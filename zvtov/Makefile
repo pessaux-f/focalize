@@ -1,7 +1,7 @@
 #  Copyright 2004 INRIA
-#  $Id: Makefile,v 1.5 2004-10-15 14:31:25 doligez Exp $
+#  $Id: Makefile,v 1.6 2004-10-29 08:42:29 doligez Exp $
 
-CAMLFLAGS = -warn-error A
+CAMLFLAGS = -warn-error A -g
 
 CAMLC = ocamlc
 CAMLCFLAGS = ${CAMLFLAGS} ${DEBUGFLAGS}

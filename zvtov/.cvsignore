@@ -1,5 +1,6 @@
 *.cm[io]
 *.annot
+gmon.out
 .config_var
 zvtov
 lexer.ml
