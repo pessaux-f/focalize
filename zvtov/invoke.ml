@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.9 2004-10-15 14:31:25 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.10 2004-10-20 14:05:12 doligez Exp $  *)
 
 let zcmd = ref "zenon";;
 let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
@@ -44,15 +44,23 @@ let print_step () p =
   | _ -> ", step " ^ (print_path () p)
 ;;
 
-let get_line loc =
-  Scanf.sscanf loc "File \"%_[^\"]\", line %d," (fun line -> line)
+type pos = Line of int | Char of int;;
+
+let get_pos loc =
+  try
+    Scanf.sscanf loc "File \"%_[^\"]\", line %d," (fun l -> Line l)
+  with Scanf.Scan_failure _ ->
+    Scanf.sscanf loc "File \"%_[^\"]\", characters %d-" (fun c -> Char c)
 ;;
 
 let zenon_loc file data loc oc =
   begin match !progress_level with
   | 0 -> ()
   | 1 ->
-      Printf.eprintf "%d " (get_line loc);
+      begin match get_pos loc with
+      | Line l -> Printf.eprintf "%d " l;
+      | Char c -> Printf.eprintf "c%d " c;
+      end;
       flush stderr;
   | 2 ->
       Printf.eprintf "## %s\n" loc;
