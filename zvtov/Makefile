@@ -1,0 +1,76 @@
+#  Copyright 2004 INRIA
+#  $Id: Makefile,v 1.1 2004-05-19 15:13:41 doligez Exp $
+
+CAMLFLAGS = -warn-error A
+
+CAMLOPT = ocamlopt
+CAMLOPTFLAGS = ${CAMLFLAGS}
+
+CAMLC = ocamlc
+CAMLCFLAGS = ${CAMLFLAGS} -g
+
+CAMLLEX = ocamllex
+CAMLYACC = ocamlyacc
+
+MODULES = invoke token lexer parser main
+
+IMPL = ${MODULES:%=%.ml}
+INTF = ${MODULES:%=%.mli}
+OBJBYT = ${MODULES:%=%.cmo}
+OBJOPT = ${MODULES:%=%.cmx}
+
+include .config_var
+
+.PHONY: default
+default: all
+
+zvtov: ${OBJBYT}
+	${CAMLC} ${CAMLCFLAGS} -o zvtov ${OBJBYT}
+
+.PHONY: all
+all: zvtov
+
+.PHONY: install
+install:
+	cp zvtov ${BINDIR}
+
+.SUFFIXES: .ml .mli .cmo .cmi .cmx
+
+.ml.cmo:
+	${CAMLC} ${CAMLCFLAGS} -c $*.ml
+
+.ml.cmx:
+	${CAMLOPT} ${CAMLOPTFLAGS} -c $*.ml
+
+.mli.cmi:
+	${CAMLOPT} ${CAMLOPTFLAGS} -c $*.mli
+
+lexer.ml: lexer.mll
+	${CAMLLEX} lexer.mll
+
+.PHONY: clean
+clean:
+	rm -f *.cmo *.cmi *.cmx *.o
+	rm -f lexer.ml
+	rm -f Makefile.bak zvtov
+
+.PHONY: depend
+depend: ${IMPL} ${INTF}
+	mv Makefile Makefile.bak
+	(sed -e '/^#DEPENDENCIES/q' Makefile.bak; \
+         ocamldep ${IMPL} ${INTF}) \
+	>Makefile
+
+# Do NOT change anything below this line.
+#DEPENDENCIES
+invoke.cmo: invoke.cmi 
+invoke.cmx: invoke.cmi 
+token.cmo: token.cmi 
+token.cmx: token.cmi 
+lexer.cmo: token.cmi lexer.cmi 
+lexer.cmx: token.cmx lexer.cmi 
+parser.cmo: invoke.cmi lexer.cmi token.cmi parser.cmi 
+parser.cmx: invoke.cmx lexer.cmx token.cmx parser.cmi 
+main.cmo: parser.cmi main.cmi 
+main.cmx: parser.cmx main.cmi 
+lexer.cmi: token.cmi 
