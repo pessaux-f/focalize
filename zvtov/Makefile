@@ -1,5 +1,5 @@
 #  Copyright 2004 INRIA
-#  $Id: Makefile,v 1.3 2004-06-02 17:08:10 doligez Exp $
+#  $Id: Makefile,v 1.4 2004-10-11 16:07:39 doligez Exp $
 
 CAMLFLAGS = -warn-error A
 
@@ -12,7 +12,7 @@ CAMLCFLAGS = ${CAMLFLAGS} -g
 CAMLLEX = ocamllex
 CAMLYACC = ocamlyacc
 
-MODULES = invoke token lexer parser main
+MODULES = cache invoke token lexer parser main
 
 IMPL = ${MODULES:%=%.ml}
 INTF = ${MODULES:%=%.mli}
@@ -64,14 +64,16 @@ depend: ${IMPL} ${INTF}
 
 # Do NOT change anything below this line.
 #DEPENDENCIES
-invoke.cmo: invoke.cmi 
-invoke.cmx: invoke.cmi 
+cache.cmo: cache.cmi 
+cache.cmx: cache.cmi 
+invoke.cmo: cache.cmi invoke.cmi 
+invoke.cmx: cache.cmx invoke.cmi 
 token.cmo: token.cmi 
 token.cmx: token.cmi 
 lexer.cmo: token.cmi lexer.cmi 
 lexer.cmx: token.cmx lexer.cmi 
 parser.cmo: invoke.cmi lexer.cmi token.cmi parser.cmi 
 parser.cmx: invoke.cmx lexer.cmx token.cmx parser.cmi 
-main.cmo: invoke.cmi parser.cmi main.cmi 
-main.cmx: invoke.cmx parser.cmx main.cmi 
+main.cmo: cache.cmi invoke.cmi parser.cmi main.cmi 
+main.cmx: cache.cmx invoke.cmx parser.cmx main.cmi 
 lexer.cmi: token.cmi 

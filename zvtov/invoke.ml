@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.7 2004-09-09 15:25:41 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.8 2004-10-11 16:07:39 doligez Exp $  *)
 
 let zcmd = ref "zenon";;
 let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
@@ -58,23 +58,29 @@ let zenon_loc file data loc oc =
   end;
   let tmp_in = (file ^ "-tmp.coz") in
   let tmp_out = (file ^ "-tmp.v") in
-  let tmpoc = open_out_bin tmp_in in
-  output_string tmpoc data;
-  close_out tmpoc;
-  let cmd = Printf.sprintf "%s -p%d -ocoqterm%s %s %s >%s"
-                           !zcmd (translate_progress !progress_level)
-                           !coq_version !zopt tmp_in tmp_out
-  in
-  let rc = Sys.command cmd in
-  if rc = 0 then begin
+  if Cache.find data tmp_out then begin
+    Printf.eprintf "\x0D";
     copy_file tmp_out oc;
   end else begin
-    Printf.eprintf "%s:\n  proof failed\n" loc;
-    flush stderr;
-    output_string oc data;
+    let tmpoc = open_out_bin tmp_in in
+    output_string tmpoc data;
+    close_out tmpoc;
+    let cmd = Printf.sprintf "%s -p%d -ocoqterm%s %s %s >%s"
+                             !zcmd (translate_progress !progress_level)
+                             !coq_version !zopt tmp_in tmp_out
+    in
+    let rc = Sys.command cmd in
+    if rc = 0 then begin
+      copy_file tmp_out oc;
+      Cache.add data tmp_out;
+    end else begin
+      Printf.eprintf "%s:\n  proof failed\n" loc;
+      flush stderr;
+      output_string oc data;
+    end;
+    Sys.remove tmp_in;
+    Sys.remove tmp_out;
   end;
-  Sys.remove tmp_in;
-  Sys.remove tmp_out;
 ;;
 
 let zenon file species proof step data oc =

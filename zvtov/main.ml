@@ -1,31 +1,33 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: main.ml,v 1.6 2004-09-09 15:25:41 doligez Exp $  *)
+(*  $Id: main.ml,v 1.7 2004-10-11 16:07:39 doligez Exp $  *)
 
 let print_version () =
-  Printf.printf "zvtov: version 0.2.0 [1] 2004-09-01";
+  Printf.printf "zvtov: version 0.2.0 [3] 2004-10-11";
   exit 0;
 ;;
 
 let infile = ref None;;
 
 let speclist = [
+  "-nocache", Arg.Clear Cache.active,
+           " do not use nor update the proof cache file";
   "-p0", Arg.Unit (fun () -> Invoke.progress_level := 0),
-      "    do not display progress info";
+      "      do not display progress info";
   "-p1", Arg.Unit (fun () -> Invoke.progress_level := 1),
-      "    display progress bar (default)";
+      "      display progress bar (default)";
   "-p2", Arg.Unit (fun () -> Invoke.progress_level := 2),
-      "    display progress messages";
+      "      display progress messages";
   "-v", Arg.Unit print_version,
-     "     print version string and exit";
+     "       print version string and exit";
   "-v7", Arg.Unit (fun () -> Invoke.coq_version := "7"),
-      "    generate proofs in Coq V7 syntax";
+      "      generate proofs in Coq V7 syntax";
   "-v8", Arg.Unit (fun () -> Invoke.coq_version := "8"),
-      "    generate proofs in Coq V8 syntax (default)";
+      "      generate proofs in Coq V8 syntax (default)";
   "-zenon", Arg.Set_string Invoke.zcmd,
-     Printf.sprintf "<command>  how to invoke zenon (default: \"%s\")"
+     Printf.sprintf "<command>    how to invoke zenon (default: \"%s\")"
                    !Invoke.zcmd;
   "-zopt", Arg.Set_string Invoke.zopt,
-    Printf.sprintf "<options>   options passed to zenon\n%s(default: \"%s\")"
+    Printf.sprintf "<options>     options passed to zenon\n%s(default: \"%s\")"
                    (String.make 12 ' ') !Invoke.zopt;
 ];;
 
@@ -42,9 +44,12 @@ let main () =
   | Some inf ->
       let ic = open_in_bin inf in
       let lb = Lexing.from_channel ic in
-      let ouf = (Filename.chop_extension inf) ^ ".v" in
+      let base = try Filename.chop_extension inf with _ -> inf in
+      let ouf = base ^ ".v" in
       let oc = open_out_bin ouf in
-      Parser.parse inf lb oc
+      Cache.init base;
+      Parser.parse inf lb oc;
+      Cache.close ();
 ;;
 
 main ();;
