@@ -1,5 +1,5 @@
 #  Copyright 2004 INRIA
-#  $Id: configure,v 1.1 2004-05-19 15:13:41 doligez Exp $
+#  $Id: configure,v 1.2 2004-05-27 17:17:03 doligez Exp $
 
 bindir=/usr/local/bin
 
@@ -15,5 +15,8 @@ case "$1" in
 esac
 
 {
-  echo BINDIR=$bindir
+  echo BINDIR="$bindir"
 } >.config_var
+
+echo Configuration summary for zvtov:
+echo BINDIR = "$bindir"
