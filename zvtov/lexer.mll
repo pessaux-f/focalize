@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: lexer.mll,v 1.1 2004-05-19 15:13:41 doligez Exp $  *)
+(*  $Id: lexer.mll,v 1.2 2004-05-23 19:53:09 doligez Exp $  *)
 {
 open Token;;
 }
@@ -10,7 +10,7 @@ let pathchar = [ '0'-'9' '_' ]
 let digit = [ '0'-'9' ]
 
 rule token = parse
-  | "Section" blank+ idchar+
+  | "Section" blank+ idchar* "__" idchar*
       { SECTION (Lexing.lexeme lexbuf) }
   | "Local" blank+ "__lemma_" pathchar+
       { LEMMA (Lexing.lexeme lexbuf) }
