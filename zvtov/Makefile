@@ -1,5 +1,5 @@
 #  Copyright 2004 INRIA
-#  $Id: Makefile,v 1.1 2004-05-19 15:13:41 doligez Exp $
+#  $Id: Makefile,v 1.2 2004-05-23 16:28:16 doligez Exp $
 
 CAMLFLAGS = -warn-error A
 
@@ -32,7 +32,8 @@ all: zvtov
 
 .PHONY: install
 install:
-	cp zvtov ${BINDIR}
+	mkdir -p ${BINDIR}
+	cp zvtov ${BINDIR}/
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
