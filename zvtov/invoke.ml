@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.11 2004-10-29 08:42:29 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.12 2004-11-09 10:03:15 prevosto Exp $  *)
 
 let zcmd = ref "zenon";;
 let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
@@ -82,9 +82,9 @@ let zenon_loc file data loc oc =
     close_out tmpoc;
     let cmd =
       if !use_coqterm then
-        Printf.sprintf "%s -p%d -ocoqterm%s %s %s >%s"
+        Printf.sprintf "%s -p%d -ocoqterm %s %s >%s"
                        !zcmd (translate_progress !progress_level)
-                       !coq_version !zopt tmp_in tmp_out
+                       !zopt tmp_in tmp_out
       else
         Printf.sprintf "%s -p%d -ocoq %s %s >%s"
                        !zcmd (translate_progress !progress_level)
