@@ -1,8 +1,8 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.1 2004-05-19 15:13:41 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.2 2004-05-27 17:18:10 doligez Exp $  *)
 
 let zcmd = ref "zenon";;
-let zopt = ref "-x coqbool -ifocal";;  (* FIXME add -ocoq *)
+let zopt = ref "-x coqbool -ifocal -ocoqterm7 -q";;
 
 let copy_file name oc =
   let ic = open_in_bin name in
