@@ -1,8 +1,16 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.5 2004-06-02 22:33:34 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.6 2004-06-03 19:50:53 doligez Exp $  *)
 
 let zcmd = ref "zenon";;
-let zopt = ref "-x coqbool -ifocal -ocoqterm7 -q -short -max-time 1m";;
+let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
+
+type coq_version = V7 | V8;;
+let coq_version = ref V7;;
+
+let with_version = function
+  | V7 -> "7"
+  | V8 -> ""
+;;
 
 let progress_level = ref 1;;
 let translate_progress x =
@@ -59,9 +67,9 @@ let zenon_loc file data loc oc =
   let tmpoc = open_out_bin tmp_in in
   output_string tmpoc data;
   close_out tmpoc;
-  let cmd = Printf.sprintf "%s -p%d %s %s >%s"
+  let cmd = Printf.sprintf "%s -p%d -ocoqterm%s %s %s >%s"
                            !zcmd (translate_progress !progress_level)
-                           !zopt tmp_in tmp_out
+                           (with_version !coq_version) !zopt tmp_in tmp_out
   in
   let rc = Sys.command cmd in
   if rc = 0 then begin
