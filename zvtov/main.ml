@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: main.ml,v 1.3 2004-06-02 17:08:10 doligez Exp $  *)
+(*  $Id: main.ml,v 1.4 2004-06-02 22:33:34 doligez Exp $  *)
 
 let print_version () =
   Printf.printf "zvtov: version 0.1.0 [2004-06-02]";
@@ -9,8 +9,12 @@ let print_version () =
 let infile = ref None;;
 
 let speclist = [
-  "-p", Arg.Set Invoke.progress_flag,
-     "           display progress messages";
+  "-p0", Arg.Unit (fun () -> Invoke.progress_level := 0),
+      "          do not display progress bar";
+  "-p1", Arg.Unit (fun () -> Invoke.progress_level := 1),
+      "          display progress bar (default)";
+  "-p2", Arg.Unit (fun () -> Invoke.progress_level := 2),
+      "          display progress messages";
   "-v", Arg.Unit print_version,
      "           print version string and exit";
   "-zenon", Arg.Set_string Invoke.zcmd,

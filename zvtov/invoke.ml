@@ -1,10 +1,16 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.4 2004-06-02 17:08:10 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.5 2004-06-02 22:33:34 doligez Exp $  *)
 
 let zcmd = ref "zenon";;
 let zopt = ref "-x coqbool -ifocal -ocoqterm7 -q -short -max-time 1m";;
 
-let progress_flag = ref false;;
+let progress_level = ref 1;;
+let translate_progress x =
+  match x with
+  | 0 | 1 -> x
+  | 2 -> 1
+  | _ -> assert false
+;;
 
 let copy_file name oc =
   let ic = open_in_bin name in
@@ -34,17 +40,29 @@ let print_step () p =
   | _ -> ", step " ^ (print_path () p)
 ;;
 
+let progress_count = ref 0;;
+
 let zenon_loc file data loc oc =
-  if !progress_flag then begin
-    Printf.eprintf "## %s\n" loc;
-    flush stderr;
+  begin match !progress_level with
+  | 0 -> ()
+  | 1 ->
+      incr progress_count;
+      Printf.eprintf "%d " !progress_count;
+      flush stderr;
+  | 2 ->
+      Printf.eprintf "## %s\n" loc;
+      flush stderr;
+  | _ -> assert false;
   end;
   let tmp_in = (file ^ "-tmp.coz") in
   let tmp_out = (file ^ "-tmp.v") in
   let tmpoc = open_out_bin tmp_in in
   output_string tmpoc data;
   close_out tmpoc;
-  let cmd = Printf.sprintf "%s %s %s >%s" !zcmd !zopt tmp_in tmp_out in
+  let cmd = Printf.sprintf "%s -p%d %s %s >%s"
+                           !zcmd (translate_progress !progress_level)
+                           !zopt tmp_in tmp_out
+  in
   let rc = Sys.command cmd in
   if rc = 0 then begin
     copy_file tmp_out oc;
