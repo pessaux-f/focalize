@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: parser.ml,v 1.6 2004-10-15 14:31:25 doligez Exp $  *)
+(*  $Id: parser.ml,v 1.7 2004-11-19 15:07:39 doligez Exp $  *)
 
 open Token;;
 
@@ -15,9 +15,9 @@ let rec incr_last = function
 ;;
 
 let prelude = Printf.sprintf "\
-   Require Import zenon%s.\n\
-   Require Import zenon_coqbool%s.\n\
-  " !Invoke.coq_version !Invoke.coq_version
+   Require Import zenon8.\n\
+   Require Import zenon_coqbool8.\n\
+  "
 ;;
 
 let prelude_inserted = ref false;;

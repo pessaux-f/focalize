@@ -1,10 +1,8 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.12 2004-11-09 10:03:15 prevosto Exp $  *)
+(*  $Id: invoke.ml,v 1.13 2004-11-19 15:07:39 doligez Exp $  *)
 
 let zcmd = ref "zenon";;
 let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
-
-let coq_version = ref "8";;
 
 let use_coqterm = ref false;;
 
@@ -44,25 +42,23 @@ let print_step () p =
   | _ -> ", step " ^ (print_path () p)
 ;;
 
-type pos = Line of int | Char of int | Nowhere;;
+type pos = Line of int | Nowhere;;
 
 let get_pos loc =
-  try
-    Scanf.sscanf loc "File \"%_[^\"]\", line %d," (fun l -> Line l)
-  with
-  | Scanf.Scan_failure _ ->
-      Scanf.sscanf loc "File \"%_[^\"]\", characters %d-" (fun c -> Char c)
-  | End_of_file -> Nowhere
+  try Scanf.sscanf loc "File \"%_[^\"]\", line %d," (fun l -> Line l)
+  with Scanf.Scan_failure _ | End_of_file -> Nowhere
 ;;
 
+let lemma_number = ref 0;;
+
 let zenon_loc file data loc oc =
+  incr lemma_number;
   begin match !progress_level with
   | 0 -> ()
   | 1 ->
       begin match get_pos loc with
       | Line l -> Printf.eprintf "%d " l;
-      | Char c -> Printf.eprintf "c%d " c;
-      | Nowhere -> ()
+      | Nowhere -> Printf.eprintf "#%d " !lemma_number;
       end;
       flush stderr;
   | 2 ->
@@ -130,6 +126,6 @@ let zenon_version () =
 ;;
 
 let signature () =
-  Printf.sprintf "%s %s\n%s\n%s v%s\n" !zcmd !zopt (zenon_version ())
-                 (if !use_coqterm then "term" else "script") !coq_version
+  Printf.sprintf "%s %s\n%s\n%s\n" !zcmd !zopt (zenon_version ())
+                 (if !use_coqterm then "term" else "script")
 ;;

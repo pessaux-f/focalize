@@ -1,8 +1,8 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: main.ml,v 1.11 2004-10-29 08:42:29 doligez Exp $  *)
+(*  $Id: main.ml,v 1.12 2004-11-19 15:07:39 doligez Exp $  *)
 
 let print_version () =
-  Printf.printf "zvtov version 0.3.0 [7] 2004-10-20\n";
+  Printf.printf "zvtov version 0.3.0 [8] 2004-10-29\n";
   exit 0;
 ;;
 
@@ -23,10 +23,6 @@ let speclist = [
         "    output proofs in term format";
   "-v", Arg.Unit print_version,
      "       print version string and exit";
-  "-v7", Arg.Unit (fun () -> Invoke.coq_version := "7"),
-      "      output proofs in Coq V7 syntax";
-  "-v8", Arg.Unit (fun () -> Invoke.coq_version := "8"),
-      "      output proofs in Coq V8 syntax (default)";
   "-zenon", Arg.Set_string Invoke.zcmd,
      Printf.sprintf "<command>    how to invoke zenon (default: \"%s\")"
                    !Invoke.zcmd;
