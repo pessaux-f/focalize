@@ -1,13 +1,14 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: cache.mli,v 1.1 2004-10-11 16:07:39 doligez Exp $  *)
+(*  $Id: cache.mli,v 1.2 2004-10-15 14:31:25 doligez Exp $  *)
 
 type reference;;
 
 val active : bool ref;;
 
-val init : string -> unit;;
-(* [init base]
+val init : string -> string -> unit;;
+(* [init base version]
    [base] is the name of the current .zv file
+   [version] is the version string of zenon
 *)
 
 val close : unit -> unit;;

@@ -1,8 +1,8 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: main.ml,v 1.7 2004-10-11 16:07:39 doligez Exp $  *)
+(*  $Id: main.ml,v 1.8 2004-10-15 14:31:25 doligez Exp $  *)
 
 let print_version () =
-  Printf.printf "zvtov: version 0.2.0 [3] 2004-10-11";
+  Printf.printf "zvtov version 0.3.0 [5] 2004-10-15\n";
   exit 0;
 ;;
 
@@ -17,6 +17,10 @@ let speclist = [
       "      display progress bar (default)";
   "-p2", Arg.Unit (fun () -> Invoke.progress_level := 2),
       "      display progress messages";
+  "-script", Arg.Clear Invoke.use_coqterm,
+          "  do proofs in script format (default)";
+  "-term", Arg.Set Invoke.use_coqterm,
+        "    do proofs in term format";
   "-v", Arg.Unit print_version,
      "       print version string and exit";
   "-v7", Arg.Unit (fun () -> Invoke.coq_version := "7"),
@@ -47,7 +51,7 @@ let main () =
       let base = try Filename.chop_extension inf with _ -> inf in
       let ouf = base ^ ".v" in
       let oc = open_out_bin ouf in
-      Cache.init base;
+      Cache.init base (Invoke.signature ());
       Parser.parse inf lb oc;
       Cache.close ();
 ;;

@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: parser.ml,v 1.5 2004-09-09 15:25:41 doligez Exp $  *)
+(*  $Id: parser.ml,v 1.6 2004-10-15 14:31:25 doligez Exp $  *)
 
 open Token;;
 
@@ -42,7 +42,7 @@ let rec parse filename lb oc =
       cur_proof := pr;
       cur_step := [];
       parse filename lb oc;
-  | TOBE s ->
+  | TOBE s ->  (* FIXME TODO : supprimer TOBE *)
       Invoke.zenon filename !cur_species !cur_proof !cur_step s oc;
       begin
         let b = Lexing.from_string s in

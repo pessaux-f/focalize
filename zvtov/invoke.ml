@@ -1,10 +1,12 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.8 2004-10-11 16:07:39 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.9 2004-10-15 14:31:25 doligez Exp $  *)
 
 let zcmd = ref "zenon";;
 let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
 
 let coq_version = ref "8";;
+
+let use_coqterm = ref false;;
 
 let progress_level = ref 1;;
 let translate_progress x =
@@ -42,14 +44,15 @@ let print_step () p =
   | _ -> ", step " ^ (print_path () p)
 ;;
 
-let progress_count = ref 0;;
+let get_line loc =
+  Scanf.sscanf loc "File \"%_[^\"]\", line %d," (fun line -> line)
+;;
 
 let zenon_loc file data loc oc =
   begin match !progress_level with
   | 0 -> ()
   | 1 ->
-      incr progress_count;
-      Printf.eprintf "%d " !progress_count;
+      Printf.eprintf "%d " (get_line loc);
       flush stderr;
   | 2 ->
       Printf.eprintf "## %s\n" loc;
@@ -61,19 +64,32 @@ let zenon_loc file data loc oc =
   if Cache.find data tmp_out then begin
     Printf.eprintf "\x0D";
     copy_file tmp_out oc;
+    if !progress_level >= 2 then Printf.eprintf "(cached)\n";
   end else begin
     let tmpoc = open_out_bin tmp_in in
     output_string tmpoc data;
     close_out tmpoc;
-    let cmd = Printf.sprintf "%s -p%d -ocoqterm%s %s %s >%s"
-                             !zcmd (translate_progress !progress_level)
-                             !coq_version !zopt tmp_in tmp_out
+    let cmd =
+      if !use_coqterm then
+        Printf.sprintf "%s -p%d -ocoqterm%s %s %s >%s"
+                       !zcmd (translate_progress !progress_level)
+                       !coq_version !zopt tmp_in tmp_out
+      else
+        Printf.sprintf "%s -p%d -ocoq %s %s >%s"
+                       !zcmd (translate_progress !progress_level)
+                       !zopt tmp_in tmp_out
     in
     let rc = Sys.command cmd in
-    if rc = 0 then begin
-      copy_file tmp_out oc;
-      Cache.add data tmp_out;
-    end else begin
+    begin match rc with
+    | 0 ->   (* OK *)
+        copy_file tmp_out oc;
+        Cache.add data tmp_out;
+    | 255 -> (* interrupted *)
+        Printf.eprintf "interrupt\n";
+        Sys.remove tmp_in;
+        Sys.remove tmp_out;
+        exit (-1);
+    | _ ->
       Printf.eprintf "%s:\n  proof failed\n" loc;
       flush stderr;
       output_string oc data;
@@ -87,4 +103,22 @@ let zenon file species proof step data oc =
   let loc = Printf.sprintf "File %s, species %s\n  proof of %s%a"
                            file species proof print_step step
   in zenon_loc file data loc oc;
+;;
+
+let zenon_version () =
+  let tempfile = Filename.temp_file "zenon_version" ".txt" in
+  let cmd = Printf.sprintf "%s -v >%s" !zcmd tempfile in
+  let rc = Sys.command cmd in
+  if rc = 0 then begin
+    let ic = open_in tempfile in
+    let result = try input_line ic with _ -> "" in
+    close_in ic;
+    (try Sys.remove tempfile with _ -> ());
+    result
+  end else ""
+;;
+
+let signature () =
+  Printf.sprintf "%s %s\n%s\n%s v%s\n" !zcmd !zopt (zenon_version ())
+                 (if !use_coqterm then "term" else "script") !coq_version
 ;;

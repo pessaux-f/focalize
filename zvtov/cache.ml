@@ -1,8 +1,8 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: cache.ml,v 1.1 2004-10-11 16:07:39 doligez Exp $  *)
+(*  $Id: cache.ml,v 1.2 2004-10-15 14:31:25 doligez Exp $  *)
 
 (* format of a cache file:
-file ::= ( "begin\x0A" data "proof\x0A" data "end\x0A" )*
+file ::= block ( "begin\x0A" data "proof\x0A" data "end\x0A" )*
 data ::= block* "0\x0A" checksum "\x0A"
 block ::= n:int "\x0A" (n bytes) "\x0A"
 checksum = hex representation of md5 digest of data
@@ -71,26 +71,6 @@ let read_item ic =
   Hashtbl.add table key offset;
 ;;
 
-let init base =
-  if !active then begin
-    oldcachefile := base ^ ".pfc";
-    newcachefile := base ^ ".pfctmp";
-    (try Sys.remove !newcachefile with Sys_error _ -> ());
-    begin try
-      let ic = open_in_bin !oldcachefile in
-      while true do read_item ic done;
-    with Exit | End_of_file | Sys_error _ -> ()
-    end
-  end
-;;
-
-let close () =
-  if !active then begin
-    (try Sys.remove !oldcachefile with Sys_error _ -> ());
-    (try Sys.rename !newcachefile !oldcachefile with Sys_error _ -> ());
-  end
-;;
-
 let write_block oc data len =
   assert (String.length data >= len);
   if !active then begin
@@ -115,6 +95,30 @@ let write_file oc file =
   in
   loop ();
   close_in ic;
+;;
+
+let init base version =
+  if !active then begin
+    oldcachefile := base ^ ".pfc";
+    newcachefile := base ^ ".pfctmp";
+    let oc = open_out_bin !newcachefile in
+    write_block oc version (String.length version);
+    close_out oc;
+    begin try
+      let ic = open_in_bin !oldcachefile in
+      let file_version = read_block ic in
+      if file_version <> Some version then raise Exit;
+      while true do read_item ic done;
+    with Exit | End_of_file | Sys_error _ -> ()
+    end;
+  end
+;;
+
+let close () =
+  if !active then begin
+    (try Sys.remove !oldcachefile with Sys_error _ -> ());
+    (try Sys.rename !newcachefile !oldcachefile with Sys_error _ -> ());
+  end
 ;;
 
 let add key file =

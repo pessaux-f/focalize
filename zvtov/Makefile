@@ -1,13 +1,10 @@
 #  Copyright 2004 INRIA
-#  $Id: Makefile,v 1.4 2004-10-11 16:07:39 doligez Exp $
+#  $Id: Makefile,v 1.5 2004-10-15 14:31:25 doligez Exp $
 
 CAMLFLAGS = -warn-error A
 
-CAMLOPT = ocamlopt
-CAMLOPTFLAGS = ${CAMLFLAGS}
-
 CAMLC = ocamlc
-CAMLCFLAGS = ${CAMLFLAGS} -g
+CAMLCFLAGS = ${CAMLFLAGS} ${DEBUGFLAGS}
 
 CAMLLEX = ocamllex
 CAMLYACC = ocamlyacc
@@ -17,7 +14,6 @@ MODULES = cache invoke token lexer parser main
 IMPL = ${MODULES:%=%.ml}
 INTF = ${MODULES:%=%.mli}
 OBJBYT = ${MODULES:%=%.cmo}
-OBJOPT = ${MODULES:%=%.cmx}
 
 include .config_var
 
@@ -40,18 +36,15 @@ install:
 .ml.cmo:
 	${CAMLC} ${CAMLCFLAGS} -c $*.ml
 
-.ml.cmx:
-	${CAMLOPT} ${CAMLOPTFLAGS} -c $*.ml
-
 .mli.cmi:
-	${CAMLOPT} ${CAMLOPTFLAGS} -c $*.mli
+	${CAMLC} ${CAMLCFLAGS} -c $*.mli
 
 lexer.ml: lexer.mll
 	${CAMLLEX} lexer.mll
 
 .PHONY: clean
 clean:
-	rm -f *.cmo *.cmi *.cmx *.o
+	rm -f *.cmo *.cmi
 	rm -f lexer.ml
 	rm -f Makefile.bak zvtov
 

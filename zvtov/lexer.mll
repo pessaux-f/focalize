@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: lexer.mll,v 1.4 2004-06-02 17:08:10 doligez Exp $  *)
+(*  $Id: lexer.mll,v 1.5 2004-10-15 14:31:25 doligez Exp $  *)
 {
 open Token;;
 }
@@ -8,6 +8,8 @@ let blank = [ ' ' '\t' '\r' '\n' ]
 let idchar = [ '0'-'9' 'A'-'Z' 'a'-'z' '_' ]
 let pathchar = [ '0'-'9' '_' ]
 let digit = [ '0'-'9' ]
+
+(* FIXME TODO : supprimer TOBE *)
 
 rule token = parse
   | "Require"
