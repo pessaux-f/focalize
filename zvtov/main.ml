@@ -1,9 +1,18 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: main.ml,v 1.2 2004-05-27 17:18:10 doligez Exp $  *)
+(*  $Id: main.ml,v 1.3 2004-06-02 17:08:10 doligez Exp $  *)
+
+let print_version () =
+  Printf.printf "zvtov: version 0.1.0 [2004-06-02]";
+  exit 0;
+;;
 
 let infile = ref None;;
 
 let speclist = [
+  "-p", Arg.Set Invoke.progress_flag,
+     "           display progress messages";
+  "-v", Arg.Unit print_version,
+     "           print version string and exit";
   "-zenon", Arg.Set_string Invoke.zcmd,
     Printf.sprintf "<command>  how to invoke zenon (default: \"%s\")"
                    !Invoke.zcmd;

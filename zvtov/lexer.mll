@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: lexer.mll,v 1.3 2004-06-01 11:56:29 doligez Exp $  *)
+(*  $Id: lexer.mll,v 1.4 2004-06-02 17:08:10 doligez Exp $  *)
 {
 open Token;;
 }
@@ -10,6 +10,8 @@ let pathchar = [ '0'-'9' '_' ]
 let digit = [ '0'-'9' ]
 
 rule token = parse
+  | "Require"
+      { REQUIRE (Lexing.lexeme lexbuf) }
   | "Section" blank+ idchar* "__" idchar*
       { SECTION (Lexing.lexeme lexbuf) }
   | "Local" blank+ "__l_" [^ '.']* "(* to be proved *)" [^ '.']* "(* Qed *)."
@@ -19,6 +21,13 @@ rule token = parse
       { TOBE (Lexing.lexeme lexbuf) }
   | "Local" blank+ "__goal_" [^ '.']* "(* to be proved *)" [^ '.']* "(* Qed *)."
       { TOBE (Lexing.lexeme lexbuf) }
+  | "%%begin-auto-proof" blank+
+    "%%location:" blank* '[' ([^ ']']* as loc) ']' blank+
+    "%%name:" blank* idchar+ blank+
+    "%%statement" blank+
+    [^ '%']+
+    "%%end-auto-proof"
+      { AUTOPROOF (Lexing.lexeme lexbuf, loc) }
   | eof
       { EOF }
   | _

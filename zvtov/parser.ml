@@ -1,11 +1,12 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: parser.ml,v 1.3 2004-06-01 11:56:29 doligez Exp $  *)
+(*  $Id: parser.ml,v 1.4 2004-06-02 17:08:10 doligez Exp $  *)
 
 open Token;;
 
 let cur_species = ref "";;
 let cur_proof = ref "";;
 let cur_step = ref ([] : int list);;
+let cur_loc = ref None;;
 
 let rec incr_last = function
   | [] -> []
@@ -13,11 +14,27 @@ let rec incr_last = function
   | h::t -> h :: (incr_last t)
 ;;
 
-let rec xparse filename lb oc =
+let prelude = "\
+   Require Import Classical.\n\
+   Require Import zenon.\n\
+   Require Import zenon_coqbool.\n\
+  "
+;;
+
+let prelude_inserted = ref false;;
+
+let rec parse filename lb oc =
   match Lexer.token lb with
+  | REQUIRE s ->
+      if not !prelude_inserted then begin
+        output_string oc prelude;
+        prelude_inserted := true;
+      end;
+      output_string oc s;
+      parse filename lb oc;
   | CHAR c ->
       output_string oc c;
-      xparse filename lb oc;
+      parse filename lb oc;
   | SECTION s ->
       output_string oc s;
       let b = Lexing.from_string s in
@@ -25,7 +42,7 @@ let rec xparse filename lb oc =
       cur_species := sp;
       cur_proof := pr;
       cur_step := [];
-      xparse filename lb oc;
+      parse filename lb oc;
   | TOBE s ->
       Invoke.zenon filename !cur_species !cur_proof !cur_step s oc;
       begin
@@ -35,18 +52,10 @@ let rec xparse filename lb oc =
         | GOAL -> cur_step := incr_last !cur_step;
         | TOP -> ()
       end;
-      xparse filename lb oc;
+      parse filename lb oc;
+  | AUTOPROOF (data, loc) ->
+      Printf.fprintf oc "(* %s *)\n" loc;
+      Invoke.zenon_loc filename data loc oc;
+      parse filename lb oc;
   | EOF -> ()
-;;
-
-let prelude =
-  "Require Import Classical.\n\
-   Require Import zenon.\n\
-   Require Import zenon_coqbool.\n\
-  "
-;;
-
-let parse filename lb oc =
-  output_string oc prelude;
-  xparse filename lb oc;
 ;;

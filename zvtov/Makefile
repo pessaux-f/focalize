@@ -1,5 +1,5 @@
 #  Copyright 2004 INRIA
-#  $Id: Makefile,v 1.2 2004-05-23 16:28:16 doligez Exp $
+#  $Id: Makefile,v 1.3 2004-06-02 17:08:10 doligez Exp $
 
 CAMLFLAGS = -warn-error A
 
@@ -72,6 +72,6 @@ lexer.cmo: token.cmi lexer.cmi
 lexer.cmx: token.cmx lexer.cmi 
 parser.cmo: invoke.cmi lexer.cmi token.cmi parser.cmi 
 parser.cmx: invoke.cmx lexer.cmx token.cmx parser.cmi 
-main.cmo: parser.cmi main.cmi 
-main.cmx: parser.cmx main.cmi 
+main.cmo: invoke.cmi parser.cmi main.cmi 
+main.cmx: invoke.cmx parser.cmx main.cmi 
 lexer.cmi: token.cmi 
