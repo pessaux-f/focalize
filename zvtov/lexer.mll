@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: lexer.mll,v 1.2 2004-05-23 19:53:09 doligez Exp $  *)
+(*  $Id: lexer.mll,v 1.3 2004-06-01 11:56:29 doligez Exp $  *)
 {
 open Token;;
 }
@@ -12,11 +12,12 @@ let digit = [ '0'-'9' ]
 rule token = parse
   | "Section" blank+ idchar* "__" idchar*
       { SECTION (Lexing.lexeme lexbuf) }
-  | "Local" blank+ "__lemma_" pathchar+
-      { LEMMA (Lexing.lexeme lexbuf) }
-  | "Local" blank+ "__goal_" pathchar+
-      { GOAL (Lexing.lexeme lexbuf) }
-  | "(* to be proved *)" [^ '.']* "(* Qed *)"
+  | "Local" blank+ "__l_" [^ '.']* "(* to be proved *)" [^ '.']* "(* Qed *)."
+      { TOBE (Lexing.lexeme lexbuf) }
+  | "Local" blank+ "__lemma_" [^ '.']* "(* to be proved *)" [^ '.']*
+    "(* Qed *)."
+      { TOBE (Lexing.lexeme lexbuf) }
+  | "Local" blank+ "__goal_" [^ '.']* "(* to be proved *)" [^ '.']* "(* Qed *)."
       { TOBE (Lexing.lexeme lexbuf) }
   | eof
       { EOF }
@@ -28,7 +29,9 @@ and section = parse
       { (species, proof) }
 
 and lemma = parse
-  | "Local" blank+ "__lemma_" { lemma_path lexbuf }
+  | "Local" blank+ "__lemma_" { LEMMA (lemma_path lexbuf) }
+  | "Local" blank+ "__goal_" { GOAL }
+  | "Local" blank+ "__l_" { TOP }
 
 and lemma_path = parse
   | "_" { lemma_path lexbuf }
@@ -37,4 +40,4 @@ and lemma_path = parse
         let t = lemma_path lexbuf in
         h :: t
       }
-  | eof { [] }
+  | _ { [] }
