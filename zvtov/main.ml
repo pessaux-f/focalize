@@ -1,8 +1,8 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: main.ml,v 1.12 2004-11-19 15:07:39 doligez Exp $  *)
+(*  $Id: main.ml,v 1.13 2005-05-24 14:15:51 doligez Exp $  *)
 
 let print_version () =
-  Printf.printf "zvtov version 0.3.0 [8] 2004-10-29\n";
+  Printf.printf "zvtov version 0.3.1 [9] 2005-05-24\n";
   exit 0;
 ;;
 
