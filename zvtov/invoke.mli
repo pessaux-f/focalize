@@ -1,8 +1,10 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.mli,v 1.7 2004-11-19 15:07:39 doligez Exp $  *)
+(*  $Id: invoke.mli,v 1.8 2005-06-23 07:09:17 prevosto Exp $  *)
 
 val zcmd : string ref;;
 val zopt : string ref;;
+
+val set_tptp_option: unit -> unit
 
 val progress_level : int ref;;
 

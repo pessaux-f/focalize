@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: lexer.mll,v 1.5 2004-10-15 14:31:25 doligez Exp $  *)
+(*  $Id: lexer.mll,v 1.6 2005-06-23 07:09:17 prevosto Exp $  *)
 {
 open Token;;
 }
@@ -26,10 +26,12 @@ rule token = parse
   | "%%begin-auto-proof" blank+
     "%%location:" blank* '[' ([^ ']']* as loc) ']' blank+
     "%%name:" blank* idchar+ blank+
+    "%%syntax:" blank* (idchar+ as syntax) blank+
     "%%statement" blank+
-    [^ '%']+
+    ([^ '%']+ | "%@" [^ '\n']+ '\n')+
     "%%end-auto-proof"
-      { AUTOPROOF (Lexing.lexeme lexbuf, loc) }
+      { if syntax = "TPTP" then Invoke.set_tptp_option ();
+        AUTOPROOF (Lexing.lexeme lexbuf, loc) }
   | eof
       { EOF }
   | _

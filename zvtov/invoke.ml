@@ -1,8 +1,10 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.13 2004-11-19 15:07:39 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.14 2005-06-23 07:09:17 prevosto Exp $  *)
 
 let zcmd = ref "zenon";;
-let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
+let zopt = ref "-x coqbool -q -short -max-time 1m";;
+let izopt = ref "-ifocal"
+let set_tptp_option () = izopt:="-itptp"
 
 let use_coqterm = ref false;;
 
@@ -78,13 +80,13 @@ let zenon_loc file data loc oc =
     close_out tmpoc;
     let cmd =
       if !use_coqterm then
-        Printf.sprintf "%s -p%d -ocoqterm %s %s >%s"
+        Printf.sprintf "%s -p%d -ocoqterm %s %s %s >%s"
                        !zcmd (translate_progress !progress_level)
-                       !zopt tmp_in tmp_out
+                       !izopt !zopt tmp_in tmp_out
       else
-        Printf.sprintf "%s -p%d -ocoq %s %s >%s"
+        Printf.sprintf "%s -p%d -ocoq %s %s %s >%s"
                        !zcmd (translate_progress !progress_level)
-                       !zopt tmp_in tmp_out
+                       !izopt !zopt tmp_in tmp_out
     in
     let rc = Sys.command cmd in
     begin match rc with
@@ -126,6 +128,6 @@ let zenon_version () =
 ;;
 
 let signature () =
-  Printf.sprintf "%s %s\n%s\n%s\n" !zcmd !zopt (zenon_version ())
+  Printf.sprintf "%s %s %s\n%s\n%s\n" !zcmd !izopt !zopt (zenon_version ())
                  (if !use_coqterm then "term" else "script")
 ;;
