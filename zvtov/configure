@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #  Copyright 2004 INRIA
-#  $Id: configure,v 1.5 2004-10-15 14:31:25 doligez Exp $
+#  $Id: configure,v 1.6 2005-07-01 12:26:22 prevosto Exp $
 
 bindir=/usr/local/bin
 libdir=/usr/local/lib/foc
@@ -26,6 +26,10 @@ while : ; do
        debug=true
        shift
     ;;
+    --with-xmlrpc)
+        xmlrpc=true
+        shift
+    ;;
     *) echo 'usage: ./configure [-bindir <dir>] [-libdir <dir>]' >&2
        exit 2
     ;;
@@ -37,10 +41,24 @@ if $debug; then
 else
   debugflags=
 fi
+
+if $xmlrpc; then
+    xmlrpcflags=`ocamlfind query -r -i-format xmlrpc | tr '\n' ' '`;
+    xmlrpcfile="xmlrpc";
+    xmlrpclink=`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\n' ' '`;
+else
+    xmlrpcflags=;
+    xmlrpcfile=;
+    xmlrpclink=;
+fi
 {
   echo BINDIR="$bindir"
   echo LIBDIR="$libdir"
   echo DEBUGFLAGS="$debugflags"
+  echo XMLRPCFILE="$xmlrpcfile"
+  echo XMLRPCFLAGS="$xmlrpcflags"
+  echo XMLRPCFILE="$xmlrpcfile"
+  echo XMLRPCLINK="$xmlrpclink"
 } >.config_var
 
 echo Configuration summary for zvtov:

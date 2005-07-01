@@ -1,15 +1,15 @@
 #  Copyright 2004 INRIA
-#  $Id: Makefile,v 1.7 2004-11-19 15:07:39 doligez Exp $
+#  $Id: Makefile,v 1.8 2005-07-01 12:26:22 prevosto Exp $
 
 CAMLFLAGS = -warn-error A
 
 CAMLC = ocamlc
-CAMLCFLAGS = ${CAMLFLAGS} ${DEBUGFLAGS}
+CAMLCFLAGS = ${CAMLFLAGS} ${DEBUGFLAGS} ${XMLRPCFLAGS}
 
 CAMLLEX = ocamllex
 CAMLYACC = ocamlyacc
 
-MODULES = cache invoke token lexer parser main
+MODULES = cache  invoke options ${XMLRPCFILE} token lexer parser main
 
 IMPL = ${MODULES:%=%.ml}
 INTF = ${MODULES:%=%.mli}
@@ -21,7 +21,7 @@ include .config_var
 default: all
 
 zvtov: ${OBJBYT}
-	${CAMLC} ${CAMLCFLAGS} -o zvtov ${OBJBYT}
+	${CAMLC} ${CAMLCFLAGS} ${XMLRPCLINK} -o zvtov ${OBJBYT}
 
 .PHONY: all
 all: zvtov
@@ -61,12 +61,16 @@ cache.cmo: cache.cmi
 cache.cmx: cache.cmi 
 invoke.cmo: cache.cmi invoke.cmi 
 invoke.cmx: cache.cmx invoke.cmi 
+options.cmo: invoke.cmi cache.cmi options.cmi 
+options.cmx: invoke.cmx cache.cmx options.cmi 
+xmlrpc.cmo: options.cmi invoke.cmi xmlrpc.cmi 
+xmlrpc.cmx: options.cmx invoke.cmx xmlrpc.cmi 
 token.cmo: token.cmi 
 token.cmx: token.cmi 
-lexer.cmo: token.cmi lexer.cmi 
-lexer.cmx: token.cmx lexer.cmi 
-parser.cmo: invoke.cmi lexer.cmi token.cmi parser.cmi 
-parser.cmx: invoke.cmx lexer.cmx token.cmx parser.cmi 
-main.cmo: cache.cmi invoke.cmi parser.cmi main.cmi 
-main.cmx: cache.cmx invoke.cmx parser.cmx main.cmi 
+lexer.cmo: token.cmi invoke.cmi lexer.cmi 
+lexer.cmx: token.cmx invoke.cmx lexer.cmi 
+parser.cmo: token.cmi lexer.cmi invoke.cmi parser.cmi 
+parser.cmx: token.cmx lexer.cmx invoke.cmx parser.cmi 
+main.cmo: parser.cmi options.cmi invoke.cmi cache.cmi main.cmi 
+main.cmx: parser.cmx options.cmx invoke.cmx cache.cmx main.cmi 
 lexer.cmi: token.cmi 

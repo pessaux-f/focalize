@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.14 2005-06-23 07:09:17 prevosto Exp $  *)
+(*  $Id: invoke.ml,v 1.15 2005-07-01 12:26:22 prevosto Exp $  *)
 
 let zcmd = ref "zenon";;
 let zopt = ref "-x coqbool -q -short -max-time 1m";;
@@ -53,7 +53,7 @@ let get_pos loc =
 
 let lemma_number = ref 0;;
 
-let zenon_loc file data loc oc =
+let zenon_loc file (_: string * string) data loc oc =
   incr lemma_number;
   begin match !progress_level with
   | 0 -> ()
@@ -108,10 +108,16 @@ let zenon_loc file data loc oc =
   end;
 ;;
 
+let atp_function = ref zenon_loc
+
+let set_atp f = atp_function:=f
+
+let atp proof loc oc = !atp_function proof loc oc
+
 let zenon file species proof step data oc =
   let loc = Printf.sprintf "File %s, species %s\n  proof of %s%a"
                            file species proof print_step step
-  in zenon_loc file data loc oc;
+  in zenon_loc file ("lemma", "True") data loc oc;
 ;;
 
 let zenon_version () =

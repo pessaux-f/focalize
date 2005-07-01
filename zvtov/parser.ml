@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: parser.ml,v 1.7 2004-11-19 15:07:39 doligez Exp $  *)
+(*  $Id: parser.ml,v 1.8 2005-07-01 12:26:22 prevosto Exp $  *)
 
 open Token;;
 
@@ -52,9 +52,9 @@ let rec parse filename lb oc =
         | TOP -> ()
       end;
       parse filename lb oc;
-  | AUTOPROOF (data, loc) ->
+  | AUTOPROOF (data, loc, statement, name) ->
       Printf.fprintf oc "(* %s *)\n" loc;
-      Invoke.zenon_loc filename data loc oc;
+      Invoke.atp filename (statement, name) data loc oc;
       parse filename lb oc;
   | EOF -> ()
 ;;
