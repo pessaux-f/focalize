@@ -1,11 +1,12 @@
 #!/bin/sh
 
 #  Copyright 2004 INRIA
-#  $Id: configure,v 1.6 2005-07-01 12:26:22 prevosto Exp $
+#  $Id: configure,v 1.7 2005-07-12 15:21:01 prevosto Exp $
 
 bindir=/usr/local/bin
 libdir=/usr/local/lib/foc
 debug=false
+xmlrpc=false
 
 case `hostname` in
   macaque*) debug=true;;
