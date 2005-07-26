@@ -1,12 +1,12 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.15 2005-07-01 12:26:22 prevosto Exp $  *)
+(*  $Id: invoke.ml,v 1.16 2005-07-26 14:26:35 prevosto Exp $  *)
 
 let zcmd = ref "zenon";;
 let zopt = ref "-x coqbool -q -short -max-time 1m";;
 let izopt = ref "-ifocal"
 let set_tptp_option () = izopt:="-itptp"
 
-let use_coqterm = ref false;;
+let use_coqterm = ref true;;
 
 let progress_level = ref 1;;
 let translate_progress x =

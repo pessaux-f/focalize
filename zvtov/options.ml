@@ -1,5 +1,5 @@
 (* possible options of zvtov. *)
-(* $Id: options.ml,v 1.1 2005-07-01 12:26:22 prevosto Exp $ *)
+(* $Id: options.ml,v 1.2 2005-07-26 14:26:35 prevosto Exp $ *)
 open Arg
 
 let print_version () =
@@ -17,9 +17,9 @@ let options = ref  [
   "-p2", Arg.Unit (fun () -> Invoke.progress_level := 2),
       "      display progress messages";
   "-script", Arg.Clear Invoke.use_coqterm,
-          "  output proofs in script format (default)";
+          "  output proofs in script format";
   "-term", Arg.Set Invoke.use_coqterm,
-        "    output proofs in term format";
+        "    output proofs in term format (default)";
   "-v", Arg.Unit print_version,
      "       print version string and exit";
   "-zenon", Arg.Set_string Invoke.zcmd,
