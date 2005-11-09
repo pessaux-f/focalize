@@ -1,5 +1,5 @@
 #  Copyright 2004 INRIA
-#  $Id: Makefile,v 1.8 2005-07-01 12:26:22 prevosto Exp $
+#  $Id: Makefile,v 1.9 2005-11-09 15:22:03 doligez Exp $
 
 CAMLFLAGS = -warn-error A
 
@@ -9,7 +9,7 @@ CAMLCFLAGS = ${CAMLFLAGS} ${DEBUGFLAGS} ${XMLRPCFLAGS}
 CAMLLEX = ocamllex
 CAMLYACC = ocamlyacc
 
-MODULES = cache  invoke options ${XMLRPCFILE} token lexer parser main
+MODULES = version cache invoke options ${XMLRPCFILE} token lexer parser main
 
 IMPL = ${MODULES:%=%.ml}
 INTF = ${MODULES:%=%.mli}
@@ -57,14 +57,14 @@ depend: ${IMPL} ${INTF}
 
 # Do NOT change anything below this line.
 #DEPENDENCIES
+version.cmo: version.cmi 
+version.cmx: version.cmi 
 cache.cmo: cache.cmi 
 cache.cmx: cache.cmi 
 invoke.cmo: cache.cmi invoke.cmi 
 invoke.cmx: cache.cmx invoke.cmi 
-options.cmo: invoke.cmi cache.cmi options.cmi 
-options.cmx: invoke.cmx cache.cmx options.cmi 
-xmlrpc.cmo: options.cmi invoke.cmi xmlrpc.cmi 
-xmlrpc.cmx: options.cmx invoke.cmx xmlrpc.cmi 
+options.cmo: version.cmi invoke.cmi cache.cmi options.cmi 
+options.cmx: version.cmx invoke.cmx cache.cmx options.cmi 
 token.cmo: token.cmi 
 token.cmx: token.cmi 
 lexer.cmo: token.cmi invoke.cmi lexer.cmi 

@@ -1,6 +1,7 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: main.ml,v 1.14 2005-07-01 12:26:22 prevosto Exp $  *)
+(*  $Id: main.ml,v 1.15 2005-11-09 15:22:03 doligez Exp $  *)
 
+open Printf;;
 
 let infile = ref None;;
 
@@ -22,9 +23,13 @@ let main () =
       let base = try Filename.chop_extension inf with _ -> inf in
       let ouf = base ^ ".v" in
       let oc = open_out_bin ouf in
-      Cache.init base (Invoke.signature ());
+      Cache.init base Version.version (Invoke.signature ());
       Parser.parse inf lb oc;
       Cache.close ();
 ;;
 
-main ();;
+Sys.catch_break true;
+try main () with
+| Sys_error msg -> eprintf "%s\n" msg; exit 3;
+| Sys.Break -> Cache.close (); eprintf "interrupt\n"; exit 4;
+;;

@@ -1,9 +1,10 @@
-(* possible options of zvtov. *)
-(* $Id: options.ml,v 1.2 2005-07-26 14:26:35 prevosto Exp $ *)
+(*  Copyright 2005 INRIA  *)
+(*  $Id: options.ml,v 1.3 2005-11-09 15:22:03 doligez Exp $  *)
+
 open Arg
 
 let print_version () =
-  Printf.printf "zvtov version 0.3.1 [9] 2005-05-24\n";
+  Printf.printf "%s\n" Version.version;
   exit 0;
 ;;
 
@@ -28,9 +29,12 @@ let options = ref  [
   "-zopt", Arg.Set_string Invoke.zopt,
     Printf.sprintf "<options>     options passed to zenon\n%s(default: \"%s\")"
                    (String.make 12 ' ') !Invoke.zopt;
-]
+  "-zz", Arg.String (fun s -> Invoke.addopt := s :: !Invoke.addopt),
+      "<option>  add <option> to be passed to zenon";
+];;
 
-let get_options () = !options
+let get_options () = !options;;
 
-let register_option flag action help = 
-  options:= (flag, action, help) :: !options
+let register_option flag action help =
+  options := (flag, action, help) :: !options
+;;

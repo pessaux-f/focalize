@@ -1,10 +1,10 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.16 2005-07-26 14:26:35 prevosto Exp $  *)
+(*  $Id: invoke.ml,v 1.17 2005-11-09 15:22:03 doligez Exp $  *)
 
 let zcmd = ref "zenon";;
-let zopt = ref "-x coqbool -q -short -max-time 1m";;
-let izopt = ref "-ifocal"
-let set_tptp_option () = izopt:="-itptp"
+let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
+let addopt = ref [];;
+let set_tptp_option () = addopt := ("-itptp" :: !addopt);;
 
 let use_coqterm = ref true;;
 
@@ -29,6 +29,13 @@ let copy_file name oc =
   in
   loop ();
   close_in ic;
+;;
+
+let file_size name =
+  let ic = open_in_bin name in
+  let result = in_channel_length ic in
+  close_in ic;
+  result
 ;;
 
 let rec print_path () p =
@@ -70,41 +77,62 @@ let zenon_loc file (_: string * string) data loc oc =
   end;
   let tmp_in = (file ^ "-tmp.coz") in
   let tmp_out = (file ^ "-tmp.v") in
-  if Cache.find data tmp_out then begin
-    Printf.eprintf "\x0D";
-    copy_file tmp_out oc;
-    if !progress_level >= 2 then Printf.eprintf "(cached)\n";
+  let tmp_err = (file ^ "-tmp.err") in
+  let cleanup () =
+    (try Sys.remove tmp_in with _ -> ());
+    (try Sys.remove tmp_out with _ -> ());
+    (try Sys.remove tmp_err with _ -> ());
+  in
+  if Cache.find data tmp_out tmp_err then begin
+    begin try
+      Printf.eprintf " (cached)\x0D";
+      copy_file tmp_out oc;
+      if file_size tmp_err > 0 then begin
+        Printf.eprintf "%s\n" loc;
+        copy_file tmp_err stderr;
+      end;
+      if !progress_level >= 2 then Printf.eprintf "\n";
+    with x -> cleanup (); raise x
+    end;
+    cleanup ();
   end else begin
     let tmpoc = open_out_bin tmp_in in
     output_string tmpoc data;
     close_out tmpoc;
     let cmd =
       if !use_coqterm then
-        Printf.sprintf "%s -p%d -ocoqterm %s %s %s >%s"
+        Printf.sprintf "%s -p%d -ocoqterm %s %s -wout %s %s >%s"
                        !zcmd (translate_progress !progress_level)
-                       !izopt !zopt tmp_in tmp_out
+                       !zopt (String.concat " " (List.rev !addopt))
+                       tmp_err tmp_in tmp_out
       else
-        Printf.sprintf "%s -p%d -ocoq %s %s %s >%s"
+        Printf.sprintf "%s -p%d -ocoq %s %s -wout %s %s >%s"
                        !zcmd (translate_progress !progress_level)
-                       !izopt !zopt tmp_in tmp_out
+                       !zopt (String.concat " " (List.rev !addopt))
+                       tmp_err tmp_in tmp_out
     in
+    begin try Sys.remove tmp_err with Sys_error _ -> () end;
     let rc = Sys.command cmd in
     begin match rc with
     | 0 ->   (* OK *)
         copy_file tmp_out oc;
-        Cache.add data tmp_out;
+        if Sys.file_exists tmp_err then begin
+          Printf.eprintf "%s\n" loc;
+          copy_file tmp_err stderr;
+        end else begin
+          close_out (open_out tmp_err);
+        end;
+        Cache.add data tmp_out tmp_err;
     | 255 -> (* interrupted *)
         Printf.eprintf "interrupt\n";
-        Sys.remove tmp_in;
-        Sys.remove tmp_out;
+        cleanup ();
         exit (-1);
     | _ ->
       Printf.eprintf "%s:\n  proof failed\n" loc;
       flush stderr;
       output_string oc data;
     end;
-    Sys.remove tmp_in;
-    Sys.remove tmp_out;
+    cleanup ();
   end;
 ;;
 
@@ -134,6 +162,7 @@ let zenon_version () =
 ;;
 
 let signature () =
-  Printf.sprintf "%s %s %s\n%s\n%s\n" !zcmd !izopt !zopt (zenon_version ())
+  let aopt = String.concat " " (List.rev !addopt) in
+  Printf.sprintf "%s %s %s\n%s\n%s\n" !zcmd !zopt aopt (zenon_version ())
                  (if !use_coqterm then "term" else "script")
 ;;

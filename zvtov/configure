@@ -1,15 +1,15 @@
 #!/bin/sh
 
 #  Copyright 2004 INRIA
-#  $Id: configure,v 1.7 2005-07-12 15:21:01 prevosto Exp $
+#  $Id: configure,v 1.8 2005-11-09 15:22:03 doligez Exp $
 
 bindir=/usr/local/bin
 libdir=/usr/local/lib/foc
 debug=false
 xmlrpc=false
 
-case `hostname` in
-  macaque*) debug=true;;
+case `whoami` in
+  doligez | prevosto) debug=true;;
 esac
 
 while : ; do
