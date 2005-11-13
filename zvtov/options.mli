@@ -1,6 +1,7 @@
-(* copyright 2005 MPI. *)
-(* $Id: options.mli,v 1.1 2005-07-01 12:26:22 prevosto Exp $ *)
-(* possible options of zvtov. *)
+(*  Copyright 2005 MPI  *)
+(*  $Id: options.mli,v 1.2 2005-11-13 22:49:11 doligez Exp $  *)
+
+(* command-line arguments *)
 
 (** returns the current list of options. *)
 val get_options: unit -> (string * Arg.spec * string) list

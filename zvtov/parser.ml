@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: parser.ml,v 1.9 2005-11-09 15:22:03 doligez Exp $  *)
+(*  $Id: parser.ml,v 1.10 2005-11-13 22:49:11 doligez Exp $  *)
 
 open Token;;
 
@@ -42,7 +42,8 @@ let rec parse filename lb oc =
       cur_proof := pr;
       cur_step := [];
       parse filename lb oc;
-  | TOBE s ->  (* FIXME TODO : supprimer TOBE *)
+(*
+  | TOBE s ->
       Invoke.zenon filename !cur_species !cur_proof !cur_step s oc;
       begin
         let b = Lexing.from_string s in
@@ -52,6 +53,7 @@ let rec parse filename lb oc =
         | TOP -> ()
       end;
       parse filename lb oc;
+*)
   | AUTOPROOF (data, loc, statement, name) ->
       Printf.fprintf oc "(* %s *)\n" loc;
       Invoke.atp filename (statement, name) data loc oc;

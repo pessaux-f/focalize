@@ -1,9 +1,11 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.17 2005-11-09 15:22:03 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.18 2005-11-13 22:49:11 doligez Exp $  *)
 
 let zcmd = ref "zenon";;
 let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
 let addopt = ref [];;
+let verbose = ref false;;
+
 let set_tptp_option () = addopt := ("-itptp" :: !addopt);;
 
 let use_coqterm = ref true;;
@@ -111,6 +113,7 @@ let zenon_loc file (_: string * string) data loc oc =
                        !zopt (String.concat " " (List.rev !addopt))
                        tmp_err tmp_in tmp_out
     in
+    if !verbose then Printf.eprintf "%s\n%!" cmd;
     begin try Sys.remove tmp_err with Sys_error _ -> () end;
     let rc = Sys.command cmd in
     begin match rc with
@@ -128,7 +131,9 @@ let zenon_loc file (_: string * string) data loc oc =
         cleanup ();
         exit (-1);
     | _ ->
-      Printf.eprintf "%s:\n  proof failed\n" loc;
+      Printf.eprintf "%s:\n" loc;
+      if Sys.file_exists tmp_err then copy_file tmp_err stderr;
+      Printf.eprintf "  ### proof failed\n";
       flush stderr;
       output_string oc data;
     end;
@@ -142,11 +147,13 @@ let set_atp f = atp_function:=f
 
 let atp proof loc oc = !atp_function proof loc oc
 
+(*
 let zenon file species proof step data oc =
   let loc = Printf.sprintf "File %s, species %s\n  proof of %s%a"
                            file species proof print_step step
   in zenon_loc file ("lemma", "True") data loc oc;
 ;;
+*)
 
 let zenon_version () =
   let tempfile = Filename.temp_file "zenon_version" ".txt" in

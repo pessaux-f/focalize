@@ -1,14 +1,14 @@
 (*  Copyright 2005 INRIA  *)
-(*  $Id: options.ml,v 1.3 2005-11-09 15:22:03 doligez Exp $  *)
+(*  $Id: options.ml,v 1.4 2005-11-13 22:49:11 doligez Exp $  *)
 
-open Arg
+open Arg;;
 
 let print_version () =
   Printf.printf "%s\n" Version.version;
   exit 0;
 ;;
 
-let options = ref  [
+let options = ref [
   "-nocache", Arg.Clear Cache.active,
            " do not use nor update the proof cache file";
   "-p0", Arg.Unit (fun () -> Invoke.progress_level := 0),
@@ -23,6 +23,8 @@ let options = ref  [
         "    output proofs in term format (default)";
   "-v", Arg.Unit print_version,
      "       print version string and exit";
+  "-verbose", Arg.Set Invoke.verbose,
+           " print out zenon invocations";
   "-zenon", Arg.Set_string Invoke.zcmd,
      Printf.sprintf "<command>    how to invoke zenon (default: \"%s\")"
                    !Invoke.zcmd;

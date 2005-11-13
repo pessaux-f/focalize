@@ -1,10 +1,12 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: token.mli,v 1.4 2005-07-01 12:26:22 prevosto Exp $  *)
+(*  $Id: token.mli,v 1.5 2005-11-13 22:49:11 doligez Exp $  *)
 
 type t =
   | REQUIRE of string
   | SECTION of string
+(*
   | TOBE of string
+*)
   | CHAR of string
   | AUTOPROOF of string * string * string * string
   | EOF
