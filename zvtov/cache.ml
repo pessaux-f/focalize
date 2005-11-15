@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: cache.ml,v 1.3 2005-11-09 15:22:03 doligez Exp $  *)
+(*  $Id: cache.ml,v 1.4 2005-11-15 15:02:26 doligez Exp $  *)
 
 (* format of a cache file:
 file ::= block block
@@ -105,7 +105,7 @@ let write_file oc file =
 let init base version1 version2 =
   if !active then begin
     oldcachefile := base ^ ".pfc";
-    newcachefile := base ^ ".pfctmp";
+    newcachefile := base ^ "-zvtmp.pfc";
     let oc = open_out_bin !newcachefile in
     write_block oc version1 (String.length version1);
     write_block oc version2 (String.length version2);

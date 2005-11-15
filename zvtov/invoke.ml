@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.18 2005-11-13 22:49:11 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.19 2005-11-15 15:02:26 doligez Exp $  *)
 
 let zcmd = ref "zenon";;
 let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
@@ -77,9 +77,9 @@ let zenon_loc file (_: string * string) data loc oc =
       flush stderr;
   | _ -> assert false;
   end;
-  let tmp_in = (file ^ "-tmp.coz") in
-  let tmp_out = (file ^ "-tmp.v") in
-  let tmp_err = (file ^ "-tmp.err") in
+  let tmp_in = (file ^ "-zvtmp.coz") in
+  let tmp_out = (file ^ "-zvtmp.v") in
+  let tmp_err = (file ^ "-zvtmp.err") in
   let cleanup () =
     (try Sys.remove tmp_in with _ -> ());
     (try Sys.remove tmp_out with _ -> ());
@@ -133,7 +133,7 @@ let zenon_loc file (_: string * string) data loc oc =
     | _ ->
       Printf.eprintf "%s:\n" loc;
       if Sys.file_exists tmp_err then copy_file tmp_err stderr;
-      Printf.eprintf "  ### proof failed\n";
+      Printf.eprintf "### proof failed\n";
       flush stderr;
       output_string oc data;
     end;
