@@ -1,5 +1,5 @@
 #  Copyright 2004 INRIA
-#  $Id: Makefile,v 1.9 2005-11-09 15:22:03 doligez Exp $
+#  $Id: Makefile,v 1.10 2005-11-16 14:51:42 doligez Exp $
 
 CAMLFLAGS = -warn-error A
 
@@ -17,19 +17,22 @@ OBJBYT = ${MODULES:%=%.cmo}
 
 include .config_var
 
-.PHONY: default
-default: all
-
-zvtov: ${OBJBYT}
-	${CAMLC} ${CAMLCFLAGS} ${XMLRPCLINK} -o zvtov ${OBJBYT}
 
 .PHONY: all
 all: zvtov
 
+
+zvtov: ${OBJBYT}
+	${CAMLC} ${CAMLCFLAGS} ${XMLRPCLINK} -o zvtov ${OBJBYT}
+
 .PHONY: install
 install:
-	mkdir -p ${BINDIR}
-	cp zvtov ${BINDIR}/
+	mkdir -p "${BINDIR}"
+	cp zvtov "${BINDIR}"/
+
+.PHONY: uninstall
+uninstall:
+	rm -f "${BINDIR}"/zvtov
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
@@ -44,33 +47,16 @@ lexer.ml: lexer.mll
 
 .PHONY: clean
 clean:
-	rm -f *.cmo *.cmi
+	rm -f *.cmo *.cmi *.annot
 	rm -f lexer.ml
-	rm -f Makefile.bak zvtov
+	rm -f zvtov
+
+.PHONY: archclean
+archclean: clean
+	rm -f .config_var
 
 .PHONY: depend
 depend: ${IMPL} ${INTF}
-	mv Makefile Makefile.bak
-	(sed -e '/^#DEPENDENCIES/q' Makefile.bak; \
-         ocamldep ${IMPL} ${INTF}) \
-	>Makefile
+	ocamldep ${IMPL} ${INTF} >.depend
 
-# Do NOT change anything below this line.
-#DEPENDENCIES
-version.cmo: version.cmi 
-version.cmx: version.cmi 
-cache.cmo: cache.cmi 
-cache.cmx: cache.cmi 
-invoke.cmo: cache.cmi invoke.cmi 
-invoke.cmx: cache.cmx invoke.cmi 
-options.cmo: version.cmi invoke.cmi cache.cmi options.cmi 
-options.cmx: version.cmx invoke.cmx cache.cmx options.cmi 
-token.cmo: token.cmi 
-token.cmx: token.cmi 
-lexer.cmo: token.cmi invoke.cmi lexer.cmi 
-lexer.cmx: token.cmx invoke.cmx lexer.cmi 
-parser.cmo: token.cmi lexer.cmi invoke.cmi parser.cmi 
-parser.cmx: token.cmx lexer.cmx invoke.cmx parser.cmi 
-main.cmo: parser.cmi options.cmi invoke.cmi cache.cmi main.cmi 
-main.cmx: parser.cmx options.cmx invoke.cmx cache.cmx main.cmi 
-lexer.cmi: token.cmi 
+include .depend

@@ -1,0 +1,17 @@
+version.cmo: version.cmi 
+version.cmx: version.cmi 
+cache.cmo: cache.cmi 
+cache.cmx: cache.cmi 
+invoke.cmo: cache.cmi invoke.cmi 
+invoke.cmx: cache.cmx invoke.cmi 
+options.cmo: version.cmi invoke.cmi cache.cmi options.cmi 
+options.cmx: version.cmx invoke.cmx cache.cmx options.cmi 
+token.cmo: token.cmi 
+token.cmx: token.cmi 
+lexer.cmo: token.cmi invoke.cmi lexer.cmi 
+lexer.cmx: token.cmx invoke.cmx lexer.cmi 
+parser.cmo: token.cmi lexer.cmi invoke.cmi parser.cmi 
+parser.cmx: token.cmx lexer.cmx invoke.cmx parser.cmi 
+main.cmo: version.cmi parser.cmi options.cmi invoke.cmi cache.cmi main.cmi 
+main.cmx: version.cmx parser.cmx options.cmx invoke.cmx cache.cmx main.cmi 
+lexer.cmi: token.cmi 
