@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.19 2005-11-15 15:02:26 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.20 2006-01-10 10:56:13 doligez Exp $  *)
 
 let zcmd = ref "zenon";;
 let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
@@ -157,7 +157,7 @@ let zenon file species proof step data oc =
 
 let zenon_version () =
   let tempfile = Filename.temp_file "zenon_version" ".txt" in
-  let cmd = Printf.sprintf "%s -v >%s" !zcmd tempfile in
+  let cmd = Printf.sprintf "%s -versions >%s" !zcmd tempfile in
   let rc = Sys.command cmd in
   if rc = 0 then begin
     let ic = open_in tempfile in
