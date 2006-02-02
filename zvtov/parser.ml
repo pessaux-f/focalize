@@ -1,7 +1,8 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: parser.ml,v 1.11 2006-02-02 13:30:03 doligez Exp $  *)
+(*  $Id: parser.ml,v 1.12 2006-02-02 22:13:54 doligez Exp $  *)
 
 open Misc;;
+open Printf;;
 open Token;;
 
 let cur_species = ref "";;
@@ -50,23 +51,28 @@ let parse filename lb oc =
         syntax := "";
         statement := "";
         Buffer.clear buf;
+        Buffer.add_string buf "\n%%begin-auto-proof";
         autoproof ();
     | EOF -> ()
     | _ -> error "unexpected %% header outside begin/end-auto-proof"
   and autoproof () =
     match Lexer.token lb with
     | LOCATION l -> loc := l; autoproof ();
-    | NAME n -> name := n; autoproof ();
+    | NAME n ->
+        name := n;
+        Buffer.add_string buf (sprintf "\n%%%%name: %s" n);
+        autoproof ();
     | SYNTAX s -> syntax := s; autoproof ();
     | STATEMENT s -> statement := s; autoproof ();
     | CHAR c -> Buffer.add_char buf c; autoproof ();
     | ENDAUTOPROOF ->
+        Buffer.add_string buf "\n%%end-auto-proof";
         if !syntax = "TPTP" then Invoke.set_tptp_option ();
         Printf.fprintf oc "(* %s *)\n" !loc;
         Invoke.atp filename (!statement, !name) (Buffer.contents buf) !loc oc;
         loop ();
     | REQUIRE -> output_string oc "Require";
     | BEGINAUTOPROOF -> error "nested begin/end-auto-proof"
-    | EOF -> error "end of file before end-auto-proof"
+    | EOF -> error "unmatched begin-auto-proof at end of file"
   in loop ();
 ;;

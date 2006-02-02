@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.21 2006-02-02 13:30:03 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.22 2006-02-02 22:13:54 doligez Exp $  *)
 
 let zcmd = ref "zenon";;
 let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
@@ -154,15 +154,21 @@ let set_atp f = atp_function:=f
 let atp proof loc oc = !atp_function proof loc oc
 
 let zenon_version () =
-  let tempfile = Filename.temp_file "zenon_version" ".txt" in
+  let tempfile = Filename.temp_file "zvtov_version" ".txt" in
   let cmd = Printf.sprintf "%s -versions >%s" !zcmd tempfile in
   let rc = Sys.command cmd in
   if rc = 0 then begin
+    let b = Buffer.create 1000 in
     let ic = open_in tempfile in
-    let result = try input_line ic with _ -> "" in
+    let rec loop () =
+      Buffer.add_string b (input_line ic);
+      Buffer.add_char b '\n';
+      loop ();
+    in
+    try loop (); with _ -> ();
     close_in ic;
     try_remove tempfile;
-    result
+    Buffer.contents b
   end else ""
 ;;
 

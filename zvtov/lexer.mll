@@ -1,10 +1,10 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: lexer.mll,v 1.9 2006-02-02 13:30:03 doligez Exp $  *)
+(*  $Id: lexer.mll,v 1.10 2006-02-02 22:13:54 doligez Exp $  *)
 {
 open Token;;
 }
 
-let blank = [ ' ' '\t' '\r' '\n' ]
+let blank = [ ' ' '\009' '\010' '\013' ]
 let idchar = [ '0'-'9' 'A'-'Z' 'a'-'z' '_' ]
 let pathchar = [ '0'-'9' '_' ]
 let digit = [ '0'-'9' ]
@@ -12,17 +12,17 @@ let digit = [ '0'-'9' ]
 rule token = parse
   | "Require"
       { REQUIRE }
-  | "\n%%begin-auto-proof"
+  | "\010%%begin-auto-proof"
       { BEGINAUTOPROOF }
-  | "\n%%location:" blank* '[' ([^ ']']* as loc) ']'
+  | "\010%%location:" blank* '[' ([^ ']']* as loc) ']'
       { LOCATION loc }
-  | "\n%%name:" blank* (idchar+ as name)
+  | "\010%%name:" blank* (idchar+ as name)
       { NAME name }
-  | "\n%%syntax:" blank* (idchar+ as syntax)
+  | "\010%%syntax:" blank* (idchar+ as syntax)
       { SYNTAX syntax }
-  | "\n%%statement" ([^'.']+ as statement) '.'
+  | "\010%%statement" ([^'.']+ as statement) '.'
       { STATEMENT statement }
-  | "\n%%end-auto-proof"
+  | "\010%%end-auto-proof"
       { ENDAUTOPROOF }
   | eof
       { EOF }
