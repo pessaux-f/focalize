@@ -1,35 +1,50 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: main.ml,v 1.15 2005-11-09 15:22:03 doligez Exp $  *)
+(*  $Id: main.ml,v 1.16 2006-02-02 13:30:03 doligez Exp $  *)
 
 open Printf;;
 
-let infile = ref None;;
+let infiles = ref [];;
 
 let speclist = Options.get_options ();;
 
-let anon s = infile := Some s;;
+let anon s = infiles := s :: !infiles;;
 
 let usage = "usage: zvtov {option} <file.zv>\noptions are:"
 
+let do_file inf =
+  let ic = open_in_bin inf in
+  let lb = Lexing.from_channel ic in
+  let base = try Filename.chop_extension inf with _ -> inf in
+  let ouf = base ^ ".v" in
+  let oc = open_out_bin ouf in
+  Cache.init base Version.version (Invoke.signature ());
+  Parser.parse inf lb oc;
+  Cache.close ();
+  close_out oc;
+  close_in ic;
+;;
+
 let main () =
   Arg.parse speclist anon usage;
-  match !infile with
-  | None ->
-      Printf.eprintf "error: no input file specified\n";
+  match !infiles with
+  | [] ->
+      eprintf "error: no input file specified\n";
       Arg.usage speclist usage;
-  | Some inf ->
-      let ic = open_in_bin inf in
-      let lb = Lexing.from_channel ic in
-      let base = try Filename.chop_extension inf with _ -> inf in
-      let ouf = base ^ ".v" in
-      let oc = open_out_bin ouf in
-      Cache.init base Version.version (Invoke.signature ());
-      Parser.parse inf lb oc;
-      Cache.close ();
+  | [f] -> do_file f;
+  | l ->
+      let f x =
+        if !Invoke.progress_level > 0 then begin
+          eprintf "%s        \n" x;
+          flush stderr;
+        end;
+        do_file x;
+      in
+      List.iter f (List.rev l);
 ;;
 
 Sys.catch_break true;
 try main () with
+| Misc.Error msg -> eprintf "Error: %s\n" msg; exit 5;
 | Sys_error msg -> eprintf "%s\n" msg; exit 3;
 | Sys.Break -> Cache.close (); eprintf "interrupt\n"; exit 4;
 ;;

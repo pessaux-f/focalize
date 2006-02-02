@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.20 2006-01-10 10:56:13 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.21 2006-02-02 13:30:03 doligez Exp $  *)
 
 let zcmd = ref "zenon";;
 let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
@@ -9,13 +9,19 @@ let verbose = ref false;;
 let set_tptp_option () = addopt := ("-itptp" :: !addopt);;
 
 let use_coqterm = ref true;;
-
+let keep_temp_files = ref false;;
 let progress_level = ref 1;;
+
 let translate_progress x =
   match x with
   | 0 | 1 -> x
   | 2 -> 1
   | _ -> assert false
+;;
+
+let try_remove f =
+  if not !keep_temp_files then
+    try Sys.remove f with Sys_error _ -> ()
 ;;
 
 let copy_file name oc =
@@ -81,9 +87,9 @@ let zenon_loc file (_: string * string) data loc oc =
   let tmp_out = (file ^ "-zvtmp.v") in
   let tmp_err = (file ^ "-zvtmp.err") in
   let cleanup () =
-    (try Sys.remove tmp_in with _ -> ());
-    (try Sys.remove tmp_out with _ -> ());
-    (try Sys.remove tmp_err with _ -> ());
+    try_remove tmp_in;
+    try_remove tmp_out;
+    try_remove tmp_err;
   in
   if Cache.find data tmp_out tmp_err then begin
     begin try
@@ -114,7 +120,7 @@ let zenon_loc file (_: string * string) data loc oc =
                        tmp_err tmp_in tmp_out
     in
     if !verbose then Printf.eprintf "%s\n%!" cmd;
-    begin try Sys.remove tmp_err with Sys_error _ -> () end;
+    try_remove tmp_err;
     let rc = Sys.command cmd in
     begin match rc with
     | 0 ->   (* OK *)
@@ -147,14 +153,6 @@ let set_atp f = atp_function:=f
 
 let atp proof loc oc = !atp_function proof loc oc
 
-(*
-let zenon file species proof step data oc =
-  let loc = Printf.sprintf "File %s, species %s\n  proof of %s%a"
-                           file species proof print_step step
-  in zenon_loc file ("lemma", "True") data loc oc;
-;;
-*)
-
 let zenon_version () =
   let tempfile = Filename.temp_file "zenon_version" ".txt" in
   let cmd = Printf.sprintf "%s -versions >%s" !zcmd tempfile in
@@ -163,7 +161,7 @@ let zenon_version () =
     let ic = open_in tempfile in
     let result = try input_line ic with _ -> "" in
     close_in ic;
-    (try Sys.remove tempfile with _ -> ());
+    try_remove tempfile;
     result
   end else ""
 ;;

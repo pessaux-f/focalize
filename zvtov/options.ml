@@ -1,5 +1,5 @@
 (*  Copyright 2005 INRIA  *)
-(*  $Id: options.ml,v 1.4 2005-11-13 22:49:11 doligez Exp $  *)
+(*  $Id: options.ml,v 1.5 2006-02-02 13:30:03 doligez Exp $  *)
 
 open Arg;;
 
@@ -9,6 +9,8 @@ let print_version () =
 ;;
 
 let options = ref [
+  "-debug", Arg.Set Invoke.keep_temp_files,
+         "   do not remove temporary files";
   "-nocache", Arg.Clear Cache.active,
            " do not use nor update the proof cache file";
   "-p0", Arg.Unit (fun () -> Invoke.progress_level := 0),

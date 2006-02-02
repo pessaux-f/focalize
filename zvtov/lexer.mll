@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: lexer.mll,v 1.8 2005-11-13 22:49:11 doligez Exp $  *)
+(*  $Id: lexer.mll,v 1.9 2006-02-02 13:30:03 doligez Exp $  *)
 {
 open Token;;
 }
@@ -11,31 +11,23 @@ let digit = [ '0'-'9' ]
 
 rule token = parse
   | "Require"
-      { REQUIRE (Lexing.lexeme lexbuf) }
-  | "Section" blank+ idchar* "__" idchar*
-      { SECTION (Lexing.lexeme lexbuf) }
-(*
-  | "Local" blank+ "__l_" [^ '.']* "(* to be proved *)" [^ '.']* "(* Qed *)."
-      { TOBE (Lexing.lexeme lexbuf) }
-  | "Local" blank+ "__lemma_" [^ '.']* "(* to be proved *)" [^ '.']*
-    "(* Qed *)."
-      { TOBE (Lexing.lexeme lexbuf) }
-  | "Local" blank+ "__goal_" [^ '.']* "(* to be proved *)" [^ '.']* "(* Qed *)."
-      { TOBE (Lexing.lexeme lexbuf) }
-*)
-  | "%%begin-auto-proof" blank+
-    "%%location:" blank* '[' ([^ ']']* as loc) ']' blank+
-    "%%name:" blank* (idchar+ as name) blank+
-    "%%syntax:" blank* (idchar+ as syntax) blank+
-    "%%statement" ([^'.']+ as statement) '.' blank+
-    ([^ '%']+ | "%@" [^ '\n']+ '\n')+
-    "%%end-auto-proof" blank+
-      { if syntax = "TPTP" then Invoke.set_tptp_option ();
-        AUTOPROOF (Lexing.lexeme lexbuf, loc, statement, name) }
+      { REQUIRE }
+  | "\n%%begin-auto-proof"
+      { BEGINAUTOPROOF }
+  | "\n%%location:" blank* '[' ([^ ']']* as loc) ']'
+      { LOCATION loc }
+  | "\n%%name:" blank* (idchar+ as name)
+      { NAME name }
+  | "\n%%syntax:" blank* (idchar+ as syntax)
+      { SYNTAX syntax }
+  | "\n%%statement" ([^'.']+ as statement) '.'
+      { STATEMENT statement }
+  | "\n%%end-auto-proof"
+      { ENDAUTOPROOF }
   | eof
       { EOF }
   | _
-      { CHAR (Lexing.lexeme lexbuf) }
+      { CHAR (Lexing.lexeme lexbuf).[0] }
 
 and section = parse
   | "Section" blank+ (idchar* as species) "__" (idchar* as proof)

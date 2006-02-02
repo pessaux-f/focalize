@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.mli,v 1.11 2005-11-13 22:49:11 doligez Exp $  *)
+(*  $Id: invoke.mli,v 1.12 2006-02-02 13:30:03 doligez Exp $  *)
 
 val zcmd : string ref;;
 val zopt : string ref;;
@@ -9,7 +9,7 @@ val verbose : bool ref;;
 val set_tptp_option: unit -> unit
 
 val progress_level : int ref;;
-
+val keep_temp_files : bool ref;;
 val use_coqterm : bool ref;;
 
 (*

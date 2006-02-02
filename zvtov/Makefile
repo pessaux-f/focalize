@@ -1,5 +1,5 @@
 #  Copyright 2004 INRIA
-#  $Id: Makefile,v 1.10 2005-11-16 14:51:42 doligez Exp $
+#  $Id: Makefile,v 1.11 2006-02-02 13:30:03 doligez Exp $
 
 CAMLFLAGS = -warn-error A
 
@@ -9,7 +9,8 @@ CAMLCFLAGS = ${CAMLFLAGS} ${DEBUGFLAGS} ${XMLRPCFLAGS}
 CAMLLEX = ocamllex
 CAMLYACC = ocamlyacc
 
-MODULES = version cache invoke options ${XMLRPCFILE} token lexer parser main
+MODULES = version misc \
+	  cache invoke options ${XMLRPCFILE} token lexer parser main
 
 IMPL = ${MODULES:%=%.ml}
 INTF = ${MODULES:%=%.mli}

@@ -1,6 +1,7 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: parser.ml,v 1.10 2005-11-13 22:49:11 doligez Exp $  *)
+(*  $Id: parser.ml,v 1.11 2006-02-02 13:30:03 doligez Exp $  *)
 
+open Misc;;
 open Token;;
 
 let cur_species = ref "";;
@@ -20,43 +21,52 @@ let prelude = Printf.sprintf "\
   "
 ;;
 
-let prelude_inserted = ref false;;
-
-let rec parse filename lb oc =
-  match Lexer.token lb with
-  | REQUIRE s ->
-      if not !prelude_inserted then begin
-        output_string oc prelude;
-        prelude_inserted := true;
-      end;
-      output_string oc s;
-      parse filename lb oc;
-  | CHAR c ->
-      output_string oc c;
-      parse filename lb oc;
-  | SECTION s ->
-      output_string oc s;
-      let b = Lexing.from_string s in
-      let (sp, pr) = Lexer.section b in
-      cur_species := sp;
-      cur_proof := pr;
-      cur_step := [];
-      parse filename lb oc;
-(*
-  | TOBE s ->
-      Invoke.zenon filename !cur_species !cur_proof !cur_step s oc;
-      begin
-        let b = Lexing.from_string s in
-        match Lexer.lemma b with
-        | LEMMA path -> cur_step := path
-        | GOAL -> cur_step := incr_last !cur_step;
-        | TOP -> ()
-      end;
-      parse filename lb oc;
-*)
-  | AUTOPROOF (data, loc, statement, name) ->
-      Printf.fprintf oc "(* %s *)\n" loc;
-      Invoke.atp filename (statement, name) data loc oc;
-      parse filename lb oc;
-  | EOF -> ()
+let parse filename lb oc =
+  let prelude_inserted = ref false in
+  let check_insert_prelude () =
+    if not !prelude_inserted then begin
+      output_string oc prelude;
+      prelude_inserted := true;
+    end;
+  in
+  let loc = ref "" in
+  let name = ref "" in
+  let syntax = ref "" in
+  let statement = ref "" in
+  let buf = Buffer.create 10000 in
+  let rec loop () =
+    match Lexer.token lb with
+    | REQUIRE ->
+        check_insert_prelude ();
+        output_string oc "Require";
+        loop ();
+    | CHAR c ->
+        output_char oc c;
+        loop ();
+    | BEGINAUTOPROOF ->
+        check_insert_prelude ();
+        loc := "";
+        name := "";
+        syntax := "";
+        statement := "";
+        Buffer.clear buf;
+        autoproof ();
+    | EOF -> ()
+    | _ -> error "unexpected %% header outside begin/end-auto-proof"
+  and autoproof () =
+    match Lexer.token lb with
+    | LOCATION l -> loc := l; autoproof ();
+    | NAME n -> name := n; autoproof ();
+    | SYNTAX s -> syntax := s; autoproof ();
+    | STATEMENT s -> statement := s; autoproof ();
+    | CHAR c -> Buffer.add_char buf c; autoproof ();
+    | ENDAUTOPROOF ->
+        if !syntax = "TPTP" then Invoke.set_tptp_option ();
+        Printf.fprintf oc "(* %s *)\n" !loc;
+        Invoke.atp filename (!statement, !name) (Buffer.contents buf) !loc oc;
+        loop ();
+    | REQUIRE -> output_string oc "Require";
+    | BEGINAUTOPROOF -> error "nested begin/end-auto-proof"
+    | EOF -> error "end of file before end-auto-proof"
+  in loop ();
 ;;
