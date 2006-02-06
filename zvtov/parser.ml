@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: parser.ml,v 1.12 2006-02-02 22:13:54 doligez Exp $  *)
+(*  $Id: parser.ml,v 1.13 2006-02-06 17:56:06 doligez Exp $  *)
 
 open Misc;;
 open Printf;;
@@ -68,7 +68,7 @@ let parse filename lb oc =
     | ENDAUTOPROOF ->
         Buffer.add_string buf "\n%%end-auto-proof";
         if !syntax = "TPTP" then Invoke.set_tptp_option ();
-        Printf.fprintf oc "(* %s *)\n" !loc;
+        Printf.fprintf oc "\n(* %s *)\n" !loc;
         Invoke.atp filename (!statement, !name) (Buffer.contents buf) !loc oc;
         loop ();
     | REQUIRE -> output_string oc "Require";
