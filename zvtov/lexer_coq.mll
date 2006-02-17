@@ -1,4 +1,5 @@
 (*  Copyright 2004 INRIA  *)
+(*  $Id: lexer_coq.mll,v 1.2 2006-02-17 15:55:12 doligez Exp $  *)
 {
 open Parser_coq;;
 open Lexing;;

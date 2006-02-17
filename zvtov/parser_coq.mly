@@ -1,3 +1,6 @@
+/*  Copyright 2006 INRIA  */
+/*  $Id: parser_coq.mly,v 1.2 2006-02-17 15:55:12 doligez Exp $  */
+
 %{
 open Expr;;
 

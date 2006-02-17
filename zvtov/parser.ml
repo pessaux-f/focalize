@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: parser.ml,v 1.14 2006-02-17 15:36:33 lk Exp $  *)
+(*  $Id: parser.ml,v 1.15 2006-02-17 15:55:12 doligez Exp $  *)
 
 open Misc;;
 open Printf;;
@@ -71,7 +71,7 @@ let parse filename lb oc =
         Buffer.add_string buf "\n%%end-auto-proof";
         if !syntax = "TPTP" then Invoke.set_tptp_option ();
         Printf.fprintf oc "\n(* %s *)\n" !loc;
-	let data = Buffer.contents buf in
+        let data = Buffer.contents buf in
         if !with_cime then begin
           Invoke_cime.cime filename data !loc !statement !name oc;
         end else begin

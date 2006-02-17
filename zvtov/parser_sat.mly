@@ -1,3 +1,5 @@
+/*  Copyright 2006 INRIA  */
+/*  $Id: parser_sat.mly,v 1.2 2006-02-17 15:55:12 doligez Exp $  */
 
 %token UNSATISFIABLE
 %token EOF
@@ -14,7 +16,7 @@
 /* Focal Syntax */
 
 cimefile:
-  | UNSATISFIABLE 
+  | UNSATISFIABLE
       {true}
   | EOF
       {false}
