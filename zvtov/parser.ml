@@ -1,14 +1,16 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: parser.ml,v 1.13 2006-02-06 17:56:06 doligez Exp $  *)
+(*  $Id: parser.ml,v 1.14 2006-02-17 15:36:33 lk Exp $  *)
 
 open Misc;;
 open Printf;;
 open Token;;
 
+let with_cime = ref false;;
 let cur_species = ref "";;
 let cur_proof = ref "";;
 let cur_step = ref ([] : int list);;
 let cur_loc = ref None;;
+
 
 let rec incr_last = function
   | [] -> []
@@ -69,7 +71,12 @@ let parse filename lb oc =
         Buffer.add_string buf "\n%%end-auto-proof";
         if !syntax = "TPTP" then Invoke.set_tptp_option ();
         Printf.fprintf oc "\n(* %s *)\n" !loc;
-        Invoke.atp filename (!statement, !name) (Buffer.contents buf) !loc oc;
+	let data = Buffer.contents buf in
+        if !with_cime then begin
+          Invoke_cime.cime filename data !loc !statement !name oc;
+        end else begin
+          Invoke.atp filename (!statement, !name) data !loc oc;
+        end;
         loop ();
     | REQUIRE -> output_string oc "Require";
     | BEGINAUTOPROOF -> error "nested begin/end-auto-proof"

@@ -1,5 +1,6 @@
 *.cm[io]
 *.annot
+*.output
 gmon.out
 .config_var
 zvtov
