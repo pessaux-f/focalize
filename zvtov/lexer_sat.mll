@@ -1,11 +1,9 @@
 (*  Copyright 2006 INRIA  *)
-(*  $Id: lexer_sat.mll,v 1.3 2006-02-20 15:27:26 morisset Exp $  *)
+(*  $Id: lexer_sat.mll,v 1.4 2006-02-21 12:28:57 doligez Exp $  *)
 
 {
 open Parser_sat;;
 open Lexing;;
-
-exception Lex_error of string;;
 
 }
 
