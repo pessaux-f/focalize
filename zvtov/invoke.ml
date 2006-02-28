@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.25 2006-02-17 15:36:33 lk Exp $  *)
+(*  $Id: invoke.ml,v 1.26 2006-02-28 14:33:28 doligez Exp $  *)
 
 let zcmd = ref "zenon";;
 let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
@@ -95,11 +95,11 @@ let zenon_loc file (_: string * string) data loc oc =
     begin try
       Printf.eprintf " (cached)\x0D";
       copy_file tmp_out oc;
-      if file_size tmp_err > 0 then 
-	begin
+      if file_size tmp_err > 0 then
+        begin
           Printf.eprintf "%s\n" loc;
           copy_file tmp_err stderr;
-	end;
+        end;
       if !progress_level >= 2 then Printf.eprintf "\n";
     with x -> cleanup (); raise x
     end;
