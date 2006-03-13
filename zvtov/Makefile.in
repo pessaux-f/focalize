@@ -1,0 +1,92 @@
+#  Copyright 2004 INRIA
+#  $Id: Makefile.in,v 1.1 2006-03-13 10:35:43 prevosto Exp $
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+foclibdir=@foclibdir@
+OTHOPTS=@OTHOPTS@
+XMLRPC=@XMLRPC@
+XMLRPCFILE=@XMLRPCFILE@
+XMLRPCFLAGS=@XMLRPCFLAGS@
+XMLRPCLINK=@XMLRPCLINK@
+
+CAMLFLAGS = -warn-error A
+
+CAMLC = @CAMLC@
+CAMLCFLAGS = $(CAMLFLAGS) $(OTHOPTS) $(XMLRPCFLAGS)
+
+CAMLLEX = @CAMLLEX@
+CAMLYACC = @CAMLYACC@
+
+MODULES = version misc \
+          cache invoke \
+          expr parser_coq lexer_coq parser_sat lexer_sat invoke_cime \
+          $(XMLRPCFILE) token lexer parser options main
+
+IMPL = $(MODULES:%=%.ml)
+INTF = $(MODULES:%=%.mli)
+OBJBYT = $(MODULES:%=%.cmo)
+
+.PHONY: all
+all: zvtov
+
+
+zvtov: $(OBJBYT)
+	$(CAMLC) $(CAMLCFLAGS) $(XMLRPCLINK) -o zvtov $(OBJBYT)
+
+.PHONY: install
+install:
+	mkdir -p "$(bindir)"
+	cp zvtov $(bindir)/
+
+.PHONY: uninstall
+uninstall:
+	rm -f $(bindir)/zvtov
+
+.SUFFIXES: .ml .mli .cmo .cmi .cmx
+
+.ml.cmo:
+	$(CAMLC) $(CAMLCFLAGS) -c $*.ml
+
+.mli.cmi:
+	$(CAMLC) $(CAMLCFLAGS) -c $*.mli
+
+lexer.ml: lexer.mll
+	$(CAMLLEX) lexer.mll
+
+lexer_coq.ml: lexer_coq.mll
+	$(CAMLLEX) lexer_coq.mll
+
+lexer_sat.ml: lexer_sat.mll
+	$(CAMLLEX) lexer_sat.mll
+
+parser_coq.ml: parser_coq.mly
+	$(CAMLYACC) -v parser_coq.mly
+
+parser_coq.mli: parser_coq.ml
+	:
+
+parser_sat.ml: parser_sat.mly
+	$(CAMLYACC) -v parser_sat.mly
+
+parser_sat.mli: parser_sat.ml
+	:
+
+
+.PHONY: clean
+clean:
+	rm -f *.cmo *.cmi *.annot
+	rm -f lexer_coq.ml lexer_sat.ml parser_coq.ml parser_sat.ml
+	rm -f parser_coq.mli parser_sat.mli
+	rm -f zvtov
+
+.PHONY: realclean
+realclean: clean
+	rm -f .config_var
+
+.PHONY: depend
+depend: $(IMPL) $(INTF)
+	ocamldep $(IMPL) $(INTF) >.depend
+
+include .depend
