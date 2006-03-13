@@ -11,3 +11,4 @@ parser_coq.ml
 parser_coq.mli
 parser_sat.ml
 parser_sat.mli
+Makefile
