@@ -1,5 +1,5 @@
 #  Copyright 2004 INRIA
-#  $Id: Makefile.in,v 1.2 2006-03-29 10:46:47 rousse Exp $
+#  $Id: Makefile.in,v 1.3 2006-03-29 11:01:53 rousse Exp $
 
 # directories
 prefix		= @prefix@
@@ -40,8 +40,8 @@ zvtov: $(OBJBYT)
 
 .PHONY: install
 install:
-	mkdir -p "$(bindir)"
-	cp zvtov $(bindir)/
+	mkdir -p "$(DESTDIR)$(bindir)"
+	cp zvtov $(DESTDIR)$(bindir)/
 
 .PHONY: uninstall
 uninstall:
