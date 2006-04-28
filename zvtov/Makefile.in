@@ -1,5 +1,5 @@
 #  Copyright 2004 INRIA
-#  $Id: Makefile.in,v 1.3 2006-03-29 11:01:53 rousse Exp $
+#  $Id: Makefile.in,v 1.4 2006-04-28 14:37:44 prevosto Exp $
 
 # directories
 prefix		= @prefix@
@@ -27,8 +27,24 @@ MODULES = version misc \
           expr parser_coq lexer_coq parser_sat lexer_sat invoke_cime \
           $(XMLRPCFILE) token lexer parser options main
 
+LEXERS = lexer_coq lexer_sat lexer
+PARSERS = parser_coq parser_sat
+
+PLAIN_MODULES = version misc cache invoke expr invoke_cime $(XMLRPCFILE) \
+                token parser options main
+
 IMPL = $(MODULES:%=%.ml)
 INTF = $(MODULES:%=%.mli)
+
+# packaging
+PACKAGE_VERSION         = @PACKAGE_VERSION@
+EXTRA_VERSION           = @EXTRA_VERSION@
+
+DIST_DIR                = ../focal-$(PACKAGE_VERSION)$(EXTRA_VERSION)/zvtov
+
+DIST_FILES              = $(LEXERS:=.mll) $(PARSERS:=.mly) $(MODULES:=.mli) \
+                          $(PLAIN_MODULES:=.ml) Makefile.in .depend
+
 OBJBYT = $(MODULES:%=%.cmo)
 
 .PHONY: all
@@ -76,6 +92,11 @@ parser_sat.ml: parser_sat.mly
 parser_sat.mli: parser_sat.ml
 	:
 
+# distributing files
+.PHONY: dist
+dist:
+	mkdir -p $(DIST_DIR)
+	cp $(DIST_FILES) $(DIST_DIR)
 
 .PHONY: clean
 clean:
