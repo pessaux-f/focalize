@@ -1,5 +1,5 @@
 (*  Copyright 2005 INRIA  *)
-(*  $Id: options.ml,v 1.6 2006-02-17 15:36:33 lk Exp $  *)
+(*  $Id: options.ml,v 1.7 2006-05-11 09:56:31 doligez Exp $  *)
 
 open Arg;;
 
@@ -10,7 +10,7 @@ let print_version () =
 
 let options = ref [
   "-cime",  Arg.Set Parser.with_cime,
-        "    invoke Cime to treat equationnal problems";
+        "    invoke Cime to treat equational problems";
   "-debug", Arg.Set Invoke.keep_temp_files,
          "   do not remove temporary files";
   "-nocache", Arg.Clear Cache.active,
