@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: lexer_coq.mll,v 1.2 2006-02-17 15:55:12 doligez Exp $  *)
+(*  $Id: lexer_coq.mll,v 1.3 2006-06-22 17:09:40 doligez Exp $  *)
 {
 open Parser_coq;;
 open Lexing;;
@@ -9,6 +9,7 @@ exception Lex_error of string;;
 }
 
 let newline = ('\010' | '\013' | "\013\010")
+let inline = [^ '\010' '\013' ]
 let space = [' ' '\009' '\012']
 let blank = [' ' '\009' '\012' '\010' '\013']
 let identchar =  [^ '\000'-'\031' '\"' '\127'-'\255' '(' ')' ' ' '#' ';' '$']
@@ -106,6 +107,7 @@ rule coqtoken = parse
   | "return"                { RETURN }
   | "Set"                   { SET }
   | "then"                  { THEN }
+  | "Theorem"               { THEOREM }
   | "Type"                  { TYPE }
   | "using"                 { USING }
   | "where"                 { WHERE }
@@ -115,16 +117,13 @@ rule coqtoken = parse
     { let s = Lexing.lexeme lexbuf in
         if String.contains s '.' then FQN s else IDENT s }
 
-  | "%%begin-auto-proof" blank* newline blank*
-    "%%location:" blank* '[' [^ ']']* ']' blank* newline blank*
-    "%%name:" blank* (identchar+ as name) blank* newline blank*
-    "%%syntax:" blank* identchar+ blank* newline blank*
-    "%%statement" [^'.']+ '.' blank* newline
-                { lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with
-                    pos_bol = lexbuf.lex_curr_p.pos_cnum;
-                    pos_lnum = lexbuf.lex_curr_p.pos_lnum + 4;
-                  };
-                  BEGINPROOF name }
+
+  | "%%begin-auto-proof" inline*
+      { BEGINPROOF }
+  | "%%name:" space* (coqidchar+ as name) space*
+      { BEGINNAME name }
+  | "%%" coqidchar* ":" inline*
+      { BEGINHEADER }
   | "%%end-auto-proof"      { ENDPROOF }
 
   | eof                     { EOF }

@@ -1,5 +1,7 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.26 2006-02-28 14:33:28 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.27 2006-06-22 17:09:40 doligez Exp $  *)
+
+open Printf;;
 
 let zcmd = ref "zenon";;
 let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
@@ -64,6 +66,58 @@ type pos = Line of int | Nowhere;;
 let get_pos loc =
   try Scanf.sscanf loc "File \"%_[^\"]\", line %d," (fun l -> Line l)
   with Scanf.Scan_failure _ | End_of_file -> Nowhere
+;;
+
+let output_placeholder oc data =
+  let lexbuf = Lexing.from_string data in
+  let name = ref "" in
+  let end_head = ref (-1) in
+  let first_param = ref (-1) in
+  let theorem = ref (-1) in
+  let tail = ref (-1) in
+  let rec loop () =
+    match Lexer_coq.coqtoken lexbuf with
+    | Parser_coq.BEGINPROOF ->
+        end_head := Lexing.lexeme_end lexbuf;
+        loop ();
+    | Parser_coq.BEGINNAME n ->
+        name := n;
+        end_head := Lexing.lexeme_end lexbuf;
+        loop ();
+    | Parser_coq.BEGINHEADER ->
+        end_head := Lexing.lexeme_end lexbuf;
+        loop ();
+    | Parser_coq.PARAMETER ->
+        if !first_param < 0 then first_param := Lexing.lexeme_start lexbuf;
+        loop ();
+    | Parser_coq.DEFINITION ->
+        if !first_param < 0 then first_param := Lexing.lexeme_start lexbuf;
+        loop ();
+    | Parser_coq.THEOREM ->
+        theorem := Lexing.lexeme_start lexbuf;
+        loop ();
+    | Parser_coq.ENDPROOF ->
+        tail := Lexing.lexeme_start lexbuf;
+        loop ();
+    | Parser_coq.EOF ->
+        ()
+    | _ -> loop ();
+  in
+  loop ();
+  let len = String.length data in
+  if !tail < 0 then tail := len;
+  if !first_param < 0 then first_param := len;
+  if !end_head < 0 then end_head := 0;
+  if !theorem >= 0 then
+    output_string oc (String.sub data !theorem (!tail - !theorem))
+  else begin
+    output_string oc "Theorem ";
+    output_string oc !name;
+    output_string oc " :\n";
+    output_string oc (String.sub data !end_head (!first_param - !end_head));
+    output_string oc ".\n";
+  end;
+  output_string oc "Proof. TO_BE_DONE_MANUALLY.\n";
 ;;
 
 let lemma_number = ref 0;;
@@ -143,7 +197,7 @@ let zenon_loc file (_: string * string) data loc oc =
       if Sys.file_exists tmp_err then copy_file tmp_err stderr;
       Printf.eprintf "### proof failed\n";
       flush stderr;
-      output_string oc data;
+      output_placeholder oc data;
     end;
     cleanup ();
   end;

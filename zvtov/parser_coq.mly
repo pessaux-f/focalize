@@ -1,5 +1,5 @@
 /*  Copyright 2006 INRIA  */
-/*  $Id: parser_coq.mly,v 1.2 2006-02-17 15:55:12 doligez Exp $  */
+/*  $Id: parser_coq.mly,v 1.3 2006-06-22 17:09:40 doligez Exp $  */
 
 %{
 open Expr;;
@@ -91,12 +91,15 @@ let mk_coq_apply (e,l) =
 %token RETURN
 %token SET
 %token THEN
+%token THEOREM
 %token TYPE
 %token USING
 %token WHERE
 %token WITH
 
-%token <string> BEGINPROOF
+%token BEGINPROOF
+%token <string> BEGINNAME
+%token BEGINHEADER
 %token ENDPROOF
 
 
@@ -107,6 +110,7 @@ let mk_coq_apply (e,l) =
 /* precedences for coq syntax */
 
 %nonassoc LPAREN_
+%nonassoc let_in
 %nonassoc IDENT FQN
 %nonassoc FORALL EXISTS COMMA_ IF THEN ELSE
 %right DASH_GT_ LT_DASH_GT_
@@ -121,14 +125,23 @@ let mk_coq_apply (e,l) =
 
 %%
 
-/* Focal Syntax */
+/* Coq Syntax */
 
 coqfile:
-  | BEGINPROOF coqexpr coq_hyp_def_list ENDPROOF EOF
-      { ($2, $3)}
+  | coq_hyp_def_list THEOREM IDENT COLON_ coqexpr PERIOD_ EOF
+      { ($5, $1) }
+
+/* deprecated "Focal" format -- kept for compatibility */
+
+  | BEGINPROOF headers BEGINNAME headers coqexpr coq_hyp_def_list ENDPROOF EOF
+      { ($5, $6) }
   | coqexpr coq_hyp_def_list EOF
-      { ($1, $2)}
+      { ($1, $2) }
 ;
+
+headers:
+  | /* empty */         { () }
+  | BEGINHEADER headers { () }
 
 coqident:
   | IDENT { $1 }
@@ -140,7 +153,7 @@ coqexpr:
   | EXISTS coqbindings COMMA_ coqexpr
       { Eex ($2, $4) }
 
-  | LET IDENT COLON_EQ_ coqexpr IN coqexpr
+  | LET IDENT COLON_EQ_ coqexpr IN coqexpr %prec let_in
       {assert false}
 
   | coqexpr DASH_GT_ coqexpr
@@ -163,7 +176,7 @@ coqexpr:
   | TILDE_ coqexpr
       { Enot ($2) }
 
-  | coqexpr1 coqexpr1_list  %prec apply 
+  | coqexpr1 coqexpr1_list  %prec apply
       { mk_coq_apply ($1, $2) }
 
   | coqexpr1
@@ -232,14 +245,14 @@ definition:
       { let (params, expr) = $4 in  Def($2, params, expr) }
 
 coq_hyp_def:
-  | DEPENDS ON parameter 
-      { 
-	$3
+  | DEPENDS ON parameter
+      {
+        $3
 
       }
   | DEPENDS ON definition
-      { 
-	$3
+      {
+        $3
       }
   | parameter  { $1 }
   | definition { $1 }

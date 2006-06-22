@@ -1,5 +1,5 @@
 #  Copyright 2004 INRIA
-#  $Id: Makefile.in,v 1.4 2006-04-28 14:37:44 prevosto Exp $
+#  $Id: Makefile.in,v 1.5 2006-06-22 17:09:40 doligez Exp $
 
 # directories
 prefix		= @prefix@
@@ -23,8 +23,8 @@ CAMLCFLAGS	= $(CAMLFLAGS) $(DEBUGFLAG) $(XMLRPCFLAGS)
 XMLRPCFILE	= @XMLRPCFILE@
 
 MODULES = version misc \
-          cache invoke \
-          expr parser_coq lexer_coq parser_sat lexer_sat invoke_cime \
+          cache \
+          expr parser_coq lexer_coq invoke parser_sat lexer_sat invoke_cime \
           $(XMLRPCFILE) token lexer parser options main
 
 LEXERS = lexer_coq lexer_sat lexer

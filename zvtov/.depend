@@ -4,8 +4,8 @@ misc.cmo: misc.cmi
 misc.cmx: misc.cmi 
 cache.cmo: cache.cmi 
 cache.cmx: cache.cmi 
-invoke.cmo: cache.cmi invoke.cmi 
-invoke.cmx: cache.cmx invoke.cmi 
+invoke.cmo: parser_coq.cmi misc.cmi lexer_coq.cmi cache.cmi invoke.cmi 
+invoke.cmx: parser_coq.cmx misc.cmx lexer_coq.cmx cache.cmx invoke.cmi 
 expr.cmo: expr.cmi 
 expr.cmx: expr.cmi 
 parser_coq.cmo: expr.cmi parser_coq.cmi 
