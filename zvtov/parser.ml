@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: parser.ml,v 1.15 2006-02-17 15:55:12 doligez Exp $  *)
+(*  $Id: parser.ml,v 1.16 2006-07-20 13:19:21 doligez Exp $  *)
 
 open Misc;;
 open Printf;;
@@ -18,9 +18,9 @@ let rec incr_last = function
   | h::t -> h :: (incr_last t)
 ;;
 
-let prelude = Printf.sprintf "\
-   Require Import zenon.\n\
-   Require Import zenon_coqbool.\n\
+let prelude () = "\
+  Require Import zenon.\n\
+  Require Import zenon_coqbool.\n\
   "
 ;;
 
@@ -28,7 +28,7 @@ let parse filename lb oc =
   let prelude_inserted = ref false in
   let check_insert_prelude () =
     if not !prelude_inserted then begin
-      output_string oc prelude;
+      output_string oc (prelude ());
       prelude_inserted := true;
     end;
   in
