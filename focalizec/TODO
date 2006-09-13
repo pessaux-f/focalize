@@ -1,0 +1,26 @@
+07 09 06 (Pierre, Damien, David)
+
+- Définition d'une Syntaxe abstraite de focal
+
+Plan de travail de la refonte du compilo:
+
+- Syntaxe concrète laissée pour plus tard. Ne faut-il pas partir d'une syntaxe
+  Caml à complèter pour faire focal ?
+
+- Typage
+
+- Compilation avec records seulement. En effet, on n'a pas les moyens
+  d'entretenir les 2 modèles de compilation.
+  Attention le code de Renaud ne marche actuellement qu'avec la compilation en
+  objets. On devra donc le faire marcher avec les records ...
+
+13 09 06 (Pierre, Damien)
+
+- Le lexer est réalisé. Caractéristiques: très semblable à celui de Caml, sauf
+quelques différences et surtout simplifications. Ce lexeur permettra les
+infixes généraux de l'utilisateur.
+
+- Le parser est aussi commencé (à poursuivre).
+
+- La syntaxe abstraite est retouchée pour les phrases toplevels et les
+définitions de valeurs.
