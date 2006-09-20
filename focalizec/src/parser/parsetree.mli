@@ -5,24 +5,43 @@
    - resolve global/local/method classification for idents
 *)
 
-type fname = string;;
-type cname = string;;
-type sname = string;;
-type label = string;;
-type constr = string;;
-type node_label = int * string;;
-type external_name = string * string;;
+type location = {
+   l_beg : Lexing.position;
+   l_end : Lexing.position;
+}
+(** Location of an AST node,
+    beginning and ending position of its corresponding source text. *);;
+
+(** Types of various identifiers in the abstract syntax tree. *)
+type fname = string
+     (** File name. *);;
+type cname = string
+     (** Collection name. *);;
+type sname = string
+     (** Species name. *);;
+type tname = string
+     (** Type name. *);;
+type vname = string
+     (** Variable name *);;
+type label = string
+     (** Label name. *);;
+type constr = string
+     (** Constructor name. *);;
+type node_label = int * string
+     (** Node label in proof. *);;
+type external_name = string * string
+     (** External name from Ocaml or Coq: module name and identifier. *);;
 
 type 'a ast = {
-   ast_loc : location;
-   ast_desc : 'a;
+   ast_loc : location; (** The location in the source of the AST node. *)
+   ast_desc : 'a;      (** Description of the node. *)
 };;
 
 type ident = ident_desc ast
 and ident_desc =
-  | I_local of string
-  | I_global of fname option * string
-  | I_method of cname option * string
+  | I_local of vname
+  | I_global of fname option * vname
+  | I_method of cname option * vname
 ;;
 
 type rep_type_expr = rep_type_expr_desc ast
@@ -46,7 +65,6 @@ and type_expr_desc =
 type constant = constant_desc ast
 and constant_desc =
   | C_int of string
-  | C_float of string
   | C_bool of string
   | C_string of string
 ;;
@@ -57,7 +75,7 @@ type rec_flag = | RF_no_rec | RF_rec
 type pattern = pat_desc ast
 and pat_desc =
   | P_const of constant
-  | P_var of ident
+  | P_var of vname
   | P_wild
   | P_app of ident * pattern list
   | P_record of (label * pattern) list
@@ -66,7 +84,7 @@ and pat_desc =
 type expr = expr_desc ast
 and expr_desc =
   | E_const of constant
-  | E_fun of ident list * expr
+  | E_fun of vname list * expr
   | E_var of ident
   | E_app of expr * expr list
   | E_match of expr * (pattern * expr) list
@@ -78,10 +96,10 @@ and expr_desc =
 
 type species_def = species_def_desc ast
 and species_def_desc = {
-   sd_name : sname;
-   sd_params : (string * species_param_type) list;
-   sd_inherits : species_expr list;
-   sd_fields : species_field list;
+  sd_name : sname;
+  sd_params : (string * species_param_type) list;
+  sd_inherits : species_expr list;
+  sd_fields : species_field list;
 }
 
 and species_param_type = species_param_type_desc ast
@@ -107,7 +125,7 @@ and species_field_desc =
   | SF_let of let_def
   | SF_letprop of let_def
   | SF_property of ident * prop
-  | SF_theorem of ident * prop * proof
+  | SF_theorem of theorem_def
   | SF_proof of ident * proof
 
 and let_def = let_def_desc ast
@@ -121,6 +139,13 @@ and binding_desc = {
   b_params : (ident * type_expr option) list;
   b_type : type_expr option;
   b_body : expr;
+}
+
+and theorem_def = theorem_def_desc ast
+and theorem_def_desc = {
+  td_name : ident;
+  td_stmt : prop;
+  td_proof : proof;
 }
 
 and fact = fact_desc ast
@@ -144,8 +169,8 @@ and proof_node_desc =
 
 and statement = statement_desc ast
 and statement_desc = {
-  | s_hyps : hyp list;
-  | s_concl : prop option;
+  s_hyps : hyp list;
+  s_concl : prop option;
 }
 
 and hyp = hyp_desc ast
@@ -155,8 +180,8 @@ and hyp_desc =
 
 and prop = prop_desc ast
 and prop_desc =
-  | P_forall of (ident * type_expr) list * prop
-  | P_exists of (ident * type_expr) list * prop
+  | P_forall of vname list * type_expr option * prop
+  | P_exists of vname list * type_expr option * prop
   | P_imply of prop * prop
   | P_or of prop * prop
   | P_and of prop * prop
@@ -167,22 +192,22 @@ and prop_desc =
 
 type coll_def = coll_def_desc ast
 and coll_def_desc = {
-   cd_name : cname;
-   cd_body : species_expr;
+  cd_name : cname;
+  cd_body : species_expr;
 };;
 
 type type_def = type_def_desc ast
 and type_def_desc = {
-   td_name : tname;
-   td_params : string list;
-   td_body : type_body;
+  td_name : tname;
+  td_params : string list;
+  td_body : type_body;
 }
 
 and type_body = type_body_desc ast
 and type_body_desc =
-   | TD_alias of type_expr
-   | TD_union of (constr * type_expr) list 
-   | TD_record of (label * type_expr) list
+  | TD_alias of type_expr
+  | TD_union of (constr * type_expr) list 
+  | TD_record of (label * type_expr) list
 ;;
 
 type phrase = phrase_desc ast
@@ -195,5 +220,5 @@ and phrase_desc =
   | Ph_let of let_def
   (* a voir: ajouter les expressions a toplevel ? *)
   | Ph_letprop of let_def
-  | Ph_theorem of ident * prop * proof
+  | Ph_theorem of theorem_def
 ;;
