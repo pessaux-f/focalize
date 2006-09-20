@@ -1,10 +1,13 @@
 %{
-(* $Id: parser.mly,v 1.1 2006-09-13 13:59:13 weis Exp $ *)
+(* $Id: parser.mly,v 1.2 2006-09-20 15:26:51 weis Exp $ *)
 
 open Parsetree;;
 
 let mk d = {
-  ast_loc = ;
+  ast_loc = {
+    l_beg = Parsing.symbol_start_pos ();
+    l_beg = Parsing.symbol_end_pos ();
+  };
   ast_desc = d;
 };;
 
@@ -13,6 +16,7 @@ let mk d = {
 %token EOF
 
 %token <string> LIDENT
+%token <string> QIDENT
 %token <string> UIDENT
 %token <string> INT
 %token <string> STRING
@@ -35,6 +39,7 @@ let mk d = {
 %token UNDERSCORE
 %token EQ
 %token SEMI
+%token SEMI_SEMI
 %token COLON
 %token DOT
 
@@ -102,12 +107,15 @@ phrase:
   | def_let SEMI_SEMI { mk (Ph_let $1) }
   /* a voir: ajouter les expressions a toplevel ? */
   | def_letprop SEMI_SEMI { mk (Ph_letprop $1) }
-  | thm  { $1 }
+  | def_theorem SEMI_SEMI { mk (Ph_theorem $1) }
+
+/*
   | atc  { $1 }
   | spec { $1 }
   | collection { $1}
   | type_def { $1 }
-  | foc_header { mkinst(Foc_header($1)) }
+  | foc_header { mk (Foc_header($1)) }
+*/
 ;
 
 def_let:
@@ -148,6 +156,112 @@ def_letprop:
       { mk {ld_rec = RF_no_rec; ld_bindings = [$2]} }
 ;
 
+def_theorem:
+  | THEOREM LIDENT COLON prop PROOF COLON proof
+      { mk { td_name = $2; td_stmt = $4; td_proof = $7 } }
+;
+
+prop:
+  | ALL vname_list opt_in_type_expr COMMA prop
+     { mk (P_forall ($2, $3, $5))
+  | EX vname_list opt_in_type_expr COMMA prop
+     { mk (P_exists ($2, $3, $5))
+  | prop DASH_GT prop
+     { mk (P_imply ($1, $3)) }
+  | prop OR prop
+     { mk (P_or ($1, $3)) }
+  | prop AND prop
+     { mk (P_and ($1, $3)) }
+  | prop LT_DASH_GT prop
+     { mk (P_equiv ($1, $3)) }
+  | NOT prop
+     { mk (P_not $2) }
+  | expr
+     { mk (P_expr $1) }
+  | LPAREN prop RPAREN
+     { mk $2 }
+;
+
+opt_in_type_expr:
+  | IN type_expr { Some $2 }
+  |              { None }
+;
+
+vname_list:
+  | LIDENT vname_list { $1 :: $2 }
+  |                   { [] }
+;
+
+type_expr:
+  | SELF
+     { mk TE_self }
+  | PROP
+     { mk TE_prop }
+  | QIDENT
+     { mk (TE_ident (mk (I_local $1))) }
+  | glob_ident
+     { mk (TE_ident $1) }
+  | LIDENT
+     { mk (TE_ident (mk (I_method (Some $1, "self")))) }
+  | type_expr DASH_GT type_expr
+     { mk (TE_fun ($1, $3)) }
+  | type_expr STAR type_expr
+     { mk (TE_prod ($1, $3)) }
+  | glob_ident LPAREN type_expr_list RPAREN
+     { mk (TE_app ($1, $3)) }
+  | LPAREN type_expr RPAREN
+     { $2 }
+;
+
+type_expr_list:
+  | type_expr COMMA type_expr_list { $1 :: $3 }
+  | type_expr { [$1] }
+;
+
+glob_ident:
+  | opt_lident SHARP LIDENT
+     { mk (I_global ($1, $3)) }
+;
+
+opt_lident:
+  | LIDENT { Some $1 }
+  |        { None }
+;
+
+expr:
+  | INT
+     { mk (E_const (mk (C_int $1))) }
+  | BOOL
+     { mk (E_const (mk (C_bool $1))) }
+  | STRING
+     { mk (E_const (mk (C_string $1))) }
+  | FUN vname_list DASH_GT expr
+     { mk (E_fun ($2, $4)) }
+  | ident
+     { mk (E_var $1) }
+  | expr LPAREN expr_list RPAREN
+     { mk (E_app ($1, $3)) }
+  | MATCH expr WITH clause_list
+     { mk (E_match ($2, $4)) }
+  | IF expr THEN expr ELSE expr
+     { mk (E_if ($2, $4, $6)) }
+  | LET opt_rec binding_list IN expr
+     { mk (E_let ($2, $3, $5)) }
+  | LBRACE record_field_list RBRACE
+     { mk (E_record $2) }
+  | EXTERNAL external_name opt_external_name
+     { mk (E_external ($2, $3)) }
+;
+
+
+ident:   /* y compris les idents locaux */
+clause_list:
+opt_rec:
+binding_list:
+record_field_list:
+external_name:
+opt_external_name:
+  
 
 
 
