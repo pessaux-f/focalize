@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.1 2006-09-13 13:57:49 weis Exp $ *)
+(* $Id: lexer.mll,v 1.2 2006-09-20 15:25:46 weis Exp $ *)
 
 {
 open Lexing
@@ -178,7 +178,9 @@ rule token = parse
           with Not_found ->
             LIDENT s }
   | uppercase identchar *
-      { UIDENT(Lexing.lexeme lexbuf) }       (* No capitalized keywords *)
+      { UIDENT (Lexing.lexeme lexbuf) }
+  | "\'" identchar +
+      { QIDENT (Lexing.lexeme lexbuf) }
   | int_literal
       { INT (Lexing.lexeme lexbuf) }
   | "\""
