@@ -1,6 +1,6 @@
-(* Abstract syntax (deep version, i.e. disambiguation has been done).
-   This is the input type of the type checker.
-   This is the output type of the disambiguation pass.
+(* The parse tree, or shallow abstract syntax.
+   Disambiguation has not been done.
+   This is the input type of the disambiguation pass.
    The disambiguation pass has to :
    - resolve global/local/method classification for idents
 *)
@@ -38,6 +38,7 @@ type 'a ast = {
 };;
 
 type ident = ident_desc ast
+     (** *)
 and ident_desc =
   | I_local of vname
   | I_global of fname option * vname
