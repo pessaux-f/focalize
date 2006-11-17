@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.2 2006-09-20 15:25:46 weis Exp $ *)
+(* $Id: lexer.mll,v 1.3 2006-11-16 23:10:24 weis Exp $ *)
 
 {
 open Lexing
@@ -71,7 +71,8 @@ let reset_string_buffer () =
 let store_string_char c =
   if !string_index >= String.length (!string_buff) then begin
     let new_buff = String.create (String.length (!string_buff) * 2) in
-      String.blit (!string_buff) 0 new_buff 0 (String.length (!string_buff));
+      String.blit (!string_buff) 0
+                  new_buff 0 (String.length (!string_buff));
       string_buff := new_buff
   end;
   String.unsafe_set (!string_buff) (!string_index) c;
@@ -92,36 +93,38 @@ let char_for_backslash = function
   | 'b' -> '\008'
   | 't' -> '\009'
   | c   -> c
+;;
 
 let char_for_decimal_code lexbuf i =
   let c = 100 * (Char.code(Lexing.lexeme_char lexbuf i) - 48) +
            10 * (Char.code(Lexing.lexeme_char lexbuf (i+1)) - 48) +
                 (Char.code(Lexing.lexeme_char lexbuf (i+2)) - 48) in
-  if (c < 0 || c > 255)
+  if c < 0 || c > 255
   then raise (Error(Illegal_escape (Lexing.lexeme lexbuf),
                     Location.curr lexbuf))
   else Char.chr c
+;;
 
 let char_for_hexadecimal_code lexbuf i =
   let d1 = Char.code (Lexing.lexeme_char lexbuf i) in
   let val1 = if d1 >= 97 then d1 - 87
              else if d1 >= 65 then d1 - 55
-             else d1 - 48
-  in
+             else d1 - 48 in
   let d2 = Char.code (Lexing.lexeme_char lexbuf (i+1)) in
   let val2 = if d2 >= 97 then d2 - 87
              else if d2 >= 65 then d2 - 55
-             else d2 - 48
-  in
+             else d2 - 48 in
   Char.chr (val1 * 16 + val2)
+;;
 
 let update_loc lexbuf file line absolute chars =
   let pos = lexbuf.lex_curr_p in
-  let new_file = match file with
-                 | None -> pos.pos_fname
-                 | Some s -> s
-  in
-  lexbuf.lex_curr_p <- { pos with
+  let new_file =
+    match file with
+    | None -> pos.pos_fname
+    | Some s -> s in
+  lexbuf.lex_curr_p <- {
+    pos with
     pos_fname = new_file;
     pos_lnum = if absolute then line else pos.pos_lnum + line;
     pos_bol = pos.pos_cnum - chars;
@@ -130,7 +133,115 @@ let update_loc lexbuf file line absolute chars =
 
 let mk_coqproof s = COQPROOF (String.sub s 2 (String.length s - 4));;
 
-open Format
+let mk_prefixop s =
+  assert (String.length s > 0);
+  match s.[0] with
+  | '`' ->
+    begin match String.length s with
+    | 1 -> BACKQUOTE
+    | n -> BACKQUOTE_OP s end
+  | '~' ->
+    begin match String.length s with
+    | 1 -> TILDE
+    | n -> TILDE_OP s end
+  | '?' ->
+    begin match String.length s with
+    | 1 -> QUESTION
+    | n -> QUESTION_OP s end
+  | '$' ->
+    begin match String.length s with
+    | 1 -> DOLLAR
+    | n -> DOLLAR_OP s end
+  | c ->
+    failwith
+      (Printf.sprintf "Unknown first character of prefix ``%c''" c)
+;;
+
+let mk_infixop s =
+  assert (String.length s > 0);
+  match s.[0] with
+  | '+' ->
+    begin match String.length s with
+    | 1 -> PLUS
+    | n -> PLUS_OP s end
+  | '-' ->
+    begin match String.length s with
+    | 1 -> DASH
+    | 2 -> if s.[1] = '>' then DASH_GT else DASH_OP s end
+    | n -> if s.[1] = '>' then DASH_GT_OP s else DASH_OP s end
+  | '*' ->
+    begin match String.length s with
+    | 1 -> STAR
+    | 2 -> if s.[1] = '*' then STAR_STAR else STAR_OP s end
+    | n -> if s.[1] = '*' then STAR_STAR_OP s else STAR_OP s end
+  | '/' ->
+    begin match String.length s with
+    | 1 -> SLASH
+    | n -> SLASH_OP s end
+  | '%' ->
+    begin match String.length s with
+    | 1 -> PERCENT
+    | n -> PERCENT_OP s end
+  | '&' ->
+    begin match String.length s with
+    | 1 -> AMPER
+    | n -> if s.[1] = '&' then AMPER_AMPER else AMPER_OP s
+    | n -> if s.[1] = '&' then AMPER_AMPER_OP s else AMPER_OP s end
+  | '|' ->
+    begin match String.length s with
+    | 1 -> BAR
+    | 2 -> if s.[1] = '|' then BAR_BAR else BAR_OP s
+    | n -> if s.[1] = '|' then BAR_BAR_OP s else BAR_OP s end
+  | ',' ->
+    match String.length s with
+    | 1 -> COMMA
+    | n -> COMMA_OP s end
+  | ':' ->
+    begin match String.length s with
+    | 1 -> COLON
+    | 2 -> if s.[1] = ':' then COLON_COLON else COLON_OP s
+    | n -> if s.[1] = ':' then COLON_COLON_OP s else COLON_OP s end
+  | ';' ->
+    begin match String.length s with
+    | 1 -> SEMI
+    | 2 -> if s.[1] = ';' then SEMI_SEMI else SEMI_OP s
+    | n -> if s.[1] = ';' SEMI_SEMI_OP s else SEMI_OP s end
+  | '<' ->
+    begin match String.length s with
+    | 1 -> LT
+    | n ->
+      if s.[1] = '-' then
+        if n = 2 then LT_DASH else
+        if s.[2] = '>' then
+          if n = 3 then LT_DASH_GT else LT_DASH_GT_OP s
+        else LT_DASH_OP s
+      else LT_OP s end
+  | '=' ->
+    begin match String.length s with
+    | 1 -> EQ
+    | n -> EQ_OP s end
+  | '>' ->
+    begin match String.length s with
+    | 1 -> GT
+    | n -> GT_OP s end
+  | '@' ->
+    begin match String.length s with
+    | 1 -> AT
+    | n -> AT_OP s end
+  | '^' ->
+    begin match String.length s with
+    | 1 -> HAT
+    | n -> HAT_OP s end
+  | '\\' ->
+    begin match String.length s with
+    | 1 -> BACKSLAH
+    | n -> BACKSLAH_OP s end    
+  | c ->
+    failwith
+      (Printf.sprintf "Unknown first character of infix ``%c''" c)
+;;
+
+open Format;;
 
 let report_error ppf = function
   | Illegal_character c ->
@@ -147,12 +258,47 @@ let report_error ppf = function
 
 let newline = '\010'
 let blank = [' ' '\009' '\012']
-let lowercase = ['a'-'z' '_']
+
+(** (0) Les identificateurs alphanumériques, noms propres et noms communs (!) *)
+
+let lowercase = ['a'-'z']
 let uppercase = ['A'-'Z']
-let identchar =
-  ['A'-'Z' 'a'-'z' '_' '0'-'9']
-let symbolchar =
-  ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~']
+let decimal = ['0'-'9']
+
+let start_lowercase_ident = '_' | lowercase
+let start_uppercase_ident = uppercase
+
+let continue_ident = start_lowercase_ident
+                   | start_uppercase_ident
+                   | decimal
+
+let lowercase_ident = start_lowercase_ident continue_ident*
+let uppercase_ident = start_uppercase_ident continue_ident*
+
+(** (1) Les identificateurs infixes, noms des opérations binaires
+
+   Ne comprennent ni Quote DoubleQuote qui sont des délimiteurs de chaînes et de caractères
+
+   Rq: End_Infix ::= SPACE  (::= blanc tab newline) ( ) [] {} *)
+
+let start_prefix = ['`' '~' '?' '$']
+
+let start_infix =
+  ['+' '-' '*' '/' '%' '&' '|' ',' ':' '<' '=' '>' '@' '^' '\\' ]
+let symbol_char = '!' | start_prefix | start_infix
+
+let continue_infix = start_infix
+                   | start_prefix
+                   | continue_ident
+
+let infix = start_infix continue_infix*
+
+(** (2) Les identificateurs préfixes, noms des opérations unaires
+    Rq: ! and # and . are treated specially and cannot be inside idents. *)
+
+let prefix = start_prefix continue_infix*
+
+(** Integers. *)
 let decimal_literal =
   ['0'-'9'] ['0'-'9' '_']*
 let hex_literal =
@@ -165,21 +311,18 @@ let int_literal =
 rule token = parse
   | newline
       { update_loc lexbuf None 1 false 0;
-        token lexbuf
-      }
+        token lexbuf }
   | blank +
       { token lexbuf }
-  | "_"
-      { UNDERSCORE }
-  | lowercase identchar *
+  | lowercase_ident
       { let s = Lexing.lexeme lexbuf in
           try
             Hashtbl.find keyword_table s
           with Not_found ->
             LIDENT s }
-  | uppercase identchar *
+  | uppercase_ident
       { UIDENT (Lexing.lexeme lexbuf) }
-  | "\'" identchar +
+  | "\'" lowercase_ident
       { QIDENT (Lexing.lexeme lexbuf) }
   | int_literal
       { INT (Lexing.lexeme lexbuf) }
@@ -190,18 +333,17 @@ rule token = parse
         lexbuf.lex_start_p <- !string_start_pos;
         STRING (get_stored_string()) }
   | "'" [^ '\\' '\'' '\010'] "'"
-      { CHAR(Lexing.lexeme_char lexbuf 1) }
+      { CHAR (Lexing.lexeme_char lexbuf 1) }
   | "'\\" ['\\' '\'' '"' 'n' 't' 'b' 'r' ' '] "'"
-      { CHAR(char_for_backslash (Lexing.lexeme_char lexbuf 2)) }
+      { CHAR (char_for_backslash (Lexing.lexeme_char lexbuf 2)) }
   | "'\\" ['0'-'9'] ['0'-'9'] ['0'-'9'] "'"
-      { CHAR(char_for_decimal_code lexbuf 2) }
+      { CHAR (char_for_decimal_code lexbuf 2) }
   | "'\\" 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F'] "'"
-      { CHAR(char_for_hexadecimal_code lexbuf 3) }
+      { CHAR (char_for_hexadecimal_code lexbuf 3) }
   | "'\\" _
       { let l = Lexing.lexeme lexbuf in
         let esc = String.sub l 1 (String.length l - 1) in
-        raise (Error(Illegal_escape esc, lexbuf.lex_start_p))
-      }
+        raise (Error (Illegal_escape esc, lexbuf.lex_start_p)) }
   | "(*"
       { comment_start_pos := [lexbuf.lex_start_p];
         comment lexbuf;
@@ -212,78 +354,51 @@ rule token = parse
         ("\"" ([^ '\010' '\013' '"' ] * as name) "\"")?
         [^ '\010' '\013'] * newline
       { update_loc lexbuf name (int_of_string num) true 0;
-        token lexbuf
-      }
-  | "#"  { SHARP }
-  | "&&" { AMPER_AMPER }
+        token lexbuf }
   | "("  { LPAREN }
   | ")"  { RPAREN }
-  | "*"  { STAR }
-  | ","  { COMMA }
-  | "->" { DASH_GT }
-  | "."  { DOT }
-  | ":"  { COLON }
-  | "::" { COLON_COLON }
-  | ";"  { SEMI }
-  | ";;" { SEMI_SEMI }
-  | "<"  { LT }
-  | "<-" { LT_DASH }
-  | "="  { EQ }
   | "["  { LBRACKET }
   | "]"  { RBRACKET }
   | "{"  { LBRACE }
   | "}"  { RBRACE }
-  | "|"  { BAR }
-  | "||" { BAR_BAR }
-  | ">"  { GT }
-  | "+"  { PLUS }
-  | "-"  { DASH }
-  | "!"  { BANG }
 
-  | ['~' '?'] symbolchar +
-            { PREFIXOP(Lexing.lexeme lexbuf) }
-  | ['=' '<' '>' '|' '&' '$'] symbolchar *
-            { INFIXOP0(Lexing.lexeme lexbuf) }
-  | ['@' '^'] symbolchar *
-            { INFIXOP1(Lexing.lexeme lexbuf) }
-  | ['+' '-'] symbolchar *
-            { INFIXOP2(Lexing.lexeme lexbuf) }
-  | "**" symbolchar *
-            { INFIXOP4(Lexing.lexeme lexbuf) }
-  | ['*' '/' '%'] symbolchar *
-            { INFIXOP3(Lexing.lexeme lexbuf) }
+  | "#"  { SHARP }
+  | "!"  { BANG }
+  | "."  { DOT }
+
+  | prefix { make_prefixop (Lexing.lexeme lexbuf) }
+
+  | infix { make_infixop (Lexing.lexeme lexbuf) }
 
   | "{*" ([^ '*'] | '*' [^ '}'])* "*}"
      { mk_coqproof (Lexing.lexeme lexbuf) }
 
   | eof { EOF }
   | _
-      { raise (Error(Illegal_character (Lexing.lexeme_char lexbuf 0),
-                     lexbuf.lex_start_p))
-      }
+      { raise
+          (Error
+             (Illegal_character
+                (Lexing.lexeme_char lexbuf 0), lexbuf.lex_start_p)) }
 
 and comment = parse
     "(*"
       { comment_start_pos := lexbuf.lex_start_p :: !comment_start_loc;
-        comment lexbuf;
-      }
+        comment lexbuf; }
   | "*)"
       { match !comment_start_pos with
         | [] -> assert false
         | [x] -> comment_start_pos := [];
         | _ :: l -> comment_start_pos := l;
-                    comment lexbuf;
-       }
+                    comment lexbuf; }
   | eof
       { match !comment_start_pos with
         | [] -> assert false
-        | pos :: _ -> comment_start_pos := [];
-                      raise (Error (Unterminated_comment, pos))
-      }
+        | pos :: _ ->
+          comment_start_pos := [];
+          raise (Error (Unterminated_comment, pos)) }
   | newline
       { update_loc lexbuf None 1 false 0;
-        comment lexbuf
-      }
+        comment lexbuf }
   | _
       { comment lexbuf }
 
@@ -292,21 +407,21 @@ and string = parse
       { () }
   | '\\' newline ([' ' '\t'] * as space)
       { update_loc lexbuf None 1 false (String.length space);
-        string lexbuf
-      }
+        string lexbuf }
   | '\\' ['\\' '\'' '"' 'n' 't' 'b' 'r' ' ' '*' ')']
       { store_string_char(char_for_backslash(Lexing.lexeme_char lexbuf 1));
         string lexbuf }
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
       { store_string_char(char_for_decimal_code lexbuf 1);
-         string lexbuf }
+        string lexbuf }
   | '\\' 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F']
       { store_string_char(char_for_hexadecimal_code lexbuf 2);
-         string lexbuf }
+        string lexbuf }
   | '\\' _
-      { raise (Error (Illegal_escape (Lexing.lexeme lexbuf),
-                      lexbuf.lex_start_p))
-      }
+      { raise
+          (Error
+             (Illegal_escape
+                (Lexing.lexeme lexbuf), lexbuf.lex_start_p)) }
   | ( "(*" | "*)" )
       { raise (Error (Comment_in_string, lexbuf.lex_start_p)) }
   | ( newline | eof )
