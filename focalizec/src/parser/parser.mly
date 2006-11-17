@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.2 2006-09-20 15:26:51 weis Exp $ *)
+(* $Id: parser.mly,v 1.3 2006-11-16 23:11:14 weis Exp $ *)
 
 open Parsetree;;
 
@@ -11,6 +11,12 @@ let mk d = {
   ast_desc = d;
 };;
 
+let mk_cons () = mk (CR_global (Some "basics", "Cons"));;
+let mk_nil () = mk (CR_global (Some "basics", "Nil"));;
+let mk_void () = mk (CR_global (Some "basics", "Void"));;
+
+let mk_infix e1 s e2 = E_app (mk (CR_GLOBAL (None, s), [e1; e2]));;
+
 %}
 
 %token EOF
@@ -21,26 +27,59 @@ let mk d = {
 %token <string> INT
 %token <string> STRING
 
+/* Arithmetic operators */
 %token PLUS
+%token <string> PLUS_OP
 %token DASH
+%token <string> DASH_OP
 %token STAR
+%token <string> STAR_OP
 %token SLASH
+%token <string> SLASH_OP
+%token STAR_STAR
+%token <string> STAR_STAR_OP
 %token LPAREN
 %token RPAREN
 %token COMMA
+%token <string> COMMA_OP
 %token QUOTE
 %token DOUBLEQUOTE
 %token BACKSLASH
 %token DASH_GT
+%token <string> DASH_GT_OP
 %token LT_DASH_GT
+%token <string> LT_DASH_GT_OP
 %token SHARP
 %token BANG
 %token BAR
+%token <string> BAR_OP
+%token BAR_BAR
+%token <string> BAR_BAR_OP
+%token AMPER
+%token <string> AMPER_OP
+%token AMPER_AMPER
+%token <string> AMPER_AMPER_OP
 %token UNDERSCORE
 %token EQ
+%token <string> EQ_OP
+%token LT
+%token <string> LT_OP
+%token LT_DASH
+%token <string> LT_DASH_OP
+%token GT
+%token <string> GT_OP
 %token SEMI
+%token <string> SEMI_OP
 %token SEMI_SEMI
+%token <string> SEMI_SEMI_OP
 %token COLON
+%token <string> COLON_OP
+%token COLON_COLON
+%token <string> COLON_COLON_OP
+%token AT
+%token <string> AT_OP
+%token HAT
+%token <string> HAT_OP
 %token DOT
 
 %token ALL
@@ -87,12 +126,48 @@ let mk d = {
 
 %token COQPROOF
 
-%nonassoc LT_DASH_GT
-%right DASH_GT
-%left COMMA AND OR
+/* Precedences and associativities. */
+
+%nonassoc IN
+%nonassoc below_SEMI
+%nonassoc SEMI                          /* below EQ ({lbl=...; lbl=...}) */
+%nonassoc LET                           /* above SEMI ( ...; let ... in ...) */
+%nonassoc below_WITH
+%nonassoc FUNCTION WITH                 /* below BAR  (match ... with ...) */
+%nonassoc AND             /* above WITH (module rec A: SIG with ... and ...) */
+%nonassoc THEN                          /* below ELSE (if ... then ...) */
+%nonassoc ELSE                          /* (if ... then ... else ...) */
+%nonassoc LT_DASH                       /* below COLON_EQ (lbl <- x := e) */
+/* %right    COLON_EQ                   /* expr (e := e := e) */ */
+/* %nonassoc AS */
+%left     BAR BAR_OP                    /* pattern (p|p|p) */
+%nonassoc below_COMMA
+%left     COMMA COMMA_OP                /* expr/expr_comma_list (e,e,e) */
+%nonassoc LT_DASH_GT                    /* <-> */
 %nonassoc NOT
-%left PLUS DASH
-%left STAR SLASH
+%right    DASH_GT DASH_GT_OP            /* core_type2 (t -> t -> t) */
+%right    BAR_BAR BAR_BAR_OP            /* expr (e || e || e) */
+%right    AMPER AMPER_OP AMPER_AMPER AMPER_AMPER_OP  /* expr (e && e && e) */
+%nonassoc below_EQ
+%left     EQ EQ_OP LT LT_OP GT GT_OP   /* expr (e OP e OP e) */
+%right    AT AT_OP HAT HAT_OP          /* expr (e OP e OP e) */
+%right    COLON_COLON COLON_COLON_OP   /* expr (e :: e :: e) */
+%left     PLUS PLUS_OP DASH DASH_OP    /* expr (e OP e OP e) */
+%left     STAR STAR_OP SLASH SLASH_OP  /* expr (e OP e OP e) */
+%right    STAR_STAR STAR_STAR_OP       /* expr (e OP e OP e) */
+%right    SLASH SLASH_OP               /* expr (e OP e OP e) */
+%nonassoc prec_unary_dash              /* unary - */
+%nonassoc prec_constant_constructor    /* cf. simple_expr (C versus C x) */
+%nonassoc prec_constr_appl             /* above AS BAR COLON_COLON COMMA */
+%nonassoc below_SHARP
+%nonassoc SHARP                        /* simple_expr/toplevel_directive */
+%nonassoc below_DOT
+%nonassoc DOT
+/* Finally, the first tokens of simple_expr are above everything else. */
+%nonassoc BEGIN CHAR FALSE INT
+          LBRACE LBRACKET LIDENT LPAREN
+          BACKQUOTE BACKQUOTE_OP TILDE TILDE_OP QUESTION QUESTION_OP DOLLAR DOLLAR_OP
+          STRING TRUE UIDENT
 
 %start main
 %type <Parsetree.phrase list> main
@@ -134,11 +209,6 @@ binding:
        { mk {b_name = $1; b_params = $3; b_type = None; b_body = $6} }
   | LIDENT LPAREN param_list RPAREN IN type_expr EQ expr
        { mk {b_name = $1; b_params = $3; b_type = Some $6; b_body = $8} }
-;
-
-binding_list:
-  | binding { [$1] }
-  | binding AND binding_list { $1 :: $3 }
 ;
 
 param_list:
@@ -218,6 +288,11 @@ type_expr_list:
   | type_expr { [$1] }
 ;
 
+constr_ref:
+  | opt_lident SHARP UIDENT
+     { mk (CR_global ($1, $3)) }
+;
+
 glob_ident:
   | opt_lident SHARP LIDENT
      { mk (I_global ($1, $3)) }
@@ -239,6 +314,10 @@ expr:
      { mk (E_fun ($2, $4)) }
   | ident
      { mk (E_var $1) }
+  | opt_lident SHARP UIDENT %prec constant_constr
+     { mk (E_constr (mk (I_global ($1, $3))), []) }
+  | opt_lident SHARP UIDENT LPAREN expr_list RPAREN
+     { mk (E_constr (mk (I_global ($1, $3))), $5) }
   | expr LPAREN expr_list RPAREN
      { mk (E_app ($1, $3)) }
   | MATCH expr WITH clause_list
@@ -251,566 +330,156 @@ expr:
      { mk (E_record $2) }
   | EXTERNAL external_name opt_external_name
      { mk (E_external ($2, $3)) }
+  | LBRACKET expr_semi_list RBRACKET { $2 }
+  | expr COLON_COLON expr { mk (E_app (mk_cons (), [$1; $3])) }
+  | LPAREN expr COMMA expr_comma_list RPAREN { mk (E_tuple ($2 :: $4)) }
+  | expr HAT expr
+      { mk_infix $1 "^" $3 }
+  | expr HAT_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr AT expr
+      { mk_infix $1 "@" $3 }
+  | expr AT_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr SEMI_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr SEMI_SEMI_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr COLON_COLON_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr PLUS expr
+      { mk_infix $1 "+" $3 }
+  | expr PLUS_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr DASH expr
+      { mk_infix $1 "-" $3 }
+  | expr DASH_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr STAR expr
+      { mk_infix $1 "*" $3 }
+  | expr STAR_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr SLASH expr
+      { mk_infix $1 "/" $3 }
+  | expr SLASH_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr PERCENT expr
+      { mk_infix $1 "/" $3 }
+  | expr PERCENT_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr BACKSLASH expr
+      { mk_infix $1 "\\" $3 }
+  | expr BACKSLASH_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr EQ expr
+      { mk_infix $1 "=" $3 }
+  | expr EQ_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr LT expr
+      { mk_infix $1 "<" $3 }
+  | expr LT_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr LT_DASH_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr LT_DASH_GT_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr GT expr
+      { mk_infix $1 ">" $3 }
+  | expr GT_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr BAR_BAR expr
+      { mk_infix $1 "||" $3 }
+  | expr BAR_BAR_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr AMPER_AMPER expr
+      { mk_infix $1 "&&" $3 }
+  | expr AMPER_AMPER_OP expr
+      { mk_infix $1 $2 $3 }
+  | LPAREN expr RPAREN 
+     { $2 }
+  | LPAREN RPAREN { mk (E_constr (mk_void (), [])) }
 ;
 
-
-ident:   /* y compris les idents locaux */
-clause_list:
-opt_rec:
-binding_list:
-record_field_list:
-external_name:
-opt_external_name:
-  
-
-
-
-foc_header:
-  | USES LIDENT SEMI_COLON SEMI_COLON 
-     { 
-       mkfoc_header(Uses( $2)) }
-  | OPEN LIDENT SEMI_COLON SEMI_COLON 
-     { 
-       mkfoc_header(Open( $2))  }
+expr_semi_list:
+  | { mk (E_app (mk_nil (), [])) }
+  | expr opt_semi { mk (E_app (mk_cons (), [$1; mk (E_app (mk_nil (), []))])) }
+  | expr SEMI expr_semi_list { mk (E_app (mk_cons (), [$1; $3])) } 
+;
+expr_comma_list:
+  | expr { [ $1 ] }
+  | expr COMMA expr_comma_list { $1 :: $3 } 
 ;
 
 ident:
-  | LIDENT { Sample_id( $1 ) }
-  | UIDENT { Sample_id( $1 ) }
+  | glob_ident { $1 }
+  | opt_lident BANG LIDENT
+     { mk (I_method ($1, $3)) }
+  | LIDENT { mk (I_local $1) }
 ;
 
-typ:
-  | typ_simpl { $1 }
-  /* Précedence des tuples comme en OCaml */
-  | typ_simpl TIMES typ_times_list { mktyp( Typ_tuple( $1::$3)) }
+clause_list:
+  | { [] }
+  | clause BAR clause_list { $1 :: $3 }
 ;
 
-typ_simpl:
-  | LIDENT 
-        { 
-	  mktyp(Typ_simple( $1 )) }
-  | QUOTE LIDENT 
-        { 
-	  mktyp(Typ_poly( $2 )) }
-  | LIDENT LPAREN typ_list RPAREN 
-        { 
-	  mktyp(Typ_constr(Sample_id($1), $3)) }
-  | typ_simpl IMPLIES typ_simpl 
-        { 
-	  mktyp(Typ_arrow( $1, $3)) }
-  | SELF 
-        { 
-	  mktyp(Typ_self) }
-  | LPAREN typ RPAREN 
-        { 
-	  $2 }
-  | PROP 
-      { 
-	mktyp(Typ_simple( "Prop" )) } 
+clause:
+  | pattern DASH_GT expr { ($1, $3) }
 ;
 
-typ_times_list:
-  | typ_simpl { [$1]}
-  | typ_simpl TIMES typ_times_list { $1::$3} 
+pattern:
+  | constant { mk (P_const $1) }
+  | LIDENT { mk (P_var $1) }
+  | UNDERSCORE { mk (P_wild) }
+  | constr_ref LPAREN pattern_list RPAREN { mk (P_constr ($1, $3)) }
+  | constr_ref %prec constant_constr { mk (P_constr ($1, [])) }
+  | LBRACKET pattern_semi_list RBRACKET { $2 }
+  | pattern COLON_COLON pattern { mk (P_constr (mk_cons (), [$1; $3])) }
+  | LBRACE label_pattern_list RBRACE { mk (P_record $2) }
+  | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
+  | LPAREN pattern RPAREN { $2 }
+  | LPAREN RPAREN { mk (P_constr (mk_void (), [])) }
 ;
 
-typ_list:
-  | typ { [$1]}
-  | typ COMMA typ_list { $1::$3} 
+pattern_semi_list:
+  | { mk (P_constr (mk_nil (), [])) }
+  | pattern opt_semi { mk (P_constr (mk_cons (), [$1; mk (P_constr (mk_nil (), []))])) }
+  | pattern SEMI pattern_semi_list { mk (P_constr (mk_cons (), [$1; $3])) } 
 ;
-
-exp:
-  | INTEGER_LITTERAL 
-       { 
-         mkexp(Exp_constant( Const_int( int_of_string $1 )))}
-  | STRING_LITTERAL  
-       {  
-	 mkexp(Exp_constant( Const_string( $1 )))}
-  | exp_ident        
-       { 
-	 mkexp(Exp_ident( $1 ))} 
-  | LET rec_opt decl_let EQUAL exp IN exp 
-       { 
-	 mkexp(Exp_let($2, $3, $5, $7)) }
-  | FUN LIDENT IMPLIES exp  
-       { 
-	 mkexp(Fun(Sample_id($2),$4)) }
-  | FUN LPAREN LIDENT IN typ RPAREN  IMPLIES exp  
-       { 
-	 mkexp(Fun_prm(Sample_id($3), $5, $8))}
-  | call             
-       { dbg "exp_9";
-         mkexp($1)}
-  | MATCH exp WITH pipe_opt patt_list END 
-       { 
-	 mkexp(Match($2, $5)) } 
-  | IF exp THEN exp ELSE exp 
-       { dbg "exp_11";
-         mkexp(If($2, $4, $6))} 
-  /* Modif exp -> exp_list pour les tuples */
-  /* | LPAREN exp_list RPAREN { dbg "exp_12b" } */   
-  | LPAREN exp RPAREN 
-      { 
-	$2 }
-  | SELF                           /* Ajouter */
-       { 
-	 mkexp(Self_exp)}   
-;
-
-exp_ident:
-  | LIDENT { Sample_id( $1 ) } 
-  | ident_opt SHARP ident 
-      { 
-        match $3 with
-	| Sample_id(s) -> Sharp_id( $1, s)
-	| _ -> assert( false ) }
-  | self_opt BANG LIDENT 
-      { 
-	Bang_id( $1, $3) }
-  | LIDENT BANG LIDENT 
-      { 
-	Bang_id( Some( Sample_id $1), $3) }
-;
-
-call:
-  exp LPAREN exp_list RPAREN   /* Reduction exp -> exp_ident */
-      { dbg "call_1";
-        Call( $1, $3)}  
-;
-
-call_body:
-  exp LPAREN exp_list RPAREN   /* Reduction exp -> exp_ident */
-      { dbg "call_1";
-        Call_body( $1, $3)}  
-;
-
-ident_opt:
-  |        { None }
-  | ident  { Some( $1) }
-;
-
-self_opt:
-  |        { None }
-  | SELF   { Some( Self_id ) }
-;
-
-rec_opt:
-  |       { Nonrecursive }
-  | REC   { Recursive }
-;
-
-decl_let:
-  | LIDENT prms_opt in_typ_opt 
-       { dbg "decl_let_1";
-         mkdecl_let(Decl_let(Sample_id($1), $2, $3))}
-   /* Ajout des tuples */
-  | prms in_typ_opt 
-       { dbg "decl_let_2";
-         mkdecl_let(Tuple($1, $2))}
-;
-
-prms_opt:
-  |       { None }
-  | prms  { Some $1 }
-;
-
-prms: 
-  | LPAREN prms_list RPAREN { $2 }
-;
-
-prms_list:
-  | prm  { [$1] }
-  | prm COMMA prms_list { $1::$3}
-;
- 
-prm:
-  | LIDENT in_typ_opt 
-      { 
-        mkprm( Prm_in( Sample_id($1), $2))}
-  | LIDENT IS typ                 /* Ajouter */
-      { dbg "prms_list_1b";
-        mkprm( Prm_is( Sample_id($1), $3))} 
-;
-
-in_typ_opt:
-  |         { None }
-  | IN typ  { Some $2 }
-;
-
-
-exp_list:
-  | exp { [$1] }  
-  | exp COMMA exp_list  { $1::$3 }
-;
-
-pipe_opt:
-  |      { dbg "pipe_opt_1" }
-  | PIPE { dbg "pipe_opt_2" }
-;
-
-patt_list:
-  | patt { [$1]}    
-  | patt PIPE patt_list { $1::$3 }
-;
-
-patt:
-  | left_patt IMPLIES exp 
-      { dbg "patt_1";
-        mkpatt(Pattern($1,$3))}
-;   
-
-left_patt:
-  | lid_or_wildcard 
-      { 
-	Lid_wcard($1) }
-  | ident_opt SHARP UIDENT patt_prm_opt 
-      { dbg "left_patt_2";
-        Patt_typ(Sharp_id($1, $3), $4)}
-;
-
-lid_or_wildcard:
-  | LIDENT { Lid(Sample_id($1)) }
-  | UNDERSCORE { Wcard }
-;
-
-patt_prm_opt:
-  |          { None }
-  | patt_prm { Some $1 }
-;
-
-patt_prm:
-  | LPAREN patt_prm_list RPAREN { $2 }
-;
-
-patt_prm_list:
-  | lid_or_wildcard     { [$1] }
-  | lid_or_wildcard COMMA  patt_prm_list { $1::$3 }
-;
-
-
-prop:
-  | exp 
-      { 
-	mkprop(Pprop_exp($1)) }
-  | ALL lident_list IN typ COMMA prop 
-      { 
-	mkprop(Pprop_all( $2, Some $4, $6)) }
-  | ALL lident_list COMMA prop 
-      { 
-	mkprop(Pprop_all( $2, None, $4)) }
-  | EX lident_list IN typ COMMA prop
-      { 
-	mkprop(Pprop_ex( $2, $4, $6)) }
-  | prop AND prop 
-      { 
-	mkprop(Pprop_and( $1,$3)) }
-  | prop OR prop 
-      { 
-	mkprop(Pprop_or( $1,$3)) }
-  | prop IMPLIES prop 
-      { 
-	mkprop(Pprop_implies( $1,$3)) }
-  | prop EQUIV prop 
-      { 
-	mkprop(Pprop_equiv( $1,$3)) }
-  | NOT prop 
-      { 
-	mkprop(Pprop_not( $2 )) }
-  | LPAREN prop RPAREN 
-      { 
-	$2 }
-;
-
-lident_list:
-  | LIDENT { [Sample_id($1)] }
-  | LIDENT lident_list { Sample_id($1)::$2 }
-;
-
-proof:
-  | ASSUMED { mkproof( Assumed )}
-  | zenon_cmd_list { mkproof( Zenon_code( $1 )) }
-  | CODE_COQ { mkproof( Coq_code )}
-;
-
-thm:
-  | THEOREM LIDENT COLON prop PROOF COLON proof SEMI_COLON SEMI_COLON 
-      { 
-	mkinst ( Thm(Sample_id($2), $4, $7)) }
-;
-
-atc:
-  | ATTACH LIDENT ident proof_opt SEMI_COLON SEMI_COLON 
-      { dbg "atc_1";
-        mkinst ( Atc(Sample_id($2), $3, $4))}
-;
-
-proof_opt:
-  |                   { None }
-  | PROOF COLON proof { Some $3 }
-;
-
-lpt_body:
-  | LETPROP LIDENT prms_opt EQUAL prop 
-      { 
-	mklpt_body( Letprop( (Sample_id $2), $3, $5))}
-;
-
-lpt:
-  | lpt_body SEMI_COLON SEMI_COLON { mkinst (Lpt $1) }
-;
-
-
-spec:
-  | SPECIES LIDENT spec_prms_opt inherits_opt EQUAL body_opt END 
-      { dbg "spec_1";
-        mkinst( Spec(Sample_id($2), $3, $4, $6))}
-;
-
-collection:
-  | COLLECTION LIDENT IMPLEMENTS spc_bind EQUAL def_spec_opt END 
-      { dbg "coll_1";
-	mkinst( Coll(Sample_id($2), $4, $6))
-      }
-;
-
-body_opt:
-  |       { None }
-  | body  { Some $1 }
-;
-
-body:
-  | field_list { $1 }
-;
-
-spec_prms_opt:
-  |            { None }
-  | spec_prms  { Some $1 }
-;
-
-spec_prms:
-  | LPAREN spec_prms_list RPAREN { $2 }
-;
-
-spec_prms_list:
-  | spec_prm { [$1] }
-  | spec_prm COMMA spec_prms_list { $1::$3 }
-;
-
-spec_prm:
-  | LIDENT IN typ 
-      { 
-        mkspec_prm(Spec_prm_in(Sample_id($1), $3)) }
-  | LIDENT IS spc_bind 
-      { 
-        mkspec_prm(Spec_prm_is(Sample_id($1), $3)) }
-;
-
-inherits_opt:
-  |             { None }
-  | INHERITS inh_list { Some $2 }
-;
-
-inh_list:
-  | inh { [$1] }
-  | inh COMMA inh_list { $1::$3 }
-;
-
-inh:
-  | spc_bind { $1 }
-;
-
-spc_bind:
-  | LIDENT inst_prm_opt { (mkspc_bind (Sample_id $1) $2) }
-;
-
-inst_prm_opt:
-  |                { None }
-  | LPAREN inst_prm_list RPAREN  { Some $2 }
-;
-
-inst_prm_list:
-  | inst_prm { [$1] }
-  | inst_prm COMMA inst_prm_list { $1::$3 }
-;
-
-inst_prm:
-  | exp { $1 }
-;
-
-field_list:
-  | field { [$1] }  
-  | field field_list { $1::$2 }
-;
-
-field:
-  | def_spec { mkfield(Def_spec($1)) }  
-  | decl_spec { mkfield(Decl_spec($1)) }  
-  | LOCAL def_spec { mkfield(Local_def_spec($2)) }  
-;
-
-def_spec:
-
-  | def_body SEMI_COLON 
-       { 
-	 mkdef_spec( Def_body($1)) } 
-  | lpt_body SEMI_COLON 
-       { 
-	 mkdef_spec( Lpt_body($1)) } 
-  | PROOF OF LIDENT EQUAL dep_clause_list_opt proof SEMI_COLON 
-       { 
-	 mkdef_spec(Proof_of(Sample_id($3), $5, $6)) } 
-  | REP EQUAL typ SEMI_COLON 
-       { 
-	 mkdef_spec(Def_Rep($3))  }
-  | THEOREM LIDENT COLON prop PROOF COLON dep_clause_list_opt proof SEMI_COLON 
-       { dbg "def_spec_5";
-	 mkdef_spec(Theorem(Sample_id($2), $4, $7, $8))} 
-;
-
-decl_spec:
-  | SIG LIDENT IN typ SEMI_COLON  
-      { 
-	mkdecl_spec(Sig( Sample_id($2), $4)) } 
-  | PROPERTY LIDENT COLON prop SEMI_COLON  /* Modif typ -> prop */ 
-      { 
-	mkdecl_spec(Decl_prop( Sample_id($2), $4)) }  
-  | REP SEMI_COLON  
-      { 
-	mkdecl_spec(Decl_rep) }
-;
-
-def_spec_opt:
-  |               { None } 
-  | def_spec_list { Some $1 } 
-;
-
-def_spec_list:
-  | def_spec      { [$1] } 
-  | def_spec def_spec_list { $1::$2 } 
-;
-
-dep_clause_list_opt:
-  |                 { None } 
-  | dep_clause_list { Some $1 } 
-;
-
-dep_clause_list:
-  |dep_clause { [$1] } 
-  |dep_clause dep_clause_list { $1::$2 } 
-;
-
-dep_clause:
-  | DECL colon_opt lident_list SEMI_COLON 
-         { 
-	   mkdep_clause(Decl ($3)) } 
-  | DEF colon_opt lident_list SEMI_COLON  
-         { 
-	   mkdep_clause(Dep ($3))  } 
-;
-
-colon_opt:
-  |       { dbg "colon_opt_1" } 
-  | COLON { dbg "colon_opt_2" } 
-;
-
-type_def:
-  | TYPE LIDENT lident_list_opt EQUAL type_decl SEMI_COLON SEMI_COLON 
-      { dbg "type_def_1";
-        mkinst( Type_def( Sample_id($2), $3, $5))} 
-;
-
-lident_list_opt:
-  |             { None } 
-  | lident_list { Some $1 } 
-;
-
-type_decl:
-  | ALIAS typ { mktype_decl(Alias($2)) } 
-  | list_decl_list {  mktype_decl(List_decl($1)) } 
-;
-
-list_decl_list:
-  | list_decl { [$1] } 
-  | list_decl list_decl_list { $1::$2 } 
-;
-
-list_decl:
-  | CAML ml_path_lident SEMI_COLON 
-      { 
-	mklist_decl(Caml($2)) } 
-  | CAML_LINK ml_path_lident SEMI_COLON 
-      { 
-	mklist_decl(Caml_link($2)) } /* Ajouter */ 
-  | COQ_LINK ident SEMI_COLON 
-      { dbg "list_decl_2";
-	mklist_decl(Coq_link($2)) } 
-  | constr SEMI_COLON 
-      { 
-	mklist_decl($1)} 
-;
-
-ml_path_lident:
-  | ml_path_opt LIDENT { dbg "ml_path_lident_1";
-			 begin
-		           match $1 with
-			   | None -> [$2]
-			   | Some l -> l@[$2]
-			 end} 
-;
-
-ml_path_uident:
-  | ml_path_opt UIDENT { dbg "ml_path_uident_1";
-			 begin
-		           match $1 with
-			   | None -> [$2]
-			   | Some l -> l@[$2]
-			 end} 
-;
-
-ml_path_opt:
-  |         { None } 
-  | ml_path { Some $1 } 
-;
-
-ml_path:
-  | UIDENT DOT { [$1] } 
-  | UIDENT DOT ml_path { $1::$3 } 
+pattern_comma_list:
+  | pattern { [ $1 ] }
+  | pattern COMMA pattern_comma_list { $1 :: $3 } 
 ;
 
-constr:
-  | UIDENT constr_opt IN typ  { Constr($1, $2, $4) }
+label_pattern_list:
+  | LIDENT EQ pattern opt_semi { [ ($1, $3) ] }
+  | LIDENT EQ pattern SEMI label_pattern_list { ($1, $3) :: $5 }
 ;
 
-constr_opt:
-  |   { None }
-  | LPAREN ml_path_uident ident_opt RPAREN 
-      { dbg "constr_opt_2";
-        Some( $2, $3)}
+opt_semi:
+  | { () }
+  | SEMI { () }
 ;
-
-
 
-/* Syntaxe Zenon */
-zenon_cmd_list:
-  | zenon_cmd { [$1] }
-  | zenon_cmd zenon_cmd_list { $1::$2 }
+opt_rec:
+  | { RF_no_rec }
+  | REC { RF_rec }
 ;
 
-zenon_cmd:
-  | BY zenon_ident_list_opt { Zenon_by( $2) }
-  | DEF zenon_ident_list { Zenon_def($2) }
+binding_list:
+  | { [] }
+  | binding AND binding_list { $1 :: $3 }
 ;
 
-zenon_ident_list_opt:
-  |                  { None}
-  | zenon_ident_list { Some $1 }
+record_field_list:
+  | label EQ expr { [ ($1, $3) ] }
+  | label EQ expr SEMI record_field_list { ($1, $3) :: $5 }
 ;
 
-zenon_ident_list:
-  | zenon_ident { [$1] }
-  | zenon_ident COMMA zenon_ident_list { $1::$3 }
+external_name:
+  | STRING { $1 }
 ;
 
-zenon_ident:
-  | exp_ident { $1 }
+opt_external_name:
+  | { None }
+  | STRING { Some $1 }
 ;
