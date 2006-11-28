@@ -1,4 +1,5 @@
 07 09 06 (Pierre, Damien, David)
+================================
 
 - Définition d'une Syntaxe abstraite de focal
 
@@ -15,6 +16,7 @@ Plan de travail de la refonte du compilo:
   objets. On devra donc le faire marcher avec les records ...
 
 13 09 06 (Pierre, Damien)
+================================
 
 - Le lexer est réalisé. Caractéristiques: très semblable à celui de Caml, sauf
 quelques différences et surtout simplifications. Ce lexeur permettra les
@@ -24,3 +26,131 @@ infixes généraux de l'utilisateur.
 
 - La syntaxe abstraite est retouchée pour les phrases toplevels et les
 définitions de valeurs.
+
+12-10-06 (Pierre, David)
+========================
+
+Boolean operators: && || ~| (almost as in Caml)
+Proposition operators: /\ \/ -> <-> ~ (as in Coq)
+
+Infixes généraux:
+- une suite de symboles est supposée être un identificateur infix
+  ex: + ++ ** -><- :=
+
+- la précédence de l'infixe correspondant est donnée par le ou les premiers
+caractères du symbole; par exemple ++ a la même précédence (et règle
+d'associativité que +), **+ a la même précédence que **.
+
+- Tout token commençant par un caractère symbolique (i.e. non alpha-numérique)
+ définit une priorité dans le parser. Exemple @ définit une priorité, de même
+ que : et même , ou ;.
+
+(0) Les identificateurs alphanumériques, noms propres et noms communs (!)
+
+Start_L_Ident ::= [_a-z]
+Start_U_Ident ::= [A-Z]
+
+Continue_Ident ::= [_a-zA-Z0-9]
+
+L_Ident := Start_L_Ident (Continue_Ident*)
+U_Ident := Start_U_Ident (Continue_Ident*)
+
+(1) Les identificateurs infixes, noms d'opérations binaires
+
+Start_Infix ::= + - * ^ @ % & | , : = \ / < > #
+         Pas ' ni " qui sont des délimiteurs de chaînes et caractères
+
+Continue_Infix := Start_Infix
+                | Start_Prefix
+                | Continue_Ident
+
+Infix ::= Start_Infix (Continue_Infix*)
+
+Rq: End_Infix ::= SPACE  (::= blanc tab newline) ( ) [] {}
+
+(2) Les identificateurs préfixes, noms d'opérations unaires
+
+Start_Prefix ::= ! ~ ? $
+
+Prefix := Start_Prefix (Continue_Infix*)
+
+() [] {} sont des délimiteurs (sauf sans le cas (* *))
+
+Exemples: 
+ _!!_ est un infixe
+ ~| est un prefixe
+
+ a + x est autorisé, c'est une addition
+ a+x est illégal n'est pas une addition
+ (a )+( x) est une addition
+
+2006-10-19 (Pierre, David)
+==========================
+
+2006-11-16 (Pierre, David, Damien)
+==================================
+Continue on the parser: more on expressions + patterns
+
+2006-11-17 (Pierre)
+==================================
+Ajout des infixes à revoir avec les autres membres de compilation.
+
+2006-11-23 (Pierre, David, Damien)
+==================================
+More parser + def coll + espèces.
+
+2006-11-27 (Pierre)
+==================================
+
+More lexer spec + parser.
+
+The first character of an ident which is not an _ gives the class of the identifier:
+
+L_ident_starter ::= [a-z]
+U_ident_starter ::= [A-Z]
+I_ident_starter ::= [+ - * ^ @ % & | , : = \ / < > #]
+P_ident_starter ::= [! ~ ? $]
+
+ident_spacer ::= [_] [0-9]
+
+Continue_ident ::=
+  | ident_spacer
+  | L_ident_starter
+  | U_ident_starter
+  | I_ident_starter
+  | P_ident_starter
+  | decimal_digit
+
+Start_L_ident ::= [_]* L_ident_starter
+Start_U_ident ::= [_]* U_ident_starter
+Start_I_ident ::= [_]* I_ident_starter
+Start_P_ident ::= [_]* P_ident_starter
+
+L_Ident :=
+         | Start_L_Ident (Continue_Ident*)
+         | [_] ((ident_spacer)*) 
+U_Ident := Start_U_Ident (Continue_Ident*)
+P_Ident := Start_P_Ident (Continue_Ident*)
+I_Ident := Start_I_Ident (Continue_Ident*)
+
+L_Ident are Lowercase identifiers.
+U_Ident are Uppercase identifiers.
+I_Ident are Infix identifiers.
+P_Ident are Prefix identifiers.
+
+Remarques:
+ -- \' et \" sont les délimiteurs de caractères et de chaînes: il ne figurent pas
+    dans les identificateurs.
+ -- () [] {} sont des délimiteurs (sauf sans le cas (* *))
+
+Exemples:
+ x, _x, x1, _1, x+, x*, _, __, sont des L_Ident
+ A, _A, A1, _A+, sont des U_Ident
+ +, _+_, +mat, sont des I_Ident
+ !, ~!, _!!_ sont des P_Ident
+ 0xFF
+
+ a + x est une addition
+ a+x est un L_Ident (ce n'est donc pas une addition)
+ (a )+( x) est une addition
+
