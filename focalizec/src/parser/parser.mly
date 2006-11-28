@@ -1,12 +1,12 @@
 %{
-(* $Id: parser.mly,v 1.3 2006-11-16 23:11:14 weis Exp $ *)
+(* $Id: parser.mly,v 1.4 2006-11-28 22:04:51 weis Exp $ *)
 
 open Parsetree;;
 
 let mk d = {
   ast_loc = {
     l_beg = Parsing.symbol_start_pos ();
-    l_beg = Parsing.symbol_end_pos ();
+    l_end = Parsing.symbol_end_pos ();
   };
   ast_desc = d;
 };;
@@ -134,7 +134,7 @@ let mk_infix e1 s e2 = E_app (mk (CR_GLOBAL (None, s), [e1; e2]));;
 %nonassoc LET                           /* above SEMI ( ...; let ... in ...) */
 %nonassoc below_WITH
 %nonassoc FUNCTION WITH                 /* below BAR  (match ... with ...) */
-%nonassoc AND             /* above WITH (module rec A: SIG with ... and ...) */
+%nonassoc AND                           /* above WITH */
 %nonassoc THEN                          /* below ELSE (if ... then ...) */
 %nonassoc ELSE                          /* (if ... then ... else ...) */
 %nonassoc LT_DASH                       /* below COLON_EQ (lbl <- x := e) */
@@ -183,14 +183,70 @@ phrase:
   /* a voir: ajouter les expressions a toplevel ? */
   | def_letprop SEMI_SEMI { mk (Ph_letprop $1) }
   | def_theorem SEMI_SEMI { mk (Ph_theorem $1) }
+  | species { mk (Ph_species $1) }
+  | collection { mk (Ph_coll $1) }
+  | type_def { mk (Ph_type $1) }
+  | OPEN STRING SEMI_SEMI { mk (Ph_open $2) }
+  | USES STRING SEMI_SEMI { mk (Ph_use $2) } /* USES should be USE */
+;
 
-/*
-  | atc  { $1 }
-  | spec { $1 }
-  | collection { $1}
-  | type_def { $1 }
-  | foc_header { mk (Foc_header($1)) }
-*/
+type_def:
+  | TYPE LIDENT lident_list EQUAL type_def_body SEMI_SEMI
+      { mk {td_name = $2; td_params = $3; td_body = $5; } }
+;
+
+lident_list:
+  | { [] }
+  | LIDENT lident_list { $1 :: $2}
+;
+
+type_def_body:
+  | ALIAS type_expr { mk (TD_alias $2) } 
+  | sum_def { mk (TD_union $2) } 
+  | prod_def { mk (TD_record $2) } 
+;
+
+sum_def:
+
+;
+
+prod_def:
+
+;
+
+species:
+  | SPECIES LIDENT species_params inherits EQUAL species_body END 
+      { mk { sd_name = $2; sd_params = $3; sd_inherits = $4; sd_fields = $6; } }
+
+;
+
+species_params:
+  | { [] }
+  | LPAREN species_param_list RPAREN { $2 }
+;
+
+species_param_list:
+  | species_param { [$1] }
+  | species_param COMMA species_param_list { $1 :: $3 }
+;
+
+species_param:
+  | LIDENT IN ident { ($1, mk (SPT_in $3)) }
+  | LIDENT IS species_expr { ($1, mk (SPT_is $3)) }
+;
+
+inherits:
+;
+
+species_body:
+;
+
+collection:
+  | COLLECTION LIDENT IMPLEMENTS species_expr EQUAL END
+      { mk { cd_name = $2; cd_body = $4; } }
+;
+
+species_expr:
 ;
 
 def_let:

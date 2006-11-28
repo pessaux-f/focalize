@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.3 2006-11-16 23:10:24 weis Exp $ *)
+(* $Id: lexer.mll,v 1.4 2006-11-28 22:04:51 weis Exp $ *)
 
 {
 open Lexing
@@ -107,13 +107,15 @@ let char_for_decimal_code lexbuf i =
 
 let char_for_hexadecimal_code lexbuf i =
   let d1 = Char.code (Lexing.lexeme_char lexbuf i) in
-  let val1 = if d1 >= 97 then d1 - 87
-             else if d1 >= 65 then d1 - 55
-             else d1 - 48 in
+  let val1 =
+    if d1 >= 97 then d1 - 87 else
+    if d1 >= 65 then d1 - 55 else
+    d1 - 48 in
   let d2 = Char.code (Lexing.lexeme_char lexbuf (i+1)) in
-  let val2 = if d2 >= 97 then d2 - 87
-             else if d2 >= 65 then d2 - 55
-             else d2 - 48 in
+  let val2 =
+    if d2 >= 97 then d2 - 87 else
+    if d2 >= 65 then d2 - 55 else
+    d2 - 48 in
   Char.chr (val1 * 16 + val2)
 ;;
 
@@ -272,9 +274,6 @@ let continue_ident = start_lowercase_ident
                    | start_uppercase_ident
                    | decimal
 
-let lowercase_ident = start_lowercase_ident continue_ident*
-let uppercase_ident = start_uppercase_ident continue_ident*
-
 (** (1) Les identificateurs infixes, noms des opérations binaires
 
    Ne comprennent ni Quote DoubleQuote qui sont des délimiteurs de chaînes et de caractères
@@ -284,12 +283,18 @@ let uppercase_ident = start_uppercase_ident continue_ident*
 let start_prefix = ['`' '~' '?' '$']
 
 let start_infix =
-  ['+' '-' '*' '/' '%' '&' '|' ',' ':' '<' '=' '>' '@' '^' '\\' ]
+  [ '+' '-' '*' '/' '%' '&' '|' ':' ';' '<' '=' '>' '@' '^' '\\' ]
 let symbol_char = '!' | start_prefix | start_infix
 
 let continue_infix = start_infix
                    | start_prefix
                    | continue_ident
+
+(* Identifiers *)
+
+let lowercase_ident = start_lowercase_ident continue_ident*
+
+let uppercase_ident = start_uppercase_ident continue_ident*
 
 let infix = start_infix continue_infix*
 
@@ -316,10 +321,8 @@ rule token = parse
       { token lexbuf }
   | lowercase_ident
       { let s = Lexing.lexeme lexbuf in
-          try
-            Hashtbl.find keyword_table s
-          with Not_found ->
-            LIDENT s }
+        try Hashtbl.find keyword_table s
+        with Not_found -> LIDENT s }
   | uppercase_ident
       { UIDENT (Lexing.lexeme lexbuf) }
   | "\'" lowercase_ident
@@ -362,9 +365,10 @@ rule token = parse
   | "{"  { LBRACE }
   | "}"  { RBRACE }
 
-  | "#"  { SHARP }
-  | "!"  { BANG }
-  | "."  { DOT }
+  | "#"  { SHARP } (* To be suppressed. *)
+  | "!"  { BANG } (* To be suppressed. *)
+(*  | "."  { DOT } *)
+  | "," { COMMA }
 
   | prefix { make_prefixop (Lexing.lexeme lexbuf) }
 
@@ -408,7 +412,7 @@ and string = parse
   | '\\' newline ([' ' '\t'] * as space)
       { update_loc lexbuf None 1 false (String.length space);
         string lexbuf }
-  | '\\' ['\\' '\'' '"' 'n' 't' 'b' 'r' ' ' '*' ')']
+  | '\\' ['(' '\\' '\'' '"' 'n' 't' 'b' 'r' ' ' '*' ')']
       { store_string_char(char_for_backslash(Lexing.lexeme_char lexbuf 1));
         string lexbuf }
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']

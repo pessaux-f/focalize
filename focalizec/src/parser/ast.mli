@@ -222,7 +222,7 @@ and type_body_desc =
 
 type phrase = phrase_desc ast
 and phrase_desc =
-  | Ph_uses of fname
+  | Ph_use of fname
   | Ph_open of fname
   | Ph_species of species_def
   | Ph_coll of coll_def
