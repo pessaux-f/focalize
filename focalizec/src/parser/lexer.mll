@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.4 2006-11-28 22:04:51 weis Exp $ *)
+(* $Id: lexer.mll,v 1.5 2006-12-01 15:42:19 weis Exp $ *)
 
 {
 open Lexing
@@ -57,16 +57,21 @@ List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
     "theorem", THEOREM;
     "type", TYPE;
     "uses", USES;
+    "value", VALUE;
+    "Coq", COQ;
+    "Caml", CAML;
     "with", WITH;
   ];;
 
-let initial_string_buffer = String.create 256
+let initial_string_buffer = String.create 256;;
 let string_buff = ref initial_string_buffer
-let string_index = ref 0
+and string_index = ref 0
+;;
 
 let reset_string_buffer () =
   string_buff := initial_string_buffer;
   string_index := 0
+;;
 
 let store_string_char c =
   if !string_index >= String.length (!string_buff) then begin
@@ -77,11 +82,13 @@ let store_string_char c =
   end;
   String.unsafe_set (!string_buff) (!string_index) c;
   incr string_index
+;;
 
 let get_stored_string () =
   let s = String.sub (!string_buff) 0 (!string_index) in
   string_buff := initial_string_buffer;
   s
+;;
 
 let string_start_pos = ref None;;
 let comment_start_pos = ref [];;
@@ -134,6 +141,9 @@ let update_loc lexbuf file line absolute chars =
 ;;
 
 let mk_coqproof s = COQPROOF (String.sub s 2 (String.length s - 4));;
+
+let mk_prefixop_prefix s = PIDENT s;;
+let mk_infixop_prefix s = IIDENT s;;
 
 let mk_prefixop s =
   assert (String.length s > 0);
@@ -370,9 +380,11 @@ rule token = parse
 (*  | "."  { DOT } *)
   | "," { COMMA }
 
-  | prefix { make_prefixop (Lexing.lexeme lexbuf) }
+  | prefix { mk_prefixop (Lexing.lexeme lexbuf) }
+  | "( " prefix " )" { mk_prefixop_prefix (Lexing.lexeme lexbuf) }
 
-  | infix { make_infixop (Lexing.lexeme lexbuf) }
+  | "( " infix " )" { mk_infixop_prefix (Lexing.lexeme lexbuf) }
+  | infix { mk_infixop (Lexing.lexeme lexbuf) }
 
   | "{*" ([^ '*'] | '*' [^ '}'])* "*}"
      { mk_coqproof (Lexing.lexeme lexbuf) }
