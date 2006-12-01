@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.5 2006-12-01 15:48:28 weis Exp $ *)
+(* $Id: parser.mly,v 1.6 2006-12-01 16:35:03 weis Exp $ *)
 
 open Parsetree;;
 
@@ -27,8 +27,13 @@ let mk_infix e1 s e2 = E_app (mk (CR_GLOBAL (None, s), [e1; e2]));;
 %token <string> IIDENT
 %token <string> INT
 %token <string> STRING
+%token <string> BOOL
 
 /* Arithmetic operators */
+%token BACKSLASH
+%token <string> BACKSLASH_OP
+%token PERCENT
+%token <string> PERCENT_OP
 %token PLUS
 %token <string> PLUS_OP
 %token DASH
@@ -65,8 +70,8 @@ let mk_infix e1 s e2 = E_app (mk (CR_GLOBAL (None, s), [e1; e2]));;
 %token AMPER_AMPER
 %token <string> AMPER_AMPER_OP
 %token UNDERSCORE
-%token EQ
-%token <string> EQ_OP
+%token EQUAL
+%token <string> EQUAL_OP
 %token LT
 %token <string> LT_OP
 %token LT_DASH
@@ -88,12 +93,15 @@ let mk_infix e1 s e2 = E_app (mk (CR_GLOBAL (None, s), [e1; e2]));;
 %token DOT
 
 %token ALL
+%token ALIAS
 %token AND
 %token AS
 %token ASSUMED
 %token BUT
 %token BY
+%token CAML
 %token COLLECTION
+%token COQ
 %token DECL
 %token DEF
 %token ELSE
@@ -104,6 +112,7 @@ let mk_infix e1 s e2 = E_app (mk (CR_GLOBAL (None, s), [e1; e2]));;
 %token IF
 %token IN
 %token INHERITS
+%token IMPLEMENTS
 %token IS
 %token LET
 %token LETPROP
@@ -127,6 +136,7 @@ let mk_infix e1 s e2 = E_app (mk (CR_GLOBAL (None, s), [e1; e2]));;
 %token THEOREM
 %token TYPE
 %token USES
+%token VALUE
 %token WITH
 
 %token COQPROOF
@@ -143,8 +153,8 @@ let mk_infix e1 s e2 = E_app (mk (CR_GLOBAL (None, s), [e1; e2]));;
 %nonassoc THEN                          /* below ELSE (if ... then ...) */
 %nonassoc ELSE                          /* (if ... then ... else ...) */
 %nonassoc LT_DASH                       /* below COLON_EQ (lbl <- x := e) */
-/* %right    COLON_EQ                   /* expr (e := e := e) */ */
-/* %nonassoc AS */
+%right    COLON_EQ                      /* expr (e := e := e) */
+%nonassoc AS
 %left     BAR BAR_OP                    /* pattern (p|p|p) */
 %nonassoc below_COMMA
 %left     COMMA COMMA_OP                /* expr/expr_comma_list (e,e,e) */
@@ -160,7 +170,6 @@ let mk_infix e1 s e2 = E_app (mk (CR_GLOBAL (None, s), [e1; e2]));;
 %left     PLUS PLUS_OP DASH DASH_OP    /* expr (e OP e OP e) */
 %left     STAR STAR_OP SLASH SLASH_OP  /* expr (e OP e OP e) */
 %right    STAR_STAR STAR_STAR_OP       /* expr (e OP e OP e) */
-%right    SLASH SLASH_OP               /* expr (e OP e OP e) */
 %nonassoc prec_unary_dash              /* unary - */
 %nonassoc prec_constant_constructor    /* cf. simple_expr (C versus C x) */
 %nonassoc prec_constructor_apply             /* above AS BAR COLON_COLON COMMA */
@@ -199,7 +208,7 @@ phrase:
 def_external:
   | TYPE LIDENT EQUAL def_external_body SEMI_SEMI
       { mk (ED_type (mk {ed_name = $2; ed_body = $4})) }
-  | VALUE variable EQUAL def_external_body SEMI_SEMI
+  | VALUE value_name EQUAL def_external_body SEMI_SEMI
       { mk (ED_value (mk {ed_name = $2; ed_body = $4})) }
 
 def_external_body:
@@ -221,7 +230,7 @@ def_type:
 
 def_type_params:
   | { [] }
-  | LPAREN def_type_param_list RPAREN { $2 } }
+  | LPAREN def_type_params RPAREN { $2 }
 ;
 
 def_type_param_comma_list:
@@ -242,8 +251,8 @@ def_sum:
 ;
 
 def_constructor:
-  | constructor { ($1, []) ] }
-  | constructor LPAREN typ_expr_comma_list RPAREN { ($1, $3) }
+  | constructor_name { ($1, []) ] }
+  | constructor_name LPAREN type_expr_comma_list RPAREN { ($1, $3) }
 ;
 def_constructor_list:
   | BAR def_constructor { [ $2 ] }
@@ -254,8 +263,8 @@ def_product:
   | LBRACE def_record_field_list RBRACE { mk (E_record $2) }
 ;
 def_record_field_list:
-  | label_name EQ typ_expr opt_semi { [ ($1, $3) ] }
-  | label_name EQ typ_expr SEMI def_record_field_list { ($1, $3) :: $5 }
+  | label_name EQ type_expr opt_semi { [ ($1, $3) ] }
+  | label_name EQ type_expr SEMI def_record_field_list { ($1, $3) :: $5 }
 ;
 
 /**** SPECIES ****/
@@ -281,9 +290,11 @@ species_param:
 ;
 
 inherits:
+  | { [] }
 ;
 
 species_body:
+  | { [] }
 ;
 
 /**** COLLECTION DEFINITION ****/
@@ -294,6 +305,7 @@ collection:
 ;
 
 species_expr:
+  | { [] }
 ;
 
 /**** FUNCTION & VALUES DEFINITION ****/
@@ -326,7 +338,7 @@ param:
   | LIDENT IN type_expr { ($1, Some $3) }
 ;
 
-/**** CPROPERTIES & THEOREM DEFINITION ****/
+/**** PROPERTIES & THEOREM DEFINITION ****/
 
 def_letprop:
   | LETPROP binding
@@ -340,9 +352,9 @@ def_theorem:
 
 prop:
   | ALL vname_list opt_in_type_expr COMMA prop
-     { mk (P_forall ($2, $3, $5))
+     { mk (P_forall ($2, $3, $5))}
   | EX vname_list opt_in_type_expr COMMA prop
-     { mk (P_exists ($2, $3, $5))
+     { mk (P_exists ($2, $3, $5))}
   | prop DASH_GT prop
      { mk (P_imply ($1, $3)) }
   | prop OR prop
@@ -369,6 +381,9 @@ vname_list:
   |                   { [] }
 ;
 
+proof:
+ | ASSUMED { [] }
+
 /**** TYPE EXPRESSIONS ****/
 
 type_expr:
@@ -384,14 +399,14 @@ type_expr:
      { mk (TE_fun ($1, $3)) }
   | type_expr STAR type_expr
      { mk (TE_prod ($1, $3)) }
-  | glob_ident LPAREN type_expr_list RPAREN
+  | glob_ident LPAREN type_expr_comma_list RPAREN
      { mk (TE_app ($1, $3)) }
   | LPAREN type_expr RPAREN
      { $2 }
 ;
 
-type_expr_list:
-  | type_expr COMMA type_expr_list { $1 :: $3 }
+type_expr_comma_list:
+  | type_expr COMMA type_expr_comma_list { $1 :: $3 }
   | type_expr { [$1] }
 ;
 
@@ -413,21 +428,17 @@ opt_lident:
 ;
 
 expr:
-  | INT
-     { mk (E_constant (mk (C_int $1))) }
-  | BOOL
-     { mk (E_constant (mk (C_bool $1))) }
-  | STRING
-     { mk (E_constant (mk (C_string $1))) }
+  | constant
+     { mk (E_constant $1) }
   | FUN vname_list DASH_GT expr
      { mk (E_fun ($2, $4)) }
   | ident
      { mk (E_var $1) }
-  | opt_lident SHARP UIDENT %prec constant_constructor
+  | opt_lident SHARP UIDENT %prec prec_constant_constructor
      { mk (E_constr (mk (I_global ($1, $3))), []) }
-  | opt_lident SHARP UIDENT LPAREN expr_list RPAREN
+  | opt_lident SHARP UIDENT LPAREN expr_comma_list RPAREN
      { mk (E_constr (mk (I_global ($1, $3))), $5) }
-  | expr LPAREN expr_list RPAREN
+  | expr LPAREN expr_comma_list RPAREN
      { mk (E_app ($1, $3)) }
   | MATCH expr WITH clause_list
      { mk (E_match ($2, $4)) }
@@ -478,9 +489,9 @@ expr:
       { mk_infix $1 "\\" $3 }
   | expr BACKSLASH_OP expr
       { mk_infix $1 $2 $3 }
-  | expr EQ expr
+  | expr EQUAL expr
       { mk_infix $1 "=" $3 }
-  | expr EQ_OP expr
+  | expr EQUAL_OP expr
       { mk_infix $1 $2 $3 }
   | expr LT expr
       { mk_infix $1 "<" $3 }
@@ -538,15 +549,22 @@ clause:
   | pattern DASH_GT expr { ($1, $3) }
 ;
 
+constant:
+  | INT { mk (C_int $1) }
+  | BOOL { mk (C_bool $1) }
+  | STRING { mk (C_string $1) }
+;
+
 pattern:
   | constant { mk (P_constant $1) }
   | LIDENT { mk (P_var $1) }
   | UNDERSCORE { mk (P_wild) }
   | constructor_ref LPAREN pattern_comma_list RPAREN { mk (P_constr ($1, $3)) }
-  | constructor_ref %prec constant_constructor { mk (P_constr ($1, [])) }
+  | constructor_ref %prec prec_constant_constructor { mk (P_constr ($1, [])) }
   | LBRACKET pattern_semi_list RBRACKET { $2 }
   | pattern COLON_COLON pattern { mk (P_constr (mk_cons (), [$1; $3])) }
   | LBRACE pattern_record_field_list RBRACE { mk (P_record $2) }
+  | pattern AS LIDENT { mk (P_as ($1, $3)) }
   | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
   | LPAREN pattern RPAREN { $2 }
   | LPAREN RPAREN { mk (P_constr (mk_void (), [])) }
@@ -593,6 +611,11 @@ external_name:
 
 value_name:
   | LIDENT { $1 }
+  | UIDENT { $1 }
+  | PIDENT { $1 }
+  | IIDENT { $1 }
+;
+constructor_name:
   | UIDENT { $1 }
   | PIDENT { $1 }
   | IIDENT { $1 }
