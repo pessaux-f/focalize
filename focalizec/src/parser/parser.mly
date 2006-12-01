@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.4 2006-11-28 22:04:51 weis Exp $ *)
+(* $Id: parser.mly,v 1.5 2006-12-01 15:48:28 weis Exp $ *)
 
 open Parsetree;;
 
@@ -22,8 +22,9 @@ let mk_infix e1 s e2 = E_app (mk (CR_GLOBAL (None, s), [e1; e2]));;
 %token EOF
 
 %token <string> LIDENT
-%token <string> QIDENT
 %token <string> UIDENT
+%token <string> PIDENT
+%token <string> IIDENT
 %token <string> INT
 %token <string> STRING
 
@@ -40,6 +41,10 @@ let mk_infix e1 s e2 = E_app (mk (CR_GLOBAL (None, s), [e1; e2]));;
 %token <string> STAR_STAR_OP
 %token LPAREN
 %token RPAREN
+%token LBRACE
+%token RBRACE
+%token LBRACKET
+%token RBRACKET
 %token COMMA
 %token <string> COMMA_OP
 %token QUOTE
@@ -158,7 +163,7 @@ let mk_infix e1 s e2 = E_app (mk (CR_GLOBAL (None, s), [e1; e2]));;
 %right    SLASH SLASH_OP               /* expr (e OP e OP e) */
 %nonassoc prec_unary_dash              /* unary - */
 %nonassoc prec_constant_constructor    /* cf. simple_expr (C versus C x) */
-%nonassoc prec_constr_appl             /* above AS BAR COLON_COLON COMMA */
+%nonassoc prec_constructor_apply             /* above AS BAR COLON_COLON COMMA */
 %nonassoc below_SHARP
 %nonassoc SHARP                        /* simple_expr/toplevel_directive */
 %nonassoc below_DOT
@@ -177,47 +182,87 @@ main:
   | EOF { [] }
   | phrase main { $1 :: $2 }
 ;
- 
+
+/* a voir: ajouter les expressions a toplevel ? */
 phrase:
   | def_let SEMI_SEMI { mk (Ph_let $1) }
-  /* a voir: ajouter les expressions a toplevel ? */
   | def_letprop SEMI_SEMI { mk (Ph_letprop $1) }
   | def_theorem SEMI_SEMI { mk (Ph_theorem $1) }
+  | def_type { mk (Ph_type $1) }
   | species { mk (Ph_species $1) }
   | collection { mk (Ph_coll $1) }
-  | type_def { mk (Ph_type $1) }
+  | EXTERNAL def_external { mk (Ph_external $2) }
   | OPEN STRING SEMI_SEMI { mk (Ph_open $2) }
   | USES STRING SEMI_SEMI { mk (Ph_use $2) } /* USES should be USE */
 ;
 
-type_def:
-  | TYPE LIDENT lident_list EQUAL type_def_body SEMI_SEMI
+def_external:
+  | TYPE LIDENT EQUAL def_external_body SEMI_SEMI
+      { mk (ED_type (mk {ed_name = $2; ed_body = $4})) }
+  | VALUE variable EQUAL def_external_body SEMI_SEMI
+      { mk (ED_value (mk {ed_name = $2; ed_body = $4})) }
+
+def_external_body:
+  | BAR external_language DASH_GT external_name { [($2, $4)]}
+  | BAR external_language DASH_GT external_name def_external_body { ($2, $4) :: $5}
+;
+
+external_language:
+  | CAML { EL_Caml}
+  | COQ { EL_Coq}
+  | STRING { EL_external $1 }
+;
+
+/**** TYPE DEFINITION ****/
+def_type:
+  | TYPE LIDENT def_type_params EQUAL def_type_body SEMI_SEMI
       { mk {td_name = $2; td_params = $3; td_body = $5; } }
 ;
 
-lident_list:
+def_type_params:
   | { [] }
-  | LIDENT lident_list { $1 :: $2}
+  | LPAREN def_type_param_list RPAREN { $2 } }
 ;
 
-type_def_body:
-  | ALIAS type_expr { mk (TD_alias $2) } 
-  | sum_def { mk (TD_union $2) } 
-  | prod_def { mk (TD_record $2) } 
+def_type_param_comma_list:
+  | LIDENT { [ $1 ] }
+  | LIDENT COMMA def_type_param_comma_list { $1 :: $3 }
 ;
 
-sum_def:
-
+def_type_body:
+  | ALIAS type_expr { mk (TD_alias $2) }
+  | def_sum { mk (TD_union $1) }
+  | def_product { mk (TD_record $1) }
 ;
 
-prod_def:
-
+def_sum:
+  | def_constructor_list { $1 }
+/* ajouter les types a constructeurs prives ? */
+/*  | PRIVATE def_constructor_list */
 ;
+
+def_constructor:
+  | constructor { ($1, []) ] }
+  | constructor LPAREN typ_expr_comma_list RPAREN { ($1, $3) }
+;
+def_constructor_list:
+  | BAR def_constructor { [ $2 ] }
+  | BAR def_constructor def_constructor_list { $2 :: $3 }
+;
+
+def_product:
+  | LBRACE def_record_field_list RBRACE { mk (E_record $2) }
+;
+def_record_field_list:
+  | label_name EQ typ_expr opt_semi { [ ($1, $3) ] }
+  | label_name EQ typ_expr SEMI def_record_field_list { ($1, $3) :: $5 }
+;
+
+/**** SPECIES ****/
 
 species:
-  | SPECIES LIDENT species_params inherits EQUAL species_body END 
+  | SPECIES LIDENT species_params inherits EQUAL species_body END
       { mk { sd_name = $2; sd_params = $3; sd_inherits = $4; sd_fields = $6; } }
-
 ;
 
 species_params:
@@ -241,6 +286,8 @@ inherits:
 species_body:
 ;
 
+/**** COLLECTION DEFINITION ****/
+
 collection:
   | COLLECTION LIDENT IMPLEMENTS species_expr EQUAL END
       { mk { cd_name = $2; cd_body = $4; } }
@@ -248,6 +295,8 @@ collection:
 
 species_expr:
 ;
+
+/**** FUNCTION & VALUES DEFINITION ****/
 
 def_let:
   | LET binding
@@ -276,6 +325,8 @@ param:
   | LIDENT { ($1, None) }
   | LIDENT IN type_expr { ($1, Some $3) }
 ;
+
+/**** CPROPERTIES & THEOREM DEFINITION ****/
 
 def_letprop:
   | LETPROP binding
@@ -318,13 +369,13 @@ vname_list:
   |                   { [] }
 ;
 
+/**** TYPE EXPRESSIONS ****/
+
 type_expr:
   | SELF
      { mk TE_self }
   | PROP
      { mk TE_prop }
-  | QIDENT
-     { mk (TE_ident (mk (I_local $1))) }
   | glob_ident
      { mk (TE_ident $1) }
   | LIDENT
@@ -344,10 +395,12 @@ type_expr_list:
   | type_expr { [$1] }
 ;
 
-constr_ref:
+constructor_ref:
   | opt_lident SHARP UIDENT
      { mk (CR_global ($1, $3)) }
 ;
+
+/**** EXPRESSIONS ****/
 
 glob_ident:
   | opt_lident SHARP LIDENT
@@ -361,16 +414,16 @@ opt_lident:
 
 expr:
   | INT
-     { mk (E_const (mk (C_int $1))) }
+     { mk (E_constant (mk (C_int $1))) }
   | BOOL
-     { mk (E_const (mk (C_bool $1))) }
+     { mk (E_constant (mk (C_bool $1))) }
   | STRING
-     { mk (E_const (mk (C_string $1))) }
+     { mk (E_constant (mk (C_string $1))) }
   | FUN vname_list DASH_GT expr
      { mk (E_fun ($2, $4)) }
   | ident
      { mk (E_var $1) }
-  | opt_lident SHARP UIDENT %prec constant_constr
+  | opt_lident SHARP UIDENT %prec constant_constructor
      { mk (E_constr (mk (I_global ($1, $3))), []) }
   | opt_lident SHARP UIDENT LPAREN expr_list RPAREN
      { mk (E_constr (mk (I_global ($1, $3))), $5) }
@@ -384,8 +437,6 @@ expr:
      { mk (E_let ($2, $3, $5)) }
   | LBRACE record_field_list RBRACE
      { mk (E_record $2) }
-  | EXTERNAL external_name opt_external_name
-     { mk (E_external ($2, $3)) }
   | LBRACKET expr_semi_list RBRACKET { $2 }
   | expr COLON_COLON expr { mk (E_app (mk_cons (), [$1; $3])) }
   | LPAREN expr COMMA expr_comma_list RPAREN { mk (E_tuple ($2 :: $4)) }
@@ -451,7 +502,7 @@ expr:
       { mk_infix $1 "&&" $3 }
   | expr AMPER_AMPER_OP expr
       { mk_infix $1 $2 $3 }
-  | LPAREN expr RPAREN 
+  | LPAREN expr RPAREN
      { $2 }
   | LPAREN RPAREN { mk (E_constr (mk_void (), [])) }
 ;
@@ -459,11 +510,16 @@ expr:
 expr_semi_list:
   | { mk (E_app (mk_nil (), [])) }
   | expr opt_semi { mk (E_app (mk_cons (), [$1; mk (E_app (mk_nil (), []))])) }
-  | expr SEMI expr_semi_list { mk (E_app (mk_cons (), [$1; $3])) } 
+  | expr SEMI expr_semi_list { mk (E_app (mk_cons (), [$1; $3])) }
 ;
 expr_comma_list:
   | expr { [ $1 ] }
-  | expr COMMA expr_comma_list { $1 :: $3 } 
+  | expr COMMA expr_comma_list { $1 :: $3 }
+;
+
+record_field_list:
+  | label_name EQ expr opt_semi { [ ($1, $3) ] }
+  | label_name EQ expr SEMI record_field_list { ($1, $3) :: $5 }
 ;
 
 ident:
@@ -483,14 +539,14 @@ clause:
 ;
 
 pattern:
-  | constant { mk (P_const $1) }
+  | constant { mk (P_constant $1) }
   | LIDENT { mk (P_var $1) }
   | UNDERSCORE { mk (P_wild) }
-  | constr_ref LPAREN pattern_list RPAREN { mk (P_constr ($1, $3)) }
-  | constr_ref %prec constant_constr { mk (P_constr ($1, [])) }
+  | constructor_ref LPAREN pattern_comma_list RPAREN { mk (P_constr ($1, $3)) }
+  | constructor_ref %prec constant_constructor { mk (P_constr ($1, [])) }
   | LBRACKET pattern_semi_list RBRACKET { $2 }
   | pattern COLON_COLON pattern { mk (P_constr (mk_cons (), [$1; $3])) }
-  | LBRACE label_pattern_list RBRACE { mk (P_record $2) }
+  | LBRACE pattern_record_field_list RBRACE { mk (P_record $2) }
   | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
   | LPAREN pattern RPAREN { $2 }
   | LPAREN RPAREN { mk (P_constr (mk_void (), [])) }
@@ -498,17 +554,19 @@ pattern:
 
 pattern_semi_list:
   | { mk (P_constr (mk_nil (), [])) }
-  | pattern opt_semi { mk (P_constr (mk_cons (), [$1; mk (P_constr (mk_nil (), []))])) }
-  | pattern SEMI pattern_semi_list { mk (P_constr (mk_cons (), [$1; $3])) } 
+  | pattern opt_semi
+    { mk (P_constr (mk_cons (), [$1; mk (P_constr (mk_nil (), []))])) }
+  | pattern SEMI pattern_semi_list
+    { mk (P_constr (mk_cons (), [$1; $3])) }
 ;
 pattern_comma_list:
   | pattern { [ $1 ] }
-  | pattern COMMA pattern_comma_list { $1 :: $3 } 
+  | pattern COMMA pattern_comma_list { $1 :: $3 }
 ;
 
-label_pattern_list:
-  | LIDENT EQ pattern opt_semi { [ ($1, $3) ] }
-  | LIDENT EQ pattern SEMI label_pattern_list { ($1, $3) :: $5 }
+pattern_record_field_list:
+  | label_name EQ pattern opt_semi { [ ($1, $3) ] }
+  | label_name EQ pattern SEMI pattern_record_field_list { ($1, $3) :: $5 }
 ;
 
 opt_semi:
@@ -526,16 +584,16 @@ binding_list:
   | binding AND binding_list { $1 :: $3 }
 ;
 
-record_field_list:
-  | label EQ expr { [ ($1, $3) ] }
-  | label EQ expr SEMI record_field_list { ($1, $3) :: $5 }
-;
+label_name:
+  | LIDENT { $1 }
 
 external_name:
   | STRING { $1 }
 ;
 
-opt_external_name:
-  | { None }
-  | STRING { Some $1 }
+value_name:
+  | LIDENT { $1 }
+  | UIDENT { $1 }
+  | PIDENT { $1 }
+  | IIDENT { $1 }
 ;
