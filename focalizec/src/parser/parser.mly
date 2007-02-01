@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.6 2006-12-01 16:35:03 weis Exp $ *)
+(* $Id: parser.mly,v 1.7 2007-02-01 20:51:55 weis Exp $ *)
 
 open Parsetree;;
 
@@ -30,19 +30,13 @@ let mk_infix e1 s e2 = E_app (mk (CR_GLOBAL (None, s), [e1; e2]));;
 %token <string> BOOL
 
 /* Arithmetic operators */
-%token BACKSLASH
 %token <string> BACKSLASH_OP
-%token PERCENT
 %token <string> PERCENT_OP
-%token PLUS
 %token <string> PLUS_OP
 %token DASH
 %token <string> DASH_OP
-%token STAR
 %token <string> STAR_OP
-%token SLASH
 %token <string> SLASH_OP
-%token STAR_STAR
 %token <string> STAR_STAR_OP
 %token LPAREN
 %token RPAREN
@@ -51,32 +45,20 @@ let mk_infix e1 s e2 = E_app (mk (CR_GLOBAL (None, s), [e1; e2]));;
 %token LBRACKET
 %token RBRACKET
 %token COMMA
-%token <string> COMMA_OP
 %token QUOTE
 %token DOUBLEQUOTE
-%token BACKSLASH
 %token DASH_GT
 %token <string> DASH_GT_OP
-%token LT_DASH_GT
 %token <string> LT_DASH_GT_OP
 %token SHARP
 %token BANG
 %token BAR
 %token <string> BAR_OP
-%token BAR_BAR
 %token <string> BAR_BAR_OP
-%token AMPER
 %token <string> AMPER_OP
-%token AMPER_AMPER
-%token <string> AMPER_AMPER_OP
 %token UNDERSCORE
-%token EQUAL
-%token <string> EQUAL_OP
-%token LT
+%token <string> EQ_OP
 %token <string> LT_OP
-%token LT_DASH
-%token <string> LT_DASH_OP
-%token GT
 %token <string> GT_OP
 %token SEMI
 %token <string> SEMI_OP
@@ -149,38 +131,36 @@ let mk_infix e1 s e2 = E_app (mk (CR_GLOBAL (None, s), [e1; e2]));;
 %nonassoc LET                           /* above SEMI ( ...; let ... in ...) */
 %nonassoc below_WITH
 %nonassoc FUNCTION WITH                 /* below BAR  (match ... with ...) */
+%nonassoc LT_DASH_GT LT_DASH_GT_OP      /* <-> */
 %nonassoc AND                           /* above WITH */
 %nonassoc THEN                          /* below ELSE (if ... then ...) */
 %nonassoc ELSE                          /* (if ... then ... else ...) */
-%nonassoc LT_DASH                       /* below COLON_EQ (lbl <- x := e) */
 %right    COLON_EQ                      /* expr (e := e := e) */
 %nonassoc AS
-%left     BAR BAR_OP                    /* pattern (p|p|p) */
+%left     BAR                           /* pattern (p|p|p) */
 %nonassoc below_COMMA
-%left     COMMA COMMA_OP                /* expr/expr_comma_list (e,e,e) */
-%nonassoc LT_DASH_GT                    /* <-> */
+%left     COMMA                         /* expr/expr_comma_list (e,e,e) */
 %nonassoc NOT
 %right    DASH_GT DASH_GT_OP            /* core_type2 (t -> t -> t) */
-%right    BAR_BAR BAR_BAR_OP            /* expr (e || e || e) */
-%right    AMPER AMPER_OP AMPER_AMPER AMPER_AMPER_OP  /* expr (e && e && e) */
+%right    BAR_OP                        /* expr (e || e || e) */
+%right    AMPER_OP                      /* expr (e && e && e) */
 %nonassoc below_EQ
-%left     EQ EQ_OP LT LT_OP GT GT_OP   /* expr (e OP e OP e) */
-%right    AT AT_OP HAT HAT_OP          /* expr (e OP e OP e) */
-%right    COLON_COLON COLON_COLON_OP   /* expr (e :: e :: e) */
-%left     PLUS PLUS_OP DASH DASH_OP    /* expr (e OP e OP e) */
-%left     STAR STAR_OP SLASH SLASH_OP  /* expr (e OP e OP e) */
-%right    STAR_STAR STAR_STAR_OP       /* expr (e OP e OP e) */
-%nonassoc prec_unary_dash              /* unary - */
-%nonassoc prec_constant_constructor    /* cf. simple_expr (C versus C x) */
-%nonassoc prec_constructor_apply             /* above AS BAR COLON_COLON COMMA */
+%left     EQ_OP LT_OP GT_OP             /* expr (e OP e OP e) */
+%right    AT_OP HAT_OP                  /* expr (e OP e OP e) */
+%right    COLON_COLON_OP                /* expr (e :: e :: e) */
+%left     PLUS_OP DASH_OP               /* expr (e OP e OP e) */
+%left     STAR_OP SLASH_OP              /* expr (e OP e OP e) */
+%right    STAR_STAR_OP                  /* expr (e OP e OP e) */
+%nonassoc PREFIX_OP                     /* unary - ` ~ ? $ */
+%nonassoc prec_constant_constructor     /* cf. simple_expr (C versus C x) */
+%nonassoc prec_constructor_apply        /* above AS BAR COLON_COLON COMMA */
 %nonassoc below_SHARP
-%nonassoc SHARP                        /* simple_expr/toplevel_directive */
+%nonassoc SHARP                         /* simple_expr/toplevel_directive */
 %nonassoc below_DOT
 %nonassoc DOT
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BEGIN CHAR FALSE INT
           LBRACE LBRACKET LIDENT LPAREN
-          BACKQUOTE BACKQUOTE_OP TILDE TILDE_OP QUESTION QUESTION_OP DOLLAR DOLLAR_OP
           STRING TRUE UIDENT
 
 %start main
@@ -430,6 +410,8 @@ opt_lident:
 expr:
   | constant
      { mk (E_constant $1) }
+  | PREFIX_OP expr
+     { mk (E_app ($1, $2)) }
   | FUN vname_list DASH_GT expr
      { mk (E_fun ($2, $4)) }
   | ident
@@ -451,12 +433,8 @@ expr:
   | LBRACKET expr_semi_list RBRACKET { $2 }
   | expr COLON_COLON expr { mk (E_app (mk_cons (), [$1; $3])) }
   | LPAREN expr COMMA expr_comma_list RPAREN { mk (E_tuple ($2 :: $4)) }
-  | expr HAT expr
-      { mk_infix $1 "^" $3 }
   | expr HAT_OP expr
       { mk_infix $1 $2 $3 }
-  | expr AT expr
-      { mk_infix $1 "@" $3 }
   | expr AT_OP expr
       { mk_infix $1 $2 $3 }
   | expr SEMI_OP expr
@@ -465,53 +443,29 @@ expr:
       { mk_infix $1 $2 $3 }
   | expr COLON_COLON_OP expr
       { mk_infix $1 $2 $3 }
-  | expr PLUS expr
-      { mk_infix $1 "+" $3 }
   | expr PLUS_OP expr
       { mk_infix $1 $2 $3 }
-  | expr DASH expr
-      { mk_infix $1 "-" $3 }
   | expr DASH_OP expr
       { mk_infix $1 $2 $3 }
-  | expr STAR expr
-      { mk_infix $1 "*" $3 }
   | expr STAR_OP expr
       { mk_infix $1 $2 $3 }
-  | expr SLASH expr
-      { mk_infix $1 "/" $3 }
   | expr SLASH_OP expr
       { mk_infix $1 $2 $3 }
-  | expr PERCENT expr
-      { mk_infix $1 "/" $3 }
   | expr PERCENT_OP expr
       { mk_infix $1 $2 $3 }
-  | expr BACKSLASH expr
-      { mk_infix $1 "\\" $3 }
   | expr BACKSLASH_OP expr
       { mk_infix $1 $2 $3 }
-  | expr EQUAL expr
-      { mk_infix $1 "=" $3 }
-  | expr EQUAL_OP expr
+  | expr EQ_OP expr
       { mk_infix $1 $2 $3 }
-  | expr LT expr
-      { mk_infix $1 "<" $3 }
   | expr LT_OP expr
-      { mk_infix $1 $2 $3 }
-  | expr LT_DASH_OP expr
       { mk_infix $1 $2 $3 }
   | expr LT_DASH_GT_OP expr
       { mk_infix $1 $2 $3 }
-  | expr GT expr
-      { mk_infix $1 ">" $3 }
   | expr GT_OP expr
       { mk_infix $1 $2 $3 }
-  | expr BAR_BAR expr
-      { mk_infix $1 "||" $3 }
   | expr BAR_BAR_OP expr
       { mk_infix $1 $2 $3 }
-  | expr AMPER_AMPER expr
-      { mk_infix $1 "&&" $3 }
-  | expr AMPER_AMPER_OP expr
+  | expr AMPER_OP expr
       { mk_infix $1 $2 $3 }
   | LPAREN expr RPAREN
      { $2 }
