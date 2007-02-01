@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.5 2006-12-01 15:42:19 weis Exp $ *)
+(* $Id: lexer.mll,v 1.6 2007-02-01 20:51:20 weis Exp $ *)
 
 {
 open Lexing
@@ -145,64 +145,29 @@ let mk_coqproof s = COQPROOF (String.sub s 2 (String.length s - 4));;
 let mk_prefixop_prefix s = PIDENT s;;
 let mk_infixop_prefix s = IIDENT s;;
 
-let mk_prefixop s =
-  assert (String.length s > 0);
-  match s.[0] with
-  | '`' ->
-    begin match String.length s with
-    | 1 -> BACKQUOTE
-    | n -> BACKQUOTE_OP s end
-  | '~' ->
-    begin match String.length s with
-    | 1 -> TILDE
-    | n -> TILDE_OP s end
-  | '?' ->
-    begin match String.length s with
-    | 1 -> QUESTION
-    | n -> QUESTION_OP s end
-  | '$' ->
-    begin match String.length s with
-    | 1 -> DOLLAR
-    | n -> DOLLAR_OP s end
-  | c ->
-    failwith
-      (Printf.sprintf "Unknown first character of prefix ``%c''" c)
-;;
-
 let mk_infixop s =
   assert (String.length s > 0);
   match s.[0] with
-  | '+' ->
-    begin match String.length s with
-    | 1 -> PLUS
-    | n -> PLUS_OP s end
+  | '+' -> PLUS_OP s
   | '-' ->
     begin match String.length s with
-    | 1 -> DASH
-    | 2 -> if s.[1] = '>' then DASH_GT else DASH_OP s end
+    | 1 -> DASH_OP s
+    | 2 -> if s.[1] = '>' then DASH_GT else DASH_OP s
     | n -> if s.[1] = '>' then DASH_GT_OP s else DASH_OP s end
   | '*' ->
     begin match String.length s with
-    | 1 -> STAR
-    | 2 -> if s.[1] = '*' then STAR_STAR else STAR_OP s end
+    | 1 -> STAR_OP s
+    | 2 -> if s.[1] = '*' then STAR_STAR else STAR_OP s
     | n -> if s.[1] = '*' then STAR_STAR_OP s else STAR_OP s end
-  | '/' ->
-    begin match String.length s with
-    | 1 -> SLASH
-    | n -> SLASH_OP s end
-  | '%' ->
-    begin match String.length s with
-    | 1 -> PERCENT
-    | n -> PERCENT_OP s end
+  | '/' -> SLASH_OP s
+  | '%' -> PERCENT_OP s
   | '&' ->
     begin match String.length s with
     | 1 -> AMPER
-    | n -> if s.[1] = '&' then AMPER_AMPER else AMPER_OP s
     | n -> if s.[1] = '&' then AMPER_AMPER_OP s else AMPER_OP s end
   | '|' ->
     begin match String.length s with
     | 1 -> BAR
-    | 2 -> if s.[1] = '|' then BAR_BAR else BAR_OP s
     | n -> if s.[1] = '|' then BAR_BAR_OP s else BAR_OP s end
   | ',' ->
     match String.length s with
@@ -220,34 +185,16 @@ let mk_infixop s =
     | n -> if s.[1] = ';' SEMI_SEMI_OP s else SEMI_OP s end
   | '<' ->
     begin match String.length s with
-    | 1 -> LT
+    | 1 -> LT_OP s
     | n ->
-      if s.[1] = '-' then
-        if n = 2 then LT_DASH else
-        if s.[2] = '>' then
-          if n = 3 then LT_DASH_GT else LT_DASH_GT_OP s
-        else LT_DASH_OP s
+      if s.[1] = '-' && n >= 2 && s.[2] = '>'
+      then if n >= 3 then LT_DASH_GT_OP s else LT_DASH_GT
       else LT_OP s end
-  | '=' ->
-    begin match String.length s with
-    | 1 -> EQ
-    | n -> EQ_OP s end
-  | '>' ->
-    begin match String.length s with
-    | 1 -> GT
-    | n -> GT_OP s end
-  | '@' ->
-    begin match String.length s with
-    | 1 -> AT
-    | n -> AT_OP s end
-  | '^' ->
-    begin match String.length s with
-    | 1 -> HAT
-    | n -> HAT_OP s end
-  | '\\' ->
-    begin match String.length s with
-    | 1 -> BACKSLAH
-    | n -> BACKSLAH_OP s end    
+  | '=' -> EQ_OP s
+  | '>' -> GT_OP s
+  | '@' -> AT_OP s
+  | '^' -> HAT_OP s
+  | '\\' -> BACKSLASH_OP s
   | c ->
     failwith
       (Printf.sprintf "Unknown first character of infix ``%c''" c)
@@ -368,23 +315,59 @@ rule token = parse
         [^ '\010' '\013'] * newline
       { update_loc lexbuf name (int_of_string num) true 0;
         token lexbuf }
-  | "("  { LPAREN }
-  | ")"  { RPAREN }
-  | "["  { LBRACKET }
-  | "]"  { RBRACKET }
-  | "{"  { LBRACE }
-  | "}"  { RBRACE }
+  | '('  { LPAREN }
+  | ')'  { RPAREN }
+  | '['  { LBRACKET }
+  | ']'  { RBRACKET }
+  | '{'  { LBRACE }
+  | '}'  { RBRACE }
 
-  | "#"  { SHARP } (* To be suppressed. *)
-  | "!"  { BANG } (* To be suppressed. *)
-(*  | "."  { DOT } *)
-  | "," { COMMA }
+  | '#'  { SHARP } (* To be suppressed. *)
+  | '!'  { BANG } (* To be suppressed. *)
+  | '.'  { DOT }
 
-  | prefix { mk_prefixop (Lexing.lexeme lexbuf) }
+  | prefix { PREFIX_OP (Lexing.lexeme lexbuf) }
   | "( " prefix " )" { mk_prefixop_prefix (Lexing.lexeme lexbuf) }
 
   | "( " infix " )" { mk_infixop_prefix (Lexing.lexeme lexbuf) }
-  | infix { mk_infixop (Lexing.lexeme lexbuf) }
+
+  | "->"                 { DASH_GT }
+  | "->" continue_infix* { DASH_GT_OP (Lexing.lexeme lexbuf) }
+
+  | "<->"                { LT_DASH_GT }
+  | "<->" continue_infix* { LT_DASH_GT_OP (Lexing.lexeme lexbuf) }
+
+  | '-' continue_infix*  { DASH_OP (Lexing.lexeme lexbuf) }
+  | '+' continue_infix*  { PLUS_OP (Lexing.lexeme lexbuf) }
+  | "**" continue_infix* { STAR_STAR_OP (Lexing.lexeme lexbuf) }
+  | '*' continue_infix*  { STAR_OP (Lexing.lexeme lexbuf) }
+  | '/' continue_infix*  { SLASH_OP (Lexing.lexeme lexbuf) }
+  | '%' continue_infix*  { PERCENT_OP (Lexing.lexeme lexbuf) }
+
+  | '&' continue_infix*  { AMPER_OP (Lexing.lexeme lexbuf) }
+  | '|'                  { BAR }
+  | '|' continue_infix*  { BAR_OP (Lexing.lexeme lexbuf) }
+
+  | '=' continue_infix*  { EQ_OP (Lexing.lexeme lexbuf) }
+  | '>' continue_infix*  { GT_OP (Lexing.lexeme lexbuf) }
+  | '<' continue_infix*  { LT_OP (Lexing.lexeme lexbuf) }
+
+  | '@' continue_infix*  { AT_OP (Lexing.lexeme lexbuf) }
+  | '^' continue_infix*  { HAT_OP (Lexing.lexeme lexbuf) }
+  | '\\' continue_infix* { BACKSLASH_OP (Lexing.lexeme lexbuf) }
+
+  | ','                  { COMMA }
+  | ',' continue_infix*  { COMMA_OP (Lexing.lexeme lexbuf) }
+
+  | ':'                  { COLON }
+  | "::"                 { COLON_COLON }
+  | "::" continue_infix* { COLON_COLON_OP s }
+  | ':' continue_infix*  { COLON_OP (Lexing.lexeme lexbuf) }
+
+  | ';'                  { SEMI }
+  | ";;"                 { SEMI_SEMI }
+  | ";;" continue_infix* { SEMI_SEMI_OP s }
+  | ';' continue_infix*  { SEMI_OP (Lexing.lexeme lexbuf) }
 
   | "{*" ([^ '*'] | '*' [^ '}'])* "*}"
      { mk_coqproof (Lexing.lexeme lexbuf) }
