@@ -68,6 +68,7 @@ and constant_desc =
   | C_int of string
   | C_bool of string
   | C_string of string
+  | C_char of char
 ;;
 
 type rec_flag = | RF_no_rec | RF_rec
@@ -88,6 +89,7 @@ and expr_desc =
   | E_fun of vname list * expr
   | E_var of ident
   | E_app of expr * expr list
+  | E_constr of expr * expr list
   | E_match of expr * (pattern * expr) list
   | E_if of expr * expr * expr
   | E_let of rec_flag * (ident * expr) list * expr
@@ -144,9 +146,9 @@ and binding_desc = {
 
 and theorem_def = theorem_def_desc ast
 and theorem_def_desc = {
-  td_name : ident;
-  td_stmt : prop;
-  td_proof : proof;
+  th_name : ident;
+  th_stmt : prop;
+  th_proof : proof;
 }
 
 and fact = fact_desc ast
@@ -207,13 +209,32 @@ and type_def_desc = {
 and type_body = type_body_desc ast
 and type_body_desc =
   | TD_alias of type_expr
-  | TD_union of (constr * type_expr) list 
+  | TD_union of (constr * (type_expr list)) list 
   | TD_record of (label * type_expr) list
 ;;
 
+type external_language =
+  | EL_Caml
+  | EL_Coq
+  | EL_external of string;;
+
+type external_def = external_def_desc ast
+and external_def_desc =
+  | ED_type of external_def_body
+  | ED_value of external_def_body
+
+and external_def_body = external_def_body_desc ast
+and external_def_body_desc = {
+  ed_name : vname;
+  ed_body : (external_language * external_expr) list;
+}
+
+and external_expr = string;;
+
 type phrase = phrase_desc ast
 and phrase_desc =
-  | Ph_uses of fname
+  | Ph_external of external_def
+  | Ph_use of fname
   | Ph_open of fname
   | Ph_species of species_def
   | Ph_coll of coll_def
