@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.6 2007-02-01 20:51:20 weis Exp $ *)
+(* $Id: lexer.mll,v 1.7 2007-02-02 00:15:50 weis Exp $ *)
 
 {
 open Lexing
@@ -107,8 +107,7 @@ let char_for_decimal_code lexbuf i =
            10 * (Char.code(Lexing.lexeme_char lexbuf (i+1)) - 48) +
                 (Char.code(Lexing.lexeme_char lexbuf (i+2)) - 48) in
   if c < 0 || c > 255
-  then raise (Error(Illegal_escape (Lexing.lexeme lexbuf),
-                    Location.curr lexbuf))
+  then raise (Error (Illegal_escape (Lexing.lexeme lexbuf), lexbuf.lex_start_p))
   else Char.chr c
 ;;
 
@@ -142,8 +141,8 @@ let update_loc lexbuf file line absolute chars =
 
 let mk_coqproof s = COQPROOF (String.sub s 2 (String.length s - 4));;
 
-let mk_prefixop_prefix s = PIDENT s;;
-let mk_infixop_prefix s = IIDENT s;;
+let mk_prefix_prefixop s = PIDENT s;;
+let mk_prefix_infixop s = IIDENT s;;
 
 let mk_infixop s =
   assert (String.length s > 0);
@@ -153,36 +152,32 @@ let mk_infixop s =
     begin match String.length s with
     | 1 -> DASH_OP s
     | 2 -> if s.[1] = '>' then DASH_GT else DASH_OP s
-    | n -> if s.[1] = '>' then DASH_GT_OP s else DASH_OP s end
+    | _ -> if s.[1] = '>' then DASH_GT_OP s else DASH_OP s end
   | '*' ->
     begin match String.length s with
     | 1 -> STAR_OP s
-    | 2 -> if s.[1] = '*' then STAR_STAR else STAR_OP s
-    | n -> if s.[1] = '*' then STAR_STAR_OP s else STAR_OP s end
+    | _ -> if s.[1] = '*' then STAR_STAR_OP s else STAR_OP s end
   | '/' -> SLASH_OP s
   | '%' -> PERCENT_OP s
-  | '&' ->
-    begin match String.length s with
-    | 1 -> AMPER
-    | n -> if s.[1] = '&' then AMPER_AMPER_OP s else AMPER_OP s end
+  | '&' -> AMPER_OP s
   | '|' ->
     begin match String.length s with
     | 1 -> BAR
-    | n -> if s.[1] = '|' then BAR_BAR_OP s else BAR_OP s end
+    | _ -> BAR_OP s end
   | ',' ->
-    match String.length s with
+    begin match String.length s with
     | 1 -> COMMA
-    | n -> COMMA_OP s end
+    | _ -> COMMA_OP s end
   | ':' ->
     begin match String.length s with
     | 1 -> COLON
     | 2 -> if s.[1] = ':' then COLON_COLON else COLON_OP s
-    | n -> if s.[1] = ':' then COLON_COLON_OP s else COLON_OP s end
+    | _ -> if s.[1] = ':' then COLON_COLON_OP s else COLON_OP s end
   | ';' ->
     begin match String.length s with
     | 1 -> SEMI
     | 2 -> if s.[1] = ';' then SEMI_SEMI else SEMI_OP s
-    | n -> if s.[1] = ';' SEMI_SEMI_OP s else SEMI_OP s end
+    | _ -> if s.[1] = ';' then SEMI_SEMI_OP s else SEMI_OP s end
   | '<' ->
     begin match String.length s with
     | 1 -> LT_OP s
@@ -190,7 +185,10 @@ let mk_infixop s =
       if s.[1] = '-' && n >= 2 && s.[2] = '>'
       then if n >= 3 then LT_DASH_GT_OP s else LT_DASH_GT
       else LT_OP s end
-  | '=' -> EQ_OP s
+  | '=' ->
+    begin match String.length s with
+    | 1 -> EQUAL
+    | _ -> EQ_OP s end
   | '>' -> GT_OP s
   | '@' -> AT_OP s
   | '^' -> HAT_OP s
@@ -209,6 +207,10 @@ let report_error ppf = function
       fprintf ppf "Illegal backslash escape in string or character (%s)" s
   | Unterminated_comment ->
       fprintf ppf "Comment not terminated"
+  | Comment_in_string ->
+      fprintf ppf "Non escaped comment separator in string constant"
+  | Uninitiated_comment ->
+      fprintf ppf "Comment has not started"
   | Unterminated_string ->
       fprintf ppf "String literal not terminated"
 ;;
@@ -238,10 +240,10 @@ let continue_ident = start_lowercase_ident
    Rq: End_Infix ::= SPACE  (::= blanc tab newline) ( ) [] {} *)
 
 let start_prefix = ['`' '~' '?' '$']
+(* Rq: ! and # and . are treated specially and cannot be inside idents. *)
 
 let start_infix =
   [ '+' '-' '*' '/' '%' '&' '|' ':' ';' '<' '=' '>' '@' '^' '\\' ]
-let symbol_char = '!' | start_prefix | start_infix
 
 let continue_infix = start_infix
                    | start_prefix
@@ -255,9 +257,7 @@ let uppercase_ident = start_uppercase_ident continue_ident*
 
 let infix = start_infix continue_infix*
 
-(** (2) Les identificateurs préfixes, noms des opérations unaires
-    Rq: ! and # and . are treated specially and cannot be inside idents. *)
-
+(** (2) Les identificateurs préfixes, noms des opérations unaires. *)
 let prefix = start_prefix continue_infix*
 
 (** Integers. *)
@@ -288,9 +288,11 @@ rule token = parse
       { INT (Lexing.lexeme lexbuf) }
   | "\""
       { reset_string_buffer();
-        string_start_pos := lexbuf.lex_start_p;
+        string_start_pos := Some lexbuf.lex_start_p;
         string lexbuf;
-        lexbuf.lex_start_p <- !string_start_pos;
+        begin match !string_start_pos with
+        | Some pos -> lexbuf.lex_start_p <- pos
+        | _ -> assert false end;
         STRING (get_stored_string()) }
   | "'" [^ '\\' '\'' '\010'] "'"
       { CHAR (Lexing.lexeme_char lexbuf 1) }
@@ -326,48 +328,13 @@ rule token = parse
   | '!'  { BANG } (* To be suppressed. *)
   | '.'  { DOT }
 
+  | "~|" { TILDA_BAR }
   | prefix { PREFIX_OP (Lexing.lexeme lexbuf) }
-  | "( " prefix " )" { mk_prefixop_prefix (Lexing.lexeme lexbuf) }
+  | "( " prefix " )" { mk_prefix_prefixop (Lexing.lexeme lexbuf) }
 
-  | "( " infix " )" { mk_infixop_prefix (Lexing.lexeme lexbuf) }
+  | "( " infix " )" { mk_prefix_infixop (Lexing.lexeme lexbuf) }
+  | infix { mk_infixop (Lexing.lexeme lexbuf) }
 
-  | "->"                 { DASH_GT }
-  | "->" continue_infix* { DASH_GT_OP (Lexing.lexeme lexbuf) }
-
-  | "<->"                { LT_DASH_GT }
-  | "<->" continue_infix* { LT_DASH_GT_OP (Lexing.lexeme lexbuf) }
-
-  | '-' continue_infix*  { DASH_OP (Lexing.lexeme lexbuf) }
-  | '+' continue_infix*  { PLUS_OP (Lexing.lexeme lexbuf) }
-  | "**" continue_infix* { STAR_STAR_OP (Lexing.lexeme lexbuf) }
-  | '*' continue_infix*  { STAR_OP (Lexing.lexeme lexbuf) }
-  | '/' continue_infix*  { SLASH_OP (Lexing.lexeme lexbuf) }
-  | '%' continue_infix*  { PERCENT_OP (Lexing.lexeme lexbuf) }
-
-  | '&' continue_infix*  { AMPER_OP (Lexing.lexeme lexbuf) }
-  | '|'                  { BAR }
-  | '|' continue_infix*  { BAR_OP (Lexing.lexeme lexbuf) }
-
-  | '=' continue_infix*  { EQ_OP (Lexing.lexeme lexbuf) }
-  | '>' continue_infix*  { GT_OP (Lexing.lexeme lexbuf) }
-  | '<' continue_infix*  { LT_OP (Lexing.lexeme lexbuf) }
-
-  | '@' continue_infix*  { AT_OP (Lexing.lexeme lexbuf) }
-  | '^' continue_infix*  { HAT_OP (Lexing.lexeme lexbuf) }
-  | '\\' continue_infix* { BACKSLASH_OP (Lexing.lexeme lexbuf) }
-
-  | ','                  { COMMA }
-  | ',' continue_infix*  { COMMA_OP (Lexing.lexeme lexbuf) }
-
-  | ':'                  { COLON }
-  | "::"                 { COLON_COLON }
-  | "::" continue_infix* { COLON_COLON_OP s }
-  | ':' continue_infix*  { COLON_OP (Lexing.lexeme lexbuf) }
-
-  | ';'                  { SEMI }
-  | ";;"                 { SEMI_SEMI }
-  | ";;" continue_infix* { SEMI_SEMI_OP s }
-  | ';' continue_infix*  { SEMI_OP (Lexing.lexeme lexbuf) }
 
   | "{*" ([^ '*'] | '*' [^ '}'])* "*}"
      { mk_coqproof (Lexing.lexeme lexbuf) }
@@ -381,7 +348,7 @@ rule token = parse
 
 and comment = parse
     "(*"
-      { comment_start_pos := lexbuf.lex_start_p :: !comment_start_loc;
+      { comment_start_pos := lexbuf.lex_start_p :: !comment_start_pos;
         comment lexbuf; }
   | "*)"
       { match !comment_start_pos with
@@ -424,7 +391,9 @@ and string = parse
   | ( "(*" | "*)" )
       { raise (Error (Comment_in_string, lexbuf.lex_start_p)) }
   | ( newline | eof )
-      { raise (Error (Unterminated_string, !string_start_loc)) }
+      { match !string_start_pos with
+        | Some pos -> raise (Error (Unterminated_string, pos))
+        | _ -> assert false }
   | _
       { store_string_char(Lexing.lexeme_char lexbuf 0);
         string lexbuf }
