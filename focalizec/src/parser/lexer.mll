@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.7 2007-02-02 00:15:50 weis Exp $ *)
+(* $Id: lexer.mll,v 1.8 2007-02-15 19:15:35 weis Exp $ *)
 
 {
 open Lexing
@@ -10,6 +10,7 @@ type error =
   | Unterminated_comment
   | Uninitiated_comment
   | Unterminated_string
+  | Unterminated_documentation
   | Comment_in_string
 ;;
 
@@ -63,6 +64,35 @@ List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
     "with", WITH;
   ];;
 
+(* Lexing the documentation tokens. *)
+let initial_documentation_buffer = String.create 256;;
+let documentation_buff = ref initial_documentation_buffer
+and documentation_index = ref 0
+;;
+
+let reset_documentation_buffer () =
+  documentation_buff := initial_documentation_buffer;
+  documentation_index := 0
+;;
+
+let store_documentation_char c =
+  if !documentation_index >= String.length (!documentation_buff) then begin
+    let new_buff = String.create (String.length (!documentation_buff) * 2) in
+    String.blit (!documentation_buff) 0
+                new_buff 0 (String.length (!documentation_buff));
+    documentation_buff := new_buff
+  end;
+  String.unsafe_set (!documentation_buff) (!documentation_index) c;
+  incr documentation_index
+;;
+
+let get_stored_documentation () =
+  let s = String.sub (!documentation_buff) 0 (!documentation_index) in
+  documentation_buff := initial_documentation_buffer;
+  s
+;;
+
+(* Lexing the string tokens. *)
 let initial_string_buffer = String.create 256;;
 let string_buff = ref initial_string_buffer
 and string_index = ref 0
@@ -90,6 +120,7 @@ let get_stored_string () =
   s
 ;;
 
+let documentation_start_pos = ref None;;
 let string_start_pos = ref None;;
 let comment_start_pos = ref [];;
 let in_comment () = !comment_start_pos <> [];;
@@ -213,6 +244,8 @@ let report_error ppf = function
       fprintf ppf "Comment has not started"
   | Unterminated_string ->
       fprintf ppf "String literal not terminated"
+  | Unterminated_documentation ->
+      fprintf ppf "Documentation not terminated"
 ;;
 
 }
@@ -287,13 +320,13 @@ rule token = parse
   | int_literal
       { INT (Lexing.lexeme lexbuf) }
   | "\""
-      { reset_string_buffer();
+      { reset_string_buffer ();
         string_start_pos := Some lexbuf.lex_start_p;
         string lexbuf;
         begin match !string_start_pos with
         | Some pos -> lexbuf.lex_start_p <- pos
         | _ -> assert false end;
-        STRING (get_stored_string()) }
+        STRING (get_stored_string ()) }
   | "'" [^ '\\' '\'' '\010'] "'"
       { CHAR (Lexing.lexeme_char lexbuf 1) }
   | "'\\" ['\\' '\'' '"' 'n' 't' 'b' 'r' ' '] "'"
@@ -306,12 +339,23 @@ rule token = parse
       { let l = Lexing.lexeme lexbuf in
         let esc = String.sub l 1 (String.length l - 1) in
         raise (Error (Illegal_escape esc, lexbuf.lex_start_p)) }
+  | "%%" [^ '\010' '\013'] * newline
+      { update_loc lexbuf None 1 false 0;
+        token lexbuf }
   | "(*"
       { comment_start_pos := [lexbuf.lex_start_p];
         comment lexbuf;
         token lexbuf }
   | "*)"
       { raise (Error (Uninitiated_comment, lexbuf.lex_start_p)) }
+  | "(**"
+      { reset_documentation_buffer ();
+        documentation_start_pos := Some lexbuf.lex_start_p;
+        documentation lexbuf;
+        begin match !documentation_start_pos with
+        | Some pos -> lexbuf.lex_start_p <- pos
+        | _ -> assert false end;
+        DOCUMENTATION (get_stored_documentation ()) }
   | "#" [' ' '\t']* (['0'-'9']+ as num) [' ' '\t']*
         ("\"" ([^ '\010' '\013' '"' ] * as name) "\"")?
         [^ '\010' '\013'] * newline
@@ -347,7 +391,7 @@ rule token = parse
                 (Lexing.lexeme_char lexbuf 0), lexbuf.lex_start_p)) }
 
 and comment = parse
-    "(*"
+  | "(*"
       { comment_start_pos := lexbuf.lex_start_p :: !comment_start_pos;
         comment lexbuf; }
   | "*)"
@@ -362,6 +406,9 @@ and comment = parse
         | pos :: _ ->
           comment_start_pos := [];
           raise (Error (Unterminated_comment, pos)) }
+  | "%%" [^ '\010' '\013'] * newline
+      { update_loc lexbuf None 1 false 0;
+        comment lexbuf }
   | newline
       { update_loc lexbuf None 1 false 0;
         comment lexbuf }
@@ -369,19 +416,19 @@ and comment = parse
       { comment lexbuf }
 
 and string = parse
-    '"'
+  | '"'
       { () }
   | '\\' newline ([' ' '\t'] * as space)
       { update_loc lexbuf None 1 false (String.length space);
         string lexbuf }
   | '\\' ['(' '\\' '\'' '"' 'n' 't' 'b' 'r' ' ' '*' ')']
-      { store_string_char(char_for_backslash(Lexing.lexeme_char lexbuf 1));
+      { store_string_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
         string lexbuf }
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
       { store_string_char(char_for_decimal_code lexbuf 1);
         string lexbuf }
   | '\\' 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F']
-      { store_string_char(char_for_hexadecimal_code lexbuf 2);
+      { store_string_char (char_for_hexadecimal_code lexbuf 2);
         string lexbuf }
   | '\\' _
       { raise
@@ -395,5 +442,19 @@ and string = parse
         | Some pos -> raise (Error (Unterminated_string, pos))
         | _ -> assert false }
   | _
-      { store_string_char(Lexing.lexeme_char lexbuf 0);
+      { store_string_char (Lexing.lexeme_char lexbuf 0);
         string lexbuf }
+
+and documentation = parse
+  | ( "*)" )
+      { () }
+  | newline
+      { update_loc lexbuf None 1 false 0;
+        documentation lexbuf }
+  | ( eof )
+      { match !documentation_start_pos with
+        | Some pos -> raise (Error (Unterminated_documentation, pos))
+        | _ -> assert false }
+  | _
+      { store_documentation_char (Lexing.lexeme_char lexbuf 0);
+        documentation lexbuf }
