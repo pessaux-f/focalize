@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.12 2007-02-15 22:49:39 weis Exp $ *)
+(* $Id: parser.mly,v 1.13 2007-02-15 22:55:41 weis Exp $ *)
 
 open Parsetree;;
 
@@ -319,14 +319,14 @@ def_let:
 ;
 
 binding:
-  | LIDENT EQUAL expr
-       { mk {b_name = mk_local_ident $1; b_params = []; b_type = None; b_body = $3} }
-  | LIDENT IN type_expr EQUAL expr
-       { mk {b_name = mk_local_ident $1; b_params = []; b_type = Some $3; b_body = $5} }
-  | LIDENT LPAREN param_list RPAREN EQUAL expr
-       { mk {b_name = mk_local_ident $1; b_params = $3; b_type = None; b_body = $6} }
-  | LIDENT LPAREN param_list RPAREN IN type_expr EQUAL expr
-       { mk {b_name = mk_local_ident $1; b_params = $3; b_type = Some $6; b_body = $8} }
+  | bound_ident EQUAL expr
+       { mk {b_name = $1; b_params = []; b_type = None; b_body = $3} }
+  | bound_ident IN type_expr EQUAL expr
+       { mk {b_name = $1; b_params = []; b_type = Some $3; b_body = $5} }
+  | bound_ident LPAREN param_list RPAREN EQUAL expr
+       { mk {b_name = $1; b_params = $3; b_type = None; b_body = $6} }
+  | bound_ident LPAREN param_list RPAREN IN type_expr EQUAL expr
+       { mk {b_name = $1; b_params = $3; b_type = Some $6; b_body = $8} }
 ;
 
 param_list:
@@ -335,8 +335,8 @@ param_list:
 ;
 
 param:
-  | LIDENT { (mk_local_ident $1, None) }
-  | LIDENT IN type_expr { (mk_local_ident $1, Some $3) }
+  | bound_ident { ($1, None) }
+  | bound_ident IN type_expr { ( $1, Some $3) }
 ;
 
 /**** PROPERTIES & THEOREM DEFINITION ****/
@@ -518,13 +518,17 @@ record_field_list:
   | label_name EQUAL expr SEMI record_field_list { ($1, $3) :: $5 }
 ;
 
+bound_ident:
+  | LIDENT { mk_local_ident $1 }
+  | PIDENT { mk_local_ident $1 }
+  | IIDENT { mk_local_ident $1 }
+;
+
 expr_ident:
   | glob_ident { $1 }
   | opt_lident BANG LIDENT
      { mk (I_method ($1, $3)) }
-  | LIDENT { mk_local_ident $1 }
-  | PIDENT { mk_local_ident $1 }
-  | IIDENT { mk_local_ident $1 }
+  | bound_ident { $1 }
 ;
 
 species_ident:
