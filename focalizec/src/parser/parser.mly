@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.9 2007-02-15 19:14:32 weis Exp $ *)
+(* $Id: parser.mly,v 1.10 2007-02-15 21:27:00 weis Exp $ *)
 
 open Parsetree;;
 
@@ -550,15 +550,15 @@ pattern:
   | pattern AS LIDENT { mk (P_as ($1, $3)) }
   | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
   | LPAREN pattern RPAREN { $2 }
-  | LPAREN RPAREN { mk (P_app (mk_void (), [])) }
+  | LPAREN RPAREN { mk (P_app (mk_void_ident (), [])) }
 ;
 
 pattern_semi_list:
-  | { mk (P_app (mk_nil (), [])) }
+  | { mk (P_app (mk_nil_ident (), [])) }
   | pattern opt_semi
-    { mk (P_app (mk_cons (), [$1; mk (P_app (mk_nil (), []))])) }
+    { mk (P_app (mk_cons_ident (), [$1; mk (P_app (mk_nil_ident (), []))])) }
   | pattern SEMI pattern_semi_list
-    { mk (P_app (mk_cons (), [$1; $3])) }
+    { mk (P_app (mk_cons_ident (), [$1; $3])) }
 ;
 pattern_comma_list:
   | pattern { [ $1 ] }

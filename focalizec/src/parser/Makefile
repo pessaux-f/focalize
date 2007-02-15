@@ -1,34 +1,45 @@
+CAMLBYT = ocamlc -warn-error A -g
+CAMLBIN = ocamlopt -warn-error A
+
+CAMLYAC = ocamlyacc -v
+CAMLLEX = ocamllex
+
+RM = rm -rf
+
 all: parsetree.cmi lexer.ml parser.ml lexer.cmo parser.cmo 
 
-lexer.ml: lexer.mll parser.mly
-	ocamllex lexer.mll
-
-parser.ml: parser.mly
-	ocamlyacc parser.mly
-
 clean::
-	rm *~ *.cm* lexer.ml parser.ml parser.mli lexer.mli
+	$(RM) *~ *.cm* lexer.ml parser.ml parser.mli lexer.mli
 
-
-.SUFFIXES: .cmo .cmi .ml .mll .mly
+.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx 
 
 .ml.cmo:
-	ocamlc -c $<
+	$(CAMLBYT) -c $<
 
 .mli.cmi:
-	ocamlc -c $<
+	$(CAMLBYT) -c $<
+
+.ml.cmx:
+	$(CAMLBIN) -c $<
+
+.mly.cmo:
+	$(CAMLYAC) $<
+	$(CAMLBYT) -c $*.mli
+	$(CAMLBYT) -c $*.ml
+
+.mly.cmx:
+	$(CAMLYAC) $<
+	$(CAMLBIN) -c $*.mli
+	$(CAMLBIN) -c $*.ml
+
+.mly.cmi:
+	$(CAMLYAC) $<
+	$(CAMLBYT) -c $*.mli
+
+.mll.ml:
+	$(CAMLLEX) $<
+
+.mly.ml:
+	$(CAMLYAC) $<
 
 lexer.cmo: parser.cmi
-
-parser.cmi: parser.mli
-	ocamlc -c parser.mli
-
-parsetree.cmi: parsetree.mli
-	ocamlc -c parsetree.mli
-
-#location.cmi: location.mli
-#	ocamlc -c location.mli
-
-#location.cmo: location.ml
-#	ocamlc -c location.ml
-
