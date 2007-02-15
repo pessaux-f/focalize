@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.10 2007-02-15 21:27:00 weis Exp $ *)
+(* $Id: parser.mly,v 1.11 2007-02-15 22:32:11 weis Exp $ *)
 
 open Parsetree;;
 
@@ -144,7 +144,7 @@ let mk_infix e1 s e2 = mk (E_app (mk_global_var s, [e1; e2]));;
 
 %nonassoc IN
 %nonassoc below_SEMI
-%nonassoc SEMI                          /* below EQ ({lbl=...; lbl=...}) */
+%nonassoc SEMI SEMI_OP SEMI_SEMI_OP     /* below EQ ({lbl=...; lbl=...}) */
 %nonassoc LET                           /* above SEMI ( ...; let ... in ...) */
 %nonassoc below_WITH
 %nonassoc FUNCTION WITH                 /* below BAR  (match ... with ...) */
@@ -154,6 +154,7 @@ let mk_infix e1 s e2 = mk (E_app (mk_global_var s, [e1; e2]));;
 %nonassoc NOT                           /* not prop */
 %nonassoc THEN                          /* below ELSE (if ... then ...) */
 %nonassoc ELSE                          /* (if ... then ... else ...) */
+%right    BACKSLASH_OP                  /* e \ e */
 %right    COLON_EQ                      /* expr (e := e := e) */
 %nonassoc AS
 %left     BAR                           /* pattern (p|p|p) */
@@ -165,7 +166,7 @@ let mk_infix e1 s e2 = mk (E_app (mk_global_var s, [e1; e2]));;
 %nonassoc below_EQ
 %left     EQ_OP LT_OP GT_OP             /* expr (e OP e OP e) */
 %right    AT_OP HAT_OP                  /* expr (e OP e OP e) */
-%right    COLON_COLON_OP                /* expr (e :: e :: e) */
+%right    COLON_COLON COLON_COLON_OP    /* expr (e :: e :: e) */
 %left     PLUS_OP DASH_OP               /* expr (e OP e OP e) */
 %left     STAR_OP SLASH_OP              /* expr (e OP e OP e) */
 %left     PERCENT_OP                    /* expr (e OP e OP e) */
@@ -230,7 +231,7 @@ def_type:
 
 def_type_params:
   | { [] }
-  | LPAREN def_type_params RPAREN { $2 }
+  | LPAREN def_type_param_comma_list RPAREN { $2 }
 ;
 
 def_type_param_comma_list:
@@ -477,6 +478,8 @@ expr:
       { mk_infix $1 $2 $3 }
   | expr PERCENT_OP expr
       { mk_infix $1 $2 $3 }
+  | expr STAR_STAR_OP expr
+      { mk_infix $1 $2 $3 }
   | expr BACKSLASH_OP expr
       { mk_infix $1 $2 $3 }
   | expr EQ_OP expr
@@ -495,14 +498,14 @@ expr:
       { mk (E_app (mk_local_var "~|", [$2])) }
   | DASH_OP expr %prec prec_unary_minus
       { mk (E_app (mk_local_var $1, [$2])) }
-   | LPAREN expr RPAREN
+  | LPAREN expr RPAREN
      { $2 }
   | LPAREN RPAREN { mk (E_constr (mk_void (), [])) }
 ;
 
 expr_semi_list:
   | { mk (E_app (mk_nil (), [])) }
-  | expr opt_semi { mk (E_app (mk_cons (), [$1; mk (E_app (mk_nil (), []))])) }
+  | expr { mk (E_app (mk_cons (), [$1; mk (E_app (mk_nil (), []))])) }
   | expr SEMI expr_semi_list { mk (E_app (mk_cons (), [$1; $3])) }
 ;
 expr_comma_list:
@@ -555,7 +558,7 @@ pattern:
 
 pattern_semi_list:
   | { mk (P_app (mk_nil_ident (), [])) }
-  | pattern opt_semi
+  | pattern
     { mk (P_app (mk_cons_ident (), [$1; mk (P_app (mk_nil_ident (), []))])) }
   | pattern SEMI pattern_semi_list
     { mk (P_app (mk_cons_ident (), [$1; $3])) }
@@ -573,11 +576,6 @@ pattern_record_field_list:
 opt_semi:
   | { () }
   | SEMI { () }
-;
-
-opt_rec:
-  | { RF_no_rec }
-  | REC { RF_rec }
 ;
 
 binding_list:
