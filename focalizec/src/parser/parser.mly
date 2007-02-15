@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.8 2007-02-02 00:16:25 weis Exp $ *)
+(* $Id: parser.mly,v 1.9 2007-02-15 19:14:32 weis Exp $ *)
 
 open Parsetree;;
 
@@ -11,9 +11,13 @@ let mk d = {
   ast_desc = d;
 };;
 
-let mk_cons () = mk (I_global (Some "basics", "Cons"));;
-let mk_nil () = mk (I_global (Some "basics", "Nil"));;
-let mk_void () = mk (I_global (Some "basics", "Void"));;
+let mk_cons_ident () = mk (I_global (Some "basics", "Cons"));;
+let mk_nil_ident () = mk (I_global (Some "basics", "Nil"));;
+let mk_void_ident () = mk (I_global (Some "basics", "Void"));;
+
+let mk_cons () = mk (E_var (mk_cons_ident ()));;
+let mk_nil () = mk (E_var (mk_nil_ident ()));;
+let mk_void () = mk (E_var (mk_void_ident ()));;
 
 let mk_local_ident s = mk (I_local s);;
 let mk_global_ident s = mk (I_global (None, s));;
@@ -36,6 +40,7 @@ let mk_infix e1 s e2 = mk (E_app (mk_global_var s, [e1; e2]));;
 %token <string> QIDENT
 %token <string> INT
 %token <string> STRING
+%token <string> DOCUMENTATION
 %token <string> BOOL
 %token <char> CHAR
 
@@ -443,8 +448,8 @@ expr:
      { mk (E_match ($2, $4)) }
   | IF expr THEN expr ELSE expr
      { mk (E_if ($2, $4, $6)) }
-  | LET opt_rec binding_list IN expr
-     { mk (E_let ($2, $3, $5)) }
+  | def_let IN expr
+     { mk (E_let ($1, $3)) }
   | LBRACE record_field_list RBRACE
      { mk (E_record $2) }
   | LBRACKET expr_semi_list RBRACKET { $2 }
@@ -487,9 +492,9 @@ expr:
   | expr AMPER_OP expr
       { mk_infix $1 $2 $3 }
   | TILDA_BAR expr
-      { mk (E_app ("~|", $2)) }
+      { mk (E_app (mk_local_var "~|", [$2])) }
   | DASH_OP expr %prec prec_unary_minus
-      { mk (E_app ($1, $2)) }
+      { mk (E_app (mk_local_var $1, [$2])) }
    | LPAREN expr RPAREN
      { $2 }
   | LPAREN RPAREN { mk (E_constr (mk_void (), [])) }
@@ -534,26 +539,26 @@ constant:
 ;
 
 pattern:
-  | constant { mk (P_constant $1) }
+  | constant { mk (P_const $1) }
   | LIDENT { mk (P_var $1) }
   | UNDERSCORE { mk (P_wild) }
-  | constructor_ref LPAREN pattern_comma_list RPAREN { mk (P_constr ($1, $3)) }
-  | constructor_ref %prec prec_constant_constructor { mk (P_constr ($1, [])) }
+  | constructor_ref LPAREN pattern_comma_list RPAREN { mk (P_app ($1, $3)) }
+  | constructor_ref %prec prec_constant_constructor { mk (P_app ($1, [])) }
   | LBRACKET pattern_semi_list RBRACKET { $2 }
-  | pattern COLON_COLON pattern { mk (P_constr (mk_cons (), [$1; $3])) }
+  | pattern COLON_COLON pattern { mk (P_app (mk_cons_ident (), [$1; $3])) }
   | LBRACE pattern_record_field_list RBRACE { mk (P_record $2) }
   | pattern AS LIDENT { mk (P_as ($1, $3)) }
   | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
   | LPAREN pattern RPAREN { $2 }
-  | LPAREN RPAREN { mk (P_constr (mk_void (), [])) }
+  | LPAREN RPAREN { mk (P_app (mk_void (), [])) }
 ;
 
 pattern_semi_list:
-  | { mk (P_constr (mk_nil (), [])) }
+  | { mk (P_app (mk_nil (), [])) }
   | pattern opt_semi
-    { mk (P_constr (mk_cons (), [$1; mk (P_constr (mk_nil (), []))])) }
+    { mk (P_app (mk_cons (), [$1; mk (P_app (mk_nil (), []))])) }
   | pattern SEMI pattern_semi_list
-    { mk (P_constr (mk_cons (), [$1; $3])) }
+    { mk (P_app (mk_cons (), [$1; $3])) }
 ;
 pattern_comma_list:
   | pattern { [ $1 ] }

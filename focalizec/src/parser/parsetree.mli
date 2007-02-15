@@ -78,23 +78,11 @@ type pattern = pat_desc ast
 and pat_desc =
   | P_const of constant
   | P_var of vname
+  | P_as of pattern * vname
   | P_wild
   | P_app of ident * pattern list
   | P_record of (label * pattern) list
-;;
-
-type expr = expr_desc ast
-and expr_desc =
-  | E_const of constant
-  | E_fun of vname list * expr
-  | E_var of ident
-  | E_app of expr * expr list
-  | E_constr of expr * expr list
-  | E_match of expr * (pattern * expr) list
-  | E_if of expr * expr * expr
-  | E_let of rec_flag * (ident * expr) list * expr
-  | E_record of (label * expr) list
-  | E_external of external_name * external_name option
+  | P_tuple of pattern list
 ;;
 
 type species_def = species_def_desc ast
@@ -191,6 +179,20 @@ and prop_desc =
   | P_equiv of prop * prop
   | P_not of prop
   | P_expr of expr
+
+and expr = expr_desc ast
+and expr_desc =
+  | E_const of constant
+  | E_fun of vname list * expr
+  | E_var of ident
+  | E_app of expr * expr list
+  | E_constr of expr * expr list
+  | E_match of expr * (pattern * expr) list
+  | E_if of expr * expr * expr
+  | E_let of let_def * expr
+  | E_record of (label * expr) list
+  | E_tuple of expr list
+  | E_external of external_name * external_name option
 ;;
 
 type coll_def = coll_def_desc ast
