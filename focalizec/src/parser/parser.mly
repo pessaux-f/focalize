@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.11 2007-02-15 22:32:11 weis Exp $ *)
+(* $Id: parser.mly,v 1.12 2007-02-15 22:49:39 weis Exp $ *)
 
 open Parsetree;;
 
@@ -286,7 +286,7 @@ species_param_list:
 ;
 
 species_param:
-  | LIDENT IN ident { ($1, mk (SPT_in $3)) }
+  | LIDENT IN species_ident { ($1, mk (SPT_in $3)) }
   | LIDENT IS species_expr { ($1, mk (SPT_is $3)) }
 ;
 
@@ -437,7 +437,7 @@ expr:
      { mk (E_app (mk_local_var $1, [ $2 ])) }
   | FUN vname_list DASH_GT expr
      { mk (E_fun ($2, $4)) }
-  | ident
+  | expr_ident
      { mk (E_var $1) }
   | opt_lident SHARP UIDENT %prec prec_constant_constructor
      { mk (E_constr (mk_global_constr $1 $3, [])) }
@@ -518,7 +518,16 @@ record_field_list:
   | label_name EQUAL expr SEMI record_field_list { ($1, $3) :: $5 }
 ;
 
-ident:
+expr_ident:
+  | glob_ident { $1 }
+  | opt_lident BANG LIDENT
+     { mk (I_method ($1, $3)) }
+  | LIDENT { mk_local_ident $1 }
+  | PIDENT { mk_local_ident $1 }
+  | IIDENT { mk_local_ident $1 }
+;
+
+species_ident:
   | glob_ident { $1 }
   | opt_lident BANG LIDENT
      { mk (I_method ($1, $3)) }
