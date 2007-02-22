@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.15 2007-02-22 16:08:41 weis Exp $ *)
+(* $Id: parser.mly,v 1.16 2007-02-22 17:28:53 weis Exp $ *)
 
 open Parsetree;;
 
@@ -29,6 +29,10 @@ let mk_global_constr s1 s2 = mk (E_var (mk_global_constr s1 s2));;
 
 let mk_infix e1 s e2 = mk (E_app (mk_global_var s, [e1; e2]));;
 
+let mk_proof_label (s1, s2) =
+  try int_of_string s1, s2 with
+  | Failure _ -> assert false;;
+
 %}
 
 %token EOF
@@ -43,6 +47,8 @@ let mk_infix e1 s e2 = mk (E_app (mk_global_var s, [e1; e2]));;
 %token <string> DOCUMENTATION
 %token <string> BOOL
 %token <char> CHAR
+
+%token <string * string> PROOF_LABEL
 
 /* Arithmetic operators */
 %token <string> BACKSLASH_OP
@@ -94,6 +100,7 @@ let mk_infix e1 s e2 = mk (E_app (mk_global_var s, [e1; e2]));;
 %token ALIAS
 %token AND
 %token AS
+%token ASSUME
 %token ASSUMED
 %token BUT
 %token BY
@@ -107,7 +114,7 @@ let mk_infix e1 s e2 = mk (E_app (mk_global_var s, [e1; e2]));;
 %token END
 %token EX
 %token EXTERNAL
-%token FUN
+%token FUNCTION
 %token IF
 %token IN
 %token INHERITS
@@ -156,7 +163,6 @@ let mk_infix e1 s e2 = mk (E_app (mk_global_var s, [e1; e2]));;
 %right    COLON_OP                      /* expr (e := e := e) */
 %nonassoc AS
 %right     BAR                          /* Dangling match (match ... with ...) */
-%nonassoc below_COMMA
 %left     COMMA COMMA_OP                /* expr/expr_comma_list (e,e,e) */
 %right    DASH_GT DASH_GT_OP            /* core_type2 (t -> t -> t) */
 %right    BAR_OP                        /* expr (e || e || e) */
@@ -172,17 +178,16 @@ let mk_infix e1 s e2 = mk (E_app (mk_global_var s, [e1; e2]));;
 %nonassoc TILDA_BAR PREFIX_OP           /* unary ` ~ ? $ continue_infix* */
 %nonassoc prec_unary_minus              /* unary DASH_OP */
 %nonassoc prec_constant_constructor     /* cf. simple_expr (C versus C x) */
-%nonassoc prec_constructor_apply        /* above AS BAR COLON_COLON COMMA */
+                                        /* above AS BAR COLON_COLON COMMA */
 %nonassoc below_SHARP
 %nonassoc SHARP                         /* simple_expr/toplevel_directive */
-%nonassoc below_DOT
 %nonassoc DOT
 %nonassoc below_RPAREN
 %nonassoc RPAREN
 /* Finally, the first tokens of simple_expr are above everything else. */
-%nonassoc BEGIN CHAR FALSE INT
+%nonassoc BEGIN CHAR INT
           LBRACE LBRACKET LIDENT LPAREN
-          STRING TRUE UIDENT
+          STRING UIDENT
 
 %start main
 %type <Parsetree.phrase list> main
@@ -372,6 +377,10 @@ prop:
      { $2 }
 ;
 
+opt_prop:
+  | prop { Some $1 }
+  |      { None }
+
 opt_in_type_expr:
   | IN type_expr { Some $2 }
   |              { None }
@@ -383,7 +392,57 @@ vname_list:
 ;
 
 proof:
- | ASSUMED { assert false }
+ | ASSUMED
+     { mk (Pf_assumed) }
+ | BY fact_list
+     { mk (Pf_auto $2) }
+ | COQPROOF
+     { mk (Pf_coq $1) }
+ | proof_node_list
+     { mk (Pf_node $1) }
+;
+
+fact_list:
+ | { [] }
+ | fact COMMA fact_list { $1 :: $3 }
+;
+
+fact:
+ | DEF LIDENT { mk (F_def (mk_local_ident $2)) }
+ | PROPERTY LIDENT { mk (F_property (mk_local_ident $2)) }
+ | PROVE PROOF_LABEL { mk (F_node (mk_proof_label $2)) }
+;
+
+proof_node_list:
+ | { [] }
+ | proof_node proof_node_list { $1 :: $2 }
+;
+
+proof_node:
+ | PROOF_LABEL statement proof
+     { mk (PN_sub (mk_proof_label $1, $2, $3)) }
+ | LET bound_ident expr
+     { mk (PN_let ($2, $3)) }
+ | QED PROOF_LABEL proof
+     { mk (PN_qed (mk_proof_label $2, $3)) }
+;
+
+statement:
+ | hyp_list opt_prop
+     { mk { s_hyps = $1; s_concl = $2; } }
+;
+
+hyp:
+ | ASSUME LIDENT IN type_expr
+     { mk (H_var ($2, $4)) }
+ | ASSUME LIDENT prop
+     { mk (H_hyp ($2, $3)) }
+;
+
+hyp_list:
+ | { [] }
+ | hyp hyp_list { $1 :: $2 }
+;
 
 /**** TYPE EXPRESSIONS ****/
 
@@ -435,7 +494,7 @@ expr:
      { mk (E_const $1) }
   | PREFIX_OP expr
      { mk (E_app (mk_local_var $1, [ $2 ])) }
-  | FUN vname_list DASH_GT expr
+  | FUNCTION vname_list DASH_GT expr
      { mk (E_fun ($2, $4)) }
   | expr_ident
      { mk (E_var $1) }
@@ -477,6 +536,8 @@ expr:
   | expr PLUS_OP expr
       { mk_infix $1 $2 $3 }
   | expr DASH_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr DASH_GT_OP expr
       { mk_infix $1 $2 $3 }
   | expr STAR_OP expr
       { mk_infix $1 $2 $3 }
@@ -565,7 +626,7 @@ pattern:
   | LIDENT { mk (P_var $1) }
   | UNDERSCORE { mk (P_wild) }
   | constructor_ref LPAREN pattern_comma_list RPAREN { mk (P_app ($1, $3)) }
-  | constructor_ref %prec prec_constant_constructor { mk (P_app ($1, [])) }
+  | constructor_ref { mk (P_app ($1, [])) }
   | LBRACKET pattern_semi_list RBRACKET { $2 }
   | pattern COLON_COLON pattern { mk (P_app (mk_cons_ident (), [$1; $3])) }
   | LBRACE pattern_record_field_list RBRACE { mk (P_record $2) }

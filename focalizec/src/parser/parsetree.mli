@@ -191,6 +191,8 @@ and expr_desc =
   | E_if of expr * expr * expr
   | E_let of let_def * expr
   | E_record of (label * expr) list
+  | E_record_access of expr * label
+  | E_record_with of expr * (label * expr) list
   | E_tuple of expr list
   | E_external of external_name * external_name option
 ;;

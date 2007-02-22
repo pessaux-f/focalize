@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.8 2007-02-15 19:15:35 weis Exp $ *)
+(* $Id: lexer.mll,v 1.9 2007-02-22 17:28:53 weis Exp $ *)
 
 {
 open Lexing
@@ -22,6 +22,7 @@ List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
     "and", AND;
     "as", AS;
     "assumed", ASSUMED;
+    "assume", ASSUME;
     "but", BUT;
     "by", BY;
     "collection", COLLECTION;
@@ -31,7 +32,8 @@ List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
     "end", END;
     "ex", EX;
     "external", EXTERNAL;
-    "fun", FUN;
+    "false", BOOL "false";
+    "function", FUNCTION;
     "if", IF;
     "in", IN;
     "inherits", INHERITS;
@@ -56,6 +58,7 @@ List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
     "species", SPECIES;
     "then", THEN;
     "theorem", THEOREM;
+    "true", BOOL "true";
     "type", TYPE;
     "uses", USES;
     "value", VALUE;
@@ -361,6 +364,8 @@ rule token = parse
         [^ '\010' '\013'] * newline
       { update_loc lexbuf name (int_of_string num) true 0;
         token lexbuf }
+  | '<' (['0'-'9']+ as level) '>' (['A'-'Z' 'a'-'z' '0'-'9']+ as label)
+      { PROOF_LABEL (level, label) }
   | '('  { LPAREN }
   | ')'  { RPAREN }
   | '['  { LBRACKET }
