@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.13 2007-02-15 22:55:41 weis Exp $ *)
+(* $Id: parser.mly,v 1.14 2007-02-22 15:01:19 weis Exp $ *)
 
 open Parsetree;;
 
@@ -138,8 +138,6 @@ let mk_infix e1 s e2 = mk (E_app (mk_global_var s, [e1; e2]));;
 %token VALUE
 %token WITH
 
-%token COQPROOF
-
 /* Precedences and associativities. */
 
 %nonassoc IN
@@ -157,7 +155,7 @@ let mk_infix e1 s e2 = mk (E_app (mk_global_var s, [e1; e2]));;
 %right    BACKSLASH_OP                  /* e \ e */
 %right    COLON_EQ                      /* expr (e := e := e) */
 %nonassoc AS
-%left     BAR                           /* pattern (p|p|p) */
+%right     BAR                          /* Dangling match (match ... with ...) */
 %nonassoc below_COMMA
 %left     COMMA COMMA_OP                /* expr/expr_comma_list (e,e,e) */
 %right    DASH_GT DASH_GT_OP            /* core_type2 (t -> t -> t) */
@@ -179,6 +177,8 @@ let mk_infix e1 s e2 = mk (E_app (mk_global_var s, [e1; e2]));;
 %nonassoc SHARP                         /* simple_expr/toplevel_directive */
 %nonassoc below_DOT
 %nonassoc DOT
+%nonassoc below_RPAREN
+%nonassoc RPAREN
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BEGIN CHAR FALSE INT
           LBRACE LBRACKET LIDENT LPAREN
@@ -366,7 +366,7 @@ prop:
      { mk (P_equiv ($1, $3)) }
   | NOT prop
      { mk (P_not $2) }
-  | expr
+  | expr %prec below_RPAREN
      { mk (P_expr $1) }
   | LPAREN prop RPAREN
      { $2 }
@@ -539,8 +539,8 @@ species_ident:
 ;
 
 clause_list:
-  | { [] }
-  | clause BAR clause_list { $1 :: $3 }
+  | BAR clause { [$2] }
+  | BAR clause clause_list { $2 :: $3 }
 ;
 
 clause:

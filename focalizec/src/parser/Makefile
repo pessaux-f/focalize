@@ -6,7 +6,7 @@ CAMLLEX = ocamllex
 
 RM = rm -rf
 
-all: parsetree.cmi lexer.ml parser.ml lexer.cmo parser.cmo 
+all:: parsetree.cmi lexer.cmo parser.cmo 
 
 clean::
 	$(RM) *~ *.cm* lexer.ml parser.ml parser.mli lexer.mli
