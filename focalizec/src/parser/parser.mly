@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.14 2007-02-22 15:01:19 weis Exp $ *)
+(* $Id: parser.mly,v 1.15 2007-02-22 16:08:41 weis Exp $ *)
 
 open Parsetree;;
 
@@ -153,7 +153,7 @@ let mk_infix e1 s e2 = mk (E_app (mk_global_var s, [e1; e2]));;
 %nonassoc THEN                          /* below ELSE (if ... then ...) */
 %nonassoc ELSE                          /* (if ... then ... else ...) */
 %right    BACKSLASH_OP                  /* e \ e */
-%right    COLON_EQ                      /* expr (e := e := e) */
+%right    COLON_OP                      /* expr (e := e := e) */
 %nonassoc AS
 %right     BAR                          /* Dangling match (match ... with ...) */
 %nonassoc below_COMMA
@@ -439,6 +439,8 @@ expr:
      { mk (E_fun ($2, $4)) }
   | expr_ident
      { mk (E_var $1) }
+  | expr DOT label_name
+     { mk (E_record_access ($1, $3)) }
   | opt_lident SHARP UIDENT %prec prec_constant_constructor
      { mk (E_constr (mk_global_constr $1 $3, [])) }
   | opt_lident SHARP UIDENT LPAREN expr_comma_list RPAREN
@@ -453,6 +455,8 @@ expr:
      { mk (E_let ($1, $3)) }
   | LBRACE record_field_list RBRACE
      { mk (E_record $2) }
+  | LBRACE expr WITH record_field_list RBRACE
+     { mk (E_record_with ($2, $4)) }
   | LBRACKET expr_semi_list RBRACKET { $2 }
   | expr COLON_COLON expr { mk (E_app (mk_cons (), [$1; $3])) }
   | LPAREN expr COMMA expr_comma_list RPAREN { mk (E_tuple ($2 :: $4)) }
@@ -467,6 +471,8 @@ expr:
   | expr SEMI_SEMI_OP expr
       { mk_infix $1 $2 $3 }
   | expr COLON_COLON_OP expr
+      { mk_infix $1 $2 $3 }
+  | expr COLON_OP expr
       { mk_infix $1 $2 $3 }
   | expr PLUS_OP expr
       { mk_infix $1 $2 $3 }
