@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.16 2007-02-22 17:28:53 weis Exp $ *)
+(* $Id: parser.mly,v 1.17 2007-03-15 15:46:08 weis Exp $ *)
 
 open Parsetree;;
 
@@ -296,11 +296,39 @@ species_param:
 ;
 
 inherits:
-  | { [] }
+  | species_expr_list { $1 }
 ;
 
+species_expr_list:
+  | {[]}
+  | species_expr species_expr_list { $1 :: $2 }
+;
+
+species_expr:
+  | species_ident
+     { mk { se_name = mk_local_ident $1; se_params = []; }}
+  | species_ident LPAREN species_param_list RPAREN
+     { mk { se_name = mk_local_ident $1; se_params = $3; }}
+
 species_body:
-  | { [] }
+  | species_field { $1 }
+  | species_field species_body { $1 :: $2 }
+
+species_field :
+  | REP rep_type_expr
+    { mk (SF_rep $2) }
+  | SIG LIDENT COLON type_expr
+    { mk (SF_sig (mk_local_ident $2, $4)) }
+  | LET let_def
+    { mk (SF_let ($2))
+  | LETPROP let_def
+    { mk (SF_letprop ($2))
+  | PROPERTY LIDENT EQUAL prop
+    { mk (SF_property (mk_local_ident $2, $4)) }
+  | THEOREM theorem_def
+    { mk (SF_theorem $2) }
+  | PROOF of LIDENT EQUAL proof
+    { mk (SF_proof (mk_local_ident $3, $5))}
 ;
 
 /**** COLLECTION DEFINITION ****/
@@ -388,7 +416,7 @@ opt_in_type_expr:
 
 vname_list:
   | LIDENT vname_list { $1 :: $2 }
-  |                   { [] }
+  | LIDENT            { [$1] }
 ;
 
 proof:
@@ -409,12 +437,12 @@ fact_list:
 
 fact:
  | DEF LIDENT { mk (F_def (mk_local_ident $2)) }
- | PROPERTY LIDENT { mk (F_property (mk_local_ident $2)) }
- | PROVE PROOF_LABEL { mk (F_node (mk_proof_label $2)) }
+ | prop_ident { mk (F_property ($1)) }
+ | PROOF_LABEL { mk (F_node (mk_proof_label $1)) }
 ;
 
 proof_node_list:
- | { [] }
+ | proof_node { [$1] }
  | proof_node proof_node_list { $1 :: $2 }
 ;
 
@@ -423,8 +451,8 @@ proof_node:
      { mk (PN_sub (mk_proof_label $1, $2, $3)) }
  | LET bound_ident expr
      { mk (PN_let ($2, $3)) }
- | QED PROOF_LABEL proof
-     { mk (PN_qed (mk_proof_label $2, $3)) }
+ | PROOF_LABEL QED proof
+     { mk (PN_qed (mk_proof_label $1, $3)) }
 ;
 
 statement:
@@ -435,8 +463,8 @@ statement:
 hyp:
  | ASSUME LIDENT IN type_expr
      { mk (H_var ($2, $4)) }
- | ASSUME LIDENT prop
-     { mk (H_hyp ($2, $3)) }
+ | ASSUME LIDENT COLON prop
+     { mk (H_hyp ($2, $4)) }
 ;
 
 hyp_list:
@@ -589,6 +617,13 @@ bound_ident:
   | LIDENT { mk_local_ident $1 }
   | PIDENT { mk_local_ident $1 }
   | IIDENT { mk_local_ident $1 }
+;
+
+prop_ident:
+  | glob_ident { $1 }
+  | opt_lident BANG LIDENT
+     { mk (I_method ($1, $3)) }
+  | bound_ident { $1 }
 ;
 
 expr_ident:
