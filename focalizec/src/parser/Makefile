@@ -24,6 +24,7 @@ clean::
 
 .mly.cmo:
 	$(CAMLYAC) $<
+	(menhir --explain $< 2>&1) > log
 	$(CAMLBYT) -c $*.mli
 	$(CAMLBYT) -c $*.ml
 
