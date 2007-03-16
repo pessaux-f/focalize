@@ -1,15 +1,18 @@
 %{
-(* $Id: parser.mly,v 1.17 2007-03-15 15:46:08 weis Exp $ *)
+(* $Id: parser.mly,v 1.18 2007-03-16 06:34:25 weis Exp $ *)
 
 open Parsetree;;
 
-let mk d = {
+let mk_doc doc d = {
   ast_loc = {
     l_beg = Parsing.symbol_start_pos ();
     l_end = Parsing.symbol_end_pos ();
   };
   ast_desc = d;
+  ast_doc = doc;
 };;
+
+let mk d = mk_doc None d;;
 
 let mk_cons_ident () = mk (I_global (Some "basics", "Cons"));;
 let mk_nil_ident () = mk (I_global (Some "basics", "Nil"));;
@@ -276,8 +279,8 @@ def_record_field_list:
 /**** SPECIES ****/
 
 species:
-  | SPECIES LIDENT species_params inherits EQUAL species_body END
-      { mk { sd_name = $2; sd_params = $3; sd_inherits = $4; sd_fields = $6; } }
+  | opt_doc SPECIES LIDENT species_params inherits EQUAL species_body END
+      { mk_doc $1 { sd_name = $3; sd_params = $4; sd_inherits = $5; sd_fields = $7; } }
 ;
 
 species_params:
@@ -315,20 +318,25 @@ species_body:
   | species_field species_body { $1 :: $2 }
 
 species_field :
-  | REP rep_type_expr
-    { mk (SF_rep $2) }
+  | opt_doc REP rep_type_expr
+    { mk_doc $1 (SF_rep $3) }
   | SIG LIDENT COLON type_expr
     { mk (SF_sig (mk_local_ident $2, $4)) }
-  | LET let_def
-    { mk (SF_let ($2))
-  | LETPROP let_def
-    { mk (SF_letprop ($2))
-  | PROPERTY LIDENT EQUAL prop
-    { mk (SF_property (mk_local_ident $2, $4)) }
-  | THEOREM theorem_def
+  | LET def_let
+    { mk (SF_let ($2))}
+  | LETPROP def_letprop
+    { mk (SF_letprop $2)}
+  | opt_doc PROPERTY LIDENT EQUAL prop
+    { mk (SF_property (mk_doc $1 {prd_name = mk_local_ident $3; prd_prop = $5;})) }
+  | THEOREM def_theorem
     { mk (SF_theorem $2) }
-  | PROOF of LIDENT EQUAL proof
+  | PROOF OF LIDENT EQUAL proof
     { mk (SF_proof (mk_local_ident $3, $5))}
+;
+
+rep_type_expr:
+  | LIDENT { mk (RTE_ident $1)}
+  /* Fixme complete */
 ;
 
 /**** COLLECTION DEFINITION ****/
@@ -691,6 +699,11 @@ pattern_record_field_list:
 opt_semi:
   | { () }
   | SEMI { () }
+;
+
+opt_doc:
+  | { None }
+  | DOCUMENTATION { Some $1 }
 ;
 
 binding_list:

@@ -32,20 +32,23 @@ type node_label = int * string
 type external_name = string * string
      (** External name from Ocaml or Coq: module name and identifier. *);;
 
-type 'a ast = {
+type ('a, 'b) generic_ast = {
    ast_loc : location; (** The location in the source of the AST node. *)
    ast_desc : 'a;      (** Description of the node. *)
+   ast_doc : 'b option; (** Support for documentation in many formats. *)
 };;
 
+type 'a ast = ('a, unit) generic_ast;;
+type 'a ast_doc = ('a, string) generic_ast;;
+
 type ident = ident_desc ast
-     (** *)
 and ident_desc =
   | I_local of vname
   | I_global of fname option * vname
   | I_method of cname option * vname
 ;;
 
-type rep_type_expr = rep_type_expr_desc ast
+type rep_type_expr = rep_type_expr_desc ast_doc
 and rep_type_expr_desc =
   | RTE_ident of ident
   | RTE_fun of rep_type_expr * rep_type_expr
@@ -85,7 +88,7 @@ and pat_desc =
   | P_tuple of pattern list
 ;;
 
-type species_def = species_def_desc ast
+type species_def = species_def_desc ast_doc
 and species_def_desc = {
   sd_name : sname;
   sd_params : (string * species_param_type) list;
@@ -109,17 +112,35 @@ and species_param_desc =
   | SP_coll of ident
   | SP_entity of expr
 
+and sig_def = sig_def_desc ast_doc
+and sig_def_desc = {
+  sd_name : ident;
+  sd_type: type_expr;
+}
+
+and proof_def = proof_def_desc ast_doc
+and proof_def_desc = {
+  pd_name : ident;
+  pd_proof: proof;
+}
+
+and property_def = property_def_desc ast_doc
+and property_def_desc = {
+  prd_name : ident;
+  prd_prop: prop;
+}
+
 and species_field = species_field_desc ast
 and species_field_desc =
   | SF_rep of rep_type_expr
-  | SF_sig of ident * type_expr
+  | SF_sig of sig_def
   | SF_let of let_def
   | SF_letprop of let_def
-  | SF_property of ident * prop
+  | SF_property of property_def
   | SF_theorem of theorem_def
-  | SF_proof of ident * proof
+  | SF_proof of proof_def
 
-and let_def = let_def_desc ast
+and let_def = let_def_desc ast_doc
 and let_def_desc = {
   ld_rec : rec_flag;
   ld_bindings : binding list;
@@ -132,7 +153,7 @@ and binding_desc = {
   b_body : expr;
 }
 
-and theorem_def = theorem_def_desc ast
+and theorem_def = theorem_def_desc ast_doc
 and theorem_def_desc = {
   th_name : ident;
   th_stmt : prop;
@@ -197,7 +218,7 @@ and expr_desc =
   | E_external of external_name * external_name option
 ;;
 
-type coll_def = coll_def_desc ast
+type coll_def = coll_def_desc ast_doc
 and coll_def_desc = {
   cd_name : cname;
   cd_body : species_expr;
@@ -235,6 +256,9 @@ and external_def_body_desc = {
 
 and external_expr = string;;
 
+(** Toplevel expressions. *)
+type expr_def = expr;;
+
 type phrase = phrase_desc ast
 and phrase_desc =
   | Ph_external of external_def
@@ -244,7 +268,7 @@ and phrase_desc =
   | Ph_coll of coll_def
   | Ph_type of type_def
   | Ph_let of let_def
-  (* a voir: ajouter les expressions a toplevel ? *)
   | Ph_letprop of let_def
   | Ph_theorem of theorem_def
+  | Ph_expr of expr_def
 ;;
