@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.19 2007-03-16 06:42:19 weis Exp $ *)
+(* $Id: parser.mly,v 1.20 2007-03-16 07:56:29 weis Exp $ *)
 
 open Parsetree;;
 
@@ -279,8 +279,8 @@ def_record_field_list:
 /**** SPECIES ****/
 
 species:
-  | opt_doc SPECIES LIDENT species_params inherits EQUAL species_body END
-      { mk_doc $1 { sd_name = mk_global_ident $3; sd_params = $4; sd_inherits = $5; sd_fields = $7; } }
+  | opt_doc SPECIES LIDENT species_params INHERITS inherits EQUAL species_body END
+      { mk_doc $1 { sd_name = mk_global_ident $3; sd_params = $4; sd_inherits = $6; sd_fields = $8; } }
 ;
 
 species_params:
@@ -336,7 +336,7 @@ species_field :
 
 rep_type_expr:
   | LIDENT { mk (RTE_ident $1)}
-  /* Fixme complete */
+  /* Fixme incomplete */
 ;
 
 /**** COLLECTION DEFINITION ****/
@@ -346,17 +346,13 @@ collection:
       { mk { cd_name = $2; cd_body = $4; } }
 ;
 
-species_expr:
-  | { assert false }
-;
-
 /**** FUNCTION & VALUES DEFINITION ****/
 
 def_let:
-  | LET binding
-       { mk {ld_rec = RF_no_rec; ld_bindings = [$2]} }
-  | LET REC binding_list
-       { mk {ld_rec = RF_rec; ld_bindings = $3} }
+  | opt_doc LET binding
+       { mk_doc $1 {ld_rec = RF_no_rec; ld_bindings = [$3]} }
+  | opt_doc LET REC binding_list
+       { mk_doc $1 {ld_rec = RF_rec; ld_bindings = $4} }
 ;
 
 binding:
@@ -383,13 +379,13 @@ param:
 /**** PROPERTIES & THEOREM DEFINITION ****/
 
 def_letprop:
-  | LETPROP binding
-      { mk {ld_rec = RF_no_rec; ld_bindings = [$2]} }
+  | opt_doc LETPROP binding
+      { mk_doc $1 {ld_rec = RF_no_rec; ld_bindings = [$3]} }
 ;
 
 def_theorem:
-  | THEOREM LIDENT COLON prop PROOF COLON proof
-      { mk { th_name = mk_local_ident $2; th_stmt = $4; th_proof = $7 } }
+  | opt_doc THEOREM LIDENT COLON prop PROOF COLON proof
+      { mk_doc $1 { th_name = mk_local_ident $3; th_stmt = $5; th_proof = $8 } }
 ;
 
 prop:
