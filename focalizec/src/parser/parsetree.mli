@@ -114,8 +114,8 @@ and species_param_desc =
 
 and sig_def = sig_def_desc ast_doc
 and sig_def_desc = {
-  sd_name : ident;
-  sd_type: type_expr;
+  sid_name : ident;
+  sid_type: type_expr;
 }
 
 and proof_def = proof_def_desc ast_doc

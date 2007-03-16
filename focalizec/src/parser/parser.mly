@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.18 2007-03-16 06:34:25 weis Exp $ *)
+(* $Id: parser.mly,v 1.19 2007-03-16 06:42:19 weis Exp $ *)
 
 open Parsetree;;
 
@@ -280,7 +280,7 @@ def_record_field_list:
 
 species:
   | opt_doc SPECIES LIDENT species_params inherits EQUAL species_body END
-      { mk_doc $1 { sd_name = $3; sd_params = $4; sd_inherits = $5; sd_fields = $7; } }
+      { mk_doc $1 { sd_name = mk_global_ident $3; sd_params = $4; sd_inherits = $5; sd_fields = $7; } }
 ;
 
 species_params:
