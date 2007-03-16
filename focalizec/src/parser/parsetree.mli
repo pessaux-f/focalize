@@ -38,7 +38,7 @@ type ('a, 'b) generic_ast = {
    ast_doc : 'b option; (** Support for documentation in many formats. *)
 };;
 
-type 'a ast = ('a, unit) generic_ast;;
+type 'a ast = ('a, string) generic_ast;;
 type 'a ast_doc = ('a, string) generic_ast;;
 
 type ident = ident_desc ast
@@ -48,12 +48,12 @@ and ident_desc =
   | I_method of cname option * vname
 ;;
 
-type rep_type_expr = rep_type_expr_desc ast_doc
-and rep_type_expr_desc =
+type rep_type_def = rep_type_def_desc ast_doc
+and rep_type_def_desc =
   | RTE_ident of ident
-  | RTE_fun of rep_type_expr * rep_type_expr
-  | RTE_app of ident * rep_type_expr list
-  | RTE_prod of rep_type_expr * rep_type_expr
+  | RTE_fun of rep_type_def * rep_type_def
+  | RTE_app of ident * rep_type_def list
+  | RTE_prod of rep_type_def * rep_type_def
 ;;
 
 type type_expr = type_expr_desc ast
@@ -91,7 +91,7 @@ and pat_desc =
 type species_def = species_def_desc ast_doc
 and species_def_desc = {
   sd_name : sname;
-  sd_params : (string * species_param_type) list;
+  sd_params : (vname * species_param_type) list;
   sd_inherits : species_expr list;
   sd_fields : species_field list;
 }
@@ -114,8 +114,8 @@ and species_param_desc =
 
 and sig_def = sig_def_desc ast_doc
 and sig_def_desc = {
-  sid_name : ident;
-  sid_type: type_expr;
+  sig_name : ident;
+  sig_type: type_expr;
 }
 
 and proof_def = proof_def_desc ast_doc
@@ -132,7 +132,7 @@ and property_def_desc = {
 
 and species_field = species_field_desc ast
 and species_field_desc =
-  | SF_rep of rep_type_expr
+  | SF_rep of rep_type_def
   | SF_sig of sig_def
   | SF_let of let_def
   | SF_letprop of let_def

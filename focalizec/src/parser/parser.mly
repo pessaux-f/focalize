@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.20 2007-03-16 07:56:29 weis Exp $ *)
+(* $Id: parser.mly,v 1.21 2007-03-16 10:56:51 weis Exp $ *)
 
 open Parsetree;;
 
@@ -13,6 +13,7 @@ let mk_doc doc d = {
 };;
 
 let mk d = mk_doc None d;;
+let mk_no_doc d = mk_doc None d;;
 
 let mk_cons_ident () = mk (I_global (Some "basics", "Cons"));;
 let mk_nil_ident () = mk (I_global (Some "basics", "Nil"));;
@@ -207,8 +208,8 @@ phrase:
   | def_letprop SEMI_SEMI { mk (Ph_letprop $1) }
   | def_theorem SEMI_SEMI { mk (Ph_theorem $1) }
   | def_type { mk (Ph_type $1) }
-  | species { mk (Ph_species $1) }
-  | collection { mk (Ph_coll $1) }
+  | def_species { mk (Ph_species $1) }
+  | def_collection { mk (Ph_coll $1) }
   | EXTERNAL def_external { mk (Ph_external $2) }
   | OPEN STRING SEMI_SEMI { mk (Ph_open $2) }
   | USES STRING SEMI_SEMI { mk (Ph_use $2) } /* USES should be USE */
@@ -221,20 +222,22 @@ def_external:
       { mk (ED_value (mk {ed_name = $2; ed_body = $4})) }
 
 def_external_body:
-  | BAR external_language DASH_GT external_name { [($2, $4)]}
-  | BAR external_language DASH_GT external_name def_external_body { ($2, $4) :: $5}
+  | BAR external_language DASH_GT external_name { [($2, $4)] }
+  | BAR external_language DASH_GT external_name def_external_body
+      { ($2, $4) :: $5 }
 ;
 
 external_language:
-  | CAML { EL_Caml}
-  | COQ { EL_Coq}
+  | CAML { EL_Caml }
+  | COQ { EL_Coq }
   | STRING { EL_external $1 }
 ;
 
 /**** TYPE DEFINITION ****/
+
 def_type:
-  | TYPE LIDENT def_type_params EQUAL def_type_body SEMI_SEMI
-      { mk {td_name = $2; td_params = $3; td_body = $5; } }
+  | opt_doc TYPE LIDENT def_type_params EQUAL def_type_body SEMI_SEMI
+      { mk_doc $1 {td_name = $3; td_params = $4; td_body = $6; } }
 ;
 
 def_type_params:
@@ -278,28 +281,24 @@ def_record_field_list:
 
 /**** SPECIES ****/
 
-species:
-  | opt_doc SPECIES LIDENT species_params INHERITS inherits EQUAL species_body END
-      { mk_doc $1 { sd_name = mk_global_ident $3; sd_params = $4; sd_inherits = $6; sd_fields = $8; } }
+def_species:
+  | opt_doc SPECIES LIDENT def_species_params INHERITS species_expr_list EQUAL species_fields END
+    { mk_doc $1 { sd_name = $3; sd_params = $4; sd_inherits = $6; sd_fields = $8; } }
 ;
 
-species_params:
+def_species_params:
   | { [] }
-  | LPAREN species_param_list RPAREN { $2 }
+  | LPAREN def_species_param_list RPAREN { $2 }
 ;
 
-species_param_list:
-  | species_param { [$1] }
-  | species_param COMMA species_param_list { $1 :: $3 }
+def_species_param_list:
+  | def_species_param { [$1] }
+  | def_species_param COMMA def_species_param_list { $1 :: $3 }
 ;
 
-species_param:
+def_species_param:
   | LIDENT IN species_ident { ($1, mk (SPT_in $3)) }
   | LIDENT IS species_expr { ($1, mk (SPT_is $3)) }
-;
-
-inherits:
-  | species_expr_list { $1 }
 ;
 
 species_expr_list:
@@ -309,41 +308,54 @@ species_expr_list:
 
 species_expr:
   | species_ident
-     { mk { se_name = mk_local_ident $1; se_params = []; }}
+    { mk_no_doc { se_name = $1; se_params = []; } }
   | species_ident LPAREN species_param_list RPAREN
-     { mk { se_name = mk_local_ident $1; se_params = $3; }}
+    { mk_no_doc { se_name = $1; se_params = $3; } }
 
-species_body:
-  | species_field { $1 }
-  | species_field species_body { $1 :: $2 }
-
-species_field :
-  | opt_doc REP rep_type_expr
-    { mk_doc $1 (SF_rep $3) }
-  | SIG LIDENT COLON type_expr
-    { mk (SF_sig (mk_local_ident $2, $4)) }
-  | LET def_let
-    { mk (SF_let ($2))}
-  | LETPROP def_letprop
-    { mk (SF_letprop $2)}
-  | opt_doc PROPERTY LIDENT EQUAL prop
-    { mk (SF_property (mk_doc $1 {prd_name = mk_local_ident $3; prd_prop = $5;})) }
-  | THEOREM def_theorem
-    { mk (SF_theorem $2) }
-  | PROOF OF LIDENT EQUAL proof
-    { mk (SF_proof (mk_local_ident $3, $5))}
+species_param:
+  | coll_ident { mk (SP_coll $1) }
+  | expr { mk (SP_entity $1) }
 ;
 
-rep_type_expr:
-  | LIDENT { mk (RTE_ident $1)}
+species_param_list:
+  | species_param { [$1] }
+  | species_param COMMA species_param_list { $1 :: $3 }
+;
+
+species_fields:
+  | species_field { [$1] }
+  | species_field species_fields { $1 :: $2 }
+
+species_field :
+  | def_rep      { mk (SF_rep $1) }
+  | def_sig      { mk (SF_sig $1) }
+  | def_let      { mk (SF_let $1) }
+  | def_letprop  { mk (SF_letprop $1) }
+  | def_property { mk (SF_property $1) }
+  | def_theorem  { mk (SF_theorem $1) }
+  | def_proof    { mk (SF_proof $1) }
+;
+
+def_proof:
+  | opt_doc PROOF OF LIDENT EQUAL proof
+    { mk_doc $1 { pd_name = mk_local_ident $4; pd_proof = $6; } }
+;
+
+def_rep:
+  | opt_doc REP rep_type_def
+    { mk_doc $1 $3 }
+;
+
+rep_type_def:
+  | LIDENT { RTE_ident (mk_global_ident $1) }
   /* Fixme incomplete */
 ;
 
 /**** COLLECTION DEFINITION ****/
 
-collection:
-  | COLLECTION LIDENT IMPLEMENTS species_expr EQUAL END
-      { mk { cd_name = $2; cd_body = $4; } }
+def_collection:
+  | opt_doc COLLECTION LIDENT IMPLEMENTS species_expr EQUAL END
+      { mk_doc $1 { cd_name = $3; cd_body = $5; } }
 ;
 
 /**** FUNCTION & VALUES DEFINITION ****/
@@ -378,9 +390,20 @@ param:
 
 /**** PROPERTIES & THEOREM DEFINITION ****/
 
+def_sig:
+  | opt_doc SIG LIDENT COLON type_expr
+    { mk_doc $1 {sig_name = mk_local_ident $3; sig_type = $5; } }
+
+;
+
 def_letprop:
   | opt_doc LETPROP binding
-      { mk_doc $1 {ld_rec = RF_no_rec; ld_bindings = [$3]} }
+    { mk_doc $1 {ld_rec = RF_no_rec; ld_bindings = [$3]} }
+;
+
+def_property:
+  | opt_doc PROPERTY LIDENT EQUAL prop
+    { mk_doc $1 {prd_name = mk_local_ident $3; prd_prop = $5; } }
 ;
 
 def_theorem:
@@ -623,13 +646,6 @@ bound_ident:
   | IIDENT { mk_local_ident $1 }
 ;
 
-prop_ident:
-  | glob_ident { $1 }
-  | opt_lident BANG LIDENT
-     { mk (I_method ($1, $3)) }
-  | bound_ident { $1 }
-;
-
 expr_ident:
   | glob_ident { $1 }
   | opt_lident BANG LIDENT
@@ -637,11 +653,18 @@ expr_ident:
   | bound_ident { $1 }
 ;
 
+prop_ident:
+  | expr_ident { $1 }
+
 species_ident:
   | glob_ident { $1 }
   | opt_lident BANG LIDENT
      { mk (I_method ($1, $3)) }
   | LIDENT { mk (I_local $1) }
+;
+
+coll_ident:
+  | species_ident { $1 }
 ;
 
 clause_list:
