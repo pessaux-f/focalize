@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.9 2007-02-22 17:28:53 weis Exp $ *)
+(* $Id: lexer.mll,v 1.10 2007-03-16 06:33:27 weis Exp $ *)
 
 {
 open Lexing
@@ -175,7 +175,9 @@ let update_loc lexbuf file line absolute chars =
 
 let mk_coqproof s = COQPROOF (String.sub s 2 (String.length s - 4));;
 
+(* The prefix version of a prefix operator. *)
 let mk_prefix_prefixop s = PIDENT s;;
+(* The prefix version of an infix operator. *)
 let mk_prefix_infixop s = IIDENT s;;
 
 let mk_infixop s =
@@ -342,15 +344,6 @@ rule token = parse
       { let l = Lexing.lexeme lexbuf in
         let esc = String.sub l 1 (String.length l - 1) in
         raise (Error (Illegal_escape esc, lexbuf.lex_start_p)) }
-  | "%%" [^ '\010' '\013'] * newline
-      { update_loc lexbuf None 1 false 0;
-        token lexbuf }
-  | "(*"
-      { comment_start_pos := [lexbuf.lex_start_p];
-        comment lexbuf;
-        token lexbuf }
-  | "*)"
-      { raise (Error (Uninitiated_comment, lexbuf.lex_start_p)) }
   | "(**"
       { reset_documentation_buffer ();
         documentation_start_pos := Some lexbuf.lex_start_p;
@@ -359,6 +352,15 @@ rule token = parse
         | Some pos -> lexbuf.lex_start_p <- pos
         | _ -> assert false end;
         DOCUMENTATION (get_stored_documentation ()) }
+  | "(*"
+      { comment_start_pos := [lexbuf.lex_start_p];
+        comment lexbuf;
+        token lexbuf }
+  | "*)"
+      { raise (Error (Uninitiated_comment, lexbuf.lex_start_p)) }
+  | "%%" [^ '\010' '\013'] * newline
+      { update_loc lexbuf None 1 false 0;
+        token lexbuf }
   | "#" [' ' '\t']* (['0'-'9']+ as num) [' ' '\t']*
         ("\"" ([^ '\010' '\013' '"' ] * as name) "\"")?
         [^ '\010' '\013'] * newline
