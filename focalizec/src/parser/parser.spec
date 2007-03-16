@@ -114,6 +114,36 @@ Structured comments
 \item must be parsed.
 \end{itemize}
 
+- on a decidé d'abandonner l'ssociation entre une méthode FoCaL et un nom
+  externe pour mathml, openmath ou LaTeX dans le commentaire de la méthode.
+
+- Dans l'entete des fichiers on fait un binding du genre
+
+   @author(Moi)
+   @title(Boolean Algebras)
+   @descrition(Boolean Alberas are a model for abstract classical logics)
+   @extern(
+          "mathml" | "plus" -> "<plus/>', "mult" -> "<times/>";
+          "tex "   | "plus" -> "+". "mult -> "";
+          )
+
+ - tous les commentaires sont à arguments: @title(), @description() ...
+
+ - dans les commentaires de méthode on autorise du texte libre avec la
+   possibilité de mettre des @focal(plus(x,y)) qui sont vérifiés du genre
+
+   (**
+       In a boolean algebra @focal(!plus(x,y)) denotes
+       logical or of @focal(x) and @focal(y)
+
+     *)
+
+ - la portée des commentaires d'une méthode est celle de l'héritage normal. La
+   notation est celle liée au fichier associé à l'héritage normal.
+
+ - Il faut penser à ce qu'on met dans du texte libre et aux caractères spéciaux
+   XML.
+
 The general parser only defines where documentation parts can be written.
 
 A documentation text must start with "(**" and ends with "*)".
