@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.22 2007-03-16 11:08:55 weis Exp $ *)
+(* $Id: parser.mly,v 1.23 2007-03-16 11:39:40 weis Exp $ *)
 
 open Parsetree;;
 
@@ -217,14 +217,14 @@ phrase:
 
 def_external:
   | TYPE LIDENT EQUAL def_external_body SEMI_SEMI
-      { mk (ED_type (mk {ed_name = $2; ed_body = $4})) }
+    { mk (ED_type (mk {ed_name = $2; ed_body = $4})) }
   | VALUE value_name EQUAL def_external_body SEMI_SEMI
-      { mk (ED_value (mk {ed_name = $2; ed_body = $4})) }
+    { mk (ED_value (mk {ed_name = $2; ed_body = $4})) }
 
 def_external_body:
   | BAR external_language DASH_GT external_name { [($2, $4)] }
   | BAR external_language DASH_GT external_name def_external_body
-      { ($2, $4) :: $5 }
+    { ($2, $4) :: $5 }
 ;
 
 external_language:
@@ -237,7 +237,7 @@ external_language:
 
 def_type:
   | opt_doc TYPE LIDENT def_type_params EQUAL def_type_body SEMI_SEMI
-      { mk_doc $1 {td_name = $3; td_params = $4; td_body = $6; } }
+    { mk_doc $1 {td_name = $3; td_params = $4; td_body = $6; } }
 ;
 
 def_type_params:
@@ -355,27 +355,27 @@ rep_type_def:
 
 def_collection:
   | opt_doc COLLECTION LIDENT IMPLEMENTS species_expr EQUAL END
-      { mk_doc $1 { cd_name = $3; cd_body = $5; } }
+    { mk_doc $1 { cd_name = $3; cd_body = $5; } }
 ;
 
 /**** FUNCTION & VALUES DEFINITION ****/
 
 def_let:
   | opt_doc LET binding
-       { mk_doc $1 {ld_rec = RF_no_rec; ld_bindings = [$3]} }
+    { mk_doc $1 {ld_rec = RF_no_rec; ld_bindings = [$3]} }
   | opt_doc LET REC binding_list
-       { mk_doc $1 {ld_rec = RF_rec; ld_bindings = $4} }
+    { mk_doc $1 {ld_rec = RF_rec; ld_bindings = $4} }
 ;
 
 binding:
   | bound_ident EQUAL expr
-       { mk {b_name = $1; b_params = []; b_type = None; b_body = $3} }
+    { mk {b_name = $1; b_params = []; b_type = None; b_body = $3} }
   | bound_ident IN type_expr EQUAL expr
-       { mk {b_name = $1; b_params = []; b_type = Some $3; b_body = $5} }
+    { mk {b_name = $1; b_params = []; b_type = Some $3; b_body = $5} }
   | bound_ident LPAREN param_list RPAREN EQUAL expr
-       { mk {b_name = $1; b_params = $3; b_type = None; b_body = $6} }
+    { mk {b_name = $1; b_params = $3; b_type = None; b_body = $6} }
   | bound_ident LPAREN param_list RPAREN IN type_expr EQUAL expr
-       { mk {b_name = $1; b_params = $3; b_type = Some $6; b_body = $8} }
+    { mk {b_name = $1; b_params = $3; b_type = Some $6; b_body = $8} }
 ;
 
 param_list:
@@ -408,28 +408,28 @@ def_property:
 
 def_theorem:
   | opt_doc THEOREM LIDENT COLON prop PROOF COLON proof
-      { mk_doc $1 { th_name = mk_local_ident $3; th_stmt = $5; th_proof = $8 } }
+    { mk_doc $1 { th_name = mk_local_ident $3; th_stmt = $5; th_proof = $8 } }
 ;
 
 prop:
   | ALL vname_list opt_in_type_expr COMMA prop
-     { mk (P_forall ($2, $3, $5))}
+    { mk (P_forall ($2, $3, $5))}
   | EX vname_list opt_in_type_expr COMMA prop
-     { mk (P_exists ($2, $3, $5))}
+    { mk (P_exists ($2, $3, $5))}
   | prop DASH_GT prop
-     { mk (P_imply ($1, $3)) }
+    { mk (P_imply ($1, $3)) }
   | prop OR prop
-     { mk (P_or ($1, $3)) }
+    { mk (P_or ($1, $3)) }
   | prop AND prop
-     { mk (P_and ($1, $3)) }
+    { mk (P_and ($1, $3)) }
   | prop LT_DASH_GT prop
-     { mk (P_equiv ($1, $3)) }
+    { mk (P_equiv ($1, $3)) }
   | NOT prop
-     { mk (P_not $2) }
+    { mk (P_not $2) }
   | expr %prec below_RPAREN
-     { mk (P_expr $1) }
+    { mk (P_expr $1) }
   | LPAREN prop RPAREN
-     { $2 }
+    { $2 }
 ;
 
 opt_prop:
@@ -448,13 +448,13 @@ vname_list:
 
 proof:
  | opt_doc ASSUMED
-     { mk_doc $1 (Pf_assumed) }
+   { mk_doc $1 (Pf_assumed) }
  | opt_doc BY fact_list
-     { mk_doc $1 (Pf_auto $3) }
+   { mk_doc $1 (Pf_auto $3) }
  | opt_doc COQPROOF
-     { mk_doc $1 (Pf_coq $2) }
+   { mk_doc $1 (Pf_coq $2) }
  | proof_node_list
-     { mk (Pf_node $1) }
+   { mk (Pf_node $1) }
 ;
 
 fact_list:
@@ -475,23 +475,21 @@ proof_node_list:
 
 proof_node:
  | opt_doc PROOF_LABEL statement proof
-     { mk_doc $1 (PN_sub (mk_proof_label $2, $3, $4)) }
+   { mk_doc $1 (PN_sub (mk_proof_label $2, $3, $4)) }
  | opt_doc LET bound_ident expr
-     { mk_doc $1 (PN_let ($3, $4)) }
+   { mk_doc $1 (PN_let ($3, $4)) }
  | opt_doc PROOF_LABEL QED proof
-     { mk_doc $1 (PN_qed (mk_proof_label $2, $4)) }
+   { mk_doc $1 (PN_qed (mk_proof_label $2, $4)) }
 ;
 
 statement:
  | hyp_list opt_prop
-     { mk { s_hyps = $1; s_concl = $2; } }
+   { mk { s_hyps = $1; s_concl = $2; } }
 ;
 
 hyp:
- | ASSUME LIDENT IN type_expr
-     { mk (H_var ($2, $4)) }
- | ASSUME LIDENT COLON prop
-     { mk (H_hyp ($2, $4)) }
+ | ASSUME LIDENT IN type_expr { mk (H_var ($2, $4)) }
+ | ASSUME LIDENT COLON prop   { mk (H_hyp ($2, $4)) }
 ;
 
 hyp_list:
@@ -503,23 +501,23 @@ hyp_list:
 
 type_expr:
   | SELF
-     { mk TE_self }
+    { mk TE_self }
   | PROP
-     { mk TE_prop }
+    { mk TE_prop }
   | QIDENT
-     { mk (TE_ident (mk_local_ident $1)) }
+    { mk (TE_ident (mk_local_ident $1)) }
   | glob_ident
-     { mk (TE_ident $1) }
+    { mk (TE_ident $1) }
   | LIDENT
-     { mk (TE_ident (mk (I_method (Some $1, "self")))) }
+    { mk (TE_ident (mk (I_method (Some $1, "self")))) }
   | type_expr DASH_GT type_expr
-     { mk (TE_fun ($1, $3)) }
+    { mk (TE_fun ($1, $3)) }
   | type_expr STAR_OP type_expr
-     { mk (TE_prod ($1, $3)) }
+    { mk (TE_prod ($1, $3)) }
   | glob_ident LPAREN type_expr_comma_list RPAREN
-     { mk (TE_app ($1, $3)) }
+    { mk (TE_app ($1, $3)) }
   | LPAREN type_expr RPAREN
-     { $2 }
+    { $2 }
 ;
 
 type_expr_comma_list:
@@ -529,115 +527,129 @@ type_expr_comma_list:
 
 constructor_ref:
   | opt_lident SHARP UIDENT
-     { mk (I_global ($1, $3)) }
+    { mk (I_global ($1, $3)) }
 ;
 
 /**** EXPRESSIONS ****/
 
 glob_ident:
   | opt_lident SHARP LIDENT
-     { mk (I_global ($1, $3)) }
+    { mk (I_global ($1, $3)) }
 ;
 
 opt_lident:
-  | LIDENT { Some $1 }
-  |        { None }
+  |
+    { None }
+  | LIDENT
+    { Some $1 }
 ;
 
 expr:
   | constant
-     { mk (E_const $1) }
+    { mk (E_const $1) }
   | PREFIX_OP expr
-     { mk (E_app (mk_local_var $1, [ $2 ])) }
+    { mk (E_app (mk_local_var $1, [ $2 ])) }
   | FUNCTION vname_list DASH_GT expr
-     { mk (E_fun ($2, $4)) }
+    { mk (E_fun ($2, $4)) }
   | expr_ident
-     { mk (E_var $1) }
+    { mk (E_var $1) }
   | expr DOT label_name
-     { mk (E_record_access ($1, $3)) }
+    { mk (E_record_access ($1, $3)) }
   | opt_lident SHARP UIDENT %prec prec_constant_constructor
-     { mk (E_constr (mk_global_constr $1 $3, [])) }
+    { mk (E_constr (mk_global_constr $1 $3, [])) }
   | opt_lident SHARP UIDENT LPAREN expr_comma_list RPAREN
-     { mk (E_constr (mk_global_constr $1 $3, $5)) }
+    { mk (E_constr (mk_global_constr $1 $3, $5)) }
   | expr LPAREN expr_comma_list RPAREN
-     { mk (E_app ($1, $3)) }
+    { mk (E_app ($1, $3)) }
   | MATCH expr WITH clause_list
-     { mk (E_match ($2, $4)) }
+    { mk (E_match ($2, $4)) }
   | IF expr THEN expr ELSE expr
-     { mk (E_if ($2, $4, $6)) }
+    { mk (E_if ($2, $4, $6)) }
   | def_let IN expr
-     { mk (E_let ($1, $3)) }
+    { mk (E_let ($1, $3)) }
   | LBRACE record_field_list RBRACE
-     { mk (E_record $2) }
+    { mk (E_record $2) }
   | LBRACE expr WITH record_field_list RBRACE
-     { mk (E_record_with ($2, $4)) }
-  | LBRACKET expr_semi_list RBRACKET { $2 }
-  | expr COLON_COLON expr { mk (E_app (mk_cons (), [$1; $3])) }
-  | LPAREN expr COMMA expr_comma_list RPAREN { mk (E_tuple ($2 :: $4)) }
+    { mk (E_record_with ($2, $4)) }
+  | LBRACKET expr_semi_list RBRACKET
+    { $2 }
+  | expr COLON_COLON expr
+    { mk (E_app (mk_cons (), [$1; $3])) }
+  | LPAREN expr COMMA expr_comma_list RPAREN
+    { mk (E_tuple ($2 :: $4)) }
   | expr COMMA_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr HAT_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr AT_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr SEMI_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr SEMI_SEMI_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr COLON_COLON_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr COLON_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr PLUS_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr DASH_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr DASH_GT_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr STAR_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr SLASH_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr PERCENT_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr STAR_STAR_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr BACKSLASH_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr EQ_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr LT_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr LT_DASH_GT_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr GT_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr BAR_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | expr AMPER_OP expr
-      { mk_infix $1 $2 $3 }
+    { mk_infix $1 $2 $3 }
   | TILDA_BAR expr
-      { mk (E_app (mk_local_var "~|", [$2])) }
+    { mk (E_app (mk_local_var "~|", [$2])) }
   | DASH_OP expr %prec prec_unary_minus
-      { mk (E_app (mk_local_var $1, [$2])) }
+    { mk (E_app (mk_local_var $1, [$2])) }
   | LPAREN expr RPAREN
-     { $2 }
-  | LPAREN RPAREN { mk (E_constr (mk_void (), [])) }
+    { $2 }
+  | LPAREN RPAREN
+    { mk (E_constr (mk_void (), [])) }
 ;
 
 expr_semi_list:
-  | { mk (E_app (mk_nil (), [])) }
-  | expr { mk (E_app (mk_cons (), [$1; mk (E_app (mk_nil (), []))])) }
-  | expr SEMI expr_semi_list { mk (E_app (mk_cons (), [$1; $3])) }
+  |
+    { mk (E_app (mk_nil (), [])) }
+  | expr
+    { mk (E_app (mk_cons (), [$1; mk (E_app (mk_nil (), []))])) }
+  | expr SEMI expr_semi_list
+    { mk (E_app (mk_cons (), [$1; $3])) }
 ;
+
 expr_comma_list:
-  | expr { [ $1 ] }
-  | expr COMMA expr_comma_list { $1 :: $3 }
+  | expr
+    { [ $1 ] }
+  | expr COMMA expr_comma_list
+    { $1 :: $3 }
 ;
 
 record_field_list:
-  | label_name EQUAL expr opt_semi { [ ($1, $3) ] }
-  | label_name EQUAL expr SEMI record_field_list { ($1, $3) :: $5 }
+  | label_name EQUAL expr opt_semi
+    { [ ($1, $3) ] }
+  | label_name EQUAL expr SEMI record_field_list
+    { ($1, $3) :: $5 }
 ;
 
 bound_ident:
@@ -647,33 +659,43 @@ bound_ident:
 ;
 
 expr_ident:
-  | glob_ident { $1 }
+  | glob_ident
+    { $1 }
   | opt_lident BANG LIDENT
-     { mk (I_method ($1, $3)) }
-  | bound_ident { $1 }
+    { mk (I_method ($1, $3)) }
+  | bound_ident
+    { $1 }
 ;
 
 prop_ident:
-  | expr_ident { $1 }
+  | expr_ident
+    { $1 }
+;
 
 species_ident:
-  | glob_ident { $1 }
+  | LIDENT
+    { mk (I_local $1) }
+  | glob_ident
+    { $1 }
   | opt_lident BANG LIDENT
-     { mk (I_method ($1, $3)) }
-  | LIDENT { mk (I_local $1) }
+    { mk (I_method ($1, $3)) }
 ;
 
 coll_ident:
-  | species_ident { $1 }
+  | species_ident
+    { $1 }
 ;
 
 clause_list:
-  | BAR clause { [$2] }
-  | BAR clause clause_list { $2 :: $3 }
+  | BAR clause
+    { [$2] }
+  | BAR clause clause_list
+    { $2 :: $3 }
 ;
 
 clause:
-  | pattern DASH_GT expr { ($1, $3) }
+  | pattern DASH_GT expr
+    { ($1, $3) }
 ;
 
 constant:
@@ -699,12 +721,14 @@ pattern:
 ;
 
 pattern_semi_list:
-  | { mk (P_app (mk_nil_ident (), [])) }
+  |
+    { mk (P_app (mk_nil_ident (), [])) }
   | pattern
     { mk (P_app (mk_cons_ident (), [$1; mk (P_app (mk_nil_ident (), []))])) }
   | pattern SEMI pattern_semi_list
     { mk (P_app (mk_cons_ident (), [$1; $3])) }
 ;
+
 pattern_comma_list:
   | pattern { [ $1 ] }
   | pattern COMMA pattern_comma_list { $1 :: $3 }
@@ -732,6 +756,7 @@ binding_list:
 
 label_name:
   | LIDENT { $1 }
+;
 
 external_name:
   | STRING { $1 }
@@ -743,6 +768,7 @@ value_name:
   | PIDENT { $1 }
   | IIDENT { $1 }
 ;
+
 constructor_name:
   | UIDENT { $1 }
   | PIDENT { $1 }
