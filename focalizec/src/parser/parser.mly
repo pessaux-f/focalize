@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.21 2007-03-16 10:56:51 weis Exp $ *)
+(* $Id: parser.mly,v 1.22 2007-03-16 11:08:55 weis Exp $ *)
 
 open Parsetree;;
 
@@ -447,12 +447,12 @@ vname_list:
 ;
 
 proof:
- | ASSUMED
-     { mk (Pf_assumed) }
- | BY fact_list
-     { mk (Pf_auto $2) }
- | COQPROOF
-     { mk (Pf_coq $1) }
+ | opt_doc ASSUMED
+     { mk_doc $1 (Pf_assumed) }
+ | opt_doc BY fact_list
+     { mk_doc $1 (Pf_auto $3) }
+ | opt_doc COQPROOF
+     { mk_doc $1 (Pf_coq $2) }
  | proof_node_list
      { mk (Pf_node $1) }
 ;
@@ -474,12 +474,12 @@ proof_node_list:
 ;
 
 proof_node:
- | PROOF_LABEL statement proof
-     { mk (PN_sub (mk_proof_label $1, $2, $3)) }
- | LET bound_ident expr
-     { mk (PN_let ($2, $3)) }
- | PROOF_LABEL QED proof
-     { mk (PN_qed (mk_proof_label $1, $3)) }
+ | opt_doc PROOF_LABEL statement proof
+     { mk_doc $1 (PN_sub (mk_proof_label $2, $3, $4)) }
+ | opt_doc LET bound_ident expr
+     { mk_doc $1 (PN_let ($3, $4)) }
+ | opt_doc PROOF_LABEL QED proof
+     { mk_doc $1 (PN_qed (mk_proof_label $2, $4)) }
 ;
 
 statement:
