@@ -122,23 +122,30 @@ A documentation text has only one limitation it cannot contains non escaped
 occurrence of the two character string "*)"  (in case we want this two chars,
 we must write a \ (as usual in focal), namely "*\)" ).
 
-For the lexer it is a token Doc of string.
+For the lexer it is a token Documentation of string.
 
 The documentation text is parsed afterwards by dedicated parser(s). The
 dedicated parser should run after the normal parser and before the
 type-checker. A simple but correct implementation for the documentation parser
 is identity.
 
-What could be documented ? Where to put the documention texts ?
+What could be documented ? Where to put the documentation texts ?
 
 Documentation just before the keyword that introduces the construction.
-sig, property: documentation is after the method name and just after the qualifier.
-rep: documentation just after the keyword = if any.
-letprop: should be treated as property (or repr) documentation just after the =.
-theorem: one documentation just after = (as in property). For proof: just after the
-naming of the proof step, before the beginning of the proof, before keyword
-assume or proof or ...
-let, species, collection: documentation just after the = (or implements).
+
+What could be documented:
+
+sig, property, rep, letprop, theorem, proof (and proof steps), let, species, collection.
+
+First steps: species, collection, letprop (let), theorem.
+
+%sig, property: documentation is after the method name and just after the qualifier.
+%rep: documentation just after the keyword = if any.
+%letprop: should be treated as property (or repr) documentation just after the =.
+%theorem: one documentation just after = (as in property). For proof: just after the
+%naming of the proof step, before the beginning of the proof, before keyword
+%assume or proof or ...
+%let, species, collection: documentation just after the = (or implements).
 
 \subsection{Unstructured comments}
 
