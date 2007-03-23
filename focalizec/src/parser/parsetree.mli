@@ -272,3 +272,8 @@ and phrase_desc =
   | Ph_theorem of theorem_def
   | Ph_expr of expr_def
 ;;
+
+type file = file_desc ast_doc
+and file_desc =
+  | File of phrase list
+;;
