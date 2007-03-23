@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.23 2007-03-16 11:39:40 weis Exp $ *)
+(* $Id: parser.mly,v 1.24 2007-03-23 17:57:24 weis Exp $ *)
 
 open Parsetree;;
 
@@ -166,7 +166,7 @@ let mk_proof_label (s1, s2) =
 %right    BACKSLASH_OP                  /* e \ e */
 %right    COLON_OP                      /* expr (e := e := e) */
 %nonassoc AS
-%right     BAR                          /* Dangling match (match ... with ...) */
+%right    BAR                           /* Dangling match (match ... with ...) */
 %left     COMMA COMMA_OP                /* expr/expr_comma_list (e,e,e) */
 %right    DASH_GT DASH_GT_OP            /* core_type2 (t -> t -> t) */
 %right    BAR_OP                        /* expr (e || e || e) */
@@ -179,7 +179,8 @@ let mk_proof_label (s1, s2) =
 %left     STAR_OP SLASH_OP              /* expr (e OP e OP e) */
 %left     PERCENT_OP                    /* expr (e OP e OP e) */
 %right    STAR_STAR_OP                  /* expr (e OP e OP e) */
-%nonassoc TILDA_BAR PREFIX_OP           /* unary ` ~ ? $ continue_infix* */
+%nonassoc TILDA_BAR                     /* ~| expr */
+%nonassoc PREFIX_OP                     /* unary ` ~ ? $ continue_infix* */
 %nonassoc prec_unary_minus              /* unary DASH_OP */
 %nonassoc prec_constant_constructor     /* cf. simple_expr (C versus C x) */
                                         /* above AS BAR COLON_COLON COMMA */
@@ -193,13 +194,17 @@ let mk_proof_label (s1, s2) =
           LBRACE LBRACKET LIDENT LPAREN
           STRING UIDENT
 
-%start main
-%type <Parsetree.phrase list> main
+%start file
+%type <Parsetree.file> file
 %%
 
-main:
+file:
+  | opt_doc phrase_list { mk_doc $1 (File $2) }
+;
+
+phrase_list:
   | EOF { [] }
-  | phrase main { $1 :: $2 }
+  | phrase phrase_list { $1 :: $2 }
 ;
 
 /* a voir: ajouter les expressions a toplevel ? */
@@ -210,9 +215,11 @@ phrase:
   | def_type { mk (Ph_type $1) }
   | def_species { mk (Ph_species $1) }
   | def_collection { mk (Ph_coll $1) }
-  | EXTERNAL def_external { mk (Ph_external $2) }
-  | OPEN STRING SEMI_SEMI { mk (Ph_open $2) }
-  | USES STRING SEMI_SEMI { mk (Ph_use $2) } /* USES should be USE */
+  | opt_doc EXTERNAL def_external { mk_doc $1 (Ph_external $3) }
+  | opt_doc OPEN STRING SEMI_SEMI { mk_doc $1 (Ph_open $3) }
+    /* USES should be USE */
+  | opt_doc USES STRING SEMI_SEMI { mk_doc $1 (Ph_use $3) }
+  | opt_doc expr SEMI_SEMI { mk_doc $1 (Ph_expr $2) }
 ;
 
 def_external:
@@ -347,8 +354,22 @@ def_rep:
 ;
 
 rep_type_def:
+  | glob_ident
+    { RTE_ident $1 }
   | LIDENT { RTE_ident (mk_global_ident $1) }
-  /* Fixme incomplete */
+  | rep_type_def DASH_GT rep_type_def
+    { RTE_fun (mk $1, mk $3) }
+  | rep_type_def STAR_OP rep_type_def
+    { RTE_prod (mk $1, mk $3) }
+  | glob_ident LPAREN rep_type_def_comma_list RPAREN
+    { RTE_app ($1, $3) }
+  | LPAREN rep_type_def RPAREN
+    { $2 }
+;
+
+rep_type_def_comma_list:
+  | rep_type_def { [ mk $1 ] }
+  | rep_type_def COMMA rep_type_def_comma_list { mk $1 :: $3 }
 ;
 
 /**** COLLECTION DEFINITION ****/
@@ -416,6 +437,10 @@ prop:
     { mk (P_forall ($2, $3, $5))}
   | EX vname_list opt_in_type_expr COMMA prop
     { mk (P_exists ($2, $3, $5))}
+  | NOT prop
+    { mk (P_not $2) }
+  | LPAREN prop RPAREN
+    { $2 }
   | prop DASH_GT prop
     { mk (P_imply ($1, $3)) }
   | prop OR prop
@@ -424,12 +449,8 @@ prop:
     { mk (P_and ($1, $3)) }
   | prop LT_DASH_GT prop
     { mk (P_equiv ($1, $3)) }
-  | NOT prop
-    { mk (P_not $2) }
   | expr %prec below_RPAREN
     { mk (P_expr $1) }
-  | LPAREN prop RPAREN
-    { $2 }
 ;
 
 opt_prop:
