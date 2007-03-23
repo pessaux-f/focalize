@@ -4,12 +4,22 @@ CAMLBIN = ocamlopt -warn-error A
 CAMLYAC = ocamlyacc -v
 CAMLLEX = ocamllex
 
+BYTOBJS=configuration.cmo \
+   lexer.cmo parser.cmo parse_file.cmo \
+   check_file.cmo
+
+CAMLBYTLIBS=lexing.cmo parsing.cmo
+
 RM = rm -rf
 
-all:: parsetree.cmi lexer.cmo parser.cmo 
+all:: $(BYTOBJS)
+	$(CAMLBYT) -o check_file $(CAMLBYTLIBS) $(BYTOBJS)
 
 clean::
 	$(RM) *~ *.cm* lexer.ml parser.ml parser.mli lexer.mli
+
+depend:
+	ocamldep *.mli *.ml > ./.depend
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx 
 
@@ -43,4 +53,6 @@ clean::
 .mly.ml:
 	$(CAMLYAC) $<
 
-lexer.cmo: parser.cmi
+lexer.cmo: parsetree.cmi parser.cmi
+
+include .depend
