@@ -2,4 +2,7 @@
 lexer.ml
 parser.ml
 parser.mli
+parser.output
 lexer.mli
+a.out
+check_file
