@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.10 2007-03-16 06:33:27 weis Exp $ *)
+(* $Id: lexer.mll,v 1.11 2007-03-23 17:58:10 weis Exp $ *)
 
 {
 open Lexing
@@ -281,7 +281,7 @@ let start_prefix = ['`' '~' '?' '$']
 (* Rq: ! and # and . are treated specially and cannot be inside idents. *)
 
 let start_infix =
-  [ '+' '-' '*' '/' '%' '&' '|' ':' ';' '<' '=' '>' '@' '^' '\\' ]
+  [ '+' '-' '*' '/' '%' '&' '|' ',' ':' ';' '<' '=' '>' '@' '^' '\\' ]
 
 let continue_infix = start_infix
                    | start_prefix
