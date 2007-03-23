@@ -165,17 +165,10 @@ Documentation just before the keyword that introduces the construction.
 
 What could be documented:
 
-sig, property, rep, letprop, theorem, proof (and proof steps), let, species, collection.
+sig, property, rep, letprop, theorem, proof (and proof steps), let, species,
+collection.
 
-First steps: species, collection, letprop (let), theorem.
-
-%sig, property: documentation is after the method name and just after the qualifier.
-%rep: documentation just after the keyword = if any.
-%letprop: should be treated as property (or repr) documentation just after the =.
-%theorem: one documentation just after = (as in property). For proof: just after the
-%naming of the proof step, before the beginning of the proof, before keyword
-%assume or proof or ...
-%let, species, collection: documentation just after the = (or implements).
+Documentation tools should mark especially the assumed occurrences in proof.
 
 \subsection{Unstructured comments}
 
