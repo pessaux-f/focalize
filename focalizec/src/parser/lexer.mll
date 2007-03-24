@@ -1,8 +1,8 @@
-(* $Id: lexer.mll,v 1.11 2007-03-23 17:58:10 weis Exp $ *)
+(* $Id: lexer.mll,v 1.12 2007-03-24 18:31:05 weis Exp $ *)
 
 {
-open Lexing
-open Parser
+open Lexing;;
+open Parser;;
 
 type error =
   | Illegal_character of char
@@ -18,54 +18,56 @@ exception Error of error * Lexing.position;;
 
 let keyword_table = Hashtbl.create 42;;
 List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
-    "all", ALL;
-    "and", AND;
-    "as", AS;
-    "assumed", ASSUMED;
-    "assume", ASSUME;
-    "but", BUT;
-    "by", BY;
-    "collection", COLLECTION;
-    "decl", DECL;
-    "def", DEF;
-    "else", ELSE;
-    "end", END;
-    "ex", EX;
-    "external", EXTERNAL;
-    "false", BOOL "false";
-    "function", FUNCTION;
-    "if", IF;
-    "in", IN;
-    "inherits", INHERITS;
-    "is", IS;
-    "let", LET;
-    "letprop", LETPROP;
-    "local", LOCAL;
-    "match", MATCH;
-    "not", NOT;
-    "of", OF;
-    "open", OPEN;
-    "or", OR;
-    "proof", PROOF;
-    "prove", PROVE;
-    "prop", PROP;
-    "property", PROPERTY;
-    "qed", QED;
-    "rec", REC;
-    "rep", REP;
-    "self", SELF;
-    "sig", SIG;
-    "species", SPECIES;
-    "then", THEN;
-    "theorem", THEOREM;
-    "true", BOOL "true";
-    "type", TYPE;
-    "uses", USES;
-    "value", VALUE;
-    "Coq", COQ;
-    "Caml", CAML;
-    "with", WITH;
-  ];;
+  "all", ALL;
+  "and", AND;
+  "as", AS;
+  "assume", ASSUME;
+  "assumed", ASSUMED;
+  "but", BUT;
+  "by", BY;
+  "caml", CAML;
+  "collection", COLLECTION;
+  "coq", COQ;
+  "decl", DECL;
+  "def", DEF;
+  "definition", DEFINITION;
+  "else", ELSE;
+  "end", END;
+  "ex", EX;
+  "external", EXTERNAL;
+  "false", BOOL "false";
+  "function", FUNCTION;
+  "if", IF;
+  "in", IN;
+  "inherits", INHERITS;
+  "implements", IMPLEMENTS;
+  "is", IS;
+  "let", LET;
+  "letprop", LETPROP;
+  "local", LOCAL;
+  "match", MATCH;
+  "not", NOT;
+  "of", OF;
+  "open", OPEN;
+  "or", OR;
+  "proof", PROOF;
+  "prop", PROP;
+  "property", PROPERTY;
+  "prove", PROVE;
+  "qed", QED;
+  "rec", REC;
+  "rep", REP;
+  "self", SELF;
+  "sig", SIG;
+  "species", SPECIES;
+  "then", THEN;
+  "theorem", THEOREM;
+  "true", BOOL "true";
+  "type", TYPE;
+  "uses", USES;
+  "value", VALUE;
+  "with", WITH;
+];;
 
 (* Lexing the documentation tokens. *)
 let initial_documentation_buffer = String.create 256;;
@@ -133,13 +135,14 @@ let char_for_backslash = function
   | 'r' -> '\013'
   | 'b' -> '\008'
   | 't' -> '\009'
-  | c   -> c
+  | c -> c
 ;;
 
 let char_for_decimal_code lexbuf i =
-  let c = 100 * (Char.code(Lexing.lexeme_char lexbuf i) - 48) +
-           10 * (Char.code(Lexing.lexeme_char lexbuf (i+1)) - 48) +
-                (Char.code(Lexing.lexeme_char lexbuf (i+2)) - 48) in
+  let c =
+    100 * (Char.code(Lexing.lexeme_char lexbuf i) - 48) +
+     10 * (Char.code(Lexing.lexeme_char lexbuf (i + 1)) - 48) +
+          (Char.code(Lexing.lexeme_char lexbuf (i + 2)) - 48) in
   if c < 0 || c > 255
   then raise (Error (Illegal_escape (Lexing.lexeme lexbuf), lexbuf.lex_start_p))
   else Char.chr c
@@ -173,12 +176,12 @@ let update_loc lexbuf file line absolute chars =
   }
 ;;
 
-let mk_coqproof s = COQPROOF (String.sub s 2 (String.length s - 4));;
+let mk_external_code s = EXTERNAL_CODE (String.sub s 2 (String.length s - 4));;
 
 (* The prefix version of a prefix operator. *)
-let mk_prefix_prefixop s = PIDENT s;;
+let ident_of_prefixop s = PIDENT s;;
 (* The prefix version of an infix operator. *)
-let mk_prefix_infixop s = IIDENT s;;
+let ident_of_infixop s = IIDENT s;;
 
 let mk_infixop s =
   assert (String.length s > 0);
@@ -238,38 +241,39 @@ open Format;;
 
 let report_error ppf = function
   | Illegal_character c ->
-      fprintf ppf "Illegal character (%s)" (Char.escaped c)
+    fprintf ppf "Illegal character (%s)" (Char.escaped c)
   | Illegal_escape s ->
-      fprintf ppf "Illegal backslash escape in string or character (%s)" s
+    fprintf ppf "Illegal backslash escape in string or character (%s)" s
   | Unterminated_comment ->
-      fprintf ppf "Comment not terminated"
+    fprintf ppf "Comment not terminated"
   | Comment_in_string ->
-      fprintf ppf "Non escaped comment separator in string constant"
+    fprintf ppf "Non escaped comment separator in string constant"
   | Uninitiated_comment ->
-      fprintf ppf "Comment has not started"
+    fprintf ppf "Comment has not started"
   | Unterminated_string ->
-      fprintf ppf "String literal not terminated"
+    fprintf ppf "String literal not terminated"
   | Unterminated_documentation ->
-      fprintf ppf "Documentation not terminated"
+    fprintf ppf "Documentation not terminated"
 ;;
 
 }
 
 let newline = '\010'
-let blank = [' ' '\009' '\012']
+let blank = [ ' ' '\009' '\012' ]
 
 (** (0) Les identificateurs alphanumériques, noms propres et noms communs (!) *)
 
-let lowercase = ['a'-'z']
-let uppercase = ['A'-'Z']
-let decimal = ['0'-'9']
+let lowercase = [ 'a'-'z' ]
+let uppercase = [ 'A'-'Z' ]
+let decimal = [ '0'-'9' ]
 
 let start_lowercase_ident = '_' | lowercase
 let start_uppercase_ident = uppercase
 
-let continue_ident = start_lowercase_ident
-                   | start_uppercase_ident
-                   | decimal
+let continue_ident =
+    start_lowercase_ident
+  | start_uppercase_ident
+  | decimal
 
 (** (1) Les identificateurs infixes, noms des opérations binaires
 
@@ -283,9 +287,10 @@ let start_prefix = ['`' '~' '?' '$']
 let start_infix =
   [ '+' '-' '*' '/' '%' '&' '|' ',' ':' ';' '<' '=' '>' '@' '^' '\\' ]
 
-let continue_infix = start_infix
-                   | start_prefix
-                   | continue_ident
+let continue_infix =
+    start_infix
+  | start_prefix
+  | continue_ident
 
 (* Identifiers *)
 
@@ -300,7 +305,7 @@ let prefix = start_prefix continue_infix*
 
 (** Integers. *)
 let decimal_literal =
-  ['0'-'9'] ['0'-'9' '_']*
+  [ '0'-'9'] ['0'-'9' '_' ]*
 let hex_literal =
   '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f' '_']+
 let bin_literal =
@@ -381,87 +386,86 @@ rule token = parse
 
   | "~|" { TILDA_BAR }
   | prefix { PREFIX_OP (Lexing.lexeme lexbuf) }
-  | "( " prefix " )" { mk_prefix_prefixop (Lexing.lexeme lexbuf) }
+  | "( " prefix " )" { ident_of_prefixop (Lexing.lexeme lexbuf) }
 
-  | "( " infix " )" { mk_prefix_infixop (Lexing.lexeme lexbuf) }
   | infix { mk_infixop (Lexing.lexeme lexbuf) }
-
+  | "( " infix " )" { ident_of_infixop (Lexing.lexeme lexbuf) }
 
   | "{*" ([^ '*'] | '*' [^ '}'])* "*}"
-     { mk_coqproof (Lexing.lexeme lexbuf) }
+    { mk_external_code (Lexing.lexeme lexbuf) }
 
   | eof { EOF }
   | _
-      { raise
-          (Error
-             (Illegal_character
-                (Lexing.lexeme_char lexbuf 0), lexbuf.lex_start_p)) }
+    { raise
+        (Error
+           (Illegal_character
+              (Lexing.lexeme_char lexbuf 0), lexbuf.lex_start_p)) }
 
 and comment = parse
   | "(*"
-      { comment_start_pos := lexbuf.lex_start_p :: !comment_start_pos;
-        comment lexbuf; }
+    { comment_start_pos := lexbuf.lex_start_p :: !comment_start_pos;
+      comment lexbuf; }
   | "*)"
-      { match !comment_start_pos with
-        | [] -> assert false
-        | [x] -> comment_start_pos := [];
-        | _ :: l -> comment_start_pos := l;
-                    comment lexbuf; }
+    { match !comment_start_pos with
+      | [] -> assert false
+      | [x] -> comment_start_pos := [];
+      | _ :: l -> comment_start_pos := l;
+                  comment lexbuf; }
   | eof
-      { match !comment_start_pos with
-        | [] -> assert false
-        | pos :: _ ->
-          comment_start_pos := [];
-          raise (Error (Unterminated_comment, pos)) }
+    { match !comment_start_pos with
+      | [] -> assert false
+      | pos :: _ ->
+        comment_start_pos := [];
+        raise (Error (Unterminated_comment, pos)) }
   | "%%" [^ '\010' '\013'] * newline
-      { update_loc lexbuf None 1 false 0;
-        comment lexbuf }
+    { update_loc lexbuf None 1 false 0;
+      comment lexbuf }
   | newline
-      { update_loc lexbuf None 1 false 0;
-        comment lexbuf }
+    { update_loc lexbuf None 1 false 0;
+      comment lexbuf }
   | _
-      { comment lexbuf }
+    { comment lexbuf }
 
 and string = parse
   | '"'
-      { () }
+    { () }
   | '\\' newline ([' ' '\t'] * as space)
-      { update_loc lexbuf None 1 false (String.length space);
-        string lexbuf }
+    { update_loc lexbuf None 1 false (String.length space);
+      string lexbuf }
   | '\\' ['(' '\\' '\'' '"' 'n' 't' 'b' 'r' ' ' '*' ')']
-      { store_string_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
-        string lexbuf }
+    { store_string_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
+      string lexbuf }
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
-      { store_string_char(char_for_decimal_code lexbuf 1);
-        string lexbuf }
+    { store_string_char(char_for_decimal_code lexbuf 1);
+      string lexbuf }
   | '\\' 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F']
-      { store_string_char (char_for_hexadecimal_code lexbuf 2);
-        string lexbuf }
+    { store_string_char (char_for_hexadecimal_code lexbuf 2);
+      string lexbuf }
   | '\\' _
-      { raise
-          (Error
-             (Illegal_escape
-                (Lexing.lexeme lexbuf), lexbuf.lex_start_p)) }
+    { raise
+        (Error
+           (Illegal_escape
+              (Lexing.lexeme lexbuf), lexbuf.lex_start_p)) }
   | ( "(*" | "*)" )
-      { raise (Error (Comment_in_string, lexbuf.lex_start_p)) }
+    { raise (Error (Comment_in_string, lexbuf.lex_start_p)) }
   | ( newline | eof )
-      { match !string_start_pos with
-        | Some pos -> raise (Error (Unterminated_string, pos))
-        | _ -> assert false }
+    { match !string_start_pos with
+      | Some pos -> raise (Error (Unterminated_string, pos))
+      | _ -> assert false }
   | _
-      { store_string_char (Lexing.lexeme_char lexbuf 0);
-        string lexbuf }
+    { store_string_char (Lexing.lexeme_char lexbuf 0);
+      string lexbuf }
 
 and documentation = parse
   | ( "*)" )
-      { () }
+    { () }
   | newline
-      { update_loc lexbuf None 1 false 0;
-        documentation lexbuf }
+    { update_loc lexbuf None 1 false 0;
+      documentation lexbuf }
   | ( eof )
-      { match !documentation_start_pos with
-        | Some pos -> raise (Error (Unterminated_documentation, pos))
-        | _ -> assert false }
+    { match !documentation_start_pos with
+      | Some pos -> raise (Error (Unterminated_documentation, pos))
+      | _ -> assert false }
   | _
-      { store_documentation_char (Lexing.lexeme_char lexbuf 0);
-        documentation lexbuf }
+    { store_documentation_char (Lexing.lexeme_char lexbuf 0);
+      documentation lexbuf }
