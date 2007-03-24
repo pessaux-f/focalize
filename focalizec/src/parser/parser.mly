@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.24 2007-03-23 17:57:24 weis Exp $ *)
+(* $Id: parser.mly,v 1.25 2007-03-24 18:32:44 weis Exp $ *)
 
 open Parsetree;;
 
@@ -111,9 +111,10 @@ let mk_proof_label (s1, s2) =
 %token CAML
 %token COLLECTION
 %token COQ
-%token <string> COQPROOF
+%token <string> EXTERNAL_CODE
 %token DECL
 %token DEF
+%token DEFINITION
 %token ELSE
 %token END
 %token EX
@@ -133,9 +134,9 @@ let mk_proof_label (s1, s2) =
 %token OPEN
 %token OR
 %token PROOF
-%token PROVE
 %token PROP
 %token PROPERTY
+%token PROVE
 %token QED
 %token REC
 %token REP
@@ -212,10 +213,10 @@ phrase:
   | def_let SEMI_SEMI { mk (Ph_let $1) }
   | def_letprop SEMI_SEMI { mk (Ph_letprop $1) }
   | def_theorem SEMI_SEMI { mk (Ph_theorem $1) }
-  | def_type { mk (Ph_type $1) }
-  | def_species { mk (Ph_species $1) }
-  | def_collection { mk (Ph_coll $1) }
-  | opt_doc EXTERNAL def_external { mk_doc $1 (Ph_external $3) }
+  | def_type SEMI_SEMI { mk (Ph_type $1) }
+  | def_species SEMI_SEMI { mk (Ph_species $1) }
+  | def_collection SEMI_SEMI { mk (Ph_coll $1) }
+  | opt_doc EXTERNAL def_external SEMI_SEMI { mk_doc $1 (Ph_external $3) }
   | opt_doc OPEN STRING SEMI_SEMI { mk_doc $1 (Ph_open $3) }
     /* USES should be USE */
   | opt_doc USES STRING SEMI_SEMI { mk_doc $1 (Ph_use $3) }
@@ -223,14 +224,19 @@ phrase:
 ;
 
 def_external:
-  | TYPE LIDENT EQUAL def_external_body SEMI_SEMI
-    { mk (ED_type (mk {ed_name = $2; ed_body = $4})) }
-  | VALUE value_name EQUAL def_external_body SEMI_SEMI
-    { mk (ED_value (mk {ed_name = $2; ed_body = $4})) }
+  | TYPE LIDENT EQUAL external_expr SEMI_SEMI
+    { mk (ED_type (mk {ed_name = $2; ed_body = mk $4})) }
+  | VALUE value_name EQUAL external_expr SEMI_SEMI
+    { mk (ED_value (mk {ed_name = $2; ed_body = mk $4})) }
+;
 
-def_external_body:
-  | BAR external_language DASH_GT external_name { [($2, $4)] }
-  | BAR external_language DASH_GT external_name def_external_body
+external_expression:
+  | STRING { $1 }
+;
+
+external_expr:
+  | BAR external_language DASH_GT external_expression { [($2, $4)] }
+  | BAR external_language DASH_GT external_expression external_expr
     { ($2, $4) :: $5 }
 ;
 
@@ -330,8 +336,8 @@ species_param_list:
 ;
 
 species_fields:
-  | species_field { [$1] }
-  | species_field species_fields { $1 :: $2 }
+  | species_field SEMI { [$1] }
+  | species_field SEMI species_fields { $1 :: $3 }
 
 species_field :
   | def_rep      { mk (SF_rep $1) }
@@ -349,8 +355,8 @@ def_proof:
 ;
 
 def_rep:
-  | opt_doc REP rep_type_def
-    { mk_doc $1 $3 }
+  | opt_doc REP EQUAL rep_type_def
+    { mk_doc $1 $4 }
 ;
 
 rep_type_def:
@@ -423,7 +429,7 @@ def_letprop:
 ;
 
 def_property:
-  | opt_doc PROPERTY LIDENT EQUAL prop
+  | opt_doc PROPERTY LIDENT COLON prop
     { mk_doc $1 {prd_name = mk_local_ident $3; prd_prop = $5; } }
 ;
 
@@ -454,8 +460,10 @@ prop:
 ;
 
 opt_prop:
-  | prop { Some $1 }
-  |      { None }
+  | PROVE prop
+    { Some $2 }
+  |
+    { None }
 
 opt_in_type_expr:
   | IN type_expr { Some $2 }
@@ -472,20 +480,24 @@ proof:
    { mk_doc $1 (Pf_assumed) }
  | opt_doc BY fact_list
    { mk_doc $1 (Pf_auto $3) }
- | opt_doc COQPROOF
-   { mk_doc $1 (Pf_coq $2) }
+ | opt_doc COQ PROOF EXTERNAL_CODE
+   { mk_doc $1 (Pf_coq $4) }
  | proof_node_list
    { mk (Pf_node $1) }
 ;
 
 fact_list:
  | { [] }
+ | fact { [$1] }
  | fact COMMA fact_list { $1 :: $3 }
 ;
 
 fact:
- | DEF LIDENT { mk (F_def (mk_local_ident $2)) }
- | prop_ident { mk (F_property ($1)) }
+/* Could be */
+/* | DEF LIDENT { mk (F_def (mk_local_ident $2)) } */
+/* | prop_ident { mk (F_property ($1)) } */
+ | DEFINITION OF species_ident { mk (F_def $3) }
+ | PROPERTY prop_ident { mk (F_property ($2)) }
  | PROOF_LABEL { mk (F_node (mk_proof_label $1)) }
 ;
 
@@ -515,7 +527,7 @@ hyp:
 
 hyp_list:
  | { [] }
- | hyp hyp_list { $1 :: $2 }
+ | hyp COMMA hyp_list { $1 :: $3 }
 ;
 
 /**** TYPE EXPRESSIONS ****/
@@ -648,6 +660,8 @@ expr:
     { $2 }
   | LPAREN RPAREN
     { mk (E_constr (mk_void (), [])) }
+  | EXTERNAL external_expr
+    { mk (E_external (mk $2)) }
 ;
 
 expr_semi_list:
@@ -777,10 +791,6 @@ binding_list:
 
 label_name:
   | LIDENT { $1 }
-;
-
-external_name:
-  | STRING { $1 }
 ;
 
 value_name:
