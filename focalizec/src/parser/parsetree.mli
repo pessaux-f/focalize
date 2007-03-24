@@ -88,6 +88,28 @@ and pat_desc =
   | P_tuple of pattern list
 ;;
 
+type external_language =
+  | EL_Caml
+  | EL_Coq
+  | EL_external of string;;
+
+type external_def = external_def_desc ast
+and external_def_desc =
+  | ED_type of external_def_body
+  | ED_value of external_def_body
+
+and external_def_body = external_def_body_desc ast
+and external_def_body_desc = {
+  ed_name : vname;
+  ed_body : external_expr;
+}
+
+and external_expr = external_expr_desc ast
+and external_expr_desc =
+    (external_language * external_expression) list
+
+and external_expression = string;;
+
 type species_def = species_def_desc ast_doc
 and species_def_desc = {
   sd_name : sname;
@@ -215,7 +237,7 @@ and expr_desc =
   | E_record_access of expr * label
   | E_record_with of expr * (label * expr) list
   | E_tuple of expr list
-  | E_external of external_name * external_name option
+  | E_external of external_expr
 ;;
 
 type coll_def = coll_def_desc ast_doc
@@ -237,24 +259,6 @@ and type_body_desc =
   | TD_union of (constr * (type_expr list)) list 
   | TD_record of (label * type_expr) list
 ;;
-
-type external_language =
-  | EL_Caml
-  | EL_Coq
-  | EL_external of string;;
-
-type external_def = external_def_desc ast
-and external_def_desc =
-  | ED_type of external_def_body
-  | ED_value of external_def_body
-
-and external_def_body = external_def_body_desc ast
-and external_def_body_desc = {
-  ed_name : vname;
-  ed_body : (external_language * external_expr) list;
-}
-
-and external_expr = string;;
 
 (** Toplevel expressions. *)
 type expr_def = expr;;
