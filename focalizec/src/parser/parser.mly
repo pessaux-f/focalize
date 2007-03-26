@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.25 2007-03-24 18:32:44 weis Exp $ *)
+(* $Id: parser.mly,v 1.26 2007-03-25 23:12:20 weis Exp $ *)
 
 open Parsetree;;
 
@@ -120,6 +120,7 @@ let mk_proof_label (s1, s2) =
 %token EX
 %token EXTERNAL
 %token FUNCTION
+%token HYPOTHESIS
 %token IF
 %token IN
 %token INHERITS
@@ -143,6 +144,7 @@ let mk_proof_label (s1, s2) =
 %token SELF
 %token SIG
 %token SPECIES
+%token STEP
 %token THEN
 %token THEOREM
 %token TYPE
@@ -224,26 +226,29 @@ phrase:
 ;
 
 def_external:
-  | TYPE LIDENT EQUAL external_expr SEMI_SEMI
+  | TYPE LIDENT EQUAL external_definition SEMI_SEMI
     { mk (ED_type (mk {ed_name = $2; ed_body = mk $4})) }
-  | VALUE value_name EQUAL external_expr SEMI_SEMI
+  | VALUE value_name EQUAL external_definition SEMI_SEMI
     { mk (ED_value (mk {ed_name = $2; ed_body = mk $4})) }
-;
-
-external_expression:
-  | STRING { $1 }
-;
-
-external_expr:
-  | BAR external_language DASH_GT external_expression { [($2, $4)] }
-  | BAR external_language DASH_GT external_expression external_expr
-    { ($2, $4) :: $5 }
 ;
 
 external_language:
   | CAML { EL_Caml }
   | COQ { EL_Coq }
   | STRING { EL_external $1 }
+;
+
+external_code:
+  | STRING { $1 }
+;
+
+external_def_one:
+  | BAR external_language DASH_GT external_code { ($2, $4) }
+;
+
+external_definition:
+  | external_def_one { [ $1 ] }
+  | external_def_one external_definition { $1 :: $2 }
 ;
 
 /**** TYPE DEFINITION ****/
@@ -434,7 +439,7 @@ def_property:
 ;
 
 def_theorem:
-  | opt_doc THEOREM LIDENT COLON prop PROOF COLON proof
+  | opt_doc THEOREM LIDENT COLON prop PROOF COLON proof DOT
     { mk_doc $1 { th_name = mk_local_ident $3; th_stmt = $5; th_proof = $8 } }
 ;
 
@@ -459,12 +464,6 @@ prop:
     { mk (P_expr $1) }
 ;
 
-opt_prop:
-  | PROVE prop
-    { Some $2 }
-  |
-    { None }
-
 opt_in_type_expr:
   | IN type_expr { Some $2 }
   |              { None }
@@ -487,22 +486,32 @@ proof:
 ;
 
 fact_list:
- | { [] }
- | fact { [$1] }
- | fact COMMA fact_list { $1 :: $3 }
+ | { [ ] }
+ | fact fact_list { $1 :: $2 }
 ;
 
 fact:
 /* Could be */
 /* | DEF LIDENT { mk (F_def (mk_local_ident $2)) } */
 /* | prop_ident { mk (F_property ($1)) } */
- | DEFINITION OF species_ident { mk (F_def $3) }
- | PROPERTY prop_ident { mk (F_property ($2)) }
- | PROOF_LABEL { mk (F_node (mk_proof_label $1)) }
+/* Why not by theorem ? */
+ | DEFINITION OF species_ident_comma_list { mk (F_def $3) }
+ | HYPOTHESIS proof_hyp_list { mk (F_hypothesis $2) }
+ | PROPERTY prop_ident_comma_list { mk (F_property ($2)) }
+ | STEP proof_label_comma_list { mk (F_node (List.map mk_proof_label $2)) }
 ;
 
+proof_hyp:
+ | UIDENT OF PROOF_LABEL { (mk_proof_label $3, $1) }
+;
+
+proof_hyp_list:
+ | proof_hyp COMMA proof_hyp_list { $1 :: $3 }
+ | proof_hyp { [ $1 ] }
+; 
+
 proof_node_list:
- | proof_node { [$1] }
+ | proof_node { [ $1 ] }
  | proof_node proof_node_list { $1 :: $2 }
 ;
 
@@ -515,6 +524,13 @@ proof_node:
    { mk_doc $1 (PN_qed (mk_proof_label $2, $4)) }
 ;
 
+opt_prop:
+  | PROVE prop
+    { Some $2 }
+  |
+    { None }
+;
+
 statement:
  | hyp_list opt_prop
    { mk { s_hyps = $1; s_concl = $2; } }
@@ -522,7 +538,7 @@ statement:
 
 hyp:
  | ASSUME LIDENT IN type_expr { mk (H_var ($2, $4)) }
- | ASSUME LIDENT COLON prop   { mk (H_hyp ($2, $4)) }
+ | ASSUME UIDENT COLON prop   { mk (H_hyp ($2, $4)) }
 ;
 
 hyp_list:
@@ -660,7 +676,7 @@ expr:
     { $2 }
   | LPAREN RPAREN
     { mk (E_constr (mk_void (), [])) }
-  | EXTERNAL external_expr
+  | EXTERNAL external_definition
     { mk (E_external (mk $2)) }
 ;
 
@@ -714,6 +730,21 @@ species_ident:
     { $1 }
   | opt_lident BANG LIDENT
     { mk (I_method ($1, $3)) }
+;
+
+species_ident_comma_list:
+  | species_ident COMMA species_ident_comma_list { $1 :: $3 }
+  | species_ident { [$1] }
+;
+
+prop_ident_comma_list:
+  | prop_ident COMMA prop_ident_comma_list { $1 :: $3 }
+  | prop_ident { [$1] }
+;
+
+proof_label_comma_list:
+  | PROOF_LABEL COMMA proof_label_comma_list { $1 :: $3 }
+  | PROOF_LABEL { [$1] }
 ;
 
 coll_ident:

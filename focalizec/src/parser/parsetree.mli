@@ -184,9 +184,10 @@ and theorem_def_desc = {
 
 and fact = fact_desc ast
 and fact_desc =
-  | F_def of ident
-  | F_property of ident
-  | F_node of node_label
+  | F_def of ident list
+  | F_property of ident list
+  | F_hypothesis of (node_label * vname) list
+  | F_node of node_label list
 
 and proof = proof_desc ast
 and proof_desc =
@@ -209,8 +210,8 @@ and statement_desc = {
 
 and hyp = hyp_desc ast
 and hyp_desc =
-  | H_var of string * type_expr
-  | H_hyp of string * prop
+  | H_var of vname * type_expr
+  | H_hyp of vname * prop
 
 and prop = prop_desc ast
 and prop_desc =
