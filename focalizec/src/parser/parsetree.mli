@@ -77,6 +77,12 @@ and constant_desc =
 type rec_flag = | RF_no_rec | RF_rec
 ;;
 
+type log_flag = | LF_no_log | LF_log
+;;
+
+type loc_flag = | LF_no_loc | LF_loc
+;;
+
 type pattern = pat_desc ast
 and pat_desc =
   | P_const of constant
@@ -131,8 +137,7 @@ and species_expr_desc = {
 
 and species_param = species_param_desc ast
 and species_param_desc =
-  | SP_coll of ident
-  | SP_entity of expr
+  | SP of expr
 
 and sig_def = sig_def_desc ast_doc
 and sig_def_desc = {
@@ -157,7 +162,6 @@ and species_field_desc =
   | SF_rep of rep_type_def
   | SF_sig of sig_def
   | SF_let of let_def
-  | SF_letprop of let_def
   | SF_property of property_def
   | SF_theorem of theorem_def
   | SF_proof of proof_def
@@ -165,6 +169,8 @@ and species_field_desc =
 and let_def = let_def_desc ast_doc
 and let_def_desc = {
   ld_rec : rec_flag;
+  ld_log : log_flag;
+  ld_loc : loc_flag;
   ld_bindings : binding list;
 }
 and binding = binding_desc ast
@@ -178,6 +184,7 @@ and binding_desc = {
 and theorem_def = theorem_def_desc ast_doc
 and theorem_def_desc = {
   th_name : ident;
+  th_loc : loc_flag;
   th_stmt : prop;
   th_proof : proof;
 }
@@ -186,7 +193,7 @@ and fact = fact_desc ast
 and fact_desc =
   | F_def of ident list
   | F_property of ident list
-  | F_hypothesis of (node_label * vname) list
+  | F_hypothesis of vname list
   | F_node of node_label list
 
 and proof = proof_desc ast
@@ -199,7 +206,6 @@ and proof_desc =
 and proof_node = proof_node_desc ast
 and proof_node_desc =
   | PN_sub of node_label * statement * proof
-  | PN_let of ident * expr
   | PN_qed of node_label * proof
 
 and statement = statement_desc ast
@@ -212,6 +218,7 @@ and hyp = hyp_desc ast
 and hyp_desc =
   | H_var of vname * type_expr
   | H_hyp of vname * prop
+  | H_let of vname * expr
 
 and prop = prop_desc ast
 and prop_desc =
@@ -273,7 +280,6 @@ and phrase_desc =
   | Ph_coll of coll_def
   | Ph_type of type_def
   | Ph_let of let_def
-  | Ph_letprop of let_def
   | Ph_theorem of theorem_def
   | Ph_expr of expr_def
 ;;

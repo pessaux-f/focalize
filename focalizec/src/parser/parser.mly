@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.26 2007-03-25 23:12:20 weis Exp $ *)
+(* $Id: parser.mly,v 1.27 2007-03-30 07:23:59 weis Exp $ *)
 
 open Parsetree;;
 
@@ -106,6 +106,7 @@ let mk_proof_label (s1, s2) =
 %token AS
 %token ASSUME
 %token ASSUMED
+%token BEGIN
 %token BUT
 %token BY
 %token CAML
@@ -127,8 +128,8 @@ let mk_proof_label (s1, s2) =
 %token IMPLEMENTS
 %token IS
 %token LET
-%token LETPROP
 %token LOCAL
+%token LOGICAL
 %token MATCH
 %token NOT
 %token OF
@@ -202,7 +203,8 @@ let mk_proof_label (s1, s2) =
 %%
 
 file:
-  | opt_doc phrase_list { mk_doc $1 (File $2) }
+  | phrase_list { mk (File $1) }
+  | opt_doc BEGIN phrase_list { mk_doc $1 (File $3) }
 ;
 
 phrase_list:
@@ -213,7 +215,7 @@ phrase_list:
 /* a voir: ajouter les expressions a toplevel ? */
 phrase:
   | def_let SEMI_SEMI { mk (Ph_let $1) }
-  | def_letprop SEMI_SEMI { mk (Ph_letprop $1) }
+  | def_logical SEMI_SEMI { mk (Ph_let $1) }
   | def_theorem SEMI_SEMI { mk (Ph_theorem $1) }
   | def_type SEMI_SEMI { mk (Ph_type $1) }
   | def_species SEMI_SEMI { mk (Ph_species $1) }
@@ -320,8 +322,8 @@ def_species_param:
 ;
 
 species_expr_list:
-  | {[]}
-  | species_expr species_expr_list { $1 :: $2 }
+  | species_expr {[ $1 ]}
+  | species_expr COMMA species_expr_list { $1 :: $3 }
 ;
 
 species_expr:
@@ -331,8 +333,7 @@ species_expr:
     { mk_no_doc { se_name = $1; se_params = $3; } }
 
 species_param:
-  | coll_ident { mk (SP_coll $1) }
-  | expr { mk (SP_entity $1) }
+  | expr { mk (SP $1) }
 ;
 
 species_param_list:
@@ -348,7 +349,7 @@ species_field :
   | def_rep      { mk (SF_rep $1) }
   | def_sig      { mk (SF_sig $1) }
   | def_let      { mk (SF_let $1) }
-  | def_letprop  { mk (SF_letprop $1) }
+  | def_logical  { mk (SF_let $1) }
   | def_property { mk (SF_property $1) }
   | def_theorem  { mk (SF_theorem $1) }
   | def_proof    { mk (SF_proof $1) }
@@ -392,11 +393,17 @@ def_collection:
 
 /**** FUNCTION & VALUES DEFINITION ****/
 
+let_binding:
+  | opt_local LET binding
+    { mk {ld_rec = RF_no_rec; ld_log = LF_no_log; ld_loc = $1;
+          ld_bindings = [ $3 ]} }
+  | opt_local LET REC binding_list
+    { mk { ld_rec = RF_rec; ld_log = LF_no_log; ld_loc = $1;
+           ld_bindings = $4; } }
+;
+
 def_let:
-  | opt_doc LET binding
-    { mk_doc $1 {ld_rec = RF_no_rec; ld_bindings = [$3]} }
-  | opt_doc LET REC binding_list
-    { mk_doc $1 {ld_rec = RF_rec; ld_bindings = $4} }
+  | opt_doc let_binding { mk_doc $1 $2.ast_desc }
 ;
 
 binding:
@@ -428,9 +435,13 @@ def_sig:
 
 ;
 
-def_letprop:
-  | opt_doc LETPROP binding
-    { mk_doc $1 {ld_rec = RF_no_rec; ld_bindings = [$3]} }
+def_logical:
+  | opt_doc opt_local LOGICAL binding
+    { mk_doc $1 {ld_rec = RF_no_rec; ld_log = LF_log; ld_loc = $2;
+                 ld_bindings = [ $4 ]} }
+  | opt_doc opt_local LOGICAL REC binding_list
+    { mk_doc $1 { ld_rec = RF_rec; ld_log = LF_log; ld_loc = $2;
+                  ld_bindings = $5; } }
 ;
 
 def_property:
@@ -439,8 +450,10 @@ def_property:
 ;
 
 def_theorem:
-  | opt_doc THEOREM LIDENT COLON prop PROOF COLON proof DOT
-    { mk_doc $1 { th_name = mk_local_ident $3; th_stmt = $5; th_proof = $8 } }
+  | opt_doc opt_local THEOREM LIDENT COLON prop PROOF COLON proof
+    { mk_doc $1
+        { th_name = mk_local_ident $4; th_loc = $2;
+          th_stmt = $6; th_proof = $9 } }
 ;
 
 prop:
@@ -474,6 +487,8 @@ vname_list:
   | LIDENT            { [$1] }
 ;
 
+/**** PROOFS ****/
+
 proof:
  | opt_doc ASSUMED
    { mk_doc $1 (Pf_assumed) }
@@ -483,6 +498,22 @@ proof:
    { mk_doc $1 (Pf_coq $4) }
  | proof_node_list
    { mk (Pf_node $1) }
+ | DOT { mk (Pf_auto []) }
+;
+
+proof_node_list:
+ | proof_node_qed { [ $1 ] }
+ | proof_node proof_node_list { $1 :: $2 }
+;
+
+proof_node:
+ | opt_doc PROOF_LABEL statement proof
+   { mk_doc $1 (PN_sub (mk_proof_label $2, $3, $4)) }
+;
+
+proof_node_qed:
+ | opt_doc PROOF_LABEL QED proof
+   { mk_doc $1 (PN_qed (mk_proof_label $2, $4)) }
 ;
 
 fact_list:
@@ -498,31 +529,18 @@ fact:
  | DEFINITION OF species_ident_comma_list { mk (F_def $3) }
  | HYPOTHESIS proof_hyp_list { mk (F_hypothesis $2) }
  | PROPERTY prop_ident_comma_list { mk (F_property ($2)) }
+ | THEOREM prop_ident_comma_list { mk (F_property ($2)) }
  | STEP proof_label_comma_list { mk (F_node (List.map mk_proof_label $2)) }
 ;
 
 proof_hyp:
- | UIDENT OF PROOF_LABEL { (mk_proof_label $3, $1) }
+ | UIDENT { $1 }
 ;
 
 proof_hyp_list:
  | proof_hyp COMMA proof_hyp_list { $1 :: $3 }
  | proof_hyp { [ $1 ] }
 ; 
-
-proof_node_list:
- | proof_node { [ $1 ] }
- | proof_node proof_node_list { $1 :: $2 }
-;
-
-proof_node:
- | opt_doc PROOF_LABEL statement proof
-   { mk_doc $1 (PN_sub (mk_proof_label $2, $3, $4)) }
- | opt_doc LET bound_ident expr
-   { mk_doc $1 (PN_let ($3, $4)) }
- | opt_doc PROOF_LABEL QED proof
-   { mk_doc $1 (PN_qed (mk_proof_label $2, $4)) }
-;
 
 opt_prop:
   | PROVE prop
@@ -614,7 +632,7 @@ expr:
     { mk (E_match ($2, $4)) }
   | IF expr THEN expr ELSE expr
     { mk (E_if ($2, $4, $6)) }
-  | def_let IN expr
+  | let_binding IN expr
     { mk (E_let ($1, $3)) }
   | LBRACE record_field_list RBRACE
     { mk (E_record $2) }
@@ -676,7 +694,7 @@ expr:
     { $2 }
   | LPAREN RPAREN
     { mk (E_constr (mk_void (), [])) }
-  | EXTERNAL external_definition
+  | EXTERNAL external_definition END
     { mk (E_external (mk $2)) }
 ;
 
@@ -747,11 +765,6 @@ proof_label_comma_list:
   | PROOF_LABEL { [$1] }
 ;
 
-coll_ident:
-  | species_ident
-    { $1 }
-;
-
 clause_list:
   | BAR clause
     { [$2] }
@@ -805,6 +818,10 @@ pattern_record_field_list:
   | label_name EQUAL pattern SEMI pattern_record_field_list { ($1, $3) :: $5 }
 ;
 
+opt_local:
+  | { LF_no_loc }
+  | LOCAL { LF_loc }
+;
 opt_semi:
   | { () }
   | SEMI { () }

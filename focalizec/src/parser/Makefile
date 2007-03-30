@@ -32,27 +32,15 @@ depend:
 .ml.cmx:
 	$(CAMLBIN) -c $<
 
-.mly.cmo:
+.mly.ml:
 	$(CAMLYAC) $<
 #	(menhir --explain $< 2>&1) > log
-	$(CAMLBYT) -c $*.mli
-	$(CAMLBYT) -c $*.ml
-
-.mly.cmx:
-	$(CAMLYAC) $<
-	$(CAMLBIN) -c $*.mli
-	$(CAMLBIN) -c $*.ml
-
-.mly.cmi:
-	$(CAMLYAC) $<
-	$(CAMLBYT) -c $*.mli
 
 .mll.ml:
 	$(CAMLLEX) $<
 
-.mly.ml:
-	$(CAMLYAC) $<
-
 lexer.cmo: parsetree.cmi parser.cmi
+
+parser.mli: parser.ml
 
 include .depend

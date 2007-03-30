@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.13 2007-03-25 23:12:20 weis Exp $ *)
+(* $Id: lexer.mll,v 1.14 2007-03-30 07:23:59 weis Exp $ *)
 
 {
 open Lexing;;
@@ -14,7 +14,7 @@ type error =
   | Comment_in_string
 ;;
 
-exception Error of error * Lexing.position;;
+exception Error of error * Lexing.position * Lexing.position;;
 
 let keyword_table = Hashtbl.create 42;;
 List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
@@ -23,6 +23,7 @@ List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
   "as", AS;
   "assume", ASSUME;
   "assumed", ASSUMED;
+  "begin", BEGIN;
   "but", BUT;
   "by", BY;
   "caml", CAML;
@@ -44,8 +45,8 @@ List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
   "implements", IMPLEMENTS;
   "is", IS;
   "let", LET;
-  "letprop", LETPROP;
   "local", LOCAL;
+  "logical", LOGICAL;
   "match", MATCH;
   "not", NOT;
   "of", OF;
@@ -146,7 +147,9 @@ let char_for_decimal_code lexbuf i =
      10 * (Char.code(Lexing.lexeme_char lexbuf (i + 1)) - 48) +
           (Char.code(Lexing.lexeme_char lexbuf (i + 2)) - 48) in
   if c < 0 || c > 255
-  then raise (Error (Illegal_escape (Lexing.lexeme lexbuf), lexbuf.lex_start_p))
+  then raise (Error (Illegal_escape (Lexing.lexeme lexbuf),
+                     lexbuf.lex_start_p,
+                     lexbuf.lex_curr_p))
   else Char.chr c
 ;;
 
@@ -287,7 +290,7 @@ let start_prefix = ['`' '~' '?' '$']
 (* Rq: ! and # and . are treated specially and cannot be inside idents. *)
 
 let start_infix =
-  [ '+' '-' '*' '/' '%' '&' '|' ',' ':' ';' '<' '=' '>' '@' '^' '\\' ]
+  [ '+' '-' '*' '/' '%' '&' '|' ':' ';' '<' '=' '>' '@' '^' '\\' ]
 
 let continue_infix =
     start_infix
@@ -333,10 +336,11 @@ rule token = parse
       { INT (Lexing.lexeme lexbuf) }
   | "\""
       { reset_string_buffer ();
-        string_start_pos := Some lexbuf.lex_start_p;
+        string_start_pos :=
+          Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
         string lexbuf;
         begin match !string_start_pos with
-        | Some pos -> lexbuf.lex_start_p <- pos
+        | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
         | _ -> assert false end;
         STRING (get_stored_string ()) }
   | "'" [^ '\\' '\'' '\010'] "'"
@@ -350,21 +354,23 @@ rule token = parse
   | "'\\" _
       { let l = Lexing.lexeme lexbuf in
         let esc = String.sub l 1 (String.length l - 1) in
-        raise (Error (Illegal_escape esc, lexbuf.lex_start_p)) }
+        raise (Error
+                (Illegal_escape esc, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
   | "(**"
       { reset_documentation_buffer ();
-        documentation_start_pos := Some lexbuf.lex_start_p;
+        documentation_start_pos :=
+          Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
         documentation lexbuf;
         begin match !documentation_start_pos with
-        | Some pos -> lexbuf.lex_start_p <- pos
+        | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
         | _ -> assert false end;
         DOCUMENTATION (get_stored_documentation ()) }
   | "(*"
-      { comment_start_pos := [lexbuf.lex_start_p];
+      { comment_start_pos := [ lexbuf.lex_start_p, lexbuf.lex_curr_p ];
         comment lexbuf;
         token lexbuf }
   | "*)"
-      { raise (Error (Uninitiated_comment, lexbuf.lex_start_p)) }
+      { raise (Error (Uninitiated_comment, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
   | "%%" [^ '\010' '\013'] * newline
       { update_loc lexbuf None 1 false 0;
         token lexbuf }
@@ -385,6 +391,7 @@ rule token = parse
   | '#'  { SHARP } (* To be suppressed. *)
   | '!'  { BANG } (* To be suppressed. *)
   | '.'  { DOT }
+  | ','  { COMMA }
 
   | "~|" { TILDA_BAR }
   | prefix { PREFIX_OP (Lexing.lexeme lexbuf) }
@@ -401,11 +408,14 @@ rule token = parse
     { raise
         (Error
            (Illegal_character
-              (Lexing.lexeme_char lexbuf 0), lexbuf.lex_start_p)) }
+              (Lexing.lexeme_char lexbuf 0),
+              lexbuf.lex_start_p,
+              lexbuf.lex_curr_p)) }
 
 and comment = parse
   | "(*"
-    { comment_start_pos := lexbuf.lex_start_p :: !comment_start_pos;
+    { comment_start_pos :=
+        (lexbuf.lex_start_p, lexbuf.lex_curr_p) :: !comment_start_pos;
       comment lexbuf; }
   | "*)"
     { match !comment_start_pos with
@@ -416,9 +426,9 @@ and comment = parse
   | eof
     { match !comment_start_pos with
       | [] -> assert false
-      | pos :: _ ->
+      | (start_pos, end_pos) :: _ ->
         comment_start_pos := [];
-        raise (Error (Unterminated_comment, pos)) }
+        raise (Error (Unterminated_comment, start_pos, end_pos)) }
   | "%%" [^ '\010' '\013'] * newline
     { update_loc lexbuf None 1 false 0;
       comment lexbuf }
@@ -446,13 +456,15 @@ and string = parse
   | '\\' _
     { raise
         (Error
-           (Illegal_escape
-              (Lexing.lexeme lexbuf), lexbuf.lex_start_p)) }
+           (Illegal_escape (Lexing.lexeme lexbuf),
+           lexbuf.lex_start_p,
+           lexbuf.lex_curr_p)) }
   | ( "(*" | "*)" )
-    { raise (Error (Comment_in_string, lexbuf.lex_start_p)) }
+    { raise (Error (Comment_in_string, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
   | ( newline | eof )
     { match !string_start_pos with
-      | Some pos -> raise (Error (Unterminated_string, pos))
+      | Some (start_pos, end_pos) ->
+        raise (Error (Unterminated_string, start_pos, end_pos))
       | _ -> assert false }
   | _
     { store_string_char (Lexing.lexeme_char lexbuf 0);
@@ -466,7 +478,8 @@ and documentation = parse
       documentation lexbuf }
   | ( eof )
     { match !documentation_start_pos with
-      | Some pos -> raise (Error (Unterminated_documentation, pos))
+      | Some (start_pos, end_pos) ->
+        raise (Error (Unterminated_documentation, start_pos, end_pos))
       | _ -> assert false }
   | _
     { store_documentation_char (Lexing.lexeme_char lexbuf 0);
