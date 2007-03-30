@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.27 2007-03-30 07:23:59 weis Exp $ *)
+(* $Id: parser.mly,v 1.28 2007-03-30 08:59:30 weis Exp $ *)
 
 open Parsetree;;
 
@@ -132,6 +132,7 @@ let mk_proof_label (s1, s2) =
 %token LOGICAL
 %token MATCH
 %token NOT
+%token NOTATION
 %token OF
 %token OPEN
 %token OR
@@ -302,8 +303,12 @@ def_record_field_list:
 /**** SPECIES ****/
 
 def_species:
-  | opt_doc SPECIES LIDENT def_species_params INHERITS species_expr_list EQUAL species_fields END
-    { mk_doc $1 { sd_name = $3; sd_params = $4; sd_inherits = $6; sd_fields = $8; } }
+  | opt_doc SPECIES LIDENT def_species_params
+            INHERITS species_expr_list
+            EQUAL species_fields END
+    { mk_doc $1
+       { sd_name = $3; sd_params = $4;
+         sd_inherits = $6; sd_fields = $8; } }
 ;
 
 def_species_params:
@@ -342,7 +347,7 @@ species_param_list:
 ;
 
 species_fields:
-  | species_field SEMI { [$1] }
+  | { [] }
   | species_field SEMI species_fields { $1 :: $3 }
 
 species_field :
@@ -535,6 +540,7 @@ fact:
 
 proof_hyp:
  | UIDENT { $1 }
+ | LIDENT { $1 }
 ;
 
 proof_hyp_list:
@@ -543,10 +549,9 @@ proof_hyp_list:
 ; 
 
 opt_prop:
+  | { None }
   | PROVE prop
     { Some $2 }
-  |
-    { None }
 ;
 
 statement:
@@ -556,7 +561,8 @@ statement:
 
 hyp:
  | ASSUME LIDENT IN type_expr { mk (H_var ($2, $4)) }
- | ASSUME UIDENT COLON prop   { mk (H_hyp ($2, $4)) }
+ | ASSUME proof_hyp COLON prop { mk (H_hyp ($2, $4)) }
+ | NOTATION proof_hyp EQUAL expr { mk (H_not ($2, $4)) }
 ;
 
 hyp_list:
@@ -607,6 +613,8 @@ glob_ident:
 opt_lident:
   |
     { None }
+  | SELF
+    { Some "self" }
   | LIDENT
     { Some $1 }
 ;
