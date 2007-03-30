@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.14 2007-03-30 07:23:59 weis Exp $ *)
+(* $Id: lexer.mll,v 1.15 2007-03-30 09:00:42 weis Exp $ *)
 
 {
 open Lexing;;
@@ -49,6 +49,7 @@ List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
   "logical", LOGICAL;
   "match", MATCH;
   "not", NOT;
+  "notation", NOTATION;
   "of", OF;
   "open", OPEN;
   "or", OR;
@@ -371,7 +372,7 @@ rule token = parse
         token lexbuf }
   | "*)"
       { raise (Error (Uninitiated_comment, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
-  | "%%" [^ '\010' '\013'] * newline
+  | "--" [^ '\010' '\013'] * newline
       { update_loc lexbuf None 1 false 0;
         token lexbuf }
   | "#" [' ' '\t']* (['0'-'9']+ as num) [' ' '\t']*
@@ -429,7 +430,7 @@ and comment = parse
       | (start_pos, end_pos) :: _ ->
         comment_start_pos := [];
         raise (Error (Unterminated_comment, start_pos, end_pos)) }
-  | "%%" [^ '\010' '\013'] * newline
+  | "--" [^ '\010' '\013'] * newline
     { update_loc lexbuf None 1 false 0;
       comment lexbuf }
   | newline
