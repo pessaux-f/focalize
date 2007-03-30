@@ -218,7 +218,7 @@ and hyp = hyp_desc ast
 and hyp_desc =
   | H_var of vname * type_expr
   | H_hyp of vname * prop
-  | H_let of vname * expr
+  | H_not of vname * expr
 
 and prop = prop_desc ast
 and prop_desc =

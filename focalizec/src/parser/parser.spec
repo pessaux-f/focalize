@@ -180,6 +180,14 @@ Unstructured comments
 \end{itemize}
 
 Uniline comments:
-- start by %% and
+- start by -- and
 - end by a new line
+
+
+In proofs.
+
+let (x : self) = 1;;
+
+theorem foo : enonce = preuve;;
+
 
