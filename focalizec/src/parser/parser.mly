@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.29 2007-04-02 09:19:27 weis Exp $ *)
+(* $Id: parser.mly,v 1.30 2007-04-02 10:01:38 weis Exp $ *)
 
 open Parsetree;;
 
@@ -114,7 +114,6 @@ let mk_proof_label (s1, s2) =
 %token <string> QUESTION_OP
 %token <string> DOLLAR_OP
 %token <string> BANG_OP
-%token <string> PREFIX_OP
 %token DOT
 
 /* Keywords */
@@ -202,12 +201,10 @@ let mk_proof_label (s1, s2) =
 %left     STAR_OP SLASH_OP              /* expr (e OP e OP e) */
 %left     PERCENT_OP                    /* expr (e OP e OP e) */
 %right    STAR_STAR_OP                  /* expr (e OP e OP e) */
-%nonassoc TILDA_OP                     /* ~| expr */
-%nonassoc QUESTION_OP
+%nonassoc TILDA_OP                      /* ~| expr */
+%nonassoc QUESTION_OP                   /* unary ` ~ ? $ continue_infix* */
 %nonassoc DOLLAR_OP
 %nonassoc BANG_OP
-%nonassoc SHARP_OP
-%nonassoc PREFIX_OP                     /* unary ` ~ ? $ continue_infix* */
 %nonassoc prec_unary_minus              /* unary DASH_OP */
 %nonassoc prec_constant_constructor     /* cf. simple_expr (C versus C x) */
                                         /* above AS BAR COLON_COLON COMMA */
@@ -251,7 +248,7 @@ phrase:
 ;
 
 def_external:
-  | TYPE LIDENT EQUAL external_definition SEMI_SEMI
+  | TYPE type_name EQUAL external_definition SEMI_SEMI
     { mk (ED_type (mk {ed_name = $2; ed_body = mk $4})) }
   | VALUE value_name EQUAL external_definition SEMI_SEMI
     { mk (ED_value (mk {ed_name = $2; ed_body = mk $4})) }
@@ -279,7 +276,7 @@ external_definition:
 /**** TYPE DEFINITION ****/
 
 def_type:
-  | opt_doc TYPE LIDENT def_type_params EQUAL def_type_body SEMI_SEMI
+  | opt_doc TYPE type_name def_type_params EQUAL def_type_body SEMI_SEMI
     { mk_doc $1 {td_name = $3; td_params = $4; td_body = $6; } }
 ;
 
@@ -289,8 +286,8 @@ def_type_params:
 ;
 
 def_type_param_comma_list:
-  | LIDENT { [ $1 ] }
-  | LIDENT COMMA def_type_param_comma_list { $1 :: $3 }
+  | type_param_name { [ $1 ] }
+  | type_param_name COMMA def_type_param_comma_list { $1 :: $3 }
 ;
 
 def_type_body:
@@ -322,10 +319,27 @@ def_record_field_list:
   | label_name EQUAL type_expr SEMI def_record_field_list { ($1, $3) :: $5 }
 ;
 
+bound_name_list:
+  | bound_name bound_name_list
+    { $1 :: $2 }
+  | bound_name
+    { [$1] }
+;
+
+bound_name:
+  | LIDENT { $1 }
+  | PIDENT { $1 }
+  | IIDENT { $1 }
+;
+
+bound_ident:
+  | bound_name { mk_local_ident $1 }
+;
+
 /**** SPECIES ****/
 
 def_species:
-  | opt_doc SPECIES LIDENT def_species_params
+  | opt_doc SPECIES species_name def_species_params
             INHERITS species_expr_list
             EQUAL species_fields END
     { mk_doc $1
@@ -344,8 +358,8 @@ def_species_param_list:
 ;
 
 def_species_param:
-  | LIDENT IN species_ident { ($1, mk (SPT_in $3)) }
-  | LIDENT IS species_expr { ($1, mk (SPT_is $3)) }
+  | bound_name IN species_ident { ($1, mk (SPT_in $3)) }
+  | bound_name IS species_expr { ($1, mk (SPT_is $3)) }
 ;
 
 species_expr_list:
@@ -383,7 +397,7 @@ species_field :
 ;
 
 def_proof:
-  | opt_doc PROOF OF LIDENT EQUAL proof
+  | opt_doc PROOF OF property_name EQUAL proof
     { mk_doc $1 { pd_name = mk_local_ident $4; pd_proof = $6; } }
 ;
 
@@ -414,7 +428,7 @@ rep_type_def_comma_list:
 /**** COLLECTION DEFINITION ****/
 
 def_collection:
-  | opt_doc COLLECTION LIDENT IMPLEMENTS species_expr EQUAL END
+  | opt_doc COLLECTION collection_name IMPLEMENTS species_expr EQUAL END
     { mk_doc $1 { cd_name = $3; cd_body = $5; } }
 ;
 
@@ -457,7 +471,7 @@ param:
 /**** PROPERTIES & THEOREM DEFINITION ****/
 
 def_sig:
-  | opt_doc SIG LIDENT COLON type_expr
+  | opt_doc SIG bound_name COLON type_expr
     { mk_doc $1 {sig_name = mk_local_ident $3; sig_type = $5; } }
 
 ;
@@ -472,21 +486,21 @@ def_logical:
 ;
 
 def_property:
-  | opt_doc PROPERTY LIDENT COLON prop
+  | opt_doc PROPERTY property_name COLON prop
     { mk_doc $1 {prd_name = mk_local_ident $3; prd_prop = $5; } }
 ;
 
 def_theorem:
-  | opt_doc opt_local THEOREM LIDENT COLON prop PROOF COLON proof
+  | opt_doc opt_local THEOREM theorem_name COLON prop PROOF COLON proof
     { mk_doc $1
         { th_name = mk_local_ident $4; th_loc = $2;
           th_stmt = $6; th_proof = $9 } }
 ;
 
 prop:
-  | ALL vname_list opt_in_type_expr COMMA prop
+  | ALL bound_name_list opt_in_type_expr COMMA prop
     { mk (P_forall ($2, $3, $5))}
-  | EX vname_list opt_in_type_expr COMMA prop
+  | EX bound_name_list opt_in_type_expr COMMA prop
     { mk (P_exists ($2, $3, $5))}
   | NOT prop
     { mk (P_not $2) }
@@ -505,13 +519,10 @@ prop:
 ;
 
 opt_in_type_expr:
-  | IN type_expr { Some $2 }
-  |              { None }
-;
-
-vname_list:
-  | LIDENT vname_list { $1 :: $2 }
-  | LIDENT            { [$1] }
+  | IN type_expr
+    { Some $2 }
+  |
+    { None }
 ;
 
 /**** PROOFS ****/
@@ -582,7 +593,7 @@ statement:
 ;
 
 hyp:
- | ASSUME LIDENT IN type_expr { mk (H_var ($2, $4)) }
+ | ASSUME bound_name IN type_expr { mk (H_var ($2, $4)) }
  | ASSUME proof_hyp COLON prop { mk (H_hyp ($2, $4)) }
  | NOTATION proof_hyp EQUAL expr { mk (H_not ($2, $4)) }
 ;
@@ -621,14 +632,14 @@ type_expr_comma_list:
 ;
 
 constructor_ref:
-  | opt_lident SHARP UIDENT
+  | opt_lident SHARP constructor_name
     { mk (I_global ($1, $3)) }
 ;
 
 /**** EXPRESSIONS ****/
 
 glob_ident:
-  | opt_lident SHARP LIDENT
+  | opt_lident SHARP bound_name
     { mk (I_global ($1, $3)) }
 ;
 
@@ -644,7 +655,7 @@ opt_lident:
 expr:
   | constant
     { mk (E_const $1) }
-  | FUNCTION vname_list DASH_GT expr
+  | FUNCTION bound_name_list DASH_GT expr
     { mk (E_fun ($2, $4)) }
   | expr_ident
     { mk (E_var $1) }
@@ -759,16 +770,10 @@ record_field_list:
     { ($1, $3) :: $5 }
 ;
 
-bound_ident:
-  | LIDENT { mk_local_ident $1 }
-  | PIDENT { mk_local_ident $1 }
-  | IIDENT { mk_local_ident $1 }
-;
-
 expr_ident:
   | glob_ident
     { $1 }
-  | opt_lident BANG LIDENT
+  | opt_lident BANG method_name
     { mk (I_method ($1, $3)) }
   | bound_ident
     { $1 }
@@ -891,4 +896,32 @@ constructor_name:
   | UIDENT { $1 }
   | PIDENT { $1 }
   | IIDENT { $1 }
+;
+
+type_name:
+  | LIDENT { $1 }
+;
+
+type_param_name:
+  | LIDENT { $1 }
+;
+
+method_name:
+  | LIDENT { $1 }
+;
+
+species_name:
+  | LIDENT { $1 }
+;
+
+collection_name:
+  | LIDENT { $1 }
+;
+
+property_name:
+  | LIDENT { $1 }
+;
+
+theorem_name:
+  | LIDENT { $1 }
 ;
