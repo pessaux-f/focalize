@@ -15,13 +15,14 @@ open "../basics";;
 species setoid inherits basic_object =
 
   (** @mathml <eq/> *)
-  sig equal : self -> self -> bool
+  sig ( = ) : self -> self -> bool
   ;
-  property equal_reflexive : all x y in self,
-    !equal (x, x)
+  property ``equal is reflexive'' : all x y in self,
+    self!( = ) (x, x) and
+    x = x
   ;
   property equal_symmetric : all x y in self,
-    !equal(x, y) -> !equal(y, x)
+    self!equal(x, y) -> !equal(y, x)
   ;
   property equal_transitive : all x y z in self,
     !equal(x, y) -> !equal(y, z) -> !equal(x, z)
