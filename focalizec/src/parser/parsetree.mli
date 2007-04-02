@@ -69,6 +69,7 @@ and type_expr_desc =
 type constant = constant_desc ast
 and constant_desc =
   | C_int of string
+  | C_float of string
   | C_bool of string
   | C_string of string
   | C_char of char
