@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.15 2007-03-30 09:00:42 weis Exp $ *)
+(* $Id: lexer.mll,v 1.16 2007-04-02 09:18:10 weis Exp $ *)
 
 {
 open Lexing;;
@@ -147,11 +147,11 @@ let char_for_decimal_code lexbuf i =
     100 * (Char.code(Lexing.lexeme_char lexbuf i) - 48) +
      10 * (Char.code(Lexing.lexeme_char lexbuf (i + 1)) - 48) +
           (Char.code(Lexing.lexeme_char lexbuf (i + 2)) - 48) in
-  if c < 0 || c > 255
-  then raise (Error (Illegal_escape (Lexing.lexeme lexbuf),
-                     lexbuf.lex_start_p,
-                     lexbuf.lex_curr_p))
-  else Char.chr c
+  if c >= 0 && c <= 255 then Char.chr c else
+    raise
+      (Error (Illegal_escape (Lexing.lexeme lexbuf),
+              lexbuf.lex_start_p,
+              lexbuf.lex_curr_p))
 ;;
 
 let char_for_hexadecimal_code lexbuf i =
@@ -189,6 +189,27 @@ let ident_of_prefixop s = PIDENT s;;
 (* The prefix version of an infix operator. *)
 let ident_of_infixop s = IIDENT s;;
 
+let mk_prefixop s =
+  assert (String.length s > 0);
+  match s.[0] with
+  | '`' ->
+    begin match String.length s with
+    | 1 -> BACKQUOTE
+    | _ -> BACKQUOTE_OP s end
+  | '~' -> TILDA_OP s
+  | '?' -> QUESTION_OP s
+  | '$' -> DOLLAR_OP s
+  | '!' ->
+    begin match String.length s with
+    | 1 -> BANG
+    | _ -> BANG_OP s end
+  | '#' ->
+    begin match String.length s with
+    | 1 -> SHARP
+    | _ -> SHARP_OP s end
+  | _ -> assert false
+;;
+
 let mk_infixop s =
   assert (String.length s > 0);
   match s.[0] with
@@ -196,12 +217,14 @@ let mk_infixop s =
   | '-' ->
     begin match String.length s with
     | 1 -> DASH_OP s
-    | 2 -> if s.[1] = '>' then DASH_GT else DASH_OP s
-    | _ -> if s.[1] = '>' then DASH_GT_OP s else DASH_OP s end
+    | n when s.[1] <> '>' -> DASH_OP s
+    | 2 -> DASH_GT
+    | _ -> DASH_GT_OP s end
   | '*' ->
     begin match String.length s with
     | 1 -> STAR_OP s
-    | _ -> if s.[1] = '*' then STAR_STAR_OP s else STAR_OP s end
+    | n when s.[1] <> '*' -> STAR_OP s
+    | _ -> STAR_STAR_OP s end
   | '/' -> SLASH_OP s
   | '%' -> PERCENT_OP s
   | '&' -> AMPER_OP s
@@ -216,20 +239,23 @@ let mk_infixop s =
   | ':' ->
     begin match String.length s with
     | 1 -> COLON
-    | 2 -> if s.[1] = ':' then COLON_COLON else COLON_OP s
-    | _ -> if s.[1] = ':' then COLON_COLON_OP s else COLON_OP s end
+    | n when s.[1] <> ':' -> COLON_OP s
+    | 2 -> COLON_COLON
+    | _ -> COLON_COLON_OP s end
   | ';' ->
     begin match String.length s with
     | 1 -> SEMI
-    | 2 -> if s.[1] = ';' then SEMI_SEMI else SEMI_OP s
-    | _ -> if s.[1] = ';' then SEMI_SEMI_OP s else SEMI_OP s end
+    | n when s.[1] <> ';' -> SEMI_OP s
+    | 2 -> SEMI_SEMI
+    | _ -> SEMI_SEMI_OP s end
   | '<' ->
     begin match String.length s with
     | 1 -> LT_OP s
-    | n ->
-      if s.[1] = '-' && n >= 2 && s.[2] = '>'
-      then if n >= 3 then LT_DASH_GT_OP s else LT_DASH_GT
-      else LT_OP s end
+    | n when s.[1] <> '-' -> LT_OP s
+    | 2 -> LT_DASH_OP s
+    | n when s.[2] <> '>' -> LT_DASH_OP s
+    | 3 -> LT_DASH_GT
+    | n -> LT_DASH_GT_OP s end
   | '=' ->
     begin match String.length s with
     | 1 -> EQUAL
@@ -267,47 +293,97 @@ let report_error ppf = function
 let newline = '\010'
 let blank = [ ' ' '\009' '\012' ]
 
-(** (0) Les identificateurs alphanumériques, noms propres et noms communs (!) *)
+(** Identifiers can be:
+   - alphanumerical,
+   - infix,
+   - prefix.
+
+   Neither Quote nor DoubleQuote appear inside identifiers: those are
+   respectively character and string delimitors. *)
+
+(** (0) Characters inside alphanumerical identifiers.
+    Alphanumerical identifiers can be:
+    - regular words starting with a lower case letter,
+    - ``family'' names starting with an upper case letter. *)
+
+(** (1) Characters inside infix identifiers:
+    infix binary identifiers, such as +, -, *.
+
+   Rq: End_Infix ::= SPACE  (::= blanc tab newline) ( ) [] {} *)
+
+(** (2) Characters inside prefix identifiers:
+   prefix unary identifiers, such as ~| (boolean not), -.
+
+   Rq: ! and # and . are treated specially and cannot be inside idents.
+   Rq: $ should be inside idents ? Concenient to get traditional $1, $2 as
+   idents. *)
 
 let lowercase = [ 'a'-'z' ]
 let uppercase = [ 'A'-'Z' ]
 let decimal = [ '0'-'9' ]
 
-let start_lowercase_ident = '_' | lowercase
-let start_uppercase_ident = uppercase
+(** Identifier classes starter characters. *)
+
+let start_lowercase_ident = '_'* (lowercase | decimal)
+let start_uppercase_ident = '_'* uppercase
+let inside_infix =
+  [ '+' '-' '*' '/' '%' '&' '|' ':' ';' '.' '<' '=' '>' '@' '^' '\\' ]
+let start_infix = ',' | inside_infix
+let inside_prefix = [ '`' '~' '?' '$' '!' '#' ]
+let start_prefix = inside_prefix
+
+(** Identifier classes continuing characters. *)
 
 let continue_ident =
-    start_lowercase_ident
-  | start_uppercase_ident
+    '_'
+  | lowercase
+  | uppercase
   | decimal
+
+let continue_prefix = inside_prefix
+
+let continue_infix =
+    inside_infix
+  | continue_prefix
+  | continue_ident
+
+(** Identifier class definitions.
+  - regular identifiers, variable names and module names,
+  - infix identifiers,
+  - prefix identifiers.
+
+  Note : the first rule for lowercase identifiers
+          '_'+ decimal* continue_ident*
+  gives us _1 and _ as idents. *)
 
 (** (1) Les identificateurs infixes, noms des opérations binaires
 
-   Ne comprennent ni Quote DoubleQuote qui sont des délimiteurs de chaînes et de caractères
+   Ne comprennent ni Quote DoubleQuote qui sont des délimiteurs
+   de chaînes et de caractères.
 
    Rq: End_Infix ::= SPACE  (::= blanc tab newline) ( ) [] {} *)
 
-let start_prefix = ['`' '~' '?' '$']
-(* Rq: ! and # and . are treated specially and cannot be inside idents. *)
-
-let start_infix =
-  [ '+' '-' '*' '/' '%' '&' '|' ':' ';' '<' '=' '>' '@' '^' '\\' ]
-
-let continue_infix =
-    start_infix
-  | start_prefix
-  | continue_ident
-
 (* Identifiers *)
+let regular_lowercase_ident = start_lowercase_ident continue_ident*
+let regular_uppercase_ident = start_uppercase_ident continue_ident*
 
-let lowercase_ident = start_lowercase_ident continue_ident*
+let delimited_lowercase_ident = 
+  '`' '`' start_lowercase_ident [^'\'']* '\'' '\''
 
-let uppercase_ident = start_uppercase_ident continue_ident*
+let delimited_uppercase_ident = 
+  '`' '`' start_uppercase_ident [^'\'']* '\'' '\''
+
+let lowercase_ident =
+    regular_lowercase_ident
+  | delimited_lowercase_ident
+
+let uppercase_ident =
+    regular_uppercase_ident
+  | delimited_uppercase_ident
 
 let infix = start_infix continue_infix*
 
-(** (2) Les identificateurs préfixes, noms des opérations unaires. *)
-let prefix = start_prefix continue_infix*
+let prefix = start_prefix continue_prefix*
 
 (** Integers. *)
 let decimal_literal =
@@ -318,6 +394,10 @@ let bin_literal =
   '0' ['b' 'B'] ['0'-'1' '_']+
 let int_literal =
   decimal_literal | hex_literal | bin_literal
+let float_literal =
+  ['0'-'9'] ['0'-'9' '_']*
+  ('.' ['0'-'9' '_']* )?
+  (['e' 'E'] ['+' '-']? ['0'-'9'] ['0'-'9' '_']*)?
 
 rule token = parse
   | newline
@@ -335,6 +415,8 @@ rule token = parse
       { QIDENT (Lexing.lexeme lexbuf) }
   | int_literal
       { INT (Lexing.lexeme lexbuf) }
+  | float_literal
+      { FLOAT (Lexing.lexeme lexbuf) }
   | "\""
       { reset_string_buffer ();
         string_start_pos :=
@@ -371,7 +453,10 @@ rule token = parse
         comment lexbuf;
         token lexbuf }
   | "*)"
-      { raise (Error (Uninitiated_comment, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
+      { raise
+          (Error (Uninitiated_comment,
+                  lexbuf.lex_start_p,
+                  lexbuf.lex_curr_p)) }
   | "--" [^ '\010' '\013'] * newline
       { update_loc lexbuf None 1 false 0;
         token lexbuf }
@@ -394,8 +479,7 @@ rule token = parse
   | '.'  { DOT }
   | ','  { COMMA }
 
-  | "~|" { TILDA_BAR }
-  | prefix { PREFIX_OP (Lexing.lexeme lexbuf) }
+  | prefix { mk_prefixop (Lexing.lexeme lexbuf) }
   | "( " prefix " )" { ident_of_prefixop (Lexing.lexeme lexbuf) }
 
   | infix { mk_infixop (Lexing.lexeme lexbuf) }
