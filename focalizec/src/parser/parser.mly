@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.28 2007-03-30 08:59:30 weis Exp $ *)
+(* $Id: parser.mly,v 1.29 2007-04-02 09:19:27 weis Exp $ *)
 
 open Parsetree;;
 
@@ -41,47 +41,60 @@ let mk_proof_label (s1, s2) =
 
 %token EOF
 
+/* Identifiers */
 %token <string> LIDENT
 %token <string> UIDENT
 %token <string> PIDENT
 %token <string> IIDENT
 %token <string> QIDENT
+
+/* Basic constants */
 %token <string> INT
-%token <string> STRING
-%token <string> DOCUMENTATION
+%token <string> FLOAT
 %token <string> BOOL
+%token <string> STRING
 %token <char> CHAR
 
+/* Special tokens */
+%token <string> DOCUMENTATION
 %token <string * string> PROOF_LABEL
+%token <string> EXTERNAL_CODE
 
 /* Arithmetic operators */
 %token <string> BACKSLASH_OP
-%token <string> PERCENT_OP
 %token <string> PLUS_OP
 %token <string> DASH_OP
 %token <string> STAR_OP
 %token <string> SLASH_OP
+%token <string> PERCENT_OP
 %token <string> STAR_STAR_OP
+
+/* Nested symbols */
 %token LPAREN
 %token RPAREN
 %token LBRACE
 %token RBRACE
 %token LBRACKET
 %token RBRACKET
+
+%token BACKQUOTE
 %token COMMA
 %token <string> COMMA_OP
 %token QUOTE
-%token DOUBLEQUOTE
+
 %token DASH_GT
 %token <string> DASH_GT_OP
+%token <string> LT_DASH_OP
 %token LT_DASH_GT
 %token <string> LT_DASH_GT_OP
 %token SHARP
+%token <string> SHARP_OP
 %token BANG
+%token <string> BANG_OP
 %token BAR
 %token <string> BAR_OP
 %token <string> AMPER_OP
-%token TILDA_BAR
+%token <string> TILDA_OP
 %token UNDERSCORE
 %token EQUAL
 %token <string> EQ_OP
@@ -95,11 +108,16 @@ let mk_proof_label (s1, s2) =
 %token <string> COLON_OP
 %token COLON_COLON
 %token <string> COLON_COLON_OP
+%token <string> BACKQUOTE_OP
 %token <string> AT_OP
 %token <string> HAT_OP
+%token <string> QUESTION_OP
+%token <string> DOLLAR_OP
+%token <string> BANG_OP
 %token <string> PREFIX_OP
 %token DOT
 
+/* Keywords */
 %token ALL
 %token ALIAS
 %token AND
@@ -112,7 +130,6 @@ let mk_proof_label (s1, s2) =
 %token CAML
 %token COLLECTION
 %token COQ
-%token <string> EXTERNAL_CODE
 %token DECL
 %token DEF
 %token DEFINITION
@@ -169,6 +186,7 @@ let mk_proof_label (s1, s2) =
 %nonassoc THEN                          /* below ELSE (if ... then ...) */
 %nonassoc ELSE                          /* (if ... then ... else ...) */
 %right    BACKSLASH_OP                  /* e \ e */
+%nonassoc LT_DASH_OP                    /* below COLON_OP */
 %right    COLON_OP                      /* expr (e := e := e) */
 %nonassoc AS
 %right    BAR                           /* Dangling match (match ... with ...) */
@@ -184,13 +202,17 @@ let mk_proof_label (s1, s2) =
 %left     STAR_OP SLASH_OP              /* expr (e OP e OP e) */
 %left     PERCENT_OP                    /* expr (e OP e OP e) */
 %right    STAR_STAR_OP                  /* expr (e OP e OP e) */
-%nonassoc TILDA_BAR                     /* ~| expr */
+%nonassoc TILDA_OP                     /* ~| expr */
+%nonassoc QUESTION_OP
+%nonassoc DOLLAR_OP
+%nonassoc BANG_OP
+%nonassoc SHARP_OP
 %nonassoc PREFIX_OP                     /* unary ` ~ ? $ continue_infix* */
 %nonassoc prec_unary_minus              /* unary DASH_OP */
 %nonassoc prec_constant_constructor     /* cf. simple_expr (C versus C x) */
                                         /* above AS BAR COLON_COLON COMMA */
 %nonassoc below_SHARP
-%nonassoc SHARP                         /* simple_expr/toplevel_directive */
+%nonassoc SHARP SHARP_OP                /* simple_expr/toplevel_directive */
 %nonassoc DOT
 %nonassoc below_RPAREN
 %nonassoc RPAREN
@@ -622,8 +644,6 @@ opt_lident:
 expr:
   | constant
     { mk (E_const $1) }
-  | PREFIX_OP expr
-    { mk (E_app (mk_local_var $1, [ $2 ])) }
   | FUNCTION vname_list DASH_GT expr
     { mk (E_fun ($2, $4)) }
   | expr_ident
@@ -686,6 +706,8 @@ expr:
     { mk_infix $1 $2 $3 }
   | expr LT_OP expr
     { mk_infix $1 $2 $3 }
+  | expr LT_DASH_OP expr
+    { mk_infix $1 $2 $3 }
   | expr LT_DASH_GT_OP expr
     { mk_infix $1 $2 $3 }
   | expr GT_OP expr
@@ -694,8 +716,16 @@ expr:
     { mk_infix $1 $2 $3 }
   | expr AMPER_OP expr
     { mk_infix $1 $2 $3 }
-  | TILDA_BAR expr
-    { mk (E_app (mk_local_var "~|", [$2])) }
+  | TILDA_OP expr
+    { mk (E_app (mk_local_var $1, [$2])) }
+  | QUESTION_OP expr
+    { mk (E_app (mk_local_var $1, [$2])) }
+  | DOLLAR_OP expr
+    { mk (E_app (mk_local_var $1, [$2])) }
+  | BANG_OP expr
+    { mk (E_app (mk_local_var $1, [$2])) }
+  | SHARP_OP expr
+    { mk (E_app (mk_local_var $1, [$2])) }
   | DASH_OP expr %prec prec_unary_minus
     { mk (E_app (mk_local_var $1, [$2])) }
   | LPAREN expr RPAREN
@@ -787,6 +817,7 @@ clause:
 
 constant:
   | INT { mk (C_int $1) }
+  | FLOAT { mk (C_float $1) }
   | BOOL { mk (C_bool $1) }
   | STRING { mk (C_string $1) }
   | CHAR { mk (C_char $1) }
