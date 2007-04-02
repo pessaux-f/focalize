@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.30 2007-04-02 10:01:38 weis Exp $ *)
+(* $Id: parser.mly,v 1.31 2007-04-02 11:09:08 weis Exp $ *)
 
 open Parsetree;;
 
@@ -113,7 +113,6 @@ let mk_proof_label (s1, s2) =
 %token <string> HAT_OP
 %token <string> QUESTION_OP
 %token <string> DOLLAR_OP
-%token <string> BANG_OP
 %token DOT
 
 /* Keywords */
@@ -194,7 +193,7 @@ let mk_proof_label (s1, s2) =
 %right    BAR_OP                        /* expr (e || e || e) */
 %right    AMPER_OP                      /* expr (e && e && e) */
 %nonassoc below_EQ
-%left     EQ_OP LT_OP GT_OP             /* expr (e OP e OP e) */
+%left     EQUAL EQ_OP LT_OP GT_OP       /* expr (e OP e OP e) */
 %right    AT_OP HAT_OP                  /* expr (e OP e OP e) */
 %right    COLON_COLON COLON_COLON_OP    /* expr (e :: e :: e) */
 %left     PLUS_OP DASH_OP               /* expr (e OP e OP e) */
@@ -214,9 +213,9 @@ let mk_proof_label (s1, s2) =
 %nonassoc below_RPAREN
 %nonassoc RPAREN
 /* Finally, the first tokens of simple_expr are above everything else. */
-%nonassoc BEGIN CHAR INT
+%nonassoc BEGIN INT FLOAT BOOL STRING CHAR
           LBRACE LBRACKET LIDENT LPAREN
-          STRING UIDENT
+          UIDENT
 
 %start file
 %type <Parsetree.file> file
@@ -315,8 +314,10 @@ def_product:
   | LBRACE def_record_field_list RBRACE { $2 }
 ;
 def_record_field_list:
-  | label_name EQUAL type_expr opt_semi { [ ($1, $3) ] }
-  | label_name EQUAL type_expr SEMI def_record_field_list { ($1, $3) :: $5 }
+  | label_name EQUAL type_expr opt_semi
+    { [ ($1, $3) ] }
+  | label_name EQUAL type_expr SEMI def_record_field_list
+    { ($1, $3) :: $5 }
 ;
 
 bound_name_list:
@@ -652,19 +653,36 @@ opt_lident:
     { Some $1 }
 ;
 
-expr:
+simple_expr:
   | constant
     { mk (E_const $1) }
-  | FUNCTION bound_name_list DASH_GT expr
-    { mk (E_fun ($2, $4)) }
   | expr_ident
     { mk (E_var $1) }
-  | expr DOT label_name
-    { mk (E_record_access ($1, $3)) }
   | opt_lident SHARP UIDENT %prec prec_constant_constructor
     { mk (E_constr (mk_global_constr $1 $3, [])) }
   | opt_lident SHARP UIDENT LPAREN expr_comma_list RPAREN
     { mk (E_constr (mk_global_constr $1 $3, $5)) }
+  | simple_expr DOT label_name
+    { mk (E_record_access ($1, $3)) }
+  | LBRACE record_field_list RBRACE
+    { mk (E_record $2) }
+  | LBRACE simple_expr WITH record_field_list RBRACE
+    { mk (E_record_with ($2, $4)) }
+  | LBRACKET expr_semi_list RBRACKET
+    { $2 }
+  | LPAREN expr COMMA expr_comma_list RPAREN
+    { mk (E_tuple ($2 :: $4)) }
+  | LPAREN expr RPAREN
+    { $2 }
+  | LPAREN RPAREN
+    { mk (E_constr (mk_void (), [])) }
+;
+
+expr:
+  | simple_expr %prec below_SHARP
+    { $1 }
+  | FUNCTION bound_name_list DASH_GT expr
+    { mk (E_fun ($2, $4)) }
   | expr LPAREN expr_comma_list RPAREN
     { mk (E_app ($1, $3)) }
   | MATCH expr WITH clause_list
@@ -673,16 +691,8 @@ expr:
     { mk (E_if ($2, $4, $6)) }
   | let_binding IN expr
     { mk (E_let ($1, $3)) }
-  | LBRACE record_field_list RBRACE
-    { mk (E_record $2) }
-  | LBRACE expr WITH record_field_list RBRACE
-    { mk (E_record_with ($2, $4)) }
-  | LBRACKET expr_semi_list RBRACKET
-    { $2 }
   | expr COLON_COLON expr
     { mk (E_app (mk_cons (), [$1; $3])) }
-  | LPAREN expr COMMA expr_comma_list RPAREN
-    { mk (E_tuple ($2 :: $4)) }
   | expr COMMA_OP expr
     { mk_infix $1 $2 $3 }
   | expr HAT_OP expr
@@ -715,6 +725,8 @@ expr:
     { mk_infix $1 $2 $3 }
   | expr EQ_OP expr
     { mk_infix $1 $2 $3 }
+  | expr EQUAL expr
+    { mk_infix $1 "=" $3 }
   | expr LT_OP expr
     { mk_infix $1 $2 $3 }
   | expr LT_DASH_OP expr
@@ -739,10 +751,6 @@ expr:
     { mk (E_app (mk_local_var $1, [$2])) }
   | DASH_OP expr %prec prec_unary_minus
     { mk (E_app (mk_local_var $1, [$2])) }
-  | LPAREN expr RPAREN
-    { $2 }
-  | LPAREN RPAREN
-    { mk (E_constr (mk_void (), [])) }
   | EXTERNAL external_definition END
     { mk (E_external (mk $2)) }
 ;
@@ -907,7 +915,7 @@ type_param_name:
 ;
 
 method_name:
-  | LIDENT { $1 }
+  | bound_name { $1 }
 ;
 
 species_name:
