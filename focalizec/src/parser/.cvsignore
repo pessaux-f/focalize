@@ -3,6 +3,8 @@ lexer.ml
 parser.ml
 parser.mli
 parser.output
+parser.conflicts
+log
 lexer.mli
 a.out
 check_file
