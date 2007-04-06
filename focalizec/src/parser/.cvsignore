@@ -1,10 +1,10 @@
 *.cm*
+log
 lexer.ml
+lexer.mli
 parser.ml
 parser.mli
 parser.output
 parser.conflicts
-log
-lexer.mli
 a.out
 check_file
