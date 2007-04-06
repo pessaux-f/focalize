@@ -16,7 +16,8 @@ all:: $(BYTOBJS)
 	$(CAMLBYT) -o check_file $(CAMLBYTLIBS) $(BYTOBJS)
 
 clean::
-	$(RM) *~ *.cm* lexer.ml parser.ml parser.mli lexer.mli
+	$(RM) *~ *.cm* log lexer.ml lexer.mli
+	$(RM) parser.ml parser.mli parser.conflicts parser.output
 
 depend:
 	ocamldep *.mli *.ml > ./.depend
