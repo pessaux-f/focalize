@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.31 2007-04-02 11:09:08 weis Exp $ *)
+(* $Id: parser.mly,v 1.32 2007-06-14 17:12:36 weis Exp $ *)
 
 open Parsetree;;
 
@@ -341,11 +341,11 @@ bound_ident:
 
 def_species:
   | opt_doc SPECIES species_name def_species_params
-            INHERITS species_expr_list
+            def_species_inherits
             EQUAL species_fields END
     { mk_doc $1
        { sd_name = $3; sd_params = $4;
-         sd_inherits = $6; sd_fields = $8; } }
+         sd_inherits = $5; sd_fields = $7; } }
 ;
 
 def_species_params:
@@ -362,6 +362,10 @@ def_species_param:
   | bound_name IN species_ident { ($1, mk (SPT_in $3)) }
   | bound_name IS species_expr { ($1, mk (SPT_is $3)) }
 ;
+
+def_species_inherits:
+  | INHERITS species_expr_list { $2 }
+  | { [] }
 
 species_expr_list:
   | species_expr {[ $1 ]}

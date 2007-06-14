@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.16 2007-04-02 09:18:10 weis Exp $ *)
+(* $Id: lexer.mll,v 1.17 2007-06-14 17:12:36 weis Exp $ *)
 
 {
 open Lexing;;
@@ -315,7 +315,7 @@ let blank = [ ' ' '\009' '\012' ]
    prefix unary identifiers, such as ~| (boolean not), -.
 
    Rq: ! and # and . are treated specially and cannot be inside idents.
-   Rq: $ should be inside idents ? Concenient to get traditional $1, $2 as
+   Rq: $ should be inside idents ? Convenient to get the traditional $1, $2 as
    idents. *)
 
 let lowercase = [ 'a'-'z' ]
@@ -353,8 +353,15 @@ let continue_infix =
   - prefix identifiers.
 
   Note : the first rule for lowercase identifiers
-          '_'+ decimal* continue_ident*
-  gives us _1 and _ as idents. *)
+          '_' + ( continue_ident* )
+  gives us _1 and _ as idents.
+
+  a _U_ b
+
+  _[0-9]+
+  _[identifier]_
+
+*)
 
 (** (1) Les identificateurs infixes, noms des opérations binaires
 
