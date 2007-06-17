@@ -21,11 +21,17 @@ type sname = string
      (** Species name. *);;
 type tname = string
      (** Type name. *);;
-type vname = string
-     (** Variable name *);;
-type label = string
+type vname =
+   | Vlident of string
+   | Vuident of string
+   | Vpident of string
+   | Viident of string
+   | Vqident of string
+     (** Variable names are classified with respect of their lexical class,
+       which can be regular. infix or prefix. *);;
+type label_name = string
      (** Label name. *);;
-type constr = string
+type constr_name = vname
      (** Constructor name. *);;
 type node_label = int * string
      (** Node label in proof. *);;
@@ -91,7 +97,7 @@ and pat_desc =
   | P_as of pattern * vname
   | P_wild
   | P_app of ident * pattern list
-  | P_record of (label * pattern) list
+  | P_record of (label_name * pattern) list
   | P_tuple of pattern list
 ;;
 
@@ -242,9 +248,9 @@ and expr_desc =
   | E_match of expr * (pattern * expr) list
   | E_if of expr * expr * expr
   | E_let of let_def * expr
-  | E_record of (label * expr) list
-  | E_record_access of expr * label
-  | E_record_with of expr * (label * expr) list
+  | E_record of (label_name * expr) list
+  | E_record_access of expr * label_name
+  | E_record_with of expr * (label_name * expr) list
   | E_tuple of expr list
   | E_external of external_expr
 ;;
@@ -265,8 +271,8 @@ and type_def_desc = {
 and type_body = type_body_desc ast
 and type_body_desc =
   | TD_alias of type_expr
-  | TD_union of (constr * (type_expr list)) list 
-  | TD_record of (label * type_expr) list
+  | TD_union of (constr_name * (type_expr list)) list 
+  | TD_record of (label_name * type_expr) list
 ;;
 
 (** Toplevel expressions. *)
