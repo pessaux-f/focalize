@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.18 2007-06-17 17:19:07 weis Exp $ *)
+(* $Id: lexer.mll,v 1.19 2007-06-17 21:31:35 weis Exp $ *)
 
 {
 open Lexing;;
@@ -24,13 +24,10 @@ List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
   "assume", ASSUME;
   "assumed", ASSUMED;
   "begin", BEGIN;
-  "but", BUT;
   "by", BY;
   "caml", CAML;
   "collection", COLLECTION;
   "coq", COQ;
-  "decl", DECL;
-  "def", DEF;
   "definition", DEFINITION;
   "else", ELSE;
   "end", END;
@@ -192,10 +189,7 @@ let ident_of_infixop s = IIDENT s;;
 let mk_prefixop s =
   assert (String.length s > 0);
   match s.[0] with
-  | '`' ->
-    begin match String.length s with
-    | 1 -> BACKQUOTE
-    | _ -> BACKQUOTE_OP s end
+  | '`' -> BACKQUOTE_OP s
   | '~' -> TILDA_OP s
   | '?' -> QUESTION_OP s
   | '$' -> DOLLAR_OP s

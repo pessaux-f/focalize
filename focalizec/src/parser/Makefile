@@ -22,6 +22,9 @@ clean::
 depend:
 	ocamldep *.mli *.ml > ./.depend
 
+explain:
+	(menhir --explain parser.mly 2>&1) > menhir.out
+
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx 
 
 .ml.cmo:
@@ -35,7 +38,6 @@ depend:
 
 .mly.ml:
 	$(CAMLYAC) $<
-#	(menhir --explain $< 2>&1) > log
 
 .mll.ml:
 	$(CAMLLEX) $<

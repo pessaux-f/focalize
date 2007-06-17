@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.33 2007-06-17 17:18:02 weis Exp $ *)
+(* $Id: parser.mly,v 1.34 2007-06-17 21:31:35 weis Exp $ *)
 
 open Parsetree;;
 
@@ -84,7 +84,6 @@ let mk_proof_label (s1, s2) =
 
 %token COMMA
 %token <string> COMMA_OP
-%token QUOTE
 
 %token DASH_GT
 %token <string> DASH_GT_OP
@@ -112,7 +111,6 @@ let mk_proof_label (s1, s2) =
 %token <string> COLON_OP
 %token COLON_COLON
 %token <string> COLON_COLON_OP
-%token BACKQUOTE
 %token <string> BACKQUOTE_OP
 %token <string> AT_OP
 %token <string> HAT_OP
@@ -128,13 +126,10 @@ let mk_proof_label (s1, s2) =
 %token ASSUME
 %token ASSUMED
 %token BEGIN
-%token BUT
 %token BY
 %token CAML
 %token COLLECTION
 %token COQ
-%token DECL
-%token DEF
 %token DEFINITION
 %token ELSE
 %token END
@@ -177,16 +172,17 @@ let mk_proof_label (s1, s2) =
 /* Precedences and associativities. */
 
 %nonassoc IN
-%nonassoc below_SEMI
-%nonassoc SEMI SEMI_OP SEMI_SEMI_OP    /* below EQ ({lbl=...; lbl=...}) */
-%nonassoc LET                          /* above SEMI ( ...; let ... in ...) */
-%nonassoc below_WITH
-%nonassoc FUNCTION WITH                /* below BAR  (match ... with ...) */
+/* %nonassoc below_SEMI */
+/* %nonassoc SEMI */
+%nonassoc SEMI_OP SEMI_SEMI_OP    /* below EQ ({lbl=...; lbl=...}) */
+/* %nonassoc LET */                    /* above SEMI ( ...; let ... in ...) */
+/* %nonassoc below_WITH */
+/* %nonassoc FUNCTION WITH */          /* below BAR  (match ... with ...) */
 %nonassoc LT_DASH_GT LT_DASH_GT_OP     /* <-> */
 %right    OR                           /* prop or prop */
 %right    AND                          /* above WITH prop and prop */
 %nonassoc NOT                          /* not prop */
-%nonassoc THEN                         /* below ELSE (if ... then ...) */
+/* %nonassoc THEN */                   /* below ELSE (if ... then ...) */
 %nonassoc ELSE                         /* (if ... then ... else ...) */
 %right    BACKSLASH_OP                 /* e \ e */
 %nonassoc LT_DASH_OP                   /* below COLON_OP */
@@ -197,7 +193,7 @@ let mk_proof_label (s1, s2) =
 %right    DASH_GT DASH_GT_OP           /* core_type2 (t -> t -> t) */
 %right    BAR_OP                       /* expr (e || e || e) */
 %right    AMPER_OP                     /* expr (e && e && e) */
-%nonassoc below_EQ
+/* %nonassoc below_EQ */
 %left     EQUAL EQ_OP LT_OP GT_OP      /* expr (e OP e OP e) */
 %right    AT_OP HAT_OP                 /* expr (e OP e OP e) */
 %right    COLON_COLON COLON_COLON_OP   /* expr (e :: e :: e) */
@@ -214,14 +210,14 @@ let mk_proof_label (s1, s2) =
 %nonassoc prec_constant_constructor    /* cf. simple_expr (C versus C x) */
                                        /* above AS BAR COLON_COLON COMMA */
 %nonassoc below_SHARP
-%nonassoc SHARP SHARP_OP               /* simple_expr/toplevel_directive */
+%nonassoc SHARP_OP               /* simple_expr */
 %nonassoc DOT
 %nonassoc below_RPAREN
 %nonassoc RPAREN
 /* Finally, the first tokens of simple_expr are above everything else. */
-%nonassoc BEGIN INT FLOAT BOOL STRING CHAR
-          LBRACE LBRACKET LIDENT LPAREN
-          UIDENT
+/* %nonassoc BEGIN INT FLOAT BOOL STRING CHAR */
+/*          LBRACE LBRACKET LIDENT UIDENT */
+%nonassoc LPAREN
 
 %start file
 %type <Parsetree.file> file
@@ -571,10 +567,6 @@ fact_list:
 ;
 
 fact:
-/* Could be */
-/* | DEF LIDENT { mk (F_def (mk_local_ident $2)) } */
-/* | prop_ident { mk (F_property ($1)) } */
-/* Why not by theorem ? */
  | DEFINITION OF species_ident_comma_list { mk (F_def $3) }
  | HYPOTHESIS proof_hyp_list { mk (F_hypothesis $2) }
  | PROPERTY prop_ident_comma_list { mk (F_property ($2)) }
@@ -655,8 +647,7 @@ glob_ident:
 ;
 
 opt_lident:
-  |
-    { None }
+  | { None }
   | SELF
     { Some "self" }
   | LIDENT
@@ -886,6 +877,7 @@ opt_local:
   | { LF_no_loc }
   | LOCAL { LF_loc }
 ;
+
 opt_semi:
   | { () }
   | SEMI { () }
