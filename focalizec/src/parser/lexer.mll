@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.17 2007-06-14 17:12:36 weis Exp $ *)
+(* $Id: lexer.mll,v 1.18 2007-06-17 17:19:07 weis Exp $ *)
 
 {
 open Lexing;;
@@ -264,9 +264,7 @@ let mk_infixop s =
   | '@' -> AT_OP s
   | '^' -> HAT_OP s
   | '\\' -> BACKSLASH_OP s
-  | c ->
-    failwith
-      (Printf.sprintf "Unknown first character of infix ``%c''" c)
+  | _ -> assert false
 ;;
 
 open Format;;
@@ -316,45 +314,70 @@ let blank = [ ' ' '\009' '\012' ]
 
    Rq: ! and # and . are treated specially and cannot be inside idents.
    Rq: $ should be inside idents ? Convenient to get the traditional $1, $2 as
-   idents. *)
+   idents.
 
-let lowercase = [ 'a'-'z' ]
-let uppercase = [ 'A'-'Z' ]
-let decimal = [ '0'-'9' ]
+   Rq: ',' cannot be inside infixes or prefixes (due to proof labels that are
+       almost parsable as infixes!)
+       '.' cannot be inside infixes or prefixes, since we want to parse
+       LIDENT DOT LIDENT
+       which will be parsed as LIDENT followed by the infix DOT LIDENT
+       (for instance, r.label would be the two tokens 
+        LIDENT "r" and DOT_OP ".label")
+*)
+
+let inside_lowercase_ident = [ 'a'-'z' ]
+let inside_uppercase_ident = [ 'A'-'Z' ]
+let inside_decimal_ident = [ '0'-'9' ]
+
+let inside_ident =
+    inside_lowercase_ident
+  | inside_uppercase_ident
+  | inside_decimal_ident
+
+let inside_infix_ident =
+  [ '+' '-' '*' '/' '%' '&' '|' ':' ';' '<' '=' '>' '@' '^' '\\' ]
+let inside_prefix_ident =
+  [ '`' '~' '?' '$' '!' '#' ]
+let inside_fix_ident =
+    inside_infix_ident
+  | inside_prefix_ident
 
 (** Identifier classes starter characters. *)
 
-let start_lowercase_ident = '_'* (lowercase | decimal)
-let start_uppercase_ident = '_'* uppercase
-let inside_infix =
-  [ '+' '-' '*' '/' '%' '&' '|' ':' ';' '.' '<' '=' '>' '@' '^' '\\' ]
-let start_infix = ',' | inside_infix
-let inside_prefix = [ '`' '~' '?' '$' '!' '#' ]
-let start_prefix = inside_prefix
+let start_lowercase_ident =
+    '_'* inside_lowercase_ident
+  | '_'+ inside_decimal_ident
+
+let start_uppercase_ident = '_'* inside_uppercase_ident
+
+let start_infix_ident = '_'* (',' | inside_infix_ident)
+
+let start_prefix_ident = '_'* inside_prefix_ident
 
 (** Identifier classes continuing characters. *)
 
 let continue_ident =
     '_'
-  | lowercase
-  | uppercase
-  | decimal
+  | inside_ident
 
-let continue_prefix = inside_prefix
+let continue_prefix_ident =
+    '_'
+  | inside_fix_ident
 
-let continue_infix =
-    inside_infix
-  | continue_prefix
-  | continue_ident
+let continue_infix_ident =
+    '_'
+  | inside_fix_ident
+  | inside_ident
 
 (** Identifier class definitions.
   - regular identifiers, variable names and module names,
-  - infix identifiers,
+  - infix_ident identifiers,
   - prefix identifiers.
 
   Note : the first rule for lowercase identifiers
-          '_' + ( continue_ident* )
-  gives us _1 and _ as idents.
+          '_'* ( lowercase | decimal )
+  gives us _1 as ident
+  and _ is a special case to produce token UNDERSCORE.
 
   a _U_ b
 
@@ -373,12 +396,21 @@ let continue_infix =
 (* Identifiers *)
 let regular_lowercase_ident = start_lowercase_ident continue_ident*
 let regular_uppercase_ident = start_uppercase_ident continue_ident*
+let regular_infix_ident = start_infix_ident continue_infix_ident*
+let regular_prefix_ident = start_prefix_ident continue_prefix_ident*
 
+(** Delimited identifiers. *)
 let delimited_lowercase_ident = 
   '`' '`' start_lowercase_ident [^'\'']* '\'' '\''
 
 let delimited_uppercase_ident = 
   '`' '`' start_uppercase_ident [^'\'']* '\'' '\''
+
+let delimited_infix_ident =
+  '`' '`' start_infix_ident [^'\'']* '\'' '\''
+
+let delimited_prefix_ident =
+  '`' '`' start_prefix_ident [^'\'']* '\'' '\''
 
 let lowercase_ident =
     regular_lowercase_ident
@@ -388,9 +420,13 @@ let uppercase_ident =
     regular_uppercase_ident
   | delimited_uppercase_ident
 
-let infix = start_infix continue_infix*
+let infix_ident =
+    regular_infix_ident
+  | delimited_infix_ident
 
-let prefix = start_prefix continue_prefix*
+let prefix_ident =
+    regular_prefix_ident
+  | delimited_prefix_ident
 
 (** Integers. *)
 let decimal_literal =
@@ -481,16 +517,16 @@ rule token = parse
   | '{'  { LBRACE }
   | '}'  { RBRACE }
 
-  | '#'  { SHARP } (* To be suppressed. *)
-  | '!'  { BANG } (* To be suppressed. *)
+(*  | '#'  { SHARP } (* To be suppressed. *)
+  | '!'  { BANG } (* To be suppressed. *) *)
   | '.'  { DOT }
-  | ','  { COMMA }
+  | '_'  { UNDERSCORE }
 
-  | prefix { mk_prefixop (Lexing.lexeme lexbuf) }
-  | "( " prefix " )" { ident_of_prefixop (Lexing.lexeme lexbuf) }
+  | prefix_ident { mk_prefixop (Lexing.lexeme lexbuf) }
+  | "( " prefix_ident " )" { ident_of_prefixop (Lexing.lexeme lexbuf) }
 
-  | infix { mk_infixop (Lexing.lexeme lexbuf) }
-  | "( " infix " )" { ident_of_infixop (Lexing.lexeme lexbuf) }
+  | infix_ident { mk_infixop (Lexing.lexeme lexbuf) }
+  | "( " infix_ident " )" { ident_of_infixop (Lexing.lexeme lexbuf) }
 
   | "{*" ([^ '*'] | '*' [^ '}'])* "*}"
     { mk_external_code (Lexing.lexeme lexbuf) }
