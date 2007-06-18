@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.34 2007-06-17 21:31:35 weis Exp $ *)
+(* $Id: parser.mly,v 1.35 2007-06-18 08:10:51 weis Exp $ *)
 
 open Parsetree;;
 
@@ -82,6 +82,7 @@ let mk_proof_label (s1, s2) =
 %token LBRACKET
 %token RBRACKET
 
+/* General infix and prefix operators */
 %token COMMA
 %token <string> COMMA_OP
 
@@ -759,8 +760,7 @@ expr:
 ;
 
 expr_semi_list:
-  |
-    { mk (E_app (mk_nil (), [])) }
+  | { mk (E_app (mk_nil (), [])) }
   | expr
     { mk (E_app (mk_cons (), [$1; mk (E_app (mk_nil (), []))])) }
   | expr SEMI expr_semi_list
@@ -892,6 +892,8 @@ binding_list:
   | { [] }
   | binding AND binding_list { $1 :: $3 }
 ;
+
+/**** NAMES ****/
 
 label_name:
   | LIDENT { $1 }
