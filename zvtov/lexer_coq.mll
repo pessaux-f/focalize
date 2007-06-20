@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: lexer_coq.mll,v 1.3 2006-06-22 17:09:40 doligez Exp $  *)
+(*  $Id: lexer_coq.mll,v 1.4 2007-06-20 10:50:49 doligez Exp $  *)
 {
 open Parser_coq;;
 open Lexing;;
@@ -116,7 +116,8 @@ rule coqtoken = parse
   | coqidbegin coqidchar *  ('.' coqidbegin coqidchar*)*
     { let s = Lexing.lexeme lexbuf in
         if String.contains s '.' then FQN s else IDENT s }
-
+  | ['0' - '9'] +
+    { IDENT (Lexing.lexeme lexbuf) }
 
   | "%%begin-auto-proof" inline*
       { BEGINPROOF }
