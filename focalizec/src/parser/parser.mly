@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.35 2007-06-18 08:10:51 weis Exp $ *)
+(* $Id: parser.mly,v 1.36 2007-06-21 23:27:27 weis Exp $ *)
 
 open Parsetree;;
 
@@ -166,7 +166,7 @@ let mk_proof_label (s1, s2) =
 %token THEN
 %token THEOREM
 %token TYPE
-%token USES
+%token USE
 %token VALUE
 %token WITH
 
@@ -244,15 +244,14 @@ phrase:
   | def_collection SEMI_SEMI { mk (Ph_coll $1) }
   | opt_doc EXTERNAL def_external SEMI_SEMI { mk_doc $1 (Ph_external $3) }
   | opt_doc OPEN STRING SEMI_SEMI { mk_doc $1 (Ph_open $3) }
-    /* USES should be USE */
-  | opt_doc USES STRING SEMI_SEMI { mk_doc $1 (Ph_use $3) }
+  | opt_doc USE STRING SEMI_SEMI { mk_doc $1 (Ph_use $3) }
   | opt_doc expr SEMI_SEMI { mk_doc $1 (Ph_expr $2) }
 ;
 
 def_external:
-  | TYPE type_name EQUAL external_definition SEMI_SEMI
+  | TYPE external_type_name EQUAL external_definition SEMI_SEMI
     { mk (ED_type (mk {ed_name = Vlident $2; ed_body = mk $4})) }
-  | VALUE value_name EQUAL external_definition SEMI_SEMI
+  | VALUE external_value_vname EQUAL external_definition SEMI_SEMI
     { mk (ED_value (mk {ed_name = $2; ed_body = mk $4})) }
 ;
 
@@ -305,8 +304,8 @@ def_sum:
 ;
 
 def_constructor:
-  | constructor_name { ($1, []) }
-  | constructor_name LPAREN type_expr_comma_list RPAREN { ($1, $3) }
+  | constructor_vname { ($1, []) }
+  | constructor_vname LPAREN type_expr_comma_list RPAREN { ($1, $3) }
 ;
 def_constructor_list:
   | BAR def_constructor { [ $2 ] }
@@ -323,23 +322,6 @@ def_record_field_list:
     { ($1, $3) :: $5 }
 ;
 
-bound_name_list:
-  | bound_name bound_name_list
-    { $1 :: $2 }
-  | bound_name
-    { [$1] }
-;
-
-bound_name:
-  | LIDENT { Vlident $1 }
-  | PIDENT { Vpident $1 }
-  | IIDENT { Viident $1 }
-;
-
-bound_ident:
-  | bound_name { mk_local_ident $1 }
-;
-
 /**** SPECIES ****/
 
 def_species:
@@ -347,8 +329,8 @@ def_species:
             def_species_inherits
             EQUAL species_fields END
     { mk_doc $1
-       { sd_name = $3; sd_params = $4;
-         sd_inherits = $5; sd_fields = $7; } }
+        { sd_name = $3; sd_params = $4;
+          sd_inherits = $5; sd_fields = $7; } }
 ;
 
 def_species_params:
@@ -362,13 +344,13 @@ def_species_param_list:
 ;
 
 def_species_param:
-  | bound_name IN species_ident { ($1, mk (SPT_in $3)) }
-  | bound_name IS species_expr { ($1, mk (SPT_is $3)) }
+  | bound_vname IN carrier_ident { ($1, mk (SPT_in $3)) }
+  | collection_vname IS species_expr { ($1, mk (SPT_is $3)) }
 ;
 
 def_species_inherits:
-  | INHERITS species_expr_list { $2 }
-  | { [] }
+  | opt_doc INHERITS species_expr_list { mk_doc $1 $3}
+  | { mk_no_doc [] }
 
 species_expr_list:
   | species_expr {[ $1 ]}
@@ -405,7 +387,7 @@ species_field :
 ;
 
 def_proof:
-  | opt_doc PROOF OF property_name EQUAL proof
+  | opt_doc PROOF OF property_vname EQUAL proof
     { mk_doc $1 { pd_name = mk_local_ident $4; pd_proof = $6; } }
 ;
 
@@ -425,7 +407,7 @@ rep_type_def:
   | glob_ident LPAREN rep_type_def_comma_list RPAREN
     { RTE_app ($1, $3) }
   | LPAREN rep_type_def RPAREN
-    { $2 }
+    { RTE_paren (mk $2) }
 ;
 
 rep_type_def_comma_list:
@@ -479,9 +461,8 @@ param:
 /**** PROPERTIES & THEOREM DEFINITION ****/
 
 def_sig:
-  | opt_doc SIG bound_name COLON type_expr
+  | opt_doc SIG bound_vname COLON type_expr
     { mk_doc $1 {sig_name = mk_local_ident $3; sig_type = $5; } }
-
 ;
 
 def_logical:
@@ -494,95 +475,94 @@ def_logical:
 ;
 
 def_property:
-  | opt_doc PROPERTY property_name COLON prop
+  | opt_doc PROPERTY property_vname COLON prop
     { mk_doc $1 {prd_name = mk_local_ident $3; prd_prop = $5; } }
 ;
 
 def_theorem:
-  | opt_doc opt_local THEOREM theorem_name COLON prop PROOF COLON proof
+  | opt_doc opt_local THEOREM theorem_vname COLON prop PROOF COLON proof
     { mk_doc $1
         { th_name = mk_local_ident $4; th_loc = $2;
           th_stmt = $6; th_proof = $9 } }
 ;
 
 prop:
-  | ALL bound_name_list opt_in_type_expr COMMA prop
-    { mk (P_forall ($2, $3, $5))}
-  | EX bound_name_list opt_in_type_expr COMMA prop
-    { mk (P_exists ($2, $3, $5))}
+  | ALL bound_vname_list opt_in_type_expr COMMA prop
+    { mk (Pr_forall ($2, $3, $5))}
+  | EX bound_vname_list opt_in_type_expr COMMA prop
+    { mk (Pr_exists ($2, $3, $5))}
   | NOT prop
-    { mk (P_not $2) }
+    { mk (Pr_not $2) }
   | LPAREN prop RPAREN
-    { $2 }
+    { mk (Pr_paren $2) }
   | prop DASH_GT prop
-    { mk (P_imply ($1, $3)) }
+    { mk (Pr_imply ($1, $3)) }
   | prop OR prop
-    { mk (P_or ($1, $3)) }
+    { mk (Pr_or ($1, $3)) }
   | prop AND prop
-    { mk (P_and ($1, $3)) }
+    { mk (Pr_and ($1, $3)) }
   | prop LT_DASH_GT prop
-    { mk (P_equiv ($1, $3)) }
+    { mk (Pr_equiv ($1, $3)) }
   | expr %prec below_RPAREN
-    { mk (P_expr $1) }
+    { mk (Pr_expr $1) }
 ;
 
 opt_in_type_expr:
   | IN type_expr
     { Some $2 }
-  |
-    { None }
+  | { None }
 ;
 
 /**** PROOFS ****/
 
 proof:
- | opt_doc ASSUMED
-   { mk_doc $1 (Pf_assumed) }
- | opt_doc BY fact_list
-   { mk_doc $1 (Pf_auto $3) }
- | opt_doc COQ PROOF EXTERNAL_CODE
-   { mk_doc $1 (Pf_coq $4) }
- | proof_node_list
-   { mk (Pf_node $1) }
- | DOT { mk (Pf_auto []) }
+  | opt_doc ASSUMED
+    { mk_doc $1 (Pf_assumed) }
+  | opt_doc BY fact_list
+    { mk_doc $1 (Pf_auto $3) }
+  | opt_doc COQ PROOF EXTERNAL_CODE
+    { mk_doc $1 (Pf_coq $4) }
+  | proof_node_list
+    { mk (Pf_node $1) }
+  | DOT { mk (Pf_auto []) }
 ;
 
 proof_node_list:
- | proof_node_qed { [ $1 ] }
- | proof_node proof_node_list { $1 :: $2 }
+  | proof_node_qed { [ $1 ] }
+  | proof_node proof_node_list { $1 :: $2 }
 ;
 
 proof_node:
- | opt_doc PROOF_LABEL statement proof
-   { mk_doc $1 (PN_sub (mk_proof_label $2, $3, $4)) }
+  | opt_doc PROOF_LABEL statement proof
+    { mk_doc $1 (PN_sub (mk_proof_label $2, $3, $4)) }
 ;
 
 proof_node_qed:
- | opt_doc PROOF_LABEL QED proof
-   { mk_doc $1 (PN_qed (mk_proof_label $2, $4)) }
+  | opt_doc PROOF_LABEL QED proof
+    { mk_doc $1 (PN_qed (mk_proof_label $2, $4)) }
 ;
 
 fact_list:
- | { [ ] }
- | fact fact_list { $1 :: $2 }
+  | { [ ] }
+  | fact fact_list { $1 :: $2 }
 ;
 
 fact:
- | DEFINITION OF species_ident_comma_list { mk (F_def $3) }
- | HYPOTHESIS proof_hyp_list { mk (F_hypothesis $2) }
- | PROPERTY prop_ident_comma_list { mk (F_property ($2)) }
- | THEOREM prop_ident_comma_list { mk (F_property ($2)) }
- | STEP proof_label_comma_list { mk (F_node (List.map mk_proof_label $2)) }
+  | DEFINITION OF species_ident_comma_list { mk (F_def $3) }
+  | HYPOTHESIS proof_hyp_list { mk (F_hypothesis $2) }
+  | PROPERTY prop_ident_comma_list { mk (F_property ($2)) }
+  | THEOREM prop_ident_comma_list { mk (F_property ($2)) }
+  | STEP proof_label_comma_list { mk (F_node (List.map mk_proof_label $2)) }
 ;
 
 proof_hyp:
- | UIDENT { Vuident $1 }
- | LIDENT { Vlident $1 }
+  | UIDENT { Vuident $1 }
+  | LIDENT { Vlident $1 }
 ;
 
 proof_hyp_list:
- | proof_hyp COMMA proof_hyp_list { $1 :: $3 }
- | proof_hyp { [ $1 ] }
+  | proof_hyp COMMA proof_hyp_list { $1 :: $3 }
+  | proof_hyp { [ $1 ] }
 ; 
 
 opt_prop:
@@ -592,19 +572,19 @@ opt_prop:
 ;
 
 statement:
- | hyp_list opt_prop
-   { mk { s_hyps = $1; s_concl = $2; } }
+  | hyp_list opt_prop
+    { mk { s_hyps = $1; s_concl = $2; } }
 ;
 
 hyp:
- | ASSUME bound_name IN type_expr { mk (H_var ($2, $4)) }
- | ASSUME proof_hyp COLON prop { mk (H_hyp ($2, $4)) }
- | NOTATION proof_hyp EQUAL expr { mk (H_not ($2, $4)) }
+  | ASSUME bound_vname IN type_expr { mk (H_var ($2, $4)) }
+  | ASSUME proof_hyp COLON prop { mk (H_hyp ($2, $4)) }
+  | NOTATION proof_hyp EQUAL expr { mk (H_not ($2, $4)) }
 ;
 
 hyp_list:
- | { [] }
- | hyp COMMA hyp_list { $1 :: $3 }
+  | { [] }
+  | hyp COMMA hyp_list { $1 :: $3 }
 ;
 
 /**** TYPE EXPRESSIONS ****/
@@ -627,7 +607,7 @@ type_expr:
   | glob_ident LPAREN type_expr_comma_list RPAREN
     { mk (TE_app ($1, $3)) }
   | LPAREN type_expr RPAREN
-    { $2 }
+    { mk (TE_paren $2) }
 ;
 
 type_expr_comma_list:
@@ -636,14 +616,14 @@ type_expr_comma_list:
 ;
 
 constructor_ref:
-  | opt_lident SHARP constructor_name
+  | opt_lident SHARP constructor_vname
     { mk (I_global ($1, $3)) }
 ;
 
 /**** EXPRESSIONS ****/
 
 glob_ident:
-  | opt_lident SHARP bound_name
+  | opt_lident SHARP bound_vname
     { mk (I_global ($1, $3)) }
 ;
 
@@ -675,7 +655,7 @@ simple_expr:
   | LPAREN expr COMMA expr_comma_list RPAREN
     { mk (E_tuple ($2 :: $4)) }
   | LPAREN expr RPAREN
-    { $2 }
+    { mk (E_paren $2) }
   | LPAREN RPAREN
     { mk (E_constr (mk_void (), [])) }
 ;
@@ -683,7 +663,7 @@ simple_expr:
 expr:
   | simple_expr %prec below_SHARP
     { $1 }
-  | FUNCTION bound_name_list DASH_GT expr
+  | FUNCTION bound_vname_list DASH_GT expr
     { mk (E_fun ($2, $4)) }
   | expr LPAREN expr_comma_list RPAREN
     { mk (E_app ($1, $3)) }
@@ -784,7 +764,7 @@ record_field_list:
 expr_ident:
   | glob_ident
     { $1 }
-  | opt_lident BANG method_name
+  | opt_lident BANG method_vname
     { mk_method_application $1 $3 }
   | bound_ident
     { $1 }
@@ -795,14 +775,24 @@ prop_ident:
     { $1 }
 ;
 
+carrier_ident :
+  | species_ident { $1 }
+;
+
 species_ident:
-  | LIDENT
-    { mk_local_ident (Vlident $1) }
+  | species_vname
+    { mk_local_ident $1 }
   | glob_ident
     { $1 }
-  | opt_lident BANG LIDENT
-    { mk_method_application $1 (Vlident $3) }
+  | opt_collection_name BANG method_vname
+    { mk_method_application $1 $3 }
 ;
+
+opt_collection_name:
+  | { None }
+  | collection_name { Some $1 }
+;
+
 
 species_ident_comma_list:
   | species_ident COMMA species_ident_comma_list { $1 :: $3 }
@@ -850,13 +840,12 @@ pattern:
   | LBRACE pattern_record_field_list RBRACE { mk (P_record $2) }
   | pattern AS LIDENT { mk (P_as ($1, Vlident $3)) }
   | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
-  | LPAREN pattern RPAREN { $2 }
+  | LPAREN pattern RPAREN { mk (P_paren $2) }
   | LPAREN RPAREN { mk (P_app (mk_void_ident (), [])) }
 ;
 
 pattern_semi_list:
-  |
-    { mk (P_app (mk_nil_ident (), [])) }
+  | { mk (P_app (mk_nil_ident (), [])) }
   | pattern
     { mk (P_app (mk_cons_ident (), [$1; mk (P_app (mk_nil_ident (), []))])) }
   | pattern SEMI pattern_semi_list
@@ -895,47 +884,82 @@ binding_list:
 
 /**** NAMES ****/
 
-label_name:
-  | LIDENT { $1 }
+bound_ident:
+  | bound_vname { mk_local_ident $1 }
 ;
 
-value_name:
+bound_vname_list:
+  | bound_vname bound_vname_list
+    { $1 :: $2 }
+  | bound_vname
+    { [$1] }
+;
+
+bound_vname:
+  | LIDENT { Vlident $1 }
+  | PIDENT { Vpident $1 }
+  | IIDENT { Viident $1 }
+;
+
+external_value_vname:
   | LIDENT { Vlident $1 }
   | UIDENT { Vuident $1 }
   | PIDENT { Vpident $1 }
   | IIDENT { Viident $1 }
 ;
 
-constructor_name:
+method_vname:
+  | bound_vname { $1 }
+;
+
+constructor_vname:
   | UIDENT { Vuident $1 }
   | PIDENT { Vpident $1 }
   | IIDENT { Viident $1 }
+;
+
+species_name:
+  | LIDENT { $1 }
+  | UIDENT { $1 }
+;
+
+species_vname:
+  | LIDENT { Vlident $1 }
+  | UIDENT { Vuident $1 }
+;
+
+collection_name:
+  | UIDENT { $1 }
+  | LIDENT { $1 }
+;
+
+collection_vname:
+  | LIDENT { Vlident $1 }
+  | UIDENT { Vuident $1 }
+;
+
+property_vname:
+  | LIDENT { Vlident $1 }
+  | UIDENT { Vuident $1 }
+;
+
+theorem_vname:
+  | LIDENT { Vlident $1 }
+  | UIDENT { Vlident $1 }
+;
+
+label_name:
+  | LIDENT { $1 }
 ;
 
 type_name:
   | LIDENT { $1 }
 ;
 
+external_type_name:
+  | LIDENT { $1 }
+;
+
 type_param_name:
   | LIDENT { $1 }
-;
-
-method_name:
-  | bound_name { $1 }
-;
-
-species_name:
-  | LIDENT { $1 }
-;
-
-collection_name:
-  | LIDENT { $1 }
-;
-
-property_name:
-  | LIDENT { Vlident $1 }
-;
-
-theorem_name:
-  | LIDENT { Vlident $1 }
 ;
