@@ -4,10 +4,17 @@
    The disambiguation pass has to :
    - resolve global/local/method classification for idents
 *)
+type position =
+   Lexing.position = {
+   pos_fname : string;
+   pos_lnum : int;
+   pos_bol : int;
+   pos_cnum : int;
+};;
 
 type location = {
-   l_beg : Lexing.position;
-   l_end : Lexing.position;
+   l_beg : position;
+   l_end : position;
 }
 (** Location of an AST node,
     beginning and ending position of its corresponding source text. *);;
@@ -40,8 +47,8 @@ type external_name = string * string
 
 type ('a, 'b) generic_ast = {
    ast_loc : location; (** The location in the source of the AST node. *)
-   ast_desc : 'a;      (** Description of the node. *)
-   ast_doc : 'b option; (** Support for documentation in many formats. *)
+   ast_desc : 'a;      (** The description of the node. *)
+   ast_doc : 'b option; (** The support for documentation in many formats. *)
 };;
 
 type 'a ast = ('a, string) generic_ast;;
@@ -60,6 +67,7 @@ and rep_type_def_desc =
   | RTE_fun of rep_type_def * rep_type_def
   | RTE_app of ident * rep_type_def list
   | RTE_prod of rep_type_def * rep_type_def
+  | RTE_paren of rep_type_def
 ;;
 
 type type_expr = type_expr_desc ast
@@ -70,6 +78,7 @@ and type_expr_desc =
   | TE_prod of type_expr * type_expr
   | TE_self
   | TE_prop
+  | TE_paren of type_expr
 ;;
 
 type constant = constant_desc ast
@@ -99,6 +108,7 @@ and pat_desc =
   | P_app of ident * pattern list
   | P_record of (label_name * pattern) list
   | P_tuple of pattern list
+  | P_paren of pattern
 ;;
 
 type external_language =
@@ -127,7 +137,7 @@ type species_def = species_def_desc ast_doc
 and species_def_desc = {
   sd_name : sname;
   sd_params : (vname * species_param_type) list;
-  sd_inherits : species_expr list;
+  sd_inherits : (species_expr list) ast_doc;
   sd_fields : species_field list;
 }
 
@@ -229,14 +239,15 @@ and hyp_desc =
 
 and prop = prop_desc ast
 and prop_desc =
-  | P_forall of vname list * type_expr option * prop
-  | P_exists of vname list * type_expr option * prop
-  | P_imply of prop * prop
-  | P_or of prop * prop
-  | P_and of prop * prop
-  | P_equiv of prop * prop
-  | P_not of prop
-  | P_expr of expr
+  | Pr_forall of vname list * type_expr option * prop
+  | Pr_exists of vname list * type_expr option * prop
+  | Pr_imply of prop * prop
+  | Pr_or of prop * prop
+  | Pr_and of prop * prop
+  | Pr_equiv of prop * prop
+  | Pr_not of prop
+  | Pr_expr of expr
+  | Pr_paren of prop
 
 and expr = expr_desc ast
 and expr_desc =
@@ -253,6 +264,7 @@ and expr_desc =
   | E_record_with of expr * (label_name * expr) list
   | E_tuple of expr list
   | E_external of external_expr
+  | E_paren of expr
 ;;
 
 type coll_def = coll_def_desc ast_doc
