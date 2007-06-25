@@ -6,28 +6,28 @@
 *)
 type position =
    Lexing.position = {
-   pos_fname : string;
-   pos_lnum : int;
-   pos_bol : int;
-   pos_cnum : int;
-};;
+   pos_fname : string ;
+   pos_lnum : int ;
+   pos_bol : int ;
+   pos_cnum : int
+} ;;
 
 type location = {
-   l_beg : position;
-   l_end : position;
+   l_beg : position ;
+   l_end : position
 }
 (** Location of an AST node,
     beginning and ending position of its corresponding source text. *);;
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
-     (** File name. *);;
+     (** File name. *) ;;
 type cname = string
-     (** Collection name. *);;
+     (** Collection name. *) ;;
 type sname = string
-     (** Species name. *);;
+     (** Species name. *) ;;
 type tname = string
-     (** Type name. *);;
+     (** Type name. *) ;;
 type vname =
    | Vlident of string
    | Vuident of string
@@ -37,18 +37,18 @@ type vname =
      (** Variable names are classified with respect of their lexical class,
        which can be regular. infix or prefix. *);;
 type label_name = string
-     (** Label name. *);;
+     (** Label name. *) ;;
 type constr_name = vname
-     (** Constructor name. *);;
+     (** Constructor name. *) ;;
 type node_label = int * string
-     (** Node label in proof. *);;
+     (** Node label in proof. *) ;;
 type external_name = string * string
      (** External name from Ocaml or Coq: module name and identifier. *);;
 
 type ('a, 'b) generic_ast = {
-   ast_loc : location; (** The location in the source of the AST node. *)
-   ast_desc : 'a;      (** The description of the node. *)
-   ast_doc : 'b option; (** The support for documentation in many formats. *)
+   ast_loc : location ; (** The location in the source of the AST node. *)
+   ast_desc : 'a ;      (** The description of the node. *)
+   ast_doc : 'b option  (** The support for documentation in many formats. *)
 };;
 
 type 'a ast = ('a, string) generic_ast;;
@@ -114,7 +114,8 @@ and pat_desc =
 type external_language =
   | EL_Caml
   | EL_Coq
-  | EL_external of string;;
+  | EL_external of string
+;;
 
 type external_def = external_def_desc ast
 and external_def_desc =
@@ -123,22 +124,22 @@ and external_def_desc =
 
 and external_def_body = external_def_body_desc ast
 and external_def_body_desc = {
-  ed_name : vname;
-  ed_body : external_expr;
+  ed_name : vname ;
+  ed_body : external_expr
 }
 
 and external_expr = external_expr_desc ast
 and external_expr_desc =
     (external_language * external_expression) list
 
-and external_expression = string;;
+and external_expression = string ;;
 
 type species_def = species_def_desc ast_doc
 and species_def_desc = {
-  sd_name : sname;
-  sd_params : (vname * species_param_type) list;
-  sd_inherits : (species_expr list) ast_doc;
-  sd_fields : species_field list;
+  sd_name : sname ;
+  sd_params : (vname * species_param_type) list ;
+  sd_inherits : (species_expr list) ast_doc ;
+  sd_fields : species_field list
 }
 
 and species_param_type = species_param_type_desc ast
@@ -148,8 +149,8 @@ and species_param_type_desc =
 
 and species_expr = species_expr_desc ast
 and species_expr_desc = {
-  se_name : ident;
-  se_params : species_param list;
+  se_name : ident ;
+  se_params : species_param list
 }
 
 and species_param = species_param_desc ast
@@ -158,20 +159,20 @@ and species_param_desc =
 
 and sig_def = sig_def_desc ast_doc
 and sig_def_desc = {
-  sig_name : ident;
-  sig_type: type_expr;
+  sig_name : ident ;
+  sig_type: type_expr
 }
 
 and proof_def = proof_def_desc ast_doc
 and proof_def_desc = {
   pd_name : ident;
-  pd_proof: proof;
+  pd_proof: proof
 }
 
 and property_def = property_def_desc ast_doc
 and property_def_desc = {
-  prd_name : ident;
-  prd_prop: prop;
+  prd_name : ident ;
+  prd_prop: prop
 }
 
 and species_field = species_field_desc ast
@@ -185,25 +186,25 @@ and species_field_desc =
 
 and let_def = let_def_desc ast_doc
 and let_def_desc = {
-  ld_rec : rec_flag;
-  ld_log : log_flag;
-  ld_loc : loc_flag;
-  ld_bindings : binding list;
+  ld_rec : rec_flag ;
+  ld_log : log_flag ;
+  ld_loc : loc_flag ;
+  ld_bindings : binding list
 }
 and binding = binding_desc ast
 and binding_desc = {
-  b_name : ident;
-  b_params : (ident * type_expr option) list;
-  b_type : type_expr option;
-  b_body : expr;
+  b_name : ident ;
+  b_params : (ident * type_expr option) list ;
+  b_type : type_expr option ;
+  b_body : expr
 }
 
 and theorem_def = theorem_def_desc ast_doc
 and theorem_def_desc = {
-  th_name : ident;
-  th_loc : loc_flag;
-  th_stmt : prop;
-  th_proof : proof;
+  th_name : ident ;
+  th_loc : loc_flag ;
+  th_stmt : prop ;
+  th_proof : proof
 }
 
 and fact = fact_desc ast
@@ -227,8 +228,8 @@ and proof_node_desc =
 
 and statement = statement_desc ast
 and statement_desc = {
-  s_hyps : hyp list;
-  s_concl : prop option;
+  s_hyps : hyp list ;
+  s_concl : prop option
 }
 
 and hyp = hyp_desc ast
@@ -269,15 +270,15 @@ and expr_desc =
 
 type coll_def = coll_def_desc ast_doc
 and coll_def_desc = {
-  cd_name : cname;
-  cd_body : species_expr;
-};;
+  cd_name : cname ;
+  cd_body : species_expr
+} ;;
 
 type type_def = type_def_desc ast
 and type_def_desc = {
-  td_name : tname;
-  td_params : string list;
-  td_body : type_body;
+  td_name : tname ;
+  td_params : string list ;
+  td_body : type_body
 }
 
 and type_body = type_body_desc ast
@@ -288,7 +289,7 @@ and type_body_desc =
 ;;
 
 (** Toplevel expressions. *)
-type expr_def = expr;;
+type expr_def = expr ;;
 
 type phrase = phrase_desc ast
 and phrase_desc =

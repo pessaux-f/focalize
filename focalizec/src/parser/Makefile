@@ -8,12 +8,11 @@ BYTOBJS=configuration.cmo \
    lexer.cmo parser.cmo parse_file.cmo \
    check_file.cmo
 
-CAMLBYTLIBS=lexing.cmo parsing.cmo
 
 RM = rm -rf
 
 all:: $(BYTOBJS)
-	$(CAMLBYT) -o check_file $(CAMLBYTLIBS) $(BYTOBJS)
+	$(CAMLBYT) -o check_file $(BYTOBJS)
 
 clean::
 	$(RM) *~ *.cm* log lexer.ml lexer.mli
