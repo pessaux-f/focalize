@@ -35,11 +35,15 @@ let print_focal_full_version () =
 let set_focal_to_verbose () = Configuration.set_verbose true;;
 
 let check_file_syntax fname =
-  try 
+  try
+    ignore (Parse_file.parse_file Format.err_formatter fname)
+(*
     let ast = Parse_file.parse_file Format.err_formatter fname in
     let fname = get_output_file_name () in
     if fname <> "" then
-    Printer.print_file ast with
+    Printer.print_file ast
+*)
+  with
   | _ -> exit 2;;
 
 (* The main procedure *)

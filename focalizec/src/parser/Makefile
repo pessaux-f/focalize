@@ -6,9 +6,11 @@ CAMLLEX = ocamllex
 
 BYTOBJS=configuration.cmo \
    lexer.cmo parser.cmo parse_file.cmo \
-   lib_pp.cmo printer.cmo \
    check_file.cmo \
-
+#BYTOBJS=configuration.cmo \
+#   lexer.cmo parser.cmo parse_file.cmo \
+#   lib_pp.cmo printer.cmo \
+#   check_file.cmo \
 
 RM = rm -rf
 
