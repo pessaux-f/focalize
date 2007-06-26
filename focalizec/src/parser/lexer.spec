@@ -48,3 +48,25 @@ Infix ::= Start_Infix (Continue_Infix*)
 
 Rq: End_Infix ::= SPACE  (::= blanc tab newline) ( ) [] {}
 *******)
+
+let rec foo (x) =
+  (Module#)foo (x + 1)
+
+Peut s'écrire:
+let rec foo (x) =
+  (Module.)foo (x + 1)
+
+(Le # devient foo et il est implicite s'il existe un module ouvert définissant
+foo).
+
+Collection and species Start with an uppercase letter.
+
+Acces to collection is
+  Col!ident
+
+Dans une espèce on définit 
+
+specied ... (Col is Ring, v in Col)
+let rec foo (x) =
+  Col!foo (x + val) + foo (val)
+end

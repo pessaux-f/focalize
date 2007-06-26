@@ -6,7 +6,8 @@ CAMLLEX = ocamllex
 
 BYTOBJS=configuration.cmo \
    lexer.cmo parser.cmo parse_file.cmo \
-   check_file.cmo
+   lib_pp.cmo printer.cmo \
+   check_file.cmo \
 
 
 RM = rm -rf
@@ -23,6 +24,9 @@ depend:
 
 explain:
 	(menhir --explain parser.mly 2>&1) > menhir.out
+
+printer.ml: parsetree.mli
+	~weis/Work/Db/camlpp -keep -f parsetree.mli -t printer.ml
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx 
 

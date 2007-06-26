@@ -7,6 +7,13 @@ let get_input_file_name, set_input_file_name =
      if !input_file_name = "-" then input_file_name := fname
      else failwith "Input file name is already set.");;
 
+let get_output_file_name, set_output_file_name =
+  let output_file_name = ref "" in
+  (fun () -> !output_file_name),
+  (fun fname ->
+     if !output_file_name = "" then output_file_name := fname
+     else failwith "Input file name is already set.");;
+
 (* Parsing the command line. *)
 
 let get_usage () =
@@ -28,7 +35,11 @@ let print_focal_full_version () =
 let set_focal_to_verbose () = Configuration.set_verbose true;;
 
 let check_file_syntax fname =
-  try ignore (Parse_file.parse_file Format.err_formatter fname) with
+  try 
+    let ast = Parse_file.parse_file Format.err_formatter fname in
+    let fname = get_output_file_name () in
+    if fname <> "" then
+    Printer.print_file ast with
   | _ -> exit 2;;
 
 (* The main procedure *)
@@ -43,6 +54,8 @@ let main () =
      " print the full focal version, sub-version and release date.");
     ("-c", Arg.String set_input_file_name,
      " check input file argument.");
+    ("-p", Arg.String set_output_file_name,
+     " print the parse tree of the focal file read into the given file name.");
   ]
   set_input_file_name
   (get_usage ());

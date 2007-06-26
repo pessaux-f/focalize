@@ -7,12 +7,12 @@ Basic sets operations, orderings and lattices.
 
 -- This is a file in new syntax!
 
-uses "../../../basics";;
+use "../../../basics";;
 open "../basics";;
 
 (** In a setoid, we can test the equality (note for logicians: this is
    a congruence). The setoid can not be empty. *)
-species setoid inherits basic_object =
+species Setoid inherits Basic_object =
 
   (** @mathml <eq/> *)
   sig ( = ) : self -> self -> bool

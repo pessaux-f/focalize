@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.19 2007-06-17 21:31:35 weis Exp $ *)
+(* $Id: lexer.mll,v 1.20 2007-06-26 07:04:37 weis Exp $ *)
 
 {
 open Lexing;;
@@ -17,6 +17,7 @@ type error =
 exception Error of error * Lexing.position * Lexing.position;;
 
 let keyword_table = Hashtbl.create 42;;
+
 List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
   "all", ALL;
   "and", AND;
@@ -65,7 +66,7 @@ List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
   "theorem", THEOREM;
   "true", BOOL "true";
   "type", TYPE;
-  "uses", USES;
+  "use", USE;
   "value", VALUE;
   "with", WITH;
 ];;
@@ -291,62 +292,64 @@ let blank = [ ' ' '\009' '\012' ]
    - prefix.
 
    Neither Quote nor DoubleQuote appear inside identifiers: those are
-   respectively character and string delimitors. *)
+   respectively character and string delimitors.
 
-(** (0) Characters inside alphanumerical identifiers.
+  (0) Characters inside alphanumerical identifiers.
     Alphanumerical identifiers can be:
     - regular words starting with a lower case letter,
-    - ``family'' names starting with an upper case letter. *)
+    - ``family'' names starting with an upper case letter.
 
-(** (1) Characters inside infix identifiers:
+  (1) Characters inside infix identifiers:
     infix binary identifiers, such as +, -, *.
 
-   Rq: End_Infix ::= SPACE  (::= blanc tab newline) ( ) [] {} *)
+   Rq: End_Infix ::= SPACE  (::= blanc tab newline) ( ) [] {}
 
-(** (2) Characters inside prefix identifiers:
+  (2) Characters inside prefix identifiers:
    prefix unary identifiers, such as ~| (boolean not), -.
 
    Rq: ! and # and . are treated specially and cannot be inside idents.
    Rq: $ should be inside idents ? Convenient to get the traditional $1, $2 as
    idents.
 
-   Rq: ',' cannot be inside infixes or prefixes (due to proof labels that are
-       almost parsable as infixes!)
-       '.' cannot be inside infixes or prefixes, since we want to parse
-       LIDENT DOT LIDENT
-       which will be parsed as LIDENT followed by the infix DOT LIDENT
-       (for instance, r.label would be the two tokens 
-        LIDENT "r" and DOT_OP ".label")
+   Rq:
+   - ',' cannot be inside infixes or prefixes (due to proof labels that are
+         almost parsable as infixes!)
+   - '.' cannot be inside infixes or prefixes, since we want to parse
+         LIDENT DOT LIDENT
+         which, if '.' were in infixes characters, would be parsed as LIDENT
+         followed by the infix DOT LIDENT.
+         (For instance, r.label would be the two tokens 
+          LIDENT "r" and DOT_OP ".label")
 *)
 
-let inside_lowercase_ident = [ 'a'-'z' ]
-let inside_uppercase_ident = [ 'A'-'Z' ]
-let inside_decimal_ident = [ '0'-'9' ]
+let lowercase_char = [ 'a'-'z' ]
+let uppercase_char = [ 'A'-'Z' ]
+let decimal_char = [ '0'-'9' ]
 
 let inside_ident =
-    inside_lowercase_ident
-  | inside_uppercase_ident
-  | inside_decimal_ident
+    lowercase_char
+  | uppercase_char
+  | decimal_char
 
-let inside_infix_ident =
+let infix_char =
   [ '+' '-' '*' '/' '%' '&' '|' ':' ';' '<' '=' '>' '@' '^' '\\' ]
-let inside_prefix_ident =
+let prefix_char =
   [ '`' '~' '?' '$' '!' '#' ]
-let inside_fix_ident =
-    inside_infix_ident
-  | inside_prefix_ident
+let fix_char =
+    infix_char
+  | prefix_char
 
 (** Identifier classes starter characters. *)
 
 let start_lowercase_ident =
-    '_'* inside_lowercase_ident
-  | '_'+ inside_decimal_ident
+    '_'* lowercase_char
+  | '_'+ decimal_char
 
-let start_uppercase_ident = '_'* inside_uppercase_ident
+let start_uppercase_ident = '_'* uppercase_char
 
-let start_infix_ident = '_'* (',' | inside_infix_ident)
+let start_infix_ident = '_'* (',' | infix_char)
 
-let start_prefix_ident = '_'* inside_prefix_ident
+let start_prefix_ident = '_'* prefix_char
 
 (** Identifier classes continuing characters. *)
 
@@ -356,11 +359,11 @@ let continue_ident =
 
 let continue_prefix_ident =
     '_'
-  | inside_fix_ident
+  | fix_char
 
 let continue_infix_ident =
     '_'
-  | inside_fix_ident
+  | fix_char
   | inside_ident
 
 (** Identifier class definitions.
@@ -371,9 +374,9 @@ let continue_infix_ident =
   Note : the first rule for lowercase identifiers
           '_'* ( lowercase | decimal )
   gives us _1 as ident
-  and _ is a special case to produce token UNDERSCORE.
+  and _ is a special case to produce the token UNDERSCORE.
 
-  a _U_ b
+  In a _U_ b the token _U_ is not an infix
 
   _[0-9]+
   _[identifier]_
@@ -438,89 +441,94 @@ let float_literal =
 
 rule token = parse
   | newline
-      { update_loc lexbuf None 1 false 0;
-        token lexbuf }
+    { update_loc lexbuf None 1 false 0;
+      token lexbuf }
   | blank +
-      { token lexbuf }
+    { token lexbuf }
   | lowercase_ident
-      { let s = Lexing.lexeme lexbuf in
-        try Hashtbl.find keyword_table s
-        with Not_found -> LIDENT s }
+    { let s = Lexing.lexeme lexbuf in
+      try Hashtbl.find keyword_table s
+      with Not_found -> LIDENT s }
   | uppercase_ident
-      { UIDENT (Lexing.lexeme lexbuf) }
+    { UIDENT (Lexing.lexeme lexbuf) }
   | "\'" lowercase_ident
-      { QIDENT (Lexing.lexeme lexbuf) }
+    { QIDENT (Lexing.lexeme lexbuf) }
   | int_literal
-      { INT (Lexing.lexeme lexbuf) }
+    { INT (Lexing.lexeme lexbuf) }
   | float_literal
-      { FLOAT (Lexing.lexeme lexbuf) }
+    { FLOAT (Lexing.lexeme lexbuf) }
   | "\""
-      { reset_string_buffer ();
-        string_start_pos :=
-          Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
-        string lexbuf;
-        begin match !string_start_pos with
-        | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
-        | _ -> assert false end;
-        STRING (get_stored_string ()) }
+    { reset_string_buffer ();
+      string_start_pos :=
+        Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
+      string lexbuf;
+      begin match !string_start_pos with
+      | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
+      | _ -> assert false end;
+      STRING (get_stored_string ()) }
   | "'" [^ '\\' '\'' '\010'] "'"
-      { CHAR (Lexing.lexeme_char lexbuf 1) }
+    { CHAR (Lexing.lexeme_char lexbuf 1) }
   | "'\\" ['\\' '\'' '"' 'n' 't' 'b' 'r' ' '] "'"
-      { CHAR (char_for_backslash (Lexing.lexeme_char lexbuf 2)) }
+    { CHAR (char_for_backslash (Lexing.lexeme_char lexbuf 2)) }
   | "'\\" ['0'-'9'] ['0'-'9'] ['0'-'9'] "'"
-      { CHAR (char_for_decimal_code lexbuf 2) }
+    { CHAR (char_for_decimal_code lexbuf 2) }
   | "'\\" 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F'] "'"
-      { CHAR (char_for_hexadecimal_code lexbuf 3) }
+    { CHAR (char_for_hexadecimal_code lexbuf 3) }
   | "'\\" _
-      { let l = Lexing.lexeme lexbuf in
-        let esc = String.sub l 1 (String.length l - 1) in
-        raise (Error
-                (Illegal_escape esc, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
+    { let l = Lexing.lexeme lexbuf in
+      let esc = String.sub l 1 (String.length l - 1) in
+      raise (Error
+              (Illegal_escape esc, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
   | "(**"
-      { reset_documentation_buffer ();
-        documentation_start_pos :=
-          Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
-        documentation lexbuf;
-        begin match !documentation_start_pos with
-        | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
-        | _ -> assert false end;
-        DOCUMENTATION (get_stored_documentation ()) }
+    { reset_documentation_buffer ();
+      documentation_start_pos :=
+        Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
+      documentation lexbuf;
+      begin match !documentation_start_pos with
+      | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
+      | _ -> assert false end;
+      DOCUMENTATION (get_stored_documentation ()) }
   | "(*"
-      { comment_start_pos := [ lexbuf.lex_start_p, lexbuf.lex_curr_p ];
-        comment lexbuf;
-        token lexbuf }
+    { comment_start_pos := [ lexbuf.lex_start_p, lexbuf.lex_curr_p ];
+      comment lexbuf;
+      token lexbuf }
   | "*)"
-      { raise
-          (Error (Uninitiated_comment,
-                  lexbuf.lex_start_p,
-                  lexbuf.lex_curr_p)) }
+    { raise
+        (Error (Uninitiated_comment,
+                lexbuf.lex_start_p,
+                lexbuf.lex_curr_p)) }
   | "--" [^ '\010' '\013'] * newline
-      { update_loc lexbuf None 1 false 0;
-        token lexbuf }
+    { update_loc lexbuf None 1 false 0;
+      token lexbuf }
   | "#" [' ' '\t']* (['0'-'9']+ as num) [' ' '\t']*
         ("\"" ([^ '\010' '\013' '"' ] * as name) "\"")?
         [^ '\010' '\013'] * newline
-      { update_loc lexbuf name (int_of_string num) true 0;
-        token lexbuf }
+    { update_loc lexbuf name (int_of_string num) true 0;
+      token lexbuf }
   | '<' (['0'-'9']+ as level) '>' (['A'-'Z' 'a'-'z' '0'-'9']+ as label)
-      { PROOF_LABEL (level, label) }
-  | '('  { LPAREN }
-  | ')'  { RPAREN }
-  | '['  { LBRACKET }
-  | ']'  { RBRACKET }
-  | '{'  { LBRACE }
-  | '}'  { RBRACE }
+    { PROOF_LABEL (level, label) }
+  | '(' { LPAREN }
+  | ')' { RPAREN }
+  | '[' { LBRACKET }
+  | ']' { RBRACKET }
+  | '{' { LBRACE }
+  | '}' { RBRACE }
 
-(*  | '#'  { SHARP } (* To be suppressed. *)
-  | '!'  { BANG } (* To be suppressed. *) *)
-  | '.'  { DOT }
-  | '_'  { UNDERSCORE }
+(* | '#'  { SHARP } (* To be suppressed *)
+(*    #xxx is the globally bound ident xxx. *)
+  | '!' { BANG } (* To be suppressed. *) *)
+  | '.' { DOT }
+  | '_' { UNDERSCORE }
 
-  | prefix_ident { mk_prefixop (Lexing.lexeme lexbuf) }
-  | "( " prefix_ident " )" { ident_of_prefixop (Lexing.lexeme lexbuf) }
+  | prefix_ident
+    { mk_prefixop (Lexing.lexeme lexbuf) }
+  | "( " prefix_ident " )"
+    { ident_of_prefixop (Lexing.lexeme lexbuf) }
 
-  | infix_ident { mk_infixop (Lexing.lexeme lexbuf) }
-  | "( " infix_ident " )" { ident_of_infixop (Lexing.lexeme lexbuf) }
+  | infix_ident
+    { mk_infixop (Lexing.lexeme lexbuf) }
+  | "( " infix_ident " )"
+    { ident_of_infixop (Lexing.lexeme lexbuf) }
 
   | "{*" ([^ '*'] | '*' [^ '}'])* "*}"
     { mk_external_code (Lexing.lexeme lexbuf) }
