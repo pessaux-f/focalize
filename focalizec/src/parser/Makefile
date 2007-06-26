@@ -4,13 +4,17 @@ CAMLBIN = ocamlopt -warn-error A
 CAMLYAC = ocamlyacc -v
 CAMLLEX = ocamllex
 
-BYTOBJS=configuration.cmo \
-   lexer.cmo parser.cmo parse_file.cmo \
-   check_file.cmo \
+CAML_COMP_FLAGS = -I ../../focc/
+
+BYTOBJS = configuration.cmo \
+	lexer.cmo parser.cmo parse_file.cmo \
+	new2old.cmo check_file.cmo
+
 #BYTOBJS=configuration.cmo \
 #   lexer.cmo parser.cmo parse_file.cmo \
 #   lib_pp.cmo printer.cmo \
 #   check_file.cmo \
+
 
 RM = rm -rf
 
@@ -22,7 +26,7 @@ clean::
 	$(RM) parser.ml parser.mli parser.conflicts parser.output
 
 depend:
-	ocamldep *.mli *.ml > ./.depend
+	ocamldep $(CAML_COMP_FLAGS) *.mli *.ml > ./.depend
 
 explain:
 	(menhir --explain parser.mly 2>&1) > menhir.out
@@ -33,13 +37,13 @@ printer.ml: parsetree.mli
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx 
 
 .ml.cmo:
-	$(CAMLBYT) -c $<
+	$(CAMLBYT) $(CAML_COMP_FLAGS) -c $<
 
 .mli.cmi:
-	$(CAMLBYT) -c $<
+	$(CAMLBYT) $(CAML_COMP_FLAGS) -c $<
 
 .ml.cmx:
-	$(CAMLBIN) -c $<
+	$(CAMLBIN) $(CAML_COMP_FLAGS) -c $<
 
 .mly.ml:
 	$(CAMLYAC) $<
