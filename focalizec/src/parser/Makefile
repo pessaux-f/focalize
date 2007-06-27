@@ -8,7 +8,7 @@ CAML_COMP_FLAGS = -I ../../focc/
 
 BYTOBJS = configuration.cmo \
 	lexer.cmo parser.cmo parse_file.cmo \
-	new2old.cmo check_file.cmo
+	../../focc/loc.cmo new2old.cmo check_file.cmo
 
 #BYTOBJS=configuration.cmo \
 #   lexer.cmo parser.cmo parse_file.cmo \
