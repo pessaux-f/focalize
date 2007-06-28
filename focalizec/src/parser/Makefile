@@ -1,3 +1,7 @@
+# $Id: Makefile,v 1.15 2007-06-28 08:47:15 weis Exp $
+
+RM = rm -rf
+
 CAMLBYT = ocamlc -warn-error A -g
 CAMLBIN = ocamlopt -warn-error A
 
@@ -8,15 +12,9 @@ CAML_COMP_FLAGS = -I ../../focc/
 
 BYTOBJS = configuration.cmo \
 	lexer.cmo parser.cmo parse_file.cmo \
-	../../focc/loc.cmo new2old.cmo check_file.cmo
-
-#BYTOBJS=configuration.cmo \
-#   lexer.cmo parser.cmo parse_file.cmo \
-#   lib_pp.cmo printer.cmo \
-#   check_file.cmo \
-
-
-RM = rm -rf
+        lib_pp.cmo printtree.cmo printer.cmo \
+	../../focc/loc.cmo new2old.cmo \
+        check_file.cmo
 
 all:: $(BYTOBJS)
 	$(CAMLBYT) -o check_file $(BYTOBJS)
