@@ -1,9 +1,8 @@
-(* The parse tree, or shallow abstract syntax.
-   Disambiguation has not been done.
-   This is the input type of the disambiguation pass.
-   The disambiguation pass has to :
-   - resolve global/local/method classification for idents
-*)
+(* $Id: printtree.ml,v 1.3 2007-06-28 08:36:42 weis Exp $ *)
+
+(* Print the parse tree, or shallow abstract syntax in the Caml way
+   (i.e. you get the tree of constructor applications that build the given
+    a.s.t.). *)
 
 (* Camlpp generated file *)
 
