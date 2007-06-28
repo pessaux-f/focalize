@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.15 2007-06-28 08:47:15 weis Exp $
+# $Id: Makefile,v 1.16 2007-06-28 18:05:21 pessaux Exp $
 
 RM = rm -rf
 
@@ -10,11 +10,17 @@ CAMLLEX = ocamllex
 
 CAML_COMP_FLAGS = -I ../../focc/
 
-BYTOBJS = configuration.cmo \
-	lexer.cmo parser.cmo parse_file.cmo \
-        lib_pp.cmo printtree.cmo printer.cmo \
-	../../focc/loc.cmo new2old.cmo \
-        check_file.cmo
+BYTOBJS = configuration.cmo lexer.cmo parser.cmo parse_file.cmo \
+	../../focc/loc.cmo ../../focc/ast_types.cmo print_ptree.cmo \
+	new2old.cmo check_file.cmo
+
+# Uncomment to use Pierre's pretty printer instead.
+#BYTOBJS = configuration.cmo \
+#	lexer.cmo parser.cmo parse_file.cmo \
+#        lib_pp.cmo printtree.cmo printer.cmo \
+#	../../focc/loc.cmo new2old.cmo \
+#        check_file.cmo
+
 
 all:: $(BYTOBJS)
 	$(CAMLBYT) -o check_file $(BYTOBJS)
@@ -29,8 +35,9 @@ depend:
 explain:
 	(menhir --explain parser.mly 2>&1) > menhir.out
 
-printer.ml: parsetree.mli
-	~weis/Work/Db/camlpp -keep -f parsetree.mli -t printer.ml
+# Uncomment to use Pierre's pretty printer instead.
+# printer.ml: parsetree.mli
+#	~weis/Work/Db/camlpp -keep -f parsetree.mli -t printer.ml
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx 
 

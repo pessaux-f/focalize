@@ -73,13 +73,21 @@ let downgrade_ident_desc_to_string = function
       begin
       match fname_opt with
        | None -> downgrade_vname vname
-       | Some _ -> raise (No_mapping "Parsetree.I_global")
+       | Some whatever ->
+	   raise
+	     (No_mapping
+		("downgrade_ident_desc_to_string: Parsetree.I_global Some (" ^
+		 whatever ^ ") " ^ (downgrade_vname vname)))
       end
   | Parsetree.I_method (fname_opt, vname) ->
       begin
       match fname_opt with
        | None -> downgrade_vname vname
-       | Some _ -> raise (No_mapping "Parsetree.I_method")
+       | Some whatever ->
+	   raise
+	     (No_mapping
+		("downgrade_ident_desc_to_string: Parsetree.I_method Some (" ^
+		 whatever ^ ") " ^ (downgrade_vname vname)))
       end
 ;;
 (* ************************************************************ *)
@@ -130,10 +138,16 @@ let downgrade_ident_to_simple_expr =
 (* ********************************************************************** *)
 let downgrade_constant_desc_to_simple_expr = function
   | Parsetree.C_int i -> Ast_types.Simple_Int (int_of_string i)
-  | Parsetree.C_float _ -> raise (No_mapping "Parsetree.C_float")
-  | Parsetree.C_bool _ -> raise (No_mapping "Parsetree.C_bool")
+  | Parsetree.C_float _ ->
+      raise
+	(No_mapping "downgrade_constant_desc_to_simple_expr: Parsetree.C_float")
+  | Parsetree.C_bool _ ->
+      raise
+	(No_mapping "downgrade_constant_desc_to_simple_expr:Parsetree.C_bool")
   | Parsetree.C_string s -> Ast_types.Simple_String s
-  | Parsetree.C_char _ -> raise (No_mapping "Parsetree.C_char")
+  | Parsetree.C_char _ ->
+      raise
+	(No_mapping "downgrade_constant_desc_to_simple_expr:Parsetree.C_char")
 ;;
 (* ***************************************************************** *)
 (*  [Fun] downgrade_constant_to_simple_expr :                        *)
@@ -593,7 +607,8 @@ let downgrade_species_def_desc species_def =
   let prms =
     List.map
       (fun (vname, ptype) ->
-	downgrade_species_param_type (downgrade_vname vname) ptype)
+	let param_name = downgrade_vname vname in
+	downgrade_species_param_type param_name ptype)
       species_def.Parsetree.sd_params in
   (* Species's ancestors. *)
   let inheritance =

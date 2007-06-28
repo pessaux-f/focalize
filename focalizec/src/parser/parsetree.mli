@@ -4,17 +4,16 @@
    The disambiguation pass has to :
    - resolve global/local/method classification for idents
 *)
-type position =
-   Lexing.position = {
-   pos_fname : string ;
-   pos_lnum : int ;
-   pos_bol : int ;
-   pos_cnum : int
+type position = Lexing.position = {
+  pos_fname : string ;
+  pos_lnum : int ;
+  pos_bol : int ;
+  pos_cnum : int
 } ;;
 
 type location = {
-   l_beg : position ;
-   l_end : position
+ l_beg : position ;
+ l_end : position
 }
 (** Location of an AST node,
     beginning and ending position of its corresponding source text. *);;
@@ -58,7 +57,10 @@ type ident = ident_desc ast
 and ident_desc =
   | I_local of vname
   | I_global of fname option * vname
-  | I_method of cname option * vname
+  | I_method of cname option * vname (* If vname is self, then the real name  *)
+	                             (* should be considered as only [cname]. *)
+                                     (* If [cname] is None and [vname] is     *)
+                                     (* self, then it's bugged !              *)
 ;;
 
 type rep_type_def = rep_type_def_desc ast_doc

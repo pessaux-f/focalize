@@ -1,9 +1,11 @@
-(* $Id: check_file.ml,v 1.5 2007-06-28 08:46:12 weis Exp $ *)
+(* $Id: check_file.ml,v 1.6 2007-06-28 18:05:21 pessaux Exp $ *)
 
 let (get_downgrade, set_downgrade) =
   let downgrade = ref false in
   (fun () -> !downgrade),
-  (fun () -> downgrade := true);;
+  (fun () -> downgrade := true)
+;;
+
 
 let (get_input_file_name,
      set_input_file_name) =
@@ -13,6 +15,8 @@ let (get_input_file_name,
     if !input_file_name = "-" then input_file_name := fname
     else failwith "Input file name is already set.")
 ;;
+
+
 
 let (get_output_file_name, set_output_file_name) =
   let output_file_name = ref "" in
@@ -43,12 +47,7 @@ let print_focal_full_version () =
 let set_focal_to_verbose () = Configuration.set_verbose true
 ;;
 
-let check_file_syntax fname =
-  let ast = Parse_file.parse_file Format.err_formatter fname in
-  let fname = get_output_file_name () in
-  if fname <> "" then
-  Printtree.print_file ast
-;;
+
 
 (* The main procedure *)
 let main () =
@@ -59,15 +58,24 @@ let main () =
        " print the full focal version, sub-version and release date.") ;
       ("-c", Arg.String set_input_file_name,
        " check input file argument.") ;
-      ("-downgrade", Arg.Set set_downgrade, "mostly undocumented") ;
+      ("-downgrade", Arg.Unit set_downgrade, "mostly undocumented") ;
       ("-p", Arg.String set_output_file_name,
        " print the parse tree of the focal file read into the given file name.")
     ]
     set_input_file_name
     (get_usage ());
-  let ast = check_file_syntax (get_input_file_name ()) in
+  let ast =
+    Parse_file.parse_file Format.err_formatter (get_input_file_name ()) in
+  if (Configuration.get_verbose ()) then
+    Print_ptree.pp_file Format.err_formatter ast ;
   if get_downgrade () then ignore (New2old.downgrade_file ast);
   exit 0
 ;;
 
-main () ;;
+
+
+try main ()
+with whatever ->
+  Printf.eprintf "Unexpected error: \"%s\".\n" (Printexc.to_string whatever) ;
+  flush stderr
+;;
