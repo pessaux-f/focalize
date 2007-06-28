@@ -1,14 +1,9 @@
-(* ******************************************************************** *)
-(* [Val] apply_downgrade_flag : bool ref.                               *)
-(** [Descr] : Flag telling wether or not one must call the translation
-              from the new AST into the old one. This feature is mostly
-              debug purpose.
+(* $Id: check_file.ml,v 1.5 2007-06-28 08:46:12 weis Exp $ *)
 
-    [Rem] : Not exported outside this module.                           *)
-(* ******************************************************************** *)
-let apply_downgrade_flag = ref false ;;
-
-
+let (get_downgrade, set_downgrade) =
+  let downgrade = ref false in
+  (fun () -> !downgrade),
+  (fun () -> downgrade := true);;
 
 let (get_input_file_name,
      set_input_file_name) =
@@ -19,8 +14,6 @@ let (get_input_file_name,
     else failwith "Input file name is already set.")
 ;;
 
-
-
 let (get_output_file_name, set_output_file_name) =
   let output_file_name = ref "" in
   (fun () -> !output_file_name),
@@ -29,48 +22,33 @@ let (get_output_file_name, set_output_file_name) =
     else failwith "Input file name is already set.")
 ;;
 
-
-
 (* Parsing the command line. *)
-let get_usage () = "Usage: focal_check <options> <.foc file>" ;;
-
-
+let get_usage () = "Usage: focal_check <options> <.foc file>"
+;;
 
 let print_focal_version v =
   prerr_endline (Printf.sprintf "The Focal compiler, version %s" v) ;
   exit 0
 ;;
 
-
-
 let print_focal_short_version () =
   print_focal_version
     (Printf.sprintf "%.2f" Configuration.focal_version_number)
 ;;
 
-
-
 let print_focal_full_version () =
   print_focal_version Configuration.focal_full_version
 ;;
 
-
-
-let set_focal_to_verbose () = Configuration.set_verbose true ;;
-
-
+let set_focal_to_verbose () = Configuration.set_verbose true
+;;
 
 let check_file_syntax fname =
-  Parse_file.parse_file Format.err_formatter fname
-(*
   let ast = Parse_file.parse_file Format.err_formatter fname in
   let fname = get_output_file_name () in
   if fname <> "" then
-  Printer.print_file ast
- *)
+  Printtree.print_file ast
 ;;
-
-
 
 (* The main procedure *)
 let main () =
@@ -81,20 +59,15 @@ let main () =
        " print the full focal version, sub-version and release date.") ;
       ("-c", Arg.String set_input_file_name,
        " check input file argument.") ;
-      ("-downgrade", Arg.Set apply_downgrade_flag, "mostly undocumented") ;
+      ("-downgrade", Arg.Set set_downgrade, "mostly undocumented") ;
       ("-p", Arg.String set_output_file_name,
        " print the parse tree of the focal file read into the given file name.")
     ]
     set_input_file_name
-    (get_usage ()) ;
+    (get_usage ());
   let ast = check_file_syntax (get_input_file_name ()) in
-  if !apply_downgrade_flag then
-    begin
-    ignore (New2old.downgrade_file ast)
-    end ;
+  if get_downgrade () then ignore (New2old.downgrade_file ast);
   exit 0
 ;;
-
-
 
 main () ;;
