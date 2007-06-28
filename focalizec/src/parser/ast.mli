@@ -1,3 +1,5 @@
+(* $Id: ast.mli,v 1.4 2007-06-28 08:34:53 weis Exp $ *)
+
 (* Abstract syntax (deep version, i.e. disambiguation has been done).
    This is the input type of the type checker.
    This is the output type of the disambiguation pass.
