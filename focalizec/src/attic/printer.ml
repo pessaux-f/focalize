@@ -1,8 +1,12 @@
-(* $Id: printtree.ml,v 1.3 2007-06-28 08:36:42 weis Exp $ *)
+(* $Id: printer.ml,v 1.1 2007-06-29 05:43:53 pessaux Exp $ *)
 
-(* Print the parse tree, or shallow abstract syntax in the Caml way
-   (i.e. you get the tree of constructor applications that build the given
-    a.s.t.). *)
+(* Prints the the parse tree, or shallow abstract syntax in the focalize way
+   (i.e. you get the focalize source file that, whence parsed, produces the
+   given a.s.t.).
+
+Warning: for the time being this is just a skeleton that needs to be continued.
+
+ *)
 
 (* Camlpp generated file *)
 
@@ -25,13 +29,13 @@ let rec print_location = function
     printf ";@]@ "; printf "@[<1>l_end =@ "; print_position p0;
     printf ";@]@ "; printf "@,}@]";;
 
-let rec print_fname = (function s -> print_quoted_string s);;
+let rec print_fname = (function s -> print_string s);;
 
-let rec print_cname = (function s -> print_quoted_string s);;
+let rec print_cname = (function s -> print_string s);;
 
-let rec print_sname = (function s -> print_quoted_string s);;
+let rec print_sname = (function s -> print_string s);;
 
-let rec print_tname = (function s -> print_quoted_string s);;
+let rec print_tname = (function s -> print_string s);;
 
 let rec print_vname = function
   | Vlident s ->

@@ -1,4 +1,4 @@
-(* $Id: ast.mli,v 1.4 2007-06-28 08:34:53 weis Exp $ *)
+(* $Id: ast.mli,v 1.1 2007-06-29 05:43:53 pessaux Exp $ *)
 
 (* Abstract syntax (deep version, i.e. disambiguation has been done).
    This is the input type of the type checker.
