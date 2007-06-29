@@ -29,7 +29,7 @@ let pp_vnames sep ppf = Handy.pp_generic_separated_list sep pp_vname ppf ;;
 
     [Rem] : Not exported ouside this module.                       *)
 (* *************************************************************** *)
-let pp_node_label ppf (i, s) = Format.fprintf ppf "<%d>%s)" i s ;;
+let pp_node_label ppf (i, s) = Format.fprintf ppf "<%d>%s" i s ;;
 (* ************************************************************************ *)
 (*  [Fun] pp_node_labels :                                                  *)
 (*          string -> Format.formatter -> (int * string) list -> unit       *)
@@ -243,8 +243,8 @@ let pp_rec_flag ppf = function
     [Rem] : Not exported ouside this module.                           *)
 (* ******************************************************************* *)
 let pp_log_flag ppf = function
-  | Parsetree.LF_no_log -> Format.fprintf ppf "!!! LF_no_log"
-  | Parsetree.LF_log -> Format.fprintf ppf "!!! LF_log"
+  | Parsetree.LF_no_log -> ()
+  | Parsetree.LF_log -> Format.fprintf ppf "logical@ "
 ;;
 
 
@@ -256,8 +256,8 @@ let pp_log_flag ppf = function
     [Rem] : Not exported ouside this module.                           *)
 (* ******************************************************************* *)
 let pp_loc_flag ppf = function
-  | Parsetree.LF_no_loc -> Format.fprintf ppf "LF_no_loc"
-  | Parsetree.LF_loc -> Format.fprintf ppf "LF_loc"
+  | Parsetree.LF_no_loc -> ()
+  | Parsetree.LF_loc -> Format.fprintf ppf "local@ "
 ;;
 
 
@@ -359,7 +359,7 @@ let rec pp_species_def_desc ppf def =
   (* Prints the parameters only if some. *)
   if def.Parsetree.sd_params <> [] then
     begin
-    Format.fprintf ppf "(@[<1>%a@])"
+    Format.fprintf ppf "(@[<1>%a@])@ "
     (Handy.pp_generic_separated_list
        ","
        (fun local_ppf (vname, species_param_type) ->
@@ -373,7 +373,7 @@ let rec pp_species_def_desc ppf def =
     Format.fprintf ppf "inherits %a =@\n"
       (pp_species_exprs ",") def.Parsetree.sd_inherits.Parsetree.ast_desc
     end ;
-  Format.fprintf ppf "%a ;" pp_species_fields def.Parsetree.sd_fields
+  Format.fprintf ppf "%a@\nend@ ;;@]" pp_species_fields def.Parsetree.sd_fields
 and pp_species_def ppf = pp_generic_ast pp_species_def_desc ppf
 
 
@@ -447,7 +447,7 @@ and pp_species_field ppf = pp_generic_ast pp_species_field_desc ppf
 
 
 and pp_let_def_desc ppf ldd =
-  Format.fprintf ppf "@[<2>let %a!!!%a!!!%a"
+  Format.fprintf ppf "@[<2>let %a%a%a"
     pp_rec_flag ldd.Parsetree.ld_rec
     pp_log_flag ldd.Parsetree.ld_log
     pp_loc_flag ldd.Parsetree.ld_loc ;
@@ -489,7 +489,7 @@ and pp_binding ppf = pp_generic_ast pp_binding_desc ppf
 
 
 and pp_theorem_def_desc ppf tdd =
-  Format.fprintf ppf "@[<2>theorem %a :@ !!!%a@ %a@]@\n@[<2>proof:@ %a @]"
+  Format.fprintf ppf "@[<2>theorem %a :@ %a@ %a@]@\n@[<2>proof:@ %a @]"
     pp_ident tdd.Parsetree.th_name
     pp_loc_flag tdd.Parsetree.th_loc
     pp_prop tdd.Parsetree.th_stmt
@@ -627,7 +627,7 @@ and pp_expr_desc ppf = function
   | Parsetree.E_tuple exprs ->
       Format.fprintf ppf "@[<1>(%a)@]" (pp_exprs ",") exprs
   | Parsetree.E_external external_expr ->
-      Format.fprintf ppf "@[<2>external@ %a@ end@]"
+      Format.fprintf ppf "@[<2>external@ %a@\nend@]"
 	pp_external_expr external_expr
   | Parsetree.E_paren expr ->
       Format.fprintf ppf "@[<2>E_paren@ (%a@])" pp_expr expr
@@ -638,7 +638,7 @@ and pp_expr ppf = pp_generic_ast pp_expr_desc ppf
 
 
 let pp_coll_def_desc ppf cdd =
-  Format.fprintf ppf "@[<2>collection@ %s@ implements@ %a@ end@]"
+  Format.fprintf ppf "@[<2>collection@ %s@ implements@ %a@\nend@ ;;@]"
     cdd.Parsetree.cd_name pp_species_expr cdd.Parsetree.cd_body
 ;;
 let pp_coll_def ppf = pp_generic_ast pp_coll_def_desc ppf ;;
@@ -693,8 +693,9 @@ and pp_type_body ppf = pp_generic_ast pp_type_body_desc ppf
 let pp_phrase_desc ppf = function
   | Parsetree.Ph_external ext_def ->
       Format.fprintf ppf "%a" pp_external_def ext_def
-  | Parsetree.Ph_use fname -> Format.fprintf ppf "@[<2>use@ \"%s\"@] ;;" fname
-  | Parsetree.Ph_open fname -> Format.fprintf ppf "@[<2>open@ \"%s\"@] ;;" fname
+  | Parsetree.Ph_use fname -> Format.fprintf ppf "@[<2>use@ \"%s\"@ ;;@]" fname
+  | Parsetree.Ph_open fname ->
+      Format.fprintf ppf "@[<2>open@ \"%s\"@ ;;@]" fname
   | Parsetree.Ph_species s_def -> Format.fprintf ppf "%a" pp_species_def s_def
   | Parsetree.Ph_coll coll_def -> Format.fprintf ppf "%a" pp_coll_def coll_def
   | Parsetree.Ph_type type_def -> Format.fprintf ppf "%a" pp_type_def type_def
