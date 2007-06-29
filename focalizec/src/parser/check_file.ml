@@ -1,4 +1,4 @@
-(* $Id: check_file.ml,v 1.6 2007-06-28 18:05:21 pessaux Exp $ *)
+(* $Id: check_file.ml,v 1.7 2007-06-29 07:59:45 pessaux Exp $ *)
 
 let (get_downgrade, set_downgrade) =
   let downgrade = ref false in
@@ -67,7 +67,7 @@ let main () =
   let ast =
     Parse_file.parse_file Format.err_formatter (get_input_file_name ()) in
   if (Configuration.get_verbose ()) then
-    Print_ptree.pp_file Format.err_formatter ast ;
+    Dump_ptree.pp_file Format.err_formatter ast ;
   if get_downgrade () then ignore (New2old.downgrade_file ast);
   exit 0
 ;;
