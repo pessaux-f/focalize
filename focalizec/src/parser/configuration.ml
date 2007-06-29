@@ -9,6 +9,12 @@ let (get_verbose,
    (fun b -> verbose := b))
 ;;
 
+let (get_pretty_print,
+     set_pretty_print) =
+  let pretty_flag = ref false in
+  ((fun () -> !pretty_flag),
+   (fun b -> pretty_flag := b))
+;;
 
 let (get_downgrade,
      set_downgrade) =
@@ -27,15 +33,6 @@ let (get_input_file_name,
      else failwith "Input file name is already set."))
 ;;
 
-
-
-let (get_output_file_name, set_output_file_name) =
-  let output_file_name = ref "" in
-  (fun () -> !output_file_name),
-  (fun fname ->
-    if !output_file_name = "" then output_file_name := fname
-    else failwith "Input file name is already set.")
-;;
 
 
 let print_focal_version v =

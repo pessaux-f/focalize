@@ -12,7 +12,7 @@ let rec pp_generic_separated_list separator printer_fct ppf = function
   | [] -> ()
   | [last] -> printer_fct ppf last
   |  h :: q ->
-      Format.fprintf ppf "%a@ %s@ %a"
+      Format.fprintf ppf "%a@,%s@ %a"
 	printer_fct h separator
 	(pp_generic_separated_list separator printer_fct) q
 ;;
