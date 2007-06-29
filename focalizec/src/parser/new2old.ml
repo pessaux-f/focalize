@@ -42,7 +42,9 @@ let gen_syntactic_type_variable =
 (*  [Fun] process_generic_ast_desc :                               *)
 (*         ('a -> 'b) -> ('a, 'c) Parsetree.generic_ast -> 'b      *)
 (** [Descr] : Wrapper to apply processing only on the 'desc' field
-              of a generic_ast. Ignores all other fields.          *)
+              of a generic_ast. Ignores all other fields.
+
+    [Rem] : Not exported outside this module.                      *)
 (* *************************************************************** *)
 let process_generic_ast_desc f ga = f ga.Parsetree.ast_desc ;;
 
