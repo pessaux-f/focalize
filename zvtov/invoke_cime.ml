@@ -1,5 +1,5 @@
 (*  Copyright 2006 INRIA  *)
-(*  $Id: invoke_cime.ml,v 1.3 2007-06-25 12:58:56 pessaux Exp $  *)
+(*  $Id: invoke_cime.ml,v 1.4 2007-06-29 16:23:35 pessaux Exp $  *)
 
 
 let cime_nb = ref 0 ;;
@@ -31,12 +31,11 @@ let file_size name =
 ;;
 
 
-let ehead s = String.sub s 1 (String.length s -1)
+let ehead s = String.sub s 1 (String.length s - 1)
 ;;
 
 
-(* La chaÃ®ne de caractÃ¨res s1 commence-t-elle par s2 ? *)
-
+(* La chaîne de caractères s1 commence-t-elle par s2 ? *)
 let rec bw s1 s2 =
   match String.length s2 with
   | 0 -> true
@@ -47,19 +46,19 @@ let rec bw s1 s2 =
 ;;
 
 
-(* PrÃ©fixe une chaÃ®ne de caractÃ¨res par c. *)
+(* Préfixe une chaîne de caractères par c. *)
 let pref c s = String.concat c [String.create (0) ; s] ;;
 
 
-(* PrÃ©fixe une chaÃ®ne de caractÃ¨res par "v" *)
-(* et la suffixe par un entier n donnÃ©.     *)
+(* Préfixe une chaîne de caractères par "v" *)
+(* et la suffixe par un entier n donné.     *)
 let createNewVar s n =
   let s1 = String.concat "v" [ String.create (0) ; s] in
   String.concat s1 [String.create (0) ; string_of_int (n)]
 ;;
 
 
-(* Une expression peut elle se rÃ©Ã©crire sous forme d'Ã©galitÃ© ? *)
+(* Une expression peut elle se réécrire sous forme d'égalité ? *)
 let rec isRewritable exp =
   match exp with
   | Expr.Enot (e1) -> isNotRewritable e1
@@ -89,7 +88,7 @@ and isNotRewritable exp =
 ;;
 
 
-(* Une hyp peut elle se rÃ©Ã©crire sous forme d'Ã©galitÃ©s ?*)
+(* Une hyp peut elle se réécrire sous forme d'égalités ?*)
 let rec isHypRewritable hyp =
   match hyp with
   | Expr.Hyp (expr) -> isRewritable expr
@@ -97,8 +96,8 @@ let rec isHypRewritable hyp =
 ;;
 
 
-(* Toutes les hypothÃ¨ses d'une liste peuvent *)
-(* elles se rÃ©Ã©crire sous forme  d'Ã©galitÃ© ? *)
+(* Toutes les hypothèses d'une liste peuvent *)
+(* elles se réécrire sous forme  d'égalité ? *)
 let rec isHypListRewritable hl =
   match hl with
   | [] -> true
@@ -106,15 +105,15 @@ let rec isHypListRewritable hl =
 ;;
 
 
-(* Le but peut-il se rÃ©Ã©crire sous forme d'Ã©galitÃ© ? *)
+(* Le but peut-il se réécrire sous forme d'égalité ? *)
 let isButRewritable (hyps, goal) =
   (isRewritable goal) && (isHypListRewritable hyps)
 ;;
 
 
-(* Remplace dans e les variables liÃ©es par des variables prÃ©fixÃ©es par "v", *)
+(* Remplace dans e les variables liées par des variables préfixées par "v", *)
 (* les variables libres par des constantes, et les constantes par des       *)
-(* constantes prÃ©fixÃ©es par C.                                              *)
+(* constantes préfixées par C.                                              *)
 let rec modifyH l expr =
   match expr with
   | Expr.Enot e1 -> Expr.Enot (modifyH l e1)
@@ -135,7 +134,7 @@ let rec modifyH l expr =
 
 
 (* Remplace dans expr les variables par des constantes, *)
-(* et prÃ©fixe le nom des constantes par c.              *)
+(* et préfixe le nom des constantes par c.              *)
 let rec modifyG expr =
   match expr with
   | Expr.Enot e1 -> Expr.Enot (modifyG e1)
@@ -153,7 +152,7 @@ let rec modifyG expr =
 ;;
 
 
-(* Modifie les hypothÃ¨ses, quelle que soit leur forme. *)
+(* Modifie les hypothèses, quelle que soit leur forme. *)
 let modifyHyps hyps =
   match hyps with
   | Expr.Hyp e -> modifyH [] e
@@ -252,8 +251,7 @@ let cime filename data loc statement name oc=
   let (goal, hyps) = Parser_coq.coqfile Lexer_coq.coqtoken lexbuf in
   let (goal2, hyps2)= (modifyG goal, List.map modifyHyps hyps) in
   let b = (isRewritable goal) && (isHypListRewritable hyps) in
-  if not b then
-    Invoke.zenon_loc filename (statement, name) data loc oc
+  if not b then Invoke.zenon_loc filename (statement, name) data loc oc
   else
     (begin
     let (tmpname, f) = Filename.open_temp_file "zvtov" ".p" in
@@ -263,14 +261,14 @@ let cime filename data loc statement name oc=
     printGoal fmt name goal2 ;
     Format.pp_print_flush fmt () ;
     close_out f ;
-    (* Puis passer ce fichier Ã  cime3. *)
+    (* Puis passer ce fichier à cime3. *)
     let cmd = "cime3 -tptp " ^ tmpname ^ " > " ^ resname in
     let rc = Sys.command cmd in
     (* Trouver unsatisfiable dans le fichier. *)
     let unsatisfiable = (rc = 0) && find resname in
     (try Sys.remove resname with _ -> ()) ;
     (try Sys.remove tmpname with _ -> ()) ;
-    (* Si la rÃ©ponse cime ne convient pas appeler zenon. *)
+    (* Si la réponse cime ne convient pas, appeler zenon. *)
     (begin
     match unsatisfiable with
       | false -> Invoke.atp filename (statement, name) data loc oc ;
