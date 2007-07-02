@@ -1,4 +1,4 @@
-(* $Id: check_file.ml,v 1.10 2007-07-02 11:55:15 pessaux Exp $ *)
+(* $Id: check_file.ml,v 1.11 2007-07-02 16:53:32 pessaux Exp $ *)
 
 
 (* The main procedure *)
@@ -15,6 +15,9 @@ let main () =
       ("--pretty",
        Arg.Unit (fun () -> Configuration.set_pretty_print true),
        " pretty-prints the parse tree of the focal file as a focal source.") ;
+      ("--old-pretty",
+       Arg.String Configuration.set_old_pretty_print,
+       " pretty-prints the parse tree of the focal file as an old focal source.") ;
       ("--verbose",
        Arg.Unit (fun () -> Configuration.set_verbose true),
        " be verbose.") ]
@@ -30,6 +33,14 @@ let main () =
   (* Pretty the AST as a new-focal-syntax source if requested. *)
   if (Configuration.get_pretty_print ()) then
     Sourcify.pp_file Format.err_formatter ast ;
+  (* Pretty the AST as an old-focal-syntax source if requested. *)
+  (match Configuration.get_old_pretty_print () with
+   | None -> ()
+   | Some fname ->
+       let out_hd = open_out_bin fname in
+       let out_fmt = Format.formatter_of_out_channel out_hd in
+       Oldsourcify.pp_file out_fmt ast ;
+       close_out out_hd) ;
   exit 0
 ;;
 
