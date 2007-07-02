@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.18 2007-06-29 15:33:13 pessaux Exp $
+# $Id: Makefile,v 1.19 2007-07-02 11:55:15 pessaux Exp $
 
 RM = rm -rf
 
@@ -11,8 +11,7 @@ CAMLLEX = ocamllex
 CAML_COMP_FLAGS = -I ../../focc/
 
 BYTOBJS = configuration.cmo lexer.cmo parser.cmo parse_file.cmo \
-	../../focc/loc.cmo ../../focc/ast_types.cmo handy.cmo dump_ptree.cmo \
-	sourcify.cmo new2old.cmo check_file.cmo
+	handy.cmo dump_ptree.cmo sourcify.cmo check_file.cmo
 
 # Uncomment to use Pierre's pretty printer instead.
 #BYTOBJS = configuration.cmo \

@@ -1,4 +1,4 @@
-(* $Id: check_file.ml,v 1.9 2007-06-29 16:19:44 pessaux Exp $ *)
+(* $Id: check_file.ml,v 1.10 2007-07-02 11:55:15 pessaux Exp $ *)
 
 
 (* The main procedure *)
@@ -12,9 +12,6 @@ let main () =
       ("-c",
        Arg.String Configuration.set_input_file_name,
        " check input file argument.") ;
-      ("--downgrade",
-       Arg.Unit Configuration.set_downgrade,
-       "mostly undocumented") ;
       ("--pretty",
        Arg.Unit (fun () -> Configuration.set_pretty_print true),
        " pretty-prints the parse tree of the focal file as a focal source.") ;
@@ -33,8 +30,6 @@ let main () =
   (* Pretty the AST as a new-focal-syntax source if requested. *)
   if (Configuration.get_pretty_print ()) then
     Sourcify.pp_file Format.err_formatter ast ;
-  (* Translate the AST into an old-focal-AST if requested. *)
-  if Configuration.get_downgrade () then ignore (New2old.downgrade_file ast) ;
   exit 0
 ;;
 

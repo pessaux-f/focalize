@@ -16,12 +16,6 @@ let (get_pretty_print,
    (fun b -> pretty_flag := b))
 ;;
 
-let (get_downgrade,
-     set_downgrade) =
-  let downgrade = ref false in
-  ((fun () -> !downgrade),
-   (fun () -> downgrade := true))
-;;
 
 
 let (get_input_file_name,
