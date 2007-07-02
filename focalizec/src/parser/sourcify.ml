@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.4 2007-07-02 11:09:53 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.5 2007-07-02 12:42:24 pessaux Exp $ *)
 
 (* ************************************************************* *)
 (*  [Fun] pp_vname : Format.formatter -> Parsetree.vname -> unit *)
@@ -54,6 +54,11 @@ let pp_node_labels sep ppf =
     [Rem] : Not exported ouside this module.                              *)
 (* ********************************************************************** *)
 let pp_generic_ast desc_printer_fct ppf g_ast =
+  (* First, print the documentation if some exists. *)
+  (match g_ast.Parsetree.ast_doc with
+   | None -> ()
+   | Some comment -> Format.fprintf ppf "(** %s*)@\n" comment) ;
+  (* Then, print the code itself. *)
   Format.fprintf ppf "%a" desc_printer_fct g_ast.Parsetree.ast_desc
 ;;
 
@@ -380,36 +385,24 @@ and pp_pattern ppf = pp_generic_ast pp_pat_desc ppf ;;
 let pp_external_language ppf = function
   | Parsetree.EL_Caml -> Format.fprintf ppf "caml@ "
   | Parsetree.EL_Coq -> Format.fprintf ppf "coq@ "
-  | Parsetree.EL_external s ->
-      failwith "pp_external_language : EL_external : still to do"
-(*
-      Format.fprintf ppf "EL_external@ (@[<2>%s@])" s
-*)
+  | Parsetree.EL_external s -> Format.fprintf ppf "%s@ " s
 ;;
 
 
 
 let rec pp_external_def_desc ppf = function
   | Parsetree.ED_type edb ->
-      failwith "pp_external_def_desc : ED_type : still to do"
-(*
-      Format.fprintf ppf "ED_type@ (@[<2>%a@])" pp_external_def_body edb
-*)
+      Format.fprintf ppf "@[<2>type@ %a@]" pp_external_def_body edb
   | Parsetree.ED_value edb ->
-      failwith "pp_external_def_desc : ED_value : still to do"
-(*
-      Format.fprintf ppf "ED_value@ (@[<2>%a@])" pp_external_def_body edb
-*)
+      Format.fprintf ppf "@[<2>value@ %a@]" pp_external_def_body edb
+
 and pp_external_def ppf = pp_generic_ast pp_external_def_desc ppf
 
 
 
 and pp_external_def_body_desc ppf body =
-  failwith "pp_external_def_body_desc : still to do"
-(*
-  Format.fprintf ppf "@[<2>{@ %a ;@ %a @]}"
+  Format.fprintf ppf "%a@ =@ %a"
     pp_vname body.Parsetree.ed_name pp_external_expr body.Parsetree.ed_body
-*)
 and pp_external_def_body ppf = pp_generic_ast pp_external_def_body_desc ppf
 
 
@@ -492,7 +485,7 @@ and pp_sig_def ppf = pp_generic_ast pp_sig_def_desc ppf
 
 
 and pp_proof_def_desc ppf pdd =
-  Format.fprintf ppf "@[<2>%a@ =@ %a @]"
+  Format.fprintf ppf "@[<2>proof of@ %a@ =@ %a @]"
     pp_ident pdd.Parsetree.pd_name pp_proof pdd.Parsetree.pd_proof
 and pp_proof_def ppf = pp_generic_ast pp_proof_def_desc ppf
 
@@ -517,7 +510,7 @@ and pp_species_field_desc ppf = function
   | Parsetree.SF_theorem theorem_def ->
       Format.fprintf ppf "%a@ ;" pp_theorem_def theorem_def
   | Parsetree.SF_proof proof_def ->
-      Format.fprintf ppf "@[<2>proof of@ %a@]@ ;" pp_proof_def proof_def
+      Format.fprintf ppf "%a@ ;" pp_proof_def proof_def
 and pp_species_fields ppf = Handy.pp_generic_newlined_list pp_species_field ppf
 and pp_species_field ppf = pp_generic_ast pp_species_field_desc ppf
 
@@ -695,11 +688,7 @@ and pp_expr_desc ppf = function
 	     pp_expr expr (pp_exprs ",") exprs
       end)
   | Parsetree.E_constr (expr, exprs) ->
-      failwith "pp_expr_desc : E_constr : still to do"
-(*
-      Format.fprintf ppf "@[<2>E_constr@ (%a,@ [@ %a@ ]@])"
-	pp_expr expr (pp_exprs ",") exprs
-*)
+      Format.fprintf ppf "@[<2>%a@ (%a)@]" pp_expr expr (pp_exprs ",") exprs
   | Parsetree.E_match (expr, pat_exprs) ->
       (begin
       Format.fprintf ppf "@[<2>match@ %a@ with@ " pp_expr expr ;
