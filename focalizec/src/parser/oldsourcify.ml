@@ -1,4 +1,4 @@
-(* $Id: oldsourcify.ml,v 1.1 2007-07-02 16:53:32 pessaux Exp $ *)
+(* $Id: oldsourcify.ml,v 1.2 2007-07-02 17:16:47 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -398,7 +398,7 @@ let pp_let_def_binding_flags ppf (ld_rec, ld_log, ld_loc) =
   Format.fprintf ppf "%a" pp_loc_flag ld_loc ;
   (match ld_log with
    | Parsetree.LF_no_log -> Format.fprintf ppf "let@ "
-   | Parsetree.LF_log -> Format.fprintf ppf "logical@ ") ;
+   | Parsetree.LF_log -> Format.fprintf ppf "letprop@ ") ;
   (match ld_rec with
    | Parsetree.RF_no_rec -> ()
    | Parsetree.RF_rec -> Format.fprintf ppf "rec@ ")
@@ -580,7 +580,7 @@ let rec pp_species_def_desc ppf def =
     Format.fprintf ppf "inherits %a =@\n"
       (pp_species_exprs ",") def.Parsetree.sd_inherits.Parsetree.ast_desc
     end ;
-  Format.fprintf ppf "%a@\nend@ ;;@]@\n"
+  Format.fprintf ppf "%a@\nend@]@\n"
     pp_species_fields def.Parsetree.sd_fields
 (* ******************************************************************* *)
 (*  [Fun] pp_species_def :                                             *)
@@ -770,7 +770,7 @@ and pp_theorem_def ppf = pp_generic_ast pp_theorem_def_desc ppf
 
 and pp_fact_desc ppf = function
   | Parsetree.F_def idents ->
-      Format.fprintf ppf "definition of %a" (pp_idents ",") idents
+      Format.fprintf ppf "DEF %a" (pp_idents ",") idents
   | Parsetree.F_property idents ->
       Format.fprintf ppf "property %a" (pp_idents ",") idents
   | Parsetree.F_hypothesis vnames ->
