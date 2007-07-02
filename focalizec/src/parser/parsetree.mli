@@ -28,10 +28,10 @@ type sname = string
 type tname = string
      (** Type name. *) ;;
 type vname =
-   | Vlident of string
-   | Vuident of string
-   | Vpident of string
-   | Viident of string
+   | Vlident of string  (* Lowercase ident. *)
+   | Vuident of string  (* Capitalized ident. *)
+   | Vpident of string  (* Prefix operator ident. *)
+   | Viident of string  (* Infix operator ident. *)
    | Vqident of string
      (** Variable names are classified with respect of their lexical class,
        which can be regular. infix or prefix. *);;
