@@ -1,5 +1,5 @@
 (*  Copyright 2006 INRIA  *)
-(*  $Id: invoke_cime.ml,v 1.4 2007-06-29 16:23:35 pessaux Exp $  *)
+(*  $Id: invoke_cime.ml,v 1.5 2007-07-02 07:07:28 pessaux Exp $  *)
 
 
 let cime_nb = ref 0 ;;
@@ -31,8 +31,7 @@ let file_size name =
 ;;
 
 
-let ehead s = String.sub s 1 (String.length s - 1)
-;;
+let ehead s = String.sub s 1 (String.length s - 1) ;;
 
 
 (* La chaîne de caractères s1 commence-t-elle par s2 ? *)
@@ -46,8 +45,15 @@ let rec bw s1 s2 =
 ;;
 
 
-(* Préfixe une chaîne de caractères par c. *)
-let pref c s = String.concat c [String.create (0) ; s] ;;
+
+(* ******************************************************** *)
+(*  [Fun] prefix_string : string -> string -> string        *)
+(** [Descr] : Adds the string prefix [c] to the string [s].
+
+    [Rem] : Not exported outside this module.               *)
+(* ******************************************************** *)
+let prefix_string c s = String.concat c [String.create (0) ; s] ;;
+
 
 
 (* Préfixe une chaîne de caractères par "v" *)
@@ -105,15 +111,16 @@ let rec isHypListRewritable hl =
 ;;
 
 
-(* Le but peut-il se réécrire sous forme d'égalité ? *)
-let isButRewritable (hyps, goal) =
-  (isRewritable goal) && (isHypListRewritable hyps)
-;;
 
 
-(* Remplace dans e les variables liées par des variables préfixées par "v", *)
-(* les variables libres par des constantes, et les constantes par des       *)
-(* constantes préfixées par C.                                              *)
+(* ************************************************************************* *)
+(*  [Fun] : modifyH : string list -> Expr.expr -> Expr.expr                  *)
+(** [Descr] : Replace, in [e], bound variables by variables prefixed by "v". *)
+(*            Replace, in [e], free variables by constants and constantes
+	      by des constants prefixed by "C".
+
+   [Rem] : Not exported outside this module.                                 *)
+(* ************************************************************************* *)
 let rec modifyH l expr =
   match expr with
   | Expr.Enot e1 -> Expr.Enot (modifyH l e1)
@@ -124,17 +131,22 @@ let rec modifyH l expr =
   | Expr.Eall (sl, e) -> modifyH (List.append l sl) e
   | Expr.Eex (sl, e) -> modifyH (List.append l sl) e
   | Expr.Evar s ->
-      if List.mem s l then Expr.Evar (pref "V" s)
-      else Expr.Eapp (pref "c" s, [])
-  | Expr.Eapp (s, [])->  Expr.Eapp (pref "c" s, [])
+      if List.mem s l then Expr.Evar (prefix_string "V" s)
+      else Expr.Eapp (prefix_string "c" s, [])
+  | Expr.Eapp (s, [])->  Expr.Eapp (prefix_string "c" s, [])
   | Expr.Eapp (s, el) -> Expr.Eapp (s, List.map (modifyH l) el)
   | Expr.Etrue -> Expr.Etrue
   | Expr.Efalse -> Expr.Efalse
 ;;
 
 
-(* Remplace dans expr les variables par des constantes, *)
-(* et préfixe le nom des constantes par c.              *)
+
+(* ********************************************************** *)
+(*  [Fun] : modifyG : Expr.expr -> Expr.expr                  *)
+(** [Descr] : Replace, inside [expr], variables by constants.
+
+    [Rem] : Not exported outside this module.                 *)
+(* ********************************************************** *)
 let rec modifyG expr =
   match expr with
   | Expr.Enot e1 -> Expr.Enot (modifyG e1)
@@ -144,8 +156,8 @@ let rec modifyG expr =
   | Expr.Eequiv (e1, e2) -> Expr.Eequiv (modifyG e1, modifyG e2)
   | Expr.Eall (sl, e) -> modifyG  e
   | Expr.Eex (sl, e) -> modifyG  e
-  | Expr.Evar s -> Expr.Eapp (pref "c" s, [])
-  | Expr.Eapp (s, [])->  Expr.Eapp (pref "c" s, [])
+  | Expr.Evar s -> Expr.Eapp (prefix_string "c" s, [])
+  | Expr.Eapp (s, [])->  Expr.Eapp (prefix_string "c" s, [])
   | Expr.Eapp (s, el) -> Expr.Eapp (s, List.map modifyG el)
   | Expr.Etrue -> Expr.Etrue
   | Expr.Efalse -> Expr.Efalse
@@ -234,9 +246,14 @@ let printPhrase o ph =
 ;;
 
 
-(* Trouver le mot "unsatisfiable" dans un fichier. *)
-(* inf : fileName (string) *)
-let find inf =
+
+(* **************************************************************** *)
+(*  [Fun] : find_unsatisfiable_in_file string -> bool               *)
+(** [Descr] : Tries to find the word "unsatisfiable" inside a file.
+
+    [Rem] : Not exported outside this module.                       *)
+(* **************************************************************** *)
+let find_unsatisfiable_in_file inf =
   try
     let ic = open_in_bin inf in
     let lexbuf = Lexing.from_channel ic in
@@ -245,15 +262,19 @@ let find inf =
 ;;
 
 
-(* Fonction principale. *)
+
+(* Main function. *)
 let cime filename data loc statement name oc=
   let lexbuf = Lexing.from_string data in
   let (goal, hyps) = Parser_coq.coqfile Lexer_coq.coqtoken lexbuf in
   let (goal2, hyps2)= (modifyG goal, List.map modifyHyps hyps) in
+  (* Check if goal and hypotheses can be rewritten as equalities. *)
   let b = (isRewritable goal) && (isHypListRewritable hyps) in
+  (* Nop, then simply call Zenon... *)
   if not b then Invoke.zenon_loc filename (statement, name) data loc oc
   else
     (begin
+    (* Yep, then we will try to apply CiMe. *)
     let (tmpname, f) = Filename.open_temp_file "zvtov" ".p" in
     let resname = Filename.temp_file "zvtov" ".res" in
     let fmt = Format.formatter_of_out_channel f in
@@ -261,20 +282,20 @@ let cime filename data loc statement name oc=
     printGoal fmt name goal2 ;
     Format.pp_print_flush fmt () ;
     close_out f ;
-    (* Puis passer ce fichier à cime3. *)
+    (* Send the file to CiMe. *)
     let cmd = "cime3 -tptp " ^ tmpname ^ " > " ^ resname in
     let rc = Sys.command cmd in
-    (* Trouver unsatisfiable dans le fichier. *)
-    let unsatisfiable = (rc = 0) && find resname in
+    (* Check if "unsatisfiable" appears inside the result file. *)
+    let unsatisfiable = (rc = 0) && find_unsatisfiable_in_file resname in
     (try Sys.remove resname with _ -> ()) ;
     (try Sys.remove tmpname with _ -> ()) ;
-    (* Si la réponse cime ne convient pas, appeler zenon. *)
+    (* If CiMe failed, then call zenon. *)
     (begin
     match unsatisfiable with
       | false -> Invoke.atp filename (statement, name) data loc oc ;
       | true ->
           (begin
-	  (* Sinon, modifier le .v. *)
+	  (* Else, modify le .v without inserting yet any real proof term. *)
           Printf.fprintf oc
 	    "Theorem %s : %s.\n Admitted. (* proved by Cime *)\n \n"
 	    name statement ;
