@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.6 2007-07-02 16:53:32 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.7 2007-07-03 15:40:57 pessaux Exp $ *)
 
 (* ************************************************************* *)
 (*  [Fun] pp_vname : Format.formatter -> Parsetree.vname -> unit *)
@@ -653,7 +653,9 @@ and pp_binding_desc ppf bd =
 	     (Handy.pp_generic_option " in " pp_type_expr) ty_expr_opt))
       bd.Parsetree.b_params
     end ;
-    Format.fprintf ppf " =@ %a" pp_expr bd.Parsetree.b_body
+    Format.fprintf ppf "%a@ =@ %a"
+      (Handy.pp_generic_option " in " pp_type_expr) bd.Parsetree.b_type
+      pp_expr bd.Parsetree.b_body
 (* ***************************************************************** *)
 (*  [Fun] pp_binding : Format.formatter -> Parsetree.binding -> unit *)
 (*          unit                                                     *)

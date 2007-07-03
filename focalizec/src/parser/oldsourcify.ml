@@ -1,4 +1,4 @@
-(* $Id: oldsourcify.ml,v 1.3 2007-07-03 12:59:47 pessaux Exp $ *)
+(* $Id: oldsourcify.ml,v 1.4 2007-07-03 15:40:57 pessaux Exp $ *)
 
 
 module StringMod = struct type t = string let compare = compare end ;;
@@ -63,7 +63,7 @@ let (cleanup_conflicting_idents_table, mk_regular_lowercase) =
        let tmp_s = " " in    (* Just a 1 char buffer to build the string. *)
        for i = start_process_index to stop_process_index do
 	 match name.[i] with
-	  | '=' -> result_str := !result_str ^ "_eq"
+	  | '=' -> result_str := !result_str ^ "equal"
 	  | '<' -> result_str := !result_str ^ "_lt"
 	  | '>' -> result_str := !result_str ^ "_gt"
 	  | '+' -> result_str := !result_str ^ "_plus"
@@ -74,7 +74,13 @@ let (cleanup_conflicting_idents_table, mk_regular_lowercase) =
 	  | '(' | ')' |'`' | '\'' ->
 	      (* Discard the prefix, infix and the quote notations. *)
 	      ()
-          | ' ' -> result_str := !result_str ^ "_"
+          | ' ' ->
+	      (* Translate spaces inside the name but delete those     *)
+	      (* close to parens to discard the prefix/infix notation. *)
+	      if (i > 0 && name.[i - 1] <> '(')
+	         &&
+		 (i < stop_process_index && name.[i + 1] <> ')') then
+		result_str := !result_str ^ "_"
 	  | whatever ->
 	      tmp_s.[0] <- whatever ;
 	      result_str := !result_str ^ tmp_s
@@ -283,7 +289,7 @@ let rec pp_type_expr_desc ppf = function
   | Parsetree.TE_prod (te1, te2) ->
       Format.fprintf ppf "@[<2>(%a@ *@ %a)@]" pp_type_expr te1 pp_type_expr te2
   | Parsetree.TE_self -> Format.fprintf ppf "self"
-  | Parsetree.TE_prop -> Format.fprintf ppf "prop"
+  | Parsetree.TE_prop -> Format.fprintf ppf "Prop"
   | Parsetree.TE_paren te -> Format.fprintf ppf "(%a)" pp_type_expr te
 (* *********************************************************************** *)
 (*  [Fun] pp_type_exprs :                                                  *)
@@ -420,9 +426,9 @@ and pp_pattern ppf = pp_generic_ast pp_pat_desc ppf ;;
     [Rem] : Not exported ouside this module.                         *)
 (* ***************************************************************** *)
 let pp_external_language ppf = function
-  | Parsetree.EL_Caml -> Format.fprintf ppf "caml@ "
-  | Parsetree.EL_Coq -> Format.fprintf ppf "coqdef@ "
-  | Parsetree.EL_external s -> Format.fprintf ppf "%s@ " s
+  | Parsetree.EL_Caml -> Format.fprintf ppf "caml"
+  | Parsetree.EL_Coq -> Format.fprintf ppf "coqdef"
+  | Parsetree.EL_external s -> Format.fprintf ppf "%s" s
 ;;
 
 
@@ -485,7 +491,7 @@ and pp_external_def_body ppf = pp_generic_ast pp_external_def_body_desc ppf
     [Rem] : Not exported ouside this module.                          *)
 (* ****************************************************************** *)
 and pp_external_expr_desc ppf lst =
-  Format.fprintf ppf "@[<2>@ %a@ @]"
+  Format.fprintf ppf "@[<2>%a@ @]"
     (Handy.pp_generic_separated_list
        "with "
        (fun local_ppf (ext_lang, ext_expr) ->
@@ -695,7 +701,9 @@ and pp_binding_desc ppf bd =
 	     (Handy.pp_generic_option " in " pp_type_expr) ty_expr_opt))
       bd.Parsetree.b_params
     end ;
-    Format.fprintf ppf " =@ %a" pp_expr bd.Parsetree.b_body
+    Format.fprintf ppf "%a@ =@ %a"
+      (Handy.pp_generic_option " in " pp_type_expr) bd.Parsetree.b_type
+      pp_expr bd.Parsetree.b_body
 (* ***************************************************************** *)
 (*  [Fun] pp_binding : Format.formatter -> Parsetree.binding -> unit *)
 (*          unit                                                     *)
@@ -730,8 +738,22 @@ and pp_theorem_def ppf = pp_generic_ast pp_theorem_def_desc ppf
 
 
 
+and pp_fact_desc ppf = function
+  | Parsetree.F_def idents ->
+      Format.fprintf ppf "def %a" (pp_idents ",") idents
+  | Parsetree.F_property idents ->
+      Format.fprintf ppf "%a" (pp_idents ",") idents
+  | Parsetree.F_hypothesis vnames ->
+      (* No "hypothesis" keyword in the old syntax. Although one must   *)
+      (* add the level in the proof where this hypothesis was declared. *)
+      
+      Format.fprintf ppf "%a" (pp_vnames ",") vnames
+  | Parsetree.F_node node_labels ->
+      (* No "step" keyword in the old syntax. *)
+      Format.fprintf ppf "%a" (pp_node_labels ",") node_labels
 (* ************************************************************************ *)
-(*  [Fun] pp_fact_desc : Format.formatter -> Parsetree.fact_desc -> unit    *)
+(*  [Fun] pp_and_merge_facts : Format.formatter ->                          *)
+(*          Parsetree.fact_desc list -> unit                                *)
 (** [Descr] : Pretty prints a list of [fact_desc] values as old FoCal
               source.
               Be carreful : in the old syntax only 2 catagories existed :
@@ -744,17 +766,6 @@ and pp_theorem_def ppf = pp_generic_ast pp_theorem_def_desc ppf
 
     [Rem] : Not exported ouside this module.                                 *)
 (* ************************************************************************* *)
-and pp_fact_desc ppf = function
-  | Parsetree.F_def idents ->
-      Format.fprintf ppf "def %a" (pp_idents ",") idents
-  | Parsetree.F_property idents ->
-      Format.fprintf ppf "%a" (pp_idents ",") idents
-  | Parsetree.F_hypothesis vnames ->
-      (* No "hypothesis" keyword in the old syntax. *)
-      Format.fprintf ppf "%a" (pp_vnames ",") vnames
-  | Parsetree.F_node node_labels ->
-      (* No "step" keyword in the old syntax. *)
-      Format.fprintf ppf "%a" (pp_node_labels ",") node_labels
 and pp_and_merge_facts ppf facts =
   let (facts_def, facts_other) =
     List.partition
@@ -788,8 +799,9 @@ and pp_proof_node_desc ppf = function
 	pp_node_label node_label pp_statement stmt pp_proof proof
   | Parsetree.PN_qed (node_label, proof) ->
       Format.fprintf ppf "%a qed@\n%a" pp_node_label node_label pp_proof proof
-and pp_proof_nodes sep ppf = Handy.pp_generic_separated_list sep proof_node ppf
-and proof_node ppf = pp_generic_ast pp_proof_node_desc ppf
+and pp_proof_nodes sep ppf =
+  Handy.pp_generic_separated_list sep pp_proof_node ppf
+and pp_proof_node ppf = pp_generic_ast pp_proof_node_desc ppf
 
 
 
