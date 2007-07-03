@@ -1,73 +1,100 @@
-(* $Id: oldsourcify.ml,v 1.2 2007-07-02 17:16:47 pessaux Exp $ *)
+(* $Id: oldsourcify.ml,v 1.3 2007-07-03 12:59:47 pessaux Exp $ *)
 
 
-(* ************************************************************************ *)
-(*  [Fun] mk_regular_lowercase : string -> string                           *)
-(** [Descr] : This function translates a new-syntax identifier string into
-              a legal old-syntaxe one. In effect, the old syntax requires
-              a string starting a lowercase alpha followed by with only
-              alphanumerical characters (no "=", "<" of whatever operator
-              symbol or "(...)" prefix notation).
-              If the string starts by an uppercase character, then it is
-              transformed by lowerizing this character and prefix it by
-              a "_" to prevent conflict induced by this renaming.
-              Otherwise, and for the remaining characters, we replace
-              them by a string sequence ("_...") if they are not pure
-              alphanumerical characters. As above, the use of a prefixing
-              "_" is intended to prevent conflicts due to this renaming
-              with alreading existing identifiers.
+module StringMod = struct type t = string let compare = compare end ;;
+module StringSet = Set.Make(StringMod) ;;
 
-    [Rem] : Not exported ouside this module.                               *)
-(* *********************************************************************** *)
-let mk_regular_lowercase name =
-  let name_len = String.length name in  (* Common expression sharing. *)
-  if name_len <= 0 then ""
-  else
-    (begin
-    let result_str = ref "" in
-    let start_process_index =
-      (match name.[0] with
-       | 'A' .. 'Z' ->
-	   (* If the first character is an uppercase alpha, then turn   *)
-	   (* it to lowercase and prefix the result string by "_", just *)
-	   (* to prevent identifiers to start by an uppercase alpha.    *)
-	   result_str := "_ " ;
-	   !result_str.[1] <- Char.lowercase name.[0] ;
-	   1
-       | _ ->
-	   (* Else, the first character was not an uppercase alpha,      *)
-	   (* then we apply the regular transformations described below. *)
-	   0) in
-    (* Index where to stop characters processing. *)
-    let stop_process_index = name_len - 1 in
-    (* The regular transformation does not deal with uppercase because *)
-    (* uppercase issue only applies to the first character and this    *)
-    (* special case was handled above. Instead, we concentrate on      *)
-    (* translating non-alphanumerical characters.                      *)
-    let tmp_s = " " in         (* Just a 1 char buffer to build the string. *)
-    for i = start_process_index to stop_process_index do
-      match name.[i] with
-       | '=' -> result_str := !result_str ^ "_eq"
-       | '<' -> result_str := !result_str ^ "_lt"
-       | '>' -> result_str := !result_str ^ "_gt"
-       | '+' -> result_str := !result_str ^ "_plus"
-       | '-' -> result_str := !result_str ^ "_minus"
-       | '/' -> result_str := !result_str ^ "_slash"
-       | '*' -> result_str := !result_str ^ "_times"
-       | '&' -> result_str := !result_str ^ "_amp"
-       | '(' | ')' | ' ' |'`' ->
-	   (* Discard the prefix, infix and the start-quote notations. *)
-	   ()
-       | '\''  ->
-	   (* Still translate stop-quote notation. *)
-	   result_str := !result_str ^ "_"
-       | whatever ->
-	   tmp_s.[0] <- whatever ;
-	   result_str := !result_str ^ tmp_s
-    done ;
-    !result_str
-    end)
-    
+
+let (cleanup_conflicting_idents_table, mk_regular_lowercase) =
+  let non_renamed_idents = ref StringSet.empty in
+  ((* ****************************************************************** *)
+   (*  [Fun] cleanup_conflicting_idents_table : unit -> unit             *)
+   (** [Descr] : Empties the set of non-modified identifier encountered.
+                 This function is and must be called before parsing any
+                 new file.
+
+       [Rem] : Not exported ouside this module.                          *)
+   (* ****************************************************************** *)
+   (fun () -> non_renamed_idents := StringSet.empty),
+   (* *********************************************************************** *)
+   (*  [Fun] mk_regular_lowercase : string -> string                          *)
+   (** [Descr] : This function translates a new-syntax identifier string into
+		 a legal old-syntaxe one. In effect, the old syntax requires
+		 a string starting a lowercase alpha followed by with only
+		 alphanumerical characters (no "=", "<" of whatever operator
+		 symbol or "(...)" prefix notation).
+		 If the string starts by an uppercase character, then it is
+		 transformed by lowerizing this character.
+		 Otherwise, and for the remaining characters, we replace
+		 them by a string sequence ("_...") if they are not pure
+		 alphanumerical characters. As above, the use of a prefixing
+		 "_" is intended to prevent conflicts due to this renaming
+		 with alreading existing identifiers.
+                 If the initial identifier was modified by the renaming
+                 process, then we check whether if conflicts with a previous
+                 non-modified identifier.
+
+       [Rem] : Not exported ouside this module.                               *)
+   (* *********************************************************************** *)
+   (fun name ->
+     let name_len = String.length name in  (* Common expression sharing. *)
+     if name_len <= 0 then ""
+     else
+       (begin
+       let result_str = ref "" in
+       let start_process_index =
+	 (match name.[0] with
+	  | 'A' .. 'Z' ->
+	      (* If the first character is an uppercase *)
+	      (*  alpha, then turn it to lowercase.     *)
+	      result_str := " " ;
+	      !result_str.[0] <- Char.lowercase name.[0] ;
+	      1
+	  | _ ->
+	      (* Else, the first character was not an uppercase alpha,      *)
+	      (* then we apply the regular transformations described below. *)
+	      0) in
+       (* Index where to stop characters processing. *)
+       let stop_process_index = name_len - 1 in
+       (* The regular transformation does not deal with uppercase because *)
+       (* uppercase issue only applies to the first character and this    *)
+       (* special case was handled above. Instead, we concentrate on      *)
+       (* translating non-alphanumerical characters.                      *)
+       let tmp_s = " " in    (* Just a 1 char buffer to build the string. *)
+       for i = start_process_index to stop_process_index do
+	 match name.[i] with
+	  | '=' -> result_str := !result_str ^ "_eq"
+	  | '<' -> result_str := !result_str ^ "_lt"
+	  | '>' -> result_str := !result_str ^ "_gt"
+	  | '+' -> result_str := !result_str ^ "_plus"
+	  | '-' -> result_str := !result_str ^ "_minus"
+	  | '/' -> result_str := !result_str ^ "_slash"
+	  | '*' -> result_str := !result_str ^ "_times"
+	  | '&' -> result_str := !result_str ^ "_amp"
+	  | '(' | ')' |'`' | '\'' ->
+	      (* Discard the prefix, infix and the quote notations. *)
+	      ()
+          | ' ' -> result_str := !result_str ^ "_"
+	  | whatever ->
+	      tmp_s.[0] <- whatever ;
+	      result_str := !result_str ^ tmp_s
+       done ;
+       (* If this ident was not modified, then it belongs *)
+       (* to the set of legally defined identifiers.      *)
+       if !result_str = name then
+	 non_renamed_idents := StringSet.add name !non_renamed_idents
+       else
+	 (begin
+	 (* If this ident  was modified, we will check it against the  *)
+	 (* set of non-modified idents to ensure they do not conflict. *)
+	 if StringSet.mem !result_str !non_renamed_idents then
+	   Format.eprintf
+	     "Warning : renamed identifier \"%s\" conflicting with existing identifier.\n" name ;
+	   
+	 end) ;
+       !result_str
+       end))
+  )
 ;;
 
 
@@ -193,71 +220,6 @@ let pp_ident ppf = pp_generic_ast pp_ident_desc ppf ;;
     [Rem] : Not exported ouside this module.                              *)
 (* ********************************************************************** *)
 let pp_idents sep ppf = Handy.pp_generic_separated_list sep pp_ident ppf ;;
-
-
-
-(* ******************************************************************* *)
-(*  [Type] expr_desc_fixitude                                          *)
-(** [Desc] : Describe wether an [expr_desc] must appears in infix of
-             prefix position as the functionnal part in an applicative
-             expression. If the [expr_desc] is not an identifier
-             expression, then is it considered as having an unspecified
-             "fixitude".
-
-    [Rem] : Not exported ouside this module.                           *)
-(* ******************************************************************* *)
-type expr_desc_fixitude =
-  | Fixitude_prefix     (* The functionnal expression is a prefix identifier. *)
-  | Fixitude_infix      (* The functionnal expression is an infix identifier. *)
-  | Fixitude_applic     (* The functionnal expression is not an identifier or *)
-			(* is neither infix nor prefix.                       *)
-;;
-
-
-
-(* ********************************************************************* *)
-(*  [Fun] expr_desc_fixitude : Parsetree.expr_desc -> expr_desc_fixitude *)
-(** [Descr] : Checks wether an [expr_desc] is a legal binary or unary
-              identifier, that can and must appear in infix of prefix
-              position as the functionnal part in an applicative
-              expression. If the [expr_desc] is not an identifier
-              expression, then is it considered as having an unspecified
-              "fixitude". Same thing if the [expr_desc] is en identifier
-              but is a [I_global] or [I_method] using an explicit scope
-              information (in this case, it must always be syntactically
-              used in a regular application way).
-
-    [Rem] : Not exported ouside this module.                             *)
-(* ********************************************************************* *)
-let expr_desc_fixitude = function
-  | Parsetree.E_var id ->
-      (begin
-      match id.Parsetree.ast_desc with
-       | Parsetree.I_local vname ->
-	   (begin
-	   (* Now discriminate according to the lexical tag. *)
-	   match vname with
-	    | Parsetree.Vpident _ -> Fixitude_prefix
-	    | Parsetree.Viident _ -> Fixitude_infix
-	    | _ -> Fixitude_applic
-	   end)
-       | Parsetree.I_global (opt, vname) | Parsetree.I_method (opt, vname) ->
-	   (begin
-	   (* Check for an explicit scope information... *)
-	   if opt <> None then
-	     Fixitude_applic  (* So can't be printed as a syntactic operator. *)
-	   else
-	     (begin
-	     (* Now discriminate according to the lexical tag, like above. *)
-	     match vname with
-	      | Parsetree.Vpident _ -> Fixitude_prefix
-	      | Parsetree.Viident _ -> Fixitude_infix
-	      | _ -> Fixitude_applic
-	     end)
-	   end)
-      end)
-  | _ -> Fixitude_applic
-;;
 
 
 
@@ -459,7 +421,7 @@ and pp_pattern ppf = pp_generic_ast pp_pat_desc ppf ;;
 (* ***************************************************************** *)
 let pp_external_language ppf = function
   | Parsetree.EL_Caml -> Format.fprintf ppf "caml@ "
-  | Parsetree.EL_Coq -> Format.fprintf ppf "coq@ "
+  | Parsetree.EL_Coq -> Format.fprintf ppf "coqdef@ "
   | Parsetree.EL_external s -> Format.fprintf ppf "%s@ " s
 ;;
 
@@ -523,11 +485,11 @@ and pp_external_def_body ppf = pp_generic_ast pp_external_def_body_desc ppf
     [Rem] : Not exported ouside this module.                          *)
 (* ****************************************************************** *)
 and pp_external_expr_desc ppf lst =
-  Format.fprintf ppf "@[<2>@ |@ %a@ @]"
+  Format.fprintf ppf "@[<2>@ %a@ @]"
     (Handy.pp_generic_separated_list
-       "|"
+       "with "
        (fun local_ppf (ext_lang, ext_expr) ->
-	 Format.fprintf local_ppf "%a@ ->@ %a@ "
+	 Format.fprintf local_ppf "%a@ %a@ "
 	   pp_external_language ext_lang pp_external_expression ext_expr))
     lst
 (* ********************************************************************* *)
@@ -549,7 +511,7 @@ and pp_external_expr ppf = pp_generic_ast pp_external_expr_desc ppf
 
     [Rem] : Not exported ouside this module.                           *)
 (* ******************************************************************* *)
-and pp_external_expression ppf eexpr = Format.fprintf ppf "\"%s\"" eexpr ;;
+and pp_external_expression ppf eexpr = Format.fprintf ppf "%s" eexpr ;;
 
 
 
@@ -768,16 +730,40 @@ and pp_theorem_def ppf = pp_generic_ast pp_theorem_def_desc ppf
 
 
 
+(* ************************************************************************ *)
+(*  [Fun] pp_fact_desc : Format.formatter -> Parsetree.fact_desc -> unit    *)
+(** [Descr] : Pretty prints a list of [fact_desc] values as old FoCal
+              source.
+              Be carreful : in the old syntax only 2 catagories existed :
+              "def" and others. Hence, because no comma was required
+              between others and the "def" keyword and because commas were
+              required between each element of "def" section and of the
+              other section, one must manually merge [F_property],
+              [F_hypothesis] and [F_node] in order to generate one unique
+              list COMMA-SEPARATED !
+
+    [Rem] : Not exported ouside this module.                                 *)
+(* ************************************************************************* *)
 and pp_fact_desc ppf = function
   | Parsetree.F_def idents ->
-      Format.fprintf ppf "DEF %a" (pp_idents ",") idents
+      Format.fprintf ppf "def %a" (pp_idents ",") idents
   | Parsetree.F_property idents ->
-      Format.fprintf ppf "property %a" (pp_idents ",") idents
+      Format.fprintf ppf "%a" (pp_idents ",") idents
   | Parsetree.F_hypothesis vnames ->
-      Format.fprintf ppf "hypothesis %a" (pp_vnames ",") vnames
+      (* No "hypothesis" keyword in the old syntax. *)
+      Format.fprintf ppf "%a" (pp_vnames ",") vnames
   | Parsetree.F_node node_labels ->
-      Format.fprintf ppf "step %a" (pp_node_labels ",") node_labels
-and pp_facts sep ppf = Handy.pp_generic_separated_list sep pp_fact ppf
+      (* No "step" keyword in the old syntax. *)
+      Format.fprintf ppf "%a" (pp_node_labels ",") node_labels
+and pp_and_merge_facts ppf facts =
+  let (facts_def, facts_other) =
+    List.partition
+      (function  { Parsetree.ast_desc = fact_desc } ->
+	match fact_desc with Parsetree.F_def _ -> true | _ -> false)
+      facts in
+  Handy.pp_generic_separated_list "," pp_fact ppf facts_other ;
+  Format.fprintf ppf "@ " ;
+  Handy.pp_generic_separated_list "" pp_fact ppf facts_def
 and pp_fact ppf = pp_generic_ast pp_fact_desc ppf
 
 
@@ -785,9 +771,10 @@ and pp_fact ppf = pp_generic_ast pp_fact_desc ppf
 and pp_proof_desc ppf = function
   | Parsetree.Pf_assumed -> Format.fprintf ppf "assumed"
   | Parsetree.Pf_auto facts ->
-      (* Empty facts list means end-of-proof. *)
-      if facts = [] then Format.fprintf ppf ".@ "
-      else Format.fprintf ppf "@[<2>by %a@]" (pp_facts "") facts
+      (* Empty facts list means end-of-proof. In the old *)
+      (* syntax, no "." is required. So, just ignore.    *)
+      if facts <> [] then
+	Format.fprintf ppf "@[<2>by %a@]" pp_and_merge_facts facts
   | Parsetree.Pf_coq s -> Format.fprintf ppf "@[<2>coq proof@ {*%s*}@]" s
   | Parsetree.Pf_node proof_nodes ->
       Format.fprintf ppf "%a" (pp_proof_nodes "") proof_nodes
@@ -807,8 +794,10 @@ and proof_node ppf = pp_generic_ast pp_proof_node_desc ppf
 
 
 and pp_statement_desc ppf stmt =
-  Format.fprintf ppf "%a@ %a"
-    (pp_hyps "") stmt.Parsetree.s_hyps
+  if stmt.Parsetree.s_hyps <> [] then
+    Format.fprintf ppf "assume %a@ "
+      pp_hyps stmt.Parsetree.s_hyps ;
+  Format.fprintf ppf "%a"
     (Handy.pp_generic_option "prove " pp_prop) stmt.Parsetree.s_concl
 and pp_statement ppf = pp_generic_ast pp_statement_desc ppf
 
@@ -816,14 +805,19 @@ and pp_statement ppf = pp_generic_ast pp_statement_desc ppf
 
 and pp_hyp_desc ppf = function
   | Parsetree.H_var (vname, te) ->
-      Format.fprintf ppf "@[<2>assume %a in@ %a,@ @]"
+      Format.fprintf ppf "@[<2>%a in@ %a@]"
 	pp_vname vname pp_type_expr te
   | Parsetree.H_hyp (vname, prop) ->
-      Format.fprintf ppf "@[<2>assume %a :@ %a,@ @]" pp_vname vname pp_prop prop
+      Format.fprintf ppf "@[<2>%a :@ %a@]" pp_vname vname pp_prop prop
   | Parsetree.H_not (vname, expr) ->
-      Format.fprintf ppf "@[<2>notation %a =@ %a,@ @]"
+      Printf.eprintf "Warning : ignored notation directive.\n" ;
+      Format.fprintf ppf
+	"@[<2>(* Warning : ignored notation directive %a =@ %a *)@ @]"
 	pp_vname vname pp_expr expr
-and pp_hyps sep ppf = Handy.pp_generic_separated_list sep pp_hyp ppf
+
+and pp_hyps ppf =
+  (* No comma between hypotheses in the old syntax ! *)
+  Handy.pp_generic_separated_list "" pp_hyp ppf
 and pp_hyp ppf = pp_generic_ast pp_hyp_desc ppf
 
 
@@ -857,7 +851,7 @@ and pp_prop ppf = pp_generic_ast pp_prop_desc ppf
 and pp_expr_desc ppf = function
   | Parsetree.E_const cst -> Format.fprintf ppf "%a" pp_constant cst
   | Parsetree.E_fun (vnames, expr) ->
-      Format.fprintf ppf "@[<2>function %a ->@ %a"
+      Format.fprintf ppf "@[<2>fun %a ->@ %a"
 	(pp_vnames "") vnames pp_expr expr
   | Parsetree.E_var id -> Format.fprintf ppf "%a" pp_ident id
   | Parsetree.E_app (expr, exprs) ->
@@ -903,8 +897,7 @@ and pp_expr_desc ppf = function
   | Parsetree.E_tuple exprs ->
       Format.fprintf ppf "@[<1>(%a)@]" (pp_exprs ",") exprs
   | Parsetree.E_external external_expr ->
-      Format.fprintf ppf "@[<2>external@\n%a@\nend@]"
-	pp_external_expr external_expr
+      Format.fprintf ppf "%a" pp_external_expr external_expr
   | Parsetree.E_paren expr ->
       Format.fprintf ppf "@[<1>(%a)@]" pp_expr expr
 and pp_exprs sep ppf = Handy.pp_generic_separated_list sep pp_expr ppf
@@ -972,14 +965,24 @@ let pp_phrase_desc ppf = function
   | Parsetree.Ph_use fname ->
       (* It seems that old syntax didn't accept file paths. *)
       if (Filename.dirname fname) <> "." then
+	(begin
 	Printf.eprintf "Warning : use directive using relative path \"%s\".\n"
 	  fname ;
+	Format.fprintf ppf
+	  "@[<2>(* Warning :  use directive using relative path \"%s\". *)@]@\n"
+	  fname
+	end) ;
       Format.fprintf ppf "@[<2>uses@ %s@ ;;@]@\n" (Filename.basename fname)
   | Parsetree.Ph_open fname ->
       (* It seems that old syntax didn't accept file paths. *)
       if (Filename.dirname fname) <> "." then
+	(begin
 	Printf.eprintf "Warning : open directive using relative path \"%s\".\n"
 	  fname ;
+	Format.fprintf ppf
+	  "@[<2>(* Warning : open directive using relative path \"%s\". *)@]@\n"
+	  fname
+	end) ;
       Format.fprintf ppf "@[<2>open@ %s@ ;;@]@\n" (Filename.basename fname)
   | Parsetree.Ph_species s_def -> Format.fprintf ppf "%a" pp_species_def s_def
   | Parsetree.Ph_coll coll_def -> Format.fprintf ppf "%a" pp_coll_def coll_def
@@ -1002,10 +1005,15 @@ let pp_phrases ppf = Handy.pp_generic_newlined_list pp_phrase ppf ;;
 let pp_file_desc ppf = function
   | Parsetree.File phrases -> Format.fprintf ppf "%a" pp_phrases phrases
 ;;
-(* ************************************************************ *)
-(*  [Fun] pp_file : Format.formatter -> Parsetree.file -> unit  *)
-(** [Descr] : Pretty prints a [file] value as old FoCal source.
+(* ******************************************************************** *)
+(*  [Fun] pp_file : Format.formatter -> Parsetree.file -> unit          *)
+(** [Descr] : Pretty prints a [file] value as old FoCal source. It also
+              cleans-up the table of encountered identifiers that were
+              not modified by the renaming processing.
 
-    [Rem] : Exported ouside this module.                        *)
-(* ************************************************************ *)
-let pp_file ppf = pp_generic_ast pp_file_desc ppf ;;
+    [Rem] : Exported ouside this module.                                *)
+(* ******************************************************************** *)
+let pp_file ppf file =
+  cleanup_conflicting_idents_table () ;
+  pp_generic_ast pp_file_desc ppf file
+;;
