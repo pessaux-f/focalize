@@ -1,4 +1,4 @@
-(* $Id: oldsourcify.ml,v 1.4 2007-07-03 15:40:57 pessaux Exp $ *)
+(* $Id: oldsourcify.ml,v 1.5 2007-07-04 15:23:41 pessaux Exp $ *)
 
 
 module StringMod = struct type t = string let compare = compare end ;;
@@ -104,6 +104,93 @@ let (cleanup_conflicting_idents_table, mk_regular_lowercase) =
 ;;
 
 
+(* ****************************************************************** *)
+(*  [Fun] record_hyp_level_in_hyps :                                  *)
+(*          int -> Parsetree.hyp list -> (Parsetree.vname * int) list *)
+(** [Descr] : Records the definition of each hypothesis inside the
+              proof tree by traversing a list of [hyp]s.
+
+    [Rem] : Not exported ouside this module.                          *)
+(* ****************************************************************** *)
+ let rec record_hyp_level_in_hyps cur_level = function
+  | [] -> []
+  | h :: q ->
+      let h_mapping =
+	(begin
+	match h.Parsetree.ast_desc with
+	 | Parsetree.H_var (_, _) -> []
+	 | Parsetree.H_hyp (vname, _) ->
+	     (* Here an hypothesis is declared at the current level. *)
+	     [(vname, cur_level)]
+	 | Parsetree.H_not (_, _) -> []
+	end) in
+      h_mapping @ (record_hyp_level_in_hyps cur_level q)
+
+
+
+(* ******************************************************************* *)
+(*  [Fun] record_hyp_level_in_statement :                              *)
+(*          int -> Parsetree.statement -> (Parsetree.vname * int) list *)
+(** [Descr] : Records the definition of each hypothesis inside the
+              proof tree by traversing a [statement].
+
+    [Rem] : Not exported ouside this module.                           *)
+(* ******************************************************************* *)
+and record_hyp_level_in_statement cur_level stmt =
+  record_hyp_level_in_hyps cur_level stmt.Parsetree.ast_desc.Parsetree.s_hyps
+
+
+
+(* *************************************************************** *)
+(*  [Fun] record_hyp_level_in_proof_nodes :                        *)
+(*          int -> Parsetree.proof_node list ->                    *)
+(*            (Parsetree.vname * int) list                         *)
+(** [Descr] : Records the definition of each hypothesis inside the
+              proof tree by traversing a list of [proof_node]s.
+
+    [Rem] : Not exported ouside this module.                       *)
+(* *************************************************************** *)
+and record_hyp_level_in_proof_nodes cur_level = function
+  | [] -> []
+  | h :: q ->
+      let h_mapping =
+	(begin
+	match h.Parsetree.ast_desc with
+	 | Parsetree.PN_sub ((level, _), stmt, proof) ->
+	     (* Can declare hypotheses via the statement. *)
+	     (record_hyp_level_in_statement level stmt)
+	     @ (record_hyp_level_in_proof cur_level proof)
+	 | Parsetree.PN_qed ((level, _), proof) ->
+	     record_hyp_level_in_proof level proof
+	end) in
+      h_mapping @ (record_hyp_level_in_proof_nodes cur_level q)
+
+
+
+(* **************************************************************** *)
+(*  [Fun] record_hyp_level_in_proof :                               *)
+(*          int -> Parsetree.proof -> (Parsetree.vname * int) list  *)
+(** [Descr] : Records the definition of each hypothesis inside the
+              proof tree by traversing a [proof].
+
+    [Rem] : Not exported ouside this module.                        *)
+(* **************************************************************** *)
+and record_hyp_level_in_proof cur_level proof =
+  match proof.Parsetree.ast_desc with
+   | Parsetree.Pf_assumed -> []
+   | Parsetree.Pf_auto _ ->
+       (* Here the hyps are used. At print-time, that's here *)
+       (* we will use the information currently harvested.   *)
+       []
+   | Parsetree.Pf_coq _ ->
+       (* Verbatim stuff. Don't care and don't search anything inside ! *)
+       []
+   | Parsetree.Pf_node proof_nodes ->
+       (* Go deeper to find hypotheses definitions... *)
+       record_hyp_level_in_proof_nodes cur_level proof_nodes
+;;
+
+
 
 (* ************************************************************* *)
 (*  [Fun] pp_vname : Format.formatter -> Parsetree.vname -> unit *)
@@ -125,6 +212,16 @@ let pp_vname ppf = function
     [Rem] : Not exported ouside this module.                           *)
 (* ******************************************************************* *)
 let pp_vnames sep ppf = Handy.pp_generic_separated_list sep pp_vname ppf ;;
+
+
+
+let pp_vnames_n_level sep ppf =
+  Handy.pp_generic_separated_list
+    sep
+    (fun local_ppf (vname, level) ->
+      Format.fprintf local_ppf "<%d>:%a"  level pp_vname vname)
+    ppf
+;;
 
 
 
@@ -493,7 +590,7 @@ and pp_external_def_body ppf = pp_generic_ast pp_external_def_body_desc ppf
 and pp_external_expr_desc ppf lst =
   Format.fprintf ppf "@[<2>%a@ @]"
     (Handy.pp_generic_separated_list
-       "with "
+       "with"
        (fun local_ppf (ext_lang, ext_expr) ->
 	 Format.fprintf local_ppf "%a@ %a@ "
 	   pp_external_language ext_lang pp_external_expression ext_expr))
@@ -614,8 +711,10 @@ and pp_sig_def ppf = pp_generic_ast pp_sig_def_desc ppf
 
 
 and pp_proof_def_desc ppf pdd =
+  let hyps_levels = record_hyp_level_in_proof 0 pdd.Parsetree.pd_proof in
   Format.fprintf ppf "@[<2>proof of@ %a@ =@ %a @]"
-    pp_ident pdd.Parsetree.pd_name pp_proof pdd.Parsetree.pd_proof
+    pp_ident pdd.Parsetree.pd_name
+   (pp_proof hyps_levels) pdd.Parsetree.pd_proof
 and pp_proof_def ppf = pp_generic_ast pp_proof_def_desc ppf
 
 
@@ -723,11 +822,12 @@ and pp_binding ppf = pp_generic_ast pp_binding_desc ppf
     [Rem] : Not exported ouside this module.                                *)
 (* ************************************************************************ *)
 and pp_theorem_def_desc ppf tdd =
+ let hyps_levels = record_hyp_level_in_proof 0 tdd.Parsetree.th_proof in
   Format.fprintf ppf "@[<2>theorem %a :@ %a@ %a@]@\n@[<2>proof:@ %a @]"
     pp_ident tdd.Parsetree.th_name
     pp_loc_flag tdd.Parsetree.th_loc
     pp_prop tdd.Parsetree.th_stmt
-    pp_proof tdd.Parsetree.th_proof
+    (pp_proof hyps_levels) tdd.Parsetree.th_proof
 (* ************************************************************************* *)
 (*  [Fun] pp_theorem_def : Format.formatter -> Parsetree.theorem_def -> unit *)
 (** [Descr] : Pretty prints a [theorem_def] value as old FoCal source.
@@ -738,7 +838,17 @@ and pp_theorem_def ppf = pp_generic_ast pp_theorem_def_desc ppf
 
 
 
-and pp_fact_desc ppf = function
+(* *********************************************************************** *)
+(*  [Fun] pp_fact_desc :                                                   *)
+(*         (Parsetree.vname * int) list -> Format.formatter ->             *)
+(*           Parsetree.fact_desc -> unit                                   *)
+(** [Descr] : Pretty prints a list of [fact_desc] values as old FoCal
+              source. It tries to extract from the mapping between
+              hypotheses and definition levels, the level to print before
+              any hypothesis usage in [F_hypothesis] facts.
+    [Rem] : Not exported ouside this module.                               *)
+(* *********************************************************************** *)
+and pp_fact_desc hyps_levels ppf = function
   | Parsetree.F_def idents ->
       Format.fprintf ppf "def %a" (pp_idents ",") idents
   | Parsetree.F_property idents ->
@@ -746,14 +856,28 @@ and pp_fact_desc ppf = function
   | Parsetree.F_hypothesis vnames ->
       (* No "hypothesis" keyword in the old syntax. Although one must   *)
       (* add the level in the proof where this hypothesis was declared. *)
-      
-      Format.fprintf ppf "%a" (pp_vnames ",") vnames
+      let full_vnames =
+	List.map
+	  (fun vname ->
+	    let level =
+	      (try List.assoc vname hyps_levels with
+	      | Not_found ->
+		  Printf.eprintf "Warning : no definition level found for hypothesis.\n" ;
+		  Format.fprintf ppf "(* Warning : no definition level found for hypothesis \"%a\". *)" pp_vname vname ;
+		  -1) in
+	    (vname, level))
+	  vnames in
+      Format.fprintf ppf "%a" (pp_vnames_n_level ",") full_vnames
   | Parsetree.F_node node_labels ->
       (* No "step" keyword in the old syntax. *)
       Format.fprintf ppf "%a" (pp_node_labels ",") node_labels
-(* ************************************************************************ *)
-(*  [Fun] pp_and_merge_facts : Format.formatter ->                          *)
-(*          Parsetree.fact_desc list -> unit                                *)
+
+
+
+(* *********************************************************************** *)
+(*  [Fun] pp_and_merge_facts :                                             *)
+(*         (Parsetree.vname * int) list ->                                 *)
+(*           Format.formatter -> Parsetree.fact list -> unit               *)
 (** [Descr] : Pretty prints a list of [fact_desc] values as old FoCal
               source.
               Be carreful : in the old syntax only 2 catagories existed :
@@ -764,44 +888,49 @@ and pp_fact_desc ppf = function
               [F_hypothesis] and [F_node] in order to generate one unique
               list COMMA-SEPARATED !
 
-    [Rem] : Not exported ouside this module.                                 *)
-(* ************************************************************************* *)
-and pp_and_merge_facts ppf facts =
+    [Rem] : Not exported ouside this module.                                *)
+(* ************************************************************************ *)
+and pp_and_merge_facts hyps_levels ppf facts =
   let (facts_def, facts_other) =
     List.partition
       (function  { Parsetree.ast_desc = fact_desc } ->
 	match fact_desc with Parsetree.F_def _ -> true | _ -> false)
       facts in
-  Handy.pp_generic_separated_list "," pp_fact ppf facts_other ;
+  Handy.pp_generic_separated_list "," (pp_fact hyps_levels) ppf facts_other ;
   Format.fprintf ppf "@ " ;
-  Handy.pp_generic_separated_list "" pp_fact ppf facts_def
-and pp_fact ppf = pp_generic_ast pp_fact_desc ppf
+  Handy.pp_generic_separated_list "" (pp_fact hyps_levels) ppf facts_def
+and pp_fact hyps_levels ppf = pp_generic_ast (pp_fact_desc hyps_levels) ppf
 
 
 
-and pp_proof_desc ppf = function
+and pp_proof_desc hyps_levels ppf = function
   | Parsetree.Pf_assumed -> Format.fprintf ppf "assumed"
   | Parsetree.Pf_auto facts ->
       (* Empty facts list means end-of-proof. In the old *)
       (* syntax, no "." is required. So, just ignore.    *)
+      (* Unde rthis points, hypotheses may be used. So we must transmit  *)
+      (* the mapping between hypotheses-names and levels to the [facts]. *)
       if facts <> [] then
-	Format.fprintf ppf "@[<2>by %a@]" pp_and_merge_facts facts
+	Format.fprintf ppf "@[<2>by %a@]" (pp_and_merge_facts hyps_levels) facts
   | Parsetree.Pf_coq s -> Format.fprintf ppf "@[<2>coq proof@ {*%s*}@]" s
   | Parsetree.Pf_node proof_nodes ->
-      Format.fprintf ppf "%a" (pp_proof_nodes "") proof_nodes
-and pp_proof ppf = pp_generic_ast pp_proof_desc ppf
+      Format.fprintf ppf "%a" (pp_proof_nodes "" hyps_levels) proof_nodes
+and pp_proof hyps_levels ppf = pp_generic_ast (pp_proof_desc hyps_levels) ppf
 
 
 
-and pp_proof_node_desc ppf = function
+and pp_proof_node_desc hyps_levels ppf = function
   | Parsetree.PN_sub (node_label, stmt, proof) ->
       Format.fprintf ppf "%a %a@\n%a"
-	pp_node_label node_label pp_statement stmt pp_proof proof
+	pp_node_label node_label pp_statement stmt
+        (pp_proof hyps_levels) proof
   | Parsetree.PN_qed (node_label, proof) ->
-      Format.fprintf ppf "%a qed@\n%a" pp_node_label node_label pp_proof proof
-and pp_proof_nodes sep ppf =
-  Handy.pp_generic_separated_list sep pp_proof_node ppf
-and pp_proof_node ppf = pp_generic_ast pp_proof_node_desc ppf
+      Format.fprintf ppf "%a qed@\n%a"
+        pp_node_label node_label (pp_proof hyps_levels) proof
+and pp_proof_nodes sep hyps_levels ppf =
+  Handy.pp_generic_separated_list sep (pp_proof_node hyps_levels) ppf
+and pp_proof_node hyps_levels ppf =
+  pp_generic_ast (pp_proof_node_desc hyps_levels) ppf
 
 
 
@@ -863,7 +992,7 @@ and pp_prop ppf = pp_generic_ast pp_prop_desc ppf
 and pp_expr_desc ppf = function
   | Parsetree.E_const cst -> Format.fprintf ppf "%a" pp_constant cst
   | Parsetree.E_fun (vnames, expr) ->
-      Format.fprintf ppf "@[<2>fun %a ->@ %a"
+      Format.fprintf ppf "@[<2>fun %a ->@ %a@]"
 	(pp_vnames "") vnames pp_expr expr
   | Parsetree.E_var id -> Format.fprintf ppf "%a" pp_ident id
   | Parsetree.E_app (expr, exprs) ->

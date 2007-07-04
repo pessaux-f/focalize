@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.7 2007-07-03 15:40:57 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.8 2007-07-04 15:23:41 pessaux Exp $ *)
 
 (* ************************************************************* *)
 (*  [Fun] pp_vname : Format.formatter -> Parsetree.vname -> unit *)
@@ -779,7 +779,7 @@ and pp_prop ppf = pp_generic_ast pp_prop_desc ppf
 and pp_expr_desc ppf = function
   | Parsetree.E_const cst -> Format.fprintf ppf "%a" pp_constant cst
   | Parsetree.E_fun (vnames, expr) ->
-      Format.fprintf ppf "@[<2>function %a ->@ %a"
+      Format.fprintf ppf "@[<2>function %a ->@ %a@]"
 	(pp_vnames "") vnames pp_expr expr
   | Parsetree.E_var id -> Format.fprintf ppf "%a" pp_ident id
   | Parsetree.E_app (expr, exprs) ->
