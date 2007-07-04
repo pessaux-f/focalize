@@ -1,5 +1,5 @@
 #  Copyright 2004 INRIA
-#  $Id: Makefile.in,v 1.5 2006-06-22 17:09:40 doligez Exp $
+#  $Id: Makefile.in,v 1.6 2007-07-04 13:16:04 pessaux Exp $
 
 # directories
 prefix		= @prefix@
@@ -24,11 +24,11 @@ XMLRPCFILE	= @XMLRPCFILE@
 
 MODULES = version misc \
           cache \
-          expr parser_coq lexer_coq invoke parser_sat lexer_sat invoke_cime \
+          expr parser_coq lexer_coq invoke invoke_cime \
           $(XMLRPCFILE) token lexer parser options main
 
-LEXERS = lexer_coq lexer_sat lexer
-PARSERS = parser_coq parser_sat
+LEXERS = lexer_coq lexer
+PARSERS = parser_coq
 
 PLAIN_MODULES = version misc cache invoke expr invoke_cime $(XMLRPCFILE) \
                 token parser options main
@@ -52,7 +52,7 @@ all: zvtov
 
 
 zvtov: $(OBJBYT)
-	$(CAMLC) $(CAMLCFLAGS) $(XMLRPCLINK) -o zvtov $(OBJBYT)
+	$(CAMLC) $(CAMLCFLAGS) str.cma $(XMLRPCLINK) -o zvtov $(OBJBYT)
 
 .PHONY: install
 install:
@@ -77,20 +77,12 @@ lexer.ml: lexer.mll
 lexer_coq.ml: lexer_coq.mll
 	$(CAMLLEX) lexer_coq.mll
 
-lexer_sat.ml: lexer_sat.mll
-	$(CAMLLEX) lexer_sat.mll
-
 parser_coq.ml: parser_coq.mly
 	$(CAMLYACC) -v parser_coq.mly
 
 parser_coq.mli: parser_coq.ml
 	:
 
-parser_sat.ml: parser_sat.mly
-	$(CAMLYACC) -v parser_sat.mly
-
-parser_sat.mli: parser_sat.ml
-	:
 
 # distributing files
 .PHONY: dist
@@ -101,8 +93,8 @@ dist:
 .PHONY: clean
 clean:
 	rm -f *.cmo *.cmi *.annot
-	rm -f lexer_coq.ml lexer_sat.ml parser_coq.ml parser_sat.ml
-	rm -f parser_coq.mli parser_sat.mli
+	rm -f lexer_coq.ml parser_coq.ml
+	rm -f parser_coq.mli
 	rm -f zvtov
 
 .PHONY: realclean

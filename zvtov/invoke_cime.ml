@@ -1,5 +1,5 @@
 (*  Copyright 2006 INRIA  *)
-(*  $Id: invoke_cime.ml,v 1.5 2007-07-02 07:07:28 pessaux Exp $  *)
+(*  $Id: invoke_cime.ml,v 1.6 2007-07-04 13:16:04 pessaux Exp $  *)
 
 
 let cime_nb = ref 0 ;;
@@ -207,8 +207,7 @@ let printNegatedConjecture o e =
 
 let printHyp o hypName hyp =
   Format.fprintf o
-    "@[%s(%s, %s, %a). \n @]"
-    "cnf" ("h" ^ hypName) "hypothesis" printExpr hyp
+    "@[%s(%s, %s, %a). \n @]" "cnf" ("h" ^ hypName) "hypothesis" printExpr hyp
 ;;
 
 
@@ -253,12 +252,17 @@ let printPhrase o ph =
 
     [Rem] : Not exported outside this module.                       *)
 (* **************************************************************** *)
-let find_unsatisfiable_in_file inf =
+let find_unsatisfiable_in_file fname =
+  let ic = open_in_bin fname in
+  let unsatifiable_regexp = Str.regexp ".*unsatifiable.*" in
   try
-    let ic = open_in_bin inf in
-    let lexbuf = Lexing.from_channel ic in
-    Parser_sat.cimefile Lexer_sat.cimetoken lexbuf
-  with _ -> false
+    let go_on = ref true in
+    while !go_on do
+      let line = input_line ic in
+      if Str.string_match unsatifiable_regexp line 0 then go_on := false
+    done ;
+    true
+  with End_of_file -> false
 ;;
 
 
@@ -271,10 +275,15 @@ let cime filename data loc statement name oc=
   (* Check if goal and hypotheses can be rewritten as equalities. *)
   let b = (isRewritable goal) && (isHypListRewritable hyps) in
   (* Nop, then simply call Zenon... *)
-  if not b then Invoke.zenon_loc filename (statement, name) data loc oc
+  if not b then
+    (begin
+(* Printf.eprintf "Can't be rewritten.\n" ; flush stderr ; *)
+    Invoke.zenon_loc filename (statement, name) data loc oc
+    end)
   else
     (begin
     (* Yep, then we will try to apply CiMe. *)
+(* Printf.eprintf "Can be rewritten.\n" ; flush stderr ; *)
     let (tmpname, f) = Filename.open_temp_file "zvtov" ".p" in
     let resname = Filename.temp_file "zvtov" ".res" in
     let fmt = Format.formatter_of_out_channel f in
@@ -284,22 +293,30 @@ let cime filename data loc statement name oc=
     close_out f ;
     (* Send the file to CiMe. *)
     let cmd = "cime3 -tptp " ^ tmpname ^ " > " ^ resname in
+(*
+let cmd =
+  "cime3 -coq-file /tmp/daube.v -tptp " ^ tmpname ^ " > " ^ resname in
+*)
     let rc = Sys.command cmd in
-    (* Check if "unsatisfiable" appears inside the result file. *)
-    let unsatisfiable = (rc = 0) && find_unsatisfiable_in_file resname in
+    (* Check if "unsatisfiable" appears inside the result *)
+    (* file or wether the call to CiMe abnormally ended.  *)
+    let unsatisfiable =
+      (rc <> 0) || try find_unsatisfiable_in_file resname with _ -> true in
     (try Sys.remove resname with _ -> ()) ;
     (try Sys.remove tmpname with _ -> ()) ;
-    (* If CiMe failed, then call zenon. *)
     (begin
     match unsatisfiable with
-      | false -> Invoke.atp filename (statement, name) data loc oc ;
-      | true ->
-          (begin
-	  (* Else, modify le .v without inserting yet any real proof term. *)
-          Printf.fprintf oc
-	    "Theorem %s : %s.\n Admitted. (* proved by Cime *)\n \n"
-	    name statement ;
-          end)
+     | true ->
+	 (* If CiMe failed, then call zenon. *)
+	 Invoke.atp filename (statement, name) data loc oc ;
+     | false ->
+         (begin
+(* Printf.eprintf "Cime got it\n" ; flush stderr ; *)
+	 (* Else, modify le .v without inserting yet any real proof term. *)
+         Printf.fprintf oc
+	   "Theorem %s : %s.\n Admitted. (* proved by Cime *)\n \n"
+	   name statement ;
+         end)
     end) ;
     incr file_nb ;
     incr cime_nb

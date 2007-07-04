@@ -4,22 +4,18 @@ misc.cmo: misc.cmi
 misc.cmx: misc.cmi 
 cache.cmo: cache.cmi 
 cache.cmx: cache.cmi 
-invoke.cmo: parser_coq.cmi misc.cmi lexer_coq.cmi cache.cmi invoke.cmi 
-invoke.cmx: parser_coq.cmx misc.cmx lexer_coq.cmx cache.cmx invoke.cmi 
 expr.cmo: expr.cmi 
 expr.cmx: expr.cmi 
 parser_coq.cmo: expr.cmi parser_coq.cmi 
 parser_coq.cmx: expr.cmx parser_coq.cmi 
 lexer_coq.cmo: parser_coq.cmi lexer_coq.cmi 
 lexer_coq.cmx: parser_coq.cmx lexer_coq.cmi 
-parser_sat.cmo: parser_sat.cmi 
-parser_sat.cmx: parser_sat.cmi 
-lexer_sat.cmo: parser_sat.cmi lexer_sat.cmi 
-lexer_sat.cmx: parser_sat.cmx lexer_sat.cmi 
-invoke_cime.cmo: parser_sat.cmi parser_coq.cmi lexer_sat.cmi lexer_coq.cmi \
-    invoke.cmi expr.cmi invoke_cime.cmi 
-invoke_cime.cmx: parser_sat.cmx parser_coq.cmx lexer_sat.cmx lexer_coq.cmx \
-    invoke.cmx expr.cmx invoke_cime.cmi 
+invoke.cmo: parser_coq.cmi lexer_coq.cmi cache.cmi invoke.cmi 
+invoke.cmx: parser_coq.cmx lexer_coq.cmx cache.cmx invoke.cmi 
+invoke_cime.cmo: parser_coq.cmi lexer_coq.cmi invoke.cmi expr.cmi \
+    invoke_cime.cmi 
+invoke_cime.cmx: parser_coq.cmx lexer_coq.cmx invoke.cmx expr.cmx \
+    invoke_cime.cmi 
 token.cmo: token.cmi 
 token.cmx: token.cmi 
 lexer.cmo: token.cmi lexer.cmi 
@@ -36,5 +32,4 @@ main.cmx: version.cmx parser.cmx options.cmx misc.cmx invoke.cmx cache.cmx \
     main.cmi 
 parser_coq.cmi: expr.cmi 
 lexer_coq.cmi: parser_coq.cmi 
-lexer_sat.cmi: parser_sat.cmi 
 lexer.cmi: token.cmi 
