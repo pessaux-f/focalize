@@ -1,5 +1,5 @@
 (*  Copyright 2006 INRIA  *)
-(*  $Id: invoke_cime.ml,v 1.6 2007-07-04 13:16:04 pessaux Exp $  *)
+(*  $Id: invoke_cime.ml,v 1.7 2007-07-05 08:47:43 pessaux Exp $  *)
 
 
 let cime_nb = ref 0 ;;
@@ -300,16 +300,18 @@ let cmd =
     let rc = Sys.command cmd in
     (* Check if "unsatisfiable" appears inside the result *)
     (* file or wether the call to CiMe abnormally ended.  *)
-    let unsatisfiable =
+    let unsatisfiable_found =
       (rc <> 0) || try find_unsatisfiable_in_file resname with _ -> true in
     (try Sys.remove resname with _ -> ()) ;
     (try Sys.remove tmpname with _ -> ()) ;
     (begin
-    match unsatisfiable with
-     | true ->
+    (* Attention: If CiMe returns "unsatisfiable" *)
+    (* then this means  that it succeed !         *)
+    match unsatisfiable_found with
+     | false ->
 	 (* If CiMe failed, then call zenon. *)
 	 Invoke.atp filename (statement, name) data loc oc ;
-     | false ->
+     | true ->
          (begin
 (* Printf.eprintf "Cime got it\n" ; flush stderr ; *)
 	 (* Else, modify le .v without inserting yet any real proof term. *)
