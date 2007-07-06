@@ -1,5 +1,5 @@
 (*  Copyright 2006 INRIA  *)
-(*  $Id: invoke_cime.ml,v 1.7 2007-07-05 08:47:43 pessaux Exp $  *)
+(*  $Id: invoke_cime.ml,v 1.8 2007-07-06 09:16:24 pessaux Exp $  *)
 
 
 let cime_nb = ref 0 ;;
@@ -292,11 +292,11 @@ let cime filename data loc statement name oc=
     Format.pp_print_flush fmt () ;
     close_out f ;
     (* Send the file to CiMe. *)
-    let cmd = "cime3 -tptp " ^ tmpname ^ " > " ^ resname in
-(*
+(*    let cmd = "cime3 -tptp " ^ tmpname ^ " > " ^ resname in*)
+
 let cmd =
   "cime3 -coq-file /tmp/daube.v -tptp " ^ tmpname ^ " > " ^ resname in
-*)
+
     let rc = Sys.command cmd in
     (* Check if "unsatisfiable" appears inside the result *)
     (* file or wether the call to CiMe abnormally ended.  *)
@@ -313,7 +313,7 @@ let cmd =
 	 Invoke.atp filename (statement, name) data loc oc ;
      | true ->
          (begin
-(* Printf.eprintf "Cime got it\n" ; flush stderr ; *)
+Printf.eprintf "Cime got it\n" ; flush stderr ;
 	 (* Else, modify le .v without inserting yet any real proof term. *)
          Printf.fprintf oc
 	   "Theorem %s : %s.\n Admitted. (* proved by Cime *)\n \n"
