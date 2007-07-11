@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.38 2007-06-26 07:54:34 weis Exp $ *)
+(* $Id: parser.mly,v 1.39 2007-07-11 08:32:22 weis Exp $ *)
 
 open Parsetree;;
 
@@ -426,10 +426,10 @@ def_collection:
 
 let_binding:
   | opt_local LET binding
-    { mk {ld_rec = RF_no_rec; ld_log = LF_no_log; ld_loc = $1;
+    { mk {ld_rec = RF_no_rec; ld_logical = LF_no_logical; ld_local = $1;
           ld_bindings = [ $3 ]} }
   | opt_local LET REC binding_list
-    { mk { ld_rec = RF_rec; ld_log = LF_no_log; ld_loc = $1;
+    { mk { ld_rec = RF_rec; ld_logical = LF_no_logical; ld_local = $1;
            ld_bindings = $4; } }
 ;
 
@@ -467,10 +467,10 @@ def_sig:
 
 def_logical:
   | opt_doc opt_local LOGICAL binding
-    { mk_doc $1 {ld_rec = RF_no_rec; ld_log = LF_log; ld_loc = $2;
+    { mk_doc $1 {ld_rec = RF_no_rec; ld_logical = LF_logical; ld_local = $2;
                  ld_bindings = [ $4 ]} }
   | opt_doc opt_local LOGICAL REC binding_list
-    { mk_doc $1 { ld_rec = RF_rec; ld_log = LF_log; ld_loc = $2;
+    { mk_doc $1 { ld_rec = RF_rec; ld_logical = LF_logical; ld_local = $2;
                   ld_bindings = $5; } }
 ;
 
@@ -482,7 +482,7 @@ def_property:
 def_theorem:
   | opt_doc opt_local THEOREM theorem_vname COLON prop PROOF COLON proof
     { mk_doc $1
-        { th_name = mk_local_ident $4; th_loc = $2;
+        { th_name = mk_local_ident $4; th_local = $2;
           th_stmt = $6; th_proof = $9 } }
 ;
 
@@ -863,8 +863,8 @@ pattern_record_field_list:
 ;
 
 opt_local:
-  | { LF_no_loc }
-  | LOCAL { LF_loc }
+  | { LF_no_local }
+  | LOCAL { LF_local }
 ;
 
 opt_semi:

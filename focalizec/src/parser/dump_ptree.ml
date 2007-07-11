@@ -255,22 +255,22 @@ let pp_rec_flag ppf = function
 
     [Rem] : Not exported ouside this module.                             *)
 (* ********************************************************************* *)
-let pp_log_flag ppf = function
-  | Parsetree.LF_no_log -> Format.fprintf ppf "LF_no_log"
-  | Parsetree.LF_log -> Format.fprintf ppf "LF_log"
+let pp_logical_flag ppf = function
+  | Parsetree.LF_no_logical -> Format.fprintf ppf "LF_no_logical"
+  | Parsetree.LF_logical -> Format.fprintf ppf "LF_logical"
 ;;
 
 
 
 (* ********************************************************************* *)
-(*  [Fun] pp_loc_flag : Format.formatter -> Parsetree.loc_flag -> unit   *)
+(*  [Fun] pp_local_flag : Format.formatter -> Parsetree.loc_flag -> unit   *)
 (** [Descr] : Pretty prints a [loc_flag] value as a Caml-like structure.
 
     [Rem] : Not exported ouside this module.                             *)
 (* ********************************************************************* *)
-let pp_loc_flag ppf = function
-  | Parsetree.LF_no_loc -> Format.fprintf ppf "LF_no_loc"
-  | Parsetree.LF_loc -> Format.fprintf ppf "LF_loc"
+let pp_local_flag ppf = function
+  | Parsetree.LF_no_local -> Format.fprintf ppf "LF_no_local"
+  | Parsetree.LF_local -> Format.fprintf ppf "LF_local"
 ;;
 
 
@@ -580,8 +580,8 @@ and pp_species_field ppf = pp_generic_ast pp_species_field_desc ppf
 and pp_let_def_desc ppf ldd =
   Format.fprintf ppf "@[<2>{@ %a ;@ %a ;@ %a ;@ [@ %a@ ] @]}"
     pp_rec_flag ldd.Parsetree.ld_rec
-    pp_log_flag ldd.Parsetree.ld_log
-    pp_loc_flag ldd.Parsetree.ld_loc
+    pp_logical_flag ldd.Parsetree.ld_logical
+    pp_local_flag ldd.Parsetree.ld_local
     pp_bindings ldd.Parsetree.ld_bindings
 and pp_let_def ppf = pp_generic_ast pp_let_def_desc ppf
 
@@ -606,7 +606,7 @@ and pp_binding ppf = pp_generic_ast pp_binding_desc ppf
 and pp_theorem_def_desc ppf tdd =
   Format.fprintf ppf "@[<2>{@ %a ;@ %a ;@ %a ;@ %a @]}"
     pp_ident tdd.Parsetree.th_name
-    pp_loc_flag tdd.Parsetree.th_loc
+    pp_local_flag tdd.Parsetree.th_local
     pp_prop tdd.Parsetree.th_stmt
     pp_proof tdd.Parsetree.th_proof
 and pp_theorem_def ppf = pp_generic_ast pp_theorem_def_desc ppf
