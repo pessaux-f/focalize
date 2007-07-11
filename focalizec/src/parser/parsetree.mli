@@ -1,4 +1,4 @@
-(* $Id: parsetree.mli,v 1.21 2007-07-11 08:28:19 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.22 2007-07-11 20:53:05 weis Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -67,9 +67,9 @@ type external_name = string * string
 ;;
 
 type ('a, 'b) generic_ast = {
-   ast_loc : location; (** The location in the source of the AST node. *)
-   ast_desc : 'a;      (** The description of the node. *)
-   ast_doc : 'b option;  (** The support for documentation in many formats. *)
+   ast_loc : location;  (** The location in the source of the AST node. *)
+   ast_desc : 'a;       (** The description of the node. *)
+   ast_doc : 'b option; (** The support for documentation in many formats. *)
 }
 ;;
 
