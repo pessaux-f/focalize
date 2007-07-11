@@ -1,3 +1,7 @@
+(* $Id: Exp *)
+
+(** Pretty printing tools. *)
+
 (* *************************************************************** *)
 (*  [Fun] pp_generic_separated_list :                              *)
 (*         string -> (Format.formatter -> 'a -> unit) ->           *)
