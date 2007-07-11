@@ -8,3 +8,4 @@ parser.output
 parser.conflicts
 a.out
 check_file
+.depend
