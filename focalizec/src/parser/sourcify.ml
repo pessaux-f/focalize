@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.8 2007-07-04 15:23:41 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.9 2007-07-11 08:33:52 weis Exp $ *)
 
 (* ************************************************************* *)
 (*  [Fun] pp_vname : Format.formatter -> Parsetree.vname -> unit *)
@@ -20,7 +20,8 @@ let pp_vname ppf = function
 
     [Rem] : Not exported ouside this module.                           *)
 (* ******************************************************************* *)
-let pp_vnames sep ppf = Handy.pp_generic_separated_list sep pp_vname ppf ;;
+let pp_vnames sep ppf = Handy.pp_generic_separated_list sep pp_vname ppf
+;;
 
 
 
@@ -30,7 +31,8 @@ let pp_vnames sep ppf = Handy.pp_generic_separated_list sep pp_vname ppf ;;
 
     [Rem] : Not exported ouside this module.                       *)
 (* *************************************************************** *)
-let pp_node_label ppf (i, s) = Format.fprintf ppf "<%d>%s" i s ;;
+let pp_node_label ppf (i, s) = Format.fprintf ppf "<%d>%s" i s
+;;
 (* ************************************************************************ *)
 (*  [Fun] pp_node_labels :                                                  *)
 (*          string -> Format.formatter -> (int * string) list -> unit       *)
@@ -112,7 +114,8 @@ let pp_ident_desc ppf = function
 
     [Rem] : Not exported ouside this module.                         *)
 (* ***************************************************************** *)
-let pp_ident ppf = pp_generic_ast pp_ident_desc ppf ;;
+let pp_ident ppf = pp_generic_ast pp_ident_desc ppf
+;;
 (* ******************************************************************* *)
 (*  [Fun] pp_idents :                                                  *)
 (*          string -> Format.formatter -> Parsetree.ident list -> unit *)
@@ -120,7 +123,8 @@ let pp_ident ppf = pp_generic_ast pp_ident_desc ppf ;;
 
     [Rem] : Not exported ouside this module.                           *)
 (* ******************************************************************* *)
-let pp_idents sep ppf = Handy.pp_generic_separated_list sep pp_ident ppf ;;
+let pp_idents sep ppf = Handy.pp_generic_separated_list sep pp_ident ppf
+;;
 
 
 
@@ -226,7 +230,8 @@ and pp_rep_type_defs sep ppf =
 
     [Rem] : Not exported ouside this module.                        *)
 (* **************************************************************** *)
-and pp_rep_type_def ppf = pp_generic_ast pp_rep_type_def_desc ppf ;;
+and pp_rep_type_def ppf = pp_generic_ast pp_rep_type_def_desc ppf
+;;
 
 
 
@@ -263,7 +268,8 @@ and pp_type_exprs sep ppf = Handy.pp_generic_separated_list sep pp_type_expr ppf
 
     [Rem] : Not exported ouside this module.                              *)
 (* ********************************************************************** *)
-and pp_type_expr ppf = pp_generic_ast pp_type_expr_desc ppf ;;
+and pp_type_expr ppf = pp_generic_ast pp_type_expr_desc ppf
+;;
 
 
 
@@ -300,9 +306,9 @@ let pp_constant = pp_generic_ast pp_constant_desc
 
     [Rem] : Not exported ouside this module.                           *)
 (* ******************************************************************* *)
-let pp_loc_flag ppf = function
-  | Parsetree.LF_no_loc -> ()
-  | Parsetree.LF_loc -> Format.fprintf ppf "local@ "
+let pp_local_flag ppf = function
+  | Parsetree.LF_no_local -> ()
+  | Parsetree.LF_local -> Format.fprintf ppf "local@ "
 ;;
 
 
@@ -319,11 +325,11 @@ let pp_loc_flag ppf = function
 
     [Rem] : Not exported ouside this module.                                  *)
 (* ************************************************************************** *)
-let pp_let_def_binding_flags ppf (ld_rec, ld_log, ld_loc) =
-  Format.fprintf ppf "%a" pp_loc_flag ld_loc ;
-  (match ld_log with
-   | Parsetree.LF_no_log -> Format.fprintf ppf "let@ "
-   | Parsetree.LF_log -> Format.fprintf ppf "logical@ ") ;
+let pp_let_def_binding_flags ppf (ld_rec, ld_logical, ld_local) =
+  Format.fprintf ppf "%a" pp_local_flag ld_local ;
+  (match ld_logical with
+   | Parsetree.LF_no_logical -> Format.fprintf ppf "let@ "
+   | Parsetree.LF_logical -> Format.fprintf ppf "logical@ ") ;
   (match ld_rec with
    | Parsetree.RF_no_rec -> ()
    | Parsetree.RF_rec -> Format.fprintf ppf "rec@ ")
@@ -369,7 +375,8 @@ and pp_patterns sep ppf = Handy.pp_generic_separated_list sep pp_pattern ppf
 
     [Rem] : Not exported ouside this module.                         *)
 (* ***************************************************************** *)
-and pp_pattern ppf = pp_generic_ast pp_pat_desc ppf ;;
+and pp_pattern ppf = pp_generic_ast pp_pat_desc ppf
+;;
 
 
 
@@ -470,7 +477,8 @@ and pp_external_expr ppf = pp_generic_ast pp_external_expr_desc ppf
 
     [Rem] : Not exported ouside this module.                               *)
 (* *********************************************************************** *)
-and pp_external_expression ppf eexpr = Format.fprintf ppf "\"%s\"" eexpr ;;
+and pp_external_expression ppf eexpr = Format.fprintf ppf "\"%s\"" eexpr
+;;
 
 
 
@@ -500,7 +508,7 @@ let rec pp_species_def_desc ppf def =
     Format.fprintf ppf "inherits %a =@\n"
       (pp_species_exprs ",") def.Parsetree.sd_inherits.Parsetree.ast_desc
     end ;
-  Format.fprintf ppf "%a@\nend@ ;;@]@\n"
+  Format.fprintf ppf "%a@\nend@@,;;@]@\n"
     pp_species_fields def.Parsetree.sd_fields
 (* *************************************************************** *)
 (*  [Fun] pp_species_def :                                         *)
@@ -607,7 +615,7 @@ and pp_species_field ppf = pp_generic_ast pp_species_field_desc ppf
 and pp_let_def_desc ppf ldd =
   Format.fprintf ppf "@[<2>%a"
     pp_let_def_binding_flags
-    (ldd.Parsetree.ld_rec, ldd.Parsetree.ld_log, ldd.Parsetree.ld_loc) ;
+    (ldd.Parsetree.ld_rec, ldd.Parsetree.ld_logical, ldd.Parsetree.ld_local) ;
   (* Now print the bindings. This is especially handled because bindings *)
   (* after the first one ar separated by "and" instead of "let".         *)
   match ldd.Parsetree.ld_bindings with
@@ -677,7 +685,7 @@ and pp_binding ppf = pp_generic_ast pp_binding_desc ppf
 and pp_theorem_def_desc ppf tdd =
   Format.fprintf ppf "@[<2>theorem %a :@ %a@ %a@]@\n@[<2>proof:@ %a @]"
     pp_ident tdd.Parsetree.th_name
-    pp_loc_flag tdd.Parsetree.th_loc
+    pp_local_flag tdd.Parsetree.th_local
     pp_prop tdd.Parsetree.th_stmt
     pp_proof tdd.Parsetree.th_proof
 (* ************************************************************************* *)
@@ -857,10 +865,11 @@ and pp_expr ppf = pp_generic_ast pp_expr_desc ppf
 
 
 let pp_coll_def_desc ppf cdd =
-  Format.fprintf ppf "@[<2>collection@ %s@ implements@ %a@\nend@ ;;@]@\n"
+  Format.fprintf ppf "@[<2>collection@ %s@ implements@ %a@\nend@@,;;@]@\n"
     cdd.Parsetree.cd_name pp_species_expr cdd.Parsetree.cd_body
 ;;
-let pp_coll_def ppf = pp_generic_ast pp_coll_def_desc ppf ;;
+let pp_coll_def ppf = pp_generic_ast pp_coll_def_desc ppf
+;;
 
 
 
@@ -913,9 +922,9 @@ let pp_phrase_desc ppf = function
   | Parsetree.Ph_external ext_def ->
       Format.fprintf ppf "%a" pp_external_def ext_def
   | Parsetree.Ph_use fname ->
-      Format.fprintf ppf "@[<2>use@ \"%s\"@ ;;@]@\n" fname
+      Format.fprintf ppf "@[<2>use@ \"%s\"@@,;;@]@\n" fname
   | Parsetree.Ph_open fname ->
-      Format.fprintf ppf "@[<2>open@ \"%s\"@ ;;@]@\n" fname
+      Format.fprintf ppf "@[<2>open@ \"%s\"@@,;;@]@\n" fname
   | Parsetree.Ph_species s_def -> Format.fprintf ppf "%a" pp_species_def s_def
   | Parsetree.Ph_coll coll_def -> Format.fprintf ppf "%a" pp_coll_def coll_def
   | Parsetree.Ph_type type_def -> Format.fprintf ppf "%a" pp_type_def type_def
@@ -923,8 +932,10 @@ let pp_phrase_desc ppf = function
   | Parsetree.Ph_theorem t_def -> Format.fprintf ppf "%a" pp_theorem_def t_def
   | Parsetree.Ph_expr expr -> Format.fprintf ppf "%a" pp_expr expr
 ;;
-let pp_phrase ppf = pp_generic_ast pp_phrase_desc ppf ;;
-let pp_phrases ppf = Handy.pp_generic_newlined_list pp_phrase ppf ;;
+let pp_phrase ppf = pp_generic_ast pp_phrase_desc ppf
+;;
+let pp_phrases ppf = Handy.pp_generic_newlined_list pp_phrase ppf
+;;
 
 
 
@@ -943,4 +954,5 @@ let pp_file_desc ppf = function
 
     [Rem] : Exported ouside this module.                       *)
 (* *********************************************************** *)
-let pp_file ppf = pp_generic_ast pp_file_desc ppf ;;
+let pp_file ppf = pp_generic_ast pp_file_desc ppf
+;;
