@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.39 2007-07-11 08:32:22 weis Exp $ *)
+(* $Id: parser.mly,v 1.40 2007-07-11 20:52:17 weis Exp $ *)
 
 open Parsetree;;
 
@@ -249,9 +249,9 @@ phrase:
 ;
 
 def_external:
-  | TYPE external_type_name EQUAL external_definition SEMI_SEMI
+  | TYPE external_type_name EQUAL external_definition
     { mk (ED_type (mk {ed_name = Vlident $2; ed_body = mk $4})) }
-  | VALUE external_value_vname EQUAL external_definition SEMI_SEMI
+  | VALUE external_value_vname EQUAL external_definition
     { mk (ED_value (mk {ed_name = $2; ed_body = mk $4})) }
 ;
 
@@ -418,7 +418,7 @@ rep_type_def_comma_list:
 /**** COLLECTION DEFINITION ****/
 
 def_collection:
-  | opt_doc COLLECTION collection_name IMPLEMENTS species_expr EQUAL END
+  | opt_doc COLLECTION collection_name IMPLEMENTS species_expr
     { mk_doc $1 { cd_name = $3; cd_body = $5; } }
 ;
 
@@ -620,8 +620,6 @@ constructor_ref:
     { mk (I_global ($1, $3)) }
 ;
 
-/**** EXPRESSIONS ****/
-
 glob_ident:
   | opt_lident SHARP bound_vname
     { mk (I_global ($1, $3)) }
@@ -634,6 +632,8 @@ opt_lident:
   | LIDENT
     { Some $1 }
 ;
+
+/**** EXPRESSIONS ****/
 
 simple_expr:
   | constant
