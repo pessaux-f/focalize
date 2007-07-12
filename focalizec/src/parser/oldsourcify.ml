@@ -1,4 +1,4 @@
-(* $Id: oldsourcify.ml,v 1.6 2007-07-11 08:31:44 weis Exp $ *)
+(* $Id: oldsourcify.ml,v 1.7 2007-07-12 11:04:46 pessaux Exp $ *)
 
 module StringMod = struct type t = string let compare = compare end
 ;;
@@ -269,19 +269,6 @@ let pp_generic_ast desc_printer_fct ppf g_ast =
 
 
 
-(* **************************************************** *)
-(*  [Fun] string_of_vname : vname -> string *)
-(** [Descr] : Extracts the inner string of the [vname].
-
-    [Rem] : Not exported outside this module.           *)
-(* **************************************************** *)
-let string_of_vname = function
-  | Parsetree.Vlident s | Parsetree.Vuident s | Parsetree.Vpident s
-  | Parsetree.Viident s | Parsetree.Vqident s -> s
-;;
-
-
-
 (* *********************************************************************** *)
 (*  [Fun] pp_ident_desc : Format.formatter -> Parsetree.ident_desc -> unit *)
 (** [Descr] : Pretty prints a [ident_desc] value as old FoCal source.
@@ -301,12 +288,12 @@ let pp_ident_desc ppf = function
       match cname_opt with
        | None ->
            (* Here, the [vname] is "self", then it's bugged ! *)
-	   assert ((string_of_vname vname) <> "self") ;
+	   assert ((Parsetree_utils.string_of_vname vname) <> "self") ;
 	   Format.fprintf ppf "!%a" pp_vname vname
        | Some cname ->
 	   (* If vname is "self", then the real name    *)
 	   (* should be considered as only the [cname]. *)
-	   let inner_name = string_of_vname vname in
+	   let inner_name = Parsetree_utils.string_of_vname vname in
 	   if inner_name = "self" then Format.fprintf ppf "%s" cname
 	   else Format.fprintf ppf "%s!%a" cname pp_vname vname
       end)
@@ -713,7 +700,7 @@ and pp_species_param ppf = pp_generic_ast pp_species_param_desc ppf
 
 
 and pp_sig_def_desc ppf sdd =
-  Format.fprintf ppf "@[<2>sig@ %a in@ %a@]"
+  Format.fprintf ppf "@[<2>sig@ %a in@ %a"
     pp_ident sdd.Parsetree.sig_name pp_type_expr sdd.Parsetree.sig_type
 and pp_sig_def ppf = pp_generic_ast pp_sig_def_desc ppf
 
@@ -729,7 +716,7 @@ and pp_proof_def ppf = pp_generic_ast pp_proof_def_desc ppf
 
 
 and pp_property_def_desc ppf pdd =
-  Format.fprintf ppf "@[<2>property@ %a :@ %a@]"
+  Format.fprintf ppf "@[<2>property@ %a :@ %a"
     pp_ident pdd.Parsetree.prd_name pp_prop pdd.Parsetree.prd_prop
 and pp_property_def ppf = pp_generic_ast pp_property_def_desc ppf
 
@@ -737,15 +724,15 @@ and pp_property_def ppf = pp_generic_ast pp_property_def_desc ppf
 
 and pp_species_field_desc ppf = function
   | Parsetree.SF_rep rep_type_def ->
-      Format.fprintf ppf "@[<2>rep@ =@ %a@]@ ;" pp_rep_type_def rep_type_def
+      Format.fprintf ppf "@[<2>rep@ =@ %a@ ;@]" pp_rep_type_def rep_type_def
   | Parsetree.SF_sig sig_def ->
-      Format.fprintf ppf "%a@ ;" pp_sig_def sig_def
+      Format.fprintf ppf "%a@ ;@]" pp_sig_def sig_def
   | Parsetree.SF_let let_def ->
       Format.fprintf ppf "%a@ ;" pp_let_def let_def
   | Parsetree.SF_property property_def ->
-      Format.fprintf ppf "%a@ ;" pp_property_def property_def
+      Format.fprintf ppf "%a@ ;@]" pp_property_def property_def
   | Parsetree.SF_theorem theorem_def ->
-      Format.fprintf ppf "%a@ ;" pp_theorem_def theorem_def
+      Format.fprintf ppf "%a@ ;@]" pp_theorem_def theorem_def
   | Parsetree.SF_proof proof_def ->
       Format.fprintf ppf "%a@ ;" pp_proof_def proof_def
 and pp_species_fields ppf = Handy.pp_generic_newlined_list pp_species_field ppf
@@ -832,7 +819,7 @@ and pp_binding ppf = pp_generic_ast pp_binding_desc ppf
 (* ************************************************************************ *)
 and pp_theorem_def_desc ppf tdd =
  let hyps_levels = record_hyp_level_in_proof 0 tdd.Parsetree.th_proof in
-  Format.fprintf ppf "@[<2>theorem %a :@ %a@ %a@]@\n@[<2>proof:@ %a @]"
+  Format.fprintf ppf "@[<2>theorem %a :@ %a@ %a@]@\n@[<2>proof:@ %a@ "
     pp_ident tdd.Parsetree.th_name
     pp_local_flag tdd.Parsetree.th_local
     pp_prop tdd.Parsetree.th_stmt
@@ -1143,7 +1130,7 @@ let pp_phrase_desc ppf = function
   | Parsetree.Ph_coll coll_def -> Format.fprintf ppf "%a" pp_coll_def coll_def
   | Parsetree.Ph_type type_def -> Format.fprintf ppf "%a" pp_type_def type_def
   | Parsetree.Ph_let let_def -> Format.fprintf ppf "%a" pp_let_def let_def
-  | Parsetree.Ph_theorem t_def -> Format.fprintf ppf "%a" pp_theorem_def t_def
+  | Parsetree.Ph_theorem t_def -> Format.fprintf ppf "%a@]" pp_theorem_def t_def
   | Parsetree.Ph_expr expr -> Format.fprintf ppf "%a" pp_expr expr
 ;;
 let pp_phrase ppf = pp_generic_ast pp_phrase_desc ppf

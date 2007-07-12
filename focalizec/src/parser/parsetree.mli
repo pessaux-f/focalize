@@ -1,4 +1,4 @@
-(* $Id: parsetree.mli,v 1.22 2007-07-11 20:53:05 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.23 2007-07-12 11:04:46 pessaux Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -25,20 +25,7 @@ type location = {
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
-     (** File name. *)
-;;
-
-type cname = string
-     (** Collection name. *)
-;;
-
-type sname = string
-     (** Species name. *)
-;;
-
-type tname = string
-     (** Type name. *)
-;;
+     (** File name. *) ;;
 
 type vname =
    | Vlident of string  (** Lowercase ident. *)
@@ -47,11 +34,7 @@ type vname =
    | Viident of string  (** Infix operator ident. *)
    | Vqident of string
      (** Variable names are classified with respect of their lexical class,
-       which can be regular, infix, or prefix. *)
-;;
-
-type label_name = string
-     (** Label name. *)
+	 which can be regular. infix or prefix. *)
 ;;
 
 type constr_name = vname
@@ -67,23 +50,23 @@ type external_name = string * string
 ;;
 
 type ('a, 'b) generic_ast = {
-   ast_loc : location;  (** The location in the source of the AST node. *)
-   ast_desc : 'a;       (** The description of the node. *)
-   ast_doc : 'b option; (** The support for documentation in many formats. *)
-}
-;;
+   ast_loc : location ;   (** The location in the source of the AST node. *)
+   ast_desc : 'a ;        (** The description of the node. *)
+   ast_doc : 'b option ;  (** The support for documentation in many formats. *)
+   mutable ast_type : Types.simple_type option     (** The type of the node. *)
+} ;;
 
-type 'a ast = ('a, string) generic_ast;;
-type 'a ast_doc = ('a, string) generic_ast;;
+type 'a ast = ('a, string) generic_ast ;;
+type 'a ast_doc = ('a, string) generic_ast ;;
 
 type ident = ident_desc ast
 and ident_desc =
   | I_local of vname
   | I_global of fname option * vname
-  | I_method of cname option * vname
-    (** If vname is self, then the real name should be considered as only
-        [cname]. ???
-        If [cname] is None and [vname] is self, then it's bugged! ??? *)
+  | I_method of Types.cname option * vname (* If vname is self, then the real *)
+	                             (* name should be considered as only     *)
+                                     (* [cname]. If [cname] is None and       *)
+                                     (* [vname] is self, then it's bugged !   *)
 ;;
 
 type rep_type_def = rep_type_def_desc ast_doc
@@ -131,7 +114,7 @@ and pat_desc =
   | P_as of pattern * vname
   | P_wild
   | P_app of ident * pattern list
-  | P_record of (label_name * pattern) list
+  | P_record of (Types.label_name * pattern) list
   | P_tuple of pattern list
   | P_paren of pattern
 ;;
@@ -161,10 +144,10 @@ and external_expression = string
 ;;
 type species_def = species_def_desc ast_doc
 and species_def_desc = {
-  sd_name : sname;
-  sd_params : (vname * species_param_type) list;
-  sd_inherits : (species_expr list) ast_doc;
-  sd_fields : species_field list;
+  sd_name : Types.sname ;
+  sd_params : (vname * species_param_type) list ;
+  sd_inherits : (species_expr list) ast_doc ;
+  sd_fields : species_field list
 }
 
 and species_param_type = species_param_type_desc ast
@@ -285,9 +268,9 @@ and expr_desc =
   | E_match of expr * (pattern * expr) list
   | E_if of expr * expr * expr
   | E_let of let_def * expr
-  | E_record of (label_name * expr) list
-  | E_record_access of expr * label_name
-  | E_record_with of expr * (label_name * expr) list
+  | E_record of (Types.label_name * expr) list
+  | E_record_access of expr * Types.label_name
+  | E_record_with of expr * (Types.label_name * expr) list
   | E_tuple of expr list
   | E_external of external_expr
   | E_paren of expr
@@ -295,23 +278,22 @@ and expr_desc =
 
 type coll_def = coll_def_desc ast_doc
 and coll_def_desc = {
-  cd_name : cname;
-  cd_body : species_expr;
-}
-;;
+  cd_name : Types.cname ;
+  cd_body : species_expr
+} ;;
 
 type type_def = type_def_desc ast
 and type_def_desc = {
-  td_name : tname;
-  td_params : string list;
-  td_body : type_body;
+  td_name : Types.tname ;
+  td_params : string list ;
+  td_body : type_body
 }
 
 and type_body = type_body_desc ast
 and type_body_desc =
   | TD_alias of type_expr
   | TD_union of (constr_name * (type_expr list)) list 
-  | TD_record of (label_name * type_expr) list
+  | TD_record of (Types.label_name * type_expr) list
 ;;
 
 (** Toplevel expressions. *)

@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.40 2007-07-11 20:52:17 weis Exp $ *)
+(* $Id: parser.mly,v 1.41 2007-07-12 11:04:46 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -9,7 +9,8 @@ let mk_doc doc d = {
     l_end = Parsing.symbol_end_pos ();
   };
   ast_desc = d;
-  ast_doc = doc;
+  ast_doc = doc ;
+  ast_type = None
 };;
 
 let mk d = mk_doc None d;;
@@ -28,7 +29,7 @@ let mk_infix_application e1 s e2 =
 let mk_prefix_application s e1 =
   mk (E_app (mk_local_var (Vpident s), [e1]));;
 
-let mk_method_application fname s = mk (I_method (fname, s));;
+let mk_method_application cname s = mk (I_method (cname, s));;
 
 let mk_cons_ident () = mk_global_constr (Some "basics") (Vuident "Cons");;
 let mk_nil_ident () = mk_global_constr (Some "basics") (Vuident "Nil");;

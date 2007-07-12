@@ -12,9 +12,9 @@ let (get_verbose,
 
 let (get_pretty_print,
      set_pretty_print) =
-  let pretty_flag = ref false in
-  ((fun () -> !pretty_flag),
-   (fun b -> pretty_flag := b))
+  let pretty_out_file = ref None in
+  ((fun () -> !pretty_out_file),
+   (fun fname -> pretty_out_file := Some fname))
 ;;
 
 

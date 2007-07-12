@@ -13,5 +13,6 @@ val pp_generic_explicit_option :
   (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a option -> unit
 ;;
 val pp_generic_option :
-  string -> (Format.formatter -> 'a -> unit) -> Format.formatter -> unit
+  string -> (Format.formatter -> 'a -> unit) -> Format.formatter ->
+    'a option -> unit
 ;;
