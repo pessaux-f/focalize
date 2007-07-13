@@ -1,4 +1,4 @@
-(* $Id: types.mli,v 1.3 2007-07-13 15:16:38 pessaux Exp $ *)
+(* $Id: types.mli,v 1.4 2007-07-13 16:57:09 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -52,4 +52,5 @@ val specialize : types_scheme -> simple_type
 val generalize : simple_type -> types_scheme
 val trivial_scheme : simple_type -> types_scheme
 
-val unify : simple_type -> simple_type -> unit
+val unify :
+  self_manifest: (simple_type option) -> simple_type -> simple_type -> unit

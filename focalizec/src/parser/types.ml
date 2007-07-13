@@ -1,4 +1,4 @@
-(* $Id: types.ml,v 1.3 2007-07-13 15:16:38 pessaux Exp $ *)
+(* $Id: types.ml,v 1.4 2007-07-13 16:57:09 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -239,7 +239,7 @@ let rec lowerize_levels max_level ty =
 
 
 
-let rec unify ty1 ty2 =
+let rec unify ~self_manifest ty1 ty2 =
   let val_of_ty1 = repr ty1 in
   let val_of_ty2 = repr ty2 in
   if val_of_ty1 == val_of_ty2 then ()
@@ -254,11 +254,11 @@ let rec unify ty1 ty2 =
          lowerize_levels var.vt_level ty ;
          var.vt_value <- VTV_known ty
      | (ST_arrow (arg1, res1), ST_arrow (arg2, res2)) ->
-         unify arg1 arg2 ;
-         unify res1 res2
+         unify ~self_manifest arg1 arg2 ;
+         unify ~self_manifest res1 res2
      | ((ST_tuple tys1), (ST_tuple tys2)) ->
 	 (begin
-         try List.iter2 unify tys1 tys2
+         try List.iter2 (unify ~self_manifest) tys1 tys2
 	 with Invalid_argument "List.iter2" ->
            (* In fact, that's an arity mismatch on the tuple. *)
            raise (Conflict (val_of_ty1, val_of_ty2))
@@ -266,7 +266,7 @@ let rec unify ty1 ty2 =
      | (ST_construct (name, args), ST_construct (name', args')) ->
          (begin
          if name <> name' then raise (Conflict (val_of_ty1, val_of_ty2)) ;
-         try List.iter2 unify args args'
+         try List.iter2 (unify ~self_manifest) args args'
          with Invalid_argument "List.iter2" ->
            (* In fact, that's an arity mismatch. *)
            raise
