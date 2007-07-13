@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.41 2007-07-12 11:04:46 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.42 2007-07-13 14:30:35 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -19,10 +19,11 @@ let mk_no_doc d = mk_doc None d;;
 let mk_local_ident s = mk (I_local s);;
 let mk_global_ident s = mk (I_global (None, s));;
 let mk_global_constr s1 s2 = mk (I_global (s1, s2));;
+let mk_global_constr_expr (s1 : Parsetree.fname option) (s2 : Parsetree.vname) =
+  mk (s1, s2) ;;
 
 let mk_local_var s = mk (E_var (mk_local_ident s));;
 let mk_global_var s = mk (E_var (mk_global_ident s));;
-let mk_global_constr_var s1 s2 = mk (E_var (mk_global_constr s1 s2));;
 
 let mk_infix_application e1 s e2 =
   mk (E_app (mk_global_var (Viident s), [e1; e2]));;
@@ -35,9 +36,11 @@ let mk_cons_ident () = mk_global_constr (Some "basics") (Vuident "Cons");;
 let mk_nil_ident () = mk_global_constr (Some "basics") (Vuident "Nil");;
 let mk_void_ident () = mk_global_constr (Some "basics") (Vuident "Void");;
 
+let mk_void_constructor_expr () =
+  mk_global_constr_expr (Some "basics") (Vuident "Void") ;;
+
 let mk_cons () = mk (E_var (mk_cons_ident ()));;
 let mk_nil () = mk (E_var (mk_nil_ident ()));;
-let mk_void () = mk (E_var (mk_void_ident ()));;
 
 let mk_proof_label (s1, s2) =
   try int_of_string s1, s2 with
@@ -642,9 +645,9 @@ simple_expr:
   | expr_ident
     { mk (E_var $1) }
   | opt_lident SHARP UIDENT %prec prec_constant_constructor
-    { mk (E_constr (mk_global_constr_var $1 (Vuident $3), [])) }
+    { mk (E_constr (mk_global_constr_expr $1 (Vuident $3), [])) }
   | opt_lident SHARP UIDENT LPAREN expr_comma_list RPAREN
-    { mk (E_constr (mk_global_constr_var $1 (Vuident $3), $5)) }
+    { mk (E_constr (mk_global_constr_expr $1 (Vuident $3), $5)) }
   | simple_expr DOT label_name
     { mk (E_record_access ($1, $3)) }
   | LBRACE record_field_list RBRACE
@@ -658,7 +661,7 @@ simple_expr:
   | LPAREN expr RPAREN
     { mk (E_paren $2) }
   | LPAREN RPAREN
-    { mk (E_constr (mk_void (), [])) }
+    { mk (E_constr (mk_void_constructor_expr (), [])) }
 ;
 
 expr:

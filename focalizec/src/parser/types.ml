@@ -23,10 +23,8 @@ type simple_type =
   | ST_construct of
       (** Basic type, possibly with arguments. *)
       (tname * simple_type list)
-  | ST_prop           (** Type of propositions. *)
   | ST_sefl_rep       (** Carrier type of the currently analysed species.  *)
   | ST_species_rep of cname   (** Carrier type of a collection. *)
-  | ST_species_type of species_type     (** Type of a species. *)
 
 
 
@@ -40,7 +38,7 @@ and species_type =
 	  same signature that they have the same semantics.
 	  Instead, one will get the type of the species via an environment
 	  using the [sname] as key. *)
-  | SPT_parametrised_in of (sname * simple_type)
+  | SPT_parametrised_in of (sname * collection_type)
   | SPT_parametrised_is of (cname * collection_type)
 
 
@@ -141,6 +139,8 @@ let type_tuple tys = ST_tuple tys ;;
 
 let type_self () = ST_sefl_rep ;;
 
+let type_prop () = type_basic "prop" [] ;;
+
 
 (* [Rem] : Non exported oustide this module. *)
 let rec occur_check var ty =
@@ -151,15 +151,7 @@ let rec occur_check var ty =
      | ST_arrow (ty1, ty2) -> test ty1 ; test ty2
      | ST_tuple tys -> List.iter test tys
      | ST_construct (_, args) -> List.iter test args
-     | ST_prop | ST_sefl_rep | ST_species_rep _ -> ()
-     | ST_species_type species_type ->
-	 (begin
-	 match species_type with
-          | SPT_collection_interface _
-          | SPT_parametrised_is (_, _)
-	  | SPT_species_interface _ -> ()
-	  | SPT_parametrised_in (_, ty) -> test ty
-	 end) in
+     | ST_sefl_rep | ST_species_rep _ -> () in
   test ty
  ;;
 
@@ -181,19 +173,9 @@ let specialize scheme =
      | ST_arrow (ty1, ty2) ->
          ST_arrow (copy_simple_type ty1, copy_simple_type ty2)
      | ST_tuple tys -> ST_tuple (List.map copy_simple_type tys)
-     | ST_construct (name, args) -> ST_construct (name, List.map copy_simple_type args)
-     | (ST_prop | ST_sefl_rep | ST_species_rep _) as ty -> ty
-     | ST_species_type species_type ->
-	 let species_type' =
-	   (begin
-	   match species_type with
-	    | SPT_collection_interface _
-	    | SPT_species_interface _
-            | SPT_parametrised_is (_, _) -> species_type
-	    | SPT_parametrised_in (spec_name, ty) ->
-		SPT_parametrised_in (spec_name, (copy_simple_type ty))
-	   end) in
-	 ST_species_type species_type' in
+     | ST_construct (name, args) ->
+	 ST_construct (name, List.map copy_simple_type args)
+     | (ST_sefl_rep | ST_species_rep _) as ty -> ty in
   (* Now really copy the scheme's body while replacing generalised vars. *)
   copy_simple_type scheme.ts_body
 ;;
@@ -215,15 +197,7 @@ let generalize ty =
      | ST_arrow (ty1, ty2) -> find_parameters ty1 ; find_parameters ty2
      | ST_tuple tys -> List.iter find_parameters tys
      | ST_construct (_, args) -> List.iter find_parameters args
-     | ST_prop | ST_sefl_rep | ST_species_rep _ -> ()
-     | ST_species_type species_type ->
-	 (begin
-	 match species_type with
-	  | SPT_collection_interface _
-	  | SPT_parametrised_is (_, _)
-	  | SPT_species_interface _ -> ()
-	  | SPT_parametrised_in (_, ty) -> find_parameters ty
-	 end) in
+     | ST_sefl_rep | ST_species_rep _ -> () in
   find_parameters ty ;
   { ts_type_parameters = !found_ty_parameters ; ts_body = ty }
 ;;
@@ -244,15 +218,7 @@ let rec lowerize_levels max_level ty =
        lowerize_levels max_level ty2
    | ST_tuple tys -> List.iter (lowerize_levels max_level) tys
    | ST_construct (_, args) -> List.iter (lowerize_levels max_level) args
-   | ST_prop | ST_sefl_rep | ST_species_rep _-> ()
-   | ST_species_type species_type ->
-       (begin
-       match species_type with
-	| SPT_collection_interface _
-	| SPT_parametrised_is (_, _)
-	| SPT_species_interface _ -> ()
-	| SPT_parametrised_in (_, ty) -> lowerize_levels max_level ty
-       end)
+   | ST_sefl_rep | ST_species_rep _-> ()
 ;;
 
 
@@ -291,16 +257,7 @@ let rec unify ty1 ty2 =
            raise
 	     (Arity_mismatch (name, (List.length args), (List.length args')))
          end)
-     | (ST_prop, ST_prop) -> ()
      | (ST_sefl_rep, _) | (_, ST_sefl_rep) -> failwith "todo0"
      | ((ST_species_rep _), _) | (_, (ST_species_rep _)) -> failwith "todo1"
-     | ((ST_species_type spety1), (ST_species_type spety2)) ->
-	 unify_species_types spety1 spety2
      | (_, _) -> raise (Conflict (val_of_ty1, val_of_ty2))
-
-
-
-(* [Rem] : Non exported oustide this module. *)
-and unify_species_types spety1 spety2 =
-  failwith "todo2"
 ;;

@@ -31,6 +31,7 @@ val type_unit : unit -> simple_type
 val type_arrow : simple_type -> simple_type -> simple_type
 val type_tuple : simple_type list -> simple_type
 val type_self : unit -> simple_type
+val type_prop : unit -> simple_type
 
 val specialize : types_scheme -> simple_type
 val generalize : simple_type -> types_scheme

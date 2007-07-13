@@ -1,4 +1,4 @@
-(* $Id: parsetree.mli,v 1.23 2007-07-12 11:04:46 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.24 2007-07-13 14:30:35 pessaux Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -68,6 +68,25 @@ and ident_desc =
                                      (* [cname]. If [cname] is None and       *)
                                      (* [vname] is self, then it's bugged !   *)
 ;;
+
+
+
+(* ********************************************************************** *)
+(*  [Type] : constructor_expr                                             *)
+(** [Descr] : Structure of the constructor part of an expression. Because
+              type constructors are always toplevel idents, neither local
+              nor a method, we extracted from [ident_desc] the only
+              relevant information. Having sur a separate type prevents
+              from having a general expression as the constructor part of
+              the [expr_desc]'s [E_constr] case.
+
+    [Rem] : Exported outside this module.                                 *)
+(* ********************************************************************** *)
+type constructor_expr = constructor_expr_desc ast
+and constructor_expr_desc = ((fname option) * vname)
+;;
+
+
 
 type rep_type_def = rep_type_def_desc ast_doc
 and rep_type_def_desc =
@@ -264,7 +283,7 @@ and expr_desc =
   | E_fun of vname list * expr
   | E_var of ident
   | E_app of expr * expr list
-  | E_constr of expr * expr list
+  | E_constr of constructor_expr * expr list
   | E_match of expr * (pattern * expr) list
   | E_if of expr * expr * expr
   | E_let of let_def * expr

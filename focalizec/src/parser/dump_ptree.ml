@@ -121,6 +121,15 @@ let pp_idents ppf = Handy.pp_generic_separated_list "," pp_ident ppf ;;
 
 
 
+let pp_cstr_expr_desc ppf (fname_opt, vname) =
+  let fname =
+    (match fname_opt with None -> "None" | Some n -> "Some (" ^ n ^ ")") in
+  Format.fprintf ppf "@[<1>(%s,@ %a@])" fname pp_vname vname
+;;
+let pp_cstr_expr ppf = pp_generic_ast pp_cstr_expr_desc ppf ;;
+
+
+
 (* ******************************************************************* *)
 (*  [Fun] pp_rep_type_def_desc :                                       *)
 (*          Format.formatter -> Parsetree.rep_type_def_desc -> unit    *)
@@ -715,9 +724,9 @@ and pp_expr_desc ppf = function
   | Parsetree.E_app (expr, exprs) ->
       Format.fprintf ppf "@[<2>E_app@ (%a,@ [@ %a@ ]@])"
 	pp_expr expr pp_exprs exprs
-  | Parsetree.E_constr (expr, exprs) ->
+  | Parsetree.E_constr (cstr_expr, exprs) ->
       Format.fprintf ppf "@[<2>E_constr@ (%a,@ [@ %a@ ]@])"
-	pp_expr expr pp_exprs exprs
+	pp_cstr_expr cstr_expr pp_exprs exprs
   | Parsetree.E_match (expr, pat_exprs) ->
       Format.fprintf ppf "@[<2>E_match@ (%a,@ [@ %a@ ]@])"
 	pp_expr expr

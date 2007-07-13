@@ -1,4 +1,4 @@
-(* $Id: oldsourcify.ml,v 1.7 2007-07-12 11:04:46 pessaux Exp $ *)
+(* $Id: oldsourcify.ml,v 1.8 2007-07-13 14:30:35 pessaux Exp $ *)
 
 module StringMod = struct type t = string let compare = compare end
 ;;
@@ -315,6 +315,17 @@ let pp_ident ppf = pp_generic_ast pp_ident_desc ppf
 (* ********************************************************************** *)
 let pp_idents sep ppf = Handy.pp_generic_separated_list sep pp_ident ppf
 ;;
+
+
+
+let pp_cstr_expr_desc ppf (fname_opt, vname) =
+  begin
+  match fname_opt with
+   | None -> Format.fprintf ppf "%a" pp_vname vname
+   | Some fname -> Format.fprintf ppf "%s#%a" fname pp_vname vname
+  end
+;;
+let pp_cstr_expr ppf = pp_generic_ast pp_cstr_expr_desc ppf ;;
 
 
 
@@ -1002,8 +1013,9 @@ and pp_expr_desc ppf = function
       (* regular function. Moreover, any "operator" identifier being   *)
       (* renamed, there is no risk to get something like "= (x, y)".   *)
       Format.fprintf ppf "@[<2>%a@ (%a)@]" pp_expr expr (pp_exprs ",") exprs
-  | Parsetree.E_constr (expr, exprs) ->
-      Format.fprintf ppf "@[<2>%a@ (%a)@]" pp_expr expr (pp_exprs ",") exprs
+  | Parsetree.E_constr (cstr_expr, exprs) ->
+      Format.fprintf ppf "@[<2>%a@ (%a)@]"
+	pp_cstr_expr cstr_expr (pp_exprs ",") exprs
   | Parsetree.E_match (expr, pat_exprs) ->
       (begin
       Format.fprintf ppf "@[<2>match@ %a@ with@ " pp_expr expr ;
