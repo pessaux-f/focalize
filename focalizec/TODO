@@ -154,3 +154,107 @@ Exemples:
  a+x est un L_Ident (ce n'est donc pas une addition)
  (a )+( x) est une addition
 
+
+
+2006-07-11 (Pierre, Renaud, François)
+=====================================
+
+--------------------------------------------------------------------------
+		 QUESTIONS AVEC DÉCISIONS EN RÉPONSE
+Sujet                      Proposition                                Etat
+--------------------------------------------------------------------------
+Noms de collections   Doivent commencer par 1 alphabétique
+et d'espèces          majuscule.
+--------------------------------------------------------------------------
+self                  Doit être renommé en "Self" dans la syntaxe
+                      afin de rester cohérent avec le fait que
+                      noms de collections et d'espèces doivent
+                      commencer par 1 alphabétique majuscule.
+--------------------------------------------------------------------------
+! et #                Doivent devenir optionnels. Autrement dit,
+                      si une application apparaît, on ira
+                      implicitement rechercher si elle réfère
+                      à une méthode de self ou à un ident
+                      toplevel du fichier courant sans qu'il
+                      soit nécessaire que l'utilisateur ait
+                      explicitement "scopé" son ident.
+                      Ceci nécessite une passe de scoping pour
+                      désambiguer entre application de :
+			- ident au toplevel d'un autre fichier
+                          (file#ident)
+			- ident au toplevel fichier (#ident)
+			- méthode de self (sel!ident ou !ident)
+			- méthode d'une autre collection
+                          (ident!ident)
+--------------------------------------------------------------------------
+!                     Retirer ! comme appel de méthode. A la
+                      place, utiliser '.' en combinaison avec la
+                      casse de le lettre de départ des
+                      identicateurs:
+			- low.low ->> Accès à un champ cde record
+			- Upp.low ->> Accès à la méthode "low" de
+                                      la collection "Upp".
+			- Upp1.Upp2 ->> ??? (non spécifié)
+                        - low.Upp   ->> ??? (non spécifié)
+--------------------------------------------------------------------------
+Syntaxe des           Les collections ne feront désormais plus
+collections           qu'implanter des espèces. Elles ne pourront
+                      pas déclarer ni définir des champs 
+                      supplémentaires à l'espèce qu'elles
+                      implantent. La syntaxe actuelle du nouveau
+                      parseur à la forme:
+                        collection ... implements ... = end ;;
+                      Le "=" suivi de "end" semble étrange. Du
+                      fait qu'une collection de définit rien de
+                      supplémentaire, on supprime le "=". Et du
+                      fait qu'elle n'ait donc pas de body, on
+                      supprime le "end". On a donc la syntaxe:
+                        collection ... implements ... ;;
+--------------------------------------------------------------------------
+		 QUESTIONS SANS DÉCISIONS EN RÉPONSE
+Sujet                      Question
+--------------------------------------------------------------------------
+constr            Le type décrivant les expresssions utilisant des
+                  constructeurs de types somme a la forme :
+                   | E_constr of expr * expr list
+                  Ceci laisse penser que le nom du constructeur n'est pas
+                  explicite et qu'il est le résultat d'un calcul arbitraire.
+                  Ceci donne donc à penser que les constructeurs sont des
+                  valeurs de première classe.
+                  A la place, ne devtrait-on pas plutôt avoir :
+                   | E_constr of constr_name * expr list
+                  Il faut voir qu'en fait le parser invariablement
+                  construit une expr de la forme (E_var ident) avec ident
+                  contenant le nom du constructeur.
+                  Toutefois, les utilisateurs avancés devant pouvoir créer
+                  des AST, cet invariant n'étant pas garanti structurellement,
+                  un risque persiste.
+--------------------------------------------------------------------------
+ident_desc        La structure des ident_desc est particulièrement étrange
+                  et impose un invariant non structurel (cite le .mli) :
+                   (* If vname is self, then the real *)
+                   (* name should be considered as only     *)
+                   (* [cname]. If [cname] is None and       *)
+                   (* [vname] is self, then it's bugged !   *)
+                   | I_method of Types.cname option * vname
+                  Pour la même raison que ci-dessus, il serait intéressant
+                  d'avoir un type garantissant structurellement cet
+                  invariant.
+                  De plus, le parser scope par défaut les identificateurs
+                  comme étant des méthodes (I_method). Y compris les
+                  identificateurs présents dans les expressions de types.
+                  Ainsi, dans :
+                   rep = bool ;
+                  "bool" sera représenté par une valeurs syntaxique encodant
+                  self!bool. Ceci est franchement étrange. Le parser ne
+                  devrait-il pas plutôt scoper par défaut en I_local ?
+--------------------------------------------------------------------------
+Algèbre de types  Doit-on autoriser (v in int) et (v in Coll) ? Autrement dit,
+Types ML et       les types ML doivent-ils être mutuellement récursifs avec le
+types d'espèces   type des collections ?
+                  Si l'on imposait de définir une collection Int implémentant
+                  des entiers, alors on pourrait écrire (v in Int) et les
+                  expressions de types ne pourraient plus apparaître que dans
+                  la défitition des carriers.
+                  On stratifierait ainsi complètement les "types ML" et les
+                  "types de collections".

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.21 2007-07-12 11:04:46 pessaux Exp $
+# $Id: Makefile,v 1.22 2007-07-13 08:47:54 pessaux Exp $
 
 RM = rm -rf
 
@@ -26,7 +26,7 @@ all:: $(BYTOBJS)
 	$(CAMLBYT) -o check_file $(BYTOBJS)
 
 clean::
-	$(RM) *~ *.cm* log lexer.ml lexer.mli
+	$(RM) *~ *.cm* log lexer.ml lexer.mli check_file
 	$(RM) parser.ml parser.mli parser.conflicts parser.output
 
 depend:
