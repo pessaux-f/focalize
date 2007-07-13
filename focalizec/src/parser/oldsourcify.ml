@@ -1,4 +1,4 @@
-(* $Id: oldsourcify.ml,v 1.9 2007-07-13 15:16:38 pessaux Exp $ *)
+(* $Id: oldsourcify.ml,v 1.10 2007-07-13 16:11:34 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -107,7 +107,7 @@ let (cleanup_conflicting_idents_table, mk_regular_lowercase) =
 	 (* If this ident  was modified, we check it against the set *)
 	 (* non-modified idents to ensure they do not conflict.      *)
 	 if StringSet.mem !result_str !non_renamed_idents then
-	   Format.eprintf
+	   Printf.eprintf
 	     "Warning : renamed identifier \"%s\" \
               conflicting with existing identifier.\n" name ;
 	   

@@ -1,4 +1,4 @@
-(* $Id: check_file.ml,v 1.14 2007-07-13 15:16:38 pessaux Exp $ *)
+(* $Id: check_file.ml,v 1.15 2007-07-13 16:11:34 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -64,14 +64,14 @@ let main () =
   exit 0
 ;;
 
+
+
 (** If something unexpected arrises when proceeding, we exit with the proper
     error code. *)
 try main () with
 | x ->
-  Printf.eprintf
-     "Unexpected error: \"%s\".\
-    \nPlease report.\n"
-     (Printexc.to_string x);
-  flush stderr;
-  exit 2
+    Printf.eprintf "Unexpected error: \"%s\".\nPlease report.\n"
+      (Printexc.to_string x) ;
+    flush stderr ;
+    exit 2
 ;;

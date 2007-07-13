@@ -1,4 +1,4 @@
-(* $Id: infer.ml,v 1.2 2007-07-13 15:16:38 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.3 2007-07-13 16:11:34 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -309,7 +309,7 @@ and prop_desc =
 *)
 
 
-(*
+
 let rec typecheck_expr env expr_desc =
   let final_ty =
     (match expr_desc.Parsetree.ast_desc with
@@ -337,14 +337,15 @@ let rec typecheck_expr env expr_desc =
 	   (fun arg_ty accu_ty -> Types.type_arrow arg_ty accu_ty)
 	   args_ty ty_body
 	 end)
-(*
      | Parsetree.E_var ident ->
-	 (* One must first check whether the ident is "self". *)
-	 if ... then Types.type_self ()
-	 else ... Dans quel ordre faire la recherche. Est-elle directement induite par l'environnement ?... Ancien ordre: local env, in-param, is-param, inheritance, global.
-	   Types.specialize (Env.find_ident ident env)
-     | Parsetree.E_app of expr * expr list
-*)
+	 (* E_var is never "self" because "self" is a dedicated case. *)
+	 (* Now, don't bother with the search order, this has already *)
+	 (* be done by both the scoping and the environment build     *)
+	 (* process. As reminder, lookup will naturally find the      *)
+         (* ident among local identifiers, in-params, is-params,      *)
+         (* inheritance and finally global identifiers.               *)
+         Types.specialize (Env.find_ident ident env)
+     | Parsetree.E_app (functional_expr, args_exps) -> failwith "todo"
      | Parsetree.E_constr (constr, exprs) ->
 	 (begin
 	 (* Because the environment maps [idents] onto types scheme and *)
@@ -380,9 +381,7 @@ let rec typecheck_expr env expr_desc =
 	   raise
 	     (Bad_constructor_arity (pseudo_ident, cstr_decl.Env.cstr_arity))
 	 end)
-(*
-     | Parsetree.E_match of expr * (pattern * expr) list
-*)
+     | Parsetree.E_match (expr, bindings) -> failwith "todo"
      | Parsetree.E_if (e_cond, e_then, e_else) ->
 	 let ty_cond = typecheck_expr env e_cond in
 	 (* Ensure the condition is a boolean. *)
@@ -394,25 +393,63 @@ let rec typecheck_expr env expr_desc =
 	 Types.unify ty_then ty_else ;
 	 (* And return any of them as result type. *)
 	 ty_then
-(*
-     | Parsetree.E_let of let_def * expr
-     | Parsetree.E_record of (Types.label_name * expr) list
-     | Parsetree.E_record_access of expr * Types.label_name
-     | Parsetree.E_record_with of expr * (Types.label_name * expr) list
-*)
+     | Parsetree.E_let (let_def, in_expr) -> failwith "todo"
+     | Parsetree.E_record fields -> typeckeck_record_expr env fields None
+     | Parsetree.E_record_access (expr, label_name) -> failwith "todo"
+     | Parsetree.E_record_with (with_expr, fields) ->
+         typeckeck_record_expr env fields (Some with_expr)
      | Parsetree.E_tuple exprs ->
           assert (exprs <> []) ;  (* Just in case. O-ary tuple is non-sense ! *)
           let tys = List.map (typecheck_expr env) exprs in
           Types.type_tuple tys
-(*
-     | Parsetree.E_external of external_expr
-*)
+     | Parsetree.E_external external_expr -> failwith "todo"
      | Parsetree.E_paren expr -> typecheck_expr env expr) in
   (* Store the type information in the expression's node. *)
   expr_desc.Parsetree.ast_type <- Some final_ty ;
   final_ty
+
+
+
+(* ***************************************************************** *)
+(*  [Fun] typeckeck_record_expr :                                    *)
+(*          Env.t -> (Types.label_name * Parsetree.expr) list ->     *)
+(*            Parsetree.expr option -> Types.simple_type             *)
+(** [Descr] : Performs type inference on record expressions with or
+              without "with" clause. Currently, the labels
+              exhaustivity is not checked. It has to be done when
+              there is no "with" clause.
+
+    [Args] :
+      - env : The current typing environment.
+      - fields : The list of fields values of the record expression.
+      - opt_with_expr : The optional "with" clause.
+
+    [Rem] : Not exported outside this module.                        *)
+(* ***************************************************************** *)
+and typeckeck_record_expr env fields opt_with_expr =
+  (* At then end, must be the type of the host of all these labels. *)
+  let result_ty = Types.type_variable () in
+  (* Typecheck the "with" construct if any. *)
+  (match opt_with_expr with
+   | None ->
+       (* To disapear once implemented ! *)
+       Printf.eprintf "Labels exhaustivity not checked on record expression.\n"
+   | Some expr ->
+       let expr_ty = typecheck_expr env expr in
+       Types.unify expr_ty result_ty) ;
+  (* Now proceed with the labels. *)
+  List.iter
+    (fun (label, expr) ->
+      let expr_ty = typecheck_expr env expr in
+      let lbl_descr = Env.find_label label env in
+      (* Get the functionnal type of this field. *)
+      let field_ty = Types.specialize lbl_descr.Env.field_scheme in
+      (* Unify the result type by side effect. *)
+      Types.unify (Types.type_arrow expr_ty result_ty) field_ty)
+    fields ;
+  result_ty
 ;;
-*)
+
 
 
 (*
