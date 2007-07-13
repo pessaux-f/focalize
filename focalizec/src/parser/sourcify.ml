@@ -1,4 +1,17 @@
-(* $Id: sourcify.ml,v 1.11 2007-07-13 14:30:35 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.12 2007-07-13 15:16:38 pessaux Exp $ *)
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
 
 (* ************************************************************* *)
 (*  [Fun] pp_vname : Format.formatter -> Parsetree.vname -> unit *)

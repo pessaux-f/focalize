@@ -1,4 +1,17 @@
-(* $Id: check_file.ml,v 1.13 2007-07-12 11:04:46 pessaux Exp $ *)
+(* $Id: check_file.ml,v 1.14 2007-07-13 15:16:38 pessaux Exp $ *)
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*            François Pessaux                                         *)
+(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
 
 (** The focalize concrete syntax file checker. *)
 

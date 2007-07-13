@@ -1,3 +1,18 @@
+(* $Id: configuration.ml,v 1.7 2007-07-13 15:16:38 pessaux Exp $ *)
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*            François Pessaux                                         *)
+(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+
 let focal_version_number = 0.1 ;;
 
 let focal_full_version = Printf.sprintf "%.2f %s" focal_version_number "alpha";;

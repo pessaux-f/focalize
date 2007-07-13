@@ -1,4 +1,17 @@
-(* $Id: parsetree.mli,v 1.24 2007-07-13 14:30:35 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.25 2007-07-13 15:16:38 pessaux Exp $ *)
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*            François Pessaux                                         *)
+(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -62,8 +75,9 @@ type 'a ast_doc = ('a, string) generic_ast ;;
 type ident = ident_desc ast
 and ident_desc =
   | I_local of vname
-  | I_global of fname option * vname
-  | I_method of Types.cname option * vname (* If vname is self, then the real *)
+  | I_global of ((fname option) * vname)
+  | I_method of ((Types.cname option) * vname)
+                                     (* If vname is self, then the real *)
 	                             (* name should be considered as only     *)
                                      (* [cname]. If [cname] is None and       *)
                                      (* [vname] is self, then it's bugged !   *)
@@ -91,18 +105,18 @@ and constructor_expr_desc = ((fname option) * vname)
 type rep_type_def = rep_type_def_desc ast_doc
 and rep_type_def_desc =
   | RTE_ident of ident
-  | RTE_fun of rep_type_def * rep_type_def
-  | RTE_app of ident * rep_type_def list
-  | RTE_prod of rep_type_def * rep_type_def
+  | RTE_fun of (rep_type_def * rep_type_def)
+  | RTE_app of (ident * rep_type_def list)
+  | RTE_prod of (rep_type_def * rep_type_def)
   | RTE_paren of rep_type_def
 ;;
 
 type type_expr = type_expr_desc ast
 and type_expr_desc =
   | TE_ident of ident
-  | TE_fun of type_expr * type_expr
-  | TE_app of ident * type_expr list
-  | TE_prod of type_expr * type_expr
+  | TE_fun of (type_expr * type_expr)
+  | TE_app of (ident * (type_expr list))
+  | TE_prod of (type_expr * type_expr)
   | TE_self
   | TE_prop
   | TE_paren of type_expr
@@ -130,9 +144,9 @@ type pattern = pat_desc ast
 and pat_desc =
   | P_const of constant
   | P_var of vname
-  | P_as of pattern * vname
+  | P_as of (pattern * vname)
   | P_wild
-  | P_app of ident * pattern list
+  | P_app of (ident * (pattern list))
   | P_record of (Types.label_name * pattern) list
   | P_tuple of pattern list
   | P_paren of pattern
@@ -187,19 +201,19 @@ and species_param_desc =
 and sig_def = sig_def_desc ast_doc
 and sig_def_desc = {
   sig_name : ident;
-  sig_type: type_expr;
+  sig_type : type_expr;
 }
 
 and proof_def = proof_def_desc ast_doc
 and proof_def_desc = {
-  pd_name : ident;
-  pd_proof: proof;
+  pd_name : ident ;
+  pd_proof : proof
 }
 
 and property_def = property_def_desc ast_doc
 and property_def_desc = {
-  prd_name : ident;
-  prd_prop: prop;
+  prd_name : ident ;
+  prd_prop : prop
 }
 
 and species_field = species_field_desc ast
@@ -213,25 +227,25 @@ and species_field_desc =
 
 and let_def = let_def_desc ast_doc
 and let_def_desc = {
-  ld_rec : rec_flag;
-  ld_logical : logical_flag;
-  ld_local : local_flag;
-  ld_bindings : binding list;
+  ld_rec : rec_flag ;
+  ld_logical : logical_flag ;
+  ld_local : local_flag ;
+  ld_bindings : binding list
 }
 and binding = binding_desc ast
 and binding_desc = {
-  b_name : ident;
-  b_params : (ident * type_expr option) list;
-  b_type : type_expr option;
-  b_body : expr;
+  b_name : ident ;
+  b_params : (ident * type_expr option) list ;
+  b_type : type_expr option ;
+  b_body : expr
 }
 
 and theorem_def = theorem_def_desc ast_doc
 and theorem_def_desc = {
-  th_name : ident;
-  th_local : local_flag;
-  th_stmt : prop;
-  th_proof : proof;
+  th_name : ident ;
+  th_local : local_flag ;
+  th_stmt : prop ;
+  th_proof : proof
 }
 
 and fact = fact_desc ast
@@ -250,29 +264,29 @@ and proof_desc =
 
 and proof_node = proof_node_desc ast
 and proof_node_desc =
-  | PN_sub of node_label * statement * proof
-  | PN_qed of node_label * proof
+  | PN_sub of (node_label * statement * proof)
+  | PN_qed of (node_label * proof)
 
 and statement = statement_desc ast
 and statement_desc = {
-  s_hyps : hyp list;
-  s_concl : prop option;
+  s_hyps : hyp list ;
+  s_concl : prop option
 }
 
 and hyp = hyp_desc ast
 and hyp_desc =
-  | H_var of vname * type_expr
-  | H_hyp of vname * prop
-  | H_not of vname * expr
+  | H_var of (vname * type_expr)
+  | H_hyp of (vname * prop)
+  | H_not of (vname * expr)
 
 and prop = prop_desc ast
 and prop_desc =
-  | Pr_forall of vname list * type_expr option * prop
-  | Pr_exists of vname list * type_expr option * prop
-  | Pr_imply of prop * prop
-  | Pr_or of prop * prop
-  | Pr_and of prop * prop
-  | Pr_equiv of prop * prop
+  | Pr_forall of ((vname list) * (type_expr option) * prop)
+  | Pr_exists of ((vname list) * (type_expr option) * prop)
+  | Pr_imply of (prop * prop)
+  | Pr_or of (prop * prop)
+  | Pr_and of (prop * prop)
+  | Pr_equiv of (prop * prop)
   | Pr_not of prop
   | Pr_expr of expr
   | Pr_paren of prop
@@ -280,13 +294,13 @@ and prop_desc =
 and expr = expr_desc ast
 and expr_desc =
   | E_const of constant
-  | E_fun of vname list * expr
+  | E_fun of ((vname list) * expr)
   | E_var of ident
   | E_app of expr * expr list
-  | E_constr of constructor_expr * expr list
-  | E_match of expr * (pattern * expr) list
-  | E_if of expr * expr * expr
-  | E_let of let_def * expr
+  | E_constr of (constructor_expr * (expr list))
+  | E_match of (expr * ((pattern * expr) list))
+  | E_if of (expr * expr * expr)
+  | E_let of (let_def * expr)
   | E_record of (Types.label_name * expr) list
   | E_record_access of expr * Types.label_name
   | E_record_with of expr * (Types.label_name * expr) list

@@ -1,4 +1,16 @@
-(* $Id: Exp *)
+(* $Id: handy.mli,v 1.5 2007-07-13 15:16:38 pessaux Exp $ *)
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
 
 (** Pretty printing tools. *)
 

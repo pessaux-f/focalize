@@ -1,3 +1,17 @@
+(* $Id: infer.ml,v 1.2 2007-07-13 15:16:38 pessaux Exp $ *)
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
 (** [Descr] : Exception used to inform that a sum type constructor was used
               with an incorrect arity. The correct expected arity is
               stored in the second argument of the exception constructor.   *)
@@ -83,13 +97,12 @@ let rec typecheck_pattern env pat_desc =
 	  | ([], Env.CA_zero) ->
 	      let cstr_ty = Types.specialize cstr_decl.Env.cstr_scheme in
 	      (cstr_ty, [])
-	  | ([], Env.CA_one) ->
-	      (* Just raise the exception with the right expected arity. *)
-	      raise (Bad_constructor_arity (cstr_name, Env.CA_one))
 	  | (nempty_pats, Env.CA_one) ->
 	      let cstr_ty = Types.specialize cstr_decl.Env.cstr_scheme in
-	      (* Recover the type of the sub-patterns by typechecking an *)
-	      (* artificial tuple argument compound of the sub-patterns. *)
+	      (* Recover the type of the sub-patterns by typechecking an  *)
+	      (* artificial tuple argument compound of the sub-patterns.  *)
+	      (* Proceed this way EVEN if there is ONE argument. We then  *)
+	      (* in effect have degenerated tuples with only 1 component. *)
               let (cstr_arg_ty, sub_bindings) =
 		typecheck_pattern env
 		  { pat_desc with
@@ -100,9 +113,10 @@ let rec typecheck_pattern env pat_desc =
               let cstr_res_ty = (Types.type_variable ()) in
               Types.unify (Types.type_arrow cstr_arg_ty cstr_res_ty) cstr_ty ;
 	      (cstr_res_ty, sub_bindings)
-	  | (_, Env.CA_zero) ->
+	  | (_, _) ->
 	      (* Just raise the exception with the right expected arity. *)
-	      raise (Bad_constructor_arity (cstr_name, Env.CA_zero))
+	      raise
+		(Bad_constructor_arity (cstr_name, cstr_decl.Env.cstr_arity))
 	 end)
      | Parsetree.P_record label_n_patterns ->
 	 (begin
@@ -294,6 +308,7 @@ and prop_desc =
   | Pr_paren of prop
 *)
 
+
 (*
 let rec typecheck_expr env expr_desc =
   let final_ty =
@@ -329,9 +344,43 @@ let rec typecheck_expr env expr_desc =
 	 else ... Dans quel ordre faire la recherche. Est-elle directement induite par l'environnement ?... Ancien ordre: local env, in-param, is-param, inheritance, global.
 	   Types.specialize (Env.find_ident ident env)
      | Parsetree.E_app of expr * expr list
-     | Parsetree.E_constr of expr * expr list
-	   ??? expr ast first argument ??? Constructors are not first
-           class values ! Should be Parsetree.ident ?
+*)
+     | Parsetree.E_constr (constr, exprs) ->
+	 (begin
+	 (* Because the environment maps [idents] onto types scheme and *)
+         (* because the constructor's name is not a "full" ident, we    *)
+         (* just wrap the the constructor's name into a global [ident]  *)
+         (* to be able to lookup inside the environment.                *)
+	 let pseudo_ident = {
+	   Parsetree.ast_loc = constr.Parsetree.ast_loc ;
+	   Parsetree.ast_desc = Parsetree.I_global constr.Parsetree.ast_desc ;
+	   Parsetree.ast_doc = constr.Parsetree.ast_doc ;
+	   Parsetree.ast_type = None } in
+	 let cstr_decl = Env.find_constructor pseudo_ident env in
+	 match (exprs, cstr_decl.Env.cstr_arity) with
+	  | ([], Env.CA_zero) ->
+	      (* Just get an instance of the constructor's type scheme. *)
+	      Types.specialize cstr_decl.Env.cstr_scheme
+          | (_, Env.CA_one) ->
+	      (begin
+	      (* The constructor must be viewed as a function. *)
+	      let tys = List.map (typecheck_expr env) exprs in
+	      (* Get an instance of the constructor's type scheme. *)
+	      let cstr_ty = Types.specialize cstr_decl.Env.cstr_scheme in
+	      (* Build the shadow tuple type as the *)
+	      (* real argument of the constructor.  *)
+	      let cstr_arg_ty = Types.type_tuple tys in
+	      (* Get a hand on what will be our final type result... *)
+	      let result_ty = Types.type_variable () in
+	      (* And simulate an application. *)
+	      Types.unify cstr_ty (Types.type_arrow cstr_arg_ty result_ty) ;
+	      result_ty
+	      end)
+       | (_, _) ->
+	   raise
+	     (Bad_constructor_arity (pseudo_ident, cstr_decl.Env.cstr_arity))
+	 end)
+(*
      | Parsetree.E_match of expr * (pattern * expr) list
 *)
      | Parsetree.E_if (e_cond, e_then, e_else) ->
