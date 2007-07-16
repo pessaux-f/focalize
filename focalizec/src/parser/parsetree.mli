@@ -1,4 +1,4 @@
-(* $Id: parsetree.mli,v 1.25 2007-07-13 15:16:38 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.26 2007-07-16 15:09:20 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -234,8 +234,8 @@ and let_def_desc = {
 }
 and binding = binding_desc ast
 and binding_desc = {
-  b_name : ident ;
-  b_params : (ident * type_expr option) list ;
+  b_name : vname ;
+  b_params : (vname * type_expr option) list ;
   b_type : type_expr option ;
   b_body : expr
 }

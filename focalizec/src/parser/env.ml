@@ -1,4 +1,4 @@
-(* $Id: env.ml,v 1.2 2007-07-13 15:16:38 pessaux Exp $ *)
+(* $Id: env.ml,v 1.3 2007-07-16 15:09:20 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -78,6 +78,7 @@ type t = {
   constructors : (Parsetree.constr_name * constructor_description) list ;
   labels : (Types.label_name * label_description) list ;
   types : (Types.tname * type_description) list ;
+  (* Contains functions methods and more generally any let-bound identifiers. *)
   idents : (Parsetree.vname * Types.types_scheme) list ;
   species : (Types.sname * species_description) list ;
   collections : (Types.cname * collections_sig) list

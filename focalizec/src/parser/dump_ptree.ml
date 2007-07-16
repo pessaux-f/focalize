@@ -1,4 +1,4 @@
-(* $Id: dump_ptree.ml,v 1.5 2007-07-13 15:16:38 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.6 2007-07-16 15:09:20 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -613,12 +613,12 @@ and pp_let_def ppf = pp_generic_ast pp_let_def_desc ppf
 
 and pp_binding_desc ppf bd =
   Format.fprintf ppf "@[<2>{@ %a ;@ [@ %a@ ] @ %a @]}"
-    pp_ident bd.Parsetree.b_name
+    pp_vname bd.Parsetree.b_name
     (Handy.pp_generic_separated_list
        ","
-       (fun local_ppf (ident, ty_expr_opt) ->
+       (fun local_ppf (vname, ty_expr_opt) ->
 	 Format.fprintf local_ppf "(%a,@ %a)"
-	   pp_ident ident
+	   pp_vname vname
 	   (Handy.pp_generic_explicit_option pp_type_expr) ty_expr_opt))
     bd.Parsetree.b_params
     pp_expr bd.Parsetree.b_body

@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.42 2007-07-13 14:30:35 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.43 2007-07-16 15:09:20 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -771,7 +771,7 @@ expr_ident:
   | opt_lident BANG method_vname
     { mk_method_application $1 $3 }
   | bound_ident
-    { $1 }
+    { mk_local_ident $1 }
 ;
 
 prop_ident:
@@ -889,7 +889,7 @@ binding_list:
 /**** NAMES ****/
 
 bound_ident:
-  | bound_vname { mk_local_ident $1 }
+  | bound_vname { $1 }
 ;
 
 bound_vname_list:

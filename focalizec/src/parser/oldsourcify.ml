@@ -1,4 +1,4 @@
-(* $Id: oldsourcify.ml,v 1.10 2007-07-13 16:11:34 pessaux Exp $ *)
+(* $Id: oldsourcify.ml,v 1.11 2007-07-16 15:09:20 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -806,17 +806,17 @@ and pp_let_def ppf = pp_generic_ast pp_let_def_desc ppf
     [Rem] : Not exported ouside this module.                              *)
 (* ********************************************************************** *)
 and pp_binding_desc ppf bd =
-  Format.fprintf ppf "%a" pp_ident bd.Parsetree.b_name ;
+  Format.fprintf ppf "%a" pp_vname bd.Parsetree.b_name ;
   (* Prints the parameters only if some. *)
   if bd.Parsetree.b_params <> [] then
     begin
     Format.fprintf ppf "@ (%a)"
       (Handy.pp_generic_separated_list
 	 ","
-	 (fun local_ppf (ident, ty_expr_opt) ->
+	 (fun local_ppf (vname, ty_expr_opt) ->
 	   (* Prints the type only if it is provided. *)
 	   Format.fprintf local_ppf "%a%a"
-	     pp_ident ident
+	     pp_vname vname
 	     (Handy.pp_generic_option " in " pp_type_expr) ty_expr_opt))
       bd.Parsetree.b_params
     end ;
