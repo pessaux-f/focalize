@@ -15,36 +15,36 @@ open "../basics";;
 species Setoid inherits Basic_object =
 
   (** @mathml <eq/> *)
-  sig ( = ) : self -> self -> bool
+  sig ( = ) : Self -> Self -> bool
   ;
-  property ``equal is reflexive'' : all x y in self,
-    self!( = ) (x, x) and
+  property ``equal is reflexive'' : all x y in Self,
+    Self!( = ) (x, x) and
     x = x
   ;
-  property equal_symmetric : all x y in self,
-    self!equal(x, y) -> !equal(y, x)
+  property equal_symmetric : all x y in Self,
+    Self!equal(x, y) -> !equal(y, x)
   ;
-  property equal_transitive : all x y z in self,
+  property equal_transitive : all x y z in Self,
     !equal(x, y) -> !equal(y, z) -> !equal(x, z)
   ;
   (** element returns some element of our non empty setoid *)
-  sig element : self
+  sig element : Self
   ;
   (** @mathml <neq/> *)
   let different (x, y) = basics#not_b(!equal(x, y))
   ;
-  theorem same_is_not_different : all x y in self,
+  theorem same_is_not_different : all x y in Self,
      !different(x, y) <-> ( !equal(x, y))
   proof:
     by definition of different
 ;
-(*   theorem same_is_not_different : all x y in self, *)
+(*   theorem same_is_not_different : all x y in Self, *)
 (*      !equal(x,y) -> not(!different(x,y))  *)
 (*   proof:  *)
 (*     DEF !different *)
 (*   ; *)
 
-(*   theorem different_is_not_same : all x y in self, *)
+(*   theorem different_is_not_same : all x y in Self, *)
 (*      !different(x,y) -> not(!equal(x,y))  *)
 (*   proof:  *)
 (*     DEF !different *)
@@ -56,7 +56,7 @@ end
 (**
   This is a first attempt to specify representations.
   We define two functions and two properties relating 
-  concrete values of rep and abstract values of self
+  concrete values of rep and abstract values of Self
 *)
 species represented_by(s is basic_object)
 
@@ -64,45 +64,45 @@ inherits setoid =
 
   rep = s;
 
-  (** an element of self is encoded by an element of s *)
-  let to_rep (x in self) in s = x;
+  (** an element of Self is encoded by an element of s *)
+  let to_rep (x in Self) in s = x;
 
   (** One should be able to describe which values of s
-     correspond to some abstract self
+     correspond to some abstract Self
    *)
-  sig represents_some_self : s -> prop;
+  sig represents_some_Self : s -> prop;
 
   (** A way to abstract concrete values,
      not intended to be used by the programmer
    *)
-  sig from_rep : s -> self;
+  sig from_rep : s -> Self;
 
-  (** This property enables to state theorems about abstract self *)
+  (** This property enables to state theorems about abstract Self *)
   logical correct_representation(x) =
-    !represents_some_self(!to_rep(x))
+    !represents_some_Self(!to_rep(x))
   ;
 
-  theorem correct_rep_spec: all x in self,
-     !correct_representation(x) <-> !represents_some_self(!to_rep(x))
+  theorem correct_rep_spec: all x in Self,
+     !correct_representation(x) <-> !represents_some_Self(!to_rep(x))
      proof: by definition of !correct_representation
   ;
 
   (** combining to_rep and from_rep gives identity *)
-  property to_rep_reverses: all x in self, !equal(!from_rep(!to_rep(x)), x);
+  property to_rep_reverses: all x in Self, !equal(!from_rep(!to_rep(x)), x);
 
   (** since we provide an injection to s from_rep is a surjection *)
-  theorem from_rep_is_surjective: all x in self, ex y in s,
+  theorem from_rep_is_surjective: all x in Self, ex y in s,
     !equal(!from_rep(y), x)
   proof:
-   <1>1 assume x in self,
+   <1>1 assume x in Self,
         prove !equal(!from_rep(x), x)
         by property !to_rep_reverses
            definition of !to_rep
    <1>f qed.
   ;
 
-  (** every element of self should verify an invariant *)
-  property correct_invariant: all x in self, !correct_representation(x);
+  (** every element of Self should verify an invariant *)
+  property correct_invariant: all x in Self, !correct_representation(x);
 
   (** by default we print the concrete data *)
   let print(x) = s!print(!to_rep(x));
@@ -121,8 +121,8 @@ end
 species partial_set inherits setoid =
 
   (** this is intended to model failure*)
-  let failed in (string -> self) =
-    let ifailed (r in string, elt in self) in self =
+  let failed in (string -> Self) =
+    let ifailed (r in string, elt in Self) in Self =
        external
        | caml -> "i_failed"
        | coq -> "i_failed"
@@ -136,11 +136,11 @@ end
 species pre_order inherits setoid =
   (** leq(x,y) is x &le; y
       @mathml <leq/> *)
-  sig leq : self -> self -> bool;
+  sig leq : Self -> Self -> bool;
 
-  property leq_reflexive: all x y in self,
+  property leq_reflexive: all x y in Self,
     !equal(x, y) -> !leq(x, y);
-  property leq_transitive: all x y  z in self,
+  property leq_transitive: all x y  z in Self,
     !leq(x, y) -> !leq(y, z) -> !leq(x, z) ;
 
    (** we may reverse inequalities by simply changing notations
@@ -148,17 +148,17 @@ species pre_order inherits setoid =
   let geq(x, y)= !leq(y, x);
 
   (** a characteristic property *)
-  theorem geq_is_leq: all x y in self,
+  theorem geq_is_leq: all x y in Self,
     (!geq(x, y) -> !leq(y, x)) and  (!leq(x, y) -> !geq(y, x))
     proof: 
       by definition of !geq
   ;
 
-  theorem geq_reflexive: all x y in self, !equal(x, y) -> !geq(x, y)
+  theorem geq_reflexive: all x y in Self, !equal(x, y) -> !geq(x, y)
   proof: by definition of !leq_reflexive, !equal_symmetric, !geq_is_leq
   ;
 
-  theorem geq_transitive: all x y z in self,
+  theorem geq_transitive: all x y z in Self,
     !geq(x, y) -> !geq(y, z) -> !geq(x, z)
     proof: by definition of !leq_transitive, !geq_is_leq
   ;
@@ -169,7 +169,7 @@ species pre_order inherits setoid =
   let lt(x, y) = basics#and_b(!leq(x, y), basics#not_b(!equal(x, y)));
 
   (** some results about strict and large inequalities *)
-  theorem lt_is_not_leq : all x y in self,
+  theorem lt_is_not_leq : all x y in Self,
     ((!lt(x, y) -> (!leq(x, y) and !different(x, y)))
   and
      (!leq(x, y) -> (!lt(x, y) or !equal(x, y))))
@@ -182,7 +182,7 @@ species pre_order inherits setoid =
   (** @mathml <gt/> *)
   let gt(x, y) = !lt(y, x);
 
-  theorem gt_is_lt: all x y in self,
+  theorem gt_is_lt: all x y in Self,
     (!gt(x, y) -> (!geq(x, y) and !different(x, y)))
       and
     (!geq(x, y) -> (!gt(x, y) or !equal(x, y)))
@@ -196,12 +196,12 @@ end
 
 (** In a set an ordering is often called a partial order *)
 species partial_order inherits pre_order =
-  property leq_antisymmetric:  all x y in self,
+  property leq_antisymmetric:  all x y in Self,
     !leq(x, y) -> !leq(y, x) -> !equal(x, y)
   ;
 
 
-  theorem geq_antisymmetric: all x y in self,
+  theorem geq_antisymmetric: all x y in Self,
     !geq(x, y) -> !geq(y, x) -> !equal(x, y)
     proof: by definition of !leq_antisymmetric, !geq_is_leq
   ;
@@ -215,19 +215,19 @@ species meet_semi_lattice inherits setoid =
   (* [rr]: need a mathml symbol for that, 
      we don't want to use <min/> nor <intersect/>
   *)
-  sig inf : self -> self -> self ;
+  sig inf : Self -> Self -> Self ;
   (** compatibility with equality *)
-  property inf_left_substitution_rule : all x y z in self,
+  property inf_left_substitution_rule : all x y z in Self,
     !equal (x, y) -> !equal (!inf (x, z), !inf (y, z))
   ;
   (** inf is a commutative law*)
-  property inf_commutes : all x y in self,
+  property inf_commutes : all x y in Self,
     !equal(!inf(x, y), !inf(y, x));
   (** 
      for a  commutative law right congruence is a consequence 
       of left congruence
    *)
-  theorem inf_right_substitution_rule : all x y z in self,
+  theorem inf_right_substitution_rule : all x y z in Self,
      !equal(y, z) -> !equal(!inf(x, y), !inf(x, z))
      proof: 
        by property
@@ -237,7 +237,7 @@ species meet_semi_lattice inherits setoid =
           !equal_transitive
      ;
   (** users should use global congruence when possible *)
-  theorem inf_substitution_rule: all x y z t in self,
+  theorem inf_substitution_rule: all x y z t in Self,
     !equal(x, y) -> !equal(z, t) -> !equal(!inf(x, z), !inf(y, t))
 (*    !equal(x, y) -> !equal(y, t) -> !equal(!inf(x, y), !inf(y, t)) *)
     proof:
@@ -249,10 +249,10 @@ species meet_semi_lattice inherits setoid =
          !equal_transitive(*, !equal_reflexive*)
     ;
   (* inf is an associative law *)
-  property inf_is_associative : all x y z in self,
+  property inf_is_associative : all x y z in Self,
     !equal(!inf(!inf(x, y), z), !inf(x, !inf(y, z)));
   (* inf is an idempotent law  *)
-  property inf_idempotent : all x y in self,
+  property inf_idempotent : all x y in Self,
     !equal(x, y) -> !equal(x, !inf(x, y));
 
   (** order_inf is the least defined ordering compatible with inf *)
@@ -260,14 +260,14 @@ species meet_semi_lattice inherits setoid =
      we don't want to use <leq/>
   *)
   let order_inf(x, y) = !equal(x, !inf(x, y));
-  theorem order_inf_is_reflexive : all x y in self,
+  theorem order_inf_is_reflexive : all x y in Self,
      !equal(x, y) -> !order_inf(x, y)
      proof : 
        by property !inf_idempotent
        definition of !order_inf
      ;
 
-  theorem order_inf_is_antisymmetric : all x y in self,
+  theorem order_inf_is_antisymmetric : all x y in Self,
      !order_inf(x, y) -> !order_inf(y, x) -> !equal(x, y)
      (* x=inf(x, y) et y=inf(x, y) *)
      proof:
@@ -275,13 +275,13 @@ species meet_semi_lattice inherits setoid =
         property !inf_commutes, !equal_transitive, !equal_symmetric
         definition of !order_inf
      ;
-  theorem order_inf_is_transitive : all x y z in self,
+  theorem order_inf_is_transitive : all x y z in Self,
      !order_inf(x, y) -> !order_inf(y, z) -> !order_inf(x, z)
      (* x=inf(x, y) et y=inf(y, z) x=inf(x, inf(y, z))=inf(inf(x, y), z)=inf(x, z)*)
      proof:
-       <1>1 assume x in self,
-            assume y in self,
-            assume z in self,
+       <1>1 assume x in Self,
+            assume y in Self,
+            assume z in Self,
             assume H1: !order_inf (x, y),
             assume H2: !order_inf (y, z),
             prove !order_inf (x, z)
@@ -309,13 +309,13 @@ species meet_semi_lattice inherits setoid =
        <1>2 qed.
      ;
   (** any element smaller than x and y is smaller than their infimum *)
-  theorem order_inf_is_infimum: all x y i in self,
+  theorem order_inf_is_infimum: all x y i in Self,
     !order_inf(i, x) -> !order_inf(i, y) ->
       !order_inf(i, !inf(x, y))
     proof:
-      <1>1 assume x in self,
-           assume y in self,
-           assume i in self,
+      <1>1 assume x in Self,
+           assume y in Self,
+           assume i in Self,
            assume H1: !order_inf(i, x),
            assume H2: !order_inf(i, y),
            prove !order_inf(i, !inf(x, y))
@@ -341,26 +341,26 @@ species join_semi_lattice inherits setoid =
   (* [rr]: need a mathml symbol for that, 
      we don't want to use <max/> nor <union/>
   *)
-  sig sup : self -> self -> self ;
+  sig sup : Self -> Self -> Self ;
   (** compatibility with equality *)
-  property sup_left_substitution_rule : all x y z in self,
+  property sup_left_substitution_rule : all x y z in Self,
     !equal (x, y) -> !equal (!sup (x, z), !sup (y, z))
   ;
-  property sup_commutes : all x y in self,
+  property sup_commutes : all x y in Self,
     !equal(!sup(x, y), !sup(y, x));
 
   (** 
      for a  commutative law right congruence is a consequence 
       of left congruence
    *)
-  theorem sup_right_substitution_rule : all x y z in self,
+  theorem sup_right_substitution_rule : all x y z in Self,
      !equal(y, z) -> !equal(!sup(x, y), !sup(x, z))
      proof: 
        by
         property !sup_left_substitution_rule, !sup_commutes, !equal_transitive
      ;
   (** users should use global congruence when possible *)
-  theorem sup_substitution_rule: all x y z t in self,
+  theorem sup_substitution_rule: all x y z t in Self,
     !equal(x, y) -> !equal(z, t) -> !equal(!sup(x, z), !sup(y, t))
 (*    !equal(x, y) -> !equal(y, t) -> !equal(!sup(x, y), !sup(y, t)) *)
     proof:
@@ -370,10 +370,10 @@ species join_semi_lattice inherits setoid =
            !equal_transitive(*, !equal_reflexive*)
     ;
   (* sup is an associative law *)
-  property sup_is_associative : all x y z in self,
+  property sup_is_associative : all x y z in Self,
     !equal(!sup(!sup(x, y), z), !sup(x, !sup(y, z)));
   (* sup is an idempotent law  *)
-  property sup_idempotent : all x y in self,
+  property sup_idempotent : all x y in Self,
     !equal(x, y) -> !equal(x, !sup(x, y));
 
   (** order_sup is the least defined ordering compatible with sup *)
@@ -382,27 +382,27 @@ species join_semi_lattice inherits setoid =
   *)
   let order_sup(x, y) = !equal(x, !sup(x, y));
 
-  theorem order_sup_is_reflexive : all x y in self,
+  theorem order_sup_is_reflexive : all x y in Self,
      !equal(x, y) -> !order_sup(x, y)
      proof:
        by property !sup_idempotent
           definition of !order_sup
   ;
 
-  theorem order_sup_is_antisymmetric : all x y in self,
+  theorem order_sup_is_antisymmetric : all x y in Self,
      !order_sup(x, y) -> !order_sup(y, x) -> !equal(x, y)
      proof:
        by property !sup_commutes, !equal_symmetric, !equal_transitive
           definition of !order_sup
      ;
 
-  theorem order_sup_is_transitive : all x y z in self,
+  theorem order_sup_is_transitive : all x y z in Self,
      !order_sup(x, y) -> !order_sup(y, z) -> !order_sup(x, z)
      (* x=inf(x, y) et y=inf(y, z) x=inf(x, inf(y, z)=inf(inf(x, y), z)=inf(x, z)*)
      proof:
-       <1>1 assume x in self,
-            assume y in self,
-            assume z in self,
+       <1>1 assume x in Self,
+            assume y in Self,
+            assume z in Self,
             assume xLTy : !order_sup (x, y),
             assume yLTz : !order_sup (y, z),
             prove !order_sup (x, z)
@@ -424,13 +424,13 @@ species join_semi_lattice inherits setoid =
      ;
 
   (** any element bigger than two elements is bigger than their supremum *)
-  theorem order_sup_is_supremum: all x y i in self,
+  theorem order_sup_is_supremum: all x y i in Self,
     !order_sup(i, x) -> !order_sup(i, y) ->
       !order_sup(i, !sup(x, y))
     proof:
-      <1>1 assume x in self,
-           assume y in self,
-           assume i in self,
+      <1>1 assume x in Self,
+           assume y in Self,
+           assume i in Self,
            assume H1: !order_sup(i, x),
            assume H2: !order_sup(i, y),
            prove !order_sup(i, !sup(x, y))
@@ -455,20 +455,20 @@ end
 species lattice inherits meet_semi_lattice, join_semi_lattice = 
 
   (** the first absorbtion law *)
-   property inf_absorbes_sup: all x y in self,
+   property inf_absorbes_sup: all x y in Self,
      !equal(x, !sup(x, !inf(x, y)));
 
    (** the second absorbtion law *)
-   property sup_absorbes_inf: all x y in self,
+   property sup_absorbes_inf: all x y in Self,
      !equal(x, !inf(x, !sup(x, y)));
 
    (** in a lattice there is only one ordering *)
-   theorem order_inf_refines_order_sup: all x y in self,
+   theorem order_inf_refines_order_sup: all x y in Self,
      !order_sup(y, x) -> !order_inf(x, y)
      proof:
        (* x = x v y ; x ^ y = x ^ (x v y) = x *)
-       <1>1 assume x in self,
-            assume y in self,
+       <1>1 assume x in Self,
+            assume y in Self,
             assume H: !order_sup(y, x),
             notation s = !sup (x, y),
             prove !order_inf(x, y)
@@ -508,7 +508,7 @@ end
 species modular_lattice inherits lattice =
 
 (** a generalization of ditributivity  *)
-property modular_law: all x y z in self,
+property modular_law: all x y z in Self,
   !order_inf(x, y) -> !equal(!inf(!sup(x, y), !sup(x, z)),
 			    !inf(y, !sup(!inf(x, y), z)));
 
@@ -526,16 +526,16 @@ species distributive_lattice
   
   inherits lattice,
             modular_lattice =
-  property sup_left_distributes : all x y z in self,
+  property sup_left_distributes : all x y z in Self,
     !equal(!sup(x, !inf(y, z)), !inf(!sup(x, y), !sup(x, z)));
 
-  theorem sup_right_distributes : all x y z in self,
+  theorem sup_right_distributes : all x y z in Self,
     !equal(!sup(!inf(x, y), z), !inf(!sup(x, z), !sup(y, z)))
     proof: 
       (* [rr]: Wow my second proof *)
-      <1>1 assume x in self,
-           assume y in self,
-           assume z in self,
+      <1>1 assume x in Self,
+           assume y in Self,
+           assume z in Self,
            prove      !equal(!sup(!inf(x, y), z), !inf(!sup(x, z), !sup(y, z)))
            <2>1 prove !equal(!sup(z, !inf(x, y)), !inf(!sup(z, x), !sup(z, y)))
                 by property !sup_left_distributes
@@ -561,9 +561,9 @@ species distributive_lattice
       <1>2 qed.
     ;
 
-  property inf_left_distributes : all x y z in self, 
+  property inf_left_distributes : all x y z in Self, 
     !equal(!inf(x, !sup(y, z)), !sup(!inf(x, y), !inf(x, z)));
-  theorem inf_right_distributes : all x y z in self, 
+  theorem inf_right_distributes : all x y z in Self, 
     !equal(!inf(!sup(x, y), z), !sup(!inf(x, z), !inf(y, z)))
     proof:
       (* [rr]: see sup_right_distributes above *)
@@ -581,9 +581,9 @@ species distributive_lattice
   (** a distributive lattice is always modular *)
   (* [rr]: shouldn't this be simplified ? *)
   proof of modular_law =
-    <1>1 assume x in self,
-         assume y in self,
-         assume z in self,
+    <1>1 assume x in Self,
+         assume y in Self,
+         assume z in Self,
          assume H: !order_inf(x, y),
          prove !equal(!inf(y, !sup(!inf(x, y), z)),
 		      !sup(x, !inf(y, z)))
@@ -621,10 +621,10 @@ A meet semi lattice with an upper bound as neutral element for infimum.
 That is a meet semi lattice with a monoid structure.
 *)
 species meet_semi_lattice_with_max inherits meet_semi_lattice =
-  sig max : self;
-  property max_is_right_neutral: all x in self, 
+  sig max : Self;
+  property max_is_right_neutral: all x in Self, 
     !equal(!inf(x, !max), x);
-  theorem max_is_left_neutral: all x in self, 
+  theorem max_is_left_neutral: all x in Self, 
     !equal(!inf(!max, x), x)
     proof:
     by property !max_is_right_neutral, !inf_commutes, !equal_transitive
@@ -638,10 +638,10 @@ A meet semi lattice with a lower bound.
 That is a meet semi lattice with an absorbant element
 *)
 species meet_semi_lattice_with_min inherits meet_semi_lattice =
-  sig min : self;
-  property min_right_absorbes: all x in self, 
+  sig min : Self;
+  property min_right_absorbes: all x in Self, 
     !equal(!inf(x, !min), !min);
-  theorem min_left_absorbes: all x in self, 
+  theorem min_left_absorbes: all x in Self, 
     !equal(!inf(!min, x), !min)
     proof:
     by property !min_right_absorbes, !inf_commutes, !equal_transitive
@@ -655,16 +655,16 @@ A join semi lattice with a lower bound as neutral element for supremum.
 That is a join semi lattice with a monoid structure.
 *)
 species join_semi_lattice_with_min inherits join_semi_lattice =
-  sig min : self;
-  property min_is_right_neutral: all x in self,
+  sig min : Self;
+  property min_is_right_neutral: all x in Self,
     !equal(!sup(x, !min), x);
-  theorem min_is_left_neutral: all x in self, 
+  theorem min_is_left_neutral: all x in Self, 
     !equal(!sup(!min, x), x)
     proof:
       by property !min_is_right_neutral, !sup_commutes, !equal_transitive
   ;
 
-  let is_min(x) = self!equal(x, self!min)
+  let is_min(x) = Self!equal(x, Self!min)
   ;
 
 end
@@ -675,10 +675,10 @@ A join semi lattice with an upper bound.
 That is a join semi lattice with an absorbant element
 *)
 species join_semi_lattice_with_max inherits join_semi_lattice =
-  sig max : self;
-  property max_right_absorbes: all x in self, 
+  sig max : Self;
+  property max_right_absorbes: all x in Self, 
     !equal(!sup(x, !max), !max);
-  theorem max_left_absorbes: all x in self, 
+  theorem max_left_absorbes: all x in Self, 
     !equal(!sup(!max, x), !max)
     proof:
     by property !max_right_absorbes, !sup_commutes, !equal_transitive
@@ -698,7 +698,7 @@ species bounded_lattice
   (** absorption laws enable to prove that being absorbant for one law 
       is being neutral for the other *)
   proof of max_right_absorbes =
-    <1>1 assume x in self ,
+    <1>1 assume x in Self ,
          prove !equal(!sup(x, !max), !max)
          <2>1 prove !equal(!max, !inf(!max, !sup(!max, x)))
               by property !sup_absorbes_inf
@@ -736,9 +736,9 @@ end
 (** An ordering is total whenever two elements are always comparable *)
 species ordered_set inherits partial_order =
 
-  property total_order: all x y in self, self!leq(x, y) or self!leq(y, x);
+  property total_order: all x y in Self, Self!leq(x, y) or Self!leq(y, x);
 
-  let equal(x, y) = #and_b(self!leq(x, y), self!leq(y, x));
+  let equal(x, y) = #and_b(Self!leq(x, y), Self!leq(y, x));
   
   proof of equal_reflexive = 
     by property !total_order
@@ -753,7 +753,7 @@ species ordered_set inherits partial_order =
     by property !leq_transitive definition of !equal
   ;
 
-  let lt(x, y) = #not_b(self!leq(y, x));
+  let lt(x, y) = #not_b(Self!leq(y, x));
   proof of lt_is_not_leq =
     by property !total_order
        definition of !lt, !different, !equal;
@@ -784,10 +784,10 @@ species partially_ordered_set_as_meet_semi_lattice
     by property !leq_transitive
        definition of !order_inf;
 
-  property inf_is_smaller: all x y in self, 
+  property inf_is_smaller: all x y in Self, 
     !leq(!inf(x, y), x) and !leq(!inf(x, y), y) ;
 
-  property leq_defines_infimum: all x y i in self, 
+  property leq_defines_infimum: all x y i in Self, 
     !leq(i, x) -> !leq(i, y) -> !leq(i, !inf(x, y));
 
   proof of order_inf_is_infimum =
@@ -796,8 +796,8 @@ species partially_ordered_set_as_meet_semi_lattice
   ;
 
   proof of inf_idempotent =
-    <1>1 assume x in self,
-         assume y in self,
+    <1>1 assume x in Self,
+         assume y in Self,
          assume H: !equal(x, y),
          prove !equal(x, !inf(x, y))
          <2>1 prove !leq(x, y) by hypothesis H property !leq_reflexive
@@ -816,9 +816,9 @@ species partially_ordered_set_as_meet_semi_lattice
 
   (** associativity is always tricky *)
   proof of inf_is_associative =
-    <1>1 assume x in self,
-         assume y in self,
-         assume z in self,
+    <1>1 assume x in Self,
+         assume y in Self,
+         assume z in Self,
          prove !equal(!inf(x, !inf(y, z)), !inf(!inf(x, y), z))
          <2>1 prove !leq(!inf(!inf(x, y), z), !inf(x, !inf(y, z)))
               <3>1 prove !leq(!inf(!inf(x, y), z), x)
@@ -860,11 +860,11 @@ species partially_ordered_set_as_join_semi_lattice
     by property !geq_transitive definition of !order_sup;
 
   (**  a supremum should be bigger than its arguments *)
-  property sup_is_bigger: all x y in self, 
+  property sup_is_bigger: all x y in Self, 
     !geq(!sup(x, y), x) and !geq(!sup(x, y), y)  ;
 
   (** Anything bigger than a supremum is bigger than the supremum  *)
-  property geq_defines_supremum: all x y s in self, 
+  property geq_defines_supremum: all x y s in Self, 
     !geq(s, x) -> !geq(s, y) -> !geq(s, !sup(x, y));
 
   (**  We relate to lattice notions *)
@@ -872,8 +872,8 @@ species partially_ordered_set_as_join_semi_lattice
     by property !geq_defines_supremum definition of !order_sup;
 
   proof of sup_idempotent =
-    <1>1 assume x in self,
-         assume y in self,
+    <1>1 assume x in Self,
+         assume y in Self,
          assume H: !equal(x, y),
          prove !equal(x, !sup(x, y))
          <2>1 prove !geq(x, y)
@@ -896,9 +896,9 @@ species partially_ordered_set_as_join_semi_lattice
 
   (** associativity is always tricky *)
   proof of sup_is_associative =
-    <1>1 assume x in self,
-         assume y in self,
-         assume z in self,
+    <1>1 assume x in Self,
+         assume y in Self,
+         assume z in Self,
          prove !equal(!sup(x, !sup(y, z)), !sup(!sup(x, y), z))
          <2>1 prove !geq(!sup(!sup(x, y), z), !sup(x, !sup(y, z)))
               <3>1 prove !geq(!sup(!sup(x, y), z), x)
@@ -935,8 +935,8 @@ species partially_ordered_set_as_lattice
   ;
 
   proof of sup_absorbes_inf =
-    <1>1 assume x in self,
-         assume y in self,
+    <1>1 assume x in Self,
+         assume y in Self,
          prove !equal(!inf(x, !sup(x, y)), x)
          <2>1 prove !leq(!inf(x, !sup(x, y)), x)
               by property !inf_is_smaller
@@ -959,8 +959,8 @@ species partially_ordered_set_as_lattice
     by !inf_is_smaller, !sup_is_bigger, !geq_reflexive, !equal_reflexive, 
        !geq_defines_supremum def !geq ;
      *)
-    <1>1 assume x in self,
-         assume y in self,
+    <1>1 assume x in Self,
+         assume y in Self,
          prove !equal(!sup(x, !inf(x, y)), x)
          <2>1 prove !geq(!sup(x, !inf(x, y)), x)
               by property !sup_is_bigger
@@ -989,7 +989,7 @@ end
  *)
 species ordered_meet_semi_lattice inherits meet_semi_lattice, ordered_set =
 
-  property leq_refines_order_inf : all x y in self, 
+  property leq_refines_order_inf : all x y in Self, 
     !order_inf(x, y) -> !leq(x, y);
 
 end
@@ -1024,7 +1024,7 @@ species ordered_set_as_meet_semi_lattice
        definition of !inf
   ;
 
-  theorem order_inf_refines_leq: all x y in self, 
+  theorem order_inf_refines_leq: all x y in Self, 
     !leq(x, y) -> !order_inf(x, y)
     proof:
       by property !total_order, !total_order, !leq_antisymmetric
@@ -1032,8 +1032,8 @@ species ordered_set_as_meet_semi_lattice
   ;
 
   proof of inf_commutes = 
-   <1>1 assume x in self,
-        assume y in self,
+   <1>1 assume x in Self,
+        assume y in Self,
         prove !equal(!inf(x, y), !inf(y, x))
         <2>1 assume Hxy: !leq(x, y),
              prove !equal(!inf(x, y), !inf(y, x))
@@ -1085,7 +1085,7 @@ end
  *)
 species ordered_join_semi_lattice inherits join_semi_lattice, ordered_set =
 
-  property geq_refines_order_sup : all x y in self, 
+  property geq_refines_order_sup : all x y in Self, 
     !order_sup(x, y) -> !geq(x, y)
   ;
 
@@ -1146,8 +1146,8 @@ species ordered_set_as_lattice
   
   (** absorption laws are a mess !*)
   proof of sup_absorbes_inf =
-    <1>1 assume x in self,
-         assume y in self,
+    <1>1 assume x in Self,
+         assume y in Self,
          prove !equal(x, !inf(x, !sup(x, y)))
          <2>1 assume H: !leq(x, y),
               prove !equal(x, !inf(x, !sup(x, y)))

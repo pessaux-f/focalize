@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.20 2007-06-26 07:04:37 weis Exp $ *)
+(* $Id: lexer.mll,v 1.21 2007-07-16 15:38:42 pessaux Exp $ *)
 
 {
 open Lexing;;
@@ -58,7 +58,6 @@ List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
   "qed", QED;
   "rec", REC;
   "rep", REP;
-  "self", SELF;
   "sig", SIG;
   "species", SPECIES;
   "step", STEP;
@@ -445,6 +444,8 @@ rule token = parse
       token lexbuf }
   | blank +
     { token lexbuf }
+  | "Self"
+    { SELF }
   | lowercase_ident
     { let s = Lexing.lexeme lexbuf in
       try Hashtbl.find keyword_table s

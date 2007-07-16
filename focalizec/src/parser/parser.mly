@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.43 2007-07-16 15:09:20 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.44 2007-07-16 15:38:42 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -603,7 +603,7 @@ type_expr:
   | glob_ident
     { mk (TE_ident $1) }
   | LIDENT
-    { mk (TE_ident (mk_method_application (Some $1) (Vlident "self"))) }
+    { mk (TE_ident (mk_method_application (Some $1) (Vlident "Self"))) }
   | type_expr DASH_GT type_expr
     { mk (TE_fun ($1, $3)) }
   | type_expr STAR_OP type_expr
@@ -632,7 +632,7 @@ glob_ident:
 opt_lident:
   | { None }
   | SELF
-    { Some "self" }
+    { Some "Self" }
   | LIDENT
     { Some $1 }
 ;
