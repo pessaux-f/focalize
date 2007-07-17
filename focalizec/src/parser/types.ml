@@ -1,4 +1,5 @@
-(* $Id: types.ml,v 1.4 2007-07-13 16:57:09 pessaux Exp $ *)
+(* $Id: types.ml,v 1.5 2007-07-17 08:25:10 pessaux Exp $ *)
+
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -25,12 +26,12 @@ type label_name = string
 
 
 
-(* *********************************************** *)
-(*  [Type] : simple_type                           *)
-(** [Descr] : Describes the type algebra of Focal.
+(* ************************************************* *)
+(* simple_type                                       *)
+(** {b Descr} : Describes the type algebra of Focal.
 
-    [Rem] : Exported opaque outside this module.   *)
-(* *********************************************** *)
+    {b Rem} : Exported opaque outside this module.   *)
+(* ************************************************* *)
 type simple_type =
   | ST_var of variable_type                   (** Type variable. *)
   | ST_arrow of (simple_type * simple_type)   (** Functionnal type. *)
@@ -85,12 +86,12 @@ and variable_type_value =
 
 
 
-(* ********************************************* *)
-(*  [Type] : types_scheme                        *)
-(** [Descr] : Types scheme, i.e. model of types.
+(* *********************************************** *)
+(* types_scheme                                    *)
+(** {b Descr} : Types scheme, i.e. model of types.
 
-    [Rem] : Exported opaque outside this module. *)
-(* ********************************************* *)
+    {b Rem} : Exported opaque outside this module. *)
+(* *********************************************** *)
 type types_scheme = {
   ts_type_parameters : variable_type list ;
   ts_body : simple_type }
@@ -104,15 +105,15 @@ exception Arity_mismatch of (string * int * int) ;;  (* Name, expected arity *)
 
 
 (* ******************************************************************** *)
-(*  [Fun] repr : simple_type -> simple_type                             *)
-(** [Descr] : Returns the canonical representation of a type.
+(* simple_type -> simple_type                                           *)
+(** {b Descr} : Returns the canonical representation of a type.
               Uncompression is performed only one level each time. The
               day the next levels may be needed, this will be during an
               unification, and [repr] will be called if needed to get a
               deeper canonical representation of the type (i.e. the
               canonical representation of its subterms).
 
-    [Rem] : Not exported outside this module.                           *)
+    {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************** *)
 let rec repr = function
   | ST_var ({ vt_value = VTV_known ty1 } as var) ->
@@ -157,7 +158,7 @@ let type_self () = ST_sefl_rep ;;
 let type_prop () = type_basic "prop" [] ;;
 
 
-(* [Rem] : Non exported oustide this module. *)
+(** {b Rem} : Non exported oustide this module. *)
 let rec occur_check var ty =
   let rec test t =
     match repr t with
@@ -172,7 +173,7 @@ let rec occur_check var ty =
 
 
 
-(* [Rem] : Exported oustide this module. *)
+(** {b Rem} : Exported oustide this module. *)
 let specialize scheme =
   (* Create, for each generalized variable of the type scheme, a       *)
   (* fresh corresponding one and remind the mapping generalized-fresh. *)
@@ -197,7 +198,7 @@ let specialize scheme =
 
 
 
-(* [Rem] : Exported oustide this module. *)
+(** {b Rem} : Exported oustide this module. *)
 let generalize ty =
   (* The list of found generalizable variables. *)
   (* We accumulate inside it by side effect.    *)
@@ -219,12 +220,12 @@ let generalize ty =
 
 
 
-(* [Rem] : Exported oustide this module. *)
+(** {b Rem} : Exported oustide this module. *)
 let trivial_scheme ty = { ts_type_parameters = [] ; ts_body = ty } ;;
 
 
 
-(* [Rem] : Non exported oustide this module. *)
+(** {b Rem} : Non exported oustide this module. *)
 let rec lowerize_levels max_level ty =
   match repr ty with
    | ST_var var -> if var.vt_level > max_level then var.vt_level <- max_level

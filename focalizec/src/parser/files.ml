@@ -1,4 +1,5 @@
-(* $Id: files.ml,v 1.2 2007-07-13 15:16:38 pessaux Exp $ *)
+(* $Id: files.ml,v 1.3 2007-07-17 08:25:10 pessaux Exp $ *)
+
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -32,13 +33,13 @@ let open_in_from_lib_paths filename =
 
 
 
-(* ********************************************************************* *)
-(*  [Fun] fo_filename_from_module_name: string -> string *)
-(** [Descr] : Creates the compiled interface filename corresponding to a
-              "module" name.
+(* **************************************************** *)
+(* fo_filename_from_module_name: string -> string       *)
+(** {b Descr} : Creates the compiled interface filename  
+              corresponding to a "module" name.
 
-    [Rem] : Exported outside this module.                                *)
-(* ********************************************************************* *)
+    {b Rem} : Exported outside this module.             *)
+(* **************************************************** *)
 let fo_filename_from_module_name module_name =
   (String.uncapitalize  module_name) ^ ".fo"
 ;;

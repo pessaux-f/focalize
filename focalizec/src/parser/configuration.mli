@@ -1,4 +1,18 @@
-(* $Id: Exp *)
+(* $Id: configuration.mli,v 1.7 2007-07-17 08:25:10 pessaux Exp $ *)
+
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*            François Pessaux                                         *)
+(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
 
 (** The various flags and definitions useful to the internal behaviour of the
     focalize compiler. *)

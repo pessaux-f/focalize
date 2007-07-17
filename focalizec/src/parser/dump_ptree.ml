@@ -1,4 +1,5 @@
-(* $Id: dump_ptree.ml,v 1.6 2007-07-16 15:09:20 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.7 2007-07-17 08:25:10 pessaux Exp $ *)
+
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -13,12 +14,12 @@
 (***********************************************************************)
 
 
-(* ******************************************************************** *)
-(*  [Fun] pp_position : Format.formatter -> Lexing.position -> unit     *)
-(** [Descr] : Pretty prints a [position] value as a Caml-like structure.
+(* *********************************************************************** *)
+(* pp_position : Format.formatter -> Lexing.position -> unit               *)
+(** {b Descr} : Pretty prints a [position] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                            *)
-(* ******************************************************************** *)
+    {b Rem} : Not exported ouside this module.                             *)
+(* *********************************************************************** *)
 let pp_position ppf pos =
   Format.fprintf ppf "@[<2>{@ %s ;@ %d ;@ %d ;@ %d @]}"
     pos.Lexing.pos_fname pos.Lexing.pos_lnum
@@ -27,12 +28,12 @@ let pp_position ppf pos =
 
 
 
-(* ********************************************************************* *)
-(*  [Fun] pp_location : Format.formatter -> Parsetree.location -> unit   *)
-(** [Descr] : Pretty prints a [location] value as a Caml-like structure.
+(* *********************************************************************** *)
+(* pp_location : Format.formatter -> Parsetree.location -> unit            *)
+(** {b Descr} : Pretty prints a [location] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                             *)
-(* ********************************************************************* *)
+    {b Rem} : Not exported ouside this module.                             *)
+(* *********************************************************************** *)
 let pp_location ppf loc =
   Format.fprintf ppf "@[<2>{@ %a ;@ %a @]}"
     pp_position loc.Parsetree.l_beg pp_position loc.Parsetree.l_end
@@ -40,12 +41,12 @@ let pp_location ppf loc =
 
 
 
-(* ****************************************************************** *)
-(*  [Fun] pp_vname : Format.formatter -> Parsetree.vname -> unit      *)
-(** [Descr] : Pretty prints a [vname] value as a Caml-like structure.
+(* ******************************************************************** *)
+(* pp_vname : Format.formatter -> Parsetree.vname -> unit               *)
+(** {b Descr} : Pretty prints a [vname] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                          *)
-(* ****************************************************************** *)
+    {b Rem} : Not exported ouside this module.                          *)
+(* ******************************************************************** *)
 let pp_vname ppf = function
   | Parsetree.Vlident s -> Format.fprintf ppf "@[<2>Vlident@ (%s@])" s
   | Parsetree.Vuident s -> Format.fprintf ppf "@[<2>Vuident@ (%s@])" s
@@ -54,30 +55,30 @@ let pp_vname ppf = function
   | Parsetree.Vqident s -> Format.fprintf ppf "@[<2>Vqident@ (%s@])" s
 ;;
 (* ******************************************************************* *)
-(*  [Fun] pp_vnames : Format.formatter -> Parsetree.vname list -> unit *)
-(** [Descr] : Pretty prints a [list] of [vname] value as a Caml-like
+(* pp_vnames : Format.formatter -> Parsetree.vname list -> unit *)
+(** {b Descr} : Pretty prints a [list] of [vname] value as a Caml-like
               structure.
 
-    [Rem] : Not exported ouside this module.                           *)
+    {b Rem} : Not exported ouside this module.                         *)
 (* ******************************************************************* *)
 let pp_vnames ppf = Handy.pp_generic_separated_list "," pp_vname ppf ;;
 
 
 
-(* *********************************************************************** *)
-(*  [Fun] pp_node_label : Format.formatter -> int * string -> unit         *)
-(** [Descr] : Pretty prints a [node_label] value as a Caml-like structure.
+(* ************************************************************************* *)
+(* pp_node_label : Format.formatter -> int * string -> unit                  *)
+(** {b Descr} : Pretty prints a [node_label] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                               *)
-(* *********************************************************************** *)
+    {b Rem} : Not exported ouside this module.                               *)
+(* ************************************************************************* *)
 let pp_node_label ppf (i, s) = Format.fprintf ppf "(%d,@ %s)" i s ;;
-(* *********************************************************************** *)
-(*  [Fun] pp_node_labels : Format.formatter -> (int * string) list -> unit *)
-(** [Descr] : Pretty prints a [list] of [node_label] value as a Caml-like
+(* ************************************************************************ *)
+(* pp_node_labels : Format.formatter -> (int * string) list -> unit         *)
+(** {b Descr} : Pretty prints a [list] of [node_label] value as a Caml-like
               structure.
 
-    [Rem] : Not exported ouside this module.                               *)
-(* *********************************************************************** *)
+    {b Rem} : Not exported ouside this module.                              *)
+(* ************************************************************************ *)
 let pp_node_labels ppf =
   Handy.pp_generic_separated_list "," pp_node_label ppf
 ;;
@@ -85,12 +86,12 @@ let pp_node_labels ppf =
 
 
 (* ********************************************************************** *)
-(*  [Fun] pp_generic_ast :                                                *)
+(* pp_generic_ast :                                                       *)
 (*          (Format.formatter -> 'a -> unit) ->                           *)
 (*            Format.formatter -> ('a, 'b) Parsetree.generic_ast -> unit  *)
-(** [Descr] : Wrapper to apply pretty-printing only on the 'desc' field
+(** {b Descr} : Wrapper to apply pretty-printing only on the 'desc' field
               of a generic_ast. Ignores all other fields.
-    [Rem] : Not exported ouside this module.                              *)
+    {b Rem} : Not exported ouside this module.                            *)
 (* ********************************************************************** *)
 let pp_generic_ast desc_printer_fct ppf g_ast =
   Format.fprintf ppf "%a@\n%a"
@@ -100,12 +101,12 @@ let pp_generic_ast desc_printer_fct ppf g_ast =
 
 
 
-(* *********************************************************************** *)
-(*  [Fun] pp_ident_desc : Format.formatter -> Parsetree.ident_desc -> unit *)
-(** [Descr] : Pretty prints a [ident_desc] value as a Caml-like structure.
+(* ************************************************************************* *)
+(* pp_ident_desc : Format.formatter -> Parsetree.ident_desc -> unit          *)
+(** {b Descr} : Pretty prints a [ident_desc] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                               *)
-(* *********************************************************************** *)
+    {b Rem} : Not exported ouside this module.                               *)
+(* ************************************************************************* *)
 let pp_ident_desc ppf = function
   | Parsetree.I_local vname ->
       Format.fprintf ppf "@[<2>I_local@ (%a@])" pp_vname vname
@@ -118,19 +119,19 @@ let pp_ident_desc ppf = function
 	(match cname_opt with None -> "None" | Some n -> "Some (" ^ n ^ ")") in
       Format.fprintf ppf "@[<2>I_method@ (%s,@ %a@])" cname pp_vname vname
 ;;
-(* ****************************************************************** *)
-(*  [Fun] pp_ident : Format.formatter -> Parsetree.ident- > unit      *)
-(** [Descr] : Pretty prints a [ident] value as a Caml-like structure.
+(* ******************************************************************** *)
+(* pp_ident : Format.formatter -> Parsetree.ident- > unit               *)
+(** {b Descr} : Pretty prints a [ident] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                          *)
-(* ****************************************************************** *)
+    {b Rem} : Not exported ouside this module.                          *)
+(* ******************************************************************** *)
 let pp_ident ppf = pp_generic_ast pp_ident_desc ppf ;;
 (* ******************************************************************* *)
-(*  [Fun] pp_idents : Format.formatter -> Parsetree.ident list -> unit *)
-(** [Descr] : Pretty prints a [list] of [ident] value as a Caml-like
+(* pp_idents : Format.formatter -> Parsetree.ident list -> unit        *)
+(** {b Descr} : Pretty prints a [list] of [ident] value as a Caml-like
               structure.
 
-    [Rem] : Not exported ouside this module.                           *)
+    {b Rem} : Not exported ouside this module.                         *)
 (* ******************************************************************* *)
 let pp_idents ppf = Handy.pp_generic_separated_list "," pp_ident ppf ;;
 
@@ -145,14 +146,14 @@ let pp_cstr_expr ppf = pp_generic_ast pp_cstr_expr_desc ppf ;;
 
 
 
-(* ******************************************************************* *)
-(*  [Fun] pp_rep_type_def_desc :                                       *)
-(*          Format.formatter -> Parsetree.rep_type_def_desc -> unit    *)
-(** [Descr] : Pretty prints a [rep_type_def_desc] value as a Caml-like
+(* ********************************************************************* *)
+(* pp_rep_type_def_desc :                                                *)
+(*          Format.formatter -> Parsetree.rep_type_def_desc -> unit      *)
+(** {b Descr} : Pretty prints a [rep_type_def_desc] value as a Caml-like
               structure.
 
-    [Rem] : Not exported ouside this module.                           *)
-(* ******************************************************************* *)
+    {b Rem} : Not exported ouside this module.                           *)
+(* ********************************************************************* *)
 let rec pp_rep_type_def_desc ppf = function
   | Parsetree.RTE_ident ident ->
       Format.fprintf ppf "@[<2>RTE_ident@ (%a@])" pp_ident ident
@@ -167,35 +168,35 @@ let rec pp_rep_type_def_desc ppf = function
 	pp_rep_type_def rtd1 pp_rep_type_def rtd2
   | Parsetree.RTE_paren rtd ->
       Format.fprintf ppf "@[<2>RTE_paren@ (%a@])" pp_rep_type_def rtd
-(* ************************************************************************ *)
-(*  [Fun] pp_rep_type_defs :                                                *)
-(*          Format.formatter -> Parsetree.rep_type_def list -> unit         *)
-(** [Descr] : Pretty prints a [list] of [rep_type_def] value as a Caml-like
+(* ************************************************************************* *)
+(* pp_rep_type_defs :                                                        *)
+(*          Format.formatter -> Parsetree.rep_type_def list -> unit          *)
+(** {b Descr} : Pretty prints a [list] of [rep_type_def] value as a Caml-like
               structure.
 
-    [Rem] : Not exported ouside this module.                                *)
-(* ************************************************************************ *)
+    {b Rem} : Not exported ouside this module.                               *)
+(* ************************************************************************* *)
 and pp_rep_type_defs ppf =
   Handy.pp_generic_separated_list "," pp_rep_type_def ppf
-(* ************************************************************************* *)
-(*  [Fun] pp_rep_type_def :                                                  *)
-(*          Format.formatter -> Parsetree.rep_type_def -> unit               *)
-(** [Descr] : Pretty prints a [rep_type_def] value as a Caml-like structure.
+(* ************************************************************************** *)
+(* pp_rep_type_def :                                                          *)
+(*          Format.formatter -> Parsetree.rep_type_def -> unit                *)
+(** {b Descr} : Pretty prints a [rep_type_def] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                                 *)
-(* ************************************************************************* *)
+    {b Rem} : Not exported ouside this module.                                *)
+(* ************************************************************************** *)
 and pp_rep_type_def ppf = pp_generic_ast pp_rep_type_def_desc ppf ;;
 
 
 
-(* **************************************************************** *)
-(*  [Fun] pp_type_expr_desc :                                       *)
-(*           Format.formatter -> Parsetree.type_expr_desc -> unit   *)
-(** [Descr] : Pretty prints a [type_expr_desc] value as a Caml-like
+(* ****************************************************************** *)
+(* pp_type_expr_desc :                                                *)
+(*           Format.formatter -> Parsetree.type_expr_desc -> unit     *)
+(** {b Descr} : Pretty prints a [type_expr_desc] value as a Caml-like
               structure.
 
-    [Rem] : Not exported ouside this module.                        *)
-(* **************************************************************** *)
+    {b Rem} : Not exported ouside this module.                        *)
+(* ****************************************************************** *)
 let rec pp_type_expr_desc ppf = function
   | Parsetree.TE_ident ident ->
       Format.fprintf ppf "@[<2>TE_ident@ (%a@])" pp_ident ident
@@ -213,32 +214,32 @@ let rec pp_type_expr_desc ppf = function
   | Parsetree.TE_paren te ->
       Format.fprintf ppf "@[<2>TE_paren@ (%a@])" pp_type_expr te
 (* ************************************************************* *)
-(*  [Fun] pp_type_exprs :                                        *)
+(* pp_type_exprs :                                               *)
 (*          Format.formatter -> Parsetree.type_expr list -> unit *)
-(** [Descr] : Pretty prints a [list] of [type_expr] value as a
+(** {b Descr} : Pretty prints a [list] of [type_expr] value as a
               Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                     *)
+    {b Rem} : Not exported ouside this module.                   *)
 (* ************************************************************* *)
 and pp_type_exprs ppf = Handy.pp_generic_separated_list "," pp_type_expr ppf
-(* ********************************************************************** *)
-(*  [Fun] pp_type_expr : Format.formatter -> Parsetree.type_expr -> unit  *)
-(** [Descr] : Pretty prints a [type_expr] value as a Caml-like structure.
+(* ************************************************************************ *)
+(* pp_type_expr : Format.formatter -> Parsetree.type_expr -> unit           *)
+(** {b Descr} : Pretty prints a [type_expr] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                              *)
-(* ********************************************************************** *)
+    {b Rem} : Not exported ouside this module.                              *)
+(* ************************************************************************ *)
 and pp_type_expr ppf = pp_generic_ast pp_type_expr_desc ppf ;;
 
 
 
-(* *************************************************************** *)
-(*  [Fun] pp_constant_desc :                                       *)
-(*          Format.formatter -> Parsetree.constant_desc -> unit    *)
-(** [Descr] : Pretty prints a [constant_desc] value as a Caml-like
+(* ***************************************************************** *)
+(* pp_constant_desc :                                                *)
+(*          Format.formatter -> Parsetree.constant_desc -> unit      *)
+(** {b Descr} : Pretty prints a [constant_desc] value as a Caml-like
               structure.
 
-    [Rem] : Not exported ouside this module.                       *)
-(* *************************************************************** *)
+    {b Rem} : Not exported ouside this module.                       *)
+(* ***************************************************************** *)
 let pp_constant_desc ppf = function
   | Parsetree.C_int s -> Format.fprintf ppf "@[<2>C_int@ (%s@])" s
   | Parsetree.C_float s -> Format.fprintf ppf "@[<2>C_float@ (%s@])" s
@@ -249,23 +250,23 @@ let pp_constant_desc ppf = function
       tmp_s.[0] <- c ;
       Format.fprintf ppf "@[<2>C_char@ (%s@])" tmp_s
 ;;
-(* ********************************************************************* *)
-(*  [Fun] pp_constant : Format.formatter -> Parsetree.constant -> unit   *)
-(** [Descr] : Pretty prints a [constant] value as a Caml-like structure.
+(* *********************************************************************** *)
+(* pp_constant : Format.formatter -> Parsetree.constant -> unit            *)
+(** {b Descr} : Pretty prints a [constant] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                             *)
-(* ********************************************************************* *)
+    {b Rem} : Not exported ouside this module.                             *)
+(* *********************************************************************** *)
 let pp_constant = pp_generic_ast pp_constant_desc
 ;;
 
 
 
-(* ********************************************************************* *)
-(*  [Fun] pp_rec_flag : Format.formatter -> Parsetree.rec_flag -> unit   *)
-(** [Descr] : Pretty prints a [rec_flag] value as a Caml-like structure.
+(* *********************************************************************** *)
+(* pp_rec_flag : Format.formatter -> Parsetree.rec_flag -> unit            *)
+(** {b Descr} : Pretty prints a [rec_flag] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                             *)
-(* ********************************************************************* *)
+    {b Rem} : Not exported ouside this module.                             *)
+(* *********************************************************************** *)
 let pp_rec_flag ppf = function
   | Parsetree.RF_no_rec -> Format.fprintf ppf "RF_no_rec"
   | Parsetree.RF_rec -> Format.fprintf ppf "RF_rec"
@@ -273,12 +274,12 @@ let pp_rec_flag ppf = function
 
 
 
-(* ********************************************************************* *)
-(*  [Fun] pp_log_flag : Format.formatter -> Parsetree.log_flag -> unit   *)
-(** [Descr] : Pretty prints a [log_flag] value as a Caml-like structure.
+(* *********************************************************************** *)
+(* pp_log_flag : Format.formatter -> Parsetree.log_flag -> unit            *)
+(** {b Descr} : Pretty prints a [log_flag] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                             *)
-(* ********************************************************************* *)
+    {b Rem} : Not exported ouside this module.                             *)
+(* *********************************************************************** *)
 let pp_logical_flag ppf = function
   | Parsetree.LF_no_logical -> Format.fprintf ppf "LF_no_logical"
   | Parsetree.LF_logical -> Format.fprintf ppf "LF_logical"
@@ -286,12 +287,12 @@ let pp_logical_flag ppf = function
 
 
 
-(* ********************************************************************* *)
-(*  [Fun] pp_local_flag : Format.formatter -> Parsetree.loc_flag -> unit   *)
-(** [Descr] : Pretty prints a [loc_flag] value as a Caml-like structure.
+(* *********************************************************************** *)
+(* pp_local_flag : Format.formatter -> Parsetree.loc_flag -> unit          *)
+(** {b Descr} : Pretty prints a [loc_flag] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                             *)
-(* ********************************************************************* *)
+    {b Rem} : Not exported ouside this module.                             *)
+(* *********************************************************************** *)
 let pp_local_flag ppf = function
   | Parsetree.LF_no_local -> Format.fprintf ppf "LF_no_local"
   | Parsetree.LF_local -> Format.fprintf ppf "LF_local"
@@ -299,12 +300,12 @@ let pp_local_flag ppf = function
 
 
 
-(* ********************************************************************* *)
-(*  [Fun] pp_pat_desc : Format.formatter -> Parsetree.pat_desc -> unit   *)
-(** [Descr] : Pretty prints a [pat_desc] value as a Caml-like structure.
+(* *********************************************************************** *)
+(* pp_pat_desc : Format.formatter -> Parsetree.pat_desc -> unit            *)
+(** {b Descr} : Pretty prints a [pat_desc] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                             *)
-(* ********************************************************************* *)
+    {b Rem} : Not exported ouside this module.                             *)
+(* *********************************************************************** *)
 let rec pp_pat_desc ppf = function
   | Parsetree.P_const cst ->
       Format.fprintf ppf "@[<2>P_const@ (%a@])" pp_constant cst
@@ -327,32 +328,32 @@ let rec pp_pat_desc ppf = function
       Format.fprintf ppf "@[<2>P_tuple@ ([@ %a@ ]@])" pp_patterns pats
   | Parsetree.P_paren pat ->
       Format.fprintf ppf "@[<2>P_paren@ (%a@])" pp_pattern pat
-(* *********************************************************************** *)
-(*  [Fun] pp_patterns : Format.formatter -> Parsetree.pattern list -> unit *)
-(** [Descr] : Pretty prints a [list] of [pattern] value as a Caml-like
+(* ********************************************************************* *)
+(* pp_patterns : Format.formatter -> Parsetree.pattern list -> unit      *)
+(** {b Descr} : Pretty prints a [list] of [pattern] value as a Caml-like
               structure.
 
-    [Rem] : Not exported ouside this module.                               *)
-(* *********************************************************************** *)
+    {b Rem} : Not exported ouside this module.                           *)
+(* ********************************************************************* *)
 and pp_patterns ppf = Handy.pp_generic_separated_list "," pp_pattern ppf
-(* ******************************************************************** *)
-(*  [Fun] pp_pattern : Format.formatter -> Parsetree.pattern -> unit    *)
-(** [Descr] : Pretty prints a [pattern] value as a Caml-like structure.
+(* ********************************************************************** *)
+(* pp_pattern : Format.formatter -> Parsetree.pattern -> unit             *)
+(** {b Descr} : Pretty prints a [pattern] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                            *)
-(* ******************************************************************** *)
+    {b Rem} : Not exported ouside this module.                            *)
+(* ********************************************************************** *)
 and pp_pattern ppf = pp_generic_ast pp_pat_desc ppf ;;
 
 
 
-(* ******************************************************************* *)
-(*  [Fun] pp_external_language :                                       *)
-(*          Format.formatter -> Parsetree.external_language -> unit    *)
-(** [Descr] : Pretty prints a [external_language] value as a Caml-like
+(* ********************************************************************* *)
+(* pp_external_language :                                                *)
+(*          Format.formatter -> Parsetree.external_language -> unit      *)
+(** {b Descr} : Pretty prints a [external_language] value as a Caml-like
               structure.
 
-    [Rem] : Not exported ouside this module.                           *)
-(* ******************************************************************* *)
+    {b Rem} : Not exported ouside this module.                           *)
+(* ********************************************************************* *)
 let pp_external_language ppf = function
   | Parsetree.EL_Caml -> Format.fprintf ppf "EL_Caml"
   | Parsetree.EL_Coq -> Format.fprintf ppf "EL_Coq"
@@ -361,14 +362,14 @@ let pp_external_language ppf = function
 
 
 
-(* ******************************************************************* *)
-(*  [Fun] pp_external_def_desc :                                       *)
-(*          Format.formatter -> Parsetree.external_def_desc -> unit    *)
-(** [Descr] : Pretty prints a [external_def_desc] value as a Caml-like
+(* ********************************************************************* *)
+(* pp_external_def_desc :                                                *)
+(*          Format.formatter -> Parsetree.external_def_desc -> unit      *)
+(** {b Descr} : Pretty prints a [external_def_desc] value as a Caml-like
               structure.
 
-    [Rem] : Not exported ouside this module.                           *)
-(* ******************************************************************* *)
+    {b Rem} : Not exported ouside this module.                           *)
+(* ********************************************************************* *)
 let rec pp_external_def_desc ppf = function
   | Parsetree.ED_type edb ->
       Format.fprintf ppf "ED_type@ (@[<2>%a@])" pp_external_def_body edb
@@ -379,35 +380,35 @@ and pp_external_def ppf = pp_generic_ast pp_external_def_desc ppf
 
 
 (* ********************************************************************* *)
-(*  [Fun] pp_external_def_body_desc :                                    *)
+(* pp_external_def_body_desc :                                           *)
 (*          Format.formatter -> Parsetree.external_def_body_desc -> unit *)
-(** [Descr] : Pretty prints a [external_def_body_desc] value as a
+(** {b Descr} : Pretty prints a [external_def_body_desc] value as a
               Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                             *)
+    {b Rem} : Not exported ouside this module.                           *)
 (* ********************************************************************* *)
 and pp_external_def_body_desc ppf body =
   Format.fprintf ppf "@[<2>{@ %a ;@ %a @]}"
     pp_vname body.Parsetree.ed_name pp_external_expr body.Parsetree.ed_body
 (* **************************************************************** *)
-(*  [Fun] pp_external_def_body :                                    *)
+(* pp_external_def_body :                                           *)
 (*          Format.formatter -> Parsetree.external_def_body -> unit *)
-(** [Descr] : Pretty prints a [external_def_body] value as a
+(** {b Descr} : Pretty prints a [external_def_body] value as a
               Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                        *)
+    {b Rem} : Not exported ouside this module.                      *)
 (* **************************************************************** *)
 and pp_external_def_body ppf = pp_generic_ast pp_external_def_body_desc ppf
 
 
 
 (* ***************************************************************** *)
-(*  [Fun] external_expr_desc :                                       *)
+(* external_expr_desc :                                              *)
 (*          Format.formatter -> Parsetree.external_expr_desc -> unit *)
-(** [Descr] : Pretty prints a [external_expr_desc] value as a
+(** {b Descr} : Pretty prints a [external_expr_desc] value as a
               Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                         *)
+    {b Rem} : Not exported ouside this module.                       *)
 (* ***************************************************************** *)
 and external_expr_desc ppf lst =
   Format.fprintf ppf "[@ %a@ ]"
@@ -417,37 +418,37 @@ and external_expr_desc ppf lst =
 	 Format.fprintf local_ppf "(%a,@ %a)"
 	   pp_external_language ext_lang pp_external_expression ext_expr))
     lst
-(* *************************************************************** *)
-(*  [Fun] pp_external_expr :                                       *)
-(*          Format.formatter -> Parsetree.external_expr -> unit    *)
-(** [Descr] : Pretty prints a [external_expr] value as a Caml-like
+(* ***************************************************************** *)
+(* pp_external_expr :                                                *)
+(*          Format.formatter -> Parsetree.external_expr -> unit      *)
+(** {b Descr} : Pretty prints a [external_expr] value as a Caml-like
               structure.
 
-    [Rem] : Not exported ouside this module.                       *)
-(* *************************************************************** *)
+    {b Rem} : Not exported ouside this module.                       *)
+(* ***************************************************************** *)
 and pp_external_expr ppf = pp_generic_ast external_expr_desc ppf
 
 
 
 (* ****************************************************************** *)
-(*  [Fun] pp_external_expression :                                    *)
+(* pp_external_expression :                                           *)
 (*          Format.formatter -> Parsetree.external_expression -> unit *)
-(** [Descr] : Pretty prints a [external_expression] value as a
+(** {b Descr} : Pretty prints a [external_expression] value as a
                Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                          *)
+    {b Rem} : Not exported ouside this module.                        *)
 (* ****************************************************************** *)
 and pp_external_expression ppf eexpr = Format.fprintf ppf "%s" eexpr ;;
 
 
 
 (* *************************************************************** *)
-(*  [Fun] pp_species_def_desc :                                    *)
+(* pp_species_def_desc :                                           *)
 (*          Format.formatter -> Parsetree.species_def_desc -> unit *)
-(** [Descr] : Pretty prints a [species_def_desc] value as a
+(** {b Descr} : Pretty prints a [species_def_desc] value as a
                Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                       *)
+    {b Rem} : Not exported ouside this module.                     *)
 (* *************************************************************** *)
 let rec pp_species_def_desc ppf def =
   Format.fprintf ppf
@@ -462,22 +463,22 @@ let rec pp_species_def_desc ppf def =
     pp_species_exprs def.Parsetree.sd_inherits.Parsetree.ast_desc
     pp_species_fields def.Parsetree.sd_fields
 (* ************************************************************************* *)
-(*  [Fun] pp_species_def : Format.formatter -> Parsetree.species_def -> unit *)
-(** [Descr] : Pretty prints a [species_def] value as a Caml-like structure.
+(* pp_species_def : Format.formatter -> Parsetree.species_def -> unit *)
+(** {b Descr} : Pretty prints a [species_def] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                                 *)
+    {b Rem} : Not exported ouside this module.                               *)
 (* ************************************************************************* *)
 and pp_species_def ppf = pp_generic_ast pp_species_def_desc ppf
 
 
 
 (* ********************************************************************** *)
-(*  [Fun] pp_species_param_type_desc :                                    *)
+(* pp_species_param_type_desc :                                           *)
 (*          Format.formatter -> Parsetree.species_param_type_desc -> unit *)
-(** [Descr] : Pretty prints a [species_param_type_desc] value as a
+(** {b Descr} : Pretty prints a [species_param_type_desc] value as a
               Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                              *)
+    {b Rem} : Not exported ouside this module.                            *)
 (* ********************************************************************** *)
 and pp_species_param_type_desc ppf = function
   | Parsetree.SPT_in ident ->
@@ -485,77 +486,77 @@ and pp_species_param_type_desc ppf = function
   | Parsetree.SPT_is species_expr ->
       Format.fprintf ppf "@[<2>SPT_is@ (%a@])" pp_species_expr species_expr
 (* ***************************************************************** *)
-(*  [Fun] pp_species_param_type :                                    *)
+(* pp_species_param_type :                                           *)
 (*          Format.formatter -> Parsetree.species_param_type -> unit *)
-(** [Descr] : Pretty prints a [species_param_type] value as a
+(** {b Descr} : Pretty prints a [species_param_type] value as a
               Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                         *)
+    {b Rem} : Not exported ouside this module.                       *)
 (* ***************************************************************** *)
 and pp_species_param_type ppf = pp_generic_ast pp_species_param_type_desc ppf
 
 
 
 (* **************************************************************** *)
-(*  [Fun] pp_species_expr_desc :                                    *)
+(* pp_species_expr_desc :                                           *)
 (*          Format.formatter -> Parsetree.species_expr_desc -> unit *)
-(** [Descr] : Pretty prints a [species_expr_desc] value as a
+(** {b Descr} : Pretty prints a [species_expr_desc] value as a
               Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                        *)
+    {b Rem} : Not exported ouside this module.                      *)
 (* **************************************************************** *)
 and pp_species_expr_desc ppf sed =
   Format.fprintf ppf "@[<2>{@ %a ;@ %a @]}"
     pp_ident sed.Parsetree.se_name pp_species_params sed.Parsetree.se_params
-(* *************************************************************** *)
-(*  [Fun] pp_species_exprs :                                       *)
-(*         Format.formatter -> Parsetree.species_expr list -> unit *)
-(** [Descr] : Pretty prints a [list] of [species_expr] value as a
+(* **************************************************************** *)
+(* pp_species_exprs :                                               *)
+(*         Format.formatter -> Parsetree.species_expr list -> unit  *)
+(** {b Descr} : Pretty prints a [list] of [species_expr] value as a
               Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                       *)
-(* *************************************************************** *)
+    {b Rem} : Not exported ouside this module.                      *)
+(* **************************************************************** *)
 and pp_species_exprs ppf =
   Handy.pp_generic_separated_list "," pp_species_expr ppf
 (* *********************************************************** *)
-(*  [Fun] pp_species_expr :                                    *)
+(* pp_species_expr :                                           *)
 (*          Format.formatter -> Parsetree.species_expr -> unit *)
-(** [Descr] : Pretty prints a [species_expr] value as a
+(** {b Descr} : Pretty prints a [species_expr] value as a
               Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                   *)
+    {b Rem} : Not exported ouside this module.                 *)
 (* *********************************************************** *)
 and pp_species_expr ppf = pp_generic_ast pp_species_expr_desc ppf
 
 
 
 (* ***************************************************************** *)
-(*  [Fun] pp_species_param_desc :                                    *)
+(* pp_species_param_desc :                                           *)
 (*          Format.formatter -> Parsetree.species_param_desc -> unit *)
-(** [Descr] : Pretty prints a [species_param_desc] value as a
+(** {b Descr} : Pretty prints a [species_param_desc] value as a
               Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                         *)
+    {b Rem} : Not exported ouside this module.                       *)
 (* ***************************************************************** *)
 and pp_species_param_desc ppf = function
   | Parsetree.SP expr -> Format.fprintf ppf "SP@ (@[<2>%a@])" pp_expr expr
 (* ***************************************************************** *)
-(*  [Fun] pp_species_params :                                        *)
+(* pp_species_params :                                               *)
 (*          Format.formatter -> Parsetree.species_param list -> unit *)
-(** [Descr] : Pretty prints a [list] of [species_param] value as a
+(** {b Descr} : Pretty prints a [list] of [species_param] value as a
               Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                         *)
+    {b Rem} : Not exported ouside this module.                       *)
 (* ***************************************************************** *)
 and pp_species_params ppf =
   Handy.pp_generic_separated_list "," pp_species_param ppf
 (* ************************************************************ *)
-(*  [Fun] pp_species_param :                                    *)
+(* pp_species_param :                                           *)
 (*          Format.formatter -> Parsetree.species_param -> unit *)
-(** [Descr] : Pretty prints a [species_param] value as a
+(** {b Descr} : Pretty prints a [species_param] value as a
               Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                    *)
+    {b Rem} : Not exported ouside this module.                  *)
 (* ************************************************************ *)
 and pp_species_param ppf = pp_generic_ast pp_species_param_desc ppf
 
@@ -723,12 +724,12 @@ and pp_prop ppf = pp_generic_ast pp_prop_desc ppf
 
 
 
-(* ********************************************************************** *)
-(*  [Fun] pp_expr_desc : Format.formatter -> Parsetree.expr_desc -> unit  *)
-(** [Descr] : Pretty prints a [expr_desc] value as a Caml-like structure.
+(* ************************************************************************ *)
+(* pp_expr_desc : Format.formatter -> Parsetree.expr_desc -> unit           *)
+(** {b Descr} : Pretty prints a [expr_desc] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                              *)
-(* ********************************************************************** *)
+    {b Rem} : Not exported ouside this module.                              *)
+(* ************************************************************************ *)
 and pp_expr_desc ppf = function
   | Parsetree.E_const cst ->
       Format.fprintf ppf "@[<2>E_const@ (%a@))" pp_constant cst
@@ -781,54 +782,54 @@ and pp_expr_desc ppf = function
 	pp_external_expr external_expr
   | Parsetree.E_paren expr ->
       Format.fprintf ppf "@[<2>E_paren@ (%a@])" pp_expr expr
-(* ***************************************************************** *)
-(*  [Fun] pp_exprs : Format.formatter -> Parsetree.expr list -> unit *)
-(** [Descr] : Pretty prints a [list] of [expr] value as a Caml-like
+(* ******************************************************************* *)
+(* pp_exprs : Format.formatter -> Parsetree.expr list -> unit          *)
+(** {b Descr} : Pretty prints a [list] of [expr] value as a Caml-like
               structure.
 
-    [Rem] : Not exported ouside this module.                         *)
-(* ***************************************************************** *)
+    {b Rem} : Not exported ouside this module.                         *)
+(* ******************************************************************* *)
 and pp_exprs ppf = Handy.pp_generic_separated_list "," pp_expr ppf
-(* ***************************************************************** *)
-(*  [Fun] pp_expr : Format.formatter -> Parsetree.expr -> unit       *)
-(** [Descr] : Pretty prints a [expr] value as a Caml-like structure.
+(* ******************************************************************* *)
+(* pp_expr : Format.formatter -> Parsetree.expr -> unit                *)
+(** {b Descr} : Pretty prints a [expr] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                         *)
-(* ***************************************************************** *)
+    {b Rem} : Not exported ouside this module.                         *)
+(* ******************************************************************* *)
 and pp_expr ppf = pp_generic_ast pp_expr_desc ppf
 ;;
 
 
 
 (* ************************************************************************** *)
-(*  [Fun] pp_coll_def : Format.formatter -> Parsetree.coll_def_desc -> unit   *)
-(** [Descr] : Pretty prints a [coll_def_desc] value as a Caml-like structure.
+(* pp_coll_def : Format.formatter -> Parsetree.coll_def_desc -> unit          *)
+(** {b Descr} : Pretty prints a [coll_def_desc] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                                  *)
+    {b Rem} : Not exported ouside this module.                                *)
 (* ************************************************************************** *)
 let pp_coll_def_desc ppf cdd =
   Format.fprintf ppf "{@ %s ;@ %a }"
     cdd.Parsetree.cd_name pp_species_expr cdd.Parsetree.cd_body
 ;;
-(* ********************************************************************* *)
-(*  [Fun] pp_coll_def : Format.formatter -> Parsetree.coll_def -> unit   *)
-(** [Descr] : Pretty prints a [coll_def] value as a Caml-like structure.
+(* *********************************************************************** *)
+(* pp_coll_def : Format.formatter -> Parsetree.coll_def -> unit            *)
+(** {b Descr} : Pretty prints a [coll_def] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                             *)
-(* ********************************************************************* *)
+    {b Rem} : Not exported ouside this module.                             *)
+(* *********************************************************************** *)
 let pp_coll_def ppf = pp_generic_ast pp_coll_def_desc ppf ;;
 
 
 
 (* ******************************************************************** *)
-(*  [Fun] pp_tmp_TD_union :                                             *)
+(* pp_tmp_TD_union :                                                    *)
 (*          Format.formatter ->                                         *)
 (*           (Parsetree.vname * Parsetree.type_expr list) list -> unit  *)
-(** [Descr] : Pretty prints the arguments of a [TD_union] constructor
+(** {b Descr} : Pretty prints the arguments of a [TD_union] constructor
               as a Caml-like structure. This function is mostly used to
               make the [pp_type_body_desc] function lighter.
 
-    [Rem] : Not exported ouside this module.                            *)
+    {b Rem} : Not exported ouside this module.                          *)
 (* ******************************************************************** *)
 let pp_tmp_TD_union ppf l =
   Format.fprintf ppf "@[<2>TD_union ([@ %a@ ]@])"
@@ -894,20 +895,20 @@ let pp_phrases ppf = Handy.pp_generic_separated_list "," pp_phrase ppf ;;
 
 
 
-(* ********************************************************************* *)
-(*  [Fun] pp_file_desc : Format.formatter -> Parsetree.file_desc -> unit *)
-(** [Descr] : Pretty prints a [file_desc] value as a Caml-like structure.
+(* ************************************************************************ *)
+(* pp_file_desc : Format.formatter -> Parsetree.file_desc -> unit           *)
+(** {b Descr} : Pretty prints a [file_desc] value as a Caml-like structure.
 
-    [Rem] : Not exported ouside this module.                             *)
-(* ********************************************************************* *)
+    {b Rem} : Not exported ouside this module.                              *)
+(* ************************************************************************ *)
 let pp_file_desc ppf = function
   | Parsetree.File phrases ->
       Format.fprintf ppf "@[<2>File@ ([@ %a@ ]@[<2>)" pp_phrases phrases
 ;;
-(* ***************************************************************** *)
-(*  [Fun] pp_file : Format.formatter -> Parsetree.file -> unit       *)
-(** [Descr] : Pretty prints a [file] value as a Caml-like structure.
+(* ******************************************************************* *)
+(* pp_file : Format.formatter -> Parsetree.file -> unit                *)
+(** {b Descr} : Pretty prints a [file] value as a Caml-like structure.
 
-    [Rem] : Exported ouside this module.                             *)
-(* ***************************************************************** *)
+    {b Rem} : Exported ouside this module.                             *)
+(* ******************************************************************* *)
 let pp_file ppf = pp_generic_ast pp_file_desc ppf ;;

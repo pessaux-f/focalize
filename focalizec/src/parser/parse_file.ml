@@ -1,4 +1,17 @@
-(* $Id: parse_file.ml,v 1.3 2007-06-28 08:35:56 weis Exp $ *)
+(* $Id: parse_file.ml,v 1.4 2007-07-17 08:25:10 pessaux Exp $ *)
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*            François Pessaux                                         *)
+(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
 
 open Parsing;;
 

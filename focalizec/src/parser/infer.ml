@@ -1,4 +1,5 @@
-(* $Id: infer.ml,v 1.5 2007-07-16 15:09:20 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.6 2007-07-17 08:25:10 pessaux Exp $ *)
+
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -12,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** [Descr] : Exception used to inform that a sum type constructor was used
+(** {bL Descr} : Exception used to inform that a sum type constructor was used
               with an incorrect arity. The correct expected arity is
               stored in the second argument of the exception constructor.   *)
 exception Bad_constructor_arity of (Parsetree.ident * Env.constructor_arity) ;;
@@ -33,18 +34,28 @@ and rep_type_def_desc =
   | RTE_prod of rep_type_def * rep_type_def
   | RTE_paren of rep_type_def
 ;;
-
-type type_expr = type_expr_desc ast
-and type_expr_desc =
-  | TE_ident of ident
-  | TE_fun of type_expr * type_expr
-  | TE_app of ident * type_expr list
-  | TE_prod of type_expr * type_expr
-  | TE_self
-  | TE_prop
-  | TE_paren of type_expr
-;;
 *)
+
+
+
+let rec typecheck_type_expr ctx env ty_expr =
+  let final_ty =
+    (match ty_expr.Parsetree.ast_desc with
+     | Parsetree.TE_ident ident -> failwith "todo"
+     | Parsetree.TE_fun (ty_expr1, ty_expr2) ->
+	 Types.type_arrow
+	   (typecheck_type_expr ctx env ty_expr1)
+	   (typecheck_type_expr ctx env ty_expr2)
+     | Parsetree.TE_app (ty_cstr_ident, args_ty_exprs) -> failwith "todo"
+     | Parsetree.TE_prod (ty_expr1, ty_expr2) ->
+	 failwith "Comment plonger a*b dans une liste ?"
+     | Parsetree.TE_self -> Types.type_self ()
+     | Parsetree.TE_prop -> Types.type_prop ()
+     | Parsetree.TE_paren inner -> typecheck_type_expr ctx env inner) in
+  (* Store the type information in the expression's node. *)
+  ty_expr.Parsetree.ast_type <- Some final_ty ;
+  final_ty
+;;
 
 
 
@@ -197,13 +208,18 @@ and external_def_body_desc = {
   ed_name : vname ;
   ed_body : external_expr
 }
-
-and external_expr = external_expr_desc ast
-and external_expr_desc =
-    (external_language * external_expression) list
-
-and external_expression = string ;;
 *)
+
+
+
+(* Does not make any assumption. Crudely returns a fresh type variable. *)
+let typecheck_external_expr ext_expr =
+  let ty = Types.type_variable () in (* A somewhat of magic obj... *)
+  ext_expr.Parsetree.ast_type <- Some ty ;
+  ty
+;;
+
+
 
 (*
 let rec typecheck_species_def env species_def_desc =
@@ -475,7 +491,7 @@ let rec typecheck_expr ctx env expr_desc =
           let tys = List.map (typecheck_expr ctx env) exprs in
           Types.type_tuple tys
 	 end)
-     | Parsetree.E_external external_expr -> failwith "todo"
+     | Parsetree.E_external ext_expr -> typecheck_external_expr ext_expr
      | Parsetree.E_paren expr -> typecheck_expr ctx env expr) in
   (* Store the type information in the expression's node. *)
   expr_desc.Parsetree.ast_type <- Some final_ty ;
@@ -483,22 +499,22 @@ let rec typecheck_expr ctx env expr_desc =
 
 
 
-(* ***************************************************************** *)
-(*  [Fun] typeckeck_record_expr :                                    *)
-(*          Env.t -> (Types.label_name * Parsetree.expr) list ->     *)
-(*            Parsetree.expr option -> Types.simple_type             *)
-(** [Descr] : Performs type inference on record expressions with or
+(* ****************************************************************** *)
+(* typeckeck_record_expr :                                            *)
+(*          Env.t -> (Types.label_name * Parsetree.expr) list ->      *)
+(*            Parsetree.expr option -> Types.simple_type              *)
+(** {b Descr} : Performs type inference on record expressions with or
               without "with" clause. Currently, the labels
               exhaustivity is not checked. It has to be done when
               there is no "with" clause.
 
-    [Args] :
+    {b Args} :
       - env : The current typing environment.
       - fields : The list of fields values of the record expression.
       - opt_with_expr : The optional "with" clause.
 
-    [Rem] : Not exported outside this module.                        *)
-(* ***************************************************************** *)
+    {b Rem} : Not exported outside this module.                       *)
+(* ****************************************************************** *)
 and typeckeck_record_expr ctx env fields opt_with_expr =
   (* At then end, must be the type of the host of all these labels. *)
   let result_ty = Types.type_variable () in
@@ -582,7 +598,7 @@ and typecheck_let_definition ctx env let_def =
 	    (fun (_, opt_arg_ty_expr) ->
 	      match opt_arg_ty_expr with
 	       | None -> Types.type_variable ()
-	       | Some ty_expr -> failwith "todo ty_expr1")
+	       | Some ty_expr -> typecheck_type_expr ctx env ty_expr)
 	    binding.Parsetree.b_params in
 	(* Extend the current environment with the arguments *)
 	(* of the bound identier if there are some.          *)
@@ -603,7 +619,11 @@ and typecheck_let_definition ctx env let_def =
 	(* If there is some constraint on this type, then unify with it. *)
 	(match binding.Parsetree.b_type with
 	 | None -> ()
-	 | Some ty_expr -> failwith "todo ty_expr2") ;
+	 | Some ty_expr ->
+	     let constraint_ty = typecheck_type_expr ctx env ty_expr in
+	     Types.unify
+	       ~self_manifest: ctx.self_manifest
+	       constraint_ty infered_body_ty) ;
 	(* Now, reconstruct the functional type from the body's and args' *)
         (* types. DO NOT fold_left, otherwise the fun type gets mirored ! *)
         let complete_ty =

@@ -1,9 +1,10 @@
-# $Id: Makefile,v 1.22 2007-07-13 08:47:54 pessaux Exp $
+# $Id: Makefile,v 1.23 2007-07-17 08:25:10 pessaux Exp $
 
 RM = rm -rf
 
 CAMLBYT = ocamlc -warn-error A -g
 CAMLBIN = ocamlopt -warn-error A
+CAMLDOC = ocamldoc
 
 CAMLYAC = ocamlyacc -v
 CAMLLEX = ocamllex
@@ -28,6 +29,10 @@ all:: $(BYTOBJS)
 clean::
 	$(RM) *~ *.cm* log lexer.ml lexer.mli check_file
 	$(RM) parser.ml parser.mli parser.conflicts parser.output
+	$(RM) doc/*
+
+doc:: $(BYTOBJS)
+	$(CAMLDOC) -html -d doc $(BYTOBJS:.cmo=.ml)
 
 depend:
 	ocamldep $(CAML_COMP_FLAGS) *.mli *.ml > ./.depend

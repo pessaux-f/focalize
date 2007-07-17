@@ -1,4 +1,5 @@
-(* $Id: configuration.ml,v 1.7 2007-07-13 15:16:38 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.8 2007-07-17 08:25:10 pessaux Exp $ *)
+
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
