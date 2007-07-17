@@ -1,4 +1,4 @@
-(* $Id: infer.ml,v 1.6 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.7 2007-07-17 15:44:27 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -13,16 +13,26 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** {bL Descr} : Exception used to inform that a sum type constructor was used
-              with an incorrect arity. The correct expected arity is
-              stored in the second argument of the exception constructor.   *)
+(* *********************************************************************** *)
+(** {bL Descr} : Exception used to inform that a sum type constructor was
+               used with an incorrect arity. The correct expected arity is
+              stored in the second argument of the exception constructor.  *)
 exception Bad_constructor_arity of (Parsetree.ident * Env.constructor_arity) ;;
+(* *********************************************************************** *)
+
+
+exception Unbound_type_variable of string ;;
+(* Expected arity, used with arity. *)
+exception Bad_type_arity of (Parsetree.ident * int * int) ;;
 
 
 (** To become the context recording various information propagated for the
     type inference. May be could also contain the environment. *)
 type typing_context = {
-  self_manifest : Types.simple_type option
+  (** Optional type Self is known to be equal to. *)
+  self_manifest : Types.simple_type option ;
+  (** Mapping between 'variables and the [simpletype] they are bound to. *)
+  tyvars_mapping : (string * Types.simple_type) list
 } ;;
 
 (*
@@ -41,14 +51,29 @@ and rep_type_def_desc =
 let rec typecheck_type_expr ctx env ty_expr =
   let final_ty =
     (match ty_expr.Parsetree.ast_desc with
-     | Parsetree.TE_ident ident -> failwith "todo"
+     | Parsetree.TE_ident ident ->
+	 (begin
+	 match ident.Parsetree.ast_desc with
+	  | Parsetree.I_local (Parsetree.Vqident quote_name) ->
+	      (begin
+	      (* Just handle the special where the ident is a type variable. *)
+	      try List.assoc quote_name ctx.tyvars_mapping
+	      with Not_found -> raise (Unbound_type_variable quote_name)
+	      end)
+	  | _ ->
+	      (* Case of all 0-ary other user-defined type constructors. *)
+	      let ty_descr = Env.find_type ident env in
+	      if ty_descr.Env.type_arity <> 0 then
+		raise (Bad_type_arity (ident, ty_descr.Env.type_arity, 0))
+	      else Types.specialize ty_descr.Env.type_identity
+	 end)
      | Parsetree.TE_fun (ty_expr1, ty_expr2) ->
 	 Types.type_arrow
 	   (typecheck_type_expr ctx env ty_expr1)
 	   (typecheck_type_expr ctx env ty_expr2)
      | Parsetree.TE_app (ty_cstr_ident, args_ty_exprs) -> failwith "todo"
      | Parsetree.TE_prod (ty_expr1, ty_expr2) ->
-	 failwith "Comment plonger a*b dans une liste ?"
+	 failwith "Plonger a*b dans une liste ?"
      | Parsetree.TE_self -> Types.type_self ()
      | Parsetree.TE_prop -> Types.type_prop ()
      | Parsetree.TE_paren inner -> typecheck_type_expr ctx env inner) in

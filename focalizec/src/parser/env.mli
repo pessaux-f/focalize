@@ -1,4 +1,4 @@
-(* $Id: env.mli,v 1.3 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: env.mli,v 1.4 2007-07-17 15:44:27 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -49,14 +49,18 @@ type type_kind =
       (Types.label_name * field_mutability * Types.types_scheme) list
 
 type type_description = {
-  type_kind : type_kind;
-  type_identity : Types.types_scheme option;
+  type_kind : type_kind ;
+  type_identity : Types.types_scheme ;
   type_arity : int;
 }
 
 type t
 
 val find_constructor : Parsetree.ident -> t -> constructor_description
+
 val find_label : Types.label_name -> t -> label_description
+
 val add_ident : Parsetree.vname -> Types.types_scheme -> t -> t
 val find_ident : Parsetree.ident -> t -> Types.types_scheme
+
+val find_type :  Parsetree.ident -> t -> type_description

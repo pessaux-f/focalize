@@ -1,4 +1,4 @@
-(* $Id: parsetree.mli,v 1.27 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.28 2007-07-17 15:44:27 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -46,7 +46,7 @@ type vname =
    | Vuident of string  (** Capitalized ident. *)
    | Vpident of string  (** Prefix operator ident. *)
    | Viident of string  (** Infix operator ident. *)
-   | Vqident of string
+   | Vqident of string  (** "Quote" ident for type variables. *)
      (** Variable names are classified with respect of their lexical class,
 	 which can be regular. infix or prefix. *)
 ;;
