@@ -1,4 +1,4 @@
-(* $Id: env.mli,v 1.4 2007-07-17 15:44:27 pessaux Exp $ *)
+(* $Id: env.mli,v 1.5 2007-07-18 15:51:06 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -55,6 +55,8 @@ type type_description = {
 }
 
 type t
+
+val empty : unit -> t
 
 val find_constructor : Parsetree.ident -> t -> constructor_description
 

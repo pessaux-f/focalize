@@ -1,4 +1,4 @@
-(* $Id: types.mli,v 1.5 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: types.mli,v 1.6 2007-07-18 15:51:06 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -50,6 +50,7 @@ val type_self : unit -> simple_type
 val type_prop : unit -> simple_type
 
 val specialize : types_scheme -> simple_type
+val specialize_and_instanciate : types_scheme -> simple_type list -> simple_type
 val generalize : simple_type -> types_scheme
 val trivial_scheme : simple_type -> types_scheme
 

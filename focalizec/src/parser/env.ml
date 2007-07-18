@@ -1,4 +1,4 @@
-(* $Id: env.ml,v 1.5 2007-07-17 15:44:27 pessaux Exp $ *)
+(* $Id: env.ml,v 1.6 2007-07-18 15:51:06 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -94,6 +94,20 @@ type t = {
 
 
 
+(* ************************************************************** *)
+(* empty : unit -> t                                              *)
+(** {b Descr] : Creates a fresh TOTALY empty environment (no even
+              pervasive stuff inside).
+
+    {b Rem} : Exported outside this module.                       *)
+(* ************************************************************** *)
+let empty () =
+  { constructors = [] ; labels = [] ; types  = [] ;
+    idents = [] ; species = [] ; collections = [] }
+;;
+
+
+
 (* ***************************************************************** *)
 (* Parsetree.fname option -> 'a -> 'a                                *)
 (** {b Descr} : Wrapper to lookup inside an external interface file.
@@ -168,7 +182,7 @@ let rec find_ident ident_ident env =
    | Parsetree.I_global (opt_scope, vname) ->
        let env' = find_module opt_scope env in
        find_ident_vname vname env'
-   | Parsetree.I_method (_, _) -> failwith "todo"
+   | Parsetree.I_method (_, _) -> failwith "todo1"
 
 and find_ident_vname vname env =
   try List.assoc vname env.idents with

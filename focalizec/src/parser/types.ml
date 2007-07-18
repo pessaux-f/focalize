@@ -1,4 +1,4 @@
-(* $Id: types.ml,v 1.5 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: types.ml,v 1.6 2007-07-18 15:51:06 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -174,11 +174,9 @@ let rec occur_check var ty =
 
 
 (** {b Rem} : Exported oustide this module. *)
-let specialize scheme =
-  (* Create, for each generalized variable of the type scheme, a       *)
-  (* fresh corresponding one and remind the mapping generalized-fresh. *)
-  let instanciated_vars =
-    List.map (fun var -> (var, type_variable ())) scheme.ts_type_parameters in
+let specialize_and_instanciate scheme tys_for_vars =
+  (* Remind the mapping between generalized avd fresh types.. *)
+  let instanciated_vars = List.combine scheme.ts_type_parameters tys_for_vars in
   (* Internal recursive copy of a type replacaing generalized variables. *)
   let rec copy_simple_type ty =
     match repr ty with
@@ -194,6 +192,15 @@ let specialize scheme =
      | (ST_sefl_rep | ST_species_rep _) as ty -> ty in
   (* Now really copy the scheme's body while replacing generalised vars. *)
   copy_simple_type scheme.ts_body
+;;
+
+
+let specialize scheme =
+  (* Create, for each generalized variable of the *)
+  (* type scheme, a fresh corresponding one.      *)
+  let tys_for_vars =
+    List.map (fun _ -> type_variable ()) scheme.ts_type_parameters in
+  specialize_and_instanciate scheme tys_for_vars
 ;;
 
 
@@ -273,7 +280,7 @@ let rec unify ~self_manifest ty1 ty2 =
            raise
 	     (Arity_mismatch (name, (List.length args), (List.length args')))
          end)
-     | (ST_sefl_rep, _) | (_, ST_sefl_rep) -> failwith "todo0"
-     | ((ST_species_rep _), _) | (_, (ST_species_rep _)) -> failwith "todo1"
+     | (ST_sefl_rep, _) | (_, ST_sefl_rep) -> failwith "todo8"
+     | ((ST_species_rep _), _) | (_, (ST_species_rep _)) -> failwith "todo9"
      | (_, _) -> raise (Conflict (val_of_ty1, val_of_ty2))
 ;;

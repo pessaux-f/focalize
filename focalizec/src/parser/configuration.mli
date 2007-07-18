@@ -1,4 +1,4 @@
-(* $Id: configuration.mli,v 1.7 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.8 2007-07-18 15:51:06 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -37,6 +37,11 @@ val get_input_file_name : unit -> string
 ;;
 val set_input_file_name : string -> unit
 ;;
+
+val get_do_typechecking : unit -> bool ;;
+
+val set_do_typechecking : bool -> unit ;;
+
 val print_focal_version : string -> 'a
 ;;
 val print_focal_short_version : unit -> unit

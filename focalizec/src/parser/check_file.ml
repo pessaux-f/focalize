@@ -1,4 +1,4 @@
-(* $Id: check_file.ml,v 1.16 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: check_file.ml,v 1.17 2007-07-18 15:51:06 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -33,7 +33,10 @@ let main () =
       ("--old-pretty",
        Arg.String Configuration.set_old_pretty_print,
        " pretty-prints the parse tree of the focalize file as \
-         an old focal source.");
+         an old focal source.") ;
+      ("--typecheck",
+       Arg.Unit (fun () -> Configuration.set_do_typechecking true),
+       " performs type inference.") ;
       ("--verbose",
        Arg.Unit (fun () -> Configuration.set_verbose true),
        " be verbose.") ]
@@ -45,7 +48,7 @@ let main () =
       Format.err_formatter (Configuration.get_input_file_name ()) in
   (* Hard-dump the AST if requested. *)
   if Configuration.get_verbose () then
-    Dump_ptree.pp_file Format.err_formatter ast;
+    Dump_ptree.pp_file Format.err_formatter ast ;
   (* Pretty the AST as a new-focal-syntax source if requested. *)
   (match Configuration.get_pretty_print () with
    | None -> ()
@@ -60,8 +63,11 @@ let main () =
    | Some fname ->
      let out_hd = open_out_bin fname in
      let out_fmt = Format.formatter_of_out_channel out_hd in
-     Oldsourcify.pp_file out_fmt ast;
-     close_out out_hd);
+     Oldsourcify.pp_file out_fmt ast ;
+     close_out out_hd) ;
+  (* Typechecks the AST if requested. *)
+  if Configuration.get_do_typechecking () then
+    Infer.typecheck_file ast ;
   exit 0
 ;;
 

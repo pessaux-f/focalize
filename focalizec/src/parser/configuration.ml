@@ -1,4 +1,4 @@
-(* $Id: configuration.ml,v 1.8 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.9 2007-07-18 15:51:06 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -24,6 +24,7 @@ let (get_verbose,
   ((fun () -> !verbose),
    (fun b -> verbose := b))
 ;;
+
 
 
 let (get_pretty_print,
@@ -55,13 +56,26 @@ let (get_input_file_name,
 
 
 
+let (get_do_typechecking,
+     set_do_typechecking) =
+  let do_typechecking_flag = ref false in
+  ((fun () -> !do_typechecking_flag),
+   (fun b -> do_typechecking_flag := b))
+;;
+
+
+
 let print_focal_version v =
   prerr_endline (Printf.sprintf "The Focal compiler, version %s" v) ;
   exit 0
 ;;
 
+
+
 let print_focal_short_version () =
   print_focal_version (Printf.sprintf "%.2f" focal_version_number)
 ;;
+
+
 
 let print_focal_full_version () = print_focal_version focal_full_version ;;
