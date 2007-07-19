@@ -1,4 +1,4 @@
-(* $Id: env.ml,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
+(* $Id: env.ml,v 1.2 2007-07-19 14:42:05 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -187,6 +187,12 @@ let rec find_ident ident_ident env =
 and find_ident_vname vname env =
   try List.assoc vname env.idents with
   | Not_found -> raise (Unbound_identifier vname)
+;;
+
+
+
+let add_type tyname ty_descr env =
+  { env with types = (tyname, ty_descr) :: env.types }
 ;;
 
 

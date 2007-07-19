@@ -1,4 +1,4 @@
-(* $Id: infer.ml,v 1.3 2007-07-19 13:57:09 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.4 2007-07-19 14:42:05 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -740,21 +740,45 @@ and coll_def_desc = {
   cd_name : Types.cname ;
   cd_body : species_expr
 } ;;
-
-type type_def = type_def_desc ast
-and type_def_desc = {
-  td_name : Types.tname ;
-  td_params : string list ;
-  td_body : type_body
-}
-
-and type_body = type_body_desc ast
-and type_body_desc =
-  | TD_alias of type_expr
-  | TD_union of (constr_name * (type_expr list)) list 
-  | TD_record of (Types.label_name * type_expr) list
-;;
 *)
+
+
+
+let typecheck_type_def ctx env type_def =
+  let type_def_descr = type_def.Parsetree.ast_desc in
+  (* First, extend the [tyvars_mapping] of the current *)
+  (* context with parameters of the type definition.   *)
+  let vmapp_extention =
+    List.map
+      (fun var_name -> (var_name, Types.type_variable ()))
+      type_def_descr.Parsetree.td_params in
+  let new_ctx = { ctx with
+    tyvars_mapping = vmapp_extention @ ctx.tyvars_mapping } in
+  (* Get the type constructor's arity. One could avoid a second iteration *)
+  (* on the list by incrementing a reference while building the extention *)
+  (* of the context, but that would be pretty uggly... And usually, there *)
+  (* are no tons of parameters in types definitions !                     *)
+  let nb_params = List.length type_def_descr.Parsetree.td_params in
+  (* Process the body of the type definition. *)
+  match type_def_descr.Parsetree.td_body.Parsetree.ast_desc with
+   | Parsetree.TD_alias ty ->
+       (* We do not insert the defined name itself  *)
+       (* to reject recursive type abbreviations.   *)
+       let identity_type = typecheck_type_expr new_ctx env ty in
+       (* Generalize the scheme to get the real identity. *)
+       let ty_descr = {
+	 Env.type_kind = Env.TK_abstract ;
+	 Env.type_identity = Types.generalize identity_type ;
+	 Env.type_arity = nb_params } in
+       (* Just returns the environment extended by the type itself. *)
+       Env.add_type type_def_descr.Parsetree.td_name ty_descr env
+   | Parsetree.TD_union constructors ->
+       failwith "todo 15"
+   | Parsetree.TD_record labels ->
+       (* We do not insert the defined record name *)
+       (* itself to reject recursive record types. *)
+       failwith "todo 15"
+;;
 
 
 
@@ -776,7 +800,10 @@ let typecheck_phrase env phrase =
      | Parsetree.Ph_open _ -> failwith "todo4"
      | Parsetree.Ph_species species_def -> failwith "todo5"
      | Parsetree.Ph_coll coll_def -> failwith "todo6"
-     | Parsetree.Ph_type type_def -> failwith "todo7"
+     | Parsetree.Ph_type type_def ->
+	 let env' = typecheck_type_def ctx env type_def in
+	 Format.fprintf Format.err_formatter "Type defined.@\n" ;
+	 ((Types.type_unit ()), env')
      | Parsetree.Ph_let let_def  ->
 	 let envt_bindings = typecheck_let_definition ctx env let_def in
 	 (* Extend the current environment with the *)

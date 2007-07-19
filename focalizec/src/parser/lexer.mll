@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.22 2007-07-19 12:01:51 pessaux Exp $ *)
+(* $Id: lexer.mll,v 1.23 2007-07-19 14:42:05 pessaux Exp $ *)
 
 {
 open Lexing;;
@@ -19,6 +19,7 @@ exception Error of error * Lexing.position * Lexing.position;;
 let keyword_table = Hashtbl.create 42;;
 
 List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
+  "alias", ALIAS;
   "all", ALL;
   "and", AND;
   "as", AS;

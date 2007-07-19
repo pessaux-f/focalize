@@ -1,4 +1,4 @@
-(* $Id: env.mli,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
+(* $Id: env.mli,v 1.2 2007-07-19 14:42:05 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -69,4 +69,5 @@ val find_label : Types.label_name -> t -> label_description
 val add_ident : Parsetree.vname -> Types.types_scheme -> t -> t
 val find_ident : Parsetree.ident -> t -> Types.types_scheme
 
+val add_type : Types.tname -> type_description -> t -> t
 val find_type :  Parsetree.ident -> t -> type_description
