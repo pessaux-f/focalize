@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.44 2007-07-16 15:38:42 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.45 2007-07-19 12:59:17 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -281,7 +281,7 @@ external_definition:
 /**** TYPE DEFINITION ****/
 
 def_type:
-  | opt_doc TYPE type_name def_type_params EQUAL def_type_body SEMI_SEMI
+  | opt_doc TYPE type_name def_type_params EQUAL def_type_body
     { mk_doc $1 {td_name = ($3 : string); td_params = $4; td_body = $6; } }
 ;
 
@@ -432,9 +432,9 @@ let_binding:
   | opt_local LET binding
     { mk {ld_rec = RF_no_rec; ld_logical = LF_no_logical; ld_local = $1;
           ld_bindings = [ $3 ]} }
-  | opt_local LET REC binding_list
+  | opt_local LET REC binding following_binding_list
     { mk { ld_rec = RF_rec; ld_logical = LF_no_logical; ld_local = $1;
-           ld_bindings = $4; } }
+           ld_bindings = $4 :: $5 ; } }
 ;
 
 def_let:
@@ -473,9 +473,9 @@ def_logical:
   | opt_doc opt_local LOGICAL binding
     { mk_doc $1 {ld_rec = RF_no_rec; ld_logical = LF_logical; ld_local = $2;
                  ld_bindings = [ $4 ]} }
-  | opt_doc opt_local LOGICAL REC binding_list
+  | opt_doc opt_local LOGICAL REC binding following_binding_list
     { mk_doc $1 { ld_rec = RF_rec; ld_logical = LF_logical; ld_local = $2;
-                  ld_bindings = $5; } }
+                  ld_bindings = $5 :: $6 ; } }
 ;
 
 def_property:
@@ -881,9 +881,9 @@ opt_doc:
   | DOCUMENTATION { Some $1 }
 ;
 
-binding_list:
+following_binding_list:
   | { [] }
-  | binding AND binding_list { $1 :: $3 }
+  | AND binding following_binding_list { $2 :: $3 }
 ;
 
 /**** NAMES ****/
