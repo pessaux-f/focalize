@@ -1,4 +1,4 @@
-(* $Id: infer.ml,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.2 2007-07-19 13:29:43 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -112,6 +112,10 @@ let rec is_non_expansive env expr =
        (List.for_all
           (fun binding ->
 	    let bound_expr = binding.Parsetree.ast_desc.Parsetree.b_body in
+	    (* Be careful. Consider the comment in the function    *)
+            (* [typecheck_let_definition] dealing with body hiding *)
+	    (* the functional aspect of the whole definition.      *)
+	    binding.Parsetree.ast_desc.Parsetree.b_params <> [] ||
 	    is_non_expansive env bound_expr)
           let_def.Parsetree.ast_desc.Parsetree.ld_bindings)
 	 &&
@@ -325,21 +329,6 @@ and species_field_desc =
   | SF_property of property_def
   | SF_theorem of theorem_def
   | SF_proof of proof_def
-
-and let_def = let_def_desc ast_doc
-and let_def_desc = {
-  ld_rec : rec_flag ;
-  ld_log : log_flag ;
-  ld_loc : loc_flag ;
-  ld_bindings : binding list
-}
-and binding = binding_desc ast
-and binding_desc = {
-  b_name : ident ;
-  b_params : (ident * type_expr option) list ;
-  b_type : type_expr option ;
-  b_body : expr
-}
 
 and theorem_def = theorem_def_desc ast_doc
 and theorem_def_desc = {
@@ -627,7 +616,16 @@ and typecheck_let_definition ctx env let_def =
         (* Just use a hack telling that if the expression won't be *)
         (* generalisable, to typecheck it, we don't change the     *)
 	(* generalisation level, then we won't generalise it.      *)
-	if is_non_expansive env binding.Parsetree.b_body then
+	(* Becareful, functions are non_expansive. Because the     *)
+	(* structure of the let-def includes the parameters of the *)
+	(* bound ident, a fun like [let f (x) = body] will not be  *)
+        (* considered as non_expansive if [body] is not because    *)
+        (* [body] hides the function because the arguments are     *)
+        (* recorded in the [b_params] field. Hence, if the list    *)
+        (* [b_params] is not empty, then the bound expression is a *)
+        (* a function and is non_expansive whatever the body is.   *)
+	if binding.Parsetree.b_params <> [] ||
+           is_non_expansive env binding.Parsetree.b_body then
 	  (begin
 	  (* The body expression will be authorised to be generalised. *)
 	  Types.begin_definition () ;
@@ -689,7 +687,6 @@ and typecheck_let_definition ctx env let_def =
 	(* Guess the body's type. *)
 	let infered_body_ty =
 	  typecheck_expr ctx local_env binding.Parsetree.b_body in
-        if non_expansive then Types.end_definition () ;
 	(* If there is some constraint on this type, then unify with it. *)
 	(match binding.Parsetree.b_type with
 	 | None -> ()
@@ -698,6 +695,7 @@ and typecheck_let_definition ctx env let_def =
 	     Types.unify
 	       ~self_manifest: ctx.self_manifest
 	       constraint_ty infered_body_ty) ;
+        if non_expansive then Types.end_definition () ;
 	(* Now, reconstruct the functional type from the body's and args' *)
         (* types. DO NOT fold_left, otherwise the fun type gets mirored ! *)
         let complete_ty =
