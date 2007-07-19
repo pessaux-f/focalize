@@ -168,7 +168,7 @@ et d'espèces          majuscule.
 --------------------------------------------------------------------------
 self                  Doit être renommé en "Self" dans la syntaxe
                       afin de rester cohérent avec le fait que
-                      noms de collections et d'espèces doivent
+                      noms de collections et d'espèces doivent        FAIT
                       commencer par 1 alphabétique majuscule.
 --------------------------------------------------------------------------
 ! et #                Doivent devenir optionnels. Autrement dit,
@@ -203,7 +203,7 @@ collections           qu'implanter des espèces. Elles ne pourront
                       supplémentaires à l'espèce qu'elles
                       implantent. La syntaxe actuelle du nouveau
                       parseur à la forme:
-                        collection ... implements ... = end ;;
+                        collection ... implements ... = end ;;        FAIT
                       Le "=" suivi de "end" semble étrange. Du
                       fait qu'une collection de définit rien de
                       supplémentaire, on supprime le "=". Et du
@@ -221,7 +221,7 @@ constr            Le type décrivant les expresssions utilisant des
                   explicite et qu'il est le résultat d'un calcul arbitraire.
                   Ceci donne donc à penser que les constructeurs sont des
                   valeurs de première classe.
-                  A la place, ne devtrait-on pas plutôt avoir :
+                  A la place, ne devtrait-on pas plutôt avoir :           FAIT
                    | E_constr of constr_name * expr list
                   Il faut voir qu'en fait le parser invariablement
                   construit une expr de la forme (E_var ident) avec ident
@@ -258,3 +258,6 @@ types d'espèces   type des collections ?
                   la défitition des carriers.
                   On stratifierait ainsi complètement les "types ML" et les
                   "types de collections".
+                                                                     FAIT
+                                                        DANS L'ALGEBRE MAIS PAS
+                                                            ENCORE EXPLOITE
