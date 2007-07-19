@@ -1,4 +1,4 @@
-(* $Id: infer.ml,v 1.2 2007-07-19 13:29:43 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.3 2007-07-19 13:57:09 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -49,6 +49,18 @@ and rep_type_def_desc =
 
 
 
+(* ******************************************************************* *)
+(* typing_context -> Env.t -> Parsetree.type_expr -> Types.simple_type *)
+(** {b Descr} : Translates a type expression into a [simple_type].
+                Variable are translated according to the mapping found
+                inside the current context. Hence, in case this
+                function is used to create the body type of a type
+                definition, if the definition is polymorphic, the
+                parameter-variables must already exist inside  the
+                mapping.
+
+    {b Rem} : Not exported outside this module.                        *)
+(* ******************************************************************* *)
 let rec typecheck_type_expr ctx env ty_expr =
   let final_ty =
     (match ty_expr.Parsetree.ast_desc with
