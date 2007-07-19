@@ -1,4 +1,4 @@
-(* $Id: handy.mli,v 1.6 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: parsetree_utils.mli,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -13,19 +13,5 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** Pretty printing tools. *)
 
-val pp_generic_separated_list :
-  string ->
-  (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a list -> unit
-;;
-val pp_generic_newlined_list :
-  (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a list -> unit
-;;
-val pp_generic_explicit_option :
-  (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a option -> unit
-;;
-val pp_generic_option :
-  string -> (Format.formatter -> 'a -> unit) -> Format.formatter ->
-    'a option -> unit
-;;
+val string_of_vname : Parsetree.vname -> string

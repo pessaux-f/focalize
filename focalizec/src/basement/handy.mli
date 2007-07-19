@@ -1,4 +1,4 @@
-(* $Id: parsetree_utils.ml,v 1.3 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: handy.mli,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -13,14 +13,21 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(** Pretty printing tools. *)
 
-(* ****************************************************** *)
-(*  string_of_vname : Parsetree.vname -> string           *)
-(** {b Descr} : Extracts the inner string of the [vname].
-
-    {b Rem} : Exported outside this module.               *)
-(* ****************************************************** *)
-let string_of_vname = function
-  | Parsetree.Vlident s | Parsetree.Vuident s | Parsetree.Vpident s
-  | Parsetree.Viident s | Parsetree.Vqident s -> s
+val pp_generic_separated_list :
+  string ->
+  (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a list -> unit
+;;
+val pp_generic_newlined_list :
+  (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a list -> unit
+;;
+val pp_generic_explicit_option :
+  (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a option -> unit
+;;
+val pp_generic_option :
+  string -> (Format.formatter -> 'a -> unit) -> Format.formatter ->
+    'a option -> unit
+;;
+val int_to_base_26 : int -> string
 ;;

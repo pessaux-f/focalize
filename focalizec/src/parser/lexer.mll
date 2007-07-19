@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.21 2007-07-16 15:38:42 pessaux Exp $ *)
+(* $Id: lexer.mll,v 1.22 2007-07-19 12:01:51 pessaux Exp $ *)
 
 {
 open Lexing;;
@@ -263,21 +263,15 @@ let mk_infixop s =
 
 open Format;;
 
-let report_error ppf = function
-  | Illegal_character c ->
-    fprintf ppf "Illegal character (%s)" (Char.escaped c)
+let string_of_lex_error = function
+  | Illegal_character c -> "Illegal character (" ^ (Char.escaped c) ^ ")"
   | Illegal_escape s ->
-    fprintf ppf "Illegal backslash escape in string or character (%s)" s
-  | Unterminated_comment ->
-    fprintf ppf "Comment not terminated"
-  | Comment_in_string ->
-    fprintf ppf "Non escaped comment separator in string constant"
-  | Uninitiated_comment ->
-    fprintf ppf "Comment has not started"
-  | Unterminated_string ->
-    fprintf ppf "String literal not terminated"
-  | Unterminated_documentation ->
-    fprintf ppf "Documentation not terminated"
+      "Illegal backslash escape in string or character (" ^ s ^ ")"
+  | Unterminated_comment -> "Comment not terminated"
+  | Comment_in_string -> "Non escaped comment separator in string constant"
+  | Uninitiated_comment -> "Comment has not started"
+  | Unterminated_string -> "String literal not terminated"
+  | Unterminated_documentation -> "Documentation not terminated"
 ;;
 
 }

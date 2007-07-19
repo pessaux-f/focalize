@@ -1,4 +1,4 @@
-(* $Id: types.ml,v 1.6 2007-07-18 15:51:06 pessaux Exp $ *)
+(* $Id: types.ml,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -101,7 +101,7 @@ type types_scheme = {
 
 exception Conflict of simple_type * simple_type ;;
 exception Circularity of simple_type * simple_type ;;
-exception Arity_mismatch of (string * int * int) ;;  (* Name, expected arity *)
+exception Arity_mismatch of (tname * int * int) ;;  (* Name, used arities. *)
 
 
 (* ******************************************************************** *)
@@ -283,4 +283,62 @@ let rec unify ~self_manifest ty1 ty2 =
      | (ST_sefl_rep, _) | (_, ST_sefl_rep) -> failwith "todo8"
      | ((ST_species_rep _), _) | (_, (ST_species_rep _)) -> failwith "todo9"
      | (_, _) -> raise (Conflict (val_of_ty1, val_of_ty2))
+;;
+
+
+
+let ty_variables_name = ref ([] : (variable_type * string) list) ;;
+let ty_variables_counter = ref 0 ;;
+
+ (* variable_type -> unit *)
+let pp_type_variable ppf var =
+  let var_name =
+    try List.assq var !ty_variables_name
+    with Not_found ->
+      let name =
+	String.make 1 (Char.chr (Char.code 'a' + !ty_variables_counter)) in
+      incr ty_variables_counter ;
+      ty_variables_name := (var, name) :: !ty_variables_name ;
+      name in
+  Format.fprintf ppf "'%s" var_name
+;;
+
+
+
+let (pp_simple_type, pp_types_scheme) =
+  let rec rec_pp ppf ty =
+    (* First of all get the "repr" guy ! *)
+    let ty = repr ty in
+    match ty with
+     | ST_var v -> Format.fprintf ppf "%a" pp_type_variable v
+     | ST_arrow (ty1, ty2) ->
+	 Format.fprintf ppf "(@[<2>%a@ ->@ %a@])" rec_pp ty1 rec_pp ty2
+     | ST_tuple tys ->
+	 Format.fprintf ppf "(@[<2>%a@])"
+	   (Handy.pp_generic_separated_list " *" rec_pp) tys
+     | ST_construct (tname, arg_tys) ->
+	 (begin
+	 match arg_tys with
+	  | [] -> Format.fprintf ppf "%s" tname
+	  | [one] -> Format.fprintf ppf "%a@ %s" rec_pp one tname
+	  | _ ->
+	      Format.fprintf ppf "(@[<1>%a)@]@ %s"
+		(Handy.pp_generic_separated_list " ," rec_pp) arg_tys tname
+	 end)
+     | ST_sefl_rep -> Format.fprintf ppf "Self"
+     | ST_species_rep cname -> Format.fprintf ppf "%s" cname in
+  (fun the_ppf the_type ->
+    (* Reset the type variable to string "mapper". *)
+    ty_variables_name := [] ;
+    ty_variables_counter := 0 ;
+    rec_pp the_ppf the_type),
+  (fun the_ppf the_scheme ->
+    (* Reset the type variable to string "mapper". *)
+    ty_variables_name := [] ;
+    ty_variables_counter := 0 ;
+    if the_scheme.ts_type_parameters <> [] then
+      Format.fprintf the_ppf "forall %a .@ "
+	(Handy.pp_generic_separated_list "," pp_type_variable)
+	the_scheme.ts_type_parameters ;
+    Format.fprintf the_ppf "%a" rec_pp the_scheme.ts_body)
 ;;

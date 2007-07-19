@@ -1,4 +1,4 @@
-(* $Id: check_file.ml,v 1.17 2007-07-18 15:51:06 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -76,8 +76,32 @@ let main () =
 (** If something unexpected arrises when proceeding, we exit with the proper
     error code. *)
 try main () with
+| Types.Conflict (ty1, ty2) ->
+    Format.fprintf Format.err_formatter
+      "Type incompatibility between %a@ and@ %a.@\n@?"
+      Types.pp_simple_type ty1 Types.pp_simple_type ty2 ;
+| Types.Circularity (ty1, ty2) ->
+    Format.fprintf Format.err_formatter "Circulary between types %a@ and@ %a@\n@?"
+    Types.pp_simple_type ty1 Types.pp_simple_type ty2
+| Types.Arity_mismatch (cstr_name, arity1, arity2) ->
+    Format.fprintf Format.err_formatter
+      "Type constructor %s used with arity %d and %d@\n@?"
+      cstr_name arity1 arity2
+| Env.Unbound_identifier vname ->
+    Format.fprintf Format.err_formatter "Unbound identifier \"%s\".@\n@?"
+      (Parsetree_utils.string_of_vname vname)
+| Parse_file.Lex_error (pos_s, pos_e, reason) ->
+    Format.fprintf Format.err_formatter "Lexical error, %a. %s@\n@?"
+      Parse_file.pp_err_loc (pos_s, pos_e) reason
+| Parse_file.Syntax_error position ->
+    Format.fprintf Format.err_formatter "Syntax error, %a.@\n@?"
+      Parse_file.pp_err_loc position
+| Parse_file.Unclear_error position ->
+    Format.fprintf Format.err_formatter "Unclear syntax error, %a.@\n@?"
+      Parse_file.pp_err_loc position
 | x ->
-    Printf.eprintf "Unexpected error: \"%s\".\nPlease report.\n"
+    Format.fprintf Format.err_formatter
+      "Unexpected error: \"%s\".\nPlease report.@\n@?"
       (Printexc.to_string x) ;
     flush stderr ;
     exit 2

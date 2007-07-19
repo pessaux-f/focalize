@@ -1,4 +1,4 @@
-(* $Id: env.mli,v 1.5 2007-07-18 15:51:06 pessaux Exp $ *)
+(* $Id: env.mli,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -17,6 +17,10 @@
 exception Unbound_constructor of Parsetree.vname
 exception Invalid_constructor_identifier of Parsetree.ident
 exception Unbound_label of Types.label_name
+exception Unbound_module of Parsetree.fname ;;
+exception Unbound_identifier of Parsetree.vname ;;
+exception Unbound_type of Types.tname ;;
+
 
 type species_param =
   | SPAR_in of (Parsetree.vname * Types.simple_type)

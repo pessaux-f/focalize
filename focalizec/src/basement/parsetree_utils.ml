@@ -1,4 +1,4 @@
-(* $Id: files.mli,v 1.2 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -14,13 +14,13 @@
 (***********************************************************************)
 
 
-exception Cant_access_file of Parsetree.fname
-exception Corrupted_fo of Parsetree.fname
+(* ****************************************************** *)
+(*  string_of_vname : Parsetree.vname -> string           *)
+(** {b Descr} : Extracts the inner string of the [vname].
 
-val lib_paths : string list ref
-val open_in_from_lib_paths : Parsetree.fname -> in_channel
-val fo_filename_from_module_name : string -> string
-type magic
-val fo_magic : magic
-val check_magic : in_channel -> magic -> bool
-val write_magic : out_channel -> magic -> unit
+    {b Rem} : Exported outside this module.               *)
+(* ****************************************************** *)
+let string_of_vname = function
+  | Parsetree.Vlident s | Parsetree.Vuident s | Parsetree.Vpident s
+  | Parsetree.Viident s | Parsetree.Vqident s -> s
+;;

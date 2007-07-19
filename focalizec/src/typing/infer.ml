@@ -1,4 +1,4 @@
-(* $Id: infer.ml,v 1.8 2007-07-18 15:51:06 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -665,6 +665,7 @@ and typecheck_let_definition ctx env let_def =
         (* Build a type for the arguments of the bound identier if there are *)
         (* some. If they have type constraints, then use it as primary type  *)
         (* instead of using a type variable that we should unify afterwards. *)
+	if non_expansive then Types.begin_definition () ;
 	let args_tys =
 	  List.map
 	    (fun (_, opt_arg_ty_expr) ->
@@ -672,6 +673,7 @@ and typecheck_let_definition ctx env let_def =
 	       | None -> Types.type_variable ()
 	       | Some ty_expr -> typecheck_type_expr ctx env ty_expr)
 	    binding.Parsetree.b_params in
+	if non_expansive then Types.end_definition () ;
 	(* Extend the current environment with the arguments *)
 	(* of the bound identier if there are some.          *)
 	let local_env =
@@ -772,12 +774,21 @@ let typecheck_phrase env phrase =
 	 let env' =
 	   List.fold_left
 	     (fun accu_env (id, ty_scheme) ->
+	       (* Just a bit of debug. *)
+	       Format.fprintf Format.err_formatter "%s : %a@\n"
+		 (Parsetree_utils.string_of_vname id)
+		 Types.pp_types_scheme ty_scheme ;
 	       Env.add_ident id ty_scheme accu_env)
 	 env envt_bindings in
 	 (* Return unit and the extended environment. *)
 	 ((Types.type_unit ()), env')
      | Parsetree.Ph_theorem theorem_def  -> failwith "todo"
-     | Parsetree.Ph_expr expr -> ((typecheck_expr ctx env expr), env)) in
+     | Parsetree.Ph_expr expr ->
+	 let expr_ty = typecheck_expr ctx env expr in
+	 (* Just a bit of debug. *)
+	 Format.fprintf Format.err_formatter "- : %a@\n"
+	   Types.pp_simple_type expr_ty ;
+	 (expr_ty, env)) in
   (* Store the type information in the phrase's node. *)
   phrase.Parsetree.ast_type <- Some final_ty ;
   (* Return the environment extended with the bindings induced by the phrase. *)

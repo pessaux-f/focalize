@@ -1,17 +1,15 @@
-# $Id: Makefile,v 1.24 2007-07-19 12:01:51 pessaux Exp $
+# $Id: Makefile,v 1.1 2007-07-19 12:01:51 pessaux Exp $
 
 include ../Makefile.config
-CAML_COMP_FLAGS = -I ../../focc/ -I ../basement
+CAML_COMP_FLAGS = -I ../../focc/ 
 
-BYTOBJS = lexer.cmo parser.cmo parse_file.cmo dump_ptree.cmo sourcify.cmo \
-	oldsourcify.cmo
+BYTOBJS = configuration.cmo handy.cmo types.cmo files.cmo parsetree_utils.cmo
 
 
 all:: $(BYTOBJS)
 
 clean::
-	$(RM) *~ *.cm* log lexer.ml lexer.mli
-	$(RM) parser.ml parser.mli parser.conflicts parser.output
+	$(RM) *~ *.cm* log
 	$(RM) doc/*
 
 doc:: $(BYTOBJS)
@@ -19,9 +17,6 @@ doc:: $(BYTOBJS)
 
 depend:
 	$(CAMLDEP) $(CAML_COMP_FLAGS) *.mli *.ml > ./.depend
-
-explain:
-	(menhir --explain parser.mly 2>&1) > menhir.out
 
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx 
@@ -40,9 +35,5 @@ explain:
 
 .mll.ml:
 	$(CAMLLEX) $<
-
-lexer.cmo: ../basement/parsetree.cmi parser.cmi
-
-parser.mli: parser.ml
 
 include .depend

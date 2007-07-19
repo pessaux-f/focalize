@@ -1,4 +1,4 @@
-(* $Id: check_file.mli,v 1.2 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -13,5 +13,37 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** The focalize concrete syntax file checker.
-    This file defines the main verification procedure and runs it. *)
+
+(** The various flags and definitions useful to the internal behaviour of the
+    focalize compiler. *)
+
+val focal_version_number : float
+;;
+val focal_full_version : string
+;;
+val get_verbose : unit -> bool
+;;
+val set_verbose : bool -> unit
+;;
+val get_pretty_print : unit -> string option
+;;
+val set_pretty_print : string -> unit
+;;
+val get_old_pretty_print : unit -> string option
+;;
+val set_old_pretty_print : string -> unit
+;;
+val get_input_file_name : unit -> string
+;;
+val set_input_file_name : string -> unit
+;;
+val get_do_typechecking : unit -> bool
+;;
+val set_do_typechecking : bool -> unit
+;;
+val print_focal_version : string -> 'a
+;;
+val print_focal_short_version : unit -> unit
+;;
+val print_focal_full_version : unit -> unit
+;;

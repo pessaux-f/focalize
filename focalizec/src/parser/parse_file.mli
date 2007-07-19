@@ -1,4 +1,4 @@
-(* $Id: parse_file.mli,v 1.1 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: parse_file.mli,v 1.2 2007-07-19 12:01:51 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -12,4 +12,10 @@
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
+exception Lex_error of (Lexing.position * Lexing.position * string) ;;
+exception Syntax_error of (Lexing.position * Lexing.position) ;;
+exception Unclear_error of (Lexing.position * Lexing.position) ;;
+
+val pp_err_loc : Format.formatter -> Lexing.position * Lexing.position -> unit
+
 val parse_file : Format.formatter -> string -> Parsetree.file

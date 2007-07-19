@@ -1,4 +1,4 @@
-(* $Id: handy.ml,v 1.5 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -86,4 +86,27 @@ let pp_generic_explicit_option printer_fct ppf = function
 let pp_generic_option some_prefix printer_fct ppf = function
   | None -> ()
   | Some data -> Format.fprintf ppf "%s%a" some_prefix printer_fct data
+;;
+
+
+
+(* ************************************************************************* *)
+(* int -> string                                                             *)
+(* {b Descr} : Transforms an integer to a string compound of only a-z chars.
+              Used to write type variables names. In fact, that only a
+              integer->base 26 printer (thar I stole in my PhD code :)).
+
+   {b Rem} : Exported outside this module.                                   *)
+(* ************************************************************************* *)
+let rec int_to_base_26 i =
+ if i >= 26 then
+   (begin
+   let ch = (i mod 26) + (Char.code 'a') in
+   (int_to_base_26 (i / 26)) ^ Char.escaped (Char.chr ch)
+   end)
+   else
+   (begin
+   let ch = (i mod 26) + (Char.code 'a') in
+   Char.escaped (Char.chr ch)
+   end)
 ;;

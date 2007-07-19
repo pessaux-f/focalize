@@ -1,0 +1,5 @@
+touch ./basement/.depend
+touch ./parser/.depend
+touch ./toplevel/.depend
+touch ./typing/.depend
+echo "Done. Now make: make depend all"

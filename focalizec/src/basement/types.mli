@@ -1,4 +1,4 @@
-(* $Id: types.mli,v 1.6 2007-07-18 15:51:06 pessaux Exp $ *)
+(* $Id: types.mli,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -31,7 +31,7 @@ type types_scheme
 
 exception Conflict of simple_type * simple_type
 exception Circularity of simple_type * simple_type
-exception Arity_mismatch of (string * int * int)
+exception Arity_mismatch of (tname * int * int)
 
 val begin_definition : unit -> unit
 val end_definition : unit -> unit
@@ -53,6 +53,7 @@ val specialize : types_scheme -> simple_type
 val specialize_and_instanciate : types_scheme -> simple_type list -> simple_type
 val generalize : simple_type -> types_scheme
 val trivial_scheme : simple_type -> types_scheme
-
 val unify :
   self_manifest: (simple_type option) -> simple_type -> simple_type -> unit
+val pp_simple_type : Format.formatter -> simple_type -> unit
+val pp_types_scheme : Format.formatter -> types_scheme -> unit
