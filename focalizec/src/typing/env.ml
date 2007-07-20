@@ -1,4 +1,4 @@
-(* $Id: env.ml,v 1.2 2007-07-19 14:42:05 pessaux Exp $ *)
+(* $Id: env.ml,v 1.3 2007-07-20 08:14:47 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -106,6 +106,59 @@ let empty () =
     idents = [] ; species = [] ; collections = [] }
 ;;
 
+
+let pervasives () =
+  (* Create the types scheme for []. *)
+  let nil_scheme =
+    (let v = Types.type_variable () in
+    Types.generalize (Types.type_basic "list" [v])) in
+  (* Create the types scheme for ::. *)
+  let cons_scheme =
+    (let v = Types.type_variable () in
+    Types.generalize
+      (Types.type_arrow
+	 (Types.type_tuple [v; (Types.type_basic "list" [v])])
+	 (Types.type_basic "list" [v]))) in
+  (* And now the structure of the envieonment itself. *)
+  {
+   constructors = [
+     (Parsetree.Vlident "[]", {
+        cstr_arity = CA_zero ; cstr_scheme = nil_scheme }) ;
+     (Parsetree.Viident "::", {
+        cstr_arity = CA_one ; cstr_scheme = cons_scheme })
+      ] ;
+   labels = [] ;
+   types  = [
+     ("int", { type_kind = TK_abstract ;
+	       type_identity = Types.generalize (Types.type_int ()) ;
+	       type_arity = 0 }) ;
+     ("float", { type_kind = TK_abstract ;
+		 type_identity = Types.generalize (Types.type_float ()) ;
+		 type_arity = 0 }) ;
+     ("bool", { type_kind = TK_abstract ;
+		type_identity = Types.generalize (Types.type_bool ()) ;
+		type_arity = 0 }) ;
+     ("string", { type_kind = TK_abstract ;
+		  type_identity = Types.generalize (Types.type_string ()) ;
+		  type_arity = 0 }) ;
+     ("char", { type_kind = TK_abstract ;
+		  type_identity = Types.generalize (Types.type_char ()) ;
+		  type_arity = 0 }) ;
+     ("unit", { type_kind = TK_abstract ;
+		type_identity = Types.generalize (Types.type_unit ()) ;
+		type_arity = 0 }) ;
+     ("list", { type_kind =
+	         TK_variant [(Parsetree.Vlident "[]", nil_scheme) ;
+			     (Parsetree.Viident "::", cons_scheme)] ;
+		type_identity =
+		  (let v = Types.type_variable () in
+		  Types.generalize (Types.type_basic "list" [v])) ;
+		type_arity = 1 })
+    ] ;
+  idents = [] ;
+  species = [] ;
+  collections = []
+} ;;
 
 
 (* ***************************************************************** *)

@@ -240,10 +240,11 @@ ident_desc        La structure des ident_desc est particulièrement étrange
                   Pour la même raison que ci-dessus, il serait intéressant
                   d'avoir un type garantissant structurellement cet
                   invariant.
+                  --------------------------------------------------------
                   De plus, le parser scope par défaut les identificateurs
                   comme étant des méthodes (I_method). Y compris les
                   identificateurs présents dans les expressions de types.
-                  Ainsi, dans :
+                  Ainsi, dans :                                           FAIT
                    rep = bool ;
                   "bool" sera représenté par une valeurs syntaxique encodant
                   self!bool. Ceci est franchement étrange. Le parser ne

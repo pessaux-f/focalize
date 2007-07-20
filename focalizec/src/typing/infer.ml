@@ -1,4 +1,4 @@
-(* $Id: infer.ml,v 1.4 2007-07-19 14:42:05 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.5 2007-07-20 08:14:47 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -837,7 +837,7 @@ let typecheck_phrase env phrase =
 let typecheck_file file =
   match file.Parsetree.ast_desc with
    | Parsetree.File phrases ->
-       let global_env = ref (Env.empty ()) in
+       let global_env = ref (Env.pervasives ()) in
        List.iter
 	 (fun phrase -> global_env := typecheck_phrase !global_env phrase)
 	 phrases
