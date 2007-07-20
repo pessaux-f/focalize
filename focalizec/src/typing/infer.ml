@@ -1,4 +1,4 @@
-(* $Id: infer.ml,v 1.5 2007-07-20 08:14:47 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.6 2007-07-20 12:03:49 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -752,6 +752,7 @@ let typecheck_type_def ctx env type_def =
     List.map
       (fun var_name -> (var_name, Types.type_variable ()))
       type_def_descr.Parsetree.td_params in
+  Types.end_definition () ;
   let new_ctx = { ctx with
     tyvars_mapping = vmapp_extention @ ctx.tyvars_mapping } in
   (* Get the type constructor's arity. One could avoid a second iteration *)
@@ -762,9 +763,12 @@ let typecheck_type_def ctx env type_def =
   (* Process the body of the type definition. *)
   match type_def_descr.Parsetree.td_body.Parsetree.ast_desc with
    | Parsetree.TD_alias ty ->
+       (begin
        (* We do not insert the defined name itself  *)
        (* to reject recursive type abbreviations.   *)
+       Types.begin_definition () ;
        let identity_type = typecheck_type_expr new_ctx env ty in
+       Types.end_definition () ;
        (* Generalize the scheme to get the real identity. *)
        let ty_descr = {
 	 Env.type_kind = Env.TK_abstract ;
@@ -772,8 +776,71 @@ let typecheck_type_def ctx env type_def =
 	 Env.type_arity = nb_params } in
        (* Just returns the environment extended by the type itself. *)
        Env.add_type type_def_descr.Parsetree.td_name ty_descr env
+       end)
    | Parsetree.TD_union constructors ->
-       failwith "todo 15"
+       (begin
+       (* Sum types are allowed to be recursive. So make a proto     *)
+       (* definition that will be used to infer the type declaration *)
+       (* if it is recursive.                                        *)
+       let futur_type_type =
+	 Types.type_basic
+	   type_def_descr.Parsetree.td_name (List.map snd vmapp_extention) in
+       let proto_descrip = {
+	 Env.type_kind = Env.TK_variant [] ;
+	 Env.type_identity = Types.trivial_scheme futur_type_type ;
+	 Env.type_arity = nb_params } in
+       (* Extend the environment with ourselves. *)
+       let new_env =
+	 Env.add_type type_def_descr.Parsetree.td_name proto_descrip env in
+       (* Now process the constructors of the type. Create the  *)
+       (* list of couples : (constructor name * simple_type).   *)
+       let cstr_bindings =
+	 List.map
+	   (fun (cstr_name, cstr_args) ->
+	     match cstr_args with
+	      | [] ->
+		  (* No argument for the constructor. So it's a constant. *)
+		  let cstr_descr = {
+		    Env.cstr_arity = Env.CA_zero ;
+		    Env.cstr_scheme = Types.generalize futur_type_type } in
+		  (cstr_name, cstr_descr)
+	      | _ ->
+		  (* There are some argument(s). So the constructor is *)
+		  (* types as a function taking a tuple of argument(s) *)
+		  (* and returning the type of the current definition. *)
+		  Types.begin_definition () ;
+		  let args_ty =
+		    List.map
+		      (typecheck_type_expr new_ctx new_env) cstr_args in
+		  (* Make a tuple of the arguments. *)
+		  let as_tuple = Types.type_tuple args_ty in
+		  let arrow = Types.type_arrow as_tuple futur_type_type in
+		  Types.end_definition () ;
+		  let cstr_descr = {
+		    Env.cstr_arity = Env.CA_one ;
+		    Env.cstr_scheme = Types.generalize arrow } in
+		  (cstr_name, cstr_descr))
+	   constructors in
+       (* And finally, extends the environment with the constructors. *)
+       let env_with_constructors =
+	 List.fold_left
+	   (fun accu_env (cstr_name, cstr_descr) ->
+	     Env.add_constructor cstr_name cstr_descr accu_env)
+	   env
+	   cstr_bindings in
+       (* Now add the type itself. *)
+       let final_type_descr = {
+	 Env.type_kind =
+	   Env.TK_variant
+	     (List.map
+		(fun (n, descr) -> (n, descr.Env.cstr_scheme))
+		cstr_bindings) ;
+	 Env.type_identity = Types.generalize futur_type_type ;
+	 Env.type_arity = nb_params } in
+       Env.add_type
+	 type_def_descr.Parsetree.td_name
+	 final_type_descr env_with_constructors
+       end)
    | Parsetree.TD_record labels ->
        (* We do not insert the defined record name *)
        (* itself to reject recursive record types. *)

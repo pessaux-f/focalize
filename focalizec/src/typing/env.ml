@@ -1,4 +1,4 @@
-(* $Id: env.ml,v 1.3 2007-07-20 08:14:47 pessaux Exp $ *)
+(* $Id: env.ml,v 1.4 2007-07-20 12:03:49 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -199,6 +199,11 @@ let find_module =
 	 end))
 ;;
 
+
+
+let add_constructor cstr_name ty_scheme env =
+  { env with constructors = (cstr_name, ty_scheme) :: env.constructors }
+;;
 
 
 let rec find_constructor cstr_ident env =
