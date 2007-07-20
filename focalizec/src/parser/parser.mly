@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.46 2007-07-20 08:14:47 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.47 2007-07-20 11:25:26 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -965,5 +965,6 @@ external_type_name:
 ;
 
 type_param_name:
+  | QIDENT { $1 }
   | LIDENT { $1 }
 ;
