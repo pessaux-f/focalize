@@ -1,4 +1,4 @@
-(* $Id: oldsourcify.ml,v 1.12 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: oldsourcify.ml,v 1.13 2007-07-21 08:49:09 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -301,16 +301,8 @@ let pp_ident_desc ppf = function
   | Parsetree.I_method (cname_opt, vname) ->
       (begin
       match cname_opt with
-       | None ->
-           (* Here, the [vname] is "self", then it's bugged ! *)
-	   assert ((Parsetree_utils.string_of_vname vname) <> "self") ;
-	   Format.fprintf ppf "!%a" pp_vname vname
-       | Some cname ->
-	   (* If vname is "self", then the real name    *)
-	   (* should be considered as only the [cname]. *)
-	   let inner_name = Parsetree_utils.string_of_vname vname in
-	   if inner_name = "self" then Format.fprintf ppf "%s" cname
-	   else Format.fprintf ppf "%s!%a" cname pp_vname vname
+       | None -> Format.fprintf ppf "!%a" pp_vname vname
+       | Some cname -> Format.fprintf ppf "%s!%a" cname pp_vname vname
       end)
 ;;
 (* *************************************************************** *)

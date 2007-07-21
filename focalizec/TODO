@@ -240,6 +240,15 @@ ident_desc        La structure des ident_desc est particulièrement étrange
                   Pour la même raison que ci-dessus, il serait intéressant
                   d'avoir un type garantissant structurellement cet
                   invariant.
+                      REGLÉ : Par défaut on scope en I_local et les idents
+		      sont scopés en I_method uniquement lorsque l'on est
+		      sûr de leur état de méthode. Ceci peut nécessiter
+		      d'ailleurs que la passe de scoping ait été effectuée.
+		      En fait, ce problème d'invariant était uniquement
+		      présent pour les constructeurs de type parce que
+		      ceux-ci étaient parsés comme bool --->> self!bool.
+		      Donc une fois qu'on a viré de problème de parse, il
+		      n'y a plus besoin de changer la structure des idents.
                   --------------------------------------------------------
                   De plus, le parser scope par défaut les identificateurs
                   comme étant des méthodes (I_method). Y compris les

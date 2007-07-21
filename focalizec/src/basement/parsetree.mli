@@ -1,4 +1,4 @@
-(* $Id: parsetree.mli,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.2 2007-07-21 08:49:09 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -78,10 +78,6 @@ and ident_desc =
   | I_local of vname
   | I_global of ((fname option) * vname)
   | I_method of ((Types.cname option) * vname)
-                                     (* If vname is self, then the real *)
-	                             (* name should be considered as only     *)
-                                     (* [cname]. If [cname] is None and       *)
-                                     (* [vname] is self, then it's bugged !   *)
 ;;
 
 
