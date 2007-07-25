@@ -1,29 +1,16 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.27 2006-06-22 17:09:40 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.28 2007-07-25 19:41:39 doligez Exp $  *)
 
+open Misc;;
 open Printf;;
 
-let zcmd = ref "zenon";;
-let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
-let addopt = ref [];;
-let verbose = ref false;;
-
-let set_tptp_option () = addopt := ("-itptp" :: !addopt);;
-
-let use_coqterm = ref true;;
-let keep_temp_files = ref false;;
-let progress_level = ref 1;;
+let set_tptp_option () = add_opt := ("-itptp" :: !add_opt);;
 
 let translate_progress x =
   match x with
   | 0 | 1 -> x
   | 2 -> 1
   | _ -> assert false
-;;
-
-let try_remove f =
-  if not !keep_temp_files then
-    try Sys.remove f with Sys_error _ -> ()
 ;;
 
 let copy_file name oc =
@@ -166,12 +153,12 @@ let zenon_loc file (_: string * string) data loc oc =
       if !use_coqterm then
         Printf.sprintf "%s -p%d -ocoqterm %s %s -wout %s %s >%s"
                        !zcmd (translate_progress !progress_level)
-                       !zopt (String.concat " " (List.rev !addopt))
+                       !zopt (String.concat " " (List.rev !add_opt))
                        tmp_err tmp_in tmp_out
       else
         Printf.sprintf "%s -p%d -ocoq %s %s -wout %s %s >%s"
                        !zcmd (translate_progress !progress_level)
-                       !zopt (String.concat " " (List.rev !addopt))
+                       !zopt (String.concat " " (List.rev !add_opt))
                        tmp_err tmp_in tmp_out
     in
     if !verbose then Printf.eprintf "%s\n%!" cmd;
@@ -229,7 +216,7 @@ let zenon_version () =
 ;;
 
 let signature () =
-  let aopt = String.concat " " (List.rev !addopt) in
+  let aopt = String.concat " " (List.rev !add_opt) in
   Printf.sprintf "%s %s %s\n%s\n%s\n" !zcmd !zopt aopt (zenon_version ())
                  (if !use_coqterm then "term" else "script")
 ;;

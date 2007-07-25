@@ -1,16 +1,7 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.mli,v 1.13 2006-02-17 15:36:33 lk Exp $  *)
-
-val zcmd : string ref;;
-val zopt : string ref;;
-val addopt : string list ref;;
-val verbose : bool ref;;
+(*  $Id: invoke.mli,v 1.14 2007-07-25 19:41:39 doligez Exp $  *)
 
 val set_tptp_option: unit -> unit
-
-val progress_level : int ref;;
-val keep_temp_files : bool ref;;
-val use_coqterm : bool ref;;
 
 (*
 val zenon :
@@ -32,5 +23,3 @@ val atp :
 ;;
 
 val signature : unit -> string;;
-
-

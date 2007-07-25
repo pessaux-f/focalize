@@ -1,11 +1,10 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: parser.ml,v 1.16 2006-07-20 13:19:21 doligez Exp $  *)
+(*  $Id: parser.ml,v 1.17 2007-07-25 19:41:39 doligez Exp $  *)
 
 open Misc;;
 open Printf;;
 open Token;;
 
-let with_cime = ref false;;
 let cur_species = ref "";;
 let cur_proof = ref "";;
 let cur_step = ref ([] : int list);;

@@ -1,4 +1,4 @@
 (*  Copyright 2005 INRIA  *)
-(*  $Id: version.ml,v 1.8 2007-06-20 10:50:49 doligez Exp $  *)
+(*  $Id: version.ml,v 1.9 2007-07-25 19:41:39 doligez Exp $  *)
 
-let version = "zvtov version 0.5.0 [21] 2007-04-23";;
+let version = "zvtov version 0.5.0 [23] 2007-07-25";;

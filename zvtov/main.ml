@@ -1,6 +1,7 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: main.ml,v 1.16 2006-02-02 13:30:03 doligez Exp $  *)
+(*  $Id: main.ml,v 1.17 2007-07-25 19:41:39 doligez Exp $  *)
 
+open Misc;;
 open Printf;;
 
 let infiles = ref [];;
@@ -33,7 +34,7 @@ let main () =
   | [f] -> do_file f;
   | l ->
       let f x =
-        if !Invoke.progress_level > 0 then begin
+        if !progress_level > 0 then begin
           eprintf "%s        \n" x;
           flush stderr;
         end;

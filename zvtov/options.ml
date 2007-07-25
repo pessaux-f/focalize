@@ -1,7 +1,8 @@
 (*  Copyright 2005 INRIA  *)
-(*  $Id: options.ml,v 1.7 2006-05-11 09:56:31 doligez Exp $  *)
+(*  $Id: options.ml,v 1.8 2007-07-25 19:41:39 doligez Exp $  *)
 
 open Arg;;
+open Misc;;
 
 let print_version () =
   Printf.printf "%s\n" Version.version;
@@ -9,33 +10,33 @@ let print_version () =
 ;;
 
 let options = ref [
-  "-cime",  Arg.Set Parser.with_cime,
+  "-cime",  Arg.Set with_cime,
         "    invoke Cime to treat equational problems";
-  "-debug", Arg.Set Invoke.keep_temp_files,
+  "-debug", Arg.Set keep_temp_files,
          "   do not remove temporary files";
-  "-nocache", Arg.Clear Cache.active,
+  "-nocache", Arg.Clear with_cache,
            " do not use nor update the proof cache file";
-  "-p0", Arg.Unit (fun () -> Invoke.progress_level := 0),
+  "-p0", Arg.Unit (fun () -> progress_level := 0),
       "      do not display progress info";
-  "-p1", Arg.Unit (fun () -> Invoke.progress_level := 1),
+  "-p1", Arg.Unit (fun () -> progress_level := 1),
       "      display progress bar (default)";
-  "-p2", Arg.Unit (fun () -> Invoke.progress_level := 2),
+  "-p2", Arg.Unit (fun () -> progress_level := 2),
       "      display progress messages";
-  "-script", Arg.Clear Invoke.use_coqterm,
+  "-script", Arg.Clear use_coqterm,
           "  output proofs in script format";
-  "-term", Arg.Set Invoke.use_coqterm,
+  "-term", Arg.Set use_coqterm,
         "    output proofs in term format (default)";
   "-v", Arg.Unit print_version,
      "       print version string and exit";
-  "-verbose", Arg.Set Invoke.verbose,
+  "-verbose", Arg.Set verbose,
            " print out zenon invocations";
-  "-zenon", Arg.Set_string Invoke.zcmd,
+  "-zenon", Arg.Set_string zcmd,
      Printf.sprintf "<command>    how to invoke zenon (default: \"%s\")"
-                   !Invoke.zcmd;
-  "-zopt", Arg.Set_string Invoke.zopt,
+                   !zcmd;
+  "-zopt", Arg.Set_string zopt,
     Printf.sprintf "<options>     options passed to zenon\n%s(default: \"%s\")"
-                   (String.make 12 ' ') !Invoke.zopt;
-  "-zz", Arg.String (fun s -> Invoke.addopt := s :: !Invoke.addopt),
+                   (String.make 12 ' ') !zopt;
+  "-zz", Arg.String (fun s -> add_opt := s :: !add_opt),
       "<option>  add <option> to be passed to zenon";
 ];;
 

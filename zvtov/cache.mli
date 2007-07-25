@@ -1,9 +1,7 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: cache.mli,v 1.3 2005-11-09 15:22:03 doligez Exp $  *)
+(*  $Id: cache.mli,v 1.4 2007-07-25 19:41:39 doligez Exp $  *)
 
 type reference;;
-
-val active : bool ref;;
 
 val init : string -> string -> string -> unit;;
 (* [init base version1 version2]

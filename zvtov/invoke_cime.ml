@@ -1,6 +1,7 @@
 (*  Copyright 2006 INRIA  *)
-(*  $Id: invoke_cime.ml,v 1.8 2007-07-06 09:16:24 pessaux Exp $  *)
+(*  $Id: invoke_cime.ml,v 1.9 2007-07-25 19:41:39 doligez Exp $  *)
 
+open Misc;;
 
 let cime_nb = ref 0 ;;
 let file_nb = ref 0 ;;
@@ -40,7 +41,7 @@ let rec bw s1 s2 =
   | 0 -> true
   | _ ->
       if (String.get s1 0 == String.get s2 0) then
-	bw (ehead s1)  (ehead s2)
+        bw (ehead s1)  (ehead s2)
       else false
 ;;
 
@@ -117,7 +118,7 @@ let rec isHypListRewritable hl =
 (*  [Fun] : modifyH : string list -> Expr.expr -> Expr.expr                  *)
 (** [Descr] : Replace, in [e], bound variables by variables prefixed by "v". *)
 (*            Replace, in [e], free variables by constants and constantes
-	      by des constants prefixed by "C".
+              by des constants prefixed by "C".
 
    [Rem] : Not exported outside this module.                                 *)
 (* ************************************************************************* *)
@@ -266,7 +267,6 @@ let find_unsatisfiable_in_file fname =
 ;;
 
 
-
 (* Main function. *)
 let cime filename data loc statement name oc=
   let lexbuf = Lexing.from_string data in
@@ -302,22 +302,22 @@ let cmd =
     (* file or wether the call to CiMe abnormally ended.  *)
     let unsatisfiable_found =
       (rc <> 0) || try find_unsatisfiable_in_file resname with _ -> true in
-    (try Sys.remove resname with _ -> ()) ;
-    (try Sys.remove tmpname with _ -> ()) ;
+    try_remove resname;
+    try_remove tmpname;
     (begin
     (* Attention: If CiMe returns "unsatisfiable" *)
     (* then this means  that it succeed !         *)
     match unsatisfiable_found with
      | false ->
-	 (* If CiMe failed, then call zenon. *)
-	 Invoke.atp filename (statement, name) data loc oc ;
+         (* If CiMe failed, then call zenon. *)
+         Invoke.atp filename (statement, name) data loc oc ;
      | true ->
          (begin
 Printf.eprintf "Cime got it\n" ; flush stderr ;
-	 (* Else, modify le .v without inserting yet any real proof term. *)
+         (* Else, modify le .v without inserting yet any real proof term. *)
          Printf.fprintf oc
-	   "Theorem %s : %s.\n Admitted. (* proved by Cime *)\n \n"
-	   name statement ;
+           "Theorem %s : %s.\n Admitted. (* proved by Cime *)\n \n"
+           name statement ;
          end)
     end) ;
     incr file_nb ;

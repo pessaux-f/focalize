@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: cache.ml,v 1.4 2005-11-15 15:02:26 doligez Exp $  *)
+(*  $Id: cache.ml,v 1.5 2007-07-25 19:41:39 doligez Exp $  *)
 
 (* format of a cache file:
 file ::= block block
@@ -9,11 +9,10 @@ block ::= n:int "\x0A" (n bytes) "\x0A"
 checksum = hex representation of md5 digest of data
 *)
 
+open Misc;;
 open Printf;;
 
 type reference = int;;
-
-let active = ref true;;
 
 let oldcachefile = ref "";;
 let newcachefile = ref "";;
@@ -78,7 +77,7 @@ let read_item ic =
 
 let write_block oc data len =
   assert (String.length data >= len);
-  if !active then begin
+  if !with_cache then begin
     fprintf oc "%d\x0A" len;
     output oc data 0 len;
     output_string oc "\x0A";
@@ -103,7 +102,7 @@ let write_file oc file =
 ;;
 
 let init base version1 version2 =
-  if !active then begin
+  if !with_cache then begin
     oldcachefile := base ^ ".pfc";
     newcachefile := base ^ "-zvtmp.pfc";
     let oc = open_out_bin !newcachefile in
@@ -123,14 +122,14 @@ let init base version1 version2 =
 ;;
 
 let close () =
-  if !active then begin
+  if !with_cache then begin
     (try Sys.remove !oldcachefile with Sys_error _ -> ());
     (try Sys.rename !newcachefile !oldcachefile with Sys_error _ -> ());
   end
 ;;
 
 let add key file1 file2 =
-  if !active then begin
+  if !with_cache then begin
     let oc = open_out_gen [Open_wronly; Open_append; Open_creat; Open_binary]
                           0o666 !newcachefile
     in
@@ -157,7 +156,7 @@ let rec copy_data ic oc =
 ;;
 
 let find key destfile1 destfile2 =
-  if !active then begin
+  if !with_cache then begin
     try
       let hashkey = Digest.to_hex (Digest.string key) in
       let (offset1, offset2) = Hashtbl.find table hashkey in
