@@ -1,4 +1,4 @@
-(* $Id: types.mli,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
+(* $Id: types.mli,v 1.2 2007-07-27 13:54:19 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -46,6 +46,7 @@ val type_char : unit -> simple_type
 val type_unit : unit -> simple_type
 val type_arrow : simple_type -> simple_type -> simple_type
 val type_tuple : simple_type list -> simple_type
+(* Generate the carrier type of the currently analysed species.  *)
 val type_self : unit -> simple_type
 val type_prop : unit -> simple_type
 

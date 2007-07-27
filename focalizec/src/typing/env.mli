@@ -1,4 +1,4 @@
-(* $Id: env.mli,v 1.4 2007-07-20 12:03:49 pessaux Exp $ *)
+(* $Id: env.mli,v 1.5 2007-07-27 13:54:19 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -17,9 +17,9 @@
 exception Unbound_constructor of Parsetree.vname
 exception Invalid_constructor_identifier of Parsetree.ident
 exception Unbound_label of Types.label_name
-exception Unbound_module of Parsetree.fname ;;
 exception Unbound_identifier of Parsetree.vname ;;
 exception Unbound_type of Types.tname ;;
+exception Unbound_module of Parsetree.fname ;;
 
 
 type species_param =
@@ -67,10 +67,11 @@ val add_constructor :
   Parsetree.constr_name -> constructor_description -> t -> t
 val find_constructor : Parsetree.ident -> t -> constructor_description
 
+val add_label : Types.label_name -> label_description -> t -> t
 val find_label : Types.label_name -> t -> label_description
 
-val add_ident : Parsetree.vname -> Types.types_scheme -> t -> t
-val find_ident : Parsetree.ident -> t -> Types.types_scheme
+val add_value : Parsetree.vname -> Types.types_scheme -> t -> t
+val find_value : Parsetree.ident -> t -> Types.types_scheme
 
 val add_type : Types.tname -> type_description -> t -> t
 val find_type :  Parsetree.ident -> t -> type_description

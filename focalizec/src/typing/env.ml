@@ -1,4 +1,4 @@
-(* $Id: env.ml,v 1.4 2007-07-20 12:03:49 pessaux Exp $ *)
+(* $Id: env.ml,v 1.5 2007-07-27 13:54:19 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -17,9 +17,9 @@
 exception Unbound_constructor of Parsetree.vname ;;
 exception Invalid_constructor_identifier of Parsetree.ident ;;
 exception Unbound_label of Types.label_name ;;
-exception Unbound_module of Parsetree.fname ;;
 exception Unbound_identifier of Parsetree.vname ;;
 exception Unbound_type of Types.tname ;;
+exception Unbound_module of Parsetree.fname ;;
 
 
 type species_param =
@@ -63,7 +63,7 @@ type type_kind =
   | TK_abstract  (** Abstract types and type abbreviations. *)
   | TK_variant of    (** Sum types. *)
       (Parsetree.constr_name * Types.types_scheme) list
-  | TK_record of  (** Record types: list of labels. *)
+  | TK_record of  (** Record types: list of labels. Any value of a type record will be typed as a [ST_construct] whose name is the name of the record type. *)
       (Types.label_name * field_mutability * Types.types_scheme) list
 ;;
 
@@ -87,7 +87,7 @@ type t = {
   types : (Types.tname * type_description) list ;
   (** [idents] Contains functions methods and more generally any let-bound
       identifiers. *)
-  idents : (Parsetree.vname * Types.types_scheme) list ;
+  values : (Parsetree.vname * Types.types_scheme) list ;
   species : (Types.sname * species_description) list ;
   collections : (Types.cname * collections_sig) list
 } ;;
@@ -103,7 +103,7 @@ type t = {
 (* ************************************************************** *)
 let empty () =
   { constructors = [] ; labels = [] ; types  = [] ;
-    idents = [] ; species = [] ; collections = [] }
+    values = [] ; species = [] ; collections = [] }
 ;;
 
 
@@ -155,10 +155,11 @@ let pervasives () =
 		  Types.generalize (Types.type_basic "list" [v])) ;
 		type_arity = 1 })
     ] ;
-  idents = [] ;
+  values = [] ;
   species = [] ;
   collections = []
 } ;;
+
 
 
 (* ***************************************************************** *)
@@ -223,27 +224,49 @@ and find_constructor_vname vname env =
 ;;
 
 
+let add_label lbl_name lbl_descr env =
+   { env with labels = (lbl_name, lbl_descr) :: env.labels }
+;;
+
+
 let find_label lbl_name env =
   try List.assoc lbl_name env.labels with
   | Not_found -> raise (Unbound_label lbl_name)
 ;;
 
 
-let add_ident ident ty_scheme env =
-  { env with idents = (ident, ty_scheme) :: env.idents }
+(* Parsetree.vname -> Types.types_scheme -> t -> t *)
+let add_value ident ty_scheme env =
+  { env with values = (ident, ty_scheme) :: env.values }
 ;;
 
 
-let rec find_ident ident_ident env =
+(* ************************************************************************ *)
+(* Parsetree.ident -> t -> Types.types_scheme                               *)
+(** {b Descr} : Looks-up for an [ident] inside the identifiers environment.
+              Hence, expects finding a first-class bound value.
+
+    {b Rem} : Exported outside this module.                                 *)
+(* ************************************************************************ *)
+let rec find_value ident_ident env =
   match ident_ident.Parsetree.ast_desc with
-   | Parsetree.I_local vname -> find_ident_vname vname env
+   | Parsetree.I_local vname -> find_value_vname vname env
    | Parsetree.I_global (opt_scope, vname) ->
        let env' = find_module opt_scope env in
-       find_ident_vname vname env'
+       find_value_vname vname env'
    | Parsetree.I_method (_, _) -> failwith "todo1"
 
-and find_ident_vname vname env =
-  try List.assoc vname env.idents with
+
+
+(* *********************************************************************** *)
+(* Parsetree.vname -> t -> Types.types_scheme *)
+(** {b Descr} : Looks-up for a [vname] inside the identifiers environment.
+              Hence, expects finding a first-class bound value.
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+and find_value_vname vname env =
+  try List.assoc vname env.values with
   | Not_found -> raise (Unbound_identifier vname)
 ;;
 

@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.15 2007-07-21 08:49:09 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.16 2007-07-27 13:54:19 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -211,9 +211,8 @@ let rec pp_rep_type_def_desc ppf = function
   | Parsetree.RTE_app (ident, rtds) ->
       Format.fprintf ppf "%a@[<2>@ (%a)@]"
    pp_ident ident (pp_rep_type_defs ",") rtds
-  | Parsetree.RTE_prod (rtd1, rtd2) ->
-      Format.fprintf ppf "@[<2>(%a@ *@ %a)@]"
-        pp_rep_type_def rtd1 pp_rep_type_def rtd2
+  | Parsetree.RTE_prod rtds ->
+      Format.fprintf ppf "@[<2>(%a)@]" (pp_rep_type_defs "*") rtds
   | Parsetree.RTE_paren rtd -> Format.fprintf ppf "(%a)" pp_rep_type_def rtd
 (* ********************************************************************* *)
 (* pp_rep_type_defs :                                                    *)
@@ -252,8 +251,8 @@ let rec pp_type_expr_desc ppf = function
   | Parsetree.TE_app (ident, tes) ->
       Format.fprintf ppf "%a@[<2>@ (%a)@]"
         pp_ident ident (pp_type_exprs ",") tes
-  | Parsetree.TE_prod (te1, te2) ->
-      Format.fprintf ppf "@[<2>(%a@ *@ %a)@]" pp_type_expr te1 pp_type_expr te2
+  | Parsetree.TE_prod (tes) ->
+      Format.fprintf ppf "@[<2>(%a)@]" (pp_type_exprs "*") tes
   | Parsetree.TE_self -> Format.fprintf ppf "self"
   | Parsetree.TE_prop -> Format.fprintf ppf "prop"
   | Parsetree.TE_paren te -> Format.fprintf ppf "(%a)" pp_type_expr te
@@ -785,6 +784,7 @@ and pp_prop ppf = pp_generic_ast pp_prop_desc ppf
 
 
 and pp_expr_desc ppf = function
+  | Parsetree.E_self -> Format.fprintf ppf "Self"
   | Parsetree.E_const cst -> Format.fprintf ppf "%a" pp_constant cst
   | Parsetree.E_fun (vnames, expr) ->
       Format.fprintf ppf "@[<2>function %a ->@ %a@]"

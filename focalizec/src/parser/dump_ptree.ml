@@ -1,4 +1,4 @@
-(* $Id: dump_ptree.ml,v 1.7 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.8 2007-07-27 13:54:19 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -163,9 +163,8 @@ let rec pp_rep_type_def_desc ppf = function
   | Parsetree.RTE_app (ident, rtds) ->
       Format.fprintf ppf "@[<2>RTE_app@ (%a,@ [@ %a@ ]@])"
 	pp_ident ident pp_rep_type_defs rtds
-  | Parsetree.RTE_prod (rtd1, rtd2) ->
-      Format.fprintf ppf "@[<2>RTE_prod@ (%a,@ %a@])"
-	pp_rep_type_def rtd1 pp_rep_type_def rtd2
+  | Parsetree.RTE_prod rtds ->
+      Format.fprintf ppf "@[<2>RTE_prod@ (%a@])" pp_rep_type_defs rtds
   | Parsetree.RTE_paren rtd ->
       Format.fprintf ppf "@[<2>RTE_paren@ (%a@])" pp_rep_type_def rtd
 (* ************************************************************************* *)
@@ -206,9 +205,8 @@ let rec pp_type_expr_desc ppf = function
   | Parsetree.TE_app (ident, tes) ->
       Format.fprintf ppf "@[<2>TE_app@ (%a,@ %a@])"
 	pp_ident ident pp_type_exprs tes
-  | Parsetree.TE_prod (te1, te2) ->
-      Format.fprintf ppf "@[<2>TE_prod@ (%a,@ %a@])"
-	pp_type_expr te1 pp_type_expr te2
+  | Parsetree.TE_prod (tes) ->
+      Format.fprintf ppf "@[<2>TE_prod@ (%a])" pp_type_exprs tes
   | Parsetree.TE_self -> Format.fprintf ppf "TE_self"
   | Parsetree.TE_prop -> Format.fprintf ppf "TE_prop"
   | Parsetree.TE_paren te ->
@@ -731,6 +729,7 @@ and pp_prop ppf = pp_generic_ast pp_prop_desc ppf
     {b Rem} : Not exported ouside this module.                              *)
 (* ************************************************************************ *)
 and pp_expr_desc ppf = function
+  | Parsetree.E_self -> Format.fprintf ppf "Self"
   | Parsetree.E_const cst ->
       Format.fprintf ppf "@[<2>E_const@ (%a@))" pp_constant cst
   | Parsetree.E_fun (vnames, expr) ->

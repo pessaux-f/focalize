@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.47 2007-07-20 11:25:26 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.48 2007-07-27 13:54:19 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -401,17 +401,27 @@ def_rep:
 ;
 
 rep_type_def:
+  | simpler_rep_type_def
+    { $1 }
+  | rep_type_tuple
+    { RTE_prod (List.map mk $1) }
+  | rep_type_def DASH_GT rep_type_def
+    { RTE_fun (mk $1, mk $3) }
+;
+
+simpler_rep_type_def:
   | glob_ident
     { RTE_ident $1 }
   | LIDENT { RTE_ident (mk_global_ident (Vlident $1)) }
-  | rep_type_def DASH_GT rep_type_def
-    { RTE_fun (mk $1, mk $3) }
-  | rep_type_def STAR_OP rep_type_def
-    { RTE_prod (mk $1, mk $3) }
   | glob_ident LPAREN rep_type_def_comma_list RPAREN
     { RTE_app ($1, $3) }
   | LPAREN rep_type_def RPAREN
     { RTE_paren (mk $2) }
+;
+
+rep_type_tuple:
+  | simpler_rep_type_def STAR_OP simpler_rep_type_def      { [$3; $1] }
+  | rep_type_tuple STAR_OP simpler_rep_type_def        { $3 :: $1 }
 ;
 
 rep_type_def_comma_list:
@@ -592,8 +602,17 @@ hyp_list:
 ;
 
 /**** TYPE EXPRESSIONS ****/
-
 type_expr:
+  | simpler_type_expr
+    { $1 }
+  | core_type_tuple
+    { mk (TE_prod $1) }
+  | type_expr DASH_GT type_expr
+    { mk (TE_fun ($1, $3)) }
+;
+
+/* Type expressions that can appear inside a tuple. */
+simpler_type_expr:
   | SELF
     { mk TE_self }
   | PROP
@@ -604,14 +623,15 @@ type_expr:
     { mk (TE_ident $1) }
   | LIDENT
     { mk (TE_ident (mk_local_ident (Vlident $1))) }
-  | type_expr DASH_GT type_expr
-    { mk (TE_fun ($1, $3)) }
-  | type_expr STAR_OP type_expr
-    { mk (TE_prod ($1, $3)) }
   | glob_ident LPAREN type_expr_comma_list RPAREN
     { mk (TE_app ($1, $3)) }
   | LPAREN type_expr RPAREN
     { mk (TE_paren $2) }
+;
+
+core_type_tuple:
+  | simpler_type_expr STAR_OP simpler_type_expr      { [$3; $1] }
+  | core_type_tuple STAR_OP simpler_type_expr        { $3 :: $1 }
 ;
 
 type_expr_comma_list:
@@ -629,6 +649,7 @@ glob_ident:
     { mk (I_global ($1, $3)) }
 ;
 
+/* Only used to prefix global notation (i.e. with '#'). */
 opt_lident:
   | { None }
   | SELF
@@ -665,6 +686,8 @@ simple_expr:
 ;
 
 expr:
+  | SELF
+    { mk E_self }
   | simple_expr %prec below_SHARP
     { $1 }
   | FUNCTION bound_vname_list DASH_GT expr

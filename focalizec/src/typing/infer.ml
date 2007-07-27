@@ -1,4 +1,4 @@
-(* $Id: infer.ml,v 1.6 2007-07-20 12:03:49 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.7 2007-07-27 13:54:19 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -102,8 +102,9 @@ let rec typecheck_type_expr ctx env ty_expr =
 	 (* of the corresponding argument.                                *)
 	 Types.specialize_and_instanciate ty_descr.Env.type_identity args_ty
 	 end)
-     | Parsetree.TE_prod (ty_expr1, ty_expr2) ->
-	 failwith "Plonger a*b dans une liste ?"
+     | Parsetree.TE_prod (ty_exprs) ->
+	 let tys = List.map (typecheck_type_expr ctx env) ty_exprs in
+	 Types.type_tuple tys
      | Parsetree.TE_self -> Types.type_self ()
      | Parsetree.TE_prop -> Types.type_prop ()
      | Parsetree.TE_paren inner -> typecheck_type_expr ctx env inner) in
@@ -250,24 +251,41 @@ let rec typecheck_pattern ctx env pat_desc =
 ;;
 
 
-(*
-type external_language =
-  | EL_Caml
-  | EL_Coq
-  | EL_external of string
+
+(* *********************************************************************** *)
+(* Env.t -> Parsetree.external_def -> Env.t                                *)
+(** {b Desc} : Synthetise the type of an external definition. In fact,
+             because such definitions do not contain any type information,
+             the only solution is to make a stupid type variable...
+             If the definition is a value definition, then the binding
+             get added to the [ident]s environment.
+             If the definition is a type definition, then the binding
+             gets added to the [type]'s environment.                       *)
+(* *********************************************************************** *)
+let typecheck_external_def env e_def =
+  (* Anyway, just make a fresh type variable because  *)
+  (* we don't have any type information here.         *)
+  Types.begin_definition () ;
+  let ty = Types.type_variable () in
+  Types.end_definition () ;
+  match e_def.Parsetree.ast_desc with
+   | Parsetree.ED_type body ->
+       (* The type definition will be considered as fully polymorphic *)
+       (* because we generalize it. It's a kind of forall 'a.'a.      *)
+       let ty_descr = {
+	 Env.type_kind = Env.TK_abstract ;
+	 Env.type_identity = Types.generalize ty ;
+	 Env.type_arity = 0 } in
+       let name_as_str =
+	 Parsetree_utils.string_of_vname
+	   body.Parsetree.ast_desc.Parsetree.ed_name in
+       Env.add_type name_as_str ty_descr env
+   | Parsetree.ED_value body ->
+       (* Record the type inside the node. I think it's useless, but... *)
+       body.Parsetree.ast_type <- Some ty ;
+       let scheme = Types.generalize ty in
+       Env.add_value body.Parsetree.ast_desc.Parsetree.ed_name scheme env
 ;;
-
-type external_def = external_def_desc ast
-and external_def_desc =
-  | ED_type of external_def_body
-  | ED_value of external_def_body
-
-and external_def_body = external_def_body_desc ast
-and external_def_body_desc = {
-  ed_name : vname ;
-  ed_body : external_expr
-}
-*)
 
 
 
@@ -341,15 +359,11 @@ and species_field_desc =
   | SF_property of property_def
   | SF_theorem of theorem_def
   | SF_proof of proof_def
+*)
 
-and theorem_def = theorem_def_desc ast_doc
-and theorem_def_desc = {
-  th_name : ident ;
-  th_loc : loc_flag ;
-  th_stmt : prop ;
-  th_proof : proof
-}
 
+
+(*
 and fact = fact_desc ast
 and fact_desc =
   | F_def of ident list
@@ -381,24 +395,22 @@ and hyp_desc =
   | H_hyp of vname * prop
   | H_not of vname * expr
 
-and prop = prop_desc ast
-and prop_desc =
-  | Pr_forall of vname list * type_expr option * prop
-  | Pr_exists of vname list * type_expr option * prop
-  | Pr_imply of prop * prop
-  | Pr_or of prop * prop
-  | Pr_and of prop * prop
-  | Pr_equiv of prop * prop
-  | Pr_not of prop
-  | Pr_expr of expr
-  | Pr_paren of prop
 *)
 
 
 
+(* ************************************************************************ *)
+(* typing_context -> Env.t -> Parsetree.expr -> Types.simple_type           *)
+(** {b Descr} : Infers the type o an [expr] and assign it by side effect in
+              de [ast_type] field of the [expr] node.
+
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
 let rec typecheck_expr ctx env initial_expr =
+  (begin
   let final_ty =
     (match initial_expr.Parsetree.ast_desc with
+     | Parsetree.E_self -> Types.type_self ()
      | Parsetree.E_const cst -> typecheck_constant cst
      | Parsetree.E_fun (arg_vnames, e_body) ->
 	 (begin
@@ -413,7 +425,7 @@ let rec typecheck_expr ctx env initial_expr =
            List.fold_left2
 	     (fun accu_env arg_name arg_ty ->
 	       (* Do not generalize argument types ! No Mu-rule yet ! *)
-	       Env.add_ident arg_name (Types.trivial_scheme arg_ty) accu_env)
+	       Env.add_value arg_name (Types.trivial_scheme arg_ty) accu_env)
 	     env arg_vnames args_ty in
 	 (* Now, typecheck the body i nthe new environment. *)
 	 let ty_body = typecheck_expr ctx extended_env e_body in
@@ -430,7 +442,7 @@ let rec typecheck_expr ctx env initial_expr =
 	 (* process. As reminder, lookup will naturally find the      *)
          (* ident among local identifiers, in-params, is-params,      *)
          (* inheritance and finally global identifiers.               *)
-         Types.specialize (Env.find_ident ident env)
+         Types.specialize (Env.find_value ident env)
      | Parsetree.E_app (functional_expr, args_exprs) ->
 	 (begin
 	 let fun_ty = typecheck_expr ctx env functional_expr in
@@ -505,7 +517,7 @@ let rec typecheck_expr ctx env initial_expr =
 	     let env' =
 	       List.fold_left
 		 (fun accu_env (id, ty_scheme) ->
-		   Env.add_ident id ty_scheme accu_env)
+		   Env.add_value id ty_scheme accu_env)
 		 env bnds in
 	     (* Infer the type of the match clause's body. *)
 	     let clause_ty = typecheck_expr ctx env' expr in
@@ -537,7 +549,7 @@ let rec typecheck_expr ctx env initial_expr =
 	 let env' =
 	   List.fold_left
 	     (fun accu_env (id, ty_scheme) ->
-	       Env.add_ident id ty_scheme accu_env)
+	       Env.add_value id ty_scheme accu_env)
              env bindings in
 	 typecheck_expr ctx env' in_expr
      | Parsetree.E_record fields -> typeckeck_record_expr ctx env fields None
@@ -569,6 +581,7 @@ let rec typecheck_expr ctx env initial_expr =
   (* Store the type information in the expression's node. *)
   initial_expr.Parsetree.ast_type <- Some final_ty ;
   final_ty
+  end)
 
 
 
@@ -617,6 +630,14 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
 
 
 
+(* ************************************************************************** *)
+(* typing_context ->                                                          *)
+(*  Env.t -> Parsetree.let_def -> (Parsetree.vname * Types.types_scheme) list *)
+(** {b Descr} : Infers the list of bindings induced by the let-def and that
+                will extend the current typing environment.
+
+    {b Rem} : Not exported outside this module.                               *)
+(* ************************************************************************** *)
 and typecheck_let_definition ctx env let_def =
   let let_def_descr = let_def.Parsetree.ast_desc in
   (* Get information to possibly build the pre-environment  *)
@@ -666,7 +687,7 @@ and typecheck_let_definition ctx env let_def =
 	  (* No generalisation (polymorphism) of the function *)
 	  (* inside its body (that's would be Mu-rule).       *)
 	  let scheme = Types.trivial_scheme ty in
-	  Env.add_ident vname scheme accu_env)
+	  Env.add_value vname scheme accu_env)
 	env pre_env_info) in
   (* Now typecheck each def's body. *)
   let env_bindings =
@@ -689,7 +710,7 @@ and typecheck_let_definition ctx env let_def =
 	let local_env =
 	  List.fold_left2
 	    (fun accu_env (arg_name, _) arg_ty ->
-	      Env.add_ident arg_name (Types.trivial_scheme arg_ty) accu_env)
+	      Env.add_value arg_name (Types.trivial_scheme arg_ty) accu_env)
 	    env'
 	    binding.Parsetree.b_params
 	    args_tys in
@@ -730,6 +751,63 @@ and typecheck_let_definition ctx env let_def =
   (* and [Parsetree.let_def have an [ast_type] but in this case it has no *)
   (* relevance, so we just leave them [None].                             *)
   env_bindings
+
+
+
+and typecheck_prop ctx env prop =
+  let final_ty =
+    (match prop.Parsetree.ast_desc with
+     | Parsetree.Pr_forall (vnames, t_expr_opt, pr)
+     | Parsetree.Pr_exists (vnames, t_expr_opt, pr) ->
+	 (begin
+	 Types.begin_definition () ;
+	 (* Get the couple (name, type) for each defined variable. *)
+	 let bound_variables =
+	   (match t_expr_opt with
+	    | None ->
+		List.map
+		  (fun vname -> (vname, (Types.type_variable ())))
+		  vnames
+	    | Some ty_constraint ->
+		let ty = typecheck_type_expr ctx env ty_constraint in
+		List.map (fun vname -> (vname, ty)) vnames) in
+	 (* Now typecheck the theorem's body in the extended environment.  *)
+	 (* Note that as often, th order bindings are inserted in the      *)
+	 (* environment does not matter since parameters can never depends *)
+	 (* on each other.                                                 *)
+	 let env' =
+	   List.fold_left
+	     (fun accu_env (th_name, th_type) ->
+	       let scheme = Types.generalize th_type in
+	       Env.add_value th_name scheme accu_env)
+	     env bound_variables in
+	 typecheck_prop ctx env' pr
+	 end)
+     | Parsetree.Pr_imply (pr1, pr2)
+     | Parsetree.Pr_or (pr1, pr2)
+     | Parsetree.Pr_and (pr1, pr2)
+     | Parsetree.Pr_equiv (pr1, pr2) ->
+	 let ty1 = typecheck_prop ctx env pr1 in
+	 let ty2 = typecheck_prop ctx env pr2 in
+	 Types.unify ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	 (* Enforce the type to be [prop]. *)
+	 Types.unify
+	   ~self_manifest: ctx.self_manifest ty1 (Types.type_prop ()) ;
+	 ty1
+     | Parsetree.Pr_not pr ->
+         let ty = typecheck_prop ctx env pr in
+	 (* Enforce the type to be [prop]. *)
+	 Types.unify ~self_manifest: ctx.self_manifest ty (Types.type_prop ()) ;
+         ty
+     | Parsetree.Pr_expr expr ->
+	 (* Expressions must be typed as [bool]. If *)
+         (* so, then the returned  type is [prop].  *)
+	 let ty = typecheck_expr ctx env expr in
+         Types.unify ~self_manifest: ctx.self_manifest ty (Types.type_bool ()) ;
+         Types.type_prop ()
+     | Parsetree.Pr_paren pr -> typecheck_prop ctx env pr) in
+  prop.Parsetree.ast_type <- Some final_ty ;
+  final_ty
 ;;
 
 
@@ -744,6 +822,29 @@ and coll_def_desc = {
 
 
 
+(* ************************************************************************ *)
+(* typing_context -> Env.t -> Parsetree.type_def -> Env.t                   *)
+(* {b Descr} : Transforms a type definition into a somewhat that can be
+             inserted inside the environment. Also generates type
+             constructors in case of a sum type definition and field
+             labels in case of a record type definition.
+             Both field labels and constructors with arguments are assigned
+             a type scheme like a function taking as argument the field's
+             type (or a tuple with type constructor's arguments types) and
+             returning a ST_construct embedding the record/sum type's name.
+             For instance:
+               type t = A of int
+             will create a constructor A : (int) -> t
+             where one must note that (int) stands for a degenerated tuple
+             type with only 1 component.
+             For other instance:
+               type u = { junk : string }
+             will create a field label junk : string -> u
+             Sum type constructors with no argument are typed as constants
+             of this type.
+
+   {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************ *)
 let typecheck_type_def ctx env type_def =
   let type_def_descr = type_def.Parsetree.ast_desc in
   (* First, extend the [tyvars_mapping] of the current *)
@@ -767,6 +868,7 @@ let typecheck_type_def ctx env type_def =
        (* We do not insert the defined name itself  *)
        (* to reject recursive type abbreviations.   *)
        Types.begin_definition () ;
+       (* This definition will only add a type name, no new type constructor. *)
        let identity_type = typecheck_type_expr new_ctx env ty in
        Types.end_definition () ;
        (* Generalize the scheme to get the real identity. *)
@@ -837,6 +939,7 @@ let typecheck_type_def ctx env type_def =
 		cstr_bindings) ;
 	 Env.type_identity = Types.generalize futur_type_type ;
 	 Env.type_arity = nb_params } in
+       (* And return the fully extended environment. *)
        Env.add_type
 	 type_def_descr.Parsetree.td_name
 	 final_type_descr env_with_constructors
@@ -844,7 +947,60 @@ let typecheck_type_def ctx env type_def =
    | Parsetree.TD_record labels ->
        (* We do not insert the defined record name *)
        (* itself to reject recursive record types. *)
-       failwith "todo 15"
+       (* First, we sort the label list in order to get a canonical *)
+       (* representation of a record.                               *)
+       let labels = Sort.list (fun (n1, _) (n2, _) -> n1 <= n2) labels in
+       (* Let's create the [ST_construct] that will    *)
+       (* represent the type of values of this record. *)
+       let futur_type_type =
+	 Types.type_basic
+	   type_def_descr.Parsetree.td_name (List.map snd vmapp_extention) in
+       (* Now typecheck the fields of the record. *)
+       let fields_descriptions =
+	 List.map
+	   (fun (lbl_name, lbl_ty_expr) ->
+	     Types.begin_definition () ;
+	     let lbl_ty = typecheck_type_expr new_ctx env lbl_ty_expr in
+	     let arrow = Types.type_arrow lbl_ty futur_type_type in	     
+	     Types.end_definition () ;
+	     let lbl_scheme = Types.generalize arrow in
+	     (* Currently, fields do not support the "mutable" tag. *)
+	     (lbl_name, { Env.field_mut  = Env.FM_immutable ;
+			  Env.field_scheme = lbl_scheme }))
+	   labels in
+       (* And finally, extends the environment with the labels. *)
+       let env_with_labels =
+	 List.fold_left
+	   (fun accu_env (lbl_name, lbl_descr) ->
+	     Env.add_label lbl_name lbl_descr accu_env)
+	   env
+	   fields_descriptions in
+       (* Now add the type itself. *)
+       let final_type_descr = {
+	 Env.type_kind =
+	   Env.TK_record
+	     (List.map
+		(fun (lbl_name, lbl_descr) ->
+		  (lbl_name,
+		   lbl_descr.Env.field_mut,
+		   lbl_descr.Env.field_scheme))
+		fields_descriptions) ;
+	 Env.type_identity = Types.generalize futur_type_type ;
+	 Env.type_arity = nb_params } in
+       (* And return the fully extended environment. *)
+       Env.add_type
+	 type_def_descr.Parsetree.td_name
+	 final_type_descr env_with_labels
+;;
+
+
+
+let typecheck_theorem_def ctx env theorem_def =
+  let final_ty =
+    typecheck_prop ctx env theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
+  theorem_def.Parsetree.ast_type <- Some final_ty ;
+  let ident = theorem_def.Parsetree.ast_desc.Parsetree.th_name in
+  (ident, failwith "generalize theorem type ?")
 ;;
 
 
@@ -854,6 +1010,8 @@ let typecheck_type_def ctx env type_def =
 (** {b Descr} : Performs type inference on a [phrase] and returns the
                 initial environment extended with the possible type
 		bindings induced by the [phrase].
+                Also assign the infered type in the [ast_type] field
+                of the [phrase] node.
 
     {b Rem} : Not exported outside this module                        *)
 (* ****************************************************************** *)
@@ -862,7 +1020,9 @@ let typecheck_phrase env phrase =
   let ctx = { self_manifest = None ; tyvars_mapping = [] } in
   let (final_ty, new_env) =
     (match phrase.Parsetree.ast_desc with
-     | Parsetree.Ph_external exter_def -> failwith "todo2"
+     | Parsetree.Ph_external exter_def ->
+	 let env' = typecheck_external_def env exter_def in
+	 ((Types.type_unit ()), env')
      | Parsetree.Ph_use _ -> failwith "todo3"
      | Parsetree.Ph_open _ -> failwith "todo4"
      | Parsetree.Ph_species species_def -> failwith "todo5"
@@ -882,11 +1042,11 @@ let typecheck_phrase env phrase =
 	       Format.fprintf Format.err_formatter "%s : %a@\n"
 		 (Parsetree_utils.string_of_vname id)
 		 Types.pp_types_scheme ty_scheme ;
-	       Env.add_ident id ty_scheme accu_env)
+	       Env.add_value id ty_scheme accu_env)
 	 env envt_bindings in
 	 (* Return unit and the extended environment. *)
 	 ((Types.type_unit ()), env')
-     | Parsetree.Ph_theorem theorem_def  -> failwith "todo"
+     | Parsetree.Ph_theorem theorem_def -> failwith "todo"
      | Parsetree.Ph_expr expr ->
 	 let expr_ty = typecheck_expr ctx env expr in
 	 (* Just a bit of debug. *)

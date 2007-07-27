@@ -1,4 +1,4 @@
-(* $Id: parsetree.mli,v 1.2 2007-07-21 08:49:09 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.3 2007-07-27 13:54:19 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -104,7 +104,7 @@ and rep_type_def_desc =
   | RTE_ident of ident
   | RTE_fun of (rep_type_def * rep_type_def)
   | RTE_app of (ident * rep_type_def list)
-  | RTE_prod of (rep_type_def * rep_type_def)
+  | RTE_prod of rep_type_def list
   | RTE_paren of rep_type_def
 ;;
 
@@ -113,7 +113,7 @@ and type_expr_desc =
   | TE_ident of ident
   | TE_fun of (type_expr * type_expr)
   | TE_app of (ident * (type_expr list))
-  | TE_prod of (type_expr * type_expr)
+  | TE_prod of type_expr list
   | TE_self
   | TE_prop
   | TE_paren of type_expr
@@ -290,6 +290,7 @@ and prop_desc =
 
 and expr = expr_desc ast
 and expr_desc =
+  | E_self
   | E_const of constant
   | E_fun of ((vname list) * expr)
   | E_var of ident

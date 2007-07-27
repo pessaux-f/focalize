@@ -1,4 +1,4 @@
-(* $Id: types.ml,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
+(* $Id: types.ml,v 1.2 2007-07-27 13:54:19 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -37,7 +37,10 @@ type simple_type =
   | ST_arrow of (simple_type * simple_type)   (** Functionnal type. *)
   | ST_tuple of simple_type list              (** Tuple type. *)
   | ST_construct of
-      (** Basic type, possibly with arguments. *)
+      (** Type constructor, possibly with arguments. Encompass the types
+	  related to records and sums. Any value of these types are typed as
+	  a [ST_construct] whose name is the name of the record (or sum)
+	  type. *)
       (tname * simple_type list)
   | ST_sefl_rep       (** Carrier type of the currently analysed species.  *)
   | ST_species_rep of cname   (** Carrier type of a collection. *)
@@ -153,6 +156,7 @@ let type_arrow t1 t2 = ST_arrow (t1, t2) ;;
 
 let type_tuple tys = ST_tuple tys ;;
 
+(* Generate the carrier type of the currently analysed species.  *)
 let type_self () = ST_sefl_rep ;;
 
 let type_prop () = type_basic "prop" [] ;;
