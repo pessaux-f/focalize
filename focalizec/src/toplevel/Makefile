@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2007-07-30 08:21:53 weis Exp $
+# $Id: Makefile,v 1.3 2007-07-30 08:24:02 weis Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ -I ../basement -I ../parser -I ../typing
@@ -40,7 +40,7 @@ bin: $(ALLBINOBJS)
 	ln -sf check_file.bin check_file
 
 clean::
-	$(RM) *~ *.cm* *.o log check_file.* check_file
+	$(RM) *~ *.cm* *.o log check_file.byt check_file.bin check_file
 	$(RM) doc/*
 
 doc:: $(BYTOBJS)
