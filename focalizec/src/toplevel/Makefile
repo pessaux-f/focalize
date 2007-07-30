@@ -1,12 +1,12 @@
-# $Id: Makefile,v 1.1 2007-07-19 12:04:24 pessaux Exp $
+# $Id: Makefile,v 1.2 2007-07-30 08:21:53 weis Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ -I ../basement -I ../parser -I ../typing
 
 BYTOBJS = check_file.cmo
+BINOBJS = $(BYTOBJS:.cmo=.cmx)
 
-
-ALLOBJS = ../basement/configuration.cmo \
+ALLBYTOBJS = ../basement/configuration.cmo \
 	../basement/configuration.cmo \
 	 ../basement/handy.cmo \
 	 ../basement/types.cmo \
@@ -25,12 +25,22 @@ ALLOBJS = ../basement/configuration.cmo \
 	\
 	$(BYTOBJS)
 
+ALLBINOBJS = $(ALLBYTOBJS:.cmo=.cmx)
 
-all:: $(ALLOBJS)
-	$(CAMLBYT) $(CAML_COMP_FLAGS) $(ALLOBJS) -o check_file
+ALLOBJS = $(ALLBYTOBJS) $(ALLBINOBJS)
+
+all:: byt #bin
+
+byt: $(ALLBYTOBJS)
+	$(CAMLBYT) $(CAML_COMP_FLAGS) $(ALLBYTOBJS) -o check_file.byt
+	ln -sf check_file.byt check_file
+
+bin: $(ALLBINOBJS)
+	$(CAMLBIN) $(CAML_COMP_FLAGS) $(ALLBINOBJS) -o check_file.bin
+	ln -sf check_file.bin check_file
 
 clean::
-	$(RM) *~ *.cm* log check_file
+	$(RM) *~ *.cm* *.o log check_file.* check_file
 	$(RM) doc/*
 
 doc:: $(BYTOBJS)

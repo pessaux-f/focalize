@@ -1,2 +1,5 @@
 *.cm*
 *.o
+check_file.byt
+check_file.bin
+
