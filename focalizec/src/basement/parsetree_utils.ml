@@ -1,5 +1,3 @@
-(* $Id: parsetree_utils.ml,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
-
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -13,14 +11,12 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* $Id: parsetree_utils.ml,v 1.2 2007-07-30 08:07:44 weis Exp $ *)
 
-(* ****************************************************** *)
-(*  string_of_vname : Parsetree.vname -> string           *)
-(** {b Descr} : Extracts the inner string of the [vname].
-
-    {b Rem} : Exported outside this module.               *)
-(* ****************************************************** *)
-let string_of_vname = function
-  | Parsetree.Vlident s | Parsetree.Vuident s | Parsetree.Vpident s
-  | Parsetree.Viident s | Parsetree.Vqident s -> s
+let name_of_vname = function
+  | Parsetree.Vlident s
+  | Parsetree.Vuident s
+  | Parsetree.Vpident s
+  | Parsetree.Viident s
+  | Parsetree.Vqident s -> s
 ;;

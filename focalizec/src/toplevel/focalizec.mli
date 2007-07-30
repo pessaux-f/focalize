@@ -1,5 +1,3 @@
-(* $Id: focalizec.mli,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
-
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -12,6 +10,8 @@
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
+
+(* $Id: focalizec.mli,v 1.2 2007-07-30 08:07:44 weis Exp $ *)
 
 (** The focalize concrete syntax file checker.
     This file defines the main verification procedure and runs it. *)

@@ -1,5 +1,3 @@
-(* $Id: env.ml,v 1.5 2007-07-27 13:54:19 pessaux Exp $ *)
-
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -14,47 +12,60 @@
 (***********************************************************************)
 
 
-exception Unbound_constructor of Parsetree.vname ;;
-exception Invalid_constructor_identifier of Parsetree.ident ;;
-exception Unbound_label of Types.label_name ;;
-exception Unbound_identifier of Parsetree.vname ;;
-exception Unbound_type of Types.tname ;;
-exception Unbound_module of Parsetree.fname ;;
+(* $Id: env.ml,v 1.6 2007-07-30 08:07:44 weis Exp $ *)
 
+exception Unbound_constructor of Parsetree.vname
+;;
+exception Invalid_constructor_identifier of Parsetree.ident
+;;
+exception Unbound_label of Types.label_name
+;;
+exception Unbound_identifier of Parsetree.vname
+;;
+exception Unbound_type of Types.type_name
+;;
+exception Unbound_module of Parsetree.fname
+;;
 
 type species_param =
-  | SPAR_in of (Parsetree.vname * Types.simple_type)    (* Entity param. *)
-  | SPAR_is of (Parsetree.vname * Types.simple_type)    (* Collection param. *)
+  | SPAR_in of Parsetree.vname * Types.type_simple    (* Entity param. *)
+  | SPAR_is of Parsetree.vname * Types.type_simple    (* Collection param. *)
 ;;
 
 type species_description = {
-  spe_sig_params : species_param list ;
-  spe_sig_inher : Types.species_type list ;
+  spe_sig_params : species_param list;
+  spe_sig_inher : Types.type_species list;
   spe_sig_methods :  (** Method's name, type and body if defined. *)
-      (string * Types.simple_type * (Parsetree.expr option)) list
-} ;;
+      (string * Types.type_simple * (Parsetree.expr option)) list
+}
+;;
 
 
-type collections_sig = (string * Types.simple_type) list ;; (* To refine. *)
+type collections_sig = (string * Types.type_simple) list
+;; (* To refine. *)
 
-type constructor_arity = CA_zero | CA_one ;;
+type constructor_arity =
+   | CA_zero | CA_one
+;;
 
 
 type constructor_description = {
   (** Arity : 0 or 1 (many = 1 type tuple), (1 = type, not a 1 tuple). *)
-  cstr_arity : constructor_arity ;
+  cstr_arity : constructor_arity;
   (** Full type scheme for this constructor, i.e (args ->) ty result. *)
-  cstr_scheme : Types.types_scheme ;
-} ;;
+  cstr_scheme : Types.type_scheme;
+}
+;;
 
 
-type field_mutability = FM_mutable | FM_immutable ;;
+type field_mutability = FM_mutable | FM_immutable
+;;
 
 
 type label_description = {
-  field_mut : field_mutability ;    (** Mutability for this field. *)
+  field_mut : field_mutability;    (** Mutability for this field. *)
   (** Full type scheme for this field, i.e arg -> ty result. *)
-  field_scheme : Types.types_scheme
+  field_scheme : Types.type_scheme
   } 
 ;;
 
@@ -62,35 +73,37 @@ type label_description = {
 type type_kind =
   | TK_abstract  (** Abstract types and type abbreviations. *)
   | TK_variant of    (** Sum types. *)
-      (Parsetree.constr_name * Types.types_scheme) list
+      (Parsetree.constr_name * Types.type_scheme) list
   | TK_record of  (** Record types: list of labels. Any value of a type record will be typed as a [ST_construct] whose name is the name of the record type. *)
-      (Types.label_name * field_mutability * Types.types_scheme) list
+      (Types.label_name * field_mutability * Types.type_scheme) list
 ;;
 
 
 type type_description = {
-  type_kind : type_kind ;             (** Kind of the type definition. *)
+  type_kind : type_kind;             (** Kind of the type definition. *)
   (** The type scheme representing to what this type is equal to. For
       instance in type 'a t = 'a list, t is TK_abstract with [type_identity]
       representing 'a list.
       If the type is a pure abstract like in type t, then t is TK_abstract
       with [type_identity] representing the type ST_construct ("t", []). *)
-  type_identity : Types.types_scheme ;
+  type_identity : Types.type_scheme;
   type_arity : int          (** Number of parameters of the type. *)
-} ;;
+}
+;;
 
 
 
 type t = {
-  constructors : (Parsetree.constr_name * constructor_description) list ;
-  labels : (Types.label_name * label_description) list ;
-  types : (Types.tname * type_description) list ;
+  constructors : (Parsetree.constr_name * constructor_description) list;
+  labels : (Types.label_name * label_description) list;
+  types : (Types.type_name * type_description) list;
   (** [idents] Contains functions methods and more generally any let-bound
       identifiers. *)
-  values : (Parsetree.vname * Types.types_scheme) list ;
-  species : (Types.sname * species_description) list ;
-  collections : (Types.cname * collections_sig) list
-} ;;
+  values : (Parsetree.vname * Types.type_scheme) list;
+  species : (Types.species_name * species_description) list;
+  collections : (Types.collection_name * collections_sig) list
+}
+;;
 
 
 
@@ -102,8 +115,8 @@ type t = {
     {b Rem} : Exported outside this module.                       *)
 (* ************************************************************** *)
 let empty () =
-  { constructors = [] ; labels = [] ; types  = [] ;
-    values = [] ; species = [] ; collections = [] }
+  { constructors = []; labels = []; types  = [];
+    values = []; species = []; collections = [] }
 ;;
 
 
@@ -123,42 +136,43 @@ let pervasives () =
   {
    constructors = [
      (Parsetree.Vlident "[]", {
-        cstr_arity = CA_zero ; cstr_scheme = nil_scheme }) ;
+        cstr_arity = CA_zero; cstr_scheme = nil_scheme });
      (Parsetree.Viident "::", {
-        cstr_arity = CA_one ; cstr_scheme = cons_scheme })
-      ] ;
-   labels = [] ;
+        cstr_arity = CA_one; cstr_scheme = cons_scheme })
+      ];
+   labels = [];
    types  = [
-     ("int", { type_kind = TK_abstract ;
-	       type_identity = Types.generalize (Types.type_int ()) ;
-	       type_arity = 0 }) ;
-     ("float", { type_kind = TK_abstract ;
-		 type_identity = Types.generalize (Types.type_float ()) ;
-		 type_arity = 0 }) ;
-     ("bool", { type_kind = TK_abstract ;
-		type_identity = Types.generalize (Types.type_bool ()) ;
-		type_arity = 0 }) ;
-     ("string", { type_kind = TK_abstract ;
-		  type_identity = Types.generalize (Types.type_string ()) ;
-		  type_arity = 0 }) ;
-     ("char", { type_kind = TK_abstract ;
-		  type_identity = Types.generalize (Types.type_char ()) ;
-		  type_arity = 0 }) ;
-     ("unit", { type_kind = TK_abstract ;
-		type_identity = Types.generalize (Types.type_unit ()) ;
-		type_arity = 0 }) ;
+     ("int", { type_kind = TK_abstract;
+	       type_identity = Types.generalize (Types.type_int ());
+	       type_arity = 0 });
+     ("float", { type_kind = TK_abstract;
+		 type_identity = Types.generalize (Types.type_float ());
+		 type_arity = 0 });
+     ("bool", { type_kind = TK_abstract;
+		type_identity = Types.generalize (Types.type_bool ());
+		type_arity = 0 });
+     ("string", { type_kind = TK_abstract;
+		  type_identity = Types.generalize (Types.type_string ());
+		  type_arity = 0 });
+     ("char", { type_kind = TK_abstract;
+		  type_identity = Types.generalize (Types.type_char ());
+		  type_arity = 0 });
+     ("unit", { type_kind = TK_abstract;
+		type_identity = Types.generalize (Types.type_unit ());
+		type_arity = 0 });
      ("list", { type_kind =
-	         TK_variant [(Parsetree.Vlident "[]", nil_scheme) ;
-			     (Parsetree.Viident "::", cons_scheme)] ;
+	         TK_variant [(Parsetree.Vlident "[]", nil_scheme);
+			     (Parsetree.Viident "::", cons_scheme)];
 		type_identity =
 		  (let v = Types.type_variable () in
-		  Types.generalize (Types.type_basic "list" [v])) ;
+		  Types.generalize (Types.type_basic "list" [v]));
 		type_arity = 1 })
-    ] ;
-  values = [] ;
-  species = [] ;
+    ];
+  values = [];
+  species = [];
   collections = []
-} ;;
+}
+;;
 
 
 
@@ -186,14 +200,14 @@ let find_module =
 	     if Files.check_magic in_file Files.fo_magic then
 	       (begin
 	       let file_envt = input_value in_file in
-	       close_in in_file ;
+	       close_in in_file;
 	       (* If the interface was found, buferize it for further uses. *)
-	       buffered := (fname, file_envt) :: !buffered ;
+	       buffered := (fname, file_envt) :: !buffered;
 	       file_envt
 	       end)
 	     else
 	       (begin
-	       close_in in_file ;
+	       close_in in_file;
 	       raise (Files.Corrupted_fo fname)
 	       end)
 	   with Files.Cant_access_file _ -> raise (Unbound_module fname)
@@ -235,14 +249,14 @@ let find_label lbl_name env =
 ;;
 
 
-(* Parsetree.vname -> Types.types_scheme -> t -> t *)
+(* Parsetree.vname -> Types.type_scheme -> t -> t *)
 let add_value ident ty_scheme env =
   { env with values = (ident, ty_scheme) :: env.values }
 ;;
 
 
 (* ************************************************************************ *)
-(* Parsetree.ident -> t -> Types.types_scheme                               *)
+(* Parsetree.ident -> t -> Types.type_scheme                               *)
 (** {b Descr} : Looks-up for an [ident] inside the identifiers environment.
               Hence, expects finding a first-class bound value.
 
@@ -259,7 +273,7 @@ let rec find_value ident_ident env =
 
 
 (* *********************************************************************** *)
-(* Parsetree.vname -> t -> Types.types_scheme *)
+(* Parsetree.vname -> t -> Types.type_scheme *)
 (** {b Descr} : Looks-up for a [vname] inside the identifiers environment.
               Hence, expects finding a first-class bound value.
 
@@ -289,7 +303,7 @@ let rec find_type type_ident env =
        assert false
 
 and find_type_vname vname env =
-  let tname = Parsetree_utils.string_of_vname vname in
-  try List.assoc tname env.types with
-  | Not_found -> raise (Unbound_type tname)
+  let type_name = Parsetree_utils.name_of_vname vname in
+  try List.assoc type_name env.types with
+  | Not_found -> raise (Unbound_type type_name)
 ;;

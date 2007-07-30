@@ -1,5 +1,3 @@
-(* $Id: dump_ptree.ml,v 1.8 2007-07-27 13:54:19 pessaux Exp $ *)
-
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -13,6 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* $Id: dump_ptree.ml,v 1.9 2007-07-30 08:07:44 weis Exp $ *)
 
 (* *********************************************************************** *)
 (* pp_position : Format.formatter -> Lexing.position -> unit               *)
@@ -137,10 +136,10 @@ let pp_idents ppf = Handy.pp_generic_separated_list "," pp_ident ppf ;;
 
 
 
-let pp_cstr_expr_desc ppf (fname_opt, vname) =
+let pp_cstr_expr_desc ppf (Parsetree.CE (fname_opt, vname)) =
   let fname =
     (match fname_opt with None -> "None" | Some n -> "Some (" ^ n ^ ")") in
-  Format.fprintf ppf "@[<1>(%s,@ %a@])" fname pp_vname vname
+  Format.fprintf ppf "@[<2>CE@ (%s,@ %a@])" fname pp_vname vname
 ;;
 let pp_cstr_expr ppf = pp_generic_ast pp_cstr_expr_desc ppf ;;
 

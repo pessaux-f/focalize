@@ -1,5 +1,3 @@
-(* $Id: parsetree.mli,v 1.3 2007-07-27 13:54:19 pessaux Exp $ *)
-
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -13,6 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* $Id: parsetree.mli,v 1.4 2007-07-30 08:07:44 weis Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -38,8 +37,10 @@ type location = {
 ;;
 
 (** Types of various identifiers in the abstract syntax tree. *)
+
 type fname = string
-     (** File name. *) ;;
+     (** File name. *)
+;;
 
 type vname =
    | Vlident of string  (** Lowercase ident. *)
@@ -47,7 +48,7 @@ type vname =
    | Vpident of string  (** Prefix operator ident. *)
    | Viident of string  (** Infix operator ident. *)
    | Vqident of string  (** "Quote" ident for type variables. *)
-     (** Variable names are classified with respect of their lexical class,
+     (** Variable names are classified with respect to their lexical class,
 	 which can be regular. infix or prefix. *)
 ;;
 
@@ -64,46 +65,45 @@ type external_name = string * string
 ;;
 
 type ('a, 'b) generic_ast = {
-   ast_loc : location ;   (** The location in the source of the AST node. *)
-   ast_desc : 'a ;        (** The description of the node. *)
-   ast_doc : 'b option ;  (** The support for documentation in many formats. *)
-   mutable ast_type : Types.simple_type option     (** The type of the node. *)
-} ;;
+   ast_loc : location;   (** The location in the source of the AST node. *)
+   ast_desc : 'a;        (** The description of the node. *)
+   ast_doc : 'b option;  (** The support for documentation in many formats. *)
+   mutable ast_type : Types.type_simple option;
+                         (** The type of the node. *)
+}
+;;
 
-type 'a ast = ('a, string) generic_ast ;;
-type 'a ast_doc = ('a, string) generic_ast ;;
+type 'a ast = ('a, string) generic_ast;;
+type 'a ast_doc = ('a, string) generic_ast;;
 
 type ident = ident_desc ast
 and ident_desc =
   | I_local of vname
-  | I_global of ((fname option) * vname)
-  | I_method of ((Types.cname option) * vname)
+  | I_global of fname option * vname
+  | I_method of Types.collection_name option * vname
 ;;
-
-
 
 (* ********************************************************************** *)
 (*  [Type] : constructor_expr                                             *)
 (** [Descr] : Structure of the constructor part of an expression. Because
               type constructors are always toplevel idents, neither local
               nor a method, we extracted from [ident_desc] the only
-              relevant information. Having sur a separate type prevents
+              relevant information. Having such a separate type prevents
               from having a general expression as the constructor part of
               the [expr_desc]'s [E_constr] case.
 
     [Rem] : Exported outside this module.                                 *)
 (* ********************************************************************** *)
 type constructor_expr = constructor_expr_desc ast
-and constructor_expr_desc = ((fname option) * vname)
+and constructor_expr_desc =
+  | CE of fname option * vname
 ;;
-
-
 
 type rep_type_def = rep_type_def_desc ast_doc
 and rep_type_def_desc =
   | RTE_ident of ident
-  | RTE_fun of (rep_type_def * rep_type_def)
-  | RTE_app of (ident * rep_type_def list)
+  | RTE_fun of rep_type_def * rep_type_def
+  | RTE_app of ident * rep_type_def list
   | RTE_prod of rep_type_def list
   | RTE_paren of rep_type_def
 ;;
@@ -111,8 +111,8 @@ and rep_type_def_desc =
 type type_expr = type_expr_desc ast
 and type_expr_desc =
   | TE_ident of ident
-  | TE_fun of (type_expr * type_expr)
-  | TE_app of (ident * (type_expr list))
+  | TE_fun of type_expr * type_expr
+  | TE_app of ident * type_expr list
   | TE_prod of type_expr list
   | TE_self
   | TE_prop
@@ -141,43 +141,53 @@ type pattern = pat_desc ast
 and pat_desc =
   | P_const of constant
   | P_var of vname
-  | P_as of (pattern * vname)
+  | P_as of pattern * vname
   | P_wild
-  | P_app of (ident * (pattern list))
+  | P_app of ident * pattern list
   | P_record of (Types.label_name * pattern) list
   | P_tuple of pattern list
   | P_paren of pattern
 ;;
 
+(** External languages definitions. *)
 type external_language =
   | EL_Caml
   | EL_Coq
   | EL_external of string
+
+(** The external languages known to the compiler are [Caml], [Coq], and any
+    other mentioned as such language name which is an uninterpreted string. *)
 ;;
 
 type external_def = external_def_desc ast
 and external_def_desc =
   | ED_type of external_def_body
   | ED_value of external_def_body
+(** An external definitions can define a new type or a new value. *)
 
 and external_def_body = external_def_body_desc ast
 and external_def_body_desc = {
   ed_name : vname;
   ed_body : external_expr;
 }
+(** The body of an external definitions contains the name defined
+    and its definition in some external language. *)
 
 and external_expr = external_expr_desc ast
 and external_expr_desc =
     (external_language * external_expression) list
 
 and external_expression = string
+    (** External expressions are not parsed: they are just considered
+        as strings of bytes. *)
 ;;
+
 type species_def = species_def_desc ast_doc
 and species_def_desc = {
-  sd_name : Types.sname ;
-  sd_params : (vname * species_param_type) list ;
-  sd_inherits : (species_expr list) ast_doc ;
-  sd_fields : species_field list
+  sd_name : Types.species_name;
+  sd_params : (vname * species_param_type) list;
+  sd_inherits : (species_expr list) ast_doc;
+  sd_fields : species_field list;
 }
 
 and species_param_type = species_param_type_desc ast
@@ -203,13 +213,13 @@ and sig_def_desc = {
 
 and proof_def = proof_def_desc ast_doc
 and proof_def_desc = {
-  pd_name : ident ;
+  pd_name : ident;
   pd_proof : proof
 }
 
 and property_def = property_def_desc ast_doc
 and property_def_desc = {
-  prd_name : ident ;
+  prd_name : ident;
   prd_prop : prop
 }
 
@@ -224,24 +234,24 @@ and species_field_desc =
 
 and let_def = let_def_desc ast_doc
 and let_def_desc = {
-  ld_rec : rec_flag ;
-  ld_logical : logical_flag ;
-  ld_local : local_flag ;
+  ld_rec : rec_flag;
+  ld_logical : logical_flag;
+  ld_local : local_flag;
   ld_bindings : binding list
 }
 and binding = binding_desc ast
 and binding_desc = {
-  b_name : vname ;
-  b_params : (vname * type_expr option) list ;
-  b_type : type_expr option ;
+  b_name : vname;
+  b_params : (vname * type_expr option) list;
+  b_type : type_expr option;
   b_body : expr
 }
 
 and theorem_def = theorem_def_desc ast_doc
 and theorem_def_desc = {
-  th_name : ident ;
-  th_local : local_flag ;
-  th_stmt : prop ;
+  th_name : ident;
+  th_local : local_flag;
+  th_stmt : prop;
   th_proof : proof
 }
 
@@ -261,29 +271,29 @@ and proof_desc =
 
 and proof_node = proof_node_desc ast
 and proof_node_desc =
-  | PN_sub of (node_label * statement * proof)
-  | PN_qed of (node_label * proof)
+  | PN_sub of node_label * statement * proof
+  | PN_qed of node_label * proof
 
 and statement = statement_desc ast
 and statement_desc = {
-  s_hyps : hyp list ;
+  s_hyps : hyp list;
   s_concl : prop option
 }
 
 and hyp = hyp_desc ast
 and hyp_desc =
-  | H_var of (vname * type_expr)
-  | H_hyp of (vname * prop)
-  | H_not of (vname * expr)
+  | H_var of vname * type_expr
+  | H_hyp of vname * prop
+  | H_not of vname * expr
 
 and prop = prop_desc ast
 and prop_desc =
-  | Pr_forall of ((vname list) * (type_expr option) * prop)
-  | Pr_exists of ((vname list) * (type_expr option) * prop)
-  | Pr_imply of (prop * prop)
-  | Pr_or of (prop * prop)
-  | Pr_and of (prop * prop)
-  | Pr_equiv of (prop * prop)
+  | Pr_forall of vname list * type_expr option * prop
+  | Pr_exists of vname list * type_expr option * prop
+  | Pr_imply of prop * prop
+  | Pr_or of prop * prop
+  | Pr_and of prop * prop
+  | Pr_equiv of prop * prop
   | Pr_not of prop
   | Pr_expr of expr
   | Pr_paren of prop
@@ -292,13 +302,13 @@ and expr = expr_desc ast
 and expr_desc =
   | E_self
   | E_const of constant
-  | E_fun of ((vname list) * expr)
+  | E_fun of vname list * expr
   | E_var of ident
   | E_app of expr * expr list
-  | E_constr of (constructor_expr * (expr list))
-  | E_match of (expr * ((pattern * expr) list))
-  | E_if of (expr * expr * expr)
-  | E_let of (let_def * expr)
+  | E_constr of constructor_expr * expr list
+  | E_match of expr * (pattern * expr) list
+  | E_if of expr * expr * expr
+  | E_let of let_def * expr
   | E_record of (Types.label_name * expr) list
   | E_record_access of expr * Types.label_name
   | E_record_with of expr * (Types.label_name * expr) list
@@ -309,21 +319,21 @@ and expr_desc =
 
 type coll_def = coll_def_desc ast_doc
 and coll_def_desc = {
-  cd_name : Types.cname ;
-  cd_body : species_expr
-} ;;
+  cd_name : Types.collection_name;
+  cd_body : species_expr;
+};;
 
 type type_def = type_def_desc ast
 and type_def_desc = {
-  td_name : Types.tname ;
-  td_params : string list ;
-  td_body : type_body
+  td_name : Types.type_name;
+  td_params : string list;
+  td_body : type_body;
 }
 
 and type_body = type_body_desc ast
 and type_body_desc =
   | TD_alias of type_expr
-  | TD_union of (constr_name * (type_expr list)) list 
+  | TD_union of (constr_name * type_expr list) list 
   | TD_record of (Types.label_name * type_expr) list
 ;;
 

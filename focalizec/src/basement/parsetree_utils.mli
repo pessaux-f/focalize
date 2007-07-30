@@ -1,5 +1,3 @@
-(* $Id: parsetree_utils.mli,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
-
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -13,5 +11,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* $Id: parsetree_utils.mli,v 1.2 2007-07-30 08:07:44 weis Exp $ *)
 
-val string_of_vname : Parsetree.vname -> string
+val name_of_vname : Parsetree.vname -> string
+(** Extracts the inner string name of the [vname] variable name. *)
+;;
+

@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.16 2007-07-27 13:54:19 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.17 2007-07-30 08:07:44 weis Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -120,14 +120,15 @@ let pp_idents sep ppf = Handy.pp_generic_separated_list sep pp_ident ppf
 
 
 
-let pp_cstr_expr_desc ppf (fname_opt, vname) =
+let pp_cstr_expr_desc ppf (Parsetree.CE (fname_opt, vname)) =
   begin
   match fname_opt with
    | None -> Format.fprintf ppf "%a" pp_vname vname
    | Some fname -> Format.fprintf ppf "%s#%a" fname pp_vname vname
   end
 ;;
-let pp_cstr_expr ppf = pp_generic_ast pp_cstr_expr_desc ppf ;;
+let pp_cstr_expr ppf = pp_generic_ast pp_cstr_expr_desc ppf
+;;
 
 
 

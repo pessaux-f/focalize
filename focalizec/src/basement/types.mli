@@ -1,5 +1,3 @@
-(* $Id: types.mli,v 1.2 2007-07-27 13:54:19 pessaux Exp $ *)
-
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -13,48 +11,108 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* $Id: types.mli,v 1.3 2007-07-30 08:07:44 weis Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
-type cname = string
-     (** Collection name. *) ;;
-type sname = string
-     (** Species name. *) ;;
-type tname = string
-     (** Type name. *) ;;
+type collection_name = string
+     (** Collection name. *)
+;;
+
+type species_name = string
+     (** Species name. *)
+;;
+
+type type_name = string
+     (** Type name. *)
+;;
+
 type label_name = string
-     (** Label name. *) ;;
+     (** Label name. *)
+;;
 
+(** The type algebra for focalize. *)
 
-type simple_type
-type species_type
-type types_scheme
+type type_simple
+;;
+type type_scheme
+;;
+type type_species
+;;
 
-exception Conflict of simple_type * simple_type
-exception Circularity of simple_type * simple_type
-exception Arity_mismatch of (tname * int * int)
+(** The exceptions raised by the type-checker. *)
+
+exception Conflict of type_simple * type_simple
+  (** Those two types cannot be unified. *)
+;;
+
+exception Circularity of type_simple * type_simple
+  (** There is a circularity detected: the first type occurs in the second. *)
+
+;;
+
+exception Arity_mismatch of type_name * int * int
+  (** A functional type constructor has been used with the wrong number of
+  arguments. The exception carries on the name of the type and the conflicting
+  arities. *)
+;;
 
 val begin_definition : unit -> unit
+;;
 val end_definition : unit -> unit
+;;
 
-val type_variable : unit -> simple_type
-val type_basic : tname -> simple_type list -> simple_type
-val type_int : unit -> simple_type
-val type_float : unit -> simple_type
-val type_bool : unit -> simple_type
-val type_string : unit -> simple_type
-val type_char : unit -> simple_type
-val type_unit : unit -> simple_type
-val type_arrow : simple_type -> simple_type -> simple_type
-val type_tuple : simple_type list -> simple_type
-(* Generate the carrier type of the currently analysed species.  *)
-val type_self : unit -> simple_type
-val type_prop : unit -> simple_type
+val type_variable : unit -> type_simple
+;;
 
-val specialize : types_scheme -> simple_type
-val specialize_and_instanciate : types_scheme -> simple_type list -> simple_type
-val generalize : simple_type -> types_scheme
-val trivial_scheme : simple_type -> types_scheme
+(** Definition of basic types. *)
+
+val type_basic : type_name -> type_simple list -> type_simple
+(** General construction of a type from its name and list of type variables. *)
+;;
+
+(** The classical basic type constants, including functions and tuples. *)
+val type_int : unit -> type_simple
+;;
+val type_float : unit -> type_simple
+;;
+val type_bool : unit -> type_simple
+;;
+val type_string : unit -> type_simple
+;;
+val type_char : unit -> type_simple
+;;
+val type_unit : unit -> type_simple
+;;
+val type_arrow : type_simple -> type_simple -> type_simple
+;;
+val type_tuple : type_simple list -> type_simple
+;;
+val type_prop : unit -> type_simple
+;;
+
+(** Generate the carrier type of the currently analysed species. *)
+val type_self : unit -> type_simple
+;;
+
+(** Manipulation of type schemes: generalization, instanciation, generation of
+a (closed) type scheme from a type without unknowns. *)
+val instanciate_parameters : type_scheme -> type_simple list -> type_simple
+;;
+val specialize : type_scheme -> type_simple
+;;
+val generalize : type_simple -> type_scheme
+;;
+val closed_scheme : type_simple -> type_scheme
+;;
+
+(** Type (schemes) unification. *)
 val unify :
-  self_manifest: (simple_type option) -> simple_type -> simple_type -> unit
-val pp_simple_type : Format.formatter -> simple_type -> unit
-val pp_types_scheme : Format.formatter -> types_scheme -> unit
+  self_manifest: (type_simple option) -> type_simple -> type_simple -> unit
+;;
+
+(** Pretty_printing for types and type schemes. *)
+
+val pp_type_simple : Format.formatter -> type_simple -> unit
+;;
+val pp_type_scheme : Format.formatter -> type_scheme -> unit
+;;
