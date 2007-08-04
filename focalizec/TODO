@@ -156,7 +156,7 @@ Exemples:
 
 
 
-2006-07-11 (Pierre, Renaud, François)
+2007-07-11 (Pierre, Renaud, François)
 =====================================
 
 --------------------------------------------------------------------------
@@ -271,3 +271,70 @@ types d'espèces   type des collections ?
                                                                      FAIT
                                                         DANS L'ALGEBRE MAIS PAS
                                                             ENCORE EXPLOITE
+
+2007-08-02 (François)
+=====================
+
+* ENVIRONNEMENTS
+****************
+Faire une passe de scoping séparée et avant la phase de typage.
+Les informations persistentes de scoping devront être stockée dans le même
+fichier (.fo) que celles de typage, afin de ne pas multiplier les fichiers
+intermédiaires.
+Les algos gérant les environnements de scoping et de typage sont
+essentiellement les mêmes. Surtout la recherche mappant les qualifications
+! et # sur les fichiers sources représentant ls modules.
+Ceci impose donc que les environnements de scoping et de typage soient dans
+un même fichier et que la structure des ".fo" connaisse à la fois la structure
+des deux environnements.
+On créera donc dans le même fichier "env.ml" les structures des environnements
+de scoping et de typage. Ensuite on pourra créer 1 seule fonction partagée
+permettant le mapping des "modules" sur les fichiers source FoCaL. Et finalement
+on pourra implémenter les fonctions de recherche de chacun des environnements.
+On pourrait envisager une structure d'environnement générique, toutefois les
+environnements de scoping n'ont pas besoin d'autant de champs que ceux de
+typage (par exemple, on ne scope pas les labels de records, on ne scope pas les
+noms de collections ou d'entités). Donc plutôt que d'avoir à disposition des
+fonctions "add" et "find" adressant des champs d'environnement toujours vides
+(et donc ne devant pas être utilisés), on fera 2 structures d'environnement
+distinctes, ce qui ne dupliquera toutefois pas trop de code.
+
+* SCOPING
+*********
+Par défaut, le parseur scope en I_local sauf si syntaxiquement se trouve
+explicitement une désambiguation ! ou #. Le boulot du scoping est donc de
+transformer si nécessaire ces I_local en I_global ou I_method.
+Par contre on ne change pas les ident nativement I_global ou I_method.
+
+Dans l'AST, une fois scopé, les idents qualifiés de I_global pourront avoir
+un champ fname à None uniquement s'ils sont globaux au fichier courant, sinon
+ce champs doit être à Some du fichier où ils se trouvent définis.
+
+Lorsque l'on insère un ident global dans l'environnement de scoping, on le
+binde à un (SBI_file (Some l'unité de compilation courante)). Ainsi, au moment
+de sauver l'environnement de scoping pour en faire un ".fo", on n'a pas besoin
+de repasser sur les bindings avec None pour les expliciter à
+(Some l'unité de compilation courante). De même lorsque l'on chargera un ".fo"
+on n'aura pas à refaire ce traitement.
+
+
+* ACCÈS EXPLICITEMENT SCOPÉS AU FICHIER COURANT
+***********************************************
+De part la structure des environnements, si l'on tente d'accéder à
+l'information liée à un ident toplevel du fichier courant qui fait explicitement
+référence à ce fichier, comme le fichier courant ajoute ses bindings directement
+dans l'environnement sans passer par une injection au sein d'un environnement
+de module, il va falloir faire en sorte que l'accès à l'information liée à
+un tel identificateur revienne à accéder à un identificateur non explicitement
+scopé... ATTENTION: Pb:
+
+toto.foc
+
+ let foo () = ...
+ open Fichier_avec_foo
+ ... 
+ toto#foo ()
+
+Comme toto#foo devrait revenir à rechercher simplement foo, le fait que le
+open ait inséré dans l'environnement un ident foo fait qu'il va masquer celui
+auquel on veut réellement accéder.

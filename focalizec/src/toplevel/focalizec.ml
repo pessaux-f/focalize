@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.2 2007-07-30 08:07:44 weis Exp $ *)
+(* $Id: focalizec.ml,v 1.3 2007-08-04 10:17:17 pessaux Exp $ *)
 
 (** The focalize concrete syntax file checker. *)
 
@@ -44,12 +44,16 @@ let main () =
     Configuration.set_input_file_name
     "Usage: focal_check <options> <.foc file>";
   (* First, let's lex and parse the input source file. *)
+  let input_file_name = Configuration.get_input_file_name () in
+  (* Create the current compilation unit "fname". In fact, this *)
+  (* is the current filename without dirname and extention.     *)
+  let current_unit =
+    Filename.chop_extension (Filename.basename input_file_name) in
   let ast =
-    Parse_file.parse_file
-      err_formatter (Configuration.get_input_file_name ()) in
+    Parse_file.parse_file err_formatter input_file_name in
   (* Hard-dump the AST if requested. *)
   if Configuration.get_verbose () then
-    Dump_ptree.pp_file err_formatter ast;
+    Dump_ptree.pp_file err_formatter ast ;
   (* Pretty the AST as a new-focal-syntax source if requested. *)
   (match Configuration.get_pretty_print () with
    | None -> ()
@@ -68,7 +72,7 @@ let main () =
      close_out out_hd);
   (* Typechecks the AST if requested. *)
   if Configuration.get_do_typechecking () then
-    Infer.typecheck_file ast;
+    Infer.typecheck_file current_unit ast ;
   exit 0
 ;;
 

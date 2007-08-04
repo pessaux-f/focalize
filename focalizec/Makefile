@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2007-07-27 13:54:19 pessaux Exp $
+# $Id: Makefile,v 1.3 2007-08-04 10:17:17 pessaux Exp $
 
 include ./Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/
@@ -12,7 +12,6 @@ BYTOBJS = configuration.cmo lexer.cmo parser.cmo handy.cmo  types.cmo \
 all::
 	$(CD) basement ; $(MAKE) all
 	$(CD) parser ; $(MAKE) all
-	$(CD) scoper ; $(MAKE) all
 	$(CD) typing ; $(MAKE) all
 	$(CD) toplevel ; $(MAKE) all
 
@@ -20,21 +19,18 @@ clean::
 	$(RM) *~
 	$(CD) basement ; $(MAKE) clean
 	$(CD) parser ; $(MAKE) clean
-	$(CD) scoper ; $(MAKE) clean
 	$(CD) typing ; $(MAKE) clean
 	$(CD) toplevel ; $(MAKE) clean
 
 doc:: 
 	$(CD) basement ; $(MAKE) doc
 	$(CD) parser ; $(MAKE) doc
-	$(CD) scoper ; $(MAKE) doc
 	$(CD) typing ; $(MAKE) doc
 	$(CD) toplevel ; $(MAKE) doc
 
 depend:
 	$(CD) basement ; $(MAKE) depend
 	$(CD) parser ; $(MAKE) depend
-	$(CD) scoper ; $(MAKE) depend
 	$(CD) typing ; $(MAKE) depend
 	$(CD) toplevel ; $(MAKE) depend
 

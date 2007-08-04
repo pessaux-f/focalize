@@ -1,1 +1,1 @@
-val typecheck_file : Parsetree.file -> unit
+val typecheck_file : Parsetree.fname -> Parsetree.file -> unit

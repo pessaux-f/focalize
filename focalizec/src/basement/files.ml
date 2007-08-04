@@ -1,4 +1,4 @@
-(* $Id: files.ml,v 1.2 2007-07-27 13:54:19 pessaux Exp $ *)
+(* $Id: files.ml,v 1.3 2007-08-04 10:17:17 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -42,7 +42,9 @@ let open_in_from_lib_paths filename =
     {b Rem} : Exported outside this module.             *)
 (* **************************************************** *)
 let fo_filename_from_module_name module_name =
-  (String.uncapitalize  module_name) ^ ".fo"
+  (* Remove the path if some, because fnames can be used *)
+  (* with a path in the "use" and "open" directives.     *)
+  (Filename.basename module_name) ^ ".fo"
 ;;
 
 
