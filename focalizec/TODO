@@ -338,3 +338,8 @@ toto.foc
 Comme toto#foo devrait revenir à rechercher simplement foo, le fait que le
 open ait inséré dans l'environnement un ident foo fait qu'il va masquer celui
 auquel on veut réellement accéder.
+
+Solution: un binding d'environment est taggé soit comme "Absolute" (il provient
+d'une définition se trouvant explicitement dans l'unité de compilation
+actuellement analysée), soit "Opened" (il provient d'une directive "use" ou
+"open".
