@@ -317,6 +317,9 @@ de repasser sur les bindings avec None pour les expliciter à
 (Some l'unité de compilation courante). De même lorsque l'on chargera un ".fo"
 on n'aura pas à refaire ce traitement.
 
+Le scoping ne doit pas affecter les idents se trouvant explicitement et
+initialement sous forme I_local ou I_method. Dans leur cas, à la rigueur le
+scoping permet de s'assurer que ces identificateurs sont bien liés.
 
 * ACCÈS EXPLICITEMENT SCOPÉS AU FICHIER COURANT
 ***********************************************
@@ -326,20 +329,68 @@ référence à ce fichier, comme le fichier courant ajoute ses bindings directement
 dans l'environnement sans passer par une injection au sein d'un environnement
 de module, il va falloir faire en sorte que l'accès à l'information liée à
 un tel identificateur revienne à accéder à un identificateur non explicitement
-scopé... ATTENTION: Pb:
+scopé... Mais ATTENTION cela pose un problème:
 
-toto.foc
+Fichier toto.foc
 
  let foo () = ...
  open Fichier_avec_foo
  ... 
  toto#foo ()
 
-Comme toto#foo devrait revenir à rechercher simplement foo, le fait que le
-open ait inséré dans l'environnement un ident foo fait qu'il va masquer celui
+Comme "toto#foo" devrait revenir à rechercher simplement "foo", le fait que le
+open ait inséré dans l'environnement un ident "foo" fait qu'il va masquer celui
 auquel on veut réellement accéder.
 
 Solution: un binding d'environment est taggé soit comme "Absolute" (il provient
 d'une définition se trouvant explicitement dans l'unité de compilation
 actuellement analysée), soit "Opened" (il provient d'une directive "use" ou
 "open".
+
+
+
+2007-08-05 (François)
+=====================
+
+* RECORDS
+*********
+Il me semble qu'il faudrait scoper aussi les champs de records. Ceux-ci
+devraient pouvoir être noté avec un mécanisme de #, sinon comment parler du
+champ d'un type record se trouvant dans un autre module que le module actuel
+(celui de l'unité de compilation actuelle) ?
+Ceci impliquerait donc qu'il faille aussi scoper les noms de champs de records.
+On pourrait alors remplacer la simple string représentant le nom du champ par
+(fname option) * string. Pas besoin de la généralité d'un ident car il ne peut
+pas être "I_method".
+
+* COLLECTIONS ET ESPECES POUR LE SCOPING
+****************************************
+En fait, je pense que l'on a besoin aussi d'un environement de collections et
+d'espèces poru scoper car pour se rendre compte qu'un ident scopé I_local
+initialement (et par défaut) par le parser est en fait un I_method, il faut
+bien avoir la liste des méthodes et l'héritage de la collection courante.
+
+* ===>>>> CONCLUSION SUR LES ENVIRONNEMENTS
+*******************************************
+Il y a quelques jours, l'idée était d'avoir 2 types d'environnements : 1 pour
+le scoping et 1 pour le typing plutôt que de faire des environnements
+génériques sous prétexte que les environnements de scoping n'avaient pas
+besoin d'autant de champs.
+En fait, il semblerait que la différence entre ces 2 environnements ne soit
+plus aussi pertinente à la vue du point précédent.
+Il serait intéressant de tenter des environnements génériques afin de factoriser
+le code, en fait !
+
+* QUESTION ENTRE SCOPING ET TYPAGE
+**********************************
+J'ai dis à l'avant dernier point que pour scoper, il nous fallait des buckets
+pour les collections et les espèces dans l'environnement de scoping. Une
+question inquiétante est de savoir si par malheur on ne risquerait pas d'avoir
+besoin de connaître les types pour scoper (ce qui casserait notre belle
+stratifications scoping PUIS typing).
+A priori la réponse est NON car le scoping ne sert qu'à résoudre les ambiguités
+induites par le fait de rendre optionnel (tacite) le #. Or ceci n'implique que
+la recherche dans les méthodes de l'arbre d'héritage de l'espèce courante Self).
+Or le type de cette espèce est implicitement connu lorsque l'on l'analyse et
+il n'y a pas besoin de calculs sur les types en vue de déterminer à quel type
+d'espèce la méthode "bla" peut appartenir dans "#bla".
