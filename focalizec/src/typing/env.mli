@@ -6,7 +6,6 @@ exception Unbound_type of Types.type_name
 exception Unbound_module of Parsetree.fname
 
 
-
 module ScopeInformation :
   sig
     type scope_binding_info =
@@ -14,9 +13,7 @@ module ScopeInformation :
       | SBI_method_of_self
       | SBI_method_of_coll of Types.collection_name
       | SBI_local
-    type t
   end
-
 
 
 module TypeInformation :
@@ -51,61 +48,63 @@ module TypeInformation :
       type_identity : Types.type_scheme;
       type_arity : int;
     }
-    type t
   end
-
 
 
 module ScopingEnv :
   sig
-    val empty : unit -> ScopeInformation.t
-    val add_value :
-      Parsetree.vname ->
-      ScopeInformation.scope_binding_info ->
-      ScopeInformation.t -> ScopeInformation.t
-    val find_value :
-      current_unit: Parsetree.fname -> Parsetree.ident -> ScopeInformation.t ->
-	(ScopeInformation.scope_binding_info * Parsetree.vname)
+    type t
+    val empty : unit -> t
+    val pervasives : unit -> t
 
+    val add_value :
+      Parsetree.vname -> ScopeInformation.scope_binding_info -> t -> t
+    val find_value :
+      current_unit:Parsetree.fname ->
+      Parsetree.ident -> t -> ScopeInformation.scope_binding_info
+
+    val add_constructor : Parsetree.constr_name -> Parsetree.fname -> t -> t
     val find_constructor :
-      current_unit: Parsetree.fname -> Parsetree.ident -> ScopeInformation.t ->
-	(Parsetree.fname * Parsetree.constr_name)
+      current_unit:Parsetree.fname -> Parsetree.ident -> t -> Parsetree.fname
+(*
+    val add_label :
+      Types.label_name -> ScopingEMAccess.label_bound_data -> t -> t
+    val find_label :
+      Types.label_name -> t -> ScopingEMAccess.label_bound_data
+
+    val add_type :
+      Types.type_name -> ScopingEMAccess.type_bound_data -> t -> t
+    val find_type :
+      current_unit:Parsetree.fname ->
+      Parsetree.ident -> t -> ScopingEMAccess.type_bound_data
+*)
   end
 
 
 module TypingEnv :
   sig
-    val empty : unit -> TypeInformation.t
-    val pervasives : unit -> TypeInformation.t
+    type t
+    val empty : unit -> t
+    val pervasives : unit -> t
+
+    val add_value : Parsetree.vname -> Types.type_scheme -> t -> t
+    val find_value :
+      current_unit: Parsetree.fname -> Parsetree.ident -> t -> Types.type_scheme
 
     val add_constructor :
       Parsetree.constr_name ->
-      TypeInformation.constructor_description ->
-      TypeInformation.t -> TypeInformation.t
+      TypeInformation.constructor_description -> t -> t
     val find_constructor :
-      current_unit: Parsetree.fname -> Parsetree.ident ->
-      TypeInformation.t -> TypeInformation.constructor_description
+      current_unit:Parsetree.fname ->
+      Parsetree.ident -> t -> TypeInformation.constructor_description
 
     val add_label :
-      Types.label_name ->
-      TypeInformation.label_description ->
-      TypeInformation.t -> TypeInformation.t
-    val find_label :
-      Types.label_name ->
-      TypeInformation.t -> TypeInformation.label_description
-
-    val add_value :
-      Parsetree.vname ->
-      Types.type_scheme -> TypeInformation.t -> TypeInformation.t
-    val find_value :
-      current_unit: Parsetree.fname -> Parsetree.ident ->
-      TypeInformation.t -> Types.type_scheme
+      Types.label_name -> TypeInformation.label_description -> t -> t
+    val find_label : Types.label_name -> t -> TypeInformation.label_description
 
     val add_type :
-      Types.type_name ->
-      TypeInformation.type_description ->
-      TypeInformation.t -> TypeInformation.t
+      Types.type_name -> TypeInformation.type_description -> t -> t
     val find_type :
-      current_unit: Parsetree.fname -> Parsetree.ident ->
-      TypeInformation.t -> TypeInformation.type_description
+      current_unit: Parsetree.fname ->
+      Parsetree.ident -> t -> TypeInformation.type_description
   end

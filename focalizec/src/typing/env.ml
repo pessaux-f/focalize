@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.7 2007-08-04 10:17:17 pessaux Exp $ *)
+(* $Id: env.ml,v 1.8 2007-08-06 12:01:46 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -86,6 +86,30 @@ let env_list_assoc ~allow_opened searched list =
 
 
 
+(* ********************************************************************** *)
+(** {Descr} : Type of the generic environments. It is parametrised by the
+            information to bind to identifiers representing:
+            - Sum-types constructors
+            - Record-types labels 
+            - Values
+            - Species
+            - Collections.
+
+    {b Rem} : Exported abstract outside this module.                      *)
+(* ********************************************************************** *)
+type ('constrs, 'labels, 'types, 'values, 'species, 'colls) generic_env = {
+  constructors : (Parsetree.constr_name * ('constrs binding_origin)) list ;
+  labels : (Types.label_name * ('labels binding_origin)) list ;
+  types : (Types.type_name * ('types binding_origin)) list ;
+  (** [idents] Contains functions methods and more generally any let-bound
+identifiers. *)
+  values : (Parsetree.vname * ('values binding_origin)) list ;
+  species : (Types.species_name * ('species binding_origin)) list ;
+  collections : (Types.collection_name * ('colls binding_origin)) list
+} ;;
+
+
+
 (* *********************************************************************** *)
 (* *********************************************************************** *)
 (* *********************************************************************** *)
@@ -104,14 +128,12 @@ module ScopeInformation = struct
   (* type scope_binding_info                                               *)
   (** {b Descr} : Tag each binding in the scopping environment in order to
 	      know if the [ident] is currently bound to a global toplevel
-	      definition inside a file or if it's a method found in the
-	      current species inheritance tree (including itself).
-	      Note that there is no need to add another case like a
-	      'SBI_method_of_specie' because if a method has to be called
-	      from a particular species other than [Self], then it has to
-	      be syntactically explicitely written !
+	      definition inside a file, if it's a method found in the
+	      current species inheritance tree (including itself), if it's
+              a method found in another species inheritance tree or
+              finally if it's a locally bound identifier.
 
-      {b Rem} : Not exported outside this module.                          *)
+      {b Rem} : Exported outside this module.                              *)
   (* ********************************************************************* *)
   type scope_binding_info =
       (* The ident is at toplevel in a file (if Some) or *)
@@ -126,11 +148,14 @@ module ScopeInformation = struct
 
 
 
-  type t = {
-    constructors :
-      (Parsetree.constr_name * (Parsetree.fname binding_origin)) list ;
-    values : (Parsetree.vname * (scope_binding_info binding_origin)) list
-  }
+  (* ************************************************************** *)
+  (** {b Descr} : Type abbreviation to shorten the structure of the
+                scoping environments.
+
+      {b Rem} : Not exported outside this module.                   *)
+  (* ************************************************************** *)
+  type env =
+    (Parsetree.fname, unit, unit, scope_binding_info, unit, unit) generic_env
 end ;;
 
 
@@ -153,6 +178,8 @@ module TypeInformation = struct
     | SPAR_in of Parsetree.vname * Types.type_simple    (* Entity param. *)
     | SPAR_is of Parsetree.vname * Types.type_simple    (* Collection param. *)
 
+
+
   type species_description = {
     spe_sig_params : species_param list ;
     spe_sig_inher : Types.type_species list ;
@@ -160,9 +187,15 @@ module TypeInformation = struct
       (string * Types.type_simple * (Parsetree.expr option)) list
     }
 
+
+
   type collections_sig = (string * Types.type_simple) list (* To refine. *)
 
+
+
   type constructor_arity = CA_zero | CA_one
+
+
 
   type constructor_description = {
     (** Arity : 0 or 1 (many = 1 type tuple), (1 = type, not a 1 tuple). *)
@@ -171,7 +204,11 @@ module TypeInformation = struct
     cstr_scheme : Types.type_scheme
   }
 
+
+
   type field_mutability = FM_mutable | FM_immutable
+
+
 
   type label_description = {
     field_mut : field_mutability ;    (** Mutability for this field. *)
@@ -179,12 +216,16 @@ module TypeInformation = struct
     field_scheme : Types.type_scheme
   }
 
+
+
   type type_kind =
     | TK_abstract  (** Abstract types and type abbreviations. *)
     | TK_variant of    (** Sum types. *)
 	(Parsetree.constr_name * Types.type_scheme) list
     | TK_record of  (** Record types: list of labels. Any value of a type record will be typed as a [ST_construct] whose name is the name of the record type. *)
 	(Types.label_name * field_mutability * Types.type_scheme) list
+
+
 
   type type_description = {
     type_kind : type_kind ;             (** Kind of the type definition. *)
@@ -198,19 +239,15 @@ module TypeInformation = struct
   }
 
 
-  type t = {
-    constructors :
-      (Parsetree.constr_name * (constructor_description binding_origin)) list ;
-    labels : (Types.label_name * (label_description binding_origin)) list ;
-    types : (Types.type_name * (type_description binding_origin)) list ;
-    (** [idents] Contains functions methods and more generally any let-bound
-identifiers. *)
-    values : (Parsetree.vname * (Types.type_scheme binding_origin)) list ;
-    species : (Types.species_name * (species_description binding_origin)) list ;
-    collections :
-      (Types.collection_name * (collections_sig binding_origin)) list
-  }
+  (* ************************************************************** *)
+  (** {b Descr} : Type abbreviation to shorten the structure of the
+                typing environments.
 
+      {b Rem} : Not exported outside this module.                   *)
+  (* ************************************************************** *)
+  type env =
+   (constructor_description, label_description, type_description,
+    Types.type_scheme, species_description, collections_sig) generic_env
 end ;;
 
 
@@ -222,11 +259,13 @@ end ;;
 
 
 let (scope_find_module, type_find_module) =
+  (* Let's just make the list used to bufferize opened files' content. *)
   let buffered =
     ref ([] :
-	   (Parsetree.fname * (ScopeInformation.t * TypeInformation.t)) list) in
+	   (Parsetree.fname * (ScopeInformation.env * TypeInformation.env))
+	   list) in
   (* ***************************************************************** *)
-  (* Parsetree.fname -> (ScopeInformation.t * TypeInformation.t)       *)
+  (* Parsetree.fname -> (ScopeInformation.env * TypeInformation.env)   *)
   (** {b Descr} : Wrapper to lookup inside an external interface file.
                 The lookup also performs a bufferisation to prevent
                 futhers calls from accessing again the disk. This
@@ -259,8 +298,9 @@ let (scope_find_module, type_find_module) =
 	  end)
       with Files.Cant_access_file _ -> raise (Unbound_module fname)
     end) in
-  ((* ****************************************************************** *)
-   (* Parsetree.fname option -> ScopeInformation.t -> ScopeInformation.t *)
+  ((* **************************************************************** *)
+   (* current_unit: Parsetree.fname -> Parsetree.fname option ->       *)
+   (*   ScopeInformation.env -> ScopeInformation.env                   *)
    (** {b Descr} : Wrapper to lookup a scoping environment inside an
                  external interface file. Note that if it is requested
                  to lookup inside the current compilation unit's
@@ -268,16 +308,20 @@ let (scope_find_module, type_find_module) =
                  the looked-up module), then returned environment is
                  the one initiallt passed as argument.
 
-       {b Rem} : Not exported outside this module.                       *)
-   (* ****************************************************************** *)
+       {b Rem} : Not exported outside this module.                     *)
+   (* **************************************************************** *)
    (fun ~current_unit fname_opt scope_env ->
     match fname_opt with
      | None -> scope_env
      | Some fname ->
 	 if current_unit = fname then scope_env
 	 else fst (internal_find_module fname)),
+
+
+
    (* **************************************************************** *)
-   (* Parsetree.fname option -> TypeInformation.t -> TypeInformation.t *)
+   (* current_unit: Parsetree.fname -> Parsetree.fname option ->       *)
+   (*   TypeInformation.env -> TypeInformation.env                     *)
    (** {b Descr} : Wrapper to lookup a typing environment inside an
                  external interface file. Note that if it is requested
                  to lookup inside the current compilation unit's
@@ -313,6 +357,7 @@ let (scope_find_module, type_find_module) =
                   are analysing the file "doudou". It's then also a search
                   for something at toplevel of the current compilation unit.
                   Hence the right binding cannot also be something "Opened".
+
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
 let allow_opened_p current_unit = function
@@ -328,48 +373,116 @@ let allow_opened_p current_unit = function
 
 
 
-(* ********************************************************************** *)
-(** {b Descr} : This module contains the scoping environment manipulation
-              primitives (lookup and insertion).
+(* *********************************************************************** *)
+(** {b Descr} : Type of modules used to encapsulate the function allowing
+              to access the environment related to a FoCaL "module" via
+	      the persistent data located on the disk.
+              This kind of module will be used as argument of the functor
+              [Make] below in order to generate the environment access
+              functions without having to add to them an extra parameter
+              that would the "find_module" function.
 
-    {b Rem} : This module is partially exported.                          *)
-(* ********************************************************************** *)
-module ScopingEnv = struct
-  (* ************************************************************* *)
-  (* empty : unit -> ScopeInformation.t                            *)
-  (** {b Descr} : Creates a fresh TOTALY empty scoping environment
+    {b Rem} : Not exported outside this module.
+            This module signature is fully local to this file, it will be
+            internally be used to create the various environment
+            structures (scoping, typing) we need.                         *)
+(* *********************************************************************** *)
+module type EnvModuleAccessSig = sig
+  type constructor_bound_data
+  type label_bound_data
+  type type_bound_data
+  type value_bound_data
+  type species_bound_data
+  type collection_bound_data
+  val find_module :
+    current_unit: Parsetree.fname -> Parsetree.fname option ->
+      (constructor_bound_data, label_bound_data, type_bound_data,
+       value_bound_data, species_bound_data, collection_bound_data)
+      generic_env ->
+        (constructor_bound_data, label_bound_data, type_bound_data,
+         value_bound_data, species_bound_data, collection_bound_data)
+      generic_env
+  val pervasives : unit ->
+    (constructor_bound_data, label_bound_data, type_bound_data,
+     value_bound_data, species_bound_data, collection_bound_data)
+      generic_env
+end ;;
+
+
+
+(* ********************************************************************* *)
+(** {b Descr} : This functor creates the environment manipulation
+              primitives (lookup and insertion), using the [find_module]
+              function of the argument [EMAccess] to access FoCal
+              "modules" persistent data on disk.
+
+    {b Rem} : Not exported outside this module.
+	      This functor is fully local to this file, it will be
+	      internally be used to create the various environment
+	      structures (scoping, typing) we need.                      *)
+(* ********************************************************************* *)
+module Make(EMAccess : EnvModuleAccessSig) = struct
+  (* ************************************************ *)
+  (** {b Descr} : The type of the environment itself.
+
+      {b Rem} : Exported outside this module.         *)
+  (* ************************************************ *)
+  type t =
+    (EMAccess.constructor_bound_data, EMAccess.label_bound_data,
+     EMAccess.type_bound_data, EMAccess.value_bound_data,
+     EMAccess.species_bound_data, EMAccess.collection_bound_data) generic_env
+
+  (* ***************************************************** *)
+  (* unit -> t                                             *)
+  (** {b Descr} : Creates a fresh TOTALY empty environment
 		(no even pervasive stuff inside).
 
-      {b Rem} : Exported outside this module.                      *)
-  (* ************************************************************* *)
+      {b Rem} : Exported outside this module.              *)
+  (* ***************************************************** *)
   let empty () =
-    { ScopeInformation.constructors = [] ;
-      ScopeInformation.values = [] }
+    ({ constructors = [] ; labels = [] ; types = [] ; values = [] ;
+      species = [] ; collections = [] } : t)
+
+
+  (* ***************************************************** *)
+  (* unit -> t                                             *)
+  (** {b Descr} : Creates a fresh environment containing
+                information bound the basic builtins.
+
+      {b Rem} : Exported outside this module.              *)
+  (* ***************************************************** *)
+  let pervasives () = EMAccess.pervasives ()
 
 
 
-  let add_value ident scope_binding_info env =
-    { env with
-        ScopeInformation.values =
-          (ident, BO_absolute scope_binding_info) ::
-          env.ScopeInformation.values }
+  (* ************************************************************** *)
+  (* Parsetree.vname -> EMAccess.value_bound_data -> t -> t         *)
+  (** {b Descr} : Return an environment extended with a binding
+                between a value [ident] and the argument [data].
+                The initial environment is passed as last argument.
+
+      {b Rem} : Exported outside this module.                       *)
+  (* ************************************************************** *)
+  let add_value ident data (env : t) =
+    ({ env with values = (ident, BO_absolute data) :: env.values } : t)
+
 
 
   (* ******************************************************************* *)
-  (* Parsetree.fname -> Parsetree.ident -> ScopeInformation.t ->         *)
-  (*   (ScopeInformation.scope_binding_info * Parsetree.vname)           *)
+  (* current_unit: Parsetree.fname -> Parsetree.ident ->                 *)
+  (*   t -> EMAccess.value_bound_data                                    *)
   (** {b Descr} : Looks-up for an [ident] inside the values environment.
 
       {b Rem} : Exported outside this module.                            *)
   (* ******************************************************************* *)
-  let rec find_value ~current_unit ident_ident env =
+  let rec find_value ~current_unit ident_ident (env : t) =
     match ident_ident.Parsetree.ast_desc with
      | Parsetree.I_local vname ->
          (* No explicit scoping information was provided, hence *)
          (* opened modules bindings are acceptable.             *)
 	 find_value_vname ~allow_opened: true vname env
      | Parsetree.I_global (opt_scope, vname) ->
-	 let env' = scope_find_module ~current_unit opt_scope env in
+	 let env' = EMAccess.find_module ~current_unit opt_scope env in
 	 (* Check if the lookup can return something *)
 	 (* coming from an opened module.            *)
 	 let allow_opened = allow_opened_p current_unit opt_scope in
@@ -379,29 +492,50 @@ module ScopingEnv = struct
 
 
   (* ****************************************************************** *)
-  (* bool -> Parsetree.vname -> ScopeInformation.t ->                   *)
-  (*   (ScopeInformation.scope_binding_info * Parsetree.vname)          *)
+  (* allow_opened: bool -> Parsetree.vname -> t ->                      *)
+  (*   EMAccess.value_bound_data                                        *)
   (** {b Descr} : Looks-up for a [vname] inside the values environment.
 
       {b Rem} : Not exported outside this module.                       *)
   (* ****************************************************************** *)
-  and find_value_vname ~allow_opened vname env =
-    try
-      let hosting_info =
-        env_list_assoc ~allow_opened vname env.ScopeInformation.values in
-      (hosting_info, vname)
+  and find_value_vname ~allow_opened vname (env : t) =
+    try env_list_assoc ~allow_opened vname env.values
     with Not_found -> raise (Unbound_identifier vname)
 
 
 
-  let rec find_constructor ~current_unit cstr_ident env =
+  (* ************************************************************** *)
+  (* Parsetree.constr_name -> EMAccess.constructor_bound_data ->    *)
+  (*   t -> t                                                       *)
+  (** {b Descr} : Return an environment extended with a binding
+                between a sum-type constructor [ident] and the
+                argument [data].
+                The initial environment is passed as last argument.
+
+      {b Rem} : Exported outside this module.                       *)
+  (* ************************************************************** *)
+  let add_constructor cstr_name data (env : t) =
+    ({ env with
+        constructors = (cstr_name, BO_absolute data) :: env.constructors } : t)
+
+
+
+  (* ************************************************************ *)
+  (* current_unit: Parsetree.fname -> Parsetree.ident ->          *)
+  (*   t -> EMAccess.constructor_bound_data                       *)
+  (** {b Descr} : Looks-up for an [ident] inside the constructors
+		environment.
+
+      {b Rem} : Exported outside this module.                     *)
+  (* ************************************************************ *)
+  let rec find_constructor ~current_unit cstr_ident (env : t) =
     match cstr_ident.Parsetree.ast_desc with
      | Parsetree.I_local vname ->
          (* No explicit scoping information was provided, hence *)
          (* opened modules bindings are acceptable.             *)
          find_constructor_vname ~allow_opened: true vname env
      | Parsetree.I_global (opt_scope, vname) ->
-	 let env' = scope_find_module ~current_unit opt_scope env in
+	 let env' = EMAccess.find_module ~current_unit opt_scope env in
 	 (* Check if the lookup can return something *)
 	 (* coming from an opened module.            *)
 	 let allow_opened = allow_opened_p current_unit opt_scope in
@@ -413,50 +547,134 @@ module ScopingEnv = struct
 
 
 
-  and find_constructor_vname ~allow_opened vname env =
-    try
-      let host_file =
-        env_list_assoc ~allow_opened vname env.ScopeInformation.constructors in
-      (host_file, vname)
+  (* *********************************************************** *)
+  (* allow_opened: bool -> Parsetree.constr_name -> t ->         *)
+  (*   EMAccess.constructor_bound_data                           *)
+  (** {b Descr} : Looks-up for a [vname] inside the constructors
+                environment.
+
+      {b Rem} : Not exported outside this module.                *)
+  (* *********************************************************** *)
+  and find_constructor_vname ~allow_opened vname (env : t) =
+    try env_list_assoc ~allow_opened vname env.constructors
     with Not_found -> raise (Unbound_constructor vname)
+
+
+
+  (* ************************************************************** *)
+  (* Types.label_name -> EMAccess.label_bound_data -> t -> t        *)
+  (** {b Descr} : Return an environment extended with a binding
+                between a record field label [ident] and the
+                argument [data].
+                The initial environment is passed as last argument.
+
+      {b Rem} : Exported outside this module.                       *)
+  (* ************************************************************** *)
+  let add_label lbl_name data (env : t) =
+     ({ env with labels = (lbl_name, BO_absolute data) :: env.labels } : t)
+
+
+
+  (* ************************************************************* *)
+  (* Types.label_name -> > t -> EMAccess.label_bound_data          *)
+  (** {b Descr} : Looks-up for an [ident] inside the record fields
+		labels environment.
+
+      {b Rem} : Exported outside this module.                      *)
+  (* ************************************************************* *)
+  let find_label lbl_name (env : t) =
+    try
+      (* Because labels cannot be written with a # notation, the only   *)
+      (* way is to access toplevel labels of the current compilation    *)
+      (* unit. Hence such bindings cannot be induced by opened modules. *)
+      env_list_assoc ~allow_opened: false lbl_name env.labels with
+    | Not_found -> raise (Unbound_label lbl_name)
+
+
+
+  (* ************************************************************** *)
+  (* Types.type_name -> EMAccess.type_bound_data -> t -> t          *)
+  (** {b Descr} : Return an environment extended with a binding
+                between a type [ident] and the argument [data].
+                The initial environment is passed as last argument.
+
+      {b Rem} : Exported outside this module.                       *)
+  (* ************************************************************** *)
+  let add_type tyname data (env : t) =
+    ({ env with types = (tyname, BO_absolute data) :: env.types } : t)
+
+
+
+  (* ****************************************************************** *)
+  (* current_unit: Parsetree.fname -> Parsetree.ident -> t ->           *)
+  (*   EMAccess.type_bound_data                                         *)
+  (** {b Descr} : Looks-up for an [ident] inside the types environment.
+
+      {b Rem} : Exported outside this module.                           *)
+  (* ****************************************************************** *)
+  let rec find_type ~current_unit type_ident (env : t) =
+    match type_ident.Parsetree.ast_desc with
+     | Parsetree.I_local vname ->
+         (* No explicit scoping information was provided, hence *)
+         (* opened modules bindings are acceptable.             *)
+	 find_type_vname ~allow_opened: true vname env
+     | Parsetree.I_global (opt_scope, vname) ->
+	 let env' = EMAccess.find_module ~current_unit opt_scope env in
+	 (* Check if the lookup can return something *)
+	 (* coming from an opened module.            *)
+	 let allow_opened = allow_opened_p current_unit opt_scope in
+	 find_type_vname ~allow_opened vname env'
+     | Parsetree.I_method (_, _) ->
+	 (* Type identifiers should never be methods ! *)
+	 assert false
+
+
+
+  (* **************************************************************** *)
+  (* allow_opened: bool -> Parsetree.vname -> Parsetree.vname -> t -> *)
+  (*   EMAccess.type_bound_data                                       *)
+  (** {b Descr} : Looks-up for a [vname] inside the types environment.
+
+      {b Rem} : Not exported outside this module.                     *)
+  (* **************************************************************** *)
+  and find_type_vname ~allow_opened vname (env : t) =
+    let type_name = Parsetree_utils.name_of_vname vname in
+    try env_list_assoc ~allow_opened type_name env.types with
+    | Not_found -> raise (Unbound_type type_name)
 
 end ;;
 
 
 
-(* *********************************************************************** *)
-(* *********************************************************************** *)
-(* *********************************************************************** *)
+module ScopingEMAccess = struct
+  type constructor_bound_data = Parsetree.fname
+  type label_bound_data = unit
+  type type_bound_data = unit
+  type value_bound_data = ScopeInformation.scope_binding_info
+  type species_bound_data = unit
+  type collection_bound_data = unit
+  let find_module = scope_find_module
+  let pervasives () =
+    { constructors = [] ; labels = [] ; types = [] ; values = [] ;
+      species = [] ; collections = [] }
+end ;;
+module ScopingEnv = Make (ScopingEMAccess) ;;
 
 
 
-(* ********************************************************************* *)
-(** {b Descr} : This module contains the typing environment manipulation
-              primitives (lookup and insertion).
-
-    {b Rem} : This module is partially exported.                         *)
-(* ********************************************************************* *)
-module TypingEnv = struct
+module TypingEMAccess = struct
+  type constructor_bound_data = TypeInformation.constructor_description
+  type label_bound_data = TypeInformation.label_description
+  type type_bound_data = TypeInformation.type_description
+  type value_bound_data = Types.type_scheme
+  type species_bound_data = TypeInformation.species_description
+  type collection_bound_data = TypeInformation.collections_sig
+  let find_module = type_find_module
   (* ************************************************************ *)
-  (* empty : unit -> TypeInformation.t                            *)
-  (** {b Descr} : Creates a fresh TOTALY empty typing environment
-		(no even pervasive stuff inside).
-
-      {b Rem} : Exported outside this module.                     *)
-  (* ************************************************************ *)
-  let empty () =
-    { TypeInformation.constructors = [] ; TypeInformation.labels = [] ;
-      TypeInformation.types  = [] ; TypeInformation.values = [] ;
-      TypeInformation.species = [] ;
-      TypeInformation.collections = [] }
-
-
-
-  (* ************************************************************ *)
-  (* pervasives : unit -> TypeInformation.t                       *)
+  (* make_pervasives : unit -> TypeInformation.env                *)
   (** {b Descr} : Creates a fresh environment containing the type
-                information of the basic built-in primitives,
-                types and constructors.
+		information of the basic built-in primitives,
+		types and constructors.
 
       {b Rem} : Exported outside this module.                     *)
   (* ************************************************************ *)
@@ -474,7 +692,7 @@ module TypingEnv = struct
 	   (Types.type_basic "list" [v]))) in
     (* And now the structure of the environment itself. *)
     {
-     TypeInformation.constructors = [
+     constructors = [
        (Parsetree.Vlident "[]",
 	BO_opened
 	  ("", { TypeInformation.cstr_arity = TypeInformation.CA_zero ;
@@ -484,8 +702,8 @@ module TypingEnv = struct
 	   ("", { TypeInformation.cstr_arity = TypeInformation.CA_one ;
 		  TypeInformation.cstr_scheme = cons_scheme }))
 	] ;
-     TypeInformation.labels = [] ;
-     TypeInformation.types = [
+     labels = [] ;
+     types = [
        ("int",
 	BO_opened
 	  ("",
@@ -534,185 +752,10 @@ module TypingEnv = struct
 		   Types.generalize (Types.type_basic "list" [v])) ;
 		 TypeInformation.type_arity = 1 }))
       ] ;
-    TypeInformation.values = [] ;
-    TypeInformation.species = [] ;
-    TypeInformation.collections = []
+    values = [] ;
+    species = [] ;
+    collections = []
   }
-
-
-
-  let add_constructor cstr_name ty_scheme env =
-    { env with
-        TypeInformation.constructors =
-          (cstr_name, BO_absolute ty_scheme) ::
-          env.TypeInformation.constructors }
-
-
-
-  (* ************************************************************ *)
-  (* Parsetree.fname -> Parsetree.ident -> TypeInformation.t ->   *)
-  (*   TypeInformation.constructor_description                    *)
-  (** {b Descr} : Looks-up for an [ident] inside the constructors
-		environment.
-
-      {b Rem} : Exported outside this module.                     *)
-  (* ************************************************************ *)
-  let rec find_constructor ~current_unit cstr_ident env =
-    match cstr_ident.Parsetree.ast_desc with
-     | Parsetree.I_local vname ->
-         (* No explicit scoping information was provided, hence *)
-         (* opened modules bindings are acceptable.             *)
-	 find_constructor_vname ~allow_opened: true vname env
-     | Parsetree.I_global (opt_scope, vname) ->
-	 let env' = type_find_module ~current_unit opt_scope env in
-	 (* Check if the lookup can return something *)
-	 (* coming from an opened module.            *)
-	 let allow_opened = allow_opened_p current_unit opt_scope in
-	 find_constructor_vname ~allow_opened  vname env'
-     | Parsetree.I_method (_, _) ->
-	 (* Don't know what it means if the           *)
-	 (* constructor seems to be in fact a method. *)
-	 raise (Invalid_constructor_identifier cstr_ident)
-
-
-
-  (* *********************************************************** *)
-  (* bool -> Parsetree.vname -> TypeInformation.t ->             *)
-  (*   TypeInformation.constructor_description                   *)
-  (** {b Descr} : Looks-up for a [vname] inside the constructors
-                environment.
-
-      {b Rem} : Not exported outside this module.                *)
-  (* *********************************************************** *)
-  and find_constructor_vname ~allow_opened vname env =
-    try env_list_assoc ~allow_opened vname env.TypeInformation.constructors with
-    | Not_found -> raise (Unbound_constructor vname)
-
-
-
-  let add_label lbl_name lbl_descr env =
-     { env with
-         TypeInformation.labels =
-           (lbl_name, BO_absolute lbl_descr) :: env.TypeInformation.labels }
-
-
-
-  let find_label lbl_name env =
-    try
-      (* Because labels cannot be written with a # notation, the only   *)
-      (* way is to access toplevel labels of the current compilation    *)
-      (* unit. Hence such bindings cannot be induced by opened modules. *)
-      env_list_assoc
-	~allow_opened: false lbl_name env.TypeInformation.labels with
-    | Not_found -> raise (Unbound_label lbl_name)
-
-
-
-  (* ************************************************************** *)
-  (* Parsetree.vname -> Types.type_scheme -> TypeInformation.t ->   *)
-  (*   TypeInformation.t                                            *)
-  (** {b Descr} : Return an environment extended with a binding
-                between a value [ident] and its [type_scheme].
-                The initial environment is passed as last argument.
-
-      {b Rem} : Exported outside this module.                       *)
-  (* ************************************************************** *)
-  let add_value ident ty_scheme env =
-    { env with
-        TypeInformation.values =
-          (ident, BO_absolute ty_scheme) :: env.TypeInformation.values }
-
-
-
-  (* ******************************************************************* *)
-  (* Parsetree.fname -> Parsetree.ident -> TypeInformation.t ->          *)
-  (*   Types.type_scheme                                                 *)
-  (** {b Descr} : Looks-up for an [ident] inside the values environment.
-		Hence, expects finding a first-class bound value.
-
-      {b Rem} : Exported outside this module.                            *)
-  (* ******************************************************************* *)
-  let rec find_value ~current_unit ident_ident env =
-    match ident_ident.Parsetree.ast_desc with
-     | Parsetree.I_local vname ->
-         (* No explicit scoping information was provided, hence *)
-         (* opened modules bindings are acceptable.             *)
-         find_value_vname ~allow_opened: true vname env
-     | Parsetree.I_global (opt_scope, vname) ->
-	 let env' = type_find_module ~current_unit opt_scope env in
-	 (* Check if the lookup can return something *)
-	 (* coming from an opened module.            *)
-	 let allow_opened = allow_opened_p current_unit opt_scope in
-	 find_value_vname ~allow_opened vname env'
-     | Parsetree.I_method (_, _) -> failwith "todo1"
-
-
-
-  (* ****************************************************************** *)
-  (* bool -> Parsetree.vname -> TypeInformation.t -> Types.type_scheme  *)
-  (** {b Descr} : Looks-up for a [vname] inside the values environment.
-		Hence, expects finding a first-class bound value.
-
-      {b Rem} : Not exported outside this module.                       *)
-  (* ****************************************************************** *)
-  and find_value_vname ~allow_opened vname env =
-    try env_list_assoc ~allow_opened vname env.TypeInformation.values with
-    | Not_found -> raise (Unbound_identifier vname)
-
-
-
-  (* ************************************************************** *)
-  (* Types.type_name -> TypeInformation.type_description ->         *)
-  (*   TypeInformation.t -> TypeInformation.t                       *)
-  (** {b Descr} : Return an environment extended with a binding
-                between a type [ident] and its [type_description].
-                The initial environment is passed as last argument.
-
-      {b Rem} : Exported outside this module.                       *)
-  (* ************************************************************** *)
-  let add_type tyname ty_descr env =
-    { env with
-        TypeInformation.types =
-          (tyname, BO_absolute ty_descr) :: env.TypeInformation.types }
-
-
-
-  (* ****************************************************************** *)
-  (* Parsetree.fname -> Parsetree.ident -> TypeInformation.t ->         *)
-  (*   TypeInformation.type_description                                 *)
-  (** {b Descr} : Looks-up for an [ident] inside the types environment.
-
-      {b Rem} : Exported outside this module.                           *)
-  (* ****************************************************************** *)
-  let rec find_type ~current_unit type_ident env =
-    match type_ident.Parsetree.ast_desc with
-     | Parsetree.I_local vname ->
-         (* No explicit scoping information was provided, hence *)
-         (* opened modules bindings are acceptable.             *)
-	 find_type_vname ~allow_opened: true vname env
-     | Parsetree.I_global (opt_scope, vname) ->
-	 let env' = type_find_module ~current_unit opt_scope env in
-	 (* Check if the lookup can return something *)
-	 (* coming from an opened module.            *)
-	 let allow_opened = allow_opened_p current_unit opt_scope in
-	 find_type_vname ~allow_opened vname env'
-     | Parsetree.I_method (_, _) ->
-	 (* Type identifiers should never be methods ! *)
-	 assert false
-
-
-
-  (* ***************************************************************** *)
-  (* bool -> Parsetree.vname -> TypeInformation.t ->                   *)
-  (*   TypeInformation.type_description                                *)
-  (** {b Descr} : Looks-up for a [vname] inside the types environment.
-
-      {b Rem} : Not exported outside this module.                      *)
-  (* ***************************************************************** *)
-  and find_type_vname ~allow_opened vname env =
-    let type_name = Parsetree_utils.name_of_vname vname in
-    try env_list_assoc ~allow_opened type_name env.TypeInformation.types with
-    | Not_found -> raise (Unbound_type type_name)
-
 end ;;
+module TypingEnv = Make (TypingEMAccess) ;;
 

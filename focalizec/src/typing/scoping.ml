@@ -1,4 +1,4 @@
-(* $Id: scoping.ml,v 1.1 2007-08-04 10:17:17 pessaux Exp $ *) 
+(* $Id: scoping.ml,v 1.2 2007-08-06 12:01:46 pessaux Exp $ *) 
 
 (** {b Desc} : Scoping phase is intended to disambiguate
 		- variables identifiers
@@ -25,6 +25,26 @@ type scoping_context = {
 
 
 
+(* *********************************************************************** *)
+(* Parsetree.ident -> Parsetree.vname *)
+(** {b Descr} : Extracts the [vname] from an [ident], hence providing the
+              name denoted by this identifier without any
+              qualification/scoping.
+              For example, "bar", "foo#bar" or "foo!bar" will lead to the
+              [vname] "bar".
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+let unqualified_vname_of_ident ident =
+  match ident.Parsetree.ast_desc with
+   | Parsetree.I_local vname
+   | Parsetree.I_global (_, vname)
+   | Parsetree.I_method (_, vname) -> vname
+;;
+
+
+
+
 let rec scope_expr ctx env expr =
   let new_desc =
     (match expr.Parsetree.ast_desc with
@@ -47,9 +67,10 @@ let rec scope_expr ctx env expr =
 	 (begin
 	 (* Here, we will finally use our environment in order  *)
 	 (* to determine the effective scope of the [ident].    *)
-	 let (hosting_info, basic_vname) =
+         let basic_vname = unqualified_vname_of_ident ident in
+	 let hosting_info =
 	   Env.ScopingEnv.find_value
-	     ~current_unit: ctx.current_unit ident env in
+             ~current_unit: ctx.current_unit ident env in
 	 (* Let's re-construct a completely scoped identifier. *)
 	 let scoped_ident_descr =
 	   (match hosting_info with
@@ -139,7 +160,8 @@ and scope_pattern ctx env pattern =
 	   Env.ScopingEnv.add_value vname Env.ScopeInformation.SBI_local env' in
 	 ((Parsetree.P_as (scoped_p, vname)), env'')
      | Parsetree.P_app  (cstr, pats) ->
-	 let (cstr_host_module, cstr_vname) =
+         let cstr_vname = unqualified_vname_of_ident cstr in
+	 let cstr_host_module =
 	   Env.ScopingEnv.find_constructor
 	     ~current_unit: ctx.current_unit cstr env in
 	 (* Let's build tne complete extended environment by accumulating   *)
