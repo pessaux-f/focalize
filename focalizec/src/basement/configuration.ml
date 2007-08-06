@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.2 2007-07-30 08:07:44 weis Exp $ *)
+(* $Id: configuration.ml,v 1.3 2007-08-06 14:00:14 pessaux Exp $ *)
 
 let focal_version_number = 0.1
 ;;
@@ -63,6 +63,12 @@ let (get_input_file_name, set_input_file_name) =
    (fun fname ->
      if !input_file_name = "-" then input_file_name := fname
      else failwith "Input file name is already set."))
+;;
+
+let (get_do_scoping, set_do_scoping) =
+  let do_scoping_flag = ref false in
+  ((fun () -> !do_scoping_flag),
+   (fun b -> do_scoping_flag := b))
 ;;
 
 let (get_do_typechecking, set_do_typechecking) =

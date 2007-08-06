@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.2 2007-07-30 08:07:44 weis Exp $ *)
+(* $Id: configuration.mli,v 1.3 2007-08-06 14:00:14 pessaux Exp $ *)
 
 (** The various flags and definitions useful to the internal behaviour of the
     focalize compiler. *)
@@ -44,6 +44,12 @@ val get_input_file_name : unit -> string
 ;;
 
 val set_input_file_name : string -> unit
+;;
+
+val get_do_scoping : unit -> bool
+;;
+
+val set_do_scoping : bool -> unit
 ;;
 
 val get_do_typechecking : unit -> bool

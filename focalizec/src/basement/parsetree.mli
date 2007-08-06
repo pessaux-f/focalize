@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.4 2007-07-30 08:07:44 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.5 2007-08-06 14:00:14 pessaux Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -234,24 +234,24 @@ and species_field_desc =
 
 and let_def = let_def_desc ast_doc
 and let_def_desc = {
-  ld_rec : rec_flag;
-  ld_logical : logical_flag;
-  ld_local : local_flag;
+  ld_rec : rec_flag ;
+  ld_logical : logical_flag ;
+  ld_local : local_flag ;
   ld_bindings : binding list
 }
 and binding = binding_desc ast
 and binding_desc = {
-  b_name : vname;
-  b_params : (vname * type_expr option) list;
-  b_type : type_expr option;
+  b_name : vname ;
+  b_params : (vname * type_expr option) list ;
+  b_type : type_expr option ;
   b_body : expr
 }
 
 and theorem_def = theorem_def_desc ast_doc
 and theorem_def_desc = {
-  th_name : ident;
-  th_local : local_flag;
-  th_stmt : prop;
+  th_name : ident ;
+  th_local : local_flag ;
+  th_stmt : prop ;
   th_proof : proof
 }
 
@@ -333,7 +333,7 @@ and type_def_desc = {
 and type_body = type_body_desc ast
 and type_body_desc =
   | TD_alias of type_expr
-  | TD_union of (constr_name * type_expr list) list 
+  | TD_union of (constr_name * type_expr list) list
   | TD_record of (Types.label_name * type_expr) list
 ;;
 
