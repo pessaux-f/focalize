@@ -308,9 +308,11 @@ Par contre on ne change pas les ident nativement I_global ou I_method.
 
 Dans l'AST, une fois scopé, les idents qualifiés de I_global pourront avoir
 un champ fname à None uniquement s'ils sont globaux au fichier courant, sinon
-ce champs doit être à Some du fichier où ils se trouvent définis.
+ce champs doit être à Some d'un fichier, donc vue que l'on ne change pas les
+idents déjà I_global, ce sera Some de là où l'utilisateur a dit en écrivant
+son identificateur !
 
-Lorsque l'on insère un ident global dans l'environnement de scoping, on le
+Lorsque L'ON INSÈRE UN IDENT GLOBAL DANS L'ENVIRONNEMENT de scoping, on le
 binde à un (SBI_file (Some l'unité de compilation courante)). Ainsi, au moment
 de sauver l'environnement de scoping pour en faire un ".fo", on n'a pas besoin
 de repasser sur les bindings avec None pour les expliciter à
@@ -346,7 +348,7 @@ Solution: un binding d'environment est taggé soit comme "Absolute" (il provient
 d'une définition se trouvant explicitement dans l'unité de compilation
 actuellement analysée), soit "Opened" (il provient d'une directive "use" ou
 "open".
-
+                                                           Status: FAIT
 
 
 2007-08-05 (François)
@@ -394,3 +396,47 @@ la recherche dans les méthodes de l'arbre d'héritage de l'espèce courante Self).
 Or le type de cette espèce est implicitement connu lorsque l'on l'analyse et
 il n'y a pas besoin de calculs sur les types en vue de déterminer à quel type
 d'espèce la méthode "bla" peut appartenir dans "#bla".
+
+
+
+2007-08-06 (François)
+=====================
+
+* HOMOGÉNÉITÉ
+*************
+À voir pour les constructeurs de types somme, comme pour les idents en général:
+si l'on a déterminé que le scope est le fichier courant, met-on None OU
+Some DU FICHIER COURANT ?
+La recherche dans les environnements sait gérer les 2 cas. Par contre, il
+faudrait être homogène...
+
+* RUGOSITÉS DE L'AST.
+*********************
+Dans un certain nombre de cas, typiquement dans ceux liés aux expressions de
+type, on utilise dans Parsetree des idents alors qu'ils sont trop généraux.
+| RTE_ident of ident
+| RTE_app of ident * ...
+| TE_ident of ident
+| TE_app of ident * ...
+L'ident (d'ailleurs par défaut généré comme I_local par le parseur) laisse la
+possibilité aberrante d'avoir un I_method, ce qui n'a aucun sens ! Un nom de
+type ne peut être une méthode ! D'où un certain nombre d''assert false au
+niveau du typage, scoping, accès aux environnements...
+Il faudrait quand même songer à restreindre à quelque chose de plus ...
+restreint. Par exemple quelque chose comme ce qui avait été fait pour les
+"expressions constructeurs de type somme". On pourrait se satisfaire d'un
+truc de la forme:
+   fname option * vname
+avec l'option à None dans le cas où le nom du type est de la forme #myty.
+Par contre, il faut réfléchir dans ce cas ce que deviennent les noms de types
+"simple" comme "bool", "int" qui eux sont actuellement considérés comme des
+I_local et qui donc ne rentrarais pas dans un schéma fname option * vname.
+
+* RUGOSITÉS DE LA SYNTAXE.
+**************************
+D'ailleurs c'est en lien direct avec la bizarerie suivante:
+  type t = alias int ;;
+  type u = alias (t * int) ;;
+  let youppp in u = (5, 6) ;;   (* Pourquoi le # est optionnel ici ... *)
+  type inv_prod ('a, 'b) = alias ('b * 'a) ;;
+  let yappp in #inv_prod (int , string) = ("gee", 42) ;;  (* ... et pas là ? *)
