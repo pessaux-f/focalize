@@ -304,7 +304,9 @@ distinctes, ce qui ne dupliquera toutefois pas trop de code.
 Par défaut, le parseur scope en I_local sauf si syntaxiquement se trouve
 explicitement une désambiguation ! ou #. Le boulot du scoping est donc de
 transformer si nécessaire ces I_local en I_global ou I_method.
-Par contre on ne change pas les ident nativement I_global ou I_method.
+Pour les ident nativement I_global ou I_method on fait en sorte que leur
+qualification soit toujours explicite (plus de None). Ainsi, dans une
+unité de compilation "tata", un identificateur "#fct" deviendra "tada#fct".
 
 Dans l'AST, une fois scopé, les idents qualifiés de I_global pourront avoir
 un champ fname à None uniquement s'ils sont globaux au fichier courant, sinon
@@ -368,7 +370,7 @@ pas être "I_method".
 * COLLECTIONS ET ESPECES POUR LE SCOPING
 ****************************************
 En fait, je pense que l'on a besoin aussi d'un environement de collections et
-d'espèces poru scoper car pour se rendre compte qu'un ident scopé I_local
+d'espèces pour scoper car pour se rendre compte qu'un ident scopé I_local
 initialement (et par défaut) par le parser est en fait un I_method, il faut
 bien avoir la liste des méthodes et l'héritage de la collection courante.
 
@@ -409,6 +411,7 @@ si l'on a déterminé que le scope est le fichier courant, met-on None OU
 Some DU FICHIER COURANT ?
 La recherche dans les environnements sait gérer les 2 cas. Par contre, il
 faudrait être homogène...
+                                            Status : FAIT : on met Some (...).
 
 * RUGOSITÉS DE L'AST.
 *********************

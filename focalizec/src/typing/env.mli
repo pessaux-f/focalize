@@ -8,18 +8,22 @@ exception Unbound_module of Parsetree.fname
 
 module ScopeInformation :
   sig
-    type scope_binding_info =
-        SBI_file of Parsetree.fname option
+    type value_binding_info =
+      | SBI_file of Parsetree.fname
       | SBI_method_of_self
       | SBI_method_of_coll of Types.collection_name
       | SBI_local
+
+    type type_binding_info =
+      | TBI_builtin_or_var
+      | TBI_defined_in of Parsetree.fname
   end
 
 
 module TypeInformation :
   sig
     type species_param =
-        SPAR_in of Parsetree.vname * Types.type_simple
+      | SPAR_in of Parsetree.vname * Types.type_simple
       | SPAR_is of Parsetree.vname * Types.type_simple
     type species_description = {
       spe_sig_params : species_param list;
@@ -58,26 +62,23 @@ module ScopingEnv :
     val pervasives : unit -> t
 
     val add_value :
-      Parsetree.vname -> ScopeInformation.scope_binding_info -> t -> t
+      Parsetree.vname -> ScopeInformation.value_binding_info -> t -> t
     val find_value :
       current_unit:Parsetree.fname ->
-      Parsetree.ident -> t -> ScopeInformation.scope_binding_info
+      Parsetree.ident -> t -> ScopeInformation.value_binding_info
 
     val add_constructor : Parsetree.constr_name -> Parsetree.fname -> t -> t
     val find_constructor :
       current_unit:Parsetree.fname -> Parsetree.ident -> t -> Parsetree.fname
-(*
-    val add_label :
-      Types.label_name -> ScopingEMAccess.label_bound_data -> t -> t
-    val find_label :
-      Types.label_name -> t -> ScopingEMAccess.label_bound_data
 
-    val add_type :
-      Types.type_name -> ScopingEMAccess.type_bound_data -> t -> t
+    val add_label : Types.label_name -> Parsetree.fname -> t -> t
+    val find_label : Types.label_name -> t -> Parsetree.fname
+
+    val add_type : Types.type_name -> ScopeInformation.type_binding_info ->
+      t -> t
     val find_type :
-      current_unit:Parsetree.fname ->
-      Parsetree.ident -> t -> ScopingEMAccess.type_bound_data
-*)
+      current_unit: Parsetree.fname -> Parsetree.ident -> t ->
+	ScopeInformation.type_binding_info
   end
 
 

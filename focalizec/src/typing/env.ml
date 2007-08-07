@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.8 2007-08-06 12:01:46 pessaux Exp $ *)
+(* $Id: env.ml,v 1.9 2007-08-07 11:30:51 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -125,7 +125,7 @@ identifiers. *)
 (* *********************************************************************** *)
 module ScopeInformation = struct
   (* ********************************************************************* *)
-  (* type scope_binding_info                                               *)
+  (* type value_binding_info                                               *)
   (** {b Descr} : Tag each binding in the scopping environment in order to
 	      know if the [ident] is currently bound to a global toplevel
 	      definition inside a file, if it's a method found in the
@@ -135,16 +135,20 @@ module ScopeInformation = struct
 
       {b Rem} : Exported outside this module.                              *)
   (* ********************************************************************* *)
-  type scope_binding_info =
-      (* The ident is at toplevel in a file (if Some) or *)
-      (* at the toplevel of the current file (if None) . *)
-    | SBI_file of Parsetree.fname option
+  type value_binding_info =
+    | SBI_file of Parsetree.fname
       (* The ident is a method implicitely of self. *)
     | SBI_method_of_self
       (* The ident is a method explicitely of a collection. *)
     | SBI_method_of_coll of Types.collection_name
       (* The ident is a locally bound indentifier (let or function parameter. *)
     | SBI_local
+
+
+
+  type type_binding_info =
+    | TBI_builtin_or_var
+    | TBI_defined_in of Parsetree.fname
 
 
 
@@ -155,7 +159,8 @@ module ScopeInformation = struct
       {b Rem} : Not exported outside this module.                   *)
   (* ************************************************************** *)
   type env =
-    (Parsetree.fname, unit, unit, scope_binding_info, unit, unit) generic_env
+    (Parsetree.fname, Parsetree.fname, type_binding_info, value_binding_info,
+     unit, unit) generic_env
 end ;;
 
 
@@ -648,15 +653,44 @@ end ;;
 
 module ScopingEMAccess = struct
   type constructor_bound_data = Parsetree.fname
-  type label_bound_data = unit
-  type type_bound_data = unit
-  type value_bound_data = ScopeInformation.scope_binding_info
+  type label_bound_data = Parsetree.fname
+  type type_bound_data = ScopeInformation.type_binding_info
+  type value_bound_data = ScopeInformation.value_binding_info
   type species_bound_data = unit
   type collection_bound_data = unit
   let find_module = scope_find_module
   let pervasives () =
-    { constructors = [] ; labels = [] ; types = [] ; values = [] ;
-      species = [] ; collections = [] }
+    { constructors = [
+        (Parsetree.Vlident "[]", BO_opened ("basics", "basics")) ;
+        (Parsetree.Viident "::", BO_opened ("basics", "basics"))
+        ] ;
+      labels = [] ;
+      types = [
+        ("int",
+	 BO_opened
+	   ("", ScopeInformation.TBI_builtin_or_var)) ;
+        ("float",
+	 BO_opened
+	   ("", ScopeInformation.TBI_builtin_or_var)) ;
+        ("bool",
+	 BO_opened
+	   ("", ScopeInformation.TBI_builtin_or_var)) ;
+        ("string",
+	 BO_opened
+	   ("", ScopeInformation.TBI_builtin_or_var)) ;
+        ("char",
+	 BO_opened
+	   ("", ScopeInformation.TBI_builtin_or_var)) ;
+        ("unit",
+	 BO_opened
+	   ("", ScopeInformation.TBI_builtin_or_var)) ;
+        ("list",
+	 BO_opened
+	   ("", ScopeInformation.TBI_builtin_or_var))
+        ] ;
+      values = [] ;
+      species = [] ;
+      collections = [] }
 end ;;
 module ScopingEnv = Make (ScopingEMAccess) ;;
 
@@ -695,12 +729,12 @@ module TypingEMAccess = struct
      constructors = [
        (Parsetree.Vlident "[]",
 	BO_opened
-	  ("", { TypeInformation.cstr_arity = TypeInformation.CA_zero ;
-		 TypeInformation.cstr_scheme = nil_scheme })) ;
+	  ("basics", { TypeInformation.cstr_arity = TypeInformation.CA_zero ;
+		       TypeInformation.cstr_scheme = nil_scheme })) ;
 	(Parsetree.Viident "::",
 	 BO_opened
-	   ("", { TypeInformation.cstr_arity = TypeInformation.CA_one ;
-		  TypeInformation.cstr_scheme = cons_scheme }))
+	   ("basics", { TypeInformation.cstr_arity = TypeInformation.CA_one ;
+			TypeInformation.cstr_scheme = cons_scheme }))
 	] ;
      labels = [] ;
      types = [
@@ -743,14 +777,14 @@ module TypingEMAccess = struct
 		TypeInformation.type_arity = 0 })) ;
        ("list",
 	BO_opened
-	  ("", { TypeInformation.type_kind =
-		   TypeInformation.TK_variant [
-		     (Parsetree.Vlident "[]", nil_scheme) ;
-		     (Parsetree.Viident "::", cons_scheme) ] ;
-		 TypeInformation.type_identity =
-		   (let v = Types.type_variable () in
-		   Types.generalize (Types.type_basic "list" [v])) ;
-		 TypeInformation.type_arity = 1 }))
+	  ("basics", { TypeInformation.type_kind =
+		       TypeInformation.TK_variant [
+		         (Parsetree.Vlident "[]", nil_scheme) ;
+		         (Parsetree.Viident "::", cons_scheme) ] ;
+		       TypeInformation.type_identity =
+		         (let v = Types.type_variable () in
+			 Types.generalize (Types.type_basic "list" [v])) ;
+		       TypeInformation.type_arity = 1 }))
       ] ;
     values = [] ;
     species = [] ;

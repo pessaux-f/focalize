@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.5 2007-08-06 14:00:14 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.6 2007-08-07 11:30:51 pessaux Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -73,8 +73,8 @@ type ('a, 'b) generic_ast = {
 }
 ;;
 
-type 'a ast = ('a, string) generic_ast;;
-type 'a ast_doc = ('a, string) generic_ast;;
+type 'a ast = ('a, string) generic_ast ;;
+type 'a ast_doc = ('a, string) generic_ast ;;
 
 type ident = ident_desc ast
 and ident_desc =
@@ -82,6 +82,8 @@ and ident_desc =
   | I_global of fname option * vname
   | I_method of Types.collection_name option * vname
 ;;
+
+
 
 (* ********************************************************************** *)
 (*  [Type] : constructor_expr                                             *)
@@ -319,15 +321,15 @@ and expr_desc =
 
 type coll_def = coll_def_desc ast_doc
 and coll_def_desc = {
-  cd_name : Types.collection_name;
-  cd_body : species_expr;
+  cd_name : Types.collection_name ;
+  cd_body : species_expr
 };;
 
 type type_def = type_def_desc ast
 and type_def_desc = {
-  td_name : Types.type_name;
-  td_params : string list;
-  td_body : type_body;
+  td_name : Types.type_name ;
+  td_params : string list ;
+  td_body : type_body
 }
 
 and type_body = type_body_desc ast

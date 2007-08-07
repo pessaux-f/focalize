@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.3 2007-08-06 14:00:14 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.4 2007-08-07 11:30:51 pessaux Exp $ *)
 
 (** {b Desc} : Scoping phase is intended to disambiguate
 		- variables identifiers
@@ -58,12 +58,174 @@ let unqualified_vname_of_ident ident =
 
 
 
+(* ************************************************************* *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.type_expr -> *)
+(*   Parsetree.type_expr                                         *)
+(** {b Descr} : Scopes a type expression. This resolves the
+              constructors, labels and type names.
+
+    {b Rem} : Not exported outside this module.                  *)
+(* ************************************************************* *)
+let rec scope_type_expr ctx env ty_expr =
+  let new_desc =
+    (match ty_expr.Parsetree.ast_desc with
+     | Parsetree.TE_ident ident ->
+	 (begin
+	 let basic_vname = unqualified_vname_of_ident ident in
+	 let hosting_info =
+	   Env.ScopingEnv.find_type ~current_unit: ctx.current_unit ident env in
+	 (* Let's re-construct a completely scoped identifier. *)
+	 let scoped_ident_descr =
+	   (match hosting_info with
+	    | Env.ScopeInformation.TBI_builtin_or_var ->
+		Parsetree.I_local basic_vname
+	    | Env.ScopeInformation.TBI_defined_in hosting_file ->
+		Parsetree.I_global ((Some hosting_file), basic_vname)) in
+	 let scoped_ident =
+	   { ident with Parsetree.ast_desc = scoped_ident_descr } in
+	 Parsetree.TE_ident scoped_ident
+	 end)
+     | Parsetree.TE_fun (te1, te2) ->
+	 let scoped_te1 = scope_type_expr ctx env te1 in
+	 let scoped_te2 = scope_type_expr ctx env te2 in
+	 Parsetree.TE_fun (scoped_te1, scoped_te2)
+     | Parsetree.TE_app (ident, tes) ->
+	 (begin
+	 let basic_vname = unqualified_vname_of_ident ident in
+	 let hosting_info =
+	   Env.ScopingEnv.find_type ~current_unit: ctx.current_unit ident env in
+	 (* Let's re-construct a completely scoped identifier. *)
+	 let scoped_ident_descr =
+	   (match hosting_info with
+	    | Env.ScopeInformation.TBI_builtin_or_var ->
+		Parsetree.I_local basic_vname
+	    | Env.ScopeInformation.TBI_defined_in hosting_file ->
+		Parsetree.I_global ((Some hosting_file), basic_vname)) in
+	 let scoped_ident =
+	   { ident with Parsetree.ast_desc = scoped_ident_descr } in
+	 let scoped_tes = List.map (scope_type_expr ctx env) tes in
+	 Parsetree.TE_app (scoped_ident, scoped_tes)
+	 end)
+     | Parsetree.TE_prod tes ->
+	 Parsetree.TE_prod (List.map (scope_type_expr ctx env) tes)
+     | Parsetree.TE_self
+     | Parsetree.TE_prop -> ty_expr.Parsetree.ast_desc
+     | Parsetree.TE_paren te ->
+	 Parsetree.TE_paren (scope_type_expr ctx env te)) in
+  { ty_expr with Parsetree.ast_desc = new_desc }
+;;
+
+
+
+(* ********************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.type_body             *)
+(*   (Parsetree.type_body * Env.ScopingEnv.t)  *)
+(** {b Descr} : Scopes a the body of a type definition by scoping its
+              internal type expressions. Returns the extended environment
+              with bindings for the possible sum type constructors or
+              record type fields label.
+
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
+let scope_type_def_body ctx env ty_def_body =
+  let (scoped_desc, new_env) =
+    (match ty_def_body.Parsetree.ast_desc with
+     | Parsetree.TD_alias ty_expr ->
+	 let descr = Parsetree.TD_alias (scope_type_expr ctx env ty_expr) in
+	 (descr, env)
+     | Parsetree.TD_union constructors ->
+	 (begin
+	 (* This will extend the scoping environment with the sum type  *)
+	 (* constructors. Do not fold_left otherwise you'll reverse the *)
+	 (* order of the constructors !                                 *)
+	 let (env', scoped_constructors) =
+	   List.fold_right
+	     (fun (constr_name, args) (env_accu, cstrs_accu) ->
+	       (* Scope the constructor's arguments. *)
+	       let scoped_args = List.map (scope_type_expr ctx env) args in
+	       let scoped_constructor = (constr_name, scoped_args) in
+	       (* Extend the environment with the constructor's name. *)
+	       let ext_env =
+		 Env.ScopingEnv.add_constructor
+		   constr_name ctx.current_unit env_accu in
+	       (* And return the whole stuff... *)
+	       (ext_env, (scoped_constructor :: cstrs_accu)))
+	     constructors
+	     (env, []) in
+	 ((Parsetree.TD_union scoped_constructors), env')
+	 end)
+     | Parsetree.TD_record fields ->
+	 (begin
+	 (* This will extend the scoping environment with the record type *)
+	 (* fields labels. Do not fold_left otherwise you'll reverse the  *)
+	 (* order of the fields !                                         *)
+	 let (env', scoped_fields) =
+	   List.fold_right
+	     (fun (label_name, field_tye) (env_accu, fields_accu) ->
+	       let scoped_field_tye = scope_type_expr ctx env field_tye in
+	       let scoped_field = (label_name, scoped_field_tye) in
+	       (* Extend the environment with the field's name. *)
+	       let ext_env =
+		 Env.ScopingEnv.add_label
+		   label_name ctx.current_unit env_accu in
+	       (* And return the whole stuff... *)
+	       (ext_env, (scoped_field :: fields_accu)))
+	     fields
+	     (env, []) in
+	 ((Parsetree.TD_record scoped_fields), env')
+	 end)) in
+  (* Now finish to reconstruct the whole definition's body. *)
+  let scoped_ty_def_body = {
+    ty_def_body with Parsetree.ast_desc = scoped_desc } in
+  (scoped_ty_def_body, new_env)
+;;
+
+
+
+(* ************************************************************************* *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.type_def ->              *)
+(*   (Parsetree.type_def * Env.ScopingEnv.t)                                 *)
+(** {b Descr} : Scopes a type definition by scoping its internal body.
+              Return the extended environment with bindings for the possible
+              sum type constructors or record type fields label and a
+              binding to this type name with the current compilation unit.
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+let scope_type_def ctx env ty_def =
+  (* We must first extend the environment with the type parameters. *)
+  let ty_def_descr = ty_def.Parsetree.ast_desc in
+  let env_with_params =
+    List.fold_left
+      (fun accu_env param_name ->
+	Env.ScopingEnv.add_type
+	  param_name Env.ScopeInformation.TBI_builtin_or_var accu_env)
+      env
+      ty_def_descr.Parsetree.td_params in
+  (* Now scope de definition's body. *)
+  let (scoped_body, env_from_def) =
+    scope_type_def_body ctx env_with_params ty_def_descr.Parsetree.td_body in
+  (* Reconstruct the completely scoped definition. *)
+  let scoped_ty_def_descr = {
+    ty_def_descr with Parsetree.td_body = scoped_body } in
+  let scoped_ty_def = {
+    ty_def with Parsetree.ast_desc = scoped_ty_def_descr } in
+  (* Extend the initial environment with a binding to *)
+  (* this type name to the current compilation unit.  *)
+  let final_env =
+    Env.ScopingEnv.add_type
+      ty_def_descr.Parsetree.td_name
+      (Env.ScopeInformation.TBI_defined_in ctx.current_unit)
+      env_from_def in
+  (scoped_ty_def, final_env)
+;;
+
+
 
 let rec scope_expr ctx env expr =
   let new_desc =
     (match expr.Parsetree.ast_desc with
-     | Parsetree.E_self ->
-	 expr.Parsetree.ast_desc  (* Nothing to scope. *)
+     | Parsetree.E_self
      | Parsetree.E_const _ ->
 	 expr.Parsetree.ast_desc  (* Nothing to scope. *)
      | Parsetree.E_fun (vnames, body) ->
@@ -88,8 +250,8 @@ let rec scope_expr ctx env expr =
 	 (* Let's re-construct a completely scoped identifier. *)
 	 let scoped_ident_descr =
 	   (match hosting_info with
-	    | Env.ScopeInformation.SBI_file fname_opt ->
-		Parsetree.I_global (fname_opt, basic_vname)
+	    | Env.ScopeInformation.SBI_file fname ->
+		Parsetree.I_global ((Some fname), basic_vname)
 	    | Env.ScopeInformation.SBI_method_of_self ->
 		Parsetree.I_method (None, basic_vname)
 	    | Env.ScopeInformation.SBI_method_of_coll coll_name ->
@@ -240,11 +402,11 @@ and scope_pattern ctx env pattern =
 and scope_let_definition ~toplevel_let ctx env let_def =
   let let_def_descr = let_def.Parsetree.ast_desc in
   (* If the let-definition is at toplevel, then we will scope the idents *)
-  (* as SBI_file None to represent the fact they are ... at toplevel of  *)
+  (* as SBI_file to represent the fact they are ... at toplevel of       *)
   (* the current compilation unit. Otherwise, the let-definition is not  *)
   (* at toplevel and hence is local.                                     *)
   let bind_locality =
-    if toplevel_let then Env.ScopeInformation.SBI_file None
+    if toplevel_let then Env.ScopeInformation.SBI_file ctx.current_unit
     else Env.ScopeInformation.SBI_local in
   (* We create the extended environment with the identifiers bound by the *)
   (* definition. This environment will always be the one returned if the  *)
@@ -273,17 +435,34 @@ and scope_let_definition ~toplevel_let ctx env let_def =
 	let env_with_params =
 	  List.fold_left
 	    (fun accu_env (param_vname, _) ->
-	      (* To disapear ! *)
-	      Printf.eprintf "No scoping yet on type expressions.\n" ;
 	      Env.ScopingEnv.add_value
 		param_vname Env.ScopeInformation.SBI_local accu_env)
 	    env'
 	    let_binding_descr.Parsetree.b_params in
+	(* Scope the params type exprs. *)
+	let scoped_b_params =
+	  List.map
+	    (fun (param_vname, tye_opt) ->
+	      let scoped_tye_opt =
+		(match tye_opt with
+		 | None -> None
+		 | Some tye ->
+		     Some (scope_type_expr ctx env_with_params tye)) in
+	      (param_vname, scoped_tye_opt))
+	    let_binding_descr.Parsetree.b_params in
 	(* Now scope the body. *)
 	let scoped_body =
 	  scope_expr ctx env_with_params let_binding_descr.Parsetree.b_body in
+	(* Now scope the optionnal body's type. *)
+	let scoped_b_type =
+	  (match let_binding_descr.Parsetree.b_type with
+	   | None -> None
+	   | Some tye -> Some (scope_type_expr ctx env_with_params tye)) in
 	let new_binding_desc =
-	  { let_binding_descr with Parsetree.b_body = scoped_body } in
+	  { let_binding_descr with
+	      Parsetree.b_params = scoped_b_params ;
+	      Parsetree.b_type = scoped_b_type ;
+	      Parsetree.b_body = scoped_body } in
 	{ let_binding with Parsetree.ast_desc = new_binding_desc })
       let_def_descr.Parsetree.ld_bindings in
   (* An finally be return the scoped let-definition *)
@@ -300,16 +479,17 @@ and scope_let_definition ~toplevel_let ctx env let_def =
 let scope_phrase ctx env phrase =
   let (new_desc, new_env) =
     (match phrase.Parsetree.ast_desc with
-     | Parsetree.Ph_external exter_def ->
+     | Parsetree.Ph_external _
 	 (* Nothing to scope here. External definition structurally *)
 	 (* do not contain any  [ident]. The scoping environment is *)
 	 (* not affected.                                           *)
-	 ((Parsetree.Ph_external exter_def), env)
-     | Parsetree.Ph_use fname -> ((Parsetree.Ph_use fname), env)
-     | Parsetree.Ph_open fname -> ((Parsetree.Ph_open fname), env)
+     | Parsetree.Ph_use _
+     | Parsetree.Ph_open _ -> (phrase.Parsetree.ast_desc, env)
      | Parsetree.Ph_species species_def -> failwith "todo S2"
      | Parsetree.Ph_coll coll_def -> failwith "todo S3"
-     | Parsetree.Ph_type type_def -> failwith "todo S4"
+     | Parsetree.Ph_type type_def ->
+         let (scoped_ty_def, env') = scope_type_def ctx env type_def in
+	 ((Parsetree.Ph_type scoped_ty_def), env')
      | Parsetree.Ph_let let_def ->
 	 (* This one can extend the global scoping environment. *)
 	 let (scoped_let_def, env') =
@@ -337,7 +517,7 @@ let scope_file current_unit file =
    | Parsetree.File phrases ->
        let ctx = { current_unit = current_unit } in
        (* Scoping of a file starts with the empty scoping environment. *)
-       let global_env = ref (Env.ScopingEnv.empty ()) in
+       let global_env = ref (Env.ScopingEnv.pervasives ()) in
        let scoped_phrases =
 	 List.map
 	   (fun phrase ->
