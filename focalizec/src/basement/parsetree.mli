@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.6 2007-08-07 11:30:51 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.7 2007-08-09 12:21:11 pessaux Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -169,8 +169,8 @@ and external_def_desc =
 
 and external_def_body = external_def_body_desc ast
 and external_def_body_desc = {
-  ed_name : vname;
-  ed_body : external_expr;
+  ed_name : vname ;
+  ed_body : external_expr
 }
 (** The body of an external definitions contains the name defined
     and its definition in some external language. *)
@@ -186,10 +186,10 @@ and external_expression = string
 
 type species_def = species_def_desc ast_doc
 and species_def_desc = {
-  sd_name : Types.species_name;
-  sd_params : (vname * species_param_type) list;
-  sd_inherits : (species_expr list) ast_doc;
-  sd_fields : species_field list;
+  sd_name : Types.species_name ;
+  sd_params : (vname * species_param_type) list ;
+  sd_inherits : (species_expr list) ast_doc ;
+  sd_fields : species_field list
 }
 
 and species_param_type = species_param_type_desc ast
@@ -199,8 +199,8 @@ and species_param_type_desc =
 
 and species_expr = species_expr_desc ast
 and species_expr_desc = {
-  se_name : ident;
-  se_params : species_param list;
+  se_name : ident ;
+  se_params : species_param list
 }
 
 and species_param = species_param_desc ast
@@ -209,8 +209,8 @@ and species_param_desc =
 
 and sig_def = sig_def_desc ast_doc
 and sig_def_desc = {
-  sig_name : ident;
-  sig_type : type_expr;
+  sig_name : ident ;
+  sig_type : type_expr
 }
 
 and proof_def = proof_def_desc ast_doc

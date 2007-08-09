@@ -308,12 +308,6 @@ Pour les ident nativement I_global ou I_method on fait en sorte que leur
 qualification soit toujours explicite (plus de None). Ainsi, dans une
 unité de compilation "tata", un identificateur "#fct" deviendra "tada#fct".
 
-Dans l'AST, une fois scopé, les idents qualifiés de I_global pourront avoir
-un champ fname à None uniquement s'ils sont globaux au fichier courant, sinon
-ce champs doit être à Some d'un fichier, donc vue que l'on ne change pas les
-idents déjà I_global, ce sera Some de là où l'utilisateur a dit en écrivant
-son identificateur !
-
 Lorsque L'ON INSÈRE UN IDENT GLOBAL DANS L'ENVIRONNEMENT de scoping, on le
 binde à un (SBI_file (Some l'unité de compilation courante)). Ainsi, au moment
 de sauver l'environnement de scoping pour en faire un ".fo", on n'a pas besoin
@@ -321,9 +315,18 @@ de repasser sur les bindings avec None pour les expliciter à
 (Some l'unité de compilation courante). De même lorsque l'on chargera un ".fo"
 on n'aura pas à refaire ce traitement.
 
-Le scoping ne doit pas affecter les idents se trouvant explicitement et
-initialement sous forme I_local ou I_method. Dans leur cas, à la rigueur le
-scoping permet de s'assurer que ces identificateurs sont bien liés.
+Le scoping permet de s'assurer que les identificateurs sont bien liés, et à
+quoi. Mais, dans certains cas on a besoin de types pour ça (par exemple "c
+is C ... c#meth" comme "c" est un paramètre pour savoir s'il a la méthode
+"meth", il faudrait non pas aller voir dans la structure de "c" lui-même,
+mais dans celle ... de son type ! C'est-à-dire de "C" !
+Ce qu'il se passe c'est que l'on possède forcément déjà un identificateur
+I_method ici et qu'en voulant le "re-scoper" en fait on fait l'identité,
+seulement pour y parvenir on fait une vérification de "liage". On comme on
+vient de voir que ceci n'est pas possible dans ce cas sans les types, il
+faudra prévoir un mécanisme pour ne pas échouer.
+Il n'emeche que pour ce qui est des identificateur scopés par #, la question
+ne se pose pas car on n'a pas de notion de "paramètre de toplevel de fichier".
 
 * ACCÈS EXPLICITEMENT SCOPÉS AU FICHIER COURANT
 ***********************************************
@@ -398,7 +401,9 @@ la recherche dans les méthodes de l'arbre d'héritage de l'espèce courante Self).
 Or le type de cette espèce est implicitement connu lorsque l'on l'analyse et
 il n'y a pas besoin de calculs sur les types en vue de déterminer à quel type
 d'espèce la méthode "bla" peut appartenir dans "#bla".
-
+Ceci signifie toutefois que lors de la passe de scoping on ne peut pas être
+certain qu'un ident déjà qualifié est bien effectivement lié. Ceci, par contre,
+nécressite du typage.
 
 
 2007-08-06 (François)
@@ -421,6 +426,7 @@ type, on utilise dans Parsetree des idents alors qu'ils sont trop généraux.
 | RTE_app of ident * ...
 | TE_ident of ident
 | TE_app of ident * ...
+| SPT_in ident
 L'ident (d'ailleurs par défaut généré comme I_local par le parseur) laisse la
 possibilité aberrante d'avoir un I_method, ce qui n'a aucun sens ! Un nom de
 type ne peut être une méthode ! D'où un certain nombre d''assert false au

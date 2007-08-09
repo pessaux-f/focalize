@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.4 2007-08-07 11:30:51 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.5 2007-08-09 12:21:11 pessaux Exp $ *)
 
 (** {b Desc} : Scoping phase is intended to disambiguate
 		- variables identifiers
@@ -286,7 +286,11 @@ let rec scope_expr ctx env expr =
 	 let then_expr' = scope_expr ctx env then_expr in
 	 let else_expr' = scope_expr ctx env else_expr in
 	 Parsetree.E_if (if_expr', then_expr', else_expr')
-     | Parsetree.E_let (let_def, in_expr) -> failwith "todo S1"
+     | Parsetree.E_let (let_def, in_expr) ->
+	 let (scoped_let_def, env') =
+	   scope_let_definition ~toplevel_let: false ctx env let_def in
+	 let scoped_in_expr = scope_expr ctx env' in_expr in
+	 Parsetree.E_let (scoped_let_def, scoped_in_expr)
      | Parsetree.E_record labels_exprs ->
 	 let scoped_labels_exprs =
 	   List.map
@@ -476,6 +480,273 @@ and scope_let_definition ~toplevel_let ctx env let_def =
 
 
 
+let scope_species_field ctx env field =
+  let (new_desc, method_name) =
+    (match field.Parsetree.ast_desc with
+     | Parsetree.SF_rep rep_type_def -> failwith "S6"
+     | Parsetree.SF_sig sig_def -> failwith "S7"
+     | Parsetree.SF_let let_def -> failwith "S8"
+     | Parsetree.SF_property prop_def -> failwith "S9"
+     | Parsetree.SF_theorem theo_def -> failwith "S10"
+     | Parsetree.SF_proof proof_def -> failwith "S11") in
+  ({ field with Parsetree.ast_desc = new_desc }, method_name)
+;;
+
+
+
+let rec scope_species_fields ctx env = function
+  | [] -> ([], [])
+  | field :: rem ->
+      let (scoped_field, method_name) = scope_species_field ctx env field in
+      (* All the methods a always inserted as [SBI_method_of_self], the *)
+      (* [find_value] taking care of changing to [SBI_method_of_coll]   *)
+      (* when required.                                                 *)
+      let env' =
+	Env.ScopingEnv.add_value
+	  method_name (Env.ScopeInformation.SBI_method_of_self) env in
+      let (rem_scoped_fields, rem_method_names) =
+	scope_species_fields ctx env' rem in
+      ((scoped_field :: rem_scoped_fields), (method_name :: rem_method_names))
+;;
+
+
+
+let scope_species_param ctx env param =
+  let new_desc =
+    (match param.Parsetree.ast_desc with
+     | Parsetree.SP expr -> Parsetree.SP (scope_expr ctx env expr)) in
+  { param with Parsetree.ast_desc = new_desc }
+;;
+
+
+
+(* ******************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.species_expr ->     *)
+(*   (Parsetree.species_expr * Parsetree.vname list)                    *)
+(** {b Descr} : Scopes a species expression. Returns the scoped
+              expression and the list of methods names this expression
+              has. This may be used when binding a new collection name
+              (a parameter indeed) to a species expression, in order
+              to "transfer" the methods of the expression to the bound
+              identifier.
+              Hence, in [species ... (C is Spec) = ... C#m], one will
+              be able to check that C really has a [m] method providing
+              that [Spec] has also it.
+
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
+let rec scope_species_expr ctx env species_expr =
+  let species_expr_descr = species_expr.Parsetree.ast_desc in
+  (* We first scope the "applied" ident. *)
+  let se_name_ident = species_expr_descr.Parsetree.se_name in
+  let ident_scope_info =
+    Env.ScopingEnv.find_species
+      ~current_unit: ctx.current_unit se_name_ident  env in
+  let basic_vname = unqualified_vname_of_ident se_name_ident in
+  let scoped_ident_descr =
+    (match ident_scope_info.Env.ScopeInformation.spbi_scope with
+     | Env.ScopeInformation.SPBI_file hosting_file ->
+	 Parsetree.I_global ((Some hosting_file), basic_vname)) in
+  let scoped_ident = {
+    se_name_ident with Parsetree.ast_desc = scoped_ident_descr } in
+  (* Scopes the parameters. *)
+  let scoped_params =
+    List.map
+      (scope_species_param ctx env)
+      species_expr_descr.Parsetree.se_params in
+  let scoped_species_expr = {
+    species_expr with
+      Parsetree.ast_desc = {
+	Parsetree.se_name = scoped_ident ;
+	Parsetree.se_params = scoped_params } } in
+  (scoped_species_expr, ident_scope_info.Env.ScopeInformation.spbi_methods)
+;;
+
+
+
+(* *********************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t ->                                  *)
+(*   (Parsetree.species_expr list) Parsetree.ast_doc ->                    *)
+(*     ((Parsetree.species_expr list) ast_doc * Parsetree.vname list)      *)
+(** {b Descr} : Scopes the inheritance specification of a species. This
+              specification  is a list of species expressions. By the way,
+              returns the list of methods inherited from this tree.
+              This list of methods contains those of the first inherited
+              species in head, then the laters...
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+let scope_inheritance ctx env spec_exprs =
+  let spec_exprs_descr = spec_exprs.Parsetree.ast_desc in
+  let (scoped_exprs_descs, methods) =
+    List.fold_right
+      (fun spec_expr (accu_exprs, accu_methods) ->
+	let (scoped_expr, meths) = scope_species_expr ctx env spec_expr in
+	((scoped_expr :: accu_exprs), (meths @ accu_methods)))
+      spec_exprs_descr
+      ([], []) in
+  let scoped_spec_exprs = {
+    spec_exprs with Parsetree.ast_desc = scoped_exprs_descs } in
+  (scoped_spec_exprs, methods)
+ ;;
+
+
+
+(* ******************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t ->                               *)
+(*   (Parsetree.vname * Parsetree.species_param_type) list ->           *)
+(*     ((Parsetree.vname * Parsetree.species_param_type) list           *)
+(*      *                                                               *)
+(*      Env.ScopingEnv.t)                                               *)
+(** {b Descr} : Scopes the species parameters and return the scoping
+              environment extended with bindings for theses parameters.
+              This extended environment will be later used to scope
+              the body of the species definition.
+
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
+let scope_species_params_types ctx env params =
+  (* Do not fold_right otherwise params will be inserted in reverse order ! *)
+  (* in the environment. Do not fold_left otherwise le list of scoped       *)
+  (* parameters will be reversed ! So what to do ????                       *)
+  (* Eh guy, just fold_left to get the correct environment, and then we     *)
+  (* just reverse the list of the scoped parameters, that's it !            *)
+  let (scoped_params_revd, env') =
+    List.fold_left
+      (fun (accu_params_revd, accu_env) (param_name, param_kind) ->
+	(* We scope parameters in the environment incrementally extended. *)
+	(* This means that following parameters know previous ones.       *)
+	match param_kind.Parsetree.ast_desc with
+	 | Parsetree.SPT_in ident ->
+	     (begin
+	     (* Let's first scope the ident representing a collection name. *)
+	     let ident_scope_info =
+	       Env.ScopingEnv.find_collection
+		 ~current_unit: ctx.current_unit ident accu_env in
+	     let basic_vname = unqualified_vname_of_ident ident in
+	     let scoped_ident_descr =
+	       (match ident_scope_info.Env.ScopeInformation.cbi_scope with
+		| Env.ScopeInformation.CBI_local ->
+		    Parsetree.I_local basic_vname
+		| Env.ScopeInformation.CBI_file hosting_file ->
+		    Parsetree.I_global ((Some hosting_file), basic_vname)) in
+	     let scoped_ident = {
+	       ident with Parsetree.ast_desc = scoped_ident_descr } in
+	     (* The parameter is a value belonging to a collection. It's *)
+	     (* type is the "repr" of the collection. Then this leads to *)
+	     (* a simple value that will get scoped as local.            *)
+	     let accu_env' =
+	       Env.ScopingEnv.add_value
+		 param_name Env.ScopeInformation.SBI_local accu_env in
+	     let scoped_param_kind = {
+	       param_kind with
+	         Parsetree.ast_desc = Parsetree.SPT_in scoped_ident } in
+	     let scoped_param = (param_name, scoped_param_kind) in
+	     ((scoped_param :: accu_params_revd), accu_env')
+	     end)
+	 | Parsetree.SPT_is spec_expr ->
+	     (begin
+	     (* The parameter is a collection (indeed, that's its *)
+	     (* type). Because collections and species are not    *)
+	     (* first-class-value, the environment extention will *)
+	     (* not be done at the "values" level.                *)
+	     let (scoped_species_expr, species_methods) =
+	       scope_species_expr ctx env spec_expr in
+	     (* Extend the environment with a "locally defined" collection *)
+	     (* having the same methods than those coming from the         *)
+	     (* expression.                                                *)
+	     let accu_env' = 
+	       Env.ScopingEnv.add_collection
+                 (Parsetree_utils.name_of_vname param_name)
+		 { Env.ScopeInformation.cbi_scope =
+		     Env.ScopeInformation.CBI_local ;
+		   Env.ScopeInformation.cbi_methods = species_methods }
+		 accu_env in
+	     let scoped_param_kind = {
+	       param_kind with
+	         Parsetree.ast_desc = Parsetree.SPT_is scoped_species_expr } in
+	     let scoped_param = (param_name, scoped_param_kind) in
+	     ((scoped_param :: accu_params_revd), accu_env')
+	     end))
+      ([], env)
+      params in
+  ((List.rev scoped_params_revd), env')
+;;
+
+
+
+(* *********************************************************************** *)
+(** {b Descr} : Scopes a species and returns the environment extended with
+              the bindings induced by the species.
+
+    {b Rem} : Not exported outside this module.
+            Environment search must proceed in the following order:
+	     1) try to find the identifier in local environment
+	     2) check if it's a parameter of entity ("in") or
+                collection ("is")
+	     4) try to find the ident throughout the hierarchy
+	     5) try to find the ident is a global identifier
+	     else) not found
+            So the order in which the idents are inserted into the
+            environment used to scope the species must respect extentions
+            in the reverse order in order to find the most recently added
+            bindings first !                                               *)
+(* *********************************************************************** *)
+let scope_species_def ctx env species_def =
+  let species_def_descr = species_def.Parsetree.ast_desc in
+  (* A species is not recursive, so no need to     *)
+  (* insert it inside the environment to scope it. *)
+  (* According to the search order, we must first add the parameters    *)
+  (* of collection and entity in their order of apparition then import  *)
+  (* the bindings from the inheritance tree, and finally local bindings *)
+  (* will be automagically be added while scoping the species' body     *)
+  (* (fields).                                                          *)
+  (* So ... the parameters... *)
+  let (scoped_params, env_with_params) =
+    scope_species_params_types ctx env species_def_descr.Parsetree.sd_params in
+  (* Next ... the inheritance... By the way we get the methods coming *)
+  (* from our ancestors. *)
+  let (scoped_inherits, inherited_methods) =
+    scope_inheritance
+      ctx env_with_params species_def_descr.Parsetree.sd_inherits in
+  (* We now must extend the environment with the inherited methods. Because *)
+  (* the list of methods contains the olders in head and the youngers in    *)
+  (* tail, we need to [fold_left] Env.ScopingEnv.add_value on it.           *)
+  let full_env =
+    List.fold_left
+      (fun accu_env meth_vname ->
+	(* Because these methods are inherited, they now are methods of   *)
+        (* ourselves, hence methodes of Self. Anyway, as previously told, *)
+        (* all the methods a always inserted as [SBI_method_of_self], the *)
+        (* [find_value] taking care of changing to [SBI_method_of_coll]   *)
+        (* when required.                                                 *)
+	Env.ScopingEnv.add_value
+	  meth_vname Env.ScopeInformation.SBI_method_of_self accu_env)
+      env_with_params
+      inherited_methods in
+  (* And now the fields in the environment we just built. *)
+  let (scoped_fields, method_names) =
+    scope_species_fields ctx full_env species_def_descr.Parsetree.sd_fields in
+  (* We must extend the initial environment with our name *)
+  (* bound to a species with the got methods names.       *)
+  let our_info = {
+    Env.ScopeInformation.spbi_methods = inherited_methods @ method_names ;
+    Env.ScopeInformation.spbi_scope =
+      Env.ScopeInformation.SPBI_file ctx.current_unit } in
+  let final_env =
+    Env.ScopingEnv.add_species
+      species_def_descr.Parsetree.sd_name our_info env in
+  let scoped_def_descr = {
+    Parsetree.sd_name = species_def_descr.Parsetree.sd_name ;
+    Parsetree.sd_params = scoped_params ;
+    Parsetree.sd_inherits = scoped_inherits ;
+    Parsetree.sd_fields = scoped_fields } in
+  let scoped_def = { species_def with Parsetree.ast_desc = scoped_def_descr } in
+  (scoped_def, final_env)
+;;
+
+
+
 let scope_phrase ctx env phrase =
   let (new_desc, new_env) =
     (match phrase.Parsetree.ast_desc with
@@ -485,7 +756,10 @@ let scope_phrase ctx env phrase =
 	 (* not affected.                                           *)
      | Parsetree.Ph_use _
      | Parsetree.Ph_open _ -> (phrase.Parsetree.ast_desc, env)
-     | Parsetree.Ph_species species_def -> failwith "todo S2"
+     | Parsetree.Ph_species species_def ->
+	 let (scoped_species_def, env') =
+	   scope_species_def ctx env species_def in
+	 ((Parsetree.Ph_species scoped_species_def), env')
      | Parsetree.Ph_coll coll_def -> failwith "todo S3"
      | Parsetree.Ph_type type_def ->
          let (scoped_ty_def, env') = scope_type_def ctx env type_def in

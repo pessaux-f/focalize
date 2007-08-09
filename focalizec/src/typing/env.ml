@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.9 2007-08-07 11:30:51 pessaux Exp $ *)
+(* $Id: env.ml,v 1.10 2007-08-09 12:21:11 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -36,12 +36,12 @@
 
 
 exception Unbound_constructor of Parsetree.vname ;;
-exception Invalid_constructor_identifier of Parsetree.ident ;;
 exception Unbound_label of Types.label_name ;;
 exception Unbound_identifier of Parsetree.vname ;;
 exception Unbound_type of Types.type_name ;;
 exception Unbound_module of Parsetree.fname ;;
-
+exception Unbound_collection of Types.collection_name ;;
+exception Unbound_species of Types.species_name ;;
 
 
 (* ******************************************************************** *)
@@ -136,10 +136,11 @@ module ScopeInformation = struct
       {b Rem} : Exported outside this module.                              *)
   (* ********************************************************************* *)
   type value_binding_info =
+      (* The ident is at toplevel of a file (including the current file). *)
     | SBI_file of Parsetree.fname
       (* The ident is a method implicitely of self. *)
     | SBI_method_of_self
-      (* The ident is a method explicitely of a collection. *)
+      (* The ident is a method explicitely of a collection. ATTENTION: while inserting a method in the environment, it must always be tagged with [SBI_method_of_self]. The tag [SBI_method_of_coll] can only be returned by [find_value] who may perform a change on the fly if required. *)
     | SBI_method_of_coll of Types.collection_name
       (* The ident is a locally bound indentifier (let or function parameter. *)
     | SBI_local
@@ -147,9 +148,37 @@ module ScopeInformation = struct
 
 
   type type_binding_info =
+      (* The type identifier is either a type variable name ('a for instance) or a builtin type (int for instance). *)
     | TBI_builtin_or_var
+      (* The identifier is a type name defined at toplevel in a file. *)
     | TBI_defined_in of Parsetree.fname
 
+
+  type collection_scope =
+  (* The identifier is a collection name defined at toplevel in a file. *)
+    | CBI_file of Parsetree.fname
+      (* The identifier is a locally bound collection like in the case of a "is"-bound parameter (i.e. [c is ...]) where [c] is then considered as a local collection). *)
+    | CBI_local
+
+
+  type collection_binding_info = {
+    (* The list of *ALL* the method owned, including those added by inheritance. Methods from the toplevel ancestor are in head of the list. In case of multiple inheritance, we consider that ancestors are older from left to right. *)
+    cbi_methods : Parsetree.vname list ;
+    cbi_scope : collection_scope
+  }
+
+
+
+  type species_scope =
+      (* The identifier is a specied name defined at toplevel in a file. *)
+    | SPBI_file of Parsetree.fname
+
+
+  type species_binding_info = {
+    (* The list of *ALL* the method owned, including those added by inheritance. Methods from the toplevel ancestor are in head of the list. In case of multiple inheritance, we consider that ancestors are older from left to right. *)
+    spbi_methods : Parsetree.vname list ;
+    spbi_scope : species_scope
+  }
 
 
   (* ************************************************************** *)
@@ -160,7 +189,7 @@ module ScopeInformation = struct
   (* ************************************************************** *)
   type env =
     (Parsetree.fname, Parsetree.fname, type_binding_info, value_binding_info,
-     unit, unit) generic_env
+     species_binding_info, collection_binding_info) generic_env
 end ;;
 
 
@@ -189,12 +218,14 @@ module TypeInformation = struct
     spe_sig_params : species_param list ;
     spe_sig_inher : Types.type_species list ;
     spe_sig_methods :  (** Method's name, type and body if defined. *)
-      (string * Types.type_simple * (Parsetree.expr option)) list
+      (Parsetree.vname * Types.type_scheme * (Parsetree.expr option)) list
     }
 
 
 
-  type collections_sig = (string * Types.type_simple) list (* To refine. *)
+  type collections_sig =
+    (** Method's name, type. *)
+    (Parsetree.vname  * Types.type_scheme) list (* To refine. *)
 
 
 
@@ -384,8 +415,32 @@ let allow_opened_p current_unit = function
 	      the persistent data located on the disk.
               This kind of module will be used as argument of the functor
               [Make] below in order to generate the environment access
-              functions without having to add to them an extra parameter
-              that would the "find_module" function.
+              functions without having to add to them extra parameters
+              that would the [find_module], [pervasives],
+              [make_value_env_from_species_methods] and
+              [make_value_env_from_collection_methods] functions.
+
+    {b Fields} :
+      - [constructor_bound_data] : Type of the information bound to a
+        sum type constructor identifier in the environment.
+      - [label_bound_data] : Type of the information bound to a record
+        type's field label identifier in the environment.
+      - [type_bound_data] : Type of the information bound to a type
+        identifier in the environment.
+      - [value_bound_data] : Type of the information bound to a value
+        identifier in the environment.
+      - [species_bound_data] : Type of the information bound to a species
+        identifier in the environment.
+      - [collection_bound_data] : Type of the information bound to a
+        collection identifier in the environment.
+      - [find_module] : The function that permits to access FoCaL "module"
+        information (# notation) via the persistent data files.
+      - [pervasives] : Function generating a fresh environment containing
+        builtin stuff.
+      - [make_value_env_from_species_methods] : Function building an
+        environment with the methods of the species inserted as values.
+      - [make_value_env_from_collection_methods] : Function building an
+        environment with the methods of the collection inserted as values.
 
     {b Rem} : Not exported outside this module.
             This module signature is fully local to this file, it will be
@@ -411,6 +466,18 @@ module type EnvModuleAccessSig = sig
     (constructor_bound_data, label_bound_data, type_bound_data,
      value_bound_data, species_bound_data, collection_bound_data)
       generic_env
+  val make_value_env_from_species_methods :
+    Types.species_name -> species_bound_data ->
+      (constructor_bound_data, label_bound_data, type_bound_data,
+       value_bound_data, species_bound_data, collection_bound_data)
+	generic_env
+  val make_value_env_from_collection_methods :
+    Types.collection_name -> collection_bound_data ->
+      (constructor_bound_data, label_bound_data, type_bound_data,
+       value_bound_data, species_bound_data, collection_bound_data)
+	generic_env
+  val post_process_method_value_binding :
+    collname: Types.collection_name -> value_bound_data -> value_bound_data
 end ;;
 
 
@@ -460,6 +527,72 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
 
+  (* current_unit: Parsetree.fname -> Parsetree.ident -> t ->       *)
+  (*   EMAccess.collection_bound_data                               *)
+  let rec find_collection ~current_unit coll_ident (env : t) =
+    match coll_ident.Parsetree.ast_desc with
+     | Parsetree.I_local vname ->
+         (* No explicit scoping information was provided, hence *)
+         (* opened modules bindings are acceptable.             *)
+	 find_collection_vname ~allow_opened: true vname env
+     | Parsetree.I_global (opt_scope, vname) ->
+	 let env' = EMAccess.find_module ~current_unit opt_scope env in
+	 (* Check if the lookup can return something *)
+	 (* coming from an opened module.            *)
+	 let allow_opened = allow_opened_p current_unit opt_scope in
+	 find_collection_vname ~allow_opened vname env'
+     | Parsetree.I_method (_, _) ->
+	 (* Because collection are not first class values,   *)
+	 (* collection identifiers should never be methods ! *)
+	 assert false
+
+
+
+  (* allow_opened: bool -> Parsetree.vname -> t ->    *)
+  (*   EMAccess.collection_bound_data                 *)
+  and find_collection_vname ~allow_opened vname (env : t) =
+    let coll_name = Parsetree_utils.name_of_vname vname in
+    try env_list_assoc ~allow_opened coll_name env.collections with
+    | Not_found -> raise (Unbound_collection coll_name)
+
+
+
+  (* Types.species_name -> EMAccess.species_bound_data -> t -> t *)
+  let add_species species_name data (env : t) =
+     ({ env with
+	  species = (species_name, BO_absolute data) :: env.species } : t)
+
+
+
+  (* current_unit: Parsetree.fname -> Parsetree.ident -> t ->    *)
+  (*   EMAccess.species_bound_data                               *)
+  let rec find_species ~current_unit coll_ident (env : t) =
+    match coll_ident.Parsetree.ast_desc with
+     | Parsetree.I_local vname ->
+         (* No explicit scoping information was provided, hence *)
+         (* opened modules bindings are acceptable.             *)
+	 find_species_vname ~allow_opened: true vname env
+     | Parsetree.I_global (opt_scope, vname) ->
+	 let env' = EMAccess.find_module ~current_unit opt_scope env in
+	 (* Check if the lookup can return something *)
+	 (* coming from an opened module.            *)
+	 let allow_opened = allow_opened_p current_unit opt_scope in
+	 find_species_vname ~allow_opened vname env'
+     | Parsetree.I_method (_, _) ->
+	 (* Because species are not first class values,   *)
+	 (* species identifiers should never be methods ! *)
+	 assert false
+
+
+  (* allow_opened: bool -> Parsetree.vname -> t ->    *)
+  (*   EMAccess.species_bound_data                 *)
+  and find_species_vname ~allow_opened vname (env : t) =
+    let coll_name = Parsetree_utils.name_of_vname vname in
+    try env_list_assoc ~allow_opened coll_name env.species with
+    | Not_found -> raise (Unbound_species coll_name)
+
+
+
   (* ************************************************************** *)
   (* Parsetree.vname -> EMAccess.value_bound_data -> t -> t         *)
   (** {b Descr} : Return an environment extended with a binding
@@ -492,7 +625,37 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 	 (* coming from an opened module.            *)
 	 let allow_opened = allow_opened_p current_unit opt_scope in
 	 find_value_vname ~allow_opened vname env'
-     | Parsetree.I_method (_, _) -> failwith "todo1"
+     | Parsetree.I_method (collname_opt, vname) ->
+	 (begin
+	 match collname_opt with
+	  | None ->
+	      (* No collection scope. Then the searched ident must belong  *)
+	      (* to the inheritance of Self. First, this means that opened *)
+	      (* stuff is forbidden. Next, because the [values] bucket is  *)
+	      (* so that inherited methods and our methods belong to it,   *)
+              (* we just have to search for the [vname] inside the current *)
+              (* environment.                                              *)
+	      find_value_vname ~allow_opened: false vname env
+	  | Some collname ->
+	      (* Collections are alwas capitalized so *)
+              (* the related [vname] is a [Vuident].  *)
+	      let coll_vname = Parsetree.Vuident collname in
+	      (* We must first look inside collections and species   *)
+              (* for the [collname] in order to recover its methods. *)
+              let available_meths =
+		(try
+		  EMAccess.make_value_env_from_collection_methods
+		    collname
+		    (find_collection_vname ~allow_opened: false coll_vname env)
+		with Unbound_collection _ ->
+		  EMAccess.make_value_env_from_species_methods
+		    collname
+		    (find_species_vname ~allow_opened: false coll_vname env)) in
+	      let data =
+		find_value_vname ~allow_opened: false vname available_meths in
+	      (* Now we apply the post-processing on the found data. *)
+	      EMAccess.post_process_method_value_binding ~collname data
+	 end)
 
 
 
@@ -548,7 +711,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
      | Parsetree.I_method (_, _) ->
 	 (* Don't know what it means if the           *)
 	 (* constructor seems to be in fact a method. *)
-	 raise (Invalid_constructor_identifier cstr_ident)
+	 assert false
 
 
 
@@ -647,6 +810,11 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
     try env_list_assoc ~allow_opened type_name env.types with
     | Not_found -> raise (Unbound_type type_name)
 
+
+  (* Types.collection_name -> EMAccess.collection_bound_data -> t -> t *)
+  let add_collection coll_name data (env : t) =
+     ({ env with
+	  collections = (coll_name, BO_absolute data) :: env.collections } : t)
 end ;;
 
 
@@ -656,8 +824,8 @@ module ScopingEMAccess = struct
   type label_bound_data = Parsetree.fname
   type type_bound_data = ScopeInformation.type_binding_info
   type value_bound_data = ScopeInformation.value_binding_info
-  type species_bound_data = unit
-  type collection_bound_data = unit
+  type species_bound_data = ScopeInformation.species_binding_info
+  type collection_bound_data = ScopeInformation.collection_binding_info
   let find_module = scope_find_module
   let pervasives () =
     { constructors = [
@@ -691,6 +859,53 @@ module ScopingEMAccess = struct
       values = [] ;
       species = [] ;
       collections = [] }
+
+
+  let make_value_env_from_collection_methods coll_name coll_info =
+    let values_bucket =
+      List.map
+	(fun meth_vname ->
+	  (meth_vname,
+	   BO_absolute (ScopeInformation.SBI_method_of_coll coll_name)))
+	coll_info.ScopeInformation.cbi_methods in
+    { constructors = [] ; labels = [] ; types = [] ; values = values_bucket ;
+      species = [] ; collections = [] }
+
+  let make_value_env_from_species_methods spec_name spec_info =
+    let values_bucket =
+      List.map
+	(fun meth_vname ->
+	  (meth_vname,
+	   BO_absolute (ScopeInformation.SBI_method_of_coll spec_name)))
+	spec_info.ScopeInformation.spbi_methods in
+    { constructors = [] ; labels = [] ; types = [] ; values = values_bucket ;
+      species = [] ; collections = [] }
+
+
+  (* ************************************************************************ *)
+  (** {b Descr} : The function used while scoping to post-process information
+               bound to values when retrieved from a [I_method] [ident].
+               Because all the methods are entered in the environment as
+               [SBI_method_of_self], we need here to tweak the result to
+               change it into a SBI_method_of_coll otherwise, any method
+               would be considered as applied from [Self] !!!
+               In fact, we need to enter methods in the environment as
+               [SBI_method_of_self] instead of [SBI_method_of_coll]
+               otherwise when we would scope a real method of [Self], if
+               this méthode was bound to, for instance "KikooSpecies", then
+               once scoped, the AST would return an [ident] explicitely
+               shaped like "KikooSpecies!meth" instead of "Self!meth".
+               This would force the method to be the one of this species
+               at this level in the inheritance, hence forbidding
+               late-binding.
+
+     {b Rem} : Exported outside this module, but not outside this file.       *)
+  (* ************************************************************************ *)
+  let post_process_method_value_binding ~collname = function
+    | ScopeInformation.SBI_method_of_self ->
+	ScopeInformation.SBI_method_of_coll collname
+    | whatever -> whatever
+
 end ;;
 module ScopingEnv = Make (ScopingEMAccess) ;;
 
@@ -790,6 +1005,30 @@ module TypingEMAccess = struct
     species = [] ;
     collections = []
   }
+
+
+  let make_value_env_from_collection_methods coll_name coll_info =
+    let values_bucket =
+      List.map
+	(fun (meth_vname, meth_scheme) ->
+	  (meth_vname, (BO_absolute meth_scheme)))
+	coll_info in
+    { constructors = [] ; labels = [] ; types = [] ; values = values_bucket ;
+      species = [] ; collections = [] }
+
+
+  let make_value_env_from_species_methods spec_name spec_info =
+    let values_bucket =
+      List.map
+	(fun (meth_vname, meth_scheme, _) ->
+	  (meth_vname, (BO_absolute meth_scheme)))
+	spec_info.TypeInformation.spe_sig_methods in
+    { constructors = [] ; labels = [] ; types = [] ; values = values_bucket ;
+      species = [] ; collections = [] }
+
+
+  (* Not yet thought about. *)
+  let post_process_method_value_binding ~collname data = data
 end ;;
 module TypingEnv = Make (TypingEMAccess) ;;
 
