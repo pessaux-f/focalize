@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.10 2007-08-06 14:00:14 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.11 2007-08-09 14:55:23 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {bL Descr} : Exception used to inform that a sum type constructor was
@@ -783,19 +783,13 @@ and typecheck_let_definition ctx env let_def =
 and typecheck_prop ctx env prop =
   let final_ty =
     (match prop.Parsetree.ast_desc with
-     | Parsetree.Pr_forall (vnames, t_expr_opt, pr)
-     | Parsetree.Pr_exists (vnames, t_expr_opt, pr) ->
+     | Parsetree.Pr_forall (vnames, t_expr, pr)
+     | Parsetree.Pr_exists (vnames, t_expr, pr) ->
          (Types.begin_definition ();
 	 (* Get the couple (name, type) for each defined variable. *)
 	 let bound_variables =
-	   (match t_expr_opt with
-	    | None ->
-		List.map
-		  (fun vname -> (vname, (Types.type_variable ())))
-		  vnames
-	    | Some ty_constraint ->
-		let ty = typecheck_type_expr ctx env ty_constraint in
-		List.map (fun vname -> (vname, ty)) vnames) in
+	   (let ty = typecheck_type_expr ctx env t_expr in
+	   List.map (fun vname -> (vname, ty)) vnames) in
 	 (* Now typecheck the theorem's body in the extended environment.  *)
 	 (* Note that as often, th order bindings are inserted in the      *)
 	 (* environment does not matter since parameters can never depends *)

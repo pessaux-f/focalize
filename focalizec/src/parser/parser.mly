@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.49 2007-07-30 08:07:44 weis Exp $ *)
+(* $Id: parser.mly,v 1.50 2007-08-09 14:55:23 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -475,7 +475,7 @@ param:
 
 def_sig:
   | opt_doc SIG bound_vname COLON type_expr
-    { mk_doc $1 {sig_name = mk_local_ident $3; sig_type = $5; } }
+    { mk_doc $1 {sig_name = $3; sig_type = $5; } }
 ;
 
 def_logical:
@@ -489,7 +489,7 @@ def_logical:
 
 def_property:
   | opt_doc PROPERTY property_vname COLON prop
-    { mk_doc $1 {prd_name = mk_local_ident $3; prd_prop = $5; } }
+    { mk_doc $1 {prd_name = $3; prd_prop = $5; } }
 ;
 
 def_theorem:
@@ -500,9 +500,9 @@ def_theorem:
 ;
 
 prop:
-  | ALL bound_vname_list opt_in_type_expr COMMA prop
+  | ALL bound_vname_list in_type_expr COMMA prop
     { mk (Pr_forall ($2, $3, $5))}
-  | EX bound_vname_list opt_in_type_expr COMMA prop
+  | EX bound_vname_list in_type_expr COMMA prop
     { mk (Pr_exists ($2, $3, $5))}
   | NOT prop
     { mk (Pr_not $2) }
@@ -520,10 +520,9 @@ prop:
     { mk (Pr_expr $1) }
 ;
 
-opt_in_type_expr:
+in_type_expr:
   | IN type_expr
-    { Some $2 }
-  | { None }
+    { $2 }
 ;
 
 /**** PROOFS ****/

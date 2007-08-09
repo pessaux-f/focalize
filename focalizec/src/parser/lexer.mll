@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.23 2007-07-19 14:42:05 pessaux Exp $ *)
+(* $Id: lexer.mll,v 1.24 2007-08-09 14:55:23 pessaux Exp $ *)
 
 {
 open Lexing;;
@@ -518,13 +518,13 @@ rule token = parse
 
   | prefix_ident
     { mk_prefixop (Lexing.lexeme lexbuf) }
-  | "( " prefix_ident " )"
-    { ident_of_prefixop (Lexing.lexeme lexbuf) }
+  | "(" [' ']+ (prefix_ident as inner) [' ']+ ")"
+    { ident_of_prefixop inner }
 
   | infix_ident
     { mk_infixop (Lexing.lexeme lexbuf) }
-  | "( " infix_ident " )"
-    { ident_of_infixop (Lexing.lexeme lexbuf) }
+  | "(" [' ']+ (infix_ident as inner) [' ']+ ")"
+    { ident_of_infixop inner }
 
   | "{*" ([^ '*'] | '*' [^ '}'])* "*}"
     { mk_external_code (Lexing.lexeme lexbuf) }

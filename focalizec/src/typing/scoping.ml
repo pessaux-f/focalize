@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.5 2007-08-09 12:21:11 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.6 2007-08-09 14:55:23 pessaux Exp $ *)
 
 (** {b Desc} : Scoping phase is intended to disambiguate
 		- variables identifiers
@@ -180,6 +180,56 @@ let scope_type_def_body ctx env ty_def_body =
   (scoped_ty_def_body, new_env)
 ;;
 
+
+
+
+let rec scope_rep_type_def ctx env rep_type_def =
+  let new_desc =
+    (match rep_type_def.Parsetree.ast_desc with
+     | Parsetree.RTE_ident ident ->
+	 (begin
+	 let basic_vname = unqualified_vname_of_ident ident in
+	 let hosting_info =
+	   Env.ScopingEnv.find_type ~current_unit: ctx.current_unit ident env in
+	 (* Let's re-construct a completely scoped identifier. *)
+	 let scoped_ident_descr =
+	   (match hosting_info with
+	    | Env.ScopeInformation.TBI_builtin_or_var ->
+		Parsetree.I_local basic_vname
+	    | Env.ScopeInformation.TBI_defined_in hosting_file ->
+		Parsetree.I_global ((Some hosting_file), basic_vname)) in
+	 let scoped_ident =
+	   { ident with Parsetree.ast_desc = scoped_ident_descr } in
+	 Parsetree.RTE_ident scoped_ident
+	 end)
+     | Parsetree.RTE_fun (rtd1, rtd2) ->
+	 let scoped_rtd1 = scope_rep_type_def ctx env rtd1 in
+	 let scoped_rtd2 = scope_rep_type_def ctx env rtd2 in
+	 Parsetree.RTE_fun (scoped_rtd1, scoped_rtd2)
+     | Parsetree.RTE_app (ident, rtds) ->
+	 (begin
+	 let basic_vname = unqualified_vname_of_ident ident in
+	 let hosting_info =
+	   Env.ScopingEnv.find_type ~current_unit: ctx.current_unit ident env in
+	 (* Let's re-construct a completely scoped identifier. *)
+	 let scoped_ident_descr =
+	   (match hosting_info with
+	    | Env.ScopeInformation.TBI_builtin_or_var ->
+		Parsetree.I_local basic_vname
+	    | Env.ScopeInformation.TBI_defined_in hosting_file ->
+		Parsetree.I_global ((Some hosting_file), basic_vname)) in
+	 let scoped_ident =
+	   { ident with Parsetree.ast_desc = scoped_ident_descr } in
+	 let scoped_rtds = List.map (scope_rep_type_def ctx env) rtds in
+	 Parsetree.RTE_app (scoped_ident, scoped_rtds)
+	 end)
+     | Parsetree.RTE_prod rtds ->
+	 let scoped_rtds = List.map (scope_rep_type_def ctx env) rtds in
+	 Parsetree.RTE_prod scoped_rtds
+     | Parsetree.RTE_paren rtd ->
+	 Parsetree.RTE_paren (scope_rep_type_def ctx env rtd)) in
+  { rep_type_def with Parsetree.ast_desc = new_desc }
+;;
 
 
 (* ************************************************************************* *)
@@ -480,16 +530,124 @@ and scope_let_definition ~toplevel_let ctx env let_def =
 
 
 
+let rec scope_prop ctx env prop =
+  let new_descr =
+    (match prop.Parsetree.ast_desc with
+     | Parsetree.Pr_forall (vnames, ty_expr, p) ->
+	 (begin
+	 let scoped_ty_expr = scope_type_expr ctx env ty_expr in
+	 (* Entend the environment with the variables bound to local values. *)
+	 let env' =
+	   List.fold_left
+	     (fun accu_env vname ->
+	       Env.ScopingEnv.add_value
+		 vname Env.ScopeInformation.SBI_local accu_env)
+	     env
+	     vnames in
+	 let scoped_p = scope_prop ctx env' p in
+	 Parsetree.Pr_forall (vnames, scoped_ty_expr, scoped_p)
+	 end)
+     | Parsetree.Pr_exists (vnames, ty_expr, p) ->
+	 (begin
+	 let scoped_ty_expr = scope_type_expr ctx env ty_expr in
+	 (* Entend the environment with the variables bound to local values. *)
+	 let env' =
+	   List.fold_left
+	     (fun accu_env vname ->
+	       Env.ScopingEnv.add_value
+		 vname Env.ScopeInformation.SBI_local accu_env)
+	     env
+	     vnames in
+	 let scoped_p = scope_prop ctx env' p in
+	 Parsetree.Pr_exists (vnames, scoped_ty_expr, scoped_p)
+	 end)	 
+     | Parsetree.Pr_imply (p1, p2) ->
+	 let scoped_p1 = scope_prop ctx env p1 in
+	 let scoped_p2 = scope_prop ctx env p2 in
+	 Parsetree.Pr_imply (scoped_p1, scoped_p2)
+     | Parsetree.Pr_or (p1, p2) ->
+	 let scoped_p1 = scope_prop ctx env p1 in
+	 let scoped_p2 = scope_prop ctx env p2 in
+	 Parsetree.Pr_or (scoped_p1, scoped_p2)
+     | Parsetree.Pr_and (p1, p2) ->
+	 let scoped_p1 = scope_prop ctx env p1 in
+	 let scoped_p2 = scope_prop ctx env p2 in
+	 Parsetree.Pr_and (scoped_p1, scoped_p2)
+     | Parsetree.Pr_equiv (p1, p2) ->
+	 let scoped_p1 = scope_prop ctx env p1 in
+	 let scoped_p2 = scope_prop ctx env p2 in
+	 Parsetree.Pr_equiv (scoped_p1, scoped_p2)
+     | Parsetree.Pr_not p -> Parsetree.Pr_not (scope_prop ctx env p)
+     | Parsetree.Pr_expr expr -> Parsetree.Pr_expr (scope_expr ctx env expr)
+     | Parsetree.Pr_paren p -> Parsetree.Pr_paren (scope_prop ctx env p)) in
+  { prop with Parsetree.ast_desc = new_descr }
+;;
+
+
+
+let scope_sig_def ctx env sig_def =
+  let sig_def_descr = sig_def.Parsetree.ast_desc in
+  let scoped_type = scope_type_expr ctx env sig_def_descr.Parsetree.sig_type in
+  let scoped_sig_def = {
+    sig_def with
+      Parsetree.ast_desc = {
+        Parsetree.sig_name = sig_def_descr.Parsetree.sig_name ;
+	Parsetree.sig_type = scoped_type
+      } } in
+  (scoped_sig_def, sig_def_descr.Parsetree.sig_name)
+;;
+
+
+
+(* ******************************************************************* *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.property_def ->    *)
+(*   (Parsetree.property_def * Parsetree.vname)                        *)
+(* {b Descr} : Scopes a property definition and return both the scoped
+             roperty definition and its name as a [vname].
+
+   {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************* *)
+let scope_property_def ctx env property_def =
+  let property_def_descr = property_def.Parsetree.ast_desc in
+  let scoped_prop = scope_prop ctx env property_def_descr.Parsetree.prd_prop in
+  let scoped_property_def = {
+    property_def with
+      Parsetree.ast_desc = {
+        Parsetree.prd_name = property_def_descr.Parsetree.prd_name ;
+	Parsetree.prd_prop = scoped_prop
+      } } in
+  (scoped_property_def, property_def_descr.Parsetree.prd_name)
+;;
+
+
+
+(* ***************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.species_field -> *)
+(*   (Parsetree.species_field * (Parsetree.vname option))            *)
+(* {b Descr} : Scopes a species field and return both the scoped
+             field and its name as a [vname] if it must be inserted
+             later in the environment as a value.
+             Especially, [rep] and [proof] are not methods hence are
+             not values to bind in the environment.
+
+   {b Rem} : Not exported outside this module.                       *)
+(* ***************************************************************** *)
 let scope_species_field ctx env field =
-  let (new_desc, method_name) =
+  let (new_desc, method_name_opt) =
     (match field.Parsetree.ast_desc with
-     | Parsetree.SF_rep rep_type_def -> failwith "S6"
-     | Parsetree.SF_sig sig_def -> failwith "S7"
+     | Parsetree.SF_rep rep_type_def ->
+         let scoped_rep_type_def = scope_rep_type_def ctx env rep_type_def in
+         ((Parsetree.SF_rep scoped_rep_type_def), None)
+     | Parsetree.SF_sig sig_def ->
+	 let (scoped_sig, name) = scope_sig_def ctx env sig_def in
+	 ((Parsetree.SF_sig scoped_sig), (Some name))
      | Parsetree.SF_let let_def -> failwith "S8"
-     | Parsetree.SF_property prop_def -> failwith "S9"
+     | Parsetree.SF_property prop_def ->
+	 let (scoped_prop, name) = scope_property_def ctx env prop_def in
+	 ((Parsetree.SF_property scoped_prop), (Some name))
      | Parsetree.SF_theorem theo_def -> failwith "S10"
      | Parsetree.SF_proof proof_def -> failwith "S11") in
-  ({ field with Parsetree.ast_desc = new_desc }, method_name)
+  ({ field with Parsetree.ast_desc = new_desc }, method_name_opt)
 ;;
 
 
@@ -497,16 +655,24 @@ let scope_species_field ctx env field =
 let rec scope_species_fields ctx env = function
   | [] -> ([], [])
   | field :: rem ->
-      let (scoped_field, method_name) = scope_species_field ctx env field in
+      let (scoped_field, name_opt) = scope_species_field ctx env field in
       (* All the methods a always inserted as [SBI_method_of_self], the *)
       (* [find_value] taking care of changing to [SBI_method_of_coll]   *)
       (* when required.                                                 *)
       let env' =
-	Env.ScopingEnv.add_value
-	  method_name (Env.ScopeInformation.SBI_method_of_self) env in
+	(match name_opt with
+	 | None -> env
+	 | Some method_name ->
+Printf.eprintf "Adding: %s\n" (Parsetree_utils.name_of_vname method_name) ; flush stderr ;
+	     Env.ScopingEnv.add_value
+	       method_name (Env.ScopeInformation.SBI_method_of_self) env) in
       let (rem_scoped_fields, rem_method_names) =
 	scope_species_fields ctx env' rem in
-      ((scoped_field :: rem_scoped_fields), (method_name :: rem_method_names))
+      let method_names =
+	(match name_opt with
+	 | None -> rem_method_names
+	 | Some method_name -> method_name :: rem_method_names) in
+      ((scoped_field :: rem_scoped_fields), method_names)
 ;;
 
 

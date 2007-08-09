@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.7 2007-08-09 12:21:11 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.8 2007-08-09 14:55:23 pessaux Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -209,7 +209,7 @@ and species_param_desc =
 
 and sig_def = sig_def_desc ast_doc
 and sig_def_desc = {
-  sig_name : ident ;
+  sig_name : vname ;
   sig_type : type_expr
 }
 
@@ -221,7 +221,7 @@ and proof_def_desc = {
 
 and property_def = property_def_desc ast_doc
 and property_def_desc = {
-  prd_name : ident;
+  prd_name : vname ;
   prd_prop : prop
 }
 
@@ -290,8 +290,8 @@ and hyp_desc =
 
 and prop = prop_desc ast
 and prop_desc =
-  | Pr_forall of vname list * type_expr option * prop
-  | Pr_exists of vname list * type_expr option * prop
+  | Pr_forall of vname list * type_expr * prop
+  | Pr_exists of vname list * type_expr * prop
   | Pr_imply of prop * prop
   | Pr_or of prop * prop
   | Pr_and of prop * prop

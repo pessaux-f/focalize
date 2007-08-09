@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.10 2007-08-09 12:21:11 pessaux Exp $ *)
+(* $Id: env.ml,v 1.11 2007-08-09 14:55:23 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -74,6 +74,21 @@ let env_list_assoc ~allow_opened searched list =
   let rec rec_assoc = function
     | [] -> raise Not_found
     | (name, data) :: q ->
+	if name = searched then
+	  (begin
+	  match data with
+	   | BO_opened (_, v) -> if allow_opened then v else rec_assoc q
+	   | BO_absolute v -> v
+	  end)
+	else rec_assoc q in
+  rec_assoc list
+;;
+
+let debug_env_list_assoc ~allow_opened searched list =
+  let rec rec_assoc = function
+    | [] -> raise Not_found
+    | (name, data) :: q ->
+Printf.eprintf "\"%s\"" (Parsetree_utils.name_of_vname name) ; flush stderr ;
 	if name = searched then
 	  (begin
 	  match data with
@@ -628,7 +643,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
      | Parsetree.I_method (collname_opt, vname) ->
 	 (begin
 	 match collname_opt with
-	  | None ->
+	  | None | Some "Self" ->
 	      (* No collection scope. Then the searched ident must belong  *)
 	      (* to the inheritance of Self. First, this means that opened *)
 	      (* stuff is forbidden. Next, because the [values] bucket is  *)
@@ -667,7 +682,8 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
       {b Rem} : Not exported outside this module.                       *)
   (* ****************************************************************** *)
   and find_value_vname ~allow_opened vname (env : t) =
-    try env_list_assoc ~allow_opened vname env.values
+(*    try env_list_assoc ~allow_opened vname env.values *)
+    try debug_env_list_assoc ~allow_opened vname env.values
     with Not_found -> raise (Unbound_identifier vname)
 
 
@@ -905,7 +921,6 @@ module ScopingEMAccess = struct
     | ScopeInformation.SBI_method_of_self ->
 	ScopeInformation.SBI_method_of_coll collname
     | whatever -> whatever
-
 end ;;
 module ScopingEnv = Make (ScopingEMAccess) ;;
 

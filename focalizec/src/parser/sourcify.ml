@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.17 2007-07-30 08:07:44 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.18 2007-08-09 14:55:23 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -571,7 +571,7 @@ and pp_species_param ppf = pp_generic_ast pp_species_param_desc ppf
 
 and pp_sig_def_desc ppf sdd =
   Format.fprintf ppf "@[<2>sig@ %a :@ %a"
-    pp_ident sdd.Parsetree.sig_name pp_type_expr sdd.Parsetree.sig_type
+    pp_vname sdd.Parsetree.sig_name pp_type_expr sdd.Parsetree.sig_type
 and pp_sig_def ppf = pp_generic_ast pp_sig_def_desc ppf
 
 
@@ -585,7 +585,7 @@ and pp_proof_def ppf = pp_generic_ast pp_proof_def_desc ppf
 
 and pp_property_def_desc ppf pdd =
   Format.fprintf ppf "@[<2>property@ %a :@ %a"
-    pp_ident pdd.Parsetree.prd_name pp_prop pdd.Parsetree.prd_prop
+    pp_vname pdd.Parsetree.prd_name pp_prop pdd.Parsetree.prd_prop
 and pp_property_def ppf = pp_generic_ast pp_property_def_desc ppf
 
 
@@ -760,15 +760,11 @@ and pp_hyp ppf = pp_generic_ast pp_hyp_desc ppf
 
 and pp_prop_desc ppf = function
   | Parsetree.Pr_forall (vnames, type_expr_opt, prop) ->
-      Format.fprintf ppf "@[<2>all@ %a@ %a,@ %a@]"
-	(pp_vnames "") vnames
-	(Handy.pp_generic_option "in " pp_type_expr) type_expr_opt
-	pp_prop prop
+      Format.fprintf ppf "@[<2>all@ %a@ in@ %a,@ %a@]"
+	(pp_vnames "") vnames pp_type_expr type_expr_opt pp_prop prop
   | Parsetree.Pr_exists (vnames, type_expr_opt, prop) ->
-      Format.fprintf ppf "@[<2>ex@ %a@ %a,@ %a@]"
-	(pp_vnames "") vnames
-	(Handy.pp_generic_option "in " pp_type_expr) type_expr_opt
-	pp_prop prop
+      Format.fprintf ppf "@[<2>ex@ %a@ in@ %a,@ %a@]"
+	(pp_vnames "") vnames pp_type_expr type_expr_opt pp_prop prop
   | Parsetree.Pr_imply (p1, p2) ->
       Format.fprintf ppf "@[<2>%a@ ->@ %a@]" pp_prop p1 pp_prop p2
   | Parsetree.Pr_or (p1, p2) ->
