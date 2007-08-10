@@ -299,14 +299,24 @@ fonctions "add" et "find" adressant des champs d'environnement toujours vides
 (et donc ne devant pas être utilisés), on fera 2 structures d'environnement
 distinctes, ce qui ne dupliquera toutefois pas trop de code.
 
+
+
 * SCOPING
 *********
 Par défaut, le parseur scope en I_local sauf si syntaxiquement se trouve
 explicitement une désambiguation ! ou #. Le boulot du scoping est donc de
 transformer si nécessaire ces I_local en I_global ou I_method.
-Pour les ident nativement I_global ou I_method on fait en sorte que leur
-qualification soit toujours explicite (plus de None). Ainsi, dans une
-unité de compilation "tata", un identificateur "#fct" deviendra "tada#fct".
+
+Pour les ident nativement I_global on fait en sorte que leur qualification
+soit toujours explicite (plus de None). Ainsi, dans une unité de compilation
+"tata", un identificateur "#fct" deviendra "tada#fct".
+
+Pour les ident nativement I_method (comme pour les I_local pour lesquels on
+a déterminé qu'ils nommaient une méthode de Self), si la method provient
+de Self, alors on laisse None plutôt que de mettre explicitement Self.
+Ceci fait qu'on obtiendra moralement un "!meth" au lieu d'un "Self!meth". On
+peut le changer facilement si le besoin s'en fait sentir d'ailleurs.
+
 
 Lorsque L'ON INSÈRE UN IDENT GLOBAL DANS L'ENVIRONNEMENT de scoping, on le
 binde à un (SBI_file (Some l'unité de compilation courante)). Ainsi, au moment
@@ -314,6 +324,8 @@ de sauver l'environnement de scoping pour en faire un ".fo", on n'a pas besoin
 de repasser sur les bindings avec None pour les expliciter à
 (Some l'unité de compilation courante). De même lorsque l'on chargera un ".fo"
 on n'aura pas à refaire ce traitement.
+
+
 
 Le scoping permet de s'assurer que les identificateurs sont bien liés, et à
 quoi. Mais, dans certains cas on a besoin de types pour ça (par exemple "c
@@ -327,6 +339,8 @@ vient de voir que ceci n'est pas possible dans ce cas sans les types, il
 faudra prévoir un mécanisme pour ne pas échouer.
 Il n'emeche que pour ce qui est des identificateur scopés par #, la question
 ne se pose pas car on n'a pas de notion de "paramètre de toplevel de fichier".
+
+
 
 * ACCÈS EXPLICITEMENT SCOPÉS AU FICHIER COURANT
 ***********************************************
@@ -370,12 +384,16 @@ On pourrait alors remplacer la simple string représentant le nom du champ par
 (fname option) * string. Pas besoin de la généralité d'un ident car il ne peut
 pas être "I_method".
 
+
+
 * COLLECTIONS ET ESPECES POUR LE SCOPING
 ****************************************
 En fait, je pense que l'on a besoin aussi d'un environement de collections et
 d'espèces pour scoper car pour se rendre compte qu'un ident scopé I_local
 initialement (et par défaut) par le parser est en fait un I_method, il faut
 bien avoir la liste des méthodes et l'héritage de la collection courante.
+
+
 
 * ===>>>> CONCLUSION SUR LES ENVIRONNEMENTS
 *******************************************
@@ -387,6 +405,8 @@ En fait, il semblerait que la différence entre ces 2 environnements ne soit
 plus aussi pertinente à la vue du point précédent.
 Il serait intéressant de tenter des environnements génériques afin de factoriser
 le code, en fait !
+
+
 
 * QUESTION ENTRE SCOPING ET TYPAGE
 **********************************
@@ -418,6 +438,8 @@ La recherche dans les environnements sait gérer les 2 cas. Par contre, il
 faudrait être homogène...
                                             Status : FAIT : on met Some (...).
 
+
+
 * RUGOSITÉS DE L'AST.
 *********************
 Dans un certain nombre de cas, typiquement dans ceux liés aux expressions de
@@ -440,6 +462,8 @@ avec l'option à None dans le cas où le nom du type est de la forme #myty.
 Par contre, il faut réfléchir dans ce cas ce que deviennent les noms de types
 "simple" comme "bool", "int" qui eux sont actuellement considérés comme des
 I_local et qui donc ne rentrarais pas dans un schéma fname option * vname.
+
+
 
 * RUGOSITÉS DE LA SYNTAXE.
 **************************

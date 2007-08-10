@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.6 2007-08-09 14:55:23 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.7 2007-08-10 15:32:07 pessaux Exp $ *)
 
 (** {b Desc} : Scoping phase is intended to disambiguate
 		- variables identifiers
@@ -56,6 +56,18 @@ let unqualified_vname_of_ident ident =
    | Parsetree.I_method (_, vname) -> vname
 ;;
 
+
+
+let scoped_ident_desc_from_value_binding_info ~basic_vname = function
+  | Env.ScopeInformation.SBI_file fname ->
+      Parsetree.I_global ((Some fname), basic_vname)
+  | Env.ScopeInformation.SBI_method_of_self ->
+      Parsetree.I_method (None, basic_vname)
+  | Env.ScopeInformation.SBI_method_of_coll coll_name ->
+      Parsetree.I_method ((Some coll_name), basic_vname)
+  | Env.ScopeInformation.SBI_local ->
+      Parsetree.I_local basic_vname
+;;
 
 
 (* ************************************************************* *)
@@ -299,15 +311,7 @@ let rec scope_expr ctx env expr =
              ~current_unit: ctx.current_unit ident env in
 	 (* Let's re-construct a completely scoped identifier. *)
 	 let scoped_ident_descr =
-	   (match hosting_info with
-	    | Env.ScopeInformation.SBI_file fname ->
-		Parsetree.I_global ((Some fname), basic_vname)
-	    | Env.ScopeInformation.SBI_method_of_self ->
-		Parsetree.I_method (None, basic_vname)
-	    | Env.ScopeInformation.SBI_method_of_coll coll_name ->
-		Parsetree.I_method ((Some coll_name), basic_vname)
-	    | Env.ScopeInformation.SBI_local ->
-		Parsetree.I_local basic_vname) in
+	   scoped_ident_desc_from_value_binding_info ~basic_vname hosting_info in
 	 let scoped_ident =
 	   { ident with Parsetree.ast_desc = scoped_ident_descr } in
 	 Parsetree.E_var scoped_ident
@@ -337,7 +341,8 @@ let rec scope_expr ctx env expr =
 	 let else_expr' = scope_expr ctx env else_expr in
 	 Parsetree.E_if (if_expr', then_expr', else_expr')
      | Parsetree.E_let (let_def, in_expr) ->
-	 let (scoped_let_def, env') =
+	 (* The list of bound names does not interest us here. *)
+	 let (scoped_let_def, env', _) =
 	   scope_let_definition ~toplevel_let: false ctx env let_def in
 	 let scoped_in_expr = scope_expr ctx env' in_expr in
 	 Parsetree.E_let (scoped_let_def, scoped_in_expr)
@@ -440,11 +445,16 @@ and scope_pattern ctx env pattern =
 
 (* **************************************************************** *)
 (* toplevel_let: bool -> scoping_context -> Env.ScopingEnv.t ->     *)
-(*   Parsetree.let_def -> (Parsetree.let_def * Env.ScopingEnv.t)    *)
+(*   Parsetree.let_def -> (Parsetree.let_def * Env.ScopingEnv.t *   *)
+(*                         Parsetree.vname list)                    *)
 (** {b Descr} : Scopes a let-definition. This returns the scoped
-              bindings and the initial scoping environment extended
+              bindings, the initial scoping environment extended
               with the information bound to the identifiers defined
-              in the let-definition.
+              in the let-definition and the list of [vnames] bound
+              by this let-definition. This last result is only
+              interesting while scoping species fields because in
+              this case the environment is not valuable, just the
+              methods names are !
               This function can either operate on let-definitions
               found at toplevel (let "NOT in") and "local"
               let-definitions (let ... in ...). In the first case,
@@ -525,13 +535,17 @@ and scope_let_definition ~toplevel_let ctx env let_def =
     let_def_descr with Parsetree.ld_bindings = scoped_bindings } in
   let scoped_let_def = {
     let_def with Parsetree.ast_desc = scoped_let_def_desc } in
-  (scoped_let_def, final_env)
+  (* We finally get le list of names bound by this let-definition. *)
+  let bound_names =
+    List.map (fun b -> b.Parsetree.ast_desc.Parsetree.b_name)
+      let_def_descr.Parsetree.ld_bindings in
+  (scoped_let_def, final_env, bound_names)
 ;;
 
 
 
 let rec scope_prop ctx env prop =
-  let new_descr =
+  let new_desc =
     (match prop.Parsetree.ast_desc with
      | Parsetree.Pr_forall (vnames, ty_expr, p) ->
 	 (begin
@@ -580,7 +594,7 @@ let rec scope_prop ctx env prop =
      | Parsetree.Pr_not p -> Parsetree.Pr_not (scope_prop ctx env p)
      | Parsetree.Pr_expr expr -> Parsetree.Pr_expr (scope_expr ctx env expr)
      | Parsetree.Pr_paren p -> Parsetree.Pr_paren (scope_prop ctx env p)) in
-  { prop with Parsetree.ast_desc = new_descr }
+  { prop with Parsetree.ast_desc = new_desc }
 ;;
 
 
@@ -597,6 +611,136 @@ let scope_sig_def ctx env sig_def =
   (scoped_sig_def, sig_def_descr.Parsetree.sig_name)
 ;;
 
+
+let scope_fact ctx env fact =
+  let new_desc =
+    (match fact.Parsetree.ast_desc with
+     | Parsetree.F_def idents ->
+	 (begin
+	 let scoped_idents =
+	   List.map
+	     (fun ident ->
+	       let basic_vname = unqualified_vname_of_ident ident in
+	       let scope_info =
+		 Env.ScopingEnv.find_value
+		   ~current_unit: ctx.current_unit ident env in
+	       let tmp =
+		 scoped_ident_desc_from_value_binding_info
+		   ~basic_vname scope_info in
+	       { ident with Parsetree.ast_desc = tmp })
+	     idents in
+	 Parsetree.F_def scoped_idents
+	 end)
+     | Parsetree.F_property idents ->
+	 (begin
+	 let scoped_idents =
+	   List.map
+	     (fun ident ->
+	       let basic_vname = unqualified_vname_of_ident ident in
+	       let scope_info =
+		 Env.ScopingEnv.find_value
+		   ~current_unit: ctx.current_unit ident env in
+	       let tmp =
+		 scoped_ident_desc_from_value_binding_info
+		   ~basic_vname scope_info in
+	     { ident with Parsetree.ast_desc = tmp })
+	     idents in
+	 Parsetree.F_property scoped_idents
+	 end)
+     | Parsetree.F_hypothesis _  (* Only vnames, so nothing to scope... *)
+     | Parsetree.F_node _ -> fact.Parsetree.ast_desc) in
+  { fact with Parsetree.ast_desc = new_desc }
+;;
+
+
+
+let scope_hyps ctx env hyps =
+  List.fold_left
+    (fun (accu_env, accu_scoped_hyps) hyp ->
+      let hyp_desc = hyp.Parsetree.ast_desc in
+      let (new_desc, env') =
+	(begin
+	match hyp_desc with
+	 | Parsetree.H_var (vname, type_expr) ->
+	     let scoped_type_expr = scope_type_expr ctx env type_expr in
+	     let env' =
+	       Env.ScopingEnv.add_value 
+		 vname Env.ScopeInformation.SBI_local accu_env in
+	     ((Parsetree.H_var (vname, scoped_type_expr)), env')
+	 | Parsetree.H_hyp (vname, prop) ->
+	     let scoped_prop = scope_prop ctx env prop in
+	     let env' =
+	       Env.ScopingEnv.add_value 
+		 vname Env.ScopeInformation.SBI_local accu_env in
+	     ((Parsetree.H_hyp (vname, scoped_prop)), env')
+	 | Parsetree.H_not (vname, expr) ->
+	     let scoped_expr = scope_expr ctx env expr in
+	     let env' =
+	       Env.ScopingEnv.add_value 
+		 vname Env.ScopeInformation.SBI_local accu_env in
+	     ((Parsetree.H_not (vname, scoped_expr)), env')
+	end) in
+      (env', { hyp with Parsetree.ast_desc = new_desc } :: accu_scoped_hyps))
+    (env, [])
+    hyps
+;;
+
+
+
+let scope_statement ctx env stmt =
+  let stmt_desc = stmt.Parsetree.ast_desc in
+  let (env', scoped_hyps) = scope_hyps ctx env stmt_desc.Parsetree.s_hyps in
+  let scoped_concl =
+    (match stmt_desc.Parsetree.s_concl with
+     | None -> None
+     | Some prop -> Some (scope_prop ctx env' prop)) in
+  let scoped_stmt_desc = {
+    Parsetree.s_hyps = scoped_hyps ; Parsetree.s_concl = scoped_concl } in
+  { stmt with Parsetree.ast_desc = scoped_stmt_desc }
+;;
+
+
+
+let rec scope_proof_node ctx env node =
+  let new_desc =
+    (match node.Parsetree.ast_desc with
+     | Parsetree.PN_sub (node_label, stmt, proof) ->
+	 let scoped_stmt = scope_statement ctx env stmt in
+	 let scoped_proof = scope_proof ctx env proof in
+	 Parsetree.PN_sub (node_label, scoped_stmt, scoped_proof)
+     | Parsetree.PN_qed (node_label, proof) ->
+	 let scoped_proof = scope_proof ctx env proof in
+	 Parsetree.PN_qed (node_label, scoped_proof)) in
+  { node with Parsetree.ast_desc = new_desc }
+
+
+
+and scope_proof ctx env proof =
+  let new_desc =
+    (match proof.Parsetree.ast_desc with
+     | Parsetree.Pf_assumed
+     | Parsetree.Pf_coq _ -> proof.Parsetree.ast_desc  (* Nothing to scope. *)
+     | Parsetree.Pf_auto facts ->
+	 Parsetree.Pf_auto (List.map (scope_fact ctx env) facts)
+     | Parsetree.Pf_node proof_nodes ->
+	 Parsetree.Pf_node (List.map (scope_proof_node ctx env) proof_nodes)) in
+  { proof with Parsetree.ast_desc = new_desc }
+;;
+
+
+
+let scope_theorem_def ctx env theo_def =
+  let theo_def_desc = theo_def.Parsetree.ast_desc in
+  let scoped_stmt = scope_prop ctx env theo_def_desc.Parsetree.th_stmt in
+  let scoped_proof = scope_proof ctx env theo_def_desc.Parsetree.th_proof in
+  let scoped_theo_def_desc = {
+    Parsetree.th_name = theo_def_desc.Parsetree.th_name ;
+    Parsetree.th_local = theo_def_desc.Parsetree.th_local ;
+    Parsetree.th_stmt = scoped_stmt ;
+    Parsetree.th_proof = scoped_proof } in
+  ({ theo_def with Parsetree.ast_desc = scoped_theo_def_desc },
+   theo_def_desc.Parsetree.th_name)
+;;
 
 
 (* ******************************************************************* *)
@@ -623,10 +767,10 @@ let scope_property_def ctx env property_def =
 
 (* ***************************************************************** *)
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.species_field -> *)
-(*   (Parsetree.species_field * (Parsetree.vname option))            *)
+(*   (Parsetree.species_field * (Parsetree.vname list))              *)
 (* {b Descr} : Scopes a species field and return both the scoped
-             field and its name as a [vname] if it must be inserted
-             later in the environment as a value.
+             field and its names as a [vname list] they must be
+             inserted later in the scoping environment as a values.
              Especially, [rep] and [proof] are not methods hence are
              not values to bind in the environment.
 
@@ -637,15 +781,20 @@ let scope_species_field ctx env field =
     (match field.Parsetree.ast_desc with
      | Parsetree.SF_rep rep_type_def ->
          let scoped_rep_type_def = scope_rep_type_def ctx env rep_type_def in
-         ((Parsetree.SF_rep scoped_rep_type_def), None)
+         ((Parsetree.SF_rep scoped_rep_type_def), [])
      | Parsetree.SF_sig sig_def ->
 	 let (scoped_sig, name) = scope_sig_def ctx env sig_def in
-	 ((Parsetree.SF_sig scoped_sig), (Some name))
-     | Parsetree.SF_let let_def -> failwith "S8"
+	 ((Parsetree.SF_sig scoped_sig), [name])
+     | Parsetree.SF_let let_def ->
+	let (scoped_let_def, _, names) =
+	  scope_let_definition ~toplevel_let: false ctx env let_def in
+	((Parsetree.SF_let scoped_let_def), names)
      | Parsetree.SF_property prop_def ->
 	 let (scoped_prop, name) = scope_property_def ctx env prop_def in
-	 ((Parsetree.SF_property scoped_prop), (Some name))
-     | Parsetree.SF_theorem theo_def -> failwith "S10"
+	 ((Parsetree.SF_property scoped_prop), [name])
+     | Parsetree.SF_theorem theo_def ->
+	 let (scoped_theo, name) = scope_theorem_def ctx env theo_def in
+	 ((Parsetree.SF_theorem scoped_theo), [name])
      | Parsetree.SF_proof proof_def -> failwith "S11") in
   ({ field with Parsetree.ast_desc = new_desc }, method_name_opt)
 ;;
@@ -655,24 +804,20 @@ let scope_species_field ctx env field =
 let rec scope_species_fields ctx env = function
   | [] -> ([], [])
   | field :: rem ->
-      let (scoped_field, name_opt) = scope_species_field ctx env field in
+      let (scoped_field, names) = scope_species_field ctx env field in
       (* All the methods a always inserted as [SBI_method_of_self], the *)
       (* [find_value] taking care of changing to [SBI_method_of_coll]   *)
       (* when required.                                                 *)
       let env' =
-	(match name_opt with
-	 | None -> env
-	 | Some method_name ->
-Printf.eprintf "Adding: %s\n" (Parsetree_utils.name_of_vname method_name) ; flush stderr ;
-	     Env.ScopingEnv.add_value
-	       method_name (Env.ScopeInformation.SBI_method_of_self) env) in
+	List.fold_left
+	  (fun accu_env method_name ->
+	    Env.ScopingEnv.add_value
+	      method_name (Env.ScopeInformation.SBI_method_of_self)
+	      accu_env)
+	  env names in
       let (rem_scoped_fields, rem_method_names) =
 	scope_species_fields ctx env' rem in
-      let method_names =
-	(match name_opt with
-	 | None -> rem_method_names
-	 | Some method_name -> method_name :: rem_method_names) in
-      ((scoped_field :: rem_scoped_fields), method_names)
+      ((scoped_field :: rem_scoped_fields), (names @ rem_method_names))
 ;;
 
 
@@ -932,7 +1077,8 @@ let scope_phrase ctx env phrase =
 	 ((Parsetree.Ph_type scoped_ty_def), env')
      | Parsetree.Ph_let let_def ->
 	 (* This one can extend the global scoping environment. *)
-	 let (scoped_let_def, env') =
+	 (* The list of bound names does not interest us here.  *)
+	 let (scoped_let_def, env', _) =
 	   scope_let_definition ~toplevel_let: true ctx env let_def in
 	 ((Parsetree.Ph_let scoped_let_def), env')
      | Parsetree.Ph_theorem theo_def -> failwith "todo S5"

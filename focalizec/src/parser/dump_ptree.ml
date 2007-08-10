@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.10 2007-08-09 14:55:23 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.11 2007-08-10 15:32:06 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (* pp_position : Format.formatter -> Lexing.position -> unit               *)
@@ -568,7 +568,7 @@ and pp_sig_def ppf = pp_generic_ast pp_sig_def_desc ppf
 
 and pp_proof_def_desc ppf pdd =
   Format.fprintf ppf "@[<2>{@ %a ;@ %a @]}"
-    pp_ident pdd.Parsetree.pd_name pp_proof pdd.Parsetree.pd_proof
+    pp_vname pdd.Parsetree.pd_name pp_proof pdd.Parsetree.pd_proof
 and pp_proof_def ppf = pp_generic_ast pp_proof_def_desc ppf
 
 
@@ -627,7 +627,7 @@ and pp_binding ppf = pp_generic_ast pp_binding_desc ppf
 
 and pp_theorem_def_desc ppf tdd =
   Format.fprintf ppf "@[<2>{@ %a ;@ %a ;@ %a ;@ %a @]}"
-    pp_ident tdd.Parsetree.th_name
+    pp_vname tdd.Parsetree.th_name
     pp_local_flag tdd.Parsetree.th_local
     pp_prop tdd.Parsetree.th_stmt
     pp_proof tdd.Parsetree.th_proof

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.8 2007-08-09 14:55:23 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.9 2007-08-10 15:32:06 pessaux Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -215,7 +215,7 @@ and sig_def_desc = {
 
 and proof_def = proof_def_desc ast_doc
 and proof_def_desc = {
-  pd_name : ident;
+  pd_name : vname ;
   pd_proof : proof
 }
 
@@ -251,7 +251,7 @@ and binding_desc = {
 
 and theorem_def = theorem_def_desc ast_doc
 and theorem_def_desc = {
-  th_name : ident ;
+  th_name : vname ;
   th_local : local_flag ;
   th_stmt : prop ;
   th_proof : proof

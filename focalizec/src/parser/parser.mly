@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.50 2007-08-09 14:55:23 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.51 2007-08-10 15:32:06 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -391,7 +391,7 @@ species_field :
 
 def_proof:
   | opt_doc PROOF OF property_vname EQUAL proof
-    { mk_doc $1 { pd_name = mk_local_ident $4; pd_proof = $6; } }
+    { mk_doc $1 { pd_name = $4; pd_proof = $6; } }
 ;
 
 def_rep:
@@ -495,7 +495,7 @@ def_property:
 def_theorem:
   | opt_doc opt_local THEOREM theorem_vname COLON prop PROOF COLON proof
     { mk_doc $1
-        { th_name = mk_local_ident $4; th_local = $2;
+        { th_name = $4; th_local = $2;
           th_stmt = $6; th_proof = $9 } }
 ;
 

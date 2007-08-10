@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.18 2007-08-09 14:55:23 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.19 2007-08-10 15:32:06 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -254,7 +254,7 @@ let rec pp_type_expr_desc ppf = function
         pp_ident ident (pp_type_exprs ",") tes
   | Parsetree.TE_prod (tes) ->
       Format.fprintf ppf "@[<2>(%a)@]" (pp_type_exprs "*") tes
-  | Parsetree.TE_self -> Format.fprintf ppf "self"
+  | Parsetree.TE_self -> Format.fprintf ppf "Self"
   | Parsetree.TE_prop -> Format.fprintf ppf "prop"
   | Parsetree.TE_paren te -> Format.fprintf ppf "(%a)" pp_type_expr te
 (* ************************************************************************* *)
@@ -511,7 +511,7 @@ let rec pp_species_def_desc ppf def =
     Format.fprintf ppf "inherits %a =@\n"
       (pp_species_exprs ",") def.Parsetree.sd_inherits.Parsetree.ast_desc
     end ;
-  Format.fprintf ppf "%a@\nend@@,;;@]@\n"
+  Format.fprintf ppf "%a@\nend ;;@]@\n"
     pp_species_fields def.Parsetree.sd_fields
 (* ***************************************************************** *)
 (* pp_species_def :                                                  *)
@@ -578,7 +578,7 @@ and pp_sig_def ppf = pp_generic_ast pp_sig_def_desc ppf
 
 and pp_proof_def_desc ppf pdd =
   Format.fprintf ppf "@[<2>proof of@ %a@ =@ %a @]"
-    pp_ident pdd.Parsetree.pd_name pp_proof pdd.Parsetree.pd_proof
+    pp_vname pdd.Parsetree.pd_name pp_proof pdd.Parsetree.pd_proof
 and pp_proof_def ppf = pp_generic_ast pp_proof_def_desc ppf
 
 
@@ -684,7 +684,7 @@ and pp_binding ppf = pp_generic_ast pp_binding_desc ppf
 (* ********************************************************************** *)
 and pp_theorem_def_desc ppf tdd =
   Format.fprintf ppf "@[<2>theorem %a :@ %a@ %a@\nproof:@ %a@ "
-    pp_ident tdd.Parsetree.th_name
+    pp_vname tdd.Parsetree.th_name
     pp_local_flag tdd.Parsetree.th_local
     pp_prop tdd.Parsetree.th_stmt
     pp_proof tdd.Parsetree.th_proof
@@ -863,7 +863,7 @@ and pp_expr ppf = pp_generic_ast pp_expr_desc ppf
 
 
 let pp_coll_def_desc ppf cdd =
-  Format.fprintf ppf "@[<2>collection@ %s@ implements@ %a@\nend@@,;;@]@\n"
+  Format.fprintf ppf "@[<2>collection@ %s@ implements@ %a@\nend@ ;;@]@\n"
     cdd.Parsetree.cd_name pp_species_expr cdd.Parsetree.cd_body
 ;;
 let pp_coll_def ppf = pp_generic_ast pp_coll_def_desc ppf
@@ -920,9 +920,9 @@ let pp_phrase_desc ppf = function
   | Parsetree.Ph_external ext_def ->
       Format.fprintf ppf "%a" pp_external_def ext_def
   | Parsetree.Ph_use fname ->
-      Format.fprintf ppf "@[<2>use@ \"%s\"@@,;;@]@\n" fname
+      Format.fprintf ppf "@[<2>use@ \"%s\" ;;@]@\n" fname
   | Parsetree.Ph_open fname ->
-      Format.fprintf ppf "@[<2>open@ \"%s\"@@,;;@]@\n" fname
+      Format.fprintf ppf "@[<2>open@ \"%s\" ;;@]@\n" fname
   | Parsetree.Ph_species s_def -> Format.fprintf ppf "%a" pp_species_def s_def
   | Parsetree.Ph_coll coll_def -> Format.fprintf ppf "%a" pp_coll_def coll_def
   | Parsetree.Ph_type type_def -> Format.fprintf ppf "%a" pp_type_def type_def

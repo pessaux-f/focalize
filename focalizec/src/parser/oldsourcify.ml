@@ -1,4 +1,4 @@
-(* $Id: oldsourcify.ml,v 1.16 2007-08-09 14:55:23 pessaux Exp $ *)
+(* $Id: oldsourcify.ml,v 1.17 2007-08-10 15:32:06 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -726,7 +726,7 @@ and pp_sig_def ppf = pp_generic_ast pp_sig_def_desc ppf
 and pp_proof_def_desc ppf pdd =
   let hyps_levels = record_hyp_level_in_proof 0 pdd.Parsetree.pd_proof in
   Format.fprintf ppf "@[<2>proof of@ %a@ =@ %a @]"
-    pp_ident pdd.Parsetree.pd_name
+    pp_vname pdd.Parsetree.pd_name
    (pp_proof hyps_levels) pdd.Parsetree.pd_proof
 and pp_proof_def ppf = pp_generic_ast pp_proof_def_desc ppf
 
@@ -837,7 +837,7 @@ and pp_binding ppf = pp_generic_ast pp_binding_desc ppf
 and pp_theorem_def_desc ppf tdd =
  let hyps_levels = record_hyp_level_in_proof 0 tdd.Parsetree.th_proof in
   Format.fprintf ppf "@[<2>theorem %a :@ %a@ %a@]@\n@[<2>proof:@ %a@ "
-    pp_ident tdd.Parsetree.th_name
+    pp_vname tdd.Parsetree.th_name
     pp_local_flag tdd.Parsetree.th_local
     pp_prop tdd.Parsetree.th_stmt
     (pp_proof hyps_levels) tdd.Parsetree.th_proof

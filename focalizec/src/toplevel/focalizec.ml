@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: focalizec.ml,v 1.4 2007-08-06 14:00:14 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.5 2007-08-10 15:32:07 pessaux Exp $ *)
 
 (** The focalize concrete syntax file checker. *)
 
@@ -39,6 +39,9 @@ let main () =
       ("--scope",
        Arg.Unit (fun () -> Configuration.set_do_scoping true),
        " performs scoping.") ;
+      ("--scoped_pretty",
+       Arg.String Configuration.set_pretty_scoped,
+       " pretty-prints the parse tree of the focal file once scoped as a focal source.") ;
       ("--typecheck",
        Arg.Unit (fun () -> Configuration.set_do_typechecking true),
        " performs type inference.") ;
@@ -76,7 +79,19 @@ let main () =
      close_out out_hd) ;
   (* Scopes the AST if requested. *)
   let may_be_scoped_ast =
-    if Configuration.get_do_scoping () then Scoping.scope_file current_unit ast
+    if Configuration.get_do_scoping () then
+      (begin
+      let tmp = Scoping.scope_file current_unit ast in
+      (* Pretty the scoped AST if requested. *)
+      (match Configuration.get_pretty_scoped () with
+       | None -> ()
+       | Some fname ->
+	   let out_hd = open_out_bin fname in
+	   let out_fmt = Format.formatter_of_out_channel out_hd in
+	   Sourcify.pp_file out_fmt tmp ;
+	   close_out out_hd) ;
+      tmp
+      end)
     else ast in
   (* Typechecks the AST if requested. *)
   if Configuration.get_do_typechecking () then
