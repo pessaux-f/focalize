@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.52 2007-08-10 16:10:23 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.53 2007-08-10 16:54:28 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -647,6 +647,11 @@ glob_ident:
     { mk (I_global ($1, $3)) }
 ;
 
+species_glob_ident:
+  | opt_lident SHARP species_vname
+    { mk (I_global ($1, $3)) }
+;
+
 /* Only used to prefix global notation (i.e. with '#'). */
 opt_lident:
   | { None }
@@ -807,7 +812,7 @@ carrier_ident :
 species_ident:
   | species_vname
     { mk_local_ident $1 }
-  | glob_ident
+  | species_glob_ident
     { $1 }
   | opt_collection_name BANG method_vname
     { mk_method_application $1 $3 }
@@ -944,22 +949,18 @@ constructor_vname:
 ;
 
 species_name:
-  | LIDENT { $1 }
   | UIDENT { $1 }
 ;
 
 species_vname:
-  | LIDENT { Vlident $1 }
   | UIDENT { Vuident $1 }
 ;
 
 collection_name:
   | UIDENT { $1 }
-  | LIDENT { $1 }
 ;
 
 collection_vname:
-  | LIDENT { Vlident $1 }
   | UIDENT { Vuident $1 }
 ;
 

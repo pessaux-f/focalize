@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.20 2007-08-10 16:10:23 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.21 2007-08-10 16:54:28 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -508,10 +508,10 @@ let rec pp_species_def_desc ppf def =
   (* Prints the ancestors only if some. *)
   if def.Parsetree.sd_inherits.Parsetree.ast_desc <> [] then
     begin
-    Format.fprintf ppf "inherits %a =@\n"
+    Format.fprintf ppf "inherits %a"
       (pp_species_exprs ",") def.Parsetree.sd_inherits.Parsetree.ast_desc
     end ;
-  Format.fprintf ppf "%a@\nend ;;@]@\n"
+  Format.fprintf ppf " =@\n%a@\nend ;;@]@\n"
     pp_species_fields def.Parsetree.sd_fields
 (* ***************************************************************** *)
 (* pp_species_def :                                                  *)
@@ -817,8 +817,9 @@ and pp_expr_desc ppf = function
 	     pp_expr expr (pp_exprs ",") exprs
       end)
   | Parsetree.E_constr (cstr_expr, exprs) ->
-      Format.fprintf ppf "@[<2>%a@ (%a)@]"
-	pp_cstr_expr cstr_expr (pp_exprs ",") exprs
+      Format.fprintf ppf "@[<2>%a" pp_cstr_expr cstr_expr ;
+      if exprs <> [] then Format.fprintf ppf "@ (%a)" (pp_exprs ",") exprs ;
+      Format.fprintf ppf "@]"
   | Parsetree.E_match (expr, pat_exprs) ->
       (begin
       Format.fprintf ppf "@[<2>match@ %a@ with@ " pp_expr expr ;
@@ -875,12 +876,12 @@ let pp_coll_def ppf = pp_generic_ast pp_coll_def_desc ppf
 let pp_tmp_TD_union ppf l =
   Format.fprintf ppf "@[<2>| %a@]"
     (Handy.pp_generic_separated_list
-       "| "
+       "|"
        (fun local_ppf (constr_name, type_exprs) ->
 	 Format.fprintf local_ppf "%a" pp_vname constr_name ;
 	 (* Print constructor's arguments if some. *)
 	 if type_exprs <> [] then
-	   Format.fprintf ppf " of@ %a" (pp_type_exprs "*") type_exprs))
+	   Format.fprintf ppf " (@[<1>%a@])" (pp_type_exprs " *") type_exprs))
     l
 ;;
 	   
