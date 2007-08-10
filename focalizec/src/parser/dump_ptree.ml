@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.11 2007-08-10 15:32:06 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.12 2007-08-10 16:10:23 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (* pp_position : Format.formatter -> Lexing.position -> unit               *)
@@ -726,7 +726,7 @@ and pp_prop ppf = pp_generic_ast pp_prop_desc ppf
 and pp_expr_desc ppf = function
   | Parsetree.E_self -> Format.fprintf ppf "Self"
   | Parsetree.E_const cst ->
-      Format.fprintf ppf "@[<2>E_const@ (%a@))" pp_constant cst
+      Format.fprintf ppf "@[<2>E_const@ (%a@])" pp_constant cst
   | Parsetree.E_fun (vnames, expr) ->
       Format.fprintf ppf "@[<2>E_fun@ ([@ %a@ ],@ %a@])"
 	pp_vnames vnames pp_expr expr

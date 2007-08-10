@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.51 2007-08-10 15:32:06 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.52 2007-08-10 16:10:23 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -419,8 +419,8 @@ simpler_rep_type_def:
 ;
 
 rep_type_tuple:
-  | simpler_rep_type_def STAR_OP simpler_rep_type_def      { [$3; $1] }
-  | rep_type_tuple STAR_OP simpler_rep_type_def        { $3 :: $1 }
+  | simpler_rep_type_def STAR_OP simpler_rep_type_def      { [$1; $3] }
+  | rep_type_tuple STAR_OP simpler_rep_type_def        { $1 @ [$3] }
 ;
 
 rep_type_def_comma_list:
@@ -628,8 +628,8 @@ simpler_type_expr:
 ;
 
 core_type_tuple:
-  | simpler_type_expr STAR_OP simpler_type_expr      { [$3; $1] }
-  | core_type_tuple STAR_OP simpler_type_expr        { $3 :: $1 }
+  | simpler_type_expr STAR_OP simpler_type_expr      { [$1; $3] }
+  | core_type_tuple STAR_OP simpler_type_expr        { $1 @ [$3] }
 ;
 
 type_expr_comma_list:
