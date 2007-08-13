@@ -12,24 +12,40 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.7 2007-08-10 15:32:07 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.8 2007-08-13 08:45:09 pessaux Exp $ *)
 
-(** {b Desc} : Scoping phase is intended to disambiguate
-		- variables identifiers
-		- types identifiers, ??????????????
-		- constructors (of sum types) identifiers. ??????????????
-             Hence, this means that only [I_local] [ident]s will be
+(* *********************************************************************** *)
+(** {b Desc} : Scoping phase is intended to disambiguate identifiers.
+             Hence, this means that only [I_local] [ident]s should be
              affected by the scoping transformation.
              Local [ident]s will be looked-up to determine whether they
              are really local or are method names or toplevel (of a file)
              names.
-             If no more precise binding than I_local is found, then NO
-             error is raised, leaving the original I_local. Errors will
-             then be reported during the tyechecking phase.
+
+             For [idents] already disamguated, there are 2 cases:
+              #-ed idents
+              !-ed idents
+
+	       - For #-ed idents, the lookup is performed and they are 
+	       always explicitely replaced with the name of the hosting 
+	       file where they are bound. Hence in a compilation unit
+               "Kikoo", then [#test ()] will be replaced by [Kikoo#test ()]
+               if the function [test] was really found inside this unit.
+               If not found, then an exception is raised.
+
+	       - For !-ed idents, the lookup is performed but no change
+	       is done. If it is like [!test()], then is is NOT changed
+               to [Self!test] !!! Only a verification is done that the
+               method exists in [Self]. If it is like [Coll!test], then
+               also only a verification is done that the method exists in
+              [Coll].
+
              The transformation is not performed in place. Instead, we
              return a fresh AST (still possibly having sharing with the
              original one) that will be suitable for the typechecking
-	     phase.                                                       *)
+	     phase.                                                        *)
+(* *********************************************************************** *)
+
 
 
 type scoping_context = {
@@ -58,6 +74,18 @@ let unqualified_vname_of_ident ident =
 
 
 
+(* ************************************************************************* *)
+(* basic_vname:Parsetree.vname -> Env.ScopeInformation.value_binding_info -> *)
+(*   Parsetree.ident_desc                                                    *)
+(* {b Descr} : Build a [Parsetree.ident] from both the [vname] initialy
+             contained in an [ident] and the value scoping information
+             found for this [ident].
+             Basically, this function dissecates the scoping information
+             and differentiate the case of "method" : of Self or of
+             another collection.
+
+   {b Rem} : Not exported outside this module.                               *)
+(* ************************************************************************* *)
 let scoped_ident_desc_from_value_binding_info ~basic_vname = function
   | Env.ScopeInformation.SBI_file fname ->
       Parsetree.I_global ((Some fname), basic_vname)
@@ -68,6 +96,7 @@ let scoped_ident_desc_from_value_binding_info ~basic_vname = function
   | Env.ScopeInformation.SBI_local ->
       Parsetree.I_local basic_vname
 ;;
+
 
 
 (* ************************************************************* *)
@@ -194,7 +223,14 @@ let scope_type_def_body ctx env ty_def_body =
 
 
 
+(* ***************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.rep_type_def ->  *)
+(*   Parsetree.rep_type_def                                          *)
+(* {b Descr} : Scopes a [scope_rep_type_def] and returns this scoped
+             [scope_rep_type_def].
 
+   {b Rem} : Not exported outside this module.                       *)
+(* ***************************************************************** *)
 let rec scope_rep_type_def ctx env rep_type_def =
   let new_desc =
     (match rep_type_def.Parsetree.ast_desc with
@@ -242,6 +278,7 @@ let rec scope_rep_type_def ctx env rep_type_def =
 	 Parsetree.RTE_paren (scope_rep_type_def ctx env rtd)) in
   { rep_type_def with Parsetree.ast_desc = new_desc }
 ;;
+
 
 
 (* ************************************************************************* *)
@@ -311,7 +348,8 @@ let rec scope_expr ctx env expr =
              ~current_unit: ctx.current_unit ident env in
 	 (* Let's re-construct a completely scoped identifier. *)
 	 let scoped_ident_descr =
-	   scoped_ident_desc_from_value_binding_info ~basic_vname hosting_info in
+	   scoped_ident_desc_from_value_binding_info
+             ~basic_vname hosting_info in
 	 let scoped_ident =
 	   { ident with Parsetree.ast_desc = scoped_ident_descr } in
 	 Parsetree.E_var scoped_ident
@@ -612,6 +650,13 @@ let scope_sig_def ctx env sig_def =
 ;;
 
 
+
+(* *********************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.fact -> Parsetree.fact *)
+(* {b Descr} : Scopes a [fact] and return this scoped fact].
+
+   {b Rem} : Not exported outside this module.                             *)
+(* *********************************************************************** *)
 let scope_fact ctx env fact =
   let new_desc =
     (match fact.Parsetree.ast_desc with
@@ -743,6 +788,19 @@ let scope_theorem_def ctx env theo_def =
 ;;
 
 
+
+let scope_proof_def ctx env proof_def =
+  let proof_def_desc = proof_def.Parsetree.ast_desc in
+  let scoped_proof = scope_proof ctx env proof_def_desc.Parsetree.pd_proof in
+  let scoped_proof_def_desc = {
+    Parsetree.pd_name = proof_def_desc.Parsetree.pd_name ;
+    Parsetree.pd_proof = scoped_proof } in
+  ({ proof_def with Parsetree.ast_desc = scoped_proof_def_desc },
+   proof_def_desc.Parsetree.pd_name)
+;;
+
+
+
 (* ******************************************************************* *)
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.property_def ->    *)
 (*   (Parsetree.property_def * Parsetree.vname)                        *)
@@ -752,15 +810,15 @@ let scope_theorem_def ctx env theo_def =
    {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************* *)
 let scope_property_def ctx env property_def =
-  let property_def_descr = property_def.Parsetree.ast_desc in
-  let scoped_prop = scope_prop ctx env property_def_descr.Parsetree.prd_prop in
+  let property_def_desc = property_def.Parsetree.ast_desc in
+  let scoped_prop = scope_prop ctx env property_def_desc.Parsetree.prd_prop in
   let scoped_property_def = {
     property_def with
       Parsetree.ast_desc = {
-        Parsetree.prd_name = property_def_descr.Parsetree.prd_name ;
+        Parsetree.prd_name = property_def_desc.Parsetree.prd_name ;
 	Parsetree.prd_prop = scoped_prop
       } } in
-  (scoped_property_def, property_def_descr.Parsetree.prd_name)
+  (scoped_property_def, property_def_desc.Parsetree.prd_name)
 ;;
 
 
@@ -795,7 +853,9 @@ let scope_species_field ctx env field =
      | Parsetree.SF_theorem theo_def ->
 	 let (scoped_theo, name) = scope_theorem_def ctx env theo_def in
 	 ((Parsetree.SF_theorem scoped_theo), [name])
-     | Parsetree.SF_proof proof_def -> failwith "S11") in
+     | Parsetree.SF_proof proof_def ->
+	 let (scoped_proof_def, name) = scope_proof_def ctx env proof_def in
+	 ((Parsetree.SF_proof scoped_proof_def), [name])) in
   ({ field with Parsetree.ast_desc = new_desc }, method_name_opt)
 ;;
 
@@ -1058,6 +1118,36 @@ let scope_species_def ctx env species_def =
 
 
 
+(* *************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.coll_def ->    *)
+(*   (Parsetree.coll_def_desc * Env.ScopingEnv.t)                  *)
+(** {b Descr] : Scopes a collection definition. Returns the scoped
+            } definition and the initial environment extended with
+              a binding for this collection inside.
+
+    {b Rem} : Not exported outside this module.                    *)
+(* *************************************************************** *)
+let scope_collection_def ctx env coll_def =
+  let coll_def_desc = coll_def.Parsetree.ast_desc in
+  let (scoped_body, methods_names) =
+    scope_species_expr ctx env coll_def_desc.Parsetree.cd_body in
+  let scoped_desc = {
+    Parsetree.cd_name = coll_def_desc.Parsetree.cd_name ;
+    Parsetree.cd_body = scoped_body } in
+  let scoped_coll_def = { coll_def with Parsetree.ast_desc = scoped_desc } in
+  (* Now add ourselves as a collection in the environment. *)
+  let our_info = {
+    Env.ScopeInformation.cbi_methods = methods_names ;
+    Env.ScopeInformation.cbi_scope =
+      Env.ScopeInformation.CBI_file ctx.current_unit } in
+  let final_env =
+    Env.ScopingEnv.add_collection
+      coll_def_desc.Parsetree.cd_name our_info env in
+  (scoped_coll_def, final_env)
+;;
+
+
+
 let scope_phrase ctx env phrase =
   let (new_desc, new_env) =
     (match phrase.Parsetree.ast_desc with
@@ -1071,7 +1161,10 @@ let scope_phrase ctx env phrase =
 	 let (scoped_species_def, env') =
 	   scope_species_def ctx env species_def in
 	 ((Parsetree.Ph_species scoped_species_def), env')
-     | Parsetree.Ph_coll coll_def -> failwith "todo S3"
+     | Parsetree.Ph_coll coll_def ->
+	 let (scoped_coll_def, env') =
+	   scope_collection_def ctx env coll_def in
+	 ((Parsetree.Ph_coll scoped_coll_def), env')
      | Parsetree.Ph_type type_def ->
          let (scoped_ty_def, env') = scope_type_def ctx env type_def in
 	 ((Parsetree.Ph_type scoped_ty_def), env')
@@ -1081,7 +1174,12 @@ let scope_phrase ctx env phrase =
 	 let (scoped_let_def, env', _) =
 	   scope_let_definition ~toplevel_let: true ctx env let_def in
 	 ((Parsetree.Ph_let scoped_let_def), env')
-     | Parsetree.Ph_theorem theo_def -> failwith "todo S5"
+     | Parsetree.Ph_theorem theo_def ->
+	 let (scoped_theo, name) = scope_theorem_def ctx env theo_def in
+	 let env' =
+	   Env.ScopingEnv.add_value
+	     name Env.ScopeInformation.SBI_method_of_self env in
+	 ((Parsetree.Ph_theorem scoped_theo), env')
      | Parsetree.Ph_expr expr_def ->
 	 (* No scoping environment extention here. *)
 	 let scoped_expr = Parsetree.Ph_expr (scope_expr ctx env expr_def) in

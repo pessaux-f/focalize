@@ -395,19 +395,6 @@ bien avoir la liste des méthodes et l'héritage de la collection courante.
 
 
 
-* ===>>>> CONCLUSION SUR LES ENVIRONNEMENTS
-*******************************************
-Il y a quelques jours, l'idée était d'avoir 2 types d'environnements : 1 pour
-le scoping et 1 pour le typing plutôt que de faire des environnements
-génériques sous prétexte que les environnements de scoping n'avaient pas
-besoin d'autant de champs.
-En fait, il semblerait que la différence entre ces 2 environnements ne soit
-plus aussi pertinente à la vue du point précédent.
-Il serait intéressant de tenter des environnements génériques afin de factoriser
-le code, en fait !
-
-
-
 * QUESTION ENTRE SCOPING ET TYPAGE
 **********************************
 J'ai dis à l'avant dernier point que pour scoper, il nous fallait des buckets
