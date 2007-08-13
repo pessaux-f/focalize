@@ -1,0 +1,81 @@
+use "../junk" ;;
+open "../junk" ;;
+
+5 ;;
+let x = 42 ;;
+let y = "Areuh world" ;;
+let id (x) = x ;;
+id (x) ;;
+id (y) ;;
+let tuple (x, y) = (x, y) ;;
+tuple ((id (x)), id (id (y))) ;;
+let rec fact (n) = fact (n) ;;
+let swap (x, y) = (y, x) ;;
+true ;;
+let switch (x, y, z) = if x then y else z ;;
+switch (true, "foo") ;;
+(* [1; 4] ;; *)
+
+type gros_produit = alias (int * (char * bool * string) * float  * bool) ;;
+type t = alias int ;;
+type u = alias (t * int) ;;
+let bib in u = (5, 6) ;;   (* Pourquoi le # est optionnel ici ... *)
+type inv_prod ('a, 'b) = alias ('b * 'a) ;;
+let doudou in #inv_prod (int , string) = ("gee", 42) ;;  (* ... et pas là ? *)
+type t = | A | B ;;
+#A ;;
+#B ;;
+type option ('a) = | None | Some ('a) ;;
+#None ;;
+let u = #None ;;
+#Some (4) ;;
+let v = #Some ("kikoo") ;;
+type record0 = { x0 = int ; y0 = float } ;;
+let r0 = { x0 = 5 ; y0 = 5.5 } ;;
+type record1 ('a) = { x1 = 'a } ;;
+let r1 = { x1 = 5 } ;;
+let r2 = { x1 = 5.0 } ;;
+let r3 = { x1 = #None } ;;
+let r4 = { x1 = #Some ("foo") } ;;
+
+
+let not_b (x) in bool =
+   match x with
+   | true -> false
+   | false -> true
+;;
+
+
+species Basic_object =
+  let equal (x, y) = true ;
+end ;;
+
+
+species Toy inherits Basic_object =
+  sig ( = ) : Self -> Self -> bool
+  ;
+  property ``equal is reflexive'' : all x y in Self,
+    Self!( = ) (x, x) and
+    x = x
+  ;
+  property equal_symmetric : all x y in Self,
+    Self!equal(x, y) -> !equal(y, x)
+  ;
+  property equal_transitive : all x y z in Self,
+    !equal(x, y) -> !equal(y, z) -> !equal(x, z)
+  ;
+  sig element : Self
+  ;
+  let different (x, y) = #not_b(!equal(x, y))
+  ;
+
+  let faux_different (x) = equal (x, x)
+  ;
+
+  theorem same_is_not_different : all x y in Self,
+     !different(x, y) <-> ( !equal(x, y))
+  proof:
+    by definition of different ;
+
+end
+;;
