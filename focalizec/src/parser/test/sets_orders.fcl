@@ -58,11 +58,9 @@ end
   We define two functions and two properties relating 
   concrete values of rep and abstract values of Self
 *)
-species represented_by(s is basic_object)
+species Represented_by(S is Basic_object) inherits Setoid =
 
-inherits setoid =
-
-  rep = s;
+  rep = s ;
 
   (** an element of Self is encoded by an element of s *)
   let to_rep (x in Self) in s = x;
@@ -118,7 +116,7 @@ end
    This requires to include some form of predicate for failing operations.
 
  *)
-species partial_set inherits setoid =
+species Partial_set inherits Setoid =
 
   (** this is intended to model failure*)
   let failed in (string -> Self) =
@@ -133,7 +131,7 @@ end
 ;;
 
 (** pre orderings are sometimes called quasi orderings *)
-species pre_order inherits setoid =
+species Pre_order inherits Setoid =
   (** leq(x,y) is x &le; y
       @mathml <leq/> *)
   sig leq : Self -> Self -> bool;
@@ -195,7 +193,7 @@ end
 ;;
 
 (** In a set an ordering is often called a partial order *)
-species partial_order inherits pre_order =
+species Partial_order inherits Pre_order =
   property leq_antisymmetric:  all x y in Self,
     !leq(x, y) -> !leq(y, x) -> !equal(x, y)
   ;
@@ -210,7 +208,7 @@ end
 ;;
 
 (** in a meet semi lattice we have an operation inducing an ordering (&lt;=)*)
-species meet_semi_lattice inherits setoid =
+species Meet_semi_lattice inherits Setoid =
   (** the infimum of two elements *)
   (* [rr]: need a mathml symbol for that, 
      we don't want to use <min/> nor <intersect/>
@@ -335,7 +333,7 @@ end
 ;;
 
 (** in a join semi lattice we have an operation inducing an ordering (&gt;=) *)
-species join_semi_lattice inherits setoid =
+species Join_semi_lattice inherits Setoid =
 
   (** the supremum of two elements *)
   (* [rr]: need a mathml symbol for that, 
@@ -452,7 +450,7 @@ end
 
 (** lattices have an inf and sup operation which induce a partial order *)
 
-species lattice inherits meet_semi_lattice, join_semi_lattice = 
+species Lattice inherits Meet_semi_lattice, Join_semi_lattice = 
 
   (** the first absorbtion law *)
    property inf_absorbes_sup: all x y in Self,
@@ -505,7 +503,7 @@ end
 ;;
 
 (** Modular lattices *)
-species modular_lattice inherits lattice =
+species Modular_lattice inherits Lattice =
 
 (** a generalization of ditributivity  *)
 property modular_law: all x y z in Self,
@@ -522,10 +520,9 @@ end
 (** Distributive lattices
     Every distribute lattice is modular.
  *)
-species distributive_lattice
+species Distributive_lattice
   
-  inherits lattice,
-            modular_lattice =
+  inherits Lattice, Modular_lattice =
   property sup_left_distributes : all x y z in Self,
     !equal(!sup(x, !inf(y, z)), !inf(!sup(x, y), !sup(x, z)));
 
@@ -620,7 +617,7 @@ end
 A meet semi lattice with an upper bound as neutral element for infimum.
 That is a meet semi lattice with a monoid structure.
 *)
-species meet_semi_lattice_with_max inherits meet_semi_lattice =
+species Meet_semi_lattice_with_max inherits Meet_semi_lattice =
   sig max : Self;
   property max_is_right_neutral: all x in Self, 
     !equal(!inf(x, !max), x);
@@ -637,7 +634,7 @@ end
 A meet semi lattice with a lower bound.
 That is a meet semi lattice with an absorbant element
 *)
-species meet_semi_lattice_with_min inherits meet_semi_lattice =
+species Meet_semi_lattice_with_min inherits Meet_semi_lattice =
   sig min : Self;
   property min_right_absorbes: all x in Self, 
     !equal(!inf(x, !min), !min);
@@ -654,7 +651,7 @@ end
 A join semi lattice with a lower bound as neutral element for supremum.
 That is a join semi lattice with a monoid structure.
 *)
-species join_semi_lattice_with_min inherits join_semi_lattice =
+species Join_semi_lattice_with_min inherits Join_semi_lattice =
   sig min : Self;
   property min_is_right_neutral: all x in Self,
     !equal(!sup(x, !min), x);
@@ -674,7 +671,7 @@ end
 A join semi lattice with an upper bound.
 That is a join semi lattice with an absorbant element
 *)
-species join_semi_lattice_with_max inherits join_semi_lattice =
+species Join_semi_lattice_with_max inherits Join_semi_lattice =
   sig max : Self;
   property max_right_absorbes: all x in Self, 
     !equal(!sup(x, !max), !max);
@@ -688,12 +685,12 @@ end
 ;;
 
 (** These are commonly named lattices *)
-species bounded_lattice 
-  inherits lattice, 
-           meet_semi_lattice_with_min, 
-           meet_semi_lattice_with_max, 
-           join_semi_lattice_with_min, 
-           join_semi_lattice_with_max =
+species Bounded_lattice 
+  inherits Lattice, 
+           Meet_semi_lattice_with_min, 
+           Meet_semi_lattice_with_max, 
+           Join_semi_lattice_with_min, 
+           Join_semi_lattice_with_max =
 
   (** absorption laws enable to prove that being absorbant for one law 
       is being neutral for the other *)
@@ -734,7 +731,7 @@ end
 ;;
 
 (** An ordering is total whenever two elements are always comparable *)
-species ordered_set inherits partial_order =
+species Ordered_set inherits Partial_order =
 
   property total_order: all x y in Self, Self!leq(x, y) or Self!leq(y, x);
 
@@ -764,10 +761,10 @@ end
 (**
    Sometimes it is convenient to define lattices from partial ordering
 *)
-species partially_ordered_set_as_meet_semi_lattice
-  inherits meet_semi_lattice, 
+species Partially_ordered_set_as_meet_semi_lattice
+  inherits Meet_semi_lattice, 
            (* partial ordering takes precedence *)
-           partial_order =
+           Partial_order =
 
   (** we define lattice ordering from normal ordering *)
   let order_inf(x, y) = !leq(x, y);
@@ -841,10 +838,10 @@ species partially_ordered_set_as_meet_semi_lattice
 end
 ;;
 
-species partially_ordered_set_as_join_semi_lattice
-  inherits join_semi_lattice, 
+species Partially_ordered_set_as_join_semi_lattice
+  inherits Join_semi_lattice, 
            (* partial ordering takes precedence *)
-           partial_order =
+           Partial_order =
 
   (** we define lattice ordering from normal ordering *)
   let order_sup(x, y) = !geq(x, y);
@@ -921,10 +918,10 @@ species partially_ordered_set_as_join_semi_lattice
 end
 ;;
 
-species partially_ordered_set_as_lattice
-  inherits lattice, 
-           partially_ordered_set_as_meet_semi_lattice, 
-           partially_ordered_set_as_join_semi_lattice =
+species Partially_ordered_set_as_lattice
+  inherits Lattice, 
+           Partially_ordered_set_as_meet_semi_lattice, 
+           Partially_ordered_set_as_join_semi_lattice =
 
   proof of order_inf_refines_order_sup =
     by definition of !order_inf, !order_sup, !geq
@@ -987,7 +984,7 @@ end
    Ordered meet semi lattices have a complete ordering which refines that 
    of the semi lattice structure.
  *)
-species ordered_meet_semi_lattice inherits meet_semi_lattice, ordered_set =
+species Ordered_meet_semi_lattice inherits Meet_semi_lattice, Ordered_set =
 
   property leq_refines_order_inf : all x y in Self, 
     !order_inf(x, y) -> !leq(x, y);
@@ -998,8 +995,8 @@ end
 (**
  We view an ordered set as a meet semi lattice
 *)
-species ordered_set_as_meet_semi_lattice
-  inherits ordered_meet_semi_lattice =
+species Ordered_set_as_meet_semi_lattice
+  inherits Ordered_meet_semi_lattice =
 
   let inf(x, y) = if !leq(x, y) then x else y ;
 
@@ -1083,7 +1080,7 @@ end
    Ordered join semi lattices have a complete ordering which refines that 
    of the join semi lattice structure.
  *)
-species ordered_join_semi_lattice inherits join_semi_lattice, ordered_set =
+species Ordered_join_semi_lattice inherits Join_semi_lattice, Ordered_set =
 
   property geq_refines_order_sup : all x y in Self, 
     !order_sup(x, y) -> !geq(x, y)
@@ -1096,7 +1093,7 @@ end
  We view an ordered set as a join semi lattice
 *)
 
-species ordered_set_as_join_semi_lattice inherits ordered_join_semi_lattice =
+species Ordered_set_as_join_semi_lattice inherits Ordered_join_semi_lattice =
 
   let sup(x, y) = if !geq(x, y) then x else y ;
 
@@ -1130,19 +1127,19 @@ end
 ;;
 
 (** here we complete the partial ordering of the lattice *)
-species ordered_lattice
-  inherits ordered_meet_semi_lattice, 
-           ordered_join_semi_lattice, 
-           lattice =
+species Ordered_lattice
+  inherits Ordered_meet_semi_lattice, 
+           Ordered_join_semi_lattice, 
+           Lattice =
 
 end
 ;;
 
 (** a toitally ordered set may be viewed as a lattice *)
-species ordered_set_as_lattice
-  inherits ordered_set_as_meet_semi_lattice, 
-           ordered_set_as_join_semi_lattice, 
-           ordered_lattice =
+species Ordered_set_as_lattice
+  inherits Ordered_set_as_meet_semi_lattice, 
+           Ordered_set_as_join_semi_lattice, 
+           Ordered_lattice =
   
   (** absorption laws are a mess !*)
   proof of sup_absorbes_inf =
