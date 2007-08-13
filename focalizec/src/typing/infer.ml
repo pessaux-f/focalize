@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.12 2007-08-13 15:01:11 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.13 2007-08-13 17:29:34 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {bL Descr} : Exception used to inform that a sum type constructor was
@@ -698,7 +698,7 @@ and typecheck_let_definition ctx env let_def =
 	    binding.Parsetree.b_params in
 	if non_expansive then Types.end_definition () ;
 	(* Extend the current environment with the arguments *)
-	(* of the bound identier if there are some.          *)
+	(* of the bound identifier if there are some.        *)
 	let local_env =
 	  List.fold_left2
 	    (fun accu_env (arg_name, _) arg_ty ->
@@ -1009,6 +1009,7 @@ and typecheck_species_fields ctx env = function
 
 
 
+(** Also performs the interface printing stuff of a species. *)
 let typecheck_species_def ctx env species_def =
   let species_def_desc = species_def.Parsetree.ast_desc in
   (* Ignore params and inherit for the moment. *)
@@ -1041,6 +1042,13 @@ let typecheck_species_def ctx env species_def =
     Env.TypingEnv.add_type
       species_def_desc.Parsetree.sd_name species_as_type_description
       env_with_species in
+  (* Interface printing stuff. *)
+  if Configuration.get_do_interface_output () then
+    (begin
+    Format.printf "@[<2>species %s%a ;;@]@\n"
+      species_def_desc.Parsetree.sd_name
+      Env.TypeInformation.pp_species_description species_description
+    end) ;
   (species_as_type, full_env)
 ;;
 
@@ -1067,7 +1075,7 @@ let typecheck_species_def ctx env species_def =
              will create a field label junk : string -> u
              Sum type constructors with no argument are typed as constants
              of this type.
-
+	     Also performs the interface printing stuff is needed.
    {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************ *)
 let typecheck_type_def ctx env type_def =
@@ -1244,11 +1252,14 @@ let typecheck_phrase ctx env phrase =
      | Parsetree.Ph_use _ -> failwith "todo T1"
      | Parsetree.Ph_open _ -> failwith "todo T2"
      | Parsetree.Ph_species species_def ->
+	 (* Interface printing stuff is done inside. *)
 	 typecheck_species_def ctx env species_def
      | Parsetree.Ph_coll coll_def -> failwith "todo T4"
      | Parsetree.Ph_type type_def ->
 	 let env' = typecheck_type_def ctx env type_def in
-	 Format.fprintf Format.err_formatter "Type defined.@\n";
+         (* Interface printing stuff must be bone inside. *)
+	 if Configuration.get_do_interface_output () then
+	   Format.printf "type ...@\n" ;
 	 ((Types.type_unit ()), env')
      | Parsetree.Ph_let let_def  ->
 	 let envt_bindings = typecheck_let_definition ctx env let_def in
@@ -1257,6 +1268,11 @@ let typecheck_phrase ctx env phrase =
 	 let env' =
 	   List.fold_left
 	     (fun accu_env (id, ty_scheme) ->
+	       (* Interface printing stuff. *)
+	       if Configuration.get_do_interface_output () then
+		 Format.printf "val %a in %a@\n"
+		   Sourcify.pp_vname id Types.pp_type_scheme ty_scheme ;
+	       (* Extend the environment with the current binding. *)
 	       Env.TypingEnv.add_value id ty_scheme accu_env)
 	 env envt_bindings in
 	 (* Return unit and the extended environment. *)
@@ -1267,12 +1283,15 @@ let typecheck_phrase ctx env phrase =
 	 let env' =
 	   Env.TypingEnv.add_value
 	     theorem_def.Parsetree.ast_desc.Parsetree.th_name scheme env in
+	 (* Interface printing stuff. *)
+	 if Configuration.get_do_interface_output () then
+	   Format.printf "theorem %a in %a@\n"
+	     Sourcify.pp_vname theorem_def.Parsetree.ast_desc.Parsetree.th_name
+	     Types.pp_type_simple ty ;
 	 (ty, env')
      | Parsetree.Ph_expr expr ->
 	 let expr_ty = typecheck_expr ctx env expr in
-	 (* Just a bit of debug. *)
-	 Format.fprintf Format.err_formatter "- : %a@\n"
-	   Types.pp_type_simple expr_ty ;
+	 (* No interface printing stuff because the expression is not bound. *)
 	 (expr_ty, env)) in
   (* Store the type information in the phrase's node. *)
   phrase.Parsetree.ast_type <- Some final_ty ;
@@ -1294,5 +1313,6 @@ let typecheck_file current_unit ast_file =
        List.iter
 	 (fun phrase ->
 	   global_env := typecheck_phrase ctx !global_env phrase)
-	 phrases
+	 phrases ;
+       !global_env
 ;;

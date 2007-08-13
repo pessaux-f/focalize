@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: focalizec.ml,v 1.5 2007-08-10 15:32:07 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.6 2007-08-13 17:29:34 pessaux Exp $ *)
 
 (** The focalize concrete syntax file checker. *)
 
@@ -29,6 +29,9 @@ let main () =
       ("-c",
        Arg.String Configuration.set_input_file_name,
        " check input file argument.") ;
+      ("-i",
+       Arg.Unit (fun () -> Configuration.set_do_interface_output true),
+       " prints the source file interface.") ;
       ("--pretty",
        Arg.String Configuration.set_pretty_print,
        " pretty-prints the parse tree of the focal file as a focal source.") ;
@@ -77,25 +80,24 @@ let main () =
      let out_fmt = Format.formatter_of_out_channel out_hd in
      Oldsourcify.pp_file out_fmt ast ;
      close_out out_hd) ;
-  (* Scopes the AST if requested. *)
-  let may_be_scoped_ast =
-    if Configuration.get_do_scoping () then
-      (begin
-      let tmp = Scoping.scope_file current_unit ast in
-      (* Pretty the scoped AST if requested. *)
-      (match Configuration.get_pretty_scoped () with
-       | None -> ()
-       | Some fname ->
-	   let out_hd = open_out_bin fname in
-	   let out_fmt = Format.formatter_of_out_channel out_hd in
-	   Sourcify.pp_file out_fmt tmp ;
-	   close_out out_hd) ;
-      tmp
-      end)
-    else ast in
-  (* Typechecks the AST if requested. *)
-  if Configuration.get_do_typechecking () then
-    Infer.typecheck_file current_unit may_be_scoped_ast ;
+  (* Scopes AST. *)
+  let (scoped_ast, scoping_toplevel_env) =
+    (let tmp = Scoping.scope_file current_unit ast in
+    (* Pretty the scoped AST if requested. *)
+    (match Configuration.get_pretty_scoped () with
+     | None -> ()
+     | Some fname ->
+	 let out_hd = open_out_bin fname in
+	 let out_fmt = Format.formatter_of_out_channel out_hd in
+	 Sourcify.pp_file out_fmt (fst tmp) ;
+	 close_out out_hd) ;
+    tmp) in
+  (* Typechecks the AST. *)
+  let typing_toplevel_env =
+    Infer.typecheck_file current_unit scoped_ast in
+  (* Now, generate the persistent interface file. *)
+  Env.make_fo_file
+    ~source_filename: input_file_name scoping_toplevel_env typing_toplevel_env ;
   exit 0
 ;;
 

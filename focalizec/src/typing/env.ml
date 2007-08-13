@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.12 2007-08-13 15:01:11 pessaux Exp $ *)
+(* $Id: env.ml,v 1.13 2007-08-13 17:29:34 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -126,6 +126,36 @@ identifiers. *)
 } ;;
 
 
+
+(* *********************************************************************** *)
+(* ('a, 'b, 'c, 'd, 'e, 'f) generic_env ->                                 *)
+(*   ('a, 'b, 'c, 'd, 'e, 'f) generic_env                                  *)
+(* {b Descr} : Filters a [generic_env], keeping only bindings coming from
+             definitions of the current compilation unit, i.e. those
+             tagged [BO_absolute].
+             Such an environment will be suitable to be dumped in a
+             persistent datastructure on disk for the "modules" mechanism.
+
+   {b Rem} : Not exported outside this module.                             *)
+(* *********************************************************************** *)
+let env_from_only_absolute_bindings generic_env =
+  let filter l =
+    List.filter
+      (function
+	| (_, (BO_absolute _)) -> true
+	| (_, (BO_opened (_, _))) -> false)
+      l in
+  let constructors' = filter generic_env.constructors in
+  let labels' = filter generic_env.labels in
+  let types' = filter generic_env.types in
+  let values' = filter generic_env.values in
+  let species' = filter generic_env.species in
+  let collections' = filter generic_env.collections in
+  { constructors = constructors' ; labels = labels' ; types = types' ;
+    values = values' ; species = species' ; collections = collections' }
+;;
+
+    
 
 (* *********************************************************************** *)
 (* *********************************************************************** *)
@@ -301,6 +331,49 @@ module TypeInformation = struct
   type env =
    (constructor_description, label_description, type_description,
     Types.type_scheme, species_description, collections_sig) generic_env
+
+
+
+  let pp_species_param ppf params =
+    let rec rec_print local_ppf = function
+      | [] -> ()
+      | [last] -> ()
+      | param :: rem -> ()
+	  in
+    if params = [] then ()
+    else Format.fprintf ppf "(%a) " rec_print params
+
+
+
+  let pp_species_inher ppf inhers =
+    let rec rec_print local_ppf = function
+      | [] -> ()
+      | [last] -> ()
+      | inher :: rem -> ()
+	  in
+    if inhers = [] then ()
+    else Format.fprintf ppf "inherits %a " rec_print inhers
+
+
+  let pp_species_methods ppf methods =
+    List.iter
+      (fun (vname, ty_scheme, _) ->
+	Format.fprintf ppf "sig %a : %a@\n"
+	  Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme)
+      methods
+
+
+  (* ******************************************************************* *)
+  (* Format.formatter -> species_description -> unit                     *)
+  (** {b Descr} : Pretty prints a [species_description] as an interface.
+
+      {b Rem} : Exported outside this module.                            *)
+  (* ******************************************************************* *)
+  let pp_species_description ppf sp_desc =
+    Format.fprintf ppf "%a%a =@\n%aend ;;"
+      pp_species_param sp_desc.spe_sig_params
+      pp_species_inher sp_desc.spe_sig_inher
+      pp_species_methods sp_desc.spe_sig_methods
 end ;;
 
 
@@ -331,7 +404,7 @@ let (scope_find_module, type_find_module) =
     try List.assoc fname !buffered
     with Not_found ->
       (* The interface was not already loaded... *)
-      let fo_name = Files.fo_filename_from_module_name fname in
+      let fo_name = Files.fo_basename_from_module_name fname in
       try
 	(* Try to open the interface file. *)
 	let in_file = Files.open_in_from_lib_paths fo_name in
@@ -351,6 +424,9 @@ let (scope_find_module, type_find_module) =
 	  end)
       with Files.Cant_access_file _ -> raise (Unbound_module fname)
     end) in
+
+
+
   ((* **************************************************************** *)
    (* current_unit: Parsetree.fname -> Parsetree.fname option ->       *)
    (*   ScopeInformation.env -> ScopeInformation.env                   *)
@@ -1049,3 +1125,39 @@ module TypingEMAccess = struct
 end ;;
 module TypingEnv = Make (TypingEMAccess) ;;
 
+
+
+(* **************************************************************** *)
+(* source_filename: Parsetree.fname -> ScopingEnv.t ->              *)
+(*   TypingEnv.t -> unit                                            *)
+(** {b Descr} : Create the "fo file" on disk related to the current
+              compilation unit.
+              This "fo file" contains :
+                - A magic number.
+                - A couple (scoping env * typing env).
+
+    {b Rem} : Exported outside this module.                         *)
+(* **************************************************************** *)
+let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env =
+  (* First, recover from the scoping environment only bindings *)
+  (* coming from definitions of our current compilation unit.  *)
+  let scoping_toplevel_env' =
+    env_from_only_absolute_bindings scoping_toplevel_env in
+  (* Next, recover from the typing environment only bindings *)
+  (* coming from definitions of our current compilation unit.  *)
+  let typing_toplevel_env' =
+    env_from_only_absolute_bindings typing_toplevel_env in
+  let fo_basename = Files.fo_basename_from_module_name source_filename in
+  (* Add to the module name the path of the currently compiled source *)
+  (* file in order to make the ".fo" lying at the same place than the *)
+  (* ".foc" file.                                                     *)
+  let with_path =
+    Filename.concat (Filename.dirname source_filename) fo_basename in
+  let out_hd = open_out_bin with_path in
+  (* First, write the magic number of the file. *)
+  Files.write_magic out_hd Files.fo_magic  ;
+  (* And now the filtered environments. *)
+  output_value out_hd (scoping_toplevel_env', typing_toplevel_env') ;
+  (* Just don't forget to close the output file... *)
+  close_out out_hd
+;;

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.9 2007-08-13 15:01:11 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.10 2007-08-13 17:29:34 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -1220,13 +1220,16 @@ let scope_phrase ctx env phrase =
 
 
 
-(* ****************************************************************** *)
-(* scope_file : Parsetree.fname -> Parsetree.file -> Parsetree.file   *)
+(* ******************************************************************* *)
+(* scope_file : Parsetree.fname -> Parsetree.file ->                   *)
+(*   (Parsetree.file * Env.ScopingEnv.t)                               *)
 (** {b Descr} : Starts the scoping phase on a whole file. The initial
-              scoping environment is totally empty.
+              scoping environment is totally empty. Returns the scoped
+              AST structure and the complete toplevel scoping
+              environment obtained after the scoping is finished.
 
-    {b Rem} : Exported outside this module.                           *)
-(* ****************************************************************** *)
+    {b Rem} : Exported outside this module.                            *)
+(* ******************************************************************* *)
 let scope_file current_unit file =
   match file.Parsetree.ast_desc with
    | Parsetree.File phrases ->
@@ -1241,5 +1244,6 @@ let scope_file current_unit file =
 	     (* Return the scoped phrase. *)
 	     phrase')
 	   phrases in
-       { file with Parsetree.ast_desc = Parsetree.File scoped_phrases }
+       ({ file with Parsetree.ast_desc = Parsetree.File scoped_phrases },
+	!global_env)
 ;;

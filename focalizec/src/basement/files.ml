@@ -1,4 +1,4 @@
-(* $Id: files.ml,v 1.3 2007-08-04 10:17:17 pessaux Exp $ *)
+(* $Id: files.ml,v 1.4 2007-08-13 17:29:34 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -34,14 +34,15 @@ let open_in_from_lib_paths filename =
 
 
 
-(* **************************************************** *)
-(* fo_filename_from_module_name: string -> string       *)
-(** {b Descr} : Creates the compiled interface filename  
-              corresponding to a "module" name.
+(* ************************************************************** *)
+(* string -> string                                               *)
+(** {b Descr} : Creates the "compiled interface" file basename
+              (i.e. without path in the filesystem) corresponding
+              to a "module" name.
 
-    {b Rem} : Exported outside this module.             *)
-(* **************************************************** *)
-let fo_filename_from_module_name module_name =
+    {b Rem} : Exported outside this module.                       *)
+(* ************************************************************** *)
+let fo_basename_from_module_name module_name =
   (* Remove the path if some, because fnames can be used *)
   (* with a path in the "use" and "open" directives.     *)
   (Filename.basename module_name) ^ ".fo"

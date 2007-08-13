@@ -70,6 +70,8 @@ module TypeInformation :
       type_identity : Types.type_scheme ;
       type_arity : int
     }
+
+  val pp_species_description : Format.formatter -> species_description -> unit
   end
 
 
@@ -147,3 +149,6 @@ module TypingEnv :
     val find_species : current_unit: Parsetree.fname -> Parsetree.ident ->
       t -> TypeInformation.species_description
   end
+
+val make_fo_file :
+  source_filename: Parsetree.fname -> ScopingEnv.t -> TypingEnv.t -> unit

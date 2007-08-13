@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.mli,v 1.2 2007-08-06 14:00:14 pessaux Exp $ *) 
+(* $Id: scoping.mli,v 1.3 2007-08-13 17:29:34 pessaux Exp $ *) 
 
-val scope_file : Parsetree.fname -> Parsetree.file -> Parsetree.file
-
+val scope_file :
+  Parsetree.fname -> Parsetree.file -> Parsetree.file * Env.ScopingEnv.t

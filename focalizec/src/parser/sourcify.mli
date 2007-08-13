@@ -1,4 +1,4 @@
-(* $Id: sourcify.mli,v 1.4 2007-07-17 08:25:10 pessaux Exp $ *)
+(* $Id: sourcify.mli,v 1.5 2007-08-13 17:29:34 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-
+val pp_vname : Format.formatter -> Parsetree.vname -> unit
 val pp_file : Format.formatter -> Parsetree.file -> unit
 ;;
 (** The pretty printer for focalize abstract syntax trees that generates

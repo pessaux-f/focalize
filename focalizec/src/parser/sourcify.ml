@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.21 2007-08-10 16:54:28 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.22 2007-08-13 17:29:34 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -15,10 +15,10 @@
 
 
 (* *********************************************************** *)
-(* pp_vname : Format.formatter -> Parsetree.vname -> unit      *)
+(* Format.formatter -> Parsetree.vname -> unit                 *)
 (** {b Descr} : Pretty prints a [vname] value as FoCal source.
 
-    {b Rem} : Not exported ouside this module.                 *)
+    {b Rem} : Exported ouside this module.                     *)
 (* *********************************************************** *)
 let pp_vname ppf = function
   | Parsetree.Vlident s -> Format.fprintf ppf "%s" s
@@ -28,7 +28,6 @@ let pp_vname ppf = function
   | Parsetree.Vqident s -> Format.fprintf ppf "%s" s
 ;;
 (* ******************************************************************** *)
-(* pp_vnames :                                                          *)
 (*   string -> Format.formatter -> Parsetree.vname list -> unit         *)
 (** {b Descr} : Pretty prints a [list] of [vname] value as FoCal source.
 

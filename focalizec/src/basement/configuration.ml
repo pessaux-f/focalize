@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.4 2007-08-10 15:32:06 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.5 2007-08-13 17:29:34 pessaux Exp $ *)
 
 let focal_version_number = 0.1
 ;;
@@ -71,6 +71,11 @@ let (get_do_scoping, set_do_scoping) =
    (fun b -> do_scoping_flag := b))
 ;;
 
+let (get_do_interface_output, set_do_interface_output) =
+  let do_interface_output_flag = ref false in
+    ((fun () -> !do_interface_output_flag),
+   (fun b -> do_interface_output_flag := b))
+;;
 
 let (get_pretty_scoped, set_pretty_scoped) =
   let pretty_out_file = ref None in

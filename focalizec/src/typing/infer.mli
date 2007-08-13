@@ -12,6 +12,6 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.3 2007-08-06 14:00:14 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.4 2007-08-13 17:29:34 pessaux Exp $ *)
 
-val typecheck_file : Parsetree.fname -> Parsetree.file -> unit
+val typecheck_file : Parsetree.fname -> Parsetree.file -> Env.TypingEnv.t
