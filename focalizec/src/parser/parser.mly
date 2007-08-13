@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.54 2007-08-13 07:17:51 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.55 2007-08-13 07:51:50 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -411,6 +411,8 @@ rep_type_def:
 simpler_rep_type_def:
   | glob_ident
     { RTE_ident $1 }
+  | species_vname          /* To have capitalized species names as types. */
+    { RTE_ident (mk (I_global (None, $1))) }
   | LIDENT { RTE_ident (mk_global_ident (Vlident $1)) }
   | glob_ident LPAREN rep_type_def_comma_list RPAREN
     { RTE_app ($1, $3) }
@@ -625,6 +627,8 @@ simpler_type_expr:
     { mk (TE_app ($1, $3)) }
   | LPAREN type_expr RPAREN
     { mk (TE_paren $2) }
+  | species_vname   /* To have capitalized species names as types. */
+    { mk (TE_ident (mk (I_global (None, $1)))) }
 ;
 
 core_type_tuple:
@@ -655,9 +659,16 @@ species_glob_ident:
 /* Only used to prefix global notation (i.e. with '#'). */
 opt_lident:
   | { None }
+  | LIDENT
+    { Some $1 }
+;
+
+/* Only used to prefix explicit method call notation (i.e. with '!'). */
+opt_uident:
+  | { None }
   | SELF
     { Some "Self" }
-  | LIDENT
+  | UIDENT
     { Some $1 }
 ;
 
@@ -794,7 +805,7 @@ record_field_list:
 expr_ident:
   | glob_ident
     { $1 }
-  | opt_lident BANG method_vname
+  | opt_uident BANG method_vname
     { mk_method_application $1 $3 }
   | bound_ident
     { mk_local_ident $1 }
