@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.11 2007-08-09 14:55:23 pessaux Exp $ *)
+(* $Id: env.ml,v 1.12 2007-08-13 15:01:11 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -84,6 +84,8 @@ let env_list_assoc ~allow_opened searched list =
   rec_assoc list
 ;;
 
+
+(*
 let debug_env_list_assoc ~allow_opened searched list =
   let rec rec_assoc = function
     | [] -> raise Not_found
@@ -98,7 +100,7 @@ Printf.eprintf "\"%s\"" (Parsetree_utils.name_of_vname name) ; flush stderr ;
 	else rec_assoc q in
   rec_assoc list
 ;;
-
+*)
 
 
 (* ********************************************************************** *)
@@ -683,7 +685,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (* ****************************************************************** *)
   and find_value_vname ~allow_opened vname (env : t) =
 (*    try env_list_assoc ~allow_opened vname env.values *)
-    try debug_env_list_assoc ~allow_opened vname env.values
+    try (*debug_env_list_assoc*) env_list_assoc ~allow_opened vname env.values
     with Not_found -> raise (Unbound_identifier vname)
 
 

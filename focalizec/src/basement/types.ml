@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.3 2007-07-30 08:07:44 weis Exp $ *)
+(* $Id: types.ml,v 1.4 2007-08-13 15:01:11 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -154,15 +154,22 @@ let type_unit () = type_basic "unit" []
 let type_arrow t1 t2 = ST_arrow (t1, t2)
 ;;
 
-let type_tuple tys = ST_tuple tys
-;;
+let type_tuple tys = ST_tuple tys ;;
+
+
 
 (* Generate the carrier type of the currently analysed species.  *)
-let type_self () = ST_self_rep
-;;
+let type_self () = ST_self_rep ;;
 
-let type_prop () = type_basic "prop" []
-;;
+
+
+let type_prop () = type_basic "prop" [] ;;
+
+
+
+let type_rep_species species_name = ST_species_rep species_name ;;
+
+
 
 (** {b Rem} : Non exported oustide this module. *)
 let rec occur_check var ty =

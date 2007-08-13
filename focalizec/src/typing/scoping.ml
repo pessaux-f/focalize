@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.8 2007-08-13 08:45:09 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.9 2007-08-13 15:01:11 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -404,8 +404,9 @@ let rec scope_expr ctx env expr =
 	 let exprs' = List.map (scope_expr ctx env) exprs in
 	 let scoped_expr = Parsetree.E_tuple exprs' in
 	 scoped_expr
-     | Parsetree.E_external _ ->
-	 expr.Parsetree.ast_desc  (* Nothing to scope. *)
+     | Parsetree.E_external external_def_body ->
+	 (* Nothing to scope since it's only strings. *)
+	 expr.Parsetree.ast_desc
      | Parsetree.E_paren e ->
 	 let scoped_e = scope_expr ctx env e in
 	 Parsetree.E_paren scoped_e) in
@@ -1148,15 +1149,45 @@ let scope_collection_def ctx env coll_def =
 
 
 
+(* **************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.external_def -> *)
+(*   Env.ScopingEnv.t                                               *)
+(* {Descr} : Returns the environment extended with the name of the
+           external definition. This name is bound into the "types"
+           bucket or into the "values" bucket according to the kind
+           of external definition.
+           Hence, there is no need to return a "scoped" version of
+           the definition because such definitions structurally do
+	   not contain [ident]s.
+
+   {b Rem} : Not exported outside this module.                      *)
+(* **************************************************************** *)
+let scope_external_def ctx env external_def =
+  match external_def.Parsetree.ast_desc with
+   | Parsetree.ED_type e_def_body ->
+       let bound_name =
+	 Parsetree_utils.name_of_vname
+	   (e_def_body.Parsetree.ast_desc.Parsetree.ed_name) in
+       Env.ScopingEnv.add_type
+	 bound_name (Env.ScopeInformation.TBI_defined_in ctx.current_unit) env
+   | Parsetree.ED_value e_def_body ->
+       let bound_name = e_def_body.Parsetree.ast_desc.Parsetree.ed_name in
+       Env.ScopingEnv.add_value
+	 bound_name (Env.ScopeInformation.SBI_file ctx.current_unit) env
+;;
+
+
+
 let scope_phrase ctx env phrase =
   let (new_desc, new_env) =
     (match phrase.Parsetree.ast_desc with
-     | Parsetree.Ph_external _
-	 (* Nothing to scope here. External definition structurally *)
-	 (* do not contain any  [ident]. The scoping environment is *)
-	 (* not affected.                                           *)
-     | Parsetree.Ph_use _
-     | Parsetree.Ph_open _ -> (phrase.Parsetree.ast_desc, env)
+     | Parsetree.Ph_external external_def ->
+	 (* Nothing to scope here. External definition structurally do not *)
+	 (* contain any  [ident]. However, the scoping environment must be *)
+	 (* extended.                                                      *)
+	 let env' = scope_external_def ctx env external_def in
+	 (phrase.Parsetree.ast_desc, env')
+     | Parsetree.Ph_use _ | Parsetree.Ph_open _ -> failwith "scope: TODO1"
      | Parsetree.Ph_species species_def ->
 	 let (scoped_species_def, env') =
 	   scope_species_def ctx env species_def in

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.3 2007-07-30 08:07:44 weis Exp $ *)
+(* $Id: types.mli,v 1.4 2007-08-13 15:01:11 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -33,11 +33,9 @@ type label_name = string
 (** The type algebra for focalize. *)
 
 type type_simple
-;;
+
 type type_scheme
-;;
 type type_species
-;;
 
 (** The exceptions raised by the type-checker. *)
 
@@ -57,9 +55,7 @@ exception Arity_mismatch of type_name * int * int
 ;;
 
 val begin_definition : unit -> unit
-;;
 val end_definition : unit -> unit
-;;
 
 val type_variable : unit -> type_simple
 ;;
@@ -72,47 +68,32 @@ val type_basic : type_name -> type_simple list -> type_simple
 
 (** The classical basic type constants, including functions and tuples. *)
 val type_int : unit -> type_simple
-;;
 val type_float : unit -> type_simple
-;;
 val type_bool : unit -> type_simple
-;;
 val type_string : unit -> type_simple
-;;
 val type_char : unit -> type_simple
-;;
 val type_unit : unit -> type_simple
-;;
 val type_arrow : type_simple -> type_simple -> type_simple
-;;
 val type_tuple : type_simple list -> type_simple
-;;
 val type_prop : unit -> type_simple
-;;
-
+val type_rep_species : species_name -> type_simple
 (** Generate the carrier type of the currently analysed species. *)
 val type_self : unit -> type_simple
-;;
+
+
 
 (** Manipulation of type schemes: generalization, instanciation, generation of
 a (closed) type scheme from a type without unknowns. *)
 val instanciate_parameters : type_scheme -> type_simple list -> type_simple
-;;
 val specialize : type_scheme -> type_simple
-;;
 val generalize : type_simple -> type_scheme
-;;
 val closed_scheme : type_simple -> type_scheme
-;;
+
 
 (** Type (schemes) unification. *)
 val unify :
   self_manifest: (type_simple option) -> type_simple -> type_simple -> unit
-;;
 
 (** Pretty_printing for types and type schemes. *)
-
 val pp_type_simple : Format.formatter -> type_simple -> unit
-;;
 val pp_type_scheme : Format.formatter -> type_scheme -> unit
-;;

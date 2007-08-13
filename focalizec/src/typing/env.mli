@@ -142,6 +142,8 @@ module TypingEnv :
     val find_collection : current_unit: Parsetree.fname -> Parsetree.ident ->
       t -> TypeInformation.collections_sig
 
+    val add_species :
+      Types.species_name -> TypeInformation.species_description -> t -> t
     val find_species : current_unit: Parsetree.fname -> Parsetree.ident ->
       t -> TypeInformation.species_description
   end
