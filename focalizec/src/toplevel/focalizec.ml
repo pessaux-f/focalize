@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: focalizec.ml,v 1.6 2007-08-13 17:29:34 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.7 2007-08-13 17:32:44 pessaux Exp $ *)
 
 (** The focalize concrete syntax file checker. *)
 
@@ -39,15 +39,9 @@ let main () =
        Arg.String Configuration.set_old_pretty_print,
        " pretty-prints the parse tree of the focalize file as \
          an old focal source.") ;
-      ("--scope",
-       Arg.Unit (fun () -> Configuration.set_do_scoping true),
-       " performs scoping.") ;
       ("--scoped_pretty",
        Arg.String Configuration.set_pretty_scoped,
        " pretty-prints the parse tree of the focal file once scoped as a focal source.") ;
-      ("--typecheck",
-       Arg.Unit (fun () -> Configuration.set_do_typechecking true),
-       " performs type inference.") ;
       ("--verbose",
        Arg.Unit (fun () -> Configuration.set_verbose true),
        " be verbose.") ]

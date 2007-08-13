@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.5 2007-08-13 17:29:34 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.6 2007-08-13 17:32:44 pessaux Exp $ *)
 
 let focal_version_number = 0.1
 ;;
@@ -65,12 +65,6 @@ let (get_input_file_name, set_input_file_name) =
      else failwith "Input file name is already set."))
 ;;
 
-let (get_do_scoping, set_do_scoping) =
-  let do_scoping_flag = ref false in
-  ((fun () -> !do_scoping_flag),
-   (fun b -> do_scoping_flag := b))
-;;
-
 let (get_do_interface_output, set_do_interface_output) =
   let do_interface_output_flag = ref false in
     ((fun () -> !do_interface_output_flag),
@@ -82,11 +76,3 @@ let (get_pretty_scoped, set_pretty_scoped) =
   ((fun () -> !pretty_out_file),
    (fun fname -> pretty_out_file := Some fname))
 ;;
-
-
-let (get_do_typechecking, set_do_typechecking) =
-  let do_typechecking_flag = ref false in
-  ((fun () -> !do_typechecking_flag),
-   (fun b -> do_typechecking_flag := b))
-;;
-

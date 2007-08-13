@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.5 2007-08-13 17:29:34 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.6 2007-08-13 17:32:44 pessaux Exp $ *)
 
 (** The various flags and definitions useful to the internal behaviour of the
     focalize compiler. *)
@@ -32,14 +32,8 @@ val set_old_pretty_print : string -> unit
 val get_input_file_name : unit -> string
 val set_input_file_name : string -> unit
 
-val get_do_scoping : unit -> bool
-val set_do_scoping : bool -> unit
-
 val get_do_interface_output : unit -> bool
 val set_do_interface_output : bool -> unit
-
-val get_do_typechecking : unit -> bool
-val set_do_typechecking : bool -> unit
 
 val get_pretty_scoped : unit -> string option
 val set_pretty_scoped : string -> unit
