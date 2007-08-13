@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.53 2007-08-10 16:54:28 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.54 2007-08-13 07:17:51 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -560,7 +560,7 @@ fact_list:
 ;
 
 fact:
-  | DEFINITION OF species_ident_comma_list { mk (F_def $3) }
+  | DEFINITION OF prop_ident_comma_list { mk (F_def $3) }
   | HYPOTHESIS proof_hyp_list { mk (F_hypothesis $2) }
   | PROPERTY prop_ident_comma_list { mk (F_property ($2)) }
   | THEOREM prop_ident_comma_list { mk (F_property ($2)) }
@@ -821,12 +821,6 @@ species_ident:
 opt_collection_name:
   | { None }
   | collection_name { Some $1 }
-;
-
-
-species_ident_comma_list:
-  | species_ident COMMA species_ident_comma_list { $1 :: $3 }
-  | species_ident { [$1] }
 ;
 
 prop_ident_comma_list:

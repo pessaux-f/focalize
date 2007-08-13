@@ -1,3 +1,4 @@
+touch .depend
 touch ./basement/.depend
 touch ./parser/.depend
 touch ./typing/.depend
