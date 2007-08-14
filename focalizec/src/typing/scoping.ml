@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.11 2007-08-14 11:04:19 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.12 2007-08-14 14:31:30 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -921,6 +921,7 @@ let rec scope_species_expr ctx env species_expr =
   let basic_vname = unqualified_vname_of_ident se_name_ident in
   let scoped_ident_descr =
     (match ident_scope_info.Env.ScopeInformation.spbi_scope with
+     | Env.ScopeInformation.SPBI_local -> Parsetree.I_local basic_vname
      | Env.ScopeInformation.SPBI_file hosting_file ->
 	 Parsetree.I_global ((Some hosting_file), basic_vname)) in
   let scoped_ident = {
@@ -997,14 +998,14 @@ let scope_species_params_types ctx env params =
 	     (begin
 	     (* Let's first scope the ident representing a collection name. *)
 	     let ident_scope_info =
-	       Env.ScopingEnv.find_collection
+	       Env.ScopingEnv.find_species
 		 ~current_unit: ctx.current_unit ident accu_env in
 	     let basic_vname = unqualified_vname_of_ident ident in
 	     let scoped_ident_descr =
-	       (match ident_scope_info.Env.ScopeInformation.cbi_scope with
-		| Env.ScopeInformation.CBI_local ->
+	       (match ident_scope_info.Env.ScopeInformation.spbi_scope with
+		| Env.ScopeInformation.SPBI_local ->
 		    Parsetree.I_local basic_vname
-		| Env.ScopeInformation.CBI_file hosting_file ->
+		| Env.ScopeInformation.SPBI_file hosting_file ->
 		    Parsetree.I_global ((Some hosting_file), basic_vname)) in
 	     let scoped_ident = {
 	       ident with Parsetree.ast_desc = scoped_ident_descr } in
@@ -1032,11 +1033,11 @@ let scope_species_params_types ctx env params =
 	     (* having the same methods than those coming from the         *)
 	     (* expression.                                                *)
 	     let accu_env' = 
-	       Env.ScopingEnv.add_collection
+	       Env.ScopingEnv.add_species
                  (Parsetree_utils.name_of_vname param_name)
-		 { Env.ScopeInformation.cbi_scope =
-		     Env.ScopeInformation.CBI_local ;
-		   Env.ScopeInformation.cbi_methods = species_methods }
+		 { Env.ScopeInformation.spbi_scope =
+		     Env.ScopeInformation.SPBI_local ;
+		   Env.ScopeInformation.spbi_methods = species_methods }
 		 accu_env in
 	     let scoped_param_kind = {
 	       param_kind with
@@ -1142,11 +1143,11 @@ let scope_collection_def ctx env coll_def =
   let scoped_coll_def = { coll_def with Parsetree.ast_desc = scoped_desc } in
   (* Now add ourselves as a collection in the environment. *)
   let our_info = {
-    Env.ScopeInformation.cbi_methods = methods_names ;
-    Env.ScopeInformation.cbi_scope =
-      Env.ScopeInformation.CBI_file ctx.current_unit } in
+    Env.ScopeInformation.spbi_methods = methods_names ;
+    Env.ScopeInformation.spbi_scope =
+      Env.ScopeInformation.SPBI_file ctx.current_unit } in
   let final_env =
-    Env.ScopingEnv.add_collection
+    Env.ScopingEnv.add_species
       coll_def_desc.Parsetree.cd_name our_info env in
   (scoped_coll_def, final_env)
 ;;

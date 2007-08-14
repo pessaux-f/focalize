@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.2 2007-08-14 13:24:03 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.3 2007-08-14 14:31:30 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -66,9 +66,6 @@ try Check_file.main () with
 	 Format.fprintf Format.err_formatter "Unbound type \'%s\'.@." tname
      | Env.Unbound_module fname ->
 	 Format.fprintf Format.err_formatter "Unbound module \'%s\'.@." fname
-     | Env.Unbound_collection cname ->
-	 Format.fprintf Format.err_formatter
-	   "Unbound collection \'%s\'.@." cname
      | Env.Unbound_species sname ->
 	 Format.fprintf Format.err_formatter "Unbound species \'%s\'.@." sname
 (* Core types problems. *)

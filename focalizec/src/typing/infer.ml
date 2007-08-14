@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.14 2007-08-14 13:20:26 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.15 2007-08-14 14:31:30 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {bL Descr} : Exception used to inform that a sum type constructor was
@@ -1043,7 +1043,10 @@ let typecheck_species_def ctx env species_def =
   (* Then one must ensure that each method has a   *)
   (* same type everywhere in the inheritance tree. *)
 
+  (* Let's build our "type" information. Since we are managing a species *)
+  (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
   let species_description = {
+    Env.TypeInformation.spe_is_collection = false ;
     Env.TypeInformation.spe_sig_params = [] ;
     Env.TypeInformation.spe_sig_inher = [] ;
     Env.TypeInformation.spe_sig_methods = methods_info } in
@@ -1269,8 +1272,14 @@ let typecheck_phrase ctx env phrase =
      | Parsetree.Ph_external exter_def ->
 	 let env' = typecheck_external_def env exter_def in
 	 ((Types.type_unit ()), env')
-     | Parsetree.Ph_use _ -> failwith "todo T1"
-     | Parsetree.Ph_open _ -> failwith "todo T2"
+     | Parsetree.Ph_use _ ->
+	 (* Nothing to do, the scoping pass already ensured that *)
+         (* "modules" opened or used were previously "use"-d.    *)
+	 ((Types.type_unit ()), env)
+     | Parsetree.Ph_open fname ->
+	 (* Load this module interface to extend the current environment. *)
+	 let env' = Env.type_open_module fname env in
+	 ((Types.type_unit ()), env')
      | Parsetree.Ph_species species_def ->
 	 (* Interface printing stuff is done inside. *)
 	 typecheck_species_def ctx env species_def
