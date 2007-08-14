@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.15 2007-08-14 14:31:30 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.16 2007-08-14 16:04:46 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {bL Descr} : Exception used to inform that a sum type constructor was
@@ -970,6 +970,7 @@ and typecheck_species_fields ctx env = function
 	       List.map2
 		 (fun (id, ty_scheme) binding ->
 		   let expr = binding.Parsetree.ast_desc.Parsetree.b_body in
+		   (* Be careful that [expr] below is already typed here. *)
 		   (id, ty_scheme, (Some expr)))
 		 bindings
 		 let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
@@ -1026,6 +1027,74 @@ and typecheck_species_fields ctx env = function
 
 
 
+(* **************************************************************** *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.species_expr ->   *)
+(*   (Parsetree.vname * Types.type_scheme) list                     *)
+(** {b Descr} : Typechecks a species expression, record its type in
+              the AST node and return the list of its methods names
+              and type schemes.
+
+    {b Rem} :Not exported outside this module.                      *)
+(* **************************************************************** *)
+let typecheck_species_expr ctx env species_expr =
+  let species_expr_desc = species_expr.Parsetree.ast_desc in
+  if species_expr_desc.Parsetree.se_params <> [] then
+    failwith "TODO parameterized species expressions" ;
+  (* Recover the information about the species. *)
+  let species_species_description =
+    Env.TypingEnv.find_species
+      ~current_unit: ctx.current_unit species_expr_desc.Parsetree.se_name env in
+  (* Create the type of this species. *)
+  let species_ident_as_string =
+    (match species_expr_desc.Parsetree.se_name.Parsetree.ast_desc with
+     | Parsetree.I_local vname -> Parsetree_utils.name_of_vname vname
+     | _ -> failwith "TODO SPE1") in
+  let species_as_type = Types.type_rep_species species_ident_as_string in
+  (* Record the type in the AST node. *)
+  species_expr.Parsetree.ast_type <- Some species_as_type ;
+  (* Extract only the methods type scheme to return them. *)
+  let only_methods =
+    List.map
+      (fun (m_name, m_scheme, _) -> (m_name, m_scheme))
+      species_species_description.Env.TypeInformation.spe_sig_methods in
+  only_methods
+;;
+
+
+
+(* ********************************************************************** *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.species_expr list ->    *)
+(*   Env.TypingEnv.t                                                      *)
+(** {b Descr} : Extends an environment as value bindings with the methods
+              of the inherited species provided in argument. Methods are
+              added in the same order than their hosting species comes
+              in the inheritance list. This means that the methods of the
+              first inherited species will be deeper in the resulting
+              environment.
+              
+    {b Rem} :Not exported outside this module.                            *)
+(* ********************************************************************** *)
+let extend_env_with_inherits ctx env spe_exprs =
+  let rec rec_extend current_env = function
+    | [] -> current_env
+    | inh :: rem_inhs ->
+	(* First typecheck the species expression in the initial   *)
+        (* (non extended) and recover its methods names and types. *)
+	let inh_species_methods =
+	  typecheck_species_expr ctx env inh in
+	let env' =
+	  List.fold_left
+	    (fun accu_env (meth_name, meth_scheme) ->
+	      Env.TypingEnv.add_value meth_name meth_scheme accu_env)
+	    current_env
+	    inh_species_methods in
+	rec_extend env' rem_inhs in
+  (* Now, let's work... *)
+  rec_extend env spe_exprs
+;;
+
+
+
 (** Also performs the interface printing stuff of a species. *)
 let typecheck_species_def ctx env species_def =
   let species_def_desc = species_def.Parsetree.ast_desc in
@@ -1036,12 +1105,18 @@ let typecheck_species_def ctx env species_def =
   if species_def_desc.Parsetree.sd_params <> [] then failwith "TODO Params." ;
   if species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc <> [] then
     failwith "TODO inherit" ;
+  (* We first load the inherited methods *)
+  (* let env_with_inherited_methods = *)
+    
+
   (* Infer the types of the current field's.*)
   let methods_info =
     typecheck_species_fields ctx env species_def_desc.Parsetree.sd_fields in
   
-  (* Then one must ensure that each method has a   *)
-  (* same type everywhere in the inheritance tree. *)
+  (* Then one must ensure that each method has the same type everywhere *)
+  (* in the inheritance tree and more generaly create the normalised    *)
+  (* form of the species.                                               *)
+
 
   (* Let's build our "type" information. Since we are managing a species *)
   (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
@@ -1102,13 +1177,13 @@ let typecheck_species_def ctx env species_def =
    {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************ *)
 let typecheck_type_def ctx env type_def =
-  let type_def_descr = type_def.Parsetree.ast_desc in
+  let type_def_desc = type_def.Parsetree.ast_desc in
   (* First, extend the [tyvars_mapping] of the current *)
   (* context with parameters of the type definition.   *)
   let vmapp_extention =
     List.map
       (fun var_name -> (var_name, Types.type_variable ()))
-      type_def_descr.Parsetree.td_params in
+      type_def_desc.Parsetree.td_params in
   Types.end_definition ();
   let new_ctx = { ctx with
     tyvars_mapping = vmapp_extention @ ctx.tyvars_mapping } in
@@ -1116,9 +1191,9 @@ let typecheck_type_def ctx env type_def =
   (* on the list by incrementing a reference while building the extention *)
   (* of the context, but that would be pretty uggly... And usually, there *)
   (* are no tons of parameters in types definitions !                     *)
-  let nb_params = List.length type_def_descr.Parsetree.td_params in
+  let nb_params = List.length type_def_desc.Parsetree.td_params in
   (* Process the body of the type definition. *)
-  match type_def_descr.Parsetree.td_body.Parsetree.ast_desc with
+  match type_def_desc.Parsetree.td_body.Parsetree.ast_desc with
   | Parsetree.TD_alias ty ->
       (begin
       (* We do not insert the defined name itself  *)
@@ -1133,7 +1208,7 @@ let typecheck_type_def ctx env type_def =
         Env.TypeInformation.type_identity = Types.generalize identity_type ;
         Env.TypeInformation.type_arity = nb_params } in
       (* Just returns the environment extended by the type itself. *)
-      Env.TypingEnv.add_type type_def_descr.Parsetree.td_name ty_descr env
+      Env.TypingEnv.add_type type_def_desc.Parsetree.td_name ty_descr env
       end)
   | Parsetree.TD_union constructors ->
       (* Sum types are allowed to be recursive. So make a proto     *)
@@ -1141,7 +1216,7 @@ let typecheck_type_def ctx env type_def =
       (* if it is recursive.                                        *)
      (let futur_type_type =
         Types.type_basic
-          type_def_descr.Parsetree.td_name (List.map snd vmapp_extention) in
+          type_def_desc.Parsetree.td_name (List.map snd vmapp_extention) in
       let proto_descrip = {
         Env.TypeInformation.type_kind = Env.TypeInformation.TK_variant [] ;
         Env.TypeInformation.type_identity =
@@ -1150,7 +1225,7 @@ let typecheck_type_def ctx env type_def =
       (* Extend the environment with ourselves. *)
       let new_env =
         Env.TypingEnv.add_type
-	  type_def_descr.Parsetree.td_name proto_descrip env in
+	  type_def_desc.Parsetree.td_name proto_descrip env in
       (* Now process the constructors of the type. Create the  *)
       (* list of couples : (constructor name * type_simple).   *)
       let cstr_bindings =
@@ -1200,7 +1275,7 @@ let typecheck_type_def ctx env type_def =
         Env.TypeInformation.type_arity = nb_params } in
       (* And return the fully extended environment. *)
       Env.TypingEnv.add_type
-        type_def_descr.Parsetree.td_name
+        type_def_desc.Parsetree.td_name
         final_type_descr env_with_constructors)
   | Parsetree.TD_record labels ->
       (* We do not insert the defined record name *)
@@ -1212,7 +1287,7 @@ let typecheck_type_def ctx env type_def =
       (* represent the type of values of this record. *)
       let futur_type_type =
         Types.type_basic
-          type_def_descr.Parsetree.td_name (List.map snd vmapp_extention) in
+          type_def_desc.Parsetree.td_name (List.map snd vmapp_extention) in
       (* Now typecheck the fields of the record. *)
       let fields_descriptions =
         List.map
@@ -1248,7 +1323,7 @@ let typecheck_type_def ctx env type_def =
         Env.TypeInformation.type_arity = nb_params } in
       (* And return the fully extended environment. *)
       Env.TypingEnv.add_type
-        type_def_descr.Parsetree.td_name
+        type_def_desc.Parsetree.td_name
         final_type_descr env_with_labels
 ;;
 
