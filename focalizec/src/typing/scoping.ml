@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.10 2007-08-13 17:29:34 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.11 2007-08-14 11:04:19 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -47,10 +47,14 @@
 (* *********************************************************************** *)
 
 
+exception Multiply_used_module of Parsetree.fname ;;
+exception Module_not_specified_as_used of Parsetree.fname ;;
 
 type scoping_context = {
   (** The name of the currently analysed compilation unit. *)
-  current_unit : Parsetree.fname
+  current_unit : Parsetree.fname ;
+  (** The list of "use"-d modules. Not file with paths and extension : just module name (ex: "Basics"). *)
+  used_modules : Parsetree.fname list ;
 } ;;
 
 
@@ -1179,43 +1183,56 @@ let scope_external_def ctx env external_def =
 
 
 let scope_phrase ctx env phrase =
-  let (new_desc, new_env) =
+  let (new_desc, new_env, new_ctx) =
     (match phrase.Parsetree.ast_desc with
      | Parsetree.Ph_external external_def ->
 	 (* Nothing to scope here. External definition structurally do not *)
 	 (* contain any  [ident]. However, the scoping environment must be *)
 	 (* extended.                                                      *)
 	 let env' = scope_external_def ctx env external_def in
-	 (phrase.Parsetree.ast_desc, env')
-     | Parsetree.Ph_use _ | Parsetree.Ph_open _ -> failwith "scope: TODO1"
+	 (phrase.Parsetree.ast_desc, env', ctx)
+     | Parsetree.Ph_use fname ->
+	 (* Check if the "module" was not already "use"-d. *)
+	 if List.mem fname ctx.used_modules then
+	   raise (Multiply_used_module fname) ;
+	 (* Allow this module to be used. *)
+	 let ctx' = { ctx with used_modules = fname :: ctx.used_modules } in
+	 (phrase.Parsetree.ast_desc, env, ctx')
+     | Parsetree.Ph_open fname ->
+	 (* Load this module interface to extend the current environment *)
+	 (* only if this "module" was previously "use"-d.                *)
+	 if not (List.mem fname ctx.used_modules) then
+	   raise (Module_not_specified_as_used fname) ;
+	 let env' = Env.scope_open_module fname env in
+	 (phrase.Parsetree.ast_desc, env', ctx)
      | Parsetree.Ph_species species_def ->
 	 let (scoped_species_def, env') =
 	   scope_species_def ctx env species_def in
-	 ((Parsetree.Ph_species scoped_species_def), env')
+	 ((Parsetree.Ph_species scoped_species_def), env', ctx)
      | Parsetree.Ph_coll coll_def ->
 	 let (scoped_coll_def, env') =
 	   scope_collection_def ctx env coll_def in
-	 ((Parsetree.Ph_coll scoped_coll_def), env')
+	 ((Parsetree.Ph_coll scoped_coll_def), env', ctx)
      | Parsetree.Ph_type type_def ->
          let (scoped_ty_def, env') = scope_type_def ctx env type_def in
-	 ((Parsetree.Ph_type scoped_ty_def), env')
+	 ((Parsetree.Ph_type scoped_ty_def), env', ctx)
      | Parsetree.Ph_let let_def ->
 	 (* This one can extend the global scoping environment. *)
 	 (* The list of bound names does not interest us here.  *)
 	 let (scoped_let_def, env', _) =
 	   scope_let_definition ~toplevel_let: true ctx env let_def in
-	 ((Parsetree.Ph_let scoped_let_def), env')
+	 ((Parsetree.Ph_let scoped_let_def), env', ctx)
      | Parsetree.Ph_theorem theo_def ->
 	 let (scoped_theo, name) = scope_theorem_def ctx env theo_def in
 	 let env' =
 	   Env.ScopingEnv.add_value
 	     name Env.ScopeInformation.SBI_method_of_self env in
-	 ((Parsetree.Ph_theorem scoped_theo), env')
+	 ((Parsetree.Ph_theorem scoped_theo), env', ctx)
      | Parsetree.Ph_expr expr_def ->
 	 (* No scoping environment extention here. *)
 	 let scoped_expr = Parsetree.Ph_expr (scope_expr ctx env expr_def) in
-	 (scoped_expr, env)) in
-  ({ phrase with Parsetree.ast_desc = new_desc }, new_env)
+	 (scoped_expr, env, ctx)) in
+  ({ phrase with Parsetree.ast_desc = new_desc }, new_env, new_ctx)
 ;;
 
 
@@ -1233,14 +1250,18 @@ let scope_phrase ctx env phrase =
 let scope_file current_unit file =
   match file.Parsetree.ast_desc with
    | Parsetree.File phrases ->
-       let ctx = { current_unit = current_unit } in
+       (* Initial context with no "use"-d modules. *)
+       let global_ctx =
+	 ref { current_unit = current_unit ; used_modules = [] } in
        (* Scoping of a file starts with the empty scoping environment. *)
        let global_env = ref (Env.ScopingEnv.pervasives ()) in
        let scoped_phrases =
 	 List.map
 	   (fun phrase ->
-	     let (phrase', env') = scope_phrase ctx !global_env phrase in
+	     let (phrase', env', ctx') =
+	       scope_phrase !global_ctx !global_env phrase in
 	     global_env := env' ;
+	     global_ctx := ctx' ;
 	     (* Return the scoped phrase. *)
 	     phrase')
 	   phrases in

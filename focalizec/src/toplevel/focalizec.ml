@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: focalizec.ml,v 1.7 2007-08-13 17:32:44 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.8 2007-08-14 11:04:19 pessaux Exp $ *)
 
 (** The focalize concrete syntax file checker. *)
 
@@ -32,6 +32,9 @@ let main () =
       ("-i",
        Arg.Unit (fun () -> Configuration.set_do_interface_output true),
        " prints the source file interface.") ;
+      ("-I",
+       Arg.String (fun path -> Files.add_lib_path path),
+       " adds the specified path to the path list where to search for compiled interfaces.") ;
       ("--pretty",
        Arg.String Configuration.set_pretty_print,
        " pretty-prints the parse tree of the focal file as a focal source.") ;

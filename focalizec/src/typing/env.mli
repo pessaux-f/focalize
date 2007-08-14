@@ -150,5 +150,8 @@ module TypingEnv :
       t -> TypeInformation.species_description
   end
 
+val scope_open_module : Parsetree.fname -> ScopingEnv.t -> ScopingEnv.t
+val type_open_module : Parsetree.fname -> TypingEnv.t -> TypingEnv.t
+
 val make_fo_file :
   source_filename: Parsetree.fname -> ScopingEnv.t -> TypingEnv.t -> unit

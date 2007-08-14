@@ -1,5 +1,5 @@
-use "../junk" ;;
-open "../junk" ;;
+use "basics" ;;
+open "basics" ;;
 
 5 ;;
 let x = 42 ;;

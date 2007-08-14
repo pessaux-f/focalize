@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.13 2007-08-13 17:29:34 pessaux Exp $ *)
+(* $Id: env.ml,v 1.14 2007-08-14 11:04:19 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -384,12 +384,19 @@ end ;;
 
 
 
-let (scope_find_module, type_find_module) =
+let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
   (* Let's just make the list used to bufferize opened files' content. *)
+  (* Because ".fo" files contains always both the scoping and typing   *)
+  (* information, once loaded for scoping purpose, the typing info     *)
+  (* is made available. Hence, the buffer list contains couples with   *)
+  (* no optionnal component.                                           *)
   let buffered =
     ref ([] :
 	   (Parsetree.fname * (ScopeInformation.env * TypeInformation.env))
 	   list) in
+
+
+
   (* ***************************************************************** *)
   (* Parsetree.fname -> (ScopeInformation.env * TypeInformation.env)   *)
   (** {b Descr} : Wrapper to lookup inside an external interface file.
@@ -427,7 +434,49 @@ let (scope_find_module, type_find_module) =
 
 
 
+  (* ********************************************************************* *)
+  (* Parsetree.fname -> ('a, 'b, 'c, 'd, 'e, 'f) generic_env ->            *)
+  (*   ('a, 'b, 'c, 'd, 'e, 'f) generic_env ->                             *)
+  (*     ('a, 'b, 'c, 'd, 'e, 'f) generic_env                              *)
+  (** {b Descr} : Internal wrapper to extend an environment with bindings
+              found in an opened "module"'s environment. Opened bindings
+              are transformed in BO_opened before being added in head to
+              the initial environment.
+
+      {b Args} :
+        - from_fname : The "module" name from where the loaded environment
+                     was found.
+        - loaded_env : The loaded environment. Not that it shoud contain
+                     only [BO_absolute] bindings.
+        - env : The environment to extend.
+
+      {b Rem} : Not exported outside this moddule.                         *)
+  (* ********************************************************************* *)
+  let internal_extend_env from_fname loaded_env env =
+    (* Local function to tranform [BO_absolute] into [BO_opened]. Note that   *)
+    (* loaded environments should never contain [BO_opened] taggged bindings. *)
+    let absolute_to_opened l =
+      List.map
+	(function
+	  | (name, (BO_absolute data)) ->
+	      (name, ((BO_opened (from_fname, data))))
+	  | (_, (BO_opened (_, _))) -> assert false)
+	l in
+    let constructors' =
+      (absolute_to_opened loaded_env.constructors) @ env.constructors in
+    let labels' = (absolute_to_opened loaded_env.labels) @ env.labels in
+    let types' = (absolute_to_opened loaded_env.types) @ env.types in
+    let values' = (absolute_to_opened loaded_env.values) @ env.values in
+    let species' = (absolute_to_opened loaded_env.species) @ env.species in
+    let collections' =
+      (absolute_to_opened loaded_env.collections) @ env.collections in
+    { constructors = constructors' ; labels = labels' ; types = types' ;
+      values = values' ; species = species' ; collections = collections' } in
+
+
+
   ((* **************************************************************** *)
+   (* scope_find_module                                                *)
    (* current_unit: Parsetree.fname -> Parsetree.fname option ->       *)
    (*   ScopeInformation.env -> ScopeInformation.env                   *)
    (** {b Descr} : Wrapper to lookup a scoping environment inside an
@@ -449,6 +498,7 @@ let (scope_find_module, type_find_module) =
 
 
    (* **************************************************************** *)
+   (* type_find_module                                                 *)
    (* current_unit: Parsetree.fname -> Parsetree.fname option ->       *)
    (*   TypeInformation.env -> TypeInformation.env                     *)
    (** {b Descr} : Wrapper to lookup a typing environment inside an
@@ -465,12 +515,70 @@ let (scope_find_module, type_find_module) =
       | None -> type_env
       | Some fname ->
 	  if current_unit = fname then type_env
-	  else snd (internal_find_module fname)))
+	  else snd (internal_find_module fname)),
+
+
+
+   (* *************************************************************** *)
+   (* scope_open_module                                               *)
+   (* Parsetree.fname ->                                              *)
+   (*   (Parsetree.fname, Parsetree.fname,                            *)
+   (*    ScopeInformation.type_binding_info,                          *)
+   (*    ScopeInformation.value_binding_info,                         *)
+   (*    ScopeInformation.species_binding_info,                       *)
+   (*    ScopeInformation.collection_binding_info)                    *)
+   (*   generic_env ->                                                *)
+   (*     (Parsetree.fname, Parsetree.fname,                          *)
+   (*      ScopeInformation.type_binding_info,                        *)
+   (*      ScopeInformation.value_binding_info,                       *)
+   (*      ScopeInformation.species_binding_info,                     *)
+   (*      ScopeInformation.collection_binding_info)                  *)
+   (*     generic_env                                                 *)
+   (** {b Descr} : Performs a full "open" directive on a scoping
+                 environment. It add in head of the environment the
+                 bindings found in the "module" content, tagging them
+                 as beeing "opened".
+
+       {b Rem} : Exported outside this module.                        *)
+   (* *************************************************************** *)
+   (fun fname env ->
+     let (loaded_scope_env, _) = internal_find_module fname in
+     internal_extend_env fname loaded_scope_env env),
+
+
+
+   (* *************************************************************** *)
+   (* type_open_module                                                *)
+   (* Parsetree.fname ->                                              *)
+   (*   (TypeInformation.constructor_description,                     *)
+   (*    TypeInformation.label_description,                           *)
+   (*    TypeInformation.type_description,                            *)
+   (*    Types.type_scheme, TypeInformation.species_description,      *)
+   (*    TypeInformation.collections_sig)                             *)
+   (*   generic_env ->                                                *)
+   (*   (TypeInformation.constructor_description,                     *)
+   (*    TypeInformation.label_description,                           *)
+   (*    TypeInformation.type_description,                            *)
+   (*    Types.type_scheme, TypeInformation.species_description,      *)
+   (*    TypeInformation.collections_sig)                             *)
+   (*   generic_env                                                   *)
+   (** {b Descr} : Performs a full "open" directive on a typing
+                 environment. It add in head of the environment the
+                 bindings found in the "module" content, tagging them
+                 as beeing "opened".
+
+       {b Rem} : Exported outside this module.                        *)
+   (* *************************************************************** *)
+   (fun fname env ->
+     let (_, loaded_type_env) = internal_find_module fname in
+     internal_extend_env fname loaded_type_env env)
+  )
 ;;
 
 
 
 (* ************************************************************************* *)
+(* 'a -> 'a option -> bool                                                   *)
 (** {b Descr} : Returns a boolean telling whether the lookup of a vname in
               and environment can succeed on a binding induced by an "open"
               directive.
@@ -976,6 +1084,7 @@ module ScopingEMAccess = struct
       species = [] ; collections = [] }
 
 
+
   (* ************************************************************************ *)
   (** {b Descr} : The function used while scoping to post-process information
                bound to values when retrieved from a [I_method] [ident].
@@ -1147,7 +1256,8 @@ let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env =
   (* coming from definitions of our current compilation unit.  *)
   let typing_toplevel_env' =
     env_from_only_absolute_bindings typing_toplevel_env in
-  let fo_basename = Files.fo_basename_from_module_name source_filename in
+  let module_name = Filename.chop_extension source_filename in
+  let fo_basename = Files.fo_basename_from_module_name module_name in
   (* Add to the module name the path of the currently compiled source *)
   (* file in order to make the ".fo" lying at the same place than the *)
   (* ".foc" file.                                                     *)
