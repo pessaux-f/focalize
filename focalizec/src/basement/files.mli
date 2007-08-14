@@ -1,4 +1,4 @@
-(* $Id: files.mli,v 1.4 2007-08-14 11:04:19 pessaux Exp $ *)
+(* $Id: files.mli,v 1.5 2007-08-14 13:20:26 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -14,7 +14,7 @@
 (***********************************************************************)
 
 
-exception Cant_access_file of Parsetree.fname
+exception Cant_access_file_in_search_path of Parsetree.fname
 exception Corrupted_fo of Parsetree.fname
 
 
@@ -26,4 +26,3 @@ type magic
 val fo_magic : magic
 val check_magic : in_channel -> magic -> bool
 val write_magic : out_channel -> magic -> unit
-

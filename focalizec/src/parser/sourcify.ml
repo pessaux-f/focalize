@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.22 2007-08-13 17:29:34 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.23 2007-08-14 13:20:26 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -103,7 +103,7 @@ let pp_ident_desc ppf = function
 (* pp_ident : Format.formatter -> Parsetree.ident- > unit      *)
 (** {b Descr} : Pretty prints a [ident] value as FoCal source.
 
-    {b Rem} : Not exported ouside this module.                 *)
+    {b Rem} : Exported ouside this module.                     *)
 (* *********************************************************** *)
 let pp_ident ppf = pp_generic_ast pp_ident_desc ppf
 ;;

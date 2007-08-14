@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.14 2007-08-14 11:04:19 pessaux Exp $ *)
+(* $Id: env.ml,v 1.15 2007-08-14 13:20:26 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -429,7 +429,8 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
 	  close_in in_file ;
 	  raise (Files.Corrupted_fo fname)
 	  end)
-      with Files.Cant_access_file _ -> raise (Unbound_module fname)
+      with Files.Cant_access_file_in_search_path _ ->
+	raise (Unbound_module fname)
     end) in
 
 

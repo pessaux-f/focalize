@@ -1,4 +1,4 @@
-(* $Id: files.ml,v 1.5 2007-08-14 11:04:19 pessaux Exp $ *)
+(* $Id: files.ml,v 1.6 2007-08-14 13:20:26 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -15,7 +15,7 @@
 
 
 (** Paths for libraries lookup. *)
-exception Cant_access_file of Parsetree.fname ;;
+exception Cant_access_file_in_search_path of Parsetree.fname ;;
 exception Corrupted_fo of Parsetree.fname ;;
 
 
@@ -53,8 +53,8 @@ let (add_lib_path, get_lib_paths) =
              in the directories indicated by the "lib_path" if the file
              has a relative name. Otherwise, if the file has an absolute
              name, it tries to open it straight.
-             If opening fails, then a [Cant_access_file] exception is
-             raised.
+             If opening fails, then a [Cant_access_file_in_search_path]
+             exception is raised.
 
    {b Rem} : Exported outside this module.                               *)
 (* ********************************************************************* *)
@@ -63,7 +63,7 @@ let open_in_from_lib_paths filename =
     | [] ->
 	(begin
 	try open_in_bin filename
-	with Sys_error _ -> raise (Cant_access_file filename)
+	with Sys_error _ -> raise (Cant_access_file_in_search_path filename)
 	end)
     | h :: rem ->
 	try open_in_bin (h ^ filename)

@@ -12,20 +12,22 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.13 2007-08-13 17:29:34 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.14 2007-08-14 13:20:26 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {bL Descr} : Exception used to inform that a sum type constructor was
                used with an incorrect arity. The correct expected arity is
               stored in the second argument of the exception constructor.  *)
-exception Bad_constructor_arity of
-  (Parsetree.ident * Env.TypeInformation.constructor_arity);;
+exception Bad_sum_type_constructor_arity of
+  (Parsetree.ident * Env.TypeInformation.constructor_arity) ;;
 
 (* *********************************************************************** *)
 
 
 exception Unbound_type_variable of string ;;
-exception Method_multiply_defined of Parsetree.vname ;;
+
+(* Method name, species name. *)
+exception Method_multiply_defined of (Parsetree.vname * Types.species_name) ;;
 
 (* Expected arity, used with arity. *)
 exception Bad_type_arity of (Parsetree.ident * int * int) ;;
@@ -37,6 +39,8 @@ exception Bad_type_arity of (Parsetree.ident * int * int) ;;
 type typing_context = {
   (** The name of the currently analysed compilation unit. *)  
   current_unit : Parsetree.fname ;
+  (** The name of the current species if relevant. *)
+  current_species : Types.species_name option ;
   (** Optional type Self is known to be equal to. *)
   self_manifest : Types.type_simple option ;
   (** Mapping between 'variables and the [simpletype] they are bound to.
@@ -286,7 +290,7 @@ let rec typecheck_pattern ctx env pat_desc =
 	  | (_, _) ->
 	      (* Just raise the exception with the right expected arity. *)
 	      raise
-		(Bad_constructor_arity
+		(Bad_sum_type_constructor_arity
 		   (cstr_name, cstr_decl.Env.TypeInformation.cstr_arity)))
      | Parsetree.P_record label_n_patterns ->
 	 (* Type for this pattern. Will be instanciated by side effect. *)
@@ -377,19 +381,21 @@ let typecheck_external_expr ext_expr =
 
 
 (* **************************************************************** *)
-(* ('a * 'b * 'c) list -> ('a * 'd * 'e) list -> unit               *)
+(* Parsetree.vname -> ('a * 'b * 'c) list -> ('a * 'd * 'e) list -> *)
+(*   unit                                                           *)
 (* {Descr} : Checks if the 2 lists of methods names overlaps.
            If so then raises en exception [Method_multiply_defined],
            else silently returns.
 
    {Rem} : Not exported outside this module.                        *)
 (* **************************************************************** *)
-let ensure_methods_uniquely_defined l1 l2 =
+let ensure_methods_uniquely_defined current_species l1 l2 =
   List.iter
     (fun (name1, _, _) ->
       List.iter
 	(fun (name2, _, _) ->
-	  if name1 = name2 then raise (Method_multiply_defined name1))
+	  if name1 = name2 then
+	    raise (Method_multiply_defined (name1, current_species)))
 	l2)
     l1
 ;;
@@ -495,7 +501,7 @@ let rec typecheck_expr ctx env initial_expr =
 	      result_ty
        | (_, _) ->
 	   raise
-	     (Bad_constructor_arity
+	     (Bad_sum_type_constructor_arity
 		(pseudo_ident, cstr_decl.Env.TypeInformation.cstr_arity)))
      | Parsetree.E_match (matched_expr, bindings) ->
 	 let matched_expr_ty = typecheck_expr ctx env matched_expr in
@@ -917,7 +923,13 @@ and typecheck_species_fields ctx env = function
 	     let rep_vname = Parsetree.Vlident "rep" in
 	     (* On must not defined several rep inside a species. *)
 	     if ctx.self_manifest <> None then
-	       raise (Method_multiply_defined rep_vname) ;
+	       (begin
+	       let current_species =
+		 (match ctx.current_species with
+		  | None ->assert false
+		  | Some n -> n) in
+	       raise (Method_multiply_defined (rep_vname, current_species))
+	       end) ;
 	     let ty = typecheck_rep_type_def ctx env rep_type_def in
 	     let ctx' = { ctx with self_manifest = Some ty } in
 	     (* Record the type information in the AST node. *)
@@ -1003,7 +1015,12 @@ and typecheck_species_fields ctx env = function
 	typecheck_species_fields new_ctx new_env rem_fields in
       (* Make sure that method names are not *)
       (* bound several times in the species. *)
-      ensure_methods_uniquely_defined fields_tys rem_fields_tys ;
+      let current_species =
+	(match ctx.current_species with
+	 | None ->assert false
+	 | Some n -> n) in
+      ensure_methods_uniquely_defined
+	current_species fields_tys rem_fields_tys ;
       fields_tys @ rem_fields_tys
 ;;
 
@@ -1012,6 +1029,9 @@ and typecheck_species_fields ctx env = function
 (** Also performs the interface printing stuff of a species. *)
 let typecheck_species_def ctx env species_def =
   let species_def_desc = species_def.Parsetree.ast_desc in
+  (* First of all, we are in a species !!! *)
+  let ctx = { ctx with
+    current_species = Some species_def_desc.Parsetree.sd_name } in
   (* Ignore params and inherit for the moment. *)
   if species_def_desc.Parsetree.sd_params <> [] then failwith "TODO Params." ;
   if species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc <> [] then
@@ -1307,6 +1327,7 @@ let typecheck_file current_unit ast_file =
        (* A phrase is always typed in an empty context. *)
        let ctx = {
 	 current_unit = current_unit ;
+	 current_species = None ;
 	 self_manifest = None ;
 	 tyvars_mapping = [] } in
        let global_env = ref (Env.TypingEnv.pervasives ()) in

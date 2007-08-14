@@ -11,7 +11,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.mli,v 1.2 2007-07-30 08:07:44 weis Exp $ *)
+(* $Id: focalizec.mli,v 1.3 2007-08-14 13:20:26 pessaux Exp $ *)
 
-(** The focalize concrete syntax file checker.
-    This file defines the main verification procedure and runs it. *)
+exception Bad_file_suffix of string
+
+val main : unit -> unit

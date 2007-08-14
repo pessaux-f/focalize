@@ -12,10 +12,10 @@
 (***********************************************************************)
 
 
-(* $Id: focalizec.ml,v 1.8 2007-08-14 11:04:19 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.9 2007-08-14 13:20:26 pessaux Exp $ *)
 
-(** The focalize concrete syntax file checker. *)
 
+exception Bad_file_suffix of string ;;
 
 
 (* The main procedure *)
@@ -54,6 +54,8 @@ let main () =
   let input_file_name = Configuration.get_input_file_name () in
   (* Create the current compilation unit "fname". In fact, this *)
   (* is the current filename without dirname and extention.     *)
+  if not (Filename.check_suffix input_file_name ".foc") then
+    raise (Bad_file_suffix input_file_name) ;
   let current_unit =
     Filename.chop_extension (Filename.basename input_file_name) in
   let ast =
@@ -96,40 +98,4 @@ let main () =
   Env.make_fo_file
     ~source_filename: input_file_name scoping_toplevel_env typing_toplevel_env ;
   exit 0
-;;
-
-
-
-(** If something unexpected arises when proceeding, we exit with the proper
-    error code. *)
-try main () with
-| Types.Conflict (ty1, ty2) ->
-    Format.fprintf Format.err_formatter
-      "Type incompatibility between %a@ and@ %a.@."
-      Types.pp_type_simple ty1 Types.pp_type_simple ty2 ;
-| Types.Circularity (ty1, ty2) ->
-    Format.fprintf Format.err_formatter
-      "Circulary between types %a@ and@ %a@."
-      Types.pp_type_simple ty1 Types.pp_type_simple ty2
-| Types.Arity_mismatch (cstr_name, arity1, arity2) ->
-    Format.fprintf Format.err_formatter
-      "Type constructor %s used with arity %d and %d@."
-      cstr_name arity1 arity2
-| Env.Unbound_identifier vname ->
-    Format.fprintf Format.err_formatter "Unbound identifier \"%s\".@."
-      (Parsetree_utils.name_of_vname vname)
-| Parse_file.Lex_error (pos_s, pos_e, reason) ->
-    Format.fprintf Format.err_formatter "Lexical error, %a. %s@."
-      Parse_file.pp_err_loc (pos_s, pos_e) reason
-| Parse_file.Syntax_error position ->
-    Format.fprintf Format.err_formatter "Syntax error, %a.@."
-      Parse_file.pp_err_loc position
-| Parse_file.Unclear_error position ->
-    Format.fprintf Format.err_formatter "Unclear syntax error, %a.@."
-      Parse_file.pp_err_loc position
-| x ->
-    Format.fprintf Format.err_formatter
-      "Unexpected error: \"%s\".\nPlease report.@."
-      (Printexc.to_string x) ;
-    exit 2
 ;;
