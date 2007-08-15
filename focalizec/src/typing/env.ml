@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.19 2007-08-15 18:15:07 pessaux Exp $ *)
+(* $Id: env.ml,v 1.20 2007-08-15 18:59:00 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -36,7 +36,7 @@
 
 
 exception Unbound_constructor of (Parsetree.vname * Location.t) ;;
-exception Unbound_label of Types.label_name ;;
+exception Unbound_label of (Types.label_name * Location.t) ;;
 exception Unbound_identifier of (Parsetree.vname * Location.t) ;;
 exception Unbound_type of (Types.type_name * Location.t) ;;
 exception Unbound_module of (Types.fname * Location.t) ;;
@@ -902,19 +902,20 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
   (* ************************************************************* *)
-  (* Types.label_name -> > t -> EMAccess.label_bound_data          *)
+  (* loc: Location.t -> Types.label_name -> > t ->                 *)
+  (*   EMAccess.label_bound_data                                   *)
   (** {b Descr} : Looks-up for an [ident] inside the record fields
 		labels environment.
 
       {b Rem} : Exported outside this module.                      *)
   (* ************************************************************* *)
-  let find_label lbl_name (env : t) =
+  let find_label ~loc lbl_name (env : t) =
     try
       (* Because labels cannot be written with a # notation, the only   *)
       (* way is to access toplevel labels of the current compilation    *)
       (* unit. Hence such bindings cannot be induced by opened modules. *)
       env_list_assoc ~allow_opened: false lbl_name env.labels with
-    | Not_found -> raise (Unbound_label lbl_name)
+    | Not_found -> raise (Unbound_label (lbl_name, loc))
 
 
 

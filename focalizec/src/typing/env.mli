@@ -1,5 +1,5 @@
 exception Unbound_constructor of (Parsetree.vname * Location.t)
-exception Unbound_label of Types.label_name
+exception Unbound_label of (Types.label_name * Location.t)
 exception Unbound_identifier of (Parsetree.vname * Location.t)
 exception Unbound_type of (Types.type_name * Location.t)
 exception Unbound_module of (Types.fname * Location.t)
@@ -84,7 +84,7 @@ module ScopingEnv :
 	t -> Types.fname
 
     val add_label : Types.label_name -> Types.fname -> t -> t
-    val find_label : Types.label_name -> t -> Types.fname
+    val find_label : loc: Location.t -> Types.label_name -> t -> Types.fname
 
     val add_type : Types.type_name -> ScopeInformation.type_binding_info ->
       t -> t
@@ -120,7 +120,9 @@ module TypingEnv :
 
     val add_label :
       Types.label_name -> TypeInformation.label_description -> t -> t
-    val find_label : Types.label_name -> t -> TypeInformation.label_description
+    val find_label :
+      loc: Location.t -> Types.label_name -> t ->
+	TypeInformation.label_description
 
     val add_type :
       Types.type_name -> TypeInformation.type_description -> t -> t

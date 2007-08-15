@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.20 2007-08-15 18:15:07 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.21 2007-08-15 18:59:00 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {bL Descr} : Exception used to inform that a sum type constructor was
@@ -221,7 +221,8 @@ let rec is_non_expansive env expr =
   | Parsetree.E_record lbl_exp_list ->
       List.for_all
         (fun (lbl, e) ->
-          let lbl_descr = Env.TypingEnv.find_label lbl env in
+          let lbl_descr =
+	    Env.TypingEnv.find_label ~loc: expr.Parsetree.ast_loc lbl env in
           (lbl_descr.Env.TypeInformation.field_mut =
 	    Env.TypeInformation.FM_immutable) && (is_non_expansive env e))
         lbl_exp_list
@@ -308,7 +309,9 @@ let rec typecheck_pattern ctx env pat_desc =
 		(fun (lbl, pat) ->
 		  (* Get bindings and sub-pattern type. *)
 		  let (sub_pat_ty, bnds) = typecheck_pattern ctx env pat in
-		  let lbl_desc = Env.TypingEnv.find_label lbl env in
+		  let lbl_desc =
+		    Env.TypingEnv.find_label
+		      ~loc: pat.Parsetree.ast_loc lbl env in
 		  (* Get the related label type. *)
 		  let lbl_ty =
 		    Types.specialize
@@ -571,7 +574,9 @@ let rec typecheck_expr ctx env initial_expr =
      | Parsetree.E_record fields -> typeckeck_record_expr ctx env fields None
      | Parsetree.E_record_access (expr, label) ->
 	 let ty_expr = typecheck_expr ctx env expr in
-	 let label_desc = Env.TypingEnv.find_label label env in
+	 let label_desc =
+	   Env.TypingEnv.find_label
+	     ~loc: initial_expr.Parsetree.ast_loc label env in
 	 (* Just remind that labels are types as functions of type     *)
 	 (* "type of the field as seen by user -> type od the record". *)
 	 let label_ty =
@@ -632,7 +637,8 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
   List.iter
     (fun (label, expr) ->
       let expr_ty = typecheck_expr ctx env expr in
-      let lbl_descr = Env.TypingEnv.find_label label env in
+      let lbl_descr =
+	Env.TypingEnv.find_label ~loc: expr.Parsetree.ast_loc label env in
       (* Get the functionnal type of this field. *)
       let field_ty =
 	Types.specialize lbl_descr.Env.TypeInformation.field_scheme in

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.6 2007-08-15 18:15:07 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.7 2007-08-15 18:59:00 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -56,9 +56,10 @@ try Check_file.main () with
      | Env.Unbound_constructor (vname, at) ->
 	 Format.fprintf Format.err_formatter "Unbound constructor \'%s\' : %a@."
 	   (Parsetree_utils.name_of_vname vname) Location.pp_location at
-     | Env.Unbound_label lname ->
+     | Env.Unbound_label (lname, at) ->
 	 Format.fprintf Format.err_formatter
-	   "Unbound record field label \'%s\'.@." lname
+	   "Unbound record field label \'%s\' : %a.@."
+	   lname Location.pp_location at
      | Env.Unbound_identifier (vname, at) ->
 	 Format.fprintf Format.err_formatter "Unbound identifier \'%s\' : %a.@."
 	   (Parsetree_utils.name_of_vname vname) Location.pp_location at
