@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.17 2007-08-15 15:25:07 pessaux Exp $ *)
+(* $Id: env.ml,v 1.18 2007-08-15 17:55:08 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -35,9 +35,9 @@
 
 
 
-exception Unbound_constructor of Parsetree.vname ;;
+exception Unbound_constructor of (Parsetree.vname * Location.t) ;;
 exception Unbound_label of Types.label_name ;;
-exception Unbound_identifier of Parsetree.vname ;;
+exception Unbound_identifier of (Parsetree.vname * Location.t) ;;
 exception Unbound_type of Types.type_name ;;
 exception Unbound_module of Types.fname ;;
 exception Unbound_species of Types.species_name ;;
@@ -84,22 +84,40 @@ let env_list_assoc ~allow_opened searched list =
 ;;
 
 
-(*
+
 let debug_env_list_assoc ~allow_opened searched list =
   let rec rec_assoc = function
-    | [] -> raise Not_found
+    | [] ->
+	Printf.eprintf "Search failed.\n" ;
+	flush stderr ;
+	raise Not_found
     | (name, data) :: q ->
-Printf.eprintf "\"%s\"" (Parsetree_utils.name_of_vname name) ; flush stderr ;
+	Printf.eprintf "\"%s\" " (Parsetree_utils.name_of_vname name) ;
+	flush stderr ;
 	if name = searched then
 	  (begin
 	  match data with
-	   | BO_opened (_, v) -> if allow_opened then v else rec_assoc q
-	   | BO_absolute v -> v
+	   | BO_opened (fname, v) ->
+	       if allow_opened then
+		 (begin
+		 Printf.eprintf
+		   "Search successfully ends on opened (\"%s\")...\n" fname ;
+		 flush stderr ;
+		 v
+		 end)
+	       else rec_assoc q
+	   | BO_absolute v ->
+	       Printf.eprintf "Search successfully ends on absolute...\n" ;
+	       flush stderr ;
+	       v
 	  end)
 	else rec_assoc q in
+  Printf.eprintf
+    "Search starts for \"%s\"...\n" (Parsetree_utils.name_of_vname  searched) ;
+  flush stderr ;
   rec_assoc list
 ;;
-*)
+
 
 
 (* ********************************************************************** *)
@@ -746,24 +764,24 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
   (* ******************************************************************* *)
-  (* current_unit: Types.fname -> Parsetree.ident ->                     *)
+  (* loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->  *)
   (*   t -> EMAccess.value_bound_data                                    *)
   (** {b Descr} : Looks-up for an [ident] inside the values environment.
 
       {b Rem} : Exported outside this module.                            *)
   (* ******************************************************************* *)
-  let rec find_value ~current_unit ident_ident (env : t) =
+  let rec find_value ~loc ~current_unit ident_ident (env : t) =
     match ident_ident.Parsetree.ast_desc with
      | Parsetree.I_local vname ->
          (* No explicit scoping information was provided, hence *)
          (* opened modules bindings are acceptable.             *)
-	 find_value_vname ~allow_opened: true vname env
+	 find_value_vname ~loc ~allow_opened: true vname env
      | Parsetree.I_global (opt_scope, vname) ->
 	 let env' = EMAccess.find_module ~current_unit opt_scope env in
 	 (* Check if the lookup can return something *)
 	 (* coming from an opened module.            *)
 	 let allow_opened = allow_opened_p current_unit opt_scope in
-	 find_value_vname ~allow_opened vname env'
+	 find_value_vname ~loc ~allow_opened vname env'
      | Parsetree.I_method (collname_opt, vname) ->
 	 (begin
 	 match collname_opt with
@@ -774,7 +792,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 	      (* so that inherited methods and our methods belong to it,   *)
               (* we just have to search for the [vname] inside the current *)
               (* environment.                                              *)
-	      find_value_vname ~allow_opened: false vname env
+	      find_value_vname ~loc ~allow_opened: false vname env
 	  | Some collname ->
 	      (* Collections are alwas capitalized so *)
               (* the related [vname] is a [Vuident].  *)
@@ -786,7 +804,8 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 		   collname
 		   (find_species_vname ~allow_opened: false coll_vname env)) in
 	      let data =
-		find_value_vname ~allow_opened: false vname available_meths in
+		find_value_vname
+		  ~loc ~allow_opened: false vname available_meths in
 	      (* Now we apply the post-processing on the found data. *)
 	      EMAccess.post_process_method_value_binding ~collname data
 	 end)
@@ -794,16 +813,15 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
   (* ****************************************************************** *)
-  (* allow_opened: bool -> Parsetree.vname -> t ->                      *)
+  (* loc: Location.t -> allow_opened: bool -> Parsetree.vname -> t ->   *)
   (*   EMAccess.value_bound_data                                        *)
   (** {b Descr} : Looks-up for a [vname] inside the values environment.
 
       {b Rem} : Not exported outside this module.                       *)
   (* ****************************************************************** *)
-  and find_value_vname ~allow_opened vname (env : t) =
-(*    try env_list_assoc ~allow_opened vname env.values *)
-    try (*debug_env_list_assoc*) env_list_assoc ~allow_opened vname env.values
-    with Not_found -> raise (Unbound_identifier vname)
+  and find_value_vname ~loc ~allow_opened vname (env : t) =
+    try debug_env_list_assoc (*env_list_assoc*) ~allow_opened vname env.values
+    with Not_found -> raise (Unbound_identifier (vname, loc))
 
 
 
@@ -823,26 +841,26 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
 
-  (* ************************************************************ *)
-  (* current_unit: Types.fname -> Parsetree.ident ->              *)
-  (*   t -> EMAccess.constructor_bound_data                       *)
+  (* ****************************************************************** *)
+  (* current_unit: loc: Location.t -> Types.fname -> Parsetree.ident -> *)
+  (*   t -> EMAccess.constructor_bound_data                             *)
   (** {b Descr} : Looks-up for an [ident] inside the constructors
 		environment.
 
-      {b Rem} : Exported outside this module.                     *)
-  (* ************************************************************ *)
-  let rec find_constructor ~current_unit cstr_ident (env : t) =
+      {b Rem} : Exported outside this module.                           *)
+  (* ****************************************************************** *)
+  let rec find_constructor ~loc ~current_unit cstr_ident (env : t) =
     match cstr_ident.Parsetree.ast_desc with
      | Parsetree.I_local vname ->
          (* No explicit scoping information was provided, hence *)
          (* opened modules bindings are acceptable.             *)
-         find_constructor_vname ~allow_opened: true vname env
+         find_constructor_vname ~loc ~allow_opened: true vname env
      | Parsetree.I_global (opt_scope, vname) ->
 	 let env' = EMAccess.find_module ~current_unit opt_scope env in
 	 (* Check if the lookup can return something *)
 	 (* coming from an opened module.            *)
 	 let allow_opened = allow_opened_p current_unit opt_scope in
-	 find_constructor_vname ~allow_opened vname env'
+	 find_constructor_vname ~loc ~allow_opened vname env'
      | Parsetree.I_method (_, _) ->
 	 (* Don't know what it means if the           *)
 	 (* constructor seems to be in fact a method. *)
@@ -851,16 +869,17 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
   (* *********************************************************** *)
-  (* allow_opened: bool -> Parsetree.constr_name -> t ->         *)
+  (* allow_opened: loc: Location.t -> bool ->                    *)
+  (*   Parsetree.constr_name -> t ->                             *)
   (*   EMAccess.constructor_bound_data                           *)
   (** {b Descr} : Looks-up for a [vname] inside the constructors
                 environment.
 
       {b Rem} : Not exported outside this module.                *)
   (* *********************************************************** *)
-  and find_constructor_vname ~allow_opened vname (env : t) =
+  and find_constructor_vname ~loc ~allow_opened vname (env : t) =
     try env_list_assoc ~allow_opened vname env.constructors
-    with Not_found -> raise (Unbound_constructor vname)
+    with Not_found -> raise (Unbound_constructor (vname, loc))
 
 
 

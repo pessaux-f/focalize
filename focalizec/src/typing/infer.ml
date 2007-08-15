@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.18 2007-08-15 17:00:01 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.19 2007-08-15 17:55:08 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {bL Descr} : Exception used to inform that a sum type constructor was
@@ -262,6 +262,7 @@ let rec typecheck_pattern ctx env pat_desc =
 	 (* Find a specialization of the constructor's type scheme. *)
 	 let cstr_decl =
 	   Env.TypingEnv.find_constructor
+	     ~loc: cstr_name.Parsetree.ast_loc
 	     ~current_unit: ctx.current_unit cstr_name env in
 	 (match (pats, cstr_decl.Env.TypeInformation.cstr_arity) with
 	  | ([], Env.TypeInformation.CA_zero) ->
@@ -446,7 +447,9 @@ let rec typecheck_expr ctx env initial_expr =
          (* ident among local identifiers, in-params, is-params,      *)
          (* inheritance and finally global identifiers.               *)
 	 let var_scheme =
-	   Env.TypingEnv.find_value ~current_unit: ctx.current_unit ident env in
+	   Env.TypingEnv.find_value
+	     ~loc: ident.Parsetree.ast_loc
+	     ~current_unit: ctx.current_unit ident env in
          Types.specialize var_scheme
      | Parsetree.E_app (functional_expr, args_exprs) ->
 	 let fun_ty = typecheck_expr ctx env functional_expr in
@@ -479,6 +482,7 @@ let rec typecheck_expr ctx env initial_expr =
 	    Parsetree.ast_type = None } in
 	 let cstr_decl =
 	   Env.TypingEnv.find_constructor
+	     ~loc: cstr_expr.Parsetree.ast_loc
 	     ~current_unit: ctx.current_unit pseudo_ident env in
 	 (match (exprs, cstr_decl.Env.TypeInformation.cstr_arity) with
 	  | ([], Env.TypeInformation.CA_zero) ->
@@ -785,12 +789,12 @@ and typecheck_prop ctx env prop =
     (match prop.Parsetree.ast_desc with
      | Parsetree.Pr_forall (vnames, t_expr, pr)
      | Parsetree.Pr_exists (vnames, t_expr, pr) ->
-         (Types.begin_definition ();
+         (Types.begin_definition () ;
 	 (* Get the couple (name, type) for each defined variable. *)
 	 let bound_variables =
 	   (let ty = typecheck_type_expr ctx env t_expr in
 	   List.map (fun vname -> (vname, ty)) vnames) in
-	 (* Now typecheck the theorem's body in the extended environment.  *)
+	 (* Now typecheck the prop's body in the extended environment.     *)
 	 (* Note that as often, th order bindings are inserted in the      *)
 	 (* environment does not matter since parameters can never depends *)
 	 (* on each other.                                                 *)
@@ -809,18 +813,18 @@ and typecheck_prop ctx env prop =
 	 let ty2 = typecheck_prop ctx env pr2 in
 	 Types.unify
 	   ~loc: prop.Parsetree.ast_loc ~self_manifest: ctx.self_manifest
-	   ty1 ty2;
+	   ty1 ty2 ;
 	 (* Enforce the type to be [prop]. *)
 	 Types.unify
 	   ~loc: prop.Parsetree.ast_loc
-	   ~self_manifest: ctx.self_manifest ty1 (Types.type_prop ());
+	   ~self_manifest: ctx.self_manifest ty1 (Types.type_prop ()) ;
 	 ty1
      | Parsetree.Pr_not pr ->
          let ty = typecheck_prop ctx env pr in
 	 (* Enforce the type to be [prop]. *)
 	 Types.unify
 	   ~loc: prop.Parsetree.ast_loc
-	   ~self_manifest: ctx.self_manifest ty (Types.type_prop ());
+	   ~self_manifest: ctx.self_manifest ty (Types.type_prop ()) ;
          ty
      | Parsetree.Pr_expr expr ->
 	 (* Expressions must be typed as [bool]. If *)
@@ -828,7 +832,7 @@ and typecheck_prop ctx env prop =
 	 let ty = typecheck_expr ctx env expr in
          Types.unify
 	   ~loc: prop.Parsetree.ast_loc
-	   ~self_manifest: ctx.self_manifest ty (Types.type_bool ());
+	   ~self_manifest: ctx.self_manifest ty (Types.type_bool ()) ;
          Types.type_prop ()
      | Parsetree.Pr_paren pr -> typecheck_prop ctx env pr) in
   prop.Parsetree.ast_type <- Some final_ty ;

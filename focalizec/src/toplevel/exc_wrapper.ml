@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.4 2007-08-15 17:00:01 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.5 2007-08-15 17:55:08 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -53,15 +53,15 @@ try Check_file.main () with
 	 Format.fprintf Format.err_formatter
 	   "Module '%s' was not declared as \"use\".@." modname
 (* Generic environments stuff. *)
-     | Env.Unbound_constructor vname ->
-	 Format.fprintf Format.err_formatter "Unbound constructor \'%s\'.@."
-	   (Parsetree_utils.name_of_vname vname)
+     | Env.Unbound_constructor (vname, at) ->
+	 Format.fprintf Format.err_formatter "Unbound constructor \'%s\' : %a@."
+	   (Parsetree_utils.name_of_vname vname) Location.pp_location at
      | Env.Unbound_label lname ->
 	 Format.fprintf Format.err_formatter
 	   "Unbound record field label \'%s\'.@." lname
-     | Env.Unbound_identifier vname ->
-	 Format.fprintf Format.err_formatter "Unbound identifier \'%s\'.@."
-	   (Parsetree_utils.name_of_vname vname)
+     | Env.Unbound_identifier (vname, at) ->
+	 Format.fprintf Format.err_formatter "Unbound identifier \'%s\' : %a.@."
+	   (Parsetree_utils.name_of_vname vname) Location.pp_location at
      | Env.Unbound_type tname ->
 	 Format.fprintf Format.err_formatter "Unbound type \'%s\'.@." tname
      | Env.Unbound_module fname ->

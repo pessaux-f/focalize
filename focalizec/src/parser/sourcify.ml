@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.23 2007-08-14 13:20:26 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.24 2007-08-15 17:55:08 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -766,9 +766,9 @@ and pp_prop_desc ppf = function
       Format.fprintf ppf "@[<2>ex@ %a@ in@ %a,@ %a@]"
 	(pp_vnames "") vnames pp_type_expr type_expr_opt pp_prop prop
   | Parsetree.Pr_imply (p1, p2) ->
-      Format.fprintf ppf "@[<2>%a@ ->@ %a@]" pp_prop p1 pp_prop p2
+      Format.fprintf ppf "@[<2>%a@ ->@ (%a)@]" pp_prop p1 pp_prop p2
   | Parsetree.Pr_or (p1, p2) ->
-      Format.fprintf ppf "@[<2>%a@ or@ %a@]" pp_prop p1 pp_prop p2
+      Format.fprintf ppf "@[<2>(%a@ or@ %a)@]" pp_prop p1 pp_prop p2
   | Parsetree.Pr_and (p1, p2) ->
       Format.fprintf ppf "@[<2>%a@ and@ %a@]" pp_prop p1 pp_prop p2
   | Parsetree.Pr_equiv (p1, p2) ->

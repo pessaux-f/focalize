@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.13 2007-08-15 15:25:07 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.14 2007-08-15 17:55:08 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -349,6 +349,7 @@ let rec scope_expr ctx env expr =
          let basic_vname = unqualified_vname_of_ident ident in
 	 let hosting_info =
 	   Env.ScopingEnv.find_value
+	     ~loc: ident.Parsetree.ast_loc
              ~current_unit: ctx.current_unit ident env in
 	 (* Let's re-construct a completely scoped identifier. *)
 	 let scoped_ident_descr =
@@ -441,6 +442,7 @@ and scope_pattern ctx env pattern =
          let cstr_vname = unqualified_vname_of_ident cstr in
 	 let cstr_host_module =
 	   Env.ScopingEnv.find_constructor
+	     ~loc: cstr.Parsetree.ast_loc
 	     ~current_unit: ctx.current_unit cstr env in
 	 (* Let's build tne complete extended environment by accumulating   *)
 	 (* the new bindings directly inside an environment accumulator.    *)
@@ -588,6 +590,9 @@ and scope_let_definition ~toplevel_let ctx env let_def =
 
 
 let rec scope_prop ctx env prop =
+Format.eprintf "Scoping prop at %a\n"
+  Location.pp_location prop.Parsetree.ast_loc ;
+flush stderr ;
   let new_desc =
     (match prop.Parsetree.ast_desc with
      | Parsetree.Pr_forall (vnames, ty_expr, p) ->
@@ -673,6 +678,7 @@ let scope_fact ctx env fact =
 	       let basic_vname = unqualified_vname_of_ident ident in
 	       let scope_info =
 		 Env.ScopingEnv.find_value
+		   ~loc: ident.Parsetree.ast_loc
 		   ~current_unit: ctx.current_unit ident env in
 	       let tmp =
 		 scoped_ident_desc_from_value_binding_info
@@ -689,6 +695,7 @@ let scope_fact ctx env fact =
 	       let basic_vname = unqualified_vname_of_ident ident in
 	       let scope_info =
 		 Env.ScopingEnv.find_value
+		   ~loc: ident.Parsetree.ast_loc
 		   ~current_unit: ctx.current_unit ident env in
 	       let tmp =
 		 scoped_ident_desc_from_value_binding_info

@@ -1,6 +1,6 @@
 use "basics" ;;
 open "basics" ;;
-
+(*
 5 ;;
 let x = 42 ;;
 let y = "Areuh world" ;;
@@ -44,7 +44,7 @@ let not_b (x) in bool =
    | true -> false
    | false -> true
 ;;
-
+*)
 
 species Basic_object =
   let equal (x, y) = true ;
