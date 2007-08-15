@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.16 2007-08-14 16:04:46 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.17 2007-08-15 15:25:07 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {bL Descr} : Exception used to inform that a sum type constructor was
@@ -38,7 +38,7 @@ exception Bad_type_arity of (Parsetree.ident * int * int) ;;
     type inference. May be could also contain the environment. *)
 type typing_context = {
   (** The name of the currently analysed compilation unit. *)  
-  current_unit : Parsetree.fname ;
+  current_unit : Types.fname ;
   (** The name of the current species if relevant. *)
   current_species : Types.species_name option ;
   (** Optional type Self is known to be equal to. *)
@@ -463,19 +463,17 @@ let rec typecheck_expr ctx env initial_expr =
            fun_ty
 	   ty_exprs
      | Parsetree.E_constr (cstr_expr, exprs) ->
-	 (* Because the environment maps [idents] onto type schemes and
-            because the constructor's name is not a "full" ident, we
-            just wrap the constructor's name into a global [ident]
-            to be able to lookup inside the environment. *)
+	 (* Because the environment maps [idents] onto type schemes and *)
+         (* because the constructor's name is not a "full" ident, we    *)
+         (* just wrap the constructor's name into a global [ident]      *)
+         (* to be able to lookup inside the environment.                *)
 	 let pseudo_ident =
            let Parsetree.CE (fname_opt, vname) = cstr_expr.Parsetree.ast_desc in
 	   {
-            Parsetree.ast_loc = cstr_expr.Parsetree.ast_loc;
-            Parsetree.ast_desc =
-              Parsetree.I_global (fname_opt, vname);
-	    Parsetree.ast_doc = cstr_expr.Parsetree.ast_doc;
-	    Parsetree.ast_type = None;
-           } in
+            Parsetree.ast_loc = cstr_expr.Parsetree.ast_loc ;
+            Parsetree.ast_desc = Parsetree.I_global (fname_opt, vname) ;
+	    Parsetree.ast_doc = cstr_expr.Parsetree.ast_doc ;
+	    Parsetree.ast_type = None } in
 	 let cstr_decl =
 	   Env.TypingEnv.find_constructor
 	     ~current_unit: ctx.current_unit pseudo_ident env in
@@ -1045,11 +1043,18 @@ let typecheck_species_expr ctx env species_expr =
     Env.TypingEnv.find_species
       ~current_unit: ctx.current_unit species_expr_desc.Parsetree.se_name env in
   (* Create the type of this species. *)
-  let species_ident_as_string =
+  let (species_module, species_name) =
     (match species_expr_desc.Parsetree.se_name.Parsetree.ast_desc with
-     | Parsetree.I_local vname -> Parsetree_utils.name_of_vname vname
-     | _ -> failwith "TODO SPE1") in
-  let species_as_type = Types.type_rep_species species_ident_as_string in
+     | Parsetree.I_local vname
+     | Parsetree.I_global (None, vname) ->
+	 (ctx.current_unit, (Parsetree_utils.name_of_vname vname))
+     | Parsetree.I_global ((Some fname), vname) ->
+	 (fname, (Parsetree_utils.name_of_vname vname))
+     | Parsetree.I_method (_, _) ->
+	 (* Species are not first class value, then  *)
+	 (* they can't be returned by a method call. *)
+	 assert false) in
+  let species_as_type = Types.type_rep_species ~species_module ~species_name in
   (* Record the type in the AST node. *)
   species_expr.Parsetree.ast_type <- Some species_as_type ;
   (* Extract only the methods type scheme to return them. *)
@@ -1103,15 +1108,14 @@ let typecheck_species_def ctx env species_def =
     current_species = Some species_def_desc.Parsetree.sd_name } in
   (* Ignore params and inherit for the moment. *)
   if species_def_desc.Parsetree.sd_params <> [] then failwith "TODO Params." ;
-  if species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc <> [] then
-    failwith "TODO inherit" ;
-  (* We first load the inherited methods *)
-  (* let env_with_inherited_methods = *)
-    
-
-  (* Infer the types of the current field's.*)
+  (* We first load the inherited methods. *)
+  let env_with_inherited_methods = 
+    extend_env_with_inherits
+      ctx env species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc in
+  (* Now infer the types of the current field's.*)
   let methods_info =
-    typecheck_species_fields ctx env species_def_desc.Parsetree.sd_fields in
+    typecheck_species_fields
+      ctx env_with_inherited_methods species_def_desc.Parsetree.sd_fields in
   
   (* Then one must ensure that each method has the same type everywhere *)
   (* in the inheritance tree and more generaly create the normalised    *)
@@ -1129,9 +1133,11 @@ let typecheck_species_def ctx env species_def =
   let env_with_species =
     Env.TypingEnv.add_species
       species_def_desc.Parsetree.sd_name species_description env in
-  (* Now, extend the environment with a type that is the spefcies. *)
+  (* Now, extend the environment with a type that is the species. *)
   let species_as_type =
-    Types.type_rep_species species_def_desc.Parsetree.sd_name in
+    Types.type_rep_species
+      ~species_module: ctx.current_unit
+      ~species_name: species_def_desc.Parsetree.sd_name in
   let species_as_type_description = {
     Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
     Env.TypeInformation.type_identity = Types.generalize species_as_type ;

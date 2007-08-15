@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.4 2007-08-13 15:01:11 pessaux Exp $ *)
+(* $Id: types.ml,v 1.5 2007-08-15 15:25:07 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -22,6 +22,8 @@ type type_name = string
      (** Type name. *) ;;
 type label_name = string
      (** Label name. *) ;;
+type fname = string
+     (** File (and "module") name. *) ;;
 
 (* ************************************************* *)
 (* type_simple                                       *)
@@ -40,7 +42,7 @@ type type_simple =
 	  type. *)
       (type_name * type_simple list)
   | ST_self_rep       (** Carrier type of the currently analysed species. *)
-  | ST_species_rep of collection_name   (** Carrier type of a collection. *)
+  | ST_species_rep of (fname * collection_name)   (** Carrier type of a collection hosted in the specified module. *)
 
 and type_species =
   | SPT_collection_interface of collection_type
@@ -167,7 +169,8 @@ let type_prop () = type_basic "prop" [] ;;
 
 
 
-let type_rep_species species_name = ST_species_rep species_name ;;
+let type_rep_species ~species_module ~species_name =
+  ST_species_rep (species_module, species_name) ;;
 
 
 
@@ -345,8 +348,8 @@ let (pp_type_simple, pp_type_scheme) =
              Format.fprintf ppf "(@[<1>%a)@]@ %s"
                (Handy.pp_generic_separated_list " ," rec_pp) arg_tys type_name)
     | ST_self_rep -> Format.fprintf ppf "Self"
-    | ST_species_rep collection_name ->
-      Format.fprintf ppf "%s" collection_name in
+    | ST_species_rep (module_name, collection_name) ->
+	Format.fprintf ppf "%s#%s" module_name collection_name in
 
   (fun ppf ty ->
     reset_type_variables_mapping ();

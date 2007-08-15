@@ -2,24 +2,24 @@ exception Unbound_constructor of Parsetree.vname
 exception Unbound_label of Types.label_name
 exception Unbound_identifier of Parsetree.vname
 exception Unbound_type of Types.type_name
-exception Unbound_module of Parsetree.fname
+exception Unbound_module of Types.fname
 exception Unbound_species of Types.species_name
 
 
 module ScopeInformation :
   sig
     type value_binding_info =
-      | SBI_file of Parsetree.fname
+      | SBI_file of Types.fname
       | SBI_method_of_self
       | SBI_method_of_coll of Types.collection_name
       | SBI_local
 
     type type_binding_info =
       | TBI_builtin_or_var
-      | TBI_defined_in of Parsetree.fname
+      | TBI_defined_in of Types.fname
 
   type species_scope =
-    | SPBI_file of Parsetree.fname
+    | SPBI_file of Types.fname
     | SPBI_local
 
   type species_binding_info = {
@@ -75,25 +75,25 @@ module ScopingEnv :
     val add_value :
       Parsetree.vname -> ScopeInformation.value_binding_info -> t -> t
     val find_value :
-      current_unit:Parsetree.fname ->
+      current_unit:Types.fname ->
       Parsetree.ident -> t -> ScopeInformation.value_binding_info
 
-    val add_constructor : Parsetree.constr_name -> Parsetree.fname -> t -> t
+    val add_constructor : Parsetree.constr_name -> Types.fname -> t -> t
     val find_constructor :
-      current_unit:Parsetree.fname -> Parsetree.ident -> t -> Parsetree.fname
+      current_unit:Types.fname -> Parsetree.ident -> t -> Types.fname
 
-    val add_label : Types.label_name -> Parsetree.fname -> t -> t
-    val find_label : Types.label_name -> t -> Parsetree.fname
+    val add_label : Types.label_name -> Types.fname -> t -> t
+    val find_label : Types.label_name -> t -> Types.fname
 
     val add_type : Types.type_name -> ScopeInformation.type_binding_info ->
       t -> t
     val find_type :
-      current_unit: Parsetree.fname -> Parsetree.ident -> t ->
+      current_unit: Types.fname -> Parsetree.ident -> t ->
 	ScopeInformation.type_binding_info
 
     val add_species :
       Types.species_name -> ScopeInformation.species_binding_info -> t -> t
-    val find_species : current_unit: Parsetree.fname -> Parsetree.ident ->
+    val find_species : current_unit: Types.fname -> Parsetree.ident ->
       t -> ScopeInformation.species_binding_info
   end
 
@@ -106,13 +106,13 @@ module TypingEnv :
 
     val add_value : Parsetree.vname -> Types.type_scheme -> t -> t
     val find_value :
-      current_unit: Parsetree.fname -> Parsetree.ident -> t -> Types.type_scheme
+      current_unit: Types.fname -> Parsetree.ident -> t -> Types.type_scheme
 
     val add_constructor :
       Parsetree.constr_name ->
       TypeInformation.constructor_description -> t -> t
     val find_constructor :
-      current_unit:Parsetree.fname ->
+      current_unit:Types.fname ->
       Parsetree.ident -> t -> TypeInformation.constructor_description
 
     val add_label :
@@ -122,17 +122,17 @@ module TypingEnv :
     val add_type :
       Types.type_name -> TypeInformation.type_description -> t -> t
     val find_type :
-      current_unit: Parsetree.fname ->
+      current_unit: Types.fname ->
       Parsetree.ident -> t -> TypeInformation.type_description
 
     val add_species :
       Types.species_name -> TypeInformation.species_description -> t -> t
-    val find_species : current_unit: Parsetree.fname -> Parsetree.ident ->
+    val find_species : current_unit: Types.fname -> Parsetree.ident ->
       t -> TypeInformation.species_description
   end
 
-val scope_open_module : Parsetree.fname -> ScopingEnv.t -> ScopingEnv.t
-val type_open_module : Parsetree.fname -> TypingEnv.t -> TypingEnv.t
+val scope_open_module : Types.fname -> ScopingEnv.t -> ScopingEnv.t
+val type_open_module : Types.fname -> TypingEnv.t -> TypingEnv.t
 
 val make_fo_file :
-  source_filename: Parsetree.fname -> ScopingEnv.t -> TypingEnv.t -> unit
+  source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t -> unit

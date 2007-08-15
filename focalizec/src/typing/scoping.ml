@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.12 2007-08-14 14:31:30 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.13 2007-08-15 15:25:07 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -47,14 +47,14 @@
 (* *********************************************************************** *)
 
 
-exception Multiply_used_module of Parsetree.fname ;;
-exception Module_not_specified_as_used of Parsetree.fname ;;
+exception Multiply_used_module of Types.fname ;;
+exception Module_not_specified_as_used of Types.fname ;;
 
 type scoping_context = {
   (** The name of the currently analysed compilation unit. *)
-  current_unit : Parsetree.fname ;
+  current_unit : Types.fname ;
   (** The list of "use"-d modules. Not file with paths and extension : just module name (ex: "Basics"). *)
-  used_modules : Parsetree.fname list ;
+  used_modules : Types.fname list ;
 } ;;
 
 
@@ -1239,7 +1239,7 @@ let scope_phrase ctx env phrase =
 
 
 (* ******************************************************************* *)
-(* scope_file : Parsetree.fname -> Parsetree.file ->                   *)
+(* scope_file : Types.fname -> Parsetree.file ->                       *)
 (*   (Parsetree.file * Env.ScopingEnv.t)                               *)
 (** {b Descr} : Starts the scoping phase on a whole file. The initial
               scoping environment is totally empty. Returns the scoped

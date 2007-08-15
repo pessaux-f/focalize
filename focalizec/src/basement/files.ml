@@ -1,4 +1,4 @@
-(* $Id: files.ml,v 1.6 2007-08-14 13:20:26 pessaux Exp $ *)
+(* $Id: files.ml,v 1.7 2007-08-15 15:25:07 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -15,8 +15,8 @@
 
 
 (** Paths for libraries lookup. *)
-exception Cant_access_file_in_search_path of Parsetree.fname ;;
-exception Corrupted_fo of Parsetree.fname ;;
+exception Cant_access_file_in_search_path of Types.fname ;;
+exception Corrupted_fo of Types.fname ;;
 
 
 
@@ -48,7 +48,7 @@ let (add_lib_path, get_lib_paths) =
 
 
 (* ********************************************************************* *)
-(* Parsetree.fname -> in_channel                                         *)
+(* Types.fname -> in_channel                                             *)
 (* {b Descr} : try to open a file in read-binary-mode, searching for it
              in the directories indicated by the "lib_path" if the file
              has a relative name. Otherwise, if the file has an absolute

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.9 2007-08-10 15:32:06 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.10 2007-08-15 15:25:07 pessaux Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -37,10 +37,6 @@ type location = {
 ;;
 
 (** Types of various identifiers in the abstract syntax tree. *)
-
-type fname = string
-     (** File name. *)
-;;
 
 type vname =
    | Vlident of string  (** Lowercase ident. *)
@@ -79,7 +75,7 @@ type 'a ast_doc = ('a, string) generic_ast ;;
 type ident = ident_desc ast
 and ident_desc =
   | I_local of vname
-  | I_global of fname option * vname
+  | I_global of Types.fname option * vname
   | I_method of Types.collection_name option * vname
 ;;
 
@@ -98,7 +94,7 @@ and ident_desc =
 (* ********************************************************************** *)
 type constructor_expr = constructor_expr_desc ast
 and constructor_expr_desc =
-  | CE of fname option * vname
+  | CE of Types.fname option * vname
 ;;
 
 type rep_type_def = rep_type_def_desc ast_doc
@@ -346,8 +342,8 @@ type expr_def = expr
 type phrase = phrase_desc ast
 and phrase_desc =
   | Ph_external of external_def
-  | Ph_use of fname
-  | Ph_open of fname
+  | Ph_use of Types.fname
+  | Ph_open of Types.fname
   | Ph_species of species_def
   | Ph_coll of coll_def
   | Ph_type of type_def

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.16 2007-08-14 14:31:30 pessaux Exp $ *)
+(* $Id: env.ml,v 1.17 2007-08-15 15:25:07 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -39,7 +39,7 @@ exception Unbound_constructor of Parsetree.vname ;;
 exception Unbound_label of Types.label_name ;;
 exception Unbound_identifier of Parsetree.vname ;;
 exception Unbound_type of Types.type_name ;;
-exception Unbound_module of Parsetree.fname ;;
+exception Unbound_module of Types.fname ;;
 exception Unbound_species of Types.species_name ;;
 
 
@@ -55,7 +55,7 @@ type 'a binding_origin =
   | BO_absolute of 'a
     (* The binding was inserted by a "open" *)
     (* directive of the file in argument.   *)
-  | BO_opened of (Parsetree.fname * 'a)
+  | BO_opened of (Types.fname * 'a)
 ;;
 
 
@@ -181,7 +181,7 @@ module ScopeInformation = struct
   (* ********************************************************************* *)
   type value_binding_info =
       (* The ident is at toplevel of a file (including the current file). *)
-    | SBI_file of Parsetree.fname
+    | SBI_file of Types.fname
       (* The ident is a method implicitely of self. *)
     | SBI_method_of_self
       (* The ident is a method explicitely of a collection. ATTENTION: while inserting a method in the environment, it must always be tagged with [SBI_method_of_self]. The tag [SBI_method_of_coll] can only be returned by [find_value] who may perform a change on the fly if required. *)
@@ -195,13 +195,13 @@ module ScopeInformation = struct
       (* The type identifier is either a type variable name ('a for instance) or a builtin type (int for instance). *)
     | TBI_builtin_or_var
       (* The identifier is a type name defined at toplevel in a file. *)
-    | TBI_defined_in of Parsetree.fname
+    | TBI_defined_in of Types.fname
 
 
 
   type species_scope =
       (* The identifier is a specied name defined at toplevel in a file. *)
-    | SPBI_file of Parsetree.fname
+    | SPBI_file of Types.fname
 (* The identifier is a locally bound collection like in the case of a "is"-bound parameter (i.e. [c is ...]) where [c] is then considered as a local collection). *)
     | SPBI_local
 
@@ -221,7 +221,7 @@ module ScopeInformation = struct
       {b Rem} : Not exported outside this module.                   *)
   (* ************************************************************** *)
   type env =
-    (Parsetree.fname, Parsetree.fname, type_binding_info, value_binding_info,
+    (Types.fname, Types.fname, type_binding_info, value_binding_info,
      species_binding_info) generic_env
 end ;;
 
@@ -373,13 +373,13 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
   (* no optionnal component.                                           *)
   let buffered =
     ref ([] :
-	   (Parsetree.fname * (ScopeInformation.env * TypeInformation.env))
+	   (Types.fname * (ScopeInformation.env * TypeInformation.env))
 	   list) in
 
 
 
   (* ***************************************************************** *)
-  (* Parsetree.fname -> (ScopeInformation.env * TypeInformation.env)   *)
+  (* Types.fname -> (ScopeInformation.env * TypeInformation.env)       *)
   (** {b Descr} : Wrapper to lookup inside an external interface file.
                 The lookup also performs a bufferisation to prevent
                 futhers calls from accessing again the disk. This
@@ -417,7 +417,7 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
 
 
   (* ******************************************************************** *)
-  (* Parsetree.fname -> ('a, 'b, 'c, 'd, 'e) generic_env ->               *)
+  (* Types.fname -> ('a, 'b, 'c, 'd, 'e) generic_env ->                   *)
   (*   ('a, 'b, 'c, 'd, 'e) generic_env ->                                *)
   (*     ('a, 'b, 'c, 'd, 'e) generic_env                                 *)
   (** {b Descr} : Internal wrapper to extend an environment with bindings
@@ -457,7 +457,7 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
 
   ((* **************************************************************** *)
    (* scope_find_module                                                *)
-   (* current_unit: Parsetree.fname -> Parsetree.fname option ->       *)
+   (* current_unit: Types.fname -> Types.fname option ->               *)
    (*   ScopeInformation.env -> ScopeInformation.env                   *)
    (** {b Descr} : Wrapper to lookup a scoping environment inside an
                  external interface file. Note that if it is requested
@@ -479,7 +479,7 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
 
    (* **************************************************************** *)
    (* type_find_module                                                 *)
-   (* current_unit: Parsetree.fname -> Parsetree.fname option ->       *)
+   (* current_unit: Types.fname -> Types.fname option ->               *)
    (*   TypeInformation.env -> TypeInformation.env                     *)
    (** {b Descr} : Wrapper to lookup a typing environment inside an
                  external interface file. Note that if it is requested
@@ -501,13 +501,13 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
 
    (* *************************************************************** *)
    (* scope_open_module                                               *)
-   (* Parsetree.fname ->                                              *)
-   (*   (Parsetree.fname, Parsetree.fname,                            *)
+   (* Types.fname ->                                                  *)
+   (*   (Types.fname, Types.fname,                                    *)
    (*    ScopeInformation.type_binding_info,                          *)
    (*    ScopeInformation.value_binding_info,                         *)
    (*    ScopeInformation.species_binding_info)                       *)
    (*   generic_env ->                                                *)
-   (*     (Parsetree.fname, Parsetree.fname,                          *)
+   (*     (Types.fname, Types.fname,                                  *)
    (*      ScopeInformation.type_binding_info,                        *)
    (*      ScopeInformation.value_binding_info,                       *)
    (*      ScopeInformation.species_binding_info)                     *)
@@ -527,7 +527,7 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
 
    (* *************************************************************** *)
    (* type_open_module                                                *)
-   (* Parsetree.fname ->                                              *)
+   (* Types.fname ->                                                  *)
    (*   (TypeInformation.constructor_description,                     *)
    (*    TypeInformation.label_description,                           *)
    (*    TypeInformation.type_description,                            *)
@@ -629,7 +629,7 @@ module type EnvModuleAccessSig = sig
   type value_bound_data
   type species_bound_data
   val find_module :
-    current_unit: Parsetree.fname -> Parsetree.fname option ->
+    current_unit: Types.fname -> Types.fname option ->
       (constructor_bound_data, label_bound_data, type_bound_data,
        value_bound_data, species_bound_data)
       generic_env ->
@@ -703,8 +703,8 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
 
-  (* current_unit: Parsetree.fname -> Parsetree.ident -> t ->    *)
-  (*   EMAccess.species_bound_data                               *)
+  (* current_unit: Types.fname -> Parsetree.ident -> t ->    *)
+  (*   EMAccess.species_bound_data                           *)
   let rec find_species ~current_unit coll_ident (env : t) =
     match coll_ident.Parsetree.ast_desc with
      | Parsetree.I_local vname ->
@@ -746,7 +746,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
   (* ******************************************************************* *)
-  (* current_unit: Parsetree.fname -> Parsetree.ident ->                 *)
+  (* current_unit: Types.fname -> Parsetree.ident ->                     *)
   (*   t -> EMAccess.value_bound_data                                    *)
   (** {b Descr} : Looks-up for an [ident] inside the values environment.
 
@@ -824,7 +824,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
   (* ************************************************************ *)
-  (* current_unit: Parsetree.fname -> Parsetree.ident ->          *)
+  (* current_unit: Types.fname -> Parsetree.ident ->              *)
   (*   t -> EMAccess.constructor_bound_data                       *)
   (** {b Descr} : Looks-up for an [ident] inside the constructors
 		environment.
@@ -909,7 +909,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
   (* ****************************************************************** *)
-  (* current_unit: Parsetree.fname -> Parsetree.ident -> t ->           *)
+  (* current_unit: Types.fname -> Parsetree.ident -> t ->               *)
   (*   EMAccess.type_bound_data                                         *)
   (** {b Descr} : Looks-up for an [ident] inside the types environment.
 
@@ -949,8 +949,8 @@ end ;;
 
 
 module ScopingEMAccess = struct
-  type constructor_bound_data = Parsetree.fname
-  type label_bound_data = Parsetree.fname
+  type constructor_bound_data = Types.fname
+  type label_bound_data = Types.fname
   type type_bound_data = ScopeInformation.type_binding_info
   type value_bound_data = ScopeInformation.value_binding_info
   type species_bound_data = ScopeInformation.species_binding_info
@@ -1141,8 +1141,8 @@ module TypingEnv = Make (TypingEMAccess) ;;
 
 
 (* **************************************************************** *)
-(* source_filename: Parsetree.fname -> ScopingEnv.t ->              *)
-(*   TypingEnv.t -> unit                                            *)
+(* source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t ->   *)
+(*    unit                                                          *)
 (** {b Descr} : Create the "fo file" on disk related to the current
               compilation unit.
               This "fo file" contains :

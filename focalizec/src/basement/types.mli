@@ -11,24 +11,19 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.4 2007-08-13 15:01:11 pessaux Exp $ *)
+(* $Id: types.mli,v 1.5 2007-08-15 15:25:07 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
-     (** Collection name. *)
-;;
-
+     (** Collection name. *) ;;
 type species_name = string
-     (** Species name. *)
-;;
-
+     (** Species name. *) ;;
 type type_name = string
-     (** Type name. *)
-;;
-
+     (** Type name. *) ;;
 type label_name = string
-     (** Label name. *)
-;;
+     (** Label name. *) ;;
+type fname = string
+     (** File (and "module") name. *) ;;
 
 (** The type algebra for focalize. *)
 
@@ -76,7 +71,8 @@ val type_unit : unit -> type_simple
 val type_arrow : type_simple -> type_simple -> type_simple
 val type_tuple : type_simple list -> type_simple
 val type_prop : unit -> type_simple
-val type_rep_species : species_name -> type_simple
+val type_rep_species :
+  species_module: fname -> species_name: species_name -> type_simple
 (** Generate the carrier type of the currently analysed species. *)
 val type_self : unit -> type_simple
 
