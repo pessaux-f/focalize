@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.19 2007-08-15 17:55:08 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.20 2007-08-15 18:15:07 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {bL Descr} : Exception used to inform that a sum type constructor was
@@ -78,6 +78,7 @@ let rec typecheck_type_expr ctx env ty_expr =
 	      (* Case of all 0-ary other user-defined type constructors. *)
 	      let ty_descr =
 		Env.TypingEnv.find_type
+		  ~loc: ident.Parsetree.ast_loc
 		  ~current_unit: ctx.current_unit ident env in
 	      if ty_descr.Env.TypeInformation.type_arity <> 0 then
 		raise
@@ -92,6 +93,7 @@ let rec typecheck_type_expr ctx env ty_expr =
 	 (begin
 	 let ty_descr =
 	   Env.TypingEnv.find_type
+	     ~loc: ty_cstr_ident.Parsetree.ast_loc
 	     ~current_unit: ctx.current_unit ty_cstr_ident env in
 	 (* Check the type constructor's arity. *)
 	 let args_ty_len = List.length args_ty_exprs in
@@ -151,6 +153,7 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
 	      (* Case of all 0-ary other user-defined type constructors. *)
 	      let ty_descr =
 		Env.TypingEnv.find_type
+		  ~loc: ident.Parsetree.ast_loc
 		  ~current_unit: ctx.current_unit ident env in
 	      if ty_descr.Env.TypeInformation.type_arity <> 0 then
 		raise
@@ -165,6 +168,7 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
 	 (begin
 	 let ty_descr =
 	   Env.TypingEnv.find_type
+	     ~loc: ty_cstr_ident.Parsetree.ast_loc
 	     ~current_unit: ctx.current_unit ty_cstr_ident env in
 	 (* Check the type constructor's arity. *)
 	 let args_ty_len = List.length args_ty_exprs in
@@ -1069,6 +1073,7 @@ let typecheck_species_expr ctx env species_expr =
   (* Recover the information about the species. *)
   let species_species_description =
     Env.TypingEnv.find_species
+      ~loc: species_expr.Parsetree.ast_loc
       ~current_unit: ctx.current_unit species_expr_desc.Parsetree.se_name env in
   (* Create the type of this species. *)
   let (species_module, species_name) =
@@ -1387,7 +1392,8 @@ let typecheck_phrase ctx env phrase =
 	 ((Types.type_unit ()), env)
      | Parsetree.Ph_open fname ->
 	 (* Load this module interface to extend the current environment. *)
-	 let env' = Env.type_open_module fname env in
+	 let env' =
+	   Env.type_open_module ~loc: phrase.Parsetree.ast_loc fname env in
 	 ((Types.type_unit ()), env')
      | Parsetree.Ph_species species_def ->
 	 (* Interface printing stuff is done inside. *)

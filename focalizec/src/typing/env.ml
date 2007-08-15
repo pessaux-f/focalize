@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.18 2007-08-15 17:55:08 pessaux Exp $ *)
+(* $Id: env.ml,v 1.19 2007-08-15 18:15:07 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -38,9 +38,9 @@
 exception Unbound_constructor of (Parsetree.vname * Location.t) ;;
 exception Unbound_label of Types.label_name ;;
 exception Unbound_identifier of (Parsetree.vname * Location.t) ;;
-exception Unbound_type of Types.type_name ;;
-exception Unbound_module of Types.fname ;;
-exception Unbound_species of Types.species_name ;;
+exception Unbound_type of (Types.type_name * Location.t) ;;
+exception Unbound_module of (Types.fname * Location.t) ;;
+exception Unbound_species of (Types.species_name * Location.t) ;;
 
 
 (* ******************************************************************** *)
@@ -397,7 +397,8 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
 
 
   (* ***************************************************************** *)
-  (* Types.fname -> (ScopeInformation.env * TypeInformation.env)       *)
+  (* loc: Location.t -> Types.fname ->                                 *)
+  (*   (ScopeInformation.env * TypeInformation.env)                    *)
   (** {b Descr} : Wrapper to lookup inside an external interface file.
                 The lookup also performs a bufferisation to prevent
                 futhers calls from accessing again the disk. This
@@ -405,7 +406,7 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
 
       {b Rem} : Not exported outside this module.                      *)
   (* ***************************************************************** *)
-  let internal_find_module fname =
+  let internal_find_module ~loc fname =
     (begin
     try List.assoc fname !buffered
     with Not_found ->
@@ -429,7 +430,7 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
 	  raise (Files.Corrupted_fo fname)
 	  end)
       with Files.Cant_access_file_in_search_path _ ->
-	raise (Unbound_module fname)
+	raise (Unbound_module (fname, loc))
     end) in
 
 
@@ -475,8 +476,9 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
 
   ((* **************************************************************** *)
    (* scope_find_module                                                *)
-   (* current_unit: Types.fname -> Types.fname option ->               *)
-   (*   ScopeInformation.env -> ScopeInformation.env                   *)
+   (* loc: Location.t -> current_unit: Types.fname ->                  *)
+   (*    Types.fname option -> ScopeInformation.env ->                 *)
+   (*      ScopeInformation.env                                        *)
    (** {b Descr} : Wrapper to lookup a scoping environment inside an
                  external interface file. Note that if it is requested
                  to lookup inside the current compilation unit's
@@ -486,19 +488,20 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
 
        {b Rem} : Not exported outside this module.                     *)
    (* **************************************************************** *)
-   (fun ~current_unit fname_opt scope_env ->
+   (fun ~loc ~current_unit fname_opt scope_env ->
     match fname_opt with
      | None -> scope_env
      | Some fname ->
 	 if current_unit = fname then scope_env
-	 else fst (internal_find_module fname)),
+	 else fst (internal_find_module ~loc fname)),
 
 
 
    (* **************************************************************** *)
    (* type_find_module                                                 *)
-   (* current_unit: Types.fname -> Types.fname option ->               *)
-   (*   TypeInformation.env -> TypeInformation.env                     *)
+   (* loc: Location.t -> current_unit: Types.fname ->                  *)
+   (*   Types.fname option -> TypeInformation.env ->                   *)
+   (*     TypeInformation.env                                          *)
    (** {b Descr} : Wrapper to lookup a typing environment inside an
                  external interface file. Note that if it is requested
                  to lookup inside the current compilation unit's
@@ -508,18 +511,18 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
 
        {b Rem} : Not exported outside this module.                     *)
    (* **************************************************************** *)
-   (fun ~current_unit fname_opt type_env ->
+   (fun ~loc ~current_unit fname_opt type_env ->
      match fname_opt with
       | None -> type_env
       | Some fname ->
 	  if current_unit = fname then type_env
-	  else snd (internal_find_module fname)),
+	  else snd (internal_find_module ~loc fname)),
 
 
 
    (* *************************************************************** *)
    (* scope_open_module                                               *)
-   (* Types.fname ->                                                  *)
+   (* loc: Location.t -> Types.fname ->                               *)
    (*   (Types.fname, Types.fname,                                    *)
    (*    ScopeInformation.type_binding_info,                          *)
    (*    ScopeInformation.value_binding_info,                         *)
@@ -537,15 +540,15 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
 
        {b Rem} : Exported outside this module.                        *)
    (* *************************************************************** *)
-   (fun fname env ->
-     let (loaded_scope_env, _) = internal_find_module fname in
+   (fun ~loc fname env ->
+     let (loaded_scope_env, _) = internal_find_module ~loc fname in
      internal_extend_env fname loaded_scope_env env),
 
 
 
    (* *************************************************************** *)
    (* type_open_module                                                *)
-   (* Types.fname ->                                                  *)
+   (* loc: Location.t -> Types.fname ->                               *)
    (*   (TypeInformation.constructor_description,                     *)
    (*    TypeInformation.label_description,                           *)
    (*    TypeInformation.type_description,                            *)
@@ -563,8 +566,8 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
 
        {b Rem} : Exported outside this module.                        *)
    (* *************************************************************** *)
-   (fun fname env ->
-     let (_, loaded_type_env) = internal_find_module fname in
+   (fun ~loc fname env ->
+     let (_, loaded_type_env) = internal_find_module ~loc fname in
      internal_extend_env fname loaded_type_env env)
   )
 ;;
@@ -647,7 +650,7 @@ module type EnvModuleAccessSig = sig
   type value_bound_data
   type species_bound_data
   val find_module :
-    current_unit: Types.fname -> Types.fname option ->
+    loc: Location.t -> current_unit: Types.fname -> Types.fname option ->
       (constructor_bound_data, label_bound_data, type_bound_data,
        value_bound_data, species_bound_data)
       generic_env ->
@@ -721,32 +724,32 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
 
-  (* current_unit: Types.fname -> Parsetree.ident -> t ->    *)
-  (*   EMAccess.species_bound_data                           *)
-  let rec find_species ~current_unit coll_ident (env : t) =
+  (* loc: Location.t -> current_unit: Types.fname -> Parsetree.ident -> *)
+  (*    t -> EMAccess.species_bound_data                                *)
+  let rec find_species ~loc ~current_unit coll_ident (env : t) =
     match coll_ident.Parsetree.ast_desc with
      | Parsetree.I_local vname ->
          (* No explicit scoping information was provided, hence *)
          (* opened modules bindings are acceptable.             *)
-	 find_species_vname ~allow_opened: true vname env
+	 find_species_vname ~loc ~allow_opened: true vname env
      | Parsetree.I_global (opt_scope, vname) ->
-	 let env' = EMAccess.find_module ~current_unit opt_scope env in
+	 let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
 	 (* Check if the lookup can return something *)
 	 (* coming from an opened module.            *)
 	 let allow_opened = allow_opened_p current_unit opt_scope in
-	 find_species_vname ~allow_opened vname env'
+	 find_species_vname ~loc ~allow_opened vname env'
      | Parsetree.I_method (_, _) ->
 	 (* Because species are not first class values,   *)
 	 (* species identifiers should never be methods ! *)
 	 assert false
 
 
-  (* allow_opened: bool -> Parsetree.vname -> t ->    *)
-  (*   EMAccess.species_bound_data                 *)
-  and find_species_vname ~allow_opened vname (env : t) =
+  (* loc: Location.t -> allow_opened: bool -> Parsetree.vname -> *)
+  (*    t -> EMAccess.species_bound_data                         *)
+  and find_species_vname ~loc ~allow_opened vname (env : t) =
     let coll_name = Parsetree_utils.name_of_vname vname in
     try env_list_assoc ~allow_opened coll_name env.species with
-    | Not_found -> raise (Unbound_species coll_name)
+    | Not_found -> raise (Unbound_species (coll_name, loc))
 
 
 
@@ -777,7 +780,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
          (* opened modules bindings are acceptable.             *)
 	 find_value_vname ~loc ~allow_opened: true vname env
      | Parsetree.I_global (opt_scope, vname) ->
-	 let env' = EMAccess.find_module ~current_unit opt_scope env in
+	 let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
 	 (* Check if the lookup can return something *)
 	 (* coming from an opened module.            *)
 	 let allow_opened = allow_opened_p current_unit opt_scope in
@@ -802,7 +805,8 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
               let available_meths =
 		(EMAccess.make_value_env_from_species_methods
 		   collname
-		   (find_species_vname ~allow_opened: false coll_vname env)) in
+		   (find_species_vname
+		      ~loc ~allow_opened: false coll_vname env)) in
 	      let data =
 		find_value_vname
 		  ~loc ~allow_opened: false vname available_meths in
@@ -856,7 +860,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
          (* opened modules bindings are acceptable.             *)
          find_constructor_vname ~loc ~allow_opened: true vname env
      | Parsetree.I_global (opt_scope, vname) ->
-	 let env' = EMAccess.find_module ~current_unit opt_scope env in
+	 let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
 	 (* Check if the lookup can return something *)
 	 (* coming from an opened module.            *)
 	 let allow_opened = allow_opened_p current_unit opt_scope in
@@ -928,24 +932,24 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
   (* ****************************************************************** *)
-  (* current_unit: Types.fname -> Parsetree.ident -> t ->               *)
-  (*   EMAccess.type_bound_data                                         *)
+  (* loc: Location.t -> current_unit: Types.fname -> Parsetree.ident -> *)
+  (*   t -> EMAccess.type_bound_data                                    *)
   (** {b Descr} : Looks-up for an [ident] inside the types environment.
 
       {b Rem} : Exported outside this module.                           *)
   (* ****************************************************************** *)
-  let rec find_type ~current_unit type_ident (env : t) =
+  let rec find_type ~loc ~current_unit type_ident (env : t) =
     match type_ident.Parsetree.ast_desc with
      | Parsetree.I_local vname ->
          (* No explicit scoping information was provided, hence *)
          (* opened modules bindings are acceptable.             *)
-	 find_type_vname ~allow_opened: true vname env
+	 find_type_vname ~loc ~allow_opened: true vname env
      | Parsetree.I_global (opt_scope, vname) ->
-	 let env' = EMAccess.find_module ~current_unit opt_scope env in
+	 let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
 	 (* Check if the lookup can return something *)
 	 (* coming from an opened module.            *)
 	 let allow_opened = allow_opened_p current_unit opt_scope in
-	 find_type_vname ~allow_opened vname env'
+	 find_type_vname ~loc ~allow_opened vname env'
      | Parsetree.I_method (_, _) ->
 	 (* Type identifiers should never be methods ! *)
 	 assert false
@@ -953,16 +957,16 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
   (* **************************************************************** *)
-  (* allow_opened: bool -> Parsetree.vname -> Parsetree.vname -> t -> *)
-  (*   EMAccess.type_bound_data                                       *)
+  (* loc: Location.t -> allow_opened: bool -> Parsetree.vname ->      *)
+  (*   Parsetree.vname -> t -> EMAccess.type_bound_data               *)
   (** {b Descr} : Looks-up for a [vname] inside the types environment.
 
       {b Rem} : Not exported outside this module.                     *)
   (* **************************************************************** *)
-  and find_type_vname ~allow_opened vname (env : t) =
+  and find_type_vname ~loc ~allow_opened vname (env : t) =
     let type_name = Parsetree_utils.name_of_vname vname in
     try env_list_assoc ~allow_opened type_name env.types with
-    | Not_found -> raise (Unbound_type type_name)
+    | Not_found -> raise (Unbound_type (type_name, loc))
 end ;;
 
 

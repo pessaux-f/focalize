@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.14 2007-08-15 17:55:08 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.15 2007-08-15 18:15:07 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -118,7 +118,9 @@ let rec scope_type_expr ctx env ty_expr =
 	 (begin
 	 let basic_vname = unqualified_vname_of_ident ident in
 	 let hosting_info =
-	   Env.ScopingEnv.find_type ~current_unit: ctx.current_unit ident env in
+	   Env.ScopingEnv.find_type
+	     ~loc: ident.Parsetree.ast_loc
+	     ~current_unit: ctx.current_unit ident env in
 	 (* Let's re-construct a completely scoped identifier. *)
 	 let scoped_ident_descr =
 	   (match hosting_info with
@@ -138,7 +140,9 @@ let rec scope_type_expr ctx env ty_expr =
 	 (begin
 	 let basic_vname = unqualified_vname_of_ident ident in
 	 let hosting_info =
-	   Env.ScopingEnv.find_type ~current_unit: ctx.current_unit ident env in
+	   Env.ScopingEnv.find_type
+	     ~loc: ident.Parsetree.ast_loc
+	     ~current_unit: ctx.current_unit ident env in
 	 (* Let's re-construct a completely scoped identifier. *)
 	 let scoped_ident_descr =
 	   (match hosting_info with
@@ -242,7 +246,9 @@ let rec scope_rep_type_def ctx env rep_type_def =
 	 (begin
 	 let basic_vname = unqualified_vname_of_ident ident in
 	 let hosting_info =
-	   Env.ScopingEnv.find_type ~current_unit: ctx.current_unit ident env in
+	   Env.ScopingEnv.find_type
+	     ~loc: ident.Parsetree.ast_loc
+	     ~current_unit: ctx.current_unit ident env in
 	 (* Let's re-construct a completely scoped identifier. *)
 	 let scoped_ident_descr =
 	   (match hosting_info with
@@ -262,7 +268,9 @@ let rec scope_rep_type_def ctx env rep_type_def =
 	 (begin
 	 let basic_vname = unqualified_vname_of_ident ident in
 	 let hosting_info =
-	   Env.ScopingEnv.find_type ~current_unit: ctx.current_unit ident env in
+	   Env.ScopingEnv.find_type
+	     ~loc: ident.Parsetree.ast_loc
+	     ~current_unit: ctx.current_unit ident env in
 	 (* Let's re-construct a completely scoped identifier. *)
 	 let scoped_ident_descr =
 	   (match hosting_info with
@@ -924,7 +932,8 @@ let rec scope_species_expr ctx env species_expr =
   let se_name_ident = species_expr_descr.Parsetree.se_name in
   let ident_scope_info =
     Env.ScopingEnv.find_species
-      ~current_unit: ctx.current_unit se_name_ident  env in
+      ~loc: se_name_ident.Parsetree.ast_loc
+      ~current_unit: ctx.current_unit se_name_ident env in
   let basic_vname = unqualified_vname_of_ident se_name_ident in
   let scoped_ident_descr =
     (match ident_scope_info.Env.ScopeInformation.spbi_scope with
@@ -1006,6 +1015,7 @@ let scope_species_params_types ctx env params =
 	     (* Let's first scope the ident representing a collection name. *)
 	     let ident_scope_info =
 	       Env.ScopingEnv.find_species
+		 ~loc: ident.Parsetree.ast_loc
 		 ~current_unit: ctx.current_unit ident accu_env in
 	     let basic_vname = unqualified_vname_of_ident ident in
 	     let scoped_ident_descr =
@@ -1211,7 +1221,8 @@ let scope_phrase ctx env phrase =
 	 (* only if this "module" was previously "use"-d.                *)
 	 if not (List.mem fname ctx.used_modules) then
 	   raise (Module_not_specified_as_used fname) ;
-	 let env' = Env.scope_open_module fname env in
+	 let env' =
+	   Env.scope_open_module ~loc: phrase.Parsetree.ast_loc fname env in
 	 (phrase.Parsetree.ast_desc, env', ctx)
      | Parsetree.Ph_species species_def ->
 	 let (scoped_species_def, env') =

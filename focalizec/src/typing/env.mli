@@ -1,9 +1,9 @@
 exception Unbound_constructor of (Parsetree.vname * Location.t)
 exception Unbound_label of Types.label_name
 exception Unbound_identifier of (Parsetree.vname * Location.t)
-exception Unbound_type of Types.type_name
-exception Unbound_module of Types.fname
-exception Unbound_species of Types.species_name
+exception Unbound_type of (Types.type_name * Location.t)
+exception Unbound_module of (Types.fname * Location.t)
+exception Unbound_species of (Types.species_name * Location.t)
 
 
 module ScopeInformation :
@@ -89,12 +89,13 @@ module ScopingEnv :
     val add_type : Types.type_name -> ScopeInformation.type_binding_info ->
       t -> t
     val find_type :
-      current_unit: Types.fname -> Parsetree.ident -> t ->
+      loc: Location.t -> current_unit: Types.fname -> Parsetree.ident -> t ->
 	ScopeInformation.type_binding_info
 
     val add_species :
       Types.species_name -> ScopeInformation.species_binding_info -> t -> t
-    val find_species : current_unit: Types.fname -> Parsetree.ident ->
+    val find_species :
+	loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
       t -> ScopeInformation.species_binding_info
   end
 
@@ -124,17 +125,20 @@ module TypingEnv :
     val add_type :
       Types.type_name -> TypeInformation.type_description -> t -> t
     val find_type :
-      current_unit: Types.fname ->
+      loc: Location.t -> current_unit: Types.fname ->
       Parsetree.ident -> t -> TypeInformation.type_description
 
     val add_species :
       Types.species_name -> TypeInformation.species_description -> t -> t
-    val find_species : current_unit: Types.fname -> Parsetree.ident ->
-      t -> TypeInformation.species_description
+    val find_species :
+	loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
+	  t -> TypeInformation.species_description
   end
 
-val scope_open_module : Types.fname -> ScopingEnv.t -> ScopingEnv.t
-val type_open_module : Types.fname -> TypingEnv.t -> TypingEnv.t
+val scope_open_module :
+  loc: Location.t -> Types.fname -> ScopingEnv.t -> ScopingEnv.t
+val type_open_module :
+  loc: Location.t -> Types.fname -> TypingEnv.t -> TypingEnv.t
 
 val make_fo_file :
   source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t -> unit

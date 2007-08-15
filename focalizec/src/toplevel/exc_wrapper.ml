@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.5 2007-08-15 17:55:08 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.6 2007-08-15 18:15:07 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -62,12 +62,15 @@ try Check_file.main () with
      | Env.Unbound_identifier (vname, at) ->
 	 Format.fprintf Format.err_formatter "Unbound identifier \'%s\' : %a.@."
 	   (Parsetree_utils.name_of_vname vname) Location.pp_location at
-     | Env.Unbound_type tname ->
-	 Format.fprintf Format.err_formatter "Unbound type \'%s\'.@." tname
-     | Env.Unbound_module fname ->
-	 Format.fprintf Format.err_formatter "Unbound module \'%s\'.@." fname
-     | Env.Unbound_species sname ->
-	 Format.fprintf Format.err_formatter "Unbound species \'%s\'.@." sname
+     | Env.Unbound_type (tname, at) ->
+	 Format.fprintf Format.err_formatter "Unbound type \'%s\' : %a.@."
+	   tname Location.pp_location at
+     | Env.Unbound_module (fname, at) ->
+	 Format.fprintf Format.err_formatter
+	   "Unbound module \'%s\': %a.@." fname Location.pp_location at
+     | Env.Unbound_species (sname, at) ->
+	 Format.fprintf Format.err_formatter
+	   "Unbound species \'%s\' : %a.@." sname Location.pp_location at
 (* Core types problems. *)
      | Types.Conflict (ty1, ty2, at) ->
 	 Format.fprintf Format.err_formatter
