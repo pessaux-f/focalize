@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.5 2007-08-15 15:25:07 pessaux Exp $ *)
+(* $Id: types.mli,v 1.6 2007-08-15 17:00:01 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -34,16 +34,16 @@ type type_species
 
 (** The exceptions raised by the type-checker. *)
 
-exception Conflict of type_simple * type_simple
+exception Conflict of (type_simple * type_simple * Location.t)
   (** Those two types cannot be unified. *)
 ;;
 
-exception Circularity of type_simple * type_simple
+exception Circularity of (type_simple * type_simple * Location.t)
   (** There is a circularity detected: the first type occurs in the second. *)
 
 ;;
 
-exception Arity_mismatch of type_name * int * int
+exception Arity_mismatch of (type_name * int * int * Location.t)
   (** A functional type constructor has been used with the wrong number of
   arguments. The exception carries on the name of the type and the conflicting
   arities. *)
@@ -88,7 +88,8 @@ val closed_scheme : type_simple -> type_scheme
 
 (** Type (schemes) unification. *)
 val unify :
-  self_manifest: (type_simple option) -> type_simple -> type_simple -> unit
+  loc: Location.t -> self_manifest: (type_simple option) -> type_simple ->
+    type_simple -> unit
 
 (** Pretty_printing for types and type schemes. *)
 val pp_type_simple : Format.formatter -> type_simple -> unit

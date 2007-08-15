@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.17 2007-08-15 15:25:07 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.18 2007-08-15 17:00:01 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {bL Descr} : Exception used to inform that a sum type constructor was
@@ -284,6 +284,7 @@ let rec typecheck_pattern ctx env pat_desc =
 	      (* to ensure the arguments types and extract the result type. *)
               let cstr_res_ty = (Types.type_variable ()) in
               Types.unify
+		~loc: pat_desc.Parsetree.ast_loc
 		~self_manifest: ctx.self_manifest
 		(Types.type_arrow cstr_arg_ty cstr_res_ty) cstr_ty ;
 	      (cstr_res_ty, sub_bindings)
@@ -311,6 +312,7 @@ let rec typecheck_pattern ctx env pat_desc =
 		  (* that the resulting record type for the whole pattern is *)
 		  (* consistent.                                             *)
 		  Types.unify
+		    ~loc: pat.Parsetree.ast_loc
 		    ~self_manifest: ctx.self_manifest
 		    lbl_ty (Types.type_arrow sub_pat_ty whole_pat_ty) ;
 		  (* Just returns the bindings. *)
@@ -457,6 +459,7 @@ let rec typecheck_expr ctx env initial_expr =
 	     (* the type of the current applicator.      *)
 	     let tmp_fun_ty = Types.type_arrow arg_ty result_ty in
 	     Types.unify
+	       ~loc: initial_expr.Parsetree.ast_loc
 	       ~self_manifest: ctx.self_manifest tmp_fun_ty accu_fun_ty;
 	     (* The result is the positive part of the arrow. *)
 	     result_ty)
@@ -494,6 +497,7 @@ let rec typecheck_expr ctx env initial_expr =
 	      let result_ty = Types.type_variable () in
 	      (* And simulate an application. *)
 	      Types.unify
+		~loc: initial_expr.Parsetree.ast_loc
 		~self_manifest: ctx.self_manifest
 		cstr_ty (Types.type_arrow cstr_arg_ty result_ty);
 	      result_ty
@@ -514,6 +518,7 @@ let rec typecheck_expr ctx env initial_expr =
 	     (* Ensure the matched expression and *)
 	     (* the pattern have the same type.   *)
 	     Types.unify
+	       ~loc: initial_expr.Parsetree.ast_loc
 	       ~self_manifest: ctx.self_manifest matched_expr_ty pat_ty;
 	     (* Extend the environment with the pattern type bindings. *)
 	     let env' =
@@ -525,6 +530,7 @@ let rec typecheck_expr ctx env initial_expr =
 	     let clause_ty = typecheck_expr ctx env' expr in
 	     (* Force every bodies to have the same result type. *)
 	     Types.unify
+	       ~loc: initial_expr.Parsetree.ast_loc
 	       ~self_manifest: ctx.self_manifest result_ty clause_ty)
 	   bindings;
 	 (* Return the type of the bodies' clauses. *)
@@ -533,12 +539,15 @@ let rec typecheck_expr ctx env initial_expr =
 	 let ty_cond = typecheck_expr ctx env e_cond in
 	 (* Ensure the condition is a boolean. *)
 	 Types.unify
+	   ~loc: initial_expr.Parsetree.ast_loc
 	   ~self_manifest: ctx.self_manifest ty_cond (Types.type_bool ());
 	 (* Typecheck the "then" expression. *)
 	 let ty_then = typecheck_expr ctx env e_then in
 	 let ty_else = typecheck_expr ctx env e_else in
 	 (* Enforce both branches to have the same type. *)
-	 Types.unify ~self_manifest: ctx.self_manifest ty_then ty_else;
+	 Types.unify
+	   ~loc: initial_expr.Parsetree.ast_loc
+	   ~self_manifest: ctx.self_manifest ty_then ty_else;
 	 (* And return any of them as result type. *)
 	 ty_then
      | Parsetree.E_let (let_def, in_expr) ->
@@ -563,6 +572,7 @@ let rec typecheck_expr ctx env initial_expr =
 	 (* i.e. the type of the field as seen by the user.         *)
 	 let result_ty = Types.type_variable () in
 	 Types.unify
+	   ~loc: initial_expr.Parsetree.ast_loc
 	   ~self_manifest: ctx.self_manifest
 	   (Types.type_arrow result_ty ty_expr) label_ty;
 	 result_ty
@@ -605,7 +615,9 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
        Printf.eprintf "Labels exhaustivity not checked on record expression.\n"
    | Some expr ->
        let expr_ty = typecheck_expr ctx env expr in
-       Types.unify ~self_manifest: ctx.self_manifest expr_ty result_ty);
+       Types.unify
+	 ~loc: expr.Parsetree.ast_loc
+	 ~self_manifest: ctx.self_manifest expr_ty result_ty) ;
   (* Now proceed with the labels.                               *)
   (* Just remind that labels are types as functions of type     *)
   (* "type of the field as seen by user -> type od the record". *)
@@ -618,6 +630,7 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
 	Types.specialize lbl_descr.Env.TypeInformation.field_scheme in
       (* Unify the result type by side effect. *)
       Types.unify
+	~loc: expr.Parsetree.ast_loc
 	~self_manifest: ctx.self_manifest
 	(Types.type_arrow expr_ty result_ty) field_ty)
     fields ;
@@ -688,7 +701,8 @@ and typecheck_let_definition ctx env let_def =
   (* Now typecheck each def's body. *)
   let env_bindings =
     List.map2
-      (fun { Parsetree.ast_desc = binding } (_, assumed_ty, non_expansive) ->
+      (fun { Parsetree.ast_desc = binding ; Parsetree.ast_loc = binding_loc }
+	   (_, assumed_ty, non_expansive) ->
         (* Build a type for the arguments of the bound identier if there are *)
         (* some. If they have type constraints, then use it as primary type  *)
         (* instead of using a type variable that we should unify afterwards. *)
@@ -723,6 +737,7 @@ and typecheck_let_definition ctx env let_def =
 	 | Some ty_expr ->
 	     let constraint_ty = typecheck_type_expr ctx env ty_expr in
 	     Types.unify
+	       ~loc: ty_expr.Parsetree.ast_loc
 	       ~self_manifest: ctx.self_manifest
 	       constraint_ty infered_body_ty) ;
         if non_expansive then Types.end_definition () ;
@@ -735,7 +750,9 @@ and typecheck_let_definition ctx env let_def =
 	    infered_body_ty in
         (* Unify the found type with the type that was temporarily assumed. *)
         Types.begin_definition () ;
-        Types.unify ~self_manifest: ctx.self_manifest assumed_ty complete_ty ;
+        Types.unify
+	  ~loc: binding_loc
+	  ~self_manifest: ctx.self_manifest assumed_ty complete_ty ;
         Types.end_definition () ;
 	(* And finally returns the type binding induced by this definition. *)
 	let ty_scheme =
@@ -790,24 +807,31 @@ and typecheck_prop ctx env prop =
      | Parsetree.Pr_equiv (pr1, pr2) ->
 	 let ty1 = typecheck_prop ctx env pr1 in
 	 let ty2 = typecheck_prop ctx env pr2 in
-	 Types.unify ~self_manifest: ctx.self_manifest ty1 ty2;
+	 Types.unify
+	   ~loc: prop.Parsetree.ast_loc ~self_manifest: ctx.self_manifest
+	   ty1 ty2;
 	 (* Enforce the type to be [prop]. *)
 	 Types.unify
+	   ~loc: prop.Parsetree.ast_loc
 	   ~self_manifest: ctx.self_manifest ty1 (Types.type_prop ());
 	 ty1
      | Parsetree.Pr_not pr ->
          let ty = typecheck_prop ctx env pr in
 	 (* Enforce the type to be [prop]. *)
-	 Types.unify ~self_manifest: ctx.self_manifest ty (Types.type_prop ());
+	 Types.unify
+	   ~loc: prop.Parsetree.ast_loc
+	   ~self_manifest: ctx.self_manifest ty (Types.type_prop ());
          ty
      | Parsetree.Pr_expr expr ->
 	 (* Expressions must be typed as [bool]. If *)
          (* so, then the returned  type is [prop].  *)
 	 let ty = typecheck_expr ctx env expr in
-         Types.unify ~self_manifest: ctx.self_manifest ty (Types.type_bool ());
+         Types.unify
+	   ~loc: prop.Parsetree.ast_loc
+	   ~self_manifest: ctx.self_manifest ty (Types.type_bool ());
          Types.type_prop ()
      | Parsetree.Pr_paren pr -> typecheck_prop ctx env pr) in
-  prop.Parsetree.ast_type <- Some final_ty;
+  prop.Parsetree.ast_type <- Some final_ty ;
   final_ty
 
 

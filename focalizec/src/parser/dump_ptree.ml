@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.12 2007-08-10 16:10:23 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.13 2007-08-15 17:00:01 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (* pp_position : Format.formatter -> Lexing.position -> unit               *)
@@ -35,7 +35,7 @@ let pp_position ppf pos =
 (* *********************************************************************** *)
 let pp_location ppf loc =
   Format.fprintf ppf "@[<2>{@ %a ;@ %a @]}"
-    pp_position loc.Parsetree.l_beg pp_position loc.Parsetree.l_end
+    pp_position loc.Location.l_beg pp_position loc.Location.l_end
 ;;
 
 

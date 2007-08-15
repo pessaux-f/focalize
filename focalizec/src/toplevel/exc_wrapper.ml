@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.3 2007-08-14 14:31:30 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.4 2007-08-15 17:00:01 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -69,18 +69,20 @@ try Check_file.main () with
      | Env.Unbound_species sname ->
 	 Format.fprintf Format.err_formatter "Unbound species \'%s\'.@." sname
 (* Core types problems. *)
-     | Types.Conflict (ty1, ty2) ->
+     | Types.Conflict (ty1, ty2, at) ->
 	 Format.fprintf Format.err_formatter
-	   "Type incompatibility between %a@ and@ %a.@."
-	   Types.pp_type_simple ty1 Types.pp_type_simple ty2 ;
-     | Types.Circularity (ty1, ty2) ->
-	 Format.fprintf Format.err_formatter
-	   "Circulary between types %a@ and@ %a@."
+	   "Type incompatibility between %a@ and@ %a : %a@."
 	   Types.pp_type_simple ty1 Types.pp_type_simple ty2
-     | Types.Arity_mismatch (cstr_name, arity1, arity2) ->
+	   Location.pp_location at
+     | Types.Circularity (ty1, ty2, at) ->
 	 Format.fprintf Format.err_formatter
-	   "Type constructor %s used with arity %d and %d@."
-	   cstr_name arity1 arity2
+	   "Circulary between types %a@ and@ %a : %a@."
+	   Types.pp_type_simple ty1 Types.pp_type_simple ty2
+	   Location.pp_location at
+     | Types.Arity_mismatch (cstr_name, arity1, arity2, at) ->
+	 Format.fprintf Format.err_formatter
+	   "Type constructor %s used with arity %d and %d : %a@."
+	   cstr_name arity1 arity2 Location.pp_location at
 (* Type inference stuff. *)
      | Infer.Bad_sum_type_constructor_arity (ident, defined_arity) ->
 	 let (expected, used) =

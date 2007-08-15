@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.10 2007-08-15 15:25:07 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.11 2007-08-15 17:00:01 pessaux Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -20,21 +20,6 @@
    - resolve global/local/method classification for idents.
 *)
 
-type position = Lexing.position = {
-  pos_fname : string;
-  pos_lnum : int;
-  pos_bol : int;
-  pos_cnum : int;
-}
-;;
-
-type location = {
- l_beg : position;
- l_end : position;
-}
-(** The location of an AST node,
-    beginning and ending position of its corresponding source text. *)
-;;
 
 (** Types of various identifiers in the abstract syntax tree. *)
 
@@ -61,9 +46,9 @@ type external_name = string * string
 ;;
 
 type ('a, 'b) generic_ast = {
-   ast_loc : location;   (** The location in the source of the AST node. *)
-   ast_desc : 'a;        (** The description of the node. *)
-   ast_doc : 'b option;  (** The support for documentation in many formats. *)
+   ast_loc : Location.t ;  (** The location in the source of the AST node. *)
+   ast_desc : 'a;          (** The description of the node. *)
+   ast_doc : 'b option;    (** The support for documentation in many formats. *)
    mutable ast_type : Types.type_simple option;
                          (** The type of the node. *)
 }

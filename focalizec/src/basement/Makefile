@@ -1,9 +1,10 @@
-# $Id: Makefile,v 1.1 2007-07-19 12:01:51 pessaux Exp $
+# $Id: Makefile,v 1.2 2007-08-15 17:00:01 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ 
 
-BYTOBJS = configuration.cmo handy.cmo types.cmo files.cmo parsetree_utils.cmo
+BYTOBJS = configuration.cmo handy.cmo location.cmo types.cmo files.cmo \
+	parsetree_utils.cmo
 
 
 all:: $(BYTOBJS)

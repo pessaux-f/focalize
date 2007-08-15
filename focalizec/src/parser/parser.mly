@@ -1,22 +1,21 @@
 %{
-(* $Id: parser.mly,v 1.55 2007-08-13 07:51:50 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.56 2007-08-15 17:00:01 pessaux Exp $ *)
 
 open Parsetree;;
 
 let mk_doc doc d = {
   ast_loc = {
-    l_beg = Parsing.symbol_start_pos ();
-    l_end = Parsing.symbol_end_pos ();
-  };
-  ast_desc = d;
-  ast_doc = doc;
-  ast_type = None;
-};;
+    Location.l_beg = Parsing.symbol_start_pos () ;
+    Location.l_end = Parsing.symbol_end_pos () } ;
+  ast_desc = d ;
+  ast_doc = doc ;
+  ast_type = None
+} ;;
 
-let mk d = mk_doc None d;;
-let mk_no_doc d = mk_doc None d;;
+let mk d = mk_doc None d ;;
+let mk_no_doc d = mk_doc None d ;;
 
-let mk_local_ident s = mk (I_local s);;
+let mk_local_ident s = mk (I_local s) ;;
 let mk_global_ident s = mk (I_global (None, s));;
 let mk_global_constr s1 s2 = mk (I_global (s1, s2));;
 let mk_global_constr_expr s1 s2 = mk (CE (s1, s2));;

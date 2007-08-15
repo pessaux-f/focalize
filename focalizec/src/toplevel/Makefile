@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2007-08-14 13:20:26 pessaux Exp $
+# $Id: Makefile,v 1.6 2007-08-15 17:00:01 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ -I ../basement -I ../parser -I ../typing
@@ -8,8 +8,9 @@ BINOBJS = $(BYTOBJS:.cmo=.cmx)
 
 ALLBYTOBJS = ../basement/configuration.cmo \
 	../basement/configuration.cmo \
-	 ../basement/handy.cmo \
-	 ../basement/types.cmo \
+	../basement/handy.cmo \
+	../basement/location.cmo \
+	../basement/types.cmo \
 	../basement/files.cmo \
 	../basement/parsetree_utils.cmo \
 	\

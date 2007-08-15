@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.5 2007-08-15 15:25:07 pessaux Exp $ *)
+(* $Id: types.ml,v 1.6 2007-08-15 17:00:01 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -92,13 +92,13 @@ type type_scheme = {
 }
 ;;
 
-exception Conflict of type_simple * type_simple
+exception Conflict of (type_simple * type_simple * Location.t)
   (* Those two types cannot be unified. *)
 ;;
-exception Circularity of type_simple * type_simple
+exception Circularity of (type_simple * type_simple * Location.t)
   (* There is a circularity detected: the first type occurs in the second. *)
 ;;
-exception Arity_mismatch of type_name * int * int
+exception Arity_mismatch of (type_name * int * int  * Location.t)
   (* A functional type constructor has been used with the wrong number of
   arguments. The exception carries on the name of the type and the conflicting
   arities. *)
@@ -175,11 +175,11 @@ let type_rep_species ~species_module ~species_name =
 
 
 (** {b Rem} : Non exported oustide this module. *)
-let rec occur_check var ty =
+let occur_check ~loc var ty =
   let rec test t =
     match repr t with
      | ST_var var' ->
-         if var == var' then raise (Circularity (ST_var var, ty))
+         if var == var' then raise (Circularity (ST_var var, ty, loc))
      | ST_arrow (ty1, ty2) -> test ty1 ; test ty2
      | ST_tuple tys -> List.iter test tys
      | ST_construct (_, args) -> List.iter test args
@@ -271,43 +271,54 @@ let rec lowerize_levels max_level ty =
   | ST_self_rep | ST_species_rep _ -> ()
 ;;
 
-let rec unify ~self_manifest ty1 ty2 =
-  let val_of_ty1 = repr ty1 in
-  let val_of_ty2 = repr ty2 in
-  if val_of_ty1 == val_of_ty2 then () else
-  match val_of_ty1, val_of_ty2 with
-  | ST_var var, ty ->
-      occur_check var ty ;
-      lowerize_levels var.tv_level ty ;
-      var.tv_value <- TVV_known ty
-  | ty, ST_var var ->
-      occur_check var ty ;
-      lowerize_levels var.tv_level ty ;
-      var.tv_value <- TVV_known ty
-  | ST_arrow (arg1, res1), ST_arrow (arg2, res2) ->
-      unify ~self_manifest arg1 arg2 ;
-      unify ~self_manifest res1 res2
-  | ST_tuple tys1, ST_tuple tys2 ->
-     (try List.iter2 (unify ~self_manifest) tys1 tys2 with
-      | Invalid_argument "List.iter2" ->
-        (* In fact, that's an arity mismatch on the tuple. *)
-        raise (Conflict (val_of_ty1, val_of_ty2)))
-  | ST_construct (name, args), ST_construct (name', args') ->
-      (if name <> name' then raise (Conflict (val_of_ty1, val_of_ty2)) ;
-       try List.iter2 (unify ~self_manifest) args args' with
-       | Invalid_argument "List.iter2" ->
-         (* In fact, that's an arity mismatch. *)
-         raise
-          (Arity_mismatch (name, (List.length args), (List.length args'))))
-  | (ST_self_rep, _) | (_, ST_self_rep) -> failwith "todo8"
-  | ((ST_species_rep _), _) | (_, (ST_species_rep _)) -> failwith "todo9"
-  | (_, _) -> raise (Conflict (val_of_ty1, val_of_ty2))
+
+
+let unify ~loc ~self_manifest type1 type2 =
+  let rec rec_unify ty1 ty2 =
+    let val_of_ty1 = repr ty1 in
+    let val_of_ty2 = repr ty2 in
+    if val_of_ty1 == val_of_ty2 then () else
+    match (val_of_ty1, val_of_ty2) with
+     | ST_var var, ty ->
+	 occur_check ~loc var ty ;
+	 lowerize_levels var.tv_level ty ;
+	 var.tv_value <- TVV_known ty
+     | ty, ST_var var ->
+	 occur_check ~loc var ty ;
+	 lowerize_levels var.tv_level ty ;
+	 var.tv_value <- TVV_known ty
+     | ST_arrow (arg1, res1), ST_arrow (arg2, res2) ->
+	 rec_unify arg1 arg2 ;
+	 rec_unify res1 res2
+     | ST_tuple tys1, ST_tuple tys2 ->
+	 (try List.iter2 rec_unify tys1 tys2 with
+	 | Invalid_argument "List.iter2" ->
+             (* In fact, that's an arity mismatch on the tuple. *)
+             raise (Conflict (val_of_ty1, val_of_ty2, loc)))
+     | ST_construct (name, args), ST_construct (name', args') ->
+	 (if name <> name' then raise (Conflict (val_of_ty1, val_of_ty2, loc)) ;
+	  try List.iter2 rec_unify args args' with
+	  | Invalid_argument "List.iter2" ->
+              (* In fact, that's an arity mismatch. *)
+              raise
+		(Arity_mismatch
+		   (name, (List.length args), (List.length args'), loc)))
+     | (ST_self_rep, ty) | (ty, ST_self_rep) ->
+	 (begin
+	 match self_manifest with
+	  | None -> raise (Conflict (ST_self_rep, ty, loc))
+	  | Some self_is_that -> rec_unify self_is_that ty
+	 end)
+     | ((ST_species_rep _), _) | (_, (ST_species_rep _)) -> failwith "todo9"
+     | (_, _) -> raise (Conflict (val_of_ty1, val_of_ty2, loc)) in
+  (* Now, let's work... *)
+  rec_unify type1 type2
 ;;
 
-let type_variables_mapping = ref ([] : (type_variable * string) list)
-;;
-let type_variables_counter = ref 0
-;;
+
+
+let type_variables_mapping = ref ([] : (type_variable * string) list) ;;
+let type_variables_counter = ref 0 ;;
 
 let reset_type_variables_mapping () =
   type_variables_mapping := [];
