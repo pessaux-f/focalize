@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.6 2007-08-15 17:00:01 pessaux Exp $ *)
+(* $Id: types.mli,v 1.7 2007-08-16 15:04:00 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -80,10 +80,13 @@ val type_self : unit -> type_simple
 
 (** Manipulation of type schemes: generalization, instanciation, generation of
 a (closed) type scheme from a type without unknowns. *)
-val instanciate_parameters : type_scheme -> type_simple list -> type_simple
 val specialize : type_scheme -> type_simple
+val specialize2 :
+  type_scheme -> type_simple list -> (type_simple * type_simple list)
 val generalize : type_simple -> type_scheme
-val closed_scheme : type_simple -> type_scheme
+val generalize2 :
+  type_simple -> type_simple list -> (type_scheme * (type_simple list))
+val trivial_scheme : type_simple -> type_scheme
 
 
 (** Type (schemes) unification. *)

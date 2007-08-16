@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.15 2007-08-15 18:15:07 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.16 2007-08-16 15:04:00 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -598,9 +598,6 @@ and scope_let_definition ~toplevel_let ctx env let_def =
 
 
 let rec scope_prop ctx env prop =
-Format.eprintf "Scoping prop at %a\n"
-  Location.pp_location prop.Parsetree.ast_loc ;
-flush stderr ;
   let new_desc =
     (match prop.Parsetree.ast_desc with
      | Parsetree.Pr_forall (vnames, ty_expr, p) ->

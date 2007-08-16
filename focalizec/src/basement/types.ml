@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.7 2007-08-16 08:53:51 pessaux Exp $ *)
+(* $Id: types.ml,v 1.8 2007-08-16 15:04:00 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -25,14 +25,42 @@ type label_name = string
 type fname = string
      (** File (and "module") name. *) ;;
 
+
+
+(* ****************************************************************** *)
+(** {b Descr} : Binding level considered as describing the level of a
+                generalized type.
+
+    {b Rem} : Not exported outside this module.                       *)
+(* ****************************************************************** *)
+let generic_level = 100000000 ;;
+
+
+
 (* ************************************************* *)
 (* type_simple                                       *)
 (** {b Descr} : Describes the type algebra of Focal.
 
     {b Rem} : Exported opaque outside this module.   *)
 (* ************************************************* *)
-type type_simple =
-  | ST_var of type_variable                   (** Type variable. *)
+type type_simple = {
+  (* Binding level of the type. *)
+  mutable ts_level : int ;
+  (* The description of the type. *)
+  ts_desc : type_simple_desc ;
+  (* Value of the type. In fact, generalisation of the value of a type variable. This permits to make an already "non-variable" type equal to Self by side effect. *)
+  mutable ts_link_value : type_link_value
+}
+
+
+(** Value of a type link (generalization of type variable's value. *)
+and type_link_value =
+  | TLV_unknown
+  | TLV_known of type_simple
+
+
+and type_simple_desc =
+  | ST_var
   | ST_arrow of (type_simple * type_simple)   (** Functionnal type. *)
   | ST_tuple of type_simple list              (** Tuple type. *)
   | ST_construct of
@@ -65,32 +93,25 @@ and collection_type = collection_name
 	same signature that they have the same semantics.
 	Instead, one will get the type of the collection via an environment
 	using the [collection_name] as key. *)
-
-(** Variable of type. Must be repr'ed. *)
-and type_variable = {
-  mutable tv_level : int;
-  mutable tv_value : type_variable_value;
-}
-
-(** Value of a type variable. *)
-and type_variable_value =
-  | TVV_unknown
-  | TVV_known of type_simple
 ;;
 
-(* *********************************************** *)
-(* type_scheme                                    *)
-(** {b Descr} : Type schemes, i.e. type with parameters (as usual parameters
-    are variables, hence here type variables), also types with unknowns,
-    or model of types.
 
-    {b Rem} : Exported opaque outside this module. *)
-(* *********************************************** *)
+
+(* ************************************************************************ *)
+(* type_scheme                                                              *)
+(** {b Descr} : Type schemes, i.e. model of types.
+              Scheme parameters are silent inside the scheme. In fact, they
+              are types in the body with a binding level equals to
+              [generic_level].
+
+    {b Rem} : Exported opaque outside this module.                          *)
+(* ************************************************************************ *)
 type type_scheme = {
-  ts_parameters : type_variable list;
-  ts_body : type_simple;
-}
-;;
+  ts_nb_vars : int ;
+  ts_body : type_simple ;
+} ;;
+
+
 
 exception Conflict of (type_simple * type_simple * Location.t)
   (* Those two types cannot be unified. *)
@@ -115,13 +136,15 @@ exception Arity_mismatch of (type_name * int * int  * Location.t)
 
     {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************** *)
-let rec repr = function
-  | ST_var ({ tv_value = TVV_known ty1 } as var) ->
-      let val_of_ty1 = repr ty1 in
-      var.tv_value <- TVV_known val_of_ty1 ;
-      val_of_ty1
-  | ty -> ty
+let rec repr ty =
+  match ty with
+   | { ts_link_value = TLV_known t } ->
+       let val_of_t = repr t in
+       ty.ts_link_value <- TLV_known val_of_t ;
+       val_of_t
+   | _ -> ty
 ;;
+
 
 let (begin_definition, end_definition, current_binding_level, type_variable) =
   let current_binding_level = ref 0 in
@@ -129,234 +152,103 @@ let (begin_definition, end_definition, current_binding_level, type_variable) =
    (fun () -> decr current_binding_level),
    (fun () -> !current_binding_level),
    (fun () ->
-     ST_var { tv_level = !current_binding_level ; tv_value = TVV_unknown }))
+     { ts_level = !current_binding_level ;
+       ts_desc = ST_var ;
+       ts_link_value = TLV_unknown }))
 ;;
 
-let type_basic type_name type_args = ST_construct (type_name, type_args)
+let type_basic type_name type_args =
+  { ts_level = current_binding_level () ;
+    ts_desc = ST_construct (type_name, type_args) ;
+    ts_link_value = TLV_unknown }
 ;;
 
-let type_int () = type_basic "int" []
+let type_int () = type_basic "int" [] ;;
+
+let type_float () = type_basic "float" [] ;;
+
+let type_bool () = type_basic "bool" [] ;;
+
+let type_string () = type_basic "string" [] ;;
+
+let type_char () = type_basic "char" [] ;;
+
+let type_unit () = type_basic "unit" [] ;;
+
+let type_arrow t1 t2 =
+  { ts_level = current_binding_level () ;
+    ts_desc = ST_arrow (t1, t2) ;
+    ts_link_value = TLV_unknown }
 ;;
 
-let type_float () = type_basic "float" []
-;;
+let type_prop () = type_basic "prop" [] ;;
 
-let type_bool () = type_basic "bool" []
+let type_tuple tys =
+  { ts_level = current_binding_level () ;
+    ts_desc = ST_tuple tys ;
+    ts_link_value = TLV_unknown }
 ;;
-
-let type_string () = type_basic "string" []
-;;
-
-let type_char () = type_basic "char" []
-;;
-
-let type_unit () = type_basic "unit" []
-;;
-
-let type_arrow t1 t2 = ST_arrow (t1, t2)
-;;
-
-let type_tuple tys = ST_tuple tys ;;
 
 
 
 (* Generate the carrier type of the currently analysed species.  *)
-let type_self () = ST_self_rep ;;
-
-
-
-let type_prop () = type_basic "prop" [] ;;
-
+let type_self () =
+  { ts_level = current_binding_level () ;
+    ts_desc = ST_self_rep ;
+    ts_link_value = TLV_unknown }
+;;
 
 
 let type_rep_species ~species_module ~species_name =
-  ST_species_rep (species_module, species_name) ;;
-
-
-
-(** {b Rem} : Non exported oustide this module. *)
-let occur_check ~loc var ty =
-  let rec test t =
-    match repr t with
-     | ST_var var' ->
-         if var == var' then raise (Circularity (ST_var var, ty, loc))
-     | ST_arrow (ty1, ty2) -> test ty1 ; test ty2
-     | ST_tuple tys -> List.iter test tys
-     | ST_construct (_, args) -> List.iter test args
-     | ST_self_rep | ST_species_rep _ -> () in
-  test ty
-;;
-
-(** {b Rem} : Exported oustide this module. *)
-let instanciate scheme parameters_mapping =
-
-  (* Internal recursive copy of a type scheme replacing its generalized
-     variables by their associated new fresh type variables. *)
-  let rec copy_type_simple ty =
-    match repr ty with
-    | ST_var var as ty ->
-      (* Check in the mapping if this variable was generalized,
-         and if so replace it by its fresh correspondance. *)
-        (try List.assq var parameters_mapping with Not_found -> ty)
-    (* The rest is homomorphic copying. *)
-    | ST_arrow (ty1, ty2) ->
-        ST_arrow (copy_type_simple ty1, copy_type_simple ty2)
-    | ST_tuple tys -> ST_tuple (List.map copy_type_simple tys)
-    | ST_construct (name, args) ->
-        ST_construct (name, List.map copy_type_simple args)
-    | (ST_self_rep | ST_species_rep _) as ty -> ty in
-
-  (* Now really copy the type scheme's body, replacing its type parameters
-     on the fly. *)
-  copy_type_simple scheme.ts_body
-;;
-
-let specialize scheme =
-  (* Remember the mapping between type parameters (a.k.a. generalized type
-     variables of a type scheme) and fresh type variables. *)
-  (* Create, for each generalized variable of the
-     type scheme, a fresh corresponding one. *)
-  let parameters_mapping =
-    List.map (fun var -> var, type_variable ()) scheme.ts_parameters in
-  instanciate scheme parameters_mapping
-;;
-
-let instanciate_parameters scheme args =
-  let parameters_mapping =
-    let parameters = scheme.ts_parameters in
-    try
-      List.map2 (fun var ty -> var, ty) parameters args with
-    | Invalid_argument "List.map2" ->
-      (* This should not occur: check the arguments before calling
-         this function! *)
-      assert false in
-  instanciate scheme parameters_mapping
-;;
-
-  
-
-(** {b Rem} : Exported oustide this module. *)
-let generalize ty =
-  (* The list of found generalizable variables.
-     We accumulate inside it by side effect. *)
-  let found_ty_parameters = ref ([] : type_variable list) in
-  (* Internal recursive hunt for generalizable variables inside the type. *)
-  let rec find_parameters ty =
-    match repr ty with
-    | ST_var var ->
-        if var.tv_level > (current_binding_level ()) &&
-           not (List.memq var !found_ty_parameters) then
-          found_ty_parameters := var :: !found_ty_parameters
-    | ST_arrow (ty1, ty2) -> find_parameters ty1 ; find_parameters ty2
-    | ST_tuple tys -> List.iter find_parameters tys
-    | ST_construct (_, args) -> List.iter find_parameters args
-    | ST_self_rep | ST_species_rep _ -> () in
-  find_parameters ty;
-  { ts_parameters = !found_ty_parameters; ts_body = ty; }
-;;
-
-(** {b Rem} : Exported oustide this module. *)
-let closed_scheme ty = { ts_parameters = [] ; ts_body = ty }
-;;
-
-(** {b Rem} : Non exported oustide this module. *)
-let rec lowerize_levels max_level ty =
-  match repr ty with
-  | ST_var var -> if var.tv_level > max_level then var.tv_level <- max_level
-  | ST_arrow (ty1, ty2) ->
-      lowerize_levels max_level ty1 ;
-      lowerize_levels max_level ty2
-  | ST_tuple tys -> List.iter (lowerize_levels max_level) tys
-  | ST_construct (_, args) -> List.iter (lowerize_levels max_level) args
-  | ST_self_rep | ST_species_rep _ -> ()
+  { ts_level = current_binding_level () ;
+    ts_desc = ST_species_rep (species_module, species_name) ;
+    ts_link_value = TLV_unknown }
 ;;
 
 
 
-let unify ~loc ~self_manifest type1 type2 =
-  let rec rec_unify ty1 ty2 =
-    let val_of_ty1 = repr ty1 in
-    let val_of_ty2 = repr ty2 in
-    if val_of_ty1 == val_of_ty2 then () else
-    match (val_of_ty1, val_of_ty2) with
-     | ST_var var, ty ->
-	 occur_check ~loc var ty ;
-	 lowerize_levels var.tv_level ty ;
-	 var.tv_value <- TVV_known ty
-     | ty, ST_var var ->
-	 occur_check ~loc var ty ;
-	 lowerize_levels var.tv_level ty ;
-	 var.tv_value <- TVV_known ty
-     | ST_arrow (arg1, res1), ST_arrow (arg2, res2) ->
-	 rec_unify arg1 arg2 ;
-	 rec_unify res1 res2
-     | ST_tuple tys1, ST_tuple tys2 ->
-	 (try List.iter2 rec_unify tys1 tys2 with
-	 | Invalid_argument "List.iter2" ->
-             (* In fact, that's an arity mismatch on the tuple. *)
-             raise (Conflict (val_of_ty1, val_of_ty2, loc)))
-     | ST_construct (name, args), ST_construct (name', args') ->
-	 (if name <> name' then raise (Conflict (val_of_ty1, val_of_ty2, loc)) ;
-	  try List.iter2 rec_unify args args' with
-	  | Invalid_argument "List.iter2" ->
-              (* In fact, that's an arity mismatch. *)
-              raise
-		(Arity_mismatch
-		   (name, (List.length args), (List.length args'), loc)))
-     | (ST_self_rep, ty) | (ty, ST_self_rep) ->
-	 (begin
-	 match self_manifest with
-	  | None -> raise (Conflict (ST_self_rep, ty, loc))
-	  | Some self_is_that -> rec_unify self_is_that ty
-	 end)
-     | ((ST_species_rep _), _) | (_, (ST_species_rep _)) -> failwith "todo9"
-     | (_, _) -> raise (Conflict (val_of_ty1, val_of_ty2, loc)) in
-  (* Now, let's work... *)
-  rec_unify type1 type2
-;;
-
-
-
-let type_variables_mapping = ref ([] : (type_variable * string) list) ;;
+let type_variable_names_mapping = ref ([] : (type_simple * string) list) ;;
 let type_variables_counter = ref 0 ;;
 
 let reset_type_variables_mapping () =
-  type_variables_mapping := [];
-  type_variables_counter := 0;
+  type_variable_names_mapping := [] ;
+  type_variables_counter := 0
 ;;
 
-let get_type_variable_name var =
-  try List.assq var !type_variables_mapping with
+let get_type_name ty ~generalized_p =
+  (* No need to repr, [pp_type_simple] already did it. *)
+  try List.assq ty !type_variable_names_mapping with
   | Not_found ->
     let name =
       String.make 1 (Char.chr (Char.code 'a' + !type_variables_counter)) in
-    incr type_variables_counter;
-    type_variables_mapping := (var, name) :: !type_variables_mapping;
-    name
+    incr type_variables_counter ;
+    let name' = if not generalized_p then "_" ^ name else name in
+    type_variable_names_mapping :=
+      (ty, name') :: !type_variable_names_mapping ;
+    name'
 ;;
 
-(* Format.pp_formatter -> type_variable -> unit *)
-let pp_type_variable ppf var =
-  Format.fprintf ppf "'%s" (get_type_variable_name var)
-;;
 
 let (pp_type_simple, pp_type_scheme) =
   let rec rec_pp prio ppf ty =
     (* First of all get the "repr" guy ! *)
     let ty = repr ty in
-    match ty with
-    | ST_var v -> Format.fprintf ppf "%a" pp_type_variable v
+    match ty.ts_desc with
+    | ST_var ->
+	let ty_variable_name =
+	  get_type_name ty ~generalized_p: (ty.ts_level = generic_level) in
+	Format.fprintf ppf "'%s" ty_variable_name
     | ST_arrow (ty1, ty2) ->
 	(* Arrow priority: 2. *)
 	if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
         Format.fprintf ppf "@[<2>%a@ ->@ %a@]" (rec_pp 2) ty1 (rec_pp 1) ty2 ;
-	if prio >= 2 then Format.fprintf ppf "@]"
+	if prio >= 2 then Format.fprintf ppf ")@]"
     | ST_tuple tys ->
 	(* Tuple priority: 3. *)
 	if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "(@[<2>%a@])"
+        Format.fprintf ppf "@[<2>%a@]"
           (Handy.pp_generic_separated_list " *" (rec_pp 3)) tys ;
-	if prio >= 3 then Format.fprintf ppf "@]"
+	if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_construct (type_name, arg_tys) ->
         (begin
 	(* Priority of arguments of a sum type constructor :       *)
@@ -366,8 +258,8 @@ let (pp_type_simple, pp_type_scheme) =
          | [] -> Format.fprintf ppf "%s" type_name
          | [one] -> Format.fprintf ppf "%a@ %s" (rec_pp 3) one type_name
          | _ ->
-             Format.fprintf ppf "(@[<1>(%a)@]@ %s"
-               (Handy.pp_generic_separated_list " ," (rec_pp 0)) arg_tys
+             Format.fprintf ppf "@[<1>(%a)@]@ %s"
+               (Handy.pp_generic_separated_list "," (rec_pp 0)) arg_tys
 	       type_name
 	end)
     | ST_self_rep -> Format.fprintf ppf "Self"
@@ -375,13 +267,272 @@ let (pp_type_simple, pp_type_scheme) =
 	Format.fprintf ppf "%s#%s" module_name collection_name in
 
   (fun ppf ty ->
-    reset_type_variables_mapping ();
+    reset_type_variables_mapping () ;
     rec_pp 0 ppf ty),
   (fun ppf the_scheme ->
-    reset_type_variables_mapping ();
-    if the_scheme.ts_parameters <> [] then
-      Format.fprintf ppf "forall %a.@ "
-	(Handy.pp_generic_separated_list "," pp_type_variable)
-	the_scheme.ts_parameters ;
+    reset_type_variables_mapping () ;
     Format.fprintf ppf "%a" (rec_pp 0) the_scheme.ts_body)
+;;
+
+
+
+(** {b Rem} : Non exported oustide this module. *)
+let occur_check ~loc var_ty ty =
+  let rec test t =
+    let t = repr t in
+    match t.ts_desc with
+     | ST_var -> if var_ty == t then raise (Circularity (var_ty, ty, loc))
+     | ST_arrow (ty1, ty2) -> test ty1 ; test ty2
+     | ST_tuple tys -> List.iter test tys
+     | ST_construct (_, args) -> List.iter test args
+     | ST_self_rep | ST_species_rep _ -> () in
+  test ty
+;;
+
+
+
+let (specialize, specialize2) =
+  let seen = ref [] in
+  (* Internal recursive copy of a type scheme replacing its generalized
+     variables by their associated new fresh type variables. *)
+  let rec copy_type_simple ty =
+    let ty = repr ty in
+    (* First check if we already saw this type. *)
+    if List.mem_assq ty !seen then List.assq ty !seen
+    else
+      (begin
+      (* If the type is not generalized, then its copy is itself. *)
+      if ty.ts_level <> generic_level then ty
+      else
+	(begin
+	(* We must inform that "we saw ourself". The problem is we do  *)
+	(* not have any "copied type" to bind to ourself in the [seen] *)
+        (* list. Then we will temporarily bind to a type variable and  *)
+        (* once we will get our opy, we will make this variable equal  *)
+        (* to this copy.                                               *)
+        let tmp_ty = {
+	  ts_level = ty.ts_level ;
+	  ts_desc = ST_var ;
+	  ts_link_value = TLV_unknown } in
+	seen := (ty, tmp_ty) :: !seen ;
+	(* Build the type description copy of ourself. *)
+	let copied_desc =
+	  (match ty.ts_desc with
+	   | ST_var -> ST_var
+	   | ST_arrow (ty1, ty2) ->
+               ST_arrow (copy_type_simple ty1, copy_type_simple ty2)
+	   | ST_tuple tys -> ST_tuple (List.map copy_type_simple tys)
+	   | ST_construct (name, args) ->
+               ST_construct (name, List.map copy_type_simple args)
+	   | (ST_self_rep | ST_species_rep _) as ty -> ty) in
+	(* Build the type expression copy of ourself. *)
+	let copied_ty = {
+	  ts_level = current_binding_level () ;
+	  ts_desc = copied_desc ;
+	  ts_link_value = TLV_unknown } in
+	(* Make our previous temporay variable equal to our copy. *)
+	tmp_ty.ts_link_value <- TLV_known copied_ty ;
+	(* And finally return our copy. *)
+	copied_ty
+	end)
+      end) in
+
+
+
+  ((* ******************************************************************** *)
+   (* specialize                                                           *)
+   (* type_scheme -> type_simple                                           *)
+   (* {b Descr} : Instanciates a type scheme. This means that is makes a
+                copy of its body, replacing generalized variables by fresh
+                variables. If a generalized variable appears several times
+                it will be replace by the same fresh variable at these
+                different locations.
+
+      {b Rem} : Exported oustide this module.                              *)
+   (* ******************************************************************** *)
+   (fun scheme ->
+     (* Copy the type scheme's body. *)
+     let instance = copy_type_simple scheme.ts_body in
+     (* Clean up seen type for further usages. *)
+     seen := [] ;
+     instance),
+
+
+
+   (* ******************************************************************* *)
+   (* specialize2                                                         *)
+   (* type_scheme -> type_simple list -> (type_simple * type_simple list) *)
+   (* {b Descr} : Performs the same job than [specialize] on the type
+                scheme. Also perform a copy of the types [tys], using the
+                same mapping of generalized variables fto fresh variables
+                to perform the copy.
+                This means that if a variable appears in both the scheme
+                and the types, then it will be replaced by the same fresh
+                variable.
+                Obviously, this in only interesting when the scheme and
+                the types share some generalized variables !
+
+      {b Rem} : Exported oustide this module.                             *)
+   (* ******************************************************************* *)
+   (fun scheme tys ->
+     (* Copy the type scheme's body. *)
+     let instance = copy_type_simple scheme.ts_body in
+     (* Also copy the other types, using the same mapping provided in [seen]. *)
+     let copied_tys = List.map copy_type_simple tys in
+     (* Clean up seen type for further usages. *)
+     seen := [] ;
+     (instance, copied_tys))
+  )
+;;
+
+  
+
+let (generalize, generalize2) =
+  (* The number found generalizable variables. We count them by side effect. *)
+  let nb_params = ref 0 in
+  (* Internal recursive hunt for generalizable variables inside the type. *)
+  let rec find_parameters ty =
+    let ty = repr ty in
+    if ty.ts_level > current_binding_level () &&
+       ty.ts_level <> generic_level then
+      (begin
+      (* Make this generalized ! *)
+      ty.ts_level <- generic_level ;
+      match ty.ts_desc with
+       | ST_var -> incr nb_params
+       | ST_arrow (ty1, ty2) -> find_parameters ty1 ; find_parameters ty2
+       | ST_tuple tys -> List.iter find_parameters tys
+       | ST_construct (_, args) -> List.iter find_parameters args
+       | ST_self_rep | ST_species_rep _ -> ()
+      end) in
+
+
+
+  ((* ********************************************************************** *)
+   (* generalize                                                             *)
+   (* type_simple -> type_scheme               *)
+   (** {b Descr} : Generalize a type in order to create a type scheme having
+                 the type's as body.
+                 The scheme body physically shares the type's structure.
+
+       {b Rem} : Exported oustide this module.                               *)
+   (* ********************************************************************** *)
+   (fun ty ->
+     find_parameters ty ;
+     let scheme = { ts_nb_vars = !nb_params ; ts_body = ty } in
+     (* Clean up parameters counter for further usages. *)
+     nb_params := 0 ;
+     scheme),
+
+   (* ********************************************************************* *)
+   (* generalize2                                                           *)
+   (* type_simple -> type_simple list -> (type_scheme * (type_simple list)) *)
+   (** {b Descr} : Performs the same job than [generalize] on the first
+                 type. Also perform generalize the types in place, but do
+                 not explicitely return them as schemes. Note that the
+                 argument counter is shared between these generalizations.
+
+       {b Rem} : Exported oustide this module.                              *)
+   (* ********************************************************************* *)
+   (fun ty tys ->
+     find_parameters ty ;
+     List.iter find_parameters tys ;
+     let scheme = { ts_nb_vars = !nb_params ; ts_body = ty } in
+     (* Clean up parameters counter for further usages. *)
+     nb_params := 0 ;
+     (scheme, tys))
+  )
+;;
+
+
+
+(** {b Rem} : Exported oustide this module. *)
+let trivial_scheme ty = { ts_nb_vars = 0 ; ts_body = ty }
+;;
+
+(** {b Rem} : Non exported oustide this module. *)
+let rec lowerize_levels max_level ty =
+  let ty = repr ty in
+  if ty.ts_level > max_level then
+    begin
+    ty.ts_level <- max_level ;
+    match ty.ts_desc with
+     | ST_var -> ()
+     | ST_arrow (ty1, ty2) ->
+	 lowerize_levels max_level ty1 ;
+	 lowerize_levels max_level ty2
+     | ST_tuple tys -> List.iter (lowerize_levels max_level) tys
+     | ST_construct (_, args) -> List.iter (lowerize_levels max_level) args
+     | ST_self_rep | ST_species_rep _ -> ()
+    end
+;;
+
+
+
+let unify ~loc ~self_manifest type1 type2 =
+  let rec rec_unify ty1 ty2 =
+    let ty1 = repr ty1 in
+    let ty2 = repr ty2 in
+    if ty1 == ty2 then () else
+    match (ty1.ts_desc, ty2.ts_desc) with
+     | (ST_var, _) ->
+	 occur_check ~loc ty1 ty2 ;
+	 lowerize_levels ty1.ts_level ty2 ;
+	 ty1.ts_link_value <- TLV_known ty2
+     | (_, ST_var) ->
+	 occur_check ~loc ty2 ty1 ;
+	 lowerize_levels ty2.ts_level ty1 ;
+	 ty2.ts_link_value <- TLV_known ty1
+     | ((ST_arrow (arg1, res1)), (ST_arrow (arg2, res2))) ->
+	 lowerize_levels ty1.ts_level ty2 ;
+	 ty1.ts_link_value <- TLV_known ty2 ;
+	 rec_unify arg1 arg2 ;
+	 rec_unify res1 res2
+     | ((ST_tuple tys1), (ST_tuple tys2)) ->
+	 lowerize_levels ty1.ts_level ty2 ;
+	 ty1.ts_link_value <- TLV_known ty2 ;
+	 (try List.iter2 rec_unify tys1 tys2 with
+	 | Invalid_argument "List.iter2" ->
+             (* In fact, that's an arity mismatch on the tuple. *)
+             raise (Conflict (ty1, ty2, loc)))
+     | (ST_construct (name, args), ST_construct (name', args')) ->
+	 (if name <> name' then raise (Conflict (ty1, ty2, loc)) ;
+	 lowerize_levels ty1.ts_level ty2 ;
+	 ty1.ts_link_value <- TLV_known ty2 ;
+	  try List.iter2 rec_unify args args' with
+	  | Invalid_argument "List.iter2" ->
+              (* In fact, that's an arity mismatch. *)
+              raise
+		(Arity_mismatch
+		   (name, (List.length args), (List.length args'), loc)))
+     | (ST_self_rep, ST_self_rep) ->
+	 (begin
+	 (* Trivial, but anyway, proceed as everywhere else. *)
+	 lowerize_levels ty1.ts_level ty2 ;
+	 ty1.ts_link_value <- TLV_known ty2
+	 end)
+     | (ST_self_rep, _) ->
+	 (begin
+	 match self_manifest with
+	  | None -> raise (Conflict (ty1, ty2, loc))
+	  | Some self_is_that ->
+	      lowerize_levels ty1.ts_level ty2 ;
+	      rec_unify self_is_that ty2 ;
+	      (* Always return Self to keep abstraction ! *)
+	      ty2.ts_link_value <- TLV_known ty1
+	 end)
+     | (_, ST_self_rep) ->
+	 (begin
+	 match self_manifest with
+	  | None -> raise (Conflict (ty1, ty2, loc))
+	  | Some self_is_that ->
+	      lowerize_levels ty1.ts_level ty2 ;
+	      rec_unify self_is_that ty1 ;
+	      (* Always return Self to keep abstraction ! *)
+	      ty1.ts_link_value <- TLV_known ty2
+	 end)
+     | ((ST_species_rep _), _) | (_, (ST_species_rep _)) -> failwith "todo9"
+     | (_, _) -> raise (Conflict (ty1, ty2, loc)) in
+  (* Now, let's work... *)
+  rec_unify type1 type2
 ;;

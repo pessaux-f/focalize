@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.56 2007-08-15 17:00:01 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.57 2007-08-16 15:04:00 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -181,6 +181,7 @@ let mk_proof_label (s1, s2) =
 /* %nonassoc LET */                    /* above SEMI ( ...; let ... in ...) */
 /* %nonassoc below_WITH */
 /* %nonassoc FUNCTION WITH */          /* below BAR  (match ... with ...) */
+%nonassoc prec_quantifier
 %nonassoc LT_DASH_GT LT_DASH_GT_OP     /* <-> */
 %right    OR                           /* prop or prop */
 %right    AND                          /* above WITH prop and prop */
@@ -501,9 +502,9 @@ def_theorem:
 ;
 
 prop:
-  | ALL bound_vname_list in_type_expr COMMA prop
+  | ALL bound_vname_list in_type_expr COMMA prop  %prec prec_quantifier
     { mk (Pr_forall ($2, $3, $5))}
-  | EX bound_vname_list in_type_expr COMMA prop
+  | EX bound_vname_list in_type_expr COMMA prop   %prec prec_quantifier
     { mk (Pr_exists ($2, $3, $5))}
   | NOT prop
     { mk (Pr_not $2) }

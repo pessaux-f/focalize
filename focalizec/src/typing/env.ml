@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.20 2007-08-15 18:59:00 pessaux Exp $ *)
+(* $Id: env.ml,v 1.21 2007-08-16 15:04:00 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -88,11 +88,11 @@ let env_list_assoc ~allow_opened searched list =
 let debug_env_list_assoc ~allow_opened searched list =
   let rec rec_assoc = function
     | [] ->
-	Printf.eprintf "Search failed.\n" ;
+	Format.eprintf "Search failed.\n" ;
 	flush stderr ;
 	raise Not_found
     | (name, data) :: q ->
-	Printf.eprintf "\"%s\" " (Parsetree_utils.name_of_vname name) ;
+	Format.eprintf "\"%s\" " (Parsetree_utils.name_of_vname name) ;
 	flush stderr ;
 	if name = searched then
 	  (begin
@@ -100,19 +100,19 @@ let debug_env_list_assoc ~allow_opened searched list =
 	   | BO_opened (fname, v) ->
 	       if allow_opened then
 		 (begin
-		 Printf.eprintf
+		 Format.eprintf
 		   "Search successfully ends on opened (\"%s\")...\n" fname ;
 		 flush stderr ;
 		 v
 		 end)
 	       else rec_assoc q
 	   | BO_absolute v ->
-	       Printf.eprintf "Search successfully ends on absolute...\n" ;
+	       Format.eprintf "Search successfully ends on absolute...\n" ;
 	       flush stderr ;
 	       v
 	  end)
 	else rec_assoc q in
-  Printf.eprintf
+  Format.eprintf
     "Search starts for \"%s\"...\n" (Parsetree_utils.name_of_vname  searched) ;
   flush stderr ;
   rec_assoc list
@@ -317,6 +317,8 @@ module TypeInformation = struct
         If the type is a pure abstract like in type t, then t is TK_abstract
         with [type_identity] representing the type ST_construct ("t", []). *)
     type_identity : Types.type_scheme ;
+    (** Parameters of the type. Be careful, they are generalized at the same that the above scheme [type_identity] is created. Hence, physical sharing exists and is crucial ! *)
+    type_params : Types.type_simple list ;
     type_arity : int          (** Number of parameters of the type. *)
   }
 
@@ -824,7 +826,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
       {b Rem} : Not exported outside this module.                       *)
   (* ****************************************************************** *)
   and find_value_vname ~loc ~allow_opened vname (env : t) =
-    try debug_env_list_assoc (*env_list_assoc*) ~allow_opened vname env.values
+    try (*debug_env_list_assoc*) env_list_assoc ~allow_opened vname env.values
     with Not_found -> raise (Unbound_identifier (vname, loc))
 
 
@@ -1080,6 +1082,18 @@ module TypingEMAccess = struct
 	(Types.type_arrow
 	   (Types.type_tuple [v; (Types.type_basic "list" [v])])
 	   (Types.type_basic "list" [v]))) in
+    (* Create the description of the type list. *)
+    let (list_identity, list_params) =
+      (let v = Types.type_variable () in
+      Types.generalize2 (Types.type_basic "list" [v]) [v]) in
+    let list_type_description = {
+      TypeInformation.type_kind =
+        TypeInformation.TK_variant [
+          (Parsetree.Vlident "[]", nil_scheme) ;
+          (Parsetree.Viident "::", cons_scheme) ] ;
+      TypeInformation.type_identity = list_identity ;
+      TypeInformation.type_params = list_params ;
+      TypeInformation.type_arity = 1 } in
     (* And now the structure of the environment itself. *)
     {
      constructors = [
@@ -1099,48 +1113,45 @@ module TypingEMAccess = struct
 	  ("",
 	   { TypeInformation.type_kind = TypeInformation.TK_abstract ;
 	     TypeInformation.type_identity =
-	     Types.generalize (Types.type_int ()) ;
+	       Types.generalize (Types.type_int ()) ;
+             TypeInformation.type_params = [] ;
 	     TypeInformation.type_arity = 0 })) ;
        ("float",
 	BO_opened
 	  ("", { TypeInformation.type_kind = TypeInformation.TK_abstract ;
 		 TypeInformation.type_identity =
 		   Types.generalize (Types.type_float ()) ;
+                 TypeInformation.type_params = [] ;
 		 TypeInformation.type_arity = 0 })) ;
        ("bool",
 	BO_opened
 	  ("", { TypeInformation.type_kind = TypeInformation.TK_abstract ;
 		 TypeInformation.type_identity =
 		   Types.generalize (Types.type_bool ()) ;
+                 TypeInformation.type_params = [] ;
 		 TypeInformation.type_arity = 0 })) ;
        ("string",
 	BO_opened
 	  ("", { TypeInformation.type_kind = TypeInformation.TK_abstract ;
 		 TypeInformation.type_identity =
 		   Types.generalize (Types. type_string ()) ;
+                 TypeInformation.type_params = [] ;
 		 TypeInformation.type_arity = 0 })) ;
        ("char",
 	BO_opened
 	  ("", { TypeInformation.type_kind = TypeInformation.TK_abstract ;
 		 TypeInformation.type_identity =
 		   Types.generalize (Types.type_char ()) ;
+                 TypeInformation.type_params = [] ;
 		 TypeInformation.type_arity = 0 })) ;
        ("unit",
 	BO_opened
 	  ("",{ TypeInformation.type_kind = TypeInformation.TK_abstract ;
 		TypeInformation.type_identity =
 		  Types.generalize (Types.type_unit ()) ;
+                 TypeInformation.type_params = [] ;
 		TypeInformation.type_arity = 0 })) ;
-       ("list",
-	BO_opened
-	  ("basics", { TypeInformation.type_kind =
-		       TypeInformation.TK_variant [
-		         (Parsetree.Vlident "[]", nil_scheme) ;
-		         (Parsetree.Viident "::", cons_scheme) ] ;
-		       TypeInformation.type_identity =
-		         (let v = Types.type_variable () in
-			 Types.generalize (Types.type_basic "list" [v])) ;
-		       TypeInformation.type_arity = 1 }))
+       ("list",	BO_opened ("basics", list_type_description))
       ] ;
     values = [] ;
     species = [] }

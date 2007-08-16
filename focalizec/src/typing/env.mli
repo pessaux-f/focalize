@@ -59,6 +59,7 @@ module TypeInformation :
     type type_description = {
       type_kind : type_kind ;
       type_identity : Types.type_scheme ;
+      type_params : Types.type_simple list ;
       type_arity : int
     }
 
