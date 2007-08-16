@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.6 2007-08-15 17:00:01 pessaux Exp $ *)
+(* $Id: types.ml,v 1.7 2007-08-16 08:53:51 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -341,35 +341,47 @@ let pp_type_variable ppf var =
 ;;
 
 let (pp_type_simple, pp_type_scheme) =
-  let rec rec_pp ppf ty =
+  let rec rec_pp prio ppf ty =
     (* First of all get the "repr" guy ! *)
     let ty = repr ty in
     match ty with
     | ST_var v -> Format.fprintf ppf "%a" pp_type_variable v
     | ST_arrow (ty1, ty2) ->
-        Format.fprintf ppf "(@[<2>%a@ ->@ %a@])" rec_pp ty1 rec_pp ty2
+	(* Arrow priority: 2. *)
+	if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
+        Format.fprintf ppf "@[<2>%a@ ->@ %a@]" (rec_pp 2) ty1 (rec_pp 1) ty2 ;
+	if prio >= 2 then Format.fprintf ppf "@]"
     | ST_tuple tys ->
+	(* Tuple priority: 3. *)
+	if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
         Format.fprintf ppf "(@[<2>%a@])"
-          (Handy.pp_generic_separated_list " *" rec_pp) tys
+          (Handy.pp_generic_separated_list " *" (rec_pp 3)) tys ;
+	if prio >= 3 then Format.fprintf ppf "@]"
     | ST_construct (type_name, arg_tys) ->
-        (match arg_tys with
+        (begin
+	(* Priority of arguments of a sum type constructor :       *)
+        (* like tuples if only one argument : 3                    *)
+        (* otherwise 0 if already a tuple because we force parens. *)
+	match arg_tys with
          | [] -> Format.fprintf ppf "%s" type_name
-         | [one] -> Format.fprintf ppf "%a@ %s" rec_pp one type_name
+         | [one] -> Format.fprintf ppf "%a@ %s" (rec_pp 3) one type_name
          | _ ->
-             Format.fprintf ppf "(@[<1>%a)@]@ %s"
-               (Handy.pp_generic_separated_list " ," rec_pp) arg_tys type_name)
+             Format.fprintf ppf "(@[<1>(%a)@]@ %s"
+               (Handy.pp_generic_separated_list " ," (rec_pp 0)) arg_tys
+	       type_name
+	end)
     | ST_self_rep -> Format.fprintf ppf "Self"
     | ST_species_rep (module_name, collection_name) ->
 	Format.fprintf ppf "%s#%s" module_name collection_name in
 
   (fun ppf ty ->
     reset_type_variables_mapping ();
-    rec_pp ppf ty),
+    rec_pp 0 ppf ty),
   (fun ppf the_scheme ->
     reset_type_variables_mapping ();
     if the_scheme.ts_parameters <> [] then
       Format.fprintf ppf "forall %a.@ "
 	(Handy.pp_generic_separated_list "," pp_type_variable)
 	the_scheme.ts_parameters ;
-    Format.fprintf ppf "%a" rec_pp the_scheme.ts_body)
+    Format.fprintf ppf "%a" (rec_pp 0) the_scheme.ts_body)
 ;;

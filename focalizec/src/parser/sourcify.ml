@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.24 2007-08-15 17:55:08 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.25 2007-08-16 08:53:51 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -238,39 +238,72 @@ and pp_rep_type_def ppf = pp_generic_ast pp_rep_type_def_desc ppf
 
 
 (* ******************************************************************** *)
-(* pp_type_expr_desc :                                                  *)
-(*   Format.formatter -> Parsetree.type_expr_desc -> unit               *)
+(* int -> Format.formatter -> Parsetree.type_expr_desc -> unit          *)
 (** {b Descr} : Pretty prints a [type_expr_desc] value as FoCal source.
 
     {b Rem} : Not exported ouside this module.                          *)
 (* ******************************************************************** *)
-let rec pp_type_expr_desc ppf = function
-  | Parsetree.TE_ident ident -> Format.fprintf ppf "%a" pp_ident ident
-  | Parsetree.TE_fun (te1, te2) ->
-      Format.fprintf ppf "@[<2>%a@ ->@ %a@]" pp_type_expr te1 pp_type_expr te2
-  | Parsetree.TE_app (ident, tes) ->
-      Format.fprintf ppf "%a@[<2>@ (%a)@]"
-        pp_ident ident (pp_type_exprs ",") tes
-  | Parsetree.TE_prod (tes) ->
-      Format.fprintf ppf "@[<2>(%a)@]" (pp_type_exprs " *") tes
-  | Parsetree.TE_self -> Format.fprintf ppf "Self"
-  | Parsetree.TE_prop -> Format.fprintf ppf "prop"
-  | Parsetree.TE_paren te -> Format.fprintf ppf "(%a)" pp_type_expr te
+let rec pp_type_expr_desc prio ppf = function
+    | Parsetree.TE_ident ident -> Format.fprintf ppf "%a" pp_ident ident
+    | Parsetree.TE_fun (te1, te2) ->
+	if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
+	Format.fprintf ppf "@[<2>%a@ ->@ %a@]"
+	  (pp_type_expr_with_prio 2) te1 (pp_type_expr_with_prio 1) te2 ;
+	if prio >= 2 then Format.fprintf ppf "@]"
+    | Parsetree.TE_app (ident, tes) ->
+	Format.fprintf ppf "%a@[<2>@ (%a)@]"
+          pp_ident ident (pp_type_exprs_with_prio 0 ",") tes
+    | Parsetree.TE_prod (tes) ->
+	Format.fprintf ppf "@[<2>(%a)@]" (pp_type_exprs_with_prio 0 " *") tes
+    | Parsetree.TE_self -> Format.fprintf ppf "Self"
+    | Parsetree.TE_prop -> Format.fprintf ppf "prop"
+    | Parsetree.TE_paren te ->
+	Format.fprintf ppf "(%a)" (pp_type_expr_with_prio 0) te
+(* ************************************************************************ *)
+(* int -> string -> Format.formatter -> Parsetree.type_expr list -> unit    *)
+(** {b Descr} : Pretty prints a [list] of [type_expr] value as FoCal source
+              using the given current priority.
+	      This function is ONLY aimed to be used internally by
+              [pp_type_expr_desc].
+    {b Rem} : Not exported ouside this module.
+              NEVER call somewhere else than in [pp_type_expr_desc]. This
+              is internal stuff !                                            *)
 (* ************************************************************************* *)
-(* pp_type_exprs :                                                           *)
-(*          string -> Format.formatter -> Parsetree.type_expr list -> unit   *)
+and pp_type_exprs_with_prio prio sep ppf =
+  Handy.pp_generic_separated_list sep (pp_type_expr_with_prio prio) ppf
+(* ***************************************************************** *)
+(* int -> string -> Format.formatter -> Parsetree.type_expr -> unit  *)
+(** {b Descr} : Pretty prints a [type_expr] value as FoCal source
+              using the given current priority.
+	      This function is ONLY aimed to be used internally by
+              [pp_type_expr_desc], [pp_type_exprs_with_prio] and
+              [pp_type_exprs].
+    {b Rem} : Not exported ouside this module.
+              NEVER call somewhere else than in [pp_type_expr_desc],
+              [pp_type_exprs_with_prio] and [pp_type_exprs].
+              is internal stuff !                                    *)
+(* ***************************************************************** *)
+and pp_type_expr_with_prio prio ppf =
+  pp_generic_ast (pp_type_expr_desc prio) ppf
+(* ************************************************************************* *)
+(*  int -> string -> Format.formatter -> Parsetree.type_expr list -> unit    *)
 (** {b Descr} : Pretty prints a [list] of [type_expr] value as FoCal source.
-
+	      The initial priority is 0, hence this function is initial
+              pretty print entry point for 1 list of type expressions.
     {b Rem} : Not exported ouside this module.                               *)
 (* ************************************************************************* *)
-and pp_type_exprs sep ppf = Handy.pp_generic_separated_list sep pp_type_expr ppf
+and pp_type_exprs sep ppf =
+  Handy.pp_generic_separated_list sep (pp_type_expr_with_prio 0) ppf
 (* *************************************************************** *)
 (* pp_type_expr : Format.formatter -> Parsetree.type_expr -> unit  *)
 (** {b Descr} : Pretty prints a [type_expr] value as FoCal source.
+              The initial priority is 0, hence this function is
+              initial pretty print entry point for 1 type
+              expression.
 
     {b Rem} : Not exported ouside this module.                     *)
 (* *************************************************************** *)
-and pp_type_expr ppf = pp_generic_ast pp_type_expr_desc ppf
+and pp_type_expr ppf = pp_generic_ast (pp_type_expr_desc 0) ppf
 ;;
 
 
