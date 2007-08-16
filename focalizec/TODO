@@ -460,3 +460,18 @@ D'ailleurs c'est en lien direct avec la bizarerie suivante:
   let youppp in u = (5, 6) ;;   (* Pourquoi le # est optionnel ici ... *)
   type inv_prod ('a, 'b) = alias ('b * 'a) ;;
   let yappp in #inv_prod (int , string) = ("gee", 42) ;;  (* ... et pas là ? *)
+
+
+
+2007-08-16 (François)
+=====================
+
+* UNIFICATION EN PLACE ET SELF
+******************************
+L'information dans le contexte de typage de ce à quoi Self est égal est
+un type. Or lors des unifications, maintenant que tous les types ont
+un binding level, le sien peu être affecté.
+Et je pense que ça peur conduire à empêcher des généralisations. Il vaudrait
+mieux metre un schéma de type que l'on instancierait à la demande avec
+le binding level courant.
+En plus, ça éviterait sans doute le "hack" du [is_self].

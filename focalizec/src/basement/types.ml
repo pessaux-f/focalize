@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.8 2007-08-16 15:04:00 pessaux Exp $ *)
+(* $Id: types.ml,v 1.9 2007-08-16 15:50:48 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -385,7 +385,7 @@ let (specialize, specialize2) =
   )
 ;;
 
-  
+
 
 let (generalize, generalize2) =
   (* The number found generalizable variables. We count them by side effect. *)
@@ -469,6 +469,24 @@ let rec lowerize_levels max_level ty =
 
 
 
+(* ********************************************************************** *)
+(* type_simple -> bool                                                    *)
+(** {b Descr} : Check if a type is [Self]. This is only used to check
+              if the type to what Self is equal is "Self". If so, this
+	      means that by side effect, a successful unification changed
+	      it hence, any unification attemp between a type and Self is
+	      successfull again because it already succeeded.
+
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
+let is_self ty =
+  let ty = repr ty in
+  match ty.ts_desc with ST_self_rep -> true | _ -> false
+;;
+
+
+
+
 let unify ~loc ~self_manifest type1 type2 =
   let rec rec_unify ty1 ty2 =
     let ty1 = repr ty1 in
@@ -517,7 +535,12 @@ let unify ~loc ~self_manifest type1 type2 =
 	  | None -> raise (Conflict (ty1, ty2, loc))
 	  | Some self_is_that ->
 	      lowerize_levels ty1.ts_level ty2 ;
-	      rec_unify self_is_that ty2 ;
+	      (* If the type to what Self is equal is "Self", this means   *)
+	      (* that by side effect, a successful unification changed it  *)
+	      (* hence, do not recurse endless, and accept the unification *)
+	      (* again because it already succeeded.                       *)
+	      if not (is_self self_is_that) then
+		rec_unify self_is_that ty2 ;
 	      (* Always return Self to keep abstraction ! *)
 	      ty2.ts_link_value <- TLV_known ty1
 	 end)
@@ -527,7 +550,12 @@ let unify ~loc ~self_manifest type1 type2 =
 	  | None -> raise (Conflict (ty1, ty2, loc))
 	  | Some self_is_that ->
 	      lowerize_levels ty1.ts_level ty2 ;
-	      rec_unify self_is_that ty1 ;
+	      (* If the type to what Self is equal is "Self", this means   *)
+	      (* that by side effect, a successful unification changed it  *)
+	      (* hence, do not recurse endless, and accept the unification *)
+	      (* again because it already succeeded.                       *)
+	      if not (is_self self_is_that) then
+		rec_unify self_is_that ty1 ;
 	      (* Always return Self to keep abstraction ! *)
 	      ty1.ts_link_value <- TLV_known ty2
 	 end)
