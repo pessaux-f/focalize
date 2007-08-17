@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.21 2007-08-16 15:04:00 pessaux Exp $ *)
+(* $Id: env.ml,v 1.22 2007-08-17 08:45:31 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -260,17 +260,21 @@ end ;;
 (* *********************************************************************** *)
 module TypeInformation = struct
   type species_param =
-    | SPAR_in of Parsetree.vname * Types.type_simple    (* Entity param. *)
-    | SPAR_is of Parsetree.vname * Types.type_simple    (* Collection param. *)
+    | SPAR_in of (Parsetree.vname * Types.type_simple)   (* Entity param. *)
+    | SPAR_is of (Parsetree.vname * Types.type_simple)   (* Collection param. *)
 
+
+  type species_field =
+    | SF_sig of (Parsetree.vname * Types.type_scheme)
+    | SF_let of (Parsetree.vname * Types.type_scheme * Parsetree.expr)
+    | SF_let_rec of (Parsetree.vname * Types.type_scheme * Parsetree.expr) list
 
 
   type species_description = {
     spe_is_collection : bool ;
     spe_sig_params : species_param list ;
     spe_sig_inher : Types.type_species list ;
-    spe_sig_methods :  (** Method's name, type and body if defined. *)
-      (Parsetree.vname * Types.type_scheme * (Parsetree.expr option)) list
+    spe_sig_methods : species_field list   (** Method's name, type and body if defined. *)
     }
 
 
@@ -358,10 +362,28 @@ module TypeInformation = struct
 
   let pp_species_methods ppf methods =
     List.iter
-      (fun (vname, ty_scheme, _) ->
-	Format.fprintf ppf "sig %a : %a@\n"
-	  Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme)
+      (function
+	| SF_sig (vname, ty_scheme) ->
+	    Format.fprintf ppf "sig %a : %a@\n"
+	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
+	| SF_let (vname, ty_scheme, _) ->
+	    Format.fprintf ppf "let %a : %a@\n"
+	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
+	| SF_let_rec rec_bounds ->
+	    (begin
+	    match rec_bounds with
+	     | [] -> assert false  (* Empty let rec is non sense ! *)
+	     | (vname, ty_scheme, _) :: rem ->
+		 Format.fprintf ppf "let rec %a : %a@\n"
+		   Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme ;
+		 List.iter
+		   (fun (v, s, _) ->
+		     Format.fprintf ppf "and %a : %a@\n"
+		       Sourcify.pp_vname v Types.pp_type_scheme s)
+		   rem
+	    end))
       methods
+
 
 
   (* ******************************************************************* *)
@@ -371,7 +393,7 @@ module TypeInformation = struct
       {b Rem} : Exported outside this module.                            *)
   (* ******************************************************************* *)
   let pp_species_description ppf sp_desc =
-    Format.fprintf ppf "%a%a =@\n%aend ;;"
+    Format.fprintf ppf "%a%a =@\n%aend"
       pp_species_param sp_desc.spe_sig_params
       pp_species_inher sp_desc.spe_sig_inher
       pp_species_methods sp_desc.spe_sig_methods
@@ -1158,14 +1180,33 @@ module TypingEMAccess = struct
 
 
 
+  (* *************************************************************** *)
+  (* 'a -> TypeInformation.species_description ->                    *)
+  (*   ('b, 'c, 'd, Types.type_scheme, 'e) generic_env               *)
+  (** {b Descr} : Create a fresh environment with the methods of the
+                species called [spec_name] from the methods found in
+                [spec_info].
+
+      {b Rem} : Not exported outside this module.                    *)
+  (* *************************************************************** *)
   let make_value_env_from_species_methods spec_name spec_info =
+    (* By folding left, fields at the head of the list will be at the tail *)
+    (* of the environment list. Hence, methods seen first are inserted     *)
+    (* first, hence are deeper in the environment.                         *)
     let values_bucket =
-      List.map
-	(fun (meth_vname, meth_scheme, _) ->
-	  (meth_vname, (BO_absolute meth_scheme)))
+      List.fold_left
+	(fun accu field ->
+	  match field with
+	   | TypeInformation.SF_sig (v, s)
+	   | TypeInformation.SF_let (v, s, _) -> [(v, (BO_absolute s))] @ accu
+	   | TypeInformation.SF_let_rec l ->
+	       let l' = List.map (fun (v, s, _) -> (v, (BO_absolute s))) l in
+	       l' @ accu)
+	[]
 	spec_info.TypeInformation.spe_sig_methods in
     { constructors = [] ; labels = [] ; types = [] ; values = values_bucket ;
       species = [] }
+
 
 
   (* Not yet thought about. *)

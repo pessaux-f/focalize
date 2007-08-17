@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.22 2007-08-16 15:04:00 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.23 2007-08-17 08:45:31 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {bL Descr} : Exception used to inform that a sum type constructor was
@@ -399,30 +399,45 @@ let typecheck_external_def env e_def =
 (* Does not make any assumption. Crudely returns a fresh type variable. *)
 let typecheck_external_expr ext_expr =
   let ty = Types.type_variable () in (* A somewhat of magic obj... *)
-  ext_expr.Parsetree.ast_type <- Some ty;
+  ext_expr.Parsetree.ast_type <- Some ty ;
   ty
 ;;
 
 
 
 (* **************************************************************** *)
-(* Parsetree.vname -> ('a * 'b * 'c) list -> ('a * 'd * 'e) list -> *)
-(*   unit                                                           *)
-(* {Descr} : Checks if the 2 lists of methods names overlaps.
-           If so then raises en exception [Method_multiply_defined],
-           else silently returns.
+(* Parsetree.vname -> Env.TypeInformation.species_field list ->     *)
+(*   Env.TypeInformation.species_field list -> unit                 *)
+(* {Descr} : Checks if the 2 lists of fields contain methods names
+           that overlap. If so then raises en exception
+           [Method_multiply_defined], else silently returns.
 
    {Rem} : Not exported outside this module.                        *)
 (* **************************************************************** *)
 let ensure_methods_uniquely_defined current_species l1 l2 =
+  (* Just a local flattening function... *)
+  let local_flat_fields fields =
+    List.fold_right
+      (fun field accu ->
+	match field with
+	 | Env.TypeInformation.SF_sig (v, _)
+	 | Env.TypeInformation.SF_let (v, _, _) -> v :: accu
+	 | Env.TypeInformation.SF_let_rec l ->
+	     let l' = List.map (fun (v, _, _) -> v) l in
+	     l' @ accu)
+      fields [] in
+  (* Now get the flat list of all the methods names. *)
+  let flat_l1 = local_flat_fields l1 in
+  let flat_l2 = local_flat_fields l2 in
+  (* And check for no overlap. *)
   List.iter
-    (fun (name1, _, _) ->
+    (fun name1 ->
       List.iter
-	(fun (name2, _, _) ->
+	(fun name2 ->
 	  if name1 = name2 then
 	    raise (Method_multiply_defined (name1, current_species)))
-	l2)
-    l1
+	flat_l2)
+    flat_l1
 ;;
 
 
@@ -949,20 +964,14 @@ and typecheck_theorem_def ctx env theorem_def =
 
 
 (* ************************************************************************* *)
-(* typing_context -> Env.TypingEnv.t -> Parsetree.species_field ->      *)
-(*   (Parsetree.vname * Types.type_scheme * Parsetree.expr option) list *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.species_field ->           *)
+(*   Env.TypeInformation.species_field list                                  *)
 (** {b Descr} : Infers the types of the species fields contained in the
               list. The typing environment is incrementally extended
               with the found methods and used to typecheck the next
               methods.
               The function returns a triplet suitable to be inserted in
               the structure of a species's type.
-
-    {b Return} : A list of triplets, one for each method found with
-      - Parsetree.vname : The name of the method.
-      - Types.type_scheme : The type scheme of the method.
-      - The body of the method is this method is "defined" (except for "rep"
-        that never has body even if it is really defined).
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
@@ -988,7 +997,8 @@ and typecheck_species_fields ctx env = function
 	     let ctx' = { ctx with self_manifest = Some ty } in
 	     (* Record the type information in the AST node. *)
 	     field.Parsetree.ast_type <- Some ty ;
-	     let field_info = (rep_vname, (Types.generalize ty), None) in
+	     let field_info =
+	       Env.TypeInformation.SF_sig (rep_vname, (Types.generalize ty)) in
 	     ([field_info], ctx', env)
 	     end)
 	 | Parsetree.SF_sig sig_def ->
@@ -1005,7 +1015,8 @@ and typecheck_species_fields ctx env = function
 	       Env.TypingEnv.add_value
 		 sig_def_descr.Parsetree.sig_name scheme env in
 	     let field_info =
-	       (sig_def_descr.Parsetree.sig_name, scheme, None) in
+	       Env.TypeInformation.SF_sig
+		 (sig_def_descr.Parsetree.sig_name, scheme) in
 	     ([field_info], ctx, env')
 	     end)
 	 | Parsetree.SF_let let_def ->
@@ -1020,15 +1031,37 @@ and typecheck_species_fields ctx env = function
 		 env bindings in
 	     (* We now collect the type information of these methods   *)
 	     (* in order to make them suitable for a "type of method". *)
-	     let field_infos =
-	       List.map2
-		 (fun (id, ty_scheme) binding ->
-		   let expr = binding.Parsetree.ast_desc.Parsetree.b_body in
-		   (* Be careful that [expr] below is already typed here. *)
-		   (id, ty_scheme, (Some expr)))
-		 bindings
-		 let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
-	     (field_infos, ctx, env')
+	     match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
+	      | Parsetree.RF_rec ->
+		  (begin
+		  let field_infos =
+		    List.map2
+		      (fun (id, ty_scheme) binding ->
+			let expr =
+			  binding.Parsetree.ast_desc.Parsetree.b_body in
+			(* Note that [expr] below is already typed here. *)
+			(id, ty_scheme, expr))
+		      bindings
+		      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
+		  (* Recursive, so just 1 field with several names. *)
+		  ([(Env.TypeInformation.SF_let_rec field_infos)], ctx, env')
+		  end)
+	      | Parsetree.RF_no_rec ->
+		  (begin
+		  (* Not recursive, then the list should be only 1 long.  *)
+		  (* Anyway, if that not the case, this does not annoy.   *)
+		  (* So we return a list of n fields with 1 name in each. *)
+		  let field_infos =
+		    List.map2
+		      (fun (id, ty_scheme) binding ->
+			let expr =
+			  binding.Parsetree.ast_desc.Parsetree.b_body in
+			(* Note that [expr] below is already typed here. *)
+			Env.TypeInformation.SF_let (id, ty_scheme, expr))
+		      bindings
+		      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
+		  (field_infos, ctx, env')
+		  end)
 	     end)
 	 | Parsetree.SF_property property_def ->
 	     (begin
@@ -1044,8 +1077,8 @@ and typecheck_species_fields ctx env = function
 		 property_def.Parsetree.ast_desc.Parsetree.prd_name
 		 scheme env in
 	     let field_info =
-	       (property_def.Parsetree.ast_desc.Parsetree.prd_name,
-		scheme, None) in
+	       Env.TypeInformation.SF_sig
+		 (property_def.Parsetree.ast_desc.Parsetree.prd_name, scheme) in
 	     ([field_info], ctx, env')
 	     end)
 	 | Parsetree.SF_theorem theorem_def ->
@@ -1057,8 +1090,8 @@ and typecheck_species_fields ctx env = function
 	       Env.TypingEnv.add_value
 		 theorem_def.Parsetree.ast_desc.Parsetree.th_name scheme env in
 	     let field_info =
-	       (theorem_def.Parsetree.ast_desc.Parsetree.th_name,
-		scheme, None) in
+	       Env.TypeInformation.SF_sig
+		 (theorem_def.Parsetree.ast_desc.Parsetree.th_name, scheme) in
 	     ([field_info], ctx, env')
 	     end)
 	 | Parsetree.SF_proof proof_def ->
@@ -1114,11 +1147,19 @@ let typecheck_species_expr ctx env species_expr =
   let species_as_type = Types.type_rep_species ~species_module ~species_name in
   (* Record the type in the AST node. *)
   species_expr.Parsetree.ast_type <- Some species_as_type ;
-  (* Extract only the methods type scheme to return them. *)
+  (* Extract only the methods type scheme to return them. Do not    *)
+  (* fold_left otherwise the list of the methods will be reversed ! *)
   let only_methods =
-    List.map
-      (fun (m_name, m_scheme, _) -> (m_name, m_scheme))
-      species_species_description.Env.TypeInformation.spe_sig_methods in
+    List.fold_right
+      (fun field accu ->
+	match field with
+	 | Env.TypeInformation.SF_sig (v, s)
+	 | Env.TypeInformation.SF_let (v, s, _) -> (v, s) :: accu
+	 | Env.TypeInformation.SF_let_rec l ->
+	     let l' = List.map (fun (v, s, _) -> (v, s)) l in
+	     l' @ accu)
+      species_species_description.Env.TypeInformation.spe_sig_methods
+      [] in
   only_methods
 ;;
 
@@ -1126,7 +1167,7 @@ let typecheck_species_expr ctx env species_expr =
 
 (* ********************************************************************** *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.species_expr list ->    *)
-(*   Env.TypingEnv.t                                                      *)
+(*   ((Parsetree.vname * Types.type_scheme) list * Env.TypingEnv.t)       *)
 (** {b Descr} : Extends an environment as value bindings with the methods
               of the inherited species provided in argument. Methods are
               added in the same order than their hosting species comes
@@ -1137,22 +1178,32 @@ let typecheck_species_expr ctx env species_expr =
     {b Rem} :Not exported outside this module.                            *)
 (* ********************************************************************** *)
 let extend_env_with_inherits ctx env spe_exprs =
-  let rec rec_extend current_env = function
-    | [] -> current_env
+  let rec rec_extend current_env revd_accu_found_methods = function
+    | [] -> (revd_accu_found_methods, current_env)
     | inh :: rem_inhs ->
 	(* First typecheck the species expression in the initial   *)
         (* (non extended) and recover its methods names and types. *)
-	let inh_species_methods =
-	  typecheck_species_expr ctx env inh in
+	let inh_species_methods = typecheck_species_expr ctx env inh in
 	let env' =
 	  List.fold_left
 	    (fun accu_env (meth_name, meth_scheme) ->
 	      Env.TypingEnv.add_value meth_name meth_scheme accu_env)
 	    current_env
 	    inh_species_methods in
-	rec_extend env' rem_inhs in
-  (* Now, let's work... *)
-  rec_extend env spe_exprs
+	let new_accu = inh_species_methods @ revd_accu_found_methods in
+	rec_extend env' new_accu rem_inhs in
+  (* Now, let's work... The list of the found methods is built reversed *)
+  (* for efficiency reason. So reverse it finally before returning so   *)
+  (* that deeper inherited methods are in head of the list.             *)
+  let (revd_found_methods, env') = rec_extend env [] spe_exprs in
+  ((List.rev revd_found_methods), env')
+;;
+
+
+
+let normalize_species methods_info inherited_methods_infos =
+
+  methods_info
 ;;
 
 
@@ -1165,27 +1216,27 @@ let typecheck_species_def ctx env species_def =
     current_species = Some species_def_desc.Parsetree.sd_name } in
   (* Ignore params and inherit for the moment. *)
   if species_def_desc.Parsetree.sd_params <> [] then failwith "TODO Params." ;
-  (* We first load the inherited methods. *)
-  let env_with_inherited_methods = 
+  (* We first load the inherited methods in the environment and  *)
+  (* get their signatures by the way.                            *)
+  let (inherited_methods_infos, env_with_inherited_methods) = 
     extend_env_with_inherits
       ctx env species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc in
   (* Now infer the types of the current field's.*)
   let methods_info =
     typecheck_species_fields
       ctx env_with_inherited_methods species_def_desc.Parsetree.sd_fields in
-  
   (* Then one must ensure that each method has the same type everywhere *)
   (* in the inheritance tree and more generaly create the normalised    *)
   (* form of the species.                                               *)
-
-
+  let normalized_methods =
+    normalize_species methods_info inherited_methods_infos in
   (* Let's build our "type" information. Since we are managing a species *)
   (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
   let species_description = {
     Env.TypeInformation.spe_is_collection = false ;
     Env.TypeInformation.spe_sig_params = [] ;
     Env.TypeInformation.spe_sig_inher = [] ;
-    Env.TypeInformation.spe_sig_methods = methods_info } in
+    Env.TypeInformation.spe_sig_methods = normalized_methods } in
   (* Extend the environment with the species. *)
   let env_with_species =
     Env.TypingEnv.add_species
