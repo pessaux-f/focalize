@@ -1,4 +1,4 @@
-(* $Id: handy.ml,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.2 2007-08-17 15:02:49 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -16,7 +16,6 @@
 (** Pretty printing tools. *)
 
 (* *************************************************************** *)
-(*   pp_generic_separated_list :                              *)
 (*         string -> (Format.formatter -> 'a -> unit) ->           *)
 (*            Format.formatter -> 'a list -> unit                  *)
 (** {b Descr} : Pretty prints a list of items thanks to the provided
@@ -37,7 +36,6 @@ let rec pp_generic_separated_list separator printer_fct ppf = function
 
 
 (* ***************************************************************** *)
-(* pp_generic_newlined_list :                                        *)
 (*  (Format.formatter -> 'a -> unit) -> Format.formatter ->          *)
 (*    'a list -> unit                                                *)
 (** {b Descr} : Pretty prints a list of items thanks to the provided
@@ -73,7 +71,6 @@ let pp_generic_explicit_option printer_fct ppf = function
 
 
 (* ****************************************************************** *)
-(* pp_generic_option :                                                *)
 (*  string -> (Format.formatter -> 'a -> unit) ->                     *)
 (*    Format.formatter -> 'a option -> unit                           *)
 (** {b Descr} : Pretty prints an optional item thanks to the provided
@@ -110,3 +107,14 @@ let rec int_to_base_26 i =
    Char.escaped (Char.chr ch)
    end)
 ;;
+
+
+
+(* *************************************************************** *)
+(* 'a list -> 'a list -> bool                                      *)
+(** {b Descr} : Checks if 2 lists intersect (i.e. have a least one
+	      common element).
+
+    {b Rem} : Exported outside this module.                        *)
+(* *************************************************************** *)
+let list_intersect_p l1 l2 = List.exists (fun e -> List.mem e l2) l1 ;;

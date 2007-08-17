@@ -1,4 +1,4 @@
-(* $Id: handy.mli,v 1.1 2007-07-19 12:01:51 pessaux Exp $ *)
+(* $Id: handy.mli,v 1.2 2007-08-17 15:02:49 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -18,16 +18,13 @@
 val pp_generic_separated_list :
   string ->
   (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a list -> unit
-;;
 val pp_generic_newlined_list :
   (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a list -> unit
-;;
 val pp_generic_explicit_option :
   (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a option -> unit
-;;
 val pp_generic_option :
   string -> (Format.formatter -> 'a -> unit) -> Format.formatter ->
     'a option -> unit
-;;
+
 val int_to_base_26 : int -> string
-;;
+val list_intersect_p : 'a list -> 'a list -> bool

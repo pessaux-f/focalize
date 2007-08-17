@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.23 2007-08-17 08:45:31 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.24 2007-08-17 15:02:49 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {bL Descr} : Exception used to inform that a sum type constructor was
@@ -654,7 +654,7 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
   (match opt_with_expr with
    | None ->
        (* To disapear once implemented ! *)
-       Printf.eprintf "Labels exhaustivity not checked on record expression.\n"
+       Format.eprintf "Labels exhaustivity not checked on record expression.@\n"
    | Some expr ->
        let expr_ty = typecheck_expr ctx env expr in
        Types.unify
@@ -899,15 +899,13 @@ and typecheck_proof ctx env proof =
    | Parsetree.Pf_assumed -> ()
    | Parsetree.Pf_auto facts -> ()
    | Parsetree.Pf_coq _ -> ()
-   | Parsetree.Pf_node nodes ->
-       List.iter (typecheck_node ctx env) nodes
+   | Parsetree.Pf_node nodes -> List.iter (typecheck_node ctx env) nodes
 
 
 
 and typecheck_node ctx env node =
   match node.Parsetree.ast_desc with
-   | Parsetree.PN_sub (_, statement, _) ->
-       typecheck_statement ctx env statement
+   | Parsetree.PN_sub (_, statement, _) -> typecheck_statement ctx env statement
    | Parsetree.PN_qed (_, proof) -> typecheck_proof ctx env proof
 
 
@@ -952,8 +950,7 @@ and typecheck_statement ctx env statement =
 
 and typecheck_theorem_def ctx env theorem_def =
   let ty =
-    typecheck_prop
-      ctx env theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
+    typecheck_prop ctx env theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
   (* Record the type information in the AST node. *)
   theorem_def.Parsetree.ast_type <- Some ty ;
   (* Now, typecheck the proof to fix types inside by side effet. *)
@@ -1116,10 +1113,11 @@ and typecheck_species_fields ctx env = function
 
 (* **************************************************************** *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.species_expr ->   *)
-(*   (Parsetree.vname * Types.type_scheme) list                     *)
+(*   Env.TypeInformation.species_field list                         *)
 (** {b Descr} : Typechecks a species expression, record its type in
               the AST node and return the list of its methods names
-              and type schemes.
+              type schemes and possible bodies (the list of fields
+              in fact).
 
     {b Rem} :Not exported outside this module.                      *)
 (* **************************************************************** *)
@@ -1144,30 +1142,20 @@ let typecheck_species_expr ctx env species_expr =
 	 (* Species are not first class value, then  *)
 	 (* they can't be returned by a method call. *)
 	 assert false) in
-  let species_as_type = Types.type_rep_species ~species_module ~species_name in
+  let species_carrier_type =
+    Types.type_rep_species ~species_module ~species_name in
+  (* Now, create the "species type" (a somawhat of signature). *)
+  
   (* Record the type in the AST node. *)
-  species_expr.Parsetree.ast_type <- Some species_as_type ;
-  (* Extract only the methods type scheme to return them. Do not    *)
-  (* fold_left otherwise the list of the methods will be reversed ! *)
-  let only_methods =
-    List.fold_right
-      (fun field accu ->
-	match field with
-	 | Env.TypeInformation.SF_sig (v, s)
-	 | Env.TypeInformation.SF_let (v, s, _) -> (v, s) :: accu
-	 | Env.TypeInformation.SF_let_rec l ->
-	     let l' = List.map (fun (v, s, _) -> (v, s)) l in
-	     l' @ accu)
-      species_species_description.Env.TypeInformation.spe_sig_methods
-      [] in
-  only_methods
+  species_expr.Parsetree.ast_type <- Some species_carrier_type ;
+  species_species_description.Env.TypeInformation.spe_sig_methods
 ;;
 
 
 
 (* ********************************************************************** *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.species_expr list ->    *)
-(*   ((Parsetree.vname * Types.type_scheme) list * Env.TypingEnv.t)       *)
+(*   (Env.TypeInformation.species_field list * Env.TypingEnv.t)           *)
 (** {b Descr} : Extends an environment as value bindings with the methods
               of the inherited species provided in argument. Methods are
               added in the same order than their hosting species comes
@@ -1186,8 +1174,18 @@ let extend_env_with_inherits ctx env spe_exprs =
 	let inh_species_methods = typecheck_species_expr ctx env inh in
 	let env' =
 	  List.fold_left
-	    (fun accu_env (meth_name, meth_scheme) ->
-	      Env.TypingEnv.add_value meth_name meth_scheme accu_env)
+	    (fun accu_env field ->
+	      match field with
+	       | Env.TypeInformation.SF_sig (meth_name, meth_scheme)
+	       | Env.TypeInformation.SF_let (meth_name, meth_scheme, _) ->
+		   Env.TypingEnv.add_value meth_name meth_scheme accu_env
+	       | Env.TypeInformation.SF_let_rec l ->
+		   List.fold_left
+		     (fun internal_accu_env (meth_name, meth_scheme, _) ->
+		       Env.TypingEnv.add_value
+			 meth_name meth_scheme internal_accu_env)
+		     accu_env
+		     l)
 	    current_env
 	    inh_species_methods in
 	let new_accu = inh_species_methods @ revd_accu_found_methods in
@@ -1201,14 +1199,238 @@ let extend_env_with_inherits ctx env spe_exprs =
 
 
 
-let normalize_species methods_info inherited_methods_infos =
+(* ********************************************************************* *)
+(* loc:Location.t -> typing_context -> Parsetree.vname ->                *)
+(*   Types.type_scheme ->                                                *)
+(*     (Parsetree.vname * Types.type_scheme * Parsetree.expr) list ->    *)
+(*       Env.TypeInformation.species_field                               *)
+(** {b Descr} : Implements the "fusion" algorithm (c.f [fields_fusion])
+              in the particular case of fusionning 1 field Sig and 1
+              field Let_rec.
 
-  methods_info
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
+let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
+  let rec_meths' =
+    List.map
+      (fun ((n, sc, body) as rec_meth) ->
+	if n = sig_name then
+	  begin
+	  let sig_ty = Types.specialize sig_scheme in
+	  let ty = Types.specialize sc in
+	  Types.unify ~loc ~self_manifest: ctx.self_manifest sig_ty ty ;
+	  (n, (Types.generalize ty), body)
+	  end
+	else rec_meth)
+      rec_meths in
+  Env.TypeInformation.SF_let_rec rec_meths'
 ;;
 
 
 
-(** Also performs the interface printing stuff of a species. *)
+(* ******************************************************************** *)
+(* 'a -> ('a * 'b * 'c) list -> ('a * 'b * 'c) * ('a * 'b * 'c) list *)
+(* {b Descr} : Searches in the list the first element whose first
+             component is equal to [name], then returns it and the list
+             minus this element.
+             If the searched name is not found in the list, then the
+             exception [Not_found] is raised.
+
+   {b Rem} : Not exported outside this module.                          *)
+(* ******************************************************************** *)
+let find_and_remain name meths =
+  let rec rec_find = function
+    | [] -> raise Not_found
+    | ((n, _, _) as meth) :: rem ->
+	if name = n then (meth, rem)
+	else
+	  let (found, tail) = rec_find rem in
+	  (found, (meth :: tail)) in
+  rec_find meths
+;;
+
+
+
+(* ******************************************************************** *)
+(* loc: Location.t -> typing_context ->                                 *)
+(*   (Parsetree.vname * Types.type_scheme * Parsetree.expr) list ->     *)
+(*     (Parsetree.vname * Types.type_scheme * Parsetree.expr) list ->   *)
+(*       Env.TypeInformation.species_field                              *)
+(** {b Descr} : Implements the "fusion" algorithm (c.f [fields_fusion])
+              in the particular case of fusionning 2 fields Let_rec.
+
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
+let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
+  let rec rec_fusion l1 l2 =
+    match l1 with
+     | [] -> l2
+     | ((n1, sc1, _) as meth) :: rem1 ->
+	 let (fused_meth, new_l2) =
+	   (try
+	     let (m2, rem_of_l2) = find_and_remain n1 l2 in
+	     let (_, sc2, _) = m2 in
+	     let ty1 = Types.specialize sc1 in
+	     let ty2 = Types.specialize sc2 in
+	     (* Ensure that the 2 versions of the method are type-compatible. *)
+	     Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	     (* And return the seconde one (late binding). *)
+	     (m2, rem_of_l2)
+	   with Not_found ->
+	     (* The method doesn't belog to l2, then keep this one. *)
+	     (meth, l2)) in
+	 (* Now make the fusion of the remaining of l1 and the remaining *)
+	 (* of l2 (this las one being possibly l2 if the search failed). *)
+	 let rem_fused_methods = rec_fusion rem1 new_l2 in
+	 fused_meth :: rem_fused_methods in
+  (* Go... *)
+  Env.TypeInformation.SF_let_rec (rec_fusion rec_meths1 rec_meths2)
+;;
+
+
+
+(* ************************************************************************* *)
+(* loc: Location.t -> typing_context -> Env.TypeInformation.species_field -> *)
+(*   Env.TypeInformation.species_field -> Env.TypeInformation.species_field  *)
+(** {b Descr} : Implements the "fusion" algorithm described in Virgile
+              Prevosto's Phd, Section 3.6, page 35.
+              This basically ensure that 2 fields with at leat 1 common
+              name are type-compatible and select the new field information
+              that summarizes these 2 original fields (implementing the late
+              binding feature by the way).
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+let fields_fusion ~loc ctx phi1 phi2 =
+  match (phi1, phi2) with
+   (* *** *)
+   | (Env.TypeInformation.SF_sig (n1, sc1),
+      Env.TypeInformation.SF_sig (n2, sc2)) when n1 = n2 ->
+        (* sig / sig. *)
+	let ty1 = Types.specialize sc1 in
+	let ty2 = Types.specialize sc2 in
+	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	Env.TypeInformation.SF_sig (n1, (Types.generalize ty1))
+   | (Env.TypeInformation.SF_sig (n1, sc1),
+      Env.TypeInformation.SF_let (n2, sc2, body)) when n1 = n2 ->
+        (* sig / let. *)
+	let ty1 = Types.specialize sc1 in
+	let ty2 = Types.specialize sc2 in
+	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	Env.TypeInformation.SF_let (n2, (Types.generalize ty2), body)
+   | (Env.TypeInformation.SF_sig (n1, sc1),
+      Env.TypeInformation.SF_let_rec rec_meths) ->
+        (* sig / let rec. *)
+	fusion_fields_let_rec_sig ~loc ctx n1 sc1 rec_meths
+   (* *** *)
+   | (Env.TypeInformation.SF_let (n1, sc1, body),
+      Env.TypeInformation.SF_sig (n2, sc2)) when n1 = n2 ->
+        (* let / sig. *)
+	let ty1 = Types.specialize sc1 in
+	let ty2 = Types.specialize sc2 in
+	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	Env.TypeInformation.SF_let (n1, (Types.generalize ty1), body)
+   | (Env.TypeInformation.SF_let (n1, sc1, _),
+      Env.TypeInformation.SF_let (n2, sc2, body)) when n1 = n2 ->
+        (* let / let. *)
+	(* Late binding : keep the second body ! *)
+	let ty1 = Types.specialize sc1 in
+	let ty2 = Types.specialize sc2 in
+	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	Env.TypeInformation.SF_let (n2, (Types.generalize ty2), body)
+   | (Env.TypeInformation.SF_let (n1, sc1, _),
+      Env.TypeInformation.SF_let_rec rec_meths) ->
+	failwith "fields_fusion let / let rec"
+   (* *** *)
+   | (Env.TypeInformation.SF_let_rec rec_meths,
+      Env.TypeInformation.SF_sig (n2, sc2)) ->
+        (* let rec / sig. *)
+	(* Symetric case than for sig / let_rec. *)
+	fusion_fields_let_rec_sig ~loc ctx n2 sc2 rec_meths
+   | (Env.TypeInformation.SF_let_rec rec_meths1,
+      Env.TypeInformation.SF_let (n2, sc2, _)) ->
+        failwith "fields_fusion let rec / let"
+   | (Env.TypeInformation.SF_let_rec rec_meths1,
+      Env.TypeInformation.SF_let_rec rec_meths2) ->
+        fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2
+   | _ -> assert false  (* From Virgile's thesis Lemma 8 p 37 *)
+;;
+
+
+
+let oldest_inter_n_field_n_fields phi fields =
+  let flat_phi_names =
+    (match phi with
+     | Env.TypeInformation.SF_sig (v, _)
+     | Env.TypeInformation.SF_let (v, _, _) -> [v]
+     | Env.TypeInformation.SF_let_rec l -> List.map (fun (v, _, _) -> v) l) in
+  (* We will now check for an intersection between the list of names *)
+  (* from phi and the names of one field of the argument [fields].   *)
+  let rec rec_hunt = function
+    | [] -> (None, [])
+    | f :: rem_f ->
+	(begin
+	match f with
+	 | Env.TypeInformation.SF_sig (v, _)
+	 | Env.TypeInformation.SF_let (v, _, _) ->
+	     if List.mem v flat_phi_names then ((Some f), rem_f)
+	     else
+	       let (found, rem_list) = rec_hunt rem_f in
+	       (found, (f :: rem_list))
+	 | Env.TypeInformation.SF_let_rec l ->
+	     let names_in_l = List.map (fun (v, _, _) -> v) l in
+	     if Handy.list_intersect_p flat_phi_names names_in_l then
+	       ((Some f), rem_f)
+	     else
+	       let (found, rem_list) = rec_hunt rem_f in
+	       (found, (f :: rem_list))
+	end) in
+  rec_hunt fields
+;;
+
+
+
+(* **************************************************************** *)
+(** {b Descr} : Implements the normalization algorithm described in
+              Virgile Prevosto's Phd, Section 3.7.1, page 36.
+
+    {b Rem}: Not exported outside this module.                      *)
+(* **************************************************************** *)
+let normalize_species ~loc ctx methods_info inherited_methods_infos =
+  let w1 = ref (inherited_methods_infos @ methods_info) in
+  let w2 = ref ([] : Env.TypeInformation.species_field list) in
+  let continue = ref true in
+  while !continue do
+    match !w1 with
+     | [] -> continue := false
+     | phi :: bigX ->
+	 (begin
+	 match oldest_inter_n_field_n_fields phi !w2 with
+	  | (None, _) ->
+	      w1 := bigX ;
+	      w2 := !w2 @ [phi]
+	  | ((Some psi_i0), sniped_w2) ->
+	      w1 :=  (fields_fusion ~loc ctx phi psi_i0) :: bigX ;
+	      w2 := sniped_w2
+	 end)
+  done ;
+  !w2
+;;
+
+
+
+(* ************************************************************************* *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.species_def ->             *)
+(*  (Types.type_simple * Env.TypingEnv.t)                                    *)
+(** {b Descr} : Typechecks a species definition. Il infers its signature and
+              bind it to the species name in the environment. Finally, adds
+              a type binding representing the species's carrier type.
+              Also performs the interface printing stuff of a species.
+              It returns both the extended environment and the species's
+              carrier type.
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
 let typecheck_species_def ctx env species_def =
   let species_def_desc = species_def.Parsetree.ast_desc in
   (* First of all, we are in a species !!! *)
@@ -1229,33 +1451,40 @@ let typecheck_species_def ctx env species_def =
   (* in the inheritance tree and more generaly create the normalised    *)
   (* form of the species.                                               *)
   let normalized_methods =
-    normalize_species methods_info inherited_methods_infos in
+    normalize_species
+      ~loc: species_def.Parsetree.ast_loc ctx methods_info
+      inherited_methods_infos in
   (* Let's build our "type" information. Since we are managing a species *)
   (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
   let species_description = {
     Env.TypeInformation.spe_is_collection = false ;
     Env.TypeInformation.spe_sig_params = [] ;
-    Env.TypeInformation.spe_sig_inher = [] ;
+    Env.TypeInformation.spe_sig_inher =
+      (Format.eprintf "spe_sig_inher not yet correct !@." ; []) ;
     Env.TypeInformation.spe_sig_methods = normalized_methods } in
   (* Extend the environment with the species. *)
   let env_with_species =
     Env.TypingEnv.add_species
       species_def_desc.Parsetree.sd_name species_description env in
   (* Now, extend the environment with a type that is the species. *)
-  let species_as_type =
+  let species_carrier_type =
     Types.type_rep_species
       ~species_module: ctx.current_unit
       ~species_name: species_def_desc.Parsetree.sd_name in
   let species_as_type_description = {
     Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
-    Env.TypeInformation.type_identity = Types.generalize species_as_type ;
+    Env.TypeInformation.type_identity = Types.generalize species_carrier_type ;
     (* Nevers parameters for a species's carrier type ! *)
-    Env.TypeInformation.type_params = [] ;
-    Env.TypeInformation.type_arity = 0 ; (* WRONG !!! *) } in
+    Env.TypeInformation.type_params =
+      (Format.eprintf "type_params not yet correct !@." ; []) ;
+    Env.TypeInformation.type_arity =
+      (Format.eprintf "type_params not yet correct !@." ; 0) } in
   let full_env =
     Env.TypingEnv.add_type
       species_def_desc.Parsetree.sd_name species_as_type_description
       env_with_species in
+  (* Record the type in the AST node. *)
+  species_def.Parsetree.ast_type <- Some species_carrier_type ;
   (* Interface printing stuff. *)
   if Configuration.get_do_interface_output () then
     (begin
@@ -1263,7 +1492,7 @@ let typecheck_species_def ctx env species_def =
       species_def_desc.Parsetree.sd_name
       Env.TypeInformation.pp_species_description species_description
     end) ;
-  (species_as_type, full_env)
+  (species_carrier_type, full_env)
 ;;
 
 

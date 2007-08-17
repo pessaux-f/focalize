@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.22 2007-08-17 08:45:31 pessaux Exp $ *)
+(* $Id: env.ml,v 1.23 2007-08-17 15:02:49 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -260,8 +260,8 @@ end ;;
 (* *********************************************************************** *)
 module TypeInformation = struct
   type species_param =
-    | SPAR_in of (Parsetree.vname * Types.type_simple)   (* Entity param. *)
-    | SPAR_is of (Parsetree.vname * Types.type_simple)   (* Collection param. *)
+    | SPAR_in of (Parsetree.vname * Types.type_species)  (* Entity param. *)
+    | SPAR_is of (Parsetree.vname * Types.type_species)  (* Collection param. *)
 
 
   type species_field =

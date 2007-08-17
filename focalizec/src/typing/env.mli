@@ -32,8 +32,8 @@ module ScopeInformation :
 module TypeInformation :
   sig
     type species_param =
-      | SPAR_in of (Parsetree.vname * Types.type_simple)
-      | SPAR_is of (Parsetree.vname * Types.type_simple)
+      | SPAR_in of (Parsetree.vname * Types.type_species)
+      | SPAR_is of (Parsetree.vname * Types.type_species)
 
   type species_field =
     | SF_sig of (Parsetree.vname * Types.type_scheme)
