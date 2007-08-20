@@ -1,5 +1,6 @@
 use "basics" ;;
 open "basics" ;;
+
 5 ;;
 let x = 42 ;;
 let y = "Areuh world" ;;
@@ -98,6 +99,6 @@ end
 
 species Dummy (a in Basic_object, B is Basic_object) =
   let x = a ;
-  let y (z) = B!equal (z) ;
+  let y (z, t) = B!equal (z, t) ;
 end
 ;;

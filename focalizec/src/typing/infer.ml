@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.26 2007-08-20 13:41:14 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.27 2007-08-20 14:34:43 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {bL Descr} : Exception used to inform that a sum type constructor was
@@ -990,7 +990,9 @@ and typecheck_species_fields ctx env = function
 		  | Some n -> n) in
 	       raise (Method_multiply_defined (rep_vname, current_species))
 	       end) ;
+	     Types.begin_definition () ;
 	     let ty = typecheck_rep_type_def ctx env rep_type_def in
+	     Types.end_definition () ;
 	     let ctx' = { ctx with self_manifest = Some ty } in
 	     (* Record the type information in the AST node. *)
 	     field.Parsetree.ast_type <- Some ty ;
@@ -1001,8 +1003,10 @@ and typecheck_species_fields ctx env = function
 	 | Parsetree.SF_sig sig_def ->
 	     (begin
 	     let sig_def_descr = sig_def.Parsetree.ast_desc in
+	     Types.begin_definition () ;
 	     let ty =
 	       typecheck_type_expr ctx env sig_def_descr.Parsetree.sig_type in
+	     Types.end_definition () ;
 	     (* Record the type information in the AST nodes. *)
 	     sig_def.Parsetree.ast_type <- Some ty ;
 	     field.Parsetree.ast_type <- Some ty ;
@@ -1062,9 +1066,11 @@ and typecheck_species_fields ctx env = function
 	     end)
 	 | Parsetree.SF_property property_def ->
 	     (begin
+	     Types.begin_definition () ;
 	     let ty =
 	       typecheck_prop
 		 ctx env property_def.Parsetree.ast_desc.Parsetree.prd_prop in
+	     Types.end_definition () ;
 	     (* Record the type information in the AST node. *)
 	     property_def.Parsetree.ast_type <- Some ty ;
 	     (* Extend the environment. *)
@@ -1080,7 +1086,9 @@ and typecheck_species_fields ctx env = function
 	     end)
 	 | Parsetree.SF_theorem theorem_def ->
 	     (begin
+	     Types.begin_definition () ;
 	     let ty = typecheck_theorem_def ctx env theorem_def in
+	     Types.end_definition () ;
 	     (* Extend the environment. *)
 	     let scheme = Types.generalize ty in
 	     let env' =
@@ -1173,16 +1181,16 @@ let abstraction cname fields =
 	  (match h with
 	   | Env.TypeInformation.SF_sig (vname, scheme)
 	   | Env.TypeInformation.SF_let (vname, scheme, _) ->
-	       let ty = Types.specialize scheme in
 	       Types.begin_definition () ;
+	       let ty = Types.specialize scheme in
 	       let ty' = Types.abstract_copy cname ty in
 	       Types.end_definition () ;
 	       [Env.TypeInformation.SF_sig (vname, (Types.generalize ty'))]
 	   | Env.TypeInformation.SF_let_rec l ->
 	       List.map
 		 (fun (vname, scheme, _) ->
-		   let ty = Types.specialize scheme in
 		   Types.begin_definition () ;
+		   let ty = Types.specialize scheme in
 		   let ty' = Types.abstract_copy cname ty in
 		   Types.end_definition () ;
 		   Env.TypeInformation.SF_sig (vname, (Types.generalize ty')))
@@ -1244,9 +1252,11 @@ let typecheck_species_def_params ctx env species_name species_params =
 	     (* Create the carrier type of the parameter and extend the *)
              (* current environment with this parameter as a value of   *)
              (* the carrier type.                                       *)
+	     Types.begin_definition () ;
 	     let param_carrier_ty =
 	       Types.type_rep_species ~species_module: param_sp_module
 		 ~species_name: param_sp_name in
+	     Types.end_definition () ;
 	     let accu_env' =
 	       Env.TypingEnv.add_value
 		 vname (Types.generalize param_carrier_ty) accu_env in
@@ -1298,9 +1308,11 @@ let typecheck_species_def_params ctx env species_name species_params =
 	     (* Create the carrier type of the parameter *)
              (* and extend the current environment.      *)
 	     let internal_cname = " " ^ param_name_as_string in
+	     Types.begin_definition () ;
 	     let param_carrier_ty =
 	       Types.type_rep_species ~species_module: ctx.current_unit
 		 ~species_name: internal_cname in
+	     Types.end_definition () ;
 	     let param_carrier_ty_description = {
 	       Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
 	       Env.TypeInformation.type_identity =
@@ -1406,9 +1418,11 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
       (fun ((n, sc, body) as rec_meth) ->
 	if n = sig_name then
 	  begin
+	  Types.begin_definition () ;
 	  let sig_ty = Types.specialize sig_scheme in
 	  let ty = Types.specialize sc in
 	  Types.unify ~loc ~self_manifest: ctx.self_manifest sig_ty ty ;
+	  Types.end_definition () ;
 	  (n, (Types.generalize ty), body)
 	  end
 	else rec_meth)
@@ -1497,16 +1511,20 @@ let fields_fusion ~loc ctx phi1 phi2 =
    | (Env.TypeInformation.SF_sig (n1, sc1),
       Env.TypeInformation.SF_sig (n2, sc2)) when n1 = n2 ->
         (* sig / sig. *)
+	Types.begin_definition () ;
 	let ty1 = Types.specialize sc1 in
 	let ty2 = Types.specialize sc2 in
 	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	Types.end_definition () ;
 	Env.TypeInformation.SF_sig (n1, (Types.generalize ty1))
    | (Env.TypeInformation.SF_sig (n1, sc1),
       Env.TypeInformation.SF_let (n2, sc2, body)) when n1 = n2 ->
         (* sig / let. *)
+	Types.begin_definition () ;
 	let ty1 = Types.specialize sc1 in
 	let ty2 = Types.specialize sc2 in
 	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	Types.end_definition () ;
 	Env.TypeInformation.SF_let (n2, (Types.generalize ty2), body)
    | (Env.TypeInformation.SF_sig (n1, sc1),
       Env.TypeInformation.SF_let_rec rec_meths) ->
@@ -1516,17 +1534,21 @@ let fields_fusion ~loc ctx phi1 phi2 =
    | (Env.TypeInformation.SF_let (n1, sc1, body),
       Env.TypeInformation.SF_sig (n2, sc2)) when n1 = n2 ->
         (* let / sig. *)
+	Types.begin_definition () ;
 	let ty1 = Types.specialize sc1 in
 	let ty2 = Types.specialize sc2 in
 	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	Types.end_definition () ;
 	Env.TypeInformation.SF_let (n1, (Types.generalize ty1), body)
    | (Env.TypeInformation.SF_let (n1, sc1, _),
       Env.TypeInformation.SF_let (n2, sc2, body)) when n1 = n2 ->
         (* let / let. *)
 	(* Late binding : keep the second body ! *)
+	Types.begin_definition () ;
 	let ty1 = Types.specialize sc1 in
 	let ty2 = Types.specialize sc2 in
 	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	Types.end_definition () ;
 	Env.TypeInformation.SF_let (n2, (Types.generalize ty2), body)
    | (Env.TypeInformation.SF_let (n1, sc1, _),
       Env.TypeInformation.SF_let_rec rec_meths) ->
@@ -1663,10 +1685,12 @@ let typecheck_species_def ctx env species_def =
     Env.TypingEnv.add_species
       species_def_desc.Parsetree.sd_name species_description env in
   (* Now, extend the environment with a type that is the species. *)
+  Types.begin_definition () ;
   let species_carrier_type =
     Types.type_rep_species
       ~species_module: ctx.current_unit
       ~species_name: species_def_desc.Parsetree.sd_name in
+  Types.end_definition () ;
   let species_as_type_description = {
     Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
     Env.TypeInformation.type_identity = Types.generalize species_carrier_type ;
@@ -1939,7 +1963,9 @@ let typecheck_phrase ctx env phrase =
 	 (* Return unit and the extended environment. *)
 	 ((Types.type_unit ()), env')
      | Parsetree.Ph_theorem theorem_def ->
+	 Types.begin_definition () ;
 	 let ty = typecheck_theorem_def ctx env theorem_def in
+	 Types.end_definition () ;
 	 let scheme = Types.generalize ty in
 	 let env' =
 	   Env.TypingEnv.add_value

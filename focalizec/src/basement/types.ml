@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.11 2007-08-20 13:41:14 pessaux Exp $ *)
+(* $Id: types.ml,v 1.12 2007-08-20 14:34:43 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -403,7 +403,11 @@ let (specialize, specialize2, abstract_copy) =
 
        {b Rem} Exported outside this module.                                *)
    (* ********************************************************************* *)
-   (fun cname ty -> copy_type_simple ~abstractize: (Some cname) ty)
+   (fun cname ty ->
+     let copy = copy_type_simple ~abstractize: (Some cname) ty in
+     (* Clean up seen type for further usages. *)
+     seen := [] ;
+     copy)
   )
 ;;
 
@@ -432,7 +436,7 @@ let (generalize, generalize2) =
 
   ((* ********************************************************************** *)
    (* generalize                                                             *)
-   (* type_simple -> type_scheme               *)
+   (* type_simple -> type_scheme                                             *)
    (** {b Descr} : Generalize a type in order to create a type scheme having
                  the type's as body.
                  The scheme body physically shares the type's structure.
