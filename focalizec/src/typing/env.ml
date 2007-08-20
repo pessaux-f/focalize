@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.23 2007-08-17 15:02:49 pessaux Exp $ *)
+(* $Id: env.ml,v 1.24 2007-08-20 08:40:12 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -124,7 +124,7 @@ let debug_env_list_assoc ~allow_opened searched list =
 (** {Descr} : Type of the generic environments. It is parametrised by the
             information to bind to identifiers representing:
             - Sum-types constructors
-            - Record-types labels 
+            - Record-types labels
             - Values
             - Species (and collections)
 
@@ -170,7 +170,7 @@ let env_from_only_absolute_bindings generic_env =
     values = values' ; species = species' }
 ;;
 
-    
+
 
 (* *********************************************************************** *)
 (* *********************************************************************** *)
@@ -343,8 +343,7 @@ module TypeInformation = struct
     let rec rec_print local_ppf = function
       | [] -> ()
       | [last] -> ()
-      | param :: rem -> ()
-	  in
+      | param :: rem -> () in
     if params = [] then ()
     else Format.fprintf ppf "(%a) " rec_print params
 
@@ -353,13 +352,21 @@ module TypeInformation = struct
   let pp_species_inher ppf inhers =
     let rec rec_print local_ppf = function
       | [] -> ()
-      | [last] -> ()
-      | inher :: rem -> ()
-	  in
+      | [last] -> Format.fprintf ppf "%a" Types.pp_type_species last
+      | inher :: rem ->
+	  Format.fprintf ppf "%a,@ " Types.pp_type_species inher ;
+	  rec_print local_ppf rem in
     if inhers = [] then ()
-    else Format.fprintf ppf "inherits %a " rec_print inhers
+    else Format.fprintf ppf " inherits %a " rec_print inhers
 
 
+
+  (* **************************************************************** *)
+  (* Format.formatter -> species_field list -> unit                   *)
+  (** {b Descr} : Pretty prints a field of species ([species_field]).
+
+      {b Rem} : Not exported outside this module.                     *)
+  (* **************************************************************** *)
   let pp_species_methods ppf methods =
     List.iter
       (function

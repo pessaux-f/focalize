@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.9 2007-08-16 15:50:48 pessaux Exp $ *)
+(* $Id: types.ml,v 1.10 2007-08-20 08:40:12 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -73,7 +73,6 @@ and type_simple_desc =
   | ST_species_rep of (fname * collection_name)   (** Carrier type of a collection hosted in the specified module. *)
 
 and type_species =
-  | SPT_collection_interface of collection_type
   | SPT_species_interface of species_name
       (** Interface of a species:
 	  It could be the list of its method'n'type'n'bodies, i.e.
@@ -82,10 +81,10 @@ and type_species =
 	  same signature that they have the same semantics.
 	  Instead, one will get the type of the species via an environment
 	  using the [species_name] as key. *)
-  | SPT_parametrised_in of (species_name * collection_type)
-  | SPT_parametrised_is of (collection_name * collection_type)
+  | SPT_parametrised_in of ((species_name * type_species) * type_species)
+  | SPT_parametrised_is of ((collection_name * type_collection) * type_species)
 
-and collection_type = collection_name
+and type_collection = collection_name
     (** Interface of a collection:
 	It could be the list of its method'n'types, i.e.
 	(string * type_simple) list but we don't want
@@ -564,3 +563,65 @@ let unify ~loc ~self_manifest type1 type2 =
   (* Now, let's work... *)
   rec_unify type1 type2
 ;;
+
+
+(* species_name -> type_species *)
+let type_species_interface base_species =
+  SPT_species_interface base_species
+;;
+
+(* (species_name * type_species) -> type_species -> type_species *)
+let type_species_in species_name_n_type species_ty =
+  SPT_parametrised_in (species_name_n_type, species_ty)
+;;
+
+
+
+(* ********************************************************************* *)
+(* (collection_name * type_collection) -> type_species -> type_species   *)
+(** {b Descr} : Build a "is-parameterized" species type.
+
+    {b Args} :
+      - coll_name_n_type : The couple (name of the parameter, collection
+                         type of the parameter).
+      - species_ty : Type of the parameterized species.
+
+    {b Rem} : Exported outside this module.                              *)
+(* ********************************************************************* *)
+let type_species_is coll_name_n_type species_ty =
+  SPT_parametrised_is (coll_name_n_type, species_ty)
+;;
+
+
+
+(* ************************************************************** *)
+(* Format.formatter -> type_species -> unit                       *)
+(** {b Descr} : Pretty prints a species' type (not carrier type).
+
+    {b Rem} : Exported outside this module.                       *)
+(* ************************************************************** *)
+let pp_type_species ppf species_type =
+  let rec rec_print nb_printed_params local_ppf = function
+    | SPT_species_interface sp_name ->
+	(begin
+	if nb_printed_params > 0 then Format.fprintf local_ppf ") " ;
+	Format.fprintf local_ppf "%s" sp_name
+	end)
+    | SPT_parametrised_in ((param_name, param_ty), ty) ->
+	(begin
+	if nb_printed_params = 0 then Format.fprintf local_ppf "("
+	else Format.fprintf local_ppf ", " ;
+	Format.fprintf local_ppf "%s in %a%a"
+	  param_name (rec_print 0) param_ty
+	  (rec_print (nb_printed_params + 1)) ty
+	end)
+    | SPT_parametrised_is ((param_name, param_ty), ty) ->
+	(begin
+	if nb_printed_params = 0 then Format.fprintf local_ppf "("
+	else Format.fprintf local_ppf ", " ;
+	Format.fprintf local_ppf "%s in %s%a"
+	  param_name param_ty (rec_print (nb_printed_params + 1)) ty
+	end) in
+  rec_print 0 ppf species_type
+;;
+

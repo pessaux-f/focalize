@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.7 2007-08-16 15:04:00 pessaux Exp $ *)
+(* $Id: types.mli,v 1.8 2007-08-20 08:40:12 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -31,6 +31,7 @@ type type_simple
 
 type type_scheme
 type type_species
+type type_collection = collection_name
 
 (** The exceptions raised by the type-checker. *)
 
@@ -76,6 +77,11 @@ val type_rep_species :
 (** Generate the carrier type of the currently analysed species. *)
 val type_self : unit -> type_simple
 
+val type_species_interface : species_name -> type_species
+val type_species_in :
+  (species_name * type_species) -> type_species -> type_species
+val type_species_is :
+  (collection_name * type_collection) -> type_species -> type_species
 
 
 (** Manipulation of type schemes: generalization, instanciation, generation of
@@ -97,3 +103,4 @@ val unify :
 (** Pretty_printing for types and type schemes. *)
 val pp_type_simple : Format.formatter -> type_simple -> unit
 val pp_type_scheme : Format.formatter -> type_scheme -> unit
+val pp_type_species : Format.formatter -> type_species -> unit

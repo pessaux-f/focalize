@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.24 2007-08-17 15:02:49 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.25 2007-08-20 08:40:12 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {bL Descr} : Exception used to inform that a sum type constructor was
@@ -1113,7 +1113,7 @@ and typecheck_species_fields ctx env = function
 
 (* **************************************************************** *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.species_expr ->   *)
-(*   Env.TypeInformation.species_field list                         *)
+(*   (Types.type_species * Env.TypeInformation.species_field list)  *)
 (** {b Descr} : Typechecks a species expression, record its type in
               the AST node and return the list of its methods names
               type schemes and possible bodies (the list of fields
@@ -1144,18 +1144,20 @@ let typecheck_species_expr ctx env species_expr =
 	 assert false) in
   let species_carrier_type =
     Types.type_rep_species ~species_module ~species_name in
-  (* Now, create the "species type" (a somawhat of signature). *)
-  
+  (* Now, create the "species type" (a somewhat of signature). *)
+  let species_type = Types.type_species_interface species_name in
   (* Record the type in the AST node. *)
   species_expr.Parsetree.ast_type <- Some species_carrier_type ;
-  species_species_description.Env.TypeInformation.spe_sig_methods
+  (species_type,
+   species_species_description.Env.TypeInformation.spe_sig_methods)
 ;;
 
 
 
 (* ********************************************************************** *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.species_expr list ->    *)
-(*   (Env.TypeInformation.species_field list * Env.TypingEnv.t)           *)
+(*   (Types.type_species list * Env.TypeInformation.species_field list *  *)
+(*    Env.TypingEnv.t)                                                    *)
 (** {b Descr} : Extends an environment as value bindings with the methods
               of the inherited species provided in argument. Methods are
               added in the same order than their hosting species comes
@@ -1166,12 +1168,14 @@ let typecheck_species_expr ctx env species_expr =
     {b Rem} :Not exported outside this module.                            *)
 (* ********************************************************************** *)
 let extend_env_with_inherits ctx env spe_exprs =
-  let rec rec_extend current_env revd_accu_found_methods = function
-    | [] -> (revd_accu_found_methods, current_env)
+  let rec rec_extend current_env revd_accu_species_types
+      revd_accu_found_methods = function
+    | [] -> (revd_accu_species_types, revd_accu_found_methods, current_env)
     | inh :: rem_inhs ->
 	(* First typecheck the species expression in the initial   *)
         (* (non extended) and recover its methods names and types. *)
-	let inh_species_methods = typecheck_species_expr ctx env inh in
+	let (inh_type, inh_species_methods) =
+	  typecheck_species_expr ctx env inh in
 	let env' =
 	  List.fold_left
 	    (fun accu_env field ->
@@ -1188,13 +1192,17 @@ let extend_env_with_inherits ctx env spe_exprs =
 		     l)
 	    current_env
 	    inh_species_methods in
-	let new_accu = inh_species_methods @ revd_accu_found_methods in
-	rec_extend env' new_accu rem_inhs in
+	let new_accu_found_methods =
+	  inh_species_methods @ revd_accu_found_methods in
+	let new_accu_species_types = inh_type :: revd_accu_species_types in
+	rec_extend env'
+	  new_accu_species_types new_accu_found_methods rem_inhs in
   (* Now, let's work... The list of the found methods is built reversed *)
   (* for efficiency reason. So reverse it finally before returning so   *)
   (* that deeper inherited methods are in head of the list.             *)
-  let (revd_found_methods, env') = rec_extend env [] spe_exprs in
-  ((List.rev revd_found_methods), env')
+  let (revd_accu_species_types, revd_found_methods, env') =
+    rec_extend env [] [] spe_exprs in
+  ((List.rev revd_accu_species_types), (List.rev revd_found_methods), env')
 ;;
 
 
@@ -1439,8 +1447,8 @@ let typecheck_species_def ctx env species_def =
   (* Ignore params and inherit for the moment. *)
   if species_def_desc.Parsetree.sd_params <> [] then failwith "TODO Params." ;
   (* We first load the inherited methods in the environment and  *)
-  (* get their signatures by the way.                            *)
-  let (inherited_methods_infos, env_with_inherited_methods) = 
+  (* get their signatures and methods information by the way.    *)
+  let (inherited_types, inherited_methods_infos, env_with_inherited_methods) = 
     extend_env_with_inherits
       ctx env species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc in
   (* Now infer the types of the current field's.*)
@@ -1459,8 +1467,7 @@ let typecheck_species_def ctx env species_def =
   let species_description = {
     Env.TypeInformation.spe_is_collection = false ;
     Env.TypeInformation.spe_sig_params = [] ;
-    Env.TypeInformation.spe_sig_inher =
-      (Format.eprintf "spe_sig_inher not yet correct !@." ; []) ;
+    Env.TypeInformation.spe_sig_inher = inherited_types ;
     Env.TypeInformation.spe_sig_methods = normalized_methods } in
   (* Extend the environment with the species. *)
   let env_with_species =
