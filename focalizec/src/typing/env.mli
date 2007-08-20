@@ -44,7 +44,8 @@ module TypeInformation :
       spe_is_collection : bool ;
       spe_sig_params : species_param list ;
       spe_sig_inher : Types.type_species list ;
-      spe_sig_methods : species_field list
+      spe_sig_methods : species_field list ;
+      spe_type_species : Types.type_species
     }
     type constructor_arity = CA_zero | CA_one
     type constructor_description = {

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.10 2007-08-20 08:40:12 pessaux Exp $ *)
+(* $Id: types.ml,v 1.11 2007-08-20 13:41:14 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -73,25 +73,25 @@ and type_simple_desc =
   | ST_species_rep of (fname * collection_name)   (** Carrier type of a collection hosted in the specified module. *)
 
 and type_species =
-  | SPT_species_interface of species_name
+  | SPT_species_interface of (fname * species_name)
       (** Interface of a species:
 	  It could be the list of its method'n'type'n'bodies, i.e.
 	  ((string * type_simple * Parsetree.expr) list) but we don't want
 	  a structural unification. That's not because 2 species have the
 	  same signature that they have the same semantics.
 	  Instead, one will get the type of the species via an environment
-	  using the [species_name] as key. *)
+	  using the [species_name] and the [fname] as key. *)
   | SPT_parametrised_in of ((species_name * type_species) * type_species)
   | SPT_parametrised_is of ((collection_name * type_collection) * type_species)
 
-and type_collection = collection_name
+and type_collection = (fname *  collection_name)
     (** Interface of a collection:
 	It could be the list of its method'n'types, i.e.
 	(string * type_simple) list but we don't want
 	a structural unification. That's not because 2 collections have the
 	same signature that they have the same semantics.
 	Instead, one will get the type of the collection via an environment
-	using the [collection_name] as key. *)
+	using the [collection_name] and the [fname] as key. *)
 ;;
 
 
@@ -290,11 +290,11 @@ let occur_check ~loc var_ty ty =
 
 
 
-let (specialize, specialize2) =
+let (specialize, specialize2, abstract_copy) =
   let seen = ref [] in
   (* Internal recursive copy of a type scheme replacing its generalized
      variables by their associated new fresh type variables. *)
-  let rec copy_type_simple ty =
+  let rec copy_type_simple ~abstractize ty =
     let ty = repr ty in
     (* First check if we already saw this type. *)
     if List.mem_assq ty !seen then List.assq ty !seen
@@ -319,11 +319,21 @@ let (specialize, specialize2) =
 	  (match ty.ts_desc with
 	   | ST_var -> ST_var
 	   | ST_arrow (ty1, ty2) ->
-               ST_arrow (copy_type_simple ty1, copy_type_simple ty2)
-	   | ST_tuple tys -> ST_tuple (List.map copy_type_simple tys)
+               ST_arrow
+		 (copy_type_simple ~abstractize ty1,
+		  copy_type_simple ~abstractize ty2)
+	   | ST_tuple tys ->
+	       ST_tuple (List.map (copy_type_simple ~abstractize) tys)
 	   | ST_construct (name, args) ->
-               ST_construct (name, List.map copy_type_simple args)
-	   | (ST_self_rep | ST_species_rep _) as ty -> ty) in
+               ST_construct
+		 (name, List.map (copy_type_simple ~abstractize) args)
+	   | ST_self_rep ->
+	       (begin
+	       match abstractize with
+		| None -> ST_self_rep
+		| Some coll_name -> ST_species_rep coll_name
+	       end)
+	   | (ST_species_rep _) as tdesc -> tdesc) in
 	(* Build the type expression copy of ourself. *)
 	let copied_ty = {
 	  ts_level = current_binding_level () ;
@@ -351,7 +361,7 @@ let (specialize, specialize2) =
    (* ******************************************************************** *)
    (fun scheme ->
      (* Copy the type scheme's body. *)
-     let instance = copy_type_simple scheme.ts_body in
+     let instance = copy_type_simple ~abstractize: None scheme.ts_body in
      (* Clean up seen type for further usages. *)
      seen := [] ;
      instance),
@@ -375,12 +385,25 @@ let (specialize, specialize2) =
    (* ******************************************************************* *)
    (fun scheme tys ->
      (* Copy the type scheme's body. *)
-     let instance = copy_type_simple scheme.ts_body in
+     let instance = copy_type_simple ~abstractize: None scheme.ts_body in
      (* Also copy the other types, using the same mapping provided in [seen]. *)
-     let copied_tys = List.map copy_type_simple tys in
+     let copied_tys = List.map (copy_type_simple ~abstractize: None) tys in
      (* Clean up seen type for further usages. *)
      seen := [] ;
-     (instance, copied_tys))
+     (instance, copied_tys)),
+
+
+
+   (* ********************************************************************* *)
+   (* abstract_copy                                                         *)
+   (* (fname * collection_name) -> type_simple -> type_simple               *)
+   (** {b Descr} : Copies the [ty] type expression (hence breaking sharing
+                 with the original one) and replaces occurrences of [Self]
+                 by the given collection's [cname] carrier type.
+
+       {b Rem} Exported outside this module.                                *)
+   (* ********************************************************************* *)
+   (fun cname ty -> copy_type_simple ~abstractize: (Some cname) ty)
   )
 ;;
 
@@ -566,8 +589,8 @@ let unify ~loc ~self_manifest type1 type2 =
 
 
 (* species_name -> type_species *)
-let type_species_interface base_species =
-  SPT_species_interface base_species
+let type_species_interface ~species_module ~species_name =
+  SPT_species_interface (species_module, species_name)
 ;;
 
 (* (species_name * type_species) -> type_species -> type_species *)
@@ -602,10 +625,10 @@ let type_species_is coll_name_n_type species_ty =
 (* ************************************************************** *)
 let pp_type_species ppf species_type =
   let rec rec_print nb_printed_params local_ppf = function
-    | SPT_species_interface sp_name ->
+    | SPT_species_interface (sp_module, sp_name) ->
 	(begin
 	if nb_printed_params > 0 then Format.fprintf local_ppf ") " ;
-	Format.fprintf local_ppf "%s" sp_name
+	Format.fprintf local_ppf "%s#%s" sp_module sp_name
 	end)
     | SPT_parametrised_in ((param_name, param_ty), ty) ->
 	(begin
@@ -615,12 +638,13 @@ let pp_type_species ppf species_type =
 	  param_name (rec_print 0) param_ty
 	  (rec_print (nb_printed_params + 1)) ty
 	end)
-    | SPT_parametrised_is ((param_name, param_ty), ty) ->
+    | SPT_parametrised_is ((param_name, (param_module, param_ty)), ty) ->
 	(begin
 	if nb_printed_params = 0 then Format.fprintf local_ppf "("
 	else Format.fprintf local_ppf ", " ;
-	Format.fprintf local_ppf "%s in %s%a"
-	  param_name param_ty (rec_print (nb_printed_params + 1)) ty
+	Format.fprintf local_ppf "%s in %s#%s%a"
+	  param_name param_module param_ty
+	  (rec_print (nb_printed_params + 1)) ty
 	end) in
   rec_print 0 ppf species_type
 ;;

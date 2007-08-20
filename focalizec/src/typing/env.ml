@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.24 2007-08-20 08:40:12 pessaux Exp $ *)
+(* $Id: env.ml,v 1.25 2007-08-20 13:41:14 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -274,7 +274,8 @@ module TypeInformation = struct
     spe_is_collection : bool ;
     spe_sig_params : species_param list ;
     spe_sig_inher : Types.type_species list ;
-    spe_sig_methods : species_field list   (** Method's name, type and body if defined. *)
+    spe_sig_methods : species_field list ;   (** Method's name, type and body if defined. *)
+    spe_type_species : Types.type_species
     }
 
 
@@ -342,22 +343,37 @@ module TypeInformation = struct
   let pp_species_param ppf params =
     let rec rec_print local_ppf = function
       | [] -> ()
-      | [last] -> ()
-      | param :: rem -> () in
+      | param :: rem ->
+	  (begin
+	  let (p_kind_string, vname, ty) =
+	    (match param with
+	     | SPAR_in (a, b) -> ("in", a, b)
+	     | SPAR_is (a, b) -> ("is", a, b)) in
+	  Format.fprintf local_ppf "%a %s %a"
+	    Sourcify.pp_vname vname p_kind_string Types.pp_type_species ty ;
+	  if rem <> [] then
+	    (begin
+	    Format.fprintf local_ppf ",@ " ;
+	    rec_print local_ppf rem
+	    end)
+	  end) in
     if params = [] then ()
-    else Format.fprintf ppf "(%a) " rec_print params
+    else Format.fprintf ppf " (@[<1>%a@]) " rec_print params
 
 
 
   let pp_species_inher ppf inhers =
     let rec rec_print local_ppf = function
       | [] -> ()
-      | [last] -> Format.fprintf ppf "%a" Types.pp_type_species last
       | inher :: rem ->
-	  Format.fprintf ppf "%a,@ " Types.pp_type_species inher ;
-	  rec_print local_ppf rem in
+	  Format.fprintf local_ppf "%a" Types.pp_type_species inher ;
+	  if rem <> [] then
+	    (begin
+	    Format.fprintf local_ppf ",@ " ;
+	    rec_print local_ppf rem
+	    end) in
     if inhers = [] then ()
-    else Format.fprintf ppf " inherits %a " rec_print inhers
+    else Format.fprintf ppf " @[<1>inherits %a@] " rec_print inhers
 
 
 

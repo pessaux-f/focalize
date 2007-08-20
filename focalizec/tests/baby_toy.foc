@@ -95,3 +95,9 @@ species Toy inherits Basic_object =
 end
 ;;
 
+
+species Dummy (a in Basic_object, B is Basic_object) =
+  let x = a ;
+  let y (z) = B!equal (z) ;
+end
+;;

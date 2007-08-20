@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.25 2007-08-20 08:40:12 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.26 2007-08-20 13:41:14 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {bL Descr} : Exception used to inform that a sum type constructor was
@@ -1145,11 +1145,193 @@ let typecheck_species_expr ctx env species_expr =
   let species_carrier_type =
     Types.type_rep_species ~species_module ~species_name in
   (* Now, create the "species type" (a somewhat of signature). *)
-  let species_type = Types.type_species_interface species_name in
+  let species_type =
+    Types.type_species_interface ~species_module ~species_name in  (*****)
   (* Record the type in the AST node. *)
   species_expr.Parsetree.ast_type <- Some species_carrier_type ;
   (species_type,
    species_species_description.Env.TypeInformation.spe_sig_methods)
+;;
+
+
+
+(* ************************************************************************ *)
+(* (Types.fname * Types.collection_name) ->                                 *)
+(*   Env.TypeInformation.species_field list ->                              *)
+(*     Env.TypeInformation.species_field list                               *)
+(** {b Descr} : Perform the abstraction of species methods. This implements
+              the "A" function described in Virgile Prevosto's Phd, section
+              3.8, page 41.
+
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
+let abstraction cname fields =
+  let rec rec_abstract = function
+    | [] -> []
+    | h :: q ->
+	let h' =
+	  (match h with
+	   | Env.TypeInformation.SF_sig (vname, scheme)
+	   | Env.TypeInformation.SF_let (vname, scheme, _) ->
+	       let ty = Types.specialize scheme in
+	       Types.begin_definition () ;
+	       let ty' = Types.abstract_copy cname ty in
+	       Types.end_definition () ;
+	       [Env.TypeInformation.SF_sig (vname, (Types.generalize ty'))]
+	   | Env.TypeInformation.SF_let_rec l ->
+	       List.map
+		 (fun (vname, scheme, _) ->
+		   let ty = Types.specialize scheme in
+		   Types.begin_definition () ;
+		   let ty' = Types.abstract_copy cname ty in
+		   Types.end_definition () ;
+		   Env.TypeInformation.SF_sig (vname, (Types.generalize ty')))
+		 l) in
+	h' @ (rec_abstract q) in
+  (* Do je job now... *)
+  rec_abstract fields
+;;
+
+
+
+(* *********************************************************************** *)
+(* typing_context -> Env.TypingEnv.t -> Types.species_name ->              *)
+(*   (Parsetree.vname * Parsetree.species_param_type) list ->              *)
+(*     (Env.TypingEnv.t * Env.TypeInformation.species_param list *         *)
+(*      Types.type_species)                                                *)
+(** {b Descr} : Performs the typechecking of a species definition
+              parameters.
+              It build the species type of the species owning these
+	      parameters and return it.
+	      It also build the list of [Env.TypeInformation.species_param]
+              that will appear in the hosting species [spe_sig_params]
+              field.
+              It also extend the environment with the species
+              induced by the parameters and the carrier types of
+              these species induced by the parameters.
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+let typecheck_species_def_params ctx env species_name species_params =
+  let rec rec_typecheck_params accu_env = function
+    | [] ->
+	let species_ty =
+	  Types.type_species_interface
+	    ~species_module: ctx.current_unit ~species_name in
+	(accu_env, [], species_ty)
+    | (vname, param_kind) :: rem ->
+	(begin
+	let param_name_as_string = Parsetree_utils.name_of_vname vname in
+	match param_kind.Parsetree.ast_desc with
+	 | Parsetree.SPT_in ident ->
+	     (begin
+	     (* Recover the module and the species name of the parameter. *)
+	     let (param_sp_module, param_sp_name) =
+	       (match ident.Parsetree.ast_desc with
+		| Parsetree.I_local vname
+		| Parsetree.I_global (None, vname) ->
+		    (ctx.current_unit, (Parsetree_utils.name_of_vname vname))
+		| Parsetree.I_global ((Some fname), vname) ->
+		    (fname, (Parsetree_utils.name_of_vname vname))
+		| Parsetree.I_method (_, _) ->
+		    (* Species are not first class value, then  *)
+		    (* they can't be returned by a method call. *)
+		    assert false) in
+	     let param_species_descr =
+	       Env.TypingEnv.find_species
+		 ~loc: ident.Parsetree.ast_loc ~current_unit: ctx.current_unit
+		 ident env in
+	     (* Create the carrier type of the parameter and extend the *)
+             (* current environment with this parameter as a value of   *)
+             (* the carrier type.                                       *)
+	     let param_carrier_ty =
+	       Types.type_rep_species ~species_module: param_sp_module
+		 ~species_name: param_sp_name in
+	     let accu_env' =
+	       Env.TypingEnv.add_value
+		 vname (Types.generalize param_carrier_ty) accu_env in
+	     (* And now, build the species type of the application. *)
+	     let (accu_env'', rem_spe_params, rem_ty) =
+	       rec_typecheck_params accu_env' rem in
+	     let application_species_type =
+	       Types.type_species_in
+		 (param_name_as_string,
+		  param_species_descr.Env.TypeInformation.spe_type_species)
+		 rem_ty  in
+	     let current_spe_param =
+	       Env.TypeInformation.SPAR_in
+		 (vname,
+		  param_species_descr.Env.TypeInformation.spe_type_species) in
+	     (* Finally, we return the fully extended environment and *)
+	     (* the type of the species application we just built.    *)
+	     (accu_env'', (current_spe_param:: rem_spe_params),
+	      application_species_type)
+	     end)
+	 | Parsetree.SPT_is species_expr ->
+	     (begin
+	     (* First, typecheck the species expression .*)
+	     let (species_expr_ty, species_expr_fields) =
+	       typecheck_species_expr ctx env species_expr in
+	     (* Create the [species_description] of the parameter *)
+             (* and extend the current environment. Because the   *)
+	     (* obtained species is not a declaration, it cannot  *)
+	     (* have parameters or inheritance.                   *)
+             (* This leads to a somewhat of "local" species, and  *)
+	     (* we will bind it in the species environment under  *)
+	     (* an internal name to be able to denote it in the   *)
+	     (* type of the application.                          *)
+	     (* This internal name is the name of the parameter   *)
+	     (* with a space character before. Hence, we are sure *)
+	     (* that it will not conflict with anyone else.       *)
+	     let param_description = {
+	       Env.TypeInformation.spe_is_collection = false ;
+	       Env.TypeInformation.spe_sig_params = [] ;
+	       Env.TypeInformation.spe_sig_inher = [] ;
+	       Env.TypeInformation.spe_sig_methods =
+                 abstraction
+		   (ctx.current_unit, param_name_as_string)
+		   species_expr_fields ;
+	       Env.TypeInformation.spe_type_species = species_expr_ty } in
+	     let accu_env' =
+	       Env.TypingEnv.add_species
+		 param_name_as_string param_description accu_env in
+	     (* Create the carrier type of the parameter *)
+             (* and extend the current environment.      *)
+	     let internal_cname = " " ^ param_name_as_string in
+	     let param_carrier_ty =
+	       Types.type_rep_species ~species_module: ctx.current_unit
+		 ~species_name: internal_cname in
+	     let param_carrier_ty_description = {
+	       Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
+	       Env.TypeInformation.type_identity =
+	         Types.generalize param_carrier_ty ;
+	       (* No param because the species is fully applied. *)
+	       Env.TypeInformation.type_params = [] ;
+	       Env.TypeInformation.type_arity = 0 } in
+	     let accu_env'' =
+	       Env.TypingEnv.add_type
+		 param_name_as_string param_carrier_ty_description accu_env' in
+	     (* And now, build the species type of the application. *)
+	     let (accu_env''', rem_spe_params, rem_ty) =
+	       rec_typecheck_params accu_env'' rem in
+	     let type_coll = (ctx.current_unit, internal_cname) in
+	     let application_species_type =
+	       Types.type_species_is
+		 (param_name_as_string, type_coll) rem_ty  in
+	     let current_spe_param =
+	       Env.TypeInformation.SPAR_is
+		 (vname,
+		  (Types.type_species_interface
+		     ~species_module: ctx.current_unit
+		     ~species_name: internal_cname)) in
+	     (* Finally, we return the fully extended environment and *)
+	     (* the type of the species application we just built.    *)
+	     (accu_env''', (current_spe_param:: rem_spe_params),
+	      application_species_type)
+	     end)
+	end) in
+  (* And now do the job... *)
+  rec_typecheck_params env species_params
 ;;
 
 
@@ -1444,13 +1626,18 @@ let typecheck_species_def ctx env species_def =
   (* First of all, we are in a species !!! *)
   let ctx = { ctx with
     current_species = Some species_def_desc.Parsetree.sd_name } in
-  (* Ignore params and inherit for the moment. *)
-  if species_def_desc.Parsetree.sd_params <> [] then failwith "TODO Params." ;
+  (* Extend the environment with the species param and   *)
+  (* synthetize the species type of the current species. *)
+  let (env_with_species_params, sig_params, me_species_type) =
+    typecheck_species_def_params
+      ctx env species_def_desc.Parsetree.sd_name
+      species_def_desc.Parsetree.sd_params in
   (* We first load the inherited methods in the environment and  *)
   (* get their signatures and methods information by the way.    *)
   let (inherited_types, inherited_methods_infos, env_with_inherited_methods) = 
     extend_env_with_inherits
-      ctx env species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc in
+      ctx env_with_species_params
+      species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc in
   (* Now infer the types of the current field's.*)
   let methods_info =
     typecheck_species_fields
@@ -1466,10 +1653,12 @@ let typecheck_species_def ctx env species_def =
   (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
   let species_description = {
     Env.TypeInformation.spe_is_collection = false ;
-    Env.TypeInformation.spe_sig_params = [] ;
+    Env.TypeInformation.spe_sig_params = sig_params ;
     Env.TypeInformation.spe_sig_inher = inherited_types ;
-    Env.TypeInformation.spe_sig_methods = normalized_methods } in
-  (* Extend the environment with the species. *)
+    Env.TypeInformation.spe_sig_methods = normalized_methods ;
+    Env.TypeInformation.spe_type_species = me_species_type } in
+  (* Extend the initial environment with the species. Not the environment *)
+  (* used to typecheck the internal definitions of the species !!!        *)
   let env_with_species =
     Env.TypingEnv.add_species
       species_def_desc.Parsetree.sd_name species_description env in
@@ -1482,10 +1671,8 @@ let typecheck_species_def ctx env species_def =
     Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
     Env.TypeInformation.type_identity = Types.generalize species_carrier_type ;
     (* Nevers parameters for a species's carrier type ! *)
-    Env.TypeInformation.type_params =
-      (Format.eprintf "type_params not yet correct !@." ; []) ;
-    Env.TypeInformation.type_arity =
-      (Format.eprintf "type_params not yet correct !@." ; 0) } in
+    Env.TypeInformation.type_params = [] ;
+    Env.TypeInformation.type_arity = 0 } in
   let full_env =
     Env.TypingEnv.add_type
       species_def_desc.Parsetree.sd_name species_as_type_description
