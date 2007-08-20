@@ -12,30 +12,74 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.27 2007-08-20 14:34:43 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.28 2007-08-20 15:52:28 pessaux Exp $ *)
 
 (* *********************************************************************** *)
-(** {bL Descr} : Exception used to inform that a sum type constructor was
+(** {b Descr} : Exception used to inform that a sum type constructor was
                used with an incorrect arity. The correct expected arity is
-              stored in the second argument of the exception constructor.  *)
-exception Bad_sum_type_constructor_arity of
-  (Parsetree.ident * Env.TypeInformation.constructor_arity) ;;
+              stored in the second argument of the exception constructor.
 
+    {b Rem} : Exported outside this module.                                *)
 (* *********************************************************************** *)
-
-
-exception Unbound_type_variable of string ;;
-
-(* Method name, species name. *)
-exception Method_multiply_defined of (Parsetree.vname * Types.species_name) ;;
-
-(* Expected arity, used with arity. *)
-exception Bad_type_arity of (Parsetree.ident * int * int) ;;
+exception Bad_sum_type_constructor_arity of
+  (Parsetree.ident * (** The name of the misused sum type constructor. *)
+   Env.TypeInformation.constructor_arity (** The correct arity it should have
+					     be used. *)
+  ) ;;
 
 
 
-(** To become the context recording various information propagated for the
-    type inference. May be could also contain the environment. *)
+(* ************************************************************************ *)
+(** {b Descr} : Exception raised when a type variable was not found inside
+              the [tyvars_mapping] of current [typing_context]. This means
+              that while typechecking a type definition, its body contains
+              a type variable not specified in the type parameters list.
+
+    {b Rem} : Exported outside this module.                                 *)
+(* ************************************************************************ *)
+exception Unbound_type_variable of
+  (** The name of the unbound variable. *)
+  string
+;;
+
+
+
+(* ************************************************************************* *)
+(** {b Descr} : Exception raised when a method is defined several times in
+              the same species.
+
+    {b Rem} : Exported outside this module.                                  *)
+(* ************************************************************************* *)
+exception Method_multiply_defined of
+  (Parsetree.vname *     (** The method's name. *)
+   Types.species_name)   (** The species's name where the method is defined. *)
+;;
+
+
+
+(* ********************************************************************** *)
+(** {b Descr} : Exception raised when a type constructor is applied to an
+              incorrect number of type arguments.
+
+    {b Rem} : Exported outside this module.                               *)
+(* ********************************************************************** *)
+exception Bad_type_arity of
+  (Parsetree.ident *   (** The name of the misused type constructor. *)
+   int *               (** The expected arity. *)
+   int)                (** The arity the constructor was used with. *)
+;;
+
+
+
+(* ************************************************************************* *)
+(** {b Descr} : Datastructure recording various the information required
+              and propagated during the type inference. It is much more
+              convenient to group the various flags and stuff needed than
+              passing them all the time as arguments of each recursive call.
+              This datastructure serves especially this purpose.
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
 type typing_context = {
   (** The name of the currently analysed compilation unit. *)  
   current_unit : Types.fname ;
@@ -1727,13 +1771,13 @@ let typecheck_species_def ctx env species_def =
              type (or a tuple with type constructor's arguments types) and
              returning a ST_construct embedding the record/sum type's name.
              For instance:
-               type t = A of int
-             will create a constructor A : (int) -> t
+               [type t = A of int]
+             will create a constructor [A : (int) -> t]
              where one must note that (int) stands for a degenerated tuple
              type with only 1 component.
              For other instance:
-               type u = { junk : string }
-             will create a field label junk : string -> u
+               [type u = { junk : string }]
+             will create a field label [junk : string -> u]
              Sum type constructors with no argument are typed as constants
              of this type.
 	     Also performs the interface printing stuff is needed.

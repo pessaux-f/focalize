@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.25 2007-08-20 13:41:14 pessaux Exp $ *)
+(* $Id: env.ml,v 1.26 2007-08-20 15:52:28 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -120,16 +120,16 @@ let debug_env_list_assoc ~allow_opened searched list =
 
 
 
-(* ********************************************************************** *)
-(** {Descr} : Type of the generic environments. It is parametrised by the
+(* ************************************************************************ *)
+(** {b Descr} : Type of the generic environments. It is parametrised by the
             information to bind to identifiers representing:
             - Sum-types constructors
             - Record-types labels
             - Values
             - Species (and collections)
 
-    {b Rem} : Exported abstract outside this module.                      *)
-(* ********************************************************************** *)
+    {b Rem} : Exported abstract outside this module.                        *)
+(* ************************************************************************ *)
 type ('constrs, 'labels, 'types, 'values, 'species) generic_env = {
   constructors : (Parsetree.constr_name * ('constrs binding_origin)) list ;
   labels : (Types.label_name * ('labels binding_origin)) list ;
@@ -202,7 +202,11 @@ module ScopeInformation = struct
     | SBI_file of Types.fname
       (* The ident is a method implicitely of self. *)
     | SBI_method_of_self
-      (* The ident is a method explicitely of a collection. ATTENTION: while inserting a method in the environment, it must always be tagged with [SBI_method_of_self]. The tag [SBI_method_of_coll] can only be returned by [find_value] who may perform a change on the fly if required. *)
+      (* The ident is a method explicitely of a collection. ATTENTION: while
+	 inserting a method in the environment, it must always be tagged with
+	 [SBI_method_of_self]. The tag [SBI_method_of_coll] can only be
+	 returned by [find_value] who may perform a change on the fly if
+	 required. *)
     | SBI_method_of_coll of Types.collection_name
       (* The ident is a locally bound indentifier (let or function parameter. *)
     | SBI_local

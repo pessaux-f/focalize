@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2007-08-15 17:00:01 pessaux Exp $
+# $Id: Makefile,v 1.3 2007-08-20 15:52:28 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ 
@@ -9,12 +9,12 @@ BYTOBJS = configuration.cmo handy.cmo location.cmo types.cmo files.cmo \
 
 all:: $(BYTOBJS)
 
+doc:: $(BYTOBJS)
+	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)
+
 clean::
 	$(RM) *~ *.cm* log
-	$(RM) doc/*
-
-doc:: $(BYTOBJS)
-	$(CAMLDOC) -html -d doc $(BYTOBJS:.cmo=.ml)
+	$(RM) odoc/*
 
 depend:
 	$(CAMLDEP) $(CAML_COMP_FLAGS) *.mli *.ml > ./.depend

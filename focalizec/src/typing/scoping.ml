@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.16 2007-08-16 15:04:00 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.17 2007-08-20 15:52:28 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -47,13 +47,50 @@
 (* *********************************************************************** *)
 
 
-exception Multiply_used_module of Types.fname ;;
-exception Module_not_specified_as_used of Types.fname ;;
 
+(* ************************************************************************ *)
+(** {b Descr} : Exception raised when a module is "use"-d (i.e. with the
+              [use] FoCaL directive) several times in the same source file.
+              Although this is not a damn, it reveals a useless idom, then
+              we prefer to reject it.
+
+    {b Rem} : Exported outside this module.                                 *)
+(* ************************************************************************ *)
+exception Multiply_used_module of
+  Types.fname  (** The name of the module used several times. *)
+;;
+
+
+
+(* ************************************************************************* *)
+(** {b Descr} : Exception raised when a module is "open"-ed (i.e. with the
+              [open] FoCaL directive) or directly invoked with the #-notation
+              without having be "use"-d (i.e. with the [use] FoCaL directive)
+              before.
+
+    {b Rem} : Exported outside this module.
+              Not yet implemented for the #-se notation indeed !             *)
+(* ************************************************************************* *)
+exception Module_not_specified_as_used of
+  Types.fname  (** The name of the module not mentioned as "use". *)
+;;
+
+
+
+(* ************************************************************************* *)
+(** {b Descr} : Datastructure recording various the information required
+              and propagated during the scoping pass. It is much more
+              convenient to group the various flags and stuff needed than
+              passing them all the time as arguments of each recursive call.
+              This datastructure serves especially this purpose.
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
 type scoping_context = {
   (** The name of the currently analysed compilation unit. *)
   current_unit : Types.fname ;
-  (** The list of "use"-d modules. Not file with paths and extension : just module name (ex: "Basics"). *)
+  (** The list of "use"-d modules. Not file with paths and extension : just
+      module name (ex: "Basics"). *)
   used_modules : Types.fname list ;
 } ;;
 
@@ -333,6 +370,12 @@ let scope_type_def ctx env ty_def =
 
 
 
+(* *********************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.expr -> Parsetree.expr *)
+(* {b Descr} : Scopes an [expr] and returns this scoped [expr].
+
+   {b Rem} : Not exported outside this module.                             *)
+(* *********************************************************************** *)
 let rec scope_expr ctx env expr =
   let new_desc =
     (match expr.Parsetree.ast_desc with
@@ -597,6 +640,12 @@ and scope_let_definition ~toplevel_let ctx env let_def =
 
 
 
+(* *********************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.prop -> Parsetree.prop *)
+(* {b Descr} : Scopes a [prop] and returns this scoped [prop].
+
+   {b Rem} : Not exported outside this module.                             *)
+(* *********************************************************************** *)
 let rec scope_prop ctx env prop =
   let new_desc =
     (match prop.Parsetree.ast_desc with
@@ -716,6 +765,18 @@ let scope_fact ctx env fact =
 
 
 
+(* ********************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.hyp ->                *)
+(*   (Env.ScopingEnv.t * (Parsetree.hyp list))                            *)
+(** {b Descr} : Scopes a list of [hyp]s and insert them in the current
+              environment. Returns the list of scoped [hyp]s and the
+              initial environment extended with all these hypotheses.
+              This environment will then be suitable to be used by
+              [scope_statement] in order to scope the body of a statement
+              under these hypotheses.
+
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
 let scope_hyps ctx env hyps =
   List.fold_left
     (fun (accu_env, accu_scoped_hyps) hyp ->
@@ -1141,8 +1202,8 @@ let scope_species_def ctx env species_def =
 (* *************************************************************** *)
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.coll_def ->    *)
 (*   (Parsetree.coll_def_desc * Env.ScopingEnv.t)                  *)
-(** {b Descr] : Scopes a collection definition. Returns the scoped
-            } definition and the initial environment extended with
+(** {b Descr} : Scopes a collection definition. Returns the scoped
+              definition and the initial environment extended with
               a binding for this collection inside.
 
     {b Rem} : Not exported outside this module.                    *)
