@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.28 2007-08-20 15:52:28 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.29 2007-08-21 11:13:57 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -256,7 +256,13 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
 
 
 
- (* If returns true then one can generalise. *)
+(* ********************************************************************* *)
+(* Env.TypingEnv.t -> Parsetree.expr -> bool *)
+(** {b Descr} : If returns [true] then one can generalise the expression
+             passed as argument.
+
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
 let rec is_non_expansive env expr =
   match expr.Parsetree.ast_desc with
   | Parsetree.E_const _ -> true
@@ -292,6 +298,13 @@ let rec is_non_expansive env expr =
 
 
 
+(* ******************************************************************** *)
+(* Parsetree.constant -> Types.type_simple                              *)
+(** {b Descr} : Infers the type of a constant. Records this type in the
+              AST node and return the type.
+
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
 let typecheck_constant constant_desc =
   let ty =
     match constant_desc.Parsetree.ast_desc with
@@ -306,6 +319,16 @@ let typecheck_constant constant_desc =
 
 
 
+(* ********************************************************************* *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.pattern ->             *)
+(*   Types.type_simple * (Parsetree.vname * Types.type_scheme) list      *)
+(** {b Descr} : Infers the type of a [pattern]. Records this type in the
+              AST node and return the type and a list of bindings
+              that map the variables found in the pattern and their
+              types.
+
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
 let rec typecheck_pattern ctx env pat_desc =
   (* First, get the pattern's type and induced bindings. *)
   let (final_ty, bindings) =
