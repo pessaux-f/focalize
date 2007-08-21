@@ -475,3 +475,34 @@ Et je pense que ça peur conduire à empêcher des généralisations. Il vaudrait
 mieux metre un schéma de type que l'on instancierait à la demande avec
 le binding level courant.
 En plus, ça éviterait sans doute le "hack" du [is_self].
+
+
+
+2007-08-21 (François)
+=====================
+
+* Parsetree.mli
+***************
+
+and species_param_desc =
+  | SP of expr
+Les expressions de paramètre lors d'une application d'espèce sont soit :
+ - des [expr] en cas de paramètre "in" (où même autra chose si l'on considère
+   l'approche du dernier point du 2007-07-11, ce qui d'ailleurs pose un
+   certain nombre de problèmes pour appliquer la règle [ENT-INST] vu que
+   remplacer un nom de collection dans des expressions de valeurs n'a pas
+   vraiment de sens. Il faudrait alors avoir un moyen d'exprimer une
+   expression de valeur "correspondant" au repr d'une collection afin de
+   faire cette substitution. Ce serait sans doute un genr ede truc builtin,
+   magic...).
+ - des *identificateurs* de collection (c.f thèse Virgile section 3.8, page
+   43) en cas de paramètre "is".
+Le record ci-dessus ne permet pas d'exprimer cela.
+
+
+and species_param_type_desc =
+  | SPT_in of ident
+  | SPT_is of species_expr
+En cas de paramètre "is", ce record oblige à avoir un [ident]. Donc on ne peut
+pas donner d'expression de type arbitraire. A voir avec les remarques du
+dernier point du 2007-07-11.
