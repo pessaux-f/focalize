@@ -496,17 +496,26 @@ Les expressions de paramètre lors d'une application d'espèce sont soit :
    faire cette substitution. Ce serait sans doute un genr ede truc builtin,
    magic...).
  - des *identificateurs* de collection (c.f thèse Virgile section 3.8, page
-   43) en cas de paramètre "is".
+   43) en cas de paramètre "is".                                   OK, COMPRIS
+                                                             CAR LE PARSEUR NE
+                             SAIT PAS SI IL EST SOUS UN in OU un is ET  COMMME
+                             C'EST LA MÊME RÈGLE, expr PERMET D'ENGLOBER TOUS
+                             LES CAS. IL FAUDRA SEULEMENT FAIRE ATTENTION QUE
+                             POUR LES EXPRESSIONS UTILISÉES DANS LE CADRE D'UN
+                             is, ON DEVRA S'ASSURER QUE CETTE EXPRESSION EST
+                             BIEN UN ident ET ALLER LE CHERCHER DANS L'ENVT
+                             DES ESPÈCES ET NON DES VALUES.
 Le record ci-dessus ne permet pas d'exprimer cela.
 
 
 and species_param_type_desc =
   | SPT_in of ident
   | SPT_is of species_expr
-En cas de paramètre "is", ce record oblige à avoir un [ident]. Donc on ne peut
+En cas de paramètre "in", ce record oblige à avoir un [ident]. Donc on ne peut
 pas donner d'expression de type arbitraire. A voir avec les remarques du
 dernier point du 2007-07-11.
 
+
 La fonction [abstract_copy] est fausse : si le type est généralisé alors elle
 ne fait pas l'abstraction. Ca, c'est d'avoir voulu partager le code avec
-[specialize]. A changer !
+[specialize]. A changer !                                                 FAIT
