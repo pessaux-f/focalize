@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.31 2007-08-22 15:43:40 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.32 2007-08-22 16:05:58 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1390,8 +1390,6 @@ let unnamed ctx env base_spe_descr params =
 (* **************************************************************** *)
 let typecheck_species_expr ctx env species_expr =
   let species_expr_desc = species_expr.Parsetree.ast_desc in
-  if species_expr_desc.Parsetree.se_params <> [] then
-    failwith "TODO parameterized species expressions" ;
   (* Recover the information about the species. *)
   let species_species_description =
     Env.TypingEnv.find_species
