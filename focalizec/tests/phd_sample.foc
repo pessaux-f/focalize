@@ -1,0 +1,27 @@
+use "basics" ;;
+open "basics" ;;
+
+species Setoid inherits Basic_object =
+  sig ( = ) : Self -> Self -> bool ;
+  sig element : Self ;
+  let different (x, y) = basics#not_b (x = y) ;
+
+  property refl : all x in Self, x = x ;
+  property symm : all x y in Self, Self!( = ) (x, y) -> y = x ;
+end ;;
+
+species Monoid inherits Setoid =
+  sig ( * ) : Self -> Self -> Self ;
+  sig un : Self ;
+  let element = Self! un * !un ;
+end ;;
+
+species Setoid_produit (A is Setoid, B is Setoid) inherits Setoid =
+  rep = (A * B) ;
+  let ( = ) (x, y) =
+     and_b
+       (A!( = ) (basics#first (x), basics#first (y)),
+	B!( = ) (scnd (x), scnd (y))) ;
+  let creer (x, y) = basics#crp (x, y) ;
+  let element = Self!creer (A!element, B!element) ;
+end ;;

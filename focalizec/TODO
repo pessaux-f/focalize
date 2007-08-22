@@ -506,3 +506,7 @@ and species_param_type_desc =
 En cas de paramètre "is", ce record oblige à avoir un [ident]. Donc on ne peut
 pas donner d'expression de type arbitraire. A voir avec les remarques du
 dernier point du 2007-07-11.
+
+La fonction [abstract_copy] est fausse : si le type est généralisé alors elle
+ne fait pas l'abstraction. Ca, c'est d'avoir voulu partager le code avec
+[specialize]. A changer !

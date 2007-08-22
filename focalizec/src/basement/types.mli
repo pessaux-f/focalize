@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.9 2007-08-20 13:41:14 pessaux Exp $ *)
+(* $Id: types.mli,v 1.10 2007-08-22 14:17:08 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -84,6 +84,15 @@ val type_species_in :
 val type_species_is :
   (collection_name * type_collection) -> type_species -> type_species
 
+val __dirty_extract_coll_name : type_species -> (fname * species_name)
+val ___dirty_chop_type_species : type_species -> type_species
+
+val subst_type_simple :
+  (fname * collection_name) -> (fname * collection_name) -> type_simple ->
+    type_simple
+val subst_type_species :
+  (fname * species_name) -> (fname * species_name) -> type_species ->
+    type_species
 
 (** Manipulation of type schemes: generalization, instanciation, generation of
 a (closed) type scheme from a type without unknowns. *)

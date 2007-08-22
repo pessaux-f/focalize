@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.12 2007-08-20 14:34:43 pessaux Exp $ *)
+(* $Id: types.ml,v 1.13 2007-08-22 14:17:08 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -290,7 +290,7 @@ let occur_check ~loc var_ty ty =
 
 
 
-let (specialize, specialize2, abstract_copy) =
+let (specialize, specialize2) =
   let seen = ref [] in
   (* Internal recursive copy of a type scheme replacing its generalized
      variables by their associated new fresh type variables. *)
@@ -390,25 +390,57 @@ let (specialize, specialize2, abstract_copy) =
      let copied_tys = List.map (copy_type_simple ~abstractize: None) tys in
      (* Clean up seen type for further usages. *)
      seen := [] ;
-     (instance, copied_tys)),
-
-
-
-   (* ********************************************************************* *)
-   (* abstract_copy                                                         *)
-   (* (fname * collection_name) -> type_simple -> type_simple               *)
-   (** {b Descr} : Copies the [ty] type expression (hence breaking sharing
-                 with the original one) and replaces occurrences of [Self]
-                 by the given collection's [cname] carrier type.
-
-       {b Rem} Exported outside this module.                                *)
-   (* ********************************************************************* *)
-   (fun cname ty ->
-     let copy = copy_type_simple ~abstractize: (Some cname) ty in
-     (* Clean up seen type for further usages. *)
-     seen := [] ;
-     copy)
+     (instance, copied_tys))
   )
+;;
+
+
+
+
+(* ********************************************************************* *)
+(* abstract_copy                                                         *)
+(* (fname * collection_name) -> type_simple -> type_simple               *)
+(** {b Descr} : Copies the [ty] type expression (hence breaking sharing
+	      with the original one) and replaces occurrences of [Self]
+	      by the given collection's [coll_name] carrier type.
+
+    {b Rem} Exported outside this module.                                *)
+(* ********************************************************************* *)
+let abstract_copy coll_name =
+  let seen = ref [] in
+  (* Internal recursive copy same stuff than for [specialize] stuff. *)
+  let rec rec_copy ty =
+    let ty = repr ty in
+    if List.mem_assq ty !seen then List.assq ty !seen
+    else
+      (begin
+      let tmp_ty = {
+	ts_level = ty.ts_level ;
+	ts_desc = ST_var ;
+	ts_link_value = TLV_unknown } in
+      seen := (ty, tmp_ty) :: !seen ;
+      let copied_desc =
+	(match ty.ts_desc with
+	 | ST_var -> ST_var
+	 | ST_arrow (ty1, ty2) -> ST_arrow (rec_copy ty1, rec_copy ty2)
+	 | ST_tuple tys -> ST_tuple (List.map rec_copy tys)
+	 | ST_construct (name, args) ->
+             ST_construct (name, List.map rec_copy args)
+	 | ST_self_rep -> ST_species_rep coll_name
+	 | (ST_species_rep _) as tdesc -> tdesc) in
+      let copied_ty = {
+	ts_level = current_binding_level () ;
+	ts_desc = copied_desc ;
+	ts_link_value = TLV_unknown } in
+      tmp_ty.ts_link_value <- TLV_known copied_ty ;
+      copied_ty
+      end) in
+  (* The function itself. *)
+  (fun ty ->
+    let copy = rec_copy ty in
+    (* Clean up seen type for further usages. *)
+    seen := [] ;
+    copy)
 ;;
 
 
@@ -617,6 +649,84 @@ let type_species_in species_name_n_type species_ty =
 (* ********************************************************************* *)
 let type_species_is coll_name_n_type species_ty =
   SPT_parametrised_is (coll_name_n_type, species_ty)
+;;
+
+
+let __dirty_extract_coll_name = function
+  | SPT_species_interface data -> data
+  | SPT_parametrised_in (_, _) -> failwith "__dirty_extract_coll_name 0"
+  | SPT_parametrised_is (_, _) -> failwith "__dirty_extract_coll_name 1"
+;;
+
+
+
+let ___dirty_chop_type_species = function
+  | SPT_species_interface data -> failwith "___dirty_chop_type_specie 0"
+  | SPT_parametrised_in ((_, _), ty)
+  | SPT_parametrised_is ((_, _), ty) -> ty
+;;
+
+
+
+let subst_type_species (fname1, spe_name1) c2 ty_spe =
+  let rec rec_subst = function
+    | SPT_species_interface (fname, spe_name) ->
+	if fname1 = fname && spe_name1 = spe_name then SPT_species_interface c2
+	else SPT_species_interface (fname, spe_name)
+    | SPT_parametrised_in ((n, ty1), ty2) ->
+	let ty1' = rec_subst ty1 in
+	let ty2' = rec_subst ty2 in
+	SPT_parametrised_in ((n, ty1'), ty2')
+    | SPT_parametrised_is ((n, (coll_fname, coll_name)), ty) ->
+	let ty' = rec_subst ty in
+	if fname1 = coll_fname && spe_name1 = coll_name then
+	  SPT_parametrised_is ((n, c2), ty')
+	else SPT_parametrised_is ((n, (coll_fname, coll_name)), ty') in
+  rec_subst ty_spe
+;;
+
+
+
+(* (fname * collection_name) -> (fname * collection_name) -> type_simple -> *)
+(*   type_simple                                                            *)
+let subst_type_simple (fname1, spe_name1) c2 =
+  let seen = ref [] in
+  (* Internal recursive copy same stuff than for [specialize] stuff. *)
+  let rec rec_copy ty =
+    let ty = repr ty in
+    if List.mem_assq ty !seen then List.assq ty !seen
+    else
+      (begin
+      let tmp_ty = {
+	ts_level = ty.ts_level ;
+	ts_desc = ST_var ;
+	ts_link_value = TLV_unknown } in
+      seen := (ty, tmp_ty) :: !seen ;
+      let copied_desc =
+	(match ty.ts_desc with
+	 | ST_var -> ST_var
+	 | ST_arrow (ty1, ty2) -> ST_arrow (rec_copy ty1, rec_copy ty2)
+	 | ST_tuple tys ->  ST_tuple (List.map rec_copy tys)
+	 | ST_construct (name, args) ->
+             ST_construct (name, List.map rec_copy args)
+	 | ST_self_rep -> ST_self_rep
+	 | ST_species_rep (fname, coll_name) ->
+	     if fname = fname1 && coll_name = spe_name1 then ST_species_rep c2
+	     else ty.ts_desc) in
+      let copied_ty = {
+	ts_level = current_binding_level () ;
+	ts_desc = copied_desc ;
+	ts_link_value = TLV_unknown } in
+      tmp_ty.ts_link_value <- TLV_known copied_ty ;
+      copied_ty
+      end) in
+  (* The function itself. *)
+  (fun ty ->
+    (* Copy the type scheme's body. *)
+    let copy = rec_copy ty in
+    (* Clean up seen type for further usages. *)
+    seen := [] ;
+    copy)
 ;;
 
 

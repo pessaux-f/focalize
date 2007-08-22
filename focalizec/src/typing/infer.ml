@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.29 2007-08-21 11:13:57 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.30 2007-08-22 14:17:08 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -517,7 +517,8 @@ let ensure_methods_uniquely_defined current_species l1 l2 =
     {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
 let rec typecheck_expr ctx env initial_expr =
-  (let final_ty =
+  (begin
+  let final_ty =
     (match initial_expr.Parsetree.ast_desc with
      | Parsetree.E_self -> Types.type_self ()
      | Parsetree.E_const cst -> typecheck_constant cst
@@ -567,7 +568,7 @@ let rec typecheck_expr ctx env initial_expr =
 	     let tmp_fun_ty = Types.type_arrow arg_ty result_ty in
 	     Types.unify
 	       ~loc: initial_expr.Parsetree.ast_loc
-	       ~self_manifest: ctx.self_manifest tmp_fun_ty accu_fun_ty;
+	       ~self_manifest: ctx.self_manifest tmp_fun_ty accu_fun_ty ;
 	     (* The result is the positive part of the arrow. *)
 	     result_ty)
            fun_ty
@@ -626,7 +627,7 @@ let rec typecheck_expr ctx env initial_expr =
 	     (* the pattern have the same type.   *)
 	     Types.unify
 	       ~loc: initial_expr.Parsetree.ast_loc
-	       ~self_manifest: ctx.self_manifest matched_expr_ty pat_ty;
+	       ~self_manifest: ctx.self_manifest matched_expr_ty pat_ty ;
 	     (* Extend the environment with the pattern type bindings. *)
 	     let env' =
 	       List.fold_left
@@ -647,14 +648,14 @@ let rec typecheck_expr ctx env initial_expr =
 	 (* Ensure the condition is a boolean. *)
 	 Types.unify
 	   ~loc: initial_expr.Parsetree.ast_loc
-	   ~self_manifest: ctx.self_manifest ty_cond (Types.type_bool ());
+	   ~self_manifest: ctx.self_manifest ty_cond (Types.type_bool ()) ;
 	 (* Typecheck the "then" expression. *)
 	 let ty_then = typecheck_expr ctx env e_then in
 	 let ty_else = typecheck_expr ctx env e_else in
 	 (* Enforce both branches to have the same type. *)
 	 Types.unify
 	   ~loc: initial_expr.Parsetree.ast_loc
-	   ~self_manifest: ctx.self_manifest ty_then ty_else;
+	   ~self_manifest: ctx.self_manifest ty_then ty_else ;
 	 (* And return any of them as result type. *)
 	 ty_then
      | Parsetree.E_let (let_def, in_expr) ->
@@ -683,7 +684,7 @@ let rec typecheck_expr ctx env initial_expr =
 	 Types.unify
 	   ~loc: initial_expr.Parsetree.ast_loc
 	   ~self_manifest: ctx.self_manifest
-	   (Types.type_arrow result_ty ty_expr) label_ty;
+	   (Types.type_arrow result_ty ty_expr) label_ty ;
 	 result_ty
      | Parsetree.E_record_with (with_expr, fields) ->
          typeckeck_record_expr ctx env fields (Some with_expr)
@@ -694,8 +695,9 @@ let rec typecheck_expr ctx env initial_expr =
      | Parsetree.E_external ext_expr -> typecheck_external_expr ext_expr
      | Parsetree.E_paren expr -> typecheck_expr ctx env expr) in
   (* Store the type information in the expression's node. *)
-  initial_expr.Parsetree.ast_type <- Some final_ty;
-  final_ty)
+  initial_expr.Parsetree.ast_type <- Some final_ty ;
+  final_ty
+  end)
 
 
 
@@ -1186,46 +1188,46 @@ and typecheck_species_fields ctx env = function
 
 
 
-(* **************************************************************** *)
-(* typing_context -> Env.TypingEnv.t -> Parsetree.species_expr ->   *)
-(*   (Types.type_species * Env.TypeInformation.species_field list)  *)
-(** {b Descr} : Typechecks a species expression, record its type in
-              the AST node and return the list of its methods names
-              type schemes and possible bodies (the list of fields
-              in fact).
+(* ************************************************************************* *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.expr ->                    *)
+(*   (Types.collection_name * Env.TypeInformation.species_description)       *)
+(** {b Descr} : Typechecks an expression in the restricted case where is it
+              used as a "is" parameter effective argument. In this particular
+              case, the rule [COLL-INST] expects a collection identifier and
+              nothing else. For this reason, the identifier is looked-up in
+              the species environment.
+              Because the AST structure cannot know a priori (i.e at parsing
+              stage) is the expression used as argument will be the one of a
+              "is" or a "in" argument, the {expr] rule is sufficiently
+              general to absorbe any possible expression, ... but is also
+              too large. Hence we perfom this check afterward, during the
+              typing stage.
 
-    {b Rem} :Not exported outside this module.                      *)
-(* **************************************************************** *)
-let typecheck_species_expr ctx env species_expr =
-  let species_expr_desc = species_expr.Parsetree.ast_desc in
-  if species_expr_desc.Parsetree.se_params <> [] then
-    failwith "TODO parameterized species expressions" ;
-  (* Recover the information about the species. *)
-  let species_species_description =
-    Env.TypingEnv.find_species
-      ~loc: species_expr.Parsetree.ast_loc
-      ~current_unit: ctx.current_unit species_expr_desc.Parsetree.se_name env in
-  (* Create the type of this species. *)
-  let (species_module, species_name) =
-    (match species_expr_desc.Parsetree.se_name.Parsetree.ast_desc with
-     | Parsetree.I_local vname
-     | Parsetree.I_global (None, vname) ->
-	 (ctx.current_unit, (Parsetree_utils.name_of_vname vname))
-     | Parsetree.I_global ((Some fname), vname) ->
-	 (fname, (Parsetree_utils.name_of_vname vname))
-     | Parsetree.I_method (_, _) ->
-	 (* Species are not first class value, then  *)
-	 (* they can't be returned by a method call. *)
-	 assert false) in
-  let species_carrier_type =
-    Types.type_rep_species ~species_module ~species_name in
-  (* Now, create the "species type" (a somewhat of signature). *)
-  let species_type =
-    Types.type_species_interface ~species_module ~species_name in  (*****)
-  (* Record the type in the AST node. *)
-  species_expr.Parsetree.ast_type <- Some species_carrier_type ;
-  (species_type,
-   species_species_description.Env.TypeInformation.spe_sig_methods)
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+let rec typecheck_expr_collection_ident_for_is_param ctx env initial_expr =
+  match initial_expr.Parsetree.ast_desc with
+   | Parsetree.E_self -> failwith "Self cannot be parametrized by itself)."
+   | Parsetree.E_var ident ->
+       let descr =
+	 Env.TypingEnv.find_species
+	   ~loc: ident.Parsetree.ast_loc
+	 ~current_unit: ctx.current_unit ident env in
+       let cname =
+	 (match ident.Parsetree.ast_desc with
+	  | Parsetree.I_local vname
+	  | Parsetree.I_global (None, vname) ->
+	      (ctx.current_unit, (Parsetree_utils.name_of_vname vname))
+	  | Parsetree.I_global ((Some fname), vname) ->
+	      (fname, (Parsetree_utils.name_of_vname vname))
+	  | Parsetree.I_method (_, _) ->
+	      (* Species are not first class value, then  *)
+	      (* they can't be returned by a method call. *)
+	      assert false) in
+       (cname, descr)
+   | Parsetree.E_paren expr ->
+       typecheck_expr_collection_ident_for_is_param ctx env expr
+   | _ -> failwith "is parameter can only be a collection identifier"
 ;;
 
 
@@ -1265,6 +1267,165 @@ let abstraction cname fields =
 	h' @ (rec_abstract q) in
   (* Do je job now... *)
   rec_abstract fields
+;;
+
+
+let is_sub_species_of ~loc ctx s1 s2 =
+  let local_flat_fields fields =
+    List.fold_right
+      (fun field accu ->
+	match field with
+	 | Env.TypeInformation.SF_sig (v, sc)
+	 | Env.TypeInformation.SF_let (v, sc, _) -> (v, sc) :: accu
+	 | Env.TypeInformation.SF_let_rec l ->
+	     let l' = List.map (fun (v, sc, _) -> (v, sc)) l in
+	     l' @ accu)
+      fields [] in
+  let flat_s1 = local_flat_fields s1 in
+  let flat_s2 = local_flat_fields s2 in
+  (* Check that for all (v, sc) in s2, ex (v, sc') in s1 and sc = sc'. *)
+  let status =
+    List.for_all
+      (fun (v2, sc2) ->
+	List.exists
+	  (fun (v1, sc1) ->
+	    if v1 = v2 then
+	      (begin
+	      Types.begin_definition () ;
+	      let ty1 = Types.specialize sc1 in
+	      let ty2 = Types.specialize sc2 in
+	      Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	      Types.end_definition () ;
+	      true
+	      end)
+	    else false)
+	  flat_s1)
+      flat_s2 in
+  if not status then failwith "Not subspecies"
+;;
+
+
+
+(* [unsure]. To be the function managing arguments in species applications. *)
+(* typing_context -> Env.TypingEnv.t ->                                    *)
+(*   Env.TypeInformation.species_description -> Parsetree.species_param -> *)
+(*     (Types.type_species * (Env.TypeInformation.species_field list))     *)
+let unnamed ctx env base_spe_descr params =
+  let rec rec_unnamed accu_sp_ty accu_meths = function
+    | ([], []) -> (accu_sp_ty, accu_meths)
+    | ((f_param :: rem_f_params), (e_param :: rem_e_params)) ->
+	let (new_sp_ty, new_meths) =
+	  (begin
+	  let (Parsetree.SP e_param_expr) = e_param.Parsetree.ast_desc in
+	  match f_param with
+	   | Env.TypeInformation.SPAR_in (f_name, f_ty) ->
+	       (* First, get the argument expression's type. *)
+	       (*let expr_ty = typecheck_expr ctx env e_param_expr in *)
+	       failwith "Et la suite ?.."
+	   | Env.TypeInformation.SPAR_is (f_name, f_sp_ty) ->
+	       (* Get the argument species expression signature and methods. *)
+	       (* Note that to be well-typed this expression must ONLY be    *)
+	       (* an [ident] that should be considered as a species name !   *)
+               (* C.f. Virgile Prevosto's Phd, section 3.8, page 43.         *)
+               (* Rule [COLL-INST].                                          *)
+	       let (c2, expr_sp_description) = (* The c2 of Virgile's Phd. *)
+		 typecheck_expr_collection_ident_for_is_param
+                   ctx env e_param_expr in
+(* Beuhhhhhhhhhhhhhhhhh ! Tmp. *)
+	       let c1 = Types.__dirty_extract_coll_name f_sp_ty in
+	       let (i1_mod, i1_cname) = c1 in
+	       let i1 = {
+		 Parsetree.ast_loc = Location.none ;
+		 Parsetree.ast_desc =
+		   Parsetree.I_global
+		     ((Some i1_mod), (Parsetree.Vuident i1_cname)) ;
+		 Parsetree.ast_doc = None ;
+		 Parsetree.ast_type = None } in
+	       let i1_fields =
+		 (Env.TypingEnv.find_species
+		    ~loc: e_param.Parsetree.ast_loc
+		    ~current_unit: ctx.current_unit i1 env).
+		   Env.TypeInformation.spe_sig_methods in
+	       let big_A_i1_c2 = abstraction c2 i1_fields in
+	       (* Ensure that i2 <= A(i1, c2). *)
+	       is_sub_species_of
+		 ~loc: e_param.Parsetree.ast_loc ctx
+		 expr_sp_description.Env.TypeInformation.spe_sig_methods
+		 big_A_i1_c2 ;
+	       (* And now checks are done, synthetize the result... *)
+	       (* First, the new species type. *)
+	       let applied_ty_species =
+		 Types.___dirty_chop_type_species accu_sp_ty in
+	       (* And now, the new species type where c1 <- c2. *)
+	       let applied_ty_species' =
+		 Types.subst_type_species c1 c2 applied_ty_species in
+	       (* And now, the new methods where c1 <- c2. *)
+	       let substd_meths =
+		 List.map
+		   (SubstColl.subst_species_field
+		      ~current_unit: ctx.current_unit c1 c2)
+		   accu_meths in
+	       (applied_ty_species', substd_meths)
+	  end) in
+	rec_unnamed new_sp_ty new_meths (rem_f_params, rem_e_params)
+    | (_, _) -> failwith "Bad arity" in
+  (* Do the job now. *)
+  rec_unnamed
+    base_spe_descr.Env.TypeInformation.spe_type_species
+    base_spe_descr.Env.TypeInformation.spe_sig_methods
+    (base_spe_descr.Env.TypeInformation.spe_sig_params, params)
+;;
+
+
+
+(* **************************************************************** *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.species_expr ->   *)
+(*   (Types.type_species * Env.TypeInformation.species_field list)  *)
+(** {b Descr} : Typechecks a species expression, record its type in
+              the AST node and return the list of its methods names
+              type schemes and possible bodies (the list of fields
+              in fact).
+
+    {b Rem} :Not exported outside this module.                      *)
+(* **************************************************************** *)
+let typecheck_species_expr ctx env species_expr =
+  let species_expr_desc = species_expr.Parsetree.ast_desc in
+  if species_expr_desc.Parsetree.se_params <> [] then
+    failwith "TODO parameterized species expressions" ;
+  (* Recover the information about the species. *)
+  let species_species_description =
+    Env.TypingEnv.find_species
+      ~loc: species_expr.Parsetree.ast_loc
+      ~current_unit: ctx.current_unit species_expr_desc.Parsetree.se_name env in
+  (* Create the type of this species. *)
+  let (species_module, species_name) =
+    (match species_expr_desc.Parsetree.se_name.Parsetree.ast_desc with
+     | Parsetree.I_local vname
+     | Parsetree.I_global (None, vname) ->
+	 (ctx.current_unit, (Parsetree_utils.name_of_vname vname))
+     | Parsetree.I_global ((Some fname), vname) ->
+	 (fname, (Parsetree_utils.name_of_vname vname))
+     | Parsetree.I_method (_, _) ->
+	 (* Species are not first class value, then  *)
+	 (* they can't be returned by a method call. *)
+	 assert false) in
+  let species_carrier_type =
+    Types.type_rep_species ~species_module ~species_name in
+  (* Now, create the "species type" (a somewhat of signature). *)
+
+  let (species_type, species_methods) =
+    unnamed
+      ctx env species_species_description
+      species_expr_desc.Parsetree.se_params in
+(*
+  (* [Unsure] *)
+  let species_type =
+    Types.type_species_interface ~species_module ~species_name in
+  (* Record the type in the AST node. *)
+*)
+  species_expr.Parsetree.ast_type <- Some species_carrier_type ;
+  (species_type, species_methods
+   (*species_species_description.Env.TypeInformation.spe_sig_methods*))
 ;;
 
 

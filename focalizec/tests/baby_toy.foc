@@ -54,7 +54,9 @@ let not_b (x) in bool =
 
 
 species Basic_object =
-  let equal (x, y) = true ;
+  let equal (x, y) =
+     let useless = if true then x else y in
+     true ;
 end ;;
 
 type sum = | Couic | Couac ;;

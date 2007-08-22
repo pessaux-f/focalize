@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.17 2007-08-20 15:52:28 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.18 2007-08-22 14:17:08 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -482,8 +482,11 @@ and scope_pattern ctx env pattern =
   let (new_desc, new_env) =
     (match pattern.Parsetree.ast_desc with
      | Parsetree.P_const _
-     | Parsetree.P_wild
-     | Parsetree.P_var _ -> (pattern.Parsetree.ast_desc, env)
+     | Parsetree.P_wild -> (pattern.Parsetree.ast_desc, env)
+     | Parsetree.P_var vname ->
+	 let env' =
+	   Env.ScopingEnv.add_value vname Env.ScopeInformation.SBI_local env in
+	 (pattern.Parsetree.ast_desc, env')
      | Parsetree.P_as  (p, vname) ->
 	 let (scoped_p, env') = scope_pattern ctx env p in
 	 let env'' =
@@ -963,7 +966,9 @@ let rec scope_species_fields ctx env = function
 let scope_species_param ctx env param =
   let new_desc =
     (match param.Parsetree.ast_desc with
-     | Parsetree.SP expr -> Parsetree.SP (scope_expr ctx env expr)) in
+     | Parsetree.SP expr ->
+	 (* [Unsure] If applied to a "is" param then exprs here can only be idents representing species_name ! *)
+	 Parsetree.SP (scope_expr ctx env expr)) in
   { param with Parsetree.ast_desc = new_desc }
 ;;
 
@@ -1101,7 +1106,7 @@ let scope_species_params_types ctx env params =
 	     (* The parameter is a collection (indeed, that's its *)
 	     (* type). Because collections and species are not    *)
 	     (* first-class-value, the environment extention will *)
-	     (* not be done at the "values" level.                *)
+	     (* Not be done at the "values" level.                *)
 	     let (scoped_species_expr, species_methods) =
 	       scope_species_expr ctx env spec_expr in
 	     (* Extend the environment with a "locally defined" collection *)
@@ -1114,11 +1119,19 @@ let scope_species_params_types ctx env params =
 		     Env.ScopeInformation.SPBI_local ;
 		   Env.ScopeInformation.spbi_methods = species_methods }
 		 accu_env in
+	     (* Now, extend the environment with the name *)
+	     (* of the carrier type for this species.     *)
+	     let accu_env'' = 
+	       Env.ScopingEnv.add_type
+		 (Parsetree_utils.name_of_vname param_name)
+		 (Env.ScopeInformation.TBI_defined_in ctx.current_unit)
+		 accu_env' in
+	     (* Now, scope the kind of the parameter. *)
 	     let scoped_param_kind = {
 	       param_kind with
 	         Parsetree.ast_desc = Parsetree.SPT_is scoped_species_expr } in
 	     let scoped_param = (param_name, scoped_param_kind) in
-	     ((scoped_param :: accu_params_revd), accu_env')
+	     ((scoped_param :: accu_params_revd), accu_env'')
 	     end))
       ([], env)
       params in

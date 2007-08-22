@@ -18,9 +18,9 @@ module ScopeInformation :
       | TBI_builtin_or_var
       | TBI_defined_in of Types.fname
 
-  type species_scope =
-    | SPBI_file of Types.fname
-    | SPBI_local
+    type species_scope =
+      | SPBI_file of Types.fname
+      | SPBI_local
 
   type species_binding_info = {
     spbi_methods : Parsetree.vname list ;

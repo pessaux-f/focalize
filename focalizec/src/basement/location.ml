@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: location.ml,v 1.1 2007-08-15 17:00:01 pessaux Exp $ *) 
+(* $Id: location.ml,v 1.2 2007-08-22 14:17:08 pessaux Exp $ *) 
 
 type position = Lexing.position = {
   pos_fname : string ;
@@ -27,6 +27,13 @@ type t = {
  l_beg : position ;
  l_end : position
 } ;;
+
+
+let none =
+  let pos_none =
+    { pos_fname = "" ; pos_lnum = 0 ; pos_bol = 0 ; pos_cnum = 0 } in
+  { l_beg = pos_none ; l_end = pos_none }
+ ;;
 
 
 let pp_location ppf { l_beg = l_beg ; l_end = l_end } =

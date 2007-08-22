@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: location.mli,v 1.1 2007-08-15 17:00:01 pessaux Exp $ *) 
+(* $Id: location.mli,v 1.2 2007-08-22 14:17:08 pessaux Exp $ *) 
 
 type position = Lexing.position = {
   pos_fname : string ;
@@ -28,5 +28,5 @@ type t = {
 (** The location of an AST node,
     beginning and ending position of its corresponding source text. *)
 
-
+val none : t
 val pp_location : Format.formatter -> t -> unit
