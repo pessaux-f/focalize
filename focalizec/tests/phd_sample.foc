@@ -24,4 +24,14 @@ species Setoid_produit (A is Setoid, B is Setoid) inherits Setoid =
 	B!( = ) (scnd (x), scnd (y))) ;
   let creer (x, y) = basics#crp (x, y) ;
   let element = Self!creer (A!element, B!element) ;
+  let print (x) =
+     sc ("(",
+	 sc (A!print (first (x)),
+	     sc (",",
+		 sc (B!print (scnd (x)),
+		     ")")))) ;
+
+  proof of refl = by definition of ( = ) ;
+
+  proof of symm = assumed ;
 end ;;

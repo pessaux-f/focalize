@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.30 2007-08-22 14:17:08 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.31 2007-08-22 15:43:40 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -250,7 +250,7 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
 	 Types.type_tuple tys
      | Parsetree.RTE_paren inner -> typecheck_rep_type_def ctx env inner) in
   (* Store the type information in the expression's node. *)
-  rep_type_def.Parsetree.ast_type <- Some final_ty;
+  rep_type_def.Parsetree.ast_type <- Some final_ty ;
   final_ty
 ;;
 
@@ -1042,7 +1042,7 @@ and typecheck_theorem_def ctx env theorem_def =
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
 and typecheck_species_fields ctx env = function
-  | [] -> []
+  | [] -> ([], ctx)
   | field :: rem_fields ->
       let (fields_tys, new_ctx, new_env) =
 	(begin
@@ -1173,7 +1173,7 @@ and typecheck_species_fields ctx env = function
 	     failwith "T9"
 	     end)
 	end) in
-      let rem_fields_tys =
+      let (rem_fields_tys, final_ctx) =
 	typecheck_species_fields new_ctx new_env rem_fields in
       (* Make sure that method names are not *)
       (* bound several times in the species. *)
@@ -1183,7 +1183,7 @@ and typecheck_species_fields ctx env = function
 	 | Some n -> n) in
       ensure_methods_uniquely_defined
 	current_species fields_tys rem_fields_tys ;
-      fields_tys @ rem_fields_tys
+      ((fields_tys @ rem_fields_tys), final_ctx)
 ;;
 
 
@@ -1518,9 +1518,7 @@ let typecheck_species_def_params ctx env species_name species_params =
 	     (* we will bind it in the species environment under  *)
 	     (* an internal name to be able to denote it in the   *)
 	     (* type of the application.                          *)
-	     (* This internal name is the name of the parameter   *)
-	     (* with a space character before. Hence, we are sure *)
-	     (* that it will not conflict with anyone else.       *)
+	     (* This internal name is the name of the parameter.  *)
 	     let param_description = {
 	       Env.TypeInformation.spe_is_collection = false ;
 	       Env.TypeInformation.spe_sig_params = [] ;
@@ -1535,11 +1533,10 @@ let typecheck_species_def_params ctx env species_name species_params =
 		 param_name_as_string param_description accu_env in
 	     (* Create the carrier type of the parameter *)
              (* and extend the current environment.      *)
-	     let internal_cname = " " ^ param_name_as_string in
 	     Types.begin_definition () ;
 	     let param_carrier_ty =
 	       Types.type_rep_species ~species_module: ctx.current_unit
-		 ~species_name: internal_cname in
+		 ~species_name: param_name_as_string in
 	     Types.end_definition () ;
 	     let param_carrier_ty_description = {
 	       Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
@@ -1554,7 +1551,7 @@ let typecheck_species_def_params ctx env species_name species_params =
 	     (* And now, build the species type of the application. *)
 	     let (accu_env''', rem_spe_params, rem_ty) =
 	       rec_typecheck_params accu_env'' rem in
-	     let type_coll = (ctx.current_unit, internal_cname) in
+	     let type_coll = (ctx.current_unit, param_name_as_string) in
 	     let application_species_type =
 	       Types.type_species_is
 		 (param_name_as_string, type_coll) rem_ty  in
@@ -1563,7 +1560,7 @@ let typecheck_species_def_params ctx env species_name species_params =
 		 (vname,
 		  (Types.type_species_interface
 		     ~species_module: ctx.current_unit
-		     ~species_name: internal_cname)) in
+		     ~species_name: param_name_as_string)) in
 	     (* Finally, we return the fully extended environment and *)
 	     (* the type of the species application we just built.    *)
 	     (accu_env''', (current_spe_param:: rem_spe_params),
@@ -1888,8 +1885,9 @@ let typecheck_species_def ctx env species_def =
     extend_env_with_inherits
       ctx env_with_species_params
       species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc in
-  (* Now infer the types of the current field's.*)
-  let methods_info =
+  (* Now infer the types of the current field's and recover *)
+  (* the context  where we may know the shape of [repr].    *)
+  let (methods_info, ctx') =
     typecheck_species_fields
       ctx env_with_inherited_methods species_def_desc.Parsetree.sd_fields in
   (* Then one must ensure that each method has the same type everywhere *)
@@ -1897,7 +1895,7 @@ let typecheck_species_def ctx env species_def =
   (* form of the species.                                               *)
   let normalized_methods =
     normalize_species
-      ~loc: species_def.Parsetree.ast_loc ctx methods_info
+      ~loc: species_def.Parsetree.ast_loc ctx' methods_info
       inherited_methods_infos in
   (* Let's build our "type" information. Since we are managing a species *)
   (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
@@ -1916,7 +1914,7 @@ let typecheck_species_def ctx env species_def =
   Types.begin_definition () ;
   let species_carrier_type =
     Types.type_rep_species
-      ~species_module: ctx.current_unit
+      ~species_module: ctx'.current_unit
       ~species_name: species_def_desc.Parsetree.sd_name in
   Types.end_definition () ;
   let species_as_type_description = {

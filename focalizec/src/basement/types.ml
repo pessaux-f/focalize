@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.13 2007-08-22 14:17:08 pessaux Exp $ *)
+(* $Id: types.ml,v 1.14 2007-08-22 15:43:40 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -617,7 +617,15 @@ let unify ~loc ~self_manifest type1 type2 =
 	      (* Always return Self to keep abstraction ! *)
 	      ty1.ts_link_value <- TLV_known ty2
 	 end)
-     | ((ST_species_rep _), _) | (_, (ST_species_rep _)) -> failwith "todo9"
+     | ((ST_species_rep c1), (ST_species_rep c2)) ->
+	 (begin
+	 if c1 = c2 then
+	   (begin
+	   lowerize_levels ty1.ts_level ty2 ;
+	   ty1.ts_link_value <- TLV_known ty2
+	   end)
+	 else raise (Conflict (ty1, ty2, loc))
+	 end)
      | (_, _) -> raise (Conflict (ty1, ty2, loc)) in
   (* Now, let's work... *)
   rec_unify type1 type2
