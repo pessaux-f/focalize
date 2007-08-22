@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.57 2007-08-16 15:04:00 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.58 2007-08-22 16:25:58 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -683,6 +683,10 @@ simple_expr:
     { mk (E_constr (mk_global_constr_expr $1 (Vuident $3), [])) }
   | opt_lident SHARP UIDENT LPAREN expr_comma_list RPAREN
     { mk (E_constr (mk_global_constr_expr $1 (Vuident $3), $5)) }
+  | UIDENT %prec prec_constant_constructor
+    { mk (E_constr (mk_global_constr_expr None (Vuident $1), [])) }
+  | UIDENT LPAREN expr_comma_list RPAREN
+    { mk (E_constr (mk_global_constr_expr None (Vuident $1), $3)) }
   | simple_expr DOT label_name
     { mk (E_record_access ($1, $3)) }
   | LBRACE record_field_list RBRACE

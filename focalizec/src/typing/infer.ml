@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.32 2007-08-22 16:05:58 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.33 2007-08-22 16:25:58 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1208,23 +1208,21 @@ and typecheck_species_fields ctx env = function
 let rec typecheck_expr_collection_ident_for_is_param ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
    | Parsetree.E_self -> failwith "Self cannot be parametrized by itself)."
-   | Parsetree.E_var ident ->
+   | Parsetree.E_constr (cstr_expr, []) ->
+       (* We re-construct a fake ident from the constructor expression *)
+       (* just to be able to lookup inside the environment.            *)
+       let Parsetree.CE (id_opt_fname, id_vname) =
+	 cstr_expr.Parsetree.ast_desc in
+       let pseudo_ident = { cstr_expr with
+         Parsetree.ast_desc = Parsetree.I_global (id_opt_fname, id_vname) } in
        let descr =
 	 Env.TypingEnv.find_species
-	   ~loc: ident.Parsetree.ast_loc
-	 ~current_unit: ctx.current_unit ident env in
-       let cname =
-	 (match ident.Parsetree.ast_desc with
-	  | Parsetree.I_local vname
-	  | Parsetree.I_global (None, vname) ->
-	      (ctx.current_unit, (Parsetree_utils.name_of_vname vname))
-	  | Parsetree.I_global ((Some fname), vname) ->
-	      (fname, (Parsetree_utils.name_of_vname vname))
-	  | Parsetree.I_method (_, _) ->
-	      (* Species are not first class value, then  *)
-	      (* they can't be returned by a method call. *)
-	      assert false) in
-       (cname, descr)
+	   ~loc: pseudo_ident.Parsetree.ast_loc
+	 ~current_unit: ctx.current_unit pseudo_ident env in
+       let id_effective_name =
+	 (match id_opt_fname with None -> ctx.current_unit | Some n -> n) in
+       (* We return the "collection type", and the collection's description. *)
+       ((id_effective_name, (Parsetree_utils.name_of_vname id_vname)), descr)
    | Parsetree.E_paren expr ->
        typecheck_expr_collection_ident_for_is_param ctx env expr
    | _ -> failwith "is parameter can only be a collection identifier"

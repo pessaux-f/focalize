@@ -503,8 +503,10 @@ Les expressions de paramètre lors d'une application d'espèce sont soit :
                              LES CAS. IL FAUDRA SEULEMENT FAIRE ATTENTION QUE
                              POUR LES EXPRESSIONS UTILISÉES DANS LE CADRE D'UN
                              is, ON DEVRA S'ASSURER QUE CETTE EXPRESSION EST
-                             BIEN UN ident ET ALLER LE CHERCHER DANS L'ENVT
-                             DES ESPÈCES ET NON DES VALUES.
+                             BIEN UN E_constr (EH OUI, LES NOMS DE COLLECTION
+                             SONT MAJUSCULÉS ET DONC CE SERA PARSÉ COMME UN
+                             CONSTRUCTEUR DE TYPE SOMME) ET ALLER LE CHERCHER
+                             DANS L'ENVT DES ESPÈCES ET NON DES VALUES.
 Le record ci-dessus ne permet pas d'exprimer cela.
 
 

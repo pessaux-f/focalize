@@ -27,10 +27,15 @@ let doudou in #inv_prod (int , string) = ("gee", 42) ;;  (* ... et pas là ? *)
 type t = | A | B ;;
 #A ;;
 #B ;;
+A ;;
+B;;
 type option ('a) = | None | Some ('a) ;;
 #None ;;
 let u = #None ;;
+let uu = None ;;
+let uuu = Some (42) ;;
 #Some (4) ;;
+#Some ("jgjg") ;;
 let v = #Some ("kikoo") ;;
 let v = #Some (#Some (true)) ;;
 type daube ('a, 'b) = | Glop ('a) | Pasglop ('b) ;;
