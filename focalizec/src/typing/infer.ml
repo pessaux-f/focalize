@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.33 2007-08-22 16:25:58 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.34 2007-08-23 08:10:39 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1198,14 +1198,14 @@ and typecheck_species_fields ctx env = function
               the species environment.
               Because the AST structure cannot know a priori (i.e at parsing
               stage) is the expression used as argument will be the one of a
-              "is" or a "in" argument, the {expr] rule is sufficiently
+              "is" or a "in" argument, the [expr] rule is sufficiently
               general to absorbe any possible expression, ... but is also
               too large. Hence we perfom this check afterward, during the
               typing stage.
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-let rec typecheck_expr_collection_ident_for_is_param ctx env initial_expr =
+let rec typecheck_expr_collection_cstr_for_is_param ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
    | Parsetree.E_self -> failwith "Self cannot be parametrized by itself)."
    | Parsetree.E_constr (cstr_expr, []) ->
@@ -1218,13 +1218,13 @@ let rec typecheck_expr_collection_ident_for_is_param ctx env initial_expr =
        let descr =
 	 Env.TypingEnv.find_species
 	   ~loc: pseudo_ident.Parsetree.ast_loc
-	 ~current_unit: ctx.current_unit pseudo_ident env in
+	   ~current_unit: ctx.current_unit pseudo_ident env in
        let id_effective_name =
 	 (match id_opt_fname with None -> ctx.current_unit | Some n -> n) in
        (* We return the "collection type", and the collection's description. *)
        ((id_effective_name, (Parsetree_utils.name_of_vname id_vname)), descr)
    | Parsetree.E_paren expr ->
-       typecheck_expr_collection_ident_for_is_param ctx env expr
+       typecheck_expr_collection_cstr_for_is_param ctx env expr
    | _ -> failwith "is parameter can only be a collection identifier"
 ;;
 
@@ -1323,11 +1323,13 @@ let unnamed ctx env base_spe_descr params =
 	   | Env.TypeInformation.SPAR_is (f_name, f_sp_ty) ->
 	       (* Get the argument species expression signature and methods. *)
 	       (* Note that to be well-typed this expression must ONLY be    *)
-	       (* an [ident] that should be considered as a species name !   *)
-               (* C.f. Virgile Prevosto's Phd, section 3.8, page 43.         *)
+	       (* an [E_constr] (because species names are capitalized,      *)
+               (* parsed as sum type constructors) that should be considered *)
+               (* as a species name. C.f. Virgile Prevosto's Phd, section    *)
+               (* 3.8, page 43.                                              *)
                (* Rule [COLL-INST].                                          *)
 	       let (c2, expr_sp_description) = (* The c2 of Virgile's Phd. *)
-		 typecheck_expr_collection_ident_for_is_param
+		 typecheck_expr_collection_cstr_for_is_param
                    ctx env e_param_expr in
 (* Beuhhhhhhhhhhhhhhhhh ! Tmp. *)
 	       let c1 = Types.__dirty_extract_coll_name f_sp_ty in

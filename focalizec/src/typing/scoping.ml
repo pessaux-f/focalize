@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.18 2007-08-22 14:17:08 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.19 2007-08-23 08:10:39 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -415,8 +415,28 @@ let rec scope_expr ctx env expr =
 	 let scoped_args = List.map (scope_expr ctx env) args_exprs in
 	 Parsetree.E_app (scoped_fun_expr, scoped_args)
      | Parsetree.E_constr (cstr_expr, args_exprs) ->
+	 (begin
+	 (* First, re-construct a fake [ident] to be able *)
+	 (* to look-up inside the values environment.     *)
+         let basic_vname =
+	   (match cstr_expr.Parsetree.ast_desc with Parsetree.CE (_, n) -> n) in
+         let pseudo_ident =
+           let Parsetree.CE (fname_opt, vname) = cstr_expr.Parsetree.ast_desc in
+	   { Parsetree.ast_loc = cstr_expr.Parsetree.ast_loc ;
+             Parsetree.ast_desc = Parsetree.I_global (fname_opt, vname) ;
+	     Parsetree.ast_doc = cstr_expr.Parsetree.ast_doc ;
+	     Parsetree.ast_type = None } in
+         let cstr_hosting_info =
+	   Env.ScopingEnv.find_constructor
+	     ~loc: cstr_expr.Parsetree.ast_loc
+	     ~current_unit: ctx.current_unit pseudo_ident env in
+         let scoped_cstr = { cstr_expr with
+	   Parsetree.ast_desc =
+	     Parsetree.CE ((Some cstr_hosting_info), basic_vname) } in
+	 (* Now, scopes the arguments. *)
 	 let scoped_args = List.map (scope_expr ctx env) args_exprs in
-	 Parsetree.E_constr (cstr_expr, scoped_args)
+	 Parsetree.E_constr (scoped_cstr, scoped_args)
+	 end)
      | Parsetree.E_match (e, pats_exprs) ->
 	 let scoped_e = scope_expr ctx env e in
 	 (* No scoping environment extention because bindings  *)
@@ -962,13 +982,47 @@ let rec scope_species_fields ctx env = function
 ;;
 
 
+let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
+  match initial_expr.Parsetree.ast_desc with
+   | Parsetree.E_self -> failwith "Self cannot be parametrized by itself)."
+   | Parsetree.E_constr (cstr_expr, []) ->
+       (* We re-construct a fake ident from the constructor expression *)
+       (* just to be able to lookup inside the environment.            *)
+       let Parsetree.CE (id_opt_fname, id_vname) =
+	 cstr_expr.Parsetree.ast_desc in
+       let pseudo_ident = { cstr_expr with
+         Parsetree.ast_desc = Parsetree.I_global (id_opt_fname, id_vname) } in
+       let species_info =
+	 Env.ScopingEnv.find_species
+	   ~loc: pseudo_ident.Parsetree.ast_loc
+	   ~current_unit: ctx.current_unit pseudo_ident env in
+       (* Recover the hosting file of the species. If the species is     *)
+       (* local, then the hosting ffile is the current compilation unit. *)
+       let hosting_file =
+	 (match species_info.Env.ScopeInformation.spbi_scope with
+	  | Env.ScopeInformation.SPBI_file n -> n
+	  | Env.ScopeInformation.SPBI_local -> ctx.current_unit) in
+       let scoped_cstr_expr = {
+	 cstr_expr with
+           Parsetree.ast_desc = Parsetree.CE (Some hosting_file, id_vname) } in
+       { initial_expr with
+           Parsetree.ast_desc = Parsetree.E_constr (scoped_cstr_expr, []) }
+   | Parsetree.E_paren expr ->
+       scope_expr_collection_cstr_for_is_param ctx env expr
+   | _ -> failwith "is parameter can only be a collection identifier"
+;;
+
+
 
 let scope_species_param ctx env param =
   let new_desc =
     (match param.Parsetree.ast_desc with
      | Parsetree.SP expr ->
-	 (* [Unsure] If applied to a "is" param then exprs here can only be idents representing species_name ! *)
-	 Parsetree.SP (scope_expr ctx env expr)) in
+	 (* Note that to be well-typed this expression must ONLY be an *)
+	 (* [E_constr] (because species names are capitalized, parsed  *)
+         (* as sum type constructors) that should be considered as a   *)
+         (* species name.                                              *)
+	 Parsetree.SP (scope_expr_collection_cstr_for_is_param ctx env expr)) in
   { param with Parsetree.ast_desc = new_desc }
 ;;
 
