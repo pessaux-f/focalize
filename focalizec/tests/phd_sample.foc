@@ -48,9 +48,11 @@ species Monoide_produit (A is Monoide, B is Monoide)
 	  B!( * ) (scnd (x), scnd (y))) ;
 end ;;
 
+(*
 species Entiers inherits Monoide =
   rep = int ;
 
   let un = 1 ;
   let ( * ) = basics#int_mult ;
 end ;;
+*)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.10 2007-08-22 14:17:08 pessaux Exp $ *)
+(* $Id: types.mli,v 1.11 2007-08-23 13:27:30 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -48,7 +48,9 @@ exception Arity_mismatch of (type_name * int * int * Location.t)
   (** A functional type constructor has been used with the wrong number of
   arguments. The exception carries on the name of the type and the conflicting
   arities. *)
-;;
+
+exception Species_type_not_atomic of type_species
+exception Species_type_not_parametrized of type_species
 
 val begin_definition : unit -> unit
 val end_definition : unit -> unit
@@ -84,14 +86,13 @@ val type_species_in :
 val type_species_is :
   (collection_name * type_collection) -> type_species -> type_species
 
-val __dirty_extract_coll_name : type_species -> (fname * species_name)
-val ___dirty_chop_type_species : type_species -> type_species
+val apply_type_species :
+  fct: type_species -> arg: type_species -> type_collection * type_species
 
-val subst_type_simple :
-  (fname * collection_name) -> (fname * collection_name) -> type_simple ->
+
+val subst_type_simple : type_collection -> type_collection -> type_simple ->
     type_simple
-val subst_type_species :
-  (fname * species_name) -> (fname * species_name) -> type_species ->
+val subst_type_species : type_collection -> type_collection -> type_species ->
     type_species
 
 (** Manipulation of type schemes: generalization, instanciation, generation of
@@ -114,3 +115,4 @@ val unify :
 val pp_type_simple : Format.formatter -> type_simple -> unit
 val pp_type_scheme : Format.formatter -> type_scheme -> unit
 val pp_type_species : Format.formatter -> type_species -> unit
+val pp_type_collection : Format.formatter -> type_collection -> unit

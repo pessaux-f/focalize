@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.35 2007-08-23 09:22:32 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.36 2007-08-23 13:27:30 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -38,8 +38,7 @@ exception Bad_sum_type_constructor_arity of
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
 exception Unbound_type_variable of
-  (** The name of the unbound variable. *)
-  string
+  string    (** The name of the unbound variable. *)
 ;;
 
 
@@ -68,6 +67,123 @@ exception Bad_type_arity of
    int *               (** The expected arity. *)
    int)                (** The arity the constructor was used with. *)
 ;;
+
+
+
+(* ********************************************************************* *)
+(** {b Descr} : Exception raised when "rep" is defined several times in
+              the same species or when it is defined several time during
+	      the inheritance.
+
+    {b Rem} : Exported outside this module.                              *)
+(* ********************************************************************* *)
+exception Rep_multiply_defined of Location.t ;;
+
+
+
+(* *********************************************************************** *)
+(** {b Descr} : Exception raised when Self appears as a species identifier
+              used in a [species_expr] that is a parameter of the current
+	      defined species.
+
+    {b Rem} : Exported outside this module.                                *)
+(* *********************************************************************** *)
+exception Self_cant_parametrize_itself of Location.t ;;
+
+
+
+(* ******************************************************************* *)
+(** {b Descr} : During subspecies relation checking, a field was found
+              with 2 incompatible types.
+
+    {b Rem} : Exported outside this module.                            *)
+(* ******************************************************************* *)
+exception Not_subspecies_conflicting_field of
+  ((** The collection name that should be a subspecies of the one below. *)
+   Types.type_collection *
+   (** The collection name that should be an overspecies of the one above. *)
+   Types.type_collection *
+   Parsetree.vname *     (** Name of the field. *)
+   Types.type_simple *   (** First subpart of type found for this field. *)
+   Types.type_simple *   (** Second subpart of type found for this field. *)
+   Location.t)           (** Related location when the error occured. *)
+;;
+
+
+
+(* ******************************************************************* *)
+(** {b Descr} : During subspecies relation checking, a field was found
+              with 2 types that can't be unified because one of them
+              occurs in the other.
+
+    {b Rem} : Exported outside this module.
+              Note that I can't really see how this coudl happen...    *)
+(* ******************************************************************* *)
+exception Not_subspecies_circular_field of
+  ((** The collection name that should be a subspecies of the one below. *)
+   Types.type_collection *
+   (** The collection name that should be an overspecies of the one above. *)
+   Types.type_collection *
+   Parsetree.vname *     (** Name of the field. *)
+   Types.type_simple *   (** First subpart of type found for this field. *)
+   Types.type_simple *   (** Second subpart of type found for this field. *)
+   Location.t)           (** Related location when the error occured. *)
+;;
+
+
+
+(* ******************************************************************* *)
+(** {b Descr} : During subspecies relation checking, a field was found
+              with 2 types that can't be unified because they do not
+              respect the correct type constructor arity.
+
+    {b Rem} : Exported outside this module.
+              Note that I can't really see how this coudl happen...    *)
+(* ******************************************************************* *)
+exception Not_subspecies_arity_mismatch of
+  ((** The collection name that should be a subspecies of the one below. *)
+   Types.type_collection *
+   (** The collection name that should be an overspecies of the one above. *)
+   Types.type_collection *
+   Parsetree.vname *    (** Name of the field. *)
+   Types.type_name *    (** Name of the type constructor. *)
+   int *                (** First arity the type constructor was used with. *)
+   int *                (** Second arity the type constructor was used with. *)
+    Location.t)         (** Related location when the error occured. *)
+;;
+
+
+
+(* ******************************************************************* *)
+(** {b Descr} : During subspecies relation checking, a field was not
+              found in the species signature that is considered as the
+              subspecies.
+
+    {b Rem} : Exported outside this module.                            *)
+(* ******************************************************************* *)
+exception Not_subspecies_missing_field of
+  ((** The collection name that should be a subspecies of the one below. *)
+   Types.type_collection *
+   (** The collection name that should be an overspecies of the one above. *)
+   Types.type_collection *
+   Parsetree.vname *     (** Field name that was not found. *)
+   Location.t)           (** Related location when the error occured. *)
+;;
+
+
+
+(* ************************************************************************ *)
+(** {b Descr} : Exception raised when an expression used to represent the
+              value of a "is" species parameter is not a collection
+	      identifier. 
+	      This is detected by the fact that the [expr] found in the
+              AST is not an [E_constr]. In effect, because the parser uses
+              the rule [expr], collection names being capitalized, they
+              must be parsed as sum types constructors with no argument.
+
+    {b Rem} : Exported outside this module.                                 *)
+(* ************************************************************************ *)
+exception Is_parameter_only_coll_ident of Location.t ;;
 
 
 
@@ -1017,6 +1133,14 @@ and typecheck_statement ctx env statement =
 
 
 
+(* ********************************************************************** *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.theorem_def ->          *)
+(*  Types.type_simple                                                     *)
+(** {b Descr } : Typechecks a theorem definition, records its type inside
+               the AST node and returns this type.
+
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
 and typecheck_theorem_def ctx env theorem_def =
   let ty =
     typecheck_prop ctx env theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
@@ -1065,7 +1189,7 @@ and typecheck_species_fields ctx env = function
 	     (* Before modifying the context, just check that no "rep" *)
              (* was previously identified. If some, then fails.        *)
 	     if ctx.self_manifest <> None then
-	       failwith "(1) rep must not de defined several times in the inheritance" ;
+	       raise (Rep_multiply_defined field.Parsetree.ast_loc) ;
 	     let ctx' = { ctx with self_manifest = Some ty } in
 	     (* Record the type information in the AST node. *)
 	     field.Parsetree.ast_type <- Some ty ;
@@ -1211,7 +1335,8 @@ and typecheck_species_fields ctx env = function
 (* ************************************************************************* *)
 let rec typecheck_expr_collection_cstr_for_is_param ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
-   | Parsetree.E_self -> failwith "Self cannot be parametrized by itself)."
+   | Parsetree.E_self ->
+       raise (Self_cant_parametrize_itself initial_expr.Parsetree.ast_loc)
    | Parsetree.E_constr (cstr_expr, []) ->
        (* We re-construct a fake ident from the constructor expression *)
        (* just to be able to lookup inside the environment.            *)
@@ -1229,7 +1354,7 @@ let rec typecheck_expr_collection_cstr_for_is_param ctx env initial_expr =
        ((id_effective_name, (Parsetree_utils.name_of_vname id_vname)), descr)
    | Parsetree.E_paren expr ->
        typecheck_expr_collection_cstr_for_is_param ctx env expr
-   | _ -> failwith "is parameter can only be a collection identifier"
+   | _ -> raise (Is_parameter_only_coll_ident initial_expr.Parsetree.ast_loc)
 ;;
 
 
@@ -1272,7 +1397,24 @@ let abstraction cname fields =
 ;;
 
 
-let is_sub_species_of ~loc ctx s1 s2 =
+
+(* ********************************************************************* *)
+(* loc: Location.t -> typing_context ->                                  *)
+(*   name_should_be_sub_spe: Types.type_collection ->                    *)
+(*     Env.TypeInformation.species_field list ->                         *)
+(*       name_should_be_over_spe: Types.type_collection ->               *)
+(*         Env.TypeInformation.species_field list -> unit                *)
+(** {b Descr} : Check that [s1] is a subspecies of [s2]. This means that
+              for all (v, sc) in s2,
+                ex (v, sc') in s1 and sc = sc'.
+              Hence, signature [s1] is "richer" than [s2].
+              The names of the 2 engaged species are provided for error
+              reporting purposes.
+
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
+let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
+    ~name_should_be_over_spe s2 =
   let local_flat_fields fields =
     List.fold_right
       (fun field accu ->
@@ -1286,9 +1428,9 @@ let is_sub_species_of ~loc ctx s1 s2 =
   let flat_s1 = local_flat_fields s1 in
   let flat_s2 = local_flat_fields s2 in
   (* Check that for all (v, sc) in s2, ex (v, sc') in s1 and sc = sc'. *)
-  let status =
-    List.for_all
-      (fun (v2, sc2) ->
+  List.iter
+    (fun (v2, sc2) ->
+      let found =
 	List.exists
 	  (fun (v1, sc1) ->
 	    if v1 = v2 then
@@ -1296,24 +1438,58 @@ let is_sub_species_of ~loc ctx s1 s2 =
 	      Types.begin_definition () ;
 	      let ty1 = Types.specialize sc1 in
 	      let ty2 = Types.specialize sc2 in
-	      Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
-	      Types.end_definition () ;
+	      (begin
+	      (* We try to translate type errors into *)
+	      (* more significant error messages.     *)
+	      try Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2
+	      with
+	      | Types.Conflict (ty1, ty2, _) ->
+		  raise
+		    (Not_subspecies_conflicting_field
+		       (name_should_be_sub_spe, name_should_be_over_spe, v1,
+			ty1, ty2, loc))
+	      | Types.Circularity (ty1, ty2, _) ->
+		  (* Mostly improbable ! *)
+		  raise
+		    (Not_subspecies_circular_field
+		       (name_should_be_sub_spe, name_should_be_over_spe, v1,
+			ty1, ty2, loc))
+	      | Types.Arity_mismatch (ty_name, ar1, ar2, _) ->
+		  raise
+		    (Not_subspecies_arity_mismatch
+		       (name_should_be_sub_spe, name_should_be_over_spe, v1,
+			ty_name, ar1, ar2,loc))
+	      end) ;
+		  Types.end_definition () ;
 	      true
 	      end)
 	    else false)
-	  flat_s1)
-      flat_s2 in
-  if not status then failwith "Not subspecies"
+	  flat_s1 in
+      (* Check if we found the same method name than v2 amoung the v1's . *)
+      (* Note that if 2 fields with the same name were found, then either *)
+      (* they can be unified, hence [found = true], or the unification    *)
+      (* failed, hence we can't be here, since an exception will abort    *)
+      (* the computation !                                                *)
+      if not found then
+	raise
+	  (Not_subspecies_missing_field
+	     (name_should_be_sub_spe, name_should_be_over_spe, v2, loc)))
+      flat_s2
 ;;
 
 
 
-(* [unsure]. To be the function managing arguments in species applications. *)
+(* *********************************************************************** *)
 (* typing_context -> Env.TypingEnv.t ->                                    *)
 (*   Env.TypeInformation.species_description -> Parsetree.species_param -> *)
 (*     (Types.type_species * (Env.TypeInformation.species_field list))     *)
-let unnamed ctx env base_spe_descr params =
-  let rec rec_unnamed accu_sp_ty accu_meths = function
+(** {b Descr} : Function managing application of arguments during species
+              applications in species expressions.
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+let apply_species_arguments ctx env base_spe_descr params =
+  let rec rec_apply accu_sp_ty accu_meths = function
     | ([], []) -> (accu_sp_ty, accu_meths)
     | ((f_param :: rem_f_params), (e_param :: rem_e_params)) ->
 	let (new_sp_ty, new_meths) =
@@ -1335,8 +1511,8 @@ let unnamed ctx env base_spe_descr params =
 	       let (c2, expr_sp_description) = (* The c2 of Virgile's Phd. *)
 		 typecheck_expr_collection_cstr_for_is_param
                    ctx env e_param_expr in
-(* Beuhhhhhhhhhhhhhhhhh ! Tmp. *)
-	       let c1 = Types.__dirty_extract_coll_name f_sp_ty in
+	       let (c1, applied_ty_species) =
+		 Types.apply_type_species ~fct: accu_sp_ty ~arg: f_sp_ty in
 	       let (i1_mod, i1_cname) = c1 in
 	       let i1 = {
 		 Parsetree.ast_loc = Location.none ;
@@ -1354,13 +1530,12 @@ let unnamed ctx env base_spe_descr params =
 	       (* Ensure that i2 <= A(i1, c2). *)
 	       is_sub_species_of
 		 ~loc: e_param.Parsetree.ast_loc ctx
+		 ~name_should_be_sub_spe: c2
 		 expr_sp_description.Env.TypeInformation.spe_sig_methods
+                 ~name_should_be_over_spe: c1
 		 big_A_i1_c2 ;
-	       (* And now checks are done, synthetize the result... *)
-	       (* First, the new species type. *)
-	       let applied_ty_species =
-		 Types.___dirty_chop_type_species accu_sp_ty in
-	       (* And now, the new species type where c1 <- c2. *)
+	       (* And now checks are done, synthetize new species type of *)
+	       (* the result of the application, where c1 <- c2.          *)
 	       let applied_ty_species' =
 		 Types.subst_type_species c1 c2 applied_ty_species in
 	       (* And now, the new methods where c1 <- c2. *)
@@ -1371,10 +1546,10 @@ let unnamed ctx env base_spe_descr params =
 		   accu_meths in
 	       (applied_ty_species', substd_meths)
 	  end) in
-	rec_unnamed new_sp_ty new_meths (rem_f_params, rem_e_params)
+	rec_apply new_sp_ty new_meths (rem_f_params, rem_e_params)
     | (_, _) -> failwith "Bad arity" in
   (* Do the job now. *)
-  rec_unnamed
+  rec_apply
     base_spe_descr.Env.TypeInformation.spe_type_species
     base_spe_descr.Env.TypeInformation.spe_sig_methods
     (base_spe_descr.Env.TypeInformation.spe_sig_params, params)
@@ -1414,20 +1589,13 @@ let typecheck_species_expr ctx env species_expr =
   let species_carrier_type =
     Types.type_rep_species ~species_module ~species_name in
   (* Now, create the "species type" (a somewhat of signature). *)
-
   let (species_type, species_methods) =
-    unnamed
+    apply_species_arguments
       ctx env species_species_description
       species_expr_desc.Parsetree.se_params in
-(*
-  (* [Unsure] *)
-  let species_type =
-    Types.type_species_interface ~species_module ~species_name in
   (* Record the type in the AST node. *)
-*)
   species_expr.Parsetree.ast_type <- Some species_carrier_type ;
-  (species_type, species_methods
-   (*species_species_description.Env.TypeInformation.spe_sig_methods*))
+  (species_type, species_methods)
 ;;
 
 
@@ -1576,7 +1744,8 @@ let typecheck_species_def_params ctx env species_name species_params =
 
 
 (* ********************************************************************** *)
-(* typing_context -> Env.TypingEnv.t -> Parsetree.species_expr list ->    *)
+(* loc: Location.t -> typing_context -> Env.TypingEnv.t ->                *)
+(* Parsetree.species_expr list ->                                         *)
 (*   (Types.type_species list * Env.TypeInformation.species_field list *  *)
 (*    Env.TypingEnv.t * typing_context)                                   *)
 (** {b Descr} : Extends an environment as value bindings with the methods
@@ -1592,7 +1761,7 @@ let typecheck_species_def_params ctx env species_name species_params =
 
     {b Rem} :Not exported outside this module.                            *)
 (* ********************************************************************** *)
-let extend_env_with_inherits ctx env spe_exprs =
+let extend_env_with_inherits ~loc ctx env spe_exprs =
   let rec rec_extend current_ctx current_env revd_accu_species_types
       revd_accu_found_methods = function
     | [] ->
@@ -1621,7 +1790,7 @@ let extend_env_with_inherits ctx env spe_exprs =
 		       (* "rep" was previously identified. If some, then   *)
 		       (* fail.                                            *)
 		       if accu_ctx.self_manifest <> None then
-			 failwith "(2) rep must not de defined several times in the inheritance" ;
+                         raise (Rep_multiply_defined loc) ;
 		       Some (Types.specialize meth_scheme)
                        end)
 		     else accu_ctx.self_manifest) in (* Else, keep unchanged. *)
@@ -1917,7 +2086,7 @@ let typecheck_species_def ctx env species_def =
        env_with_inherited_methods,
        ctx_with_inherited_repr) = 
     extend_env_with_inherits
-      ctx env_with_species_params
+      ~loc: species_def.Parsetree.ast_loc ctx env_with_species_params
       species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc in
   (* Now infer the types of the current field's and recover *)
   (* the context  where we may know the shape of [repr].    *)

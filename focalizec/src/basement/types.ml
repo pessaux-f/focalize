@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.14 2007-08-22 15:43:40 pessaux Exp $ *)
+(* $Id: types.ml,v 1.15 2007-08-23 13:27:30 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -112,17 +112,53 @@ type type_scheme = {
 
 
 
-exception Conflict of (type_simple * type_simple * Location.t)
-  (* Those two types cannot be unified. *)
-;;
-exception Circularity of (type_simple * type_simple * Location.t)
-  (* There is a circularity detected: the first type occurs in the second. *)
-;;
-exception Arity_mismatch of (type_name * int * int  * Location.t)
-  (* A functional type constructor has been used with the wrong number of
-  arguments. The exception carries on the name of the type and the conflicting
-  arities. *)
-;;
+(* *********************************************************************** *)
+(** {Descr} : Exception meaning that the 2 arguments types cannot be
+              unified. The location related to the point where unification
+              occured is provided for error reporting purposes.            *)
+(* *********************************************************************** *)
+exception Conflict of (type_simple * type_simple * Location.t) ;;
+
+
+
+(* ****************************************************************** *)
+(** {Descr} : Exception meaning that a circularity would occur if
+             the unification of these 2 types was performed.
+             In other words, the first type occurs inside the second. *)
+(* ****************************************************************** *)
+exception Circularity of (type_simple * type_simple * Location.t) ;;
+
+
+
+(* ********************************************************************** *)
+(** {Descr} : A functional type constructor has been used with the wrong
+            number of arguments. The exception carries on the name of the
+            type and the conflicting arities.                             *)
+(* ********************************************************************** *)
+exception Arity_mismatch of (type_name * int * int  * Location.t) ;;
+
+
+
+(* *************************************************************** *)
+(** {Descr} : A species signature provided in the functionnal part
+            of an application in a [species_expr] appears not to
+            have parameters. It can hence not be applied.
+            The exception carries on the guilty signature.         *)
+(* *************************************************************** *)
+exception Species_type_not_parametrized of type_species ;;
+
+
+
+(* *************************************************************** *)
+(** {Descr} : A species signature provided in the argument part
+            of an application in a [species_expr] appears to have
+            parameters (i.e. is not "atmoic". It can hence not be
+            used as argument of a species application.
+            The exception carries on the guilty signature.         *)
+(* *************************************************************** *)
+exception Species_type_not_atomic of type_species ;;
+
+
 
 (* ******************************************************************** *)
 (* type_simple -> type_simple                                           *)
@@ -660,18 +696,36 @@ let type_species_is coll_name_n_type species_ty =
 ;;
 
 
-let __dirty_extract_coll_name = function
-  | SPT_species_interface data -> data
-  | SPT_parametrised_in (_, _) -> failwith "__dirty_extract_coll_name 0"
-  | SPT_parametrised_is (_, _) -> failwith "__dirty_extract_coll_name 1"
-;;
 
+(* ******************************************************************** *)
+(* type_species -> type_species -> type_collection * type_species       *)
+(* {b Descr} : Verifies that the argument signature [arg_ty] is a
+              basic species type (i.e. not parametrized). Verifies that
+              the "functionnal" signature [fun_ty] is parametrized.
+             Then extract both the [type_collection] of the argument
+             [arg_ty] and the result signature of the [fun_ty] once
+             an application is done with it.
+             Note that no verification is performed about wether the
+             [arg_ty] is compatible with the negative part of the
+             [fun_ty]. This job is done after, during the inference
+             process in [Infer.apply_species_arguments] by
+             [Infer.is_sub_species_of].
 
-
-let ___dirty_chop_type_species = function
-  | SPT_species_interface data -> failwith "___dirty_chop_type_specie 0"
-  | SPT_parametrised_in ((_, _), ty)
-  | SPT_parametrised_is ((_, _), ty) -> ty
+   {b Rem} : Exported outside this module.                              *)
+(* ******************************************************************** *)
+let apply_type_species ~fct ~arg =
+  let coll_ty =
+    (match arg with
+     | SPT_species_interface data -> data
+     | SPT_parametrised_in (_, _)
+     | SPT_parametrised_is (_, _) -> raise (Species_type_not_atomic arg)) in
+  let res_ty =
+    (match fct with
+     | SPT_species_interface _ ->
+	 raise (Species_type_not_parametrized fct)
+     | SPT_parametrised_in ((_, _), ty)
+     | SPT_parametrised_is ((_, _), ty) -> ty) in
+  (coll_ty, res_ty)
 ;;
 
 
@@ -695,8 +749,7 @@ let subst_type_species (fname1, spe_name1) c2 ty_spe =
 
 
 
-(* (fname * collection_name) -> (fname * collection_name) -> type_simple -> *)
-(*   type_simple                                                            *)
+(* type_collection -> type_collection_name -> type_simple -> type_simple *)
 let subst_type_simple (fname1, spe_name1) c2 =
   let seen = ref [] in
   (* Internal recursive copy same stuff than for [specialize] stuff. *)
@@ -771,3 +824,14 @@ let pp_type_species ppf species_type =
   rec_print 0 ppf species_type
 ;;
 
+
+
+(* ***************************************************************** *)
+(* Format.formatter -> type_collection_name -> unit                  *)
+(** {b Descr} : Pretty prints a collection' type (not carrier type).
+
+    {b Rem} : Exported outside this module.                          *)
+(* ***************************************************************** *)
+let pp_type_collection ppf (coll_module, coll_name) =
+  Format.fprintf ppf "%s#%s" coll_module coll_name
+;;
