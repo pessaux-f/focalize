@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.26 2007-08-20 15:52:28 pessaux Exp $ *)
+(* $Id: env.ml,v 1.27 2007-08-23 14:18:44 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -264,8 +264,8 @@ end ;;
 (* *********************************************************************** *)
 module TypeInformation = struct
   type species_param =
-    | SPAR_in of (Parsetree.vname * Types.type_species)  (* Entity param. *)
-    | SPAR_is of (Parsetree.vname * Types.type_species)  (* Collection param. *)
+    | SPAR_in of (Parsetree.vname * Types.type_collection)  (* Entity param. *)
+    | SPAR_is of (Parsetree.vname * Types.type_collection)  (* Collection param. *)
 
 
   type species_field =
@@ -277,9 +277,7 @@ module TypeInformation = struct
   type species_description = {
     spe_is_collection : bool ;
     spe_sig_params : species_param list ;
-    spe_sig_inher : Types.type_species list ;
-    spe_sig_methods : species_field list ;   (** Method's name, type and body if defined. *)
-    spe_type_species : Types.type_species
+    spe_sig_methods : species_field list    (** Method's name, type and body if defined. *)
     }
 
 
@@ -354,7 +352,7 @@ module TypeInformation = struct
 	     | SPAR_in (a, b) -> ("in", a, b)
 	     | SPAR_is (a, b) -> ("is", a, b)) in
 	  Format.fprintf local_ppf "%a %s %a"
-	    Sourcify.pp_vname vname p_kind_string Types.pp_type_species ty ;
+	    Sourcify.pp_vname vname p_kind_string Types.pp_type_collection ty ;
 	  if rem <> [] then
 	    (begin
 	    Format.fprintf local_ppf ",@ " ;
@@ -363,21 +361,6 @@ module TypeInformation = struct
 	  end) in
     if params = [] then ()
     else Format.fprintf ppf " (@[<1>%a@]) " rec_print params
-
-
-
-  let pp_species_inher ppf inhers =
-    let rec rec_print local_ppf = function
-      | [] -> ()
-      | inher :: rem ->
-	  Format.fprintf local_ppf "%a" Types.pp_type_species inher ;
-	  if rem <> [] then
-	    (begin
-	    Format.fprintf local_ppf ",@ " ;
-	    rec_print local_ppf rem
-	    end) in
-    if inhers = [] then ()
-    else Format.fprintf ppf " @[<1>inherits %a@] " rec_print inhers
 
 
 
@@ -420,9 +403,8 @@ module TypeInformation = struct
       {b Rem} : Exported outside this module.                            *)
   (* ******************************************************************* *)
   let pp_species_description ppf sp_desc =
-    Format.fprintf ppf "%a%a =@\n%aend"
+    Format.fprintf ppf "%a =@\n%aend"
       pp_species_param sp_desc.spe_sig_params
-      pp_species_inher sp_desc.spe_sig_inher
       pp_species_methods sp_desc.spe_sig_methods
 end ;;
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.11 2007-08-23 13:27:30 pessaux Exp $ *)
+(* $Id: types.mli,v 1.12 2007-08-23 14:18:44 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -30,7 +30,6 @@ type fname = string
 type type_simple
 
 type type_scheme
-type type_species
 type type_collection = (fname * collection_name)
 
 (** The exceptions raised by the type-checker. *)
@@ -48,9 +47,6 @@ exception Arity_mismatch of (type_name * int * int * Location.t)
   (** A functional type constructor has been used with the wrong number of
   arguments. The exception carries on the name of the type and the conflicting
   arities. *)
-
-exception Species_type_not_atomic of type_species
-exception Species_type_not_parametrized of type_species
 
 val begin_definition : unit -> unit
 val end_definition : unit -> unit
@@ -79,21 +75,9 @@ val type_rep_species :
 (** Generate the carrier type of the currently analysed species. *)
 val type_self : unit -> type_simple
 
-val type_species_interface :
-  species_module: fname -> species_name: species_name -> type_species
-val type_species_in :
-  (species_name * type_species) -> type_species -> type_species
-val type_species_is :
-  (collection_name * type_collection) -> type_species -> type_species
-
-val apply_type_species :
-  fct: type_species -> arg: type_species -> type_collection * type_species
-
 
 val subst_type_simple : type_collection -> type_collection -> type_simple ->
     type_simple
-val subst_type_species : type_collection -> type_collection -> type_species ->
-    type_species
 
 (** Manipulation of type schemes: generalization, instanciation, generation of
 a (closed) type scheme from a type without unknowns. *)
@@ -114,5 +98,4 @@ val unify :
 (** Pretty_printing for types and type schemes. *)
 val pp_type_simple : Format.formatter -> type_simple -> unit
 val pp_type_scheme : Format.formatter -> type_scheme -> unit
-val pp_type_species : Format.formatter -> type_species -> unit
 val pp_type_collection : Format.formatter -> type_collection -> unit

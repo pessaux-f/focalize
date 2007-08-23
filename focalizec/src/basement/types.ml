@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.15 2007-08-23 13:27:30 pessaux Exp $ *)
+(* $Id: types.ml,v 1.16 2007-08-23 14:18:44 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -71,33 +71,28 @@ and type_simple_desc =
       (type_name * type_simple list)
   | ST_self_rep       (** Carrier type of the currently analysed species. *)
   | ST_species_rep of (fname * collection_name)   (** Carrier type of a collection hosted in the specified module. *)
-
-and type_species =
-  | SPT_species_interface of (fname * species_name)
-      (** Interface of a species:
-	  It could be the list of its method'n'type'n'bodies, i.e.
-	  ((string * type_simple * Parsetree.expr) list) but we don't want
-	  a structural unification. That's not because 2 species have the
-	  same signature that they have the same semantics.
-	  Instead, one will get the type of the species via an environment
-	  using the [species_name] and the [fname] as key. *)
-  | SPT_parametrised_in of ((species_name * type_species) * type_species)
-  | SPT_parametrised_is of ((collection_name * type_collection) * type_species)
-
-and type_collection = (fname *  collection_name)
-    (** Interface of a collection:
-	It could be the list of its method'n'types, i.e.
-	(string * type_simple) list but we don't want
-	a structural unification. That's not because 2 collections have the
-	same signature that they have the same semantics.
-	Instead, one will get the type of the collection via an environment
-	using the [collection_name] and the [fname] as key. *)
 ;;
 
 
 
 (* ************************************************************************ *)
-(* type_scheme                                                              *)
+(** {b Descr} : Interface of a collection. It could be the list of its
+         method'n'types, i.e. (string * type_simple) list but we don't want
+	a structural unification. That's not because 2 collections have the
+	same signature that they have the same semantics.
+	Instead, one will get the type of the collection via an environment
+	using the [collection_name] and the [fname] as key.
+
+    {b Rem} : Exported outside this module.                                 *)
+(* ************************************************************************ *)
+type type_collection =
+  (fname *               (** The "module" hosting the collection' code. *)
+  collection_name)       (** The name of the collection. *)
+;;
+
+
+
+(* ************************************************************************ *)
 (** {b Descr} : Type schemes, i.e. model of types.
               Scheme parameters are silent inside the scheme. In fact, they
               are types in the body with a binding level equals to
@@ -106,8 +101,9 @@ and type_collection = (fname *  collection_name)
     {b Rem} : Exported opaque outside this module.                          *)
 (* ************************************************************************ *)
 type type_scheme = {
-  ts_nb_vars : int ;
-  ts_body : type_simple ;
+  ts_nb_vars : int ;       (** Number of parameters in the scheme. *)
+  ts_body : type_simple    (** Body of the scheme where generalized types
+			       have a level equal to [generic_level]. *)
 } ;;
 
 
@@ -136,27 +132,6 @@ exception Circularity of (type_simple * type_simple * Location.t) ;;
             type and the conflicting arities.                             *)
 (* ********************************************************************** *)
 exception Arity_mismatch of (type_name * int * int  * Location.t) ;;
-
-
-
-(* *************************************************************** *)
-(** {Descr} : A species signature provided in the functionnal part
-            of an application in a [species_expr] appears not to
-            have parameters. It can hence not be applied.
-            The exception carries on the guilty signature.         *)
-(* *************************************************************** *)
-exception Species_type_not_parametrized of type_species ;;
-
-
-
-(* *************************************************************** *)
-(** {Descr} : A species signature provided in the argument part
-            of an application in a [species_expr] appears to have
-            parameters (i.e. is not "atmoic". It can hence not be
-            used as argument of a species application.
-            The exception carries on the guilty signature.         *)
-(* *************************************************************** *)
-exception Species_type_not_atomic of type_species ;;
 
 
 
@@ -668,86 +643,6 @@ let unify ~loc ~self_manifest type1 type2 =
 ;;
 
 
-(* species_name -> type_species *)
-let type_species_interface ~species_module ~species_name =
-  SPT_species_interface (species_module, species_name)
-;;
-
-(* (species_name * type_species) -> type_species -> type_species *)
-let type_species_in species_name_n_type species_ty =
-  SPT_parametrised_in (species_name_n_type, species_ty)
-;;
-
-
-
-(* ********************************************************************* *)
-(* (collection_name * type_collection) -> type_species -> type_species   *)
-(** {b Descr} : Build a "is-parameterized" species type.
-
-    {b Args} :
-      - coll_name_n_type : The couple (name of the parameter, collection
-                         type of the parameter).
-      - species_ty : Type of the parameterized species.
-
-    {b Rem} : Exported outside this module.                              *)
-(* ********************************************************************* *)
-let type_species_is coll_name_n_type species_ty =
-  SPT_parametrised_is (coll_name_n_type, species_ty)
-;;
-
-
-
-(* ******************************************************************** *)
-(* type_species -> type_species -> type_collection * type_species       *)
-(* {b Descr} : Verifies that the argument signature [arg_ty] is a
-              basic species type (i.e. not parametrized). Verifies that
-              the "functionnal" signature [fun_ty] is parametrized.
-             Then extract both the [type_collection] of the argument
-             [arg_ty] and the result signature of the [fun_ty] once
-             an application is done with it.
-             Note that no verification is performed about wether the
-             [arg_ty] is compatible with the negative part of the
-             [fun_ty]. This job is done after, during the inference
-             process in [Infer.apply_species_arguments] by
-             [Infer.is_sub_species_of].
-
-   {b Rem} : Exported outside this module.                              *)
-(* ******************************************************************** *)
-let apply_type_species ~fct ~arg =
-  let coll_ty =
-    (match arg with
-     | SPT_species_interface data -> data
-     | SPT_parametrised_in (_, _)
-     | SPT_parametrised_is (_, _) -> raise (Species_type_not_atomic arg)) in
-  let res_ty =
-    (match fct with
-     | SPT_species_interface _ ->
-	 raise (Species_type_not_parametrized fct)
-     | SPT_parametrised_in ((_, _), ty)
-     | SPT_parametrised_is ((_, _), ty) -> ty) in
-  (coll_ty, res_ty)
-;;
-
-
-
-let subst_type_species (fname1, spe_name1) c2 ty_spe =
-  let rec rec_subst = function
-    | SPT_species_interface (fname, spe_name) ->
-	if fname1 = fname && spe_name1 = spe_name then SPT_species_interface c2
-	else SPT_species_interface (fname, spe_name)
-    | SPT_parametrised_in ((n, ty1), ty2) ->
-	let ty1' = rec_subst ty1 in
-	let ty2' = rec_subst ty2 in
-	SPT_parametrised_in ((n, ty1'), ty2')
-    | SPT_parametrised_is ((n, (coll_fname, coll_name)), ty) ->
-	let ty' = rec_subst ty in
-	if fname1 = coll_fname && spe_name1 = coll_name then
-	  SPT_parametrised_is ((n, c2), ty')
-	else SPT_parametrised_is ((n, (coll_fname, coll_name)), ty') in
-  rec_subst ty_spe
-;;
-
-
 
 (* type_collection -> type_collection_name -> type_simple -> type_simple *)
 let subst_type_simple (fname1, spe_name1) c2 =
@@ -788,40 +683,6 @@ let subst_type_simple (fname1, spe_name1) c2 =
     (* Clean up seen type for further usages. *)
     seen := [] ;
     copy)
-;;
-
-
-
-(* ************************************************************** *)
-(* Format.formatter -> type_species -> unit                       *)
-(** {b Descr} : Pretty prints a species' type (not carrier type).
-
-    {b Rem} : Exported outside this module.                       *)
-(* ************************************************************** *)
-let pp_type_species ppf species_type =
-  let rec rec_print nb_printed_params local_ppf = function
-    | SPT_species_interface (sp_module, sp_name) ->
-	(begin
-	if nb_printed_params > 0 then Format.fprintf local_ppf ") " ;
-	Format.fprintf local_ppf "%s#%s" sp_module sp_name
-	end)
-    | SPT_parametrised_in ((param_name, param_ty), ty) ->
-	(begin
-	if nb_printed_params = 0 then Format.fprintf local_ppf "("
-	else Format.fprintf local_ppf ", " ;
-	Format.fprintf local_ppf "%s in %a%a"
-	  param_name (rec_print 0) param_ty
-	  (rec_print (nb_printed_params + 1)) ty
-	end)
-    | SPT_parametrised_is ((param_name, (param_module, param_ty)), ty) ->
-	(begin
-	if nb_printed_params = 0 then Format.fprintf local_ppf "("
-	else Format.fprintf local_ppf ", " ;
-	Format.fprintf local_ppf "%s in %s#%s%a"
-	  param_name param_module param_ty
-	  (rec_print (nb_printed_params + 1)) ty
-	end) in
-  rec_print 0 ppf species_type
 ;;
 
 

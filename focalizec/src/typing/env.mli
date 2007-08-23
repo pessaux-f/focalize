@@ -32,8 +32,8 @@ module ScopeInformation :
 module TypeInformation :
   sig
     type species_param =
-      | SPAR_in of (Parsetree.vname * Types.type_species)
-      | SPAR_is of (Parsetree.vname * Types.type_species)
+      | SPAR_in of (Parsetree.vname * Types.type_collection)
+      | SPAR_is of (Parsetree.vname * Types.type_collection)
 
   type species_field =
     | SF_sig of (Parsetree.vname * Types.type_scheme)
@@ -43,9 +43,7 @@ module TypeInformation :
     type species_description = {
       spe_is_collection : bool ;
       spe_sig_params : species_param list ;
-      spe_sig_inher : Types.type_species list ;
-      spe_sig_methods : species_field list ;
-      spe_type_species : Types.type_species
+      spe_sig_methods : species_field list
     }
     type constructor_arity = CA_zero | CA_one
     type constructor_description = {

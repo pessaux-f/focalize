@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.8 2007-08-23 13:27:30 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.9 2007-08-23 14:18:44 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -114,14 +114,6 @@ try Check_file.main () with
 	   Sourcify.pp_ident ident expected used
 (* *********************** *)
 (* Species type inference. *)
-     | Types.Species_type_not_parametrized spe_sig ->
-	 Format.fprintf Format.err_formatter
-	   "Species@ signature@ '%a'@ is@ atomic@ but@ was@ used@ as@ parametrized.@."
-	   Types.pp_type_species spe_sig
-     | Types.Species_type_not_atomic spe_sig ->
-	 Format.fprintf Format.err_formatter
-	   "Species@ signature@ '%a'@ is@ parametrized@ but@ was@ used@ as@ argument.@."
-	   Types.pp_type_species spe_sig
      | Infer.Rep_multiply_defined at ->
 	 Format.fprintf Format.err_formatter "Carrier@ 'rep'@ is@ multiply@ defined :@ %a@."
 	   Location.pp_location at
