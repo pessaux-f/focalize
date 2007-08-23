@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.34 2007-08-23 08:10:39 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.35 2007-08-23 09:22:32 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1062,6 +1062,10 @@ and typecheck_species_fields ctx env = function
 	     Types.begin_definition () ;
 	     let ty = typecheck_rep_type_def ctx env rep_type_def in
 	     Types.end_definition () ;
+	     (* Before modifying the context, just check that no "rep" *)
+             (* was previously identified. If some, then fails.        *)
+	     if ctx.self_manifest <> None then
+	       failwith "(1) rep must not de defined several times in the inheritance" ;
 	     let ctx' = { ctx with self_manifest = Some ty } in
 	     (* Record the type information in the AST node. *)
 	     field.Parsetree.ast_type <- Some ty ;
@@ -1574,52 +1578,79 @@ let typecheck_species_def_params ctx env species_name species_params =
 (* ********************************************************************** *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.species_expr list ->    *)
 (*   (Types.type_species list * Env.TypeInformation.species_field list *  *)
-(*    Env.TypingEnv.t)                                                    *)
+(*    Env.TypingEnv.t * typing_context)                                   *)
 (** {b Descr} : Extends an environment as value bindings with the methods
               of the inherited species provided in argument. Methods are
               added in the same order than their hosting species comes
               in the inheritance list. This means that the methods of the
               first inherited species will be deeper in the resulting
               environment.
-              
+              Extends the typing_context if among the inherited methods
+              "rep" is found. In this case, this means that the carrier
+              is manifest and changes the typing_context with its
+              representation.
+
     {b Rem} :Not exported outside this module.                            *)
 (* ********************************************************************** *)
 let extend_env_with_inherits ctx env spe_exprs =
-  let rec rec_extend current_env revd_accu_species_types
+  let rec rec_extend current_ctx current_env revd_accu_species_types
       revd_accu_found_methods = function
-    | [] -> (revd_accu_species_types, revd_accu_found_methods, current_env)
+    | [] ->
+	(revd_accu_species_types, revd_accu_found_methods,
+	 current_env, current_ctx)
     | inh :: rem_inhs ->
 	(* First typecheck the species expression in the initial   *)
         (* (non extended) and recover its methods names and types. *)
 	let (inh_type, inh_species_methods) =
-	  typecheck_species_expr ctx env inh in
-	let env' =
+	  typecheck_species_expr current_ctx env inh in
+	let (env', current_ctx')  =
 	  List.fold_left
-	    (fun accu_env field ->
+	    (fun (accu_env, accu_ctx) field ->
 	      match field with
 	       | Env.TypeInformation.SF_sig (meth_name, meth_scheme)
 	       | Env.TypeInformation.SF_let (meth_name, meth_scheme, _) ->
-		   Env.TypingEnv.add_value meth_name meth_scheme accu_env
+		   let e =
+		     Env.TypingEnv.add_value meth_name meth_scheme accu_env in
+		   (* Now check if we inherited a [rep]. *)
+		   let m_name_as_str =
+		     Parsetree_utils.name_of_vname meth_name in
+		   let manifest =
+		     (if m_name_as_str = "rep" then
+		       (begin
+		       (* Before modifying the context, just check that no *)
+		       (* "rep" was previously identified. If some, then   *)
+		       (* fail.                                            *)
+		       if accu_ctx.self_manifest <> None then
+			 failwith "(2) rep must not de defined several times in the inheritance" ;
+		       Some (Types.specialize meth_scheme)
+                       end)
+		     else accu_ctx.self_manifest) in (* Else, keep unchanged. *)
+		   let c = { accu_ctx with self_manifest = manifest } in
+		   (e, c)
 	       | Env.TypeInformation.SF_let_rec l ->
-		   List.fold_left
-		     (fun internal_accu_env (meth_name, meth_scheme, _) ->
-		       Env.TypingEnv.add_value
-			 meth_name meth_scheme internal_accu_env)
-		     accu_env
-		     l)
-	    current_env
+		   let e =
+		     List.fold_left
+		       (fun internal_accu_env (meth_name, meth_scheme, _) ->
+			 Env.TypingEnv.add_value
+			   meth_name meth_scheme internal_accu_env)
+		       accu_env
+		       l in
+		   (e, accu_ctx))
+	    (current_env, current_ctx)
 	    inh_species_methods in
 	let new_accu_found_methods =
 	  inh_species_methods @ revd_accu_found_methods in
 	let new_accu_species_types = inh_type :: revd_accu_species_types in
-	rec_extend env'
-	  new_accu_species_types new_accu_found_methods rem_inhs in
+	rec_extend
+	  current_ctx' env' new_accu_species_types new_accu_found_methods
+	  rem_inhs in
   (* Now, let's work... The list of the found methods is built reversed *)
   (* for efficiency reason. So reverse it finally before returning so   *)
   (* that deeper inherited methods are in head of the list.             *)
-  let (revd_accu_species_types, revd_found_methods, env') =
-    rec_extend env [] [] spe_exprs in
-  ((List.rev revd_accu_species_types), (List.rev revd_found_methods), env')
+  let (revd_accu_species_types, revd_found_methods, env', ctx') =
+    rec_extend ctx env [] [] spe_exprs in
+  ((List.rev revd_accu_species_types), (List.rev revd_found_methods),
+   env', ctx')
 ;;
 
 
@@ -1879,7 +1910,12 @@ let typecheck_species_def ctx env species_def =
       species_def_desc.Parsetree.sd_params in
   (* We first load the inherited methods in the environment and  *)
   (* get their signatures and methods information by the way.    *)
-  let (inherited_types, inherited_methods_infos, env_with_inherited_methods) = 
+  (* We also get a possibly new context where the fact that Self *)
+  (* is now manifest is unpdated, in case we inherited a [repr]. *)
+  let (inherited_types,
+       inherited_methods_infos,
+       env_with_inherited_methods,
+       ctx_with_inherited_repr) = 
     extend_env_with_inherits
       ctx env_with_species_params
       species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc in
@@ -1887,7 +1923,8 @@ let typecheck_species_def ctx env species_def =
   (* the context  where we may know the shape of [repr].    *)
   let (methods_info, ctx') =
     typecheck_species_fields
-      ctx env_with_inherited_methods species_def_desc.Parsetree.sd_fields in
+      ctx_with_inherited_repr env_with_inherited_methods
+      species_def_desc.Parsetree.sd_fields in
   (* Then one must ensure that each method has the same type everywhere *)
   (* in the inheritance tree and more generaly create the normalised    *)
   (* form of the species.                                               *)
