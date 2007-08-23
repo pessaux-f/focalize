@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.9 2007-08-23 14:18:44 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.10 2007-08-23 15:18:42 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -36,6 +36,9 @@ try Check_file.main () with
 	   "Invalid@ file@ extention@ for@ '%s'.@." fname
      | Sys_error m ->
 	 Format.fprintf Format.err_formatter "System@ error -@ %s.@." m
+     | Configuration.Input_file_already_set ->
+	 Format.fprintf Format.err_formatter
+	   "Input@ file@ name@ is@ already@ set.@."
 (* *********************** *)
 (* Lexing / parsing stage. *)
      | Parse_file.Lex_error (pos_s, pos_e, reason) ->
@@ -117,10 +120,10 @@ try Check_file.main () with
      | Infer.Rep_multiply_defined at ->
 	 Format.fprintf Format.err_formatter "Carrier@ 'rep'@ is@ multiply@ defined :@ %a@."
 	   Location.pp_location at
-     | Infer.Self_cant_parametrize_itself at ->
+     | Scoping.Self_cant_parameterize_itself at ->
 	 Format.fprintf Format.err_formatter
-	   "'Self'@ can't@ be@ parametrized@ by@ itself :@ %a@." Location.pp_location at
-     | Infer.Is_parameter_only_coll_ident at ->
+	   "'Self'@ can't@ be@ parameterized@ by@ itself :@ %a@." Location.pp_location at
+     | Scoping.Is_parameter_only_coll_ident at ->
 	 Format.fprintf Format.err_formatter
 	   "A@ 'is'@ parameter@ can@ only@ be@ a@ collection@ identifier :@ %a@."
 	   Location.pp_location at
@@ -148,6 +151,9 @@ try Check_file.main () with
 	   Types.pp_type_collection c1 Types.pp_type_collection c2
 	   Sourcify.pp_vname field Types.pp_type_collection c1
 	   Location.pp_location at
+     | Infer.Parameterized_species_arity_mismatch msg ->
+	 Format.fprintf Format.err_formatter
+	   "Parameterized@ specie@ is@ applied@ to@ %s@ arguments@."  msg
 (* ********************** *)
 (* The ultimate firewall. *)
      | x ->

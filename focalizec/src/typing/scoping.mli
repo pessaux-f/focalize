@@ -12,10 +12,12 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.mli,v 1.5 2007-08-15 15:25:07 pessaux Exp $ *) 
+(* $Id: scoping.mli,v 1.6 2007-08-23 15:18:42 pessaux Exp $ *) 
 
 exception Multiply_used_module of Types.fname
 exception Module_not_specified_as_used of Types.fname
+exception Self_cant_parameterize_itself of Location.t
+exception Is_parameter_only_coll_ident of Location.t
 
 val scope_file :
   Types.fname -> Parsetree.file -> Parsetree.file * Env.ScopingEnv.t

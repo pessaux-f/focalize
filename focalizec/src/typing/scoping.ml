@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.19 2007-08-23 08:10:39 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.20 2007-08-23 15:18:42 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -74,6 +74,32 @@ exception Multiply_used_module of
 exception Module_not_specified_as_used of
   Types.fname  (** The name of the module not mentioned as "use". *)
 ;;
+
+
+
+(* *********************************************************************** *)
+(** {b Descr} : Exception raised when Self appears as a species identifier
+              used in a [species_expr] that is a parameter of the current
+	      defined species.
+
+    {b Rem} : Exported outside this module.                                *)
+(* *********************************************************************** *)
+exception Self_cant_parameterize_itself of Location.t ;;
+
+
+
+(* ************************************************************************ *)
+(** {b Descr} : Exception raised when an expression used to represent the
+              value of a "is" species parameter is not a collection
+	      identifier. 
+	      This is detected by the fact that the [expr] found in the
+              AST is not an [E_constr]. In effect, because the parser uses
+              the rule [expr], collection names being capitalized, they
+              must be parsed as sum types constructors with no argument.
+
+    {b Rem} : Exported outside this module.                                 *)
+(* ************************************************************************ *)
+exception Is_parameter_only_coll_ident of Location.t ;;
 
 
 
@@ -984,7 +1010,8 @@ let rec scope_species_fields ctx env = function
 
 let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
-   | Parsetree.E_self -> failwith "Self cannot be parametrized by itself)."
+   | Parsetree.E_self ->
+       raise (Self_cant_parameterize_itself initial_expr.Parsetree.ast_loc)
    | Parsetree.E_constr (cstr_expr, []) ->
        (* We re-construct a fake ident from the constructor expression *)
        (* just to be able to lookup inside the environment.            *)
@@ -1009,7 +1036,7 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
            Parsetree.ast_desc = Parsetree.E_constr (scoped_cstr_expr, []) }
    | Parsetree.E_paren expr ->
        scope_expr_collection_cstr_for_is_param ctx env expr
-   | _ -> failwith "is parameter can only be a collection identifier"
+   | _ -> raise (Is_parameter_only_coll_ident initial_expr.Parsetree.ast_loc)
 ;;
 
 

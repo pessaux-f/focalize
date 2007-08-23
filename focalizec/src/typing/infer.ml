@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.37 2007-08-23 14:18:44 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.38 2007-08-23 15:18:42 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -78,17 +78,6 @@ exception Bad_type_arity of
     {b Rem} : Exported outside this module.                              *)
 (* ********************************************************************* *)
 exception Rep_multiply_defined of Location.t ;;
-
-
-
-(* *********************************************************************** *)
-(** {b Descr} : Exception raised when Self appears as a species identifier
-              used in a [species_expr] that is a parameter of the current
-	      defined species.
-
-    {b Rem} : Exported outside this module.                                *)
-(* *********************************************************************** *)
-exception Self_cant_parametrize_itself of Location.t ;;
 
 
 
@@ -172,19 +161,16 @@ exception Not_subspecies_missing_field of
 
 
 
-(* ************************************************************************ *)
-(** {b Descr} : Exception raised when an expression used to represent the
-              value of a "is" species parameter is not a collection
-	      identifier. 
-	      This is detected by the fact that the [expr] found in the
-              AST is not an [E_constr]. In effect, because the parser uses
-              the rule [expr], collection names being capitalized, they
-              must be parsed as sum types constructors with no argument.
+(* ******************************************************************* *)
+(** {b Descr} : During a parameterized species application, the number
+              of provided arguments is incorrect compared to the
+	      number of expected arguments.
 
-    {b Rem} : Exported outside this module.                                 *)
-(* ************************************************************************ *)
-exception Is_parameter_only_coll_ident of Location.t ;;
-
+    {b Rem} : Exported outside this module.                            *)
+(* ******************************************************************* *)
+exception Parameterized_species_arity_mismatch of
+  string    (** The message to insert in the error message: "many" or "few". *)
+;;
 
 
 (* ************************************************************************* *)
@@ -1336,7 +1322,9 @@ and typecheck_species_fields ctx env = function
 let rec typecheck_expr_collection_cstr_for_is_param ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
    | Parsetree.E_self ->
-       raise (Self_cant_parametrize_itself initial_expr.Parsetree.ast_loc)
+       (* Should be always caught before, at scoping phase. *)
+       raise
+	 (Scoping.Self_cant_parameterize_itself initial_expr.Parsetree.ast_loc)
    | Parsetree.E_constr (cstr_expr, []) ->
        (* We re-construct a fake ident from the constructor expression *)
        (* just to be able to lookup inside the environment.            *)
@@ -1354,7 +1342,10 @@ let rec typecheck_expr_collection_cstr_for_is_param ctx env initial_expr =
        ((id_effective_name, (Parsetree_utils.name_of_vname id_vname)), descr)
    | Parsetree.E_paren expr ->
        typecheck_expr_collection_cstr_for_is_param ctx env expr
-   | _ -> raise (Is_parameter_only_coll_ident initial_expr.Parsetree.ast_loc)
+   | _ ->
+       (* Should be always caught before, at scoping phase. *)
+       raise
+	 (Scoping.Is_parameter_only_coll_ident initial_expr.Parsetree.ast_loc)
 ;;
 
 
@@ -1541,7 +1532,13 @@ let apply_species_arguments ctx env base_spe_descr params =
 	       substd_meths
 	  end) in
 	rec_apply new_meths (rem_f_params, rem_e_params)
-    | (_, _) -> failwith "Bad arity" in
+    | (rem_formals, _) ->
+	(begin
+	let rem_formals_len = List.length rem_formals in
+	(* To be able to tell "... is applied to too many/to few arguments". *)
+	let msg = (if rem_formals_len = 0 then "many" else "few") in
+	raise (Parameterized_species_arity_mismatch msg)
+	end) in
   (* Do the job now. *)
   rec_apply
     base_spe_descr.Env.TypeInformation.spe_sig_methods

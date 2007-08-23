@@ -11,10 +11,12 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.6 2007-08-13 17:32:44 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.7 2007-08-23 15:18:42 pessaux Exp $ *)
 
 (** The various flags and definitions useful to the internal behaviour of the
     focalize compiler. *)
+
+exception Input_file_already_set
 
 val focal_version_number : float
 

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.27 2007-08-23 14:18:44 pessaux Exp $ *)
+(* $Id: env.ml,v 1.28 2007-08-23 15:18:42 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -120,16 +120,16 @@ let debug_env_list_assoc ~allow_opened searched list =
 
 
 
-(* ************************************************************************ *)
-(** {b Descr} : Type of the generic environments. It is parametrised by the
-            information to bind to identifiers representing:
+(* ********************************************************************* *)
+(** {b Descr} : Type of the generic environments. It is parameterized by
+            the information to bind to identifiers representing:
             - Sum-types constructors
             - Record-types labels
             - Values
             - Species (and collections)
 
-    {b Rem} : Exported abstract outside this module.                        *)
-(* ************************************************************************ *)
+    {b Rem} : Exported abstract outside this module.                     *)
+(* ********************************************************************* *)
 type ('constrs, 'labels, 'types, 'values, 'species) generic_env = {
   constructors : (Parsetree.constr_name * ('constrs binding_origin)) list ;
   labels : (Types.label_name * ('labels binding_origin)) list ;
