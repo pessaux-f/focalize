@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.40 2007-08-24 14:53:54 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.41 2007-08-24 14:56:15 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1199,7 +1199,6 @@ and typecheck_species_fields ctx env = function
 	 | Parsetree.SF_sig sig_def ->
 	     (begin
 	     let sig_def_descr = sig_def.Parsetree.ast_desc in
-Format.eprintf "Champ sig: %a@." Sourcify.pp_vname sig_def_descr.Parsetree.sig_name ;
 	     Types.begin_definition () ;
 	     let ty =
 	       typecheck_type_expr ctx env sig_def_descr.Parsetree.sig_type in
@@ -1219,7 +1218,6 @@ Format.eprintf "Champ sig: %a@." Sourcify.pp_vname sig_def_descr.Parsetree.sig_n
 	     end)
 	 | Parsetree.SF_let let_def ->
 	     (begin
-Format.eprintf "Champ let: @." ;
 	     (* Don't increase level, this will be done in the let inference. *)
 	     let bindings = typecheck_let_definition ctx env let_def in
 	     (* Let's build the environment with the bindings for this let. *)
@@ -1512,13 +1510,6 @@ let apply_species_arguments ctx env base_spe_descr params =
 	   | Env.TypeInformation.SPAR_is (f_name, c1_ty) ->
 	       let c1 =
 		 (ctx.current_unit, (Parsetree_utils.name_of_vname f_name)) in
-Format.eprintf "Trouvé un param formel IS nommé %a@." Sourcify.pp_vname f_name ;
-Format.eprintf "Ses méthodes sont attendues comme:@." ;
-Format.eprintf "%a@." Env.TypeInformation.pp_species_description
-  { Env.TypeInformation.spe_sig_methods = c1_ty ;
-    Env.TypeInformation.spe_is_collection = false ;
-    Env.TypeInformation.spe_sig_params = [] } ;
-Format.eprintf "Fin@." ;
 	       (* Get the argument species expression signature and methods. *)
 	       (* Note that to be well-typed this expression must ONLY be    *)
 	       (* an [E_constr] (because species names are capitalized,      *)
@@ -1529,18 +1520,7 @@ Format.eprintf "Fin@." ;
 	       let (c2, expr_sp_description) = (* The c2 of Virgile's Phd. *)
 		 typecheck_expr_collection_cstr_for_is_param
                    ctx env e_param_expr in
-Format.eprintf "Il est appliqué à l'effectif %s#%s@." (fst c2) (snd c2) ;
-Format.eprintf "dont les méthodes sont:@." ;
-Format.eprintf "%a@."
-  Env.TypeInformation.pp_species_description expr_sp_description ;
-Format.eprintf "Fin@." ;
 	       let big_A_i1_c2 = abstraction c2 c1_ty in
-Format.eprintf "Une fois abstraites les méthodes du formel sont:@." ;
-Format.eprintf "%a@." Env.TypeInformation.pp_species_description
-  { Env.TypeInformation.spe_sig_methods = big_A_i1_c2 ;
-    Env.TypeInformation.spe_is_collection = false ;
-    Env.TypeInformation.spe_sig_params = [] } ;
-Format.eprintf "Fin@." ;
 	       (* Ensure that i2 <= A(i1, c2). *)
 	       is_sub_species_of
 		 ~loc: e_param.Parsetree.ast_loc ctx
@@ -1683,7 +1663,6 @@ let typecheck_species_def_params ctx env species_name species_params =
 	     end)
 	 | Parsetree.SPT_is species_expr ->
 	     (begin
-Format.eprintf "Trouvé un paramètre is dans la decl: %a@." Sourcify.pp_vname vname ;
 	     (* First, typecheck the species expression .*)
 	     let species_expr_fields =
 	       typecheck_species_expr ctx env species_expr in
@@ -1696,21 +1675,9 @@ Format.eprintf "Trouvé un paramètre is dans la decl: %a@." Sourcify.pp_vname vna
 	     (* an internal name to be able to denote it in the   *)
 	     (* type of the application.                          *)
 	     (* This internal name is the name of the parameter.  *)
-Format.eprintf "Méthodes de ce paramètre après analyse de l'expression d'espèces:@." ;
-Format.eprintf "%a@." Env.TypeInformation.pp_species_description
-  { Env.TypeInformation.spe_sig_methods = species_expr_fields ;
-    Env.TypeInformation.spe_is_collection = false ;
-    Env.TypeInformation.spe_sig_params = [] } ;
-Format.eprintf "Fin@." ;
 	     let abstracted_methods =
 	       abstraction
 		 (ctx.current_unit, param_name_as_string) species_expr_fields in
-Format.eprintf "Méthodes de ce paramètre après abstraction:@." ;
-Format.eprintf "%a@." Env.TypeInformation.pp_species_description
-  { Env.TypeInformation.spe_sig_methods = abstracted_methods ;
-    Env.TypeInformation.spe_is_collection = false ;
-    Env.TypeInformation.spe_sig_params = [] } ;
-Format.eprintf "Fin@." ;
 	     let param_description = {
 	       Env.TypeInformation.spe_is_collection = false ;
 	       Env.TypeInformation.spe_sig_params = [] ;
@@ -2068,7 +2035,6 @@ let normalize_species ~loc ctx methods_info inherited_methods_infos =
 (* ************************************************************************* *)
 let typecheck_species_def ctx env species_def =
   let species_def_desc = species_def.Parsetree.ast_desc in
-Format.eprintf "Espèce: %s@." species_def_desc.Parsetree.sd_name ;
   (* First of all, we are in a species !!! *)
   let ctx = { ctx with
     current_species = Some species_def_desc.Parsetree.sd_name } in
