@@ -64,8 +64,8 @@ end ;;
 
 collection Les_entiers implements Entiers_concrets ;;
 
-(* species Daube (C is Entiers_concrets) inherits Setoide_produit (C, C) = end ;; *)
 
 collection Couple_d_entiers implements
   Monoide_produit (Les_entiers, Les_entiers)
 ;;
+

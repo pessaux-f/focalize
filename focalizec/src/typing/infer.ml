@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.39 2007-08-24 10:51:20 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.40 2007-08-24 14:53:54 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1535,7 +1535,7 @@ Format.eprintf "%a@."
   Env.TypeInformation.pp_species_description expr_sp_description ;
 Format.eprintf "Fin@." ;
 	       let big_A_i1_c2 = abstraction c2 c1_ty in
-Format.eprintf "Une fois abstraites ses méthodes sont:@." ;
+Format.eprintf "Une fois abstraites les méthodes du formel sont:@." ;
 Format.eprintf "%a@." Env.TypeInformation.pp_species_description
   { Env.TypeInformation.spe_sig_methods = big_A_i1_c2 ;
     Env.TypeInformation.spe_is_collection = false ;
@@ -1739,7 +1739,7 @@ Format.eprintf "Fin@." ;
 	     let (accu_env''', rem_spe_params) =
 	       rec_typecheck_params accu_env'' rem in
 	     let current_spe_param =
-	       Env.TypeInformation.SPAR_is  (vname, abstracted_methods) in
+	       Env.TypeInformation.SPAR_is (vname, (*abstracted_methods*) species_expr_fields) in
 	     (* Finally, we return the fully extended environment and *)
 	     (* the type of the species application we just built.    *)
 	     (accu_env''', (current_spe_param:: rem_spe_params))
@@ -2345,6 +2345,13 @@ let rec ensure_collection_completely_defined = function
 ;;
 
 
+(* [Unsure]. Même totatelement faux car ça bouffe carément dans l'espèce,le corps des méthodes. Par contre ça fait le bon mécanisme de remplacement de Self par le type de la collection. Au moins, ça permet dans un premier temps de tester. *)
+let make_collection_from_species_fields myself_coll_ty fields =
+  Format.eprintf "Todo : really make the collection keeping its exprs.@." ;
+  abstraction myself_coll_ty fields
+;;
+
+
 
 let typecheck_collection_def ctx env coll_def =
   let coll_def_desc = coll_def.Parsetree.ast_desc in
@@ -2357,12 +2364,16 @@ let typecheck_collection_def ctx env coll_def =
   (* One must ensure that the collection is *)
   (* really a completely defined species.   *)
   ensure_collection_completely_defined species_expr_fields ;
+  let collection_fields =
+    make_collection_from_species_fields
+      (ctx.current_unit, coll_def_desc.Parsetree.cd_name)
+      species_expr_fields in
   (* Let's build our "type" information. Since we are managing a species *)
   (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
   let collec_description = {
     Env.TypeInformation.spe_is_collection = true ;
     Env.TypeInformation.spe_sig_params = [] ;
-    Env.TypeInformation.spe_sig_methods = species_expr_fields } in
+    Env.TypeInformation.spe_sig_methods = collection_fields } in
   (* Add this collection in the environment. *)
   let env_with_collection =
     Env.TypingEnv.add_species
