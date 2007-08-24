@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.41 2007-08-24 14:56:15 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.42 2007-08-24 16:36:18 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1532,7 +1532,8 @@ let apply_species_arguments ctx env base_spe_descr params =
 	       let substd_meths =
 		 List.map
 		   (SubstColl.subst_species_field
-		      ~current_unit: ctx.current_unit c1 c2)
+		      ~current_unit: ctx.current_unit
+		      (SubstColl.SCK_coll c1) c2)
 		   accu_meths in
 	       substd_meths
 	  end) in
@@ -2311,13 +2312,6 @@ let rec ensure_collection_completely_defined = function
 ;;
 
 
-(* [Unsure]. Même totatelement faux car ça bouffe carément dans l'espèce,le corps des méthodes. Par contre ça fait le bon mécanisme de remplacement de Self par le type de la collection. Au moins, ça permet dans un premier temps de tester. *)
-let make_collection_from_species_fields myself_coll_ty fields =
-  Format.eprintf "Todo : really make the collection keeping its exprs.@." ;
-  abstraction myself_coll_ty fields
-;;
-
-
 
 let typecheck_collection_def ctx env coll_def =
   let coll_def_desc = coll_def.Parsetree.ast_desc in
@@ -2330,9 +2324,12 @@ let typecheck_collection_def ctx env coll_def =
   (* One must ensure that the collection is *)
   (* really a completely defined species.   *)
   ensure_collection_completely_defined species_expr_fields ;
+  let myself_coll_ty = (ctx.current_unit, coll_def_desc.Parsetree.cd_name) in
+  (* In the collection's fields, substitute Self <- the collection name. *)
   let collection_fields =
-    make_collection_from_species_fields
-      (ctx.current_unit, coll_def_desc.Parsetree.cd_name)
+    List.map
+      (SubstColl.subst_species_field
+	 ~current_unit: ctx.current_unit SubstColl.SCK_self myself_coll_ty)
       species_expr_fields in
   (* Let's build our "type" information. Since we are managing a species *)
   (* and NOT a collection, we must set [spe_is_collection] to [false].   *)

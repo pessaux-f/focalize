@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: substColl.ml,v 1.1 2007-08-22 14:17:08 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.2 2007-08-24 16:36:18 pessaux Exp $ *)
 
 (* ********************************************************************** *)
 (** {Descr} : This module performs substitution of a collection name [c1]
@@ -22,10 +22,41 @@
 (* ********************************************************************** *)
 
 
+(* ************************************************************************** *)
+(** {b Descr} : Describes which kind of collection type must be replaced
+              by a substitution. It can be either Self or another collection
+              "name". This enables factorizing the substitution code for
+              replacing Self (in case of collection creation) or another
+              collection (in case of "abstraction" function).
+              One must make a difference because Self is a special
+              constructor in both types and expressions.
 
+    {b Rem} : Exported outside this module.                                   *)
+(* ************************************************************************** *)
+type substitution_collection_kind =
+    (** The collection to replace is the one named in the argument. *)
+  | SCK_coll of Types.type_collection
+  | SCK_self          (** The collection to replace is Self. *)
+;;
+
+
+
+(* ******************************************************************* *)
+(* substitution_collection_kind -> Types.type_collection ->            *)
+(*   Types.type_simple option -> Types.type_simple option              *)
+(** {b Descr} : Performs the collection name substitution [c1] <- [c2]
+              in an optional [Types.type_simple].
+
+    {b Rem} : Not exported outside this module.                        *)
+(* ******************************************************************* *)
 let subst_type_simple_option c1 c2 = function
   | None -> None
-  | Some ty -> Some (Types.subst_type_simple c1 c2 ty)
+  | Some ty ->
+      (begin
+      match c1 with
+       | SCK_coll c -> Some (Types.subst_type_simple c c2 ty)
+       | SCK_self -> Some (Types.abstract_copy c2 ty)
+      end)
 ;;
 
 
@@ -39,12 +70,20 @@ let subst_ident ~current_unit c1 c2 ident =
 	 (* No collection name inside, hence nothing to change. *)
 	 ident.Parsetree.ast_desc
      | Parsetree.I_method ((Some c), vname) ->
-	 (* [Unsure] *)
-	 (* Because methods idents never have their "module" name, *)
-	 (* we check against the current compilation unit.         *)
-	 if (current_unit, c) = c1 then
-	   Parsetree.I_method ((Some (snd c2)), vname)
-	 else ident.Parsetree.ast_desc) in
+	 (begin
+	 match c1 with
+	  | SCK_self ->
+	      (* Because Self is a special constructor, an ident cannot    *)
+	      (* be Self. Then in this case, the substitution is identity. *)
+	      ident.Parsetree.ast_desc
+	  | SCK_coll effective_coll_ty ->
+	      (* [Unsure] *)
+	      (* Because methods idents never have their "module" name, *)
+	      (* we check against the current compilation unit.         *)
+	      if (current_unit, c) = effective_coll_ty then
+		Parsetree.I_method ((Some (snd c2)), vname)
+	      else ident.Parsetree.ast_desc
+	 end)) in
   (* Substitute in the AST node type. *)
   let new_type = subst_type_simple_option c1 c2 ident.Parsetree.ast_type in
   { ident with
@@ -54,9 +93,22 @@ let subst_ident ~current_unit c1 c2 ident =
 
 
 
+(* ************************************************************************ *)
+(* substitution_collection_kind -> Types.type_collection ->                 *)
+(*   Parsetree.pattern -> Parsetree.pattern                                 *)
+(** {b Descr} : Performs the collection name substitution [c1] <- [c2] in
+              a [pattern]. Note that because patterns cannot be collections
+              (there is no collection-pattern), the substitution does not
+              affect the pattern's structure.
+              However, because patterns can be variables and match a
+              collection-value, the type of these variable may be of a
+              collection. Then we need to substitute in the types hooked
+              in the AST's pattern [Parsetree.ast_type] field.
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
 let subst_pattern c1 c2 pattern =
   (* Let's just make a local recursive function to save the stack, *)
-  (* avoidingpassing each time the 2 arguments [c1] and [c2].      *)
+  (* avoiding passing each time the 2 arguments [c1] and [c2].     *)
   let rec rec_subst pat =
     (* Substitute in the AST node description. *)
     let new_desc =
@@ -246,7 +298,10 @@ let subst_species_field ~current_unit c1 c2 = function
       (begin
       Types.begin_definition () ;
       let ty = Types.specialize scheme in
-      let ty' = Types.subst_type_simple c1 c2 ty in
+      let ty' =
+	(match c1 with
+	 | SCK_coll c -> Types.subst_type_simple c c2 ty
+	 | SCK_self -> Types.abstract_copy c2 ty) in
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       Env.TypeInformation.SF_sig (vname, scheme')
@@ -255,7 +310,10 @@ let subst_species_field ~current_unit c1 c2 = function
       (begin
       Types.begin_definition () ;
       let ty = Types.specialize scheme in
-      let ty' = Types.subst_type_simple c1 c2 ty in
+      let ty' =
+	(match c1 with
+	 | SCK_coll c -> Types.subst_type_simple c c2 ty
+	 | SCK_self -> Types.abstract_copy c2 ty) in
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_expr ~current_unit c1 c2 body in
@@ -266,7 +324,10 @@ let subst_species_field ~current_unit c1 c2 = function
 	List.map
 	  (fun (vname, scheme, body) ->
 	    let ty = Types.specialize scheme in
-	    let ty' = Types.subst_type_simple c1 c2 ty in
+	    let ty' =
+	      (match c1 with
+	       | SCK_coll c -> Types.subst_type_simple c c2 ty
+	       | SCK_self -> Types.abstract_copy c2 ty) in
 	    Types.end_definition () ;
 	    let scheme' = Types.generalize ty' in
 	    let body' = subst_expr ~current_unit c1 c2 body in
