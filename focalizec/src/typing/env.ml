@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.28 2007-08-23 15:18:42 pessaux Exp $ *)
+(* $Id: env.ml,v 1.29 2007-08-24 10:51:20 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -265,10 +265,10 @@ end ;;
 module TypeInformation = struct
   type species_param =
     | SPAR_in of (Parsetree.vname * Types.type_collection)  (* Entity param. *)
-    | SPAR_is of (Parsetree.vname * Types.type_collection)  (* Collection param. *)
+    | SPAR_is of (Parsetree.vname * (species_field list))  (* Collection param. *)
 
 
-  type species_field =
+  and species_field =
     | SF_sig of (Parsetree.vname * Types.type_scheme)
     | SF_let of (Parsetree.vname * Types.type_scheme * Parsetree.expr)
     | SF_let_rec of (Parsetree.vname * Types.type_scheme * Parsetree.expr) list
@@ -347,12 +347,12 @@ module TypeInformation = struct
       | [] -> ()
       | param :: rem ->
 	  (begin
-	  let (p_kind_string, vname, ty) =
+	  let (p_kind_string, vname) =
 	    (match param with
-	     | SPAR_in (a, b) -> ("in", a, b)
-	     | SPAR_is (a, b) -> ("is", a, b)) in
-	  Format.fprintf local_ppf "%a %s %a"
-	    Sourcify.pp_vname vname p_kind_string Types.pp_type_collection ty ;
+	     | SPAR_in (a, _) -> ("in", a)
+	     | SPAR_is (a, _) -> ("is", a)) in
+	  Format.fprintf local_ppf "%a %s ..."
+	    Sourcify.pp_vname vname p_kind_string  ;
 	  if rem <> [] then
 	    (begin
 	    Format.fprintf local_ppf ",@ " ;
@@ -1020,24 +1020,6 @@ module ScopingEMAccess = struct
         ] ;
       labels = [] ;
       types = [
-        ("int",
-	 BO_opened
-	   ("", ScopeInformation.TBI_builtin_or_var)) ;
-        ("float",
-	 BO_opened
-	   ("", ScopeInformation.TBI_builtin_or_var)) ;
-        ("bool",
-	 BO_opened
-	   ("", ScopeInformation.TBI_builtin_or_var)) ;
-        ("string",
-	 BO_opened
-	   ("", ScopeInformation.TBI_builtin_or_var)) ;
-        ("char",
-	 BO_opened
-	   ("", ScopeInformation.TBI_builtin_or_var)) ;
-        ("unit",
-	 BO_opened
-	   ("", ScopeInformation.TBI_builtin_or_var)) ;
         ("list",
 	 BO_opened
 	   ("", ScopeInformation.TBI_builtin_or_var))
@@ -1139,49 +1121,6 @@ module TypingEMAccess = struct
 	] ;
      labels = [] ;
      types = [
-       ("int",
-	BO_opened
-	  ("",
-	   { TypeInformation.type_kind = TypeInformation.TK_abstract ;
-	     TypeInformation.type_identity =
-	       Types.generalize (Types.type_int ()) ;
-             TypeInformation.type_params = [] ;
-	     TypeInformation.type_arity = 0 })) ;
-       ("float",
-	BO_opened
-	  ("", { TypeInformation.type_kind = TypeInformation.TK_abstract ;
-		 TypeInformation.type_identity =
-		   Types.generalize (Types.type_float ()) ;
-                 TypeInformation.type_params = [] ;
-		 TypeInformation.type_arity = 0 })) ;
-       ("bool",
-	BO_opened
-	  ("", { TypeInformation.type_kind = TypeInformation.TK_abstract ;
-		 TypeInformation.type_identity =
-		   Types.generalize (Types.type_bool ()) ;
-                 TypeInformation.type_params = [] ;
-		 TypeInformation.type_arity = 0 })) ;
-       ("string",
-	BO_opened
-	  ("", { TypeInformation.type_kind = TypeInformation.TK_abstract ;
-		 TypeInformation.type_identity =
-		   Types.generalize (Types. type_string ()) ;
-                 TypeInformation.type_params = [] ;
-		 TypeInformation.type_arity = 0 })) ;
-       ("char",
-	BO_opened
-	  ("", { TypeInformation.type_kind = TypeInformation.TK_abstract ;
-		 TypeInformation.type_identity =
-		   Types.generalize (Types.type_char ()) ;
-                 TypeInformation.type_params = [] ;
-		 TypeInformation.type_arity = 0 })) ;
-       ("unit",
-	BO_opened
-	  ("",{ TypeInformation.type_kind = TypeInformation.TK_abstract ;
-		TypeInformation.type_identity =
-		  Types.generalize (Types.type_unit ()) ;
-                 TypeInformation.type_params = [] ;
-		TypeInformation.type_arity = 0 })) ;
        ("list",	BO_opened ("basics", list_type_description))
       ] ;
     values = [] ;

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.16 2007-08-23 14:18:44 pessaux Exp $ *)
+(* $Id: types.ml,v 1.17 2007-08-24 10:51:20 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -305,7 +305,7 @@ let (specialize, specialize2) =
   let seen = ref [] in
   (* Internal recursive copy of a type scheme replacing its generalized
      variables by their associated new fresh type variables. *)
-  let rec copy_type_simple ~abstractize ty =
+  let rec copy_type_simple ty =
     let ty = repr ty in
     (* First check if we already saw this type. *)
     if List.mem_assq ty !seen then List.assq ty !seen
@@ -331,19 +331,11 @@ let (specialize, specialize2) =
 	   | ST_var -> ST_var
 	   | ST_arrow (ty1, ty2) ->
                ST_arrow
-		 (copy_type_simple ~abstractize ty1,
-		  copy_type_simple ~abstractize ty2)
-	   | ST_tuple tys ->
-	       ST_tuple (List.map (copy_type_simple ~abstractize) tys)
+		 (copy_type_simple ty1, copy_type_simple ty2)
+	   | ST_tuple tys ->  ST_tuple (List.map copy_type_simple tys)
 	   | ST_construct (name, args) ->
-               ST_construct
-		 (name, List.map (copy_type_simple ~abstractize) args)
-	   | ST_self_rep ->
-	       (begin
-	       match abstractize with
-		| None -> ST_self_rep
-		| Some coll_name -> ST_species_rep coll_name
-	       end)
+               ST_construct (name, List.map copy_type_simple args)
+	   | ST_self_rep -> ST_self_rep
 	   | (ST_species_rep _) as tdesc -> tdesc) in
 	(* Build the type expression copy of ourself. *)
 	let copied_ty = {
@@ -372,7 +364,7 @@ let (specialize, specialize2) =
    (* ******************************************************************** *)
    (fun scheme ->
      (* Copy the type scheme's body. *)
-     let instance = copy_type_simple ~abstractize: None scheme.ts_body in
+     let instance = copy_type_simple scheme.ts_body in
      (* Clean up seen type for further usages. *)
      seen := [] ;
      instance),
@@ -396,9 +388,9 @@ let (specialize, specialize2) =
    (* ******************************************************************* *)
    (fun scheme tys ->
      (* Copy the type scheme's body. *)
-     let instance = copy_type_simple ~abstractize: None scheme.ts_body in
+     let instance = copy_type_simple scheme.ts_body in
      (* Also copy the other types, using the same mapping provided in [seen]. *)
-     let copied_tys = List.map (copy_type_simple ~abstractize: None) tys in
+     let copied_tys = List.map copy_type_simple tys in
      (* Clean up seen type for further usages. *)
      seen := [] ;
      (instance, copied_tys))

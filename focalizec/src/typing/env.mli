@@ -33,12 +33,13 @@ module TypeInformation :
   sig
     type species_param =
       | SPAR_in of (Parsetree.vname * Types.type_collection)
-      | SPAR_is of (Parsetree.vname * Types.type_collection)
+      | SPAR_is of (Parsetree.vname * (species_field list))
 
-  type species_field =
-    | SF_sig of (Parsetree.vname * Types.type_scheme)
-    | SF_let of (Parsetree.vname * Types.type_scheme * Parsetree.expr)
-    | SF_let_rec of (Parsetree.vname * Types.type_scheme * Parsetree.expr) list
+    and species_field =
+      | SF_sig of (Parsetree.vname * Types.type_scheme)
+      | SF_let of (Parsetree.vname * Types.type_scheme * Parsetree.expr)
+      | SF_let_rec of
+	  (Parsetree.vname * Types.type_scheme * Parsetree.expr) list
 
     type species_description = {
       spe_is_collection : bool ;

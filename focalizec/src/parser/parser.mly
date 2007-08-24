@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.58 2007-08-22 16:25:58 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.59 2007-08-24 10:51:20 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -252,10 +252,17 @@ phrase:
 ;
 
 def_external:
-  | TYPE external_type_name EQUAL external_definition
-    { mk (ED_type (mk {ed_name = Vlident $2; ed_body = mk $4})) }
+  | TYPE external_type_name external_def_type_params EQUAL external_definition
+    {
+     mk
+       (ED_type
+	  (mk
+	     { ed_name = Vlident $2 ;
+	       ed_params = List.map (fun n -> Vqident n) $3 ;
+	       ed_body = mk $5 }))
+   }
   | VALUE external_value_vname EQUAL external_definition
-    { mk (ED_value (mk {ed_name = $2; ed_body = mk $4})) }
+    { mk (ED_value (mk { ed_name = $2 ; ed_params = [] ; ed_body = mk $4 })) }
 ;
 
 external_language:
@@ -323,6 +330,17 @@ def_record_field_list:
     { [ ($1, $3) ] }
   | label_name EQUAL type_expr SEMI def_record_field_list
     { ($1, $3) :: $5 }
+;
+
+external_def_type_params:
+  | { [] }
+  | LPAREN external_def_type_param_comma_list RPAREN { $2 }
+;
+
+external_def_type_param_comma_list:
+  | external_type_param_name { [ $1 ] }
+  | external_type_param_name COMMA external_def_type_param_comma_list
+      { $1 :: $3 }
 ;
 
 /**** SPECIES ****/
@@ -999,3 +1017,8 @@ type_param_name:
   | QIDENT { $1 }
   | LIDENT { $1 }
 ;
+
+external_type_param_name:
+  | QIDENT { $1 }
+;
+

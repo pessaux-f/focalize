@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.11 2007-08-15 17:00:01 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.12 2007-08-24 10:51:20 pessaux Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -151,6 +151,7 @@ and external_def_desc =
 and external_def_body = external_def_body_desc ast
 and external_def_body_desc = {
   ed_name : vname ;
+  ed_params : vname list ;    (** Mostly for types to know their arity. *)
   ed_body : external_expr
 }
 (** The body of an external definitions contains the name defined

@@ -32,27 +32,40 @@ species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
 		 sc (B!print (scnd (x)),
 		     ")")))) ;
 
-  (*
   proof of refl = by definition of ( = ) ;
   proof of symm = assumed ;
-  *)
+
 end ;;
 
 
-species Monoide_produit (A is Monoide, B is Monoide)
-  inherits Monoide, Setoide_produit (A, B) =
+species Monoide_produit (C is Monoide, D is Monoide)
+  inherits Monoide, Setoide_produit (C, D) =
 
-  let un = !creer (A!un, B!un) ;
+  let un = !creer (C!un, D!un) ;
   let ( * ) (x, y) =
-     crp (A!( * ) (first (x), first (y)),
-	  B!( * ) (scnd (x), scnd (y))) ;
+     crp (C!( * ) (first (x), first (y)),
+	  D!( * ) (scnd (x), scnd (y))) ;
 end ;;
 
-(*
-species Entiers inherits Monoide =
-  rep = int ;
+
+species Entiers_concrets inherits Monoide =
+  rep = basics#int ;
 
   let un = 1 ;
   let ( * ) = basics#int_mult ;
+  let ( = ) = basics#base_eq ;
+  let print = basics#string_of_int ;
+  let parse = basics#int_of_string ;
+
+  proof of refl = assumed ;
+  proof of symm = assumed ;
 end ;;
-*)
+
+
+collection Les_entiers implements Entiers_concrets ;;
+
+(* species Daube (C is Entiers_concrets) inherits Setoide_produit (C, C) = end ;; *)
+
+collection Couple_d_entiers implements
+  Monoide_produit (Les_entiers, Les_entiers)
+;;
