@@ -1,4 +1,4 @@
-(* $Id: files.ml,v 1.7 2007-08-15 15:25:07 pessaux Exp $ *)
+(* $Id: files.ml,v 1.8 2007-08-27 16:31:57 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -66,7 +66,7 @@ let open_in_from_lib_paths filename =
 	with Sys_error _ -> raise (Cant_access_file_in_search_path filename)
 	end)
     | h :: rem ->
-	try open_in_bin (h ^ filename)
+	try open_in_bin (Filename.concat h filename)
 	with Sys_error _ -> rec_open rem in
   if Filename.is_relative filename then rec_open (get_lib_paths ())
   else open_in_bin filename
