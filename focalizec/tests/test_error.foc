@@ -20,5 +20,6 @@ end ;;
 
 collection Coll_int implements Id_int ;;
 
+(* Must fail !!!!!!!!!! *)
 collection Error implements Id_bool (Coll_int) ;;
 
