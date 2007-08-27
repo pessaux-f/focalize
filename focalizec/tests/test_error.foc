@@ -1,0 +1,24 @@
+use "basics" ;;
+open "basics" ;;
+
+
+species Poly =
+  let id (x) = x ;
+end ;;
+
+species Id_bool (X is Poly) =
+  rep = basics#unit ;
+
+  let elt = X!id (true) ;
+end ;;
+
+species Id_int inherits Poly =
+  rep = basics#unit ;
+
+  let id (x) = if true then 1 else x ;
+end ;;
+
+collection Coll_int implements Id_int ;;
+
+collection Error implements Id_bool (Coll_int) ;;
+

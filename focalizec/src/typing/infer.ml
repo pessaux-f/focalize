@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.44 2007-08-27 12:33:26 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.45 2007-08-27 15:34:57 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -790,7 +790,8 @@ let rec typecheck_expr ctx env initial_expr =
 	 ty_then
      | Parsetree.E_let (let_def, in_expr) ->
 	 (* Don't increase level, this will be done in the let inference. *)
-	 let bindings = typecheck_let_definition ctx env let_def in
+	 let bindings =
+	   typecheck_let_definition ~is_a_field: false ctx env let_def in
 	 (* Let's build the environment for typing the ending expression. *)
 	 let env' =
 	   List.fold_left
@@ -881,15 +882,29 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
 
 
 (* ************************************************************************ *)
-(* typing_context ->                                                        *)
+(* is_a_field: bool -> typing_context ->                                    *)
 (*  Env.TypingEnv.t -> Parsetree.let_def ->                                 *)
 (*   (Parsetree.vname * Types.type_scheme) list                             *)
 (** {b Descr} : Infers the list of bindings induced by the let-def and that
                 will extend the current typing environment.
+                Because methods cannot be polymorphic (c.f. Virgile
+                Prevosto's Phd section 3.3, page 24) the parameter
+                [~is_a_field] permits to know if we must generalize
+                or not the let bound identifiers, and even more, if the
+                scheme must be down-leveled to 0 or not. If [~is_a_field]
+                is [true], then the bound identifiers must NOT be
+                generalized and even more, in order to be never
+                generalizable (for instance in another species where the
+                use of this ident is unfortunately done at the same
+                binding level) the scheme's body must be fully toggled
+                with a level equal to 0 ! This way, the obtained scheme
+                will not be polymorphic forever.
+                When this function is called from under a field definition,
+                then this flag must obviously be [true].
 
     {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
-and typecheck_let_definition ctx env let_def =
+and typecheck_let_definition ~is_a_field ctx env let_def =
   let let_def_descr = let_def.Parsetree.ast_desc in
   (* Get information to possibly build the pre-environment, *)
   (* i.e. the induced environment bindings between idents   *)
@@ -908,14 +923,15 @@ and typecheck_let_definition ctx env let_def =
         (* recorded in the [b_params] field. Hence, if the list    *)
         (* [b_params] is not empty, then the bound expression is a *)
         (* a function and is non_expansive whatever the body is.   *)
-	if binding.Parsetree.b_params <> [] ||
-           is_non_expansive env binding.Parsetree.b_body then
+	if (not is_a_field) &&
+	   (binding.Parsetree.b_params <> [] ||
+            is_non_expansive env binding.Parsetree.b_body) then
 	  (begin
-	  (* The body expression will be authorised to be generalised. *)
+	  (* The body expression will be authorised to be generalized. *)
 	  Types.begin_definition () ;
 	  let ty = Types.type_variable () in
           Types.end_definition () ;
-	  (* Say "true" to mean "generalisable" (implies that a  *)
+	  (* Say "true" to mean "generalizable" (implies that a  *)
 	  (* begin/end_definition have been performed) .         *)
 	  (binding.Parsetree.b_name, ty, true)
 	  end)
@@ -1000,10 +1016,14 @@ and typecheck_let_definition ctx env let_def =
 	  ~loc: binding_loc
 	  ~self_manifest: ctx.self_manifest assumed_ty complete_ty ;
         Types.end_definition () ;
-	(* And finally returns the type binding induced by this definition. *)
+	(* And finally returns the type binding induced by this definition *)
+	(* king care to generate a scheme with a 0 level if we are dealing *)
+	(* with a species method (field).                                  *)
 	let ty_scheme =
           (if non_expansive then Types.generalize complete_ty
-          else Types.trivial_scheme complete_ty) in
+          else
+	    if is_a_field then Types.never_generalizable_scheme complete_ty
+	    else Types.trivial_scheme complete_ty) in
         (binding.Parsetree.b_name, ty_scheme))
       let_def_descr.Parsetree.ld_bindings
       pre_env_info in
@@ -1207,8 +1227,11 @@ and typecheck_species_fields ctx env = function
 	     let ctx' = { ctx with self_manifest = Some ty } in
 	     (* Record the type information in the AST node. *)
 	     field.Parsetree.ast_type <- Some ty ;
+	     (* Be careful : methods are not polymorphics (c.f. Virgile   *)
+             (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
 	     let field_info =
-	       Env.TypeInformation.SF_sig (rep_vname, (Types.generalize ty)) in
+	       Env.TypeInformation.SF_sig
+		 (rep_vname, (Types.never_generalizable_scheme ty)) in
 	     ([field_info], ctx', env)
 	     end)
 	 | Parsetree.SF_sig sig_def ->
@@ -1221,8 +1244,10 @@ and typecheck_species_fields ctx env = function
 	     (* Record the type information in the AST nodes. *)
 	     sig_def.Parsetree.ast_type <- Some ty ;
 	     field.Parsetree.ast_type <- Some ty ;
-	     (* Extend the environment with this new method of Self. *)
-	     let scheme = Types.generalize ty in
+	     (* Extend the environment with this new method of Self.      *)
+	     (* Be careful : methods are not polymorphics (c.f. Virgile   *)
+             (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
+	     let scheme = Types.never_generalizable_scheme ty in
 	     let env' =
 	       Env.TypingEnv.add_value
 		 sig_def_descr.Parsetree.sig_name scheme env in
@@ -1234,7 +1259,10 @@ and typecheck_species_fields ctx env = function
 	 | Parsetree.SF_let let_def ->
 	     (begin
 	     (* Don't increase level, this will be done in the let inference. *)
-	     let bindings = typecheck_let_definition ctx env let_def in
+	     (* Be careful : methods are not polymorphics (c.f. Virgile   *)
+             (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
+	     let bindings =
+	       typecheck_let_definition ~is_a_field: true ctx env let_def in
 	     (* Let's build the environment with the bindings for this let. *)
 	     let env' =
 	       List.fold_left
@@ -1285,7 +1313,9 @@ and typecheck_species_fields ctx env = function
 	     (* Record the type information in the AST node. *)
 	     property_def.Parsetree.ast_type <- Some ty ;
 	     (* Extend the environment. *)
-	     let scheme = Types.generalize ty in
+	     (* Be careful : methods are not polymorphics (c.f. Virgile   *)
+             (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
+	     let scheme = Types.never_generalizable_scheme ty in
 	     let env' =
 	       Env.TypingEnv.add_value
 		 property_def.Parsetree.ast_desc.Parsetree.prd_name
@@ -1301,7 +1331,9 @@ and typecheck_species_fields ctx env = function
 	     let ty = typecheck_theorem_def ctx env theorem_def in
 	     Types.end_definition () ;
 	     (* Extend the environment. *)
-	     let scheme = Types.generalize ty in
+	     (* Be careful : methods are not polymorphics (c.f. Virgile   *)
+             (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
+	     let scheme = Types.never_generalizable_scheme ty in
 	     let env' =
 	       Env.TypingEnv.add_value
 		 theorem_def.Parsetree.ast_desc.Parsetree.th_name scheme env in
@@ -1620,7 +1652,7 @@ let typecheck_species_expr ctx env species_expr =
     Types.type_rep_species ~species_module ~species_name in
   (* Now, create the "species type" (a somewhat of signature). *)
   let species_methods =
-    apply_species_arguments      ctx env species_species_description
+    apply_species_arguments ctx env species_species_description
       species_expr_desc.Parsetree.se_params in
   (* Record the type in the AST node. *)
   species_expr.Parsetree.ast_type <- Some species_carrier_type ;
@@ -2512,7 +2544,8 @@ let typecheck_phrase ctx env phrase =
 	   Format.printf "type ...@\n" ;
 	 ((Types.type_unit ()), env')
      | Parsetree.Ph_let let_def  ->
-	 let envt_bindings = typecheck_let_definition ctx env let_def in
+	 let envt_bindings =
+	   typecheck_let_definition ~is_a_field: false ctx env let_def in
 	 (* Extend the current environment with the *)
 	 (* bindings induced the let-definition.    *)
 	 let env' =
