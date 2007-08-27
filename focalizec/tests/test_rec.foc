@@ -1,0 +1,20 @@
+use "basics" ;;
+
+species A =
+ sig y2 : basics#unit -> basics#unit ;
+
+ let y1 (v) = y2 (v) ;
+ let x1 (v) = y1 (v) ;
+end ;;
+
+species B inherits A =
+  sig y4 : basics#unit -> basics#unit ;
+
+  let y3 (v) = y4 (v) ;
+  let y2 (v) = y3 (v) ;
+end ;;
+
+species C inherits B =
+  let rec x2 (v) = y4 (v)
+  and y4 (v) = x2 (v) ;
+end ;;
