@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.18 2007-08-27 15:34:57 pessaux Exp $ *)
+(* $Id: types.ml,v 1.19 2007-08-27 16:37:20 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -35,13 +35,7 @@ type fname = string
 (* ****************************************************************** *)
 let generic_level = 100000000 ;;
 
-let gen_sym =
-  let r = ref 0 in
-  (fun () ->
-    let tmp = !r in
-    incr r ;
-    tmp)
-;;
+
 
 (* ************************************************* *)
 (* type_simple                                       *)
@@ -55,8 +49,7 @@ type type_simple = {
   (* The description of the type. *)
   ts_desc : type_simple_desc ;
   (* Value of the type. In fact, generalisation of the value of a type variable. This permits to make an already "non-variable" type equal to Self by side effect. *)
-  mutable ts_link_value : type_link_value ;
-  ts_debug : int
+  mutable ts_link_value : type_link_value
 }
 
 
@@ -171,15 +164,13 @@ let (begin_definition, end_definition, current_binding_level, type_variable) =
    (fun () ->
      { ts_level = !current_binding_level ;
        ts_desc = ST_var ;
-       ts_link_value = TLV_unknown ;
-       ts_debug = gen_sym () }))
+       ts_link_value = TLV_unknown }))
 ;;
 
 let type_basic type_name type_args =
   { ts_level = current_binding_level () ;
     ts_desc = ST_construct (type_name, type_args) ;
-    ts_link_value = TLV_unknown ;
-    ts_debug = gen_sym () }
+    ts_link_value = TLV_unknown }
 ;;
 
 let type_int () = type_basic "int" [] ;;
@@ -197,8 +188,7 @@ let type_unit () = type_basic "unit" [] ;;
 let type_arrow t1 t2 =
   { ts_level = current_binding_level () ;
     ts_desc = ST_arrow (t1, t2) ;
-    ts_link_value = TLV_unknown ;
-    ts_debug = gen_sym () }
+    ts_link_value = TLV_unknown }
 ;;
 
 let type_prop () = type_basic "prop" [] ;;
@@ -206,8 +196,7 @@ let type_prop () = type_basic "prop" [] ;;
 let type_tuple tys =
   { ts_level = current_binding_level () ;
     ts_desc = ST_tuple tys ;
-    ts_link_value = TLV_unknown ;
-    ts_debug = gen_sym () }
+    ts_link_value = TLV_unknown }
 ;;
 
 
@@ -216,16 +205,14 @@ let type_tuple tys =
 let type_self () =
   { ts_level = current_binding_level () ;
     ts_desc = ST_self_rep ;
-    ts_link_value = TLV_unknown ;
-    ts_debug = gen_sym () }
+    ts_link_value = TLV_unknown }
 ;;
 
 
 let type_rep_species ~species_module ~species_name =
   { ts_level = current_binding_level () ;
     ts_desc = ST_species_rep (species_module, species_name) ;
-    ts_link_value = TLV_unknown ;
-    ts_debug = gen_sym () }
+    ts_link_value = TLV_unknown }
 ;;
 
 
@@ -256,12 +243,11 @@ let (pp_type_simple, pp_type_scheme) =
   let rec rec_pp prio ppf ty =
     (* First of all get the "repr" guy ! *)
     let ty = repr ty in
-    Format.fprintf ppf "[%d]" ty.ts_debug ;
     match ty.ts_desc with
     | ST_var ->
 	let ty_variable_name =
 	  get_type_name ty ~generalized_p: (ty.ts_level = generic_level) in
-	Format.fprintf ppf "'%s.%d" ty_variable_name ty.ts_level
+	Format.fprintf ppf "'%s" ty_variable_name
     | ST_arrow (ty1, ty2) ->
 	(* Arrow priority: 2. *)
 	if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
@@ -337,8 +323,7 @@ let (specialize, specialize2) =
         let tmp_ty = {
 	  ts_level = min ty.ts_level (current_binding_level ()) ;
 	  ts_desc = ST_var ;
-	  ts_link_value = TLV_unknown ;
-	  ts_debug = gen_sym () } in
+	  ts_link_value = TLV_unknown } in
 	seen := (ty, tmp_ty) :: !seen ;
 	(* Build the type description copy of ourself. *)
 	let copied_desc =
@@ -356,8 +341,7 @@ let (specialize, specialize2) =
 	let copied_ty = {
 	  ts_level = min ty.ts_level (current_binding_level ()) ;
 	  ts_desc = copied_desc ;
-	  ts_link_value = TLV_unknown ;
-	  ts_debug = gen_sym () } in
+	  ts_link_value = TLV_unknown } in
 	(* Make our previous temporay variable equal to our copy. *)
 	tmp_ty.ts_link_value <- TLV_known copied_ty ;
 	(* And finally return our copy. *)
@@ -445,8 +429,7 @@ let abstract_copy coll_name =
 	   let tmp_ty = {
 	     ts_level = min ty.ts_level (current_binding_level ()) ;
 	     ts_desc = ST_var ;
-	     ts_link_value = TLV_unknown ;
-	     ts_debug = gen_sym () } in
+	     ts_link_value = TLV_unknown } in
 	   seen := (ty, tmp_ty) :: !seen ;
 	   let copied_desc =
 	     (match ty.ts_desc with
@@ -462,8 +445,7 @@ let abstract_copy coll_name =
 	     (* the original level of the type must be kept !         *)
 	     ts_level = min ty.ts_level (current_binding_level ()) ;
 	     ts_desc = copied_desc ;
-	     ts_link_value = TLV_unknown ;
-	     ts_debug = gen_sym () } in
+	     ts_link_value = TLV_unknown } in
 	   tmp_ty.ts_link_value <- TLV_known copied_ty ;
 	   copied_ty
 	   end)
@@ -718,8 +700,7 @@ let subst_type_simple (fname1, spe_name1) c2 =
       let tmp_ty = {
 	ts_level = min ty.ts_level (current_binding_level ()) ;
 	ts_desc = ST_var ;
-	ts_link_value = TLV_unknown ;
-	ts_debug = gen_sym () } in
+	ts_link_value = TLV_unknown } in
       seen := (ty, tmp_ty) :: !seen ;
       let copied_desc =
 	(match ty.ts_desc with
@@ -737,8 +718,7 @@ let subst_type_simple (fname1, spe_name1) c2 =
 	(* the original level of the type must be kept !         *)
 	ts_level = min ty.ts_level (current_binding_level ()) ;
 	ts_desc = copied_desc ;
-	ts_link_value = TLV_unknown ;
-	ts_debug = gen_sym () } in
+	ts_link_value = TLV_unknown } in
       tmp_ty.ts_link_value <- TLV_known copied_ty ;
       copied_ty
       end) in
