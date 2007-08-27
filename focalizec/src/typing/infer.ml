@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.42 2007-08-24 16:36:18 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.43 2007-08-27 11:33:23 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1505,8 +1505,27 @@ let apply_species_arguments ctx env base_spe_descr params =
 	  match f_param with
 	   | Env.TypeInformation.SPAR_in (f_name, f_ty) ->
 	       (* First, get the argument expression's type. *)
-	       (*let expr_ty = typecheck_expr ctx env e_param_expr in *)
-	       failwith "Et la suite ?.."
+	       let expr_ty = typecheck_expr ctx env e_param_expr in
+	       (* The formal's collection type [f_ty] is the name of the *)
+	       (* collection that the effective argument is expected to  *)
+               (* be a carrier of. Then one must unify the effective     *)
+               (* expression's type with a "carrier" of the formal       *)
+               (* collection.                                            *)
+               let repr_of_formal =
+		 Types.type_rep_species
+		   ~species_module: (fst f_ty) ~species_name: (snd f_ty) in
+               Types.unify
+		 ~loc: e_param.Parsetree.ast_loc
+		 ~self_manifest: ctx.self_manifest repr_of_formal expr_ty ;
+	       (* And now, the new methods where x <- e (in Virgile's thesis) *)
+               (* i.e. here, [f_name] <- [e_param_expr].                      *)
+	       let substd_meths =
+		 List.map
+		   (SubstExpr.subst_species_field
+		      ~param_unit: (fst f_ty)
+		      f_name e_param_expr.Parsetree.ast_desc)
+		   accu_meths in
+	       substd_meths
 	   | Env.TypeInformation.SPAR_is (f_name, c1_ty) ->
 	       let c1 =
 		 (ctx.current_unit, (Parsetree_utils.name_of_vname f_name)) in
@@ -1640,7 +1659,7 @@ let typecheck_species_def_params ctx env species_name species_params =
 	     ignore
 	       (Env.TypingEnv.find_species
 		  ~loc: ident.Parsetree.ast_loc ~current_unit: ctx.current_unit
-		  ident env) ;
+		  ident accu_env) ;
 	     (* Create the carrier type of the parameter and extend the *)
              (* current environment with this parameter as a value of   *)
              (* the carrier type.                                       *)
@@ -1666,7 +1685,7 @@ let typecheck_species_def_params ctx env species_name species_params =
 	     (begin
 	     (* First, typecheck the species expression .*)
 	     let species_expr_fields =
-	       typecheck_species_expr ctx env species_expr in
+	       typecheck_species_expr ctx accu_env species_expr in
 	     (* Create the [species_description] of the parameter *)
              (* and extend the current environment. Because the   *)
 	     (* obtained species is not a declaration, it cannot  *)
@@ -1707,7 +1726,7 @@ let typecheck_species_def_params ctx env species_name species_params =
 	     let (accu_env''', rem_spe_params) =
 	       rec_typecheck_params accu_env'' rem in
 	     let current_spe_param =
-	       Env.TypeInformation.SPAR_is (vname, (*abstracted_methods*) species_expr_fields) in
+	       Env.TypeInformation.SPAR_is (vname, species_expr_fields) in
 	     (* Finally, we return the fully extended environment and *)
 	     (* the type of the species application we just built.    *)
 	     (accu_env''', (current_spe_param:: rem_spe_params))

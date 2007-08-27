@@ -1,0 +1,290 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+
+(* $Id: substExpr.ml,v 1.1 2007-08-27 11:33:23 pessaux Exp $ *)
+
+(* ********************************************************************** *)
+(** {Descr} : This module performs substitution of a value name [name_x]
+            by an expression [by_expr]. This means that [name_x] will be
+            replaced by [by_expr].
+            The substitution operates in "values" expressions and is
+            trigered by a "in" parameter application. Hence it only
+            affects the I_local bindings or the I_global bindings whose
+            "module" field is the same that the one passed in the
+            argument [param_unit] to the substitution function (i.e. the
+            module name of where the parmaterized species was defined.    *)
+(* ********************************************************************** *)
+
+
+
+
+
+
+let subst_E_var ~param_unit ~bound_variables name_x by_expr ident =
+  (* Substitute in the AST node description. *)
+  match ident.Parsetree.ast_desc with
+   | Parsetree.I_local v_name ->
+       if v_name = name_x && not (List.mem v_name bound_variables) then
+	 by_expr
+       else Parsetree.E_var ident
+   | Parsetree.I_global ((Some mod_name), v_name) ->
+       if mod_name = param_unit && v_name = name_x &&
+          not (List.mem v_name bound_variables) then
+	 by_expr
+       else Parsetree.E_var ident
+   | Parsetree.I_method (_, _) -> Parsetree.E_var ident
+   | Parsetree.I_global (None, _) ->
+       (* In this case, may be there is some scoping process missing. *)
+       assert false
+;;
+
+
+
+(* ************************************************************************ *)
+(* Parsetree.vname list -> Parsetree.pattern -> Parsetree.vname list        *)
+(** {b Descr} : Returns an extended list of bound identifiers that must not
+              be affected by a substitution. Especially, variables bound by
+              a pattern are NOT subject to substitutions !
+
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
+let rec extend_bound_name_from_pattern bound_variables pattern =
+  match pattern.Parsetree.ast_desc with
+   | Parsetree.P_const _ | Parsetree.P_wild -> bound_variables
+   | Parsetree.P_var v_name -> v_name :: bound_variables
+   | Parsetree.P_as (pat', vname) ->
+       extend_bound_name_from_pattern (vname :: bound_variables) pat'
+   | Parsetree.P_app (_, pats) ->
+       (* Because the [ident] here is a sum type constructor, *)
+       (* there is no risk of capture here.                   *)
+       List.fold_left
+	 (fun accu_bounds p ->
+	   extend_bound_name_from_pattern accu_bounds p)
+	 bound_variables
+	 pats
+   | Parsetree.P_record fields ->
+       List.fold_left
+	 (fun accu_bounds (label, p) ->
+	   (* Because labels are alway lowercase we insert them as [Vlident]. *)
+	   extend_bound_name_from_pattern
+             ((Parsetree.Vlident label) :: accu_bounds) p)
+	 bound_variables
+	 fields
+   | Parsetree.P_tuple pats ->
+       List.fold_left
+	 (fun accu_bounds p ->
+	   extend_bound_name_from_pattern accu_bounds p)
+	 bound_variables
+	 pats
+   | Parsetree.P_paren pat' ->
+       extend_bound_name_from_pattern bound_variables pat'
+;;
+
+
+
+(* ******************************************************************* *)
+(* param_unit: Types.fname -> bound_variables: Parsetree.vname list -> *)
+(*   Parsetree.vname -> Parsetree.expr_desc -> Parsetree.expr ->       *)
+(*     Parsetree.expr                                                  *)
+(** {b Descr} : Performs the substitution of a value name [name_x] by
+              an expression [by_expr] inside an expression. Takes care
+              not to substitute non free variables whose names are in
+              the list [bound_variables].
+
+    {b Rem} : Not exported outside this module.                        *)
+(* ******************************************************************* *)
+let rec subst_expr ~param_unit ~bound_variables name_x by_expr expression =
+  (* Let's just make a local recursive function to save the stack, avoiding *)
+  (* passing each time the 3 arguments [~param_unit], [bound_variables]     *)
+  (* [name_x] and [by_expr].                                                *)
+  let rec rec_subst rec_bound_vars initial_expr =
+    (* Substitute in the AST node description. *)
+    let new_desc =
+      (match initial_expr.Parsetree.ast_desc with
+       | Parsetree.E_self
+       | Parsetree.E_const _ ->
+	   (* Structurally, no possible change in expressions or types below. *)
+	   initial_expr.Parsetree.ast_desc
+       | Parsetree.E_fun (arg_vnames, e_body) ->
+	   Parsetree.E_fun (arg_vnames, (rec_subst rec_bound_vars e_body))
+       | Parsetree.E_var ident ->
+	   subst_E_var
+	     ~param_unit ~bound_variables: rec_bound_vars name_x by_expr ident
+       | Parsetree.E_app (functional_expr, args_exprs) ->
+	   let functional_expr' = rec_subst rec_bound_vars functional_expr in
+	   let args_exprs' = List.map (rec_subst rec_bound_vars) args_exprs in
+	   Parsetree.E_app (functional_expr', args_exprs')
+       | Parsetree.E_constr (cstr_expr, exprs) ->
+	   (* The constructor expression can not be substituted. *)
+	   let exprs' = List.map (rec_subst rec_bound_vars) exprs in
+	   Parsetree.E_constr (cstr_expr, exprs')
+       | Parsetree.E_match (matched_expr, bindings) ->
+	   let matched_expr' = rec_subst rec_bound_vars matched_expr in
+	   let bindings' =
+	     List.map
+	       (fun (pat, expr) ->
+		 (* Because patterns bind variables the substitution does *)
+                 (* not affect the pattern's structure. However patterns  *)
+		 (* bind variables and then make them insensitive to      *)
+                 (* substitutions. So, first extend the list of bound     *)
+                 (* variables with those introduced by the pattern.       *)
+		 let bound_variables' =
+                   extend_bound_name_from_pattern bound_variables pat in
+		 let expr' = rec_subst bound_variables' expr in
+		 (pat, expr'))
+	       bindings in
+	   Parsetree.E_match (matched_expr', bindings')
+       | Parsetree.E_if (e_cond, e_then, e_else) ->
+	   let e_cond' = rec_subst rec_bound_vars e_cond in
+	   let e_then' = rec_subst rec_bound_vars e_then in
+	   let e_else' = rec_subst rec_bound_vars e_else in
+	   Parsetree.E_if (e_cond', e_then', e_else')
+       | Parsetree.E_let (let_def, in_expr) ->
+	   let (let_def', bound_variables') =
+             subst_let_definition
+	       ~param_unit ~bound_variables: rec_bound_vars name_x by_expr
+	       let_def in
+	   let in_expr' = rec_subst bound_variables' in_expr in
+	   Parsetree.E_let (let_def', in_expr')
+       | Parsetree.E_record fields ->
+	   let fields' =
+	     List.map
+	       (fun (name, expr) ->
+		 (* Because labels are alway lowercase *)
+                 (* we insert them as [Vlident].       *)
+		 let bound_variables' =
+		   (Parsetree.Vlident name) :: rec_bound_vars in
+		 (name, (rec_subst bound_variables' expr)))
+	       fields in
+	   Parsetree.E_record fields'
+       | Parsetree.E_record_access (expr, label) ->
+	   Parsetree.E_record_access ((rec_subst rec_bound_vars expr), label)
+       | Parsetree.E_record_with (with_expr, fields) ->
+	   let with_expr' = rec_subst rec_bound_vars with_expr in
+	   let fields' =
+	     List.map
+	       (fun (name, expr) ->
+		 let bound_variables' =
+		   (Parsetree.Vlident name) :: rec_bound_vars in
+		 (name, (rec_subst bound_variables' expr))) fields in
+	   Parsetree.E_record_with (with_expr', fields')
+       | Parsetree.E_tuple exprs ->
+	   Parsetree.E_tuple (List.map (rec_subst rec_bound_vars) exprs)
+       | Parsetree.E_external _ ->
+	   (* Because this is in fact just a string, nowhere to substitute . *)
+	   initial_expr.Parsetree.ast_desc
+       | Parsetree.E_paren expr ->
+	   Parsetree.E_paren (rec_subst rec_bound_vars expr)) in
+    (* An finally, make a new AST node. *)
+    { initial_expr with Parsetree.ast_desc = new_desc } in
+  (* Do je job now. *)
+  rec_subst bound_variables expression
+
+
+
+and subst_let_binding ~param_unit ~bound_variables name_x by_expr binding =
+  (* Substitute in the AST node description. *)
+  let binding_desc = binding.Parsetree.ast_desc in
+  (* We must first extend the bound variables list with the *)
+  (* parameters of the currently defined identifier.        *)
+  let bound_variables' =
+    (List.map fst binding_desc.Parsetree.b_params) @ bound_variables in
+  let b_body' =
+    subst_expr
+      ~param_unit ~bound_variables: bound_variables' name_x by_expr
+      binding_desc.Parsetree.b_body in
+  let desc' = { binding_desc with Parsetree.b_body = b_body' } in
+  ({ binding with Parsetree.ast_desc = desc' }, binding_desc.Parsetree.b_name)
+
+
+
+(* ************************************************************************** *)
+(* param_unit: Types.fname -> bound_variables: Parsetree.vname list ->        *)
+(*   Parsetree.vname -> Parsetree.expr_desc -> Parsetree.let_def ->           *)
+(*     (Parsetree.let_def * Parsetree.vname list)                             *)
+(** {b Descr} : Performs the substitution of a value name [name_x] by an
+              expression [by_expr] inside a let-definition and returns the
+              list of variables bound by this definition. These variable
+              must then never be affected by a substitution because they are
+              not free anymore.
+
+    {b Rem} : Not exported outside this module.                               *)
+(* ************************************************************************** *)
+and subst_let_definition ~param_unit ~bound_variables name_x by_expr let_def =
+  let let_def_desc = let_def.Parsetree.ast_desc in
+  (* Substitute in the AST node description. *)
+  match let_def_desc.Parsetree.ld_rec with
+   | Parsetree.RF_no_rec ->
+       (begin
+       (* In case of non recursive let-definition, the set of variables    *)
+       (* insensitive to substitutions is incrementally extended. Do       *)
+       (* not [fold_left] otherwise the list of bindings will be reversed. *)
+       let (bound_variables', bindings') =
+	 List.fold_right
+	   (fun binding (accu_bvars, accu_bindings) ->
+	     let (binding', bound_var) =
+	       subst_let_binding
+		 ~param_unit ~bound_variables: accu_bvars name_x by_expr
+		 binding in
+	     ((bound_var :: accu_bvars), (binding' :: accu_bindings)))
+	   let_def_desc.Parsetree.ld_bindings
+	   (bound_variables, []) in
+       let desc' = { let_def_desc with Parsetree.ld_bindings = bindings' } in
+       ({ let_def with Parsetree.ast_desc = desc' }, bound_variables')
+       end)
+   | Parsetree.RF_rec ->
+       (begin
+       (* First get all the bound variables in the recursive let-definition. *)
+       let bound_variables' =
+	 List.map
+	   (fun binding -> binding.Parsetree.ast_desc.Parsetree.b_name) 
+	   let_def_desc.Parsetree.ld_bindings in
+       (* An now, substitute inside the definitions with all these *)
+       (* insensitive variables known. Note that we can ignore the *)
+       (* returned bound variable because it is still in our       *)
+       (* "recursive" bound vars list.                             *)
+       let (bindings', _) =
+	 List.split
+	   (List.map
+	      (subst_let_binding
+		 ~param_unit ~bound_variables: bound_variables' name_x by_expr)
+	      let_def_desc.Parsetree.ld_bindings) in
+       let desc' = { let_def_desc with Parsetree.ld_bindings = bindings' } in
+       ({ let_def with Parsetree.ast_desc = desc' }, bound_variables')
+       end)
+;;
+
+
+
+let subst_species_field ~param_unit name_x by_expr field =
+  match field with
+  | Env.TypeInformation.SF_sig (_, _) -> field     (* Nowhere to substitute. *)
+  | Env.TypeInformation.SF_let (vname, scheme, body) ->
+      (begin
+      let bound_variables = [vname] in
+      let body' = subst_expr ~param_unit ~bound_variables name_x by_expr body in
+      Env.TypeInformation.SF_let (vname, scheme, body')
+      end)
+  | Env.TypeInformation.SF_let_rec l ->
+      (* First get all the recursive bound variables. *)
+      let bound_variables = List.map (fun (vname, _, _) -> vname) l in
+      let l' =
+	List.map
+	  (fun (vname, scheme, body) ->
+	    let body' =
+	      subst_expr ~param_unit ~bound_variables name_x by_expr body in
+	    (vname, scheme, body'))
+	  l in
+      Env.TypeInformation.SF_let_rec l'
+;;

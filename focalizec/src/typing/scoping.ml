@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.20 2007-08-23 15:18:42 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.21 2007-08-27 11:33:23 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -1135,8 +1135,9 @@ let scope_inheritance ctx env spec_exprs =
 (*     ((Parsetree.vname * Parsetree.species_param_type) list           *)
 (*      *                                                               *)
 (*      Env.ScopingEnv.t)                                               *)
-(** {b Descr} : Scopes the species parameters and return the scoping
-              environment extended with bindings for theses parameters.
+(** {b Descr} : Scopes the species parameters of a specied definition
+              and return the scoping environment extended with bindings
+              for theses parameters.
               This extended environment will be later used to scope
               the body of the species definition.
 

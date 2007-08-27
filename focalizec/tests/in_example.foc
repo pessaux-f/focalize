@@ -1,0 +1,21 @@
+use "basics" ;;
+open "basics" ;;
+
+
+species IntModel inherits Basic_object =
+  rep = basics#int ;
+  let un in Self = 1 ;
+  let modulo (a, b) = if true then a else (if false then b else un) ;
+end ;;
+
+
+species Me (Naturals is IntModel, n in Naturals) =
+  rep = Naturals ;
+
+  let reduce (x in Naturals) in Self =
+    Naturals!modulo (x, n) ;
+end ;;
+
+collection ConcreteInt implements IntModel ;;
+
+let n = ConcreteInt!un ;;
