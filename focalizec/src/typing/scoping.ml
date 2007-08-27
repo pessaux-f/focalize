@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.21 2007-08-27 11:33:23 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.22 2007-08-27 12:33:26 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -873,6 +873,13 @@ let scope_statement ctx env stmt =
 
 
 
+(* ********************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.proof_node ->         *)
+(*   Parsetree.proof_node                                                 *)
+(** {b Descr} : Scopes a [proof_node] and returns a scoped version of it.
+
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
 let rec scope_proof_node ctx env node =
   let new_desc =
     (match node.Parsetree.ast_desc with

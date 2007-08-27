@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.43 2007-08-27 11:33:23 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.44 2007-08-27 12:33:26 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -171,6 +171,21 @@ exception Not_subspecies_missing_field of
 exception Parameterized_species_arity_mismatch of
   string    (** The message to insert in the error message: "many" or "few". *)
 ;;
+
+
+
+(* *********************************************************************** *)
+(** {b Descr} : During collection creation, it appears that the collection
+              can't be created because at leat one field is only declared
+	     and not defined.
+
+    {b Rem} : Exported outside this module.                                *)
+(* *********************************************************************** *)
+exception Collection_not_fully_defined of
+  (Types.species_name *  (** The incompletely species. *)
+   Parsetree.vname)      (** The name of the field missing an implementation. *)
+;;
+
 
 
 (* ************************************************************************* *)
@@ -1980,6 +1995,22 @@ let fields_fusion ~loc ctx phi1 phi2 =
 
 
 
+(* ************************************************************************ *)
+(* Env.TypeInformation.species_field ->                                     *)
+(*   Env.TypeInformation.species_field list ->                              *)
+(*     (Env.TypeInformation.species_field option *                          *)
+(*      Env.TypeInformation.species_field list)                             *)
+(** {b Descr} : Searches in the list of fields [fields] the oldest field
+              sharing a name in common with the field [phi]. Then it
+              returns this field of [fields] and the list [fields] itself
+              minus the found field.
+              This function intends to serves in the normalization
+              algorithm described in Virgile Prevosto's Phd, Section 3.7.1,
+              page 36. It addresses the problem of "finding i_0 the
+              smallest index such as N(phi) inter N(psi_0) <> empty".
+
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
 let oldest_inter_n_field_n_fields phi fields =
   let flat_phi_names =
     (match phi with
@@ -2323,15 +2354,66 @@ let typecheck_type_def ctx env type_def =
 
 
 
-let rec ensure_collection_completely_defined = function
-  | [] -> ()
-  | field :: rem_fields ->
-      Format.eprintf "Todo : collection is fully defined@." ;
-      ensure_collection_completely_defined rem_fields 
+(* ******************************************************************* *)
+(* typing_context -> Env.TypeInformation.species_field list -> unit    *)
+(** {b Descr} : Verifies that a species subject to become a collection
+              is really fully defined. This means that this species
+              must not contain any "declared" fields (i.e. SF_sig)
+              except for "repr" who must be declared (of course, its
+              declaration is also its definition !).
+
+    {b Rem} : Not exported outside this module.                        *)
+(* ******************************************************************* *)
+let ensure_collection_completely_defined ctx fields =
+  (* Let just make a reference poru checking the presence pf "rep" instead *)
+  (* of passing a boolean flag. This way, the function keeps terminal.     *)
+  let rep_found = ref false in
+  let rec rec_ensure = function
+    | [] -> ()
+    | field :: rem_fields ->
+	(begin
+	match field with
+	 | Env.TypeInformation.SF_sig (vname, _) ->
+             if vname = (Parsetree.Vlident "rep") then rep_found := true
+             else
+	       (begin
+	       match ctx.current_species with
+		| None -> assert false
+		| Some curr_spec ->
+		    raise (Collection_not_fully_defined (curr_spec, vname))
+	       end)
+	 | Env.TypeInformation.SF_let (_, _, _) -> ()
+	 | Env.TypeInformation.SF_let_rec _ -> ()
+	end) ;
+	rec_ensure rem_fields in
+  (* Now do the job... *)
+  rec_ensure fields ;
+  (* Finally, ckeck if the carrier "rep" was actually found. *)
+  if not !rep_found then
+    (begin
+    match ctx.current_species with
+     | None -> assert false
+     | Some curr_spec ->
+	 raise
+	   (Collection_not_fully_defined (curr_spec, (Parsetree.Vlident "rep")))
+    end)
 ;;
 
 
 
+(* ****************************************************************** *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.coll_def ->         *)
+(*   (Types.type_simple * Env.TypingEnv.t)                            *)
+(** {b Descr} : Typecheck a definition of collection. It recovers its
+              fields and their types and verifies that the resulting
+              species is fully defined.
+              Once the collection is successfully built, it is added
+              to the current environment.
+              The function returns both the extended environment and
+              the carrier type pf the species.
+
+    {b Rem} : Not exported outside this module.                       *)
+(* ****************************************************************** *)
 let typecheck_collection_def ctx env coll_def =
   let coll_def_desc = coll_def.Parsetree.ast_desc in
   (* First of all, we are in a species !!! *)
@@ -2342,7 +2424,7 @@ let typecheck_collection_def ctx env coll_def =
     typecheck_species_expr ctx env coll_def_desc.Parsetree.cd_body in
   (* One must ensure that the collection is *)
   (* really a completely defined species.   *)
-  ensure_collection_completely_defined species_expr_fields ;
+  ensure_collection_completely_defined ctx species_expr_fields ;
   let myself_coll_ty = (ctx.current_unit, coll_def_desc.Parsetree.cd_name) in
   (* In the collection's fields, substitute Self <- the collection name. *)
   let collection_fields =

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.8 2007-08-23 15:18:42 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.9 2007-08-27 12:33:26 pessaux Exp $ *)
 
 exception Method_multiply_defined of (Parsetree.vname * Types.species_name)
 exception Unbound_type_variable of string
@@ -34,6 +34,7 @@ exception Not_subspecies_arity_mismatch of
 exception Not_subspecies_missing_field of
   (Types.type_collection * Types.type_collection * Parsetree.vname *
    Location.t)
+exception Collection_not_fully_defined of (Types.species_name * Parsetree.vname)
 
 
 val typecheck_file : Types.fname -> Parsetree.file -> Env.TypingEnv.t

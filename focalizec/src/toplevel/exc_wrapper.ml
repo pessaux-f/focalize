@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.10 2007-08-23 15:18:42 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.11 2007-08-27 12:33:26 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -154,6 +154,10 @@ try Check_file.main () with
      | Infer.Parameterized_species_arity_mismatch msg ->
 	 Format.fprintf Format.err_formatter
 	   "Parameterized@ specie@ is@ applied@ to@ %s@ arguments@."  msg
+     | Infer.Collection_not_fully_defined (coll_name, field_name) ->
+	 Format.fprintf Format.err_formatter
+	   "Species@ '%s'@ cannot@ be@ turned@ into@ a@ collection.@ Field@ '%a'@ is@ not@ defined@."
+	   coll_name Sourcify.pp_vname field_name
 (* ********************** *)
 (* The ultimate firewall. *)
      | x ->
