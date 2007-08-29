@@ -1,6 +1,34 @@
 use "basics" ;;
 
 species A =
+  sig x : Self ;
+  let y = Self!x ;
+end ;;
+
+species B =
+  sig y : Self ;
+  let x = Self!y ;
+
+  let rec z1 (a) = if true then 42 else Self!z2 (if true then a else 1)
+  and     z2 (a) = if true then 24 else Self!z1 (if true then a else 1) ;
+end ;;
+
+species C inherits A, B =
+  rep = basics#int ;
+end ;;
+
+(*
+species Foo =
+  let rec a(x) = b(x)
+  and b(x) = a(x) ;
+end ;;
+
+species Bar inherits Foo =
+  let rec a(x) = c(x)
+  and c(x) = a(x) ;
+end ;;
+
+species A =
  sig y2 : basics#unit -> basics#unit ;
 
  let y1 (v) = y2 (v) ;
@@ -18,3 +46,4 @@ species C inherits B =
   let rec x2 (v) = y4 (v)
   and y4 (v) = x2 (v) ;
 end ;;
+*)

@@ -1,4 +1,4 @@
-(* $Id: sourcify.mli,v 1.6 2007-08-14 13:20:26 pessaux Exp $ *)
+(* $Id: sourcify.mli,v 1.7 2007-08-29 12:47:48 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -14,6 +14,7 @@
 (***********************************************************************)
 
 val pp_vname : Format.formatter -> Parsetree.vname -> unit
+val pp_vnames : string -> Format.formatter -> Parsetree.vname list -> unit
 val pp_ident : Format.formatter -> Parsetree.ident -> unit
 val pp_file : Format.formatter -> Parsetree.file -> unit
 ;;

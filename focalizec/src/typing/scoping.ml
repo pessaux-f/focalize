@@ -12,11 +12,11 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.22 2007-08-27 12:33:26 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.23 2007-08-29 12:47:48 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
-             Hence, this means that only [I_local] [ident]s should be
+             Hence, this means that only [I_local] [ident]s will be
              affected by the scoping transformation.
              Local [ident]s will be looked-up to determine whether they
              are really local or are method names or toplevel (of a file)

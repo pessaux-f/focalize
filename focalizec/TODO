@@ -269,8 +269,6 @@ types d'espèces   type des collections ?
                   On stratifierait ainsi complètement les "types ML" et les
                   "types de collections".
                                                                      FAIT
-                                                        DANS L'ALGEBRE MAIS PAS
-                                                            ENCORE EXPLOITE
 
 2007-08-02 (François)
 =====================
@@ -283,22 +281,14 @@ fichier (.fo) que celles de typage, afin de ne pas multiplier les fichiers
 intermédiaires.
 Les algos gérant les environnements de scoping et de typage sont
 essentiellement les mêmes. Surtout la recherche mappant les qualifications
-! et # sur les fichiers sources représentant ls modules.
+! et # sur les fichiers sources représentant les modules.
 Ceci impose donc que les environnements de scoping et de typage soient dans
 un même fichier et que la structure des ".fo" connaisse à la fois la structure
 des deux environnements.
-On créera donc dans le même fichier "env.ml" les structures des environnements
-de scoping et de typage. Ensuite on pourra créer 1 seule fonction partagée
-permettant le mapping des "modules" sur les fichiers source FoCaL. Et finalement
-on pourra implémenter les fonctions de recherche de chacun des environnements.
-On pourrait envisager une structure d'environnement générique, toutefois les
-environnements de scoping n'ont pas besoin d'autant de champs que ceux de
-typage (par exemple, on ne scope pas les labels de records, on ne scope pas les
-noms de collections ou d'entités). Donc plutôt que d'avoir à disposition des
-fonctions "add" et "find" adressant des champs d'environnement toujours vides
-(et donc ne devant pas être utilisés), on fera 2 structures d'environnement
-distinctes, ce qui ne dupliquera toutefois pas trop de code.
-
+On créera donc dans le même fichier "env.ml" 1 seule fonction partagée
+permettant le mapping des "modules" sur les fichiers source FoCaL et une
+structure d'environnement générique.
+                                                           Status: FAIT
 
 
 * SCOPING
@@ -310,12 +300,14 @@ transformer si nécessaire ces I_local en I_global ou I_method.
 Pour les ident nativement I_global on fait en sorte que leur qualification
 soit toujours explicite (plus de None). Ainsi, dans une unité de compilation
 "tata", un identificateur "#fct" deviendra "tada#fct".
+                                                           Status: FAIT
 
 Pour les ident nativement I_method (comme pour les I_local pour lesquels on
 a déterminé qu'ils nommaient une méthode de Self), si la method provient
 de Self, alors on laisse None plutôt que de mettre explicitement Self.
 Ceci fait qu'on obtiendra moralement un "!meth" au lieu d'un "Self!meth". On
 peut le changer facilement si le besoin s'en fait sentir d'ailleurs.
+                                                           Status: FAIT
 
 
 Lorsque L'ON INSÈRE UN IDENT GLOBAL DANS L'ENVIRONNEMENT de scoping, on le
@@ -324,7 +316,7 @@ de sauver l'environnement de scoping pour en faire un ".fo", on n'a pas besoin
 de repasser sur les bindings avec None pour les expliciter à
 (Some l'unité de compilation courante). De même lorsque l'on chargera un ".fo"
 on n'aura pas à refaire ce traitement.
-
+                                                           Status: FAIT
 
 
 Le scoping permet de s'assurer que les identificateurs sont bien liés, et à

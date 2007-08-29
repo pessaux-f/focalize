@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.45 2007-08-27 15:34:57 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.46 2007-08-29 12:47:48 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -2143,6 +2143,36 @@ let typecheck_species_def ctx env species_def =
     typecheck_species_fields
       ctx_with_inherited_repr env_with_inherited_methods
       species_def_desc.Parsetree.sd_fields in
+(**********************)
+(**********************)
+Format.eprintf "Species %s@." species_def_desc.Parsetree.sd_name ;
+let semi_normed_meths = inherited_methods_infos @ methods_info in
+List.iter
+  (function
+    | Env.TypeInformation.SF_sig (vname, _)
+    | Env.TypeInformation.SF_let (vname, _, _) ->
+	let ec =
+	  Dep_analysis.debug_clockwise_arrow_equiv_class
+	    vname semi_normed_meths in
+	Format.eprintf "EC(%a) = { %a }@."
+	  Sourcify.pp_vname vname (Sourcify.pp_vnames ",") ec
+    | Env.TypeInformation.SF_let_rec l ->
+	(begin
+	List.iter
+	  (fun (vname, _, _) ->
+	    let ec =
+	      Dep_analysis.debug_clockwise_arrow_equiv_class
+		vname semi_normed_meths in
+	    Format.eprintf "EaClass arrow (%a) = { %a }@."
+	      Sourcify.pp_vname vname (Sourcify.pp_vnames ",") ec)
+	  l
+	end))
+  semi_normed_meths ;
+Dep_analysis.debug_where semi_normed_meths ;
+Dep_analysis.debug_in_species_dependencies
+  ~current_species: species_def_desc.Parsetree.sd_name semi_normed_meths ;
+(**********************)
+(**********************)
   (* Then one must ensure that each method has the same type everywhere *)
   (* in the inheritance tree and more generaly create the normalised    *)
   (* form of the species.                                               *)

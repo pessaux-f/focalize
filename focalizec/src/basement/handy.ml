@@ -1,4 +1,4 @@
-(* $Id: handy.ml,v 1.2 2007-08-17 15:02:49 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.3 2007-08-29 12:47:48 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -118,3 +118,30 @@ let rec int_to_base_26 i =
     {b Rem} : Exported outside this module.                        *)
 (* *************************************************************** *)
 let list_intersect_p l1 l2 = List.exists (fun e -> List.mem e l2) l1 ;;
+
+
+
+(* *********************************************************************** *)
+(* 'a -> 'a list -> 'a list                                                *)
+(** {b Descr} : Return a list with the element [e] in head of the list [l]
+              only if [e] did not already belong to [l] (equality test
+              performed with structural equality [=]).
+
+    {b Rem} : Exported outside this module.                                *)
+(* *********************************************************************** *)
+let list_cons_uniq_eq a l =
+  if List.mem a l then l else a :: l
+;;
+
+
+
+(* ********************************************************************** *)
+(* 'a list -> 'a list -> 'a list                                          *)
+(** {b Descr} : Return a list containing elements of [l2] that are not in
+              [l1]. This is equivalent to say that the resultign list is
+              [l1 - l2].
+    {b Rem} : Exported outside this module.                               *)
+(* ********************************************************************** *)
+let list_substract l1 l2 =
+  List.filter (fun e -> not (List.mem e l2)) l1
+;;
