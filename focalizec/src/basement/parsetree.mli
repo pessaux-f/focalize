@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.12 2007-08-24 10:51:20 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.13 2007-08-31 16:21:09 pessaux Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -144,16 +144,24 @@ type external_language =
 
 type external_def = external_def_desc ast
 and external_def_desc =
-  | ED_type of external_def_body
-  | ED_value of external_def_body
+  | ED_type of external_type_def_body
+  | ED_value of external_value_def_body
 (** An external definitions can define a new type or a new value. *)
 
-and external_def_body = external_def_body_desc ast
-and external_def_body_desc = {
-  ed_name : vname ;
-  ed_params : vname list ;    (** Mostly for types to know their arity. *)
-  ed_body : external_expr
+and external_type_def_body = external_type_def_body_desc ast
+and external_type_def_body_desc = {
+  etd_name : vname ;
+  etd_params : vname list ;    (** For types to know their arity. *)
+  etd_body : external_expr
 }
+
+and external_value_def_body = external_value_def_body_desc ast
+and external_value_def_body_desc = {
+  evd_name : vname ;
+  evd_type : type_expr ;
+  evd_body : external_expr
+}
+
 (** The body of an external definitions contains the name defined
     and its definition in some external language. *)
 

@@ -1,0 +1,80 @@
+external type int = | caml -> "int" ;;
+external type unit = | caml -> "unit" ;;
+external type float = | caml -> "float" ;;
+external type char = | caml -> "char" ;;
+external type string = | caml -> "string" ;;
+external type bool = | caml -> "bool" ;;
+external type list ('a) = | caml -> "list" ;;
+
+external value foc_error : string -> 'a =
+  | caml -> "foc_error"
+  | coq -> "foc_error"
+;;
+
+let and_b (x, y) =
+   match (x, y) with
+   | (true, true) -> true
+   | (false, false) -> false
+   | (_ , _) -> false    (* Beware the space before the , !!! *)
+;;
+
+let or_b (x, y) =
+   match (x, y) with
+   | (true, _) -> true
+   | (_ , true) -> true  (* Beware the space before the , !!! *)
+   | (_ , _) -> false    (* Beware the space before the , !!! *)
+;;
+
+let not_b (x) in bool =
+   match x with
+   | true -> false
+   | false -> true
+;;
+
+let xor_b (x, y) = 
+   or_b (and_b (x, not_b (y)), and_b (not_b (x), y))
+;;
+
+(* Operations on pairs *)
+let crp (x, y) = (x, y) ;;
+let first (x) = match x with | (v, _ ) -> v ;;
+let scnd (x) = match x with | (_ , v) -> v ;;
+
+(* String operations *)
+external value sc : string -> string -> string = | caml -> "sc" ;;
+
+external value string_of_int : int -> string = | caml -> "soi" ;;
+external value int_of_string : string -> int = | caml -> "ios" ;;
+external value int_mult : int -> int -> int = | caml -> "int_mult" ;;
+external value print_int : int -> unit = | caml -> "pi" ;;
+
+(* Operations on integers *)
+external value int_mod : int -> int -> int = | caml -> "int_mod" ;;
+external value int_eq : int -> int -> bool =
+  | caml -> "int_eq"
+  | coq -> "int_eq" ;;
+external value int_div : int -> int -> int = | caml -> "int_div" ;;
+external value int_lt : int -> int -> bool =
+  | caml -> "int_lt"
+  | coq -> "int_lt" ;;
+external value int_leq : int -> int -> bool =
+  | caml -> "int_leq"
+  | coq -> "int_leq" ;;
+external value int_geq : int -> int -> bool =
+  | caml -> "int_geq"
+  | coq -> "int_geq" ;;
+external value int_gt : int -> int -> bool =
+  | caml -> "int_gt"
+  | coq -> "int_gt" ;;
+
+external value base_eq : 'a -> 'a -> bool =
+  | caml -> "beq"
+  | coq -> "beq" ;;
+
+species Basic_object =
+  let print (x in Self) = "<abst>" ;
+  let parse (x in string) in Self = #foc_error ("not parsable") ;
+  let equal (x, y) =
+     let useless = if true then x else y in
+     true ;
+end ;;

@@ -1,4 +1,4 @@
-(* $Id: oldsourcify.ml,v 1.17 2007-08-10 15:32:06 pessaux Exp $ *)
+(* $Id: oldsourcify.ml,v 1.18 2007-08-31 16:21:09 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -542,19 +542,18 @@ let pp_external_language ppf = function
 
 
 
-(* ***************************************************************** *)
-(* pp_external_def_desc :                                     *)
-(*          Format.formatter -> Parsetree.external_def_desc -> unit  *)
+(* ****************************************************************** *)
+(* Format.formatter -> Parsetree.external_def_desc -> unit            *)
 (** {b Descr} : Pretty prints a [external_def_desc] value as old FoCal
                source.
 
-    {b Rem} : Not exported ouside this module.                         *)
-(* ***************************************************************** *)
+    {b Rem} : Not exported ouside this module.                        *)
+(* ****************************************************************** *)
 let rec pp_external_def_desc ppf = function
   | Parsetree.ED_type edb ->
-      Format.fprintf ppf "@[<2>type@ %a@]" pp_external_def_body edb
+      Format.fprintf ppf "@[<2>type@ %a@]" pp_external_type_def_body edb
   | Parsetree.ED_value edb ->
-      Format.fprintf ppf "@[<2>value@ %a@]" pp_external_def_body edb
+      Format.fprintf ppf "@[<2>value@ %a@]" pp_external_value_def_body edb
 (* ************************************************************************ *)
 (* pp_external_def :                                                 *)
 (*          Format.formatter ->                                             *)
@@ -568,26 +567,50 @@ and pp_external_def ppf = pp_generic_ast pp_external_def_desc ppf
 
 
 
-(* ********************************************************************** *)
-(* pp_external_def_body_desc :                                     *)
-(*          Format.formatter -> Parsetree.external_def_body_desc -> unit  *)
-(** {b Descr} : Pretty prints a [external_def_body_desc] value as old FoCal
-              source.
+(* ******************************************************************* *)
+(* Format.formatter -> Parsetree.external_type_def_body_desc -> unit   *)
+(** {b Descr} : Pretty prints a [external_type_def_body_desc] value as
+              old FoCal source.
 
-    {b Rem} : Not exported ouside this module.                              *)
-(* ********************************************************************** *)
-and pp_external_def_body_desc ppf body =
+    {b Rem} : Not exported ouside this module.                         *)
+(* ******************************************************************* *)
+and pp_external_type_def_body_desc ppf body =
   Format.fprintf ppf "%a@ =@ %a"
-    pp_vname body.Parsetree.ed_name pp_external_expr body.Parsetree.ed_body
+    pp_vname body.Parsetree.etd_name
+    pp_external_expr body.Parsetree.etd_body
 (* ****************************************************************** *)
-(* pp_external_def_body :                                      *)
-(*          Format.formatter -> Parsetree.external_def_body -> unit   *)
-(** {b Descr} : Pretty prints a [external_def_body] value as old FoCal
-              source.
+(* Format.formatter -> Parsetree.external_type_def_body -> unit       *)
+(** {b Descr} : Pretty prints a [external_type_def_body] value as old
+              FoCal source.
+
+    {b Rem} : Not exported ouside this module.                        *)
+(* ****************************************************************** *)
+and pp_external_type_def_body ppf =
+  pp_generic_ast pp_external_type_def_body_desc ppf
+
+
+
+(* ******************************************************************** *)
+(* Format.formatter -> Parsetree.external_value_def_body_desc -> unit   *)
+(** {b Descr} : Pretty prints a [external_value_def_body_desc] value as
+              old FoCal source.
 
     {b Rem} : Not exported ouside this module.                          *)
-(* ****************************************************************** *)
-and pp_external_def_body ppf = pp_generic_ast pp_external_def_body_desc ppf
+(* ******************************************************************** *)
+and pp_external_value_def_body_desc ppf body =
+  Format.fprintf ppf "%a@ :@ %a@ =@ %a"
+    pp_vname body.Parsetree.evd_name
+    pp_type_expr body.Parsetree.evd_type
+    pp_external_expr body.Parsetree.evd_body
+(* *************************************************************** *)
+(* Format.formatter -> Parsetree.external_value_def_body -> unit   *)
+(** {b Descr} : Pretty prints a [external_value_def_body] value as
+              old FoCal source.
+
+    {b Rem} : Not exported ouside this module.                     *)
+(* *************************************************************** *)
+and pp_external_value_def_body ppf =
+  pp_generic_ast pp_external_value_def_body_desc ppf
 
 
 

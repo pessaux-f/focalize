@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.49 2007-08-31 14:28:01 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.50 2007-08-31 16:21:09 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -279,7 +279,7 @@ let rec typecheck_type_expr ctx env ty_expr =
 	   ty_constr_params args_ty ;
 	 ty_constr_type
 	 end)
-     | Parsetree.TE_prod (ty_exprs) ->
+     | Parsetree.TE_prod ty_exprs ->
 	 let tys = List.map (typecheck_type_expr ctx env) ty_exprs in
 	 Types.type_tuple tys
      | Parsetree.TE_self -> Types.type_self ()
@@ -369,6 +369,53 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
   (* Store the type information in the expression's node. *)
   rep_type_def.Parsetree.ast_type <- Some final_ty ;
   final_ty
+;;
+
+
+
+(* ************************************************************************* *)
+(* Parsetree.type_expr -> (string * Types.type_simple) list                  *)
+(** {b Descr} : Create a fresh variable mapping automatically variables in
+              the type as generalized. This is used when one creates a
+              type structure from an external value's type expression.
+              In effect, in such a context, variables in the type are
+              implicitely considered as generalized because the type
+              constraint annotating the external value does not show
+              explicitely "forall-bound-variables".
+              Hence, in an external value definition like:
+              [external value foc_error : string -> 'a = ...]
+              the ['a] must be considered as generalized, then when
+              typechecking this definitionn the context must have a variable
+              mapping where ['a] is known. Using the present function, one
+              can build such a mapping.
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+let make_implicit_var_mapping_from_type_expr type_expression =
+  let mapping = ref [] in
+  let rec rec_make texpr =
+    match texpr.Parsetree.ast_desc with
+     | Parsetree.TE_ident ident ->
+	 (begin
+	 match ident.Parsetree.ast_desc with
+	  | Parsetree.I_local (Parsetree.Vqident quote_name) ->
+	      (begin
+              (* Just handle the special where the ident is a type variable. *)
+	      if not (List.mem_assoc quote_name !mapping) then
+		mapping := (quote_name, (Types.type_variable ())) :: !mapping
+	      end)
+	  | _ -> ()
+	 end)
+     | Parsetree.TE_fun (ty_expr1, ty_expr2) ->
+	 rec_make ty_expr1 ;
+	 rec_make ty_expr2
+     | Parsetree.TE_app (_, args_ty_exprs) -> List.iter rec_make args_ty_exprs
+     | Parsetree.TE_prod ty_exprs -> List.iter rec_make ty_exprs
+     | Parsetree.TE_self
+     | Parsetree.TE_prop -> ()
+     | Parsetree.TE_paren inner -> rec_make inner in
+  rec_make type_expression ;
+  !mapping
 ;;
 
 
@@ -538,26 +585,26 @@ let rec typecheck_pattern ctx env pat_desc =
 
 
 
-(* *********************************************************************** *)
-(* Env.TypingEnv.t -> Parsetree.external_def -> Env.TypingEnv.t            *)
-(** {b Desc} : Synthetise the type of an external definition. In fact,
-             because such definitions do not contain any type information,
-             the only solution is to make a stupid type variable...
+(* ******************************************************************* *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.external_def ->      *)
+(*   Env.TypingEnv.t                                                   *)
+(** {b Desc} : Synthetise the type of an external definition.
              If the definition is a value definition, then the binding
              get added to the [ident]s environment.
              If the definition is a type definition, then the binding
              gets added to the [type]'s environment.
+             Also performs the interface printing stuff.
 
-    {b Rem} : Not exported outside this module.                            *)
-(* *********************************************************************** *)
-let typecheck_external_def env e_def =
+    {b Rem} : Not exported outside this module.                        *)
+(* ******************************************************************* *)
+let typecheck_external_def ctx env e_def =
   let e_def_desc = e_def.Parsetree.ast_desc in
   match e_def_desc with
   | Parsetree.ED_type body ->
       (* Get the name of the defined type as a simple string. *)
       let name_as_str =
         Parsetree_utils.name_of_vname
-          body.Parsetree.ast_desc.Parsetree.ed_name in
+          body.Parsetree.ast_desc.Parsetree.etd_name in
       (* We will build an abstract type of this name with as many *)
       (* parameters we find in the [ed_params] list.              *)
       Types.begin_definition () ;
@@ -565,7 +612,7 @@ let typecheck_external_def env e_def =
       let params =
         List.map
 	  (fun _ -> Types.type_variable ())
-	  body.Parsetree.ast_desc.Parsetree.ed_params in
+	  body.Parsetree.ast_desc.Parsetree.etd_params in
       (* Make the constructor... *)
       let ty = Types.type_basic name_as_str params in
       Types.end_definition () ;
@@ -576,19 +623,38 @@ let typecheck_external_def env e_def =
         Env.TypeInformation.type_identity = identity ;
 	Env.TypeInformation.type_params = params ;
         Env.TypeInformation.type_arity = List.length params } in
+      if Configuration.get_do_interface_output () then
+	(begin
+	Format.printf "@[<2>external@ type %s@ =@ %a@]@\n"
+	  name_as_str Types.pp_type_scheme identity
+	end) ;
+      (* Return the extended environment. *)
       Env.TypingEnv.add_type name_as_str ty_descr env
   | Parsetree.ED_value body ->
-      (* [Unsure] *)
-      (* Anyway, just make a fresh type variable because *)
-      (* we don't have any type information here yet.    *)
       Types.begin_definition () ;
-      let ty = Types.type_variable () in
+      (* In external value definitions, variables in the *)
+      (* type are implicitely quantified.                *)
+      let vmapp =
+	make_implicit_var_mapping_from_type_expr
+	  body.Parsetree.ast_desc.Parsetree.evd_type in
+      let ctx' = { ctx with tyvars_mapping = vmapp } in
+      let ty =
+	typecheck_type_expr
+	  ctx' env body.Parsetree.ast_desc.Parsetree.evd_type in
       Types.end_definition () ;
       (* Record the type inside the node. I think it's useless, but... *)
       body.Parsetree.ast_type <- Some ty ;
       let scheme = Types.generalize ty in
+      (* Interface printing stuff. *)
+      if Configuration.get_do_interface_output () then
+	(begin
+	Format.printf "@[<2>external@ val %a@ :@ %a@]@\n"
+	  Sourcify.pp_vname body.Parsetree.ast_desc.Parsetree.evd_name
+	  Types.pp_type_scheme scheme
+	end) ;
+      (* Return the extended environment. *)
       Env.TypingEnv.add_value
-	body.Parsetree.ast_desc.Parsetree.ed_name scheme env
+	body.Parsetree.ast_desc.Parsetree.evd_name scheme env
 ;;
 
 
@@ -2522,7 +2588,7 @@ let typecheck_phrase ctx env phrase =
   let (final_ty, new_env) =
     (match phrase.Parsetree.ast_desc with
      | Parsetree.Ph_external exter_def ->
-	 let env' = typecheck_external_def env exter_def in
+	 let env' = typecheck_external_def ctx env exter_def in
 	 ((Types.type_unit ()), env')
      | Parsetree.Ph_use _ ->
 	 (* Nothing to do, the scoping pass already ensured that *)

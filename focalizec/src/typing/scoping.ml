@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.23 2007-08-29 12:47:48 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.24 2007-08-31 16:21:09 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -1349,11 +1349,11 @@ let scope_external_def ctx env external_def =
    | Parsetree.ED_type e_def_body ->
        let bound_name =
 	 Parsetree_utils.name_of_vname
-	   (e_def_body.Parsetree.ast_desc.Parsetree.ed_name) in
+	   (e_def_body.Parsetree.ast_desc.Parsetree.etd_name) in
        Env.ScopingEnv.add_type
 	 bound_name (Env.ScopeInformation.TBI_defined_in ctx.current_unit) env
    | Parsetree.ED_value e_def_body ->
-       let bound_name = e_def_body.Parsetree.ast_desc.Parsetree.ed_name in
+       let bound_name = e_def_body.Parsetree.ast_desc.Parsetree.evd_name in
        Env.ScopingEnv.add_value
 	 bound_name (Env.ScopeInformation.SBI_file ctx.current_unit) env
 ;;

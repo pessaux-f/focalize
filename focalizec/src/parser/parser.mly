@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.59 2007-08-24 10:51:20 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.60 2007-08-31 16:21:09 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -257,12 +257,15 @@ def_external:
      mk
        (ED_type
 	  (mk
-	     { ed_name = Vlident $2 ;
-	       ed_params = List.map (fun n -> Vqident n) $3 ;
-	       ed_body = mk $5 }))
+	     { etd_name = Vlident $2 ;
+	       etd_params = List.map (fun n -> Vqident n) $3 ;
+	       etd_body = mk $5 }))
    }
-  | VALUE external_value_vname EQUAL external_definition
-    { mk (ED_value (mk { ed_name = $2 ; ed_params = [] ; ed_body = mk $4 })) }
+  | VALUE external_value_vname COLON external_type_expr EQUAL external_definition
+    {
+     mk
+       (ED_value (mk { evd_name = $2 ; evd_type = $4 ; evd_body = mk $6 }))
+   }
 ;
 
 external_language:
@@ -689,6 +692,48 @@ opt_uident:
   | UIDENT
     { Some $1 }
 ;
+
+
+
+/**** TYPE EXPRESSIONS FOR EXTERNAL VALUES ****/
+/* Type expressions that are used to anotate external values. */
+/* Like [type_expr] except that don't allow Self and Prop. */
+external_type_expr:
+  | simpler_external_type_expr
+    { $1 }
+  | external_type_tuple
+    { mk (TE_prod $1) }
+  | external_type_expr DASH_GT external_type_expr
+    { mk (TE_fun ($1, $3)) }
+;
+
+/* Type expressions that can appear inside a tuple. */
+simpler_external_type_expr:
+  | QIDENT
+    { mk (TE_ident (mk_local_ident (Vqident $1))) }
+  | glob_ident
+    { mk (TE_ident $1) }
+  | LIDENT
+    { mk (TE_ident (mk_local_ident (Vlident $1))) }
+  | glob_ident LPAREN external_type_expr_comma_list RPAREN
+    { mk (TE_app ($1, $3)) }
+  | LPAREN external_type_expr RPAREN
+    { mk (TE_paren $2) }
+  | species_vname   /* To have capitalized species names as types. */
+    { mk (TE_ident (mk (I_global (None, $1)))) }
+;
+
+external_type_tuple:
+  | simpler_external_type_expr STAR_OP simpler_external_type_expr
+      { [$1; $3] }
+  | external_type_tuple STAR_OP simpler_external_type_expr        { $1 @ [$3] }
+;
+
+external_type_expr_comma_list:
+  | external_type_expr COMMA external_type_expr_comma_list { $1 :: $3 }
+  | external_type_expr { [$1] }
+;
+
 
 /**** EXPRESSIONS ****/
 
