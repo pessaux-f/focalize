@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.48 2007-08-31 13:45:52 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.49 2007-08-31 14:28:01 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1804,13 +1804,12 @@ let typecheck_species_def_params ctx env species_name species_params =
     {b Rem} :Not exported outside this module.                            *)
 (* ********************************************************************** *)
 let extend_env_with_inherits ~loc ctx env spe_exprs =
-  let rec rec_extend current_ctx current_env revd_accu_found_methods = function
-    | [] -> (revd_accu_found_methods, current_env, current_ctx)
+  let rec rec_extend current_ctx current_env accu_found_methods = function
+    | [] -> (accu_found_methods, current_env, current_ctx)
     | inh :: rem_inhs ->
 	(* First typecheck the species expression in the initial   *)
         (* (non extended) and recover its methods names and types. *)
-	let inh_species_methods =
-	  typecheck_species_expr current_ctx env inh in
+	let inh_species_methods = typecheck_species_expr current_ctx env inh in
 	let (env', current_ctx')  =
 	  List.fold_left
 	    (fun (accu_env, accu_ctx) field ->
@@ -1846,14 +1845,10 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
 		   (e, accu_ctx))
 	    (current_env, current_ctx)
 	    inh_species_methods in
-	let new_accu_found_methods =
-	  inh_species_methods @ revd_accu_found_methods in
+	let new_accu_found_methods = accu_found_methods @ inh_species_methods in
 	rec_extend current_ctx' env' new_accu_found_methods rem_inhs in
-  (* Now, let's work... The list of the found methods is built reversed *)
-  (* for efficiency reason. So reverse it finally before returning so   *)
-  (* that deeper inherited methods are in head of the list.             *)
-  let (revd_found_methods, env', ctx') = rec_extend ctx env [] spe_exprs in
-  ((List.rev revd_found_methods), env', ctx')
+  (* Now, let's work... *)
+  rec_extend ctx env [] spe_exprs
 ;;
 
 
