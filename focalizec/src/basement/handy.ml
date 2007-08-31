@@ -1,4 +1,4 @@
-(* $Id: handy.ml,v 1.3 2007-08-29 12:47:48 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.4 2007-08-31 11:18:47 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -145,3 +145,39 @@ let list_cons_uniq_eq a l =
 let list_substract l1 l2 =
   List.filter (fun e -> not (List.mem e l2)) l1
 ;;
+
+
+
+(* ********************************************************************* *)
+(* 'a -> 'a list -> 'a list                                              *)
+(** {b Descr} : Returns the index in the list [l] where the element [e]
+              was found. Raises [Not_found] if [e] doesn't belong to [l].
+
+    {b Rem} : Exported outside this module.                              *)
+(* ********************************************************************* *)
+let list_mem_count e l =
+  let rec rec_find counter = function
+    | [] -> raise Not_found
+    | h :: q ->
+	if h = e then counter else rec_find (counter + 1) q in
+  rec_find 0 l
+;;
+
+
+
+(* *********************************************************************** *)
+(* 'a list -> 'a list -> ' a list *)
+(** {b Descr} : Assuming that [l2] does not contain doubles, returns the
+              concatenation of elements of [l1] that do not belong to [l2].
+              If [l1] contains doubles, then only one of each will appear
+              in the resulting list.
+              The equality predicate used here is the physical equality.
+
+    {b Rem} : Exported outside this module.                                *)
+(* *********************************************************************** *)
+let list_concat_uniqq l1 l2 =
+  let rec rec_append = function
+    | [] -> l2
+    | h :: q ->
+	if List.memq h l2 then rec_append q else h :: (rec_append q) in
+  rec_append l1 ;;

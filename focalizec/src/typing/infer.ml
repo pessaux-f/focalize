@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.46 2007-08-29 12:47:48 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.47 2007-08-31 11:18:47 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -2151,26 +2151,27 @@ List.iter
   (function
     | Env.TypeInformation.SF_sig (vname, _)
     | Env.TypeInformation.SF_let (vname, _, _) ->
-	let ec =
-	  Dep_analysis.debug_clockwise_arrow_equiv_class
-	    vname semi_normed_meths in
-	Format.eprintf "EC(%a) = { %a }@."
+	let ec = Dep_analysis.clockwise_arrow vname semi_normed_meths in
+	Format.eprintf "%a clock { %a }@."
 	  Sourcify.pp_vname vname (Sourcify.pp_vnames ",") ec
     | Env.TypeInformation.SF_let_rec l ->
 	(begin
 	List.iter
 	  (fun (vname, _, _) ->
-	    let ec =
-	      Dep_analysis.debug_clockwise_arrow_equiv_class
-		vname semi_normed_meths in
-	    Format.eprintf "EaClass arrow (%a) = { %a }@."
+	    let ec = Dep_analysis.clockwise_arrow vname semi_normed_meths in
+	    Format.eprintf "%a clock { %a }@."
 	      Sourcify.pp_vname vname (Sourcify.pp_vnames ",") ec)
 	  l
 	end))
   semi_normed_meths ;
 Dep_analysis.debug_where semi_normed_meths ;
-Dep_analysis.debug_in_species_dependencies
-  ~current_species: species_def_desc.Parsetree.sd_name semi_normed_meths ;
+
+let well_formed =
+  Dep_analysis.is_species_well_formed
+    ~current_species: species_def_desc.Parsetree.sd_name semi_normed_meths in
+if not well_formed then
+  failwith ("ESPECE " ^ species_def_desc.Parsetree.sd_name ^ " mal formée.") ;
+
 (**********************)
 (**********************)
   (* Then one must ensure that each method has the same type everywhere *)

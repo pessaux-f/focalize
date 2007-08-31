@@ -1,4 +1,4 @@
-(* $Id: handy.mli,v 1.3 2007-08-29 12:47:48 pessaux Exp $ *)
+(* $Id: handy.mli,v 1.4 2007-08-31 11:18:47 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -30,3 +30,5 @@ val int_to_base_26 : int -> string
 val list_intersect_p : 'a list -> 'a list -> bool
 val list_cons_uniq_eq : 'a -> 'a list -> 'a list
 val list_substract : 'a list -> 'a list -> 'a list
+val list_mem_count : 'a -> 'a list -> int
+val list_concat_uniqq : 'a list -> 'a list -> 'a list

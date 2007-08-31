@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.1 2007-08-29 12:47:48 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.2 2007-08-31 11:18:47 pessaux Exp $ *)
 
 module VnameMod = struct type t = Parsetree.vname let compare = compare end ;;
 module VnameSet = Set.Make (VnameMod) ;;
@@ -158,13 +158,6 @@ let field_dependencies ~current_species = function
               Pdh, section 3.5, page 30) for the name [field_name]
               in the fields [fields] that must include the inherited
               fields of the analysed species.
-              Instead of just returning the names, it returns the fields
-              these names belong to. If one really need the names, then
-              we will just extract them afterwards.
-              Returns the list of fields in their order of apparition in
-              the original list. This means that if oldest inherited
-              fields are in head of the list, so they will be in the
-              resulting list.
 
     {b Rem} : MUST BE used on a fields list containing all the
              **normalized inherited fields** of the species and the
@@ -179,6 +172,32 @@ let field_dependencies ~current_species = function
              to check for let rec at this level.                         *)
 (* ********************************************************************* *)
 let clockwise_arrow field_name fields =
+  List.fold_right
+    (fun field accu ->
+      match field with
+      | Env.TypeInformation.SF_sig (vname, _)
+      | Env.TypeInformation.SF_let (vname, _, _) ->
+	  if vname = field_name then Handy.list_cons_uniq_eq vname accu
+	  else accu
+       | Env.TypeInformation.SF_let_rec l ->
+	   (* Check if the searched field name is among those in this     *)
+           (* recursive let definition. If so, then the relation includes *)
+           (* all the bound names of this recursive let definition.       *)
+	   if List.exists (fun (vname, _, _) -> vname = field_name) l then
+	     List.fold_right
+	       (fun (n, _, _) accu' -> Handy.list_cons_uniq_eq n accu')
+	       l accu
+	   else accu)
+    fields
+    []
+;;
+
+
+
+(* ********************************************************************* *)
+(* Parsetree.vname -> Env.TypeInformation.species_field list ->          *)
+(*   Env.TypeInformation.species_field list                              *)
+let where field_name fields =
   List.fold_right
     (fun field accu ->
       match field with
@@ -198,23 +217,6 @@ let clockwise_arrow field_name fields =
 
 
 
-(* ********************************************************************* *)
-(* Parsetree.vname -> Env.TypeInformation.species_field list ->          *)
-(*   Env.TypeInformation.species_field list                              *)
-let where field_name fields =
-  (* First, compute the FIELD-INTRO rule of the relation. Because *)
-  (* [clockwise_arrow] directly returns a fields list instead of  *)
-  (* simply names, the set of phis is trivialy obtained.          *)
-  let phi_for_field_intro = clockwise_arrow field_name fields in
-  (* Now, there is nothing to do for the FIELD-INH rule of the relation. *)
-  (* Thanks to our incremental process because fields of the current     *)
-  (* level ARE NOT normalized, them, they will lie in another field with *)
-  (* its bindings that are not already fusionned with the inherited and  *)
-  (* already normalized fields.                                          *)
-  phi_for_field_intro
-;;
-
-
 
 (* Just helper. *)
 let names_set_of_field = function
@@ -228,6 +230,40 @@ let names_set_of_field = function
 ;;
 
 
+(* Just helper. The list preserves the order the names appear in the list
+   of fields and in the list of names in case of recursive let-def field. *)
+let ordered_names_list_of_fields fields =
+  List.fold_right
+    (fun field accu ->
+      match field with
+       | Env.TypeInformation.SF_sig (n, _)
+       | Env.TypeInformation.SF_let (n, _, _) -> n :: accu
+       | Env.TypeInformation.SF_let_rec l ->
+	   List.fold_right (fun (n, _, _) accu' -> n :: accu') l accu)
+    fields
+    []
+;;
+	       
+
+let find_most_recent_rec_field_binding y_name fields =
+  let rec rec_search = function
+    | [] -> raise Not_found
+    | h :: q ->
+	(begin
+	match h with
+	 | Env.TypeInformation.SF_sig (_, _)
+	 | Env.TypeInformation.SF_let (_, _, _) ->
+	     rec_search q
+       | Env.TypeInformation.SF_let_rec l ->
+	   if List.exists (fun (n, _, _) -> n = y_name ) l then
+	     h
+	   else rec_search q
+	end) in
+  (* Reverse the list so that most recent names are in head. *)
+  rec_search (List.rev fields)
+;;
+
+
 (* *********************************************************************** *)
 (** {b Descr} : Implements the second case of the definition 16 in Virgile
               Prevosto's Phd, section 3.5, page 32.
@@ -237,8 +273,9 @@ let names_set_of_field = function
 let union_y_clock_x_etc ~current_species x_name fields =
   let all_ys = clockwise_arrow x_name fields in
   List.fold_left
-    (fun accu_deps field_y ->
+    (fun accu_deps y_name ->
       (* First compute the great union. *)
+      let field_y = find_most_recent_rec_field_binding y_name fields in
       let u =
 	VnameSet.union
 	  (field_dependencies ~current_species field_y) accu_deps in
@@ -267,70 +304,198 @@ let in_species_dependencies_for_one_name ~current_species (name, body) fields =
 ;;
 
 
-(* current_species: Types.collection_name ->                 *)
-(*   Env.TypeInformation.species_field list -> VnameSet.t    *)
-let in_species_dependencies ~current_species fields =
-  List.fold_left
-    (fun accu_deps field ->
-      match field with
-       | Env.TypeInformation.SF_sig (_, _) -> 
-	   (* The field is not defined, hence it doe not belong to D(s). *)
-	   accu_deps
-       | Env.TypeInformation.SF_let (name, _, body) ->
-	   (begin
-	   let deps =
-	     in_species_dependencies_for_one_name
-	       ~current_species (name, body) fields in
-	   VnameSet.union deps accu_deps
-	   end)
-       | Env.TypeInformation.SF_let_rec l ->
-	   (begin
-	   List.fold_left
-	     (fun accu_deps' (name, _, body) ->
-	       let deps =
-		 in_species_dependencies_for_one_name
-		   ~current_species (name, body) fields in
-	       VnameSet.union deps accu_deps')
-	     accu_deps
-	     l
-	   end))
-    VnameSet.empty
-    fields
+
+(* *********************************************************************** *)
+(** {Descr} : Strutrure of a node in a dependency graph representing the
+            fact that some names' bodies contain call to non-let-rec-bound
+            othernames (relation \lbag n \rbag in Virgile Prevosto's Phd,
+            section 3.5, definition 16, page 32.
+
+    {Rem} : Not exported outside this module.                              *)
+(* *********************************************************************** *)
+type name_node = {
+ (** Name of the node, i.e. one name of a species fields. *)
+  nn_name : Parsetree.vname ;
+ (** Means that the current names depends of the children nodes. I.e. the
+     current name's body contains calls to the children names. *)
+  mutable nn_children : name_node list
+} ;;
+
+
+
+let find_or_create tree_nodes name =
+  try List.find (fun node -> node.nn_name = name) !tree_nodes
+  with Not_found ->
+    let new_node = { nn_name = name ; nn_children = [] } in
+    tree_nodes := new_node :: !tree_nodes ;
+    new_node
 ;;
 
-(*
-let left_triangle x1 x2 fields =
-  let y1s = clockwise_arrow x1 fields in
-  let yns = clockwise_arrow x2 in
+
+
+let build_dependencies_graph_for_fields ~current_species fields =
+  let tree_nodes = ref ([] : name_node list) in
+  (* Just make a local function dealing with one let binding. We *)
+  (* when use it once for a Let and iter it for a Let_Rec.       *)
+  let local_build_for_one_let n b =
+    (* Find th dependencies node for the current name. *)
+    let n_node = find_or_create tree_nodes n in
+    (* Find the names dependencies for the current name. *)
+    let n_deps_names =
+      in_species_dependencies_for_one_name ~current_species (n, b) fields in
+    (* Now, find the dependencies nodes for these names. *)
+    let n_deps_nodes =
+      VnameSet.fold
+	(fun n accu ->
+	  let node = find_or_create tree_nodes n in
+	  node :: accu)
+	n_deps_names
+	[] in
+    (* Now add an edge from the current name's node to each of the *)
+    (* dependencies names' nodes.                                  *)
+    n_node.nn_children <-
+      Handy.list_concat_uniqq n_deps_nodes n_node.nn_children in
+  (* Now do the job. *)
+  List.iter
+    (function
+      | Env.TypeInformation.SF_sig (n, _) ->
+	  if not (List.exists (fun node -> node.nn_name = n) !tree_nodes) then
+	    tree_nodes := { nn_name = n ; nn_children = [] } :: !tree_nodes
+      | Env.TypeInformation.SF_let (n, _, b) -> local_build_for_one_let n b
+      | Env.TypeInformation.SF_let_rec l ->
+	  List.iter (fun (n, _, b) -> local_build_for_one_let n b) l)
+    fields ;
+  (* Return the list of nodes of the graph. *)
+  !tree_nodes
+;;
+
+
+
+(* ************************************************************************ *)
+(* current_species:string -> name_node list -> unit                         *)
+(** {b Descr} : Prints the dependencies graph of a species in dotty format.
+
+    {b Rem} : Exported outside this module.                                 *)
+(* ************************************************************************ *)
+let dependencies_graph_to_dotty ~current_species tree_nodes =
+  let out_hd = open_out_bin ("/tmp/deps_" ^ current_species ^ ".dot") in
+  Printf.fprintf out_hd "digraph G {\n" ;
+  List.iter
+    (fun { nn_name = n } -> 
+      Printf.fprintf out_hd "\"%s\" [shape=box,fontsize=10] ;\n"
+	(Parsetree_utils.name_of_vname n))
+    tree_nodes ;
+  List.iter
+    (fun { nn_name = n ; nn_children = children } -> 
+      List.iter
+	(fun { nn_name = child_name } ->
+	  Printf.fprintf out_hd
+	    "\"%s\" -> \"%s\" [style=dotted,color=blue,fontsize=10] ;"
+	    (Parsetree_utils.name_of_vname n)
+	    (Parsetree_utils.name_of_vname child_name))
+	children)
+    tree_nodes ;
+  Printf.fprintf out_hd " \n}\n" ;
+  close_out out_hd
+;;
+
+
+
+(* ************************************************************************ *)
+(* name_node -> name_node -> bool                                           *)
+(** {b Descr} : Checks for a non trivial path from [start_node] to
+              [start_node]. "Non-trivial" means that the path must at least
+              be of length 1.
+
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
+let is_reachable start_node end_node =
+  (* List of already seen nodes. Will be extended during the search. *)
+  let seen = ref ([] : name_node list) in
+  let rec rec_search current_node =
+    (* If the current node was already seen, this means that ... we already  *)
+    (* saw it, then we already checked if the [end_node] was in its children *)
+    (* and the anwser was NOT. Hence there is no reason to start again the   *)
+    (* search, we will get the same answer forever (and loop forever of      *)
+    (* course by the way).                                                   *)
+    if List.memq current_node !seen then false
+    else
+      (begin
+      (* We check if the current node's children contain en [end_node]. This *)
+      (* way, for each node, we are sure that the possibly found path is not *)
+      (* the trivial path (because we explicitely look inside the children   *)
+      (* and if a node is acceptable in the children, then the path length   *)
+      (* is mandatorily non-null).                                           *)
+      if List.memq end_node current_node.nn_children then true
+      else
+	(begin
+	seen := current_node :: !seen ;
+        (* The [end_node] was not found in the children, *)
+        (* then search in the children.                  *)
+	List.exists rec_search current_node.nn_children
+	end)
+      end) in
+  (* Start the search. *)
+  rec_search start_node
+;;
+
+
+
+(* current_species: Types.collection_name -> Parsetree.vname ->          *)
+(*   Parsetree.vname -> Env.TypeInformation.species_field list -> bool   *)
+let left_triangle ~current_species x1 x2 fields =
+  (* Guess the fields where x1 is recursively bound. *)
+  let x1_arrow = clockwise_arrow x1 fields in
+  (* Guess the fields where x2 is recursively bound. *)
+  let x2_arrow = clockwise_arrow x2 fields in
+  (* Now, let's build the global dependencies graph for all the names. *)
+  let dep_graph_nodes =
+    build_dependencies_graph_for_fields ~current_species fields in
+  dependencies_graph_to_dotty ~current_species dep_graph_nodes ;
+  (* Now we will apply the "well-formness" predicate on the cartesian  *)
+  (* product of the names bound by "clockwise-arrow" of [x1] and those *)
+  (* bound by "clockwise-arrow" of [x2]. Intuitively, we will apply    *)
+  (* this predicate on all possible combinaisons of [y_1] and [y_n].   *)
   List.exists
     (fun y1 ->
-    )
-    y1s
-;;
-*)
-
-
-(** Mostly debug. Must disapear. *)
-let debug_clockwise_arrow_equiv_class field_name fields =
-  let phis =  where field_name fields in
-  List.fold_left
-    (fun accu field ->
-      match field with
-       | Env.TypeInformation.SF_sig (vname, _)
-       | Env.TypeInformation.SF_let (vname, _, _) ->
-	   if vname = field_name then
-	     if List.mem vname accu then accu
-	     else vname :: accu else accu
-       | Env.TypeInformation.SF_let_rec l ->
-	   List.fold_left
-	     (fun accu' (vname,  _, _) ->
-	       if List.mem vname accu' then accu' else vname :: accu')
-             accu l)
-    []
-    phis
+      List.exists
+	(fun yn ->
+	  (* Search a path in the graph from yn to y2. The lookup for *)
+          (* nodes y1 and yn should never fail because the graph was  *)
+	  (* created before.                                          *)
+	  let y1_node =
+	    List.find (fun node -> node.nn_name = y1) dep_graph_nodes in
+	  let yn_node =
+	    List.find (fun node -> node.nn_name = yn) dep_graph_nodes in
+	  is_reachable yn_node y1_node)
+	x2_arrow)
+    x1_arrow
 ;;
 
 
+
+(* ************************************************************************ *)
+(* current_species: Types.collection_name ->                                *)
+(*   Env.TypeInformation.species_field list -> bool                         *)
+(** {b Descr} : Checks if a species is well-formed, applying the definition
+              17 in Virgile Prevosto's Phd, section 3.5, page 32
+
+    {b Rem} : Exported outside this module.                                 *)
+(* ************************************************************************ *)
+let is_species_well_formed ~current_species fields =
+  let names = ordered_names_list_of_fields fields in
+  List.for_all
+    (fun x_name ->
+      let tmp = left_triangle ~current_species x_name x_name fields in
+      Format.eprintf "%a <| %a : %b@."
+	Sourcify.pp_vname x_name Sourcify.pp_vname x_name tmp ;
+      not tmp)
+    names
+;;
+
+
+
+(* Junk. To disapear. *)
 let debug_where fields =
   List.iter
     (function
@@ -361,13 +526,4 @@ let debug_where fields =
 	     l
 	   end))
     fields
-;;
-
-
-let debug_in_species_dependencies ~current_species fields =
-  Format.eprintf "Dependences de l'espèce '%s' : " current_species ;
-  let s = in_species_dependencies ~current_species fields in
-  let s' = VnameSet.elements s in
-  Format.eprintf "{%a}" (Sourcify.pp_vnames ",") s' ;
-  Format.eprintf "@."
 ;;

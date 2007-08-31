@@ -1,5 +1,20 @@
 use "basics" ;;
+(*
+species A =
+  let rec x1 (x) = let foo = y1 (1) in (1)
+  and y1 (x) = let foo = x1 (1) in 1 ;
+end ;;
 
+species B inherits A =
+  let y2 (x) = y1 (x) ;
+end ;;
+
+species C inherits B =
+  let rec y3 (x) = let foo = y2 (1) in let bar = x2 (1) in 1
+  and x2 (x) = let foo = y3 (x) in 1 ;
+end ;;
+*)
+(*
 species A =
   sig x : Self ;
   let y = Self!x ;
@@ -16,8 +31,9 @@ end ;;
 species C inherits A, B =
   rep = basics#int ;
 end ;;
+*)
 
-(*
+
 species Foo =
   let rec a(x) = b(x)
   and b(x) = a(x) ;
@@ -46,4 +62,4 @@ species C inherits B =
   let rec x2 (v) = y4 (v)
   and y4 (v) = x2 (v) ;
 end ;;
-*)
+
