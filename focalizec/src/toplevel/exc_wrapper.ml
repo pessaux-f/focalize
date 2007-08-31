@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.12 2007-08-31 13:45:52 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.13 2007-08-31 14:00:25 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -162,7 +162,7 @@ try Check_file.main () with
 (* Dependencies analysis. *)
      | Dep_analysis.Ill_formed_species species_name ->
 	 Format.fprintf Format.err_formatter
-	   "Species@ '%s'@ not well-formed@." species_name
+	   "Species@ '%s'@ is@ not@ well-formed@." species_name
 (* ********************** *)
 (* The ultimate firewall. *)
      | x ->

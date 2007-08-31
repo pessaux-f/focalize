@@ -12,11 +12,20 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.3 2007-08-31 13:45:52 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.4 2007-08-31 14:00:25 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
-              in Virgile Prevosto's Phd, section 3.5.                      *)
+              in Virgile Prevosto's Phd, section 3.5.
+
+    {b Rem} : Be careful that in the Phd, the well-formation formula is
+            incorrect. It should be read:
+            x1 <| x2 <=>
+              \ex {y_i}_(i=1..n) such as
+                (y_1 \circarrow x_1 and y_n \circarrow x_2 and
+                 \all j < n, y_j \in \lbag y_j+1 \rbag_s)
+              And in the condition for well-formation, <| must be
+              subscripted by s and not a.                                  *)
 (* *********************************************************************** *)
 
 
