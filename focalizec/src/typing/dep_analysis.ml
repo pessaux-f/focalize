@@ -12,8 +12,29 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.2 2007-08-31 11:18:47 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.3 2007-08-31 13:45:52 pessaux Exp $ *)
 
+(* *********************************************************************** *)
+(** {b Descr} : This module performs the well-formation analysis described
+              in Virgile Prevosto's Phd, section 3.5.                      *)
+(* *********************************************************************** *)
+
+
+
+(* ********************************************************** *)
+(** {b Descr} : Raised if a species appears to be ill-formed.
+
+    {b Rem} : Exported outside this module.                   *)
+(* ********************************************************** *)
+exception Ill_formed_species of Types.species_name ;;
+
+
+
+(* *************************************************************** *)
+(** {b Descr} : Module stuff to create sets of [Parsetree.vanme]s.
+ 
+    {b Rem} : Not exported outside this module.                    *)
+(* *************************************************************** *)
 module VnameMod = struct type t = Parsetree.vname let compare = compare end ;;
 module VnameSet = Set.Make (VnameMod) ;;
 
@@ -194,9 +215,14 @@ let clockwise_arrow field_name fields =
 
 
 
-(* ********************************************************************* *)
-(* Parsetree.vname -> Env.TypeInformation.species_field list ->          *)
-(*   Env.TypeInformation.species_field list                              *)
+(* ******************************************************************** *)
+(* Parsetree.vname -> Env.TypeInformation.species_field list ->         *)
+(*   Env.TypeInformation.species_field list                             *)
+(** {b Descr} : Computes the set Where as defined in Virgile Prevosto's
+              Phd, section 3.5, page 32, definition 15.
+
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
 let where field_name fields =
   List.fold_right
     (fun field accu ->
@@ -217,8 +243,13 @@ let where field_name fields =
 
 
 
+(* ******************************************************************* *)
+(* Env.TypeInformation.species_field -> VnameSet.t                     *)
+(** {b Descr} : Just an helper returning the set of all names bound in
+              a species fields.
 
-(* Just helper. *)
+    {b Rem} : Not exported outside this module.                        *)
+(* ******************************************************************* *)
 let names_set_of_field = function
   | Env.TypeInformation.SF_sig (vname, _)
   | Env.TypeInformation.SF_let (vname, _, _) -> VnameSet.singleton vname
@@ -230,8 +261,17 @@ let names_set_of_field = function
 ;;
 
 
-(* Just helper. The list preserves the order the names appear in the list
-   of fields and in the list of names in case of recursive let-def field. *)
+
+(* ************************************************************************ *)
+(** {b Descr} : Just helper returning the list of all names bound in a list
+              of fields. The resulting list preserves the order the names
+              appear in the list of fields and in the list of names in
+              case of recursive let-def field.
+              Example: [let s ; sig y ; let rec z ... and t] will give the
+              list [s; y; z; t].
+
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
 let ordered_names_list_of_fields fields =
   List.fold_right
     (fun field accu ->
@@ -245,7 +285,23 @@ let ordered_names_list_of_fields fields =
 ;;
 	       
 
+
+(* ****************************************************************** *)
+(* Parsetree.vname -> Env.TypeInformation.species_field list ->       *)
+(*   Env.TypeInformation.species_field                                *)
+(** {b Descr} : Looks for the most recently defined field that binds 
+              [y_name] among [fields] and return it.
+              This function relies on the fact that the field list is
+              ordered with oldest inherited fields are in head of the
+              list and the most recent are in tail.
+
+    {b Rem} : Not exported outside this module.                       *)
+(* ****************************************************************** *)
 let find_most_recent_rec_field_binding y_name fields =
+  (* The search is a simple walk in the list, starting by the head and    *)
+  (* going on with the tail. Because fields list is assumed to be ordered *)
+  (* with the oldest inherited fields in head, one will have to reverse   *)
+  (* the initial list of field before applying the present function.      *)
   let rec rec_search = function
     | [] -> raise Not_found
     | h :: q ->
@@ -264,7 +320,10 @@ let find_most_recent_rec_field_binding y_name fields =
 ;;
 
 
+
 (* *********************************************************************** *)
+(* current_species: Types.collection_name -> Parsetree.vname ->            *)
+(*   Env.TypeInformation.species_field list -> VnameSet.t                  *)
 (** {b Descr} : Implements the second case of the definition 16 in Virgile
               Prevosto's Phd, section 3.5, page 32.
 
@@ -275,6 +334,10 @@ let union_y_clock_x_etc ~current_species x_name fields =
   List.fold_left
     (fun accu_deps y_name ->
       (* First compute the great union. *)
+      (* We look for the most recently defined field that binds [y_name]. *)
+      (* This way, we really "compute" \Cal B_s (y) because \Cal B is     *)
+      (* defined to return the body of the most recent fiedl in the       *)
+      (* inheritance.                                                     *)
       let field_y = find_most_recent_rec_field_binding y_name fields in
       let u =
 	VnameSet.union
@@ -288,10 +351,16 @@ let union_y_clock_x_etc ~current_species x_name fields =
 
 
 
-(* current_species: Types.collection_name ->                         *)
-(*   (Parsetree.vname * Parsetree.expr) ->                           *)
-(*     Env.TypeInformation.species_field list -> VnameSet.t          *)
-(* Just helper. *)
+(* ********************************************************************* *)
+(* current_species: Types.collection_name ->                             *)
+(*   (Parsetree.vname * Parsetree.expr) ->                               *)
+(*     Env.TypeInformation.species_field list -> VnameSet.t              *)
+(** {b Descr} : Compute the dependencies of a name in a species. Namely
+              this is the \lbag x \rbag_s in Virgile Prevosto's Pdh,
+              section 3.5, page 32, definition 16.
+
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
 let in_species_dependencies_for_one_name ~current_species (name, body) fields =
   let where_x = where name fields in
   (* Check if Where (x) does NOT contain Let_rec fields. *)
@@ -305,14 +374,14 @@ let in_species_dependencies_for_one_name ~current_species (name, body) fields =
 
 
 
-(* *********************************************************************** *)
-(** {Descr} : Strutrure of a node in a dependency graph representing the
+(* ************************************************************************ *)
+(** {b Descr} : Strutrure of a node in a dependency graph representing the
             fact that some names' bodies contain call to non-let-rec-bound
             othernames (relation \lbag n \rbag in Virgile Prevosto's Phd,
             section 3.5, definition 16, page 32.
 
-    {Rem} : Not exported outside this module.                              *)
-(* *********************************************************************** *)
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
 type name_node = {
  (** Name of the node, i.e. one name of a species fields. *)
   nn_name : Parsetree.vname ;
@@ -323,6 +392,17 @@ type name_node = {
 
 
 
+(* ******************************************************************** *)
+(* name_node list ref -> Parsetree.vname -> name_node                   *)
+(** {b Descr} : Looks for a node labeled [name] in the list of nodes
+              [tree_nodes]. If a node with this name is found, then we
+              return it. Otherwise, a fresh node is created with [name]
+              as name and no child, and this fresh node is returned.
+              This is mostly a helper for the function
+              [build_dependencies_graph_for_fields].
+
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
 let find_or_create tree_nodes name =
   try List.find (fun node -> node.nn_name = name) !tree_nodes
   with Not_found ->
@@ -333,12 +413,23 @@ let find_or_create tree_nodes name =
 
 
 
+(* ********************************************************************* *)
+(* current_species: Types.collection_name ->                             *)
+(*   Env.TypeInformation.species_field list -> name_node list            *)
+(** {b Descr} : Build the dependencies graph of the names present in the
+              fields list [fields] of the species [~current_species].
+              In such a graph, if an arrow exists from n1 to n2, then
+              it means that in the body of n1, call(s) to n2 is (are)
+              performed.
+
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
 let build_dependencies_graph_for_fields ~current_species fields =
   let tree_nodes = ref ([] : name_node list) in
   (* Just make a local function dealing with one let binding. We *)
   (* when use it once for a Let and iter it for a Let_Rec.       *)
   let local_build_for_one_let n b =
-    (* Find th dependencies node for the current name. *)
+    (* Find the dependencies node for the current name. *)
     let n_node = find_or_create tree_nodes n in
     (* Find the names dependencies for the current name. *)
     let n_deps_names =
@@ -372,19 +463,26 @@ let build_dependencies_graph_for_fields ~current_species fields =
 
 
 (* ************************************************************************ *)
-(* current_species:string -> name_node list -> unit                         *)
+(* dirname: string -> current_species: string -> name_node list -> unit     *)
 (** {b Descr} : Prints the dependencies graph of a species in dotty format.
 
-    {b Rem} : Exported outside this module.                                 *)
+    {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
-let dependencies_graph_to_dotty ~current_species tree_nodes =
-  let out_hd = open_out_bin ("/tmp/deps_" ^ current_species ^ ".dot") in
+let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
+  (* For each species, a file named with "deps_", the species name *)
+  (* and the suffix ".dot" will be generated in the directory.     *)
+  let out_filename =
+    Filename.concat dirname ("deps_" ^ current_species ^ ".dot") in
+  let out_hd = open_out_bin out_filename in
+  (* First, outputs the header of the dotty file. *)
   Printf.fprintf out_hd "digraph G {\n" ;
+  (* Outputs all the nodes og the graph. *)
   List.iter
     (fun { nn_name = n } -> 
       Printf.fprintf out_hd "\"%s\" [shape=box,fontsize=10] ;\n"
 	(Parsetree_utils.name_of_vname n))
     tree_nodes ;
+  (* Outputs all the edges between the nodes. *)
   List.iter
     (fun { nn_name = n ; nn_children = children } -> 
       List.iter
@@ -395,6 +493,7 @@ let dependencies_graph_to_dotty ~current_species tree_nodes =
 	    (Parsetree_utils.name_of_vname child_name))
 	children)
     tree_nodes ;
+  (* Finally, outputs the trailer of the dotty file. *)
   Printf.fprintf out_hd " \n}\n" ;
   close_out out_hd
 ;;
@@ -441,8 +540,16 @@ let is_reachable start_node end_node =
 
 
 
-(* current_species: Types.collection_name -> Parsetree.vname ->          *)
-(*   Parsetree.vname -> Env.TypeInformation.species_field list -> bool   *)
+(* *********************************************************************** *)
+(* current_species: Types.collection_name -> Parsetree.vname ->            *)
+(*   Parsetree.vname -> Env.TypeInformation.species_field list -> bool     *)
+(** {b Descr} : Implements the relation "left-oriented triangle" of
+              Virgile Prevosto's Phd, section 3.5, page 32, definition 17.
+              Also output the dependencies as a dotty file if asked in the
+              command-line options.
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
 let left_triangle ~current_species x1 x2 fields =
   (* Guess the fields where x1 is recursively bound. *)
   let x1_arrow = clockwise_arrow x1 fields in
@@ -451,7 +558,11 @@ let left_triangle ~current_species x1 x2 fields =
   (* Now, let's build the global dependencies graph for all the names. *)
   let dep_graph_nodes =
     build_dependencies_graph_for_fields ~current_species fields in
-  dependencies_graph_to_dotty ~current_species dep_graph_nodes ;
+  (* If asked, generate the dotty output of the dependencies. *)
+  (match Configuration.get_dotty_dependencies () with
+   | None -> ()
+   | Some dirname ->
+       dependencies_graph_to_dotty ~dirname ~current_species dep_graph_nodes) ;
   (* Now we will apply the "well-formness" predicate on the cartesian  *)
   (* product of the names bound by "clockwise-arrow" of [x1] and those *)
   (* bound by "clockwise-arrow" of [x2]. Intuitively, we will apply    *)
@@ -467,6 +578,8 @@ let left_triangle ~current_species x1 x2 fields =
 	    List.find (fun node -> node.nn_name = y1) dep_graph_nodes in
 	  let yn_node =
 	    List.find (fun node -> node.nn_name = yn) dep_graph_nodes in
+          (* Because our graph edges link from yn to y1, we must invert *)
+          (* the start/end nodes.                                       *)
 	  is_reachable yn_node y1_node)
 	x2_arrow)
     x1_arrow
@@ -476,26 +589,25 @@ let left_triangle ~current_species x1 x2 fields =
 
 (* ************************************************************************ *)
 (* current_species: Types.collection_name ->                                *)
-(*   Env.TypeInformation.species_field list -> bool                         *)
+(*   Env.TypeInformation.species_field list -> unit                         *)
 (** {b Descr} : Checks if a species is well-formed, applying the definition
               17 in Virgile Prevosto's Phd, section 3.5, page 32
 
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
-let is_species_well_formed ~current_species fields =
+let ensure_species_well_formed ~current_species fields =
   let names = ordered_names_list_of_fields fields in
-  List.for_all
+  List.iter
     (fun x_name ->
-      let tmp = left_triangle ~current_species x_name x_name fields in
-      Format.eprintf "%a <| %a : %b@."
-	Sourcify.pp_vname x_name Sourcify.pp_vname x_name tmp ;
-      not tmp)
+      let ill_f = left_triangle ~current_species x_name x_name fields in
+      if ill_f then raise (Ill_formed_species current_species))
     names
 ;;
 
 
 
-(* Junk. To disapear. *)
+(*
+(* Was debug. To disapear. *)
 let debug_where fields =
   List.iter
     (function
@@ -527,3 +639,5 @@ let debug_where fields =
 	   end))
     fields
 ;;
+*)
+

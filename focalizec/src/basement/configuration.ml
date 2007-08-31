@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.7 2007-08-23 15:18:42 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.8 2007-08-31 13:45:52 pessaux Exp $ *)
 
 exception Input_file_already_set ;;
 
@@ -76,4 +76,10 @@ let (get_pretty_scoped, set_pretty_scoped) =
   let pretty_out_file = ref None in
   ((fun () -> !pretty_out_file),
    (fun fname -> pretty_out_file := Some fname))
+;;
+
+let (get_dotty_dependencies, set_dotty_dependencies) =
+  let dotty_dependencie_out_dir = ref None in
+  ((fun () -> !dotty_dependencie_out_dir),
+   (fun fname -> dotty_dependencie_out_dir := Some fname))
 ;;

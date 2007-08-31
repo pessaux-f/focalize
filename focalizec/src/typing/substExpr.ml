@@ -12,10 +12,10 @@
 (***********************************************************************)
 
 
-(* $Id: substExpr.ml,v 1.1 2007-08-27 11:33:23 pessaux Exp $ *)
+(* $Id: substExpr.ml,v 1.2 2007-08-31 13:45:52 pessaux Exp $ *)
 
-(* ********************************************************************** *)
-(** {Descr} : This module performs substitution of a value name [name_x]
+(* *********************************************************************** *)
+(** {b Descr} : This module performs substitution of a value name [name_x]
             by an expression [by_expr]. This means that [name_x] will be
             replaced by [by_expr].
             The substitution operates in "values" expressions and is
@@ -23,8 +23,8 @@
             affects the I_local bindings or the I_global bindings whose
             "module" field is the same that the one passed in the
             argument [param_unit] to the substitution function (i.e. the
-            module name of where the parmaterized species was defined.    *)
-(* ********************************************************************** *)
+            module name of where the parmaterized species was defined.     *)
+(* *********************************************************************** *)
 
 
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.7 2007-08-23 15:18:42 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.8 2007-08-31 13:45:52 pessaux Exp $ *)
 
 (** The various flags and definitions useful to the internal behaviour of the
     focalize compiler. *)
@@ -42,3 +42,6 @@ val set_pretty_scoped : string -> unit
 
 val print_focal_short_version : unit -> unit
 val print_focal_full_version : unit -> unit
+
+val get_dotty_dependencies : unit -> string option
+val set_dotty_dependencies : string -> unit

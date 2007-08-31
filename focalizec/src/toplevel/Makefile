@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2007-08-29 12:47:48 pessaux Exp $
+# $Id: Makefile,v 1.11 2007-08-31 13:45:52 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ -I ../basement -I ../parser -I ../typing
@@ -49,7 +49,7 @@ clean::
 	$(RM) odoc/*
 
 doc:: $(BYTOBJS)
-	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)
+	$(CAMLDOC) $(CAML_COMP_FLAGS) -html -d odoc $(BYTOBJS:.cmo=.ml)
 
 depend:
 	$(CAMLDEP) $(CAML_COMP_FLAGS) *.mli *.ml > ./.depend

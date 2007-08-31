@@ -12,14 +12,14 @@
 (***********************************************************************)
 
 
-(* $Id: substColl.ml,v 1.2 2007-08-24 16:36:18 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.3 2007-08-31 13:45:52 pessaux Exp $ *)
 
-(* ********************************************************************** *)
-(** {Descr} : This module performs substitution of a collection name [c1]
+(* ************************************************************************ *)
+(** {b Descr} : This module performs substitution of a collection name [c1]
             by [c2]. This means that [c1] will be replaced by [c2].
             The substitution operates in both expressions and types.
-            Types are handled by the [Types.subst_type_simple] function.  *)
-(* ********************************************************************** *)
+            Types are handled by the [Types.subst_type_simple] function.    *)
+(* ************************************************************************ *)
 
 
 (* ************************************************************************** *)

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.47 2007-08-31 11:18:47 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.48 2007-08-31 13:45:52 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -2143,37 +2143,13 @@ let typecheck_species_def ctx env species_def =
     typecheck_species_fields
       ctx_with_inherited_repr env_with_inherited_methods
       species_def_desc.Parsetree.sd_fields in
-(**********************)
-(**********************)
-Format.eprintf "Species %s@." species_def_desc.Parsetree.sd_name ;
-let semi_normed_meths = inherited_methods_infos @ methods_info in
-List.iter
-  (function
-    | Env.TypeInformation.SF_sig (vname, _)
-    | Env.TypeInformation.SF_let (vname, _, _) ->
-	let ec = Dep_analysis.clockwise_arrow vname semi_normed_meths in
-	Format.eprintf "%a clock { %a }@."
-	  Sourcify.pp_vname vname (Sourcify.pp_vnames ",") ec
-    | Env.TypeInformation.SF_let_rec l ->
-	(begin
-	List.iter
-	  (fun (vname, _, _) ->
-	    let ec = Dep_analysis.clockwise_arrow vname semi_normed_meths in
-	    Format.eprintf "%a clock { %a }@."
-	      Sourcify.pp_vname vname (Sourcify.pp_vnames ",") ec)
-	  l
-	end))
-  semi_normed_meths ;
-Dep_analysis.debug_where semi_normed_meths ;
-
-let well_formed =
-  Dep_analysis.is_species_well_formed
-    ~current_species: species_def_desc.Parsetree.sd_name semi_normed_meths in
-if not well_formed then
-  failwith ("ESPECE " ^ species_def_desc.Parsetree.sd_name ^ " mal formée.") ;
-
-(**********************)
-(**********************)
+  (* Create the list of field "semi-normalized", i.e with inherited methods   *)
+  (* normalized and in head of the list, and the fresh methods not normalized *)
+  (* and in tail of the list.                                                 *)
+  let semi_normed_meths = inherited_methods_infos @ methods_info in
+  (* Ensure that the species is well-formed. *)
+  Dep_analysis.ensure_species_well_formed
+    ~current_species: species_def_desc.Parsetree.sd_name semi_normed_meths ;
   (* Then one must ensure that each method has the same type everywhere *)
   (* in the inheritance tree and more generaly create the normalised    *)
   (* form of the species.                                               *)

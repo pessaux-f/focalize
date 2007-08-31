@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.25 2007-08-20 15:52:28 pessaux Exp $
+# $Id: Makefile,v 1.26 2007-08-31 13:45:52 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ -I ../basement
@@ -10,7 +10,7 @@ BYTOBJS = lexer.cmo parser.cmo parse_file.cmo dump_ptree.cmo sourcify.cmo \
 all:: $(BYTOBJS)
 
 doc:: $(BYTOBJS)
-	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)
+	$(CAMLDOC) $(CAML_COMP_FLAGS) -html -d odoc $(BYTOBJS:.cmo=.ml)
 
 clean::
 	$(RM) *~ *.cm* log lexer.ml lexer.mli

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.11 2007-08-27 12:33:26 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.12 2007-08-31 13:45:52 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -158,6 +158,11 @@ try Check_file.main () with
 	 Format.fprintf Format.err_formatter
 	   "Species@ '%s'@ cannot@ be@ turned@ into@ a@ collection.@ Field@ '%a'@ is@ not@ defined@."
 	   coll_name Sourcify.pp_vname field_name
+(* ********************** *)
+(* Dependencies analysis. *)
+     | Dep_analysis.Ill_formed_species species_name ->
+	 Format.fprintf Format.err_formatter
+	   "Species@ '%s'@ not well-formed@." species_name
 (* ********************** *)
 (* The ultimate firewall. *)
      | x ->

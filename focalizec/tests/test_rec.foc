@@ -14,7 +14,7 @@ species C inherits B =
   and x2 (x) = let foo = y3 (x) in 1 ;
 end ;;
 *)
-(*
+
 species A =
   sig x : Self ;
   let y = Self!x ;
@@ -31,9 +31,9 @@ end ;;
 species C inherits A, B =
   rep = basics#int ;
 end ;;
-*)
 
 
+(*
 species Foo =
   let rec a(x) = b(x)
   and b(x) = a(x) ;
@@ -63,3 +63,4 @@ species C inherits B =
   and y4 (v) = x2 (v) ;
 end ;;
 
+*)

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: focalizec.ml,v 1.9 2007-08-14 13:20:26 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.10 2007-08-31 13:45:52 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -21,33 +21,36 @@ exception Bad_file_suffix of string ;;
 (* The main procedure *)
 let main () =
   Arg.parse
-    [ ("-v", Arg.Unit Configuration.print_focal_short_version,
-       " print the focalize version.") ;
-      ("--version",
-       Arg.Unit Configuration.print_focal_full_version,
-       " print the full focalize version, sub-version and release date.") ;
-      ("-c",
+    [ ("-c",
        Arg.String Configuration.set_input_file_name,
        " check input file argument.") ;
+      ("--dot-dependencies",
+       Arg.String Configuration.set_dotty_dependencies,
+       " dump species dependencies as dotty files in the directory.") ;
       ("-i",
        Arg.Unit (fun () -> Configuration.set_do_interface_output true),
        " prints the source file interface.") ;
       ("-I",
        Arg.String (fun path -> Files.add_lib_path path),
        " adds the specified path to the path list where to search for compiled interfaces.") ;
-      ("--pretty",
-       Arg.String Configuration.set_pretty_print,
-       " pretty-prints the parse tree of the focal file as a focal source.") ;
       ("--old-pretty",
        Arg.String Configuration.set_old_pretty_print,
        " pretty-prints the parse tree of the focalize file as \
          an old focal source.") ;
+      ("--pretty",
+       Arg.String Configuration.set_pretty_print,
+       " pretty-prints the parse tree of the focal file as a focal source.") ;
       ("--scoped_pretty",
        Arg.String Configuration.set_pretty_scoped,
        " pretty-prints the parse tree of the focal file once scoped as a focal source.") ;
       ("--verbose",
        Arg.Unit (fun () -> Configuration.set_verbose true),
-       " be verbose.") ]
+       " be verbose.") ;
+      ("-v", Arg.Unit Configuration.print_focal_short_version,
+       " print the focalize version.") ;
+      ("--version",
+       Arg.Unit Configuration.print_focal_full_version,
+       " print the full focalize version, sub-version and release date.") ]
     Configuration.set_input_file_name
     "Usage: focal_check <options> <.foc file>" ;
   (* First, let's lex and parse the input source file. *)

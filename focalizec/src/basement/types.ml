@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.19 2007-08-27 16:37:20 pessaux Exp $ *)
+(* $Id: types.ml,v 1.20 2007-08-31 13:45:52 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -109,7 +109,7 @@ type type_scheme = {
 
 
 (* *********************************************************************** *)
-(** {Descr} : Exception meaning that the 2 arguments types cannot be
+(** {b Descr} : Exception meaning that the 2 arguments types cannot be
               unified. The location related to the point where unification
               occured is provided for error reporting purposes.            *)
 (* *********************************************************************** *)
@@ -118,7 +118,7 @@ exception Conflict of (type_simple * type_simple * Location.t) ;;
 
 
 (* ****************************************************************** *)
-(** {Descr} : Exception meaning that a circularity would occur if
+(** {b Descr} : Exception meaning that a circularity would occur if
              the unification of these 2 types was performed.
              In other words, the first type occurs inside the second. *)
 (* ****************************************************************** *)
@@ -127,7 +127,7 @@ exception Circularity of (type_simple * type_simple * Location.t) ;;
 
 
 (* ********************************************************************** *)
-(** {Descr} : A functional type constructor has been used with the wrong
+(** {b Descr} : A functional type constructor has been used with the wrong
             number of arguments. The exception carries on the name of the
             type and the conflicting arities.                             *)
 (* ********************************************************************** *)
