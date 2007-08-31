@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: focalizec.ml,v 1.10 2007-08-31 13:45:52 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.11 2007-08-31 14:31:31 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -24,9 +24,9 @@ let main () =
     [ ("-c",
        Arg.String Configuration.set_input_file_name,
        " check input file argument.") ;
-      ("--dot-dependencies",
+      ("--dot-non-rec-dependencies",
        Arg.String Configuration.set_dotty_dependencies,
-       " dump species dependencies as dotty files in the directory.") ;
+       " dump species non-let-rec- dependencies as dotty files in the directory.") ;
       ("-i",
        Arg.Unit (fun () -> Configuration.set_do_interface_output true),
        " prints the source file interface.") ;
