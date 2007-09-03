@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: substColl.ml,v 1.3 2007-08-31 13:45:52 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.4 2007-09-03 13:48:07 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -293,6 +293,46 @@ and subst_let_definition ~current_unit c1 c2 let_def =
 
 
 
+let subst_prop ~current_unit c1 c2 initial_prop_expr =
+  let rec rec_subst prop_expr =
+    let new_desc =
+      (match prop_expr.Parsetree.ast_desc with
+       |  Parsetree.Pr_forall (vnames, type_expr, prop) ->
+	   let type_expr' = subst_type_expr ~current_unit c1 c2 type_expr in
+	   let body' = rec_subst prop in
+	   Parsetree.Pr_forall (vnames, type_expr', body')
+       | Parsetree.Pr_exists (vnames, type_expr, prop) ->
+	   let type_expr' = subst_type_expr ~current_unit c1 c2 type_expr in
+	   let body' = rec_subst prop in
+	   Parsetree.Pr_exists (vnames, type_expr', body')
+       | Parsetree.Pr_imply (prop1, prop2) ->
+	   let prop1' = rec_subst prop1 in
+	   let prop2' = rec_subst prop2 in
+	   Parsetree.Pr_imply (prop1', prop2')
+       | Parsetree.Pr_or (prop1, prop2) ->
+	   let prop1' = rec_subst prop1 in
+	   let prop2' = rec_subst prop2 in
+	   Parsetree.Pr_or (prop1', prop2')
+       | Parsetree.Pr_and (prop1, prop2) ->
+	   let prop1' = rec_subst prop1 in
+	   let prop2' = rec_subst prop2 in
+	   Parsetree.Pr_and (prop1', prop2')
+       | Parsetree.Pr_equiv (prop1, prop2) ->
+	   let prop1' = rec_subst prop1 in
+	   let prop2' = rec_subst prop2 in
+	   Parsetree.Pr_equiv (prop1', prop2')
+       | Parsetree.Pr_not prop -> Parsetree.Pr_not (rec_subst prop)
+       | Parsetree.Pr_expr expr ->
+	   let expr' = subst_expr ~current_unit c1 c2 expr in
+	   Parsetree.Pr_expr expr'
+       | Parsetree.Pr_paren prop -> Parsetree.Pr_paren (rec_subst prop)) in
+    { prop_expr with Parsetree.ast_desc = new_desc } in
+  (* Now do the job. *)
+  rec_subst initial_prop_expr
+;;
+
+
+
 let subst_species_field ~current_unit c1 c2 = function
   | Env.TypeInformation.SF_sig (vname, scheme) ->
       (begin
@@ -320,6 +360,7 @@ let subst_species_field ~current_unit c1 c2 = function
       Env.TypeInformation.SF_let (vname, scheme', body')
       end)
   | Env.TypeInformation.SF_let_rec l ->
+      (begin
       let l' =
 	List.map
 	  (fun (vname, scheme, body) ->
@@ -334,4 +375,32 @@ let subst_species_field ~current_unit c1 c2 = function
 	    (vname, scheme', body'))
 	  l in
       Env.TypeInformation.SF_let_rec l'
+      end)
+  | Env.TypeInformation.SF_theorem (vname, scheme, body, proof) ->
+      (begin
+      (* No substitution inside the proof. *)
+      Types.begin_definition () ;
+      let ty = Types.specialize scheme in
+      let ty' =
+	(match c1 with
+	 | SCK_coll c -> Types.subst_type_simple c c2 ty
+	 | SCK_self -> Types.abstract_copy c2 ty) in
+      Types.end_definition () ;
+      let scheme' = Types.generalize ty' in
+      let body' = subst_prop ~current_unit c1 c2 body in
+      Env.TypeInformation.SF_theorem (vname, scheme', body', proof)
+      end)
+  | Env.TypeInformation.SF_property (vname, scheme, body) ->
+      (begin
+      Types.begin_definition () ;
+      let ty = Types.specialize scheme in
+      let ty' =
+	(match c1 with
+	 | SCK_coll c -> Types.subst_type_simple c c2 ty
+	 | SCK_self -> Types.abstract_copy c2 ty) in
+      Types.end_definition () ;
+      let scheme' = Types.generalize ty' in
+      let body' = subst_prop ~current_unit c1 c2 body in
+      Env.TypeInformation.SF_property (vname, scheme', body')
+      end)
 ;;

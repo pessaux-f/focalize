@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.5 2007-09-03 12:01:04 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.6 2007-09-03 13:48:07 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -147,6 +147,132 @@ let expr_decl_dependencies ~current_species expression =
 
 
 
+let prop_decl_dependencies ~current_species initial_prop_expression =
+  let rec rec_depend prop_expression = 
+    match prop_expression.Parsetree.ast_desc with
+     | Parsetree.Pr_forall (_, _, prop)
+     | Parsetree.Pr_exists (_, _, prop)
+     | Parsetree.Pr_not prop
+     | Parsetree.Pr_paren prop -> rec_depend prop
+     | Parsetree.Pr_imply (prop1, prop2)
+     | Parsetree.Pr_or (prop1, prop2)
+     | Parsetree.Pr_and (prop1, prop2)
+     | Parsetree.Pr_equiv (prop1, prop2) ->
+	 VnameSet.union (rec_depend prop1) (rec_depend prop2)
+     | Parsetree.Pr_expr expr -> expr_decl_dependencies ~current_species expr in
+  (* Now, do the job. *)
+  rec_depend initial_prop_expression
+;;
+
+
+let ident_in_fact_decl_dependencies ~current_species ident =
+  match ident.Parsetree.ast_desc with
+   | Parsetree.I_local _ ->
+       (* Because scoping pass already renamed all the identfiers that *)
+       (* "looked like" local identifiers into "method identifiers" if *)
+       (* they indeed denoted methods, we can safely consider that     *)
+       (* remaining "local identifiers" are really local and introduce *)
+       (* no dependency. Furthermore, there is no reason to get here   *)
+       (* real local identifier unless the user put an erroneous fact. *)
+       failwith "May be erroneous fact in the proof."
+   | Parsetree.I_global (_, _) ->
+       (* [Unsure] *)
+       failwith "# TODO once dependencies will carry module + vname"
+   | Parsetree.I_method (coll_name_opt, vname) ->
+       (begin
+       match coll_name_opt with
+	| None -> VnameSet.singleton vname            (* A method of Self. *)
+	| Some coll_name when coll_name = current_species ->
+	    VnameSet.singleton vname                  (* A method of Self. *)
+	| Some _ ->
+	    failwith "! TODO once dependencies will carry module + vname"
+       end)
+;;
+
+
+
+let fact_decl_dependencies ~current_species fact =
+  match fact.Parsetree.ast_desc with
+   | Parsetree.F_property idents ->
+       (begin
+       (* Here are some "decl"-dependencies ! *)
+       List.fold_left
+	 (fun accu ident ->
+	   VnameSet.union accu
+	     (ident_in_fact_decl_dependencies ~current_species ident))
+	 VnameSet.empty
+	 idents
+       end)
+   | Parsetree.F_def _    (* These "def"-dependencies, not "decl" !!! *)
+   | Parsetree.F_hypothesis _
+   | Parsetree.F_node _ -> VnameSet.empty
+;;
+
+
+
+let hyp_decl_dependencies ~current_species hyp =
+  match hyp.Parsetree.ast_desc with
+   | Parsetree.H_var (_, _) ->
+       (* No dependency from type expressions. *)
+       VnameSet.empty
+   | Parsetree.H_hyp (_, prop) -> prop_decl_dependencies ~current_species prop
+   | Parsetree.H_not (_, expr) -> expr_decl_dependencies ~current_species expr
+;;
+
+
+
+let statement_decl_dependencies ~current_species stmt =
+  let stmt_desc = stmt.Parsetree.ast_desc in
+  (* Frst, get the dependencies from the hypothses. *)
+  let hyps_deps =
+    List.fold_left
+      (fun accu hyp ->
+	VnameSet.union accu (hyp_decl_dependencies ~current_species hyp))
+      VnameSet.empty
+      stmt_desc.Parsetree.s_hyps in
+  (* An now, accumulate with those of the conclusion *)
+  match stmt_desc.Parsetree.s_concl with
+   | None -> hyps_deps
+   | Some prop ->
+       VnameSet.union hyps_deps (prop_decl_dependencies ~current_species prop)
+;;
+
+
+
+let rec proof_decl_dependencies ~current_species proof =
+  match proof.Parsetree.ast_desc with
+   | Parsetree.Pf_assumed
+   | Parsetree.Pf_coq _ -> VnameSet.empty
+   | Parsetree.Pf_auto facts ->
+       (begin
+       List.fold_left
+	 (fun accu fact ->
+	   let fact_deps = fact_decl_dependencies ~current_species fact in
+	   VnameSet.union accu fact_deps)
+	 VnameSet.empty
+	 facts
+       end)
+   | Parsetree.Pf_node proof_nodes ->
+       (begin
+       List.fold_left
+	 (fun accu proof_node ->
+	   let proof_node_deps =
+	     (match proof_node.Parsetree.ast_desc with
+	      | Parsetree.PN_sub (_, stmt, p) ->
+		  let sub_proof_deps =
+		    proof_decl_dependencies ~current_species p in
+		  let stmt_deps =
+		    statement_decl_dependencies ~current_species stmt in
+		  VnameSet.union sub_proof_deps stmt_deps
+	      | Parsetree.PN_qed (_, p) ->
+		  proof_decl_dependencies ~current_species p) in
+	   VnameSet.union accu proof_node_deps)
+	 VnameSet.empty
+	 proof_nodes
+       end)
+;;
+
+
 (* ******************************************************************** *)
 (* current_species: Types.collection_name ->                            *)
 (*   Env.TypeInformation.species_field -> VnameSet.t                    *)
@@ -160,6 +286,7 @@ let field_decl_dependencies ~current_species = function
   | Env.TypeInformation.SF_let (_, _, body) ->
       expr_decl_dependencies ~current_species body
   | Env.TypeInformation.SF_let_rec l ->
+      (begin
       (* Create the set of names to remove afterwards. *)
       let names_of_l =
 	List.fold_left
@@ -176,6 +303,16 @@ let field_decl_dependencies ~current_species = function
 	  l in
       (* And now, remove the rec-bound-names from the dependencies. *)
       VnameSet.diff deps_of_l names_of_l
+      end)
+  | Env.TypeInformation.SF_theorem (_, _, body, proof) ->
+      (begin
+      let bodys_deps = prop_decl_dependencies ~current_species body in
+      (* Now, recover the explicit "decl" dependencies of the proof. *)
+      let proof_deps = proof_decl_dependencies ~current_species proof in
+      VnameSet.union bodys_deps proof_deps
+      end)
+  | Env.TypeInformation.SF_property (_, _, body) ->
+      prop_decl_dependencies ~current_species body
 ;;
 
 
@@ -217,7 +354,9 @@ let clockwise_arrow field_name fields =
 	     List.fold_right
 	       (fun (n, _, _) accu' -> Handy.list_cons_uniq_eq n accu')
 	       l accu
-	   else accu)
+	   else accu
+       | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO1"
+       | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO2")
     fields
     []
 ;;
@@ -245,7 +384,9 @@ let where field_name fields =
            (* all the bound names of this recursive let definition.       *)
 	   if List.exists (fun (vname, _, _) -> vname = field_name) l then
 	     field :: accu
-	   else accu)
+	   else accu
+       | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO3"
+       | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO4")
     fields
     []
 ;;
@@ -267,6 +408,8 @@ let names_set_of_field = function
 	(fun accu_names (n, _, _) -> VnameSet.add n accu_names)
 	VnameSet.empty
 	l
+  | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO5"
+  | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO6"
 ;;
 
 
@@ -288,7 +431,9 @@ let ordered_names_list_of_fields fields =
        | Env.TypeInformation.SF_sig (n, _)
        | Env.TypeInformation.SF_let (n, _, _) -> n :: accu
        | Env.TypeInformation.SF_let_rec l ->
-	   List.fold_right (fun (n, _, _) accu' -> n :: accu') l accu)
+	   List.fold_right (fun (n, _, _) accu' -> n :: accu') l accu
+       | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO7"
+       | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO8")
     fields
     []
 ;;
@@ -317,12 +462,13 @@ let find_most_recent_rec_field_binding y_name fields =
 	(begin
 	match h with
 	 | Env.TypeInformation.SF_sig (_, _)
-	 | Env.TypeInformation.SF_let (_, _, _) ->
-	     rec_search q
-       | Env.TypeInformation.SF_let_rec l ->
-	   if List.exists (fun (n, _, _) -> n = y_name ) l then
-	     h
-	   else rec_search q
+	 | Env.TypeInformation.SF_let (_, _, _)
+	 | Env.TypeInformation.SF_theorem (_, _, _, _)
+	 | Env.TypeInformation.SF_property (_, _, _) -> rec_search q
+	 | Env.TypeInformation.SF_let_rec l ->
+	     if List.exists (fun (n, _, _) -> n = y_name ) l then
+	       h
+	     else rec_search q
 	end) in
   (* Reverse the list so that most recent names are in head. *)
   rec_search (List.rev fields)
@@ -377,6 +523,8 @@ let in_species_decl_dependencies_for_one_name ~current_species (name, body)
   if List.for_all
       (function
 	| Env.TypeInformation.SF_let_rec _ -> false
+	| Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO9"
+	| Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO10"
 	| _ -> true)
       where_x then expr_decl_dependencies ~current_species body
   else union_y_clock_x_etc ~current_species name fields
@@ -465,7 +613,9 @@ let build_dependencies_graph_for_fields ~current_species fields =
 	    tree_nodes := { nn_name = n ; nn_children = [] } :: !tree_nodes
       | Env.TypeInformation.SF_let (n, _, b) -> local_build_for_one_let n b
       | Env.TypeInformation.SF_let_rec l ->
-	  List.iter (fun (n, _, b) -> local_build_for_one_let n b) l)
+	  List.iter (fun (n, _, b) -> local_build_for_one_let n b) l
+      | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO11"
+      | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO12")
     fields ;
   (* Return the list of nodes of the graph. *)
   !tree_nodes

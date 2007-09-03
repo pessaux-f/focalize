@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.52 2007-09-03 10:06:42 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.53 2007-09-03 13:48:07 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -736,7 +736,9 @@ let ensure_methods_uniquely_defined current_species l1 l2 =
       (fun field accu ->
 	match field with
 	 | Env.TypeInformation.SF_sig (v, _)
-	 | Env.TypeInformation.SF_let (v, _, _) -> v :: accu
+	 | Env.TypeInformation.SF_let (v, _, _)
+	 | Env.TypeInformation.SF_theorem (v, _, _, _)
+	 | Env.TypeInformation.SF_property (v, _, _) -> v :: accu
 	 | Env.TypeInformation.SF_let_rec l ->
 	     let l' = List.map (fun (v, _, _) -> v) l in
 	     l' @ accu)
@@ -1457,8 +1459,10 @@ and typecheck_species_fields ctx env = function
 		 property_def.Parsetree.ast_desc.Parsetree.prd_name
 		 scheme env in
 	     let field_info =
-	       Env.TypeInformation.SF_sig
-		 (property_def.Parsetree.ast_desc.Parsetree.prd_name, scheme) in
+	       Env.TypeInformation.SF_property
+		 (property_def.Parsetree.ast_desc.Parsetree.prd_name,
+		  scheme,
+		  property_def.Parsetree.ast_desc.Parsetree.prd_prop) in
 	     ([field_info], ctx, env')
 	     end)
 	 | Parsetree.SF_theorem theorem_def ->
@@ -1474,8 +1478,11 @@ and typecheck_species_fields ctx env = function
 	       Env.TypingEnv.add_value
 		 theorem_def.Parsetree.ast_desc.Parsetree.th_name scheme env in
 	     let field_info =
-	       Env.TypeInformation.SF_sig
-		 (theorem_def.Parsetree.ast_desc.Parsetree.th_name, scheme) in
+	       Env.TypeInformation.SF_theorem
+		 (theorem_def.Parsetree.ast_desc.Parsetree.th_name,
+		  scheme,
+		  theorem_def.Parsetree.ast_desc.Parsetree.th_stmt,
+		  theorem_def.Parsetree.ast_desc.Parsetree.th_proof) in
 	     ([field_info], ctx, env')
 	     end)
 	 | Parsetree.SF_proof proof_def ->
@@ -1580,7 +1587,9 @@ let abstraction cname fields =
 		   let ty' = Types.abstract_copy cname ty in
 		   Types.end_definition () ;
 		   Env.TypeInformation.SF_sig (vname, (Types.generalize ty')))
-		 l) in
+		 l
+	   | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO13"
+	   | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO14") in
 	h' @ (rec_abstract q) in
   (* Do je job now... *)
   rec_abstract fields
@@ -1613,7 +1622,9 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
 	 | Env.TypeInformation.SF_let (v, sc, _) -> (v, sc) :: accu
 	 | Env.TypeInformation.SF_let_rec l ->
 	     let l' = List.map (fun (v, sc, _) -> (v, sc)) l in
-	     l' @ accu)
+	     l' @ accu
+	 | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO15"
+	 | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO16")
       fields [] in
   let flat_s1 = local_flat_fields s1 in
   let flat_s2 = local_flat_fields s2 in
@@ -1978,7 +1989,10 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
 			   meth_name meth_scheme internal_accu_env)
 		       accu_env
 		       l in
-		   (e, accu_ctx))
+		   (e, accu_ctx)
+	       | Env.TypeInformation.SF_theorem (_, _, _, _) ->
+		   failwith "TODO17"
+	       | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO18")
 	    (current_env, current_ctx)
 	    inh_species_methods in
 	let new_accu_found_methods = accu_found_methods @ inh_species_methods in
@@ -2179,7 +2193,9 @@ let oldest_inter_n_field_n_fields phi fields =
     (match phi with
      | Env.TypeInformation.SF_sig (v, _)
      | Env.TypeInformation.SF_let (v, _, _) -> [v]
-     | Env.TypeInformation.SF_let_rec l -> List.map (fun (v, _, _) -> v) l) in
+     | Env.TypeInformation.SF_let_rec l -> List.map (fun (v, _, _) -> v) l
+     | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO19"
+     | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO20") in
   (* We will now check for an intersection between the list of names *)
   (* from phi and the names of one field of the argument [fields].   *)
   let rec rec_hunt = function
@@ -2200,6 +2216,8 @@ let oldest_inter_n_field_n_fields phi fields =
 	     else
 	       let (found, rem_list) = rec_hunt rem_f in
 	       (found, (f :: rem_list))
+	 | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO21"
+	 | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO22"
 	end) in
   rec_hunt fields
 ;;
@@ -2554,6 +2572,8 @@ let ensure_collection_completely_defined ctx fields =
 	       end)
 	 | Env.TypeInformation.SF_let (_, _, _) -> ()
 	 | Env.TypeInformation.SF_let_rec _ -> ()
+	 | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO23"
+	 | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO24"
 	end) ;
 	rec_ensure rem_fields in
   (* Now do the job... *)

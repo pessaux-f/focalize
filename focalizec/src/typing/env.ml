@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.29 2007-08-24 10:51:20 pessaux Exp $ *)
+(* $Id: env.ml,v 1.30 2007-09-03 13:48:07 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -272,6 +272,9 @@ module TypeInformation = struct
     | SF_sig of (Parsetree.vname * Types.type_scheme)
     | SF_let of (Parsetree.vname * Types.type_scheme * Parsetree.expr)
     | SF_let_rec of (Parsetree.vname * Types.type_scheme * Parsetree.expr) list
+    | SF_theorem of (Parsetree.vname * Types.type_scheme * Parsetree.prop *
+		     Parsetree.proof)
+    | SF_property of (Parsetree.vname * Types.type_scheme * Parsetree.prop)
 
 
   type species_description = {
@@ -391,7 +394,13 @@ module TypeInformation = struct
 		     Format.fprintf ppf "and %a : %a@\n"
 		       Sourcify.pp_vname v Types.pp_type_scheme s)
 		   rem
-	    end))
+	    end)
+	| SF_theorem (vname, ty_scheme, _, _) ->
+	    Format.fprintf ppf "theorem %a : %a@\n"
+	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
+	| SF_property (vname, ty_scheme, _) ->
+	    Format.fprintf ppf "property %a : %a@\n"
+	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme)
       methods
 
 
@@ -1128,15 +1137,15 @@ module TypingEMAccess = struct
 
 
 
-  (* *************************************************************** *)
-  (* 'a -> TypeInformation.species_description ->                    *)
-  (*   ('b, 'c, 'd, Types.type_scheme, 'e) generic_env               *)
-  (** {b Descr} : Create a fresh environment with the methods of the
-                species called [spec_name] from the methods found in
-                [spec_info].
+  (* ******************************************************************** *)
+  (* 'a -> TypeInformation.species_description ->                         *)
+  (*   ('b, 'c, 'd, Types.type_scheme, 'e) generic_env                    *)
+  (** {b Descr} : Create a fresh environment with the methods, properties
+                and theorems of the species called [spec_name] from the
+                 methods found in [spec_info].
 
-      {b Rem} : Not exported outside this module.                    *)
-  (* *************************************************************** *)
+      {b Rem} : Not exported outside this module.                         *)
+  (* ******************************************************************** *)
   let make_value_env_from_species_methods spec_name spec_info =
     (* By folding left, fields at the head of the list will be at the tail *)
     (* of the environment list. Hence, methods seen first are inserted     *)
@@ -1146,7 +1155,10 @@ module TypingEMAccess = struct
 	(fun accu field ->
 	  match field with
 	   | TypeInformation.SF_sig (v, s)
-	   | TypeInformation.SF_let (v, s, _) -> [(v, (BO_absolute s))] @ accu
+	   | TypeInformation.SF_let (v, s, _)
+	   | TypeInformation.SF_theorem (v, s, _, _)
+	   | TypeInformation.SF_property (v, s, _) ->
+	       [(v, (BO_absolute s))] @ accu
 	   | TypeInformation.SF_let_rec l ->
 	       let l' = List.map (fun (v, s, _) -> (v, (BO_absolute s))) l in
 	       l' @ accu)

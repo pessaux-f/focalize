@@ -40,6 +40,9 @@ module TypeInformation :
       | SF_let of (Parsetree.vname * Types.type_scheme * Parsetree.expr)
       | SF_let_rec of
 	  (Parsetree.vname * Types.type_scheme * Parsetree.expr) list
+      | SF_theorem of (Parsetree.vname * Types.type_scheme *
+		       Parsetree.prop * Parsetree.proof)
+      | SF_property of (Parsetree.vname * Types.type_scheme * Parsetree.prop)
 
     type species_description = {
       spe_is_collection : bool ;
