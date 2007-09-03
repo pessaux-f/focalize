@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.4 2007-08-31 14:00:25 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.5 2007-09-03 12:01:04 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -56,7 +56,7 @@ module VnameSet = Set.Make (VnameMod) ;;
 
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
-let expr_dependencies ~current_species expression =
+let expr_decl_dependencies ~current_species expression =
   (* Let's just make a local function to save the stack, avoid *)
   (* passing each time the parameter [~current_species].       *)
   let rec rec_depend expr =
@@ -155,10 +155,10 @@ let expr_dependencies ~current_species expression =
 
     {b Rem} : Exported outside this module.                             *)
 (* ******************************************************************** *)
-let field_dependencies ~current_species = function
+let field_decl_dependencies ~current_species = function
   | Env.TypeInformation.SF_sig (_, _) -> VnameSet.empty
   | Env.TypeInformation.SF_let (_, _, body) ->
-      expr_dependencies ~current_species body
+      expr_decl_dependencies ~current_species body
   | Env.TypeInformation.SF_let_rec l ->
       (* Create the set of names to remove afterwards. *)
       let names_of_l =
@@ -170,7 +170,7 @@ let field_dependencies ~current_species = function
       let deps_of_l =
 	List.fold_left
 	  (fun accu_deps (_, _, body) ->
-	    let d = expr_dependencies ~current_species body in
+	    let d = expr_decl_dependencies ~current_species body in
 	    VnameSet.union d accu_deps)
 	  VnameSet.empty
 	  l in
@@ -350,7 +350,7 @@ let union_y_clock_x_etc ~current_species x_name fields =
       let field_y = find_most_recent_rec_field_binding y_name fields in
       let u =
 	VnameSet.union
-	  (field_dependencies ~current_species field_y) accu_deps in
+	  (field_decl_dependencies ~current_species field_y) accu_deps in
       (*  Then remove the recursive bound names. *)
       let rec_bound_names = names_set_of_field field_y in
       VnameSet.diff u rec_bound_names)
@@ -370,14 +370,15 @@ let union_y_clock_x_etc ~current_species x_name fields =
 
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
-let in_species_dependencies_for_one_name ~current_species (name, body) fields =
+let in_species_decl_dependencies_for_one_name ~current_species (name, body)
+    fields =
   let where_x = where name fields in
   (* Check if Where (x) does NOT contain Let_rec fields. *)
   if List.for_all
       (function
 	| Env.TypeInformation.SF_let_rec _ -> false
 	| _ -> true)
-      where_x then expr_dependencies ~current_species body
+      where_x then expr_decl_dependencies ~current_species body
   else union_y_clock_x_etc ~current_species name fields
 ;;
 
@@ -442,7 +443,8 @@ let build_dependencies_graph_for_fields ~current_species fields =
     let n_node = find_or_create tree_nodes n in
     (* Find the names dependencies for the current name. *)
     let n_deps_names =
-      in_species_dependencies_for_one_name ~current_species (n, b) fields in
+      in_species_decl_dependencies_for_one_name
+	~current_species (n, b) fields in
     (* Now, find the dependencies nodes for these names. *)
     let n_deps_nodes =
       VnameSet.fold
