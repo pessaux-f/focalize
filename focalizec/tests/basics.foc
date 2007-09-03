@@ -42,6 +42,9 @@ let scnd (x) = match x with | (_ , v) -> v ;;
 
 (* String operations *)
 external value sc : string -> string -> string = | caml -> "sc" ;;
+external value str_lt : string -> string -> bool = | caml -> "str_lt" ;;
+external value print_string : string -> unit = | caml -> "prt" ;;
+let print_newline (x in unit) = print_string ("\n") ;;
 
 external value string_of_int : int -> string = | caml -> "soi" ;;
 external value int_of_string : string -> int = | caml -> "ios" ;;
@@ -70,6 +73,71 @@ external value int_gt : int -> int -> bool =
 external value base_eq : 'a -> 'a -> bool =
   | caml -> "beq"
   | coq -> "beq" ;;
+theorem beq_refl : all x in 'a, base_eq (x, x) proof: assumed ;;
+theorem beq_symm: all x y in 'a, base_eq (x, y) -> base_eq (y, x) 
+  proof: assumed ;;
+theorem beq_trans: all x y z in 'a, base_eq (x, y) -> base_eq (y, z) ->
+  base_eq (x, z)
+proof: assumed ;;
+
+theorem int_le_not_gt :
+  all x y in int, int_leq (x, y) -> not (int_gt (x, y))
+  proof:
+    coq proof
+   {* Intros x y; Unfold __g_int_leq __g_int_gt.
+   Elim (Z_le_dec x y).
+   Intros H.
+   Intros b; Clear b.
+   Elim (Z_gt_dec x y).
+   Intros H1; Absurd `x > y`.
+   Apply Zle_not_gt; Trivial.
+   Trivial.
+   Compute; Trivial.
+   Compute; Trivial. *)
+    intros x y; unfold __g_int_leq, __g_int_gt in |- *.
+    elim (Z_le_dec x y).
+    intros H.
+    intros b; clear b.
+  elim (Z_gt_dec x y).
+  intros H1; absurd (x > y)%Z.
+  apply Zle_not_gt; trivial.
+  trivial.
+  compute in |- *; trivial.
+  compute in |- *; trivial. *}
+;;
+
+theorem int_lt_le_trans :
+  all x y z in int, int_lt (x, y) -> int_leq (y, z) -> int_lt (x, z)
+proof:
+  coq proof
+    {*
+(*v7
+   Intros x y z.
+   Unfold __g_int_lt __g_int_leq.
+   Elim (Z_lt_dec x y).
+   Elim (Z_le_dec y z).
+   Intros Hle Hlt foo bar; Clear foo bar.
+   Elim (Z_lt_dec x z).
+   Intros H; Compute; Trivial.
+   Intros H; Absurd (Zlt x z); Trivial.
+   Apply (Zlt_le_trans x y z); Trivial.
+   Intros b a H Habs; Compute; Contradiction.
+   Intros b H; Compute in H; Contradiction.
+ *)
+    intros x y z.
+    unfold __g_int_lt, __g_int_leq in |- *.
+  elim (Z_lt_dec x y).
+  elim (Z_le_dec y z).
+  intros Hle Hlt foo bar; clear foo bar.
+  elim (Z_lt_dec x z).
+  intros H; compute in |- *; trivial.
+  intros H; absurd (x < z)%Z; trivial.
+  apply (Zlt_le_trans x y z); trivial.
+  intros b a H Habs; compute in |- *; contradiction.
+  intros b H; compute in H; contradiction.
+  *}
+;;
+
 
 species Basic_object =
   let print (x in Self) = "<abst>" ;

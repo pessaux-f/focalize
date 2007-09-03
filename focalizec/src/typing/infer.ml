@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.50 2007-08-31 16:21:09 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.51 2007-09-03 09:07:23 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -385,7 +385,7 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
               Hence, in an external value definition like:
               [external value foc_error : string -> 'a = ...]
               the ['a] must be considered as generalized, then when
-              typechecking this definitionn the context must have a variable
+              typechecking this definition the context must have a variable
               mapping where ['a] is known. Using the present function, one
               can build such a mapping.
 
@@ -415,6 +415,58 @@ let make_implicit_var_mapping_from_type_expr type_expression =
      | Parsetree.TE_prop -> ()
      | Parsetree.TE_paren inner -> rec_make inner in
   rec_make type_expression ;
+  !mapping
+;;
+
+
+
+(* ************************************************************************* *)
+(* Parsetree.prop -> (string * Types.type_simple) list                       *)
+(** {b Descr} : Create a fresh variable mapping automatically variables in
+              the type parts of a [prop] as generalized. This is used when
+              one creates a type structure from a theorem expression.
+              In effect, in such a context, variables in the type are
+              implicitely considered as generalized because the type
+              constraint annotating the theorem does not show
+              explicitely "forall-bound-variables".
+              Hence, in an theorem definition like:
+              [theorem beq_refl : all x in 'a, ...]
+              the ['a] must be considered as generalized, then when
+              typechecking this definitionn the context must have a variable
+              mapping where ['a] is known. Using the present function, one
+              can build such a mapping.
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+let make_implicit_var_mapping_from_prop prop_expression =
+  let mapping = ref [] in
+  let rec rec_make pexpr =
+    match pexpr.Parsetree.ast_desc with
+     | Parsetree.Pr_forall (_, ty, prop)
+     | Parsetree.Pr_exists (_, ty, prop) ->
+	 (begin
+	 (* First recover the mapping induced byt the type expression. *)
+	 let mapping_from_ty = make_implicit_var_mapping_from_type_expr ty in
+	 (* Assuming the current mapping doesn't contain doubles, we *)
+	 (* extend it by the one got from the  type expression.      *)
+	 mapping :=
+	   Handy.list_concat_uniq_custom_eq
+	     (fun (n, _) (n', _) -> n = n') mapping_from_ty !mapping ;
+	 rec_make prop
+	 end)
+     | Parsetree.Pr_imply (prop1, prop2)
+     | Parsetree.Pr_or (prop1, prop2)
+     | Parsetree.Pr_and (prop1, prop2)
+     | Parsetree.Pr_equiv (prop1, prop2) ->
+	 rec_make prop1 ;
+	 rec_make prop2
+     | Parsetree.Pr_not prop
+     | Parsetree.Pr_paren prop -> rec_make prop
+     | Parsetree.Pr_expr _ ->
+	 (* Inside expressions type variable must be bound by the previous *)
+         (* parts of the prop ! Hence, do not continue searching inside.   *)
+	 () in
+  rec_make prop_expression ;
   !mapping
 ;;
 
@@ -1242,12 +1294,21 @@ and typecheck_statement ctx env statement =
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
 and typecheck_theorem_def ctx env theorem_def =
+  (* For the same reason that in external definition, variables present  *)
+  (* in a type expression in a theorem are implicitely considered as     *)
+  (* universally quantified. In effect, there no syntax to make explicit *)
+  (* the quantification. Then we first create a variable mapping from    *)
+  (* the type expression to avoid variable from being "unbound".         *)
+  let vmapp =
+    make_implicit_var_mapping_from_prop
+      theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
+  let ctx' = { ctx with tyvars_mapping = vmapp } in
   let ty =
-    typecheck_prop ctx env theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
+    typecheck_prop ctx' env theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
   (* Record the type information in the AST node. *)
   theorem_def.Parsetree.ast_type <- Some ty ;
   (* Now, typecheck the proof to fix types inside by side effet. *)
-  typecheck_proof ctx env theorem_def.Parsetree.ast_desc.Parsetree.th_proof ;
+  typecheck_proof ctx' env theorem_def.Parsetree.ast_desc.Parsetree.th_proof ;
   (* And return the type pf the stamement as type of the theorem.*)
   ty
 

@@ -1,4 +1,4 @@
-(* $Id: handy.ml,v 1.4 2007-08-31 11:18:47 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.5 2007-09-03 09:07:23 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -180,4 +180,28 @@ let list_concat_uniqq l1 l2 =
     | [] -> l2
     | h :: q ->
 	if List.memq h l2 then rec_append q else h :: (rec_append q) in
-  rec_append l1 ;;
+  rec_append l1
+;;
+
+
+
+(* *********************************************************************** *)
+(* ('a -> 'a -> bool) -> 'a list -> 'a list -> 'a list                     *)
+(** {b Descr} : Assuming that [l2] does not contain doubles, returns the
+              concatenation of elements of [l1] that do not belong to [l2].
+              If [l1] contains doubles, then only one of each will appear
+              in the resulting list.
+              The equality predicate used is provided by the [eq_fct]
+              argument.
+
+    {b Rem} : Exported outside this module.                                *)
+(* *********************************************************************** *)
+let list_concat_uniq_custom_eq eq_fct l1 l2 =
+  let rec rec_append = function
+    | [] -> l2
+    | h :: q ->
+	if List.exists (fun x -> eq_fct x h) l2 then
+	  rec_append q
+	else h :: (rec_append q) in
+  rec_append l1
+;;
