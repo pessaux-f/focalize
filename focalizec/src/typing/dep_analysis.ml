@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.6 2007-09-03 13:48:07 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.7 2007-09-03 15:32:03 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -41,7 +41,7 @@ exception Ill_formed_species of Types.species_name ;;
 
 (* *************************************************************** *)
 (** {b Descr} : Module stuff to create sets of [Parsetree.vanme]s.
- 
+
     {b Rem} : Not exported outside this module.                    *)
 (* *************************************************************** *)
 module VnameMod = struct type t = Parsetree.vname let compare = compare end ;;
@@ -52,7 +52,7 @@ module VnameSet = Set.Make (VnameMod) ;;
 (* ********************************************************************** *)
 (* current_species: Types.collection_name -> Parsetree.expr -> VnameSet.t *)
 (** {b Descr} : Compute the set of vnames the expression [expression]
-              depends of in the species [~current_species]
+              decl-depends of in the species [~current_species].
 
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
@@ -147,8 +147,16 @@ let expr_decl_dependencies ~current_species expression =
 
 
 
+(* ********************************************************************** *)
+(* current_species: Types.collection_name -> Parsetree.prop -> VnameSet.t *)
+(** {b Descr} : Compute the set of vnames the prop expression
+              [initial_prop_expression] decl-depends of in the species
+              [~current_species].
+
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
 let prop_decl_dependencies ~current_species initial_prop_expression =
-  let rec rec_depend prop_expression = 
+  let rec rec_depend prop_expression =
     match prop_expression.Parsetree.ast_desc with
      | Parsetree.Pr_forall (_, _, prop)
      | Parsetree.Pr_exists (_, _, prop)
@@ -165,6 +173,17 @@ let prop_decl_dependencies ~current_species initial_prop_expression =
 ;;
 
 
+
+(* ************************************************************************ *)
+(* current_species: Types.collection_name -> Parsetree.ident-> VnameSet.t   *)
+(** {b Descr} : Compute the set of vnames the identifier [ident] represents
+              as dependencies when this ident is located in a [fact].
+              In such a context, the [ident] is in fact a dependency.
+
+    {b Rem} : MUST only called with idents extracted from a [fact]'s
+            structure !
+            Not exported outside this module.                               *)
+(* ************************************************************************ *)
 let ident_in_fact_decl_dependencies ~current_species ident =
   match ident.Parsetree.ast_desc with
    | Parsetree.I_local _ ->
@@ -191,6 +210,13 @@ let ident_in_fact_decl_dependencies ~current_species ident =
 
 
 
+(* ******************************************************************** *)
+(* current_species:Types.collection_name -> Parsetree.fact-> VnameSet.t *)
+(** {b Descr} : Compute the set of vnames the fact [fact] decl-depends
+              of in the species [~current_species].
+
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
 let fact_decl_dependencies ~current_species fact =
   match fact.Parsetree.ast_desc with
    | Parsetree.F_property idents ->
@@ -273,6 +299,7 @@ let rec proof_decl_dependencies ~current_species proof =
 ;;
 
 
+
 (* ******************************************************************** *)
 (* current_species: Types.collection_name ->                            *)
 (*   Env.TypeInformation.species_field -> VnameSet.t                    *)
@@ -343,7 +370,9 @@ let clockwise_arrow field_name fields =
     (fun field accu ->
       match field with
       | Env.TypeInformation.SF_sig (vname, _)
-      | Env.TypeInformation.SF_let (vname, _, _) ->
+      | Env.TypeInformation.SF_let (vname, _, _)
+      | Env.TypeInformation.SF_theorem (vname, _, _, _)
+      | Env.TypeInformation.SF_property (vname, _, _) ->
 	  if vname = field_name then Handy.list_cons_uniq_eq vname accu
 	  else accu
        | Env.TypeInformation.SF_let_rec l ->
@@ -354,9 +383,7 @@ let clockwise_arrow field_name fields =
 	     List.fold_right
 	       (fun (n, _, _) accu' -> Handy.list_cons_uniq_eq n accu')
 	       l accu
-	   else accu
-       | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO1"
-       | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO2")
+	   else accu)
     fields
     []
 ;;
@@ -376,7 +403,9 @@ let where field_name fields =
     (fun field accu ->
       match field with
        | Env.TypeInformation.SF_sig (vname, _)
-       | Env.TypeInformation.SF_let (vname, _, _) ->
+       | Env.TypeInformation.SF_let (vname, _, _)
+       | Env.TypeInformation.SF_theorem (vname, _, _, _)
+       | Env.TypeInformation.SF_property (vname, _, _) ->
 	   if vname = field_name then field :: accu else accu
        | Env.TypeInformation.SF_let_rec l ->
 	   (* Check if the searched field name is among those in this     *)
@@ -384,9 +413,7 @@ let where field_name fields =
            (* all the bound names of this recursive let definition.       *)
 	   if List.exists (fun (vname, _, _) -> vname = field_name) l then
 	     field :: accu
-	   else accu
-       | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO3"
-       | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO4")
+	   else accu)
     fields
     []
 ;;
@@ -402,14 +429,14 @@ let where field_name fields =
 (* ******************************************************************* *)
 let names_set_of_field = function
   | Env.TypeInformation.SF_sig (vname, _)
-  | Env.TypeInformation.SF_let (vname, _, _) -> VnameSet.singleton vname
+  | Env.TypeInformation.SF_let (vname, _, _)
+  | Env.TypeInformation.SF_theorem (vname, _, _, _)
+  | Env.TypeInformation.SF_property (vname, _, _)  -> VnameSet.singleton vname
   | Env.TypeInformation.SF_let_rec l ->
       List.fold_left
 	(fun accu_names (n, _, _) -> VnameSet.add n accu_names)
 	VnameSet.empty
 	l
-  | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO5"
-  | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO6"
 ;;
 
 
@@ -429,22 +456,22 @@ let ordered_names_list_of_fields fields =
     (fun field accu ->
       match field with
        | Env.TypeInformation.SF_sig (n, _)
-       | Env.TypeInformation.SF_let (n, _, _) -> n :: accu
+       | Env.TypeInformation.SF_let (n, _, _)
+       | Env.TypeInformation.SF_theorem (n, _, _, _)
+       | Env.TypeInformation.SF_property (n, _, _) -> n :: accu
        | Env.TypeInformation.SF_let_rec l ->
-	   List.fold_right (fun (n, _, _) accu' -> n :: accu') l accu
-       | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO7"
-       | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO8")
+	   List.fold_right (fun (n, _, _) accu' -> n :: accu') l accu)
     fields
     []
 ;;
-	       
+
 
 
 (* ****************************************************************** *)
 (* Parsetree.vname -> Env.TypeInformation.species_field list ->       *)
 (*   Env.TypeInformation.species_field                                *)
-(** {b Descr} : Looks for the most recently defined field that binds 
-              [y_name] among [fields] and return it.
+(** {b Descr} : Looks for the most recently defined field that
+              let-rec-binds [y_name] among [fields] and return it.
               This function relies on the fact that the field list is
               ordered with oldest inherited fields are in head of the
               list and the most recent are in tail.
@@ -466,8 +493,7 @@ let find_most_recent_rec_field_binding y_name fields =
 	 | Env.TypeInformation.SF_theorem (_, _, _, _)
 	 | Env.TypeInformation.SF_property (_, _, _) -> rec_search q
 	 | Env.TypeInformation.SF_let_rec l ->
-	     if List.exists (fun (n, _, _) -> n = y_name ) l then
-	       h
+	     if List.exists (fun (n, _, _) -> n = y_name) l then h
 	     else rec_search q
 	end) in
   (* Reverse the list so that most recent names are in head. *)
@@ -510,24 +536,54 @@ let union_y_clock_x_etc ~current_species x_name fields =
 (* current_species: Types.collection_name ->                             *)
 (*   (Parsetree.vname * Parsetree.expr) ->                               *)
 (*     Env.TypeInformation.species_field list -> VnameSet.t              *)
-(** {b Descr} : Compute the dependencies of a name in a species. Namely
-              this is the \lbag x \rbag_s in Virgile Prevosto's Pdh,
-              section 3.5, page 32, definition 16.
+(** {b Descr} : Compute the dependencies of a sig, let or let-rec bound
+              name in a species. Namely this is the \lbag x \rbag_s in
+              Virgile Prevosto's Pdh, section 3.5, page 32, definition
+              16.
 
-    {b Rem} : Not exported outside this module.                          *)
+    {b Rem} : MUST be called only with a [name] sig, let or let-rec
+              bound !
+              Not exported outside this module.                          *)
 (* ********************************************************************* *)
-let in_species_decl_dependencies_for_one_name ~current_species (name, body)
-    fields =
+let in_species_decl_dependencies_for_one_function_name ~current_species
+    (name, body) fields =
   let where_x = where name fields in
   (* Check if Where (x) does NOT contain Let_rec fields. *)
   if List.for_all
       (function
+	| Env.TypeInformation.SF_sig (_, _)
+	| Env.TypeInformation.SF_let (_, _, _) -> true
 	| Env.TypeInformation.SF_let_rec _ -> false
-	| Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO9"
-	| Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO10"
-	| _ -> true)
+	| Env.TypeInformation.SF_theorem (_, _, _, _)
+	| Env.TypeInformation.SF_property (_, _, _) ->
+	    (* Because this function is intended to be called only on *)
+	    (* names bound by sig, let or let-rec fields, these cases *)
+	    (* should never arise !                                   *)
+	    assert false)
       where_x then expr_decl_dependencies ~current_species body
   else union_y_clock_x_etc ~current_species name fields
+;;
+
+
+
+(* ********************************************************************* *)
+(** {b Descr} : Compute the dependencies of a property or theorem bound
+              name in a species. Namely this is the \lbag x \rbag_s in
+              Virgile Prevosto's Pdh, section 3.9.5, page 53, definition
+              30.
+
+    {b Rem} : MUST be called only with a [name] property or theorem
+              bound !
+              Not exported outside this module.                          *)
+(* ********************************************************************* *)
+let in_species_decl_dependencies_for_one_theo_property_name ~current_species 
+    (t_prop, opt_body) fields =
+  let t_prop_deps = prop_decl_dependencies ~current_species t_prop in
+  match opt_body with
+   | None -> t_prop_deps
+   | Some proof ->
+       let proof_deps = proof_decl_dependencies ~current_species proof in
+       VnameSet.union t_prop_deps proof_deps
 ;;
 
 
@@ -583,15 +639,21 @@ let find_or_create tree_nodes name =
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
 let build_dependencies_graph_for_fields ~current_species fields =
+  (* The root hoot used to remind all the created nodes in the graph. *)
   let tree_nodes = ref ([] : name_node list) in
-  (* Just make a local function dealing with one let binding. We *)
-  (* when use it once for a Let and iter it for a Let_Rec.       *)
+
+  (* ******************************************************************** *)
+  (** {Descr} : Just make a local function dealing with one let binding.
+              We then use it once for a Let and iter it for a Let_Rec.
+              Apply the rules section 3.5, page 32, definition  16 to get
+              the dependencies.                                           *)
+  (* ******************************************************************** *)
   let local_build_for_one_let n b =
     (* Find the dependencies node for the current name. *)
     let n_node = find_or_create tree_nodes n in
     (* Find the names dependencies for the current name. *)
     let n_deps_names =
-      in_species_decl_dependencies_for_one_name
+      in_species_decl_dependencies_for_one_function_name
 	~current_species (n, b) fields in
     (* Now, find the dependencies nodes for these names. *)
     let n_deps_nodes =
@@ -605,7 +667,35 @@ let build_dependencies_graph_for_fields ~current_species fields =
     (* dependencies names' nodes.                                  *)
     n_node.nn_children <-
       Handy.list_concat_uniqq n_deps_nodes n_node.nn_children in
+
+  (* **************************************************************** *)
+  (** {Descr} : Just make a local function dealing with one property
+              or theorem name.
+              Apply rules from section 3.9.5, page 53, definition 30. *)
+  (* **************************************************************** *)
+  let local_build_for_one_theo_property n prop_t opt_b =
+    (* Find the dependencies node for the current name. *)
+    let n_node = find_or_create tree_nodes n in
+    (* Find the names dependencies for the current name. *)
+    let n_deps_names =
+      in_species_decl_dependencies_for_one_theo_property_name
+	~current_species (prop_t, opt_b) fields in
+    (* Now, find the dependencies nodes for these names. *)
+    let n_deps_nodes =
+      VnameSet.fold
+	(fun n accu ->
+	  let node = find_or_create tree_nodes n in
+	  node :: accu)
+	n_deps_names
+	[] in
+    (* Now add an edge from the current name's node to each of the *)
+    (* dependencies names' nodes.                                  *)
+    n_node.nn_children <-
+      Handy.list_concat_uniqq n_deps_nodes n_node.nn_children in
+
+  (* *************** *)
   (* Now do the job. *)
+  (* *************** *)
   List.iter
     (function
       | Env.TypeInformation.SF_sig (n, _) ->
@@ -614,8 +704,10 @@ let build_dependencies_graph_for_fields ~current_species fields =
       | Env.TypeInformation.SF_let (n, _, b) -> local_build_for_one_let n b
       | Env.TypeInformation.SF_let_rec l ->
 	  List.iter (fun (n, _, b) -> local_build_for_one_let n b) l
-      | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO11"
-      | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO12")
+      | Env.TypeInformation.SF_theorem (n, _, prop, body) ->
+          local_build_for_one_theo_property n prop (Some body)
+      | Env.TypeInformation.SF_property (n, _, prop) ->
+          local_build_for_one_theo_property n prop None)
     fields ;
   (* Return the list of nodes of the graph. *)
   !tree_nodes
@@ -639,13 +731,13 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
   Printf.fprintf out_hd "digraph G {\n" ;
   (* Outputs all the nodes og the graph. *)
   List.iter
-    (fun { nn_name = n } -> 
+    (fun { nn_name = n } ->
       Printf.fprintf out_hd "\"%s\" [shape=box,fontsize=10] ;\n"
 	(Parsetree_utils.name_of_vname n))
     tree_nodes ;
   (* Outputs all the edges between the nodes. *)
   List.iter
-    (fun { nn_name = n ; nn_children = children } -> 
+    (fun { nn_name = n ; nn_children = children } ->
       List.iter
 	(fun { nn_name = child_name } ->
 	  Printf.fprintf out_hd
@@ -772,7 +864,7 @@ let ensure_species_well_formed ~current_species fields =
 let debug_where fields =
   List.iter
     (function
-       | Env.TypeInformation.SF_sig (vname, _) 
+       | Env.TypeInformation.SF_sig (vname, _)
        | Env.TypeInformation.SF_let (vname, _, _) ->
 	   let w = where vname fields in
 	   Format.eprintf "Where (%a) : { " Sourcify.pp_vname vname ;
