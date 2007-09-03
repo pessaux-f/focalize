@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.51 2007-09-03 09:07:23 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.52 2007-09-03 10:06:42 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1152,71 +1152,80 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
 
 
 
-(* ************************************************************* *)
-(* typing_context -> Env.TypingEnv.t -> Parsetree.prop ->        *)
-(*   Types.type_simple                                           *)
-(** {b Descr} : Infers the type of a [prop]. This type is always
-              expected to be [Prop], hence this inference moslty
-              verifies the right types usages inside a property
-              and ensures that the final type is really [Prop].
-              It finally assign the type by side effect in the
-              [ast_type] field of the [prop] node.
+(* ************************************************************************* *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.prop ->                    *)
+(*   Types.type_simple                                                       *)
+(** {b Descr} : Infers the type of a [prop]. This type is always expected
+              to be [Prop], hence this inference moslty verifies the right
+              types usages inside a property and ensures that the final
+              type is really [Prop].
+              It finally assign the type by side effect in the [ast_type]
+              field of the [prop] node.
+              This function takes into account the fact that that carrier
+              "rep" must be considered as unknown to prevent def-dependencies
+             (C.f. Virgile Prevosto's Phd, section 3.9.4 pages 51 & 52).
 
-    {b Rem} : Not exported outside this module.                  *)
-(* ************************************************************* *)
-and typecheck_prop ctx env prop =
-  let final_ty =
-    (match prop.Parsetree.ast_desc with
-     | Parsetree.Pr_forall (vnames, t_expr, pr)
-     | Parsetree.Pr_exists (vnames, t_expr, pr) ->
-         (Types.begin_definition () ;
-	 (* Get the couple (name, type) for each defined variable. *)
-	 let bound_variables =
-	   (let ty = typecheck_type_expr ctx env t_expr in
-	   List.map (fun vname -> (vname, ty)) vnames) in
-	 (* Now typecheck the prop's body in the extended environment.     *)
-	 (* Note that as often, th order bindings are inserted in the      *)
-	 (* environment does not matter since parameters can never depends *)
-	 (* on each other.                                                 *)
-	 let env' =
-	   List.fold_left
-	     (fun accu_env (th_name, th_type) ->
-	       let scheme = Types.generalize th_type in
-	       Env.TypingEnv.add_value th_name scheme accu_env)
-	     env bound_variables in
-	 typecheck_prop ctx env' pr)
-     | Parsetree.Pr_imply (pr1, pr2)
-     | Parsetree.Pr_or (pr1, pr2)
-     | Parsetree.Pr_and (pr1, pr2)
-     | Parsetree.Pr_equiv (pr1, pr2) ->
-	 let ty1 = typecheck_prop ctx env pr1 in
-	 let ty2 = typecheck_prop ctx env pr2 in
-	 Types.unify
-	   ~loc: prop.Parsetree.ast_loc ~self_manifest: ctx.self_manifest
-	   ty1 ty2 ;
-	 (* Enforce the type to be [prop]. *)
-	 Types.unify
-	   ~loc: prop.Parsetree.ast_loc
-	   ~self_manifest: ctx.self_manifest ty1 (Types.type_prop ()) ;
-	 ty1
-     | Parsetree.Pr_not pr ->
-         let ty = typecheck_prop ctx env pr in
-	 (* Enforce the type to be [prop]. *)
-	 Types.unify
-	   ~loc: prop.Parsetree.ast_loc
-	   ~self_manifest: ctx.self_manifest ty (Types.type_prop ()) ;
-         ty
-     | Parsetree.Pr_expr expr ->
-	 (* Expressions must be typed as [bool]. If *)
-         (* so, then the returned  type is [prop].  *)
-	 let ty = typecheck_expr ctx env expr in
-         Types.unify
-	   ~loc: prop.Parsetree.ast_loc
-	   ~self_manifest: ctx.self_manifest ty (Types.type_bool ()) ;
-         Types.type_prop ()
-     | Parsetree.Pr_paren pr -> typecheck_prop ctx env pr) in
-  prop.Parsetree.ast_type <- Some final_ty ;
-  final_ty
+    {b Rem} : Not exported outside this module.                               *)
+(* ************************************************************************** *)
+and typecheck_prop start_ctx start_env proposition =
+  (* Make the carrier abstract to prevent def-dependencies with "rep". *)
+  let ctx = { start_ctx with self_manifest = None } in
+  (* The local recursive function to save carying and changing the context. *)
+  let rec rec_typecheck env prop =
+    let final_ty =
+      (match prop.Parsetree.ast_desc with
+       | Parsetree.Pr_forall (vnames, t_expr, pr)
+       | Parsetree.Pr_exists (vnames, t_expr, pr) ->
+           (Types.begin_definition () ;
+	    (* Get the couple (name, type) for each defined variable. *)
+	    let bound_variables =
+	      (let ty = typecheck_type_expr ctx env t_expr in
+	      List.map (fun vname -> (vname, ty)) vnames) in
+	    (* Now typecheck the prop's body in the extended environment.     *)
+	    (* Note that as often, th order bindings are inserted in the      *)
+	    (* environment does not matter since parameters can never depends *)
+	    (* on each other.                                                 *)
+	    let env' =
+	      List.fold_left
+		(fun accu_env (th_name, th_type) ->
+		  let scheme = Types.generalize th_type in
+		  Env.TypingEnv.add_value th_name scheme accu_env)
+		env bound_variables in
+	    rec_typecheck env' pr)
+       | Parsetree.Pr_imply (pr1, pr2)
+       | Parsetree.Pr_or (pr1, pr2)
+       | Parsetree.Pr_and (pr1, pr2)
+       | Parsetree.Pr_equiv (pr1, pr2) ->
+	   let ty1 = rec_typecheck env pr1 in
+	   let ty2 = rec_typecheck env pr2 in
+	   Types.unify
+	     ~loc: prop.Parsetree.ast_loc ~self_manifest: ctx.self_manifest
+	     ty1 ty2 ;
+	   (* Enforce the type to be [prop]. *)
+	   Types.unify
+	     ~loc: prop.Parsetree.ast_loc
+	     ~self_manifest: ctx.self_manifest ty1 (Types.type_prop ()) ;
+	   ty1
+       | Parsetree.Pr_not pr ->
+           let ty = rec_typecheck env pr in
+	   (* Enforce the type to be [prop]. *)
+	   Types.unify
+	     ~loc: prop.Parsetree.ast_loc
+	     ~self_manifest: ctx.self_manifest ty (Types.type_prop ()) ;
+           ty
+       | Parsetree.Pr_expr expr ->
+	   (* Expressions must be typed as [bool]. If *)
+           (* so, then the returned  type is [prop].  *)
+	   let ty = typecheck_expr ctx env expr in
+           Types.unify
+	     ~loc: prop.Parsetree.ast_loc
+	     ~self_manifest: ctx.self_manifest ty (Types.type_bool ()) ;
+           Types.type_prop ()
+       | Parsetree.Pr_paren pr -> rec_typecheck env pr) in
+    prop.Parsetree.ast_type <- Some final_ty ;
+    final_ty in
+  (* Now, do the job... *)
+  rec_typecheck start_env proposition
 
 
 
