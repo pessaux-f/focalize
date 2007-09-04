@@ -110,34 +110,77 @@ theorem int_lt_le_trans :
   all x y z in int, int_lt (x, y) -> int_leq (y, z) -> int_lt (x, z)
 proof:
   coq proof
-    {*
-(*v7
-   Intros x y z.
-   Unfold __g_int_lt __g_int_leq.
-   Elim (Z_lt_dec x y).
-   Elim (Z_le_dec y z).
-   Intros Hle Hlt foo bar; Clear foo bar.
-   Elim (Z_lt_dec x z).
-   Intros H; Compute; Trivial.
-   Intros H; Absurd (Zlt x z); Trivial.
-   Apply (Zlt_le_trans x y z); Trivial.
-   Intros b a H Habs; Compute; Contradiction.
-   Intros b H; Compute in H; Contradiction.
- *)
-    intros x y z.
-    unfold __g_int_lt, __g_int_leq in |- *.
-  elim (Z_lt_dec x y).
-  elim (Z_le_dec y z).
-  intros Hle Hlt foo bar; clear foo bar.
-  elim (Z_lt_dec x z).
-  intros H; compute in |- *; trivial.
-  intros H; absurd (x < z)%Z; trivial.
-  apply (Zlt_le_trans x y z); trivial.
-  intros b a H Habs; compute in |- *; contradiction.
-  intros b H; compute in H; contradiction.
-  *}
+  {* intros x y z.
+     unfold __g_int_lt, __g_int_leq in |- *.
+     elim (Z_lt_dec x y).
+     elim (Z_le_dec y z).
+     intros Hle Hlt foo bar; clear foo bar.
+     elim (Z_lt_dec x z).
+     intros H; compute in |- *; trivial.
+     intros H; absurd (x < z)%Z; trivial.
+     apply (Zlt_le_trans x y z); trivial.
+     intros b a H Habs; compute in |- *; contradiction.
+     intros b H; compute in H; contradiction. *}
 ;;
 
+theorem int_lt_le_trans :
+  all x y z in int, int_lt (x, y) -> int_leq (y, z) -> int_lt (x, z)
+proof:
+  coq proof
+  {* intros x y z.
+     unfold __g_int_lt, __g_int_leq in |- *.
+     elim (Z_lt_dec x y).
+     elim (Z_le_dec y z).
+     intros Hle Hlt foo bar; clear foo bar.
+     elim (Z_lt_dec x z).
+     intros H; compute in |- *; trivial.
+     intros H; absurd (x < z)%Z; trivial.
+     apply (Zlt_le_trans x y z); trivial.
+     intros b a H Habs; compute in |- *; contradiction.
+     intros b H; compute in H; contradiction. *}
+;;
+
+theorem int_le_refl :
+  all x y in int, base_eq (x, y) -> int_leq (x, y) proof: assumed ;;
+
+theorem int_le_antisymm:
+  all x y in int, int_leq (x, y) -> int_leq (y, x) -> base_eq (x, y)
+proof:
+  coq proof
+  {* intros x y.
+     unfold __g_int_leq in |- *.
+     elim (Z_le_dec x y); elim (Z_le_dec y x).
+     intros H1 H2.
+     intros b c; clear b c.
+     replace x with y.
+     eapply beq_refl.
+     apply Zle_antisym; trivial.
+     intros b a H; clear H a.
+     compute in |- *; intros Habs; eapply False_ind; trivial.
+     intros a b Habs H; clear H a; compute in Habs; eapply False_ind; trivial.
+     intros a b Habs H; clear H a; compute in Habs; eapply False_ind; trivial.
+*} ;;
+
+theorem int_le_trans:
+  all x y z in int,  #int_leq(x, y) -> #int_leq (y, z) -> #int_leq(x, z)
+proof:
+  coq proof
+  {* unfold __g_int_leq in |- *; intros x y z H1 H2.
+     apply dec_IsTrue. cut (x <= y)%Z. cut (y <= z)%Z.
+     eauto with zarith.
+     eapply IsTrue_dec. apply H2.
+     eapply IsTrue_dec; apply H1. *}
+;;
+
+theorem int_lt_irrefl :
+  all x y in int, int_lt (x, y) -> not base_eq (x, y)
+proof: assumed ;;
+
+external value pred : int -> int = | caml -> "pred" | coq -> "pred" ;;
+external value int_opp : int -> int =
+  | caml -> "int_opp" | coq -> "int_opp" ;;
+external value int_plus : int -> int -> int =
+  | caml -> "int_plus" | coq -> "int_plus" ;;
 
 species Basic_object =
   let print (x in Self) = "<abst>" ;

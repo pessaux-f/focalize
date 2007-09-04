@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2007-08-31 13:45:52 pessaux Exp $
+# $Id: Makefile,v 1.12 2007-09-04 15:02:44 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ -I ../basement -I ../parser -I ../typing
@@ -25,6 +25,7 @@ ALLBYTOBJS = ../basement/configuration.cmo \
 	../typing/scoping.cmo \
 	../typing/substExpr.cmo \
 	../typing/substColl.cmo \
+	../typing/ast_equal.cmo \
 	../typing/dep_analysis.cmo \
 	../typing/infer.cmo \
 	\

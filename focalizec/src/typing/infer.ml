@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.53 2007-09-03 13:48:07 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.54 2007-09-04 15:02:44 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -198,7 +198,7 @@ exception Collection_not_fully_defined of
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
 type typing_context = {
-  (** The name of the currently analysed compilation unit. *)  
+  (** The name of the currently analysed compilation unit. *)
   current_unit : Types.fname ;
   (** The name of the current species if relevant. *)
   current_species : Types.species_name option ;
@@ -2167,6 +2167,51 @@ let fields_fusion ~loc ctx phi1 phi2 =
    | (Env.TypeInformation.SF_let_rec rec_meths1,
       Env.TypeInformation.SF_let_rec rec_meths2) ->
         fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2
+   | ((Env.TypeInformation.SF_property (n1, sc1, prop1)),
+      (Env.TypeInformation.SF_property (n2, sc2, prop2)))
+   | ((Env.TypeInformation.SF_property (n1, sc1, prop1)),
+      (Env.TypeInformation.SF_theorem (n2, sc2, prop2, _)))
+   | ((Env.TypeInformation.SF_theorem (n1, sc1, prop1, _)),
+      (Env.TypeInformation.SF_theorem (n2, sc2, prop2, _))) ->
+	(begin
+	(* First, ensure that the names are the same. *)
+	if n1 = n2 then
+	  (begin
+	  (* Now ensure that types are the same. *)
+	  let ty1 = Types.specialize sc1 in
+	  let ty2 = Types.specialize sc2 in
+	  (try
+	    Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2
+	  with _ -> assert false) ;
+	  (* Finally, ensure that the propositions are the same. *)
+	  if Ast_equal.prop prop1 prop2 then
+	    (* Return the theorem in case of property / theorem and  *)
+	    (* return the last theorem in case of theorem  /theorem. *)
+	    phi2
+	  else assert false
+	  end)
+	else assert false
+	end)
+   | ((Env.TypeInformation.SF_theorem (n1, sc1, prop1, _)),
+      (Env.TypeInformation.SF_property (n2, sc2, prop2))) ->
+	(begin
+	(* First, ensure that the names are the same. *)
+	if n1 = n2 then
+	  (begin
+	  (* Now ensure that types are the same. *)
+	  let ty1 = Types.specialize sc1 in
+	  let ty2 = Types.specialize sc2 in
+	  (try
+	    Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2
+	  with _ -> assert false) ;
+	  (* Finally, ensure that the propositions are the same. *)
+	  if Ast_equal.prop prop1 prop2 then
+	    (* Return the theorem. *)
+	    phi1
+	  else assert false
+	  end)
+	else assert false
+	end)
    | _ -> assert false  (* From Virgile's thesis Lemma 8 p 37 *)
 ;;
 
@@ -2194,8 +2239,8 @@ let oldest_inter_n_field_n_fields phi fields =
      | Env.TypeInformation.SF_sig (v, _)
      | Env.TypeInformation.SF_let (v, _, _) -> [v]
      | Env.TypeInformation.SF_let_rec l -> List.map (fun (v, _, _) -> v) l
-     | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO19"
-     | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO20") in
+     | Env.TypeInformation.SF_theorem (v, _, _, _) -> [v]
+     | Env.TypeInformation.SF_property (v, _, _) -> [v]) in
   (* We will now check for an intersection between the list of names *)
   (* from phi and the names of one field of the argument [fields].   *)
   let rec rec_hunt = function
@@ -2282,7 +2327,7 @@ let typecheck_species_def ctx env species_def =
   (* is now manifest is unpdated, in case we inherited a [repr]. *)
   let (inherited_methods_infos,
        env_with_inherited_methods,
-       ctx_with_inherited_repr) = 
+       ctx_with_inherited_repr) =
     extend_env_with_inherits
       ~loc: species_def.Parsetree.ast_loc ctx env_with_species_params
       species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc in
@@ -2504,7 +2549,7 @@ let typecheck_type_def ctx env type_def =
           (fun (lbl_name, lbl_ty_expr) ->
             Types.begin_definition () ;
             let lbl_ty = typecheck_type_expr new_ctx env lbl_ty_expr in
-            let arrow = Types.type_arrow lbl_ty futur_type_type in	     
+            let arrow = Types.type_arrow lbl_ty futur_type_type in
             Types.end_definition () ;
             let lbl_scheme = Types.generalize arrow in
             (* Currently, fields do not support the "mutable" tag. *)
