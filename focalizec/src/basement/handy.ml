@@ -1,4 +1,4 @@
-(* $Id: handy.ml,v 1.5 2007-09-03 09:07:23 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.6 2007-09-04 11:00:25 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -204,4 +204,23 @@ let list_concat_uniq_custom_eq eq_fct l1 l2 =
 	  rec_append q
 	else h :: (rec_append q) in
   rec_append l1
+;;
+
+
+
+(* ************************************************************************ *)
+(* ('a -> 'a -> bool) -> 'a -> 'a list -> bool                              *)
+(** {b Descr} : Test if the element [e] belongs to the list [l]. The
+              comparision function used to test the equality is provided by
+              the argument [eq_fct].
+              Returns [true] if a element of [l] is equal to [e] otherwise
+              returns [false].
+
+   {b Rem} : Exported outside this module.                                  *)
+(* ************************************************************************ *)
+let list_mem_custom_eq eq_fct e l =
+  let rec rec_mem = function
+    | [] -> false
+    | h :: q -> if eq_fct h e then true else rec_mem q in
+  rec_mem l
 ;;

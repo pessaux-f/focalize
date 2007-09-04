@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.7 2007-09-03 15:32:03 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.8 2007-09-04 11:00:25 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -150,7 +150,7 @@ let expr_decl_dependencies ~current_species expression =
 (* ********************************************************************** *)
 (* current_species: Types.collection_name -> Parsetree.prop -> VnameSet.t *)
 (** {b Descr} : Compute the set of vnames the prop expression
-              [initial_prop_expression] decl-depends of in the species
+              [initial_prop_expression] decl-depends in the species
               [~current_species].
 
     {b Rem} : Not exported outside this module.                           *)
@@ -166,8 +166,11 @@ let prop_decl_dependencies ~current_species initial_prop_expression =
      | Parsetree.Pr_or (prop1, prop2)
      | Parsetree.Pr_and (prop1, prop2)
      | Parsetree.Pr_equiv (prop1, prop2) ->
-	 VnameSet.union (rec_depend prop1) (rec_depend prop2)
-     | Parsetree.Pr_expr expr -> expr_decl_dependencies ~current_species expr in
+	 let prop1_decl_deps = rec_depend prop1 in
+	 let prop2_decl_deps = rec_depend prop2 in
+	 (VnameSet.union prop1_decl_deps prop2_decl_deps)
+     | Parsetree.Pr_expr expr ->
+	 expr_decl_dependencies ~current_species expr in
   (* Now, do the job. *)
   rec_depend initial_prop_expression
 ;;
@@ -179,12 +182,15 @@ let prop_decl_dependencies ~current_species initial_prop_expression =
 (** {b Descr} : Compute the set of vnames the identifier [ident] represents
               as dependencies when this ident is located in a [fact].
               In such a context, the [ident] is in fact a dependency.
+              Depending on wether the ident appears under a "Def" or "Decl"
+              the dependency will be considered as a "decl" or a "def"
+              dependency.
 
     {b Rem} : MUST only called with idents extracted from a [fact]'s
             structure !
             Not exported outside this module.                               *)
 (* ************************************************************************ *)
-let ident_in_fact_decl_dependencies ~current_species ident =
+let ident_in_fact_dependencies ~current_species ident =
   match ident.Parsetree.ast_desc with
    | Parsetree.I_local _ ->
        (* Because scoping pass already renamed all the identfiers that *)
@@ -211,27 +217,41 @@ let ident_in_fact_decl_dependencies ~current_species ident =
 
 
 (* ******************************************************************** *)
-(* current_species:Types.collection_name -> Parsetree.fact-> VnameSet.t *)
+(* current_species:Types.collection_name -> Parsetree.fact->            *)
+(*   (VnameSet.t * VnameSet.t)                                          *)
 (** {b Descr} : Compute the set of vnames the fact [fact] decl-depends
-              of in the species [~current_species].
+              and def-depends of in the species [~current_species].
 
     {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************** *)
-let fact_decl_dependencies ~current_species fact =
+let fact_decl_n_def_dependencies ~current_species fact =
   match fact.Parsetree.ast_desc with
    | Parsetree.F_property idents ->
        (begin
        (* Here are some "decl"-dependencies ! *)
-       List.fold_left
-	 (fun accu ident ->
-	   VnameSet.union accu
-	     (ident_in_fact_decl_dependencies ~current_species ident))
-	 VnameSet.empty
-	 idents
+       let decl_deps =
+	 List.fold_left
+	   (fun accu ident ->
+	     VnameSet.union accu
+	       (ident_in_fact_dependencies ~current_species ident))
+	   VnameSet.empty
+	   idents in
+       (decl_deps, VnameSet.empty)
        end)
-   | Parsetree.F_def _    (* These "def"-dependencies, not "decl" !!! *)
+   | Parsetree.F_def idents ->
+       (begin
+       (* These are "def"-dependencies, not "decl" !!! *)
+       let def_deps =
+	 List.fold_left
+	   (fun accu ident ->
+	     VnameSet.union accu
+	       (ident_in_fact_dependencies ~current_species ident))
+	   VnameSet.empty
+	   idents in
+       (VnameSet.empty, def_deps)
+       end)
    | Parsetree.F_hypothesis _
-   | Parsetree.F_node _ -> VnameSet.empty
+   | Parsetree.F_node _ -> (VnameSet.empty, VnameSet.empty)
 ;;
 
 
@@ -239,7 +259,7 @@ let fact_decl_dependencies ~current_species fact =
 let hyp_decl_dependencies ~current_species hyp =
   match hyp.Parsetree.ast_desc with
    | Parsetree.H_var (_, _) ->
-       (* No dependency from type expressions. *)
+       (* No decl-dependency from type expressions. *)
        VnameSet.empty
    | Parsetree.H_hyp (_, prop) -> prop_decl_dependencies ~current_species prop
    | Parsetree.H_not (_, expr) -> expr_decl_dependencies ~current_species expr
@@ -249,51 +269,62 @@ let hyp_decl_dependencies ~current_species hyp =
 
 let statement_decl_dependencies ~current_species stmt =
   let stmt_desc = stmt.Parsetree.ast_desc in
-  (* Frst, get the dependencies from the hypothses. *)
-  let hyps_deps =
+  (* First, get the decl-dependencies from the hypothses. *)
+  let hyps_decl_deps =
     List.fold_left
-      (fun accu hyp ->
-	VnameSet.union accu (hyp_decl_dependencies ~current_species hyp))
+      (fun accu_decl_deps hyp ->
+	let hyp_decl_deps = hyp_decl_dependencies ~current_species hyp in
+	VnameSet.union accu_decl_deps hyp_decl_deps)
       VnameSet.empty
       stmt_desc.Parsetree.s_hyps in
   (* An now, accumulate with those of the conclusion *)
   match stmt_desc.Parsetree.s_concl with
-   | None -> hyps_deps
+   | None ->hyps_decl_deps
    | Some prop ->
-       VnameSet.union hyps_deps (prop_decl_dependencies ~current_species prop)
+       let prop_decl_defs =
+	 prop_decl_dependencies ~current_species prop in
+       VnameSet.union hyps_decl_deps prop_decl_defs
+	
 ;;
 
 
 
-let rec proof_decl_dependencies ~current_species proof =
+let rec proof_decl_n_def_dependencies ~current_species proof =
   match proof.Parsetree.ast_desc with
    | Parsetree.Pf_assumed
-   | Parsetree.Pf_coq _ -> VnameSet.empty
+   | Parsetree.Pf_coq _ -> (VnameSet.empty, VnameSet.empty)
    | Parsetree.Pf_auto facts ->
        (begin
        List.fold_left
-	 (fun accu fact ->
-	   let fact_deps = fact_decl_dependencies ~current_species fact in
-	   VnameSet.union accu fact_deps)
-	 VnameSet.empty
+	 (fun (accu_decl_deps, accu_def_deps) fact ->
+	   let (fact_decl_deps, fact_def_deps) =
+	     fact_decl_n_def_dependencies ~current_species fact in
+	   (* Return both "decl" and "def" dependencies. *)
+	   ((VnameSet.union accu_decl_deps fact_decl_deps),
+	    (VnameSet.union accu_def_deps fact_def_deps)))
+	 (VnameSet.empty, VnameSet.empty)
 	 facts
        end)
    | Parsetree.Pf_node proof_nodes ->
        (begin
        List.fold_left
-	 (fun accu proof_node ->
-	   let proof_node_deps =
+	 (fun (accu_decl_deps, accu_def_deps) proof_node ->
+	   let (proof_node_decl_deps, proof_node_def_deps) =
 	     (match proof_node.Parsetree.ast_desc with
 	      | Parsetree.PN_sub (_, stmt, p) ->
-		  let sub_proof_deps =
-		    proof_decl_dependencies ~current_species p in
-		  let stmt_deps =
+		  let (sub_proof_decl_deps, sub_proof_def_deps) =
+		    proof_decl_n_def_dependencies ~current_species p in
+		  (* Statement only have decl-dependencies. *)
+		  let stmt_decl_deps =
 		    statement_decl_dependencies ~current_species stmt in
-		  VnameSet.union sub_proof_deps stmt_deps
+		  ((VnameSet.union sub_proof_decl_deps stmt_decl_deps),
+		   sub_proof_def_deps)
 	      | Parsetree.PN_qed (_, p) ->
-		  proof_decl_dependencies ~current_species p) in
-	   VnameSet.union accu proof_node_deps)
-	 VnameSet.empty
+		  proof_decl_n_def_dependencies ~current_species p) in
+	   (* Return both "decl" and "def" dependencies. *)
+	   ((VnameSet.union accu_decl_deps proof_node_decl_deps),
+	    (VnameSet.union accu_def_deps proof_node_def_deps)))
+	 (VnameSet.empty, VnameSet.empty)
 	 proof_nodes
        end)
 ;;
@@ -308,7 +339,7 @@ let rec proof_decl_dependencies ~current_species proof =
 
     {b Rem} : Exported outside this module.                             *)
 (* ******************************************************************** *)
-let field_decl_dependencies ~current_species = function
+let field_only_decl_dependencies ~current_species = function
   | Env.TypeInformation.SF_sig (_, _) -> VnameSet.empty
   | Env.TypeInformation.SF_let (_, _, body) ->
       expr_decl_dependencies ~current_species body
@@ -333,10 +364,12 @@ let field_decl_dependencies ~current_species = function
       end)
   | Env.TypeInformation.SF_theorem (_, _, body, proof) ->
       (begin
-      let bodys_deps = prop_decl_dependencies ~current_species body in
-      (* Now, recover the explicit "decl" dependencies of the proof. *)
-      let proof_deps = proof_decl_dependencies ~current_species proof in
-      VnameSet.union bodys_deps proof_deps
+      let body_decl_deps = prop_decl_dependencies ~current_species body in
+      (* Now, recover the explicit "decl" dependencies of  *)
+      (* the proof and ignore here the "def"-dependencies. *)
+      let (proof_deps, _) =
+	proof_decl_n_def_dependencies ~current_species proof in
+      VnameSet.union body_decl_deps proof_deps
       end)
   | Env.TypeInformation.SF_property (_, _, body) ->
       prop_decl_dependencies ~current_species body
@@ -522,7 +555,7 @@ let union_y_clock_x_etc ~current_species x_name fields =
       let field_y = find_most_recent_rec_field_binding y_name fields in
       let u =
 	VnameSet.union
-	  (field_decl_dependencies ~current_species field_y) accu_deps in
+	  (field_only_decl_dependencies ~current_species field_y) accu_deps in
       (*  Then remove the recursive bound names. *)
       let rec_bound_names = names_set_of_field field_y in
       VnameSet.diff u rec_bound_names)
@@ -570,23 +603,31 @@ let in_species_decl_dependencies_for_one_function_name ~current_species
 (** {b Descr} : Compute the dependencies of a property or theorem bound
               name in a species. Namely this is the \lbag x \rbag_s in
               Virgile Prevosto's Pdh, section 3.9.5, page 53, definition
-              30.
+              30. Returns both the "decl" and "def" dependencies.
 
     {b Rem} : MUST be called only with a [name] property or theorem
               bound !
               Not exported outside this module.                          *)
 (* ********************************************************************* *)
-let in_species_decl_dependencies_for_one_theo_property_name ~current_species 
-    (t_prop, opt_body) fields =
-  let t_prop_deps = prop_decl_dependencies ~current_species t_prop in
+let in_species_decl_n_def_dependencies_for_one_theo_property_name
+    ~current_species (t_prop, opt_body) fields =
+  let t_prop_decl_deps = prop_decl_dependencies ~current_species t_prop in
   match opt_body with
-   | None -> t_prop_deps
+   | None ->
+       (* No body, then no "def"-dependencies. *)
+       (t_prop_decl_deps, VnameSet.empty)
    | Some proof ->
-       let proof_deps = proof_decl_dependencies ~current_species proof in
-       VnameSet.union t_prop_deps proof_deps
+       let (proof_decl_deps, proof_def_deps) =
+	 proof_decl_n_def_dependencies ~current_species proof in
+       ((VnameSet.union t_prop_decl_deps proof_decl_deps), proof_def_deps)
 ;;
 
 
+
+type dependency_kind =
+  | DK_decl
+  | DK_def
+;;
 
 (* ************************************************************************ *)
 (** {b Descr} : Strutrure of a node in a dependency graph representing the
@@ -601,7 +642,7 @@ type name_node = {
   nn_name : Parsetree.vname ;
  (** Means that the current names depends of the children nodes. I.e. the
      current name's body contains calls to the children names. *)
-  mutable nn_children : name_node list
+  mutable nn_children : (name_node * dependency_kind) list
 } ;;
 
 
@@ -651,22 +692,24 @@ let build_dependencies_graph_for_fields ~current_species fields =
   let local_build_for_one_let n b =
     (* Find the dependencies node for the current name. *)
     let n_node = find_or_create tree_nodes n in
-    (* Find the names dependencies for the current name. *)
-    let n_deps_names =
+    (* Find the names decl-dependencies for the current name. *)
+    let n_decl_deps_names =
       in_species_decl_dependencies_for_one_function_name
 	~current_species (n, b) fields in
-    (* Now, find the dependencies nodes for these names. *)
+    (* Now, find the decl-dependencies nodes for these names. *)
     let n_deps_nodes =
       VnameSet.fold
 	(fun n accu ->
 	  let node = find_or_create tree_nodes n in
-	  node :: accu)
-	n_deps_names
+	  (node, DK_decl) :: accu)
+	n_decl_deps_names
 	[] in
     (* Now add an edge from the current name's node to each of the *)
-    (* dependencies names' nodes.                                  *)
+    (* decl-dependencies names' nodes.                             *)
     n_node.nn_children <-
-      Handy.list_concat_uniqq n_deps_nodes n_node.nn_children in
+      Handy.list_concat_uniq_custom_eq
+	(fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
+	n_deps_nodes n_node.nn_children in
 
   (* **************************************************************** *)
   (** {Descr} : Just make a local function dealing with one property
@@ -676,22 +719,38 @@ let build_dependencies_graph_for_fields ~current_species fields =
   let local_build_for_one_theo_property n prop_t opt_b =
     (* Find the dependencies node for the current name. *)
     let n_node = find_or_create tree_nodes n in
-    (* Find the names dependencies for the current name. *)
-    let n_deps_names =
-      in_species_decl_dependencies_for_one_theo_property_name
+    (* Find the names decl and defs dependencies for the current name. *)
+    let (n_decl_deps_names, n_def_deps_names) =
+      in_species_decl_n_def_dependencies_for_one_theo_property_name
 	~current_species (prop_t, opt_b) fields in
-    (* Now, find the dependencies nodes for these names. *)
-    let n_deps_nodes =
+    (* Now, find the decl-dependencies nodes for these names. *)
+    let n_decl_deps_nodes =
       VnameSet.fold
 	(fun n accu ->
 	  let node = find_or_create tree_nodes n in
-	  node :: accu)
-	n_deps_names
+	  (node, DK_decl) :: accu)
+	n_decl_deps_names
 	[] in
     (* Now add an edge from the current name's node to each of the *)
-    (* dependencies names' nodes.                                  *)
+    (* decl-dependencies names' nodes.                             *)
     n_node.nn_children <-
-      Handy.list_concat_uniqq n_deps_nodes n_node.nn_children in
+      Handy.list_concat_uniq_custom_eq
+	(fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
+	n_decl_deps_nodes n_node.nn_children ;
+    (* Now, find the def-dependencies nodes for these names. *)
+    let n_def_deps_nodes =
+      VnameSet.fold
+	(fun n accu ->
+	  let node = find_or_create tree_nodes n in
+	  (node, DK_def) :: accu)
+	n_def_deps_names
+	[] in
+    (* Now add an edge from the current name's node to each of the *)
+    (* def-dependencies names' nodes.                              *)
+    n_node.nn_children <-
+      Handy.list_concat_uniq_custom_eq
+	(fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
+	n_def_deps_nodes n_node.nn_children in
 
   (* *************** *)
   (* Now do the job. *)
@@ -739,11 +798,16 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
   List.iter
     (fun { nn_name = n ; nn_children = children } ->
       List.iter
-	(fun { nn_name = child_name } ->
+	(fun ({ nn_name = child_name }, decl_kind) ->
+	  (* Just make a different style depending on the kind of dependency. *)
+	  let (style, color) =
+	    (match decl_kind with
+	     | DK_decl -> ("", "red")
+	     | DK_def -> ("style=dotted,", "blue")) in
 	  Printf.fprintf out_hd
-	    "\"%s\" -> \"%s\" [style=dotted,color=blue,fontsize=10] ;"
+	    "\"%s\" -> \"%s\" [%scolor=%s,fontsize=10] ;"
 	    (Parsetree_utils.name_of_vname n)
-	    (Parsetree_utils.name_of_vname child_name))
+	    (Parsetree_utils.name_of_vname child_name) style color)
 	children)
     tree_nodes ;
   (* Finally, outputs the trailer of the dotty file. *)
@@ -778,13 +842,14 @@ let is_reachable start_node end_node =
       (* the trivial path (because we explicitely look inside the children   *)
       (* and if a node is acceptable in the children, then the path length   *)
       (* is mandatorily non-null).                                           *)
-      if List.memq end_node current_node.nn_children then true
+      if List.exists
+	  (fun (n, _) -> n == end_node) current_node.nn_children then true
       else
 	(begin
 	seen := current_node :: !seen ;
         (* The [end_node] was not found in the children, *)
         (* then search in the children.                  *)
-	List.exists rec_search current_node.nn_children
+	List.exists (fun (n, _) -> rec_search n) current_node.nn_children
 	end)
       end) in
   (* Start the search. *)
