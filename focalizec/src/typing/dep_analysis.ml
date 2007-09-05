@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.8 2007-09-04 11:00:25 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.9 2007-09-05 14:13:18 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -284,7 +284,7 @@ let statement_decl_dependencies ~current_species stmt =
        let prop_decl_defs =
 	 prop_decl_dependencies ~current_species prop in
        VnameSet.union hyps_decl_deps prop_decl_defs
-	
+
 ;;
 
 
@@ -482,7 +482,7 @@ let names_set_of_field = function
               Example: [let s ; sig y ; let rec z ... and t] will give the
               list [s; y; z; t].
 
-    {b Rem} : Not exported outside this module.                             *)
+    {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
 let ordered_names_list_of_fields fields =
   List.fold_right
@@ -924,6 +924,119 @@ let ensure_species_well_formed ~current_species fields =
 
 
 
+(* ************************************************************************* *)
+(* Env.TypeInformation.species_field ->                                      *)
+(*   Env.TypeInformation.species_field list                                  *)
+(** {b Descr} : Implements the erasing procedure of one field described
+              in Virgile Prevosto's Phd, Section 3.9.5, page 53, definition
+              33.
+
+    {b Rem} : Not exported outside this module.
+              Because the erasing of one Let_rec leads to several Sig fields
+              this function takes 1 fields and may return several.
+              In the same spirit, because we don't have any "slilent"  Sig
+              for "rep" (of course, "rep" is always a Sig when present), if
+              we find "rep" defined, then the only way to abstract it is to
+              remove it. Hence this function may also return an empty list
+              of fields.                                                     *)
+(* ************************************************************************* *)
+let erase_field field =
+  match field with
+   | Env.TypeInformation.SF_sig (vname, _) ->
+       (begin
+       (* Also includes "rep". *)
+       let m_name_as_str = Parsetree_utils.name_of_vname vname in
+       if m_name_as_str = "rep" then
+	 []  (* No explicit "rep" means ... no "rep". *)
+       else [field]
+       end)
+   | Env.TypeInformation.SF_let (vname, sch, _) ->
+       [Env.TypeInformation.SF_sig (vname, sch)]  (* Turn the Let into a Sig. *)
+   | Env.TypeInformation.SF_let_rec l ->
+       (* Just turn the whole list into Sigs. *)
+       List.map (fun (n, sch, _) -> Env.TypeInformation.SF_sig (n, sch)) l
+   | Env.TypeInformation.SF_theorem (n, sch, prop, body) ->
+       [Env.TypeInformation.SF_property (n, sch, prop)]
+   | _ -> [field]                       (* Everything else is unchanged. *)
+;;
+
+
+
+(* ****************************************************************** *)
+(* current_species: Types.collection_name -> Parsetree.vname list ->  *)
+(*   Env.TypeInformation.species_field list ->                        *)
+(*     Env.TypeInformation.species_field list                         *)
+(** {b Descr} : Implements the erasing procedure in a list of fields
+              [fields] as described in Virgile Prevosto's Phd,
+              Section 3.9.5, page 53, definition 33.
+              Erases in the list of fields definitions according to
+              the context represented by the list of names [context].
+
+    {b Rem} : Exported outside this module.                           *)
+(* ****************************************************************** *)
+let erase_fields_in_context ~current_species context fields =
+  (* Now, the recursive function dealing with each field...*)
+  let rec rec_erase rec_context = function
+    | [] -> []
+    | m_field :: l_rem_fields ->
+	(begin
+	(* We check if the [m_field] is already astracted. *)
+	match m_field with
+	 | Env.TypeInformation.SF_sig (_, _)
+	 | Env.TypeInformation.SF_property (_, _, _) ->
+	     (* [m_field] is already astracted. If so, then nothing to do on *)
+             (* it and just go on with the remaining fields [l_rem_fields].  *)
+	     m_field :: (rec_erase rec_context l_rem_fields)
+	 | _ ->
+	     (begin
+	     (* All other cases. First compute the intersection between *)
+	     (* [m_field]'s def-dependencies and the context. This is   *)
+             (* the \lbag\lbag m \rbag\rbag \inter \Cal N formula  of   *)
+	     (* definition 33, page 53.                                 *)
+	     let def_deps =
+	       (match m_field with
+		| Env.TypeInformation.SF_let (_, _, _)
+		| Env.TypeInformation.SF_let_rec _ ->
+		    (* No "def"-dependencies for functions (C.f. definition   *)
+		    (* 30 in Virgile Prevosto's Phd, section 3.9.5, page 53). *)
+		    VnameSet.empty
+		| Env.TypeInformation.SF_theorem (n, _, prop, proof) ->
+		    let (_, n_def_deps_names) =
+		      in_species_decl_n_def_dependencies_for_one_theo_property_name
+			~current_species (prop, (Some proof)) fields in
+		    (* Just return the "def"-dependencies. *)
+		    n_def_deps_names
+		| Env.TypeInformation.SF_property (_, _, _)
+		| Env.TypeInformation.SF_sig (_, _) ->
+		    (* Can not arise because these cases were matched above. *)
+		    assert false) in
+	     (* Compute the intersection with the context... *)
+	     if VnameSet.is_empty (VnameSet.inter def_deps rec_context) then
+	       (begin
+	       (* Intersection is empty. *)
+	       m_field :: (rec_erase rec_context l_rem_fields)
+	       end)
+	     else
+	       (begin
+	       (* Intersection non non-empty. Erase the current field. *)
+	       let erased_m_field = erase_field m_field in
+	       (* Extent the erasing context with names of the current field. *)
+	       let new_context =
+		 VnameSet.union rec_context (names_set_of_field m_field) in
+	       (* And then process the remaining fields. *)
+	       erased_m_field @ (rec_erase new_context l_rem_fields)
+	       end)
+	   end)
+      end) in
+  (* Now do the job... *)
+  (* Build once for all the set on names contained in the context list. *)
+  let context_as_set =
+    List.fold_left (fun accu n -> VnameSet.add n accu) VnameSet.empty context in
+  rec_erase context_as_set fields
+;;
+
+
+
 (*
 (* Was debug. To disapear. *)
 let debug_where fields =
@@ -958,4 +1071,3 @@ let debug_where fields =
     fields
 ;;
 *)
-

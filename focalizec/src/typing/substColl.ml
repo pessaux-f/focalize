@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: substColl.ml,v 1.4 2007-09-03 13:48:07 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.5 2007-09-05 14:13:18 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -293,6 +293,14 @@ and subst_let_definition ~current_unit c1 c2 let_def =
 
 
 
+(* ******************************************************************* *)
+(* current_unit:Types.fname -> substitution_collection_kind ->         *)
+(*   Types.type_collection -> Parsetree.prop -> Parsetree.prop         *)
+(** {b Descr} : Performs the collection name substitution [c1] <- [c2]
+              in a [Parsetree.prop].
+
+    {b Rem} : Exported outside this module.                            *)
+(* ******************************************************************* *)
 let subst_prop ~current_unit c1 c2 initial_prop_expr =
   let rec rec_subst prop_expr =
     let new_desc =

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.54 2007-09-04 15:02:44 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.55 2007-09-05 14:13:18 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1557,7 +1557,7 @@ let rec typecheck_expr_collection_cstr_for_is_param ctx env initial_expr =
 
 
 (* ************************************************************************ *)
-(* (Types.fname * Types.collection_name) ->                                 *)
+(* current_unit: Types.fname -> (Types.fname * Types.collection_name) ->    *)
 (*   Env.TypeInformation.species_field list ->                              *)
 (*     Env.TypeInformation.species_field list                               *)
 (** {b Descr} : Perform the abstraction of species methods. This implements
@@ -1566,7 +1566,7 @@ let rec typecheck_expr_collection_cstr_for_is_param ctx env initial_expr =
 
     {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
-let abstraction cname fields =
+let abstraction ~current_unit cname fields =
   let rec rec_abstract = function
     | [] -> []
     | h :: q ->
@@ -1588,8 +1588,18 @@ let abstraction cname fields =
 		   Types.end_definition () ;
 		   Env.TypeInformation.SF_sig (vname, (Types.generalize ty')))
 		 l
-	   | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO13"
-	   | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO14") in
+	   | Env.TypeInformation.SF_theorem (vname, scheme, prop, _)
+	   | Env.TypeInformation.SF_property (vname, scheme, prop) ->
+	       Types.begin_definition () ;
+	       let ty = Types.specialize scheme in
+	       let ty' = Types.abstract_copy cname ty in
+	       Types.end_definition () ;
+	       (* We substitute Self by [cname] in the prop. *)
+	       let abstracted_prop =
+		 SubstColl.subst_prop ~current_unit SubstColl.SCK_self
+		   cname prop in
+	       [Env.TypeInformation.SF_property
+		  (vname, (Types.generalize ty'), abstracted_prop)]) in
 	h' @ (rec_abstract q) in
   (* Do je job now... *)
   rec_abstract fields
@@ -1623,8 +1633,8 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
 	 | Env.TypeInformation.SF_let_rec l ->
 	     let l' = List.map (fun (v, sc, _) -> (v, sc)) l in
 	     l' @ accu
-	 | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO15"
-	 | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO16")
+	 | Env.TypeInformation.SF_theorem (v, sc, _, _)
+	 | Env.TypeInformation.SF_property (v, sc, _) -> (v, sc) :: accu)
       fields [] in
   let flat_s1 = local_flat_fields s1 in
   let flat_s2 = local_flat_fields s2 in
@@ -1733,7 +1743,8 @@ let apply_species_arguments ctx env base_spe_descr params =
 	       let (c2, expr_sp_description) = (* The c2 of Virgile's Phd. *)
 		 typecheck_expr_collection_cstr_for_is_param
                    ctx env e_param_expr in
-	       let big_A_i1_c2 = abstraction c2 c1_ty in
+	       let big_A_i1_c2 =
+		 abstraction ~current_unit: ctx.current_unit c2 c1_ty in
 	       (* Ensure that i2 <= A(i1, c2). *)
 	       is_sub_species_of
 		 ~loc: e_param.Parsetree.ast_loc ctx
@@ -1891,6 +1902,7 @@ let typecheck_species_def_params ctx env species_name species_params =
 	     (* This internal name is the name of the parameter.  *)
 	     let abstracted_methods =
 	       abstraction
+		 ~current_unit: ctx.current_unit
 		 (ctx.current_unit, param_name_as_string) species_expr_fields in
 	     let param_description = {
 	       Env.TypeInformation.spe_is_collection = false ;
@@ -1990,9 +2002,14 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
 		       accu_env
 		       l in
 		   (e, accu_ctx)
-	       | Env.TypeInformation.SF_theorem (_, _, _, _) ->
-		   failwith "TODO17"
-	       | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO18")
+	       | Env.TypeInformation.SF_theorem (theo_name, theo_sch, _, _) ->
+		   let e =
+		     Env.TypingEnv.add_value theo_name theo_sch accu_env in
+		   (e, accu_ctx)
+	       | Env.TypeInformation.SF_property (prop_name, prop_sch, _) ->
+		   let e =
+		     Env.TypingEnv.add_value prop_name prop_sch accu_env in
+		   (e, accu_ctx))
 	    (current_env, current_ctx)
 	    inh_species_methods in
 	let new_accu_found_methods = accu_found_methods @ inh_species_methods in
@@ -2221,11 +2238,14 @@ let fields_fusion ~loc ctx phi1 phi2 =
 (* Env.TypeInformation.species_field ->                                     *)
 (*   Env.TypeInformation.species_field list ->                              *)
 (*     (Env.TypeInformation.species_field option *                          *)
+(*      Env.TypeInformation.species_field list *                            *)
 (*      Env.TypeInformation.species_field list)                             *)
 (** {b Descr} : Searches in the list of fields [fields] the oldest field
               sharing a name in common with the field [phi]. Then it
               returns this field of [fields] and the list [fields] itself
-              minus the found field.
+              minus the found field splitted in two parts :
+               - the head formed by the elements before the found field,
+               - the tail formed by the elements after the found field.
               This function intends to serves in the normalization
               algorithm described in Virgile Prevosto's Phd, Section 3.7.1,
               page 36. It addresses the problem of "finding i_0 the
@@ -2244,25 +2264,27 @@ let oldest_inter_n_field_n_fields phi fields =
   (* We will now check for an intersection between the list of names *)
   (* from phi and the names of one field of the argument [fields].   *)
   let rec rec_hunt = function
-    | [] -> (None, [])
+    | [] -> (None, [], [])
     | f :: rem_f ->
 	(begin
 	match f with
 	 | Env.TypeInformation.SF_sig (v, _)
-	 | Env.TypeInformation.SF_let (v, _, _) ->
-	     if List.mem v flat_phi_names then ((Some f), rem_f)
+	 | Env.TypeInformation.SF_let (v, _, _)
+	 | Env.TypeInformation.SF_theorem (v, _, _, _)
+	 | Env.TypeInformation.SF_property (v, _, _) ->
+	     if List.mem v flat_phi_names then ((Some f), [], rem_f)
 	     else
-	       let (found, rem_list) = rec_hunt rem_f in
-	       (found, (f :: rem_list))
+	       let (found, head_list, rem_list) = rec_hunt rem_f in
+	       (* Not found in [f], then add it in the head part. *)
+	       (found, (f :: head_list), rem_list)
 	 | Env.TypeInformation.SF_let_rec l ->
 	     let names_in_l = List.map (fun (v, _, _) -> v) l in
 	     if Handy.list_intersect_p flat_phi_names names_in_l then
-	       ((Some f), rem_f)
+	       ((Some f), [], rem_f)
 	     else
-	       let (found, rem_list) = rec_hunt rem_f in
-	       (found, (f :: rem_list))
-	 | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO21"
-	 | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO22"
+	       let (found, head_list, rem_list) = rec_hunt rem_f in
+               (* Not found in [f], then add it in the head part. *)
+	       (found, (f :: head_list), rem_list)
 	end) in
   rec_hunt fields
 ;;
@@ -2271,7 +2293,9 @@ let oldest_inter_n_field_n_fields phi fields =
 
 (* **************************************************************** *)
 (** {b Descr} : Implements the normalization algorithm described in
-              Virgile Prevosto's Phd, Section 3.7.1, page 36.
+              Virgile Prevosto's Phd, Section 3.7.1, page 36 plus
+              its extention to properties and theorems in Section
+              3.9.7, page 57.
 
     {b Rem}: Not exported outside this module.                      *)
 (* **************************************************************** *)
@@ -2285,12 +2309,25 @@ let normalize_species ~loc ctx methods_info inherited_methods_infos =
      | phi :: bigX ->
 	 (begin
 	 match oldest_inter_n_field_n_fields phi !w2 with
-	  | (None, _) ->
+	  | (None, _, _) ->
 	      w1 := bigX ;
 	      w2 := !w2 @ [phi]
-	  | ((Some psi_i0), sniped_w2) ->
+	  | ((Some psi_i0), head_sniped_w2, tail_sniped_w2) ->
+	      (* Extract the names forming the erasing context. *)
+	      let psi_i0_names =
+		Dep_analysis.ordered_names_list_of_fields [psi_i0] in
 	      w1 :=  (fields_fusion ~loc ctx phi psi_i0) :: bigX ;
-	      w2 := sniped_w2
+	      (* Rather apply the formula Section of Section 3.9.7, page 57. *)
+	      (* Hence we erase in the tail of the list, i.e. in fields      *)
+	      (* found after [psi_i0].                                       *)
+	      let current_species =
+		(match ctx.current_species with
+		 | None -> assert false
+		 | Some sp_name -> sp_name) in
+	      let erased_tail =
+                Dep_analysis.erase_fields_in_context
+                  ~current_species psi_i0_names tail_sniped_w2 in
+	      w2 := head_sniped_w2 @ erased_tail
 	 end)
   done ;
   !w2
@@ -2598,8 +2635,8 @@ let typecheck_type_def ctx env type_def =
     {b Rem} : Not exported outside this module.                        *)
 (* ******************************************************************* *)
 let ensure_collection_completely_defined ctx fields =
-  (* Let just make a reference poru checking the presence pf "rep" instead *)
-  (* of passing a boolean flag. This way, the function keeps terminal.     *)
+  (* Let just make a reference for checking the presence pf "rep" instead *)
+  (* of passing a boolean flag. This way, the function keeps terminal.    *)
   let rep_found = ref false in
   let rec rec_ensure = function
     | [] -> ()
@@ -2617,8 +2654,15 @@ let ensure_collection_completely_defined ctx fields =
 	       end)
 	 | Env.TypeInformation.SF_let (_, _, _) -> ()
 	 | Env.TypeInformation.SF_let_rec _ -> ()
-	 | Env.TypeInformation.SF_theorem (_, _, _, _) -> failwith "TODO23"
-	 | Env.TypeInformation.SF_property (_, _, _) -> failwith "TODO24"
+	 | Env.TypeInformation.SF_theorem (_, _, _, _) -> ()
+	 | Env.TypeInformation.SF_property (vname, _, _) ->
+	     (begin
+	     (* A property does not have proof. So, it is not fully defined. *)
+	     match ctx.current_species with
+	      | None -> assert false
+	      | Some curr_spec ->
+		  raise (Collection_not_fully_defined (curr_spec, vname))
+	     end)
 	end) ;
 	rec_ensure rem_fields in
   (* Now do the job... *)
