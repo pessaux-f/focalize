@@ -32,7 +32,7 @@ species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
 		 sc (B!print (scnd (x)),
 		     ")")))) ;
 
-  proof of refl = by definition of ( = ) ;
+  proof of refl = (* by definition of ( = ) *) assumed ;
   proof of symm = assumed ;
 
 end ;;
