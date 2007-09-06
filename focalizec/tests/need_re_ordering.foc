@@ -1,0 +1,34 @@
+use "basics" ;;
+open "basics" ;;
+
+species Closed_A =
+  let ( = ) = basics#base_eq ;
+  let element = 1 ;
+
+  property refl : all x in Self, x = x ;
+  proof of refl = assumed ;
+end ;;
+
+
+species A =
+  sig ( = ) : Self -> Self -> bool ;
+  sig element : Self ;
+
+  property refl : all x in Self, x = x ;
+end ;;
+
+species B inherits A =
+  theorem lemme_bidon : all x in Self, true
+  proof : assumed ;
+end ;;
+
+species Closed_C inherits B =
+  rep = basics#int ;
+  let ( = ) = basics#base_eq ;
+  let element = 1 ;
+
+  (* lemme_bidon must then appear BEFORE refl ! *)
+  proof of refl = by definition of lemme_bidon ;
+end ;;
+
+collection Daube implements Closed_C ;;
