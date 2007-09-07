@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.9 2007-09-05 14:13:18 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.10 2007-09-07 10:43:31 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -475,6 +475,7 @@ let names_set_of_field = function
 
 
 (* ************************************************************************ *)
+(* Env.TypeInformation.species_field list -> Parsetree.vname list           *)
 (** {b Descr} : Just helper returning the list of all names bound in a list
               of fields. The resulting list preserves the order the names
               appear in the list of fields and in the list of names in
@@ -624,10 +625,18 @@ let in_species_decl_n_def_dependencies_for_one_theo_property_name
 
 
 
+(* ********************************************************************* *)
+(** {b Descr} : Describes the kind of dependency between 2 nodes. Can be
+              either "def" or "dep" dependency.
+
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
 type dependency_kind =
   | DK_decl
   | DK_def
 ;;
+
+
 
 (* ************************************************************************ *)
 (** {b Descr} : Strutrure of a node in a dependency graph representing the
@@ -813,6 +822,138 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
   (* Finally, outputs the trailer of the dotty file. *)
   Printf.fprintf out_hd " \n}\n" ;
   close_out out_hd
+;;
+
+
+
+(* ********************************************************* *)
+(** {b Descr} : Module stuff to create maps of [name_node]s.
+
+    {b Rem} : Not exported outside this module.              *)
+(* ********************************************************* *)
+module NameNodeMod = struct
+  type t = name_node
+  let compare nn1 nn2 = compare nn1.nn_name nn2.nn_name
+end ;;
+module NameNodeMap = Map.Make (NameNodeMod) ;;
+
+
+
+(* ******************************************************************* *)
+(* type name_node -> int                                               *)
+(** {b Descr} : Compute the "out degree" of a node, i.e. the number of
+              DIFFERENT children nodes it has. By different, we mean
+              that 2 edges of different kinds between 2 same nodes are
+              considered as only 1 edge.
+
+    {b Rem} : Not exported outside this module.                        *)
+(* ******************************************************************* *)
+let node_out_degree node =
+  let count = ref 0 in
+  let seen = ref ([] : Parsetree.vname list) in
+  List.iter
+    (fun (n, _) ->
+      if not (List.mem n.nn_name !seen) then
+	(begin
+	seen := n.nn_name :: !seen ;
+	incr count
+	end))
+    node.nn_children ;
+  !count
+;;
+
+
+
+(* ************************************************************************** *)
+(* current_species: Types.collection_name ->                                  *)
+(*   Env.TypeInformation.species_field list -> Parsetree.vname list           *)
+(** {b Descr} : Determines the order of apparition of the fields inside a
+              species to prevent fields depending on other fields from
+              appearing before. In others words, this prevents from
+              having [lemma2 ; lemma1] if the proof of [lemma2] requires
+              [lemma1].
+              We then must make in head of the species, the deepest fields
+              in the dependency graph, before adding those of the immediately
+              upper level, and so on.
+              Hence, this is a kind of reverse-topological sort. In effect
+              in our graph an edge i -> j does not mean that i must be
+              "processed" before j, but exactely the opposite !
+
+    {b Rem} : Because of well-formation properties, this process should never
+              find a cyclic graph. If so, then may be the well-formness
+              process is bugged somewhere-else.
+              Exported outside this module.                                   *)
+(* ************************************************************************** *)
+let compute_fields_reordering ~current_species fields =
+  (* First, compute the depency graph of the species fields. *)
+  let dep_graph_nodes =
+    build_dependencies_graph_for_fields ~current_species fields in
+  (* Map recording for each node its "outputs degree", *)
+  (* that's to say, the number of children it has.     *)
+  let out_degree = ref NameNodeMap.empty in
+  (* First, initialize the out degree of each node, taking care not *)
+  (* to double-count 2 edges of different dependency kind between   *)
+  (* two same nodes.                                                *)
+  List.iter
+    (fun name_node ->
+      let nb_distict_children = node_out_degree name_node in
+      out_degree :=
+	NameNodeMap.add name_node (ref nb_distict_children) !out_degree)
+    dep_graph_nodes ;
+  (* The working list... *)
+  let c_queue = Queue.create () in
+  (* Initialization with nodes having a out degree equal to 0.*)
+  NameNodeMap.iter
+    (fun node degree ->
+      if !degree = 0 then
+	begin
+	Queue.push node c_queue ;
+	out_degree := NameNodeMap.remove node !out_degree
+	end)
+    !out_degree ;
+  (* The list with the newly ordered fields names. We build it reversed *)
+  (* for sake of efficiency. We will need to reverse it at the end.     *)
+  let revd_order_list = ref ([] : Parsetree.vname list) in
+  (* Now, iterate until the working list gets empty. *)
+  (begin
+  try
+    while true do
+      let j = Queue.take c_queue in
+      (* [j] can now be output. *)
+      revd_order_list := j.nn_name :: !revd_order_list ;
+      (* Search all parents, i, of  j to decrement their out degree. *)
+      NameNodeMap.iter
+	(fun i i_out_degree ->
+	  (* Tests if [j] belongs to [i]'s children, *)
+          (* ignoring the dependency kind.           *)
+	  let is_i_parent_of_j =
+	    List.exists (fun (child, _) -> child == j) i.nn_children in
+	  if is_i_parent_of_j then
+	    (begin
+	    (* The node [j] appears in [i]'s childrens, hence [i] *)
+	    (* is right a parent of [j].                          *)
+	    decr i_out_degree ;
+	    if !i_out_degree = 0 then
+	      (begin
+	      (* This parent is now of degree 0, it can now be processed *)
+	      (* because all its children have already been.             *)
+	      Queue.push i c_queue ;
+	      out_degree := NameNodeMap.remove i !out_degree
+	      end)
+	    end))
+	!out_degree
+    done
+  with Queue.Empty ->
+    (* If there remain nodes in the [out_degree] table, this means  *)
+    (* that there exists nodes one could not classify because their *)
+    (* degree never reached 0. This corresponds to cycles in the    *)
+    (* graph. Because on well-formness properties, this should      *)
+    (* never appear except if the well-formness algorithm is        *)
+    (* buggy somewhere else.                                        *)
+    if not (NameNodeMap.is_empty!out_degree) then assert false
+  end) ;
+  (* And finaly, reverse the order list to get it in the right ... order. *)
+  List.rev !revd_order_list
 ;;
 
 

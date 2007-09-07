@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.56 2007-09-06 14:42:44 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.57 2007-09-07 10:43:31 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -2141,6 +2141,114 @@ let collapse_proofs_of found_proofs_of inherited_methods_infos methods_info =
 
 
 
+(* ********************************************************************** *)
+(* Parsetree.vname -> Env.TypeInformation.species_field list ->           *)
+(*   (Env.TypeInformation.species_field *                                 *)
+(*    (Env.TypeInformation.species_field list))                           *)
+(** {b Descr} : Among the fields list [fields], find the one binding the
+              name [name]. Return both the found field and the list minus
+              this found field.
+
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
+let extract_field_from_list_by_name name fields =
+  let rec rec_extract = function
+    | [] -> assert false      (* By construction, the field MUST exist. *)
+    | field :: rem ->
+	(begin
+	let found =
+	  (match field with
+	   | Env.TypeInformation.SF_sig (n, _)
+	   | Env.TypeInformation.SF_let (n, _, _)
+	   | Env.TypeInformation.SF_theorem (n, _, _, _)
+	   | Env.TypeInformation.SF_property (n, _, _) -> name = n
+	   | Env.TypeInformation.SF_let_rec l ->
+	       List.exists (fun (n, _, _) -> name = n) l) in
+	if found then (field, rem)
+	else
+	  let (found_field, tail) = rec_extract rem in
+	  (found_field, (field :: tail))
+	end) in
+  rec_extract fields
+;;
+
+
+
+(* ********************************************************************* *)
+(* Parsetree.vname list -> Parsetree.vname list                          *)
+(** {b Descr} : Looks for "rep" in the names list [l]. If found, then
+              remove it from its place and put it again but as the first
+              element of the list.
+
+    {b Rem} : Implicitely assumes that "rep" exists at most once in the
+            list [l] (no doubles).
+            Not exported outside this module.                            *)
+(* ********************************************************************* *)
+let ensure_rep_in_first l =
+  let rec rec_search = function
+    | [] -> ([], false)
+    | h :: q ->
+	(* If it's "rep", then stop and return the list without "rep". *)
+        (* Of course, by stopping search we assume that "rep" is at    *)
+        (* most once in the list (no doubles).                         *)
+	if h = Parsetree.Vlident "rep" then (q, true)
+	else
+	  let (filtered_q, found) = rec_search q in
+	  ((h :: filtered_q), found) in
+  (* Go... *)
+  let (new_l, was_found) = rec_search l in
+  (* If "rep" was found, then it was also removed, then re-add it in front. *)
+  if was_found then (Parsetree.Vlident "rep") :: new_l else new_l
+;;
+
+
+
+(* ******************************************************************** *)
+(* Parsetree.vname list ->  Env.TypeInformation.species_field list ->   *)
+(*   Env.TypeInformation.species_field list                             *)
+(** {b Descr} : Effectively reorganize the fields contained in the list
+              [fields] to make them appear in the order provided by the
+              list of names [order].
+              For [Let_rec] fields, their order of apparition is given
+              by the order of the first name (rec bound) appearing in
+              the order list.
+              ATTENTION : The only exception is "rep" which if present
+              is always put at the beginning of the list !
+
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
+let order_fields_according_to order fields =
+  let rec rec_reorder rec_order rec_fields =
+    match (rec_order, rec_fields) with
+     | ([], []) -> []
+     | ([], _) | (_, []) ->
+	 (* If there are spurious fields or names then *)
+         (* it's we went wrong somewhere !             *)
+	 assert false
+     | (name :: rem_order, _) ->
+	 (* We first find the field hosting [name]. This field will be *)
+         (* inserted here in the result list. We then must remove from *)
+         (* the order list, all the name rec-bound with [name]. Then   *)
+         (* we continue with this new order and the fields list from   *)
+         (* which we remove the found field. This way, the fields list *)
+         (* in which we search will be smaller and smaller (cool for   *)
+         (* efficiency), and will finish to be empty.                  *)
+         let (related_field, new_rec_fields) =
+	   extract_field_from_list_by_name name rec_fields in
+	 let names_bound =
+	   Dep_analysis.ordered_names_list_of_fields [related_field] in
+	 (* So, remove from the order the rec-bound names... *)
+	 let new_rec_order =
+	   List.filter (fun n -> not (List.mem n names_bound)) rec_order in
+	 related_field :: (rec_reorder new_rec_order new_rec_fields) in
+  (* Now do the job. First, if "rep" is in the order, then *)
+  (* ensure that it is the first in the list.              *)
+  let order_with_rep_in_front = ensure_rep_in_first order in
+  rec_reorder order_with_rep_in_front fields
+;;
+
+
+
 (* ********************************************************************* *)
 (* loc:Location.t -> typing_context -> Parsetree.vname ->                *)
 (*   Types.type_scheme ->                                                *)
@@ -2514,15 +2622,20 @@ let typecheck_species_def ctx env species_def =
     normalize_species
       ~loc: species_def.Parsetree.ast_loc ctx' collapsed_methods_info
       collapsed_inherited_methods_infos in
-  (* Now, reorder the fields to prevent ill-formness described *)
-  (* in the [collapse_proofs_of] function's header.            *)
-  Format.eprintf "Reordering of merge properties/proofs not performed.@." ;
+  (* Now, compute the fields order to prevent ill-formness    *)
+  (* described in the [collapse_proofs_of] function's header. *)
+  let new_order =
+    Dep_analysis.compute_fields_reordering
+      ~current_species: species_def_desc.Parsetree.sd_name normalized_methods in
+  (* Now really re-order the normalized fields. *)
+  let reordered_normalized_methods =
+    order_fields_according_to new_order normalized_methods in
   (* Let's build our "type" information. Since we are managing a species *)
   (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
   let species_description = {
     Env.TypeInformation.spe_is_collection = false ;
     Env.TypeInformation.spe_sig_params = sig_params ;
-    Env.TypeInformation.spe_sig_methods = normalized_methods } in
+    Env.TypeInformation.spe_sig_methods = reordered_normalized_methods } in
   (* Extend the initial environment with the species. Not the environment *)
   (* used to typecheck the internal definitions of the species !!!        *)
   let env_with_species =

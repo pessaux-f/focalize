@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.mli,v 1.2 2007-09-05 14:13:18 pessaux Exp $ *)
+(* $Id: dep_analysis.mli,v 1.3 2007-09-07 10:43:31 pessaux Exp $ *)
 
 exception Ill_formed_species of Types.species_name
 
@@ -27,3 +27,10 @@ val erase_fields_in_context :
   current_species: Types.collection_name -> Parsetree.vname list ->
     Env.TypeInformation.species_field list ->
       Env.TypeInformation.species_field list
+
+val compute_fields_reordering :
+  current_species: Types.collection_name ->
+    Env.TypeInformation.species_field list -> Parsetree.vname list
+
+val ordered_names_list_of_fields :
+  Env.TypeInformation.species_field list -> Parsetree.vname list

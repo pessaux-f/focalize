@@ -27,6 +27,9 @@ species Closed_C inherits B =
   let ( = ) = basics#base_eq ;
   let element = 1 ;
 
+  let rec a (x) = let foo = b (1) in 1
+  and b (x) = let foo = a (1) in 1 ;
+
   (* lemme_bidon must then appear BEFORE refl ! *)
   proof of refl = by definition of lemme_bidon ;
 end ;;
