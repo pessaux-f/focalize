@@ -1,6 +1,12 @@
 use "basics" ;;
 open "basics" ;;
 
+
+(* ******************************************************************* *)
+(* Must pass.                                                          *)
+(* Nothing very special. Just a bit of everything in any order to make *)
+(* a first test ;)                                                     *)
+(* ******************************************************************* *)
 5 ;;
 let x = 42 ;;
 let y = "Areuh world" ;;

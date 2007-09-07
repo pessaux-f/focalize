@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: focalizec.ml,v 1.11 2007-08-31 14:31:31 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.12 2007-09-07 12:54:18 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -40,11 +40,14 @@ let main () =
       ("--pretty",
        Arg.String Configuration.set_pretty_print,
        " pretty-prints the parse tree of the focal file as a focal source.") ;
+      ("--raw-ast-dump",
+       Arg.Unit Configuration.set_raw_ast_dump,
+       " prints on stderr the raw AST structure after parsing stage.") ;
       ("--scoped_pretty",
        Arg.String Configuration.set_pretty_scoped,
        " pretty-prints the parse tree of the focal file once scoped as a focal source.") ;
       ("--verbose",
-       Arg.Unit (fun () -> Configuration.set_verbose true),
+       Arg.Unit Configuration.set_verbose,
        " be verbose.") ;
       ("-v", Arg.Unit Configuration.print_focal_short_version,
        " print the focalize version.") ;
@@ -64,7 +67,7 @@ let main () =
   let ast =
     Parse_file.parse_file Format.err_formatter input_file_name in
   (* Hard-dump the AST if requested. *)
-  if Configuration.get_verbose () then
+  if Configuration.get_raw_ast_dump () then
     Dump_ptree.pp_file Format.err_formatter ast ;
   (* Pretty the AST as a new-focal-syntax source if requested. *)
   (match Configuration.get_pretty_print () with

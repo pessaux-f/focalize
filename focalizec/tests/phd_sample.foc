@@ -1,6 +1,12 @@
 use "basics" ;;
 open "basics" ;;
 
+
+(* ****************************************************************** *)
+(* Must pass.                                                         *)
+(* The initial example given in Virgile Prevosto's Phd, section 2.2.2 *)
+(* starting page 14.                                                  *)
+(* ****************************************************************** *)
 species Setoide inherits Basic_object =
   sig ( = ) : Self -> Self -> bool ;
   sig element : Self ;

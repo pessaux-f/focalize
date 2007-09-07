@@ -2,6 +2,12 @@ use "basics" ;;
 open "basics" ;;
 
 
+(* ****************************************************************** *)
+(* Must pass.                                                         *)
+(* Example showing how now use the "in" parameter whithout allowing   *)
+(* their type to be a "ml type". Now, "in" parameters are always of a *)
+(* species (collection more accurately) type !                        *)
+(* ****************************************************************** *)
 species IntModel inherits Basic_object =
   rep = basics#int ;
   let un in Self = 1 ;

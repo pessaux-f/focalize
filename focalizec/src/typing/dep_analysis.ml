@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.10 2007-09-07 10:43:31 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.11 2007-09-07 12:54:18 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -1088,15 +1088,28 @@ let erase_field field =
        (* Also includes "rep". *)
        let m_name_as_str = Parsetree_utils.name_of_vname vname in
        if m_name_as_str = "rep" then
+	 (begin
+	 if Configuration.get_verbose () then
+	   Format.eprintf "Erasing field '%a'@." Sourcify.pp_vname vname ;
 	 []  (* No explicit "rep" means ... no "rep". *)
+	 end)
        else [field]
        end)
    | Env.TypeInformation.SF_let (vname, sch, _) ->
+       if Configuration.get_verbose () then
+	 Format.eprintf "Erasing field '%a'@." Sourcify.pp_vname vname ;
        [Env.TypeInformation.SF_sig (vname, sch)]  (* Turn the Let into a Sig. *)
    | Env.TypeInformation.SF_let_rec l ->
        (* Just turn the whole list into Sigs. *)
-       List.map (fun (n, sch, _) -> Env.TypeInformation.SF_sig (n, sch)) l
+       List.map
+	 (fun (n, sch, _) ->
+	   if Configuration.get_verbose () then
+	     Format.eprintf "Erasing field '%a'@." Sourcify.pp_vname n ;
+	   Env.TypeInformation.SF_sig (n, sch))
+	 l
    | Env.TypeInformation.SF_theorem (n, sch, prop, body) ->
+       if Configuration.get_verbose () then
+	 Format.eprintf "Erasing field '%a'@." Sourcify.pp_vname n ;
        [Env.TypeInformation.SF_property (n, sch, prop)]
    | _ -> [field]                       (* Everything else is unchanged. *)
 ;;

@@ -1,6 +1,9 @@
 use "basics" ;;
 
-(* Must fail. *)
+(* Failure required                                                  *)
+(* Example showing an ill-formed species because of mutual recursion *)
+(* introduced by inheritance. This is the basic example justifying   *)
+(* the dependencies computation on species.                          *)
 species A =
   sig x : Self ;
   let y = Self!x ;

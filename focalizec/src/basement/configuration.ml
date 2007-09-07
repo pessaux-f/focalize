@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.8 2007-08-31 13:45:52 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.9 2007-09-07 12:54:17 pessaux Exp $ *)
 
 exception Input_file_already_set ;;
 
@@ -43,7 +43,7 @@ let print_focal_full_version () =
 let (get_verbose, set_verbose) =
   let verbose = ref false in
   ((fun () -> !verbose),
-   (fun b -> verbose := b))
+   (fun () -> verbose := true))
 ;;
 
 let (get_pretty_print, set_pretty_print) =
@@ -82,4 +82,10 @@ let (get_dotty_dependencies, set_dotty_dependencies) =
   let dotty_dependencie_out_dir = ref None in
   ((fun () -> !dotty_dependencie_out_dir),
    (fun fname -> dotty_dependencie_out_dir := Some fname))
+;;
+
+let (get_raw_ast_dump, set_raw_ast_dump) =
+  let raw_ast_dump = ref false in
+  ((fun () -> !raw_ast_dump),
+   (fun () -> raw_ast_dump := true))
 ;;

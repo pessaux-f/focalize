@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.57 2007-09-07 10:43:31 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.58 2007-09-07 12:54:18 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -2064,6 +2064,10 @@ let collapse_proof proof_of fields =
 	       let new_field = 
 		 Env.TypeInformation.SF_theorem
 		   (name, sch, prop, proof_of.Parsetree.pd_proof) in
+	       if Configuration.get_verbose () then
+		 Format.eprintf
+		   "Merging property '%a' and proof into theorem.@."
+	           Sourcify.pp_vname name ;
 	       (* Stop the search now. Say that a change actually occured. *)
 	       ((new_field :: rem), true)
 	       end)
@@ -2578,6 +2582,9 @@ let normalize_species ~loc ctx methods_info inherited_methods_infos =
 (* ************************************************************************* *)
 let typecheck_species_def ctx env species_def =
   let species_def_desc = species_def.Parsetree.ast_desc in
+  if Configuration.get_verbose () then
+    Format.eprintf
+      "Analysing species '%s'@." species_def_desc.Parsetree.sd_name ;
   (* First of all, we are in a species !!! *)
   let ctx = { ctx with
     current_species = Some species_def_desc.Parsetree.sd_name } in

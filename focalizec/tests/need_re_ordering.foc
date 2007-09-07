@@ -1,6 +1,12 @@
 use "basics" ;;
 open "basics" ;;
 
+
+(* ******************************************************************** *)
+(* Must pass.                                                           *)
+(* Example showing the need of the final re-organization of methods due *)
+(* to the collapsing-procedure of properties and "proof of"s.           *)
+(* ******************************************************************** *)
 species Closed_A =
   let ( = ) = basics#base_eq ;
   let element = 1 ;

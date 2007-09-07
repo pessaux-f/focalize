@@ -1,6 +1,10 @@
 use "basics" ;;
 open "basics" ;;
 
+(* *********************************************************** *)
+(* Failure required                                            *)
+(* Example showing the need for methods to be not polymorphic. *)
+(* *********************************************************** *)
 
 species Poly =
   let id (x) = x ;
