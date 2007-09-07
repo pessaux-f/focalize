@@ -1,0 +1,22 @@
+use "basics" ;;
+open "basics" ;;
+
+
+(* ********************************************************************* *)
+(* Must pass.                                                            *)
+(* Example of Virgile Prevosto's Phd, section 3.9.6, page 56. Illustrate *)
+(* the need for the erasing procedure.                                   *)
+(* ********************************************************************* *)
+species A inherits Basic_object =
+  sig eq : Self -> Self -> bool ;
+  let id (x in Self) = x ;
+  theorem foo : all x in Self, eq (x, id (x))
+    proof: by definition of id ;
+end ;;
+
+species B inherits A =
+  rep = basics#int ;
+  proof of foo = by definition of id ;
+  let id (x in Self) = int_plus (x, 1) ;
+end ;;
+
