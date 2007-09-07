@@ -1,0 +1,24 @@
+#============================start configure.in============================
+AC_INIT([focalize], [0.1])
+# Ensure we are in the right directory.
+AC_CONFIG_SRCDIR([toplevel/check_file.ml])
+
+# First, check ocaml and ensure the version is 3.09.3.
+AC_PATH_PROG([OCAMLC], [ocamlc], [],[$PATH])
+if test $ac_cv_path_OCAMLC != no; then
+   ocaml_version=`$ac_cv_path_OCAMLC -version` ;
+   if test "$ocaml_version" != "3.09.3"; then
+     echo "Objective caml version must be 3.09.3.";
+     exit
+   else
+   echo "Good! Objective caml version $ocaml_version was found." ;
+   fi
+fi
+
+touch .depend
+touch ./basement/.depend
+touch ./parser/.depend
+touch ./typing/.depend
+touch ./toplevel/.depend
+echo "Done. Now make: make depend all"
+#============================end configure.in============================

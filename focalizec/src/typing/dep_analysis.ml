@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.11 2007-09-07 12:54:18 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.12 2007-09-07 17:31:20 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -199,7 +199,7 @@ let ident_in_fact_dependencies ~current_species ident =
        (* remaining "local identifiers" are really local and introduce *)
        (* no dependency. Furthermore, there is no reason to get here   *)
        (* real local identifier unless the user put an erroneous fact. *)
-       failwith "May be erroneous fact in the proof."
+       failwith "To see: May be erroneous fact in the proof."
    | Parsetree.I_global (_, _) ->
        (* [Unsure] *)
        failwith "# TODO once dependencies will carry module + vname"
