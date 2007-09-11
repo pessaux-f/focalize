@@ -1,0 +1,57 @@
+external type string = | caml -> "string" ;;
+external type bool = | caml -> "bool" ;;
+external type int = | caml -> "int" ;;
+external type list ('a) = | caml -> "list" ;;
+external value foc_error : string -> 'a =  | caml -> "" ;;
+external value print_int : int -> string =  | caml -> "" ;;
+external value print_bool : bool -> string = | caml -> "" ;;
+external value ext_nil : #list ('a) = | caml -> "" ;;
+external value ext_cons : 'a -> #list ('a) -> #list ('a) = | caml -> "" ;;
+external value ext_head : #list ('a) -> 'a  = | caml -> "" ;;
+external value ext_tail : #list ('a) -> #list ('a) = | caml -> "" ;;
+
+species Basic_object =
+  let print (x in Self) = "<abst>" ;
+  let parse (x in string) in Self = #foc_error ("not parsable") ;
+  let equal (x in Self, y) =
+     let useless = if true then x else y in
+     true ;
+end ;;
+
+species List (E is Basic_object) inherits Basic_object =
+   sig nil : Self ;
+   sig cons : E -> Self -> Self ;
+   sig head : Self -> E ;
+   sig tail : Self -> Self ;
+   let rec map (f, l) =
+     if equal (l, nil) then nil
+     else
+       let h = head (l) in
+       let q = tail (l) in
+       let h2 = f (h) in
+       let q2 = map (f, q) in
+       cons (h2, q2) ;
+end ;;
+
+species Concrete_list (E is Basic_object) inherits List (E) =
+  rep = #list (E) ;
+  let nil = ext_nil ;
+  let cons (e, l) = ext_cons (e, l) ;
+  let head (l) = ext_head (l) ;
+  let tail (l) = ext_tail (l) ;
+end ;;
+
+species Contrete_int inherits Basic_object =
+  rep = int ;
+  let print = print_int ;
+end ;;
+collection Int implements Contrete_int ;;
+
+species Contrete_bool inherits Basic_object =
+  rep = bool ;
+  let print = print_bool ;
+end ;;
+collection Bool implements Contrete_bool ;;
+
+collection Int_list implements Concrete_list (Int) ;;
+collection Bool_list implements Concrete_list (Bool) ;;
