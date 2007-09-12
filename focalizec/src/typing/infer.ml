@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.59 2007-09-12 13:38:15 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.60 2007-09-12 14:01:34 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1166,6 +1166,17 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
               This function takes into account the fact that that carrier
               "rep" must be considered as unknown to prevent def-dependencies
              (C.f. Virgile Prevosto's Phd, section 3.9.4 pages 51 & 52).
+             ATTENTION : Because idents (bound by forall and exists) are
+             **expressions** and are directly entered in the environment
+             with the type prop, the rule of Virgile telling that expressions
+             must be of type bool is incorrect. In effect, because idents
+             are expressions and are already types prop, unifying them
+             with bool wil always fail. Moreover, this fact may leak all
+             around the expression type, then one cannot restrict the check
+             to only say that an expression-ident typed prop is correct.
+             This may flood all around the proposition expression. Then
+             in case of an expression, one allows both prop and bool as
+             types.
 
     {b Rem} : Not exported outside this module.                               *)
 (* ************************************************************************** *)
