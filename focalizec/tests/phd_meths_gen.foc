@@ -25,6 +25,6 @@ species S inherits Basic_object =
   property p1_p2 : all x in Self, p2 (x) -> p1 (x) ;
   property op_spec : all x in Self, p1 (x) -> p2 (op (x)) ;
   property a_spec : p1 (a) ;
-  theorem t1 : p2 (c) proof : by definition of c ;
+  theorem t1 : p2 (c) proof : by definition of c property op_spec, a_spec ;
   theorem t2 : p1 (c) proof : by property t1, p1_p2 ;
 end ;;
