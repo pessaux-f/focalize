@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.58 2007-09-07 12:54:18 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.59 2007-09-12 13:38:15 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1216,12 +1216,26 @@ and typecheck_prop start_ctx start_env proposition =
 	     ~self_manifest: ctx.self_manifest ty (Types.type_prop ()) ;
            ty
        | Parsetree.Pr_expr expr ->
-	   (* Expressions must be typed as [bool]. If *)
-           (* so, then the returned  type is [prop].  *)
+	   (* Expressions must be typed as [bool] OR [prop]. If *)
+           (* so, then the returned  type is [prop].            *)
 	   let ty = typecheck_expr ctx env expr in
-           Types.unify
-	     ~loc: prop.Parsetree.ast_loc
-	     ~self_manifest: ctx.self_manifest ty (Types.type_bool ()) ;
+	   (try
+	     (* First try to check if it is typed bool. *)
+             Types.unify
+	       ~loc: prop.Parsetree.ast_loc
+	       ~self_manifest: ctx.self_manifest ty (Types.type_bool ())
+	   with err ->
+	     (begin
+	     try
+	       (* If not bool,try to check if it is typed prop. *)
+	       Types.unify
+		 ~loc: prop.Parsetree.ast_loc
+		 ~self_manifest: ctx.self_manifest ty (Types.type_prop ())
+	     with _ ->
+	       (* If it's neither bool nor prop, then restore *)
+	       (* the fisrt error cause  for error report.    *)
+	       raise err
+	     end)) ;
            Types.type_prop ()
        | Parsetree.Pr_paren pr -> rec_typecheck env pr) in
     prop.Parsetree.ast_type <- Some final_ty ;

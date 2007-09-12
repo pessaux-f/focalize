@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: location.ml,v 1.2 2007-08-22 14:17:08 pessaux Exp $ *) 
+(* $Id: location.ml,v 1.3 2007-09-12 13:38:15 pessaux Exp $ *) 
 
 type position = Lexing.position = {
   pos_fname : string ;
@@ -38,11 +38,12 @@ let none =
 
 let pp_location ppf { l_beg = l_beg ; l_end = l_end } =
   if l_beg.pos_lnum = l_end.pos_lnum then  (* Starts and ends on a same line. *)
-    Format.fprintf ppf "file '%s' line %d, characters %d-%d"
+    Format.fprintf ppf "File \"%s\", line %d, characters %d-%d"
       l_beg.pos_fname l_beg.pos_lnum
       (l_beg.pos_cnum - l_beg.pos_bol) (l_end.pos_cnum - l_end.pos_bol)
   else
-    Format.fprintf ppf "file '%s' line %d, character %d - line %d, character %d"
+    Format.fprintf ppf
+      "File \"%s\" line %d, character %d, line %d, character %d"
       l_beg.pos_fname l_beg.pos_lnum (l_beg.pos_cnum - l_beg.pos_bol)
       l_end.pos_lnum (l_end.pos_cnum - l_end.pos_bol)
 ;;

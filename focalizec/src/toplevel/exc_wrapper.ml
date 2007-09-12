@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.13 2007-08-31 14:00:25 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.14 2007-09-12 13:38:15 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -61,40 +61,42 @@ try Check_file.main () with
 (* *************************** *)
 (* Generic environments stuff. *)
      | Env.Unbound_constructor (vname, at) ->
-	 Format.fprintf Format.err_formatter "Unbound@ constructor@ \'%s\' :@ %a@."
-	   (Parsetree_utils.name_of_vname vname) Location.pp_location at
+	 Format.fprintf Format.err_formatter
+	   "%a:@\nUnbound@ constructor@ \'%s\'.@."
+	   Location.pp_location at (Parsetree_utils.name_of_vname vname)
      | Env.Unbound_label (lname, at) ->
 	 Format.fprintf Format.err_formatter
-	   "Unbound@ record@ field@ label@ \'%s\' : %a.@."
-	   lname Location.pp_location at
+	   "%a:@\nUnbound@ record@ field@ label@ \'%s\'.@."
+	   Location.pp_location at lname
      | Env.Unbound_identifier (vname, at) ->
-	 Format.fprintf Format.err_formatter "Unbound identifier \'%s\' :@ %a.@."
-	   (Parsetree_utils.name_of_vname vname) Location.pp_location at
+	 Format.fprintf Format.err_formatter
+	   "%a:@\nUnbound identifier \'%s\'.@."
+	   Location.pp_location at (Parsetree_utils.name_of_vname vname)
      | Env.Unbound_type (tname, at) ->
-	 Format.fprintf Format.err_formatter "Unbound@ type@ \'%s\' :@ %a.@."
-	   tname Location.pp_location at
+	 Format.fprintf Format.err_formatter "@ %a :@\nUnbound@ type@ \'%s\'.@."
+	   Location.pp_location at tname
      | Env.Unbound_module (fname, at) ->
 	 Format.fprintf Format.err_formatter
-	   "Unbound@ module@ \'%s\':@ %a.@." fname Location.pp_location at
+	   "%a:@\nUnbound@ module@ \'%s\'.@." Location.pp_location at fname
      | Env.Unbound_species (sname, at) ->
 	 Format.fprintf Format.err_formatter
-	   "Unbound@ species@ \'%s\' :@ %a.@." sname Location.pp_location at
+	   "%a:@\nUnbound@ species@ \'%s\'.@." Location.pp_location at sname
 (* ******************** *)
 (* Core types problems. *)
      | Types.Conflict (ty1, ty2, at) ->
 	 Format.fprintf Format.err_formatter
-	   "Types@ @[%a@]@ and@ @[%a@]@ are@ not@ compatible :@ %a@."
-	   Types.pp_type_simple ty1 Types.pp_type_simple ty2
+	   "%a:@\nTypes@ @[%a@]@ and@ @[%a@]@ are@ not@ compatible.@."
 	   Location.pp_location at
+	   Types.pp_type_simple ty1 Types.pp_type_simple ty2
      | Types.Circularity (ty1, ty2, at) ->
 	 Format.fprintf Format.err_formatter
-	   "Type@ @[%a@]@ occurs@ in@ @[%a@]@ and@ would@ lead@ to@ a@ cycle :@ %a@."
-	   Types.pp_type_simple ty1 Types.pp_type_simple ty2
+	   "%a:@\nType@ @[%a@]@ occurs@ in@ @[%a@]@ and@ would@ lead@ to@ a@ cycle.@."
 	   Location.pp_location at
+	   Types.pp_type_simple ty1 Types.pp_type_simple ty2
      | Types.Arity_mismatch (cstr_name, arity1, arity2, at) ->
 	 Format.fprintf Format.err_formatter
-	   "Type@ constructor@ '%s'@ used@ with@ the@ different@ arities@ %d@ and@ %d :@ %a@."
-	   cstr_name arity1 arity2 Location.pp_location at
+	   "%a:@\nType@ constructor@ '%s'@ used@ with@ the@ different@ arities@ %d@ and@ %d.@."
+	   Location.pp_location at cstr_name arity1 arity2
 (* ************************** *)
 (* Core type inference stuff. *)
      | Infer.Bad_sum_type_constructor_arity (ident, defined_arity) ->
@@ -118,39 +120,44 @@ try Check_file.main () with
 (* *********************** *)
 (* Species type inference. *)
      | Infer.Rep_multiply_defined at ->
-	 Format.fprintf Format.err_formatter "Carrier@ 'rep'@ is@ multiply@ defined :@ %a@."
+	 Format.fprintf Format.err_formatter
+	   "%a:@\nCarrier@ 'rep'@ is@ multiply@ defined.@."
 	   Location.pp_location at
      | Scoping.Self_cant_parameterize_itself at ->
 	 Format.fprintf Format.err_formatter
-	   "'Self'@ can't@ be@ parameterized@ by@ itself :@ %a@." Location.pp_location at
+	   "%a:@\n'Self'@ can't@ be@ parameterized@ by@ itself.@."
+	   Location.pp_location at
      | Scoping.Is_parameter_only_coll_ident at ->
 	 Format.fprintf Format.err_formatter
-	   "A@ 'is'@ parameter@ can@ only@ be@ a@ collection@ identifier :@ %a@."
+	   "%a:@\nA@ \"is\"@ parameter@ can@ only@ be@ a@ collection@ identifier.@."
 	   Location.pp_location at
      | Infer.Not_subspecies_conflicting_field (c1, c2, field, ty1, ty2, at) ->
 	 Format.fprintf Format.err_formatter
-	   "Species@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ In@ field@ '%a',@ types@ @[%a@]@ and@ @[%a@] are@ not@ compatible :@ %a@."
+	   "%a:@\nSpecies@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ In@ field@ '%a',@ types@ @[%a@]@ and@ @[%a@]@ are@ not@ compatible.@."
 	   Types.pp_type_collection c1 Types.pp_type_collection c2
+	   Location.pp_location at
 	     Sourcify.pp_vname field Types.pp_type_simple ty1
-	     Types.pp_type_simple ty2 Location.pp_location at
+	     Types.pp_type_simple ty2
      | Infer.Not_subspecies_circular_field (c1, c2, field, ty1, ty2, at) ->
 	 Format.fprintf Format.err_formatter
-	     "Species@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ In@ field@ '%a',@ type@ @[%a@]@ occurs@ in@ @[%a@]@ and@ would@ lead@ to@ a@ cycle :@ %a@."
-	     Types.pp_type_collection c1 Types.pp_type_collection c2
-	     Sourcify.pp_vname field Types.pp_type_simple ty1
-	     Types.pp_type_simple ty2 Location.pp_location at
+	   "%a:@\nSpecies@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ In@ field@ '%a',@ type@ @[%a@]@ occurs@ in@ @[%a@]@ and@ would@ lead@ to@ a@ cycle.@."
+	   Location.pp_location at
+	   Types.pp_type_collection c1 Types.pp_type_collection c2
+	   Sourcify.pp_vname field Types.pp_type_simple ty1
+	   Types.pp_type_simple ty2
      | Infer.Not_subspecies_arity_mismatch
 	 (c1, c2, field, ty_name, ar1, ar2, at) ->
 	   Format.fprintf Format.err_formatter
-	     "Species@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ In@ field@ '%a',@ the@ type@ constructor@ '%s'@ is@ used@ with@ the@ different@ arities@ %d@ and@ %d :@ %a@."
+	     "%a:@\nSpecies@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ In@ field@ '%a',@ the@ type@ constructor@ '%s'@ is@ used@ with@ the@ different@ arities@ %d@ and@ %d.@."
+	     Location.pp_location at
 	     Types.pp_type_collection c1 Types.pp_type_collection c2
-	     Sourcify.pp_vname field ty_name ar1 ar2 Location.pp_location at
+	     Sourcify.pp_vname field ty_name ar1 ar2
      | Infer.Not_subspecies_missing_field (c1, c2, field, at) ->
 	 Format.fprintf Format.err_formatter
-	   "Species@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ Field@ '%a'@ is@ not@ present@ in@ '%a' :@ %a@."
+	   "%a:@\nSpecies@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ Field@ '%a'@ is@ not@ present@ in@ '%a'.@."
+	   Location.pp_location at
 	   Types.pp_type_collection c1 Types.pp_type_collection c2
 	   Sourcify.pp_vname field Types.pp_type_collection c1
-	   Location.pp_location at
      | Infer.Parameterized_species_arity_mismatch msg ->
 	 Format.fprintf Format.err_formatter
 	   "Parameterized@ specie@ is@ applied@ to@ %s@ arguments@."  msg
