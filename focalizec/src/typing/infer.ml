@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.60 2007-09-12 14:01:34 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.61 2007-09-13 08:45:11 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -286,7 +286,7 @@ let rec typecheck_type_expr ctx env ty_expr =
      | Parsetree.TE_prop -> Types.type_prop ()
      | Parsetree.TE_paren inner -> typecheck_type_expr ctx env inner) in
   (* Store the type information in the expression's node. *)
-  ty_expr.Parsetree.ast_type <- Some final_ty;
+  ty_expr.Parsetree.ast_type <- Some final_ty ;
   final_ty
 ;;
 

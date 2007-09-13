@@ -19,6 +19,7 @@ touch .depend
 touch ./basement/.depend
 touch ./parser/.depend
 touch ./typing/.depend
+touch ./mlcodegen/.depend
 touch ./toplevel/.depend
-echo "Done. Now make: make depend all"
+echo "Done. Now, please invoke: make depend all"
 #============================end configure.in============================
