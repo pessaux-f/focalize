@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.9 2007-08-27 12:33:26 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.10 2007-09-14 09:22:41 pessaux Exp $ *)
 
 exception Method_multiply_defined of (Parsetree.vname * Types.species_name)
 exception Unbound_type_variable of string
@@ -36,5 +36,17 @@ exception Not_subspecies_missing_field of
    Location.t)
 exception Collection_not_fully_defined of (Types.species_name * Parsetree.vname)
 
+type please_compile_me =
+  | PCM_no_matter
+  | PCM_external
+  | PCM_species of
+      (Parsetree.species_def *  Env.TypeInformation.species_field list)
+  | PCM_collection of
+      (Parsetree.coll_def * Env.TypeInformation.species_field list)
+  | PCM_type
+  | PCM_let_def of Parsetree.let_def
+  | PCM_theorem of Parsetree.theorem_def
+  | PCM_expr of Parsetree.expr
 
-val typecheck_file : Types.fname -> Parsetree.file -> Env.TypingEnv.t
+val typecheck_file :
+  Types.fname -> Parsetree.file -> (Env.TypingEnv.t * (please_compile_me list))

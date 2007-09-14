@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.61 2007-09-13 08:45:11 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.62 2007-09-14 09:22:41 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -2593,6 +2593,37 @@ let normalize_species ~loc ctx methods_info inherited_methods_infos =
 
 
 
+(* ********************************************************************** *)
+(** {b Descr} : Helper-type to record the various information from the
+              typechecking pass needed to go to the code generation pass.
+              This is mostly obvious and self-describing.
+
+    {b Rem} : Clearly exported outside this module.                       *)
+(* ********************************************************************** *)
+type please_compile_me =
+  | PCM_no_matter       (** Nothing to do during the compilation pass. *)
+  | PCM_external
+  | PCM_species of
+      ((** The species expression. *)
+	Parsetree.species_def *
+        (** The list of methods contained in the normalized species, with
+	    "oldestly" inherited in head of the list. *)
+        Env.TypeInformation.species_field list)
+  | PCM_collection of
+      ((** The collection expression. *)
+       Parsetree.coll_def *
+       (** The list of methods contained in the normalized collection, with
+	   "oldestly" inherited in head of the list and Self replaced by
+           the collection name inside. *)
+       Env.TypeInformation.species_field list)
+  | PCM_type
+  | PCM_let_def of Parsetree.let_def
+  | PCM_theorem of Parsetree.theorem_def
+  | PCM_expr of Parsetree.expr
+;;
+
+
+
 (* ************************************************************************* *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.species_def ->             *)
 (*  (Types.type_simple * Env.TypingEnv.t)                                    *)
@@ -2699,7 +2730,8 @@ let typecheck_species_def ctx env species_def =
       species_def_desc.Parsetree.sd_name
       Env.TypeInformation.pp_species_description species_description
     end) ;
-  (species_carrier_type, full_env)
+  ((PCM_species (species_def, reordered_normalized_methods)),
+   species_carrier_type, full_env)
 ;;
 
 
@@ -3021,14 +3053,15 @@ let typecheck_collection_def ctx env coll_def =
       coll_def_desc.Parsetree.cd_name
       Env.TypeInformation.pp_species_description collec_description
     end) ;
-  (collec_carrier_type, full_env)
+  ((PCM_collection (coll_def, collection_fields)),
+   collec_carrier_type, full_env)
 ;;
 
 
 
 (* ****************************************************************** *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.phrase ->           *)
-(*   Env.TypingEnv.t                                                  *)
+(*   (please_compile_me * Env.TypingEnv.t)                            *)
 (** {b Descr} : Performs type inference on a [phrase] and returns the
                 initial environment extended with the possible type
 		bindings induced by the [phrase].
@@ -3038,20 +3071,20 @@ let typecheck_collection_def ctx env coll_def =
     {b Rem} : Not exported outside this module                        *)
 (* ****************************************************************** *)
 let typecheck_phrase ctx env phrase =
-  let (final_ty, new_env) =
+  let (stuff_to_compile, final_ty, new_env) =
     (match phrase.Parsetree.ast_desc with
      | Parsetree.Ph_external exter_def ->
 	 let env' = typecheck_external_def ctx env exter_def in
-	 ((Types.type_unit ()), env')
+	 (PCM_no_matter, (Types.type_unit ()), env')
      | Parsetree.Ph_use _ ->
 	 (* Nothing to do, the scoping pass already ensured that *)
          (* "modules" opened or used were previously "use"-d.    *)
-	 ((Types.type_unit ()), env)
+	 (PCM_no_matter, (Types.type_unit ()), env)
      | Parsetree.Ph_open fname ->
 	 (* Load this module interface to extend the current environment. *)
 	 let env' =
 	   Env.type_open_module ~loc: phrase.Parsetree.ast_loc fname env in
-	 ((Types.type_unit ()), env')
+	 (PCM_no_matter, (Types.type_unit ()), env')
      | Parsetree.Ph_species species_def ->
 	 (* Interface printing stuff is done inside. *)
 	 typecheck_species_def ctx env species_def
@@ -3063,7 +3096,7 @@ let typecheck_phrase ctx env phrase =
          (* Interface printing stuff must be bone inside. *)
 	 if Configuration.get_do_interface_output () then
 	   Format.printf "type ...@\n" ;
-	 ((Types.type_unit ()), env')
+	 (PCM_type, (Types.type_unit ()), env')
      | Parsetree.Ph_let let_def  ->
 	 let envt_bindings =
 	   typecheck_let_definition ~is_a_field: false ctx env let_def in
@@ -3080,7 +3113,7 @@ let typecheck_phrase ctx env phrase =
 	       Env.TypingEnv.add_value id ty_scheme accu_env)
 	 env envt_bindings in
 	 (* Return unit and the extended environment. *)
-	 ((Types.type_unit ()), env')
+	 ((PCM_let_def let_def), (Types.type_unit ()), env')
      | Parsetree.Ph_theorem theorem_def ->
 	 Types.begin_definition () ;
 	 let ty = typecheck_theorem_def ctx env theorem_def in
@@ -3094,19 +3127,21 @@ let typecheck_phrase ctx env phrase =
 	   Format.printf "theorem %a in %a@\n"
 	     Sourcify.pp_vname theorem_def.Parsetree.ast_desc.Parsetree.th_name
 	     Types.pp_type_simple ty ;
-	 (ty, env')
+	 ((PCM_theorem theorem_def), ty, env')
      | Parsetree.Ph_expr expr ->
 	 let expr_ty = typecheck_expr ctx env expr in
 	 (* No interface printing stuff because the expression is not bound. *)
-	 (expr_ty, env)) in
+	 ((PCM_expr expr), expr_ty, env)) in
   (* Store the type information in the phrase's node. *)
   phrase.Parsetree.ast_type <- Some final_ty ;
   (* Return the environment extended with the bindings induced by the phrase. *)
-  new_env
+  (stuff_to_compile, new_env)
 ;;
 
 
 
+(* Types.fname -> Parsetree.file ->                     *)
+(*   (Env.TypingEnv.t * (please_compile_me list))       *)
 let typecheck_file current_unit ast_file =
   match ast_file.Parsetree.ast_desc with
    | Parsetree.File phrases ->
@@ -3117,9 +3152,13 @@ let typecheck_file current_unit ast_file =
 	 self_manifest = None ;
 	 tyvars_mapping = [] } in
        let global_env = ref (Env.TypingEnv.pervasives ()) in
-       List.iter
-	 (fun phrase ->
-	   global_env := typecheck_phrase ctx !global_env phrase)
-	 phrases ;
-       !global_env
+       let what_to_compile = 
+	 List.map
+	   (fun phrase ->
+	     let (stuff_to_compile, new_global_env) =
+	       typecheck_phrase ctx !global_env phrase in
+	     global_env := new_global_env ;
+	     stuff_to_compile)
+	   phrases in
+       (!global_env, what_to_compile)
 ;;

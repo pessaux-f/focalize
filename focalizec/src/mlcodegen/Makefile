@@ -1,9 +1,9 @@
-# $Id: Makefile,v 1.1 2007-09-13 08:45:11 pessaux Exp $
+# $Id: Makefile,v 1.2 2007-09-14 09:22:41 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ -I ../basement -I ../parser -I ../typing
 
-BYTOBJS = 
+BYTOBJS = core_ml_generation.cmo
 
 all:: $(BYTOBJS)
 
