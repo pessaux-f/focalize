@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.9 2007-09-07 12:54:17 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.10 2007-09-14 14:32:32 pessaux Exp $ *)
 
 exception Input_file_already_set ;;
 
@@ -88,4 +88,11 @@ let (get_raw_ast_dump, set_raw_ast_dump) =
   let raw_ast_dump = ref false in
   ((fun () -> !raw_ast_dump),
    (fun () -> raw_ast_dump := true))
+;;
+
+
+let (get_generate_ocaml, unset_generate_ocaml) =
+  let generate_ocaml = ref true in
+  ((fun () -> !generate_ocaml),
+   (fun () -> generate_ocaml := false))
 ;;

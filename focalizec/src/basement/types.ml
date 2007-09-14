@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.20 2007-08-31 13:45:52 pessaux Exp $ *)
+(* $Id: types.ml,v 1.21 2007-09-14 14:32:32 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -225,7 +225,9 @@ let reset_type_variables_mapping () =
   type_variables_counter := 0
 ;;
 
-let get_type_name ty ~generalized_p =
+
+
+let get_or_make_type_variable_name ty ~generalized_p =
   (* No need to repr, [pp_type_simple] already did it. *)
   try List.assq ty !type_variable_names_mapping with
   | Not_found ->
@@ -246,7 +248,7 @@ let (pp_type_simple, pp_type_scheme) =
     match ty.ts_desc with
     | ST_var ->
 	let ty_variable_name =
-	  get_type_name ty ~generalized_p: (ty.ts_level = generic_level) in
+	  get_or_make_type_variable_name ty ~generalized_p: (ty.ts_level = generic_level) in
 	Format.fprintf ppf "'%s" ty_variable_name
     | ST_arrow (ty1, ty2) ->
 	(* Arrow priority: 2. *)
@@ -422,7 +424,7 @@ let abstract_copy coll_name =
        | ST_var ->
 	   (* The abstraction must never change     *)
 	   (* variables to prevent sharing breaks ! *)
-	   seen := (ty, ty) :: !seen ;	   
+	   seen := (ty, ty) :: !seen ;
 	   ty
        | _ ->
 	   (begin
@@ -741,4 +743,80 @@ let subst_type_simple (fname1, spe_name1) c2 =
 (* ***************************************************************** *)
 let pp_type_collection ppf (coll_module, coll_name) =
   Format.fprintf ppf "%s#%s" coll_module coll_name
+;;
+
+
+
+(* ************************************************************************* *)
+(* (type_collection * string) list -> Format.formatter ->                    *)
+(*   type_simple -> unit                                                     *)
+(** {b Descr} : "Compile", i.e. generate the OCaml source representation of
+              a type. Basically, proceeds like the regular [pp_type_simple]
+              except in 2 cases:
+		- when encountering [Self] : in this case, generates the
+		  type variable name representing [Self], i.e. by convention
+		  "'me_as_carrier",
+                - when encountering a species carrier type : in this case,
+                  generate the type variable name representing this
+                  species (recover it thanks to the mapping between
+                  collections names and type variables names
+                  [collections_carrier_mapping]).
+
+    {b Rem} : Exported outside this module.                                  *)
+(* ************************************************************************* *)
+let pp_type_simple_to_ml collections_carrier_mapping ppf whole_type =
+  let rec rec_pp prio ppf ty =
+    (* First of all get the "repr" guy ! *)
+    let ty = repr ty in
+    match ty.ts_desc with
+    | ST_var ->
+	let ty_variable_name =
+	  get_or_make_type_variable_name
+	    ty ~generalized_p: (ty.ts_level = generic_level) in
+	Format.fprintf ppf "'%s" ty_variable_name
+    | ST_arrow (ty1, ty2) ->
+	(* Arrow priority: 2. *)
+	if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
+        Format.fprintf ppf "@[<2>%a@ ->@ %a@]" (rec_pp 2) ty1 (rec_pp 1) ty2 ;
+	if prio >= 2 then Format.fprintf ppf ")@]"
+    | ST_tuple tys ->
+	(* Tuple priority: 3. *)
+	if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
+        Format.fprintf ppf "@[<2>%a@]"
+          (Handy.pp_generic_separated_list " *" (rec_pp 3)) tys ;
+	if prio >= 3 then Format.fprintf ppf ")@]"
+    | ST_construct (type_name, arg_tys) ->
+        (begin
+	(* Priority of arguments of a sum type constructor :       *)
+        (* like tuples if only one argument : 3                    *)
+        (* otherwise 0 if already a tuple because we force parens. *)
+	match arg_tys with
+         | [] -> Format.fprintf ppf "%s" type_name
+         | [one] -> Format.fprintf ppf "%a@ %s" (rec_pp 3) one type_name
+         | _ ->
+             Format.fprintf ppf "@[<1>(%a)@]@ %s"
+               (Handy.pp_generic_separated_list "," (rec_pp 0)) arg_tys
+	       type_name
+	end)
+    | ST_self_rep ->
+	(* Here is the major difference with the regular [pp_type_simple]. *)
+        (* We print the type variable that represents our carrier in the   *)
+        (* OCaml translation.                                              *)
+	Format.fprintf ppf "'me_as_carrier"
+    | ST_species_rep (module_name, collection_name) ->
+        (begin
+        try
+	  let coll_type_variable =
+	    List.assoc
+	      (module_name, collection_name) collections_carrier_mapping in
+	  Format.fprintf ppf "%s" coll_type_variable
+	with Not_found ->
+	  (* Thank's to the all bunch of analyses performed, we should *)
+	  (* never be not able to find the type variable representing  *)
+	  (* the carrier type of a species in the OCaml translation.   *)
+	  assert false
+        end) in
+  (* Now, let's really work. *)
+  reset_type_variables_mapping () ;
+  rec_pp 0 ppf whole_type
 ;;

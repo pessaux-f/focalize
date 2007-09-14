@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.62 2007-09-14 09:22:41 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.63 2007-09-14 14:32:32 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -2606,16 +2606,20 @@ type please_compile_me =
   | PCM_species of
       ((** The species expression. *)
 	Parsetree.species_def *
-        (** The list of methods contained in the normalized species, with
+        (** The species description from the typechecking passe, with the
+            list of methods contained in its normalized form, with
 	    "oldestly" inherited in head of the list. *)
-        Env.TypeInformation.species_field list)
+        Env.TypeInformation.species_description *
+        (** The depency graph of the species's methods. *)
+        (Dep_analysis.name_node list))
   | PCM_collection of
       ((** The collection expression. *)
        Parsetree.coll_def *
-       (** The list of methods contained in the normalized collection, with
+       (** The collection description from the typechecking passe, with
+	   the list of methods contained in its normalized form, with
 	   "oldestly" inherited in head of the list and Self replaced by
            the collection name inside. *)
-       Env.TypeInformation.species_field list)
+       Env.TypeInformation.species_description)
   | PCM_type
   | PCM_let_def of Parsetree.let_def
   | PCM_theorem of Parsetree.theorem_def
@@ -2675,9 +2679,18 @@ let typecheck_species_def ctx env species_def =
   (* and in tail of the list.                                                 *)
   let semi_normed_meths =
     collapsed_inherited_methods_infos @ collapsed_methods_info in
-  (* Ensure that the species is well-formed. *)
-  Dep_analysis.ensure_species_well_formed
-    ~current_species: species_def_desc.Parsetree.sd_name semi_normed_meths ;
+  (* Ensure that the species is well-formed and get its depency graph. *)
+
+let junk =
+{ Env.TypeInformation.spe_sig_methods = semi_normed_meths ;
+  Env.TypeInformation.spe_sig_params = [] ;
+  Env.TypeInformation.spe_is_collection = false } in
+Format.eprintf "Species %s :@\n%a@."
+  species_def_desc.Parsetree.sd_name Env.TypeInformation.pp_species_description junk ;
+
+  let species_dep_graph =
+    Dep_analysis.ensure_species_well_formed
+      ~current_species: species_def_desc.Parsetree.sd_name semi_normed_meths in
   (* Then one must ensure that each method has the same type everywhere *)
   (* in the inheritance tree and more generaly create the normalised    *)
   (* form of the species.                                               *)
@@ -2730,7 +2743,7 @@ let typecheck_species_def ctx env species_def =
       species_def_desc.Parsetree.sd_name
       Env.TypeInformation.pp_species_description species_description
     end) ;
-  ((PCM_species (species_def, reordered_normalized_methods)),
+  ((PCM_species (species_def, species_description, species_dep_graph)),
    species_carrier_type, full_env)
 ;;
 
@@ -3053,7 +3066,7 @@ let typecheck_collection_def ctx env coll_def =
       coll_def_desc.Parsetree.cd_name
       Env.TypeInformation.pp_species_description collec_description
     end) ;
-  ((PCM_collection (coll_def, collection_fields)),
+  ((PCM_collection (coll_def, collec_description)),
    collec_carrier_type, full_env)
 ;;
 
@@ -3140,9 +3153,9 @@ let typecheck_phrase ctx env phrase =
 
 
 
-(* Types.fname -> Parsetree.file ->                     *)
+(* current_unit: Types.fname -> Parsetree.file ->       *)
 (*   (Env.TypingEnv.t * (please_compile_me list))       *)
-let typecheck_file current_unit ast_file =
+let typecheck_file ~current_unit ast_file =
   match ast_file.Parsetree.ast_desc with
    | Parsetree.File phrases ->
        (* A phrase is always typed in an empty context. *)

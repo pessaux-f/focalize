@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.13 2007-08-27 15:34:57 pessaux Exp $ *)
+(* $Id: types.mli,v 1.14 2007-09-14 14:32:32 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -96,7 +96,11 @@ val unify :
   loc: Location.t -> self_manifest: (type_simple option) -> type_simple ->
     type_simple -> unit
 
-(** Pretty_printing for types and type schemes. *)
+(** Pretty_printing for types and type schemes for FoCal. *)
 val pp_type_simple : Format.formatter -> type_simple -> unit
 val pp_type_scheme : Format.formatter -> type_scheme -> unit
 val pp_type_collection : Format.formatter -> type_collection -> unit
+
+(** Pretty_printing for types for the OCaml translation. *)
+val pp_type_simple_to_ml :
+  (type_collection * string) list -> Format.formatter -> type_simple -> unit

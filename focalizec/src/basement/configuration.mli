@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.9 2007-09-07 12:54:17 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.10 2007-09-14 14:32:32 pessaux Exp $ *)
 
 (** The various flags and definitions useful to the internal behaviour of the
     focalize compiler. *)
@@ -48,3 +48,6 @@ val set_dotty_dependencies : string -> unit
 
 val get_raw_ast_dump : unit -> bool
 val set_raw_ast_dump : unit -> unit
+
+val get_generate_ocaml : unit -> bool
+val unset_generate_ocaml : unit -> unit

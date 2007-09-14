@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: focalizec.ml,v 1.13 2007-09-14 09:22:41 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.14 2007-09-14 14:32:32 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -26,13 +26,18 @@ let main () =
        " check input file argument.") ;
       ("--dot-non-rec-dependencies",
        Arg.String Configuration.set_dotty_dependencies,
-       " dump species non-let-rec- dependencies as dotty files in the directory.") ;
+       " dump species non-let-rec- dependencies as dotty files in the \
+	 directory.") ;
       ("-i",
        Arg.Unit (fun () -> Configuration.set_do_interface_output true),
        " prints the source file interface.") ;
       ("-I",
        Arg.String (fun path -> Files.add_lib_path path),
-       " adds the specified path to the path list where to search for compiled interfaces.") ;
+       " adds the specified path to the path list where to search for \
+	 compiled interfaces.") ;
+      ("--no-ocaml-code",
+       Arg.Unit Configuration.unset_generate_ocaml,
+       " disables the OCaml code generation.") ;
       ("--old-pretty",
        Arg.String Configuration.set_old_pretty_print,
        " pretty-prints the parse tree of the focalize file as \
@@ -45,7 +50,8 @@ let main () =
        " prints on stderr the raw AST structure after parsing stage.") ;
       ("--scoped_pretty",
        Arg.String Configuration.set_pretty_scoped,
-       " pretty-prints the parse tree of the focal file once scoped as a focal source.") ;
+       " pretty-prints the parse tree of the focal file once scoped as a \
+	 focal source.") ;
       ("--verbose",
        Arg.Unit Configuration.set_verbose,
        " be verbose.") ;
@@ -99,13 +105,16 @@ let main () =
     tmp) in
   (* Typechecks the AST. *)
   let (typing_toplevel_env, stuff_to_compile) =
-    Infer.typecheck_file current_unit scoped_ast in
+    Infer.typecheck_file ~current_unit scoped_ast in
   (* Now, generate the persistent interface file. *)
   Env.make_fo_file
     ~source_filename: input_file_name scoping_toplevel_env typing_toplevel_env ;
-  (* Now go to the OCaml code generation. *)
-  let out_file_name = (Filename.chop_extension input_file_name) ^ ".ml" in
-  Core_ml_generation.root_compile
-    out_file_name typing_toplevel_env stuff_to_compile ;
+  (* Now go to the OCaml code generation if requested. *)
+  if Configuration.get_generate_ocaml () then
+    (begin
+    let out_file_name = (Filename.chop_extension input_file_name) ^ ".ml" in
+    Core_ml_generation.root_compile
+      ~current_unit ~out_file_name typing_toplevel_env stuff_to_compile
+    end) ;
   exit 0
 ;;

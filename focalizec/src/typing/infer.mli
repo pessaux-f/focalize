@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.10 2007-09-14 09:22:41 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.11 2007-09-14 14:32:32 pessaux Exp $ *)
 
 exception Method_multiply_defined of (Parsetree.vname * Types.species_name)
 exception Unbound_type_variable of string
@@ -40,13 +40,15 @@ type please_compile_me =
   | PCM_no_matter
   | PCM_external
   | PCM_species of
-      (Parsetree.species_def *  Env.TypeInformation.species_field list)
+      (Parsetree.species_def * Env.TypeInformation.species_description *
+       (Dep_analysis.name_node list))
   | PCM_collection of
-      (Parsetree.coll_def * Env.TypeInformation.species_field list)
+      (Parsetree.coll_def * Env.TypeInformation.species_description)
   | PCM_type
   | PCM_let_def of Parsetree.let_def
   | PCM_theorem of Parsetree.theorem_def
   | PCM_expr of Parsetree.expr
 
 val typecheck_file :
-  Types.fname -> Parsetree.file -> (Env.TypingEnv.t * (please_compile_me list))
+  current_unit: Types.fname -> Parsetree.file ->
+    (Env.TypingEnv.t * (please_compile_me list))

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.12 2007-09-07 17:31:20 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.13 2007-09-14 14:32:32 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -629,7 +629,7 @@ let in_species_decl_n_def_dependencies_for_one_theo_property_name
 (** {b Descr} : Describes the kind of dependency between 2 nodes. Can be
               either "def" or "dep" dependency.
 
-    {b Rem} : Not exported outside this module.                          *)
+    {b Rem} : Exported outside this module.                              *)
 (* ********************************************************************* *)
 type dependency_kind =
   | DK_decl
@@ -644,7 +644,7 @@ type dependency_kind =
             othernames (relation \lbag n \rbag in Virgile Prevosto's Phd,
             section 3.5, definition 16, page 32.
 
-    {b Rem} : Not exported outside this module.                             *)
+    {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
 type name_node = {
  (** Name of the node, i.e. one name of a species fields. *)
@@ -1000,28 +1000,18 @@ let is_reachable start_node end_node =
 
 
 (* *********************************************************************** *)
-(* current_species: Types.collection_name -> Parsetree.vname ->            *)
-(*   Parsetree.vname -> Env.TypeInformation.species_field list -> bool     *)
+(* name_node list -> -> Parsetree.vname -> Parsetree.vname ->              *)
+(*   Env.TypeInformation.species_field list -> bool                        *)
 (** {b Descr} : Implements the relation "left-oriented triangle" of
               Virgile Prevosto's Phd, section 3.5, page 32, definition 17.
-              Also output the dependencies as a dotty file if asked in the
-              command-line options.
 
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
-let left_triangle ~current_species x1 x2 fields =
+let left_triangle dep_graph_nodes x1 x2 fields =
   (* Guess the fields where x1 is recursively bound. *)
   let x1_arrow = clockwise_arrow x1 fields in
   (* Guess the fields where x2 is recursively bound. *)
   let x2_arrow = clockwise_arrow x2 fields in
-  (* Now, let's build the global dependencies graph for all the names. *)
-  let dep_graph_nodes =
-    build_dependencies_graph_for_fields ~current_species fields in
-  (* If asked, generate the dotty output of the dependencies. *)
-  (match Configuration.get_dotty_dependencies () with
-   | None -> ()
-   | Some dirname ->
-       dependencies_graph_to_dotty ~dirname ~current_species dep_graph_nodes) ;
   (* Now we will apply the "well-formness" predicate on the cartesian  *)
   (* product of the names bound by "clockwise-arrow" of [x1] and those *)
   (* bound by "clockwise-arrow" of [x2]. Intuitively, we will apply    *)
@@ -1048,19 +1038,33 @@ let left_triangle ~current_species x1 x2 fields =
 
 (* ************************************************************************ *)
 (* current_species: Types.collection_name ->                                *)
-(*   Env.TypeInformation.species_field list -> unit                         *)
+(*   Env.TypeInformation.species_field list -> name_node list               *)
 (** {b Descr} : Checks if a species is well-formed, applying the definition
               17 in Virgile Prevosto's Phd, section 3.5, page 32
+              If the species is well-formed, then returns it dependy graph
+              for all its fields.
+              Also output the dependencies as a dotty file if asked in the
+              command-line options.
 
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
 let ensure_species_well_formed ~current_species fields =
   let names = ordered_names_list_of_fields fields in
+  (* Now, let's build the global dependencies graph for all the names. *)
+  let dep_graph_nodes =
+    build_dependencies_graph_for_fields ~current_species fields in
+  (* If asked, generate the dotty output of the dependencies. *)
+  (match Configuration.get_dotty_dependencies () with
+   | None -> ()
+   | Some dirname ->
+       dependencies_graph_to_dotty ~dirname ~current_species dep_graph_nodes) ;
+  (* Now check the well-formness. *)
   List.iter
     (fun x_name ->
-      let ill_f = left_triangle ~current_species x_name x_name fields in
+      let ill_f = left_triangle dep_graph_nodes x_name x_name fields in
       if ill_f then raise (Ill_formed_species current_species))
-    names
+    names ;
+  dep_graph_nodes
 ;;
 
 
@@ -1188,40 +1192,3 @@ let erase_fields_in_context ~current_species context fields =
     List.fold_left (fun accu n -> VnameSet.add n accu) VnameSet.empty context in
   rec_erase context_as_set fields
 ;;
-
-
-
-(*
-(* Was debug. To disapear. *)
-let debug_where fields =
-  List.iter
-    (function
-       | Env.TypeInformation.SF_sig (vname, _)
-       | Env.TypeInformation.SF_let (vname, _, _) ->
-	   let w = where vname fields in
-	   Format.eprintf "Where (%a) : { " Sourcify.pp_vname vname ;
-	   List.iter
-	     (fun f ->
-	       let s = names_set_of_field f in
-	       let s' = VnameSet.elements s in
-	       Format.eprintf "[%a] " (Sourcify.pp_vnames ",") s')
-	     w ;
-	   Format.eprintf "}@."
-       | Env.TypeInformation.SF_let_rec l ->
-	   (begin
-	   List.iter
-	     (fun (vname, _, _) ->
-	       let w = where vname fields in
-	       Format.eprintf "Where (%a) : { " Sourcify.pp_vname vname ;
-	       List.iter
-		 (fun f ->
-		   let s = names_set_of_field f in
-		   let s' = VnameSet.elements s in
-		   Format.eprintf "[%a] " (Sourcify.pp_vnames ",") s')
-		 w ;
-	       Format.eprintf "}@.")
-	     l
-	   end))
-    fields
-;;
-*)
