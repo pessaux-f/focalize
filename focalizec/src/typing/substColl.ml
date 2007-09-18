@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: substColl.ml,v 1.5 2007-09-05 14:13:18 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.6 2007-09-18 09:30:42 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -55,7 +55,7 @@ let subst_type_simple_option c1 c2 = function
       (begin
       match c1 with
        | SCK_coll c -> Some (Types.subst_type_simple c c2 ty)
-       | SCK_self -> Some (Types.abstract_copy c2 ty)
+       | SCK_self -> Some (Types.copy_type_simple ~and_abstract: (Some c2) ty)
       end)
 ;;
 
@@ -349,7 +349,7 @@ let subst_species_field ~current_unit c1 c2 = function
       let ty' =
 	(match c1 with
 	 | SCK_coll c -> Types.subst_type_simple c c2 ty
-	 | SCK_self -> Types.abstract_copy c2 ty) in
+	 | SCK_self -> Types.copy_type_simple ~and_abstract: (Some c2) ty) in
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       Env.TypeInformation.SF_sig (vname, scheme')
@@ -361,7 +361,7 @@ let subst_species_field ~current_unit c1 c2 = function
       let ty' =
 	(match c1 with
 	 | SCK_coll c -> Types.subst_type_simple c c2 ty
-	 | SCK_self -> Types.abstract_copy c2 ty) in
+	 | SCK_self -> Types.copy_type_simple ~and_abstract: (Some c2) ty) in
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_expr ~current_unit c1 c2 body in
@@ -376,7 +376,8 @@ let subst_species_field ~current_unit c1 c2 = function
 	    let ty' =
 	      (match c1 with
 	       | SCK_coll c -> Types.subst_type_simple c c2 ty
-	       | SCK_self -> Types.abstract_copy c2 ty) in
+	       | SCK_self ->
+		   Types.copy_type_simple ~and_abstract: (Some c2) ty) in
 	    Types.end_definition () ;
 	    let scheme' = Types.generalize ty' in
 	    let body' = subst_expr ~current_unit c1 c2 body in
@@ -392,7 +393,7 @@ let subst_species_field ~current_unit c1 c2 = function
       let ty' =
 	(match c1 with
 	 | SCK_coll c -> Types.subst_type_simple c c2 ty
-	 | SCK_self -> Types.abstract_copy c2 ty) in
+	 | SCK_self -> Types.copy_type_simple ~and_abstract: (Some c2) ty) in
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_prop ~current_unit c1 c2 body in
@@ -405,7 +406,7 @@ let subst_species_field ~current_unit c1 c2 = function
       let ty' =
 	(match c1 with
 	 | SCK_coll c -> Types.subst_type_simple c c2 ty
-	 | SCK_self -> Types.abstract_copy c2 ty) in
+	 | SCK_self -> Types.copy_type_simple ~and_abstract: (Some c2) ty) in
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_prop ~current_unit c1 c2 body in

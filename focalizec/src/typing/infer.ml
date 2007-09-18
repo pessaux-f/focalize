@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.63 2007-09-14 14:32:32 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.64 2007-09-18 09:30:42 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -313,6 +313,13 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
 	  | Parsetree.I_local (Parsetree.Vqident quote_name) ->
 	      (begin
 	      (* Just handle the special where the ident is a type variable. *)
+	      (* Note that for a "rep" type because polymorphism is not      *)
+	      (* allowed, this should never be used. We could safely raise   *)
+	      (* an error. But, in order to keep this function clean and     *)
+	      (* smooth, we will enable this and perform a non-polymorphism  *)
+	      (* test later on the obtained type. Anyway this kind of test   *)
+	      (* is not only required for "rep", but also for all the other  *)
+	      (* methods (they can't either be polymorphic).                 *)
 	      try List.assoc quote_name ctx.tyvars_mapping
 	      with Not_found -> raise (Unbound_type_variable quote_name)
 	      end)
@@ -1367,9 +1374,9 @@ and typecheck_theorem_def ctx env theorem_def =
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
 and typecheck_species_fields ctx env = function
-  | [] -> ([(* Fields *)], ctx, [(* Proofs *)])
+  | [] -> ([(* Fields *)], ctx, [(* Proofs *)], None)
   | field :: rem_fields ->
-      let (fields_tys, new_ctx, new_env, new_proofs) =
+      let (fields_tys, new_ctx, new_env, new_proofs, opt_self_backup) =
 	(begin
 	match field.Parsetree.ast_desc with
 	 | Parsetree.SF_rep rep_type_def ->
@@ -1392,6 +1399,11 @@ and typecheck_species_fields ctx env = function
 	     if ctx.self_manifest <> None then
 	       raise (Rep_multiply_defined field.Parsetree.ast_loc) ;
 	     let ctx' = { ctx with self_manifest = Some ty } in
+	     (* Make a copy of Self's type that don't risk to be unified *)
+	     (* somewhere, hence that will keep its effective structure  *)
+             (* forever.                                                 *)
+	     let backup_self_ty =
+	       Types.copy_type_simple ~and_abstract: None ty in
 	     (* Record the type information in the AST node. *)
 	     field.Parsetree.ast_type <- Some ty ;
 	     (* Be careful : methods are not polymorphics (c.f. Virgile   *)
@@ -1399,7 +1411,7 @@ and typecheck_species_fields ctx env = function
 	     let field_info =
 	       Env.TypeInformation.SF_sig
 		 (rep_vname, (Types.never_generalizable_scheme ty)) in
-	     ([field_info], ctx', env, [(* Proofs *)])
+	     ([field_info], ctx', env, [(* Proofs *)], Some (backup_self_ty))
 	     end)
 	 | Parsetree.SF_sig sig_def ->
 	     (begin
@@ -1421,7 +1433,7 @@ and typecheck_species_fields ctx env = function
 	     let field_info =
 	       Env.TypeInformation.SF_sig
 		 (sig_def_descr.Parsetree.sig_name, scheme) in
-	     ([field_info], ctx, env', [(* Proofs *)])
+	     ([field_info], ctx, env', [(* Proofs *)], None)
 	     end)
 	 | Parsetree.SF_let let_def ->
 	     (begin
@@ -1452,7 +1464,7 @@ and typecheck_species_fields ctx env = function
 		      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
 		  (* Recursive, so just 1 field with several names. *)
 		  ([(Env.TypeInformation.SF_let_rec field_infos)], ctx, env',
-		   [(* Proofs *)])
+		   [(* Proofs *)], None)
 		  end)
 	      | Parsetree.RF_no_rec ->
 		  (begin
@@ -1468,7 +1480,7 @@ and typecheck_species_fields ctx env = function
 			Env.TypeInformation.SF_let (id, ty_scheme, expr))
 		      bindings
 		      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
-		  (field_infos, ctx, env', [(* Proofs *)])
+		  (field_infos, ctx, env', [(* Proofs *)], None)
 		  end)
 	     end)
 	 | Parsetree.SF_property property_def ->
@@ -1493,7 +1505,7 @@ and typecheck_species_fields ctx env = function
 		 (property_def.Parsetree.ast_desc.Parsetree.prd_name,
 		  scheme,
 		  property_def.Parsetree.ast_desc.Parsetree.prd_prop) in
-	     ([field_info], ctx, env', [(* Proofs *)])
+	     ([field_info], ctx, env', [(* Proofs *)], None)
 	     end)
 	 | Parsetree.SF_theorem theorem_def ->
 	     (begin
@@ -1513,17 +1525,17 @@ and typecheck_species_fields ctx env = function
 		  scheme,
 		  theorem_def.Parsetree.ast_desc.Parsetree.th_stmt,
 		  theorem_def.Parsetree.ast_desc.Parsetree.th_proof) in
-	     ([field_info], ctx, env', [(* Proofs *)])
+	     ([field_info], ctx, env', [(* Proofs *)], None)
 	     end)
 	 | Parsetree.SF_proof proof_def ->
 	     (begin
 	     let proof_def_desc = proof_def.Parsetree.ast_desc in
 	     typecheck_proof ctx env proof_def_desc.Parsetree.pd_proof ;
 	     (* No extension there. *)
-	     ([], ctx, env, [proof_def])
+	     ([], ctx, env, [proof_def], None)
 	     end)
 	end) in
-      let (rem_fields_tys, final_ctx, rem_proofs) =
+      let (rem_fields_tys, final_ctx, rem_proofs, rem_opt_self) =
 	typecheck_species_fields new_ctx new_env rem_fields in
       (* Make sure that method names are not *)
       (* bound several times in the species. *)
@@ -1533,7 +1545,15 @@ and typecheck_species_fields ctx env = function
 	 | Some n -> n) in
       ensure_methods_uniquely_defined
 	current_species fields_tys rem_fields_tys ;
-      ((fields_tys @ rem_fields_tys), final_ctx, (new_proofs @ rem_proofs))
+      let self_backup_ty =
+	(match (opt_self_backup ,rem_opt_self) with
+	 | (None, opt_t)
+	 | (opt_t, None) -> opt_t
+	 | ((Some _), (Some _)) ->
+	     (* Should be detected by [ensure_methods_uniquely_defined]. *)
+	     assert false) in
+      ((fields_tys @ rem_fields_tys), final_ctx, (new_proofs @ rem_proofs),
+      self_backup_ty)
 ;;
 
 
@@ -1606,7 +1626,8 @@ let abstraction ~current_unit cname fields =
 	   | Env.TypeInformation.SF_let (vname, scheme, _) ->
 	       Types.begin_definition () ;
 	       let ty = Types.specialize scheme in
-	       let ty' = Types.abstract_copy cname ty in
+	       let ty' =
+		 Types.copy_type_simple ~and_abstract: (Some cname) ty in
 	       Types.end_definition () ;
 	       [Env.TypeInformation.SF_sig (vname, (Types.generalize ty'))]
 	   | Env.TypeInformation.SF_let_rec l ->
@@ -1614,7 +1635,8 @@ let abstraction ~current_unit cname fields =
 		 (fun (vname, scheme, _) ->
 		   Types.begin_definition () ;
 		   let ty = Types.specialize scheme in
-		   let ty' = Types.abstract_copy cname ty in
+		   let ty' =
+		     Types.copy_type_simple ~and_abstract: (Some cname) ty in
 		   Types.end_definition () ;
 		   Env.TypeInformation.SF_sig (vname, (Types.generalize ty')))
 		 l
@@ -1622,7 +1644,8 @@ let abstraction ~current_unit cname fields =
 	   | Env.TypeInformation.SF_property (vname, scheme, prop) ->
 	       Types.begin_definition () ;
 	       let ty = Types.specialize scheme in
-	       let ty' = Types.abstract_copy cname ty in
+	       let ty' =
+		 Types.copy_type_simple ~and_abstract: (Some cname) ty in
 	       Types.end_definition () ;
 	       (* We substitute Self by [cname] in the prop. *)
 	       let abstracted_prop =
@@ -1730,10 +1753,10 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
 let apply_species_arguments ctx env base_spe_descr params =
-  let rec rec_apply accu_meths = function
-    | ([], []) -> accu_meths
+  let rec rec_apply accu_opt_self_type_backup accu_meths = function
+    | ([], []) -> (accu_opt_self_type_backup, accu_meths)
     | ((f_param :: rem_f_params), (e_param :: rem_e_params)) ->
-	let new_meths =
+	let (new_accu_opt_self_type_backup, new_meths) =
 	  (begin
 	  let (Parsetree.SP e_param_expr) = e_param.Parsetree.ast_desc in
 	  match f_param with
@@ -1759,7 +1782,9 @@ let apply_species_arguments ctx env base_spe_descr params =
 		      ~param_unit: (fst f_ty)
 		      f_name e_param_expr.Parsetree.ast_desc)
 		   accu_meths in
-	       substd_meths
+	       (* No substition to do in the self's type backup since *)
+	       (* substitions of expressions do not affect types.     *)
+	       (accu_opt_self_type_backup, substd_meths)
 	   | Env.TypeInformation.SPAR_is (f_name, c1_ty) ->
 	       let c1 =
 		 (ctx.current_unit, (Parsetree_utils.name_of_vname f_name)) in
@@ -1789,9 +1814,15 @@ let apply_species_arguments ctx env base_spe_descr params =
 		      ~current_unit: ctx.current_unit
 		      (SubstColl.SCK_coll c1) c2)
 		   accu_meths in
-	       substd_meths
+	       (* Substitute also if relevant in the self's type backup. *)
+	       let accu_opt_self_type_backup' =
+		 (match accu_opt_self_type_backup with
+		  | None -> None
+		  | Some t -> Some (Types.subst_type_simple c1 c2 t)) in
+	       (accu_opt_self_type_backup', substd_meths)
 	  end) in
-	rec_apply new_meths (rem_f_params, rem_e_params)
+	rec_apply
+	  new_accu_opt_self_type_backup new_meths (rem_f_params, rem_e_params)
     | (rem_formals, _) ->
 	(begin
 	let rem_formals_len = List.length rem_formals in
@@ -1801,6 +1832,7 @@ let apply_species_arguments ctx env base_spe_descr params =
 	end) in
   (* Do the job now. *)
   rec_apply
+    base_spe_descr.Env.TypeInformation.spe_self_type_backup
     base_spe_descr.Env.TypeInformation.spe_sig_methods
     (base_spe_descr.Env.TypeInformation.spe_sig_params, params)
 ;;
@@ -1839,12 +1871,13 @@ let typecheck_species_expr ctx env species_expr =
   let species_carrier_type =
     Types.type_rep_species ~species_module ~species_name in
   (* Now, create the "species type" (a somewhat of signature). *)
-  let species_methods =
-    apply_species_arguments ctx env species_species_description
+  let (opt_self_type_backup, species_methods) =
+    apply_species_arguments ctx env
+      species_species_description
       species_expr_desc.Parsetree.se_params in
   (* Record the type in the AST node. *)
   species_expr.Parsetree.ast_type <- Some species_carrier_type ;
-  species_methods
+  (species_methods, opt_self_type_backup)
 ;;
 
 
@@ -1918,8 +1951,10 @@ let typecheck_species_def_params ctx env species_name species_params =
 	     end)
 	 | Parsetree.SPT_is species_expr ->
 	     (begin
-	     (* First, typecheck the species expression .*)
-	     let species_expr_fields =
+	     (* First, typecheck the species expression.          *)
+             (* Discard the self's type backup because parameters *)
+             (* must never show their carrier's structure !       *)
+	     let (species_expr_fields, _) =
 	       typecheck_species_expr ctx accu_env species_expr in
 	     (* Create the [species_description] of the parameter *)
              (* and extend the current environment. Because the   *)
@@ -1935,6 +1970,7 @@ let typecheck_species_def_params ctx env species_name species_params =
 		 ~current_unit: ctx.current_unit
 		 (ctx.current_unit, param_name_as_string) species_expr_fields in
 	     let param_description = {
+	       Env.TypeInformation.spe_self_type_backup = None ;
 	       Env.TypeInformation.spe_is_collection = false ;
 	       Env.TypeInformation.spe_sig_params = [] ;
 	       Env.TypeInformation.spe_sig_methods = abstracted_methods } in
@@ -1994,11 +2030,12 @@ let typecheck_species_def_params ctx env species_name species_params =
 (* ********************************************************************** *)
 let extend_env_with_inherits ~loc ctx env spe_exprs =
   let rec rec_extend current_ctx current_env accu_found_methods = function
-    | [] -> (accu_found_methods, current_env, current_ctx)
+    | [] -> (accu_found_methods, current_env, current_ctx, None)
     | inh :: rem_inhs ->
 	(* First typecheck the species expression in the initial   *)
         (* (non extended) and recover its methods names and types. *)
-	let inh_species_methods = typecheck_species_expr current_ctx env inh in
+	let (inh_species_methods, inh_opt_self_type_backup) =
+	  typecheck_species_expr current_ctx env inh in
 	let (env', current_ctx')  =
 	  List.fold_left
 	    (fun (accu_env, accu_ctx) field ->
@@ -2043,7 +2080,18 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
 	    (current_env, current_ctx)
 	    inh_species_methods in
 	let new_accu_found_methods = accu_found_methods @ inh_species_methods in
-	rec_extend current_ctx' env' new_accu_found_methods rem_inhs in
+	(* Go on with the next inherited species. *)
+	let (rec_built_methods, rec_build_env, rec_build_ctx,
+	     rec_found_opt_self_type_backup) =
+	  rec_extend current_ctx' env' new_accu_found_methods rem_inhs in
+	(* Prefer to keep the most recent backup. *)
+	let opt_self_type_backup =
+	  (match (inh_opt_self_type_backup, rec_found_opt_self_type_backup) with
+	   | (None, opt_t)
+	   | (opt_t, None) -> opt_t
+	   | (_, (Some opt_t)) -> Some opt_t) in
+	(rec_built_methods, rec_build_env,
+	 rec_build_ctx, opt_self_type_backup) in
   (* Now, let's work... *)
   rec_extend ctx env [] spe_exprs
 ;;
@@ -2660,13 +2708,14 @@ let typecheck_species_def ctx env species_def =
   (* is now manifest is unpdated, in case we inherited a [repr]. *)
   let (inherited_methods_infos,
        env_with_inherited_methods,
-       ctx_with_inherited_repr) =
+       ctx_with_inherited_repr,
+       opt_inherited_self_type_backup) =
     extend_env_with_inherits
       ~loc: species_def.Parsetree.ast_loc ctx env_with_species_params
       species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc in
   (* Now infer the types of the current field's and recover *)
   (* the context  where we may know the shape of [repr].    *)
-  let (methods_info, ctx', found_proofs_of) =
+  let (methods_info, ctx', found_proofs_of, opt_self_type_backup) =
     typecheck_species_fields
       ctx_with_inherited_repr env_with_inherited_methods
       species_def_desc.Parsetree.sd_fields in
@@ -2680,14 +2729,6 @@ let typecheck_species_def ctx env species_def =
   let semi_normed_meths =
     collapsed_inherited_methods_infos @ collapsed_methods_info in
   (* Ensure that the species is well-formed and get its depency graph. *)
-
-let junk =
-{ Env.TypeInformation.spe_sig_methods = semi_normed_meths ;
-  Env.TypeInformation.spe_sig_params = [] ;
-  Env.TypeInformation.spe_is_collection = false } in
-Format.eprintf "Species %s :@\n%a@."
-  species_def_desc.Parsetree.sd_name Env.TypeInformation.pp_species_description junk ;
-
   let species_dep_graph =
     Dep_analysis.ensure_species_well_formed
       ~current_species: species_def_desc.Parsetree.sd_name semi_normed_meths in
@@ -2709,6 +2750,12 @@ Format.eprintf "Species %s :@\n%a@."
   (* Let's build our "type" information. Since we are managing a species *)
   (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
   let species_description = {
+    (* Prefer to keep the most recent. *)
+    Env.TypeInformation.spe_self_type_backup =
+      (match (opt_inherited_self_type_backup, opt_self_type_backup) with
+       | (None, opt_t)
+       | (opt_t, None) -> opt_t
+       | (_, (Some t)) -> Some t) ;
     Env.TypeInformation.spe_is_collection = false ;
     Env.TypeInformation.spe_sig_params = sig_params ;
     Env.TypeInformation.spe_sig_methods = reordered_normalized_methods } in
@@ -3017,8 +3064,10 @@ let typecheck_collection_def ctx env coll_def =
   (* First of all, we are in a species !!! *)
   let ctx = { ctx with
     current_species = Some coll_def_desc.Parsetree.cd_name } in
- (* Typecheck the body's species expression .*)
-  let species_expr_fields =
+  (* Typecheck the body's species expression .*)
+  (* Discard the self's type backup because anyway in the final *)
+  (* collection the carrier is always abstracted.               *)
+  let (species_expr_fields, _) =
     typecheck_species_expr ctx env coll_def_desc.Parsetree.cd_body in
   (* One must ensure that the collection is *)
   (* really a completely defined species.   *)
@@ -3033,6 +3082,7 @@ let typecheck_collection_def ctx env coll_def =
   (* Let's build our "type" information. Since we are managing a species *)
   (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
   let collec_description = {
+    Env.TypeInformation.spe_self_type_backup = None ;
     Env.TypeInformation.spe_is_collection = true ;
     Env.TypeInformation.spe_sig_params = [] ;
     Env.TypeInformation.spe_sig_methods = collection_fields } in

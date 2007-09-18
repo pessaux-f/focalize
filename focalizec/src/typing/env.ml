@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.30 2007-09-03 13:48:07 pessaux Exp $ *)
+(* $Id: env.ml,v 1.31 2007-09-18 09:30:42 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -279,6 +279,7 @@ module TypeInformation = struct
 
   type species_description = {
     spe_is_collection : bool ;
+    spe_self_type_backup : Types.type_simple option ;
     spe_sig_params : species_param list ;
     spe_sig_methods : species_field list    (** Method's name, type and body if defined. *)
     }
@@ -373,12 +374,30 @@ module TypeInformation = struct
 
       {b Rem} : Not exported outside this module.                     *)
   (* **************************************************************** *)
-  let pp_species_methods ppf methods =
+  let pp_species_methods opt_self_type_backup ppf methods =
     List.iter
       (function
 	| SF_sig (vname, ty_scheme) ->
-	    Format.fprintf ppf "sig %a : %a@\n"
-	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
+	    (begin
+	    (* Handle the special case of printing "rep"'s type. *)
+	    let vname_as_str = Parsetree_utils.name_of_vname vname in
+	    if vname_as_str = "rep" then
+	      (begin
+	      match opt_self_type_backup with
+	       | None ->
+		   (* Something went wrong somewhere. How could we have *)
+		   (* "rep" defined in the species without having any   *)
+		   (* backup type information ?!                        *)
+		   assert false
+	       | Some ty ->
+		   (* Always use the backup structure of "rep" ! *)
+		   Format.fprintf ppf "sig %a : %a@\n"
+		     Sourcify.pp_vname vname Types.pp_type_simple ty
+	      end)
+	    else
+	      Format.fprintf ppf "sig %a : %a@\n"
+		Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
+	    end)
 	| SF_let (vname, ty_scheme, _) ->
 	    Format.fprintf ppf "let %a : %a@\n"
 	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
@@ -414,7 +433,7 @@ module TypeInformation = struct
   let pp_species_description ppf sp_desc =
     Format.fprintf ppf "%a =@\n%aend"
       pp_species_param sp_desc.spe_sig_params
-      pp_species_methods sp_desc.spe_sig_methods
+      (pp_species_methods sp_desc.spe_self_type_backup) sp_desc.spe_sig_methods
 end ;;
 
 

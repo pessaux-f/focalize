@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: core_ml_generation.ml,v 1.2 2007-09-14 14:32:32 pessaux Exp $ *)
+(* $Id: core_ml_generation.ml,v 1.3 2007-09-18 09:30:42 pessaux Exp $ *)
 
 
 type species_compil_context = {
@@ -29,6 +29,15 @@ type species_compil_context = {
 
 
 
+(* *********************************************************************** *)
+(* current_unit: Types.fname -> Env.TypeInformation.species_description -> *)
+(*   (Types.type_collection * string) list                                 *)
+(** {b Descr} : Create the correspondance between the collection type of
+              the species definition parameters and the type variables
+              names to be used later during the OCaml translation.
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
 let build_collections_carrier_mapping ~current_unit species_descr =
     List.map
       (function
@@ -62,6 +71,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
 
 
 (* ************************************************************************* *)
+(* species_compil_context -> Env.TypeInformation.species_field list -> unit  *)
 (** {b Descr} : Checks if "rep" is defined. If so, then generate the type
               constraint reflecting its effective structure. We loosely
               iterate on the list of fields, stopping at the first occurence
@@ -70,7 +80,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-let generate_rep_constraint_in_record_type ctx fields =
+let generate_rep_constraint_in_record_type ctx self_type_backup fields =
   let rec rec_search = function
     | [] -> ()
     | h :: q ->
@@ -80,12 +90,21 @@ let generate_rep_constraint_in_record_type ctx fields =
 	     (* Check if the si is "rep". *)
 	     if (Parsetree_utils.name_of_vname n) = "rep" then
 	       (begin
-	       let ty = Types.specialize sch in
-	       (* Be careful, the type name of "rep" here is "me_as_carrier" *)
-	       (* with not quote ! It is NOT a type variable. And even more  *)
-	       (* not the "'me_as_carrier" !                                 *)
-	       Format.fprintf ctx.out_fmter "@[<2>type me_as_carrier =@ %a@]@\n"
-		 (Types.pp_type_simple_to_ml ctx.collections_carrier_mapping) ty
+	       match self_type_backup with
+		| None ->
+		    (* Something went wrong somewhere. How could we have *)
+		    (* "rep" defined in the species without having any   *)
+		    (* backup type information ?!                        *)
+		    assert false
+		| Some ty ->
+		    (* Be careful, the type name of "rep" here is *)
+                    (* "me_as_carrier" with no quote ! It is NOT a *)
+		    (* type variable. And even more not the        *)
+		    (* "'me_as_carrier" !                          *)
+		    Format.fprintf ctx.out_fmter
+		      "@[<2>type me_as_carrier =@ %a@]@\n"
+		      (Types.pp_type_simple_to_ml
+			 ctx.collections_carrier_mapping) ty
 	       end)
 	     else rec_search q
 	 | _ -> rec_search q
@@ -96,15 +115,14 @@ let generate_rep_constraint_in_record_type ctx fields =
 
 
 let generate_record_type ctx species_def species_descr =
-Format.eprintf "Species2%s :@\n%a@."
-  species_def.Parsetree.ast_desc.Parsetree.sd_name Env.TypeInformation.pp_species_description species_descr ;
-
   let out_fmter = ctx.out_fmter in
   let collections_carrier_mapping = ctx.collections_carrier_mapping in
   (* First, check if "rep" is defined. If so, then generate the type *)
-  (* constraint reflecting its effective structure.                  *)
+  (* constraint reflecting its effective structure, using the backup *)
+  (* type, not the type scheme bound to "rep" itself.                *)
   generate_rep_constraint_in_record_type
-    ctx species_descr.Env.TypeInformation.spe_sig_methods ;
+    ctx species_descr.Env.TypeInformation.spe_self_type_backup
+    species_descr.Env.TypeInformation.spe_sig_methods ;
   let field_prefix =
     String.lowercase species_def.Parsetree.ast_desc.Parsetree.sd_name in
   (* The header of the OCaml type definition for the species record. *)
@@ -168,7 +186,7 @@ let species_compile ~current_unit out_fmter species_def species_descr
     build_collections_carrier_mapping ~current_unit species_descr in
   (* The record type representing the species' type. *)
   let ctx = {
-  current_unit = current_unit ;
+    current_unit = current_unit ;
     current_species = species_def_desc.Parsetree.sd_name ;
     collections_carrier_mapping = collections_carrier_mapping ;
     out_fmter = out_fmter } in

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.21 2007-09-14 14:32:32 pessaux Exp $ *)
+(* $Id: types.ml,v 1.22 2007-09-18 09:30:42 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -138,7 +138,7 @@ exception Arity_mismatch of (type_name * int * int  * Location.t) ;;
 (* ******************************************************************** *)
 (* type_simple -> type_simple                                           *)
 (** {b Descr} : Returns the canonical representation of a type.
-              Uncompression is performed only one level each time. The
+              Compression is performed only one level each time. The
               day the next levels may be needed, this will be during an
               unification, and [repr] will be called if needed to get a
               deeper canonical representation of the type (i.e. the
@@ -401,18 +401,18 @@ let (specialize, specialize2) =
 
 
 
-
 (* ********************************************************************* *)
-(* abstract_copy                                                         *)
-(* (fname * collection_name) -> type_simple -> type_simple               *)
+(* and_abstract: (fname * collection_name) option -> type_simple ->      *)
+(*   type_simple                                                         *)
 (** {b Descr} : Copies the [ty] type expression (hence breaking sharing
 	      with the original one except for variables) and replaces
               occurrences of [Self] by the given collection's
-              [coll_name] carrier type.
+              [~and_abstract] carrier type if provided (i.e. different
+              from [None]).
 
     {b Rem} Exported outside this module.                                *)
 (* ********************************************************************* *)
-let abstract_copy coll_name =
+let copy_type_simple ~and_abstract =
   let seen = ref [] in
   (* Internal recursive copy same stuff than for [specialize] stuff. *)
   let rec rec_copy ty =
@@ -440,7 +440,12 @@ let abstract_copy coll_name =
 	      | ST_tuple tys -> ST_tuple (List.map rec_copy tys)
 	      | ST_construct (name, args) ->
 		  ST_construct (name, List.map rec_copy args)
-	      | ST_self_rep -> ST_species_rep coll_name
+	      | ST_self_rep ->
+		  (begin
+		  match and_abstract with
+		   | Some coll_name -> ST_species_rep coll_name
+		   | None -> ST_self_rep
+		  end)
 	      | (ST_species_rep _) as tdesc -> tdesc) in
 	   let copied_ty = {
 	     (* Be careful, it's a copy, not a specialization ! Hence *)
@@ -459,7 +464,6 @@ let abstract_copy coll_name =
     seen := [] ;
     copy)
 ;;
-
 
 
 let (generalize, generalize2) =
