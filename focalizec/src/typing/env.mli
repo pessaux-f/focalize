@@ -46,7 +46,6 @@ module TypeInformation :
 
     type species_description = {
       spe_is_collection : bool ;
-      spe_self_type_backup : Types.type_simple option ;
       spe_sig_params : species_param list ;
       spe_sig_methods : species_field list
     }
