@@ -17,15 +17,15 @@ fi
 
 touch .depend
 touch ./basement/.depend
-mkdir ./basement/odoc
+mkdir -p ./basement/odoc
 touch ./parser/.depend
-mkdir ./parser/odoc
+mkdir -p ./parser/odoc
 touch ./typing/.depend
-mkdir ./typing/odoc
+mkdir -p ./typing/odoc
 touch ./mlcodegen/.depend
-mkdir ./mlcodegen/odoc
+mkdir -p ./mlcodegen/odoc
 touch ./toplevel/.depend
-mkdir ./toplevel/odoc
+mkdir -p ./toplevel/odoc
 
 echo "Done. Now, please invoke: make depend all"
 #============================end configure.in============================
