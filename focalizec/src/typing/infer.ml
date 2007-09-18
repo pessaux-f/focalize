@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.65 2007-09-18 10:29:38 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.66 2007-09-18 10:43:50 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1374,9 +1374,9 @@ and typecheck_theorem_def ctx env theorem_def =
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
 and typecheck_species_fields ctx env = function
-  | [] -> ([(* Fields *)], ctx, [(* Proofs *)], None)
+  | [] -> ([(* Fields *)], ctx, [(* Proofs *)])
   | field :: rem_fields ->
-      let (fields_tys, new_ctx, new_env, new_proofs, opt_self_backup) =
+      let (fields_tys, new_ctx, new_env, new_proofs) =
 	(begin
 	match field.Parsetree.ast_desc with
 	 | Parsetree.SF_rep rep_type_def ->
@@ -1387,7 +1387,7 @@ and typecheck_species_fields ctx env = function
 	       (begin
 	       let current_species =
 		 (match ctx.current_species with
-		  | None ->assert false
+		  | None -> assert false
 		  | Some n -> n) in
 	       raise (Method_multiply_defined (rep_vname, current_species))
 	       end) ;
@@ -1398,17 +1398,29 @@ and typecheck_species_fields ctx env = function
              (* was previously identified. If some, then fails.        *)
 	     if ctx.self_manifest <> None then
 	       raise (Rep_multiply_defined field.Parsetree.ast_loc) ;
+	     (* Extend the context with the type "rep" is equal to. Beware  *)
+	     (* we make a copy of the infered type in order to keep the     *)
+	     (* originally infered type aside any further modifications     *)
+	     (* that could arise while unifying anywhere "Self" with "its   *)
+             (* known representation". In effect, unification in place      *)
+	     (* woudl establish a link by side effect from the              *)
+             (* representation to the type [Types.ST_self_rep], hence       *)
+	     (* fooling the explicit structure of what is initially "rep".  *)
+             (* This first would prevent us from being to generate code     *)
+             (* finally relying on the representation of "rep". Furthermore *)
+	     (* because of how [Types.unify] handles unification with       *)
+	     (* [Types.ST_self_rep] to prevent cycles, unification of this  *)
+             (* **mangled** representation would suceed with any types,     *)
+             (* even those incompatible with the original **correct**       *)
+             (* representation of "rep"'s type !                            *)
 	     let ctx' = {
 	       ctx with
 	         self_manifest =
 		   Some (Types.copy_type_simple ~and_abstract: None ty) } in
-	     (* Make a copy of Self's type that don't risk to be unified *)
-	     (* somewhere, hence that will keep its effective structure  *)
-             (* forever.                                                 *)
-let backup_self_ty =
-  Types.copy_type_simple ~and_abstract: None ty in
 	     (* Record the type information in the AST node with again a *)
-             (* separate copy.                                           *)
+             (* separate copy so that Self's type that don't risk to be  *)
+	     (* unified somewhere, hence that will keep its effective    *)
+             (* structure forever.                                       *)
 	     field.Parsetree.ast_type <-
 	       Some (Types.copy_type_simple ~and_abstract: None ty) ;
 	     (* Be careful : methods are not polymorphics (c.f. Virgile   *)
@@ -1416,7 +1428,7 @@ let backup_self_ty =
 	     let field_info =
 	       Env.TypeInformation.SF_sig
 		 (rep_vname, (Types.never_generalizable_scheme ty)) in
-	     ([field_info], ctx', env, [(* Proofs *)], Some (backup_self_ty))
+	     ([field_info], ctx', env, [(* Proofs *)])
 	     end)
 	 | Parsetree.SF_sig sig_def ->
 	     (begin
@@ -1438,7 +1450,7 @@ let backup_self_ty =
 	     let field_info =
 	       Env.TypeInformation.SF_sig
 		 (sig_def_descr.Parsetree.sig_name, scheme) in
-	     ([field_info], ctx, env', [(* Proofs *)], None)
+	     ([field_info], ctx, env', [(* Proofs *)])
 	     end)
 	 | Parsetree.SF_let let_def ->
 	     (begin
@@ -1469,7 +1481,7 @@ let backup_self_ty =
 		      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
 		  (* Recursive, so just 1 field with several names. *)
 		  ([(Env.TypeInformation.SF_let_rec field_infos)], ctx, env',
-		   [(* Proofs *)], None)
+		   [(* Proofs *)])
 		  end)
 	      | Parsetree.RF_no_rec ->
 		  (begin
@@ -1485,7 +1497,7 @@ let backup_self_ty =
 			Env.TypeInformation.SF_let (id, ty_scheme, expr))
 		      bindings
 		      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
-		  (field_infos, ctx, env', [(* Proofs *)], None)
+		  (field_infos, ctx, env', [(* Proofs *)])
 		  end)
 	     end)
 	 | Parsetree.SF_property property_def ->
@@ -1510,7 +1522,7 @@ let backup_self_ty =
 		 (property_def.Parsetree.ast_desc.Parsetree.prd_name,
 		  scheme,
 		  property_def.Parsetree.ast_desc.Parsetree.prd_prop) in
-	     ([field_info], ctx, env', [(* Proofs *)], None)
+	     ([field_info], ctx, env', [(* Proofs *)])
 	     end)
 	 | Parsetree.SF_theorem theorem_def ->
 	     (begin
@@ -1530,35 +1542,26 @@ let backup_self_ty =
 		  scheme,
 		  theorem_def.Parsetree.ast_desc.Parsetree.th_stmt,
 		  theorem_def.Parsetree.ast_desc.Parsetree.th_proof) in
-	     ([field_info], ctx, env', [(* Proofs *)], None)
+	     ([field_info], ctx, env', [(* Proofs *)])
 	     end)
 	 | Parsetree.SF_proof proof_def ->
 	     (begin
 	     let proof_def_desc = proof_def.Parsetree.ast_desc in
 	     typecheck_proof ctx env proof_def_desc.Parsetree.pd_proof ;
 	     (* No extension there. *)
-	     ([], ctx, env, [proof_def], None)
+	     ([], ctx, env, [proof_def])
 	     end)
 	end) in
-      let (rem_fields_tys, final_ctx, rem_proofs, rem_opt_self) =
+      let (rem_fields_tys, final_ctx, rem_proofs) =
 	typecheck_species_fields new_ctx new_env rem_fields in
       (* Make sure that method names are not *)
       (* bound several times in the species. *)
       let current_species =
-	(match ctx.current_species with
-	 | None ->assert false
-	 | Some n -> n) in
+	(match ctx.current_species with None -> assert false | Some n -> n) in
       ensure_methods_uniquely_defined
 	current_species fields_tys rem_fields_tys ;
-      let self_backup_ty =
-	(match (opt_self_backup ,rem_opt_self) with
-	 | (None, opt_t)
-	 | (opt_t, None) -> opt_t
-	 | ((Some _), (Some _)) ->
-	     (* Should be detected by [ensure_methods_uniquely_defined]. *)
-	     assert false) in
-      ((fields_tys @ rem_fields_tys), final_ctx, (new_proofs @ rem_proofs),
-      self_backup_ty)
+      (* And finally the result... *)
+      ((fields_tys @ rem_fields_tys), final_ctx, (new_proofs @ rem_proofs))
 ;;
 
 
@@ -2696,7 +2699,7 @@ let typecheck_species_def ctx env species_def =
       species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc in
   (* Now infer the types of the current field's and recover *)
   (* the context  where we may know the shape of [repr].    *)
-  let (methods_info, ctx', found_proofs_of, opt_self_type_backup) =
+  let (methods_info, ctx', found_proofs_of) =
     typecheck_species_fields
       ctx_with_inherited_repr env_with_inherited_methods
       species_def_desc.Parsetree.sd_fields in
