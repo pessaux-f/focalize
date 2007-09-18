@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.22 2007-09-18 09:30:42 pessaux Exp $ *)
+(* $Id: types.ml,v 1.23 2007-09-18 10:06:48 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -653,13 +653,19 @@ let unify ~loc ~self_manifest type1 type2 =
 	 match self_manifest with
 	  | None -> raise (Conflict (ty1, ty2, loc))
 	  | Some self_is_that ->
+	      (* First, make a fully separated copy of the type "Sefl" has    *)
+	      (* to prevent any pollution of its structure during unification *)
+	      (* (especially, making it [TLV_known ST_self_rep] which would ! *)
+              (* enable to unify anything).                                   *)
+	      let self_is_that_copied =
+		copy_type_simple ~and_abstract: None self_is_that in
 	      lowerize_levels ty1.ts_level ty2 ;
 	      (* If the type to what Self is equal is "Self", this means   *)
 	      (* that by side effect, a successful unification changed it  *)
 	      (* hence, do not recurse endless, and accept the unification *)
 	      (* again because it already succeeded.                       *)
-	      if not (is_self self_is_that) then
-		rec_unify self_is_that ty2 ;
+	      if not (is_self self_is_that_copied) then
+		rec_unify self_is_that_copied ty2 ;
 	      (* Always return Self to keep abstraction ! *)
 	      ty2.ts_link_value <- TLV_known ty1
 	 end)
@@ -668,13 +674,16 @@ let unify ~loc ~self_manifest type1 type2 =
 	 match self_manifest with
 	  | None -> raise (Conflict (ty1, ty2, loc))
 	  | Some self_is_that ->
+	      (* Same remark than in the mirror case above. *)
+	      let self_is_that_copied =
+		copy_type_simple ~and_abstract: None self_is_that in
 	      lowerize_levels ty1.ts_level ty2 ;
 	      (* If the type to what Self is equal is "Self", this means   *)
 	      (* that by side effect, a successful unification changed it  *)
 	      (* hence, do not recurse endless, and accept the unification *)
 	      (* again because it already succeeded.                       *)
-	      if not (is_self self_is_that) then
-		rec_unify self_is_that ty1 ;
+	      if not (is_self self_is_that_copied) then
+		rec_unify self_is_that_copied ty1 ;
 	      (* Always return Self to keep abstraction ! *)
 	      ty1.ts_link_value <- TLV_known ty2
 	 end)
