@@ -1,0 +1,23 @@
+external type int = | caml -> "int" ;;
+external type unit = | caml -> "unit" ;;
+external type string = | caml -> "string" ;;
+
+(* ******************************************************************* *)
+(* Must fail.                                                          *)
+(* Example showing the need to use a fresh copy the the "rep" type     *)
+(* structure to prevent first unification from spoiling this structure *)
+(* hence making any further unifications successful between "rep" type *)
+(* and normally incompatible other types structures.                   *)
+(* ******************************************************************* *)
+species Fails =
+  rep = int ;
+  let x in Self = 5 ;
+  let y in Self = 5 ;
+  let z in Self = "56" ;  (* If "rep"'s type structure was not fresly       *)
+                          (* copied before any unification, one unification *)
+                          (* of [Self] with [int] would have be performed   *)
+                          (* above, "rep"'s structure known as [int] would  *)
+                          (* be physically made equal to [Self], hence      *)
+                          (* allowing [Types.unify] to success with any     *)
+                          (* other type to unify with {Self].               *)
+end ;;
