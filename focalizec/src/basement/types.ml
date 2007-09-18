@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.23 2007-09-18 10:06:48 pessaux Exp $ *)
+(* $Id: types.ml,v 1.24 2007-09-18 11:22:51 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -405,14 +405,15 @@ let (specialize, specialize2) =
 (* and_abstract: (fname * collection_name) option -> type_simple ->      *)
 (*   type_simple                                                         *)
 (** {b Descr} : Copies the [ty] type expression (hence breaking sharing
-	      with the original one except for variables) and replaces
-              occurrences of [Self] by the given collection's
-              [~and_abstract] carrier type if provided (i.e. different
-              from [None]).
+	      with the original one except for variables : these one are
+              NOT "freshly copied" but remain shared between the copied
+              and original types) and replaces occurrences of [Self] by
+              the given collection's [~and_abstract] collection's
+              carrier type if provided (i.e. different from [None]).
 
     {b Rem} Exported outside this module.                                *)
 (* ********************************************************************* *)
-let copy_type_simple ~and_abstract =
+let copy_type_simple_but_variables ~and_abstract =
   let seen = ref [] in
   (* Internal recursive copy same stuff than for [specialize] stuff. *)
   let rec rec_copy ty =
@@ -658,7 +659,8 @@ let unify ~loc ~self_manifest type1 type2 =
 	      (* (especially, making it [TLV_known ST_self_rep] which would ! *)
               (* enable to unify anything).                                   *)
 	      let self_is_that_copied =
-		copy_type_simple ~and_abstract: None self_is_that in
+		copy_type_simple_but_variables
+		  ~and_abstract: None self_is_that in
 	      lowerize_levels ty1.ts_level ty2 ;
 	      (* If the type to what Self is equal is "Self", this means   *)
 	      (* that by side effect, a successful unification changed it  *)
@@ -676,7 +678,8 @@ let unify ~loc ~self_manifest type1 type2 =
 	  | Some self_is_that ->
 	      (* Same remark than in the mirror case above. *)
 	      let self_is_that_copied =
-		copy_type_simple ~and_abstract: None self_is_that in
+		copy_type_simple_but_variables
+		  ~and_abstract: None self_is_that in
 	      lowerize_levels ty1.ts_level ty2 ;
 	      (* If the type to what Self is equal is "Self", this means   *)
 	      (* that by side effect, a successful unification changed it  *)

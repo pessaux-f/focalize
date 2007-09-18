@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.66 2007-09-18 10:43:50 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.67 2007-09-18 11:22:51 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1416,13 +1416,17 @@ and typecheck_species_fields ctx env = function
 	     let ctx' = {
 	       ctx with
 	         self_manifest =
-		   Some (Types.copy_type_simple ~and_abstract: None ty) } in
+		   Some
+		     (Types.copy_type_simple_but_variables
+		        ~and_abstract: None ty) } in
 	     (* Record the type information in the AST node with again a *)
              (* separate copy so that Self's type that don't risk to be  *)
 	     (* unified somewhere, hence that will keep its effective    *)
              (* structure forever.                                       *)
 	     field.Parsetree.ast_type <-
-	       Some (Types.copy_type_simple ~and_abstract: None ty) ;
+	       Some
+		 (Types.copy_type_simple_but_variables
+		    ~and_abstract: None ty) ;
 	     (* Be careful : methods are not polymorphics (c.f. Virgile   *)
              (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
 	     let field_info =
@@ -1635,7 +1639,8 @@ let abstraction ~current_unit cname fields =
 	       Types.begin_definition () ;
 	       let ty = Types.specialize scheme in
 	       let ty' =
-		 Types.copy_type_simple ~and_abstract: (Some cname) ty in
+		 Types.copy_type_simple_but_variables
+		   ~and_abstract: (Some cname) ty in
 	       Types.end_definition () ;
 	       [Env.TypeInformation.SF_sig (vname, (Types.generalize ty'))]
 	   | Env.TypeInformation.SF_let_rec l ->
@@ -1644,7 +1649,8 @@ let abstraction ~current_unit cname fields =
 		   Types.begin_definition () ;
 		   let ty = Types.specialize scheme in
 		   let ty' =
-		     Types.copy_type_simple ~and_abstract: (Some cname) ty in
+		     Types.copy_type_simple_but_variables
+		       ~and_abstract: (Some cname) ty in
 		   Types.end_definition () ;
 		   Env.TypeInformation.SF_sig (vname, (Types.generalize ty')))
 		 l
@@ -1653,7 +1659,8 @@ let abstraction ~current_unit cname fields =
 	       Types.begin_definition () ;
 	       let ty = Types.specialize scheme in
 	       let ty' =
-		 Types.copy_type_simple ~and_abstract: (Some cname) ty in
+		 Types.copy_type_simple_but_variables
+		   ~and_abstract: (Some cname) ty in
 	       Types.end_definition () ;
 	       (* We substitute Self by [cname] in the prop. *)
 	       let abstracted_prop =
