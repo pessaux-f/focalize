@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.24 2007-09-18 11:22:51 pessaux Exp $ *)
+(* $Id: types.ml,v 1.25 2007-09-19 13:36:18 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -700,6 +700,7 @@ let unify ~loc ~self_manifest type1 type2 =
 	 else raise (Conflict (ty1, ty2, loc))
 	 end)
      | (_, _) -> raise (Conflict (ty1, ty2, loc)) in
+  (* ****************** *)
   (* Now, let's work... *)
   rec_unify type1 type2
 ;;
@@ -832,6 +833,7 @@ let pp_type_simple_to_ml collections_carrier_mapping ppf whole_type =
 	  (* the carrier type of a species in the OCaml translation.   *)
 	  assert false
         end) in
+  (* *********************** *)
   (* Now, let's really work. *)
   reset_type_variables_mapping () ;
   rec_pp 0 ppf whole_type

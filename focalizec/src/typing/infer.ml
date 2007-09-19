@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.67 2007-09-18 11:22:51 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.68 2007-09-19 13:36:18 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -2084,6 +2084,7 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
 	let new_accu_found_methods = accu_found_methods @ inh_species_methods in
 	(* Go on with the next inherited species. *)
 	rec_extend current_ctx' env' new_accu_found_methods rem_inhs in
+  (* ****************** *)
   (* Now, let's work... *)
   rec_extend ctx env [] spe_exprs
 ;;

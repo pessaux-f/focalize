@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.32 2007-09-18 10:29:38 pessaux Exp $ *)
+(* $Id: env.ml,v 1.33 2007-09-19 13:36:18 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -280,7 +280,8 @@ module TypeInformation = struct
   type species_description = {
     spe_is_collection : bool ;
     spe_sig_params : species_param list ;
-    spe_sig_methods : species_field list    (** Method's name, type and body if defined. *)
+    (** Method's name, type and body if defined. *)
+    spe_sig_methods : species_field list
     }
 
 

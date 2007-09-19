@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.13 2007-09-14 14:32:32 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.14 2007-09-19 13:36:18 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -171,6 +171,7 @@ let prop_decl_dependencies ~current_species initial_prop_expression =
 	 (VnameSet.union prop1_decl_deps prop2_decl_deps)
      | Parsetree.Pr_expr expr ->
 	 expr_decl_dependencies ~current_species expr in
+  (* **************** *)
   (* Now, do the job. *)
   rec_depend initial_prop_expression
 ;;
@@ -763,7 +764,6 @@ let build_dependencies_graph_for_fields ~current_species fields =
 
   (* *************** *)
   (* Now do the job. *)
-  (* *************** *)
   List.iter
     (function
       | Env.TypeInformation.SF_sig (n, _) ->
@@ -1186,6 +1186,7 @@ let erase_fields_in_context ~current_species context fields =
 	       end)
 	   end)
       end) in
+  (* ***************** *)
   (* Now do the job... *)
   (* Build once for all the set on names contained in the context list. *)
   let context_as_set =

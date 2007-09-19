@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: core_ml_generation.ml,v 1.5 2007-09-19 09:48:59 pessaux Exp $ *)
+(* $Id: core_ml_generation.ml,v 1.6 2007-09-19 13:36:18 pessaux Exp $ *)
 
 
 (* ********************************************************************* *)
@@ -105,8 +105,10 @@ type species_compil_context = {
   current_unit : Types.fname ;
   (** The name of the current species. *)
   current_species : Types.species_name ;
-  (* The current correspondance between collection types and type variable names
-     representing the carrier of a species type in the OCaml code. *)
+  (** The nodes of the current species's dependency graph. *)
+  dependency_graph_nodes : Dep_analysis.name_node list ;
+  (** The current correspondance between collection types and type variable
+      names representing the carrier of a species type in the OCaml code. *)
   collections_carrier_mapping : (Types.type_collection * string) list ;
   (** The current output formatter where to send the generated code. *)
   out_fmter : Format.formatter
@@ -301,6 +303,148 @@ let generate_record_type ctx species_def species_descr =
 
 
 
+
+let generate_constant out_fmter constant =
+  match constant.Parsetree.ast_desc with
+   | Parsetree.C_int i -> Format.fprintf out_fmter "%s" i
+   | Parsetree.C_float fl -> Format.fprintf out_fmter "%s" fl
+   | Parsetree.C_bool b -> Format.fprintf out_fmter "%s" b
+   | Parsetree.C_string s -> Format.fprintf out_fmter "\"%s\"" s
+   | Parsetree.C_char c -> Format.fprintf out_fmter "'%c'" c
+;;
+
+
+
+let generate_expr out_fmter collections_carrier_mapping initial_expression =
+  let rec rec_generate expr =
+    match expr.Parsetree.ast_desc with
+     | Parsetree.E_self ->
+	 Format.eprintf "generate_expr E_self TODO@."
+     | Parsetree.E_const cst -> generate_constant out_fmter cst
+     | Parsetree.E_fun (args_names, body) ->
+	 Format.eprintf "generate_expr E_fun TODO@."
+     | Parsetree.E_var ident ->
+	 Format.eprintf "generate_expr E_var TODO@."
+     | Parsetree.E_app (expr, exprs) ->
+	 Format.fprintf out_fmter "@[<1>(" ;
+	 rec_generate expr ;
+	 rec_generate_exprs_list ~comma: false exprs ;
+	 Format.fprintf out_fmter ")@]"
+     | Parsetree.E_constr (cstr_expr, exprs) ->
+	 Format.eprintf "generate_expr E_constr TODO@."
+     | Parsetree.E_match (expr, pats_exprs) ->
+	 Format.eprintf "generate_expr E_match TODO@."
+     | Parsetree.E_if (expr1, expr2, expr3) ->
+	 Format.fprintf out_fmter "if@ " ;
+	 rec_generate expr1 ;
+	 Format.fprintf out_fmter "@ then@ " ;
+	 rec_generate expr2 ;
+         Format.fprintf out_fmter "@ else@ " ;
+	 rec_generate expr3 ;
+     | Parsetree.E_let (let_def, expr) ->
+	 Format.eprintf "generate_expr E_let TODO@."
+     | Parsetree.E_record labs_exprs ->
+	 Format.eprintf "generate_expr E_record TODO@."
+     | Parsetree.E_record_access (expr, label_name) ->
+	 Format.eprintf "generate_expr E_record_access TODO@."
+     | Parsetree.E_record_with (expr, labs_exprs) ->
+	 Format.eprintf "generate_expr E_record_with TODO@."
+     | Parsetree.E_tuple exprs ->
+	 Format.fprintf out_fmter "@[<1>(" ;
+	 rec_generate_exprs_list ~comma: true exprs ;
+	 Format.fprintf out_fmter ")@]"
+     | Parsetree.E_external external_expr ->
+	 Format.eprintf "generate_expr E_external TODO@."
+     | Parsetree.E_paren e ->
+	 Format.fprintf out_fmter "@[<1>(" ;
+	 rec_generate e ;
+	 Format.fprintf out_fmter ")@]"
+
+
+  and rec_generate_exprs_list ~comma = function
+    | [] -> ()
+    | [last] -> rec_generate last 
+    | h :: q ->
+	rec_generate h ;
+	if comma then Format.fprintf out_fmter ",@ "
+	else Format.fprintf out_fmter "@ " ;
+	rec_generate_exprs_list ~comma q in
+  (* ********************** *)
+  (* Now, let's do the job. *)
+  rec_generate initial_expression
+;;
+
+
+
+let generate_methods ctx field =
+  let out_fmter = ctx.out_fmter in
+  (* Local function to handle one binding. Will be directly used in case *)
+  (* of [SF_let] field, or be iterated in case of [SF_let_rec] field.    *)
+  (* The [~is_first] boolean tells whether we must start de function     *)
+  (* binding with "let" or "and".                                        *)
+  let generate_one_binding ~is_first (name, scheme, body) =
+    (* Now, get all the methods we directly decl-depend on. They will *)
+    (* lead each to an extra parameter of the final OCaml function    *)
+    (* (lambda-lifing).                                               *)
+    let decl_children =
+      (try
+	let my_node =
+	  List.find
+	    (fun { Dep_analysis.nn_name = n } -> n = name)
+	    ctx.dependency_graph_nodes in
+	(* Only keep "decl-dependencies". *)
+	List.filter
+	  (function
+	    | (_, Dep_analysis.DK_decl) -> true
+	    | (_, Dep_analysis.DK_def) -> false)
+	  my_node.Dep_analysis.nn_children
+      with Not_found -> []  (* No children at all. *)) in
+    (* Start the OCaml function definition. *)
+    if is_first then
+      Format.fprintf out_fmter "let %a " pp_to_ocaml_vname name
+    else
+      Format.fprintf out_fmter "and %a " pp_to_ocaml_vname name ;
+    (* Now, lambda-lift all the dependencies. *)
+    List.iter
+      (fun ({ Dep_analysis.nn_name = dep_name }, _) ->
+	Format.fprintf out_fmter "abst_%a " pp_to_ocaml_vname dep_name)
+      decl_children ;
+    (* The "=" sign ending the OCaml function's "header". *)
+    Format.fprintf out_fmter "=@ " ;
+    (* Add the real arguments of the method if some, with their *)
+    (* type constraints and generate the body's code.           *)
+    generate_expr out_fmter ctx.collections_carrier_mapping body ;
+    (* Done... Then, final carriage return. *)
+    Format.fprintf out_fmter "@."
+    in
+  (* ****************************** *)
+  (* Now, really process the field. *)
+  match field with
+   | Env.TypeInformation.SF_sig (_, _) ->
+       (* Only declared, hence, no code to generate yet ! *)
+       ()
+   | Env.TypeInformation.SF_let (name, scheme, body) ->
+       generate_one_binding ~is_first: true (name, scheme, body)
+   | Env.TypeInformation.SF_let_rec l ->
+       (begin
+       match l with
+	| [] ->
+	    (* A "let", then a fortiori "let rec" construct *)
+	    (* must at least bind one identifier !          *)
+	    assert false
+	| h :: q ->
+	    generate_one_binding ~is_first: true h ;
+	    List.iter (generate_one_binding ~is_first: false) q
+       end)
+   | Env.TypeInformation.SF_theorem (_, _, _, _)
+   | Env.TypeInformation.SF_property (_, _, _) ->
+       (* Properties and theorems are purely  *)
+       (* discarded in the Ocaml translation. *)
+       ()
+;;
+
+
+
 let species_compile ~current_unit out_fmter species_def species_descr
     dep_graph =
   let species_def_desc = species_def.Parsetree.ast_desc in
@@ -311,13 +455,18 @@ let species_compile ~current_unit out_fmter species_def species_descr
   (* and the type variable names representing their carrier.  *)
   let collections_carrier_mapping =
     build_collections_carrier_mapping ~current_unit species_descr in
-  (* The record type representing the species' type. *)
+  (* Create the initial compilation context for this species. *)
   let ctx = {
     current_unit = current_unit ;
     current_species = species_def_desc.Parsetree.sd_name ;
+    dependency_graph_nodes = dep_graph ;
     collections_carrier_mapping = collections_carrier_mapping ;
     out_fmter = out_fmter } in
+  (* The record type representing the species' type. *)
   generate_record_type ctx species_def species_descr ;
+  (* Now, the methods of the species. *)
+  List.iter
+    (generate_methods ctx) species_descr.Env.TypeInformation.spe_sig_methods ;
   Format.fprintf out_fmter "@\nend ;;@]@\n@."
 ;;
 
