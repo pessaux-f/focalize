@@ -12,7 +12,92 @@
 (***********************************************************************)
 
 
-(* $Id: core_ml_generation.ml,v 1.4 2007-09-18 10:29:38 pessaux Exp $ *)
+(* $Id: core_ml_generation.ml,v 1.5 2007-09-19 09:48:59 pessaux Exp $ *)
+
+
+(* ********************************************************************* *)
+(* string -> string                                                      *)
+(** {b Descr} : Translate a FoC operator name to a legal OCaml function
+              name, preventing the versatile FoC operators names from
+              being lexically incorrect if straighforwardly converted
+              into OCaml identifiers.
+	      The transformation is pretty stupid, replacing all the
+              legal "symbolic" characters available for FoC prefix/infix
+              idents (extracted from the lexer definitions) by a regular
+              string.
+
+    {b Rem} : Not exported outsidethis module.                           *)
+(* ********************************************************************* *)
+let parse_operator_string op_string =
+  let renamed_operator = ref "" in
+  String.iter
+    (fun character ->
+      let str_tail =
+	(match character with
+	 | '`' -> "_focop_bquote_"
+	 | '~' -> "_focop_tilda_"
+	 | '?' -> "_focop_question_"
+	 | '$' -> "_focop_dollar_"
+	 | '!' -> "_focop_bang_"
+	 | '#' -> "_focop_sharp_"
+	 | '+' -> "_focop_plus_"
+	 | '-' -> "_focop_minus_"
+	 | '*' -> "_focop_star_"
+	 | '/' -> "_focop_slash_"
+	 | '%' -> "_focop_percent_"
+	 | '&' -> "_focop_ampers_"
+	 | '|' -> "_focop_pipe_"
+	 | ',' -> "_focop_comma_"
+	 | ':' -> "_focop_colon_"
+	 | ';' -> "_focop_semi_"
+	 | '<' -> "_focop_lt_"
+	 | '=' -> "_focop_eq_"
+	 | '>' -> "_focop_gt_"
+	 | '@' -> "_focop_at_"
+	 | '^' -> "_focop_hat_"
+	 | '\\' -> "_focop_bslash"
+	 | whatever ->
+	     (* For any other character, keep it unchanged. *)
+	     let s = " " in
+	     s.[0] <- whatever ;
+	     s) in
+      (* Appending on string is not very efficient, but *)
+      (* this should not be a real matter here ! *)
+      renamed_operator := !renamed_operator ^ str_tail)
+    op_string ;
+  (* Just return the "translated" identifier name. *)
+  !renamed_operator
+;;
+
+
+
+(* ******************************************************************** *)
+(* Format.formatter -> Parsetree.vname -> unit                          *)
+(** {b Descr} : Pretty prints a [vname] value as OCaml source. Because
+              FoC allows more infix/prefix operators then OCaml syntaxe
+              it's impossible to crudely translate the string of the
+              [vname] to OCaml.
+              For instance, a FoC infix operator "( **+ )" has no
+              equivalent in OCaml syntaxe : "( **+ )" is not a correct
+              operator identifier according to OCaml.
+              Then, instead of havign particular cases for operators
+              that can be straighforward translated (like "( +)") and
+              the others, we adopt a uniform mapping for infix and
+              prefix operators using the [parse_operator_string]
+              function to transform infix/prefix operators names
+              before printing and straighforwardly print other
+              operators names.
+
+    {b Rem} : Exported ouside this module.                              *)
+(* ******************************************************************** *)
+let pp_to_ocaml_vname ppf = function
+  | Parsetree.Vlident s
+  | Parsetree.Vuident s
+  | Parsetree.Vqident s -> Format.fprintf ppf "%s" s
+  | Parsetree.Vpident s
+  | Parsetree.Viident s -> Format.fprintf ppf "%s" (parse_operator_string s)
+;;
+
 
 
 type species_compil_context = {
@@ -70,6 +155,27 @@ let build_collections_carrier_mapping ~current_unit species_descr =
 
 
 
+(* ******************************************************************** *)
+(* ('a * string) list -> unit                                           *)
+(** {b Descr} : Helper to print the list of known variables names in
+              a collections carrier mapping as a legal OCaml list of
+              type parameters, i.e, comma separated except for the last
+              one.
+
+    [b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
+let print_comma_separated_vars_list_from_mapping out_fmter vars_list =
+  let rec rec_print = function
+    | [] -> ()
+    | [(_, last_name)] -> Format.fprintf out_fmter "%s" last_name
+    | (_, h) :: q ->
+	Format.fprintf out_fmter "%s,@ " h ;
+	rec_print q in
+  rec_print vars_list
+;;
+
+
+
 (* ************************************************************************* *)
 (* species_compil_context -> Env.TypeInformation.species_field list -> unit  *)
 (** {b Descr} : Checks if "rep" is defined. If so, then generate the type
@@ -90,9 +196,24 @@ let generate_rep_constraint_in_record_type ctx fields =
 	     (* Check if the si is "rep". *)
 	     if (Parsetree_utils.name_of_vname n) = "rep" then
 	       (begin
+	       Format.fprintf ctx.out_fmter "@[<2>type " ;
+	       (* First, output the type parameters if some, and enclose *)
+	       (* them by perentheses if there are several.              *)
+	       (match ctx.collections_carrier_mapping with
+		| [] -> ()
+		| [ (_, only_var_name) ] ->
+		    Format.fprintf ctx.out_fmter "%s@ " only_var_name
+		| _ ->
+		    (* More than one, then sourround by parentheses. *)
+		    Format.fprintf ctx.out_fmter "@[<1>(" ;
+		    (* Print the variables names... *)
+		    print_comma_separated_vars_list_from_mapping
+		      ctx.out_fmter ctx.collections_carrier_mapping ;
+		    Format.fprintf ctx.out_fmter ")@]@ ") ;
+	       (* Now, output the type's name and body. *)
 	       let ty = Types.specialize sch in
 	       Format.fprintf ctx.out_fmter
-		 "@[<2>type me_as_carrier =@ %a@]@\n"
+		 "@[<2>me_as_carrier =@ %a@]@\n"
 		 (Types.pp_type_simple_to_ml
 		    ctx.collections_carrier_mapping) ty
 	       end)
@@ -104,6 +225,21 @@ let generate_rep_constraint_in_record_type ctx fields =
 
 
 
+(* ************************************************************************** *)
+(* species_compil_context -> Parsetree.species_def ->                         *)
+(*   Env.TypeInformation.species_description -> unit                          *)
+(** {b Descr} : Generate the record type representing a species. This type
+              contains a field per method. This type is named "me_as_species"
+              to reflect the point that it represents the ML structure
+              representing the FoCaL species.
+              Depending on whether the species has parameters, this record
+              type also has parameters. In any case, it at least has a
+              parameter representing "self as it will be once instanciated"
+              once "we" (i.e. the species) will be really living as a
+              collection.
+
+    {b Rem} : Not exported outside this module.                               *)
+(* ************************************************************************** *)
 let generate_record_type ctx species_def species_descr =
   let out_fmter = ctx.out_fmter in
   let collections_carrier_mapping = ctx.collections_carrier_mapping in
@@ -134,9 +270,7 @@ let generate_record_type ctx species_def species_descr =
   List.iter
     (function
       | Env.TypeInformation.SF_sig (n, sch)
-      | Env.TypeInformation.SF_let (n, sch, _)
-      | Env.TypeInformation.SF_theorem  (n, sch, _, _)
-      | Env.TypeInformation.SF_property (n, sch, _) ->
+      | Env.TypeInformation.SF_let (n, sch, _) ->
 	  (begin
 	  (* Skip "rep", because it is a bit different and processed above *)
 	  (* c.f. function [generate_rep_constraint_in_record_type].       *)
@@ -144,7 +278,7 @@ let generate_record_type ctx species_def species_descr =
 	    (begin
 	    let ty = Types.specialize sch in
 	    Format.fprintf out_fmter "%s_%a :@ %a ;@\n"
-	      field_prefix Sourcify.pp_vname n
+	      field_prefix pp_to_ocaml_vname n
 	      (Types.pp_type_simple_to_ml collections_carrier_mapping) ty
 	    end)
 	  end)
@@ -153,9 +287,14 @@ let generate_record_type ctx species_def species_descr =
 	    (fun (n, sch, _) ->
 	      let ty = Types.specialize sch in
 	      Format.fprintf out_fmter "%s_%a :@ %a ;@\n"
-		field_prefix Sourcify.pp_vname n
+		field_prefix pp_to_ocaml_vname n
 		(Types.pp_type_simple_to_ml collections_carrier_mapping) ty)
-	    l)
+	    l
+      | Env.TypeInformation.SF_theorem  (_, _, _, _)
+      | Env.TypeInformation.SF_property (_, _, _) ->
+	  (* Properties and theorems are purely  *)
+          (* discarded in the Ocaml translation. *)
+	  ())
     species_descr.Env.TypeInformation.spe_sig_methods ;
   Format.fprintf out_fmter "@]}@\n"
 ;;
