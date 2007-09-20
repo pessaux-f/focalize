@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.33 2007-09-19 13:36:18 pessaux Exp $ *)
+(* $Id: env.ml,v 1.34 2007-09-20 10:38:19 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -51,10 +51,10 @@ exception Unbound_species of (Types.species_name * Location.t) ;;
     {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************** *)
 type 'a binding_origin =
-    (* The binding comes from the current compilation unit. *)
+    (** The binding comes from the current compilation unit. *)
   | BO_absolute of 'a
-    (* The binding was inserted by a "open" *)
-    (* directive of the file in argument.   *)
+    (** The binding was inserted by a "open" directive of the file in
+	argument. *)
   | BO_opened of (Types.fname * 'a)
 ;;
 
@@ -264,32 +264,83 @@ end ;;
 (* *********************************************************************** *)
 module TypeInformation = struct
   type species_param =
-    | SPAR_in of (Parsetree.vname * Types.type_collection)  (* Entity param. *)
-    | SPAR_is of (Parsetree.vname * (species_field list))  (* Collection param. *)
+    (** Entity parameter. *)
+    | SPAR_in of (Parsetree.vname * Types.type_collection)
+    (** Collection parameter. *)
+    | SPAR_is of (Parsetree.vname * (species_field list))
 
 
   and species_field =
-    | SF_sig of (Parsetree.vname * Types.type_scheme)
-    | SF_let of (Parsetree.vname * Types.type_scheme * Parsetree.expr)
-    | SF_let_rec of (Parsetree.vname * Types.type_scheme * Parsetree.expr) list
-    | SF_theorem of (Parsetree.vname * Types.type_scheme * Parsetree.prop *
-		     Parsetree.proof)
-    | SF_property of (Parsetree.vname * Types.type_scheme * Parsetree.prop)
+    | SF_sig of
+	((** Where the sig comes from (the most recent in inheritance). *)
+	 Types.species_name *
+	 Parsetree.vname *          (** The sig's name. *)
+	 Types.type_scheme          (** The sig's type scheme. *))
+    | SF_let of
+	((** Where the let-bound comes from (the most recent in inheritance). *)
+	 Types.species_name *
+	 Parsetree.vname *       (** Name of the let-bound definition. *)
+	 Types.type_scheme *     (** Type scheme of the let-bound definition. *)
+	 Parsetree.expr          (** Body of the let-bound definition. *))
+    | SF_let_rec of
+	(Types.species_name * Parsetree.vname * Types.type_scheme *
+	   Parsetree.expr) list  (** The list of information similar to what
+				     can be found for a [SF_let], but for each
+				     mutually recursive bound identifier. *)
+    | SF_theorem of
+	((** Where the theorem comes from (the most recent in inheritance). *)
+	 Types.species_name *
+	 Parsetree.vname *      (** The theorem's name. *)
+	 Types.type_scheme *    (** The theorem's type scheme. *)
+	 Parsetree.prop *       (** The theorem's body. *)
+	 Parsetree.proof        (** The theorem's proof. *))
+    | SF_property of
+	((** Where the property comes from (the most recent in inheritance). *)
+	 Types.species_name *
+	 Parsetree.vname *       (** The property's name. *)
+	 Types.type_scheme *     (** The property's type scheme. *)
+	 Parsetree.prop          (** The property's body. *))
 
 
   type species_description = {
-    spe_is_collection : bool ;
-    spe_sig_params : species_param list ;
+    spe_is_collection : bool ;  (** Whether the species is a collection. *)
+    spe_sig_params : species_param list ;   (** Species parameters. *)
     (** Method's name, type and body if defined. *)
     spe_sig_methods : species_field list
     }
 
 
 
-  type constructor_arity = CA_zero | CA_one
+  (* ********************************************************************* *)
+  (** {b Descr} : Because sum-type constructors are considered either with
+                not parameter or with only ONE parameter (that can be a
+                tuple), the arity of such a sum-type constructor is
+                only given by the 2 following values.
+
+      {b Rem} : Exported outside this module.                              *)
+  (* ********************************************************************* *)
+  type constructor_arity =
+    | CA_zero   (** Constructor has no argument. *)
+    | CA_one    (** Constructor has argument(s). *)
 
 
 
+  (* ********************************************************************* *)
+  (** {b Descr} : Description of a sum-type constructor. Contains it's
+                arity and its type scheme. A constructor has a functionnal
+                type whose "argument" is the tuple of types of the
+                constructor's argument and whose "result" has the same
+                type than the type the constructor belongs to.
+                For instance: [type t = Foo of (int * char)] will lead
+                to the constructor [Foo : (int * char) -> t].
+                In the degenerated case of a constructor with only one
+                effective argument, the type of the argument will be
+                a tuple with only 1 component.
+                For instance: [type u = Bar of int] will lead to the
+                constructor [Bar : (int) -> u].
+
+      {b Rem} : Exported outside this module.                              *)
+  (* ********************************************************************* *)
   type constructor_description = {
     (** Arity : 0 or 1 (many = 1 type tuple), (1 = type, not a 1 tuple). *)
     cstr_arity : constructor_arity ;
@@ -377,29 +428,34 @@ module TypeInformation = struct
   let pp_species_methods ppf methods =
     List.iter
       (function
-	| SF_sig (vname, ty_scheme) ->
+	| SF_sig (from, vname, ty_scheme) ->
+	    Format.fprintf ppf "(* From species %s. *)@\n" from ;
 	    Format.fprintf ppf "sig %a : %a@\n"
 	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
-	| SF_let (vname, ty_scheme, _) ->
+	| SF_let (from, vname, ty_scheme, _) ->
+	    Format.fprintf ppf "(* From species %s. *)@\n" from ;
 	    Format.fprintf ppf "let %a : %a@\n"
 	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
 	| SF_let_rec rec_bounds ->
 	    (begin
 	    match rec_bounds with
 	     | [] -> assert false  (* Empty let rec is non sense ! *)
-	     | (vname, ty_scheme, _) :: rem ->
+	     | (from, vname, ty_scheme, _) :: rem ->
 		 Format.fprintf ppf "let rec %a : %a@\n"
 		   Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme ;
 		 List.iter
-		   (fun (v, s, _) ->
+		   (fun (from, v, s, _) ->
+		     Format.fprintf ppf "(* From species %s. *)@\n" from ;
 		     Format.fprintf ppf "and %a : %a@\n"
 		       Sourcify.pp_vname v Types.pp_type_scheme s)
 		   rem
 	    end)
-	| SF_theorem (vname, ty_scheme, _, _) ->
+	| SF_theorem (from, vname, ty_scheme, _, _) ->
+	    Format.fprintf ppf "(* From species %s. *)@\n" from ;
 	    Format.fprintf ppf "theorem %a : %a@\n"
 	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
-	| SF_property (vname, ty_scheme, _) ->
+	| SF_property (from, vname, ty_scheme, _) ->
+	    Format.fprintf ppf "(* From species %s. *)@\n" from ;
 	    Format.fprintf ppf "property %a : %a@\n"
 	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme)
       methods
@@ -1155,13 +1211,13 @@ module TypingEMAccess = struct
       List.fold_left
 	(fun accu field ->
 	  match field with
-	   | TypeInformation.SF_sig (v, s)
-	   | TypeInformation.SF_let (v, s, _)
-	   | TypeInformation.SF_theorem (v, s, _, _)
-	   | TypeInformation.SF_property (v, s, _) ->
+	   | TypeInformation.SF_sig (_, v, s)
+	   | TypeInformation.SF_let (_, v, s, _)
+	   | TypeInformation.SF_theorem (_, v, s, _, _)
+	   | TypeInformation.SF_property (_, v, s, _) ->
 	       [(v, (BO_absolute s))] @ accu
 	   | TypeInformation.SF_let_rec l ->
-	       let l' = List.map (fun (v, s, _) -> (v, (BO_absolute s))) l in
+	       let l' = List.map (fun (_, v, s, _) -> (v, (BO_absolute s))) l in
 	       l' @ accu)
 	[]
 	spec_info.TypeInformation.spe_sig_methods in

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: substColl.ml,v 1.7 2007-09-18 11:22:51 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.8 2007-09-20 10:38:19 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -344,7 +344,7 @@ let subst_prop ~current_unit c1 c2 initial_prop_expr =
 
 
 let subst_species_field ~current_unit c1 c2 = function
-  | Env.TypeInformation.SF_sig (vname, scheme) ->
+  | Env.TypeInformation.SF_sig (from, vname, scheme) ->
       (begin
       Types.begin_definition () ;
       let ty = Types.specialize scheme in
@@ -356,9 +356,9 @@ let subst_species_field ~current_unit c1 c2 = function
 	       ~and_abstract: (Some c2) ty) in
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
-      Env.TypeInformation.SF_sig (vname, scheme')
+      Env.TypeInformation.SF_sig (from, vname, scheme')
       end)
-  | Env.TypeInformation.SF_let (vname, scheme, body) ->
+  | Env.TypeInformation.SF_let (from, vname, scheme, body) ->
       (begin
       Types.begin_definition () ;
       let ty = Types.specialize scheme in
@@ -371,13 +371,13 @@ let subst_species_field ~current_unit c1 c2 = function
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_expr ~current_unit c1 c2 body in
-      Env.TypeInformation.SF_let (vname, scheme', body')
+      Env.TypeInformation.SF_let (from, vname, scheme', body')
       end)
   | Env.TypeInformation.SF_let_rec l ->
       (begin
       let l' =
 	List.map
-	  (fun (vname, scheme, body) ->
+	  (fun (from, vname, scheme, body) ->
 	    let ty = Types.specialize scheme in
 	    let ty' =
 	      (match c1 with
@@ -388,11 +388,11 @@ let subst_species_field ~current_unit c1 c2 = function
 	    Types.end_definition () ;
 	    let scheme' = Types.generalize ty' in
 	    let body' = subst_expr ~current_unit c1 c2 body in
-	    (vname, scheme', body'))
+	    (from, vname, scheme', body'))
 	  l in
       Env.TypeInformation.SF_let_rec l'
       end)
-  | Env.TypeInformation.SF_theorem (vname, scheme, body, proof) ->
+  | Env.TypeInformation.SF_theorem (from, vname, scheme, body, proof) ->
       (begin
       (* No substitution inside the proof. *)
       Types.begin_definition () ;
@@ -406,9 +406,9 @@ let subst_species_field ~current_unit c1 c2 = function
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_prop ~current_unit c1 c2 body in
-      Env.TypeInformation.SF_theorem (vname, scheme', body', proof)
+      Env.TypeInformation.SF_theorem (from, vname, scheme', body', proof)
       end)
-  | Env.TypeInformation.SF_property (vname, scheme, body) ->
+  | Env.TypeInformation.SF_property (from, vname, scheme, body) ->
       (begin
       Types.begin_definition () ;
       let ty = Types.specialize scheme in
@@ -421,6 +421,6 @@ let subst_species_field ~current_unit c1 c2 = function
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_prop ~current_unit c1 c2 body in
-      Env.TypeInformation.SF_property (vname, scheme', body')
+      Env.TypeInformation.SF_property (from, vname, scheme', body')
       end)
 ;;

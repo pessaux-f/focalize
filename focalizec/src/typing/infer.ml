@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.68 2007-09-19 13:36:18 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.69 2007-09-20 10:38:19 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -742,12 +742,12 @@ let ensure_methods_uniquely_defined current_species l1 l2 =
     List.fold_right
       (fun field accu ->
 	match field with
-	 | Env.TypeInformation.SF_sig (v, _)
-	 | Env.TypeInformation.SF_let (v, _, _)
-	 | Env.TypeInformation.SF_theorem (v, _, _, _)
-	 | Env.TypeInformation.SF_property (v, _, _) -> v :: accu
+	 | Env.TypeInformation.SF_sig (_, v, _)
+	 | Env.TypeInformation.SF_let (_, v, _, _)
+	 | Env.TypeInformation.SF_theorem (_, v, _, _, _)
+	 | Env.TypeInformation.SF_property (_, v, _, _) -> v :: accu
 	 | Env.TypeInformation.SF_let_rec l ->
-	     let l' = List.map (fun (v, _, _) -> v) l in
+	     let l' = List.map (fun (_, v, _, _) -> v) l in
 	     l' @ accu)
       fields [] in
   (* Now get the flat list of all the methods names. *)
@@ -1376,6 +1376,8 @@ and typecheck_theorem_def ctx env theorem_def =
 and typecheck_species_fields ctx env = function
   | [] -> ([(* Fields *)], ctx, [(* Proofs *)])
   | field :: rem_fields ->
+      let current_species =
+	(match ctx.current_species with None -> assert false | Some n -> n) in
       let (fields_tys, new_ctx, new_env, new_proofs) =
 	(begin
 	match field.Parsetree.ast_desc with
@@ -1384,13 +1386,7 @@ and typecheck_species_fields ctx env = function
 	     let rep_vname = Parsetree.Vlident "rep" in
 	     (* On must not defined several rep inside a species. *)
 	     if ctx.self_manifest <> None then
-	       (begin
-	       let current_species =
-		 (match ctx.current_species with
-		  | None -> assert false
-		  | Some n -> n) in
-	       raise (Method_multiply_defined (rep_vname, current_species))
-	       end) ;
+	       raise (Method_multiply_defined (rep_vname, current_species)) ;
 	     Types.begin_definition () ;
 	     let ty = typecheck_rep_type_def ctx env rep_type_def in
 	     Types.end_definition () ;
@@ -1431,7 +1427,8 @@ and typecheck_species_fields ctx env = function
              (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
 	     let field_info =
 	       Env.TypeInformation.SF_sig
-		 (rep_vname, (Types.never_generalizable_scheme ty)) in
+		(current_species, rep_vname,
+		 (Types.never_generalizable_scheme ty)) in
 	     ([field_info], ctx', env, [(* Proofs *)])
 	     end)
 	 | Parsetree.SF_sig sig_def ->
@@ -1453,7 +1450,7 @@ and typecheck_species_fields ctx env = function
 		 sig_def_descr.Parsetree.sig_name scheme env in
 	     let field_info =
 	       Env.TypeInformation.SF_sig
-		 (sig_def_descr.Parsetree.sig_name, scheme) in
+		 (current_species, sig_def_descr.Parsetree.sig_name, scheme) in
 	     ([field_info], ctx, env', [(* Proofs *)])
 	     end)
 	 | Parsetree.SF_let let_def ->
@@ -1480,7 +1477,7 @@ and typecheck_species_fields ctx env = function
 			let expr =
 			  binding.Parsetree.ast_desc.Parsetree.b_body in
 			(* Note that [expr] below is already typed here. *)
-			(id, ty_scheme, expr))
+			(current_species, id, ty_scheme, expr))
 		      bindings
 		      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
 		  (* Recursive, so just 1 field with several names. *)
@@ -1498,7 +1495,8 @@ and typecheck_species_fields ctx env = function
 			let expr =
 			  binding.Parsetree.ast_desc.Parsetree.b_body in
 			(* Note that [expr] below is already typed here. *)
-			Env.TypeInformation.SF_let (id, ty_scheme, expr))
+			Env.TypeInformation.SF_let
+		          (current_species, id, ty_scheme, expr))
 		      bindings
 		      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
 		  (field_infos, ctx, env', [(* Proofs *)])
@@ -1523,7 +1521,8 @@ and typecheck_species_fields ctx env = function
 		 scheme env in
 	     let field_info =
 	       Env.TypeInformation.SF_property
-		 (property_def.Parsetree.ast_desc.Parsetree.prd_name,
+		 (current_species,
+		  property_def.Parsetree.ast_desc.Parsetree.prd_name,
 		  scheme,
 		  property_def.Parsetree.ast_desc.Parsetree.prd_prop) in
 	     ([field_info], ctx, env', [(* Proofs *)])
@@ -1542,7 +1541,8 @@ and typecheck_species_fields ctx env = function
 		 theorem_def.Parsetree.ast_desc.Parsetree.th_name scheme env in
 	     let field_info =
 	       Env.TypeInformation.SF_theorem
-		 (theorem_def.Parsetree.ast_desc.Parsetree.th_name,
+		 (current_species,
+		  theorem_def.Parsetree.ast_desc.Parsetree.th_name,
 		  scheme,
 		  theorem_def.Parsetree.ast_desc.Parsetree.th_stmt,
 		  theorem_def.Parsetree.ast_desc.Parsetree.th_proof) in
@@ -1560,8 +1560,6 @@ and typecheck_species_fields ctx env = function
 	typecheck_species_fields new_ctx new_env rem_fields in
       (* Make sure that method names are not *)
       (* bound several times in the species. *)
-      let current_species =
-	(match ctx.current_species with None -> assert false | Some n -> n) in
       ensure_methods_uniquely_defined
 	current_species fields_tys rem_fields_tys ;
       (* And finally the result... *)
@@ -1634,28 +1632,30 @@ let abstraction ~current_unit cname fields =
     | h :: q ->
 	let h' =
 	  (match h with
-	   | Env.TypeInformation.SF_sig (vname, scheme)
-	   | Env.TypeInformation.SF_let (vname, scheme, _) ->
+	   | Env.TypeInformation.SF_sig (from, vname, scheme)
+	   | Env.TypeInformation.SF_let (from, vname, scheme, _) ->
 	       Types.begin_definition () ;
 	       let ty = Types.specialize scheme in
 	       let ty' =
 		 Types.copy_type_simple_but_variables
 		   ~and_abstract: (Some cname) ty in
 	       Types.end_definition () ;
-	       [Env.TypeInformation.SF_sig (vname, (Types.generalize ty'))]
+	       [Env.TypeInformation.SF_sig
+		  (from, vname, (Types.generalize ty'))]
 	   | Env.TypeInformation.SF_let_rec l ->
 	       List.map
-		 (fun (vname, scheme, _) ->
+		 (fun (from, vname, scheme, _) ->
 		   Types.begin_definition () ;
 		   let ty = Types.specialize scheme in
 		   let ty' =
 		     Types.copy_type_simple_but_variables
 		       ~and_abstract: (Some cname) ty in
 		   Types.end_definition () ;
-		   Env.TypeInformation.SF_sig (vname, (Types.generalize ty')))
+		   Env.TypeInformation.SF_sig
+		     (from, vname, (Types.generalize ty')))
 		 l
-	   | Env.TypeInformation.SF_theorem (vname, scheme, prop, _)
-	   | Env.TypeInformation.SF_property (vname, scheme, prop) ->
+	   | Env.TypeInformation.SF_theorem (from, vname, scheme, prop, _)
+	   | Env.TypeInformation.SF_property (from, vname, scheme, prop) ->
 	       Types.begin_definition () ;
 	       let ty = Types.specialize scheme in
 	       let ty' =
@@ -1667,7 +1667,7 @@ let abstraction ~current_unit cname fields =
 		 SubstColl.subst_prop ~current_unit SubstColl.SCK_self
 		   cname prop in
 	       [Env.TypeInformation.SF_property
-		  (vname, (Types.generalize ty'), abstracted_prop)]) in
+		  (from, vname, (Types.generalize ty'), abstracted_prop)]) in
 	h' @ (rec_abstract q) in
   (* Do je job now... *)
   rec_abstract fields
@@ -1696,13 +1696,13 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
     List.fold_right
       (fun field accu ->
 	match field with
-	 | Env.TypeInformation.SF_sig (v, sc)
-	 | Env.TypeInformation.SF_let (v, sc, _) -> (v, sc) :: accu
+	 | Env.TypeInformation.SF_sig (_, v, sc)
+	 | Env.TypeInformation.SF_let (_, v, sc, _) -> (v, sc) :: accu
 	 | Env.TypeInformation.SF_let_rec l ->
-	     let l' = List.map (fun (v, sc, _) -> (v, sc)) l in
+	     let l' = List.map (fun (_, v, sc, _) -> (v, sc)) l in
 	     l' @ accu
-	 | Env.TypeInformation.SF_theorem (v, sc, _, _)
-	 | Env.TypeInformation.SF_property (v, sc, _) -> (v, sc) :: accu)
+	 | Env.TypeInformation.SF_theorem (_, v, sc, _, _)
+	 | Env.TypeInformation.SF_property (_, v, sc, _) -> (v, sc) :: accu)
       fields [] in
   let flat_s1 = local_flat_fields s1 in
   let flat_s2 = local_flat_fields s2 in
@@ -2042,8 +2042,8 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
 	  List.fold_left
 	    (fun (accu_env, accu_ctx) field ->
 	      match field with
-	       | Env.TypeInformation.SF_sig (meth_name, meth_scheme)
-	       | Env.TypeInformation.SF_let (meth_name, meth_scheme, _) ->
+	       | Env.TypeInformation.SF_sig (_, meth_name, meth_scheme)
+	       | Env.TypeInformation.SF_let (_, meth_name, meth_scheme, _) ->
 		   let e =
 		     Env.TypingEnv.add_value meth_name meth_scheme accu_env in
 		   (* Now check if we inherited a [rep]. *)
@@ -2065,17 +2065,17 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
 	       | Env.TypeInformation.SF_let_rec l ->
 		   let e =
 		     List.fold_left
-		       (fun internal_accu_env (meth_name, meth_scheme, _) ->
+		       (fun internal_accu_env (_, meth_name, meth_scheme, _) ->
 			 Env.TypingEnv.add_value
 			   meth_name meth_scheme internal_accu_env)
 		       accu_env
 		       l in
 		   (e, accu_ctx)
-	       | Env.TypeInformation.SF_theorem (theo_name, theo_sch, _, _) ->
+	       | Env.TypeInformation.SF_theorem  (_, theo_name, t_sch, _, _) ->
 		   let e =
-		     Env.TypingEnv.add_value theo_name theo_sch accu_env in
+		     Env.TypingEnv.add_value theo_name t_sch accu_env in
 		   (e, accu_ctx)
-	       | Env.TypeInformation.SF_property (prop_name, prop_sch, _) ->
+	       | Env.TypeInformation.SF_property (_, prop_name, prop_sch, _) ->
 		   let e =
 		     Env.TypingEnv.add_value prop_name prop_sch accu_env in
 		   (e, accu_ctx))
@@ -2108,20 +2108,20 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
 
    {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************* *)
-let collapse_proof proof_of fields =
+let collapse_proof proof_of ~current_species fields =
   let name_of_proof_of = proof_of.Parsetree.pd_name in
   let rec rec_find = function
     | [] -> ([], false)
     | field :: rem ->
 	(begin
 	match field with
-	 | Env.TypeInformation.SF_sig (_, _)
-	 | Env.TypeInformation.SF_let (_, _, _)
+	 | Env.TypeInformation.SF_sig (_, _, _)
+	 | Env.TypeInformation.SF_let (_, _, _, _)
 	 | Env.TypeInformation.SF_let_rec _
 	 | Env.TypeInformation.SF_theorem _ ->
 	     let (collapsed_rem, was_collapsed) = rec_find rem in
 	     ((field :: collapsed_rem), was_collapsed)
-	 | Env.TypeInformation.SF_property (name, sch, prop) ->
+	 | Env.TypeInformation.SF_property (_, name, sch, prop) ->
 	     (begin
 	     if name_of_proof_of = name then
 	       (begin
@@ -2129,7 +2129,8 @@ let collapse_proof proof_of fields =
 	       (* Change this property into a theorem.        *)
 	       let new_field = 
 		 Env.TypeInformation.SF_theorem
-		   (name, sch, prop, proof_of.Parsetree.pd_proof) in
+		   (current_species, name, sch, prop,
+		    proof_of.Parsetree.pd_proof) in
 	       if Configuration.get_verbose () then
 		 Format.eprintf
 		   "Merging property '%a' and proof into theorem.@."
@@ -2179,7 +2180,8 @@ let collapse_proof proof_of fields =
              well-formed.
              Not exported outside this module.                             *)
 (* *********************************************************************** *)
-let collapse_proofs_of found_proofs_of inherited_methods_infos methods_info =
+let collapse_proofs_of ~current_species found_proofs_of inherited_methods_infos
+       methods_info =
   (* We must first reverse the lists of methods so that the collapse *)
   (* procedure will find first the most recent methods.             *)
   let revd_inherited_methods_infos = List.rev inherited_methods_infos in
@@ -2190,14 +2192,17 @@ let collapse_proofs_of found_proofs_of inherited_methods_infos methods_info =
 	(* First, try on the "most recent" methods, i.e. the current *)
 	(* inheritance level's ones.                                 *)
 	let (collapsed_current, was_collapsed) =
-	  collapse_proof found_proof_of.Parsetree.ast_desc accu_current in
+	  collapse_proof
+	    ~current_species found_proof_of.Parsetree.ast_desc accu_current in
 	if was_collapsed then (accu_inherited, collapsed_current)
 	else
 	  (begin
 	  (* No collapse in the current level's       *)
 	  (* methods, then try on the inherited ones. *)
 	  let (collapsed_inherited, was_collapsed) =
-	    collapse_proof found_proof_of.Parsetree.ast_desc accu_inherited in
+	    collapse_proof
+	      ~current_species found_proof_of.Parsetree.ast_desc
+	      accu_inherited in
 	  if was_collapsed then (collapsed_inherited, accu_current)
 	  else (accu_inherited, accu_current)      (* No collapse at all ! *)
 	  end))
@@ -2228,12 +2233,12 @@ let extract_field_from_list_by_name name fields =
 	(begin
 	let found =
 	  (match field with
-	   | Env.TypeInformation.SF_sig (n, _)
-	   | Env.TypeInformation.SF_let (n, _, _)
-	   | Env.TypeInformation.SF_theorem (n, _, _, _)
-	   | Env.TypeInformation.SF_property (n, _, _) -> name = n
+	   | Env.TypeInformation.SF_sig (_, n, _)
+	   | Env.TypeInformation.SF_let (_, n, _, _)
+	   | Env.TypeInformation.SF_theorem (_, n, _, _, _)
+	   | Env.TypeInformation.SF_property (_, n, _, _) -> name = n
 	   | Env.TypeInformation.SF_let_rec l ->
-	       List.exists (fun (n, _, _) -> name = n) l) in
+	       List.exists (fun (_, n, _, _) -> name = n) l) in
 	if found then (field, rem)
 	else
 	  let (found_field, tail) = rec_extract rem in
@@ -2322,7 +2327,8 @@ let order_fields_according_to order fields =
 (* ********************************************************************* *)
 (* loc:Location.t -> typing_context -> Parsetree.vname ->                *)
 (*   Types.type_scheme ->                                                *)
-(*     (Parsetree.vname * Types.type_scheme * Parsetree.expr) list ->    *)
+(*     (Types.species_name * Parsetree.vname * Types.type_scheme *       *)
+(*      Parsetree.expr) list ->                                          *)
 (*       Env.TypeInformation.species_field                               *)
 (** {b Descr} : Implements the "fusion" algorithm (c.f [fields_fusion])
               in the particular case of fusionning 1 field Sig and 1
@@ -2333,7 +2339,7 @@ let order_fields_according_to order fields =
 let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
   let rec_meths' =
     List.map
-      (fun ((n, sc, body) as rec_meth) ->
+      (fun ((from, n, sc, body) as rec_meth) ->
 	if n = sig_name then
 	  begin
 	  Types.begin_definition () ;
@@ -2341,7 +2347,7 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
 	  let ty = Types.specialize sc in
 	  Types.unify ~loc ~self_manifest: ctx.self_manifest sig_ty ty ;
 	  Types.end_definition () ;
-	  (n, (Types.generalize ty), body)
+	  (from, n, (Types.generalize ty), body)
 	  end
 	else rec_meth)
       rec_meths in
@@ -2351,7 +2357,8 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
 
 
 (* ******************************************************************** *)
-(* 'a -> ('a * 'b * 'c) list -> ('a * 'b * 'c) * ('a * 'b * 'c) list *)
+(* 'a -> ('b * 'a * 'c * 'd) list ->                                    *)
+(*   ('b * 'a * 'c * 'd) * (('b * 'a * 'c * 'd) list)                   *)
 (* {b Descr} : Searches in the list the first element whose first
              component is equal to [name], then returns it and the list
              minus this element.
@@ -2363,7 +2370,7 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
 let find_and_remain name meths =
   let rec rec_find = function
     | [] -> raise Not_found
-    | ((n, _, _) as meth) :: rem ->
+    | ((_, n, _, _) as meth) :: rem ->
 	if name = n then (meth, rem)
 	else
 	  let (found, tail) = rec_find rem in
@@ -2375,8 +2382,10 @@ let find_and_remain name meths =
 
 (* ******************************************************************** *)
 (* loc: Location.t -> typing_context ->                                 *)
-(*   (Parsetree.vname * Types.type_scheme * Parsetree.expr) list ->     *)
-(*     (Parsetree.vname * Types.type_scheme * Parsetree.expr) list ->   *)
+(*   (Types.species_name * Parsetree.vname * Types.type_scheme *        *)
+(*    Parsetree.expr) list ->                                           *)
+(*     (Types.species_name *  Parsetree.vname * Types.type_scheme *     *)
+(*      Parsetree.expr) list ->                                         *)
 (*       Env.TypeInformation.species_field                              *)
 (** {b Descr} : Implements the "fusion" algorithm (c.f [fields_fusion])
               in the particular case of fusionning 2 fields Let_rec.
@@ -2387,11 +2396,11 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
   let rec rec_fusion l1 l2 =
     match l1 with
      | [] -> l2
-     | ((n1, sc1, _) as meth) :: rem1 ->
+     | ((_, n1, sc1, _) as meth) :: rem1 ->
 	 let (fused_meth, new_l2) =
 	   (try
 	     let (m2, rem_of_l2) = find_and_remain n1 l2 in
-	     let (_, sc2, _) = m2 in
+	     let (_, _, sc2, _) = m2 in
 	     let ty1 = Types.specialize sc1 in
 	     let ty2 = Types.specialize sc2 in
 	     (* Ensure that the 2 versions of the method are type-compatible. *)
@@ -2426,40 +2435,40 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
 let fields_fusion ~loc ctx phi1 phi2 =
   match (phi1, phi2) with
    (* *** *)
-   | (Env.TypeInformation.SF_sig (n1, sc1),
-      Env.TypeInformation.SF_sig (n2, sc2)) when n1 = n2 ->
+   | (Env.TypeInformation.SF_sig (_, n1, sc1),
+      Env.TypeInformation.SF_sig (from2, n2, sc2)) when n1 = n2 ->
         (* sig / sig. *)
 	Types.begin_definition () ;
 	let ty1 = Types.specialize sc1 in
 	let ty2 = Types.specialize sc2 in
 	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
 	Types.end_definition () ;
-	Env.TypeInformation.SF_sig (n1, (Types.generalize ty1))
-   | (Env.TypeInformation.SF_sig (n1, sc1),
-      Env.TypeInformation.SF_let (n2, sc2, body)) when n1 = n2 ->
+	Env.TypeInformation.SF_sig (from2, n2, (Types.generalize ty2))
+   | (Env.TypeInformation.SF_sig (_, n1, sc1),
+      Env.TypeInformation.SF_let (from2, n2, sc2, body)) when n1 = n2 ->
         (* sig / let. *)
 	Types.begin_definition () ;
 	let ty1 = Types.specialize sc1 in
 	let ty2 = Types.specialize sc2 in
 	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
 	Types.end_definition () ;
-	Env.TypeInformation.SF_let (n2, (Types.generalize ty2), body)
-   | (Env.TypeInformation.SF_sig (n1, sc1),
+	Env.TypeInformation.SF_let (from2, n2, (Types.generalize ty2), body)
+   | (Env.TypeInformation.SF_sig (_, n1, sc1),
       Env.TypeInformation.SF_let_rec rec_meths) ->
         (* sig / let rec. *)
 	fusion_fields_let_rec_sig ~loc ctx n1 sc1 rec_meths
    (* *** *)
-   | (Env.TypeInformation.SF_let (n1, sc1, body),
-      Env.TypeInformation.SF_sig (n2, sc2)) when n1 = n2 ->
+   | (Env.TypeInformation.SF_let (from1, n1, sc1, body),
+      Env.TypeInformation.SF_sig (_, n2, sc2)) when n1 = n2 ->
         (* let / sig. *)
 	Types.begin_definition () ;
 	let ty1 = Types.specialize sc1 in
 	let ty2 = Types.specialize sc2 in
 	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
 	Types.end_definition () ;
-	Env.TypeInformation.SF_let (n1, (Types.generalize ty1), body)
-   | (Env.TypeInformation.SF_let (n1, sc1, _),
-      Env.TypeInformation.SF_let (n2, sc2, body)) when n1 = n2 ->
+	Env.TypeInformation.SF_let (from1, n1, (Types.generalize ty1), body)
+   | (Env.TypeInformation.SF_let (_, n1, sc1, _),
+      Env.TypeInformation.SF_let (from2, n2, sc2, body)) when n1 = n2 ->
         (* let / let. *)
 	(* Late binding : keep the second body ! *)
 	Types.begin_definition () ;
@@ -2467,28 +2476,28 @@ let fields_fusion ~loc ctx phi1 phi2 =
 	let ty2 = Types.specialize sc2 in
 	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
 	Types.end_definition () ;
-	Env.TypeInformation.SF_let (n2, (Types.generalize ty2), body)
-   | (Env.TypeInformation.SF_let (n1, sc1, _),
+	Env.TypeInformation.SF_let (from2, n2, (Types.generalize ty2), body)
+   | (Env.TypeInformation.SF_let (_, n1, sc1, _),
       Env.TypeInformation.SF_let_rec rec_meths) ->
 	failwith "fields_fusion let / let rec"
    (* *** *)
    | (Env.TypeInformation.SF_let_rec rec_meths,
-      Env.TypeInformation.SF_sig (n2, sc2)) ->
+      Env.TypeInformation.SF_sig (_, n2, sc2)) ->
         (* let rec / sig. *)
 	(* Symetric case than for sig / let_rec. *)
 	fusion_fields_let_rec_sig ~loc ctx n2 sc2 rec_meths
    | (Env.TypeInformation.SF_let_rec rec_meths1,
-      Env.TypeInformation.SF_let (n2, sc2, _)) ->
+      Env.TypeInformation.SF_let (_, n2, sc2, _)) ->
         failwith "fields_fusion let rec / let"
    | (Env.TypeInformation.SF_let_rec rec_meths1,
       Env.TypeInformation.SF_let_rec rec_meths2) ->
         fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2
-   | ((Env.TypeInformation.SF_property (n1, sc1, prop1)),
-      (Env.TypeInformation.SF_property (n2, sc2, prop2)))
-   | ((Env.TypeInformation.SF_property (n1, sc1, prop1)),
-      (Env.TypeInformation.SF_theorem (n2, sc2, prop2, _)))
-   | ((Env.TypeInformation.SF_theorem (n1, sc1, prop1, _)),
-      (Env.TypeInformation.SF_theorem (n2, sc2, prop2, _))) ->
+   | ((Env.TypeInformation.SF_property (_, n1, sc1, prop1)),
+      (Env.TypeInformation.SF_property (_, n2, sc2, prop2)))
+   | ((Env.TypeInformation.SF_property (_, n1, sc1, prop1)),
+      (Env.TypeInformation.SF_theorem (_, n2, sc2, prop2, _)))
+   | ((Env.TypeInformation.SF_theorem (_, n1, sc1, prop1, _)),
+      (Env.TypeInformation.SF_theorem (_, n2, sc2, prop2, _))) ->
 	(begin
 	(* First, ensure that the names are the same. *)
 	if n1 = n2 then
@@ -2508,8 +2517,8 @@ let fields_fusion ~loc ctx phi1 phi2 =
 	  end)
 	else assert false
 	end)
-   | ((Env.TypeInformation.SF_theorem (n1, sc1, prop1, _)),
-      (Env.TypeInformation.SF_property (n2, sc2, prop2))) ->
+   | ((Env.TypeInformation.SF_theorem (_, n1, sc1, prop1, _)),
+      (Env.TypeInformation.SF_property (_, n2, sc2, prop2))) ->
 	(begin
 	(* First, ensure that the names are the same. *)
 	if n1 = n2 then
@@ -2555,11 +2564,11 @@ let fields_fusion ~loc ctx phi1 phi2 =
 let oldest_inter_n_field_n_fields phi fields =
   let flat_phi_names =
     (match phi with
-     | Env.TypeInformation.SF_sig (v, _)
-     | Env.TypeInformation.SF_let (v, _, _) -> [v]
-     | Env.TypeInformation.SF_let_rec l -> List.map (fun (v, _, _) -> v) l
-     | Env.TypeInformation.SF_theorem (v, _, _, _) -> [v]
-     | Env.TypeInformation.SF_property (v, _, _) -> [v]) in
+     | Env.TypeInformation.SF_sig (_, v, _)
+     | Env.TypeInformation.SF_let (_, v, _, _) -> [v]
+     | Env.TypeInformation.SF_let_rec l -> List.map (fun (_, v, _, _) -> v) l
+     | Env.TypeInformation.SF_theorem (_, v, _, _, _) -> [v]
+     | Env.TypeInformation.SF_property (_, v, _, _) -> [v]) in
   (* We will now check for an intersection between the list of names *)
   (* from phi and the names of one field of the argument [fields].   *)
   let rec rec_hunt = function
@@ -2567,17 +2576,17 @@ let oldest_inter_n_field_n_fields phi fields =
     | f :: rem_f ->
 	(begin
 	match f with
-	 | Env.TypeInformation.SF_sig (v, _)
-	 | Env.TypeInformation.SF_let (v, _, _)
-	 | Env.TypeInformation.SF_theorem (v, _, _, _)
-	 | Env.TypeInformation.SF_property (v, _, _) ->
+	 | Env.TypeInformation.SF_sig (_, v, _)
+	 | Env.TypeInformation.SF_let (_, v, _, _)
+	 | Env.TypeInformation.SF_theorem (_, v, _, _, _)
+	 | Env.TypeInformation.SF_property (_, v, _, _) ->
 	     if List.mem v flat_phi_names then ((Some f), [], rem_f)
 	     else
 	       let (found, head_list, rem_list) = rec_hunt rem_f in
 	       (* Not found in [f], then add it in the head part. *)
 	       (found, (f :: head_list), rem_list)
 	 | Env.TypeInformation.SF_let_rec l ->
-	     let names_in_l = List.map (fun (v, _, _) -> v) l in
+	     let names_in_l = List.map (fun (_, v, _, _) -> v) l in
 	     if Handy.list_intersect_p flat_phi_names names_in_l then
 	       ((Some f), [], rem_f)
 	     else
@@ -2714,7 +2723,9 @@ let typecheck_species_def ctx env species_def =
   (* We first collapse "proof-of"s with their *)
   (* related property to lead to a theorem.   *)
   let (collapsed_inherited_methods_infos, collapsed_methods_info) =
-    collapse_proofs_of found_proofs_of inherited_methods_infos methods_info in
+    collapse_proofs_of
+      ~current_species: species_def_desc.Parsetree.sd_name found_proofs_of
+      inherited_methods_infos methods_info in
   (* Create the list of field "semi-normalized", i.e with inherited methods   *)
   (* normalized and in head of the list, and the fresh methods not normalized *)
   (* and in tail of the list.                                                 *)
@@ -2995,7 +3006,7 @@ let ensure_collection_completely_defined ctx fields =
     | field :: rem_fields ->
 	(begin
 	match field with
-	 | Env.TypeInformation.SF_sig (vname, _) ->
+	 | Env.TypeInformation.SF_sig (_, vname, _) ->
              if vname = (Parsetree.Vlident "rep") then rep_found := true
              else
 	       (begin
@@ -3004,10 +3015,10 @@ let ensure_collection_completely_defined ctx fields =
 		| Some curr_spec ->
 		    raise (Collection_not_fully_defined (curr_spec, vname))
 	       end)
-	 | Env.TypeInformation.SF_let (_, _, _) -> ()
+	 | Env.TypeInformation.SF_let (_, _, _, _) -> ()
 	 | Env.TypeInformation.SF_let_rec _ -> ()
-	 | Env.TypeInformation.SF_theorem (_, _, _, _) -> ()
-	 | Env.TypeInformation.SF_property (vname, _, _) ->
+	 | Env.TypeInformation.SF_theorem (_, _, _, _, _) -> ()
+	 | Env.TypeInformation.SF_property (_, vname, _, _) ->
 	     (begin
 	     (* A property does not have proof. So, it is not fully defined. *)
 	     match ctx.current_species with

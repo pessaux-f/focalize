@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: core_ml_generation.ml,v 1.6 2007-09-19 13:36:18 pessaux Exp $ *)
+(* $Id: core_ml_generation.ml,v 1.7 2007-09-20 10:38:19 pessaux Exp $ *)
 
 
 (* ********************************************************************* *)
@@ -194,7 +194,7 @@ let generate_rep_constraint_in_record_type ctx fields =
     | h :: q ->
 	(begin
 	match h with
-	 | Env.TypeInformation.SF_sig (n, sch) ->
+	 | Env.TypeInformation.SF_sig (_, n, sch) ->
 	     (* Check if the si is "rep". *)
 	     if (Parsetree_utils.name_of_vname n) = "rep" then
 	       (begin
@@ -271,8 +271,8 @@ let generate_record_type ctx species_def species_descr =
   (* The record's fields types. *)
   List.iter
     (function
-      | Env.TypeInformation.SF_sig (n, sch)
-      | Env.TypeInformation.SF_let (n, sch, _) ->
+      | Env.TypeInformation.SF_sig (_, n, sch)
+      | Env.TypeInformation.SF_let (_, n, sch, _) ->
 	  (begin
 	  (* Skip "rep", because it is a bit different and processed above *)
 	  (* c.f. function [generate_rep_constraint_in_record_type].       *)
@@ -286,14 +286,14 @@ let generate_record_type ctx species_def species_descr =
 	  end)
       | Env.TypeInformation.SF_let_rec l ->
 	  List.iter
-	    (fun (n, sch, _) ->
+	    (fun (_, n, sch, _) ->
 	      let ty = Types.specialize sch in
 	      Format.fprintf out_fmter "%s_%a :@ %a ;@\n"
 		field_prefix pp_to_ocaml_vname n
 		(Types.pp_type_simple_to_ml collections_carrier_mapping) ty)
 	    l
-      | Env.TypeInformation.SF_theorem  (_, _, _, _)
-      | Env.TypeInformation.SF_property (_, _, _) ->
+      | Env.TypeInformation.SF_theorem  (_, _, _, _, _)
+      | Env.TypeInformation.SF_property (_, _, _, _) ->
 	  (* Properties and theorems are purely  *)
           (* discarded in the Ocaml translation. *)
 	  ())
@@ -382,7 +382,7 @@ let generate_methods ctx field =
   (* of [SF_let] field, or be iterated in case of [SF_let_rec] field.    *)
   (* The [~is_first] boolean tells whether we must start de function     *)
   (* binding with "let" or "and".                                        *)
-  let generate_one_binding ~is_first (name, scheme, body) =
+  let generate_one_binding ~is_first (from, name, scheme, body) =
     (* Now, get all the methods we directly decl-depend on. They will *)
     (* lead each to an extra parameter of the final OCaml function    *)
     (* (lambda-lifing).                                               *)
@@ -420,11 +420,11 @@ let generate_methods ctx field =
   (* ****************************** *)
   (* Now, really process the field. *)
   match field with
-   | Env.TypeInformation.SF_sig (_, _) ->
+   | Env.TypeInformation.SF_sig (_, _, _) ->
        (* Only declared, hence, no code to generate yet ! *)
        ()
-   | Env.TypeInformation.SF_let (name, scheme, body) ->
-       generate_one_binding ~is_first: true (name, scheme, body)
+   | Env.TypeInformation.SF_let (from, name, scheme, body) ->
+       generate_one_binding ~is_first: true (from, name, scheme, body)
    | Env.TypeInformation.SF_let_rec l ->
        (begin
        match l with
@@ -436,8 +436,8 @@ let generate_methods ctx field =
 	    generate_one_binding ~is_first: true h ;
 	    List.iter (generate_one_binding ~is_first: false) q
        end)
-   | Env.TypeInformation.SF_theorem (_, _, _, _)
-   | Env.TypeInformation.SF_property (_, _, _) ->
+   | Env.TypeInformation.SF_theorem (_, _, _, _, _)
+   | Env.TypeInformation.SF_property (_, _, _, _) ->
        (* Properties and theorems are purely  *)
        (* discarded in the Ocaml translation. *)
        ()
