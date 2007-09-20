@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.34 2007-09-20 10:38:19 pessaux Exp $ *)
+(* $Id: env.ml,v 1.35 2007-09-20 11:42:37 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -85,6 +85,7 @@ let env_list_assoc ~allow_opened searched list =
 
 
 
+(* Mostly to debug.
 let debug_env_list_assoc ~allow_opened searched list =
   let rec rec_assoc = function
     | [] ->
@@ -117,6 +118,7 @@ let debug_env_list_assoc ~allow_opened searched list =
   flush stderr ;
   rec_assoc list
 ;;
+*)
 
 
 
@@ -198,39 +200,46 @@ module ScopeInformation = struct
       {b Rem} : Exported outside this module.                              *)
   (* ********************************************************************* *)
   type value_binding_info =
-      (* The ident is at toplevel of a file (including the current file). *)
+      (** The ident is at toplevel of a file (including the current file). *)
     | SBI_file of Types.fname
-      (* The ident is a method implicitely of self. *)
+      (** The ident is a method implicitely of self. *)
     | SBI_method_of_self
-      (* The ident is a method explicitely of a collection. ATTENTION: while
-	 inserting a method in the environment, it must always be tagged with
-	 [SBI_method_of_self]. The tag [SBI_method_of_coll] can only be
-	 returned by [find_value] who may perform a change on the fly if
-	 required. *)
+      (** The ident is a method explicitely of a collection. ATTENTION: while
+	  inserting a method in the environment, it must always be tagged with
+	  [SBI_method_of_self]. The tag [SBI_method_of_coll] can only be
+	  returned by [find_value] who may perform a change on the fly if
+	  required. *)
     | SBI_method_of_coll of Types.collection_name
-      (* The ident is a locally bound indentifier (let or function parameter. *)
+      (** The ident is a locally bound indentifier
+	  (let or function parameter). *)
     | SBI_local
 
 
 
   type type_binding_info =
-      (* The type identifier is either a type variable name ('a for instance) or a builtin type (int for instance). *)
+      (** The type identifier is either a type variable name
+	  ('a for instance) or a builtin type (int for instance). *)
     | TBI_builtin_or_var
-      (* The identifier is a type name defined at toplevel in a file. *)
+      (** The identifier is a type name defined at toplevel in a file. *)
     | TBI_defined_in of Types.fname
 
 
 
   type species_scope =
-      (* The identifier is a specied name defined at toplevel in a file. *)
+      (** The identifier is a specied name defined at toplevel in a file. *)
     | SPBI_file of Types.fname
-(* The identifier is a locally bound collection like in the case of a "is"-bound parameter (i.e. [c is ...]) where [c] is then considered as a local collection). *)
+      (** The identifier is a locally bound collection like in the case of a
+	  "is"-bound parameter (i.e. [c is ...]) where [c] is then considered
+	  as a local collection). *)
     | SPBI_local
 
 
 
   type species_binding_info = {
-    (* The list of *ALL* the method owned, including those added by inheritance. Methods from the toplevel ancestor are in head of the list. In case of multiple inheritance, we consider that ancestors are older from left to right. *)
+    (** The list of *ALL* the method owned, including those added by
+	inheritance. Methods from the toplevel ancestor are in head of the
+	list. In case of multiple inheritance, we consider that ancestors
+	are older from left to right. *)
     spbi_methods : Parsetree.vname list ;
     spbi_scope : species_scope
   }
@@ -270,6 +279,16 @@ module TypeInformation = struct
     | SPAR_is of (Parsetree.vname * (species_field list))
 
 
+
+  (* ************************************************************************ *)
+  (** {b Desc} : Describe the essence of a species field, i.e. if it's
+               a signature, a let-binding, let let-rec-binding, a theorem
+               or a property. Through this description the name, type, body
+               and provenance (and even more if needed to fully describe the
+               field according to its nature) of the field is made available.
+
+      {b Rem} : Exported outside this module.                                 *)
+  (* ************************************************************************ *)
   and species_field =
     | SF_sig of
 	((** Where the sig comes from (the most recent in inheritance). *)
@@ -302,6 +321,15 @@ module TypeInformation = struct
 	 Parsetree.prop          (** The property's body. *))
 
 
+
+  (* ******************************************************************** *)
+  (** {b Desc} : Describe the essence of a species or collection. This
+               description contains a flag telling if ti's a species or
+               a collection, the possible parameters of the species and a
+               link to all its fields.
+
+      {b Rem} : Exported outside this module.                             *)
+  (* ******************************************************************** *)
   type species_description = {
     spe_is_collection : bool ;  (** Whether the species is a collection. *)
     spe_sig_params : species_param list ;   (** Species parameters. *)
@@ -350,6 +378,14 @@ module TypeInformation = struct
 
 
 
+  (* ***************************************************************** *)
+  (** {b Descr} : Tells is a record field is "mutable" (i.e. can be
+                modified physically in place) or not.
+
+      {b Rem} : Exported outside this module.
+              Not yet used in FoC. Just there in case... Currently all
+              record fields are non-mutable.                           *)
+  (* ***************************************************************** *)
   type field_mutability = FM_mutable | FM_immutable
 
 
