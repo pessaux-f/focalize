@@ -4,7 +4,7 @@ external type float = | caml -> "float" ;;
 external type char = | caml -> "char" ;;
 external type string = | caml -> "string" ;;
 external type bool = | caml -> "bool" ;;
-external type list ('a) = | caml -> "list" ;;
+external type list ('a) = | caml -> "'a list" ;;
 
 external value foc_error : string -> 'a =
   | caml -> "Focvasives.foc_error"
@@ -69,15 +69,17 @@ external value int_leq : int -> int -> bool =
   | caml -> "Focvasives.int_leq"
   | coq -> "int_leq" ;;
 external value int_geq : int -> int -> bool =
-  | caml -> "int_geq"
+  | caml -> "Focvasives.int_geq"
   | coq -> "int_geq" ;;
 external value int_gt : int -> int -> bool =
-  | caml -> "int_gt"
+  | caml -> "Focvasives.int_gt"
   | coq -> "int_gt" ;;
-
+external value phys_eq : 'a ->'a -> bool =
+  | caml -> "Focvasives.base_equal" ;;
 external value base_eq : 'a -> 'a -> bool =
-  | caml -> "beq"
+  | caml -> "Focvasives.base_eq"
   | coq -> "beq" ;;
+
 theorem beq_refl : all x in 'a, base_eq (x, x) proof: assumed ;;
 theorem beq_symm: all x y in 'a, base_eq (x, y) -> base_eq (y, x) 
   proof: assumed ;;
@@ -181,11 +183,12 @@ theorem int_lt_irrefl :
   all x y in int, int_lt (x, y) -> not base_eq (x, y)
 proof: assumed ;;
 
-external value pred : int -> int = | caml -> "pred" | coq -> "pred" ;;
+external value pred : int -> int =
+  | caml -> "Focvasives.pred" | coq -> "pred" ;;
 external value int_opp : int -> int =
-  | caml -> "int_opp" | coq -> "int_opp" ;;
+  | caml -> "Focvasives.int_opposite" | coq -> "int_opp" ;;
 external value int_plus : int -> int -> int =
-  | caml -> "int_plus" | coq -> "int_plus" ;;
+  | caml -> "Focvasives.int_plus" | coq -> "int_plus" ;;
 
 species Basic_object =
   let print (x in Self) = "<abst>" ;

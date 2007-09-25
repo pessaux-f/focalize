@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2007-09-14 09:22:41 pessaux Exp $
+# $Id: Makefile,v 1.5 2007-09-25 15:29:10 pessaux Exp $
 
 include ./Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/
@@ -15,6 +15,7 @@ all::
 	$(CD) typing ; $(MAKE) all
 	$(CD) mlcodegen ; $(MAKE) all
 	$(CD) toplevel ; $(MAKE) all
+	$(CD) lib ; $(MAKE) all
 
 clean::
 	$(RM) *~
@@ -23,6 +24,7 @@ clean::
 	$(CD) typing ; $(MAKE) clean
 	$(CD) mlcodegen ; $(MAKE) clean
 	$(CD) toplevel ; $(MAKE) clean
+	$(CD) lib ; $(MAKE) clean
 
 doc:: 
 	$(CD) basement ; $(MAKE) doc
@@ -30,6 +32,7 @@ doc::
 	$(CD) typing ; $(MAKE) doc
 	$(CD) mlcodegen ; $(MAKE) doc
 	$(CD) toplevel ; $(MAKE) doc
+	$(CD) lib ; $(MAKE) doc
 
 depend:
 	$(CD) basement ; $(MAKE) depend
@@ -37,6 +40,7 @@ depend:
 	$(CD) typing ; $(MAKE) depend
 	$(CD) mlcodegen ; $(MAKE) depend
 	$(CD) toplevel ; $(MAKE) depend
+	$(CD) lib ; $(MAKE) depend
 
 
 

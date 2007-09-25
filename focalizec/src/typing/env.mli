@@ -52,6 +52,7 @@ module TypeInformation :
 
     type species_description = {
       spe_is_collection : bool ;
+      spe_is_closed : bool ;
       spe_sig_params : species_param list ;
       spe_sig_methods : species_field list
     }

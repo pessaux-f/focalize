@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.36 2007-09-25 11:15:59 pessaux Exp $ *)
+(* $Id: env.ml,v 1.37 2007-09-25 15:29:10 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -335,6 +335,10 @@ module TypeInformation = struct
   (* ******************************************************************** *)
   type species_description = {
     spe_is_collection : bool ;  (** Whether the species is a collection. *)
+    spe_is_closed : bool ;   (** Whether the species is fully defined, even if
+				 not turned into a collection. This information
+				 will be useful to known when collection
+				 generators must be created. *)
     spe_sig_params : species_param list ;   (** Species parameters. *)
     (** Method's name, type and body if defined. *)
     spe_sig_methods : species_field list

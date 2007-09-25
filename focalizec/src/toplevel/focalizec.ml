@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: focalizec.ml,v 1.15 2007-09-25 11:15:59 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.16 2007-09-25 15:29:10 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -115,7 +115,7 @@ let main () =
     (begin
     let out_file_name = (Filename.chop_extension input_file_name) ^ ".ml" in
     Core_ml_generation.root_compile
-      ~current_unit ~out_file_name typing_toplevel_env stuff_to_compile
+      ~current_unit ~out_file_name stuff_to_compile
     end) ;
   exit 0
 ;;

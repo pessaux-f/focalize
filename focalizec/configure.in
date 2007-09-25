@@ -26,6 +26,8 @@ touch ./mlcodegen/.depend
 mkdir -p ./mlcodegen/odoc
 touch ./toplevel/.depend
 mkdir -p ./toplevel/odoc
+touch ./lib/.depend
+mkdir -p ./lib/odoc
 
 echo "Done. Now, please invoke: make depend all"
 #============================end configure.in============================

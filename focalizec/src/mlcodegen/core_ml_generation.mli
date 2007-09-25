@@ -12,11 +12,11 @@
 (***********************************************************************)
 
 
-(* $Id: core_ml_generation.mli,v 1.1 2007-09-25 11:15:59 pessaux Exp $ *)
+(* $Id: core_ml_generation.mli,v 1.2 2007-09-25 15:29:10 pessaux Exp $ *)
 
 exception No_external_value_caml_def of (Parsetree.vname * Location.t)
-
+exception No_external_type_caml_def of (Parsetree.vname * Location.t)
 
 val root_compile :
-  current_unit: Types.fname ->  out_file_name: string -> Env.TypingEnv.t ->
+  current_unit: Types.fname ->  out_file_name: string ->
     Infer.please_compile_me list -> unit

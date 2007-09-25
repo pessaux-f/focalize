@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.16 2007-09-25 11:15:59 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.17 2007-09-25 15:29:10 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -694,12 +694,12 @@ let build_dependencies_graph_for_fields ~current_species fields =
   (* The root hoot used to remind all the created nodes in the graph. *)
   let tree_nodes = ref ([] : name_node list) in
 
-  (* ******************************************************************** *)
-  (** {Descr} : Just make a local function dealing with one let binding.
+  (* ********************************************************************* *)
+  (** {b Descr} : Just make a local function dealing with one let binding.
               We then use it once for a Let and iter it for a Let_Rec.
               Apply the rules section 3.5, page 32, definition  16 to get
-              the dependencies.                                           *)
-  (* ******************************************************************** *)
+              the dependencies.                                            *)
+  (* ********************************************************************* *)
   let local_build_for_one_let n b =
     (* Find the dependencies node for the current name. *)
     let n_node = find_or_create tree_nodes n in
@@ -722,11 +722,11 @@ let build_dependencies_graph_for_fields ~current_species fields =
 	(fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
 	n_deps_nodes n_node.nn_children in
 
-  (* **************************************************************** *)
-  (** {Descr} : Just make a local function dealing with one property
+  (* ***************************************************************** *)
+  (** {b Descr} : Just make a local function dealing with one property
               or theorem name.
-              Apply rules from section 3.9.5, page 53, definition 30. *)
-  (* **************************************************************** *)
+              Apply rules from section 3.9.5, page 53, definition 30.  *)
+  (* ***************************************************************** *)
   let local_build_for_one_theo_property n prop_t opt_b =
     (* Find the dependencies node for the current name. *)
     let n_node = find_or_create tree_nodes n in

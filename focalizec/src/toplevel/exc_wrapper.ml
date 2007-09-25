@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.15 2007-09-25 11:15:59 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.16 2007-09-25 15:29:10 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -170,9 +170,15 @@ try Check_file.main () with
      | Dep_analysis.Ill_formed_species species_name ->
 	 Format.fprintf Format.err_formatter
 	   "Species@ '%s'@ is@ not@ well-formed@." species_name
+(* ********************** *)
+(* OCaml code generation. *)
      | Core_ml_generation.No_external_value_caml_def (def_name, at) ->
 	 Format.fprintf Format.err_formatter
 	   "%a:@\nNo OCaml mapping given for the external value definition '%a'.@."
+	   Location.pp_location at Sourcify.pp_vname def_name
+     | Core_ml_generation.No_external_type_caml_def (def_name, at) ->
+	 Format.fprintf Format.err_formatter
+	   "%a:@\nNo OCaml mapping given for the external type definition '%a'.@."
 	   Location.pp_location at Sourcify.pp_vname def_name
 (* ********************** *)
 (* The ultimate firewall. *)

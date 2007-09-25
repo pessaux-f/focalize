@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.70 2007-09-25 11:15:59 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.71 2007-09-25 15:29:10 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -189,7 +189,7 @@ exception Collection_not_fully_defined of
 
 
 (* ************************************************************************* *)
-(** {b Descr} : Datastructure recording various the information required
+(** {b Descr} : Datastructure recording the various information required
               and propagated during the type inference. It is much more
               convenient to group the various flags and stuff needed than
               passing them all the time as arguments of each recursive call.
@@ -198,7 +198,8 @@ exception Collection_not_fully_defined of
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
 type typing_context = {
-  (** The name of the currently analysed compilation unit. *)
+  (** The name of the currently analysed compilation unit (i.e. the name
+      of the file without extension and not capitalized). *)
   current_unit : Types.fname ;
   (** The name of the current species if relevant. *)
   current_species : Types.species_name option ;
@@ -730,8 +731,8 @@ let typecheck_external_expr ext_expr =
 (* **************************************************************** *)
 (* Parsetree.vname -> Env.TypeInformation.species_field list ->     *)
 (*   Env.TypeInformation.species_field list -> unit                 *)
-(* {Descr} : Checks if the 2 lists of fields contain methods names
-           that overlap. If so then raises en exception
+(* {b Descr} : Checks if the 2 lists of fields contain methods
+           names that overlap. If so then raises en exception
            [Method_multiply_defined], else silently returns.
 
    {Rem} : Not exported outside this module.                        *)
@@ -1981,6 +1982,7 @@ let typecheck_species_def_params ctx env species_name species_params =
 		 (ctx.current_unit, param_name_as_string) species_expr_fields in
 	     let param_description = {
 	       Env.TypeInformation.spe_is_collection = false ;
+	       Env.TypeInformation.spe_is_closed = false ;
 	       Env.TypeInformation.spe_sig_params = [] ;
 	       Env.TypeInformation.spe_sig_methods = abstracted_methods } in
 	     let accu_env' =
@@ -2653,6 +2655,62 @@ let normalize_species ~loc ctx methods_info inherited_methods_infos =
 
 
 
+(* ******************************************************************* *)
+(* typing_context -> Env.TypeInformation.species_field list -> unit    *)
+(** {b Descr} : Verifies that a species subject to become a collection
+              is really fully defined. This means that this species
+              must not contain any "declared" fields (i.e. SF_sig)
+              except for "repr" who must be declared (of course, its
+              declaration is also its definition !).
+
+    {b Rem} : Not exported outside this module.                        *)
+(* ******************************************************************* *)
+let ensure_collection_completely_defined ctx fields =
+  (* Let just make a reference for checking the presence pf "rep" instead *)
+  (* of passing a boolean flag. This way, the function keeps terminal.    *)
+  let rep_found = ref false in
+  let rec rec_ensure = function
+    | [] -> ()
+    | field :: rem_fields ->
+	(begin
+	match field with
+	 | Env.TypeInformation.SF_sig (_, vname, _) ->
+             if vname = (Parsetree.Vlident "rep") then rep_found := true
+             else
+	       (begin
+	       match ctx.current_species with
+		| None -> assert false
+		| Some curr_spec ->
+		    raise (Collection_not_fully_defined (curr_spec, vname))
+	       end)
+	 | Env.TypeInformation.SF_let (_, _, _, _, _) -> ()
+	 | Env.TypeInformation.SF_let_rec _ -> ()
+	 | Env.TypeInformation.SF_theorem (_, _, _, _, _) -> ()
+	 | Env.TypeInformation.SF_property (_, vname, _, _) ->
+	     (begin
+	     (* A property does not have proof. So, it is not fully defined. *)
+	     match ctx.current_species with
+	      | None -> assert false
+	      | Some curr_spec ->
+		  raise (Collection_not_fully_defined (curr_spec, vname))
+	     end)
+	end) ;
+	rec_ensure rem_fields in
+  (* Now do the job... *)
+  rec_ensure fields ;
+  (* Finally, ckeck if the carrier "rep" was actually found. *)
+  if not !rep_found then
+    (begin
+    match ctx.current_species with
+     | None -> assert false
+     | Some curr_spec ->
+	 raise
+	   (Collection_not_fully_defined (curr_spec, (Parsetree.Vlident "rep")))
+    end)
+;;
+
+
+
 (* ********************************************************************** *)
 (** {b Descr} : Helper-type to record the various information from the
               typechecking pass needed to go to the code generation pass.
@@ -2760,10 +2818,20 @@ let typecheck_species_def ctx env species_def =
   (* Now really re-order the normalized fields. *)
   let reordered_normalized_methods =
     order_fields_according_to new_order normalized_methods in
+  (* Check whether the collection is fully defined. If so, then at code  *)
+  (* generation-time, then en collection generator must be created. Note *)
+  (* that this is independant of the fact to be a collection.            *)
+  let is_closed =
+    (try
+      ensure_collection_completely_defined ctx reordered_normalized_methods ;
+      (* If the check didn't fail, then the species if fully defined. *)
+      true
+    with Collection_not_fully_defined _ -> false) in
   (* Let's build our "type" information. Since we are managing a species *)
   (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
   let species_description = {
     Env.TypeInformation.spe_is_collection = false ;
+    Env.TypeInformation.spe_is_closed = is_closed ;
     Env.TypeInformation.spe_sig_params = sig_params ;
     Env.TypeInformation.spe_sig_methods = reordered_normalized_methods } in
   (* Extend the initial environment with the species. Not the environment *)
@@ -2997,62 +3065,6 @@ let typecheck_type_def ctx env type_def =
 
 
 
-(* ******************************************************************* *)
-(* typing_context -> Env.TypeInformation.species_field list -> unit    *)
-(** {b Descr} : Verifies that a species subject to become a collection
-              is really fully defined. This means that this species
-              must not contain any "declared" fields (i.e. SF_sig)
-              except for "repr" who must be declared (of course, its
-              declaration is also its definition !).
-
-    {b Rem} : Not exported outside this module.                        *)
-(* ******************************************************************* *)
-let ensure_collection_completely_defined ctx fields =
-  (* Let just make a reference for checking the presence pf "rep" instead *)
-  (* of passing a boolean flag. This way, the function keeps terminal.    *)
-  let rep_found = ref false in
-  let rec rec_ensure = function
-    | [] -> ()
-    | field :: rem_fields ->
-	(begin
-	match field with
-	 | Env.TypeInformation.SF_sig (_, vname, _) ->
-             if vname = (Parsetree.Vlident "rep") then rep_found := true
-             else
-	       (begin
-	       match ctx.current_species with
-		| None -> assert false
-		| Some curr_spec ->
-		    raise (Collection_not_fully_defined (curr_spec, vname))
-	       end)
-	 | Env.TypeInformation.SF_let (_, _, _, _, _) -> ()
-	 | Env.TypeInformation.SF_let_rec _ -> ()
-	 | Env.TypeInformation.SF_theorem (_, _, _, _, _) -> ()
-	 | Env.TypeInformation.SF_property (_, vname, _, _) ->
-	     (begin
-	     (* A property does not have proof. So, it is not fully defined. *)
-	     match ctx.current_species with
-	      | None -> assert false
-	      | Some curr_spec ->
-		  raise (Collection_not_fully_defined (curr_spec, vname))
-	     end)
-	end) ;
-	rec_ensure rem_fields in
-  (* Now do the job... *)
-  rec_ensure fields ;
-  (* Finally, ckeck if the carrier "rep" was actually found. *)
-  if not !rep_found then
-    (begin
-    match ctx.current_species with
-     | None -> assert false
-     | Some curr_spec ->
-	 raise
-	   (Collection_not_fully_defined (curr_spec, (Parsetree.Vlident "rep")))
-    end)
-;;
-
-
-
 (* ****************************************************************** *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.coll_def ->         *)
 (*   (Types.type_simple * Env.TypingEnv.t)                            *)
@@ -3063,6 +3075,13 @@ let ensure_collection_completely_defined ctx fields =
               to the current environment.
               The function returns both the extended environment and
               the carrier type pf the species.
+
+    {b Args} :
+      - [ctx] : Current structure recording the various information
+              required and propagated to typecheck.
+      - [env] : The current typing environment mapping identifiers
+              onto types.
+      - [coll_def] : Collection definition to typecheck.
 
     {b Rem} : Not exported outside this module.                       *)
 (* ****************************************************************** *)
@@ -3088,6 +3107,7 @@ let typecheck_collection_def ctx env coll_def =
   (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
   let collec_description = {
     Env.TypeInformation.spe_is_collection = true ;
+    Env.TypeInformation.spe_is_closed = true ;  (* Obviously, eh ! *)
     Env.TypeInformation.spe_sig_params = [] ;
     Env.TypeInformation.spe_sig_methods = collection_fields } in
   (* Add this collection in the environment. *)

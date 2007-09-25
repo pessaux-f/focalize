@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: core_ml_generation.ml,v 1.8 2007-09-25 11:15:59 pessaux Exp $ *)
+(* $Id: core_ml_generation.ml,v 1.9 2007-09-25 15:29:10 pessaux Exp $ *)
 
 
 
@@ -24,6 +24,15 @@
 (* ************************************************************************ *)
 exception No_external_value_caml_def of (Parsetree.vname * Location.t) ;;
 
+
+
+(* ************************************************************************ *)
+(** {b Descr} : Exception raised when an external type definition does not
+              not provides any correspondance with OCaml.
+
+    {b Rem} : Exported outside this module.                                 *)
+(* ************************************************************************ *)
+exception No_external_type_caml_def of (Parsetree.vname * Location.t) ;;
 
 
 (* ********************************************************************* *)
@@ -538,7 +547,6 @@ let generate_pattern ctx pattern =
          (* to know if parens are needed.          *)
 	 match pats with
 	  | [] -> ()
-	  | [one] -> rec_gen_pat one
 	  | _ ->
 	      Format.fprintf out_fmter " (" ;
 	      rec_generate_pats_list pats ;
@@ -558,7 +566,7 @@ let generate_pattern ctx pattern =
 
   and rec_generate_pats_list = function
     | [] -> ()
-    | [last] -> rec_gen_pat last 
+    | [last] -> rec_gen_pat last
     | h :: q ->
 	rec_gen_pat h ;
 	Format.fprintf out_fmter ",@ " ;
@@ -706,10 +714,9 @@ and generate_expr ctx initial_expression =
 	 generate_constructor_expr_for_method_generator ctx cstr_expr ;
 	 match exprs with
 	  | [] -> ()
-	  | [one] -> rec_generate one   (* Not a tuple => no parenthesis. *)
-	  | _ -> 
-	      (* If several arguments, enclose by parens to make a tuple. *)
-	      Format.fprintf out_fmter "@[<1>(" ;
+	  | _ ->
+	      (* If argument(s), enclose by parens to possibly make a tuple. *)
+	      Format.fprintf out_fmter "@ @[<1>(" ;
 	      rec_generate_exprs_list ~comma: true exprs ;
 	      Format.fprintf out_fmter ")@]"
 	 end)
@@ -751,7 +758,11 @@ and generate_expr ctx initial_expression =
 	 Format.fprintf out_fmter "@ in@\n" ;
 	 rec_generate in_expr
      | Parsetree.E_record labs_exprs ->
-	 Format.eprintf "generate_expr E_record TODO@."
+	 (begin
+	 Format.fprintf out_fmter "@[<1>{@ " ;
+	 rec_generate_record_field_exprs_list labs_exprs ;
+	 Format.fprintf out_fmter "@ }@]"
+	 end)
      | Parsetree.E_record_access (expr, label_name) ->
 	 Format.eprintf "generate_expr E_record_access TODO@."
      | Parsetree.E_record_with (expr, labs_exprs) ->
@@ -774,12 +785,24 @@ and generate_expr ctx initial_expression =
 
   and rec_generate_exprs_list ~comma = function
     | [] -> ()
-    | [last] -> rec_generate last 
+    | [last] -> rec_generate last
     | h :: q ->
 	rec_generate h ;
 	if comma then Format.fprintf out_fmter ",@ "
 	else Format.fprintf out_fmter "@ " ;
-	rec_generate_exprs_list ~comma q in
+	rec_generate_exprs_list ~comma q
+
+
+  and rec_generate_record_field_exprs_list = function
+    | [] -> ()
+    | [(label, last)] ->
+	Format.fprintf out_fmter "%s =@ " label ;
+	rec_generate last
+    | (h_label, h_expr) :: q ->
+	Format.fprintf out_fmter "%s =@ " h_label ;
+	rec_generate h_expr ;
+	Format.fprintf out_fmter " ;@ " ;
+	rec_generate_record_field_exprs_list q in
   (* ********************** *)
   (* Now, let's do the job. *)
   rec_generate initial_expression
@@ -1008,10 +1031,64 @@ let species_compile ~current_unit out_fmter species_def species_descr
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
 let external_type_def_compile out_fmter external_type_def =
-  Format.eprintf "external_type_def_compile TODO@." ;;
+  let external_type_def_desc = external_type_def.Parsetree.ast_desc in
+  (* Type definition header. *)
+  Format.fprintf out_fmter "type" ;
+  (* Now, generate the type parameters if some. *)
+  (match external_type_def_desc.Parsetree.etd_params with
+   | [] -> ()
+   | [one] ->
+       (* Do not put parentheses because only one parameter. *)
+       Format.fprintf out_fmter " %a" pp_to_ocaml_vname one
+   | several ->
+       (begin
+       (* Enclose by parentheses and separate by commas. *)
+       let rec rec_print_params = function
+	 | [] -> ()
+	 | [last] -> Format.fprintf out_fmter "%a" pp_to_ocaml_vname last
+	 | first :: rem ->
+	     Format.fprintf out_fmter "%a,@ " pp_to_ocaml_vname first ;
+	     rec_print_params rem in
+       Format.fprintf out_fmter " (" ;
+       rec_print_params several ;
+       Format.fprintf out_fmter ")"
+       end)) ;
+  (* Now, the type name, renamed as "_focty_" followed by the original name. *)
+  Format.fprintf out_fmter " _focty_%a =@ "
+    pp_to_ocaml_vname external_type_def_desc.Parsetree.etd_name ;
+  (* And now, bind the FoCaL identifier to the OCaml one. *)
+  try
+    let (_, ocaml_binding) =
+      List.find
+	(function
+	  | (Parsetree.EL_Caml, _) -> true
+	  | (Parsetree.EL_Coq, _)
+	  | ((Parsetree.EL_external _), _) -> false)
+	external_type_def_desc.Parsetree.etd_body.Parsetree.ast_desc  in
+    Format.fprintf out_fmter "%s@]@ ;;@\n" ocaml_binding
+  with Not_found ->
+    (* We didn't find any correspondance for OCaml. *)
+    raise
+      (No_external_type_caml_def
+	 (external_type_def_desc.Parsetree.etd_name,
+	  external_type_def.Parsetree.ast_loc))
+;;
 
 
 
+(* ********************************************************************** *)
+(* Format.formatter -> Parsetree.external_value_def_body -> unit          *)
+(** {b Descr} : Generate the OCaml source code for a FoCaL external value
+              definition.
+
+    {b Args} :
+      - [out_fmter] : The out channel where to generate the OCaml source
+                    code.
+      - [external_value_def] : The external type definition to compile
+           to OCaml source code.
+
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
 let external_value_def_compile out_fmter external_value_def =
   let external_value_def_desc = external_value_def.Parsetree.ast_desc in
   (* Prints the name of the defined identifier *)
@@ -1060,7 +1137,24 @@ let external_def_compile out_fmter extern_def =
 
 
 
-let toplevel_compile ~current_unit out_fmter global_env = function
+(* *********************************************************************** *)
+(* current_unit: Types.fname -> Format.formatter ->                        *)
+(*  Infer.please_compile_me -> unit                                        *)
+(** {b Descr} : Dispatch the OCaml code generation of a toplevel structure
+              to the various more specialized code generation routines.
+
+    {b Arg} :
+      - [current_unit] : The name of the current compilation unit (i.e.
+                       the name of the file without extension and not
+                       capitalized).
+      - [out_fmter] : The out channel where to generate the OCaml source
+                    code.
+      - unnamed : The structure for which the OCaml source code has to be
+                generated.
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+let toplevel_compile ~current_unit out_fmter = function
   | Infer.PCM_no_matter -> ()
   | Infer.PCM_external extern_def -> external_def_compile out_fmter extern_def
   | Infer.PCM_species (species_def, species_descr, dep_graph) ->
@@ -1080,18 +1174,24 @@ let toplevel_compile ~current_unit out_fmter global_env = function
       let bound_schemes = List.map (fun sch -> Some sch) def_schemes in
       let_def_compile ctx let_def bound_schemes ;
       Format.fprintf out_fmter "@\n;;@\n"
-  | Infer.PCM_theorem theorem_def ->
-      Format.eprintf "Infer.PCM_theorem expr : TODO@."
-  | Infer.PCM_expr expr -> Format.eprintf "Infer.PCM_expr expr : TODO@."
+  | Infer.PCM_theorem _ -> ()  (* Theorems do not lead to OCaml code. *)
+  | Infer.PCM_expr expr ->
+      let ctx = {
+	ecc_current_unit = current_unit ;
+	ecc_out_fmter = out_fmter
+      } in
+      generate_expr ctx expr ;
+      (* Generate the final double-semis. *)
+      Format.fprintf out_fmter "@ ;;@\n"
 ;;
 
 
 
-let root_compile ~current_unit ~out_file_name global_env stuff =
+let root_compile ~current_unit ~out_file_name stuff =
   let out_hd = open_out_bin out_file_name in
   let out_fmter = Format.formatter_of_out_channel out_hd in
   try
-    List.iter (toplevel_compile ~current_unit out_fmter global_env) stuff ;
+    List.iter (toplevel_compile ~current_unit out_fmter) stuff ;
     close_out out_hd
   with whatever ->
     (* In any error case, close the outfile. *)
