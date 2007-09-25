@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.11 2007-09-14 14:32:32 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.12 2007-09-25 11:15:59 pessaux Exp $ *)
 
 exception Method_multiply_defined of (Parsetree.vname * Types.species_name)
 exception Unbound_type_variable of string
@@ -38,14 +38,14 @@ exception Collection_not_fully_defined of (Types.species_name * Parsetree.vname)
 
 type please_compile_me =
   | PCM_no_matter
-  | PCM_external
+  | PCM_external of Parsetree.external_def
   | PCM_species of
       (Parsetree.species_def * Env.TypeInformation.species_description *
        (Dep_analysis.name_node list))
   | PCM_collection of
       (Parsetree.coll_def * Env.TypeInformation.species_description)
   | PCM_type
-  | PCM_let_def of Parsetree.let_def
+  | PCM_let_def of (Parsetree.let_def * (Types.type_scheme list))
   | PCM_theorem of Parsetree.theorem_def
   | PCM_expr of Parsetree.expr
 

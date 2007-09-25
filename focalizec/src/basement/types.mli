@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.16 2007-09-18 11:22:51 pessaux Exp $ *)
+(* $Id: types.mli,v 1.17 2007-09-25 11:15:59 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -105,4 +105,6 @@ val pp_type_collection : Format.formatter -> type_collection -> unit
 
 (** Pretty_printing for types for the OCaml translation. *)
 val pp_type_simple_to_ml :
-  (type_collection * string) list -> Format.formatter -> type_simple -> unit
+  reuse_mapping: bool -> (type_collection * string) list ->
+    Format.formatter -> type_simple -> unit
+val purge_type_simple_to_ml_variable_mapping : unit -> unit

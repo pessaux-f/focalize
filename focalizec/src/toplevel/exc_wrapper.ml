@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.14 2007-09-12 13:38:15 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.15 2007-09-25 11:15:59 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -163,13 +163,17 @@ try Check_file.main () with
 	   "Parameterized@ specie@ is@ applied@ to@ %s@ arguments@."  msg
      | Infer.Collection_not_fully_defined (coll_name, field_name) ->
 	 Format.fprintf Format.err_formatter
-	   "Species@ '%s'@ cannot@ be@ turned@ into@ a@ collection.@ Field@ '%a'@ is@ not@ defined@."
+	   "Species@ '%s'@ cannot@ be@ turned@ into@ a@ collection.@ Field@ '%a'@ is@ not@ defined.@."
 	   coll_name Sourcify.pp_vname field_name
 (* ********************** *)
 (* Dependencies analysis. *)
      | Dep_analysis.Ill_formed_species species_name ->
 	 Format.fprintf Format.err_formatter
 	   "Species@ '%s'@ is@ not@ well-formed@." species_name
+     | Core_ml_generation.No_external_value_caml_def (def_name, at) ->
+	 Format.fprintf Format.err_formatter
+	   "%a:@\nNo OCaml mapping given for the external value definition '%a'.@."
+	   Location.pp_location at Sourcify.pp_vname def_name
 (* ********************** *)
 (* The ultimate firewall. *)
      | x ->

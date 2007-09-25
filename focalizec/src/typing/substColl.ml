@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: substColl.ml,v 1.8 2007-09-20 10:38:19 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.9 2007-09-25 11:16:00 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -80,8 +80,12 @@ let subst_ident ~current_unit c1 c2 ident =
 	      ident.Parsetree.ast_desc
 	  | SCK_coll effective_coll_ty ->
 	      (* [Unsure] *)
-	      (* Because methods idents never have their "module" name, *)
-	      (* we check against the current compilation unit.         *)
+	      (* Because in "methods idents", collection-part never have a *)
+	      (* "module" name,  we check against the current compilation  *)
+	      (* unit.                                                     *)
+	      (* QUESTION: What happens if invoking a method from a        *)
+              (* collection defined at the toplevel of another compilation *)
+	      (* unit ???                                                  *)
 	      if (current_unit, c) = effective_coll_ty then
 		Parsetree.I_method ((Some (snd c2)), vname)
 	      else ident.Parsetree.ast_desc
@@ -358,7 +362,7 @@ let subst_species_field ~current_unit c1 c2 = function
       let scheme' = Types.generalize ty' in
       Env.TypeInformation.SF_sig (from, vname, scheme')
       end)
-  | Env.TypeInformation.SF_let (from, vname, scheme, body) ->
+  | Env.TypeInformation.SF_let (from, vname, params_names, scheme, body) ->
       (begin
       Types.begin_definition () ;
       let ty = Types.specialize scheme in
@@ -371,13 +375,13 @@ let subst_species_field ~current_unit c1 c2 = function
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_expr ~current_unit c1 c2 body in
-      Env.TypeInformation.SF_let (from, vname, scheme', body')
+      Env.TypeInformation.SF_let (from, vname, params_names, scheme', body')
       end)
   | Env.TypeInformation.SF_let_rec l ->
       (begin
       let l' =
 	List.map
-	  (fun (from, vname, scheme, body) ->
+	  (fun (from, vname, params_names, scheme, body) ->
 	    let ty = Types.specialize scheme in
 	    let ty' =
 	      (match c1 with
@@ -388,7 +392,7 @@ let subst_species_field ~current_unit c1 c2 = function
 	    Types.end_definition () ;
 	    let scheme' = Types.generalize ty' in
 	    let body' = subst_expr ~current_unit c1 c2 body in
-	    (from, vname, scheme', body'))
+	    (from, vname, params_names, scheme', body'))
 	  l in
       Env.TypeInformation.SF_let_rec l'
       end)

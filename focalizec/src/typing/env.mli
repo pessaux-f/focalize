@@ -38,11 +38,11 @@ module TypeInformation :
     and species_field =
       | SF_sig of (Types.species_name * Parsetree.vname * Types.type_scheme)
       | SF_let of
-	  (Types.species_name * Parsetree.vname * Types.type_scheme *
-	   Parsetree.expr)
+	  (Types.species_name * Parsetree.vname * (Parsetree.vname list) *
+	   Types.type_scheme * Parsetree.expr)
       | SF_let_rec of
-	  (Types.species_name * Parsetree.vname * Types.type_scheme *
-	   Parsetree.expr) list
+	  (Types.species_name * Parsetree.vname * (Parsetree.vname list) *
+	   Types.type_scheme * Parsetree.expr) list
       | SF_theorem of
 	  (Types.species_name * Parsetree.vname * Types.type_scheme *
 	   Parsetree.prop * Parsetree.proof)

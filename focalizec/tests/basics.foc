@@ -7,7 +7,7 @@ external type bool = | caml -> "bool" ;;
 external type list ('a) = | caml -> "list" ;;
 
 external value foc_error : string -> 'a =
-  | caml -> "foc_error"
+  | caml -> "Focvasives.foc_error"
   | coq -> "foc_error"
 ;;
 
@@ -41,27 +41,32 @@ let first (x) = match x with | (v, _ ) -> v ;;
 let scnd (x) = match x with | (_ , v) -> v ;;
 
 (* String operations *)
-external value sc : string -> string -> string = | caml -> "sc" ;;
-external value str_lt : string -> string -> bool = | caml -> "str_lt" ;;
-external value print_string : string -> unit = | caml -> "prt" ;;
+external value sc : string -> string -> string =
+  | caml -> "Focvasives.str_cat" ;;
+external value str_lt : string -> string -> bool =
+  | caml -> "Focvasives.str_lt" ;;
+external value print_string : string -> unit =
+  | caml -> "Focvasives.str_print" ;;
 let print_newline (x in unit) = print_string ("\n") ;;
 
-external value string_of_int : int -> string = | caml -> "soi" ;;
-external value int_of_string : string -> int = | caml -> "ios" ;;
-external value int_mult : int -> int -> int = | caml -> "int_mult" ;;
-external value print_int : int -> unit = | caml -> "pi" ;;
+external value string_of_int : int -> string =
+  | caml -> "Focvasives.string_of_int" ;;
+external value int_of_string : string -> int =
+  | caml -> "Focvasives.int_of_string" ;;
+external value int_mult : int -> int -> int = | caml -> "Focvasives.int_mult" ;;
+external value print_int : int -> unit = | caml -> "Focvasives.int_print" ;;
 
 (* Operations on integers *)
-external value int_mod : int -> int -> int = | caml -> "int_mod" ;;
+external value int_mod : int -> int -> int = | caml -> "Focvasives.int_mod" ;;
 external value int_eq : int -> int -> bool =
-  | caml -> "int_eq"
+  | caml -> "Focvasives.int_eq"
   | coq -> "int_eq" ;;
-external value int_div : int -> int -> int = | caml -> "int_div" ;;
+external value int_div : int -> int -> int = | caml -> "Focvasives.int_div" ;;
 external value int_lt : int -> int -> bool =
-  | caml -> "int_lt"
+  | caml -> "Focvasives.int_lt"
   | coq -> "int_lt" ;;
 external value int_leq : int -> int -> bool =
-  | caml -> "int_leq"
+  | caml -> "Focvasives.int_leq"
   | coq -> "int_leq" ;;
 external value int_geq : int -> int -> bool =
   | caml -> "int_geq"

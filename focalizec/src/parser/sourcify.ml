@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.26 2007-08-31 16:21:09 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.27 2007-09-25 11:15:59 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -707,7 +707,7 @@ and pp_binding_desc ppf bd =
   Format.fprintf ppf "%a" pp_vname bd.Parsetree.b_name ;
   (* Prints the parameters only if some. *)
   if bd.Parsetree.b_params <> [] then
-    begin
+    (begin
     Format.fprintf ppf "@ (%a)"
       (Handy.pp_generic_separated_list
 	 ","
@@ -717,7 +717,7 @@ and pp_binding_desc ppf bd =
 	     pp_vname vname
 	     (Handy.pp_generic_option " in " pp_type_expr) ty_expr_opt))
       bd.Parsetree.b_params
-    end ;
+    end) ;
     Format.fprintf ppf "%a@ =@ %a"
       (Handy.pp_generic_option " in " pp_type_expr) bd.Parsetree.b_type
       pp_expr bd.Parsetree.b_body

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: focalizec.ml,v 1.14 2007-09-14 14:32:32 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.15 2007-09-25 11:15:59 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -26,8 +26,8 @@ let main () =
        " check input file argument.") ;
       ("--dot-non-rec-dependencies",
        Arg.String Configuration.set_dotty_dependencies,
-       " dump species non-let-rec- dependencies as dotty files in the \
-	 directory.") ;
+       " dump species non-let-rec- dependencies as dotty files into the \
+	 argument directory.") ;
       ("-i",
        Arg.Unit (fun () -> Configuration.set_do_interface_output true),
        " prints the source file interface.") ;
@@ -41,17 +41,18 @@ let main () =
       ("--old-pretty",
        Arg.String Configuration.set_old_pretty_print,
        " pretty-prints the parse tree of the focalize file as \
-         an old focal source.") ;
+         an old focal source into the argument file") ;
       ("--pretty",
        Arg.String Configuration.set_pretty_print,
-       " pretty-prints the parse tree of the focal file as a focal source.") ;
+       " pretty-prints the parse tree of the focal file as a focal source \
+	 into the argument file.") ;
       ("--raw-ast-dump",
        Arg.Unit Configuration.set_raw_ast_dump,
        " prints on stderr the raw AST structure after parsing stage.") ;
       ("--scoped_pretty",
        Arg.String Configuration.set_pretty_scoped,
        " pretty-prints the parse tree of the focal file once scoped as a \
-	 focal source.") ;
+	 focal source into the argument file.") ;
       ("--verbose",
        Arg.Unit Configuration.set_verbose,
        " be verbose.") ;

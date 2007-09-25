@@ -1,10 +1,10 @@
-# $Id: Makefile,v 1.7 2007-09-04 15:02:44 pessaux Exp $
+# $Id: Makefile,v 1.8 2007-09-25 11:15:59 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ -I ../basement -I ../parser
 
 BYTOBJS = env.cmo scoping.cmo substExpr.cmo substColl.cmo ast_equal.cmo \
-	dep_analysis.cmo infer.cmo
+	dep_analysis.cmo param_dep_analysis.cmo infer.cmo
 
 all:: $(BYTOBJS)
 

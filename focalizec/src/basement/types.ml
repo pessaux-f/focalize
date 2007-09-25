@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.25 2007-09-19 13:36:18 pessaux Exp $ *)
+(* $Id: types.ml,v 1.26 2007-09-25 11:15:59 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -217,38 +217,66 @@ let type_rep_species ~species_module ~species_name =
 
 
 
-let type_variable_names_mapping = ref ([] : (type_simple * string) list) ;;
-let type_variables_counter = ref 0 ;;
-
-let reset_type_variables_mapping () =
-  type_variable_names_mapping := [] ;
-  type_variables_counter := 0
-;;
-
-
-
-let get_or_make_type_variable_name ty ~generalized_p =
-  (* No need to repr, [pp_type_simple] already did it. *)
-  try List.assq ty !type_variable_names_mapping with
-  | Not_found ->
-    let name =
-      String.make 1 (Char.chr (Char.code 'a' + !type_variables_counter)) in
-    incr type_variables_counter ;
-    let name' = if not generalized_p then "_" ^ name else name in
-    type_variable_names_mapping :=
-      (ty, name') :: !type_variable_names_mapping ;
-    name'
-;;
-
-
 let (pp_type_simple, pp_type_scheme) =
+  (* ********************************************************************* *)
+  (* ((type_simple * string) list) ref                                     *)
+  (** {b Descr} : The mapping giving for each variable already seen the
+                name used to denote it while printing it.
+
+      {b Rem} : Not exported. This mapping is purely local to the
+              pretty-print function of type into the FoCal syntax. It is
+              especially not shared with the type printing routine used to
+              generate the OCaml or Coq code.                              *)
+  (* ********************************************************************* *)
+  let type_variable_names_mapping = ref ([] : (type_simple * string) list) in
+
+  (* ********************************************************************* *)
+  (* int ref                                                               *)
+  (** {b Descr} : The counter counting the number of different variables
+                already seen hence printed. It serves to generate a fresh
+                name to new variables to print.
+
+      {b Rem} : Not exported. This counter is purely local to the
+              pretty-print function of type into the FoCal syntax. It is
+              especially not shared with the type printing routine used to
+              generate the OCaml or Coq code.                              *)
+  (* ********************************************************************* *)
+  let type_variables_counter = ref 0 in
+
+  (* ******************************************************************** *)
+  (* unit -> unit                                                         *)
+  (** {b Descr} : Resets the variables names mapping an counter. This
+               allows to stop name-sharing between type prints.
+
+     {b Rem} : Not exported. This counter is purely local to the
+              pretty-print function of type into the FoCal syntax. It is
+              especially not shared with the type printing routine used to
+              generate the OCaml or Coq code.                              *)
+  (* ********************************************************************* *)
+  let reset_type_variables_mapping () =
+    type_variable_names_mapping := [] ;
+    type_variables_counter := 0 in
+
+  let get_or_make_type_variable_name ty ~generalized_p =
+    (* No need to repr, [rec_pp] already did it. *)
+    try List.assq ty !type_variable_names_mapping with
+    | Not_found ->
+	let name =
+	  String.make 1 (Char.chr (Char.code 'a' + !type_variables_counter)) in
+	incr type_variables_counter ;
+	let name' = if not generalized_p then "_" ^ name else name in
+	type_variable_names_mapping :=
+	  (ty, name') :: !type_variable_names_mapping ;
+	name' in
+
   let rec rec_pp prio ppf ty =
     (* First of all get the "repr" guy ! *)
     let ty = repr ty in
     match ty.ts_desc with
     | ST_var ->
 	let ty_variable_name =
-	  get_or_make_type_variable_name ty ~generalized_p: (ty.ts_level = generic_level) in
+	  get_or_make_type_variable_name
+	    ty ~generalized_p: (ty.ts_level = generic_level) in
 	Format.fprintf ppf "'%s" ty_variable_name
     | ST_arrow (ty1, ty2) ->
 	(* Arrow priority: 2. *)
@@ -707,7 +735,17 @@ let unify ~loc ~self_manifest type1 type2 =
 
 
 
-(* type_collection -> type_collection_name -> type_simple -> type_simple *)
+(* ************************************************************************* *)
+(* type_collection -> type_collection_name -> type_simple -> type_simple     *)
+(** {b Descr} : Performs the collection name substitution
+              [(fname1, spe_name1)] <- [c2] inside a [type_simple].
+
+    {b Args} :
+      - [(fname1, spe_name1)] : The "collection type" to replace.
+      - [c2] : The "collection type" to put everywhere [(fname1, spe_name1)]
+             is found.
+    {b Rem} : Exported outside this module.                                  *)
+(* ************************************************************************* *)
 let subst_type_simple (fname1, spe_name1) c2 =
   let seen = ref [] in
   (* Internal recursive copy same stuff than for [specialize] stuff. *)
@@ -765,8 +803,9 @@ let pp_type_collection ppf (coll_module, coll_name) =
 
 
 (* ************************************************************************* *)
-(* (type_collection * string) list -> Format.formatter ->                    *)
-(*   type_simple -> unit                                                     *)
+(* reuse_mapping: bool -> (type_collection * string) list ->                 *)
+(*   Format.formatter -> type_simple -> unit                                 *)
+
 (** {b Descr} : "Compile", i.e. generate the OCaml source representation of
               a type. Basically, proceeds like the regular [pp_type_simple]
               except in 2 cases:
@@ -779,28 +818,112 @@ let pp_type_collection ppf (coll_module, coll_name) =
                   collections names and type variables names
                   [collections_carrier_mapping]).
 
+              Be carreful : because we generate OCaml code, remind that in
+              OCaml expressions, variables that are present in "source code
+              types" do not involve any notion of "generalized" or "not
+              generalized". Hence, if we want to write a type variable in
+              an OCaml source code, we always write it as "'a" and never as
+              "'_a" otherwise it is lexically incorrect. OCaml will do the
+              job itself to check whether the variable is generalizable or
+              not. FOR THIS REASON, when we print type variables here, we
+              only consider that they are generalised, to get a printing
+              without any underscore in the variable's name.
+
+              To be able to print separately parts of a same type, hence
+              keep sharing of variables names, this function has an extra
+	      argument telling whether the local variables names mapping
+              must be kept from previous printing calls.
+
+    {b Args} :
+      - [reuse_mapping] : Boolean telling if the print session must keep
+          active the previous variables names mapping. If so, then sharing
+          of variables names will be active between the previous prints and
+          the current one. If no, then all the variables of the current type
+          will be considered a new compared to those "seen" during previous
+          calls to the printing function.
+      - [collections_carrier_mapping] : Mapping giving for each collection
+          in the scope of the printing session, which type variable name is
+          used to represent in OCaml this collection carrier's type.
+      - [ppf] : Out channel where to send the text of the printed type.
+      - [whole_type] : Tye type expression to print.
+
     {b Rem} : Exported outside this module.                                  *)
 (* ************************************************************************* *)
-let pp_type_simple_to_ml collections_carrier_mapping ppf whole_type =
-  let rec rec_pp prio ppf ty =
+let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
+  (* ********************************************************************* *)
+  (* ((type_simple * string) list) ref                                     *)
+  (** {b Descr} : The mapping giving for each variable already seen the
+                name used to denote it while printing it.
+
+      {b Rem} : Not exported. This mapping is purely local to the
+              pretty-print function of type into the OCaml syntax. It is
+              especially not shared with the type printing routine used to
+              generate the FoCaL feedback and the Coq code.                *)
+  (* ********************************************************************* *)
+  let type_variable_names_mapping = ref ([] : (type_simple * string) list) in
+
+  (* ********************************************************************* *)
+  (* int ref                                                               *)
+  (** {b Descr} : The counter counting the number of different variables
+                already seen hence printed. It serves to generate a fresh
+                name to new variables to print.
+
+      {b Rem} : Not exported. This counter is purely local to the
+              pretty-print function of type into the FoCal syntax. It is
+              especially not shared with the type printing routine used to
+              generate the FoCaL feedback and the Coq code.                *)
+  (* ********************************************************************* *)
+  let type_variables_counter = ref 0 in
+
+  (* ******************************************************************** *)
+  (* unit -> unit                                                         *)
+  (** {b Descr} : Resets the variables names mapping an counter. This
+               allows to stop name-sharing between type prints.
+
+     {b Rem} : Exported outside this module.
+             Hoever, this counter is purely local to the pretty-print
+             function of type into the FoCal syntax. It is especially not
+             shared with the type printing routine used to generate the
+             FoCaL feedback and the Coq code.                             *)
+  (* ******************************************************************** *)
+  let reset_type_variables_mapping () =
+    type_variable_names_mapping := [] ;
+    type_variables_counter := 0 in
+
+  let get_or_make_type_variable_name ty =
+    (* No need to repr, [rec_pp] already did it. *)
+    try List.assq ty !type_variable_names_mapping with
+    | Not_found ->
+	let name =
+	  String.make 1 (Char.chr (Char.code 'a' + !type_variables_counter)) in
+	incr type_variables_counter ;
+	type_variable_names_mapping :=
+	  (ty, name) :: !type_variable_names_mapping ;
+	name in
+
+
+  let rec rec_pp collections_carrier_mapping prio ppf ty =
     (* First of all get the "repr" guy ! *)
     let ty = repr ty in
     match ty.ts_desc with
     | ST_var ->
-	let ty_variable_name =
-	  get_or_make_type_variable_name
-	    ty ~generalized_p: (ty.ts_level = generic_level) in
+	(* Read the justification in the current function's header about *)
+        (* the fact that we amways consider variables as generalized.    *)
+	let ty_variable_name = get_or_make_type_variable_name ty in
 	Format.fprintf ppf "'%s" ty_variable_name
     | ST_arrow (ty1, ty2) ->
 	(* Arrow priority: 2. *)
 	if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "@[<2>%a@ ->@ %a@]" (rec_pp 2) ty1 (rec_pp 1) ty2 ;
+        Format.fprintf ppf "@[<2>%a@ ->@ %a@]"
+	  (rec_pp collections_carrier_mapping 2) ty1
+	  (rec_pp collections_carrier_mapping 1) ty2 ;
 	if prio >= 2 then Format.fprintf ppf ")@]"
     | ST_tuple tys ->
 	(* Tuple priority: 3. *)
 	if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
         Format.fprintf ppf "@[<2>%a@]"
-          (Handy.pp_generic_separated_list " *" (rec_pp 3)) tys ;
+          (Handy.pp_generic_separated_list " *"
+	     (rec_pp collections_carrier_mapping 3)) tys ;
 	if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_construct (type_name, arg_tys) ->
         (begin
@@ -809,10 +932,13 @@ let pp_type_simple_to_ml collections_carrier_mapping ppf whole_type =
         (* otherwise 0 if already a tuple because we force parens. *)
 	match arg_tys with
          | [] -> Format.fprintf ppf "%s" type_name
-         | [one] -> Format.fprintf ppf "%a@ %s" (rec_pp 3) one type_name
+         | [one] ->
+	     Format.fprintf ppf "%a@ %s"
+	       (rec_pp collections_carrier_mapping 3) one type_name
          | _ ->
              Format.fprintf ppf "@[<1>(%a)@]@ %s"
-               (Handy.pp_generic_separated_list "," (rec_pp 0)) arg_tys
+               (Handy.pp_generic_separated_list ","
+		  (rec_pp collections_carrier_mapping 0)) arg_tys
 	       type_name
 	end)
     | ST_self_rep ->
@@ -833,8 +959,14 @@ let pp_type_simple_to_ml collections_carrier_mapping ppf whole_type =
 	  (* the carrier type of a species in the OCaml translation.   *)
 	  assert false
         end) in
-  (* *********************** *)
-  (* Now, let's really work. *)
-  reset_type_variables_mapping () ;
-  rec_pp 0 ppf whole_type
+
+  (* ************************************************* *)
+  (* Now, the real definition of the printing function *)
+  (
+   (fun ~reuse_mapping collections_carrier_mapping ppf whole_type ->
+     (* Only reset the variable mapping if we were not told the opposite. *)
+     if not reuse_mapping then reset_type_variables_mapping () ;
+     rec_pp collections_carrier_mapping 0 ppf whole_type),
+
+   (fun () -> reset_type_variables_mapping ()))
 ;;

@@ -1,0 +1,52 @@
+In function/methods identifiers, translation of the special characters from
+FoCaL names toward OCaml names.
+  | '`' -> "_focop_bquote_"
+  | '~' -> "_focop_tilda_"
+  | '?' -> "_focop_question_"
+  | '$' -> "_focop_dollar_"
+  | '!' -> "_focop_bang_"
+  | '#' -> "_focop_sharp_"
+  | '+' -> "_focop_plus_"
+  | '-' -> "_focop_minus_"
+  | '*' -> "_focop_star_"
+  | '/' -> "_focop_slash_"
+  | '%' -> "_focop_percent_"
+  | '&' -> "_focop_ampers_"
+  | '|' -> "_focop_pipe_"
+  | ',' -> "_focop_comma_"
+  | ':' -> "_focop_colon_"
+  | ';' -> "_focop_semi_"
+  | '<' -> "_focop_lt_"
+  | '=' -> "_focop_eq_"
+  | '>' -> "_focop_gt_"
+  | '@' -> "_focop_at_"
+  | '^' -> "_focop_hat_"
+  | '\\' -> "_focop_bslash"
+  | remain -> remain
+
+In type identifiers, translation from FoCaL types names toward OCaml types
+names:
+  "_focty_" + name of the FoCaL type
+
+In species, lambda-lifted methods from species paramaters called in a species
+method:
+  "_p_" + species parameter name + "_" + called method name
+
+In species, lambda-lifted methods from the current species called in a species
+method:
+  "abst_" + called method name
+
+In a species, name of the record type representing this species:
+  "me_as_species"
+
+In a species, type variable representing our carrier:
+  "'me_as_carrier"
+
+In a species, in its record type, names of the methods of this species:
+  lowercased name of the species + "_" + name of the method
+
+In a species, name of the variable type representing this species's carrier:
+  "'me_as_carrier"
+
+In a species, type variables names representing the species parameters carriers:
+ "'" + lowercased name of the species parameter + "_as_carrier"
