@@ -11,11 +11,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parse_file.mli,v 1.3 2007-09-26 09:17:30 weis Exp $ *)
+(* $Id: parse_file.mli,v 1.4 2007-09-26 09:29:52 weis Exp $ *)
 
 exception Lex_error of (Lexing.position * Lexing.position * string) ;;
 exception Syntax_error of (Lexing.position * Lexing.position) ;;
-exception Unclear_error of (Lexing.position * Lexing.position) ;;
+exception Unclear_error of (string * Lexing.position * Lexing.position) ;;
 
 val pp_err_loc : Format.formatter -> Lexing.position * Lexing.position -> unit
 ;;

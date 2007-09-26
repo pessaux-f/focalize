@@ -1,4 +1,3 @@
-(* $Id: parse_file.ml,v 1.5 2007-07-19 12:01:51 pessaux Exp $ *)
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -12,11 +11,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* $Id: parse_file.ml,v 1.6 2007-09-26 09:29:52 weis Exp $ *)
 
 open Parsing ;;
+
 exception Lex_error of (Lexing.position * Lexing.position * string) ;;
 exception Syntax_error of (Lexing.position * Lexing.position) ;;
-exception Unclear_error of (Lexing.position * Lexing.position) ;;
+exception Unclear_error of (string * Lexing.position * Lexing.position) ;;
 
 
 let wrap parsing_fun lexbuf =
@@ -28,8 +29,6 @@ let wrap parsing_fun lexbuf =
 let implementation lexbuf = wrap Parser.file lexbuf
 ;;
 
-
-
 let pp_err_loc ppf (sp, ep) =
   Format.fprintf ppf
     "File %S, line %i, characters %i-%i:@."
@@ -39,9 +38,7 @@ let pp_err_loc ppf (sp, ep) =
     (ep.Lexing.pos_cnum - sp.Lexing.pos_bol)
 ;;
 
-
-
-let parse_file ppf fname =
+let parse_file fname =
   let ic = open_in_bin fname in
   let lexbuff = Lexing.from_channel ic in
   lexbuff.Lexing.lex_curr_p <-
@@ -64,5 +61,5 @@ let parse_file ppf fname =
   | x ->
       let sp = Lexing.lexeme_start_p lexbuff in
       let ep = Lexing.lexeme_end_p lexbuff in
-      raise (Unclear_error (sp, ep)) ;
+      raise (Unclear_error (Printexc.to_string x, sp, ep)) ;
 ;;
