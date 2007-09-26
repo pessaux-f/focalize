@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.64 2007-09-26 15:56:16 weis Exp $ *)
+(* $Id: parser.mly,v 1.65 2007-09-26 18:01:56 weis Exp $ *)
 
 open Parsetree;;
 
@@ -15,31 +15,34 @@ let mk_doc doc d = {
 let mk d = mk_doc None d ;;
 let mk_no_doc d = mk_doc None d ;;
 
-let mk_local_ident s = mk (I_local s) ;;
-let mk_global_ident s = mk (I_global (None, s));;
-let mk_global_constr s1 s2 = mk (I_global (s1, s2));;
-let mk_global_constr_expr s1 s2 = mk (CE (s1, s2));;
+let mk_local_ident vname = mk (I_local vname) ;;
+let mk_global_ident qual vname = mk (I_global (qual, vname));;
+let mk_unqualified_global_ident vname = mk_global_ident None vname;;
 
-let mk_local_var s = mk (E_var (mk_local_ident s));;
-let mk_global_var s = mk (E_var (mk_global_ident s));;
+let mk_local_expr_ident vname = mk (EI_local vname);;
+let mk_global_expr_ident vname = mk (EI_global (None, vname));;
+let mk_local_ident_expr vname =
+  mk (E_var (mk_local_expr_ident vname));;
+let mk_global_ident_expr vname =
+  mk (E_var (mk_global_expr_ident vname));;
 
 let mk_infix_application e1 s e2 =
-  mk (E_app (mk_global_var (Viident s), [e1; e2]));;
+  mk (E_app (mk_global_ident_expr (Viident s), [e1; e2]));;
 let mk_prefix_application s e1 =
-  mk (E_app (mk_local_var (Vpident s), [e1]));;
+  mk (E_app (mk_local_ident_expr (Vpident s), [e1]));;
 
-let mk_method_application cname s = mk (I_method (cname, s));;
+let mk_method_expr_ident qual vname = mk (EI_method (qual, vname));;
 
-let mk_cons_ident () = mk_global_constr (Some "basics") (Vuident "Cons");;
-let mk_nil_ident () = mk_global_constr (Some "basics") (Vuident "Nil");;
-let mk_void_ident () = mk_global_constr (Some "basics") (Vuident "Void");;
+let mk_global_constructor_ident qual vname = mk (CI (qual, vname));;
 
-let mk_void_constructor_expr () =
-  mk_global_constr_expr (Some "basics") (Vuident "Void") ;;
+let mk_cons () = mk_global_constructor_ident (Some "basics") (Vuident "Cons");;
+let mk_nil () = mk_global_constructor_ident (Some "basics") (Vuident "Nil");;
+let mk_void () = mk_global_constructor_ident (Some "basics") (Vuident "Void");;
 
-let mk_cons () = mk (E_var (mk_cons_ident ()));;
-let mk_nil () = mk (E_var (mk_nil_ident ()));;
-
+(*let mk_cons_expr () = mk (E_var (mk_cons_ident ()));;
+let mk_nil_expr () = mk (E_var (mk_nil_ident ()));;
+let mk_void_expr () = mk (E_var (mk_void_ident ()));;
+*)
 let mk_proof_label (s1, s2) =
   try int_of_string s1, s2 with
   | Failure _ -> assert false;;
@@ -423,7 +426,7 @@ simple_rep_type_def:
     { RTE_ident $1 }
   | species_vname          /* To have capitalized species names as types. */
     { RTE_ident (mk (I_global (None, $1))) }
-  | LIDENT { RTE_ident (mk_global_ident (Vlident $1)) }
+  | LIDENT { RTE_ident (mk_unqualified_global_ident (Vlident $1)) }
   | glob_ident LPAREN rep_type_def_comma_list RPAREN
     { RTE_app ($1, $3) }
   | LPAREN rep_type_def RPAREN
@@ -572,10 +575,10 @@ fact_list:
 ;
 
 fact:
-  | DEFINITION OF prop_ident_comma_list { mk (F_def $3) }
+  | DEFINITION OF property_ident_comma_list { mk (F_def $3) }
   | HYPOTHESIS proof_hyp_list { mk (F_hypothesis $2) }
-  | PROPERTY prop_ident_comma_list { mk (F_property ($2)) }
-  | THEOREM prop_ident_comma_list { mk (F_property ($2)) }
+  | PROPERTY property_ident_comma_list { mk (F_property ($2)) }
+  | THEOREM property_ident_comma_list { mk (F_property ($2)) }
   | STEP proof_label_comma_list { mk (F_node (List.map mk_proof_label $2)) }
 ;
 
@@ -636,7 +639,7 @@ simple_type_expr:
   | glob_ident LPAREN type_expr_comma_list RPAREN
     { mk (TE_app ($1, $3)) }
   | LIDENT LPAREN type_expr_comma_list RPAREN
-    { mk (TE_app (mk_global_ident (Vlident $1), $3)) }
+    { mk (TE_app (mk_unqualified_global_ident (Vlident $1), $3)) }
   | LPAREN type_expr RPAREN
     { mk (TE_paren $2) }
   | species_vname   /* To have capitalized species names as types. */
@@ -655,7 +658,7 @@ type_expr_comma_list:
 
 constructor_ref:
   | opt_lident SHARP constructor_vname
-    { mk (I_global ($1, $3)) }
+    { mk (CI ($1, $3)) }
 ;
 
 glob_ident:
@@ -665,7 +668,7 @@ glob_ident:
 
 species_glob_ident:
   | opt_lident SHARP species_vname
-    { mk (I_global ($1, $3)) }
+    { mk (EI_global ($1, $3)) }
 ;
 
 /* Only used to prefix global notation (i.e. with '#'). */
@@ -734,13 +737,13 @@ simple_expr:
   | expr_ident
     { mk (E_var $1) }
   | opt_lident SHARP UIDENT %prec prec_constant_constructor
-    { mk (E_constr (mk_global_constr_expr $1 (Vuident $3), [])) }
+    { mk (E_constr (mk_global_constructor_ident $1 (Vuident $3), [])) }
   | opt_lident SHARP UIDENT LPAREN expr_comma_list RPAREN
-    { mk (E_constr (mk_global_constr_expr $1 (Vuident $3), $5)) }
+    { mk (E_constr (mk_global_constructor_ident $1 (Vuident $3), $5)) }
   | UIDENT %prec prec_constant_constructor
-    { mk (E_constr (mk_global_constr_expr None (Vuident $1), [])) }
+    { mk (E_constr (mk_global_constructor_ident None (Vuident $1), [])) }
   | UIDENT LPAREN expr_comma_list RPAREN
-    { mk (E_constr (mk_global_constr_expr None (Vuident $1), $3)) }
+    { mk (E_constr (mk_global_constructor_ident None (Vuident $1), $3)) }
   | simple_expr DOT label_name
     { mk (E_record_access ($1, $3)) }
   | LBRACE record_field_list RBRACE
@@ -754,7 +757,7 @@ simple_expr:
   | LPAREN expr RPAREN
     { mk (E_paren $2) }
   | LPAREN RPAREN
-    { mk (E_constr (mk_void_constructor_expr (), [])) }
+    { mk (E_constr (mk_void (), [])) }
 ;
 
 expr:
@@ -773,7 +776,7 @@ expr:
   | let_binding IN expr
     { mk (E_let ($1, $3)) }
   | expr COLON_COLON expr
-    { mk (E_app (mk_cons (), [$1; $3])) }
+    { mk (E_constr (mk_cons (), [$1; $3])) }
   | expr COMMA_OP expr
     { mk_infix_application $1 $2 $3 }
   | expr HAT_OP expr
@@ -839,11 +842,11 @@ expr:
 ;
 
 expr_semi_list:
-  | { mk (E_app (mk_nil (), [])) }
+  | { mk (E_constr (mk_nil (), [])) }
   | expr
-    { mk (E_app (mk_cons (), [$1; mk (E_app (mk_nil (), []))])) }
+    { mk (E_constr (mk_cons (), [$1; mk (E_constr (mk_nil (), []))])) }
   | expr SEMI expr_semi_list
-    { mk (E_app (mk_cons (), [$1; $3])) }
+    { mk (E_constr (mk_cons (), [$1; $3])) }
 ;
 
 expr_comma_list:
@@ -861,17 +864,19 @@ record_field_list:
 ;
 
 expr_ident:
-  | glob_ident
-    { $1 }
+  | opt_lident SHARP bound_vname
+    { mk (EI_global ($1, $3)) }
   | opt_uident BANG method_vname
-    { mk_method_application $1 $3 }
+    { mk (EI_method ($1, $3)) }
   | bound_ident
-    { mk_local_ident $1 }
+    { mk (EI_local $1) }
 ;
 
-prop_ident:
-  | expr_ident
-    { $1 }
+property_ident:
+  | property_vname
+    { mk (I_local $1) }
+  | opt_lident SHARP property_vname
+    { mk (I_global ($1, $3)) }
 ;
 
 carrier_ident :
@@ -880,11 +885,11 @@ carrier_ident :
 
 species_ident:
   | species_vname
-    { mk_local_ident $1 }
+    { mk_local_expr_ident $1 }
   | species_glob_ident
     { $1 }
   | opt_collection_name BANG method_vname
-    { mk_method_application $1 $3 }
+    { mk_method_expr_ident $1 $3 }
 ;
 
 opt_collection_name:
@@ -892,9 +897,9 @@ opt_collection_name:
   | collection_name { Some $1 }
 ;
 
-prop_ident_comma_list:
-  | prop_ident COMMA prop_ident_comma_list { $1 :: $3 }
-  | prop_ident { [$1] }
+property_ident_comma_list:
+  | property_ident COMMA property_ident_comma_list { $1 :: $3 }
+  | property_ident { [$1] }
 ;
 
 proof_label_comma_list:
@@ -926,23 +931,23 @@ pattern:
   | constant { mk (P_const $1) }
   | LIDENT { mk (P_var (Vlident $1)) }
   | UNDERSCORE { mk (P_wild) }
-  | constructor_ref LPAREN pattern_comma_list RPAREN { mk (P_app ($1, $3)) }
-  | constructor_ref { mk (P_app ($1, [])) }
+  | constructor_ref LPAREN pattern_comma_list RPAREN { mk (P_constr ($1, $3)) }
+  | constructor_ref { mk (P_constr ($1, [])) }
   | LBRACKET pattern_semi_list RBRACKET { $2 }
-  | pattern COLON_COLON pattern { mk (P_app (mk_cons_ident (), [$1; $3])) }
+  | pattern COLON_COLON pattern { mk (P_constr (mk_cons (), [$1; $3])) }
   | LBRACE pattern_record_field_list RBRACE { mk (P_record $2) }
   | pattern AS LIDENT { mk (P_as ($1, Vlident $3)) }
   | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
   | LPAREN pattern RPAREN { mk (P_paren $2) }
-  | LPAREN RPAREN { mk (P_app (mk_void_ident (), [])) }
+  | LPAREN RPAREN { mk (P_constr (mk_void (), [])) }
 ;
 
 pattern_semi_list:
-  | { mk (P_app (mk_nil_ident (), [])) }
+  | { mk (P_constr (mk_nil (), [])) }
   | pattern
-    { mk (P_app (mk_cons_ident (), [$1; mk (P_app (mk_nil_ident (), []))])) }
+    { mk (P_constr (mk_cons (), [$1; mk (P_constr (mk_nil (), []))])) }
   | pattern SEMI pattern_semi_list
-    { mk (P_app (mk_cons_ident (), [$1; $3])) }
+    { mk (P_constr (mk_cons (), [$1; $3])) }
 ;
 
 pattern_comma_list:

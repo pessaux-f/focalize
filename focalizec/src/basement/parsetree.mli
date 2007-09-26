@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.15 2007-09-26 16:11:22 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.16 2007-09-26 18:01:56 weis Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -80,7 +80,7 @@ and ident_desc =
 (* ********************************************************************** *)
 type constructor_ident = constructor_ident_desc ast
 and constructor_ident_desc =
-  | CE of Types.fname option * vname
+  | CI of Types.fname option * vname
 ;;
 
 type rep_type_def = rep_type_def_desc ast_doc
@@ -127,7 +127,7 @@ and pat_desc =
   | P_var of vname
   | P_as of pattern * vname
   | P_wild
-  | P_app of constructor_ident * pattern list
+  | P_constr of constructor_ident * pattern list
   | P_record of (Types.label_name * pattern) list
   | P_tuple of pattern list
   | P_paren of pattern
@@ -184,12 +184,12 @@ and species_def_desc = {
 
 and species_param_type = species_param_type_desc ast
 and species_param_type_desc =
-  | SPT_in of ident
+  | SPT_in of expr_ident
   | SPT_is of species_expr
 
 and species_expr = species_expr_desc ast
 and species_expr_desc = {
-  se_name : ident;
+  se_name : expr_ident;
   se_params : species_param list;
 }
 
