@@ -84,23 +84,175 @@ a simple focal type definition, coupled with a set of external directives:
 We now get:
 
 \begin{verbatim}
-type list (a) =
+type foc_list (a) = external
   | Nil
-  | Cons (a, list (a))
+  | Cons (a, foc_list (a))
 ;;
 
-external type list =
+external type foc_list =
  | Caml -> "list"
  | Coq -> "List.list"
 ;;
 
-external val Nil =
+external value Nil =
  | Caml -> "[]"
  | Coq -> "nil";;
 
-external val Cons =
+external value Cons =
  | Caml -> "( :: )"
  | Coq -> "cons";;
+
+type foc_int = external;;
+external type foc_int =
+ | Caml -> "int"
+ | Coq -> "Z"
+;;
+\end{verbatim}
+
+\subsection{External definitions for types}
+
+2007/09/26 Autre idée: one time definition.
+
+We need:
+
+\begin{verbatim}
+(* Focalize binding of the foc_list type constructor and its associated
+   contructors or labels. *)
+type foc_list (a) = external
+  | Nil
+  | Cons (a, foc_list (a))
+;;
+
+(* External binding of the foc_list type constructor:
+   type arguments of type constructor foc_list are important here
+   since they are externalized into foreign languages. *)
+external type foc_list ('a) =
+ | Caml -> "'a list"
+ | Coq -> "List.list ['a]"
+;;
+
+external value Nil =
+ | Caml -> "[]"
+ | Coq -> "nil"
+;;
+
+external value Cons =
+ | Caml -> "( :: )"
+ | Coq -> "cons"
+;;
+\end{verbatim}
+
+External type definition for sum types:
+
+\begin{verbatim}
+(* Focalize binding of the foc_list type constructor and its associated
+   contructors or labels. *)
+type foc_list ('a) =
+ internal
+ | Nil
+ | Cons ('a, foc_list ('a))
+
+ external
+ | Caml -> "'a, list"
+ | Coq -> "List.list ['a]"
+
+ and Nil =
+ | Caml -> "[]"
+ | Coq -> "nil"
+
+ and Cons =
+ | Caml -> "( :: )"
+ | Coq -> "cons"
+;;
+\end{verbatim}
+
+External type definition for abbreviation types:
+
+\begin{verbatim}
+type foc_pair ('a, 'b) =
+  [internal] (* No internal definition: type is fully abstract. *)
+  external
+  | Caml -> "('a, 'b)"
+  | Coq -> "{fst : 'a; snd : 'b}
+;;
+
+type foc_diag ('a) =
+  internal ('a * 'a)
+  external
+  | Caml -> "('a, 'a)"
+  | Coq -> "{fst : 'a; snd : 'a}
+;;
+
+type int =
+  external
+  | Caml -> "int"
+  | Coq -> "Z"
+;;
+
+\end{verbatim}
+
+External definitions for record types:
+
+\begin{verbatim}
+(* Focalize binding of the foc_record type constructor and its associated
+   contructors or labels. *)
+type foc_record ('a) =
+  internal
+  { hcode : int; contents : 'a; }
+
+ external
+ | Caml -> "'a Focvasives.foc_record"
+ | Coq -> "Focq.foc_record ['a]"
+
+ and hcode =
+ | Caml -> "Focvasives.fv_hashing_code"
+ | Coq -> "Focq.hc"
+
+ and contents =
+ | Caml -> "Focvasives.fv_contents"
+ | Coq -> "Focq.conts"
+;;
+\end{verbatim}
+
+\begin{verbatim}
+type foc_pair ('a, 'b) =
+  [internal]
+  external
+  | Caml -> "('a, 'b)"
+  | Coq -> "{fst : 'a; snd : 'b}
+;;
+
+type foc_diag ('a) =
+  internal ('a * 'a)
+  external
+  | Caml -> "('a, 'a)"
+  | Coq -> "{fst : 'a; snd : 'a}
+;;
+\end{verbatim}
+
+\subsection{External directives for values}
+
+We could have chosen:
+
+\begin{verbatim}
+let sc = (external : string -> string -> string);;
+
+external value sc =
+  | Caml -> "concat"
+  | Coq -> "^"
+;;
+\end{verbatim}
+
+But we prefer something more similar to what is widely accepted for external
+type definitions:
+
+\begin{verbatim}
+let sc =
+  internal string -> string -> string
+  external
+  | Caml -> "Pervasives.( ^ )"
+  | Coq -> "Focq.catenate"
+;;
 \end{verbatim}
 
 \section{Comments}
