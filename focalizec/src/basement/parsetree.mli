@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.14 2007-09-26 15:56:16 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.15 2007-09-26 16:11:22 weis Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -55,15 +55,20 @@ type ('a, 'b) generic_ast = {
 type 'a ast = ('a, string) generic_ast;;
 type 'a ast_doc = ('a, string) generic_ast;;
 
+type expr_ident = expr_ident_desc ast
+and expr_ident_desc =
+  | EI_local of vname
+  | EI_global of Types.fname option * vname
+  | EI_method of Types.collection_name option * vname
+;;
+
 type ident = ident_desc ast
 and ident_desc =
   | I_local of vname
   | I_global of Types.fname option * vname
-  | I_method of Types.collection_name option * vname
 ;;
 
 (* ********************************************************************** *)
-(*  [Type] : constructor_expr                                             *)
 (** [Descr] : Structure of the constructor part of an expression. Because
               type constructors are always toplevel idents, neither local
               nor a method, we extracted from [ident_desc] the only
@@ -73,8 +78,8 @@ and ident_desc =
 
     [Rem] : Exported outside this module.                                 *)
 (* ********************************************************************** *)
-type constructor_expr = constructor_expr_desc ast
-and constructor_expr_desc =
+type constructor_ident = constructor_ident_desc ast
+and constructor_ident_desc =
   | CE of Types.fname option * vname
 ;;
 
@@ -122,7 +127,7 @@ and pat_desc =
   | P_var of vname
   | P_as of pattern * vname
   | P_wild
-  | P_app of ident * pattern list
+  | P_app of constructor_ident * pattern list
   | P_record of (Types.label_name * pattern) list
   | P_tuple of pattern list
   | P_paren of pattern
@@ -290,9 +295,9 @@ and expr_desc =
   | E_self
   | E_const of constant
   | E_fun of vname list * expr
-  | E_var of ident
+  | E_var of expr_ident
   | E_app of expr * expr list
-  | E_constr of constructor_expr * expr list
+  | E_constr of constructor_ident * expr list
   | E_match of expr * (pattern * expr) list
   | E_if of expr * expr * expr
   | E_let of let_def * expr

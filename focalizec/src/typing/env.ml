@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.38 2007-09-26 10:22:13 pessaux Exp $ *)
+(* $Id: env.ml,v 1.39 2007-09-26 16:11:22 weis Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -133,7 +133,7 @@ let debug_env_list_assoc ~allow_opened searched list =
     {b Rem} : Exported abstract outside this module.                     *)
 (* ********************************************************************* *)
 type ('constrs, 'labels, 'types, 'values, 'species) generic_env = {
-  constructors : (Parsetree.constr_name * ('constrs binding_origin)) list ;
+  constructors : (Parsetree.constructor_name * ('constrs binding_origin)) list ;
   labels : (Types.label_name * ('labels binding_origin)) list ;
   types : (Types.type_name * ('types binding_origin)) list ;
   (** [idents] Contains functions methods and more generally any let-bound
@@ -408,7 +408,7 @@ module TypeInformation = struct
   type type_kind =
     | TK_abstract  (** Abstract types and type abbreviations. *)
     | TK_variant of    (** Sum types. *)
-	(Parsetree.constr_name * Types.type_scheme) list
+	(Parsetree.constructor_name * Types.type_scheme) list
     | TK_record of  (** Record types: list of labels. Any value of a type record will be typed as a [ST_construct] whose name is the name of the record type. *)
 	(Types.label_name * field_mutability * Types.type_scheme) list
 
@@ -973,7 +973,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
   (* ************************************************************** *)
-  (* Parsetree.constr_name -> EMAccess.constructor_bound_data ->    *)
+  (* Parsetree.constructor_name -> EMAccess.constructor_bound_data ->    *)
   (*   t -> t                                                       *)
   (** {b Descr} : Return an environment extended with a binding
                 between a sum-type constructor [ident] and the
@@ -1017,7 +1017,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
   (* *********************************************************** *)
   (* allow_opened: loc: Location.t -> bool ->                    *)
-  (*   Parsetree.constr_name -> t ->                             *)
+  (*   Parsetree.constructor_name -> t ->                             *)
   (*   EMAccess.constructor_bound_data                           *)
   (** {b Descr} : Looks-up for a [vname] inside the constructors
                 environment.

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.26 2007-09-26 10:22:13 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.27 2007-09-26 16:11:22 weis Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -371,9 +371,9 @@ let scope_type_def ctx env ty_def =
   let ty_def_descr = ty_def.Parsetree.ast_desc in
   let env_with_params =
     List.fold_left
-      (fun accu_env param_name ->
+      (fun accu_env param_vname ->
 	Env.ScopingEnv.add_type
-	  param_name Env.ScopeInformation.TBI_builtin_or_var accu_env)
+	  param_vname Env.ScopeInformation.TBI_builtin_or_var accu_env)
       env
       ty_def_descr.Parsetree.td_params in
   (* Now scope de definition's body. *)

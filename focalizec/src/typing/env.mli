@@ -68,7 +68,7 @@ module TypeInformation :
     }
     type type_kind =
         TK_abstract
-      | TK_variant of (Parsetree.constr_name * Types.type_scheme) list
+      | TK_variant of (Parsetree.constructor_name * Types.type_scheme) list
       | TK_record of
           (Types.label_name * field_mutability * Types.type_scheme) list
     type type_description = {
@@ -94,7 +94,7 @@ module ScopingEnv :
       loc: Location.t -> current_unit: Types.fname ->
       Parsetree.ident -> t -> ScopeInformation.value_binding_info
 
-    val add_constructor : Parsetree.constr_name -> Types.fname -> t -> t
+    val add_constructor : Parsetree.constructor_name -> Types.fname -> t -> t
     val find_constructor :
       loc: Location.t -> current_unit:Types.fname -> Parsetree.ident ->
 	t -> Types.fname
@@ -128,7 +128,7 @@ module TypingEnv :
 	t -> Types.type_scheme
 
     val add_constructor :
-      Parsetree.constr_name ->
+      Parsetree.constructor_name ->
       TypeInformation.constructor_description -> t -> t
     val find_constructor :
       loc: Location.t -> current_unit:Types.fname ->
