@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.24 2007-08-09 14:55:23 pessaux Exp $ *)
+(* $Id: lexer.mll,v 1.25 2007-09-26 09:16:23 weis Exp $ *)
 
 {
 open Lexing;;
@@ -212,13 +212,13 @@ let mk_infixop s =
   | '-' ->
     begin match String.length s with
     | 1 -> DASH_OP s
-    | n when s.[1] <> '>' -> DASH_OP s
+    | _ when s.[1] <> '>' -> DASH_OP s
     | 2 -> DASH_GT
     | _ -> DASH_GT_OP s end
   | '*' ->
     begin match String.length s with
     | 1 -> STAR_OP s
-    | n when s.[1] <> '*' -> STAR_OP s
+    | _ when s.[1] <> '*' -> STAR_OP s
     | _ -> STAR_STAR_OP s end
   | '/' -> SLASH_OP s
   | '%' -> PERCENT_OP s
@@ -234,23 +234,23 @@ let mk_infixop s =
   | ':' ->
     begin match String.length s with
     | 1 -> COLON
-    | n when s.[1] <> ':' -> COLON_OP s
+    | _ when s.[1] <> ':' -> COLON_OP s
     | 2 -> COLON_COLON
     | _ -> COLON_COLON_OP s end
   | ';' ->
     begin match String.length s with
     | 1 -> SEMI
-    | n when s.[1] <> ';' -> SEMI_OP s
+    | _ when s.[1] <> ';' -> SEMI_OP s
     | 2 -> SEMI_SEMI
     | _ -> SEMI_SEMI_OP s end
   | '<' ->
     begin match String.length s with
     | 1 -> LT_OP s
-    | n when s.[1] <> '-' -> LT_OP s
+    | _ when s.[1] <> '-' -> LT_OP s
     | 2 -> LT_DASH_OP s
-    | n when s.[2] <> '>' -> LT_DASH_OP s
+    | _ when s.[2] <> '>' -> LT_DASH_OP s
     | 3 -> LT_DASH_GT
-    | n -> LT_DASH_GT_OP s end
+    | _ -> LT_DASH_GT_OP s end
   | '=' ->
     begin match String.length s with
     | 1 -> EQUAL
@@ -546,7 +546,7 @@ and comment = parse
   | "*)"
     { match !comment_start_pos with
       | [] -> assert false
-      | [x] -> comment_start_pos := [];
+      | [ _ ] -> comment_start_pos := [];
       | _ :: l -> comment_start_pos := l;
                   comment lexbuf; }
   | eof
