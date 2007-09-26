@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.60 2007-08-31 16:21:09 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.61 2007-09-26 10:02:57 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -646,6 +646,13 @@ simpler_type_expr:
     { mk (TE_ident (mk_local_ident (Vlident $1))) }
   | glob_ident LPAREN type_expr_comma_list RPAREN
     { mk (TE_app ($1, $3)) }
+  | LIDENT LPAREN type_expr_comma_list RPAREN
+      {
+       (* Create a "global" identifier without explicit scoping infirmation. *)
+       let type_constructor_name =
+	 mk (I_global (None, (Parsetree.Vlident $1))) in
+       mk (TE_app (type_constructor_name, $3))
+     }
   | LPAREN type_expr RPAREN
     { mk (TE_paren $2) }
   | species_vname   /* To have capitalized species names as types. */
