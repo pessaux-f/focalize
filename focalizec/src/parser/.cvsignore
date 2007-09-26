@@ -1,4 +1,7 @@
 *.cm*
+*.o
+.depend
+odoc
 log
 lexer.ml
 lexer.mli
@@ -8,4 +11,3 @@ parser.output
 parser.conflicts
 a.out
 check_file
-.depend

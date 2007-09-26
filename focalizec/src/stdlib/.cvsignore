@@ -1,4 +1,2 @@
-*.cm*
-*.o
 .depend
 odoc
