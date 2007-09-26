@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.25 2007-09-26 09:16:23 weis Exp $ *)
+(* $Id: lexer.mll,v 1.26 2007-09-26 13:56:47 weis Exp $ *)
 
 {
 open Lexing;;
@@ -41,6 +41,7 @@ List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
   "if", IF;
   "in", IN;
   "inherits", INHERITS;
+  "internal", INTERNAL;
   "implements", IMPLEMENTS;
   "is", IS;
   "let", LET;
