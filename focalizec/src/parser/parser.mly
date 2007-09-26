@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.61 2007-09-26 10:02:57 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.62 2007-09-26 13:58:37 weis Exp $ *)
 
 open Parsetree;;
 
@@ -18,6 +18,7 @@ let mk_no_doc d = mk_doc None d ;;
 let mk_local_ident s = mk (I_local s) ;;
 let mk_global_ident s = mk (I_global (None, s));;
 let mk_global_constr s1 s2 = mk (I_global (s1, s2));;
+let mk_global_constr_lident s = mk (I_global (s1, s2));;
 let mk_global_constr_expr s1 s2 = mk (CE (s1, s2));;
 
 let mk_local_var s = mk (E_var (mk_local_ident s));;
@@ -143,6 +144,7 @@ let mk_proof_label (s1, s2) =
 %token IF
 %token IN
 %token INHERITS
+%token INTERNAL
 %token IMPLEMENTS
 %token IS
 %token LET
@@ -421,7 +423,7 @@ def_rep:
 ;
 
 rep_type_def:
-  | simpler_rep_type_def
+  | simple_rep_type_def
     { $1 }
   | rep_type_tuple
     { RTE_prod (List.map mk $1) }
@@ -429,7 +431,7 @@ rep_type_def:
     { RTE_fun (mk $1, mk $3) }
 ;
 
-simpler_rep_type_def:
+simple_rep_type_def:
   | glob_ident
     { RTE_ident $1 }
   | species_vname          /* To have capitalized species names as types. */
@@ -442,8 +444,8 @@ simpler_rep_type_def:
 ;
 
 rep_type_tuple:
-  | simpler_rep_type_def STAR_OP simpler_rep_type_def      { [$1; $3] }
-  | rep_type_tuple STAR_OP simpler_rep_type_def        { $1 @ [$3] }
+  | simple_rep_type_def STAR_OP simple_rep_type_def  { [$1; $3] }
+  | rep_type_tuple STAR_OP simple_rep_type_def        { $1 @ [$3] }
 ;
 
 rep_type_def_comma_list:
@@ -624,7 +626,7 @@ hyp_list:
 
 /**** TYPE EXPRESSIONS ****/
 type_expr:
-  | simpler_type_expr
+  | simple_type_expr
     { $1 }
   | core_type_tuple
     { mk (TE_prod $1) }
@@ -633,7 +635,7 @@ type_expr:
 ;
 
 /* Type expressions that can appear inside a tuple. */
-simpler_type_expr:
+simple_type_expr:
   | SELF
     { mk TE_self }
   | PROP
@@ -647,12 +649,7 @@ simpler_type_expr:
   | glob_ident LPAREN type_expr_comma_list RPAREN
     { mk (TE_app ($1, $3)) }
   | LIDENT LPAREN type_expr_comma_list RPAREN
-      {
-       (* Create a "global" identifier without explicit scoping infirmation. *)
-       let type_constructor_name =
-	 mk (I_global (None, (Parsetree.Vlident $1))) in
-       mk (TE_app (type_constructor_name, $3))
-     }
+    { mk (TE_app (mk_global_ident (Vlident $1), $3)) }
   | LPAREN type_expr RPAREN
     { mk (TE_paren $2) }
   | species_vname   /* To have capitalized species names as types. */
@@ -660,8 +657,8 @@ simpler_type_expr:
 ;
 
 core_type_tuple:
-  | simpler_type_expr STAR_OP simpler_type_expr      { [$1; $3] }
-  | core_type_tuple STAR_OP simpler_type_expr        { $1 @ [$3] }
+  | simple_type_expr STAR_OP simple_type_expr      { [$1; $3] }
+  | core_type_tuple STAR_OP simple_type_expr        { $1 @ [$3] }
 ;
 
 type_expr_comma_list:
@@ -706,7 +703,7 @@ opt_uident:
 /* Type expressions that are used to anotate external values. */
 /* Like [type_expr] except that don't allow Self and Prop. */
 external_type_expr:
-  | simpler_external_type_expr
+  | simple_external_type_expr
     { $1 }
   | external_type_tuple
     { mk (TE_prod $1) }
@@ -715,7 +712,7 @@ external_type_expr:
 ;
 
 /* Type expressions that can appear inside a tuple. */
-simpler_external_type_expr:
+simple_external_type_expr:
   | QIDENT
     { mk (TE_ident (mk_local_ident (Vqident $1))) }
   | glob_ident
@@ -731,9 +728,9 @@ simpler_external_type_expr:
 ;
 
 external_type_tuple:
-  | simpler_external_type_expr STAR_OP simpler_external_type_expr
+  | simple_external_type_expr STAR_OP simple_external_type_expr
       { [$1; $3] }
-  | external_type_tuple STAR_OP simpler_external_type_expr        { $1 @ [$3] }
+  | external_type_tuple STAR_OP simple_external_type_expr        { $1 @ [$3] }
 ;
 
 external_type_expr_comma_list:
