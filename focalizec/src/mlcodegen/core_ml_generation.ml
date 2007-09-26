@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: core_ml_generation.ml,v 1.9 2007-09-25 15:29:10 pessaux Exp $ *)
+(* $Id: core_ml_generation.ml,v 1.10 2007-09-26 10:22:13 pessaux Exp $ *)
 
 
 
@@ -552,7 +552,7 @@ let generate_pattern ctx pattern =
 	      rec_generate_pats_list pats ;
 	      Format.fprintf out_fmter ")"
 	 end)
-     | Parsetree.P_record labs_pats ->
+     | Parsetree.P_record _labs_pats ->
 	 Format.eprintf "generate_pattern P_record TODO@."
      | Parsetree.P_tuple pats ->
 	 Format.fprintf out_fmter "(@[<1>" ;
@@ -763,9 +763,9 @@ and generate_expr ctx initial_expression =
 	 rec_generate_record_field_exprs_list labs_exprs ;
 	 Format.fprintf out_fmter "@ }@]"
 	 end)
-     | Parsetree.E_record_access (expr, label_name) ->
+     | Parsetree.E_record_access (_expr, _label_name) ->
 	 Format.eprintf "generate_expr E_record_access TODO@."
-     | Parsetree.E_record_with (expr, labs_exprs) ->
+     | Parsetree.E_record_with (_expr, _labs_exprs) ->
 	 Format.eprintf "generate_expr E_record_with TODO@."
      | Parsetree.E_tuple exprs ->
 	 (begin
@@ -777,7 +777,7 @@ and generate_expr ctx initial_expression =
 	      rec_generate_exprs_list ~comma: true exprs ;
 	      Format.fprintf out_fmter ")@]"
 	 end)
-     | Parsetree.E_external external_expr ->
+     | Parsetree.E_external _external_expr ->
 	 Format.eprintf "generate_expr E_external TODO@."
      | Parsetree.E_paren e -> rec_generate e
 
@@ -1160,7 +1160,7 @@ let toplevel_compile ~current_unit out_fmter = function
   | Infer.PCM_species (species_def, species_descr, dep_graph) ->
       species_compile
 	~current_unit out_fmter species_def species_descr dep_graph
-  | Infer.PCM_collection (coll_def, fields) ->
+  | Infer.PCM_collection (_coll_def, _fields) ->
       Format.eprintf "Infer.PCM_collection expr : TODO@."
   | Infer.PCM_type -> Format.eprintf "Infer.PCM_type expr : TODO@."
   | Infer.PCM_let_def (let_def, def_schemes) ->

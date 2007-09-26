@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.25 2007-09-03 09:07:23 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.26 2007-09-26 10:22:13 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -506,7 +506,7 @@ let rec scope_expr ctx env expr =
 	 let exprs' = List.map (scope_expr ctx env) exprs in
 	 let scoped_expr = Parsetree.E_tuple exprs' in
 	 scoped_expr
-     | Parsetree.E_external external_def_body ->
+     | Parsetree.E_external _ ->
 	 (* Nothing to scope since it's only strings. *)
 	 expr.Parsetree.ast_desc
      | Parsetree.E_paren e ->
@@ -581,7 +581,7 @@ and scope_pattern ctx env pattern =
 	 ((Parsetree.P_tuple scoped_pats), env')
      | Parsetree.P_paren p ->
 	 let (scoped_p, env') = scope_pattern ctx env p in
-	 ((Parsetree.P_paren p), env')) in
+	 ((Parsetree.P_paren scoped_p), env')) in
   (* Finally, return the whole scoped pattern and the initial     *)
   (* environment extended by the bindings induced by the pattern. *)
   ({ pattern with Parsetree.ast_desc = new_desc }, new_env)

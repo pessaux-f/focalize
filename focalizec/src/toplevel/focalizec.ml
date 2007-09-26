@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: focalizec.ml,v 1.16 2007-09-25 15:29:10 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.17 2007-09-26 10:22:13 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -71,8 +71,7 @@ let main () =
     raise (Bad_file_suffix input_file_name) ;
   let current_unit =
     Filename.chop_extension (Filename.basename input_file_name) in
-  let ast =
-    Parse_file.parse_file Format.err_formatter input_file_name in
+  let ast = Parse_file.parse_file input_file_name in
   (* Hard-dump the AST if requested. *)
   if Configuration.get_raw_ast_dump () then
     Dump_ptree.pp_file Format.err_formatter ast ;

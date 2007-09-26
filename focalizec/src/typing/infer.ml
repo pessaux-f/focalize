@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.71 2007-09-25 15:29:10 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.72 2007-09-26 10:22:13 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1278,7 +1278,7 @@ and typecheck_proof ctx env proof =
   (* No type information inserted in the AST node because not relevant. *)
   match proof.Parsetree.ast_desc with
    | Parsetree.Pf_assumed -> ()
-   | Parsetree.Pf_auto facts -> ()
+   | Parsetree.Pf_auto _ -> ()
    | Parsetree.Pf_coq _ -> ()
    | Parsetree.Pf_node nodes -> List.iter (typecheck_node ctx env) nodes
 
@@ -1896,7 +1896,7 @@ let typecheck_species_expr ctx env species_expr =
 
 
 (* *********************************************************************** *)
-(* typing_context -> Env.TypingEnv.t -> Types.species_name ->              *)
+(* typing_context -> Env.TypingEnv.t ->                                    *)
 (*   (Parsetree.vname * Parsetree.species_param_type) list ->              *)
 (*     (Env.TypingEnv.t * Env.TypeInformation.species_param list *         *)
 (*      Types.type_species)                                                *)
@@ -1913,7 +1913,7 @@ let typecheck_species_expr ctx env species_expr =
 
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
-let typecheck_species_def_params ctx env species_name species_params =
+let typecheck_species_def_params ctx env species_params =
   let rec rec_typecheck_params accu_env = function
     | [] -> (accu_env, [])
     | (vname, param_kind) :: rem ->
@@ -2309,7 +2309,7 @@ let order_fields_according_to order fields =
 	 (* If there are spurious fields or names then *)
          (* it's we went wrong somewhere !             *)
 	 assert false
-     | (name :: rem_order, _) ->
+     | (name :: _, _) ->
 	 (* We first find the field hosting [name]. This field will be *)
          (* inserted here in the result list. We then must remove from *)
          (* the order list, all the name rec-bound with [name]. Then   *)
@@ -2489,8 +2489,8 @@ let fields_fusion ~loc ctx phi1 phi2 =
 	Types.end_definition () ;
 	Env.TypeInformation.SF_let
 	  (from2, n2, pars2, (Types.generalize ty2), body)
-   | (Env.TypeInformation.SF_let (_, n1, _, sc1, _),
-      Env.TypeInformation.SF_let_rec rec_meths) ->
+   | (Env.TypeInformation.SF_let (_, _, _, _, _),
+      Env.TypeInformation.SF_let_rec _) ->
 	failwith "fields_fusion let / let rec"
    (* *** *)
    | (Env.TypeInformation.SF_let_rec rec_meths,
@@ -2498,8 +2498,8 @@ let fields_fusion ~loc ctx phi1 phi2 =
         (* let rec / sig. *)
 	(* Symetric case than for sig / let_rec. *)
 	fusion_fields_let_rec_sig ~loc ctx n2 sc2 rec_meths
-   | (Env.TypeInformation.SF_let_rec rec_meths1,
-      Env.TypeInformation.SF_let (_, n2, _, sc2, _)) ->
+   | (Env.TypeInformation.SF_let_rec _,
+      Env.TypeInformation.SF_let (_, _, _, _, _)) ->
         failwith "fields_fusion let rec / let"
    | (Env.TypeInformation.SF_let_rec rec_meths1,
       Env.TypeInformation.SF_let_rec rec_meths2) ->
@@ -2770,8 +2770,7 @@ let typecheck_species_def ctx env species_def =
   (* synthetize the species type of the current species. *)
   let (env_with_species_params, sig_params) =
     typecheck_species_def_params
-      ctx env species_def_desc.Parsetree.sd_name
-      species_def_desc.Parsetree.sd_params in
+      ctx env species_def_desc.Parsetree.sd_params in
   (* We first load the inherited methods in the environment and  *)
   (* get their signatures and methods information by the way.    *)
   (* We also get a possibly new context where the fact that Self *)

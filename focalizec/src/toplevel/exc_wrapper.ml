@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.16 2007-09-25 15:29:10 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.17 2007-09-26 10:22:13 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -42,14 +42,15 @@ try Check_file.main () with
 (* *********************** *)
 (* Lexing / parsing stage. *)
      | Parse_file.Lex_error (pos_s, pos_e, reason) ->
-	 Format.fprintf Format.err_formatter "Lexical@ error,@ %a.@ %s@."
+	 Format.fprintf Format.err_formatter "%a:@\nLexical@ error@ %s@."
 	   Parse_file.pp_err_loc (pos_s, pos_e) reason
      | Parse_file.Syntax_error position ->
-	 Format.fprintf Format.err_formatter "Syntax@ error,@ %a.@."
+	 Format.fprintf Format.err_formatter "%a:@\nSyntax@ error.@."
 	   Parse_file.pp_err_loc position
-     | Parse_file.Unclear_error position ->
-	 Format.fprintf Format.err_formatter "Unclear@ syntax@ error,@ %a.@."
-	   Parse_file.pp_err_loc position
+     | Parse_file.Unclear_error (exc_string, pos_s, pos_e) ->
+	 Format.fprintf Format.err_formatter
+	   "%a:@\nUnclear@ syntax@ error:@ %s@."
+	   Parse_file.pp_err_loc (pos_s, pos_e) exc_string
 (* ************** *)
 (* Scoping stage. *)
      | Scoping.Multiply_used_module modname ->

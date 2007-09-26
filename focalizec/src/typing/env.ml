@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.37 2007-09-25 15:29:10 pessaux Exp $ *)
+(* $Id: env.ml,v 1.38 2007-09-26 10:22:13 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -484,6 +484,7 @@ module TypeInformation = struct
 	    match rec_bounds with
 	     | [] -> assert false  (* Empty let rec is non sense ! *)
 	     | (from, vname, _, ty_scheme, _) :: rem ->
+		 Format.fprintf ppf "(* From species %s. *)@\n" from ;
 		 Format.fprintf ppf "let rec %a : %a@\n"
 		   Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme ;
 		 List.iter
@@ -809,7 +810,7 @@ module type EnvModuleAccessSig = sig
        value_bound_data, species_bound_data)
 	generic_env
   val post_process_method_value_binding :
-    collname: Types.collection_name -> value_bound_data -> value_bound_data
+    Types.collection_name -> value_bound_data -> value_bound_data
 end ;;
 
 
@@ -953,7 +954,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 		find_value_vname
 		  ~loc ~allow_opened: false vname available_meths in
 	      (* Now we apply the post-processing on the found data. *)
-	      EMAccess.post_process_method_value_binding ~collname data
+	      EMAccess.post_process_method_value_binding collname data
 	 end)
 
 
@@ -1168,7 +1169,7 @@ module ScopingEMAccess = struct
 
      {b Rem} : Exported outside this module, but not outside this file.       *)
   (* ************************************************************************ *)
-  let post_process_method_value_binding ~collname = function
+  let post_process_method_value_binding collname = function
     | ScopeInformation.SBI_method_of_self ->
 	ScopeInformation.SBI_method_of_coll collname
     | whatever -> whatever
@@ -1246,7 +1247,7 @@ module TypingEMAccess = struct
 
       {b Rem} : Not exported outside this module.                         *)
   (* ******************************************************************** *)
-  let make_value_env_from_species_methods spec_name spec_info =
+  let make_value_env_from_species_methods _spec_name spec_info =
     (* By folding left, fields at the head of the list will be at the tail *)
     (* of the environment list. Hence, methods seen first are inserted     *)
     (* first, hence are deeper in the environment.                         *)
@@ -1271,7 +1272,7 @@ module TypingEMAccess = struct
 
 
   (* Not yet thought about. *)
-  let post_process_method_value_binding ~collname data = data
+  let post_process_method_value_binding _collname data = data
 end ;;
 module TypingEnv = Make (TypingEMAccess) ;;
 

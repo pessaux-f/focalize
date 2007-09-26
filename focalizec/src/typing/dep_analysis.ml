@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.17 2007-09-25 15:29:10 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.18 2007-09-26 10:22:13 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -613,7 +613,7 @@ let in_species_decl_dependencies_for_one_function_name ~current_species
               Not exported outside this module.                          *)
 (* ********************************************************************* *)
 let in_species_decl_n_def_dependencies_for_one_theo_property_name
-    ~current_species (t_prop, opt_body) fields =
+    ~current_species (t_prop, opt_body) =
   let t_prop_decl_deps = prop_decl_dependencies ~current_species t_prop in
   match opt_body with
    | None ->
@@ -733,7 +733,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
     (* Find the names decl and defs dependencies for the current name. *)
     let (n_decl_deps_names, n_def_deps_names) =
       in_species_decl_n_def_dependencies_for_one_theo_property_name
-	~current_species (prop_t, opt_b) fields in
+	~current_species (prop_t, opt_b) in
     (* Now, find the decl-dependencies nodes for these names. *)
     let n_decl_deps_nodes =
       VnameSet.fold
@@ -1117,7 +1117,7 @@ let erase_field field =
 	       Sourcify.pp_vname n from ;
 	   Env.TypeInformation.SF_sig (from, n, sch))
 	 l
-   | Env.TypeInformation.SF_theorem (from, n, sch, prop, body) ->
+   | Env.TypeInformation.SF_theorem (from, n, sch, prop, _) ->
        if Configuration.get_verbose () then
 	 Format.eprintf "Erasing field '%a' coming from '%s'.@."
 	   Sourcify.pp_vname n from ;
@@ -1166,10 +1166,10 @@ let erase_fields_in_context ~current_species context fields =
 		    (* No "def"-dependencies for functions (C.f. definition   *)
 		    (* 30 in Virgile Prevosto's Phd, section 3.9.5, page 53). *)
 		    VnameSet.empty
-		| Env.TypeInformation.SF_theorem (_, n, _, prop, proof) ->
+		| Env.TypeInformation.SF_theorem (_, _, _, prop, proof) ->
 		    let (_, n_def_deps_names) =
 		      in_species_decl_n_def_dependencies_for_one_theo_property_name
-			~current_species (prop, (Some proof)) fields in
+			~current_species (prop, (Some proof)) in
 		    (* Just return the "def"-dependencies. *)
 		    n_def_deps_names
 		| Env.TypeInformation.SF_property (_, _, _, _)

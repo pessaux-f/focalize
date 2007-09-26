@@ -185,7 +185,7 @@ self                  Doit être renommé en "Self" dans la syntaxe
 			- ident au toplevel fichier (#ident)
 			- méthode de self (sel!ident ou !ident)
 			- méthode d'une autre collection
-                          (ident!ident)
+                          (ident!ident)                               FAIT
 --------------------------------------------------------------------------
 !                     Retirer ! comme appel de méthode. A la
                       place, utiliser '.' en combinaison avec la
@@ -384,7 +384,7 @@ En fait, je pense que l'on a besoin aussi d'un environement de collections et
 d'espèces pour scoper car pour se rendre compte qu'un ident scopé I_local
 initialement (et par défaut) par le parser est en fait un I_method, il faut
 bien avoir la liste des méthodes et l'héritage de la collection courante.
-
+                                                            Status : FAIT
 
 
 * QUESTION ENTRE SCOPING ET TYPAGE
@@ -440,7 +440,7 @@ truc de la forme:
 avec l'option à None dans le cas où le nom du type est de la forme #myty.
 Par contre, il faut réfléchir dans ce cas ce que deviennent les noms de types
 "simple" comme "bool", "int" qui eux sont actuellement considérés comme des
-I_local et qui donc ne rentrarais pas dans un schéma fname option * vname.
+I_local et qui donc ne rentrerait pas dans un schéma fname option * vname.
 
 
 
@@ -453,6 +453,7 @@ D'ailleurs c'est en lien direct avec la bizarerie suivante:
   type inv_prod ('a, 'b) = alias ('b * 'a) ;;
   let yappp in #inv_prod (int , string) = ("gee", 42) ;;  (* ... et pas là ? *)
 
+                                      Status : FAIT. Le # est vraiment optionnel
 
 
 2007-08-16 (François)
@@ -479,13 +480,13 @@ En plus, ça éviterait sans doute le "hack" du [is_self].
 and species_param_desc =
   | SP of expr
 Les expressions de paramètre lors d'une application d'espèce sont soit :
- - des [expr] en cas de paramètre "in" (où même autra chose si l'on considère
+ - des [expr] en cas de paramètre "in" (où même autre chose si l'on considère
    l'approche du dernier point du 2007-07-11, ce qui d'ailleurs pose un
    certain nombre de problèmes pour appliquer la règle [ENT-INST] vu que
    remplacer un nom de collection dans des expressions de valeurs n'a pas
    vraiment de sens. Il faudrait alors avoir un moyen d'exprimer une
    expression de valeur "correspondant" au repr d'une collection afin de
-   faire cette substitution. Ce serait sans doute un genr ede truc builtin,
+   faire cette substitution. Ce serait sans doute un genre de truc builtin,
    magic...).
  - des *identificateurs* de collection (c.f thèse Virgile section 3.8, page
    43) en cas de paramètre "is".                                   OK, COMPRIS
