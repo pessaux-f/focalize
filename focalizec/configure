@@ -1,0 +1,15 @@
+touch .depend
+touch ./basement/.depend
+mkdir -p ./basement/odoc
+touch ./parser/.depend
+mkdir -p ./parser/odoc
+touch ./typing/.depend
+mkdir -p ./typing/odoc
+touch ./mlcodegen/.depend
+mkdir -p ./mlcodegen/odoc
+touch ./toplevel/.depend
+mkdir -p ./toplevel/odoc
+touch ./lib/.depend
+mkdir -p ./lib/odoc
+
+echo "Done. Now, please invoke: make depend all"
