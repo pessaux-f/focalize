@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.62 2007-09-26 13:58:37 weis Exp $ *)
+(* $Id: parser.mly,v 1.63 2007-09-26 14:21:27 weis Exp $ *)
 
 open Parsetree;;
 
@@ -18,7 +18,6 @@ let mk_no_doc d = mk_doc None d ;;
 let mk_local_ident s = mk (I_local s) ;;
 let mk_global_ident s = mk (I_global (None, s));;
 let mk_global_constr s1 s2 = mk (I_global (s1, s2));;
-let mk_global_constr_lident s = mk (I_global (s1, s2));;
 let mk_global_constr_expr s1 s2 = mk (CE (s1, s2));;
 
 let mk_local_var s = mk (E_var (mk_local_ident s));;
@@ -254,7 +253,7 @@ phrase:
 ;
 
 def_external:
-  | TYPE external_type_name external_def_type_params EQUAL external_definition
+  | TYPE type_name def_type_params EQUAL external_definition
     {
      mk
        (ED_type
@@ -335,17 +334,6 @@ def_record_field_list:
     { [ ($1, $3) ] }
   | label_name EQUAL type_expr SEMI def_record_field_list
     { ($1, $3) :: $5 }
-;
-
-external_def_type_params:
-  | { [] }
-  | LPAREN external_def_type_param_comma_list RPAREN { $2 }
-;
-
-external_def_type_param_comma_list:
-  | external_type_param_name { [ $1 ] }
-  | external_type_param_name COMMA external_def_type_param_comma_list
-      { $1 :: $3 }
 ;
 
 /**** SPECIES ****/
@@ -1058,16 +1046,7 @@ type_name:
   | LIDENT { $1 }
 ;
 
-external_type_name:
-  | LIDENT { $1 }
-;
-
 type_param_name:
   | QIDENT { $1 }
   | LIDENT { $1 }
 ;
-
-external_type_param_name:
-  | QIDENT { $1 }
-;
-
