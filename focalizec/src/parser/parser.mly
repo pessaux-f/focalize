@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.63 2007-09-26 14:21:27 weis Exp $ *)
+(* $Id: parser.mly,v 1.64 2007-09-26 15:56:16 weis Exp $ *)
 
 open Parsetree;;
 
@@ -246,27 +246,26 @@ phrase:
   | def_type SEMI_SEMI { mk (Ph_type $1) }
   | def_species SEMI_SEMI { mk (Ph_species $1) }
   | def_collection SEMI_SEMI { mk (Ph_coll $1) }
+/* ??? | def_external SEMI_SEMI { mk (Ph_external $1) } */
   | opt_doc EXTERNAL def_external SEMI_SEMI { mk_doc $1 (Ph_external $3) }
   | opt_doc OPEN STRING SEMI_SEMI { mk_doc $1 (Ph_open $3) }
   | opt_doc USE STRING SEMI_SEMI { mk_doc $1 (Ph_use $3) }
   | opt_doc expr SEMI_SEMI { mk_doc $1 (Ph_expr $2) }
 ;
 
+/* Definition of external definition of types and values. */
 def_external:
-  | TYPE type_name def_type_params EQUAL external_definition
-    {
-     mk
+/*
+  | opt_doc TYPE type_vname def_type_params EQUAL def_type_body
+    { mk_doc $1 {td_name = ($3 : string); td_params = $4; td_body = $6; } }
+;
+*/
+  | TYPE type_vname def_type_params EQUAL external_definition
+    { mk
        (ED_type
-	  (mk
-	     { etd_name = Vlident $2 ;
-	       etd_params = List.map (fun n -> Vqident n) $3 ;
-	       etd_body = mk $5 }))
-   }
+          (mk { etd_name = $2; etd_params = $3; etd_body = mk $5; })) }
   | VALUE external_value_vname COLON external_type_expr EQUAL external_definition
-    {
-     mk
-       (ED_value (mk { evd_name = $2 ; evd_type = $4 ; evd_body = mk $6 }))
-   }
+    { mk (ED_value (mk { evd_name = $2 ; evd_type = $4 ; evd_body = mk $6 })) }
 ;
 
 external_language:
@@ -291,8 +290,8 @@ external_definition:
 /**** TYPE DEFINITION ****/
 
 def_type:
-  | opt_doc TYPE type_name def_type_params EQUAL def_type_body
-    { mk_doc $1 {td_name = ($3 : string); td_params = $4; td_body = $6; } }
+  | opt_doc TYPE type_vname def_type_params EQUAL def_type_body
+    { mk_doc $1 {td_name = $3; td_params = $4; td_body = $6; } }
 ;
 
 def_type_params:
@@ -301,8 +300,8 @@ def_type_params:
 ;
 
 def_type_param_comma_list:
-  | type_param_name { [ $1 ] }
-  | type_param_name COMMA def_type_param_comma_list { $1 :: $3 }
+  | type_param_vname { [ $1 ] }
+  | type_param_vname COMMA def_type_param_comma_list { $1 :: $3 }
 ;
 
 def_type_body:
@@ -1042,11 +1041,11 @@ label_name:
   | LIDENT { $1 }
 ;
 
-type_name:
-  | LIDENT { $1 }
+type_vname:
+  | LIDENT { Vlident $1 }
 ;
 
-type_param_name:
-  | QIDENT { $1 }
-  | LIDENT { $1 }
+type_param_vname:
+  | QIDENT { Vqident $1 }
+  | LIDENT { Vlident $1 }
 ;

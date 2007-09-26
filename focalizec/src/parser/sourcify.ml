@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.27 2007-09-25 11:15:59 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.28 2007-09-26 15:56:16 weis Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -944,13 +944,13 @@ let pp_tmp_TD_union ppf l =
 
 let rec pp_type_def_desc ppf td =
   (* The type's name. *)
-  Format.fprintf ppf "@[<2>type %s " td.Parsetree.td_name  ;
+  Format.fprintf ppf "@[<2>type %a " pp_vname td.Parsetree.td_name  ;
   (* Print type's parameters if some. *)
   if td.Parsetree.td_params <> [] then
     Format.fprintf ppf "(%a) "
       (Handy.pp_generic_separated_list
 	 ","
-	 (fun local_ppf s -> Format.fprintf local_ppf "%s" s))
+	 (fun local_ppf s -> Format.fprintf local_ppf "%a" pp_vname s))
       td.Parsetree.td_params ;
   Format.fprintf ppf "=@ %a@]" pp_type_body td.Parsetree.td_body
     

@@ -1,4 +1,4 @@
-(* $Id: oldsourcify.ml,v 1.18 2007-08-31 16:21:09 pessaux Exp $ *)
+(* $Id: oldsourcify.ml,v 1.19 2007-09-26 15:56:16 weis Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -1115,10 +1115,10 @@ let rec pp_type_def_desc ppf td =
     Format.fprintf ppf "(%a) "
       (Handy.pp_generic_separated_list
 	 ","
-	 (fun local_ppf s -> Format.fprintf local_ppf "%s" s))
+	 (fun local_ppf s -> Format.fprintf local_ppf "%a" pp_vname s))
       td.Parsetree.td_params ;
-  Format.fprintf ppf "%s =@ %a@]"
-    td.Parsetree.td_name pp_type_body td.Parsetree.td_body
+  Format.fprintf ppf "%a =@ %a@]"
+    pp_vname td.Parsetree.td_name pp_type_body td.Parsetree.td_body
 and pp_type_def ppf = pp_generic_ast pp_type_def_desc ppf
 
 

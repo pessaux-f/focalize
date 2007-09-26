@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.14 2007-08-31 16:21:09 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.15 2007-09-26 15:56:16 weis Exp $ *)
 
 (* *********************************************************************** *)
 (* pp_position : Format.formatter -> Lexing.position -> unit               *)
@@ -857,11 +857,11 @@ let pp_tmp_TD_union ppf l =
 
 
 let rec pp_type_def_desc ppf td =
-  Format.fprintf ppf "{@[<2>%s ;@ [@ %a@ ] ;@ %a @]}"
-    td.Parsetree.td_name
+  Format.fprintf ppf "{@[<2>%a ;@ [@ %a@ ] ;@ %a @]}"
+    pp_vname td.Parsetree.td_name
     (Handy.pp_generic_separated_list
        ","
-       (fun local_ppf s -> Format.fprintf local_ppf "%s" s))
+       (fun local_ppf s -> Format.fprintf local_ppf "%a" pp_vname s))
     td.Parsetree.td_params
     pp_type_body td.Parsetree.td_body
 and pp_type_def ppf = pp_generic_ast pp_type_def_desc ppf

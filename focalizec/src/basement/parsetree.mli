@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.13 2007-08-31 16:21:09 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.14 2007-09-26 15:56:16 weis Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -20,9 +20,7 @@
    - resolve global/local/method classification for idents.
 *)
 
-
 (** Types of various identifiers in the abstract syntax tree. *)
-
 type vname =
    | Vlident of string  (** Lowercase ident. *)
    | Vuident of string  (** Capitalized ident. *)
@@ -33,7 +31,7 @@ type vname =
 	 which can be regular. infix or prefix. *)
 ;;
 
-type constr_name = vname
+type constructor_name = vname
      (** Constructor name. *)
 ;;
 
@@ -46,16 +44,16 @@ type external_name = string * string
 ;;
 
 type ('a, 'b) generic_ast = {
-   ast_loc : Location.t ;  (** The location in the source of the AST node. *)
-   ast_desc : 'a;          (** The description of the node. *)
-   ast_doc : 'b option;    (** The support for documentation in many formats. *)
+   ast_loc : Location.t; (** The location in the source of the AST node. *)
+   ast_desc : 'a;        (** The description of the node. *)
+   ast_doc : 'b option;  (** The support for documentation in many formats. *)
    mutable ast_type : Types.type_simple option;
                          (** The type of the node. *)
 }
 ;;
 
-type 'a ast = ('a, string) generic_ast ;;
-type 'a ast_doc = ('a, string) generic_ast ;;
+type 'a ast = ('a, string) generic_ast;;
+type 'a ast_doc = ('a, string) generic_ast;;
 
 type ident = ident_desc ast
 and ident_desc =
@@ -63,8 +61,6 @@ and ident_desc =
   | I_global of Types.fname option * vname
   | I_method of Types.collection_name option * vname
 ;;
-
-
 
 (* ********************************************************************** *)
 (*  [Type] : constructor_expr                                             *)
@@ -137,7 +133,6 @@ type external_language =
   | EL_Caml
   | EL_Coq
   | EL_external of string
-
 (** The external languages known to the compiler are [Caml], [Coq], and any
     other mentioned as such language name which is an uninterpreted string. *)
 ;;
@@ -150,16 +145,16 @@ and external_def_desc =
 
 and external_type_def_body = external_type_def_body_desc ast
 and external_type_def_body_desc = {
-  etd_name : vname ;
-  etd_params : vname list ;    (** For types to know their arity. *)
-  etd_body : external_expr
+  etd_name : vname;
+  etd_params : vname list;    (** For types to know their arity. *)
+  etd_body : external_expr;
 }
 
 and external_value_def_body = external_value_def_body_desc ast
 and external_value_def_body_desc = {
-  evd_name : vname ;
-  evd_type : type_expr ;
-  evd_body : external_expr
+  evd_name : vname;
+  evd_type : type_expr;
+  evd_body : external_expr;
 }
 
 (** The body of an external definitions contains the name defined
@@ -176,10 +171,10 @@ and external_expression = string
 
 type species_def = species_def_desc ast_doc
 and species_def_desc = {
-  sd_name : Types.species_name ;
-  sd_params : (vname * species_param_type) list ;
-  sd_inherits : (species_expr list) ast_doc ;
-  sd_fields : species_field list
+  sd_name : Types.species_name;
+  sd_params : (vname * species_param_type) list;
+  sd_inherits : (species_expr list) ast_doc;
+  sd_fields : species_field list;
 }
 
 and species_param_type = species_param_type_desc ast
@@ -189,8 +184,8 @@ and species_param_type_desc =
 
 and species_expr = species_expr_desc ast
 and species_expr_desc = {
-  se_name : ident ;
-  se_params : species_param list
+  se_name : ident;
+  se_params : species_param list;
 }
 
 and species_param = species_param_desc ast
@@ -199,20 +194,20 @@ and species_param_desc =
 
 and sig_def = sig_def_desc ast_doc
 and sig_def_desc = {
-  sig_name : vname ;
-  sig_type : type_expr
+  sig_name : vname;
+  sig_type : type_expr;
 }
 
 and proof_def = proof_def_desc ast_doc
 and proof_def_desc = {
-  pd_name : vname ;
-  pd_proof : proof
+  pd_name : vname;
+  pd_proof : proof;
 }
 
 and property_def = property_def_desc ast_doc
 and property_def_desc = {
-  prd_name : vname ;
-  prd_prop : prop
+  prd_name : vname;
+  prd_prop : prop;
 }
 
 and species_field = species_field_desc ast
@@ -226,25 +221,25 @@ and species_field_desc =
 
 and let_def = let_def_desc ast_doc
 and let_def_desc = {
-  ld_rec : rec_flag ;
-  ld_logical : logical_flag ;
-  ld_local : local_flag ;
-  ld_bindings : binding list
+  ld_rec : rec_flag;
+  ld_logical : logical_flag;
+  ld_local : local_flag;
+  ld_bindings : binding list;
 }
 and binding = binding_desc ast
 and binding_desc = {
-  b_name : vname ;
-  b_params : (vname * type_expr option) list ;
-  b_type : type_expr option ;
-  b_body : expr
+  b_name : vname;
+  b_params : (vname * type_expr option) list;
+  b_type : type_expr option;
+  b_body : expr;
 }
 
 and theorem_def = theorem_def_desc ast_doc
 and theorem_def_desc = {
-  th_name : vname ;
-  th_local : local_flag ;
-  th_stmt : prop ;
-  th_proof : proof
+  th_name : vname;
+  th_local : local_flag;
+  th_stmt : prop;
+  th_proof : proof;
 }
 
 and fact = fact_desc ast
@@ -269,7 +264,7 @@ and proof_node_desc =
 and statement = statement_desc ast
 and statement_desc = {
   s_hyps : hyp list;
-  s_concl : prop option
+  s_concl : prop option;
 }
 
 and hyp = hyp_desc ast
@@ -311,21 +306,21 @@ and expr_desc =
 
 type coll_def = coll_def_desc ast_doc
 and coll_def_desc = {
-  cd_name : Types.collection_name ;
-  cd_body : species_expr
+  cd_name : Types.collection_name;
+  cd_body : species_expr;
 };;
 
 type type_def = type_def_desc ast
 and type_def_desc = {
-  td_name : Types.type_name ;
-  td_params : string list ;
-  td_body : type_body
+  td_name : vname;
+  td_params : vname list;
+  td_body : type_body;
 }
 
 and type_body = type_body_desc ast
 and type_body_desc =
   | TD_alias of type_expr
-  | TD_union of (constr_name * type_expr list) list
+  | TD_union of (constructor_name * type_expr list) list
   | TD_record of (Types.label_name * type_expr) list
 ;;
 
