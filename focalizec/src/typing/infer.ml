@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.72 2007-09-26 10:22:13 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.73 2007-09-28 08:40:10 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -22,7 +22,8 @@
     {b Rem} : Exported outside this module.                                *)
 (* *********************************************************************** *)
 exception Bad_sum_type_constructor_arity of
-  (Parsetree.ident * (** The name of the misused sum type constructor. *)
+  (Parsetree.constructor_ident *     (** The name of the misused sum type
+					 constructor. *)
    Env.TypeInformation.constructor_arity (** The correct arity it should have
 					     be used. *)
   ) ;;
@@ -38,7 +39,7 @@ exception Bad_sum_type_constructor_arity of
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
 exception Unbound_type_variable of
-  string    (** The name of the unbound variable. *)
+  Parsetree.vname    (** The name of the unbound variable. *)
 ;;
 
 
@@ -51,7 +52,7 @@ exception Unbound_type_variable of
 (* ************************************************************************* *)
 exception Method_multiply_defined of
   (Parsetree.vname *     (** The method's name. *)
-   Types.species_name)   (** The species's name where the method is defined. *)
+   Parsetree.vname)      (** The species's name where the method is defined. *)
 ;;
 
 
@@ -182,7 +183,7 @@ exception Parameterized_species_arity_mismatch of
     {b Rem} : Exported outside this module.                                *)
 (* *********************************************************************** *)
 exception Collection_not_fully_defined of
-  (Types.species_name *  (** The incompletely species. *)
+  (Parsetree.vname *  (** The incompletely species. *)
    Parsetree.vname)      (** The name of the field missing an implementation. *)
 ;;
 
@@ -202,12 +203,12 @@ type typing_context = {
       of the file without extension and not capitalized). *)
   current_unit : Types.fname ;
   (** The name of the current species if relevant. *)
-  current_species : Types.species_name option ;
+  current_species : Parsetree.vname option ;
   (** Optional type Self is known to be equal to. *)
   self_manifest : Types.type_simple option ;
-  (** Mapping between 'variables and the [simpletype] they are bound to.
-      Used when creating a polymorphic type definition. *)
-  tyvars_mapping : (string * Types.type_simple) list
+  (** Mapping between 'variables [vname]s and the [simple_type] they are
+      bound to. Used when creating a polymorphic type definition. *)
+  tyvars_mapping : (Parsetree.vname * Types.type_simple) list
 } ;;
 
 
@@ -230,11 +231,11 @@ let rec typecheck_type_expr ctx env ty_expr =
     (match ty_expr.Parsetree.ast_desc with
      | Parsetree.TE_ident ident ->
          (match ident.Parsetree.ast_desc with
-	  | Parsetree.I_local (Parsetree.Vqident quote_name) ->
+	  | Parsetree.I_local ((Parsetree.Vqident _) as variable_qname) ->
 	      (begin
 	      (* Just handle the special where the ident is a type variable. *)
-	      try List.assoc quote_name ctx.tyvars_mapping
-	      with Not_found -> raise (Unbound_type_variable quote_name)
+	      try List.assoc variable_qname ctx.tyvars_mapping
+	      with Not_found -> raise (Unbound_type_variable variable_qname)
 	      end)
 	  | _ ->
 	      (* Case of all 0-ary other user-defined type constructors. *)
@@ -311,7 +312,7 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
     (match rep_type_def.Parsetree.ast_desc with
      | Parsetree.RTE_ident ident ->
          (match ident.Parsetree.ast_desc with
-	  | Parsetree.I_local (Parsetree.Vqident quote_name) ->
+	  | Parsetree.I_local ((Parsetree.Vqident _) as variable_qname) ->
 	      (begin
 	      (* Just handle the special where the ident is a type variable. *)
 	      (* Note that for a "rep" type because polymorphism is not      *)
@@ -321,8 +322,8 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
 	      (* test later on the obtained type. Anyway this kind of test   *)
 	      (* is not only required for "rep", but also for all the other  *)
 	      (* methods (they can't either be polymorphic).                 *)
-	      try List.assoc quote_name ctx.tyvars_mapping
-	      with Not_found -> raise (Unbound_type_variable quote_name)
+	      try List.assoc variable_qname ctx.tyvars_mapping
+	      with Not_found -> raise (Unbound_type_variable variable_qname)
 	      end)
 	  | _ ->
 	      (* Case of all 0-ary other user-defined type constructors. *)
@@ -382,7 +383,7 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
 
 
 (* ************************************************************************* *)
-(* Parsetree.type_expr -> (string * Types.type_simple) list                  *)
+(* Parsetree.type_expr -> (Parsetree.vname * Types.type_simple) list         *)
 (** {b Descr} : Create a fresh variable mapping automatically variables in
               the type as generalized. This is used when one creates a
               type structure from an external value's type expression.
@@ -406,11 +407,12 @@ let make_implicit_var_mapping_from_type_expr type_expression =
      | Parsetree.TE_ident ident ->
 	 (begin
 	 match ident.Parsetree.ast_desc with
-	  | Parsetree.I_local (Parsetree.Vqident quote_name) ->
+	  | Parsetree.I_local ((Parsetree.Vqident _) as variable_qname) ->
 	      (begin
               (* Just handle the special where the ident is a type variable. *)
-	      if not (List.mem_assoc quote_name !mapping) then
-		mapping := (quote_name, (Types.type_variable ())) :: !mapping
+	      if not (List.mem_assoc variable_qname !mapping) then
+		mapping :=
+		  (variable_qname, (Types.type_variable ())) :: !mapping
 	      end)
 	  | _ -> ()
 	 end)
@@ -567,7 +569,7 @@ let rec typecheck_pattern ctx env pat_desc =
      | Parsetree.P_wild ->
 	 let var_ty = Types.type_variable () in
 	 (var_ty, [])
-     | Parsetree.P_app (cstr_name, pats) ->
+     | Parsetree.P_constr (cstr_name, pats) ->
 	 (* Find a specialization of the constructor's type scheme. *)
 	 let cstr_decl =
 	   Env.TypingEnv.find_constructor
@@ -674,6 +676,7 @@ let typecheck_external_def ctx env e_def =
 	  (fun _ -> Types.type_variable ())
 	  body.Parsetree.ast_desc.Parsetree.etd_params in
       (* Make the constructor... *)
+      (* [Unsure] : les types basics devraient ne plus être une chaîne mais directement le vname ou même encore plus, le scope+vname ! *)
       let ty = Types.type_basic name_as_str params in
       Types.end_definition () ;
       let (identity, params) = Types.generalize2 ty params in
@@ -689,7 +692,8 @@ let typecheck_external_def ctx env e_def =
 	  name_as_str Types.pp_type_scheme identity
 	end) ;
       (* Return the extended environment. *)
-      Env.TypingEnv.add_type name_as_str ty_descr env
+      Env.TypingEnv.add_type
+	body.Parsetree.ast_desc.Parsetree.etd_name ty_descr env
   | Parsetree.ED_value body ->
       Types.begin_definition () ;
       (* In external value definitions, variables in the *)
@@ -831,21 +835,11 @@ let rec typecheck_expr ctx env initial_expr =
 	     result_ty)
            fun_ty
 	   ty_exprs
-     | Parsetree.E_constr (cstr_expr, exprs) ->
-	 (* Because the environment maps [idents] onto type schemes and *)
-         (* because the constructor's name is not a "full" ident, we    *)
-         (* just wrap the constructor's name into a global [ident]      *)
-         (* to be able to lookup inside the environment.                *)
-	 let pseudo_ident =
-           let Parsetree.CE (fname_opt, vname) = cstr_expr.Parsetree.ast_desc in
-	   { Parsetree.ast_loc = cstr_expr.Parsetree.ast_loc ;
-             Parsetree.ast_desc = Parsetree.I_global (fname_opt, vname) ;
-	     Parsetree.ast_doc = cstr_expr.Parsetree.ast_doc ;
-	     Parsetree.ast_type = None } in
+     | Parsetree.E_constr (cstr_ident, exprs) ->
 	 let cstr_decl =
 	   Env.TypingEnv.find_constructor
-	     ~loc: cstr_expr.Parsetree.ast_loc
-	     ~current_unit: ctx.current_unit pseudo_ident env in
+	     ~loc: cstr_ident.Parsetree.ast_loc
+	     ~current_unit: ctx.current_unit cstr_ident env in
 	 (match (exprs, cstr_decl.Env.TypeInformation.cstr_arity) with
 	  | ([], Env.TypeInformation.CA_zero) ->
 	      (* Just get an instance of the constructor's type scheme. *)
@@ -870,7 +864,7 @@ let rec typecheck_expr ctx env initial_expr =
        | (_, _) ->
 	   raise
 	     (Bad_sum_type_constructor_arity
-		(pseudo_ident, cstr_decl.Env.TypeInformation.cstr_arity)))
+		(cstr_ident, cstr_decl.Env.TypeInformation.cstr_arity)))
      | Parsetree.E_match (matched_expr, bindings) ->
 	 let matched_expr_ty = typecheck_expr ctx env matched_expr in
 	 (* Let's get a fresh type accumulator  *)
@@ -1601,7 +1595,7 @@ let rec typecheck_expr_collection_cstr_for_is_param ctx env initial_expr =
    | Parsetree.E_constr (cstr_expr, []) ->
        (* We re-construct a fake ident from the constructor expression *)
        (* just to be able to lookup inside the environment.            *)
-       let Parsetree.CE (id_opt_fname, id_vname) =
+       let Parsetree.CI (id_opt_fname, id_vname) =
 	 cstr_expr.Parsetree.ast_desc in
        let pseudo_ident = { cstr_expr with
          Parsetree.ast_desc = Parsetree.I_global (id_opt_fname, id_vname) } in
@@ -1876,11 +1870,7 @@ let typecheck_species_expr ctx env species_expr =
      | Parsetree.I_global (None, vname) ->
 	 (ctx.current_unit, (Parsetree_utils.name_of_vname vname))
      | Parsetree.I_global ((Some fname), vname) ->
-	 (fname, (Parsetree_utils.name_of_vname vname))
-     | Parsetree.I_method (_, _) ->
-	 (* Species are not first class value, then  *)
-	 (* they can't be returned by a method call. *)
-	 assert false) in
+	 (fname, (Parsetree_utils.name_of_vname vname))) in
   let species_carrier_type =
     Types.type_rep_species ~species_module ~species_name in
   (* Now, create the "species type" (a somewhat of signature). *)
@@ -1916,9 +1906,9 @@ let typecheck_species_expr ctx env species_expr =
 let typecheck_species_def_params ctx env species_params =
   let rec rec_typecheck_params accu_env = function
     | [] -> (accu_env, [])
-    | (vname, param_kind) :: rem ->
+    | (param_vname, param_kind) :: rem ->
 	(begin
-	let param_name_as_string = Parsetree_utils.name_of_vname vname in
+	let param_name_as_string = Parsetree_utils.name_of_vname param_vname in
 	match param_kind.Parsetree.ast_desc with
 	 | Parsetree.SPT_in ident ->
 	     (begin
@@ -1930,11 +1920,7 @@ let typecheck_species_def_params ctx env species_params =
 		| Parsetree.I_global (None, vname) ->
 		    (ctx.current_unit, (Parsetree_utils.name_of_vname vname))
 		| Parsetree.I_global ((Some fname), vname) ->
-		    (fname, (Parsetree_utils.name_of_vname vname))
-		| Parsetree.I_method (_, _) ->
-		    (* Species are not first class value, then  *)
-		    (* they can't be returned by a method call. *)
-		    assert false) in
+		    (fname, (Parsetree_utils.name_of_vname vname))) in
 	     (* Just check that the species exists to avoid raising an  *)
 	     (* error at application-time if the species doesn't exist. *)
 	     ignore
@@ -1951,13 +1937,13 @@ let typecheck_species_def_params ctx env species_params =
 	     Types.end_definition () ;
 	     let accu_env' =
 	       Env.TypingEnv.add_value
-		 vname (Types.generalize param_carrier_ty) accu_env in
+		 param_vname (Types.generalize param_carrier_ty) accu_env in
 	     (* And now, build the species type of the application. *)
 	     let (accu_env'', rem_spe_params) =
 	       rec_typecheck_params accu_env' rem in
 	     let current_spe_param =
 	       Env.TypeInformation.SPAR_in
-		 (vname, (param_sp_module, param_sp_name)) in
+		 (param_vname, (param_sp_module, param_sp_name)) in
 	     (* Finally, we return the fully extended environment and *)
 	     (* the type of the species application we just built.    *)
 	     (accu_env'', (current_spe_param:: rem_spe_params))
@@ -1987,7 +1973,7 @@ let typecheck_species_def_params ctx env species_params =
 	       Env.TypeInformation.spe_sig_methods = abstracted_methods } in
 	     let accu_env' =
 	       Env.TypingEnv.add_species
-		 param_name_as_string param_description accu_env in
+		 param_vname param_description accu_env in
 	     (* Create the carrier type of the parameter *)
              (* and extend the current environment.      *)
 	     Types.begin_definition () ;
@@ -2004,12 +1990,12 @@ let typecheck_species_def_params ctx env species_params =
 	       Env.TypeInformation.type_arity = 0 } in
 	     let accu_env'' =
 	       Env.TypingEnv.add_type
-		 param_name_as_string param_carrier_ty_description accu_env' in
+		 param_vname param_carrier_ty_description accu_env' in
 	     (* And now, build the species type of the application. *)
 	     let (accu_env''', rem_spe_params) =
 	       rec_typecheck_params accu_env'' rem in
 	     let current_spe_param =
-	       Env.TypeInformation.SPAR_is (vname, species_expr_fields) in
+	       Env.TypeInformation.SPAR_is (param_vname, species_expr_fields) in
 	     (* Finally, we return the fully extended environment and *)
 	     (* the type of the species application we just built.    *)
 	     (accu_env''', (current_spe_param:: rem_spe_params))
@@ -2762,7 +2748,8 @@ let typecheck_species_def ctx env species_def =
   let species_def_desc = species_def.Parsetree.ast_desc in
   if Configuration.get_verbose () then
     Format.eprintf
-      "Analysing species '%s'@." species_def_desc.Parsetree.sd_name ;
+      "Analysing species '%a'@."
+      Sourcify.pp_vname species_def_desc.Parsetree.sd_name ;
   (* First of all, we are in a species !!! *)
   let ctx = { ctx with
     current_species = Some species_def_desc.Parsetree.sd_name } in
@@ -2843,7 +2830,8 @@ let typecheck_species_def ctx env species_def =
   let species_carrier_type =
     Types.type_rep_species
       ~species_module: ctx'.current_unit
-      ~species_name: species_def_desc.Parsetree.sd_name in
+      ~species_name:
+        (Parsetree_utils.name_of_vname species_def_desc.Parsetree.sd_name) in
   Types.end_definition () ;
   let species_as_type_description = {
     Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
@@ -2860,8 +2848,8 @@ let typecheck_species_def ctx env species_def =
   (* Interface printing stuff. *)
   if Configuration.get_do_interface_output () then
     (begin
-    Format.printf "@[<2>species %s%a@]@\n"
-      species_def_desc.Parsetree.sd_name
+    Format.printf "@[<2>species %a%a@]@\n"
+      Sourcify.pp_vname species_def_desc.Parsetree.sd_name
       Env.TypeInformation.pp_species_description species_description
     end) ;
   ((PCM_species (species_def, species_description, species_dep_graph)),
@@ -2939,7 +2927,9 @@ let typecheck_type_def ctx env type_def =
       (begin
       Types.begin_definition () ;
       let futur_type_type =
-        Types.type_basic type_def_desc.Parsetree.td_name vars_of_mapping in
+        Types.type_basic
+	  (Parsetree_utils.name_of_vname type_def_desc.Parsetree.td_name)
+	  vars_of_mapping in
       Types.end_definition () ;
       let proto_descrip = {
         Env.TypeInformation.type_kind = Env.TypeInformation.TK_variant [] ;
@@ -3018,7 +3008,8 @@ let typecheck_type_def ctx env type_def =
       Types.begin_definition () ;
       let futur_type_type =
         Types.type_basic
-          type_def_desc.Parsetree.td_name vars_of_mapping in
+          (Parsetree_utils.name_of_vname type_def_desc.Parsetree.td_name)
+	  vars_of_mapping in
       Types.end_definition () ;
       (* Now typecheck the fields of the record. *)
       let fields_descriptions =
@@ -3095,7 +3086,9 @@ let typecheck_collection_def ctx env coll_def =
   (* One must ensure that the collection is *)
   (* really a completely defined species.   *)
   ensure_collection_completely_defined ctx species_expr_fields ;
-  let myself_coll_ty = (ctx.current_unit, coll_def_desc.Parsetree.cd_name) in
+  let myself_coll_ty =
+    (ctx.current_unit,
+     (Parsetree_utils.name_of_vname coll_def_desc.Parsetree.cd_name)) in
   (* In the collection's fields, substitute Self <- the collection name. *)
   let collection_fields =
     List.map
@@ -3118,7 +3111,8 @@ let typecheck_collection_def ctx env coll_def =
   let collec_carrier_type =
     Types.type_rep_species
       ~species_module: ctx.current_unit
-      ~species_name: coll_def_desc.Parsetree.cd_name in
+      ~species_name:
+        (Parsetree_utils.name_of_vname coll_def_desc.Parsetree.cd_name) in
   Types.end_definition () ;
   let collec_as_type_description = {
     Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
@@ -3135,8 +3129,8 @@ let typecheck_collection_def ctx env coll_def =
   (* Interface printing stuff. *)
   if Configuration.get_do_interface_output () then
     (begin
-    Format.printf "@[<2>collection %s%a@]@\n"
-      coll_def_desc.Parsetree.cd_name
+    Format.printf "@[<2>collection %a%a@]@\n"
+      Sourcify.pp_vname coll_def_desc.Parsetree.cd_name
       Env.TypeInformation.pp_species_description collec_description
     end) ;
   ((PCM_collection (coll_def, collec_description)),

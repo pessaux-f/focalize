@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.26 2007-09-25 11:15:59 pessaux Exp $ *)
+(* $Id: types.ml,v 1.27 2007-09-28 08:40:10 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -44,11 +44,11 @@ let generic_level = 100000000 ;;
     {b Rem} : Exported opaque outside this module.   *)
 (* ************************************************* *)
 type type_simple = {
-  (* Binding level of the type. *)
+  (** Binding level of the type. *)
   mutable ts_level : int ;
   (* The description of the type. *)
   ts_desc : type_simple_desc ;
-  (* Value of the type. In fact, generalisation of the value of a type variable. This permits to make an already "non-variable" type equal to Self by side effect. *)
+  (** Value of the type. In fact, generalisation of the value of a type variable. This permits to make an already "non-variable" type equal to Self by side effect. *)
   mutable ts_link_value : type_link_value
 }
 
@@ -736,7 +736,7 @@ let unify ~loc ~self_manifest type1 type2 =
 
 
 (* ************************************************************************* *)
-(* type_collection -> type_collection_name -> type_simple -> type_simple     *)
+(* type_collection -> type_collection -> type_simple -> type_simple          *)
 (** {b Descr} : Performs the collection name substitution
               [(fname1, spe_name1)] <- [c2] inside a [type_simple].
 

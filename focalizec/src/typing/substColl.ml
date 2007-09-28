@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: substColl.ml,v 1.9 2007-09-25 11:16:00 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.10 2007-09-28 08:40:10 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -63,20 +63,33 @@ let subst_type_simple_option c1 c2 = function
 
 
 
-let subst_ident ~current_unit c1 c2 ident =
+(* substitution_collection_kind -> Types.type_collection ->    *)
+(*   Parsetree.ident -> Parsetree.ident                        *)
+let subst_ident c1 c2 ident =
+  (* Substitution in the AST node description is trivially empty.          *)
+  (* Because [idents] can only be [I_local] of [I_global] stuff, there is  *)
+  (* never collection names inside, hence nothing to change in the [desc]. *)
+  (* Substitute in the AST node type. *)
+  let new_type = subst_type_simple_option c1 c2 ident.Parsetree.ast_type in
+  { ident with Parsetree.ast_type = new_type }
+;;
+
+
+
+let subst_expr_ident ~current_unit c1 c2 ident =
   (* Substitute in the AST node description. *)
   let  new_desc =
     (match ident.Parsetree.ast_desc with
-     | Parsetree.I_local _ | Parsetree.I_global (_, _)
-     | Parsetree.I_method (None, _) ->
+     | Parsetree.EI_local _ | Parsetree.EI_global (_, _)
+     | Parsetree.EI_method (None, _) ->
 	 (* No collection name inside, hence nothing to change. *)
 	 ident.Parsetree.ast_desc
-     | Parsetree.I_method ((Some c), vname) ->
+     | Parsetree.EI_method ((Some c), vname) ->
 	 (begin
 	 match c1 with
 	  | SCK_self ->
-	      (* Because Self is a special constructor, an ident cannot    *)
-	      (* be Self. Then in this case, the substitution is identity. *)
+	      (* Because Self is a special constructor, an expr_ident can't  *)
+	      (* be Self. Then in this case, the substitution is identity.   *)
 	      ident.Parsetree.ast_desc
 	  | SCK_coll effective_coll_ty ->
 	      (* [Unsure] *)
@@ -86,8 +99,14 @@ let subst_ident ~current_unit c1 c2 ident =
 	      (* QUESTION: What happens if invoking a method from a        *)
               (* collection defined at the toplevel of another compilation *)
 	      (* unit ???                                                  *)
-	      if (current_unit, c) = effective_coll_ty then
-		Parsetree.I_method ((Some (snd c2)), vname)
+	      let c_as_string = Parsetree_utils.name_of_vname c in
+	      (* Attention, [c2] is a [Types.collection_type], then it has *)
+              (* to be transformed into a [Parsetree.vname] before being   *)
+              (* inserted in the [Parsetree.EI_method]. Because collection *)
+              (* names are always capitalized, the transformation is       *)
+              (* trivially to surround [c2] byt a [Parsetree.Vuident].     *)
+	      if (current_unit, c_as_string) = effective_coll_ty then
+		Parsetree.EI_method ((Some (Parsetree.Vuident (snd c2))), vname)
 	      else ident.Parsetree.ast_desc
 	 end)) in
   (* Substitute in the AST node type. *)
@@ -126,11 +145,11 @@ let subst_pattern c1 c2 pattern =
 	   pat.Parsetree.ast_desc
        | Parsetree.P_as (pat', vname) ->
 	   Parsetree.P_as ((rec_subst pat'), vname)
-       | Parsetree.P_app (ident, pats) ->
+       | Parsetree.P_constr (ident, pats) ->
 	   (* Because the [ident] here is a sum type constructor, *)
            (* there is no substitution to do here.                *)
            let pats' = List.map rec_subst pats in
-           Parsetree.P_app (ident, pats')
+           Parsetree.P_constr (ident, pats')
        | Parsetree.P_record fields ->
            let fields' =
              List.map (fun (label, p) -> (label, (rec_subst p))) fields in
@@ -148,19 +167,19 @@ let subst_pattern c1 c2 pattern =
 
 
 
-let subst_type_expr ~current_unit c1 c2 type_expression =
-  (* Let's just make a local recursive function to save the stack, avoiding *)
-  (* passing each time the 3 arguments [~current_unit], [c1] and [c2].      *)
+let subst_type_expr c1 c2 type_expression =
+  (* Let's just make a local recursive function to save the stack, *)
+  (* avoiding passing each time the 2 arguments [c1] and [c2].     *)
   let rec rec_subst ty_expr =
     (* Substitute in the AST node description. *)
     let new_desc =
       (match ty_expr.Parsetree.ast_desc with
        | Parsetree.TE_ident ident ->
-	   Parsetree.TE_ident (subst_ident ~current_unit c1 c2 ident)
+	   Parsetree.TE_ident (subst_ident c1 c2 ident)
        | Parsetree.TE_fun (t1, t2) ->
 	   Parsetree.TE_fun ((rec_subst t1), (rec_subst t2))
        | Parsetree.TE_app (ident, tys) ->
-	   let ident' = subst_ident ~current_unit c1 c2 ident in
+	   let ident' = subst_ident c1 c2 ident in
 	   let tys' = List.map rec_subst tys in
 	   Parsetree.TE_app (ident', tys')
        | Parsetree.TE_prod tys -> Parsetree.TE_prod (List.map rec_subst tys)
@@ -192,7 +211,7 @@ let rec subst_expr ~current_unit c1 c2 expression =
        | Parsetree.E_fun (arg_vnames, e_body) ->
 	   Parsetree.E_fun (arg_vnames, (rec_subst e_body))
        | Parsetree.E_var ident ->
-	   Parsetree.E_var (subst_ident ~current_unit c1 c2 ident)
+	   Parsetree.E_var (subst_expr_ident ~current_unit c1 c2 ident)
        | Parsetree.E_app (functional_expr, args_exprs) ->
 	   let functional_expr' = rec_subst functional_expr in
 	   let args_exprs' = List.map rec_subst args_exprs in
@@ -261,13 +280,13 @@ and subst_let_binding ~current_unit c1 c2 binding =
 	let ty_opt' =
 	  (match ty_opt with
 	   | None -> None
-	   | Some ty -> Some (subst_type_expr ~current_unit c1 c2 ty)) in
+	   | Some ty -> Some (subst_type_expr c1 c2 ty)) in
 	(vname, ty_opt'))
       binding_desc.Parsetree.b_params in
     let b_type' =
       (match binding_desc.Parsetree.b_type with
        | None -> None
-       | Some ty_expr -> Some (subst_type_expr ~current_unit c1 c2 ty_expr)) in
+       | Some ty_expr -> Some (subst_type_expr c1 c2 ty_expr)) in
     let b_body' =
       subst_expr ~current_unit c1 c2 binding_desc.Parsetree.b_body in
     let desc' = { binding_desc with
@@ -312,11 +331,11 @@ let subst_prop ~current_unit c1 c2 initial_prop_expr =
     let new_desc =
       (match prop_expr.Parsetree.ast_desc with
        |  Parsetree.Pr_forall (vnames, type_expr, prop) ->
-	   let type_expr' = subst_type_expr ~current_unit c1 c2 type_expr in
+	   let type_expr' = subst_type_expr c1 c2 type_expr in
 	   let body' = rec_subst prop in
 	   Parsetree.Pr_forall (vnames, type_expr', body')
        | Parsetree.Pr_exists (vnames, type_expr, prop) ->
-	   let type_expr' = subst_type_expr ~current_unit c1 c2 type_expr in
+	   let type_expr' = subst_type_expr c1 c2 type_expr in
 	   let body' = rec_subst prop in
 	   Parsetree.Pr_exists (vnames, type_expr', body')
        | Parsetree.Pr_imply (prop1, prop2) ->

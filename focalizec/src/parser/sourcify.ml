@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.28 2007-09-26 15:56:16 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.29 2007-09-28 08:40:10 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -79,7 +79,7 @@ let pp_generic_ast desc_printer_fct ppf g_ast =
 
 
 (* ****************************************************************** *)
-(* pp_ident_desc : Format.formatter -> Parsetree.ident_desc -> unit   *)
+(* Format.formatter -> Parsetree.ident_desc -> unit                   *)
 (** {b Descr} : Pretty prints a [ident_desc] value as a FoCal source.
 
     {b Rem} : Not exported ouside this module.                        *)
@@ -92,15 +92,9 @@ let pp_ident_desc ppf = function
        | None -> Format.fprintf ppf "%a" pp_vname vname
        | Some fname -> Format.fprintf ppf "%s#%a" fname pp_vname vname
       end
-  | Parsetree.I_method (cname_opt, vname) ->
-      (begin
-      match cname_opt with
-       | None -> Format.fprintf ppf "!%a" pp_vname vname
-       | Some cname -> Format.fprintf ppf "%s!%a" cname pp_vname vname
-      end)
 ;;
 (* *********************************************************** *)
-(* pp_ident : Format.formatter -> Parsetree.ident- > unit      *)
+(* Format.formatter -> Parsetree.ident- > unit                 *)
 (** {b Descr} : Pretty prints a [ident] value as FoCal source.
 
     {b Rem} : Exported ouside this module.                     *)
@@ -108,8 +102,7 @@ let pp_ident_desc ppf = function
 let pp_ident ppf = pp_generic_ast pp_ident_desc ppf
 ;;
 (* ********************************************************************* *)
-(* pp_idents :                                                           *)
-(*   string -> Format.formatter -> Parsetree.ident list -> unit          *)
+(* string -> Format.formatter -> Parsetree.ident list -> unit            *)
 (** {b Descr} : Pretty prints a [list] of [ident] value as FoCal source.
 
     {b Rem} : Not exported ouside this module.                           *)
@@ -119,14 +112,56 @@ let pp_idents sep ppf = Handy.pp_generic_separated_list sep pp_ident ppf
 
 
 
-let pp_cstr_expr_desc ppf (Parsetree.CE (fname_opt, vname)) =
+(* ********************************************************************** *)
+(* Format.formatter -> Parsetree.expr_ident_desc -> unit                  *)
+(** {b Descr} : Pretty prints a [expr_ident_desc] value as a FoCal source.
+
+    {b Rem} : Not exported ouside this module.                            *)
+(* ********************************************************************** *)
+let pp_expr_ident_desc ppf = function
+  | Parsetree.EI_local vname -> Format.fprintf ppf "%a" pp_vname vname
+  | Parsetree.EI_global (fname_opt, vname) ->
+      begin
+      match fname_opt with
+       | None -> Format.fprintf ppf "%a" pp_vname vname
+       | Some fname -> Format.fprintf ppf "%s#%a" fname pp_vname vname
+      end
+  | Parsetree.EI_method (coll_name_opt, vname) ->
+      (begin
+      match coll_name_opt with
+       | None -> Format.fprintf ppf "!%a" pp_vname vname
+       | Some coll_name ->
+	   Format.fprintf ppf "%a!%a" pp_vname coll_name pp_vname vname
+      end)
+;;
+(* **************************************************************** *)
+(* Format.formatter -> Parsetree.expr_ident- > unit                 *)
+(** {b Descr} : Pretty prints a [expr_ident] value as FoCal source.
+
+    {b Rem} : Exported ouside this module.                          *)
+(* **************************************************************** *)
+let pp_expr_ident ppf = pp_generic_ast pp_expr_ident_desc ppf
+;;
+(* ************************************************************************** *)
+(* string -> Format.formatter -> Parsetree.expr_ident list -> unit            *)
+(** {b Descr} : Pretty prints a [list] of [expr_ident] value as FoCal source.
+
+    {b Rem} : Not exported ouside this module.                                *)
+(* ************************************************************************** *)
+let pp_expr_idents sep ppf =
+  Handy.pp_generic_separated_list sep pp_expr_ident ppf
+;;
+
+
+
+let pp_constructor_ident_desc ppf (Parsetree.CI (fname_opt, vname)) =
   begin
   match fname_opt with
    | None -> Format.fprintf ppf "%a" pp_vname vname
    | Some fname -> Format.fprintf ppf "%s#%a" fname pp_vname vname
   end
 ;;
-let pp_cstr_expr ppf = pp_generic_ast pp_cstr_expr_desc ppf
+let pp_constructor_ident ppf = pp_generic_ast pp_constructor_ident_desc ppf
 ;;
 
 
@@ -168,7 +203,7 @@ let expr_desc_fixitude = function
   | Parsetree.E_var id ->
       (begin
       match id.Parsetree.ast_desc with
-       | Parsetree.I_local vname ->
+       | Parsetree.EI_local vname ->
 	   (begin
 	   (* Now discriminate according to the lexical tag. *)
 	   match vname with
@@ -176,9 +211,24 @@ let expr_desc_fixitude = function
 	    | Parsetree.Viident _ -> Fixitude_infix
 	    | _ -> Fixitude_applic
 	   end)
-       | Parsetree.I_global (opt, vname) | Parsetree.I_method (opt, vname) ->
+       | Parsetree.EI_global (opt, vname) ->
 	   (begin
 	   (* Check for an explicit scope information... *)
+	   if opt <> None then
+	     Fixitude_applic  (* So can't be printed as a syntactic operator. *)
+	   else
+	     (begin
+	     (* Now discriminate according to the lexical tag, like above. *)
+	     match vname with
+	      | Parsetree.Vpident _ -> Fixitude_prefix
+	      | Parsetree.Viident _ -> Fixitude_infix
+	      | _ -> Fixitude_applic
+	     end)
+	   end)
+       | Parsetree.EI_method (opt, vname) -> 
+	   (begin
+	   (* Samr kind of process than just above. Check for *)
+	   (* an explicit collection prefix information...    *)
 	   if opt <> None then
 	     Fixitude_applic  (* So can't be printed as a syntactic operator. *)
 	   else
@@ -383,9 +433,9 @@ let rec pp_pat_desc ppf = function
   | Parsetree.P_as (pat, vname) ->
       Format.fprintf ppf "%a@ as@ %a" pp_pattern pat pp_vname vname
   | Parsetree.P_wild -> Format.fprintf ppf "_"
-  | Parsetree.P_app (ident, pats) ->
+  | Parsetree.P_constr (ident, pats) ->
       Format.fprintf ppf "@[<2>%a@ (%a)@])"
-	pp_ident ident (pp_patterns ",") pats
+	pp_constructor_ident ident (pp_patterns ",") pats
   | Parsetree.P_record lab_pat_lst ->
       Format.fprintf ppf "@[<2>{@ %a@ }@])"
 	(Handy.pp_generic_separated_list
@@ -548,7 +598,7 @@ and pp_external_expression ppf eexpr = Format.fprintf ppf "\"%s\"" eexpr
     {b Rem} : Not exported ouside this module.                            *)
 (* ********************************************************************** *)
 let rec pp_species_def_desc ppf def =
-  Format.fprintf ppf "@[<2>species %s " def.Parsetree.sd_name ;
+  Format.fprintf ppf "@[<2>species %a " pp_vname def.Parsetree.sd_name ;
   (* Prints the parameters only if some. *)
   if def.Parsetree.sd_params <> [] then
     begin
@@ -756,9 +806,9 @@ and pp_theorem_def ppf = pp_generic_ast pp_theorem_def_desc ppf
 
 and pp_fact_desc ppf = function
   | Parsetree.F_def idents ->
-      Format.fprintf ppf "definition of %a" (pp_idents ",") idents
+      Format.fprintf ppf "definition of %a" (pp_expr_idents ",") idents
   | Parsetree.F_property idents ->
-      Format.fprintf ppf "property %a" (pp_idents ",") idents
+      Format.fprintf ppf "property %a" (pp_expr_idents ",") idents
   | Parsetree.F_hypothesis vnames ->
       Format.fprintf ppf "hypothesis %a" (pp_vnames ",") vnames
   | Parsetree.F_node node_labels ->
@@ -842,7 +892,7 @@ and pp_expr_desc ppf = function
   | Parsetree.E_fun (vnames, expr) ->
       Format.fprintf ppf "@[<2>function %a ->@ %a@]"
 	(pp_vnames "") vnames pp_expr expr
-  | Parsetree.E_var id -> Format.fprintf ppf "%a" pp_ident id
+  | Parsetree.E_var id -> Format.fprintf ppf "%a" pp_expr_ident id
   | Parsetree.E_app (expr, exprs) ->
       (begin
       (* Especially handle the case where the functionnal expression is *)
@@ -872,7 +922,7 @@ and pp_expr_desc ppf = function
 	     pp_expr expr (pp_exprs ",") exprs
       end)
   | Parsetree.E_constr (cstr_expr, exprs) ->
-      Format.fprintf ppf "@[<2>%a" pp_cstr_expr cstr_expr ;
+      Format.fprintf ppf "@[<2>%a" pp_constructor_ident cstr_expr ;
       if exprs <> [] then Format.fprintf ppf "@ (%a)" (pp_exprs ",") exprs ;
       Format.fprintf ppf "@]"
   | Parsetree.E_match (expr, pat_exprs) ->
@@ -920,8 +970,8 @@ and pp_expr ppf = pp_generic_ast pp_expr_desc ppf
 
 
 let pp_coll_def_desc ppf cdd =
-  Format.fprintf ppf "@[<2>collection@ %s@ implements@ %a@\nend@ ;;@]@\n"
-    cdd.Parsetree.cd_name pp_species_expr cdd.Parsetree.cd_body
+  Format.fprintf ppf "@[<2>collection@ %a@ implements@ %a@\nend@ ;;@]@\n"
+    pp_vname cdd.Parsetree.cd_name pp_species_expr cdd.Parsetree.cd_body
 ;;
 let pp_coll_def ppf = pp_generic_ast pp_coll_def_desc ppf
 ;;

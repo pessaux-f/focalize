@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.17 2007-09-26 10:22:13 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.18 2007-09-28 08:40:10 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -63,25 +63,26 @@ try Check_file.main () with
 (* Generic environments stuff. *)
      | Env.Unbound_constructor (vname, at) ->
 	 Format.fprintf Format.err_formatter
-	   "%a:@\nUnbound@ constructor@ \'%s\'.@."
-	   Location.pp_location at (Parsetree_utils.name_of_vname vname)
+	   "%a:@\nUnbound@ constructor@ '%a'.@."
+	   Location.pp_location at Sourcify.pp_vname vname
      | Env.Unbound_label (lname, at) ->
 	 Format.fprintf Format.err_formatter
-	   "%a:@\nUnbound@ record@ field@ label@ \'%s\'.@."
+	   "%a:@\nUnbound@ record@ field@ label@ '%s'.@."
 	   Location.pp_location at lname
      | Env.Unbound_identifier (vname, at) ->
 	 Format.fprintf Format.err_formatter
-	   "%a:@\nUnbound identifier \'%s\'.@."
-	   Location.pp_location at (Parsetree_utils.name_of_vname vname)
+	   "%a:@\nUnbound identifier '%a'.@."
+	   Location.pp_location at Sourcify.pp_vname vname
      | Env.Unbound_type (tname, at) ->
-	 Format.fprintf Format.err_formatter "@ %a :@\nUnbound@ type@ \'%s\'.@."
-	   Location.pp_location at tname
+	 Format.fprintf Format.err_formatter "@ %a :@\nUnbound@ type@ '%a'.@."
+	   Location.pp_location at Sourcify.pp_vname tname
      | Env.Unbound_module (fname, at) ->
 	 Format.fprintf Format.err_formatter
-	   "%a:@\nUnbound@ module@ \'%s\'.@." Location.pp_location at fname
+	   "%a:@\nUnbound@ module@ '%s'.@." Location.pp_location at fname
      | Env.Unbound_species (sname, at) ->
 	 Format.fprintf Format.err_formatter
-	   "%a:@\nUnbound@ species@ \'%s\'.@." Location.pp_location at sname
+	   "%a:@\nUnbound@ species@ '%a'.@."
+	   Location.pp_location at Sourcify.pp_vname sname
 (* ******************** *)
 (* Core types problems. *)
      | Types.Conflict (ty1, ty2, at) ->
@@ -107,13 +108,15 @@ try Check_file.main () with
 	    | Env.TypeInformation.CA_one -> ("1", "no")) in
 	 Format.fprintf Format.err_formatter
 	   "Sum@ type@ constructor@ '%a'@ expected@ %s@ argument@ but@ was@ used@ with@ %s@ argument.@."
-	   Sourcify.pp_ident ident expected used
+	   Sourcify.pp_constructor_ident ident expected used
      | Infer.Unbound_type_variable var_name ->
-	 Format.fprintf Format.err_formatter "Unbound@ type@ variable@ %s.@." var_name
+	 Format.fprintf Format.err_formatter "Unbound@ type@ variable@ %s.@."
+	   (Parsetree_utils.name_of_vname var_name)
      | Infer.Method_multiply_defined (m_vname, s_name) ->
 	 Format.fprintf Format.err_formatter
 	   "Method@ '%s'@ multiply@ defined@ in@ species@ '%s'.@."
-	   (Parsetree_utils.name_of_vname m_vname) s_name
+	   (Parsetree_utils.name_of_vname m_vname)
+	   (Parsetree_utils.name_of_vname s_name)
      | Infer.Bad_type_arity (ident, expected, used) ->
 	 Format.fprintf Format.err_formatter
 	   "Type@ constructor@ '%a'@ expected@ %d@ arguments@ but@ was@ used@ with@ %d@ arguments.@."
@@ -164,13 +167,14 @@ try Check_file.main () with
 	   "Parameterized@ specie@ is@ applied@ to@ %s@ arguments@."  msg
      | Infer.Collection_not_fully_defined (coll_name, field_name) ->
 	 Format.fprintf Format.err_formatter
-	   "Species@ '%s'@ cannot@ be@ turned@ into@ a@ collection.@ Field@ '%a'@ is@ not@ defined.@."
-	   coll_name Sourcify.pp_vname field_name
+	   "Species@ '%a'@ cannot@ be@ turned@ into@ a@ collection.@ Field@ '%a'@ is@ not@ defined.@."
+	   Sourcify.pp_vname coll_name Sourcify.pp_vname field_name
 (* ********************** *)
 (* Dependencies analysis. *)
      | Dep_analysis.Ill_formed_species species_name ->
 	 Format.fprintf Format.err_formatter
-	   "Species@ '%s'@ is@ not@ well-formed@." species_name
+	   "Species@ '%a'@ is@ not@ well-formed@."
+	   Sourcify.pp_vname species_name
 (* ********************** *)
 (* OCaml code generation. *)
      | Core_ml_generation.No_external_value_caml_def (def_name, at) ->

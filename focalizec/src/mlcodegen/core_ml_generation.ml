@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: core_ml_generation.ml,v 1.10 2007-09-26 10:22:13 pessaux Exp $ *)
+(* $Id: core_ml_generation.ml,v 1.11 2007-09-28 08:40:10 pessaux Exp $ *)
 
 
 
@@ -124,7 +124,7 @@ type species_compil_context = {
   (** The name of the currently analysed compilation unit. *)
   scc_current_unit : Types.fname ;
   (** The name of the current species. *)
-  scc_current_species : Types.species_name ;
+  scc_current_species : Parsetree.vname ;
   (** The nodes of the current species's dependency graph. *)
   scc_dependency_graph_nodes : Dep_analysis.name_node list ;
   (** The current correspondance between collection types and type variable
@@ -356,7 +356,9 @@ let generate_record_type ctx species_def species_descr =
   generate_rep_constraint_in_record_type
     ctx species_descr.Env.TypeInformation.spe_sig_methods ;
   let field_prefix =
-    String.lowercase species_def.Parsetree.ast_desc.Parsetree.sd_name in
+    String.lowercase
+      (Parsetree_utils.name_of_vname
+	 species_def.Parsetree.ast_desc.Parsetree.sd_name) in
   (* The header of the OCaml type definition for the species record. *)
   Format.fprintf out_fmter "@[<2>type " ;
   (* Process parameters and "self" type variables names. *)
@@ -385,7 +387,8 @@ let generate_record_type ctx species_def species_descr =
 	  if (Parsetree_utils.name_of_vname n) <> "rep" then
 	    (begin
 	    let ty = Types.specialize sch in
-            Format.fprintf out_fmter "(* From species %s. *)@\n" from ;
+            Format.fprintf out_fmter "(* From species %a. *)@\n"
+	      Sourcify.pp_vname from ;
 	    (* Since we are printing a whole type scheme, it is stand-alone *)
             (* and we don't need to keep name sharing with anythin else.    *)
 	    Format.fprintf out_fmter "@[<2>%s_%a : %a ;@]@\n"
@@ -398,7 +401,8 @@ let generate_record_type ctx species_def species_descr =
 	  List.iter
 	    (fun (from, n, _, sch, _) ->
 	      let ty = Types.specialize sch in
-	      Format.fprintf out_fmter "(* From species %s. *)@\n" from ;
+	      Format.fprintf out_fmter "(* From species %a. *)@\n"
+		Sourcify.pp_vname from ;
 	      (* Since we are printing a whole type scheme, it is stand-alone *)
               (* and we don't need to keep name sharing with anythin else.    *)
 	      Format.fprintf out_fmter "%s_%a : %a ;@\n"
@@ -475,7 +479,45 @@ let generate_ident_for_method_generator ctx ident =
 	    else
 	      Format.fprintf ctx.ecc_out_fmter "%a" pp_to_ocaml_vname vname
        end)
-   | Parsetree.I_method (coll_name_opt, vname) ->
+;;
+
+
+
+(* **************************************************************** *)
+(* expr_compil_context -> Parsetree.expr_ident -> unit              *)
+(** {b Descr} : Generate the OCaml code from a FoCaL [ident] in the
+              context of method generator generation.
+
+    {b Rem} : Not exported outside this module.                     *)
+(* **************************************************************** *)
+let generate_expr_ident_for_method_generator ctx ident =
+  match ident.Parsetree.ast_desc with
+   | Parsetree.EI_local vname ->
+       (* Thanks to the scoping pass, identifiers remaining "local" are *)
+       (* really let-bound in the contect of the expression, hence have *)
+       (* a direrct mapping between FoCaL and OCaml code.               *)
+       Format.fprintf ctx.ecc_out_fmter "%a" pp_to_ocaml_vname vname
+   | Parsetree.EI_global (fname_opt, vname) ->
+       (begin
+       match fname_opt with
+	| None ->
+	    (* Thanks to the scoping pass, [I_global] with a [None] module *)
+            (* name are toplevel definitions of the current compilation    *)
+            (* unit. Then hence can be straightforwardly called in the     *)
+            (* OCaml code.                                                 *)
+	    Format.fprintf ctx.ecc_out_fmter "%a" pp_to_ocaml_vname vname
+	| Some mod_name ->
+	    (* Call the OCaml corresponding identifier in the corresponding *)
+            (* module (i.e. the capitalized [mod_name]). If the module is   *)
+	    (* the currently compiled one, then do not qualify the          *)
+	    (* identifier.                                                  *)
+	    if mod_name <> ctx.ecc_current_unit then
+	      Format.fprintf ctx.ecc_out_fmter "%s.%a"
+		(String.capitalize mod_name) pp_to_ocaml_vname vname
+	    else
+	      Format.fprintf ctx.ecc_out_fmter "%a" pp_to_ocaml_vname vname
+       end)
+   | Parsetree.EI_method (coll_name_opt, vname) ->
        (begin
        match coll_name_opt with
 	| None ->
@@ -494,7 +536,10 @@ let generate_ident_for_method_generator ctx ident =
             (* parameters due to depdencencies coming from the species    *)
             (* parameter. I.e: "_p_", followed by the species parameter   *)
             (* name, followed by "_", followed by the method's name.      *)
-            let prefix = "_p_" ^ (String.lowercase coll_name) ^ "_" in
+            let prefix =
+	      "_p_" ^
+	      (String.lowercase (Parsetree_utils.name_of_vname coll_name)) ^
+	      "_" in
             Format.fprintf ctx.ecc_out_fmter
 	      "%s%a" prefix pp_to_ocaml_vname vname
        end)
@@ -503,15 +548,15 @@ let generate_ident_for_method_generator ctx ident =
 
 
 (* ******************************************************************** *)
-(* expr_compil_context ->  Parsetree.constructor_expr -> unit           *)
+(* expr_compil_context ->  Parsetree.constructor_ident -> unit          *)
 (** {b Descr} : Generate the OCaml code from a FoCaL [constructor_expr]
               in the context of method generator generation.
 
     {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************** *)
-let generate_constructor_expr_for_method_generator ctx cstr_expr =
+let generate_constructor_ident_for_method_generator ctx cstr_expr =
   match cstr_expr.Parsetree.ast_desc with
-   | Parsetree.CE (fname_opt, name) ->
+   | Parsetree.CI (fname_opt, name) ->
        (begin
        match fname_opt with
 	| None -> Format.fprintf ctx.ecc_out_fmter "%a" pp_to_ocaml_vname name
@@ -540,9 +585,9 @@ let generate_pattern ctx pattern =
 	 rec_gen_pat p ;
 	 Format.fprintf out_fmter "as@ %a)" pp_to_ocaml_vname name
      | Parsetree.P_wild -> Format.fprintf out_fmter "_"
-     | Parsetree.P_app (ident, pats) ->
+     | Parsetree.P_constr (ident, pats) ->
 	 (begin
-	 generate_ident_for_method_generator ctx ident ;
+	 generate_constructor_ident_for_method_generator ctx ident ;
 	 (* Discriminate on the umber of arguments *)
          (* to know if parens are needed.          *)
 	 match pats with
@@ -702,7 +747,7 @@ and generate_expr ctx initial_expression =
 	 rec_generate body ;
          Format.fprintf out_fmter "@]"
      | Parsetree.E_var ident ->
-	 generate_ident_for_method_generator ctx ident
+	 generate_expr_ident_for_method_generator ctx ident
      | Parsetree.E_app (expr, exprs) ->
 	 Format.fprintf out_fmter "@[<2>(" ;
 	 rec_generate expr ;
@@ -711,7 +756,7 @@ and generate_expr ctx initial_expression =
 	 Format.fprintf out_fmter ")@]"
      | Parsetree.E_constr (cstr_expr, exprs) ->
 	 (begin
-	 generate_constructor_expr_for_method_generator ctx cstr_expr ;
+	 generate_constructor_ident_for_method_generator ctx cstr_expr ;
 	 match exprs with
 	  | [] -> ()
 	  | _ ->
@@ -811,7 +856,7 @@ and generate_expr ctx initial_expression =
 
 
 (* *********************************************************************** *)
-(* species_compil_context -> Types.collection_name list ->                 *)
+(* species_compil_context -> Parsetree.vname list ->                       *)
 (*   Env.TypeInformation.species_field -> unit                             *)
 (** {b Desc} : Generates the OCaml code for ONE method field (i.e. for one
              let-bound construct or for one item of let-rec-bound items.
@@ -819,7 +864,7 @@ and generate_expr ctx initial_expression =
     {b Args} :
       - [ctx] : The species-compilation-context merging the various
           stuffs sometimes needed during the compilation pass.
-      - [species_parameters_names] : The list of the names of parameters
+      - [species_parameters_names] : The list of the vnames of parameters
           the currently compiled species as.
       - [field] : The species's field to compile (i.e. a "let", "let rec",
                 "sig", "theorem" or "property").
@@ -884,7 +929,11 @@ let generate_methods ctx species_parameters_names field =
 	  (* Each abstracted method will be named like "_p_", followed by *)
 	  (* the species parameter name, followed by "_", followed by the *)
           (* method's name.                                               *)
-	  let prefix = "_p_" ^ (String.lowercase species_param_name) ^ "_" in
+	  let prefix =
+	    "_p_" ^
+	    (String.lowercase
+	       (Parsetree_utils.name_of_vname species_param_name)) ^
+	    "_" in
 	  Dep_analysis.VnameSet.iter
 	    (fun meth ->
 	      Format.fprintf out_fmter "@ %s%a" prefix pp_to_ocaml_vname meth)
@@ -984,11 +1033,11 @@ let species_compile ~current_unit out_fmter species_def species_descr
   let species_def_desc = species_def.Parsetree.ast_desc in
   (* Just a bit of debug. *)
   if Configuration.get_verbose () then
-    Format.eprintf "Generating OCaml code for species %s@."
-      species_def_desc.Parsetree.sd_name ;
+    Format.eprintf "Generating OCaml code for species %a@."
+      Sourcify.pp_vname species_def_desc.Parsetree.sd_name ;
   (* Start the module encapsulating the species representation. *)
-  Format.fprintf out_fmter "@[<2>module %s =@\nstruct@\n"
-    species_def_desc.Parsetree.sd_name ;
+  Format.fprintf out_fmter "@[<2>module %a =@\nstruct@\n"
+    Sourcify.pp_vname species_def_desc.Parsetree.sd_name ;
   (* Now, establish the mapping between collections available *)
   (* and the type variable names representing their carrier.  *)
   let collections_carrier_mapping =
@@ -1009,7 +1058,7 @@ let species_compile ~current_unit out_fmter species_def species_descr
     List.map
       (function
 	| Env.TypeInformation.SPAR_in (n, _)
-	| Env.TypeInformation.SPAR_is (n, _) -> Parsetree_utils.name_of_vname n)
+	| Env.TypeInformation.SPAR_is (n, _) -> n)
       species_descr.Env.TypeInformation.spe_sig_params in
   (* Now, the methods of the species. *)
   List.iter

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.39 2007-09-26 16:11:22 weis Exp $ *)
+(* $Id: env.ml,v 1.40 2007-09-28 08:40:10 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -38,9 +38,9 @@
 exception Unbound_constructor of (Parsetree.vname * Location.t) ;;
 exception Unbound_label of (Types.label_name * Location.t) ;;
 exception Unbound_identifier of (Parsetree.vname * Location.t) ;;
-exception Unbound_type of (Types.type_name * Location.t) ;;
+exception Unbound_type of (Parsetree.vname * Location.t) ;;
 exception Unbound_module of (Types.fname * Location.t) ;;
-exception Unbound_species of (Types.species_name * Location.t) ;;
+exception Unbound_species of (Parsetree.vname * Location.t) ;;
 
 
 (* ******************************************************************** *)
@@ -135,12 +135,12 @@ let debug_env_list_assoc ~allow_opened searched list =
 type ('constrs, 'labels, 'types, 'values, 'species) generic_env = {
   constructors : (Parsetree.constructor_name * ('constrs binding_origin)) list ;
   labels : (Types.label_name * ('labels binding_origin)) list ;
-  types : (Types.type_name * ('types binding_origin)) list ;
+  types : (Parsetree.vname * ('types binding_origin)) list ;
   (** [idents] Contains functions methods and more generally any let-bound
 identifiers. *)
   values : (Parsetree.vname * ('values binding_origin)) list ;
   (** [species] Contains both species and collections. *)
-  species : (Types.species_name * ('species binding_origin)) list
+  species : (Parsetree.vname * ('species binding_origin)) list
 } ;;
 
 
@@ -209,7 +209,9 @@ module ScopeInformation = struct
 	  [SBI_method_of_self]. The tag [SBI_method_of_coll] can only be
 	  returned by [find_value] who may perform a change on the fly if
 	  required. *)
-    | SBI_method_of_coll of Types.collection_name
+    | SBI_method_of_coll of Parsetree.vname (** The value identifier is a
+						method of
+						collection / species. *)
       (** The ident is a locally bound indentifier
 	  (let or function parameter). *)
     | SBI_local
@@ -292,33 +294,38 @@ module TypeInformation = struct
   and species_field =
     | SF_sig of
 	((** Where the sig comes from (the most recent in inheritance). *)
-	 Types.species_name *
+	 Parsetree.vname *
 	 Parsetree.vname *          (** The sig's name. *)
 	 Types.type_scheme          (** The sig's type scheme. *))
     | SF_let of
 	((** Where the let-bound comes from (the most recent in inheritance). *)
-	 Types.species_name *
+	 Parsetree.vname *
 	 Parsetree.vname *       (** Name of the let-bound definition. *)
 	 (** Parameters of the let-bound definition. *) 
          (Parsetree.vname list) *
 	 Types.type_scheme *     (** Type scheme of the let-bound definition. *)
 	 Parsetree.expr          (** Body of the let-bound definition. *))
     | SF_let_rec of
-	(Types.species_name * Parsetree.vname * (Parsetree.vname list) *
+	((** Where the let-rec-bound comes from (the most recent in
+	     inheritance). *)
+	 Parsetree.vname *
+	 Parsetree.vname * (** Name of the let-rec-bound definition. *)
+	 (** Parameters of the let-rec-bound definition. *) 
+         (Parsetree.vname list) *
 	 Types.type_scheme *
 	 Parsetree.expr) list  (** The list of information similar to what
 				     can be found for a [SF_let], but for each
 				     mutually recursive bound identifier. *)
     | SF_theorem of
 	((** Where the theorem comes from (the most recent in inheritance). *)
-	 Types.species_name *
+	 Parsetree.vname *
 	 Parsetree.vname *      (** The theorem's name. *)
 	 Types.type_scheme *    (** The theorem's type scheme. *)
 	 Parsetree.prop *       (** The theorem's body. *)
 	 Parsetree.proof        (** The theorem's proof. *))
     | SF_property of
 	((** Where the property comes from (the most recent in inheritance). *)
-	 Types.species_name *
+	 Parsetree.vname *
 	 Parsetree.vname *       (** The property's name. *)
 	 Types.type_scheme *     (** The property's type scheme. *)
 	 Parsetree.prop          (** The property's body. *))
@@ -472,11 +479,13 @@ module TypeInformation = struct
     List.iter
       (function
 	| SF_sig (from, vname, ty_scheme) ->
-	    Format.fprintf ppf "(* From species %s. *)@\n" from ;
+	    Format.fprintf ppf "(* From species %a. *)@\n"
+	      Sourcify.pp_vname from ;
 	    Format.fprintf ppf "sig %a : %a@\n"
 	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
 	| SF_let (from, vname, _, ty_scheme, _) ->
-	    Format.fprintf ppf "(* From species %s. *)@\n" from ;
+	    Format.fprintf ppf "(* From species %a. *)@\n"
+	      Sourcify.pp_vname from ;
 	    Format.fprintf ppf "let %a : %a@\n"
 	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
 	| SF_let_rec rec_bounds ->
@@ -484,22 +493,26 @@ module TypeInformation = struct
 	    match rec_bounds with
 	     | [] -> assert false  (* Empty let rec is non sense ! *)
 	     | (from, vname, _, ty_scheme, _) :: rem ->
-		 Format.fprintf ppf "(* From species %s. *)@\n" from ;
+		 Format.fprintf ppf "(* From species %a. *)@\n"
+		   Sourcify.pp_vname from ;
 		 Format.fprintf ppf "let rec %a : %a@\n"
 		   Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme ;
 		 List.iter
 		   (fun (from, v, _, s, _) ->
-		     Format.fprintf ppf "(* From species %s. *)@\n" from ;
+		     Format.fprintf ppf
+		       "(* From species %a. *)@\n" Sourcify.pp_vname from ;
 		     Format.fprintf ppf "and %a : %a@\n"
 		       Sourcify.pp_vname v Types.pp_type_scheme s)
 		   rem
 	    end)
 	| SF_theorem (from, vname, ty_scheme, _, _) ->
-	    Format.fprintf ppf "(* From species %s. *)@\n" from ;
+	    Format.fprintf ppf "(* From species %a. *)@\n"
+	      Sourcify.pp_vname from ;
 	    Format.fprintf ppf "theorem %a : %a@\n"
 	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
 	| SF_property (from, vname, ty_scheme, _) ->
-	    Format.fprintf ppf "(* From species %s. *)@\n" from ;
+	    Format.fprintf ppf "(* From species %a. *)@\n"
+	      Sourcify.pp_vname from ;
 	    Format.fprintf ppf "property %a : %a@\n"
 	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme)
       methods
@@ -805,12 +818,12 @@ module type EnvModuleAccessSig = sig
      value_bound_data, species_bound_data)
       generic_env
   val make_value_env_from_species_methods :
-    Types.species_name -> species_bound_data ->
+    Parsetree.vname -> species_bound_data ->
       (constructor_bound_data, label_bound_data, type_bound_data,
        value_bound_data, species_bound_data)
 	generic_env
   val post_process_method_value_binding :
-    Types.collection_name -> value_bound_data -> value_bound_data
+    Parsetree.vname -> value_bound_data -> value_bound_data
 end ;;
 
 
@@ -860,7 +873,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
 
-  (* Types.species_name -> EMAccess.species_bound_data -> t -> t *)
+  (* Parsetree.vname -> EMAccess.species_bound_data -> t -> t *)
   let add_species species_name data (env : t) =
      ({ env with
 	  species = (species_name, BO_absolute data) :: env.species } : t)
@@ -881,18 +894,13 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 	 (* coming from an opened module.            *)
 	 let allow_opened = allow_opened_p current_unit opt_scope in
 	 find_species_vname ~loc ~allow_opened vname env'
-     | Parsetree.I_method (_, _) ->
-	 (* Because species are not first class values,   *)
-	 (* species identifiers should never be methods ! *)
-	 assert false
 
 
   (* loc: Location.t -> allow_opened: bool -> Parsetree.vname -> *)
   (*    t -> EMAccess.species_bound_data                         *)
   and find_species_vname ~loc ~allow_opened vname (env : t) =
-    let coll_name = Parsetree_utils.name_of_vname vname in
-    try env_list_assoc ~allow_opened coll_name env.species with
-    | Not_found -> raise (Unbound_species (coll_name, loc))
+    try env_list_assoc ~allow_opened vname env.species with
+    | Not_found -> raise (Unbound_species (vname, loc))
 
 
 
@@ -910,28 +918,28 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
   (* ******************************************************************* *)
-  (* loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->  *)
-  (*   t -> EMAccess.value_bound_data                                    *)
+  (* loc: Location.t -> current_unit: Types.fname ->                     *)
+  (*   Parsetree.expr_ident -> t -> EMAccess.value_bound_data            *)
   (** {b Descr} : Looks-up for an [ident] inside the values environment.
 
       {b Rem} : Exported outside this module.                            *)
   (* ******************************************************************* *)
   let rec find_value ~loc ~current_unit ident_ident (env : t) =
     match ident_ident.Parsetree.ast_desc with
-     | Parsetree.I_local vname ->
+     | Parsetree.EI_local vname ->
          (* No explicit scoping information was provided, hence *)
          (* opened modules bindings are acceptable.             *)
 	 find_value_vname ~loc ~allow_opened: true vname env
-     | Parsetree.I_global (opt_scope, vname) ->
+     | Parsetree.EI_global (opt_scope, vname) ->
 	 let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
 	 (* Check if the lookup can return something *)
 	 (* coming from an opened module.            *)
 	 let allow_opened = allow_opened_p current_unit opt_scope in
 	 find_value_vname ~loc ~allow_opened vname env'
-     | Parsetree.I_method (collname_opt, vname) ->
+     | Parsetree.EI_method (collname_opt, vname) ->
 	 (begin
 	 match collname_opt with
-	  | None | Some "Self" ->
+	  | None | Some (Parsetree.Vuident "Self") ->
 	      (* No collection scope. Then the searched ident must belong  *)
 	      (* to the inheritance of Self. First, this means that opened *)
 	      (* stuff is forbidden. Next, because the [values] bucket is  *)
@@ -939,22 +947,19 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
               (* we just have to search for the [vname] inside the current *)
               (* environment.                                              *)
 	      find_value_vname ~loc ~allow_opened: false vname env
-	  | Some collname ->
-	      (* Collections are alwas capitalized so *)
-              (* the related [vname] is a [Vuident].  *)
-	      let coll_vname = Parsetree.Vuident collname in
+	  | Some coll_vname ->
 	      (* We must first look inside collections and species   *)
               (* for the [collname] in order to recover its methods. *)
               let available_meths =
 		(EMAccess.make_value_env_from_species_methods
-		   collname
+		   coll_vname
 		   (find_species_vname
 		      ~loc ~allow_opened: false coll_vname env)) in
 	      let data =
 		find_value_vname
 		  ~loc ~allow_opened: false vname available_meths in
 	      (* Now we apply the post-processing on the found data. *)
-	      EMAccess.post_process_method_value_binding collname data
+	      EMAccess.post_process_method_value_binding coll_vname data
 	 end)
 
 
@@ -988,30 +993,22 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
 
-  (* ****************************************************************** *)
-  (* current_unit: loc: Location.t -> Types.fname -> Parsetree.ident -> *)
-  (*   t -> EMAccess.constructor_bound_data                             *)
-  (** {b Descr} : Looks-up for an [ident] inside the constructors
+  (* ********************************************************************* *)
+  (* current_unit: loc: Location.t -> Types.fname ->                       *)
+  (*   Parsetree.constructor_ident -> t -> EMAccess.constructor_bound_data *)
+  (** {b Descr} : Looks-up for a [constructorident] inside the constructors
 		environment.
 
-      {b Rem} : Exported outside this module.                           *)
-  (* ****************************************************************** *)
+      {b Rem} : Exported outside this module.                              *)
+  (* ********************************************************************* *)
   let rec find_constructor ~loc ~current_unit cstr_ident (env : t) =
     match cstr_ident.Parsetree.ast_desc with
-     | Parsetree.I_local vname ->
-         (* No explicit scoping information was provided, hence *)
-         (* opened modules bindings are acceptable.             *)
-         find_constructor_vname ~loc ~allow_opened: true vname env
-     | Parsetree.I_global (opt_scope, vname) ->
+     | Parsetree.CI (opt_scope, vname) ->
 	 let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
 	 (* Check if the lookup can return something *)
 	 (* coming from an opened module.            *)
 	 let allow_opened = allow_opened_p current_unit opt_scope in
 	 find_constructor_vname ~loc ~allow_opened vname env'
-     | Parsetree.I_method (_, _) ->
-	 (* Don't know what it means if the           *)
-	 (* constructor seems to be in fact a method. *)
-	 assert false
 
 
 
@@ -1094,9 +1091,6 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 	 (* coming from an opened module.            *)
 	 let allow_opened = allow_opened_p current_unit opt_scope in
 	 find_type_vname ~loc ~allow_opened vname env'
-     | Parsetree.I_method (_, _) ->
-	 (* Type identifiers should never be methods ! *)
-	 assert false
 
 
 
@@ -1108,9 +1102,8 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
       {b Rem} : Not exported outside this module.                     *)
   (* **************************************************************** *)
   and find_type_vname ~loc ~allow_opened vname (env : t) =
-    let type_name = Parsetree_utils.name_of_vname vname in
-    try env_list_assoc ~allow_opened type_name env.types with
-    | Not_found -> raise (Unbound_type (type_name, loc))
+    try env_list_assoc ~allow_opened vname env.types with
+    | Not_found -> raise (Unbound_type (vname, loc))
 end ;;
 
 
@@ -1130,7 +1123,7 @@ module ScopingEMAccess = struct
         ] ;
       labels = [] ;
       types = [
-        ("list",
+        ((Parsetree.Vlident "list"),
 	 BO_opened
 	   ("", ScopeInformation.TBI_builtin_or_var))
         ] ;
@@ -1169,9 +1162,9 @@ module ScopingEMAccess = struct
 
      {b Rem} : Exported outside this module, but not outside this file.       *)
   (* ************************************************************************ *)
-  let post_process_method_value_binding collname = function
+  let post_process_method_value_binding coll_vname = function
     | ScopeInformation.SBI_method_of_self ->
-	ScopeInformation.SBI_method_of_coll collname
+	ScopeInformation.SBI_method_of_coll coll_vname
     | whatever -> whatever
 end ;;
 module ScopingEnv = Make (ScopingEMAccess) ;;
@@ -1231,7 +1224,7 @@ module TypingEMAccess = struct
 	] ;
      labels = [] ;
      types = [
-       ("list",	BO_opened ("basics", list_type_description))
+       ((Parsetree.Vlident "list"), BO_opened ("basics", list_type_description))
       ] ;
     values = [] ;
     species = [] }

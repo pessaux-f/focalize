@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: ast_equal.ml,v 1.1 2007-09-04 15:02:44 pessaux Exp $ *)
+(* $Id: ast_equal.ml,v 1.2 2007-09-28 08:40:10 pessaux Exp $ *)
 
 (* ********************************************************************** *)
 (** {b Descr} : This module performs test equality of the AST expression.
@@ -43,15 +43,30 @@ let ident (ident1 : Parsetree.ident) (ident2 : Parsetree.ident) =
 ;;
 
 
+
 (* **************************************************************** *)
-(* Parsetree.constructor_expr -> Parsetree.constructor_expr -> bool *)
-(** {b Descr} : Tests the equality of 2 [constructor_expr]s.
+(* val ident : Parsetree.expr_ident -> Parsetree.expr_ident -> bool *)
+(** {b Descr} : Tests the equality of 2 [ident].
 
     {b Rem} : Not exported outside this module.                     *)
 (* **************************************************************** *)
-let constructor_expr
-    (cexpr1 : Parsetree.constructor_expr)
-    (cexpr2  : Parsetree.constructor_expr) =
+let expr_ident (ident1 : Parsetree.expr_ident) (ident2 : Parsetree.expr_ident) =
+  (* Because scoping has been done, we can safely perform a simple structural *)
+  (* equality on the [Parsetree.ast_desc] field of the [ident] .              *)
+  ident1.Parsetree.ast_desc = ident2.Parsetree.ast_desc
+;;
+
+
+
+(* ****************************************************************** *)
+(* Parsetree.constructor_ident -> Parsetree.constructor_ident -> bool *)
+(** {b Descr} : Tests the equality of 2 [constructor_expr]s.
+
+    {b Rem} : Not exported outside this module.                       *)
+(* ****************************************************************** *)
+let constructor_ident
+    (cexpr1 : Parsetree.constructor_ident)
+    (cexpr2  : Parsetree.constructor_ident) =
   (* Constructor expressions only contain string and sum types. Nothing *)
   (* requiring sharing or physical stuff. It is then safe to apply a    *)
   (* simple structural equality.                                        *)
@@ -105,8 +120,8 @@ let rec pattern pattern1 pattern2 =
    | ((Parsetree.P_as (p1, n1)), (Parsetree.P_as (p2, n2))) ->
        (pattern p1 p2) && (n1 = n2)
    | (Parsetree.P_wild, Parsetree.P_wild) -> true
-   | ((Parsetree.P_app (id1, pats1)), (Parsetree.P_app (id2, pats2))) ->
-       (ident id1 id2) && (List.for_all2 pattern pats1 pats2)
+   | ((Parsetree.P_constr (id1, pats1)), (Parsetree.P_constr (id2, pats2))) ->
+       (constructor_ident id1 id2) && (List.for_all2 pattern pats1 pats2)
    | ((Parsetree.P_record labs_pats1), (Parsetree.P_record labs_pats2)) ->
        List.for_all2
 	 (fun (lab1, pat1) (lab2, pat2) -> (lab1 = lab2) && (pattern pat1 pat2))
@@ -166,11 +181,11 @@ let rec expr expression1 expression2 =
    | ((Parsetree.E_const c1), (Parsetree.E_const c2)) -> constant c1 c2
    | ((Parsetree.E_fun (vnames1, e1)), (Parsetree.E_fun (vnames2, e2))) ->
        (vnames1 = vnames2) && (expr e1 e2)
-   | ((Parsetree.E_var id1), (Parsetree.E_var id2)) -> ident id1 id2
+   | ((Parsetree.E_var id1), (Parsetree.E_var id2)) -> expr_ident id1 id2
    | ((Parsetree.E_app (e1, es1)), (Parsetree.E_app (e2, es2))) ->
        (expr e1 e2) && (List.for_all2 expr es1 es2)
    | ((Parsetree.E_constr (ce1, es1)), (Parsetree.E_constr (ce2, es2))) ->
-       (constructor_expr ce1 ce2) && (List.for_all2 expr es1 es2)
+       (constructor_ident ce1 ce2) && (List.for_all2 expr es1 es2)
    | ((Parsetree.E_match (e1, pats_es1)), (Parsetree.E_match (e2, pats_es2))) ->
        (expr e1 e2) &&
        (List.for_all2

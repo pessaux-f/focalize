@@ -1,9 +1,9 @@
 exception Unbound_constructor of (Parsetree.vname * Location.t)
 exception Unbound_label of (Types.label_name * Location.t)
 exception Unbound_identifier of (Parsetree.vname * Location.t)
-exception Unbound_type of (Types.type_name * Location.t)
+exception Unbound_type of (Parsetree.vname * Location.t)
 exception Unbound_module of (Types.fname * Location.t)
-exception Unbound_species of (Types.species_name * Location.t)
+exception Unbound_species of (Parsetree.vname * Location.t)
 
 
 module ScopeInformation :
@@ -11,7 +11,7 @@ module ScopeInformation :
     type value_binding_info =
       | SBI_file of Types.fname
       | SBI_method_of_self
-      | SBI_method_of_coll of Types.collection_name
+      | SBI_method_of_coll of Parsetree.vname
       | SBI_local
 
     type type_binding_info =
@@ -36,18 +36,18 @@ module TypeInformation :
       | SPAR_is of (Parsetree.vname * (species_field list))
 
     and species_field =
-      | SF_sig of (Types.species_name * Parsetree.vname * Types.type_scheme)
+      | SF_sig of (Parsetree.vname * Parsetree.vname * Types.type_scheme)
       | SF_let of
-	  (Types.species_name * Parsetree.vname * (Parsetree.vname list) *
+	  (Parsetree.vname * Parsetree.vname * (Parsetree.vname list) *
 	   Types.type_scheme * Parsetree.expr)
       | SF_let_rec of
-	  (Types.species_name * Parsetree.vname * (Parsetree.vname list) *
+	  (Parsetree.vname * Parsetree.vname * (Parsetree.vname list) *
 	   Types.type_scheme * Parsetree.expr) list
       | SF_theorem of
-	  (Types.species_name * Parsetree.vname * Types.type_scheme *
+	  (Parsetree.vname * Parsetree.vname * Types.type_scheme *
 	   Parsetree.prop * Parsetree.proof)
       | SF_property of
-	  (Types.species_name * Parsetree.vname * Types.type_scheme *
+	  (Parsetree.vname * Parsetree.vname * Types.type_scheme *
 	   Parsetree.prop)
 
     type species_description = {
@@ -92,24 +92,24 @@ module ScopingEnv :
       Parsetree.vname -> ScopeInformation.value_binding_info -> t -> t
     val find_value :
       loc: Location.t -> current_unit: Types.fname ->
-      Parsetree.ident -> t -> ScopeInformation.value_binding_info
+      Parsetree.expr_ident -> t -> ScopeInformation.value_binding_info
 
     val add_constructor : Parsetree.constructor_name -> Types.fname -> t -> t
     val find_constructor :
-      loc: Location.t -> current_unit:Types.fname -> Parsetree.ident ->
-	t -> Types.fname
+      loc: Location.t -> current_unit:Types.fname ->
+	Parsetree.constructor_ident -> t -> Types.fname
 
     val add_label : Types.label_name -> Types.fname -> t -> t
     val find_label : loc: Location.t -> Types.label_name -> t -> Types.fname
 
-    val add_type : Types.type_name -> ScopeInformation.type_binding_info ->
+    val add_type : Parsetree.vname -> ScopeInformation.type_binding_info ->
       t -> t
     val find_type :
       loc: Location.t -> current_unit: Types.fname -> Parsetree.ident -> t ->
 	ScopeInformation.type_binding_info
 
     val add_species :
-      Types.species_name -> ScopeInformation.species_binding_info -> t -> t
+      Parsetree.vname -> ScopeInformation.species_binding_info -> t -> t
     val find_species :
 	loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
       t -> ScopeInformation.species_binding_info
@@ -124,7 +124,7 @@ module TypingEnv :
 
     val add_value : Parsetree.vname -> Types.type_scheme -> t -> t
     val find_value :
-      loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
+      loc: Location.t -> current_unit: Types.fname -> Parsetree.expr_ident ->
 	t -> Types.type_scheme
 
     val add_constructor :
@@ -132,7 +132,8 @@ module TypingEnv :
       TypeInformation.constructor_description -> t -> t
     val find_constructor :
       loc: Location.t -> current_unit:Types.fname ->
-      Parsetree.ident -> t -> TypeInformation.constructor_description
+	Parsetree.constructor_ident -> t ->
+	  TypeInformation.constructor_description
 
     val add_label :
       Types.label_name -> TypeInformation.label_description -> t -> t
@@ -141,13 +142,13 @@ module TypingEnv :
 	TypeInformation.label_description
 
     val add_type :
-      Types.type_name -> TypeInformation.type_description -> t -> t
+      Parsetree.vname -> TypeInformation.type_description -> t -> t
     val find_type :
       loc: Location.t -> current_unit: Types.fname ->
       Parsetree.ident -> t -> TypeInformation.type_description
 
     val add_species :
-      Types.species_name -> TypeInformation.species_description -> t -> t
+      Parsetree.vname -> TypeInformation.species_description -> t -> t
     val find_species :
 	loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
 	  t -> TypeInformation.species_description

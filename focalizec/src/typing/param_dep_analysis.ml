@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: param_dep_analysis.ml,v 1.1 2007-09-25 11:16:00 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.2 2007-09-28 08:40:10 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -38,11 +38,11 @@
 (* ********************************************************************* *)
 let param_deps_ident param_coll_name ident =
   match ident.Parsetree.ast_desc with
-   | Parsetree.I_local _
-   | Parsetree.I_global (_, _) ->
+   | Parsetree.EI_local _
+   | Parsetree.EI_global (_, _) ->
        (* These are not a method call, then they induce no dependency. *)
        Dep_analysis.VnameSet.empty
-   | Parsetree.I_method (coll_name_opt, vname) ->
+   | Parsetree.EI_method (coll_name_opt, vname) ->
        (begin
        match coll_name_opt with
 	| None ->
@@ -61,7 +61,7 @@ let param_deps_ident param_coll_name ident =
 
 
 (* ************************************************************************* *)
-(* Types.collection_name -> Parsetree.expr -> Dep_analysis.VnameSet.t        *)
+(* Parsetree.vname -> Parsetree.expr -> Dep_analysis.VnameSet.t              *)
 (** {b Descr} : Computes the dependencies of an expression on the collection
               parameter name [param_coll_name]. In other words, detects
               which methods of [param_coll_name] (that is considered as
@@ -70,7 +70,7 @@ let param_deps_ident param_coll_name ident =
 
     {b Rem} : Exported outside this module.                                  *)
 (* ************************************************************************* *)
-(* [Unsure] INCOMPLET !!!! Il reste encore les transitivités !!! *)
+(* [Unsure] INCOMPLET !!!! Il reste encore les transitivités !!!??!! *)
 let param_deps_expr param_coll_name expression =
   let rec rec_deps expr =
     match expr.Parsetree.ast_desc with

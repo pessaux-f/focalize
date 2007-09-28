@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.65 2007-09-26 18:01:56 weis Exp $ *)
+(* $Id: parser.mly,v 1.66 2007-09-28 08:40:10 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -341,7 +341,7 @@ def_record_field_list:
 /**** SPECIES ****/
 
 def_species:
-  | opt_doc SPECIES species_name def_species_params
+  | opt_doc SPECIES species_vname def_species_params
             def_species_inherits
             EQUAL species_fields END
     { mk_doc $1
@@ -446,7 +446,7 @@ rep_type_def_comma_list:
 /**** COLLECTION DEFINITION ****/
 
 def_collection:
-  | opt_doc COLLECTION collection_name IMPLEMENTS species_expr
+  | opt_doc COLLECTION collection_vname IMPLEMENTS species_expr
     { mk_doc $1 { cd_name = $3; cd_body = $5; } }
 ;
 
@@ -668,7 +668,7 @@ glob_ident:
 
 species_glob_ident:
   | opt_lident SHARP species_vname
-    { mk (EI_global ($1, $3)) }
+    { mk (I_global ($1, $3)) }
 ;
 
 /* Only used to prefix global notation (i.e. with '#'). */
@@ -682,9 +682,9 @@ opt_lident:
 opt_uident:
   | { None }
   | SELF
-    { Some "Self" }
+    { Some (Parsetree.Vuident "Self") }
   | UIDENT
-    { Some $1 }
+    { Some (Parsetree.Vuident $1) }
 ;
 
 
@@ -874,27 +874,20 @@ expr_ident:
 
 property_ident:
   | property_vname
-    { mk (I_local $1) }
+    { mk (EI_local $1) }
   | opt_lident SHARP property_vname
-    { mk (I_global ($1, $3)) }
+    { mk (EI_global ($1, $3)) }
 ;
 
-carrier_ident :
+carrier_ident:
   | species_ident { $1 }
 ;
 
 species_ident:
   | species_vname
-    { mk_local_expr_ident $1 }
+    { mk_local_ident $1 }
   | species_glob_ident
     { $1 }
-  | opt_collection_name BANG method_vname
-    { mk_method_expr_ident $1 $3 }
-;
-
-opt_collection_name:
-  | { None }
-  | collection_name { Some $1 }
 ;
 
 property_ident_comma_list:
@@ -1016,16 +1009,8 @@ constructor_vname:
   | IIDENT { Viident $1 }
 ;
 
-species_name:
-  | UIDENT { $1 }
-;
-
 species_vname:
   | UIDENT { Vuident $1 }
-;
-
-collection_name:
-  | UIDENT { $1 }
 ;
 
 collection_vname:

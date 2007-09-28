@@ -12,12 +12,12 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.12 2007-09-25 11:15:59 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.13 2007-09-28 08:40:10 pessaux Exp $ *)
 
-exception Method_multiply_defined of (Parsetree.vname * Types.species_name)
-exception Unbound_type_variable of string
+exception Method_multiply_defined of (Parsetree.vname * Parsetree.vname)
+exception Unbound_type_variable of Parsetree.vname
 exception Bad_sum_type_constructor_arity of
-  (Parsetree.ident * Env.TypeInformation.constructor_arity)
+  (Parsetree.constructor_ident * Env.TypeInformation.constructor_arity)
 exception Bad_type_arity of (Parsetree.ident * int * int)
 exception Rep_multiply_defined of Location.t
 exception Parameterized_species_arity_mismatch of string
@@ -34,7 +34,7 @@ exception Not_subspecies_arity_mismatch of
 exception Not_subspecies_missing_field of
   (Types.type_collection * Types.type_collection * Parsetree.vname *
    Location.t)
-exception Collection_not_fully_defined of (Types.species_name * Parsetree.vname)
+exception Collection_not_fully_defined of (Parsetree.vname * Parsetree.vname)
 
 type please_compile_me =
   | PCM_no_matter

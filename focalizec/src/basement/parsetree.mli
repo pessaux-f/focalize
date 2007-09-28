@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.16 2007-09-26 18:01:56 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.17 2007-09-28 08:40:10 pessaux Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -59,7 +59,9 @@ type expr_ident = expr_ident_desc ast
 and expr_ident_desc =
   | EI_local of vname
   | EI_global of Types.fname option * vname
-  | EI_method of Types.collection_name option * vname
+  | EI_method of (
+      (vname option) *  (** The collection name before the "!". *)
+       vname            (** The method of the collection. *))
 ;;
 
 type ident = ident_desc ast
@@ -176,7 +178,7 @@ and external_expression = string
 
 type species_def = species_def_desc ast_doc
 and species_def_desc = {
-  sd_name : Types.species_name;
+  sd_name : vname;
   sd_params : (vname * species_param_type) list;
   sd_inherits : (species_expr list) ast_doc;
   sd_fields : species_field list;
@@ -184,12 +186,12 @@ and species_def_desc = {
 
 and species_param_type = species_param_type_desc ast
 and species_param_type_desc =
-  | SPT_in of expr_ident
+  | SPT_in of ident
   | SPT_is of species_expr
 
 and species_expr = species_expr_desc ast
 and species_expr_desc = {
-  se_name : expr_ident;
+  se_name : ident ;
   se_params : species_param list;
 }
 
@@ -249,8 +251,8 @@ and theorem_def_desc = {
 
 and fact = fact_desc ast
 and fact_desc =
-  | F_def of ident list
-  | F_property of ident list
+  | F_def of expr_ident list
+  | F_property of expr_ident list
   | F_hypothesis of vname list
   | F_node of node_label list
 
@@ -311,7 +313,7 @@ and expr_desc =
 
 type coll_def = coll_def_desc ast_doc
 and coll_def_desc = {
-  cd_name : Types.collection_name;
+  cd_name : vname ;
   cd_body : species_expr;
 };;
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.17 2007-09-25 11:15:59 pessaux Exp $ *)
+(* $Id: types.mli,v 1.18 2007-09-28 08:40:10 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type collection_name = string
@@ -90,7 +90,7 @@ val generalize2 :
 val trivial_scheme : type_simple -> type_scheme
 val never_generalizable_scheme : type_simple -> type_scheme
 val copy_type_simple_but_variables :
-  and_abstract:(fname * collection_name) option -> type_simple -> type_simple
+  and_abstract: type_collection option -> type_simple -> type_simple
 
 
 (** Type (schemes) unification. *)

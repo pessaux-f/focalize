@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: substExpr.ml,v 1.5 2007-09-25 11:16:00 pessaux Exp $ *)
+(* $Id: substExpr.ml,v 1.6 2007-09-28 08:40:10 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs substitution of a value name [name_x]
@@ -34,17 +34,17 @@
 let subst_E_var ~param_unit ~bound_variables name_x by_expr ident =
   (* Substitute in the AST node description. *)
   match ident.Parsetree.ast_desc with
-   | Parsetree.I_local v_name ->
+   | Parsetree.EI_local v_name ->
        if v_name = name_x && not (List.mem v_name bound_variables) then
 	 by_expr
        else Parsetree.E_var ident
-   | Parsetree.I_global ((Some mod_name), v_name) ->
+   | Parsetree.EI_global ((Some mod_name), v_name) ->
        if mod_name = param_unit && v_name = name_x &&
           not (List.mem v_name bound_variables) then
 	 by_expr
        else Parsetree.E_var ident
-   | Parsetree.I_method (_, _) -> Parsetree.E_var ident
-   | Parsetree.I_global (None, _) ->
+   | Parsetree.EI_method (_, _) -> Parsetree.E_var ident
+   | Parsetree.EI_global (None, _) ->
        (* In this case, may be there is some scoping process missing. *)
        assert false
 ;;
@@ -65,7 +65,7 @@ let rec extend_bound_name_from_pattern bound_variables pattern =
    | Parsetree.P_var v_name -> v_name :: bound_variables
    | Parsetree.P_as (pat', vname) ->
        extend_bound_name_from_pattern (vname :: bound_variables) pat'
-   | Parsetree.P_app (_, pats) ->
+   | Parsetree.P_constr (_, pats) ->
        (* Because the [ident] here is a sum type constructor, *)
        (* there is no risk of capture here.                   *)
        List.fold_left

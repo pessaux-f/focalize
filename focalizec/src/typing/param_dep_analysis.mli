@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: param_dep_analysis.mli,v 1.1 2007-09-25 11:16:00 pessaux Exp $ *)
+(* $Id: param_dep_analysis.mli,v 1.2 2007-09-28 08:40:10 pessaux Exp $ *)
 
 val param_deps_expr :
-  Types.collection_name -> Parsetree.expr -> Dep_analysis.VnameSet.t
+  Parsetree.vname -> Parsetree.expr -> Dep_analysis.VnameSet.t

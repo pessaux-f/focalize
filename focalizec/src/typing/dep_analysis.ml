@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.18 2007-09-26 10:22:13 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.19 2007-09-28 08:40:10 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -35,7 +35,7 @@
 
     {b Rem} : Exported outside this module.                   *)
 (* ********************************************************** *)
-exception Ill_formed_species of Types.species_name ;;
+exception Ill_formed_species of Parsetree.vname ;;
 
 
 
@@ -49,13 +49,13 @@ module VnameSet = Set.Make (VnameMod) ;;
 
 
 
-(* ********************************************************************** *)
-(* current_species: Types.collection_name -> Parsetree.expr -> VnameSet.t *)
+(* ****************************************************************** *)
+(* current_species: Parsetree.vname -> Parsetree.expr -> VnameSet.t   *)
 (** {b Descr} : Compute the set of vnames the expression [expression]
               decl-depends of in the species [~current_species].
 
-    {b Rem} : Not exported outside this module.                           *)
-(* ********************************************************************** *)
+    {b Rem} : Not exported outside this module.                       *)
+(* ****************************************************************** *)
 let expr_decl_dependencies ~current_species expression =
   (* Let's just make a local function to save the stack, avoid *)
   (* passing each time the parameter [~current_species].       *)
@@ -67,15 +67,15 @@ let expr_decl_dependencies ~current_species expression =
      | Parsetree.E_var ident ->
 	 (begin
 	 match ident.Parsetree.ast_desc with
-	  | Parsetree.I_local _ ->
+	  | Parsetree.EI_local _ ->
 	      (* Because scoping pass already renamed all the identfiers that *)
 	      (* "looked like" local identifiers into "method identifiers" if *)
 	      (* they indeed denoted methods, we can safely consider that     *)
               (* remaining "local identifiers" are really local and introduce *)
 	      (* no dependency.                                               *)
 	      VnameSet.empty
-	  | Parsetree.I_global (_, _) -> VnameSet.empty
-	  | Parsetree.I_method (coll_name_opt, vname) ->
+	  | Parsetree.EI_global (_, _) -> VnameSet.empty
+	  | Parsetree.EI_method (coll_name_opt, vname) ->
 	      (begin
 	      match coll_name_opt with
 	       | None ->
@@ -147,14 +147,14 @@ let expr_decl_dependencies ~current_species expression =
 
 
 
-(* ********************************************************************** *)
-(* current_species: Types.collection_name -> Parsetree.prop -> VnameSet.t *)
+(* **************************************************************** *)
+(* current_species: Parsetree.vname -> Parsetree.prop -> VnameSet.t *)
 (** {b Descr} : Compute the set of vnames the prop expression
               [initial_prop_expression] decl-depends in the species
               [~current_species].
 
-    {b Rem} : Not exported outside this module.                           *)
-(* ********************************************************************** *)
+    {b Rem} : Not exported outside this module.                     *)
+(* **************************************************************** *)
 let prop_decl_dependencies ~current_species initial_prop_expression =
   let rec rec_depend prop_expression =
     match prop_expression.Parsetree.ast_desc with
@@ -179,7 +179,7 @@ let prop_decl_dependencies ~current_species initial_prop_expression =
 
 
 (* ************************************************************************ *)
-(* current_species: Types.collection_name -> Parsetree.ident-> VnameSet.t   *)
+(* current_species: Parsetree.vname -> Parsetree.ident-> VnameSet.t         *)
 (** {b Descr} : Compute the set of vnames the identifier [ident] represents
               as dependencies when this ident is located in a [fact].
               In such a context, the [ident] is in fact a dependency.
@@ -193,7 +193,7 @@ let prop_decl_dependencies ~current_species initial_prop_expression =
 (* ************************************************************************ *)
 let ident_in_fact_dependencies ~current_species ident =
   match ident.Parsetree.ast_desc with
-   | Parsetree.I_local _ ->
+   | Parsetree.EI_local _ ->
        (* Because scoping pass already renamed all the identfiers that *)
        (* "looked like" local identifiers into "method identifiers" if *)
        (* they indeed denoted methods, we can safely consider that     *)
@@ -201,10 +201,10 @@ let ident_in_fact_dependencies ~current_species ident =
        (* no dependency. Furthermore, there is no reason to get here   *)
        (* real local identifier unless the user put an erroneous fact. *)
        failwith "To see: May be erroneous fact in the proof."
-   | Parsetree.I_global (_, _) ->
+   | Parsetree.EI_global (_, _) ->
        (* [Unsure] *)
        failwith "# TODO once dependencies will carry module + vname"
-   | Parsetree.I_method (coll_name_opt, vname) ->
+   | Parsetree.EI_method (coll_name_opt, vname) ->
        (begin
        match coll_name_opt with
 	| None -> VnameSet.singleton vname            (* A method of Self. *)
@@ -333,7 +333,7 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
 
 
 (* ******************************************************************** *)
-(* current_species: Types.collection_name ->                            *)
+(* current_species: Parsetree.vname ->                                  *)
 (*   Env.TypeInformation.species_field -> VnameSet.t                    *)
 (** {b Descr} : Compute the set of vnames the argument field depends of
               in the species [~current_species]
@@ -539,7 +539,7 @@ let find_most_recent_rec_field_binding y_name fields =
 
 
 (* *********************************************************************** *)
-(* current_species: Types.collection_name -> Parsetree.vname ->            *)
+(* current_species: Parsetree.vname -> Parsetree.vname ->                  *)
 (*   Env.TypeInformation.species_field list -> VnameSet.t                  *)
 (** {b Descr} : Implements the second case of the definition 16 in Virgile
               Prevosto's Phd, section 3.5, page 32.
@@ -569,7 +569,7 @@ let union_y_clock_x_etc ~current_species x_name fields =
 
 
 (* ********************************************************************* *)
-(* current_species: Types.collection_name ->                             *)
+(* current_species: Parsetree.vname ->                                   *)
 (*   (Parsetree.vname * Parsetree.expr) ->                               *)
 (*     Env.TypeInformation.species_field list -> VnameSet.t              *)
 (** {b Descr} : Compute the dependencies of a sig, let or let-rec bound
@@ -680,7 +680,7 @@ let find_or_create tree_nodes name =
 
 
 (* ********************************************************************* *)
-(* current_species: Types.collection_name ->                             *)
+(* current_species: Parsetree.vname ->                                   *)
 (*   Env.TypeInformation.species_field list -> name_node list            *)
 (** {b Descr} : Build the dependencies graph of the names present in the
               fields list [fields] of the species [~current_species].
@@ -786,7 +786,8 @@ let build_dependencies_graph_for_fields ~current_species fields =
 
 
 (* ************************************************************************ *)
-(* dirname: string -> current_species: string -> name_node list -> unit     *)
+(* dirname: string -> current_species: Parsetree.vname -> name_node list -> *)
+(*   unit                                                                   *)
 (** {b Descr} : Prints the dependencies graph of a species in dotty format.
 
     {b Rem} : Not exported outside this module.                             *)
@@ -795,7 +796,9 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
   (* For each species, a file named with "deps_", the species name *)
   (* and the suffix ".dot" will be generated in the directory.     *)
   let out_filename =
-    Filename.concat dirname ("deps_" ^ current_species ^ ".dot") in
+    Filename.concat
+      dirname
+      ("deps_" ^ (Parsetree_utils.name_of_vname current_species) ^ ".dot") in
   let out_hd = open_out_bin out_filename in
   (* First, outputs the header of the dotty file. *)
   Printf.fprintf out_hd "digraph G {\n" ;
@@ -867,7 +870,7 @@ let node_out_degree node =
 
 
 (* ************************************************************************** *)
-(* current_species: Types.collection_name ->                                  *)
+(* current_species: Parsetree.vname ->                                        *)
 (*   Env.TypeInformation.species_field list -> Parsetree.vname list           *)
 (** {b Descr} : Determines the order of apparition of the fields inside a
               species to prevent fields depending on other fields from
@@ -1039,7 +1042,7 @@ let left_triangle dep_graph_nodes x1 x2 fields =
 
 
 (* ************************************************************************ *)
-(* current_species: Types.collection_name ->                                *)
+(* current_species: Parsetree.vname ->                                      *)
 (*   Env.TypeInformation.species_field list -> name_node list               *)
 (** {b Descr} : Checks if a species is well-formed, applying the definition
               17 in Virgile Prevosto's Phd, section 3.5, page 32
@@ -1096,16 +1099,16 @@ let erase_field field =
        if m_name_as_str = "rep" then
 	 (begin
 	 if Configuration.get_verbose () then
-	   Format.eprintf "Erasing field '%a' coming from '%s'.@."
-	     Sourcify.pp_vname vname from ;
+	   Format.eprintf "Erasing field '%a' coming from '%a'.@."
+	     Sourcify.pp_vname vname Sourcify.pp_vname from ;
 	 []  (* No explicit "rep" means ... no "rep". *)
 	 end)
        else [field]
        end)
    | Env.TypeInformation.SF_let (from, vname, _, sch, _) ->
        if Configuration.get_verbose () then
-	 Format.eprintf "Erasing field '%a' coming from '%s'.@."
-	   Sourcify.pp_vname vname from ;
+	 Format.eprintf "Erasing field '%a' coming from '%a'.@."
+	   Sourcify.pp_vname vname Sourcify.pp_vname from ;
        (* Turn the "let" into a "sig". *)
        [Env.TypeInformation.SF_sig (from, vname, sch)]
    | Env.TypeInformation.SF_let_rec l ->
@@ -1113,14 +1116,14 @@ let erase_field field =
        List.map
 	 (fun (from, n, _, sch, _) ->
 	   if Configuration.get_verbose () then
-	     Format.eprintf "Erasing field '%a' coming from '%s'.@."
-	       Sourcify.pp_vname n from ;
+	     Format.eprintf "Erasing field '%a' coming from '%a'.@."
+	       Sourcify.pp_vname n Sourcify.pp_vname from ;
 	   Env.TypeInformation.SF_sig (from, n, sch))
 	 l
    | Env.TypeInformation.SF_theorem (from, n, sch, prop, _) ->
        if Configuration.get_verbose () then
-	 Format.eprintf "Erasing field '%a' coming from '%s'.@."
-	   Sourcify.pp_vname n from ;
+	 Format.eprintf "Erasing field '%a' coming from '%a'.@."
+	   Sourcify.pp_vname n Sourcify.pp_vname from ;
        (* Turn the "theorem" into a "property". *)
        [Env.TypeInformation.SF_property (from, n, sch, prop)]
    | _ -> [field]                       (* Everything else is unchanged. *)
@@ -1129,7 +1132,7 @@ let erase_field field =
 
 
 (* ****************************************************************** *)
-(* current_species: Types.collection_name -> Parsetree.vname list ->  *)
+(* current_species: Parsetree_utils.vname -> Parsetree.vname list ->  *)
 (*   Env.TypeInformation.species_field list ->                        *)
 (*     Env.TypeInformation.species_field list                         *)
 (** {b Descr} : Implements the erasing procedure in a list of fields
