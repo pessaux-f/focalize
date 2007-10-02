@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: substColl.ml,v 1.10 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.11 2007-10-02 09:29:36 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -84,7 +84,7 @@ let subst_expr_ident ~current_unit c1 c2 ident =
      | Parsetree.EI_method (None, _) ->
 	 (* No collection name inside, hence nothing to change. *)
 	 ident.Parsetree.ast_desc
-     | Parsetree.EI_method ((Some c), vname) ->
+     | Parsetree.EI_method ((Some coll_specifier), vname) ->
 	 (begin
 	 match c1 with
 	  | SCK_self ->
@@ -92,21 +92,29 @@ let subst_expr_ident ~current_unit c1 c2 ident =
 	      (* be Self. Then in this case, the substitution is identity.   *)
 	      ident.Parsetree.ast_desc
 	  | SCK_coll effective_coll_ty ->
-	      (* [Unsure] *)
-	      (* Because in "methods idents", collection-part never have a *)
-	      (* "module" name,  we check against the current compilation  *)
-	      (* unit.                                                     *)
-	      (* QUESTION: What happens if invoking a method from a        *)
-              (* collection defined at the toplevel of another compilation *)
-	      (* unit ???                                                  *)
-	      let c_as_string = Parsetree_utils.name_of_vname c in
+	      let ident_full_coll_specifier =
+		match coll_specifier with
+		 | (None, coll_vname) ->
+		     (* If no module specifier appears in the ident, then it *)
+		     (* implicitely refers to the current compilation unit.  *)
+		     (* Should never happen because the scoping passe should *)
+                     (* have made the hosting module explicit.               *)
+		     (current_unit, (Parsetree_utils.name_of_vname coll_vname))
+		 | ((Some module_name), coll_vname) ->
+		     (module_name,
+		      (Parsetree_utils.name_of_vname coll_vname)) in
 	      (* Attention, [c2] is a [Types.collection_type], then it has *)
               (* to be transformed into a [Parsetree.vname] before being   *)
               (* inserted in the [Parsetree.EI_method]. Because collection *)
               (* names are always capitalized, the transformation is       *)
               (* trivially to surround [c2] byt a [Parsetree.Vuident].     *)
-	      if (current_unit, c_as_string) = effective_coll_ty then
-		Parsetree.EI_method ((Some (Parsetree.Vuident (snd c2))), vname)
+	      if ident_full_coll_specifier = effective_coll_ty then
+		(begin
+		let new_may_be_qualified_species_vname =
+		  ((Some (fst c2)), (Parsetree.Vuident (snd c2))) in
+		Parsetree.EI_method
+		  ((Some new_may_be_qualified_species_vname), vname)
+		end)
 	      else ident.Parsetree.ast_desc
 	 end)) in
   (* Substitute in the AST node type. *)

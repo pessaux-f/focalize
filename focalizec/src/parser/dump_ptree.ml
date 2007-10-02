@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.16 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.17 2007-10-02 09:29:36 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (* pp_position : Format.formatter -> Lexing.position -> unit               *)
@@ -146,14 +146,23 @@ let pp_expr_ident_desc ppf = function
       let fname =
 	(match fname_opt with None -> "None" | Some n -> "Some (" ^ n ^ ")") in
       Format.fprintf ppf "@[<2>I_global@ (%s,@ %a@])" fname pp_vname vname
-  | Parsetree.EI_method (vname_opt, vname) ->
+  | Parsetree.EI_method (species_opt, meth_vname) ->
       (begin
-      match vname_opt with
+      match species_opt with
        | None ->
-	   Format.fprintf ppf "@[<2>I_method@ (None,@ %a@])" pp_vname vname
-       | Some n ->
-	   Format.fprintf ppf
-	     "@[<2>I_method@ (Some (%a),@ %a@])" pp_vname n pp_vname vname
+	   Format.fprintf ppf "@[<2>I_method@ (None,@ %a@])" pp_vname meth_vname
+       | Some species_qualifier ->
+	   (begin
+	   match species_qualifier with
+	    | (None, species_vname) ->
+		Format.fprintf ppf
+		  "@[<2>I_method@ (Some (None,@ %a),@ %a@])"
+		  pp_vname species_vname pp_vname meth_vname
+	    | ((Some module_name), species_vname) ->
+		Format.fprintf ppf
+		  "@[<2>I_method@ (Some ((Some %s),@ %a),@ %a@])"
+		  module_name pp_vname species_vname pp_vname meth_vname
+	   end)
       end)
 ;;
 (* ************************************************************************ *)

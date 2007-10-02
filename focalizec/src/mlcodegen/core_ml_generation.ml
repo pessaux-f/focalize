@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: core_ml_generation.ml,v 1.11 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: core_ml_generation.ml,v 1.12 2007-10-02 09:29:36 pessaux Exp $ *)
 
 
 
@@ -120,11 +120,24 @@ let pp_to_ocaml_vname ppf = function
 
 
 
+(* ********************************************************************* *)
+(** {b Descr} : Data structure to record the various stuff needed to
+          generate the OCaml code for a species definition. Passing this
+          structure prevents from recursively passing a bunch of
+          parameters to the functions. Instead, one pass only one and
+          functions use the fields they need. This is mostly to preserve
+          the stack and to make the code more readable. In fact,
+          information recorded in this structure is semantically pretty
+          un-interesting to understand the compilation process: it is
+           more utilities.
+
+    {b Rem} Not exported outside this module.                            *)
+(* ********************************************************************* *)
 type species_compil_context = {
   (** The name of the currently analysed compilation unit. *)
   scc_current_unit : Types.fname ;
   (** The name of the current species. *)
-  scc_current_species : Parsetree.vname ;
+  scc_current_species : Parsetree.qualified_vname ;
   (** The nodes of the current species's dependency graph. *)
   scc_dependency_graph_nodes : Dep_analysis.name_node list ;
   (** The current correspondance between collection types and type variable
@@ -136,11 +149,24 @@ type species_compil_context = {
 
 
 
-type expr_compil_context = {
+(* ********************************************************************* *)
+(** {b Descr} : Data structure to record the various stuff needed to
+          generate the OCaml code for various constructs. Passing this
+          structure prevents from recursively passing a bunch of
+          parameters to the functions. Instead, one pass only one and
+          functions use the fields they need. This is mostly to preserve
+          the stack and to make the code more readable. In fact,
+          information recorded in this structure is semantically pretty
+          uninteresting to understand the compilation process: it is more
+          utilities.
+
+    {b Rem} Not exported outside this module.                            *)
+(* ********************************************************************* *)
+type reduced_compil_context = {
   (** The name of the currently analysed compilation unit. *)
-  ecc_current_unit : Types.fname ;
+  rcc_current_unit : Types.fname ;
    (** The current output formatter where to send the generated code. *)
-  ecc_out_fmter : Format.formatter
+  rcc_out_fmter : Format.formatter
 } ;;
 
 
@@ -302,7 +328,7 @@ let generate_rep_constraint_in_record_type ctx fields =
 	     if (Parsetree_utils.name_of_vname n) = "rep" then
 	       (begin
 	       Format.fprintf ctx.scc_out_fmter
-		 "(* Carrier's structure explicitely given by \"rep\". *)@\n" ;
+		 "(* Carrier's structure explicitly given by \"rep\". *)@\n" ;
 	       Format.fprintf ctx.scc_out_fmter "@[<2>type " ;
 	       (* First, output the type parameters if some, and enclose *)
 	       (* them by parentheses if there are several.              *)
@@ -322,6 +348,7 @@ let generate_rep_constraint_in_record_type ctx fields =
 	       Format.fprintf ctx.scc_out_fmter
 		 "me_as_carrier =@ %a@]@\n"
 		 (Types.pp_type_simple_to_ml
+		    ~current_unit: ctx.scc_current_unit
 		    ~reuse_mapping: false
 		    ctx.scc_collections_carrier_mapping) ty
 	       end)
@@ -333,21 +360,21 @@ let generate_rep_constraint_in_record_type ctx fields =
 
 
 
-(* ************************************************************************** *)
-(* species_compil_context -> Parsetree.species_def ->                         *)
-(*   Env.TypeInformation.species_description -> unit                          *)
+(* ************************************************************************ *)
+(* species_compil_context -> Parsetree.species_def ->                       *)
+(*   Env.TypeInformation.species_description -> unit                        *)
 (** {b Descr} : Generate the record type representing a species. This type
-              contains a field per method. This type is named "me_as_species"
-              to reflect the point that it represents the ML structure
-              representing the FoCaL species.
-              Depending on whether the species has parameters, this record
-              type also has parameters. In any case, it at least has a
-              parameter representing "self as it will be once instanciated"
-              once "we" (i.e. the species) will be really living as a
-              collection.
+          contains a field per method. This type is named "me_as_species"
+          to reflect the point that it represents the ML structure
+          representing the FoCaL species.
+          Depending on whether the species has parameters, this record
+          type also has parameters. In any case, it at least has a
+          parameter representing "self as it will be once instanciated"
+          once "we" (i.e. the species) will be really living as a
+          collection.
 
-    {b Rem} : Not exported outside this module.                               *)
-(* ************************************************************************** *)
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
 let generate_record_type ctx species_def species_descr =
   let out_fmter = ctx.scc_out_fmter in
   let collections_carrier_mapping = ctx.scc_collections_carrier_mapping in
@@ -388,12 +415,13 @@ let generate_record_type ctx species_def species_descr =
 	    (begin
 	    let ty = Types.specialize sch in
             Format.fprintf out_fmter "(* From species %a. *)@\n"
-	      Sourcify.pp_vname from ;
+	      Sourcify.pp_qualified_vname from ;
 	    (* Since we are printing a whole type scheme, it is stand-alone *)
             (* and we don't need to keep name sharing with anythin else.    *)
 	    Format.fprintf out_fmter "@[<2>%s_%a : %a ;@]@\n"
 	      field_prefix pp_to_ocaml_vname n
 	      (Types.pp_type_simple_to_ml
+		 ~current_unit: ctx.scc_current_unit
 		 ~reuse_mapping: false collections_carrier_mapping) ty
 	    end)
 	  end)
@@ -402,12 +430,13 @@ let generate_record_type ctx species_def species_descr =
 	    (fun (from, n, _, sch, _) ->
 	      let ty = Types.specialize sch in
 	      Format.fprintf out_fmter "(* From species %a. *)@\n"
-		Sourcify.pp_vname from ;
+		Sourcify.pp_qualified_vname from ;
 	      (* Since we are printing a whole type scheme, it is stand-alone *)
               (* and we don't need to keep name sharing with anythin else.    *)
 	      Format.fprintf out_fmter "%s_%a : %a ;@\n"
 		field_prefix pp_to_ocaml_vname n
 		(Types.pp_type_simple_to_ml
+		   ~current_unit: ctx.scc_current_unit
 		   ~reuse_mapping: false collections_carrier_mapping) ty)
 	    l
       | Env.TypeInformation.SF_theorem  (_, _, _, _, _)
@@ -446,7 +475,7 @@ let generate_constant out_fmter constant =
 
 
 (* **************************************************************** *)
-(* expr_compil_context -> Parsetree.ident -> unit                   *)
+(* reduced_compil_context -> Parsetree.ident -> unit                *)
 (** {b Descr} : Generate the OCaml code from a FoCaL [ident] in the
               context of method generator generation.
 
@@ -458,7 +487,7 @@ let generate_ident_for_method_generator ctx ident =
        (* Thanks to the scoping pass, identifiers remaining "local" are *)
        (* really let-bound in the contect of the expression, hence have *)
        (* a direrct mapping between FoCaL and OCaml code.               *)
-       Format.fprintf ctx.ecc_out_fmter "%a" pp_to_ocaml_vname vname
+       Format.fprintf ctx.rcc_out_fmter "%a" pp_to_ocaml_vname vname
    | Parsetree. I_global (fname_opt, vname) ->
        (begin
        match fname_opt with
@@ -467,24 +496,24 @@ let generate_ident_for_method_generator ctx ident =
             (* name are toplevel definitions of the current compilation    *)
             (* unit. Then hence can be straightforwardly called in the     *)
             (* OCaml code.                                                 *)
-	    Format.fprintf ctx.ecc_out_fmter "%a" pp_to_ocaml_vname vname
+	    Format.fprintf ctx.rcc_out_fmter "%a" pp_to_ocaml_vname vname
 	| Some mod_name ->
 	    (* Call the OCaml corresponding identifier in the corresponding *)
             (* module (i.e. the capitalized [mod_name]). If the module is   *)
 	    (* the currently compiled one, then do not qualify the          *)
 	    (* identifier.                                                  *)
-	    if mod_name <> ctx.ecc_current_unit then
-	      Format.fprintf ctx.ecc_out_fmter "%s.%a"
+	    if mod_name <> ctx.rcc_current_unit then
+	      Format.fprintf ctx.rcc_out_fmter "%s.%a"
 		(String.capitalize mod_name) pp_to_ocaml_vname vname
 	    else
-	      Format.fprintf ctx.ecc_out_fmter "%a" pp_to_ocaml_vname vname
+	      Format.fprintf ctx.rcc_out_fmter "%a" pp_to_ocaml_vname vname
        end)
 ;;
 
 
 
 (* **************************************************************** *)
-(* expr_compil_context -> Parsetree.expr_ident -> unit              *)
+(* reduced_compil_context -> Parsetree.expr_ident -> unit           *)
 (** {b Descr} : Generate the OCaml code from a FoCaL [ident] in the
               context of method generator generation.
 
@@ -496,59 +525,88 @@ let generate_expr_ident_for_method_generator ctx ident =
        (* Thanks to the scoping pass, identifiers remaining "local" are *)
        (* really let-bound in the contect of the expression, hence have *)
        (* a direrct mapping between FoCaL and OCaml code.               *)
-       Format.fprintf ctx.ecc_out_fmter "%a" pp_to_ocaml_vname vname
+       Format.fprintf ctx.rcc_out_fmter "%a" pp_to_ocaml_vname vname
    | Parsetree.EI_global (fname_opt, vname) ->
        (begin
        match fname_opt with
 	| None ->
-	    (* Thanks to the scoping pass, [I_global] with a [None] module *)
-            (* name are toplevel definitions of the current compilation    *)
-            (* unit. Then hence can be straightforwardly called in the     *)
-            (* OCaml code.                                                 *)
-	    Format.fprintf ctx.ecc_out_fmter "%a" pp_to_ocaml_vname vname
+	    (* In this case, may be there is some scoping process missing. *)
+	    assert false
 	| Some mod_name ->
 	    (* Call the OCaml corresponding identifier in the corresponding *)
             (* module (i.e. the capitalized [mod_name]). If the module is   *)
 	    (* the currently compiled one, then do not qualify the          *)
 	    (* identifier.                                                  *)
-	    if mod_name <> ctx.ecc_current_unit then
-	      Format.fprintf ctx.ecc_out_fmter "%s.%a"
+	    if mod_name <> ctx.rcc_current_unit then
+	      Format.fprintf ctx.rcc_out_fmter "%s.%a"
 		(String.capitalize mod_name) pp_to_ocaml_vname vname
 	    else
-	      Format.fprintf ctx.ecc_out_fmter "%a" pp_to_ocaml_vname vname
+	      Format.fprintf ctx.rcc_out_fmter "%a" pp_to_ocaml_vname vname
        end)
-   | Parsetree.EI_method (coll_name_opt, vname) ->
+   | Parsetree.EI_method (coll_specifier_opt, vname) ->
        (begin
-       match coll_name_opt with
+       match coll_specifier_opt with
 	| None ->
 	    (* Method call from the current species. This corresponds to *)
 	    (* a call to the corresponding lambda-lifted method that is  *)
 	    (* represented as an extra parameter of the OCaml function.  *)
-	    Format.fprintf ctx.ecc_out_fmter "abst_%a" pp_to_ocaml_vname vname
-	| Some coll_name ->
-	    (* [Unsure]. What should happen in term of generated code and     *)
-            (* what is the meaning of a method call from a toplevel defined   *)
-            (* collection ????????                                            *)
-	    (* Method call from a species that is not the current. May be *)
-	    (* either a paramater or a toplevel defined collection. To    *)
-	    (* retrieve the related method name we build it the same way  *)
-            (* we built it while generating the extra OCaml function's    *)
-            (* parameters due to depdencencies coming from the species    *)
-            (* parameter. I.e: "_p_", followed by the species parameter   *)
-            (* name, followed by "_", followed by the method's name.      *)
-            let prefix =
-	      "_p_" ^
-	      (String.lowercase (Parsetree_utils.name_of_vname coll_name)) ^
-	      "_" in
-            Format.fprintf ctx.ecc_out_fmter
-	      "%s%a" prefix pp_to_ocaml_vname vname
+	    Format.fprintf ctx.rcc_out_fmter "abst_%a" pp_to_ocaml_vname vname
+	| Some coll_specifier ->
+	    (begin
+	    match coll_specifier with
+	     | (None, coll_name) ->
+		 (begin
+		 (* Method call from a species that is not the current but  *)
+		 (* is implicitely in the current compilation unit. May be  *)
+		 (* either a paramater or a toplevel defined collection. To *)
+		 (* retrieve the related method name we build it the same   *)
+		 (* way we built it while generating the extra OCaml        *)
+		 (* function's parameters due to depdencencies coming from  *)
+                 (* the species parameter. I.e: "_p_", followed by the      *)
+		 (* species parameter name, followed by "_", followed by    *)
+		 (* the method's name.                                      *)
+		 let prefix =
+		   "_p_" ^
+		   (String.lowercase
+		      (Parsetree_utils.name_of_vname coll_name)) ^
+		   "_" in
+		 Format.fprintf ctx.rcc_out_fmter
+		   "%s%a" prefix pp_to_ocaml_vname vname
+		 end)
+	     | (Some module_name, coll_name) ->
+		 (begin
+		 if module_name = ctx.rcc_current_unit then
+		   (begin
+		   (* Exactly like when it is method call from a species that *)
+                   (* is not the current but is implicitely in the current    *)
+		   (* compilation unit : the call is performed to a method    *)
+                   (* a species that is EXPLICITELY in the current            *)
+                   (* compilation unit.                                       *)
+		   let prefix =
+		     "_p_" ^
+		     (String.lowercase
+			(Parsetree_utils.name_of_vname coll_name)) ^
+		     "_" in
+		   Format.fprintf ctx.rcc_out_fmter
+		     "%s%a" prefix pp_to_ocaml_vname vname
+		   end)
+		 else
+		   (begin
+		   (* The called method belongs to a species that is not    *)
+		   (* ourselves and moreover belongs to another compilation *)
+		   (* unit. May be a species from the toplevel of another   *)
+		   (* FoCaL source file.                                    *)
+		   failwith "generate_expr_ident_for_method_generator foreign species's module TODO"
+		   end)
+		 end)
+	    end)
        end)
 ;;
 
 
 
 (* ******************************************************************** *)
-(* expr_compil_context ->  Parsetree.constructor_ident -> unit          *)
+(* reduced_compil_context ->  Parsetree.constructor_ident -> unit       *)
 (** {b Descr} : Generate the OCaml code from a FoCaL [constructor_expr]
               in the context of method generator generation.
 
@@ -559,22 +617,22 @@ let generate_constructor_ident_for_method_generator ctx cstr_expr =
    | Parsetree.CI (fname_opt, name) ->
        (begin
        match fname_opt with
-	| None -> Format.fprintf ctx.ecc_out_fmter "%a" pp_to_ocaml_vname name
+	| None -> Format.fprintf ctx.rcc_out_fmter "%a" pp_to_ocaml_vname name
 	| Some fname ->
 	    (* If the constructor belongs to the current      *)
 	    (* compilation unit then one must not qualify it. *)
-	    if fname <> ctx.ecc_current_unit then
-	      Format.fprintf ctx.ecc_out_fmter "%s.%a"
+	    if fname <> ctx.rcc_current_unit then
+	      Format.fprintf ctx.rcc_out_fmter "%s.%a"
 		(String.capitalize fname) pp_to_ocaml_vname name
 	    else
-	      Format.fprintf ctx.ecc_out_fmter "%a" pp_to_ocaml_vname name
+	      Format.fprintf ctx.rcc_out_fmter "%a" pp_to_ocaml_vname name
        end)
 ;;
 
 
 
 let generate_pattern ctx pattern =
-  let out_fmter = ctx.ecc_out_fmter in
+  let out_fmter = ctx.rcc_out_fmter in
   let rec rec_gen_pat pat =
     match pat.Parsetree.ast_desc with
      | Parsetree.P_const constant -> generate_constant out_fmter constant
@@ -624,7 +682,7 @@ let generate_pattern ctx pattern =
 
 
 let rec let_binding_compile ctx collections_carrier_mapping bd opt_sch =
-  let out_fmter = ctx.ecc_out_fmter in
+  let out_fmter = ctx.rcc_out_fmter in
   (* Generate the bound name. *)
   Format.fprintf out_fmter "%a"
     pp_to_ocaml_vname bd.Parsetree.ast_desc.Parsetree.b_name ;
@@ -644,6 +702,7 @@ let rec let_binding_compile ctx collections_carrier_mapping bd opt_sch =
 	   Format.fprintf out_fmter "@ (%a : %a)"
 	     pp_to_ocaml_vname param_vname
 	     (Types.pp_type_simple_to_ml
+		~current_unit: ctx.rcc_current_unit
 		~reuse_mapping: true collections_carrier_mapping) param_ty
        | None ->
 	   Format.fprintf out_fmter "@ %a" pp_to_ocaml_vname param_vname)
@@ -661,35 +720,32 @@ let rec let_binding_compile ctx collections_carrier_mapping bd opt_sch =
 
 
 
-(* ********************************************************************* *)
-(* expr_compil_context -> Parsetree.let_def -> Types.type_scheme list -> *)
-(*   unit                                                                *)
+(* ************************************************************************ *)
+(* reduced_compil_context -> Parsetree.let_def -> Types.type_scheme list -> *)
+(*   unit                                                                   *)
 (** {b Desrc} : Generates the OCaml code for a FoCaL "let"-definition.
 
     {b Args} :
       - [out_fmter] : The out channel where to generate the OCaml source
-                    code.
+              code.
       - [let_def] : The [Parsetree.let_def] structure representing the
-                  "let-definition" for which th generate the OCaml
-                  source code.
+              "let-definition" for which th generate the OCaml source
+               code.
       - [bound_schemes] : The list of types schemes of the identifiers
-                        bound to the "let-definition" (i.e. several if
-                        the definition is a "rec", hence binds sevzral
-                        identifiers). In effect, because we do not have
-                        directly inside the [Parsetree.let_def] these
-                        schemes, in order to be able to generate the
-                        type constraints of each components of the
-                        "let-definition", we must take these schemes
-                        aside.
-                        It is sometimes impossible yet to have this
-                        information. In this case, no type constraint
-                        will be added to the parameter of the bound
-                        identifiers.
+              bound to the "let-definition" (i.e. several if the
+              definition is a "rec", hence binds several identifiers).
+              In effect, because we do not have directly inside the
+              [Parsetree.let_def] these schemes, in order to be able to
+	      generate the type constraints of each components of the
+              "let-definition", we must take these schemes aside.
+              It is sometimes impossible yet to have this information.
+              In this case, no type constraint will be added to the
+              parameter of the bound identifiers.
 
-    {b Rem} : Not exported outside this module.                          *)
-(* ********************************************************************* *)
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
 and let_def_compile ctx let_def opt_bound_schemes =
-  let out_fmter = ctx.ecc_out_fmter in
+  let out_fmter = ctx.rcc_out_fmter in
   (* Generates the binder ("rec" or non-"rec"). *)
   Format.fprintf out_fmter "@[<2>let%s@ "
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
@@ -726,18 +782,18 @@ and let_def_compile ctx let_def opt_bound_schemes =
 
 
 (* ************************************************************* *)
-(* expr_compil_context -> Parsetree.expr -> unit                 *)
+(* reduced_compil_context -> Parsetree.expr -> unit              *)
 (** {b Descr} : Generate the OCaml code from a FoCaL expression.
 
     {b Rem} : Not exported outside this module.                  *)
 (* ************************************************************* *)
 and generate_expr ctx initial_expression =
-  let out_fmter = ctx.ecc_out_fmter in
+  let out_fmter = ctx.rcc_out_fmter in
   let rec rec_generate expr =
     (* Generate the source code for the expression. *)
     match expr.Parsetree.ast_desc with
      | Parsetree.E_self ->
-	 Format.eprintf "generate_expr E_self TODO@."
+	 Format.eprintf "generate_expr E_self TODO@." (* D'ailleurs, est-ce possible en fait ? *)
      | Parsetree.E_const cst -> generate_constant out_fmter cst
      | Parsetree.E_fun (args_names, body) ->
 	 List.iter
@@ -808,10 +864,29 @@ and generate_expr ctx initial_expression =
 	 rec_generate_record_field_exprs_list labs_exprs ;
 	 Format.fprintf out_fmter "@ }@]"
 	 end)
-     | Parsetree.E_record_access (_expr, _label_name) ->
-	 Format.eprintf "generate_expr E_record_access TODO@."
-     | Parsetree.E_record_with (_expr, _labs_exprs) ->
-	 Format.eprintf "generate_expr E_record_with TODO@."
+     | Parsetree.E_record_access (expr, label_name) ->
+	 (begin
+	 Format.fprintf out_fmter "@[<2>" ;
+	 rec_generate expr ;
+	 Format.fprintf out_fmter ".@,%s@]" label_name
+	 end)
+     | Parsetree.E_record_with (expr, labs_exprs) ->
+	 (begin
+	 (* Because in OCaml the with construct only starts by an ident, we *)
+	 (* create a temporary ident to bind the expression to an ident.    *)
+	 Format.fprintf out_fmter "@[<2>let __foc_tmp_with_ =@ " ;
+	 rec_generate expr ;
+	 Format.fprintf out_fmter "@ in@] " ;
+	 (* Now really generate the "with"-construct. *)
+	 Format.fprintf out_fmter "@[<2>{ __foc_tmp_with_ with@\n" ;
+	 List.iter
+	   (fun (label_name, field_expr) ->
+	     Format.fprintf out_fmter "%s =@ " label_name ;
+	     rec_generate field_expr ;
+	     Format.fprintf out_fmter " ;")
+	   labs_exprs ;
+	 Format.fprintf out_fmter "@ }@]"
+	 end)
      | Parsetree.E_tuple exprs ->
 	 (begin
 	 match exprs with
@@ -822,8 +897,24 @@ and generate_expr ctx initial_expression =
 	      rec_generate_exprs_list ~comma: true exprs ;
 	      Format.fprintf out_fmter ")@]"
 	 end)
-     | Parsetree.E_external _external_expr ->
-	 Format.eprintf "generate_expr E_external TODO@."
+     | Parsetree.E_external external_expr ->
+	 (begin
+	 try
+	   (* Simply a somewhat of verbatim stuff of the OCaml translation. *)
+	   let (_, ocaml_binding) =
+	     List.find
+	       (function
+		 | (Parsetree.EL_Caml, _) -> true
+		 | (Parsetree.EL_Coq, _)
+		 | ((Parsetree.EL_external _), _) -> false)
+	       external_expr.Parsetree.ast_desc in
+	   Format.fprintf out_fmter "%s" ocaml_binding
+	 with Not_found ->
+	   (* No OCam mapping found. *)
+	   raise
+	     (No_external_value_caml_def
+		((Parsetree.Vlident "<expr>"), expr.Parsetree.ast_loc))
+	 end)
      | Parsetree.E_paren e -> rec_generate e
 
 
@@ -918,7 +1009,9 @@ let generate_methods ctx species_parameters_names field =
 	List.fold_right
 	  (fun species_param_name accu ->
 	    let meths_from_param =
-	      Param_dep_analysis.param_deps_expr species_param_name body in
+	      Param_dep_analysis.param_deps_expr
+		~current_species: ctx.scc_current_species
+		species_param_name body in
 	    (* Return a couple binding the species parameter's name with the *)
 	    (* methods of it we found as required for the current method.    *)
 	    (species_param_name, meths_from_param) :: accu)
@@ -959,6 +1052,7 @@ let generate_methods ctx species_parameters_names field =
 	       Format.fprintf out_fmter "@ (%a : %a)"
 		 pp_to_ocaml_vname param_vname
 		 (Types.pp_type_simple_to_ml
+		    ~current_unit: ctx.scc_current_unit
 		    ~reuse_mapping: true collections_carrier_mapping) param_ty
 	   | None ->
 	       Format.fprintf out_fmter "@ %a" pp_to_ocaml_vname param_vname)
@@ -973,8 +1067,8 @@ let generate_methods ctx species_parameters_names field =
       Format.fprintf out_fmter " =@ " ;
       (* Generates the body's code of the method. *)
       let expr_ctx = {
-	ecc_current_unit = ctx.scc_current_unit ;
-	ecc_out_fmter = out_fmter } in
+	rcc_current_unit = ctx.scc_current_unit ;
+	rcc_out_fmter = out_fmter } in
       generate_expr expr_ctx body ;
       (* Done... Then, final carriage return. *)
       Format.fprintf out_fmter "@]@\n"
@@ -1028,6 +1122,148 @@ let generate_methods ctx species_parameters_names field =
 
 
 
+let generate_collection_generator ctx species_parameters_names species_descr =
+  let current_species_name = snd ctx.scc_current_species in
+  let out_fmter = ctx.scc_out_fmter in
+  (* Just a bit of debug. *)
+  if Configuration.get_verbose () then
+    Format.eprintf
+      "Species %a is fully defined. Generating its collection generator@."
+      Sourcify.pp_vname current_species_name ;
+  (* Factorize the prefix to put in from of each species's field *)
+  (* to get the corresponding record field name on OCaml's side. *)
+  let _field_prefix =
+    String.lowercase (Parsetree_utils.name_of_vname current_species_name) in
+ 
+  (* ******************************************************************* *)
+  (** {b Descr} : A local function to process one field. This allows to
+                factorize the processing for both [Let] and [Let_rec]
+                definitions.
+
+      {b Rem} : Local to the [generate_collection_generator] function.
+               Not exported.                                             *)
+  (* ******************************************************************* *)
+  let process_one_field (from, meth_name, _, _, body) =
+    Format.fprintf out_fmter "(* From species %a. *)@\n"
+      Sourcify.pp_qualified_vname from ;
+    (* Let's first find the methods of each species parameter we depend on. *)
+    (* Like when creating method generator, wee will need to know the extra *)
+    (* arguments the method has, not to lambda-lift them this time, but to  *)
+    (* apply them ! We build this list in the same order than in the        *)
+    (* [generate_methods] function to be sure the order of the extra        *)
+    (* parameters will be the same at lambda-lifting time (in the function  *)
+    (* [generate_methods]) and at application time (here).                  *)
+    let dependencies_from_params =
+      List.fold_right
+	(fun species_param_name accu ->
+	  let meths_from_param =
+	    Param_dep_analysis.param_deps_expr
+	      ~current_species: ctx.scc_current_species
+	      species_param_name body in
+	  (* Return a couple binding the species parameter's name with the *)
+	  (* methods of it we found as required for the current method.    *)
+	  (species_param_name, meths_from_param) :: accu)
+	species_parameters_names
+	[] in
+    (* Now we get the get all the methods we directly decl-depend on. They *)
+    (* have also be mapped onto extra parameters, so we need them to know  *)
+    (* what to apply to this current method's generator.                   *)
+    let decl_children =
+      (try
+	let my_node =
+	  List.find
+	    (fun { Dep_analysis.nn_name = n } -> n = meth_name)
+	    ctx.scc_dependency_graph_nodes in
+	(* Only keep "decl-dependencies". *)
+	List.filter
+	  (function
+	    | (_, Dep_analysis.DK_decl) -> true
+	    | (_, Dep_analysis.DK_def) -> false)
+	  my_node.Dep_analysis.nn_children
+      with Not_found -> []  (* No children at all. *)) in
+    Format.fprintf out_fmter "@[<2>let local_%a =@ "
+      pp_to_ocaml_vname meth_name ;
+    (* Find the method generator to use depending on if it belongs to this *)
+    (* inheritance level or if it was inherited from another species.      *)
+    if from = ctx.scc_current_species then
+      (begin
+      (* It comes from the current inheritance level.   *)
+      (* Then its name is simply the the method's name. *)
+      Format.fprintf out_fmter "%a"
+	pp_to_ocaml_vname meth_name
+      end)
+    else
+      (begin
+      (* It comes from a previous inheritance level. Then its name is *)
+      (* the the module where the species inhabits if not the same    *)
+      (* compilation unit than the current + "." + species name as    *)
+      (* module + "." + the method's name.                            *)
+      if (fst from) <> ctx.scc_current_unit then
+	Format.fprintf out_fmter "%s.@," (String.capitalize (fst from)) ;
+      Format.fprintf out_fmter "%a.@,%a"
+	pp_to_ocaml_vname (snd from) pp_to_ocaml_vname meth_name
+      end) ;
+    (* Now, apply the method generator to each of the extra *)
+    (* arguments we harvested above.                        *)
+    (* First, the extra arguments due to the species parameters methods we  *)
+    (* depends of. The name used for application is formed according to the *)
+    (* same scheme we used at lambda-lifting time: "_p_" +                  *)
+    (* species parameter name + "_" + called method name.                   *)
+    List.iter
+      (fun (species_param_name, meths_from_param) ->
+	let prefix =
+	  "_p_" ^
+	  (String.lowercase
+	     (Parsetree_utils.name_of_vname species_param_name)) ^
+	  "_" in
+	Dep_analysis.VnameSet.iter
+	  (fun meth ->
+	    Format.fprintf out_fmter "@ %s%a" prefix pp_to_ocaml_vname meth)
+	  meths_from_param)
+      dependencies_from_params ;
+    (* Second, the method of our inheritance tree we depend on because these *)
+    (* methods are now defined, we apply using these defined methods, i.e.   *)
+    (* the "local" function defined here for this method. Hence, for each    *)
+    (* method of ourselves we depend on, its name is "local_" + the method's *)
+    (* name.                                                                 *)
+    List.iter
+      (fun ({ Dep_analysis.nn_name = dep_name }, _) ->
+	Format.fprintf out_fmter "@ local_%a" pp_to_ocaml_vname dep_name)
+      decl_children ;
+    (* That's it for this field code generation. *)
+    Format.fprintf out_fmter "@ in@]@\n" in    
+
+  (* *********************** *)
+  (* Now, let's really work. *)
+  (* A little comment in the generated OCaml code. *)
+  Format.fprintf out_fmter
+    "(* Fully defined '%a' species's collection generator. *)@\n"
+    Sourcify.pp_vname current_species_name ;
+  (* Generate the local functions that will be used to fill the record value. *)
+  List.iter
+    (function
+      | Env.TypeInformation.SF_sig (_, _, _) ->
+	  (* Either it's the "rep", or this should not happen since the  *)
+	  (* species is fully defined. So, basta for the assert false if *)
+	  (* it's not "rep", just silently ignore all.                   *)
+	  ()
+      | Env.TypeInformation.SF_let (from, name, params, scheme, body) ->
+	  process_one_field (from, name, params, scheme, body)
+      | Env.TypeInformation.SF_let_rec l ->
+	  List.iter process_one_field l
+      | Env.TypeInformation.SF_theorem (_, _, _, _, _)
+      | Env.TypeInformation.SF_property (_, _, _, _) ->
+	  (* Theorems and properties o no lead to OCaml code. Ignore them. *)
+	  ())
+    species_descr.Env.TypeInformation.spe_sig_methods ;
+  (* The record value. *)
+  Format.fprintf ctx.scc_out_fmter "{ @[<2>" ;
+  (* Close the record expression. *)
+  Format.fprintf ctx.scc_out_fmter "@] }@\n" ;
+;;
+
+       
+
 let species_compile ~current_unit out_fmter species_def species_descr
     dep_graph =
   let species_def_desc = species_def.Parsetree.ast_desc in
@@ -1045,7 +1281,7 @@ let species_compile ~current_unit out_fmter species_def species_descr
   (* Create the initial compilation context for this species. *)
   let ctx = {
     scc_current_unit = current_unit ;
-    scc_current_species = species_def_desc.Parsetree.sd_name ;
+    scc_current_species = (current_unit, species_def_desc.Parsetree.sd_name) ;
     scc_dependency_graph_nodes = dep_graph ;
     scc_collections_carrier_mapping = collections_carrier_mapping ;
     scc_out_fmter = out_fmter } in
@@ -1064,13 +1300,17 @@ let species_compile ~current_unit out_fmter species_def species_descr
   List.iter
     (generate_methods ctx species_parameters_names)
     species_descr.Env.TypeInformation.spe_sig_methods ;
+  (* Now check if the species supports a collection *)
+  (* generator because fully defined.               *)
+  if species_descr.Env.TypeInformation.spe_is_closed then
+    generate_collection_generator ctx species_parameters_names species_descr ;
   Format.fprintf out_fmter "end ;;@]@\n@."
 ;;
 
 
 
 (* ************************************************************************* *)
-(* Format.formatter -> Parsetree.external_type_def_body -> unit              *)
+(* reduced_compil_context -> Parsetree.external_type_def_body -> unit        *)
 (** {b Descr} : Generates the OCaml code to bind a FoCaL type onto an OCaml
         existing type. If the FoCaL type name is the same than the OCaml
         one, then we silently ignore the type definition to avoid OCaml type
@@ -1079,10 +1319,11 @@ let species_compile ~current_unit out_fmter species_def species_descr
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-let external_type_def_compile out_fmter external_type_def =
+let external_type_def_compile ctx external_type_def =
   let external_type_def_desc = external_type_def.Parsetree.ast_desc in
+  let out_fmter = ctx.rcc_out_fmter in
   (* Type definition header. *)
-  Format.fprintf out_fmter "type" ;
+  Format.fprintf out_fmter "@[<2>type" ;
   (* Now, generate the type parameters if some. *)
   (match external_type_def_desc.Parsetree.etd_params with
    | [] -> ()
@@ -1098,9 +1339,9 @@ let external_type_def_compile out_fmter external_type_def =
 	 | first :: rem ->
 	     Format.fprintf out_fmter "%a,@ " pp_to_ocaml_vname first ;
 	     rec_print_params rem in
-       Format.fprintf out_fmter " (" ;
+       Format.fprintf out_fmter " (@[<1>" ;
        rec_print_params several ;
-       Format.fprintf out_fmter ")"
+       Format.fprintf out_fmter "@])"
        end)) ;
   (* Now, the type name, renamed as "_focty_" followed by the original name. *)
   Format.fprintf out_fmter " _focty_%a =@ "
@@ -1125,21 +1366,202 @@ let external_type_def_compile out_fmter external_type_def =
 
 
 
+(* ************************************************************************ *)
+(* reduced_compil_context -> Types.type_simple list -> unit                 *)
+(** {b Descr} : Just an helper to print a list of types separated by commas
+       and sharing a same variables mapping and an empty collection carrier
+       mapping. If the list has only 1 element then it is NOT enclosed
+       between parens.
+       If it a several elements, then it IS enclosed between parens.
+       If is has no element (degenerated case) then nothing gets printed.
+       This is espercially used to print the parameters of a type
+       definition.
+
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
+let print_types_comma_with_same_vmapping_and_empty_carrier_mapping ctx tys =
+  let current_unit = ctx.rcc_current_unit in
+  let out_fmter = ctx.rcc_out_fmter in
+  match tys with
+   | [] -> ()
+   | [one] ->
+       Format.fprintf out_fmter " %a"
+	 (Types.pp_type_simple_to_ml ~current_unit ~reuse_mapping: true []) one
+   | several ->
+       (begin
+       (* Enclose by parentheses and separate by commas. *)
+       let rec rec_print_params = function
+	 | [] -> ()
+	 | [last] ->
+	     Format.fprintf out_fmter "%a"
+	       (Types.pp_type_simple_to_ml
+		  ~current_unit ~reuse_mapping: true [])
+	       last
+	 | first :: rem ->
+	     Format.fprintf out_fmter "%a,@ "
+	       (Types.pp_type_simple_to_ml
+		  ~current_unit ~reuse_mapping: true [])
+	       first ;
+	     rec_print_params rem in
+       Format.fprintf out_fmter " (@[<1>" ;
+       rec_print_params several ;
+       Format.fprintf out_fmter "@])"
+       end)
+;;
+
+
+
+(* ***************************************************************** *)
+(* reduced_compil_context -> Parsetree.vname ->                      *)
+(*   Env.TypeInformation.type_description -> unit                    *)
+(** {b Descr} : Generates the OCaml code for a "regular" (i.e. non 
+          "external" FoCaL type definition.
+
+    {b Rem} : Not exported outside this module.                      *)
+(* ***************************************************************** *)
+let type_def_compile ctx type_def_name type_descr =
+  let out_fmter = ctx.rcc_out_fmter in
+  (* Type definition header. *)
+  Format.fprintf out_fmter "@[<2>type" ;
+  (* Get a fresh instance of the type's identity scheme. *)
+  let (instanciated_body, params) =
+    Types.specialize2
+      type_descr.Env.TypeInformation.type_identity
+      type_descr.Env.TypeInformation.type_params in
+  (* Useless, but just in case.... This does not hurt ! *)
+  Types.purge_type_simple_to_ml_variable_mapping () ;
+  (* Now, generates the type definition's body. *)
+  match type_descr.Env.TypeInformation.type_kind with
+   | Env.TypeInformation.TK_abstract ->
+       (* Print the parameter(s) stuff if any. *)
+       print_types_comma_with_same_vmapping_and_empty_carrier_mapping
+	 ctx params ;
+       (* Now print the type constructor's name. *)
+       Format.fprintf out_fmter " _focty_%a =@ "
+	 pp_to_ocaml_vname type_def_name ;
+       (* Type abbreviation: the body is the abbreviated type. *)
+       Format.fprintf out_fmter "%a@] ;;@\n "
+	 (Types.pp_type_simple_to_ml
+	    ~current_unit: ctx.rcc_current_unit ~reuse_mapping: true [])
+	 instanciated_body
+   | Env.TypeInformation.TK_variant cstrs ->
+       (begin
+       (* To ensure variables names sharing, we will unify an instance of   *)
+       (* each constructor result type (remind they have a functional type  *)
+       (* whose arguments are the sum constructor's arguments and result is *)
+       (* the same type that the hosting type itself) with the instance of  *)
+       (* the defined type identity.                                        *)
+       let sum_constructors_to_print =
+	 List.map
+	   (fun (sum_cstr_name, sum_cstr_arity, sum_cstr_scheme) ->
+	     if sum_cstr_arity = Env.TypeInformation.CA_one then
+	       (begin
+	       try
+		 let sum_cstr_ty = Types.specialize sum_cstr_scheme in
+		 let sum_cstr_args = Types.type_variable () in
+		 Types.unify
+		   ~loc: Location.none ~self_manifest: None
+		   (Types.type_arrow sum_cstr_args instanciated_body)
+		   sum_cstr_ty ;
+		 (sum_cstr_name, (Some sum_cstr_args))
+	       with _ ->
+		 (* Because program is already well-typed, this *)
+		 (* should always succeed.                      *)
+		 assert false
+	       end)
+	     else (sum_cstr_name, None))
+	   cstrs in
+       (* Print the parameter(s) stuff if any. Do it only now the  *)
+       (* unifications have been done with the sum constructors to *)
+       (* be sure that thanks to unifications, "sames" variables   *)
+       (* will have the "same" name everywhere (i.e. in the        *)
+       (* the parameters enumeration of the type and in the sum    *)
+       (* constructors definitions).                               *)
+       print_types_comma_with_same_vmapping_and_empty_carrier_mapping
+	 ctx params ;
+       (* Now print the type constructor's name. *)
+       Format.fprintf out_fmter " _focty_%a =@ "
+	 pp_to_ocaml_vname type_def_name ;
+       (* And finally really print the constructors definitions. *)
+       List.iter
+	 (fun (sum_cstr_name, opt_args) ->
+	   (* The sum constructor name. *)
+	   Format.fprintf out_fmter "@\n| %a" pp_to_ocaml_vname sum_cstr_name ;
+	   match opt_args with
+	    | None -> ()
+	    | Some sum_cstr_args ->
+		(* The argument(s) of the constructor. *)
+		Format.fprintf out_fmter " of@ (@[<1>%a@])"
+		  (Types.pp_type_simple_to_ml
+		     ~current_unit: ctx.rcc_current_unit
+		     ~reuse_mapping: true [])
+		  sum_cstr_args)
+	 sum_constructors_to_print ;
+       Format.fprintf out_fmter "@]@\n ;;@\n "
+       end)
+   | Env.TypeInformation.TK_record fields ->
+       (begin
+       (* Like for the sum types, we make use of unification to ensure the *)
+       (* sharing of variables names. We proceed exactly the same way,     *)
+       (* delaying the whole print until we unified into each record-field *)
+       (* type.                                                            *)
+       let record_fields_to_print =
+	 List.map
+	   (fun (field_name, field_mut, field_scheme) ->
+	     try
+	       let field_ty = Types.specialize field_scheme in
+	       let field_args = Types.type_variable () in
+	       Types.unify
+		 ~loc: Location.none ~self_manifest: None
+		 (Types.type_arrow field_args instanciated_body)
+		 field_ty ;
+	       (field_name, field_mut, field_args)
+	     with _ ->
+	       (* Because program is already well-typed, this *)
+	       (* should always succeed.                      *)
+	       assert false)
+	   fields in
+       (* Print the parameter(s) stuff if any. *)
+       print_types_comma_with_same_vmapping_and_empty_carrier_mapping
+	 ctx params ;
+       (* Now print the type constructor's name. *)
+       Format.fprintf out_fmter " _focty_%a = {@ "
+	 pp_to_ocaml_vname type_def_name ;
+       (* And finally really print the fields definitions. *)
+       List.iter
+	 (fun (field_name, field_mut, field_ty) ->
+	   Format.fprintf out_fmter "@\n " ;
+	   (* Generate the mutability flag. *)
+	   if field_mut = Env.TypeInformation.FM_mutable then
+	     Format.fprintf out_fmter "mutable " ;
+	   Format.fprintf out_fmter "%s :@ %a ;"
+	     field_name
+	     (Types.pp_type_simple_to_ml
+		~current_unit: ctx.rcc_current_unit ~reuse_mapping: true [])
+	     field_ty)
+	 record_fields_to_print ;
+       Format.fprintf out_fmter " }@] ;;@\n "
+       end)
+;;
+
+
+
 (* ********************************************************************** *)
-(* Format.formatter -> Parsetree.external_value_def_body -> unit          *)
+(* reduced_compil_context -> Parsetree.external_value_def_body -> unit    *)
 (** {b Descr} : Generate the OCaml source code for a FoCaL external value
               definition.
 
     {b Args} :
-      - [out_fmter] : The out channel where to generate the OCaml source
-                    code.
+      - [ctx] : The structure recording the various utilities information
+              for the code generation of the external definition.
       - [external_value_def] : The external type definition to compile
            to OCaml source code.
 
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
-let external_value_def_compile out_fmter external_value_def =
+let external_value_def_compile ctx external_value_def =
   let external_value_def_desc = external_value_def.Parsetree.ast_desc in
+  let out_fmter = ctx.rcc_out_fmter in
   (* Prints the name of the defined identifier *)
   (* and prepares for its type constraint.     *)
   Format.fprintf out_fmter "@[<2>let (%a : "
@@ -1155,7 +1577,9 @@ let external_value_def_compile out_fmter external_value_def =
   (* definitions are always at toplevel, no species parameter is in the *)
   (* scope, hence the collections carrier mapping is trivially empty.   *)
   Format.fprintf out_fmter "%a) =@ "
-    (Types.pp_type_simple_to_ml ~reuse_mapping: false []) extern_val_type ;
+    (Types.pp_type_simple_to_ml
+       ~current_unit: ctx.rcc_current_unit
+       ~reuse_mapping: false []) extern_val_type ;
   (* And now, bind the FoCaL identifier to the OCaml one. *)
   try
     let (_, ocaml_binding) =
@@ -1176,12 +1600,12 @@ let external_value_def_compile out_fmter external_value_def =
 
 
 
-let external_def_compile out_fmter extern_def =
+let external_def_compile ctx extern_def =
   match extern_def.Parsetree.ast_desc with
    | Parsetree.ED_type external_type_def ->
-       external_type_def_compile out_fmter external_type_def
+       external_type_def_compile ctx external_type_def
    | Parsetree.ED_value external_value_def ->
-       external_value_def_compile out_fmter external_value_def
+       external_value_def_compile ctx external_value_def
 ;;
 
 
@@ -1205,18 +1629,28 @@ let external_def_compile out_fmter extern_def =
 (* *********************************************************************** *)
 let toplevel_compile ~current_unit out_fmter = function
   | Infer.PCM_no_matter -> ()
-  | Infer.PCM_external extern_def -> external_def_compile out_fmter extern_def
+  | Infer.PCM_external extern_def ->
+      (* Create the initial context for compiling the let-definition. *)
+      let ctx = {
+	rcc_current_unit = current_unit ;
+	rcc_out_fmter = out_fmter } in
+      external_def_compile ctx extern_def
   | Infer.PCM_species (species_def, species_descr, dep_graph) ->
       species_compile
 	~current_unit out_fmter species_def species_descr dep_graph
   | Infer.PCM_collection (_coll_def, _fields) ->
       Format.eprintf "Infer.PCM_collection expr : TODO@."
-  | Infer.PCM_type -> Format.eprintf "Infer.PCM_type expr : TODO@."
+  | Infer.PCM_type (type_def_name, type_descr) ->
+      (* Create the initial context for compiling the type definition. *)
+      let ctx = {
+	rcc_current_unit = current_unit ;
+	rcc_out_fmter = out_fmter } in
+      type_def_compile ctx type_def_name type_descr
   | Infer.PCM_let_def (let_def, def_schemes) ->
       (* Create the initial context for compiling the let-definition. *)
       let ctx = {
-	ecc_current_unit = current_unit ;
-	ecc_out_fmter = out_fmter } in
+	rcc_current_unit = current_unit ;
+	rcc_out_fmter = out_fmter } in
       (* We have the schemes under the hand. Then we will be able    *)
       (* to annotate the parameters of the toplevel let-bound idents *)
       (* with type constraints.                                      *)
@@ -1226,8 +1660,8 @@ let toplevel_compile ~current_unit out_fmter = function
   | Infer.PCM_theorem _ -> ()  (* Theorems do not lead to OCaml code. *)
   | Infer.PCM_expr expr ->
       let ctx = {
-	ecc_current_unit = current_unit ;
-	ecc_out_fmter = out_fmter
+	rcc_current_unit = current_unit ;
+	rcc_out_fmter = out_fmter
       } in
       generate_expr ctx expr ;
       (* Generate the final double-semis. *)

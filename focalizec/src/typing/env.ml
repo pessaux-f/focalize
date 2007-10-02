@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.40 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: env.ml,v 1.41 2007-10-02 09:29:36 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -204,14 +204,15 @@ module ScopeInformation = struct
     | SBI_file of Types.fname
       (** The ident is a method implicitely of self. *)
     | SBI_method_of_self
-      (** The ident is a method explicitely of a collection. ATTENTION: while
+      (** The ident is a method explicitly of a collection. ATTENTION: while
 	  inserting a method in the environment, it must always be tagged with
 	  [SBI_method_of_self]. The tag [SBI_method_of_coll] can only be
 	  returned by [find_value] who may perform a change on the fly if
 	  required. *)
-    | SBI_method_of_coll of Parsetree.vname (** The value identifier is a
-						method of
-						collection / species. *)
+    | SBI_method_of_coll of
+	Parsetree.qualified_vname (** The module name hosting the collection
+				      and the collection the
+	    method belongs to. *)
       (** The ident is a locally bound indentifier
 	  (let or function parameter). *)
     | SBI_local
@@ -294,12 +295,12 @@ module TypeInformation = struct
   and species_field =
     | SF_sig of
 	((** Where the sig comes from (the most recent in inheritance). *)
-	 Parsetree.vname *
+	 Parsetree.qualified_vname *
 	 Parsetree.vname *          (** The sig's name. *)
 	 Types.type_scheme          (** The sig's type scheme. *))
     | SF_let of
 	((** Where the let-bound comes from (the most recent in inheritance). *)
-	 Parsetree.vname *
+	 Parsetree.qualified_vname *
 	 Parsetree.vname *       (** Name of the let-bound definition. *)
 	 (** Parameters of the let-bound definition. *) 
          (Parsetree.vname list) *
@@ -308,7 +309,7 @@ module TypeInformation = struct
     | SF_let_rec of
 	((** Where the let-rec-bound comes from (the most recent in
 	     inheritance). *)
-	 Parsetree.vname *
+	 Parsetree.qualified_vname *
 	 Parsetree.vname * (** Name of the let-rec-bound definition. *)
 	 (** Parameters of the let-rec-bound definition. *) 
          (Parsetree.vname list) *
@@ -318,14 +319,14 @@ module TypeInformation = struct
 				     mutually recursive bound identifier. *)
     | SF_theorem of
 	((** Where the theorem comes from (the most recent in inheritance). *)
-	 Parsetree.vname *
+	 Parsetree.qualified_vname *
 	 Parsetree.vname *      (** The theorem's name. *)
 	 Types.type_scheme *    (** The theorem's type scheme. *)
 	 Parsetree.prop *       (** The theorem's body. *)
 	 Parsetree.proof        (** The theorem's proof. *))
     | SF_property of
 	((** Where the property comes from (the most recent in inheritance). *)
-	 Parsetree.vname *
+	 Parsetree.qualified_vname *
 	 Parsetree.vname *       (** The property's name. *)
 	 Types.type_scheme *     (** The property's type scheme. *)
 	 Parsetree.prop          (** The property's body. *))
@@ -415,8 +416,11 @@ module TypeInformation = struct
   type type_kind =
     | TK_abstract  (** Abstract types and type abbreviations. *)
     | TK_variant of    (** Sum types. *)
-	(Parsetree.constructor_name * Types.type_scheme) list
-    | TK_record of  (** Record types: list of labels. Any value of a type record will be typed as a [ST_construct] whose name is the name of the record type. *)
+	(Parsetree.constructor_name * constructor_arity *
+	 Types.type_scheme) list
+    | TK_record of  (** Record types: list of labels. Any value of a type
+			record will be typed as a [ST_construct] whose name is
+			the name of the record type. *)
 	(Types.label_name * field_mutability * Types.type_scheme) list
 
 
@@ -429,7 +433,9 @@ module TypeInformation = struct
         If the type is a pure abstract like in type t, then t is TK_abstract
         with [type_identity] representing the type ST_construct ("t", []). *)
     type_identity : Types.type_scheme ;
-    (** Parameters of the type. Be careful, they are generalized at the same that the above scheme [type_identity] is created. Hence, physical sharing exists and is crucial ! *)
+    (** Parameters of the type. Be careful, they are generalized at the same
+	that the above scheme [type_identity] is created. Hence, physical
+	sharing exists and is crucial ! *)
     type_params : Types.type_simple list ;
     type_arity : int          (** Number of parameters of the type. *)
   }
@@ -480,12 +486,12 @@ module TypeInformation = struct
       (function
 	| SF_sig (from, vname, ty_scheme) ->
 	    Format.fprintf ppf "(* From species %a. *)@\n"
-	      Sourcify.pp_vname from ;
+	      Sourcify.pp_qualified_vname from ;
 	    Format.fprintf ppf "sig %a : %a@\n"
 	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
 	| SF_let (from, vname, _, ty_scheme, _) ->
 	    Format.fprintf ppf "(* From species %a. *)@\n"
-	      Sourcify.pp_vname from ;
+	      Sourcify.pp_qualified_vname from ;
 	    Format.fprintf ppf "let %a : %a@\n"
 	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
 	| SF_let_rec rec_bounds ->
@@ -494,25 +500,26 @@ module TypeInformation = struct
 	     | [] -> assert false  (* Empty let rec is non sense ! *)
 	     | (from, vname, _, ty_scheme, _) :: rem ->
 		 Format.fprintf ppf "(* From species %a. *)@\n"
-		   Sourcify.pp_vname from ;
+		   Sourcify.pp_qualified_vname from ;
 		 Format.fprintf ppf "let rec %a : %a@\n"
 		   Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme ;
 		 List.iter
-		   (fun (from, v, _, s, _) ->
+		   (fun (local_from, v, _, s, _) ->
 		     Format.fprintf ppf
-		       "(* From species %a. *)@\n" Sourcify.pp_vname from ;
+		       "(* From species %a. *)@\n"
+		       Sourcify.pp_qualified_vname local_from ;
 		     Format.fprintf ppf "and %a : %a@\n"
 		       Sourcify.pp_vname v Types.pp_type_scheme s)
 		   rem
 	    end)
 	| SF_theorem (from, vname, ty_scheme, _, _) ->
 	    Format.fprintf ppf "(* From species %a. *)@\n"
-	      Sourcify.pp_vname from ;
+	      Sourcify.pp_qualified_vname from ;
 	    Format.fprintf ppf "theorem %a : %a@\n"
 	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
 	| SF_property (from, vname, ty_scheme, _) ->
 	    Format.fprintf ppf "(* From species %a. *)@\n"
-	      Sourcify.pp_vname from ;
+	      Sourcify.pp_qualified_vname from ;
 	    Format.fprintf ppf "property %a : %a@\n"
 	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme)
       methods
@@ -818,12 +825,12 @@ module type EnvModuleAccessSig = sig
      value_bound_data, species_bound_data)
       generic_env
   val make_value_env_from_species_methods :
-    Parsetree.vname -> species_bound_data ->
+    Parsetree.qualified_vname -> species_bound_data ->
       (constructor_bound_data, label_bound_data, type_bound_data,
        value_bound_data, species_bound_data)
 	generic_env
   val post_process_method_value_binding :
-    Parsetree.vname -> value_bound_data -> value_bound_data
+    Parsetree.qualified_vname -> value_bound_data -> value_bound_data
 end ;;
 
 
@@ -936,10 +943,10 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 	 (* coming from an opened module.            *)
 	 let allow_opened = allow_opened_p current_unit opt_scope in
 	 find_value_vname ~loc ~allow_opened vname env'
-     | Parsetree.EI_method (collname_opt, vname) ->
+     | Parsetree.EI_method (coll_specifier_opt, vname) ->
 	 (begin
-	 match collname_opt with
-	  | None | Some (Parsetree.Vuident "Self") ->
+	 match coll_specifier_opt with
+	  | None ->
 	      (* No collection scope. Then the searched ident must belong  *)
 	      (* to the inheritance of Self. First, this means that opened *)
 	      (* stuff is forbidden. Next, because the [values] bucket is  *)
@@ -947,19 +954,46 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
               (* we just have to search for the [vname] inside the current *)
               (* environment.                                              *)
 	      find_value_vname ~loc ~allow_opened: false vname env
-	  | Some coll_vname ->
-	      (* We must first look inside collections and species   *)
-              (* for the [collname] in order to recover its methods. *)
-              let available_meths =
-		(EMAccess.make_value_env_from_species_methods
-		   coll_vname
-		   (find_species_vname
-		      ~loc ~allow_opened: false coll_vname env)) in
-	      let data =
-		find_value_vname
-		  ~loc ~allow_opened: false vname available_meths in
-	      (* Now we apply the post-processing on the found data. *)
-	      EMAccess.post_process_method_value_binding coll_vname data
+	  | Some coll_specifier ->
+	      (begin
+	      match coll_specifier with
+	       | (None, (Parsetree.Vuident "Self")) ->
+		   (* Like if there was no collection scope (see above). *)
+		   find_value_vname ~loc ~allow_opened: false vname env
+	       | (opt_module_qual, coll_vname) ->
+		   (begin
+		   (* Recover the environment in where to search,according *)
+		   (* to if the species is qualified by a module name.     *)
+		   let env' =
+		     EMAccess.find_module
+		       ~loc ~current_unit opt_module_qual env in
+		   (* Check if the lookup can return something *)
+		   (* coming from an opened module.            *)
+		   let allow_opened =
+		     allow_opened_p current_unit opt_module_qual in
+		   (* Build the complete species name, including its hosting *)
+		   (* module. If none specified, then this module is the     *)
+		   (* current one because this means that the species name   *)
+		   (* implicitely refers to the current compilation unit.    *)
+		   let full_coll_name =
+		     (match opt_module_qual with
+		      | None -> (current_unit, coll_vname)
+		      | Some module_qual -> (module_qual, coll_vname)) in
+		   (* We must first look inside collections and species     *)
+		   (* for the [coll_vname] in order to recover its methods. *)
+		   let available_meths =
+		     (EMAccess.make_value_env_from_species_methods
+			full_coll_name
+			(find_species_vname
+			   ~loc ~allow_opened  coll_vname env')) in
+		   let data =
+		     find_value_vname
+		       ~loc ~allow_opened vname available_meths in
+		   (* Now we apply the post-processing on the found data. *)
+		   EMAccess.post_process_method_value_binding
+		     full_coll_name data
+		   end)
+	      end)
 	 end)
 
 
@@ -1131,12 +1165,12 @@ module ScopingEMAccess = struct
       species = [] }
 
 
-  let make_value_env_from_species_methods spec_name spec_info =
+  let make_value_env_from_species_methods species spec_info =
     let values_bucket =
       List.map
 	(fun meth_vname ->
 	  (meth_vname,
-	   BO_absolute (ScopeInformation.SBI_method_of_coll spec_name)))
+	   BO_absolute (ScopeInformation.SBI_method_of_coll species)))
 	spec_info.ScopeInformation.spbi_methods in
     { constructors = [] ; labels = [] ; types = [] ; values = values_bucket ;
       species = [] }
@@ -1154,7 +1188,7 @@ module ScopingEMAccess = struct
                [SBI_method_of_self] instead of [SBI_method_of_coll]
                otherwise when we would scope a real method of [Self], if
                this méthode was bound to, for instance "KikooSpecies", then
-               once scoped, the AST would return an [ident] explicitely
+               once scoped, the AST would return an [ident] explicitly
                shaped like "KikooSpecies!meth" instead of "Self!meth".
                This would force the method to be the one of this species
                at this level in the inheritance, hence forbidding
@@ -1162,9 +1196,9 @@ module ScopingEMAccess = struct
 
      {b Rem} : Exported outside this module, but not outside this file.       *)
   (* ************************************************************************ *)
-  let post_process_method_value_binding coll_vname = function
+  let post_process_method_value_binding coll_name = function
     | ScopeInformation.SBI_method_of_self ->
-	ScopeInformation.SBI_method_of_coll coll_vname
+	ScopeInformation.SBI_method_of_coll coll_name
     | whatever -> whatever
 end ;;
 module ScopingEnv = Make (ScopingEMAccess) ;;
@@ -1190,23 +1224,23 @@ module TypingEMAccess = struct
     (* Create the types scheme for "[]". *)
     let nil_scheme =
       (let v = Types.type_variable () in
-      Types.generalize (Types.type_basic "list" [v])) in
+      Types.generalize (Types.type_list v)) in
     (* Create the types scheme for "::". *)
     let cons_scheme =
       (let v = Types.type_variable () in
       Types.generalize
 	(Types.type_arrow
-	   (Types.type_tuple [v; (Types.type_basic "list" [v])])
-	   (Types.type_basic "list" [v]))) in
+	   (Types.type_tuple [v; (Types.type_list v)])
+	   (Types.type_list v))) in
     (* Create the description of the type list. *)
     let (list_identity, list_params) =
       (let v = Types.type_variable () in
-      Types.generalize2 (Types.type_basic "list" [v]) [v]) in
+      Types.generalize2 (Types.type_list v) [v]) in
     let list_type_description = {
       TypeInformation.type_kind =
         TypeInformation.TK_variant [
-          (Parsetree.Vlident "[]", nil_scheme) ;
-          (Parsetree.Viident "::", cons_scheme) ] ;
+          (Parsetree.Vlident "[]", TypeInformation.CA_zero, nil_scheme) ;
+          (Parsetree.Viident "::", TypeInformation.CA_one, cons_scheme) ] ;
       TypeInformation.type_identity = list_identity ;
       TypeInformation.type_params = list_params ;
       TypeInformation.type_arity = 1 } in

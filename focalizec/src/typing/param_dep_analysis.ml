@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: param_dep_analysis.ml,v 1.2 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.3 2007-10-02 09:29:36 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -26,6 +26,8 @@
 
 
 (* ********************************************************************* *)
+(* current_species: Parsetree.qualified_vname -> Parsetree.vname ->      *)
+(*  Parsetree.expr_ident -> Dep_analysis.VnameSet.t                      *)
 (** {b Descr} : Computes the set of methods names the identifier [ident]
               represents as invloving a dependency with the
               [param_coll_name] collection name.
@@ -36,49 +38,66 @@
 
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
-let param_deps_ident param_coll_name ident =
+let param_deps_ident ~current_species param_coll_name ident =
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local _
    | Parsetree.EI_global (_, _) ->
        (* These are not a method call, then they induce no dependency. *)
        Dep_analysis.VnameSet.empty
-   | Parsetree.EI_method (coll_name_opt, vname) ->
+   | Parsetree.EI_method (coll_specifier_opt, vname) ->
        (begin
-       match coll_name_opt with
+       match coll_specifier_opt with
 	| None ->
 	    (* A method of self, then induces no dependency *)
-	    (* like those wre are looking for.              *)
+	    (* like those were are looking for.             *)
 	    Dep_analysis.VnameSet.empty
-	| Some coll_name ->
-	    (* Check it this method call is from the  *)
-	    (* species parameter we are working with. *)
-	    if coll_name = param_coll_name then
-	      Dep_analysis.VnameSet.singleton vname
-	    else Dep_analysis.VnameSet.empty
+	| Some coll_specifier ->
+	    (begin
+	    match coll_specifier with
+	     | (None, coll_name) ->
+		 (* Check it this method call is from the species parameter *)
+		 (* we are working with. Should never happen because the    *)
+		 (* scoping pass should make explicit the hosting module.   *)
+		 if coll_name = param_coll_name then
+		   Dep_analysis.VnameSet.singleton vname
+		 else Dep_analysis.VnameSet.empty
+	     | ((Some module_name), coll_name) ->
+		 (begin
+		 (* If the module specification matches the one of the *)
+		 (* current_species and if the collection name matches *)
+                 (* species parameter then we have a dependency.       *)
+                 if module_name = (fst current_species) &&
+                    coll_name = param_coll_name then
+		   Dep_analysis.VnameSet.singleton vname
+		 else Dep_analysis.VnameSet.empty
+		 end)
+	    end)
        end)
 ;;
 
 
 
 (* ************************************************************************* *)
-(* Parsetree.vname -> Parsetree.expr -> Dep_analysis.VnameSet.t              *)
+(* current_species: Parsetree.qualified_vname ->                             *)
+(*   Parsetree.may_be_qualified_vname -> Parsetree.expr ->                   *)
+(*   Dep_analysis.VnameSet.t                                                 *)
 (** {b Descr} : Computes the dependencies of an expression on the collection
               parameter name [param_coll_name]. In other words, detects
               which methods of [param_coll_name] (that is considered as
-              a collection (i.e "is") parameter, the current expression
+              a collection (i.e "is") parameter), the current expression
               needs.
 
     {b Rem} : Exported outside this module.                                  *)
 (* ************************************************************************* *)
-(* [Unsure] INCOMPLET !!!! Il reste encore les transitivités !!!??!! *)
-let param_deps_expr param_coll_name expression =
+let param_deps_expr ~current_species param_coll_name expression =
   let rec rec_deps expr =
     match expr.Parsetree.ast_desc with
      | Parsetree.E_self
      | Parsetree.E_const _
      | Parsetree.E_external _ -> Dep_analysis.VnameSet.empty
      | Parsetree.E_fun (_, e_body) -> rec_deps e_body
-     | Parsetree.E_var ident -> param_deps_ident param_coll_name ident
+     | Parsetree.E_var ident ->
+	 param_deps_ident ~current_species param_coll_name ident
      | Parsetree.E_app (functional_expr, args_exprs) ->
 	 List.fold_left
 	   (fun accu_deps e ->

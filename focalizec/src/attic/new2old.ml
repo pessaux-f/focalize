@@ -505,8 +505,8 @@ and downgrade_expr_to_expr expr =
 (* (string * typ * expr) *)
 let downgrade_binding_desc desc =
   let bound_name = downgrade_ident_to_string desc.Parsetree.b_name in
-  (* Recover the list of parameter with their type. If none       *)
-  (* explicitely specified, then one get a type variable instead. *)
+  (* Recover the list of parameter with their type. If none      *)
+  (* explicitly specified, then one get a type variable instead. *)
   let params =
     List.map 
       (fun (ident, texpr_opt) ->

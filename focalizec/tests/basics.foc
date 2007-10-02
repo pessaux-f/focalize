@@ -193,7 +193,5 @@ external value int_plus : int -> int -> int =
 species Basic_object =
   let print (x in Self) = "<abst>" ;
   let parse (x in string) in Self = #foc_error ("not parsable") ;
-  let equal (x in Self, y in Self) =
-     let useless = if true then x else y in
-     true ;
+  let equal (x in Self, y in Self) = true ;
 end ;;

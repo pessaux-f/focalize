@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.10 2007-09-14 14:32:32 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.11 2007-10-02 09:29:36 pessaux Exp $ *)
 
 exception Input_file_already_set ;;
 
@@ -47,12 +47,6 @@ let (get_verbose, set_verbose) =
 ;;
 
 let (get_pretty_print, set_pretty_print) =
-  let pretty_out_file = ref None in
-  ((fun () -> !pretty_out_file),
-   (fun fname -> pretty_out_file := Some fname))
-;;
-
-let (get_old_pretty_print, set_old_pretty_print) =
   let pretty_out_file = ref None in
   ((fun () -> !pretty_out_file),
    (fun fname -> pretty_out_file := Some fname))

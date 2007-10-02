@@ -29,7 +29,7 @@ species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
      and_b
        (A!( = ) (basics#first (x), basics#first (y)),
 	B!( = ) (scnd (x), scnd (y))) ;
-  let creer (x, y) = basics#crp (x, y) ;
+  let creer (x, y) in Self = basics#crp (x, y) ;
   let element = Self!creer (A!element, B!element) ;
   let print (x) =
      sc ("(",
@@ -59,7 +59,7 @@ species Entiers_concrets inherits Monoide =
 
   let un = 1 ;
   let ( * ) = basics#int_mult ;
-  let ( = ) = basics#base_eq ;
+  let ( = ) in Self -> Self -> bool = basics#base_eq ;
   let print = basics#string_of_int ;
   let parse = basics#int_of_string ;
 

@@ -1,4 +1,4 @@
-(* $Id: sourcify.ml,v 1.29 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.30 2007-10-02 09:29:36 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -28,12 +28,39 @@ let pp_vname ppf = function
   | Parsetree.Vqident s -> Format.fprintf ppf "%s" s
 ;;
 (* ******************************************************************** *)
-(*   string -> Format.formatter -> Parsetree.vname list -> unit         *)
+(* string -> Format.formatter -> Parsetree.vname list -> unit           *)
 (** {b Descr} : Pretty prints a [list] of [vname] value as FoCal source.
 
     {b Rem} : Not exported ouside this module.                          *)
 (* ******************************************************************** *)
 let pp_vnames sep ppf = Handy.pp_generic_separated_list sep pp_vname ppf
+;;
+
+
+
+(* ************************************************************** *)
+(* Format.formatter -> Parsetree.may_be_qualified_vname -> unit   *)
+(** {b Descr} : Pretty prints a [may_be_qualified_vname] value as
+              FoCal source.
+    {b Rem} : Exported ouside this module.                        *)
+(* ************************************************************** *)
+let pp_may_be_qualified_vname ppf (opt_mod_name, vname) =
+  match opt_mod_name with
+   | None -> pp_vname ppf vname
+   | Some mod_name ->
+       Format.fprintf ppf "%s#%a" mod_name pp_vname vname
+;;
+
+
+
+(* ************************************************************** *)
+(* Format.formatter -> Parsetree.qualified_vname -> unit          *)
+(** {b Descr} : Pretty prints a [may_be_qualified_vname] value as
+              FoCal source.
+    {b Rem} : Exported ouside this module.                        *)
+(* ************************************************************** *)
+let pp_qualified_vname ppf (mod_name, vname) =
+  Format.fprintf ppf "%s#%a" mod_name pp_vname vname
 ;;
 
 
@@ -126,12 +153,21 @@ let pp_expr_ident_desc ppf = function
        | None -> Format.fprintf ppf "%a" pp_vname vname
        | Some fname -> Format.fprintf ppf "%s#%a" fname pp_vname vname
       end
-  | Parsetree.EI_method (coll_name_opt, vname) ->
+  | Parsetree.EI_method (coll_specifier_opt, vname) ->
       (begin
-      match coll_name_opt with
+      match coll_specifier_opt with
        | None -> Format.fprintf ppf "!%a" pp_vname vname
-       | Some coll_name ->
-	   Format.fprintf ppf "%a!%a" pp_vname coll_name pp_vname vname
+       | Some coll_specifier ->
+	   (begin
+	   match coll_specifier with
+	    | (None, coll_vname) ->
+		(* The species qualification doesn't show the hosting module. *)
+		Format.fprintf ppf "%a!%a" pp_vname coll_vname pp_vname vname
+	    | ((Some module_name), coll_vname) ->
+		(* The species qualification shows the hosting module. *)
+		Format.fprintf ppf "%s#%a!%a"
+		  module_name pp_vname coll_vname pp_vname vname
+	   end)
       end)
 ;;
 (* **************************************************************** *)

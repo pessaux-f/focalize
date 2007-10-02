@@ -11,19 +11,15 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.18 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: types.mli,v 1.19 2007-10-02 09:29:36 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
-type collection_name = string
-     (** Collection name. *) ;;
-type species_name = string
-     (** Species name. *) ;;
-type type_name = string
-     (** Type name. *) ;;
-type label_name = string
-     (** Label name. *) ;;
+
+
 type fname = string
-     (** File (and "module") name. *) ;;
+type collection_name = string
+type type_name
+type label_name = string
 
 (** The type algebra for focalize. *)
 
@@ -33,23 +29,15 @@ type type_scheme
 type type_collection = (fname * collection_name)
 
 (** The exceptions raised by the type-checker. *)
-
 exception Conflict of (type_simple * type_simple * Location.t)
-  (** Those two types cannot be unified. *)
-;;
-
 exception Circularity of (type_simple * type_simple * Location.t)
-  (** There is a circularity detected: the first type occurs in the second. *)
-
-;;
-
 exception Arity_mismatch of (type_name * int * int * Location.t)
-  (** A functional type constructor has been used with the wrong number of
-  arguments. The exception carries on the name of the type and the conflicting
-  arities. *)
+exception Type_contains_non_generalizable_vars of (type_simple * Location.t)
 
 val begin_definition : unit -> unit
 val end_definition : unit -> unit
+
+val make_type_constructor : fname -> string -> type_name
 
 val type_variable : unit -> type_simple
 ;;
@@ -69,9 +57,10 @@ val type_char : unit -> type_simple
 val type_unit : unit -> type_simple
 val type_arrow : type_simple -> type_simple -> type_simple
 val type_tuple : type_simple list -> type_simple
+val type_list : type_simple -> type_simple
 val type_prop : unit -> type_simple
 val type_rep_species :
-  species_module: fname -> species_name: species_name -> type_simple
+  species_module: fname -> species_name: collection_name -> type_simple
 (** Generate the carrier type of the currently analysed species. *)
 val type_self : unit -> type_simple
 
@@ -88,7 +77,7 @@ val generalize : type_simple -> type_scheme
 val generalize2 :
   type_simple -> type_simple list -> (type_scheme * (type_simple list))
 val trivial_scheme : type_simple -> type_scheme
-val never_generalizable_scheme : type_simple -> type_scheme
+val never_generalizable_scheme : Location.t -> type_simple -> type_scheme
 val copy_type_simple_but_variables :
   and_abstract: type_collection option -> type_simple -> type_simple
 
@@ -99,12 +88,13 @@ val unify :
     type_simple -> unit
 
 (** Pretty_printing for types and type schemes for FoCal. *)
+val pp_type_name : Format.formatter -> type_name -> unit
 val pp_type_simple : Format.formatter -> type_simple -> unit
 val pp_type_scheme : Format.formatter -> type_scheme -> unit
 val pp_type_collection : Format.formatter -> type_collection -> unit
 
 (** Pretty_printing for types for the OCaml translation. *)
 val pp_type_simple_to_ml :
-  reuse_mapping: bool -> (type_collection * string) list ->
-    Format.formatter -> type_simple -> unit
+  current_unit: fname -> reuse_mapping: bool ->
+    (type_collection * string) list -> Format.formatter -> type_simple -> unit
 val purge_type_simple_to_ml_variable_mapping : unit -> unit

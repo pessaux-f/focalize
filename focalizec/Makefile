@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2007-09-25 15:29:10 pessaux Exp $
+# $Id: Makefile,v 1.6 2007-10-02 09:29:36 pessaux Exp $
 
 include ./Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/
@@ -25,6 +25,7 @@ clean::
 	$(CD) mlcodegen ; $(MAKE) clean
 	$(CD) toplevel ; $(MAKE) clean
 	$(CD) lib ; $(MAKE) clean
+	$(CD) tests ; $(MAKE) clean
 
 doc:: 
 	$(CD) basement ; $(MAKE) doc

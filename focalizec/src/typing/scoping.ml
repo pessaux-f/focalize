@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.28 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.29 2007-10-02 09:29:36 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -27,14 +27,14 @@
               !-ed idents
 
 	       - For #-ed idents, the lookup is performed and they are
-	       always explicitely replaced with the name of the hosting
+	       always explicitly replaced with the name of the hosting
 	       file where they are bound. Hence in a compilation unit
                "Kikoo", then [#test ()] will be replaced by [Kikoo#test ()]
                if the function [test] was really found inside this unit.
                If not found, then an exception is raised.
 
 	       - For !-ed idents, the lookup is performed but no change
-	       is done. If it is like [!test()], then is is NOT changed
+	       is done. If it is like [!test()], then it is NOT changed
                to [Self!test] !!! Only a verification is done that the
                method exists in [Self]. If it is like [Coll!test], then
                also only a verification is done that the method exists in
@@ -192,8 +192,11 @@ let scoped_expr_ident_desc_from_value_binding_info ~basic_vname = function
       Parsetree.EI_global ((Some fname), basic_vname)
   | Env.ScopeInformation.SBI_method_of_self ->
       Parsetree.EI_method (None, basic_vname)
-  | Env.ScopeInformation.SBI_method_of_coll coll_name ->
-      Parsetree.EI_method ((Some coll_name), basic_vname)
+  | Env.ScopeInformation.SBI_method_of_coll (coll_module, coll_vname) ->
+      (* We nown know the module of the collection *)
+      (* and the collection the method belongs to. *)
+      Parsetree.EI_method
+	((Some ((Some coll_module), coll_vname)), basic_vname)
   | Env.ScopeInformation.SBI_local ->
       Parsetree.EI_local basic_vname
 ;;
@@ -795,7 +798,7 @@ let rec scope_prop ctx env prop =
               In effect, in such a context, variables in the type are
               implicitely considered as generalized because the type
               constraint annotating the external value does not show
-              explicitely "forall-bound-variables".
+              explicitly "forall-bound-variables".
               Hence, in an external value definition like:
               [external value foc_error : string -> 'a = ...]
               the ['a] must be considered as generalized, then when
@@ -843,8 +846,8 @@ let extend_env_with_implicit_gen_vars_from_type_expr env type_expression =
               from a theorem expression.
               In effect, in such a context, variables in the type are
               implicitely considered as generalized because the type
-              constraint annotating the theorem does not show
-              explicitely "forall-bound-variables".
+              constraint annotating the theorem does not show explicitly
+              "forall-bound-variables".
               Hence, in an theorem definition like:
               [theorem beq_refl : all x in 'a, ...]
               the ['a] must be considered as generalized, then when

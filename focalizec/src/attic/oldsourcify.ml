@@ -1,4 +1,4 @@
-(* $Id: oldsourcify.ml,v 1.20 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: oldsourcify.ml,v 1.1 2007-10-02 09:29:36 pessaux Exp $ *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -319,17 +319,28 @@ let pp_idents sep ppf = Handy.pp_generic_separated_list sep pp_ident ppf
 (* ************************************************************************ *)
 let pp_expr_ident_desc ppf = function
   | Parsetree.EI_local vname -> Format.fprintf ppf "%a" pp_vname vname
-  | Parsetree.EI_global (fname_opt, vname) ->
+  | Parsetree.EI_global (fname_opt, meth_vname) ->
       begin
       match fname_opt with
-       | None -> Format.fprintf ppf "%a" pp_vname vname
-       | Some fname -> Format.fprintf ppf "%s#%a" fname pp_vname vname
+       | None -> Format.fprintf ppf "%a" pp_vname meth_vname
+       | Some fname -> Format.fprintf ppf "%s#%a" fname pp_vname meth_vname
       end
-  | Parsetree.EI_method (cname_opt, vname) ->
+  | Parsetree.EI_method (coll_specifier_opt, meth_vname) ->
       (begin
-      match cname_opt with
-       | None -> Format.fprintf ppf "!%a" pp_vname vname
-       | Some cname -> Format.fprintf ppf "%a!%a" pp_vname cname pp_vname vname
+      match coll_specifier_opt with
+       | None -> Format.fprintf ppf "!%a" pp_vname meth_vname
+       | Some coll_specifier ->
+	   (begin
+	   match coll_specifier with
+	    | (None,  coll_vname) ->
+		(* The species qualification doesn't show the hosting module. *)
+		Format.fprintf ppf "%a!%a"
+		  pp_vname coll_vname pp_vname meth_vname
+	    | ((Some module_name), coll_vname) ->
+		(* The species qualification shows the hosting module. *)
+		Format.fprintf ppf "%s#%a!%a"
+		  module_name pp_vname coll_vname pp_vname meth_vname
+	   end)
       end)
 ;;
 (* ******************************************************************** *)

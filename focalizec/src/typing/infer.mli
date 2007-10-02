@@ -12,9 +12,10 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.13 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.14 2007-10-02 09:29:36 pessaux Exp $ *)
 
-exception Method_multiply_defined of (Parsetree.vname * Parsetree.vname)
+exception Method_multiply_defined of
+  (Parsetree.vname * Parsetree.qualified_vname)
 exception Unbound_type_variable of Parsetree.vname
 exception Bad_sum_type_constructor_arity of
   (Parsetree.constructor_ident * Env.TypeInformation.constructor_arity)
@@ -34,7 +35,8 @@ exception Not_subspecies_arity_mismatch of
 exception Not_subspecies_missing_field of
   (Types.type_collection * Types.type_collection * Parsetree.vname *
    Location.t)
-exception Collection_not_fully_defined of (Parsetree.vname * Parsetree.vname)
+exception Collection_not_fully_defined of
+  (Parsetree.qualified_vname * Parsetree.vname)
 
 type please_compile_me =
   | PCM_no_matter
@@ -44,7 +46,7 @@ type please_compile_me =
        (Dep_analysis.name_node list))
   | PCM_collection of
       (Parsetree.coll_def * Env.TypeInformation.species_description)
-  | PCM_type
+  | PCM_type of (Parsetree.vname * Env.TypeInformation.type_description)
   | PCM_let_def of (Parsetree.let_def * (Types.type_scheme list))
   | PCM_theorem of Parsetree.theorem_def
   | PCM_expr of Parsetree.expr

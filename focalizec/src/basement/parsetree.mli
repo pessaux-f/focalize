@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.17 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.18 2007-10-02 09:29:36 pessaux Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -55,19 +55,49 @@ type ('a, 'b) generic_ast = {
 type 'a ast = ('a, string) generic_ast;;
 type 'a ast_doc = ('a, string) generic_ast;;
 
+
+
+(* ************************************************************************* *)
+(** {b Descr} : Represent [vnames] possibly qualified by a FoCaL "module"
+              name. For instance, [foo] is a [Vlident] with no module
+              qualifier. And [file#Foo] is a [Vuident] with the "module"
+              qualifier [Some "file"].
+              This type serves to represent both the [EI_global] identifiers
+              and the optional qualification of method calls (the !-stuff).
+              For this last case, this enables to make explicit the module
+              where the species from which the method is called inhabits.
+
+    {b Rem} : Clearly exported outside this module.                          *)
+(* ************************************************************************* *)
+type may_be_qualified_vname = ((Types.fname option) * vname) ;;
+
+
+
+(* ************************************************************************* *)
+(** {b Descr} : Represent [vnames] qualified by a FoCaL "module"
+              name. For instance, [file#Foo] is a [Vuident] with the "module"
+              qualifier ["file"].
+
+    {b Rem} : Clearly exported outside this module.                          *)
+(* ************************************************************************* *)
+type qualified_vname = (Types.fname * vname) ;;
+
+
 type expr_ident = expr_ident_desc ast
 and expr_ident_desc =
   | EI_local of vname
-  | EI_global of Types.fname option * vname
+  | EI_global of may_be_qualified_vname
   | EI_method of (
-      (vname option) *  (** The collection name before the "!". *)
+      (** The collection name located before the "!", optionnally qualified
+	  by a module name. *)
+      (may_be_qualified_vname option) *
        vname            (** The method of the collection. *))
 ;;
 
 type ident = ident_desc ast
 and ident_desc =
   | I_local of vname
-  | I_global of Types.fname option * vname
+  | I_global of may_be_qualified_vname
 ;;
 
 (* ********************************************************************** *)

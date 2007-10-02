@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.66 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.67 2007-10-02 09:29:36 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -679,12 +679,16 @@ opt_lident:
 ;
 
 /* Only used to prefix explicit method call notation (i.e. with '!'). */
-opt_uident:
+opt_uident_opt_qualified:
   | { None }
-  | SELF
-    { Some (Parsetree.Vuident "Self") }
-  | UIDENT
-    { Some (Parsetree.Vuident $1) }
+  | SELF               /* No "module" name qualification and is Self */
+    { Some (None, (Parsetree.Vuident "Self")) }
+  | UIDENT             /* No "module" name qualification  and is NOT Self . */
+    { Some (None,  (Parsetree.Vuident $1)) }
+  | opt_lident SHARP UIDENT          /* "Module" name qualification. To allow */
+                    /* a species name to be "module"-scoped in a method call. */
+		    /* E.g. my_file#My_species!my_method.                     */
+    { Some ($1, (Parsetree.Vuident $3)) }
 ;
 
 
@@ -866,7 +870,7 @@ record_field_list:
 expr_ident:
   | opt_lident SHARP bound_vname
     { mk (EI_global ($1, $3)) }
-  | opt_uident BANG method_vname
+  | opt_uident_opt_qualified BANG method_vname
     { mk (EI_method ($1, $3)) }
   | bound_ident
     { mk (EI_local $1) }

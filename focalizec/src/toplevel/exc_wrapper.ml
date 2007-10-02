@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.18 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.19 2007-10-02 09:29:36 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -95,10 +95,14 @@ try Check_file.main () with
 	   "%a:@\nType@ @[%a@]@ occurs@ in@ @[%a@]@ and@ would@ lead@ to@ a@ cycle.@."
 	   Location.pp_location at
 	   Types.pp_type_simple ty1 Types.pp_type_simple ty2
-     | Types.Arity_mismatch (cstr_name, arity1, arity2, at) ->
+     | Types.Arity_mismatch (ty_cstr_name, arity1, arity2, at) ->
 	 Format.fprintf Format.err_formatter
-	   "%a:@\nType@ constructor@ '%s'@ used@ with@ the@ different@ arities@ %d@ and@ %d.@."
-	   Location.pp_location at cstr_name arity1 arity2
+	   "%a:@\nType@ constructor@ '%a'@ used@ with@ the@ different@ arities@ %d@ and@ %d.@."
+	   Location.pp_location at Types.pp_type_name ty_cstr_name arity1 arity2
+     | Types.Type_contains_non_generalizable_vars (ty, at) ->
+	 Format.fprintf Format.err_formatter
+	   "%a:@\nType@ @[%a@] contains@ variables@ than@ cannot@ be@ generalized or would be polymorphic.@."
+	   Location.pp_location at Types.pp_type_simple ty
 (* ************************** *)
 (* Core type inference stuff. *)
      | Infer.Bad_sum_type_constructor_arity (ident, defined_arity) ->
@@ -114,9 +118,9 @@ try Check_file.main () with
 	   (Parsetree_utils.name_of_vname var_name)
      | Infer.Method_multiply_defined (m_vname, s_name) ->
 	 Format.fprintf Format.err_formatter
-	   "Method@ '%s'@ multiply@ defined@ in@ species@ '%s'.@."
-	   (Parsetree_utils.name_of_vname m_vname)
-	   (Parsetree_utils.name_of_vname s_name)
+	   "Method@ '%a'@ multiply@ defined@ in@ species@ '%a'.@."
+	   Sourcify.pp_vname m_vname
+	   Sourcify.pp_qualified_vname s_name
      | Infer.Bad_type_arity (ident, expected, used) ->
 	 Format.fprintf Format.err_formatter
 	   "Type@ constructor@ '%a'@ expected@ %d@ arguments@ but@ was@ used@ with@ %d@ arguments.@."
@@ -152,10 +156,10 @@ try Check_file.main () with
      | Infer.Not_subspecies_arity_mismatch
 	 (c1, c2, field, ty_name, ar1, ar2, at) ->
 	   Format.fprintf Format.err_formatter
-	     "%a:@\nSpecies@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ In@ field@ '%a',@ the@ type@ constructor@ '%s'@ is@ used@ with@ the@ different@ arities@ %d@ and@ %d.@."
+	     "%a:@\nSpecies@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ In@ field@ '%a',@ the@ type@ constructor@ '%a'@ is@ used@ with@ the@ different@ arities@ %d@ and@ %d.@."
 	     Location.pp_location at
 	     Types.pp_type_collection c1 Types.pp_type_collection c2
-	     Sourcify.pp_vname field ty_name ar1 ar2
+	     Sourcify.pp_vname field Types.pp_type_name ty_name ar1 ar2
      | Infer.Not_subspecies_missing_field (c1, c2, field, at) ->
 	 Format.fprintf Format.err_formatter
 	   "%a:@\nSpecies@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ Field@ '%a'@ is@ not@ present@ in@ '%a'.@."
@@ -168,13 +172,14 @@ try Check_file.main () with
      | Infer.Collection_not_fully_defined (coll_name, field_name) ->
 	 Format.fprintf Format.err_formatter
 	   "Species@ '%a'@ cannot@ be@ turned@ into@ a@ collection.@ Field@ '%a'@ is@ not@ defined.@."
-	   Sourcify.pp_vname coll_name Sourcify.pp_vname field_name
+	   Sourcify.pp_qualified_vname coll_name
+	   Sourcify.pp_vname field_name
 (* ********************** *)
 (* Dependencies analysis. *)
      | Dep_analysis.Ill_formed_species species_name ->
 	 Format.fprintf Format.err_formatter
 	   "Species@ '%a'@ is@ not@ well-formed@."
-	   Sourcify.pp_vname species_name
+	   Sourcify.pp_qualified_vname species_name
 (* ********************** *)
 (* OCaml code generation. *)
      | Core_ml_generation.No_external_value_caml_def (def_name, at) ->

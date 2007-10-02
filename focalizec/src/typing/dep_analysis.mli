@@ -12,9 +12,9 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.mli,v 1.6 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: dep_analysis.mli,v 1.7 2007-10-02 09:29:36 pessaux Exp $ *)
 
-exception Ill_formed_species of Parsetree.vname
+exception Ill_formed_species of Parsetree.qualified_vname
 
 type dependency_kind = DK_decl | DK_def
 
@@ -55,19 +55,19 @@ type name_node = {
 }
 
 val ensure_species_well_formed :
-  current_species: Parsetree.vname ->
+  current_species: Parsetree.qualified_vname ->
     Env.TypeInformation.species_field list -> name_node list
 
 val ordered_names_list_of_fields :
   Env.TypeInformation.species_field list -> Parsetree.vname list
 
 val erase_fields_in_context :
-  current_species: Parsetree.vname -> Parsetree.vname list ->
+  current_species: Parsetree.qualified_vname -> Parsetree.vname list ->
     Env.TypeInformation.species_field list ->
       Env.TypeInformation.species_field list
 
 val compute_fields_reordering :
-  current_species: Parsetree.vname ->
+  current_species: Parsetree.qualified_vname ->
     Env.TypeInformation.species_field list -> Parsetree.vname list
 
 val ordered_names_list_of_fields :

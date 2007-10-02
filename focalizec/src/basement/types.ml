@@ -11,19 +11,39 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.27 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: types.ml,v 1.28 2007-10-02 09:29:36 pessaux Exp $ *)
 
-(** Types of various identifiers in the abstract syntax tree. *)
+
+(* **************************************************************** *)
+(** {b Descr} : File ("module") name (without the ".foc" extension).
+ 
+    {b Rem} : Clearly exported outside this module.                  *)
+(* **************************************************************** *)
+type fname = string ;;
+
+
+
+(* ************************************************ *)
+(** {b Descr} : Collection / species name.
+
+    {b Rem} : Clearly exported outside this module. *)
+(* ************************************************ *)
 type collection_name = string
-     (** Collection name. *) ;;
-type species_name = string
-     (** Species name. *) ;;
-type type_name = string
-     (** Type name. *) ;;
-type label_name = string
-     (** Label name. *) ;;
-type fname = string
-     (** File (and "module") name. *) ;;
+
+
+
+(* ************************************************************************ *)
+(** {b Descr} : Type constructot name. Records both the constructor's name
+              and it's hosting module (file) name).
+
+    {b Rem} : Abstract outside this module..                                *)
+(* ************************************************************************ *)
+type type_name = (fname * string) ;;
+
+
+
+(** Label name. *)
+type label_name = string ;;
 
 
 
@@ -38,7 +58,6 @@ let generic_level = 100000000 ;;
 
 
 (* ************************************************* *)
-(* type_simple                                       *)
 (** {b Descr} : Describes the type algebra of Focal.
 
     {b Rem} : Exported opaque outside this module.   *)
@@ -53,10 +72,12 @@ type type_simple = {
 }
 
 
-(** Value of a type link (generalization of type variable's value. *)
+
+(** Value of a type link (generalization principle of type variable's value. *)
 and type_link_value =
   | TLV_unknown
   | TLV_known of type_simple
+
 
 
 and type_simple_desc =
@@ -86,8 +107,11 @@ and type_simple_desc =
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
 type type_collection =
-  (fname *               (** The "module" hosting the collection' code. *)
-  collection_name)       (** The name of the collection. *)
+  (fname *           (** The "module" hosting the collection' code. *)
+  collection_name)   (** The name of the collection as a string (not a
+			 [Parsetree.vname] to prevent mutual depency between
+		         the [types.ml] and [parsetree.ml] modules. And indeed,
+		         a simple string is eally sufficient ! *)
 ;;
 
 
@@ -135,6 +159,18 @@ exception Arity_mismatch of (type_name * int * int  * Location.t) ;;
 
 
 
+(* ********************************************************************* *)
+(** {b Descr} : At generalization-time, a type contains variables that
+              can't be generalized. Hence in the resulting scheme, they
+              would not appear as ['a] but as the OCaml ['_a] variables.
+              Because in FoCaL methods are not even polymorphic, we of
+              course also reject any scheme where some non-polymorphic
+              variable would remain.                                     *)
+(* ********************************************************************* *)
+exception Type_contains_non_generalizable_vars of (type_simple * Location.t) ;;
+
+
+
 (* ******************************************************************** *)
 (* type_simple -> type_simple                                           *)
 (** {b Descr} : Returns the canonical representation of a type.
@@ -158,14 +194,70 @@ let rec repr ty =
 
 let (begin_definition, end_definition, current_binding_level, type_variable) =
   let current_binding_level = ref 0 in
-  ((fun () -> incr current_binding_level),
+  ((* ****************************************************************** *)
+   (* begin_definition : unit -> unit                                    *)
+   (* {b Descr} : Must be called BEFORE every potentially generalizable
+                definition. It increases the binding level to enable
+                generalization once we go back to a lower level.
+
+      {b Rem} : Exported outside this module.                            *) 
+   (* ****************************************************************** *)
+   (fun () -> incr current_binding_level),
+
+
+
+   (* ****************************************************************** *)
+   (* end_definition : unit -> unit                                    *)
+   (* {b Descr} : Must be called AFTER every potentially generalizable
+                definition. It decreases the binding level to prevent
+                generalization of higher binding level type variables.
+
+      {b Rem} : Exported outside this module.                            *) 
+   (* ****************************************************************** *)
    (fun () -> decr current_binding_level),
+
+
+
+   (* ***************************************************************** *)
+   (* current_binding_level: unit -> int                                *)
+   (* {b Descr} : Returns the current binding level, i.e. the level of
+                variables than be generalized if they are of a level
+                strictly greater than the current binding level.
+      {b Rem} : Not exported outside this module.                       *)
+   (* ***************************************************************** *)
    (fun () -> !current_binding_level),
+
+
+
+   (* ******************************************************************* *)
+   (* type_variable : unit -> type_simple                                 *)
+   (* {b Descr} : Generates a type variable at the current binding level.
+
+      {b Rem} : Exported outside this module.                             *)
+   (* ******************************************************************* *)
    (fun () ->
      { ts_level = !current_binding_level ;
        ts_desc = ST_var ;
        ts_link_value = TLV_unknown }))
 ;;
+
+
+
+(* ************************************************************************* *)
+(* fname -> string -> type_name                                              *)
+(** { b Descr } : Creates a type constructor whose basic name is
+                [constructor_name] and hosting module is [hosting_module].
+                For instance, "int" coming from the module "basics.foc"
+                will be represented by [("basics", "int")].
+                This allows to record in a type constructor both the
+                constructor name and the hosting file where this constructor
+                was defined.                                                 *)
+(* ************************************************************************* *)
+let make_type_constructor hosting_module constructor_name =
+  (hosting_module, constructor_name)
+;;
+
+
 
 let type_basic type_name type_args =
   { ts_level = current_binding_level () ;
@@ -173,17 +265,17 @@ let type_basic type_name type_args =
     ts_link_value = TLV_unknown }
 ;;
 
-let type_int () = type_basic "int" [] ;;
+let type_int () = type_basic ("basics", "int") [] ;;
 
-let type_float () = type_basic "float" [] ;;
+let type_float () = type_basic ("basics", "float") [] ;;
 
-let type_bool () = type_basic "bool" [] ;;
+let type_bool () = type_basic ("basics", "bool") [] ;;
 
-let type_string () = type_basic "string" [] ;;
+let type_string () = type_basic ("basics", "string") [] ;;
 
-let type_char () = type_basic "char" [] ;;
+let type_char () = type_basic ("basics", "char") [] ;;
 
-let type_unit () = type_basic "unit" [] ;;
+let type_unit () = type_basic ("basics", "unit") [] ;;
 
 let type_arrow t1 t2 =
   { ts_level = current_binding_level () ;
@@ -191,7 +283,7 @@ let type_arrow t1 t2 =
     ts_link_value = TLV_unknown }
 ;;
 
-let type_prop () = type_basic "prop" [] ;;
+let type_prop () = type_basic ("basics", "prop") [] ;;
 
 let type_tuple tys =
   { ts_level = current_binding_level () ;
@@ -199,7 +291,7 @@ let type_tuple tys =
     ts_link_value = TLV_unknown }
 ;;
 
-
+let type_list t1 = type_basic ("basics", "list") [t1] ;;
 
 (* Generate the carrier type of the currently analysed species.  *)
 let type_self () =
@@ -213,6 +305,12 @@ let type_rep_species ~species_module ~species_name =
   { ts_level = current_binding_level () ;
     ts_desc = ST_species_rep (species_module, species_name) ;
     ts_link_value = TLV_unknown }
+;;
+
+
+
+let pp_type_name ppf (hosting_module, constructor_name) =
+  Format.fprintf ppf "%s#%s" hosting_module constructor_name
 ;;
 
 
@@ -295,12 +393,13 @@ let (pp_type_simple, pp_type_scheme) =
         (* like tuples if only one argument : 3                    *)
         (* otherwise 0 if already a tuple because we force parens. *)
 	match arg_tys with
-         | [] -> Format.fprintf ppf "%s" type_name
-         | [one] -> Format.fprintf ppf "%a@ %s" (rec_pp 3) one type_name
+         | [] -> Format.fprintf ppf "%a" pp_type_name type_name
+         | [one] ->
+	     Format.fprintf ppf "%a@ %a" (rec_pp 3) one pp_type_name type_name
          | _ ->
-             Format.fprintf ppf "@[<1>(%a)@]@ %s"
+             Format.fprintf ppf "@[<1>(%a)@]@ %a"
                (Handy.pp_generic_separated_list "," (rec_pp 0)) arg_tys
-	       type_name
+	       pp_type_name type_name
 	end)
     | ST_self_rep -> Format.fprintf ppf "Self"
     | ST_species_rep (module_name, collection_name) ->
@@ -406,7 +505,7 @@ let (specialize, specialize2) =
    (* type_scheme -> type_simple list -> (type_simple * type_simple list) *)
    (* {b Descr} : Performs the same job than [specialize] on the type
                 scheme. Also perform a copy of the types [tys], using the
-                same mapping of generalized variables fto fresh variables
+                same mapping of generalized variables to fresh variables
                 to perform the copy.
                 This means that if a variable appears in both the scheme
                 and the types, then it will be replaced by the same fresh
@@ -536,9 +635,10 @@ let (generalize, generalize2) =
    (* generalize2                                                           *)
    (* type_simple -> type_simple list -> (type_scheme * (type_simple list)) *)
    (** {b Descr} : Performs the same job than [generalize] on the first
-                 type. Also perform generalize the types in place, but do
-                 not explicitely return them as schemes. Note that the
-                 argument counter is shared between these generalizations.
+                 type. Also perform generalization in place on the types in
+                 [tys] , but do not explicitly return them as schemes.
+                 Note that the argument counter is shared between these
+                 generalizations.
 
        {b Rem} : Exported oustide this module.                              *)
    (* ********************************************************************* *)
@@ -594,16 +694,20 @@ let rec lowerize_levels max_level ty =
               monomorphic now appears as polymorphic.
               Hence, setting a 0 level in the scheme body, this
               inconsistence cannot appear anymore.
+              At the same time, verifies that there is no variables
+              remaining, i.e. variables that could be instanciated later
+              but are not polymorphic in the obtained type scheme. Such
+              variables would correspond to ['_a] in OCaml.
 
     {b Rem} : Exported oustide this module.                                   *)
 (* ************************************************************************** *)
-let never_generalizable_scheme ty =
+let never_generalizable_scheme location ty =
   let rec rec_deep_lowerize ty =
     let ty = repr ty in
     begin
     ty.ts_level <- 0 ;
     match ty.ts_desc with
-     | ST_var -> ()
+     | ST_var -> raise (Type_contains_non_generalizable_vars (ty, location))
      | ST_arrow (ty1, ty2) ->
 	 rec_deep_lowerize ty1 ;
 	 rec_deep_lowerize ty2
@@ -835,6 +939,16 @@ let pp_type_collection ppf (coll_module, coll_name) =
               must be kept from previous printing calls.
 
     {b Args} :
+      - [current_unit] : The string giving the name of the current
+          compilation unit we are generating the OCaml code of. This is
+          required to prevent, when printin types, to qualify type
+          constructors with the OCaml module name if the type belongs
+          to the currently compiled compilation unit. Hence this
+          prevents things like in a "bar.foc" file containing
+          [type t1 = ... ; type t2 = t1 * t2], getting in the generated
+          OCaml file definitions like [type t1 = ... ;
+	  type t2 = Bar.t1 * Bar.t1] which would lead to an OCaml module
+          depending of itself.
       - [reuse_mapping] : Boolean telling if the print session must keep
           active the previous variables names mapping. If so, then sharing
           of variables names will be active between the previous prints and
@@ -901,8 +1015,14 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
 	  (ty, name) :: !type_variable_names_mapping ;
 	name in
 
+  let pp_type_name_to_ml ~current_unit ppf (hosting_module, constructor_name) =
+    if current_unit = hosting_module then
+      Format.fprintf ppf "_focty_%s" constructor_name
+    else
+      Format.fprintf ppf "%s._focty_%s"
+	(String.capitalize hosting_module) constructor_name in
 
-  let rec rec_pp collections_carrier_mapping prio ppf ty =
+  let rec rec_pp ~current_unit collections_carrier_mapping prio ppf ty =
     (* First of all get the "repr" guy ! *)
     let ty = repr ty in
     match ty.ts_desc with
@@ -915,15 +1035,15 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
 	(* Arrow priority: 2. *)
 	if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
         Format.fprintf ppf "@[<2>%a@ ->@ %a@]"
-	  (rec_pp collections_carrier_mapping 2) ty1
-	  (rec_pp collections_carrier_mapping 1) ty2 ;
+	  (rec_pp ~current_unit collections_carrier_mapping 2) ty1
+	  (rec_pp ~current_unit collections_carrier_mapping 1) ty2 ;
 	if prio >= 2 then Format.fprintf ppf ")@]"
     | ST_tuple tys ->
 	(* Tuple priority: 3. *)
 	if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
         Format.fprintf ppf "@[<2>%a@]"
           (Handy.pp_generic_separated_list " *"
-	     (rec_pp collections_carrier_mapping 3)) tys ;
+	     (rec_pp ~current_unit collections_carrier_mapping 3)) tys ;
 	if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_construct (type_name, arg_tys) ->
         (begin
@@ -931,15 +1051,18 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
         (* like tuples if only one argument : 3                    *)
         (* otherwise 0 if already a tuple because we force parens. *)
 	match arg_tys with
-         | [] -> Format.fprintf ppf "%s" type_name
+         | [] ->
+	     Format.fprintf ppf "%a"
+	       (pp_type_name_to_ml ~current_unit) type_name
          | [one] ->
-	     Format.fprintf ppf "%a@ %s"
-	       (rec_pp collections_carrier_mapping 3) one type_name
+	     Format.fprintf ppf "%a@ %a"
+	       (rec_pp ~current_unit collections_carrier_mapping 3) one
+	       (pp_type_name_to_ml ~current_unit) type_name
          | _ ->
-             Format.fprintf ppf "@[<1>(%a)@]@ %s"
+             Format.fprintf ppf "@[<1>(%a)@]@ %a"
                (Handy.pp_generic_separated_list ","
-		  (rec_pp collections_carrier_mapping 0)) arg_tys
-	       type_name
+		  (rec_pp ~current_unit collections_carrier_mapping 0)) arg_tys
+	       (pp_type_name_to_ml ~current_unit) type_name
 	end)
     | ST_self_rep ->
 	(* Here is the major difference with the regular [pp_type_simple]. *)
@@ -963,10 +1086,11 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
   (* ************************************************* *)
   (* Now, the real definition of the printing function *)
   (
-   (fun ~reuse_mapping collections_carrier_mapping ppf whole_type ->
+   (fun ~current_unit ~reuse_mapping collections_carrier_mapping ppf
+       whole_type ->
      (* Only reset the variable mapping if we were not told the opposite. *)
      if not reuse_mapping then reset_type_variables_mapping () ;
-     rec_pp collections_carrier_mapping 0 ppf whole_type),
+     rec_pp ~current_unit collections_carrier_mapping 0 ppf whole_type),
 
    (fun () -> reset_type_variables_mapping ()))
 ;;

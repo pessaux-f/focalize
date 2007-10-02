@@ -1,10 +1,9 @@
-# $Id: Makefile,v 1.26 2007-08-31 13:45:52 pessaux Exp $
+# $Id: Makefile,v 1.27 2007-10-02 09:29:36 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ -I ../basement
 
-BYTOBJS = lexer.cmo parser.cmo parse_file.cmo dump_ptree.cmo sourcify.cmo \
-	oldsourcify.cmo
+BYTOBJS = lexer.cmo parser.cmo parse_file.cmo dump_ptree.cmo sourcify.cmo
 
 
 all:: $(BYTOBJS)

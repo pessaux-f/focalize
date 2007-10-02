@@ -11,7 +11,7 @@ module ScopeInformation :
     type value_binding_info =
       | SBI_file of Types.fname
       | SBI_method_of_self
-      | SBI_method_of_coll of Parsetree.vname
+      | SBI_method_of_coll of Parsetree.qualified_vname
       | SBI_local
 
     type type_binding_info =
@@ -36,19 +36,24 @@ module TypeInformation :
       | SPAR_is of (Parsetree.vname * (species_field list))
 
     and species_field =
-      | SF_sig of (Parsetree.vname * Parsetree.vname * Types.type_scheme)
+      | SF_sig of
+	  (Parsetree.qualified_vname * Parsetree.vname *
+	   Types.type_scheme)
       | SF_let of
-	  (Parsetree.vname * Parsetree.vname * (Parsetree.vname list) *
+	  (Parsetree.qualified_vname * Parsetree.vname *
+	   (Parsetree.vname list) *
 	   Types.type_scheme * Parsetree.expr)
       | SF_let_rec of
-	  (Parsetree.vname * Parsetree.vname * (Parsetree.vname list) *
+	  (Parsetree.qualified_vname * Parsetree.vname *
+	   (Parsetree.vname list) *
 	   Types.type_scheme * Parsetree.expr) list
       | SF_theorem of
-	  (Parsetree.vname * Parsetree.vname * Types.type_scheme *
+	  (Parsetree.qualified_vname * Parsetree.vname *
+	   Types.type_scheme *
 	   Parsetree.prop * Parsetree.proof)
       | SF_property of
-	  (Parsetree.vname * Parsetree.vname * Types.type_scheme *
-	   Parsetree.prop)
+	  (Parsetree.qualified_vname * Parsetree.vname *
+	   Types.type_scheme * Parsetree.prop)
 
     type species_description = {
       spe_is_collection : bool ;
@@ -68,7 +73,8 @@ module TypeInformation :
     }
     type type_kind =
         TK_abstract
-      | TK_variant of (Parsetree.constructor_name * Types.type_scheme) list
+      | TK_variant of (Parsetree.constructor_name * constructor_arity *
+		       Types.type_scheme) list
       | TK_record of
           (Types.label_name * field_mutability * Types.type_scheme) list
     type type_description = {

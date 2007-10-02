@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: focalizec.ml,v 1.17 2007-09-26 10:22:13 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.18 2007-10-02 09:29:36 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -38,10 +38,6 @@ let main () =
       ("--no-ocaml-code",
        Arg.Unit Configuration.unset_generate_ocaml,
        " disables the OCaml code generation.") ;
-      ("--old-pretty",
-       Arg.String Configuration.set_old_pretty_print,
-       " pretty-prints the parse tree of the focalize file as \
-         an old focal source into the argument file") ;
       ("--pretty",
        Arg.String Configuration.set_pretty_print,
        " pretty-prints the parse tree of the focal file as a focal source \
@@ -83,14 +79,6 @@ let main () =
        let out_fmt = Format.formatter_of_out_channel out_hd in
        Sourcify.pp_file out_fmt ast ;
        close_out out_hd) ;
-  (* Pretty the AST as an old-focal-syntax source if requested. *)
-  (match Configuration.get_old_pretty_print () with
-   | None -> ()
-   | Some fname ->
-     let out_hd = open_out_bin fname in
-     let out_fmt = Format.formatter_of_out_channel out_hd in
-     Oldsourcify.pp_file out_fmt ast ;
-     close_out out_hd) ;
   (* Scopes AST. *)
   let (scoped_ast, scoping_toplevel_env) =
     (let tmp = Scoping.scope_file current_unit ast in

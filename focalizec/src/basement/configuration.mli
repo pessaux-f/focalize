@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.10 2007-09-14 14:32:32 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.11 2007-10-02 09:29:36 pessaux Exp $ *)
 
 (** The various flags and definitions useful to the internal behaviour of the
     focalize compiler. *)
@@ -27,9 +27,6 @@ val set_verbose : unit -> unit
 
 val get_pretty_print : unit -> string option
 val set_pretty_print : string -> unit
-
-val get_old_pretty_print : unit -> string option
-val set_old_pretty_print : string -> unit
 
 val get_input_file_name : unit -> string
 val set_input_file_name : string -> unit
