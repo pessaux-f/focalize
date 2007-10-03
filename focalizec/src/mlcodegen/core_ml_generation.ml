@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: core_ml_generation.ml,v 1.13 2007-10-03 13:44:47 pessaux Exp $ *)
+(* $Id: core_ml_generation.ml,v 1.14 2007-10-03 15:49:05 pessaux Exp $ *)
 
 
 
@@ -1166,10 +1166,10 @@ let generate_methods ctx species_parameters_names field =
 		~is_first: true (from, name, params, (Some scheme), body) in
 	    let rem_compiled =
 	      List.map
-		(fun (_from, _name, _params, _scheme, _body) ->
+		(fun (from, name, params, scheme, body) ->
 		  generate_one_binding
 		    ~is_first: false
-		    (_from, _name, _params, (Some _scheme), _body))
+		    (from, name, params, (Some scheme), body))
 		q in
 	    Some (CSF_let_rec (first_compiled :: rem_compiled))
        end)
@@ -1186,11 +1186,79 @@ let generate_methods ctx species_parameters_names field =
 ;;
 
 
+(* *********************************************************************** *)
+(** {b Descr} : Dumps as OCaml code the parameters required to the
+         collection generator in order to make them bound in the
+         collection generator's body. Hence, this function must UNIQUELY
+         find the names of all the extra parameters the methods will need
+         to make them arguments of the collection generator and record
+         then in a precise order that must be made public for the guys who
+         want to instanciate the collection.
 
-let dump_collection_generator_arguments _out_fmter _compiled_species_fields =
-  (* We must UNIQUELY find the names of all the extra parameters the       *)
-  (* methods will need to make them arguments of the collection generator. *)
-() ;; (* TODO*)
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+let dump_collection_generator_arguments out_fmter compiled_species_fields =
+  (* Let's create an assoc list mapping for each species paramater name *)
+  (* the set of methods names from it that needed to be lambda-lifted,  *)
+  (* hence that will lead to parameters of the collection generator.    *)
+  let species_param_names_and_methods = ref [] in
+  (* ************************************************************************ *)
+  (** {b Descr} :  Local function to process only one [compiled_field_memory].
+         Handy to factorize the code in both the cases of [CSF_let] and
+         [CSF_let_rec]. This function effectivly accumulates by side effect
+         for each species parameter the set of methods we depend on.
+
+      { b Rem} : Local to the enclosing [dump_collection_generator_arguments]
+               function. Not exported.                                        *)
+  (* ************************************************************************ *)
+  let rec process_one_field_memory field_memory =
+    List.iter
+      (fun (spe_param_name, meths_set) ->
+	(* Get or create for this species parameter name, the bucket *)
+	(* recording all the methods someone depends on.             *)
+	let spe_param_bucket =
+	  (try List.assoc spe_param_name !species_param_names_and_methods
+	  with Not_found ->
+	    let bucket = ref Dep_analysis.VnameSet.empty in
+	    species_param_names_and_methods :=
+	      (spe_param_name, bucket) :: !species_param_names_and_methods ;
+	    bucket) in
+	(* And now, union the current methods we depend on with *)
+	(* the already previously recorded.                     *)
+	spe_param_bucket :=
+	  Dep_analysis.VnameSet.union meths_set !spe_param_bucket)
+      field_memory.cfm_dependencies_from_parameters in
+
+  (* ********************************************************** *)
+  (* Now, really work, building by side effect for each species *)
+  (* parameter the set of methods we depend on.                 *)
+  List.iter
+    (function
+      | None -> ()
+      | Some (CSF_let field_memory) -> process_one_field_memory field_memory
+      | Some (CSF_let_rec l) -> List.iter process_one_field_memory l)
+    compiled_species_fields ;
+  (* Now we get the assoc list complete, we can dump the parameters of the  *)
+  (* collection generator. To make them correct with their usage inside the *)
+  (* local functions of the collection generator, we must give them a name  *)
+  (* shaped in the same way, i.e:                                           *)
+  (* "_p_" + species parameter name + "_" + called method name.             *)
+  List.iter
+    (fun (species_param_name, meths_set) ->
+      let prefix =
+	"_p_" ^
+	(String.lowercase
+	   (Parsetree_utils.name_of_vname species_param_name)) ^
+	"_" in
+      Dep_analysis.VnameSet.iter
+	(fun meth ->
+	  Format.fprintf out_fmter "@ %s%a" prefix pp_to_ocaml_vname meth)
+	!meths_set)
+  !species_param_names_and_methods ;
+  (* Finally, make this parameters information public by returning it. *)
+  !species_param_names_and_methods
+;;
+
 
 
 let generate_collection_generator ctx compiled_species_fields =
@@ -1283,7 +1351,8 @@ let generate_collection_generator ctx compiled_species_fields =
   (* Generate the parameters the collection generator needs to build the   *)
   (* each of the current species's local function (functions corresponding *)
   (* to the actuall method stored in the collection record).               *)
-  dump_collection_generator_arguments out_fmter compiled_species_fields ;
+let _public_stuff_to_use_later =
+  dump_collection_generator_arguments out_fmter compiled_species_fields in
   Format.fprintf out_fmter " =@ " ;
   (* Generate the local functions that will be used to fill the record value. *)
   List.iter
