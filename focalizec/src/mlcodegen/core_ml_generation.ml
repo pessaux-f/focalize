@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: core_ml_generation.ml,v 1.12 2007-10-02 09:29:36 pessaux Exp $ *)
+(* $Id: core_ml_generation.ml,v 1.13 2007-10-03 13:44:47 pessaux Exp $ *)
 
 
 
@@ -946,6 +946,52 @@ and generate_expr ctx initial_expression =
 
 
 
+(* ************************************************************************** *)
+(** {b Descr} : Lower-level species field (relevant for collection generator)
+        description recording information about dependency and extra
+        parameters already computed while generating the methods and that
+        will be re-used while generating the collection generator.
+        This avoids computing several the same things and ensure that the
+        information is formated in the same way everywhere (in other words
+        that the extra parameters discovered will appear in the same order
+        between method declaration and method application).
+    {b Rem} : Not exported outside this module.                               *)
+(* ************************************************************************** *)
+type compiled_field_memory ={
+  (** Where the method comes from (the most recent in inheritance). *)
+  cfm_from_species : Parsetree.qualified_vname ;
+  (** The method's name. *)
+  cfm_method_name : Parsetree.vname ;
+  (** The method's body. *)
+  cfm_method_body  : Parsetree.expr ;
+  (** The list mapping for each species parameter, the methods the current
+      method depends on. By lambda-lifting, these methods induce extra
+      parameters named as "_p_" +  species parameter name + "_" + called
+      method's name we depend on. The first component of each couple is the
+      parameter's name and the second is the set of methods the current
+      method depends on from this species parameter.*)
+  cfm_dependencies_from_parameters :
+    (Parsetree.vname * Dep_analysis.VnameSet.t) list ;
+  (** The methods of our inheritance tree the method depends on. *)
+  cfm_decl_children :
+    (Dep_analysis.name_node * Dep_analysis.dependency_kind) list ;
+} ;;
+
+
+(* ************************************************************************ *)
+(** {b Descr} : Type of the fields significant for the collection generator
+       creation, once the methods of the species have been generated. It
+       remove all the fields that are not relevant for the collection
+       generator.
+
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
+type compiled_species_fields =
+  | CSF_let of compiled_field_memory
+  | CSF_let_rec of compiled_field_memory list
+;;
+
+
 (* *********************************************************************** *)
 (* species_compil_context -> Parsetree.vname list ->                       *)
 (*   Env.TypeInformation.species_field -> unit                             *)
@@ -970,6 +1016,40 @@ let generate_methods ctx species_parameters_names field =
   (* The [~is_first] boolean tells whether we must start de function     *)
   (* binding with "let" or "and".                                        *)
   let generate_one_binding ~is_first (from, name, params, scheme, body) =
+    (* Get all the methods we directly decl-depend on. They will   *)
+    (* lead each to an extra parameter of the final OCaml function *)
+    (* (lambda-lifing).                                            *)
+    let decl_children =
+      (try
+	let my_node =
+	  List.find
+	    (fun { Dep_analysis.nn_name = n } -> n = name)
+	    ctx.scc_dependency_graph_nodes in
+	(* Only keep "decl-dependencies". *)
+	List.filter
+	  (function
+	    | (_, Dep_analysis.DK_decl) -> true
+	    | (_, Dep_analysis.DK_def) -> false)
+	  my_node.Dep_analysis.nn_children
+      with Not_found -> []  (* No children at all. *)) in
+    (* Get the list of the methods from the species parameters the current *)
+    (* method depends on. Do not [fold_left] to keep the extra parameters  *)
+    (* in the same order than the species parameters order. I.e. for a    *)
+    (* species [Foo (A ..., B) ...] we want to have the extra parameters  *)
+    (* due to lambda-lifting in the OCaml function ordered such as those  *)
+    (* coming from [A] are first, then come those from [B].               *)
+    let dependencies_from_params =
+      List.fold_right
+	(fun species_param_name accu ->
+	  let meths_from_param =
+	    Param_dep_analysis.param_deps_expr
+	      ~current_species: ctx.scc_current_species
+	      species_param_name body in
+	  (* Return a couple binding the species parameter's name with the *)
+	  (* methods of it we found as required for the current method.    *)
+	  (species_param_name, meths_from_param) :: accu)
+	species_parameters_names
+	[] in
     (* First of all, only methods defined in the current species must *)
     (* be generated. Inherited methods ARE NOT generated again !      *)
     if from = ctx.scc_current_species then
@@ -978,45 +1058,13 @@ let generate_methods ctx species_parameters_names field =
       if Configuration.get_verbose () then
 	Format.eprintf "Generating OCaml code for field '%a'.@."
 	  pp_to_ocaml_vname name ;
-      (* Now, get all the methods we directly decl-depend on. They will *)
-      (* lead each to an extra parameter of the final OCaml function    *)
-      (* (lambda-lifing).                                               *)
-      let decl_children =
-	(try
-	  let my_node =
-	    List.find
-	      (fun { Dep_analysis.nn_name = n } -> n = name)
-	      ctx.scc_dependency_graph_nodes in
-	  (* Only keep "decl-dependencies". *)
-	  List.filter
-	    (function
-	      | (_, Dep_analysis.DK_decl) -> true
-	      | (_, Dep_analysis.DK_def) -> false)
-	    my_node.Dep_analysis.nn_children
-	with Not_found -> []  (* No children at all. *)) in
       (* Start the OCaml function definition. *)
       if is_first then
 	Format.fprintf out_fmter "@[<2>let %a" pp_to_ocaml_vname name
       else
 	Format.fprintf out_fmter "@[<2>and %a" pp_to_ocaml_vname name ;
       (* First, abstract according to the species's parameters the current  *)
-      (* method depends on. Do not [fold_left] to keep the extra parameters *)
-      (* in the same order than the species parameters order. I.e. for a    *)
-      (* species [Foo (A ..., B) ...] we want to have the extra parameters  *)
-      (* due to lambda-lifting in the OCaml function ordered such as those  *)
-      (* coming from [A] are first, then come those from [B].               *)
-      let dependencies_from_params =
-	List.fold_right
-	  (fun species_param_name accu ->
-	    let meths_from_param =
-	      Param_dep_analysis.param_deps_expr
-		~current_species: ctx.scc_current_species
-		species_param_name body in
-	    (* Return a couple binding the species parameter's name with the *)
-	    (* methods of it we found as required for the current method.    *)
-	    (species_param_name, meths_from_param) :: accu)
-	  species_parameters_names
-	  [] in
+      (* method depends on.                                                 *)
       List.iter
 	(fun (species_param_name, meths) ->
 	  (* Each abstracted method will be named like "_p_", followed by *)
@@ -1032,7 +1080,8 @@ let generate_methods ctx species_parameters_names field =
 	      Format.fprintf out_fmter "@ %s%a" prefix pp_to_ocaml_vname meth)
 	    meths)
 	dependencies_from_params ;
-      (* Now, lambda-lift all the dependencies (i.e function we depend on). *)
+      (* Now, lambda-lift all the dependencies from our inheritance tree *)
+      (* (i.e methods we depend on).                                     *)
       List.iter
 	(fun ({ Dep_analysis.nn_name = dep_name }, _) ->
 	  Format.fprintf out_fmter "@ abst_%a" pp_to_ocaml_vname dep_name)
@@ -1080,7 +1129,14 @@ let generate_methods ctx species_parameters_names field =
 	Format.eprintf
           "Field '%a' inherited but not (re)-declared is not generated again.@."
 	  pp_to_ocaml_vname name
-      end) in
+      end) ;
+    (* Now, build the [compiled_field_memory], even if the method  *)
+    (* was not really generated because it was inherited.          *)
+    { cfm_from_species = from ;
+      cfm_method_name = name ;
+      cfm_method_body = body ;
+      cfm_dependencies_from_parameters = dependencies_from_params ;
+      cfm_decl_children = decl_children } in
 
   (* ****************************** *)
   (* Now, really process the field. *)
@@ -1089,10 +1145,14 @@ let generate_methods ctx species_parameters_names field =
        (* Only declared, hence, no code to generate yet ! *)
        if Configuration.get_verbose () then
 	 Format.eprintf "OCaml code for signature '%a' leads to void code.@."
-	   pp_to_ocaml_vname name
+	   pp_to_ocaml_vname name ;
+       (* Nothing to keep for the collection generator. *)
+       None
    | Env.TypeInformation.SF_let (from, name, params, scheme, body) ->
-       generate_one_binding
-	 ~is_first: true (from, name, params, (Some scheme), body)
+       Some
+	 (CSF_let
+	    (generate_one_binding
+	       ~is_first: true (from, name, params, (Some scheme), body)))
    | Env.TypeInformation.SF_let_rec l ->
        (begin
        match l with
@@ -1101,14 +1161,17 @@ let generate_methods ctx species_parameters_names field =
 	    (* must at least bind one identifier !          *)
 	    assert false
 	| (from, name, params, scheme, body) :: q ->
-	    generate_one_binding
-	      ~is_first: true (from, name, params, (Some scheme), body) ;
-	    List.iter
-	      (fun (_from, _name, _params, _scheme, _body) ->
-		generate_one_binding
-		  ~is_first: false
-		  (_from, _name, _params, (Some _scheme), _body))
-	      q
+	    let first_compiled =
+	      generate_one_binding
+		~is_first: true (from, name, params, (Some scheme), body) in
+	    let rem_compiled =
+	      List.map
+		(fun (_from, _name, _params, _scheme, _body) ->
+		  generate_one_binding
+		    ~is_first: false
+		    (_from, _name, _params, (Some _scheme), _body))
+		q in
+	    Some (CSF_let_rec (first_compiled :: rem_compiled))
        end)
    | Env.TypeInformation.SF_theorem (_, name, _, _, _)
    | Env.TypeInformation.SF_property (_, name, _, _) ->
@@ -1117,18 +1180,26 @@ let generate_methods ctx species_parameters_names field =
        if Configuration.get_verbose () then
 	 Format.eprintf
 	   "OCaml code for theorem/property '%a' leads to void code.@."
-	   pp_to_ocaml_vname name
+	   pp_to_ocaml_vname name ;
+       (* Nothing to keep for the collection generator. *)
+       None
 ;;
 
 
 
-let generate_collection_generator ctx species_parameters_names species_descr =
+let dump_collection_generator_arguments _out_fmter _compiled_species_fields =
+  (* We must UNIQUELY find the names of all the extra parameters the       *)
+  (* methods will need to make them arguments of the collection generator. *)
+() ;; (* TODO*)
+
+
+let generate_collection_generator ctx compiled_species_fields =
   let current_species_name = snd ctx.scc_current_species in
   let out_fmter = ctx.scc_out_fmter in
   (* Just a bit of debug. *)
   if Configuration.get_verbose () then
     Format.eprintf
-      "Species %a is fully defined. Generating its collection generator@."
+      "@\nSpecies %a is fully defined. Generating its collection generator@."
       Sourcify.pp_vname current_species_name ;
   (* Factorize the prefix to put in from of each species's field *)
   (* to get the corresponding record field name on OCaml's side. *)
@@ -1143,46 +1214,12 @@ let generate_collection_generator ctx species_parameters_names species_descr =
       {b Rem} : Local to the [generate_collection_generator] function.
                Not exported.                                             *)
   (* ******************************************************************* *)
-  let process_one_field (from, meth_name, _, _, body) =
+  let process_one_field field_memory =
+    let from = field_memory.cfm_from_species in
     Format.fprintf out_fmter "(* From species %a. *)@\n"
       Sourcify.pp_qualified_vname from ;
-    (* Let's first find the methods of each species parameter we depend on. *)
-    (* Like when creating method generator, wee will need to know the extra *)
-    (* arguments the method has, not to lambda-lift them this time, but to  *)
-    (* apply them ! We build this list in the same order than in the        *)
-    (* [generate_methods] function to be sure the order of the extra        *)
-    (* parameters will be the same at lambda-lifting time (in the function  *)
-    (* [generate_methods]) and at application time (here).                  *)
-    let dependencies_from_params =
-      List.fold_right
-	(fun species_param_name accu ->
-	  let meths_from_param =
-	    Param_dep_analysis.param_deps_expr
-	      ~current_species: ctx.scc_current_species
-	      species_param_name body in
-	  (* Return a couple binding the species parameter's name with the *)
-	  (* methods of it we found as required for the current method.    *)
-	  (species_param_name, meths_from_param) :: accu)
-	species_parameters_names
-	[] in
-    (* Now we get the get all the methods we directly decl-depend on. They *)
-    (* have also be mapped onto extra parameters, so we need them to know  *)
-    (* what to apply to this current method's generator.                   *)
-    let decl_children =
-      (try
-	let my_node =
-	  List.find
-	    (fun { Dep_analysis.nn_name = n } -> n = meth_name)
-	    ctx.scc_dependency_graph_nodes in
-	(* Only keep "decl-dependencies". *)
-	List.filter
-	  (function
-	    | (_, Dep_analysis.DK_decl) -> true
-	    | (_, Dep_analysis.DK_def) -> false)
-	  my_node.Dep_analysis.nn_children
-      with Not_found -> []  (* No children at all. *)) in
     Format.fprintf out_fmter "@[<2>let local_%a =@ "
-      pp_to_ocaml_vname meth_name ;
+      pp_to_ocaml_vname field_memory.cfm_method_name ;
     (* Find the method generator to use depending on if it belongs to this *)
     (* inheritance level or if it was inherited from another species.      *)
     if from = ctx.scc_current_species then
@@ -1190,7 +1227,7 @@ let generate_collection_generator ctx species_parameters_names species_descr =
       (* It comes from the current inheritance level.   *)
       (* Then its name is simply the the method's name. *)
       Format.fprintf out_fmter "%a"
-	pp_to_ocaml_vname meth_name
+	pp_to_ocaml_vname field_memory.cfm_method_name
       end)
     else
       (begin
@@ -1201,14 +1238,16 @@ let generate_collection_generator ctx species_parameters_names species_descr =
       if (fst from) <> ctx.scc_current_unit then
 	Format.fprintf out_fmter "%s.@," (String.capitalize (fst from)) ;
       Format.fprintf out_fmter "%a.@,%a"
-	pp_to_ocaml_vname (snd from) pp_to_ocaml_vname meth_name
+	pp_to_ocaml_vname (snd from)
+	pp_to_ocaml_vname field_memory.cfm_method_name
       end) ;
-    (* Now, apply the method generator to each of the extra *)
-    (* arguments we harvested above.                        *)
+    (* Now, apply the method generator to each of the extra arguments *)
+    (* induced by the variosu lambda-lifting we previously performed. *)
     (* First, the extra arguments due to the species parameters methods we  *)
-    (* depends of. The name used for application is formed according to the *)
-    (* same scheme we used at lambda-lifting time: "_p_" +                  *)
-    (* species parameter name + "_" + called method name.                   *)
+    (* depends of. Here we will not use them to lambda-lift them this time, *)
+    (* but to apply them !  The name used for application is formed         *)
+    (* according to the same scheme we used at lambda-lifting time:         *)
+    (* "_p_" + species parameter name + "_" + called method name.           *)
     List.iter
       (fun (species_param_name, meths_from_param) ->
 	let prefix =
@@ -1220,7 +1259,7 @@ let generate_collection_generator ctx species_parameters_names species_descr =
 	  (fun meth ->
 	    Format.fprintf out_fmter "@ %s%a" prefix pp_to_ocaml_vname meth)
 	  meths_from_param)
-      dependencies_from_params ;
+      field_memory.cfm_dependencies_from_parameters ;
     (* Second, the method of our inheritance tree we depend on because these *)
     (* methods are now defined, we apply using these defined methods, i.e.   *)
     (* the "local" function defined here for this method. Hence, for each    *)
@@ -1229,7 +1268,7 @@ let generate_collection_generator ctx species_parameters_names species_descr =
     List.iter
       (fun ({ Dep_analysis.nn_name = dep_name }, _) ->
 	Format.fprintf out_fmter "@ local_%a" pp_to_ocaml_vname dep_name)
-      decl_children ;
+      field_memory.cfm_decl_children ;
     (* That's it for this field code generation. *)
     Format.fprintf out_fmter "@ in@]@\n" in    
 
@@ -1239,23 +1278,21 @@ let generate_collection_generator ctx species_parameters_names species_descr =
   Format.fprintf out_fmter
     "(* Fully defined '%a' species's collection generator. *)@\n"
     Sourcify.pp_vname current_species_name ;
+  (* The generic name of the collection generator: "collection_create". *)
+  Format.fprintf out_fmter "@[<2>let collection_create" ;
+  (* Generate the parameters the collection generator needs to build the   *)
+  (* each of the current species's local function (functions corresponding *)
+  (* to the actuall method stored in the collection record).               *)
+  dump_collection_generator_arguments out_fmter compiled_species_fields ;
+  Format.fprintf out_fmter " =@ " ;
   (* Generate the local functions that will be used to fill the record value. *)
   List.iter
     (function
-      | Env.TypeInformation.SF_sig (_, _, _) ->
-	  (* Either it's the "rep", or this should not happen since the  *)
-	  (* species is fully defined. So, basta for the assert false if *)
-	  (* it's not "rep", just silently ignore all.                   *)
-	  ()
-      | Env.TypeInformation.SF_let (from, name, params, scheme, body) ->
-	  process_one_field (from, name, params, scheme, body)
-      | Env.TypeInformation.SF_let_rec l ->
-	  List.iter process_one_field l
-      | Env.TypeInformation.SF_theorem (_, _, _, _, _)
-      | Env.TypeInformation.SF_property (_, _, _, _) ->
-	  (* Theorems and properties o no lead to OCaml code. Ignore them. *)
-	  ())
-    species_descr.Env.TypeInformation.spe_sig_methods ;
+      | None -> ()
+      | Some (CSF_let field_memory) -> process_one_field field_memory
+      | Some (CSF_let_rec l) -> List.iter (fun fm -> process_one_field fm) l)
+    compiled_species_fields ;
+  Format.fprintf ctx.scc_out_fmter "@ in@]@\n" ;
   (* The record value. *)
   Format.fprintf ctx.scc_out_fmter "{ @[<2>" ;
   (* Close the record expression. *)
@@ -1287,9 +1324,9 @@ let species_compile ~current_unit out_fmter species_def species_descr
     scc_out_fmter = out_fmter } in
   (* The record type representing the species' type. *)
   generate_record_type ctx species_def species_descr ;
-  (* Compute the list of names of parameters of the species. This  *)
-  (* will be use to ompute for each method the set of methods from *)
-  (* the parameters the method depends on.                         *)
+  (* Compute the list of names of parameters of the species. This   *)
+  (* will be use to compute for each method the set of methods from *)
+  (* the parameters the method depends on.                          *)
   let species_parameters_names =
     List.map
       (function
@@ -1297,13 +1334,14 @@ let species_compile ~current_unit out_fmter species_def species_descr
 	| Env.TypeInformation.SPAR_is (n, _) -> n)
       species_descr.Env.TypeInformation.spe_sig_params in
   (* Now, the methods of the species. *)
-  List.iter
-    (generate_methods ctx species_parameters_names)
-    species_descr.Env.TypeInformation.spe_sig_methods ;
+  let compiled_fields =
+    List.map
+      (generate_methods ctx species_parameters_names)
+      species_descr.Env.TypeInformation.spe_sig_methods in
   (* Now check if the species supports a collection *)
   (* generator because fully defined.               *)
   if species_descr.Env.TypeInformation.spe_is_closed then
-    generate_collection_generator ctx species_parameters_names species_descr ;
+    generate_collection_generator ctx compiled_fields ;
   Format.fprintf out_fmter "end ;;@]@\n@."
 ;;
 

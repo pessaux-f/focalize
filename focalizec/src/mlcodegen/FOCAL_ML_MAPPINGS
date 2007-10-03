@@ -30,11 +30,11 @@ names:
 
 In species, lambda-lifted methods from species paramaters called in a species
 method:
-  "_p_" + species parameter name + "_" + called method name
+  "_p_" + species parameter's name + "_" + called method's name
 
 In species, lambda-lifted methods from the current species called in a species
 method:
-  "abst_" + called method name
+  "abst_" + called method's name
 
 In a species, name of the record type representing this species:
   "me_as_species"
