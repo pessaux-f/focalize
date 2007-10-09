@@ -11,7 +11,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.11 2007-10-02 09:29:36 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.12 2007-10-09 08:38:15 pessaux Exp $ *)
+
 
 (** The various flags and definitions useful to the internal behaviour of the
     focalize compiler. *)

@@ -88,6 +88,15 @@ module TypeInformation :
   end
 
 
+
+module MlGenInformation :
+  sig
+    type collection_generator_parameters = unit list
+    type species_binding_info = collection_generator_parameters option
+  end
+
+
+
 module ScopingEnv :
   sig
     type t
@@ -160,10 +169,26 @@ module TypingEnv :
 	  t -> TypeInformation.species_description
   end
 
+
+module MlGenEnv :
+  sig
+    type t
+    val empty : unit -> t
+    val pervasives : unit -> t
+    val add_species :
+      Parsetree.vname -> MlGenInformation.species_binding_info -> t
+	-> t
+    val find_species :
+      loc: Location.t -> current_unit: Types.fname ->Parsetree.ident ->
+	t -> MlGenInformation.species_binding_info
+  end
+
+
 val scope_open_module :
   loc: Location.t -> Types.fname -> ScopingEnv.t -> ScopingEnv.t
 val type_open_module :
   loc: Location.t -> Types.fname -> TypingEnv.t -> TypingEnv.t
 
 val make_fo_file :
-  source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t -> unit
+  source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t ->
+    MlGenEnv.t ->unit

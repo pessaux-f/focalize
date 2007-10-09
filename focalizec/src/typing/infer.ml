@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.74 2007-10-02 09:29:36 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.75 2007-10-09 08:38:16 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -2632,7 +2632,7 @@ let normalize_species ~loc ctx methods_info inherited_methods_infos =
 	      (* Extract the names forming the erasing context. *)
 	      let psi_i0_names =
 		Dep_analysis.ordered_names_list_of_fields [psi_i0] in
-	      w1 :=  (fields_fusion ~loc ctx phi psi_i0) :: bigX ;
+	      w1 :=  (fields_fusion ~loc ctx psi_i0 phi) :: bigX ;
 	      (* Rather apply the formula Section of Section 3.9.7, page 57. *)
 	      (* Hence we erase in the tail of the list, i.e. in fields      *)
 	      (* found after [psi_i0].                                       *)
@@ -2720,7 +2720,7 @@ type please_compile_me =
   | PCM_species of
       ((** The species expression. *)
 	Parsetree.species_def *
-        (** The species description from the typechecking passe, with the
+        (** The species description from the typechecking pass, with the
             list of methods contained in its normalized form, with
 	    "oldestly" inherited in head of the list. *)
         Env.TypeInformation.species_description *
@@ -2733,7 +2733,9 @@ type please_compile_me =
 	   the list of methods contained in its normalized form, with
 	   "oldestly" inherited in head of the list and Self replaced by
            the collection name inside. *)
-       Env.TypeInformation.species_description)
+       Env.TypeInformation.species_description *
+	 (** The depency graph of the collection's methods. *)
+         (Dep_analysis.name_node list))
   | PCM_type of (Parsetree.vname * Env.TypeInformation.type_description)
   | PCM_let_def of (Parsetree.let_def * (Types.type_scheme list))
   | PCM_theorem of Parsetree.theorem_def
@@ -2756,14 +2758,14 @@ type please_compile_me =
 (* ************************************************************************* *)
 let typecheck_species_def ctx env species_def =
   let species_def_desc = species_def.Parsetree.ast_desc in
+  let current_species =
+    (ctx.current_unit, species_def_desc.Parsetree.sd_name) in
   if Configuration.get_verbose () then
     Format.eprintf
       "Analysing species '%a'@."
       Sourcify.pp_vname species_def_desc.Parsetree.sd_name ;
   (* First of all, we are in a species !!! *)
-  let ctx = { ctx with
-    current_species =
-      Some (ctx.current_unit, species_def_desc.Parsetree.sd_name) } in
+  let ctx = { ctx with current_species = Some current_species } in
   (* Extend the environment with the species param and   *)
   (* synthetize the species type of the current species. *)
   let (env_with_species_params, sig_params) =
@@ -2789,19 +2791,14 @@ let typecheck_species_def ctx env species_def =
   (* related property to lead to a theorem.   *)
   let (collapsed_inherited_methods_infos, collapsed_methods_info) =
     collapse_proofs_of
-      ~current_species: (ctx.current_unit, species_def_desc.Parsetree.sd_name)
-      found_proofs_of
-      inherited_methods_infos methods_info in
+      ~current_species found_proofs_of inherited_methods_infos methods_info in
   (* Create the list of field "semi-normalized", i.e with inherited methods   *)
   (* normalized and in head of the list, and the fresh methods not normalized *)
   (* and in tail of the list.                                                 *)
   let semi_normed_meths =
     collapsed_inherited_methods_infos @ collapsed_methods_info in
-  (* Ensure that the species is well-formed and get its depency graph. *)
-  let species_dep_graph =
-    Dep_analysis.ensure_species_well_formed
-      ~current_species: (ctx.current_unit, species_def_desc.Parsetree.sd_name)
-      semi_normed_meths in
+  (* Ensure that the species is well-formed. *)
+  Dep_analysis.ensure_species_well_formed ~current_species semi_normed_meths ;
   (* Then one must ensure that each method has the same type everywhere *)
   (* in the inheritance tree and more generaly create the normalised    *)
   (* form of the species.                                               *)
@@ -2809,15 +2806,26 @@ let typecheck_species_def ctx env species_def =
     normalize_species
       ~loc: species_def.Parsetree.ast_loc ctx' collapsed_methods_info
       collapsed_inherited_methods_infos in
-  (* Now, compute the fields order to prevent ill-formness    *)
-  (* described in the [collapse_proofs_of] function's header. *)
+  (* Now, compute the fields order to prevent ill-formness described in the *)
+  (* [collapse_proofs_of] function's header.                                *)
   let new_order =
     Dep_analysis.compute_fields_reordering
-      ~current_species: (ctx.current_unit, species_def_desc.Parsetree.sd_name)
-      normalized_methods in
+      ~current_species normalized_methods in
   (* Now really re-order the normalized fields. *)
   let reordered_normalized_methods =
     order_fields_according_to new_order normalized_methods in
+  (* The methods are now completly correct perhaps except for their order  *)
+  (* ("correct" i.e. with no multiple times the same name as it can be     *)
+  (* before the normalization process), we get its final dependency graph. *)
+  let species_dep_graph =
+    Dep_analysis.build_dependencies_graph_for_fields 
+      ~current_species reordered_normalized_methods in
+  (* If asked, generate the dotty output of the dependencies. *)
+  (match Configuration.get_dotty_dependencies () with
+   | None -> ()
+   | Some dirname ->
+       Dep_analysis.dependencies_graph_to_dotty
+	 ~dirname ~current_species species_dep_graph) ;
   (* Check whether the collection is fully defined. If so, then at code  *)
   (* generation-time, then en collection generator must be created. Note *)
   (* that this is independant of the fact to be a collection.            *)
@@ -3108,10 +3116,9 @@ let typecheck_type_def ctx env type_def =
 (* ****************************************************************** *)
 let typecheck_collection_def ctx env coll_def =
   let coll_def_desc = coll_def.Parsetree.ast_desc in
+  let current_species = (ctx.current_unit, coll_def_desc.Parsetree.cd_name) in
   (* First of all, we are in a species !!! *)
-  let ctx = { ctx with
-    current_species =
-      Some (ctx.current_unit, coll_def_desc.Parsetree.cd_name) } in
+  let ctx = { ctx with current_species = Some current_species } in
   (* Typecheck the body's species expression .*)
   let species_expr_fields =
     typecheck_species_expr ctx env coll_def_desc.Parsetree.cd_body in
@@ -3127,6 +3134,16 @@ let typecheck_collection_def ctx env coll_def =
       (SubstColl.subst_species_field
 	 ~current_unit: ctx.current_unit SubstColl.SCK_self myself_coll_ty)
       species_expr_fields in
+  (* Get the dependencies graph of the species. *)
+  let collection_dep_graph =
+    Dep_analysis.build_dependencies_graph_for_fields 
+      ~current_species collection_fields in
+  (* If asked, generate the dotty output of the dependencies. *)
+  (match Configuration.get_dotty_dependencies () with
+   | None -> ()
+   | Some dirname ->
+       Dep_analysis.dependencies_graph_to_dotty
+	 ~dirname ~current_species collection_dep_graph) ;
   (* Let's build our "type" information. Since we are managing a species *)
   (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
   let collec_description = {
@@ -3165,7 +3182,7 @@ let typecheck_collection_def ctx env coll_def =
       Sourcify.pp_vname coll_def_desc.Parsetree.cd_name
       Env.TypeInformation.pp_species_description collec_description
     end) ;
-  ((PCM_collection (coll_def, collec_description)),
+  ((PCM_collection (coll_def, collec_description, collection_dep_graph)),
    collec_carrier_type, full_env)
 ;;
 

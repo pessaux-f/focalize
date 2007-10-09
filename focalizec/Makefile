@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2007-10-02 09:29:36 pessaux Exp $
+# $Id: Makefile,v 1.7 2007-10-09 08:38:15 pessaux Exp $
 
 include ./Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/
@@ -43,6 +43,10 @@ depend:
 	$(CD) toplevel ; $(MAKE) depend
 	$(CD) lib ; $(MAKE) depend
 
+
+# Only on demand.
+tests::
+	$(CD) tests ; $(MAKE) all
 
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx 

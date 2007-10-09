@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.20 2007-10-02 09:29:36 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.21 2007-10-09 08:38:15 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -639,6 +639,9 @@ let in_species_decl_dependencies_for_one_function_name ~current_species
               name in a species. Namely this is the \lbag x \rbag_s in
               Virgile Prevosto's Pdh, section 3.9.5, page 53, definition
               30. Returns both the "decl" and "def" dependencies.
+              Note that names we depend on are inevitably names from the
+              current species inheritance tree's fields. That is by
+              definition of the dependencies computation !
 
     {b Rem} : MUST be called only with a [name] property or theorem
               bound !
@@ -681,10 +684,10 @@ type dependency_kind =
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
 type name_node = {
- (** Name of the node, i.e. one name of a species fields. *)
+  (** Name of the node, i.e. one name of a species fields. *)
   nn_name : Parsetree.vname ;
- (** Means that the current names depends of the children nodes. I.e. the
-     current name's body contains calls to the children names. *)
+  (** Means that the current names depends of the children nodes. I.e. the
+      current name's body contains calls to the children names. *)
   mutable nn_children : (name_node * dependency_kind) list
 } ;;
 
@@ -720,7 +723,7 @@ let find_or_create tree_nodes name =
               it means that in the body of n1, call(s) to n2 is (are)
               performed.
 
-    {b Rem} : Not exported outside this module.                          *)
+    {b Rem} : Exported outside this module.                              *)
 (* ********************************************************************* *)
 let build_dependencies_graph_for_fields ~current_species fields =
   (* The root hoot used to remind all the created nodes in the graph. *)
@@ -822,7 +825,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
 (*   name_node list -> unit                                                 *)
 (** {b Descr} : Prints the dependencies graph of a species in dotty format.
 
-    {b Rem} : Not exported outside this module.                             *)
+    {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
 let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
   (* For each species, a file named with "deps_", the species name *)
@@ -1077,13 +1080,9 @@ let left_triangle dep_graph_nodes x1 x2 fields =
 
 (* ************************************************************************ *)
 (* current_species: Parsetree.qualified_vname ->                            *)
-(*   Env.TypeInformation.species_field list -> name_node list               *)
+(*   Env.TypeInformation.species_field list -> unit                         *)
 (** {b Descr} : Checks if a species is well-formed, applying the definition
               17 in Virgile Prevosto's Phd, section 3.5, page 32
-              If the species is well-formed, then returns it dependy graph
-              for all its fields.
-              Also output the dependencies as a dotty file if asked in the
-              command-line options.
 
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
@@ -1092,18 +1091,12 @@ let ensure_species_well_formed ~current_species fields =
   (* Now, let's build the global dependencies graph for all the names. *)
   let dep_graph_nodes =
     build_dependencies_graph_for_fields ~current_species fields in
-  (* If asked, generate the dotty output of the dependencies. *)
-  (match Configuration.get_dotty_dependencies () with
-   | None -> ()
-   | Some dirname ->
-       dependencies_graph_to_dotty ~dirname ~current_species dep_graph_nodes) ;
   (* Now check the well-formness. *)
   List.iter
     (fun x_name ->
       let ill_f = left_triangle dep_graph_nodes x_name x_name fields in
       if ill_f then raise (Ill_formed_species current_species))
-    names ;
-  dep_graph_nodes
+    names
 ;;
 
 

@@ -11,7 +11,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.mli,v 1.3 2007-08-14 13:20:26 pessaux Exp $ *)
+(* $Id: focalizec.mli,v 1.4 2007-10-09 08:38:15 pessaux Exp $ *)
+
 
 exception Bad_file_suffix of string
 

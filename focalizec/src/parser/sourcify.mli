@@ -1,5 +1,3 @@
-(* $Id: sourcify.mli,v 1.9 2007-10-02 09:29:36 pessaux Exp $ *)
-
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -12,6 +10,9 @@
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
+
+(* $Id: sourcify.mli,v 1.10 2007-10-09 08:38:15 pessaux Exp $ *)
+
 
 val pp_vname : Format.formatter -> Parsetree.vname -> unit
 val pp_vnames : string -> Format.formatter -> Parsetree.vname list -> unit

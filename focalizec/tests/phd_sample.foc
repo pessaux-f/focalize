@@ -75,3 +75,8 @@ collection Couple_d_entiers implements
   Monoide_produit (Les_entiers, Les_entiers)
 ;;
 
+let cinq = Les_entiers!parse ("5") ;;
+let cinq_carre = Les_entiers! ( * ) (cinq, #cinq) ;;
+let foo = Couple_d_entiers!creer (cinq, cinq_carre) ;;
+let foo2 = Couple_d_entiers! ( * ) (foo, foo) ;;
+basics#print_string (Couple_d_entiers!print (#foo2)) ;;

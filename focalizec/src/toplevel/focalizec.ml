@@ -11,8 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-
-(* $Id: focalizec.ml,v 1.18 2007-10-02 09:29:36 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.19 2007-10-09 08:38:15 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -94,15 +93,19 @@ let main () =
   (* Typechecks the AST. *)
   let (typing_toplevel_env, stuff_to_compile) =
     Infer.typecheck_file ~current_unit scoped_ast in
+  (* Now go to the OCaml code generation if requested. *)
+  let mlgen_toplevel_env =
+    if Configuration.get_generate_ocaml () then
+      (begin
+      let out_file_name = (Filename.chop_extension input_file_name) ^ ".ml" in
+      Main_ml_generation.root_compile
+	~current_unit ~out_file_name stuff_to_compile ;
+Env.MlGenEnv.empty ()  (* A CHANGER. *)
+      end)
+    else Env.MlGenEnv.empty () in
   (* Now, generate the persistent interface file. *)
   Env.make_fo_file
-    ~source_filename: input_file_name scoping_toplevel_env typing_toplevel_env ;
-  (* Now go to the OCaml code generation if requested. *)
-  if Configuration.get_generate_ocaml () then
-    (begin
-    let out_file_name = (Filename.chop_extension input_file_name) ^ ".ml" in
-    Core_ml_generation.root_compile
-      ~current_unit ~out_file_name stuff_to_compile
-    end) ;
+    ~source_filename: input_file_name
+    scoping_toplevel_env typing_toplevel_env mlgen_toplevel_env ;
   exit 0
 ;;

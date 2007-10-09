@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.mli,v 1.7 2007-10-02 09:29:36 pessaux Exp $ *)
+(* $Id: dep_analysis.mli,v 1.8 2007-10-09 08:38:16 pessaux Exp $ *)
 
 exception Ill_formed_species of Parsetree.qualified_vname
 
@@ -56,7 +56,7 @@ type name_node = {
 
 val ensure_species_well_formed :
   current_species: Parsetree.qualified_vname ->
-    Env.TypeInformation.species_field list -> name_node list
+    Env.TypeInformation.species_field list -> unit
 
 val ordered_names_list_of_fields :
   Env.TypeInformation.species_field list -> Parsetree.vname list
@@ -72,3 +72,11 @@ val compute_fields_reordering :
 
 val ordered_names_list_of_fields :
   Env.TypeInformation.species_field list -> Parsetree.vname list
+
+val build_dependencies_graph_for_fields :
+  current_species:Types.fname * Parsetree.vname ->
+    Env.TypeInformation.species_field list -> name_node list
+
+val dependencies_graph_to_dotty :
+  dirname: string -> current_species: Parsetree.qualified_vname ->
+    name_node list -> unit

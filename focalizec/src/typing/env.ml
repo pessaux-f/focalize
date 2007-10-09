@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.41 2007-10-02 09:29:36 pessaux Exp $ *)
+(* $Id: env.ml,v 1.42 2007-10-09 08:38:16 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -171,6 +171,22 @@ let env_from_only_absolute_bindings generic_env =
   { constructors = constructors' ; labels = labels' ; types = types' ;
     values = values' ; species = species' }
 ;;
+
+
+
+(* *********************************************************************** *)
+(* ('a, 'b, 'c) ->                                                         *)
+(*    - 'a                                                                 *)
+(*    - 'b                                                                 *)
+(*    - 'c                                                                 *)
+(** {b Descr} : Small helpers to access separately the three components of
+  a triplet. Nothing exciting... that's not science...
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+let triplet_fst (x, _, _) = x ;;
+let triplet_snd (_, x, _) = x ;;
+let triplet_thd (_, _, x) = x ;;
 
 
 
@@ -546,7 +562,32 @@ end ;;
 
 
 
-let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
+module MlGenInformation = struct
+  type collection_generator_parameters = unit list
+
+  type species_binding_info = collection_generator_parameters option
+
+
+  (* ************************************************************** *)
+  (** {b Descr} : Type abbreviation to shorten the structure of the
+                scoping environments.
+
+      {b Rem} : Not exported outside this module.                   *)
+  (* ************************************************************** *)
+  type env =
+    (unit, unit, unit, unit, species_binding_info) generic_env
+end ;;
+
+
+
+(* *********************************************************************** *)
+(* *********************************************************************** *)
+(* *********************************************************************** *)
+
+
+
+let (scope_find_module, type_find_module, mlgen_find_module,
+     scope_open_module, type_open_module, mlgen_open_module) =
   (* Let's just make the list used to bufferize opened files' content. *)
   (* Because ".fo" files contains always both the scoping and typing   *)
   (* information, once loaded for scoping purpose, the typing info     *)
@@ -554,7 +595,9 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
   (* no optionnal component.                                           *)
   let buffered =
     ref ([] :
-	   (Types.fname * (ScopeInformation.env * TypeInformation.env))
+	   (Types.fname *
+	     (ScopeInformation.env * TypeInformation.env *
+	      MlGenInformation.env))
 	   list) in
 
 
@@ -564,8 +607,8 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
   (*   (ScopeInformation.env * TypeInformation.env)                    *)
   (** {b Descr} : Wrapper to lookup inside an external interface file.
                 The lookup also performs a bufferisation to prevent
-                futhers calls from accessing again the disk. This
-                should enhance lookup speed.
+                futher calls from accessing again the disk. This
+	        should enhance lookup speed.
 
       {b Rem} : Not exported outside this module.                      *)
   (* ***************************************************************** *)
@@ -656,7 +699,7 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
      | None -> scope_env
      | Some fname ->
 	 if current_unit = fname then scope_env
-	 else fst (internal_find_module ~loc fname)),
+	 else triplet_fst (internal_find_module ~loc fname)),
 
 
 
@@ -679,7 +722,30 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
       | None -> type_env
       | Some fname ->
 	  if current_unit = fname then type_env
-	  else snd (internal_find_module ~loc fname)),
+	  else triplet_snd (internal_find_module ~loc fname)),
+
+
+
+   (* ******************************************************************* *)
+   (* mlgen_find_module                                                   *)
+   (*   loc: Location.t -> current_unit: Types.fname ->                   *)
+   (*   Types.fname option -> MlGenInformation.env ->                     *)
+   (*     MlGenInformation.env                                            *)
+   (** {b Descr} : Wrapper to lookup a ml generation environment inside
+                 an external interface file. Note that if it is requested
+                 to lookup inside the current compilation unit's
+                 environment (the current file has the same name than
+                 the looked-up module), then returned environment is
+                 the one initially passed as argument.
+
+       {b Rem} : Not exported outside this module.                        *)
+   (* ******************************************************************* *)
+   (fun ~loc ~current_unit fname_opt type_env ->
+     match fname_opt with
+      | None -> type_env
+      | Some fname ->
+	  if current_unit = fname then type_env
+	  else triplet_thd (internal_find_module ~loc fname)),
 
 
 
@@ -704,7 +770,7 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
        {b Rem} : Exported outside this module.                        *)
    (* *************************************************************** *)
    (fun ~loc fname env ->
-     let (loaded_scope_env, _) = internal_find_module ~loc fname in
+     let (loaded_scope_env, _, _) = internal_find_module ~loc fname in
      internal_extend_env fname loaded_scope_env env),
 
 
@@ -730,8 +796,34 @@ let (scope_find_module, type_find_module, scope_open_module, type_open_module) =
        {b Rem} : Exported outside this module.                        *)
    (* *************************************************************** *)
    (fun ~loc fname env ->
-     let (_, loaded_type_env) = internal_find_module ~loc fname in
-     internal_extend_env fname loaded_type_env env)
+     let (_, loaded_type_env, _) = internal_find_module ~loc fname in
+     internal_extend_env fname loaded_type_env env),
+
+
+
+   (* **************************************************************** *)
+   (* mlgen_open_module                                                *)
+   (*   loc: Location.t -> Types.fname ->                              *)
+   (*     (MlGenInformation.constructor_description,                   *)
+   (*      MlGenInformation.label_description,                         *)
+   (*      MlGenInformation.type_description,                          *)
+   (*      Types.type_scheme, MlGenInformation.species_description)    *)
+   (*     generic_env ->                                               *)
+   (*     (MlGenInformation.constructor_description,                   *)
+   (*      MlGenInformation.label_description,                         *)
+   (*      MlGenInformation.type_description,                          *)
+   (*      Types.type_scheme, TypeInformation.species_description)     *)
+   (*     generic_env                                                  *)
+   (** {b Descr} : Performs a full "open" directive on a ml generation
+                 environment. It add in head of the environment the
+                 bindings found in the "module" content, tagging them
+                 as beeing "opened".
+
+       {b Rem} : Exported outside this module.                         *)
+   (* **************************************************************** *)
+   (fun ~loc fname env ->
+     let (_, _, loaded_mlgen_env) = internal_find_module ~loc fname in
+     internal_extend_env fname loaded_mlgen_env env)
   )
 ;;
 
@@ -1305,18 +1397,43 @@ module TypingEnv = Make (TypingEMAccess) ;;
 
 
 
+module MlGenEMAccess = struct
+  type constructor_bound_data = unit
+  type label_bound_data = unit
+  type type_bound_data = unit
+  type value_bound_data = unit
+  type species_bound_data = MlGenInformation.species_binding_info
+
+  let find_module = mlgen_find_module
+  let pervasives () =
+    { constructors = [] ; labels = [] ; types = [] ; values = [] ;
+      species = [] }
+
+
+  let make_value_env_from_species_methods _species _spec_info =
+    assert false   (** Non sense for ml code generation environments ! *)
+
+
+  (* No real need in ml code generation environments case. *)
+  let post_process_method_value_binding _collname data = data
+end ;;
+module MlGenEnv = Make (MlGenEMAccess) ;;
+
+
+
 (* **************************************************************** *)
 (* source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t ->   *)
-(*    unit                                                          *)
+(*   MlGenEnv.t -> unit                                             *)
 (** {b Descr} : Create the "fo file" on disk related to the current
               compilation unit.
               This "fo file" contains :
                 - A magic number.
-                - A couple (scoping env * typing env).
+                - A triplet (scoping env * typing env * mlgen env).
 
     {b Rem} : Exported outside this module.                         *)
 (* **************************************************************** *)
-let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env =
+let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
+    mlgen_toplevel_env =
   (* First, recover from the scoping environment only bindings *)
   (* coming from definitions of our current compilation unit.  *)
   let scoping_toplevel_env' =
@@ -1325,6 +1442,10 @@ let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env =
   (* coming from definitions of our current compilation unit.  *)
   let typing_toplevel_env' =
     env_from_only_absolute_bindings typing_toplevel_env in
+  (* Finally, recover from the ml generation environment only bindings *)
+  (* coming from definitions of our current compilation unit.          *)
+  let mlgen_toplevel_env' =
+    env_from_only_absolute_bindings mlgen_toplevel_env in
   let module_name = Filename.chop_extension source_filename in
   let fo_basename = Files.fo_basename_from_module_name module_name in
   (* Add to the module name the path of the currently compiled source *)
@@ -1336,7 +1457,8 @@ let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env =
   (* First, write the magic number of the file. *)
   Files.write_magic out_hd Files.fo_magic  ;
   (* And now the filtered environments. *)
-  output_value out_hd (scoping_toplevel_env', typing_toplevel_env') ;
+  output_value
+    out_hd (scoping_toplevel_env', typing_toplevel_env', mlgen_toplevel_env') ;
   (* Just don't forget to close the output file... *)
   close_out out_hd
 ;;

@@ -13,7 +13,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.11 2007-10-02 09:29:36 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.12 2007-10-09 08:38:15 pessaux Exp $ *)
+
 
 exception Input_file_already_set ;;
 

@@ -11,20 +11,17 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.19 2007-10-02 09:29:36 pessaux Exp $ *)
+(* $Id: types.mli,v 1.20 2007-10-09 08:38:15 pessaux Exp $ *)
+
 
 (** Types of various identifiers in the abstract syntax tree. *)
-
-
 type fname = string
 type collection_name = string
 type type_name
 type label_name = string
 
 (** The type algebra for focalize. *)
-
 type type_simple
-
 type type_scheme
 type type_collection = (fname * collection_name)
 

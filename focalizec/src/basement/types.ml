@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.28 2007-10-02 09:29:36 pessaux Exp $ *)
+(* $Id: types.ml,v 1.29 2007-10-09 08:38:15 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1077,10 +1077,16 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
 	      (module_name, collection_name) collections_carrier_mapping in
 	  Format.fprintf ppf "%s" coll_type_variable
 	with Not_found ->
-	  (* Thank's to the all bunch of analyses performed, we should *)
-	  (* never be not able to find the type variable representing  *)
-	  (* the carrier type of a species in the OCaml translation.   *)
-	  assert false
+	  (* If the carrier is not in the mapping created for the species *)
+	  (* parameters, that's because the searched species carrier's is *)
+          (* not a species parameter, i.e. it's a toplevel species.       *)
+	  (* And as always, the type's name representing a species's      *)
+	  (* carrier is "me_as_carrier".                                  *)
+	  if current_unit = module_name then
+	    Format.fprintf ppf "%s.me_as_carrier" collection_name
+	  else
+	    Format.fprintf ppf "%s.%s.me_as_carrier"
+	      (String.capitalize module_name) collection_name
         end) in
 
   (* ************************************************* *)

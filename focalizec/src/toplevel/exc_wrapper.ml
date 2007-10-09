@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.19 2007-10-02 09:29:36 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.20 2007-10-09 08:38:15 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -182,11 +182,11 @@ try Check_file.main () with
 	   Sourcify.pp_qualified_vname species_name
 (* ********************** *)
 (* OCaml code generation. *)
-     | Core_ml_generation.No_external_value_caml_def (def_name, at) ->
+     | Externals_ml_generation.No_external_value_caml_def (def_name, at) ->
 	 Format.fprintf Format.err_formatter
 	   "%a:@\nNo OCaml mapping given for the external value definition '%a'.@."
 	   Location.pp_location at Sourcify.pp_vname def_name
-     | Core_ml_generation.No_external_type_caml_def (def_name, at) ->
+     | Externals_ml_generation.No_external_type_caml_def (def_name, at) ->
 	 Format.fprintf Format.err_formatter
 	   "%a:@\nNo OCaml mapping given for the external type definition '%a'.@."
 	   Location.pp_location at Sourcify.pp_vname def_name

@@ -1,5 +1,3 @@
-(* $Id: files.mli,v 1.6 2007-08-15 15:25:07 pessaux Exp $ *)
-
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -12,6 +10,8 @@
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
+
+(* $Id: files.mli,v 1.7 2007-10-09 08:38:15 pessaux Exp $ *)
 
 
 exception Cant_access_file_in_search_path of Types.fname

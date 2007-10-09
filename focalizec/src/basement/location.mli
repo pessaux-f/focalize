@@ -11,8 +11,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* $Id: location.mli,v 1.3 2007-10-09 08:38:15 pessaux Exp $ *) 
 
-(* $Id: location.mli,v 1.2 2007-08-22 14:17:08 pessaux Exp $ *) 
 
 type position = Lexing.position = {
   pos_fname : string ;
