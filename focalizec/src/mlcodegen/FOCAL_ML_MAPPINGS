@@ -43,14 +43,18 @@ In a species, type variable representing our carrier:
   "'me_as_carrier"
 
 In a species, in its record type, names of the methods of this species:
-  lowercased name of the species + "_" + name of the method
+  uncapitalized name of the species + "_" + name of the method
 
 In a species, name of the variable type representing this species's carrier:
   "'me_as_carrier"
 
 In a species, type variables names representing the species parameters carriers:
-  "'" + lowercased name of the species parameter + "_as_carrier"
+  "'" + uncapitalized name of the species parameter + "_as_carrier"
 
 In collection generator, name of the local function to assign in the record
 value bucket of a method:
   "local_" + name of the method
+
+In a collection, name of the value representing the effective collection's
+instance:
+  "effective_collection"
