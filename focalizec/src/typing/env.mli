@@ -91,8 +91,10 @@ module TypeInformation :
 
 module MlGenInformation :
   sig
-    type collection_generator_parameters = unit list
-    type species_binding_info = collection_generator_parameters option
+    type collection_generator_parameters =
+      (Parsetree.vname * Parsetree_utils.VnameSet.t) list
+    type species_binding_info =
+      ((Parsetree.vname list) * collection_generator_parameters) option
   end
 
 
@@ -179,7 +181,7 @@ module MlGenEnv :
       Parsetree.vname -> MlGenInformation.species_binding_info -> t
 	-> t
     val find_species :
-      loc: Location.t -> current_unit: Types.fname ->Parsetree.ident ->
+      loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
 	t -> MlGenInformation.species_binding_info
   end
 

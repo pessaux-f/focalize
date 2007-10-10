@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.42 2007-10-09 08:38:16 pessaux Exp $ *)
+(* $Id: env.ml,v 1.43 2007-10-10 15:27:43 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -171,22 +171,6 @@ let env_from_only_absolute_bindings generic_env =
   { constructors = constructors' ; labels = labels' ; types = types' ;
     values = values' ; species = species' }
 ;;
-
-
-
-(* *********************************************************************** *)
-(* ('a, 'b, 'c) ->                                                         *)
-(*    - 'a                                                                 *)
-(*    - 'b                                                                 *)
-(*    - 'c                                                                 *)
-(** {b Descr} : Small helpers to access separately the three components of
-  a triplet. Nothing exciting... that's not science...
-
-    {b Rem} : Not exported outside this module.                            *)
-(* *********************************************************************** *)
-let triplet_fst (x, _, _) = x ;;
-let triplet_snd (_, x, _) = x ;;
-let triplet_thd (_, _, x) = x ;;
 
 
 
@@ -563,9 +547,28 @@ end ;;
 
 
 module MlGenInformation = struct
-  type collection_generator_parameters = unit list
+  type collection_generator_parameters =
+     (** The list mapping for each parameter name, the set of methods the
+	 collection generator depends on, hence must be provided an instance
+	 to be used. Note that the list is not guaranted to be ordered
+         according to the order of the species parameters names (that's why
+         we have the information about this order given in
+	 [species_binding_info]). *)
+     (Parsetree.vname * Parsetree_utils.VnameSet.t) list
 
-  type species_binding_info = collection_generator_parameters option
+
+
+  type species_binding_info =
+    (** The list of species parameters names the species whose collection
+	generator belongs to has. This list is positionnal, i.e. that the
+	first name of the list is the name of the first species parameter
+	and so on. *)
+    ((Parsetree.vname list) *
+     collection_generator_parameters)
+	(** Optionnal because species that are non fully defined do not have
+	    any collection generator although they are entered in the
+	    environment. *)
+	option
 
 
   (* ************************************************************** *)
@@ -584,6 +587,12 @@ end ;;
 (* *********************************************************************** *)
 (* *********************************************************************** *)
 
+type fo_file_structure = {
+  ffs_scoping : ScopeInformation.env ;
+  ffs_typing : TypeInformation.env ;
+  ffs_mlgeneration : MlGenInformation.env
+} ;;
+
 
 
 let (scope_find_module, type_find_module, mlgen_find_module,
@@ -591,14 +600,9 @@ let (scope_find_module, type_find_module, mlgen_find_module,
   (* Let's just make the list used to bufferize opened files' content. *)
   (* Because ".fo" files contains always both the scoping and typing   *)
   (* information, once loaded for scoping purpose, the typing info     *)
-  (* is made available. Hence, the buffer list contains couples with   *)
-  (* no optionnal component.                                           *)
-  let buffered =
-    ref ([] :
-	   (Types.fname *
-	     (ScopeInformation.env * TypeInformation.env *
-	      MlGenInformation.env))
-	   list) in
+  (* and ml code generation information are made available. Hence, the *)
+  (* buffer list contains couples with no optionnal component.         *)
+  let buffered = ref ([] : (Types.fname * fo_file_structure) list) in
 
 
 
@@ -699,7 +703,7 @@ let (scope_find_module, type_find_module, mlgen_find_module,
      | None -> scope_env
      | Some fname ->
 	 if current_unit = fname then scope_env
-	 else triplet_fst (internal_find_module ~loc fname)),
+	 else (internal_find_module ~loc fname).ffs_scoping),
 
 
 
@@ -722,7 +726,7 @@ let (scope_find_module, type_find_module, mlgen_find_module,
       | None -> type_env
       | Some fname ->
 	  if current_unit = fname then type_env
-	  else triplet_snd (internal_find_module ~loc fname)),
+	  else (internal_find_module ~loc fname).ffs_typing),
 
 
 
@@ -745,7 +749,7 @@ let (scope_find_module, type_find_module, mlgen_find_module,
       | None -> type_env
       | Some fname ->
 	  if current_unit = fname then type_env
-	  else triplet_thd (internal_find_module ~loc fname)),
+	  else (internal_find_module ~loc fname).ffs_mlgeneration),
 
 
 
@@ -770,7 +774,7 @@ let (scope_find_module, type_find_module, mlgen_find_module,
        {b Rem} : Exported outside this module.                        *)
    (* *************************************************************** *)
    (fun ~loc fname env ->
-     let (loaded_scope_env, _, _) = internal_find_module ~loc fname in
+     let loaded_scope_env = (internal_find_module ~loc fname).ffs_scoping in
      internal_extend_env fname loaded_scope_env env),
 
 
@@ -796,7 +800,7 @@ let (scope_find_module, type_find_module, mlgen_find_module,
        {b Rem} : Exported outside this module.                        *)
    (* *************************************************************** *)
    (fun ~loc fname env ->
-     let (_, loaded_type_env, _) = internal_find_module ~loc fname in
+     let loaded_type_env = (internal_find_module ~loc fname).ffs_typing in
      internal_extend_env fname loaded_type_env env),
 
 
@@ -822,7 +826,8 @@ let (scope_find_module, type_find_module, mlgen_find_module,
        {b Rem} : Exported outside this module.                         *)
    (* **************************************************************** *)
    (fun ~loc fname env ->
-     let (_, _, loaded_mlgen_env) = internal_find_module ~loc fname in
+     let loaded_mlgen_env =
+       (internal_find_module ~loc fname).ffs_mlgeneration in
      internal_extend_env fname loaded_mlgen_env env)
   )
 ;;
@@ -1279,7 +1284,7 @@ module ScopingEMAccess = struct
                In fact, we need to enter methods in the environment as
                [SBI_method_of_self] instead of [SBI_method_of_coll]
                otherwise when we would scope a real method of [Self], if
-               this méthode was bound to, for instance "KikooSpecies", then
+               this method was bound to, for instance "KikooSpecies", then
                once scoped, the AST would return an [ident] explicitly
                shaped like "KikooSpecies!meth" instead of "Self!meth".
                This would force the method to be the one of this species
@@ -1390,7 +1395,7 @@ module TypingEMAccess = struct
 
 
 
-  (* Not yet thought about. *)
+  (* No real need in the typing environment case. *)
   let post_process_method_value_binding _collname data = data
 end ;;
 module TypingEnv = Make (TypingEMAccess) ;;
@@ -1414,7 +1419,7 @@ module MlGenEMAccess = struct
     assert false   (** Non sense for ml code generation environments ! *)
 
 
-  (* No real need in ml code generation environments case. *)
+  (* No real need in the ml code generation environment case. *)
   let post_process_method_value_binding _collname data = data
 end ;;
 module MlGenEnv = Make (MlGenEMAccess) ;;

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.1 2007-10-09 08:37:35 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.2 2007-10-10 15:27:43 pessaux Exp $ *)
 
 
 (* ********************************************************************* *)
@@ -282,7 +282,7 @@ type compiled_field_memory ={
       parameter's name and the second is the set of methods the current
       method depends on from this species parameter.*)
   cfm_dependencies_from_parameters :
-    (Parsetree.vname * Dep_analysis.VnameSet.t) list ;
+    (Parsetree.vname * Parsetree_utils.VnameSet.t) list ;
   (** The methods of our inheritance tree the method depends on. *)
   cfm_decl_children :
     (Dep_analysis.name_node * Dep_analysis.dependency_kind) list ;
@@ -388,7 +388,7 @@ let generate_methods ctx species_parameters_names field =
 	    (String.uncapitalize
 	       (Parsetree_utils.name_of_vname species_param_name)) ^
 	    "_" in
-	  Dep_analysis.VnameSet.iter
+	  Parsetree_utils.VnameSet.iter
 	    (fun meth ->
 	      Format.fprintf out_fmter "@ %s%a"
 		prefix Misc_ml_generation.pp_to_ocaml_vname meth)
@@ -523,7 +523,8 @@ let dump_collection_generator_arguments out_fmter compiled_species_fields =
   (* Let's create an assoc list mapping for each species paramater name *)
   (* the set of methods names from it that needed to be lambda-lifted,  *)
   (* hence that will lead to parameters of the collection generator.    *)
-  let species_param_names_and_methods = ref [] in
+  let species_param_names_and_methods =
+    ref ([] : (Parsetree.vname * Parsetree_utils.VnameSet.t ref) list) in
   (* ************************************************************************ *)
   (** {b Descr} :  Local function to process only one [compiled_field_memory].
          Handy to factorize the code in both the cases of [CSF_let] and
@@ -541,14 +542,14 @@ let dump_collection_generator_arguments out_fmter compiled_species_fields =
 	let spe_param_bucket =
 	  (try List.assoc spe_param_name !species_param_names_and_methods
 	  with Not_found ->
-	    let bucket = ref Dep_analysis.VnameSet.empty in
+	    let bucket = ref Parsetree_utils.VnameSet.empty in
 	    species_param_names_and_methods :=
 	      (spe_param_name, bucket) :: !species_param_names_and_methods ;
 	    bucket) in
 	(* And now, union the current methods we depend on with *)
 	(* the already previously recorded.                     *)
 	spe_param_bucket :=
-	  Dep_analysis.VnameSet.union meths_set !spe_param_bucket)
+	  Parsetree_utils.VnameSet.union meths_set !spe_param_bucket)
       field_memory.cfm_dependencies_from_parameters in
 
   (* ********************************************************** *)
@@ -572,14 +573,17 @@ let dump_collection_generator_arguments out_fmter compiled_species_fields =
 	(String.uncapitalize
 	   (Parsetree_utils.name_of_vname species_param_name)) ^
 	"_" in
-      Dep_analysis.VnameSet.iter
+      Parsetree_utils.VnameSet.iter
 	(fun meth ->
 	  Format.fprintf out_fmter "@ %s%a"
 	    prefix Misc_ml_generation.pp_to_ocaml_vname meth)
 	!meths_set)
   !species_param_names_and_methods ;
-  (* Finally, make this parameters information public by returning it. *)
-  !species_param_names_and_methods
+  (* Finally, make this parameters information public by returning it. By     *)
+  (* the way, the ref on the inner set is not anymore needed, then remove it. *)
+  List.map
+    (fun (sp_par_name, meths_set) -> (sp_par_name, !meths_set))
+    !species_param_names_and_methods
 ;;
 
 
@@ -642,7 +646,7 @@ let generate_collection_generator ctx compiled_species_fields =
 	  (String.uncapitalize
 	     (Parsetree_utils.name_of_vname species_param_name)) ^
 	  "_" in
-	Dep_analysis.VnameSet.iter
+	Parsetree_utils.VnameSet.iter
 	  (fun meth ->
 	    Format.fprintf out_fmter "@ %s%a"
 	      prefix Misc_ml_generation.pp_to_ocaml_vname meth)
@@ -670,8 +674,11 @@ let generate_collection_generator ctx compiled_species_fields =
   Format.fprintf out_fmter "@[<2>let collection_create" ;
   (* Generate the parameters the collection generator needs to build the   *)
   (* each of the current species's local function (functions corresponding *)
-  (* to the actuall method stored in the collection record).               *)
-  let _public_stuff_to_use_later =
+  (* to the actuall method stored in the collection record). By the way,   *)
+  (* recover the list of species parameters linked together with their     *)
+  (* methods we need to instanciate in order to apply the collection       *)
+  (* generator.                                                            *)
+  let extra_args_from_spe_params =
     dump_collection_generator_arguments out_fmter compiled_species_fields in
   Format.fprintf out_fmter " =@ " ;
   (* Generate the local functions that will be used to fill the record value. *)
@@ -715,12 +722,15 @@ let generate_collection_generator ctx compiled_species_fields =
   Format.fprintf ctx.scc_out_fmter "@ }@]@\n" ;
   (* Close the pretty-print box of the "let collection_create =". *)
   Format.fprintf ctx.scc_out_fmter "@]@\n" ;
+  extra_args_from_spe_params
 ;;
 
 
        
-let species_compile ~current_unit out_fmter species_name species_descr
+let species_compile ~current_unit out_fmter species_def species_descr
     dep_graph =
+  let species_def_desc = species_def.Parsetree.ast_desc in
+  let species_name = species_def_desc.Parsetree.sd_name in
   (* Just a bit of debug. *)
   if Configuration.get_verbose () then
     Format.eprintf "Generating OCaml code for species %a@."
@@ -755,16 +765,34 @@ let species_compile ~current_unit out_fmter species_name species_descr
     List.map
       (generate_methods ctx species_parameters_names)
       species_descr.Env.TypeInformation.spe_sig_methods in
-  (* Now check if the species supports a collection *)
-  (* generator because fully defined.               *)
-  if species_descr.Env.TypeInformation.spe_is_closed then
-    generate_collection_generator ctx compiled_fields ;
-  Format.fprintf out_fmter "end ;;@]@\n@."
+  (* Now build the list of the species parameters names to make *)
+  (* them public in the future ml generation environnment.      *)
+  let species_params_names =
+    List.map fst species_def_desc.Parsetree.sd_params in
+  (* Now check if the species supports a collection generator because fully *)
+  (* defined and get the information about which arguments to pass in order *)
+  (* to later call the collection generator.                                *)
+  let extra_args_from_spe_params =
+    if species_descr.Env.TypeInformation.spe_is_closed then
+      Some
+	(species_params_names,
+	 (generate_collection_generator ctx compiled_fields))
+    else None in
+  Format.fprintf out_fmter "end ;;@]@\n@." ;
+  (* Return what is needed to enter this species *)
+  (* in the  ml generation environnment. *)
+  extra_args_from_spe_params
 ;;
 
 
 
-let collection_compile ~current_unit out_fmter coll_def coll_descr dep_graph =
+let apply_generator_to_parameters _coll_body_params _params_info =
+() ;;  
+
+
+
+let collection_compile ~current_unit out_fmter env coll_def coll_descr
+    dep_graph =
   let coll_name = coll_def.Parsetree.ast_desc.Parsetree.cd_name in
   (* Just a bit of debug. *)
   if Configuration.get_verbose () then
@@ -816,9 +844,34 @@ let collection_compile ~current_unit out_fmter coll_def coll_descr dep_graph =
   (* the closed species we implement has (if it has some). We must         *)
   (* make this application WITH THE RIGHT EFFECTIVE FUNCTIONS and IN THE   *)
   (* RIGHT ORDER !                                                         *)
-
-  (* End the definition of the value representing the effective instance. *)
-  Format.fprintf out_fmter "@]@\n" ;
-  (* End the module representing the collection. *)
-  Format.fprintf out_fmter "end ;;@]@\n@."
+  (begin
+  try
+    let opt_params_info =
+      Env.MlGenEnv.find_species
+	~loc: coll_def.Parsetree.ast_loc ~current_unit
+	implemented_species_name env in
+    (match opt_params_info with
+     | None ->
+	 (* The species has no collection generator. Hence it is not a   *)
+	 (* fully defined species. This should have be prevented before, *)
+	 (* by forbidding to make a collection from a non fully defined  *)
+         (* species !                                                    *)
+	 assert false          (* [Unsure]. *)
+     | Some params_info ->
+	 let coll_body_params =
+	   coll_def.Parsetree.ast_desc.Parsetree.cd_body.Parsetree.ast_desc.
+	     Parsetree.se_params in
+	 apply_generator_to_parameters coll_body_params params_info) ;
+    (* End the definition of the value representing the effective instance. *)
+    Format.fprintf out_fmter "@]@\n" ;
+    (* End the module representing the collection. *)
+    Format.fprintf out_fmter "end ;;@]@\n@."
+  with Not_found ->
+    (* Don't see why the species could not be present in the environment.  *)
+    (* The only case would be to make a collection from a collection since *)
+    (* collection are never entered in the environment because it's a non  *)
+    (* sense to make a collection "implementing" a collection !            *)
+    (* [Unsure]. *)
+    assert false
+  end)
 ;;

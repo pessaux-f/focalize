@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.ml,v 1.21 2007-10-09 08:38:15 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.22 2007-10-10 15:27:43 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -39,21 +39,9 @@ exception Ill_formed_species of Parsetree.qualified_vname ;;
 
 
 
-(* *************************************************************** *)
-(** {b Descr} : Module stuff to create sets of [Parsetree.vname]s.
-              This will serves to make sets of methods [vname]s in
-              order to represent dependencies.
-
-    {b Rem} : Not exported outside this module.                    *)
-(* *************************************************************** *)
-module VnameMod = struct type t = Parsetree.vname let compare = compare end ;;
-module VnameSet = Set.Make (VnameMod) ;;
-
-
-
 (* ****************************************************************** *)
 (* current_species: Parsetree.qualified_vname -> Parsetree.expr ->    *)
-(*  VnameSet.t                                                        *)
+(*  Parsetree_utils.VnameSet.t                                        *)
 (** {b Descr} : Compute the set of vnames the expression [expression]
               decl-depends of in the species [~current_species].
 
@@ -65,7 +53,7 @@ let expr_decl_dependencies ~current_species expression =
   let rec rec_depend expr =
     match expr.Parsetree.ast_desc with
      | Parsetree.E_self
-     | Parsetree.E_const _ -> VnameSet.empty
+     | Parsetree.E_const _ -> Parsetree_utils.VnameSet.empty
      | Parsetree.E_fun (_, body) -> rec_depend body
      | Parsetree.E_var ident ->
 	 (begin
@@ -76,15 +64,15 @@ let expr_decl_dependencies ~current_species expression =
 	      (* they indeed denoted methods, we can safely consider that     *)
               (* remaining "local identifiers" are really local and introduce *)
 	      (* no dependency.                                               *)
-	      VnameSet.empty
-	  | Parsetree.EI_global (_, _) -> VnameSet.empty
+	      Parsetree_utils.VnameSet.empty
+	  | Parsetree.EI_global (_, _) -> Parsetree_utils.VnameSet.empty
 	  | Parsetree.EI_method (coll_specifier_opt, vname) ->
 	      (begin
 	      match coll_specifier_opt with
 	       | None ->
                    (* Case c!x in Virgile Prevosto's Phd, section 3.5, *)
 		   (* page 30, definition 12.                          *)
-		   VnameSet.singleton vname
+		   Parsetree_utils.VnameSet.singleton vname
 	       | Some coll_specifier ->
 		   (begin
 		   match coll_specifier with
@@ -96,63 +84,70 @@ let expr_decl_dependencies ~current_species expression =
 			if current_species = (module_name, coll_name) then
 			  (* Case c!x in Virgile Prevosto's Phd, section 3.5, *)
 			  (* page 30, definition 12.                          *)
-			  VnameSet.singleton vname
-			else VnameSet.empty
+			  Parsetree_utils.VnameSet.singleton vname
+			else Parsetree_utils.VnameSet.empty
 		   end)
 	      end)
 	 end)
      | Parsetree.E_app (fun_expr, args_exprs) ->
 	 let fun_expr_deps = rec_depend fun_expr in
 	 List.fold_left
-	   (fun accu_deps e -> VnameSet.union (rec_depend e) accu_deps)
+	   (fun accu_deps e ->
+	     Parsetree_utils.VnameSet.union (rec_depend e) accu_deps)
 	   fun_expr_deps
 	   args_exprs
      | Parsetree.E_constr (_, args_exprs) ->
 	 List.fold_left
-	   (fun accu_deps e -> VnameSet.union (rec_depend e) accu_deps)
-	   VnameSet.empty
+	   (fun accu_deps e ->
+	     Parsetree_utils.VnameSet.union (rec_depend e) accu_deps)
+	   Parsetree_utils.VnameSet.empty
 	   args_exprs
      | Parsetree.E_match (matched_e, pats_exprs) ->
 	 let matched_e_deps = rec_depend matched_e in
 	 List.fold_left
-	   (fun accu_deps (_, e) -> VnameSet.union (rec_depend e) accu_deps)
+	   (fun accu_deps (_, e) ->
+	     Parsetree_utils.VnameSet.union (rec_depend e) accu_deps)
 	   matched_e_deps
 	   pats_exprs
      | Parsetree.E_if (if_expr, then_expr, else_expr) ->
 	 let if_expr_deps = rec_depend if_expr in
          let then_expr_deps = rec_depend  then_expr in
 	 let else_expr_deps = rec_depend else_expr in
-	 VnameSet.union
-	   if_expr_deps (VnameSet.union then_expr_deps else_expr_deps)
+	 Parsetree_utils.VnameSet.union
+	   if_expr_deps
+           (Parsetree_utils.VnameSet.union then_expr_deps else_expr_deps)
      | Parsetree.E_let (let_def, in_expr) ->
 	 (* No substration here because the let-definition *)
          (* is NOT a field definition !                    *)
 	 let in_expr_deps = rec_depend in_expr in
 	 List.fold_left
 	   (fun accu_deps binding ->
-	     VnameSet.union
+	     Parsetree_utils.VnameSet.union
 	       (rec_depend binding.Parsetree.ast_desc.Parsetree.b_body)
 	       accu_deps)
 	   in_expr_deps
 	   let_def.Parsetree.ast_desc.Parsetree.ld_bindings
      | Parsetree.E_record labels_exprs ->
 	 List.fold_left
-	   (fun accu_deps (_, e) -> VnameSet.union (rec_depend e) accu_deps)
-	   VnameSet.empty
+	   (fun accu_deps (_, e) ->
+	     Parsetree_utils.VnameSet.union (rec_depend e) accu_deps)
+	   Parsetree_utils.VnameSet.empty
 	   labels_exprs
      | Parsetree.E_record_access (e, _) -> rec_depend e
      | Parsetree.E_record_with (e, labels_exprs) ->
 	 let e_deps = rec_depend e in
 	 List.fold_left
-	   (fun accu_deps (_, e) -> VnameSet.union (rec_depend e) accu_deps)
+	   (fun accu_deps (_, e) ->
+	     Parsetree_utils.VnameSet.union (rec_depend e) accu_deps)
 	   e_deps
 	   labels_exprs
      | Parsetree.E_tuple exprs ->
 	 List.fold_left
-	   (fun accu_deps e -> VnameSet.union (rec_depend e) accu_deps)
-	   VnameSet.empty
+	   (fun accu_deps e ->
+	     Parsetree_utils.VnameSet.union (rec_depend e) accu_deps)
+	   Parsetree_utils.VnameSet.empty
 	   exprs
-     | Parsetree.E_external _ -> VnameSet.empty
+     | Parsetree.E_external _ -> Parsetree_utils.VnameSet.empty
      | Parsetree.E_paren e -> rec_depend e in
   rec_depend expression
 ;;
@@ -161,7 +156,7 @@ let expr_decl_dependencies ~current_species expression =
 
 (* **************************************************************** *)
 (* current_species: Parsetree.qualified_vname -> Parsetree.prop ->  *)
-(*   VnameSet.t                                                     *)
+(*   Parsetree_utils.VnameSet.t                                     *)
 (** {b Descr} : Compute the set of vnames the prop expression
               [initial_prop_expression] decl-depends in the species
               [~current_species].
@@ -181,7 +176,7 @@ let prop_decl_dependencies ~current_species initial_prop_expression =
      | Parsetree.Pr_equiv (prop1, prop2) ->
 	 let prop1_decl_deps = rec_depend prop1 in
 	 let prop2_decl_deps = rec_depend prop2 in
-	 (VnameSet.union prop1_decl_deps prop2_decl_deps)
+	 (Parsetree_utils.VnameSet.union prop1_decl_deps prop2_decl_deps)
      | Parsetree.Pr_expr expr ->
 	 expr_decl_dependencies ~current_species expr in
   (* **************** *)
@@ -193,7 +188,7 @@ let prop_decl_dependencies ~current_species initial_prop_expression =
 
 (* ************************************************************************ *)
 (* current_species: Parsetree.qualified_vname -> Parsetree.ident->          *)
-(*   VnameSet.t                                                             *)
+(*   Parsetree_utils.VnameSet.t                                             *)
 (** {b Descr} : Compute the set of vnames the identifier [ident] represents
               as dependencies when this ident is located in a [fact].
               In such a context, the [ident] is in fact a dependency.
@@ -219,11 +214,12 @@ let ident_in_fact_dependencies ~current_species ident =
        (* Since dependencies are computed inside A species architecture,   *)
        (* invocation of a global stuff does not involve dependency because *)
        (* it does not belong to the currently analyzed species.            *)
-       VnameSet.empty
+       Parsetree_utils.VnameSet.empty
    | Parsetree.EI_method (coll_specifier_opt, vname) ->
        (begin
        match coll_specifier_opt with
-	| None -> VnameSet.singleton vname            (* A method of Self. *)
+	| None ->
+	    Parsetree_utils.VnameSet.singleton vname     (* A method of Self. *)
 	| Some coll_specifier ->
 	   (begin
 	   match coll_specifier with
@@ -239,9 +235,11 @@ let ident_in_fact_dependencies ~current_species ident =
 		(* match the [current_species] then are are still in the     *)
                 (* case of Self. Else we are in the case of another species. *)
                 if (module_name, coll_vname) = current_species then
-		  VnameSet.singleton vname            (* A method of Self. *)
+		  (* A method of Self. *)
+		  Parsetree_utils.VnameSet.singleton vname
 		else
-		  VnameSet.empty (* Method from another species, then no dep. *)
+		  (* Method from another species, then no dep. *)
+		  Parsetree_utils.VnameSet.empty
 		end)
 	   end)
        end)
@@ -251,7 +249,7 @@ let ident_in_fact_dependencies ~current_species ident =
 
 (* ******************************************************************* *)
 (* current_species: Parsetree.qualified_vname -> Parsetree.fact->      *)
-(*   (VnameSet.t * VnameSet.t)                                         *)
+(*   (Parsetree_utils.VnameSet.t * Parsetree_utils.VnameSet.t)         *)
 (** {b Descr} : Compute the set of vnames the fact [fact] decl-depends
               and def-depends of in the species [~current_species].
 
@@ -265,11 +263,11 @@ let fact_decl_n_def_dependencies ~current_species fact =
        let decl_deps =
 	 List.fold_left
 	   (fun accu ident ->
-	     VnameSet.union accu
+	     Parsetree_utils.VnameSet.union accu
 	       (ident_in_fact_dependencies ~current_species ident))
-	   VnameSet.empty
+	   Parsetree_utils.VnameSet.empty
 	   idents in
-       (decl_deps, VnameSet.empty)
+       (decl_deps, Parsetree_utils.VnameSet.empty)
        end)
    | Parsetree.F_def idents ->
        (begin
@@ -277,14 +275,15 @@ let fact_decl_n_def_dependencies ~current_species fact =
        let def_deps =
 	 List.fold_left
 	   (fun accu ident ->
-	     VnameSet.union accu
+	     Parsetree_utils.VnameSet.union accu
 	       (ident_in_fact_dependencies ~current_species ident))
-	   VnameSet.empty
+	   Parsetree_utils.VnameSet.empty
 	   idents in
-       (VnameSet.empty, def_deps)
+       (Parsetree_utils.VnameSet.empty, def_deps)
        end)
    | Parsetree.F_hypothesis _
-   | Parsetree.F_node _ -> (VnameSet.empty, VnameSet.empty)
+   | Parsetree.F_node _ ->
+       (Parsetree_utils.VnameSet.empty, Parsetree_utils.VnameSet.empty)
 ;;
 
 
@@ -293,7 +292,7 @@ let hyp_decl_dependencies ~current_species hyp =
   match hyp.Parsetree.ast_desc with
    | Parsetree.H_var (_, _) ->
        (* No decl-dependency from type expressions. *)
-       VnameSet.empty
+       Parsetree_utils.VnameSet.empty
    | Parsetree.H_hyp (_, prop) -> prop_decl_dependencies ~current_species prop
    | Parsetree.H_not (_, expr) -> expr_decl_dependencies ~current_species expr
 ;;
@@ -307,8 +306,8 @@ let statement_decl_dependencies ~current_species stmt =
     List.fold_left
       (fun accu_decl_deps hyp ->
 	let hyp_decl_deps = hyp_decl_dependencies ~current_species hyp in
-	VnameSet.union accu_decl_deps hyp_decl_deps)
-      VnameSet.empty
+	Parsetree_utils.VnameSet.union accu_decl_deps hyp_decl_deps)
+      Parsetree_utils.VnameSet.empty
       stmt_desc.Parsetree.s_hyps in
   (* An now, accumulate with those of the conclusion *)
   match stmt_desc.Parsetree.s_concl with
@@ -316,7 +315,7 @@ let statement_decl_dependencies ~current_species stmt =
    | Some prop ->
        let prop_decl_defs =
 	 prop_decl_dependencies ~current_species prop in
-       VnameSet.union hyps_decl_deps prop_decl_defs
+       Parsetree_utils.VnameSet.union hyps_decl_deps prop_decl_defs
 
 ;;
 
@@ -325,7 +324,8 @@ let statement_decl_dependencies ~current_species stmt =
 let rec proof_decl_n_def_dependencies ~current_species proof =
   match proof.Parsetree.ast_desc with
    | Parsetree.Pf_assumed
-   | Parsetree.Pf_coq _ -> (VnameSet.empty, VnameSet.empty)
+   | Parsetree.Pf_coq _ ->
+       (Parsetree_utils.VnameSet.empty, Parsetree_utils.VnameSet.empty)
    | Parsetree.Pf_auto facts ->
        (begin
        List.fold_left
@@ -333,9 +333,9 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
 	   let (fact_decl_deps, fact_def_deps) =
 	     fact_decl_n_def_dependencies ~current_species fact in
 	   (* Return both "decl" and "def" dependencies. *)
-	   ((VnameSet.union accu_decl_deps fact_decl_deps),
-	    (VnameSet.union accu_def_deps fact_def_deps)))
-	 (VnameSet.empty, VnameSet.empty)
+	   ((Parsetree_utils.VnameSet.union accu_decl_deps fact_decl_deps),
+	    (Parsetree_utils.VnameSet.union accu_def_deps fact_def_deps)))
+	 (Parsetree_utils.VnameSet.empty, Parsetree_utils.VnameSet.empty)
 	 facts
        end)
    | Parsetree.Pf_node proof_nodes ->
@@ -350,14 +350,16 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
 		  (* Statement only have decl-dependencies. *)
 		  let stmt_decl_deps =
 		    statement_decl_dependencies ~current_species stmt in
-		  ((VnameSet.union sub_proof_decl_deps stmt_decl_deps),
+		  ((Parsetree_utils.VnameSet.union
+		      sub_proof_decl_deps stmt_decl_deps),
 		   sub_proof_def_deps)
 	      | Parsetree.PN_qed (_, p) ->
 		  proof_decl_n_def_dependencies ~current_species p) in
 	   (* Return both "decl" and "def" dependencies. *)
-	   ((VnameSet.union accu_decl_deps proof_node_decl_deps),
-	    (VnameSet.union accu_def_deps proof_node_def_deps)))
-	 (VnameSet.empty, VnameSet.empty)
+	   ((Parsetree_utils.VnameSet.union
+	       accu_decl_deps proof_node_decl_deps),
+	    (Parsetree_utils.VnameSet.union accu_def_deps proof_node_def_deps)))
+	 (Parsetree_utils.VnameSet.empty, Parsetree_utils.VnameSet.empty)
 	 proof_nodes
        end)
 ;;
@@ -366,14 +368,14 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
 
 (* ******************************************************************** *)
 (* current_species: Parsetree.qualified_vname ->                        *)
-(*   Env.TypeInformation.species_field -> VnameSet.t                    *)
+(*   Env.TypeInformation.species_field -> Parsetree_utils.VnameSet.t    *)
 (** {b Descr} : Compute the set of vnames the argument field depends of
               in the species [~current_species]
 
     {b Rem} : Exported outside this module.                             *)
 (* ******************************************************************** *)
 let field_only_decl_dependencies ~current_species = function
-  | Env.TypeInformation.SF_sig (_, _, _) -> VnameSet.empty
+  | Env.TypeInformation.SF_sig (_, _, _) -> Parsetree_utils.VnameSet.empty
   | Env.TypeInformation.SF_let (_, _, _, _, body) ->
       expr_decl_dependencies ~current_species body
   | Env.TypeInformation.SF_let_rec l ->
@@ -381,19 +383,20 @@ let field_only_decl_dependencies ~current_species = function
       (* Create the set of names to remove afterwards. *)
       let names_of_l =
 	List.fold_left
-	  (fun accu_set (_, n, _, _, _) -> VnameSet.add n accu_set)
-	  VnameSet.empty
+	  (fun accu_set (_, n, _, _, _) ->
+	    Parsetree_utils.VnameSet.add n accu_set)
+	  Parsetree_utils.VnameSet.empty
 	  l in
       (* Now, compute the dependencies on all the rec-bound-names. *)
       let deps_of_l =
 	List.fold_left
 	  (fun accu_deps (_, _, _, _, body) ->
 	    let d = expr_decl_dependencies ~current_species body in
-	    VnameSet.union d accu_deps)
-	  VnameSet.empty
+	    Parsetree_utils.VnameSet.union d accu_deps)
+	  Parsetree_utils.VnameSet.empty
 	  l in
       (* And now, remove the rec-bound-names from the dependencies. *)
-      VnameSet.diff deps_of_l names_of_l
+      Parsetree_utils.VnameSet.diff deps_of_l names_of_l
       end)
   | Env.TypeInformation.SF_theorem (_, _, _, body, proof) ->
       (begin
@@ -402,7 +405,7 @@ let field_only_decl_dependencies ~current_species = function
       (* the proof and ignore here the "def"-dependencies. *)
       let (proof_deps, _) =
 	proof_decl_n_def_dependencies ~current_species proof in
-      VnameSet.union body_decl_deps proof_deps
+      Parsetree_utils.VnameSet.union body_decl_deps proof_deps
       end)
   | Env.TypeInformation.SF_property (_, _, _, body) ->
       prop_decl_dependencies ~current_species body
@@ -487,7 +490,7 @@ let where field_name fields =
 
 
 (* ******************************************************************* *)
-(* Env.TypeInformation.species_field -> VnameSet.t                     *)
+(* Env.TypeInformation.species_field -> Parsetree_utils.VnameSet.t                     *)
 (** {b Descr} : Just an helper returning the set of all names bound in
               a species fields.
 
@@ -498,11 +501,12 @@ let names_set_of_field = function
   | Env.TypeInformation.SF_let (_, vname, _, _, _)
   | Env.TypeInformation.SF_theorem (_, vname, _, _, _)
   | Env.TypeInformation.SF_property (_, vname, _, _)  ->
-      VnameSet.singleton vname
+      Parsetree_utils.VnameSet.singleton vname
   | Env.TypeInformation.SF_let_rec l ->
       List.fold_left
-	(fun accu_names (_, n, _, _, _) -> VnameSet.add n accu_names)
-	VnameSet.empty
+	(fun accu_names (_, n, _, _, _) ->
+	  Parsetree_utils.VnameSet.add n accu_names)
+	Parsetree_utils.VnameSet.empty
 	l
 ;;
 
@@ -572,7 +576,8 @@ let find_most_recent_rec_field_binding y_name fields =
 
 (* *********************************************************************** *)
 (* current_species: Parsetree.qualified_vname -> Parsetree.vname ->        *)
-(*   Env.TypeInformation.species_field list -> VnameSet.t                  *)
+(*   Env.TypeInformation.species_field list ->                             *)
+(*     Parsetree_utils.VnameSet.t                                          *)
 (** {b Descr} : Implements the second case of the definition 16 in Virgile
               Prevosto's Phd, section 3.5, page 32.
 
@@ -589,21 +594,22 @@ let union_y_clock_x_etc ~current_species x_name fields =
       (* inheritance.                                                     *)
       let field_y = find_most_recent_rec_field_binding y_name fields in
       let u =
-	VnameSet.union
+	Parsetree_utils.VnameSet.union
 	  (field_only_decl_dependencies ~current_species field_y) accu_deps in
       (*  Then remove the recursive bound names. *)
       let rec_bound_names = names_set_of_field field_y in
-      VnameSet.diff u rec_bound_names)
-    VnameSet.empty
+      Parsetree_utils.VnameSet.diff u rec_bound_names)
+    Parsetree_utils.VnameSet.empty
     all_ys
 ;;
 
 
 
-(* ********************************************************************* *)
-(* current_species: Parsetree.qualified_vname ->                         *)
-(*   (Parsetree.vname * Parsetree.expr) ->                               *)
-(*     Env.TypeInformation.species_field list -> VnameSet.t              *)
+(* ******************************************************************** *)
+(* current_species: Parsetree.qualified_vname ->                        *)
+(*   (Parsetree.vname * Parsetree.expr) ->                              *)
+(*     Env.TypeInformation.species_field list ->                        *)
+(*       Parsetree_utils.VnameSet.t                                     *)
 (** {b Descr} : Compute the dependencies of a sig, let or let-rec bound
               name in a species. Namely this is the \lbag x \rbag_s in
               Virgile Prevosto's Pdh, section 3.5, page 32, definition
@@ -611,8 +617,8 @@ let union_y_clock_x_etc ~current_species x_name fields =
 
     {b Rem} : MUST be called only with a [name] sig, let or let-rec
               bound !
-              Not exported outside this module.                          *)
-(* ********************************************************************* *)
+              Not exported outside this module.                         *)
+(* ******************************************************************** *)
 let in_species_decl_dependencies_for_one_function_name ~current_species
     (name, body) fields =
   let where_x = where name fields in
@@ -653,11 +659,12 @@ let in_species_decl_n_def_dependencies_for_one_theo_property_name
   match opt_body with
    | None ->
        (* No body, then no "def"-dependencies. *)
-       (t_prop_decl_deps, VnameSet.empty)
+       (t_prop_decl_deps, Parsetree_utils.VnameSet.empty)
    | Some proof ->
        let (proof_decl_deps, proof_def_deps) =
 	 proof_decl_n_def_dependencies ~current_species proof in
-       ((VnameSet.union t_prop_decl_deps proof_decl_deps), proof_def_deps)
+       ((Parsetree_utils.VnameSet.union t_prop_decl_deps proof_decl_deps),
+	proof_def_deps)
 ;;
 
 
@@ -744,7 +751,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
 	~current_species (n, b) fields in
     (* Now, find the decl-dependencies nodes for these names. *)
     let n_deps_nodes =
-      VnameSet.fold
+      Parsetree_utils.VnameSet.fold
 	(fun n accu ->
 	  let node = find_or_create tree_nodes n in
 	  (node, DK_decl) :: accu)
@@ -771,7 +778,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
 	~current_species (prop_t, opt_b) in
     (* Now, find the decl-dependencies nodes for these names. *)
     let n_decl_deps_nodes =
-      VnameSet.fold
+      Parsetree_utils.VnameSet.fold
 	(fun n accu ->
 	  let node = find_or_create tree_nodes n in
 	  (node, DK_decl) :: accu)
@@ -785,7 +792,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
 	n_decl_deps_nodes n_node.nn_children ;
     (* Now, find the def-dependencies nodes for these names. *)
     let n_def_deps_nodes =
-      VnameSet.fold
+      Parsetree_utils.VnameSet.fold
 	(fun n accu ->
 	  let node = find_or_create tree_nodes n in
 	  (node, DK_def) :: accu)
@@ -1022,7 +1029,7 @@ let is_reachable start_node end_node =
       (begin
       (* We check if the current node's children contain en [end_node]. This *)
       (* way, for each node, we are sure that the possibly found path is not *)
-      (* the trivial path (because we explicitly look inside the children   *)
+      (* the trivial path (because we explicitly look inside the children    *)
       (* and if a node is acceptable in the children, then the path length   *)
       (* is mandatorily non-null).                                           *)
       if List.exists
@@ -1195,7 +1202,7 @@ let erase_fields_in_context ~current_species context fields =
 		| Env.TypeInformation.SF_let_rec _ ->
 		    (* No "def"-dependencies for functions (C.f. definition   *)
 		    (* 30 in Virgile Prevosto's Phd, section 3.9.5, page 53). *)
-		    VnameSet.empty
+		    Parsetree_utils.VnameSet.empty
 		| Env.TypeInformation.SF_theorem (_, _, _, prop, proof) ->
 		    let (_, n_def_deps_names) =
 		      in_species_decl_n_def_dependencies_for_one_theo_property_name
@@ -1207,7 +1214,8 @@ let erase_fields_in_context ~current_species context fields =
 		    (* Can not arise because these cases were matched above. *)
 		    assert false) in
 	     (* Compute the intersection with the context... *)
-	     if VnameSet.is_empty (VnameSet.inter def_deps rec_context) then
+	     if Parsetree_utils.VnameSet.is_empty
+		 (Parsetree_utils.VnameSet.inter def_deps rec_context) then
 	       (begin
 	       (* Intersection is empty. *)
 	       m_field :: (rec_erase rec_context l_rem_fields)
@@ -1218,7 +1226,8 @@ let erase_fields_in_context ~current_species context fields =
 	       let erased_m_field = erase_field m_field in
 	       (* Extent the erasing context with names of the current field. *)
 	       let new_context =
-		 VnameSet.union rec_context (names_set_of_field m_field) in
+		 Parsetree_utils.VnameSet.union
+		   rec_context (names_set_of_field m_field) in
 	       (* And then process the remaining fields. *)
 	       erased_m_field @ (rec_erase new_context l_rem_fields)
 	       end)
@@ -1228,6 +1237,8 @@ let erase_fields_in_context ~current_species context fields =
   (* Now do the job... *)
   (* Build once for all the set on names contained in the context list. *)
   let context_as_set =
-    List.fold_left (fun accu n -> VnameSet.add n accu) VnameSet.empty context in
+    List.fold_left
+      (fun accu n -> Parsetree_utils.VnameSet.add n accu)
+      Parsetree_utils.VnameSet.empty context in
   rec_erase context_as_set fields
 ;;

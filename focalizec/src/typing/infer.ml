@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.75 2007-10-09 08:38:16 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.76 2007-10-10 15:27:43 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -2729,7 +2729,7 @@ type please_compile_me =
   | PCM_collection of
       ((** The collection expression. *)
        Parsetree.coll_def *
-       (** The collection description from the typechecking passe, with
+       (** The collection description from the typechecking pass, with
 	   the list of methods contained in its normalized form, with
 	   "oldestly" inherited in head of the list and Self replaced by
            the collection name inside. *)

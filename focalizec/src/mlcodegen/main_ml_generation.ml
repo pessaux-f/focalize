@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.1 2007-10-09 08:37:35 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.2 2007-10-10 15:27:43 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -24,7 +24,7 @@
 
 (* *********************************************************************** *)
 (* current_unit: Types.fname -> Format.formatter ->                        *)
-(*  Infer.please_compile_me -> unit                                        *)
+(*  Infer.please_compile_me -> Env.MlGenEnv.t                              *)
 (** {b Descr} : Dispatch the OCaml code generation of a toplevel structure
               to the various more specialized code generation routines.
 
@@ -39,27 +39,38 @@
 
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
-let toplevel_compile ~current_unit out_fmter = function
-  | Infer.PCM_no_matter -> ()
+let toplevel_compile ~current_unit out_fmter env = function
+  | Infer.PCM_no_matter -> env
   | Infer.PCM_external extern_def ->
       (* Create the initial context for compiling the let-definition. *)
       let ctx = {
 	Misc_ml_generation.rcc_current_unit = current_unit ;
 	Misc_ml_generation.rcc_out_fmter = out_fmter } in
-      Externals_ml_generation.external_def_compile ctx extern_def
+      Externals_ml_generation.external_def_compile ctx extern_def ;
+      env
   | Infer.PCM_species (species_def, species_descr, dep_graph) ->
-      Species_ml_generation.species_compile
-	~current_unit out_fmter
-	species_def.Parsetree.ast_desc.Parsetree.sd_name species_descr dep_graph
+      let opt_coll_gen_args =
+	Species_ml_generation.species_compile
+	  ~current_unit out_fmter species_def species_descr dep_graph in
+      (* Return the ml code generation environment extended by the *)
+      (* current species's collection generator information.       *)
+      Env.MlGenEnv.add_species
+	species_def.Parsetree.ast_desc.Parsetree.sd_name
+	opt_coll_gen_args env
   | Infer.PCM_collection (coll_def, coll_descr, dep_graph) ->
       Species_ml_generation.collection_compile
-	~current_unit out_fmter	coll_def coll_descr dep_graph
+	~current_unit out_fmter env coll_def coll_descr dep_graph ;
+      (* Collection do not have collection generator, then simply add *)
+      (* them in the environment with None.                           *)
+      Env.MlGenEnv.add_species
+	coll_def.Parsetree.ast_desc.Parsetree.cd_name None env
   | Infer.PCM_type (type_def_name, type_descr) ->
       (* Create the initial context for compiling the type definition. *)
       let ctx = {
 	Misc_ml_generation.rcc_current_unit = current_unit ;
 	Misc_ml_generation.rcc_out_fmter = out_fmter } in
-      Type_ml_generation.type_def_compile ctx type_def_name type_descr
+      Type_ml_generation.type_def_compile ctx type_def_name type_descr ;
+      env
   | Infer.PCM_let_def (let_def, def_schemes) ->
       (* Create the initial context for compiling the let-definition. *)
       let ctx = {
@@ -70,8 +81,9 @@ let toplevel_compile ~current_unit out_fmter = function
       (* with type constraints.                                      *)
       let bound_schemes = List.map (fun sch -> Some sch) def_schemes in
       Base_exprs_ml_generation.let_def_compile ctx let_def bound_schemes ;
-      Format.fprintf out_fmter "@\n;;@\n"
-  | Infer.PCM_theorem _ -> ()  (* Theorems do not lead to OCaml code. *)
+      Format.fprintf out_fmter "@\n;;@\n" ;
+      env
+  | Infer.PCM_theorem _ -> env  (* Theorems do not lead to OCaml code. *)
   | Infer.PCM_expr expr ->
       let ctx = {
 	Misc_ml_generation.rcc_current_unit = current_unit ;
@@ -79,7 +91,8 @@ let toplevel_compile ~current_unit out_fmter = function
       } in
       Base_exprs_ml_generation.generate_expr ctx expr ;
       (* Generate the final double-semis. *)
-      Format.fprintf out_fmter "@ ;;@\n"
+      Format.fprintf out_fmter "@ ;;@\n" ;
+      env
 ;;
 
 
@@ -87,8 +100,14 @@ let toplevel_compile ~current_unit out_fmter = function
 let root_compile ~current_unit ~out_file_name stuff =
   let out_hd = open_out_bin out_file_name in
   let out_fmter = Format.formatter_of_out_channel out_hd in
+  let global_env = ref (Env.MlGenEnv.empty ()) in
   try
-    List.iter (toplevel_compile ~current_unit out_fmter) stuff ;
+    List.iter
+      (fun data ->
+	let new_env =
+	  toplevel_compile ~current_unit out_fmter !global_env data in
+	global_env := new_env)
+      stuff ;
     (* Flush the pretty-printer. *)
     Format.fprintf out_fmter "@?" ;
     close_out out_hd
