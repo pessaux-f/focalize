@@ -91,10 +91,13 @@ module TypeInformation :
 
 module MlGenInformation :
   sig
-    type collection_generator_parameters =
-      (Parsetree.vname * Parsetree_utils.VnameSet.t) list
-    type species_binding_info =
-      ((Parsetree.vname list) * collection_generator_parameters) option
+    type collection_generator_info = {
+      cgi_implemented_species_params_names : Parsetree.vname list ;
+      cgi_generator_parameters :
+	(Parsetree.vname * Parsetree_utils.VnameSet.t) list
+    }
+
+    type species_binding_info = collection_generator_info option
   end
 
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.2 2007-10-10 15:27:43 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.3 2007-10-10 15:40:19 pessaux Exp $ *)
 
 
 (* ********************************************************************* *)
@@ -775,8 +775,10 @@ let species_compile ~current_unit out_fmter species_def species_descr
   let extra_args_from_spe_params =
     if species_descr.Env.TypeInformation.spe_is_closed then
       Some
-	(species_params_names,
-	 (generate_collection_generator ctx compiled_fields))
+	{ Env.MlGenInformation.cgi_implemented_species_params_names =
+	    species_params_names ;
+	  Env.MlGenInformation.cgi_generator_parameters =
+	    generate_collection_generator ctx compiled_fields }
     else None in
   Format.fprintf out_fmter "end ;;@]@\n@." ;
   (* Return what is needed to enter this species *)

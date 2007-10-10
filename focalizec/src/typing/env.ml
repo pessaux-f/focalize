@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.43 2007-10-10 15:27:43 pessaux Exp $ *)
+(* $Id: env.ml,v 1.44 2007-10-10 15:40:19 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -547,28 +547,27 @@ end ;;
 
 
 module MlGenInformation = struct
-  type collection_generator_parameters =
-     (** The list mapping for each parameter name, the set of methods the
-	 collection generator depends on, hence must be provided an instance
-	 to be used. Note that the list is not guaranted to be ordered
-         according to the order of the species parameters names (that's why
-         we have the information about this order given in
-	 [species_binding_info]). *)
-     (Parsetree.vname * Parsetree_utils.VnameSet.t) list
-
-
-
-  type species_binding_info =
+  type collection_generator_info = {
     (** The list of species parameters names the species whose collection
 	generator belongs to has. This list is positionnal, i.e. that the
 	first name of the list is the name of the first species parameter
 	and so on. *)
-    ((Parsetree.vname list) *
-     collection_generator_parameters)
-	(** Optionnal because species that are non fully defined do not have
-	    any collection generator although they are entered in the
-	    environment. *)
-	option
+    cgi_implemented_species_params_names : Parsetree.vname list ;
+    (** The list mapping for each parameter name, the set of methods the
+	collection generator depends on, hence must be provided an instance
+	to be used. Note that the list is not guaranted to be ordered
+	according to the order of the species parameters names (that's why
+	we have the information about this order given in
+	[species_binding_info]). *)
+    cgi_generator_parameters :
+      (Parsetree.vname * Parsetree_utils.VnameSet.t) list
+  }
+
+  type species_binding_info =
+    (** Optionnal because species that are non fully defined do not have
+	any collection generator although they are entered in the
+	environment. *)
+    collection_generator_info option
 
 
   (* ************************************************************** *)
