@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.2 2007-10-10 15:27:43 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.3 2007-10-16 10:00:48 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -45,6 +45,8 @@ let toplevel_compile ~current_unit out_fmter env = function
       (* Create the initial context for compiling the let-definition. *)
       let ctx = {
 	Misc_ml_generation.rcc_current_unit = current_unit ;
+	(* Not under a species, hence no species parameter. *)
+	Misc_ml_generation.rcc_species_parameters_names = [] ;
 	Misc_ml_generation.rcc_out_fmter = out_fmter } in
       Externals_ml_generation.external_def_compile ctx extern_def ;
       env
@@ -68,6 +70,8 @@ let toplevel_compile ~current_unit out_fmter env = function
       (* Create the initial context for compiling the type definition. *)
       let ctx = {
 	Misc_ml_generation.rcc_current_unit = current_unit ;
+	(* Not under a species, hence no species parameter. *)
+	Misc_ml_generation.rcc_species_parameters_names = [] ;
 	Misc_ml_generation.rcc_out_fmter = out_fmter } in
       Type_ml_generation.type_def_compile ctx type_def_name type_descr ;
       env
@@ -75,21 +79,28 @@ let toplevel_compile ~current_unit out_fmter env = function
       (* Create the initial context for compiling the let-definition. *)
       let ctx = {
 	Misc_ml_generation.rcc_current_unit = current_unit ;
+	(* Not under a species, hence no species parameter. *)
+	Misc_ml_generation.rcc_species_parameters_names = [] ;
 	Misc_ml_generation.rcc_out_fmter = out_fmter } in
       (* We have the schemes under the hand. Then we will be able    *)
       (* to annotate the parameters of the toplevel let-bound idents *)
       (* with type constraints.                                      *)
       let bound_schemes = List.map (fun sch -> Some sch) def_schemes in
-      Base_exprs_ml_generation.let_def_compile ctx let_def bound_schemes ;
+      (* No local idents in the scope because we are at toplevel. *)
+      Base_exprs_ml_generation.let_def_compile
+	ctx ~local_idents: [] let_def bound_schemes ;
       Format.fprintf out_fmter "@\n;;@\n" ;
       env
   | Infer.PCM_theorem _ -> env  (* Theorems do not lead to OCaml code. *)
   | Infer.PCM_expr expr ->
       let ctx = {
 	Misc_ml_generation.rcc_current_unit = current_unit ;
+	(* Not under a species, hence no species parameter. *)
+	Misc_ml_generation.rcc_species_parameters_names = [] ;
 	Misc_ml_generation.rcc_out_fmter = out_fmter
       } in
-      Base_exprs_ml_generation.generate_expr ctx expr ;
+      (* No local idents in the scope because we are at toplevel. *)
+      Base_exprs_ml_generation.generate_expr ctx ~local_idents: [] expr ;
       (* Generate the final double-semis. *)
       Format.fprintf out_fmter "@ ;;@\n" ;
       env
@@ -98,6 +109,8 @@ let toplevel_compile ~current_unit out_fmter env = function
 
 
 let root_compile ~current_unit ~out_file_name stuff =
+  if Configuration.get_verbose () then
+    Format.eprintf "Starting OCaml code generation.@." ;
   let out_hd = open_out_bin out_file_name in
   let out_fmter = Format.formatter_of_out_channel out_hd in
   let global_env = ref (Env.MlGenEnv.empty ()) in

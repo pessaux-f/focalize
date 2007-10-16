@@ -1,6 +1,7 @@
 TEST_FILES = basics.foc \
 	phd_sample.foc \
-	baby_toy.foc
+	baby_toy.foc \
+	in_example.foc
 
 
 all: $(TEST_FILES)

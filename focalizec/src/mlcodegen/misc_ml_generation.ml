@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.ml,v 1.1 2007-10-09 08:37:35 pessaux Exp $ *)
+(* $Id: misc_ml_generation.ml,v 1.2 2007-10-16 10:00:48 pessaux Exp $ *)
 
 
 (* ********************************************************************* *)
@@ -115,7 +115,10 @@ let pp_to_ocaml_vname ppf = function
 type reduced_compil_context = {
   (** The name of the currently analysed compilation unit. *)
   rcc_current_unit : Types.fname ;
-   (** The current output formatter where to send the generated code. *)
+  (** The list of the current species species parameters if we are in the
+      scope of a species and if it has some parameters. *)
+  rcc_species_parameters_names : Parsetree.vname list ;
+  (** The current output formatter where to send the generated code. *)
   rcc_out_fmter : Format.formatter
 } ;;
 

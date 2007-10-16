@@ -12,8 +12,8 @@
 (***********************************************************************)
 
 
-(* $Id: param_dep_analysis.mli,v 1.4 2007-10-10 15:27:43 pessaux Exp $ *)
+(* $Id: param_dep_analysis.mli,v 1.5 2007-10-16 10:00:48 pessaux Exp $ *)
 
 val param_deps_expr :
   current_species: Parsetree.qualified_vname -> Parsetree.vname ->
-    Parsetree.expr -> Parsetree_utils.VnameSet.t
+     Parsetree.expr -> Parsetree_utils.VnameSet.t

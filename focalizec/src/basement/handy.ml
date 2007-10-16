@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.7 2007-10-09 08:38:15 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.8 2007-10-16 10:00:48 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -225,3 +225,19 @@ let list_mem_custom_eq eq_fct e l =
     | h :: q -> if eq_fct h e then true else rec_mem q in
   rec_mem l
 ;;
+
+
+let pp_set_shaded ppf =
+  if Configuration.get_fancy_ansi () then Format.fprintf ppf "@<0>\027[2m" ;;
+
+let pp_set_underlined ppf =
+  if Configuration.get_fancy_ansi () then Format.fprintf ppf "@<0>\027[4m" ;;
+
+let pp_set_bold ppf =
+  if Configuration.get_fancy_ansi () then Format.fprintf ppf "@<0>\027[1m" ;;
+
+let pp_set_videoinv ppf =
+  if Configuration.get_fancy_ansi () then Format.fprintf ppf "@<0>\027[7m" ;;
+
+let pp_reset_effects ppf =
+  if Configuration.get_fancy_ansi () then Format.fprintf ppf "@<0>\027[0m" ;;

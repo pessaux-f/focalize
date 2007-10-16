@@ -13,10 +13,12 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.12 2007-10-09 08:38:15 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.13 2007-10-16 10:00:48 pessaux Exp $ *)
 
 
 exception Input_file_already_set ;;
+exception No_input_file ;;
+
 
 let focal_version_number = 0.1 ;;
 
@@ -54,10 +56,12 @@ let (get_pretty_print, set_pretty_print) =
 ;;
 
 let (get_input_file_name, set_input_file_name) =
-  let input_file_name = ref "-" in
-  ((fun () -> !input_file_name),
+  let input_file_name = ref "" in
+  ((fun () ->
+    if !input_file_name = "" then raise No_input_file
+    else !input_file_name),
    (fun fname ->
-     if !input_file_name = "-" then input_file_name := fname
+     if !input_file_name = "" then input_file_name := fname
      else raise Input_file_already_set))
 ;;
 
@@ -90,4 +94,11 @@ let (get_generate_ocaml, unset_generate_ocaml) =
   let generate_ocaml = ref true in
   ((fun () -> !generate_ocaml),
    (fun () -> generate_ocaml := false))
+;;
+
+
+let (get_fancy_ansi, unset_fancy_ansi) =
+  let fancy_ansi = ref true in
+  ((fun () -> !fancy_ansi),
+   (fun () -> fancy_ansi := false))
 ;;

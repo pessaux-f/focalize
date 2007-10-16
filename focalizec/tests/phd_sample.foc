@@ -67,9 +67,13 @@ species Entiers_concrets inherits Monoide =
   proof of symm = assumed ;
 end ;;
 
-
 collection Les_entiers implements Entiers_concrets ;;
 
+(*
+species JunkMeGuy (A is Monoide, B is Monoide) inherits
+  Monoide_produit (A, B) =
+end ;;
+*)
 
 collection Couple_d_entiers implements
   Monoide_produit (Les_entiers, Les_entiers)

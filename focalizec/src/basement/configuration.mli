@@ -11,13 +11,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.12 2007-10-09 08:38:15 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.13 2007-10-16 10:00:48 pessaux Exp $ *)
 
 
 (** The various flags and definitions useful to the internal behaviour of the
     focalize compiler. *)
 
 exception Input_file_already_set
+exception No_input_file
 
 val focal_version_number : float
 
@@ -49,3 +50,6 @@ val set_raw_ast_dump : unit -> unit
 
 val get_generate_ocaml : unit -> bool
 val unset_generate_ocaml : unit -> unit
+
+val get_fancy_ansi : unit -> bool
+val unset_fancy_ansi : unit -> unit

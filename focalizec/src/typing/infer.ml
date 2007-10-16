@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.76 2007-10-10 15:27:43 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.77 2007-10-16 10:00:48 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1580,10 +1580,10 @@ and typecheck_species_fields ctx env = function
 (* typing_context -> Env.TypingEnv.t -> Parsetree.expr ->                    *)
 (*   (Types.collection_name * Env.TypeInformation.species_description)       *)
 (** {b Descr} : Typechecks an expression in the restricted case where is it
-              used as a "is" parameter effective argument. In this particular
-              case, the rule [COLL-INST] expects a collection identifier and
-              nothing else. For this reason, the identifier is looked-up in
-              the species environment.
+              used as a "is" or "in" parameter effective argument. In this
+              particular case, the rule [COLL-INST] expects a
+              collection identifier and nothing else. For this reason, the
+              identifier is looked-up in the species environment.
               Because the AST structure cannot know a priori (i.e at parsing
               stage) is the expression used as argument will be the one of a
               "is" or a "in" argument, the [expr] rule is sufficiently
@@ -1593,7 +1593,7 @@ and typecheck_species_fields ctx env = function
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-let rec typecheck_expr_collection_cstr_for_is_param ctx env initial_expr =
+let rec typecheck_expr_as_species_parameter_argument ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
    | Parsetree.E_self ->
        (* Should be always caught before, at scoping phase. *)
@@ -1615,11 +1615,12 @@ let rec typecheck_expr_collection_cstr_for_is_param ctx env initial_expr =
        (* We return the "collection type", and the collection's description. *)
        ((id_effective_name, (Parsetree_utils.name_of_vname id_vname)), descr)
    | Parsetree.E_paren expr ->
-       typecheck_expr_collection_cstr_for_is_param ctx env expr
+       typecheck_expr_as_species_parameter_argument ctx env expr
    | _ ->
        (* Should be always caught before, at scoping phase. *)
        raise
-	 (Scoping.Is_parameter_only_coll_ident initial_expr.Parsetree.ast_loc)
+	 (Scoping.Species_parameter_only_coll_ident
+	    initial_expr.Parsetree.ast_loc)
 ;;
 
 
@@ -1784,8 +1785,17 @@ let apply_species_arguments ctx env base_spe_descr params =
 	  let (Parsetree.SP e_param_expr) = e_param.Parsetree.ast_desc in
 	  match f_param with
 	   | Env.TypeInformation.SPAR_in (f_name, f_ty) ->
-	       (* First, get the argument expression's type. *)
-	       let expr_ty = typecheck_expr ctx env e_param_expr in
+	       (* First, get the argument expression's type. It is encoded *)
+	       (* as an [expr] but it is too large in fact. So let's       *)
+               (* restrict here to consider [expr]s legal for a            *)
+               (* "in"-parameter syntax.                                   *)
+	       let ((expr_as_species_fname, expr_as_species_spname), _) =
+		 typecheck_expr_as_species_parameter_argument
+		   ctx env e_param_expr in
+	       let expr_ty_as_species_ty =
+		 Types.type_rep_species
+		   ~species_module: expr_as_species_fname
+		   ~species_name: expr_as_species_spname in
 	       (* The formal's collection type [f_ty] is the name of the *)
 	       (* collection that the effective argument is expected to  *)
                (* be a carrier of. Then one must unify the effective     *)
@@ -1796,7 +1806,8 @@ let apply_species_arguments ctx env base_spe_descr params =
 		   ~species_module: (fst f_ty) ~species_name: (snd f_ty) in
                Types.unify
 		 ~loc: e_param.Parsetree.ast_loc
-		 ~self_manifest: ctx.self_manifest repr_of_formal expr_ty ;
+		 ~self_manifest: ctx.self_manifest
+		 repr_of_formal expr_ty_as_species_ty ;
 	       (* And now, the new methods where x <- e (in Virgile's thesis) *)
                (* i.e. here, [f_name] <- [e_param_expr].                      *)
 	       let substd_meths =
@@ -1817,7 +1828,7 @@ let apply_species_arguments ctx env base_spe_descr params =
                (* 3.8, page 43.                                              *)
                (* Rule [COLL-INST].                                          *)
 	       let (c2, expr_sp_description) = (* The c2 of Virgile's Phd. *)
-		 typecheck_expr_collection_cstr_for_is_param
+		 typecheck_expr_as_species_parameter_argument
                    ctx env e_param_expr in
 	       let big_A_i1_c2 =
 		 abstraction ~current_unit: ctx.current_unit c2 c1_ty in
@@ -2762,7 +2773,7 @@ let typecheck_species_def ctx env species_def =
     (ctx.current_unit, species_def_desc.Parsetree.sd_name) in
   if Configuration.get_verbose () then
     Format.eprintf
-      "Analysing species '%a'@."
+      "Typechecking species '%a'.@."
       Sourcify.pp_vname species_def_desc.Parsetree.sd_name ;
   (* First of all, we are in a species !!! *)
   let ctx = { ctx with current_species = Some current_species } in
@@ -2792,6 +2803,10 @@ let typecheck_species_def ctx env species_def =
   let (collapsed_inherited_methods_infos, collapsed_methods_info) =
     collapse_proofs_of
       ~current_species found_proofs_of inherited_methods_infos methods_info in
+  if Configuration.get_verbose () then
+    Format.eprintf
+      "Normalizing species '%a'.@."
+      Sourcify.pp_vname species_def_desc.Parsetree.sd_name ;
   (* Create the list of field "semi-normalized", i.e with inherited methods   *)
   (* normalized and in head of the list, and the fresh methods not normalized *)
   (* and in tail of the list.                                                 *)
@@ -2814,6 +2829,10 @@ let typecheck_species_def ctx env species_def =
   (* Now really re-order the normalized fields. *)
   let reordered_normalized_methods =
     order_fields_according_to new_order normalized_methods in
+  if Configuration.get_verbose () then
+    Format.eprintf
+      "Computing dependencies inside species '%a'.@."
+      Sourcify.pp_vname species_def_desc.Parsetree.sd_name ;
   (* The methods are now completly correct perhaps except for their order  *)
   (* ("correct" i.e. with no multiple times the same name as it can be     *)
   (* before the normalization process), we get its final dependency graph. *)
@@ -2867,6 +2886,10 @@ let typecheck_species_def ctx env species_def =
       env_with_species in
   (* Record the type in the AST node. *)
   species_def.Parsetree.ast_type <- Some species_carrier_type ;
+  if Configuration.get_verbose () then
+    Format.eprintf
+      "Species '%a' accepted.@."
+      Sourcify.pp_vname species_def_desc.Parsetree.sd_name ;
   (* Interface printing stuff. *)
   if Configuration.get_do_interface_output () then
     (begin
@@ -3116,6 +3139,9 @@ let typecheck_type_def ctx env type_def =
 (* ****************************************************************** *)
 let typecheck_collection_def ctx env coll_def =
   let coll_def_desc = coll_def.Parsetree.ast_desc in
+  if Configuration.get_verbose () then
+    Format.eprintf "Typechecking collection '%a'.@."
+      Sourcify.pp_vname coll_def_desc.Parsetree.cd_name ;
   let current_species = (ctx.current_unit, coll_def_desc.Parsetree.cd_name) in
   (* First of all, we are in a species !!! *)
   let ctx = { ctx with current_species = Some current_species } in
@@ -3135,6 +3161,10 @@ let typecheck_collection_def ctx env coll_def =
 	 ~current_unit: ctx.current_unit SubstColl.SCK_self myself_coll_ty)
       species_expr_fields in
   (* Get the dependencies graph of the species. *)
+  if Configuration.get_verbose () then
+    Format.eprintf
+      "Computing dependencies inside collection '%a'.@."
+      Sourcify.pp_vname coll_def_desc.Parsetree.cd_name ;
   let collection_dep_graph =
     Dep_analysis.build_dependencies_graph_for_fields 
       ~current_species collection_fields in

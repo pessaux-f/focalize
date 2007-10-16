@@ -111,9 +111,21 @@ species Toy inherits Basic_object =
 end
 ;;
 
+species Daube inherits Basic_object =
+  rep = basics#int ;
+end
+;;
 
-species Dummy (a in Basic_object, B is Basic_object) =
+collection CDaube implements Daube ;;
+
+
+(* species Dummy (a in Daube, B is Basic_object) = PAS Daube car pas collection ! *)
+species Dummy (a in CDaube, B is Basic_object) =
+  rep = basics#int ;
   let x = a ;
   let y (z, t) = B!equal (z, t) ;
 end
 ;;
+
+collection CDummy implements Dummy (CDaube, CDaube) ;;
+(* collection CDummy implements Dummy (Daube, CDaube) ;; *)

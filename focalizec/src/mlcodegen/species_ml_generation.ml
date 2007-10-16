@@ -11,7 +11,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.3 2007-10-10 15:40:19 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.4 2007-10-16 10:00:48 pessaux Exp $ *)
+
+
+(* *************************************************************** *)
+(** {b Descr} : This module performs the compilation from FoCaL to 
+              Ocaml of FoCaL's collections and species.            *)
+(* *************************************************************** *)
 
 
 (* ********************************************************************* *)
@@ -80,7 +86,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
 	    (* this parameter's carrier type seen from OCaml. Same     *)
             (* remark than above for lowercase/uppercase.              *)
 	    let carrier_type_variable_name =
-	      "' " ^ (String.uncapitalize (Parsetree_utils.name_of_vname n)) ^
+	      "'" ^ (String.uncapitalize (Parsetree_utils.name_of_vname n)) ^
 	      "_as_carrier" in
 	    (type_coll, carrier_type_variable_name))
       species_descr.Env.TypeInformation.spe_sig_params
@@ -169,9 +175,8 @@ let generate_rep_constraint_in_record_type ctx fields =
 
 
 
-(* ************************************************************************ *)
-(* species_compil_context -> Parsetree.vname ->                             *)
-(*   Env.TypeInformation.species_description -> unit                        *)
+(* ************************************************************************* *)
+(* species_compil_context -> Env.TypeInformation.species_description -> unit *)
 (** {b Descr} : Generate the record type representing a species. This type
           contains a field per method. This type is named "me_as_species"
           to reflect the point that it represents the ML structure
@@ -182,17 +187,15 @@ let generate_rep_constraint_in_record_type ctx fields =
           once "we" (i.e. the species) will be really living as a
           collection.
 
-    {b Rem} : Not exported outside this module.                             *)
-(* ************************************************************************ *)
-let generate_record_type ctx species_name species_descr =
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+let generate_record_type ctx species_descr =
   let out_fmter = ctx.scc_out_fmter in
   let collections_carrier_mapping = ctx.scc_collections_carrier_mapping in
   (* First, check if "rep" is defined. If so, then generate  *)
   (* the type constraint reflecting its effective structure. *)
   generate_rep_constraint_in_record_type
     ctx species_descr.Env.TypeInformation.spe_sig_methods ;
-  let field_prefix =
-    String.uncapitalize (Parsetree_utils.name_of_vname species_name) in
   (* The header of the OCaml type definition for the species record. *)
   Format.fprintf out_fmter "@[<2>type " ;
   (* Process parameters and "self" type variables names. *)
@@ -210,6 +213,23 @@ let generate_record_type ctx species_name species_descr =
     end) ;
   (* The name of the type. *)
   Format.fprintf out_fmter "me_as_species = {@\n" ;
+  (* We now extend the collections_carrier_mapping with ourselve known.     *)
+  (* Hence, if we refer to our "rep" (i.e. "me_as_carrier"), we will be     *)
+  (* known and we wont get the fully qualified type name, otherwise         *)
+  (* this would lead to a dependency with ourselve in term of OCaml module. *)
+  (* Indeed, we now may refer to our carrier explicitely here because there *)
+  (* is no more late binding: here when one say "me", it's not anymore      *)
+  (* "what I will be finally" because we are already "finally". Before, as  *)
+  (* long a species is not a collection, it always refers to itself's type  *)
+  (* as "'me_as_species" because late binding prevents known until the last *)
+  (* moment who "we will be". But because now it's the end of the species   *)
+  (* specification, we know really "who we are" and "'me_as_species" is     *)
+  (* definitely replaced by "who we really are" : "me_as_species".          *)
+  let (my_fname, my_species_name) = ctx.scc_current_species in
+  let collections_carrier_mapping =
+    ((my_fname, (Parsetree_utils.name_of_vname my_species_name)),
+     "me_as_carrier") ::
+    collections_carrier_mapping in
   (* The record's fields types. *)
   List.iter
     (function
@@ -225,8 +245,8 @@ let generate_record_type ctx species_name species_descr =
 	      Sourcify.pp_qualified_vname from ;
 	    (* Since we are printing a whole type scheme, it is stand-alone *)
             (* and we don't need to keep name sharing with anythin else.    *)
-	    Format.fprintf out_fmter "@[<2>%s_%a : %a ;@]@\n"
-	      field_prefix Misc_ml_generation.pp_to_ocaml_vname n
+	    Format.fprintf out_fmter "@[<2>%a : %a ;@]@\n"
+	      Misc_ml_generation.pp_to_ocaml_vname n
 	      (Types.pp_type_simple_to_ml
 		 ~current_unit: ctx.scc_current_unit
 		 ~reuse_mapping: false collections_carrier_mapping) ty
@@ -240,8 +260,8 @@ let generate_record_type ctx species_name species_descr =
 		Sourcify.pp_qualified_vname from ;
 	      (* Since we are printing a whole type scheme, it is stand-alone *)
               (* and we don't need to keep name sharing with anythin else.    *)
-	      Format.fprintf out_fmter "%s_%a : %a ;@\n"
-		field_prefix Misc_ml_generation.pp_to_ocaml_vname n
+	      Format.fprintf out_fmter "%a : %a ;@\n"
+		Misc_ml_generation.pp_to_ocaml_vname n
 		(Types.pp_type_simple_to_ml
 		   ~current_unit: ctx.scc_current_unit
 		   ~reuse_mapping: false collections_carrier_mapping) ty)
@@ -289,6 +309,7 @@ type compiled_field_memory ={
 } ;;
 
 
+
 (* ************************************************************************ *)
 (** {b Descr} : Type of the fields significant for the collection generator
        creation, once the methods of the species have been generated. It
@@ -303,6 +324,7 @@ type compiled_species_fields =
 ;;
 
 
+
 (* *********************************************************************** *)
 (* species_compil_context -> Parsetree.vname list ->                       *)
 (*   Env.TypeInformation.species_field -> unit                             *)
@@ -313,7 +335,7 @@ type compiled_species_fields =
       - [ctx] : The species-compilation-context merging the various
           stuffs sometimes needed during the compilation pass.
       - [species_parameters_names] : The list of the vnames of parameters
-          the currently compiled species as.
+          the currently compiled species has.
       - [field] : The species's field to compile (i.e. a "let", "let rec",
                 "sig", "theorem" or "property").
 
@@ -434,8 +456,12 @@ let generate_methods ctx species_parameters_names field =
       (* Generates the body's code of the method. *)
       let expr_ctx = {
 	Misc_ml_generation.rcc_current_unit = ctx.scc_current_unit ;
+	Misc_ml_generation.rcc_species_parameters_names =
+	  species_parameters_names ;
 	Misc_ml_generation.rcc_out_fmter = out_fmter } in
-      Base_exprs_ml_generation.generate_expr expr_ctx body ;
+      (* No local idents in the context because we just enter the scope *)
+      (* of a species fields and so we are not under a core expression. *)
+      Base_exprs_ml_generation.generate_expr expr_ctx ~local_idents: [] body ;
       (* Done... Then, final carriage return. *)
       Format.fprintf out_fmter "@]@\n"
       end)
@@ -505,6 +531,8 @@ let generate_methods ctx species_parameters_names field =
 
 
 (* *********************************************************************** *)
+(* Format.formatter -> compiled_species_fields option list ->              *)
+(*  (Parsetree.vname * Parsetree_utils.VnameSet.t) list                    *)
 (** {b Descr} : Dumps as OCaml code the parameters required to the
          collection generator in order to make them bound in the
          collection generator's body. These parameters come from
@@ -695,23 +723,17 @@ let generate_collection_generator ctx compiled_species_fields =
   (* The local function corresponding to the method is "local_" +    *)
   (* the method's name.                                              *)
   Format.fprintf ctx.scc_out_fmter "@[<2>{ " ;
-  (* Factorize the prefix to put in from of each species's field *)
-  (* to get the corresponding record field name on OCaml's side. *)
-  let field_prefix =
-    String.uncapitalize (Parsetree_utils.name_of_vname current_species_name) in
   List.iter
       (function
       | None -> ()
       | Some (CSF_let field_memory) ->
-	  Format.fprintf ctx.scc_out_fmter "%s_%a =@ local_%a ;@\n"
-	    field_prefix
+	  Format.fprintf ctx.scc_out_fmter "%a =@ local_%a ;@\n"
 	    Misc_ml_generation.pp_to_ocaml_vname field_memory.cfm_method_name
 	    Misc_ml_generation.pp_to_ocaml_vname field_memory.cfm_method_name
       | Some (CSF_let_rec l) ->
 	  List.iter
 	    (fun field_memory ->
-	      Format.fprintf ctx.scc_out_fmter "%s_%a =@ local_%a ;@\n"
-		field_prefix
+	      Format.fprintf ctx.scc_out_fmter "%a =@ local_%a ;@\n"
 		Misc_ml_generation.pp_to_ocaml_vname
 		field_memory.cfm_method_name
 		Misc_ml_generation.pp_to_ocaml_vname
@@ -750,7 +772,7 @@ let species_compile ~current_unit out_fmter species_def species_descr
     scc_collections_carrier_mapping = collections_carrier_mapping ;
     scc_out_fmter = out_fmter } in
   (* The record type representing the species' type. *)
-  generate_record_type ctx species_name species_descr ;
+  generate_record_type ctx species_descr ;
   (* Compute the list of names of parameters of the species. This   *)
   (* will be use to compute for each method the set of methods from *)
   (* the parameters the method depends on.                          *)
@@ -788,11 +810,193 @@ let species_compile ~current_unit out_fmter species_def species_descr
 
 
 
-let apply_generator_to_parameters _coll_body_params _params_info =
-() ;;  
+(* ************************************************************************* *)
+(* current_unit: string -> Format.formatter ->                               *)
+(*   (string option * Parsetree.vname) list ->                               *)
+(*     Env.MlGenInformation.collection_generator_info -> unit                *)
+(** {b Descr} : This function recovers from the fully defined species the
+    collection implements, the names of its parameters names. Then it gets
+    the parameters the collection generator needs and actually applies it to
+    correct corresponding functions.
+    This "correct corresponding" functions are those from the collection that
+    instanciate the species parameter, but coming from the collection that
+    instanciates this species parameter in the freshly defined collection.
+
+    For example, let's take "collection A implements B (C, D)", with B being
+    parameterized by the formal X and Y. Imagine we determined that B's
+    collection generator needs to be feeded an argument representing a method
+    "foo" of X and "bar" of Y, in the order "bar" before and "foo" next.
+    To fully apply B's collection generator, we need to pass the abstractions
+    (the functions) corresponding to [bar] and [foo] IN THIS ORDER.
+
+    In the [param_info] parameter, we know the expected function names and
+    from where they come in term of formal parameter in B (i.e. we need that
+    coming from the formal species parameter "X", a function for "bar" is
+    needed and for the formal species parameter "Y", a function for "foo" is
+    needed). And the order in which to apply them is implicitly given by the
+    structure of the list [params_info.cgi_generator_parameters].
+
+    The question is now to know which formal species parameters name of B
+    corresponds to the effective collection passed as argument at
+    "implements-time" in A. This information is obtained from
+    [params_info.cgi_implemented_species_params_names] that is the ordered
+    list of the "implemented" species (i.e. used to create a collection).
+    The first element is this list is the name of the first formal parameter
+    of B, I.e. X. Now because we know that "A implements B (C, D)", we know
+    that X is instanciated by C and Y by D.
+
+    Then, to apply B's collection generator, we just walk the list of
+    arguments it needs ([params_info.cgi_generator_parameters]) and create
+    the function identifier denoting the expected function but coming from
+    the effective collection corresponding to the formal parameter this
+    expected function comes from in [params_info.cgi_generator_parameters].
+    For example, if [params_info.cgi_generator_parameters] tells that we
+    must apply "bar" from Y, then "foo" from X, then one must generate
+    the identifiers "D.bar" then "C.foo".
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+let apply_generator_to_parameters ~current_unit out_fmter coll_body_params
+    col_gen_params_info =
+  (* Create the assoc list mapping the formal to the effectives parameters. *)
+  let formal_to_effective_map =
+    (try
+      List.map2
+	(fun formal (opt_effective_fname, effective_vname) ->
+	  match opt_effective_fname with
+	   | None ->
+	       (* Assumed to be local to the current unit. *)
+	       (formal, (None, effective_vname))
+	   | Some effective_fname ->
+	       (* If the species belongs to the current unit, then we don't *)
+	       (* need to qualify it in the OCaml generated code. Then we   *)
+               (* simply discard its explicit hosting information.          *)
+	       if effective_fname = current_unit then
+		 (formal, (None, effective_vname))
+	       else (formal, (opt_effective_fname, effective_vname)))
+	col_gen_params_info.Env.MlGenInformation.
+          cgi_implemented_species_params_names
+	coll_body_params
+    with _ -> assert false  (* The lists length must be equal. *)) in
+  (* Now, generate the argment identifier for each *)
+  (* expected collection generator parameter.      *)
+  List.iter
+    (fun (formal_species_param_name, method_names) ->
+      let (corresponding_effective_opt_fname, corresponding_effective_vname) =
+	List.assoc formal_species_param_name formal_to_effective_map in
+      Parsetree_utils.VnameSet.iter
+	(fun meth_name ->
+	  (* If needed, qualify the name of the species in the OCaml code. *)
+	  (match corresponding_effective_opt_fname with
+	   | Some fname ->
+	       Format.fprintf out_fmter "%s." (String.capitalize fname)
+	   | None -> ()) ;
+	  (* Species name."effective_collection.". *)
+	  Format.fprintf out_fmter "@ %a.effective_collection."
+	    Misc_ml_generation.pp_to_ocaml_vname corresponding_effective_vname ;
+	  (* If needed, qualify the name of the species in the OCaml code. *)
+	  (match corresponding_effective_opt_fname with
+	   | Some fname ->
+	       Format.fprintf out_fmter "%s." (String.capitalize fname)
+	   | None -> ()) ;
+	  (* Species name.method name. *)
+	  Format.fprintf out_fmter "%a.%a"
+	    Misc_ml_generation.pp_to_ocaml_vname corresponding_effective_vname
+	    Misc_ml_generation.pp_to_ocaml_vname meth_name)
+	method_names)
+    col_gen_params_info.Env.MlGenInformation.cgi_generator_parameters
+;;
 
 
 
+(* ************************************************************************* *)
+(* Parsetree.species_param -> (Types.fname option * Parsetree.vname) list    *)
+(** {b Descr} : Extract the collections names used in an "implements" clause
+       as arguments of the species that it used to make the collection.
+       The parsetree encodes these parameters [Parsetree.expr]s but this
+       is a too large structure for the actual legal parameters expressions.
+       Then we extracts here just the names of effective collections hidden
+       in these [Parsetree.expr]s.
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+let get_implements_effective_names species_params =
+  List.map
+    (fun param ->
+      match param.Parsetree.ast_desc with
+       | Parsetree.SP expr ->
+	   match expr.Parsetree.ast_desc with
+	    | Parsetree.E_constr (cstr_ident, []) ->
+		let Parsetree.CI (fname_opt, vname) =
+		  cstr_ident.Parsetree.ast_desc in
+		(fname_opt, vname)
+	    | _ ->
+		(* Collections expressions used as parameters of an      *)
+		(* "implements" clause should always be represented by   *)
+                (* a sum-type value and because these collections are    *)
+                (* not parametrized, this value should have no argument. *)
+		(* If it's not the case here, then we missed something   *)
+                (* before during the analyses !                          *)
+		assert false)
+    species_params
+;;
+
+
+
+(* ************************************************************************** *)
+(* current_unit: Types.fname -> Format.formatter -> Parsetree.ident -> unit *)
+(** {b Descr} : Helper that prints a species name as an OCaml module,
+       with module qualification if needed.
+       In other words, each time we need to refer to a module qualification
+       induced by a species, this function prints the the capitalize name
+       of the species, prefixed by its hosting file considered as an OCaml
+       module if this species is not in the current compilation unit.
+       For example, imagine we are in the "foo.foc" file and we need to
+       speak of a record field of a species "S" that lives in the "bar.foc"
+       file. Then because each FoCaL compilation unit is mapped onto an
+       OCaml file (hence an OCaml module corresponding to the file-as-module),
+       it will be printed like "Bar.S". If the species "S" was in the same
+       compilation unit (i.e. "foo.foc"), then it would be printed directly
+       "S".
+       
+    {b Rem} : Not exported outside this module.                               *)
+(* ************************************************************************** *)
+let print_implemented_species_as_ocaml_module ~current_unit out_fmter
+    impl_species_name =
+  match impl_species_name.Parsetree.ast_desc with
+   | Parsetree.I_local vname
+   | Parsetree.I_global (None, vname) ->
+       (* Local species, so no need to find it in another ML "file-module". *)
+       Format.fprintf out_fmter "%s"
+	 (String.capitalize (Parsetree_utils.name_of_vname vname))
+   | Parsetree.I_global ((Some fname), vname) ->
+       (* If the specified module name is the current compilation unit, *)
+       (* then again no need to find the species's module in another ML *)
+       (* "file-module" otherwise we explicitely prefix by the module   *)
+       (* name corresponding to the filename.                           *)
+       if fname <> current_unit then
+	 Format.fprintf out_fmter "%s." (String.capitalize fname) ;
+       Format.fprintf out_fmter "%s"
+	 (String.capitalize (Parsetree_utils.name_of_vname vname))
+;;
+
+
+
+(* ********************************************************************* *)
+(* current_unit: Types.fname -> Format.formatter -> Env.MlGenEnv.t ->    *)
+(*   Parsetree.coll_def -> Env.TypeInformation.species_description ->    *)
+(*     Dep_analysis.name_node list -> unit                               *)
+(** {b Descr} : Generate the OCaml code for a collection implementation.
+      The compilation model dumps:
+       - The record type representing the species actual representation,
+       - A call the the "implemented" species's collection generator,
+       - And a final value (of type above) representing the actual
+         species and borrowing every fields from the value obtained
+         via the collection generator application in order to make
+         the collection having its own record fields names.
+
+    {b Rem} : Exported outside this module.                              *)
+(* ********************************************************************* *)
 let collection_compile ~current_unit out_fmter env coll_def coll_descr
     dep_graph =
   let coll_name = coll_def.Parsetree.ast_desc.Parsetree.cd_name in
@@ -814,33 +1018,25 @@ let collection_compile ~current_unit out_fmter env coll_def coll_descr
     scc_dependency_graph_nodes = dep_graph ;
     scc_collections_carrier_mapping = collections_carrier_mapping ;
     scc_out_fmter = out_fmter } in
-  (* First, because "rep" is (it really must otherwise we bugged in our *)
-  (* analyses before !) defined. then we generate the type constraint   *)
-  (* reflecting its effective structure.                                *)
-  generate_rep_constraint_in_record_type
-    ctx coll_descr.Env.TypeInformation.spe_sig_methods ;
+  (* The record type representing the collection's type. *)
+  generate_record_type ctx coll_descr ;
+  (* We do not want any collection generator. Instead, we will call the  *)
+  (* collection generator of the collection we implement and apply it to *)
+  (* the functions it needs coming from the collection applied to its    *)
+  (* parameters if there are some.                                       *)
   (* Now generate the value representing the effective instance of the *)
   (* collection. We always name it by "effective_collection".          *)
-  Format.fprintf out_fmter "@[<2>let effective_collection =@ " ;
+  Format.fprintf out_fmter "@[<2>let effective_collection =@\n" ;
+  (* The temporary value resulting from the application of *)
+  (* the collection generator mentionned just above...     *)
+  Format.fprintf out_fmter "@[<2>let t =@\n" ;
   (* Now, get the collection generator from the closed species we implement. *)
   let implemented_species_name =
     coll_def.Parsetree.ast_desc.Parsetree.
       cd_body.Parsetree.ast_desc.Parsetree.se_name in
-  (match implemented_species_name.Parsetree.ast_desc with
-   | Parsetree.I_local vname
-   | Parsetree.I_global (None, vname) ->
-       (* Local species, so no need to find it in another ML "file-module". *)
-       Format.fprintf out_fmter "%s.collection_create"
-	 (String.capitalize (Parsetree_utils.name_of_vname vname))
-   | Parsetree.I_global ((Some fname), vname) ->
-       (* If the specified module name is the current compilation unit, *)
-       (* then again no need to find the species's module in another ML *)
-       (* "file-module" otherwise we explicitely prefix by the module   *)
-       (* name corresponding to the filename.                           *)
-       if fname <> current_unit then
-	 Format.fprintf out_fmter "%s." (String.capitalize fname) ;
-       Format.fprintf out_fmter "%s.collection_create"
-	 (String.capitalize (Parsetree_utils.name_of_vname vname))) ;
+  print_implemented_species_as_ocaml_module
+    ~current_unit out_fmter implemented_species_name ;
+  Format.fprintf out_fmter ".collection_create" ;
   (* Finally, we must recover the arguments to apply to this collection    *)
   (* generator. These arguments of course come from the species parameters *)
   (* the closed species we implement has (if it has some). We must         *)
@@ -860,12 +1056,47 @@ let collection_compile ~current_unit out_fmter env coll_def coll_descr
          (* species !                                                    *)
 	 assert false          (* [Unsure]. *)
      | Some params_info ->
+	 (* Get the names of the collections effectivly applied. *)
 	 let coll_body_params =
-	   coll_def.Parsetree.ast_desc.Parsetree.cd_body.Parsetree.ast_desc.
-	     Parsetree.se_params in
-	 apply_generator_to_parameters coll_body_params params_info) ;
+	   get_implements_effective_names
+	     coll_def.Parsetree.ast_desc.Parsetree.cd_body.Parsetree.ast_desc.
+	       Parsetree.se_params in
+	 apply_generator_to_parameters
+	   ~current_unit out_fmter coll_body_params params_info) ;
+    Format.fprintf out_fmter "@ in@]@\n" ;
+    (* And now, create the final value representing the effective instance *)
+    (* of our collection, borrowing each field from the temporary value    *)
+    (* obtained above. This way, our collection will have ITS own record   *)
+    (* fields names, preventing the need to use those coming fom the       *)
+    (* it implements.                                                      *)
+    Format.fprintf out_fmter "@[<2>{@ " ;
+    (* Make the record value borrowing every fields from the temporary *)
+    (* value generated by the collection generator.                    *)
+    List.iter
+      (function
+	| Env.TypeInformation.SF_sig (_, _, _)
+	| Env.TypeInformation.SF_theorem (_, _, _, _, _)
+	| Env.TypeInformation.SF_property (_, _, _, _) -> ()
+	| Env.TypeInformation.SF_let (_, n, _, _, _) ->
+	    Format.fprintf out_fmter "%a =@ t."
+	      Misc_ml_generation.pp_to_ocaml_vname n ;
+	    print_implemented_species_as_ocaml_module
+	      ~current_unit out_fmter implemented_species_name ;
+	    Format.fprintf out_fmter ".%a ;@\n"
+	      Misc_ml_generation.pp_to_ocaml_vname n
+	| Env.TypeInformation.SF_let_rec l ->
+	    List.iter
+	      (fun (_, n, _, _, _) ->
+		Format.fprintf out_fmter "%a =@ t."
+		  Misc_ml_generation.pp_to_ocaml_vname n ;
+		print_implemented_species_as_ocaml_module
+		  ~current_unit out_fmter implemented_species_name ;
+		Format.fprintf out_fmter ".%a ;@\n"
+		  Misc_ml_generation.pp_to_ocaml_vname n)
+	      l)
+      coll_descr.Env.TypeInformation.spe_sig_methods ;
     (* End the definition of the value representing the effective instance. *)
-    Format.fprintf out_fmter "@]@\n" ;
+    Format.fprintf out_fmter "@ }@]@]@\n" ;
     (* End the module representing the collection. *)
     Format.fprintf out_fmter "end ;;@]@\n@."
   with Not_found ->
@@ -877,3 +1108,4 @@ let collection_compile ~current_unit out_fmter env coll_def coll_descr
     assert false
   end)
 ;;
+

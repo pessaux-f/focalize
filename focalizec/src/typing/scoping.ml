@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.29 2007-10-02 09:29:36 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.30 2007-10-16 10:00:48 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -90,7 +90,7 @@ exception Self_cant_parameterize_itself of Location.t ;;
 
 (* ************************************************************************ *)
 (** {b Descr} : Exception raised when an expression used to represent the
-              value of a "is" species parameter is not a collection
+              value of a "is" or "in" species parameter is not a collection
 	      identifier.
 	      This is detected by the fact that the [expr] found in the
               AST is not an [E_constr]. In effect, because the parser uses
@@ -99,7 +99,7 @@ exception Self_cant_parameterize_itself of Location.t ;;
 
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
-exception Is_parameter_only_coll_ident of Location.t ;;
+exception Species_parameter_only_coll_ident of Location.t ;;
 
 
 
@@ -1179,7 +1179,8 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
            Parsetree.ast_desc = Parsetree.E_constr (scoped_cstr_expr, []) }
    | Parsetree.E_paren expr ->
        scope_expr_collection_cstr_for_is_param ctx env expr
-   | _ -> raise (Is_parameter_only_coll_ident initial_expr.Parsetree.ast_loc)
+   | _ ->
+       raise (Species_parameter_only_coll_ident initial_expr.Parsetree.ast_loc)
 ;;
 
 

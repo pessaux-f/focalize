@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.mli,v 1.3 2007-10-10 15:27:43 pessaux Exp $ *)
+(* $Id: parsetree_utils.mli,v 1.4 2007-10-16 10:00:48 pessaux Exp $ *)
 
 val name_of_vname : Parsetree.vname -> string
 (** Extracts the inner string name of the [vname] variable name. *)
@@ -46,3 +46,6 @@ module VnameSet :
     val choose : t -> elt
     val split : elt -> t -> t * bool * t
   end
+
+
+val get_local_idents_from_pattern : Parsetree.pattern -> Parsetree.vname list

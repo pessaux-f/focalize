@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.19 2007-10-09 08:38:15 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.20 2007-10-16 10:00:48 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -34,6 +34,9 @@ let main () =
        Arg.String (fun path -> Files.add_lib_path path),
        " adds the specified path to the path list where to search for \
 	 compiled interfaces.") ;
+      ("--no-ansi-escape",
+	  Arg.Unit Configuration.unset_fancy_ansi,
+       " disables ANSI escape sequences in the error messages.") ;
       ("--no-ocaml-code",
        Arg.Unit Configuration.unset_generate_ocaml,
        " disables the OCaml code generation.") ;
@@ -100,7 +103,7 @@ let main () =
       let out_file_name = (Filename.chop_extension input_file_name) ^ ".ml" in
       Main_ml_generation.root_compile
 	~current_unit ~out_file_name stuff_to_compile ;
-Env.MlGenEnv.empty ()  (* A CHANGER. *)
+Env.MlGenEnv.empty ()  (* [Unsure] A CHANGER. *)
       end)
     else Env.MlGenEnv.empty () in
   (* Now, generate the persistent interface file. *)

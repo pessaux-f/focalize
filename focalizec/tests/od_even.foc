@@ -1,0 +1,18 @@
+use "basics" ;;
+open "basics" ;;
+
+
+species OddEven =
+  rep = basics#int ;
+
+  let cinq in Self = 5 ;
+
+  let rec even (x in Self) =
+     if int_eq (x, 0) then true else odd (pred (x))
+  and odd (y in Self) =
+     if int_eq (y, 0) then false else even (pred (y)) ;
+end ;;
+
+collection COddEven implements OddEven ;;
+
+let r = COddEven!even (COddEven!cinq) ;;

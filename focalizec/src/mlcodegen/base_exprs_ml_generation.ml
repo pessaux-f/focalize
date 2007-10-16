@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.1 2007-10-09 08:37:35 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.2 2007-10-16 10:00:48 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -48,13 +48,13 @@ let generate_constant out_fmter constant =
 
 
 
-(* **************************************************************** *)
-(* reduced_compil_context -> Parsetree.ident -> unit                *)
+(* ******************************************************************** *)
+(* Misc_ml_generation.reduced_compil_context -> Parsetree.ident -> unit *)
 (** {b Descr} : Generate the OCaml code from a FoCaL [ident] in the
               context of method generator generation.
 
-    {b Rem} : Not exported outside this module.                     *)
-(* **************************************************************** *)
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
 let generate_ident_for_method_generator ctx ident =
   match ident.Parsetree.ast_desc with
    | Parsetree.I_local vname ->
@@ -90,21 +90,60 @@ let generate_ident_for_method_generator ctx ident =
 
 
 
-(* **************************************************************** *)
-(* reduced_compil_context -> Parsetree.expr_ident -> unit           *)
+(* ******************************************************************** *)
+(* Misc_ml_generation.reduced_compil_context ->                         *)
+(*   local_idents: Parsetree.vname list -> Parsetree.expr_ident ->      *)
+(*     unit                                                             *)
 (** {b Descr} : Generate the OCaml code from a FoCaL [ident] in the
               context of method generator generation.
 
-    {b Rem} : Not exported outside this module.                     *)
-(* **************************************************************** *)
-let generate_expr_ident_for_method_generator ctx ident =
+              The mosst tricky stuff is dealing with [ident] denoting
+              methods (i.e. "!-ed" identifiers).
+              If the method [ident] corresponds to a parameter's method
+              then we use the lambda-lifted principle. Otherwise, this
+              ident is considered as from something not abstracted, coming
+              from a toplevel collection. In this case, it is printed as
+              a field coming from the collection's effective value
+              (i.e. field "effective_collection" of the collection value)
+               with its scoping qualification if there is some.
+
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
+let generate_expr_ident_for_method_generator ctx ~local_idents ident =
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
+       (begin
        (* Thanks to the scoping pass, identifiers remaining "local" are *)
-       (* really let-bound in the contect of the expression, hence have *)
-       (* a direrct mapping between FoCaL and OCaml code.               *)
-       Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
-	 Misc_ml_generation.pp_to_ocaml_vname vname
+       (* either really let-bound in the contect of the expression,     *)
+       (* hence have a direct mapping between FoCaL and OCaml code, or  *)
+       (* species "in"-parameters and then must be mapped onto the      *)
+       (* lambda-lifted parameter introduced for it in the context of   *)
+       (* the current species.                                          *)
+       (* To check if a "smelling local" identifier is really local or  *)
+       (* a "in"-parameter of the species, we use the same reasoning    *)
+       (* that in [param_dep_analysis.ml]. Check justification over     *)
+       (* there ! *)
+       if (List.mem vname
+	     ctx.Misc_ml_generation.rcc_species_parameters_names) &&
+	 (not (List.mem vname local_idents)) then
+	 (begin
+	 (* In fact, a species "in"-parameter. This parameter was of the *)
+	 (* form "foo in C". Then it's naming scheme will be "_p_" +     *)
+         (* the species parameter's name + the method's name that is     *)
+         (* trivially the parameter's name again (because this last one  *)
+         (* is computed as the "stuff" a dependency was found on, and in *)
+         (* the case of a "in"-parameter, the dependency can only be on  *)
+         (* the parameter's value itself, not on any method since there  *)
+         (* is none !).                                                  *)
+	 Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "_p_%a_%a"
+	   Misc_ml_generation.pp_to_ocaml_vname vname
+	   Misc_ml_generation.pp_to_ocaml_vname vname
+	 end)
+       else
+	 (* Really a local identifier. *)
+	 Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
+	   Misc_ml_generation.pp_to_ocaml_vname vname
+       end)
    | Parsetree.EI_global (fname_opt, vname) ->
        (begin
        match fname_opt with
@@ -140,20 +179,36 @@ let generate_expr_ident_for_method_generator ctx ident =
 		 (begin
 		 (* Method call from a species that is not the current but  *)
 		 (* is implicitely in the current compilation unit. May be  *)
-		 (* either a paramater or a toplevel defined collection. To *)
-		 (* retrieve the related method name we build it the same   *)
-		 (* way we built it while generating the extra OCaml        *)
-		 (* function's parameters due to depdencencies coming from  *)
-                 (* the species parameter. I.e: "_p_", followed by the      *)
-		 (* species parameter name, followed by "_", followed by    *)
-		 (* the method's name.                                      *)
-		 let prefix =
-		   "_p_" ^
-		   (String.uncapitalize
-		      (Parsetree_utils.name_of_vname coll_name)) ^
-		   "_" in
-		 Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter
-		   "%s%a" prefix Misc_ml_generation.pp_to_ocaml_vname vname
+		 (* either a paramater or a toplevel defined collection.    *)
+		 if List.mem
+		     coll_name
+		     ctx.Misc_ml_generation.rcc_species_parameters_names then
+		   (begin
+		   (* It comes from a parameter. To retrieve the related *)
+		   (* method name we build it the same way we built it   *)
+                   (* while generating the extra OCaml function's        *)
+                   (* parameters due to depdencencies coming from the    *)
+                   (* species parameter. I.e: "_p_", followed by the     *)
+		   (* species parameter name, followed by "_", followed  *)
+		   (* by the method's name.                               *)
+		   let prefix =
+		     "_p_" ^
+		     (String.uncapitalize
+			(Parsetree_utils.name_of_vname coll_name)) ^
+		     "_" in
+		   Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter
+		     "%s%a" prefix Misc_ml_generation.pp_to_ocaml_vname vname
+		   end)
+		 else
+		   (begin
+		   (* It comes from a toplevel stuff, hence not abstracted *)
+		   (* by lambda-lifting.                                   *)
+		   Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter
+		     "%a.effective_collection.%a.%a"
+		     Misc_ml_generation.pp_to_ocaml_vname coll_name
+		     Misc_ml_generation.pp_to_ocaml_vname coll_name
+		     Misc_ml_generation.pp_to_ocaml_vname vname
+		   end)
 		 end)
 	     | (Some module_name, coll_name) ->
 		 (begin
@@ -164,13 +219,26 @@ let generate_expr_ident_for_method_generator ctx ident =
 		   (* compilation unit : the call is performed to a method    *)
                    (* a species that is EXPLICITELY in the current            *)
                    (* compilation unit.                                       *)
-		   let prefix =
-		     "_p_" ^
-		     (String.uncapitalize
-			(Parsetree_utils.name_of_vname coll_name)) ^
-		     "_" in
-		   Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter
-		     "%s%a" prefix Misc_ml_generation.pp_to_ocaml_vname vname
+		   if List.mem
+		       coll_name
+		       ctx.Misc_ml_generation.rcc_species_parameters_names then
+		     (begin
+		     let prefix =
+		       "_p_" ^
+		       (String.uncapitalize
+			  (Parsetree_utils.name_of_vname coll_name)) ^
+		       "_" in
+		     Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter
+		       "%s%a" prefix Misc_ml_generation.pp_to_ocaml_vname vname
+		       end)
+		   else
+		     (begin
+		     Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter
+		       "%a.effective_collection.%a.%a"
+		       Misc_ml_generation.pp_to_ocaml_vname coll_name
+		       Misc_ml_generation.pp_to_ocaml_vname coll_name
+		       Misc_ml_generation.pp_to_ocaml_vname vname
+		     end)
 		   end)
 		 else
 		   (begin
@@ -188,7 +256,8 @@ let generate_expr_ident_for_method_generator ctx ident =
 
 
 (* ******************************************************************** *)
-(* reduced_compil_context ->  Parsetree.constructor_ident -> unit       *)
+(* Misc_ml_generation.reduced_compil_context ->                         *)
+(*   Parsetree.constructor_ident -> unit                                *)
 (** {b Descr} : Generate the OCaml code from a FoCaL [constructor_expr]
               in the context of method generator generation.
 
@@ -267,7 +336,8 @@ let generate_pattern ctx pattern =
 
 
 
-let rec let_binding_compile ctx collections_carrier_mapping bd opt_sch =
+let rec let_binding_compile ctx local_idents collections_carrier_mapping
+    bd opt_sch =
   let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
   (* Generate the bound name. *)
   Format.fprintf out_fmter "%a"
@@ -304,36 +374,41 @@ let rec let_binding_compile ctx collections_carrier_mapping bd opt_sch =
   (* Output now the "=" sign ending the OCaml function's "header".    *)
   (* With a NON-breakable space before to prevent uggly hyphenation ! *)
   Format.fprintf out_fmter " =@ " ;
+  (* Here, each parameter name of the binding may mask a "in"-parameter. *)
+  let local_idents' = params_names @ local_idents in
   (* Now, let's generate the bound body. *)
-  generate_expr ctx bd.Parsetree.ast_desc.Parsetree.b_body
+  generate_expr ctx ~local_idents: local_idents'
+    bd.Parsetree.ast_desc.Parsetree.b_body
 
 
 
-(* ************************************************************************ *)
-(* reduced_compil_context -> Parsetree.let_def -> Types.type_scheme list -> *)
-(*   unit                                                                   *)
+(* ********************************************************************* *)
+(* Misc_ml_generation.reduced_compil_context ->                          *)
+(*   local_idents: Parsetree.vname list -> Parsetree.let_def ->          *)
+(*     Types.type_scheme list -> unit                                    *)
 (** {b Desrc} : Generates the OCaml code for a FoCaL "let"-definition.
 
     {b Args} :
       - [out_fmter] : The out channel where to generate the OCaml source
               code.
+      - [local_idents] : The list of known local identifiers in the
+          scope of this "let" EXPRESSION.
       - [let_def] : The [Parsetree.let_def] structure representing the
-              "let-definition" for which th generate the OCaml source
-               code.
+          "let-definition" for which th generate the OCaml source code.
       - [bound_schemes] : The list of types schemes of the identifiers
-              bound to the "let-definition" (i.e. several if the
-              definition is a "rec", hence binds several identifiers).
-              In effect, because we do not have directly inside the
-              [Parsetree.let_def] these schemes, in order to be able to
-	      generate the type constraints of each components of the
-              "let-definition", we must take these schemes aside.
-              It is sometimes impossible yet to have this information.
-              In this case, no type constraint will be added to the
-              parameter of the bound identifiers.
+          bound to the "let-definition" (i.e. several if the definition
+          is a "rec", hence binds several identifiers).
+          In effect, because we do not have directly inside the
+          [Parsetree.let_def] these schemes, in order to be able to
+	  generate the type constraints of each components of the
+          "let-definition", we must take these schemes aside.
+          It is sometimes impossible yet to have this information.
+          In this case, no type constraint will be added to the
+          parameter of the bound identifiers.
 
-    {b Rem} : Not exported outside this module.                             *)
-(* ************************************************************************ *)
-and let_def_compile ctx let_def opt_bound_schemes =
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
+and let_def_compile ctx ~local_idents let_def opt_bound_schemes =
   let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
   (* Generates the binder ("rec" or non-"rec"). *)
   Format.fprintf out_fmter "@[<2>let%s@ "
@@ -352,13 +427,13 @@ and let_def_compile ctx let_def opt_bound_schemes =
        (* The let construct should always at least bind one identifier ! *)
        assert false
    | ([one_bnd], [one_scheme]) ->
-       let_binding_compile ctx [] one_bnd one_scheme
+       let_binding_compile ctx local_idents [] one_bnd one_scheme
    | ((first_bnd :: next_bnds), (first_scheme :: next_schemes)) ->
-       let_binding_compile ctx [] first_bnd first_scheme ;
+       let_binding_compile ctx local_idents [] first_bnd first_scheme ;
        List.iter2
 	 (fun binding scheme ->
 	   Format.fprintf out_fmter "@]@\n@[<2>and " ;
-	   let_binding_compile ctx [] binding scheme)
+	   let_binding_compile ctx local_idents [] binding scheme)
 	 next_bnds
 	 next_schemes
    | (_, _) ->
@@ -370,15 +445,16 @@ and let_def_compile ctx let_def opt_bound_schemes =
 
 
 
-(* ************************************************************* *)
-(* reduced_compil_context -> Parsetree.expr -> unit              *)
+(* ******************************************************************** *)
+(* Misc_ml_generation.reduced_compil_context ->                         *)
+(*   local_idents: Parsetree.vname list ->  Parsetree.expr -> unit      *)
 (** {b Descr} : Generate the OCaml code from a FoCaL expression.
 
-    {b Rem} : Not exported outside this module.                  *)
-(* ************************************************************* *)
-and generate_expr ctx initial_expression =
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
+and generate_expr ctx ~local_idents initial_expression =
   let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
-  let rec rec_generate expr =
+  let rec rec_generate loc_idents expr =
     (* Generate the source code for the expression. *)
     match expr.Parsetree.ast_desc with
      | Parsetree.E_self ->
@@ -390,15 +466,18 @@ and generate_expr ctx initial_expression =
 	     Format.fprintf out_fmter "@[<2>fun@ %a@ ->@ "
 	       Misc_ml_generation.pp_to_ocaml_vname n)
 	   args_names ;
-	 rec_generate body ;
+	 (* Here, the function parameter name may mask a "in"-parameter. *)
+	 let loc_idents' = args_names @ loc_idents in
+	 rec_generate loc_idents' body ;
          Format.fprintf out_fmter "@]"
      | Parsetree.E_var ident ->
-	 generate_expr_ident_for_method_generator ctx ident
+	 generate_expr_ident_for_method_generator
+	   ctx ~local_idents: loc_idents ident
      | Parsetree.E_app (expr, exprs) ->
 	 Format.fprintf out_fmter "@[<2>(" ;
-	 rec_generate expr ;
+	 rec_generate loc_idents expr ;
 	 Format.fprintf out_fmter "@ " ;
-	 rec_generate_exprs_list ~comma: false exprs ;
+	 rec_generate_exprs_list ~comma: false loc_idents exprs ;
 	 Format.fprintf out_fmter ")@]"
      | Parsetree.E_constr (cstr_expr, exprs) ->
 	 (begin
@@ -408,13 +487,13 @@ and generate_expr ctx initial_expression =
 	  | _ ->
 	      (* If argument(s), enclose by parens to possibly make a tuple. *)
 	      Format.fprintf out_fmter "@ @[<1>(" ;
-	      rec_generate_exprs_list ~comma: true exprs ;
+	      rec_generate_exprs_list ~comma: true loc_idents exprs ;
 	      Format.fprintf out_fmter ")@]"
 	 end)
      | Parsetree.E_match (matched_expr, pats_exprs) ->
 	 (begin
 	 Format.fprintf out_fmter "@[<1>match " ;
-	 rec_generate matched_expr ;
+	 rec_generate loc_idents matched_expr ;
 	 Format.fprintf out_fmter " with" ;
 	 List.iter
 	   (fun (pattern, expr) ->
@@ -424,18 +503,22 @@ and generate_expr ctx initial_expression =
 	     generate_pattern ctx pattern ;
 	     (* Enclose each match-case by begin/end to ensure no confusion. *)
              Format.fprintf out_fmter " ->@\n(begin@\n" ;
-	     rec_generate expr ;
+	     (* Here, each name of the pattern may mask a "in"-parameter. *)
+	     let loc_idents' =
+	       (Parsetree_utils.get_local_idents_from_pattern pattern) @
+	       loc_idents in
+	     rec_generate loc_idents'  expr ;
 	     Format.fprintf out_fmter "@\nend)@]")
 	   pats_exprs ;
 	 Format.fprintf out_fmter "@]"
 	 end)
      | Parsetree.E_if (expr1, expr2, expr3) ->
 	 Format.fprintf out_fmter "@[<2>if@ " ;
-	 rec_generate expr1 ;
+	 rec_generate loc_idents expr1 ;
 	 Format.fprintf out_fmter "@ @[<2>then@ @]" ;
-	 rec_generate expr2 ;
+	 rec_generate loc_idents expr2 ;
          Format.fprintf out_fmter "@ @[<2>else@ @]" ;
-	 rec_generate expr3 ;
+	 rec_generate loc_idents expr3 ;
          Format.fprintf out_fmter "@]"
      | Parsetree.E_let (let_def, in_expr) ->
 	 (* Here we do not have trype contraints under the hand. So give-up *)
@@ -445,19 +528,19 @@ and generate_expr ctx initial_expression =
 	   List.map
 	     (fun _ -> None)
 	     let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
-	 let_def_compile ctx let_def bound_schemes ;
+	 let_def_compile ctx ~local_idents: loc_idents let_def bound_schemes ;
 	 Format.fprintf out_fmter "@ in@\n" ;
-	 rec_generate in_expr
+	 rec_generate loc_idents in_expr
      | Parsetree.E_record labs_exprs ->
 	 (begin
 	 Format.fprintf out_fmter "@[<1>{@ " ;
-	 rec_generate_record_field_exprs_list labs_exprs ;
+	 rec_generate_record_field_exprs_list loc_idents labs_exprs ;
 	 Format.fprintf out_fmter "@ }@]"
 	 end)
      | Parsetree.E_record_access (expr, label_name) ->
 	 (begin
 	 Format.fprintf out_fmter "@[<2>" ;
-	 rec_generate expr ;
+	 rec_generate loc_idents expr ;
 	 Format.fprintf out_fmter ".@,%s@]" label_name
 	 end)
      | Parsetree.E_record_with (expr, labs_exprs) ->
@@ -465,14 +548,14 @@ and generate_expr ctx initial_expression =
 	 (* Because in OCaml the with construct only starts by an ident, we *)
 	 (* create a temporary ident to bind the expression to an ident.    *)
 	 Format.fprintf out_fmter "@[<2>let __foc_tmp_with_ =@ " ;
-	 rec_generate expr ;
+	 rec_generate loc_idents expr ;
 	 Format.fprintf out_fmter "@ in@] " ;
 	 (* Now really generate the "with"-construct. *)
 	 Format.fprintf out_fmter "@[<2>{ __foc_tmp_with_ with@\n" ;
 	 List.iter
 	   (fun (label_name, field_expr) ->
 	     Format.fprintf out_fmter "%s =@ " label_name ;
-	     rec_generate field_expr ;
+	     rec_generate loc_idents field_expr ;
 	     Format.fprintf out_fmter " ;")
 	   labs_exprs ;
 	 Format.fprintf out_fmter "@ }@]"
@@ -481,10 +564,10 @@ and generate_expr ctx initial_expression =
 	 (begin
 	 match exprs with
 	  | [] -> assert false
-	  | [one] -> rec_generate one
+	  | [one] -> rec_generate loc_idents one
 	  | _ ->
 	      Format.fprintf out_fmter "@[<1>(" ;
-	      rec_generate_exprs_list ~comma: true exprs ;
+	      rec_generate_exprs_list ~comma: true loc_idents exprs ;
 	      Format.fprintf out_fmter ")@]"
 	 end)
      | Parsetree.E_external external_expr ->
@@ -505,31 +588,31 @@ and generate_expr ctx initial_expression =
 	     (Externals_ml_generation.No_external_value_caml_def
 		((Parsetree.Vlident "<expr>"), expr.Parsetree.ast_loc))
 	 end)
-     | Parsetree.E_paren e -> rec_generate e
+     | Parsetree.E_paren e -> rec_generate loc_idents e
 
 
 
-  and rec_generate_exprs_list ~comma = function
+  and rec_generate_exprs_list ~comma loc_idents = function
     | [] -> ()
-    | [last] -> rec_generate last
+    | [last] -> rec_generate loc_idents last
     | h :: q ->
-	rec_generate h ;
+	rec_generate loc_idents h ;
 	if comma then Format.fprintf out_fmter ",@ "
 	else Format.fprintf out_fmter "@ " ;
-	rec_generate_exprs_list ~comma q
+	rec_generate_exprs_list ~comma loc_idents q
 
 
-  and rec_generate_record_field_exprs_list = function
+  and rec_generate_record_field_exprs_list loc_idents = function
     | [] -> ()
     | [(label, last)] ->
 	Format.fprintf out_fmter "%s =@ " label ;
-	rec_generate last
+	rec_generate loc_idents last
     | (h_label, h_expr) :: q ->
 	Format.fprintf out_fmter "%s =@ " h_label ;
-	rec_generate h_expr ;
+	rec_generate loc_idents h_expr ;
 	Format.fprintf out_fmter " ;@ " ;
-	rec_generate_record_field_exprs_list q in
+	rec_generate_record_field_exprs_list loc_idents q in
   (* ********************** *)
   (* Now, let's do the job. *)
-  rec_generate initial_expression
+  rec_generate local_idents initial_expression
 ;;
