@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.4 2007-10-16 10:00:48 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.5 2007-10-16 12:32:34 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -325,6 +325,24 @@ type compiled_species_fields =
 
 
 
+(* ************************************************************************* *)
+(** {b Descr} : Describes when starting the code of a let binding how it
+       must be linked to the possible previous code. If the binding is the
+       first of a non-recursive definition, then it must be introduced by
+       "let ". If it is the first of a recursive definition, then it must be
+       introduced by "let rec ". If it is not the first of a multiple
+       definition, then it must be introduced by "and ".
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+type let_connector =
+  | LC_first_non_rec
+  | LC_first_rec
+  | LC_following
+;;
+
+
+
 (* *********************************************************************** *)
 (* species_compil_context -> Parsetree.vname list ->                       *)
 (*   Env.TypeInformation.species_field -> unit                             *)
@@ -344,11 +362,11 @@ type compiled_species_fields =
 let generate_methods ctx species_parameters_names field =
   let out_fmter = ctx.scc_out_fmter in
   let collections_carrier_mapping = ctx.scc_collections_carrier_mapping in
-  (* Local function to handle one binding. Will be directly used in case *)
-  (* of [SF_let] field, or be iterated in case of [SF_let_rec] field.    *)
-  (* The [~is_first] boolean tells whether we must start de function     *)
-  (* binding with "let" or "and".                                        *)
-  let generate_one_binding ~is_first (from, name, params, scheme, body) =
+  (* Local function to handle one binding. Will be directly used in case  *)
+  (* of [SF_let] field, or be iterated in case of [SF_let_rec] field.     *)
+  (* The [~let_connect] parameter tells whether we must start de function *)
+  (* binding with "let" or "and".                                         *)
+  let generate_one_binding ~let_connect (from, name, params, scheme, body) =
     (* Get all the methods we directly decl-depend on. They will   *)
     (* lead each to an extra parameter of the final OCaml function *)
     (* (lambda-lifing).                                            *)
@@ -392,12 +410,16 @@ let generate_methods ctx species_parameters_names field =
 	Format.eprintf "Generating OCaml code for field '%a'.@."
 	  Misc_ml_generation.pp_to_ocaml_vname name ;
       (* Start the OCaml function definition. *)
-      if is_first then
-	Format.fprintf out_fmter "@[<2>let %a"
-	  Misc_ml_generation.pp_to_ocaml_vname name
-      else
-	Format.fprintf out_fmter "@[<2>and %a"
-	  Misc_ml_generation.pp_to_ocaml_vname name ;
+      (match let_connect with
+       | LC_first_non_rec ->
+	   Format.fprintf out_fmter "@[<2>let %a"
+	     Misc_ml_generation.pp_to_ocaml_vname name
+       | LC_first_rec ->
+	   Format.fprintf out_fmter "@[<2>let rec %a"
+	     Misc_ml_generation.pp_to_ocaml_vname name
+       | LC_following ->
+	   Format.fprintf out_fmter "@[<2>and %a"
+	     Misc_ml_generation.pp_to_ocaml_vname name) ;
       (* First, abstract according to the species's parameters the current  *)
       (* method depends on.                                                 *)
       List.iter
@@ -495,7 +517,8 @@ let generate_methods ctx species_parameters_names field =
        Some
 	 (CSF_let
 	    (generate_one_binding
-	       ~is_first: true (from, name, params, (Some scheme), body)))
+	       ~let_connect: LC_first_non_rec
+	       (from, name, params, (Some scheme), body)))
    | Env.TypeInformation.SF_let_rec l ->
        (begin
        match l with
@@ -506,12 +529,13 @@ let generate_methods ctx species_parameters_names field =
 	| (from, name, params, scheme, body) :: q ->
 	    let first_compiled =
 	      generate_one_binding
-		~is_first: true (from, name, params, (Some scheme), body) in
+		~let_connect: LC_first_rec
+		(from, name, params, (Some scheme), body) in
 	    let rem_compiled =
 	      List.map
 		(fun (from, name, params, scheme, body) ->
 		  generate_one_binding
-		    ~is_first: false
+		    ~let_connect: LC_following
 		    (from, name, params, (Some scheme), body))
 		q in
 	    Some (CSF_let_rec (first_compiled :: rem_compiled))

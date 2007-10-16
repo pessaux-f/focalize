@@ -2,6 +2,11 @@ use "basics" ;;
 open "basics" ;;
 
 
+(* ************************************************** *)
+(* Must pass.                                         *)
+(* Example showing simple mutually recursive methods. *)
+(* ************************************************** *)
+
 species OddEven =
   rep = basics#int ;
 
