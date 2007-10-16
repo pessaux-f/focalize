@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.30 2007-10-16 10:00:48 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.31 2007-10-16 10:32:54 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -99,7 +99,7 @@ exception Self_cant_parameterize_itself of Location.t ;;
 
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
-exception Species_parameter_only_coll_ident of Location.t ;;
+exception Is_parameter_only_coll_ident of Location.t ;;
 
 
 
@@ -1180,7 +1180,7 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
    | Parsetree.E_paren expr ->
        scope_expr_collection_cstr_for_is_param ctx env expr
    | _ ->
-       raise (Species_parameter_only_coll_ident initial_expr.Parsetree.ast_loc)
+       raise (Is_parameter_only_coll_ident initial_expr.Parsetree.ast_loc)
 ;;
 
 

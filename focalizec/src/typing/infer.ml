@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.77 2007-10-16 10:00:48 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.78 2007-10-16 10:32:54 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1619,8 +1619,7 @@ let rec typecheck_expr_as_species_parameter_argument ctx env initial_expr =
    | _ ->
        (* Should be always caught before, at scoping phase. *)
        raise
-	 (Scoping.Species_parameter_only_coll_ident
-	    initial_expr.Parsetree.ast_loc)
+	 (Scoping.Is_parameter_only_coll_ident initial_expr.Parsetree.ast_loc)
 ;;
 
 
@@ -1785,17 +1784,9 @@ let apply_species_arguments ctx env base_spe_descr params =
 	  let (Parsetree.SP e_param_expr) = e_param.Parsetree.ast_desc in
 	  match f_param with
 	   | Env.TypeInformation.SPAR_in (f_name, f_ty) ->
-	       (* First, get the argument expression's type. It is encoded *)
-	       (* as an [expr] but it is too large in fact. So let's       *)
-               (* restrict here to consider [expr]s legal for a            *)
-               (* "in"-parameter syntax.                                   *)
-	       let ((expr_as_species_fname, expr_as_species_spname), _) =
-		 typecheck_expr_as_species_parameter_argument
-		   ctx env e_param_expr in
-	       let expr_ty_as_species_ty =
-		 Types.type_rep_species
-		   ~species_module: expr_as_species_fname
-		   ~species_name: expr_as_species_spname in
+	       (begin
+	       (* First, get the argument expression's type. *)
+	       let expr_ty = typecheck_expr ctx env e_param_expr in
 	       (* The formal's collection type [f_ty] is the name of the *)
 	       (* collection that the effective argument is expected to  *)
                (* be a carrier of. Then one must unify the effective     *)
@@ -1806,8 +1797,7 @@ let apply_species_arguments ctx env base_spe_descr params =
 		   ~species_module: (fst f_ty) ~species_name: (snd f_ty) in
                Types.unify
 		 ~loc: e_param.Parsetree.ast_loc
-		 ~self_manifest: ctx.self_manifest
-		 repr_of_formal expr_ty_as_species_ty ;
+		 ~self_manifest: ctx.self_manifest repr_of_formal expr_ty ;
 	       (* And now, the new methods where x <- e (in Virgile's thesis) *)
                (* i.e. here, [f_name] <- [e_param_expr].                      *)
 	       let substd_meths =
@@ -1817,6 +1807,7 @@ let apply_species_arguments ctx env base_spe_descr params =
 		      f_name e_param_expr.Parsetree.ast_desc)
 		   accu_meths in
 	       substd_meths
+	       end)
 	   | Env.TypeInformation.SPAR_is (f_name, c1_ty) ->
 	       let c1 =
 		 (ctx.current_unit, (Parsetree_utils.name_of_vname f_name)) in

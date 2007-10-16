@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.21 2007-10-16 10:00:48 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.22 2007-10-16 10:32:54 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -171,7 +171,7 @@ try Check_file.main () with
 	   "%a:@\n@[%t'Self'@ can't@ be@ parameterized@ by@ itself%t.@]@."
 	   Location.pp_location at
 	   Handy.pp_set_bold Handy.pp_reset_effects
-     | Scoping.Species_parameter_only_coll_ident at ->
+     | Scoping.Is_parameter_only_coll_ident at ->
 	 Format.fprintf Format.err_formatter
 	   "%a:@\n@[%tA@ \"is\"@ parameter@ can@ only@ be@ a@ collection@ identifier%t.@]@."
 	   Location.pp_location at
