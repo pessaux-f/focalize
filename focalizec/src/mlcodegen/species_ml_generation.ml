@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.6 2007-10-17 11:45:28 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.7 2007-10-17 14:13:19 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -336,9 +336,11 @@ type compiled_species_fields =
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
 type let_connector =
-  | LC_first_non_rec
-  | LC_first_rec
-  | LC_following
+  | LC_first_non_rec   (** The binding is the first of a non-recursive
+			   definition. *)
+  | LC_first_rec   (** The binding is the first of a recursive definition. *)
+  | LC_following   (** The binding is not the first of a multiple definition
+		       (don't matter if the definition is recursive or not). *)
 ;;
 
 
