@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.29 2007-10-09 08:38:15 pessaux Exp $ *)
+(* $Id: types.ml,v 1.30 2007-10-17 14:13:53 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -808,15 +808,11 @@ let unify ~loc ~self_manifest type1 type2 =
 	 match self_manifest with
 	  | None -> raise (Conflict (ty1, ty2, loc))
 	  | Some self_is_that ->
-	      (* Same remark than in the mirror case above. *)
+	      (* Same remarks than in the mirror case above. *)
 	      let self_is_that_copied =
 		copy_type_simple_but_variables
 		  ~and_abstract: None self_is_that in
 	      lowerize_levels ty1.ts_level ty2 ;
-	      (* If the type to what Self is equal is "Self", this means   *)
-	      (* that by side effect, a successful unification changed it  *)
-	      (* hence, do not recurse endless, and accept the unification *)
-	      (* again because it already succeeded.                       *)
 	      if not (is_self self_is_that_copied) then
 		rec_unify self_is_that_copied ty1 ;
 	      (* Always return Self to keep abstraction ! *)
