@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.22 2007-10-16 10:32:54 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.23 2007-10-17 11:45:28 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -73,6 +73,10 @@ try Check_file.main () with
      | Scoping.Module_not_specified_as_used modname ->
 	 Format.fprintf Format.err_formatter
 	   "@[Module@ '%s'@ was@ not@ declared@ as@ \"use\".@]@." modname
+     | Scoping.Parametrized_species_wrong_arity at ->
+	 Format.fprintf Format.err_formatter
+	   "%a:@\n@[%tWrong number of species parameters%t.@]@."
+	   Location.pp_location at Handy.pp_set_bold Handy.pp_reset_effects
 (* *************************** *)
 (* Generic environments stuff. *)
      | Env.Unbound_constructor (vname, at) ->

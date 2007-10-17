@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.5 2007-10-16 12:32:34 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.6 2007-10-17 11:45:28 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -813,8 +813,13 @@ let species_compile ~current_unit out_fmter species_def species_descr
       species_descr.Env.TypeInformation.spe_sig_methods in
   (* Now build the list of the species parameters names to make *)
   (* them public in the future ml generation environnment.      *)
-  let species_params_names =
-    List.map fst species_def_desc.Parsetree.sd_params in
+  let species_params_names_n_kinds =
+    List.map
+      (fun (pname, pkind) ->
+	match pkind.Parsetree.ast_desc with
+         | Parsetree.SPT_in _ -> (pname, Env.ScopeInformation.SPK_in)
+	 | Parsetree.SPT_is _ -> (pname, Env.ScopeInformation.SPK_is))
+      species_def_desc.Parsetree.sd_params in
   (* Now check if the species supports a collection generator because fully *)
   (* defined and get the information about which arguments to pass in order *)
   (* to later call the collection generator.                                *)
@@ -822,7 +827,7 @@ let species_compile ~current_unit out_fmter species_def species_descr
     if species_descr.Env.TypeInformation.spe_is_closed then
       Some
 	{ Env.MlGenInformation.cgi_implemented_species_params_names =
-	    species_params_names ;
+	    species_params_names_n_kinds ;
 	  Env.MlGenInformation.cgi_generator_parameters =
 	    generate_collection_generator ctx compiled_fields }
     else None in
@@ -834,9 +839,16 @@ let species_compile ~current_unit out_fmter species_def species_descr
 
 
 
+type collection_effective_arguments =
+  | CEA_coll_name_for_is of Parsetree.may_be_qualified_vname
+  | CEA_value_expr_for_in of Parsetree.expr
+;;
+
+
+
 (* ************************************************************************* *)
 (* current_unit: string -> Format.formatter ->                               *)
-(*   (string option * Parsetree.vname) list ->                               *)
+(*   collection_effective_arguments list ->                                  *)
 (*     Env.MlGenInformation.collection_generator_info -> unit                *)
 (** {b Descr} : This function recovers from the fully defined species the
     collection implements, the names of its parameters names. Then it gets
@@ -886,55 +898,102 @@ let apply_generator_to_parameters ~current_unit out_fmter coll_body_params
   let formal_to_effective_map =
     (try
       List.map2
-	(fun formal (opt_effective_fname, effective_vname) ->
-	  match opt_effective_fname with
-	   | None ->
-	       (* Assumed to be local to the current unit. *)
-	       (formal, (None, effective_vname))
-	   | Some effective_fname ->
-	       (* If the species belongs to the current unit, then we don't *)
-	       (* need to qualify it in the OCaml generated code. Then we   *)
-               (* simply discard its explicit hosting information.          *)
-	       if effective_fname = current_unit then
-		 (formal, (None, effective_vname))
-	       else (formal, (opt_effective_fname, effective_vname)))
+	(fun formal_info effective_info ->
+	  match (formal_info, effective_info) with
+	   | ((formal, Env.ScopeInformation.SPK_is),
+	      CEA_coll_name_for_is (opt_effective_fname, effective_vname)) ->
+	       (begin
+	       (* "In" parameter. Leads to collection name based stuff. *)
+	       match opt_effective_fname with
+		| None ->
+		    (* Assumed to be local to the current unit. *)
+		    (formal, CEA_coll_name_for_is (None, effective_vname))
+		| Some effective_fname ->
+		    (* If the species belongs to the current unit, then we   *)
+		    (* don't need to qualify it in the OCaml generated code. *)
+		    (* Then we simply discard its explicit hosting           *)
+		    (* information.                                          *)
+		    if effective_fname = current_unit then
+		      (formal, CEA_coll_name_for_is (None, effective_vname))
+		    else
+		      (formal,
+		       CEA_coll_name_for_is
+			 (opt_effective_fname, effective_vname))
+	       end)
+	   | ((formal, Env.ScopeInformation.SPK_in),
+	      (CEA_value_expr_for_in effective_expr)) ->
+	       (begin
+	       (* "Is" parameter. Leads to direct value based stuff. *)
+	       (formal, (CEA_value_expr_for_in effective_expr))
+	       end)
+	   | (_, _) ->
+	       (* This would mean that we try to apply an effective stuff    *)
+	       (* in:is-incompatible with the kind of the species parameter. *)
+	       (* This should have been caught before by the analyses !      *)
+	       assert false)
 	col_gen_params_info.Env.MlGenInformation.
           cgi_implemented_species_params_names
 	coll_body_params
-    with _ -> assert false  (* The lists length must be equal. *)) in
-  (* Now, generate the argment identifier for each *)
-  (* expected collection generator parameter.      *)
+    with Invalid_argument "List.map2" ->
+      assert false  (* The lists length must be equal. *)) in
+  (* Now, generate the argment identifier or expression *)
+  (* for each expected collection generator parameter.  *)
   List.iter
     (fun (formal_species_param_name, method_names) ->
-      let (corresponding_effective_opt_fname, corresponding_effective_vname) =
-	List.assoc formal_species_param_name formal_to_effective_map in
-      Parsetree_utils.VnameSet.iter
-	(fun meth_name ->
-	  (* If needed, qualify the name of the species in the OCaml code. *)
-	  (match corresponding_effective_opt_fname with
-	   | Some fname ->
-	       Format.fprintf out_fmter "%s." (String.capitalize fname)
-	   | None -> ()) ;
-	  (* Species name."effective_collection.". *)
-	  Format.fprintf out_fmter "@ %a.effective_collection."
-	    Misc_ml_generation.pp_to_ocaml_vname corresponding_effective_vname ;
-	  (* If needed, qualify the name of the species in the OCaml code. *)
-	  (match corresponding_effective_opt_fname with
-	   | Some fname ->
-	       Format.fprintf out_fmter "%s." (String.capitalize fname)
-	   | None -> ()) ;
-	  (* Species name.method name. *)
-	  Format.fprintf out_fmter "%a.%a"
-	    Misc_ml_generation.pp_to_ocaml_vname corresponding_effective_vname
-	    Misc_ml_generation.pp_to_ocaml_vname meth_name)
-	method_names)
+      match List.assoc formal_species_param_name formal_to_effective_map with
+       | CEA_coll_name_for_is
+	   (corresponding_effective_opt_fname, corresponding_effective_vname) ->
+	   (begin
+	   Parsetree_utils.VnameSet.iter
+	     (fun meth_name ->
+	       (* If needed, qualify the name of the *)
+	       (* species in the OCaml code. *)
+	       (match corresponding_effective_opt_fname with
+		| Some fname ->
+		    Format.fprintf out_fmter "%s." (String.capitalize fname)
+		| None -> ()) ;
+	       (* Species name."effective_collection.". *)
+	       Format.fprintf out_fmter "@ %a.effective_collection."
+		 Misc_ml_generation.pp_to_ocaml_vname
+		 corresponding_effective_vname ;
+	       (* If needed, qualify the name of the species *)
+               (* in the OCaml code. *)
+	       (match corresponding_effective_opt_fname with
+		| Some fname ->
+		    Format.fprintf out_fmter "%s." (String.capitalize fname)
+		| None -> ()) ;
+	       (* Species name.method name. *)
+	       Format.fprintf out_fmter "%a.%a"
+		 Misc_ml_generation.pp_to_ocaml_vname
+		 corresponding_effective_vname
+		 Misc_ml_generation.pp_to_ocaml_vname meth_name)
+	     method_names
+	   end)
+       | CEA_value_expr_for_in expr ->
+	   (begin
+	   Format.fprintf out_fmter "(@[<1>" ;
+	   let expr_ctx = {
+	     Misc_ml_generation.rcc_current_unit = current_unit ;
+	     (* Since we are in the context of a collection and since a *)
+             (* collection does not have parameters, the                *)
+             (* [rcc_species_parameters_names] is trivially empty.      *)
+	     Misc_ml_generation.rcc_species_parameters_names = [] ;
+	     Misc_ml_generation.rcc_out_fmter = out_fmter } in
+	   (* No local idents in the context because we just enter the scope *)
+	   (* of a species fields and so we are not under a core expression. *)
+	   Base_exprs_ml_generation.generate_expr
+	     expr_ctx ~local_idents: [] expr ;
+	   Format.fprintf out_fmter ")@]" ;
+	   end))
     col_gen_params_info.Env.MlGenInformation.cgi_generator_parameters
 ;;
 
 
 
 (* ************************************************************************* *)
-(* Parsetree.species_param -> (Types.fname option * Parsetree.vname) list    *)
+(* Parsetree.species_param list ->                                           *)
+(*   (Parsetree.vname * Env.ScopeInformation.species_parameter_kind) list    *)
+(*     collection_effective_arguments list                                   *)
 (** {b Descr} : Extract the collections names used in an "implements" clause
        as arguments of the species that it used to make the collection.
        The parsetree encodes these parameters [Parsetree.expr]s but this
@@ -944,16 +1003,18 @@ let apply_generator_to_parameters ~current_unit out_fmter coll_body_params
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-let get_implements_effective_names species_params =
-  List.map
-    (fun param ->
-      match param.Parsetree.ast_desc with
-       | Parsetree.SP expr ->
+let get_implements_effectives species_params_exprs species_formals_info =
+  List.map2
+    (fun param_expr (_, param_kind) ->
+      let Parsetree.SP expr = param_expr.Parsetree.ast_desc in
+      match param_kind with
+       | Env.ScopeInformation.SPK_is ->
+	   (begin
 	   match expr.Parsetree.ast_desc with
 	    | Parsetree.E_constr (cstr_ident, []) ->
 		let Parsetree.CI (fname_opt, vname) =
 		  cstr_ident.Parsetree.ast_desc in
-		(fname_opt, vname)
+		CEA_coll_name_for_is (fname_opt, vname)
 	    | _ ->
 		(* Collections expressions used as parameters of an      *)
 		(* "implements" clause should always be represented by   *)
@@ -961,8 +1022,13 @@ let get_implements_effective_names species_params =
                 (* not parametrized, this value should have no argument. *)
 		(* If it's not the case here, then we missed something   *)
                 (* before during the analyses !                          *)
-		assert false)
-    species_params
+		assert false
+	   end)
+       | Env.ScopeInformation.SPK_in ->
+	   (* For an entity parameter, all first-class expressions are legal. *)
+	   CEA_value_expr_for_in expr)
+    species_params_exprs
+    species_formals_info
 ;;
 
 
@@ -1080,11 +1146,14 @@ let collection_compile ~current_unit out_fmter env coll_def coll_descr
          (* species !                                                    *)
 	 assert false          (* [Unsure]. *)
      | Some params_info ->
-	 (* Get the names of the collections effectivly applied. *)
+	 (* Get the names of the collections or the value *)
+	 (* expressions effectively applied.              *)
 	 let coll_body_params =
-	   get_implements_effective_names
+	   get_implements_effectives
 	     coll_def.Parsetree.ast_desc.Parsetree.cd_body.Parsetree.ast_desc.
-	       Parsetree.se_params in
+	       Parsetree.se_params
+	     params_info.Env.MlGenInformation.
+               cgi_implemented_species_params_names in
 	 apply_generator_to_parameters
 	   ~current_unit out_fmter coll_body_params params_info) ;
     Format.fprintf out_fmter "@ in@]@\n" ;

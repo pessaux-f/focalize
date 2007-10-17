@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.31 2007-10-16 10:32:54 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.32 2007-10-17 11:45:28 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -101,6 +101,9 @@ exception Self_cant_parameterize_itself of Location.t ;;
 (* ************************************************************************ *)
 exception Is_parameter_only_coll_ident of Location.t ;;
 
+
+
+exception Parametrized_species_wrong_arity of Location.t ;;
 
 
 (* ************************************************************************* *)
@@ -1179,21 +1182,27 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
            Parsetree.ast_desc = Parsetree.E_constr (scoped_cstr_expr, []) }
    | Parsetree.E_paren expr ->
        scope_expr_collection_cstr_for_is_param ctx env expr
-   | _ ->
-       raise (Is_parameter_only_coll_ident initial_expr.Parsetree.ast_loc)
+   | _ -> raise (Is_parameter_only_coll_ident initial_expr.Parsetree.ast_loc)
 ;;
 
 
 
-let scope_species_param ctx env param =
+let scope_species_param ctx env param param_kind =
   let new_desc =
     (match param.Parsetree.ast_desc with
      | Parsetree.SP expr ->
-	 (* Note that to be well-typed this expression must ONLY be an *)
-	 (* [E_constr] (because species names are capitalized, parsed  *)
-         (* as sum type constructors) that should be considered as a   *)
-         (* species name.                                              *)
-	 Parsetree.SP (scope_expr_collection_cstr_for_is_param ctx env expr)) in
+	 (begin
+	 match param_kind with
+	  | Env.ScopeInformation.SPK_is ->
+	      (* Note that to be well-typed this expression must ONLY be an *)
+	      (* [E_constr] (because species names are capitalized, parsed  *)
+              (* as sum type constructors) that should be considered as a   *)
+              (* species name.                                              *)
+	      Parsetree.SP
+		(scope_expr_collection_cstr_for_is_param ctx env expr)
+	  | Env.ScopeInformation.SPK_in ->
+	      Parsetree.SP (scope_expr ctx env expr)
+	 end)) in
   { param with Parsetree.ast_desc = new_desc }
 ;;
 
@@ -1203,7 +1212,7 @@ let scope_species_param ctx env param =
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.species_expr ->     *)
 (*   (Parsetree.species_expr * Parsetree.vname list)                    *)
 (** {b Descr} : Scopes a species expression. Returns the scoped
-              expression and the list of methods names this expression
+              expression, the list of methods names this expression
               has. This may be used when binding a new collection name
               (a parameter indeed) to a species expression, in order
               to "transfer" the methods of the expression to the bound
@@ -1230,11 +1239,18 @@ let rec scope_species_expr ctx env species_expr =
 	 Parsetree.I_global ((Some hosting_file), basic_vname)) in
   let scoped_ident = {
     se_name_ident with Parsetree.ast_desc = scoped_ident_descr } in
-  (* Scopes the parameters. *)
+  (* Scopes the effective parameters. *)
   let scoped_params =
-    List.map
-      (scope_species_param ctx env)
-      species_expr_descr.Parsetree.se_params in
+    (try
+      List.map2
+	(scope_species_param ctx env)
+	species_expr_descr.Parsetree.se_params
+	ident_scope_info.Env.ScopeInformation.spbi_params_kind
+    with Failure _ ->
+      (* If List.map2 fails, that's because the 2 lists are of different     *)
+      (* length, then the species is applied to a wrong number of arguments. *)
+      raise
+	(Parametrized_species_wrong_arity species_expr.Parsetree.ast_loc)) in
   let scoped_species_expr = {
     species_expr with
       Parsetree.ast_desc = {
@@ -1343,6 +1359,10 @@ let scope_species_params_types ctx env params =
                  param_name
 		 { Env.ScopeInformation.spbi_scope =
 		     Env.ScopeInformation.SPBI_local ;
+		   (* Because parameters are indeed COLLECTION parameters *)
+		   (* (i.e. ar eintended to be finally instanciated to a  *)
+		   (* collection), they have no ... parameters, them.     *)
+		   Env.ScopeInformation.spbi_params_kind = [] ;
 		   Env.ScopeInformation.spbi_methods = species_methods }
 		 accu_env in
 	     (* Now, extend the environment with the name *)
@@ -1422,6 +1442,13 @@ let scope_species_def ctx env species_def =
   (* bound to a species with the got methods names.       *)
   let our_info = {
     Env.ScopeInformation.spbi_methods = inherited_methods @ method_names ;
+    Env.ScopeInformation.spbi_params_kind =
+      List.map
+        (fun (_, pkind) ->
+	  match pkind.Parsetree.ast_desc with
+	   | Parsetree.SPT_in _ -> Env.ScopeInformation.SPK_in
+	   | Parsetree.SPT_is _ -> Env.ScopeInformation.SPK_is)
+        species_def_descr.Parsetree.sd_params ;
     Env.ScopeInformation.spbi_scope =
       Env.ScopeInformation.SPBI_file ctx.current_unit } in
   let final_env =
@@ -1458,6 +1485,8 @@ let scope_collection_def ctx env coll_def =
   (* Now add ourselves as a collection in the environment. *)
   let our_info = {
     Env.ScopeInformation.spbi_methods = methods_names ;
+    (* A collection never have remaining parameters ! *)
+    Env.ScopeInformation.spbi_params_kind = [] ;
     Env.ScopeInformation.spbi_scope =
       Env.ScopeInformation.SPBI_file ctx.current_unit } in
   let final_env =

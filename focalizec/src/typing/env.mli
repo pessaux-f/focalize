@@ -22,8 +22,13 @@ module ScopeInformation :
       | SPBI_file of Types.fname
       | SPBI_local
 
+    type species_parameter_kind =
+      | SPK_in
+      | SPK_is
+
   type species_binding_info = {
     spbi_methods : Parsetree.vname list ;
+    spbi_params_kind : species_parameter_kind list ;
     spbi_scope : species_scope
   }
   end
@@ -92,7 +97,8 @@ module TypeInformation :
 module MlGenInformation :
   sig
     type collection_generator_info = {
-      cgi_implemented_species_params_names : Parsetree.vname list ;
+      cgi_implemented_species_params_names :
+	(Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
       cgi_generator_parameters :
 	(Parsetree.vname * Parsetree_utils.VnameSet.t) list
     }

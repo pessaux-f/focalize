@@ -1,0 +1,38 @@
+use "basics" ;;
+open "basics" ;;
+
+(* ****************************************************************** *)
+(* Must pass.                                                         *)
+(* Example showing how now use the "in" parameter whithout allowing   *)
+(* their type to be a "ml type". Now, "in" parameters are always of a *)
+(* species (collection more accurately) type !                        *)
+(* ****************************************************************** *)
+species My_basic_object =
+  let equal (x in Self, y in Self) = true ;
+end ;;
+
+species Test inherits My_basic_object =
+  rep = basics#int ;
+  let create (x) in Self = basics#int_of_string (x) ;
+  let print (x in Self) = basics#print_int (x) ;
+  (* let create (x in basics#int) in Self = x ; *)
+end
+;;
+
+collection CTest implements Test ;;
+
+
+species Dummy (a in CTest) =
+  rep = basics#string ;
+  let x = a ;
+  let print (msg) =
+     let ignore1 = basics#print_string (msg) in
+     let ignore2 = CTest!print (x) in
+     basics#print_string ("\n") ;
+end
+;;
+
+collection CDummy implements Dummy (CTest!create ("4")) ;;
+(* collection CDummy implements Dummy (CTest!create (4)) ;; *)
+
+CDummy!print ("Et alors ? ") ;;

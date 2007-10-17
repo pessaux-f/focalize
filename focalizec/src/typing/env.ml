@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.44 2007-10-10 15:40:19 pessaux Exp $ *)
+(* $Id: env.ml,v 1.45 2007-10-17 11:45:28 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -237,6 +237,10 @@ module ScopeInformation = struct
     | SPBI_local
 
 
+  type species_parameter_kind =
+    | SPK_in
+    | SPK_is
+
 
   type species_binding_info = {
     (** The list of *ALL* the method owned, including those added by
@@ -244,6 +248,19 @@ module ScopeInformation = struct
 	list. In case of multiple inheritance, we consider that ancestors
 	are older from left to right. *)
     spbi_methods : Parsetree.vname list ;
+    (** The kind of the species's parameters. The first kind of the list is
+	the kind of the first parameter of the species and so on. This
+	information is required in order to properly scope effective arguments
+	of a species "application". In effect, "in" parameters are first-class
+        expressions and must be scoped this way, although "is" parameters are
+        collection names and because they are structurally (in the parsetree)
+        encapsulated in a first-class expression, they must be restricted to
+        only syntactic sum-type contructors (yep, species names are
+	capitalized then look like a sum type constructor seen from a
+	first-class expression point of view) and looked-up into the species
+	field of the scoping environment. *)
+    spbi_params_kind : species_parameter_kind list ;
+    (** The information telling how the species is bound (i.e. "scoped"). *)
     spbi_scope : species_scope
   }
 
@@ -548,11 +565,12 @@ end ;;
 
 module MlGenInformation = struct
   type collection_generator_info = {
-    (** The list of species parameters names the species whose collection
-	generator belongs to has. This list is positionnal, i.e. that the
-	first name of the list is the name of the first species parameter
-	and so on. *)
-    cgi_implemented_species_params_names : Parsetree.vname list ;
+    (** The list of species parameters names and kinds the species whose
+	collection generator belongs to has. This list is positionnal, i.e.
+	that the first name of the list is the name of the first species
+	parameter and so on. *)
+    cgi_implemented_species_params_names :
+      (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
     (** The list mapping for each parameter name, the set of methods the
 	collection generator depends on, hence must be provided an instance
 	to be used. Note that the list is not guaranted to be ordered
