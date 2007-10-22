@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.ml,v 1.2 2007-10-16 10:00:48 pessaux Exp $ *)
+(* $Id: misc_ml_generation.ml,v 1.3 2007-10-22 08:41:30 pessaux Exp $ *)
 
 
 (* ********************************************************************* *)
@@ -160,16 +160,10 @@ let bind_parameters_to_types_from_type_scheme opt_scheme params_names =
 	 let rec rec_bind accu_bindings ty = function
 	   | [] -> accu_bindings
 	   | h :: q ->
-	       (* We split the functionnal type thanks to the unification. *)
-	       (* First, get a variable to hold the argument type. *)
- 	       let h_type = Types.type_variable () in
-	       (* Next, get a variable to hold the result type. *)
-	       let q_type = Types.type_variable () in
-	       (* And now assign by the unification's *)
-               (* side effects these 2 variables.     *)
-	       Types.unify
-		 ~loc: Location.none ~self_manifest: None
-		 (Types.type_arrow h_type q_type) ty ;
+	       (* We split the functionnal type. First, get argument type. *)
+ 	       let h_type = Types.extract_fun_ty_arg ty in
+	       (* Next, get the result type. *)
+	       let q_type = Types.extract_fun_ty_result ty in
 	       (* We bind the current parameter to the "head-type" *)
                (* and continue with the remaining parameters using *)
                (* the "tail-type".                                 *)

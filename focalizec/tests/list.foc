@@ -1,6 +1,6 @@
-external type string = | caml -> "string" ;;
-external type bool = | caml -> "bool" ;;
-external type int = | caml -> "int" ;;
+use "basics" ;;
+open "basics" ;;
+
 external type list ('a) = | caml -> "list" ;;
 external value foc_error : string -> 'a =  | caml -> "" ;;
 external value print_int : int -> string =  | caml -> "" ;;
@@ -42,13 +42,13 @@ species Concrete_list (E is Basic_object) inherits List (E) =
 end ;;
 
 species Contrete_int inherits Basic_object =
-  rep = int ;
+  rep = basics#int ;
   let print = print_int ;
 end ;;
 collection Int implements Contrete_int ;;
 
 species Contrete_bool inherits Basic_object =
-  rep = bool ;
+  rep = basics#bool ;
   let print = print_bool ;
 end ;;
 collection Bool implements Contrete_bool ;;

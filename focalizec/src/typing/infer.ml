@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.78 2007-10-16 10:32:54 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.79 2007-10-22 08:41:30 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -189,6 +189,25 @@ exception Collection_not_fully_defined of
 ;;
 
 
+(* ************************************************************************* *)
+(** {b Descr} : After generalization, a type scheme contains type variables.
+       (either generalized or non generalized). Because in FoCaL methods
+       are not even polymorphic, we of course also reject any scheme
+       where some polymorphic variable would remain. But because we also
+       don't want to have non instanciated variables in a scheme (those
+       like OCaml's "'_a") we also reject schemes with non-generalized
+       variables. Hence, more globally, we reject schemes containing
+       variables.
+
+    {b Rem} : Exported outside this module.                                  *)
+(* ************************************************************************* *)
+exception Scheme_contains_type_vars of (
+  Parsetree.vname *   (** The method's name whose scheme contains variables. *)
+  Types.type_scheme * (** The scheme containing the variables. *)
+  Location.t)         (** Location where the issue arises in the source. *)
+ ;;
+
+
 
 (* ************************************************************************* *)
 (** {b Descr} : Datastructure recording the various information required
@@ -268,19 +287,11 @@ let rec typecheck_type_expr ctx env ty_expr =
 		 args_ty_len)) ;
 	 (* Synthetise the types for the arguments. *)
 	 let args_ty = List.map (typecheck_type_expr ctx env) args_ty_exprs in
-	 (* Now get a fresh instance of the type's type scheme being   *)
-	 (* cautious to preserve sharing between the scheme parameters *)
-	 (* during the instanciation.                                  *)
-	 let (ty_constr_type, ty_constr_params) =
-	   Types.specialize2
-	     ty_descr.Env.TypeInformation.type_identity args_ty in
-	 (* We now must unify the parameters with the effective *)
-	 (* arguments types provided in the application.        *)
-	 List.iter2
-	   (Types.unify
-	      ~loc: ty_expr.Parsetree.ast_loc ~self_manifest: ctx.self_manifest)
-	   ty_constr_params args_ty ;
-	 ty_constr_type
+	 (* Now get a fresh instance of the type's type scheme in which *)
+         (* the parameters are directly instanciated by the effective   *)
+	 (* arguments the sum type constructor is applied to.           *)
+	 Types.specialize_with_args
+	   ty_descr.Env.TypeInformation.type_identity args_ty
 	 end)
      | Parsetree.TE_prod ty_exprs ->
 	 let tys = List.map (typecheck_type_expr ctx env) ty_exprs in
@@ -299,12 +310,12 @@ let rec typecheck_type_expr ctx env ty_expr =
 (* typing_context -> Env.Env.ScopeInformation.t ->                     *)
 (*   Parsetree.rep_type_def -> Types.type_simple                       *)
 (** {b Descr} : Translates a rep type expression into a [type_simple].
-                Variable are translated according to the mapping found
-                inside the current context. Hence, in case this
-                function is used to create the body type of a type
-                definition, if the definition is polymorphic, the
-                parameter-variables must already exist inside  the
-                mapping.
+        This function behaves exactly like [typecheck_type_expr].
+        Variable are translated according to the mapping found inside
+        the current context. Hence, in case this function is used to
+        create the body type of a type definition, if the definition
+        is polymorphic, the parameter-variables must already exist
+        inside the mapping.
 
     {b Rem} : Not exported outside this module.                        *)
 (* ******************************************************************* *)
@@ -357,20 +368,11 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
 	 (* Synthetise the types for the arguments. *)
 	 let args_ty =
 	   List.map (typecheck_rep_type_def ctx env) args_ty_exprs in
-	 (* Now get a fresh instance of the type's type scheme being   *)
-	 (* cautious to preserve sharing between the scheme parameters *)
-	 (* during the instanciation.                                  *)
-	 let (ty_constr_type, ty_constr_params) =
-	   Types.specialize2
-	     ty_descr.Env.TypeInformation.type_identity args_ty in
-	 (* We now must unify the parameters with the effective *)
-	 (* arguments types provided in the application.        *)
-	 List.iter2
-	   (Types.unify
-	      ~loc: rep_type_def.Parsetree.ast_loc
-	      ~self_manifest: ctx.self_manifest)
-	   ty_constr_params args_ty ;
-	 ty_constr_type
+	 (* Now get a fresh instance of the type's type scheme in which *)
+         (* the parameters are directly instanciated by the effective   *)
+	 (* arguments the sum type constructor is applied to.           *)
+	 Types.specialize_with_args
+	   ty_descr.Env.TypeInformation.type_identity args_ty
 	 end)
      | Parsetree.RTE_prod (ty_exprs) ->
 	 let tys = List.map (typecheck_rep_type_def ctx env) ty_exprs in
@@ -595,12 +597,13 @@ let rec typecheck_pattern ctx env pat_desc =
               (* Constructeurs being functions, we will unify [cstr_type]   *)
 	      (* with an arrow type to ensure that it is really one and     *)
 	      (* to ensure the arguments types and extract the result type. *)
-              let cstr_res_ty = (Types.type_variable ()) in
-              Types.unify
-		~loc: pat_desc.Parsetree.ast_loc
-		~self_manifest: ctx.self_manifest
-		(Types.type_arrow cstr_arg_ty cstr_res_ty) cstr_ty ;
-	      (cstr_res_ty, sub_bindings)
+	      let unified_cstr_ty =
+		Types.unify
+		  ~loc: pat_desc.Parsetree.ast_loc
+		  ~self_manifest: ctx.self_manifest
+		  (Types.type_arrow cstr_arg_ty (Types.type_variable ()))
+		  cstr_ty in
+	      ((Types.extract_fun_ty_result unified_cstr_ty), sub_bindings)
 	  | (_, _) ->
 	      (* Just raise the exception with the right expected arity. *)
 	      raise
@@ -608,7 +611,7 @@ let rec typecheck_pattern ctx env pat_desc =
 		   (cstr_name, cstr_decl.Env.TypeInformation.cstr_arity)))
      | Parsetree.P_record label_n_patterns ->
 	 (* Type for this pattern. Will be instanciated by side effect. *)
-	 let whole_pat_ty = Types.type_variable () in
+	 let whole_pat_ty = ref (Types.type_variable ()) in
 	 (* Infer type of eack sub-pattern. *)
          let bindings =
 	   List.flatten
@@ -626,14 +629,16 @@ let rec typecheck_pattern ctx env pat_desc =
 		  (* Now, ensure the 2 sub-pattners types are compatible and *)
 		  (* that the resulting record type for the whole pattern is *)
 		  (* consistent.                                             *)
-		  Types.unify
-		    ~loc: pat.Parsetree.ast_loc
-		    ~self_manifest: ctx.self_manifest
-		    lbl_ty (Types.type_arrow sub_pat_ty whole_pat_ty) ;
+		  let unified_field_ty =
+		    Types.unify
+		      ~loc: pat.Parsetree.ast_loc
+		      ~self_manifest: ctx.self_manifest lbl_ty 
+		      (Types.type_arrow sub_pat_ty !whole_pat_ty) in
+		  whole_pat_ty := Types.extract_fun_ty_result unified_field_ty ;
 		  (* Just returns the bindings. *)
 		  bnds)
 		label_n_patterns) in
-	 (whole_pat_ty, bindings)
+	 (!whole_pat_ty, bindings)
      | Parsetree.P_tuple pats ->
          let (tys, bindings) =
 	   List.split (List.map (typecheck_pattern ctx env) pats) in
@@ -826,16 +831,16 @@ let rec typecheck_expr ctx env initial_expr =
 	 let ty_exprs = List.map (typecheck_expr ctx env) args_exprs in
 	 List.fold_left
            (fun accu_fun_ty arg_ty ->
-	     (* Type returned after this application step. *)
-	     let result_ty = Types.type_variable () in
 	     (* Temporary functionnal type to unify with *)
 	     (* the type of the current applicator.      *)
-	     let tmp_fun_ty = Types.type_arrow arg_ty result_ty in
-	     Types.unify
-	       ~loc: initial_expr.Parsetree.ast_loc
-	       ~self_manifest: ctx.self_manifest tmp_fun_ty accu_fun_ty ;
+	     let tmp_fun_ty =
+	       Types.type_arrow arg_ty (Types.type_variable ()) in
+	     let unified_fun_ty =
+	       Types.unify
+		 ~loc: initial_expr.Parsetree.ast_loc
+		 ~self_manifest: ctx.self_manifest tmp_fun_ty accu_fun_ty in
 	     (* The result is the positive part of the arrow. *)
-	     result_ty)
+	     Types.extract_fun_ty_result unified_fun_ty)
            fun_ty
 	   ty_exprs
      | Parsetree.E_constr (cstr_ident, exprs) ->
@@ -856,33 +861,34 @@ let rec typecheck_expr ctx env initial_expr =
 	      (* Build the shadow tuple type as the *)
 	      (* real argument of the constructor.  *)
 	      let cstr_arg_ty = Types.type_tuple tys in
-	      (* Get a hand on what will be our final type result... *)
-	      let result_ty = Types.type_variable () in
 	      (* And simulate an application. *)
-	      Types.unify
-		~loc: initial_expr.Parsetree.ast_loc
-		~self_manifest: ctx.self_manifest
-		cstr_ty (Types.type_arrow cstr_arg_ty result_ty) ;
-	      result_ty
+	      let unified_cstr_ty =
+		Types.unify
+		  ~loc: initial_expr.Parsetree.ast_loc
+		  ~self_manifest: ctx.self_manifest
+		  cstr_ty
+		  (Types.type_arrow cstr_arg_ty (Types.type_variable ())) in
+	      (Types.extract_fun_ty_result unified_cstr_ty)
        | (_, _) ->
 	   raise
 	     (Bad_sum_type_constructor_arity
 		(cstr_ident, cstr_decl.Env.TypeInformation.cstr_arity)))
      | Parsetree.E_match (matched_expr, bindings) ->
-	 let matched_expr_ty = typecheck_expr ctx env matched_expr in
+	 let matched_expr_ty = ref (typecheck_expr ctx env matched_expr) in
 	 (* Let's get a fresh type accumulator  *)
 	 (* to unify the clauses' bodies types. *)
-	 let result_ty = Types.type_variable () in
+	 let result_ty = ref (Types.type_variable ()) in
 	 (* Process each clause of the match. *)
 	 List.iter
 	   (fun (pat, expr) ->
 	     (* Infer the type and bindings induced by the pattern. *)
 	     let (pat_ty, bnds) = typecheck_pattern ctx env pat in
-	     (* Ensure the matched expression and *)
-	     (* the pattern have the same type.   *)
-	     Types.unify
-	       ~loc: initial_expr.Parsetree.ast_loc
-	       ~self_manifest: ctx.self_manifest matched_expr_ty pat_ty ;
+	     (* Ensure the matched expression and the pattern have the *)
+	     (* same type always keep the type where Self is prefered. *)
+	     matched_expr_ty :=
+	       Types.unify
+		 ~loc: initial_expr.Parsetree.ast_loc
+		 ~self_manifest: ctx.self_manifest !matched_expr_ty pat_ty ;
 	     (* Extend the environment with the pattern type bindings. *)
 	     let env' =
 	       List.fold_left
@@ -891,28 +897,29 @@ let rec typecheck_expr ctx env initial_expr =
 		 env bnds in
 	     (* Infer the type of the match clause's body. *)
 	     let clause_ty = typecheck_expr ctx env' expr in
-	     (* Force every bodies to have the same result type. *)
-	     Types.unify
-	       ~loc: initial_expr.Parsetree.ast_loc
-	       ~self_manifest: ctx.self_manifest result_ty clause_ty)
+	     (* Force every bodies to have the same result type  *)
+	     (* and always keep the type where Self is prefered. *)
+	     result_ty :=
+	       Types.unify
+		 ~loc: initial_expr.Parsetree.ast_loc
+		 ~self_manifest: ctx.self_manifest !result_ty clause_ty)
 	   bindings;
 	 (* Return the type of the bodies' clauses. *)
-	 result_ty
+	 !result_ty
      | Parsetree.E_if (e_cond, e_then, e_else) ->
 	 let ty_cond = typecheck_expr ctx env e_cond in
 	 (* Ensure the condition is a boolean. *)
-	 Types.unify
-	   ~loc: initial_expr.Parsetree.ast_loc
-	   ~self_manifest: ctx.self_manifest ty_cond (Types.type_bool ()) ;
+	 ignore
+	   (Types.unify
+	      ~loc: initial_expr.Parsetree.ast_loc
+	      ~self_manifest: ctx.self_manifest ty_cond (Types.type_bool ())) ;
 	 (* Typecheck the "then" expression. *)
 	 let ty_then = typecheck_expr ctx env e_then in
 	 let ty_else = typecheck_expr ctx env e_else in
 	 (* Enforce both branches to have the same type. *)
 	 Types.unify
 	   ~loc: initial_expr.Parsetree.ast_loc
-	   ~self_manifest: ctx.self_manifest ty_then ty_else ;
-	 (* And return any of them as result type. *)
-	 ty_then
+	   ~self_manifest: ctx.self_manifest ty_then ty_else
      | Parsetree.E_let (let_def, in_expr) ->
 	 (* Don't increase level, this will be done in the let inference. *)
 	 let bindings =
@@ -926,6 +933,7 @@ let rec typecheck_expr ctx env initial_expr =
 	 typecheck_expr ctx env' in_expr
      | Parsetree.E_record fields -> typeckeck_record_expr ctx env fields None
      | Parsetree.E_record_access (expr, label) ->
+	 (begin
 	 let ty_expr = typecheck_expr ctx env expr in
 	 let label_desc =
 	   Env.TypingEnv.find_label
@@ -934,14 +942,13 @@ let rec typecheck_expr ctx env initial_expr =
 	 (* "type of the field as seen by user -> type od the record". *)
 	 let label_ty =
 	   Types.specialize label_desc.Env.TypeInformation.field_scheme in
-	 (* Get a holder to extract the "arg type of the function", *)
-	 (* i.e. the type of the field as seen by the user.         *)
-	 let result_ty = Types.type_variable () in
-	 Types.unify
-	   ~loc: initial_expr.Parsetree.ast_loc
-	   ~self_manifest: ctx.self_manifest
-	   (Types.type_arrow result_ty ty_expr) label_ty ;
-	 result_ty
+	 let unified_label_ty =
+	   Types.unify
+	     ~loc: initial_expr.Parsetree.ast_loc
+	     ~self_manifest: ctx.self_manifest
+	     (Types.type_arrow (Types.type_variable ()) ty_expr) label_ty in
+	 Types.extract_fun_ty_arg unified_label_ty
+	 end)
      | Parsetree.E_record_with (with_expr, fields) ->
          typeckeck_record_expr ctx env fields (Some with_expr)
      | Parsetree.E_tuple exprs ->
@@ -974,7 +981,7 @@ let rec typecheck_expr ctx env initial_expr =
 (* ***************************************************************** *)
 and typeckeck_record_expr ctx env fields opt_with_expr =
   (* At then end, must be the type of the host of all these labels. *)
-  let result_ty = Types.type_variable () in
+  let result_ty = ref (Types.type_variable ()) in
   (* Typecheck the "with" construct if any. *)
   (match opt_with_expr with
    | None ->
@@ -982,9 +989,10 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
        Format.eprintf "Labels exhaustivity not checked on record expression.@\n"
    | Some expr ->
        let expr_ty = typecheck_expr ctx env expr in
-       Types.unify
-	 ~loc: expr.Parsetree.ast_loc
-	 ~self_manifest: ctx.self_manifest expr_ty result_ty) ;
+       result_ty :=
+	 Types.unify
+	   ~loc: expr.Parsetree.ast_loc
+	   ~self_manifest: ctx.self_manifest expr_ty !result_ty) ;
   (* Now proceed with the labels.                               *)
   (* Just remind that labels are types as functions of type     *)
   (* "type of the field as seen by user -> type od the record". *)
@@ -997,12 +1005,13 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
       let field_ty =
 	Types.specialize lbl_descr.Env.TypeInformation.field_scheme in
       (* Unify the result type by side effect. *)
-      Types.unify
-	~loc: expr.Parsetree.ast_loc
-	~self_manifest: ctx.self_manifest
-	(Types.type_arrow expr_ty result_ty) field_ty)
+      let unified_field_ty =
+	Types.unify
+	  ~loc: expr.Parsetree.ast_loc ~self_manifest: ctx.self_manifest
+	  (Types.type_arrow expr_ty !result_ty) field_ty in
+      result_ty := Types.extract_fun_ty_result unified_field_ty)
     fields ;
-  result_ty
+  !result_ty
 
 
 
@@ -1081,7 +1090,7 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
 	  Env.TypingEnv.add_value vname scheme accu_env)
 	env pre_env_info) in
   (* Now typecheck each def's body. *)
-  let env_bindings =
+  let tmp_env_bindings =
     List.map2
       (fun { Parsetree.ast_desc = binding ; Parsetree.ast_loc = binding_loc }
 	   (_, assumed_ty, non_expansive) ->
@@ -1114,14 +1123,15 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
 	let infered_body_ty =
 	  typecheck_expr ctx local_env binding.Parsetree.b_body in
 	(* If there is some constraint on this type, then unify with it. *)
-	(match binding.Parsetree.b_type with
-	 | None -> ()
-	 | Some ty_expr ->
-	     let constraint_ty = typecheck_type_expr ctx env ty_expr in
-	     Types.unify
-	       ~loc: ty_expr.Parsetree.ast_loc
-	       ~self_manifest: ctx.self_manifest
-	       constraint_ty infered_body_ty) ;
+	let infered_body_ty_with_constraint =
+	  (match binding.Parsetree.b_type with
+	   | None -> infered_body_ty
+	   | Some ty_expr ->
+	       let constraint_ty = typecheck_type_expr ctx env ty_expr in
+	       Types.unify
+		 ~loc: ty_expr.Parsetree.ast_loc
+		 ~self_manifest: ctx.self_manifest
+		 constraint_ty infered_body_ty) in
 	(* Now, reconstruct the functional type from the body's and args' *)
         (* types. DO NOT fold_left, otherwise the fun type gets mirored ! *)
         (* By the way, be careful to create the type arrow with the right *)
@@ -1132,26 +1142,40 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
 	  List.fold_right
 	    (fun arg_ty accu_ty -> Types.type_arrow arg_ty accu_ty)
 	    args_tys
-	    infered_body_ty in
+	    infered_body_ty_with_constraint in
         if non_expansive then Types.end_definition () ;
         (* Unify the found type with the type that was temporarily assumed. *)
         Types.begin_definition () ;
-        Types.unify
-	  ~loc: binding_loc
-	  ~self_manifest: ctx.self_manifest assumed_ty complete_ty ;
+	let final_ty =
+          Types.unify
+	    ~loc: binding_loc
+	    ~self_manifest: ctx.self_manifest assumed_ty complete_ty in
         Types.end_definition () ;
-	(* And finally returns the type binding induced by this definition *)
-	(* king care to generate a scheme with a 0 level if we are dealing *)
-	(* with a species method (field).                                  *)
+	(* And finally returns the type binding induced by this definition. *)
 	let ty_scheme =
-          (if non_expansive then Types.generalize complete_ty
-          else
-	    if is_a_field then
-	      Types.never_generalizable_scheme binding_loc complete_ty
-	    else Types.trivial_scheme complete_ty) in
-        (binding.Parsetree.b_name, ty_scheme))
+          (if non_expansive then Types.generalize final_ty
+	  else Types.trivial_scheme final_ty) in
+        (binding.Parsetree.b_name, ty_scheme, binding_loc))
       let_def_descr.Parsetree.ld_bindings
       pre_env_info in
+  (* Before leaving, if the definition is a species field, we ensure that   *)
+  (* no scheme contains generalised or even non generalised type variables. *)
+  (* In effect, methods are not polymorphic. And we don't want also to      *)
+  (* have methods with partially instanciated types !                       *)
+  (* We can't check for this before because of mutual definitions, when     *)
+  (* looking at the scheme of a methods, some variables may still be non    *)
+  (* instanciated because they will be only once we will have processed the *)
+  (* next methods' schemes.                                                 *)
+  (* By the way, we make the clean environment binding by discarding the  *)
+  (* location information we kept just to be able to pinpoint accurately  *)
+  (* the guilty method in case of one would have variables in its scheme. *)
+  let env_bindings =
+    List.map
+      (fun (name, sc, loc) ->
+	if is_a_field && (Types.scheme_contains_variable_p sc) then
+	  raise (Scheme_contains_type_vars (name, sc, loc)) ;
+	(name, sc))
+      tmp_env_bindings in
   (* Finally, returns the induced bindings. Note that [Parsetree.binding] *)
   (* and [Parsetree.let_def have an [ast_type] but in this case it has no *)
   (* relevance, so we just leave them [None].                             *)
@@ -1185,79 +1209,83 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
 
     {b Rem} : Not exported outside this module.                               *)
 (* ************************************************************************** *)
-and typecheck_prop start_ctx start_env proposition =
-  (* Make the carrier abstract to prevent def-dependencies with "rep". *)
-  let ctx = { start_ctx with self_manifest = None } in
+and typecheck_prop ctx env prop =
   (* The local recursive function to save carying and changing the context. *)
-  let rec rec_typecheck env prop =
-    let final_ty =
-      (match prop.Parsetree.ast_desc with
-       | Parsetree.Pr_forall (vnames, t_expr, pr)
-       | Parsetree.Pr_exists (vnames, t_expr, pr) ->
-           (Types.begin_definition () ;
-	    (* Get the couple (name, type) for each defined variable. *)
-	    let bound_variables =
-	      (let ty = typecheck_type_expr ctx env t_expr in
-	      List.map (fun vname -> (vname, ty)) vnames) in
-	    (* Now typecheck the prop's body in the extended environment.     *)
-	    (* Note that as often, th order bindings are inserted in the      *)
-	    (* environment does not matter since parameters can never depends *)
-	    (* on each other.                                                 *)
-	    let env' =
-	      List.fold_left
-		(fun accu_env (th_name, th_type) ->
-		  let scheme = Types.generalize th_type in
-		  Env.TypingEnv.add_value th_name scheme accu_env)
-		env bound_variables in
-	    rec_typecheck env' pr)
-       | Parsetree.Pr_imply (pr1, pr2)
-       | Parsetree.Pr_or (pr1, pr2)
-       | Parsetree.Pr_and (pr1, pr2)
-       | Parsetree.Pr_equiv (pr1, pr2) ->
-	   let ty1 = rec_typecheck env pr1 in
-	   let ty2 = rec_typecheck env pr2 in
+  let final_ty =
+    (match prop.Parsetree.ast_desc with
+     | Parsetree.Pr_forall (vnames, t_expr, pr)
+     | Parsetree.Pr_exists (vnames, t_expr, pr) ->
+         (Types.begin_definition () ;
+	  (* Get the couple (name, type) for each defined variable. *)
+	  let bound_variables =
+	    (let ty = typecheck_type_expr ctx env t_expr in
+	    List.map (fun vname -> (vname, ty)) vnames) in
+	  (* Now typecheck the prop's body in the extended environment.     *)
+	  (* Note that as often, th order bindings are inserted in the      *)
+	  (* environment does not matter since parameters can never depends *)
+	  (* on each other.                                                 *)
+	  let env' =
+	    List.fold_left
+	      (fun accu_env (th_name, th_type) ->
+		let scheme = Types.generalize th_type in
+		Env.TypingEnv.add_value th_name scheme accu_env)
+	      env bound_variables in
+	  typecheck_prop ctx env' pr)
+     | Parsetree.Pr_imply (pr1, pr2)
+     | Parsetree.Pr_or (pr1, pr2)
+     | Parsetree.Pr_and (pr1, pr2)
+     | Parsetree.Pr_equiv (pr1, pr2) ->
+	 let ty1 = typecheck_prop ctx env pr1 in
+	 let ty2 = typecheck_prop ctx env pr2 in
+	 ignore
+	   (Types.unify
+	      ~loc: prop.Parsetree.ast_loc ~self_manifest: ctx.self_manifest
+	      ty1 ty2) ;
+	 (* Enforce the type to be [prop]. *)
+	 let final_ty =
 	   Types.unify
-	     ~loc: prop.Parsetree.ast_loc ~self_manifest: ctx.self_manifest
-	     ty1 ty2 ;
-	   (* Enforce the type to be [prop]. *)
-	   Types.unify
-	     ~loc: prop.Parsetree.ast_loc
-	     ~self_manifest: ctx.self_manifest ty1 (Types.type_prop ()) ;
-	   ty1
-       | Parsetree.Pr_not pr ->
-           let ty = rec_typecheck env pr in
-	   (* Enforce the type to be [prop]. *)
-	   Types.unify
-	     ~loc: prop.Parsetree.ast_loc
-	     ~self_manifest: ctx.self_manifest ty (Types.type_prop ()) ;
-           ty
-       | Parsetree.Pr_expr expr ->
-	   (* Expressions must be typed as [bool] OR [prop]. If *)
-           (* so, then the returned  type is [prop].            *)
-	   let ty = typecheck_expr ctx env expr in
-	   (try
-	     (* First try to check if it is typed bool. *)
-             Types.unify
 	       ~loc: prop.Parsetree.ast_loc
-	       ~self_manifest: ctx.self_manifest ty (Types.type_bool ())
-	   with err ->
-	     (begin
-	     try
-	       (* If not bool,try to check if it is typed prop. *)
-	       Types.unify
-		 ~loc: prop.Parsetree.ast_loc
-		 ~self_manifest: ctx.self_manifest ty (Types.type_prop ())
-	     with _ ->
-	       (* If it's neither bool nor prop, then restore *)
-	       (* the fisrt error cause  for error report.    *)
-	       raise err
-	     end)) ;
-           Types.type_prop ()
-       | Parsetree.Pr_paren pr -> rec_typecheck env pr) in
-    prop.Parsetree.ast_type <- Some final_ty ;
-    final_ty in
-  (* Now, do the job... *)
-  rec_typecheck start_env proposition
+	     ~self_manifest: ctx.self_manifest ty1 (Types.type_prop ()) in
+	 final_ty
+     | Parsetree.Pr_not pr ->
+         let ty = typecheck_prop ctx env pr in
+	 (* Enforce the type to be [prop]. *)
+	 let final_ty =
+	   Types.unify
+	     ~loc: prop.Parsetree.ast_loc
+	     ~self_manifest: ctx.self_manifest ty (Types.type_prop ()) in
+         final_ty
+     | Parsetree.Pr_expr expr ->
+	 (* Make the carrier abstract to prevent def-dependencies  *)
+	 (* with "rep" (c.f Virgile Prevosto's Phd page 52, Fig3.3 *)
+	 (* rule [EXPR].                                           *)
+	 let ctx' = { ctx with self_manifest = None } in
+	 (* Expressions must be typed as [bool] OR [prop]. If *)
+         (* so, then the returned  type is [prop].            *)
+	 let ty = typecheck_expr ctx' env expr in
+	 (try
+	   (* First try to check if it is typed bool. *)
+           ignore
+	     (Types.unify
+		~loc: prop.Parsetree.ast_loc
+		~self_manifest: ctx'.self_manifest ty (Types.type_bool ()))
+	 with err ->
+	   (begin
+	   try
+	     (* If not bool,try to check if it is typed prop. *)
+	     ignore
+	       (Types.unify
+		  ~loc: prop.Parsetree.ast_loc
+		  ~self_manifest: ctx'.self_manifest ty (Types.type_prop ()))
+	   with _ ->
+	     (* If it's neither bool nor prop, then restore *)
+	     (* the fisrt error cause  for error report.    *)
+	     raise err
+	   end)) ;
+         Types.type_prop ()
+     | Parsetree.Pr_paren pr -> typecheck_prop ctx env pr) in
+  prop.Parsetree.ast_type <- Some final_ty ;
+  final_ty
 
 
 
@@ -1335,6 +1363,8 @@ and typecheck_statement ctx env statement =
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
 and typecheck_theorem_def ctx env theorem_def =
+Format.eprintf "Typecheking theorem %a@."
+Sourcify.pp_vname theorem_def.Parsetree.ast_desc.Parsetree.th_name ;
   (* For the same reason that in external definition, variables present  *)
   (* in a type expression in a theorem are implicitely considered as     *)
   (* universally quantified. In effect, there no syntax to make explicit *)
@@ -1344,8 +1374,14 @@ and typecheck_theorem_def ctx env theorem_def =
     make_implicit_var_mapping_from_prop
       theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
   let ctx' = { ctx with tyvars_mapping = vmapp } in
+
+(match ctx'.self_manifest with
+ | None -> Format.eprintf "Self n'est pas manifeste@."
+ | Some ty -> Format.eprintf "Self est égal à %a@."
+       Types.pp_type_simple ty) ;
   let ty =
     typecheck_prop ctx' env theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
+Format.eprintf "typecheck_prop de typecheck_theorem_def est passé@." ;
   (* Record the type information in the AST node. *)
   theorem_def.Parsetree.ast_type <- Some ty ;
   (* Now, typecheck the proof to fix types inside by side effet. *)
@@ -1423,11 +1459,14 @@ and typecheck_species_fields ctx env = function
 		    ~and_abstract: None ty) ;
 	     (* Be careful : methods are not polymorphics (c.f. Virgile   *)
              (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
+	     let rep_scheme = Types.trivial_scheme ty in
+	     if Types.scheme_contains_variable_p rep_scheme then
+		raise
+		  (Scheme_contains_type_vars
+		    (rep_vname, rep_scheme,  field.Parsetree.ast_loc)) ;
 	     let field_info =
 	       Env.TypeInformation.SF_sig
-		(current_species, rep_vname,
-		 (Types.never_generalizable_scheme
-		   field.Parsetree.ast_loc ty)) in
+		(current_species, rep_vname, rep_scheme) in
 	     ([field_info], ctx', env, [(* Proofs *)])
 	     end)
 	 | Parsetree.SF_sig sig_def ->
@@ -1443,8 +1482,12 @@ and typecheck_species_fields ctx env = function
 	     (* Extend the environment with this new method of Self.      *)
 	     (* Be careful : methods are not polymorphics (c.f. Virgile   *)
              (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
-	     let scheme =
-		Types.never_generalizable_scheme field.Parsetree.ast_loc ty in
+	     let scheme = Types.trivial_scheme ty in
+	     if Types.scheme_contains_variable_p scheme then
+		raise
+		  (Scheme_contains_type_vars
+		    (sig_def_descr.Parsetree.sig_name, scheme,
+		     field.Parsetree.ast_loc)) ;
 	     let env' =
 	       Env.TypingEnv.add_value
 		 sig_def_descr.Parsetree.sig_name scheme env in
@@ -1520,8 +1563,12 @@ and typecheck_species_fields ctx env = function
 	     (* Extend the environment. *)
 	     (* Be careful : methods are not polymorphics (c.f. Virgile   *)
              (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
-	     let scheme =
-		Types.never_generalizable_scheme field.Parsetree.ast_loc ty in
+	     let scheme = Types.trivial_scheme ty in
+	     if Types.scheme_contains_variable_p scheme then
+		raise
+		  (Scheme_contains_type_vars
+		    (property_def.Parsetree.ast_desc.Parsetree.prd_name,
+		     scheme, field.Parsetree.ast_loc)) ;
 	     let env' =
 	       Env.TypingEnv.add_value
 		 property_def.Parsetree.ast_desc.Parsetree.prd_name
@@ -1542,8 +1589,12 @@ and typecheck_species_fields ctx env = function
 	     (* Extend the environment. *)
 	     (* Be careful : methods are not polymorphics (c.f. Virgile   *)
              (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
-	     let scheme =
-		Types.never_generalizable_scheme field.Parsetree.ast_loc ty in
+	     let scheme = Types.trivial_scheme ty in
+	     if Types.scheme_contains_variable_p scheme then
+		raise
+		  (Scheme_contains_type_vars
+		    (theorem_def.Parsetree.ast_desc.Parsetree.th_name, scheme,
+		     field.Parsetree.ast_loc)) ;
 	     let env' =
 	       Env.TypingEnv.add_value
 		 theorem_def.Parsetree.ast_desc.Parsetree.th_name scheme env in
@@ -1728,7 +1779,9 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
 	      (begin
 	      (* We try to translate type errors into *)
 	      (* more significant error messages.     *)
-	      try Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2
+	      try
+		ignore
+		  (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2)
 	      with
 	      | Types.Conflict (ty1, ty2, _) ->
 		  raise
@@ -1747,7 +1800,7 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
 		       (name_should_be_sub_spe, name_should_be_over_spe, v1,
 			ty_name, ar1, ar2,loc))
 	      end) ;
-		  Types.end_definition () ;
+	      Types.end_definition () ;
 	      true
 	      end)
 	    else false)
@@ -1795,9 +1848,10 @@ let apply_species_arguments ctx env base_spe_descr params =
                let repr_of_formal =
 		 Types.type_rep_species
 		   ~species_module: (fst f_ty) ~species_name: (snd f_ty) in
-               Types.unify
-		 ~loc: e_param.Parsetree.ast_loc
-		 ~self_manifest: ctx.self_manifest repr_of_formal expr_ty ;
+		ignore
+		(Types.unify
+		   ~loc: e_param.Parsetree.ast_loc
+		   ~self_manifest: ctx.self_manifest repr_of_formal expr_ty) ;
 	       (* And now, the new methods where x <- e (in Virgile's thesis) *)
                (* i.e. here, [f_name] <- [e_param_expr].                      *)
 	       let substd_meths =
@@ -2352,9 +2406,11 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
 	  Types.begin_definition () ;
 	  let sig_ty = Types.specialize sig_scheme in
 	  let ty = Types.specialize sc in
-	  Types.unify ~loc ~self_manifest: ctx.self_manifest sig_ty ty ;
+	  (* Recover the type where Self is prefered. *)
+	  let ty' =
+	    Types.unify ~loc ~self_manifest: ctx.self_manifest sig_ty ty in
 	  Types.end_definition () ;
-	  (from, n, params_names, (Types.generalize ty), body)
+	  (from, n, params_names, (Types.generalize ty'), body)
 	  end
 	else rec_meth)
       rec_meths in
@@ -2411,7 +2467,8 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
 	     let ty1 = Types.specialize sc1 in
 	     let ty2 = Types.specialize sc2 in
 	     (* Ensure that the 2 versions of the method are type-compatible. *)
-	     Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	     ignore
+	       (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
 	     (* And return the seconde one (late binding). *)
 	     (m2, rem_of_l2)
 	   with Not_found ->
@@ -2448,19 +2505,19 @@ let fields_fusion ~loc ctx phi1 phi2 =
 	Types.begin_definition () ;
 	let ty1 = Types.specialize sc1 in
 	let ty2 = Types.specialize sc2 in
-	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	let ty = Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 in
 	Types.end_definition () ;
-	Env.TypeInformation.SF_sig (from2, n2, (Types.generalize ty2))
+	Env.TypeInformation.SF_sig (from2, n2, (Types.generalize ty))
    | (Env.TypeInformation.SF_sig (_, n1, sc1),
       Env.TypeInformation.SF_let (from2, n2, pars2, sc2, body)) when n1 = n2 ->
         (* sig / let. *)
 	Types.begin_definition () ;
 	let ty1 = Types.specialize sc1 in
 	let ty2 = Types.specialize sc2 in
-	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	let ty = Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 in
 	Types.end_definition () ;
 	Env.TypeInformation.SF_let
-	  (from2, n2, pars2, (Types.generalize ty2), body)
+	  (from2, n2, pars2, (Types.generalize ty), body)
    | (Env.TypeInformation.SF_sig (_, n1, sc1),
       Env.TypeInformation.SF_let_rec rec_meths) ->
         (* sig / let rec. *)
@@ -2472,10 +2529,10 @@ let fields_fusion ~loc ctx phi1 phi2 =
 	Types.begin_definition () ;
 	let ty1 = Types.specialize sc1 in
 	let ty2 = Types.specialize sc2 in
-	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	let ty = Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 in
 	Types.end_definition () ;
 	Env.TypeInformation.SF_let
-	  (from1, n1, pars1, (Types.generalize ty1), body)
+	  (from1, n1, pars1, (Types.generalize ty), body)
    | (Env.TypeInformation.SF_let (_, n1, _, sc1, _),
       Env.TypeInformation.SF_let (from2, n2, pars2, sc2, body)) when n1 = n2 ->
         (* let / let. *)
@@ -2483,10 +2540,10 @@ let fields_fusion ~loc ctx phi1 phi2 =
 	Types.begin_definition () ;
 	let ty1 = Types.specialize sc1 in
 	let ty2 = Types.specialize sc2 in
-	Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 ;
+	let ty = Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 in
 	Types.end_definition () ;
 	Env.TypeInformation.SF_let
-	  (from2, n2, pars2, (Types.generalize ty2), body)
+	  (from2, n2, pars2, (Types.generalize ty), body)
    | (Env.TypeInformation.SF_let (_, _, _, _, _),
       Env.TypeInformation.SF_let_rec _) ->
 	failwith "fields_fusion let / let rec"
@@ -2516,7 +2573,8 @@ let fields_fusion ~loc ctx phi1 phi2 =
 	  let ty1 = Types.specialize sc1 in
 	  let ty2 = Types.specialize sc2 in
 	  (try
-	    Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2
+	    ignore
+	      (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2)
 	  with _ -> assert false) ;
 	  (* Finally, ensure that the propositions are the same. *)
 	  if Ast_equal.prop prop1 prop2 then
@@ -2537,7 +2595,8 @@ let fields_fusion ~loc ctx phi1 phi2 =
 	  let ty1 = Types.specialize sc1 in
 	  let ty2 = Types.specialize sc2 in
 	  (try
-	    Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2
+	    ignore
+	      (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2)
 	  with _ -> assert false) ;
 	  (* Finally, ensure that the propositions are the same. *)
 	  if Ast_equal.prop prop1 prop2 then

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.15 2007-10-09 08:38:16 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.16 2007-10-22 08:41:30 pessaux Exp $ *)
 
 exception Method_multiply_defined of
   (Parsetree.vname * Parsetree.qualified_vname)
@@ -37,6 +37,8 @@ exception Not_subspecies_missing_field of
    Location.t)
 exception Collection_not_fully_defined of
   (Parsetree.qualified_vname * Parsetree.vname)
+exception Scheme_contains_type_vars of
+  (Parsetree.vname * Types.type_scheme * Location.t)
 
 type please_compile_me =
   | PCM_no_matter

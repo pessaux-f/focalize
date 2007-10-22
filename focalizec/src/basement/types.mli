@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.20 2007-10-09 08:38:15 pessaux Exp $ *)
+(* $Id: types.mli,v 1.21 2007-10-22 08:41:30 pessaux Exp $ *)
 
 
 (** Types of various identifiers in the abstract syntax tree. *)
@@ -29,7 +29,6 @@ type type_collection = (fname * collection_name)
 exception Conflict of (type_simple * type_simple * Location.t)
 exception Circularity of (type_simple * type_simple * Location.t)
 exception Arity_mismatch of (type_name * int * int * Location.t)
-exception Type_contains_non_generalizable_vars of (type_simple * Location.t)
 
 val begin_definition : unit -> unit
 val end_definition : unit -> unit
@@ -68,13 +67,12 @@ val subst_type_simple : type_collection -> type_collection -> type_simple ->
 (** Manipulation of type schemes: generalization, instanciation, generation of
 a (closed) type scheme from a type without unknowns. *)
 val specialize : type_scheme -> type_simple
-val specialize2 :
-  type_scheme -> type_simple list -> (type_simple * type_simple list)
+val specialize_with_args : type_scheme -> type_simple list -> type_simple
 val generalize : type_simple -> type_scheme
 val generalize2 :
   type_simple -> type_simple list -> (type_scheme * (type_simple list))
 val trivial_scheme : type_simple -> type_scheme
-val never_generalizable_scheme : Location.t -> type_simple -> type_scheme
+val scheme_contains_variable_p : type_scheme -> bool
 val copy_type_simple_but_variables :
   and_abstract: type_collection option -> type_simple -> type_simple
 
@@ -82,7 +80,9 @@ val copy_type_simple_but_variables :
 (** Type (schemes) unification. *)
 val unify :
   loc: Location.t -> self_manifest: (type_simple option) -> type_simple ->
-    type_simple -> unit
+    type_simple -> type_simple
+val extract_fun_ty_result : type_simple -> type_simple
+val extract_fun_ty_arg : type_simple -> type_simple
 
 (** Pretty_printing for types and type schemes for FoCal. *)
 val pp_type_name : Format.formatter -> type_name -> unit

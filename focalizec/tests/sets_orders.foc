@@ -7,48 +7,49 @@ Basic sets operations, orderings and lattices.
 
 -- This is a file in new syntax!
 
-use "../../../basics";;
-open "../basics";;
+use "basics";;
+open "basics";;
 
 (** In a setoid, we can test the equality (note for logicians: this is
    a congruence). The setoid can not be empty. *)
 species Setoid inherits Basic_object =
 
   (** @mathml <eq/> *)
-  sig ( = ) : Self -> Self -> bool
-  ;
+  (* sig ( = ) : Self -> Self -> bool ; *)
+  sig equal : Self -> Self -> bool ;
+
+  (*
   property ``equal is reflexive'' : all x y in Self,
-    Self!( = ) (x, x) and
-    x = x
-  ;
+    Self!( = ) (x, x) and x = x ;
+   *)
+  property equal_reflexive : all x in Self, !equal (x, x) ;
+
   property equal_symmetric : all x y in Self,
-    Self!equal(x, y) -> !equal(y, x)
-  ;
+    Self!equal(x, y) -> !equal(y, x) ;
+
   property equal_transitive : all x y z in Self,
-    !equal(x, y) -> !equal(y, z) -> !equal(x, z)
-  ;
+    !equal(x, y) -> !equal(y, z) -> !equal(x, z) ;
+
   (** element returns some element of our non empty setoid *)
-  sig element : Self
-  ;
+  sig element : Self ;
+
   (** @mathml <neq/> *)
-  let different (x, y) = basics#not_b(!equal(x, y))
-  ;
+  let different (x, y) = basics#not_b(!equal(x, y)) ;
+
   theorem same_is_not_different : all x y in Self,
      !different(x, y) <-> ( !equal(x, y))
   proof:
-    by definition of different
-;
-(*   theorem same_is_not_different : all x y in Self, *)
-(*      !equal(x,y) -> not(!different(x,y))  *)
-(*   proof:  *)
-(*     DEF !different *)
-(*   ; *)
+    by definition of different ;
 
-(*   theorem different_is_not_same : all x y in Self, *)
-(*      !different(x,y) -> not(!equal(x,y))  *)
-(*   proof:  *)
-(*     DEF !different *)
-(*   ; *)
+  theorem different_is_irreflexive: all x in Self,
+    not (!different (x, x))
+  proof:
+    (* by property ``equal is reflexive'', same_is_not_different *)
+    by property equal_reflexive, same_is_not_different ;
+
+  theorem different_is_symmetric: all x y in Self, 
+    !different (x, y) -> !different (y, x)
+  proof: by property equal_symmetric, same_is_not_different ;
 
 end
 ;;
@@ -58,58 +59,58 @@ end
   We define two functions and two properties relating 
   concrete values of rep and abstract values of Self
 *)
-species Represented_by(S is Basic_object) inherits Setoid =
+species Represented_by (S is Basic_object) inherits Setoid =
 
   rep = S ;
 
-  (** an element of Self is encoded by an element of s *)
-  let to_rep (x in Self) in S = x;
+  (** An element of Self is encoded by an element of S. *)
+  let to_rep (x in Self) in S = x ;
 
-  (** One should be able to describe which values of s
-     correspond to some abstract Self
-   *)
-  sig represents_some_Self : S -> prop;
+  (** One should be able to describe which values of s correspond to some
+     abstract Self. *)
+  sig represents_some_Self : S -> prop ;
 
-  (** A way to abstract concrete values,
-     not intended to be used by the programmer
-   *)
+  (** A way to abstract concrete values, not intended to be used by the
+     programmer *)
   sig from_rep : S -> Self;
 
-  (** This property enables to state theorems about abstract Self *)
-  logical correct_representation(x) =
-    !represents_some_Self(!to_rep(x))
+  (** This property enables to state theorems about abstract Self. *)
+  logical correct_representation (x) =
+    !represents_some_Self (!to_rep (x))
   ;
 
+(* [Unsure] Je ne comprends pas pourquoi ça devrait passer en vue des règles
+   de typage. *)
   theorem correct_rep_spec: all x in Self,
-     !correct_representation(x) <-> !represents_some_Self(!to_rep(x))
-     proof: by definition of !correct_representation
+     !correct_representation (x) <-> !represents_some_Self (!to_rep (x))
+     proof: by definition of correct_representation
   ;
 
-  (** combining to_rep and from_rep gives identity *)
-  property to_rep_reverses: all x in Self, !equal(!from_rep(!to_rep(x)), x);
+  (** Combining to_rep and from_rep gives identity. *)
+  property to_rep_reverses: all x in Self, !equal (!from_rep (!to_rep (x)), x) ;
 
-  (** since we provide an injection to s from_rep is a surjection *)
+  (** Since we provide an injection to s from_rep is a surjection. *)
   theorem from_rep_is_surjective: all x in Self, ex y in S,
-    !equal(!from_rep(y), x)
+    !equal (!from_rep (y), x)
   proof:
    <1>1 assume x in Self,
-        prove !equal(!from_rep(x), x)
-        by property !to_rep_reverses
-           definition of !to_rep
+        prove !equal (!from_rep (x), x)
+        by property to_rep_reverses
+        definition of to_rep
    <1>f qed.
   ;
 
-  (** every element of Self should verify an invariant *)
-  property correct_invariant: all x in Self, !correct_representation(x);
+  (** Every element of Self should verify an invariant. *)
+  property correct_invariant: all x in Self, !correct_representation (x) ;
 
-  (** by default we print the concrete data *)
-  let print(x) = S!print(!to_rep(x));
-  (** by default we parse concrete data and abstract it*)
-  let parse(p) = !from_rep(S!parse(p));
-
+  (** By default we print the concrete data. *)
+  let print (x) = S!print (!to_rep (x)) ;
+  (** By default we parse concrete data and abstract it. *)
+  let parse (p) = !from_rep (S!parse (p)) ;
 end
 ;;
 
+(*
 (** 
    Here we state that in some cases we may view partial operations
    as total operations.
@@ -1203,3 +1204,4 @@ end
 ;;
 
 
+*)

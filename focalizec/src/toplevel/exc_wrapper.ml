@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.23 2007-10-17 11:45:28 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.24 2007-10-22 08:41:30 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -27,9 +27,10 @@ try Check_file.main () with
      | Files.Cant_access_file_in_search_path fname ->
 	 (* In fact, should always be caught by env.ml. *)
 	 Format.fprintf Format.err_formatter
-	   "@[%tUnable@ to@ find@ file%t@ '%t%s%t'@ in@ the@ search@ path.@]@."
+	   "@[%tUnable@ to@ find@ file%t@ '%t%s%t'@ %tin@ the@ search@ path%t.@]@."
 	   Handy.pp_set_bold Handy.pp_reset_effects
 	   Handy.pp_set_underlined fname Handy.pp_reset_effects
+	   Handy.pp_set_bold Handy.pp_reset_effects
      | Files.Corrupted_fo fname ->
 	 Format.fprintf Format.err_formatter
 	   "@[%tInvalid@ or@ corrupted@ compiled@ interface%t@ '%t%s%t'.@]@."
@@ -45,10 +46,12 @@ try Check_file.main () with
 	   Handy.pp_set_bold Handy.pp_reset_effects m
      | Configuration.Input_file_already_set ->
 	 Format.fprintf Format.err_formatter
-	   "@[Input@ file@ name@ is@ already@ set.@]@."
+	   "@[%tInput@ file@ name@ is@ already@ set%t.@]@."
+	   Handy.pp_set_bold Handy.pp_reset_effects
      | Configuration.No_input_file ->
 	 Format.fprintf Format.err_formatter
-	   "@[No@ input@ file.@ FoCaL@ is@ cowardly@ and@ gives@ out...@]@."
+	   "@[%tNo@ input@ file.@ FoCaL@ is@ cowardly@ and@ gives@ out...%t@]@."
+	   Handy.pp_set_bold Handy.pp_reset_effects
 (* *********************** *)
 (* Lexing / parsing stage. *)
      | Parse_file.Lex_error (pos_s, pos_e, reason) ->
@@ -69,10 +72,16 @@ try Check_file.main () with
 (* Scoping stage. *)
      | Scoping.Multiply_used_module modname ->
 	 Format.fprintf Format.err_formatter
-	   "@[Module@ '%s'@ was@ \"use\"@ several@ times.@]@." modname
+	   "@[%tModule%t@ '%s'@ %twas@ \"use\"@ several@ times%t.@]@."
+	   Handy.pp_set_bold Handy.pp_reset_effects
+	   modname
+	   Handy.pp_set_bold Handy.pp_reset_effects
      | Scoping.Module_not_specified_as_used modname ->
 	 Format.fprintf Format.err_formatter
-	   "@[Module@ '%s'@ was@ not@ declared@ as@ \"use\".@]@." modname
+	   "@[%tModule%t@ '%s'@ %twas@ not@ declared@ as@ \"use\"%t.@]@."
+	   Handy.pp_set_bold Handy.pp_reset_effects
+	   modname
+	   Handy.pp_set_bold Handy.pp_reset_effects
      | Scoping.Parametrized_species_wrong_arity at ->
 	 Format.fprintf Format.err_formatter
 	   "%a:@\n@[%tWrong number of species parameters%t.@]@."
@@ -137,10 +146,16 @@ try Check_file.main () with
 	 Format.fprintf Format.err_formatter
 	   "%a:@\n@[Type@ constructor@ '%a'@ used@ with@ the@ different@ arities@ %d@ and@ %d.@]@."
 	   Location.pp_location at Types.pp_type_name ty_cstr_name arity1 arity2
-     | Types.Type_contains_non_generalizable_vars (ty, at) ->
+     | Infer.Scheme_contains_type_vars (field_name, sch, at) ->
 	 Format.fprintf Format.err_formatter
-	   "%a:@\n@[Type@ @[%a@] contains@ variables@ than@ cannot@ be@ generalized or would be polymorphic.@]@."
-	   Location.pp_location at Types.pp_type_simple ty
+	   "%a:@\n@[%tIn@ field%t@ '%t%a%t'%t,@ type scheme%t@ @[%a@]@ %tcontains@ variables@ than@ cannot@ be@ generalized or is polymorphic%t.@]@."
+	   Location.pp_location at
+	   Handy.pp_set_bold Handy.pp_reset_effects
+	   Handy.pp_set_underlined Sourcify.pp_vname field_name
+	   Handy.pp_reset_effects
+	   Handy.pp_set_bold Handy.pp_reset_effects
+	   Types.pp_type_scheme sch
+	   Handy.pp_set_bold Handy.pp_reset_effects
 (* ************************** *)
 (* Core type inference stuff. *)
      | Infer.Bad_sum_type_constructor_arity (ident, defined_arity) ->
@@ -149,16 +164,26 @@ try Check_file.main () with
 	    | Env.TypeInformation.CA_zero -> ("no", "1")
 	    | Env.TypeInformation.CA_one -> ("1", "no")) in
 	 Format.fprintf Format.err_formatter
-	   "@[Sum@ type@ constructor@ '%a'@ expected@ %s@ argument@ but@ was@ used@ with@ %s@ argument.@]@."
-	   Sourcify.pp_constructor_ident ident expected used
+	   "@[%tSum@ type@ constructor%t@ '%t%a%t'@ %texpected@ %s@ argument@ but@ was@ used@ with@ %s@ argument%t.@]@."
+	   Handy.pp_set_bold Handy.pp_reset_effects
+	   Handy.pp_set_underlined Sourcify.pp_constructor_ident ident
+	   Handy.pp_reset_effects
+	   Handy.pp_set_bold expected used Handy.pp_reset_effects
      | Infer.Unbound_type_variable var_name ->
-	 Format.fprintf Format.err_formatter "Unbound@ type@ variable@ %s.@."
-	   (Parsetree_utils.name_of_vname var_name)
+	 Format.fprintf Format.err_formatter
+	   "@[%tUnbound@ type@ variable%t@ %t%s%t.@]@."
+	   Handy.pp_set_bold Handy.pp_reset_effects
+	   Handy.pp_set_underlined (Parsetree_utils.name_of_vname var_name)
+	   Handy.pp_reset_effects
      | Infer.Method_multiply_defined (m_vname, s_name) ->
 	 Format.fprintf Format.err_formatter
-	   "@[Method@ '%a'@ multiply@ defined@ in@ species@ '%a'.@]@."
-	   Sourcify.pp_vname m_vname
-	   Sourcify.pp_qualified_vname s_name
+	   "@[%tMethod%t@ '%t%a%t'@ %tmultiply@ defined@ in@ species%t@ '%t%a%t'.@]@."
+	   Handy.pp_set_bold Handy.pp_reset_effects
+	   Handy.pp_set_underlined Sourcify.pp_vname m_vname
+	   Handy.pp_reset_effects
+	   Handy.pp_set_bold Handy.pp_reset_effects
+	   Handy.pp_set_underlined Sourcify.pp_qualified_vname s_name
+	   Handy.pp_reset_effects
      | Infer.Bad_type_arity (ident, expected, used) ->
 	 Format.fprintf Format.err_formatter
 	   "@[Type@ constructor@ '%a'@ expected@ %d@ arguments@ but@ was@ used@ with@ %d@ arguments.@]@."
@@ -224,8 +249,11 @@ try Check_file.main () with
 (* Dependencies analysis. *)
      | Dep_analysis.Ill_formed_species species_name ->
 	 Format.fprintf Format.err_formatter
-	   "Species@ '%a'@ is@ not@ well-formed@."
-	   Sourcify.pp_qualified_vname species_name
+	   "@[%tSpecies%t@ '%t%a%t'@ %tis@ not@ well-formed%t.@]@."
+	   Handy.pp_set_bold Handy.pp_reset_effects
+	   Handy.pp_set_underlined Sourcify.pp_qualified_vname species_name
+	   Handy.pp_reset_effects
+	   Handy.pp_set_bold Handy.pp_reset_effects
 (* ********************** *)
 (* OCaml code generation. *)
      | Externals_ml_generation.No_external_value_caml_def (def_name, at) ->

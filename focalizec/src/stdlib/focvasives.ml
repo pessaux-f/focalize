@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focvasives.ml,v 1.3 2007-10-09 08:38:15 pessaux Exp $ *)
+(* $Id: focvasives.ml,v 1.4 2007-10-22 08:41:30 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -42,3 +42,6 @@ let base_eq x y = x = y ;;
 let pred x = x - 1 ;;
 let int_opposite i = - i ;;
 let int_plus x y = x + y ;;
+let int_minus x y = x - y ;;
+let int_max (x : int) (y : int) = max x y ;;
+let int_min (x : int) (y : int) = min x y ;;

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_ml_generation.ml,v 1.1 2007-10-09 08:37:35 pessaux Exp $ *)
+(* $Id: type_ml_generation.ml,v 1.2 2007-10-22 08:41:30 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -72,9 +72,10 @@ let type_def_compile ctx type_def_name type_descr =
   let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
   (* Type definition header. *)
   Format.fprintf out_fmter "@[<2>type" ;
-  (* Get a fresh instance of the type's identity scheme. *)
-  let (instanciated_body, params) =
-    Types.specialize2
+  (* Get a fresh instance of the type's identity scheme directly *)
+  (* instanciated with the effective type arguments.             *)
+  let instanciated_body =
+    Types.specialize_with_args
       type_descr.Env.TypeInformation.type_identity
       type_descr.Env.TypeInformation.type_params in
   (* Useless, but just in case.... This does not hurt ! *)
@@ -84,7 +85,7 @@ let type_def_compile ctx type_def_name type_descr =
    | Env.TypeInformation.TK_abstract ->
        (* Print the parameter(s) stuff if any. *)
        print_types_comma_with_same_vmapping_and_empty_carrier_mapping
-	 ctx params ;
+	 ctx type_descr.Env.TypeInformation.type_params ;
        (* Now print the type constructor's name. *)
        Format.fprintf out_fmter " _focty_%a =@ "
 	 Misc_ml_generation.pp_to_ocaml_vname type_def_name ;
@@ -108,11 +109,14 @@ let type_def_compile ctx type_def_name type_descr =
 	       (begin
 	       try
 		 let sum_cstr_ty = Types.specialize sum_cstr_scheme in
-		 let sum_cstr_args = Types.type_variable () in
-		 Types.unify
-		   ~loc: Location.none ~self_manifest: None
-		   (Types.type_arrow sum_cstr_args instanciated_body)
-		   sum_cstr_ty ;
+		 let unified_sum_cstr_ty =
+		   Types.unify
+		     ~loc: Location.none ~self_manifest: None
+		     (Types.type_arrow
+			(Types.type_variable ()) instanciated_body)
+		     sum_cstr_ty in
+		 let sum_cstr_args =
+		   Types.extract_fun_ty_arg unified_sum_cstr_ty in
 		 (sum_cstr_name, (Some sum_cstr_args))
 	       with _ ->
 		 (* Because program is already well-typed, this *)
@@ -128,7 +132,7 @@ let type_def_compile ctx type_def_name type_descr =
        (* the parameters enumeration of the type and in the sum    *)
        (* constructors definitions).                               *)
        print_types_comma_with_same_vmapping_and_empty_carrier_mapping
-	 ctx params ;
+	 ctx type_descr.Env.TypeInformation.type_params ;
        (* Now print the type constructor's name. *)
        Format.fprintf out_fmter " _focty_%a =@ "
 	 Misc_ml_generation.pp_to_ocaml_vname type_def_name ;
@@ -161,11 +165,12 @@ let type_def_compile ctx type_def_name type_descr =
 	   (fun (field_name, field_mut, field_scheme) ->
 	     try
 	       let field_ty = Types.specialize field_scheme in
-	       let field_args = Types.type_variable () in
-	       Types.unify
-		 ~loc: Location.none ~self_manifest: None
-		 (Types.type_arrow field_args instanciated_body)
-		 field_ty ;
+	       let unified_field_ty =
+		 Types.unify
+		   ~loc: Location.none ~self_manifest: None
+		   (Types.type_arrow (Types.type_variable ()) instanciated_body)
+		   field_ty in
+	       let field_args = Types.extract_fun_ty_arg unified_field_ty in
 	       (field_name, field_mut, field_args)
 	     with _ ->
 	       (* Because program is already well-typed, this *)
@@ -174,7 +179,7 @@ let type_def_compile ctx type_def_name type_descr =
 	   fields in
        (* Print the parameter(s) stuff if any. *)
        print_types_comma_with_same_vmapping_and_empty_carrier_mapping
-	 ctx params ;
+	 ctx type_descr.Env.TypeInformation.type_params ;
        (* Now print the type constructor's name. *)
        Format.fprintf out_fmter " _focty_%a = {@ "
 	 Misc_ml_generation.pp_to_ocaml_vname type_def_name ;
