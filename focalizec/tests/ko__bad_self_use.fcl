@@ -1,16 +1,30 @@
-external type int = | caml -> "int" ;;
-external type unit = | caml -> "unit" ;;
-external type string = | caml -> "string" ;;
+use "basics" ;;
+open "basics" ;;
+
 
 (* ******************************************************************* *)
 (* Must fail.                                                          *)
+(*
+    JUSTIFICATION DUE TO THE OLD UNIFICATION AND TYPES STRUCTURE
+    THAT WERE ALLOWING ANY TYPE TO HAVE A "link" FIELD TO TELL THAT
+    A TYPE IS KNOWN TO BE EQUAL TO ANOTHER (UNTIL types.ml CVS
+    VERSION 1.30).
+    BECAUSE THIS MECHANISM IS NOT CORRECT WITH THE FACT THAT, UNIFYING
+    Sefl AND A TYPE WHEN Self IS KNOWN MANIFEST TO THIS TYPE, WE MUST
+    PREFER TO RETURN Self AS UNIFIER, WE CHANGE UNIFICATION AND TYPES
+    STRUCTURE AND THERE IS NO NEED ANYMORE TO HACK BY USING A FRESH
+    COPY OF Self.
+    WE JUST KEEP THE EXPLANATION BELOW TO REMEMBER THE PROBLEM WE GOT
+    AND HOW IT WAS EXHIBITED WHEN WE ADD THIS Self FRESH COPY HACK.
+    ANYWAY, THIS EXAMPLE MUST FAIL.
+*)
 (* Example showing the need to use a fresh copy the the "rep" type     *)
 (* structure to prevent first unification from spoiling this structure *)
 (* hence making any further unifications successful between "rep" type *)
 (* and normally incompatible other types structures.                   *)
 (* ******************************************************************* *)
 species Fails =
-  rep = int ;
+  rep = basics#int ;
   let x in Self = 5 ;
   let y in Self = 5 ;
   let z in Self = "56" ;  (* If "rep"'s type structure was not fresly       *)

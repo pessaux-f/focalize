@@ -8,7 +8,7 @@ open "basics" ;;
 (* to the collapsing-procedure of properties and "proof of"s.           *)
 (* ******************************************************************** *)
 species Closed_A =
-  let ( = ) = basics#base_eq ;
+  let ( = ) (x in Self, y in Self) = basics#base_eq (x, y) ;
   let element = 1 ;
 
   property refl : all x in Self, x = x ;
@@ -30,7 +30,7 @@ end ;;
 
 species Closed_C inherits B =
   rep = basics#int ;
-  let ( = ) = basics#base_eq ;
+  let ( = ) (x in Self, y in Self) = basics#base_eq (x, y) ;
   let element = 1 ;
 
   let rec a (x) = let foo = b (1) in 1

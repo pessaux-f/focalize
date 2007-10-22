@@ -13,9 +13,9 @@ end ;;
 
 species Test inherits My_basic_object =
   rep = basics#int ;
-  let create (x) in Self = basics#int_of_string (x) ;
+  (* (EX1) let create (x) in Self = basics#int_of_string (x) ; *)
   let print (x in Self) = basics#print_int (x) ;
-  (* let create (x in basics#int) in Self = x ; *)
+  let create (x in basics#int) in Self = x ;
 end
 ;;
 
@@ -32,7 +32,7 @@ species Dummy (a in CTest) =
 end
 ;;
 
-collection CDummy implements Dummy (CTest!create ("4")) ;;
-(* collection CDummy implements Dummy (CTest!create (4)) ;; *)
+(* (EX1) collection CDummy implements Dummy (CTest!create ("4")) ;; *)
 
+collection CDummy implements Dummy (CTest!create (4)) ;;
 CDummy!print ("Et alors ? ") ;;

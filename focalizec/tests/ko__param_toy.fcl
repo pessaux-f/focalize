@@ -1,0 +1,40 @@
+use "basics" ;;
+open "basics" ;;
+
+
+(* ******************************************************************** *)
+(* Must fail.                                                           *)
+(* Test showing non generalized variables escaping a species and their  *)
+(* instanciations with different types, hence leading to an error. This *)
+(* especially show the consequence of the fact that methods are not     *)
+(* polymorphic.                                                         *)
+(* ******************************************************************** *)
+species Basic_object =
+  let equal (x in Self, y) =
+    let useless = if true then x else y in
+    true ;
+end ;;
+
+let id (x) = x ;;
+
+species ArgObject =
+  sig element : Self ;
+
+  let give_int (dummy in Self) = 1 ;
+  let give_myself (dummy in Self) = !element ;
+
+  let apply_on_whatever (f, x) = f (x) ;
+  let apply_on_me (f) = f (!element) ;
+end ;;
+
+
+species ParamToy (P is ArgObject) inherits Basic_object =
+  let to_int (x in Self) = P!give_int (x) ;
+  let get_param (x) = P!give_myself (x) ;
+  let a (x in Self) = P!apply_on_whatever (id, P!give_int (x)) ;
+  (* Below, fails because of non polymorphism. *)
+  let b (x in Self) = P!apply_on_whatever (id, P!give_myself (x)) ;
+  let c (x in Self) = P!apply_on_me (id) ;
+  let d (x in Self) = P!apply_on_whatever (id, x) ;
+end
+;;

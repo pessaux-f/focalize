@@ -1,0 +1,27 @@
+use "basics" ;;
+open "basics" ;;
+
+
+(* ****************************************************************** *)
+(* Must pass.                                                         *)
+(* Example showing how now use the "in" parameter whithout allowing   *)
+(* their type to be a "ml type". Now, "in" parameters are always of a *)
+(* species (collection more accurately) type !                        *)
+(* ****************************************************************** *)
+species IntModel inherits Basic_object =
+  rep = basics#int ;
+  let un in Self = 1 ;
+  let modulo (a, b) = if true then a else (if false then b else un) ;
+end ;;
+
+
+species Me (Naturals is IntModel, n in Naturals) =
+  rep = Naturals ;
+
+  let reduce (x in Naturals) in Self =
+    Naturals!modulo (x, n) ;
+end ;;
+
+collection ConcreteInt implements IntModel ;;
+
+let n = ConcreteInt!un ;;
