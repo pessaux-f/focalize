@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.80 2007-10-23 09:04:58 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.81 2007-10-23 09:40:04 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1212,10 +1212,12 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
              This may flood all around the proposition expression. Then
              in case of an expression, one allows both prop and bool as
              types.
-
+             The [~in_proof] boolean enables to abstract Self only in case
+             we infer a [prop]'s type inside a property/theorem definition
+             and not in it's proof !
     {b Rem} : Not exported outside this module.                               *)
 (* ************************************************************************** *)
-and typecheck_prop ctx env prop =
+and typecheck_prop ~in_proof ctx env prop =
   (* The local recursive function to save carying and changing the context. *)
   let final_ty =
     (match prop.Parsetree.ast_desc with
@@ -1236,13 +1238,13 @@ and typecheck_prop ctx env prop =
 		let scheme = Types.generalize th_type in
 		Env.TypingEnv.add_value th_name scheme accu_env)
 	      env bound_variables in
-	  typecheck_prop ctx env' pr)
+	  typecheck_prop ~in_proof ctx env' pr)
      | Parsetree.Pr_imply (pr1, pr2)
      | Parsetree.Pr_or (pr1, pr2)
      | Parsetree.Pr_and (pr1, pr2)
      | Parsetree.Pr_equiv (pr1, pr2) ->
-	 let ty1 = typecheck_prop ctx env pr1 in
-	 let ty2 = typecheck_prop ctx env pr2 in
+	 let ty1 = typecheck_prop ~in_proof ctx env pr1 in
+	 let ty2 = typecheck_prop ~in_proof ctx env pr2 in
 	 ignore
 	   (Types.unify
 	      ~loc: prop.Parsetree.ast_loc ~self_manifest: ctx.self_manifest
@@ -1254,7 +1256,7 @@ and typecheck_prop ctx env prop =
 	     ~self_manifest: ctx.self_manifest ty1 (Types.type_prop ()) in
 	 final_ty
      | Parsetree.Pr_not pr ->
-         let ty = typecheck_prop ctx env pr in
+         let ty = typecheck_prop ~in_proof ctx env pr in
 	 (* Enforce the type to be [prop]. *)
 	 let final_ty =
 	   Types.unify
@@ -1264,8 +1266,10 @@ and typecheck_prop ctx env prop =
      | Parsetree.Pr_expr expr ->
 	 (* Make the carrier abstract to prevent def-dependencies  *)
 	 (* with "rep" (c.f Virgile Prevosto's Phd page 52, Fig3.3 *)
-	 (* rule [EXPR].                                           *)
-	 let ctx' = { ctx with self_manifest = None } in
+	 (* rule [EXPR] only when the current prop appears in a    *)
+	 (* theorem/property definition, not in its proof.         *)
+	 let ctx' =
+	   (if in_proof then ctx else { ctx with self_manifest = None }) in
 	 (* Expressions must be typed as [bool] OR [prop]. If *)
          (* so, then the returned  type is [prop].            *)
 	 let ty = typecheck_expr ctx' env expr in
@@ -1289,7 +1293,7 @@ and typecheck_prop ctx env prop =
 	     raise err
 	   end)) ;
          Types.type_prop ()
-     | Parsetree.Pr_paren pr -> typecheck_prop ctx env pr) in
+     | Parsetree.Pr_paren pr -> typecheck_prop ~in_proof ctx env pr) in
   prop.Parsetree.ast_type <- Some final_ty ;
   final_ty
 
@@ -1340,7 +1344,10 @@ and typecheck_statement ctx env statement =
 	   | Parsetree.H_var (vname, type_expr) ->
 	       (vname, (typecheck_type_expr ctx accu_env type_expr))
 	   | Parsetree.H_hyp (vname, prop) ->
-	       (vname, (typecheck_prop ctx accu_env prop))
+	       (* Be careful, because we are not in a theorem/property *)
+	       (* description, but in its proof, we must not make Self *)
+	       (* abstract here !                                      *)
+	       (vname, (typecheck_prop ~in_proof: true ctx accu_env prop))
 	   | Parsetree.H_not (vname, expr) ->
 	       (vname, (typecheck_expr ctx accu_env expr))) in
 	(* Record the type information in the AST node. *)
@@ -1355,7 +1362,9 @@ and typecheck_statement ctx env statement =
   (* Now, typecheck the conclusion, if some, in the extended environment. *)
   match statement.Parsetree.ast_desc.Parsetree.s_concl with
    | None -> ()
-   | Some prop -> ignore (typecheck_prop ctx env' prop)
+   | Some prop ->
+       (* Same remark than above pour Self being not abstract ! *)
+       ignore (typecheck_prop ~in_proof: true ctx env' prop)
   end)
 
 
@@ -1378,8 +1387,12 @@ and typecheck_theorem_def ctx env theorem_def =
     make_implicit_var_mapping_from_prop
       theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
   let ctx' = { ctx with tyvars_mapping = vmapp } in
+  (* Ensure that Self we be abstract during the theorem's definition *)
+  (* type inference by setting [~in_proof: false].                   *)
   let ty =
-    typecheck_prop ctx' env theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
+    typecheck_prop
+      ~in_proof: false ctx' env
+      theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
   (* Record the type information in the AST node. *)
   theorem_def.Parsetree.ast_type <- Some ty ;
   (* Now, typecheck the proof to fix types inside by side effet. *)
@@ -1552,9 +1565,12 @@ and typecheck_species_fields ctx env = function
 	 | Parsetree.SF_property property_def ->
 	     (begin
 	     Types.begin_definition () ;
+	     (* Ensure that Self we be abstract during the property's    *)
+	     (* definition type inference by setting [~in_proof: false]. *)
 	     let ty =
 	       typecheck_prop
-		 ctx env property_def.Parsetree.ast_desc.Parsetree.prd_prop in
+		 ~in_proof: false ctx env
+		 property_def.Parsetree.ast_desc.Parsetree.prd_prop in
 	     Types.end_definition () ;
 	     (* Record the type information in the AST node. *)
 	     property_def.Parsetree.ast_type <- Some ty ;
