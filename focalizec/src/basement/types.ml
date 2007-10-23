@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.31 2007-10-22 08:41:30 pessaux Exp $ *)
+(* $Id: types.ml,v 1.32 2007-10-23 09:04:58 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -725,13 +725,9 @@ let unify ~loc ~self_manifest type1 type2 =
 	 end)
      | (ST_self_rep, _) ->
 	 (begin
-Format.eprintf "Cas 0@." ;
 	 match self_manifest with
-	  | None ->
-	      Format.eprintf "Cas 0.1 None@." ;
-	      raise (Conflict (ty1, ty2, loc))
+	  | None -> raise (Conflict (ty1, ty2, loc))
 	  | Some self_is_that ->
-Format.eprintf "Cas 0.2 : %a@." pp_type_simple self_is_that ;
 	      ignore (rec_unify self_is_that ty2) ;
               (* Always prefer Self ! *)
               ST_self_rep
@@ -742,7 +738,7 @@ Format.eprintf "Cas 0.2 : %a@." pp_type_simple self_is_that ;
 	  | None -> raise (Conflict (ty1, ty2, loc))
 	  | Some self_is_that ->
 	      (* Same remarks than in the mirror case above. *)
-	      ignore (rec_unify self_is_that ty1 ) ;
+	      ignore (rec_unify self_is_that ty1) ;
 	      ST_self_rep
 	 end)
      | ((ST_species_rep c1), (ST_species_rep c2)) ->

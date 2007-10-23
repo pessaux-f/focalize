@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.79 2007-10-22 08:41:30 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.80 2007-10-23 09:04:58 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -1123,15 +1123,21 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
 	let infered_body_ty =
 	  typecheck_expr ctx local_env binding.Parsetree.b_body in
 	(* If there is some constraint on this type, then unify with it. *)
+	(* But anyway KEEP the constraint for type ! Unification is only *)
+	(* there to ensure compatibility between the infered type and    *)
+	(* the proposed constraint !                                     *)
 	let infered_body_ty_with_constraint =
 	  (match binding.Parsetree.b_type with
 	   | None -> infered_body_ty
 	   | Some ty_expr ->
 	       let constraint_ty = typecheck_type_expr ctx env ty_expr in
-	       Types.unify
-		 ~loc: ty_expr.Parsetree.ast_loc
-		 ~self_manifest: ctx.self_manifest
-		 constraint_ty infered_body_ty) in
+	       ignore
+		 (Types.unify
+		    ~loc: ty_expr.Parsetree.ast_loc
+		    ~self_manifest: ctx.self_manifest
+		    constraint_ty infered_body_ty) ;
+	       (* As said above, KEEP the constraint as the final type ! *)
+	       constraint_ty) in
 	(* Now, reconstruct the functional type from the body's and args' *)
         (* types. DO NOT fold_left, otherwise the fun type gets mirored ! *)
         (* By the way, be careful to create the type arrow with the right *)
@@ -1363,8 +1369,6 @@ and typecheck_statement ctx env statement =
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
 and typecheck_theorem_def ctx env theorem_def =
-Format.eprintf "Typecheking theorem %a@."
-Sourcify.pp_vname theorem_def.Parsetree.ast_desc.Parsetree.th_name ;
   (* For the same reason that in external definition, variables present  *)
   (* in a type expression in a theorem are implicitely considered as     *)
   (* universally quantified. In effect, there no syntax to make explicit *)
@@ -1374,14 +1378,8 @@ Sourcify.pp_vname theorem_def.Parsetree.ast_desc.Parsetree.th_name ;
     make_implicit_var_mapping_from_prop
       theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
   let ctx' = { ctx with tyvars_mapping = vmapp } in
-
-(match ctx'.self_manifest with
- | None -> Format.eprintf "Self n'est pas manifeste@."
- | Some ty -> Format.eprintf "Self est égal à %a@."
-       Types.pp_type_simple ty) ;
   let ty =
     typecheck_prop ctx' env theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
-Format.eprintf "typecheck_prop de typecheck_theorem_def est passé@." ;
   (* Record the type information in the AST node. *)
   theorem_def.Parsetree.ast_type <- Some ty ;
   (* Now, typecheck the proof to fix types inside by side effet. *)
