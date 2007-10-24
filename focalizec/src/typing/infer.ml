@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.81 2007-10-23 09:40:04 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.82 2007-10-24 09:45:03 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -3366,12 +3366,17 @@ let typecheck_phrase ctx env phrase =
 
 
 
-(* current_unit: Types.fname -> Parsetree.file ->       *)
-(*   (Env.TypingEnv.t * (please_compile_me list))       *)
+(* ********************************************************************* *)
+(* current_unit: Types.fname -> Parsetree.file ->                        *)
+(*   (Env.TypingEnv.t * (please_compile_me list))                        *)
+(** {b Descr} : Performs type inference on a complete FoCaL source file.
+
+    {b Rem} : Exported outside this module.                              *)
+(* ********************************************************************* *)
 let typecheck_file ~current_unit ast_file =
   match ast_file.Parsetree.ast_desc with
    | Parsetree.File phrases ->
-       (* A phrase is always typed in an empty context. *)
+       (* A file is always typed in an empty context. *)
        let ctx = {
 	 current_unit = current_unit ;
 	 current_species = None ;
@@ -3383,6 +3388,7 @@ let typecheck_file ~current_unit ast_file =
 	   (fun phrase ->
 	     let (stuff_to_compile, new_global_env) =
 	       typecheck_phrase ctx !global_env phrase in
+	     (* Make the global typing environment growing by side effect. *)
 	     global_env := new_global_env ;
 	     stuff_to_compile)
 	   phrases in

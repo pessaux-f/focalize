@@ -186,76 +186,58 @@ external value int_plus : int -> int -> int =
 theorem int_0_plus: all x y in int,
   #base_eq (x, 0) -> #base_eq (#int_plus (x, y), y)
 proof:
-  assumed            (* [Unsure] *)
-(*
   coq proof
   {* unfold __g_int_plus, __g_base_eq_ in |- *; intros x y Hxz;
      apply EQ_base_eq; replace x with 0%Z; eauto with zarith.
      symmetry  in |- *.
      apply decidable.
      apply Z_eq_dec. assumption. *}
-*)
 ;;
 
 theorem int_lt_le_S:
   all x y in int, #int_lt (x, y) -> #int_leq (#int_plus (x, 1), y)
 proof:
-  assumed            (* [Unsure] *)
-(*
   coq proof
   {* unfold __g_int_lt, __g_int_leq, __g_int_plus in |- *; intros x y Hlt;
      apply dec_IsTrue; fold (Zsucc x) in |- *; apply Zlt_le_succ;
      trivial. exact (IsTrue_dec Hlt). *}
-*)
 ;;
 
 theorem int_plus_assoc: all x y z in int,
   #base_eq (#int_plus (#int_plus (x, y), z), #int_plus (x, #int_plus (y, z)))
 proof:
-  assumed            (* [Unsure] *)
-(*
   coq proof
     {* unfold __g_int_plus, __g_base_eq_ in |- *; intros x y z;
        apply EQ_base_eq; auto with zarith. *}
-*)
 ;;
 
 theorem int_plus_commute: all x y  in int,
   #base_eq (#int_plus (x, y), #int_plus (y, x))
 proof:
-  assumed            (* [Unsure] *)
-(*
   coq proof {*
     unfold __g_int_plus, __g_base_eq_ in |- *; intros x y; apply EQ_base_eq;
     auto with zarith. *}
-*)
 ;;
 
 theorem int_plus_plus:  all x y z t in int,
   #base_eq (x, y) ->
     #base_eq (z, t) -> #base_eq (#int_plus (x, z), #int_plus (y, t))
 proof:
-  assumed            (* [Unsure] *)
-(*
   coq proof
   {* unfold __g_int_plus, __g_base_eq_ in |- *; intros x y z t H1 H2;
      apply EQ_base_eq; replace y with x. replace t with z. reflexivity.
      apply decidable. apply Z_eq_dec. assumption.
      apply decidable. apply Z_eq_dec. assumption. *}
-*)
 ;;
 
 theorem int_le_plus_plus: all x y z t in int,
   #int_leq (x, y) -> #int_leq (z, t) ->
     #int_leq (#int_plus (x, z), #int_plus (y, t))
 proof:
-  assumed            (* [Unsure] *)
-(*
    coq proof
      {* unfold __g_int_plus, __g_int_leq in |- *; intros x y z t H1 H2;
         apply dec_IsTrue; apply Zplus_le_compat;
         [ exact (IsTrue_dec H1) | exact (IsTrue_dec H2) ]. *}
-*)
 ;;
 
 let succ(x) = #int_plus (x, 1) ;;
@@ -279,20 +261,15 @@ external value int_min : int -> int -> int =
 theorem int_min_le: all x y z in int,
   (#int_leq (z, x) and #int_leq (z, y)) -> #int_leq (z, #int_min (x, y))
 proof:
-  assumed            (* [Unsure] *)
-(*
    coq proof
      {* intros x y z H; elim H; intros H1 H2; clear H;
         unfold __g_int_min in |- *; elim (Z_lt_dec x y);
         intros H; trivial. *}
-*)
 ;;
 
 theorem int_min_le2: all x y z in int,
   #int_leq (z, #int_min (x, y)) -> (#int_leq (z, x) and #int_leq (z, y))
 proof:
-  assumed            (* [Unsure] *)
-(*
    coq proof
    {*
    intros x y z; unfold __g_int_min in |- *.
@@ -303,35 +280,28 @@ proof:
    unfold __g_int_leq in |- *; apply dec_IsTrue.
    elim (Zle_or_lt y x); trivial.   intros Habs; absurd (x < y)%Z; trivial.
  *}
-*)
 ;;
 
 theorem int_plus_minus: all x y z in int,
   #base_eq (#int_plus (x, y), z) -> #base_eq (y, #int_minus (z, x))
 proof:
-  assumed            (* [Unsure] *)
-(*
    coq proof
    {*
    intros x y z; unfold __g_int_plus, __g_int_minus, __g_base_eq_ in |- *;
    intros H; apply EQ_base_eq; apply Zplus_minus_eq;
    symmetry  in |- *; apply (decidable _ _ _ (Z_eq_dec (x + y) z) H).
  *}
-*)
  ;;
 
 theorem int_minus_plus: all x y z in int,
  #base_eq (#int_minus (x, y), z) -> #base_eq (x, #int_plus (y, z))
 proof:
-  assumed            (* [Unsure] *)
-(*
    coq proof
    {*
    intros x y z; unfold __g_int_plus, __g_int_minus, __g_base_eq_ in |- *;
    intros H; apply EQ_base_eq; rewrite <- (Zplus_minus y x);
    apply Zplus_eq_compat; trivial; apply decidable. apply Z_eq_dec. assumption.
    *}
-*)
 ;;
 
 (* String operations. *)

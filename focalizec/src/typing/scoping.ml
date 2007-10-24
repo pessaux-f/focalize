@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.32 2007-10-17 11:45:28 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.33 2007-10-24 09:45:03 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -966,29 +966,30 @@ let scope_hyps ctx env hyps =
   List.fold_left
     (fun (accu_env, accu_scoped_hyps) hyp ->
       let hyp_desc = hyp.Parsetree.ast_desc in
-      let (new_desc, env') =
+      let (new_desc, accu_env') =
 	(begin
 	match hyp_desc with
 	 | Parsetree.H_var (vname, type_expr) ->
-	     let scoped_type_expr = scope_type_expr ctx env type_expr in
+	     let scoped_type_expr = scope_type_expr ctx accu_env type_expr in
 	     let env' =
 	       Env.ScopingEnv.add_value
 		 vname Env.ScopeInformation.SBI_local accu_env in
 	     ((Parsetree.H_var (vname, scoped_type_expr)), env')
 	 | Parsetree.H_hyp (vname, prop) ->
-	     let scoped_prop = scope_prop ctx env prop in
+	     let scoped_prop = scope_prop ctx accu_env prop in
 	     let env' =
 	       Env.ScopingEnv.add_value
 		 vname Env.ScopeInformation.SBI_local accu_env in
 	     ((Parsetree.H_hyp (vname, scoped_prop)), env')
 	 | Parsetree.H_not (vname, expr) ->
-	     let scoped_expr = scope_expr ctx env expr in
+	     let scoped_expr = scope_expr ctx accu_env expr in
 	     let env' =
 	       Env.ScopingEnv.add_value
 		 vname Env.ScopeInformation.SBI_local accu_env in
 	     ((Parsetree.H_not (vname, scoped_expr)), env')
 	end) in
-      (env', { hyp with Parsetree.ast_desc = new_desc } :: accu_scoped_hyps))
+      (accu_env',
+       { hyp with Parsetree.ast_desc = new_desc } :: accu_scoped_hyps))
     (env, [])
     hyps
 ;;
