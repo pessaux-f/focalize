@@ -173,7 +173,7 @@ type foc_pair ('a, 'b) =
   [internal] (* No internal definition: type is fully abstract. *)
   external
   | Caml -> "('a, 'b)"
-  | Coq -> "{fst : 'a; snd : 'b}
+  | Coq -> "{fst : 'a; snd : 'b}"
 ;;
 
 type foc_diag ('a) =
@@ -188,6 +188,109 @@ type int =
   | Caml -> "int"
   | Coq -> "Z"
 ;;
+
+(** There is a predefined ``module'' (file in fact) named Predefined,
+    Internal which is known by the compiler. *)
+
+type int =
+  internal Internal#int
+  external
+  | Caml -> "int"
+  | Coq -> "Z"
+;;
+
+(** Internal#t ne peut apparaître que dans une clause internal et ne peut
+faire référence qu'à un constructeur de l'algèbre des types de base. *)
+
+type t =
+  internal Internal#int
+  external
+  | Caml -> "int"
+  | Coq -> "Z"
+;;
+
+(** Crée dans l'environnement
+ - une liaison de t vers Internal#int dans l'environnement de typage du
+   programme: similaire à une abbreviation de Caml,
+ - une liaison de Internal#int vers t dans l'environnement ``Internal'',
+celui qui dit que 1 est de type (assoc Internal#int ``environnement
+Internal'').
+ - la (re)définition d'une liaison pour Internal#int est interdite (sauf une
+fois si une option non documentée du compilateur ?).
+
+
+*)
+    
+
+(* The type t is concrete. *)
+
+(1 : t)
+
+type t =
+  internal (* Fully abstract *)
+  external
+  | Caml -> "int"
+  | Coq -> "Z"
+;;
+(** Les valeurs de t sont abstraites. Et donc: *)
+
+(1 /: t);;
+
+(** Defining external vision of the internal type algebra
+
+Internal#bool
+Internal#int
+Inutile de définir car sémantique bien comprise Internal#``->''
+Inutile de définir car sémantique bien comprise Internal#``*''
+
+ *)
+
+(** Où est vissé le type int dans le compilo ?
+
+Dans l'algèbre de type ? Pas vraiment: c'est un constructeur constant comme
+un autre.
+
+En fait on visse le fait que ST_construct "int" est connu du compilateur au
+moment où on type les constantes entières.
+
+Dans le aprser, à la place de générer une constante E_const (C_int "123"), on
+pourrait générer un appel à une fonction de conversion dans le parser. Par
+exemple, en appelant cette fonction int_litteral, on génèrerait:
+
+INT s -> E_app (mk (E_var "int_litteral"), mk (C_string s))
+
+Le type int serait ainsi ``dévissé'' du typeur des constantes.
+
+La fonction int_litteral devrait être définie en focalize comme external
+(sans définition interne):
+
+let int_litteral =
+  internal: string -> integer
+  external
+  | Caml -> "Pervasives.int_of_string"
+  | Coq -> ""
+;;
+
+L'intérêt annexe est la possibilité de redéfinir les constantes de base,
+simplement en redéfinissant une fonction utilisateur. Par exemple
+let int_litteral =
+  internal: string -> big_integer
+  external
+  | Caml -> "Num.num_of_string"
+  | Coq -> "??"
+;;
+
+Par extension on pourrait aussi avoir bool_litteral, char_litteral ...,
+pour dévisser les constantes de type correspondantes.
+
+Dans le fichier de définition des concepts internes on définirait la liaison
+entre le type connu du compilateur et le type connu de l'environnement
+utilisateur par une définition de type external avec un champ internal
+dénotant un ``built-in'' (un identificateur du pseudo-``module'' Internal):
+
+
+
+ *)
 
 \end{verbatim}
 
