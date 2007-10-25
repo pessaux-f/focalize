@@ -1,21 +1,22 @@
 %{
-(* $Id: parser.mly,v 1.67 2007-10-02 09:29:36 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.68 2007-10-25 21:47:40 weis Exp $ *)
 
 open Parsetree;;
 
 let mk_doc doc d = {
   ast_loc = {
-    Location.l_beg = Parsing.symbol_start_pos () ;
-    Location.l_end = Parsing.symbol_end_pos () } ;
-  ast_desc = d ;
-  ast_doc = doc ;
-  ast_type = None
-} ;;
+    Location.l_beg = Parsing.symbol_start_pos ();
+    Location.l_end = Parsing.symbol_end_pos ();
+  };
+  ast_desc = d;
+  ast_doc = doc;
+  ast_type = None;
+};;
 
-let mk d = mk_doc None d ;;
-let mk_no_doc d = mk_doc None d ;;
+let mk d = mk_doc None d;;
+let mk_no_doc d = mk_doc None d;;
 
-let mk_local_ident vname = mk (I_local vname) ;;
+let mk_local_ident vname = mk (I_local vname);;
 let mk_global_ident qual vname = mk (I_global (qual, vname));;
 let mk_unqualified_global_ident vname = mk_global_ident None vname;;
 
@@ -249,26 +250,9 @@ phrase:
   | def_type SEMI_SEMI { mk (Ph_type $1) }
   | def_species SEMI_SEMI { mk (Ph_species $1) }
   | def_collection SEMI_SEMI { mk (Ph_coll $1) }
-/* ??? | def_external SEMI_SEMI { mk (Ph_external $1) } */
-  | opt_doc EXTERNAL def_external SEMI_SEMI { mk_doc $1 (Ph_external $3) }
   | opt_doc OPEN STRING SEMI_SEMI { mk_doc $1 (Ph_open $3) }
   | opt_doc USE STRING SEMI_SEMI { mk_doc $1 (Ph_use $3) }
   | opt_doc expr SEMI_SEMI { mk_doc $1 (Ph_expr $2) }
-;
-
-/* Definition of external definition of types and values. */
-def_external:
-/*
-  | opt_doc TYPE type_vname def_type_params EQUAL def_type_body
-    { mk_doc $1 {td_name = ($3 : string); td_params = $4; td_body = $6; } }
-;
-*/
-  | TYPE type_vname def_type_params EQUAL external_definition
-    { mk
-       (ED_type
-          (mk { etd_name = $2; etd_params = $3; etd_body = mk $5; })) }
-  | VALUE external_value_vname COLON external_type_expr EQUAL external_definition
-    { mk (ED_value (mk { evd_name = $2 ; evd_type = $4 ; evd_body = mk $6 })) }
 ;
 
 external_language:
@@ -281,13 +265,13 @@ external_code:
   | STRING { $1 }
 ;
 
-external_def_one:
+external_expr_one:
   | BAR external_language DASH_GT external_code { ($2, $4) }
 ;
 
-external_definition:
-  | external_def_one { [ $1 ] }
-  | external_def_one external_definition { $1 :: $2 }
+external_expr:
+  | external_expr_one { [ $1 ] }
+  | external_expr_one external_expr { $1 :: $2 }
 ;
 
 /**** TYPE DEFINITION ****/
@@ -308,6 +292,32 @@ def_type_param_comma_list:
 ;
 
 def_type_body:
+  | INTERNAL def_type_body_simple_opt
+    EXTERNAL external_expr following_external_binding_list
+     { TDB_external
+         { etdb_internal = $2;
+           etdb_external = $4;
+           etdb_bindings = $5; }
+     }
+  | def_type_body_simple { TDB_simple $1 }
+;
+
+external_binding :
+    { [] }
+  | external_value_vname EQUAL external_expr { $1, $3 }
+;
+
+following_external_binding_list:
+  | { [] }
+| AND external_binding following_external_binding_list { $2 :: $3 }
+;
+
+def_type_body_simple_opt:
+   { None }
+ | def_type_body_simple { Some $1 } 
+;
+
+def_type_body_simple:
   | ALIAS type_expr { mk (TD_alias $2) }
   | def_sum { mk (TD_union $1) }
   | def_product { mk (TD_record $1) }
@@ -458,7 +468,7 @@ let_binding:
           ld_bindings = [ $3 ]} }
   | opt_local LET REC binding following_binding_list
     { mk { ld_rec = RF_rec; ld_logical = LF_no_logical; ld_local = $1;
-           ld_bindings = $4 :: $5 ; } }
+           ld_bindings = $4 :: $5; } }
 ;
 
 def_let:
@@ -467,13 +477,15 @@ def_let:
 
 binding:
   | bound_ident EQUAL expr
-    { mk {b_name = $1; b_params = []; b_type = None; b_body = $3} }
+    { mk { b_name = $1; b_params = []; b_type = None; b_body = $3; } }
+  | bound_ident EQUAL INTERNAL type_expr EXTERNAL external_expr
+    { mk { b_name = $1; b_params = []; b_type = Some $4; b_body = $6; } }
   | bound_ident IN type_expr EQUAL expr
-    { mk {b_name = $1; b_params = []; b_type = Some $3; b_body = $5} }
+    { mk { b_name = $1; b_params = []; b_type = Some $3; b_body = $5; } }
   | bound_ident LPAREN param_list RPAREN EQUAL expr
-    { mk {b_name = $1; b_params = $3; b_type = None; b_body = $6} }
+    { mk { b_name = $1; b_params = $3; b_type = None; b_body = $6; } }
   | bound_ident LPAREN param_list RPAREN IN type_expr EQUAL expr
-    { mk {b_name = $1; b_params = $3; b_type = Some $6; b_body = $8} }
+    { mk { b_name = $1; b_params = $3; b_type = Some $6; b_body = $8; } }
 ;
 
 param_list:
@@ -499,7 +511,7 @@ def_logical:
                  ld_bindings = [ $4 ]} }
   | opt_doc opt_local LOGICAL REC binding following_binding_list
     { mk_doc $1 { ld_rec = RF_rec; ld_logical = LF_logical; ld_local = $2;
-                  ld_bindings = $5 :: $6 ; } }
+                  ld_bindings = $5 :: $6; } }
 ;
 
 def_property:
@@ -841,7 +853,7 @@ expr:
     { mk_prefix_application $1 $2 }
   | DASH_OP expr %prec prec_unary_minus
     { mk_prefix_application $1 $2 }
-  | EXTERNAL external_definition END
+  | EXTERNAL external_expr END
     { mk (E_external (mk $2)) }
 ;
 
