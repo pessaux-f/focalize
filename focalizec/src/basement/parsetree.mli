@@ -11,7 +11,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.19 2007-10-25 17:07:39 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.20 2007-10-25 21:46:32 weis Exp $ *)
+
+(** {2 The Focalize abstract syntax tree definition.} *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -20,28 +22,7 @@
    - resolve global/local/method classification for idents.
 *)
 
-(** Types of various identifiers in the abstract syntax tree. *)
-type vname =
-   | Vlident of string  (** Lowercase ident. *)
-   | Vuident of string  (** Capitalized ident. *)
-   | Vpident of string  (** Prefix operator ident. *)
-   | Viident of string  (** Infix operator ident. *)
-   | Vqident of string  (** "Quote" ident for type variables. *)
-     (** Variable names are classified with respect to their lexical class,
-	 which can be regular. infix or prefix. *)
-;;
-
-type constructor_name = vname
-     (** Constructor name. *)
-;;
-
-type node_label = int * string
-     (** Node label in proof. *)
-;;
-
-type external_name = string * string
-     (** External name from Ocaml or Coq: module name and identifier. *)
-;;
+(** {3 The generic polymorphic type for AST nodes.} *)
 
 type ('a, 'b) generic_ast = {
    (** The location in the source of the AST node. *)
@@ -58,62 +39,81 @@ type ('a, 'b) generic_ast = {
 type 'a ast = ('a, string) generic_ast;;
 type 'a ast_doc = ('a, string) generic_ast;;
 
-(* ************************************************************************* *)
-(** {b Descr} : Represent [vnames] possibly qualified by a FoCaL "module"
-              name. For instance, [foo] is a [Vlident] with no module
-              qualifier. And [file#Foo] is a [Vuident] with the "module"
-              qualifier [Some "file"].
-              This type serves to represent both the [EI_global] identifiers
-              and the optional qualification of method calls (the !-stuff).
-              For this last case, this enables to make explicit the module
-              where the species from which the method is called inhabits.
+(** {3 Names of the various entities.} *)
 
-    {b Rem} : Clearly exported outside this module.                          *)
-(* ************************************************************************* *)
-type may_be_qualified_vname = ((Types.fname option) * vname);;
+(** {6 General names.} *)
 
-(* ************************************************************************* *)
-(** {b Descr} : Represent [vnames] qualified by a FoCaL "module"
-              name. For instance, [file#Foo] is a [Vuident] with the "module"
-              qualifier ["file"].
+type modname = Types.fname;;
+(** The type of ``module'' names.
+  Since there are no modules in Focalize yet, modules are just files and
+  module names are just file names. *)
 
-    {b Rem} : Clearly exported outside this module.                          *)
-(* ************************************************************************* *)
-type qualified_vname = (Types.fname * vname);;
+type vname =
+   | Vlident of string  (** Lowercase ident. *)
+   | Vuident of string  (** Capitalized ident. *)
+   | Vpident of string  (** Prefix operator ident. *)
+   | Viident of string  (** Infix operator ident. *)
+   | Vqident of string  (** "Quote" ident for type variables. *)
+(** The type of variables classified by their respective lexical category,
+  which can be regular identifiers (lowercase or capitalized), infix, or
+  prefix identifiers. *)
+;;
 
+type qualified_vname = modname option * vname;;
+(** A [qualified_vname] is a [vname] possibly qualified by a
+  module name. For instance, [None, Vlident "foo"] represents the
+  unqualified identifier [foo], and [Some "Basics", Vuident "Foo"] represents
+  the identifier [Foo] from module [Basics]. *)
+
+type constructor_name = vname
+(** A constructor name as mentioned in type definitions. *)
+;;
+type label_name = vname
+(** A label name as mentioned in type definitions. *)
+;;
+
+type node_label = int * string
+(** A node label in a proof as a intger level and a string label. *)
+;;
+
+(** {6 Identifiers specific to expressions and patterns.} *)
 
 type expr_ident = expr_ident_desc ast
 and expr_ident_desc =
   | EI_local of vname
-  | EI_global of may_be_qualified_vname
-  | EI_method of (
-      (** The collection name located before the "!", optionnally qualified
-	  by a module name. *)
-      (may_be_qualified_vname option) *
-      (** The method of the collection. *)
-      vname)
+  | EI_global of qualified_vname
+  | EI_method of qualified_vname option * vname
+    (** The optional (optionally qualified) collection name before
+        the "!" sign, and the name of the method. *)
+(** The identifiers that appear in expressions: they could be globally or
+   locally bound identifiers or method names. *)
 ;;
+
+type constructor_ident = constructor_ident_desc ast
+and constructor_ident_desc =
+  | CI of qualified_vname
+(** The constructor names that can appear in an expression or a pattern.
+    This is always a global uppercase qualified identifier. *)
+;;
+
+type label_ident = label_ident_desc ast
+and label_ident_desc =
+  | LI of qualified_vname
+(** The label names that can appear in an expression or a pattern.
+    This is always a global lowercase qualified identifier. *)
+;;
+
+(** {6 Other identifiers.} *)
 
 type ident = ident_desc ast
 and ident_desc =
   | I_local of vname
-  | I_global of may_be_qualified_vname
+  | I_global of qualified_vname
+(** Unclassified identifiers: identifiers that appear anywhere else in the
+  parse trees. *)
 ;;
 
-(* ********************************************************************** *)
-(** [Descr] : Structure of the constructor part of an expression. Because
-              type constructors are always toplevel idents, neither local
-              nor a method, we extracted from [ident_desc] the only
-              relevant information. Having such a separate type prevents
-              from having a general expression as the constructor part of
-              the [expr_desc]'s [E_constr] case.
-
-    [Rem] : Exported outside this module.                                 *)
-(* ********************************************************************** *)
-type constructor_ident = constructor_ident_desc ast
-and constructor_ident_desc =
-  | CI of Types.fname option * vname
-;;
+(** {3 Type expressions.} *)
 
 type rep_type_def = rep_type_def_desc ast_doc
 and rep_type_def_desc =
@@ -122,6 +122,7 @@ and rep_type_def_desc =
   | RTE_app of ident * rep_type_def list
   | RTE_prod of rep_type_def list
   | RTE_paren of rep_type_def
+(** Types for representations of collections. *)
 ;;
 
 type type_expr = type_expr_desc ast
@@ -133,7 +134,69 @@ and type_expr_desc =
   | TE_self
   | TE_prop
   | TE_paren of type_expr
+(** Types for values, constructors, ... *)
 ;;
+
+(** {3 External definitions for values and constructors.} *)
+
+(** {6 External languages name definitions.} *)
+
+type external_language =
+  | EL_Caml
+  | EL_Coq
+  | EL_external of string
+(** The external languages known to the compiler are [Caml], [Coq], and any
+    other mentioned as such language name which is an uninterpreted string. *)
+;;
+
+(** {6 External expressions.} *)
+
+type external_expr = external_expr_desc ast
+and external_expr_desc =
+    (external_language * external_code) list
+(** An external expression is a list that bind an external language name to an
+    expression in this language.*)
+
+and external_code = string
+(** Foreign expressions are not parsed: they are just considered
+    as strings of bytes. *)
+;;
+
+(** {3 Type definitions.} *)
+
+(** Type definitions can be either external type definitions,
+  or simple type definitions of the language. *)
+
+type type_def = type_def_desc ast
+and type_def_desc = {
+  td_name : vname;
+  td_params : vname list;
+  td_body : type_def_body;
+}
+
+and type_def_body = type_def_body_desc ast
+and type_def_body_desc =
+    (** Regular type definitions (unions, records, and aliases). *)
+  | TDB_simple of simple_type_def_body_desc
+    (** External type definitions. *)
+  | TDB_external of external_type_def_body_desc
+
+and external_type_def_body_desc = {
+  (** The internal view of the externally defined type. *)
+  etdb_internal : simple_type_def_body_desc option;
+  (** The external view of the externally defined type. *)
+  etdb_external : external_expr;
+  (** The external mapping of constructors of labels of the externally defined type. *)
+  etdb_bindings : (vname * external_expr) list;
+ }
+
+and simple_type_def_body_desc =
+  | STDB_alias of type_expr
+  | STDB_union of (constructor_name * type_expr list) list
+  | STDB_record of (label_name * type_expr) list
+;;
+
+(** {3 Patterns.} *)
 
 type constant = constant_desc ast
 and constant_desc =
@@ -144,15 +207,6 @@ and constant_desc =
   | C_char of char
 ;;
 
-type rec_flag = | RF_no_rec | RF_rec
-;;
-
-type logical_flag = | LF_no_logical | LF_logical
-;;
-
-type local_flag = | LF_no_local | LF_local
-;;
-
 type pattern = pat_desc ast
 and pat_desc =
   | P_const of constant
@@ -160,31 +214,22 @@ and pat_desc =
   | P_as of pattern * vname
   | P_wild
   | P_constr of constructor_ident * pattern list
-  | P_record of (Types.label_name * pattern) list
+  | P_record of (label_ident * pattern) list
   | P_tuple of pattern list
   | P_paren of pattern
 ;;
 
-(** External languages definitions. *)
-type external_language =
-  | EL_Caml
-  | EL_Coq
-  | EL_external of string
-(** The external languages known to the compiler are [Caml], [Coq], and any
-    other mentioned as such language name which is an uninterpreted string. *)
-;;
+(** {3 Species definitions.} *)
 
-(** The body of an external definitions contains the name defined
-    and its definition in some external language. *)
+(** {6 Various flags.} *)
 
-type external_expr = external_expr_desc ast
-and external_expr_desc =
-    (external_language * external_expression) list
+type rec_flag = | RF_no_rec | RF_rec;;
 
-and external_expression = string
-    (** External expressions are not parsed: they are just considered
-        as strings of bytes. *)
-;;
+type logical_flag = | LF_no_logical | LF_logical;;
+
+type local_flag = | LF_no_local | LF_local;;
+
+(** {6 The big rec def!} *)
 
 type species_def = species_def_desc ast_doc
 and species_def_desc = {
@@ -243,6 +288,7 @@ and let_def_desc = {
   ld_local : local_flag;
   ld_bindings : binding list;
 }
+
 and binding = binding_desc ast
 and binding_desc = {
   b_name : vname;
@@ -313,13 +359,15 @@ and expr_desc =
   | E_match of expr * (pattern * expr) list
   | E_if of expr * expr * expr
   | E_let of let_def * expr
-  | E_record of (Types.label_name * expr) list
-  | E_record_access of expr * Types.label_name
-  | E_record_with of expr * (Types.label_name * expr) list
+  | E_record of (label_ident * expr) list
+  | E_record_access of expr * label_ident
+  | E_record_with of expr * (label_ident * expr) list
   | E_tuple of expr list
   | E_external of external_expr
   | E_paren of expr
 ;;
+
+(** {3 Collection definitions.} *)
 
 type coll_def = coll_def_desc ast_doc
 and coll_def_desc = {
@@ -327,36 +375,9 @@ and coll_def_desc = {
   cd_body : species_expr;
 };;
 
-type type_def = type_def_desc ast
-and type_def_desc = {
-  td_name : vname;
-  td_params : vname list;
-  td_body : type_def_body;
-}
 
-and type_def_body = type_def_body_desc ast
-and type_def_body_desc =
-    (** Regular type definitions (unions, records, and aliases). *)
-  | TDB_simple of simple_type_def_body_desc
-    (** External type definitions. *)
-  | TDB_external of external_type_def_body_desc
+(** {3 Toplevel entities.} *)
 
-and external_type_def_body_desc = {
-  (** The internal view of the externally defined type. *)
-  etdb_internal : simple_type_def_body_desc option;
-  (** The external view of the externally defined type. *)
-  etdb_external : external_expr;
-  (** The external mapping of constructors of labels of the externally defined type. *)
-  etdb_bindings : (vname * external_expr) list;
- }
-
-and simple_type_def_body_desc =
-  | STDB_alias of type_expr
-  | STDB_union of (constructor_name * type_expr list) list
-  | STDB_record of (Types.label_name * type_expr) list
-;;
-
-(** Toplevel expressions. *)
 type expr_def = expr
 ;;
 
