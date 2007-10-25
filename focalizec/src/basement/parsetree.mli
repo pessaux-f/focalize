@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.18 2007-10-02 09:29:36 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.19 2007-10-25 17:07:39 weis Exp $ *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -44,18 +44,19 @@ type external_name = string * string
 ;;
 
 type ('a, 'b) generic_ast = {
-   ast_loc : Location.t; (** The location in the source of the AST node. *)
-   ast_desc : 'a;        (** The description of the node. *)
-   ast_doc : 'b option;  (** The support for documentation in many formats. *)
+   (** The location in the source of the AST node. *)
+   ast_loc : Location.t;
+   (** The description of the node. *)
+   ast_desc : 'a;
+   (** The support for documentation in many formats. *)
+   ast_doc : 'b option;
+   (** The type of the node. *)
    mutable ast_type : Types.type_simple option;
-                         (** The type of the node. *)
 }
 ;;
 
 type 'a ast = ('a, string) generic_ast;;
 type 'a ast_doc = ('a, string) generic_ast;;
-
-
 
 (* ************************************************************************* *)
 (** {b Descr} : Represent [vnames] possibly qualified by a FoCaL "module"
@@ -69,9 +70,7 @@ type 'a ast_doc = ('a, string) generic_ast;;
 
     {b Rem} : Clearly exported outside this module.                          *)
 (* ************************************************************************* *)
-type may_be_qualified_vname = ((Types.fname option) * vname) ;;
-
-
+type may_be_qualified_vname = ((Types.fname option) * vname);;
 
 (* ************************************************************************* *)
 (** {b Descr} : Represent [vnames] qualified by a FoCaL "module"
@@ -80,7 +79,7 @@ type may_be_qualified_vname = ((Types.fname option) * vname) ;;
 
     {b Rem} : Clearly exported outside this module.                          *)
 (* ************************************************************************* *)
-type qualified_vname = (Types.fname * vname) ;;
+type qualified_vname = (Types.fname * vname);;
 
 
 type expr_ident = expr_ident_desc ast
@@ -91,7 +90,8 @@ and expr_ident_desc =
       (** The collection name located before the "!", optionnally qualified
 	  by a module name. *)
       (may_be_qualified_vname option) *
-       vname            (** The method of the collection. *))
+      (** The method of the collection. *)
+      vname)
 ;;
 
 type ident = ident_desc ast
@@ -174,30 +174,10 @@ type external_language =
     other mentioned as such language name which is an uninterpreted string. *)
 ;;
 
-type external_def = external_def_desc ast
-and external_def_desc =
-  | ED_type of external_type_def_body
-  | ED_value of external_value_def_body
-(** An external definitions can define a new type or a new value. *)
-
-and external_type_def_body = external_type_def_body_desc ast
-and external_type_def_body_desc = {
-  etd_name : vname;
-  etd_params : vname list;    (** For types to know their arity. *)
-  etd_body : external_expr;
-}
-
-and external_value_def_body = external_value_def_body_desc ast
-and external_value_def_body_desc = {
-  evd_name : vname;
-  evd_type : type_expr;
-  evd_body : external_expr;
-}
-
 (** The body of an external definitions contains the name defined
     and its definition in some external language. *)
 
-and external_expr = external_expr_desc ast
+type external_expr = external_expr_desc ast
 and external_expr_desc =
     (external_language * external_expression) list
 
@@ -221,7 +201,7 @@ and species_param_type_desc =
 
 and species_expr = species_expr_desc ast
 and species_expr_desc = {
-  se_name : ident ;
+  se_name : ident;
   se_params : species_param list;
 }
 
@@ -343,7 +323,7 @@ and expr_desc =
 
 type coll_def = coll_def_desc ast_doc
 and coll_def_desc = {
-  cd_name : vname ;
+  cd_name : vname;
   cd_body : species_expr;
 };;
 
@@ -351,14 +331,29 @@ type type_def = type_def_desc ast
 and type_def_desc = {
   td_name : vname;
   td_params : vname list;
-  td_body : type_body;
+  td_body : type_def_body;
 }
 
-and type_body = type_body_desc ast
-and type_body_desc =
-  | TD_alias of type_expr
-  | TD_union of (constructor_name * type_expr list) list
-  | TD_record of (Types.label_name * type_expr) list
+and type_def_body = type_def_body_desc ast
+and type_def_body_desc =
+    (** Regular type definitions (unions, records, and aliases). *)
+  | TDB_simple of simple_type_def_body_desc
+    (** External type definitions. *)
+  | TDB_external of external_type_def_body_desc
+
+and external_type_def_body_desc = {
+  (** The internal view of the externally defined type. *)
+  etdb_internal : simple_type_def_body_desc option;
+  (** The external view of the externally defined type. *)
+  etdb_external : external_expr;
+  (** The external mapping of constructors of labels of the externally defined type. *)
+  etdb_bindings : (vname * external_expr) list;
+ }
+
+and simple_type_def_body_desc =
+  | STDB_alias of type_expr
+  | STDB_union of (constructor_name * type_expr list) list
+  | STDB_record of (Types.label_name * type_expr) list
 ;;
 
 (** Toplevel expressions. *)
@@ -367,7 +362,6 @@ type expr_def = expr
 
 type phrase = phrase_desc ast
 and phrase_desc =
-  | Ph_external of external_def
   | Ph_use of Types.fname
   | Ph_open of Types.fname
   | Ph_species of species_def
