@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.20 2007-10-25 21:46:32 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.21 2007-10-26 15:46:55 weis Exp $ *)
 
 (** {2 The Focalize abstract syntax tree definition.} *)
 
@@ -177,23 +177,31 @@ and type_def_desc = {
 and type_def_body = type_def_body_desc ast
 and type_def_body_desc =
     (** Regular type definitions (unions, records, and aliases). *)
-  | TDB_simple of simple_type_def_body_desc
+  | TDB_simple of simple_type_def_body
     (** External type definitions. *)
-  | TDB_external of external_type_def_body_desc
+  | TDB_external of external_type_def_body
 
+and external_type_def_body = external_type_def_body_desc ast
 and external_type_def_body_desc = {
   (** The internal view of the externally defined type. *)
-  etdb_internal : simple_type_def_body_desc option;
+  etdb_internal : simple_type_def_body option;
   (** The external view of the externally defined type. *)
   etdb_external : external_expr;
   (** The external mapping of constructors of labels of the externally defined type. *)
-  etdb_bindings : (vname * external_expr) list;
+  etdb_bindings : external_bindings;
  }
 
+and simple_type_def_body = simple_type_def_body_desc ast
 and simple_type_def_body_desc =
   | STDB_alias of type_expr
   | STDB_union of (constructor_name * type_expr list) list
   | STDB_record of (label_name * type_expr) list
+
+and external_bindings = external_bindings_desc ast
+and external_bindings_desc = external_binding list
+
+and external_binding = external_binding_desc ast
+and external_binding_desc = (vname * external_expr)
 ;;
 
 (** {3 Patterns.} *)
