@@ -1,14 +1,14 @@
 %{
-(* $Id: parser.mly,v 1.68 2007-10-25 21:47:40 weis Exp $ *)
+(* $Id: parser.mly,v 1.69 2007-10-26 15:48:34 weis Exp $ *)
 
 open Parsetree;;
 
-let mk_doc doc d = {
+let mk_doc doc desc = {
   ast_loc = {
     Location.l_beg = Parsing.symbol_start_pos ();
     Location.l_end = Parsing.symbol_end_pos ();
   };
-  ast_desc = d;
+  ast_desc = desc;
   ast_doc = doc;
   ast_type = None;
 };;
@@ -40,10 +40,6 @@ let mk_cons () = mk_global_constructor_ident (Some "basics") (Vuident "Cons");;
 let mk_nil () = mk_global_constructor_ident (Some "basics") (Vuident "Nil");;
 let mk_void () = mk_global_constructor_ident (Some "basics") (Vuident "Void");;
 
-(*let mk_cons_expr () = mk (E_var (mk_cons_ident ()));;
-let mk_nil_expr () = mk (E_var (mk_nil_ident ()));;
-let mk_void_expr () = mk (E_var (mk_void_ident ()));;
-*)
 let mk_proof_label (s1, s2) =
   try int_of_string s1, s2 with
   | Failure _ -> assert false;;
@@ -182,7 +178,7 @@ let mk_proof_label (s1, s2) =
 %nonassoc IN
 /* %nonassoc below_SEMI */
 /* %nonassoc SEMI */
-%nonassoc SEMI_OP SEMI_SEMI_OP    /* below EQ ({lbl=...; lbl=...}) */
+%nonassoc SEMI_OP SEMI_SEMI_OP         /* below EQ ({lbl=...; lbl=...}) */
 /* %nonassoc LET */                    /* above SEMI ( ...; let ... in ...) */
 /* %nonassoc below_WITH */
 /* %nonassoc FUNCTION WITH */          /* below BAR  (match ... with ...) */
@@ -269,9 +265,13 @@ external_expr_one:
   | BAR external_language DASH_GT external_code { ($2, $4) }
 ;
 
-external_expr:
+external_expr_desc:
   | external_expr_one { [ $1 ] }
-  | external_expr_one external_expr { $1 :: $2 }
+  | external_expr_one external_expr_desc { $1 :: $2 }
+;
+
+external_expr:
+  external_expr_desc { mk $1 }
 ;
 
 /**** TYPE DEFINITION ****/
@@ -292,35 +292,37 @@ def_type_param_comma_list:
 ;
 
 def_type_body:
-  | INTERNAL def_type_body_simple_opt
-    EXTERNAL external_expr following_external_binding_list
-     { TDB_external
-         { etdb_internal = $2;
-           etdb_external = $4;
-           etdb_bindings = $5; }
-     }
-  | def_type_body_simple { TDB_simple $1 }
+  | opt_doc def_type_body_simple { mk_doc $1 (TDB_simple $2) }
+  | opt_doc def_type_body_external { mk_doc $1 (TDB_external $2) }
 ;
 
-external_binding :
-    { [] }
-  | external_value_vname EQUAL external_expr { $1, $3 }
+def_type_body_external:
+  | INTERNAL def_type_body_simple_opt
+    opt_doc EXTERNAL external_expr_desc following_external_binding_list
+     { mk { etdb_internal = $2;
+            etdb_external = mk_doc $3 $5;
+            etdb_bindings = mk $6; }
+     }
+;
+
+external_binding:
+  | external_value_vname EQUAL external_expr { mk ($1, $3) }
 ;
 
 following_external_binding_list:
   | { [] }
-| AND external_binding following_external_binding_list { $2 :: $3 }
+  | AND external_binding following_external_binding_list { $2 :: $3 }
 ;
 
 def_type_body_simple_opt:
-   { None }
- | def_type_body_simple { Some $1 } 
+  | { None }
+  | def_type_body_simple { Some $1 }
 ;
 
 def_type_body_simple:
-  | ALIAS type_expr { mk (TD_alias $2) }
-  | def_sum { mk (TD_union $1) }
-  | def_product { mk (TD_record $1) }
+  | ALIAS type_expr { mk (STDB_alias $2) }
+  | def_sum { mk (STDB_union $1) }
+  | def_product { mk (STDB_record $1) }
 ;
 
 def_sum:
@@ -342,9 +344,9 @@ def_product:
   | LBRACE def_record_field_list RBRACE { $2 }
 ;
 def_record_field_list:
-  | label_name EQUAL type_expr opt_semi
+  | label_vname EQUAL type_expr opt_semi
     { [ ($1, $3) ] }
-  | label_name EQUAL type_expr SEMI def_record_field_list
+  | label_vname EQUAL type_expr SEMI def_record_field_list
     { ($1, $3) :: $5 }
 ;
 
@@ -479,7 +481,7 @@ binding:
   | bound_ident EQUAL expr
     { mk { b_name = $1; b_params = []; b_type = None; b_body = $3; } }
   | bound_ident EQUAL INTERNAL type_expr EXTERNAL external_expr
-    { mk { b_name = $1; b_params = []; b_type = Some $4; b_body = $6; } }
+    { mk { b_name = $1; b_params = []; b_type = Some $4; b_body = mk (E_external $6); } }
   | bound_ident IN type_expr EQUAL expr
     { mk { b_name = $1; b_params = []; b_type = Some $3; b_body = $5; } }
   | bound_ident LPAREN param_list RPAREN EQUAL expr
@@ -669,6 +671,8 @@ type_expr_comma_list:
 ;
 
 constructor_ref:
+  | constructor_vname
+    { mk (CI (None, $1)) }
   | opt_lident SHARP constructor_vname
     { mk (CI ($1, $3)) }
 ;
@@ -703,48 +707,6 @@ opt_uident_opt_qualified:
     { Some ($1, (Parsetree.Vuident $3)) }
 ;
 
-
-
-/**** TYPE EXPRESSIONS FOR EXTERNAL VALUES ****/
-/* Type expressions that are used to anotate external values. */
-/* Like [type_expr] except that don't allow Self and Prop. */
-external_type_expr:
-  | simple_external_type_expr
-    { $1 }
-  | external_type_tuple
-    { mk (TE_prod $1) }
-  | external_type_expr DASH_GT external_type_expr
-    { mk (TE_fun ($1, $3)) }
-;
-
-/* Type expressions that can appear inside a tuple. */
-simple_external_type_expr:
-  | QIDENT
-    { mk (TE_ident (mk_local_ident (Vqident $1))) }
-  | glob_ident
-    { mk (TE_ident $1) }
-  | LIDENT
-    { mk (TE_ident (mk_local_ident (Vlident $1))) }
-  | glob_ident LPAREN external_type_expr_comma_list RPAREN
-    { mk (TE_app ($1, $3)) }
-  | LPAREN external_type_expr RPAREN
-    { mk (TE_paren $2) }
-  | species_vname   /* To have capitalized species names as types. */
-    { mk (TE_ident (mk (I_global (None, $1)))) }
-;
-
-external_type_tuple:
-  | simple_external_type_expr STAR_OP simple_external_type_expr
-      { [$1; $3] }
-  | external_type_tuple STAR_OP simple_external_type_expr        { $1 @ [$3] }
-;
-
-external_type_expr_comma_list:
-  | external_type_expr COMMA external_type_expr_comma_list { $1 :: $3 }
-  | external_type_expr { [$1] }
-;
-
-
 /**** EXPRESSIONS ****/
 
 simple_expr:
@@ -760,7 +722,7 @@ simple_expr:
     { mk (E_constr (mk_global_constructor_ident None (Vuident $1), [])) }
   | UIDENT LPAREN expr_comma_list RPAREN
     { mk (E_constr (mk_global_constructor_ident None (Vuident $1), $3)) }
-  | simple_expr DOT label_name
+  | simple_expr DOT label_ident
     { mk (E_record_access ($1, $3)) }
   | LBRACE record_field_list RBRACE
     { mk (E_record $2) }
@@ -854,7 +816,7 @@ expr:
   | DASH_OP expr %prec prec_unary_minus
     { mk_prefix_application $1 $2 }
   | EXTERNAL external_expr END
-    { mk (E_external (mk $2)) }
+    { mk (E_external $2) }
 ;
 
 expr_semi_list:
@@ -873,9 +835,9 @@ expr_comma_list:
 ;
 
 record_field_list:
-  | label_name EQUAL expr opt_semi
+  | label_ident EQUAL expr opt_semi
     { [ ($1, $3) ] }
-  | label_name EQUAL expr SEMI record_field_list
+  | label_ident EQUAL expr SEMI record_field_list
     { ($1, $3) :: $5 }
 ;
 
@@ -965,8 +927,8 @@ pattern_comma_list:
 ;
 
 pattern_record_field_list:
-  | label_name EQUAL pattern opt_semi { [ ($1, $3) ] }
-  | label_name EQUAL pattern SEMI pattern_record_field_list { ($1, $3) :: $5 }
+  | label_ident EQUAL pattern opt_semi { [ ($1, $3) ] }
+  | label_ident EQUAL pattern SEMI pattern_record_field_list { ($1, $3) :: $5 }
 ;
 
 opt_local:
@@ -991,6 +953,11 @@ following_binding_list:
 
 /**** NAMES ****/
 
+label_ident:
+  | label_vname { mk (LI (None, $1)) }
+  | opt_lident SHARP label_vname { mk (LI ($1, $3)) }
+;
+
 bound_ident:
   | bound_vname { $1 }
 ;
@@ -1009,10 +976,8 @@ bound_vname:
 ;
 
 external_value_vname:
-  | LIDENT { Vlident $1 }
   | UIDENT { Vuident $1 }
-  | PIDENT { Vpident $1 }
-  | IIDENT { Viident $1 }
+  | bound_vname { $1 }
 ;
 
 method_vname:
@@ -1023,6 +988,10 @@ constructor_vname:
   | UIDENT { Vuident $1 }
   | PIDENT { Vpident $1 }
   | IIDENT { Viident $1 }
+;
+
+label_vname:
+  | bound_vname { $1 }
 ;
 
 species_vname:
@@ -1039,12 +1008,7 @@ property_vname:
 ;
 
 theorem_vname:
-  | LIDENT { Vlident $1 }
-  | UIDENT { Vlident $1 }
-;
-
-label_name:
-  | LIDENT { $1 }
+  | property_vname { $1 }
 ;
 
 type_vname:
