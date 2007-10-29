@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: substExpr.ml,v 1.6 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: substExpr.ml,v 1.7 2007-10-29 13:37:29 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs substitution of a value name [name_x]
@@ -75,10 +75,8 @@ let rec extend_bound_name_from_pattern bound_variables pattern =
 	 pats
    | Parsetree.P_record fields ->
        List.fold_left
-	 (fun accu_bounds (label, p) ->
-	   (* Because labels are alway lowercase we insert them as [Vlident]. *)
-	   extend_bound_name_from_pattern
-             ((Parsetree.Vlident label) :: accu_bounds) p)
+	 (fun accu_bounds (_, p) ->
+	   extend_bound_name_from_pattern accu_bounds p)
 	 bound_variables
 	 fields
    | Parsetree.P_tuple pats ->
@@ -160,12 +158,7 @@ let rec subst_expr ~param_unit ~bound_variables name_x by_expr expression =
        | Parsetree.E_record fields ->
 	   let fields' =
 	     List.map
-	       (fun (name, expr) ->
-		 (* Because labels are alway lowercase *)
-                 (* we insert them as [Vlident].       *)
-		 let bound_variables' =
-		   (Parsetree.Vlident name) :: rec_bound_vars in
-		 (name, (rec_subst bound_variables' expr)))
+	       (fun (name, expr) -> (name, (rec_subst rec_bound_vars expr)))
 	       fields in
 	   Parsetree.E_record fields'
        | Parsetree.E_record_access (expr, label) ->
@@ -174,10 +167,8 @@ let rec subst_expr ~param_unit ~bound_variables name_x by_expr expression =
 	   let with_expr' = rec_subst rec_bound_vars with_expr in
 	   let fields' =
 	     List.map
-	       (fun (name, expr) ->
-		 let bound_variables' =
-		   (Parsetree.Vlident name) :: rec_bound_vars in
-		 (name, (rec_subst bound_variables' expr))) fields in
+	       (fun (name, expr) -> (name, (rec_subst rec_bound_vars expr)))
+	       fields in
 	   Parsetree.E_record_with (with_expr', fields')
        | Parsetree.E_tuple exprs ->
 	   Parsetree.E_tuple (List.map (rec_subst rec_bound_vars) exprs)

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.46 2007-10-29 08:18:36 pessaux Exp $ *)
+(* $Id: env.ml,v 1.47 2007-10-29 13:37:29 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -36,7 +36,7 @@
 
 
 exception Unbound_constructor of (Parsetree.vname * Location.t) ;;
-exception Unbound_label of (Types.label_name * Location.t) ;;
+exception Unbound_label of (Parsetree.vname * Location.t) ;;
 exception Unbound_identifier of (Parsetree.vname * Location.t) ;;
 exception Unbound_type of (Parsetree.vname * Location.t) ;;
 exception Unbound_module of (Types.fname * Location.t) ;;
@@ -138,7 +138,7 @@ let debug_env_list_assoc ~allow_opened searched list =
 (* ********************************************************************* *)
 type ('constrs, 'labels, 'types, 'values, 'species) generic_env = {
   constructors : (Parsetree.constructor_name * ('constrs binding_origin)) list ;
-  labels : (Types.label_name * ('labels binding_origin)) list ;
+  labels : (Parsetree.vname * ('labels binding_origin)) list ;
   types : (Parsetree.vname * ('types binding_origin)) list ;
   (** [idents] Contains functions methods and more generally any let-bound
 identifiers. *)
@@ -1188,34 +1188,49 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
   (* ************************************************************** *)
-  (* Types.label_name -> EMAccess.label_bound_data -> t -> t        *)
+  (* Parsetree.vname -> EMAccess.label_bound_data -> t -> t         *)
   (** {b Descr} : Return an environment extended with a binding
-                between a record field label [ident] and the
+                between a record field label [lbl_vname] and the
                 argument [data].
                 The initial environment is passed as last argument.
 
       {b Rem} : Exported outside this module.                       *)
   (* ************************************************************** *)
-  let add_label lbl_name data (env : t) =
-     ({ env with labels = (lbl_name, BO_absolute data) :: env.labels } : t)
+  let add_label lbl_vname data (env : t) =
+    ({ env with labels = (lbl_vname, BO_absolute data) :: env.labels } : t)
 
 
 
   (* ************************************************************* *)
-  (* loc: Location.t -> Types.label_name -> > t ->                 *)
+  (* loc: Location.t -> Parsetree.label_ident -> t ->              *)
   (*   EMAccess.label_bound_data                                   *)
   (** {b Descr} : Looks-up for an [ident] inside the record fields
 		labels environment.
 
       {b Rem} : Exported outside this module.                      *)
   (* ************************************************************* *)
-  let find_label ~loc lbl_name (env : t) =
-    try
-      (* Because labels cannot be written with a # notation, the only   *)
-      (* way is to access toplevel labels of the current compilation    *)
-      (* unit. Hence such bindings cannot be induced by opened modules. *)
-      env_list_assoc ~allow_opened: false lbl_name env.labels with
-    | Not_found -> raise (Unbound_label (lbl_name, loc))
+  let rec find_label ~loc ~current_unit lbl_ident (env : t) =
+    match lbl_ident.Parsetree.ast_desc with
+     | Parsetree.LI (opt_scope, vname) ->
+	 let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
+	 (* Check if the lookup can return something *)
+	 (* coming from an opened module.            *)
+	 let allow_opened = allow_opened_p current_unit opt_scope in
+	 find_label_vname ~loc ~allow_opened vname env'
+
+
+
+  (* ***************************************************************** *)
+  (* loc: Location.t -> allow_opened: bool -> Parsetree.vname ->       *)
+  (*   Parsetree.vname -> t -> EMAccess.label_bound_data               *)
+  (** {b Descr} : Looks-up for a [vname] inside the record type labels
+         environment.
+
+      {b Rem} : Not exported outside this module.                      *)
+  (* ***************************************************************** *)
+  and find_label_vname ~loc ~allow_opened vname (env : t) =
+    try env_list_assoc ~allow_opened vname env.labels with
+    | Not_found -> raise (Unbound_label (vname, loc))
 
 
 

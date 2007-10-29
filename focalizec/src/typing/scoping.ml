@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.34 2007-10-29 08:18:36 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.35 2007-10-29 13:37:29 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -285,27 +285,27 @@ let rec scope_type_expr ctx env ty_expr =
 
 (* ********************************************************************** *)
 (* scoping_context -> Env.ScopingEnv.t -> Env.ScopingEnv.t ->             *)
-(*   Parsetree.type_body -> (Parsetree.type_body * Env.ScopingEnv.t)      *)
-(** {b Descr} : Scopes a the body of a type definition by scoping its
-              internal type expressions. Returns the extended environment
-              with bindings for the possible sum type constructors or
-              record type fields label.
-	      Note that we pass 2 different environments because we need
-              one with the the parameters type variables if the
-              definition has some and another wher ethey are not and in
-              which record fields and sum type constructors will be added,
-              WITHOUT the previously mentionned parameters type variables
-              inside to prevent them to escape in the final environment.
-              In effect, there variables that are the definition's
-              parameters are purely "local" to the type definition.
-              We can use the first one to scope recursively and the last
-              one to accumulate the record fields and sum type constructors
-              induced by the type definition because in a type structure
-              constructors and record fields can't depend on the previous
-              ones in the type definition. This justifies that one never
-              needs to know the record fields or sum constructors already
-              entered for the current type definition to continue scoping
-              the remaining of the current type definition.
+(*   Parsetree.simple_type_def_body ->                                    *)
+(*     (Parsetree.simple_type_def_body * Env.ScopingEnv.t)                *)
+(** {b Descr} : Scopes a the body of a simple type definition by scoping
+     its internal type expressions. Returns the extended environment
+     with bindings for the possible sum type constructors or record type
+     fields label.
+     Note that we pass 2 different environments because we need one with
+     the the parameters type variables if the definition has some and
+     another wher ethey are not and in which record fields and sum type
+     constructors will be added, WITHOUT the previously mentionned
+     parameters type variables inside to prevent them to escape in the
+     final environment.
+     In effect, there variables that are the definition's parameters are
+     purely "local" to the type definition. We can use the first one to
+     scope recursively and the last one to accumulate the record fields
+     and sum type constructors induced by the type definition because in
+     a type structure constructors and record fields can't depend on the
+     previous ones in the type definition. This justifies that one never
+     needs to know the record fields or sum constructors already entered
+     for the current type definition to continue scoping the remaining of
+     the current type definition.
 
     {b Args} :
       - [ctx] : The current scoping context.
@@ -318,17 +318,17 @@ let rec scope_type_expr ctx env ty_expr =
           by the type definition's body (i.e. record fields, sum type
           constructors).
 
-       - [ty_def_body] : The type definition's body to scope.
+       - [sty_def_body] : The simple type definition's body to scope.
 
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
-let scope_type_def_body ctx env env_to_extend ty_def_body =
+let scope_simple_type_def_body ctx env env_to_extend sty_def_body =
   let (scoped_desc, new_env) =
-    (match ty_def_body.Parsetree.ast_desc with
-     | Parsetree.TD_alias ty_expr ->
-	 let descr = Parsetree.TD_alias (scope_type_expr ctx env ty_expr) in
+    (match sty_def_body.Parsetree.ast_desc with
+     | Parsetree.STDB_alias ty_expr ->
+	 let descr = Parsetree.STDB_alias (scope_type_expr ctx env ty_expr) in
 	 (descr, env_to_extend)
-     | Parsetree.TD_union constructors ->
+     | Parsetree.STDB_union constructors ->
 	 (begin
 	 (* This will extend the scoping environment with the sum type  *)
 	 (* constructors. Do not fold_left otherwise you'll reverse the *)
@@ -347,32 +347,32 @@ let scope_type_def_body ctx env env_to_extend ty_def_body =
 	       (ext_env, (scoped_constructor :: cstrs_accu)))
 	     constructors
 	     (env_to_extend, []) in
-	 ((Parsetree.TD_union scoped_constructors), env_to_extend')
+	 ((Parsetree.STDB_union scoped_constructors), env_to_extend')
 	 end)
-     | Parsetree.TD_record fields ->
+     | Parsetree.STDB_record fields ->
 	 (begin
 	 (* This will extend the scoping environment with the record type *)
 	 (* fields labels. Do not fold_left otherwise you'll reverse the  *)
 	 (* order of the fields !                                         *)
 	 let (env_to_extend', scoped_fields) =
 	   List.fold_right
-	     (fun (label_name, field_tye) (env_accu, fields_accu) ->
+	     (fun (label_vname, field_tye) (env_accu, fields_accu) ->
 	       let scoped_field_tye = scope_type_expr ctx env field_tye in
-	       let scoped_field = (label_name, scoped_field_tye) in
+	       let scoped_field = (label_vname, scoped_field_tye) in
 	       (* Extend the environment with the field's name. *)
 	       let ext_env =
 		 Env.ScopingEnv.add_label
-		   label_name ctx.current_unit env_accu in
+		   label_vname ctx.current_unit env_accu in
 	       (* And return the whole stuff... *)
 	       (ext_env, (scoped_field :: fields_accu)))
 	     fields
 	     (env_to_extend, []) in
-	 ((Parsetree.TD_record scoped_fields), env_to_extend')
+	 ((Parsetree.STDB_record scoped_fields), env_to_extend')
 	 end)) in
   (* Now finish to reconstruct the whole definition's body. *)
-  let scoped_ty_def_body = {
-    ty_def_body with Parsetree.ast_desc = scoped_desc } in
-  (scoped_ty_def_body, new_env)
+  let scoped_sty_def_body = {
+    sty_def_body with Parsetree.ast_desc = scoped_desc } in
+  (scoped_sty_def_body, new_env)
 ;;
 
 
@@ -435,6 +435,22 @@ let rec scope_rep_type_def ctx env rep_type_def =
      | Parsetree.RTE_paren rtd ->
 	 Parsetree.RTE_paren (scope_rep_type_def ctx env rtd)) in
   { rep_type_def with Parsetree.ast_desc = new_desc }
+;;
+
+
+
+let scope_type_def_body ctx env_with_params env ty_def_body =
+  match ty_def_body.Parsetree.ast_desc with
+   | Parsetree.TDB_simple simple_type_def_body ->
+       let (scoped_sty_def, env') =
+	 scope_simple_type_def_body
+	   ctx env_with_params env simple_type_def_body in
+       let scoped_ty_def_body = {
+	 ty_def_body with
+	   Parsetree.ast_desc = Parsetree.TDB_simple scoped_sty_def } in
+       (scoped_ty_def_body, env')
+   | Parsetree.TDB_external _ ->
+       failwith "todo"
 ;;
 
 
@@ -1599,69 +1615,9 @@ let scope_collection_def ctx env coll_def =
 
 
 
-(* **************************************************************** *)
-(* scoping_context -> Env.ScopingEnv.t -> Parsetree.external_def -> *)
-(*   (Parsetree.external_def * Env.ScopingEnv.t)                    *)
-(* {Descr} : Returns the environment extended with the name of the
-           external definition. This name is bound into the "types"
-           bucket or into the "values" bucket according to the kind
-           of external definition.
-           Also return a "scoped" version of the definition.
-
-   {b Rem} : Not exported outside this module.                      *)
-(* **************************************************************** *)
-let scope_external_def ctx env external_def =
-  match external_def.Parsetree.ast_desc with
-   | Parsetree.ED_type e_def_body ->
-       (begin
-       let env' =
-	 Env.ScopingEnv.add_type
-	   ~loc: external_def.Parsetree.ast_loc
-	   e_def_body.Parsetree.ast_desc.Parsetree.etd_name
-	   (Env.ScopeInformation.TBI_defined_in ctx.current_unit) env in
-       (* Because external type definition do not structurally contain *)
-       (* elements that can be scoped, we directly return the initial  *)
-       (* expression.                                                  *)
-       (external_def, env')
-       end)
-   | Parsetree.ED_value e_def_body ->
-       (begin
-       (* First, scope the type expression annotating the external value. *)
-       let env' =
-	 extend_env_with_implicit_gen_vars_from_type_expr
-	   e_def_body.Parsetree.ast_desc.Parsetree.evd_type env in
-       let scoped_ty =
-	 scope_type_expr
-	   ctx env' e_def_body.Parsetree.ast_desc.Parsetree.evd_type in
-       let bound_name = e_def_body.Parsetree.ast_desc.Parsetree.evd_name in
-       (* Build the extended scoping environment. *)
-       let env'' =
-	 Env.ScopingEnv.add_value
-	   bound_name (Env.ScopeInformation.SBI_file ctx.current_unit) env in
-       (* Now, reconstruct a scoped external definition. *)
-       let scoped_e_def_body_desc = { e_def_body.Parsetree.ast_desc with
-         Parsetree.evd_type = scoped_ty } in
-       let scoped_e_def_body = { e_def_body with
-         Parsetree.ast_desc = scoped_e_def_body_desc } in
-       let scoped_external_def = { external_def with
-         Parsetree.ast_desc = Parsetree.ED_value scoped_e_def_body } in
-       (* And finally, return both the extended environment ans scoped def. *)
-       (scoped_external_def, env'')
-       end)
-;;
-
-
-
 let scope_phrase ctx env phrase =
   let (new_desc, new_env, new_ctx) =
     (match phrase.Parsetree.ast_desc with
-     | Parsetree.Ph_external external_def ->
-	 (* Nothing to scope here. External definition structurally do not *)
-	 (* contain any  [ident]. However, the scoping environment must be *)
-	 (* extended.                                                      *)
-	 let (scoped_external_def, env') =
-	   scope_external_def ctx env external_def in
-	 ((Parsetree.Ph_external scoped_external_def), env', ctx)
      | Parsetree.Ph_use fname ->
 	 (* Check if the "module" was not already "use"-d. *)
 	 if List.mem fname ctx.used_modules then
