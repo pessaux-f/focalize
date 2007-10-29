@@ -11,13 +11,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.mli,v 1.11 2007-10-16 10:00:48 pessaux Exp $ *)
+(* $Id: sourcify.mli,v 1.12 2007-10-29 12:10:31 pessaux Exp $ *)
 
 
 val pp_vname : Format.formatter -> Parsetree.vname -> unit
 val pp_vnames : string -> Format.formatter -> Parsetree.vname list -> unit
-val pp_may_be_qualified_vname :
-  Format.formatter -> Parsetree.may_be_qualified_vname -> unit 
 val pp_qualified_vname : Format.formatter -> Parsetree.qualified_vname -> unit
 val pp_ident : Format.formatter -> Parsetree.ident -> unit
 val pp_constructor_ident :
