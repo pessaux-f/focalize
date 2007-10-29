@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.3 2007-10-29 08:18:36 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.4 2007-10-29 15:48:12 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -562,7 +562,8 @@ and generate_expr ctx ~local_idents initial_expression =
 	 (begin
 	 Format.fprintf out_fmter "@[<2>" ;
 	 rec_generate loc_idents expr ;
-	 Format.fprintf out_fmter ".@,%s@]" label_name
+	 Format.fprintf out_fmter ".@,%a@]"
+	   Misc_ml_generation.pp_to_ocaml_label_ident label_name
 	 end)
      | Parsetree.E_record_with (expr, labs_exprs) ->
 	 (begin
@@ -575,7 +576,8 @@ and generate_expr ctx ~local_idents initial_expression =
 	 Format.fprintf out_fmter "@[<2>{ __foc_tmp_with_ with@\n" ;
 	 List.iter
 	   (fun (label_name, field_expr) ->
-	     Format.fprintf out_fmter "%s =@ " label_name ;
+	     Format.fprintf out_fmter "%a =@ "
+	       Misc_ml_generation.pp_to_ocaml_label_ident label_name ;
 	     rec_generate loc_idents field_expr ;
 	     Format.fprintf out_fmter " ;")
 	   labs_exprs ;
@@ -626,10 +628,12 @@ and generate_expr ctx ~local_idents initial_expression =
   and rec_generate_record_field_exprs_list loc_idents = function
     | [] -> ()
     | [(label, last)] ->
-	Format.fprintf out_fmter "%s =@ " label ;
+	Format.fprintf out_fmter "%a =@ "
+	  Misc_ml_generation.pp_to_ocaml_label_ident label ;
 	rec_generate loc_idents last
     | (h_label, h_expr) :: q ->
-	Format.fprintf out_fmter "%s =@ " h_label ;
+	Format.fprintf out_fmter "%a =@ "
+	  Misc_ml_generation.pp_to_ocaml_label_ident h_label ;
 	rec_generate loc_idents h_expr ;
 	Format.fprintf out_fmter " ;@ " ;
 	rec_generate_record_field_exprs_list loc_idents q in

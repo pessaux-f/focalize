@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.ml,v 1.4 2007-10-29 08:18:36 pessaux Exp $ *)
+(* $Id: misc_ml_generation.ml,v 1.5 2007-10-29 15:48:12 pessaux Exp $ *)
 
 
 (* ********************************************************************* *)
@@ -95,6 +95,17 @@ let pp_to_ocaml_vname ppf = function
   | Parsetree.Vqident s -> Format.fprintf ppf "%s" s
   | Parsetree.Vpident s
   | Parsetree.Viident s -> Format.fprintf ppf "%s" (parse_operator_string s)
+;;
+
+
+
+let pp_to_ocaml_label_ident ppf lab_ident =
+  match lab_ident.Parsetree.ast_desc with
+   | Parsetree.LI (fname_opt, vname) ->
+       (match fname_opt with
+	| None -> ()
+	| Some fname -> Format.fprintf ppf "%s." (String.capitalize fname)) ;
+       Format.fprintf ppf "%a" pp_to_ocaml_vname vname
 ;;
 
 

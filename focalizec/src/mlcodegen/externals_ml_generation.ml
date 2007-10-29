@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: externals_ml_generation.ml,v 1.1 2007-10-09 08:37:35 pessaux Exp $ *)
+(* $Id: externals_ml_generation.ml,v 1.2 2007-10-29 15:48:12 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -34,6 +34,7 @@ exception No_external_type_caml_def of (Parsetree.vname * Location.t) ;;
 
 
 
+(*
 (* ************************************************************************* *)
 (* Misc_ml_generation.reduced_compil_context ->                              *)
 (*   Parsetree.external_type_def_body -> unit                                *)
@@ -150,11 +151,4 @@ let external_value_def_compile ctx external_value_def =
 ;;
 
 
-
-let external_def_compile ctx extern_def =
-  match extern_def.Parsetree.ast_desc with
-   | Parsetree.ED_type external_type_def ->
-       external_type_def_compile ctx external_type_def
-   | Parsetree.ED_value external_value_def ->
-       external_value_def_compile ctx external_value_def
-;;
+*)

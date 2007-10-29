@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.25 2007-10-29 08:18:36 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.26 2007-10-29 15:48:12 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -97,11 +97,11 @@ try Check_file.main () with
 	   Location.pp_location at Handy.pp_set_bold Handy.pp_reset_effects
 	   Handy.pp_set_underlined Sourcify.pp_vname vname
 	   Handy.pp_reset_effects
-     | Env.Unbound_label (lname, at) ->
+     | Env.Unbound_label (lvname, at) ->
 	 Format.fprintf Format.err_formatter
-	   "%a:@\n@[%tUnbound@ record@ field@ label%t@ '%t%s%t'.@]@."
+	   "%a:@\n@[%tUnbound@ record@ field@ label%t@ '%t%a%t'.@]@."
 	   Location.pp_location at Handy.pp_set_bold Handy.pp_reset_effects
-	   Handy.pp_set_underlined lname
+	   Handy.pp_set_underlined Sourcify.pp_vname lvname
 	   Handy.pp_reset_effects
      | Env.Unbound_identifier (vname, at) ->
 	 Format.fprintf Format.err_formatter

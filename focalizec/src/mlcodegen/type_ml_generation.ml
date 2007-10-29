@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_ml_generation.ml,v 1.2 2007-10-22 08:41:30 pessaux Exp $ *)
+(* $Id: type_ml_generation.ml,v 1.3 2007-10-29 15:48:12 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -190,8 +190,8 @@ let type_def_compile ctx type_def_name type_descr =
 	   (* Generate the mutability flag. *)
 	   if field_mut = Env.TypeInformation.FM_mutable then
 	     Format.fprintf out_fmter "mutable " ;
-	   Format.fprintf out_fmter "%s :@ %a ;"
-	     field_name
+	   Format.fprintf out_fmter "%a :@ %a ;"
+	     Misc_ml_generation.pp_to_ocaml_vname field_name
 	     (Types.pp_type_simple_to_ml
 		~current_unit: ctx.Misc_ml_generation.rcc_current_unit
 		~reuse_mapping: true [])

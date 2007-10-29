@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.4 2007-10-29 08:18:36 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.5 2007-10-29 15:48:12 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -41,17 +41,6 @@
 (* *********************************************************************** *)
 let toplevel_compile ~current_unit out_fmter env = function
   | Infer.PCM_no_matter -> env
-  | Infer.PCM_external extern_def ->
-      (* Create the initial context for compiling the let-definition. *)
-      let ctx = {
-	Misc_ml_generation.rcc_current_unit = current_unit ;
-	(* Not under a species, hence no species parameter. *)
-	Misc_ml_generation.rcc_species_parameters_names = [] ;
-	(* Not in the context of generating a method's body code, then empty. *)
-	Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
-	Misc_ml_generation.rcc_out_fmter = out_fmter } in
-      Externals_ml_generation.external_def_compile ctx extern_def ;
-      env
   | Infer.PCM_species (species_def, species_descr, dep_graph) ->
       let opt_coll_gen_args =
 	Species_ml_generation.species_compile

@@ -1,14 +1,44 @@
-external type int = | caml -> "int" ;;
-external type unit = | caml -> "unit" ;;
-external type float = | caml -> "float" ;;
-external type char = | caml -> "char" ;;
-external type string = | caml -> "string" ;;
-external type bool = | caml -> "bool" ;;
-external type list ('a) = | caml -> "'a list" ;;
+type int =
+  internal
+  external
+  | caml -> "int"
+;;
+type unit =
+  internal
+  external
+  | caml -> "unit"
+;;
+type float =
+  internal
+  external
+  | caml -> "float"
+;;
+type char =
+  internal
+  external
+  | caml -> "char"
+;;
+type string =
+  internal
+  external
+  | caml -> "string"
+;;
+type bool =
+  internal
+  external
+  | caml -> "bool"
+;;
+type list ('a) =
+  internal
+  external
+  | caml -> "'a list"
+;;
 
-external value foc_error : string -> 'a =
-  | caml -> "Focvasives.foc_error"
-  | coq -> "foc_error"
+let foc_error =
+   internal string -> 'a
+   external
+    | caml -> "Focvasives.foc_error"
+    | coq -> "foc_error"
 ;;
 
 let and_b (x, y) =
@@ -40,36 +70,60 @@ let crp (x, y) = (x, y) ;;
 let first (x) = match x with | (v, _ ) -> v ;;
 let scnd (x) = match x with | (_ , v) -> v ;;
 
-external value string_of_int : int -> string =
+let string_of_int =
+  internal int -> string
+  external
   | caml -> "Focvasives.string_of_int" ;;
-external value int_of_string : string -> int =
+let int_of_string =
+  internal string -> int
+  external
   | caml -> "Focvasives.int_of_string" ;;
-
-
-
-external value print_int : int -> unit = | caml -> "Focvasives.int_print" ;;
+let print_int =
+  internal int -> unit
+  external
+  | caml -> "Focvasives.int_print" ;;
 
 (* Operations on integers. *)
-external value int_mod : int -> int -> int = | caml -> "Focvasives.int_mod" ;;
-external value int_eq : int -> int -> bool =
+let int_mod =
+  internal int -> int -> int
+  external
+  | caml -> "Focvasives.int_mod" ;;
+let int_eq =
+  internal int -> int -> bool
+  external
   | caml -> "Focvasives.int_eq"
   | coq -> "int_eq" ;;
-external value int_div : int -> int -> int = | caml -> "Focvasives.int_div" ;;
-external value int_lt : int -> int -> bool =
+let int_div =
+  internal int -> int -> int
+  external
+   | caml -> "Focvasives.int_div" ;;
+let int_lt =
+  internal int -> int -> bool
+  external
   | caml -> "Focvasives.int_lt"
   | coq -> "int_lt" ;;
-external value int_leq : int -> int -> bool =
+let int_leq =
+  internal int -> int -> bool
+  external
   | caml -> "Focvasives.int_leq"
   | coq -> "int_leq" ;;
-external value int_geq : int -> int -> bool =
+let int_geq =
+  internal int -> int -> bool
+  external
   | caml -> "Focvasives.int_geq"
   | coq -> "int_geq" ;;
-external value int_gt : int -> int -> bool =
+let int_gt =
+  internal  int -> int -> bool
+  external
   | caml -> "Focvasives.int_gt"
   | coq -> "int_gt" ;;
-external value phys_eq : 'a ->'a -> bool =
-  | caml -> "Focvasives.base_equal" ;;
-external value base_eq : 'a -> 'a -> bool =
+let phys_eq =
+  internal 'a ->'a -> bool
+  external
+    | caml -> "Focvasives.base_equal" ;;
+let base_eq =
+  internal  'a -> 'a -> bool
+  external
   | caml -> "Focvasives.base_eq"
   | coq -> "beq" ;;
 
@@ -176,11 +230,17 @@ theorem int_lt_irrefl :
   all x y in int, int_lt (x, y) -> not base_eq (x, y)
 proof: assumed ;;
 
-external value pred : int -> int =
+let pred =
+  internal int -> int
+  external
   | caml -> "Focvasives.pred" | coq -> "pred" ;;
-external value int_opp : int -> int =
+let int_opp =
+  internal  int -> int
+  external
   | caml -> "Focvasives.int_opposite" | coq -> "int_opp" ;;
-external value int_plus : int -> int -> int =
+let int_plus =
+  internal int -> int -> int
+  external
   | caml -> "Focvasives.int_plus" | coq -> "int_plus" ;;
 
 theorem int_0_plus: all x y in int,
@@ -241,22 +301,27 @@ proof:
 ;;
 
 let succ(x) = #int_plus (x, 1) ;;
-external value int_mult : int -> int -> int =
+let int_mult =
+  internal int -> int -> int
+  external
   | caml -> "Focvasives.int_mult"
-  | coq -> "int_mult"
-;;
-external value int_minus : int -> int -> int =
+  | coq -> "int_mult" ;;
+let int_minus =
+  internal int -> int -> int
+  external
   | caml -> "Focvasives.int_minus"
-  | coq -> "int_moins"
-;;
-external value int_max : int -> int -> int =
+  | coq -> "int_moins" ;;
+let int_max =
+  internal  int -> int -> int
+  external
   | caml -> "Focvasives.int_max"
   | coq -> "max"
 ;;
-external value int_min : int -> int -> int =
+let int_min =
+  internal int -> int -> int
+  external
   | caml -> "Focvasives.int_min"
-  | coq -> "min"
-;;
+  | coq -> "min" ;;
 
 theorem int_min_le: all x y z in int,
   (#int_leq (z, x) and #int_leq (z, y)) -> #int_leq (z, #int_min (x, y))
@@ -306,11 +371,17 @@ proof:
 
 (* String operations. *)
 (* Concatenation. *)
-external value sc : string -> string -> string =
+let sc =
+  internal  string -> string -> string
+  external
   | caml -> "Focvasives.str_cat" ;;
-external value str_lt : string -> string -> bool =
+let str_lt =
+  internal string -> string -> bool =
+  external
   | caml -> "Focvasives.str_lt" ;;
-external value print_string : string -> unit =
+let print_string =
+  internal string -> unit
+  external
   | caml -> "Focvasives.str_print" ;;
 let print_newline (x in unit) = print_string ("\n") ;;
 
