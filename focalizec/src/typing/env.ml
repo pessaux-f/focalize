@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.45 2007-10-17 11:45:28 pessaux Exp $ *)
+(* $Id: env.ml,v 1.46 2007-10-29 08:18:36 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -41,6 +41,10 @@ exception Unbound_identifier of (Parsetree.vname * Location.t) ;;
 exception Unbound_type of (Parsetree.vname * Location.t) ;;
 exception Unbound_module of (Types.fname * Location.t) ;;
 exception Unbound_species of (Parsetree.vname * Location.t) ;;
+
+exception Rebound_type of (Parsetree.vname * Location.t) ;;
+exception Rebound_species of (Parsetree.vname * Location.t) ;;
+
 
 
 (* ******************************************************************** *)
@@ -994,10 +998,18 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
 
-  (* Parsetree.vname -> EMAccess.species_bound_data -> t -> t *)
-  let add_species species_name data (env : t) =
-     ({ env with
-	  species = (species_name, BO_absolute data) :: env.species } : t)
+  (* loc: Location.t -> Parsetree.vname -> EMAccess.species_bound_data -> *)
+  (*   t -> t                                                             *)
+  let add_species ~loc species_name data (env : t) =
+    (* Ensure the species name does not already exists in the *)
+    (* current module. This means that this name must not be  *)
+    (* already bound to a [BO_absolute].                      *)
+    if List.exists
+	(function (n, (BO_absolute _)) -> n = species_name | _ -> false)
+	env.species then
+      raise (Rebound_species (species_name, loc)) ;
+    ({ env with
+       species = (species_name, BO_absolute data) :: env.species } : t)
 
 
 
@@ -1207,15 +1219,23 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
 
-  (* ************************************************************** *)
-  (* Types.type_name -> EMAccess.type_bound_data -> t -> t          *)
+  (* ***************************************************************** *)
+  (* loc: Location.t -> Types.type_name -> EMAccess.type_bound_data -> *)
+  (*   t -> t                                                          *)
   (** {b Descr} : Return an environment extended with a binding
                 between a type [ident] and the argument [data].
                 The initial environment is passed as last argument.
 
-      {b Rem} : Exported outside this module.                       *)
-  (* ************************************************************** *)
-  let add_type tyname data (env : t) =
+      {b Rem} : Exported outside this module.                          *)
+  (* ***************************************************************** *)
+  let add_type ~loc tyname data (env : t) =
+    (* Ensure the type name does not already exists in the *)
+    (* current module. This means that this name must not  *)
+    (* be already bound to a [BO_absolute].                *)
+    if List.exists
+	(function (n, (BO_absolute _)) -> n = tyname | _ -> false)
+	env.types then
+      raise (Rebound_type (tyname, loc)) ;
     ({ env with types = (tyname, BO_absolute data) :: env.types } : t)
 
 

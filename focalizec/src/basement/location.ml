@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: location.ml,v 1.4 2007-10-09 08:38:15 pessaux Exp $ *) 
+(* $Id: location.ml,v 1.5 2007-10-29 08:18:36 pessaux Exp $ *) 
 
 
 type position = Lexing.position = {
@@ -43,7 +43,7 @@ let pp_location ppf { l_beg = l_beg ; l_end = l_end } =
       (l_beg.pos_cnum - l_beg.pos_bol) (l_end.pos_cnum - l_end.pos_bol)
   else
     Format.fprintf ppf
-      "File \"%s\" line %d, character %d, line %d, character %d"
+      "File \"%s\", line %d, character %d, line %d, character %d"
       l_beg.pos_fname l_beg.pos_lnum (l_beg.pos_cnum - l_beg.pos_bol)
       l_end.pos_lnum (l_end.pos_cnum - l_end.pos_bol)
 ;;

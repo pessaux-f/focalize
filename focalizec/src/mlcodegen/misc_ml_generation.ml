@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.ml,v 1.3 2007-10-22 08:41:30 pessaux Exp $ *)
+(* $Id: misc_ml_generation.ml,v 1.4 2007-10-29 08:18:36 pessaux Exp $ *)
 
 
 (* ********************************************************************* *)
@@ -99,6 +99,16 @@ let pp_to_ocaml_vname ppf = function
 
 
 
+let ocaml_vname_as_string = function
+  | Parsetree.Vlident s
+  | Parsetree.Vuident s
+  | Parsetree.Vqident s -> s
+  | Parsetree.Vpident s
+  | Parsetree.Viident s -> parse_operator_string s
+;;
+
+
+
 (* ********************************************************************* *)
 (** {b Descr} : Data structure to record the various stuff needed to
           generate the OCaml code for various constructs. Passing this
@@ -118,6 +128,13 @@ type reduced_compil_context = {
   (** The list of the current species species parameters if we are in the
       scope of a species and if it has some parameters. *)
   rcc_species_parameters_names : Parsetree.vname list ;
+  (** The current correspondance between method names of Self and their
+      extra parameters they must be applied to because of the lambda-lifting
+      process. This info is used when generating the OCaml code of a
+      method, hence it is only relevant in case of recursive methods to know
+      in their own body what they must be applied to in addition to their
+      explicit arguments (those given by the FoCaL programmer). *)
+  rcc_lambda_lift_params_mapping : (Parsetree.vname * (string list)) list ;
   (** The current output formatter where to send the generated code. *)
   rcc_out_fmter : Format.formatter
 } ;;

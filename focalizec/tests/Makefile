@@ -1,5 +1,4 @@
-TEST_FILES = basics.foc \
-	\
+TEST_FILES = \
 	ok__baby_toy.foc \
 	ko__bad_self_use.foc \
 	ok__in_example.foc \
@@ -18,12 +17,12 @@ all: $(TEST_FILES)
 	# Compile from FoCaL to OCaml.
 	for i in $(TEST_FILES); do \
 	  echo "Focalizing $$i"; \
-	  ../toplevel/check_file -I . -c $$i; \
+	  ../toplevel/check_file -c $$i; \
 	done; \
 	# Compile the generated OCaml code.
 	for i in $(TEST_FILES:.foc=.ml); do \
 	  echo "OCamllizing $$i"; \
-	  ocamlc -I ../lib/ -I . ../lib/focvasives.cmo basics.cmo $$i -o $$i.out; \
+	  ocamlc -I ../lib/ -I . ../lib/focvasives.cmo ../lib/basics.cmo $$i -o $$i.out; \
 	done
 
 clean:

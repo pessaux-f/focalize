@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.13 2007-10-16 10:00:48 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.14 2007-10-29 08:18:36 pessaux Exp $ *)
 
 
 exception Input_file_already_set ;;
@@ -41,6 +41,12 @@ let print_focal_short_version () =
 
 let print_focal_full_version () =
   print_focal_version focal_full_version
+;;
+
+let print_install_dirs () =
+  Format.printf "%s %s@."
+    Installation.install_bin_dir Installation.install_lib_dir ;
+  exit 0
 ;;
 
 let (get_verbose, set_verbose) =
@@ -101,4 +107,11 @@ let (get_fancy_ansi, unset_fancy_ansi) =
   let fancy_ansi = ref true in
   ((fun () -> !fancy_ansi),
    (fun () -> fancy_ansi := false))
+;;
+
+
+let (get_use_default_lib, unset_use_default_lib) =
+  let use_default_lib = ref true in
+  ((fun () -> !use_default_lib),
+   (fun () -> use_default_lib := false))
 ;;

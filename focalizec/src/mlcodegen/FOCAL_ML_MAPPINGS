@@ -49,7 +49,8 @@ In a species, name of the variable type representing this species's carrier:
   "'me_as_carrier"
 
 In a species, type variables names representing the species parameters carriers:
-  "'" + uncapitalized name of the species parameter + "_as_carrier"
+  "'" + uncapitalized name of the species parameter +
+  a unique int in this type + "_as_carrier"
 
 In collection generator, name of the local function to assign in the record
 value bucket of a method:
@@ -58,3 +59,10 @@ value bucket of a method:
 In a collection, name of the value representing the effective collection's
 instance:
   "effective_collection"
+
+The "prop" type is hardwired-mapped onto the ML-equvalent of bool, i.e. onto
+the "Basics._focty_bool". In effect, the mapping of bool is assumed to be in
+the "basics.foc" file. The problem is that we can't really "define" "prop"
+in the file "basic.foc" because "prop" is a keyword. This only impacts the
+function [rec_pp] inside the function [pp_type_simple_to_ml] in the
+"basement/types.ml" file.

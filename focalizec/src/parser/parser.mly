@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.69 2007-10-26 15:48:34 weis Exp $ *)
+(* $Id: parser.mly,v 1.70 2007-10-29 08:18:36 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -438,6 +438,8 @@ simple_rep_type_def:
     { RTE_ident $1 }
   | species_vname          /* To have capitalized species names as types. */
     { RTE_ident (mk (I_global (None, $1))) }
+  | species_glob_ident     /* To have qualified species names as types. */
+      { RTE_ident $1 }
   | LIDENT { RTE_ident (mk_unqualified_global_ident (Vlident $1)) }
   | glob_ident LPAREN rep_type_def_comma_list RPAREN
     { RTE_app ($1, $3) }
@@ -658,6 +660,8 @@ simple_type_expr:
     { mk (TE_paren $2) }
   | species_vname   /* To have capitalized species names as types. */
     { mk (TE_ident (mk (I_global (None, $1)))) }
+  | species_glob_ident     /* To have qualified species names as types. */
+      { mk (TE_ident $1) }
 ;
 
 core_type_tuple:

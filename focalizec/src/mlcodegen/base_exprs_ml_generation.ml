@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.2 2007-10-16 10:00:48 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.3 2007-10-29 08:18:36 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -90,14 +90,14 @@ let generate_ident_for_method_generator ctx ident =
 
 
 
-(* ******************************************************************** *)
-(* Misc_ml_generation.reduced_compil_context ->                         *)
-(*   local_idents: Parsetree.vname list -> Parsetree.expr_ident ->      *)
-(*     unit                                                             *)
+(* *********************************************************************** *)
+(* Misc_ml_generation.reduced_compil_context ->                            *)
+(*   local_idents: Parsetree.vname list -> Parsetree.expr_ident ->         *)
+(*     unit                                                                *)
 (** {b Descr} : Generate the OCaml code from a FoCaL [ident] in the
               context of method generator generation.
 
-              The mosst tricky stuff is dealing with [ident] denoting
+              The most tricky stuff is dealing with [ident] denoting
               methods (i.e. "!-ed" identifiers).
               If the method [ident] corresponds to a parameter's method
               then we use the lambda-lifted principle. Otherwise, this
@@ -105,20 +105,28 @@ let generate_ident_for_method_generator ctx ident =
               from a toplevel collection. In this case, it is printed as
               a field coming from the collection's effective value
               (i.e. field "effective_collection" of the collection value)
-               with its scoping qualification if there is some.
+              with its scoping qualification if there is some.
 
-    {b Rem} : Not exported outside this module.                         *)
-(* ******************************************************************** *)
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
 let generate_expr_ident_for_method_generator ctx ~local_idents ident =
+  let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
        (begin
        (* Thanks to the scoping pass, identifiers remaining "local" are *)
-       (* either really let-bound in the contect of the expression,     *)
+       (* either really let-bound in the context of the expression,     *)
        (* hence have a direct mapping between FoCaL and OCaml code, or  *)
        (* species "in"-parameters and then must be mapped onto the      *)
        (* lambda-lifted parameter introduced for it in the context of   *)
        (* the current species.                                          *)
+       (* Be careful, because a recursive method called in its body is  *)
+       (* scoped AS LOCAL ! And because recursive methods do not have   *)
+       (* dependencies together, there is no way to recover the extra   *)
+       (* parameters to apply to them in this configuration. Hence, to  *)
+       (* avoid forgetting these extra arguments, we must use here the  *)
+       (* information recorded in the context, i.e. the extra arguments *)
+       (* of the recursive functions.                                   *)
        (* To check if a "smelling local" identifier is really local or  *)
        (* a "in"-parameter of the species, we use the same reasoning    *)
        (* that in [param_dep_analysis.ml]. Check justification over     *)
@@ -135,14 +143,24 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
          (* the case of a "in"-parameter, the dependency can only be on  *)
          (* the parameter's value itself, not on any method since there  *)
          (* is none !).                                                  *)
-	 Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "_p_%a_%a"
+	 Format.fprintf out_fmter "_p_%a_%a"
 	   Misc_ml_generation.pp_to_ocaml_vname vname
 	   Misc_ml_generation.pp_to_ocaml_vname vname
 	 end)
        else
-	 (* Really a local identifier. *)
-	 Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
-	   Misc_ml_generation.pp_to_ocaml_vname vname
+	 (begin
+	 (* Really a local identifier or a call to a recursive method. *)
+	 Format.fprintf out_fmter "%a"
+	   Misc_ml_generation.pp_to_ocaml_vname vname ;
+	 (* Because this method can be recursive, we must apply it to *)
+         (* its extra parameters if it has some.                      *)
+	 try
+	   let extra_args =
+	     List.assoc
+	       vname ctx.Misc_ml_generation.rcc_lambda_lift_params_mapping in
+	   List.iter (fun s -> Format.fprintf out_fmter "@ %s" s) extra_args
+	    with Not_found -> ()
+	 end)
        end)
    | Parsetree.EI_global (fname_opt, vname) ->
        (begin
@@ -156,22 +174,25 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
 	    (* the currently compiled one, then do not qualify the          *)
 	    (* identifier.                                                  *)
 	    if mod_name <> ctx.Misc_ml_generation.rcc_current_unit then
-	      Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%s.%a"
+	      Format.fprintf out_fmter "%s.%a"
 		(String.capitalize mod_name)
 		Misc_ml_generation.pp_to_ocaml_vname vname
 	    else
-	      Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
+	      Format.fprintf out_fmter "%a"
 		Misc_ml_generation.pp_to_ocaml_vname vname
        end)
    | Parsetree.EI_method (coll_specifier_opt, vname) ->
        (begin
        match coll_specifier_opt with
-	| None ->
+	| None
+	| Some (None, (Parsetree.Vuident "Self")) ->
+	    (begin
 	    (* Method call from the current species. This corresponds to *)
 	    (* a call to the corresponding lambda-lifted method that is  *)
 	    (* represented as an extra parameter of the OCaml function.  *)
-	    Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "abst_%a"
-	      Misc_ml_generation.pp_to_ocaml_vname vname
+	    Format.fprintf out_fmter "abst_%a"
+	      Misc_ml_generation.pp_to_ocaml_vname vname ;
+	    end)
 	| Some coll_specifier ->
 	    (begin
 	    match coll_specifier with
@@ -196,14 +217,14 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
 		     (String.uncapitalize
 			(Parsetree_utils.name_of_vname coll_name)) ^
 		     "_" in
-		   Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter
+		   Format.fprintf out_fmter
 		     "%s%a" prefix Misc_ml_generation.pp_to_ocaml_vname vname
 		   end)
 		 else
 		   (begin
 		   (* It comes from a toplevel stuff, hence not abstracted *)
 		   (* by lambda-lifting.                                   *)
-		   Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter
+		   Format.fprintf out_fmter
 		     "%a.effective_collection.%a.%a"
 		     Misc_ml_generation.pp_to_ocaml_vname coll_name
 		     Misc_ml_generation.pp_to_ocaml_vname coll_name
@@ -228,12 +249,12 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
 		       (String.uncapitalize
 			  (Parsetree_utils.name_of_vname coll_name)) ^
 		       "_" in
-		     Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter
+		     Format.fprintf out_fmter
 		       "%s%a" prefix Misc_ml_generation.pp_to_ocaml_vname vname
 		       end)
 		   else
 		     (begin
-		     Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter
+		     Format.fprintf out_fmter
 		       "%a.effective_collection.%a.%a"
 		       Misc_ml_generation.pp_to_ocaml_vname coll_name
 		       Misc_ml_generation.pp_to_ocaml_vname coll_name

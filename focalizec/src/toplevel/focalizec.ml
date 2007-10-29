@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.20 2007-10-16 10:00:48 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.21 2007-10-29 08:18:36 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -22,43 +22,52 @@ let main () =
   Arg.parse
     [ ("-c",
        Arg.String Configuration.set_input_file_name,
-       " check input file argument.") ;
+       " checks input file argument.") ;
       ("--dot-non-rec-dependencies",
        Arg.String Configuration.set_dotty_dependencies,
-       " dump species non-let-rec- dependencies as dotty files into the \
+       " dumps species non-let-rec- dependencies as dotty\n\tfiles into the\
 	 argument directory.") ;
       ("-i",
        Arg.Unit (fun () -> Configuration.set_do_interface_output true),
        " prints the source file interface.") ;
       ("-I",
        Arg.String (fun path -> Files.add_lib_path path),
-       " adds the specified path to the path list where to search for \
-	 compiled interfaces.") ;
+       " adds the specified path to the path list where to search for\
+	 compiled\n\tinterfaces.") ;
       ("--no-ansi-escape",
-	  Arg.Unit Configuration.unset_fancy_ansi,
+       Arg.Unit Configuration.unset_fancy_ansi,
        " disables ANSI escape sequences in the error messages.") ;
       ("--no-ocaml-code",
        Arg.Unit Configuration.unset_generate_ocaml,
        " disables the OCaml code generation.") ;
+      ("-no-stdlib-path",
+       Arg.Unit Configuration.unset_use_default_lib,
+       " do not include by default the standard library installation\n\t\
+	 directory in the search path.") ;
       ("--pretty",
        Arg.String Configuration.set_pretty_print,
-       " pretty-prints the parse tree of the focal file as a focal source \
+       " pretty-prints the parse tree of the focal file as a focal source\n\t\
 	 into the argument file.") ;
       ("--raw-ast-dump",
        Arg.Unit Configuration.set_raw_ast_dump,
        " prints on stderr the raw AST structure after parsing stage.") ;
       ("--scoped_pretty",
        Arg.String Configuration.set_pretty_scoped,
-       " pretty-prints the parse tree of the focal file once scoped as a \
+       " pretty-prints the parse tree of the focal file once scoped\n\tas a\
 	 focal source into the argument file.") ;
       ("--verbose",
        Arg.Unit Configuration.set_verbose,
        " be verbose.") ;
       ("-v", Arg.Unit Configuration.print_focal_short_version,
-       " print the focalize version.") ;
+       " print the focalize version then exit.") ;
       ("--version",
        Arg.Unit Configuration.print_focal_full_version,
-       " print the full focalize version, sub-version and release date.") ]
+       " print the full focalize version, sub-version and release date,\n\t\
+         then exit.") ;
+       ("--where",
+	Arg.Unit Configuration.print_install_dirs,
+	" print the binaries and libraries installation directories then exit.")
+     ]
     Configuration.set_input_file_name
     "Usage: focal_check <options> <.foc file>" ;
   (* First, let's lex and parse the input source file. *)
@@ -69,6 +78,10 @@ let main () =
     raise (Bad_file_suffix input_file_name) ;
   let current_unit =
     Filename.chop_extension (Filename.basename input_file_name) in
+  (* Include the installation libraries directory in the search path. *)
+  if Configuration.get_use_default_lib () then
+    Files.add_lib_path Installation.install_lib_dir ;
+  (* Parse the file. *)
   let ast = Parse_file.parse_file input_file_name in
   (* Hard-dump the AST if requested. *)
   if Configuration.get_raw_ast_dump () then

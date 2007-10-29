@@ -35,6 +35,7 @@ type t2 = | A | B ;;
 #B ;;
 A ;;
 B;;
+
 type option ('a) = | None | Some ('a) ;;
 #None ;;
 let u = #None ;;

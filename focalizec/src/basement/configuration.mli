@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.13 2007-10-16 10:00:48 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.14 2007-10-29 08:18:36 pessaux Exp $ *)
 
 
 (** The various flags and definitions useful to the internal behaviour of the
@@ -41,6 +41,7 @@ val set_pretty_scoped : string -> unit
 
 val print_focal_short_version : unit -> unit
 val print_focal_full_version : unit -> unit
+val print_install_dirs : unit -> unit
 
 val get_dotty_dependencies : unit -> string option
 val set_dotty_dependencies : string -> unit
@@ -53,3 +54,6 @@ val unset_generate_ocaml : unit -> unit
 
 val get_fancy_ansi : unit -> bool
 val unset_fancy_ansi : unit -> unit
+
+val get_use_default_lib : unit -> bool
+val unset_use_default_lib : unit -> unit

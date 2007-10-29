@@ -1,32 +1,53 @@
-# $Id: Makefile,v 1.1 2007-09-26 09:00:51 pessaux Exp $
+# $Id: Makefile,v 1.2 2007-10-29 08:18:36 pessaux Exp $
 
 include ../Makefile.config
-CAML_COMP_FLAGS =
+FOCC = ../toplevel/check_file
+# Jut redefine to remove the warnings because FoCaL has some warnings
+# in its generated code. Especially "Warning Z: unused variable ..."
+# because FoCaL doesn't have the "_" ident which would be usefull in
+# the case of let foo (x in unit) = ...
+CAMLBYT = ocamlc
+CAMLBIN = ocamlc
 
-BYTOBJS = focvasives.cmo
 
-all:: $(BYTOBJS)
+FOC_COMP_FLAGS =
+
+FOCSRC = basics.foc \
+	sets_orders.foc \
+	iterators.foc \
+	additive_law.foc \
+	multiplicative_law.foc
+FOCMLS = $(FOCSRC:.foc=.ml)
+FOCCMOS = $(FOCMLS:.ml=.cmo)
+EXTERNALOBJS = focvasives.cmo sets_orders_externals.cmo
+
+
+
+all:: $(EXTERNALOBJS) $(FOCMLS) $(FOCCMOS)
 
 doc:: $(BYTOBJS)
-	$(CAMLDOC) $(CAML_COMP_FLAGS) -html -d odoc $(BYTOBJS:.cmo=.ml)
+	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)
 
 clean::
-	$(RM) *~ *.cm* log
+	$(RM) *~ *.cm* log *.fo $(FOCMLS)
 	$(RM) odoc/*
 
 depend:
-	$(CAMLDEP) $(CAML_COMP_FLAGS) *.mli *.ml > ./.depend
+	$(CAMLDEP) *.mli *.ml > ./.depend
 
-.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx 
+.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .foc .fo
+
+.foc.fo .foc.ml:
+	$(FOCC) $(FOC_COMP_FLAGS) -c $<
 
 .ml.cmo:
-	$(CAMLBYT) $(CAML_COMP_FLAGS) -c $<
+	$(CAMLBYT) -c $<
 
 .mli.cmi:
-	$(CAMLBYT) $(CAML_COMP_FLAGS) -c $<
+	$(CAMLBYT) -c $<
 
 .ml.cmx:
-	$(CAMLBIN) $(CAML_COMP_FLAGS) -c $<
+	$(CAMLBIN) -c $<
 
 .mly.ml:
 	$(CAMLYACC) $<

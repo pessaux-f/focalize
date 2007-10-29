@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.32 2007-10-23 09:04:58 pessaux Exp $ *)
+(* $Id: types.ml,v 1.33 2007-10-29 08:18:36 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -962,8 +962,16 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
         (* otherwise 0 if already a tuple because we force parens. *)
 	match arg_tys with
          | [] ->
-	     Format.fprintf ppf "%a"
-	       (pp_type_name_to_ml ~current_unit) type_name
+	     (* Just the special case for type "prop" that maps onto bool... *)
+	     (* The problem is that we can't really "define" "prop" in the   *)
+	     (* file "basic.foc" because "prop" is a keyword. Hence, we make *)
+             (* directmy the shortcut between "prop" and the type "bool"     *)
+	     (* defined in the "basic.foc" file .                            *)
+	     if type_name = ("basics", "prop") then
+	       Format.fprintf ppf "Basics._focty_bool"
+	     else
+	       Format.fprintf ppf "%a"
+		 (pp_type_name_to_ml ~current_unit) type_name
          | [one] ->
 	     Format.fprintf ppf "%a@ %a"
 	       (rec_pp ~current_unit collections_carrier_mapping 3) one

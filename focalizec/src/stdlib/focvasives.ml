@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focvasives.ml,v 1.4 2007-10-22 08:41:30 pessaux Exp $ *)
+(* $Id: focvasives.ml,v 1.5 2007-10-29 08:18:36 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -21,6 +21,7 @@
 
 
 exception Foc_error of string ;;
+exception Foc_Failure of string ;;
 
 let foc_error msg = raise (Foc_error msg) ;;
 let str_cat x y = x ^ y ;;

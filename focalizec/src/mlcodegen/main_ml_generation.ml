@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.3 2007-10-16 10:00:48 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.4 2007-10-29 08:18:36 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -47,6 +47,8 @@ let toplevel_compile ~current_unit out_fmter env = function
 	Misc_ml_generation.rcc_current_unit = current_unit ;
 	(* Not under a species, hence no species parameter. *)
 	Misc_ml_generation.rcc_species_parameters_names = [] ;
+	(* Not in the context of generating a method's body code, then empty. *)
+	Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
 	Misc_ml_generation.rcc_out_fmter = out_fmter } in
       Externals_ml_generation.external_def_compile ctx extern_def ;
       env
@@ -57,6 +59,7 @@ let toplevel_compile ~current_unit out_fmter env = function
       (* Return the ml code generation environment extended by the *)
       (* current species's collection generator information.       *)
       Env.MlGenEnv.add_species
+	~loc: species_def.Parsetree.ast_loc
 	species_def.Parsetree.ast_desc.Parsetree.sd_name
 	opt_coll_gen_args env
   | Infer.PCM_collection (coll_def, coll_descr, dep_graph) ->
@@ -65,6 +68,7 @@ let toplevel_compile ~current_unit out_fmter env = function
       (* Collection do not have collection generator, then simply add *)
       (* them in the environment with None.                           *)
       Env.MlGenEnv.add_species
+        ~loc: coll_def.Parsetree.ast_loc
 	coll_def.Parsetree.ast_desc.Parsetree.cd_name None env
   | Infer.PCM_type (type_def_name, type_descr) ->
       (* Create the initial context for compiling the type definition. *)
@@ -72,6 +76,8 @@ let toplevel_compile ~current_unit out_fmter env = function
 	Misc_ml_generation.rcc_current_unit = current_unit ;
 	(* Not under a species, hence no species parameter. *)
 	Misc_ml_generation.rcc_species_parameters_names = [] ;
+	(* Not in the context of generating a method's body code, then empty. *)
+	Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
 	Misc_ml_generation.rcc_out_fmter = out_fmter } in
       Type_ml_generation.type_def_compile ctx type_def_name type_descr ;
       env
@@ -81,6 +87,8 @@ let toplevel_compile ~current_unit out_fmter env = function
 	Misc_ml_generation.rcc_current_unit = current_unit ;
 	(* Not under a species, hence no species parameter. *)
 	Misc_ml_generation.rcc_species_parameters_names = [] ;
+	(* Not in the context of generating a method's body code, then empty. *)
+	Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
 	Misc_ml_generation.rcc_out_fmter = out_fmter } in
       (* We have the schemes under the hand. Then we will be able    *)
       (* to annotate the parameters of the toplevel let-bound idents *)
@@ -97,6 +105,8 @@ let toplevel_compile ~current_unit out_fmter env = function
 	Misc_ml_generation.rcc_current_unit = current_unit ;
 	(* Not under a species, hence no species parameter. *)
 	Misc_ml_generation.rcc_species_parameters_names = [] ;
+	(* Not in the context of generating a method's body code, then empty. *)
+	Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
 	Misc_ml_generation.rcc_out_fmter = out_fmter
       } in
       (* No local idents in the scope because we are at toplevel. *)

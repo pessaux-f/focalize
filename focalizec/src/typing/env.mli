@@ -5,6 +5,9 @@ exception Unbound_type of (Parsetree.vname * Location.t)
 exception Unbound_module of (Types.fname * Location.t)
 exception Unbound_species of (Parsetree.vname * Location.t)
 
+exception Rebound_type of (Parsetree.vname * Location.t)
+exception Rebound_species of (Parsetree.vname * Location.t)
+
 
 module ScopeInformation :
   sig
@@ -128,14 +131,17 @@ module ScopingEnv :
     val add_label : Types.label_name -> Types.fname -> t -> t
     val find_label : loc: Location.t -> Types.label_name -> t -> Types.fname
 
-    val add_type : Parsetree.vname -> ScopeInformation.type_binding_info ->
+    val add_type :
+      loc: Location.t -> Parsetree.vname ->
+	ScopeInformation.type_binding_info ->
       t -> t
     val find_type :
       loc: Location.t -> current_unit: Types.fname -> Parsetree.ident -> t ->
 	ScopeInformation.type_binding_info
 
     val add_species :
-      Parsetree.vname -> ScopeInformation.species_binding_info -> t -> t
+      loc: Location.t -> Parsetree.vname ->
+	ScopeInformation.species_binding_info -> t -> t
     val find_species :
 	loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
       t -> ScopeInformation.species_binding_info
@@ -168,13 +174,15 @@ module TypingEnv :
 	TypeInformation.label_description
 
     val add_type :
-      Parsetree.vname -> TypeInformation.type_description -> t -> t
+      loc: Location.t -> Parsetree.vname ->
+	TypeInformation.type_description -> t -> t
     val find_type :
       loc: Location.t -> current_unit: Types.fname ->
       Parsetree.ident -> t -> TypeInformation.type_description
 
     val add_species :
-      Parsetree.vname -> TypeInformation.species_description -> t -> t
+      loc: Location.t -> Parsetree.vname ->
+	TypeInformation.species_description -> t -> t
     val find_species :
 	loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
 	  t -> TypeInformation.species_description
@@ -187,7 +195,8 @@ module MlGenEnv :
     val empty : unit -> t
     val pervasives : unit -> t
     val add_species :
-      Parsetree.vname -> MlGenInformation.species_binding_info -> t
+      loc: Location.t -> Parsetree.vname ->
+	MlGenInformation.species_binding_info -> t
 	-> t
     val find_species :
       loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->

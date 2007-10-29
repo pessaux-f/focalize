@@ -1,10 +1,10 @@
-# $Id: Makefile,v 1.3 2007-08-20 15:52:28 pessaux Exp $
+# $Id: Makefile,v 1.4 2007-10-29 08:18:36 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ 
 
-BYTOBJS = configuration.cmo handy.cmo location.cmo types.cmo files.cmo \
-	parsetree_utils.cmo
+BYTOBJS = installation.cmo configuration.cmo handy.cmo location.cmo types.cmo \
+	files.cmo parsetree_utils.cmo
 
 
 all:: $(BYTOBJS)
@@ -19,6 +19,11 @@ clean::
 depend:
 	$(CAMLDEP) $(CAML_COMP_FLAGS) *.mli *.ml > ./.depend
 
+
+installation.ml:
+	@if test ! -L $@ ; then \
+		echo "Please, run configure first." ; \
+	fi
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx 
 

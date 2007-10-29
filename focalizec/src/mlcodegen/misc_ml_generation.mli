@@ -11,13 +11,16 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.mli,v 1.2 2007-10-16 10:00:48 pessaux Exp $ *)
+(* $Id: misc_ml_generation.mli,v 1.3 2007-10-29 08:18:36 pessaux Exp $ *)
 
 
 val pp_to_ocaml_vname : Format.formatter -> Parsetree.vname -> unit
+val ocaml_vname_as_string : Parsetree.vname -> string
+
 type reduced_compil_context = {
   rcc_current_unit : Types.fname ;
   rcc_species_parameters_names : Parsetree.vname list ;
+  rcc_lambda_lift_params_mapping : (Parsetree.vname * (string list)) list ;
   rcc_out_fmter : Format.formatter
 }
 val bind_parameters_to_types_from_type_scheme :

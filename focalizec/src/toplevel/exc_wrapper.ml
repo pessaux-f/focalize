@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.24 2007-10-22 08:41:30 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.25 2007-10-29 08:18:36 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -82,15 +82,18 @@ try Check_file.main () with
 	   Handy.pp_set_bold Handy.pp_reset_effects
 	   modname
 	   Handy.pp_set_bold Handy.pp_reset_effects
-     | Scoping.Parametrized_species_wrong_arity at ->
+     | Scoping.Parametrized_species_wrong_arity (at, expected, used_with) ->
 	 Format.fprintf Format.err_formatter
-	   "%a:@\n@[%tWrong number of species parameters%t.@]@."
+	   "%a:@\n@[%tSpecies@ application@ expression@ expected%t@ %d@ %t@ arguments@ but@ was@ provided%t@ %d.@]@."
 	   Location.pp_location at Handy.pp_set_bold Handy.pp_reset_effects
+	   expected
+	   Handy.pp_set_bold Handy.pp_reset_effects
+	   used_with
 (* *************************** *)
 (* Generic environments stuff. *)
      | Env.Unbound_constructor (vname, at) ->
 	 Format.fprintf Format.err_formatter
-	   "%a:@\n@[%tUnbound@ sum type constructor%t@ '%t%a%t'.@]@."
+	   "%a:@\n@[%tUnbound@ sum@ type@ constructor%t@ '%t%a%t'.@]@."
 	   Location.pp_location at Handy.pp_set_bold Handy.pp_reset_effects
 	   Handy.pp_set_underlined Sourcify.pp_vname vname
 	   Handy.pp_reset_effects
@@ -102,7 +105,7 @@ try Check_file.main () with
 	   Handy.pp_reset_effects
      | Env.Unbound_identifier (vname, at) ->
 	 Format.fprintf Format.err_formatter
-	   "%a:@\n@[%tUnbound identifier%t '%t%a%t'.@]@."
+	   "%a:@\n@[%tUnbound@ identifier%t@ '%t%a%t'.@]@."
 	   Location.pp_location at Handy.pp_set_bold Handy.pp_reset_effects
 	   Handy.pp_set_underlined Sourcify.pp_vname vname
 	   Handy.pp_reset_effects
@@ -124,6 +127,20 @@ try Check_file.main () with
 	   Location.pp_location at Handy.pp_set_bold Handy.pp_reset_effects
 	   Handy.pp_set_underlined Sourcify.pp_vname sname
 	   Handy.pp_reset_effects
+     | Env.Rebound_type (vname, at) ->
+	 Format.fprintf Format.err_formatter
+	   "%a:@\n@[%tType@ name%t@ '%t%a%t' %talready@ bound@ in@ the@ current@ scope%t.@]@."
+	   Location.pp_location at Handy.pp_set_bold Handy.pp_reset_effects
+	   Handy.pp_set_underlined Sourcify.pp_vname vname
+	   Handy.pp_reset_effects
+	   Handy.pp_set_bold Handy.pp_reset_effects
+     | Env.Rebound_species (vname, at) ->
+	 Format.fprintf Format.err_formatter
+	   "%a:@\n@[%tSpecies@ name%t@ '%t%a%t' %talready@ bound@ in@ the@ current@ scope%t.@]@."
+	   Location.pp_location at Handy.pp_set_bold Handy.pp_reset_effects
+	   Handy.pp_set_underlined Sourcify.pp_vname vname
+	   Handy.pp_reset_effects
+	   Handy.pp_set_bold Handy.pp_reset_effects
 (* ******************** *)
 (* Core types problems. *)
      | Types.Conflict (ty1, ty2, at) ->
@@ -276,3 +293,4 @@ try Check_file.main () with
     (* Anf anyway, if an exception occured, exit with -1 error code. *)
     exit (-1)
 ;;
+

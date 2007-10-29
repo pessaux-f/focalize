@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.82 2007-10-24 09:45:03 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.83 2007-10-29 08:18:36 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -701,6 +701,7 @@ let typecheck_external_def ctx env e_def =
 	end) ;
       (* Return the extended environment. *)
       Env.TypingEnv.add_type
+	~loc: e_def.Parsetree.ast_loc
 	body.Parsetree.ast_desc.Parsetree.etd_name ty_descr env
   | Parsetree.ED_value body ->
       Types.begin_definition () ;
@@ -1321,7 +1322,9 @@ and typecheck_proof ctx env proof =
 
 and typecheck_node ctx env node =
   match node.Parsetree.ast_desc with
-   | Parsetree.PN_sub (_, statement, _) -> typecheck_statement ctx env statement
+   | Parsetree.PN_sub (_, statement, proof) ->
+       let env' = typecheck_statement ctx env statement in
+       typecheck_proof ctx env' proof
    | Parsetree.PN_qed (_, proof) -> typecheck_proof ctx env proof
 
 
@@ -1336,9 +1339,11 @@ and typecheck_node ctx env node =
 (* ******************************************************************** *)
 and typecheck_statement ctx env statement =
   (begin
+  (* Do not fold_left otherwise the hypotheses will be *)
+  (* processed in reverse order !!!                    *)
   let env' =
-    List.fold_left
-      (fun accu_env hyp ->
+    List.fold_right
+      (fun hyp accu_env ->
 	let (name, ty) =
 	  (match hyp.Parsetree.ast_desc with
 	   | Parsetree.H_var (vname, type_expr) ->
@@ -1357,14 +1362,17 @@ and typecheck_statement ctx env statement =
 	(* typecheck the conclusion of the statement.                 *)
 	let scheme = Types.generalize ty in
 	Env.TypingEnv.add_value name scheme accu_env)
-      env
-      statement.Parsetree.ast_desc.Parsetree.s_hyps in
+      statement.Parsetree.ast_desc.Parsetree.s_hyps
+      env in
   (* Now, typecheck the conclusion, if some, in the extended environment. *)
-  match statement.Parsetree.ast_desc.Parsetree.s_concl with
+  (match statement.Parsetree.ast_desc.Parsetree.s_concl with
    | None -> ()
    | Some prop ->
        (* Same remark than above pour Self being not abstract ! *)
-       ignore (typecheck_prop ~in_proof: true ctx env' prop)
+       ignore (typecheck_prop ~in_proof: true ctx env' prop)) ;
+  (* Return the environment extended by the possible idents *)
+  (* the statement binds via its hypotheses.                *)
+  env'
   end)
 
 
@@ -2050,6 +2058,7 @@ let typecheck_species_def_params ctx env species_params =
 	       Env.TypeInformation.spe_sig_methods = abstracted_methods } in
 	     let accu_env' =
 	       Env.TypingEnv.add_species
+		 ~loc: species_expr.Parsetree.ast_loc
 		 param_vname param_description accu_env in
 	     (* Create the carrier type of the parameter *)
              (* and extend the current environment.      *)
@@ -2067,6 +2076,7 @@ let typecheck_species_def_params ctx env species_params =
 	       Env.TypeInformation.type_arity = 0 } in
 	     let accu_env'' =
 	       Env.TypingEnv.add_type
+		 ~loc: species_expr.Parsetree.ast_loc
 		 param_vname param_carrier_ty_description accu_env' in
 	     (* And now, build the species type of the application. *)
 	     let (accu_env''', rem_spe_params) =
@@ -2929,6 +2939,7 @@ let typecheck_species_def ctx env species_def =
   (* used to typecheck the internal definitions of the species !!!        *)
   let env_with_species =
     Env.TypingEnv.add_species
+      ~loc: species_def.Parsetree.ast_loc
       species_def_desc.Parsetree.sd_name species_description env in
   (* Now, extend the environment with a type that is the species. *)
   Types.begin_definition () ;
@@ -2946,6 +2957,7 @@ let typecheck_species_def ctx env species_def =
     Env.TypeInformation.type_arity = 0 } in
   let full_env =
     Env.TypingEnv.add_type
+      ~loc: species_def.Parsetree.ast_loc
       species_def_desc.Parsetree.sd_name species_as_type_description
       env_with_species in
   (* Record the type in the AST node. *)
@@ -3028,7 +3040,9 @@ let typecheck_type_def ctx env type_def =
         Env.TypeInformation.type_arity = nb_params } in
       (* Extend the environment by the type itself. *)
       let env' =
-	Env.TypingEnv.add_type type_def_desc.Parsetree.td_name ty_descr env in
+	Env.TypingEnv.add_type
+	  ~loc: type_def.Parsetree.ast_loc
+	  type_def_desc.Parsetree.td_name ty_descr env in
       (* Return the extended environment and the type description. *)
       (env', ty_descr)
       end)
@@ -3057,6 +3071,7 @@ let typecheck_type_def ctx env type_def =
       (* Extend the environment with ourselves. *)
       let new_env =
         Env.TypingEnv.add_type
+	  ~loc: type_def.Parsetree.ast_loc
 	  type_def_desc.Parsetree.td_name proto_descrip env in
       (* Now process the constructors of the type. Create the  *)
       (* list of couples : (constructor name * type_simple).   *)
@@ -3112,6 +3127,7 @@ let typecheck_type_def ctx env type_def =
       (* Extend the environment by the type itself. *)
       let env' =
 	Env.TypingEnv.add_type
+	  ~loc: type_def.Parsetree.ast_loc
           type_def_desc.Parsetree.td_name
 	  final_type_descr env_with_constructors in
       (* Return the extended environment and the type description. *)
@@ -3174,6 +3190,7 @@ let typecheck_type_def ctx env type_def =
       (* Extend the environment by the type itself. *)
       let env' =
 	Env.TypingEnv.add_type
+	  ~loc: type_def.Parsetree.ast_loc
           type_def_desc.Parsetree.td_name final_type_descr env_with_labels in
       (* Return the extended environment and the type description. *)
       (env', final_type_descr)
@@ -3248,6 +3265,7 @@ let typecheck_collection_def ctx env coll_def =
   (* Add this collection in the environment. *)
   let env_with_collection =
     Env.TypingEnv.add_species
+      ~loc: coll_def.Parsetree.ast_loc
       coll_def_desc.Parsetree.cd_name collec_description env in
   (* Now, extend the environment with a type that is this collection. *)
   Types.begin_definition () ;
@@ -3265,6 +3283,7 @@ let typecheck_collection_def ctx env coll_def =
     Env.TypeInformation.type_arity = 0 } in
   let full_env =
     Env.TypingEnv.add_type
+      ~loc: coll_def.Parsetree.ast_loc
       coll_def_desc.Parsetree.cd_name collec_as_type_description
       env_with_collection in
   (* Record the type in the AST node. *)

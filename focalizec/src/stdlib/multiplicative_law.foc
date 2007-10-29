@@ -1,0 +1,383 @@
+(**
+ @title Multiplicative laws
+ @author The FoC Project
+
+Common properties of multiplicative laws
+*)
+
+use "basics" ;;
+use "sets_orders" ;;
+use "iterators";;
+open "basics" ;;
+open "sets_orders" ;;
+open "iterators" ;;
+
+(** one associative multiplicative binop, this is sometimes called a magma *)
+species Semi_group inherits Setoid =
+ (** @mathml <times/>*)
+ sig mult : Self -> Self -> Self ;
+
+  (** associativity rule *)
+ property mult_assoc : all x y z in Self,
+   !equal (!mult (x, !mult (y, z)), !mult (!mult (x, y), z)) ;
+
+  (** compatibility with equality *)
+  property mult_left_substitution_rule : all x y z in Self,
+    !equal (x, y) -> (!equal (!mult (x, z), !mult (y, z))) ;
+
+  (** compatibility with equality *)
+  property mult_right_substitution_rule : all x y z in Self,
+    !equal (x, y) -> (!equal (!mult (z, x), !mult (z, y))) ;
+
+  (** users should use this property when possible *)
+  theorem mult_substitution_rule: all x_1 x_2 y_1 y_2 in Self,
+    !equal (x_1, x_2) -> !equal (y_1, y_2) ->
+      !equal (!mult (x_1, y_1), !mult (x_2, y_2))
+    proof:
+     by property mult_left_substitution_rule, mult_right_substitution_rule,
+       equal_transitive ;
+end ;;
+
+
+(** multiplicative monoids  have a unit element one *)
+species Monoid inherits Setoid_with_one, Semi_group =
+  (** right neutrality *)
+  property one_is_right_neutral : all x in Self,
+    !equal (!mult (x, !one), x) ;
+
+  (** left neutrality *)
+  property one_is_left_neutral : all x in Self,
+   !equal (!mult (!one, x), x) ;
+
+  (** neutrality *)
+  theorem one_is_neutral: all x in Self,
+    !equal (!mult (x, !one), x) and !equal (!mult (!one, x), x)
+    proof:
+      by property one_is_left_neutral, one_is_right_neutral ;
+
+  (** in a monoid the unit element is unique *)
+  theorem one_is_unique :
+    (all o in Self,
+     (all x in Self, !equal (x, !mult (x, o)) or !equal (x, !mult (o, x)))
+      -> !equal (o, !one))
+    proof: by property one_is_neutral, equal_symmetric, equal_transitive ;
+end ;;
+
+(* [Unsure] A compléter ci-dessous...
+species Power_by_dichotomy (M is Monoid, Nat is Dichotomic_system)
+  inherits Basic_object =
+
+  let expt =
+     let dicho = dichotomy (Nat, M, M!mult, M!one) in
+     fun x -> fun n -> dicho!dichot (x, n) ;
+end ;;
+
+
+(* [rr]: this should be renamed *)
+species Power (m is Monoid, nat is Dichotomic_system)
+  inherits Power_by_dichotomy (m, nat) =
+  rep = unit ;
+end ;;
+
+(** A commutative monoid has a commutative multiplicative law.
+   we shloud be able to reduce right neutrality to left neutrality *)
+species Commutative_monoid inherits Monoid =
+  (** commutativity *)
+  property mult_commutes: all x y in Self,
+    !equal(!mult(x,y),!mult(y,x)) ;
+
+  (** *)
+  proof of mult_right_substitution_rule =
+    <1>1 assume x y_1 y_2 in Self
+             H: !equal(y_1, y_2)
+         prove !equal(!mult(x, y_1), !mult(x, y_2))
+         <2>1 prove !equal(!mult(x, y_1), !mult(y_1, x)) by !mult_commutes
+         <2>2 prove !equal(!mult(y_2, x), !mult(x, y_2)) by !mult_commutes
+         <2>3 prove !equal(!mult(y_1, x), !mult(y_2, x))
+              by  <1>:H, !mult_left_substitution_rule
+         <2>f qed by <2>1, <2>2, <2>3, !equal_transitive
+    <1>f qed
+    ;
+end ;;
+
+(** Commonly multiplication by zero gives zero  *)
+species Monoid_with_absorbant inherits Set_with_zero, monoid =
+  property zero_left_absorbes: all x in Self,
+   !equal (!mult (!zero, x), !zero) ;
+
+  property zero_right_absorbes: all x in Self,
+   !equal (!mult (x, !zero), !zero) ;
+
+  theorem zero_absorbes: all x in Self,
+    !equal (!mult (x, !zero), !zero)
+    and
+    !equal (!mult (!zero, x), !zero)
+   proof: by property zero_right_absorbes, zero_left_absorbes ;
+end ;;
+
+species Commutative_monoid_with_absorbant
+   inherits Monoid_with_absorbant, Commutative_monoid =
+   proof of zero_right_absorbes =
+     by property mult_commutes, zero_left_absorbes, equal_transitive ;
+end ;;
+
+species Commutative_integral_monoid_with_absorbant
+  inherits Commutative_monoid_with_absorbant =
+
+  property mult_is_integral: all x in Self, all a in Self,
+    !equal (!mult (a, x), !zero) -> (!equal(a, !zero) or !equal (x, !zero)) ;
+end ;;
+
+(**
+   An attempt to define divisibility as the weakest ordering compatible
+   with multiplication. In usual commutative algebra one expects that
+   there is a function performing it.
+   Units are commonly defined as divisors of one which leads to the notion
+   od associated elements.
+   Here we simply specify the preorder of divisibility. Usually one says that
+   x divides y if there exists a z such that y = xz
+   but this is not constructive.
+   Here we simply express compatibility with multiplication
+ *)
+species commutative_monoid_with_divisibility inherits commutative_monoid =
+   sig divides in Self -> Self -> Prop;
+
+   (** A reflexive relation should be expressed as an extension of equality *)
+   property divides_extends_equal: all x y in Self,
+     !equal(x, y) -> !divides(x, y);
+
+   theorem divides_reflexive: all x in Self,! divides(x, x)
+      proof: by !divides_extends_equal, !equal_reflexive;
+
+   (**
+      This is the main property which enables not to distinguish
+      left and right divisibility. Otherwise things are more complicated...
+    *)
+   property divides_reverses_mult: all x y in Self,
+     !divides(x, !mult(x, y)) and !divides(y, !mult(x, y));
+
+   property divides_transitive: all x y z in Self,
+     !divides(x, y) -> !divides(y, z) -> !divides(x, z);
+
+   (**
+      One is always minimal for divisibility
+    *)
+   theorem one_is_minimal: all x in Self, !divides(!one, x)
+     proof:
+     <1>1 assume x in Self
+           prove !divides(!one, x)
+           <2>1 prove !divides(!one, !mult(!one, x)) by !divides_reverses_mult
+           <2>3 prove !divides(!mult(!one, x), x)
+                <3>1 prove !equal(!mult(!one, x), x) by !one_is_neutral
+                <3>f qed by <3>1, !divides_extends_equal
+           <2>f qed by <2>1, <2>3, !divides_transitive
+     <1>f qed;
+
+end ;;
+
+(**
+   In a monoid with 0 and 1,
+   0 acts as a biggest element and 1 as a smallest
+ *)
+species Commutative_monoid_with_absorbant_divibility
+  inherits Commutative_monoid_with_divisibility,
+           Commutative_monoid_with_absorbant =
+
+  theorem zero_is_maximal: all x in Self,
+    !divides (x, !zero)
+    proof:
+      by property zero_absorbes, divides_reverses_mult, divides_transitive,
+        divides_extends_equal;
+end ;;
+
+(** A cancellation monoid has some form of simplification property *)
+species Cancellative_commutative_monoid
+   inherits Commutative_monoid_with_absorbant =
+
+   (** Left cancellation by non null element *)
+   property mult_is_left_regular: all x y z in Self,
+     !equal (!mult (x, y), !mult (x, z)) -> not (!equal (x, !zero)) ->
+       !equal (y, z) ;
+
+   (** Right cancellation by non null element *)
+   theorem mult_is_right_regular: all x y z in Self,
+     !equal (!mult (y, x), !mult (z, x)) -> not (!equal (x, !zero)) ->
+       !equal(y, z)
+     proof: by property mult_is_left_regular, mult_commutes, equal_transitive ;
+
+   (** The cancellation property *)
+   theorem mult_is_regular: all x y z in Self,
+    (!equal (!mult(x, y), !mult(x, z)) -> not (!equal(x, !zero)) ->
+      !equal (y, z)
+      and
+     !equal (!mult(x, z), !mult(y, z)) -> not (!equal(z, !zero)) ->
+       !equal(x, y))
+   proof: by !mult_is_left_regular, !mult_is_right_regular ;
+end ;;
+
+(**
+   Regular multiplicative monoids are commutative multiplicative monoids
+    with a special 0 element and a safe division named exquo
+*)
+species Regular_monoid
+  inherits  Commutative_monoid_with_absorbant_divibility,
+            Commutative_integral_monoid_with_absorbant,
+            Cancellative_commutative_monoid =
+
+  sig exquo : Self -> Self -> partiel (Self) ;
+
+  property exquo_divides: all x y z in Self,
+    #is_failed (!exquo (x, z))
+      or
+    !equal (y, #non_failed (!exquo (x, z))) -> !equal (x, !mult (z, y)) ;
+
+  let recip (x) = Self!exquo (Self!one, x) ;
+
+  (* [rr]: need to fill those *)
+  letprop divides (x, y) = #not_b (#is_failed (!exquo (y, x))) ;
+  proof of divides_extends_equal =
+    def: divides;
+    assumed ;
+
+  proof of divides_transitive = assumed ;
+  proof of divides_reverses_mult = assumed ;
+end ;;
+
+(** a division monoid is like a regular monoid but has a division
+    which can raise an error
+*)
+species division_monoid
+  inherits  commutative_monoid_with_absorbant_divibility,
+            commutative_integral_monoid_with_absorbant,
+            cancellative_commutative_monoid =
+  (** @mathml <quotient/> *)
+  sig div in Self -> Self -> Self;
+
+  property div_divides: all x y in Self,
+    !equal(y, !zero) or !equal(!mult(!div(x, y), y), x);
+
+  theorem div_left_substitution_rule: all x_1 x_2 y in Self,
+    !equal(x_1, x_2) -> not(!equal(y, !zero)) ->
+       !equal(!div(x_1, y), !div(x_2, y))
+    proof:
+    <1>1 assume x_1 x_2 y in Self
+             H_x: !equal(x_1, x_2)
+             H_y: not(!equal(y, !zero))
+         prove !equal(!div(x_1, y), !div(x_2, y))
+         <2>1 prove !equal(!mult(!div(x_1, y), y), x_1)
+              by !div_divides, <1>:H_y
+         <2>2 prove !equal(!mult(!div(x_2, y), y), x_2)
+              by !div_divides, <1>:H_y
+         <2>3 prove !equal(!mult(!div(x_1, y), y),
+			   !mult(!div(x_2, y), y))
+              by <2>1, <2>2, <1>:H_x, !equal_transitive, !equal_symmetric
+         <2>f qed by <2>3, <1>:H_y, !mult_is_regular
+    <1>f qed;
+
+  theorem div_right_substitution_rule: all x y_1 y_2 in Self,
+    !equal(y_1, y_2) -> not(!equal(y_1, !zero)) ->
+       !equal(!div(x, y_1), !div(x, y_2))
+    (* [rr]: to do ! *)
+    proof:
+      <1>1 assume x y_1 y_2 in Self
+              H_y: !equal(y_1, y_2)
+              H_0: not(!equal(y_1, !zero))
+            prove !equal(!div(x, y_1), !div(x, y_2))
+            <2>1 prove !equal(!mult(!div(x, y_1), y_1), x)
+                 by !div_divides, <1>:H_0
+            <2>2 prove !equal(!mult(!div(x, y_2), y_1), x)
+                 <3>1 prove !equal(!mult(!div(x, y_2), y_2), x)
+                      <4>1 prove not(!equal(y_2, !zero))
+                           by <1>:H_y, <1>:H_0, !equal_transitive
+                      <4>2 qed by <4>1, !div_divides
+                 <3>2 prove !equal(!mult(!div(x, y_2), y_1),
+				   !mult(!div(x, y_2), y_2))
+                      (* [rr]: strange but zenon does not guess *)
+                      <4>1 assume z in Self
+                           prove !equal(!mult(z, y_1), !mult(z, y_2))
+                           by <1>:H_y, !mult_right_substitution_rule
+                      <4>f qed by <4>1
+                 <3>f qed by <3>1, <3>2, !equal_transitive
+            <2>3 prove !equal(!mult(!div(x, y_1), y_1),
+			      !mult(!div(x, y_2), y_1))
+                by <2>1, <2>2,
+                   !equal_symmetric, !equal_transitive
+            <2>f qed  by <2>3, <1>:H_0, !mult_is_regular
+      <1>f qed;
+
+
+  theorem div_really_divides: all x y in Self,
+    !equal(y, !zero) or !divides(!div(x, y), x)
+    proof:
+     <1>1 assume x y in Self
+              H: !different(y, !zero)
+          prove !divides(!div(x, y), x)
+          <2>1 prove !equal(!mult(!div(x, y), y), x)
+               by <1>:H, !div_divides, !same_is_not_different
+           <2>2 prove !divides(!div(x, y), !mult(!div(x, y), y))
+               by !divides_reverses_mult
+          <2>f qed by <2>1, <2>2, !divides_extends_equal, !divides_transitive
+     <1>f qed by <1>1, !same_is_not_different;
+
+  letprop divides(x, y) = #or_b(!equal(y, !zero), #not_b(!equal(x, !zero)));
+
+  proof of divides_extends_equal =
+    <1>1 assume x y in Self
+             H: !equal(x, y)
+          prove !divides(x, y)
+          <2>1 assume H_0: !equal(y, !zero)
+                prove !divides(x, y)
+                by <2>:H_0 def !divides
+          <2>2 assume H_1: !different(y, !zero)
+               prove !divides(x, y)
+               <3>1 prove not(!equal(x, !zero))
+		    by <1>:H, <2>:H_1,
+                       !equal_transitive, !equal_symmetric,
+		       !same_is_not_different
+               <3>f qed by <3>1 def !divides
+          <2>f qed by <2>1, <2>2, !same_is_not_different
+    <1>f qed ;
+
+  proof of divides_reverses_mult =
+    <1>1 assume x in Self,
+         assume y in Self,
+         prove !divides (x, !mult (x, y))
+         <2>1 assume H_0: !equal (x, !zero)
+              prove !divides (x, !mult (x, y))
+              <3>1 prove !equal (!mult (x, y), !zero)
+                   by <2>:H_0,
+                      !zero_absorbes, !equal_transitive,
+                      !mult_left_substitution_rule
+              <3>f qed by <3>1 def !divides
+         <2>2 assume H_1: !different(x, !zero)
+              prove !divides(x, !mult(x,y))
+              by <2>:H_1, !same_is_not_different def !divides
+         <2>f qed by <2>1, <2>2, !same_is_not_different
+    <1>f qed by <1>1,
+                !mult_commutes, !divides_extends_equal, !divides_transitive;
+
+  proof of divides_transitive = by definition of divides ;
+
+  let inv (x) = Self!div (Self!one, x) ;
+
+  theorem inv_substitution_rule: all x_1 x_2 in Self,
+    !equal (x_1, x_2) -> not (!equal (x_1, !zero)) ->
+      !equal (!inv (x_1), !inv (x_2))
+    proof: by property div_right_substitution_rule
+              definition of inv ;
+end ;;
+
+(* gcd (Original ocaml version by Louis Mandel) *)
+species factorization_monoid inherits regular_monoid =
+  (** @mathml <gcd/>*)
+  sig gcd : Self-> Self-> Self;
+  property gcd_divides: all x y z in Self,
+    !equal (z, !gcd (x, y)) ->
+      (not (#is_failed (!exquo (x, z)))
+        and
+       not (#is_failed (!exquo (y, z)))) ;
+  property divisor_is_multiple_of_gcd: all x y d in Self,
+    not (#is_failed (!exquo (x, d))) -> not (#is_failed (!exquo (y, d))) ->
+        not (#is_failed (!exquo (d, !gcd (x, y)))) ;
+end ;;
+*)
