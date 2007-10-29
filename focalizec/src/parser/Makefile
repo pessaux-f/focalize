@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.27 2007-10-02 09:29:36 pessaux Exp $
+# $Id: Makefile,v 1.28 2007-10-29 11:22:33 weis Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ -I ../basement
@@ -20,7 +20,7 @@ depend:
 	$(CAMLDEP) $(CAML_COMP_FLAGS) *.mli *.ml > ./.depend
 
 explain:
-	(menhir --explain parser.mly 2>&1) > menhir.out
+	menhir --explain parser.mly > menhir.out 2>&1
 
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx 
