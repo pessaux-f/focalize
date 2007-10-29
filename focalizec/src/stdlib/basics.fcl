@@ -376,7 +376,7 @@ let sc =
   external
   | caml -> "Focvasives.str_cat" ;;
 let str_lt =
-  internal string -> string -> bool =
+  internal string -> string -> bool
   external
   | caml -> "Focvasives.str_lt" ;;
 let print_string =
