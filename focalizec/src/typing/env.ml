@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.47 2007-10-29 13:37:29 pessaux Exp $ *)
+(* $Id: env.ml,v 1.48 2007-10-29 15:00:58 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -442,7 +442,7 @@ module TypeInformation = struct
     | TK_record of  (** Record types: list of labels. Any value of a type
 			record will be typed as a [ST_construct] whose name is
 			the name of the record type. *)
-	(Types.label_name * field_mutability * Types.type_scheme) list
+	(Parsetree.vname * field_mutability * Types.type_scheme) list
 
 
 

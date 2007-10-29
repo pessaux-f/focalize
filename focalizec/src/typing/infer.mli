@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.16 2007-10-22 08:41:30 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.17 2007-10-29 15:00:58 pessaux Exp $ *)
 
 exception Method_multiply_defined of
   (Parsetree.vname * Parsetree.qualified_vname)
@@ -42,7 +42,6 @@ exception Scheme_contains_type_vars of
 
 type please_compile_me =
   | PCM_no_matter
-  | PCM_external of Parsetree.external_def
   | PCM_species of
       (Parsetree.species_def * Env.TypeInformation.species_description *
        (Dep_analysis.name_node list))

@@ -84,7 +84,7 @@ module TypeInformation :
       | TK_variant of (Parsetree.constructor_name * constructor_arity *
 		       Types.type_scheme) list
       | TK_record of
-          (Types.label_name * field_mutability * Types.type_scheme) list
+          (Parsetree.vname * field_mutability * Types.type_scheme) list
     type type_description = {
       type_kind : type_kind ;
       type_identity : Types.type_scheme ;
