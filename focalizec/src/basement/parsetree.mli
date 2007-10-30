@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.23 2007-10-30 09:20:01 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.24 2007-10-30 21:14:30 weis Exp $ *)
 
 (** {2 The Focalize abstract syntax tree definition.} *)
 
@@ -58,6 +58,8 @@ type vname =
   which can be regular identifiers (lowercase or capitalized), infix, or
   prefix identifiers. *)
 ;;
+
+type qualified_species = modname * vname;;
 
 type qualified_vname =
    | Vname of vname

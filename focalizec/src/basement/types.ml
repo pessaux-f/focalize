@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.33 2007-10-29 08:18:36 pessaux Exp $ *)
+(* $Id: types.ml,v 1.34 2007-10-30 21:14:30 weis Exp $ *)
 
 
 (* **************************************************************** *)
@@ -72,8 +72,10 @@ type type_simple =
 	  a [ST_construct] whose name is the name of the record (or sum)
 	  type. *)
       (type_name * type_simple list)
-  | ST_self_rep       (** Carrier type of the currently analysed species. *)
-  | ST_species_rep of (fname * collection_name)   (** Carrier type of a collection hosted in the specified module. *)
+  | ST_self_rep
+    (** Carrier type of the currently analysed species. *)
+  | ST_species_rep of (fname * collection_name)
+    (** Carrier type of a collection hosted in the specified module. *)
 
 
 
