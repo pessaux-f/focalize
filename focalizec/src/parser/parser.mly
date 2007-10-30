@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.70 2007-10-29 08:18:36 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.71 2007-10-30 09:22:03 weis Exp $ *)
 
 open Parsetree;;
 
@@ -17,24 +17,58 @@ let mk d = mk_doc None d;;
 let mk_no_doc d = mk_doc None d;;
 
 let mk_local_ident vname = mk (I_local vname);;
-let mk_global_ident qual vname = mk (I_global (qual, vname));;
-let mk_unqualified_global_ident vname = mk_global_ident None vname;;
 
-let mk_local_expr_ident vname = mk (EI_local vname);;
-let mk_global_expr_ident vname = mk (EI_global (None, vname));;
-let mk_local_ident_expr vname =
+let mk_qual_vname qual vname =
+  match qual with
+  | None -> Vname vname
+  | Some qual -> Qualified (qual, vname)
+;;
+
+let mk_global_ident qual vname =
+  mk (I_global (mk_qual_vname qual vname))
+;;
+
+let mk_unqualified_global_ident vname =
+  mk_global_ident None vname
+;;
+
+let mk_global_species_ident qual vname =
+  mk (I_global (mk_qual_vname qual vname));;
+
+let mk_label_ident qual vname =
+  mk (LI (mk_qual_vname qual vname))
+;;
+
+let mk_global_constructor_ident qual vname =
+  mk (CI (mk_qual_vname qual vname));;
+
+let mk_local_expr_ident vname =
+  mk (EI_local vname)
+;;
+
+let mk_global_expr_ident qual vname =
+  mk (EI_global (mk_qual_vname qual vname))
+;;
+
+let mk_method_expr_ident opt_qualified_vname method_vname =
+  mk (EI_method (opt_qualified_vname, method_vname))
+;;
+
+let mk_local_expr_var vname =
   mk (E_var (mk_local_expr_ident vname));;
-let mk_global_ident_expr vname =
-  mk (E_var (mk_global_expr_ident vname));;
+let mk_global_expr_var qual vname =
+  mk (E_var (mk_global_expr_ident qual vname));;
+
+let mk_qual_infix_application e1 s qual e2 =
+  mk (E_app (mk_global_expr_var qual (Viident s), [e1; e2]))
+;;
 
 let mk_infix_application e1 s e2 =
-  mk (E_app (mk_global_ident_expr (Viident s), [e1; e2]));;
+  mk (E_app (mk_global_expr_var None (Viident s), [e1; e2]))
+;;
 let mk_prefix_application s e1 =
-  mk (E_app (mk_local_ident_expr (Vpident s), [e1]));;
-
-let mk_method_expr_ident qual vname = mk (EI_method (qual, vname));;
-
-let mk_global_constructor_ident qual vname = mk (CI (qual, vname));;
+  mk (E_app (mk_local_expr_var (Vpident s), [e1]))
+;;
 
 let mk_cons () = mk_global_constructor_ident (Some "basics") (Vuident "Cons");;
 let mk_nil () = mk_global_constructor_ident (Some "basics") (Vuident "Nil");;
@@ -353,9 +387,10 @@ def_record_field_list:
 /**** SPECIES ****/
 
 def_species:
-  | opt_doc SPECIES species_vname def_species_params
-            def_species_inherits
-            EQUAL species_fields END
+  | opt_doc
+    SPECIES species_vname def_species_params def_species_inherits EQUAL
+      species_fields
+    END
     { mk_doc $1
         { sd_name = $3; sd_params = $4;
           sd_inherits = $5; sd_fields = $7; } }
@@ -437,9 +472,9 @@ simple_rep_type_def:
   | glob_ident
     { RTE_ident $1 }
   | species_vname          /* To have capitalized species names as types. */
-    { RTE_ident (mk (I_global (None, $1))) }
+    { RTE_ident (mk_unqualified_global_ident $1) }
   | species_glob_ident     /* To have qualified species names as types. */
-      { RTE_ident $1 }
+    { RTE_ident $1 }
   | LIDENT { RTE_ident (mk_unqualified_global_ident (Vlident $1)) }
   | glob_ident LPAREN rep_type_def_comma_list RPAREN
     { RTE_app ($1, $3) }
@@ -480,15 +515,15 @@ def_let:
 ;
 
 binding:
-  | bound_ident EQUAL expr
+  | bound_vname EQUAL expr
     { mk { b_name = $1; b_params = []; b_type = None; b_body = $3; } }
-  | bound_ident EQUAL INTERNAL type_expr EXTERNAL external_expr
+  | bound_vname EQUAL INTERNAL type_expr EXTERNAL external_expr
     { mk { b_name = $1; b_params = []; b_type = Some $4; b_body = mk (E_external $6); } }
-  | bound_ident IN type_expr EQUAL expr
+  | bound_vname IN type_expr EQUAL expr
     { mk { b_name = $1; b_params = []; b_type = Some $3; b_body = $5; } }
-  | bound_ident LPAREN param_list RPAREN EQUAL expr
+  | bound_vname LPAREN param_list RPAREN EQUAL expr
     { mk { b_name = $1; b_params = $3; b_type = None; b_body = $6; } }
-  | bound_ident LPAREN param_list RPAREN IN type_expr EQUAL expr
+  | bound_vname LPAREN param_list RPAREN IN type_expr EQUAL expr
     { mk { b_name = $1; b_params = $3; b_type = Some $6; b_body = $8; } }
 ;
 
@@ -498,8 +533,8 @@ param_list:
 ;
 
 param:
-  | bound_ident { ($1, None) }
-  | bound_ident IN type_expr { ( $1, Some $3) }
+  | bound_vname { ($1, None) }
+  | bound_vname IN type_expr { ( $1, Some $3) }
 ;
 
 /**** PROPERTIES & THEOREM DEFINITION ****/
@@ -659,9 +694,9 @@ simple_type_expr:
   | LPAREN type_expr RPAREN
     { mk (TE_paren $2) }
   | species_vname   /* To have capitalized species names as types. */
-    { mk (TE_ident (mk (I_global (None, $1)))) }
+    { mk (TE_ident (mk_unqualified_global_ident $1)) }
   | species_glob_ident     /* To have qualified species names as types. */
-      { mk (TE_ident $1) }
+    { mk (TE_ident $1) }
 ;
 
 core_type_tuple:
@@ -676,19 +711,19 @@ type_expr_comma_list:
 
 constructor_ref:
   | constructor_vname
-    { mk (CI (None, $1)) }
+    { mk_global_constructor_ident None $1 }
   | opt_lident SHARP constructor_vname
-    { mk (CI ($1, $3)) }
+    { mk_global_constructor_ident $1 $3 }
 ;
 
 glob_ident:
   | opt_lident SHARP bound_vname
-    { mk (I_global ($1, $3)) }
+    { mk_global_ident $1 $3 }
 ;
 
 species_glob_ident:
   | opt_lident SHARP species_vname
-    { mk (I_global ($1, $3)) }
+    { mk_global_species_ident $1 $3 }
 ;
 
 /* Only used to prefix global notation (i.e. with '#'). */
@@ -699,16 +734,17 @@ opt_lident:
 ;
 
 /* Only used to prefix explicit method call notation (i.e. with '!'). */
-opt_uident_opt_qualified:
+opt_qualified_vname:
   | { None }
-  | SELF               /* No "module" name qualification and is Self */
-    { Some (None, (Parsetree.Vuident "Self")) }
-  | UIDENT             /* No "module" name qualification  and is NOT Self . */
-    { Some (None,  (Parsetree.Vuident $1)) }
-  | opt_lident SHARP UIDENT          /* "Module" name qualification. To allow */
-                    /* a species name to be "module"-scoped in a method call. */
-		    /* E.g. my_file#My_species!my_method.                     */
-    { Some ($1, (Parsetree.Vuident $3)) }
+  | SELF
+    { Some (mk_qual_vname None (Vuident "Self")) }
+  | UIDENT
+    { Some (mk_qual_vname None (Vuident $1)) }
+    /* "Module" name qualification. To allow a species name to be */
+    /* "module"-scoped in a method call. */
+    /* E.g. my_file#My_species!my_method. */
+  | opt_lident SHARP UIDENT
+    { Some (mk_qual_vname $1 (Vuident $3)) }
 ;
 
 /**** EXPRESSIONS ****/
@@ -773,6 +809,8 @@ expr:
     { mk_infix_application $1 $2 $3 }
   | expr COLON_OP expr
     { mk_infix_application $1 $2 $3 }
+/*  | expr opt_lident SHARP PLUS_OP expr*/
+/*    { mk_qual_infix_application $1 $2 $4 $5 }*/
   | expr PLUS_OP expr
     { mk_infix_application $1 $2 $3 }
   | expr DASH_OP expr
@@ -847,18 +885,18 @@ record_field_list:
 
 expr_ident:
   | opt_lident SHARP bound_vname
-    { mk (EI_global ($1, $3)) }
-  | opt_uident_opt_qualified BANG method_vname
-    { mk (EI_method ($1, $3)) }
-  | bound_ident
-    { mk (EI_local $1) }
+    { mk_global_expr_ident $1 $3 }
+  | opt_qualified_vname BANG method_vname
+    { mk_method_expr_ident $1 $3 }
+  | bound_vname
+    { mk_local_expr_ident $1 }
 ;
 
 property_ident:
   | property_vname
-    { mk (EI_local $1) }
+    { mk_local_expr_ident $1 }
   | opt_lident SHARP property_vname
-    { mk (EI_global ($1, $3)) }
+    { mk_global_expr_ident $1 $3 }
 ;
 
 carrier_ident:
@@ -958,12 +996,14 @@ following_binding_list:
 /**** NAMES ****/
 
 label_ident:
-  | label_vname { mk (LI (None, $1)) }
-  | opt_lident SHARP label_vname { mk (LI ($1, $3)) }
+  | label_vname { mk_label_ident None $1 }
+  | opt_lident SHARP label_vname { mk_label_ident $1 $3 }
 ;
 
-bound_ident:
-  | bound_vname { $1 }
+bound_vname:
+  | LIDENT { Vlident $1 }
+  | PIDENT { Vpident $1 }
+  | IIDENT { Viident $1 }
 ;
 
 bound_vname_list:
@@ -971,12 +1011,6 @@ bound_vname_list:
     { $1 :: $2 }
   | bound_vname
     { [$1] }
-;
-
-bound_vname:
-  | LIDENT { Vlident $1 }
-  | PIDENT { Vpident $1 }
-  | IIDENT { Viident $1 }
 ;
 
 external_value_vname:
