@@ -11,8 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-
-(* $Id: substColl.ml,v 1.11 2007-10-02 09:29:36 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.12 2007-10-30 21:15:07 weis Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -21,6 +20,7 @@
             Types are handled by the [Types.subst_type_simple] function.    *)
 (* ************************************************************************ *)
 
+open Parsetree;;
 
 (* ************************************************************************** *)
 (** {b Descr} : Describes which kind of collection type must be replaced
@@ -56,8 +56,8 @@ let subst_type_simple_option c1 c2 = function
       match c1 with
        | SCK_coll c -> Some (Types.subst_type_simple c c2 ty)
        | SCK_self ->
-	   Some
-	     (Types.copy_type_simple_but_variables ~and_abstract: (Some c2) ty)
+           Some
+             (Types.copy_type_simple_but_variables ~and_abstract: (Some c2) ty)
       end)
 ;;
 
@@ -78,50 +78,45 @@ let subst_ident c1 c2 ident =
 
 let subst_expr_ident ~current_unit c1 c2 ident =
   (* Substitute in the AST node description. *)
-  let  new_desc =
-    (match ident.Parsetree.ast_desc with
-     | Parsetree.EI_local _ | Parsetree.EI_global (_, _)
-     | Parsetree.EI_method (None, _) ->
-	 (* No collection name inside, hence nothing to change. *)
-	 ident.Parsetree.ast_desc
-     | Parsetree.EI_method ((Some coll_specifier), vname) ->
-	 (begin
-	 match c1 with
-	  | SCK_self ->
-	      (* Because Self is a special constructor, an expr_ident can't  *)
-	      (* be Self. Then in this case, the substitution is identity.   *)
-	      ident.Parsetree.ast_desc
-	  | SCK_coll effective_coll_ty ->
-	      let ident_full_coll_specifier =
-		match coll_specifier with
-		 | (None, coll_vname) ->
-		     (* If no module specifier appears in the ident, then it *)
-		     (* implicitely refers to the current compilation unit.  *)
-		     (* Should never happen because the scoping passe should *)
-                     (* have made the hosting module explicit.               *)
-		     (current_unit, (Parsetree_utils.name_of_vname coll_vname))
-		 | ((Some module_name), coll_vname) ->
-		     (module_name,
-		      (Parsetree_utils.name_of_vname coll_vname)) in
-	      (* Attention, [c2] is a [Types.collection_type], then it has *)
-              (* to be transformed into a [Parsetree.vname] before being   *)
-              (* inserted in the [Parsetree.EI_method]. Because collection *)
-              (* names are always capitalized, the transformation is       *)
-              (* trivially to surround [c2] byt a [Parsetree.Vuident].     *)
-	      if ident_full_coll_specifier = effective_coll_ty then
-		(begin
-		let new_may_be_qualified_species_vname =
-		  ((Some (fst c2)), (Parsetree.Vuident (snd c2))) in
-		Parsetree.EI_method
-		  ((Some new_may_be_qualified_species_vname), vname)
-		end)
-	      else ident.Parsetree.ast_desc
-	 end)) in
+  let new_desc =
+    match ident.Parsetree.ast_desc with
+    | Parsetree.EI_local _ | Parsetree.EI_global _
+    | Parsetree.EI_method (None, _) ->
+      (* No collection name inside, hence nothing to change. *)
+      ident.Parsetree.ast_desc
+    | Parsetree.EI_method (Some coll_qvname, vname) ->
+      match c1 with
+      | SCK_self ->
+        (* Because Self is a special constructor, an expr_ident can't  *)
+        (* be Self. Then in this case, the substitution is identity.   *)
+        ident.Parsetree.ast_desc
+      | SCK_coll effective_coll_ty ->
+        let coll_ty =
+          match coll_qvname with
+          | Vname coll_vname ->
+            (* If no module specifier appears in the ident, then it *)
+            (* implicitely refers to the current compilation unit.  *)
+            (* Should never happen because the scoping pass should  *)
+            (* have made the hosting module explicit.               *)
+            (current_unit, Parsetree_utils.name_of_vname coll_vname)
+          | Qualified (modname, coll_vname) ->
+            (modname, Parsetree_utils.name_of_vname coll_vname) in
+        (* Attention, [c2] is a [Types.collection_type], then it has *)
+        (* to be transformed into a [Parsetree.vname] before being   *)
+        (* inserted in the [Parsetree.EI_method]. Because collection *)
+        (* names are always capitalized, the transformation is       *)
+        (* trivially to surround [c2] byt a [Parsetree.Vuident].     *)
+        if coll_ty = effective_coll_ty then
+          let new_species_qvname =
+            Qualified (fst c2, Parsetree.Vuident (snd c2)) in
+          Parsetree.EI_method
+            (Some new_species_qvname, vname)
+        else ident.Parsetree.ast_desc in
   (* Substitute in the AST node type. *)
   let new_type = subst_type_simple_option c1 c2 ident.Parsetree.ast_type in
   { ident with
-      Parsetree.ast_desc = new_desc ;
-      Parsetree.ast_type = new_type }
+      Parsetree.ast_desc = new_desc;
+      Parsetree.ast_type = new_type; }
 ;;
 
 
@@ -149,12 +144,12 @@ let subst_pattern c1 c2 pattern =
        | Parsetree.P_const _
        | Parsetree.P_var _
        | Parsetree.P_wild ->
-	   (* Structurally nothing to substitute. *)
-	   pat.Parsetree.ast_desc
+           (* Structurally nothing to substitute. *)
+           pat.Parsetree.ast_desc
        | Parsetree.P_as (pat', vname) ->
-	   Parsetree.P_as ((rec_subst pat'), vname)
+           Parsetree.P_as ((rec_subst pat'), vname)
        | Parsetree.P_constr (ident, pats) ->
-	   (* Because the [ident] here is a sum type constructor, *)
+           (* Because the [ident] here is a sum type constructor, *)
            (* there is no substitution to do here.                *)
            let pats' = List.map rec_subst pats in
            Parsetree.P_constr (ident, pats')
@@ -168,7 +163,7 @@ let subst_pattern c1 c2 pattern =
     let new_type = subst_type_simple_option c1 c2 pat.Parsetree.ast_type in
     (* An finally, make a new AST node. *)
     { pat with
-        Parsetree.ast_desc = new_desc ; Parsetree.ast_type = new_type } in
+        Parsetree.ast_desc = new_desc; Parsetree.ast_type = new_type } in
   (* Now, do the job. *)
   rec_subst pattern
 ;;
@@ -183,13 +178,13 @@ let subst_type_expr c1 c2 type_expression =
     let new_desc =
       (match ty_expr.Parsetree.ast_desc with
        | Parsetree.TE_ident ident ->
-	   Parsetree.TE_ident (subst_ident c1 c2 ident)
+           Parsetree.TE_ident (subst_ident c1 c2 ident)
        | Parsetree.TE_fun (t1, t2) ->
-	   Parsetree.TE_fun ((rec_subst t1), (rec_subst t2))
+           Parsetree.TE_fun ((rec_subst t1), (rec_subst t2))
        | Parsetree.TE_app (ident, tys) ->
-	   let ident' = subst_ident c1 c2 ident in
-	   let tys' = List.map rec_subst tys in
-	   Parsetree.TE_app (ident', tys')
+           let ident' = subst_ident c1 c2 ident in
+           let tys' = List.map rec_subst tys in
+           Parsetree.TE_app (ident', tys')
        | Parsetree.TE_prod tys -> Parsetree.TE_prod (List.map rec_subst tys)
        | Parsetree.TE_self
        | Parsetree.TE_prop -> ty_expr.Parsetree.ast_desc
@@ -198,7 +193,7 @@ let subst_type_expr c1 c2 type_expression =
     let new_type = subst_type_simple_option c1 c2 ty_expr.Parsetree.ast_type in
     (* An finally, make a new AST node. *)
     { ty_expr with
-        Parsetree.ast_desc = new_desc ; Parsetree.ast_type = new_type } in
+        Parsetree.ast_desc = new_desc; Parsetree.ast_type = new_type } in
   (* Now, do the job. *)
   rec_subst type_expression
 ;;
@@ -214,66 +209,66 @@ let rec subst_expr ~current_unit c1 c2 expression =
       (match initial_expr.Parsetree.ast_desc with
        | Parsetree.E_self
        | Parsetree.E_const _ ->
-	   (* Structurally, no possible change in expressions or types below. *)
-	   initial_expr.Parsetree.ast_desc
+           (* Structurally, no possible change in expressions or types below. *)
+           initial_expr.Parsetree.ast_desc
        | Parsetree.E_fun (arg_vnames, e_body) ->
-	   Parsetree.E_fun (arg_vnames, (rec_subst e_body))
+           Parsetree.E_fun (arg_vnames, (rec_subst e_body))
        | Parsetree.E_var ident ->
-	   Parsetree.E_var (subst_expr_ident ~current_unit c1 c2 ident)
+           Parsetree.E_var (subst_expr_ident ~current_unit c1 c2 ident)
        | Parsetree.E_app (functional_expr, args_exprs) ->
-	   let functional_expr' = rec_subst functional_expr in
-	   let args_exprs' = List.map rec_subst args_exprs in
-	   Parsetree.E_app (functional_expr', args_exprs')
+           let functional_expr' = rec_subst functional_expr in
+           let args_exprs' = List.map rec_subst args_exprs in
+           Parsetree.E_app (functional_expr', args_exprs')
        | Parsetree.E_constr (cstr_expr, exprs) ->
-	   (* The constructor expression can not be substituted. May be only *)
-	   (* in its type, and it's even pretty sure that no. So just hack   *)
-	   (* it's type, but leave the structure unchanged.                  *)
-	   let cstr_expr' = { cstr_expr with
-	     Parsetree.ast_type =
-	       subst_type_simple_option c1 c2 cstr_expr.Parsetree.ast_type } in
-	   let exprs' = List.map rec_subst exprs in
-	   Parsetree.E_constr (cstr_expr', exprs')
+           (* The constructor expression can not be substituted. May be only *)
+           (* in its type, and it's even pretty sure that no. So just hack   *)
+           (* it's type, but leave the structure unchanged.                  *)
+           let cstr_expr' = { cstr_expr with
+             Parsetree.ast_type =
+               subst_type_simple_option c1 c2 cstr_expr.Parsetree.ast_type } in
+           let exprs' = List.map rec_subst exprs in
+           Parsetree.E_constr (cstr_expr', exprs')
        | Parsetree.E_match (matched_expr, bindings) ->
-	   let matched_expr' = rec_subst matched_expr in
-	   let bindings' =
-	     List.map
-	       (fun (pat, expr) ->
-		 let pat' = subst_pattern c1 c2 pat in
-		 let expr' = rec_subst expr in
-		 (pat', expr'))
-	       bindings in
-	   Parsetree.E_match (matched_expr', bindings')
+           let matched_expr' = rec_subst matched_expr in
+           let bindings' =
+             List.map
+               (fun (pat, expr) ->
+         let pat' = subst_pattern c1 c2 pat in
+         let expr' = rec_subst expr in
+         (pat', expr'))
+               bindings in
+           Parsetree.E_match (matched_expr', bindings')
        | Parsetree.E_if (e_cond, e_then, e_else) ->
-	   let e_cond' = rec_subst e_cond in
-	   let e_then' = rec_subst e_then in
-	   let e_else' = rec_subst e_else in
-	   Parsetree.E_if (e_cond', e_then', e_else')
+           let e_cond' = rec_subst e_cond in
+           let e_then' = rec_subst e_then in
+           let e_else' = rec_subst e_else in
+           Parsetree.E_if (e_cond', e_then', e_else')
        | Parsetree.E_let (let_def, in_expr) ->
-	   let let_def' = subst_let_definition ~current_unit c1 c2 let_def in
-	   let in_expr' = rec_subst in_expr in
-	   Parsetree.E_let (let_def', in_expr')
+           let let_def' = subst_let_definition ~current_unit c1 c2 let_def in
+           let in_expr' = rec_subst in_expr in
+           Parsetree.E_let (let_def', in_expr')
        | Parsetree.E_record fields ->
-	   let fields' =
-	     List.map (fun (name, expr) -> (name, (rec_subst expr))) fields in
-	   Parsetree.E_record fields'
+           let fields' =
+             List.map (fun (name, expr) -> (name, (rec_subst expr))) fields in
+           Parsetree.E_record fields'
        | Parsetree.E_record_access (expr, label) ->
-	   Parsetree.E_record_access ((rec_subst expr), label)
+           Parsetree.E_record_access ((rec_subst expr), label)
        | Parsetree.E_record_with (with_expr, fields) ->
-	   let with_expr' = rec_subst with_expr in
-	   let fields' =
-	     List.map (fun (name, expr) -> (name, (rec_subst expr))) fields in
-	   Parsetree.E_record_with (with_expr', fields')
+           let with_expr' = rec_subst with_expr in
+           let fields' =
+             List.map (fun (name, expr) -> (name, (rec_subst expr))) fields in
+           Parsetree.E_record_with (with_expr', fields')
        | Parsetree.E_tuple exprs -> Parsetree.E_tuple (List.map rec_subst exprs)
        | Parsetree.E_external _ ->
-	   (* Because this is in fact just a string, nowhere to substitute . *)
-	   initial_expr.Parsetree.ast_desc
+           (* Because this is in fact just a string, nowhere to substitute . *)
+           initial_expr.Parsetree.ast_desc
        | Parsetree.E_paren expr -> Parsetree.E_paren (rec_subst expr)) in
     (* Substitute in the AST node type. *)
     let new_type =
       subst_type_simple_option c1 c2 initial_expr.Parsetree.ast_type in
     (* An finally, make a new AST node. *)
     { initial_expr with
-	Parsetree.ast_desc = new_desc ; Parsetree.ast_type = new_type } in
+        Parsetree.ast_desc = new_desc; Parsetree.ast_type = new_type } in
   (* Do je job now. *)
   rec_subst expression
 
@@ -285,11 +280,11 @@ and subst_let_binding ~current_unit c1 c2 binding =
   let b_params' =
     List.map
       (fun (vname, ty_opt) ->
-	let ty_opt' =
-	  (match ty_opt with
-	   | None -> None
-	   | Some ty -> Some (subst_type_expr c1 c2 ty)) in
-	(vname, ty_opt'))
+        let ty_opt' =
+          (match ty_opt with
+           | None -> None
+           | Some ty -> Some (subst_type_expr c1 c2 ty)) in
+        (vname, ty_opt'))
       binding_desc.Parsetree.b_params in
     let b_type' =
       (match binding_desc.Parsetree.b_type with
@@ -298,13 +293,13 @@ and subst_let_binding ~current_unit c1 c2 binding =
     let b_body' =
       subst_expr ~current_unit c1 c2 binding_desc.Parsetree.b_body in
     let desc' = { binding_desc with
-       Parsetree.b_params = b_params' ;
-       Parsetree.b_type = b_type' ;
+       Parsetree.b_params = b_params';
+       Parsetree.b_type = b_type';
        Parsetree.b_body = b_body' } in
     { binding with
         (* Substitute in the AST node type. *)
         Parsetree.ast_type =
-          subst_type_simple_option c1 c2 binding.Parsetree.ast_type ;
+          subst_type_simple_option c1 c2 binding.Parsetree.ast_type;
         Parsetree.ast_desc = desc' }
 
 
@@ -320,7 +315,7 @@ and subst_let_definition ~current_unit c1 c2 let_def =
   { let_def with
      (* Substitute in the AST node type. *)
       Parsetree.ast_type =
-        subst_type_simple_option c1 c2 let_def.Parsetree.ast_type ;
+        subst_type_simple_option c1 c2 let_def.Parsetree.ast_type;
       Parsetree.ast_desc = desc' }
 ;;
 
@@ -339,33 +334,33 @@ let subst_prop ~current_unit c1 c2 initial_prop_expr =
     let new_desc =
       (match prop_expr.Parsetree.ast_desc with
        |  Parsetree.Pr_forall (vnames, type_expr, prop) ->
-	   let type_expr' = subst_type_expr c1 c2 type_expr in
-	   let body' = rec_subst prop in
-	   Parsetree.Pr_forall (vnames, type_expr', body')
+           let type_expr' = subst_type_expr c1 c2 type_expr in
+           let body' = rec_subst prop in
+           Parsetree.Pr_forall (vnames, type_expr', body')
        | Parsetree.Pr_exists (vnames, type_expr, prop) ->
-	   let type_expr' = subst_type_expr c1 c2 type_expr in
-	   let body' = rec_subst prop in
-	   Parsetree.Pr_exists (vnames, type_expr', body')
+           let type_expr' = subst_type_expr c1 c2 type_expr in
+           let body' = rec_subst prop in
+           Parsetree.Pr_exists (vnames, type_expr', body')
        | Parsetree.Pr_imply (prop1, prop2) ->
-	   let prop1' = rec_subst prop1 in
-	   let prop2' = rec_subst prop2 in
-	   Parsetree.Pr_imply (prop1', prop2')
+           let prop1' = rec_subst prop1 in
+           let prop2' = rec_subst prop2 in
+           Parsetree.Pr_imply (prop1', prop2')
        | Parsetree.Pr_or (prop1, prop2) ->
-	   let prop1' = rec_subst prop1 in
-	   let prop2' = rec_subst prop2 in
-	   Parsetree.Pr_or (prop1', prop2')
+           let prop1' = rec_subst prop1 in
+           let prop2' = rec_subst prop2 in
+           Parsetree.Pr_or (prop1', prop2')
        | Parsetree.Pr_and (prop1, prop2) ->
-	   let prop1' = rec_subst prop1 in
-	   let prop2' = rec_subst prop2 in
-	   Parsetree.Pr_and (prop1', prop2')
+           let prop1' = rec_subst prop1 in
+           let prop2' = rec_subst prop2 in
+           Parsetree.Pr_and (prop1', prop2')
        | Parsetree.Pr_equiv (prop1, prop2) ->
-	   let prop1' = rec_subst prop1 in
-	   let prop2' = rec_subst prop2 in
-	   Parsetree.Pr_equiv (prop1', prop2')
+           let prop1' = rec_subst prop1 in
+           let prop2' = rec_subst prop2 in
+           Parsetree.Pr_equiv (prop1', prop2')
        | Parsetree.Pr_not prop -> Parsetree.Pr_not (rec_subst prop)
        | Parsetree.Pr_expr expr ->
-	   let expr' = subst_expr ~current_unit c1 c2 expr in
-	   Parsetree.Pr_expr expr'
+           let expr' = subst_expr ~current_unit c1 c2 expr in
+           Parsetree.Pr_expr expr'
        | Parsetree.Pr_paren prop -> Parsetree.Pr_paren (rec_subst prop)) in
     { prop_expr with Parsetree.ast_desc = new_desc } in
   (* Now do the job. *)
@@ -377,29 +372,29 @@ let subst_prop ~current_unit c1 c2 initial_prop_expr =
 let subst_species_field ~current_unit c1 c2 = function
   | Env.TypeInformation.SF_sig (from, vname, scheme) ->
       (begin
-      Types.begin_definition () ;
+      Types.begin_definition ();
       let ty = Types.specialize scheme in
       let ty' =
-	(match c1 with
-	 | SCK_coll c -> Types.subst_type_simple c c2 ty
-	 | SCK_self ->
-	     Types.copy_type_simple_but_variables
-	       ~and_abstract: (Some c2) ty) in
-      Types.end_definition () ;
+        (match c1 with
+         | SCK_coll c -> Types.subst_type_simple c c2 ty
+         | SCK_self ->
+             Types.copy_type_simple_but_variables
+               ~and_abstract: (Some c2) ty) in
+      Types.end_definition ();
       let scheme' = Types.generalize ty' in
       Env.TypeInformation.SF_sig (from, vname, scheme')
       end)
   | Env.TypeInformation.SF_let (from, vname, params_names, scheme, body) ->
       (begin
-      Types.begin_definition () ;
+      Types.begin_definition ();
       let ty = Types.specialize scheme in
       let ty' =
-	(match c1 with
-	 | SCK_coll c -> Types.subst_type_simple c c2 ty
-	 | SCK_self ->
-	     Types.copy_type_simple_but_variables
-	       ~and_abstract: (Some c2) ty) in
-      Types.end_definition () ;
+        (match c1 with
+         | SCK_coll c -> Types.subst_type_simple c c2 ty
+         | SCK_self ->
+             Types.copy_type_simple_but_variables
+               ~and_abstract: (Some c2) ty) in
+      Types.end_definition ();
       let scheme' = Types.generalize ty' in
       let body' = subst_expr ~current_unit c1 c2 body in
       Env.TypeInformation.SF_let (from, vname, params_names, scheme', body')
@@ -407,49 +402,49 @@ let subst_species_field ~current_unit c1 c2 = function
   | Env.TypeInformation.SF_let_rec l ->
       (begin
       let l' =
-	List.map
-	  (fun (from, vname, params_names, scheme, body) ->
-	    let ty = Types.specialize scheme in
-	    let ty' =
-	      (match c1 with
-	       | SCK_coll c -> Types.subst_type_simple c c2 ty
-	       | SCK_self ->
-		   Types.copy_type_simple_but_variables
-		     ~and_abstract: (Some c2) ty) in
-	    Types.end_definition () ;
-	    let scheme' = Types.generalize ty' in
-	    let body' = subst_expr ~current_unit c1 c2 body in
-	    (from, vname, params_names, scheme', body'))
-	  l in
+        List.map
+          (fun (from, vname, params_names, scheme, body) ->
+            let ty = Types.specialize scheme in
+            let ty' =
+              (match c1 with
+               | SCK_coll c -> Types.subst_type_simple c c2 ty
+               | SCK_self ->
+           Types.copy_type_simple_but_variables
+             ~and_abstract: (Some c2) ty) in
+            Types.end_definition ();
+            let scheme' = Types.generalize ty' in
+            let body' = subst_expr ~current_unit c1 c2 body in
+            (from, vname, params_names, scheme', body'))
+          l in
       Env.TypeInformation.SF_let_rec l'
       end)
   | Env.TypeInformation.SF_theorem (from, vname, scheme, body, proof) ->
       (begin
       (* No substitution inside the proof. *)
-      Types.begin_definition () ;
+      Types.begin_definition ();
       let ty = Types.specialize scheme in
       let ty' =
-	(match c1 with
-	 | SCK_coll c -> Types.subst_type_simple c c2 ty
-	 | SCK_self ->
-	     Types.copy_type_simple_but_variables
-	       ~and_abstract: (Some c2) ty) in
-      Types.end_definition () ;
+        (match c1 with
+         | SCK_coll c -> Types.subst_type_simple c c2 ty
+         | SCK_self ->
+             Types.copy_type_simple_but_variables
+               ~and_abstract: (Some c2) ty) in
+      Types.end_definition ();
       let scheme' = Types.generalize ty' in
       let body' = subst_prop ~current_unit c1 c2 body in
       Env.TypeInformation.SF_theorem (from, vname, scheme', body', proof)
       end)
   | Env.TypeInformation.SF_property (from, vname, scheme, body) ->
       (begin
-      Types.begin_definition () ;
+      Types.begin_definition ();
       let ty = Types.specialize scheme in
       let ty' =
-	(match c1 with
-	 | SCK_coll c -> Types.subst_type_simple c c2 ty
-	 | SCK_self ->
-	     Types.copy_type_simple_but_variables
-	       ~and_abstract: (Some c2) ty) in
-      Types.end_definition () ;
+        (match c1 with
+         | SCK_coll c -> Types.subst_type_simple c c2 ty
+         | SCK_self ->
+             Types.copy_type_simple_but_variables
+               ~and_abstract: (Some c2) ty) in
+      Types.end_definition ();
       let scheme' = Types.generalize ty' in
       let body' = subst_prop ~current_unit c1 c2 body in
       Env.TypeInformation.SF_property (from, vname, scheme', body')
