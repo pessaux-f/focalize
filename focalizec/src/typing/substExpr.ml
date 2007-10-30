@@ -11,8 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-
-(* $Id: substExpr.ml,v 1.7 2007-10-29 13:37:29 pessaux Exp $ *)
+(* $Id: substExpr.ml,v 1.8 2007-10-30 17:45:45 weis Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs substitution of a value name [name_x]
@@ -26,25 +25,22 @@
             module name of where the parmaterized species was defined.     *)
 (* *********************************************************************** *)
 
-
-
-
-
+open Parsetree;;
 
 let subst_E_var ~param_unit ~bound_variables name_x by_expr ident =
   (* Substitute in the AST node description. *)
   match ident.Parsetree.ast_desc with
-   | Parsetree.EI_local v_name ->
-       if v_name = name_x && not (List.mem v_name bound_variables) then
+   | Parsetree.EI_local vname ->
+       if vname = name_x && not (List.mem vname bound_variables) then
 	 by_expr
        else Parsetree.E_var ident
-   | Parsetree.EI_global ((Some mod_name), v_name) ->
-       if mod_name = param_unit && v_name = name_x &&
-          not (List.mem v_name bound_variables) then
+   | Parsetree.EI_global (Qualified (modname, vname)) ->
+       if modname = param_unit && vname = name_x &&
+          not (List.mem vname bound_variables) then
 	 by_expr
        else Parsetree.E_var ident
    | Parsetree.EI_method (_, _) -> Parsetree.E_var ident
-   | Parsetree.EI_global (None, _) ->
+   | Parsetree.EI_global (Vname _) ->
        (* In this case, may be there is some scoping process missing. *)
        assert false
 ;;
@@ -62,7 +58,7 @@ let subst_E_var ~param_unit ~bound_variables name_x by_expr ident =
 let rec extend_bound_name_from_pattern bound_variables pattern =
   match pattern.Parsetree.ast_desc with
    | Parsetree.P_const _ | Parsetree.P_wild -> bound_variables
-   | Parsetree.P_var v_name -> v_name :: bound_variables
+   | Parsetree.P_var vname -> vname :: bound_variables
    | Parsetree.P_as (pat', vname) ->
        extend_bound_name_from_pattern (vname :: bound_variables) pat'
    | Parsetree.P_constr (_, pats) ->
