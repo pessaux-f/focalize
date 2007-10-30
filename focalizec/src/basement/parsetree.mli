@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.22 2007-10-29 12:08:53 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.23 2007-10-30 09:20:01 weis Exp $ *)
 
 (** {2 The Focalize abstract syntax tree definition.} *)
 
@@ -43,7 +43,7 @@ type 'a ast_doc = ('a, string) generic_ast;;
 
 (** {6 General names.} *)
 
-type modname = Types.fname ;;
+type modname = Types.fname;;
 (** The type of ``module'' names.
   Since there are no modules in Focalize yet, modules are just files and
   module names are just file names. *)
@@ -59,33 +59,10 @@ type vname =
   prefix identifiers. *)
 ;;
 
-
-(* ************************************************************************* *)
-(** {b Descr} : A [may_be_qualified_vname] is a [vname] possibly qualified by a
-         module name. For instance, [None, Vlident "foo"] represents the
-  unqualified identifier [foo], and [Some "Basics", Vuident "Foo"] represents
-  the identifier [Foo] from module [Basics].
-              This type serves to represent both the [EI_global] identifiers
-              and the optional qualification of method calls (the !-stuff).
-              For this last case, this enables to make explicit the module
-              where the species from which the method is called inhabits.
-
-    {b Rem} : Clearly exported outside this module.                          *)
-(* ************************************************************************* *)
-type may_be_qualified_vname = ((modname option) * vname) ;;
-
-
-
-(* ************************************************************************* *)
-(** {b Descr} : Represent [vnames] qualified by a FoCaL "module"
-              name. For instance, [file#Foo] is a [Vuident] with the "module"
-              qualifier ["file"].
-
-    {b Rem} : Clearly exported outside this module.                          *)
-(* ************************************************************************* *)
-type qualified_vname = (modname * vname) ;;
-
-
+type qualified_vname =
+   | Vname of vname
+   | Qualified of modname * vname;;
+(** A [vname] with possibly a modulename qualification. *)
 
 type constructor_name = vname
 (** A constructor name as mentioned in type definitions. *)
@@ -103,24 +80,24 @@ type node_label = int * string
 type expr_ident = expr_ident_desc ast
 and expr_ident_desc =
   | EI_local of vname
-  | EI_global of may_be_qualified_vname
-  | EI_method of ((may_be_qualified_vname option) * vname)
-    (** The optional (optionally qualified) collection name before
-        the "!" sign, and the name of the method. *)
+  | EI_global of qualified_vname
+  | EI_method of qualified_vname option * vname
+    (** The optional collection name before the "!" sign,
+        and the name of the method. *)
 (** The identifiers that appear in expressions: they could be globally or
    locally bound identifiers or method names. *)
 ;;
 
 type constructor_ident = constructor_ident_desc ast
 and constructor_ident_desc =
-  | CI of may_be_qualified_vname
+  | CI of qualified_vname
 (** The constructor names that can appear in an expression or a pattern.
     This is always a global uppercase qualified identifier. *)
 ;;
 
 type label_ident = label_ident_desc ast
 and label_ident_desc =
-  | LI of may_be_qualified_vname
+  | LI of qualified_vname
 (** The label names that can appear in an expression or a pattern.
     This is always a global lowercase qualified identifier. *)
 ;;
@@ -130,7 +107,7 @@ and label_ident_desc =
 type ident = ident_desc ast
 and ident_desc =
   | I_local of vname
-  | I_global of may_be_qualified_vname
+  | I_global of qualified_vname
 (** Unclassified identifiers: identifiers that appear anywhere else in the
   parse trees. *)
 ;;
@@ -403,7 +380,8 @@ type coll_def = coll_def_desc ast_doc
 and coll_def_desc = {
   cd_name : vname;
   cd_body : species_expr;
-};;
+}
+;;
 
 
 (** {3 Toplevel entities.} *)
