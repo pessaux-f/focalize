@@ -88,21 +88,21 @@ External type definition for sum types:
 (* Focalize binding of the foc_list type constructor and its associated
    contructors or labels. *)
 type foc_list ('a) =
- internal
- | Nil
- | Cons ('a, foc_list ('a))
+  internal
+  | Nil
+  | Cons ('a, foc_list ('a))
 
- external
- | Caml -> "'a, list"
- | Coq -> "List.list ['a]"
+  external
+  | Caml -> "'a, list"
+  | Coq -> "List.list ['a]"
 
- and Nil =
- | Caml -> "[]"
- | Coq -> "nil"
+  and Nil =
+  | Caml -> "[]"
+  | Coq -> "nil"
 
- and Cons =
- | Caml -> "( :: )"
- | Coq -> "cons"
+  and Cons =
+  | Caml -> "( :: )"
+  | Coq -> "cons"
 ;;
 \end{verbatim}
 
@@ -115,17 +115,17 @@ type foc_record ('a) =
   internal
   { hcode : int; contents : 'a; }
 
- external
- | Caml -> "'a Focvasives.foc_record"
- | Coq -> "Focq.foc_record ['a]"
+  external
+  | Caml -> "'a Focvasives.foc_record"
+  | Coq -> "Focq.foc_record ['a]"
 
- and hcode =
- | Caml -> "Focvasives.fv_hashing_code"
- | Coq -> "Focq.hc"
+  and hcode =
+  | Caml -> "Focvasives.fv_hashing_code"
+  | Coq -> "Focq.hc"
 
- and contents =
- | Caml -> "Focvasives.fv_contents"
- | Coq -> "Focq.conts"
+  and contents =
+  | Caml -> "Focvasives.fv_contents"
+  | Coq -> "Focq.conts"
 ;;
 \end{verbatim}
 
