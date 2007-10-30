@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.48 2007-10-29 15:00:58 pessaux Exp $ *)
+(* $Id: env.ml,v 1.49 2007-10-30 11:01:09 weis Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -25,25 +25,25 @@
     on loading the ".fo" file from the FoCaL source "open" or "use" directive
     must know the 2 environments (scope and type) structures.
     That's basically the reason we have here:
-	- The structure of scoping information used in scoping environments.
+        - The structure of scoping information used in scoping environments.
         - The structure od typing information used in typing environments.
         - The shared [find_module] function allowing to retrieve on the disk
-	  The persistent datastructure related to de "module" name.
-	- The scoping environment primitives.
-	- The typing environment primitives.                                  *)
+          The persistent datastructure related to de "module" name.
+        - The scoping environment primitives.
+        - The typing environment primitives.                                  *)
 (* ************************************************************************** *)
 
 
 
-exception Unbound_constructor of (Parsetree.vname * Location.t) ;;
-exception Unbound_label of (Parsetree.vname * Location.t) ;;
-exception Unbound_identifier of (Parsetree.vname * Location.t) ;;
-exception Unbound_type of (Parsetree.vname * Location.t) ;;
-exception Unbound_module of (Types.fname * Location.t) ;;
-exception Unbound_species of (Parsetree.vname * Location.t) ;;
+exception Unbound_constructor of (Parsetree.vname * Location.t);;
+exception Unbound_label of (Parsetree.vname * Location.t);;
+exception Unbound_identifier of (Parsetree.vname * Location.t);;
+exception Unbound_type of (Parsetree.vname * Location.t);;
+exception Unbound_module of (Types.fname * Location.t);;
+exception Unbound_species of (Parsetree.vname * Location.t);;
 
-exception Rebound_type of (Parsetree.vname * Location.t) ;;
-exception Rebound_species of (Parsetree.vname * Location.t) ;;
+exception Rebound_type of (Parsetree.vname * Location.t);;
+exception Rebound_species of (Parsetree.vname * Location.t);;
 
 
 
@@ -58,7 +58,7 @@ type 'a binding_origin =
     (** The binding comes from the current compilation unit. *)
   | BO_absolute of 'a
     (** The binding was inserted by a "open" directive of the file in
-	argument. *)
+        argument. *)
   | BO_opened of (Types.fname * 'a)
 ;;
 
@@ -77,13 +77,13 @@ let env_list_assoc ~allow_opened searched list =
   let rec rec_assoc = function
     | [] -> raise Not_found
     | (name, data) :: q ->
-	if name = searched then
-	  (begin
-	  match data with
-	   | BO_opened (_, v) -> if allow_opened then v else rec_assoc q
-	   | BO_absolute v -> v
-	  end)
-	else rec_assoc q in
+        if name = searched then
+          (begin
+          match data with
+           | BO_opened (_, v) -> if allow_opened then v else rec_assoc q
+           | BO_absolute v -> v
+          end)
+        else rec_assoc q in
   rec_assoc list
 ;;
 
@@ -93,33 +93,33 @@ let env_list_assoc ~allow_opened searched list =
 let debug_env_list_assoc ~allow_opened searched list =
   let rec rec_assoc = function
     | [] ->
-	Format.eprintf "Search failed.\n" ;
-	flush stderr ;
-	raise Not_found
+        Format.eprintf "Search failed.\n";
+        flush stderr;
+        raise Not_found
     | (name, data) :: q ->
-	Format.eprintf "\"%s\" " (Parsetree_utils.name_of_vname name) ;
-	flush stderr ;
-	if name = searched then
-	  (begin
-	  match data with
-	   | BO_opened (fname, v) ->
-	       if allow_opened then
-		 (begin
-		 Format.eprintf
-		   "Search successfully ends on opened (\"%s\")...\n" fname ;
-		 flush stderr ;
-		 v
-		 end)
-	       else rec_assoc q
-	   | BO_absolute v ->
-	       Format.eprintf "Search successfully ends on absolute...\n" ;
-	       flush stderr ;
-	       v
-	  end)
-	else rec_assoc q in
+        Format.eprintf "\"%s\" " (Parsetree_utils.name_of_vname name);
+        flush stderr;
+        if name = searched then
+          (begin
+          match data with
+           | BO_opened (fname, v) ->
+               if allow_opened then
+         (begin
+         Format.eprintf
+           "Search successfully ends on opened (\"%s\")...\n" fname;
+         flush stderr;
+         v
+         end)
+               else rec_assoc q
+           | BO_absolute v ->
+               Format.eprintf "Search successfully ends on absolute...\n";
+               flush stderr;
+               v
+          end)
+        else rec_assoc q in
   Format.eprintf
-    "Search starts for \"%s\"...\n" (Parsetree_utils.name_of_vname  searched) ;
-  flush stderr ;
+    "Search starts for \"%s\"...\n" (Parsetree_utils.name_of_vname  searched);
+  flush stderr;
   rec_assoc list
 ;;
 *)
@@ -137,15 +137,16 @@ let debug_env_list_assoc ~allow_opened searched list =
     {b Rem} : Exported abstract outside this module.                     *)
 (* ********************************************************************* *)
 type ('constrs, 'labels, 'types, 'values, 'species) generic_env = {
-  constructors : (Parsetree.constructor_name * ('constrs binding_origin)) list ;
-  labels : (Parsetree.vname * ('labels binding_origin)) list ;
-  types : (Parsetree.vname * ('types binding_origin)) list ;
+  constructors : (Parsetree.constructor_name * ('constrs binding_origin)) list;
+  labels : (Parsetree.vname * ('labels binding_origin)) list;
+  types : (Parsetree.vname * ('types binding_origin)) list;
   (** [idents] Contains functions methods and more generally any let-bound
 identifiers. *)
-  values : (Parsetree.vname * ('values binding_origin)) list ;
+  values : (Parsetree.vname * ('values binding_origin)) list;
   (** [species] Contains both species and collections. *)
   species : (Parsetree.vname * ('species binding_origin)) list
-} ;;
+}
+;;
 
 
 
@@ -164,16 +165,16 @@ let env_from_only_absolute_bindings generic_env =
   let filter l =
     List.filter
       (function
-	| (_, (BO_absolute _)) -> true
-	| (_, (BO_opened (_, _))) -> false)
+        | (_, (BO_absolute _)) -> true
+        | (_, (BO_opened (_, _))) -> false)
       l in
   let constructors' = filter generic_env.constructors in
   let labels' = filter generic_env.labels in
   let types' = filter generic_env.types in
   let values' = filter generic_env.values in
   let species' = filter generic_env.species in
-  { constructors = constructors' ; labels = labels' ; types = types' ;
-    values = values' ; species = species' }
+  { constructors = constructors'; labels = labels'; types = types';
+    values = values'; species = species' }
 ;;
 
 
@@ -195,9 +196,9 @@ module ScopeInformation = struct
   (* ********************************************************************* *)
   (* type value_binding_info                                               *)
   (** {b Descr} : Tag each binding in the scopping environment in order to
-	      know if the [ident] is currently bound to a global toplevel
-	      definition inside a file, if it's a method found in the
-	      current species inheritance tree (including itself), if it's
+              know if the [ident] is currently bound to a global toplevel
+              definition inside a file, if it's a method found in the
+              current species inheritance tree (including itself), if it's
               a method found in another species inheritance tree or
               finally if it's a locally bound identifier.
 
@@ -209,23 +210,23 @@ module ScopeInformation = struct
       (** The ident is a method implicitely of self. *)
     | SBI_method_of_self
       (** The ident is a method explicitly of a collection. ATTENTION: while
-	  inserting a method in the environment, it must always be tagged with
-	  [SBI_method_of_self]. The tag [SBI_method_of_coll] can only be
-	  returned by [find_value] who may perform a change on the fly if
-	  required. *)
+          inserting a method in the environment, it must always be tagged with
+          [SBI_method_of_self]. The tag [SBI_method_of_coll] can only be
+          returned by [find_value] who may perform a change on the fly if
+          required. *)
     | SBI_method_of_coll of
-	Parsetree.qualified_vname (** The module name hosting the collection
-				      and the collection the
-	    method belongs to. *)
+        Parsetree.qualified_vname (** The module name hosting the collection
+              and the collection the
+            method belongs to. *)
       (** The ident is a locally bound indentifier
-	  (let or function parameter). *)
+          (let or function parameter). *)
     | SBI_local
 
 
 
   type type_binding_info =
       (** The type identifier is either a type variable name
-	  ('a for instance) or a builtin type (int for instance). *)
+          ('a for instance) or a builtin type (int for instance). *)
     | TBI_builtin_or_var
       (** The identifier is a type name defined at toplevel in a file. *)
     | TBI_defined_in of Types.fname
@@ -236,8 +237,8 @@ module ScopeInformation = struct
       (** The identifier is a specied name defined at toplevel in a file. *)
     | SPBI_file of Types.fname
       (** The identifier is a locally bound collection like in the case of a
-	  "is"-bound parameter (i.e. [c is ...]) where [c] is then considered
-	  as a local collection). *)
+          "is"-bound parameter (i.e. [c is ...]) where [c] is then considered
+          as a local collection). *)
     | SPBI_local
 
 
@@ -248,22 +249,22 @@ module ScopeInformation = struct
 
   type species_binding_info = {
     (** The list of *ALL* the method owned, including those added by
-	inheritance. Methods from the toplevel ancestor are in head of the
-	list. In case of multiple inheritance, we consider that ancestors
-	are older from left to right. *)
-    spbi_methods : Parsetree.vname list ;
+        inheritance. Methods from the toplevel ancestor are in head of the
+        list. In case of multiple inheritance, we consider that ancestors
+        are older from left to right. *)
+    spbi_methods : Parsetree.vname list;
     (** The kind of the species's parameters. The first kind of the list is
-	the kind of the first parameter of the species and so on. This
-	information is required in order to properly scope effective arguments
-	of a species "application". In effect, "in" parameters are first-class
+        the kind of the first parameter of the species and so on. This
+        information is required in order to properly scope effective arguments
+        of a species "application". In effect, "in" parameters are first-class
         expressions and must be scoped this way, although "is" parameters are
         collection names and because they are structurally (in the parsetree)
         encapsulated in a first-class expression, they must be restricted to
         only syntactic sum-type contructors (yep, species names are
-	capitalized then look like a sum type constructor seen from a
-	first-class expression point of view) and looked-up into the species
-	field of the scoping environment. *)
-    spbi_params_kind : species_parameter_kind list ;
+        capitalized then look like a sum type constructor seen from a
+        first-class expression point of view) and looked-up into the species
+        field of the scoping environment. *)
+    spbi_params_kind : species_parameter_kind list;
     (** The information telling how the species is bound (i.e. "scoped"). *)
     spbi_scope : species_scope
   }
@@ -278,7 +279,8 @@ module ScopeInformation = struct
   type env =
     (Types.fname, Types.fname, type_binding_info, value_binding_info,
      species_binding_info) generic_env
-end ;;
+end
+;;
 
 
 
@@ -315,42 +317,42 @@ module TypeInformation = struct
   (* ************************************************************************ *)
   and species_field =
     | SF_sig of
-	((** Where the sig comes from (the most recent in inheritance). *)
-	 Parsetree.qualified_vname *
-	 Parsetree.vname *          (** The sig's name. *)
-	 Types.type_scheme          (** The sig's type scheme. *))
+        ((** Where the sig comes from (the most recent in inheritance). *)
+         Parsetree.qualified_vname *
+         Parsetree.vname *          (** The sig's name. *)
+         Types.type_scheme          (** The sig's type scheme. *))
     | SF_let of
-	((** Where the let-bound comes from (the most recent in inheritance). *)
-	 Parsetree.qualified_vname *
-	 Parsetree.vname *       (** Name of the let-bound definition. *)
-	 (** Parameters of the let-bound definition. *) 
+        ((** Where the let-bound comes from (the most recent in inheritance). *)
+         Parsetree.qualified_vname *
+         Parsetree.vname *       (** Name of the let-bound definition. *)
+         (** Parameters of the let-bound definition. *)
          (Parsetree.vname list) *
-	 Types.type_scheme *     (** Type scheme of the let-bound definition. *)
-	 Parsetree.expr          (** Body of the let-bound definition. *))
+         Types.type_scheme *     (** Type scheme of the let-bound definition. *)
+         Parsetree.expr          (** Body of the let-bound definition. *))
     | SF_let_rec of
-	((** Where the let-rec-bound comes from (the most recent in
-	     inheritance). *)
-	 Parsetree.qualified_vname *
-	 Parsetree.vname * (** Name of the let-rec-bound definition. *)
-	 (** Parameters of the let-rec-bound definition. *) 
+        ((** Where the let-rec-bound comes from (the most recent in
+             inheritance). *)
+         Parsetree.qualified_vname *
+         Parsetree.vname * (** Name of the let-rec-bound definition. *)
+         (** Parameters of the let-rec-bound definition. *)
          (Parsetree.vname list) *
-	 Types.type_scheme *
-	 Parsetree.expr) list  (** The list of information similar to what
-				     can be found for a [SF_let], but for each
-				     mutually recursive bound identifier. *)
+         Types.type_scheme *
+         Parsetree.expr) list  (** The list of information similar to what
+             can be found for a [SF_let], but for each
+             mutually recursive bound identifier. *)
     | SF_theorem of
-	((** Where the theorem comes from (the most recent in inheritance). *)
-	 Parsetree.qualified_vname *
-	 Parsetree.vname *      (** The theorem's name. *)
-	 Types.type_scheme *    (** The theorem's type scheme. *)
-	 Parsetree.prop *       (** The theorem's body. *)
-	 Parsetree.proof        (** The theorem's proof. *))
+        ((** Where the theorem comes from (the most recent in inheritance). *)
+         Parsetree.qualified_vname *
+         Parsetree.vname *      (** The theorem's name. *)
+         Types.type_scheme *    (** The theorem's type scheme. *)
+         Parsetree.prop *       (** The theorem's body. *)
+         Parsetree.proof        (** The theorem's proof. *))
     | SF_property of
-	((** Where the property comes from (the most recent in inheritance). *)
-	 Parsetree.qualified_vname *
-	 Parsetree.vname *       (** The property's name. *)
-	 Types.type_scheme *     (** The property's type scheme. *)
-	 Parsetree.prop          (** The property's body. *))
+        ((** Where the property comes from (the most recent in inheritance). *)
+         Parsetree.qualified_vname *
+         Parsetree.vname *       (** The property's name. *)
+         Types.type_scheme *     (** The property's type scheme. *)
+         Parsetree.prop          (** The property's body. *))
 
 
 
@@ -363,12 +365,12 @@ module TypeInformation = struct
       {b Rem} : Exported outside this module.                             *)
   (* ******************************************************************** *)
   type species_description = {
-    spe_is_collection : bool ;  (** Whether the species is a collection. *)
-    spe_is_closed : bool ;   (** Whether the species is fully defined, even if
-				 not turned into a collection. This information
-				 will be useful to known when collection
-				 generators must be created. *)
-    spe_sig_params : species_param list ;   (** Species parameters. *)
+    spe_is_collection : bool;  (** Whether the species is a collection. *)
+    spe_is_closed : bool;   (** Whether the species is fully defined, even if
+         not turned into a collection. This information
+         will be useful to known when collection
+         generators must be created. *)
+    spe_sig_params : species_param list;   (** Species parameters. *)
     (** Method's name, type and body if defined. *)
     spe_sig_methods : species_field list
     }
@@ -407,7 +409,7 @@ module TypeInformation = struct
   (* ********************************************************************* *)
   type constructor_description = {
     (** Arity : 0 or 1 (many = 1 type tuple), (1 = type, not a 1 tuple). *)
-    cstr_arity : constructor_arity ;
+    cstr_arity : constructor_arity;
     (** Full type scheme for this constructor, i.e (args ->) ty result. *)
     cstr_scheme : Types.type_scheme
   }
@@ -427,7 +429,7 @@ module TypeInformation = struct
 
 
   type label_description = {
-    field_mut : field_mutability ;    (** Mutability for this field. *)
+    field_mut : field_mutability;    (** Mutability for this field. *)
     (** Full type scheme for this field, i.e arg -> ty result. *)
     field_scheme : Types.type_scheme
   }
@@ -437,27 +439,27 @@ module TypeInformation = struct
   type type_kind =
     | TK_abstract  (** Abstract types and type abbreviations. *)
     | TK_variant of    (** Sum types. *)
-	(Parsetree.constructor_name * constructor_arity *
-	 Types.type_scheme) list
+        (Parsetree.constructor_name * constructor_arity *
+         Types.type_scheme) list
     | TK_record of  (** Record types: list of labels. Any value of a type
-			record will be typed as a [ST_construct] whose name is
-			the name of the record type. *)
-	(Parsetree.vname * field_mutability * Types.type_scheme) list
+        record will be typed as a [ST_construct] whose name is
+        the name of the record type. *)
+        (Parsetree.vname * field_mutability * Types.type_scheme) list
 
 
 
   type type_description = {
-    type_kind : type_kind ;             (** Kind of the type definition. *)
+    type_kind : type_kind;             (** Kind of the type definition. *)
     (** The type scheme representing to what this type is equal to. For
         instance in type 'a t = 'a list, t is TK_abstract with [type_identity]
         representing 'a list.
         If the type is a pure abstract like in type t, then t is TK_abstract
         with [type_identity] representing the type ST_construct ("t", []). *)
-    type_identity : Types.type_scheme ;
+    type_identity : Types.type_scheme;
     (** Parameters of the type. Be careful, they are generalized at the same
-	that the above scheme [type_identity] is created. Hence, physical
-	sharing exists and is crucial ! *)
-    type_params : Types.type_simple list ;
+        that the above scheme [type_identity] is created. Hence, physical
+        sharing exists and is crucial ! *)
+    type_params : Types.type_simple list;
     type_arity : int          (** Number of parameters of the type. *)
   }
 
@@ -478,19 +480,19 @@ module TypeInformation = struct
     let rec rec_print local_ppf = function
       | [] -> ()
       | param :: rem ->
-	  (begin
-	  let (p_kind_string, vname) =
-	    (match param with
-	     | SPAR_in (a, _) -> ("in", a)
-	     | SPAR_is (a, _) -> ("is", a)) in
-	  Format.fprintf local_ppf "%a %s ..."
-	    Sourcify.pp_vname vname p_kind_string  ;
-	  if rem <> [] then
-	    (begin
-	    Format.fprintf local_ppf ",@ " ;
-	    rec_print local_ppf rem
-	    end)
-	  end) in
+          (begin
+          let (p_kind_string, vname) =
+            (match param with
+             | SPAR_in (a, _) -> ("in", a)
+             | SPAR_is (a, _) -> ("is", a)) in
+          Format.fprintf local_ppf "%a %s ..."
+            Sourcify.pp_vname vname p_kind_string;
+          if rem <> [] then
+            (begin
+            Format.fprintf local_ppf ",@ ";
+            rec_print local_ppf rem
+            end)
+          end) in
     if params = [] then ()
     else Format.fprintf ppf " (@[<1>%a@]) " rec_print params
 
@@ -505,44 +507,44 @@ module TypeInformation = struct
   let pp_species_methods ppf methods =
     List.iter
       (function
-	| SF_sig (from, vname, ty_scheme) ->
-	    Format.fprintf ppf "(* From species %a. *)@\n"
-	      Sourcify.pp_qualified_vname from ;
-	    Format.fprintf ppf "sig %a : %a@\n"
-	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
-	| SF_let (from, vname, _, ty_scheme, _) ->
-	    Format.fprintf ppf "(* From species %a. *)@\n"
-	      Sourcify.pp_qualified_vname from ;
-	    Format.fprintf ppf "let %a : %a@\n"
-	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
-	| SF_let_rec rec_bounds ->
-	    (begin
-	    match rec_bounds with
-	     | [] -> assert false  (* Empty let rec is non sense ! *)
-	     | (from, vname, _, ty_scheme, _) :: rem ->
-		 Format.fprintf ppf "(* From species %a. *)@\n"
-		   Sourcify.pp_qualified_vname from ;
-		 Format.fprintf ppf "let rec %a : %a@\n"
-		   Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme ;
-		 List.iter
-		   (fun (local_from, v, _, s, _) ->
-		     Format.fprintf ppf
-		       "(* From species %a. *)@\n"
-		       Sourcify.pp_qualified_vname local_from ;
-		     Format.fprintf ppf "and %a : %a@\n"
-		       Sourcify.pp_vname v Types.pp_type_scheme s)
-		   rem
-	    end)
-	| SF_theorem (from, vname, ty_scheme, _, _) ->
-	    Format.fprintf ppf "(* From species %a. *)@\n"
-	      Sourcify.pp_qualified_vname from ;
-	    Format.fprintf ppf "theorem %a : %a@\n"
-	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
-	| SF_property (from, vname, ty_scheme, _) ->
-	    Format.fprintf ppf "(* From species %a. *)@\n"
-	      Sourcify.pp_qualified_vname from ;
-	    Format.fprintf ppf "property %a : %a@\n"
-	      Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme)
+        | SF_sig (from, vname, ty_scheme) ->
+            Format.fprintf ppf "(* From species %a. *)@\n"
+              Sourcify.pp_qualified_vname from;
+            Format.fprintf ppf "sig %a : %a@\n"
+              Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
+        | SF_let (from, vname, _, ty_scheme, _) ->
+            Format.fprintf ppf "(* From species %a. *)@\n"
+              Sourcify.pp_qualified_vname from;
+            Format.fprintf ppf "let %a : %a@\n"
+              Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
+        | SF_let_rec rec_bounds ->
+            (begin
+            match rec_bounds with
+             | [] -> assert false  (* Empty let rec is non sense ! *)
+             | (from, vname, _, ty_scheme, _) :: rem ->
+         Format.fprintf ppf "(* From species %a. *)@\n"
+           Sourcify.pp_qualified_vname from;
+         Format.fprintf ppf "let rec %a : %a@\n"
+           Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme;
+         List.iter
+           (fun (local_from, v, _, s, _) ->
+             Format.fprintf ppf
+               "(* From species %a. *)@\n"
+               Sourcify.pp_qualified_vname local_from;
+             Format.fprintf ppf "and %a : %a@\n"
+               Sourcify.pp_vname v Types.pp_type_scheme s)
+           rem
+            end)
+        | SF_theorem (from, vname, ty_scheme, _, _) ->
+            Format.fprintf ppf "(* From species %a. *)@\n"
+              Sourcify.pp_qualified_vname from;
+            Format.fprintf ppf "theorem %a : %a@\n"
+              Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
+        | SF_property (from, vname, ty_scheme, _) ->
+            Format.fprintf ppf "(* From species %a. *)@\n"
+              Sourcify.pp_qualified_vname from;
+            Format.fprintf ppf "property %a : %a@\n"
+              Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme)
       methods
 
 
@@ -557,7 +559,8 @@ module TypeInformation = struct
     Format.fprintf ppf "%a =@\n%aend"
       pp_species_param sp_desc.spe_sig_params
       pp_species_methods sp_desc.spe_sig_methods
-end ;;
+end
+;;
 
 
 
@@ -570,25 +573,25 @@ end ;;
 module MlGenInformation = struct
   type collection_generator_info = {
     (** The list of species parameters names and kinds the species whose
-	collection generator belongs to has. This list is positionnal, i.e.
-	that the first name of the list is the name of the first species
-	parameter and so on. *)
+        collection generator belongs to has. This list is positionnal, i.e.
+        that the first name of the list is the name of the first species
+        parameter and so on. *)
     cgi_implemented_species_params_names :
-      (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
+      (Parsetree.vname * ScopeInformation.species_parameter_kind) list;
     (** The list mapping for each parameter name, the set of methods the
-	collection generator depends on, hence must be provided an instance
-	to be used. Note that the list is not guaranted to be ordered
-	according to the order of the species parameters names (that's why
-	we have the information about this order given in
-	[species_binding_info]). *)
+        collection generator depends on, hence must be provided an instance
+        to be used. Note that the list is not guaranted to be ordered
+        according to the order of the species parameters names (that's why
+        we have the information about this order given in
+        [species_binding_info]). *)
     cgi_generator_parameters :
       (Parsetree.vname * Parsetree_utils.VnameSet.t) list
   }
 
   type species_binding_info =
     (** Optionnal because species that are non fully defined do not have
-	any collection generator although they are entered in the
-	environment. *)
+        any collection generator although they are entered in the
+        environment. *)
     collection_generator_info option
 
 
@@ -600,7 +603,8 @@ module MlGenInformation = struct
   (* ************************************************************** *)
   type env =
     (unit, unit, unit, unit, species_binding_info) generic_env
-end ;;
+end
+;;
 
 
 
@@ -609,10 +613,11 @@ end ;;
 (* *********************************************************************** *)
 
 type fo_file_structure = {
-  ffs_scoping : ScopeInformation.env ;
-  ffs_typing : TypeInformation.env ;
+  ffs_scoping : ScopeInformation.env;
+  ffs_typing : TypeInformation.env;
   ffs_mlgeneration : MlGenInformation.env
-} ;;
+}
+;;
 
 
 
@@ -633,7 +638,7 @@ let (scope_find_module, type_find_module, mlgen_find_module,
   (** {b Descr} : Wrapper to lookup inside an external interface file.
                 The lookup also performs a bufferisation to prevent
                 futher calls from accessing again the disk. This
-	        should enhance lookup speed.
+                should enhance lookup speed.
 
       {b Rem} : Not exported outside this module.                      *)
   (* ***************************************************************** *)
@@ -644,24 +649,24 @@ let (scope_find_module, type_find_module, mlgen_find_module,
       (* The interface was not already loaded... *)
       let fo_name = Files.fo_basename_from_module_name fname in
       try
-	(* Try to open the interface file. *)
-	let in_file = Files.open_in_from_lib_paths fo_name in
-	(* Just ensure it's really an interface file. *)
-	if Files.check_magic in_file Files.fo_magic then
-	  (begin
-	  let envts = input_value in_file in
-	  close_in in_file ;
-	  (* If the interface was found, buferize it for further uses. *)
-	  buffered := (fname, envts) :: !buffered ;
-	  envts
-	  end)
-	else
-	  (begin
-	  close_in in_file ;
-	  raise (Files.Corrupted_fo fname)
-	  end)
+        (* Try to open the interface file. *)
+        let in_file = Files.open_in_from_lib_paths fo_name in
+        (* Just ensure it's really an interface file. *)
+        if Files.check_magic in_file Files.fo_magic then
+          (begin
+          let envts = input_value in_file in
+          close_in in_file;
+          (* If the interface was found, buferize it for further uses. *)
+          buffered := (fname, envts) :: !buffered;
+          envts
+          end)
+        else
+          (begin
+          close_in in_file;
+          raise (Files.Corrupted_fo fname)
+          end)
       with Files.Cant_access_file_in_search_path _ ->
-	raise (Unbound_module (fname, loc))
+        raise (Unbound_module (fname, loc))
     end) in
 
 
@@ -689,19 +694,19 @@ let (scope_find_module, type_find_module, mlgen_find_module,
     (* loaded environments should never contain [BO_opened] taggged bindings. *)
     let absolute_to_opened l =
       List.map
-	(function
-	  | (name, (BO_absolute data)) ->
-	      (name, ((BO_opened (from_fname, data))))
-	  | (_, (BO_opened (_, _))) -> assert false)
-	l in
+        (function
+          | (name, (BO_absolute data)) ->
+              (name, ((BO_opened (from_fname, data))))
+          | (_, (BO_opened (_, _))) -> assert false)
+        l in
     let constructors' =
       (absolute_to_opened loaded_env.constructors) @ env.constructors in
     let labels' = (absolute_to_opened loaded_env.labels) @ env.labels in
     let types' = (absolute_to_opened loaded_env.types) @ env.types in
     let values' = (absolute_to_opened loaded_env.values) @ env.values in
     let species' = (absolute_to_opened loaded_env.species) @ env.species in
-    { constructors = constructors' ; labels = labels' ; types = types' ;
-      values = values' ; species = species' } in
+    { constructors = constructors'; labels = labels'; types = types';
+      values = values'; species = species' } in
 
 
 
@@ -723,8 +728,8 @@ let (scope_find_module, type_find_module, mlgen_find_module,
     match fname_opt with
      | None -> scope_env
      | Some fname ->
-	 if current_unit = fname then scope_env
-	 else (internal_find_module ~loc fname).ffs_scoping),
+         if current_unit = fname then scope_env
+         else (internal_find_module ~loc fname).ffs_scoping),
 
 
 
@@ -746,8 +751,8 @@ let (scope_find_module, type_find_module, mlgen_find_module,
      match fname_opt with
       | None -> type_env
       | Some fname ->
-	  if current_unit = fname then type_env
-	  else (internal_find_module ~loc fname).ffs_typing),
+          if current_unit = fname then type_env
+          else (internal_find_module ~loc fname).ffs_typing),
 
 
 
@@ -769,8 +774,8 @@ let (scope_find_module, type_find_module, mlgen_find_module,
      match fname_opt with
       | None -> type_env
       | Some fname ->
-	  if current_unit = fname then type_env
-	  else (internal_find_module ~loc fname).ffs_mlgeneration),
+          if current_unit = fname then type_env
+          else (internal_find_module ~loc fname).ffs_mlgeneration),
 
 
 
@@ -891,7 +896,7 @@ let allow_opened_p current_unit = function
 (* *********************************************************************** *)
 (** {b Descr} : Type of modules used to encapsulate the function allowing
               to access the environment related to a FoCaL "module" via
-	      the persistent data located on the disk.
+              the persistent data located on the disk.
               This kind of module will be used as argument of the functor
               [Make] below in order to generate the environment access
               functions without having to add to them extra parameters
@@ -946,10 +951,11 @@ module type EnvModuleAccessSig = sig
     Parsetree.qualified_vname -> species_bound_data ->
       (constructor_bound_data, label_bound_data, type_bound_data,
        value_bound_data, species_bound_data)
-	generic_env
+        generic_env
   val post_process_method_value_binding :
     Parsetree.qualified_vname -> value_bound_data -> value_bound_data
-end ;;
+end
+;;
 
 
 
@@ -960,9 +966,9 @@ end ;;
               "modules" persistent data on disk.
 
     {b Rem} : Not exported outside this module.
-	      This functor is fully local to this file, it will be
-	      internally be used to create the various environment
-	      structures (scoping, typing) we need.                      *)
+              This functor is fully local to this file, it will be
+              internally be used to create the various environment
+              structures (scoping, typing) we need.                      *)
 (* ********************************************************************* *)
 module Make(EMAccess : EnvModuleAccessSig) = struct
   (* ************************************************ *)
@@ -978,12 +984,12 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (* ***************************************************** *)
   (* unit -> t                                             *)
   (** {b Descr} : Creates a fresh TOTALY empty environment
-		(no even pervasive stuff inside).
+        (no even pervasive stuff inside).
 
       {b Rem} : Exported outside this module.              *)
   (* ***************************************************** *)
   let empty () =
-    ({ constructors = [] ; labels = [] ; types = [] ; values = [] ;
+    ({ constructors = []; labels = []; types = []; values = [];
       species = [] } : t)
 
 
@@ -1005,13 +1011,15 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
     (* current module. This means that this name must not be  *)
     (* already bound to a [BO_absolute].                      *)
     if List.exists
-	(function (n, (BO_absolute _)) -> n = species_name | _ -> false)
-	env.species then
-      raise (Rebound_species (species_name, loc)) ;
+        (function (n, (BO_absolute _)) -> n = species_name | _ -> false)
+        env.species then
+      raise (Rebound_species (species_name, loc));
     ({ env with
        species = (species_name, BO_absolute data) :: env.species } : t)
 
-
+  let opt_scope_vname = function
+  | Parsetree.Vname vname -> None, vname
+  | Parsetree.Qualified (modname, vname) -> Some modname, vname
 
   (* loc: Location.t -> current_unit: Types.fname -> Parsetree.ident -> *)
   (*    t -> EMAccess.species_bound_data                                *)
@@ -1020,13 +1028,14 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
      | Parsetree.I_local vname ->
          (* No explicit scoping information was provided, hence *)
          (* opened modules bindings are acceptable.             *)
-	 find_species_vname ~loc ~allow_opened: true vname env
-     | Parsetree.I_global (opt_scope, vname) ->
-	 let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
-	 (* Check if the lookup can return something *)
-	 (* coming from an opened module.            *)
-	 let allow_opened = allow_opened_p current_unit opt_scope in
-	 find_species_vname ~loc ~allow_opened vname env'
+         find_species_vname ~loc ~allow_opened: true vname env
+     | Parsetree.I_global qvname ->
+         let opt_scope, vname = opt_scope_vname qvname in
+         let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
+         (* Check if the lookup can return something *)
+         (* coming from an opened module.            *)
+         let allow_opened = allow_opened_p current_unit opt_scope in
+         find_species_vname ~loc ~allow_opened vname env'
 
 
   (* loc: Location.t -> allow_opened: bool -> Parsetree.vname -> *)
@@ -1062,66 +1071,63 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
      | Parsetree.EI_local vname ->
          (* No explicit scoping information was provided, hence *)
          (* opened modules bindings are acceptable.             *)
-	 find_value_vname ~loc ~allow_opened: true vname env
-     | Parsetree.EI_global (opt_scope, vname) ->
-	 let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
-	 (* Check if the lookup can return something *)
-	 (* coming from an opened module.            *)
-	 let allow_opened = allow_opened_p current_unit opt_scope in
-	 find_value_vname ~loc ~allow_opened vname env'
-     | Parsetree.EI_method (coll_specifier_opt, vname) ->
-	 (begin
-	 match coll_specifier_opt with
-	  | None ->
-	      (* No collection scope. Then the searched ident must belong  *)
-	      (* to the inheritance of Self. First, this means that opened *)
-	      (* stuff is forbidden. Next, because the [values] bucket is  *)
-	      (* so that inherited methods and our methods belong to it,   *)
-              (* we just have to search for the [vname] inside the current *)
-              (* environment.                                              *)
-	      find_value_vname ~loc ~allow_opened: false vname env
-	  | Some coll_specifier ->
-	      (begin
-	      match coll_specifier with
-	       | (None, (Parsetree.Vuident "Self")) ->
-		   (* Like if there was no collection scope (see above). *)
-		   find_value_vname ~loc ~allow_opened: false vname env
-	       | (opt_module_qual, coll_vname) ->
-		   (begin
-		   (* Recover the environment in where to search,according *)
-		   (* to if the species is qualified by a module name.     *)
-		   let env' =
-		     EMAccess.find_module
-		       ~loc ~current_unit opt_module_qual env in
-		   (* Check if the lookup can return something *)
-		   (* coming from an opened module.            *)
-		   let allow_opened =
-		     allow_opened_p current_unit opt_module_qual in
-		   (* Build the complete species name, including its hosting *)
-		   (* module. If none specified, then this module is the     *)
-		   (* current one because this means that the species name   *)
-		   (* implicitely refers to the current compilation unit.    *)
-		   let full_coll_name =
-		     (match opt_module_qual with
-		      | None -> (current_unit, coll_vname)
-		      | Some module_qual -> (module_qual, coll_vname)) in
-		   (* We must first look inside collections and species     *)
-		   (* for the [coll_vname] in order to recover its methods. *)
-		   let available_meths =
-		     (EMAccess.make_value_env_from_species_methods
-			full_coll_name
-			(find_species_vname
-			   ~loc ~allow_opened  coll_vname env')) in
-		   let data =
-		     find_value_vname
-		       ~loc ~allow_opened vname available_meths in
-		   (* Now we apply the post-processing on the found data. *)
-		   EMAccess.post_process_method_value_binding
-		     full_coll_name data
-		   end)
-	      end)
-	 end)
-
+         find_value_vname ~loc ~allow_opened: true vname env
+     | Parsetree.EI_global qvname ->
+         let (opt_scope, vname) = opt_scope_vname qvname in
+         let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
+         (* Check if the lookup can return something *)
+         (* coming from an opened module.            *)
+         let allow_opened = allow_opened_p current_unit opt_scope in
+         find_value_vname ~loc ~allow_opened vname env'
+     | Parsetree.EI_method (None, vname) ->
+         (* No collection scope. Then the searched ident must belong  *)
+         (* to the inheritance of Self. First, this means that opened *)
+         (* stuff is forbidden. Next, because the [values] bucket is  *)
+         (* so that inherited methods and our methods belong to it,   *)
+         (* we just have to search for the [vname] inside the current *)
+         (* environment.                                              *)
+         find_value_vname ~loc ~allow_opened: false vname env
+     | Parsetree.EI_method
+         (Some (Parsetree.Vname (Parsetree.Vuident "Self")), vname) ->
+         (* Like if there was no collection scope (see above). *)
+         find_value_vname ~loc ~allow_opened: false vname env
+     | Parsetree.EI_method (Some coll_specifier, vname) ->
+         let (opt_module_qual, coll_vname) =
+           match coll_specifier with
+           | Parsetree.Vname coll_vname ->
+             None, coll_vname
+           | Parsetree.Qualified (modname, coll_vname) ->
+             Some modname, coll_vname in
+         (* Recover the environment in where to search,according *)
+         (* to if the species is qualified by a module name.     *)
+         let env' =
+           EMAccess.find_module
+             ~loc ~current_unit opt_module_qual env in
+         (* Check if the lookup can return something *)
+         (* coming from an opened module.            *)
+         let allow_opened =
+           allow_opened_p current_unit opt_module_qual in
+         (* Build the complete species name, including its hosting *)
+         (* module. If none specified, then this module is the     *)
+         (* current one because this means that the species name   *)
+         (* implicitely refers to the current compilation unit.    *)
+         let full_coll_name =
+           (match opt_module_qual with
+            | None -> Parsetree.Qualified (current_unit, coll_vname)
+            | Some module_qual -> Parsetree.Qualified (module_qual, coll_vname)) in
+         (* We must first look inside collections and species     *)
+         (* for the [coll_vname] in order to recover its methods. *)
+         let available_meths =
+           (EMAccess.make_value_env_from_species_methods
+              full_coll_name
+              (find_species_vname
+                 ~loc ~allow_opened  coll_vname env')) in
+         let data =
+           find_value_vname
+             ~loc ~allow_opened vname available_meths in
+         (* Now we apply the post-processing on the found data. *)
+         EMAccess.post_process_method_value_binding
+           full_coll_name data
 
 
   (* ****************************************************************** *)
@@ -1157,18 +1163,19 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (* current_unit: loc: Location.t -> Types.fname ->                       *)
   (*   Parsetree.constructor_ident -> t -> EMAccess.constructor_bound_data *)
   (** {b Descr} : Looks-up for a [constructorident] inside the constructors
-		environment.
+        environment.
 
       {b Rem} : Exported outside this module.                              *)
   (* ********************************************************************* *)
   let rec find_constructor ~loc ~current_unit cstr_ident (env : t) =
     match cstr_ident.Parsetree.ast_desc with
-     | Parsetree.CI (opt_scope, vname) ->
-	 let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
-	 (* Check if the lookup can return something *)
-	 (* coming from an opened module.            *)
-	 let allow_opened = allow_opened_p current_unit opt_scope in
-	 find_constructor_vname ~loc ~allow_opened vname env'
+     | Parsetree.CI qvname ->
+         let (opt_scope, vname) = opt_scope_vname qvname in
+         let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
+         (* Check if the lookup can return something *)
+         (* coming from an opened module.            *)
+         let allow_opened = allow_opened_p current_unit opt_scope in
+         find_constructor_vname ~loc ~allow_opened vname env'
 
 
 
@@ -1205,18 +1212,19 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (* loc: Location.t -> Parsetree.label_ident -> t ->              *)
   (*   EMAccess.label_bound_data                                   *)
   (** {b Descr} : Looks-up for an [ident] inside the record fields
-		labels environment.
+        labels environment.
 
       {b Rem} : Exported outside this module.                      *)
   (* ************************************************************* *)
   let rec find_label ~loc ~current_unit lbl_ident (env : t) =
     match lbl_ident.Parsetree.ast_desc with
-     | Parsetree.LI (opt_scope, vname) ->
-	 let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
-	 (* Check if the lookup can return something *)
-	 (* coming from an opened module.            *)
-	 let allow_opened = allow_opened_p current_unit opt_scope in
-	 find_label_vname ~loc ~allow_opened vname env'
+     | Parsetree.LI qvname ->
+         let (opt_scope, vname) = opt_scope_vname qvname in
+         let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
+         (* Check if the lookup can return something *)
+         (* coming from an opened module.            *)
+         let allow_opened = allow_opened_p current_unit opt_scope in
+         find_label_vname ~loc ~allow_opened vname env'
 
 
 
@@ -1248,9 +1256,9 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
     (* current module. This means that this name must not  *)
     (* be already bound to a [BO_absolute].                *)
     if List.exists
-	(function (n, (BO_absolute _)) -> n = tyname | _ -> false)
-	env.types then
-      raise (Rebound_type (tyname, loc)) ;
+        (function (n, (BO_absolute _)) -> n = tyname | _ -> false)
+        env.types then
+      raise (Rebound_type (tyname, loc));
     ({ env with types = (tyname, BO_absolute data) :: env.types } : t)
 
 
@@ -1267,13 +1275,14 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
      | Parsetree.I_local vname ->
          (* No explicit scoping information was provided, hence *)
          (* opened modules bindings are acceptable.             *)
-	 find_type_vname ~loc ~allow_opened: true vname env
-     | Parsetree.I_global (opt_scope, vname) ->
-	 let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
-	 (* Check if the lookup can return something *)
-	 (* coming from an opened module.            *)
-	 let allow_opened = allow_opened_p current_unit opt_scope in
-	 find_type_vname ~loc ~allow_opened vname env'
+         find_type_vname ~loc ~allow_opened: true vname env
+     | Parsetree.I_global qvname ->
+         let (opt_scope, vname) = opt_scope_vname qvname in
+         let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
+         (* Check if the lookup can return something *)
+         (* coming from an opened module.            *)
+         let allow_opened = allow_opened_p current_unit opt_scope in
+         find_type_vname ~loc ~allow_opened vname env'
 
 
 
@@ -1287,7 +1296,8 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   and find_type_vname ~loc ~allow_opened vname (env : t) =
     try env_list_assoc ~allow_opened vname env.types with
     | Not_found -> raise (Unbound_type (vname, loc))
-end ;;
+end
+;;
 
 
 
@@ -1301,27 +1311,27 @@ module ScopingEMAccess = struct
   let find_module = scope_find_module
   let pervasives () =
     { constructors = [
-        (Parsetree.Vlident "[]", BO_opened ("basics", "basics")) ;
+        (Parsetree.Vlident "[]", BO_opened ("basics", "basics"));
         (Parsetree.Viident "::", BO_opened ("basics", "basics"))
-        ] ;
-      labels = [] ;
+        ];
+      labels = [];
       types = [
         ((Parsetree.Vlident "list"),
-	 BO_opened
-	   ("", ScopeInformation.TBI_builtin_or_var))
-        ] ;
-      values = [] ;
+         BO_opened
+           ("", ScopeInformation.TBI_builtin_or_var))
+        ];
+      values = [];
       species = [] }
 
 
   let make_value_env_from_species_methods species spec_info =
     let values_bucket =
       List.map
-	(fun meth_vname ->
-	  (meth_vname,
-	   BO_absolute (ScopeInformation.SBI_method_of_coll species)))
-	spec_info.ScopeInformation.spbi_methods in
-    { constructors = [] ; labels = [] ; types = [] ; values = values_bucket ;
+        (fun meth_vname ->
+          (meth_vname,
+           BO_absolute (ScopeInformation.SBI_method_of_coll species)))
+        spec_info.ScopeInformation.spbi_methods in
+    { constructors = []; labels = []; types = []; values = values_bucket;
       species = [] }
 
 
@@ -1347,10 +1357,11 @@ module ScopingEMAccess = struct
   (* ************************************************************************ *)
   let post_process_method_value_binding coll_name = function
     | ScopeInformation.SBI_method_of_self ->
-	ScopeInformation.SBI_method_of_coll coll_name
+        ScopeInformation.SBI_method_of_coll coll_name
     | whatever -> whatever
-end ;;
-module ScopingEnv = Make (ScopingEMAccess) ;;
+end
+;;
+module ScopingEnv = Make (ScopingEMAccess);;
 
 
 
@@ -1364,8 +1375,8 @@ module TypingEMAccess = struct
   (* ************************************************************ *)
   (* make_pervasives : unit -> TypeInformation.env                *)
   (** {b Descr} : Creates a fresh environment containing the type
-		information of the basic built-in primitives,
-		types and constructors.
+        information of the basic built-in primitives,
+        types and constructors.
 
       {b Rem} : Exported outside this module.                     *)
   (* ************************************************************ *)
@@ -1378,9 +1389,9 @@ module TypingEMAccess = struct
     let cons_scheme =
       (let v = Types.type_variable () in
       Types.generalize
-	(Types.type_arrow
-	   (Types.type_tuple [v; (Types.type_list v)])
-	   (Types.type_list v))) in
+        (Types.type_arrow
+           (Types.type_tuple [v; (Types.type_list v)])
+           (Types.type_list v))) in
     (* Create the description of the type list. *)
     let (list_identity, list_params) =
       (let v = Types.type_variable () in
@@ -1388,28 +1399,28 @@ module TypingEMAccess = struct
     let list_type_description = {
       TypeInformation.type_kind =
         TypeInformation.TK_variant [
-          (Parsetree.Vlident "[]", TypeInformation.CA_zero, nil_scheme) ;
-          (Parsetree.Viident "::", TypeInformation.CA_one, cons_scheme) ] ;
-      TypeInformation.type_identity = list_identity ;
-      TypeInformation.type_params = list_params ;
+          (Parsetree.Vlident "[]", TypeInformation.CA_zero, nil_scheme);
+          (Parsetree.Viident "::", TypeInformation.CA_one, cons_scheme) ];
+      TypeInformation.type_identity = list_identity;
+      TypeInformation.type_params = list_params;
       TypeInformation.type_arity = 1 } in
     (* And now the structure of the environment itself. *)
     {
      constructors = [
        (Parsetree.Vlident "[]",
-	BO_opened
-	  ("basics", { TypeInformation.cstr_arity = TypeInformation.CA_zero ;
-		       TypeInformation.cstr_scheme = nil_scheme })) ;
-	(Parsetree.Viident "::",
-	 BO_opened
-	   ("basics", { TypeInformation.cstr_arity = TypeInformation.CA_one ;
-			TypeInformation.cstr_scheme = cons_scheme }))
-	] ;
-     labels = [] ;
+        BO_opened
+          ("basics", { TypeInformation.cstr_arity = TypeInformation.CA_zero;
+               TypeInformation.cstr_scheme = nil_scheme }));
+        (Parsetree.Viident "::",
+         BO_opened
+           ("basics", { TypeInformation.cstr_arity = TypeInformation.CA_one;
+        TypeInformation.cstr_scheme = cons_scheme }))
+        ];
+     labels = [];
      types = [
        ((Parsetree.Vlident "list"), BO_opened ("basics", list_type_description))
-      ] ;
-    values = [] ;
+      ];
+    values = [];
     species = [] }
 
 
@@ -1429,28 +1440,29 @@ module TypingEMAccess = struct
     (* first, hence are deeper in the environment.                         *)
     let values_bucket =
       List.fold_left
-	(fun accu field ->
-	  match field with
-	   | TypeInformation.SF_sig (_, v, s)
-	   | TypeInformation.SF_let (_, v, _, s, _)
-	   | TypeInformation.SF_theorem (_, v, s, _, _)
-	   | TypeInformation.SF_property (_, v, s, _) ->
-	       [(v, (BO_absolute s))] @ accu
-	   | TypeInformation.SF_let_rec l ->
-	       let l' = List.map (fun (_, v, _, s, _) ->
-		 (v, (BO_absolute s))) l in
-	       l' @ accu)
-	[]
-	spec_info.TypeInformation.spe_sig_methods in
-    { constructors = [] ; labels = [] ; types = [] ; values = values_bucket ;
+        (fun accu field ->
+          match field with
+           | TypeInformation.SF_sig (_, v, s)
+           | TypeInformation.SF_let (_, v, _, s, _)
+           | TypeInformation.SF_theorem (_, v, s, _, _)
+           | TypeInformation.SF_property (_, v, s, _) ->
+               [(v, (BO_absolute s))] @ accu
+           | TypeInformation.SF_let_rec l ->
+               let l' = List.map (fun (_, v, _, s, _) ->
+         (v, (BO_absolute s))) l in
+               l' @ accu)
+        []
+        spec_info.TypeInformation.spe_sig_methods in
+    { constructors = []; labels = []; types = []; values = values_bucket;
       species = [] }
 
 
 
   (* No real need in the typing environment case. *)
   let post_process_method_value_binding _collname data = data
-end ;;
-module TypingEnv = Make (TypingEMAccess) ;;
+end
+;;
+module TypingEnv = Make (TypingEMAccess);;
 
 
 
@@ -1463,7 +1475,7 @@ module MlGenEMAccess = struct
 
   let find_module = mlgen_find_module
   let pervasives () =
-    { constructors = [] ; labels = [] ; types = [] ; values = [] ;
+    { constructors = []; labels = []; types = []; values = [];
       species = [] }
 
 
@@ -1473,8 +1485,9 @@ module MlGenEMAccess = struct
 
   (* No real need in the ml code generation environment case. *)
   let post_process_method_value_binding _collname data = data
-end ;;
-module MlGenEnv = Make (MlGenEMAccess) ;;
+end
+;;
+module MlGenEnv = Make (MlGenEMAccess);;
 
 
 
@@ -1512,10 +1525,10 @@ let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
     Filename.concat (Filename.dirname source_filename) fo_basename in
   let out_hd = open_out_bin with_path in
   (* First, write the magic number of the file. *)
-  Files.write_magic out_hd Files.fo_magic  ;
+  Files.write_magic out_hd Files.fo_magic;
   (* And now the filtered environments. *)
   output_value
-    out_hd (scoping_toplevel_env', typing_toplevel_env', mlgen_toplevel_env') ;
+    out_hd (scoping_toplevel_env', typing_toplevel_env', mlgen_toplevel_env');
   (* Just don't forget to close the output file... *)
   close_out out_hd
 ;;
