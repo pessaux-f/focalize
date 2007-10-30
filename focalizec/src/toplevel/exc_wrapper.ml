@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.26 2007-10-29 15:48:12 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.27 2007-10-30 13:27:59 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -186,9 +186,10 @@ try Check_file.main () with
 	   Handy.pp_set_underlined Sourcify.pp_constructor_ident ident
 	   Handy.pp_reset_effects
 	   Handy.pp_set_bold expected used Handy.pp_reset_effects
-     | Infer.Unbound_type_variable var_name ->
+     | Infer.Unbound_type_variable (at, var_name) ->
 	 Format.fprintf Format.err_formatter
-	   "@[%tUnbound@ type@ variable%t@ %t%s%t.@]@."
+	   "%a:@\n@[%tUnbound@ type@ variable%t@ %t%s%t.@]@."
+	   Location.pp_location at
 	   Handy.pp_set_bold Handy.pp_reset_effects
 	   Handy.pp_set_underlined (Parsetree_utils.name_of_vname var_name)
 	   Handy.pp_reset_effects

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.ml,v 1.84 2007-10-29 15:00:58 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.85 2007-10-30 13:27:59 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
@@ -39,7 +39,8 @@ exception Bad_sum_type_constructor_arity of
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
 exception Unbound_type_variable of
-  Parsetree.vname    (** The name of the unbound variable. *)
+  (Location.t *        (* The location where the variable was found unbound. *)
+   Parsetree.vname)    (** The name of the unbound variable. *)
 ;;
 
 
@@ -255,7 +256,10 @@ let rec typecheck_type_expr ctx env ty_expr =
 	      (begin
 	      (* Just handle the special where the ident is a type variable. *)
 	      try List.assoc variable_qname ctx.tyvars_mapping
-	      with Not_found -> raise (Unbound_type_variable variable_qname)
+	      with Not_found ->
+		raise
+		  (Unbound_type_variable
+		     (ident.Parsetree.ast_loc, variable_qname))
 	      end)
 	  | _ ->
 	      (* Case of all 0-ary other user-defined type constructors. *)
@@ -335,7 +339,10 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
 	      (* is not only required for "rep", but also for all the other  *)
 	      (* methods (they can't either be polymorphic).                 *)
 	      try List.assoc variable_qname ctx.tyvars_mapping
-	      with Not_found -> raise (Unbound_type_variable variable_qname)
+	      with Not_found ->
+		raise
+		  (Unbound_type_variable
+		     (ident.Parsetree.ast_loc, variable_qname))
 	      end)
 	  | _ ->
 	      (* Case of all 0-ary other user-defined type constructors. *)
@@ -386,9 +393,9 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
 
 
 (* ************************************************************************* *)
-(* Parsetree.type_expr -> (Parsetree.vname * Types.type_simple) list         *)
+(* Parsetree.type_expr list -> (Parsetree.vname * Types.type_simple) list    *)
 (** {b Descr} : Create a fresh variable mapping automatically variables in
-              the type as generalized. This is used when one creates a
+              the types as generalized. This is used when one creates a
               type structure from an external value's type expression.
               In effect, in such a context, variables in the type are
               implicitely considered as generalized because the type
@@ -403,7 +410,7 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-let make_implicit_var_mapping_from_type_expr type_expression =
+let make_implicit_var_mapping_from_type_exprs type_expressions =
   let mapping = ref [] in
   let rec rec_make texpr =
     match texpr.Parsetree.ast_desc with
@@ -427,7 +434,10 @@ let make_implicit_var_mapping_from_type_expr type_expression =
      | Parsetree.TE_self
      | Parsetree.TE_prop -> ()
      | Parsetree.TE_paren inner -> rec_make inner in
-  rec_make type_expression ;
+  (* **************** *)
+  (* Now really work. *)
+  mapping := [] ;
+  List.iter rec_make type_expressions ;
   !mapping
 ;;
 
@@ -458,8 +468,8 @@ let make_implicit_var_mapping_from_prop prop_expression =
      | Parsetree.Pr_forall (_, ty, prop)
      | Parsetree.Pr_exists (_, ty, prop) ->
 	 (begin
-	 (* First recover the mapping induced byt the type expression. *)
-	 let mapping_from_ty = make_implicit_var_mapping_from_type_expr ty in
+	 (* First recover the mapping induced by the type expression. *)
+	 let mapping_from_ty = make_implicit_var_mapping_from_type_exprs [ty] in
 	 (* Assuming the current mapping doesn't contain doubles, we *)
 	 (* extend it by the one got from the  type expression.      *)
 	 mapping :=
@@ -1048,12 +1058,32 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
 	    env'
 	    binding.Parsetree.b_params
 	    args_tys in
+	(* Get all the type constraints from both the params *)
+	(* and the body annotations of the definition.       *)
+	let all_ty_constraints =
+	  List.fold_left
+	    (fun accu (_, tye_opt) ->
+	      match tye_opt with
+	       | None -> accu
+	       | Some tye -> tye :: accu)
+	    (match binding.Parsetree.b_type with
+	     | None -> []
+	     | Some tye -> [tye])
+	    binding.Parsetree.b_params in
+	(* Then, same stuff than for scoping, we add the type variables      *)
+	(* appearing in the type contraints to the current variable_mapping. *)
+	(* These type variable are in effect implicitely generalized !       *)
+	let vmap' =
+	  make_implicit_var_mapping_from_type_exprs all_ty_constraints in
+	let ctx_with_tv_vars_constraints = {
+	  ctx with tyvars_mapping = vmap' @ ctx.tyvars_mapping } in
         (* Same hack thant above for the variables *)
         (* that must not be generalised.           *)
         if non_expansive then Types.begin_definition () ;
 	(* Guess the body's type. *)
 	let infered_body_ty =
-	  typecheck_expr ctx local_env binding.Parsetree.b_body in
+	  typecheck_expr
+	    ctx_with_tv_vars_constraints local_env binding.Parsetree.b_body in
 	(* If there is some constraint on this type, then unify with it. *)
 	(* But anyway KEEP the constraint for type ! Unification is only *)
 	(* there to ensure compatibility between the infered type and    *)
@@ -1062,11 +1092,12 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
 	  (match binding.Parsetree.b_type with
 	   | None -> infered_body_ty
 	   | Some ty_expr ->
-	       let constraint_ty = typecheck_type_expr ctx env ty_expr in
+	       let constraint_ty =
+		 typecheck_type_expr ctx_with_tv_vars_constraints env ty_expr in
 	       ignore
 		 (Types.unify
 		    ~loc: ty_expr.Parsetree.ast_loc
-		    ~self_manifest: ctx.self_manifest
+		    ~self_manifest: ctx_with_tv_vars_constraints.self_manifest
 		    constraint_ty infered_body_ty) ;
 	       (* As said above, KEEP the constraint as the final type ! *)
 	       constraint_ty) in
@@ -1087,7 +1118,8 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
 	let final_ty =
           Types.unify
 	    ~loc: binding_loc
-	    ~self_manifest: ctx.self_manifest assumed_ty complete_ty in
+	    ~self_manifest: ctx_with_tv_vars_constraints.self_manifest
+	    assumed_ty complete_ty in
         Types.end_definition () ;
 	(* And finally returns the type binding induced by this definition. *)
 	let ty_scheme =
@@ -3116,10 +3148,71 @@ let typecheck_simple_type_def_body ctx env type_name simple_type_def_body =
 
 
 
+(* ************************************************************************* *)
+(** {b Args} :
+      - [ctx] : The curren ttyping context in which the "variable mapping"
+           (i.e. mapping from the definition's parameters to type variables)
+            is already recorded.
+
+      - [type_name] : The name of the type definition (i.e. the name of
+          the type constructor defined by this ... definition).
+
+      - [env] : The current typing environment (which will be extented by
+          the current typechecking process).
+
+      - [params] : The positionnal list of type variables the type
+          definition's parameters are related to.
+
+      - [external_type_def_body] : The external definition's body to
+          typecheck.
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+let typecheck_external_type_def_body ctx env type_name params
+    external_type_def_body =
+  match external_type_def_body.Parsetree.ast_desc.Parsetree. etdb_internal with
+   | None ->
+       (begin
+       (* We will build an abstract type of this name with as many *)
+       (* parameters we find in the [ctx.tyvars_mapping] list.     *)
+       Types.begin_definition () ;
+       (* Make the type constructor... We know it's vname. Now its hosting *)
+       (* module is the current one because it is defined inside it, eh !  *)
+       let ty =
+	 Types.type_basic
+	   (Types.make_type_constructor
+	      ctx.current_unit
+	      (Parsetree_utils.name_of_vname type_name))
+	   params in
+       Types.end_definition () ;
+      let (identity, params) = Types.generalize2 ty params in
+      (* And now make the type's description to insert in the environment. *)
+      let ty_descr = {
+        Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
+        Env.TypeInformation.type_identity = identity ;
+	Env.TypeInformation.type_params = params ;
+        Env.TypeInformation.type_arity = List.length params } in
+      if Configuration.get_do_interface_output () then
+	(begin
+	Format.printf "@[<2>external@ type %a@ =@ %a@]@\n"
+	  Sourcify.pp_vname type_name Types.pp_type_scheme identity
+	end) ;
+      (* Return the extended environment. *)
+      let finl_env =
+	Env.TypingEnv.add_type
+	  ~loc: external_type_def_body.Parsetree.ast_loc type_name ty_descr
+	  env in
+      (finl_env, ty_descr)
+       end)
+   | Some _ -> failwith "TODO"  (* [Unsure] *)
+;;
+
+
+
 let typecheck_type_def ctx env type_def =
   let type_def_desc = type_def.Parsetree.ast_desc in
-  (* First, extend the [tyvars_mapping] of the current *)
-  (* context with parameters of the type definition.   *)
+  (* First, extend the [tyvars_mapping] of the current context with      *)
+  (* parameters of the type definition. The position of variables in the *)
+  (* mapping is and must be the same that in the type's parameters list. *)
   Types.begin_definition () ;
   let vmapp =
     List.map
@@ -3131,8 +3224,10 @@ let typecheck_type_def ctx env type_def =
    | Parsetree.TDB_simple simple_def_body ->
        typecheck_simple_type_def_body
 	 new_ctx env type_def_desc.Parsetree.td_name simple_def_body
-   | Parsetree.TDB_external _ ->
-       failwith "TODO"
+   | Parsetree.TDB_external external_type_def_body ->
+       typecheck_external_type_def_body
+	 new_ctx env type_def_desc.Parsetree.td_name
+	 (List.map snd vmapp) external_type_def_body
 ;;
 
 

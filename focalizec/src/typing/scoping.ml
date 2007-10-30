@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.ml,v 1.35 2007-10-29 13:37:29 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.36 2007-10-30 13:27:59 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -107,6 +107,7 @@ exception Is_parameter_only_coll_ident of Location.t ;;
 (** {b Descr} : Exception raised when a species application expression do
       not contain the right number of effective arguments according to
       the number of parameter the applied species has in its definition.
+
     {b Rem} : Exported outside this module.                               *)
 (* ********************************************************************** *)
 exception Parametrized_species_wrong_arity of
@@ -117,6 +118,23 @@ exception Parametrized_species_wrong_arity of
    (** The effective number of applied arguments. *)
    int)
 ;;
+
+
+
+(* ********************************************************************* *)
+(** {b Descr} : Exception raised when an external binding try to bind an
+        identifier that is not a capitalized or a lowercase ident. These
+        2 styles of idents are the only legal. Capitalized ones are sum
+        type constructors. Lowercase ones are record type field names.
+
+    {b Rem} : Exported outside this module.                              *)
+(* ********************************************************************* *)
+exception Invalid_external_binding_identifier of (Location.t * Parsetree.vname)
+;;
+
+
+
+exception Invalid_external_binding_number of Location.t ;;
 
 
 
@@ -220,6 +238,128 @@ let scoped_expr_ident_desc_from_value_binding_info ~basic_vname = function
 
 
 
+let (extend_env_with_implicit_gen_vars_from_type_exprs,
+     extend_env_with_implicit_gen_vars_from_prop) =
+  (* List of the variables names already seen to prevent them to be inserted *)
+  (* multiple times in the scoping environment. This list is shared between  *)
+  (* the processing of both the [prop]s and the [type_expr]'s because a      *)
+  (* [prop] may contain [type_expr]s and we don't want to pass and return    *)
+  (* each time the list of the "seen variables". This make the code easier.  *)
+  let seen_vars = ref [] in
+
+  (* ******************************************************** *)  
+  (* The local recursive function operating on a [type_expr]. *)
+  let rec rec_extend_texpr texpr accu_env =
+    match texpr.Parsetree.ast_desc with
+     | Parsetree.TE_ident ident ->
+	 (begin
+	 match ident.Parsetree.ast_desc with
+	  | Parsetree.I_local ((Parsetree.Vqident _) as variable_qname) ->
+	      (begin
+              (* Just handle the special where the ident is a type variable. *)
+	      if not (List.mem variable_qname !seen_vars) then
+		(begin
+		seen_vars := variable_qname :: !seen_vars ;
+		Env.ScopingEnv.add_type
+		  ~loc: ident.Parsetree.ast_loc
+		  variable_qname Env.ScopeInformation.TBI_builtin_or_var
+		  accu_env
+		end)
+	      else accu_env
+	      end)
+	  | _ -> accu_env
+	 end)
+     | Parsetree.TE_fun (ty_expr1, ty_expr2) ->
+	 let accu_env1 = rec_extend_texpr ty_expr1 accu_env in
+	 rec_extend_texpr ty_expr2 accu_env1
+     | Parsetree.TE_app (_, ty_exprs)
+     | Parsetree.TE_prod ty_exprs ->
+	 List.fold_left
+	   (fun local_accu_env ty -> rec_extend_texpr ty local_accu_env)
+	   accu_env
+	   ty_exprs
+     | Parsetree.TE_self
+     | Parsetree.TE_prop -> accu_env
+     | Parsetree.TE_paren inner -> rec_extend_texpr inner accu_env
+
+  (* *************************************************** *)
+  (* The local recursive function operating on a [prop]. *)
+  and rec_extend_prop pexpr accu_env =
+    match pexpr.Parsetree.ast_desc with
+     | Parsetree.Pr_forall (_, ty, prop)
+     | Parsetree.Pr_exists (_, ty, prop) ->
+	 (* First recover the mapping induced by the type expression. *)
+	 let env_from_ty = rec_extend_texpr ty accu_env in
+	 rec_extend_prop prop env_from_ty
+     | Parsetree.Pr_imply (prop1, prop2)
+     | Parsetree.Pr_or (prop1, prop2)
+     | Parsetree.Pr_and (prop1, prop2)
+     | Parsetree.Pr_equiv (prop1, prop2) ->
+	 let env_from_prop1 = rec_extend_prop prop1 accu_env in
+	 rec_extend_prop prop2 env_from_prop1
+     | Parsetree.Pr_not prop
+     | Parsetree.Pr_paren prop -> rec_extend_prop prop accu_env
+     | Parsetree.Pr_expr _ ->
+	 (* Inside expressions type variable must be bound by the previous *)
+         (* parts of the prop ! Hence, do not continue searching inside.   *)
+	 accu_env in
+
+  (
+   (* *********************************************************************** *)
+   (* extend_env_with_implicit_gen_vars_from_type_exprs :                     *)
+   (*   Parsetree.type_expr list -> Env.ScopingEnv.t -> Env.ScopingEnv.t      *)
+   (** {b Descr} : Insert in the scoping environment the variables present
+              in a list of type expressions, considering they are
+              implicitely generalized. This is used when one creates a
+              type structure from an external value's type expression or
+              a type constraint on an expression.
+              In effect, in such a context, variables in the type are
+              implicitely considered as generalized because the type
+              constraint annotating the external value or the regular value
+              does not show explicitly "forall-bound-variables".
+              Hence, in an external value definition like:
+              [external value foc_error : string -> 'a = ...]
+              the ['a] must be considered as generalized, then when
+              typechecking this definition the context must have a variable
+              mapping where ['a] is known. Using the present function, one
+              can build such a mapping.
+
+       {b Rem} : Not exported outside this module.                           *)
+   (* ********************************************************************** *)
+   (fun env type_expressions ->
+     seen_vars := [] ;
+     List.fold_left
+       (fun env_accu ty_expr -> rec_extend_texpr ty_expr env_accu)
+       env
+       type_expressions),
+
+   (* *********************************************************************** *)
+   (* extend_env_with_implicit_gen_vars_from_prop :                           *)
+   (** {b Descr} : Insert in the scoping environment the variables present
+              in a type parts of a [prop], considering they are implicitely
+              generalized. This is used when one creates a type structure
+              from a theorem expression.
+              In effect, in such a context, variables in the type are
+              implicitely considered as generalized because the type
+              constraint annotating the theorem does not show explicitly
+              "forall-bound-variables".
+              Hence, in an theorem definition like:
+              [theorem beq_refl : all x in 'a, ...]
+              the ['a] must be considered as generalized, then when
+              typechecking this definitionn the context must have a variable
+              mapping where ['a] is known. Using the present function, one
+              can build such a mapping.
+
+       {b Rem} : Not exported outside this module.                           *)
+   (* ********************************************************************** *)
+   (fun env prop_expression ->
+     seen_vars := [] ;
+     rec_extend_prop prop_expression env)
+  )
+;;
+
+
+
 (* ************************************************************* *)
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.type_expr -> *)
 (*   Parsetree.type_expr                                         *)
@@ -286,14 +426,17 @@ let rec scope_type_expr ctx env ty_expr =
 (* ********************************************************************** *)
 (* scoping_context -> Env.ScopingEnv.t -> Env.ScopingEnv.t ->             *)
 (*   Parsetree.simple_type_def_body ->                                    *)
-(*     (Parsetree.simple_type_def_body * Env.ScopingEnv.t)                *)
+(*     (Parsetree.simple_type_def_body * Env.ScopingEnv.t *               *)
+(*      (Parsetree.vname_list))                                           *)
 (** {b Descr} : Scopes a the body of a simple type definition by scoping
-     its internal type expressions. Returns the extended environment
-     with bindings for the possible sum type constructors or record type
-     fields label.
+     its internal type expressions and return the scoped version of it.
+     Returns the extended environment with bindings for the possible sum
+     type constructors or record type fields label.
+     Also returns the list of names bound to sum type constructors or
+     record type fields label.
      Note that we pass 2 different environments because we need one with
-     the the parameters type variables if the definition has some and
-     another wher ethey are not and in which record fields and sum type
+     the parameters type variables if the definition has some and
+     another where they are not and in which record fields and sum type
      constructors will be added, WITHOUT the previously mentionned
      parameters type variables inside to prevent them to escape in the
      final environment.
@@ -323,11 +466,11 @@ let rec scope_type_expr ctx env ty_expr =
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
 let scope_simple_type_def_body ctx env env_to_extend sty_def_body =
-  let (scoped_desc, new_env) =
+  let (scoped_desc, new_env, bound_names) =
     (match sty_def_body.Parsetree.ast_desc with
      | Parsetree.STDB_alias ty_expr ->
 	 let descr = Parsetree.STDB_alias (scope_type_expr ctx env ty_expr) in
-	 (descr, env_to_extend)
+	 (descr, env_to_extend, [])
      | Parsetree.STDB_union constructors ->
 	 (begin
 	 (* This will extend the scoping environment with the sum type  *)
@@ -347,7 +490,10 @@ let scope_simple_type_def_body ctx env env_to_extend sty_def_body =
 	       (ext_env, (scoped_constructor :: cstrs_accu)))
 	     constructors
 	     (env_to_extend, []) in
-	 ((Parsetree.STDB_union scoped_constructors), env_to_extend')
+	 let sum_cstr_names = List.map fst constructors in
+	 ((Parsetree.STDB_union scoped_constructors),
+	  env_to_extend',
+	  sum_cstr_names)
 	 end)
      | Parsetree.STDB_record fields ->
 	 (begin
@@ -367,12 +513,15 @@ let scope_simple_type_def_body ctx env env_to_extend sty_def_body =
 	       (ext_env, (scoped_field :: fields_accu)))
 	     fields
 	     (env_to_extend, []) in
-	 ((Parsetree.STDB_record scoped_fields), env_to_extend')
+	 let record_field_names = List.map fst fields in
+	 ((Parsetree.STDB_record scoped_fields),
+	  env_to_extend',
+	  record_field_names)
 	 end)) in
   (* Now finish to reconstruct the whole definition's body. *)
   let scoped_sty_def_body = {
     sty_def_body with Parsetree.ast_desc = scoped_desc } in
-  (scoped_sty_def_body, new_env)
+  (scoped_sty_def_body, new_env, bound_names)
 ;;
 
 
@@ -439,18 +588,98 @@ let rec scope_rep_type_def ctx env rep_type_def =
 
 
 
+(* *********************************************************************** *)
+(** {b Descr} : Ensure that the sum type constructors and/or the record
+      type field names introduced by the external bindings of a
+      [external_type_def_body] exactly correspond to those induced by the
+      internal representation of this [external_type_def_body].
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+let rec verify_external_binding ~type_def_body_loc external_bindings
+    bound_names =
+  match external_bindings with
+   | [] -> if bound_names <> [] then
+       raise (Invalid_external_binding_number type_def_body_loc)
+   | binding :: bindings ->
+       let rem_bound_names =
+	 (match binding.Parsetree.ast_desc with
+	  | (((Parsetree.Vlident _) as vname), _) ->
+	      (* Lowercase ident must be mapped on a record field_name. *)
+	      Handy.list_mem_n_remove vname bound_names
+	  | (((Parsetree.Vuident _) as vname), _) ->
+	      (* Capitalized ident must be mapped on a sum type constructor. *)
+	      Handy.list_mem_n_remove vname bound_names
+	  | (other, _) ->
+	      raise
+		(Invalid_external_binding_identifier
+		   (binding.Parsetree.ast_loc, other))) in
+       (* Continue with the remaining bindings and the list of bound *)
+       (* names in which we suppressed the current binding name.     *)
+       verify_external_binding ~type_def_body_loc bindings rem_bound_names
+;;
+
+
+
+let scope_external_type_def_body ctx env_with_params env tdef_body =
+  let tdef_body_desc = tdef_body.Parsetree.ast_desc in
+  (* First scope the internal representation of the external type definition. *)
+  let (etdb_internal', extended_env, bound_names) =
+    (match tdef_body_desc.Parsetree.etdb_internal with
+     | None -> (None, env, [])
+     | Some internal_repr ->
+	 let (scoped_internal_repr, env', names) =
+	   scope_simple_type_def_body ctx env_with_params env internal_repr in
+	 ((Some scoped_internal_repr), env', names)) in
+  (* Then, the [etdb_external] being simple bindings toward the external *)
+  (* languages, there nothing to scope inside.                           *)
+  (* Now, the [etdb_bindings] may introduce the sum type constructors or *)
+  (* the record type field names. Then they must correspond to the names *)
+  (* introduced by the internal representation of the type definition.   *)
+  verify_external_binding
+    ~type_def_body_loc: tdef_body.Parsetree.ast_loc
+    tdef_body_desc.Parsetree.etdb_bindings.Parsetree.ast_desc bound_names ;
+  let scoped_tdef_body_desc = {
+    Parsetree.etdb_internal = etdb_internal' ;
+    Parsetree.etdb_external = tdef_body_desc.Parsetree.etdb_external ;
+    Parsetree.etdb_bindings = tdef_body_desc.Parsetree.etdb_bindings } in
+  ({ tdef_body with Parsetree.ast_desc = scoped_tdef_body_desc }, extended_env)
+;;
+
+
+
+(* ***************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t ->  Env.ScopingEnv.t ->       *)
+(*   Parsetree.type_def_body_desc ->                                 *)
+(*     (Parsetree.type_def_body_desc * Env.ScopingEnv.t)             *)
+(* {b Descr} : Scopes a [type_def_body] and returns this scoped
+        [type_def_body].
+         Takes 2 scoping environments because we need one with the
+         parameters type variables if the definition has some and
+         another where they are not. C.f. comment in the function
+         [scope_simple_type_def_body].
+
+   {b Rem} : Not exported outside this module.                       *)
+(* ***************************************************************** *)
 let scope_type_def_body ctx env_with_params env ty_def_body =
   match ty_def_body.Parsetree.ast_desc with
    | Parsetree.TDB_simple simple_type_def_body ->
-       let (scoped_sty_def, env') =
+       let (scoped_sty_def, env', _) =
 	 scope_simple_type_def_body
 	   ctx env_with_params env simple_type_def_body in
        let scoped_ty_def_body = {
 	 ty_def_body with
 	   Parsetree.ast_desc = Parsetree.TDB_simple scoped_sty_def } in
        (scoped_ty_def_body, env')
-   | Parsetree.TDB_external _ ->
-       failwith "todo"
+   | Parsetree.TDB_external external_tdef_body ->
+       let (scoped_external_tdef_body, env') =
+	 scope_external_type_def_body
+	   ctx env_with_params env external_tdef_body in
+       let scoped_ty_def_body = {
+	 ty_def_body with
+	   Parsetree.ast_desc =
+	     Parsetree.TDB_external scoped_external_tdef_body } in
+       (scoped_ty_def_body, env')
 ;;
 
 
@@ -752,6 +981,23 @@ and scope_let_definition ~toplevel_let ctx env let_def =
 		param_vname Env.ScopeInformation.SBI_local accu_env)
 	    env'
 	    let_binding_descr.Parsetree.b_params in
+	(* Get all the type constraints from both the params *)
+	(* and the body annotations of the definition.       *)
+	let all_ty_constraints =
+	  List.fold_left
+	    (fun accu (_, tye_opt) ->
+	      match tye_opt with
+	       | None -> accu
+	       | Some tye -> tye :: accu)
+	    (match let_binding_descr.Parsetree.b_type with
+	     | None -> []
+	     | Some tye -> [tye])
+	    let_binding_descr.Parsetree.b_params in
+	(* Now extend the environment with all the variables implicitly *)
+	(* generalized from all these type constraints.                 *)
+	let env_with_ty_constraints_variables =
+	  extend_env_with_implicit_gen_vars_from_type_exprs
+	    env_with_params all_ty_constraints in
 	(* Scope the params type exprs. *)
 	let scoped_b_params =
 	  List.map
@@ -760,17 +1006,23 @@ and scope_let_definition ~toplevel_let ctx env let_def =
 		(match tye_opt with
 		 | None -> None
 		 | Some tye ->
-		     Some (scope_type_expr ctx env_with_params tye)) in
+		     Some
+		       (scope_type_expr
+			  ctx env_with_ty_constraints_variables tye)) in
 	      (param_vname, scoped_tye_opt))
 	    let_binding_descr.Parsetree.b_params in
 	(* Now scope the body. *)
 	let scoped_body =
-	  scope_expr ctx env_with_params let_binding_descr.Parsetree.b_body in
+	  scope_expr
+	    ctx env_with_ty_constraints_variables
+	    let_binding_descr.Parsetree.b_body in
 	(* Now scope the optionnal body's type. *)
 	let scoped_b_type =
 	  (match let_binding_descr.Parsetree.b_type with
 	   | None -> None
-	   | Some tye -> Some (scope_type_expr ctx env_with_params tye)) in
+	   | Some tye ->
+	       Some
+		 (scope_type_expr ctx env_with_ty_constraints_variables tye)) in
 	let new_binding_desc =
 	  { let_binding_descr with
 	      Parsetree.b_params = scoped_b_params ;
@@ -850,123 +1102,6 @@ let rec scope_prop ctx env prop =
      | Parsetree.Pr_expr expr -> Parsetree.Pr_expr (scope_expr ctx env expr)
      | Parsetree.Pr_paren p -> Parsetree.Pr_paren (scope_prop ctx env p)) in
   { prop with Parsetree.ast_desc = new_desc }
-;;
-
-
-
-let (extend_env_with_implicit_gen_vars_from_type_expr,
-     extend_env_with_implicit_gen_vars_from_prop) =
-  (* List of the variables names already seen to prevent them to be inserted *)
-  (* multiple times in the scoping environment. This list is shared between  *)
-  (* the processing of both the [prop]s and the [type_expr]'s because a      *)
-  (* [prop] may contain [type_expr]s and we don't want to pass and return    *)
-  (* each time the list of the "seen variables". This make the code easier.  *)
-  let seen_vars = ref [] in
-
-  (* ******************************************************** *)  
-  (* The local recursive function operating on a [type_expr]. *)
-  let rec rec_extend_texpr texpr accu_env =
-    match texpr.Parsetree.ast_desc with
-     | Parsetree.TE_ident ident ->
-	 (begin
-	 match ident.Parsetree.ast_desc with
-	  | Parsetree.I_local ((Parsetree.Vqident _) as variable_qname) ->
-	      (begin
-              (* Just handle the special where the ident is a type variable. *)
-	      if not (List.mem variable_qname !seen_vars) then
-		(begin
-		seen_vars := variable_qname :: !seen_vars ;
-		Env.ScopingEnv.add_type
-		  ~loc: ident.Parsetree.ast_loc
-		  variable_qname Env.ScopeInformation.TBI_builtin_or_var
-		  accu_env
-		end)
-	      else accu_env
-	      end)
-	  | _ -> accu_env
-	 end)
-     | Parsetree.TE_fun (ty_expr1, ty_expr2) ->
-	 let accu_env1 = rec_extend_texpr ty_expr1 accu_env in
-	 rec_extend_texpr ty_expr2 accu_env1
-     | Parsetree.TE_app (_, ty_exprs)
-     | Parsetree.TE_prod ty_exprs ->
-	 List.fold_left
-	   (fun local_accu_env ty -> rec_extend_texpr ty local_accu_env)
-	   accu_env
-	   ty_exprs
-     | Parsetree.TE_self
-     | Parsetree.TE_prop -> accu_env
-     | Parsetree.TE_paren inner -> rec_extend_texpr inner accu_env
-
-  (* *************************************************** *)
-  (* The local recursive function operating on a [prop]. *)
-  and rec_extend_prop pexpr accu_env =
-    match pexpr.Parsetree.ast_desc with
-     | Parsetree.Pr_forall (_, ty, prop)
-     | Parsetree.Pr_exists (_, ty, prop) ->
-	 (* First recover the mapping induced by the type expression. *)
-	 let env_from_ty = rec_extend_texpr ty accu_env in
-	 rec_extend_prop prop env_from_ty
-     | Parsetree.Pr_imply (prop1, prop2)
-     | Parsetree.Pr_or (prop1, prop2)
-     | Parsetree.Pr_and (prop1, prop2)
-     | Parsetree.Pr_equiv (prop1, prop2) ->
-	 let env_from_prop1 = rec_extend_prop prop1 accu_env in
-	 rec_extend_prop prop2 env_from_prop1
-     | Parsetree.Pr_not prop
-     | Parsetree.Pr_paren prop -> rec_extend_prop prop accu_env
-     | Parsetree.Pr_expr _ ->
-	 (* Inside expressions type variable must be bound by the previous *)
-         (* parts of the prop ! Hence, do not continue searching inside.   *)
-	 accu_env in
-
-  (
-   (* ********************************************************************** *)
-   (* extend_env_with_implicit_gen_vars_from_type_expr :                     *)
-   (*   Parsetree.type_expr -> Env.ScopingEnv.t -> Env.ScopingEnv.t          *)
-   (** {b Descr} : Insert in the scoping environment the variables present
-              in a type expression, considering they are implicitely
-              generalized. This is used when one creates a
-              type structure from an external value's type expression.
-              In effect, in such a context, variables in the type are
-              implicitely considered as generalized because the type
-              constraint annotating the external value does not show
-              explicitly "forall-bound-variables".
-              Hence, in an external value definition like:
-              [external value foc_error : string -> 'a = ...]
-              the ['a] must be considered as generalized, then when
-              typechecking this definition the context must have a variable
-              mapping where ['a] is known. Using the present function, one
-              can build such a mapping.
-
-       {b Rem} : Not exported outside this module.                           *)
-   (* ********************************************************************** *)
-   (fun env type_expression ->
-     seen_vars := [] ;
-     rec_extend_texpr env type_expression),
-
-   (* *********************************************************************** *)
-   (** {b Descr} : Insert in the scoping environment the variables present
-              in a type parts of a [prop], considering they are implicitely
-              generalized. This is used when one creates a type structure
-              from a theorem expression.
-              In effect, in such a context, variables in the type are
-              implicitely considered as generalized because the type
-              constraint annotating the theorem does not show explicitly
-              "forall-bound-variables".
-              Hence, in an theorem definition like:
-              [theorem beq_refl : all x in 'a, ...]
-              the ['a] must be considered as generalized, then when
-              typechecking this definitionn the context must have a variable
-              mapping where ['a] is known. Using the present function, one
-              can build such a mapping.
-
-       {b Rem} : Not exported outside this module.                           *)
-   (* ********************************************************************** *)
-   (fun env prop_expression ->
-     seen_vars := [] ;
-     rec_extend_prop prop_expression env)
-  )
 ;;
 
 

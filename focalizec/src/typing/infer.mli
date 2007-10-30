@@ -12,11 +12,11 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.17 2007-10-29 15:00:58 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.18 2007-10-30 13:27:59 pessaux Exp $ *)
 
 exception Method_multiply_defined of
   (Parsetree.vname * Parsetree.qualified_vname)
-exception Unbound_type_variable of Parsetree.vname
+exception Unbound_type_variable of (Location.t * Parsetree.vname)
 exception Bad_sum_type_constructor_arity of
   (Parsetree.constructor_ident * Env.TypeInformation.constructor_arity)
 exception Bad_type_arity of (Parsetree.ident * int * int)

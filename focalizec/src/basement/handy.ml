@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.8 2007-10-16 10:00:48 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.9 2007-10-30 13:27:59 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -225,6 +225,24 @@ let list_mem_custom_eq eq_fct e l =
     | h :: q -> if eq_fct h e then true else rec_mem q in
   rec_mem l
 ;;
+
+
+
+(* ******************************************************************** *)
+(* 'a -> 'a list -> 'a list                                             *)
+(** {b Descr} :  Test if the element [elem] belongs to the list [l] and
+       remove its (first) occurrence from the returned list. Raises
+       [Not_found] if [elem] was not found in [l].
+
+    {b Rem} : Exported outside this module.                             *)
+(* ******************************************************************** *)
+let list_mem_n_remove elem l =
+  let rec rec_mem = function
+    | [] -> raise Not_found
+    | h :: q -> if h = elem then q else h :: (rec_mem q) in
+  rec_mem l							
+;;
+
 
 
 let pp_set_shaded ppf =
