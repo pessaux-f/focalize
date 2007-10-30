@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_ml_generation.ml,v 1.3 2007-10-29 15:48:12 pessaux Exp $ *)
+(* $Id: type_ml_generation.ml,v 1.4 2007-10-30 16:35:27 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -60,14 +60,25 @@ let print_types_comma_with_same_vmapping_and_empty_carrier_mapping ctx tys =
 
 
 
-(* **************************************************************** *)
-(* Misc_ml_generation.reduced_compil_context -> Parsetree.vname ->  *)
-(*   Env.TypeInformation.type_description -> unit                   *)
-(** {b Descr} : Generates the OCaml code for a "regular" (i.e. non 
-          "external" FoCaL type definition.
+(* ****************************************************************** *)
+(* Misc_ml_generation.reduced_compil_context -> Parsetree.vname ->    *)
+(*   Env.TypeInformation.type_description -> unit                     *)
+(** {b Descr} : Generates the OCaml code for a FoCaL type definition.
+      The process is split in 2 pretty different generation models
+      in order to handled both:
+       1) the regular (i.e. non-external) type definitions.
+       2) the external type definitions.
+    In case 1), the generated type body is based on its
+    [type_descr.Env.TypeInformation.type_identity] and its
+    [type_descr.Env.TypeInformation.type_kind].
+    In case 2), the type will be for sure a TK_abstract (because it
+    can't be a sum or a record. Then if it is fully abstract, we map
+    it directly to an OCaml type wearing the same name than the
+    defined type itself. This means that this type must exists in
+    the OCaml environment of the generated file.
 
-    {b Rem} : Exported outside this module.                         *)
-(* **************************************************************** *)
+    {b Rem} : Exported outside this module.                           *)
+(* ****************************************************************** *)
 let type_def_compile ctx type_def_name type_descr =
   let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
   (* Type definition header. *)
@@ -95,6 +106,31 @@ let type_def_compile ctx type_def_name type_descr =
 	    ~current_unit: ctx.Misc_ml_generation.rcc_current_unit
 	    ~reuse_mapping: true [])
 	 instanciated_body
+   | Env.TypeInformation.TK_external external_expr ->
+       (begin
+       (* Print the parameter(s) stuff if any. *)
+       print_types_comma_with_same_vmapping_and_empty_carrier_mapping
+	 ctx type_descr.Env.TypeInformation.type_params ;
+       (* Now, the type name, renamed as "_focty_" followed by *)
+       (* the original name.                                   *)
+       Format.fprintf out_fmter " _focty_%a =@ "
+	 Misc_ml_generation.pp_to_ocaml_vname type_def_name ;
+       (* And now, bind the FoCaL identifier to the OCaml one. *)
+       try
+	 let (_, ocaml_binding) =
+	   List.find
+	     (function
+	       | (Parsetree.EL_Caml, _) -> true
+	       | (Parsetree.EL_Coq, _)
+	       | ((Parsetree.EL_external _), _) -> false)
+	     external_expr.Parsetree.ast_desc in
+	 Format.fprintf out_fmter "%s@]@ ;;@\n" ocaml_binding
+       with Not_found ->
+	 (* We didn't find any correspondance for OCaml. *)
+	 raise
+	   (Externals_ml_generation.No_external_type_caml_def
+	      (type_def_name, external_expr.Parsetree.ast_loc))
+       end)
    | Env.TypeInformation.TK_variant cstrs ->
        (begin
        (* To ensure variables names sharing, we will unify an instance of   *)
