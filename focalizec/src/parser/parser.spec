@@ -374,3 +374,8 @@ let (x : self) = 1;;
 theorem foo : enonce = preuve;;
 
 
+\section{Pensées pour éviter les champs mutables de type dans l'ast}
+scope : 'a ast -> untyped ast
+infer : untyped ast -> Types.simple_type ast
+parse : string -> untyped ast
+pass :  Types.simple_type ast -> quelconque ast

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.4 2007-10-29 15:48:12 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.5 2007-10-31 15:33:37 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -63,29 +63,25 @@ let generate_ident_for_method_generator ctx ident =
        (* a direrct mapping between FoCaL and OCaml code.               *)
        Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
 	 Misc_ml_generation.pp_to_ocaml_vname vname
-   | Parsetree. I_global (fname_opt, vname) ->
-       (begin
-       match fname_opt with
-	| None ->
-	    (* Thanks to the scoping pass, [I_global] with a [None] module *)
-            (* name are toplevel definitions of the current compilation    *)
-            (* unit. Then hence can be straightforwardly called in the     *)
-            (* OCaml code.                                                 *)
-	    Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
-	      Misc_ml_generation.pp_to_ocaml_vname vname
-	| Some mod_name ->
-	    (* Call the OCaml corresponding identifier in the corresponding *)
-            (* module (i.e. the capitalized [mod_name]). If the module is   *)
-	    (* the currently compiled one, then do not qualify the          *)
-	    (* identifier.                                                  *)
-	    if mod_name <> ctx.Misc_ml_generation.rcc_current_unit then
-	      Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%s.%a"
-		(String.capitalize mod_name)
-		Misc_ml_generation.pp_to_ocaml_vname vname
-	    else
-	      Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
-		Misc_ml_generation.pp_to_ocaml_vname vname
-       end)
+   | Parsetree. I_global (Parsetree.Vname vname) ->
+       (* Thanks to the scoping pass, [I_global] with a [None] module *)
+       (* name are toplevel definitions of the current compilation    *)
+       (* unit. Then hence can be straightforwardly called in the     *)
+       (* OCaml code.                                                 *)
+       Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
+	 Misc_ml_generation.pp_to_ocaml_vname vname
+   | Parsetree. I_global (Parsetree.Qualified (mod_name, vname)) ->
+       (* Call the OCaml corresponding identifier in the corresponding *)
+       (* module (i.e. the capitalized [mod_name]). If the module is   *)
+       (* the currently compiled one, then do not qualify the          *)
+       (* identifier.                                                  *)
+       if mod_name <> ctx.Misc_ml_generation.rcc_current_unit then
+	 Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%s.%a"
+	   (String.capitalize mod_name)
+	   Misc_ml_generation.pp_to_ocaml_vname vname
+       else
+	 Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
+	   Misc_ml_generation.pp_to_ocaml_vname vname
 ;;
 
 
@@ -162,30 +158,26 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
 	    with Not_found -> ()
 	 end)
        end)
-   | Parsetree.EI_global (fname_opt, vname) ->
-       (begin
-       match fname_opt with
-	| None ->
-	    (* In this case, may be there is some scoping process missing. *)
-	    assert false
-	| Some mod_name ->
-	    (* Call the OCaml corresponding identifier in the corresponding *)
-            (* module (i.e. the capitalized [mod_name]). If the module is   *)
-	    (* the currently compiled one, then do not qualify the          *)
-	    (* identifier.                                                  *)
-	    if mod_name <> ctx.Misc_ml_generation.rcc_current_unit then
-	      Format.fprintf out_fmter "%s.%a"
-		(String.capitalize mod_name)
-		Misc_ml_generation.pp_to_ocaml_vname vname
-	    else
-	      Format.fprintf out_fmter "%a"
-		Misc_ml_generation.pp_to_ocaml_vname vname
-       end)
+   | Parsetree.EI_global (Parsetree.Vname _) ->
+       (* In this case, may be there is some scoping process missing. *)
+       assert false
+   | Parsetree.EI_global (Parsetree.Qualified (mod_name, vname)) ->
+       (* Call the OCaml corresponding identifier in the corresponding *)
+       (* module (i.e. the capitalized [mod_name]). If the module is   *)
+       (* the currently compiled one, then do not qualify the          *)
+       (* identifier.                                                  *)
+       if mod_name <> ctx.Misc_ml_generation.rcc_current_unit then
+	 Format.fprintf out_fmter "%s.%a"
+	   (String.capitalize mod_name)
+	   Misc_ml_generation.pp_to_ocaml_vname vname
+       else
+	 Format.fprintf out_fmter "%a"
+	   Misc_ml_generation.pp_to_ocaml_vname vname
    | Parsetree.EI_method (coll_specifier_opt, vname) ->
        (begin
        match coll_specifier_opt with
 	| None
-	| Some (None, (Parsetree.Vuident "Self")) ->
+	| Some (Parsetree.Vname (Parsetree.Vuident "Self")) ->
 	    (begin
 	    (* Method call from the current species. This corresponds to *)
 	    (* a call to the corresponding lambda-lifted method that is  *)
@@ -196,7 +188,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
 	| Some coll_specifier ->
 	    (begin
 	    match coll_specifier with
-	     | (None, coll_name) ->
+	     | Parsetree.Vname coll_name ->
 		 (begin
 		 (* Method call from a species that is not the current but  *)
 		 (* is implicitely in the current compilation unit. May be  *)
@@ -231,7 +223,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
 		     Misc_ml_generation.pp_to_ocaml_vname vname
 		   end)
 		 end)
-	     | (Some module_name, coll_name) ->
+	     | Parsetree.Qualified (module_name, coll_name) ->
 		 (begin
 		 if module_name = ctx.Misc_ml_generation.rcc_current_unit then
 		   (begin
@@ -286,22 +278,19 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
 (* ******************************************************************** *)
 let generate_constructor_ident_for_method_generator ctx cstr_expr =
   match cstr_expr.Parsetree.ast_desc with
-   | Parsetree.CI (fname_opt, name) ->
-       (begin
-       match fname_opt with
-	| None -> Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
-	      Misc_ml_generation.pp_to_ocaml_vname name
-	| Some fname ->
-	    (* If the constructor belongs to the current      *)
-	    (* compilation unit then one must not qualify it. *)
-	    if fname <> ctx.Misc_ml_generation.rcc_current_unit then
-	      Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%s.%a"
-		(String.capitalize fname)
-		Misc_ml_generation.pp_to_ocaml_vname name
-	    else
-	      Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
-		Misc_ml_generation.pp_to_ocaml_vname name
-       end)
+   | Parsetree.CI (Parsetree.Vname name) ->
+       Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
+	 Misc_ml_generation.pp_to_ocaml_vname name
+   | Parsetree.CI (Parsetree.Qualified (fname, name)) ->
+       (* If the constructor belongs to the current      *)
+       (* compilation unit then one must not qualify it. *)
+       if fname <> ctx.Misc_ml_generation.rcc_current_unit then
+	 Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%s.%a"
+	   (String.capitalize fname)
+	   Misc_ml_generation.pp_to_ocaml_vname name
+       else
+	 Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
+	   Misc_ml_generation.pp_to_ocaml_vname name
 ;;
 
 

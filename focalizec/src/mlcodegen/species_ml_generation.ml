@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.8 2007-10-29 08:18:36 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.9 2007-10-31 15:33:37 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -37,7 +37,7 @@ type species_compil_context = {
   (** The name of the currently analysed compilation unit. *)
   scc_current_unit : Types.fname ;
   (** The name of the current species. *)
-  scc_current_species : Parsetree.qualified_vname ;
+  scc_current_species : Parsetree.qualified_species ;
   (** The nodes of the current species's dependency graph. *)
   scc_dependency_graph_nodes : Dep_analysis.name_node list ;
   (** The current correspondance between collection types and type variable
@@ -258,7 +258,7 @@ let generate_record_type ctx species_descr =
 	    (begin
 	    let ty = Types.specialize sch in
             Format.fprintf out_fmter "(* From species %a. *)@\n"
-	      Sourcify.pp_qualified_vname from ;
+	      Sourcify.pp_qualified_species from ;
 	    (* Since we are printing a whole type scheme, it is stand-alone *)
             (* and we don't need to keep name sharing with anythin else.    *)
 	    Format.fprintf out_fmter "@[<2>%a : %a ;@]@\n"
@@ -273,7 +273,7 @@ let generate_record_type ctx species_descr =
 	    (fun (from, n, _, sch, _) ->
 	      let ty = Types.specialize sch in
 	      Format.fprintf out_fmter "(* From species %a. *)@\n"
-		Sourcify.pp_qualified_vname from ;
+		Sourcify.pp_qualified_species from ;
 	      (* Since we are printing a whole type scheme, it is stand-alone *)
               (* and we don't need to keep name sharing with anythin else.    *)
 	      Format.fprintf out_fmter "%a : %a ;@\n"
@@ -304,9 +304,9 @@ let generate_record_type ctx species_descr =
         between method declaration and method application).
     {b Rem} : Not exported outside this module.                               *)
 (* ************************************************************************** *)
-type compiled_field_memory ={
+type compiled_field_memory = {
   (** Where the method comes from (the most recent in inheritance). *)
-  cfm_from_species : Parsetree.qualified_vname ;
+  cfm_from_species : Parsetree.qualified_species ;
   (** The method's name. *)
   cfm_method_name : Parsetree.vname ;
   (** The method's body. *)
@@ -767,7 +767,7 @@ let generate_collection_generator ctx compiled_species_fields =
   let process_one_field field_memory =
     let from = field_memory.cfm_from_species in
     Format.fprintf out_fmter "(* From species %a. *)@\n"
-      Sourcify.pp_qualified_vname from ;
+      Sourcify.pp_qualified_species from ;
     Format.fprintf out_fmter "@[<2>let local_%a =@ "
       Misc_ml_generation.pp_to_ocaml_vname field_memory.cfm_method_name ;
     (* Find the method generator to use depending on if it belongs to this *)
@@ -948,7 +948,7 @@ let species_compile ~current_unit out_fmter species_def species_descr
 
 
 type collection_effective_arguments =
-  | CEA_coll_name_for_is of Parsetree.may_be_qualified_vname
+  | CEA_coll_name_for_is of Parsetree.qualified_vname
   | CEA_value_expr_for_in of Parsetree.expr
 ;;
 
@@ -1009,24 +1009,26 @@ let apply_generator_to_parameters ctx coll_body_params col_gen_params_info =
 	(fun formal_info effective_info ->
 	  match (formal_info, effective_info) with
 	   | ((formal, Env.ScopeInformation.SPK_is),
-	      CEA_coll_name_for_is (opt_effective_fname, effective_vname)) ->
+	      CEA_coll_name_for_is qualified_vname) ->
 	       (begin
 	       (* "In" parameter. Leads to collection name based stuff. *)
-	       match opt_effective_fname with
-		| None ->
+	       match qualified_vname with
+		| Parsetree.Vname _ ->
 		    (* Assumed to be local to the current unit. *)
-		    (formal, CEA_coll_name_for_is (None, effective_vname))
-		| Some effective_fname ->
+		    (formal, CEA_coll_name_for_is qualified_vname)
+		| Parsetree.Qualified (effective_fname, effective_vname) ->
 		    (* If the species belongs to the current unit, then we   *)
 		    (* don't need to qualify it in the OCaml generated code. *)
 		    (* Then we simply discard its explicit hosting           *)
 		    (* information.                                          *)
 		    if effective_fname = current_unit then
-		      (formal, CEA_coll_name_for_is (None, effective_vname))
+		      (formal,
+		       CEA_coll_name_for_is (Parsetree.Vname effective_vname))
 		    else
 		      (formal,
 		       CEA_coll_name_for_is
-			 (opt_effective_fname, effective_vname))
+			 (Parsetree.Qualified
+			    (effective_fname, effective_vname)))
 	       end)
 	   | ((formal, Env.ScopeInformation.SPK_in),
 	      (CEA_value_expr_for_in effective_expr)) ->
