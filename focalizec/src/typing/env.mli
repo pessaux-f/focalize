@@ -81,6 +81,7 @@ module TypeInformation :
     }
     type type_kind =
         TK_abstract
+      | TK_external of Parsetree.external_expr
       | TK_variant of (Parsetree.constructor_name * constructor_arity *
 		       Types.type_scheme) list
       | TK_record of

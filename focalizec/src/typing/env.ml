@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.49 2007-10-30 11:01:09 weis Exp $ *)
+(* $Id: env.ml,v 1.50 2007-10-31 09:53:17 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -437,10 +437,12 @@ module TypeInformation = struct
 
 
   type type_kind =
-    | TK_abstract  (** Abstract types and type abbreviations. *)
-    | TK_variant of    (** Sum types. *)
-        (Parsetree.constructor_name * constructor_arity *
-         Types.type_scheme) list
+    | TK_abstract       (** Abstract types and type abbreviations. *)
+    | TK_external of    (** Abstract types externally defined. *)
+	Parsetree.external_expr
+    | TK_variant of     (** Sum types. *)
+	(Parsetree.constructor_name * constructor_arity *
+	 Types.type_scheme) list
     | TK_record of  (** Record types: list of labels. Any value of a type
         record will be typed as a [ST_construct] whose name is
         the name of the record type. *)
