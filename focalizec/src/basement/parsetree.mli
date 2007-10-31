@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.24 2007-10-30 21:14:30 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.25 2007-10-31 08:29:01 weis Exp $ *)
 
 (** {2 The Focalize abstract syntax tree definition.} *)
 
@@ -30,14 +30,14 @@ type ('a, 'b) generic_ast = {
    (** The description of the node. *)
    ast_desc : 'a;
    (** The support for documentation in many formats. *)
-   ast_doc : 'b option;
+   ast_doc : 'b;
    (** The type of the node. *)
    mutable ast_type : Types.type_simple option;
 }
 ;;
 
-type 'a ast = ('a, string) generic_ast;;
-type 'a ast_doc = ('a, string) generic_ast;;
+type 'a ast = ('a, string list) generic_ast;;
+type 'a ast_doc = ('a, string list) generic_ast;;
 
 (** {3 Names of the various entities.} *)
 

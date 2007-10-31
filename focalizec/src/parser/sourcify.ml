@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.33 2007-10-30 10:19:24 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.34 2007-10-31 08:29:01 weis Exp $ *)
 
 open Parsetree;;
 
@@ -35,21 +35,6 @@ let pp_vname ppf = function
     {b Rem} : Not exported ouside this module.                          *)
 (* ******************************************************************** *)
 let pp_vnames sep ppf = Handy.pp_generic_separated_list sep pp_vname ppf
-;;
-
-
-
-(* ************************************************************** *)
-(* Format.formatter -> Parsetree.may_be_qualified_vname -> unit   *)
-(** {b Descr} : Pretty prints a [may_be_qualified_vname] value as
-              FoCal source.
-    {b Rem} : Exported ouside this module.                        *)
-(* ************************************************************** *)
-let pp_may_be_qualified_vname ppf (opt_mod_name, vname) =
-  match opt_mod_name with
-   | None -> pp_vname ppf vname
-   | Some mod_name ->
-       Format.fprintf ppf "%s#%a" mod_name pp_vname vname
 ;;
 
 
@@ -84,10 +69,15 @@ let pp_node_labels sep ppf =
     {b Rem} : Not exported ouside this module.                              *)
 (* ************************************************************************ *)
 let pp_generic_ast desc_printer_fct ppf g_ast =
+  let print_documentation = function
+    | [] -> ()
+    | docs ->
+      let print_doc ppf d = Format.fprintf ppf "(** %s *)@ " d in
+      let print_docs ppf ds =
+        List.iter (fun d -> Format.fprintf ppf "%a@ " print_doc d) ds in
+      Format.fprintf ppf "@[<v>%a@]" print_docs docs in
   (* First, print the documentation if some exists. *)
-  (match g_ast.Parsetree.ast_doc with
-   | None -> ()
-   | Some comment -> Format.fprintf ppf "(** %s*)@\n" comment);
+  print_documentation g_ast.Parsetree.ast_doc;
   (* Then, print the code itself. *)
   Format.fprintf ppf "%a" desc_printer_fct g_ast.Parsetree.ast_desc
 ;;
@@ -254,7 +244,7 @@ let rec pp_rep_type_def_desc ppf = function
         pp_rep_type_def rtd1 pp_rep_type_def rtd2
   | Parsetree.RTE_app (ident, rtds) ->
       Format.fprintf ppf "%a@[<2>@ (%a)@]"
-   pp_ident ident (pp_rep_type_defs ",") rtds
+        pp_ident ident (pp_rep_type_defs ",") rtds
   | Parsetree.RTE_prod rtds ->
       Format.fprintf ppf "@[<2>(%a)@]" (pp_rep_type_defs "*") rtds
   | Parsetree.RTE_paren rtd -> Format.fprintf ppf "(%a)" pp_rep_type_def rtd

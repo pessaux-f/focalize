@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.71 2007-10-30 09:22:03 weis Exp $ *)
+(* $Id: parser.mly,v 1.72 2007-10-31 08:29:01 weis Exp $ *)
 
 open Parsetree;;
 
@@ -13,8 +13,8 @@ let mk_doc doc desc = {
   ast_type = None;
 };;
 
-let mk d = mk_doc None d;;
-let mk_no_doc d = mk_doc None d;;
+let mk d = mk_doc [] d;;
+let mk_no_doc d = mk_doc [] d;;
 
 let mk_local_ident vname = mk (I_local vname);;
 
@@ -984,8 +984,8 @@ opt_semi:
 ;
 
 opt_doc:
-  | { None }
-  | DOCUMENTATION { Some $1 }
+  | { [] }
+  | DOCUMENTATION opt_doc { $1 :: $2 }
 ;
 
 following_binding_list:
