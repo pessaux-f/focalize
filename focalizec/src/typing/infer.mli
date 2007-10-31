@@ -12,10 +12,10 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.18 2007-10-30 13:27:59 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.19 2007-10-31 11:06:38 pessaux Exp $ *)
 
 exception Method_multiply_defined of
-  (Parsetree.vname * Parsetree.qualified_vname)
+  (Parsetree.vname * Parsetree.qualified_species)
 exception Unbound_type_variable of (Location.t * Parsetree.vname)
 exception Bad_sum_type_constructor_arity of
   (Parsetree.constructor_ident * Env.TypeInformation.constructor_arity)
@@ -36,7 +36,7 @@ exception Not_subspecies_missing_field of
   (Types.type_collection * Types.type_collection * Parsetree.vname *
    Location.t)
 exception Collection_not_fully_defined of
-  (Parsetree.qualified_vname * Parsetree.vname)
+  (Parsetree.qualified_species * Parsetree.vname)
 exception Scheme_contains_type_vars of
   (Parsetree.vname * Types.type_scheme * Location.t)
 

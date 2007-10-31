@@ -45,22 +45,22 @@ module TypeInformation :
 
     and species_field =
       | SF_sig of
-	  (Parsetree.qualified_vname * Parsetree.vname *
+	  (Parsetree.qualified_species * Parsetree.vname *
 	   Types.type_scheme)
       | SF_let of
-	  (Parsetree.qualified_vname * Parsetree.vname *
+	  (Parsetree.qualified_species * Parsetree.vname *
 	   (Parsetree.vname list) *
 	   Types.type_scheme * Parsetree.expr)
       | SF_let_rec of
-	  (Parsetree.qualified_vname * Parsetree.vname *
+	  (Parsetree.qualified_species * Parsetree.vname *
 	   (Parsetree.vname list) *
 	   Types.type_scheme * Parsetree.expr) list
       | SF_theorem of
-	  (Parsetree.qualified_vname * Parsetree.vname *
+	  (Parsetree.qualified_species * Parsetree.vname *
 	   Types.type_scheme *
 	   Parsetree.prop * Parsetree.proof)
       | SF_property of
-	  (Parsetree.qualified_vname * Parsetree.vname *
+	  (Parsetree.qualified_species * Parsetree.vname *
 	   Types.type_scheme * Parsetree.prop)
 
     type species_description = {

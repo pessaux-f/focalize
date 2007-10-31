@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.23 2007-10-30 21:15:07 weis Exp $ *)
+(* $Id: dep_analysis.ml,v 1.24 2007-10-31 11:06:38 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -1118,14 +1118,14 @@ let erase_field field =
       (begin
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
-          Sourcify.pp_vname vname Sourcify.pp_qualified_vname from;
+          Sourcify.pp_vname vname Sourcify.pp_qualified_species from ;
       []  (* No explicit "rep" means ... no "rep". *)
       end)
     else [field]
   | Env.TypeInformation.SF_let (from, vname, _, sch, _) ->
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
-          Sourcify.pp_vname vname Sourcify.pp_qualified_vname from;
+          Sourcify.pp_vname vname Sourcify.pp_qualified_species from ;
       (* Turn the "let" into a "sig". *)
       [Env.TypeInformation.SF_sig (from, vname, sch)]
   | Env.TypeInformation.SF_let_rec l ->
@@ -1134,13 +1134,13 @@ let erase_field field =
         (fun (from, n, _, sch, _) ->
           if Configuration.get_verbose () then
             Format.eprintf "Erasing field '%a' coming from '%a'.@."
-              Sourcify.pp_vname n Sourcify.pp_qualified_vname from;
+              Sourcify.pp_vname n Sourcify.pp_qualified_species from ;
           Env.TypeInformation.SF_sig (from, n, sch))
         l
   | Env.TypeInformation.SF_theorem (from, n, sch, prop, _) ->
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
-          Sourcify.pp_vname n Sourcify.pp_qualified_vname from;
+          Sourcify.pp_vname n Sourcify.pp_qualified_species from ;
       (* Turn the "theorem" into a "property". *)
       [Env.TypeInformation.SF_property (from, n, sch, prop)]
   | _ -> [field]                       (* Everything else is unchanged. *)

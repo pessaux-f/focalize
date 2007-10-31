@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.50 2007-10-31 09:53:17 pessaux Exp $ *)
+(* $Id: env.ml,v 1.51 2007-10-31 11:06:38 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -318,12 +318,12 @@ module TypeInformation = struct
   and species_field =
     | SF_sig of
         ((** Where the sig comes from (the most recent in inheritance). *)
-         Parsetree.qualified_vname *
+         Parsetree.qualified_species *
          Parsetree.vname *          (** The sig's name. *)
          Types.type_scheme          (** The sig's type scheme. *))
     | SF_let of
         ((** Where the let-bound comes from (the most recent in inheritance). *)
-         Parsetree.qualified_vname *
+         Parsetree.qualified_species *
          Parsetree.vname *       (** Name of the let-bound definition. *)
          (** Parameters of the let-bound definition. *)
          (Parsetree.vname list) *
@@ -332,7 +332,7 @@ module TypeInformation = struct
     | SF_let_rec of
         ((** Where the let-rec-bound comes from (the most recent in
              inheritance). *)
-         Parsetree.qualified_vname *
+         Parsetree.qualified_species *
          Parsetree.vname * (** Name of the let-rec-bound definition. *)
          (** Parameters of the let-rec-bound definition. *)
          (Parsetree.vname list) *
@@ -342,14 +342,14 @@ module TypeInformation = struct
              mutually recursive bound identifier. *)
     | SF_theorem of
         ((** Where the theorem comes from (the most recent in inheritance). *)
-         Parsetree.qualified_vname *
+         Parsetree.qualified_species *
          Parsetree.vname *      (** The theorem's name. *)
          Types.type_scheme *    (** The theorem's type scheme. *)
          Parsetree.prop *       (** The theorem's body. *)
          Parsetree.proof        (** The theorem's proof. *))
     | SF_property of
         ((** Where the property comes from (the most recent in inheritance). *)
-         Parsetree.qualified_vname *
+         Parsetree.qualified_species *
          Parsetree.vname *       (** The property's name. *)
          Types.type_scheme *     (** The property's type scheme. *)
          Parsetree.prop          (** The property's body. *))
@@ -511,12 +511,12 @@ module TypeInformation = struct
       (function
         | SF_sig (from, vname, ty_scheme) ->
             Format.fprintf ppf "(* From species %a. *)@\n"
-              Sourcify.pp_qualified_vname from;
+              Sourcify.pp_qualified_species from ;
             Format.fprintf ppf "sig %a : %a@\n"
               Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
         | SF_let (from, vname, _, ty_scheme, _) ->
             Format.fprintf ppf "(* From species %a. *)@\n"
-              Sourcify.pp_qualified_vname from;
+              Sourcify.pp_qualified_species from ;
             Format.fprintf ppf "let %a : %a@\n"
               Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
         | SF_let_rec rec_bounds ->
@@ -525,26 +525,26 @@ module TypeInformation = struct
              | [] -> assert false  (* Empty let rec is non sense ! *)
              | (from, vname, _, ty_scheme, _) :: rem ->
          Format.fprintf ppf "(* From species %a. *)@\n"
-           Sourcify.pp_qualified_vname from;
+           Sourcify.pp_qualified_species from ;
          Format.fprintf ppf "let rec %a : %a@\n"
            Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme;
          List.iter
            (fun (local_from, v, _, s, _) ->
              Format.fprintf ppf
                "(* From species %a. *)@\n"
-               Sourcify.pp_qualified_vname local_from;
+               Sourcify.pp_qualified_species local_from ;
              Format.fprintf ppf "and %a : %a@\n"
                Sourcify.pp_vname v Types.pp_type_scheme s)
            rem
             end)
         | SF_theorem (from, vname, ty_scheme, _, _) ->
             Format.fprintf ppf "(* From species %a. *)@\n"
-              Sourcify.pp_qualified_vname from;
+              Sourcify.pp_qualified_species from ;
             Format.fprintf ppf "theorem %a : %a@\n"
               Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
         | SF_property (from, vname, ty_scheme, _) ->
             Format.fprintf ppf "(* From species %a. *)@\n"
-              Sourcify.pp_qualified_vname from;
+              Sourcify.pp_qualified_species from ;
             Format.fprintf ppf "property %a : %a@\n"
               Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme)
       methods

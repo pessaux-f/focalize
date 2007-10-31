@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.34 2007-10-31 08:29:01 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.35 2007-10-31 11:06:24 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -82,11 +82,21 @@ let pp_generic_ast desc_printer_fct ppf g_ast =
   Format.fprintf ppf "%a" desc_printer_fct g_ast.Parsetree.ast_desc
 ;;
 
+
+
 let pp_qualified_vname ppf = function
   | Vname vname -> Format.fprintf ppf "%a" pp_vname vname
   | Qualified (modname, vname) ->
-    Format.fprintf ppf "%s#%a" modname pp_vname vname
+      Format.fprintf ppf "%s#%a" modname pp_vname vname
 ;;
+
+
+
+let pp_qualified_species ppf (modname, vname) =
+  Format.fprintf ppf "%s#%a" modname pp_vname vname
+;;
+
+
 
 (* An abbrev to get simpler code. *)
 let pp_qvname = pp_qualified_vname;;
