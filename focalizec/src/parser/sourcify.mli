@@ -11,8 +11,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.mli,v 1.13 2007-10-31 11:06:24 pessaux Exp $ *)
+(* $Id: sourcify.mli,v 1.14 2007-11-01 17:12:04 weis Exp $ *)
 
+(** Printing source files from AST. *)
 
 val pp_vname : Format.formatter -> Parsetree.vname -> unit
 val pp_vnames : string -> Format.formatter -> Parsetree.vname list -> unit
@@ -23,10 +24,9 @@ val pp_ident : Format.formatter -> Parsetree.ident -> unit
 val pp_constructor_ident :
   Format.formatter -> Parsetree.constructor_ident -> unit
 val pp_file : Format.formatter -> Parsetree.file -> unit
-;;
 (** The pretty printer for focalize abstract syntax trees that generates
     focalize source code. *)
-
+;;
 
 (* Exported for debug. To disapear from interface. *)
 val pp_expr : Format.formatter -> Parsetree.expr -> unit
