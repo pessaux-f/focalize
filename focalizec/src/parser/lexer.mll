@@ -1,24 +1,25 @@
-(* $Id: lexer.mll,v 1.26 2007-09-26 13:56:47 weis Exp $ *)
+(* $Id: lexer.mll,v 1.27 2007-11-01 18:20:34 weis Exp $ *)
 
 {
 open Lexing;;
 open Parser;;
 
 type error =
-  | Illegal_character of char
-  | Illegal_escape of string
-  | Unterminated_comment
-  | Uninitiated_comment
-  | Unterminated_string
-  | Unterminated_documentation
-  | Comment_in_string
+   | Illegal_character of char
+   | Illegal_escape of string
+   | Unterminated_comment
+   | Uninitiated_comment
+   | Unterminated_string
+   | Unterminated_documentation
+   | Comment_in_string
 ;;
 
 exception Error of error * Lexing.position * Lexing.position;;
 
 let keyword_table = Hashtbl.create 42;;
 
-List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
+List.iter
+ (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
   "alias", ALIAS;
   "all", ALL;
   "and", AND;
@@ -70,7 +71,8 @@ List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
   "use", USE;
   "value", VALUE;
   "with", WITH;
-];;
+]
+;;
 
 (* Lexing the documentation tokens. *)
 let initial_documentation_buffer = String.create 256;;
@@ -181,7 +183,9 @@ let update_loc lexbuf file line absolute chars =
   }
 ;;
 
-let mk_external_code s = EXTERNAL_CODE (String.sub s 2 (String.length s - 4));;
+let mk_external_code s =
+  EXTERNAL_CODE (String.sub s 2 (String.length s - 4))
+;;
 
 (* The prefix version of a prefix operator. *)
 let ident_of_prefixop s = PIDENT s;;
@@ -313,9 +317,8 @@ let blank = [ ' ' '\009' '\012' ]
          LIDENT DOT LIDENT
          which, if '.' were in infixes characters, would be parsed as LIDENT
          followed by the infix DOT LIDENT.
-         (For instance, r.label would be the two tokens 
-          LIDENT "r" and DOT_OP ".label")
-*)
+         (For instance, r.label would be the two tokens
+          LIDENT "r" and DOT_OP ".label"). *)
 
 let lowercase_char = [ 'a'-'z' ]
 let uppercase_char = [ 'A'-'Z' ]
@@ -368,34 +371,26 @@ let continue_infix_ident =
 
   Note : the first rule for lowercase identifiers
           '_'* ( lowercase | decimal )
-  gives us _1 as ident
-  and _ is a special case to produce the token UNDERSCORE.
+  gives us _1 as ident (as well as _[0-9]+)
+  _identifier_ is also an ident since '_' is in continue_ident
 
-  In a _U_ b the token _U_ is not an infix
+  and _ is a special case of identifier to produce the token UNDERSCORE.
 
-  _[0-9]+
-  _[identifier]_
+  In a _U_ b the token _U_ is not an infix but an uppercase ident. *)
 
-*)
+(** Identifiers *)
 
-(** (1) Les identificateurs infixes, noms des opérations binaires
-
-   Ne comprennent ni Quote DoubleQuote qui sont des délimiteurs
-   de chaînes et de caractères.
-
-   Rq: End_Infix ::= SPACE  (::= blanc tab newline) ( ) [] {} *)
-
-(* Identifiers *)
 let regular_lowercase_ident = start_lowercase_ident continue_ident*
 let regular_uppercase_ident = start_uppercase_ident continue_ident*
 let regular_infix_ident = start_infix_ident continue_infix_ident*
 let regular_prefix_ident = start_prefix_ident continue_prefix_ident*
 
 (** Delimited identifiers. *)
-let delimited_lowercase_ident = 
+
+let delimited_lowercase_ident =
   '`' '`' start_lowercase_ident [^'\'']* '\'' '\''
 
-let delimited_uppercase_ident = 
+let delimited_uppercase_ident =
   '`' '`' start_uppercase_ident [^'\'']* '\'' '\''
 
 let delimited_infix_ident =
@@ -510,10 +505,6 @@ rule token = parse
   | ']' { RBRACKET }
   | '{' { LBRACE }
   | '}' { RBRACE }
-
-(* | '#'  { SHARP } (* To be suppressed *)
-(*    #xxx is the globally bound ident xxx. *)
-  | '!' { BANG } (* To be suppressed. *) *)
   | '.' { DOT }
   | '_' { UNDERSCORE }
 
