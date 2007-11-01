@@ -11,11 +11,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.mli,v 1.5 2007-10-09 08:38:15 pessaux Exp $ *)
+(* $Id: dump_ptree.mli,v 1.6 2007-11-01 17:08:19 weis Exp $ *)
 
 
 val pp_file :
-  Format.formatter -> (Parsetree.file_desc, 'a) Parsetree.generic_ast -> unit
+  Format.formatter -> Parsetree.file -> unit
 ;;
-(** The pretty printer that dumps the abstract syntax trees of focalize
- files. *)
+(** The pretty printer that dumps the abstract syntax trees of
+    focalize files. *)
