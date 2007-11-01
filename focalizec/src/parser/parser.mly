@@ -1,13 +1,20 @@
 %{
-(* $Id: parser.mly,v 1.72 2007-10-31 08:29:01 weis Exp $ *)
+(* $Id: parser.mly,v 1.73 2007-11-01 17:13:51 weis Exp $ *)
 
 open Parsetree;;
 
-let mk_doc doc desc = {
-  ast_loc = {
+let mk_loc () = {
     Location.l_beg = Parsing.symbol_start_pos ();
     Location.l_end = Parsing.symbol_end_pos ();
-  };
+};;
+
+let mk_doc_elem de = {
+  de_loc = mk_loc ();
+  de_desc = de;
+};;
+
+let mk_doc doc desc = {
+  ast_loc = mk_loc ();
   ast_desc = desc;
   ast_doc = doc;
   ast_type = None;
@@ -985,7 +992,7 @@ opt_semi:
 
 opt_doc:
   | { [] }
-  | DOCUMENTATION opt_doc { $1 :: $2 }
+  | DOCUMENTATION opt_doc { mk_doc_elem $1 :: $2 }
 ;
 
 following_binding_list:
