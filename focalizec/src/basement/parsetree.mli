@@ -11,42 +11,44 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.25 2007-10-31 08:29:01 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.26 2007-11-01 15:43:03 weis Exp $ *)
 
-(** {2 The Focalize abstract syntax tree definition.} *)
+(** {2 The Focalize abstract syntax tree.} *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
    This is the input type of the disambiguation pass.
-   The disambiguation pass has to :
-   - resolve global/local/method classification for idents.
-*)
+   The disambiguation pass has to resolve global/local/method
+   classification for idents. *)
 
-(** {3 The generic polymorphic type for AST nodes.} *)
+(** {3 The generic polymorphic type of AST nodes.} *)
 
 type ('a, 'b) generic_ast = {
    (** The location in the source of the AST node. *)
    ast_loc : Location.t;
    (** The description of the node. *)
    ast_desc : 'a;
-   (** The support for documentation in many formats. *)
+   (** The support for documentation in any format. *)
    ast_doc : 'b;
    (** The type of the node. *)
    mutable ast_type : Types.type_simple option;
 }
 ;;
 
-type 'a ast = ('a, string list) generic_ast;;
-type 'a ast_doc = ('a, string list) generic_ast;;
+type documentation = string list;;
+
+type 'a ast = ('a, documentation) generic_ast;;
+type 'a ast_doc = ('a, documentation) generic_ast;;
 
 (** {3 Names of the various entities.} *)
 
 (** {6 General names.} *)
 
-type modname = Types.fname;;
+type modname = Types.fname
 (** The type of ``module'' names.
   Since there are no modules in Focalize yet, modules are just files and
   module names are just file names. *)
+;;
 
 type vname =
    | Vlident of string  (** Lowercase ident. *)
@@ -59,12 +61,15 @@ type vname =
   prefix identifiers. *)
 ;;
 
-type qualified_species = modname * vname;;
+type qualified_species = modname * vname
+(** The name of a species qualified with its defining module. *)
+;;
 
 type qualified_vname =
    | Vname of vname
-   | Qualified of modname * vname;;
+   | Qualified of modname * vname
 (** A [vname] with possibly a modulename qualification. *)
+;;
 
 type constructor_name = vname
 (** A constructor name as mentioned in type definitions. *)
@@ -87,7 +92,7 @@ and expr_ident_desc =
     (** The optional collection name before the "!" sign,
         and the name of the method. *)
 (** The identifiers that appear in expressions: they could be globally or
-   locally bound identifiers or method names. *)
+    locally bound identifiers or method names. *)
 ;;
 
 type constructor_ident = constructor_ident_desc ast
@@ -110,11 +115,13 @@ type ident = ident_desc ast
 and ident_desc =
   | I_local of vname
   | I_global of qualified_vname
-(** Unclassified identifiers: identifiers that appear anywhere else in the
-  parse trees. *)
+(** Unclassified identifiers: identifiers that can appear anywhere
+    in the parse trees. *)
 ;;
 
 (** {3 Type expressions.} *)
+
+(** Types for representations of collections. *)
 
 type rep_type_def = rep_type_def_desc ast_doc
 and rep_type_def_desc =
@@ -123,8 +130,9 @@ and rep_type_def_desc =
   | RTE_app of ident * rep_type_def list
   | RTE_prod of rep_type_def list
   | RTE_paren of rep_type_def
-(** Types for representations of collections. *)
 ;;
+
+(** Types for all other entites: values, constructors, ... *)
 
 type type_expr = type_expr_desc ast
 and type_expr_desc =
@@ -135,38 +143,40 @@ and type_expr_desc =
   | TE_self
   | TE_prop
   | TE_paren of type_expr
-(** Types for values, constructors, ... *)
 ;;
 
 (** {3 External definitions for values and constructors.} *)
 
 (** {6 External languages name definitions.} *)
 
+(** The external languages known to the compiler are [Caml] and [Coq].
+    Any other language can be mentioned as external using its name
+    which is uninterpreted. *)
+
 type external_language =
   | EL_Caml
   | EL_Coq
   | EL_external of string
-(** The external languages known to the compiler are [Caml], [Coq], and any
-    other mentioned as such language name which is an uninterpreted string. *)
 ;;
 
 (** {6 External expressions.} *)
 
+(** An external expression is a list that binds an external language name
+    to an expression in this language.*)
+
 type external_expr = external_expr_desc ast
 and external_expr_desc =
     (external_language * external_code) list
-(** An external expression is a list that bind an external language name to an
-    expression in this language.*)
 
 and external_code = string
 (** Foreign expressions are not parsed: they are just considered
-    as strings of bytes. *)
+    as unstructured strings of bytes. *)
 ;;
 
 (** {3 Type definitions.} *)
 
 (** Type definitions can be either external type definitions,
-  or simple type definitions of the language. *)
+    or simple type definitions of the language. *)
 
 type type_def = type_def_desc ast
 and type_def_desc = {
@@ -188,7 +198,8 @@ and external_type_def_body_desc = {
   etdb_internal : simple_type_def_body option;
   (** The external view of the externally defined type. *)
   etdb_external : external_expr;
-  (** The external mapping of constructors of labels of the externally defined type. *)
+  (** The external mapping of the constructors or labels
+      of the externally defined type. *)
   etdb_bindings : external_bindings;
  }
 
@@ -228,9 +239,9 @@ and pat_desc =
   | P_paren of pattern
 ;;
 
-(** {3 Species definitions.} *)
+(** {3 Expressions.} *)
 
-(** {6 Various flags.} *)
+(** {6 Various flags for let definitions.} *)
 
 type rec_flag = | RF_no_rec | RF_rec;;
 
@@ -238,126 +249,9 @@ type logical_flag = | LF_no_logical | LF_logical;;
 
 type local_flag = | LF_no_local | LF_local;;
 
-(** {6 The big rec def!} *)
+(** {6 Expressions and let definitions.} *)
 
-type species_def = species_def_desc ast_doc
-and species_def_desc = {
-  sd_name : vname;
-  sd_params : (vname * species_param_type) list;
-  sd_inherits : (species_expr list) ast_doc;
-  sd_fields : species_field list;
-}
-
-and species_param_type = species_param_type_desc ast
-and species_param_type_desc =
-  | SPT_in of ident
-  | SPT_is of species_expr
-
-and species_expr = species_expr_desc ast
-and species_expr_desc = {
-  se_name : ident;
-  se_params : species_param list;
-}
-
-and species_param = species_param_desc ast
-and species_param_desc =
-  | SP of expr
-
-and sig_def = sig_def_desc ast_doc
-and sig_def_desc = {
-  sig_name : vname;
-  sig_type : type_expr;
-}
-
-and proof_def = proof_def_desc ast_doc
-and proof_def_desc = {
-  pd_name : vname;
-  pd_proof : proof;
-}
-
-and property_def = property_def_desc ast_doc
-and property_def_desc = {
-  prd_name : vname;
-  prd_prop : prop;
-}
-
-and species_field = species_field_desc ast
-and species_field_desc =
-  | SF_rep of rep_type_def
-  | SF_sig of sig_def
-  | SF_let of let_def
-  | SF_property of property_def
-  | SF_theorem of theorem_def
-  | SF_proof of proof_def
-
-and let_def = let_def_desc ast_doc
-and let_def_desc = {
-  ld_rec : rec_flag;
-  ld_logical : logical_flag;
-  ld_local : local_flag;
-  ld_bindings : binding list;
-}
-
-and binding = binding_desc ast
-and binding_desc = {
-  b_name : vname;
-  b_params : (vname * type_expr option) list;
-  b_type : type_expr option;
-  b_body : expr;
-}
-
-and theorem_def = theorem_def_desc ast_doc
-and theorem_def_desc = {
-  th_name : vname;
-  th_local : local_flag;
-  th_stmt : prop;
-  th_proof : proof;
-}
-
-and fact = fact_desc ast
-and fact_desc =
-  | F_def of expr_ident list
-  | F_property of expr_ident list
-  | F_hypothesis of vname list
-  | F_node of node_label list
-
-and proof = proof_desc ast
-and proof_desc =
-  | Pf_assumed
-  | Pf_auto of fact list
-  | Pf_coq of string
-  | Pf_node of proof_node list
-
-and proof_node = proof_node_desc ast
-and proof_node_desc =
-  | PN_sub of node_label * statement * proof
-  | PN_qed of node_label * proof
-
-and statement = statement_desc ast
-and statement_desc = {
-  s_hyps : hyp list;
-  s_concl : prop option;
-}
-
-and hyp = hyp_desc ast
-and hyp_desc =
-  | H_var of vname * type_expr
-  | H_hyp of vname * prop
-  | H_not of vname * expr
-
-and prop = prop_desc ast
-and prop_desc =
-  | Pr_forall of vname list * type_expr * prop
-  | Pr_exists of vname list * type_expr * prop
-  | Pr_imply of prop * prop
-  | Pr_or of prop * prop
-  | Pr_and of prop * prop
-  | Pr_equiv of prop * prop
-  | Pr_not of prop
-  | Pr_expr of expr
-  | Pr_paren of prop
-
-and expr = expr_desc ast
+type expr = expr_desc ast
 and expr_desc =
   | E_self
   | E_const of constant
@@ -374,6 +268,153 @@ and expr_desc =
   | E_tuple of expr list
   | E_external of external_expr
   | E_paren of expr
+
+and let_def = let_def_desc ast_doc
+and let_def_desc = {
+  ld_rec : rec_flag;
+  ld_logical : logical_flag;
+  ld_local : local_flag;
+  ld_bindings : binding list;
+}
+
+and binding = binding_desc ast
+and binding_desc = {
+  b_name : vname;
+  b_params : (vname * type_expr option) list;
+  b_type : type_expr option;
+  b_body : expr;
+}
+;;
+
+(** {3 Proofs.} *)
+
+(** {6 Propositions.} *)
+
+type prop = prop_desc ast
+and prop_desc =
+  | Pr_forall of vname list * type_expr * prop
+  | Pr_exists of vname list * type_expr * prop
+  | Pr_imply of prop * prop
+  | Pr_or of prop * prop
+  | Pr_and of prop * prop
+  | Pr_equiv of prop * prop
+  | Pr_not of prop
+  | Pr_expr of expr
+  | Pr_paren of prop
+;;
+
+(** {6 Hypotheses, statements and facts.} *)
+
+type hyp = hyp_desc ast
+and hyp_desc =
+  | H_var of vname * type_expr
+  | H_hyp of vname * prop
+  | H_not of vname * expr
+;;
+
+type statement = statement_desc ast
+and statement_desc = {
+  s_hyps : hyp list;
+  s_concl : prop option;
+}
+;;
+
+type fact = fact_desc ast
+and fact_desc =
+  | F_def of expr_ident list
+  | F_property of expr_ident list
+  | F_hypothesis of vname list
+  | F_node of node_label list
+;;
+
+(** Proofs. *)
+
+type proof = proof_desc ast
+and proof_desc =
+  | Pf_assumed
+  | Pf_auto of fact list
+  | Pf_coq of string
+  | Pf_node of proof_node list
+
+and proof_node = proof_node_desc ast
+and proof_node_desc =
+  | PN_sub of node_label * statement * proof
+  | PN_qed of node_label * proof
+;;
+
+(** {3 Species definitions.} *)
+
+(** {6 Intra species definitions.} *)
+
+(** Signatures, proofs, theorems, and property definitions that
+    may appear inside species.} *)
+
+type sig_def = sig_def_desc ast_doc
+and sig_def_desc = {
+  sig_name : vname;
+  sig_type : type_expr;
+}
+;;
+
+type proof_def = proof_def_desc ast_doc
+and proof_def_desc = {
+  pd_name : vname;
+  pd_proof : proof;
+}
+;;
+
+type property_def = property_def_desc ast_doc
+and property_def_desc = {
+  prd_name : vname;
+  prd_prop : prop;
+}
+;;
+
+type theorem_def = theorem_def_desc ast_doc
+and theorem_def_desc = {
+  th_name : vname;
+  th_local : local_flag;
+  th_stmt : prop;
+  th_proof : proof;
+}
+;;
+
+(** {6 Species expressions.} *)
+
+type species_expr = species_expr_desc ast
+and species_expr_desc = {
+  se_name : ident;
+  se_params : species_param list;
+}
+
+and species_param = species_param_desc ast
+and species_param_desc =
+  | SP of expr
+;;
+
+(** {6 Species definitions.} *)
+
+type species_def = species_def_desc ast_doc
+and species_def_desc = {
+  sd_name : vname;
+  sd_params : (vname * species_param_type) list;
+  sd_inherits : (species_expr list) ast_doc;
+  sd_fields : species_field list;
+}
+
+and species_param_type = species_param_type_desc ast
+and species_param_type_desc =
+  | SPT_in of ident
+  | SPT_is of species_expr
+
+and species_field = species_field_desc ast
+and species_field_desc =
+  | SF_rep of rep_type_def
+  | SF_sig of sig_def
+  | SF_let of let_def
+  | SF_property of property_def
+  | SF_theorem of theorem_def
+  | SF_proof of proof_def
 ;;
 
 (** {3 Collection definitions.} *)
@@ -384,7 +425,6 @@ and coll_def_desc = {
   cd_body : species_expr;
 }
 ;;
-
 
 (** {3 Toplevel entities.} *)
 
