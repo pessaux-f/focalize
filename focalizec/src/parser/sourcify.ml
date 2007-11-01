@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.35 2007-10-31 11:06:24 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.36 2007-11-01 17:12:47 weis Exp $ *)
 
 open Parsetree;;
 
@@ -61,25 +61,24 @@ let pp_node_labels sep ppf =
 
 
 (* ************************************************************************ *)
-(* pp_generic_ast :                                                         *)
+(* pp_ast :                                                         *)
 (*   (Format.formatter -> 'a -> unit) ->                                    *)
-(*     Format.formatter -> ('a, string) Parsetree.generic_ast -> unit       *)
+(*     Format.formatter -> ('a, string) Parsetree.ast -> unit       *)
 (** {b Descr} : Wrapper to apply pretty-printing only on the 'ast_doc' and
-              'ast_desc' fields of a generic_ast. Ignores all other fields.
+              'ast_desc' fields of a ast. Ignores all other fields.
     {b Rem} : Not exported ouside this module.                              *)
 (* ************************************************************************ *)
-let pp_generic_ast desc_printer_fct ppf g_ast =
+let pp_ast desc_printer_fct ppf ast =
+  let print_doc_elem ppf de = Format.fprintf ppf "(** %s *)@ " de.de_desc in
+  let print_doc_elems ppf des =
+      List.iter (fun d -> Format.fprintf ppf "%a@ " print_doc_elem d) des in
   let print_documentation = function
     | [] -> ()
-    | docs ->
-      let print_doc ppf d = Format.fprintf ppf "(** %s *)@ " d in
-      let print_docs ppf ds =
-        List.iter (fun d -> Format.fprintf ppf "%a@ " print_doc d) ds in
-      Format.fprintf ppf "@[<v>%a@]" print_docs docs in
+    | docs -> Format.fprintf ppf "@[<v>%a@]" print_doc_elems docs in
   (* First, print the documentation if some exists. *)
-  print_documentation g_ast.Parsetree.ast_doc;
+  print_documentation ast.Parsetree.ast_doc;
   (* Then, print the code itself. *)
-  Format.fprintf ppf "%a" desc_printer_fct g_ast.Parsetree.ast_desc
+  Format.fprintf ppf "%a" desc_printer_fct ast.Parsetree.ast_desc
 ;;
 
 
@@ -111,7 +110,7 @@ let pp_ident_desc ppf = function
 
     {b Rem} : Exported ouside this module.                     *)
 (* *********************************************************** *)
-let pp_ident ppf = pp_generic_ast pp_ident_desc ppf
+let pp_ident ppf = pp_ast pp_ident_desc ppf
 ;;
 (* ********************************************************************* *)
 (* string -> Format.formatter -> Parsetree.ident list -> unit            *)
@@ -140,7 +139,7 @@ let pp_label_ident_desc ppf = function
        structure.
     {b Rem} : Not exported ouside this module.                     *)
 (* *************************************************************** *)
-let pp_label_ident ppf = pp_generic_ast pp_label_ident_desc ppf;;
+let pp_label_ident ppf = pp_ast pp_label_ident_desc ppf;;
 
 
 
@@ -165,7 +164,7 @@ let pp_expr_ident_desc ppf = function
 
     {b Rem} : Exported ouside this module.                          *)
 (* **************************************************************** *)
-let pp_expr_ident ppf = pp_generic_ast pp_expr_ident_desc ppf
+let pp_expr_ident ppf = pp_ast pp_expr_ident_desc ppf
 ;;
 (* ************************************************************************** *)
 (* string -> Format.formatter -> Parsetree.expr_ident list -> unit            *)
@@ -182,7 +181,7 @@ let pp_expr_idents sep ppf =
 let pp_constructor_ident_desc ppf (Parsetree.CI qvname) =
   Format.fprintf ppf "%a" pp_qvname qvname
 ;;
-let pp_constructor_ident ppf = pp_generic_ast pp_constructor_ident_desc ppf
+let pp_constructor_ident ppf = pp_ast pp_constructor_ident_desc ppf
 ;;
 
 
@@ -276,7 +275,7 @@ and pp_rep_type_defs sep ppf =
 
     {b Rem} : Not exported ouside this module.                        *)
 (* ****************************************************************** *)
-and pp_rep_type_def ppf = pp_generic_ast pp_rep_type_def_desc ppf
+and pp_rep_type_def ppf = pp_ast pp_rep_type_def_desc ppf
 ;;
 
 
@@ -328,7 +327,7 @@ and pp_type_exprs_with_prio prio sep ppf =
               is internal stuff !                                    *)
 (* ***************************************************************** *)
 and pp_type_expr_with_prio prio ppf =
-  pp_generic_ast (pp_type_expr_desc prio) ppf
+  pp_ast (pp_type_expr_desc prio) ppf
 (* ************************************************************************* *)
 (*  int -> string -> Format.formatter -> Parsetree.type_expr list -> unit    *)
 (** {b Descr} : Pretty prints a [list] of [type_expr] value as FoCal source.
@@ -347,7 +346,7 @@ and pp_type_exprs sep ppf =
 
     {b Rem} : Not exported ouside this module.                     *)
 (* *************************************************************** *)
-and pp_type_expr ppf = pp_generic_ast (pp_type_expr_desc 0) ppf
+and pp_type_expr ppf = pp_ast (pp_type_expr_desc 0) ppf
 ;;
 
 
@@ -374,7 +373,7 @@ let pp_constant_desc ppf = function
 
     {b Rem} : Not exported ouside this module.                    *)
 (* ************************************************************** *)
-let pp_constant = pp_generic_ast pp_constant_desc
+let pp_constant = pp_ast pp_constant_desc
 ;;
 
 
@@ -455,7 +454,7 @@ and pp_patterns sep ppf = Handy.pp_generic_separated_list sep pp_pattern ppf
 
     {b Rem} : Not exported ouside this module.                   *)
 (* ************************************************************* *)
-and pp_pattern ppf = pp_generic_ast pp_pat_desc ppf
+and pp_pattern ppf = pp_ast pp_pat_desc ppf
 ;;
 
 
@@ -509,7 +508,7 @@ let pp_external_expr_desc ppf lst =
 
     {b Rem} : Not exported ouside this module.                         *)
 (* ******************************************************************* *)
-let pp_external_expr ppf = pp_generic_ast pp_external_expr_desc ppf;;
+let pp_external_expr ppf = pp_ast pp_external_expr_desc ppf;;
 
 
 
@@ -548,7 +547,7 @@ let rec pp_species_def_desc ppf def =
 
     {b Rem} : Not exported ouside this module.                       *)
 (* ***************************************************************** *)
-and pp_species_def ppf = pp_generic_ast pp_species_def_desc ppf
+and pp_species_def ppf = pp_ast pp_species_def_desc ppf
 
 
 
@@ -572,7 +571,7 @@ and pp_species_param_type_desc ppf = function
 
     {b Rem} : Not exported ouside this module.                           *)
 (* ********************************************************************* *)
-and pp_species_param_type ppf = pp_generic_ast pp_species_param_type_desc ppf
+and pp_species_param_type ppf = pp_ast pp_species_param_type_desc ppf
 
 
 
@@ -585,7 +584,7 @@ and pp_species_expr_desc ppf sed =
     end
 and pp_species_exprs sep ppf =
   Handy.pp_generic_separated_list sep pp_species_expr ppf
-and pp_species_expr ppf = pp_generic_ast pp_species_expr_desc ppf
+and pp_species_expr ppf = pp_ast pp_species_expr_desc ppf
 
 
 
@@ -593,28 +592,28 @@ and pp_species_param_desc ppf = function
   | Parsetree.SP expr -> Format.fprintf ppf "%a" pp_expr expr
 and pp_species_params sep ppf =
   Handy.pp_generic_separated_list sep pp_species_param ppf
-and pp_species_param ppf = pp_generic_ast pp_species_param_desc ppf
+and pp_species_param ppf = pp_ast pp_species_param_desc ppf
 
 
 
 and pp_sig_def_desc ppf sdd =
   Format.fprintf ppf "@[<2>sig@ %a :@ %a@]"
     pp_vname sdd.Parsetree.sig_name pp_type_expr sdd.Parsetree.sig_type
-and pp_sig_def ppf = pp_generic_ast pp_sig_def_desc ppf
+and pp_sig_def ppf = pp_ast pp_sig_def_desc ppf
 
 
 
 and pp_proof_def_desc ppf pdd =
   Format.fprintf ppf "@[<2>proof of@ %a@ =@ %a@]"
     pp_vname pdd.Parsetree.pd_name pp_proof pdd.Parsetree.pd_proof
-and pp_proof_def ppf = pp_generic_ast pp_proof_def_desc ppf
+and pp_proof_def ppf = pp_ast pp_proof_def_desc ppf
 
 
 
 and pp_property_def_desc ppf pdd =
   Format.fprintf ppf "@[<2>property@ %a :@ %a@]"
     pp_vname pdd.Parsetree.prd_name pp_prop pdd.Parsetree.prd_prop
-and pp_property_def ppf = pp_generic_ast pp_property_def_desc ppf
+and pp_property_def ppf = pp_ast pp_property_def_desc ppf
 
 
 
@@ -632,7 +631,7 @@ and pp_species_field_desc ppf = function
   | Parsetree.SF_proof proof_def ->
       Format.fprintf ppf "%a@;" pp_proof_def proof_def
 and pp_species_fields ppf = Handy.pp_generic_newlined_list pp_species_field ppf
-and pp_species_field ppf = pp_generic_ast pp_species_field_desc ppf
+and pp_species_field ppf = pp_ast pp_species_field_desc ppf
 
 
 
@@ -665,7 +664,7 @@ and pp_let_def_desc ppf ldd =
 
     {b Rem} : Not exported ouside this module.                   *)
 (* ************************************************************* *)
-and pp_let_def ppf = pp_generic_ast pp_let_def_desc ppf
+and pp_let_def ppf = pp_ast pp_let_def_desc ppf
 
 
 
@@ -700,7 +699,7 @@ and pp_binding_desc ppf bd =
 
     {b Rem} : Not exported ouside this module.                   *)
 (* ************************************************************* *)
-and pp_binding ppf = pp_generic_ast pp_binding_desc ppf
+and pp_binding ppf = pp_ast pp_binding_desc ppf
 
 
 
@@ -723,7 +722,7 @@ and pp_theorem_def_desc ppf tdd =
 
     {b Rem} : Not exported ouside this module.                        *)
 (* ****************************************************************** *)
-and pp_theorem_def ppf = pp_generic_ast pp_theorem_def_desc ppf
+and pp_theorem_def ppf = pp_ast pp_theorem_def_desc ppf
 
 
 
@@ -737,7 +736,7 @@ and pp_fact_desc ppf = function
   | Parsetree.F_node node_labels ->
       Format.fprintf ppf "step %a" (pp_node_labels ",") node_labels
 and pp_facts sep ppf = Handy.pp_generic_separated_list sep pp_fact ppf
-and pp_fact ppf = pp_generic_ast pp_fact_desc ppf
+and pp_fact ppf = pp_ast pp_fact_desc ppf
 
 
 
@@ -750,7 +749,7 @@ and pp_proof_desc ppf = function
   | Parsetree.Pf_coq s -> Format.fprintf ppf "@[<2>coq proof@ {*%s*}@]" s
   | Parsetree.Pf_node proof_nodes ->
       Format.fprintf ppf "%a" (pp_proof_nodes "") proof_nodes
-and pp_proof ppf = pp_generic_ast pp_proof_desc ppf
+and pp_proof ppf = pp_ast pp_proof_desc ppf
 
 
 
@@ -761,7 +760,7 @@ and pp_proof_node_desc ppf = function
   | Parsetree.PN_qed (node_label, proof) ->
       Format.fprintf ppf "%a qed@\n%a" pp_node_label node_label pp_proof proof
 and pp_proof_nodes sep ppf = Handy.pp_generic_separated_list sep proof_node ppf
-and proof_node ppf = pp_generic_ast pp_proof_node_desc ppf
+and proof_node ppf = pp_ast pp_proof_node_desc ppf
 
 
 
@@ -769,7 +768,7 @@ and pp_statement_desc ppf stmt =
   Format.fprintf ppf "%a@ %a"
     (pp_hyps "") stmt.Parsetree.s_hyps
     (Handy.pp_generic_option "prove " pp_prop) stmt.Parsetree.s_concl
-and pp_statement ppf = pp_generic_ast pp_statement_desc ppf
+and pp_statement ppf = pp_ast pp_statement_desc ppf
 
 
 
@@ -783,7 +782,7 @@ and pp_hyp_desc ppf = function
       Format.fprintf ppf "@[<2>notation %a =@ %a,@ @]"
         pp_vname vname pp_expr expr
 and pp_hyps sep ppf = Handy.pp_generic_separated_list sep pp_hyp ppf
-and pp_hyp ppf = pp_generic_ast pp_hyp_desc ppf
+and pp_hyp ppf = pp_ast pp_hyp_desc ppf
 
 
 
@@ -805,7 +804,7 @@ and pp_prop_desc ppf = function
   | Parsetree.Pr_not p -> Format.fprintf ppf "@[<2>not@ %a@]" pp_prop p
   | Parsetree.Pr_expr e -> Format.fprintf ppf "%a" pp_expr e
   | Parsetree.Pr_paren p -> Format.fprintf ppf "@[<1>(%a)@]" pp_prop p
-and pp_prop ppf = pp_generic_ast pp_prop_desc ppf
+and pp_prop ppf = pp_ast pp_prop_desc ppf
 
 
 
@@ -889,7 +888,7 @@ and pp_expr_desc ppf = function
   | Parsetree.E_paren expr ->
       Format.fprintf ppf "@[<1>(%a)@]" pp_expr expr
 and pp_exprs sep ppf = Handy.pp_generic_separated_list sep pp_expr ppf
-and pp_expr ppf = pp_generic_ast pp_expr_desc ppf
+and pp_expr ppf = pp_ast pp_expr_desc ppf
 ;;
 
 
@@ -898,7 +897,7 @@ let pp_coll_def_desc ppf cdd =
   Format.fprintf ppf "@[<2>collection@ %a@ implements@ %a@\nend@;;@]@\n"
     pp_vname cdd.Parsetree.cd_name pp_species_expr cdd.Parsetree.cd_body
 ;;
-let pp_coll_def ppf = pp_generic_ast pp_coll_def_desc ppf
+let pp_coll_def ppf = pp_ast pp_coll_def_desc ppf
 ;;
 
 
@@ -930,7 +929,7 @@ let pp_simple_type_def_body_desc ppf = function
         lab_exprs
 ;;
 let pp_simple_type_def_body ppf =
-  pp_generic_ast pp_simple_type_def_body_desc ppf
+  pp_ast pp_simple_type_def_body_desc ppf
 ;;
 
 
@@ -961,7 +960,7 @@ let pp_external_type_def_body_desc ppf ex_tydef_body =
     pp_external_bindings ex_tydef_body.Parsetree.etdb_bindings
 ;;
 let pp_external_type_def_body ppf =
-  pp_generic_ast pp_external_type_def_body_desc ppf
+  pp_ast pp_external_type_def_body_desc ppf
 ;;
 
 
@@ -972,7 +971,7 @@ let pp_type_def_body_desc ppf = function
   | Parsetree.TDB_external external_tydef_body ->
       Format.fprintf ppf "%a" pp_external_type_def_body external_tydef_body
 ;;
-let pp_type_def_body ppf = pp_generic_ast pp_type_def_body_desc ppf
+let pp_type_def_body ppf = pp_ast pp_type_def_body_desc ppf
 ;;
 
 
@@ -989,7 +988,7 @@ let pp_type_def_desc ppf td =
       td.Parsetree.td_params;
   Format.fprintf ppf "=@ %a@]" pp_type_def_body td.Parsetree.td_body
 ;;
-let pp_type_def ppf = pp_generic_ast pp_type_def_desc ppf;;
+let pp_type_def ppf = pp_ast pp_type_def_desc ppf;;
 
 
 
@@ -1009,7 +1008,7 @@ let pp_phrase_desc ppf = function
       Format.fprintf ppf "%a;;" pp_theorem_def t_def
   | Parsetree.Ph_expr expr -> Format.fprintf ppf "%a;;" pp_expr expr
 ;;
-let pp_phrase ppf = pp_generic_ast pp_phrase_desc ppf
+let pp_phrase ppf = pp_ast pp_phrase_desc ppf
 ;;
 let pp_phrases ppf = Handy.pp_generic_newlined_list pp_phrase ppf
 ;;
@@ -1031,5 +1030,5 @@ let pp_file_desc ppf = function
 
     {b Rem} : Exported ouside this module.                    *)
 (* ********************************************************** *)
-let pp_file ppf = pp_generic_ast pp_file_desc ppf
+let pp_file ppf = pp_ast pp_file_desc ppf
 ;;
