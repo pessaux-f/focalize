@@ -265,7 +265,7 @@ types d'espèces   type des collections ?
                   Si l'on imposait de définir une collection Int implémentant
                   des entiers, alors on pourrait écrire (v in Int) et les
                   expressions de types ne pourraient plus apparaître que dans
-                  la défitition des carriers.
+                  la définition des carriers.
                   On stratifierait ainsi complètement les "types ML" et les
                   "types de collections".
                                                                      FAIT
@@ -303,7 +303,7 @@ soit toujours explicite (plus de None). Ainsi, dans une unité de compilation
                                                            Status: FAIT
 
 Pour les ident nativement I_method (comme pour les I_local pour lesquels on
-a déterminé qu'ils nommaient une méthode de Self), si la method provient
+a déterminé qu'ils nommaient une méthode de Self), si la methode provient
 de Self, alors on laisse None plutôt que de mettre explicitement Self.
 Ceci fait qu'on obtiendra moralement un "!meth" au lieu d'un "Self!meth". On
 peut le changer facilement si le besoin s'en fait sentir d'ailleurs.
@@ -323,13 +323,13 @@ Le scoping permet de s'assurer que les identificateurs sont bien liés, et à
 quoi. Mais, dans certains cas on a besoin de types pour ça (par exemple "c
 is C ... c#meth" comme "c" est un paramètre pour savoir s'il a la méthode
 "meth", il faudrait non pas aller voir dans la structure de "c" lui-même,
-mais dans celle ... de son type ! C'est-à-dire de "C" !
+mais dans celle ... de son type ! C'est-à-dire de "C" !)
 Ce qu'il se passe c'est que l'on possède forcément déjà un identificateur
 I_method ici et qu'en voulant le "re-scoper" en fait on fait l'identité,
-seulement pour y parvenir on fait une vérification de "liage". On comme on
+seulement pour y parvenir on fait une vérification de "liage". Or, comme on
 vient de voir que ceci n'est pas possible dans ce cas sans les types, il
 faudra prévoir un mécanisme pour ne pas échouer.
-Il n'emeche que pour ce qui est des identificateur scopés par #, la question
+Il n'empêche que pour ce qui est des identificateur scopés par #, la question
 ne se pose pas car on n'a pas de notion de "paramètre de toplevel de fichier".
 
 
@@ -358,9 +358,16 @@ auquel on veut réellement accéder.
 Solution: un binding d'environment est taggé soit comme "Absolute" (il provient
 d'une définition se trouvant explicitement dans l'unité de compilation
 actuellement analysée), soit "Opened" (il provient d'une directive "use" ou
-"open".
+"open").
                                                            Status: FAIT
 
+??? PW 2007-11-1
+Je ne comprends pas vraiment ce probleme, pourquoi ne pas ajouter les
+liaisons du fichier courant en passant systématiquement par une injection ?
+
+Après open Fichier_avec_foo dans toto.foc, il est logique que
+foo référence Fichier_avec_foo#foo (pas toto#foo)
+et toto#foo référence bien sûr toto#foo. Quel est le problème ???
 
 2007-08-05 (François)
 =====================
@@ -375,6 +382,8 @@ Ceci impliquerait donc qu'il faille aussi scoper les noms de champs de records.
 On pourrait alors remplacer la simple string représentant le nom du champ par
 (fname option) * string. Pas besoin de la généralité d'un ident car il ne peut
 pas être "I_method".
+
+                                                           Status: FAIT
 
 
 
@@ -396,13 +405,13 @@ besoin de connaître les types pour scoper (ce qui casserait notre belle
 stratifications scoping PUIS typing).
 A priori la réponse est NON car le scoping ne sert qu'à résoudre les ambiguités
 induites par le fait de rendre optionnel (tacite) le #. Or ceci n'implique que
-la recherche dans les méthodes de l'arbre d'héritage de l'espèce courante Self).
+la recherche dans les méthodes de l'arbre d'héritage de l'espèce courante (Self).
 Or le type de cette espèce est implicitement connu lorsque l'on l'analyse et
 il n'y a pas besoin de calculs sur les types en vue de déterminer à quel type
 d'espèce la méthode "bla" peut appartenir dans "#bla".
 Ceci signifie toutefois que lors de la passe de scoping on ne peut pas être
 certain qu'un ident déjà qualifié est bien effectivement lié. Ceci, par contre,
-nécressite du typage.
+nécéssite du typage.
 
 
 2007-08-06 (François)
@@ -442,6 +451,16 @@ Par contre, il faut réfléchir dans ce cas ce que deviennent les noms de types
 "simple" comme "bool", "int" qui eux sont actuellement considérés comme des
 I_local et qui donc ne rentrerait pas dans un schéma fname option * vname.
 
+PW 2007/11/1
+                                          Status: FAIT :
+                                          - les idents de type ne peuvent être
+                                             que I_local ou I_global
+                                          À faire ([unsure]):
+                                          - pour bool et int, il doivent être
+                                            scopés en
+                                            I_global ("internal", Vlident "int")
+
+PW: Cela rejoint le discussion sur les types vraiment internes que nous avons eue.
 
 
 * RUGOSITÉS DE LA SYNTAXE.
@@ -463,13 +482,16 @@ D'ailleurs c'est en lien direct avec la bizarerie suivante:
 ******************************
 L'information dans le contexte de typage de ce à quoi Self est égal est
 un type. Or lors des unifications, maintenant que tous les types ont
-un binding level, le sien peu être affecté.
-Et je pense que ça peur conduire à empêcher des généralisations. Il vaudrait
-mieux metre un schéma de type que l'on instancierait à la demande avec
+un binding level, le sien peut être affecté.
+Et je pense que ça peut conduire à empêcher des généralisations. Il vaudrait
+mieux mettre un schéma de type que l'on instancierait à la demande avec
 le binding level courant.
 En plus, ça éviterait sans doute le "hack" du [is_self].
 
-
+PW 2007-11-1: Je ne suis pas sûr que ce soit correct. Mettre un schéma de
+type dans l'environnement et l'instancier à la demande ne suffit pas pour
+assurer la correction. Il faut en plus que soit cohérent!
+Ça me semble rejoindre le problème général de la règle mu, non ?
 
 2007-08-21 (François)
 =====================
