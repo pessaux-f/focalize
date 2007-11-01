@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.26 2007-11-01 15:43:03 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.27 2007-11-01 17:06:08 weis Exp $ *)
 
 (** {2 The Focalize abstract syntax tree.} *)
 
@@ -23,22 +23,33 @@
 
 (** {3 The generic polymorphic type of AST nodes.} *)
 
-type ('a, 'b) generic_ast = {
+(** AST documentation support:
+    documentation elements are special lexems that can appear in specified
+    nodes according to the grammar of the language.
+    A documentation is a list of such documentation elements.
+    The contents of documentation elements is free style, provided that the
+    documentation element is a legal language comment (hence, the usual end of
+    comment marker of the language cannot appear in a documentation element).
+    Note that an empty list of documentation elements stands for no
+    documentation at all. *)
+type documentation = doc_elem list
+and doc_elem = {
+  de_loc : Location.t;
+  de_desc : string;
+}
+;;
+
+type 'a ast = {
    (** The location in the source of the AST node. *)
    ast_loc : Location.t;
    (** The description of the node. *)
    ast_desc : 'a;
-   (** The support for documentation in any format. *)
-   ast_doc : 'b;
+   (** The support for documentation. *)
+   ast_doc : documentation;
    (** The type of the node. *)
    mutable ast_type : Types.type_simple option;
 }
 ;;
-
-type documentation = string list;;
-
-type 'a ast = ('a, documentation) generic_ast;;
-type 'a ast_doc = ('a, documentation) generic_ast;;
 
 (** {3 Names of the various entities.} *)
 
@@ -123,7 +134,7 @@ and ident_desc =
 
 (** Types for representations of collections. *)
 
-type rep_type_def = rep_type_def_desc ast_doc
+type rep_type_def = rep_type_def_desc ast
 and rep_type_def_desc =
   | RTE_ident of ident
   | RTE_fun of rep_type_def * rep_type_def
@@ -269,7 +280,7 @@ and expr_desc =
   | E_external of external_expr
   | E_paren of expr
 
-and let_def = let_def_desc ast_doc
+and let_def = let_def_desc ast
 and let_def_desc = {
   ld_rec : rec_flag;
   ld_logical : logical_flag;
@@ -349,28 +360,28 @@ and proof_node_desc =
 (** Signatures, proofs, theorems, and property definitions that
     may appear inside species.} *)
 
-type sig_def = sig_def_desc ast_doc
+type sig_def = sig_def_desc ast
 and sig_def_desc = {
   sig_name : vname;
   sig_type : type_expr;
 }
 ;;
 
-type proof_def = proof_def_desc ast_doc
+type proof_def = proof_def_desc ast
 and proof_def_desc = {
   pd_name : vname;
   pd_proof : proof;
 }
 ;;
 
-type property_def = property_def_desc ast_doc
+type property_def = property_def_desc ast
 and property_def_desc = {
   prd_name : vname;
   prd_prop : prop;
 }
 ;;
 
-type theorem_def = theorem_def_desc ast_doc
+type theorem_def = theorem_def_desc ast
 and theorem_def_desc = {
   th_name : vname;
   th_local : local_flag;
@@ -394,11 +405,11 @@ and species_param_desc =
 
 (** {6 Species definitions.} *)
 
-type species_def = species_def_desc ast_doc
+type species_def = species_def_desc ast
 and species_def_desc = {
   sd_name : vname;
   sd_params : (vname * species_param_type) list;
-  sd_inherits : (species_expr list) ast_doc;
+  sd_inherits : (species_expr list) ast;
   sd_fields : species_field list;
 }
 
@@ -419,7 +430,7 @@ and species_field_desc =
 
 (** {3 Collection definitions.} *)
 
-type coll_def = coll_def_desc ast_doc
+type coll_def = coll_def_desc ast
 and coll_def_desc = {
   cd_name : vname;
   cd_body : species_expr;
@@ -443,7 +454,7 @@ and phrase_desc =
   | Ph_expr of expr_def
 ;;
 
-type file = file_desc ast_doc
+type file = file_desc ast
 and file_desc =
   | File of phrase list
 ;;
