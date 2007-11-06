@@ -36,6 +36,44 @@ type t2 = | A | B ;;
 A ;;
 B;;
 
+type rec_type =
+| RT1 (int)
+| RT2 (rec_type)
+;;
+
+type rec_type_poly ('a) =
+| RT1 ('a)
+| RT2 (rec_type_poly ('a))
+;;
+
+(* A "diagonal" type to test external manifest abbreviation definitions. *)
+type foc_diag ('a) =
+  internal alias ('a * 'a)
+  external
+  | caml -> "('a * 'a)"
+  | coq -> "{ fst : 'a ; snd : 'a}"
+;;
+
+(* An external record type. *)
+type foc_record ('a) =
+  internal  { hcode = int ; contents = 'a; }
+  external
+  | caml -> "'a Focvasives.foc_record"
+  | coq -> "Focq.foc_record ['a]"
+
+  and hcode =
+  | caml -> "Focvasives.fv_hashing_code"
+  | coq -> "Focq.hc"
+
+  and contents =
+  | caml -> "Focvasives.fv_contents"
+  | coq -> "Focq.conts"
+;;
+let junk = { hcode = 42 ; contents = "Same same..." } ;;
+if true then junk else { hcode = 43 ; contents = "Not same..." } ;;
+
+let a in foc_diag (int) = (1, 4) ;;
+
 type option ('a) = | None | Some ('a) ;;
 #None ;;
 let u = #None ;;
@@ -65,6 +103,8 @@ let not_b (x) in bool =
    | false -> true
 ;;
 
+(* Must be mapped onto OCaml's type list. *)
+basics#Cons (1, basics#Nil) ;;
 
 species Basic_object =
   let equal (x in Self, y in Self) = true ;

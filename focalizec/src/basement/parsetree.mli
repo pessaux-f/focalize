@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.27 2007-11-01 17:06:08 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.28 2007-11-06 10:14:58 pessaux Exp $ *)
 
 (** {2 The Focalize abstract syntax tree.} *)
 
@@ -209,8 +209,8 @@ and external_type_def_body_desc = {
   etdb_internal : simple_type_def_body option;
   (** The external view of the externally defined type. *)
   etdb_external : external_expr;
-  (** The external mapping of the constructors or labels
-      of the externally defined type. *)
+  (** The external mapping of constructors of labels of the externally
+      defined type. *)
   etdb_bindings : external_bindings;
  }
 

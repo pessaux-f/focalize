@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.ml,v 1.6 2007-10-31 15:33:37 pessaux Exp $ *)
+(* $Id: misc_ml_generation.ml,v 1.7 2007-11-06 10:14:58 pessaux Exp $ *)
 
 
 (* ********************************************************************* *)
@@ -20,7 +20,7 @@
               name, preventing the versatile FoC operators names from
               being lexically incorrect if straighforwardly converted
               into OCaml identifiers.
-	      The transformation is pretty stupid, replacing all the
+              The transformation is pretty stupid, replacing all the
               legal "symbolic" characters available for FoC prefix/infix
               idents (extracted from the lexer definitions) by a regular
               string.
@@ -32,34 +32,34 @@ let parse_operator_string op_string =
   String.iter
     (fun character ->
       let str_tail =
-	(match character with
-	 | '`' -> "_focop_bquote_"
-	 | '~' -> "_focop_tilda_"
-	 | '?' -> "_focop_question_"
-	 | '$' -> "_focop_dollar_"
-	 | '!' -> "_focop_bang_"
-	 | '#' -> "_focop_sharp_"
-	 | '+' -> "_focop_plus_"
-	 | '-' -> "_focop_minus_"
-	 | '*' -> "_focop_star_"
-	 | '/' -> "_focop_slash_"
-	 | '%' -> "_focop_percent_"
-	 | '&' -> "_focop_ampers_"
-	 | '|' -> "_focop_pipe_"
-	 | ',' -> "_focop_comma_"
-	 | ':' -> "_focop_colon_"
-	 | ';' -> "_focop_semi_"
-	 | '<' -> "_focop_lt_"
-	 | '=' -> "_focop_eq_"
-	 | '>' -> "_focop_gt_"
-	 | '@' -> "_focop_at_"
-	 | '^' -> "_focop_hat_"
-	 | '\\' -> "_focop_bslash"
-	 | whatever ->
-	     (* For any other character, keep it unchanged. *)
-	     let s = " " in
-	     s.[0] <- whatever ;
-	     s) in
+        (match character with
+         | '`' -> "_focop_bquote_"
+         | '~' -> "_focop_tilda_"
+         | '?' -> "_focop_question_"
+         | '$' -> "_focop_dollar_"
+         | '!' -> "_focop_bang_"
+         | '#' -> "_focop_sharp_"
+         | '+' -> "_focop_plus_"
+         | '-' -> "_focop_minus_"
+         | '*' -> "_focop_star_"
+         | '/' -> "_focop_slash_"
+         | '%' -> "_focop_percent_"
+         | '&' -> "_focop_ampers_"
+         | '|' -> "_focop_pipe_"
+         | ',' -> "_focop_comma_"
+         | ':' -> "_focop_colon_"
+         | ';' -> "_focop_semi_"
+         | '<' -> "_focop_lt_"
+         | '=' -> "_focop_eq_"
+         | '>' -> "_focop_gt_"
+         | '@' -> "_focop_at_"
+         | '^' -> "_focop_hat_"
+         | '\\' -> "_focop_bslash"
+         | whatever ->
+             (* For any other character, keep it unchanged. *)
+             let s = " " in
+             s.[0] <- whatever ;
+             s) in
       (* Appending on string is not very efficient, but *)
       (* this should not be a real matter here ! *)
       renamed_operator := !renamed_operator ^ str_tail)
@@ -103,11 +103,11 @@ let pp_to_ocaml_label_ident ppf lab_ident =
   match lab_ident.Parsetree.ast_desc with
    | Parsetree.LI qual_name ->
        let vname =
-	 (match qual_name with
-	  | Parsetree.Vname n -> n
-	  | Parsetree.Qualified (modname, n) ->
-	      Format.fprintf ppf "%s." (String.capitalize modname) ;
-	      n) in
+         (match qual_name with
+          | Parsetree.Vname n -> n
+          | Parsetree.Qualified (modname, n) ->
+              Format.fprintf ppf "%s." (String.capitalize modname) ;
+              n) in
        Format.fprintf ppf "%a" pp_to_ocaml_vname vname
 ;;
 
@@ -184,33 +184,33 @@ let bind_parameters_to_types_from_type_scheme opt_scheme params_names =
    | Some scheme ->
        (begin
        try
-	 let type_from_scheme = Types.specialize scheme in
-	 (* Be careful, the bindings list is built reversed ! We must finally *)
-	 (* reverse it again to keep the right order (i.e. first argument in  *)
-	 (* head of the list.                                                 *)
-	 let rec rec_bind accu_bindings ty = function
-	   | [] -> accu_bindings
-	   | h :: q ->
-	       (* We split the functionnal type. First, get argument type. *)
- 	       let h_type = Types.extract_fun_ty_arg ty in
-	       (* Next, get the result type. *)
-	       let q_type = Types.extract_fun_ty_result ty in
-	       (* We bind the current parameter to the "head-type" *)
+         let type_from_scheme = Types.specialize scheme in
+         (* Be careful, the bindings list is built reversed ! We must finally *)
+         (* reverse it again to keep the right order (i.e. first argument in  *)
+         (* head of the list.                                                 *)
+         let rec rec_bind accu_bindings ty = function
+           | [] -> accu_bindings
+           | h :: q ->
+               (* We split the functionnal type. First, get argument type. *)
+               let h_type = Types.extract_fun_ty_arg ty in
+               (* Next, get the result type. *)
+               let q_type = Types.extract_fun_ty_result ty in
+               (* We bind the current parameter to the "head-type" *)
                (* and continue with the remaining parameters using *)
                (* the "tail-type".                                 *)
-	       rec_bind ((h, (Some h_type)) :: accu_bindings) q_type q in
+               rec_bind ((h, (Some h_type)) :: accu_bindings) q_type q in
 
-	 (* ********************** *)
-	 (* Now, let's do the job. *)
-	 let revd_mapping = rec_bind [] type_from_scheme params_names in
-	 (* Put the resulting mapping in the right order. *)
-	 List.rev revd_mapping
+         (* ********************** *)
+         (* Now, let's do the job. *)
+         let revd_mapping = rec_bind [] type_from_scheme params_names in
+         (* Put the resulting mapping in the right order. *)
+         List.rev revd_mapping
        with _ ->
-	 (* Because the typechecking was done in the previous passes, the   *)
-	 (* program must be well-typed at this point. Then unification must *)
-	 (* always be successfull. If it fails, then there is a bug         *)
+         (* Because the typechecking was done in the previous passes, the   *)
+         (* program must be well-typed at this point. Then unification must *)
+         (* always be successfull. If it fails, then there is a bug         *)
          (* somewhere else before !                                         *)
-	 assert false
+         assert false
        end)
 ;;
 

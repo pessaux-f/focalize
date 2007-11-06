@@ -28,10 +28,19 @@ type bool =
   external
   | caml -> "bool"
 ;;
+
 type list ('a) =
   internal
+  | Nil
+  | Cons ('a, list ('a))
   external
   | caml -> "'a list"
+
+and Nil =
+  | caml -> "[]"
+
+and Cons =
+  | caml -> "( :: )"
 ;;
 
 let foc_error =

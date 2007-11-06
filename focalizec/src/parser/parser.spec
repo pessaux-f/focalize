@@ -54,8 +54,8 @@ clause may be a bit more structured, as in
 
 \begin{verbatim}
 external Cons =
- | Caml -> "( :: )"
- | Coq -> "cons";;
+ | caml -> "( :: )"
+ | coq -> "cons";;
 \end{verbatim}
 
 Also we may want to differentiate the concepts bound (and to be more similar to
@@ -63,13 +63,13 @@ the specifications of identifiers):
 
 \begin{verbatim}
 external type list =
- | Caml -> "list"
- | Coq -> "List.list"
+ | caml -> "list"
+ | coq -> "List.list"
 ;;
 
 external val Cons =
- | Caml -> "( :: )"
- | Coq -> "cons";;
+ | caml -> "( :: )"
+ | coq -> "cons";;
 \end{verbatim}
 
 
@@ -93,16 +93,16 @@ type foc_list ('a) =
   | Cons ('a, foc_list ('a))
 
   external
-  | Caml -> "'a, list"
-  | Coq -> "List.list ['a]"
+  | caml -> "'a list"
+  | coq -> "List.list ['a]"
 
   and Nil =
-  | Caml -> "[]"
-  | Coq -> "nil"
+  | caml -> "[]"
+  | coq -> "nil"
 
   and Cons =
-  | Caml -> "( :: )"
-  | Coq -> "cons"
+  | caml -> "( :: )"
+  | coq -> "cons"
 ;;
 \end{verbatim}
 
@@ -116,16 +116,16 @@ type foc_record ('a) =
   { hcode : int; contents : 'a; }
 
   external
-  | Caml -> "'a Focvasives.foc_record"
-  | Coq -> "Focq.foc_record ['a]"
+  | caml -> "'a Focvasives.foc_record"
+  | coq -> "Focq.foc_record ['a]"
 
   and hcode =
-  | Caml -> "Focvasives.fv_hashing_code"
-  | Coq -> "Focq.hc"
+  | caml -> "Focvasives.fv_hashing_code"
+  | coq -> "Focq.hc"
 
   and contents =
-  | Caml -> "Focvasives.fv_contents"
-  | Coq -> "Focq.conts"
+  | caml -> "Focvasives.fv_contents"
+  | coq -> "Focq.conts"
 ;;
 \end{verbatim}
 
@@ -136,21 +136,21 @@ External type definition for abbreviation types:
 type foc_pair ('a, 'b) =
   [internal] (* No internal definition: type is fully abstract. *)
   external
-  | Caml -> "('a, 'b)"
-  | Coq -> "{fst : 'a; snd : 'b}"
+  | caml -> "('a, 'b)"
+  | coq -> "{fst : 'a; snd : 'b}"
 ;;
 
 type foc_diag ('a) =
   internal ('a * 'a)
   external
-  | Caml -> "('a, 'a)"
-  | Coq -> "{fst : 'a; snd : 'a}
+  | caml -> "('a * 'a)"
+  | coq -> "{ fst : 'a ; snd : 'a}"
 ;;
 
 type int =
   external
-  | Caml -> "int"
-  | Coq -> "Z"
+  | caml -> "int"
+  | coq -> "Z"
 ;;
 \end{verbatim}
 
@@ -164,8 +164,8 @@ We could have chosen:
 let sc = (external : string -> string -> string);;
 
 external value sc =
-  | Caml -> "concat"
-  | Coq -> "^"
+  | caml -> "concat"
+  | coq -> "^"
 ;;
 \end{verbatim}
 
@@ -176,8 +176,8 @@ type definitions:
 let sc =
   internal string -> string -> string
   external
-  | Caml -> "Pervasives.( ^ )"
-  | Coq -> "Focq.catenate"
+  | caml -> "Pervasives.( ^ )"
+  | coq -> "Focq.catenate"
 ;;
 \end{verbatim}
 
@@ -190,8 +190,8 @@ let sc =
 type int =
   internal Internal#int
   external
-  | Caml -> "int"
-  | Coq -> "Z"
+  | caml -> "int"
+  | coq -> "Z"
 ;;
 
 (** Internal#t ne peut apparaître que dans une clause internal et ne peut
@@ -200,8 +200,8 @@ faire référence qu'à un constructeur de l'algèbre des types de base. *)
 type t =
   internal Internal#int
   external
-  | Caml -> "int"
-  | Coq -> "Z"
+  | caml -> "int"
+  | coq -> "Z"
 ;;
 
 (** Crée dans l'environnement
@@ -224,8 +224,8 @@ fois si une option non documentée du compilateur ?).
 type t =
   internal (* Fully abstract *)
   external
-  | Caml -> "int"
-  | Coq -> "Z"
+  | caml -> "int"
+  | coq -> "Z"
 ;;
 (** Les valeurs de t sont abstraites. Et donc: *)
 
@@ -262,8 +262,8 @@ La fonction int_litteral devrait être définie en focalize comme external
 let int_litteral =
   internal: string -> integer
   external
-  | Caml -> "Pervasives.int_of_string"
-  | Coq -> ""
+  | caml -> "Pervasives.int_of_string"
+  | coq -> ""
 ;;
 
 L'intérêt annexe est la possibilité de redéfinir les constantes de base,
@@ -271,8 +271,8 @@ simplement en redéfinissant une fonction utilisateur. Par exemple
 let int_litteral =
   internal: string -> big_integer
   external
-  | Caml -> "Num.num_of_string"
-  | Coq -> "??"
+  | caml -> "Num.num_of_string"
+  | coq -> "??"
 ;;
 
 Par extension on pourrait aussi avoir bool_litteral, char_litteral ...,

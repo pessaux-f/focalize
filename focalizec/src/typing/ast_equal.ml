@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: ast_equal.ml,v 1.2 2007-09-28 08:40:10 pessaux Exp $ *)
+(* $Id: ast_equal.ml,v 1.3 2007-11-06 10:14:58 pessaux Exp $ *)
 
 (* ********************************************************************** *)
 (** {b Descr} : This module performs test equality of the AST expression.
@@ -124,8 +124,8 @@ let rec pattern pattern1 pattern2 =
        (constructor_ident id1 id2) && (List.for_all2 pattern pats1 pats2)
    | ((Parsetree.P_record labs_pats1), (Parsetree.P_record labs_pats2)) ->
        List.for_all2
-	 (fun (lab1, pat1) (lab2, pat2) -> (lab1 = lab2) && (pattern pat1 pat2))
-	 labs_pats1 labs_pats2
+         (fun (lab1, pat1) (lab2, pat2) -> (lab1 = lab2) && (pattern pat1 pat2))
+         labs_pats1 labs_pats2
    | ((Parsetree.P_tuple pats1), (Parsetree.P_tuple pats2)) ->
        List.for_all2 pattern pats1 pats2
    | ((Parsetree.P_paren p1), (Parsetree.P_paren p2)) -> pattern p1 p2
@@ -189,25 +189,25 @@ let rec expr expression1 expression2 =
    | ((Parsetree.E_match (e1, pats_es1)), (Parsetree.E_match (e2, pats_es2))) ->
        (expr e1 e2) &&
        (List.for_all2
-	  (fun (pat1, e1) (pat2, e2) -> (pattern pat1 pat2) && (expr e1 e2))
-	  pats_es1 pats_es2)
+          (fun (pat1, e1) (pat2, e2) -> (pattern pat1 pat2) && (expr e1 e2))
+          pats_es1 pats_es2)
    | ((Parsetree.E_if (e1, e1', e1'')), (Parsetree.E_if (e2, e2', e2''))) ->
        (expr e1 e2) && (expr e1' e2') && (expr e1'' e2'')
    | ((Parsetree.E_let (ldef1, e1)), (Parsetree.E_let (ldef2, e2))) ->
        (let_def ldef1 ldef2) && (expr e1 e2)
    | ((Parsetree.E_record labs_es1), (Parsetree.E_record labs_es2)) ->
        List.for_all2
-	 (fun (lab1, e1) (lab2, e2) -> (lab1 = lab2) && (expr e1 e2))
-	 labs_es1 labs_es2
+         (fun (lab1, e1) (lab2, e2) -> (lab1 = lab2) && (expr e1 e2))
+         labs_es1 labs_es2
    | ((Parsetree.E_record_access (e1, lab1)),
       (Parsetree.E_record_access (e2, lab2))) ->
-	(expr e1 e2) && (lab1 = lab2)
+        (expr e1 e2) && (lab1 = lab2)
    | ((Parsetree.E_record_with (e1, labs_es1)),
       (Parsetree.E_record_with (e2, labs_es2))) ->
-	(expr e1 e2) &&
-	(List.for_all2
-	   (fun (lab1, e1) (lab2, e2) -> (lab1 = lab2) && (expr e1 e2))
-	   labs_es1 labs_es2)
+        (expr e1 e2) &&
+        (List.for_all2
+           (fun (lab1, e1) (lab2, e2) -> (lab1 = lab2) && (expr e1 e2))
+           labs_es1 labs_es2)
    | ((Parsetree.E_tuple es1), (Parsetree.E_tuple es2)) ->
        List.for_all2 expr es1 es2
    | ((Parsetree.E_external ee1), (Parsetree.E_external ee2)) ->
@@ -264,9 +264,9 @@ and bindind bnd1 bnd2 =
        (n1 = n2)
        &&
        (match (te_opt1, te_opt2) with
-	| (None, None) -> true
-	| ((Some te1), (Some te2)) -> type_expr te1 te2
-	| (_, _) -> false))
+        | (None, None) -> true
+        | ((Some te1), (Some te2)) -> type_expr te1 te2
+        | (_, _) -> false))
      bnd1_desc.Parsetree.b_params bnd2_desc.Parsetree.b_params)
   &&
   (expr bnd1_desc.Parsetree.b_body bnd2_desc.Parsetree.b_body)
@@ -286,7 +286,7 @@ let rec prop prop1 prop2 =
       (Parsetree.Pr_forall (vnames2, ty_expr2, p2)))
    | ((Parsetree.Pr_exists (vnames1, ty_expr1, p1)),
       (Parsetree.Pr_exists (vnames2, ty_expr2, p2))) ->
-	vnames1 = vnames2 && (type_expr ty_expr1 ty_expr2) && (prop p1 p2)
+        vnames1 = vnames2 && (type_expr ty_expr1 ty_expr2) && (prop p1 p2)
    | ((Parsetree.Pr_imply (p1, p1')), (Parsetree.Pr_imply (p2, p2')))
    | ((Parsetree.Pr_or (p1, p1')), (Parsetree.Pr_or (p2, p2')))
    | ((Parsetree.Pr_and (p1, p1')), (Parsetree.Pr_and (p2, p2')))

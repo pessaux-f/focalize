@@ -63,7 +63,7 @@ species Monoid inherits Setoid_with_one, Semi_group =
     proof: by property one_is_neutral, equal_symmetric, equal_transitive ;
 end ;;
 
-(* [Unsure] A compléter ci-dessous...
+(* [Unsure] A compléter ci-dessous... Quand on aura les espèces locales.
 species Power_by_dichotomy (M is Monoid, Nat is Dichotomic_system)
   inherits Basic_object =
 

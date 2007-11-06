@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.51 2007-10-31 11:06:38 pessaux Exp $ *)
+(* $Id: env.ml,v 1.52 2007-11-06 10:14:58 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -89,7 +89,7 @@ let env_list_assoc ~allow_opened searched list =
 
 
 
-(* Mostly to debug.
+(* Mostly for debug purpose.
 let debug_env_list_assoc ~allow_opened searched list =
   let rec rec_assoc = function
     | [] ->
@@ -173,8 +173,8 @@ let env_from_only_absolute_bindings generic_env =
   let types' = filter generic_env.types in
   let values' = filter generic_env.values in
   let species' = filter generic_env.species in
-  { constructors = constructors'; labels = labels'; types = types';
-    values = values'; species = species' }
+  { constructors = constructors' ; labels = labels' ; types = types' ;
+    values = values' ; species = species' }
 ;;
 
 
@@ -439,10 +439,16 @@ module TypeInformation = struct
   type type_kind =
     | TK_abstract       (** Abstract types and type abbreviations. *)
     | TK_external of    (** Abstract types externally defined. *)
-	Parsetree.external_expr
+        (Parsetree.external_expr *   (** On what to map the type constructor in
+                                         the external languages. *)
+         Parsetree.external_bindings)  (** On what to map the possible sum
+                                           constructors or field labels. *)
     | TK_variant of     (** Sum types. *)
-	(Parsetree.constructor_name * constructor_arity *
-	 Types.type_scheme) list
+        (Parsetree.constructor_name *   (** Name of sum contructor. *)
+         constructor_arity *            (** Arity of sum contructor. *)
+         Types.type_scheme)             (** Type scheme of sum constructor. *)
+        list                            (** ... and this for all constructor of
+                                            this type. *)
     | TK_record of  (** Record types: list of labels. Any value of a type
         record will be typed as a [ST_construct] whose name is
         the name of the record type. *)
@@ -596,6 +602,15 @@ module MlGenInformation = struct
         environment. *)
     collection_generator_info option
 
+  (** The list of mappings according to external languages to know to which
+      string the record type field name corresponds. *)
+  type label_mapping_info = Parsetree.external_expr_desc
+
+  (** The list of mappings according to external languages to know to which
+      string the sum type constructor corresponds. For instance, in Caml,
+      "Nil" will be mapped onto "[]" and "Cons" to "( :: )". *)
+  type constructor_mapping_info = Parsetree.external_expr_desc
+
 
   (* ************************************************************** *)
   (** {b Descr} : Type abbreviation to shorten the structure of the
@@ -604,7 +619,8 @@ module MlGenInformation = struct
       {b Rem} : Not exported outside this module.                   *)
   (* ************************************************************** *)
   type env =
-    (unit, unit, unit, unit, species_binding_info) generic_env
+    (constructor_mapping_info, label_mapping_info, unit, unit,
+     species_binding_info) generic_env
 end
 ;;
 
@@ -615,8 +631,8 @@ end
 (* *********************************************************************** *)
 
 type fo_file_structure = {
-  ffs_scoping : ScopeInformation.env;
-  ffs_typing : TypeInformation.env;
+  ffs_scoping : ScopeInformation.env ;
+  ffs_typing : TypeInformation.env ;
   ffs_mlgeneration : MlGenInformation.env
 }
 ;;
@@ -656,15 +672,15 @@ let (scope_find_module, type_find_module, mlgen_find_module,
         (* Just ensure it's really an interface file. *)
         if Files.check_magic in_file Files.fo_magic then
           (begin
-          let envts = input_value in_file in
-          close_in in_file;
+          let (envts : fo_file_structure) = input_value in_file in
+          close_in in_file ;
           (* If the interface was found, buferize it for further uses. *)
-          buffered := (fname, envts) :: !buffered;
+          buffered := (fname, envts) :: !buffered ;
           envts
           end)
         else
           (begin
-          close_in in_file;
+          close_in in_file ;
           raise (Files.Corrupted_fo fname)
           end)
       with Files.Cant_access_file_in_search_path _ ->
@@ -772,11 +788,11 @@ let (scope_find_module, type_find_module, mlgen_find_module,
 
        {b Rem} : Not exported outside this module.                        *)
    (* ******************************************************************* *)
-   (fun ~loc ~current_unit fname_opt type_env ->
+   (fun ~loc ~current_unit fname_opt mlgen_env ->
      match fname_opt with
-      | None -> type_env
+      | None -> mlgen_env
       | Some fname ->
-          if current_unit = fname then type_env
+          if current_unit = fname then mlgen_env
           else (internal_find_module ~loc fname).ffs_mlgeneration),
 
 
@@ -1469,8 +1485,8 @@ module TypingEnv = Make (TypingEMAccess);;
 
 
 module MlGenEMAccess = struct
-  type constructor_bound_data = unit
-  type label_bound_data = unit
+  type constructor_bound_data = MlGenInformation.constructor_mapping_info
+  type label_bound_data = MlGenInformation.label_mapping_info
   type type_bound_data = unit
   type value_bound_data = unit
   type species_bound_data = MlGenInformation.species_binding_info

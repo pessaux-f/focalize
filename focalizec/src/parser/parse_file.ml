@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parse_file.ml,v 1.6 2007-09-26 09:29:52 weis Exp $ *)
+(* $Id: parse_file.ml,v 1.7 2007-11-06 10:14:58 pessaux Exp $ *)
 
 open Parsing ;;
 
@@ -47,8 +47,8 @@ let parse_file fname =
     let ast =
       try implementation lexbuff with
       | x ->
-	  close_in ic ;
-	  raise x in
+          close_in ic ;
+          raise x in
     close_in ic ;
     ast
   with

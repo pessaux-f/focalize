@@ -8,6 +8,7 @@ open "basics" ;;
 (* to the collapsing-procedure of properties and "proof of"s.           *)
 (* ******************************************************************** *)
 species Closed_A =
+  rep = basics#int ;
   let ( = ) (x in Self, y in Self) = basics#base_eq (x, y) ;
   let element = 1 ;
 

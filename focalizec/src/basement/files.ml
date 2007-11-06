@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: files.ml,v 1.9 2007-10-09 08:38:15 pessaux Exp $ *)
+(* $Id: files.ml,v 1.10 2007-11-06 10:14:58 pessaux Exp $ *)
 
 
 (** Paths for libraries lookup. *)
@@ -61,13 +61,13 @@ let (add_lib_path, get_lib_paths) =
 let open_in_from_lib_paths filename =
   let rec rec_open  = function
     | [] ->
-	(begin
-	try open_in_bin filename
-	with Sys_error _ -> raise (Cant_access_file_in_search_path filename)
-	end)
+        (begin
+        try open_in_bin filename
+        with Sys_error _ -> raise (Cant_access_file_in_search_path filename)
+        end)
     | h :: rem ->
-	try open_in_bin (Filename.concat h filename)
-	with Sys_error _ -> rec_open rem in
+        try open_in_bin (Filename.concat h filename)
+        with Sys_error _ -> rec_open rem in
   if Filename.is_relative filename then rec_open (get_lib_paths ())
   else open_in_bin filename
 ;;

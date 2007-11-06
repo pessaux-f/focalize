@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.5 2007-10-29 15:48:12 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.6 2007-11-06 10:14:58 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -23,7 +23,7 @@
 
 
 (* *********************************************************************** *)
-(* current_unit: Types.fname -> Format.formatter ->                        *)
+(* Env.MlGenEnv.t -> current_unit: Types.fname -> Format.formatter ->      *)
 (*  Infer.please_compile_me -> Env.MlGenEnv.t                              *)
 (** {b Descr} : Dispatch the OCaml code generation of a toplevel structure
               to the various more specialized code generation routines.
@@ -39,67 +39,70 @@
 
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
-let toplevel_compile ~current_unit out_fmter env = function
+let toplevel_compile env ~current_unit out_fmter = function
   | Infer.PCM_no_matter -> env
+  | Infer.PCM_open (phrase_loc, fname) ->
+      (* One must "open" the ml code generation environment of this module *)
+      (* and return the environment extended with these "opened" bindings. *)
+      Env.mlgen_open_module ~loc: phrase_loc fname env
   | Infer.PCM_species (species_def, species_descr, dep_graph) ->
       let opt_coll_gen_args =
-	Species_ml_generation.species_compile
-	  ~current_unit out_fmter species_def species_descr dep_graph in
+        Species_ml_generation.species_compile
+          env ~current_unit out_fmter species_def species_descr dep_graph in
       (* Return the ml code generation environment extended by the *)
       (* current species's collection generator information.       *)
       Env.MlGenEnv.add_species
-	~loc: species_def.Parsetree.ast_loc
-	species_def.Parsetree.ast_desc.Parsetree.sd_name
-	opt_coll_gen_args env
+        ~loc: species_def.Parsetree.ast_loc
+        species_def.Parsetree.ast_desc.Parsetree.sd_name
+        opt_coll_gen_args env
   | Infer.PCM_collection (coll_def, coll_descr, dep_graph) ->
       Species_ml_generation.collection_compile
-	~current_unit out_fmter env coll_def coll_descr dep_graph ;
+        env ~current_unit out_fmter coll_def coll_descr dep_graph ;
       (* Collection do not have collection generator, then simply add *)
       (* them in the environment with None.                           *)
       Env.MlGenEnv.add_species
         ~loc: coll_def.Parsetree.ast_loc
-	coll_def.Parsetree.ast_desc.Parsetree.cd_name None env
+        coll_def.Parsetree.ast_desc.Parsetree.cd_name None env
   | Infer.PCM_type (type_def_name, type_descr) ->
       (* Create the initial context for compiling the type definition. *)
       let ctx = {
-	Misc_ml_generation.rcc_current_unit = current_unit ;
-	(* Not under a species, hence no species parameter. *)
-	Misc_ml_generation.rcc_species_parameters_names = [] ;
-	(* Not in the context of generating a method's body code, then empty. *)
-	Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
-	Misc_ml_generation.rcc_out_fmter = out_fmter } in
-      Type_ml_generation.type_def_compile ctx type_def_name type_descr ;
-      env
+        Misc_ml_generation.rcc_current_unit = current_unit ;
+        (* Not under a species, hence no species parameter. *)
+        Misc_ml_generation.rcc_species_parameters_names = [] ;
+        (* Not in the context of generating a method's body code, then empty. *)
+        Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
+        Misc_ml_generation.rcc_out_fmter = out_fmter } in
+      Type_ml_generation.type_def_compile ctx env type_def_name type_descr
   | Infer.PCM_let_def (let_def, def_schemes) ->
       (* Create the initial context for compiling the let-definition. *)
       let ctx = {
-	Misc_ml_generation.rcc_current_unit = current_unit ;
-	(* Not under a species, hence no species parameter. *)
-	Misc_ml_generation.rcc_species_parameters_names = [] ;
-	(* Not in the context of generating a method's body code, then empty. *)
-	Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
-	Misc_ml_generation.rcc_out_fmter = out_fmter } in
+        Misc_ml_generation.rcc_current_unit = current_unit ;
+        (* Not under a species, hence no species parameter. *)
+        Misc_ml_generation.rcc_species_parameters_names = [] ;
+        (* Not in the context of generating a method's body code, so, empty. *)
+        Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
+        Misc_ml_generation.rcc_out_fmter = out_fmter } in
       (* We have the schemes under the hand. Then we will be able    *)
       (* to annotate the parameters of the toplevel let-bound idents *)
       (* with type constraints.                                      *)
       let bound_schemes = List.map (fun sch -> Some sch) def_schemes in
       (* No local idents in the scope because we are at toplevel. *)
       Base_exprs_ml_generation.let_def_compile
-	ctx ~local_idents: [] let_def bound_schemes ;
+        ctx ~local_idents: [] env let_def bound_schemes ;
       Format.fprintf out_fmter "@\n;;@\n" ;
       env
   | Infer.PCM_theorem _ -> env  (* Theorems do not lead to OCaml code. *)
   | Infer.PCM_expr expr ->
       let ctx = {
-	Misc_ml_generation.rcc_current_unit = current_unit ;
-	(* Not under a species, hence no species parameter. *)
-	Misc_ml_generation.rcc_species_parameters_names = [] ;
-	(* Not in the context of generating a method's body code, then empty. *)
-	Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
-	Misc_ml_generation.rcc_out_fmter = out_fmter
+        Misc_ml_generation.rcc_current_unit = current_unit ;
+        (* Not under a species, hence no species parameter. *)
+        Misc_ml_generation.rcc_species_parameters_names = [] ;
+        (* Not in the context of generating a method's body code, so, empty. *)
+        Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
+        Misc_ml_generation.rcc_out_fmter = out_fmter
       } in
       (* No local idents in the scope because we are at toplevel. *)
-      Base_exprs_ml_generation.generate_expr ctx ~local_idents: [] expr ;
+      Base_exprs_ml_generation.generate_expr ctx env ~local_idents: [] expr ;
       (* Generate the final double-semis. *)
       Format.fprintf out_fmter "@ ;;@\n" ;
       env
@@ -116,13 +119,14 @@ let root_compile ~current_unit ~out_file_name stuff =
   try
     List.iter
       (fun data ->
-	let new_env =
-	  toplevel_compile ~current_unit out_fmter !global_env data in
-	global_env := new_env)
+        let new_env =
+          toplevel_compile !global_env ~current_unit out_fmter data in
+        global_env := new_env)
       stuff ;
     (* Flush the pretty-printer. *)
     Format.fprintf out_fmter "@?" ;
-    close_out out_hd
+    close_out out_hd ;
+    !global_env
   with whatever ->
     (* In any error case, flush the pretty-printer and close the outfile. *)
     Format.fprintf out_fmter "@?" ;
@@ -144,7 +148,7 @@ let root_compile ~current_unit ~out_file_name stuff =
       (* problem that made the code generation impossible, we first process *)
       (* here I/O errors, then will be raise again the initial error.       *)
       Format.eprintf "Error@ while@ trying@ to@ keep@ trace@ of@ the@ partially@ generated@ OCaml@ code:@ %s.@\nInitial error follows.@."
-	(Printexc.to_string second_error)
+        (Printexc.to_string second_error)
       end)
     end) ;
     (* Re-reaise the initial error. *)

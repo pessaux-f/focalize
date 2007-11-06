@@ -726,7 +726,7 @@ species Ordered_additive_group inherits
 (* [rr]: again, looks wrong to me : x <= y => x-y <= 0, y <= x => y-x <= 0*)
  proof of leq_antisymmetric =
 (*    decl: minus_substracts plus_compat_with_order; *)
-   assumed ; (* [Unsure] Really assumed ??? *)
+   assumed ; (* [Unsure] Y'a syntax erreor en dessous. Je comprends pas *)
 (*
  def: equal;
  {*

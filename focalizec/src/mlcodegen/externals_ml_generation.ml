@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: externals_ml_generation.ml,v 1.3 2007-10-31 09:43:01 pessaux Exp $ *)
+(* $Id: externals_ml_generation.ml,v 1.4 2007-11-06 10:14:58 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -31,3 +31,27 @@ exception No_external_value_caml_def of (Parsetree.vname * Location.t) ;;
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
 exception No_external_type_caml_def of (Parsetree.vname * Location.t) ;;
+
+
+
+(* ************************************************************************ *)
+(** {b Descr} : Exception raised when an external type sum type definition
+         named a sum constructor but didn't provided any correspondance
+         with OCaml. The location of the error is self-contained in the
+         [constructor_ident].
+
+    {b Rem} : Exported outside this module.                                 *)
+(* ************************************************************************ *)
+exception No_external_constructor_caml_def of Parsetree.constructor_ident ;;
+
+
+
+(* ********************************************************************* *)
+(** {b Descr} : Exception raised when an external type record type
+         definition named a field but didn't provided any correspondance
+         with OCaml. The location of the error is self-contained in the
+         [label_ident].
+
+    {b Rem} : Exported outside this module.                              *)
+(* ********************************************************************* *)
+exception No_external_field_caml_def of Parsetree.label_ident ;;

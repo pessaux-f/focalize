@@ -45,23 +45,23 @@ module TypeInformation :
 
     and species_field =
       | SF_sig of
-	  (Parsetree.qualified_species * Parsetree.vname *
-	   Types.type_scheme)
+          (Parsetree.qualified_species * Parsetree.vname *
+           Types.type_scheme)
       | SF_let of
-	  (Parsetree.qualified_species * Parsetree.vname *
-	   (Parsetree.vname list) *
-	   Types.type_scheme * Parsetree.expr)
+          (Parsetree.qualified_species * Parsetree.vname *
+           (Parsetree.vname list) *
+           Types.type_scheme * Parsetree.expr)
       | SF_let_rec of
-	  (Parsetree.qualified_species * Parsetree.vname *
-	   (Parsetree.vname list) *
-	   Types.type_scheme * Parsetree.expr) list
+          (Parsetree.qualified_species * Parsetree.vname *
+           (Parsetree.vname list) *
+           Types.type_scheme * Parsetree.expr) list
       | SF_theorem of
-	  (Parsetree.qualified_species * Parsetree.vname *
-	   Types.type_scheme *
-	   Parsetree.prop * Parsetree.proof)
+          (Parsetree.qualified_species * Parsetree.vname *
+           Types.type_scheme *
+           Parsetree.prop * Parsetree.proof)
       | SF_property of
-	  (Parsetree.qualified_species * Parsetree.vname *
-	   Types.type_scheme * Parsetree.prop)
+          (Parsetree.qualified_species * Parsetree.vname *
+           Types.type_scheme * Parsetree.prop)
 
     type species_description = {
       spe_is_collection : bool ;
@@ -81,9 +81,9 @@ module TypeInformation :
     }
     type type_kind =
         TK_abstract
-      | TK_external of Parsetree.external_expr
+      | TK_external of (Parsetree.external_expr * Parsetree.external_bindings)
       | TK_variant of (Parsetree.constructor_name * constructor_arity *
-		       Types.type_scheme) list
+                       Types.type_scheme) list
       | TK_record of
           (Parsetree.vname * field_mutability * Types.type_scheme) list
     type type_description = {
@@ -102,12 +102,14 @@ module MlGenInformation :
   sig
     type collection_generator_info = {
       cgi_implemented_species_params_names :
-	(Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
+        (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
       cgi_generator_parameters :
-	(Parsetree.vname * Parsetree_utils.VnameSet.t) list
+        (Parsetree.vname * Parsetree_utils.VnameSet.t) list
     }
 
     type species_binding_info = collection_generator_info option
+    type label_mapping_info = Parsetree.external_expr_desc
+    type constructor_mapping_info = Parsetree.external_expr_desc
   end
 
 
@@ -127,26 +129,26 @@ module ScopingEnv :
     val add_constructor : Parsetree.constructor_name -> Types.fname -> t -> t
     val find_constructor :
       loc: Location.t -> current_unit:Types.fname ->
-	Parsetree.constructor_ident -> t -> Types.fname
+        Parsetree.constructor_ident -> t -> Types.fname
 
     val add_label : Parsetree.vname -> Types.fname -> t -> t
     val find_label :
       loc: Location.t -> current_unit: Types.fname -> Parsetree.label_ident ->
-	t -> Types.fname
+        t -> Types.fname
 
     val add_type :
       loc: Location.t -> Parsetree.vname ->
-	ScopeInformation.type_binding_info ->
+        ScopeInformation.type_binding_info ->
       t -> t
     val find_type :
       loc: Location.t -> current_unit: Types.fname -> Parsetree.ident -> t ->
-	ScopeInformation.type_binding_info
+        ScopeInformation.type_binding_info
 
     val add_species :
       loc: Location.t -> Parsetree.vname ->
-	ScopeInformation.species_binding_info -> t -> t
+        ScopeInformation.species_binding_info -> t -> t
     val find_species :
-	loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
+        loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
       t -> ScopeInformation.species_binding_info
   end
 
@@ -160,35 +162,35 @@ module TypingEnv :
     val add_value : Parsetree.vname -> Types.type_scheme -> t -> t
     val find_value :
       loc: Location.t -> current_unit: Types.fname -> Parsetree.expr_ident ->
-	t -> Types.type_scheme
+        t -> Types.type_scheme
 
     val add_constructor :
       Parsetree.constructor_name ->
       TypeInformation.constructor_description -> t -> t
     val find_constructor :
       loc: Location.t -> current_unit:Types.fname ->
-	Parsetree.constructor_ident -> t ->
-	  TypeInformation.constructor_description
+        Parsetree.constructor_ident -> t ->
+          TypeInformation.constructor_description
 
     val add_label :
       Parsetree.vname -> TypeInformation.label_description -> t -> t
     val find_label :
       loc: Location.t -> current_unit: Types.fname -> Parsetree.label_ident ->
-	t -> TypeInformation.label_description
+        t -> TypeInformation.label_description
 
     val add_type :
       loc: Location.t -> Parsetree.vname ->
-	TypeInformation.type_description -> t -> t
+        TypeInformation.type_description -> t -> t
     val find_type :
       loc: Location.t -> current_unit: Types.fname ->
       Parsetree.ident -> t -> TypeInformation.type_description
 
     val add_species :
       loc: Location.t -> Parsetree.vname ->
-	TypeInformation.species_description -> t -> t
+        TypeInformation.species_description -> t -> t
     val find_species :
-	loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
-	  t -> TypeInformation.species_description
+        loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
+          t -> TypeInformation.species_description
   end
 
 
@@ -197,13 +199,28 @@ module MlGenEnv :
     type t
     val empty : unit -> t
     val pervasives : unit -> t
+
+    val add_constructor :
+      Parsetree.constructor_name ->
+	MlGenInformation.constructor_mapping_info -> t -> t
+    val find_constructor :
+      loc: Location.t -> current_unit: Types.fname ->
+	Parsetree.constructor_ident -> t ->
+	  MlGenInformation.constructor_mapping_info
+
+    val add_label :
+      Parsetree.vname -> MlGenInformation.label_mapping_info -> t -> t
+    val find_label :
+      loc: Location.t -> current_unit: Types.fname -> Parsetree.label_ident ->
+	t -> MlGenInformation.label_mapping_info
+
     val add_species :
       loc: Location.t -> Parsetree.vname ->
-	MlGenInformation.species_binding_info -> t
-	-> t
+        MlGenInformation.species_binding_info -> t
+        -> t
     val find_species :
       loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
-	t -> MlGenInformation.species_binding_info
+        t -> MlGenInformation.species_binding_info
   end
 
 
@@ -211,6 +228,8 @@ val scope_open_module :
   loc: Location.t -> Types.fname -> ScopingEnv.t -> ScopingEnv.t
 val type_open_module :
   loc: Location.t -> Types.fname -> TypingEnv.t -> TypingEnv.t
+val mlgen_open_module :
+  loc: Location.t -> Types.fname -> MlGenEnv.t -> MlGenEnv.t
 
 val make_fo_file :
   source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t ->

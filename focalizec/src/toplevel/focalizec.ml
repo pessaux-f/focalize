@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.21 2007-10-29 08:18:36 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.22 2007-11-06 10:14:58 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -26,14 +26,14 @@ let main () =
       ("--dot-non-rec-dependencies",
        Arg.String Configuration.set_dotty_dependencies,
        " dumps species non-let-rec- dependencies as dotty\n\tfiles into the\
-	 argument directory.") ;
+         argument directory.") ;
       ("-i",
        Arg.Unit (fun () -> Configuration.set_do_interface_output true),
        " prints the source file interface.") ;
       ("-I",
        Arg.String (fun path -> Files.add_lib_path path),
        " adds the specified path to the path list where to search for\
-	 compiled\n\tinterfaces.") ;
+         compiled\n\tinterfaces.") ;
       ("--no-ansi-escape",
        Arg.Unit Configuration.unset_fancy_ansi,
        " disables ANSI escape sequences in the error messages.") ;
@@ -43,18 +43,18 @@ let main () =
       ("-no-stdlib-path",
        Arg.Unit Configuration.unset_use_default_lib,
        " do not include by default the standard library installation\n\t\
-	 directory in the search path.") ;
+         directory in the search path.") ;
       ("--pretty",
        Arg.String Configuration.set_pretty_print,
        " pretty-prints the parse tree of the focal file as a focal source\n\t\
-	 into the argument file.") ;
+         into the argument file.") ;
       ("--raw-ast-dump",
        Arg.Unit Configuration.set_raw_ast_dump,
        " prints on stderr the raw AST structure after parsing stage.") ;
       ("--scoped_pretty",
        Arg.String Configuration.set_pretty_scoped,
        " pretty-prints the parse tree of the focal file once scoped\n\tas a\
-	 focal source into the argument file.") ;
+         focal source into the argument file.") ;
       ("--verbose",
        Arg.Unit Configuration.set_verbose,
        " be verbose.") ;
@@ -65,8 +65,8 @@ let main () =
        " print the full focalize version, sub-version and release date,\n\t\
          then exit.") ;
        ("--where",
-	Arg.Unit Configuration.print_install_dirs,
-	" print the binaries and libraries installation directories then exit.")
+        Arg.Unit Configuration.print_install_dirs,
+        " print the binaries and libraries installation directories then exit.")
      ]
     Configuration.set_input_file_name
     "Usage: focal_check <options> <.foc file>" ;
@@ -101,10 +101,10 @@ let main () =
     (match Configuration.get_pretty_scoped () with
      | None -> ()
      | Some fname ->
-	 let out_hd = open_out_bin fname in
-	 let out_fmt = Format.formatter_of_out_channel out_hd in
-	 Sourcify.pp_file out_fmt (fst tmp) ;
-	 close_out out_hd) ;
+         let out_hd = open_out_bin fname in
+         let out_fmt = Format.formatter_of_out_channel out_hd in
+         Sourcify.pp_file out_fmt (fst tmp) ;
+         close_out out_hd) ;
     tmp) in
   (* Typechecks the AST. *)
   let (typing_toplevel_env, stuff_to_compile) =
@@ -115,8 +115,7 @@ let main () =
       (begin
       let out_file_name = (Filename.chop_extension input_file_name) ^ ".ml" in
       Main_ml_generation.root_compile
-	~current_unit ~out_file_name stuff_to_compile ;
-Env.MlGenEnv.empty ()  (* [Unsure] A CHANGER. *)
+        ~current_unit ~out_file_name stuff_to_compile ;
       end)
     else Env.MlGenEnv.empty () in
   (* Now, generate the persistent interface file. *)

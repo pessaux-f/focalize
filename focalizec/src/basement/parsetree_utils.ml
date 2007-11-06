@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.4 2007-10-16 10:00:48 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.5 2007-11-06 10:14:58 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -53,6 +53,6 @@ let rec get_local_idents_from_pattern pat =
        List.flatten (List.map get_local_idents_from_pattern ps)
    | Parsetree.P_record labs_pats ->
         List.flatten
-	 (List.map (fun (_, p) -> get_local_idents_from_pattern p) labs_pats)
+         (List.map (fun (_, p) -> get_local_idents_from_pattern p) labs_pats)
    | Parsetree.P_paren p -> get_local_idents_from_pattern p
 ;;

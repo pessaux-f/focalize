@@ -11,9 +11,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.mli,v 1.1 2007-10-09 08:37:35 pessaux Exp $ *)
+(* $Id: main_ml_generation.mli,v 1.2 2007-11-06 10:14:58 pessaux Exp $ *)
 
 
 val root_compile :
   current_unit: Types.fname ->  out_file_name: string ->
-    Infer.please_compile_me list -> unit
+    Infer.please_compile_me list -> Env.MlGenEnv.t

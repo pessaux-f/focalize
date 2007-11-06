@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.34 2007-10-30 21:14:30 weis Exp $ *)
+(* $Id: types.ml,v 1.35 2007-11-06 10:14:58 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -68,9 +68,9 @@ type type_simple =
   | ST_tuple of type_simple list              (** Tuple type. *)
   | ST_construct of
       (** Type constructor, possibly with arguments. Encompass the types
-	  related to records and sums. Any value of these types are typed as
-	  a [ST_construct] whose name is the name of the record (or sum)
-	  type. *)
+          related to records and sums. Any value of these types are typed as
+          a [ST_construct] whose name is the name of the record (or sum)
+          type. *)
       (type_name * type_simple list)
   | ST_self_rep
     (** Carrier type of the currently analysed species. *)
@@ -99,19 +99,19 @@ and type_variable_value =
 (* ************************************************************************ *)
 (** {b Descr} : Interface of a collection. It could be the list of its
          method'n'types, i.e. (string * type_simple) list but we don't want
-	a structural unification. That's not because 2 collections have the
-	same signature that they have the same semantics.
-	Instead, one will get the type of the collection via an environment
-	using the [collection_name] and the [fname] as key.
+        a structural unification. That's not because 2 collections have the
+        same signature that they have the same semantics.
+        Instead, one will get the type of the collection via an environment
+        using the [collection_name] and the [fname] as key.
 
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
 type type_collection =
   (fname *           (** The "module" hosting the collection' code. *)
   collection_name)   (** The name of the collection as a string (not a
-			 [Parsetree.vname] to prevent mutual depency between
-		         the [types.ml] and [parsetree.ml] modules. And indeed,
-		         a simple string is eally sufficient ! *)
+                         [Parsetree.vname] to prevent mutual depency between
+                         the [types.ml] and [parsetree.ml] modules. And indeed,
+                         a simple string is eally sufficient ! *)
 ;;
 
 
@@ -127,7 +127,7 @@ type type_collection =
 type type_scheme = {
   ts_vars : type_variable list ;          (** Parameters in the scheme. *)
   ts_body : type_simple    (** Body of the scheme where generalized types
-			       have a level equal to [generic_level]. *)
+                               have a level equal to [generic_level]. *)
 } ;;
 
 
@@ -327,51 +327,51 @@ let (pp_type_simple, pp_type_scheme) =
     (* No need to repr, [rec_pp] already did it. *)
     try List.assq ty !type_variable_names_mapping with
     | Not_found ->
-	let name =
-	  String.make 1 (Char.chr (Char.code 'a' + !type_variables_counter)) in
-	incr type_variables_counter ;
-	let name' = if not generalized_p then "_" ^ name else name in
-	type_variable_names_mapping :=
-	  (ty, name') :: !type_variable_names_mapping ;
-	name' in
+        let name =
+          String.make 1 (Char.chr (Char.code 'a' + !type_variables_counter)) in
+        incr type_variables_counter ;
+        let name' = if not generalized_p then "_" ^ name else name in
+        type_variable_names_mapping :=
+          (ty, name') :: !type_variable_names_mapping ;
+        name' in
 
   let rec rec_pp prio ppf ty =
     (* First of all get the "repr" guy ! *)
     let ty = repr ty in
     match ty with
     | ST_var ty_var ->
-	let ty_variable_name =
-	  get_or_make_type_variable_name
-	    ty ~generalized_p: (ty_var.tv_level = generic_level) in
-	Format.fprintf ppf "'%s" ty_variable_name
+        let ty_variable_name =
+          get_or_make_type_variable_name
+            ty ~generalized_p: (ty_var.tv_level = generic_level) in
+        Format.fprintf ppf "'%s" ty_variable_name
     | ST_arrow (ty1, ty2) ->
-	(* Arrow priority: 2. *)
-	if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
+        (* Arrow priority: 2. *)
+        if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
         Format.fprintf ppf "@[<2>%a@ ->@ %a@]" (rec_pp 2) ty1 (rec_pp 1) ty2 ;
-	if prio >= 2 then Format.fprintf ppf ")@]"
+        if prio >= 2 then Format.fprintf ppf ")@]"
     | ST_tuple tys ->
-	(* Tuple priority: 3. *)
-	if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
+        (* Tuple priority: 3. *)
+        if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
         Format.fprintf ppf "@[<2>%a@]"
           (Handy.pp_generic_separated_list " *" (rec_pp 3)) tys ;
-	if prio >= 3 then Format.fprintf ppf ")@]"
+        if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_construct (type_name, arg_tys) ->
         (begin
-	(* Priority of arguments of a sum type constructor :       *)
+        (* Priority of arguments of a sum type constructor :       *)
         (* like tuples if only one argument : 3                    *)
         (* otherwise 0 if already a tuple because we force parens. *)
-	match arg_tys with
+        match arg_tys with
          | [] -> Format.fprintf ppf "%a" pp_type_name type_name
          | [one] ->
-	     Format.fprintf ppf "%a@ %a" (rec_pp 3) one pp_type_name type_name
+             Format.fprintf ppf "%a@ %a" (rec_pp 3) one pp_type_name type_name
          | _ ->
              Format.fprintf ppf "@[<1>(%a)@]@ %a"
                (Handy.pp_generic_separated_list "," (rec_pp 0)) arg_tys
-	       pp_type_name type_name
-	end)
+               pp_type_name type_name
+        end)
     | ST_self_rep -> Format.fprintf ppf "Self"
     | ST_species_rep (module_name, collection_name) ->
-	Format.fprintf ppf "%s#%s" module_name collection_name in
+        Format.fprintf ppf "%s#%s" module_name collection_name in
 
   (fun ppf ty ->
     reset_type_variables_mapping () ;
@@ -389,7 +389,7 @@ let occur_check ~loc var ty =
     let t = repr t in
     match t with
      | ST_var var' ->
-	 if var == var' then raise (Circularity (t, ty, loc))
+         if var == var' then raise (Circularity (t, ty, loc))
      | ST_arrow (ty1, ty2) -> test ty1 ; test ty2
      | ST_tuple tys -> List.iter test tys
      | ST_construct (_, args) -> List.iter test args
@@ -407,21 +407,21 @@ let (specialize, specialize_with_args) =
     let ty = repr ty in
     match ty with
      | ST_var var ->
-	 (* If the type is not generalized, then its copy is itself. *)
-	 if var.tv_level <> generic_level then ty
-	 else
-	   (begin
-	   (* If the variable was not yet seen, generate a fresh copy *)
-	   (* and remind that the variable is now already seen.       *)
-	   try List.assq var !seen
-	   with Not_found ->
-	     let fresh_var = type_variable () in
-	     seen := (var, fresh_var) :: !seen ;
-	     fresh_var
-	   end)
+         (* If the type is not generalized, then its copy is itself. *)
+         if var.tv_level <> generic_level then ty
+         else
+           (begin
+           (* If the variable was not yet seen, generate a fresh copy *)
+           (* and remind that the variable is now already seen.       *)
+           try List.assq var !seen
+           with Not_found ->
+             let fresh_var = type_variable () in
+             seen := (var, fresh_var) :: !seen ;
+             fresh_var
+           end)
      | ST_arrow (ty1, ty2) ->
          ST_arrow
-	   (copy_type_simple ty1, copy_type_simple ty2)
+           (copy_type_simple ty1, copy_type_simple ty2)
      | ST_tuple tys ->  ST_tuple (List.map copy_type_simple tys)
      | ST_construct (name, args) ->
          ST_construct (name, List.map copy_type_simple args)
@@ -478,7 +478,7 @@ let (specialize, specialize_with_args) =
 (* and_abstract: (fname * collection_name) option -> type_simple ->      *)
 (*   type_simple                                                         *)
 (** {b Descr} : Copies the [ty] type expression (hence breaking sharing
-	      with the original one except for variables : these one are
+              with the original one except for variables : these one are
               NOT "freshly copied" but remain shared between the copied
               and original types) and replaces occurrences of [Self] by
               the given collection's [~and_abstract] collection's
@@ -493,24 +493,24 @@ let copy_type_simple_but_variables ~and_abstract =
     let ty = repr ty in
     match ty with
      | ST_var var ->
-	 (begin
-	 (* The abstraction must never change     *)
-	 (* variables to prevent sharing breaks ! *)
-	 try List.assq var !seen
-	 with Not_found ->
-	   seen := (var, ty) :: !seen ;
-	   ty
-	 end)
+         (begin
+         (* The abstraction must never change     *)
+         (* variables to prevent sharing breaks ! *)
+         try List.assq var !seen
+         with Not_found ->
+           seen := (var, ty) :: !seen ;
+           ty
+         end)
      | ST_arrow (ty1, ty2) -> ST_arrow (rec_copy ty1, rec_copy ty2)
      | ST_tuple tys -> ST_tuple (List.map rec_copy tys)
      | ST_construct (name, args) ->
-	 ST_construct (name, List.map rec_copy args)
+         ST_construct (name, List.map rec_copy args)
      | ST_self_rep ->
-	 (begin
-	 match and_abstract with
-	  | Some coll_name -> ST_species_rep coll_name
-	  | None -> ST_self_rep
-	 end)
+         (begin
+         match and_abstract with
+          | Some coll_name -> ST_species_rep coll_name
+          | None -> ST_self_rep
+         end)
      | (ST_species_rep _) as tdesc -> tdesc in
   (* ******************** *)
   (* The function itself. *)
@@ -531,12 +531,12 @@ let (generalize, generalize2) =
     let ty = repr ty in
     match ty with
      | ST_var var ->
-	 if var.tv_level > current_binding_level () &&
-	    not (List.memq var !found_ty_parameters) then
-	   begin
-	   var.tv_level <- generic_level ;
-	   found_ty_parameters := var :: !found_ty_parameters
-	   end
+         if var.tv_level > current_binding_level () &&
+            not (List.memq var !found_ty_parameters) then
+           begin
+           var.tv_level <- generic_level ;
+           found_ty_parameters := var :: !found_ty_parameters
+           end
      | ST_arrow (ty1, ty2) -> find_parameters ty1 ; find_parameters ty2
      | ST_tuple tys -> List.iter find_parameters tys
      | ST_construct (_, args) -> List.iter find_parameters args
@@ -616,7 +616,7 @@ let scheme_contains_variable_p scheme =
     match ty with
      | ST_var _ -> true
      | ST_arrow (ty1, ty2) ->
-	 (rec_check ty1) || (rec_check ty2)
+         (rec_check ty1) || (rec_check ty2)
      | ST_tuple tys -> List.exists rec_check tys
      | ST_construct (_, args) -> List.exists rec_check args
      | ST_self_rep | ST_species_rep _ -> false in
@@ -690,61 +690,61 @@ let unify ~loc ~self_manifest type1 type2 =
     if ty1 == ty2 then ty1 else
     match (ty1, ty2) with
      | (ST_var var, _) ->
-	 occur_check ~loc var ty2 ;
-	 lowerize_levels var.tv_level ty2 ;
-	 var.tv_value <- TVV_known ty2 ;
-	 ty2
+         occur_check ~loc var ty2 ;
+         lowerize_levels var.tv_level ty2 ;
+         var.tv_value <- TVV_known ty2 ;
+         ty2
      | (_, ST_var var) ->
-	 occur_check ~loc var ty1 ;
-	 lowerize_levels var.tv_level ty1 ;
-	 var.tv_value <- TVV_known ty1 ;
-	 ty1
+         occur_check ~loc var ty1 ;
+         lowerize_levels var.tv_level ty1 ;
+         var.tv_value <- TVV_known ty1 ;
+         ty1
      | ((ST_arrow (arg1, res1)), (ST_arrow (arg2, res2))) ->
-	 let arg3 = rec_unify arg1 arg2 in
-	 let res3 = rec_unify res1 res2 in
-	 ST_arrow (arg3, res3)
+         let arg3 = rec_unify arg1 arg2 in
+         let res3 = rec_unify res1 res2 in
+         ST_arrow (arg3, res3)
      | ((ST_tuple tys1), (ST_tuple tys2)) ->
-	 let tys3 =
-	   (try List.map2 rec_unify tys1 tys2 with
-	   | Invalid_argument "List.iter2" ->
+         let tys3 =
+           (try List.map2 rec_unify tys1 tys2 with
+           | Invalid_argument "List.iter2" ->
                (* In fact, that's an arity mismatch on the tuple. *)
                raise (Conflict (ty1, ty2, loc))) in
-	 ST_tuple tys3
+         ST_tuple tys3
      | (ST_construct (name, args), ST_construct (name', args')) ->
-	 (if name <> name' then raise (Conflict (ty1, ty2, loc))) ;
-	 let args'' =
-	   (try List.map2 rec_unify args args' with
-	   | Invalid_argument "List.iter2" ->
-	       (* In fact, that's an arity mismatch. *)
-	       raise
-		 (Arity_mismatch
-		    (name, (List.length args), (List.length args'), loc))) in
-	 ST_construct (name, args'')
+         (if name <> name' then raise (Conflict (ty1, ty2, loc))) ;
+         let args'' =
+           (try List.map2 rec_unify args args' with
+           | Invalid_argument "List.iter2" ->
+               (* In fact, that's an arity mismatch. *)
+               raise
+                 (Arity_mismatch
+                    (name, (List.length args), (List.length args'), loc))) in
+         ST_construct (name, args'')
      | (ST_self_rep, ST_self_rep) ->
-	 (begin
-	 (* Trivial, but anyway, proceed as everywhere else. *)
-	 ST_self_rep
-	 end)
+         (begin
+         (* Trivial, but anyway, proceed as everywhere else. *)
+         ST_self_rep
+         end)
      | (ST_self_rep, _) ->
-	 (begin
-	 match self_manifest with
-	  | None -> raise (Conflict (ty1, ty2, loc))
-	  | Some self_is_that ->
-	      ignore (rec_unify self_is_that ty2) ;
+         (begin
+         match self_manifest with
+          | None -> raise (Conflict (ty1, ty2, loc))
+          | Some self_is_that ->
+              ignore (rec_unify self_is_that ty2) ;
               (* Always prefer Self ! *)
               ST_self_rep
-	 end)
+         end)
      | (_, ST_self_rep) ->
-	 (begin
-	 match self_manifest with
-	  | None -> raise (Conflict (ty1, ty2, loc))
-	  | Some self_is_that ->
-	      (* Same remarks than in the mirror case above. *)
-	      ignore (rec_unify self_is_that ty1) ;
-	      ST_self_rep
-	 end)
+         (begin
+         match self_manifest with
+          | None -> raise (Conflict (ty1, ty2, loc))
+          | Some self_is_that ->
+              (* Same remarks than in the mirror case above. *)
+              ignore (rec_unify self_is_that ty1) ;
+              ST_self_rep
+         end)
      | ((ST_species_rep c1), (ST_species_rep c2)) ->
-	 if c1 = c2 then ty1 else raise (Conflict (ty1, ty2, loc))
+         if c1 = c2 then ty1 else raise (Conflict (ty1, ty2, loc))
      | (_, _) -> raise (Conflict (ty1, ty2, loc)) in
   (* ****************** *)
   (* Now, let's work... *)
@@ -772,28 +772,28 @@ let subst_type_simple (fname1, spe_name1) c2 =
     let ty = repr ty in
     match ty with
      | ST_var var ->
-	 (begin
-	 try List.assq var !seen
-	 with Not_found ->
-	   let fresh_var = type_variable () in
-	   (* Be careful, it's a copy, not a specialization ! Hence   *)
-	   (* the original level of the type must be kept ! The fresh *)
-	   (* variable is create at the [current_binding_level], then *)
+         (begin
+         try List.assq var !seen
+         with Not_found ->
+           let fresh_var = type_variable () in
+           (* Be careful, it's a copy, not a specialization ! Hence   *)
+           (* the original level of the type must be kept ! The fresh *)
+           (* variable is create at the [current_binding_level], then *)
            (* in case the original one was created at a lower generic *)
            (* level, we [lowerize_levels] taking the level max equal  *)
            (* to the level of the original variable.                  *)
            lowerize_levels var.tv_level fresh_var ;
-	   seen := (var, fresh_var) :: !seen ;
-	   fresh_var
-	 end)
+           seen := (var, fresh_var) :: !seen ;
+           fresh_var
+         end)
      | ST_arrow (ty1, ty2) -> ST_arrow (rec_copy ty1, rec_copy ty2)
      | ST_tuple tys ->  ST_tuple (List.map rec_copy tys)
      | ST_construct (name, args) ->
-	 ST_construct (name, List.map rec_copy args)
+         ST_construct (name, List.map rec_copy args)
      | ST_self_rep -> ST_self_rep
      | ST_species_rep (fname, coll_name) ->
-	 if fname = fname1 && coll_name = spe_name1 then ST_species_rep c2
-	 else ty in
+         if fname = fname1 && coll_name = spe_name1 then ST_species_rep c2
+         else ty in
   (* ******************** *)
   (* The function itself. *)
   (fun ty ->
@@ -825,9 +825,9 @@ let pp_type_collection ppf (coll_module, coll_name) =
 (** {b Descr} : "Compile", i.e. generate the OCaml source representation of
               a type. Basically, proceeds like the regular [pp_type_simple]
               except in 2 cases:
-		- when encountering [Self] : in this case, generates the
-		  type variable name representing [Self], i.e. by convention
-		  "'me_as_carrier",
+                - when encountering [Self] : in this case, generates the
+                  type variable name representing [Self], i.e. by convention
+                  "'me_as_carrier",
                 - when encountering a species carrier type : in this case,
                   generate the type variable name representing this
                   species (recover it thanks to the mapping between
@@ -847,7 +847,7 @@ let pp_type_collection ppf (coll_module, coll_name) =
 
               To be able to print separately parts of a same type, hence
               keep sharing of variables names, this function has an extra
-	      argument telling whether the local variables names mapping
+              argument telling whether the local variables names mapping
               must be kept from previous printing calls.
 
     {b Args} :
@@ -859,7 +859,7 @@ let pp_type_collection ppf (coll_module, coll_name) =
           prevents things like in a "bar.foc" file containing
           [type t1 = ... ; type t2 = t1 * t2], getting in the generated
           OCaml file definitions like [type t1 = ... ;
-	  type t2 = Bar.t1 * Bar.t1] which would lead to an OCaml module
+          type t2 = Bar.t1 * Bar.t1] which would lead to an OCaml module
           depending of itself.
       - [reuse_mapping] : Boolean telling if the print session must keep
           active the previous variables names mapping. If so, then sharing
@@ -920,93 +920,93 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
     (* No need to repr, [rec_pp] already did it. *)
     try List.assq var !type_variable_names_mapping with
     | Not_found ->
-	let name =
-	  String.make 1 (Char.chr (Char.code 'a' + !type_variables_counter)) in
-	incr type_variables_counter ;
-	type_variable_names_mapping :=
-	  (var, name) :: !type_variable_names_mapping ;
-	name in
+        let name =
+          String.make 1 (Char.chr (Char.code 'a' + !type_variables_counter)) in
+        incr type_variables_counter ;
+        type_variable_names_mapping :=
+          (var, name) :: !type_variable_names_mapping ;
+        name in
 
   let pp_type_name_to_ml ~current_unit ppf (hosting_module, constructor_name) =
     if current_unit = hosting_module then
       Format.fprintf ppf "_focty_%s" constructor_name
     else
       Format.fprintf ppf "%s._focty_%s"
-	(String.capitalize hosting_module) constructor_name in
+        (String.capitalize hosting_module) constructor_name in
 
   let rec rec_pp ~current_unit collections_carrier_mapping prio ppf ty =
     (* First of all get the "repr" guy ! *)
     let ty = repr ty in
     match ty with
     | ST_var var ->
-	(* Read the justification in the current function's header about *)
+        (* Read the justification in the current function's header about *)
         (* the fact that we amways consider variables as generalized.    *)
-	let ty_variable_name = get_or_make_type_variable_name var in
-	Format.fprintf ppf "'%s" ty_variable_name
+        let ty_variable_name = get_or_make_type_variable_name var in
+        Format.fprintf ppf "'%s" ty_variable_name
     | ST_arrow (ty1, ty2) ->
-	(* Arrow priority: 2. *)
-	if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
+        (* Arrow priority: 2. *)
+        if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
         Format.fprintf ppf "@[<2>%a@ ->@ %a@]"
-	  (rec_pp ~current_unit collections_carrier_mapping 2) ty1
-	  (rec_pp ~current_unit collections_carrier_mapping 1) ty2 ;
-	if prio >= 2 then Format.fprintf ppf ")@]"
+          (rec_pp ~current_unit collections_carrier_mapping 2) ty1
+          (rec_pp ~current_unit collections_carrier_mapping 1) ty2 ;
+        if prio >= 2 then Format.fprintf ppf ")@]"
     | ST_tuple tys ->
-	(* Tuple priority: 3. *)
-	if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
+        (* Tuple priority: 3. *)
+        if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
         Format.fprintf ppf "@[<2>%a@]"
           (Handy.pp_generic_separated_list " *"
-	     (rec_pp ~current_unit collections_carrier_mapping 3)) tys ;
-	if prio >= 3 then Format.fprintf ppf ")@]"
+             (rec_pp ~current_unit collections_carrier_mapping 3)) tys ;
+        if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_construct (type_name, arg_tys) ->
         (begin
-	(* Priority of arguments of a sum type constructor :       *)
+        (* Priority of arguments of a sum type constructor :       *)
         (* like tuples if only one argument : 3                    *)
         (* otherwise 0 if already a tuple because we force parens. *)
-	match arg_tys with
+        match arg_tys with
          | [] ->
-	     (* Just the special case for type "prop" that maps onto bool... *)
-	     (* The problem is that we can't really "define" "prop" in the   *)
-	     (* file "basic.foc" because "prop" is a keyword. Hence, we make *)
+             (* Just the special case for type "prop" that maps onto bool... *)
+             (* The problem is that we can't really "define" "prop" in the   *)
+             (* file "basic.foc" because "prop" is a keyword. Hence, we make *)
              (* directmy the shortcut between "prop" and the type "bool"     *)
-	     (* defined in the "basic.foc" file .                            *)
-	     if type_name = ("basics", "prop") then
-	       Format.fprintf ppf "Basics._focty_bool"
-	     else
-	       Format.fprintf ppf "%a"
-		 (pp_type_name_to_ml ~current_unit) type_name
+             (* defined in the "basic.foc" file .                            *)
+             if type_name = ("basics", "prop") then
+               Format.fprintf ppf "Basics._focty_bool"
+             else
+               Format.fprintf ppf "%a"
+                 (pp_type_name_to_ml ~current_unit) type_name
          | [one] ->
-	     Format.fprintf ppf "%a@ %a"
-	       (rec_pp ~current_unit collections_carrier_mapping 3) one
-	       (pp_type_name_to_ml ~current_unit) type_name
+             Format.fprintf ppf "%a@ %a"
+               (rec_pp ~current_unit collections_carrier_mapping 3) one
+               (pp_type_name_to_ml ~current_unit) type_name
          | _ ->
              Format.fprintf ppf "@[<1>(%a)@]@ %a"
                (Handy.pp_generic_separated_list ","
-		  (rec_pp ~current_unit collections_carrier_mapping 0)) arg_tys
-	       (pp_type_name_to_ml ~current_unit) type_name
-	end)
+                  (rec_pp ~current_unit collections_carrier_mapping 0)) arg_tys
+               (pp_type_name_to_ml ~current_unit) type_name
+        end)
     | ST_self_rep ->
-	(* Here is the major difference with the regular [pp_type_simple]. *)
+        (* Here is the major difference with the regular [pp_type_simple]. *)
         (* We print the type variable that represents our carrier in the   *)
         (* OCaml translation.                                              *)
-	Format.fprintf ppf "'me_as_carrier"
+        Format.fprintf ppf "'me_as_carrier"
     | ST_species_rep (module_name, collection_name) ->
         (begin
         try
-	  let coll_type_variable =
-	    List.assoc
-	      (module_name, collection_name) collections_carrier_mapping in
-	  Format.fprintf ppf "%s" coll_type_variable
-	with Not_found ->
-	  (* If the carrier is not in the mapping created for the species *)
-	  (* parameters, that's because the searched species carrier's is *)
+          let coll_type_variable =
+            List.assoc
+              (module_name, collection_name) collections_carrier_mapping in
+          Format.fprintf ppf "%s" coll_type_variable
+        with Not_found ->
+          (* If the carrier is not in the mapping created for the species *)
+          (* parameters, that's because the searched species carrier's is *)
           (* not a species parameter, i.e. it's a toplevel species.       *)
-	  (* And as always, the type's name representing a species's      *)
-	  (* carrier is "me_as_carrier".                                  *)
-	  if current_unit = module_name then
-	    Format.fprintf ppf "%s.me_as_carrier" collection_name
-	  else
-	    Format.fprintf ppf "%s.%s.me_as_carrier"
-	      (String.capitalize module_name) collection_name
+          (* And as always, the type's name representing a species's      *)
+          (* carrier is "me_as_carrier".                                  *)
+          if current_unit = module_name then
+            Format.fprintf ppf "%s.me_as_carrier" collection_name
+          else
+            Format.fprintf ppf "%s.%s.me_as_carrier"
+              (String.capitalize module_name) collection_name
         end) in
 
   (* ************************************************* *)

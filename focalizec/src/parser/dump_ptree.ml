@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.21 2007-11-01 17:10:53 weis Exp $ *)
+(* $Id: dump_ptree.ml,v 1.22 2007-11-06 10:14:58 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -630,7 +630,7 @@ and pp_let_def ppf = pp_ast pp_let_def_desc ppf
 
 
 and pp_binding_desc ppf bd =
-  Format.fprintf ppf "@[<2>{@ %a;@ [@ %a@ ]@ %a@ }@]"
+  Format.fprintf ppf "@[<2>{@ %a;@ [@ %a@ ] @ %a @ %a @]}"
     pp_vname bd.Parsetree.b_name
     (Handy.pp_generic_separated_list
        ","
@@ -639,6 +639,7 @@ and pp_binding_desc ppf bd =
            pp_vname vname
            (Handy.pp_generic_explicit_option pp_type_expr) ty_expr_opt))
     bd.Parsetree.b_params
+    (Handy.pp_generic_explicit_option pp_type_expr) bd.Parsetree.b_type
     pp_expr bd.Parsetree.b_body
 and pp_bindings ppf = Handy.pp_generic_separated_list "," pp_binding ppf
 and pp_binding ppf = pp_ast pp_binding_desc ppf

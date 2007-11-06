@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.9 2007-10-30 13:27:59 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.10 2007-11-06 10:14:58 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -30,8 +30,8 @@ let rec pp_generic_separated_list separator printer_fct ppf = function
   | [last] -> printer_fct ppf last
   |  h :: q ->
       Format.fprintf ppf "%a@,%s@ %a"
-	printer_fct h separator
-	(pp_generic_separated_list separator printer_fct) q
+        printer_fct h separator
+        (pp_generic_separated_list separator printer_fct) q
 ;;
 
 
@@ -49,7 +49,7 @@ let rec pp_generic_newlined_list printer_fct ppf = function
   | [last] -> printer_fct ppf last
   |  h :: q ->
       Format.fprintf ppf "%a@\n%a"
-	printer_fct h (pp_generic_newlined_list printer_fct) q
+        printer_fct h (pp_generic_newlined_list printer_fct) q
 ;;
 
 
@@ -114,7 +114,7 @@ let rec int_to_base_26 i =
 (* *************************************************************** *)
 (* 'a list -> 'a list -> bool                                      *)
 (** {b Descr} : Checks if 2 lists intersect (i.e. have a least one
-	      common element).
+              common element).
 
     {b Rem} : Exported outside this module.                        *)
 (* *************************************************************** *)
@@ -160,7 +160,7 @@ let list_mem_count e l =
   let rec rec_find counter = function
     | [] -> raise Not_found
     | h :: q ->
-	if h = e then counter else rec_find (counter + 1) q in
+        if h = e then counter else rec_find (counter + 1) q in
   rec_find 0 l
 ;;
 
@@ -180,7 +180,7 @@ let list_concat_uniqq l1 l2 =
   let rec rec_append = function
     | [] -> l2
     | h :: q ->
-	if List.memq h l2 then rec_append q else h :: (rec_append q) in
+        if List.memq h l2 then rec_append q else h :: (rec_append q) in
   rec_append l1
 ;;
 
@@ -201,9 +201,9 @@ let list_concat_uniq_custom_eq eq_fct l1 l2 =
   let rec rec_append = function
     | [] -> l2
     | h :: q ->
-	if List.exists (fun x -> eq_fct x h) l2 then
-	  rec_append q
-	else h :: (rec_append q) in
+        if List.exists (fun x -> eq_fct x h) l2 then
+          rec_append q
+        else h :: (rec_append q) in
   rec_append l1
 ;;
 
@@ -240,7 +240,7 @@ let list_mem_n_remove elem l =
   let rec rec_mem = function
     | [] -> raise Not_found
     | h :: q -> if h = elem then q else h :: (rec_mem q) in
-  rec_mem l							
+  rec_mem l                                                     
 ;;
 
 

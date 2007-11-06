@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.37 2007-10-30 17:44:53 weis Exp $ *)
+(* $Id: scoping.ml,v 1.38 2007-11-06 10:14:58 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -383,12 +383,12 @@ let rec scope_type_expr ctx env ty_expr =
              ~current_unit: ctx.current_unit ident env in
          (* Let's re-construct a completely scoped identifier. *)
          let scoped_ident_descr =
-            match hosting_info with
+           match hosting_info with
             | Env.ScopeInformation.TBI_builtin_or_var ->
-              Parsetree.I_local basic_vname
+                Parsetree.I_local basic_vname
             | Env.ScopeInformation.TBI_defined_in hosting_file ->
-              Parsetree.I_global
-                (Parsetree.Qualified (hosting_file, basic_vname)) in
+                Parsetree.I_global
+                  (Parsetree.Qualified (hosting_file, basic_vname)) in
          let scoped_ident =
            { ident with Parsetree.ast_desc = scoped_ident_descr } in
          Parsetree.TE_ident scoped_ident
@@ -407,11 +407,11 @@ let rec scope_type_expr ctx env ty_expr =
          (* Let's re-construct a completely scoped identifier. *)
          let scoped_ident_descr =
            match hosting_info with
-           | Env.ScopeInformation.TBI_builtin_or_var ->
-             Parsetree.I_local basic_vname
-           | Env.ScopeInformation.TBI_defined_in hosting_file ->
-             Parsetree.I_global
-               (Parsetree.Qualified (hosting_file, basic_vname)) in
+            | Env.ScopeInformation.TBI_builtin_or_var ->
+		Parsetree.I_local basic_vname
+            | Env.ScopeInformation.TBI_defined_in hosting_file ->
+		Parsetree.I_global
+                  (Parsetree.Qualified (hosting_file, basic_vname)) in
          let scoped_ident =
            { ident with Parsetree.ast_desc = scoped_ident_descr } in
          let scoped_tes = List.map (scope_type_expr ctx env) tes in
@@ -700,15 +700,26 @@ let scope_type_def_body ctx env_with_params env ty_def_body =
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
 let scope_type_def ctx env ty_def =
-  (* We must first extend the environment with the type parameters. *)
   let ty_def_descr = ty_def.Parsetree.ast_desc in
+  (* We must first extend the environment with the type's name itself in *)
+  (* case the definition is recursive. This is done in the environment   *)
+  (* that will be used while scoping the body but will not be extended.  *)
+  (* Scoping the body will extend the environment where the type         *)
+  (* parameters and this temporary type binding are not recorded. So     *)
+  (* there is no risk to see 2 bindings for this type name in the final  *)
+  (* environment since the final is not built from [env_with_type].      *)
+  let env_with_type =
+    Env.ScopingEnv.add_type
+      ~loc: ty_def.Parsetree.ast_loc ty_def_descr.Parsetree.td_name
+      (Env.ScopeInformation.TBI_defined_in ctx.current_unit) env in
+  (* Then extend the environment with the type parameters. *)
   let env_with_params =
     List.fold_left
       (fun accu_env param_vname ->
         Env.ScopingEnv.add_type
           ~loc: ty_def.Parsetree.ast_loc
           param_vname Env.ScopeInformation.TBI_builtin_or_var accu_env)
-      env
+      env_with_type
       ty_def_descr.Parsetree.td_params in
   (* Now scope de definition's body. *)
   let (scoped_body, env_from_def) =
@@ -973,9 +984,7 @@ and scope_let_definition ~toplevel_let ctx env let_def =
   let env' =
     if let_def_descr.Parsetree.ld_rec = Parsetree.RF_no_rec then env
     else final_env in
-
   (* Now, scope the bodies, hence the bindings... *)
-
   let scope_binding let_binding =
     let let_binding_descr = let_binding.Parsetree.ast_desc in
     (* Extend the local environment with the possible arguments *)
@@ -1011,9 +1020,9 @@ and scope_let_definition ~toplevel_let ctx env let_def =
           let scoped_tye_opt =
             match tye_opt with
             | None -> None
-            | Some tye -> Some (
-              scope_type_expr
-                ctx env_with_ty_constraints_variables tye) in
+            | Some tye ->
+		Some
+		  (scope_type_expr ctx env_with_ty_constraints_variables tye) in
           (param_vname, scoped_tye_opt))
         let_binding_descr.Parsetree.b_params in
     (* Now scope the body. *)
@@ -1025,8 +1034,8 @@ and scope_let_definition ~toplevel_let ctx env let_def =
     let scoped_b_type =
       (match let_binding_descr.Parsetree.b_type with
        | None -> None
-       | Some tye -> Some (
-         scope_type_expr ctx env_with_ty_constraints_variables tye)) in
+       | Some tye ->
+	   Some (scope_type_expr ctx env_with_ty_constraints_variables tye)) in
     let new_binding_desc =
       { let_binding_descr with
           Parsetree.b_params = scoped_b_params;

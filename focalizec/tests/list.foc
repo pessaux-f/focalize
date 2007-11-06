@@ -1,24 +1,38 @@
 use "basics" ;;
 open "basics" ;;
 
-external type list ('a) = | caml -> "list" ;;
-external value foc_error : string -> 'a =  | caml -> "" ;;
-external value print_int : int -> string =  | caml -> "" ;;
-external value print_bool : bool -> string = | caml -> "" ;;
-external value ext_nil : #list ('a) = | caml -> "" ;;
-external value ext_cons : 'a -> #list ('a) -> #list ('a) = | caml -> "" ;;
-external value ext_head : #list ('a) -> 'a  = | caml -> "" ;;
-external value ext_tail : #list ('a) -> #list ('a) = | caml -> "" ;;
+let print_bool =
+   internal bool -> string
+   external
+   | caml -> "string_of_bool"
+;;
+let ext_nil =
+   internal list ('a)
+   external
+   | caml -> "[]"
+;;
+let ext_cons =
+   internal 'a -> list ('a) -> basics#list ('a)
+   external
+   | caml -> "(fun e l -> e :: l)"
+;;
+let ext_head =
+  internal list ('a) -> 'a
+  external
+  | caml -> "List.hd"
+;;
+let ext_tail =
+  internal list ('a) -> list ('a)
+  external
+  | caml -> "List.tl"
+;;
 
-species Basic_object =
-  let print (x in Self) = "<abst>" ;
-  let parse (x in string) in Self = #foc_error ("not parsable") ;
-  let equal (x in Self, y) =
-     let useless = if true then x else y in
-     true ;
+
+species Equalified_object inherits Basic_object =
+  let equal (x in Self, y in Self) in bool = base_eq (x, y) ;
 end ;;
 
-species List (E is Basic_object) inherits Basic_object =
+species List (E is Basic_object) inherits Equalified_object =
    sig nil : Self ;
    sig cons : E -> Self -> Self ;
    sig head : Self -> E ;
@@ -34,16 +48,16 @@ species List (E is Basic_object) inherits Basic_object =
 end ;;
 
 species Concrete_list (E is Basic_object) inherits List (E) =
-  rep = #list (E) ;
-  let nil = ext_nil ;
-  let cons (e, l) = ext_cons (e, l) ;
-  let head (l) = ext_head (l) ;
-  let tail (l) = ext_tail (l) ;
+  rep = basics#list (E) ;
+  let nil in Self = ext_nil ;
+  let cons (e, l) in Self = ext_cons (e, l) ;
+  let head (l in Self) in E = ext_head (l) ;
+  let tail (l in Self) in Self = ext_tail (l) ;
 end ;;
 
 species Contrete_int inherits Basic_object =
   rep = basics#int ;
-  let print = print_int ;
+  let print = string_of_int ;
 end ;;
 collection Int implements Contrete_int ;;
 

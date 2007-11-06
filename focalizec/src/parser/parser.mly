@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.73 2007-11-01 17:13:51 weis Exp $ *)
+(* $Id: parser.mly,v 1.74 2007-11-06 10:14:58 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -33,10 +33,6 @@ let mk_qual_vname qual vname =
 
 let mk_global_ident qual vname =
   mk (I_global (mk_qual_vname qual vname))
-;;
-
-let mk_unqualified_global_ident vname =
-  mk_global_ident None vname
 ;;
 
 let mk_global_species_ident qual vname =
@@ -479,10 +475,10 @@ simple_rep_type_def:
   | glob_ident
     { RTE_ident $1 }
   | species_vname          /* To have capitalized species names as types. */
-    { RTE_ident (mk_unqualified_global_ident $1) }
+    { RTE_ident (mk_local_ident $1) }
   | species_glob_ident     /* To have qualified species names as types. */
     { RTE_ident $1 }
-  | LIDENT { RTE_ident (mk_unqualified_global_ident (Vlident $1)) }
+  | LIDENT { RTE_ident (mk_local_ident (Vlident $1)) }
   | glob_ident LPAREN rep_type_def_comma_list RPAREN
     { RTE_app ($1, $3) }
   | LPAREN rep_type_def RPAREN
@@ -697,11 +693,11 @@ simple_type_expr:
   | glob_ident LPAREN type_expr_comma_list RPAREN
     { mk (TE_app ($1, $3)) }
   | LIDENT LPAREN type_expr_comma_list RPAREN
-    { mk (TE_app (mk_unqualified_global_ident (Vlident $1), $3)) }
+    { mk (TE_app (mk_local_ident (Vlident $1), $3)) }
   | LPAREN type_expr RPAREN
     { mk (TE_paren $2) }
   | species_vname   /* To have capitalized species names as types. */
-    { mk (TE_ident (mk_unqualified_global_ident $1)) }
+    { mk (TE_ident (mk_local_ident $1)) }
   | species_glob_ident     /* To have qualified species names as types. */
     { mk (TE_ident $1) }
 ;
