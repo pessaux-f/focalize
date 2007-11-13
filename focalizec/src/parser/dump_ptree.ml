@@ -11,9 +11,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.22 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.23 2007-11-13 13:30:34 pessaux Exp $ *)
 
-open Parsetree;;
+
 
 (* *********************************************************************** *)
 (* pp_position : Format.formatter -> Lexing.position -> unit               *)
@@ -57,11 +57,11 @@ let pp_vname ppf = function
 ;;
 
 let pp_qvname ppf = function
-  | Vname vname ->
-    Format.fprintf ppf "@[<2>Vname@ (%a)@]" pp_vname vname
-  | Qualified (modname, vname) ->
-    Format.fprintf ppf "@[<2>Qualified@ (%a, %a)@]"
-      pp_vname vname pp_modname modname
+  | Parsetree.Vname vname ->
+      Format.fprintf ppf "@[<2>Vname@ (%a)@]" pp_vname vname
+  | Parsetree.Qualified (modname, vname) ->
+      Format.fprintf ppf "@[<2>Qualified@ (%a, %a)@]"
+        pp_vname vname pp_modname modname
 ;;
 
 (* ******************************************************************* *)
@@ -71,7 +71,7 @@ let pp_qvname ppf = function
 
     {b Rem} : Not exported ouside this module.                         *)
 (* ******************************************************************* *)
-let pp_vnames ppf = Handy.pp_generic_separated_list "," pp_vname ppf;;
+let pp_vnames ppf = Handy.pp_generic_separated_list "," pp_vname ppf ;;
 
 
 
