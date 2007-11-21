@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.38 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.39 2007-11-21 16:34:15 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -408,9 +408,9 @@ let rec scope_type_expr ctx env ty_expr =
          let scoped_ident_descr =
            match hosting_info with
             | Env.ScopeInformation.TBI_builtin_or_var ->
-		Parsetree.I_local basic_vname
+                Parsetree.I_local basic_vname
             | Env.ScopeInformation.TBI_defined_in hosting_file ->
-		Parsetree.I_global
+                Parsetree.I_global
                   (Parsetree.Qualified (hosting_file, basic_vname)) in
          let scoped_ident =
            { ident with Parsetree.ast_desc = scoped_ident_descr } in
@@ -801,7 +801,7 @@ let rec scope_expr ctx env expr =
            { Parsetree.ast_loc = cstr_ident.Parsetree.ast_loc;
              Parsetree.ast_desc = Parsetree.CI qvname;
              Parsetree.ast_doc = cstr_ident.Parsetree.ast_doc;
-             Parsetree.ast_type = None } in
+             Parsetree.ast_type = Parsetree.ANTI_none } in
          let cstr_hosting_info =
            Env.ScopingEnv.find_constructor
              ~loc: cstr_ident.Parsetree.ast_loc
@@ -1021,8 +1021,8 @@ and scope_let_definition ~toplevel_let ctx env let_def =
             match tye_opt with
             | None -> None
             | Some tye ->
-		Some
-		  (scope_type_expr ctx env_with_ty_constraints_variables tye) in
+                Some
+                  (scope_type_expr ctx env_with_ty_constraints_variables tye) in
           (param_vname, scoped_tye_opt))
         let_binding_descr.Parsetree.b_params in
     (* Now scope the body. *)
@@ -1035,7 +1035,7 @@ and scope_let_definition ~toplevel_let ctx env let_def =
       (match let_binding_descr.Parsetree.b_type with
        | None -> None
        | Some tye ->
-	   Some (scope_type_expr ctx env_with_ty_constraints_variables tye)) in
+           Some (scope_type_expr ctx env_with_ty_constraints_variables tye)) in
     let new_binding_desc =
       { let_binding_descr with
           Parsetree.b_params = scoped_b_params;

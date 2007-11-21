@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_ml_generation.ml,v 1.5 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: type_ml_generation.ml,v 1.6 2007-11-21 16:34:15 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -114,12 +114,18 @@ let type_def_compile ctx env type_def_name type_descr =
   let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
   (* Type definition header. *)
   Format.fprintf out_fmter "@[<2>type" ;
-  (* Get a fresh instance of the type's identity scheme directly *)
-  (* instanciated with the effective type arguments.             *)
+  (* Get a fresh instance of the type's identity scheme directly   *)
+  (* instanciated with the variables that will serve as parameters *)
+  (* of the definition. We keep the list of these variables to be  *)
+  (* able to print them in front of the type constructor in the    *)
+  (* OCaml definition.                                             *)
+  let type_def_params =
+    List.map
+      (fun _ -> Types.type_variable ())
+      type_descr.Env.TypeInformation.type_params in
   let instanciated_body =
     Types.specialize_with_args
-      type_descr.Env.TypeInformation.type_identity
-      type_descr.Env.TypeInformation.type_params in
+      type_descr.Env.TypeInformation.type_identity type_def_params in
   (* Useless, but just in case.... This does not hurt ! *)
   Types.purge_type_simple_to_ml_variable_mapping () ;
   (* Now, generates the type definition's body. *)
@@ -127,10 +133,10 @@ let type_def_compile ctx env type_def_name type_descr =
    | Env.TypeInformation.TK_abstract ->
        (* Print the parameter(s) stuff if any. *)
        print_types_comma_with_same_vmapping_and_empty_carrier_mapping
-         ctx type_descr.Env.TypeInformation.type_params ;
+         ctx type_def_params ;
        (* Now print the type constructor's name. *)
        Format.fprintf out_fmter " _focty_%a =@ "
-         Misc_ml_generation.pp_to_ocaml_vname type_def_name ;
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
        (* Type abbreviation: the body is the abbreviated type. *)
        Format.fprintf out_fmter "%a@] ;;@\n "
          (Types.pp_type_simple_to_ml
@@ -143,11 +149,11 @@ let type_def_compile ctx env type_def_name type_descr =
        (begin
        (* Print the parameter(s) stuff if any. *)
        print_types_comma_with_same_vmapping_and_empty_carrier_mapping
-         ctx type_descr.Env.TypeInformation.type_params ;
+         ctx type_def_params ;
        (* Now, the type name, renamed as "_focty_" followed by *)
        (* the original name.                                   *)
        Format.fprintf out_fmter " _focty_%a =@ "
-         Misc_ml_generation.pp_to_ocaml_vname type_def_name ;
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
        (* And now, bind the FoCaL identifier to the OCaml one. *)
        (try
          let (_, ocaml_binding) =
@@ -205,16 +211,16 @@ let type_def_compile ctx env type_def_name type_descr =
        (* the parameters enumeration of the type and in the sum    *)
        (* constructors definitions).                               *)
        print_types_comma_with_same_vmapping_and_empty_carrier_mapping
-         ctx type_descr.Env.TypeInformation.type_params ;
+         ctx type_def_params ;
        (* Now print the type constructor's name. *)
        Format.fprintf out_fmter " _focty_%a =@ "
-         Misc_ml_generation.pp_to_ocaml_vname type_def_name ;
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
        (* And finally really print the constructors definitions. *)
        List.iter
          (fun (sum_cstr_name, opt_args) ->
            (* The sum constructor name. *)
            Format.fprintf out_fmter "@\n| %a"
-             Misc_ml_generation.pp_to_ocaml_vname sum_cstr_name ;
+             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name ;
            match opt_args with
             | None -> ()
             | Some sum_cstr_args ->
@@ -254,10 +260,10 @@ let type_def_compile ctx env type_def_name type_descr =
            fields in
        (* Print the parameter(s) stuff if any. *)
        print_types_comma_with_same_vmapping_and_empty_carrier_mapping
-         ctx type_descr.Env.TypeInformation.type_params ;
+         ctx type_def_params ;
        (* Now print the type constructor's name. *)
        Format.fprintf out_fmter " _focty_%a = {@ "
-         Misc_ml_generation.pp_to_ocaml_vname type_def_name ;
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
        (* And finally really print the fields definitions. *)
        List.iter
          (fun (field_name, field_mut, field_ty) ->
@@ -266,7 +272,7 @@ let type_def_compile ctx env type_def_name type_descr =
            if field_mut = Env.TypeInformation.FM_mutable then
              Format.fprintf out_fmter "mutable " ;
            Format.fprintf out_fmter "%a :@ %a ;"
-             Misc_ml_generation.pp_to_ocaml_vname field_name
+             Parsetree_utils.pp_vname_with_operators_expanded field_name
              (Types.pp_type_simple_to_ml
                 ~current_unit: ctx.Misc_ml_generation.rcc_current_unit
                 ~reuse_mapping: true [])

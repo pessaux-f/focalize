@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.23 2007-11-13 13:30:34 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.24 2007-11-21 16:34:15 pessaux Exp $ *)
 
 
 
@@ -150,7 +150,7 @@ let pp_idents ppf = Handy.pp_generic_separated_list "," pp_ident ppf;;
 (* *********************************************************** *)
 let pp_label_ident_desc ppf = function
   | Parsetree.LI qvname->
-      Format.fprintf ppf "@[<2>I_global@ (%a)@]" pp_qvname qvname
+      Format.fprintf ppf "@[<2>LI@ (%a)@]" pp_qvname qvname
 ;;
 (* *************************************************************** *)
 (* Format.formatter -> Parsetree.label_ident -> unit               *)
@@ -203,7 +203,7 @@ let pp_expr_idents ppf =
 
 
 let pp_constructor_ident_desc ppf (Parsetree.CI qvname) =
-  Format.fprintf ppf "@[<2>CE@ (%a)@]" pp_qvname qvname
+  Format.fprintf ppf "@[<2>CI@ (%a)@]" pp_qvname qvname
 ;;
 let pp_constructor_ident ppf = pp_ast pp_constructor_ident_desc ppf;;
 
@@ -849,7 +849,7 @@ let pp_coll_def ppf = pp_ast pp_coll_def_desc ppf;;
     {b Rem} : Not exported ouside this module.                          *)
 (* ******************************************************************** *)
 let pp_tmp_TD_union ppf l =
-  Format.fprintf ppf "@[<2>TD_union ([@ %a@ ])@]"
+  Format.fprintf ppf "@[<2>STDB_union ([@ %a@ ])@]"
     (Handy.pp_generic_separated_list
        ","
        (fun local_ppf (constr_name, type_exprs) ->
@@ -861,10 +861,10 @@ let pp_tmp_TD_union ppf l =
 
 let pp_simple_type_def_body_desc ppf = function
   | Parsetree.STDB_alias te ->
-      Format.fprintf ppf "@[<2>TD_alias@ (%a)@]" pp_type_expr te
+      Format.fprintf ppf "@[<2>STDB_alias@ (%a)@]" pp_type_expr te
   | Parsetree.STDB_union l -> Format.fprintf ppf "%a" pp_tmp_TD_union l
   | Parsetree.STDB_record lab_exprs ->
-      Format.fprintf ppf "@[<2>TD_record@ ([@ %a@ ])@]"
+      Format.fprintf ppf "@[<2>STDB_record@ ([@ %a@ ])@]"
         (Handy.pp_generic_separated_list
            ","
            (fun local_ppf (lab, e) ->

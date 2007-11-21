@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.28 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.29 2007-11-21 16:34:15 pessaux Exp $ *)
 
 (** {2 The Focalize abstract syntax tree.} *)
 
@@ -39,6 +39,13 @@ and doc_elem = {
 }
 ;;
 
+type ast_node_type_information =
+  | ANTI_none
+  | ANTI_non_relevant
+  | ANTI_type of Types.type_simple
+  | ANTI_scheme of Types.type_scheme
+;;
+
 type 'a ast = {
    (** The location in the source of the AST node. *)
    ast_loc : Location.t;
@@ -47,7 +54,7 @@ type 'a ast = {
    (** The support for documentation. *)
    ast_doc : documentation;
    (** The type of the node. *)
-   mutable ast_type : Types.type_simple option;
+   mutable ast_type : ast_node_type_information
 }
 ;;
 

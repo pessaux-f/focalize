@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.mli,v 1.9 2007-10-30 13:27:59 pessaux Exp $ *)
+(* $Id: handy.mli,v 1.10 2007-11-21 16:34:15 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -43,3 +43,5 @@ val pp_set_underlined : Format.formatter -> unit
 val pp_set_bold : Format.formatter -> unit
 val pp_set_videoinv : Format.formatter -> unit
 val pp_reset_effects : Format.formatter -> unit
+
+val int_to_base_26 : int -> string

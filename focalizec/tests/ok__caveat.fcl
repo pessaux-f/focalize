@@ -1,0 +1,50 @@
+(* $Id: ok__caveat.fcl,v 1.1 2007-11-21 16:34:15 pessaux Exp $ *)
+
+use "basics" ;;
+open "basics" ;;
+
+
+(* *************************************************************** *)
+(* Must pass.                                                      *)
+(* Illustrates the pitfall of sum type constructors that have ONE  *)
+(* argument that is a tupple or SEVERAL arguments but are hardly   *)
+(* different from the syntax point of view. Note that this make no *)
+(* difference in the generated OCaml code.                         *)
+(* *************************************************************** *)
+
+
+type with_1_tuple_arg = 
+  | A (int * bool * string) ;;   (* Note the stars. *)
+
+(** Beware the double parens: the constructor has 1 argument that is a tuple.
+   and because the syntaxe for constructors with arguments already requires
+   parens, that's the reason for these double parentheses. *)
+let ok1 = A ( (1, false, "") ) ;;
+
+(*
+let ko1 = A (1, false, "") ;;
+Would lead to an error telling that types
+   basics#int * basics#bool * basics#string
+and
+   basics#int
+are not compatible. In effect in this case, A is considered to be applied to
+several arguments, the first one being 1 that is of type int. And int is
+really incompatible with a tuple type.
+*)
+
+type with_several_args =
+  | B (int, bool, string) ;;   (* Note the comas. *)
+
+(* Here we pass to B 3 arguments. *)
+let ok2 = B (1, false, "") ;;
+
+(*
+let ko2 = B ( (1, false, "") ) ;;
+Would lead to an error telling that types
+   basics#int
+and
+   basics#int * basics#bool * basics#string
+are not compatible.
+In effect, we try to pass to B 1 unique argument that is a tuple. And a tuple
+is incompatible with the first expected argument ob B that is int.
+*)

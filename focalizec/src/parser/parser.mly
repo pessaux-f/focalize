@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.74 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.75 2007-11-21 16:34:15 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -17,7 +17,7 @@ let mk_doc doc desc = {
   ast_loc = mk_loc ();
   ast_desc = desc;
   ast_doc = doc;
-  ast_type = None;
+  ast_type = Parsetree.ANTI_none
 };;
 
 let mk d = mk_doc [] d;;
@@ -481,6 +481,11 @@ simple_rep_type_def:
   | LIDENT { RTE_ident (mk_local_ident (Vlident $1)) }
   | glob_ident LPAREN rep_type_def_comma_list RPAREN
     { RTE_app ($1, $3) }
+  | LIDENT LPAREN rep_type_def_comma_list RPAREN   /* To have non-qualified
+                                                      parametreized type
+                                                      constructors names. */
+    { let paramd_cstr = mk_local_ident (Vlident $1) in
+      RTE_app (paramd_cstr, $3) }
   | LPAREN rep_type_def RPAREN
     { RTE_paren (mk $2) }
 ;

@@ -11,91 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.ml,v 1.7 2007-11-06 10:14:58 pessaux Exp $ *)
-
-
-(* ********************************************************************* *)
-(* string -> string                                                      *)
-(** {b Descr} : Translate a FoC operator name to a legal OCaml function
-              name, preventing the versatile FoC operators names from
-              being lexically incorrect if straighforwardly converted
-              into OCaml identifiers.
-              The transformation is pretty stupid, replacing all the
-              legal "symbolic" characters available for FoC prefix/infix
-              idents (extracted from the lexer definitions) by a regular
-              string.
-
-    {b Rem} : Not exported outsidethis module.                           *)
-(* ********************************************************************* *)
-let parse_operator_string op_string =
-  let renamed_operator = ref "" in
-  String.iter
-    (fun character ->
-      let str_tail =
-        (match character with
-         | '`' -> "_focop_bquote_"
-         | '~' -> "_focop_tilda_"
-         | '?' -> "_focop_question_"
-         | '$' -> "_focop_dollar_"
-         | '!' -> "_focop_bang_"
-         | '#' -> "_focop_sharp_"
-         | '+' -> "_focop_plus_"
-         | '-' -> "_focop_minus_"
-         | '*' -> "_focop_star_"
-         | '/' -> "_focop_slash_"
-         | '%' -> "_focop_percent_"
-         | '&' -> "_focop_ampers_"
-         | '|' -> "_focop_pipe_"
-         | ',' -> "_focop_comma_"
-         | ':' -> "_focop_colon_"
-         | ';' -> "_focop_semi_"
-         | '<' -> "_focop_lt_"
-         | '=' -> "_focop_eq_"
-         | '>' -> "_focop_gt_"
-         | '@' -> "_focop_at_"
-         | '^' -> "_focop_hat_"
-         | '\\' -> "_focop_bslash"
-         | whatever ->
-             (* For any other character, keep it unchanged. *)
-             let s = " " in
-             s.[0] <- whatever ;
-             s) in
-      (* Appending on string is not very efficient, but *)
-      (* this should not be a real matter here ! *)
-      renamed_operator := !renamed_operator ^ str_tail)
-    op_string ;
-  (* Just return the "translated" identifier name. *)
-  !renamed_operator
-;;
-
-
-
-(* ******************************************************************** *)
-(* Format.formatter -> Parsetree.vname -> unit                          *)
-(** {b Descr} : Pretty prints a [vname] value as OCaml source. Because
-              FoC allows more infix/prefix operators then OCaml syntaxe
-              it's impossible to crudely translate the string of the
-              [vname] to OCaml.
-              For instance, a FoC infix operator "( **+ )" has no
-              equivalent in OCaml syntaxe : "( **+ )" is not a correct
-              operator identifier according to OCaml.
-              Then, instead of havign particular cases for operators
-              that can be straighforward translated (like "( +)") and
-              the others, we adopt a uniform mapping for infix and
-              prefix operators using the [parse_operator_string]
-              function to transform infix/prefix operators names
-              before printing and straighforwardly print other
-              operators names.
-
-    {b Rem} : Exported ouside this module.                              *)
-(* ******************************************************************** *)
-let pp_to_ocaml_vname ppf = function
-  | Parsetree.Vlident s
-  | Parsetree.Vuident s
-  | Parsetree.Vqident s -> Format.fprintf ppf "%s" s
-  | Parsetree.Vpident s
-  | Parsetree.Viident s -> Format.fprintf ppf "%s" (parse_operator_string s)
-;;
+(* $Id: misc_ml_generation.ml,v 1.8 2007-11-21 16:34:15 pessaux Exp $ *)
 
 
 
@@ -108,17 +24,8 @@ let pp_to_ocaml_label_ident ppf lab_ident =
           | Parsetree.Qualified (modname, n) ->
               Format.fprintf ppf "%s." (String.capitalize modname) ;
               n) in
-       Format.fprintf ppf "%a" pp_to_ocaml_vname vname
-;;
-
-
-
-let ocaml_vname_as_string = function
-  | Parsetree.Vlident s
-  | Parsetree.Vuident s
-  | Parsetree.Vqident s -> s
-  | Parsetree.Vpident s
-  | Parsetree.Viident s -> parse_operator_string s
+       Format.fprintf ppf "%a"
+         Parsetree_utils.pp_vname_with_operators_expanded vname
 ;;
 
 

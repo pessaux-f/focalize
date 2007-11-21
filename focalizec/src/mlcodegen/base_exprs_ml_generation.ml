@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.6 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.7 2007-11-21 16:34:15 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -59,17 +59,17 @@ let generate_ident_for_method_generator ctx ident =
   match ident.Parsetree.ast_desc with
    | Parsetree.I_local vname ->
        (* Thanks to the scoping pass, identifiers remaining "local" are *)
-       (* really let-bound in the contect of the expression, hence have *)
+       (* really let-bound in the context of the expression, hence have *)
        (* a direrct mapping between FoCaL and OCaml code.               *)
        Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
-         Misc_ml_generation.pp_to_ocaml_vname vname
+         Parsetree_utils.pp_vname_with_operators_expanded vname
    | Parsetree. I_global (Parsetree.Vname vname) ->
        (* Thanks to the scoping pass, [I_global] with a [None] module *)
        (* name are toplevel definitions of the current compilation    *)
        (* unit. Then hence can be straightforwardly called in the     *)
        (* OCaml code.                                                 *)
        Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
-         Misc_ml_generation.pp_to_ocaml_vname vname
+         Parsetree_utils.pp_vname_with_operators_expanded vname
    | Parsetree. I_global (Parsetree.Qualified (mod_name, vname)) ->
        (* Call the OCaml corresponding identifier in the corresponding *)
        (* module (i.e. the capitalized [mod_name]). If the module is   *)
@@ -78,10 +78,10 @@ let generate_ident_for_method_generator ctx ident =
        if mod_name <> ctx.Misc_ml_generation.rcc_current_unit then
          Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%s.%a"
            (String.capitalize mod_name)
-           Misc_ml_generation.pp_to_ocaml_vname vname
+           Parsetree_utils.pp_vname_with_operators_expanded vname
        else
          Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
-           Misc_ml_generation.pp_to_ocaml_vname vname
+           Parsetree_utils.pp_vname_with_operators_expanded vname
 ;;
 
 
@@ -139,14 +139,14 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
          (* the parameter's value itself, not on any method since there  *)
          (* is none !).                                                  *)
          Format.fprintf out_fmter "_p_%a_%a"
-           Misc_ml_generation.pp_to_ocaml_vname vname
-           Misc_ml_generation.pp_to_ocaml_vname vname
+           Parsetree_utils.pp_vname_with_operators_expanded vname
+           Parsetree_utils.pp_vname_with_operators_expanded vname
          end)
        else
          (begin
          (* Really a local identifier or a call to a recursive method. *)
          Format.fprintf out_fmter "%a"
-           Misc_ml_generation.pp_to_ocaml_vname vname ;
+           Parsetree_utils.pp_vname_with_operators_expanded vname ;
          (* Because this method can be recursive, we must apply it to *)
          (* its extra parameters if it has some.                      *)
          try
@@ -168,10 +168,10 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
        if mod_name <> ctx.Misc_ml_generation.rcc_current_unit then
          Format.fprintf out_fmter "%s.%a"
            (String.capitalize mod_name)
-           Misc_ml_generation.pp_to_ocaml_vname vname
+           Parsetree_utils.pp_vname_with_operators_expanded vname
        else
          Format.fprintf out_fmter "%a"
-           Misc_ml_generation.pp_to_ocaml_vname vname
+           Parsetree_utils.pp_vname_with_operators_expanded vname
    | Parsetree.EI_method (coll_specifier_opt, vname) ->
        (begin
        match coll_specifier_opt with
@@ -182,7 +182,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
             (* a call to the corresponding lambda-lifted method that is  *)
             (* represented as an extra parameter of the OCaml function.  *)
             Format.fprintf out_fmter "abst_%a"
-              Misc_ml_generation.pp_to_ocaml_vname vname ;
+              Parsetree_utils.pp_vname_with_operators_expanded vname
             end)
         | Some coll_specifier ->
             (begin
@@ -208,8 +208,9 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                      (String.uncapitalize
                         (Parsetree_utils.name_of_vname coll_name)) ^
                      "_" in
-                   Format.fprintf out_fmter
-                     "%s%a" prefix Misc_ml_generation.pp_to_ocaml_vname vname
+                   Format.fprintf out_fmter "%s%a"
+                     prefix
+                     Parsetree_utils.pp_vname_with_operators_expanded vname
                    end)
                  else
                    (begin
@@ -217,9 +218,9 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                    (* by lambda-lifting.                                   *)
                    Format.fprintf out_fmter
                      "%a.effective_collection.%a.%a"
-                     Misc_ml_generation.pp_to_ocaml_vname coll_name
-                     Misc_ml_generation.pp_to_ocaml_vname coll_name
-                     Misc_ml_generation.pp_to_ocaml_vname vname
+                     Parsetree_utils.pp_vname_with_operators_expanded coll_name
+                     Parsetree_utils.pp_vname_with_operators_expanded coll_name
+                     Parsetree_utils.pp_vname_with_operators_expanded vname
                    end)
                  end)
              | Parsetree.Qualified (module_name, coll_name) ->
@@ -240,16 +241,20 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                        (String.uncapitalize
                           (Parsetree_utils.name_of_vname coll_name)) ^
                        "_" in
-                     Format.fprintf out_fmter
-                       "%s%a" prefix Misc_ml_generation.pp_to_ocaml_vname vname
+                     Format.fprintf out_fmter "%s%a"
+                       prefix Parsetree_utils.pp_vname_with_operators_expanded
+                       vname
                        end)
                    else
                      (begin
                      Format.fprintf out_fmter
                        "%a.effective_collection.%a.%a"
-                       Misc_ml_generation.pp_to_ocaml_vname coll_name
-                       Misc_ml_generation.pp_to_ocaml_vname coll_name
-                       Misc_ml_generation.pp_to_ocaml_vname vname
+                       Parsetree_utils.pp_vname_with_operators_expanded
+                       coll_name
+                       Parsetree_utils.pp_vname_with_operators_expanded
+                       coll_name
+                       Parsetree_utils.pp_vname_with_operators_expanded
+                       vname
                      end)
                    end)
                  else
@@ -308,17 +313,17 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
       match cstr_expr.Parsetree.ast_desc with
        | Parsetree.CI (Parsetree.Vname name) ->
            Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
-             Misc_ml_generation.pp_to_ocaml_vname name
+             Parsetree_utils.pp_vname_with_operators_expanded name
        | Parsetree.CI (Parsetree.Qualified (fname, name)) ->
            (* If the constructor belongs to the current      *)
            (* compilation unit then one must not qualify it. *)
            if fname <> ctx.Misc_ml_generation.rcc_current_unit then
              Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%s.%a"
                (String.capitalize fname)
-               Misc_ml_generation.pp_to_ocaml_vname name
+               Parsetree_utils.pp_vname_with_operators_expanded name
            else
              Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
-               Misc_ml_generation.pp_to_ocaml_vname name
+               Parsetree_utils.pp_vname_with_operators_expanded name
       end)
 ;;
 
@@ -330,12 +335,12 @@ let generate_pattern ctx env pattern =
     match pat.Parsetree.ast_desc with
      | Parsetree.P_const constant -> generate_constant out_fmter constant
      | Parsetree.P_var name ->
-         Format.fprintf out_fmter "%a" Misc_ml_generation.pp_to_ocaml_vname name
+         Format.fprintf out_fmter "%a" Parsetree_utils.pp_vname_with_operators_expanded name
      | Parsetree.P_as (p, name) ->
          Format.fprintf out_fmter "(" ;
          rec_gen_pat p ;
          Format.fprintf out_fmter "as@ %a)"
-           Misc_ml_generation.pp_to_ocaml_vname name
+           Parsetree_utils.pp_vname_with_operators_expanded name
      | Parsetree.P_wild -> Format.fprintf out_fmter "_"
      | Parsetree.P_constr (ident, pats) ->
          (begin
@@ -380,7 +385,7 @@ let rec let_binding_compile ctx ~local_idents env collections_carrier_mapping
   let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
   (* Generate the bound name. *)
   Format.fprintf out_fmter "%a"
-    Misc_ml_generation.pp_to_ocaml_vname
+    Parsetree_utils.pp_vname_with_operators_expanded
     bd.Parsetree.ast_desc.Parsetree.b_name ;
   (* Generate the parameters if some, with their type constraints. *)
   let params_names = List.map fst bd.Parsetree.ast_desc.Parsetree.b_params in
@@ -397,13 +402,13 @@ let rec let_binding_compile ctx ~local_idents env collections_carrier_mapping
       match pot_param_ty with
        | Some param_ty ->
            Format.fprintf out_fmter "@ (%a : %a)"
-             Misc_ml_generation.pp_to_ocaml_vname param_vname
+             Parsetree_utils.pp_vname_with_operators_expanded param_vname
              (Types.pp_type_simple_to_ml
                 ~current_unit: ctx.Misc_ml_generation.rcc_current_unit
                 ~reuse_mapping: true collections_carrier_mapping) param_ty
        | None ->
            Format.fprintf out_fmter "@ %a"
-             Misc_ml_generation.pp_to_ocaml_vname param_vname)
+             Parsetree_utils.pp_vname_with_operators_expanded param_vname)
     params_with_type ;
   (* Now we don't need anymore the sharing. Hence, clean it. This should not *)
   (* be useful because the other guys usign printing should manage this      *)
@@ -509,7 +514,7 @@ and generate_expr ctx ~local_idents env initial_expression =
          List.iter
            (fun n ->
              Format.fprintf out_fmter "@[<2>fun@ %a@ ->@ "
-               Misc_ml_generation.pp_to_ocaml_vname n)
+               Parsetree_utils.pp_vname_with_operators_expanded n)
            args_names ;
          (* Here, the function parameter name may mask a "in"-parameter. *)
          let loc_idents' = args_names @ loc_idents in

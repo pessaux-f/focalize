@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.10 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.11 2007-11-21 16:34:15 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -259,3 +259,24 @@ let pp_set_videoinv ppf =
 
 let pp_reset_effects ppf =
   if Configuration.get_fancy_ansi () then Format.fprintf ppf "@<0>\027[0m" ;;
+
+
+
+(* ************************************************************************ *)
+(* int -> string                                                            *)
+(** {b Descr}: Transform an integer to a string compound of only a-z chars.
+      Used to write variables. In fact, that only a integer->base 26
+      printer.
+      I love this function !!! I wrote it once during my Phd Thesis, and
+      then I copied/pasted it tons of times since !!!
+
+    {b Rem} : Exported outside this module.                                 *)
+(* ************************************************************************ *)
+let rec int_to_base_26 i =
+  if i >= 26 then
+    let ch = (i mod 26) + (Char.code 'a') in
+    (int_to_base_26 (i / 26)) ^ Char.escaped (Char.chr ch)
+  else
+    let ch = (i mod 26) + (Char.code 'a') in
+    Char.escaped (Char.chr ch)
+;;

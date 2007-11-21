@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2007-10-29 08:18:36 pessaux Exp $
+# $Id: Makefile,v 1.3 2007-11-21 16:34:15 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file
@@ -19,17 +19,20 @@ FOCSRC = basics.foc \
 	multiplicative_law.foc
 FOCMLS = $(FOCSRC:.foc=.ml)
 FOCCMOS = $(FOCMLS:.ml=.cmo)
+FOCVS = $(FOCSRC:.foc=.v)
 EXTERNALOBJS = focvasives.cmo sets_orders_externals.cmo
 
 
 
-all:: $(EXTERNALOBJS) $(FOCMLS) $(FOCCMOS)
+all:: $(EXTERNALOBJS) $(FOCMLS) $(FOCVS) $(FOCCMOS)
+	$(RM) -f basics.v
+	$(LN) -s ../tmp_basics.v basics.v
 
 doc:: $(BYTOBJS)
 	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)
 
 clean::
-	$(RM) *~ *.cm* log *.fo $(FOCMLS)
+	$(RM) *~ *.cm* log *.fo $(FOCMLS) $(FOCVS)
 	$(RM) odoc/*
 
 depend:
@@ -37,7 +40,7 @@ depend:
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .foc .fo
 
-.foc.fo .foc.ml:
+.foc.fo .foc.ml .foc.v:
 	$(FOCC) $(FOC_COMP_FLAGS) -c $<
 
 .ml.cmo:

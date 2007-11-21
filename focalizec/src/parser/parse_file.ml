@@ -11,9 +11,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parse_file.ml,v 1.7 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: parse_file.ml,v 1.8 2007-11-21 16:34:15 pessaux Exp $ *)
 
-open Parsing ;;
 
 exception Lex_error of (Lexing.position * Lexing.position * string) ;;
 exception Syntax_error of (Lexing.position * Lexing.position) ;;

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.52 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: env.ml,v 1.53 2007-11-21 16:34:15 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -302,7 +302,18 @@ module TypeInformation = struct
     (** Entity parameter. *)
     | SPAR_in of (Parsetree.vname * Types.type_collection)
     (** Collection parameter. *)
-    | SPAR_is of (Parsetree.vname * (species_field list))
+    | SPAR_is of
+        ((** The name of the species parameter. *)
+         Parsetree.vname *
+         (** The list of fields this parameter has. It is in fact the normalized
+             form of the species type the parameter has. *)
+         (species_field list) *
+         (** The species expression of the parameter. This expression has the
+             normalized form compound of the above list of fields. This
+             expression is kept because Coq code generation need to know it
+             in order to make the type expression annotation the parameter
+             in the hosting species record type. *)
+         Parsetree.species_expr)
 
 
 
@@ -492,7 +503,7 @@ module TypeInformation = struct
           let (p_kind_string, vname) =
             (match param with
              | SPAR_in (a, _) -> ("in", a)
-             | SPAR_is (a, _) -> ("is", a)) in
+             | SPAR_is (a, _, _) -> ("is", a)) in
           Format.fprintf local_ppf "%a %s ..."
             Sourcify.pp_vname vname p_kind_string;
           if rem <> [] then
@@ -1399,6 +1410,7 @@ module TypingEMAccess = struct
       {b Rem} : Exported outside this module.                     *)
   (* ************************************************************ *)
   let pervasives () =
+    (* [Unsure] A virer une fois que les listes seront dans basics.foc. *)
     (* Create the types scheme for "[]". *)
     let nil_scheme =
       (let v = Types.type_variable () in
@@ -1411,9 +1423,11 @@ module TypingEMAccess = struct
            (Types.type_tuple [v; (Types.type_list v)])
            (Types.type_list v))) in
     (* Create the description of the type list. *)
-    let (list_identity, list_params) =
-      (let v = Types.type_variable () in
-      Types.generalize2 (Types.type_list v) [v]) in
+    let list_param = Types.type_variable () in
+    let list_params = [list_param] in
+    let list_identity =
+      Types.build_type_def_scheme
+        ~variables: list_params ~body: (Types.type_list list_param) in
     let list_type_description = {
       TypeInformation.type_kind =
         TypeInformation.TK_variant [

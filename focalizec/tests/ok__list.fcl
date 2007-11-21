@@ -1,6 +1,17 @@
 use "basics" ;;
 open "basics" ;;
 
+(* ***************************************************************** *)
+(* Must pass.                                                        *)
+(* Example showing how to make lists as species in FoCaL. It also    *)
+(* illustrate the need for the extra unit argument to the collection *)
+(* generator "collection_create" in case it has no arguments, what   *)
+(* would prevent OCaml to generalize the type og this generator. And *)
+(* if the type of this generator was not generalized, then once the  *)
+(* Int List are done, variables of the generator get instanciated    *)
+(* by a somewhat of int, and it is now impossible to create the      *)
+(* Bool List.                                                        *)
+
 let print_bool =
    internal bool -> string
    external

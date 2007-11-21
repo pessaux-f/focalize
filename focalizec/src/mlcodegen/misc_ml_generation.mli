@@ -11,11 +11,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.mli,v 1.4 2007-10-29 15:48:12 pessaux Exp $ *)
+(* $Id: misc_ml_generation.mli,v 1.5 2007-11-21 16:34:15 pessaux Exp $ *)
 
 
-val pp_to_ocaml_vname : Format.formatter -> Parsetree.vname -> unit
-val ocaml_vname_as_string : Parsetree.vname -> string
+
 val pp_to_ocaml_label_ident : Format.formatter -> Parsetree.label_ident -> unit
 
 type reduced_compil_context = {

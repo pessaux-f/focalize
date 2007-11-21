@@ -3,6 +3,7 @@ TEST_FILES = \
 	ko__bad_self_use.foc \
 	ok__in_example.foc \
 	ok__in_example2.foc \
+	ok__list.foc \
 	ok__need_re_ordering.foc \
 	ok__odd_even.foc \
 	ko__param_toy.foc \
@@ -26,4 +27,4 @@ all: $(TEST_FILES)
 	done
 
 clean:
-	rm -f *.fo *.mangled *~ .*~ *.cm* *.o *.ml *.out
+	rm -f *.fo *.mangled *~ .*~ *.cm* *.o *.ml *.v *.out

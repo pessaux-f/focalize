@@ -11,9 +11,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.36 2007-11-01 17:12:47 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.37 2007-11-21 16:34:15 pessaux Exp $ *)
 
-open Parsetree;;
 
 (* *********************************************************** *)
 (* Format.formatter -> Parsetree.vname -> unit                 *)
@@ -69,7 +68,8 @@ let pp_node_labels sep ppf =
     {b Rem} : Not exported ouside this module.                              *)
 (* ************************************************************************ *)
 let pp_ast desc_printer_fct ppf ast =
-  let print_doc_elem ppf de = Format.fprintf ppf "(** %s *)@ " de.de_desc in
+  let print_doc_elem ppf de =
+    Format.fprintf ppf "(** %s *)@ " de.Parsetree.de_desc in
   let print_doc_elems ppf des =
       List.iter (fun d -> Format.fprintf ppf "%a@ " print_doc_elem d) des in
   let print_documentation = function
@@ -84,8 +84,8 @@ let pp_ast desc_printer_fct ppf ast =
 
 
 let pp_qualified_vname ppf = function
-  | Vname vname -> Format.fprintf ppf "%a" pp_vname vname
-  | Qualified (modname, vname) ->
+  | Parsetree.Vname vname -> Format.fprintf ppf "%a" pp_vname vname
+  | Parsetree.Qualified (modname, vname) ->
       Format.fprintf ppf "%s#%a" modname pp_vname vname
 ;;
 
@@ -228,8 +228,8 @@ let expr_desc_fixitude = function
         | _ -> Fixitude_applic in
       begin match id.Parsetree.ast_desc with
       | Parsetree.EI_local vname -> fixitude_of_vname vname
-      | Parsetree.EI_global (Vname vname) -> fixitude_of_vname vname
-      | Parsetree.EI_global (Qualified (_, _)) ->
+      | Parsetree.EI_global (Parsetree.Vname vname) -> fixitude_of_vname vname
+      | Parsetree.EI_global (Parsetree.Qualified (_, _)) ->
           Fixitude_applic  (* So can't be printed as a syntactic operator. *)
       | Parsetree.EI_method (None, vname) -> fixitude_of_vname vname
       | Parsetree.EI_method (Some _, _) -> Fixitude_applic

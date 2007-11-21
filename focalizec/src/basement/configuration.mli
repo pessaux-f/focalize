@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.14 2007-10-29 08:18:36 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.15 2007-11-21 16:34:15 pessaux Exp $ *)
 
 
 (** The various flags and definitions useful to the internal behaviour of the
@@ -51,6 +51,9 @@ val set_raw_ast_dump : unit -> unit
 
 val get_generate_ocaml : unit -> bool
 val unset_generate_ocaml : unit -> unit
+
+val get_generate_coq : unit -> bool
+val unset_generate_coq : unit -> unit
 
 val get_fancy_ansi : unit -> bool
 val unset_fancy_ansi : unit -> unit

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.6 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.7 2007-11-21 16:34:15 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -147,7 +147,7 @@ let root_compile ~current_unit ~out_file_name stuff =
       (* stuff. Because we don't want these errors to hide the real initial *)
       (* problem that made the code generation impossible, we first process *)
       (* here I/O errors, then will be raise again the initial error.       *)
-      Format.eprintf "Error@ while@ trying@ to@ keep@ trace@ of@ the@ partially@ generated@ OCaml@ code:@ %s.@\nInitial error follows.@."
+      Format.eprintf "Error@ while@ trying@ to@ keep@ trace@ of@ the@ partially@ generated@ OCaml@ code:@ %s.@\nInitial@ error@ follows.@."
         (Printexc.to_string second_error)
       end)
     end) ;

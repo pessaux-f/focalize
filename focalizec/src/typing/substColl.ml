@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.12 2007-10-30 21:15:07 weis Exp $ *)
+(* $Id: substColl.ml,v 1.13 2007-11-21 16:34:15 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -43,21 +43,29 @@ type substitution_collection_kind =
 
 (* ******************************************************************* *)
 (* substitution_collection_kind -> Types.type_collection ->            *)
-(*   Types.type_simple option -> Types.type_simple option              *)
+(*   Parsetree.ast_node_type_information -> Types.type_simple option   *)
 (** {b Descr} : Performs the collection name substitution [c1] <- [c2]
-              in an optional [Types.type_simple].
+              in an optional [Types.type_simple] under the form of a
+              [Parsetree.ast_node_type_information].
 
     {b Rem} : Not exported outside this module.                        *)
 (* ******************************************************************* *)
-let subst_type_simple_option c1 c2 = function
-  | None -> None
-  | Some ty ->
+let subst_ast_node_type_information c1 c2 = function
+  | Parsetree.ANTI_none -> Parsetree.ANTI_none
+  | Parsetree.ANTI_non_relevant -> Parsetree.ANTI_non_relevant
+  | Parsetree.ANTI_type ty ->
       (begin
       match c1 with
-       | SCK_coll c -> Some (Types.subst_type_simple c c2 ty)
+       | SCK_coll c -> Parsetree.ANTI_type (Types.subst_type_simple c c2 ty)
        | SCK_self ->
-           Some
+           Parsetree.ANTI_type
              (Types.copy_type_simple_but_variables ~and_abstract: (Some c2) ty)
+      end)
+  | Parsetree.ANTI_scheme sch ->
+      (begin
+      match c1 with
+       | SCK_coll c -> Parsetree.ANTI_scheme (Types.subst_type_scheme c c2 sch)
+       | SCK_self -> Parsetree.ANTI_scheme (Types.abstract_in_scheme c2 sch)
       end)
 ;;
 
@@ -70,7 +78,8 @@ let subst_ident c1 c2 ident =
   (* Because [idents] can only be [I_local] of [I_global] stuff, there is  *)
   (* never collection names inside, hence nothing to change in the [desc]. *)
   (* Substitute in the AST node type. *)
-  let new_type = subst_type_simple_option c1 c2 ident.Parsetree.ast_type in
+  let new_type =
+    subst_ast_node_type_information c1 c2 ident.Parsetree.ast_type in
   { ident with Parsetree.ast_type = new_type }
 ;;
 
@@ -113,7 +122,8 @@ let subst_expr_ident ~current_unit c1 c2 ident =
             (Some new_species_qvname, vname)
         else ident.Parsetree.ast_desc in
   (* Substitute in the AST node type. *)
-  let new_type = subst_type_simple_option c1 c2 ident.Parsetree.ast_type in
+  let new_type =
+    subst_ast_node_type_information c1 c2 ident.Parsetree.ast_type in
   { ident with
       Parsetree.ast_desc = new_desc;
       Parsetree.ast_type = new_type; }
@@ -160,7 +170,8 @@ let subst_pattern c1 c2 pattern =
        | Parsetree.P_tuple pats -> Parsetree.P_tuple (List.map rec_subst pats)
        | Parsetree.P_paren pat' -> Parsetree.P_paren (rec_subst pat')) in
     (* Substitute in the AST node type. *)
-    let new_type = subst_type_simple_option c1 c2 pat.Parsetree.ast_type in
+    let new_type =
+      subst_ast_node_type_information c1 c2 pat.Parsetree.ast_type in
     (* An finally, make a new AST node. *)
     { pat with
         Parsetree.ast_desc = new_desc; Parsetree.ast_type = new_type } in
@@ -190,7 +201,8 @@ let subst_type_expr c1 c2 type_expression =
        | Parsetree.TE_prop -> ty_expr.Parsetree.ast_desc
        | Parsetree.TE_paren ty -> Parsetree.TE_paren (rec_subst ty)) in
     (* Substitute in the AST node type. *)
-    let new_type = subst_type_simple_option c1 c2 ty_expr.Parsetree.ast_type in
+    let new_type =
+      subst_ast_node_type_information c1 c2 ty_expr.Parsetree.ast_type in
     (* An finally, make a new AST node. *)
     { ty_expr with
         Parsetree.ast_desc = new_desc; Parsetree.ast_type = new_type } in
@@ -225,7 +237,8 @@ let rec subst_expr ~current_unit c1 c2 expression =
            (* it's type, but leave the structure unchanged.                  *)
            let cstr_expr' = { cstr_expr with
              Parsetree.ast_type =
-               subst_type_simple_option c1 c2 cstr_expr.Parsetree.ast_type } in
+               subst_ast_node_type_information
+                 c1 c2 cstr_expr.Parsetree.ast_type } in
            let exprs' = List.map rec_subst exprs in
            Parsetree.E_constr (cstr_expr', exprs')
        | Parsetree.E_match (matched_expr, bindings) ->
@@ -265,7 +278,7 @@ let rec subst_expr ~current_unit c1 c2 expression =
        | Parsetree.E_paren expr -> Parsetree.E_paren (rec_subst expr)) in
     (* Substitute in the AST node type. *)
     let new_type =
-      subst_type_simple_option c1 c2 initial_expr.Parsetree.ast_type in
+      subst_ast_node_type_information c1 c2 initial_expr.Parsetree.ast_type in
     (* An finally, make a new AST node. *)
     { initial_expr with
         Parsetree.ast_desc = new_desc; Parsetree.ast_type = new_type } in
@@ -299,7 +312,7 @@ and subst_let_binding ~current_unit c1 c2 binding =
     { binding with
         (* Substitute in the AST node type. *)
         Parsetree.ast_type =
-          subst_type_simple_option c1 c2 binding.Parsetree.ast_type;
+          subst_ast_node_type_information c1 c2 binding.Parsetree.ast_type;
         Parsetree.ast_desc = desc' }
 
 
@@ -315,7 +328,7 @@ and subst_let_definition ~current_unit c1 c2 let_def =
   { let_def with
      (* Substitute in the AST node type. *)
       Parsetree.ast_type =
-        subst_type_simple_option c1 c2 let_def.Parsetree.ast_type;
+        subst_ast_node_type_information c1 c2 let_def.Parsetree.ast_type;
       Parsetree.ast_desc = desc' }
 ;;
 

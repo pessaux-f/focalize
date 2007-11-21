@@ -13,6 +13,8 @@ touch ./typing/.depend
 mkdir -p ./typing/odoc
 touch ./mlcodegen/.depend
 mkdir -p ./mlcodegen/odoc
+touch ./coqcodegen/.depend
+mkdir -p ./coqcodegen/odoc
 touch ./toplevel/.depend
 mkdir -p ./toplevel/odoc
 touch ./lib/.depend

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.35 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: types.ml,v 1.36 2007-11-21 16:34:15 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -277,6 +277,23 @@ let type_rep_species ~species_module ~species_name =
 
 
 
+(* ******************************************************************* *)
+(* type_simple -> bool                                                 *)
+(** {b Descr}: Verifies if the type is "bool". This is used in Coq
+      generation to determine if an expression must be surrounded by a
+      wrapper applying Coq's "Is_true".
+
+    {b Rem}: Exported outside this module.                             *)
+(* ******************************************************************* *)
+let is_bool_type ty =
+  let ty = repr ty in
+  match ty with
+   | ST_construct (("basics", "bool"), []) -> true
+   | _ -> false
+;;
+
+
+
 let pp_type_name ppf (hosting_module, constructor_name) =
   Format.fprintf ppf "%s#%s" hosting_module constructor_name
 ;;
@@ -294,7 +311,7 @@ let (pp_type_simple, pp_type_scheme) =
               especially not shared with the type printing routine used to
               generate the OCaml or Coq code.                              *)
   (* ********************************************************************* *)
-  let type_variable_names_mapping = ref ([] : (type_simple * string) list) in
+  let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
 
   (* ********************************************************************* *)
   (* int ref                                                               *)
@@ -323,16 +340,15 @@ let (pp_type_simple, pp_type_scheme) =
     type_variable_names_mapping := [] ;
     type_variables_counter := 0 in
 
-  let get_or_make_type_variable_name ty ~generalized_p =
+  let get_or_make_type_variable_name ty_var ~generalized_p =
     (* No need to repr, [rec_pp] already did it. *)
-    try List.assq ty !type_variable_names_mapping with
+    try List.assq ty_var !type_variable_names_mapping with
     | Not_found ->
-        let name =
-          String.make 1 (Char.chr (Char.code 'a' + !type_variables_counter)) in
+        let name = Handy.int_to_base_26 !type_variables_counter in
         incr type_variables_counter ;
         let name' = if not generalized_p then "_" ^ name else name in
         type_variable_names_mapping :=
-          (ty, name') :: !type_variable_names_mapping ;
+          (ty_var, name') :: !type_variable_names_mapping ;
         name' in
 
   let rec rec_pp prio ppf ty =
@@ -342,7 +358,7 @@ let (pp_type_simple, pp_type_scheme) =
     | ST_var ty_var ->
         let ty_variable_name =
           get_or_make_type_variable_name
-            ty ~generalized_p: (ty_var.tv_level = generic_level) in
+            ty_var ~generalized_p: (ty_var.tv_level = generic_level) in
         Format.fprintf ppf "'%s" ty_variable_name
     | ST_arrow (ty1, ty2) ->
         (* Arrow priority: 2. *)
@@ -362,12 +378,10 @@ let (pp_type_simple, pp_type_scheme) =
         (* otherwise 0 if already a tuple because we force parens. *)
         match arg_tys with
          | [] -> Format.fprintf ppf "%a" pp_type_name type_name
-         | [one] ->
-             Format.fprintf ppf "%a@ %a" (rec_pp 3) one pp_type_name type_name
          | _ ->
-             Format.fprintf ppf "@[<1>(%a)@]@ %a"
-               (Handy.pp_generic_separated_list "," (rec_pp 0)) arg_tys
+             Format.fprintf ppf "%a@ @[<1>(%a)@]"
                pp_type_name type_name
+               (Handy.pp_generic_separated_list "," (rec_pp 0)) arg_tys
         end)
     | ST_self_rep -> Format.fprintf ppf "Self"
     | ST_species_rep (module_name, collection_name) ->
@@ -522,7 +536,37 @@ let copy_type_simple_but_variables ~and_abstract =
 ;;
 
 
-let (generalize, generalize2) =
+
+(* ************************************************************************ *)
+(* type_collection -> type_scheme -> type_scheme                            *)
+(** {b Descr} : Like [copy_type_simple_but_variables] but operate on the
+      [type_simple] making the scheme's body. This function is needed for
+      the collection substitution because we make it also operating on the
+      [Parsetree.ast_type] field of the AST.
+
+    {Rem} : Because the compiler doesn't use the [Parsetree.ast_type] field
+      of the AST, the result of this function will never be used internally
+      by the compiler.
+      Exported outside this module.                                         *)
+(* ************************************************************************ *)
+let abstract_in_scheme coll_to_abstract sch =
+  let body' =
+    copy_type_simple_but_variables
+      ~and_abstract: (Some coll_to_abstract) sch.ts_body in
+  { sch with ts_body = body' }
+;;
+
+
+
+(* ********************************************************************** *)
+(* type_simple -> type_scheme                                             *)
+(** {b Descr} : Generalize a type in order to create a type scheme having
+              the type's as body.
+              The scheme body physically shares the type's structure.
+
+    {b Rem} : Exported oustide this module.                               *)
+(* ********************************************************************** *)
+let generalize =
   (* The list of found generalizable variables. *)
   (* We accumulate inside it by side effect.    *)
   let found_ty_parameters = ref ([] : type_variable list) in
@@ -541,44 +585,33 @@ let (generalize, generalize2) =
      | ST_tuple tys -> List.iter find_parameters tys
      | ST_construct (_, args) -> List.iter find_parameters args
      | ST_self_rep | ST_species_rep _ -> () in
+  (* Let's do the job now. *)
+  (fun ty ->
+    find_parameters ty ;
+    let scheme = { ts_vars = !found_ty_parameters ; ts_body = ty } in
+    (* Clean up found parameters for further usages. *)
+    found_ty_parameters := [] ;
+    scheme)
+;;
 
 
 
-  ((* ********************************************************************** *)
-   (* generalize                                                             *)
-   (* type_simple -> type_scheme                                             *)
-   (** {b Descr} : Generalize a type in order to create a type scheme having
-                 the type's as body.
-                 The scheme body physically shares the type's structure.
-
-       {b Rem} : Exported oustide this module.                               *)
-   (* ********************************************************************** *)
-   (fun ty ->
-     find_parameters ty ;
-     let scheme = { ts_vars = !found_ty_parameters ; ts_body = ty } in
-     (* Clean up found parameters for further usages. *)
-     found_ty_parameters := [] ;
-     scheme),
-
-   (* ********************************************************************* *)
-   (* generalize2                                                           *)
-   (* type_simple -> type_simple list -> (type_scheme * (type_simple list)) *)
-   (** {b Descr} : Performs the same job than [generalize] on the first
-                 type. Also perform generalization in place on the types in
-                 [tys] , but do not explicitly return them as schemes.
-                 Note that the argument counter is shared between these
-                 generalizations.
-
-       {b Rem} : Exported oustide this module.                              *)
-   (* ********************************************************************* *)
-   (fun ty tys ->
-     find_parameters ty ;
-     List.iter find_parameters tys ;
-     let scheme = { ts_vars = !found_ty_parameters ; ts_body = ty } in
-     (* Clean up found parameters for further usages. *)
-     found_ty_parameters := [] ;
-     (scheme, tys))
-  )
+let build_type_def_scheme ~variables ~body =
+  (* Mark the variables as generalized. *)
+  let vars =
+    List.map
+      (fun ty ->
+        let ty = repr ty in
+        match ty with
+         | ST_var var -> var.tv_level <- generic_level ; var
+         | _ -> assert false)
+      variables in
+  (* And make a scheme with the type [ty] as body and the variables [var] *)
+  (* as parameter, KEEPING their order ! In effect, the position of the   *)
+  (* variables are important un a type definition :                       *)
+  (* "type ('a, 'b) = ('a * 'b)" is different of type                     *)
+  (* "type ('b * 'a) = ('a * 'b)"                                         *)
+  { ts_vars = vars ; ts_body = body }
 ;;
 
 
@@ -806,6 +839,13 @@ let subst_type_simple (fname1, spe_name1) c2 =
 
 
 
+let subst_type_scheme (fname1, spe_name1) c2 scheme =
+  let body' = subst_type_simple (fname1, spe_name1) c2 scheme.ts_body in
+  { scheme with ts_body = body' }
+;;
+
+
+
 (* ***************************************************************** *)
 (* Format.formatter -> type_collection_name -> unit                  *)
 (** {b Descr} : Pretty prints a collection' type (not carrier type).
@@ -912,16 +952,15 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
              shared with the type printing routine used to generate the
              FoCaL feedback and the Coq code.                             *)
   (* ******************************************************************** *)
-  let reset_type_variables_mapping () =
+  let reset_type_variables_mapping_to_ml () =
     type_variable_names_mapping := [] ;
     type_variables_counter := 0 in
 
-  let get_or_make_type_variable_name var =
-    (* No need to repr, [rec_pp] already did it. *)
+  let get_or_make_type_variable_name_to_ml var =
+    (* No need to repr, [rec_pp_to_ml] already did it. *)
     try List.assq var !type_variable_names_mapping with
     | Not_found ->
-        let name =
-          String.make 1 (Char.chr (Char.code 'a' + !type_variables_counter)) in
+        let name = Handy.int_to_base_26 !type_variables_counter in
         incr type_variables_counter ;
         type_variable_names_mapping :=
           (var, name) :: !type_variable_names_mapping ;
@@ -934,28 +973,28 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
       Format.fprintf ppf "%s._focty_%s"
         (String.capitalize hosting_module) constructor_name in
 
-  let rec rec_pp ~current_unit collections_carrier_mapping prio ppf ty =
+  let rec rec_pp_to_ml ~current_unit collections_carrier_mapping prio ppf ty =
     (* First of all get the "repr" guy ! *)
     let ty = repr ty in
     match ty with
     | ST_var var ->
         (* Read the justification in the current function's header about *)
         (* the fact that we amways consider variables as generalized.    *)
-        let ty_variable_name = get_or_make_type_variable_name var in
+        let ty_variable_name = get_or_make_type_variable_name_to_ml var in
         Format.fprintf ppf "'%s" ty_variable_name
     | ST_arrow (ty1, ty2) ->
         (* Arrow priority: 2. *)
         if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
         Format.fprintf ppf "@[<2>%a@ ->@ %a@]"
-          (rec_pp ~current_unit collections_carrier_mapping 2) ty1
-          (rec_pp ~current_unit collections_carrier_mapping 1) ty2 ;
+          (rec_pp_to_ml ~current_unit collections_carrier_mapping 2) ty1
+          (rec_pp_to_ml ~current_unit collections_carrier_mapping 1) ty2 ;
         if prio >= 2 then Format.fprintf ppf ")@]"
     | ST_tuple tys ->
         (* Tuple priority: 3. *)
         if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
         Format.fprintf ppf "@[<2>%a@]"
           (Handy.pp_generic_separated_list " *"
-             (rec_pp ~current_unit collections_carrier_mapping 3)) tys ;
+             (rec_pp_to_ml ~current_unit collections_carrier_mapping 3)) tys ;
         if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_construct (type_name, arg_tys) ->
         (begin
@@ -976,12 +1015,13 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
                  (pp_type_name_to_ml ~current_unit) type_name
          | [one] ->
              Format.fprintf ppf "%a@ %a"
-               (rec_pp ~current_unit collections_carrier_mapping 3) one
+               (rec_pp_to_ml ~current_unit collections_carrier_mapping 3) one
                (pp_type_name_to_ml ~current_unit) type_name
          | _ ->
              Format.fprintf ppf "@[<1>(%a)@]@ %a"
                (Handy.pp_generic_separated_list ","
-                  (rec_pp ~current_unit collections_carrier_mapping 0)) arg_tys
+                  (rec_pp_to_ml ~current_unit collections_carrier_mapping 0))
+               arg_tys
                (pp_type_name_to_ml ~current_unit) type_name
         end)
     | ST_self_rep ->
@@ -1009,14 +1049,179 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
               (String.capitalize module_name) collection_name
         end) in
 
-  (* ************************************************* *)
-  (* Now, the real definition of the printing function *)
+  (* ************************************************** *)
+  (* Now, the real definition of the printing functions *)
   (
    (fun ~current_unit ~reuse_mapping collections_carrier_mapping ppf
        whole_type ->
      (* Only reset the variable mapping if we were not told the opposite. *)
-     if not reuse_mapping then reset_type_variables_mapping () ;
-     rec_pp ~current_unit collections_carrier_mapping 0 ppf whole_type),
+     if not reuse_mapping then reset_type_variables_mapping_to_ml () ;
+     rec_pp_to_ml ~current_unit collections_carrier_mapping 0 ppf whole_type),
 
-   (fun () -> reset_type_variables_mapping ()))
+   (fun () -> reset_type_variables_mapping_to_ml ()))
+;;
+
+
+
+type coq_print_context = {
+  cpc_current_unit : fname ;
+  cpc_current_species : type_collection option ;
+  cpc_collections_carrier_mapping : (type_collection * string) list
+} ;;
+
+
+
+let (pp_type_simple_to_coq, pp_type_scheme_to_coq) =
+  (* ********************************************************************* *)
+  (* ((type_simple * string) list) ref                                     *)
+  (** {b Descr} : The mapping giving for each variable already seen the
+                name used to denote it while printing it.
+
+      {b Rem} : Not exported. This mapping is purely local to the
+              pretty-print function of type into the FoCal syntax. It is
+              especially not shared with the type printing routine used to
+              generate the OCaml code or the FoCaL feedback.               *)
+  (* ********************************************************************* *)
+  let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
+
+  (* ********************************************************************* *)
+  (* int ref                                                               *)
+  (** {b Descr} : The counter counting the number of different variables
+                already seen hence printed. It serves to generate a fresh
+                name to new variables to print.
+
+      {b Rem} : Not exported. This counter is purely local to the
+              pretty-print function of type into the FoCal syntax. It is
+              especially not shared with the type printing routine used to
+              generate the OCaml or Coq code.                              *)
+  (* ********************************************************************* *)
+  let type_variables_counter = ref 0 in
+
+  (* ******************************************************************** *)
+  (* unit -> unit                                                         *)
+  (** {b Descr} : Resets the variables names mapping an counter. This
+               allows to stop name-sharing between type prints.
+
+     {b Rem} : Not exported. This counter is purely local to the
+              pretty-print function of type into the FoCal syntax. It is
+              especially not shared with the type printing routine used to
+              generate the OCaml or Coq code.                              *)
+  (* ********************************************************************* *)
+  let reset_type_variables_mapping_to_coq () =
+    type_variable_names_mapping := [] ;
+    type_variables_counter := 0 in
+
+  let get_or_make_type_variable_name_to_coq ty =
+    (* No need to repr, [rec_pp_to_coq] already did it. *)
+    try List.assq ty !type_variable_names_mapping with
+    | Not_found ->
+        let name =
+          "__var_" ^ (Handy.int_to_base_26 !type_variables_counter) in
+        incr type_variables_counter ;
+        type_variable_names_mapping :=
+          (ty, name) :: !type_variable_names_mapping ;
+        name in
+
+  let pp_type_name_to_coq ~current_unit ppf (hosting_module, constructor_name) =
+    if current_unit = hosting_module then
+      Format.fprintf ppf "%s__t" constructor_name
+    else
+      (* In Coq, no file name capitalization ! *)
+      Format.fprintf ppf "%s.%s__t" hosting_module constructor_name in
+
+
+  let rec rec_pp_to_coq ctx prio ppf ty =
+    (* First of all get the "repr" guy ! *)
+    let ty = repr ty in
+    match ty with
+    | ST_var ty_var ->
+        let ty_variable_name = get_or_make_type_variable_name_to_coq ty_var in
+        Format.fprintf ppf "%s" ty_variable_name
+    | ST_arrow (ty1, ty2) ->
+        (* Arrow priority: 2. *)
+        if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
+        Format.fprintf ppf "@[<2>%a@ ->@ %a@]"
+          (rec_pp_to_coq ctx 2) ty1 (rec_pp_to_coq ctx 1) ty2 ;
+        if prio >= 2 then Format.fprintf ppf ")@]"
+    | ST_tuple tys ->
+        (* Tuple priority: 3. *)
+        if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
+        Format.fprintf ppf "@[<2>%a@]"
+          (rec_pp_to_coq_tuple_as_pairs ctx 3) tys ;
+        if prio >= 3 then Format.fprintf ppf ")@]"
+    | ST_construct (type_name, arg_tys) ->
+        (begin
+        (* Priority of arguments of a sum type constructor : *)
+        (* like an regular application : 0.                  *)
+        match arg_tys with
+         | [] -> Format.fprintf ppf "%a"
+               (pp_type_name_to_coq ~current_unit: ctx.cpc_current_unit)
+               type_name
+         | _ ->
+             Format.fprintf ppf "%a@ %a"
+               (pp_type_name_to_coq ~current_unit: ctx.cpc_current_unit)
+               type_name
+               (Handy.pp_generic_separated_list " "
+                  (rec_pp_to_coq ctx 0)) arg_tys
+        end)
+    | ST_self_rep ->
+        (begin
+        match ctx.cpc_current_species with
+         | None ->
+             (* Referencing "Sel" outside a species should have  *)
+             (* been caught earlier, i.e. at typechecking stage. *)
+             assert false
+         | Some (species_modname, species_name) ->
+             (* Obviously, Self should refer to the current species. *)
+             (* This means that the CURRENT species MUST be in the   *)
+             (* CURRENT compilation unit !                           *)
+             assert (species_modname = ctx.cpc_current_unit) ;
+             Format.fprintf ppf "%s_T" species_name ;
+        end)
+    | ST_species_rep (module_name, collection_name) ->
+        (begin
+        try
+          let coll_type_variable =
+            List.assoc
+              (module_name, collection_name)
+              ctx.cpc_collections_carrier_mapping in
+          Format.fprintf ppf "%s" coll_type_variable
+        with Not_found ->
+          (* If the carrier is not in the mapping created for the species *)
+          (* parameters, that's because the searched species carrier's is *)
+          (* not a species parameter, i.e. it's a toplevel species.       *)
+          (* And as always, the type's name representing a species's      *)
+          (* carrier is the species's name + "_T".                        *)
+          if ctx.cpc_current_unit = module_name then
+            Format.fprintf ppf "%s_T" collection_name
+          else
+            Format.fprintf ppf "%s.%s_T"
+              (String.capitalize module_name) collection_name
+        end)
+
+  (* ********************************************************************* *)
+  (** {Descr} : Encodes FoCaL tuples into nested pairs because Coq doesn't
+      have tuples with abitrary arity: it just has pairs. Associativity
+      is on the left, i.e, a FoCaL tuple "(1, 2, 3, 4)" will be mapped
+      onto the Coq "(prod 1 (prod 2 (prod 3 4)))" data structure.
+
+      {Rem} : Not exported outside this module.                            *)
+  (* ********************************************************************* *)
+  and rec_pp_to_coq_tuple_as_pairs ctx prio ppf = function
+    | [] -> assert false  (* Tuples should never be 0 component. *)
+    | [last] ->
+        Format.fprintf ppf "%a" (rec_pp_to_coq ctx prio) last
+    | ty1 :: ty2 :: rem ->
+        Format.fprintf ppf "(prod@ %a@ %a)"
+          (rec_pp_to_coq ctx prio) ty1 (rec_pp_to_coq_tuple_as_pairs ctx prio)
+          (ty2 :: rem) in
+
+  (* ************************************************** *)
+  (* Now, the real definition of the printing functions *)
+  (fun ctx ppf ty ->
+    reset_type_variables_mapping_to_coq () ;
+    rec_pp_to_coq ctx 0 ppf ty),
+  (fun ctx ppf the_scheme ->
+    reset_type_variables_mapping_to_coq () ;
+    Format.fprintf ppf "%a" (rec_pp_to_coq ctx 0) the_scheme.ts_body)
 ;;

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.10 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.11 2007-11-21 16:34:15 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -78,7 +78,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
   let cnt = ref 0 in
   List.map
     (function
-      | Env.TypeInformation.SPAR_is (n, _) ->
+      | Env.TypeInformation.SPAR_is (n, _, _) ->
           let n_as_string = Parsetree_utils.name_of_vname n in
           (* Build the name of the type variable that will represent *)
           (* this parameter's carrier type seen from OCaml. Just     *)
@@ -262,7 +262,7 @@ let generate_record_type ctx species_descr =
             (* Since we are printing a whole type scheme, it is stand-alone *)
             (* and we don't need to keep name sharing with anythin else.    *)
             Format.fprintf out_fmter "@[<2>%a : %a ;@]@\n"
-              Misc_ml_generation.pp_to_ocaml_vname n
+              Parsetree_utils.pp_vname_with_operators_expanded n
               (Types.pp_type_simple_to_ml
                  ~current_unit: ctx.scc_current_unit
                  ~reuse_mapping: false collections_carrier_mapping) ty
@@ -277,7 +277,7 @@ let generate_record_type ctx species_descr =
               (* Since we are printing a whole type scheme, it is stand-alone *)
               (* and we don't need to keep name sharing with anythin else.    *)
               Format.fprintf out_fmter "%a : %a ;@\n"
-                Misc_ml_generation.pp_to_ocaml_vname n
+                Parsetree_utils.pp_vname_with_operators_expanded n
                 (Types.pp_type_simple_to_ml
                    ~current_unit: ctx.scc_current_unit
                    ~reuse_mapping: false collections_carrier_mapping) ty)
@@ -435,7 +435,8 @@ let compute_lambda_liftings_for_field ctx species_parameters_names name body =
       Parsetree_utils.VnameSet.iter
         (fun meth ->
           let llift_name =
-            prefix ^ (Misc_ml_generation.ocaml_vname_as_string meth) in
+            prefix ^
+            (Parsetree_utils.vname_as_string_with_operators_expanded meth) in
           revd_lambda_lifts := llift_name :: !revd_lambda_lifts)
         meths)
     dependencies_from_params ;
@@ -444,7 +445,8 @@ let compute_lambda_liftings_for_field ctx species_parameters_names name body =
   List.iter
     (fun ({ Dep_analysis.nn_name = dep_name }, _) ->
       let llift_name =
-        "abst_" ^ (Misc_ml_generation.ocaml_vname_as_string dep_name) in
+        "abst_" ^
+        (Parsetree_utils.vname_as_string_with_operators_expanded dep_name) in
       revd_lambda_lifts := llift_name :: !revd_lambda_lifts)
     decl_children ;
   (dependencies_from_params, decl_children, (List.rev !revd_lambda_lifts))
@@ -467,18 +469,18 @@ let generate_one_field_binding ctx env ~let_connect species_parameters_names
     (* Just a bit of debug. *)
     if Configuration.get_verbose () then
       Format.eprintf "Generating OCaml code for field '%a'.@."
-        Misc_ml_generation.pp_to_ocaml_vname name ;
+        Parsetree_utils.pp_vname_with_operators_expanded name ;
     (* Start the OCaml function definition. *)
     (match let_connect with
      | LC_first_non_rec ->
          Format.fprintf out_fmter "@[<2>let %a"
-           Misc_ml_generation.pp_to_ocaml_vname name
+           Parsetree_utils.pp_vname_with_operators_expanded name
      | LC_first_rec ->
          Format.fprintf out_fmter "@[<2>let rec %a"
-           Misc_ml_generation.pp_to_ocaml_vname name
+           Parsetree_utils.pp_vname_with_operators_expanded name
      | LC_following ->
          Format.fprintf out_fmter "@[<2>and %a"
-           Misc_ml_generation.pp_to_ocaml_vname name) ;
+           Parsetree_utils.pp_vname_with_operators_expanded name) ;
     (* Now, output the extra parameters induced by the lambda liftings *)
     (* we did because of the species parameters and our dependencies.  *)
     List.iter
@@ -498,13 +500,13 @@ let generate_one_field_binding ctx env ~let_connect species_parameters_names
         match opt_param_ty with
          | Some param_ty ->
              Format.fprintf out_fmter "@ (%a : %a)"
-               Misc_ml_generation.pp_to_ocaml_vname param_vname
+               Parsetree_utils.pp_vname_with_operators_expanded param_vname
                (Types.pp_type_simple_to_ml
                   ~current_unit: ctx.scc_current_unit
                   ~reuse_mapping: true collections_carrier_mapping) param_ty
          | None ->
              Format.fprintf out_fmter "@ %a"
-               Misc_ml_generation.pp_to_ocaml_vname param_vname)
+               Parsetree_utils.pp_vname_with_operators_expanded param_vname)
       params_with_type ;
     (* Now we don't need anymore the sharing. Hence, clean it. This should *)
     (* not be useful because the other guys usign printing should manage   *)
@@ -534,7 +536,7 @@ let generate_one_field_binding ctx env ~let_connect species_parameters_names
     if Configuration.get_verbose () then
       Format.eprintf
         "Field '%a' inherited but not (re)-declared is not generated again.@."
-        Misc_ml_generation.pp_to_ocaml_vname name
+        Parsetree_utils.pp_vname_with_operators_expanded name
     end)
 ;;
 
@@ -562,7 +564,7 @@ let generate_methods ctx env species_parameters_names field =
        (* Only declared, hence, no code to generate yet ! *)
        if Configuration.get_verbose () then
          Format.eprintf "OCaml code for signature '%a' leads to void code.@."
-           Misc_ml_generation.pp_to_ocaml_vname name ;
+           Parsetree_utils.pp_vname_with_operators_expanded name ;
        (* Nothing to keep for the collection generator. *)
        None
    | Env.TypeInformation.SF_let (from, name, params, scheme, body) ->
@@ -654,7 +656,7 @@ let generate_methods ctx env species_parameters_names field =
        if Configuration.get_verbose () then
          Format.eprintf
            "OCaml code for theorem/property '%a' leads to void code.@."
-           Misc_ml_generation.pp_to_ocaml_vname name ;
+           Parsetree_utils.pp_vname_with_operators_expanded name ;
        (* Nothing to keep for the collection generator. *)
        None
 ;;
@@ -735,7 +737,7 @@ let dump_collection_generator_arguments out_fmter compiled_species_fields =
       Parsetree_utils.VnameSet.iter
         (fun meth ->
           Format.fprintf out_fmter "@ %s%a"
-            prefix Misc_ml_generation.pp_to_ocaml_vname meth)
+            prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
         !meths_set)
   !species_param_names_and_methods ;
   (* Finally, make this parameters information public by returning it. By     *)
@@ -769,7 +771,7 @@ let generate_collection_generator ctx compiled_species_fields =
     Format.fprintf out_fmter "(* From species %a. *)@\n"
       Sourcify.pp_qualified_species from ;
     Format.fprintf out_fmter "@[<2>let local_%a =@ "
-      Misc_ml_generation.pp_to_ocaml_vname field_memory.cfm_method_name ;
+      Parsetree_utils.pp_vname_with_operators_expanded field_memory.cfm_method_name ;
     (* Find the method generator to use depending on if it belongs to this *)
     (* inheritance level or if it was inherited from another species.      *)
     if from = ctx.scc_current_species then
@@ -777,7 +779,7 @@ let generate_collection_generator ctx compiled_species_fields =
       (* It comes from the current inheritance level.   *)
       (* Then its name is simply the the method's name. *)
       Format.fprintf out_fmter "%a"
-        Misc_ml_generation.pp_to_ocaml_vname field_memory.cfm_method_name
+        Parsetree_utils.pp_vname_with_operators_expanded field_memory.cfm_method_name
       end)
     else
       (begin
@@ -788,8 +790,8 @@ let generate_collection_generator ctx compiled_species_fields =
       if (fst from) <> ctx.scc_current_unit then
         Format.fprintf out_fmter "%s.@," (String.capitalize (fst from)) ;
       Format.fprintf out_fmter "%a.@,%a"
-        Misc_ml_generation.pp_to_ocaml_vname (snd from)
-        Misc_ml_generation.pp_to_ocaml_vname field_memory.cfm_method_name
+        Parsetree_utils.pp_vname_with_operators_expanded (snd from)
+        Parsetree_utils.pp_vname_with_operators_expanded field_memory.cfm_method_name
       end) ;
     (* Now, apply the method generator to each of the extra arguments *)
     (* induced by the various lambda-lifting we previously performed. *)
@@ -808,7 +810,7 @@ let generate_collection_generator ctx compiled_species_fields =
         Parsetree_utils.VnameSet.iter
           (fun meth ->
             Format.fprintf out_fmter "@ %s%a"
-              prefix Misc_ml_generation.pp_to_ocaml_vname meth)
+              prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
           meths_from_param)
       field_memory.cfm_dependencies_from_parameters ;
     (* Second, the methods of our inheritance tree we depend on and that are *)
@@ -818,7 +820,7 @@ let generate_collection_generator ctx compiled_species_fields =
     List.iter
       (fun ({ Dep_analysis.nn_name = dep_name }, _) ->
           Format.fprintf out_fmter "@ local_%a"
-            Misc_ml_generation.pp_to_ocaml_vname dep_name)
+            Parsetree_utils.pp_vname_with_operators_expanded dep_name)
       field_memory.cfm_decl_children ;
     (* That's it for this field code generation. *)
     Format.fprintf out_fmter "@ in@]@\n" in    
@@ -830,7 +832,15 @@ let generate_collection_generator ctx compiled_species_fields =
     "(* Fully defined '%a' species's collection generator. *)@\n"
     Sourcify.pp_vname current_species_name ;
   (* The generic name of the collection generator: "collection_create". *)
-  Format.fprintf out_fmter "@[<2>let collection_create" ;
+  (* Be careful, if the collection generator has no extra parameter     *)
+  (* then the "collection_create" will not be a function but directly   *)
+  (* the record representing the species. In this case, if some fields  *)
+  (* of these records are polymorphic, OCaml won't generalize because   *)
+  (* it is unsound to generalize a value that is expansive (and         *)
+  (* recor values are expansives). So to ensure this won't arise, we    *)
+  (* always 1 unit argument to the generator. We could add it only if   *)
+  (* there is no arguments to the generator, but is it really a matter? *)
+  Format.fprintf out_fmter "@[<2>let collection_create ()" ;
   (* Generate the parameters the collection generator needs to build the   *)
   (* each of the current species's local function (functions corresponding *)
   (* to the actuall method stored in the collection record). By the way,   *)
@@ -859,21 +869,21 @@ let generate_collection_generator ctx compiled_species_fields =
       | None -> ()
       | Some (CSF_let field_memory) ->
           Format.fprintf ctx.scc_out_fmter "%a =@ local_%a ;@\n"
-            Misc_ml_generation.pp_to_ocaml_vname field_memory.cfm_method_name
-            Misc_ml_generation.pp_to_ocaml_vname field_memory.cfm_method_name
+            Parsetree_utils.pp_vname_with_operators_expanded field_memory.cfm_method_name
+            Parsetree_utils.pp_vname_with_operators_expanded field_memory.cfm_method_name
       | Some (CSF_let_rec l) ->
           List.iter
             (fun field_memory ->
               Format.fprintf ctx.scc_out_fmter "%a =@ local_%a ;@\n"
-                Misc_ml_generation.pp_to_ocaml_vname
+                Parsetree_utils.pp_vname_with_operators_expanded
                 field_memory.cfm_method_name
-                Misc_ml_generation.pp_to_ocaml_vname
+                Parsetree_utils.pp_vname_with_operators_expanded
                 field_memory.cfm_method_name)
             l)
     compiled_species_fields ;
   (* Close the record expression. *)
   Format.fprintf ctx.scc_out_fmter "@ }@]@\n" ;
-  (* Close the pretty-print box of the "let collection_create =". *)
+  (* Close the pretty-print box of the "let collection_create ... =". *)
   Format.fprintf ctx.scc_out_fmter "@]@\n" ;
   extra_args_from_spe_params
 ;;
@@ -912,7 +922,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     List.map
       (function
         | Env.TypeInformation.SPAR_in (n, _)
-        | Env.TypeInformation.SPAR_is (n, _) -> n)
+        | Env.TypeInformation.SPAR_is (n, _, _) -> n)
       species_descr.Env.TypeInformation.spe_sig_params in
   (* Now, the methods of the species. *)
   let compiled_fields =
@@ -1069,7 +1079,7 @@ let apply_generator_to_parameters ctx env coll_body_params col_gen_params_info =
                 | None -> ()) ;
                (* Species name."effective_collection.". *)
                Format.fprintf out_fmter "@ %a.effective_collection."
-                 Misc_ml_generation.pp_to_ocaml_vname
+                 Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname ;
                (* If needed, qualify the name of the species *)
                (* in the OCaml code. *)
@@ -1079,9 +1089,9 @@ let apply_generator_to_parameters ctx env coll_body_params col_gen_params_info =
                 | None -> ()) ;
                (* Species name.method name. *)
                Format.fprintf out_fmter "%a.%a"
-                 Misc_ml_generation.pp_to_ocaml_vname
+                 Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname
-                 Misc_ml_generation.pp_to_ocaml_vname meth_name)
+                 Parsetree_utils.pp_vname_with_operators_expanded meth_name)
              method_names
            end)
        | CEA_value_expr_for_in expr ->
@@ -1244,7 +1254,9 @@ let collection_compile env ~current_unit out_fmter coll_def coll_descr
       cd_body.Parsetree.ast_desc.Parsetree.se_name in
   print_implemented_species_as_ocaml_module
     ~current_unit out_fmter implemented_species_name ;
-  Format.fprintf out_fmter ".collection_create" ;
+  (* Don't forget to add the extra unit arument. C.f  *)
+  (* [generate_collection_generator] for explanation. *)
+  Format.fprintf out_fmter ".collection_create ()" ;
   (* Finally, we must recover the arguments to apply to this collection    *)
   (* generator. These arguments of course come from the species parameters *)
   (* the closed species we implement has (if it has some). We must         *)
@@ -1289,20 +1301,20 @@ let collection_compile env ~current_unit out_fmter coll_def coll_descr
         | Env.TypeInformation.SF_property (_, _, _, _) -> ()
         | Env.TypeInformation.SF_let (_, n, _, _, _) ->
             Format.fprintf out_fmter "%a =@ t."
-              Misc_ml_generation.pp_to_ocaml_vname n ;
+              Parsetree_utils.pp_vname_with_operators_expanded n ;
             print_implemented_species_as_ocaml_module
               ~current_unit out_fmter implemented_species_name ;
             Format.fprintf out_fmter ".%a ;@\n"
-              Misc_ml_generation.pp_to_ocaml_vname n
+              Parsetree_utils.pp_vname_with_operators_expanded n
         | Env.TypeInformation.SF_let_rec l ->
             List.iter
               (fun (_, n, _, _, _) ->
                 Format.fprintf out_fmter "%a =@ t."
-                  Misc_ml_generation.pp_to_ocaml_vname n ;
+                  Parsetree_utils.pp_vname_with_operators_expanded n ;
                 print_implemented_species_as_ocaml_module
                   ~current_unit out_fmter implemented_species_name ;
                 Format.fprintf out_fmter ".%a ;@\n"
-                  Misc_ml_generation.pp_to_ocaml_vname n)
+                  Parsetree_utils.pp_vname_with_operators_expanded n)
               l)
       coll_descr.Env.TypeInformation.spe_sig_methods ;
     (* End the definition of the value representing the effective instance. *)

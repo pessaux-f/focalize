@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.22 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.23 2007-11-21 16:34:15 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -37,6 +37,9 @@ let main () =
       ("--no-ansi-escape",
        Arg.Unit Configuration.unset_fancy_ansi,
        " disables ANSI escape sequences in the error messages.") ;
+      ("--no-coq-code",
+       Arg.Unit Configuration.unset_generate_coq,
+       " disables the Coq code generation.") ;
       ("--no-ocaml-code",
        Arg.Unit Configuration.unset_generate_ocaml,
        " disables the OCaml code generation.") ;
@@ -115,9 +118,16 @@ let main () =
       (begin
       let out_file_name = (Filename.chop_extension input_file_name) ^ ".ml" in
       Main_ml_generation.root_compile
-        ~current_unit ~out_file_name stuff_to_compile ;
+        ~current_unit ~out_file_name stuff_to_compile
       end)
     else Env.MlGenEnv.empty () in
+  (* Finally, go to the Coq code generation if requested. *)
+  if Configuration.get_generate_coq () then
+    (begin
+    let out_file_name = (Filename.chop_extension input_file_name) ^ ".v" in
+    Main_coq_generation.root_compile
+      ~current_unit ~out_file_name stuff_to_compile
+    end) ;
   (* Now, generate the persistent interface file. *)
   Env.make_fo_file
     ~source_filename: input_file_name

@@ -41,7 +41,8 @@ module TypeInformation :
   sig
     type species_param =
       | SPAR_in of (Parsetree.vname * Types.type_collection)
-      | SPAR_is of (Parsetree.vname * (species_field list))
+      | SPAR_is of
+          (Parsetree.vname * (species_field list) * Parsetree.species_expr)
 
     and species_field =
       | SF_sig of
@@ -202,17 +203,17 @@ module MlGenEnv :
 
     val add_constructor :
       Parsetree.constructor_name ->
-	MlGenInformation.constructor_mapping_info -> t -> t
+        MlGenInformation.constructor_mapping_info -> t -> t
     val find_constructor :
       loc: Location.t -> current_unit: Types.fname ->
-	Parsetree.constructor_ident -> t ->
-	  MlGenInformation.constructor_mapping_info
+        Parsetree.constructor_ident -> t ->
+          MlGenInformation.constructor_mapping_info
 
     val add_label :
       Parsetree.vname -> MlGenInformation.label_mapping_info -> t -> t
     val find_label :
       loc: Location.t -> current_unit: Types.fname -> Parsetree.label_ident ->
-	t -> MlGenInformation.label_mapping_info
+        t -> MlGenInformation.label_mapping_info
 
     val add_species :
       loc: Location.t -> Parsetree.vname ->
