@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.11 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.12 2007-11-26 20:47:45 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -168,7 +168,7 @@ let generate_rep_constraint_in_record_type ctx fields =
                 | [ (_, only_var_name) ] ->
                     Format.fprintf ctx.scc_out_fmter "%s@ " only_var_name
                 | _ ->
-                    (* More than one, then suround by parentheses. *)
+                    (* More than one, then surround by parentheses. *)
                     Format.fprintf ctx.scc_out_fmter "@[<1>(" ;
                     (* Print the variables names... *)
                     print_comma_separated_vars_list_from_mapping
@@ -230,17 +230,23 @@ let generate_record_type ctx species_descr =
   (* The name of the type. *)
   Format.fprintf out_fmter "me_as_species = {@\n" ;
   (* We now extend the collections_carrier_mapping with ourselve known.     *)
-  (* Hence, if we refer to our "rep" (i.e. "me_as_carrier"), we will be     *)
-  (* known and we wont get the fully qualified type name, otherwise         *)
-  (* this would lead to a dependency with ourselve in term of OCaml module. *)
-  (* Indeed, we now may refer to our carrier explicitely here because there *)
-  (* is no more late binding: here when one say "me", it's not anymore      *)
+  (* This is required when "rep" is defined.                                *)
+  (* Hence, if we refer to our "rep" (i.e. "me_as_carrier"), not to Self, I *)
+  (* mean to a type-collection that is "(our compilation unit, our species  *)
+  (* name)" (that is the case when creating a collection where Self gets    *)
+  (* especially abstracted to "(our compilation unit, our species name)",   *)
+  (* we will be known and we wont get the fully qualified type name,        *)
+  (* otherwise this would lead to a dependency with ourselve in term of     *)
+  (* OCaml module.                                                          *)
+  (* Indeed, we now may refer to our carrier explicitely here in the scope  *)
+  (* of a collection (not species, really collection)  because there is no  *)
+  (* more late binding: here when one say "me", it's not anymore            *)
   (* "what I will be finally" because we are already "finally". Before, as  *)
   (* long a species is not a collection, it always refers to itself's type  *)
-  (* as "'me_as_species" because late binding prevents known until the last *)
+  (* as "'me_as_carrier" because late binding prevents known until the last *)
   (* moment who "we will be". But because now it's the end of the species   *)
-  (* specification, we know really "who we are" and "'me_as_species" is     *)
-  (* definitely replaced by "who we really are" : "me_as_species".          *)
+  (* specification, we know really "who we are" and "'me_as_carrier" is     *)
+  (* definitely replaced by "who we really are" : "me_as_carrier".          *)
   let (my_fname, my_species_name) = ctx.scc_current_species in
   let collections_carrier_mapping =
     ((my_fname, (Parsetree_utils.name_of_vname my_species_name)),
@@ -546,7 +552,8 @@ let generate_one_field_binding ctx env ~let_connect species_parameters_names
 (* species_compil_context -> Parsetree.vname list ->                       *)
 (*   Env.TypeInformation.species_field -> unit                             *)
 (** {b Desc} : Generates the OCaml code for ONE method field (i.e. for one
-             let-bound construct or for one item of let-rec-bound items.
+             let-bound construct or for one bunch of items of a
+             let-rec-bound construct.
 
     {b Args} :
       - [ctx] : The species-compilation-context merging the various
@@ -771,7 +778,8 @@ let generate_collection_generator ctx compiled_species_fields =
     Format.fprintf out_fmter "(* From species %a. *)@\n"
       Sourcify.pp_qualified_species from ;
     Format.fprintf out_fmter "@[<2>let local_%a =@ "
-      Parsetree_utils.pp_vname_with_operators_expanded field_memory.cfm_method_name ;
+      Parsetree_utils.pp_vname_with_operators_expanded
+      field_memory.cfm_method_name ;
     (* Find the method generator to use depending on if it belongs to this *)
     (* inheritance level or if it was inherited from another species.      *)
     if from = ctx.scc_current_species then
@@ -779,7 +787,8 @@ let generate_collection_generator ctx compiled_species_fields =
       (* It comes from the current inheritance level.   *)
       (* Then its name is simply the the method's name. *)
       Format.fprintf out_fmter "%a"
-        Parsetree_utils.pp_vname_with_operators_expanded field_memory.cfm_method_name
+        Parsetree_utils.pp_vname_with_operators_expanded
+        field_memory.cfm_method_name
       end)
     else
       (begin
@@ -791,7 +800,8 @@ let generate_collection_generator ctx compiled_species_fields =
         Format.fprintf out_fmter "%s.@," (String.capitalize (fst from)) ;
       Format.fprintf out_fmter "%a.@,%a"
         Parsetree_utils.pp_vname_with_operators_expanded (snd from)
-        Parsetree_utils.pp_vname_with_operators_expanded field_memory.cfm_method_name
+        Parsetree_utils.pp_vname_with_operators_expanded
+        field_memory.cfm_method_name
       end) ;
     (* Now, apply the method generator to each of the extra arguments *)
     (* induced by the various lambda-lifting we previously performed. *)
@@ -869,8 +879,10 @@ let generate_collection_generator ctx compiled_species_fields =
       | None -> ()
       | Some (CSF_let field_memory) ->
           Format.fprintf ctx.scc_out_fmter "%a =@ local_%a ;@\n"
-            Parsetree_utils.pp_vname_with_operators_expanded field_memory.cfm_method_name
-            Parsetree_utils.pp_vname_with_operators_expanded field_memory.cfm_method_name
+            Parsetree_utils.pp_vname_with_operators_expanded
+            field_memory.cfm_method_name
+            Parsetree_utils.pp_vname_with_operators_expanded
+            field_memory.cfm_method_name
       | Some (CSF_let_rec l) ->
           List.iter
             (fun field_memory ->
