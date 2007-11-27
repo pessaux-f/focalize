@@ -722,5 +722,87 @@ est complètement définie. Elle va créer la fonction générateur de
 collection dont le travail sera de construire une valeur du type
 record représentant l'espèce, pour peu que l'on lui fournisse les
 fonctions instanciant les méthodes dont les méthode du record
-dépendent.
+dépendent. Le générateur de collection d'une espèce est toujours
+appelé {\tt collection\_create}.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Algo}
+\begin{enumerate}
+  \item On commence par générer le nom du générateur, en lui
+    adjoignant toujours un argument ``artificiel'' {\tt ()}. Ceci est
+    dû au fait que si ce générateur se trouve ne pas avoir de
+    paramètre du tout (par exemple, l'espèce n'a pas de paramètre donc
+    ne peut pas avoir de méthodes dont on dépend en leur provenance,
+    de plus étant totalement définie elle n'a plas non plus de 
+    donc étant complètement définie elle n'a pas non plus de paramètre
+    représentant des méthodes d'elle-même non encore définie), alors
+    il va se retrouver comme étant directement égal à l'expression de
+    record représentant l'espèce en OCaml. \\
+    Or pour des raisons de ``non-expansivité'', il est in terdit en ML
+    de généraliser des valeurs non fonctionnelles (en simplifiant un
+    peu). De ce fait, les éventuelles variables de type présentes dans
+    le type du générateur de collection ne pourront pas être
+    généralisées, ce qui pourra empêcher l'utilisation de ce dernier
+    de manière polymorphe. \\
+    En rajoutant toutle temps ce paramètre {\tt ()}, on est sûr que le
+    générateur de collection est bien une fonction et donc sera
+    généralisable. L'exemple ``tests.ok\_list.foc'' illustre ce
+    problème. On pourrait ne rajouter ce paramètre que lorsque l'on
+    s'aperçoit que le générateur de collection n'a pas de paramètre
+    mais c'est plus simple de le mettre tout le temps. Si un jour on
+    veut ``optimiser'', on verra\ldots
+  \item On génère les paramètres dont le générateur de collection
+    aura besoin pour construire chacune des fonctions locales
+    (fonctions correspondant chaque méthode effective stockée dans le
+    record de la collection) via la fonction
+    ({\tt dump\_collection\_generator\_arguments}).
+  \item On récupère la liste liant les paramètres d'espèces liés aux
+    noms de méthodes qu'ils apportent (et donc qui devront être
+    instanciées) et dont on a besoin pour appliquer le générateur de
+    collection.
+  \item Pour chaque methode de l'espèce, on génère une fonction locale
+    correspondant l'application du générateur de méthode. C'est cette
+    fonction locale qui va être stocké dans le record. La fonction
+    locale correspondant à une méthode est nommée ``local\_'' + le nom
+    de cette méthode. C'est ce que fait la fonction
+    {\tt process\_one\_field} locale à
+    {\tt generate\_collection\_generator}.
+  \item Finalement, on affecte à chaque champ du record (dont le nom
+    correspond au nom d'une méthode de l'espèce), la fonction locale
+    nommée ``local\_'' + le nom de cette méthode.
+\end{enumerate}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{process\_one\_field}
+\begin{enumerate}
+  \item On commence par rechercher le générateur de méthode à
+    appliquer. Si la méthode est définie au niveau courant de
+    l'héritage, alors il est une fonction localement définie au
+    module, du même nom que la méthode. Si la méthode provient de
+    l'héritage, alors on regarde de quelle espèce et le nom du
+    générateur est le nom de la méthode mais qualifié par le module
+    représentant l'espèce d'où il provient. Un fois qu'on a son nom,
+    on peut l'imprimer.
+    \item On applique maintenant le générateur de methode trouvé à
+      chacun de ses paramètres supplémentaires induits par les divers
+      lambda-liftings que nosu avons précédemment réalisés. \\
+      On commence par les paramètres dus aux méthodes des paramètres
+      de l'espèce. Le schéma de nommage que l'on utilise est le même
+      que celui utilisé lorsque nous avons lambda-lifté: ``\_p\_'' +
+      le nom du paramètre d'espèce + ``\_'' + le nom de la
+      méthode. L'ordre d'application de ces paramètres est gardé
+      cohérent avec celui de la définition du générateur de méthode
+      car nosu avons pris soin, lors de la création de ces
+      générateurs, de conserver l'information de cet ordre (champ
+      {\tt cfm\_dependencies\_from\_parameters} associé à chaque champ
+      à compiler de l'espèce.
+    \item Ensuite, on applique les paramètres correspondant aux
+      méthodes de l'espèce elle-même. Ces méthodes ont donné lieu à
+      des fonctions locales nommées ``local\_'' + le nom de la
+      méthode. Comme on a également conservé l'ordre de ces arguments
+      lors de la création du générateur de méthode, on a juste à
+      parcourir la liste ordonnée de ces méthodes dont on dépend et de
+      générer l'argument nommé ``local\_'' + le nom de la méthode.
+\end{enumerate}
+
 \end{document}

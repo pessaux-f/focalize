@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.12 2007-11-26 20:47:45 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.13 2007-11-27 16:25:33 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -853,7 +853,7 @@ let generate_collection_generator ctx compiled_species_fields =
   Format.fprintf out_fmter "@[<2>let collection_create ()" ;
   (* Generate the parameters the collection generator needs to build the   *)
   (* each of the current species's local function (functions corresponding *)
-  (* to the actuall method stored in the collection record). By the way,   *)
+  (* to the actual method stored in the collection record). By the way,    *)
   (* recover the list of species parameters linked together with their     *)
   (* methods we need to instanciate in order to apply the collection       *)
   (* generator.                                                            *)
@@ -870,7 +870,7 @@ let generate_collection_generator ctx compiled_species_fields =
   (* And now, the record value. We just assign each record fields    *)
   (* corresponding to the current species's method the corresponding *)
   (* local function we defined just above. Remind that the record    *)
-  (* field's is the species's name + "_" + the method's name.        *)
+  (* field's is simply the method's name.                            *)
   (* The local function corresponding to the method is "local_" +    *)
   (* the method's name.                                              *)
   Format.fprintf ctx.scc_out_fmter "@[<2>{ " ;
