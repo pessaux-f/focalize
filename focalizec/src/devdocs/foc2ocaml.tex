@@ -1,0 +1,625 @@
+\documentclass{book}
+\usepackage[francais]{babel}
+%%\usepackage{dropping}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{alltt}
+\usepackage[latin1]{inputenc}
+\usepackage[french]{varioref}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amscd}
+%%\usepackage{smallverbatim}
+
+\geometry{a4paper,twoside,body={5.5in,9in}}
+
+\begin{document}
+
+
+\chapter{Le principe intuitif de la compilation d'une espèce}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Le header de l'espèce}
+Une espèce est mappée sur un module OCaml.
+On commence donc par créer un module de même nom que l'espèce. Pour
+l'espèce FoCaL:
+\begin{verbatim}
+species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
+\end{verbatim}
+on aura le module OCaml:
+\begin{verbatim}
+module Setoide_produit =
+  struct
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{La représentation du {\em carrier}}
+Si {\tt rep} n'est pas définie dans l'espèce (i.e. pas définie à ce
+niveau d'héritage ni dans les parents, autrement on n'a jamais fixé la
+{\tt rep}), alors la représentation du {\em carrier} ne donne lieu à
+aucun code. Dans le cas contraire, on définit dans le module, le type
+{\tt me\_as\_carrier} comme étant égal à la traduction FoCaL vers
+OCaml de l'expression de type FoCaL de cette {\tt rep}.
+Ainsi,
+\begin{verbatim}
+species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
+  rep = (A * B) ;
+\end{verbatim}
+génèrera le code OCaml:
+\begin{verbatim}
+module Setoide_produit =
+  struct
+  (* Carrier's structure explicitly given by "rep". *)
+  type ('a0_as_carrier, 'b1_as_carrier) me_as_carrier =
+    'a0_as_carrier * 'b1_as_carrier
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Le type record représentant l'espèce}
+Ensuite, il faut générer le type record représentant l'espèce
+proprement dite (pas son {\em carrier}) !
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Le header du record}
+Ce type record sera toujours appelé {\tt me\_as\_species}. Il est
+toujours au moins paramétré par une variable de type qui sera
+instanciée en le {\em carrier} de la collection. Cette variable sera
+toujours nommée {\tt 'me\_as\_carrier}.  Donc pour une espèce non
+paramétrée, on aura un début de définition de type de la forme:
+\begin{verbatim}
+  type 'me_as_carrier me_as_species = {
+\end{verbatim}
+Si l'espèce est paramétrée, alors le type du record sera paramétré en
+premier par une variable de type par paramètre, chacune d'entre elle
+devant un jour être instancié par le carrier du paramètre effectif
+correspondant lors de la création d'une collection. Chaque variable
+paramètre du type du record porte le nom du paramètre d'espèce ou
+d'entité dans lequel on aura forcé la première lettre à être en
+minuscule (obligation syntaxe OCaml), suivi d'un stamp unique (pour
+la cas où une espèce aurait 2 paramètres de même nom à la casse près
+de la première lettre: {\tt A is S, a in A}), suivi la la chaîne
+``\_as\_carrier''.
+Ainsi,
+\begin{verbatim}
+species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
+  rep = (A * B) ;
+\end{verbatim}
+génèrera le code OCaml:
+\begin{verbatim}
+module Setoide_produit =
+  struct
+  (* Carrier's structure explicitly given by "rep". *)
+  type ('a0_as_carrier, 'b1_as_carrier) me_as_carrier =
+    'a0_as_carrier * 'b1_as_carrier
+  type ('a0_as_carrier, 'b1_as_carrier, 'me_as_carrier) me_as_species = {
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Les champs du record}
+Ces champs donnent le type de toutes les méthodes (définies et
+déclarées) disponibles dans la forme normale de l'espèce. On n'y
+retrouve donc pas de trace de {\tt theorem} ni de
+{\tt property}. Seulement des {\tt sig} et des {\tt let}.
+
+Le nom des champs correspond directement au nom des méthodes (par de
+préfixe par le nom de l'espèce, ce n'est pas utile la nommage unique
+étant déjà apporté par le fait d'encapsuler les espèces dans des
+modules). Le seul changement possible est lorsque la méthode porte un
+nom d'opérateur ({\tt +, +=, *}, etc\ldots). Comme ces noms ne sont
+pas des identificateurs OCaml légaux, on les remplace par des chaînes
+du genre ``{\tt =}'' devient ``\_focop\_eq\_''.
+
+Derrière chaque nom de champ se trouve son type. On notera que dans la
+traduction des types, {\tt Self} est traduit par
+{\tt 'me\_as\_carrier}. De même, si un type réfère à un paramètre
+d'espèce, il sera traduit en la variable de type dénotant le type de
+ce paramètre (ex. {tt 'a0\_as\_carrier} pour le paramètre {\tt A} de
+l'espèce {\tt Setoide\_produit}).
+
+\begin{verbatim}
+module Setoide_produit =
+    .......
+    (* From species ok__phd_sample#Setoide_produit. *)
+    creer : 'a0_as_carrier -> 'b1_as_carrier -> 'me_as_carrier ;
+    (* From species basics#Basic_object. *)
+    parse : Basics._focty_string -> 'me_as_carrier ;
+    (* From species ok__phd_sample#Setoide_produit. *)
+    print : 'me_as_carrier -> Basics._focty_string ;
+    (* From species ok__phd_sample#Setoide_produit. *)
+    _focop_eq_ : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    (* From species ok__phd_sample#Setoide_produit. *)
+    element : 'me_as_carrier ;
+    (* From species ok__phd_sample#Setoide. *)
+    different : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Les méthodes définies à cet étage d'héritage}
+Maintenant on traduit le corps FoCaL des méthodes définies dans
+l'espèce courante sous forme de définitions locales au module. Ce sont
+les générateurs de méthodes.
+Pour {\tt Setoide\_produit}, sont définies:
+\begin{itemize}
+  \item $( = )$
+  \item creer
+  \item element
+  \item print
+\end{itemize}
+On retrouve alors directement des fonction OCaml de même nom das le
+module. Ces fonctions sont agrémentées de paramètres supplémentaires
+par rapport à leur homologues FoCaL. Pour chaque methode dont une
+méthode dépend, on rajoute un paramètre fonctionnel (lambda-lifting)
+qui sera instancié par la fonction effective à appeler lorsque
+l'espèce sera complète et transformée en collection.
+On bâtit le nom de ces paramètres supplémentaires en fonction de si la
+méthode dont on dépend est:
+\begin{itemize}
+  \item Un paramètre de l'espèce: on l'appelle ``\_p\_'' + le nom du
+    paramètre passé en minuscule + le nom de la méthode dont on
+    dépend. (C.f. {\tt print}).
+  \item Une méthode de l'espèce uniquement déclarée (via héritage
+    éventuellement) : on l'appelle ``abst\_'' + le nom de la méthode
+    dont on dépend.  (C.f. {\tt element}).
+\end{itemize}
+
+\begin{verbatim}
+  let creer (x : 'a0_as_carrier) (y : 'b1_as_carrier) = (Basics.crp x y)
+  let print _p_a_print _p_b_print (x : 'me_as_carrier) =
+    (Basics.sc "("
+      (Basics.sc (_p_a_print (Basics.first x))
+        (Basics.sc "," (Basics.sc (_p_b_print (Basics.scnd x)) ")"))))
+  let _focop_eq_ _p_a__focop_eq_ _p_b__focop_eq_ (x : 'me_as_carrier)
+    (y : 'me_as_carrier) =
+    (Basics.and_b (_p_a__focop_eq_ (Basics.first x) (Basics.first y))
+      (_p_b__focop_eq_ (Basics.scnd x) (Basics.scnd y)))
+  let element _p_a_element _p_b_element abst_creer =
+    (abst_creer _p_a_element _p_b_element)
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Dans le cas d'une espèce complètement définie}
+Dans ce cas, il convient de créer un générateur de
+collection. Celui-ci va permettre de créer une valeur du type du
+record présenté ci-dessus et représentant une espèce en tant que
+telle.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Le générateur de collection comme fonction}
+Le générateur de collection est donc une fonction prenant en argument
+toutes les fonctions dont les générateurs de méthodes dépendent et
+appliquant les générateurs de méthodes de chaque méthode aux fonction
+qu'elles requièrent afin de donner des fonctions finalement
+applicables aux seuls arguments FoCaL qu'elles nécessitent. Lorsque
+l'on voudra créer une collection, on appèlera donc ce générateur de
+collection en lui passant les fonctions à effictivement appliquer aux
+générateurs de méthode de sont record, ce qui donnera enfin des
+fonctions finalement applicables aux seuls arguments FoCaL qu'elles
+nécessitent.
+
+L'ordre d'apparition de ces paramètres correspondant aux méthodes dont
+ont dépend en provenance des paramètres de l'espèce, est choisi
+arbitrairement MAIS est mémorisé afin que lors de la création d'une
+collection on puisse lui passer les bonnes fonctions au bon
+endroit. Ceci sera mémorisé dans une structur persistente de la passe
+de génération du code OCaml. Puisque l'espèce est totalement définie,
+il ne reste bien évidemment plus de question de paramètres
+supplémentaires dus aux méthodes de nous-même dont on pourrait
+dépendre !
+
+Le schéma de nommage des fonctions à passer au générateur de
+collection est similaire à celui utilisé pour les paramètres
+supplémentaires rajoutés aux générateurs de méthodes afin de modéliser
+les méthodes de paramètres de l'espèce dont ils dépendent: ``\_p\_''
++ le nom du paramètre passé en minuscule + le nom de la méthode dont
+on dépend. Ce sont ces arguments du générateur de collection qui
+seront appliqués aux générateurs de méthodes en ayant besoin,
+exactement en utilisant ce schéma de nommage.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Les fonctions locales au générateur}
+Avant de créer la valeur de record proprement dite, on génère une
+fonction temporaire par méthode (préfixée par ``local\_'' + le nom de
+la méthode) et on se servira d'elles pour initialiser la valeur de
+record. On retrouvera donc 1 fonction par méthode disponible dans la
+forme normalisée de l'espèce. Ces fonctions seront locales au
+générateur de collection.
+\begin{verbatim}
+  (* Fully defined 'Setoide_produit' species's collection generator. *)
+  let collection_create () _p_b_element _p_b_print _p_b__focop_eq_
+    _p_a_element _p_a_print _p_a__focop_eq_ =
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local_creer = ...
+    (* From species basics#Basic_object. *)
+    let local_parse = ...
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local_print = ...
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local__focop_eq_ = ...
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local_element = ...
+    (* From species ok__phd_sample#Setoide. *)
+    let local_different = ...
+\end{verbatim}
+
+Deux cas possibles se produisent pour chaque méthode à inclure dans le
+générateur de collection:
+\begin{itemize}
+  \item Soit le générateur de méthode appartient au niveau courant
+    d'héritage (i.e. la méthode a été définie à cet étage). Dans ce
+    cas, le nom de ce générateur est simplement le nom de la méthode
+    car une fonction locale a été créée avec ce nom comme décrit juste
+    au dessus.
+  \item Soit le générateur de méthode appartient à un niveau
+    d'héritage antérieur (i.e. la méthode a été définie
+    précédemment). Dans ce cas, le nom de ce générateur est le nom du
+    module dans lequel se trouve l'ancêtre définisseur + ``.'' (si ce
+    n'est pas l'unité de compilation courante) + le nom de l'espèce
+    définisseur + la nom de la méthode correspondant à ce générateur.
+\end{itemize}
+
+Ainsi, ci-dessous l'on voit que {\tt creer} étant directement définie
+dans l'espèce, on reprend directement sotn générateur de méthode qui
+porte le même nom pour créer la fonction {\tt local\_creer}. Idem pour
+{\tt print}, {\tt focop\_eq\_} et {\tt element}.
+
+Par contre, {\tt parse} qui provient de {\tt Basic\_object} est dénoté
+{\tt Basics.Basic\_object.parse} pour créer la fonction
+{\tt local\_parse}.
+
+\begin{verbatim}
+  (* Fully defined 'Setoide_produit' species's collection generator. *)
+  let collection_create () _p_b_element _p_b_print _p_b__focop_eq_
+    _p_a_element _p_a_print _p_a__focop_eq_ =
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local_creer = creer ...
+    (* From species basics#Basic_object. *)
+    let local_parse = Basics.Basic_object.parse ...
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local_print = print ...
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local__focop_eq_ = _focop_eq_ ...
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local_element = element ...
+    (* From species ok__phd_sample#Setoide. *)
+    let local_different = Setoide.different ...
+\end{verbatim}
+
+Maintenant que nous savons quel générateur de méthode appeler dans nos
+fonctions locales permettant d'initialiser notre valeur de type
+record, il nous faut encore savoir à quoi les appliquer pour leur
+fournir leur paramètres de lambda-lifting. Nous avons vu que ces
+paramètres des fonctions sont aussi (forcément) des paramètres du
+générateur de collection ou des générateurs de méthodes de l'espèce
+courante (poru les méthodes de nous-même dont on dépend). Donc on
+prendra soin de leur donner le même schéma de nommage aux 2 endroits.
+
+On a vu que les générateurs de méthodes sont toujours abstraits par
+rapport aux méthodes des paramètres de l'espèce puis ensuite par
+rapport aux méthodes de l'espèce elle-même. Pour plus de robustesse,
+cet ordre est mémorisé lors de la création des générateurs de méthode
+et lors de leur application, on reprend directement cet ordre. Donc on
+sait quel paramètre correspond à quelle fonction représentant la
+méthode de quel paramètre ou de soi-même.
+
+\begin{verbatim}
+  (* Fully defined 'Setoide_produit' species's collection generator. *)
+  let collection_create () _p_b_element _p_b_print _p_b__focop_eq_
+    _p_a_element _p_a_print _p_a__focop_eq_ =
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local_creer = creer in
+    (* From species basics#Basic_object. *)
+    let local_parse = Basics.Basic_object.parse in
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local_print = print _p_a_print _p_b_print in
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local__focop_eq_ = _focop_eq_ _p_a__focop_eq_ _p_b__focop_eq_ in
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local_element = element _p_a_element _p_b_element local_creer in
+    (* From species ok__phd_sample#Setoide. *)
+    let local_different = Setoide.different local__focop_eq_ in
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{La création de la valeur de record}
+Maintenant que les fonctions locales permettant de remplir les champs
+du record sont créées, il ne reste plus qu'à construire cette
+valeur. Pour ce faire, on reprend chacun des noms de champs de record
+généré et dont nosu avons parlé au début et on leur affecte le nom de
+la fonction locale correspondante, c'est-à-dire ``local\_'' + le nom
+du champ.
+
+\begin{verbatim}
+    let local_different = Setoide.different local__focop_eq_ in
+    { creer = local_creer ;
+      parse = local_parse ;
+      print = local_print ;
+      _focop_eq_ = local__focop_eq_ ;
+      element = local_element ;
+      different = local_different ;
+       }
+\end{verbatim}
+
+Le module représentant l'espèce est alors terminé. On le ferme par son
+{\tt end ;;} final. On obtient donc le code complet suivant:
+
+\begin{verbatim}
+module Setoide_produit =
+  struct
+  (* Carrier's structure explicitly given by "rep". *)
+  type ('a0_as_carrier, 'b1_as_carrier) me_as_carrier =
+    'a0_as_carrier * 'b1_as_carrier
+  type ('a0_as_carrier, 'b1_as_carrier, 'me_as_carrier) me_as_species = {
+    (* From species ok__phd_sample#Setoide_produit. *)
+    creer : 'a0_as_carrier -> 'b1_as_carrier -> 'me_as_carrier ;
+    (* From species basics#Basic_object. *)
+    parse : Basics._focty_string -> 'me_as_carrier ;
+    (* From species ok__phd_sample#Setoide_produit. *)
+    print : 'me_as_carrier -> Basics._focty_string ;
+    (* From species ok__phd_sample#Setoide_produit. *)
+    _focop_eq_ : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    (* From species ok__phd_sample#Setoide_produit. *)
+    element : 'me_as_carrier ;
+    (* From species ok__phd_sample#Setoide. *)
+    different : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    }
+  let creer (x : 'a0_as_carrier) (y : 'b1_as_carrier) = (Basics.crp x y)
+  let print _p_a_print _p_b_print (x : 'me_as_carrier) =
+    (Basics.sc "("
+      (Basics.sc (_p_a_print (Basics.first x))
+        (Basics.sc "," (Basics.sc (_p_b_print (Basics.scnd x)) ")"))))
+  let _focop_eq_ _p_a__focop_eq_ _p_b__focop_eq_ (x : 'me_as_carrier)
+    (y : 'me_as_carrier) =
+    (Basics.and_b (_p_a__focop_eq_ (Basics.first x) (Basics.first y))
+      (_p_b__focop_eq_ (Basics.scnd x) (Basics.scnd y)))
+  let element _p_a_element _p_b_element abst_creer =
+    (abst_creer _p_a_element _p_b_element)
+  (* Fully defined 'Setoide_produit' species's collection generator. *)
+  let collection_create () _p_b_element _p_b_print _p_b__focop_eq_
+    _p_a_element _p_a_print _p_a__focop_eq_ =
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local_creer = creer in
+    (* From species basics#Basic_object. *)
+    let local_parse = Basics.Basic_object.parse in
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local_print = print _p_a_print _p_b_print in
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local__focop_eq_ = _focop_eq_ _p_a__focop_eq_ _p_b__focop_eq_ in
+    (* From species ok__phd_sample#Setoide_produit. *)
+    let local_element = element _p_a_element _p_b_element local_creer in
+    (* From species ok__phd_sample#Setoide. *)
+    let local_different = Setoide.different local__focop_eq_ in
+    { creer = local_creer ;
+      parse = local_parse ;
+      print = local_print ;
+      _focop_eq_ = local__focop_eq_ ;
+      element = local_element ;
+      different = local_different ;
+       }
+  end ;;
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Et maintenant, un tour détaillé de l'algorithme}
+Le processus de compilation d'une espèce réside dans le fichier
+{\tt /mlcodegen/species\_ml\_generation.ml}.
+
+
+\section{species\_compile}
+Le point d'entrée de la compilation est la fonction
+{\tt species\_compile}. Cette fonction prend en paramètres:
+\begin{itemize}
+  \item {\tt env} : L'environnement courant contenant les informations
+    persistentes de compilation. C'est un {\tt Env.MlGenEnv.t}. Dedans
+    se trouvent en particulier comment mapper les noms ayant des
+    correspondances ``external'' de constructeurs de type somme et de
+    champs de records. On y trouve aussi les informations sur les
+    espèces permettant de savoir pour leur méthodes quels sont leur
+    paramètres lambda-liftés supplémentaires et leur ordre.
+  \item {\tt ~current\_unit} : Le nom de l'unité de compilation
+    courante (le nom du fichier source FoCaL sans son extension
+    ``.foc'').
+  \item {\tt out\_fmter} : Le canal de sortie vers lequel émettre le
+    code OCaml produit.
+  \item {\tt species\_def} : La structure d'AST représentant l'espèce
+    (de type {\tt Parsetree.species\_def}).
+  \item {\tt species\_descr} : Le structure représentant l'espèce
+    synthétisée par le typeur et le normalisateur. C'est en fait la
+    structure mémorisée pour l'espèce dans l'environnement de typage.
+   \item {\tt dep\_graph} : Le graphe de dépendance des méthodes de
+     l'espèce. Il va servir à calculer les lambda-liftings nécessaires
+     pour paramétrer les générateurs de méthodes par les méthodes dont
+     ils dépendent.
+\end{itemize}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Algo}
+\begin{enumerate}
+  \item Impression du nom du module représentant l'espèce. \\
+    {\tt module Setoide\_produit = struct}.
+  \item Génération de la correspondance entre les paramètres de
+    l'espèce et le nom de la variable de type représentant chacun des
+    {em carrier} de ces paramètres
+    (fonction {\tt build\_collections\_carrier\_mapping}). Ceci va
+    permettre de savoir par quelle variable de type dénoter dans une
+    expression de type OCaml, le {em carrier} des paramètres de
+    l'espèce. Cette fonction nous retournera une liste d'association
+    donnant pour chaque type de collection
+    ({\tt Types.type\_collection})  paramètre de l'espèce, le nom
+    complet de la variable de type associée du côté OCaml.
+  \item Génération du type record représntant l'espèce, pas son {\em
+    carrier} (fonction {\tt generate\_record\_type}).
+  \item Calcul de la liste des noms de paramètres de l'espèce. Ceci va
+    servir à calculer ensuite pour chaque méthode de l'espèce
+    l'ensemble de méthodes des paramètres dont dépend la méthode de
+    l'espèce. Cette information va être passée à la passe de
+    génération des générateurs de méthodes afin qu'elle puisse les
+    lambda-lifter en fonction des dépendances.
+  \item Génération des champs de l'espèce c'est-à-dire des générateurs
+    de méthodes (fonction {\tt generate\_methods}). Cette fonction
+    retournera pour chaque champ généré une structure récapitulant son
+    nom, d'où il provient dans l'héritage, son corps, pour chaque
+    paramètre de l'espèce le méthodes dont il dépend et les méthodes
+    dont il dépend dans l'arbre d'héritage courant. Ces informations
+    seront nécessaires lorsqu'il s'agira de se souvenir à quoi
+    appliquer le générateur de méthode correspondant à ce champ.
+  \item Si l'espèce possède des paramètres, il faut alors mémoriser
+    leurs noms afin que lorsque l'on ``implement''-era ou appliquera
+    cette espèce, on puisse savoir faire correspondre les paramètres
+    effectifs avec ces noms de paramètres formels. Ceci sera mémorisé
+    avec les information ci-dessus.
+  \item Si l'espèce est totalement définie, on génère un générateur de
+    collection et on récupère l'information disant quels arguments lui
+    passer afin de pouvoir appeler ce générateur de collection
+    ultérieurement.
+  \item Clôture du module représentant l'espèce. \\
+    {tt end ;;}.
+\end{enumerate}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{build\_collections\_carrier\_mapping}
+Cette fonction crée la correspondance entre le type-collection des
+paramètres de la définition de l'espèce et les noms de variables de type
+utilisés plus tard durant la traduction vers Ocaml dans les
+expressions de types ``parlant'' des {\em carriers} de ces paramètres.
+
+Pour un paramètre d'espèce {\tt A is/in \ldots}, la variable de type
+qui va être utilisée sera formée par ``''' + le nom du paramètre
+d'espèce (passé en minuscule pour les paramètres ``is'' car les noms
+d'espèces FoCaL sont capitalisés ce qui est syntaxiquement incorrect
+pour OCaml qui considèrerait que ce sont des constructeurs de types
+sommes) + un entier unique + ``\_as\_carrier''.
+
+On a besoin d'un ``stamp'' (l'entier unique) en plus juste pour éviter
+qu'un même nom de variable de type apparaisse plusieurs fois dans le
+cas où une espèce aurait 2 paramètres identiques à la casse près. Ceci
+se voit souvent dans le cadre de paramètres ``is'' et ``in'' sous la
+forme: {\tt species A (F is B, f in F)} où {\tt F} et {\tt f}
+aboutiraient tous deux à un même nom de variable de type OCaml:
+{\tt 'f\_as\_carrier}. À la place, on aura deux variables différentes:
+{\tt 'f0\_as\_carrier} et {\tt 'f1\_as\_carrier}.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Algo}
+Pour chaque paramètre de la définition de l'espèce,
+\begin{enumerate}
+  \item Si c'est un paramètre ``is'', on crée son nom comme énoncé
+    ci-dessus. On incrémente le stamp unique. Dans une espèce, un
+    paramètre ``is'' va se voir  affubler d'un type étant directement
+    son nom. Autrement dit, dans {\tt species Foo (A is Setoid)},
+    {\tt A} va avoir un type-collection {\tt A} et son module FoCaL
+    hôte va bien sûr être l'unité de compilation courante. Ce
+    type-collection est en fait complètement local à l'espèce ayant ce
+    paramètre. On va donc lier le nom de variable de type OCaml que
+    l'on vient de créer au type-collection formé du couple (unité de
+    compilation courante, nom du paramètre de l'espèce).
+  \item Si c'est un paramètre ``in'', on crée son nom comme énoncé
+    ci-dessus. On incrémente le stamp unique. Dans le cas présent, ce
+    paramètre possède un type-collection clairement identifié dans se
+    définition. On liera donc directement le nom de variable de type
+    OCaml que l'on vient de créer à ce type-collection dans le mapping
+    généré.
+\end{enumerate}
+
+En sortie, on a donc pour chaque type-collection, le nom de la
+variable de type OCaml à utiliser pour parler du {\em carrier} de ces
+types-collection.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{generate\_record\_type}
+Cette fonction génère le type record représentant une espèce. Ce type
+contient un champ par méthode. Il est toujours nommé
+{\tt me\_as\_species} pour refléter le fait qu'il représente la
+structure OCaml de l'espèce FoCaL.
+
+En fonction de si l'espèce possède des paramètres, ce record en
+possède aussi. Quoi qu'il en soit, il possède toujours au moins un
+paramètre représentant "self tel qu'il sera une fois instancié", une
+fois que ``nous'' (i.e. l'espèce) vivra réellement comme une
+collection.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Algo}
+\begin{enumerate}
+  \item Si la {\tt rep} est définie alors il faut générer la
+    définition de type reflétant sa structure
+    (fonction {\tt generate\_rep\_constraint\_in\_record\_type}),
+    sinon on l'oublie.
+  \item Génération du début de la définition du record. Si le mapping
+    des type-collections n'est pas vide, c'est que l'espèce possède
+    des paramètres d'espèce. Donc le type record va en avoir aussi
+    pour les représenter. On génère donc comme paramètres au type la
+    liste des variables de types OCaml du mapping. Et quoi qu'il en
+    soit, on rajoute la paramètre représentant ``Self'':
+    {\tt 'me\_as\_carrier}.
+  \item Maintenant que les paramètre ont été générés, on peut imprimer
+    le nom du type record: toujours {\tt me\_as\_species}.
+  \item Lorsque l'on travaille au sein d'une collection (pas une
+    espèce), Self se trouve abstrait et remplacé par le
+    type-collection du nom de cette collection. Autrement dit, dans
+    une collection {\tt C} du fichier ``foo.foc'', Self devient le
+    type-collection ({\tt C}, ``foo''). \\
+    Si dans ce cadre, une expression de type dénote
+    ({\tt C}, ``foo''), alors il faudra  faire en sorte que la
+    traduction OCaml se mappe sur le type support de l'espèce et non
+    plus sur la variable de type représentant ``Self'' tant que l'on
+    ne sait pas ce qu'est réellement ``Self.''. \\
+    Pour ce faire, on étend le mapping des types-collections avec
+    notre propre type-collection en le liant  non pas à
+    {\tt 'me\_as\_carrier} mais à {\tt me\_as\_carrier}. \\ \\
+    Voyons comment la communication entre {\tt 'me\_as\_carrier} et
+    {\tt me\_as\_carrier} va se faire. Lorsque l'on est dans une
+    espèce qui n'est pasune collection, lorsque l'on parle du type
+    ``Self'', il va être traduit par la variable de type
+    {\tt 'me\_as\_carrier}. Lorsque l'on se retrouve dans une
+    collection, ``Self'' disparaît au profit du type-collection
+    explicite de l'espèce. Il se retrouve donc mappé par le mécanisme
+    ci-dessus sur {\tt me\_as\_carrier} et non plus sur la variable de
+    type {\tt 'me\_as\_carrier}.
+    Toutes les methodes faisant apparaître {\tt 'me\_as\_carrier} vont
+    se retrouver, dans le générateur de collection instanciées par des
+    functions ayant pour type {\tt me\_as\_carrier}. Et donc
+    l'instanciation de la variable de type {\tt 'me\_as\_carrier} se
+    fera à ce moment-là par le type {\tt me\_as\_carrier}. \\
+    Autrement dit, le champ
+    {\tt parse : Basics.\_focty\_string -> 'me\_as\_carrier ;}
+    qui se trouvait dans une espèce va se retrouner dans une
+    collection affecté par une fonction de type
+    {\tt Basics.\_focty\_string -> me\_as\_carrier ;}, donnant dans la
+    collection finale un champ de la forme:
+    {\tt parse : Basics.\_focty\_string -> me\_as\_carrier ;}.
+  \item Maintenant, pour chaque méthode de la forme normale de
+    l'espèce, on affiche un champ de record de même nom en y mettant
+    la traduction de son type.
+  \item Finalement, on clot la définition du type record.
+\end{enumerate}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{generate\_rep\_constraint\_in\_record\_type}
+Cette fonction vérifie si la {\tt rep} est définie dans l'espèce. Si
+tel est le cas, elle génère la contrainte de type OCaml reflétant sa
+structure FoCaL en définissant le type OCaml {\tt me\_as\_carrier}
+comme étant égal à la traduction cette structure FoCaL.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{generate\_methods}
+Cette fonction génèrates le code OCaml pour un champ de méthode
+(c'est-à-dire pour une construction {\tt let} ou un paquet d'items de
+{\tt let rec}). Elle ignore les {\tt sig}, les {\tt theorem} et les
+{\property} qui eux ne donnent naissance à aucun code OCaml. Cette
+fonction est itérée à la demande sur tous les champs de l'espèce.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Algo}
+\begin{enumerate}
+
+\end{document}
