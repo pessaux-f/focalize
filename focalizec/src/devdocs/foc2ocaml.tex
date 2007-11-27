@@ -45,7 +45,7 @@ Ainsi,
 species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
   rep = (A * B) ;
 \end{verbatim}
-génèrera le code OCaml:
+générera le code OCaml:
 \begin{verbatim}
 module Setoide_produit =
   struct
@@ -85,7 +85,7 @@ Ainsi,
 species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
   rep = (A * B) ;
 \end{verbatim}
-génèrera le code OCaml:
+générera le code OCaml:
 \begin{verbatim}
 module Setoide_produit =
   struct
@@ -96,7 +96,7 @@ module Setoide_produit =
 \end{verbatim}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Les champs du record}
+\subsection{Le type des champs du record}
 Ces champs donnent le type de toutes les méthodes (définies et
 déclarées) disponibles dans la forme normale de l'espèce. On n'y
 retrouve donc pas de trace de {\tt theorem} ni de
@@ -114,7 +114,7 @@ Derrière chaque nom de champ se trouve son type. On notera que dans la
 traduction des types, {\tt Self} est traduit par
 {\tt 'me\_as\_carrier}. De même, si un type réfère à un paramètre
 d'espèce, il sera traduit en la variable de type dénotant le type de
-ce paramètre (ex. {tt 'a0\_as\_carrier} pour le paramètre {\tt A} de
+ce paramètre (ex. {\tt 'a0\_as\_carrier} pour le paramètre {\tt A} de
 l'espèce {\tt Setoide\_produit}).
 
 \begin{verbatim}
@@ -147,9 +147,9 @@ Pour {\tt Setoide\_produit}, sont définies:
   \item element
   \item print
 \end{itemize}
-On retrouve alors directement des fonction OCaml de même nom das le
+On retrouve alors directement des fonction OCaml de même nom dans le
 module. Ces fonctions sont agrémentées de paramètres supplémentaires
-par rapport à leur homologues FoCaL. Pour chaque methode dont une
+par rapport à leur homologues FoCaL. Pour chaque méthode dont une
 méthode dépend, on rajoute un paramètre fonctionnel (lambda-lifting)
 qui sera instancié par la fonction effective à appeler lorsque
 l'espèce sera complète et transformée en collection.
@@ -190,7 +190,7 @@ telle.
 \subsection{Le générateur de collection comme fonction}
 Le générateur de collection est donc une fonction prenant en argument
 toutes les fonctions dont les générateurs de méthodes dépendent et
-appliquant les générateurs de méthodes de chaque méthode aux fonction
+appliquant les générateurs de méthodes de chaque méthode aux fonctions
 qu'elles requièrent afin de donner des fonctions finalement
 applicables aux seuls arguments FoCaL qu'elles nécessitent. Lorsque
 l'on voudra créer une collection, on appèlera donc ce générateur de
@@ -203,10 +203,10 @@ L'ordre d'apparition de ces paramètres correspondant aux méthodes dont
 ont dépend en provenance des paramètres de l'espèce, est choisi
 arbitrairement MAIS est mémorisé afin que lors de la création d'une
 collection on puisse lui passer les bonnes fonctions au bon
-endroit. Ceci sera mémorisé dans une structur persistente de la passe
+endroit. Ceci sera mémorisé dans une structure persistante de la passe
 de génération du code OCaml. Puisque l'espèce est totalement définie,
 il ne reste bien évidemment plus de question de paramètres
-supplémentaires dus aux méthodes de nous-même dont on pourrait
+supplémentaires dus aux méthodes de nous-mêmes dont on pourrait
 dépendre !
 
 Le schéma de nommage des fonctions à passer au générateur de
@@ -261,7 +261,7 @@ générateur de collection:
 \end{itemize}
 
 Ainsi, ci-dessous l'on voit que {\tt creer} étant directement définie
-dans l'espèce, on reprend directement sotn générateur de méthode qui
+dans l'espèce, on reprend directement sont générateur de méthode qui
 porte le même nom pour créer la fonction {\tt local\_creer}. Idem pour
 {\tt print}, {\tt focop\_eq\_} et {\tt element}.
 
@@ -293,7 +293,7 @@ record, il nous faut encore savoir à quoi les appliquer pour leur
 fournir leur paramètres de lambda-lifting. Nous avons vu que ces
 paramètres des fonctions sont aussi (forcément) des paramètres du
 générateur de collection ou des générateurs de méthodes de l'espèce
-courante (poru les méthodes de nous-même dont on dépend). Donc on
+courante (pour les méthodes de nous-mêmes dont on dépend). Donc on
 prendra soin de leur donner le même schéma de nommage aux 2 endroits.
 
 On a vu que les générateurs de méthodes sont toujours abstraits par
@@ -327,7 +327,7 @@ méthode de quel paramètre ou de soi-même.
 Maintenant que les fonctions locales permettant de remplir les champs
 du record sont créées, il ne reste plus qu'à construire cette
 valeur. Pour ce faire, on reprend chacun des noms de champs de record
-généré et dont nosu avons parlé au début et on leur affecte le nom de
+généré et dont nous avons parlé au début et on leur affecte le nom de
 la fonction locale correspondante, c'est-à-dire ``local\_'' + le nom
 du champ.
 
@@ -415,7 +415,7 @@ Le point d'entrée de la compilation est la fonction
 {\tt species\_compile}. Cette fonction prend en paramètres:
 \begin{itemize}
   \item {\tt env} : L'environnement courant contenant les informations
-    persistentes de compilation. C'est un {\tt Env.MlGenEnv.t}. Dedans
+    persistantes de compilation. C'est un {\tt Env.MlGenEnv.t}. Dedans
     se trouvent en particulier comment mapper les noms ayant des
     correspondances ``external'' de constructeurs de type somme et de
     champs de records. On y trouve aussi les informations sur les
@@ -428,7 +428,7 @@ Le point d'entrée de la compilation est la fonction
     code OCaml produit.
   \item {\tt species\_def} : La structure d'AST représentant l'espèce
     (de type {\tt Parsetree.species\_def}).
-  \item {\tt species\_descr} : Le structure représentant l'espèce
+  \item {\tt species\_descr} : La structure représentant l'espèce
     synthétisée par le typeur et le normalisateur. C'est en fait la
     structure mémorisée pour l'espèce dans l'environnement de typage.
    \item {\tt dep\_graph} : Le graphe de dépendance des méthodes de
@@ -444,15 +444,15 @@ Le point d'entrée de la compilation est la fonction
     {\tt module Setoide\_produit = struct}.
   \item Génération de la correspondance entre les paramètres de
     l'espèce et le nom de la variable de type représentant chacun des
-    {em carrier} de ces paramètres
+    {\em carrier} de ces paramètres
     (fonction {\tt build\_collections\_carrier\_mapping}). Ceci va
     permettre de savoir par quelle variable de type dénoter dans une
-    expression de type OCaml, le {em carrier} des paramètres de
+    expression de type OCaml, le {\em carrier} des paramètres de
     l'espèce. Cette fonction nous retournera une liste d'association
     donnant pour chaque type de collection
     ({\tt Types.type\_collection})  paramètre de l'espèce, le nom
     complet de la variable de type associée du côté OCaml.
-  \item Génération du type record représntant l'espèce, pas son {\em
+  \item Génération du type record représentant l'espèce, pas son {\em
     carrier} (fonction {\tt generate\_record\_type}).
   \item Calcul de la liste des noms de paramètres de l'espèce. Ceci va
     servir à calculer ensuite pour chaque méthode de l'espèce
@@ -474,11 +474,11 @@ Le point d'entrée de la compilation est la fonction
     effectifs avec ces noms de paramètres formels. Ceci sera mémorisé
     avec les information ci-dessus.
   \item Si l'espèce est totalement définie, on génère un générateur de
-    collection et on récupère l'information disant quels arguments lui
-    passer afin de pouvoir appeler ce générateur de collection
-    ultérieurement.
+    collection (fonction {\tt generate\_collection\_generator}) et on
+    récupère l'information disant quels arguments lui passer afin de
+    pouvoir appeler ce générateur de collection ultérieurement.
   \item Clôture du module représentant l'espèce. \\
-    {tt end ;;}.
+    {\tt end ;;}.
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -493,7 +493,7 @@ Pour un paramètre d'espèce {\tt A is/in \ldots}, la variable de type
 qui va être utilisée sera formée par ``''' + le nom du paramètre
 d'espèce (passé en minuscule pour les paramètres ``is'' car les noms
 d'espèces FoCaL sont capitalisés ce qui est syntaxiquement incorrect
-pour OCaml qui considèrerait que ce sont des constructeurs de types
+pour OCaml qui considérerait que ce sont des constructeurs de types
 sommes) + un entier unique + ``\_as\_carrier''.
 
 On a besoin d'un ``stamp'' (l'entier unique) en plus juste pour éviter
@@ -576,21 +576,21 @@ collection.
     {\tt 'me\_as\_carrier} mais à {\tt me\_as\_carrier}. \\ \\
     Voyons comment la communication entre {\tt 'me\_as\_carrier} et
     {\tt me\_as\_carrier} va se faire. Lorsque l'on est dans une
-    espèce qui n'est pasune collection, lorsque l'on parle du type
+    espèce qui n'est pas une collection, lorsque l'on parle du type
     ``Self'', il va être traduit par la variable de type
     {\tt 'me\_as\_carrier}. Lorsque l'on se retrouve dans une
     collection, ``Self'' disparaît au profit du type-collection
     explicite de l'espèce. Il se retrouve donc mappé par le mécanisme
     ci-dessus sur {\tt me\_as\_carrier} et non plus sur la variable de
     type {\tt 'me\_as\_carrier}.
-    Toutes les methodes faisant apparaître {\tt 'me\_as\_carrier} vont
+    Toutes les méthodes faisant apparaître {\tt 'me\_as\_carrier} vont
     se retrouver, dans le générateur de collection instanciées par des
-    functions ayant pour type {\tt me\_as\_carrier}. Et donc
+    fonctions ayant pour type {\tt me\_as\_carrier}. Et donc
     l'instanciation de la variable de type {\tt 'me\_as\_carrier} se
     fera à ce moment-là par le type {\tt me\_as\_carrier}. \\
     Autrement dit, le champ
     {\tt parse : Basics.\_focty\_string -> 'me\_as\_carrier ;}
-    qui se trouvait dans une espèce va se retrouner dans une
+    qui se trouvait dans une espèce va se retrouver dans une
     collection affecté par une fonction de type
     {\tt Basics.\_focty\_string -> me\_as\_carrier ;}, donnant dans la
     collection finale un champ de la forme:
@@ -598,7 +598,7 @@ collection.
   \item Maintenant, pour chaque méthode de la forme normale de
     l'espèce, on affiche un champ de record de même nom en y mettant
     la traduction de son type.
-  \item Finalement, on clot la définition du type record.
+  \item Finalement, on clôt la définition du type record.
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -612,14 +612,115 @@ comme étant égal à la traduction cette structure FoCaL.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{generate\_methods}
-Cette fonction génèrates le code OCaml pour un champ de méthode
+Cette fonction génère le code OCaml pour un champ de méthode
 (c'est-à-dire pour une construction {\tt let} ou un paquet d'items de
 {\tt let rec}). Elle ignore les {\tt sig}, les {\tt theorem} et les
-{\property} qui eux ne donnent naissance à aucun code OCaml. Cette
+{\tt property} qui eux ne donnent naissance à aucun code OCaml. Cette
 fonction est itérée à la demande sur tous les champs de l'espèce.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Algo}
 \begin{enumerate}
+  \item Si le champ est une {\tt sig}, un {\tt theorem} ou une
+    {\tt property}, on ne génère pas de code.
+  \item Si le champ est un {\tt let} non récursif on détermine les
+    paramètres à lambda-lifter (fonction
+    {\tt compute\_lambda\_liftings\_for\_field}) et on entre dans la
+    génération du code du binding (fonction
+    {\tt generate\_one\_field\_binding}). \\
+    À l'issue de la production de code, on enregistre les informations
+    de paramètres lambda-liftés dans une structure qui sera persistante
+    à la passe de génération de code OCaml.
+  \item Si le champ est un {\tt let rec}, alors on commence par
+    récupérer pour chaque fonction récursivement liée, les
+    informations sur ses paramètres lambda-liftés et on lie ces
+    information à chaque fonction dans l'environnement afin, en cas
+    d'appel récursif, d'être capable de savoir quels sont les
+    paramètres à rajouter à l'appel. \\
+    Ensuite, on produit successivement le code de chaque
+    identificateur lié par le {\tt let rec}. \\
+    Et comme ci-dessus, à l'issue de la production de code, on
+    enregistre les informations de paramètres lambda-liftés pour chaque
+    identificateur lié par le {\tt let rec}.
+\end{enumerate}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{compute\_lambda\_liftings\_for\_field}
+Cette fonction préprocesse un champ avant sa compilation vers
+OCaml. Elle calcule différentes informations relatives aux paramètres
+supplémentaires que la méthode va avoir par lambda-lifting dus aux
+méthodes dont elle dépend en provenance de l'espèce elle-même ou des
+paramètres de cette espèce.
 
+Elle extrait les méthodes de l'espèce courante dont le champ
+decl-dépend, les méthodes des paramètres de l'espèce dont le champ
+decl-dépend et finalement elle synthétise la liste des paramètres
+formels que la méthode va avoir du fait de ces lambda-liftings dus aux
+dépendances.
+
+Cette dernière liste va être directement imprimée par le générateur de
+code mais va également être retournée afin d'être enregistrée dans le
+contexte de compilation. Ainsi, l'application récursive d'une méthode
+devra et sera capable d'utiliser ces paramètres supplémentaires en
+plus de ceux effectivement passés lors de l'appel dans le code FoCaL.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Algo}
+\begin{enumerate}
+  \item On récupère dans le graphe de dépendances de l'espèce (qui se
+    trouve dans le contexte de compilation), les méthodes dont on
+    decl-dépend directement (pas transitivement).
+  \item On récupère la liste des méthodes en provenance des paramètres
+    de l'espèce et dont on dépend. Cette liste est une association
+    (nom de paramètre d'espèce, nom de méthode de ce paramètre dont on
+    dépend).
+  \item On construit la chaîne de caractères (le ``code OCaml'') à
+    émettre pour énumérer les noms de paramètres lambda-liftés
+    (concaténation des noms séparés par un espace). \\
+    On commence par ceux induits par les méthodes de paramètres de
+    l'espèce. On les nomme ``\_p\_'' + le nom du paramètre d'espèce
+    sans majuscule + le nom de la méthode. \\
+    Ensuite, on continue avec les paramètres induits par les
+    méthodes de l'espèce courante dont on dépend. On les nomme
+    ``abst\_'' + le nom de la méthode. \\
+  \item On retourne les 3 informations calculées ci-dessus, elles
+    seront utilisées ailleurs dans la suite de la génération du code.
+\end{enumerate}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{generate\_one\_field\_binding}
+Cette fonction émet réellement le code OCaml correspondant au champ de
+l'espèce. Le champ n'est généré que s'il est défini dans l'espèce
+courante, à son niveau d'héritage. S'il est hérité alors on ne
+re-génère pas son code.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Algo}
+\begin{enumerate}
+  \item Si le champ est hérité on ne fait rien, sinon\ldots
+  \item En fonction de si on provient un champ {\tt let}, du premier
+    binding d'un champ {\tt let rec} ou d'un suivant d'un champ
+    {\tt let rec}, on génère le lieur OCaml {\tt let}, {\tt let rec}
+    ou {\tt and}.
+  \item On imprime la chaîne de caractères représentant les paramètres
+    supplémentaires dus aux lambda-liftings (chaîne construite par la
+    fonction {\tt compute\_lambda\_liftings\_for\_field} vue
+    précédemment.
+  \item On imprime chaque paramètre de l'identificateur lié en
+    l'annotant par son type.
+  \item On imprime le ``='' puis on génère la traduction du corps (en
+    invoquant \\ {\tt Base\_exprs\_ml\_generation.generate\_expr}).
+\end{enumerate}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{generate\_collection\_generator}
+Cette fonction est appelée uniquement dans le cas où l'espèce compilée
+est complètement définie. Elle va créer la fonction générateur de
+collection dont le travail sera de construire une valeur du type
+record représentant l'espèce, pour peu que l'on lui fournisse les
+fonctions instanciant les méthodes dont les méthode du record
+dépendent.
 \end{document}

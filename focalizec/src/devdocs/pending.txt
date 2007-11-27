@@ -1,7 +1,8 @@
 Pending bugs and stuff.
 ***********************
 
-******
+******************************************************************************
+******************************************************************************
 species A =
   sig equal in Self -> Self -> bool
 end
@@ -10,7 +11,9 @@ species B inherits A =
 On se fait jeter car dans B equal est trouvé de type 'a -> 'a -> bool
 et ne semble pas être unifié avec la sig héritée.
 
-******
+
+******************************************************************************
+******************************************************************************
 type foo =
   internal alias bool
   external
@@ -20,3 +23,24 @@ Partout, quand on parle de foo le type est considéré comme bool en
 FoCaL. La question est alors que dans ce cas là, on risque de mal
 traduire vers OCaml car en voyant bool on va traduire vers
 _foc_ty_bool et non vers "myint".
+
+
+******************************************************************************
+******************************************************************************
+Collections locales.
+
+
+******************************************************************************
+******************************************************************************
+Les letprop.
+
+
+******************************************************************************
+******************************************************************************
+let equal in Self -> Self -> basics#bool = external
+    | caml -> "(=)"
+    | "c" -> "..."
+  end;
+
+donne que l'ast_node de l'external contient le type :
+'variable de type' au lieu de 'self -> self -> bool
