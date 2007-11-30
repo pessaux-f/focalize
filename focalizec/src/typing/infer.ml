@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.90 2007-11-30 10:29:18 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.91 2007-11-30 12:06:44 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -948,7 +948,7 @@ let rec typecheck_expr ctx env initial_expr =
      | Parsetree.E_record_with (with_expr, fields) ->
          typeckeck_record_expr ctx env fields (Some with_expr)
      | Parsetree.E_tuple exprs ->
-         assert (exprs <> []);  (* Just in case. O-ary tuple is non-sense ! *)
+         assert (exprs <> []) ;  (* Just in case. O-ary tuple is non-sense ! *)
          let tys = List.map (typecheck_expr ctx env) exprs in
          Types.type_tuple tys
      | Parsetree.E_external ext_expr -> typecheck_external_expr ext_expr
@@ -1196,24 +1196,11 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
         (binding_desc.Parsetree.b_name, ty_scheme, binding_loc))
       let_def_descr.Parsetree.ld_bindings
       pre_env_info in
-  (* Before leaving, if the definition is a species field, we ensure that   *)
-  (* no scheme contains generalised or even non generalised type variables. *)
-  (* In effect, methods are not polymorphic. And we don't want also to      *)
-  (* have methods with partially instanciated types !                       *)
-  (* We can't check for this before because of mutual definitions, when     *)
-  (* looking at the scheme of a methods, some variables may still be non    *)
-  (* instanciated because they will be only once we will have processed the *)
-  (* next methods' schemes.                                                 *)
-  (* By the way, we make the clean environment binding by discarding the  *)
-  (* location information we kept just to be able to pinpoint accurately  *)
-  (* the guilty method in case of one would have variables in its scheme. *)
+  (* We make the clean environment binding by discarding the location *)
+  (* information we kept just to be able to pinpoint accurately the   *)
+  (* guilty method in case of one would have variables in its scheme. *)
   let env_bindings =
-    List.map
-      (fun (name, sc, loc) ->
-        if is_a_field && Types.scheme_contains_variable_p sc then
-          raise (Scheme_contains_type_vars (name, sc, loc));
-        (name, sc))
-      tmp_env_bindings in
+    List.map (fun (name, sc, _) -> (name, sc)) tmp_env_bindings in
   (* Finally, returns the induced bindings. Note that [Parsetree.binding] *)
   (* and [Parsetree.let_def have an [ast_type] but in this case it has no *)
   (* relevance, so we just leave them [None].                             *)
@@ -1517,10 +1504,6 @@ and typecheck_species_fields ctx env = function
              (* Be careful : methods are not polymorphic (c.f. Virgile    *)
              (* Prevosto's Phd section 3.3, page 24). No generalization ! *)
              let rep_scheme = Types.trivial_scheme ty in
-             if Types.scheme_contains_variable_p rep_scheme then
-               raise
-                 (Scheme_contains_type_vars
-                    (rep_vname, rep_scheme,  field.Parsetree.ast_loc));
              let field_info =
                Env.TypeInformation.SF_sig
                  (current_species, rep_vname, rep_scheme) in
@@ -1539,11 +1522,6 @@ and typecheck_species_fields ctx env = function
              (* Be careful : methods are not polymorphics (c.f. Virgile   *)
              (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
              let scheme = Types.trivial_scheme ty in
-             if Types.scheme_contains_variable_p scheme then
-               raise
-                (Scheme_contains_type_vars
-                   (sig_def_descr.Parsetree.sig_name, scheme,
-                    field.Parsetree.ast_loc));
              let env' =
                Env.TypingEnv.add_value
                  sig_def_descr.Parsetree.sig_name scheme env in
@@ -1628,11 +1606,6 @@ and typecheck_species_fields ctx env = function
              (* Be careful : methods are not polymorphics (c.f. Virgile   *)
              (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
              let scheme = Types.trivial_scheme ty in
-             if Types.scheme_contains_variable_p scheme then
-               raise
-                 (Scheme_contains_type_vars
-                    (property_def.Parsetree.ast_desc.Parsetree.prd_name,
-                     scheme, field.Parsetree.ast_loc));
              let env' =
                Env.TypingEnv.add_value
                  property_def.Parsetree.ast_desc.Parsetree.prd_name
@@ -1656,11 +1629,6 @@ and typecheck_species_fields ctx env = function
              (* Be careful : methods are not polymorphics (c.f. Virgile   *)
              (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
              let scheme = Types.trivial_scheme ty in
-             if Types.scheme_contains_variable_p scheme then
-               raise
-                 (Scheme_contains_type_vars
-                   (theorem_def.Parsetree.ast_desc.Parsetree.th_name, scheme,
-                    field.Parsetree.ast_loc)) ;
              let env' =
                Env.TypingEnv.add_value
                 theorem_def.Parsetree.ast_desc.Parsetree.th_name scheme env in
@@ -2281,8 +2249,6 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
 (* Parsetree.proof_def_desc -> current_species:Parsetree.qualified_vname -> *)
 (*   Env.TypeInformation.species_field list ->                              *)
 (*     (Env.TypeInformation.species_field list * bool)                      *)
-
-
 (* {b Descr} : Searches in the list the first SF_property field whose
              name is equal to the [proof_of]'s name, then convert
              this property field into a theorem fields by adding the
@@ -2512,7 +2478,7 @@ let order_fields_according_to order fields =
 
 
 (* ********************************************************************* *)
-(* loc:Location.t -> typing_context -> Parsetree.vname ->                *)
+(* loc: Location.t -> typing_context -> Parsetree.vname ->               *)
 (*   Types.type_scheme ->                                                *)
 (*     (Types.species_name * Parsetree.vname * Types.type_scheme *       *)
 (*      Parsetree.expr) list ->                                          *)
@@ -2807,7 +2773,7 @@ let normalize_species ~loc ctx methods_info inherited_methods_infos =
       (begin
         match oldest_inter_n_field_n_fields phi !w2 with
         | (None, _, _) ->
-           w1 := bigX;
+           w1 := bigX ;
            w2 := !w2 @ [phi]
         | (Some psi_i0, head_sniped_w2, tail_sniped_w2) ->
            (* Extract the names forming the erasing context. *)
@@ -2884,6 +2850,51 @@ let ensure_collection_completely_defined ctx fields =
         raise
           (Collection_not_fully_defined (curr_spec, (Parsetree.Vlident "rep")))
      end)
+;;
+
+
+
+(* ************************************************************************ *)
+(* loc: Location.t -> Env.TypeInformation.species_field -> unit             *)
+(** {b Descr} : Detects and reject polymorphic methods. This proces is done
+      once the fusion of inhérited methods and current methods is done.
+      In effect, it is possible to have an inherited signature specifying a
+      non polymorphic type and a definition of this method not specifying the
+      types (hence that could seem polymorphic). The expected behaviour is
+      that the type constraint inherited comes and apply to the method
+      definition to in fact make it non polymorphic.
+      For instance:
+        species A =
+          sig equal : Self -> Self -> basics#bool ;
+        end ;;
+       species B inherits A =
+         let equal (x, y) = true ;
+       end ;;
+      In A "equal" is not polymorphic since its type is explicitely given.
+      However, in "B", no type constraint is done. Hence the "equal" method
+      in B looks 'a -> 'b -> bool. But because it is the same than in A, it
+      really has the type Self -> Self -> bool ad must not be rejected.
+      When the species is normalized and inherited fields a fusionned,
+      unification is performed between fields of the same name. Then the
+      polymorphic-like scheme of "equal" in B gets instancied by the one of
+      "equal" in A, and doesn't look anymore polymorphics. That's why the
+      polymorphic hunt must be done only once fields have been fusionned.
+
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
+let detect_polymorphic_method ~loc = function
+  | Env.TypeInformation.SF_sig (_, name, sch)
+  | Env.TypeInformation.SF_let (_, name, _, sch, _)
+  | Env.TypeInformation.SF_theorem (_, name, sch, _, _)
+  | Env.TypeInformation.SF_property (_, name, sch, _) ->
+      if Types.scheme_contains_variable_p sch then
+        raise (Scheme_contains_type_vars (name, sch, loc))
+  | Env.TypeInformation.SF_let_rec defs ->
+      List.iter
+        (fun (_, name, _, sch, _) ->
+          if Types.scheme_contains_variable_p sch then
+            raise (Scheme_contains_type_vars (name, sch, loc)))
+        defs
 ;;
 
 
@@ -2991,6 +3002,11 @@ let typecheck_species_def ctx env species_def =
     normalize_species
       ~loc: species_def.Parsetree.ast_loc ctx' collapsed_methods_info
       collapsed_inherited_methods_infos in
+  (* Ensure that no method is polymorphic  (c.f. Virgile *)
+  (* Prevosto's Phd section 3.3, page 24).               *)
+  List.iter
+    (detect_polymorphic_method ~loc: species_def.Parsetree.ast_loc)
+    normalized_methods ;
   (* Now, compute the fields order to prevent ill-formness described in the *)
   (* [collapse_proofs_of] function's header.                                *)
   let new_order =

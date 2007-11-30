@@ -3,17 +3,6 @@ Pending bugs and stuff.
 
 ******************************************************************************
 ******************************************************************************
-species A =
-  sig equal in Self -> Self -> bool
-end
-species B inherits A =
-  let equal (x, y) = ...
-On se fait jeter car dans B equal est trouvé de type 'a -> 'a -> bool
-et ne semble pas être unifié avec la sig héritée.
-
-
-******************************************************************************
-******************************************************************************
 type foo =
   internal alias bool
   external
