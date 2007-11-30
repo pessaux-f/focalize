@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.13 2007-11-27 16:25:33 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.14 2007-11-30 10:29:18 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -78,8 +78,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
   let cnt = ref 0 in
   List.map
     (function
-      | Env.TypeInformation.SPAR_is (n, _, _) ->
-          let n_as_string = Parsetree_utils.name_of_vname n in
+      | Env.TypeInformation.SPAR_is ((_, n_as_string), _, _) ->
           (* Build the name of the type variable that will represent *)
           (* this parameter's carrier type seen from OCaml. Just     *)
           (* lowerize the parameter name because collection names    *)
@@ -933,8 +932,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   let species_parameters_names =
     List.map
       (function
-        | Env.TypeInformation.SPAR_in (n, _)
-        | Env.TypeInformation.SPAR_is (n, _, _) -> n)
+        | Env.TypeInformation.SPAR_in (n, _) -> n
+        | Env.TypeInformation.SPAR_is ((_, n), _, _) -> Parsetree. Vuident n)
       species_descr.Env.TypeInformation.spe_sig_params in
   (* Now, the methods of the species. *)
   let compiled_fields =

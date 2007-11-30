@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.89 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.90 2007-11-30 10:29:18 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1255,7 +1255,7 @@ and typecheck_prop ~in_proof ctx env prop =
     (match prop.Parsetree.ast_desc with
      | Parsetree.Pr_forall (vnames, t_expr, pr)
      | Parsetree.Pr_exists (vnames, t_expr, pr) ->
-         Types.begin_definition ();
+         Types.begin_definition () ;
          (* Get the couple (name, type) for each defined variable. *)
          let bound_variables =
            let ty = typecheck_type_expr ctx env t_expr in
@@ -1478,9 +1478,9 @@ and typecheck_species_fields ctx env = function
              (* On must not defined several rep inside a species. *)
              if ctx.self_manifest <> None then
                raise (Method_multiply_defined (rep_vname, current_species));
-             Types.begin_definition ();
+             Types.begin_definition () ;
              let ty = typecheck_rep_type_def ctx env rep_type_def in
-             Types.end_definition ();
+             Types.end_definition () ;
              (* Before modifying the context, just check that no "rep" *)
              (* was previously identified. If some, then fails.        *)
              if ctx.self_manifest <> None then
@@ -1621,7 +1621,7 @@ and typecheck_species_fields ctx env = function
                typecheck_prop
                  ~in_proof: false ctx env
                  property_def.Parsetree.ast_desc.Parsetree.prd_prop in
-             Types.end_definition ();
+             Types.end_definition () ;
              (* Record the type information in the AST node. *)
              property_def.Parsetree.ast_type <- Parsetree.ANTI_type ty ;
              (* Extend the environment. *)
@@ -1784,34 +1784,34 @@ let abstraction ~current_unit cname fields =
           (match h with
            | Env.TypeInformation.SF_sig (from, vname, scheme)
            | Env.TypeInformation.SF_let (from, vname, _, scheme, _) ->
-               Types.begin_definition ();
+               Types.begin_definition () ;
                let ty = Types.specialize scheme in
                let ty' =
                  Types.copy_type_simple_but_variables
                    ~and_abstract: (Some cname) ty in
-               Types.end_definition ();
+               Types.end_definition () ;
                [Env.TypeInformation.SF_sig
                   (from, vname, (Types.generalize ty'))]
            | Env.TypeInformation.SF_let_rec l ->
                List.map
                  (fun (from, vname, _, scheme, _) ->
-                  Types.begin_definition ();
+                  Types.begin_definition () ;
                   let ty = Types.specialize scheme in
                   let ty' =
                     Types.copy_type_simple_but_variables
                       ~and_abstract: (Some cname) ty in
-                  Types.end_definition ();
+                  Types.end_definition () ;
                   Env.TypeInformation.SF_sig
                     (from, vname, (Types.generalize ty')))
                  l
            | Env.TypeInformation.SF_theorem (from, vname, scheme, prop, _)
            | Env.TypeInformation.SF_property (from, vname, scheme, prop) ->
-               Types.begin_definition ();
+               Types.begin_definition () ;
                let ty = Types.specialize scheme in
                let ty' =
                  Types.copy_type_simple_but_variables
                    ~and_abstract: (Some cname) ty in
-               Types.end_definition ();
+               Types.end_definition () ;
                (* We substitute Self by [cname] in the prop. *)
                let abstracted_prop =
                  SubstColl.subst_prop ~current_unit SubstColl.SCK_self
@@ -1864,7 +1864,7 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
           (fun (v1, sc1) ->
             if v1 = v2 then
               (begin
-               Types.begin_definition ();
+               Types.begin_definition () ;
                let ty1 = Types.specialize sc1 in
                let ty2 = Types.specialize sc2 in
                (begin
@@ -1891,7 +1891,7 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
                          (name_should_be_sub_spe, name_should_be_over_spe, v1,
                           ty_name, ar1, ar2,loc))
                 end);
-               Types.end_definition ();
+               Types.end_definition () ;
                true
                end)
             else false)
@@ -1921,7 +1921,7 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
 (* *********************************************************************** *)
 let apply_species_arguments ctx env base_spe_descr params =
   let rec rec_apply accu_meths = function
-    | [], [] -> accu_meths
+    | ([], []) -> accu_meths
     | ((f_param :: rem_f_params), (e_param :: rem_e_params)) ->
       let new_meths =
         (begin
@@ -1956,9 +1956,8 @@ let apply_species_arguments ctx env base_spe_descr params =
                   accu_meths in
               substd_meths
              end)
-          | Env.TypeInformation.SPAR_is (f_name, c1_ty, _) ->
-              let c1 =
-                (ctx.current_unit, Parsetree_utils.name_of_vname f_name) in
+          | Env.TypeInformation.SPAR_is ((f_module, f_name), c1_ty, _) ->
+              let c1 = (f_module, f_name) in
               (* Get the argument species expression signature and methods. *)
               (* Note that to be well-typed this expression must ONLY be    *)
               (* an [E_constr] (because species names are capitalized,      *)
@@ -1997,7 +1996,7 @@ let apply_species_arguments ctx env base_spe_descr params =
               substd_meths
           end) in
       rec_apply new_meths (rem_f_params, rem_e_params)
-    | rem_formals, _ ->
+    | (rem_formals, _) ->
       (begin
         let rem_formals_len = List.length rem_formals in
         (* To be able to tell "... is applied to too many/to few arguments". *)
@@ -2177,9 +2176,17 @@ let typecheck_species_def_params ctx env species_params =
                rec_typecheck_params accu_env'' rem in
              (* We keep the [species_expr]'s in the [SPAR_is] structure *)
              (* because it will be needed for Coq code generation.      *)
+             (* By keeping the current unit and the parameter name, we  *)
+             (* in fact keep the type-collection od the parameter. In   *)
+             (* effect, a "in" parameter is given a type-collection     *)
+             (* is its (module * name). This means that a species       *)
+             (* parameter has a purely local type to the species.       *)
+             (* because we also keep the methods it has, we are still   *)
+             (* able to verify species signature matching !             *)
              let current_spe_param =
                Env.TypeInformation.SPAR_is
-                 (param_vname, species_expr_fields, species_expr) in
+                 ((ctx.current_unit, param_name_as_string),
+                  species_expr_fields, species_expr) in
              (* Finally, we return the fully extended environment and *)
              (* the type of the species application we just built.    *)
              (accu_env''', (current_spe_param :: rem_spe_params))
@@ -2522,13 +2529,13 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
       (fun ((from, n, params_names, sc, body) as rec_meth) ->
         if n = sig_name then
           begin
-           Types.begin_definition ();
+           Types.begin_definition () ;
            let sig_ty = Types.specialize sig_scheme in
            let ty = Types.specialize sc in
            (* Recover the type where Self is prefered. *)
            let ty' =
              Types.unify ~loc ~self_manifest: ctx.self_manifest sig_ty ty in
-           Types.end_definition ();
+           Types.end_definition () ;
            (from, n, params_names, (Types.generalize ty'), body)
           end
         else rec_meth)
@@ -2620,20 +2627,20 @@ let fields_fusion ~loc ctx phi1 phi2 =
    | (Env.TypeInformation.SF_sig (_, n1, sc1),
       Env.TypeInformation.SF_sig (from2, n2, sc2)) when n1 = n2 ->
         (* sig / sig. *)
-        Types.begin_definition ();
+        Types.begin_definition () ;
         let ty1 = Types.specialize sc1 in
         let ty2 = Types.specialize sc2 in
         let ty = Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 in
-        Types.end_definition ();
+        Types.end_definition () ;
         Env.TypeInformation.SF_sig (from2, n2, (Types.generalize ty))
    | (Env.TypeInformation.SF_sig (_, n1, sc1),
       Env.TypeInformation.SF_let (from2, n2, pars2, sc2, body)) when n1 = n2 ->
         (* sig / let. *)
-        Types.begin_definition ();
+        Types.begin_definition () ;
         let ty1 = Types.specialize sc1 in
         let ty2 = Types.specialize sc2 in
         let ty = Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 in
-        Types.end_definition ();
+        Types.end_definition () ;
         Env.TypeInformation.SF_let
           (from2, n2, pars2, (Types.generalize ty), body)
    | (Env.TypeInformation.SF_sig (_, n1, sc1),
@@ -2644,22 +2651,22 @@ let fields_fusion ~loc ctx phi1 phi2 =
    | (Env.TypeInformation.SF_let (from1, n1, pars1, sc1, body),
       Env.TypeInformation.SF_sig (_, n2, sc2)) when n1 = n2 ->
         (* let / sig. *)
-        Types.begin_definition ();
+        Types.begin_definition () ;
         let ty1 = Types.specialize sc1 in
         let ty2 = Types.specialize sc2 in
         let ty = Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 in
-        Types.end_definition ();
+        Types.end_definition () ;
         Env.TypeInformation.SF_let
           (from1, n1, pars1, (Types.generalize ty), body)
    | (Env.TypeInformation.SF_let (_, n1, _, sc1, _),
       Env.TypeInformation.SF_let (from2, n2, pars2, sc2, body)) when n1 = n2 ->
         (* let / let. *)
         (* Late binding : keep the second body ! *)
-        Types.begin_definition ();
+        Types.begin_definition () ;
         let ty1 = Types.specialize sc1 in
         let ty2 = Types.specialize sc2 in
         let ty = Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 in
-        Types.end_definition ();
+        Types.end_definition () ;
         Env.TypeInformation.SF_let
           (from2, n2, pars2, (Types.generalize ty), body)
    | (Env.TypeInformation.SF_let (_, _, _, _, _),
@@ -3031,13 +3038,13 @@ let typecheck_species_def ctx env species_def =
       ~loc: species_def.Parsetree.ast_loc
       species_def_desc.Parsetree.sd_name species_description env in
   (* Now, extend the environment with a type that is the species. *)
-  Types.begin_definition ();
+  Types.begin_definition () ;
   let species_carrier_type =
     Types.type_rep_species
       ~species_module: ctx'.current_unit
       ~species_name:
         (Parsetree_utils.name_of_vname species_def_desc.Parsetree.sd_name) in
-  Types.end_definition ();
+  Types.end_definition () ;
   let species_as_type_description = {
     Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract;
     Env.TypeInformation.type_identity = Types.generalize species_carrier_type;
@@ -3249,11 +3256,11 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
       let fields_descriptions =
         List.map
           (fun (lbl_name, lbl_ty_expr) ->
-            Types.begin_definition ();
+            Types.begin_definition () ;
             let lbl_ty =
               typecheck_type_expr ctx env_with_proto_ourselves lbl_ty_expr in
             let arrow = Types.type_arrow lbl_ty futur_type_type in
-            Types.end_definition ();
+            Types.end_definition () ;
             let lbl_scheme = Types.generalize arrow in
             (* Currently, fields do not support the "mutable" tag. *)
             (lbl_name, { Env.TypeInformation.field_mut =

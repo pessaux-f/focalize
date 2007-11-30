@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.13 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.14 2007-11-30 10:29:18 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -20,7 +20,6 @@
             Types are handled by the [Types.subst_type_simple] function.    *)
 (* ************************************************************************ *)
 
-open Parsetree;;
 
 (* ************************************************************************** *)
 (** {b Descr} : Describes which kind of collection type must be replaced
@@ -102,13 +101,13 @@ let subst_expr_ident ~current_unit c1 c2 ident =
       | SCK_coll effective_coll_ty ->
         let coll_ty =
           match coll_qvname with
-          | Vname coll_vname ->
+          | Parsetree.Vname coll_vname ->
             (* If no module specifier appears in the ident, then it *)
             (* implicitely refers to the current compilation unit.  *)
             (* Should never happen because the scoping pass should  *)
             (* have made the hosting module explicit.               *)
             (current_unit, Parsetree_utils.name_of_vname coll_vname)
-          | Qualified (modname, coll_vname) ->
+          | Parsetree.Qualified (modname, coll_vname) ->
             (modname, Parsetree_utils.name_of_vname coll_vname) in
         (* Attention, [c2] is a [Types.collection_type], then it has *)
         (* to be transformed into a [Parsetree.vname] before being   *)
@@ -117,7 +116,7 @@ let subst_expr_ident ~current_unit c1 c2 ident =
         (* trivially to surround [c2] byt a [Parsetree.Vuident].     *)
         if coll_ty = effective_coll_ty then
           let new_species_qvname =
-            Qualified (fst c2, Parsetree.Vuident (snd c2)) in
+            Parsetree.Qualified (fst c2, Parsetree.Vuident (snd c2)) in
           Parsetree.EI_method
             (Some new_species_qvname, vname)
         else ident.Parsetree.ast_desc in
@@ -385,7 +384,7 @@ let subst_prop ~current_unit c1 c2 initial_prop_expr =
 let subst_species_field ~current_unit c1 c2 = function
   | Env.TypeInformation.SF_sig (from, vname, scheme) ->
       (begin
-      Types.begin_definition ();
+      Types.begin_definition () ;
       let ty = Types.specialize scheme in
       let ty' =
         (match c1 with
@@ -393,13 +392,13 @@ let subst_species_field ~current_unit c1 c2 = function
          | SCK_self ->
              Types.copy_type_simple_but_variables
                ~and_abstract: (Some c2) ty) in
-      Types.end_definition ();
+      Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       Env.TypeInformation.SF_sig (from, vname, scheme')
       end)
   | Env.TypeInformation.SF_let (from, vname, params_names, scheme, body) ->
       (begin
-      Types.begin_definition ();
+      Types.begin_definition () ;
       let ty = Types.specialize scheme in
       let ty' =
         (match c1 with
@@ -407,7 +406,7 @@ let subst_species_field ~current_unit c1 c2 = function
          | SCK_self ->
              Types.copy_type_simple_but_variables
                ~and_abstract: (Some c2) ty) in
-      Types.end_definition ();
+      Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_expr ~current_unit c1 c2 body in
       Env.TypeInformation.SF_let (from, vname, params_names, scheme', body')
@@ -434,7 +433,7 @@ let subst_species_field ~current_unit c1 c2 = function
   | Env.TypeInformation.SF_theorem (from, vname, scheme, body, proof) ->
       (begin
       (* No substitution inside the proof. *)
-      Types.begin_definition ();
+      Types.begin_definition () ;
       let ty = Types.specialize scheme in
       let ty' =
         (match c1 with
@@ -442,14 +441,14 @@ let subst_species_field ~current_unit c1 c2 = function
          | SCK_self ->
              Types.copy_type_simple_but_variables
                ~and_abstract: (Some c2) ty) in
-      Types.end_definition ();
+      Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_prop ~current_unit c1 c2 body in
       Env.TypeInformation.SF_theorem (from, vname, scheme', body', proof)
       end)
   | Env.TypeInformation.SF_property (from, vname, scheme, body) ->
       (begin
-      Types.begin_definition ();
+      Types.begin_definition () ;
       let ty = Types.specialize scheme in
       let ty' =
         (match c1 with
@@ -457,7 +456,7 @@ let subst_species_field ~current_unit c1 c2 = function
          | SCK_self ->
              Types.copy_type_simple_but_variables
                ~and_abstract: (Some c2) ty) in
-      Types.end_definition ();
+      Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_prop ~current_unit c1 c2 body in
       Env.TypeInformation.SF_property (from, vname, scheme', body')

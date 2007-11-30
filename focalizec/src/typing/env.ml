@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.53 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: env.ml,v 1.54 2007-11-30 10:29:18 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -303,8 +303,9 @@ module TypeInformation = struct
     | SPAR_in of (Parsetree.vname * Types.type_collection)
     (** Collection parameter. *)
     | SPAR_is of
-        ((** The name of the species parameter. *)
-         Parsetree.vname *
+        ((** The module and name of the species parameter. Indeed, that
+             is the parameter's type-collection. *)
+         Types.type_collection *
          (** The list of fields this parameter has. It is in fact the normalized
              form of the species type the parameter has. *)
          (species_field list) *
@@ -500,12 +501,11 @@ module TypeInformation = struct
       | [] -> ()
       | param :: rem ->
           (begin
-          let (p_kind_string, vname) =
-            (match param with
-             | SPAR_in (a, _) -> ("in", a)
-             | SPAR_is (a, _, _) -> ("is", a)) in
-          Format.fprintf local_ppf "%a %s ..."
-            Sourcify.pp_vname vname p_kind_string;
+          (match param with
+           | SPAR_in (a, _) ->
+               Format.fprintf local_ppf "%a in ..." Sourcify.pp_vname a
+           | SPAR_is ((modname, param_name), _, _) ->
+               Format.fprintf local_ppf "%s.%s is ..." modname param_name) ;
           if rem <> [] then
             (begin
             Format.fprintf local_ppf ",@ ";

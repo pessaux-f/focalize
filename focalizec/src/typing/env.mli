@@ -42,7 +42,8 @@ module TypeInformation :
     type species_param =
       | SPAR_in of (Parsetree.vname * Types.type_collection)
       | SPAR_is of
-          (Parsetree.vname * (species_field list) * Parsetree.species_expr)
+          (Types.type_collection * (species_field list) *
+           Parsetree.species_expr)
 
     and species_field =
       | SF_sig of
