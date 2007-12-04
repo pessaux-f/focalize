@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.1 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.2 2007-12-04 16:51:14 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -67,6 +67,9 @@ let root_compile ~current_unit ~out_file_name stuff =
     Format.eprintf "Starting Coq code generation.@." ;
   let out_hd = open_out_bin out_file_name in
   let out_fmter = Format.formatter_of_out_channel out_hd in
+  (* Always import Coq booleans and integers. *)
+  Format.fprintf out_fmter
+    "Require Export Bool.@\nRequire Export ZArith.@\n@\n" ;
   try
     List.iter
       (fun data -> toplevel_compile ~current_unit out_fmter data)

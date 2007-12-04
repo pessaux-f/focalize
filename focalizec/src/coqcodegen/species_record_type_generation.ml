@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.1 2007-11-30 10:31:33 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.2 2007-12-04 16:51:14 pessaux Exp $ *)
 
 
 
@@ -48,7 +48,7 @@ let generate_expr_ident_for_E_var ctx ident =
    | Parsetree.EI_local vname ->
       (* [Unsure] : incomplet au possible. le code ci dessous gère uniquement
 	 les idents qui sont vraiment des variables locales ou des appels
-	 récursives. Si l'identificateur est un paramètre en "in" ça foire
+	 récursifs. Si l'identificateur est un paramètre en "in" ça foire
 	 complètement, bien sûr !!! *)
        Parsetree_utils.pp_vname_with_operators_expanded out_fmter vname
    | Parsetree.EI_global (Parsetree.Vname _) ->
@@ -70,8 +70,11 @@ let generate_expr_ident_for_E_var ctx ident =
         | None
         | Some (Parsetree.Vname (Parsetree.Vuident "Self")) ->
             (begin
-            (* Method call from the current species.  *)
-            Format.fprintf out_fmter "abst_%a"
+            (* Method call from the current species. Mapped onto the current *)
+	    (* species' method, i.e. the species name + "_" + method name.   *)
+            Format.fprintf out_fmter "%a_%a"
+	      Parsetree_utils.pp_vname_with_operators_expanded
+	        (snd ctx.Species_gen_basics.scc_current_species)
               Parsetree_utils.pp_vname_with_operators_expanded vname
             end)
 | _ -> (* [Unsure]*) Format.fprintf out_fmter "todo"
@@ -112,7 +115,9 @@ let generate_expr ctx initial_expression =
     if is_bool then Format.fprintf out_fmter "@[<2>Is_true (" ;
     (* Now, dissecate the expression core. *)
     (match expression.Parsetree.ast_desc with
-     | Parsetree.E_self -> Format.fprintf out_fmter "E_self"
+     | Parsetree.E_self ->
+         (* [Unsure] D'ailleurs, est-ce possible en fait ? *)
+         Format.eprintf "generate_expr E_self TODO@."
      | Parsetree.E_const cst -> generate_constant ctx cst
      | Parsetree.E_fun (_vnames, _body) ->
          Format.fprintf out_fmter "E_fun"

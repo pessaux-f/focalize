@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.2 2007-11-30 10:29:18 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.3 2007-12-04 16:51:14 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -114,9 +114,6 @@ let species_compile ~current_unit out_fmter species_def species_descr
   if Configuration.get_verbose () then
     Format.eprintf "Generating Coq code for species %a@."
       Sourcify.pp_vname species_name ;
-  (* Always import Coq booleans and integers. *)
-  Format.fprintf out_fmter
-    "Require Export Bool.@\nRequire Export ZArith.@\n@\n" ;
   (* Start the chapter encapsulating the species representation. *)
   let chapter_name =
     String.capitalize (Parsetree_utils.name_of_vname species_name) in
