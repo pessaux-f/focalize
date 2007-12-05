@@ -536,3 +536,16 @@ dernier point du 2007-07-11.
 La fonction [abstract_copy] est fausse : si le type est généralisé alors elle
 ne fait pas l'abstraction. Ca, c'est d'avoir voulu partager le code avec
 [specialize]. A changer !                                                 FAIT
+
+
+
+2007-11-29
+==========
+David, François
+
+Creuser l'idée de ne pas lambda-lifter pour les méthodes de paramètres d'espèce
+dont une méthode dépend. A la place, passer au générateur de collection 1
+paramètre de type record par paramètre d'espèce. Le type record en question
+serait celui représentant l'espèce paramètre. Et dans le générateur de
+collection, plutôt que d'appliquer le paramètre lambda-lifter, on appliquerait
+directement le paramètrePOINTsa_méthode dont on dépend.
