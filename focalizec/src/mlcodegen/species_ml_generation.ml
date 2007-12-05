@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.14 2007-11-30 10:29:18 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.15 2007-12-05 16:41:35 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -526,6 +526,8 @@ let generate_one_field_binding ctx env ~let_connect species_parameters_names
       Misc_ml_generation.rcc_current_unit = ctx.scc_current_unit ;
       Misc_ml_generation.rcc_species_parameters_names =
         species_parameters_names ;
+      Misc_ml_generation.rcc_collections_carrier_mapping =
+        collections_carrier_mapping ;
       Misc_ml_generation.rcc_lambda_lift_params_mapping =
         ctx.scc_lambda_lift_params_mapping ;
       Misc_ml_generation.rcc_out_fmter = out_fmter } in
@@ -1114,6 +1116,8 @@ let apply_generator_to_parameters ctx env coll_body_params col_gen_params_info =
              (* collection does not have parameters, the                *)
              (* [rcc_species_parameters_names] is trivially empty.      *)
              Misc_ml_generation.rcc_species_parameters_names = [] ;
+	     Misc_ml_generation.rcc_collections_carrier_mapping =
+	       ctx.scc_collections_carrier_mapping ;
              Misc_ml_generation.rcc_lambda_lift_params_mapping =
                ctx.scc_lambda_lift_params_mapping ;
              Misc_ml_generation.rcc_out_fmter = out_fmter } in

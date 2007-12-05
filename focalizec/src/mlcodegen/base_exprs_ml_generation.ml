@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.8 2007-12-05 15:34:40 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.9 2007-12-05 16:41:35 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -381,8 +381,7 @@ let generate_pattern ctx env pattern =
 
 
 
-let rec let_binding_compile ctx ~local_idents env collections_carrier_mapping
-    bd opt_sch =
+let rec let_binding_compile ctx ~local_idents env bd opt_sch =
   let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
   (* Generate the bound name. *)
   Format.fprintf out_fmter "%a"
@@ -406,7 +405,9 @@ let rec let_binding_compile ctx ~local_idents env collections_carrier_mapping
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
              (Types.pp_type_simple_to_ml
                 ~current_unit: ctx.Misc_ml_generation.rcc_current_unit
-                ~reuse_mapping: true collections_carrier_mapping) param_ty
+                ~reuse_mapping: true
+                ctx.Misc_ml_generation.rcc_collections_carrier_mapping)
+             param_ty
        | None ->
            Format.fprintf out_fmter "@ %a"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname)
@@ -476,13 +477,13 @@ and let_def_compile ctx ~local_idents env let_def opt_bound_schemes =
        (* The let construct should always at least bind one identifier ! *)
        assert false
    | ([one_bnd], [one_scheme]) ->
-       let_binding_compile ctx ~local_idents env [] one_bnd one_scheme
+       let_binding_compile ctx ~local_idents env one_bnd one_scheme
    | ((first_bnd :: next_bnds), (first_scheme :: next_schemes)) ->
-       let_binding_compile ctx ~local_idents env [] first_bnd first_scheme ;
+       let_binding_compile ctx ~local_idents env first_bnd first_scheme ;
        List.iter2
          (fun binding scheme ->
            Format.fprintf out_fmter "@]@\n@[<2>and " ;
-           let_binding_compile ctx ~local_idents env [] binding scheme)
+           let_binding_compile ctx ~local_idents env binding scheme)
          next_bnds
          next_schemes
    | (_, _) ->

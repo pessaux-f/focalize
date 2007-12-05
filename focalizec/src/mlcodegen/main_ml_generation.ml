@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.7 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.8 2007-12-05 16:41:35 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -69,6 +69,8 @@ let toplevel_compile env ~current_unit out_fmter = function
         Misc_ml_generation.rcc_current_unit = current_unit ;
         (* Not under a species, hence no species parameter. *)
         Misc_ml_generation.rcc_species_parameters_names = [] ;
+        (* Not under a species, hence empty carriers mapping. *)
+        Misc_ml_generation.rcc_collections_carrier_mapping = [] ;
         (* Not in the context of generating a method's body code, then empty. *)
         Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
         Misc_ml_generation.rcc_out_fmter = out_fmter } in
@@ -79,6 +81,8 @@ let toplevel_compile env ~current_unit out_fmter = function
         Misc_ml_generation.rcc_current_unit = current_unit ;
         (* Not under a species, hence no species parameter. *)
         Misc_ml_generation.rcc_species_parameters_names = [] ;
+        (* Not under a species, hence empty carriers mapping. *)
+        Misc_ml_generation.rcc_collections_carrier_mapping = [] ;
         (* Not in the context of generating a method's body code, so, empty. *)
         Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
         Misc_ml_generation.rcc_out_fmter = out_fmter } in
@@ -97,6 +101,8 @@ let toplevel_compile env ~current_unit out_fmter = function
         Misc_ml_generation.rcc_current_unit = current_unit ;
         (* Not under a species, hence no species parameter. *)
         Misc_ml_generation.rcc_species_parameters_names = [] ;
+        (* Not under a species, hence empty carriers mapping. *)
+        Misc_ml_generation.rcc_collections_carrier_mapping = [] ;
         (* Not in the context of generating a method's body code, so, empty. *)
         Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
         Misc_ml_generation.rcc_out_fmter = out_fmter

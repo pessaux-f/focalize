@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.ml,v 1.8 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: misc_ml_generation.ml,v 1.9 2007-12-05 16:41:35 pessaux Exp $ *)
 
 
 
@@ -49,6 +49,9 @@ type reduced_compil_context = {
   (** The list of the current species species parameters if we are in the
       scope of a species and if it has some parameters. *)
   rcc_species_parameters_names : Parsetree.vname list ;
+  (** The current correspondance between collection types and type variable
+      names representing the carrier of a species type in the OCaml code. *)
+  rcc_collections_carrier_mapping : (Types.type_collection * string) list ;
   (** The current correspondance between method names of Self and their
       extra parameters they must be applied to because of the lambda-lifting
       process. This info is used when generating the OCaml code of a
