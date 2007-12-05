@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.7 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.8 2007-12-05 15:34:40 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -335,7 +335,8 @@ let generate_pattern ctx env pattern =
     match pat.Parsetree.ast_desc with
      | Parsetree.P_const constant -> generate_constant out_fmter constant
      | Parsetree.P_var name ->
-         Format.fprintf out_fmter "%a" Parsetree_utils.pp_vname_with_operators_expanded name
+         Format.fprintf out_fmter "%a"
+           Parsetree_utils.pp_vname_with_operators_expanded name
      | Parsetree.P_as (p, name) ->
          Format.fprintf out_fmter "(" ;
          rec_gen_pat p ;
@@ -557,7 +558,7 @@ and generate_expr ctx ~local_idents env initial_expression =
              let loc_idents' =
                (Parsetree_utils.get_local_idents_from_pattern pattern) @
                loc_idents in
-             rec_generate loc_idents'  expr ;
+             rec_generate loc_idents' expr ;
              Format.fprintf out_fmter "@\nend)@]")
            pats_exprs ;
          Format.fprintf out_fmter "@]"
