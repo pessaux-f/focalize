@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.6 2007-10-30 21:15:07 weis Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.7 2007-12-07 15:19:37 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -86,29 +86,21 @@ let param_deps_ident ~current_species param_coll_name local_idents ident =
 
 
 
-(* ************************************************************************* *)
-(* current_species: Parsetree.qualified_vname ->                             *)
-(*   Parsetree.qualified_vname -> Parsetree.expr ->                          *)
-(*   Parsetree_utils.VnameSet.t                                              *)
-(** {b Descr} : Computes the dependencies of an expression on the collection
-              parameter name [param_coll_name]. In other words, detects
-              which methods of [param_coll_name] (that is considered as
-              a collection (i.e "is") parameter), the current expression
-              needs.
+(* ************************************************************************ *)
+(** {b Descr} : Basically really does the job of [param_deps_expr] but
+      has the extra parameter [start_local_idents] allowing to start
+      with a non-empty list of identifiers considered as local.
+      This is needed for [__param_deps_prop] that needs to call ourselves
+      with its already accumulated list of local identifiers.
+      However, outside this module, the exported function [param_deps_expr]
+      does not have any local identifier list as parameter because it
+      must never be called in a context where there would already exists
+      local identifiers.
 
-    {b Args}:
-      - ~current_species : The name (module + effective name) of the
-          currently analyzed species, i.e. the species where we asked for
-          the dependencies to be computed.
-      - param_coll_name : The name of the species parameter we want to
-          to detect dependencies to in the expression.
-      - expression : The expression in which we want to detect possible
-          dependencies on the species parameter whose name is
-          [param_coll_name].
-
-    {b Rem} : Exported outside this module.                                  *)
-(* ************************************************************************* *)
-let param_deps_expr ~current_species param_coll_name expression =
+  {b Rem} : Not exported outside this module.                               *)
+(* ************************************************************************ *)
+let __param_deps_expr ~current_species param_coll_name start_local_idents
+    expression =
   let rec rec_deps local_idents expr =
     match expr.Parsetree.ast_desc with
     | Parsetree.E_self
@@ -178,6 +170,69 @@ let param_deps_expr ~current_species param_coll_name expression =
     | Parsetree.E_paren e -> rec_deps local_idents e in
   (* **************** *)
   (* Now, do the job. *)
-  rec_deps [] expression
+  rec_deps start_local_idents expression
 ;;
+
+
+
+(* ************************************************************************* *)
+(* current_species: Parsetree.qualified_species -> Parsetree.vname ->        *)
+(*   Parsetree.expr -> Parsetree_utils.VnameSet.t                            *)
+(** {b Descr} : Computes the dependencies of an expression on the collection
+              parameter name [param_coll_name]. In other words, detects
+              which methods of [param_coll_name] (that is considered as
+              a collection (i.e "is") parameter), the current expression
+              needs.
+
+    {b Args}:
+      - ~current_species : The name (module + effective name) of the
+          currently analyzed species, i.e. the species where we asked for
+          the dependencies to be computed.
+      - param_coll_name : The name of the species parameter we want to
+          to detect dependencies to in the expression.
+      - expression : The expression in which we want to detect possible
+          dependencies on the species parameter whose name is
+          [param_coll_name].
+
+    {b Rem} : Exported outside this module.                                  *)
+(* ************************************************************************* *)
+let param_deps_expr ~current_species param_coll_name expression =
+  __param_deps_expr ~current_species param_coll_name [] expression
+;;
+
+
+
+
+let __param_deps_prop ~current_species param_coll_name start_local_idents
+    proposition =
+  let rec rec_deps local_idents prop =
+    match prop.Parsetree.ast_desc with
+     | Parsetree.Pr_forall (vnames, _, prop')
+     | Parsetree.Pr_exists (vnames, _, prop') ->
+         (* Here, the quantifid names may mask a "in"-parameter. *)
+        rec_deps (vnames @ local_idents) prop'
+     | Parsetree.Pr_imply (prop1, prop2)
+     | Parsetree.Pr_or (prop1, prop2)
+     | Parsetree.Pr_and (prop1, prop2)
+     | Parsetree.Pr_equiv (prop1, prop2) ->
+         let deps1 = rec_deps local_idents prop1 in
+         let deps2 = rec_deps local_idents prop2 in
+         Parsetree_utils.VnameSet.union deps1 deps2
+     | Parsetree.Pr_not prop' -> rec_deps local_idents prop'
+     | Parsetree.Pr_expr expr ->
+         __param_deps_expr ~current_species param_coll_name local_idents expr
+     | Parsetree.Pr_paren prop' -> rec_deps local_idents prop' in
+  (* **************** *)
+  (* Now, do the job. *)
+  rec_deps start_local_idents proposition
+ ;;
+
+
+
+(* current_species: Parsetree.qualified_species -> Parsetree.vname -> *)
+(*   Parsetree.prop -> Parsetree_utils.VnameSet.t                     *)
+let param_deps_prop ~current_species param_coll_name proposition =
+  __param_deps_prop ~current_species param_coll_name [] proposition
+;;
+
 

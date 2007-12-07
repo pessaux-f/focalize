@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.9 2007-12-05 16:41:35 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.10 2007-12-07 15:19:37 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -201,8 +201,8 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                    (* while generating the extra OCaml function's        *)
                    (* parameters due to depdencencies coming from the    *)
                    (* species parameter. I.e: "_p_", followed by the     *)
-                   (* species parameter name, followed by "_", followed  *)
-                   (* by the method's name.                               *)
+                   (* lowercase species parameter name, followed by "_", *)
+                   (* followed by the method's name.                     *)
                    let prefix =
                      "_p_" ^
                      (String.uncapitalize
@@ -510,7 +510,7 @@ and generate_expr ctx ~local_idents env initial_expression =
     match expr.Parsetree.ast_desc with
      | Parsetree.E_self ->
          (* [Unsure] D'ailleurs, est-ce possible en fait ? *)
-         Format.eprintf "generate_expr E_self TODO@."
+         failwith "generate_expr E_self TODO"
      | Parsetree.E_const cst -> generate_constant out_fmter cst
      | Parsetree.E_fun (args_names, body) ->
          List.iter

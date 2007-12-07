@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_gen_basics.mli,v 1.1 2007-11-30 10:31:33 pessaux Exp $ *)
+(* $Id: species_gen_basics.mli,v 1.2 2007-12-07 15:19:37 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -58,6 +58,9 @@ type species_compil_context = {
   scc_current_species : Parsetree.qualified_species ;
   (** The nodes of the current species's dependency graph. *)
   scc_dependency_graph_nodes : Dep_analysis.name_node list ;
+  (** The list of the current species species parameters if we are in the
+      scope of a species and if it has some parameters. *)
+  scc_species_parameters_names : Parsetree.vname list ;
   (** The current correspondance between collection parameters names and
       the names they are mapped onto in the Coq code and their kind. *)
   scc_collections_carrier_mapping :
