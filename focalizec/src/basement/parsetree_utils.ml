@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.6 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.7 2007-12-10 10:14:07 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -26,11 +26,17 @@ let name_of_vname = function
 (** {b Descr} : Module stuff to create sets of [Parsetree.vname]s.
               This will serves to make sets of methods [vname]s in
               order to represent dependencies.
+              We also keep the name's scheme in order to be able
+              to annotate it if required during Coq code
+              generation.
 
     {b Rem} : Not exported outside this module.                    *)
 (* *************************************************************** *)
-module VnameMod = struct type t = Parsetree.vname let compare = compare end ;;
-module VnameSet = Set.Make (VnameMod) ;;
+module DepNameMod = struct
+  type t = (Parsetree.vname * Types.type_simple)
+  let compare (n1, _) (n2, _) = compare n1 n2
+end ;;
+module DepNameSet = Set.Make (DepNameMod) ;;
 
 
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.16 2007-12-07 15:19:37 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.17 2007-12-10 10:14:07 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -323,7 +323,7 @@ type compiled_field_memory = {
       parameter's name and the second is the set of methods the current
       method depends on from this species parameter.*)
   cfm_dependencies_from_parameters :
-    (Parsetree.vname * Parsetree_utils.VnameSet.t) list ;
+    (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ;
   (** The methods of our inheritance tree the method depends on. *)
   cfm_decl_children :
     (Dep_analysis.name_node * Dep_analysis.dependency_kind) list ;
@@ -369,7 +369,7 @@ type let_connector =
 (* ************************************************************************ *)
 (* species_compil_context -> Parsetree.vname list -> Parsetree.vname ->     *)
 (*   Parsetree.expr ->                                                      *)
-(*     ((Parsetree.vname * Parsetree_utils.VnameSet.t) list *               *)
+(*     ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list *               *)
 (*      (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *      *)
 (*      string list)                                                        *)
 (** {b Descr} : Pre-process a field before its compilation to OCaml. We
@@ -437,8 +437,9 @@ let compute_lambda_liftings_for_field ctx species_parameters_names name body =
         (String.uncapitalize
            (Parsetree_utils.name_of_vname species_param_name)) ^
         "_" in
-      Parsetree_utils.VnameSet.iter
-        (fun meth ->
+      Parsetree_utils.DepNameSet.iter
+        (fun (meth, _) ->
+          (* Don't print the type to prevent being too verbose. *)
           let llift_name =
             prefix ^
             (Parsetree_utils.vname_as_string_with_operators_expanded meth) in
@@ -673,7 +674,7 @@ let generate_methods ctx env species_parameters_names field =
 
 (* *********************************************************************** *)
 (* Format.formatter -> compiled_species_fields option list ->              *)
-(*  (Parsetree.vname * Parsetree_utils.VnameSet.t) list                    *)
+(*  (Parsetree.vname * Parsetree_utils.DepNameSet.t) list                    *)
 (** {b Descr} : Dumps as OCaml code the parameters required to the
          collection generator in order to make them bound in the
          collection generator's body. These parameters come from
@@ -693,7 +694,7 @@ let dump_collection_generator_arguments out_fmter compiled_species_fields =
   (* the set of methods names from it that needed to be lambda-lifted,  *)
   (* hence that will lead to parameters of the collection generator.    *)
   let species_param_names_and_methods =
-    ref ([] : (Parsetree.vname * Parsetree_utils.VnameSet.t ref) list) in
+    ref ([] : (Parsetree.vname * Parsetree_utils.DepNameSet.t ref) list) in
   (* ************************************************************************ *)
   (** {b Descr} :  Local function to process only one [compiled_field_memory].
          Handy to factorize the code in both the cases of [CSF_let] and
@@ -711,14 +712,14 @@ let dump_collection_generator_arguments out_fmter compiled_species_fields =
         let spe_param_bucket =
           (try List.assoc spe_param_name !species_param_names_and_methods
           with Not_found ->
-            let bucket = ref Parsetree_utils.VnameSet.empty in
+            let bucket = ref Parsetree_utils.DepNameSet.empty in
             species_param_names_and_methods :=
               (spe_param_name, bucket) :: !species_param_names_and_methods ;
             bucket) in
         (* And now, union the current methods we depend on with *)
         (* the already previously recorded.                     *)
         spe_param_bucket :=
-          Parsetree_utils.VnameSet.union meths_set !spe_param_bucket)
+          Parsetree_utils.DepNameSet.union meths_set !spe_param_bucket)
       field_memory.cfm_dependencies_from_parameters in
 
   (* ********************************************************** *)
@@ -742,8 +743,9 @@ let dump_collection_generator_arguments out_fmter compiled_species_fields =
         (String.uncapitalize
            (Parsetree_utils.name_of_vname species_param_name)) ^
         "_" in
-      Parsetree_utils.VnameSet.iter
-        (fun meth ->
+      Parsetree_utils.DepNameSet.iter
+        (fun (meth, _) ->
+          (* Don't print the type to prevent being too verbose. *)
           Format.fprintf out_fmter "@ %s%a"
             prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
         !meths_set)
@@ -818,8 +820,9 @@ let generate_collection_generator ctx compiled_species_fields =
           (String.uncapitalize
              (Parsetree_utils.name_of_vname species_param_name)) ^
           "_" in
-        Parsetree_utils.VnameSet.iter
-          (fun meth ->
+        Parsetree_utils.DepNameSet.iter
+          (fun (meth, _) ->
+            (* Don't print the type to prevent being too verbose. *)
             Format.fprintf out_fmter "@ %s%a"
               prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
           meths_from_param)
@@ -1082,10 +1085,11 @@ let apply_generator_to_parameters ctx env coll_body_params col_gen_params_info =
              match corresponding_effective with
               | Parsetree.Vname n -> (None, n)
               | Parsetree.Qualified (m, n) -> ((Some m), n) in
-           Parsetree_utils.VnameSet.iter
-             (fun meth_name ->
-               (* If needed, qualify the name of the *)
-               (* species in the OCaml code. *)
+           Parsetree_utils.DepNameSet.iter
+             (fun (meth_name, _) ->
+               (* If needed, qualify the name of the species in the *)
+               (* OCaml code. Don't print the type to prevent being *)
+               (* too verbose.                                      *)
                (match corresponding_effective_opt_fname with
                 | Some fname ->
                     Format.fprintf out_fmter "%s." (String.capitalize fname)

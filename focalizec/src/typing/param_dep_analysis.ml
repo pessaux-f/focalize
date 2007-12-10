@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.7 2007-12-07 15:19:37 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.8 2007-12-10 10:14:07 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -25,7 +25,7 @@ open Parsetree;;
 
 (* ********************************************************************* *)
 (* current_species: Parsetree.qualified_vname -> Parsetree.vname ->      *)
-(*  Parsetree.expr_ident -> Parsetree_utils.VnameSet.t                   *)
+(*  Parsetree.expr_ident -> Parsetree_utils.DepNameSet.t                 *)
 (** {b Descr} : Computes the set of methods names the identifier [ident]
               represents as involving a dependency with the
               [param_coll_name] collection name.
@@ -37,6 +37,13 @@ open Parsetree;;
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
 let param_deps_ident ~current_species param_coll_name local_idents ident =
+  (* Recover the ident's type. *)
+  let ident_ty =
+    (match ident.Parsetree.ast_type with
+     | Parsetree.ANTI_none
+     | Parsetree.ANTI_non_relevant
+     | Parsetree.ANTI_scheme  _ -> assert false
+     | Parsetree.ANTI_type t -> t) in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local n ->
        (* Be careful. Because "is" parameters smell like regular local *)
@@ -54,15 +61,15 @@ let param_deps_ident ~current_species param_coll_name local_idents ident =
        (* "in"-parameter (hence, masks it) , we just need to check if  *)
        (* it exists in the list of locally-bound idents.               *)
        if param_coll_name = n && not (List.mem n local_idents)
-       then Parsetree_utils.VnameSet.singleton n
-       else Parsetree_utils.VnameSet.empty
+       then Parsetree_utils.DepNameSet.singleton (n, ident_ty)
+       else Parsetree_utils.DepNameSet.empty
    | Parsetree.EI_global _ ->
        (* These are not a method call, then they induce no dependency. *)
-       Parsetree_utils.VnameSet.empty
+       Parsetree_utils.DepNameSet.empty
    | Parsetree.EI_method (None, _) ->
        (* A method of self, then induces no dependency *)
        (* like those were are looking for.             *)
-       Parsetree_utils.VnameSet.empty
+       Parsetree_utils.DepNameSet.empty
    | Parsetree.EI_method (Some coll_specifier, vname) ->
        (begin
         match coll_specifier with
@@ -71,16 +78,16 @@ let param_deps_ident ~current_species param_coll_name local_idents ident =
           (* we are working with. Should never happen because the    *)
           (* scoping pass should make explicit the hosting module.   *)
           if coll_name = param_coll_name then
-            Parsetree_utils.VnameSet.singleton vname
-          else Parsetree_utils.VnameSet.empty
+            Parsetree_utils.DepNameSet.singleton (vname, ident_ty)
+          else Parsetree_utils.DepNameSet.empty
         | Qualified (module_name, coll_name) ->
           (* If the module specification matches the one of the *)
           (* current_species and if the collection name matches *)
           (* species parameter then we have a dependency.       *)
           if module_name = fst current_species &&
              coll_name = param_coll_name
-          then Parsetree_utils.VnameSet.singleton vname
-          else Parsetree_utils.VnameSet.empty
+          then Parsetree_utils.DepNameSet.singleton (vname, ident_ty)
+          else Parsetree_utils.DepNameSet.empty
        end)
 ;;
 
@@ -105,7 +112,7 @@ let __param_deps_expr ~current_species param_coll_name start_local_idents
     match expr.Parsetree.ast_desc with
     | Parsetree.E_self
     | Parsetree.E_const _
-    | Parsetree.E_external _ -> Parsetree_utils.VnameSet.empty
+    | Parsetree.E_external _ -> Parsetree_utils.DepNameSet.empty
     | Parsetree.E_fun (bound_name, e_body) ->
         (* Here, the function parameter name may mask a "in"-parameter. *)
         rec_deps (bound_name @ local_idents) e_body
@@ -114,7 +121,8 @@ let __param_deps_expr ~current_species param_coll_name start_local_idents
     | Parsetree.E_app (functional_expr, args_exprs) ->
         List.fold_left
           (fun accu_deps e ->
-            Parsetree_utils.VnameSet.union accu_deps (rec_deps local_idents e))
+            Parsetree_utils.DepNameSet.union
+              accu_deps (rec_deps local_idents e))
           (rec_deps local_idents functional_expr)
           args_exprs
     | Parsetree.E_match (matched_expr, bindings) ->
@@ -124,7 +132,7 @@ let __param_deps_expr ~current_species param_coll_name start_local_idents
             let local_idents' =
               (Parsetree_utils.get_local_idents_from_pattern pat) @
               local_idents in
-            Parsetree_utils.VnameSet.union
+            Parsetree_utils.DepNameSet.union
               accu_deps (rec_deps local_idents' e))
           (rec_deps local_idents matched_expr)
           bindings
@@ -132,8 +140,8 @@ let __param_deps_expr ~current_species param_coll_name start_local_idents
         let deps1 = rec_deps local_idents e_cond in
         let deps2 = rec_deps local_idents e_then in
         let deps3 = rec_deps local_idents e_else in
-        Parsetree_utils.VnameSet.union
-          (Parsetree_utils.VnameSet.union deps1 deps2) deps3
+        Parsetree_utils.DepNameSet.union
+          (Parsetree_utils.DepNameSet.union deps1 deps2) deps3
     | Parsetree.E_let (let_def, in_expr) ->
         List.fold_left
           (fun accu_deps binding ->
@@ -143,29 +151,32 @@ let __param_deps_expr ~current_species param_coll_name start_local_idents
               (List.map fst binding.Parsetree.ast_desc.Parsetree.b_params) @
               local_idents in
             let body = binding.Parsetree.ast_desc.Parsetree.b_body in
-            Parsetree_utils.VnameSet.union
+            Parsetree_utils.DepNameSet.union
               accu_deps (rec_deps local_idents' body))
           (rec_deps local_idents in_expr)
           let_def.Parsetree.ast_desc.Parsetree.ld_bindings
     | Parsetree.E_record fields ->
         List.fold_left
           (fun accu_deps (_, e) ->
-            Parsetree_utils.VnameSet.union accu_deps (rec_deps local_idents e))
-          Parsetree_utils.VnameSet.empty
+            Parsetree_utils.DepNameSet.union
+              accu_deps (rec_deps local_idents e))
+          Parsetree_utils.DepNameSet.empty
           fields
     | Parsetree.E_record_access (e, _) -> rec_deps local_idents e
     | Parsetree.E_record_with (e, labs_exprs) ->
         List.fold_left
           (fun accu_deps (_, e) ->
-            Parsetree_utils.VnameSet.union accu_deps (rec_deps local_idents e))
+            Parsetree_utils.DepNameSet.union
+              accu_deps (rec_deps local_idents e))
           (rec_deps local_idents e)
           labs_exprs
     | Parsetree.E_constr (_, exprs)
     | Parsetree.E_tuple exprs ->
         List.fold_left
           (fun accu_deps e ->
-            Parsetree_utils.VnameSet.union accu_deps (rec_deps local_idents e))
-          Parsetree_utils.VnameSet.empty
+            Parsetree_utils.DepNameSet.union
+              accu_deps (rec_deps local_idents e))
+          Parsetree_utils.DepNameSet.empty
           exprs
     | Parsetree.E_paren e -> rec_deps local_idents e in
   (* **************** *)
@@ -177,7 +188,7 @@ let __param_deps_expr ~current_species param_coll_name start_local_idents
 
 (* ************************************************************************* *)
 (* current_species: Parsetree.qualified_species -> Parsetree.vname ->        *)
-(*   Parsetree.expr -> Parsetree_utils.VnameSet.t                            *)
+(*   Parsetree.expr -> Parsetree_utils.DepNameSet.t                          *)
 (** {b Descr} : Computes the dependencies of an expression on the collection
               parameter name [param_coll_name]. In other words, detects
               which methods of [param_coll_name] (that is considered as
@@ -217,7 +228,7 @@ let __param_deps_prop ~current_species param_coll_name start_local_idents
      | Parsetree.Pr_equiv (prop1, prop2) ->
          let deps1 = rec_deps local_idents prop1 in
          let deps2 = rec_deps local_idents prop2 in
-         Parsetree_utils.VnameSet.union deps1 deps2
+         Parsetree_utils.DepNameSet.union deps1 deps2
      | Parsetree.Pr_not prop' -> rec_deps local_idents prop'
      | Parsetree.Pr_expr expr ->
          __param_deps_expr ~current_species param_coll_name local_idents expr
@@ -230,7 +241,7 @@ let __param_deps_prop ~current_species param_coll_name start_local_idents
 
 
 (* current_species: Parsetree.qualified_species -> Parsetree.vname -> *)
-(*   Parsetree.prop -> Parsetree_utils.VnameSet.t                     *)
+(*   Parsetree.prop -> Parsetree_utils.DepNameSet.t                   *)
 let param_deps_prop ~current_species param_coll_name proposition =
   __param_deps_prop ~current_species param_coll_name [] proposition
 ;;

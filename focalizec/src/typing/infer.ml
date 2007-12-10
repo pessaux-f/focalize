@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.91 2007-11-30 12:06:44 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.92 2007-12-10 10:14:07 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -2447,13 +2447,13 @@ let ensure_rep_in_first l =
 (* ******************************************************************** *)
 let order_fields_according_to order fields =
   let rec rec_reorder rec_order rec_fields =
-    match rec_order, rec_fields with
-    | [], [] -> []
-    | [], _ | _, [] ->
+    match (rec_order, rec_fields) with
+    | ([], []) -> []
+    | ([], _) | (_, []) ->
       (* If there are spurious fields or names then *)
       (* it's because we went wrong somewhere ! *)
       assert false
-    | name :: _, _ ->
+    | ((name :: _), _) ->
       (* We first find the field hosting [name]. This field will be *)
       (* inserted here in the result list. We then must remove from *)
       (* the order list, all the name rec-bound with [name]. Then   *)
@@ -2464,7 +2464,8 @@ let order_fields_according_to order fields =
       let (related_field, new_rec_fields) =
         extract_field_from_list_by_name name rec_fields in
       let names_bound =
-        Dep_analysis.ordered_names_list_of_fields [related_field] in
+        List.map
+          fst (Dep_analysis.ordered_names_list_of_fields [related_field]) in
       (* So, remove from the order the rec-bound names... *)
       let new_rec_order =
         List.filter (fun n -> not (List.mem n names_bound)) rec_order in

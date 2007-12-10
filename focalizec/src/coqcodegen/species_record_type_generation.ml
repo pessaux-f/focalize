@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.3 2007-12-07 15:19:37 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.4 2007-12-10 10:14:07 pessaux Exp $ *)
 
 
 
@@ -655,6 +655,18 @@ let generate_record_type_parameters ctx species_fields =
   (* appear through properties and theorems bodies.                  *)
   let species_parameters_names =
     ctx.Species_gen_basics.scc_species_parameters_names in
+  let (species_mod, species_vname) =
+    ctx.Species_gen_basics.scc_current_species in
+    let print_ctx = {
+    Types.cpc_current_unit = ctx.Species_gen_basics.scc_current_unit ;
+    Types.cpc_current_species =
+      Some  (species_mod, (Parsetree_utils.name_of_vname species_vname)) ;
+    Types.cpc_collections_carrier_mapping =
+      (* Throw the [collection_carrier_mapping_info] *)
+      (* in the printing context.                    *)
+      List.map
+        (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
+        ctx.Species_gen_basics.scc_collections_carrier_mapping } in
   List.iter
     (function
       | Env.TypeInformation.SF_sig (_, _, _)
@@ -692,13 +704,15 @@ let generate_record_type_parameters ctx species_fields =
               let prefix =
                 "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
                 "_" in
-              Parsetree_utils.VnameSet.iter
-                (fun meth ->
+              Parsetree_utils.DepNameSet.iter
+                (fun (meth, ty) ->
                   let llift_name =
                     prefix ^
                     (Parsetree_utils.vname_as_string_with_operators_expanded
                        meth) in
-                  Format.fprintf ppf "(%s : )@ " llift_name)
+                  Format.fprintf ppf "(%s : %a)@ "
+                    llift_name
+                    (Types.pp_type_simple_to_coq print_ctx) ty)
                 meths)
             dependencies_from_params)
     species_fields

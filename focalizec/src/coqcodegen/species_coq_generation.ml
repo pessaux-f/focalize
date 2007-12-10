@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.4 2007-12-07 15:19:37 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.5 2007-12-10 10:14:07 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -46,7 +46,7 @@ type compiled_field_memory = {
       parameter's name and the second is the set of methods the current
       method depends on from this species parameter.*)
   cfm_dependencies_from_parameters :
-    (Parsetree.vname * Parsetree_utils.VnameSet.t) list ;
+    (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ;
   (** The methods of our inheritance tree the method depends on. *)
   cfm_decl_children :
     (Dep_analysis.name_node * Dep_analysis.dependency_kind) list ;

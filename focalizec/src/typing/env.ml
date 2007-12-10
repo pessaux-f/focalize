@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.54 2007-11-30 10:29:18 pessaux Exp $ *)
+(* $Id: env.ml,v 1.55 2007-12-10 10:14:07 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -604,7 +604,7 @@ module MlGenInformation = struct
         we have the information about this order given in
         [species_binding_info]). *)
     cgi_generator_parameters :
-      (Parsetree.vname * Parsetree_utils.VnameSet.t) list
+      (Parsetree.vname * Parsetree_utils.DepNameSet.t) list
   }
 
   type species_binding_info =

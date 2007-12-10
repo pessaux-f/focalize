@@ -11,15 +11,15 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.mli,v 1.5 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: parsetree_utils.mli,v 1.6 2007-12-10 10:14:07 pessaux Exp $ *)
 
 val name_of_vname : Parsetree.vname -> string
 (** Extracts the inner string name of the [vname] variable name. *)
 ;;
 
-module VnameSet :
+module DepNameSet :
   sig
-    type elt = Parsetree.vname
+    type elt = (Parsetree.vname * Types.type_simple)
     type t
     val empty : t
     val is_empty : t -> bool
