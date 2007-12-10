@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.4 2007-12-10 10:14:07 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.5 2007-12-10 15:04:53 pessaux Exp $ *)
 
 
 
@@ -42,15 +42,59 @@ let simply_pp_to_coq_qualified_vname ~current_unit ppf = function
 
 
 
-let generate_expr_ident_for_E_var ctx ident =
+let generate_expr_ident_for_E_var ctx ~local_idents ident =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
-      (* [Unsure] : incomplet au possible. le code ci dessous gère uniquement
-         les idents qui sont vraiment des variables locales ou des appels
-         récursifs. Si l'identificateur est un paramètre en "in" ça foire
-         complètement, bien sûr !!! *)
-       Parsetree_utils.pp_vname_with_operators_expanded out_fmter vname
+       (begin
+       (* Thanks to the scoping pass, identifiers remaining "local" are *)
+       (* either really let-bound in the context of the expression,     *)
+       (* hence have a direct mapping between FoCaL and OCaml code, or  *)
+       (* species "in"-parameters and then must be mapped onto the      *)
+       (* lambda-lifted parameter introduced for it in the context of   *)
+       (* the current species.                                          *)
+       (* Be careful, because a recursive method called in its body is  *)
+       (* scoped AS LOCAL ! And because recursive methods do not have   *)
+       (* dependencies together, there is no way to recover the extra   *)
+       (* parameters to apply to them in this configuration. Hence, to  *)
+       (* avoid forgetting these extra arguments, we must use here the  *)
+       (* information recorded in the context, i.e. the extra arguments *)
+       (* of the recursive functions.                                   *)
+       (* To check if a "smelling local" identifier is really local or  *)
+       (* a "in"-parameter of the species, we use the same reasoning    *)
+       (* that in [param_dep_analysis.ml]. Check justification over     *)
+       (* there ! *)
+       if (List.mem vname
+             ctx.Species_gen_basics.scc_species_parameters_names) &&
+         (not (List.mem vname local_idents)) then
+         (begin
+         (* In fact, a species "in"-parameter. This parameter was of the *)
+         (* form "foo in C". Then it's naming scheme will be "_p_" +     *)
+         (* the species parameter's name + the method's name that is     *)
+         (* trivially the parameter's name again (because this last one  *)
+         (* is computed as the "stuff" a dependency was found on, and in *)
+         (* the case of a "in"-parameter, the dependency can only be on  *)
+         (* the parameter's value itself, not on any method since there  *)
+         (* is none !).                                                  *)
+         Format.fprintf out_fmter "_p_%a_%a"
+           Parsetree_utils.pp_vname_with_operators_expanded vname
+           Parsetree_utils.pp_vname_with_operators_expanded vname
+         end)
+       else
+         (begin
+         (* Really a local identifier or a call to a recursive method. *)
+         Format.fprintf out_fmter "%a"
+           Parsetree_utils.pp_vname_with_operators_expanded vname ;
+         (* Because this method can be recursive, we must apply it to *)
+         (* its extra parameters if it has some.                      *)
+         try
+           let extra_args =
+             List.assoc
+               vname ctx.Species_gen_basics.scc_lambda_lift_params_mapping in
+           List.iter (fun s -> Format.fprintf out_fmter "@ %s" s) extra_args
+            with Not_found -> ()
+         end)
+       end)
    | Parsetree.EI_global (Parsetree.Vname _) ->
        (* In this case, may be there is some scoping process missing. *)
        assert false
@@ -322,8 +366,7 @@ and let_def_compile ctx (*~local_idents env*) let_def opt_bound_schemes =
 
 
 
-(* [Unsure] *)
-let generate_expr ctx initial_expression =
+let generate_expr ctx ~local_idents initial_expression =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
   (* Create the coq type print context. *)
   let (species_modname, species_vname) =
@@ -339,7 +382,7 @@ let generate_expr ctx initial_expression =
         (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
         ctx.Species_gen_basics.scc_collections_carrier_mapping } in
 
-  let rec rec_generate_expr expression = 
+  let rec rec_generate_expr loc_idents expression = 
     (* Now, dissecate the expression core. *)
     match expression.Parsetree.ast_desc with
      | Parsetree.E_self ->
@@ -369,21 +412,23 @@ let generate_expr ctx initial_expression =
               fun_ty
               vnames) ;
          Format.fprintf out_fmter "=>@ " ;
-         rec_generate_expr body ;
+         rec_generate_expr loc_idents body ;
          Format.fprintf out_fmter "@]" ;
-     | Parsetree.E_var ident -> generate_expr_ident_for_E_var ctx ident
+     | Parsetree.E_var ident ->
+         generate_expr_ident_for_E_var ctx ~local_idents: loc_idents ident
      | Parsetree.E_app (func_expr, args) ->
          Format.fprintf out_fmter "@[<2>(" ;
-         rec_generate_expr func_expr ;
+         rec_generate_expr loc_idents func_expr ;
          Format.fprintf out_fmter "@ " ;
-         rec_generate_exprs_list  ~comma: false args ;
+         rec_generate_exprs_list  ~comma: false loc_idents args ;
          Format.fprintf out_fmter ")@]"
      | Parsetree.E_constr (_cstr_ident, _args) ->
+         (* [Unsure] *)
          Format.fprintf out_fmter "E_constr"
      | Parsetree.E_match (expr, pats_exprs) ->
          (begin
          Format.fprintf out_fmter "@[<1>match " ;
-         rec_generate_expr expr ;
+         rec_generate_expr loc_idents expr ;
          Format.fprintf out_fmter " with" ;
          List.iter
            (fun (pattern, expr) ->
@@ -392,28 +437,28 @@ let generate_expr ctx initial_expression =
              Format.fprintf out_fmter "@\n@[<4>| " ;
              generate_pattern ctx (*env*) pattern ;
              Format.fprintf out_fmter " =>@\n" ;
-(* [Unsure]
              (* Here, each name of the pattern may mask a "in"-parameter. *)
              let loc_idents' =
                (Parsetree_utils.get_local_idents_from_pattern pattern) @
                loc_idents in
-*)
-             rec_generate_expr (* loc_idents' *) expr ;
+             rec_generate_expr loc_idents' expr ;
              Format.fprintf out_fmter "@]")
            pats_exprs ;
          Format.fprintf out_fmter "@\nend@]"
          end)
      | Parsetree.E_if (expr1, expr2, expr3) ->
          Format.fprintf out_fmter "@[<2>if@ " ;
-         rec_generate_expr expr1 ;
+         rec_generate_expr loc_idents expr1 ;
          Format.fprintf out_fmter "@ @[<2>then@ @]" ;
-         rec_generate_expr expr2 ;
+         rec_generate_expr loc_idents expr2 ;
          Format.fprintf out_fmter "@ @[<2>else@ @]" ;
-         rec_generate_expr expr3 ;
+         rec_generate_expr loc_idents expr3 ;
          Format.fprintf out_fmter "@]"
      | Parsetree.E_let (_let_def, _in_expr) ->
+         (* [Unsure] *)
          Format.fprintf out_fmter "E_let"
      | Parsetree.E_record _labs_exprs ->
+         (* [Unsure] *)
          Format.fprintf out_fmter "E_record"
      | Parsetree.E_record_access (_expr, _label) ->
          Format.fprintf out_fmter "E_record_access"
@@ -423,38 +468,39 @@ let generate_expr ctx initial_expression =
          (begin
          match exprs with
           | [] -> assert false
-          | [one] -> rec_generate_expr one
+          | [one] -> rec_generate_expr loc_idents one
           | _ ->
               Format.fprintf out_fmter "@[<1>(" ;
-              rec_generate_exprs_list ~comma: true exprs ;
+              rec_generate_exprs_list ~comma: true loc_idents exprs ;
               Format.fprintf out_fmter ")@]"
          end)
      | Parsetree.E_external _ext_expr ->
+         (* [Unsure] *)
          Format.fprintf out_fmter "E_external"
      | Parsetree.E_paren expr ->
          Format.fprintf out_fmter "@[<1>(" ;
-         rec_generate_expr expr ;
+         rec_generate_expr loc_idents expr ;
          Format.fprintf out_fmter ")@]"
 
 
-  and rec_generate_exprs_list  ~comma = function
+  and rec_generate_exprs_list  ~comma loc_idents = function
     | [] -> ()
-    | [last] -> rec_generate_expr last
+    | [last] -> rec_generate_expr loc_idents last
     | h :: q ->
-        rec_generate_expr h ;
+        rec_generate_expr loc_idents h ;
         if comma then Format.fprintf out_fmter ",@ "
         else Format.fprintf out_fmter "@ " ;
-        rec_generate_exprs_list ~comma q in
+        rec_generate_exprs_list ~comma loc_idents q in
 
 
   (* ************************************************ *)
   (* Now, let's really do the job of [generate_expr]. *)
-  rec_generate_expr initial_expression
+  rec_generate_expr local_idents initial_expression
 ;;
 
 
 
-let generate_prop ctx initial_proposition =
+let generate_prop ctx ~local_idents initial_proposition =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
   (* Create the coq type print context. *)
   let (species_modname, species_vname) =
@@ -469,7 +515,7 @@ let generate_prop ctx initial_proposition =
       List.map
         (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
         ctx.Species_gen_basics.scc_collections_carrier_mapping } in
-  let rec rec_generate_prop proposition =
+  let rec rec_generate_prop loc_idents proposition =
     match proposition.Parsetree.ast_desc with
      | Parsetree.Pr_forall (vnames, ty_expr, prop)
      | Parsetree.Pr_exists (vnames, ty_expr, prop) ->
@@ -495,37 +541,39 @@ let generate_prop ctx initial_proposition =
                   (Parsetree_utils.vname_as_string_with_operators_expanded vn)))
            vnames
            (Types.pp_type_simple_to_coq print_ctx) ty ;
-         rec_generate_prop prop ;
+         (* Here, the bound variables name may mask a "in"-parameter. *)
+         let loc_idents' = vnames @ loc_idents in
+         rec_generate_prop loc_idents' prop ;
          Format.fprintf out_fmter "@]"
          end)
      | Parsetree.Pr_imply (prop1, prop2) ->
          Format.fprintf out_fmter "@[<2>" ;
-         rec_generate_prop prop1 ;
+         rec_generate_prop loc_idents prop1 ;
          Format.fprintf out_fmter " ->@ " ;
-         rec_generate_prop prop2 ;
+         rec_generate_prop loc_idents prop2 ;
          Format.fprintf out_fmter "@]"
      | Parsetree.Pr_or  (prop1, prop2) ->
          Format.fprintf out_fmter "@[<2>" ;
-         rec_generate_prop prop1 ;
+         rec_generate_prop loc_idents prop1 ;
          Format.fprintf out_fmter " \\/@ " ;
-         rec_generate_prop prop2 ;
+         rec_generate_prop loc_idents prop2 ;
          Format.fprintf out_fmter "@]"
      | Parsetree.Pr_and  (prop1, prop2) ->
          Format.fprintf out_fmter "@[<2>" ;
-         rec_generate_prop prop1 ;
+         rec_generate_prop loc_idents prop1 ;
          Format.fprintf out_fmter " /\\@ " ;
-         rec_generate_prop prop2 ;
+         rec_generate_prop loc_idents prop2 ;
          Format.fprintf out_fmter "@]"
      | Parsetree.Pr_equiv (prop1, prop2) ->
          Format.fprintf out_fmter "@[<2>" ;
-         rec_generate_prop prop1 ;
+         rec_generate_prop loc_idents prop1 ;
          Format.fprintf out_fmter " <->@ " ;
-         rec_generate_prop prop2 ;
+         rec_generate_prop loc_idents prop2 ;
          Format.fprintf out_fmter "@]"
      | Parsetree.Pr_not prop ->
          Format.fprintf out_fmter "@[<2>" ;
          Format.fprintf out_fmter "~" ;
-         rec_generate_prop prop ;
+         rec_generate_prop loc_idents prop ;
          Format.fprintf out_fmter "@]"
      | Parsetree.Pr_expr expr ->
          (* The wrapper surrounding the expression by Coq's *)
@@ -540,18 +588,18 @@ let generate_prop ctx initial_proposition =
                 (* type scheme, but only a type.    *)
                 assert false) in
          if is_bool then Format.fprintf out_fmter "@[<2>Is_true (" ;
-         generate_expr ctx expr ;
+         generate_expr ctx ~local_idents: loc_idents expr ;
          (* The end of the wrapper surrounding  *)
          (* the expression if it has type bool. *)
          if is_bool then Format.fprintf out_fmter ")@]"
      | Parsetree.Pr_paren prop ->
          Format.fprintf out_fmter "@[<1>(" ;
-         rec_generate_prop prop ;
+         rec_generate_prop loc_idents prop ;
          Format.fprintf out_fmter ")@]" in
 
   (* ************************************************ *)
   (* Now, let's really do the job of [generate_prop]. *)
-  rec_generate_prop initial_proposition
+  rec_generate_prop local_idents initial_proposition
 ;;
 
 
@@ -667,55 +715,68 @@ let generate_record_type_parameters ctx species_fields =
       List.map
         (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
         ctx.Species_gen_basics.scc_collections_carrier_mapping } in
-  List.iter
-    (function
-      | Env.TypeInformation.SF_sig (_, _, _)
-      | Env.TypeInformation.SF_let (_, _, _, _, _)
-      | Env.TypeInformation.SF_let_rec _-> ()
-      | Env.TypeInformation.SF_theorem (_, _, _, prop, _)
-      | Env.TypeInformation.SF_property (_, _, _, prop) ->
-          (* Get the list of the methods from the species parameters the    *)
-          (* current prop/theo depends on. Do not [fold_left] to keep the   *)
-          (* extra parameters in the same order than the species parameters *)
-          (* order. I.e. for a species [Foo (A ..., B) ...] we want to have *)
-          (* the extra parameters due to lambda-lifting in the Coq record   *)
-          (* type ordered such as those coming from [A] are first, then     *)
-          (* come those from [B].                                           *)
-          let dependencies_from_params =
-            List.fold_right
-              (fun species_param_name accu ->
-                let meths_from_param =
-                  Param_dep_analysis.param_deps_prop
-                    ~current_species:
-                    ctx.Species_gen_basics.scc_current_species
-                    species_param_name prop in
-                (* Return a couple binding the species parameter's name *)
-                (* with the methods of it we found as required for the  *)
-                (* current property/theorem.                            *)
-                (species_param_name, meths_from_param) :: accu)
-              species_parameters_names
-              [] in
-          (* Now, output each of the extra record type parameter. *)
-          List.iter
-            (fun (species_param_name, meths) ->
-              (* Each abstracted method will be named like "_p_", followed by *)
-              (* the species parameter name, followed by "_", followed by the *)
-              (* method's name.                                               *)
-              let prefix =
-                "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
-                "_" in
-              Parsetree_utils.DepNameSet.iter
-                (fun (meth, ty) ->
-                  let llift_name =
-                    prefix ^
-                    (Parsetree_utils.vname_as_string_with_operators_expanded
-                       meth) in
-                  Format.fprintf ppf "(%s : %a)@ "
-                    llift_name
-                    (Types.pp_type_simple_to_coq print_ctx) ty)
-                meths)
-            dependencies_from_params)
-    species_fields
+    (* We first build the lists of dependent methods for each *)
+    (* property and theorem fields.                           *)
+    let deps_lists_for_fields =
+      List.map
+        (function
+          | Env.TypeInformation.SF_sig (_, _, _)
+          | Env.TypeInformation.SF_let (_, _, _, _, _)
+          | Env.TypeInformation.SF_let_rec _-> []
+          | Env.TypeInformation.SF_theorem (_, _, _, prop, _)
+          | Env.TypeInformation.SF_property (_, _, _, prop) ->
+              (* Get the list of the methods from the species parameters the  *)
+              (* current prop/theo depends on. Do not [fold_left] to keep the *)
+              (* extra parameters in the same order than the species          *)
+              (* parameters order. I.e. for a species [Foo (A ..., B) ...]    *)
+              (* we want to have the extra parameters due to lambda-lifting   *)
+              (* in the Coq record type ordered such as those coming from [A] *)
+              (* are first, then come those from [B].                         *)
+              let dependencies_from_params =
+                List.fold_right
+                  (fun species_param_name accu ->
+                    let meths_from_param =
+                      Param_dep_analysis.param_deps_prop
+                        ~current_species:
+                        ctx.Species_gen_basics.scc_current_species
+                        species_param_name prop in
+                    (* Return a couple binding the species parameter's name *)
+                    (* with the methods of it we found as required for the  *)
+                    (* current property/theorem.                            *)
+                    (species_param_name, meths_from_param) :: accu)
+                  species_parameters_names
+                  [] in
+              dependencies_from_params)
+        species_fields in
+    (* Now, we must flatten them and make sure that each record type's  *)
+    (* parameter induced by a dependent method from a species parameter *)
+    (* is uniquely printed to avoid having several times the same       *)
+    (* parameter name in the record type in case where several fields   *)
+    (* depend on the same method.                                       *)
+    let flat_deps_for_fields = List.flatten deps_lists_for_fields in
+    let seen = ref [] in
+    List.iter
+      (fun (species_param_name, meths) ->
+        (* Each abstracted method will be named like "_p_", followed by *)
+        (* the species parameter name, followed by "_", followed by the *)
+        (* method's name.                                               *)
+        let prefix =
+          "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
+          "_" in
+        Parsetree_utils.DepNameSet.iter
+          (fun (meth, ty) ->
+            if not (List.mem (species_param_name, meth) !seen) then
+              (begin
+              seen := (species_param_name, meth) :: !seen ;
+              let llift_name =
+                prefix ^
+                (Parsetree_utils.vname_as_string_with_operators_expanded
+                   meth) in
+              Format.fprintf ppf "(%s : %a)@ "
+                llift_name (Types.pp_type_simple_to_coq print_ctx) ty
+              end))
+          meths)
+      flat_deps_for_fields
 ;;
 
 
@@ -818,7 +879,9 @@ let generate_record_type ctx species_descr =
         Format.fprintf out_fmter "@[<2>%s_%a :@ "
           my_species_name Parsetree_utils.pp_vname_with_operators_expanded n ;
         (* Generate the Coq code representing the proposition. *)
-        generate_prop ctx prop ;
+        (* No local idents in the context because we just enter the scope *)
+        (* of a species fields and so we are not under a core expression. *)
+        generate_prop ctx ~local_idents: [] prop ;
         if semi then Format.fprintf out_fmter " ;" ;
         Format.fprintf out_fmter "@]@\n" in
   (* Coq syntax required not semi after the last field. That's why   *)
