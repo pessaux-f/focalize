@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.5 2007-12-10 15:04:53 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.6 2007-12-10 17:00:21 pessaux Exp $ *)
 
 
 
@@ -329,7 +329,7 @@ let generate_pattern ctx (*env*) pattern =
 
 
 (*
-and let_def_compile ctx (*~local_idents env*) let_def opt_bound_schemes =
+and let_def_compile ctx ~local_idents env let_def opt_bound_schemes =
   let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
   (* Generates the binder ("rec" or non-"rec"). *)
   Format.fprintf out_fmter "@[<2>let%s@ "

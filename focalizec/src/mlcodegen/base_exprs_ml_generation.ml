@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.10 2007-12-07 15:19:37 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.11 2007-12-10 17:00:21 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -573,7 +573,7 @@ and generate_expr ctx ~local_idents env initial_expression =
          rec_generate loc_idents expr3 ;
          Format.fprintf out_fmter "@]"
      | Parsetree.E_let (let_def, in_expr) ->
-         (* Here we do not have trype contraints under the hand. So give-up *)
+         (* Here we do not have type contraints under the hand. So give-up  *)
          (* generating such constraints. Just generate the raw code for the *)
          (* "let-definition".                                               *)
          let bound_schemes =
