@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.17 2007-12-10 10:14:07 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.18 2007-12-12 16:45:15 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -492,8 +492,12 @@ let generate_one_field_binding ctx env ~let_connect species_parameters_names
     List.iter
       (fun param_name -> Format.fprintf out_fmter "@ %s" param_name)
       params_llifted ;
-    (* Add the parameters of the let-binding with their type. *)
-    let params_with_type =
+    (* Add the parameters of the let-binding with their type.   *)
+    (* Ignore the result type of the "let" if it's a function   *)
+    (* because we never print the type constraint on the result *)
+    (* of the "let". We only print them in the arguments of the *)
+    (* let-bound ident.                                         *)
+    let (params_with_type, _) =
       Misc_ml_generation.bind_parameters_to_types_from_type_scheme
         scheme params in
     (* We are printing each parameter's type. These types in fact belong *)

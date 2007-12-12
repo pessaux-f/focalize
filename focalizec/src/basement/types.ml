@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.36 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: types.ml,v 1.37 2007-12-12 16:45:15 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1071,7 +1071,8 @@ type coq_print_context = {
 
 
 
-let (pp_type_simple_to_coq, pp_type_scheme_to_coq) =
+let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
+     purge_type_simple_to_coq_variable_mapping) =
   (* ********************************************************************* *)
   (* ((type_simple * string) list) ref                                     *)
   (** {b Descr} : The mapping giving for each variable already seen the
@@ -1168,7 +1169,7 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq) =
         (begin
         match ctx.cpc_current_species with
          | None ->
-             (* Referencing "Sel" outside a species should have  *)
+             (* Referencing "Self" outside a species should have *)
              (* been caught earlier, i.e. at typechecking stage. *)
              assert false
          | Some (species_modname, species_name) ->
@@ -1195,8 +1196,7 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq) =
           if ctx.cpc_current_unit = module_name then
             Format.fprintf ppf "%s_T" collection_name
           else
-            Format.fprintf ppf "%s.%s_T"
-              (String.capitalize module_name) collection_name
+            Format.fprintf ppf "%s.%s_T" module_name collection_name
         end)
 
   (* ********************************************************************* *)
@@ -1218,10 +1218,16 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq) =
 
   (* ************************************************** *)
   (* Now, the real definition of the printing functions *)
-  (fun ctx ppf ty ->
-    reset_type_variables_mapping_to_coq () ;
+  ((* pp_type_simple_to_coq *)
+   (fun ctx ~reuse_mapping ppf ty ->
+     (* Only reset the variable mapping if we were not told the opposite. *)
+     if not reuse_mapping then reset_type_variables_mapping_to_coq () ;
     rec_pp_to_coq ctx 0 ppf ty),
-  (fun ctx ppf the_scheme ->
-    reset_type_variables_mapping_to_coq () ;
-    Format.fprintf ppf "%a" (rec_pp_to_coq ctx 0) the_scheme.ts_body)
+   (* pp_type_scheme_to_coq *)
+   (fun ctx ppf the_scheme ->
+     reset_type_variables_mapping_to_coq () ;
+     Format.fprintf ppf "%a" (rec_pp_to_coq ctx 0) the_scheme.ts_body),
+   (* purge_type_simple_to_coq_variable_mapping *)
+   (fun () -> reset_type_variables_mapping_to_coq ())
+  )
 ;;

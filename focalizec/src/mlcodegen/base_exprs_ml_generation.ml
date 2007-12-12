@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.11 2007-12-10 17:00:21 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.12 2007-12-12 16:45:15 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -389,7 +389,10 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
     bd.Parsetree.ast_desc.Parsetree.b_name ;
   (* Generate the parameters if some, with their type constraints. *)
   let params_names = List.map fst bd.Parsetree.ast_desc.Parsetree.b_params in
-  let params_with_type =
+  (* We ignore the result type of the "let" if it's a function because *)
+  (* we never print the type constraint on the result of the "let". We *)
+  (* only print them in the arguments of the let-bound ident.          *)
+  let (params_with_type, _) =
     Misc_ml_generation.bind_parameters_to_types_from_type_scheme
       opt_sch params_names in
   (* We are printing each parameter's type. These types in fact belong *)
@@ -460,7 +463,7 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
 
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
-and let_def_compile ctx ~local_idents env let_def opt_bound_schemes =
+and let_def_compile ctx ~local_idents env let_def bound_schemes =
   let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
   (* Generates the binder ("rec" or non-"rec"). *)
   Format.fprintf out_fmter "@[<2>let%s@ "
@@ -468,13 +471,9 @@ and let_def_compile ctx ~local_idents env let_def opt_bound_schemes =
      | Parsetree.RF_no_rec -> ""
      | Parsetree.RF_rec -> " rec"   (* NON-breakable space in front. *)) ;
   (* Now generate each bound definition. *)
-  (* Because we are in a toplevel [let_def], we have no species       *)
-  (* parameter in the scope. Hence the collections carrier mapping is *)
-  (* empty.                                                           *)
-  (match (let_def.Parsetree.ast_desc.Parsetree.ld_bindings,
-          opt_bound_schemes) with
+  (match (let_def.Parsetree.ast_desc.Parsetree.ld_bindings, bound_schemes) with
    | ([], []) ->
-       (* The let construct should always at least bind one identifier ! *)
+       (* The "let" construct should always at least bind one identifier ! *)
        assert false
    | ([one_bnd], [one_scheme]) ->
        let_binding_compile ctx ~local_idents env one_bnd one_scheme

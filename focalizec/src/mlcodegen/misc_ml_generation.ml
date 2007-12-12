@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.ml,v 1.9 2007-12-05 16:41:35 pessaux Exp $ *)
+(* $Id: misc_ml_generation.ml,v 1.10 2007-12-12 16:45:15 pessaux Exp $ *)
 
 
 
@@ -67,7 +67,8 @@ type reduced_compil_context = {
 
 (* ************************************************************************ *)
 (* Types.type_scheme option -> Parsetree.vname list ->                      *)
-(*  (Parsetree.vname * Types.type_simple option) list                       *)
+(*  (((Parsetree.vname * Types.type_simple option) list) *                  *)
+(*   (Types.type_simple option))                                            *)
 (** {b Descr} : Because methods parameters do not have their type with them
               in the [species_description]s, this function establish the
               mapping between the parameters names and their related type.
@@ -90,7 +91,7 @@ let bind_parameters_to_types_from_type_scheme opt_scheme params_names =
    | None ->
        (* Since we are not given any type information, the binding will *)
        (* be trivially void and no type constraint will be printed.     *)
-       (List.map (fun p_name -> (p_name, None)) params_names)
+       ((List.map (fun p_name -> (p_name, None)) params_names), None)
    | Some scheme ->
        (begin
        try
@@ -99,7 +100,7 @@ let bind_parameters_to_types_from_type_scheme opt_scheme params_names =
          (* reverse it again to keep the right order (i.e. first argument in  *)
          (* head of the list.                                                 *)
          let rec rec_bind accu_bindings ty = function
-           | [] -> accu_bindings
+           | [] -> (accu_bindings, (Some ty))
            | h :: q ->
                (* We split the functionnal type. First, get argument type. *)
                let h_type = Types.extract_fun_ty_arg ty in
@@ -112,9 +113,10 @@ let bind_parameters_to_types_from_type_scheme opt_scheme params_names =
 
          (* ********************** *)
          (* Now, let's do the job. *)
-         let revd_mapping = rec_bind [] type_from_scheme params_names in
+         let (revd_mapping, result_ty) =
+	   rec_bind [] type_from_scheme params_names in
          (* Put the resulting mapping in the right order. *)
-         List.rev revd_mapping
+         ((List.rev revd_mapping), result_ty)
        with _ ->
          (* Because the typechecking was done in the previous passes, the   *)
          (* program must be well-typed at this point. Then unification must *)
