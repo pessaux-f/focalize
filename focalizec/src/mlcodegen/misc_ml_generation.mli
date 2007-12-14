@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.mli,v 1.7 2007-12-12 16:45:15 pessaux Exp $ *)
+(* $Id: misc_ml_generation.mli,v 1.8 2007-12-14 16:18:11 pessaux Exp $ *)
 
 
 
@@ -27,4 +27,5 @@ type reduced_compil_context = {
 val bind_parameters_to_types_from_type_scheme :
   Types.type_scheme option -> Parsetree.vname list ->
     (((Parsetree.vname * Types.type_simple option) list) *
-      (Types.type_simple option))
+      (Types.type_simple option) *
+      (Types.type_simple list))

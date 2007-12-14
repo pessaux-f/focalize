@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.7 2007-12-12 16:45:15 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.8 2007-12-14 16:18:11 pessaux Exp $ *)
 
 
 
@@ -326,7 +326,8 @@ let generate_pattern ctx (*env*) pattern =
 ;;
 
 
-let rec let_binding_compile ctx ~local_idents (*env*) bd =
+
+let rec let_binding_compile ctx ~local_idents ~is_rec (*env*) bd =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
   (* Generate the bound name. *)
   Format.fprintf out_fmter "%a"
@@ -340,7 +341,7 @@ let rec let_binding_compile ctx ~local_idents (*env*) bd =
      | Parsetree.ANTI_none | Parsetree.ANTI_non_relevant
      | Parsetree.ANTI_type _ -> assert false
      | Parsetree.ANTI_scheme s -> s) in
-  let (params_with_type, result_ty) =
+  let (params_with_type, result_ty, generalized_instanciated_vars) =
     Misc_ml_generation.bind_parameters_to_types_from_type_scheme
        (Some def_scheme) params_names in
   (* Build the print context. *)
@@ -361,6 +362,22 @@ let rec let_binding_compile ctx ~local_idents (*env*) bd =
   (* For this reason, we first purge the printing variable mapping and *)
   (* after, activate its persistence between each parameter printing.  *)
   Types.purge_type_simple_to_coq_variable_mapping () ;
+  (* If the original scheme is polymorphic, then we must ad extra Coq  *)
+  (* parameters of type "Set" for each of the generalized variables.   *)
+  (* Hence, printing the variables used to instanciate the polymorphic *)
+  (* ones in front of the function, they will appear and moreover they *)
+  (* will be "tagged" as "seen" in the variable mapping. Hence, when   *)
+  (* we will print the arguments having these variables as type, the   *)
+  (* same variable name will be used, hence establishing the correct   *)
+  (* link between the type of the variable and the type variable of    *)
+  (* the function argument's type.                                     *)
+  List.iter
+    (fun var ->
+       Format.fprintf out_fmter "@ (%a : Set)"
+        (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
+        var)
+    generalized_instanciated_vars ;
+  (* Now, generate each of the real function's parameter with its type. *)
   List.iter
     (fun (param_vname, pot_param_ty) ->
       match pot_param_ty with
@@ -375,6 +392,19 @@ let rec let_binding_compile ctx ~local_idents (*env*) bd =
            (* type for each parameter name !                            *)
            assert false)
     params_with_type ;
+  (* If the definition is a recursive function, then one must exhibit  *)
+  (* one decreasing argument. Because we don't know which one is, just *)
+  (* take one at random... For instance, the first one...              *)
+  (* If there is no parameter, then the binding is not a function and  *)
+  (* we do not need to exhibit any decreasing argument.                *)
+  if is_rec then
+    (begin
+    match params_with_type with
+     | (param_vname, _) :: _ ->
+         Format.fprintf out_fmter "@ {struct %a}"
+           Parsetree_utils.pp_vname_with_operators_expanded param_vname
+     | _ -> ()
+    end) ;
   (* Now, print the result type of the "let". *)
   (match result_ty with
    | None ->
@@ -403,11 +433,15 @@ let rec let_binding_compile ctx ~local_idents (*env*) bd =
 
 and let_in_def_compile ctx ~local_idents (*env*) let_def =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
+  let is_rec =
+    (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
+     | Parsetree.RF_no_rec -> false
+     | Parsetree.RF_rec -> true) in
   (* Generates the binder ("fix" or non-"fix"). *)
   Format.fprintf out_fmter "@[<2>let%s@ "
-    (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-     | Parsetree.RF_no_rec -> ""
-     | Parsetree.RF_rec ->
+    (match is_rec with
+     | false -> ""
+     | true ->
          (* [Unsure] We don't known now how to compile several local mutually *)
          (* recursive functions. *)
          if (List.length let_def.Parsetree.ast_desc.Parsetree.ld_bindings) > 1
@@ -419,15 +453,15 @@ and let_in_def_compile ctx ~local_idents (*env*) let_def =
        (* The "let" construct should always at least bind one identifier ! *)
        assert false
    | [one_bnd] ->
-       let_binding_compile ctx ~local_idents (*env*) one_bnd
+       let_binding_compile ctx ~local_idents ~is_rec (*env*) one_bnd
    | first_bnd :: next_bnds ->
-       let_binding_compile ctx ~local_idents (*env*) first_bnd ;
+       let_binding_compile ctx ~local_idents ~is_rec (*env*) first_bnd ;
        List.iter
          (fun binding ->
            (* We transform "let and" non recursive functions *)
            (* into several "let in" definitions.             *)
            Format.fprintf out_fmter "@ in@]@\n@[<2>let " ;
-           let_binding_compile ctx ~local_idents (*env*) binding)
+           let_binding_compile ctx ~local_idents ~is_rec (*env*) binding)
          next_bnds) ;
   Format.fprintf out_fmter "@]"
 
@@ -451,7 +485,7 @@ and generate_expr ctx ~local_idents initial_expression =
         (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
         ctx.Species_gen_basics.scc_collections_carrier_mapping } in
 
-  let rec rec_generate_expr loc_idents expression = 
+  let rec rec_generate_expr loc_idents expression =
     (* Now, dissecate the expression core. *)
     match expression.Parsetree.ast_desc with
      | Parsetree.E_self ->
@@ -526,7 +560,7 @@ and generate_expr ctx ~local_idents initial_expression =
          Format.fprintf out_fmter "@]"
      | Parsetree.E_let (let_def, in_expr) ->
          let_in_def_compile ctx ~local_idents (*env*) let_def ;
-	 Format.fprintf out_fmter "@ in@\n" ;
+         Format.fprintf out_fmter "@ in@\n" ;
          rec_generate_expr loc_idents in_expr
      | Parsetree.E_record _labs_exprs ->
          (* [Unsure] *)

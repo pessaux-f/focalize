@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.3 2007-12-07 15:19:37 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.4 2007-12-14 16:18:11 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -37,27 +37,36 @@
 
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
-let toplevel_compile ~current_unit out_fmter = function
-  | Infer.PCM_no_matter -> ()
-  | Infer.PCM_open (_, modname) ->
+let toplevel_compile env ~current_unit out_fmter = function
+  | Infer.PCM_no_matter -> env
+  | Infer.PCM_open (phrase_loc, modname) ->
       (* One must let known that the module is required. In fact it should *)
       (* also be "Import" but because the compiler always generate fully   *)
       (* qualified stuff, the notion of "opended" is not needed anymore    *)
       (* in the code generated for Coq.                                    *)
-      Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" modname
+      Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" modname ;
+      (* One must "open" the coq code generation environment of this module *)
+      (* and return the environment extended with these "opened" bindings.  *)
+      Env.coqgen_open_module ~loc: phrase_loc modname env
   | Infer.PCM_species (species_def, species_descr, dep_graph) ->
       Species_coq_generation.species_compile
-        ~current_unit out_fmter species_def species_descr dep_graph
+        ~current_unit out_fmter species_def species_descr dep_graph ;
+      (* [Unsure] *) env
   | Infer.PCM_collection (_, _, _) ->
-      Format.fprintf out_fmter "Infer.PCM_collection TODO@."
+      Format.fprintf out_fmter "Infer.PCM_collection TODO@." ;
+      (* [Unsure] *) env
   | Infer.PCM_type (_, _) ->
-      Format.fprintf out_fmter "Infer.PCM_type TODO@."
+      Format.fprintf out_fmter "Infer.PCM_type TODO@." ;
+      (* [Unsure] *) env
   | Infer.PCM_let_def (_, _) ->
-      Format.fprintf out_fmter "Infer.PCM_let_def TODO@."
+      Format.fprintf out_fmter "Infer.PCM_let_def TODO@." ;
+      (* [Unsure] *) env
   | Infer.PCM_theorem _ ->
-      Format.fprintf out_fmter "Infer.PCM_theorem TODO@."
+      Format.fprintf out_fmter "Infer.PCM_theorem TODO@." ;
+      (* [Unsure] *) env
   | Infer.PCM_expr _ ->
-      Format.fprintf out_fmter "Infer.PCM_expr TODO@."
+      Format.fprintf out_fmter "Infer.PCM_expr TODO@." ;
+      (* [Unsure] *) env
  ;;
 
 
@@ -67,16 +76,21 @@ let root_compile ~current_unit ~out_file_name stuff =
     Format.eprintf "Starting Coq code generation.@." ;
   let out_hd = open_out_bin out_file_name in
   let out_fmter = Format.formatter_of_out_channel out_hd in
+  let global_env = ref (Env.CoqGenEnv.empty ()) in
   (* Always import Coq booleans and integers. Alias int notation to Z. *)
   Format.fprintf out_fmter
     "Require Export Bool.@\nRequire Export ZArith.@\nOpen Scope Z_scope.@\n@\n" ;
   try
     List.iter
-      (fun data -> toplevel_compile ~current_unit out_fmter data)
+      (fun data ->
+        let new_env =
+          toplevel_compile !global_env ~current_unit out_fmter data in
+        global_env := new_env)
       stuff ;
     (* Flush the pretty-printer. *)
     Format.fprintf out_fmter "@?" ;
     close_out out_hd ;
+    !global_env
   with whatever ->
     (* In any error case, flush the pretty-printer and close the outfile. *)
     Format.fprintf out_fmter "@?" ;

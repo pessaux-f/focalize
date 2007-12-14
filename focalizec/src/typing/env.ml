@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.55 2007-12-10 10:14:07 pessaux Exp $ *)
+(* $Id: env.ml,v 1.56 2007-12-14 16:18:11 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -640,18 +640,44 @@ end
 (* *********************************************************************** *)
 (* *********************************************************************** *)
 (* *********************************************************************** *)
+module CoqGenInformation = struct
+  type constructor_mapping_info = unit
+  type label_mapping_info = unit
+  type species_binding_info = unit
+  type value_mapping_info = unit
 
-type fo_file_structure = {
-  ffs_scoping : ScopeInformation.env ;
-  ffs_typing : TypeInformation.env ;
-  ffs_mlgeneration : MlGenInformation.env
-}
+  (* ************************************************************** *)
+  (** {b Descr} : Type abbreviation to shorten the structure of the
+                scoping environments.
+
+      {b Rem} : Not exported outside this module.                   *)
+  (* ************************************************************** *)
+  type env =
+    (constructor_mapping_info, label_mapping_info, unit, unit,
+     species_binding_info) generic_env
+end
 ;;
 
 
 
-let (scope_find_module, type_find_module, mlgen_find_module,
-     scope_open_module, type_open_module, mlgen_open_module) =
+
+(* *********************************************************************** *)
+(* *********************************************************************** *)
+(* *********************************************************************** *)
+
+type fo_file_structure = {
+  ffs_scoping : ScopeInformation.env ;
+  ffs_typing : TypeInformation.env ;
+  ffs_mlgeneration : MlGenInformation.env ;
+  ffs_coqgeneration : CoqGenInformation.env }
+;;
+
+
+
+let (scope_find_module, type_find_module,
+     mlgen_find_module, coqgen_find_module,
+     scope_open_module, type_open_module,
+     mlgen_open_module, coqgen_open_module) =
   (* Let's just make the list used to bufferize opened files' content. *)
   (* Because ".fo" files contains always both the scoping and typing   *)
   (* information, once loaded for scoping purpose, the typing info     *)
@@ -808,19 +834,32 @@ let (scope_find_module, type_find_module, mlgen_find_module,
 
 
 
+   (* ******************************************************************* *)
+   (* coqgen_find_module                                                  *)
+   (*   loc: Location.t -> current_unit: Types.fname ->                   *)
+   (*   Types.fname option -> MlGenInformation.env ->                     *)
+   (*     CoqGenInformation.env                                           *)
+   (** {b Descr} : Wrapper to lookup a ml generation environment inside
+                 an external interface file. Note that if it is requested
+                 to lookup inside the current compilation unit's
+                 environment (the current file has the same name than
+                 the looked-up module), then returned environment is
+                 the one initially passed as argument.
+
+       {b Rem} : Not exported outside this module.                        *)
+   (* ******************************************************************* *)
+   (fun ~loc ~current_unit fname_opt mlgen_env ->
+     match fname_opt with
+      | None -> mlgen_env
+      | Some fname ->
+          if current_unit = fname then mlgen_env
+          else (internal_find_module ~loc fname).ffs_coqgeneration),
+
+
+
    (* *************************************************************** *)
    (* scope_open_module                                               *)
-   (* loc: Location.t -> Types.fname ->                               *)
-   (*   (Types.fname, Types.fname,                                    *)
-   (*    ScopeInformation.type_binding_info,                          *)
-   (*    ScopeInformation.value_binding_info,                         *)
-   (*    ScopeInformation.species_binding_info)                       *)
-   (*   generic_env ->                                                *)
-   (*     (Types.fname, Types.fname,                                  *)
-   (*      ScopeInformation.type_binding_info,                        *)
-   (*      ScopeInformation.value_binding_info,                       *)
-   (*      ScopeInformation.species_binding_info)                     *)
-   (*     generic_env                                                 *)
+   (* loc: Location.t -> Types.fname -> ScopingEnv.t -> ScopingEnv.t  *)
    (** {b Descr} : Performs a full "open" directive on a scoping
                  environment. It add in head of the environment the
                  bindings found in the "module" content, tagging them
@@ -836,17 +875,7 @@ let (scope_find_module, type_find_module, mlgen_find_module,
 
    (* *************************************************************** *)
    (* type_open_module                                                *)
-   (* loc: Location.t -> Types.fname ->                               *)
-   (*   (TypeInformation.constructor_description,                     *)
-   (*    TypeInformation.label_description,                           *)
-   (*    TypeInformation.type_description,                            *)
-   (*    Types.type_scheme, TypeInformation.species_description)      *)
-   (*   generic_env ->                                                *)
-   (*   (TypeInformation.constructor_description,                     *)
-   (*    TypeInformation.label_description,                           *)
-   (*    TypeInformation.type_description,                            *)
-   (*    Types.type_scheme, TypeInformation.species_description)      *)
-   (*   generic_env                                                   *)
+   (* loc: Location.t -> Types.fname -> TypingEnv.t -> TypingEnv.t    *)
    (** {b Descr} : Performs a full "open" directive on a typing
                  environment. It add in head of the environment the
                  bindings found in the "module" content, tagging them
@@ -862,17 +891,7 @@ let (scope_find_module, type_find_module, mlgen_find_module,
 
    (* **************************************************************** *)
    (* mlgen_open_module                                                *)
-   (*   loc: Location.t -> Types.fname ->                              *)
-   (*     (MlGenInformation.constructor_description,                   *)
-   (*      MlGenInformation.label_description,                         *)
-   (*      MlGenInformation.type_description,                          *)
-   (*      Types.type_scheme, MlGenInformation.species_description)    *)
-   (*     generic_env ->                                               *)
-   (*     (MlGenInformation.constructor_description,                   *)
-   (*      MlGenInformation.label_description,                         *)
-   (*      MlGenInformation.type_description,                          *)
-   (*      Types.type_scheme, TypeInformation.species_description)     *)
-   (*     generic_env                                                  *)
+   (*   loc: Location.t -> Types.fname -> MlGenEnv.t -> MlGenEnv.t     *)
    (** {b Descr} : Performs a full "open" directive on a ml generation
                  environment. It add in head of the environment the
                  bindings found in the "module" content, tagging them
@@ -883,7 +902,24 @@ let (scope_find_module, type_find_module, mlgen_find_module,
    (fun ~loc fname env ->
      let loaded_mlgen_env =
        (internal_find_module ~loc fname).ffs_mlgeneration in
-     internal_extend_env fname loaded_mlgen_env env)
+     internal_extend_env fname loaded_mlgen_env env),
+
+
+
+   (* **************************************************************** *)
+   (* coqgen_open_module                                               *)
+   (*   loc: Location.t -> Types.fname ->  CoqGenEnv.t -> CoqGenEnv.t  *)
+   (** {b Descr} : Performs a full "open" directive on a coq
+            generation environment. It add in head of the environment
+            the bindings found in the "module" content, tagging them
+            as beeing "opened".
+
+       {b Rem} : Exported outside this module.                         *)
+   (* **************************************************************** *)
+   (fun ~loc fname env ->
+     let loaded_coqgen_env =
+       (internal_find_module ~loc fname).ffs_coqgeneration in
+     internal_extend_env fname loaded_coqgen_env env)
   )
 ;;
 
@@ -1046,9 +1082,12 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
     ({ env with
        species = (species_name, BO_absolute data) :: env.species } : t)
 
+
   let opt_scope_vname = function
-  | Parsetree.Vname vname -> None, vname
-  | Parsetree.Qualified (modname, vname) -> Some modname, vname
+    | Parsetree.Vname vname -> (None, vname)
+    | Parsetree.Qualified (modname, vname) -> ((Some modname), vname)
+
+
 
   (* loc: Location.t -> current_unit: Types.fname -> Parsetree.ident -> *)
   (*    t -> EMAccess.species_bound_data                                *)
@@ -1059,7 +1098,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
          (* opened modules bindings are acceptable.             *)
          find_species_vname ~loc ~allow_opened: true vname env
      | Parsetree.I_global qvname ->
-         let opt_scope, vname = opt_scope_vname qvname in
+         let (opt_scope, vname) = opt_scope_vname qvname in
          let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
          (* Check if the lookup can return something *)
          (* coming from an opened module.            *)
@@ -1143,7 +1182,8 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
          let full_coll_name =
            (match opt_module_qual with
             | None -> Parsetree.Qualified (current_unit, coll_vname)
-            | Some module_qual -> Parsetree.Qualified (module_qual, coll_vname)) in
+            | Some module_qual ->
+                Parsetree.Qualified (module_qual, coll_vname)) in
          (* We must first look inside collections and species     *)
          (* for the [coll_vname] in order to recover its methods. *)
          let available_meths =
@@ -1523,9 +1563,34 @@ module MlGenEnv = Make (MlGenEMAccess);;
 
 
 
+module CoqGenEMAccess = struct
+  type constructor_bound_data = CoqGenInformation.constructor_mapping_info
+  type label_bound_data = CoqGenInformation.label_mapping_info
+  type type_bound_data = unit
+  type value_bound_data = CoqGenInformation.value_mapping_info
+  type species_bound_data = CoqGenInformation.species_binding_info
+
+  let find_module = coqgen_find_module
+  let pervasives () =
+    { constructors = []; labels = []; types = []; values = [];
+      species = [] }
+
+
+  let make_value_env_from_species_methods _species _spec_info =
+    assert false   (** Non sense for coq code generation environments ! *)
+
+
+  (* No real need in the ml code generation environment case. *)
+  let post_process_method_value_binding _collname data = data
+end
+;;
+module CoqGenEnv = Make (CoqGenEMAccess);;
+
+
+
 (* **************************************************************** *)
 (* source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t ->   *)
-(*   MlGenEnv.t -> unit                                             *)
+(*   MlGenEnv.t -> CoqGenEnv.t -> unit                              *)
 (** {b Descr} : Create the "fo file" on disk related to the current
               compilation unit.
               This "fo file" contains :
@@ -1535,7 +1600,7 @@ module MlGenEnv = Make (MlGenEMAccess);;
     {b Rem} : Exported outside this module.                         *)
 (* **************************************************************** *)
 let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
-    mlgen_toplevel_env =
+    mlgen_toplevel_env coqgen_toplevel_env =
   (* First, recover from the scoping environment only bindings *)
   (* coming from definitions of our current compilation unit.  *)
   let scoping_toplevel_env' =
@@ -1544,10 +1609,14 @@ let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
   (* coming from definitions of our current compilation unit.  *)
   let typing_toplevel_env' =
     env_from_only_absolute_bindings typing_toplevel_env in
-  (* Finally, recover from the ml generation environment only bindings *)
-  (* coming from definitions of our current compilation unit.          *)
+  (* Next, recover from the ml generation environment only bindings *)
+  (* coming from definitions of our current compilation unit.        *)
   let mlgen_toplevel_env' =
     env_from_only_absolute_bindings mlgen_toplevel_env in
+  (* Finally, recover from the coq generation environment only bindings *)
+  (* coming from definitions of our current compilation unit.           *)
+  let coqgen_toplevel_env' =
+    env_from_only_absolute_bindings coqgen_toplevel_env in
   let module_name = Filename.chop_extension source_filename in
   let fo_basename = Files.fo_basename_from_module_name module_name in
   (* Add to the module name the path of the currently compiled source *)
@@ -1557,10 +1626,12 @@ let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
     Filename.concat (Filename.dirname source_filename) fo_basename in
   let out_hd = open_out_bin with_path in
   (* First, write the magic number of the file. *)
-  Files.write_magic out_hd Files.fo_magic;
+  Files.write_magic out_hd Files.fo_magic ;
   (* And now the filtered environments. *)
   output_value
-    out_hd (scoping_toplevel_env', typing_toplevel_env', mlgen_toplevel_env');
+    out_hd
+    (scoping_toplevel_env', typing_toplevel_env',
+     mlgen_toplevel_env', coqgen_toplevel_env') ;
   (* Just don't forget to close the output file... *)
   close_out out_hd
 ;;

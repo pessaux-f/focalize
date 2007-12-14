@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.24 2007-12-12 16:45:15 pessaux Exp $ *)
+(* $Id: types.mli,v 1.25 2007-12-14 16:18:11 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -67,6 +67,8 @@ val subst_type_scheme :
 a (closed) type scheme from a type without unknowns. *)
 val specialize : type_scheme -> type_simple
 val specialize_with_args : type_scheme -> type_simple list -> type_simple
+val specialize_n_show_instanciated_generalized_vars :
+  type_scheme -> (type_simple * (type_simple list))
 val generalize : type_simple -> type_scheme
 val build_type_def_scheme :
     variables: type_simple list -> body: type_simple -> type_scheme

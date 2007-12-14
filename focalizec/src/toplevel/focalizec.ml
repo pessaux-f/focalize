@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.23 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.24 2007-12-14 16:18:11 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -122,15 +122,18 @@ let main () =
       end)
     else Env.MlGenEnv.empty () in
   (* Finally, go to the Coq code generation if requested. *)
-  if Configuration.get_generate_coq () then
-    (begin
-    let out_file_name = (Filename.chop_extension input_file_name) ^ ".v" in
-    Main_coq_generation.root_compile
-      ~current_unit ~out_file_name stuff_to_compile
-    end) ;
+  let coqgen_toplevel_env =
+    if Configuration.get_generate_coq () then
+      (begin
+      let out_file_name = (Filename.chop_extension input_file_name) ^ ".v" in
+      Main_coq_generation.root_compile
+        ~current_unit ~out_file_name stuff_to_compile
+      end)
+    else Env.CoqGenEnv.empty () in
   (* Now, generate the persistent interface file. *)
   Env.make_fo_file
     ~source_filename: input_file_name
-    scoping_toplevel_env typing_toplevel_env mlgen_toplevel_env ;
+    scoping_toplevel_env typing_toplevel_env mlgen_toplevel_env
+    coqgen_toplevel_env ;
   exit 0
 ;;

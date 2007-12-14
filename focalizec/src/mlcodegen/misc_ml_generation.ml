@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.ml,v 1.10 2007-12-12 16:45:15 pessaux Exp $ *)
+(* $Id: misc_ml_generation.ml,v 1.11 2007-12-14 16:18:11 pessaux Exp $ *)
 
 
 
@@ -68,7 +68,8 @@ type reduced_compil_context = {
 (* ************************************************************************ *)
 (* Types.type_scheme option -> Parsetree.vname list ->                      *)
 (*  (((Parsetree.vname * Types.type_simple option) list) *                  *)
-(*   (Types.type_simple option))                                            *)
+(*   (Types.type_simple option) *                                           *)
+(*   (Types.type_simple list))                                              *)
 (** {b Descr} : Because methods parameters do not have their type with them
               in the [species_description]s, this function establish the
               mapping between the parameters names and their related type.
@@ -83,6 +84,12 @@ type reduced_compil_context = {
               parameter name its type and the "result" type of the method
               (i.e. the type remaining after having "removed all the
               arrows" induced by the parameters).
+              It also returns the list of type variables that were used
+              to instanciated the ones generalized in the type scheme.
+              This is useful for Coq generation because polymorphism is
+              explicit, leading for each polymorphic parameter to one
+              extra parameter of type "Set" used to type the polymorphic
+              parameter.
 
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
@@ -91,11 +98,12 @@ let bind_parameters_to_types_from_type_scheme opt_scheme params_names =
    | None ->
        (* Since we are not given any type information, the binding will *)
        (* be trivially void and no type constraint will be printed.     *)
-       ((List.map (fun p_name -> (p_name, None)) params_names), None)
+       ((List.map (fun p_name -> (p_name, None)) params_names), None, [])
    | Some scheme ->
        (begin
        try
-         let type_from_scheme = Types.specialize scheme in
+         let (type_from_scheme, generalized_instanciated_vars) =
+	   Types.specialize_n_show_instanciated_generalized_vars scheme in
          (* Be careful, the bindings list is built reversed ! We must finally *)
          (* reverse it again to keep the right order (i.e. first argument in  *)
          (* head of the list.                                                 *)
@@ -116,7 +124,7 @@ let bind_parameters_to_types_from_type_scheme opt_scheme params_names =
          let (revd_mapping, result_ty) =
 	   rec_bind [] type_from_scheme params_names in
          (* Put the resulting mapping in the right order. *)
-         ((List.rev revd_mapping), result_ty)
+         ((List.rev revd_mapping), result_ty, generalized_instanciated_vars)
        with _ ->
          (* Because the typechecking was done in the previous passes, the   *)
          (* program must be well-typed at this point. Then unification must *)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.37 2007-12-12 16:45:15 pessaux Exp $ *)
+(* $Id: types.ml,v 1.38 2007-12-14 16:18:11 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -413,7 +413,9 @@ let occur_check ~loc var ty =
 
 
 
-let (specialize, specialize_with_args) =
+let (specialize,
+     specialize_with_args,
+     specialize_n_show_instanciated_generalized_vars) =
   let seen = ref [] in
   (* Internal recursive copy of a type scheme replacing its generalized
      variables by their associated new fresh type variables. *)
@@ -482,7 +484,28 @@ let (specialize, specialize_with_args) =
      let instance = copy_type_simple scheme.ts_body in
      (* Clean up seen type for further usages. *)
      seen := [] ;
-     instance)
+     instance),
+
+
+
+   (* *************************************************************** *)
+   (* specialize_n_show_instanciated_generalized_vars                 *)
+   (* type_scheme -> (type_simple * (type_simple list))               *)
+   (* {b Descr} : Like [specialize] but also return the list of fresh
+         variables that were created to instanciate the generalized
+         variables of the type scheme.
+
+      {b Rem} : Exported oustide this module.                         *)
+   (* *************************************************************** *)
+   (fun scheme ->
+     (* Copy the type scheme's body. *)
+     let instance = copy_type_simple scheme.ts_body in
+     (* Get the fresh variables that instanciated *)
+     (* the generalized ones of the scheme.       *)
+     let instanciated_generalized_vars = List.map snd !seen in
+     (* Clean up seen type for further usages. *)
+     seen := [] ;
+     (instance, instanciated_generalized_vars))
   )
 ;;
 

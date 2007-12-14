@@ -116,6 +116,15 @@ module MlGenInformation :
 
 
 
+module CoqGenInformation :
+  sig
+    type constructor_mapping_info = unit
+    type label_mapping_info = unit
+    type species_binding_info = unit
+    type value_mapping_info = unit
+  end
+
+
 module ScopingEnv :
   sig
     type t
@@ -218,12 +227,48 @@ module MlGenEnv :
 
     val add_species :
       loc: Location.t -> Parsetree.vname ->
-        MlGenInformation.species_binding_info -> t
-        -> t
+        MlGenInformation.species_binding_info -> t -> t
     val find_species :
       loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
         t -> MlGenInformation.species_binding_info
   end
+
+
+module CoqGenEnv :
+  sig
+    type t
+    val empty : unit -> t
+    val pervasives : unit -> t
+
+    val add_species :
+      loc: Location.t ->
+      Parsetree.vname -> CoqGenInformation.species_binding_info -> t -> t
+    val find_species :
+      loc: Location.t -> current_unit: Types.fname ->
+      Parsetree.ident -> t -> CoqGenInformation.species_binding_info
+
+    val add_value :
+      Parsetree.vname -> CoqGenInformation.value_mapping_info -> t -> t
+    val find_value :
+      loc: Location.t ->
+      current_unit: Types.fname -> Parsetree.expr_ident -> t ->
+        CoqGenInformation.value_mapping_info
+
+    val add_constructor :
+      Parsetree.constructor_name ->
+        CoqGenInformation.constructor_mapping_info -> t -> t
+    val find_constructor :
+      loc: Location.t -> current_unit: Types.fname ->
+        Parsetree.constructor_ident -> t ->
+          CoqGenInformation.constructor_mapping_info
+
+    val add_label :
+      Parsetree.vname -> CoqGenInformation.label_mapping_info -> t -> t
+    val find_label :
+      loc: Location.t -> current_unit: Types.fname ->
+      Parsetree.label_ident -> t -> CoqGenInformation.label_mapping_info
+  end
+
 
 
 val scope_open_module :
@@ -232,7 +277,9 @@ val type_open_module :
   loc: Location.t -> Types.fname -> TypingEnv.t -> TypingEnv.t
 val mlgen_open_module :
   loc: Location.t -> Types.fname -> MlGenEnv.t -> MlGenEnv.t
+val coqgen_open_module :
+  loc: Location.t -> Types.fname -> CoqGenEnv.t -> CoqGenEnv.t
 
 val make_fo_file :
   source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t ->
-    MlGenEnv.t ->unit
+    MlGenEnv.t -> CoqGenEnv.t -> unit
