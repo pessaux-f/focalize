@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.6 2007-12-17 14:31:05 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.7 2007-12-17 16:49:33 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -21,13 +21,27 @@
 
 
 
-let generate_methods _ctx _env field =
+
+let generate_methods ctx print_ctx _env field =
+  let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
   match field with
-   | Env.TypeInformation.SF_sig (_, name, _) ->
+   | Env.TypeInformation.SF_sig (from, name, sch) ->
        (* "rep" is specially handled before, then ignore it now. *)
        if (Parsetree_utils.name_of_vname name) <> "rep" then
          (begin
-         ()
+         (* Because methods are not polymorphic, we take the shortcut not *)
+         (* to verify if the need extra parameters to the type due to     *)
+         (* polymorphism.                                                 *)
+         let ty = Types.specialize sch in
+         Format.fprintf out_fmter "(* From species %a. *)@\n"
+           Sourcify.pp_qualified_species from ;
+         (* Only declared method. Hence appears as a "Variable". *)
+         Format.fprintf out_fmter
+           "@[<2>Variable self_%a :@ %a.@]@\n"
+           Parsetree_utils.pp_vname_with_operators_expanded name
+           (Types.pp_type_simple_to_coq
+              print_ctx ~reuse_mapping: false ~self_is_abstract: true) ty
+           (* [Unsure] Retourner les infos de compil. *)
          end)
    | Env.TypeInformation.SF_let (_from, _name, _params, _scheme, _body) -> ()
    | Env.TypeInformation.SF_let_rec _l -> ()
@@ -156,13 +170,36 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     Species_gen_basics.scc_out_fmter = out_fmter } in
   (* The record type representing the species' type. *)
   Species_record_type_generation.generate_record_type ctx env species_descr ;
+  (* We now extend the collections_carrier_mapping with ourselve known.  *)
+  (* Hence, if we refer to our "rep" we will be directly mapped onto the *)
+  (* "self_T" without needing to re-construct this name each time.       *)
+  let collections_carrier_mapping' =
+    ((current_unit, (Parsetree_utils.name_of_vname species_name)),
+     ("self_T", Species_gen_basics.CCMI_in_or_not_param)) ::
+    ctx.Species_gen_basics.scc_collections_carrier_mapping in
+  let ctx' = { ctx with
+     Species_gen_basics.scc_collections_carrier_mapping =
+       collections_carrier_mapping' } in
+  (* Build the print context for the methods once for all. *)
+  let print_ctx = {
+    Types.cpc_current_unit = ctx.Species_gen_basics.scc_current_unit ;
+    Types.cpc_current_species =
+      Some
+        (Parsetree_utils.type_coll_from_qualified_species
+           ctx.Species_gen_basics.scc_current_species) ;
+    Types.cpc_collections_carrier_mapping =
+      (* Throw the [collection_carrier_mapping_info] *)
+      (* in the printing context.                    *)
+      List.map
+        (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
+        ctx'.Species_gen_basics.scc_collections_carrier_mapping } in
   (* Now, the methods of the species. We deal with "rep" first *)
   (* and then it will be ignore while generating the methods.  *)
   Format.fprintf out_fmter "@\n(* Carrier representation. *)@\n" ;
   Format.fprintf out_fmter "Variable self_T : Set.@\n@\n";
   let _compiled_fields =
     List.map
-      (generate_methods ctx env)
+      (generate_methods ctx' print_ctx env)
       species_descr.Env.TypeInformation.spe_sig_methods in
   (* The end of the chapter hosting the species. *)
   Format.fprintf out_fmter "@]End %s.@\n@." chapter_name

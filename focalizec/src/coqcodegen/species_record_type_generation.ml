@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.9 2007-12-17 14:31:05 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.10 2007-12-17 16:49:33 pessaux Exp $ *)
 
 
 
@@ -369,7 +369,8 @@ let rec let_binding_compile ctx ~local_idents ~is_rec env bd =
   List.iter
     (fun var ->
        Format.fprintf out_fmter "@ (%a : Set)"
-        (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
+        (Types.pp_type_simple_to_coq
+           print_ctx ~reuse_mapping: true ~self_is_abstract: false)
         var)
     generalized_instanciated_vars ;
   (* Record NOW in the environment the number of extra arguments  *)
@@ -388,7 +389,8 @@ let rec let_binding_compile ctx ~local_idents ~is_rec env bd =
        | Some param_ty ->
            Format.fprintf out_fmter "@ (%a : %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
-             (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
+             (Types.pp_type_simple_to_coq
+                print_ctx ~reuse_mapping: true ~self_is_abstract: false)
              param_ty
        | None ->
            (* Because we provided a type scheme to the function         *)
@@ -418,7 +420,8 @@ let rec let_binding_compile ctx ~local_idents ~is_rec env bd =
        assert false
    | Some t ->
        Format.fprintf out_fmter "@ :@ %a"
-         (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) t) ;
+         (Types.pp_type_simple_to_coq
+            print_ctx ~reuse_mapping: true ~self_is_abstract: false) t) ;
   (* Now we don't need anymore the sharing. Hence, clean it. This should not *)
   (* be useful because the other guys usign printing should manage this      *)
   (* themselves (as we did just above by cleaning before activating the      *)
@@ -522,7 +525,8 @@ and generate_expr ctx ~local_idents initial_env initial_expression =
                 let res_ty = Types.extract_fun_ty_result accu_ty in
                 Format.fprintf out_fmter "(%a :@ %a)@ "
                   Parsetree_utils.pp_vname_with_operators_expanded arg_name
-                  (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
+                  (Types.pp_type_simple_to_coq
+                     print_ctx ~reuse_mapping: false ~self_is_abstract: false)
                   arg_ty ;
                 (* Return the remainder of the type to continue. *)
                 res_ty)
@@ -678,7 +682,8 @@ let generate_prop ctx ~local_idents initial_env initial_proposition =
          List.iter
            (fun var ->
               Format.fprintf out_fmter "@ (%a : Set)"
-               (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
+               (Types.pp_type_simple_to_coq
+                  print_ctx ~reuse_mapping: true ~self_is_abstract: false)
                var)
            generalized_instanciated_vars ;
          (* Now, print the real bound variables. *)
@@ -689,7 +694,8 @@ let generate_prop ctx ~local_idents initial_env initial_proposition =
                 Format.fprintf ppf "%s"
                   (Parsetree_utils.vname_as_string_with_operators_expanded vn)))
            vnames
-           (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty ;
+           (Types.pp_type_simple_to_coq
+              print_ctx ~reuse_mapping: true ~self_is_abstract: false) ty ;
          (* IMHO : not really useful, but... doesn't hurt... *)
          Types.purge_type_simple_to_coq_variable_mapping () ;
          (* Here, the bound variables name may mask a "in"-parameter. *)
@@ -934,7 +940,8 @@ let generate_record_type_parameters ctx species_fields =
                  meth) in
             Format.fprintf ppf "(%s : %a)@ "
               llift_name
-              (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false) ty
+              (Types.pp_type_simple_to_coq
+                 print_ctx ~reuse_mapping: false ~self_is_abstract: false) ty
             end))
         meths)
     flat_deps_for_fields
@@ -1011,7 +1018,8 @@ let generate_record_type ctx env species_descr =
           Format.fprintf out_fmter "@[<2>%s_%a : %a"
             my_species_name
             Parsetree_utils.pp_vname_with_operators_expanded n
-            (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false) ty ;
+            (Types.pp_type_simple_to_coq
+               print_ctx ~reuse_mapping: false ~self_is_abstract: false) ty ;
           if semi then Format.fprintf out_fmter " ;" ;
           Format.fprintf out_fmter "@]@\n"
           end)
@@ -1026,7 +1034,8 @@ let generate_record_type ctx env species_descr =
             Format.fprintf out_fmter "%s_%a : %a"
               my_species_name
               Parsetree_utils.pp_vname_with_operators_expanded n
-              (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false) ty ;
+              (Types.pp_type_simple_to_coq
+                 print_ctx ~reuse_mapping: false ~self_is_abstract: false) ty ;
             if semi then Format.fprintf out_fmter " ;" ;
             Format.fprintf out_fmter "@]@\n")
           l
