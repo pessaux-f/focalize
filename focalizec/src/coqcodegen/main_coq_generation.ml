@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.4 2007-12-14 16:18:11 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.5 2007-12-17 14:31:05 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -50,7 +50,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       Env.coqgen_open_module ~loc: phrase_loc modname env
   | Infer.PCM_species (species_def, species_descr, dep_graph) ->
       Species_coq_generation.species_compile
-        ~current_unit out_fmter species_def species_descr dep_graph ;
+        ~current_unit env out_fmter species_def species_descr dep_graph ;
       (* [Unsure] *) env
   | Infer.PCM_collection (_, _, _) ->
       Format.fprintf out_fmter "Infer.PCM_collection TODO@." ;

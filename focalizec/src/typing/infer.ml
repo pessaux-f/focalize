@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.92 2007-12-10 10:14:07 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.93 2007-12-17 14:31:05 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1243,20 +1243,21 @@ and typecheck_prop ~in_proof ctx env prop =
      | Parsetree.Pr_forall (vnames, t_expr, pr)
      | Parsetree.Pr_exists (vnames, t_expr, pr) ->
          Types.begin_definition () ;
-         (* Get the couple (name, type) for each defined variable. *)
-         let bound_variables =
-           let ty = typecheck_type_expr ctx env t_expr in
-           List.map (fun vname -> (vname, ty)) vnames in
+         let ty = typecheck_type_expr ctx env t_expr in
+         Types.end_definition () ;
          (* Now typecheck the prop's body in the extended environment.     *)
-         (* Note that as often, th order bindings are inserted in the      *)
+         (* Note that as often, the order bindings are inserted in the     *)
          (* environment does not matter since parameters can never depends *)
          (* on each other.                                                 *)
+         let scheme = Types.generalize ty in
          let env' =
            List.fold_left
-             (fun accu_env (th_name, th_type) ->
-               let scheme = Types.generalize th_type in
+             (fun accu_env th_name ->
                Env.TypingEnv.add_value th_name scheme accu_env)
-             env bound_variables in
+             env vnames in
+         (* Fix the type scheme in the [t_expr]. *)
+         t_expr.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
+         (* And go on with the ody... *)
          typecheck_prop ~in_proof ctx env' pr
      | Parsetree.Pr_imply (pr1, pr2)
      | Parsetree.Pr_or (pr1, pr2)

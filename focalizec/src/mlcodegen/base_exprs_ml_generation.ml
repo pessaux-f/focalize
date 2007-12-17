@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.13 2007-12-14 16:18:11 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.14 2007-12-17 14:31:05 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -153,7 +153,10 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
            let extra_args =
              List.assoc
                vname ctx.Misc_ml_generation.rcc_lambda_lift_params_mapping in
-           List.iter (fun s -> Format.fprintf out_fmter "@ %s" s) extra_args
+           List.iter
+             (fun (s, _) ->
+               (* Don't print types in OCaml to prevent being to verbose. *)
+               Format.fprintf out_fmter "@ %s" s) extra_args
             with Not_found -> ()
          end)
        end)
@@ -201,12 +204,10 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                    (* while generating the extra OCaml function's        *)
                    (* parameters due to depdencencies coming from the    *)
                    (* species parameter. I.e: "_p_", followed by the     *)
-                   (* lowercase species parameter name, followed by "_", *)
-                   (* followed by the method's name.                     *)
+                   (* species parameter name, followed by "_", followed  *)
+                   (* by the method's name.                              *)
                    let prefix =
-                     "_p_" ^
-                     (String.uncapitalize
-                        (Parsetree_utils.name_of_vname coll_name)) ^
+                     "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^
                      "_" in
                    Format.fprintf out_fmter "%s%a"
                      prefix
@@ -237,9 +238,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                        ctx.Misc_ml_generation.rcc_species_parameters_names then
                      (begin
                      let prefix =
-                       "_p_" ^
-                       (String.uncapitalize
-                          (Parsetree_utils.name_of_vname coll_name)) ^
+                       "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^
                        "_" in
                      Format.fprintf out_fmter "%s%a"
                        prefix Parsetree_utils.pp_vname_with_operators_expanded
@@ -301,7 +300,7 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
             | ((Parsetree.EL_external _), _) -> false)
           mapping_info
       with Not_found ->
-        (* No OCam mapping found. *)
+        (* No OCaml mapping found. *)
         raise
           (Externals_ml_generation.No_external_constructor_caml_def
              cstr_expr) in
@@ -640,7 +639,7 @@ and generate_expr ctx ~local_idents env initial_expression =
                external_expr.Parsetree.ast_desc in
            Format.fprintf out_fmter "%s" ocaml_binding
          with Not_found ->
-           (* No OCam mapping found. *)
+           (* No OCaml mapping found. *)
            raise
              (Externals_ml_generation.No_external_value_caml_def
                 ((Parsetree.Vlident "<expr>"), expr.Parsetree.ast_loc))
@@ -703,7 +702,7 @@ and generate_expr ctx ~local_idents env initial_expression =
               | ((Parsetree.EL_external _), _) -> false)
             mapping_info
         with Not_found ->
-          (* No OCam mapping found. *)
+          (* No OCaml mapping found. *)
           raise (Externals_ml_generation.No_external_field_caml_def label) in
       Format.fprintf out_fmter "%s" ocaml_binding
     with

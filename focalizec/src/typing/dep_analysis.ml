@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.25 2007-12-10 10:14:07 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.26 2007-12-17 14:31:05 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -35,7 +35,7 @@ open Parsetree;;
 
     {b Rem} : Exported outside this module.                   *)
 (* ********************************************************** *)
-exception Ill_formed_species of Parsetree.qualified_vname;;
+exception Ill_formed_species of Parsetree.qualified_vname ;;
 
 
 
@@ -697,7 +697,7 @@ type dependency_kind =
 (* ************************************************************************ *)
 type name_node = {
   (** Name of the node, i.e. one name of a species fields. *)
-  nn_name : Parsetree.vname;
+  nn_name : Parsetree.vname ;
   (** The type of the field wearing this name. *)
   nn_type : Types.type_simple ;
   (** Means that the current names depends of the children nodes. I.e. the
@@ -839,7 +839,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
       | Env.TypeInformation.SF_property (_, n, sch, prop) ->
           let ty = Types.specialize sch in
           local_build_for_one_theo_property n ty prop None)
-    fields;
+    fields ;
   (* Return the list of nodes of the graph. *)
   !tree_nodes
 ;;
@@ -870,7 +870,7 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
     (fun { nn_name = n } ->
       Printf.fprintf out_hd "\"%s\" [shape=box,fontsize=10];\n"
         (Parsetree_utils.name_of_vname n))
-    tree_nodes;
+    tree_nodes ;
   (* Outputs all the edges between the nodes. *)
   List.iter
     (fun { nn_name = n; nn_children = children } ->
@@ -886,9 +886,9 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
             (Parsetree_utils.name_of_vname n)
             (Parsetree_utils.name_of_vname child_name) style color)
         children)
-    tree_nodes;
+    tree_nodes ;
   (* Finally, outputs the trailer of the dotty file. *)
-  Printf.fprintf out_hd " \n}\n";
+  Printf.fprintf out_hd " \n}\n" ;
   close_out out_hd
 ;;
 
@@ -924,10 +924,10 @@ let node_out_degree node =
     (fun (n, _) ->
       if not (List.mem n.nn_name !seen) then
         (begin
-        seen := n.nn_name :: !seen;
+        seen := n.nn_name :: !seen ;
         incr count
         end))
-    node.nn_children;
+    node.nn_children ;
   !count
 ;;
 
@@ -968,7 +968,7 @@ let compute_fields_reordering ~current_species fields =
       let nb_distict_children = node_out_degree name_node in
       out_degree :=
         NameNodeMap.add name_node (ref nb_distict_children) !out_degree)
-    dep_graph_nodes;
+    dep_graph_nodes ;
   (* The working list... *)
   let c_queue = Queue.create () in
   (* Initialization with nodes having a out degree equal to 0.*)
@@ -976,10 +976,10 @@ let compute_fields_reordering ~current_species fields =
     (fun node degree ->
       if !degree = 0 then
         begin
-        Queue.push node c_queue;
+        Queue.push node c_queue ;
         out_degree := NameNodeMap.remove node !out_degree
         end)
-    !out_degree;
+    !out_degree ;
   (* The list with the newly ordered fields names. We build it reversed *)
   (* for sake of efficiency. We will need to reverse it at the end.     *)
   let revd_order_list = ref ([] : Parsetree.vname list) in
@@ -989,7 +989,7 @@ let compute_fields_reordering ~current_species fields =
     while true do
       let j = Queue.take c_queue in
       (* [j] can now be output. *)
-      revd_order_list := j.nn_name :: !revd_order_list;
+      revd_order_list := j.nn_name :: !revd_order_list ;
       (* Search all parents, i, of  j to decrement their out degree. *)
       NameNodeMap.iter
         (fun i i_out_degree ->
@@ -1001,12 +1001,12 @@ let compute_fields_reordering ~current_species fields =
             (begin
             (* The node [j] appears in [i]'s childrens, hence [i] *)
             (* is right a parent of [j].                          *)
-            decr i_out_degree;
+            decr i_out_degree ;
             if !i_out_degree = 0 then
               (begin
               (* This parent is now of degree 0, it can now be processed *)
               (* because all its children have already been.             *)
-              Queue.push i c_queue;
+              Queue.push i c_queue ;
               out_degree := NameNodeMap.remove i !out_degree
               end)
             end))
@@ -1019,7 +1019,7 @@ let compute_fields_reordering ~current_species fields =
     (* graph. Because on well-formness properties, this should      *)
     (* never appear except if the well-formness algorithm is        *)
     (* buggy somewhere else.                                        *)
-    if not (NameNodeMap.is_empty!out_degree) then assert false
+    if not (NameNodeMap.is_empty !out_degree) then assert false
   end);
   (* And finaly, reverse the order list to get it in the right ... order. *)
   List.rev !revd_order_list
@@ -1056,7 +1056,7 @@ let is_reachable start_node end_node =
           (fun (n, _) -> n == end_node) current_node.nn_children then true
       else
         (begin
-        seen := current_node :: !seen;
+        seen := current_node :: !seen ;
         (* The [end_node] was not found in the children, *)
         (* then search in the children.                  *)
         List.exists (fun (n, _) -> rec_search n) current_node.nn_children

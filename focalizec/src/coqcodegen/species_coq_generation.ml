@@ -11,13 +11,29 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.5 2007-12-10 10:14:07 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.6 2007-12-17 14:31:05 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
 (** {b Descr} : This module performs the compilation from FoCaL to
               Coq of FoCaL's collections and species.            *)
 (* *************************************************************** *)
+
+
+
+let generate_methods _ctx _env field =
+  match field with
+   | Env.TypeInformation.SF_sig (_, name, _) ->
+       (* "rep" is specially handled before, then ignore it now. *)
+       if (Parsetree_utils.name_of_vname name) <> "rep" then
+         (begin
+         ()
+         end)
+   | Env.TypeInformation.SF_let (_from, _name, _params, _scheme, _body) -> ()
+   | Env.TypeInformation.SF_let_rec _l -> ()
+   | Env.TypeInformation.SF_theorem (_from, _name, _, _, _) -> ()
+   | Env.TypeInformation.SF_property (_from, _name, _, _) -> ()
+;;
 
 
 
@@ -102,7 +118,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
 
 
 
-let species_compile ~current_unit out_fmter species_def species_descr
+let species_compile env ~current_unit out_fmter species_def species_descr
     dep_graph =
   let species_def_desc = species_def.Parsetree.ast_desc in
   let species_name = species_def_desc.Parsetree.sd_name in
@@ -139,7 +155,15 @@ let species_compile ~current_unit out_fmter species_def species_descr
     Species_gen_basics.scc_lambda_lift_params_mapping = [] ;
     Species_gen_basics.scc_out_fmter = out_fmter } in
   (* The record type representing the species' type. *)
-  Species_record_type_generation.generate_record_type ctx species_descr ;
-
+  Species_record_type_generation.generate_record_type ctx env species_descr ;
+  (* Now, the methods of the species. We deal with "rep" first *)
+  (* and then it will be ignore while generating the methods.  *)
+  Format.fprintf out_fmter "@\n(* Carrier representation. *)@\n" ;
+  Format.fprintf out_fmter "Variable self_T : Set.@\n@\n";
+  let _compiled_fields =
+    List.map
+      (generate_methods ctx env)
+      species_descr.Env.TypeInformation.spe_sig_methods in
+  (* The end of the chapter hosting the species. *)
   Format.fprintf out_fmter "@]End %s.@\n@." chapter_name
 ;;

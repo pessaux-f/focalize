@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.56 2007-12-14 16:18:11 pessaux Exp $ *)
+(* $Id: env.ml,v 1.57 2007-12-17 14:31:05 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -641,10 +641,17 @@ end
 (* *********************************************************************** *)
 (* *********************************************************************** *)
 module CoqGenInformation = struct
-  type constructor_mapping_info = unit
+  type constructor_mapping_info = {
+    (** The number of extra argument the constructor has due to its
+        polymorphism. *)
+    cmi_num_polymorphics_extra_args : int
+    }
+
   type label_mapping_info = unit
   type species_binding_info = unit
-  type value_mapping_info = unit
+  (** The number of extra argument the identifier has due to its
+      polymorphism. *)
+  type value_mapping_info = int
 
   (* ************************************************************** *)
   (** {b Descr} : Type abbreviation to shorten the structure of the
@@ -653,7 +660,7 @@ module CoqGenInformation = struct
       {b Rem} : Not exported outside this module.                   *)
   (* ************************************************************** *)
   type env =
-    (constructor_mapping_info, label_mapping_info, unit, unit,
+    (constructor_mapping_info, label_mapping_info, unit, value_mapping_info,
      species_binding_info) generic_env
 end
 ;;
@@ -837,7 +844,7 @@ let (scope_find_module, type_find_module,
    (* ******************************************************************* *)
    (* coqgen_find_module                                                  *)
    (*   loc: Location.t -> current_unit: Types.fname ->                   *)
-   (*   Types.fname option -> MlGenInformation.env ->                     *)
+   (*   Types.fname option -> CoqGenInformation.env ->                    *)
    (*     CoqGenInformation.env                                           *)
    (** {b Descr} : Wrapper to lookup a ml generation environment inside
                  an external interface file. Note that if it is requested
@@ -848,11 +855,11 @@ let (scope_find_module, type_find_module,
 
        {b Rem} : Not exported outside this module.                        *)
    (* ******************************************************************* *)
-   (fun ~loc ~current_unit fname_opt mlgen_env ->
+   (fun ~loc ~current_unit fname_opt coqgen_env ->
      match fname_opt with
-      | None -> mlgen_env
+      | None -> coqgen_env
       | Some fname ->
-          if current_unit = fname then mlgen_env
+          if current_unit = fname then coqgen_env
           else (internal_find_module ~loc fname).ffs_coqgeneration),
 
 
@@ -1552,7 +1559,10 @@ module MlGenEMAccess = struct
 
 
   let make_value_env_from_species_methods _species _spec_info =
-    assert false   (** Non sense for ml code generation environments ! *)
+    (* Non sense for ml code generation environments because we do not *)
+    (* provide any [find_value] function and that's this function that *)
+    (* requires [make_value_env_from_species_methods].                 *)
+    assert false
 
 
   (* No real need in the ml code generation environment case. *)
@@ -1577,7 +1587,7 @@ module CoqGenEMAccess = struct
 
 
   let make_value_env_from_species_methods _species _spec_info =
-    assert false   (** Non sense for coq code generation environments ! *)
+    failwith "CoqGenEMAccess.make_value_env_from_species_methods : TODO"
 
 
   (* No real need in the ml code generation environment case. *)

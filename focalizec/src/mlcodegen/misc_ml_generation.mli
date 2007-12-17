@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.mli,v 1.8 2007-12-14 16:18:11 pessaux Exp $ *)
+(* $Id: misc_ml_generation.mli,v 1.9 2007-12-17 14:31:05 pessaux Exp $ *)
 
 
 
@@ -21,11 +21,21 @@ type reduced_compil_context = {
   rcc_current_unit : Types.fname ;
   rcc_species_parameters_names : Parsetree.vname list ;
   rcc_collections_carrier_mapping : (Types.type_collection * string) list ;
-  rcc_lambda_lift_params_mapping : (Parsetree.vname * (string list)) list ;
+  rcc_lambda_lift_params_mapping :
+    (Parsetree.vname * ((string * Types.type_simple )list)) list ;
   rcc_out_fmter : Format.formatter
 }
+
 val bind_parameters_to_types_from_type_scheme :
   Types.type_scheme option -> Parsetree.vname list ->
     (((Parsetree.vname * Types.type_simple option) list) *
       (Types.type_simple option) *
       (Types.type_simple list))
+
+val compute_lambda_liftings_for_field :
+  current_species: Parsetree.qualified_species -> Parsetree.vname list ->
+    Dep_analysis.name_node list -> Parsetree.vname ->
+      Parsetree.expr ->
+        ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list *
+         (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *
+         (string * Types.type_simple) list)

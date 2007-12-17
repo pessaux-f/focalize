@@ -118,10 +118,13 @@ module MlGenInformation :
 
 module CoqGenInformation :
   sig
-    type constructor_mapping_info = unit
+    type constructor_mapping_info = {
+      cmi_num_polymorphics_extra_args : int
+    }
+
     type label_mapping_info = unit
     type species_binding_info = unit
-    type value_mapping_info = unit
+    type value_mapping_info = int
   end
 
 
