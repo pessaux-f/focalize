@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.8 2007-12-21 14:47:35 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.9 2007-12-21 15:42:28 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -84,7 +84,9 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
     (* Start the Coq function definition. *)
     (match let_connect with
      | LC_first_non_rec ->
-         Format.fprintf out_fmter "@[<2>Definition %a_%a"
+         (* Beware that the definition corresponding to the *)
+         (* method outside the record type has 2 "_"'s !    *)
+         Format.fprintf out_fmter "@[<2>Definition %a__%a"
            Parsetree_utils.pp_vname_with_operators_expanded species_name
            Parsetree_utils.pp_vname_with_operators_expanded name
      | LC_first_rec ->
@@ -246,10 +248,10 @@ let generate_methods ctx print_ctx env species_parameters_names field =
               the species definition parameters and the names to be used
               later during the Coq translation.
               For a species parameter [A is/in ... ], the name that will be
-              used is directly the name of the species parameter without
-              any change. No need like in OCaml to add a stamp because we
-              don't lowercase names. Hence parameters will never wear the
-              same name.
+              used isthe name of the species parameter + "_T"
+              No need like in OCaml to add a stamp because we don't
+              lowercase names. Hence parameters will never wear the same
+              name.
               This avoids the need to remind the stamp of a "is" parameter
               that is used to make a "in" parameter. In effect, for the
               "species Me (Naturals is IntModel, n in Naturals)" code,
@@ -272,7 +274,8 @@ let build_collections_carrier_mapping ~current_unit species_descr =
           (* "is" parameter whose species expr is [param_expr] that will  *)
           (* be used to create the Coq type expression annotating this    *)
           (* parameter in the hosting species record type.                *)
-          (type_coll, (carrier_name, (Species_gen_basics.CCMI_is param_expr)))
+          (type_coll,
+           (carrier_name ^ "_T", (Species_gen_basics.CCMI_is param_expr)))
       | Env.TypeInformation.SPAR_in (n, type_coll) ->
           (* Build the name that will represent this parameter's *)
           (* carrier seen from Coq.                              *)
@@ -281,7 +284,8 @@ let build_collections_carrier_mapping ~current_unit species_descr =
           (* need any species expression to annotate this parameter in the   *)
           (* Coq type expression annotating this parameter in the hosting    *)
           (* species record type: it will simply be of the type [type_coll]. *)
-          (type_coll, (carrier_name, Species_gen_basics.CCMI_in_or_not_param)))
+          (type_coll,
+           (carrier_name ^"_T", Species_gen_basics.CCMI_in_or_not_param)))
     species_descr.Env.TypeInformation.spe_sig_params
 ;;
 

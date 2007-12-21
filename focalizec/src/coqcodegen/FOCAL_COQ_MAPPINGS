@@ -1,6 +1,6 @@
 Nom du record d'une espèce : le nom de l'espèce.
 
-Nom de paramètre d'espèce : le nom de ce paramètre + un stamp.
+Nom de paramètre d'espèce : "__p" + le nom de ce paramètre.
 
 Nom de type d'espèce : le nom de l'espèce + "_T".
 
@@ -9,5 +9,8 @@ Nom de type : le nom du type + "__t".
 Nom de module: nom de fichier coq, sans suffixe et sans changer la casse
   (contrairement aux nom de modules en OCaml) !
 
-Nom d'une méthode (et donc du champ de record lui correspondant) : nom de
+Nom d'une méthode dans champ de record lui correspondant : nom de
   l'espèce l'hébergeant + "_" + nom de la méthode.
+
+Nom d'une méthode définie en dehors du record : nom de
+  l'espèce l'hébergeant + "__" + nom de la méthode.
