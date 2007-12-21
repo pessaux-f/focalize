@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.57 2007-12-17 14:31:05 pessaux Exp $ *)
+(* $Id: env.ml,v 1.58 2007-12-21 14:47:35 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -596,7 +596,7 @@ module MlGenInformation = struct
         that the first name of the list is the name of the first species
         parameter and so on. *)
     cgi_implemented_species_params_names :
-      (Parsetree.vname * ScopeInformation.species_parameter_kind) list;
+      (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
     (** The list mapping for each parameter name, the set of methods the
         collection generator depends on, hence must be provided an instance
         to be used. Note that the list is not guaranted to be ordered
@@ -648,7 +648,10 @@ module CoqGenInformation = struct
     }
 
   type label_mapping_info = unit
-  type species_binding_info = unit
+  type species_binding_info =
+    (** The fields names of the species. *)
+    Parsetree.vname list
+
   (** The number of extra argument the identifier has due to its
       polymorphism. *)
   type value_mapping_info = int
@@ -1586,8 +1589,17 @@ module CoqGenEMAccess = struct
       species = [] }
 
 
-  let make_value_env_from_species_methods _species _spec_info =
-    failwith "CoqGenEMAccess.make_value_env_from_species_methods : TODO"
+  let make_value_env_from_species_methods _species spec_info =
+    (* Because methods are never polymorphics this was checked before), *)
+    (* we can safely insert each method as a value bound to 0 extra     *)
+    (* parameters that woud come from ... polymorphism.                 *)
+    let values_bucket =
+      List.map
+        (fun field_name -> (field_name, (BO_absolute 0)))
+        spec_info in
+    { constructors = []; labels = []; types = []; values = values_bucket;
+      species = [] }
+
 
 
   (* No real need in the ml code generation environment case. *)

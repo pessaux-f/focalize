@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.5 2007-12-17 14:31:05 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.6 2007-12-21 14:47:35 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -49,9 +49,15 @@ let toplevel_compile env ~current_unit out_fmter = function
       (* and return the environment extended with these "opened" bindings.  *)
       Env.coqgen_open_module ~loc: phrase_loc modname env
   | Infer.PCM_species (species_def, species_descr, dep_graph) ->
-      Species_coq_generation.species_compile
-        ~current_unit env out_fmter species_def species_descr dep_graph ;
-      (* [Unsure] *) env
+      let spe_binding_info =
+        Species_coq_generation.species_compile
+          ~current_unit env out_fmter species_def species_descr dep_graph in
+      (* Return the coq code generation environment extended *)
+      (* by the current species's information.               *)
+      Env.CoqGenEnv.add_species
+        ~loc: species_def.Parsetree.ast_loc
+        species_def.Parsetree.ast_desc.Parsetree.sd_name
+        spe_binding_info env
   | Infer.PCM_collection (_, _, _) ->
       Format.fprintf out_fmter "Infer.PCM_collection TODO@." ;
       (* [Unsure] *) env

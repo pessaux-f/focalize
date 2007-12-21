@@ -123,7 +123,7 @@ module CoqGenInformation :
     }
 
     type label_mapping_info = unit
-    type species_binding_info = unit
+    type species_binding_info = Parsetree.vname list
     type value_mapping_info = int
   end
 

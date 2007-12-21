@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.mli,v 1.15 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: sourcify.mli,v 1.16 2007-12-21 14:47:35 pessaux Exp $ *)
 
 (** Printing source files from AST. *)
 
@@ -21,6 +21,7 @@ val pp_qualified_vname : Format.formatter -> Parsetree.qualified_vname -> unit
 val pp_qualified_species :
     Format.formatter -> Parsetree.qualified_species -> unit
 val pp_ident : Format.formatter -> Parsetree.ident -> unit
+val pp_expr_ident : Format.formatter -> Parsetree.expr_ident -> unit
 val pp_label_ident : Format.formatter -> Parsetree.label_ident -> unit
 val pp_constructor_ident :
   Format.formatter -> Parsetree.constructor_ident -> unit

@@ -299,8 +299,8 @@ species Meet_semi_lattice inherits Setoid =
               property inf_is_associative, equal_transitive, equal_symmetric
          <2>3 prove !equal (x, !inf (x, z))
               by step <2>2, <2>0
-	         property equal_symmetric, equal_transitive,
-	           inf_left_substitution_rule
+                 property equal_symmetric, equal_transitive,
+                   inf_left_substitution_rule
          <2>4 qed
               by step <2>3
                  definition of order_inf
@@ -509,7 +509,7 @@ species Modular_lattice inherits Lattice =
 (** a generalization of ditributivity  *)
 property modular_law: all x y z in Self,
   !order_inf(x, y) -> !equal(!inf(!sup(x, y), !sup(x, z)),
-			    !inf(y, !sup(!inf(x, y), z)));
+                            !inf(y, !sup(!inf(x, y), z)));
 
 end
 ;;
@@ -584,21 +584,21 @@ species Distributive_lattice
          assume z in Self,
          assume H: !order_inf(x, y),
          prove !equal(!inf(y, !sup(!inf(x, y), z)),
-		      !sup(x, !inf(y, z)))
+                      !sup(x, !inf(y, z)))
          <2>0 prove !equal(x, !inf(x, y))
               by step <1>1 definition of order_inf
          <2>1 prove !equal(!inf(y, !sup(!inf(x, y), z)), 
-			   !sup(!inf(y, !inf(x, y)), !inf(y, z)))
+                           !sup(!inf(y, !inf(x, y)), !inf(y, z)))
               by property inf_left_distributes
          <2>2 prove !equal(!inf(y, !inf(x, y)), !inf(y, x))
-	      by step <2>0
+              by step <2>0
                  property inf_right_substitution_rule, equal_symmetric
          <2>3 prove !equal(!sup(!inf(y, !inf(x, y)), !inf(y, z)), 
-			   !sup(!inf(y, x), !inf(y, z)))
+                           !sup(!inf(y, x), !inf(y, z)))
               by step <2>2
                  property sup_left_substitution_rule
          <2>4 prove !equal(!sup(!inf(y, x), !inf(y, z)), 
-			   !sup(x, !inf(y, z)))
+                           !sup(x, !inf(y, z)))
               <3>0 prove !equal(!inf(y, x), x)
                    by step <2>0
                       property inf_commutes,
@@ -1151,21 +1151,21 @@ species Ordered_set_as_lattice
                         by hypothesis H
                            definition of geq
                    <4>2 prove !equal(!sup(y, x), y)
-		        by step <4>1
+                        by step <4>1
                            property equal_reflexive
                            definition of sup
                    <4>f qed
                       by step <4>2
                          property sup_commutes, 
-		                  equal_symmetric, equal_transitive
+                                  equal_symmetric, equal_transitive
               <3>2 prove !equal(x, !inf(x, y))
                    by hypothesis H
                       property equal_reflexive
                       definition of inf
               <3>3 prove !equal(!inf(x, !sup(x, y)), 
-				!inf(x, y))
+                                !inf(x, y))
 (* [rr]: loops?    by step <3>1 property !inf_substitution_rule, !equal_symmetric *)
-		   by step <3>1
+                   by step <3>1
                       property inf_right_substitution_rule, equal_symmetric
               <3>f qed
                  by step <3>3, <3>2
@@ -1180,8 +1180,8 @@ species Ordered_set_as_lattice
                       property equal_reflexive
                       definition of sup
               <3>3 prove !equal(!inf(x, !sup(x, y)), 
-				!inf(x, x))
-		   by step <3>2
+                                !inf(x, x))
+                   by step <3>2
                       property inf_right_substitution_rule, equal_symmetric
               <3>f qed
                  by step <3>2, <3>3

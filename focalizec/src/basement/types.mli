@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.26 2007-12-17 16:49:33 pessaux Exp $ *)
+(* $Id: types.mli,v 1.27 2007-12-21 14:47:35 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -57,6 +57,8 @@ val type_rep_species :
 (** Generate the carrier type of the currently analysed species. *)
 val type_self : unit -> type_simple
 val is_bool_type : type_simple -> bool
+
+val refers_to_self_p : type_simple -> bool
 
 val subst_type_simple :
   type_collection -> type_collection -> type_simple -> type_simple
@@ -108,11 +110,16 @@ type coq_print_context = {
   cpc_collections_carrier_mapping : (type_collection * string) list
 }
 
+type coq_self_representation =
+  | CSR_abst
+  | CSR_self
+  | CSR_species
+
 val pp_type_simple_to_coq :
-  coq_print_context -> reuse_mapping: bool -> self_is_abstract:bool ->
-    Format.formatter -> type_simple -> unit
+  coq_print_context -> reuse_mapping: bool ->
+    self_as: coq_self_representation -> Format.formatter -> type_simple -> unit
 val pp_type_scheme_to_coq :
-  coq_print_context ->self_is_abstract:bool -> Format.formatter ->
+  coq_print_context -> self_as: coq_self_representation -> Format.formatter ->
     type_scheme -> unit
 
 val purge_type_simple_to_coq_variable_mapping : unit -> unit
