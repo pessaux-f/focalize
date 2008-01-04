@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.11 2007-12-21 14:47:35 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.12 2008-01-04 15:32:49 pessaux Exp $ *)
 
 
 
@@ -824,6 +824,7 @@ let rec generate_expr_as_species_parameter_expression ~current_unit ppf expr =
 
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
+(* [Unsure] Encore utile ? *)
 let generate_parameter_species_expr ~current_unit ppf species_expr =
   let expr_desc = species_expr.Parsetree.ast_desc in
   (match expr_desc.Parsetree.se_name.Parsetree.ast_desc with
@@ -843,6 +844,9 @@ let generate_parameter_species_expr ~current_unit ppf species_expr =
     end)
 ;;
 
+
+(* [Unsure] CCMI_is blabla. "blabla" est-il encore justifié puisque le type
+   Coq des paramètres "is" est maintenant toujours "Set" . *)
 
 
 (* ********************************************************************** *)
@@ -866,10 +870,7 @@ let generate_record_type_parameters ctx species_fields =
     (fun ((param_ty_mod, param_ty_coll), (param_name, param_kind)) ->
       Format.fprintf ppf "@[<1>(%s :@ " param_name ;
       (match param_kind with
-       | Species_gen_basics.CCMI_is parameter_expr ->
-           generate_parameter_species_expr
-             ~current_unit: ctx.Species_gen_basics.scc_current_unit
-             ppf parameter_expr
+       | Species_gen_basics.CCMI_is _ -> Format.fprintf ppf "Set"
        | Species_gen_basics.CCMI_in_or_not_param ->
            if param_ty_mod <> ctx.Species_gen_basics.scc_current_unit then
              Format.fprintf ppf "%s." param_ty_mod ;

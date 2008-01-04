@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.20 2007-12-17 14:31:05 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.21 2008-01-04 15:32:49 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -394,8 +394,8 @@ let generate_one_field_binding ctx env ~let_connect species_parameters_names
      | LC_following ->
          Format.fprintf out_fmter "@[<2>and %a"
            Parsetree_utils.pp_vname_with_operators_expanded name) ;
-    (* Now, output the extra parameters induced by the lambda liftings *)
-    (* we did because of the species parameters and our dependencies.  *)
+     (* Now, output the extra parameters induced by the lambda liftings *)
+     (* we did because of the species parameters and our dependencies.  *)
      List.iter
      (fun (param_name, _) ->
         (* In OCaml, we don't print the types to prevent being verbose. *)
@@ -725,8 +725,8 @@ let generate_collection_generator ctx compiled_species_fields =
     (* Now, apply the method generator to each of the extra arguments *)
     (* induced by the various lambda-lifting we previously performed. *)
     (* First, the extra arguments due to the species parameters methods we  *)
-    (* depends of. Here we will not use them to lambda-lift them this time, *)
-    (* but to apply them !  The name used for application is formed         *)
+    (* depends on. Here we will not use them to lambda-lift them this time, *)
+    (* but to apply them ! The name used for application is formed          *)
     (* according to the same scheme we used at lambda-lifting time:         *)
     (* "_p_" + species parameter name + "_" + called method name.           *)
     List.iter

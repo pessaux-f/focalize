@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.9 2007-12-21 15:42:28 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.10 2008-01-04 15:32:49 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -52,6 +52,9 @@ type compiled_field_memory = {
   (** The methods of our inheritance tree the method depends on. *)
   cfm_decl_children :
     (Dep_analysis.name_node * Dep_analysis.dependency_kind) list ;
+  (* Tell if the method's type involves "Self", hence if it has an extra
+      Coq argument to represent the type of "Self". *)
+  cfm_need_self_extra_arg : bool
 } ;;
 
 
@@ -69,9 +72,21 @@ type compiled_species_fields =
 
 
 (* [Unsure] Quasiment comme pour OCaml ! Factoriser ! Nettoyer !!! *)
+(* Return whether the method's type uses "Self", then whether it has an
+   extra first argument that is "abst_speciesname : Set". This must be
+   reminded because when applying the method generator, this extra argument
+   will have to be provided. *)
 let generate_one_field_binding ctx print_ctx env ~let_connect
-    params_llifted (from, name, params, scheme, body) =
+    params_llifted _dependencies_from_params decl_children
+    (from, name, params, scheme, body) =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
+  (* We need to check if at least one of these parameter has a type using *)
+  (* "Self". In this case, "Self" being represented as "asbt_T", (i.e. a  *)
+  (* type variable in OCaml), we need to make the polymorphism explicit   *)
+  (* in Coq, that is, add an extra param "(asbt_T : Set)" in head of the  *)
+  (* remaining parameters.                                                *)
+  let need_self_extra_arg =
+    List.exists (fun (_, t) -> Types.refers_to_self_p t) params_llifted in
   (* First of all, only methods defined in the current species must *)
   (* be generated. Inherited methods ARE NOT generated again !      *)
   if from = ctx.Species_gen_basics.scc_current_species then
@@ -103,16 +118,10 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
            Parsetree_utils.pp_vname_with_operators_expanded name) ;
          *)
          failwith "TODO 2") ;
+    (* Check if an extra parameter is required to represent "Self"'s type. *)
+    if need_self_extra_arg then Format.fprintf out_fmter "@ (abst_T : Set)" ;
     (* Now, output the extra parameters induced by the lambda liftings *)
     (* we did because of the species parameters and our dependencies.  *)
-    (* But before, we need to check if at least one of these parameter *)
-    (* has a type using "Self". In this case, "Self" being represented *)
-    (* as "asbt_T", (i.e. a type variable in OCaml), we need to make   *)
-    (* the polymorphism explicit in Coq, that is, add an extra param   *)
-    (* "(asbt_T : Set)" in head of the remaining parameters.           *)
-    if List.exists (fun (_, t) -> Types.refers_to_self_p t) params_llifted then
-      Format.fprintf out_fmter "@ (abst_T : Set)" ;
-    (* Now dump the other extra parameters. *)
     List.iter
       (fun (param_name, param_ty) ->
         Format.fprintf out_fmter "@ (%s : %a)" param_name
@@ -172,6 +181,32 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
     Species_record_type_generation.generate_expr
       ctx ~local_idents: [] ~self_as: Types.CSR_abst env body ;
     (* Done... Then, final carriage return. *)
+    Format.fprintf out_fmter ".@]@\n" ;
+    (* Now, generate the "Let self_..." by applying this method generator.   *)
+    (* It is required in case where a "property" uses the current method. In *)
+    (* effect, because in "property"s we don't lambda-lift, to keep late     *)
+    (* binding, "property"s always use the "self_..." Coq "Variable"         *)
+    (* representing the method.                                              *)
+    Format.fprintf out_fmter "@[<2>Let self_%a :=@ %a__%a"
+      Parsetree_utils.pp_vname_with_operators_expanded name
+      Parsetree_utils.pp_vname_with_operators_expanded species_name
+      Parsetree_utils.pp_vname_with_operators_expanded name ;
+    (* If required, apply the above method generator to the  *)
+    (* extra argument that represents "Self" : i.e "self_T". *)
+    if need_self_extra_arg then Format.fprintf out_fmter "@ self_T" ;
+    (* Now, apply to each extra parameter coming from the lambda liftings. *)
+    (* First, the extra arguments due to the species parameters methods we *)
+    (* depends on. They are names parameter name + "_" + method name.      *)
+(* [Unsure] TODO. En plus, il faut penser à rajouter 1 Variable par méthode
+   des paramètres de l'espèce (dont 1 méthode au moins de l'espèce courante
+   dépend serait certainement une bonne optim. *)
+    (* Next, the extra arguments due to methods of ourselves we depend on. *)
+    (* They are always present in the species under the name "self_...".   *)
+    List.iter
+      (fun ({ Dep_analysis.nn_name = dep_name }, _) ->
+        Format.fprintf out_fmter "@ self_%a"
+          Parsetree_utils.pp_vname_with_operators_expanded dep_name)
+      decl_children ;
     Format.fprintf out_fmter ".@]@\n"
     end)
   else
@@ -181,7 +216,8 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
       Format.eprintf
         "Field '%a' inherited but not (re)-declared is not generated again.@."
         Parsetree_utils.pp_vname_with_operators_expanded name
-    end)
+    end) ;
+  need_self_extra_arg
 ;;
 
 
@@ -199,8 +235,19 @@ let generate_methods ctx print_ctx env species_parameters_names field =
          let ty = Types.specialize sch in
          Format.fprintf out_fmter "(* From species %a. *)@\n"
            Sourcify.pp_qualified_species from ;
-         (* [Unsure] Est-ce vraiment nécessaire ? En Caml on ignore les sig. *)
-         (* Only declared method. Hence appears as a "Variable". *)
+         (* Only declared method. Hence appears as a "Variable". In OCaml *)
+         (* "sig"s are ignored and methods using them are lambda-lifted.  *)
+         (* In Coq, we also lambda-lift this way methods, so the "sig"s   *)
+         (* could seem to be ignored. However, it's impossible to lambda  *)
+         (* lift in "property"s. So the variable is still needed. It will *)
+         (* then be automatically abstracted by Coq in the "property".    *)
+         (* Then, for methods generators where lambda-abstraction has     *)
+         (* been done, we will apply these generators to this variable.   *)
+         (* [Unsure] En fait, comme on n'utilise les générateurs de       *)
+         (* méthodes dans les générateurs de collection et qu'à ce moment *)
+         (* toutes les methodes sont définies, si ça se trouve on n'aura  *)
+         (* même pas à utiliser la Variable, maisd directement la VRAIE   *)
+         (* méthodes.                                                     *)
          Format.fprintf out_fmter
            "@[<2>Variable self_%a :@ %a.@]@\n"
            Parsetree_utils.pp_vname_with_operators_expanded name
@@ -218,9 +265,11 @@ let generate_methods ctx print_ctx env species_parameters_names field =
        (* No recursivity, then the method cannot call itself in its body *)
        (* then no need to set the [scc_lambda_lift_params_mapping] of    *)
        (* the context.                                                   *)
-       generate_one_field_binding
-         ctx print_ctx env ~let_connect: LC_first_non_rec
-         llift_params (from, name, params, (Some scheme), body) ;
+       let need_self_extra_arg =
+         generate_one_field_binding
+           ctx print_ctx env ~let_connect: LC_first_non_rec
+           llift_params dependencies_from_params decl_children
+           (from, name, params, (Some scheme), body) in
        (* Now, build the [compiled_field_memory], even if the method  *)
        (* was not really generated because it was inherited.          *)
        let compiled_field = {
@@ -228,14 +277,24 @@ let generate_methods ctx print_ctx env species_parameters_names field =
          cfm_method_name = name ;
          cfm_method_body = body ;
          cfm_dependencies_from_parameters = dependencies_from_params ;
-         cfm_decl_children = decl_children } in
+         cfm_decl_children = decl_children ;
+         cfm_need_self_extra_arg = need_self_extra_arg } in
        CSF_let compiled_field
    | Env.TypeInformation.SF_let_rec _l ->
        (* [Unsure]. *)
        CSF_let_rec []
    | Env.TypeInformation.SF_theorem (_from, name, _, _, _) ->
        CSF_theorem name
-   | Env.TypeInformation.SF_property (_from, name, _, _) ->
+   | Env.TypeInformation.SF_property (from, name, _, prop) ->
+       (* "Property"s lead to a Coq "Hypothesis". *)
+       Format.fprintf out_fmter "(* From species %a. *)@\n"
+         Sourcify.pp_qualified_species from ;
+       Format.fprintf out_fmter
+         "@[<2>Hypothesis self_%a :@ "
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
+       Species_record_type_generation.generate_prop
+         ~local_idents: [] ~self_as: Types.CSR_self ctx env prop ;
+       Format.fprintf out_fmter ".@]@\n" ;
        CSF_property name
 ;;
 
@@ -344,6 +403,36 @@ let extend_env_for_species_def env species_descr =
 ;;
 
 
+let generate_self_representation out_fmter print_ctx species_fields =
+  let rec rec_find = function
+    | [] ->
+        (* No explicit "rep" structure found. Then, generate a Coq variable. *)
+        Format.fprintf out_fmter "@\n(* Carrier representation. *)@\n" ;
+        Format.fprintf out_fmter "@[<2>Variable self_T : Set.@]@\n@\n"
+    | h :: q ->
+        (begin
+        match h with
+         | Env.TypeInformation.SF_sig (_, (Parsetree.Vlident "rep"), sch) ->
+             (* We finally found an explicit representation of the carrier. *)
+             let (type_from_scheme, generalized_instanciated_vars) =
+               Types.specialize_n_show_instanciated_generalized_vars sch in
+             (* Because "rep" is never polymorphic, its type must never *)
+             (* contain instanciated variables coming from the scheme.  *)
+             assert (generalized_instanciated_vars = []) ;
+             Format.fprintf out_fmter "@\n(* Carrier representation. *)@\n" ;
+             (* We print the "rep"'s type using the [CSR_self] mode but in    *)
+             (* fact, because the carrier can't be recursive, it can't        *)
+             (* appear in it's own structure, and the mode has no importance. *)
+             Format.fprintf out_fmter "@[<2>Let self_T : Set :=@ %a.@]@\n@\n"
+               (Types.pp_type_simple_to_coq
+                  print_ctx ~reuse_mapping: false ~self_as: Types.CSR_self)
+               type_from_scheme
+         | _ -> rec_find q
+        end) in
+  rec_find species_fields
+;;
+
+
 
 let species_compile env ~current_unit out_fmter species_def species_descr
     dep_graph =
@@ -386,7 +475,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   let env' = extend_env_for_species_def env species_descr in
   (* The record type representing the species' type. *)
   Species_record_type_generation.generate_record_type ctx env' species_descr ;
-  (* We now extend the collections_carrier_mapping with ourselve known.  *)
+  (* We now extend the collections_carrier_mapping with ourselves known. *)
   (* Hence, if we refer to our "rep" we will be directly mapped onto the *)
   (* "self_T" without needing to re-construct this name each time.       *)
   let collections_carrier_mapping' =
@@ -409,10 +498,20 @@ let species_compile env ~current_unit out_fmter species_def species_descr
       List.map
         (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
         ctx'.Species_gen_basics.scc_collections_carrier_mapping } in
+  (* Now we generate a "Variable" of type "Set" for each species's parameter *)
+  (* with the same name used during the record type generation, i.e. the     *)
+  (* parameter's name + "_T".                                                *)
+  List.iter
+    (fun p_vname ->
+      let p_name = Parsetree_utils.name_of_vname p_vname in
+      Format.fprintf out_fmter
+        "(* Variable abstracting the species parameter [%s]. *)@\n" p_name ;
+      Format.fprintf out_fmter "@[<2>Variable %s_T :@ Set.@]@\n" p_name)
+    species_parameters_names ;
   (* Now, the methods of the species. We deal with "rep" first *)
   (* and then it will be ignore while generating the methods.  *)
-  Format.fprintf out_fmter "@\n(* Carrier representation. *)@\n" ;
-  Format.fprintf out_fmter "Variable self_T : Set.@\n@\n";
+  generate_self_representation
+    out_fmter print_ctx species_descr.Env.TypeInformation.spe_sig_methods ;
   let compiled_fields =
     List.map
       (generate_methods ctx' print_ctx env' species_parameters_names)
