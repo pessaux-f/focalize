@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.27 2007-12-21 14:47:35 pessaux Exp $ *)
+(* $Id: types.mli,v 1.28 2008-01-07 17:23:51 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -85,6 +85,9 @@ val abstract_in_scheme : type_collection -> type_scheme -> type_scheme
 val unify :
   loc: Location.t -> self_manifest: (type_simple option) -> type_simple ->
     type_simple -> type_simple
+
+val reset_def_dep_on_rep : unit -> unit
+val get_def_dep_on_rep : unit -> bool
 
 val extract_fun_ty_result : type_simple -> type_simple
 val extract_fun_ty_arg : type_simple -> type_simple

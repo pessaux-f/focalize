@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.11 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.12 2008-01-07 17:23:51 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -224,6 +224,12 @@ let list_mem_custom_eq eq_fct e l =
     | [] -> false
     | h :: q -> if eq_fct h e then true else rec_mem q in
   rec_mem l
+;;
+
+
+
+let list_cons_uniq_custom_eq eq_fct e l =
+  if list_mem_custom_eq eq_fct e l then l else e :: l
 ;;
 
 

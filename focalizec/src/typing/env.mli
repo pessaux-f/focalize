@@ -52,11 +52,11 @@ module TypeInformation :
       | SF_let of
           (Parsetree.qualified_species * Parsetree.vname *
            (Parsetree.vname list) *
-           Types.type_scheme * Parsetree.expr)
+           Types.type_scheme * Parsetree.expr * bool)
       | SF_let_rec of
           (Parsetree.qualified_species * Parsetree.vname *
            (Parsetree.vname list) *
-           Types.type_scheme * Parsetree.expr) list
+           Types.type_scheme * Parsetree.expr * bool) list
       | SF_theorem of
           (Parsetree.qualified_species * Parsetree.vname *
            Types.type_scheme *

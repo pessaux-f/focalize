@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.10 2008-01-04 15:32:49 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.11 2008-01-07 17:23:51 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -80,13 +80,15 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
     params_llifted _dependencies_from_params decl_children
     (from, name, params, scheme, body) =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
-  (* We need to check if at least one of these parameter has a type using *)
-  (* "Self". In this case, "Self" being represented as "asbt_T", (i.e. a  *)
-  (* type variable in OCaml), we need to make the polymorphism explicit   *)
-  (* in Coq, that is, add an extra param "(asbt_T : Set)" in head of the  *)
-  (* remaining parameters.                                                *)
+  (* We need to check if at least one of the parameters has a type using *)
+  (* "Self". In this case, "Self" being represented as "asbt_T", (i.e. a *)
+  (* type variable in OCaml), we need to make the polymorphism explicit  *)
+  (* in Coq, that is, add an extra param "(asbt_T : Set)" in head of the *)
+  (* remaining parameters.                                               *)
   let need_self_extra_arg =
-    List.exists (fun (_, t) -> Types.refers_to_self_p t) params_llifted in
+    Types.refers_to_self_p (Types.specialize scheme)
+      ||
+      List.exists (fun (_, t) -> Types.refers_to_self_p t) params_llifted in
   (* First of all, only methods defined in the current species must *)
   (* be generated. Inherited methods ARE NOT generated again !      *)
   if from = ctx.Species_gen_basics.scc_current_species then
@@ -122,11 +124,20 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
     if need_self_extra_arg then Format.fprintf out_fmter "@ (abst_T : Set)" ;
     (* Now, output the extra parameters induced by the lambda liftings *)
     (* we did because of the species parameters and our dependencies.  *)
+    (* If "Self" has a representation, then it should be printed as    *)
+    (* "Self_T", otherwise as "asbt_T". Then we discriminate on the    *)
+    (* [need_self_extra_arg]'s value which already incorporate this    *)
+    (* test.                                                           *)
+
+(* [Unsure] : Faux ! Dépend en fait de s'il existe une def dep vis-à-vis de
+   "rep". *)
+    let how_to_print_Self =
+      if need_self_extra_arg then Types.CSR_abst else Types.CSR_self in
     List.iter
       (fun (param_name, param_ty) ->
         Format.fprintf out_fmter "@ (%s : %a)" param_name
           (Types.pp_type_simple_to_coq
-             print_ctx ~reuse_mapping: false ~self_as: Types.CSR_abst)
+             print_ctx ~reuse_mapping: false ~self_as: how_to_print_Self)
           param_ty)
       params_llifted ;
     (* Add the parameters of the let-binding with their type.   *)
@@ -138,7 +149,7 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
     (* have instanciate variables. We just check for this.      *)
     let (params_with_type, ending_ty_opt, instanciated_vars) =
       Misc_ml_generation.bind_parameters_to_types_from_type_scheme
-        scheme params in
+        (Some scheme) params in
     assert (instanciated_vars = []) ;
     let ending_ty =
       (match ending_ty_opt with
@@ -159,7 +170,7 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
              Format.fprintf out_fmter "@ (%a : %a)"
                Parsetree_utils.pp_vname_with_operators_expanded param_vname
                (Types.pp_type_simple_to_coq
-                  print_ctx ~reuse_mapping: true ~self_as: Types.CSR_abst)
+                  print_ctx ~reuse_mapping: true ~self_as: how_to_print_Self)
                param_ty
          | None ->
              Format.fprintf out_fmter "@ %a"
@@ -168,7 +179,7 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
     (* Now, we print the ending type of the method. *)
     Format.fprintf out_fmter " :@ %a :=@ "
       (Types.pp_type_simple_to_coq
-         print_ctx ~reuse_mapping: true ~self_as: Types.CSR_abst)
+         print_ctx ~reuse_mapping: true ~self_as: how_to_print_Self)
       ending_ty ;
     (* Now we don't need anymore the sharing. Hence, clean it. This should *)
     (* not be useful because the other guys usign printing should manage   *)
@@ -179,7 +190,7 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
     (* No local idents in the context because we just enter the scope *)
     (* of a species fields and so we are not under a core expression. *)
     Species_record_type_generation.generate_expr
-      ctx ~local_idents: [] ~self_as: Types.CSR_abst env body ;
+      ctx ~local_idents: [] ~self_as: how_to_print_Self env body ;
     (* Done... Then, final carriage return. *)
     Format.fprintf out_fmter ".@]@\n" ;
     (* Now, generate the "Let self_..." by applying this method generator.   *)
@@ -256,7 +267,7 @@ let generate_methods ctx print_ctx env species_parameters_names field =
          end) ;
        (* Nothing to keep for the collection generator. *)
        CSF_sig name
-   | Env.TypeInformation.SF_let (from, name, params, scheme, body) ->
+   | Env.TypeInformation.SF_let (from, name, params, scheme, body, _) ->
        let (dependencies_from_params, decl_children, llift_params) =
          Misc_ml_generation.compute_lambda_liftings_for_field
            ~current_species: ctx.Species_gen_basics.scc_current_species
@@ -269,7 +280,7 @@ let generate_methods ctx print_ctx env species_parameters_names field =
          generate_one_field_binding
            ctx print_ctx env ~let_connect: LC_first_non_rec
            llift_params dependencies_from_params decl_children
-           (from, name, params, (Some scheme), body) in
+           (from, name, params, scheme, body) in
        (* Now, build the [compiled_field_memory], even if the method  *)
        (* was not really generated because it was inherited.          *)
        let compiled_field = {
@@ -401,6 +412,8 @@ let extend_env_for_species_def env species_descr =
     env_with_methods_as_values
     species_descr.Env.TypeInformation.spe_sig_params
 ;;
+
+
 
 
 let generate_self_representation out_fmter print_ctx species_fields =

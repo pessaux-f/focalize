@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.14 2007-11-30 10:29:18 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.15 2008-01-07 17:23:51 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -396,7 +396,7 @@ let subst_species_field ~current_unit c1 c2 = function
       let scheme' = Types.generalize ty' in
       Env.TypeInformation.SF_sig (from, vname, scheme')
       end)
-  | Env.TypeInformation.SF_let (from, vname, params_names, scheme, body) ->
+  | Env.TypeInformation.SF_let (from, vname, params_names, scheme, body, dep) ->
       (begin
       Types.begin_definition () ;
       let ty = Types.specialize scheme in
@@ -409,13 +409,14 @@ let subst_species_field ~current_unit c1 c2 = function
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_expr ~current_unit c1 c2 body in
-      Env.TypeInformation.SF_let (from, vname, params_names, scheme', body')
+      Env.TypeInformation.SF_let
+	(from, vname, params_names, scheme', body', dep)
       end)
   | Env.TypeInformation.SF_let_rec l ->
       (begin
       let l' =
         List.map
-          (fun (from, vname, params_names, scheme, body) ->
+          (fun (from, vname, params_names, scheme, body, dep) ->
             let ty = Types.specialize scheme in
             let ty' =
               (match c1 with
@@ -426,7 +427,7 @@ let subst_species_field ~current_unit c1 c2 = function
             Types.end_definition ();
             let scheme' = Types.generalize ty' in
             let body' = subst_expr ~current_unit c1 c2 body in
-            (from, vname, params_names, scheme', body'))
+            (from, vname, params_names, scheme', body', dep))
           l in
       Env.TypeInformation.SF_let_rec l'
       end)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.mli,v 1.10 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: handy.mli,v 1.11 2008-01-07 17:23:51 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -34,7 +34,9 @@ val list_substract : 'a list -> 'a list -> 'a list
 val list_mem_count : 'a -> 'a list -> int
 val list_concat_uniqq : 'a list -> 'a list -> 'a list
 val list_concat_uniq_custom_eq :
-    ('a -> 'a -> bool) -> 'a list -> 'a list -> 'a list
+  ('a -> 'a -> bool) -> 'a list -> 'a list -> 'a list
+val list_cons_uniq_custom_eq :
+  ('a -> 'a -> bool) -> 'a -> 'a list -> 'a list
 val list_mem_custom_eq : ('a -> 'a -> bool) -> 'a -> 'a list -> bool
 val list_mem_n_remove : 'a -> 'a list -> 'a list
 

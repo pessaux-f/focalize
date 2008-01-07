@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.40 2007-12-21 14:47:35 pessaux Exp $ *)
+(* $Id: types.ml,v 1.41 2008-01-07 17:23:51 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -759,6 +759,19 @@ let extract_fun_ty_arg ty =
 
 
 
+let (reset_def_dep_on_rep, get_def_dep_on_rep, set_def_dep_on_rep) =
+  let found = ref false in
+  (
+   (* reset_def_dep_on_rep : unit -> unit *)
+   (fun () -> found := false),
+   (* get_def_dep_on_rep : unit -> bool *)
+   (fun () -> !found),
+   (* set_def_dep_on_rep : unit -> unit *)
+   (fun () -> found := true)
+  )
+;;
+
+
 let unify ~loc ~self_manifest type1 type2 =
   let rec rec_unify ty1 ty2 =
     let ty1 = repr ty1 in
@@ -807,6 +820,7 @@ let unify ~loc ~self_manifest type1 type2 =
           | None -> raise (Conflict (ty1, ty2, loc))
           | Some self_is_that ->
               ignore (rec_unify self_is_that ty2) ;
+	      set_def_dep_on_rep () ;
               (* Always prefer Self ! *)
               ST_self_rep
          end)
@@ -815,8 +829,9 @@ let unify ~loc ~self_manifest type1 type2 =
          match self_manifest with
           | None -> raise (Conflict (ty1, ty2, loc))
           | Some self_is_that ->
-              (* Same remarks than in the mirror case above. *)
               ignore (rec_unify self_is_that ty1) ;
+	      set_def_dep_on_rep () ;
+	      (* Always prefer Self ! *)
               ST_self_rep
          end)
      | ((ST_species_rep c1), (ST_species_rep c2)) ->

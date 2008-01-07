@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substExpr.ml,v 1.9 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: substExpr.ml,v 1.10 2008-01-07 17:23:51 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs substitution of a value name [name_x]
@@ -302,21 +302,21 @@ let subst_prop ~param_unit ~bound_variables name_x by_expr initial_prop_expr =
 let subst_species_field ~param_unit name_x by_expr field =
   match field with
   | Env.TypeInformation.SF_sig (_, _, _) -> field   (* Nowhere to substitute. *)
-  | Env.TypeInformation.SF_let (from, vname, params_names, scheme, body) ->
+  | Env.TypeInformation.SF_let (from, vname, params_names, scheme, body, dep) ->
       (begin
       let bound_variables = [vname] in
       let body' = subst_expr ~param_unit ~bound_variables name_x by_expr body in
-      Env.TypeInformation.SF_let (from, vname, params_names, scheme, body')
+      Env.TypeInformation.SF_let (from, vname, params_names, scheme, body', dep)
       end)
   | Env.TypeInformation.SF_let_rec l ->
       (* First get all the recursive bound variables. *)
-      let bound_variables = List.map (fun (_, vname, _, _, _) -> vname) l in
+      let bound_variables = List.map (fun (_, vname, _, _, _, _) -> vname) l in
       let l' =
         List.map
-          (fun (from, vname, params_names, scheme, body) ->
+          (fun (from, vname, params_names, scheme, body, dep) ->
             let body' =
               subst_expr ~param_unit ~bound_variables name_x by_expr body in
-            (from, vname, params_names, scheme, body'))
+            (from, vname, params_names, scheme, body', dep))
           l in
       Env.TypeInformation.SF_let_rec l'
   | Env.TypeInformation.SF_theorem (from, vname, scheme, body, proof) ->

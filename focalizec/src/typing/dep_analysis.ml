@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.26 2007-12-17 14:31:05 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.27 2008-01-07 17:23:51 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -373,14 +373,14 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
 (* ******************************************************************** *)
 let field_only_decl_dependencies ~current_species = function
   | Env.TypeInformation.SF_sig (_, _, _) -> Parsetree_utils.DepNameSet.empty
-  | Env.TypeInformation.SF_let (_, _, _, _, body) ->
+  | Env.TypeInformation.SF_let (_, _, _, _, body, _) ->
       expr_decl_dependencies ~current_species body
   | Env.TypeInformation.SF_let_rec l ->
       (begin
       (* Create the set of names to remove afterwards. *)
       let names_of_l =
         List.fold_left
-          (fun accu_set (_, n, _, _, _) ->
+          (fun accu_set (_, n, _, _, _, _) ->
             (* Give a dummy type variable as type... *)
             Parsetree_utils.DepNameSet.add (n, Types.type_variable ()) accu_set)
           Parsetree_utils.DepNameSet.empty
@@ -388,7 +388,7 @@ let field_only_decl_dependencies ~current_species = function
       (* Now, compute the dependencies on all the rec-bound-names. *)
       let deps_of_l =
         List.fold_left
-          (fun accu_deps (_, _, _, _, body) ->
+          (fun accu_deps (_, _, _, _, body, _) ->
             let d = expr_decl_dependencies ~current_species body in
             Parsetree_utils.DepNameSet.union d accu_deps)
           Parsetree_utils.DepNameSet.empty
@@ -437,7 +437,7 @@ let clockwise_arrow field_name fields =
     (fun field accu ->
       match field with
       | Env.TypeInformation.SF_sig (_, vname, _)
-      | Env.TypeInformation.SF_let (_, vname, _, _, _)
+      | Env.TypeInformation.SF_let (_, vname, _, _, _, _)
       | Env.TypeInformation.SF_theorem (_, vname, _, _, _)
       | Env.TypeInformation.SF_property (_, vname, _, _) ->
           if vname = field_name then Handy.list_cons_uniq_eq vname accu
@@ -446,9 +446,10 @@ let clockwise_arrow field_name fields =
            (* Check if the searched field name is among those in this     *)
            (* recursive let definition. If so, then the relation includes *)
            (* all the bound names of this recursive let definition.       *)
-           if List.exists (fun (_, vname, _, _, _) -> vname = field_name) l then
+           if List.exists (fun (_, vname, _, _, _, _) -> vname = field_name) l
+	   then
              List.fold_right
-               (fun (_, n, _, _, _) accu' -> Handy.list_cons_uniq_eq n accu')
+               (fun (_, n, _, _, _, _) accu' -> Handy.list_cons_uniq_eq n accu')
                l accu
            else accu)
     fields
@@ -470,7 +471,7 @@ let where field_name fields =
     (fun field accu ->
       match field with
        | Env.TypeInformation.SF_sig (_, vname, _)
-       | Env.TypeInformation.SF_let (_, vname, _, _, _)
+       | Env.TypeInformation.SF_let (_, vname, _, _, _, _)
        | Env.TypeInformation.SF_theorem (_, vname, _, _, _)
        | Env.TypeInformation.SF_property (_, vname, _, _) ->
            if vname = field_name then field :: accu else accu
@@ -478,8 +479,8 @@ let where field_name fields =
            (* Check if the searched field name is among those in this     *)
            (* recursive let definition. If so, then the relation includes *)
            (* all the bound names of this recursive let definition.       *)
-           if List.exists (fun (_, vname, _, _, _) -> vname = field_name) l then
-             field :: accu
+           if List.exists (fun (_, vname, _, _, _, _) -> vname = field_name) l
+	   then field :: accu
            else accu)
     fields
     []
@@ -496,14 +497,14 @@ let where field_name fields =
 (* ******************************************************************* *)
 let names_set_of_field = function
   | Env.TypeInformation.SF_sig (_, vname, sch)
-  | Env.TypeInformation.SF_let (_, vname, _, sch, _)
+  | Env.TypeInformation.SF_let (_, vname, _, sch, _, _)
   | Env.TypeInformation.SF_theorem (_, vname, sch, _, _)
   | Env.TypeInformation.SF_property (_, vname, sch, _)  ->
       let ty = Types.specialize sch in
       Parsetree_utils.DepNameSet.singleton (vname, ty)
   | Env.TypeInformation.SF_let_rec l ->
       List.fold_left
-        (fun accu_names (_, n, _, sch, _) ->
+        (fun accu_names (_, n, _, sch, _, _) ->
           let ty = Types.specialize sch in
           Parsetree_utils.DepNameSet.add (n, ty) accu_names)
         Parsetree_utils.DepNameSet.empty
@@ -529,13 +530,13 @@ let ordered_names_list_of_fields fields =
     (fun field accu ->
       match field with
        | Env.TypeInformation.SF_sig (_, n, sch)
-       | Env.TypeInformation.SF_let (_, n, _, sch, _)
+       | Env.TypeInformation.SF_let (_, n, _, sch, _, _)
        | Env.TypeInformation.SF_theorem (_, n, sch, _, _)
        | Env.TypeInformation.SF_property (_, n, sch, _) ->
            let ty = Types.specialize sch in (n, ty) :: accu
        | Env.TypeInformation.SF_let_rec l ->
            List.fold_right
-             (fun (_, n, _, sch, _) accu' ->
+             (fun (_, n, _, sch, _, _) accu' ->
                let ty = Types.specialize sch in (n, ty) :: accu')
              l accu)
     fields
@@ -566,11 +567,11 @@ let find_most_recent_rec_field_binding y_name fields =
         (begin
         match h with
          | Env.TypeInformation.SF_sig (_, _, _)
-         | Env.TypeInformation.SF_let (_, _, _, _, _)
+         | Env.TypeInformation.SF_let (_, _, _, _, _, _)
          | Env.TypeInformation.SF_theorem (_, _, _, _, _)
          | Env.TypeInformation.SF_property (_, _, _, _) -> rec_search q
          | Env.TypeInformation.SF_let_rec l ->
-             if List.exists (fun (_, n, _, _, _) -> n = y_name) l then h
+             if List.exists (fun (_, n, _, _, _, _) -> n = y_name) l then h
              else rec_search q
         end) in
   (* Reverse the list so that most recent names are in head. *)
@@ -631,7 +632,7 @@ let in_species_decl_dependencies_for_one_function_name ~current_species
   if List.for_all
       (function
         | Env.TypeInformation.SF_sig (_, _, _)
-        | Env.TypeInformation.SF_let (_, _, _, _, _) -> true
+        | Env.TypeInformation.SF_let (_, _, _, _, _, _) -> true
         | Env.TypeInformation.SF_let_rec _ -> false
         | Env.TypeInformation.SF_theorem (_, _, _, _, _)
         | Env.TypeInformation.SF_property (_, _, _, _) ->
@@ -751,7 +752,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
               Apply the rules section 3.5, page 32, definition  16 to get
               the dependencies.                                            *)
   (* ********************************************************************* *)
-  let local_build_for_one_let n ty b =
+  let local_build_for_one_let n ty b dep_on_rep =
     (* Find the dependencies node for the current name. *)
     let n_node = find_or_create tree_nodes (n, ty) in
     (* Find the names decl-dependencies for the current name. *)
@@ -771,7 +772,22 @@ let build_dependencies_graph_for_fields ~current_species fields =
     n_node.nn_children <-
       Handy.list_concat_uniq_custom_eq
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-        n_deps_nodes n_node.nn_children in
+        n_deps_nodes n_node.nn_children  ;
+    (* Now, check if there is a def-dependency on "rep". *)
+    if dep_on_rep then
+      (begin
+      (* Hard-build a node for "rep". *)
+      let node =
+	find_or_create
+	  tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
+      (* Now add an edge from the current name's node to the *)
+      (* def-dependencies node of "rep".                     *)
+      let edge = (node, DK_def) in
+      n_node.nn_children <-
+	Handy.list_cons_uniq_custom_eq
+          (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
+	  edge n_node.nn_children
+      end) in
 
   (* ***************************************************************** *)
   (** {b Descr} : Just make a local function dealing with one property
@@ -825,14 +841,14 @@ let build_dependencies_graph_for_fields ~current_species fields =
             tree_nodes :=
               { nn_name = n ; nn_type = ty ; nn_children = [] } :: !tree_nodes
             end)
-      | Env.TypeInformation.SF_let (_, n, _, sch, b) ->
+      | Env.TypeInformation.SF_let (_, n, _, sch, b, dep_on_rep) ->
           let ty = Types.specialize sch in
-          local_build_for_one_let n ty b
+          local_build_for_one_let n ty b dep_on_rep
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
-            (fun (_, n, _, sch, b) ->
+            (fun (_, n, _, sch, b, dep_on_rep) ->
               let ty = Types.specialize sch in
-              local_build_for_one_let n ty b) l
+              local_build_for_one_let n ty b dep_on_rep) l
       | Env.TypeInformation.SF_theorem (_, n, sch, prop, body) ->
           let ty = Types.specialize sch in
           local_build_for_one_theo_property n ty prop (Some body)
@@ -1160,7 +1176,7 @@ let erase_field field =
       []  (* No explicit "rep" means ... no "rep". *)
       end)
     else [field]
-  | Env.TypeInformation.SF_let (from, vname, _, sch, _) ->
+  | Env.TypeInformation.SF_let (from, vname, _, sch, _, _) ->
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
           Sourcify.pp_vname vname Sourcify.pp_qualified_species from ;
@@ -1169,7 +1185,7 @@ let erase_field field =
   | Env.TypeInformation.SF_let_rec l ->
       (* Just turn the whole list into "sig"s. *)
       List.map
-        (fun (from, n, _, sch, _) ->
+        (fun (from, n, _, sch, _, _) ->
           if Configuration.get_verbose () then
             Format.eprintf "Erasing field '%a' coming from '%a'.@."
               Sourcify.pp_vname n Sourcify.pp_qualified_species from ;
@@ -1219,7 +1235,7 @@ let erase_fields_in_context ~current_species context fields =
           (* definition 33, page 53.                                 *)
           let def_deps =
             (match m_field with
-             | Env.TypeInformation.SF_let (_, _, _, _, _)
+             | Env.TypeInformation.SF_let (_, _, _, _, _, _)
              | Env.TypeInformation.SF_let_rec _ ->
                (* No "def"-dependencies for functions (C.f. definition   *)
                (* 30 in Virgile Prevosto's Phd, section 3.9.5, page 53). *)

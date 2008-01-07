@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.58 2007-12-21 14:47:35 pessaux Exp $ *)
+(* $Id: env.ml,v 1.59 2008-01-07 17:23:51 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -113,7 +113,7 @@ let debug_env_list_assoc ~allow_opened searched list =
                else rec_assoc q
            | BO_absolute v ->
                Format.eprintf "Search successfully ends on absolute...\n";
-               flush stderr;
+               flush stderr ;
                v
           end)
         else rec_assoc q in
@@ -340,7 +340,9 @@ module TypeInformation = struct
          (** Parameters of the let-bound definition. *)
          (Parsetree.vname list) *
          Types.type_scheme *     (** Type scheme of the let-bound definition. *)
-         Parsetree.expr          (** Body of the let-bound definition. *))
+         Parsetree.expr *        (** Body of the let-bound definition. *)
+	 bool                    (** Tells if the method has def-dependency on
+				     "rep". *))
     | SF_let_rec of
         ((** Where the let-rec-bound comes from (the most recent in
              inheritance). *)
@@ -349,9 +351,10 @@ module TypeInformation = struct
          (** Parameters of the let-rec-bound definition. *)
          (Parsetree.vname list) *
          Types.type_scheme *
-         Parsetree.expr) list  (** The list of information similar to what
-             can be found for a [SF_let], but for each
-             mutually recursive bound identifier. *)
+         Parsetree.expr *
+         bool) list  (** The list of information similar to what
+			 can be found for a [SF_let], but for each
+			 mutually recursive bound identifier. *)
     | SF_theorem of
         ((** Where the theorem comes from (the most recent in inheritance). *)
          Parsetree.qualified_species *
@@ -531,7 +534,7 @@ module TypeInformation = struct
               Sourcify.pp_qualified_species from ;
             Format.fprintf ppf "sig %a : %a@\n"
               Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
-        | SF_let (from, vname, _, ty_scheme, _) ->
+        | SF_let (from, vname, _, ty_scheme, _, _) ->
             Format.fprintf ppf "(* From species %a. *)@\n"
               Sourcify.pp_qualified_species from ;
             Format.fprintf ppf "let %a : %a@\n"
@@ -540,13 +543,13 @@ module TypeInformation = struct
             (begin
             match rec_bounds with
              | [] -> assert false  (* Empty let rec is non sense ! *)
-             | (from, vname, _, ty_scheme, _) :: rem ->
+             | (from, vname, _, ty_scheme, _, _) :: rem ->
          Format.fprintf ppf "(* From species %a. *)@\n"
            Sourcify.pp_qualified_species from ;
          Format.fprintf ppf "let rec %a : %a@\n"
            Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme;
          List.iter
-           (fun (local_from, v, _, s, _) ->
+           (fun (local_from, v, _, s, _, _) ->
              Format.fprintf ppf
                "(* From species %a. *)@\n"
                Sourcify.pp_qualified_species local_from ;
@@ -1525,17 +1528,18 @@ module TypingEMAccess = struct
         (fun accu field ->
           match field with
            | TypeInformation.SF_sig (_, v, s)
-           | TypeInformation.SF_let (_, v, _, s, _)
+           | TypeInformation.SF_let (_, v, _, s, _, _)
            | TypeInformation.SF_theorem (_, v, s, _, _)
            | TypeInformation.SF_property (_, v, s, _) ->
                [(v, (BO_absolute s))] @ accu
            | TypeInformation.SF_let_rec l ->
-               let l' = List.map (fun (_, v, _, s, _) ->
-         (v, (BO_absolute s))) l in
+               let l' =
+		 List.map
+		   (fun (_, v, _, s, _, _) -> (v, (BO_absolute s))) l in
                l' @ accu)
         []
         spec_info.TypeInformation.spe_sig_methods in
-    { constructors = []; labels = []; types = []; values = values_bucket;
+    { constructors = [] ; labels = [] ; types = [] ; values = values_bucket ;
       species = [] }
 
 
@@ -1544,7 +1548,7 @@ module TypingEMAccess = struct
   let post_process_method_value_binding _collname data = data
 end
 ;;
-module TypingEnv = Make (TypingEMAccess);;
+module TypingEnv = Make (TypingEMAccess) ;;
 
 
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.21 2008-01-04 15:32:49 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.22 2008-01-07 17:23:51 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -256,7 +256,7 @@ let generate_record_type ctx species_descr =
   List.iter
     (function
       | Env.TypeInformation.SF_sig (from, n, sch)
-      | Env.TypeInformation.SF_let (from, n, _, sch, _) ->
+      | Env.TypeInformation.SF_let (from, n, _, sch, _, _) ->
           (begin
           (* Skip "rep", because it is a bit different and processed above *)
           (* c.f. function [generate_rep_constraint_in_record_type].       *)
@@ -276,7 +276,7 @@ let generate_record_type ctx species_descr =
           end)
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
-            (fun (from, n, _, sch, _) ->
+            (fun (from, n, _, sch, _, _) ->
               let ty = Types.specialize sch in
               Format.fprintf out_fmter "(* From species %a. *)@\n"
                 Sourcify.pp_qualified_species from ;
@@ -492,7 +492,7 @@ let generate_methods ctx env species_parameters_names field =
            Parsetree_utils.pp_vname_with_operators_expanded name ;
        (* Nothing to keep for the collection generator. *)
        None
-   | Env.TypeInformation.SF_let (from, name, params, scheme, body) ->
+   | Env.TypeInformation.SF_let (from, name, params, scheme, body, _) ->
        let (dependencies_from_params, decl_children, llift_params) =
          Misc_ml_generation.compute_lambda_liftings_for_field
            ~current_species: ctx.scc_current_species species_parameters_names
@@ -520,12 +520,12 @@ let generate_methods ctx env species_parameters_names field =
             (* A "let", then a fortiori "let rec" construct *)
             (* must at least bind one identifier !          *)
             assert false
-        | (from, name, params, scheme, body) :: q ->
+        | (from, name, params, scheme, body, _) :: q ->
             (* First, get for each method, its lambda lifting infos, *)
             (* i.e. its extra parameters and dependency information. *)
             let lliftings_infos =
               List.map
-                (fun (_, n, _, _, b) ->
+                (fun (_, n, _, _, b, _) ->
                   Misc_ml_generation.compute_lambda_liftings_for_field
                     ~current_species: ctx.scc_current_species
                     species_parameters_names ctx.scc_dependency_graph_nodes n b)
@@ -536,7 +536,7 @@ let generate_methods ctx env species_parameters_names field =
               ctx with
                 scc_lambda_lift_params_mapping =
                   List.map2
-                    (fun (_, n, _, _, _) (_, _, extra_params) ->
+                    (fun (_, n, _, _, _, _) (_, _, extra_params) ->
                       (n, extra_params))
                      l
                      lliftings_infos } in
@@ -560,7 +560,7 @@ let generate_methods ctx env species_parameters_names field =
             (* Finally, generate the remaining  methods, introduced by "and". *)
             let rem_compiled =
               List.map2
-                (fun (from, name, params, scheme, body)
+                (fun (from, name, params, scheme, body, _)
                     (dependencies_from_params, decl_children, llift_params) ->
                   generate_one_field_binding
                     ctx' env ~let_connect: LC_following
@@ -1232,7 +1232,7 @@ let collection_compile env ~current_unit out_fmter coll_def coll_descr
         | Env.TypeInformation.SF_sig (_, _, _)
         | Env.TypeInformation.SF_theorem (_, _, _, _, _)
         | Env.TypeInformation.SF_property (_, _, _, _) -> ()
-        | Env.TypeInformation.SF_let (_, n, _, _, _) ->
+        | Env.TypeInformation.SF_let (_, n, _, _, _, _) ->
             Format.fprintf out_fmter "%a =@ t."
               Parsetree_utils.pp_vname_with_operators_expanded n ;
             print_implemented_species_as_ocaml_module
@@ -1241,7 +1241,7 @@ let collection_compile env ~current_unit out_fmter coll_def coll_descr
               Parsetree_utils.pp_vname_with_operators_expanded n
         | Env.TypeInformation.SF_let_rec l ->
             List.iter
-              (fun (_, n, _, _, _) ->
+              (fun (_, n, _, _, _, _) ->
                 Format.fprintf out_fmter "%a =@ t."
                   Parsetree_utils.pp_vname_with_operators_expanded n ;
                 print_implemented_species_as_ocaml_module
