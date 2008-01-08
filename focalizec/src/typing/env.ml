@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.59 2008-01-07 17:23:51 pessaux Exp $ *)
+(* $Id: env.ml,v 1.60 2008-01-08 12:27:29 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -298,6 +298,16 @@ end
             abstracted to prevent savage manipulations.                    *)
 (* *********************************************************************** *)
 module TypeInformation = struct
+  (* ************************************************************** *)
+  (** {Descr} : Records if a method has dependencies on the carrier
+        representation "rep".
+      {b Rem} : Exported outside this module.                       *)
+  (* ************************************************************** *)
+  type dependency_on_rep = {
+    dor_def : bool }  (** Flag for a def-dependency. *)
+
+
+
   type species_param =
     (** Entity parameter. *)
     | SPAR_in of (Parsetree.vname * Types.type_collection)
@@ -341,8 +351,8 @@ module TypeInformation = struct
          (Parsetree.vname list) *
          Types.type_scheme *     (** Type scheme of the let-bound definition. *)
          Parsetree.expr *        (** Body of the let-bound definition. *)
-	 bool                    (** Tells if the method has def-dependency on
-				     "rep". *))
+         dependency_on_rep       (** Tells if the method has dependencies on
+                                     "rep". *))
     | SF_let_rec of
         ((** Where the let-rec-bound comes from (the most recent in
              inheritance). *)
@@ -352,9 +362,9 @@ module TypeInformation = struct
          (Parsetree.vname list) *
          Types.type_scheme *
          Parsetree.expr *
-         bool) list  (** The list of information similar to what
-			 can be found for a [SF_let], but for each
-			 mutually recursive bound identifier. *)
+         dependency_on_rep) list  (** The list of information similar to what
+                         can be found for a [SF_let], but for each
+                         mutually recursive bound identifier. *)
     | SF_theorem of
         ((** Where the theorem comes from (the most recent in inheritance). *)
          Parsetree.qualified_species *
@@ -1534,8 +1544,8 @@ module TypingEMAccess = struct
                [(v, (BO_absolute s))] @ accu
            | TypeInformation.SF_let_rec l ->
                let l' =
-		 List.map
-		   (fun (_, v, _, s, _, _) -> (v, (BO_absolute s))) l in
+                 List.map
+                   (fun (_, v, _, s, _, _) -> (v, (BO_absolute s))) l in
                l' @ accu)
         []
         spec_info.TypeInformation.spe_sig_methods in

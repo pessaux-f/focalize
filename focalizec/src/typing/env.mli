@@ -39,6 +39,9 @@ module ScopeInformation :
 
 module TypeInformation :
   sig
+    type dependency_on_rep = {
+      dor_def : bool }
+
     type species_param =
       | SPAR_in of (Parsetree.vname * Types.type_collection)
       | SPAR_is of
@@ -52,11 +55,11 @@ module TypeInformation :
       | SF_let of
           (Parsetree.qualified_species * Parsetree.vname *
            (Parsetree.vname list) *
-           Types.type_scheme * Parsetree.expr * bool)
+           Types.type_scheme * Parsetree.expr * dependency_on_rep)
       | SF_let_rec of
           (Parsetree.qualified_species * Parsetree.vname *
            (Parsetree.vname list) *
-           Types.type_scheme * Parsetree.expr * bool) list
+           Types.type_scheme * Parsetree.expr * dependency_on_rep) list
       | SF_theorem of
           (Parsetree.qualified_species * Parsetree.vname *
            Types.type_scheme *

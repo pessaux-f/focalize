@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.27 2008-01-07 17:23:51 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.28 2008-01-08 12:27:29 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -447,7 +447,7 @@ let clockwise_arrow field_name fields =
            (* recursive let definition. If so, then the relation includes *)
            (* all the bound names of this recursive let definition.       *)
            if List.exists (fun (_, vname, _, _, _, _) -> vname = field_name) l
-	   then
+           then
              List.fold_right
                (fun (_, n, _, _, _, _) accu' -> Handy.list_cons_uniq_eq n accu')
                l accu
@@ -480,7 +480,7 @@ let where field_name fields =
            (* recursive let definition. If so, then the relation includes *)
            (* all the bound names of this recursive let definition.       *)
            if List.exists (fun (_, vname, _, _, _, _) -> vname = field_name) l
-	   then field :: accu
+           then field :: accu
            else accu)
     fields
     []
@@ -774,19 +774,19 @@ let build_dependencies_graph_for_fields ~current_species fields =
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
         n_deps_nodes n_node.nn_children  ;
     (* Now, check if there is a def-dependency on "rep". *)
-    if dep_on_rep then
+    if dep_on_rep.Env.TypeInformation.dor_def then
       (begin
       (* Hard-build a node for "rep". *)
       let node =
-	find_or_create
-	  tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
+        find_or_create
+          tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
       (* Now add an edge from the current name's node to the *)
       (* def-dependencies node of "rep".                     *)
       let edge = (node, DK_def) in
       n_node.nn_children <-
-	Handy.list_cons_uniq_custom_eq
+        Handy.list_cons_uniq_custom_eq
           (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-	  edge n_node.nn_children
+          edge n_node.nn_children
       end) in
 
   (* ***************************************************************** *)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.94 2008-01-07 17:23:51 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.95 2008-01-08 12:27:29 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1016,7 +1016,8 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
 
 (* ************************************************************************ *)
 (* is_a_field: bool -> typing_context -> Env.TypingEnv.t ->                 *)
-(*   Parsetree.let_def -> (Parsetree.vname * Types.type_scheme * bool) list *)
+(*   Parsetree.let_def -> (Parsetree.vname * Types.type_scheme *            *)
+(*                         Env.TypeInformation.dependency_on_rep) list      *)
 (** {b Descr} : Infers the list of bindings induced by the let-def and that
                 will extend the current typing environment.
                 Because methods cannot be polymorphic (c.f. Virgile
@@ -1207,9 +1208,10 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
         (* Record the scheme in the AST node of the [binding]. *)
          binding.Parsetree.ast_type <- Parsetree.ANTI_scheme ty_scheme ;
         (* Recover if a def-dependency on "rep" was found for this binding. *)
-        let rep_def_dep_found = Types.get_def_dep_on_rep () in
+        let dep_on_rep = {
+          Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () } in
         (binding_desc.Parsetree.b_name, ty_scheme, binding_loc,
-         rep_def_dep_found))
+         dep_on_rep))
       let_def_descr.Parsetree.ld_bindings
       pre_env_info in
   (* We make the clean environment binding by discarding the location *)
@@ -1217,7 +1219,7 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
   (* guilty method in case of one would have variables in its scheme. *)
   let env_bindings =
     List.map
-      (fun (name, sc, _, rep_def_dep) -> (name, sc, rep_def_dep))
+      (fun (name, sc, _, dep_on_rep) -> (name, sc, dep_on_rep))
       tmp_env_bindings in
   (* Finally, returns the induced bindings. Note that [Parsetree.binding] *)
   (* and [Parsetree.let_def have an [ast_type] but in this case it has no *)
@@ -1565,7 +1567,7 @@ and typecheck_species_fields ctx env = function
              let env' =
                List.fold_left
                  (fun accu_env (id, ty_scheme, _) ->
-                  Env.TypingEnv.add_value id ty_scheme accu_env)
+                    Env.TypingEnv.add_value id ty_scheme accu_env)
                  env bindings in
              (* We now collect the type information of these methods   *)
              (* in order to make them suitable for a "type of method". *)
@@ -2502,7 +2504,7 @@ let order_fields_according_to order fields =
 (* loc: Location.t -> typing_context -> Parsetree.vname ->               *)
 (*   Types.type_scheme ->                                                *)
 (*     (Types.species_name * Parsetree.vname * Types.type_scheme *       *)
-(*      Parsetree.expr) list ->                                          *)
+(*      Parsetree.expr * Env.TypeInformation.dependency_on_rep) list ->  *)
 (*       Env.TypeInformation.species_field                               *)
 (** {b Descr} : Implements the "fusion" algorithm (c.f [fields_fusion])
               in the particular case of fusionning 1 field Sig and 1
@@ -2513,7 +2515,7 @@ let order_fields_according_to order fields =
 let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
   let rec_meths' =
     List.map
-      (fun ((from, n, params_names, sc, body, has_dep) as rec_meth) ->
+      (fun ((from, n, params_names, sc, body, dep_on_rep) as rec_meth) ->
         if n = sig_name then
           begin
            (* Fusion, by unification may induce def dependency on "rep" ! *)
@@ -2525,8 +2527,11 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
            let ty' =
              Types.unify ~loc ~self_manifest: ctx.self_manifest sig_ty ty in
            Types.end_definition () ;
-           let has_dep' = has_dep || Types.get_def_dep_on_rep () in
-           (from, n, params_names, (Types.generalize ty'), body, has_dep')
+           let dep_on_rep' = {
+             Env.TypeInformation.dor_def =
+               dep_on_rep.Env.TypeInformation.dor_def ||
+               Types.get_def_dep_on_rep () } in
+           (from, n, params_names, (Types.generalize ty'), body, dep_on_rep')
           end
         else rec_meth)
       rec_meths in
@@ -2587,7 +2592,10 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
             (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
           (* And return the seconde one (late binding) with the presence *)
           (* of def-dependency on "rep" updated.                         *)
-          let dep' = dep2 || Types.get_def_dep_on_rep () in
+          let dep' =
+            { Env.TypeInformation.dor_def =
+                dep2.Env.TypeInformation.dor_def
+                || Types.get_def_dep_on_rep () } in
           let m2' = (f2, n2, args2, sc2, body2, dep') in
           (m2', rem_of_l2)
          with Not_found ->
@@ -2636,7 +2644,9 @@ let fields_fusion ~loc ctx phi1 phi2 =
         let ty2 = Types.specialize sc2 in
         let ty = Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 in
         Types.end_definition () ;
-        let dep' = dep2 || Types.get_def_dep_on_rep () in
+        let dep' = {
+          Env.TypeInformation.dor_def =
+            dep2.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () } in
         Env.TypeInformation.SF_let
           (from2, n2, pars2, (Types.generalize ty), body, dep')
    | (Env.TypeInformation.SF_sig (_, n1, sc1),
@@ -2653,7 +2663,9 @@ let fields_fusion ~loc ctx phi1 phi2 =
         let ty2 = Types.specialize sc2 in
         let ty = Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 in
         Types.end_definition () ;
-        let dep' = dep1 || Types.get_def_dep_on_rep () in
+        let dep' = {
+          Env.TypeInformation.dor_def =
+            dep1.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () } in
         Env.TypeInformation.SF_let
           (from1, n1, pars1, (Types.generalize ty), body, dep')
    | (Env.TypeInformation.SF_let (_, n1, _, sc1, _, _),
@@ -2666,7 +2678,9 @@ let fields_fusion ~loc ctx phi1 phi2 =
         let ty2 = Types.specialize sc2 in
         let ty = Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 in
         Types.end_definition () ;
-        let dep' = dep || Types.get_def_dep_on_rep () in
+        let dep' = {
+          Env.TypeInformation.dor_def =
+            dep.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () } in
         Env.TypeInformation.SF_let
           (from2, n2, pars2, (Types.generalize ty), body, dep')
    | (Env.TypeInformation.SF_let (_, _, _, _, _, _),
