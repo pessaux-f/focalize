@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.95 2008-01-08 12:27:29 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.96 2008-01-15 10:51:16 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -444,7 +444,7 @@ let make_implicit_var_mapping_from_type_exprs type_expressions =
          | _ -> ()
          end)
     | Parsetree.TE_fun (ty_expr1, ty_expr2) ->
-        rec_make ty_expr1;
+        rec_make ty_expr1 ;
         rec_make ty_expr2
     | Parsetree.TE_app (_, args_ty_exprs) -> List.iter rec_make args_ty_exprs
     | Parsetree.TE_prod ty_exprs -> List.iter rec_make ty_exprs
@@ -453,8 +453,8 @@ let make_implicit_var_mapping_from_type_exprs type_expressions =
     | Parsetree.TE_paren inner -> rec_make inner in
   (* **************** *)
   (* Now really work. *)
-  mapping := [];
-  List.iter rec_make type_expressions;
+  mapping := [] ;
+  List.iter rec_make type_expressions ;
   !mapping
 ;;
 
@@ -490,13 +490,13 @@ let make_implicit_var_mapping_from_prop prop_expression =
         (* extend it by the one got from the  type expression.      *)
         mapping :=
           Handy.list_concat_uniq_custom_eq
-            (fun (n, _) (n', _) -> n = n') mapping_from_ty !mapping;
+            (fun (n, _) (n', _) -> n = n') mapping_from_ty !mapping ;
         rec_make prop
     | Parsetree.Pr_imply (prop1, prop2)
     | Parsetree.Pr_or (prop1, prop2)
     | Parsetree.Pr_and (prop1, prop2)
     | Parsetree.Pr_equiv (prop1, prop2) ->
-        rec_make prop1;
+        rec_make prop1 ;
         rec_make prop2
     | Parsetree.Pr_not prop
     | Parsetree.Pr_paren prop -> rec_make prop
@@ -504,7 +504,7 @@ let make_implicit_var_mapping_from_prop prop_expression =
         (* Inside expressions type variable must be bound by the previous *)
         (* parts of the prop ! Hence, do not continue searching inside.   *)
         () in
-  rec_make prop_expression;
+  rec_make prop_expression ;
   !mapping
 ;;
 
@@ -611,11 +611,11 @@ let rec typecheck_pattern ctx env pat_desc =
              ~loc: cstr_name.Parsetree.ast_loc
              ~current_unit: ctx.current_unit cstr_name env in
          (match pats, cstr_decl.Env.TypeInformation.cstr_arity with
-          | [], Env.TypeInformation.CA_zero ->
+          | ([], Env.TypeInformation.CA_zero) ->
               let cstr_ty =
                 Types.specialize cstr_decl.Env.TypeInformation.cstr_scheme in
               (cstr_ty, [])
-          | nempty_pats, Env.TypeInformation.CA_one ->
+          | (nempty_pats, Env.TypeInformation.CA_one) ->
               let cstr_ty =
                 Types.specialize cstr_decl.Env.TypeInformation.cstr_scheme in
               (* Recover the type of the sub-patterns by typechecking an  *)
@@ -636,7 +636,7 @@ let rec typecheck_pattern ctx env pat_desc =
                   (Types.type_arrow cstr_arg_ty (Types.type_variable ()))
                   cstr_ty in
               (Types.extract_fun_ty_result unified_cstr_ty, sub_bindings)
-          | _, _ ->
+          | (_, _) ->
               (* Just raise the exception with the right expected arity. *)
               raise
                 (Bad_sum_type_constructor_arity
@@ -955,6 +955,8 @@ let rec typecheck_expr ctx env initial_expr =
      | Parsetree.E_paren expr -> typecheck_expr ctx env expr) in
   (* Store the type information in the expression's node. *)
   initial_expr.Parsetree.ast_type <- Parsetree.ANTI_type final_ty ;
+  (* Check if the expression has type Self and set the flag according to. *)
+  Types.check_for_decl_dep_on_self final_ty ;
   final_ty
 
 
@@ -1003,6 +1005,7 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
         Types.specialize lbl_descr.Env.TypeInformation.field_scheme in
       (* Record the type of the field in the AST node of the [label_ident]. *)
       label.Parsetree.ast_type <- Parsetree.ANTI_type field_ty ;
+      Types.check_for_decl_dep_on_self field_ty ;
        (* Unify the result type by side effect. *)
       let unified_field_ty =
         Types.unify
@@ -1010,6 +1013,7 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
           (Types.type_arrow expr_ty !result_ty) field_ty in
       result_ty := Types.extract_fun_ty_result unified_field_ty)
     fields ;
+  Types.check_for_decl_dep_on_self !result_ty ;
   !result_ty
 
 
@@ -1105,11 +1109,11 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
   let tmp_env_bindings =
     List.map2
       (fun binding (_, assumed_ty, non_expansive) ->
-        (* Clear the status of whether a def-dependency on "rep" exists if *)
-        (* the let-definition is a species field. Otherwise, keep if as it *)
-        (* is in order to accumulate the information for the global        *)
-        (* surrounding expression.                                         *)
-        if is_a_field then Types.reset_def_dep_on_rep () ;
+        (* Clear the status of whether def/decl-dependency on "rep" exist if *)
+        (* the let-definition is a species field. Otherwise, keep if as it   *)
+        (* is in order to accumulate the information for the global          *)
+        (* surrounding expression.                                           *)
+        if is_a_field then Types.reset_deps_on_rep () ;
         let binding_desc =  binding.Parsetree.ast_desc in
         let binding_loc = binding.Parsetree.ast_loc in
         (* Build a type for the arguments of the bound identier if there are *)
@@ -1207,9 +1211,11 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
           else Types.trivial_scheme final_ty in
         (* Record the scheme in the AST node of the [binding]. *)
          binding.Parsetree.ast_type <- Parsetree.ANTI_scheme ty_scheme ;
-        (* Recover if a def-dependency on "rep" was found for this binding. *)
+        (* Recover if a def-dependency or a decl-dependency *)
+        (* on "rep" was/were found for this binding.        *)
         let dep_on_rep = {
-          Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () } in
+          Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
+          Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep () } in
         (binding_desc.Parsetree.b_name, ty_scheme, binding_loc,
          dep_on_rep))
       let_def_descr.Parsetree.ld_bindings
@@ -1335,6 +1341,7 @@ and typecheck_prop ~in_proof ctx env prop =
          Types.type_prop ()
      | Parsetree.Pr_paren pr -> typecheck_prop ~in_proof ctx env pr) in
   prop.Parsetree.ast_type <- Parsetree.ANTI_type final_ty ;
+  Types.check_for_decl_dep_on_self final_ty ;
   final_ty
 
 
@@ -2519,7 +2526,7 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
         if n = sig_name then
           begin
            (* Fusion, by unification may induce def dependency on "rep" ! *)
-           Types.reset_def_dep_on_rep () ;
+           Types.reset_deps_on_rep () ;
            Types.begin_definition () ;
            let sig_ty = Types.specialize sig_scheme in
            let ty = Types.specialize sc in
@@ -2530,7 +2537,10 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
            let dep_on_rep' = {
              Env.TypeInformation.dor_def =
                dep_on_rep.Env.TypeInformation.dor_def ||
-               Types.get_def_dep_on_rep () } in
+               Types.get_def_dep_on_rep () ;
+             Env.TypeInformation.dor_decl =
+               dep_on_rep.Env.TypeInformation.dor_decl ||
+               Types.get_decl_dep_on_rep () } in
            (from, n, params_names, (Types.generalize ty'), body, dep_on_rep')
           end
         else rec_meth)
@@ -2586,7 +2596,7 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
           let (f2, n2, args2, sc2, body2, dep2) = m2 in
           let ty1 = Types.specialize sc1 in
           let ty2 = Types.specialize sc2 in
-          Types.reset_def_dep_on_rep () ;
+          Types.reset_deps_on_rep () ;
           (* Ensure that the 2 versions of the method are type-compatible. *)
           ignore
             (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
@@ -2595,7 +2605,10 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
           let dep' =
             { Env.TypeInformation.dor_def =
                 dep2.Env.TypeInformation.dor_def
-                || Types.get_def_dep_on_rep () } in
+                || Types.get_def_dep_on_rep () ;
+              Env.TypeInformation.dor_decl =
+                dep2.Env.TypeInformation.dor_decl
+                || Types.get_decl_dep_on_rep () } in
           let m2' = (f2, n2, args2, sc2, body2, dep') in
           (m2', rem_of_l2)
          with Not_found ->
@@ -2636,9 +2649,10 @@ let fields_fusion ~loc ctx phi1 phi2 =
         Types.end_definition () ;
         Env.TypeInformation.SF_sig (from2, n2, (Types.generalize ty))
    | (Env.TypeInformation.SF_sig (_, n1, sc1),
-      Env.TypeInformation.SF_let (from2, n2, pars2, sc2, body, dep2)) when n1 = n2 ->
+      Env.TypeInformation.SF_let (from2, n2, pars2, sc2, body, dep2))
+     when n1 = n2 ->
         (* sig / let. *)
-        Types.reset_def_dep_on_rep () ;
+        Types.reset_deps_on_rep () ;
         Types.begin_definition () ;
         let ty1 = Types.specialize sc1 in
         let ty2 = Types.specialize sc2 in
@@ -2646,7 +2660,10 @@ let fields_fusion ~loc ctx phi1 phi2 =
         Types.end_definition () ;
         let dep' = {
           Env.TypeInformation.dor_def =
-            dep2.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () } in
+            dep2.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () ;
+          Env.TypeInformation.dor_decl =
+            dep2.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep ()
+          } in
         Env.TypeInformation.SF_let
           (from2, n2, pars2, (Types.generalize ty), body, dep')
    | (Env.TypeInformation.SF_sig (_, n1, sc1),
@@ -2657,7 +2674,7 @@ let fields_fusion ~loc ctx phi1 phi2 =
    | (Env.TypeInformation.SF_let (from1, n1, pars1, sc1, body, dep1),
       Env.TypeInformation.SF_sig (_, n2, sc2)) when n1 = n2 ->
         (* let / sig. *)
-        Types.reset_def_dep_on_rep () ;
+        Types.reset_deps_on_rep () ;
         Types.begin_definition () ;
         let ty1 = Types.specialize sc1 in
         let ty2 = Types.specialize sc2 in
@@ -2665,14 +2682,18 @@ let fields_fusion ~loc ctx phi1 phi2 =
         Types.end_definition () ;
         let dep' = {
           Env.TypeInformation.dor_def =
-            dep1.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () } in
+            dep1.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () ;
+          Env.TypeInformation.dor_decl =
+            dep1.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep ()
+          } in
         Env.TypeInformation.SF_let
           (from1, n1, pars1, (Types.generalize ty), body, dep')
    | (Env.TypeInformation.SF_let (_, n1, _, sc1, _, _),
-      Env.TypeInformation.SF_let (from2, n2, pars2, sc2, body, dep)) when n1 = n2 ->
+      Env.TypeInformation.SF_let (from2, n2, pars2, sc2, body, dep))
+     when n1 = n2 ->
         (* let / let. *)
         (* Late binding : keep the second body ! *)
-        Types.reset_def_dep_on_rep () ;
+        Types.reset_deps_on_rep () ;
         Types.begin_definition () ;
         let ty1 = Types.specialize sc1 in
         let ty2 = Types.specialize sc2 in
@@ -2680,7 +2701,10 @@ let fields_fusion ~loc ctx phi1 phi2 =
         Types.end_definition () ;
         let dep' = {
           Env.TypeInformation.dor_def =
-            dep.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () } in
+            dep.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () ;
+          Env.TypeInformation.dor_decl =
+            dep.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep ()
+          } in
         Env.TypeInformation.SF_let
           (from2, n2, pars2, (Types.generalize ty), body, dep')
    | (Env.TypeInformation.SF_let (_, _, _, _, _, _),

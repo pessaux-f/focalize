@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.60 2008-01-08 12:27:29 pessaux Exp $ *)
+(* $Id: env.ml,v 1.61 2008-01-15 10:51:16 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -304,7 +304,8 @@ module TypeInformation = struct
       {b Rem} : Exported outside this module.                       *)
   (* ************************************************************** *)
   type dependency_on_rep = {
-    dor_def : bool }  (** Flag for a def-dependency. *)
+    dor_def : bool  ;  (** Flag for a def-dependency. *)
+    dor_decl : bool }  (** Flag for a decl-dependency. *)
 
 
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.41 2008-01-07 17:23:51 pessaux Exp $ *)
+(* $Id: types.ml,v 1.42 2008-01-15 10:51:16 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -759,15 +759,54 @@ let extract_fun_ty_arg ty =
 
 
 
-let (reset_def_dep_on_rep, get_def_dep_on_rep, set_def_dep_on_rep) =
-  let found = ref false in
+let (reset_deps_on_rep,
+     get_def_dep_on_rep, set_def_dep_on_rep,
+     get_decl_dep_on_rep,
+     check_for_decl_dep_on_self) =
+  let found_decl = ref false in
+  let found_def = ref false in
   (
-   (* reset_def_dep_on_rep : unit -> unit *)
-   (fun () -> found := false),
+   (* *********************************************************************** *)
+   (* reset_deps_on_rep : unit -> unit                                        *)
+   (** {b Descr} : Reset to [false] the flags telling if decl and def
+       dependencies on the carrier were found. Because research of such
+       dependencies are performed in the scope of a species field (i.e. "let",
+       "let ...rec", "property", "theorem"), the liveness of these 2 flags is
+       the same. Hence they always get reset at the same time.
+
+       {b Rem} : Exported outside this module.                                *)
+   (* *********************************************************************** *)
+   (fun () ->
+     found_decl := false ;
+     found_def := false),
    (* get_def_dep_on_rep : unit -> bool *)
-   (fun () -> !found),
-   (* set_def_dep_on_rep : unit -> unit *)
-   (fun () -> found := true)
+   (fun () -> !found_def),
+   (* ********************************************************************* *)
+   (* set_def_dep_on_rep : unit -> unit                                     *)
+   (** {b Descr} : Turns on the flag telling that a def-dependency on the
+       carrier was found.
+       This function is only called by the unification function when one of
+       the [SELF] rules of Virgile Phd is used (c.f. Definition 28 page 50)
+       and rules in Definition 9 page 27).
+
+       [Rem] : Not exported outside this module.                            *)
+   (* ********************************************************************* *)
+   (fun () -> found_def := true),
+   (* get_decl_dep_on_rep : unit -> bool *)
+   (fun () -> !found_decl),
+   (* ********************************************************************** *)
+   (* check_for_decl_dep_on_self : type_simple -> unit                       *)
+   (** {b Descr} : Turns on the flag telling that a decl-dependency on the
+       carrier was found.
+       This function is called by the type inference on expressions to
+       check if the type of the expression is "Self". If so, then there is a
+       decl-dependency and the flag is turned on.
+
+       [Rem] : Exported outside this module .                                *)
+   (* ********************************************************************** *)
+   (fun ty ->
+     let ty = repr ty in
+     if ty = ST_self_rep then found_decl := true)
   )
 ;;
 
@@ -820,7 +859,7 @@ let unify ~loc ~self_manifest type1 type2 =
           | None -> raise (Conflict (ty1, ty2, loc))
           | Some self_is_that ->
               ignore (rec_unify self_is_that ty2) ;
-	      set_def_dep_on_rep () ;
+              set_def_dep_on_rep () ;
               (* Always prefer Self ! *)
               ST_self_rep
          end)
@@ -830,8 +869,8 @@ let unify ~loc ~self_manifest type1 type2 =
           | None -> raise (Conflict (ty1, ty2, loc))
           | Some self_is_that ->
               ignore (rec_unify self_is_that ty1) ;
-	      set_def_dep_on_rep () ;
-	      (* Always prefer Self ! *)
+              set_def_dep_on_rep () ;
+              (* Always prefer Self ! *)
               ST_self_rep
          end)
      | ((ST_species_rep c1), (ST_species_rep c2)) ->

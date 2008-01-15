@@ -40,7 +40,8 @@ module ScopeInformation :
 module TypeInformation :
   sig
     type dependency_on_rep = {
-      dor_def : bool }
+      dor_def : bool ;
+      dor_decl : bool }
 
     type species_param =
       | SPAR_in of (Parsetree.vname * Types.type_collection)
