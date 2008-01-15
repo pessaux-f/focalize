@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.43 2008-01-15 13:46:40 pessaux Exp $ *)
+(* $Id: types.ml,v 1.44 2008-01-15 15:59:18 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -413,26 +413,6 @@ let occur_check ~loc var ty =
 
 
 
-(* ********************************************************************* *)
-(* type_simple -> bool                                                   *)
-(** {b Descr} : Check if a [type_simple] contains a reference to "Self".
-
-    {b Rem} : Exported oustide this module.                              *)
-(* ********************************************************************* *)
-let refers_to_self_p ty =
-  let rec test t =
-    let t =  repr t in
-    match t with
-     | ST_var _ -> false
-     | ST_arrow (ty1, ty2) -> test ty1 || test ty2
-     | ST_tuple tys -> List.exists test tys
-     | ST_construct (_, args) -> List.exists test args
-     | ST_self_rep -> true
-     | ST_species_rep _ -> false in
-  test ty
-;;
-
-
 let (specialize,
      specialize_with_args,
      specialize_n_show_instanciated_generalized_vars) =
@@ -759,6 +739,28 @@ let extract_fun_ty_arg ty =
 
 
 
+(* ********************************************************************* *)
+(* type_simple -> bool                                                   *)
+(** {b Descr} : Check if a [type_simple] contains a reference to "Self".
+
+[Unsure] Ne devra plus être exportée une fois que les dépendances sur "rep"
+seront correctement utilisées.
+    {b Rem} : Exported oustide this module.                              *)
+(* ********************************************************************* *)
+let refers_to_self_p ty =
+  let rec test t =
+    let t =  repr t in
+    match t with
+     | ST_var _ -> false
+     | ST_arrow (ty1, ty2) -> test ty1 || test ty2
+     | ST_tuple tys -> List.exists test tys
+     | ST_construct (_, args) -> List.exists test args
+     | ST_self_rep -> true
+     | ST_species_rep _ -> false in
+  test ty
+;;
+
+
 let (reset_deps_on_rep,
      get_def_dep_on_rep, set_def_dep_on_rep,
      get_decl_dep_on_rep,
@@ -804,9 +806,7 @@ let (reset_deps_on_rep,
 
        [Rem] : Exported outside this module .                                *)
    (* ********************************************************************** *)
-   (fun ty ->
-     let ty = repr ty in
-     if ty = ST_self_rep then found_decl := true)
+   (fun ty -> if refers_to_self_p ty then found_decl := true)
   )
 ;;
 

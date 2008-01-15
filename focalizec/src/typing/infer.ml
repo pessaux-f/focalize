@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.97 2008-01-15 13:46:40 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.98 2008-01-15 15:59:18 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1204,6 +1204,8 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
             ~self_manifest: ctx_with_tv_vars_constraints.self_manifest
             assumed_ty complete_ty in
         Types.end_definition () ;
+        (* Check for a decl dependency on "rep". *)
+        Types.check_for_decl_dep_on_self final_ty ;
         (* And finally returns the type binding induced by this definition. *)
         let ty_scheme =
           if non_expansive

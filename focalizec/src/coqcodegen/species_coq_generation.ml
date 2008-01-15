@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.11 2008-01-07 17:23:51 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.12 2008-01-15 15:59:18 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -267,7 +267,7 @@ let generate_methods ctx print_ctx env species_parameters_names field =
          end) ;
        (* Nothing to keep for the collection generator. *)
        CSF_sig name
-   | Env.TypeInformation.SF_let (from, name, params, scheme, body, _) ->
+   | Env.TypeInformation.SF_let (from, name, params, scheme, body, junk) ->
        let (dependencies_from_params, decl_children, llift_params) =
          Misc_ml_generation.compute_lambda_liftings_for_field
            ~current_species: ctx.Species_gen_basics.scc_current_species
