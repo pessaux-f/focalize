@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.28 2008-01-08 12:27:29 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.29 2008-01-15 13:46:40 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -646,19 +646,19 @@ let in_species_decl_dependencies_for_one_function_name ~current_species
 
 
 
-(* ********************************************************************* *)
+(* ******************************************************************** *)
 (** {b Descr} : Compute the dependencies of a property or theorem bound
-              name in a species. Namely this is the \lbag x \rbag_s in
-              Virgile Prevosto's Pdh, section 3.9.5, page 53, definition
-              30. Returns both the "decl" and "def" dependencies.
-              Note that names we depend on are inevitably names from the
-              current species inheritance tree's fields. That is by
-              definition of the dependencies computation !
+    name in a species. Namely this is the \lbag x \rbag_s in Virgile
+    Prevosto's Pdh, section 3.9.5, page 53, definition 30. Returns both
+    the "decl" and "def" dependencies.
+    Note that names we depend on are inevitably names from the current
+    species inheritance tree's fields. That is by definition of the
+    dependencies computation !
 
     {b Rem} : MUST be called only with a [name] property or theorem
               bound !
-              Not exported outside this module.                          *)
-(* ********************************************************************* *)
+              Not exported outside this module.                         *)
+(* ******************************************************************** *)
 let in_species_decl_n_def_dependencies_for_one_theo_property_name
     ~current_species (t_prop, opt_body) =
   let t_prop_decl_deps = prop_decl_dependencies ~current_species t_prop in
@@ -675,12 +675,12 @@ let in_species_decl_n_def_dependencies_for_one_theo_property_name
 
 
 
-(* ********************************************************************* *)
-(** {b Descr} : Describes the kind of dependency between 2 nodes. Can be
-              either "def" or "dep" dependency.
+(* ************************************************************** *)
+(** {b Descr} : Describes the kind of dependency between 2 nodes.
+    Can be either "def" or "dep" dependency.
 
-    {b Rem} : Exported outside this module.                              *)
-(* ********************************************************************* *)
+    {b Rem} : Exported outside this module.                       *)
+(* ************************************************************** *)
 type dependency_kind =
   | DK_decl
   | DK_def
@@ -688,14 +688,14 @@ type dependency_kind =
 
 
 
-(* ************************************************************************ *)
-(** {b Descr} : Strutrure of a node in a dependency graph representing the
-            fact that some names' bodies contain call to non-let-rec-bound
-            othernames (relation \lbag n \rbag in Virgile Prevosto's Phd,
-            section 3.5, definition 16, page 32.
+(* ******************************************************************* *)
+(** {b Descr} : Strutrure of a node in a dependency graph representing
+    the fact that some names' bodies contain call to non-let-rec-bound
+    othernames (relation \lbag n \rbag in Virgile Prevosto's Phd,
+    section 3.5, definition 16, page 32.
 
-    {b Rem} : Exported outside this module.                                 *)
-(* ************************************************************************ *)
+    {b Rem} : Exported outside this module.                            *)
+(* ******************************************************************* *)
 type name_node = {
   (** Name of the node, i.e. one name of a species fields. *)
   nn_name : Parsetree.vname ;
@@ -709,18 +709,18 @@ type name_node = {
 
 
 
-(* ******************************************************************** *)
-(* name_node list ref -> (Parsetree.vname * Types.type_simple) ->       *)
-(*   name_node                                                          *)
+(* ******************************************************************* *)
+(* name_node list ref -> (Parsetree.vname * Types.type_simple) ->      *)
+(*   name_node                                                         *)
 (** {b Descr} : Looks for a node labeled [name] in the list of nodes
-              [tree_nodes]. If a node with this name is found, then we
-              return it. Otherwise, a fresh node is created with [name]
-              as name and no child, and this fresh node is returned.
-              This is mostly a helper for the function
-              [build_dependencies_graph_for_fields].
+    [tree_nodes]. If a node with this name is found, then we return
+    it. Otherwise, a fresh node is created with [name] as name and no
+    child, and this fresh node is returned.
+    This is mostly a helper for the function
+    [build_dependencies_graph_for_fields].
 
-    {b Rem} : Not exported outside this module.                         *)
-(* ******************************************************************** *)
+    {b Rem} : Not exported outside this module.                        *)
+(* ******************************************************************* *)
 let find_or_create tree_nodes (name, ty) =
   try List.find (fun node -> node.nn_name = name) !tree_nodes
   with Not_found ->
@@ -731,31 +731,45 @@ let find_or_create tree_nodes (name, ty) =
 
 
 
-(* ********************************************************************* *)
-(* current_species: Parsetree.qualified_vname ->                         *)
-(*   Env.TypeInformation.species_field list -> name_node list            *)
-(** {b Descr} : Build the dependencies graph of the names present in the
-              fields list [fields] of the species [~current_species].
-              In such a graph, if an arrow exists from n1 to n2, then
-              it means that in the body of n1, call(s) to n2 is (are)
-              performed.
+(* ***************************************************************** *)
+(* current_species: Parsetree.qualified_vname ->                     *)
+(*   Env.TypeInformation.species_field list -> name_node list        *)
+(** {b Descr} : Build the dependencies graph of the names present in
+    the fields list [fields] of the species [~current_species].
+    In such a graph, if an arrow exists from n1 to n2, then it means
+    that in the body of n1, call(s) to n2 is (are) performed.
 
-    {b Rem} : Exported outside this module.                              *)
-(* ********************************************************************* *)
+    {b Rem} : Exported outside this module.                          *)
+(* ***************************************************************** *)
 let build_dependencies_graph_for_fields ~current_species fields =
   (* The root hoot used to remind all the created nodes in the graph. *)
   let tree_nodes = ref ([] : name_node list) in
 
   (* ********************************************************************* *)
   (** {b Descr} : Just make a local function dealing with one let binding.
-              We then use it once for a Let and iter it for a Let_Rec.
-              Apply the rules section 3.5, page 32, definition  16 to get
-              the dependencies.                                            *)
+      We then use it once for a Let and iter it for a Let_Rec.
+      Apply the rules section 3.5, page 32, definition  16 to get the
+      dependencies.                                                        *)
   (* ********************************************************************* *)
   let local_build_for_one_let n ty b dep_on_rep =
     (* Find the dependencies node for the current name. *)
     let n_node = find_or_create tree_nodes (n, ty) in
-    (* Find the names decl-dependencies for the current name. *)
+    (* Check if there is a decl-dependency on "rep". *)
+    if dep_on_rep.Env.TypeInformation.dor_decl then
+      (begin
+      (* Hard-build a node for "rep". *)
+      let node =
+        find_or_create
+          tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
+      (* Now add an edge from the current name's node to the *)
+      (* decl-dependencies node of "rep".                    *)
+      let edge = (node, DK_decl) in
+      n_node.nn_children <-
+        Handy.list_cons_uniq_custom_eq
+          (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
+          edge n_node.nn_children
+      end) ;
+    (* Now, find the names decl-dependencies for the current name. *)
     let n_decl_deps_names =
       in_species_decl_dependencies_for_one_function_name
         ~current_species (n, b) fields in
@@ -1208,10 +1222,10 @@ let erase_field field =
 (*     Env.TypeInformation.species_field list ->                       *)
 (*       Env.TypeInformation.species_field list                        *)
 (** {b Descr} : Implements the erasing procedure in a list of fields
-              [fields] as described in Virgile Prevosto's Phd,
-              Section 3.9.5, page 53, definition 33.
-              Erases in the list of fields definitions according to
-              the context represented by the list of names [context].
+    [fields] as described in Virgile Prevosto's Phd, Section 3.9.5,
+    page 53, definition 33.
+    Erases in the list of fields definitions according to the context
+    represented by the list of names [context].
 
     {b Rem} : Exported outside this module.                            *)
 (* ******************************************************************* *)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.42 2008-01-15 10:51:16 pessaux Exp $ *)
+(* $Id: types.ml,v 1.43 2008-01-15 13:46:40 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -601,14 +601,14 @@ let abstract_in_scheme coll_to_abstract sch =
 
 
 
-(* ********************************************************************** *)
-(* type_simple -> type_scheme                                             *)
-(** {b Descr} : Generalize a type in order to create a type scheme having
-              the type's as body.
-              The scheme body physically shares the type's structure.
+(* *************************************************************** *)
+(* type_simple -> type_scheme                                      *)
+(** {b Descr} : Generalize a type in order to create a type scheme
+    having the type's as body. The scheme body physically shares
+    the type's structure.
 
-    {b Rem} : Exported oustide this module.                               *)
-(* ********************************************************************** *)
+    {b Rem} : Exported oustide this module.                        *)
+(* *************************************************************** *)
 let generalize =
   (* The list of found generalizable variables. *)
   (* We accumulate inside it by side effect.    *)
@@ -786,8 +786,8 @@ let (reset_deps_on_rep,
    (** {b Descr} : Turns on the flag telling that a def-dependency on the
        carrier was found.
        This function is only called by the unification function when one of
-       the [SELF] rules of Virgile Phd is used (c.f. Definition 28 page 50)
-       and rules in Definition 9 page 27).
+       the [SELF] rules of Virgile Prevosto's Phd is used (c.f. Definition
+       28 page 50) and rules in Definition 9 page 27).
 
        [Rem] : Not exported outside this module.                            *)
    (* ********************************************************************* *)
@@ -960,32 +960,30 @@ let pp_type_collection ppf (coll_module, coll_name) =
 (*   Format.formatter -> type_simple -> unit                                 *)
 
 (** {b Descr} : "Compile", i.e. generate the OCaml source representation of
-              a type. Basically, proceeds like the regular [pp_type_simple]
-              except in 2 cases:
-                - when encountering [Self] : in this case, generates the
-                  type variable name representing [Self], i.e. by convention
-                  "'me_as_carrier",
-                - when encountering a species carrier type : in this case,
-                  generate the type variable name representing this
-                  species (recover it thanks to the mapping between
-                  collections names and type variables names
-                  [collections_carrier_mapping]).
+    a type. Basically, proceeds like the regular [pp_type_simple]
+    except in 2 cases:
+      - when encountering [Self] : in this case, generates the type variable
+        name representing [Self], i.e. by convention "'me_as_carrier",
+      - when encountering a species carrier type : in this case, generate
+        the type variable name representing this species (recover it thanks
+        to the mapping between collections names and type variables names
+        [collections_carrier_mapping]).
 
-              Be carreful : because we generate OCaml code, remind that in
-              OCaml expressions, variables that are present in "source code
-              types" do not involve any notion of "generalized" or "not
-              generalized". Hence, if we want to write a type variable in
-              an OCaml source code, we always write it as "'a" and never as
-              "'_a" otherwise it is lexically incorrect. OCaml will do the
-              job itself to check whether the variable is generalizable or
-              not. FOR THIS REASON, when we print type variables here, we
-              only consider that they are generalised, to get a printing
-              without any underscore in the variable's name.
-
-              To be able to print separately parts of a same type, hence
-              keep sharing of variables names, this function has an extra
-              argument telling whether the local variables names mapping
-              must be kept from previous printing calls.
+    Be carreful : because we generate OCaml code, remind that in OCaml
+    expressions, variables that are present in "source code types" do not
+    involve any notion of "generalized" or "not generalized". Hence, if we
+    want to write a type variable in an OCaml source code, we always write
+    it as "'a" and never as "'_a" otherwise it is lexically incorrect.
+    OCaml will do the job itself to check whether the variable is
+    generalizable or not.
+    FOR THIS REASON, when we print type variables here, we only consider
+    that they are generalised, to get a printing without any underscore
+    in the variable's name.
+    
+    To be able to print separately parts of a same type, hence keep sharing
+    of variables names, this function has an extra argument telling whether
+    the local variables names mapping must be kept from previous printing
+    calls.
 
     {b Args} :
       - [current_unit] : The string giving the name of the current
@@ -1189,29 +1187,29 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
   (* ********************************************************************* *)
   let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
 
-  (* ********************************************************************* *)
-  (* int ref                                                               *)
-  (** {b Descr} : The counter counting the number of different variables
-                already seen hence printed. It serves to generate a fresh
-                name to new variables to print.
+  (* ************************************************************** *)
+  (* int ref                                                        *)
+  (** {b Descr} : The counter counting the number of different 
+      variables already seen hence printed. It serves to generate a
+      fresh name to new variables to print.
 
       {b Rem} : Not exported. This counter is purely local to the
-              pretty-print function of type into the FoCal syntax. It is
-              especially not shared with the type printing routine used to
-              generate the OCaml or Coq code.                              *)
-  (* ********************************************************************* *)
+      pretty-print function of type into the FoCal syntax. It is
+      especially not shared with the type printing routine used to
+      generate the OCaml or Coq code.                               *)
+  (* ************************************************************** *)
   let type_variables_counter = ref 0 in
 
-  (* ******************************************************************** *)
-  (* unit -> unit                                                         *)
-  (** {b Descr} : Resets the variables names mapping an counter. This
-               allows to stop name-sharing between type prints.
+  (* ************************************************************* *)
+  (* unit -> unit                                                  *)
+  (** {b Descr} : Resets the variables names mapping an counter.
+      This allows to stop name-sharing between type prints.
 
-     {b Rem} : Not exported. This counter is purely local to the
-              pretty-print function of type into the FoCal syntax. It is
-              especially not shared with the type printing routine used to
-              generate the OCaml or Coq code.                              *)
-  (* ********************************************************************* *)
+      {b Rem} : Not exported. This counter is purely local to the
+      pretty-print function of type into the FoCal syntax. It is
+      especially not shared with the type printing routine used to
+      generate the OCaml or Coq code.                              *)
+  (* ************************************************************* *)
   let reset_type_variables_mapping_to_coq () =
     type_variable_names_mapping := [] ;
     type_variables_counter := 0 in
@@ -1323,7 +1321,7 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
       {b Rem} : Not exported outside this module.                          *)
   (* ********************************************************************* *)
   and rec_pp_to_coq_tuple_as_pairs ctx ~self_as prio ppf = function
-    | [] -> assert false  (* Tuples should never be 0 component. *)
+    | [] -> assert false  (* Tuples should never have 0 component. *)
     | [last] ->
         Format.fprintf ppf "%a" (rec_pp_to_coq ctx ~self_as prio) last
     | ty1 :: ty2 :: rem ->
