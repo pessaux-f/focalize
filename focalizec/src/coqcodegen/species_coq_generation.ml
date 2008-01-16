@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.13 2008-01-16 13:33:15 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.14 2008-01-16 16:57:42 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -74,7 +74,7 @@ type compiled_species_fields =
    reminded because when applying the method generator, this extra argument
    will have to be provided. *)
 let generate_one_field_binding ctx print_ctx env ~let_connect
-    params_llifted _dependencies_from_params decl_children
+    params_llifted dependencies_from_params decl_children
     (from, name, params, scheme, body, deps_on_rep) =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
   (* We need to check id "Self" has to be abstracted i.e. must lead to *)
@@ -199,10 +199,18 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
     if is_self_abstract then Format.fprintf out_fmter "@ self_T" ;
     (* Now, apply to each extra parameter coming from the lambda liftings. *)
     (* First, the extra arguments due to the species parameters methods we *)
-    (* depends on. They are names parameter name + "_" + method name.      *)
-(* [Unsure] TODO. En plus, il faut penser à rajouter 1 Variable par méthode
-   des paramètres de l'espèce (dont 1 méthode au moins de l'espèce courante
-   dépend serait certainement une bonne optim. *)
+    (* depends on. They are "Variables" previously declared and named:     *)
+    (* species parameter name + "_" + method name.                         *)
+     List.iter
+      (fun (species_param_name, meths_from_param) ->
+        let prefix = Parsetree_utils.name_of_vname species_param_name in
+        Parsetree_utils.DepNameSet.iter
+          (fun (meth, _) ->
+            (* Don't print the type to prevent being too verbose. *)
+            Format.fprintf out_fmter "@ %s_%a"
+              prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
+          meths_from_param)
+      dependencies_from_params ;
     (* Next, the extra arguments due to methods of ourselves we depend on. *)
     (* They are always present in the species under the name "self_...".   *)
     List.iter
@@ -479,6 +487,7 @@ let generate_variables_for_species_parameters_methods ctx print_ctx
           ())
     methods ;
   (* Now print the Coq "Variable"s, avoiding to print several times the same. *)
+  (* The naming scheme of the methods is species param name + method name.    *)
   if !accu_found_dependencies <> [] then
     (begin
     let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
