@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.12 2008-01-15 15:59:18 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.13 2008-01-16 13:33:15 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -51,10 +51,7 @@ type compiled_field_memory = {
     (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ;
   (** The methods of our inheritance tree the method depends on. *)
   cfm_decl_children :
-    (Dep_analysis.name_node * Dep_analysis.dependency_kind) list ;
-  (* Tell if the method's type involves "Self", hence if it has an extra
-      Coq argument to represent the type of "Self". *)
-  cfm_need_self_extra_arg : bool
+    (Dep_analysis.name_node * Dep_analysis.dependency_kind) list
 } ;;
 
 
@@ -78,17 +75,16 @@ type compiled_species_fields =
    will have to be provided. *)
 let generate_one_field_binding ctx print_ctx env ~let_connect
     params_llifted _dependencies_from_params decl_children
-    (from, name, params, scheme, body) =
+    (from, name, params, scheme, body, deps_on_rep) =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
-  (* We need to check if at least one of the parameters has a type using *)
-  (* "Self". In this case, "Self" being represented as "asbt_T", (i.e. a *)
-  (* type variable in OCaml), we need to make the polymorphism explicit  *)
-  (* in Coq, that is, add an extra param "(asbt_T : Set)" in head of the *)
-  (* remaining parameters.                                               *)
-  let need_self_extra_arg =
-    Types.refers_to_self_p (Types.specialize scheme)
-      ||
-      List.exists (fun (_, t) -> Types.refers_to_self_p t) params_llifted in
+  (* We need to check id "Self" has to be abstracted i.e. must lead to *)
+  (* an extra parameter "(asbt_T : Set)" of the method. This is the    *)
+  (* if the method has a decl-dependency on the carrier and no def     *)
+  (* dependency on the carrier. If it's not the case, then "Self" will *)
+  (* be denoted directly by "Self_T".                                  *)
+  let is_self_abstract =
+    deps_on_rep.Env.TypeInformation.dor_decl &&
+    (not deps_on_rep.Env.TypeInformation.dor_def) in
   (* First of all, only methods defined in the current species must *)
   (* be generated. Inherited methods ARE NOT generated again !      *)
   if from = ctx.Species_gen_basics.scc_current_species then
@@ -120,19 +116,15 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
            Parsetree_utils.pp_vname_with_operators_expanded name) ;
          *)
          failwith "TODO 2") ;
-    (* Check if an extra parameter is required to represent "Self"'s type. *)
-    if need_self_extra_arg then Format.fprintf out_fmter "@ (abst_T : Set)" ;
+    (* Check if an extra parameter is required to represent "Self"'s type *)
+    (* i.e. whether "Self" is abstracted (lambda-lifted) in the method.   *)
+    if is_self_abstract then Format.fprintf out_fmter "@ (abst_T : Set)" ;
     (* Now, output the extra parameters induced by the lambda liftings *)
     (* we did because of the species parameters and our dependencies.  *)
-    (* If "Self" has a representation, then it should be printed as    *)
-    (* "Self_T", otherwise as "asbt_T". Then we discriminate on the    *)
-    (* [need_self_extra_arg]'s value which already incorporate this    *)
-    (* test.                                                           *)
-
-(* [Unsure] : Faux ! Dépend en fait de s'il existe une def dep vis-à-vis de
-   "rep". *)
+    (* If "Self" was lifted then it will be printed "abst_T" otherwise *)
+    (* "Self_T".                                                       *)
     let how_to_print_Self =
-      if need_self_extra_arg then Types.CSR_abst else Types.CSR_self in
+      if is_self_abstract then Types.CSR_abst else Types.CSR_self in
     List.iter
       (fun (param_name, param_ty) ->
         Format.fprintf out_fmter "@ (%s : %a)" param_name
@@ -204,7 +196,7 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
       Parsetree_utils.pp_vname_with_operators_expanded name ;
     (* If required, apply the above method generator to the  *)
     (* extra argument that represents "Self" : i.e "self_T". *)
-    if need_self_extra_arg then Format.fprintf out_fmter "@ self_T" ;
+    if is_self_abstract then Format.fprintf out_fmter "@ self_T" ;
     (* Now, apply to each extra parameter coming from the lambda liftings. *)
     (* First, the extra arguments due to the species parameters methods we *)
     (* depends on. They are names parameter name + "_" + method name.      *)
@@ -227,8 +219,7 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
       Format.eprintf
         "Field '%a' inherited but not (re)-declared is not generated again.@."
         Parsetree_utils.pp_vname_with_operators_expanded name
-    end) ;
-  need_self_extra_arg
+    end)
 ;;
 
 
@@ -267,7 +258,7 @@ let generate_methods ctx print_ctx env species_parameters_names field =
          end) ;
        (* Nothing to keep for the collection generator. *)
        CSF_sig name
-   | Env.TypeInformation.SF_let (from, name, params, scheme, body, junk) ->
+   | Env.TypeInformation.SF_let (from, name, params, scheme, body, deps_rep) ->
        let (dependencies_from_params, decl_children, llift_params) =
          Misc_ml_generation.compute_lambda_liftings_for_field
            ~current_species: ctx.Species_gen_basics.scc_current_species
@@ -276,11 +267,10 @@ let generate_methods ctx print_ctx env species_parameters_names field =
        (* No recursivity, then the method cannot call itself in its body *)
        (* then no need to set the [scc_lambda_lift_params_mapping] of    *)
        (* the context.                                                   *)
-       let need_self_extra_arg =
-         generate_one_field_binding
-           ctx print_ctx env ~let_connect: LC_first_non_rec
-           llift_params dependencies_from_params decl_children
-           (from, name, params, scheme, body) in
+       generate_one_field_binding
+         ctx print_ctx env ~let_connect: LC_first_non_rec
+         llift_params dependencies_from_params decl_children
+         (from, name, params, scheme, body, deps_rep) ;
        (* Now, build the [compiled_field_memory], even if the method  *)
        (* was not really generated because it was inherited.          *)
        let compiled_field = {
@@ -288,8 +278,7 @@ let generate_methods ctx print_ctx env species_parameters_names field =
          cfm_method_name = name ;
          cfm_method_body = body ;
          cfm_dependencies_from_parameters = dependencies_from_params ;
-         cfm_decl_children = decl_children ;
-         cfm_need_self_extra_arg = need_self_extra_arg } in
+         cfm_decl_children = decl_children } in
        CSF_let compiled_field
    | Env.TypeInformation.SF_let_rec _l ->
        (* [Unsure]. *)
@@ -447,6 +436,84 @@ let generate_self_representation out_fmter print_ctx species_fields =
 
 
 
+(* [Unsure] On calcule 2 fois compute_lambda_liftings_for_field. Il faudra
+  factoriser ! *)
+let generate_variables_for_species_parameters_methods ctx print_ctx
+    species_parameters_names methods =
+  (* To keep tail-rec, we will accumulate by side effect. *)
+  let accu_found_dependencies =
+    ref ([] : (Parsetree.vname * Parsetree_utils.DepNameSet.t) list) in
+  (* We first harvest the list of all methods from  species parameters our  *)
+  (* fields depend on. Hence, we get a list a list of (species parameter    *)
+  (* names * the set of its methods we depend on). This list would need to  *)
+  (* be cleaned-up to prevent doubles. Instead, of cleaning it, we just     *)
+  (* avoid generating several times the same "Variable" by recording those  *)
+  (* already seen.                                                          *)
+  List.iter
+    (function
+      | Env.TypeInformation.SF_sig (_, _, _) -> ()
+      | Env.TypeInformation.SF_let (_, name, _, _, body, _) ->
+          let (dependencies_from_params, _, _) =
+            Misc_ml_generation.compute_lambda_liftings_for_field
+              ~current_species: ctx.Species_gen_basics.scc_current_species
+              species_parameters_names
+              ctx.Species_gen_basics.scc_dependency_graph_nodes name body in
+          accu_found_dependencies :=
+            dependencies_from_params @ !accu_found_dependencies
+      | Env.TypeInformation.SF_let_rec l ->
+          List.iter
+            (fun (_, name, _, _, body, _) ->
+              let (dependencies_from_params, _, _) =
+                Misc_ml_generation.compute_lambda_liftings_for_field
+                  ~current_species: ctx.Species_gen_basics.scc_current_species
+                  species_parameters_names
+                  ctx.Species_gen_basics.scc_dependency_graph_nodes name body in
+              accu_found_dependencies :=
+                dependencies_from_params @ !accu_found_dependencies)
+            l
+      | Env.TypeInformation.SF_theorem (_, _name, _, _prop, _) ->
+          (* [Unsure] *)
+          ()
+      | Env.TypeInformation.SF_property (_, _name, _, _prop) ->
+          (* [Unsure] *)
+          ())
+    methods ;
+  (* Now print the Coq "Variable"s, avoiding to print several times the same. *)
+  if !accu_found_dependencies <> [] then
+    (begin
+    let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
+    Format.fprintf out_fmter
+      "(* Variable(s) induced by dependencies from species \
+       parameter(s). *)@\n" ;
+    let seen = ref [] in
+    List.iter
+      (fun (spe_param_name, deps_set) ->
+        Parsetree_utils.DepNameSet.iter
+          (fun (meth_name, meth_type) ->
+            let remind_me = (spe_param_name, meth_name) in
+            if not (List.mem remind_me !seen) then
+              (begin
+              seen := remind_me :: !seen ;
+              (* Just a note: because in the type of the species parameter's *)
+              (* method there is no reason to see "Self" appearing, the way  *)
+              (* to print "Self" passed to [pp_type_simple_to_coq] has no    *)
+              (* importance.                                                 *)
+              Format.fprintf out_fmter "@[<2>Variable %a_%a :@ %a.@]@\n"
+                Parsetree_utils.pp_vname_with_operators_expanded spe_param_name
+                Parsetree_utils.pp_vname_with_operators_expanded meth_name
+                (Types.pp_type_simple_to_coq
+                   print_ctx ~reuse_mapping: false ~self_as: Types.CSR_self)
+                meth_type
+              end))
+          deps_set)
+      !accu_found_dependencies ;
+    (* Just an extra line feed to make the source more readable. *)
+    Format.fprintf out_fmter "@\n"
+    end)
+;;
+
+
+
 let species_compile env ~current_unit out_fmter species_def species_descr
     dep_graph =
   let species_def_desc = species_def.Parsetree.ast_desc in
@@ -525,6 +592,12 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   (* and then it will be ignore while generating the methods.  *)
   generate_self_representation
     out_fmter print_ctx species_descr.Env.TypeInformation.spe_sig_methods ;
+  (* Generate for each method of a species parameter we        *)
+  (* decl-depend on and don't def-depend on, a Coq "Variable". *)
+  generate_variables_for_species_parameters_methods
+     ctx' print_ctx species_parameters_names
+    species_descr.Env.TypeInformation.spe_sig_methods ;
+  (* Now, generate the Coq code of the methods. *)
   let compiled_fields =
     List.map
       (generate_methods ctx' print_ctx env' species_parameters_names)

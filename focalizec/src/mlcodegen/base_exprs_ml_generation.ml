@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.16 2008-01-15 13:46:40 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.17 2008-01-16 13:33:15 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -109,14 +109,8 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
          (* Really a local identifier or a call to a recursive method. *)
          Format.fprintf out_fmter "%a"
            Parsetree_utils.pp_vname_with_operators_expanded vname ;
-         (* Because this method can be recursive, we must apply it to     *)
-         (* its extra parameters if it has some, except "rep" because     *)
-         (* dependencies on the carrier are ignored in OCaml. In the      *)
-         (* compilation context's field [rcc_lambda_lift_params_mapping], *)
-         (* we directly recorded the positionnal list of extra parameters *)
-         (* names of recursive functions. Then we must filter "abst_rep"  *)
-         (* to ignore extra parameter induced by a dependency on the      *)
-         (* carrier.                                                      *)
+         (* Because this method can be recursive, we must apply it to *)
+         (* its extra parameters if it has some.                      *)
          try
            let extra_args =
              List.assoc
@@ -124,7 +118,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
            List.iter
              (fun (s, _) ->
                (* Don't print types in OCaml to prevent being to verbose. *)
-               if s <> "abst_rep" then Format.fprintf out_fmter "@ %s" s)
+               Format.fprintf out_fmter "@ %s" s)
              extra_args
             with Not_found -> ()
          end)

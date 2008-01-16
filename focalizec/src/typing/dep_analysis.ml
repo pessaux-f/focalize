@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.29 2008-01-15 13:46:40 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.30 2008-01-16 13:33:15 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -751,25 +751,10 @@ let build_dependencies_graph_for_fields ~current_species fields =
       Apply the rules section 3.5, page 32, definition  16 to get the
       dependencies.                                                        *)
   (* ********************************************************************* *)
-  let local_build_for_one_let n ty b dep_on_rep =
+  let local_build_for_one_let n ty b =
     (* Find the dependencies node for the current name. *)
     let n_node = find_or_create tree_nodes (n, ty) in
-    (* Check if there is a decl-dependency on "rep". *)
-    if dep_on_rep.Env.TypeInformation.dor_decl then
-      (begin
-      (* Hard-build a node for "rep". *)
-      let node =
-        find_or_create
-          tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
-      (* Now add an edge from the current name's node to the *)
-      (* decl-dependencies node of "rep".                    *)
-      let edge = (node, DK_decl) in
-      n_node.nn_children <-
-        Handy.list_cons_uniq_custom_eq
-          (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-          edge n_node.nn_children
-      end) ;
-    (* Now, find the names decl-dependencies for the current name. *)
+    (* Find the names decl-dependencies for the current name. *)
     let n_decl_deps_names =
       in_species_decl_dependencies_for_one_function_name
         ~current_species (n, b) fields in
@@ -786,22 +771,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
     n_node.nn_children <-
       Handy.list_concat_uniq_custom_eq
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-        n_deps_nodes n_node.nn_children  ;
-    (* Now, check if there is a def-dependency on "rep". *)
-    if dep_on_rep.Env.TypeInformation.dor_def then
-      (begin
-      (* Hard-build a node for "rep". *)
-      let node =
-        find_or_create
-          tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
-      (* Now add an edge from the current name's node to the *)
-      (* def-dependencies node of "rep".                     *)
-      let edge = (node, DK_def) in
-      n_node.nn_children <-
-        Handy.list_cons_uniq_custom_eq
-          (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-          edge n_node.nn_children
-      end) in
+        n_deps_nodes n_node.nn_children in
 
   (* ***************************************************************** *)
   (** {b Descr} : Just make a local function dealing with one property
@@ -855,14 +825,14 @@ let build_dependencies_graph_for_fields ~current_species fields =
             tree_nodes :=
               { nn_name = n ; nn_type = ty ; nn_children = [] } :: !tree_nodes
             end)
-      | Env.TypeInformation.SF_let (_, n, _, sch, b, dep_on_rep) ->
+      | Env.TypeInformation.SF_let (_, n, _, sch, b, _) ->
           let ty = Types.specialize sch in
-          local_build_for_one_let n ty b dep_on_rep
+          local_build_for_one_let n ty b
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
-            (fun (_, n, _, sch, b, dep_on_rep) ->
+            (fun (_, n, _, sch, b, _) ->
               let ty = Types.specialize sch in
-              local_build_for_one_let n ty b dep_on_rep) l
+              local_build_for_one_let n ty b) l
       | Env.TypeInformation.SF_theorem (_, n, sch, prop, body) ->
           let ty = Types.specialize sch in
           local_build_for_one_theo_property n ty prop (Some body)

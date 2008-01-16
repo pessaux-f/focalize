@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.23 2008-01-15 13:46:40 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.24 2008-01-16 13:33:15 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -397,15 +397,10 @@ let generate_one_field_binding ctx env ~let_connect species_parameters_names
            Parsetree_utils.pp_vname_with_operators_expanded name) ;
      (* Now, output the extra parameters induced by the lambda liftings *)
      (* we did because of the species parameters and our dependencies.  *)
-     (* ATTENTION: in OCaml the dependencies on the carrier do not need *)
-     (* to be lambda lifted : the OCaml's type system manages this via  *)
-     (* our type variables mechanism. The abstraction of the carrier in *)
-     (* the [params_llifted] is "abst_rep". Then we filter it.          *)
      List.iter
-     (fun (param_name, _) ->
+      (fun (param_name, _) ->
         (* In OCaml, we don't print the types to prevent being verbose. *)
-        if param_name <> "abst_rep" then
-          Format.fprintf out_fmter "@ %s" param_name)
+        Format.fprintf out_fmter "@ %s" param_name)
       params_llifted ;
     (* Add the parameters of the let-binding with their type.   *)
     (* Ignore the result type of the "let" if it's a function   *)
@@ -751,16 +746,10 @@ let generate_collection_generator ctx compiled_species_fields =
     (* only declared. These methods leaded to "local" functions defined       *)
     (* above. Hence, for each  method only declared of ourselves we depend    *)
     (* on, its name is "local_" + the method's name.                          *)
-    (* ATTENTION: in OCaml the dependencies on the carrier do not need to be  *)
-    (* lambda lifted : the OCaml's type system manages this via our type      *)
-    (* variables mechanism. The carrier's name being "rep" we just filter it. *)
-    (* In effect while we built the method generators, we did not lambda-lift *)
-    (* the carrier. So it is normal here not to apply any extra argument !    *)
     List.iter
       (fun ({ Dep_analysis.nn_name = dep_name }, _) ->
-        if dep_name <> (Parsetree.Vlident "rep") then
-          Format.fprintf out_fmter "@ local_%a"
-            Parsetree_utils.pp_vname_with_operators_expanded dep_name)
+        Format.fprintf out_fmter "@ local_%a"
+          Parsetree_utils.pp_vname_with_operators_expanded dep_name)
       field_memory.cfm_decl_children ;
     (* That's it for this field code generation. *)
     Format.fprintf out_fmter "@ in@]@\n" in    
