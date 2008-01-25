@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.99 2008-01-16 13:33:15 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.100 2008-01-25 15:21:10 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -746,8 +746,8 @@ let ensure_methods_uniquely_defined current_species l1 l2 =
         match field with
         | Env.TypeInformation.SF_sig (_, v, _)
         | Env.TypeInformation.SF_let (_, v, _, _, _, _)
-        | Env.TypeInformation.SF_theorem (_, v, _, _, _)
-        | Env.TypeInformation.SF_property (_, v, _, _) -> v :: accu
+        | Env.TypeInformation.SF_theorem (_, v, _, _, _, _)
+        | Env.TypeInformation.SF_property (_, v, _, _, _) -> v :: accu
         | Env.TypeInformation.SF_let_rec l ->
             let l' = List.map (fun (_, v, _, _, _, _) -> v) l in
             l' @ accu)
@@ -1623,6 +1623,7 @@ and typecheck_species_fields ctx env = function
              end)
          | Parsetree.SF_property property_def ->
              (begin
+	     Types.reset_deps_on_rep () ;
              Types.begin_definition () ;
              (* Ensure that Self we be abstract during the property's    *)
              (* definition type inference by setting [~in_proof: false]. *)
@@ -1631,6 +1632,8 @@ and typecheck_species_fields ctx env = function
                  ~in_proof: false ctx env
                  property_def.Parsetree.ast_desc.Parsetree.prd_prop in
              Types.end_definition () ;
+	     (* Check for a decl dependency on "rep". *)
+             Types.check_for_decl_dep_on_self ty ;
              (* Record the type information in the AST node. *)
              property_def.Parsetree.ast_type <- Parsetree.ANTI_type ty ;
              (* Extend the environment. *)
@@ -1641,21 +1644,30 @@ and typecheck_species_fields ctx env = function
                Env.TypingEnv.add_value
                  property_def.Parsetree.ast_desc.Parsetree.prd_name
                  scheme env in
+	     (* Recover if a def-dependency or a decl-dependency *)
+             (* on "rep" was/were found for this binding.        *)
+             let dep_on_rep = {
+               Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
+               Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep () } in
              let field_info =
                Env.TypeInformation.SF_property
                  (current_species,
                   property_def.Parsetree.ast_desc.Parsetree.prd_name,
                   scheme,
-                  property_def.Parsetree.ast_desc.Parsetree.prd_prop) in
+                  property_def.Parsetree.ast_desc.Parsetree.prd_prop,
+		  dep_on_rep) in
              (* Record the property's scheme in the AST node. *)
              field.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
              ([field_info], ctx, env', [(* Proofs *)])
              end)
          | Parsetree.SF_theorem theorem_def ->
              (begin
+	     Types.reset_deps_on_rep () ;
              Types.begin_definition () ;
              let ty = typecheck_theorem_def ctx env theorem_def in
              Types.end_definition () ;
+	     (* Check for a decl dependency on "rep". *)
+             Types.check_for_decl_dep_on_self ty ;
              (* Extend the environment. *)
              (* Be careful : methods are not polymorphics (c.f. Virgile   *)
              (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
@@ -1663,13 +1675,19 @@ and typecheck_species_fields ctx env = function
              let env' =
                Env.TypingEnv.add_value
                 theorem_def.Parsetree.ast_desc.Parsetree.th_name scheme env in
+             (* Recover if a def-dependency or a decl-dependency *)
+             (* on "rep" was/were found for this binding.        *)
+             let dep_on_rep = {
+               Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
+               Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep () } in
              let field_info =
                Env.TypeInformation.SF_theorem
                 (current_species,
                  theorem_def.Parsetree.ast_desc.Parsetree.th_name,
                  scheme,
                  theorem_def.Parsetree.ast_desc.Parsetree.th_stmt,
-                 theorem_def.Parsetree.ast_desc.Parsetree.th_proof) in
+                 theorem_def.Parsetree.ast_desc.Parsetree.th_proof,
+		 dep_on_rep) in
              (* Record the theorem's scheme in the AST node. *)
              field.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
              ([field_info], ctx, env', [(* Proofs *)])
@@ -1803,8 +1821,10 @@ let abstraction ~current_unit cname fields =
                   Env.TypeInformation.SF_sig
                     (from, vname, (Types.generalize ty')))
                  l
-           | Env.TypeInformation.SF_theorem (from, vname, scheme, prop, _)
-           | Env.TypeInformation.SF_property (from, vname, scheme, prop) ->
+           | Env.TypeInformation.SF_theorem
+	       (from, vname, scheme, prop, _, deps_rep)
+           | Env.TypeInformation.SF_property
+	       (from, vname, scheme, prop, deps_rep) ->
                Types.begin_definition () ;
                let ty = Types.specialize scheme in
                let ty' =
@@ -1816,7 +1836,8 @@ let abstraction ~current_unit cname fields =
                  SubstColl.subst_prop ~current_unit SubstColl.SCK_self
                    cname prop in
                [Env.TypeInformation.SF_property
-                  (from, vname, (Types.generalize ty'), abstracted_prop)]) in
+                  (from, vname, (Types.generalize ty'), abstracted_prop,
+		   deps_rep)]) in
         h' @ rec_abstract q in
   (* Do the job now... *)
   rec_abstract fields
@@ -1850,8 +1871,8 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
         | Env.TypeInformation.SF_let_rec l ->
             let l' = List.map (fun (_, v, _, sc, _, _) -> (v, sc)) l in
             l' @ accu
-        | Env.TypeInformation.SF_theorem (_, v, sc, _, _)
-        | Env.TypeInformation.SF_property (_, v, sc, _) -> (v, sc) :: accu)
+        | Env.TypeInformation.SF_theorem (_, v, sc, _, _, _)
+        | Env.TypeInformation.SF_property (_, v, sc, _, _) -> (v, sc) :: accu)
       fields [] in
   let flat_s1 = local_flat_fields s1 in
   let flat_s2 = local_flat_fields s2 in
@@ -2256,11 +2277,11 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
                    accu_env
                    l in
                (e, accu_ctx)
-             | Env.TypeInformation.SF_theorem  (_, theo_name, t_sch, _, _) ->
+             | Env.TypeInformation.SF_theorem  (_, theo_name, t_sch, _, _, _) ->
                let e =
                  Env.TypingEnv.add_value theo_name t_sch accu_env in
                (e, accu_ctx)
-             | Env.TypeInformation.SF_property (_, prop_name, prop_sch, _) ->
+             | Env.TypeInformation.SF_property (_, prop_name, prop_sch, _, _) ->
                let e =
                  Env.TypingEnv.add_value prop_name prop_sch accu_env in
                  (e, accu_ctx))
@@ -2306,7 +2327,7 @@ let collapse_proof proof_of ~current_species fields =
         | Env.TypeInformation.SF_theorem _ ->
           let (collapsed_rem, was_collapsed) = rec_find rem in
           (field :: collapsed_rem, was_collapsed)
-        | Env.TypeInformation.SF_property (_, name, sch, prop) ->
+        | Env.TypeInformation.SF_property (_, name, sch, prop, deps_rep) ->
           (begin
             if name_of_proof_of = name then
               (begin
@@ -2315,7 +2336,7 @@ let collapse_proof proof_of ~current_species fields =
                 let new_field =
                   Env.TypeInformation.SF_theorem
                     (current_species, name, sch, prop,
-                     proof_of.Parsetree.pd_proof) in
+                     proof_of.Parsetree.pd_proof, deps_rep) in
                 if Configuration.get_verbose () then
                   Format.eprintf
                     "Merging property '%a' and proof into theorem.@."
@@ -2421,8 +2442,8 @@ let extract_field_from_list_by_name name fields =
           (match field with
            | Env.TypeInformation.SF_sig (_, n, _)
            | Env.TypeInformation.SF_let (_, n, _, _, _, _)
-           | Env.TypeInformation.SF_theorem (_, n, _, _, _)
-           | Env.TypeInformation.SF_property (_, n, _, _) -> name = n
+           | Env.TypeInformation.SF_theorem (_, n, _, _, _, _)
+           | Env.TypeInformation.SF_property (_, n, _, _, _) -> name = n
            | Env.TypeInformation.SF_let_rec l ->
              List.exists (fun (_, n, _, _, _, _) -> name = n) l) in
         if found then (field, rem) else
@@ -2726,12 +2747,12 @@ let fields_fusion ~loc ctx phi1 phi2 =
    | (Env.TypeInformation.SF_let_rec rec_meths1,
       Env.TypeInformation.SF_let_rec rec_meths2) ->
         fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2
-   | ((Env.TypeInformation.SF_property (_, n1, sc1, prop1)),
-      (Env.TypeInformation.SF_property (_, n2, sc2, prop2)))
-   | ((Env.TypeInformation.SF_property (_, n1, sc1, prop1)),
-      (Env.TypeInformation.SF_theorem (_, n2, sc2, prop2, _)))
-   | ((Env.TypeInformation.SF_theorem (_, n1, sc1, prop1, _)),
-      (Env.TypeInformation.SF_theorem (_, n2, sc2, prop2, _))) ->
+   | ((Env.TypeInformation.SF_property (_, n1, sc1, prop1, _)),
+      (Env.TypeInformation.SF_property (_, n2, sc2, prop2, _)))
+   | ((Env.TypeInformation.SF_property (_, n1, sc1, prop1, _)),
+      (Env.TypeInformation.SF_theorem (_, n2, sc2, prop2, _, _)))
+   | ((Env.TypeInformation.SF_theorem (_, n1, sc1, prop1, _, _)),
+      (Env.TypeInformation.SF_theorem (_, n2, sc2, prop2, _, _))) ->
         (* First, ensure that the names are the same. *)
         if n1 = n2 then
           (begin
@@ -2750,8 +2771,8 @@ let fields_fusion ~loc ctx phi1 phi2 =
             else assert false
            end)
         else assert false
-   | ((Env.TypeInformation.SF_theorem (_, n1, sc1, prop1, _)),
-      (Env.TypeInformation.SF_property (_, n2, sc2, prop2))) ->
+   | ((Env.TypeInformation.SF_theorem (_, n1, sc1, prop1, _, _)),
+      (Env.TypeInformation.SF_property (_, n2, sc2, prop2, _))) ->
         (* First, ensure that the names are the same. *)
         if n1 = n2 then
           (begin
@@ -2799,8 +2820,8 @@ let oldest_inter_n_field_n_fields phi fields =
      | Env.TypeInformation.SF_let (_, v, _, _, _, _) -> [v]
      | Env.TypeInformation.SF_let_rec l ->
          List.map (fun (_, v, _, _, _, _) -> v) l
-     | Env.TypeInformation.SF_theorem (_, v, _, _, _) -> [v]
-     | Env.TypeInformation.SF_property (_, v, _, _) -> [v]) in
+     | Env.TypeInformation.SF_theorem (_, v, _, _, _, _) -> [v]
+     | Env.TypeInformation.SF_property (_, v, _, _, _) -> [v]) in
   (* We will now check for an intersection between the list of names *)
   (* from phi and the names of one field of the argument [fields].   *)
   let rec rec_hunt = function
@@ -2810,8 +2831,8 @@ let oldest_inter_n_field_n_fields phi fields =
         match f with
         | Env.TypeInformation.SF_sig (_, v, _)
         | Env.TypeInformation.SF_let (_, v, _, _, _, _)
-        | Env.TypeInformation.SF_theorem (_, v, _, _, _)
-        | Env.TypeInformation.SF_property (_, v, _, _) ->
+        | Env.TypeInformation.SF_theorem (_, v, _, _, _, _)
+        | Env.TypeInformation.SF_property (_, v, _, _, _) ->
             if List.mem v flat_phi_names then ((Some f), [], rem_f)
             else
               let (found, head_list, rem_list) = rec_hunt rem_f in
@@ -2905,8 +2926,8 @@ let ensure_collection_completely_defined ctx fields =
             end)
         | Env.TypeInformation.SF_let (_, _, _, _, _, _) -> ()
         | Env.TypeInformation.SF_let_rec _ -> ()
-        | Env.TypeInformation.SF_theorem (_, _, _, _, _) -> ()
-        | Env.TypeInformation.SF_property (_, vname, _, _) ->
+        | Env.TypeInformation.SF_theorem (_, _, _, _, _, _) -> ()
+        | Env.TypeInformation.SF_property (_, vname, _, _, _) ->
           (begin
             (* A property does not have proof. So, it is not fully defined. *)
             match ctx.current_species with
@@ -2962,8 +2983,8 @@ let ensure_collection_completely_defined ctx fields =
 let detect_polymorphic_method ~loc = function
   | Env.TypeInformation.SF_sig (_, name, sch)
   | Env.TypeInformation.SF_let (_, name, _, sch, _, _)
-  | Env.TypeInformation.SF_theorem (_, name, sch, _, _)
-  | Env.TypeInformation.SF_property (_, name, sch, _) ->
+  | Env.TypeInformation.SF_theorem (_, name, sch, _, _, _)
+  | Env.TypeInformation.SF_property (_, name, sch, _, _) ->
       if Types.scheme_contains_variable_p sch then
         raise (Scheme_contains_type_vars (name, sch, loc))
   | Env.TypeInformation.SF_let_rec defs ->

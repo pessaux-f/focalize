@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.30 2008-01-16 13:33:15 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.31 2008-01-25 15:21:10 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -367,7 +367,8 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
 (* current_species: Parsetree.qualified_vname ->                        *)
 (*   Env.TypeInformation.species_field -> Parsetree_utils.DepNameSet.t  *)
 (** {b Descr} : Compute the set of vnames the argument field depends of
-              in the species [~current_species]
+       in the species [~current_species]. Does not take into account
+       dependencies on the carrier. They must be handled appart.
 
     {b Rem} : Exported outside this module.                             *)
 (* ******************************************************************** *)
@@ -396,7 +397,7 @@ let field_only_decl_dependencies ~current_species = function
       (* And now, remove the rec-bound-names from the dependencies. *)
       Parsetree_utils.DepNameSet.diff deps_of_l names_of_l
       end)
-  | Env.TypeInformation.SF_theorem (_, _, _, body, proof) ->
+  | Env.TypeInformation.SF_theorem (_, _, _, body, proof, _) ->
       (begin
       let body_decl_deps = prop_decl_dependencies ~current_species body in
       (* Now, recover the explicit "decl" dependencies of  *)
@@ -405,7 +406,7 @@ let field_only_decl_dependencies ~current_species = function
         proof_decl_n_def_dependencies ~current_species proof in
       Parsetree_utils.DepNameSet.union body_decl_deps proof_deps
       end)
-  | Env.TypeInformation.SF_property (_, _, _, body) ->
+  | Env.TypeInformation.SF_property (_, _, _, body, _) ->
       prop_decl_dependencies ~current_species body
 ;;
 
@@ -438,8 +439,8 @@ let clockwise_arrow field_name fields =
       match field with
       | Env.TypeInformation.SF_sig (_, vname, _)
       | Env.TypeInformation.SF_let (_, vname, _, _, _, _)
-      | Env.TypeInformation.SF_theorem (_, vname, _, _, _)
-      | Env.TypeInformation.SF_property (_, vname, _, _) ->
+      | Env.TypeInformation.SF_theorem (_, vname, _, _, _, _)
+      | Env.TypeInformation.SF_property (_, vname, _, _, _) ->
           if vname = field_name then Handy.list_cons_uniq_eq vname accu
           else accu
        | Env.TypeInformation.SF_let_rec l ->
@@ -472,8 +473,8 @@ let where field_name fields =
       match field with
        | Env.TypeInformation.SF_sig (_, vname, _)
        | Env.TypeInformation.SF_let (_, vname, _, _, _, _)
-       | Env.TypeInformation.SF_theorem (_, vname, _, _, _)
-       | Env.TypeInformation.SF_property (_, vname, _, _) ->
+       | Env.TypeInformation.SF_theorem (_, vname, _, _, _, _)
+       | Env.TypeInformation.SF_property (_, vname, _, _, _) ->
            if vname = field_name then field :: accu else accu
        | Env.TypeInformation.SF_let_rec l ->
            (* Check if the searched field name is among those in this     *)
@@ -498,8 +499,8 @@ let where field_name fields =
 let names_set_of_field = function
   | Env.TypeInformation.SF_sig (_, vname, sch)
   | Env.TypeInformation.SF_let (_, vname, _, sch, _, _)
-  | Env.TypeInformation.SF_theorem (_, vname, sch, _, _)
-  | Env.TypeInformation.SF_property (_, vname, sch, _)  ->
+  | Env.TypeInformation.SF_theorem (_, vname, sch, _, _, _)
+  | Env.TypeInformation.SF_property (_, vname, sch, _, _)  ->
       let ty = Types.specialize sch in
       Parsetree_utils.DepNameSet.singleton (vname, ty)
   | Env.TypeInformation.SF_let_rec l ->
@@ -531,8 +532,8 @@ let ordered_names_list_of_fields fields =
       match field with
        | Env.TypeInformation.SF_sig (_, n, sch)
        | Env.TypeInformation.SF_let (_, n, _, sch, _, _)
-       | Env.TypeInformation.SF_theorem (_, n, sch, _, _)
-       | Env.TypeInformation.SF_property (_, n, sch, _) ->
+       | Env.TypeInformation.SF_theorem (_, n, sch, _, _, _)
+       | Env.TypeInformation.SF_property (_, n, sch, _, _) ->
            let ty = Types.specialize sch in (n, ty) :: accu
        | Env.TypeInformation.SF_let_rec l ->
            List.fold_right
@@ -568,8 +569,8 @@ let find_most_recent_rec_field_binding y_name fields =
         match h with
          | Env.TypeInformation.SF_sig (_, _, _)
          | Env.TypeInformation.SF_let (_, _, _, _, _, _)
-         | Env.TypeInformation.SF_theorem (_, _, _, _, _)
-         | Env.TypeInformation.SF_property (_, _, _, _) -> rec_search q
+         | Env.TypeInformation.SF_theorem (_, _, _, _, _, _)
+         | Env.TypeInformation.SF_property (_, _, _, _, _) -> rec_search q
          | Env.TypeInformation.SF_let_rec l ->
              if List.exists (fun (_, n, _, _, _, _) -> n = y_name) l then h
              else rec_search q
@@ -617,9 +618,11 @@ let union_y_clock_x_etc ~current_species x_name fields =
 (*     Env.TypeInformation.species_field list ->                        *)
 (*       Parsetree_utils.DepNameSet.t                                   *)
 (** {b Descr} : Compute the dependencies of a sig, let or let-rec bound
-              name in a species. Namely this is the \lbag x \rbag_s in
-              Virgile Prevosto's Pdh, section 3.5, page 32, definition
-              16.
+      name in a species. Namely this is the \lbag x \rbag_s in Virgile
+      Prevosto's Pdh, section 3.5, page 32, definition 16.
+      Does take into account dependencies on the carrier (they must be
+      handled appart).
+     
 
     {b Rem} : MUST be called only with a [name] sig, let or let-rec
               bound !
@@ -634,8 +637,8 @@ let in_species_decl_dependencies_for_one_function_name ~current_species
         | Env.TypeInformation.SF_sig (_, _, _)
         | Env.TypeInformation.SF_let (_, _, _, _, _, _) -> true
         | Env.TypeInformation.SF_let_rec _ -> false
-        | Env.TypeInformation.SF_theorem (_, _, _, _, _)
-        | Env.TypeInformation.SF_property (_, _, _, _) ->
+        | Env.TypeInformation.SF_theorem (_, _, _, _, _, _)
+        | Env.TypeInformation.SF_property (_, _, _, _, _) ->
             (* Because this function is intended to be called only on *)
             (* names bound by sig, let or let-rec fields, these cases *)
             (* should never arise !                                   *)
@@ -833,10 +836,10 @@ let build_dependencies_graph_for_fields ~current_species fields =
             (fun (_, n, _, sch, b, _) ->
               let ty = Types.specialize sch in
               local_build_for_one_let n ty b) l
-      | Env.TypeInformation.SF_theorem (_, n, sch, prop, body) ->
+      | Env.TypeInformation.SF_theorem (_, n, sch, prop, body, _) ->
           let ty = Types.specialize sch in
           local_build_for_one_theo_property n ty prop (Some body)
-      | Env.TypeInformation.SF_property (_, n, sch, prop) ->
+      | Env.TypeInformation.SF_property (_, n, sch, prop, _) ->
           let ty = Types.specialize sch in
           local_build_for_one_theo_property n ty prop None)
     fields ;
@@ -1124,7 +1127,7 @@ let ensure_species_well_formed ~current_species fields =
     (fun x_name ->
       let ill_f = left_triangle dep_graph_nodes x_name x_name fields in
       if ill_f then
-       let modname, species_vname = current_species in
+       let (modname, species_vname) = current_species in
        raise (Ill_formed_species (Qualified (modname, species_vname))))
     names
 ;;
@@ -1175,12 +1178,14 @@ let erase_field field =
               Sourcify.pp_vname n Sourcify.pp_qualified_species from ;
           Env.TypeInformation.SF_sig (from, n, sch))
         l
-  | Env.TypeInformation.SF_theorem (from, n, sch, prop, _) ->
+  | Env.TypeInformation.SF_theorem (from, n, sch, prop, _, deps_rep) ->
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
           Sourcify.pp_vname n Sourcify.pp_qualified_species from ;
-      (* Turn the "theorem" into a "property". *)
-      [Env.TypeInformation.SF_property (from, n, sch, prop)]
+      (* Turn the "theorem" into a "property".               *)
+      (* Hence, destroys any def-dependency on the carrier ! *)
+      let deps_rep' = { deps_rep with Env.TypeInformation.dor_def = false } in
+      [Env.TypeInformation.SF_property (from, n, sch, prop, deps_rep')]
   | _ -> [field]                       (* Everything else is unchanged. *)
 ;;
 
@@ -1208,7 +1213,7 @@ let erase_fields_in_context ~current_species context fields =
       (* We check if the [m_field] is already astracted. *)
       match m_field with
       | Env.TypeInformation.SF_sig (_, _, _)
-      | Env.TypeInformation.SF_property (_, _, _, _) ->
+      | Env.TypeInformation.SF_property (_, _, _, _, _) ->
           (* [m_field] is already astracted. If so, then nothing to do on *)
           (* it and just go on with the remaining fields [l_rem_fields].  *)
           m_field :: (rec_erase rec_context l_rem_fields)
@@ -1224,13 +1229,13 @@ let erase_fields_in_context ~current_species context fields =
                (* No "def"-dependencies for functions (C.f. definition   *)
                (* 30 in Virgile Prevosto's Phd, section 3.9.5, page 53). *)
                Parsetree_utils.DepNameSet.empty
-             | Env.TypeInformation.SF_theorem (_, _, _, prop, proof) ->
+             | Env.TypeInformation.SF_theorem (_, _, _, prop, proof, _) ->
                let (_, n_def_deps_names) =
                  in_species_decl_n_def_dependencies_for_one_theo_property_name
                    ~current_species (prop, (Some proof)) in
                (* Just return the "def"-dependencies. *)
                n_def_deps_names
-             | Env.TypeInformation.SF_property (_, _, _, _)
+             | Env.TypeInformation.SF_property (_, _, _, _, _)
              | Env.TypeInformation.SF_sig (_, _, _) ->
                  (* Can not arise because these cases were matched above. *)
                  assert false) in

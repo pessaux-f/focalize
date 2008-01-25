@@ -51,8 +51,7 @@ module TypeInformation :
 
     and species_field =
       | SF_sig of
-          (Parsetree.qualified_species * Parsetree.vname *
-           Types.type_scheme)
+          (Parsetree.qualified_species * Parsetree.vname * Types.type_scheme)
       | SF_let of
           (Parsetree.qualified_species * Parsetree.vname *
            (Parsetree.vname list) *
@@ -64,10 +63,10 @@ module TypeInformation :
       | SF_theorem of
           (Parsetree.qualified_species * Parsetree.vname *
            Types.type_scheme *
-           Parsetree.prop * Parsetree.proof)
+           Parsetree.prop * Parsetree.proof * dependency_on_rep)
       | SF_property of
           (Parsetree.qualified_species * Parsetree.vname *
-           Types.type_scheme * Parsetree.prop)
+           Types.type_scheme * Parsetree.prop * dependency_on_rep)
 
     type species_description = {
       spe_is_collection : bool ;

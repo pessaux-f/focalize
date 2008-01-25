@@ -2,6 +2,10 @@ Require Export Bool.
 Require Export ZArith.
 
 
+(** The weak proof !!! Give it a Prop, and abracadabra ... it's proved ! *)
+Axiom magic_prove : forall A : Prop, A.
+
+
 (** The type of strings named [string__t]. *)
 Inductive string : Set :=
   string_make : string.
@@ -43,6 +47,12 @@ Definition not_b (x : bool__t) : bool__t := if x then false else true.
 Definition and_b (x : bool__t) (y : bool__t) : bool__t :=
   if x then y else false.
 
+
+(* Junky code to have one representative of the string__t type. *)
+Variable ___a_string : string__t.
+
+
+(* Currently partially hand-generated. *)
 Chapter Basic_object.
   Record Basic_object : Type :=
     mk_Basic_object {
@@ -50,7 +60,19 @@ Chapter Basic_object.
     (* From species basics#Basic_object. *)
     parse : string__t -> Basic_object_T ;
     (* From species basics#Basic_object. *)
-    print : Basic_object_T -> string__t
+    print : Basic_object_T -> string__t ;
+    (* From species basics#basic_object. *)
+    Basic_object_print : Basic_object_T -> string__t
     }.
-  End Basic_object.
+
+  (* Carrier representation. *)
+  Variable self_T : Set.
+  
+  Definition Basic_object__parse (abst_T : Set) (x : string__t) :
+    abst_T := (__g_foc_error ___a_string).
+  Let self_parse := Basic_object__parse self_T.
+  Definition Basic_object__print (abst_T : Set) (x : abst_T) :
+    basics.string__t := ___a_string.
+  Let self_print := Basic_object__print self_T.
+End Basic_object.
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substExpr.ml,v 1.10 2008-01-07 17:23:51 pessaux Exp $ *)
+(* $Id: substExpr.ml,v 1.11 2008-01-25 15:21:10 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs substitution of a value name [name_x]
@@ -319,18 +319,20 @@ let subst_species_field ~param_unit name_x by_expr field =
             (from, vname, params_names, scheme, body', dep))
           l in
       Env.TypeInformation.SF_let_rec l'
-  | Env.TypeInformation.SF_theorem (from, vname, scheme, body, proof) ->
+  | Env.TypeInformation.SF_theorem
+      (from, vname, scheme, body, proof, deps_rep) ->
       (begin
       (* No substitution inside the proof. *)
       let bound_variables = [vname] in
       let body' = subst_prop ~param_unit ~bound_variables name_x by_expr body in
-      Env.TypeInformation.SF_theorem (from, vname, scheme, body', proof)
+      Env.TypeInformation.SF_theorem
+        (from, vname, scheme, body', proof, deps_rep)
       end)
-  | Env.TypeInformation.SF_property (from, vname, scheme, body) ->
+  | Env.TypeInformation.SF_property (from, vname, scheme, body, deps_rep) ->
       (begin
       let bound_variables = [vname] in
       let body' = subst_prop ~param_unit ~bound_variables name_x by_expr body in
-      Env.TypeInformation.SF_property (from, vname, scheme, body')
+      Env.TypeInformation.SF_property (from, vname, scheme, body', deps_rep)
       end)
 
 ;;

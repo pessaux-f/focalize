@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.24 2008-01-16 13:33:15 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.25 2008-01-25 15:21:10 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -288,8 +288,8 @@ let generate_record_type ctx species_descr =
                    ~current_unit: ctx.scc_current_unit
                    ~reuse_mapping: false collections_carrier_mapping) ty)
             l
-      | Env.TypeInformation.SF_theorem  (_, _, _, _, _)
-      | Env.TypeInformation.SF_property (_, _, _, _) ->
+      | Env.TypeInformation.SF_theorem  (_, _, _, _, _, _)
+      | Env.TypeInformation.SF_property (_, _, _, _, _) ->
           (* Properties and theorems are purely  *)
           (* discarded in the Ocaml translation. *)
           ())
@@ -494,10 +494,15 @@ let generate_methods ctx env species_parameters_names field =
        (* Nothing to keep for the collection generator. *)
        None
    | Env.TypeInformation.SF_let (from, name, params, scheme, body, _) ->
-       let (dependencies_from_params, decl_children, llift_params) =
+       (* For OCaml, ignore the def-dependencies. By the way, they should *)
+       (* always be empty (remind that the only def-dependency that can   *)
+       (* exist is on the carrier, but this one is not in the graph and   *)
+       (* is processed appart).                                           *)
+       let (dependencies_from_params, decl_children, _, llift_params) =
          Misc_ml_generation.compute_lambda_liftings_for_field
            ~current_species: ctx.scc_current_species species_parameters_names
-           ctx.scc_dependency_graph_nodes name body in
+           ctx.scc_dependency_graph_nodes name
+	   (Misc_ml_generation.FBK_expr body) in
        (* No recursivity, then the method cannot call itself in its body *)
        (* then no need to set the [scc_lambda_lift_params_mapping] of    *)
        (* the context.                                                   *)
@@ -529,7 +534,8 @@ let generate_methods ctx env species_parameters_names field =
                 (fun (_, n, _, _, b, _) ->
                   Misc_ml_generation.compute_lambda_liftings_for_field
                     ~current_species: ctx.scc_current_species
-                    species_parameters_names ctx.scc_dependency_graph_nodes n b)
+                    species_parameters_names ctx.scc_dependency_graph_nodes n
+		    (Misc_ml_generation.FBK_expr b))
                 l in
             (* Extend the context with the mapping between these *)
             (* recursive functions and their extra arguments.    *)
@@ -537,15 +543,19 @@ let generate_methods ctx env species_parameters_names field =
               ctx with
                 scc_lambda_lift_params_mapping =
                   List.map2
-                    (fun (_, n, _, _, _, _) (_, _, extra_params) ->
+                    (fun (_, n, _, _, _, _) (_, _, _, extra_params) ->
                       (n, extra_params))
                      l
                      lliftings_infos } in
+	    (* For OCaml, ignore the def-dependencies. By the way, they     *)
+	    (* should always be empty (remind that the only def-dependency  *)
+	    (* that can exist is on the carrier, but this one is not in the *)
+	    (* graph and is processed appart).                              *)
             let ((dependencies_from_params_head,
                   decl_children_head, llift_params_head) ,
                  lliftings_infos_tail) =
               match lliftings_infos with
-               | (a, b, c) :: q -> ((a, b, c), q)
+               | (a, b, _, c) :: q -> ((a, b, c), q)
                | _ -> assert false in
             (* Now, generate the first method, introduced by "let rec". *)
             generate_one_field_binding
@@ -562,7 +572,8 @@ let generate_methods ctx env species_parameters_names field =
             let rem_compiled =
               List.map2
                 (fun (from, name, params, scheme, body, _)
-                    (dependencies_from_params, decl_children, llift_params) ->
+                   (dependencies_from_params, decl_children, _, llift_params) ->
+		  (* For OCaml, ignore the def-dependencies. *)
                   generate_one_field_binding
                     ctx' env ~let_connect: LC_following
                     species_parameters_names llift_params
@@ -577,8 +588,8 @@ let generate_methods ctx env species_parameters_names field =
                 lliftings_infos_tail in
             Some (CSF_let_rec (first_compiled :: rem_compiled))
        end)
-   | Env.TypeInformation.SF_theorem (_, name, _, _, _)
-   | Env.TypeInformation.SF_property (_, name, _, _) ->
+   | Env.TypeInformation.SF_theorem (_, name, _, _, _, _)
+   | Env.TypeInformation.SF_property (_, name, _, _, _) ->
        (* Properties and theorems are purely  *)
        (* discarded in the Ocaml translation. *)
        if Configuration.get_verbose () then
@@ -1231,8 +1242,8 @@ let collection_compile env ~current_unit out_fmter coll_def coll_descr
     List.iter
       (function
         | Env.TypeInformation.SF_sig (_, _, _)
-        | Env.TypeInformation.SF_theorem (_, _, _, _, _)
-        | Env.TypeInformation.SF_property (_, _, _, _) -> ()
+        | Env.TypeInformation.SF_theorem (_, _, _, _, _, _)
+        | Env.TypeInformation.SF_property (_, _, _, _, _) -> ()
         | Env.TypeInformation.SF_let (_, n, _, _, _, _) ->
             Format.fprintf out_fmter "%a =@ t."
               Parsetree_utils.pp_vname_with_operators_expanded n ;

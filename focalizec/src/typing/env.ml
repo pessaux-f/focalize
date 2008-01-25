@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.61 2008-01-15 10:51:16 pessaux Exp $ *)
+(* $Id: env.ml,v 1.62 2008-01-25 15:21:10 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -372,13 +372,17 @@ module TypeInformation = struct
          Parsetree.vname *      (** The theorem's name. *)
          Types.type_scheme *    (** The theorem's type scheme. *)
          Parsetree.prop *       (** The theorem's body. *)
-         Parsetree.proof        (** The theorem's proof. *))
+         Parsetree.proof *      (** The theorem's proof. *)
+	 dependency_on_rep      (** Tells if the theorem has dependencies on
+                                    "rep". *))
     | SF_property of
         ((** Where the property comes from (the most recent in inheritance). *)
          Parsetree.qualified_species *
          Parsetree.vname *       (** The property's name. *)
          Types.type_scheme *     (** The property's type scheme. *)
-         Parsetree.prop          (** The property's body. *))
+         Parsetree.prop *        (** The property's body. *)
+         dependency_on_rep       (** Tells if the property has dependencies on
+                                    "rep". *))
 
 
 
@@ -568,12 +572,12 @@ module TypeInformation = struct
                Sourcify.pp_vname v Types.pp_type_scheme s)
            rem
             end)
-        | SF_theorem (from, vname, ty_scheme, _, _) ->
+        | SF_theorem (from, vname, ty_scheme, _, _, _) ->
             Format.fprintf ppf "(* From species %a. *)@\n"
               Sourcify.pp_qualified_species from ;
             Format.fprintf ppf "theorem %a : %a@\n"
               Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
-        | SF_property (from, vname, ty_scheme, _) ->
+        | SF_property (from, vname, ty_scheme, _, _) ->
             Format.fprintf ppf "(* From species %a. *)@\n"
               Sourcify.pp_qualified_species from ;
             Format.fprintf ppf "property %a : %a@\n"
@@ -1540,8 +1544,8 @@ module TypingEMAccess = struct
           match field with
            | TypeInformation.SF_sig (_, v, s)
            | TypeInformation.SF_let (_, v, _, s, _, _)
-           | TypeInformation.SF_theorem (_, v, s, _, _)
-           | TypeInformation.SF_property (_, v, s, _) ->
+           | TypeInformation.SF_theorem (_, v, s, _, _, _)
+           | TypeInformation.SF_property (_, v, s, _, _) ->
                [(v, (BO_absolute s))] @ accu
            | TypeInformation.SF_let_rec l ->
                let l' =

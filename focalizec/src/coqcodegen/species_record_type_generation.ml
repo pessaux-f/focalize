@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.13 2008-01-07 17:23:51 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.14 2008-01-25 15:21:10 pessaux Exp $ *)
 
 
 
@@ -396,7 +396,7 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~is_rec env bd =
            Format.fprintf out_fmter "@ (%a : %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
              (Types.pp_type_simple_to_coq
-                print_ctx ~reuse_mapping: true ~self_as: Types.CSR_species)
+		print_ctx ~reuse_mapping: true ~self_as)
              param_ty
        | None ->
            (* Because we provided a type scheme to the function         *)
@@ -426,8 +426,8 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~is_rec env bd =
        assert false
    | Some t ->
        Format.fprintf out_fmter "@ :@ %a"
-         (Types.pp_type_simple_to_coq
-            print_ctx ~reuse_mapping: true ~self_as: Types.CSR_species) t) ;
+         (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true ~self_as)
+	 t) ;
   (* Now we don't need anymore the sharing. Hence, clean it. This should not *)
   (* be useful because the other guys usign printing should manage this      *)
   (* themselves (as we did just above by cleaning before activating the      *)
@@ -902,8 +902,8 @@ let generate_record_type_parameters ctx species_fields =
         | Env.TypeInformation.SF_sig (_, _, _)
         | Env.TypeInformation.SF_let (_, _, _, _, _, _)
         | Env.TypeInformation.SF_let_rec _-> []
-        | Env.TypeInformation.SF_theorem (_, _, _, prop, _)
-        | Env.TypeInformation.SF_property (_, _, _, prop) ->
+        | Env.TypeInformation.SF_theorem (_, _, _, prop, _, _)
+        | Env.TypeInformation.SF_property (_, _, _, prop, _) ->
             (* Get the list of the methods from the species parameters the  *)
             (* current prop/theo depends on. Do not [fold_left] to keep the *)
             (* extra parameters in the same order than the species          *)
@@ -1053,8 +1053,8 @@ let generate_record_type ctx env species_descr =
             if semi then Format.fprintf out_fmter " ;" ;
             Format.fprintf out_fmter "@]@\n")
           l
-    | Env.TypeInformation.SF_theorem  (from, n, _, prop, _)
-    | Env.TypeInformation.SF_property (from, n, _, prop) ->
+    | Env.TypeInformation.SF_theorem  (from, n, _, prop, _, _)
+    | Env.TypeInformation.SF_property (from, n, _, prop, _) ->
         (* In the record type, theorems and      *)
         (* properties are displayed in same way. *)
         Format.fprintf out_fmter "(* From species %a. *)@\n"

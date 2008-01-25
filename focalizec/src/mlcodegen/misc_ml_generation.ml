@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.ml,v 1.12 2007-12-17 14:31:05 pessaux Exp $ *)
+(* $Id: misc_ml_generation.ml,v 1.13 2008-01-25 15:21:10 pessaux Exp $ *)
 
 
 
@@ -137,27 +137,44 @@ let bind_parameters_to_types_from_type_scheme opt_scheme params_names =
 
 
 
+(* ******************************************************************** *)
+(** {b Descr} : Describes if the argument passed to the function
+      [compute_lambda_liftings_for_field] is the body of a "let" or of
+      a "property/theorem". This allows the function to process at once
+      both the case of the liftings computation for expressions and
+      propositions.
+
+    {b Rem} : Exported outside this module.                             *)
+(* ******************************************************************** *)
+type field_body_kind =
+  | FBK_expr of Parsetree.expr
+  | FBK_prop of Parsetree.prop
+;;
+
+
 
 (* ************************************************************************ *)
 (* current_species: Parsetree.qualified_species -> Parsetree.vname list ->  *)
 (*   Dep_analysis.name_node list -> Parsetree.vname ->                      *)
-(*     Parsetree.expr ->                                                    *)
+(*     field_body_kind ->                                                   *)
 (*       ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list *           *)
+(*        (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *    *)
 (*        (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *    *)
 (*        (string * Types.type_simple) list)                                *)
 (** {b Descr} : Pre-process a field before its compilation to OCaml. We
         compute here the information related to the extra parameters
         a method will have by lambda-lifting due to the species parameters
         and the dependencies of the method.
-        We extract the methods we decl-depend on, the methods of the
-        species parameters we depend on, and finally the list of formal
-        parameters (name and type) the method will have due to the 2
-        dependency infos we computed. This last list will be straight
-        printed by the code generator, but will also be recorded in the
-        context for the case we need to generate the code of a recursive
-        method. This way, the recursive application of the method will have
-        to and will be able to use these extra parameters in addition to
-        those effectively passed in the FoCaL code.
+        We extract the methods we decl-depend on,the methods we def-depend
+	on, the methods of the species parameters we depend on, and finally
+        the list of formal parameters (name and type) the method will have
+        due to the decl and params dependencies infos we computed. This
+        last list will be straight printed by the code generator, but will
+        also be recorded in the context for the case we need to generate
+        the code of a recursive method. This way, the recursive application
+        of the method will have to and will be able to use these extra
+        parameters in addition to those effectively passed in the FoCaL
+        code.
 
     {b Rem} : Not exported oustide this module.                             *)
 (* ************************************************************************ *)
@@ -165,20 +182,21 @@ let compute_lambda_liftings_for_field ~current_species
      species_parameters_names dependency_graph_nodes name body =
   (* Get all the methods we directly decl-depend on. They will   *)
   (* lead each to an extra parameter of the final OCaml function *)
-  (* (lambda-lifing).                                            *)
-  let decl_children =
+  (* (lambda-lifing). Get the methods we directly def-depend.    *)
+  (* They will be ignored for OCaml but used for Coq.            *)
+  let (decl_children, def_children) =
     (try
       let my_node =
         List.find
           (fun { Dep_analysis.nn_name = n } -> n = name)
           dependency_graph_nodes in
       (* Only keep "decl-dependencies" . *)
-      List.filter
+      List.partition
         (function
           | (_, Dep_analysis.DK_decl) -> true
           | (_, Dep_analysis.DK_def) -> false)
         my_node.Dep_analysis.nn_children
-    with Not_found -> []  (* No children at all. *)) in
+    with Not_found -> ([], [])  (* No children at all. *)) in
   (* Get the list of the methods from the species parameters the current *)
   (* method depends on. Do not [fold_left] to keep the extra parameters  *)
   (* in the same order than the species parameters order. I.e. for a    *)
@@ -189,8 +207,13 @@ let compute_lambda_liftings_for_field ~current_species
     List.fold_right
       (fun species_param_name accu ->
         let meths_from_param =
-          Param_dep_analysis.param_deps_expr
-            ~current_species species_param_name body in
+	  (match body with
+	   | FBK_expr e ->
+               Param_dep_analysis.param_deps_expr
+		 ~current_species species_param_name e
+	   | FBK_prop p ->
+	       Param_dep_analysis.param_deps_prop
+		 ~current_species species_param_name p) in
         (* Return a couple binding the species parameter's name with the *)
         (* methods of it we found as required for the current method.    *)
         (species_param_name, meths_from_param) :: accu)
@@ -224,5 +247,6 @@ let compute_lambda_liftings_for_field ~current_species
         (Parsetree_utils.vname_as_string_with_operators_expanded dep_name) in
       revd_lambda_lifts := (llift_name, ty) :: !revd_lambda_lifts)
     decl_children ;
-  (dependencies_from_params, decl_children, (List.rev !revd_lambda_lifts))
+  (dependencies_from_params, decl_children,
+   def_children, (List.rev !revd_lambda_lifts))
 ;;

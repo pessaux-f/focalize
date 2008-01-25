@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.mli,v 1.9 2007-12-17 14:31:05 pessaux Exp $ *)
+(* $Id: misc_ml_generation.mli,v 1.10 2008-01-25 15:21:10 pessaux Exp $ *)
 
 
 
@@ -32,10 +32,15 @@ val bind_parameters_to_types_from_type_scheme :
       (Types.type_simple option) *
       (Types.type_simple list))
 
+type field_body_kind =
+  | FBK_expr of Parsetree.expr
+  | FBK_prop of Parsetree.prop
+
 val compute_lambda_liftings_for_field :
   current_species: Parsetree.qualified_species -> Parsetree.vname list ->
     Dep_analysis.name_node list -> Parsetree.vname ->
-      Parsetree.expr ->
+      field_body_kind ->
         ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list *
+         (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *
          (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *
          (string * Types.type_simple) list)

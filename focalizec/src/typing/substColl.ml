@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.15 2008-01-07 17:23:51 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.16 2008-01-25 15:21:10 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -431,7 +431,8 @@ let subst_species_field ~current_unit c1 c2 = function
           l in
       Env.TypeInformation.SF_let_rec l'
       end)
-  | Env.TypeInformation.SF_theorem (from, vname, scheme, body, proof) ->
+  | Env.TypeInformation.SF_theorem
+      (from, vname, scheme, body, proof, deps_rep) ->
       (begin
       (* No substitution inside the proof. *)
       Types.begin_definition () ;
@@ -445,9 +446,10 @@ let subst_species_field ~current_unit c1 c2 = function
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_prop ~current_unit c1 c2 body in
-      Env.TypeInformation.SF_theorem (from, vname, scheme', body', proof)
+      Env.TypeInformation.SF_theorem
+	(from, vname, scheme', body', proof, deps_rep)
       end)
-  | Env.TypeInformation.SF_property (from, vname, scheme, body) ->
+  | Env.TypeInformation.SF_property (from, vname, scheme, body, deps_rep) ->
       (begin
       Types.begin_definition () ;
       let ty = Types.specialize scheme in
@@ -460,6 +462,6 @@ let subst_species_field ~current_unit c1 c2 = function
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_prop ~current_unit c1 c2 body in
-      Env.TypeInformation.SF_property (from, vname, scheme', body')
+      Env.TypeInformation.SF_property (from, vname, scheme', body', deps_rep)
       end)
 ;;

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.8 2007-12-12 16:45:15 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.9 2008-01-25 15:21:10 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -39,6 +39,12 @@ end ;;
 module DepNameSet = Set.Make (DepNameMod) ;;
 
 
+
+module VnameMod = struct
+  type t = Parsetree.vname
+  let compare = compare
+end ;;
+module VnameSet = Set.Make (VnameMod) ;;
 
 (* ************************************************************************* *)
 (* Parsetree.pattern -> Parsetree.vname list                                 *)
