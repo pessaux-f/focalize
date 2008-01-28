@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.15 2008-01-25 15:21:10 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.16 2008-01-28 14:49:05 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -75,24 +75,69 @@ type compiled_species_fields =
 
 
 
-(* ******************************************************************* *)
-(* (Dep_analysis.name_node * 'a) list ->                               *)
-(*   (Dep_analysis.name_node * 'b) list -> Parsetree_utils.VnameSet.t  *)
-(** {b Descr} : Computes the visible universe of a species field whose
-    decl, def-dependencies and fields are given as argument. This
-    function works according to the definition 57 page 116 section
-    6.4.4 in Virgile Prevosto's Phg.
+(* ******************************************************************** *)
+(** {b Descr} : Describes how a method arrives into a visible universe.
+    Either by a decl-dependency and NO transitive def-dependency. Or by
+    at least a transitive def-dependency (in this case, no matter if it
+    also arrives thanks a decl-dependency.
 
-    {b Rem} : Not exported outside this module.                        *)
-(* ******************************************************************* *)
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
+type in_the_universe_because =
+  | IU_only_decl   (** The method arrives in the visible universe by the
+                       presence of only a decl-dependency and NO transitive
+                       def-dependency. *)
+  | IU_trans_def   (** The method arrives in the visible universe by the
+                       presence at least of a transitive def-dependency
+                       (no matter whether the also is a decl-dependency in
+                       this case). *)
+;;
+
+
+
+(* ********************************************************************* *)
+(** {b Descr} : Structure of a visible universe. It's a [Map] linking
+    a method name with the reason how this method arrives in the visible
+  universe.
+    Building the visible universe with this information ease the
+    computation of the \inter\smallinter operation of Virgile Prevosto's
+    Phd, page 116, definition 58, section 6.4.4. In effect, with the
+    reason of why the method is in the universe reminded, the choice of
+    rule 3 or 4 is immediate instead of having to look again if the
+    method was a introduced my a decl ou a transitive-def dependency.
+
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
+module UniverseElem = struct
+  type t = Parsetree.vname
+  let compare = compare
+end ;;
+module Universe = Map.Make(UniverseElem) ;;
+
+
+
+(* ************************************************************** *)
+(* (Dep_analysis.name_node * 'a) list ->                          *)
+(*   (Dep_analysis.name_node * 'b) list ->                        *)
+(*     in_the_universe_because Universe.t                         *)
+(** {b Descr} : Computes the visible universe of a species field
+    whose decl, def-dependencies and fields are given as argument.
+    This function works according to the definition 57 page 116
+    section 6.4.4 in Virgile Prevosto's Phg.
+
+    {b Rem} : Not exported outside this module.                   *)
+(* ************************************************************** *)
 let visible_universe x_decl_dependencies x_def_dependencies =
-  (* First, apply rule 1. Because decl-dependencies are already computed *)
-  (* when computing the visible universe, just take them as parameter    *)
-  (* instead of computing them again.                                    *)
-  let universe = ref Parsetree_utils.VnameSet.empty in
+  (* First, apply rule 1. Because decl-dependencies are already computed  *)
+  (* when computing the visible universe, just take them as parameter     *)
+  (* instead of computing them again. We add each method with the tag     *)
+  (* telling that it comes here thanks to a decl-dependency. If it        *)
+  (* appears later to also come thank to a transitive def-dependency,     *)
+  (* then it will be removed and changed to that def tag in the universe. *)
+  let universe = ref Universe.empty in
   List.iter
     (fun (n, _) ->
-      universe := Parsetree_utils.VnameSet.add n.Dep_analysis.nn_name !universe)
+      universe := Universe.add n.Dep_analysis.nn_name IU_only_decl !universe)
     x_decl_dependencies ;
   (* Next, apply rule 2 and 3. Add the def-dependencies. Like            *)
   (* decl-dependencies,  they are already available, so take them as a   *)
@@ -102,39 +147,61 @@ let visible_universe x_decl_dependencies x_def_dependencies =
   (* node, its decl-dependencies.                                        *)
   (* First, create the set of already isited nodes. *)
   let seen = ref Parsetree_utils.VnameSet.empty in
-  (* **************************************************************** *)
-  (* transitive_addition : name_node -> unit                          *)
-  (* Now the local recursive function that will walk the dependencies *)
-  (* graph to hunt transitive def-dependencies.                       *)
-  (* **************************************************************** *)
+  (* *********************************************************** *)
+  (* transitive_addition : name_node -> unit                     *)
+  (* {b Descr} : The local recursive function that will walk the *)
+  (* dependencies graph to hunt transitive def-dependencies.     *)
+  (* It also add the decl-dependencies for each def-dependency   *)
+  (* found. This way, one unique walk is needed.                 *)
+  (* *********************************************************** *)
   let rec transitive_addition n =
     if not (Parsetree_utils.VnameSet.mem n.Dep_analysis.nn_name !seen) then
       (begin
       (* Mark it as seen. *)
       seen := Parsetree_utils.VnameSet.add n.Dep_analysis.nn_name !seen ;
-      universe :=
-        Parsetree_utils.VnameSet.add n.Dep_analysis.nn_name !universe ;
+      (* Add the node that has def-dependency to the universe. If the method *)
+      (* already appeared with only the decl tag, then it gets cleared and   *)
+      (* replaced with the tag meaning that this method comes here thanks to *)
+      (* a transitive def-dependency.                                        *)
+      universe := Universe.add n.Dep_analysis.nn_name IU_trans_def !universe ;
       List.iter
         (function
           | (child_node, Dep_analysis.DK_def) ->
-              (* Add the decl-dependencies of this node. *)
+              (* Add the decl-dependencies of this node to the universe. *)
               List.iter
                 (function
                   | (child_node_decl_child, Dep_analysis.DK_decl) ->
-                      universe :=
-                        Parsetree_utils.VnameSet.add
-                          child_node_decl_child.Dep_analysis.nn_name !universe
+                      (begin
+                      (* If the method already appeared with the tag meaning *)
+                      (* that is comes here thanks to a transitive def-dep , *)
+                      (* let it unchanged, otherwise add it with the tag     *)
+                      (* meaning that it come here thanks to a decl-dep.     *)
+                      (* In fact the process is simpler: if the method       *)
+                      (* already appears in the universe: either it's with a *)
+                      (* transitive def-dep, and then no change to do. Or    *)
+                      (* it's with de decl-dep tag, and in this case, it's   *)
+                      (* useless to add it again with this tag: then also no *)
+                      (* change to do.                                       *)
+                      if not
+                          (Universe.mem
+                             child_node_decl_child.Dep_analysis.nn_name
+                             !universe) then
+                        universe :=
+                          Universe.add
+                            child_node_decl_child.Dep_analysis.nn_name
+                            IU_only_decl !universe
+                      end)
                   | (_, Dep_analysis.DK_def) -> ())
                 child_node.Dep_analysis.nn_children ;
-              (* Now recurse to walk deeper in the graph. *)
+              (* Now recurse to walk deeper in the graph *)
+              (* on def-dependency children only.        *)
               transitive_addition child_node
           | (_, Dep_analysis.DK_decl) -> ())
         n.Dep_analysis.nn_children
       end) in
   (* Now, start the transitive hunt for each initial def-dependencies nodes. *)
   List.iter
-    (fun (def_node, _) ->
-      transitive_addition def_node)
+    (fun (def_node, _) -> transitive_addition def_node)
     x_def_dependencies ;
   (* Finally, rule 4 could appear to be a fixpoint over the universe. In  *)
   (* in a type, the only method that can appear is "rep" (appearing under *)
@@ -143,6 +210,8 @@ let visible_universe x_decl_dependencies x_def_dependencies =
   (* it is sufficient to search for a decl-dependency on "rep" for at     *)
   (* least one the the members of the current universe, and if one is     *)
   (* found, then to add "rep" in the universe.                            *)
+(* [Unsure] Implémenter la règle 4 avec la remarque ci-dessus si elle est
+   correcte. *)
 (* [Unsure] A faire. Voir si l'on ne remet pas les dépendances sur rep
    dans le graphe général plutôt que de garder les 2 flags à part. *)
   (* Finally, return the visible universe. *)
@@ -151,11 +220,70 @@ let visible_universe x_decl_dependencies x_def_dependencies =
 
 
 
+(* *********************************************************************** *)
+(* in_the_universe_because Universe.t ->                                   *)
+(*   Env.TypeInformation.species_field list ->                             *)
+(*     Env.TypeInformation.species_field list                              *)
+(** {b Descr} Compute the minimal Coq typing environment for a field whose
+    visible universe is passed as [universe]. Proceeds following Virgile
+    Prevosto's Phd, page 116, definition 58, section 6.4.4.
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+let minimal_typing_environment universe species_fields =
+  (* A local function to process onne let-binding. Handy to *)
+  (* factorize code for both [Let] and [Let_rec] fields.    *)
+  let process_one_let_binding l_binding =
+    try
+      let (from, n, _, sch, _, _) = l_binding in
+      let reason = Universe.find n universe in
+      if reason = IU_only_decl then
+        (* Keep in the environment, but as abstracted. *)
+        [Env.TypeInformation.SF_sig (from, n, sch)]
+      else
+        (* Otherwise, keep the full definition. *)
+        [Env.TypeInformation.SF_let l_binding]
+    with Not_found ->
+      (* Not in the universe. Hence not in the minimal typing env. *)
+      [] in
+  (* Now the local recursive function that will examine each species field. *)
+  let rec build = function
+   | [] -> []
+   | h :: q ->
+       let h' =
+         (match h with
+          | Env.TypeInformation.SF_sig (_, n, _) ->
+              if Universe.mem n universe then [h] else []
+          | Env.TypeInformation.SF_let l_binding ->
+              process_one_let_binding l_binding
+          | Env.TypeInformation.SF_let_rec l ->
+              List.flatten (List.map process_one_let_binding l)
+          | Env.TypeInformation.SF_theorem (from, n, sch, body, _, deps_rep) ->
+              (begin
+              try
+                let reason = Universe.find n universe in
+                if reason = IU_only_decl then
+                  (* Keep in the environment, but as abstracted. *)
+                  [Env.TypeInformation.SF_property
+                     (from, n, sch, body, deps_rep) ]
+                else
+                  (* Otherwise, keep the full definition. *)
+                  [h]
+              with Not_found ->
+                (* Not in the universe. Hence not in the minimal typing env. *)
+                []
+              end)
+          | Env.TypeInformation.SF_property (_, n, _, _, _) ->
+              if Universe.mem n universe then [h] else []) in
+       h' @ (build q) in
+  (* *************************** *)
+  (* Now, let do the real job... *)
+  build species_fields
+;;
+
+
+
 (* [Unsure] Quasiment comme pour OCaml ! Factoriser ! Nettoyer !!! *)
-(* Return whether the method's type uses "Self", then whether it has an
-   extra first argument that is "abst_speciesname : Set". This must be
-   reminded because when applying the method generator, this extra argument
-   will have to be provided. *)
 let generate_one_field_binding ctx print_ctx env ~let_connect
     params_llifted dependencies_from_params decl_children
     (from, name, params, scheme, body, deps_on_rep) =
