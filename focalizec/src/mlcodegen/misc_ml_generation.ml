@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.ml,v 1.13 2008-01-25 15:21:10 pessaux Exp $ *)
+(* $Id: misc_ml_generation.ml,v 1.14 2008-01-29 14:51:44 pessaux Exp $ *)
 
 
 
@@ -166,7 +166,7 @@ type field_body_kind =
         a method will have by lambda-lifting due to the species parameters
         and the dependencies of the method.
         We extract the methods we decl-depend on,the methods we def-depend
-	on, the methods of the species parameters we depend on, and finally
+        on, the methods of the species parameters we depend on, and finally
         the list of formal parameters (name and type) the method will have
         due to the decl and params dependencies infos we computed. This
         last list will be straight printed by the code generator, but will
@@ -193,7 +193,7 @@ let compute_lambda_liftings_for_field ~current_species
       (* Only keep "decl-dependencies" . *)
       List.partition
         (function
-          | (_, Dep_analysis.DK_decl) -> true
+          | (_, Dep_analysis.DK_decl _) -> true
           | (_, Dep_analysis.DK_def) -> false)
         my_node.Dep_analysis.nn_children
     with Not_found -> ([], [])  (* No children at all. *)) in
@@ -207,13 +207,13 @@ let compute_lambda_liftings_for_field ~current_species
     List.fold_right
       (fun species_param_name accu ->
         let meths_from_param =
-	  (match body with
-	   | FBK_expr e ->
+          (match body with
+           | FBK_expr e ->
                Param_dep_analysis.param_deps_expr
-		 ~current_species species_param_name e
-	   | FBK_prop p ->
-	       Param_dep_analysis.param_deps_prop
-		 ~current_species species_param_name p) in
+                 ~current_species species_param_name e
+           | FBK_prop p ->
+               Param_dep_analysis.param_deps_prop
+                 ~current_species species_param_name p) in
         (* Return a couple binding the species parameter's name with the *)
         (* methods of it we found as required for the current method.    *)
         (species_param_name, meths_from_param) :: accu)

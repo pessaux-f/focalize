@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.16 2008-01-28 14:49:05 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.17 2008-01-29 14:51:44 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -127,7 +127,7 @@ module Universe = Map.Make(UniverseElem) ;;
 
     {b Rem} : Not exported outside this module.                   *)
 (* ************************************************************** *)
-let visible_universe x_decl_dependencies x_def_dependencies =
+let visible_universe dep_graph x_decl_dependencies x_def_dependencies =
   (* First, apply rule 1. Because decl-dependencies are already computed  *)
   (* when computing the visible universe, just take them as parameter     *)
   (* instead of computing them again. We add each method with the tag     *)
@@ -170,7 +170,7 @@ let visible_universe x_decl_dependencies x_def_dependencies =
               (* Add the decl-dependencies of this node to the universe. *)
               List.iter
                 (function
-                  | (child_node_decl_child, Dep_analysis.DK_decl) ->
+                  | (child_node_decl_child, (Dep_analysis.DK_decl _)) ->
                       (begin
                       (* If the method already appeared with the tag meaning *)
                       (* that is comes here thanks to a transitive def-dep , *)
@@ -196,22 +196,55 @@ let visible_universe x_decl_dependencies x_def_dependencies =
               (* Now recurse to walk deeper in the graph *)
               (* on def-dependency children only.        *)
               transitive_addition child_node
-          | (_, Dep_analysis.DK_decl) -> ())
+          | (_, (Dep_analysis.DK_decl _)) -> ())
         n.Dep_analysis.nn_children
       end) in
   (* Now, start the transitive hunt for each initial def-dependencies nodes. *)
   List.iter
     (fun (def_node, _) -> transitive_addition def_node)
     x_def_dependencies ;
-  (* Finally, rule 4 could appear to be a fixpoint over the universe. In  *)
-  (* in a type, the only method that can appear is "rep" (appearing under *)
-  (* the form of the type "Self". This information is already available   *)
-  (* since we recorded the decl/def dependencies on the carrier. Hence,   *)
-  (* it is sufficient to search for a decl-dependency on "rep" for at     *)
-  (* least one the the members of the current universe, and if one is     *)
-  (* found, then to add "rep" in the universe.                            *)
-(* [Unsure] Implémenter la règle 4 avec la remarque ci-dessus si elle est
-   correcte. *)
+  (* Now, compute the fixpoint for rule 4. This rule only takes into account *)
+  (* decl-dependencies of the "type" of a field. This is equivalent to only  *)
+  (* use the "decl"-dependencies tagged {DDK_from_type].                     *)
+  let continue = ref true in
+  while !continue do
+    (* Reset the fixpoint end's flag. *)
+    continue := false ;
+    (* For each member of the universe... *)
+    Universe.iter
+      (fun z_name _ ->    (* [z_name] is "z" in definition 57 of the Phd. *)
+        (* ... Find its node in the graph (must never fail because the     *)
+        (* graph is already built and is built from the species fields)... *)
+        let z_node =
+          (try
+            List.find (fun node -> node.Dep_analysis.nn_name = z_name) dep_graph
+          with Not_found -> assert false) in
+        (* ... For each dependency of the node... *)
+        List.iter
+          (function
+            | (child_node, (Dep_analysis.DK_decl Dep_analysis.DDK_from_type)) ->
+                (* ... Only consider those tagged as coming       *)
+                (* from the "type" of the field having this mode. *)
+                (* If the child is not already in universe, then add it with  *)
+                (* a [IU_only_decl] tag. If it is already in the universe,    *)
+                (* then do nothing. In effet, either it is inside with a      *)
+                (* [IU_only_decl] tag and then it is useless to add it again. *)
+                (* Or it is inside with a [IU_trans_def] and this flag has    *)
+                (* a higher priority and must not be changed.                 *)
+                if not
+                    (Universe.mem child_node.Dep_analysis.nn_name !universe)
+                then
+                  (begin
+                  universe :=
+                    Universe.add
+                      child_node.Dep_analysis.nn_name IU_only_decl !universe ;
+                  (* Mark that we must continue the fixpoint. *)
+                  continue := true ;
+                  end)
+            | (_, _) -> ())
+          z_node.Dep_analysis.nn_children)
+      !universe
+  done ;
 (* [Unsure] A faire. Voir si l'on ne remet pas les dépendances sur rep
    dans le graphe général plutôt que de garder les 2 flags à part. *)
   (* Finally, return the visible universe. *)
@@ -423,7 +456,7 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
       Parsetree_utils.pp_vname_with_operators_expanded (snd from)
   else
     Format.fprintf out_fmter "%a"
-      Parsetree_utils.pp_vname_with_operators_expanded species_name ;
+      Parsetree_utils.pp_vname_with_operators_expanded (snd from) ;
   Format.fprintf out_fmter "__%a"
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* If required, apply the above method generator to the  *)
@@ -480,10 +513,10 @@ Format.eprintf "Gasp !!! %a@." Parsetree_utils.pp_vname_with_operators_expanded 
 
 
 
-let generate_theorem ctx print_ctx env _llift_params _dependencies_from_params
-    decl_children def_children generated_fields
-    (from, name, prop, deps_on_rep) =
+let generate_theorem ctx print_ctx env min_coq_env _llift_params
+    _dependencies_from_params generated_fields (from, name, prop, deps_on_rep) =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
+  let curr_species_name = (snd ctx.Species_gen_basics.scc_current_species) in
   (* A "theorem" defined in the species leads to a Coq *)
   (* "Theorem" enclosed in a dedicated "Section".      *)
   if from = ctx.Species_gen_basics.scc_current_species then
@@ -497,87 +530,105 @@ let generate_theorem ctx print_ctx env _llift_params _dependencies_from_params
     (* Open a Coq "Section". *)
     Format.fprintf out_fmter "@\n@[<2>Section %a.@\n"
       Parsetree_utils.pp_vname_with_operators_expanded name ;
-    (* Now, generate "Variable"s related to the decl-dependencies than *)
-    (* do not also appear in the def-dependencies ! We first start by  *)
-    (* the carrier which is handled appart from the other methods.     *)
+    (* Now, generate a "Variable"s for the carrier (which is handled  *)
+    (* appart) from the other method) if it induced a decl-dependency *)
+    (* and not a def-dependency.                                      *)
     if deps_on_rep.Env.TypeInformation.dor_decl &&
       (not deps_on_rep.Env.TypeInformation.dor_def) then
       Format.fprintf out_fmter "Variable abst_T : Set.@\n" ;
-    (* Now the decl-dependencies on methods other than the carrier. *)
+    (* Now, if the carrier induces a def-dependency, we generate *)
+    (* a local definition for this carrier.                      *)
+(* [Unsure] A faire ! *)
+
+    (* For each method in the minimal Coq typing environment, if it is  *)
+    (* only declared, then we abstract them (i.e. make a "Variable"     *)
+    (* named "abst_" + the method name and bind its type).              *)
+    (* Otherwise, we make a local definition using the method generator *)
+    (* of this method. This generator one has obligatorily been created *)
+    (* previously and used the effective generator induced by the       *)
+    (* inheritance level the method was declared defined. Because we    *)
+    (* always create the "local" method generators, (self_xxx) we are   *)
+    (* sure that we can find and call it.                               *)
     List.iter
-      (fun (meth_node, _) ->
-        let method_name = meth_node.Dep_analysis.nn_name in
-        if not (List.exists
-                  (fun (n, _) -> n.Dep_analysis.nn_name = method_name)
-                  def_children) then
-          begin
-          (* Generate a comment before the variable. *)
-          Format.fprintf out_fmter "(* Due to a decl-dependency on '%a'. *)@\n"
-            Parsetree_utils.pp_vname_with_operators_expanded method_name ;
-          (* "Self" is always represented by "abst_T" in "Variables" *)
-          (* representing the decl-dependencies of a theorem.        *)
-          Format.fprintf out_fmter "@[<2>Variable abst_%a :@ %a.@]@\n"
-            Parsetree_utils.pp_vname_with_operators_expanded method_name
-            (Types.pp_type_simple_to_coq
-               print_ctx ~reuse_mapping: false ~self_as: Types.CSR_abst)
-            meth_node.Dep_analysis.nn_type
-          end)
-      decl_children ;
-    (* Now, generate local definitions related to the def-dependencies.   *)
-    (* They are always the application of our local generator. In effect  *)
-    (* this one has been created previously and used the effective        *)
-    (* generator induced by the inheritance level the method was declared *)
-    (* or defined. Because we always create the "local" method generators *)
-    (* (self_xxx) we are sure that we can call it.                        *)
-    (* We first start by the def-dependency on the carrier (appart).      *)
-(* [Unsure] TODO *)
-    
-    (* And now the def-dependencies on methods other than the carrier. *)
-    let curr_species_name = (snd ctx.Species_gen_basics.scc_current_species) in
-    List.iter
-      (fun (meth_node, _) ->
-        let method_name = meth_node.Dep_analysis.nn_name in
-        (* Generate a comment before the variable. *)
-        Format.fprintf out_fmter "(* Due to a def-dependency on '%a'. *)@\n"
-            Parsetree_utils.pp_vname_with_operators_expanded method_name ;
-        Format.fprintf out_fmter "@[<2>Let abst_%a :@ %a :=@ "
-          Parsetree_utils.pp_vname_with_operators_expanded method_name
-          (Types.pp_type_simple_to_coq
-               print_ctx ~reuse_mapping: false ~self_as: Types.CSR_abst)
-            meth_node.Dep_analysis.nn_type ;
-        (* Now generate the application of the method local generator. *)
-        Format.fprintf out_fmter "%a__%a"
-          Parsetree_utils.pp_vname_with_operators_expanded curr_species_name
-          Parsetree_utils.pp_vname_with_operators_expanded method_name ;
-        (* Now, recover from the already generated fields, *)
-        (* what to apply to this generator.                *)
+      (function
+        | Env.TypeInformation.SF_sig (_, name, sch) ->
+            (* Generate a comment before the variable. *)
+            Format.fprintf out_fmter
+              "(* Due to a decl-dependency on '%a'. *)@\n"
+              Parsetree_utils.pp_vname_with_operators_expanded name ;
+            let ty = Types.specialize sch in
+            (* "Self" is always represented by "abst_T" in "Variables" *)
+            (* representing the decl-dependencies of a theorem.        *)
+            Format.fprintf out_fmter "@[<2>Variable abst_%a :@ %a.@]@\n"
+              Parsetree_utils.pp_vname_with_operators_expanded name
+              (Types.pp_type_simple_to_coq
+                 print_ctx ~reuse_mapping: false ~self_as: Types.CSR_abst) ty
+        | Env.TypeInformation.SF_let (_, name, _, sch, _, _) ->
+            (* Generate a comment before the Let. *)
+            Format.fprintf out_fmter "(* Due to a def-dependency on '%a'. *)@\n"
+              Parsetree_utils.pp_vname_with_operators_expanded name ;
+            let ty = Types.specialize sch in
+            (* Now, create the definition using the method generator. *)
+            Format.fprintf out_fmter "@[<2>Let abst_%a :@ %a :=@ "
+              Parsetree_utils.pp_vname_with_operators_expanded name
+              (Types.pp_type_simple_to_coq
+                 print_ctx ~reuse_mapping: false ~self_as: Types.CSR_abst) ty ;
+            (* Now generate the application of the method local generator. *)
+            Format.fprintf out_fmter "%a__%a"
+              Parsetree_utils.pp_vname_with_operators_expanded curr_species_name
+              Parsetree_utils.pp_vname_with_operators_expanded name ;
+            (* Now, recover from the already generated fields, *)
+            (* what to apply to this generator.                *)
 (* [Unsure] En fait on fait quasiment déjà ça pour "Let". *)
-        let memory = find_compiled_field_memory method_name generated_fields in
-        if memory.cfm_deps_on_rep.Env.TypeInformation.dor_decl &&
-           (not memory.cfm_deps_on_rep.Env.TypeInformation.dor_def) then
-          Format.fprintf out_fmter "@ abst_T" ;
-        List.iter
-          (fun (species_param_name, meths_from_param) ->
-            let prefix = Parsetree_utils.name_of_vname species_param_name in
-            Parsetree_utils.DepNameSet.iter
-              (fun (meth, _) ->
-                Format.fprintf out_fmter "@ %s_%a"
-                  prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
-              meths_from_param)
-          memory.cfm_dependencies_from_parameters ;
-        List.iter
-          (fun ({ Dep_analysis.nn_name = dep_name }, _) ->
-            Format.fprintf out_fmter "@ abst_%a"
-              Parsetree_utils.pp_vname_with_operators_expanded dep_name)
-          memory.cfm_decl_children)
-      def_children ;
-    (* End the application of the generator. *)
-    Format.fprintf out_fmter ".@]@\n" ;
+            let memory = find_compiled_field_memory name generated_fields in
+            if memory.cfm_deps_on_rep.Env.TypeInformation.dor_decl &&
+              (not memory.cfm_deps_on_rep.Env.TypeInformation.dor_def) then
+              Format.fprintf out_fmter "@ abst_T" ;
+            List.iter
+              (fun (species_param_name, meths_from_param) ->
+                let prefix = Parsetree_utils.name_of_vname species_param_name in
+                Parsetree_utils.DepNameSet.iter
+                  (fun (meth, _) ->
+                    Format.fprintf out_fmter "@ %s_%a"
+                      prefix Parsetree_utils.pp_vname_with_operators_expanded
+                      meth)
+                  meths_from_param)
+              memory.cfm_dependencies_from_parameters ;
+            List.iter
+              (fun ({ Dep_analysis.nn_name = dep_name }, _) ->
+                Format.fprintf out_fmter "@ abst_%a"
+                  Parsetree_utils.pp_vname_with_operators_expanded dep_name)
+              memory.cfm_decl_children ;
+            (* End the application of the generator. *)
+            Format.fprintf out_fmter ".@]@\n"
+        | Env.TypeInformation.SF_theorem (_, n, _sch, _body, _, _) ->
+Format.eprintf "Arf ! %a@." Parsetree_utils.pp_vname_with_operators_expanded n ;
+            failwith "TODO 1"
+        | Env.TypeInformation.SF_property (_, n, _, body, _) ->
+            (* The type of a property is its body, not its ML type ! *)
+            (* Generate a comment before the variable. *)
+            Format.fprintf out_fmter
+              "(* Due to a decl-dependency on '%a'. *)@\n"
+              Parsetree_utils.pp_vname_with_operators_expanded n ;
+            (* "Self" is always represented by "abst_T" in "Variables" *)
+            (* representing the decl-dependencies of a theorem.        *)
+            Format.fprintf out_fmter "@[<2>Variable abst_%a :@ "
+              Parsetree_utils.pp_vname_with_operators_expanded n ;
+            (* Rem: no local idents in the context at this point. *)
+            Species_record_type_generation.generate_prop
+              ctx ~local_idents: [] ~self_as: Types.CSR_abst env body ;
+            Format.fprintf out_fmter ".@]@\n"
+        | Env.TypeInformation.SF_let_rec _ ->
+            (* In the minimal Coq typing environment, let-rec-bindings are  *)
+            (* transformed into sequences of let-bindings. This is only due *)
+            (* to the fact that we use fields structure also to remind the  *)
+            (* needed methods in the minimal Coq typing environment.        *)
+            assert false)
+      min_coq_env ;
     (* Finally, the theorem itself. Inside, any method of "Self" is *)
     (* abstracted (i.e. as if it was lambda-lifted), hence named    *)
     (* "abst_xxx". That' why we use the mode [Types.CSR_abst].      *)
-    Format.fprintf out_fmter
-      "@[<2>Theorem self_%a :@ "
+    Format.fprintf out_fmter "@[<2>Theorem self_%a :@ "
       Parsetree_utils.pp_vname_with_operators_expanded name ;
     Species_record_type_generation.generate_prop
       ~local_idents: [] ~self_as: Types.CSR_abst ctx env prop ;
@@ -587,7 +638,6 @@ let generate_theorem ctx print_ctx env _llift_params _dependencies_from_params
       Parsetree_utils.pp_vname_with_operators_expanded name ;
     (* Now, apply the theorem generator to the "local" methods "self_xxx". *)
 (* [Unsure] TODO *)
-
     end)
   else
     (begin
@@ -606,7 +656,7 @@ let generate_theorem ctx print_ctx env _llift_params _dependencies_from_params
     already be generated. Used while generating theorems to know what to apply
         to the methods generators the theorem depends on. *)
 let generate_methods ctx print_ctx env species_parameters_names
-    generated_fields field =
+    all_fields generated_fields field =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
   match field with
    | Env.TypeInformation.SF_sig (from, name, sch) ->
@@ -676,10 +726,16 @@ let generate_methods ctx print_ctx env species_parameters_names
            species_parameters_names
            ctx.Species_gen_basics.scc_dependency_graph_nodes name
            (Misc_ml_generation.FBK_prop prop) in
+       (* Compute the visible universe of the theorem. *)
+       let universe =
+         visible_universe
+           ctx.Species_gen_basics.scc_dependency_graph_nodes decl_children
+           def_children in
+       (* Now, its minimal Coq typing environment. *)
+       let min_coq_env = minimal_typing_environment universe all_fields in
        generate_theorem
-         ctx print_ctx env llift_params dependencies_from_params
-         decl_children def_children generated_fields
-         (from, name, prop, deps_on_rep) ;
+         ctx print_ctx env min_coq_env llift_params dependencies_from_params
+          generated_fields (from, name, prop, deps_on_rep) ;
        let compiled_field = {
          cfm_from_species = from ;
          cfm_method_name = name ;
@@ -1026,7 +1082,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
         (* Pass the accu to be able to remind the already generated fields. *)
         let compiled_field =
           generate_methods
-            ctx' print_ctx env' species_parameters_names accu field in
+            ctx' print_ctx env' species_parameters_names
+            species_descr.Env.TypeInformation.spe_sig_methods accu field in
         (* Not efficient, but required to keep the fields in the right order. *)
         accu @ [compiled_field])
       []

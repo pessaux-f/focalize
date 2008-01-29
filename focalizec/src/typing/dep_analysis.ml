@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.31 2008-01-25 15:21:10 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.32 2008-01-29 14:51:44 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -28,7 +28,7 @@
 (* *********************************************************************** *)
 
 
-open Parsetree;;
+open Parsetree
 
 (* ********************************************************** *)
 (** {b Descr} : Raised if a species appears to be ill-formed.
@@ -649,43 +649,57 @@ let in_species_decl_dependencies_for_one_function_name ~current_species
 
 
 
-(* ******************************************************************** *)
+(* ********************************************************************** *)
 (** {b Descr} : Compute the dependencies of a property or theorem bound
     name in a species. Namely this is the \lbag x \rbag_s in Virgile
     Prevosto's Pdh, section 3.9.5, page 53, definition 30. Returns both
-    the "decl" and "def" dependencies.
+    the "decl" (separately those coming from the "type", i.e. the
+    proposition of the property/theorem and those coming from the "body",
+    i.e. the proof of the theorem) and "def" dependencies.
     Note that names we depend on are inevitably names from the current
     species inheritance tree's fields. That is by definition of the
     dependencies computation !
 
     {b Rem} : MUST be called only with a [name] property or theorem
               bound !
-              Not exported outside this module.                         *)
-(* ******************************************************************** *)
+              Not exported outside this module.                           *)
+(* ********************************************************************** *)
 let in_species_decl_n_def_dependencies_for_one_theo_property_name
     ~current_species (t_prop, opt_body) =
   let t_prop_decl_deps = prop_decl_dependencies ~current_species t_prop in
-  match opt_body with
-   | None ->
-       (* No body, then no "def"-dependencies. *)
-       (t_prop_decl_deps, Parsetree_utils.DepNameSet.empty)
-   | Some proof ->
-       let (proof_decl_deps, proof_def_deps) =
-         proof_decl_n_def_dependencies ~current_species proof in
-       ((Parsetree_utils.DepNameSet.union t_prop_decl_deps proof_decl_deps),
-        proof_def_deps)
+  let (opt_body_decl_deps, opt_body_def_deps) =
+    (match opt_body with
+     | None ->
+         (* No body, then no "def" not "decl"-dependencies. *)
+         (Parsetree_utils.DepNameSet.empty, Parsetree_utils.DepNameSet.empty)
+     | Some proof ->
+         proof_decl_n_def_dependencies ~current_species proof) in
+  (t_prop_decl_deps, opt_body_decl_deps, opt_body_def_deps)
 ;;
+
+
+
+(* ***************************************************************** *)
+(** {b Descr} Describes for a "decl" dependency , the 2 cases of its
+    origine. A  "decl" dependency can come from the type or the body
+    of a method. In other words, this means wether it comes from the
+    proposition of a theorem/property or if it comes from the proof
+    of a theorem.
+    {b Rem} : Exported outside this module.                          *)
+(* ***************************************************************** *)
+type decl_dependency_kind = DDK_from_type | DDK_from_body ;;
 
 
 
 (* ************************************************************** *)
 (** {b Descr} : Describes the kind of dependency between 2 nodes.
-    Can be either "def" or "dep" dependency.
+    Can be either "def" or "decl" dependency. Note that "Let",
+     "Sig", and "Let_rec" methods can't have "decl" dependencies.
 
     {b Rem} : Exported outside this module.                       *)
 (* ************************************************************** *)
 type dependency_kind =
-  | DK_decl
+  | DK_decl of decl_dependency_kind
   | DK_def
 ;;
 
@@ -766,7 +780,9 @@ let build_dependencies_graph_for_fields ~current_species fields =
       Parsetree_utils.DepNameSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
-          (node, DK_decl) :: accu)
+          (* In "Let/rec" methods, "decl" dependencies *)
+          (* can only com from the type of the method. *)
+          (node, (DK_decl DDK_from_type)) :: accu)
         n_decl_deps_names
         [] in
     (* Now add an edge from the current name's node to each of the *)
@@ -785,7 +801,9 @@ let build_dependencies_graph_for_fields ~current_species fields =
     (* Find the dependencies node for the current name. *)
     let n_node = find_or_create tree_nodes (n, ty) in
     (* Find the names decl and defs dependencies for the current name. *)
-    let (n_decl_deps_names, n_def_deps_names) =
+    let (n_decl_deps_names_from_type,
+         n_decl_deps_names_from_body,
+         n_def_deps_names) =
       in_species_decl_n_def_dependencies_for_one_theo_property_name
         ~current_species (prop_t, opt_b) in
     (* Now, find the decl-dependencies nodes for these names. *)
@@ -793,15 +811,22 @@ let build_dependencies_graph_for_fields ~current_species fields =
       Parsetree_utils.DepNameSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
-          (node, DK_decl) :: accu)
-        n_decl_deps_names
+          (node, (DK_decl DDK_from_type)) :: accu)
+        n_decl_deps_names_from_type
         [] in
+    let n_decl_deps_nodes =
+      Parsetree_utils.DepNameSet.fold
+        (fun n accu ->
+          let node = find_or_create tree_nodes n in
+          (node, (DK_decl DDK_from_body)) :: accu)
+        n_decl_deps_names_from_body
+        n_decl_deps_nodes in
     (* Now add an edge from the current name's node to each of the *)
     (* decl-dependencies names' nodes.                             *)
     n_node.nn_children <-
       Handy.list_concat_uniq_custom_eq
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-        n_decl_deps_nodes n_node.nn_children;
+        n_decl_deps_nodes n_node.nn_children ;
     (* Now, find the def-dependencies nodes for these names. *)
     let n_def_deps_nodes =
       Parsetree_utils.DepNameSet.fold
@@ -882,7 +907,8 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
           (* Just make a different style depending on the kind of dependency. *)
           let (style, color) =
             (match decl_kind with
-             | DK_decl -> ("", "red")
+             | DK_decl DDK_from_type -> ("", "red")
+             | DK_decl DDK_from_body -> ("", "pink")
              | DK_def -> ("style=dotted,", "blue")) in
           Printf.fprintf out_hd
             "\"%s\" -> \"%s\" [%scolor=%s,fontsize=10];"
@@ -1230,7 +1256,7 @@ let erase_fields_in_context ~current_species context fields =
                (* 30 in Virgile Prevosto's Phd, section 3.9.5, page 53). *)
                Parsetree_utils.DepNameSet.empty
              | Env.TypeInformation.SF_theorem (_, _, _, prop, proof, _) ->
-               let (_, n_def_deps_names) =
+               let (_, _, n_def_deps_names) =
                  in_species_decl_n_def_dependencies_for_one_theo_property_name
                    ~current_species (prop, (Some proof)) in
                (* Just return the "def"-dependencies. *)

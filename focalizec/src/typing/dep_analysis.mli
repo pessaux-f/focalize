@@ -12,11 +12,13 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.mli,v 1.11 2007-12-10 10:14:07 pessaux Exp $ *)
+(* $Id: dep_analysis.mli,v 1.12 2008-01-29 14:51:44 pessaux Exp $ *)
 
 exception Ill_formed_species of Parsetree.qualified_vname
 
-type dependency_kind = DK_decl | DK_def
+type decl_dependency_kind = DDK_from_type | DDK_from_body
+
+type dependency_kind = DK_decl of decl_dependency_kind | DK_def
 
 type name_node = {
   nn_name : Parsetree.vname ;
