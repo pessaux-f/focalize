@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.100 2008-01-25 15:21:10 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.101 2008-01-31 16:49:22 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1623,7 +1623,7 @@ and typecheck_species_fields ctx env = function
              end)
          | Parsetree.SF_property property_def ->
              (begin
-	     Types.reset_deps_on_rep () ;
+             Types.reset_deps_on_rep () ;
              Types.begin_definition () ;
              (* Ensure that Self we be abstract during the property's    *)
              (* definition type inference by setting [~in_proof: false]. *)
@@ -1632,7 +1632,7 @@ and typecheck_species_fields ctx env = function
                  ~in_proof: false ctx env
                  property_def.Parsetree.ast_desc.Parsetree.prd_prop in
              Types.end_definition () ;
-	     (* Check for a decl dependency on "rep". *)
+             (* Check for a decl dependency on "rep". *)
              Types.check_for_decl_dep_on_self ty ;
              (* Record the type information in the AST node. *)
              property_def.Parsetree.ast_type <- Parsetree.ANTI_type ty ;
@@ -1644,7 +1644,7 @@ and typecheck_species_fields ctx env = function
                Env.TypingEnv.add_value
                  property_def.Parsetree.ast_desc.Parsetree.prd_name
                  scheme env in
-	     (* Recover if a def-dependency or a decl-dependency *)
+             (* Recover if a def-dependency or a decl-dependency *)
              (* on "rep" was/were found for this binding.        *)
              let dep_on_rep = {
                Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
@@ -1655,18 +1655,18 @@ and typecheck_species_fields ctx env = function
                   property_def.Parsetree.ast_desc.Parsetree.prd_name,
                   scheme,
                   property_def.Parsetree.ast_desc.Parsetree.prd_prop,
-		  dep_on_rep) in
+                  dep_on_rep) in
              (* Record the property's scheme in the AST node. *)
              field.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
              ([field_info], ctx, env', [(* Proofs *)])
              end)
          | Parsetree.SF_theorem theorem_def ->
              (begin
-	     Types.reset_deps_on_rep () ;
+             Types.reset_deps_on_rep () ;
              Types.begin_definition () ;
              let ty = typecheck_theorem_def ctx env theorem_def in
              Types.end_definition () ;
-	     (* Check for a decl dependency on "rep". *)
+             (* Check for a decl dependency on "rep". *)
              Types.check_for_decl_dep_on_self ty ;
              (* Extend the environment. *)
              (* Be careful : methods are not polymorphics (c.f. Virgile   *)
@@ -1687,7 +1687,7 @@ and typecheck_species_fields ctx env = function
                  scheme,
                  theorem_def.Parsetree.ast_desc.Parsetree.th_stmt,
                  theorem_def.Parsetree.ast_desc.Parsetree.th_proof,
-		 dep_on_rep) in
+                 dep_on_rep) in
              (* Record the theorem's scheme in the AST node. *)
              field.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
              ([field_info], ctx, env', [(* Proofs *)])
@@ -1822,9 +1822,9 @@ let abstraction ~current_unit cname fields =
                     (from, vname, (Types.generalize ty')))
                  l
            | Env.TypeInformation.SF_theorem
-	       (from, vname, scheme, prop, _, deps_rep)
+               (from, vname, scheme, prop, _, deps_rep)
            | Env.TypeInformation.SF_property
-	       (from, vname, scheme, prop, deps_rep) ->
+               (from, vname, scheme, prop, deps_rep) ->
                Types.begin_definition () ;
                let ty = Types.specialize scheme in
                let ty' =
@@ -1837,7 +1837,7 @@ let abstraction ~current_unit cname fields =
                    cname prop in
                [Env.TypeInformation.SF_property
                   (from, vname, (Types.generalize ty'), abstracted_prop,
-		   deps_rep)]) in
+                   deps_rep)]) in
         h' @ rec_abstract q in
   (* Do the job now... *)
   rec_abstract fields

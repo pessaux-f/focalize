@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.17 2008-01-29 14:51:44 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.18 2008-01-31 16:49:22 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -59,7 +59,12 @@ type compiled_field_memory = {
   cfm_decl_children :
     (Dep_analysis.name_node * Dep_analysis.dependency_kind) list ;
   (** Whether the method has dependencies on the carrier. *)
-  cfm_deps_on_rep : Env.TypeInformation.dependency_on_rep
+  cfm_deps_on_rep : Env.TypeInformation.dependency_on_rep ;
+  (** The positional list of method names appearing in the minimal Coq typing
+      environment. Note that for Sig, Let, Let_rec and Property, this list
+      is always empty. The notion of minimal environment is only required for
+      theorems. *)
+  cfm_coq_min_typ_env_names : Parsetree.vname list
 } ;;
 
 
@@ -450,7 +455,8 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
   (* representing the method.                                             *)
   Format.fprintf out_fmter "@[<2>Let self_%a :=@ "
     Parsetree_utils.pp_vname_with_operators_expanded name ;
-  (* If the generator is in another module, then qualify its name. *)
+  (* The method generator's name... If the generator *)
+  (* is in another module, then qualify its name.    *)
   if (fst from) <> ctx.Species_gen_basics.scc_current_unit then
     Format.fprintf out_fmter "%s.@,%a" (fst from)
       Parsetree_utils.pp_vname_with_operators_expanded (snd from)
@@ -525,10 +531,11 @@ let generate_theorem ctx print_ctx env min_coq_env _llift_params
     if Configuration.get_verbose () then
       Format.eprintf "Generating Coq code for field '%a'.@."
         Parsetree_utils.pp_vname_with_operators_expanded name ;
-    Format.fprintf out_fmter "(* From species %a. *)@\n"
+    (* Put an extra newline before the theorem to make some air ! *)
+    Format.fprintf out_fmter "@\n(* From species %a. *)@\n"
       Sourcify.pp_qualified_species from ;
     (* Open a Coq "Section". *)
-    Format.fprintf out_fmter "@\n@[<2>Section %a.@\n"
+    Format.fprintf out_fmter "@[<2>Section %a.@\n"
       Parsetree_utils.pp_vname_with_operators_expanded name ;
     (* Now, generate a "Variable"s for the carrier (which is handled  *)
     (* appart) from the other method) if it induced a decl-dependency *)
@@ -549,105 +556,215 @@ let generate_theorem ctx print_ctx env min_coq_env _llift_params
     (* inheritance level the method was declared defined. Because we    *)
     (* always create the "local" method generators, (self_xxx) we are   *)
     (* sure that we can find and call it.                               *)
-    List.iter
-      (function
-        | Env.TypeInformation.SF_sig (_, name, sch) ->
-            (* Generate a comment before the variable. *)
-            Format.fprintf out_fmter
-              "(* Due to a decl-dependency on '%a'. *)@\n"
-              Parsetree_utils.pp_vname_with_operators_expanded name ;
-            let ty = Types.specialize sch in
-            (* "Self" is always represented by "abst_T" in "Variables" *)
-            (* representing the decl-dependencies of a theorem.        *)
-            Format.fprintf out_fmter "@[<2>Variable abst_%a :@ %a.@]@\n"
-              Parsetree_utils.pp_vname_with_operators_expanded name
-              (Types.pp_type_simple_to_coq
-                 print_ctx ~reuse_mapping: false ~self_as: Types.CSR_abst) ty
-        | Env.TypeInformation.SF_let (_, name, _, sch, _, _) ->
-            (* Generate a comment before the Let. *)
-            Format.fprintf out_fmter "(* Due to a def-dependency on '%a'. *)@\n"
-              Parsetree_utils.pp_vname_with_operators_expanded name ;
-            let ty = Types.specialize sch in
-            (* Now, create the definition using the method generator. *)
-            Format.fprintf out_fmter "@[<2>Let abst_%a :@ %a :=@ "
-              Parsetree_utils.pp_vname_with_operators_expanded name
-              (Types.pp_type_simple_to_coq
-                 print_ctx ~reuse_mapping: false ~self_as: Types.CSR_abst) ty ;
-            (* Now generate the application of the method local generator. *)
-            Format.fprintf out_fmter "%a__%a"
-              Parsetree_utils.pp_vname_with_operators_expanded curr_species_name
-              Parsetree_utils.pp_vname_with_operators_expanded name ;
-            (* Now, recover from the already generated fields, *)
-            (* what to apply to this generator.                *)
+    (* We keep the name of these abstracted in order to generate in the *)
+    (* theorem proof some artificial "assert" to force Coq to abstract  *)
+    (* the related "Variable"s even if they are not used (in fact, by   *)
+    (* using, these artificial "assert", they *get* used, hence         *)
+    (* abstracted by Coq !).                                            *)
+    let abstracted_methods =
+      List.flatten
+        (List.map
+           (function
+             | Env.TypeInformation.SF_sig (_, name, sch) ->
+                 (* Generate a comment before the variable. *)
+                 Format.fprintf out_fmter
+                   "(* Due to a decl-dependency on '%a'. *)@\n"
+                   Parsetree_utils.pp_vname_with_operators_expanded name ;
+                 let ty = Types.specialize sch in
+                 (* "Self" is always represented by "abst_T" in "Variables" *)
+                 (* representing the decl-dependencies of a theorem.        *)
+                 Format.fprintf out_fmter "@[<2>Variable abst_%a :@ %a.@]@\n"
+                   Parsetree_utils.pp_vname_with_operators_expanded name
+                   (Types.pp_type_simple_to_coq
+                      print_ctx ~reuse_mapping: false ~self_as: Types.CSR_abst)
+                   ty ;
+                 (* Method abstracted by a "Variable". Hence will *)
+                 (* be an argument of the theorem generator.      *)
+                 [name]
+             | Env.TypeInformation.SF_let (_, name, _, sch, _, _) ->
+                 (* Generate a comment before the Let. *)
+                 Format.fprintf out_fmter
+                   "(* Due to a def-dependency on '%a'. *)@\n"
+                   Parsetree_utils.pp_vname_with_operators_expanded name ;
+                 let ty = Types.specialize sch in
+                 (* Now, create the definition using the method generator. *)
+                 Format.fprintf out_fmter "@[<2>Let abst_%a :@ %a :=@ "
+                   Parsetree_utils.pp_vname_with_operators_expanded name
+                   (Types.pp_type_simple_to_coq
+                      print_ctx ~reuse_mapping: false ~self_as: Types.CSR_abst)
+                   ty ;
+                 (* Generate the application of the method local generator. *)
+                 Format.fprintf out_fmter "%a__%a"
+                   Parsetree_utils.pp_vname_with_operators_expanded
+                   curr_species_name
+                   Parsetree_utils.pp_vname_with_operators_expanded name ;
+                 (* Now, recover from the already generated fields, *)
+                 (* what to apply to this generator.                *)
 (* [Unsure] En fait on fait quasiment déjà ça pour "Let". *)
-            let memory = find_compiled_field_memory name generated_fields in
-            if memory.cfm_deps_on_rep.Env.TypeInformation.dor_decl &&
-              (not memory.cfm_deps_on_rep.Env.TypeInformation.dor_def) then
-              Format.fprintf out_fmter "@ abst_T" ;
-            List.iter
-              (fun (species_param_name, meths_from_param) ->
-                let prefix = Parsetree_utils.name_of_vname species_param_name in
-                Parsetree_utils.DepNameSet.iter
-                  (fun (meth, _) ->
-                    Format.fprintf out_fmter "@ %s_%a"
-                      prefix Parsetree_utils.pp_vname_with_operators_expanded
-                      meth)
-                  meths_from_param)
-              memory.cfm_dependencies_from_parameters ;
-            List.iter
-              (fun ({ Dep_analysis.nn_name = dep_name }, _) ->
-                Format.fprintf out_fmter "@ abst_%a"
-                  Parsetree_utils.pp_vname_with_operators_expanded dep_name)
-              memory.cfm_decl_children ;
-            (* End the application of the generator. *)
-            Format.fprintf out_fmter ".@]@\n"
-        | Env.TypeInformation.SF_theorem (_, n, _sch, _body, _, _) ->
-Format.eprintf "Arf ! %a@." Parsetree_utils.pp_vname_with_operators_expanded n ;
-            failwith "TODO 1"
-        | Env.TypeInformation.SF_property (_, n, _, body, _) ->
-            (* The type of a property is its body, not its ML type ! *)
-            (* Generate a comment before the variable. *)
-            Format.fprintf out_fmter
-              "(* Due to a decl-dependency on '%a'. *)@\n"
-              Parsetree_utils.pp_vname_with_operators_expanded n ;
-            (* "Self" is always represented by "abst_T" in "Variables" *)
-            (* representing the decl-dependencies of a theorem.        *)
-            Format.fprintf out_fmter "@[<2>Variable abst_%a :@ "
-              Parsetree_utils.pp_vname_with_operators_expanded n ;
-            (* Rem: no local idents in the context at this point. *)
-            Species_record_type_generation.generate_prop
-              ctx ~local_idents: [] ~self_as: Types.CSR_abst env body ;
-            Format.fprintf out_fmter ".@]@\n"
-        | Env.TypeInformation.SF_let_rec _ ->
-            (* In the minimal Coq typing environment, let-rec-bindings are  *)
-            (* transformed into sequences of let-bindings. This is only due *)
-            (* to the fact that we use fields structure also to remind the  *)
-            (* needed methods in the minimal Coq typing environment.        *)
-            assert false)
-      min_coq_env ;
+                 let memory =
+                   find_compiled_field_memory name generated_fields in
+                 if memory.cfm_deps_on_rep.Env.TypeInformation.dor_decl &&
+                   (not memory.cfm_deps_on_rep.Env.TypeInformation.dor_def) then
+                   Format.fprintf out_fmter "@ abst_T" ;
+                 List.iter
+                   (fun (species_param_name, meths_from_param) ->
+                     let prefix =
+                       Parsetree_utils.name_of_vname species_param_name in
+                     Parsetree_utils.DepNameSet.iter
+                       (fun (meth, _) ->
+                         Format.fprintf out_fmter "@ %s_%a"
+                           prefix
+                           Parsetree_utils.pp_vname_with_operators_expanded
+                           meth)
+                       meths_from_param)
+                   memory.cfm_dependencies_from_parameters ;
+                 List.iter
+                   (fun ({ Dep_analysis.nn_name = dep_name }, _) ->
+                     Format.fprintf out_fmter "@ abst_%a"
+                       Parsetree_utils.pp_vname_with_operators_expanded
+                       dep_name)
+                   memory.cfm_decl_children ;
+                 (* End the application of the generator. *)
+                 Format.fprintf out_fmter ".@]@\n" ;
+                 (* Method not abstracted. Hence not an *)
+                 (* argument of the theorem generator.  *)
+                 []
+             | Env.TypeInformation.SF_theorem (_, name, _, body, _, _) ->
+                 (* Generate a comment before the Let. *)
+                 Format.fprintf out_fmter
+                   "(* Due to a def-dependency on '%a'. *)@\n"
+                   Parsetree_utils.pp_vname_with_operators_expanded name ;
+                 (* Now, create the definition using the method generator. *)
+                 Format.fprintf out_fmter "@[<2>Let abst_%a :@ "
+                   Parsetree_utils.pp_vname_with_operators_expanded name ;
+                 Species_record_type_generation.generate_prop
+                   ctx ~local_idents: [] ~self_as: Types.CSR_abst env body ;
+                 Format.fprintf out_fmter " :=@ " ;
+                 (* Generate the application of the method local generator. *)
+                 (* Since one cannot depend from something that is not in   *)
+                 (* our inheritance and because generators we depend on are *)
+                 (* obligatorily generated before, we always use the local  *)
+                 (* theorem generator.                                      *)
+                 Format.fprintf out_fmter "%a__%a"
+                   Parsetree_utils.pp_vname_with_operators_expanded
+                   curr_species_name
+                   Parsetree_utils.pp_vname_with_operators_expanded name ;
+                 (* Now, recover from this theorem's minimal environment, *)
+                 (* what to apply to this generator.                      *)
+                 let memory =
+                   find_compiled_field_memory name generated_fields in
+                 List.iter
+                   (fun n ->
+                      Format.fprintf out_fmter "@ abst_%a"
+                        Parsetree_utils.pp_vname_with_operators_expanded n)
+                   memory.cfm_coq_min_typ_env_names ;
+                 (* End the application of the generator. *)
+                 Format.fprintf out_fmter ".@]@\n" ;
+                 (* Method not abstracted. Hence not an *)
+                 (* argument of the theorem generator.  *)
+                 []
+             | Env.TypeInformation.SF_property (_, name, _, body, _) ->
+                 (* The type of a property or a theorem is  *)
+                 (* its body, not its ML type !             *)
+                 (* Generate a comment before the variable. *)
+                 Format.fprintf out_fmter
+                   "(* Due to a decl-dependency on '%a'. *)@\n"
+                   Parsetree_utils.pp_vname_with_operators_expanded name ;
+                 (* "Self" is always represented by "abst_T" in "Variables" *)
+                 (* representing the decl-dependencies of a theorem.        *)
+                 Format.fprintf out_fmter "@[<2>Variable abst_%a :@ "
+                   Parsetree_utils.pp_vname_with_operators_expanded name ;
+                 (* Rem: no local idents in the context at this point. *)
+                 Species_record_type_generation.generate_prop
+                   ctx ~local_idents: [] ~self_as: Types.CSR_abst env body ;
+                 Format.fprintf out_fmter ".@]@\n" ;
+                 (* Method abstracted by a "Variable". Hence will *)
+                 (* be an argument of the theorem generator.      *)
+                 [name]
+             | Env.TypeInformation.SF_let_rec _ ->
+                 (* In the minimal Coq typing environment, let-rec-bindings *)
+                 (* are transformed into sequences of let-bindings. This is *)
+                 (* only due to the fact that we use fields structure also  *)
+                 (* to remind the needed methods in the minimal Coq typing  *)
+                 (* environment.                                            *)
+                 assert false)
+           min_coq_env) in
     (* Finally, the theorem itself. Inside, any method of "Self" is *)
     (* abstracted (i.e. as if it was lambda-lifted), hence named    *)
     (* "abst_xxx". That' why we use the mode [Types.CSR_abst].      *)
-    Format.fprintf out_fmter "@[<2>Theorem self_%a :@ "
+    Format.fprintf out_fmter "@[<2>Theorem %a__%a :@ "
+      Parsetree_utils.pp_vname_with_operators_expanded curr_species_name
       Parsetree_utils.pp_vname_with_operators_expanded name ;
     Species_record_type_generation.generate_prop
       ~local_idents: [] ~self_as: Types.CSR_abst ctx env prop ;
     Format.fprintf out_fmter ".@]@\n" ;
+    (* Generate "assert"s to be sure that Coq will really abstract in the     *)
+    (* section all the "Variable"s we created for detected decl-dependencies. *)
+    List.iter
+      (fun dep_name ->
+        Format.fprintf out_fmter
+          "@[(* Artificial@ use@ of@ method@ '%a'@ to@ ensure@ abstraction@ \
+             of@ it's@ related@ variable@ in@ the@ theorem@ section.@ *)@]@\n"
+          Parsetree_utils.pp_vname_with_operators_expanded dep_name ;
+        Format.fprintf out_fmter
+          "@[<2>assert@ (___force_abstraction_%a :=@ abst_%a).@]@\n"
+          Parsetree_utils.pp_vname_with_operators_expanded dep_name
+          Parsetree_utils.pp_vname_with_operators_expanded dep_name)
+      abstracted_methods ;
+    (* [Unsure] We now need to handle the proof. *)
+    Format.fprintf out_fmter "apply basics.magic_prove.@\nQed.@\n" ;
     (* Close the theorem's "Section". *)
-    Format.fprintf out_fmter "End %a.@]\n"
+    Format.fprintf out_fmter "End %a.@]@\n"
       Parsetree_utils.pp_vname_with_operators_expanded name ;
-    (* Now, apply the theorem generator to the "local" methods "self_xxx". *)
-(* [Unsure] TODO *)
     end)
   else
     (begin
-(* [Unsure] Il faut appliquer le générateur dont on hérite avec un Let ! *)
     (* Just a bit of debug/information if requested. *)
     if Configuration.get_verbose () then
       Format.eprintf
         "Field '%a' inherited but not (re)-declared uses inherited generator.@."
         Parsetree_utils.pp_vname_with_operators_expanded name
-    end)
+    end) ;
+  (* In any case, if the method is declared or inherited, we apply *)
+  (* the theorem generator  to the "local" methods "self_xxx".     *)
+  Format.fprintf out_fmter "@[<2>Let self_%a :@ "
+    Parsetree_utils.pp_vname_with_operators_expanded name ;
+  Species_record_type_generation.generate_prop
+    ~local_idents: [] ~self_as: Types.CSR_self ctx env prop ;
+  (* The theorem generator's name... If the generator *)
+  (* is in another module,  then qualify its name.    *)
+  Format.fprintf out_fmter " :=@ " ;
+  if (fst from) <> ctx.Species_gen_basics.scc_current_unit then
+    Format.fprintf out_fmter "%s.@,%a" (fst from)
+      Parsetree_utils.pp_vname_with_operators_expanded (snd from)
+  else
+    Format.fprintf out_fmter "%a"
+      Parsetree_utils.pp_vname_with_operators_expanded (snd from) ;
+  Format.fprintf out_fmter "__%a"
+    Parsetree_utils.pp_vname_with_operators_expanded name ;
+  (* And now apply its arguments with the local "Self_xxx" definitions. *)
+  (* These arguments are those from the minimal environment that are    *)
+  (* "only declared".                                                   *)
+(* [Unsure] Manque le paramètre Self et ceux issus des paramètres d'espèce. *)
+  let coq_min_typ_env_names =
+    List.flatten
+      (List.map
+         (function
+           | Env.TypeInformation.SF_sig (_, n, _) ->
+               Format.fprintf out_fmter "@ self_%a"
+                 Parsetree_utils.pp_vname_with_operators_expanded n ;
+               [n]
+           | Env.TypeInformation.SF_let (_, _, _, _, _, _) -> []
+           | Env.TypeInformation.SF_theorem (_, _, _, _, _, _) -> []
+           | Env.TypeInformation.SF_property (_, n, _, _, _) ->
+               Format.fprintf out_fmter "@ self_%a"
+                 Parsetree_utils.pp_vname_with_operators_expanded n ;
+               [n]
+           | Env.TypeInformation.SF_let_rec _ -> assert false)
+         min_coq_env) in
+  Format.fprintf out_fmter ".@]@\n" ;
+  (* Return the names abstracted in the minimal typing environment. *)
+  coq_min_typ_env_names
 ;;
 
 
@@ -713,7 +830,8 @@ let generate_methods ctx print_ctx env species_parameters_names
          cfm_method_body = CMB_expr body ;
          cfm_dependencies_from_parameters = dependencies_from_params ;
          cfm_decl_children = decl_children ;
-         cfm_deps_on_rep = deps_rep } in
+         cfm_deps_on_rep = deps_rep ;
+         cfm_coq_min_typ_env_names = [] } in
        CSF_let compiled_field
    | Env.TypeInformation.SF_let_rec _l ->
        (* [Unsure]. *)
@@ -733,16 +851,18 @@ let generate_methods ctx print_ctx env species_parameters_names
            def_children in
        (* Now, its minimal Coq typing environment. *)
        let min_coq_env = minimal_typing_environment universe all_fields in
-       generate_theorem
-         ctx print_ctx env min_coq_env llift_params dependencies_from_params
-          generated_fields (from, name, prop, deps_on_rep) ;
+       let coq_min_typ_env_names =
+         generate_theorem
+           ctx print_ctx env min_coq_env llift_params dependencies_from_params
+           generated_fields (from, name, prop, deps_on_rep) in
        let compiled_field = {
          cfm_from_species = from ;
          cfm_method_name = name ;
          cfm_method_body = CMB_prop prop ;
          cfm_dependencies_from_parameters = dependencies_from_params ;
          cfm_decl_children = decl_children ;
-         cfm_deps_on_rep = deps_on_rep } in
+         cfm_deps_on_rep = deps_on_rep ;
+         cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
        CSF_theorem compiled_field
    | Env.TypeInformation.SF_property (from, name, _, prop, _) ->
        (* [Unsure] Pas besoin de connaitre les dépendances sur "rep" ? *)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.25 2008-01-25 15:21:10 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.26 2008-01-31 16:49:22 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -502,7 +502,7 @@ let generate_methods ctx env species_parameters_names field =
          Misc_ml_generation.compute_lambda_liftings_for_field
            ~current_species: ctx.scc_current_species species_parameters_names
            ctx.scc_dependency_graph_nodes name
-	   (Misc_ml_generation.FBK_expr body) in
+           (Misc_ml_generation.FBK_expr body) in
        (* No recursivity, then the method cannot call itself in its body *)
        (* then no need to set the [scc_lambda_lift_params_mapping] of    *)
        (* the context.                                                   *)
@@ -535,7 +535,7 @@ let generate_methods ctx env species_parameters_names field =
                   Misc_ml_generation.compute_lambda_liftings_for_field
                     ~current_species: ctx.scc_current_species
                     species_parameters_names ctx.scc_dependency_graph_nodes n
-		    (Misc_ml_generation.FBK_expr b))
+                    (Misc_ml_generation.FBK_expr b))
                 l in
             (* Extend the context with the mapping between these *)
             (* recursive functions and their extra arguments.    *)
@@ -547,10 +547,10 @@ let generate_methods ctx env species_parameters_names field =
                       (n, extra_params))
                      l
                      lliftings_infos } in
-	    (* For OCaml, ignore the def-dependencies. By the way, they     *)
-	    (* should always be empty (remind that the only def-dependency  *)
-	    (* that can exist is on the carrier, but this one is not in the *)
-	    (* graph and is processed appart).                              *)
+            (* For OCaml, ignore the def-dependencies. By the way, they     *)
+            (* should always be empty (remind that the only def-dependency  *)
+            (* that can exist is on the carrier, but this one is not in the *)
+            (* graph and is processed appart).                              *)
             let ((dependencies_from_params_head,
                   decl_children_head, llift_params_head) ,
                  lliftings_infos_tail) =
@@ -573,7 +573,7 @@ let generate_methods ctx env species_parameters_names field =
               List.map2
                 (fun (from, name, params, scheme, body, _)
                    (dependencies_from_params, decl_children, _, llift_params) ->
-		  (* For OCaml, ignore the def-dependencies. *)
+                  (* For OCaml, ignore the def-dependencies. *)
                   generate_one_field_binding
                     ctx' env ~let_connect: LC_following
                     species_parameters_names llift_params

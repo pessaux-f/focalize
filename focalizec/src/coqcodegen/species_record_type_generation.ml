@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.14 2008-01-25 15:21:10 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.15 2008-01-31 16:49:22 pessaux Exp $ *)
 
 
 
@@ -396,7 +396,7 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~is_rec env bd =
            Format.fprintf out_fmter "@ (%a : %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
              (Types.pp_type_simple_to_coq
-		print_ctx ~reuse_mapping: true ~self_as)
+                print_ctx ~reuse_mapping: true ~self_as)
              param_ty
        | None ->
            (* Because we provided a type scheme to the function         *)
@@ -427,7 +427,7 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~is_rec env bd =
    | Some t ->
        Format.fprintf out_fmter "@ :@ %a"
          (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true ~self_as)
-	 t) ;
+         t) ;
   (* Now we don't need anymore the sharing. Hence, clean it. This should not *)
   (* be useful because the other guys usign printing should manage this      *)
   (* themselves (as we did just above by cleaning before activating the      *)
@@ -1079,5 +1079,5 @@ let generate_record_type ctx env species_descr =
         output_one_field ~semi: true h ;
         iter_semi_separated q in
   iter_semi_separated species_descr.Env.TypeInformation.spe_sig_methods ;
-  Format.fprintf out_fmter "@]}.@\n"
+  Format.fprintf out_fmter "@]}.@\n@\n"
 ;;

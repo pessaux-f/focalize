@@ -14,3 +14,5 @@ Nom d'une méthode dans champ de record lui correspondant : nom de
 
 Nom d'une méthode définie en dehors du record : nom de
   l'espèce l'hébergeant + "__" + nom de la méthode.
+
+Nom d'un générateur de **théoreme** : espèce + "__" + nom théorème.
