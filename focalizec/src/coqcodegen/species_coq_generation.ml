@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.19 2008-02-01 12:33:10 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.20 2008-02-01 16:11:30 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -257,12 +257,46 @@ let visible_universe dep_graph x_decl_dependencies x_def_dependencies =
 
 
 (* *********************************************************************** *)
+(** {b Descr} Elements of the minimal Coq typing environment for methods.
+    We can't directly use [Env.TypeInformation.species_field] because they
+    can't make appearing the fact that the carrier belongs to the minimal
+    environment even if not *defined* (remind that in species fields, if
+    "rep" appears then is it *defined* otherwise; it is silently
+    declared and does't appear in the list of fields).
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+type min_coq_env_element =
+  | MCEE_Declared_carrier    (** The carrier belongs to the environment but
+                                 only via a decl-dependency. Hence it doesn't
+                                 need to be explicitely defined, but need to
+                                 be in the environment. *)
+  | MCEE_Defined_carrier of Types.type_scheme (** The carrier belongs to the
+               environment via at least a def-dependency. Then is have to
+               be explicitely declared. *)
+  | MCEE_Declared_computational of
+      (Parsetree.vname * Types.type_scheme) (** Abstract computational method,
+           i.e. abstracted Let or abstracted Let_rec or Sig other than "rep". *)
+  | MCEE_Defined_computational of
+      (Parsetree.vname * Types.type_scheme)  (** Defined computational method,
+           i.e. Let or Let_rec. *)
+  | MCEE_Declared_logical of
+      (Parsetree.vname * Parsetree.prop)  (** Abstract logical property,
+           i.e. Property or abstracted Theorem. *)
+  | MCEE_Defined_logical of      (** Defined logical property, i.e. Theorem. *)
+      (Parsetree.vname * Parsetree.prop)
+;;
+
+
+
+(* *********************************************************************** *)
 (* in_the_universe_because Universe.t ->                                   *)
 (*   Env.TypeInformation.species_field list ->                             *)
-(*     Env.TypeInformation.species_field list                              *)
+(*     min_coq_env_element list                                            *)
 (** {b Descr} Compute the minimal Coq typing environment for a field whose
     visible universe is passed as [universe]. Proceeds following Virgile
     Prevosto's Phd, page 116, definition 58, section 6.4.4.
+    If the carrier belongs to this list, then it ALWAYS is in head.
 
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
@@ -271,50 +305,91 @@ let minimal_typing_environment universe species_fields =
   (* factorize code for both [Let] and [Let_rec] fields.    *)
   let process_one_let_binding l_binding =
     try
-      let (from, n, _, sch, _, _) = l_binding in
+      let (_, n, _, sch, _, _) = l_binding in
       let reason = Universe.find n universe in
       if reason = IU_only_decl then
         (* Keep in the environment, but as abstracted. *)
-        [Env.TypeInformation.SF_sig (from, n, sch)]
+        [MCEE_Declared_computational (n, sch)]
       else
         (* Otherwise, keep the full definition. *)
-        [Env.TypeInformation.SF_let l_binding]
+        [MCEE_Defined_computational (n, sch)]
     with Not_found ->
       (* Not in the universe. Hence not in the minimal typing env. *)
       [] in
+  (* We make a temporary flag that will remind if "rep" appears among the *)
+  (* fields. This is a bit casual, but this avoid searching again in the  *)
+  (* list for this field. We need this because "rep" will be processed    *)
+  (* aside the other Sigs. See below.                                     *)
+  let found_rep_field = ref None in
   (* Now the local recursive function that will examine each species field. *)
   let rec build = function
    | [] -> []
    | h :: q ->
        let h' =
          (match h with
-          | Env.TypeInformation.SF_sig (_, n, _) ->
-              if Universe.mem n universe then [h] else []
+          | Env.TypeInformation.SF_sig (_, n, sch) ->
+              (* We will process "rep" specially because it may belong to *)
+              (* the universe although not present among the fields. See  *)
+              (* below.                                                   *)
+              if n <> (Parsetree.Vlident "rep") then
+                (if Universe.mem n universe then
+                  [MCEE_Declared_computational (n, sch)]
+                else [])
+              else (found_rep_field := Some sch ; [])
           | Env.TypeInformation.SF_let l_binding ->
               process_one_let_binding l_binding
           | Env.TypeInformation.SF_let_rec l ->
               List.flatten (List.map process_one_let_binding l)
-          | Env.TypeInformation.SF_theorem (from, n, sch, body, _, deps_rep) ->
+          | Env.TypeInformation.SF_theorem (_, n, _, body, _, _) ->
               (begin
               try
                 let reason = Universe.find n universe in
                 if reason = IU_only_decl then
                   (* Keep in the environment, but as abstracted. *)
-                  [Env.TypeInformation.SF_property
-                     (from, n, sch, body, deps_rep) ]
+                  [MCEE_Declared_logical (n, body) ]
                 else
                   (* Otherwise, keep the full definition. *)
-                  [h]
+                  [MCEE_Defined_logical (n, body) ]
               with Not_found ->
                 (* Not in the universe. Hence not in the minimal typing env. *)
                 []
               end)
-          | Env.TypeInformation.SF_property (_, n, _, _, _) ->
-              if Universe.mem n universe then [h] else []) in
+          | Env.TypeInformation.SF_property (_, n, _, body, _) ->
+              if Universe.mem n universe then
+                [MCEE_Declared_logical (n, body)]
+              else []) in
        h' @ (build q) in
   (* *************************** *)
   (* Now, let do the real job... *)
-  build species_fields
+  let env_without_carrier = build species_fields in
+  (* Now, we need to handle "rep" aside. In effect, it may belong to the   *)
+  (* universe although not present among the fields. Moreover, if present  *)
+  (* among the fields, one must make it "declared" or "defined" depending  *)
+  (* on if it is in the universe via [IU_only_decl] or via [IU_trans_def]. *)
+  (* The regular processing of Sigs doesn't take this last point in        *)
+  (* account. So we proces "rep" aside here. If "rep" has to be added,     *)
+  (* then, always put it in head !                                         *)
+  try
+    (begin
+    let reason = Universe.find (Parsetree.Vlident "rep") universe in
+    match (!found_rep_field, reason) with
+     | (None, IU_only_decl) ->
+         (* A decl-dependency was found even if "rep" is not defined. *)
+         MCEE_Declared_carrier :: env_without_carrier
+     | (None, IU_trans_def) ->
+         (* Impossible to have a def-dependency if *)
+         (* the carrier's structure is unknown !   *)
+         assert false
+     | ((Some _), IU_only_decl) ->
+         (* A decl-dependency was found. No matter what "rep" is. *)
+         MCEE_Declared_carrier :: env_without_carrier
+     | ((Some sch), IU_trans_def) ->
+         (* A def-dependency was found. So, record the carrier's structure. *)
+         (MCEE_Defined_carrier sch) :: env_without_carrier
+    end)
+  with Not_found ->
+    (* Not in the universe. Hence not in the minimal typing env. *)
+    env_without_carrier
 ;;
 
 
@@ -523,7 +598,7 @@ Format.eprintf "Gasp !!! %a@." Parsetree_utils.pp_vname_with_operators_expanded 
 
 
 let generate_theorem ctx print_ctx env min_coq_env _llift_params
-    _dependencies_from_params generated_fields (from, name, prop, deps_on_rep) =
+    _dependencies_from_params generated_fields (from, name, prop, _) =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
   let curr_species_name = (snd ctx.Species_gen_basics.scc_current_species) in
   (* A "theorem" defined in the species leads to a Coq *)
@@ -540,17 +615,6 @@ let generate_theorem ctx print_ctx env min_coq_env _llift_params
     (* Open a Coq "Section". *)
     Format.fprintf out_fmter "@[<2>Section %a.@\n"
       Parsetree_utils.pp_vname_with_operators_expanded name ;
-    (* Now, generate a "Variable"s for the carrier (which is handled  *)
-    (* appart) from the other method) if it induced a decl-dependency *)
-    (* and not a def-dependency.                                      *)
-(* [Unsure] A changer avec rep dans le graphe maintenant. *)
-    if deps_on_rep.Env.TypeInformation.dor_decl &&
-      (not deps_on_rep.Env.TypeInformation.dor_def) then
-      Format.fprintf out_fmter "Variable abst_T : Set.@\n" ;
-    (* Now, if the carrier induces a def-dependency, we generate *)
-    (* a local definition for this carrier.                      *)
-(* [Unsure] A faire ! *)
-
     (* For each method in the minimal Coq typing environment, if it is  *)
     (* only declared, then we abstract them (i.e. make a "Variable"     *)
     (* named "abst_" + the method name and bind its type).              *)
@@ -569,30 +633,42 @@ let generate_theorem ctx print_ctx env min_coq_env _llift_params
       List.flatten
         (List.map
            (function
-             | Env.TypeInformation.SF_sig (_, name, sch) ->
-(* [Unsure] A changer avec rep dans le graphe maintenant. *)
-                 if name <> Parsetree.Vlident "rep" then
-                   (begin
-                   (* Generate a comment before the variable. *)
-                   Format.fprintf out_fmter
-                     "(* Due to a decl-dependency on '%a'. *)@\n"
-                     Parsetree_utils.pp_vname_with_operators_expanded name ;
-                   let ty = Types.specialize sch in
-                   (* "Self" is always represented by "abst_T" in "Variables" *)
-                   (* representing the decl-dependencies of a theorem.        *)
-                   Format.fprintf out_fmter "@[<2>Variable abst_%a :@ %a.@]@\n"
-                     Parsetree_utils.pp_vname_with_operators_expanded name
-                     (Types.pp_type_simple_to_coq
-                        print_ctx ~reuse_mapping: false
-                        ~self_as: Types.CSR_abst)
-                     ty ;
-                   (* Method abstracted by a "Variable". Hence will *)
-                   (* be an argument of the theorem generator.      *)
-                   [name]
-                   end)
-(* [Unsure] A changer avec rep dans le graphe maintenant. *)
-                 else []
-             | Env.TypeInformation.SF_let (_, name, _, sch, _, _) ->
+             | MCEE_Declared_carrier ->
+                 (* Generate a comment before the Let. *)
+                 Format.fprintf out_fmter
+                   "(* Due to a decl-dependency on 'rep'. *)@\n" ;
+                 Format.fprintf out_fmter "Variable abst_T : Set.@\n" ;
+                 (* Carrier is abstract. *)
+                 [Parsetree.Vlident "rep"]
+             | MCEE_Defined_carrier sch ->
+                 (* Generate a comment before the Let. *)
+                 Format.fprintf out_fmter
+                   "(* Due to a def-dependency on 'rep'. *)@\n" ;
+                 let ty = Types.specialize sch in
+                 Format.fprintf out_fmter "@[<2>Let abst_T :=@ %a.@]@\n"
+                   (Types.pp_type_simple_to_coq
+                      print_ctx ~reuse_mapping: false
+                      ~self_as: Types.CSR_species)
+                   ty ;
+                 []
+             | MCEE_Declared_computational (name, sch) ->
+                 (* Generate a comment before the variable. *)
+                 Format.fprintf out_fmter
+                   "(* Due to a decl-dependency on '%a'. *)@\n"
+                   Parsetree_utils.pp_vname_with_operators_expanded name ;
+                 let ty = Types.specialize sch in
+                 (* "Self" is always represented by "abst_T" in "Variables" *)
+                 (* representing the decl-dependencies of a theorem.        *)
+                 Format.fprintf out_fmter "@[<2>Variable abst_%a :@ %a.@]@\n"
+                   Parsetree_utils.pp_vname_with_operators_expanded name
+                   (Types.pp_type_simple_to_coq
+                      print_ctx ~reuse_mapping: false
+                      ~self_as: Types.CSR_abst)
+                   ty ;
+                 (* Method abstracted by a "Variable". Hence will *)
+                 (* be an argument of the theorem generator.      *)
+                 [name]
+             | MCEE_Defined_computational (name, sch) ->
                  (* Generate a comment before the Let. *)
                  Format.fprintf out_fmter
                    "(* Due to a def-dependency on '%a'. *)@\n"
@@ -642,7 +718,7 @@ let generate_theorem ctx print_ctx env min_coq_env _llift_params
                  (* Method not abstracted. Hence not an *)
                  (* argument of the theorem generator.  *)
                  []
-             | Env.TypeInformation.SF_theorem (_, name, _, body, _, _) ->
+             | MCEE_Defined_logical (name, body) ->
                  (* Generate a comment before the Let. *)
                  Format.fprintf out_fmter
                    "(* Due to a def-dependency on '%a'. *)@\n"
@@ -678,7 +754,7 @@ let generate_theorem ctx print_ctx env min_coq_env _llift_params
                  (* Method not abstracted. Hence not an *)
                  (* argument of the theorem generator.  *)
                  []
-             | Env.TypeInformation.SF_property (_, name, _, body, _) ->
+             | MCEE_Declared_logical (name, body) ->
                  (* The type of a property or a theorem is  *)
                  (* its body, not its ML type !             *)
                  (* Generate a comment before the variable. *)
@@ -695,14 +771,7 @@ let generate_theorem ctx print_ctx env min_coq_env _llift_params
                  Format.fprintf out_fmter ".@]@\n" ;
                  (* Method abstracted by a "Variable". Hence will *)
                  (* be an argument of the theorem generator.      *)
-                 [name]
-             | Env.TypeInformation.SF_let_rec _ ->
-                 (* In the minimal Coq typing environment, let-rec-bindings *)
-                 (* are transformed into sequences of let-bindings. This is *)
-                 (* only due to the fact that we use fields structure also  *)
-                 (* to remind the needed methods in the minimal Coq typing  *)
-                 (* environment.                                            *)
-                 assert false)
+                 [name])
            min_coq_env) in
     (* Finally, the theorem itself. Inside, any method of "Self" is *)
     (* abstracted (i.e. as if it was lambda-lifted), hence named    *)
@@ -717,14 +786,18 @@ let generate_theorem ctx print_ctx env min_coq_env _llift_params
     (* section all the "Variable"s we created for detected decl-dependencies. *)
     List.iter
       (fun dep_name ->
-        Format.fprintf out_fmter
-          "@[(* Artificial@ use@ of@ method@ '%a'@ to@ ensure@ abstraction@ \
+        (* Skip the carrier in the list. *)
+        if dep_name <> (Parsetree.Vlident "rep") then
+          begin
+          Format.fprintf out_fmter
+            "@[(* Artificial@ use@ of@ method@ '%a'@ to@ ensure@ abstraction@ \
              of@ it's@ related@ variable@ in@ the@ theorem@ section.@ *)@]@\n"
-          Parsetree_utils.pp_vname_with_operators_expanded dep_name ;
-        Format.fprintf out_fmter
-          "@[<2>assert@ (___force_abstraction_%a :=@ abst_%a).@]@\n"
-          Parsetree_utils.pp_vname_with_operators_expanded dep_name
-          Parsetree_utils.pp_vname_with_operators_expanded dep_name)
+            Parsetree_utils.pp_vname_with_operators_expanded dep_name ;
+          Format.fprintf out_fmter
+            "@[<2>assert@ (___force_abstraction_%a :=@ abst_%a).@]@\n"
+            Parsetree_utils.pp_vname_with_operators_expanded dep_name
+            Parsetree_utils.pp_vname_with_operators_expanded dep_name
+          end)
       abstracted_methods ;
     (* [Unsure] We now need to handle the proof. *)
     Format.fprintf out_fmter "apply basics.magic_prove.@\nQed.@\n" ;
@@ -760,27 +833,25 @@ let generate_theorem ctx print_ctx env min_coq_env _llift_params
   (* And now apply its arguments with the local "Self_xxx" definitions. *)
   (* These arguments are those from the minimal environment that are    *)
   (* "only declared".                                                   *)
-(* [Unsure] Manque le paramètre Self et ceux issus des paramètres d'espèce. *)
+(* [Unsure] Manque les paramètres issus des paramètres d'espèce. *)
   let coq_min_typ_env_names =
     List.flatten
       (List.map
          (function
-           | Env.TypeInformation.SF_sig (_, n, _) ->
-               if n <> Parsetree.Vlident "rep" then
-                 (begin
-                 Format.fprintf out_fmter "@ self_%a"
-                   Parsetree_utils.pp_vname_with_operators_expanded n ;
-                 [n]
-                 end)
-(* [Unsure] A changer avec rep dans le graphe maintenant. *)
-               else []
-           | Env.TypeInformation.SF_let (_, _, _, _, _, _) -> []
-           | Env.TypeInformation.SF_theorem (_, _, _, _, _, _) -> []
-           | Env.TypeInformation.SF_property (_, n, _, _, _) ->
+           | MCEE_Declared_carrier ->
+               Format.fprintf out_fmter "@ self_T" ;
+               [Parsetree.Vlident "rep"]
+           | MCEE_Defined_carrier _ -> []
+           | MCEE_Declared_computational (n, _) ->
                Format.fprintf out_fmter "@ self_%a"
                  Parsetree_utils.pp_vname_with_operators_expanded n ;
                [n]
-           | Env.TypeInformation.SF_let_rec _ -> assert false)
+           | MCEE_Defined_computational (_, _)
+           | MCEE_Defined_logical (_, _) -> []
+           | MCEE_Declared_logical (n, _) ->
+               Format.fprintf out_fmter "@ self_%a"
+                 Parsetree_utils.pp_vname_with_operators_expanded n ;
+               [n])
          min_coq_env) in
   Format.fprintf out_fmter ".@]@\n" ;
   (* Return the names abstracted in the minimal typing environment. *)
