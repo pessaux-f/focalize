@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.101 2008-01-31 16:49:22 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.102 2008-02-01 12:33:10 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -2491,6 +2491,14 @@ let ensure_rep_in_first l =
     names [order].
     For [Let_rec] fields, their order of apparition is given by the
     order of the first name (rec bound) appearing in the order list.
+    ATTENTION : The only exception is "rep" which if present is always
+    put at the beginning of the list !
+    ATTENTION: Moreover, because the order is induced by dependencies,
+    one may have dependencies on "rep" although "rep" is not defined
+    (remember that is "rep" is not given a structure, then instead of
+    declaring it as "rep ;", we do not mention it at all). In this
+    case the lookup via [extract_field_from_list_by_name] may fail.
+    That's the only case where we accept it to fail.
 
     {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************** *)
@@ -2504,25 +2512,29 @@ let order_fields_according_to order fields =
          assert false
      | ((name :: rem_rec_order), _) ->
          (begin
-         (* We first find the field hosting [name]. This field will be *)
-         (* inserted here in the result list. We then must remove from *)
-         (* the order list, all the name rec-bound with [name]. Then   *)
-         (* we continue with this new order and the fields list from   *)
-         (* which we remove the found field. This way, the fields list *)
-         (* in which we search will be smaller and smaller (cool for   *)
-         (* efficiency), and will finish to be empty.                  *)
-         let (related_field, new_rec_fields) =
-           extract_field_from_list_by_name name rec_fields in
-         let names_bound =
-           List.map
-             fst
-             (Dep_analysis.ordered_names_list_of_fields [related_field]) in
-         (* So, remove from the order the rec-bound names... *)
-         let new_rec_order =
-           List.filter
-             (fun n -> not (List.mem n names_bound))
-             rem_rec_order in
-         related_field :: (rec_reorder new_rec_order new_rec_fields)
+         try
+           (* We first find the field hosting [name]. This field will be *)
+           (* inserted here in the result list. We then must remove from *)
+           (* the order list, all the name rec-bound with [name]. Then   *)
+           (* we continue with this new order and the fields list from   *)
+           (* which we remove the found field. This way, the fields list *)
+           (* in which we search will be smaller and smaller (cool for   *)
+           (* efficiency), and will finish to be empty.                  *)
+           let (related_field, new_rec_fields) =
+             extract_field_from_list_by_name name rec_fields in
+           let names_bound =
+             List.map
+               fst
+               (Dep_analysis.ordered_names_list_of_fields [related_field]) in
+           (* So, remove from the order the rec-bound names... *)
+           let new_rec_order =
+             List.filter
+               (fun n -> not (List.mem n names_bound))
+               rem_rec_order in
+           related_field :: (rec_reorder new_rec_order new_rec_fields)
+         with Not_found ->
+           (* See second ATTENTION in the header of the function. *)
+           (rec_reorder rem_rec_order rec_fields)
          end) in
   (* Now do the job. First, if "rep" is in the order, then *)
   (* ensure that it is the first in the list.              *)

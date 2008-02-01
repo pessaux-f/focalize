@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.32 2008-01-29 14:51:44 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.33 2008-02-01 12:33:10 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -367,15 +367,19 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
 (* current_species: Parsetree.qualified_vname ->                        *)
 (*   Env.TypeInformation.species_field -> Parsetree_utils.DepNameSet.t  *)
 (** {b Descr} : Compute the set of vnames the argument field depends of
-       in the species [~current_species]. Does not take into account
-       dependencies on the carrier. They must be handled appart.
+       in the species [~current_species].
 
     {b Rem} : Exported outside this module.                             *)
 (* ******************************************************************** *)
 let field_only_decl_dependencies ~current_species = function
   | Env.TypeInformation.SF_sig (_, _, _) -> Parsetree_utils.DepNameSet.empty
-  | Env.TypeInformation.SF_let (_, _, _, _, body, _) ->
-      expr_decl_dependencies ~current_species body
+  | Env.TypeInformation.SF_let (_, _, _, _, body, rep_deps) ->
+      let body_deps = expr_decl_dependencies ~current_species body in
+      (* Take into account dependencies on the carrier. *)
+      if rep_deps.Env.TypeInformation.dor_decl then
+        Parsetree_utils.DepNameSet.add
+          ((Parsetree.Vlident "rep"), (Types.type_self ())) body_deps
+      else body_deps
   | Env.TypeInformation.SF_let_rec l ->
       (begin
       (* Create the set of names to remove afterwards. *)
@@ -389,22 +393,34 @@ let field_only_decl_dependencies ~current_species = function
       (* Now, compute the dependencies on all the rec-bound-names. *)
       let deps_of_l =
         List.fold_left
-          (fun accu_deps (_, _, _, _, body, _) ->
+          (fun accu_deps (_, _, _, _, body, rep_deps) ->
             let d = expr_decl_dependencies ~current_species body in
-            Parsetree_utils.DepNameSet.union d accu_deps)
+            (* Take into account dependencies on the carrier. *)
+            let d' =
+              if rep_deps.Env.TypeInformation.dor_decl then
+                Parsetree_utils.DepNameSet.add
+                  ((Parsetree.Vlident "rep"), (Types.type_self ())) d
+              else d in
+            Parsetree_utils.DepNameSet.union d' accu_deps)
           Parsetree_utils.DepNameSet.empty
           l in
       (* And now, remove the rec-bound-names from the dependencies. *)
       Parsetree_utils.DepNameSet.diff deps_of_l names_of_l
       end)
-  | Env.TypeInformation.SF_theorem (_, _, _, body, proof, _) ->
+  | Env.TypeInformation.SF_theorem (_, _, _, body, proof, rep_deps) ->
       (begin
       let body_decl_deps = prop_decl_dependencies ~current_species body in
       (* Now, recover the explicit "decl" dependencies of  *)
       (* the proof and ignore here the "def"-dependencies. *)
       let (proof_deps, _) =
         proof_decl_n_def_dependencies ~current_species proof in
-      Parsetree_utils.DepNameSet.union body_decl_deps proof_deps
+      let deps_without_carrier =
+        Parsetree_utils.DepNameSet.union body_decl_deps proof_deps in
+      (* Take into account dependencies on the carrier. *)
+      if rep_deps.Env.TypeInformation.dor_decl then
+        Parsetree_utils.DepNameSet.add
+          ((Parsetree.Vlident "rep"), (Types.type_self ())) deps_without_carrier
+      else deps_without_carrier
       end)
   | Env.TypeInformation.SF_property (_, _, _, body, _) ->
       prop_decl_dependencies ~current_species body
@@ -672,8 +688,7 @@ let in_species_decl_n_def_dependencies_for_one_theo_property_name
      | None ->
          (* No body, then no "def" not "decl"-dependencies. *)
          (Parsetree_utils.DepNameSet.empty, Parsetree_utils.DepNameSet.empty)
-     | Some proof ->
-         proof_decl_n_def_dependencies ~current_species proof) in
+     | Some proof -> proof_decl_n_def_dependencies ~current_species proof) in
   (t_prop_decl_deps, opt_body_decl_deps, opt_body_def_deps)
 ;;
 
@@ -721,8 +736,7 @@ type name_node = {
   (** Means that the current names depends of the children nodes. I.e. the
       current name's body contains calls to the children names. *)
   mutable nn_children : (name_node * dependency_kind) list
-}
-;;
+} ;;
 
 
 
@@ -768,9 +782,26 @@ let build_dependencies_graph_for_fields ~current_species fields =
       Apply the rules section 3.5, page 32, definition  16 to get the
       dependencies.                                                        *)
   (* ********************************************************************* *)
-  let local_build_for_one_let n ty b =
+  let local_build_for_one_let n ty b dep_on_rep =
     (* Find the dependencies node for the current name. *)
     let n_node = find_or_create tree_nodes (n, ty) in
+    (* Check if there is a decl-dependency on "rep". *)
+    if dep_on_rep.Env.TypeInformation.dor_decl then
+      (begin
+      (* Hard-build a node for "rep". *)
+      let node =
+        find_or_create
+          tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
+      (* Now add an edge from the current name's node to the    *)
+      (* decl-dependencies node of "rep". In "Let/rec" methods, *)
+      (* "decl" dependencies can only come from the type of the *)
+      (* method.                                                *)
+      let edge = (node, DK_decl DDK_from_type) in
+      n_node.nn_children <-
+        Handy.list_cons_uniq_custom_eq
+          (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
+          edge n_node.nn_children
+      end) ;
     (* Find the names decl-dependencies for the current name. *)
     let n_decl_deps_names =
       in_species_decl_dependencies_for_one_function_name
@@ -780,8 +811,8 @@ let build_dependencies_graph_for_fields ~current_species fields =
       Parsetree_utils.DepNameSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
-          (* In "Let/rec" methods, "decl" dependencies *)
-          (* can only com from the type of the method. *)
+          (* In "Let/rec" methods, "decl" dependencies  *)
+          (* can only come from the type of the method. *)
           (node, (DK_decl DDK_from_type)) :: accu)
         n_decl_deps_names
         [] in
@@ -790,16 +821,52 @@ let build_dependencies_graph_for_fields ~current_species fields =
     n_node.nn_children <-
       Handy.list_concat_uniq_custom_eq
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-        n_deps_nodes n_node.nn_children in
+        n_deps_nodes n_node.nn_children ;
+    (* Now, check if there is a def-dependency on "rep". *)
+    if dep_on_rep.Env.TypeInformation.dor_def then
+      (begin
+      (* Hard-build a node for "rep". *)
+      let node =
+        find_or_create
+          tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
+      (* Now add an edge from the current name's node to the *)
+      (* def-dependencies node of "rep".                     *)
+      let edge = (node, DK_def) in
+      n_node.nn_children <-
+        Handy.list_cons_uniq_custom_eq
+          (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
+          edge n_node.nn_children
+      end)
+    (* Note that in a "Let", there cannot be other def-dependencies than *)
+    (* on the carrier. So, non need to check for other def-dependencies *) in
+
 
   (* ***************************************************************** *)
   (** {b Descr} : Just make a local function dealing with one property
               or theorem name.
               Apply rules from section 3.9.5, page 53, definition 30.  *)
   (* ***************************************************************** *)
-  let local_build_for_one_theo_property n ty prop_t opt_b =
+  let local_build_for_one_theo_property n ty prop_t opt_b dep_on_rep =
     (* Find the dependencies node for the current name. *)
     let n_node = find_or_create tree_nodes (n, ty) in
+    (* Check if there is a decl-dependency on "rep". *)
+    if dep_on_rep.Env.TypeInformation.dor_decl then
+      (begin
+      (* Hard-build a node for "rep". *)
+      let node =
+        find_or_create
+          tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
+      (* Now add an edge from the current name's node to the   *)
+      (* decl-dependencies node of "rep". Even in a theorem,   *)
+      (*  a decl-dependency on the carrier can only come from  *)
+      (* the type (of course, one can't say in the body, i.e   *)
+      (* in the proof, "by def Self" or "by property Self" !). *)
+      let edge = (node, DK_decl DDK_from_type) in
+      n_node.nn_children <-
+        Handy.list_cons_uniq_custom_eq
+          (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
+          edge n_node.nn_children
+      end) ;
     (* Find the names decl and defs dependencies for the current name. *)
     let (n_decl_deps_names_from_type,
          n_decl_deps_names_from_body,
@@ -840,7 +907,22 @@ let build_dependencies_graph_for_fields ~current_species fields =
     n_node.nn_children <-
       Handy.list_concat_uniq_custom_eq
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-        n_def_deps_nodes n_node.nn_children in
+        n_def_deps_nodes n_node.nn_children ;
+    (* Now, check if there is a def-dependency on "rep". *)
+    if dep_on_rep.Env.TypeInformation.dor_def then
+      (begin
+      (* Hard-build a node for "rep". *)
+      let node =
+        find_or_create
+          tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
+      (* Now add an edge from the current name's node to the *)
+      (* def-dependencies node of "rep".                     *)
+      let edge = (node, DK_def) in
+      n_node.nn_children <-
+        Handy.list_cons_uniq_custom_eq
+          (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
+          edge n_node.nn_children
+      end) in
 
   (* *************** *)
   (* Now do the job. *)
@@ -853,20 +935,21 @@ let build_dependencies_graph_for_fields ~current_species fields =
             tree_nodes :=
               { nn_name = n ; nn_type = ty ; nn_children = [] } :: !tree_nodes
             end)
-      | Env.TypeInformation.SF_let (_, n, _, sch, b, _) ->
+      | Env.TypeInformation.SF_let (_, n, _, sch, b, deps_on_rep) ->
           let ty = Types.specialize sch in
-          local_build_for_one_let n ty b
+          local_build_for_one_let n ty b deps_on_rep
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
-            (fun (_, n, _, sch, b, _) ->
+            (fun (_, n, _, sch, b, deps_on_rep) ->
               let ty = Types.specialize sch in
-              local_build_for_one_let n ty b) l
-      | Env.TypeInformation.SF_theorem (_, n, sch, prop, body, _) ->
+              local_build_for_one_let n ty b deps_on_rep)
+            l
+      | Env.TypeInformation.SF_theorem (_, n, sch, prop, body, deps_on_rep) ->
           let ty = Types.specialize sch in
-          local_build_for_one_theo_property n ty prop (Some body)
-      | Env.TypeInformation.SF_property (_, n, sch, prop, _) ->
+          local_build_for_one_theo_property n ty prop (Some body) deps_on_rep
+      | Env.TypeInformation.SF_property (_, n, sch, prop, deps_on_rep) ->
           let ty = Types.specialize sch in
-          local_build_for_one_theo_property n ty prop None)
+          local_build_for_one_theo_property n ty prop None deps_on_rep)
     fields ;
   (* Return the list of nodes of the graph. *)
   !tree_nodes

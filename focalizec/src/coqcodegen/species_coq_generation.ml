@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.18 2008-01-31 16:49:22 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.19 2008-02-01 12:33:10 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -250,8 +250,6 @@ let visible_universe dep_graph x_decl_dependencies x_def_dependencies =
           z_node.Dep_analysis.nn_children)
       !universe
   done ;
-(* [Unsure] A faire. Voir si l'on ne remet pas les dépendances sur rep
-   dans le graphe général plutôt que de garder les 2 flags à part. *)
   (* Finally, return the visible universe. *)
   !universe
 ;;
@@ -326,11 +324,12 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
     params_llifted dependencies_from_params decl_children
     (from, name, params, scheme, body, deps_on_rep) =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
-  (* We need to check id "Self" has to be abstracted i.e. must lead to *)
+  (* We need to check if "Self" has to be abstracted i.e. must lead to *)
   (* an extra parameter "(abst_T : Set)" of the method. This is the    *)
   (* if the method has a decl-dependency on the carrier and no def     *)
   (* dependency on the carrier. If it's not the case, then "Self" will *)
   (* be denoted directly by "Self_T".                                  *)
+(* [Unsure] A changer avec rep dans le graphe maintenant. *)
   let is_self_abstract =
     deps_on_rep.Env.TypeInformation.dor_decl &&
     (not deps_on_rep.Env.TypeInformation.dor_def) in
@@ -376,10 +375,12 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
       if is_self_abstract then Types.CSR_abst else Types.CSR_self in
     List.iter
       (fun (param_name, param_ty) ->
-        Format.fprintf out_fmter "@ (%s : %a)" param_name
-          (Types.pp_type_simple_to_coq
-             print_ctx ~reuse_mapping: false ~self_as: how_to_print_Self)
-          param_ty)
+        (* Skip the carrier that is handled ad-hoc. *)
+        if param_name <> "abst_rep" then
+          Format.fprintf out_fmter "@ (%s : %a)" param_name
+            (Types.pp_type_simple_to_coq
+               print_ctx ~reuse_mapping: false ~self_as: how_to_print_Self)
+            param_ty)
       params_llifted ;
     (* Add the parameters of the let-binding with their type.   *)
     (* Ignore the result type of the "let" if it's a function   *)
@@ -486,8 +487,10 @@ let generate_one_field_binding ctx print_ctx env ~let_connect
   (* They are always present in the species under the name "self_...".   *)
   List.iter
     (fun ({ Dep_analysis.nn_name = dep_name }, _) ->
-      Format.fprintf out_fmter "@ self_%a"
-        Parsetree_utils.pp_vname_with_operators_expanded dep_name)
+      (* Skip the carrier that is handled ad-hoc. *)
+      if dep_name <> (Parsetree.Vlident "rep") then
+        Format.fprintf out_fmter "@ self_%a"
+          Parsetree_utils.pp_vname_with_operators_expanded dep_name)
     decl_children ;
   Format.fprintf out_fmter ".@]@\n"
 ;;
@@ -540,6 +543,7 @@ let generate_theorem ctx print_ctx env min_coq_env _llift_params
     (* Now, generate a "Variable"s for the carrier (which is handled  *)
     (* appart) from the other method) if it induced a decl-dependency *)
     (* and not a def-dependency.                                      *)
+(* [Unsure] A changer avec rep dans le graphe maintenant. *)
     if deps_on_rep.Env.TypeInformation.dor_decl &&
       (not deps_on_rep.Env.TypeInformation.dor_def) then
       Format.fprintf out_fmter "Variable abst_T : Set.@\n" ;
@@ -566,21 +570,28 @@ let generate_theorem ctx print_ctx env min_coq_env _llift_params
         (List.map
            (function
              | Env.TypeInformation.SF_sig (_, name, sch) ->
-                 (* Generate a comment before the variable. *)
-                 Format.fprintf out_fmter
-                   "(* Due to a decl-dependency on '%a'. *)@\n"
-                   Parsetree_utils.pp_vname_with_operators_expanded name ;
-                 let ty = Types.specialize sch in
-                 (* "Self" is always represented by "abst_T" in "Variables" *)
-                 (* representing the decl-dependencies of a theorem.        *)
-                 Format.fprintf out_fmter "@[<2>Variable abst_%a :@ %a.@]@\n"
-                   Parsetree_utils.pp_vname_with_operators_expanded name
-                   (Types.pp_type_simple_to_coq
-                      print_ctx ~reuse_mapping: false ~self_as: Types.CSR_abst)
-                   ty ;
-                 (* Method abstracted by a "Variable". Hence will *)
-                 (* be an argument of the theorem generator.      *)
-                 [name]
+(* [Unsure] A changer avec rep dans le graphe maintenant. *)
+                 if name <> Parsetree.Vlident "rep" then
+                   (begin
+                   (* Generate a comment before the variable. *)
+                   Format.fprintf out_fmter
+                     "(* Due to a decl-dependency on '%a'. *)@\n"
+                     Parsetree_utils.pp_vname_with_operators_expanded name ;
+                   let ty = Types.specialize sch in
+                   (* "Self" is always represented by "abst_T" in "Variables" *)
+                   (* representing the decl-dependencies of a theorem.        *)
+                   Format.fprintf out_fmter "@[<2>Variable abst_%a :@ %a.@]@\n"
+                     Parsetree_utils.pp_vname_with_operators_expanded name
+                     (Types.pp_type_simple_to_coq
+                        print_ctx ~reuse_mapping: false
+                        ~self_as: Types.CSR_abst)
+                     ty ;
+                   (* Method abstracted by a "Variable". Hence will *)
+                   (* be an argument of the theorem generator.      *)
+                   [name]
+                   end)
+(* [Unsure] A changer avec rep dans le graphe maintenant. *)
+                 else []
              | Env.TypeInformation.SF_let (_, name, _, sch, _, _) ->
                  (* Generate a comment before the Let. *)
                  Format.fprintf out_fmter
@@ -620,9 +631,11 @@ let generate_theorem ctx print_ctx env min_coq_env _llift_params
                    memory.cfm_dependencies_from_parameters ;
                  List.iter
                    (fun ({ Dep_analysis.nn_name = dep_name }, _) ->
-                     Format.fprintf out_fmter "@ abst_%a"
-                       Parsetree_utils.pp_vname_with_operators_expanded
-                       dep_name)
+(* [Unsure] A changer avec rep dans le graphe maintenant. *)
+                     if dep_name <> (Parsetree.Vlident "rep") then
+                       Format.fprintf out_fmter "@ abst_%a"
+                         Parsetree_utils.pp_vname_with_operators_expanded
+                         dep_name)
                    memory.cfm_decl_children ;
                  (* End the application of the generator. *)
                  Format.fprintf out_fmter ".@]@\n" ;
@@ -655,8 +668,10 @@ let generate_theorem ctx print_ctx env min_coq_env _llift_params
                    find_compiled_field_memory name generated_fields in
                  List.iter
                    (fun n ->
-                      Format.fprintf out_fmter "@ abst_%a"
-                        Parsetree_utils.pp_vname_with_operators_expanded n)
+(* [Unsure] A changer avec rep dans le graphe maintenant. *)
+                     if n <> (Parsetree.Vlident "rep") then
+                       Format.fprintf out_fmter "@ abst_%a"
+                         Parsetree_utils.pp_vname_with_operators_expanded n)
                    memory.cfm_coq_min_typ_env_names ;
                  (* End the application of the generator. *)
                  Format.fprintf out_fmter ".@]@\n" ;
@@ -751,9 +766,14 @@ let generate_theorem ctx print_ctx env min_coq_env _llift_params
       (List.map
          (function
            | Env.TypeInformation.SF_sig (_, n, _) ->
-               Format.fprintf out_fmter "@ self_%a"
-                 Parsetree_utils.pp_vname_with_operators_expanded n ;
-               [n]
+               if n <> Parsetree.Vlident "rep" then
+                 (begin
+                 Format.fprintf out_fmter "@ self_%a"
+                   Parsetree_utils.pp_vname_with_operators_expanded n ;
+                 [n]
+                 end)
+(* [Unsure] A changer avec rep dans le graphe maintenant. *)
+               else []
            | Env.TypeInformation.SF_let (_, _, _, _, _, _) -> []
            | Env.TypeInformation.SF_theorem (_, _, _, _, _, _) -> []
            | Env.TypeInformation.SF_property (_, n, _, _, _) ->

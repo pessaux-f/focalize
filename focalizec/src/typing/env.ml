@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.62 2008-01-25 15:21:10 pessaux Exp $ *)
+(* $Id: env.ml,v 1.63 2008-02-01 12:33:10 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -373,7 +373,7 @@ module TypeInformation = struct
          Types.type_scheme *    (** The theorem's type scheme. *)
          Parsetree.prop *       (** The theorem's body. *)
          Parsetree.proof *      (** The theorem's proof. *)
-	 dependency_on_rep      (** Tells if the theorem has dependencies on
+         dependency_on_rep      (** Tells if the theorem has dependencies on
                                     "rep". *))
     | SF_property of
         ((** Where the property comes from (the most recent in inheritance). *)

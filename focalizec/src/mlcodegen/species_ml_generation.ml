@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.26 2008-01-31 16:49:22 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.27 2008-02-01 12:33:10 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -400,7 +400,10 @@ let generate_one_field_binding ctx env ~let_connect species_parameters_names
      List.iter
       (fun (param_name, _) ->
         (* In OCaml, we don't print the types to prevent being verbose. *)
-        Format.fprintf out_fmter "@ %s" param_name)
+        (* Moreover, in Ocaml generation model, the carrier is never    *)
+        (* lambda-lifted then desn't appear as an extra parameter     . *)
+        if param_name <> "abst_rep" then
+          Format.fprintf out_fmter "@ %s" param_name)
       params_llifted ;
     (* Add the parameters of the let-binding with their type.   *)
     (* Ignore the result type of the "let" if it's a function   *)
@@ -537,8 +540,8 @@ let generate_methods ctx env species_parameters_names field =
                     species_parameters_names ctx.scc_dependency_graph_nodes n
                     (Misc_ml_generation.FBK_expr b))
                 l in
-            (* Extend the context with the mapping between these *)
-            (* recursive functions and their extra arguments.    *)
+            (* Extend the context with the mapping between these          *)
+            (* recursive functions and their extra arguments.             *)
             let ctx' = {
               ctx with
                 scc_lambda_lift_params_mapping =
@@ -759,8 +762,10 @@ let generate_collection_generator ctx compiled_species_fields =
     (* on, its name is "local_" + the method's name.                          *)
     List.iter
       (fun ({ Dep_analysis.nn_name = dep_name }, _) ->
-        Format.fprintf out_fmter "@ local_%a"
-          Parsetree_utils.pp_vname_with_operators_expanded dep_name)
+        (* In Ocaml generation model, the carrier is never lambda-lifted. *)
+        if dep_name <> (Parsetree.Vlident "rep") then
+          Format.fprintf out_fmter "@ local_%a"
+            Parsetree_utils.pp_vname_with_operators_expanded dep_name)
       field_memory.cfm_decl_children ;
     (* That's it for this field code generation. *)
     Format.fprintf out_fmter "@ in@]@\n" in    
