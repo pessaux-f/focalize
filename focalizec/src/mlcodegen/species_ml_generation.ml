@@ -11,11 +11,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.27 2008-02-01 12:33:10 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.28 2008-02-04 11:00:51 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
-(** {b Descr} : This module performs the compilation from FoCaL to 
+(** {b Descr} : This module performs the compilation from FoCaL to
               Ocaml of FoCaL's collections and species.            *)
 (* *************************************************************** *)
 
@@ -698,7 +698,7 @@ let generate_collection_generator ctx compiled_species_fields =
     Format.eprintf
       "@\nSpecies %a is fully defined. Generating its collection generator@."
       Sourcify.pp_vname current_species_name ;
- 
+
   (* ******************************************************************* *)
   (** {b Descr} : A local function to process one field. This allows to
                 factorize the processing for both [Let] and [Let_rec]
@@ -768,7 +768,7 @@ let generate_collection_generator ctx compiled_species_fields =
             Parsetree_utils.pp_vname_with_operators_expanded dep_name)
       field_memory.cfm_decl_children ;
     (* That's it for this field code generation. *)
-    Format.fprintf out_fmter "@ in@]@\n" in    
+    Format.fprintf out_fmter "@ in@]@\n" in
 
   (* *********************** *)
   (* Now, let's really work. *)
@@ -836,7 +836,7 @@ let generate_collection_generator ctx compiled_species_fields =
 ;;
 
 
-       
+
 let species_compile env ~current_unit out_fmter species_def species_descr
     dep_graph =
   let species_def_desc = species_def.Parsetree.ast_desc in
@@ -1125,7 +1125,7 @@ let get_implements_effectives species_params_exprs species_formals_info =
        it will be printed like "Bar.S". If the species "S" was in the same
        compilation unit (i.e. "foo.foc"), then it would be printed directly
        "S".
-       
+
     {b Rem} : Not exported outside this module.                               *)
 (* ************************************************************************** *)
 let print_implemented_species_as_ocaml_module ~current_unit out_fmter
