@@ -126,7 +126,15 @@ module CoqGenInformation :
     }
 
     type label_mapping_info = unit
-    type species_binding_info = Parsetree.vname list
+
+    type method_info = {
+      mi_name : Parsetree.vname ;
+      mi_dependencies_from_parameters :
+        (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ;
+      mi_abstracted_methods : Parsetree.vname list
+    }
+
+    type species_binding_info = method_info list
     type value_mapping_info = int
   end
 

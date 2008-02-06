@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.63 2008-02-01 12:33:10 pessaux Exp $ *)
+(* $Id: env.ml,v 1.64 2008-02-06 13:52:48 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -666,12 +666,22 @@ module CoqGenInformation = struct
     }
 
   type label_mapping_info = unit
-  type species_binding_info =
-    (** The fields names of the species. *)
-    Parsetree.vname list
+
+
+  type method_info = {
+    mi_name : Parsetree.vname ;        (** The field name. *)
+    mi_dependencies_from_parameters :
+      (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ;  (** The
+        positional list of methods from the species parameters abstracted by
+        lambda-lifting. *)
+    mi_abstracted_methods : Parsetree.vname list   (** The positional list
+        of methods from ourselves abstrated by lambda-lifting. *)
+    }
+
+  type species_binding_info = method_info list
 
   (** The number of extra argument the identifier has due to its
-      polymorphism. *)
+      polymorphism. [Unsure] Certainement useless maintenant. *)
   type value_mapping_info = int
 
   (* ************************************************************** *)
@@ -1614,7 +1624,8 @@ module CoqGenEMAccess = struct
     (* parameters that woud come from ... polymorphism.                 *)
     let values_bucket =
       List.map
-        (fun field_name -> (field_name, (BO_absolute 0)))
+        (fun { CoqGenInformation. mi_name = field_name } ->
+          (field_name, (BO_absolute 0)))
         spec_info in
     { constructors = []; labels = []; types = []; values = values_bucket;
       species = [] }
