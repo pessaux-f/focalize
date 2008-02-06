@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.23 2008-02-06 13:52:48 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.24 2008-02-06 16:42:36 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -614,7 +614,7 @@ let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
   (* The method generator's name... If the generator *)
   (* is in another module, then qualify its name.    *)
   if (fst from) <> ctx.Species_gen_basics.scc_current_unit then
-    Format.fprintf out_fmter "%s.@,%a" (fst from)
+    Format.fprintf out_fmter "%s.%a" (fst from)
       Parsetree_utils.pp_vname_with_operators_expanded (snd from)
   else
     Format.fprintf out_fmter "%a"
@@ -779,7 +779,7 @@ let generate_theorem ctx print_ctx env min_coq_env
                      ty ;
                    (* Generate the application of the method generator. *)
                    if (fst from) <> ctx.Species_gen_basics.scc_current_unit then
-                     Format.fprintf out_fmter "%s.@,%a" (fst from)
+                     Format.fprintf out_fmter "%s.%a" (fst from)
                        Parsetree_utils.pp_vname_with_operators_expanded
                        (snd from)
                    else
@@ -835,7 +835,7 @@ let generate_theorem ctx print_ctx env min_coq_env
                    (* on are obligatorily generated before, we always use *)
                    (* the theorem generator.                              *)
                    if (fst from) <> ctx.Species_gen_basics.scc_current_unit then
-                     Format.fprintf out_fmter "%s.@,%a" (fst from)
+                     Format.fprintf out_fmter "%s.%a" (fst from)
                        Parsetree_utils.pp_vname_with_operators_expanded
                        (snd from)
                    else
@@ -938,7 +938,7 @@ let generate_theorem ctx print_ctx env min_coq_env
   (* is in another module,  then qualify its name.    *)
   Format.fprintf out_fmter " :=@ " ;
   if (fst from) <> ctx.Species_gen_basics.scc_current_unit then
-    Format.fprintf out_fmter "%s.@,%a" (fst from)
+    Format.fprintf out_fmter "%s.%a" (fst from)
       Parsetree_utils.pp_vname_with_operators_expanded (snd from)
   else
     Format.fprintf out_fmter "%a"

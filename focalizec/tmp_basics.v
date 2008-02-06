@@ -47,6 +47,15 @@ Definition not_b (x : bool__t) : bool__t := if x then false else true.
 Definition and_b (x : bool__t) (y : bool__t) : bool__t :=
   if x then y else false.
 
+Definition xor_b (x : bool__t) (y : bool__t) : bool__t :=
+  (or_b  (and_b  x (not_b  y)) (and_b  (not_b  x) y)).
+
+Require Export ZArith.
+
+(* [Unsure]. *)
+Definition int_eq (x : int__t) (y : int__t) : bool__t := true.
+Definition int_leq (x : int__t) (y : int__t) : bool__t := true.
+
 
 (* Junky code to have one representative of the string__t type. *)
 Variable ___a_string : string__t.

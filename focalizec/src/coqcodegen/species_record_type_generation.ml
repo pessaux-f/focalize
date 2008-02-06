@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.15 2008-01-31 16:49:22 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.16 2008-02-06 16:42:36 pessaux Exp $ *)
 
 
 
@@ -874,7 +874,7 @@ let generate_record_type_parameters ctx species_fields =
        | Species_gen_basics.CCMI_in_or_not_param ->
            if param_ty_mod <> ctx.Species_gen_basics.scc_current_unit then
              Format.fprintf ppf "%s." param_ty_mod ;
-           Format.fprintf ppf "%s" param_ty_coll) ;
+           Format.fprintf ppf "%s_T" param_ty_coll) ;
       Format.fprintf ppf ")@ @]")
     ctx.Species_gen_basics.scc_collections_carrier_mapping ;
   (* Now, we will find the methods of the parameters we decl-depend  *)
