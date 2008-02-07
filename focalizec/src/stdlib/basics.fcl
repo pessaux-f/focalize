@@ -404,8 +404,24 @@ species Basic_object =
   let print (x in Self) = "<abst>" ;
   (* Generic parse function. *)
   let parse (x in string) in Self = #foc_error ("not parsable") ;
+end ;;
 
 
 (* .......... SNIPED .......... *)
 
-end ;;
+type partiel ('a) =
+  | Failed
+  | Unfailed ('a)
+;;
+
+
+let is_failed (x) = match x with | Failed -> true | Unfailed (_) -> false ;;
+
+let non_failed (x) =
+   match x with
+   | Failed -> foc_error("partial function")
+   | Unfailed (a) -> a
+;;
+
+(* .......... SNIPED .......... *)
+

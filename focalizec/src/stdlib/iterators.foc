@@ -1,5 +1,5 @@
-(**                                                                      
-   @title FoC Project. Basic algebra.                       
+(**
+   @title FoC Project. Basic algebra.
    @author The FoC project
 
    Basic techniques to iterate a process including very simple numbers
@@ -11,7 +11,7 @@ open "sets_orders" ;;
 
 (** a set with zero has an element called zero *)
 species Set_with_zero inherits Setoid =
- (** @mathml <mn>0</mn> 
+ (** @mathml <mn>0</mn>
     will be rendered as 0
   *)
   sig zero : Self ;
@@ -47,13 +47,13 @@ species Enumeration_system inherits Setoid =
    *)
   sig predecessor : Self -> Self;
   property predecessor_reverses_successor : all x y in Self,
-     !equal (x, !successor (y)) -> 
+     !equal (x, !successor (y)) ->
        !equal (y, !predecessor (x)) ;
 end ;;
 
 
-(** 
-   An abstract enumeration system is a system that could be obtained 
+(**
+   An abstract enumeration system is a system that could be obtained
    by stating from the 0 element and iterating the successor function.
  *)
 species Enumerated_system
@@ -64,12 +64,12 @@ species Enumerated_system
 
   (** Weak injectivity of predecessor is a Peano axiom *)
   property predecessor_is_injective: all n m in Self,
-    not (!equal (n, !start)) -> not (!equal (m, !start)) -> 
+    not (!equal (n, !start)) -> not (!equal (m, !start)) ->
       !equal (!predecessor (n), !predecessor (m)) -> !equal (m, n) ;
 
   (** An induction principle for natural numbers *)
-  theorem enumerated_induction: all p in (Self -> prop), 
-    p (!start) -> (all n in Self, p (n) -> p (!successor (n))) 
+  theorem enumerated_induction: all p in (Self -> prop),
+    p (!start) -> (all n in Self, p (n) -> p (!successor (n)))
       -> (all n in Self, p (n))
     proof : assumed ;
 end ;;
@@ -82,22 +82,22 @@ species Function_t_t_t (T is basics#Basic_object) =
 end ;;
 
 
-(** 
-   Iteration of an arbitrary binary operation. This is not intended to be 
+(**
+   Iteration of an arbitrary binary operation. This is not intended to be
    effectively used in the library but can be used to specify functions.
  *)
 
 species Iteration (Nat is Enumeration_system, S is basics#Basic_object,
-		   F is Function_t_t_t (S), f in F, zero in S) =
+                   F is Function_t_t_t (S), f in F, zero in S) =
    rep = basics#unit ;
-   let rec iterate (x in S, n in Nat) in S = 
+   let rec iterate (x in S, n in Nat) in S =
      if Nat!equal (n, Nat!start) then zero
      else F!f (x, !iterate (x, Nat!predecessor (n))) ;
 end ;;
 
 
 
-(** 
+(**
   Here we state properties for a total ordering over an enumeration.
   Implicitely we orient the binary relation x = succ(y)
   and consider its transitive closure
@@ -137,21 +137,21 @@ species Ordered_Enumeration_system inherits Enumeration_system =
                    by hypothesis Axy
                    property lt_is_anti_symmetric
                 <3>2 qed
-		     by step <3>1
-		     hypothesis Hyx
-		     property equal_symmetric
+                     by step <3>1
+                     hypothesis Hyx
+                     property equal_symmetric
                      definition of leq
            <2>2 assume Ayx: !lt (y, x),
                 prove !equal (x, y)
                 <3>1 prove not (!lt (x, y))
-		       by hypothesis Ayx
-		       property lt_is_anti_symmetric
+                       by hypothesis Ayx
+                       property lt_is_anti_symmetric
                 <3>2 qed by
-			 step <3>1
-			 hypothesis Hxy
+                         step <3>1
+                         hypothesis Hxy
                          definition of leq
            <2>f qed by step <2>1, <2>2
-			   property lt_is_total
+                           property lt_is_total
       <1>2 qed.
     ;
   theorem leq_is_transitive: all x y z in Self,
@@ -159,7 +159,7 @@ species Ordered_Enumeration_system inherits Enumeration_system =
     (* [rr]: todo *)
     proof: assumed;
 
-  (** Properties which state that the ordering 
+  (** Properties which state that the ordering
      is induced by the successor function *)
   property successor_defines_bigger: all x in Self,
     !lt (x, !successor (x)) ;
@@ -168,7 +168,7 @@ species Ordered_Enumeration_system inherits Enumeration_system =
   property successor_defines_infimum: all x y in Self,
     !leq (x, y) -> not (!equal (x, y)) -> !leq (!successor (x), y);
 
-  (* [rr]: 
+  (* [rr]:
      To be continued ... One should be able to implement something which
      reasonably implement natural numbers
    *)
@@ -187,9 +187,9 @@ end ;;
 
 
 (**
-   Here we define two different embedings of an enumeration system 
+   Here we define two different embedings of an enumeration system
    @param nat @mathml <mi>N/<mi>
-   into our structure. This should enable to provide negative numbers. 
+   into our structure. This should enable to provide negative numbers.
  *)
 
 (* species signed_system(nat is Enumeration_system)  *)
@@ -261,7 +261,7 @@ species Dichotomic_system
   (** multiplication by two *)
   sig mult2 : Self -> Self ;
   (** compatibility with equality *)
-  property mult2_substitution_rule: all n m in Self, 
+  property mult2_substitution_rule: all n m in Self,
    !equal (n, m) -> !equal (!mult2 (n), !mult2 (m)) ;
 
   property zero_fixes_mult2: !equal (!mult2 (!zero), !zero) ;
@@ -311,16 +311,21 @@ species Dichotomic_system
 
 end ;;
 
-(** 
+
+species Binop (S is basics#Basic_object) inherits basics#Basic_object =
+  sig binop : S -> S -> S ;
+  sig bvalue : S ;
+end ;;
+
+
+(**
    A species to perform dichotomy.
    The result is the same than that of iteration only if operation f is
    associative
 *)
 species Dichotomy (Nat is Dichotomic_system,
                    S is basics#Basic_object,
-                   F is Function_t_t_t (S),
-		   f in F,
-                   zero  in S) 
+                   Bins is Binop (S))
   inherits basics#Basic_object =
   rep = basics#unit ;
 
@@ -328,14 +333,14 @@ species Dichotomy (Nat is Dichotomic_system,
   let rec dichot (x, n) =
      let n_2 = Nat!div2 (n) in
      if Nat!equal (n_2, Nat!zero) then
-      if Nat!equal (n, Nat!zero) then zero
+      if Nat!equal (n, Nat!zero) then Bins!bvalue
       else (* we know n is 1 *)
-           F!f (x, zero)
+           Bins!binop (x, Bins!bvalue)
     else
-      let e = !dichot (x, n_2) in 
-        if Nat!is_odd (n) then F!f (x, F!f(e, e))
+      let e = !dichot (x, n_2) in
+        if Nat!is_odd (n) then Bins!binop (x, Bins!binop (e, e))
         else (* we know it is even *)
-          F!f (e, e) ;
+          Bins!binop (e, e) ;
 end ;;
 
 (* (\**  *)
