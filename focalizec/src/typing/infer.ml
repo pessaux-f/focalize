@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.102 2008-02-01 12:33:10 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.103 2008-02-12 15:28:41 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1930,6 +1930,23 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
 
 
 
+let apply_substitutions_reversed_list_on_fields
+    ~current_unit fields reversed_substs =
+  (* ATTENTION Do not fold left otherwise substitutions *)
+  (* will be performed in reverse order.                *)
+  List.fold_right
+    (fun (c1, c2) accu_fields ->
+      List.map
+        (fun field ->
+          SubstColl.subst_species_field
+            ~current_unit (SubstColl.SCK_coll c1) c2 field)
+        accu_fields)
+    reversed_substs
+    fields
+;;
+
+
+
 (* *********************************************************************** *)
 (* typing_context -> Env.TypingEnv.t ->                                    *)
 (*   Env.TypeInformation.species_description -> Parsetree.species_param -> *)
@@ -1940,10 +1957,27 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
 let apply_species_arguments ctx env base_spe_descr params =
-  let rec rec_apply accu_meths = function
+  (* ****************************************************************** *)
+  (** {b Args} :
+        - [accu_substs] : The list of substitutions to apply to each
+             effective parameter before processing it. This is the way
+             to represent the fact that in rule COLL-INST, page 43,
+             fig 3.2, section 3.8 in Virgile Prevosto's Phd, the
+             substutition "[c1 <- c2]" is performed on ts, i.e. in
+             it's methods types but also in the remaining effective
+             species parameters (yep, indeed, the ts signature of a
+             species contains both the methodes and the parameters).
+             Because these parameters will be "evaluated" after the
+             current one, we need to delay the substitution until they
+             are really processed.
+             This list contains the in *REVERSE* order of the
+             application order. This means that the first required
+             substitution is in tail.                                   *)
+  (* ****************************************************************** *)
+  let rec rec_apply accu_meths accu_substs = function
     | ([], []) -> accu_meths
     | ((f_param :: rem_f_params), (e_param :: rem_e_params)) ->
-      let new_meths =
+      let (new_meths, new_accu_substs) =
         (begin
           let (Parsetree.SP e_param_expr) = e_param.Parsetree.ast_desc in
           match f_param with
@@ -1974,7 +2008,7 @@ let apply_species_arguments ctx env base_spe_descr params =
                      ~param_unit: (fst f_ty)
                      f_name e_param_expr.Parsetree.ast_desc)
                   accu_meths in
-              substd_meths
+              (substd_meths, accu_substs)
              end)
           | Env.TypeInformation.SPAR_is ((f_module, f_name), c1_ty, _) ->
               let c1 = (f_module, f_name) in
@@ -1988,6 +2022,9 @@ let apply_species_arguments ctx env base_spe_descr params =
               let ((c2_mod_name, c2_species_name), expr_sp_description) =
                 typecheck_expr_as_species_parameter_argument
                   ctx env e_param_expr in
+              let substd_c1_ty =
+                apply_substitutions_reversed_list_on_fields
+                  ~current_unit: ctx.current_unit c1_ty accu_substs in
               (* The c2 of Virgile's Phd. *)
               let c2 = (c2_mod_name, c2_species_name) in
               (* Record the type in the AST node. *)
@@ -1998,7 +2035,7 @@ let apply_species_arguments ctx env base_spe_descr params =
                 Parsetree.ANTI_type param_type_for_ast ;
               (* Proceed to abstraction and signature compatibility. *)
               let big_A_i1_c2 =
-                abstraction ~current_unit: ctx.current_unit c2 c1_ty in
+                abstraction ~current_unit: ctx.current_unit c2 substd_c1_ty in
               (* Ensure that i2 <= A(i1, c2). *)
               is_sub_species_of
                 ~loc: e_param.Parsetree.ast_loc ctx
@@ -2013,9 +2050,10 @@ let apply_species_arguments ctx env base_spe_descr params =
                      ~current_unit: ctx.current_unit
                      (SubstColl.SCK_coll c1) c2)
                   accu_meths in
-              substd_meths
+              let new_substs = (c1, c2) :: accu_substs in
+              (substd_meths, new_substs)
           end) in
-      rec_apply new_meths (rem_f_params, rem_e_params)
+      rec_apply new_meths new_accu_substs (rem_f_params, rem_e_params)
     | (rem_formals, _) ->
       (begin
         let rem_formals_len = List.length rem_formals in
@@ -2026,6 +2064,7 @@ let apply_species_arguments ctx env base_spe_descr params =
   (* Do the job now. *)
   rec_apply
     base_spe_descr.Env.TypeInformation.spe_sig_methods
+    []
     (base_spe_descr.Env.TypeInformation.spe_sig_params, params)
 ;;
 
