@@ -1,0 +1,30 @@
+use "basics" ;;
+open "basics" ;;
+
+(* ****************************************************************** *)
+(* Must pass.                                                         *)
+(* Example showing how now use a collection defined outside the       *)
+(* current one (i.e. the used one not a parameter) in a collection    *)
+(* or a species. [Ints] is straightly used in [Contrete_couple_ints]. *)
+(* ****************************************************************** *)
+
+species Contrete_int inherits Basic_object =
+  rep = basics#int ;
+  let printer (x in Self) = print_int (x) ;
+  let create (x in int) in Self = 15 ;
+end ;;
+collection Int implements Contrete_int ;;
+
+
+species Contrete_couple_ints inherits Basic_object =
+  rep = (Int * Int) ;
+  let create (x in int) in Self = crp ((Int!create (x)), (Int!create (x))) ;
+
+  let printer (x in Self) =
+     let a = Int!printer (first (x)) in
+     Int!printer (scnd (x)) ;
+end ;;
+collection Couple_ints implements Contrete_couple_ints ;;
+
+let foo = Couple_ints!create (1) ;;
+Couple_ints!printer (foo) ;;

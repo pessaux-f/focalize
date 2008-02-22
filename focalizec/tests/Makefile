@@ -8,6 +8,7 @@ OK_TEST_FILES = \
 	ok__phd_def_deps.foc \
 	ok__phd_meths_gen.foc \
 	ok__phd_sample.foc
+	#ok__coll_outside.foc
 
 KO_TEST_FILES = \
 	ko__bad_self_use.foc \
