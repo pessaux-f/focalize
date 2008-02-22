@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.mli,v 1.10 2008-01-25 15:21:10 pessaux Exp $ *)
+(* $Id: misc_ml_generation.mli,v 1.11 2008-02-22 18:06:29 pessaux Exp $ *)
 
 
 
@@ -37,10 +37,11 @@ type field_body_kind =
   | FBK_prop of Parsetree.prop
 
 val compute_lambda_liftings_for_field :
-  current_species: Parsetree.qualified_species -> Parsetree.vname list ->
-    Dep_analysis.name_node list -> Parsetree.vname ->
+  current_unit: Types.fname ->current_species: Parsetree.qualified_species ->
+    Parsetree.vname list -> Dep_analysis.name_node list -> Parsetree.vname ->
       field_body_kind ->
-        ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list *
+        ((Parsetree.vname list) *
+         (Parsetree.vname * Parsetree_utils.DepNameSet.t) list *
          (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *
          (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *
          (string * Types.type_simple) list)

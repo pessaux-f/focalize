@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.24 2008-02-06 16:42:36 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.25 2008-02-22 18:06:29 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -297,8 +297,8 @@ type min_coq_env_element =
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
 let minimal_typing_environment universe species_fields =
-  (* A local function to process onne let-binding. Handy to *)
-  (* factorize code for both [Let] and [Let_rec] fields.    *)
+  (* A local function to process one let-binding. Handy to *)
+  (* factorize code for both [Let] and [Let_rec] fields.   *)
   let process_one_let_binding l_binding =
     try
       let (from, n, _, sch, _, _) = l_binding in
@@ -437,7 +437,8 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
 
 
 let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
-    dependencies_from_params (from, name, params, scheme, body, _) =
+    used_species_parameter_tys dependencies_from_params
+    (from, name, params, scheme, body, _) =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
   (* We need to check if "Self" is abstracted i.e. leads to an extra *)
   (* parameter "(abst_T : Set)" of the method. This is the case if   *)
@@ -482,6 +483,38 @@ let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
             *)
            failwith "TODO 2") ;
       (* Generate the parameters from the species parameters' methods we use. *)
+      (* By the way, we get he stuf to add to the current collection carrier  *)
+      (* mapping to make so the type expressions representing some species    *)
+      (* parameter carrier types, will be automatically be mapped onto our    *)
+      (* freshly created extra args.                                          *)
+      let cc_mapping_extension =
+        List.map
+          (fun species_param_type_name ->
+            let as_string =
+              Parsetree_utils.vname_as_string_with_operators_expanded
+                species_param_type_name in
+            let param_name =  "_p_" ^ as_string ^ "_T" in
+            (* First, generate the parameter. *)
+            Format.fprintf out_fmter "@ (%s :@ Set)" param_name ;
+            (* Return the stuff to extend the collection_carrier_mapping. *)
+            ((ctx.Species_gen_basics.scc_current_unit, as_string),
+             (param_name, Species_gen_basics.CCMI_is)))
+          used_species_parameter_tys in
+      (* Extend the collection_carrier_mapping of the context. *)
+      let new_ctx = { ctx with
+        Species_gen_basics.scc_collections_carrier_mapping =
+          cc_mapping_extension @
+          ctx.Species_gen_basics.scc_collections_carrier_mapping } in
+      (* Same thing for the printing comtext. *) 
+      let new_print_ctx = {
+         print_ctx with
+           Types.cpc_collections_carrier_mapping =
+              (* Throw the [collection_carrier_mapping_info] *)
+              (* in the printing context.                    *)
+              (List.map
+                 (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
+               cc_mapping_extension)
+              @ print_ctx.Types.cpc_collections_carrier_mapping } in
       List.iter
         (fun (species_param_name, meths) ->
           (* Each abstracted method will be named like "_p_", followed by *)
@@ -491,11 +524,12 @@ let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
             "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
           Parsetree_utils.DepNameSet.iter
             (fun (meth, meth_ty) ->
-              Format.fprintf out_fmter "(%s%a :@ %a)"
+              Format.fprintf out_fmter "@ (%s%a :@ %a)"
                 prefix
                 Parsetree_utils.pp_vname_with_operators_expanded meth
                 (Types.pp_type_simple_to_coq
-                   print_ctx ~reuse_mapping: false ~self_as: how_to_print_Self)
+                   new_print_ctx ~reuse_mapping: false
+                   ~self_as: how_to_print_Self)
                 meth_ty)
             meths)
         dependencies_from_params ;
@@ -519,7 +553,7 @@ let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
                    Format.fprintf out_fmter "@ (abst_%a : %a)"
                      Parsetree_utils.pp_vname_with_operators_expanded n
                      (Types.pp_type_simple_to_coq
-                        print_ctx ~reuse_mapping: false
+                        new_print_ctx ~reuse_mapping: false
                         ~self_as: how_to_print_Self)
                      ty ;
                    [n]
@@ -527,7 +561,8 @@ let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
                    Format.fprintf out_fmter "@ (%a :@ "
                      Parsetree_utils.pp_vname_with_operators_expanded n ;
                    Species_record_type_generation.generate_prop
-                     ctx ~local_idents: [] ~self_as: how_to_print_Self env b ;
+                     new_ctx ~local_idents: [] ~self_as: how_to_print_Self env
+                     b ;
                    Format.fprintf out_fmter ")" ;
                    [n])
              min_coq_env) in
@@ -561,7 +596,8 @@ let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
                Format.fprintf out_fmter "@ (%a : %a)"
                  Parsetree_utils.pp_vname_with_operators_expanded param_vname
                  (Types.pp_type_simple_to_coq
-                    print_ctx ~reuse_mapping: true ~self_as: how_to_print_Self)
+                    new_print_ctx ~reuse_mapping: true
+                    ~self_as: how_to_print_Self)
                  param_ty
            | None ->
                Format.fprintf out_fmter "@ %a"
@@ -570,7 +606,7 @@ let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
       (* Now, we print the ending type of the method. *)
       Format.fprintf out_fmter " :@ %a :=@ "
         (Types.pp_type_simple_to_coq
-           print_ctx ~reuse_mapping: true ~self_as: how_to_print_Self)
+           new_print_ctx ~reuse_mapping: true ~self_as: how_to_print_Self)
         ending_ty ;
       (* Now we don't need anymore the sharing. Hence, clean it. This should *)
       (* not be useful because the other guys usign printing should manage   *)
@@ -581,7 +617,7 @@ let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
       (* No local idents in the context because we just enter the scope *)
       (* of a species fields and so we are not under a core expression. *)
       Species_record_type_generation.generate_expr
-        ctx ~local_idents: [] ~self_as: how_to_print_Self env body ;
+        new_ctx ~local_idents: [] ~self_as: how_to_print_Self env body ;
       (* Done... Then, final carriage return. *)
       Format.fprintf out_fmter ".@]@\n" ;
       abstracted_methods
@@ -622,7 +658,15 @@ let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
   Format.fprintf out_fmter "__%a"
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* Now, apply to each extra parameter coming from the lambda liftings. *)
-  (* First, the extra arguments due to the species parameters methods we *)
+  (* First, the extra arguments that represent the types of the species   *)
+  (* parameters used in the method. It is always the species name + "_T". *)
+  List.iter
+     (fun species_param_type_name ->
+        Format.fprintf out_fmter "@ %a_T"
+          Parsetree_utils.pp_vname_with_operators_expanded
+          species_param_type_name)
+  used_species_parameter_tys ;
+  (* Next, the extra arguments due to the species parameters methods we *)
   (* depends on. They are "Variables" previously declared and named:     *)
   (* species parameter name + "_" + method name.                         *)
   List.iter
@@ -693,7 +737,8 @@ let find_compiled_field_memory name fields =
 
 
 let generate_theorem ctx print_ctx env min_coq_env
-    dependencies_from_params generated_fields (from, name, prop, _) =
+    _used_species_parameter_tys dependencies_from_params generated_fields
+    (from, name, prop, _) =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
   let curr_species_name = (snd ctx.Species_gen_basics.scc_current_species) in
   (* A "theorem" defined in the species leads to a Coq *)
@@ -792,6 +837,8 @@ let generate_theorem ctx print_ctx env min_coq_env
                    (* what to apply to this generator.                *)
                    let memory =
                      find_compiled_field_memory name generated_fields in
+(** BUG Là il faut commencer par appliquer en mettant les types de
+    paramètres d'espèce. *)
                    List.iter
                      (fun (species_param_name, meths_from_param) ->
                        let prefix =
@@ -945,6 +992,7 @@ let generate_theorem ctx print_ctx env min_coq_env
       Parsetree_utils.pp_vname_with_operators_expanded (snd from) ;
   Format.fprintf out_fmter "__%a"
     Parsetree_utils.pp_vname_with_operators_expanded name ;
+(** BUG Là il faut appliquer le type des paramètres d'espèce. *)
   (* Apply the species parameters' methods we use. *)
   List.iter
     (fun (species_param_name, meths) ->
@@ -1014,8 +1062,10 @@ let generate_methods ctx print_ctx env species_parameters_names
        (* Nothing to keep for the collection generator. *)
        CSF_sig name
    | Env.TypeInformation.SF_let (from, name, params, scheme, body, deps_rep) ->
-       let (dependencies_from_params, decl_children, def_children,  _) =
+       let (used_species_parameter_tys, dependencies_from_params,
+            decl_children, def_children,  _) =
          Misc_ml_generation.compute_lambda_liftings_for_field
+           ~current_unit: ctx.Species_gen_basics.scc_current_unit
            ~current_species: ctx.Species_gen_basics.scc_current_species
            species_parameters_names
            ctx.Species_gen_basics.scc_dependency_graph_nodes name
@@ -1033,7 +1083,7 @@ let generate_methods ctx print_ctx env species_parameters_names
        let coq_min_typ_env_names =
          generate_one_field_binding
            ctx print_ctx env min_coq_env ~let_connect: LC_first_non_rec
-           dependencies_from_params
+           used_species_parameter_tys dependencies_from_params
            (from, name, params, scheme, body, deps_rep) in
        (* Now, build the [compiled_field_memory], even if the method  *)
        (* was not really generated because it was inherited.          *)
@@ -1048,8 +1098,10 @@ let generate_methods ctx print_ctx env species_parameters_names
        (* [Unsure]. *)
        CSF_let_rec []
    | Env.TypeInformation.SF_theorem (from, name, _, prop, _, deps_on_rep) ->
-       let (dependencies_from_params, decl_children, def_children, _) =
+       let (used_species_parameter_tys, dependencies_from_params,
+            decl_children, def_children, _) =
          Misc_ml_generation.compute_lambda_liftings_for_field
+           ~current_unit: ctx.Species_gen_basics.scc_current_unit
            ~current_species: ctx.Species_gen_basics.scc_current_species
            species_parameters_names
            ctx.Species_gen_basics.scc_dependency_graph_nodes name
@@ -1063,8 +1115,9 @@ let generate_methods ctx print_ctx env species_parameters_names
        let min_coq_env = minimal_typing_environment universe all_fields in
        let coq_min_typ_env_names =
          generate_theorem
-           ctx print_ctx env min_coq_env dependencies_from_params
-           generated_fields (from, name, prop, deps_on_rep) in
+           ctx print_ctx env min_coq_env used_species_parameter_tys
+           dependencies_from_params generated_fields
+           (from, name, prop, deps_on_rep) in
        let compiled_field = {
          cfm_from_species = from ;
          cfm_method_name = name ;
@@ -1110,18 +1163,15 @@ let generate_methods ctx print_ctx env species_parameters_names
 let build_collections_carrier_mapping ~current_unit species_descr =
   List.map
     (function
-      | Env.TypeInformation.SPAR_is ((_, carrier_name), _, param_expr) ->
+      | Env.TypeInformation.SPAR_is ((_, carrier_name), _, _) ->
           (* Now, build the "collection type" this name will be bound to. *)
           (* According to how the "collection type" of parameters are     *)
           (* built, this will be the couple of the current compilation    *)
           (* unit and the name of the parameter.                          *)
           let type_coll = (current_unit, carrier_name) in
-          (* And now create the binding... Record that the parameter is a *)
-          (* "is" parameter whose species expr is [param_expr] that will  *)
-          (* be used to create the Coq type expression annotating this    *)
-          (* parameter in the hosting species record type.                *)
-          (type_coll,
-           (carrier_name ^ "_T", (Species_gen_basics.CCMI_is param_expr)))
+          (* And now create the binding... Record that *)
+          (* the parameter is a "is" parameter.        *)
+          (type_coll, (carrier_name ^ "_T", Species_gen_basics.CCMI_is))
       | Env.TypeInformation.SPAR_in (n, type_coll) ->
           (* Build the name that will represent this parameter's *)
           (* carrier seen from Coq.                              *)
@@ -1266,8 +1316,9 @@ let generate_variables_for_species_parameters_methods ctx print_ctx
     (function
       | Env.TypeInformation.SF_sig (_, _, _) -> ()
       | Env.TypeInformation.SF_let (_, name, _, _, body, _) ->
-          let (dependencies_from_params, _, _, _) =
+          let (_, dependencies_from_params, _, _, _) =
             Misc_ml_generation.compute_lambda_liftings_for_field
+              ~current_unit: ctx.Species_gen_basics.scc_current_unit
               ~current_species: ctx.Species_gen_basics.scc_current_species
               species_parameters_names
               ctx.Species_gen_basics.scc_dependency_graph_nodes name
@@ -1277,8 +1328,9 @@ let generate_variables_for_species_parameters_methods ctx print_ctx
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
             (fun (_, name, _, _, body, _) ->
-              let (dependencies_from_params, _, _, _) =
+              let (_, dependencies_from_params, _, _, _) =
                 Misc_ml_generation.compute_lambda_liftings_for_field
+                  ~current_unit: ctx.Species_gen_basics.scc_current_unit
                   ~current_species: ctx.Species_gen_basics.scc_current_species
                   species_parameters_names
                   ctx.Species_gen_basics.scc_dependency_graph_nodes name

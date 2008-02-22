@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.64 2008-02-06 13:52:48 pessaux Exp $ *)
+(* $Id: env.ml,v 1.65 2008-02-22 18:06:29 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -1601,7 +1601,7 @@ module MlGenEMAccess = struct
   let post_process_method_value_binding _collname data = data
 end
 ;;
-module MlGenEnv = Make (MlGenEMAccess);;
+module MlGenEnv = Make (MlGenEMAccess) ;;
 
 
 

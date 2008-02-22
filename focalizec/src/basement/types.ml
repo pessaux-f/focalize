@@ -11,12 +11,12 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.44 2008-01-15 15:59:18 pessaux Exp $ *)
+(* $Id: types.ml,v 1.45 2008-02-22 18:06:29 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
 (** {b Descr} : File ("module") name (without the ".foc" extension).
- 
+
     {b Rem} : Clearly exported outside this module.                  *)
 (* **************************************************************** *)
 type fname = string ;;
@@ -188,7 +188,7 @@ let (begin_definition, end_definition, current_binding_level, type_variable) =
                 definition. It increases the binding level to enable
                 generalization once we go back to a lower level.
 
-      {b Rem} : Exported outside this module.                            *) 
+      {b Rem} : Exported outside this module.                            *)
    (* ****************************************************************** *)
    (fun () -> incr current_binding_level),
 
@@ -200,7 +200,7 @@ let (begin_definition, end_definition, current_binding_level, type_variable) =
                 definition. It decreases the binding level to prevent
                 generalization of higher binding level type variables.
 
-      {b Rem} : Exported outside this module.                            *) 
+      {b Rem} : Exported outside this module.                            *)
    (* ****************************************************************** *)
    (fun () -> decr current_binding_level),
 
@@ -979,7 +979,7 @@ let pp_type_collection ppf (coll_module, coll_name) =
     FOR THIS REASON, when we print type variables here, we only consider
     that they are generalised, to get a printing without any underscore
     in the variable's name.
-    
+
     To be able to print separately parts of a same type, hence keep sharing
     of variables names, this function has an extra argument telling whether
     the local variables names mapping must be kept from previous printing
@@ -1189,7 +1189,7 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
 
   (* ************************************************************** *)
   (* int ref                                                        *)
-  (** {b Descr} : The counter counting the number of different 
+  (** {b Descr} : The counter counting the number of different
       variables already seen hence printed. It serves to generate a
       fresh name to new variables to print.
 
@@ -1345,4 +1345,43 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
    (* purge_type_simple_to_coq_variable_mapping *)
    (fun () -> reset_type_variables_mapping_to_coq ())
   )
+;;
+
+
+
+module SpeciesCarrierType = struct
+  type t =  (fname * collection_name)
+  let compare = compare
+end ;;
+
+
+
+module SpeciesCarrierTypeSet = Set.Make (SpeciesCarrierType) ;;
+
+
+
+(* ******************************************************************** *)
+(* type_simple -> SpeciesCarrierTypeSet.t                               *)
+(** {b Descr} : This function searches for species carrier types inside
+    a [simple_type]. This will serve to determine which extra argument
+    will have to be added in Coq to make these species carrier type
+    abstracted by a parameter of type "Set".
+
+    {b Rem} : Exported outside this module.                             *)
+(* ******************************************************************** *)
+let rec get_species_types_in_type ty =
+  match repr ty with
+   | ST_var _ -> SpeciesCarrierTypeSet.empty
+   | ST_arrow (ty1, ty2) ->
+       SpeciesCarrierTypeSet.union
+         (get_species_types_in_type ty1) (get_species_types_in_type ty2)
+   | ST_tuple tys
+   | ST_construct (_, tys) ->
+       List.fold_left
+         (fun accu t ->
+           SpeciesCarrierTypeSet.union accu (get_species_types_in_type t))
+         SpeciesCarrierTypeSet.empty
+         tys
+     | ST_self_rep -> SpeciesCarrierTypeSet.empty
+     | ST_species_rep st -> SpeciesCarrierTypeSet.singleton st
 ;;

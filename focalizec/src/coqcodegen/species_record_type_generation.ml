@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.16 2008-02-06 16:42:36 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.17 2008-02-22 18:06:29 pessaux Exp $ *)
 
 
 
@@ -845,9 +845,6 @@ let generate_parameter_species_expr ~current_unit ppf species_expr =
 ;;
 
 
-(* [Unsure] CCMI_is blabla. "blabla" est-il encore justifié puisque le type
-   Coq des paramètres "is" est maintenant toujours "Set" . *)
-
 
 (* ********************************************************************** *)
 (* Species_gen_basics.species_compil_context ->                           *)
@@ -870,7 +867,7 @@ let generate_record_type_parameters ctx species_fields =
     (fun ((param_ty_mod, param_ty_coll), (param_name, param_kind)) ->
       Format.fprintf ppf "@[<1>(%s :@ " param_name ;
       (match param_kind with
-       | Species_gen_basics.CCMI_is _ -> Format.fprintf ppf "Set"
+       | Species_gen_basics.CCMI_is -> Format.fprintf ppf "Set"
        | Species_gen_basics.CCMI_in_or_not_param ->
            if param_ty_mod <> ctx.Species_gen_basics.scc_current_unit then
              Format.fprintf ppf "%s." param_ty_mod ;

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.28 2008-02-04 11:00:51 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.29 2008-02-22 18:06:29 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -501,8 +501,9 @@ let generate_methods ctx env species_parameters_names field =
        (* always be empty (remind that the only def-dependency that can   *)
        (* exist is on the carrier, but this one is not in the graph and   *)
        (* is processed appart).                                           *)
-       let (dependencies_from_params, decl_children, _, llift_params) =
+       let (_, dependencies_from_params, decl_children, _, llift_params) =
          Misc_ml_generation.compute_lambda_liftings_for_field
+           ~current_unit: ctx.scc_current_unit
            ~current_species: ctx.scc_current_species species_parameters_names
            ctx.scc_dependency_graph_nodes name
            (Misc_ml_generation.FBK_expr body) in
@@ -536,6 +537,7 @@ let generate_methods ctx env species_parameters_names field =
               List.map
                 (fun (_, n, _, _, b, _) ->
                   Misc_ml_generation.compute_lambda_liftings_for_field
+                    ~current_unit: ctx.scc_current_unit
                     ~current_species: ctx.scc_current_species
                     species_parameters_names ctx.scc_dependency_graph_nodes n
                     (Misc_ml_generation.FBK_expr b))
@@ -546,7 +548,7 @@ let generate_methods ctx env species_parameters_names field =
               ctx with
                 scc_lambda_lift_params_mapping =
                   List.map2
-                    (fun (_, n, _, _, _, _) (_, _, _, extra_params) ->
+                    (fun (_, n, _, _, _, _) (_, _, _, _, extra_params) ->
                       (n, extra_params))
                      l
                      lliftings_infos } in
@@ -558,7 +560,7 @@ let generate_methods ctx env species_parameters_names field =
                   decl_children_head, llift_params_head) ,
                  lliftings_infos_tail) =
               match lliftings_infos with
-               | (a, b, _, c) :: q -> ((a, b, c), q)
+               | (_, a, b, _, c) :: q -> ((a, b, c), q)
                | _ -> assert false in
             (* Now, generate the first method, introduced by "let rec". *)
             generate_one_field_binding
@@ -575,7 +577,7 @@ let generate_methods ctx env species_parameters_names field =
             let rem_compiled =
               List.map2
                 (fun (from, name, params, scheme, body, _)
-                   (dependencies_from_params, decl_children, _, llift_params) ->
+                   (_, dependencies_from_params, decl_children, _, llift_params) ->
                   (* For OCaml, ignore the def-dependencies. *)
                   generate_one_field_binding
                     ctx' env ~let_connect: LC_following

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.ml,v 1.14 2008-01-29 14:51:44 pessaux Exp $ *)
+(* $Id: misc_ml_generation.ml,v 1.15 2008-02-22 18:06:29 pessaux Exp $ *)
 
 
 
@@ -154,13 +154,15 @@ type field_body_kind =
 
 
 (* ************************************************************************ *)
-(* current_species: Parsetree.qualified_species -> Parsetree.vname list ->  *)
-(*   Dep_analysis.name_node list -> Parsetree.vname ->                      *)
-(*     field_body_kind ->                                                   *)
-(*       ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list *           *)
-(*        (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *    *)
-(*        (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *    *)
-(*        (string * Types.type_simple) list)                                *)
+(* current_unit: Types.fname ->                                             *)
+(*   current_species: Parsetree.qualified_species ->                        *)
+(*     Parsetree.vname list -> Dep_analysis.name_node list ->               *)
+(*       Parsetree.vname -> field_body_kind ->                              *)
+(*         ((Parsetree.vname list) *                                        *)
+(*          (Parsetree.vname * Parsetree_utils.DepNameSet.t) list *         *)
+(*          (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *  *)
+(*          (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *  *)
+(*          (string * Types.type_simple) list)                              *)
 (** {b Descr} : Pre-process a field before its compilation to OCaml. We
         compute here the information related to the extra parameters
         a method will have by lambda-lifting due to the species parameters
@@ -178,7 +180,7 @@ type field_body_kind =
 
     {b Rem} : Not exported oustide this module.                             *)
 (* ************************************************************************ *)
-let compute_lambda_liftings_for_field ~current_species
+let compute_lambda_liftings_for_field ~current_unit ~current_species
      species_parameters_names dependency_graph_nodes name body =
   (* Get all the methods we directly decl-depend on. They will   *)
   (* lead each to an extra parameter of the final OCaml function *)
@@ -221,6 +223,7 @@ let compute_lambda_liftings_for_field ~current_species
       [] in
   (* Build the list by side effect in reverse order for efficiency. *)
   let revd_lambda_lifts = ref [] in
+  let params_appearing_in_types = ref Types.SpeciesCarrierTypeSet.empty in
   (* First, abstract according to the species's parameters the current  *)
   (* method depends on.                                                 *)
   List.iter
@@ -235,7 +238,13 @@ let compute_lambda_liftings_for_field ~current_species
           let llift_name =
             prefix ^
             (Parsetree_utils.vname_as_string_with_operators_expanded meth) in
-          revd_lambda_lifts := (llift_name, meth_ty) :: !revd_lambda_lifts)
+          revd_lambda_lifts := (llift_name, meth_ty) :: !revd_lambda_lifts ;
+          (* By the way and by side effect, we remind the   *)
+          (* species types appearing the the method's type. *)
+          let st_set = Types.get_species_types_in_type meth_ty in
+          params_appearing_in_types :=
+            Types.SpeciesCarrierTypeSet.union
+              st_set !params_appearing_in_types)
         meths)
     dependencies_from_params ;
   (* Now, lambda-lift all the dependencies from our inheritance tree *)
@@ -247,6 +256,21 @@ let compute_lambda_liftings_for_field ~current_species
         (Parsetree_utils.vname_as_string_with_operators_expanded dep_name) in
       revd_lambda_lifts := (llift_name, ty) :: !revd_lambda_lifts)
     decl_children ;
-  (dependencies_from_params, decl_children,
-   def_children, (List.rev !revd_lambda_lifts))
+  (* Now compute the set of species parameters types used in the   *)
+  (* types of the methods comming from the species parameters that *)
+  (* the current field uses. This information is required for Coq  *)
+  (* since they will lead to extra args of type "Set".             *)
+  let species_param_names = List.map fst dependencies_from_params in
+  let used_species_parameter_tys =
+    List.filter
+      (fun species_param_name ->
+        let as_string = Parsetree_utils.name_of_vname species_param_name in
+        Types.SpeciesCarrierTypeSet.mem
+          (current_unit, as_string) !params_appearing_in_types)
+      species_param_names in
+  (used_species_parameter_tys,
+   dependencies_from_params,
+   decl_children,
+   def_children,
+   (List.rev !revd_lambda_lifts))
 ;;

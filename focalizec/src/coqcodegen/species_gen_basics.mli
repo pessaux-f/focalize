@@ -11,15 +11,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_gen_basics.mli,v 1.2 2007-12-07 15:19:37 pessaux Exp $ *)
+(* $Id: species_gen_basics.mli,v 1.3 2008-02-22 18:06:29 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
 (* {b Descr}: Describes in the [scc_collections_carrier_mapping] the kind
      of species parameter.
-     It can either be a "is" parameter and then we keep its species
-     expression in order to be able to generate the Coq type expression
-     annotating this parameter in the hosting species's record type.
+     It can either be a "is" parameter.
      Otherwise, it is a "in" parameter or not at all a parameter and the
      type expression that will annotate this parameter (if it appears to be
      one) in the hosting species's record type is straightly the type
@@ -30,8 +28,8 @@
    {b Rem} : Not exported outside this module.                             *)
 (* *********************************************************************** *)
 type collection_carrier_mapping_info =
-    (** The parameter is a "is" parameter whose species expression follows. *)
-  | CCMI_is of Parsetree.species_expr
+    (** The parameter is a "is" parameter. *)
+  | CCMI_is
     (** The parameter is a "in" parameter or is not a parameter. *)
   | CCMI_in_or_not_param
 ;;
