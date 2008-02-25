@@ -85,3 +85,23 @@ Chapter Basic_object.
   Let self_print := Basic_object__print self_T.
 End Basic_object.
 
+Inductive partiel__t (a : Set) : Set :=
+  | Failed_ : (partiel__t (a))
+  | Unfailed_ : (a) -> (partiel__t (a)).
+
+Notation Failed := (Failed_ _ ).
+Notation Unfailed := (Unfailed_ _).
+
+Definition __is_failed (a : Set) (x : partiel__t a) : bool__t :=
+  match x with
+   | Failed_ => true
+   | Unfailed_ _ => false
+  end.
+Notation is_failed := (__is_failed _).
+
+Definition __non_failed (a : Set) (x : partiel__t a) : a :=
+  match x with
+   | Failed_ => __g_foc_error ___a_string
+   | Unfailed_ v => v
+  end.
+Notation non_failed := (__non_failed _).
