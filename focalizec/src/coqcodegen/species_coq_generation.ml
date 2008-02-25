@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.25 2008-02-22 18:06:29 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.26 2008-02-25 15:51:48 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -47,6 +47,12 @@ type compiled_field_memory = {
   cfm_method_name : Parsetree.vname ;
   (** The method's body. *)
   cfm_method_body  : compiled_method_body ;
+  (* The positionnal list of species parameter carriers appearing in the
+     type of the method. They lead to extra arguments of type "Set" and
+     must be instanciated by the correct type when applying the method's
+     generator. This is mostly due to the fact that in Coq polymorphism
+     is explicit and lead to a dependant type. *)
+  cfm_used_species_parameter_tys : Parsetree.vname list ;
   (** The list mapping for each species parameter, the methods the current
       method depends on. By lambda-lifting, these methods induce extra
       parameters named as "_p_" +  species parameter name + "_" + called
@@ -483,10 +489,10 @@ let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
             *)
            failwith "TODO 2") ;
       (* Generate the parameters from the species parameters' methods we use. *)
-      (* By the way, we get he stuf to add to the current collection carrier  *)
-      (* mapping to make so the type expressions representing some species    *)
-      (* parameter carrier types, will be automatically be mapped onto our    *)
-      (* freshly created extra args.                                          *)
+      (* By the way, we get the stuff to add to the current collection        *)
+      (* carrier mapping to make so the type expressions representing some    *)
+      (* species parameter carrier types, will be automatically be mapped     *)
+      (* onto our freshly created extra args.                                 *)
       let cc_mapping_extension =
         List.map
           (fun species_param_type_name ->
@@ -737,7 +743,7 @@ let find_compiled_field_memory name fields =
 
 
 let generate_theorem ctx print_ctx env min_coq_env
-    _used_species_parameter_tys dependencies_from_params generated_fields
+    used_species_parameter_tys dependencies_from_params generated_fields
     (from, name, prop, _) =
   let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
   let curr_species_name = (snd ctx.Species_gen_basics.scc_current_species) in
@@ -837,8 +843,19 @@ let generate_theorem ctx print_ctx env min_coq_env
                    (* what to apply to this generator.                *)
                    let memory =
                      find_compiled_field_memory name generated_fields in
-(** BUG Là il faut commencer par appliquer en mettant les types de
-    paramètres d'espèce. *)
+                   (* We first instanciate the parameters corresponding to   *)
+                   (* the carriers types of species parameters and appearing *)
+                   (* in the method's type.                                  *)
+                   List.iter
+                     (fun species_param_type_name ->
+                        (* [Unsure] Je voudrais bien trouver un cas qui *)
+                        (* passe là-dedans !!! *)
+                        Format.fprintf out_fmter "@ %a_T"
+                          Parsetree_utils.pp_vname_with_operators_expanded
+                          species_param_type_name)
+                     memory.cfm_used_species_parameter_tys ;
+                   (* Now apply the abstracted methods from the species *)
+                   (* parameters we depend on.                          *)
                    List.iter
                      (fun (species_param_name, meths_from_param) ->
                        let prefix =
@@ -992,7 +1009,18 @@ let generate_theorem ctx print_ctx env min_coq_env
       Parsetree_utils.pp_vname_with_operators_expanded (snd from) ;
   Format.fprintf out_fmter "__%a"
     Parsetree_utils.pp_vname_with_operators_expanded name ;
-(** BUG Là il faut appliquer le type des paramètres d'espèce. *)
+  (* Because we don't print any types, no need to extend the collection   *)
+  (* carrier mapping at this point.                                       *)
+  (* Now, apply to each extra parameter coming from the lambda liftings.  *)
+  (* First, the extra arguments that represent the types of the species   *)
+  (* parameters used in the method. It is always the species name + "_T". *)
+  List.iter
+     (fun species_param_type_name ->
+       (* [Unsure] Je voudrais bien trouver un cas qui passe là-dedans !!! *)
+       Format.fprintf out_fmter "@ %a_T"
+         Parsetree_utils.pp_vname_with_operators_expanded
+         species_param_type_name)
+  used_species_parameter_tys ;
   (* Apply the species parameters' methods we use. *)
   List.iter
     (fun (species_param_name, meths) ->
@@ -1091,6 +1119,7 @@ let generate_methods ctx print_ctx env species_parameters_names
          cfm_from_species = from ;
          cfm_method_name = name ;
          cfm_method_body = CMB_expr body ;
+         cfm_used_species_parameter_tys = used_species_parameter_tys ;
          cfm_dependencies_from_parameters = dependencies_from_params ;
          cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
        CSF_let compiled_field
@@ -1122,6 +1151,7 @@ let generate_methods ctx print_ctx env species_parameters_names
          cfm_from_species = from ;
          cfm_method_name = name ;
          cfm_method_body = CMB_prop prop ;
+         cfm_used_species_parameter_tys = used_species_parameter_tys ;
          cfm_dependencies_from_parameters = dependencies_from_params ;
          cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
        CSF_theorem compiled_field

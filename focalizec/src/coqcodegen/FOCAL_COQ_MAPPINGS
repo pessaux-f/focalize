@@ -16,3 +16,5 @@ Nom d'une méthode définie en dehors du record : nom de
   l'espèce l'hébergeant + "__" + nom de la méthode.
 
 Nom d'un générateur de **théoreme** : espèce + "__" + nom théorème.
+
+Type d'un paramètre d'espèce : "_p_" + nom paramètre d'espèce + "_T".
