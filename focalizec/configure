@@ -11,6 +11,8 @@ touch ./parser/.depend
 mkdir -p ./parser/odoc
 touch ./typing/.depend
 mkdir -p ./typing/odoc
+touch commoncodegen/.depend
+mkdir -p ./commoncodegen/odoc
 touch ./mlcodegen/.depend
 mkdir -p ./mlcodegen/odoc
 touch ./coqcodegen/.depend

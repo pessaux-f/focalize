@@ -1,8 +1,8 @@
-# $Id: Makefile,v 1.19 2007-11-30 10:29:18 pessaux Exp $
+# $Id: Makefile,v 1.20 2008-02-27 12:43:27 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ -I ../basement -I ../parser -I ../typing \
-	-I ../mlcodegen -I ../coqcodegen
+	-I ../commoncodegen -I ../mlcodegen -I ../coqcodegen
 
 BYTOBJS = check_file.cmo exc_wrapper.cmo
 BINOBJS = $(BYTOBJS:.cmo=.cmx)
@@ -31,6 +31,8 @@ ALLBYTOBJS = \
 	../typing/dep_analysis.cmo \
 	../typing/param_dep_analysis.cmo \
 	../typing/infer.cmo \
+	\
+	../commoncodegen/visUniverse.cmo \
 	\
 	../mlcodegen/misc_ml_generation.cmo \
 	../mlcodegen/externals_ml_generation.cmo \
