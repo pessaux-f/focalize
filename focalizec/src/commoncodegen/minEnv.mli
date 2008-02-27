@@ -11,17 +11,18 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.mli,v 1.12 2008-02-27 13:42:49 pessaux Exp $ *)
+(* $$ *)
 
+type min_coq_env_element =
+    MCEE_Declared_carrier
+  | MCEE_Defined_carrier of Types.type_scheme
+  | MCEE_Declared_computational of (Parsetree.vname * Types.type_scheme)
+  | MCEE_Defined_computational of
+      (Parsetree.qualified_species * Parsetree.vname * Types.type_scheme)
+  | MCEE_Declared_logical of (Parsetree.vname * Parsetree.prop)
+  | MCEE_Defined_logical of
+      (Parsetree.qualified_species * Parsetree.vname * Parsetree.prop)
 
-
-val pp_to_ocaml_label_ident : Format.formatter -> Parsetree.label_ident -> unit
-
-type reduced_compil_context = {
-  rcc_current_unit : Types.fname ;
-  rcc_species_parameters_names : Parsetree.vname list ;
-  rcc_collections_carrier_mapping : (Types.type_collection * string) list ;
-  rcc_lambda_lift_params_mapping :
-    (Parsetree.vname * ((string * Types.type_simple )list)) list ;
-  rcc_out_fmter : Format.formatter
-}
+val minimal_typing_environment :
+  VisUniverse.in_the_universe_because VisUniverse.Universe.t ->
+  Env.TypeInformation.species_field list -> min_coq_env_element list

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.18 2008-02-01 12:33:10 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.19 2008-02-27 13:42:49 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -359,7 +359,7 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
   (* We also ignore the variables used to instanciate the polymorphic  *)
   (* ones of the scheme because in OCaml polymorphism is not explicit. *)
   let (params_with_type, _, _) =
-    Misc_ml_generation.bind_parameters_to_types_from_type_scheme
+    MiscHelpers.bind_parameters_to_types_from_type_scheme
       opt_sch params_names in
   (* We are printing each parameter's type. These types in fact belong *)
   (* to a same type scheme. Hence, they may share variables together.  *)

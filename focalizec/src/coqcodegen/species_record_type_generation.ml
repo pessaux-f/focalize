@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.17 2008-02-22 18:06:29 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.18 2008-02-27 13:42:49 pessaux Exp $ *)
 
 
 
@@ -344,8 +344,8 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~is_rec env bd =
      | Parsetree.ANTI_type _ -> assert false
      | Parsetree.ANTI_scheme s -> s) in
   let (params_with_type, result_ty, generalized_instanciated_vars) =
-    Misc_ml_generation.bind_parameters_to_types_from_type_scheme
-       (Some def_scheme) params_names in
+    MiscHelpers.bind_parameters_to_types_from_type_scheme
+      (Some def_scheme) params_names in
   (* Build the print context. *)
   let print_ctx = {
     Types.cpc_current_unit = ctx.Species_gen_basics.scc_current_unit ;

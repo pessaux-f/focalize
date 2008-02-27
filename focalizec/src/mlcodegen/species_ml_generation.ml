@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.29 2008-02-22 18:06:29 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.30 2008-02-27 13:42:49 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -414,8 +414,7 @@ let generate_one_field_binding ctx env ~let_connect species_parameters_names
     (* polymorphic ones of the scheme because in OCaml          *)
     (* polymorphism is not explicit.                            *)
     let (params_with_type, _, _) =
-      Misc_ml_generation.bind_parameters_to_types_from_type_scheme
-        scheme params in
+      MiscHelpers.bind_parameters_to_types_from_type_scheme scheme params in
     (* We are printing each parameter's type. These types in fact belong *)
     (* to a same type scheme. Hence, they may share variables together.  *)
     (* For this reason, we first purge the printing variable mapping and *)
@@ -502,11 +501,11 @@ let generate_methods ctx env species_parameters_names field =
        (* exist is on the carrier, but this one is not in the graph and   *)
        (* is processed appart).                                           *)
        let (_, dependencies_from_params, decl_children, _, llift_params) =
-         Misc_ml_generation.compute_lambda_liftings_for_field
+         Abstractions.compute_lambda_liftings_for_field
            ~current_unit: ctx.scc_current_unit
            ~current_species: ctx.scc_current_species species_parameters_names
            ctx.scc_dependency_graph_nodes name
-           (Misc_ml_generation.FBK_expr body) in
+           (Abstractions.FBK_expr body) in
        (* No recursivity, then the method cannot call itself in its body *)
        (* then no need to set the [scc_lambda_lift_params_mapping] of    *)
        (* the context.                                                   *)
@@ -536,11 +535,11 @@ let generate_methods ctx env species_parameters_names field =
             let lliftings_infos =
               List.map
                 (fun (_, n, _, _, b, _) ->
-                  Misc_ml_generation.compute_lambda_liftings_for_field
+                  Abstractions.compute_lambda_liftings_for_field
                     ~current_unit: ctx.scc_current_unit
                     ~current_species: ctx.scc_current_species
                     species_parameters_names ctx.scc_dependency_graph_nodes n
-                    (Misc_ml_generation.FBK_expr b))
+                    (Abstractions.FBK_expr b))
                 l in
             (* Extend the context with the mapping between these          *)
             (* recursive functions and their extra arguments.             *)

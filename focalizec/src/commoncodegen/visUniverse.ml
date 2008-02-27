@@ -1,3 +1,18 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: visUniverse.ml,v 1.2 2008-02-27 13:42:49 pessaux Exp $ *)
+
 (* ******************************************************************** *)
 (** {b Descr} : Describes how a method arrives into a visible universe.
     Either by a decl-dependency and NO transitive def-dependency. Or by
