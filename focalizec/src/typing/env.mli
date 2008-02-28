@@ -43,6 +43,20 @@ module TypeInformation :
       dor_def : bool ;
       dor_decl : bool }
 
+    type sig_field_info =
+      (Parsetree.qualified_species * Parsetree.vname * Types.type_scheme)
+    type let_field_info =
+      (Parsetree.qualified_species * Parsetree.vname * (Parsetree.vname list) *
+       Types.type_scheme * Parsetree.expr * dependency_on_rep)
+
+    type theorem_field_info =
+      (Parsetree.qualified_species * Parsetree.vname * Types.type_scheme *
+       Parsetree.prop * Parsetree.proof * dependency_on_rep)
+
+    type property_field_info =
+      (Parsetree.qualified_species * Parsetree.vname * Types.type_scheme *
+       Parsetree.prop * dependency_on_rep)
+
     type species_param =
       | SPAR_in of (Parsetree.vname * Types.type_collection)
       | SPAR_is of
@@ -50,23 +64,11 @@ module TypeInformation :
            Parsetree.species_expr)
 
     and species_field =
-      | SF_sig of
-          (Parsetree.qualified_species * Parsetree.vname * Types.type_scheme)
-      | SF_let of
-          (Parsetree.qualified_species * Parsetree.vname *
-           (Parsetree.vname list) *
-           Types.type_scheme * Parsetree.expr * dependency_on_rep)
-      | SF_let_rec of
-          (Parsetree.qualified_species * Parsetree.vname *
-           (Parsetree.vname list) *
-           Types.type_scheme * Parsetree.expr * dependency_on_rep) list
-      | SF_theorem of
-          (Parsetree.qualified_species * Parsetree.vname *
-           Types.type_scheme *
-           Parsetree.prop * Parsetree.proof * dependency_on_rep)
-      | SF_property of
-          (Parsetree.qualified_species * Parsetree.vname *
-           Types.type_scheme * Parsetree.prop * dependency_on_rep)
+      | SF_sig of sig_field_info
+      | SF_let of let_field_info
+      | SF_let_rec of let_field_info list
+      | SF_theorem of theorem_field_info
+      | SF_property of property_field_info
 
     type species_description = {
       spe_is_collection : bool ;

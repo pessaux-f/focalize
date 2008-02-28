@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.65 2008-02-22 18:06:29 pessaux Exp $ *)
+(* $Id: env.ml,v 1.66 2008-02-28 10:26:05 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -309,6 +309,50 @@ module TypeInformation = struct
 
 
 
+  type sig_field_info =
+    ((** Where the sig comes from (the most recent in inheritance). *)
+     Parsetree.qualified_species *
+     Parsetree.vname *          (** The sig's name. *)
+     Types.type_scheme)         (** The sig's type scheme. *)
+
+
+
+  type let_field_info =
+    ((** Where the let-bound comes from (the most recent in inheritance). *)
+     Parsetree.qualified_species *
+     Parsetree.vname *       (** Name of the let-bound definition. *)
+     (** Parameters of the let-bound definition. *)
+     (Parsetree.vname list) *
+     Types.type_scheme *     (** Type scheme of the let-bound definition. *)
+     Parsetree.expr *        (** Body of the let-bound definition. *)
+     (** Tells if the method has dependencies on the carrier ("rep"). *)
+     dependency_on_rep)
+
+
+
+  type theorem_field_info =
+    ((** Where the theorem comes from (the most recent in inheritance). *)
+     Parsetree.qualified_species *
+     Parsetree.vname *      (** The theorem's name. *)
+     Types.type_scheme *    (** The theorem's type scheme. *)
+     Parsetree.prop *       (** The theorem's body. *)
+     Parsetree.proof *      (** The theorem's proof. *)
+     (** Tells if the theorem has dependencies on the carrier ("rep"). *)
+     dependency_on_rep)
+
+
+
+  type property_field_info =
+    ((** Where the property comes from (the most recent in inheritance). *)
+     Parsetree.qualified_species *
+     Parsetree.vname *       (** The property's name. *)
+     Types.type_scheme *     (** The property's type scheme. *)
+     Parsetree.prop *        (** The property's body. *)
+     (** Tells if the property has dependencies on the carrier ("rep"). *)
+     dependency_on_rep)
+
+
+
   type species_param =
     (** Entity parameter. *)
     | SPAR_in of (Parsetree.vname * Types.type_collection)
@@ -339,50 +383,14 @@ module TypeInformation = struct
       {b Rem} : Exported outside this module.                                 *)
   (* ************************************************************************ *)
   and species_field =
-    | SF_sig of
-        ((** Where the sig comes from (the most recent in inheritance). *)
-         Parsetree.qualified_species *
-         Parsetree.vname *          (** The sig's name. *)
-         Types.type_scheme          (** The sig's type scheme. *))
-    | SF_let of
-        ((** Where the let-bound comes from (the most recent in inheritance). *)
-         Parsetree.qualified_species *
-         Parsetree.vname *       (** Name of the let-bound definition. *)
-         (** Parameters of the let-bound definition. *)
-         (Parsetree.vname list) *
-         Types.type_scheme *     (** Type scheme of the let-bound definition. *)
-         Parsetree.expr *        (** Body of the let-bound definition. *)
-         dependency_on_rep       (** Tells if the method has dependencies on
-                                     "rep". *))
-    | SF_let_rec of
-        ((** Where the let-rec-bound comes from (the most recent in
-             inheritance). *)
-         Parsetree.qualified_species *
-         Parsetree.vname * (** Name of the let-rec-bound definition. *)
-         (** Parameters of the let-rec-bound definition. *)
-         (Parsetree.vname list) *
-         Types.type_scheme *
-         Parsetree.expr *
-         dependency_on_rep) list  (** The list of information similar to what
-                         can be found for a [SF_let], but for each
-                         mutually recursive bound identifier. *)
-    | SF_theorem of
-        ((** Where the theorem comes from (the most recent in inheritance). *)
-         Parsetree.qualified_species *
-         Parsetree.vname *      (** The theorem's name. *)
-         Types.type_scheme *    (** The theorem's type scheme. *)
-         Parsetree.prop *       (** The theorem's body. *)
-         Parsetree.proof *      (** The theorem's proof. *)
-         dependency_on_rep      (** Tells if the theorem has dependencies on
-                                    "rep". *))
-    | SF_property of
-        ((** Where the property comes from (the most recent in inheritance). *)
-         Parsetree.qualified_species *
-         Parsetree.vname *       (** The property's name. *)
-         Types.type_scheme *     (** The property's type scheme. *)
-         Parsetree.prop *        (** The property's body. *)
-         dependency_on_rep       (** Tells if the property has dependencies on
-                                    "rep". *))
+    | SF_sig of sig_field_info
+    | SF_let of let_field_info
+    | SF_let_rec of let_field_info list   (** The list of information similar
+                                              to what can be found for a
+                                              [SF_let], but for each mutually
+                                              recursive bound identifier. *)
+    | SF_theorem of theorem_field_info
+    | SF_property of property_field_info
 
 
 
