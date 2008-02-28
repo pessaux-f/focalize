@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.45 2008-02-22 18:06:29 pessaux Exp $ *)
+(* $Id: types.ml,v 1.46 2008-02-28 17:36:46 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -955,6 +955,36 @@ let pp_type_collection ppf (coll_module, coll_name) =
 
 
 
+(* *********************************************************************** *)
+(* {b Descr}: Describes in the [scc_collections_carrier_mapping] the kind
+     of species parameter.
+     It can either be a "is" parameter.
+     Otherwise, it is a "in" parameter or not at all a parameter and the
+     type expression that will annotate this parameter (if it appears to be
+     one) in the hosting species's record type is straightly the type
+     (as a [Types.collection_type]) of this parameter. And if it is not a
+     parameter, then in case of need to annotate, the type will be shaped
+     exactly the same way.
+
+   {b Rem} : Exported outside this module.                                 *)
+(* *********************************************************************** *)
+type collection_carrier_mapping_info =
+    (** The parameter is a "is" parameter. *)
+  | CCMI_is
+    (** The parameter is a "in" parameter or is not a parameter. *)
+  | CCMI_in_or_not_param
+;;
+
+
+
+(** Correspondance between collection parameters names and
+    the names they are mapped onto in the Caml/Coq code and their kind. *)
+type collection_carrier_mapping =
+  (type_collection * (string * collection_carrier_mapping_info)) list
+;;
+
+
+
 (* ************************************************************************* *)
 (* reuse_mapping: bool -> (type_collection * string) list ->                 *)
 (*   Format.formatter -> type_simple -> unit                                 *)
@@ -1127,7 +1157,7 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
     | ST_species_rep (module_name, collection_name) ->
         (begin
         try
-          let coll_type_variable =
+          let (coll_type_variable, _) =
             List.assoc
               (module_name, collection_name) collections_carrier_mapping in
           Format.fprintf ppf "%s" coll_type_variable
@@ -1161,7 +1191,7 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
 type coq_print_context = {
   cpc_current_unit : fname ;
   cpc_current_species : type_collection option ;
-  cpc_collections_carrier_mapping : (type_collection * string) list
+  cpc_collections_carrier_mapping : collection_carrier_mapping
 } ;;
 
 
@@ -1295,7 +1325,7 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
     | ST_species_rep (module_name, collection_name) ->
         (begin
         try
-          let coll_type_variable =
+          let (coll_type_variable, _) =
             List.assoc
               (module_name, collection_name)
               ctx.cpc_collections_carrier_mapping in

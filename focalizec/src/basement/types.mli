@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.30 2008-02-22 18:06:29 pessaux Exp $ *)
+(* $Id: types.mli,v 1.31 2008-02-28 17:36:46 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -101,10 +101,17 @@ val pp_type_simple : Format.formatter -> type_simple -> unit
 val pp_type_scheme : Format.formatter -> type_scheme -> unit
 val pp_type_collection : Format.formatter -> type_collection -> unit
 
+type collection_carrier_mapping_info =
+  | CCMI_is
+  | CCMI_in_or_not_param
+
+type collection_carrier_mapping =
+  (type_collection * (string * collection_carrier_mapping_info)) list
+
 (** Pretty_printing for types for the OCaml translation. *)
 val pp_type_simple_to_ml :
   current_unit: fname -> reuse_mapping: bool ->
-  (type_collection * string) list -> Format.formatter -> type_simple ->
+  collection_carrier_mapping -> Format.formatter -> type_simple ->
   unit
 
 val purge_type_simple_to_ml_variable_mapping : unit -> unit
@@ -113,7 +120,7 @@ val purge_type_simple_to_ml_variable_mapping : unit -> unit
 type coq_print_context = {
   cpc_current_unit : fname ;
   cpc_current_species : type_collection option ;
-  cpc_collections_carrier_mapping : (type_collection * string) list
+  cpc_collections_carrier_mapping : collection_carrier_mapping
 }
 
 type coq_self_representation =

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_ml_generation.ml,v 1.16 2008-02-27 13:42:49 pessaux Exp $ *)
+(* $Id: misc_ml_generation.ml,v 1.17 2008-02-28 17:36:46 pessaux Exp $ *)
 
 
 
@@ -51,7 +51,7 @@ type reduced_compil_context = {
   rcc_species_parameters_names : Parsetree.vname list ;
   (** The current correspondance between collection types and type variable
       names representing the carrier of a species type in the OCaml code. *)
-  rcc_collections_carrier_mapping : (Types.type_collection * string) list ;
+  rcc_collections_carrier_mapping : Types.collection_carrier_mapping ;
   (** The current correspondance between method names of Self and their
       extra parameters they must be applied to because of the lambda-lifting
       process. This info is used when generating the OCaml code of a
@@ -59,7 +59,7 @@ type reduced_compil_context = {
       in their own body what they must be applied to in addition to their
       explicit arguments (those given by the FoCaL programmer). *)
   rcc_lambda_lift_params_mapping :
-   (Parsetree.vname * ((string * Types.type_simple )list)) list ;
+   (Parsetree.vname * ((string * Types.type_simple) list)) list ;
   (** The current output formatter where to send the generated code. *)
   rcc_out_fmter : Format.formatter
 } ;;

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.31 2008-02-28 13:35:23 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.32 2008-02-28 17:36:46 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -198,7 +198,7 @@ let generate_defined_method ctx print_ctx env min_coq_env
         Format.fprintf out_fmter "@ (%s :@ Set)" param_name ;
         (* Return the stuff to extend the collection_carrier_mapping. *)
         ((ctx.Context.scc_current_unit, as_string),
-         (param_name, Context.CCMI_is)))
+         (param_name, Types.CCMI_is)))
       used_species_parameter_tys in
   (* Extend the collection_carrier_mapping of the context. *)
   let new_ctx = { ctx with
@@ -208,12 +208,8 @@ let generate_defined_method ctx print_ctx env min_coq_env
   let new_print_ctx = {
     print_ctx with
       Types.cpc_collections_carrier_mapping =
-      (* Throw the [collection_carrier_mapping_info] *)
-      (* in the printing context.                    *)
-      (List.map
-         (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
-         cc_mapping_extension)
-      @ print_ctx.Types.cpc_collections_carrier_mapping } in
+        cc_mapping_extension @
+        print_ctx.Types.cpc_collections_carrier_mapping } in
   List.iter
     (fun (species_param_name, meths) ->
       (* Each abstracted method will be named like "_p_", followed by *)
@@ -911,7 +907,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
           let type_coll = (current_unit, carrier_name) in
           (* And now create the binding... Record that *)
           (* the parameter is a "is" parameter.        *)
-          (type_coll, (carrier_name ^ "_T", Context.CCMI_is))
+          (type_coll, (carrier_name ^ "_T", Types.CCMI_is))
       | Env.TypeInformation.SPAR_in (n, type_coll) ->
           (* Build the name that will represent this parameter's *)
           (* carrier seen from Coq.                              *)
@@ -921,7 +917,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
           (* Coq type expression annotating this parameter in the hosting    *)
           (* species record type: it will simply be of the type [type_coll]. *)
           (type_coll,
-           (carrier_name ^"_T", Context.CCMI_in_or_not_param)))
+           (carrier_name ^"_T", Types.CCMI_in_or_not_param)))
     species_descr.Env.TypeInformation.spe_sig_params
 ;;
 
@@ -1152,7 +1148,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   (* "self_T" without needing to re-construct this name each time.       *)
   let collections_carrier_mapping' =
     ((current_unit, (Parsetree_utils.name_of_vname species_name)),
-     ("self_T", Context.CCMI_in_or_not_param)) ::
+     ("self_T", Types.CCMI_in_or_not_param)) ::
         ctx.Context.scc_collections_carrier_mapping in
   let ctx' = { ctx with
      Context.scc_collections_carrier_mapping = collections_carrier_mapping' } in
@@ -1164,11 +1160,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping =
-      (* Throw the [collection_carrier_mapping_info] *)
-      (* in the printing context.                    *)
-      List.map
-        (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
-        ctx'.Context.scc_collections_carrier_mapping } in
+      ctx'.Context.scc_collections_carrier_mapping } in
   (* Now we generate a "Variable" of type "Set" for each species's parameter *)
   (* with the same name used during the record type generation, i.e. the     *)
   (* parameter's name + "_T".                                                *)

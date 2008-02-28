@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.19 2008-02-28 13:35:23 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.20 2008-02-28 17:36:46 pessaux Exp $ *)
 
 
 
@@ -89,7 +89,11 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ident =
          try
            let extra_args =
              List.assoc vname ctx.Context.scc_lambda_lift_params_mapping in
-           List.iter (fun s -> Format.fprintf out_fmter "@ %s" s) extra_args
+           List.iter
+             (fun (s, _) ->
+               (* Ignore type while printing. *)
+               Format.fprintf out_fmter "@ %s" s)
+             extra_args
             with Not_found -> ()
          end)
        end)
@@ -351,11 +355,7 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~is_rec env bd =
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping =
-      (* Throw the [collection_carrier_mapping_info] *)
-      (* in the printing context.                    *)
-      List.map
-        (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
-        ctx.Context.scc_collections_carrier_mapping } in
+      ctx.Context.scc_collections_carrier_mapping } in
   (* We are printing each parameter's type. These types in fact belong *)
   (* to a same type scheme. Hence, they may share variables together.  *)
   (* For this reason, we first purge the printing variable mapping and *)
@@ -502,11 +502,7 @@ and generate_expr ctx ~local_idents ~self_as initial_env
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping =
-      (* Throw the [collection_carrier_mapping_info] *)
-      (* in the printing context.                    *)
-      List.map
-        (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
-        ctx.Context.scc_collections_carrier_mapping } in
+      ctx.Context.scc_collections_carrier_mapping } in
 
   let rec rec_generate_expr loc_idents env expression =
     (* Now, dissecate the expression core. *)
@@ -658,11 +654,7 @@ let generate_prop ctx ~local_idents ~self_as initial_env
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping =
-      (* Throw the [collection_carrier_mapping_info] *)
-      (* in the printing context.                    *)
-      List.map
-        (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
-        ctx.Context.scc_collections_carrier_mapping } in
+      ctx.Context.scc_collections_carrier_mapping } in
   let rec rec_generate_prop loc_idents env proposition =
     match proposition.Parsetree.ast_desc with
      | Parsetree.Pr_forall (vnames, ty_expr, prop)
@@ -864,8 +856,8 @@ let generate_record_type_parameters ctx species_fields =
     (fun ((param_ty_mod, param_ty_coll), (param_name, param_kind)) ->
       Format.fprintf ppf "@[<1>(%s :@ " param_name ;
       (match param_kind with
-       | Context.CCMI_is -> Format.fprintf ppf "Set"
-       | Context.CCMI_in_or_not_param ->
+       | Types.CCMI_is -> Format.fprintf ppf "Set"
+       | Types.CCMI_in_or_not_param ->
            if param_ty_mod <> ctx.Context.scc_current_unit then
              Format.fprintf ppf "%s." param_ty_mod ;
            Format.fprintf ppf "%s_T" param_ty_coll) ;
@@ -882,10 +874,6 @@ let generate_record_type_parameters ctx species_fields =
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
       Types.cpc_collections_carrier_mapping =
-      (* Throw the [collection_carrier_mapping_info] *)
-      (* in the printing context.                    *)
-      List.map
-        (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
         ctx.Context.scc_collections_carrier_mapping } in
   (* We first build the lists of dependent methods for each *)
   (* property and theorem fields.                           *)
@@ -982,7 +970,7 @@ let generate_record_type ctx env species_descr =
   (* each time. *)
   let collections_carrier_mapping =
     ((my_fname, my_species_name),
-     ((my_species_name ^ "_T"), Context.CCMI_in_or_not_param)) ::
+     ((my_species_name ^ "_T"), Types.CCMI_in_or_not_param)) ::
     collections_carrier_mapping in
   (* Create the coq type print context. *)
   let print_ctx = {
@@ -992,10 +980,7 @@ let generate_record_type ctx env species_descr =
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping =
-      (* Throw the [collection_carrier_mapping_info] in the printing context. *)
-      List.map
-        (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
-        collections_carrier_mapping } in
+      collections_carrier_mapping } in
   (* Always generate the "rep" coercion. *)
   Format.fprintf out_fmter "@[<2>%s_T :> Set" my_species_name ;
   (* Put a trailing semi only if there is other fields to generate. *)

@@ -11,51 +11,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.30 2008-02-27 13:42:49 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.31 2008-02-28 17:36:46 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
 (** {b Descr} : This module performs the compilation from FoCaL to
               Ocaml of FoCaL's collections and species.            *)
 (* *************************************************************** *)
-
-
-(* ********************************************************************* *)
-(** {b Descr} : Data structure to record the various stuff needed to
-          generate the OCaml code for a species definition. Passing this
-          structure prevents from recursively passing a bunch of
-          parameters to the functions. Instead, one pass only one and
-          functions use the fields they need. This is mostly to preserve
-          the stack and to make the code more readable. In fact,
-          information recorded in this structure is semantically pretty
-          un-interesting to understand the compilation process: it is
-           more utilities.
-
-    {b Rem} Not exported outside this module.                            *)
-(* ********************************************************************* *)
-type species_compil_context = {
-  (** The name of the currently analysed compilation unit. *)
-  scc_current_unit : Types.fname ;
-  (** The name of the current species. *)
-  scc_current_species : Parsetree.qualified_species ;
-  (** The nodes of the current species's dependency graph. *)
-  scc_dependency_graph_nodes : Dep_analysis.name_node list ;
-  (** The current correspondance between collection types and type variable
-      names representing the carrier of a species type in the OCaml code. *)
-  scc_collections_carrier_mapping : (Types.type_collection * string) list ;
-  (** The current correspondance between method names of Self and their
-      extra parameters they must be applied to because of the lambda-lifting
-      process. This info is used when generating the OCaml code of a
-      method, hence it is only relevant in case of recursive methods to know
-      in their own body what they must be applied to in addition to their
-      explicit arguments (those given by the FoCaL programmer). *)
-  scc_lambda_lift_params_mapping :
-    (Parsetree.vname * ((string * Types.type_simple) list)) list ;
-  (** The current output formatter where to send the generated code. *)
-  scc_out_fmter : Format.formatter
-} ;;
-
-
 
 
 (* ************************************************************************ *)
@@ -95,7 +57,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
           (* unit and the name of the parameter.                          *)
           let type_coll = (current_unit, n_as_string) in
           (* And now create the binding... *)
-          (type_coll, carrier_type_variable_name)
+          (type_coll, (carrier_type_variable_name, Types.CCMI_is))
       | Env.TypeInformation.SPAR_in (n, type_coll) ->
           (* Build the name of the type variable that will represent *)
           (* this parameter's carrier type seen from OCaml. Same     *)
@@ -104,14 +66,15 @@ let build_collections_carrier_mapping ~current_unit species_descr =
             "'" ^ (String.uncapitalize (Parsetree_utils.name_of_vname n)) ^
             (string_of_int !cnt) ^ "_as_carrier" in
           incr cnt ;
-          (type_coll, carrier_type_variable_name))
+          (type_coll,
+           (carrier_type_variable_name, Types.CCMI_in_or_not_param)))
     species_descr.Env.TypeInformation.spe_sig_params
 ;;
 
 
 
 (* ******************************************************************** *)
-(* ('a * string) list -> unit                                           *)
+(* ('a * (string, 'b)) list -> unit                                     *)
 (** {b Descr} : Helper to print the list of known variables names in
               a collections carrier mapping as a legal OCaml list of
               type parameters, i.e, comma separated except for the last
@@ -129,8 +92,8 @@ let build_collections_carrier_mapping ~current_unit species_descr =
 let print_comma_separated_vars_list_from_mapping out_fmter vars_list =
   let rec rec_print = function
     | [] -> ()
-    | [(_, last_name)] -> Format.fprintf out_fmter "%s" last_name
-    | (_, h) :: q ->
+    | [(_, (last_name, _))] -> Format.fprintf out_fmter "%s" last_name
+    | (_, (h, _)) :: q ->
         Format.fprintf out_fmter "%s,@ " h ;
         rec_print q in
   rec_print vars_list
@@ -158,30 +121,32 @@ let generate_rep_constraint_in_record_type ctx fields =
              (* Check if the sig is "rep". *)
              if (Parsetree_utils.name_of_vname n) = "rep" then
                (begin
-               Format.fprintf ctx.scc_out_fmter
+               Format.fprintf ctx.Context.scc_out_fmter
                  "(* Carrier's structure explicitly given by \"rep\". *)@\n" ;
-               Format.fprintf ctx.scc_out_fmter "@[<2>type " ;
+               Format.fprintf ctx.Context.scc_out_fmter "@[<2>type " ;
                (* First, output the type parameters if some, and enclose *)
                (* them by parentheses if there are several.              *)
-               (match ctx.scc_collections_carrier_mapping with
+               (match ctx.Context.scc_collections_carrier_mapping with
                 | [] -> ()
-                | [ (_, only_var_name) ] ->
-                    Format.fprintf ctx.scc_out_fmter "%s@ " only_var_name
+                | [ (_, (only_var_name, _)) ] ->
+                    Format.fprintf ctx.Context.scc_out_fmter "%s@ "
+                      only_var_name
                 | _ ->
                     (* More than one, then surround by parentheses. *)
-                    Format.fprintf ctx.scc_out_fmter "@[<1>(" ;
+                    Format.fprintf ctx.Context.scc_out_fmter "@[<1>(" ;
                     (* Print the variables names... *)
                     print_comma_separated_vars_list_from_mapping
-                      ctx.scc_out_fmter ctx.scc_collections_carrier_mapping ;
-                    Format.fprintf ctx.scc_out_fmter ")@]@ ") ;
+                      ctx.Context.scc_out_fmter
+                      ctx.Context.scc_collections_carrier_mapping ;
+                    Format.fprintf ctx.Context.scc_out_fmter ")@]@ ") ;
                (* Now, output the type's name and body. *)
                let ty = Types.specialize sch in
-               Format.fprintf ctx.scc_out_fmter
+               Format.fprintf ctx.Context.scc_out_fmter
                  "me_as_carrier =@ %a@]@\n"
                  (Types.pp_type_simple_to_ml
-                    ~current_unit: ctx.scc_current_unit
+                    ~current_unit: ctx.Context.scc_current_unit
                     ~reuse_mapping: false
-                    ctx.scc_collections_carrier_mapping) ty
+                    ctx.Context.scc_collections_carrier_mapping) ty
                end)
              else rec_search q
          | _ -> rec_search q
@@ -206,8 +171,9 @@ let generate_rep_constraint_in_record_type ctx fields =
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
 let generate_record_type ctx species_descr =
-  let out_fmter = ctx.scc_out_fmter in
-  let collections_carrier_mapping = ctx.scc_collections_carrier_mapping in
+  let out_fmter = ctx.Context.scc_out_fmter in
+  let collections_carrier_mapping =
+    ctx.Context.scc_collections_carrier_mapping in
   (* First, check if "rep" is defined. If so, then generate  *)
   (* the type constraint reflecting its effective structure. *)
   generate_rep_constraint_in_record_type
@@ -222,7 +188,7 @@ let generate_record_type ctx species_descr =
     (* If there are several parameters, then enclose them by parentheses. *)
     Format.fprintf out_fmter "(@[<1>" ;
     List.iter
-      (fun (_, type_variable_name) ->
+      (fun (_, (type_variable_name, _)) ->
         Format.fprintf out_fmter "%s,@ " type_variable_name)
       collections_carrier_mapping ;
     Format.fprintf out_fmter "'me_as_carrier)@] "
@@ -247,10 +213,10 @@ let generate_record_type ctx species_descr =
   (* moment who "we will be". But because now it's the end of the species   *)
   (* specification, we know really "who we are" and "'me_as_carrier" is     *)
   (* definitely replaced by "who we really are" : "me_as_carrier".          *)
-  let (my_fname, my_species_name) = ctx.scc_current_species in
+  let (my_fname, my_species_name) = ctx.Context.scc_current_species in
   let collections_carrier_mapping =
     ((my_fname, (Parsetree_utils.name_of_vname my_species_name)),
-     "me_as_carrier") ::
+     ("me_as_carrier", Types.CCMI_in_or_not_param)) ::
     collections_carrier_mapping in
   (* The record's fields types. *)
   List.iter
@@ -270,7 +236,7 @@ let generate_record_type ctx species_descr =
             Format.fprintf out_fmter "@[<2>%a : %a ;@]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded n
               (Types.pp_type_simple_to_ml
-                 ~current_unit: ctx.scc_current_unit
+                 ~current_unit: ctx.Context.scc_current_unit
                  ~reuse_mapping: false collections_carrier_mapping) ty
             end)
           end)
@@ -285,7 +251,7 @@ let generate_record_type ctx species_descr =
               Format.fprintf out_fmter "%a : %a ;@\n"
                 Parsetree_utils.pp_vname_with_operators_expanded n
                 (Types.pp_type_simple_to_ml
-                   ~current_unit: ctx.scc_current_unit
+                   ~current_unit: ctx.Context.scc_current_unit
                    ~reuse_mapping: false collections_carrier_mapping) ty)
             l
       | Env.TypeInformation.SF_theorem  (_, _, _, _, _, _)
@@ -374,11 +340,12 @@ type let_connector =
     binding with "let" or "and".                                         *)
 let generate_one_field_binding ctx env ~let_connect species_parameters_names
     params_llifted (from, name, params, scheme, body) =
-  let out_fmter = ctx.scc_out_fmter in
-  let collections_carrier_mapping = ctx.scc_collections_carrier_mapping in
+  let out_fmter = ctx.Context.scc_out_fmter in
+  let collections_carrier_mapping =
+     ctx.Context.scc_collections_carrier_mapping in
   (* First of all, only methods defined in the current species must *)
   (* be generated. Inherited methods ARE NOT generated again !      *)
-  if from = ctx.scc_current_species then
+  if from = ctx.Context.scc_current_species then
     (begin
     (* Just a bit of debug. *)
     if Configuration.get_verbose () then
@@ -427,7 +394,7 @@ let generate_one_field_binding ctx env ~let_connect species_parameters_names
              Format.fprintf out_fmter "@ (%a : %a)"
                Parsetree_utils.pp_vname_with_operators_expanded param_vname
                (Types.pp_type_simple_to_ml
-                  ~current_unit: ctx.scc_current_unit
+                  ~current_unit: ctx.Context.scc_current_unit
                   ~reuse_mapping: true collections_carrier_mapping) param_ty
          | None ->
              Format.fprintf out_fmter "@ %a"
@@ -443,13 +410,13 @@ let generate_one_field_binding ctx env ~let_connect species_parameters_names
     Format.fprintf out_fmter " =@ " ;
     (* Generates the body's code of the method. *)
     let expr_ctx = {
-      Misc_ml_generation.rcc_current_unit = ctx.scc_current_unit ;
+      Misc_ml_generation.rcc_current_unit = ctx.Context.scc_current_unit ;
       Misc_ml_generation.rcc_species_parameters_names =
         species_parameters_names ;
       Misc_ml_generation.rcc_collections_carrier_mapping =
         collections_carrier_mapping ;
       Misc_ml_generation.rcc_lambda_lift_params_mapping =
-        ctx.scc_lambda_lift_params_mapping ;
+        ctx.Context.scc_lambda_lift_params_mapping ;
       Misc_ml_generation.rcc_out_fmter = out_fmter } in
     (* No local idents in the context because we just enter the scope *)
     (* of a species fields and so we are not under a core expression. *)
@@ -502,9 +469,10 @@ let generate_methods ctx env species_parameters_names field =
        (* is processed appart).                                           *)
        let (_, dependencies_from_params, decl_children, _, llift_params) =
          Abstractions.compute_lambda_liftings_for_field
-           ~current_unit: ctx.scc_current_unit
-           ~current_species: ctx.scc_current_species species_parameters_names
-           ctx.scc_dependency_graph_nodes name
+           ~current_unit: ctx.Context.scc_current_unit
+           ~current_species:
+             ctx.Context.scc_current_species species_parameters_names
+           ctx.Context.scc_dependency_graph_nodes name
            (Abstractions.FBK_expr body) in
        (* No recursivity, then the method cannot call itself in its body *)
        (* then no need to set the [scc_lambda_lift_params_mapping] of    *)
@@ -536,16 +504,17 @@ let generate_methods ctx env species_parameters_names field =
               List.map
                 (fun (_, n, _, _, b, _) ->
                   Abstractions.compute_lambda_liftings_for_field
-                    ~current_unit: ctx.scc_current_unit
-                    ~current_species: ctx.scc_current_species
-                    species_parameters_names ctx.scc_dependency_graph_nodes n
+                    ~current_unit: ctx.Context.scc_current_unit
+                    ~current_species: ctx.Context.scc_current_species
+                    species_parameters_names
+                    ctx.Context.scc_dependency_graph_nodes n
                     (Abstractions.FBK_expr b))
                 l in
             (* Extend the context with the mapping between these          *)
             (* recursive functions and their extra arguments.             *)
             let ctx' = {
               ctx with
-                scc_lambda_lift_params_mapping =
+                Context.scc_lambda_lift_params_mapping =
                   List.map2
                     (fun (_, n, _, _, _, _) (_, _, _, _, extra_params) ->
                       (n, extra_params))
@@ -692,8 +661,8 @@ let dump_collection_generator_arguments out_fmter compiled_species_fields =
 
 
 let generate_collection_generator ctx compiled_species_fields =
-  let current_species_name = snd ctx.scc_current_species in
-  let out_fmter = ctx.scc_out_fmter in
+  let current_species_name = snd ctx.Context.scc_current_species in
+  let out_fmter = ctx.Context.scc_out_fmter in
   (* Just a bit of debug. *)
   if Configuration.get_verbose () then
     Format.eprintf
@@ -717,7 +686,7 @@ let generate_collection_generator ctx compiled_species_fields =
       field_memory.cfm_method_name ;
     (* Find the method generator to use depending on if it belongs to this *)
     (* inheritance level or if it was inherited from another species.      *)
-    if from = ctx.scc_current_species then
+    if from = ctx.Context.scc_current_species then
       (begin
       (* It comes from the current inheritance level.   *)
       (* Then its name is simply the the method's name. *)
@@ -731,7 +700,7 @@ let generate_collection_generator ctx compiled_species_fields =
       (* the the module where the species inhabits if not the same    *)
       (* compilation unit than the current + "." + species name as    *)
       (* module + "." + the method's name.                            *)
-      if (fst from) <> ctx.scc_current_unit then
+      if (fst from) <> ctx.Context.scc_current_unit then
         Format.fprintf out_fmter "%s.@," (String.capitalize (fst from)) ;
       Format.fprintf out_fmter "%a.@,%a"
         Parsetree_utils.pp_vname_with_operators_expanded (snd from)
@@ -809,12 +778,12 @@ let generate_collection_generator ctx compiled_species_fields =
   (* field's is simply the method's name.                            *)
   (* The local function corresponding to the method is "local_" +    *)
   (* the method's name.                                              *)
-  Format.fprintf ctx.scc_out_fmter "@[<2>{ " ;
+  Format.fprintf ctx.Context.scc_out_fmter "@[<2>{ " ;
   List.iter
       (function
       | None -> ()
       | Some (CSF_let field_memory) ->
-          Format.fprintf ctx.scc_out_fmter "%a =@ local_%a ;@\n"
+          Format.fprintf ctx.Context.scc_out_fmter "%a =@ local_%a ;@\n"
             Parsetree_utils.pp_vname_with_operators_expanded
             field_memory.cfm_method_name
             Parsetree_utils.pp_vname_with_operators_expanded
@@ -822,7 +791,7 @@ let generate_collection_generator ctx compiled_species_fields =
       | Some (CSF_let_rec l) ->
           List.iter
             (fun field_memory ->
-              Format.fprintf ctx.scc_out_fmter "%a =@ local_%a ;@\n"
+              Format.fprintf ctx.Context.scc_out_fmter "%a =@ local_%a ;@\n"
                 Parsetree_utils.pp_vname_with_operators_expanded
                 field_memory.cfm_method_name
                 Parsetree_utils.pp_vname_with_operators_expanded
@@ -830,9 +799,9 @@ let generate_collection_generator ctx compiled_species_fields =
             l)
     compiled_species_fields ;
   (* Close the record expression. *)
-  Format.fprintf ctx.scc_out_fmter "@ }@]@\n" ;
+  Format.fprintf ctx.Context.scc_out_fmter "@ }@]@\n" ;
   (* Close the pretty-print box of the "let collection_create ... =". *)
-  Format.fprintf ctx.scc_out_fmter "@]@\n" ;
+  Format.fprintf ctx.Context.scc_out_fmter "@]@\n" ;
   extra_args_from_spe_params
 ;;
 
@@ -853,16 +822,6 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   (* and the type variable names representing their carrier.  *)
   let collections_carrier_mapping =
     build_collections_carrier_mapping ~current_unit species_descr in
-  (* Create the initial compilation context for this species. *)
-  let ctx = {
-    scc_current_unit = current_unit ;
-    scc_current_species = (current_unit, species_name) ;
-    scc_dependency_graph_nodes = dep_graph ;
-    scc_collections_carrier_mapping = collections_carrier_mapping ;
-    scc_lambda_lift_params_mapping = [] ;
-    scc_out_fmter = out_fmter } in
-  (* The record type representing the species' type. *)
-  generate_record_type ctx species_descr ;
   (* Compute the list of names of parameters of the species. This   *)
   (* will be use to compute for each method the set of methods from *)
   (* the parameters the method depends on.                          *)
@@ -872,6 +831,17 @@ let species_compile env ~current_unit out_fmter species_def species_descr
         | Env.TypeInformation.SPAR_in (n, _) -> n
         | Env.TypeInformation.SPAR_is ((_, n), _, _) -> Parsetree. Vuident n)
       species_descr.Env.TypeInformation.spe_sig_params in
+  (* Create the initial compilation context for this species. *)
+  let ctx = {
+    Context.scc_current_unit = current_unit ;
+    Context.scc_current_species = (current_unit, species_name) ;
+    Context.scc_dependency_graph_nodes = dep_graph ;
+    Context.scc_species_parameters_names = species_parameters_names ;
+    Context.scc_collections_carrier_mapping = collections_carrier_mapping ;
+    Context.scc_lambda_lift_params_mapping = [] ;
+    Context.scc_out_fmter = out_fmter } in
+  (* The record type representing the species' type. *)
+  generate_record_type ctx species_descr ;
   (* Now, the methods of the species. *)
   let compiled_fields =
     List.map
@@ -958,8 +928,8 @@ type collection_effective_arguments =
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
 let apply_generator_to_parameters ctx env coll_body_params col_gen_params_info =
-  let current_unit = ctx.scc_current_unit in
-  let out_fmter = ctx.scc_out_fmter in
+  let current_unit = ctx.Context.scc_current_unit in
+  let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the assoc list mapping the formal to the effectives parameters. *)
   let formal_to_effective_map =
     (try
@@ -1053,9 +1023,9 @@ let apply_generator_to_parameters ctx env coll_body_params col_gen_params_info =
              (* [rcc_species_parameters_names] is trivially empty.      *)
              Misc_ml_generation.rcc_species_parameters_names = [] ;
              Misc_ml_generation.rcc_collections_carrier_mapping =
-               ctx.scc_collections_carrier_mapping ;
+               ctx.Context.scc_collections_carrier_mapping ;
              Misc_ml_generation.rcc_lambda_lift_params_mapping =
-               ctx.scc_lambda_lift_params_mapping ;
+               ctx.Context.scc_lambda_lift_params_mapping ;
              Misc_ml_generation.rcc_out_fmter = out_fmter } in
            (* No local idents in the context because we just enter the scope *)
            (* of a species fields and so we are not under a core expression. *)
@@ -1181,12 +1151,14 @@ let collection_compile env ~current_unit out_fmter coll_def coll_descr
     build_collections_carrier_mapping ~current_unit coll_descr in
   (* Create the initial compilation context for this collection. *)
   let ctx = {
-    scc_current_unit = current_unit ;
-    scc_current_species = (current_unit, coll_name) ;
-    scc_dependency_graph_nodes = dep_graph ;
-    scc_collections_carrier_mapping = collections_carrier_mapping ;
-    scc_lambda_lift_params_mapping = [] ;
-    scc_out_fmter = out_fmter } in
+    Context.scc_current_unit = current_unit ;
+    Context.scc_current_species = (current_unit, coll_name) ;
+    Context.scc_dependency_graph_nodes = dep_graph ;
+    (* A collection never has parameter. *)
+    Context.scc_species_parameters_names = [] ;
+    Context.scc_collections_carrier_mapping = collections_carrier_mapping ;
+    Context.scc_lambda_lift_params_mapping = [] ;
+    Context.scc_out_fmter = out_fmter } in
   (* The record type representing the collection's type. *)
   generate_record_type ctx coll_descr ;
   (* We do not want any collection generator. Instead, we will call the  *)
