@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $$ *)
+(* $Id: miscHelpers.mli,v 1.2 2008-02-28 13:38:56 pessaux Exp $ *)
 
 val bind_parameters_to_types_from_type_scheme :
   Types.type_scheme option -> Parsetree.vname list ->
