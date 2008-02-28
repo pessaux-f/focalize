@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.18 2008-02-27 13:42:49 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.19 2008-02-28 13:35:23 pessaux Exp $ *)
 
 
 
@@ -43,7 +43,7 @@ let simply_pp_to_coq_qualified_vname ~current_unit ppf = function
 
 
 let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ident =
-  let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
+  let out_fmter = ctx.Context.scc_out_fmter in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
        (begin
@@ -64,8 +64,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ident =
        (* a "in"-parameter of the species, we use the same reasoning    *)
        (* that in [param_dep_analysis.ml]. Check justification over     *)
        (* there ! *)
-       if (List.mem vname
-             ctx.Species_gen_basics.scc_species_parameters_names) &&
+       if (List.mem vname ctx.Context.scc_species_parameters_names) &&
          (not (List.mem vname local_idents)) then
          (begin
          (* In fact, a species "in"-parameter. This parameter was of the *)
@@ -89,8 +88,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ident =
          (* its extra parameters if it has some.                      *)
          try
            let extra_args =
-             List.assoc
-               vname ctx.Species_gen_basics.scc_lambda_lift_params_mapping in
+             List.assoc vname ctx.Context.scc_lambda_lift_params_mapping in
            List.iter (fun s -> Format.fprintf out_fmter "@ %s" s) extra_args
             with Not_found -> ()
          end)
@@ -102,7 +100,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ident =
        (* Call the Coq corresponding identifier in the corresponding   *)
        (* module (i.e. the [mod_name]). If the module is the currently *)
        (* compiled one, then do not qualify the identifier.            *)
-       if mod_name <> ctx.Species_gen_basics.scc_current_unit then
+       if mod_name <> ctx.Context.scc_current_unit then
          Format.fprintf out_fmter "%s.%a"
            mod_name Parsetree_utils.pp_vname_with_operators_expanded vname
        else
@@ -122,7 +120,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ident =
              | Types.CSR_species ->
                  Format.fprintf out_fmter "%a_%a"
                    Parsetree_utils.pp_vname_with_operators_expanded
-                   (snd ctx.Species_gen_basics.scc_current_species)
+                   (snd ctx.Context.scc_current_species)
                    Parsetree_utils.pp_vname_with_operators_expanded vname
              | Types.CSR_self ->
                  Format.fprintf out_fmter "self_%a"
@@ -137,8 +135,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ident =
                  (* is implicitely in the current compilation unit. May be  *)
                  (* either a paramater or a toplevel defined collection.    *)
                  if List.mem
-                     coll_name
-                     ctx.Species_gen_basics.scc_species_parameters_names then
+                     coll_name ctx.Context.scc_species_parameters_names then
                    (begin
                    (* It comes from a parameter. To retrieve the related *)
                    (* method name we build it the same way we built it   *)
@@ -167,7 +164,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ident =
                  end)
              | Parsetree.Qualified (module_name, coll_name) ->
                  (begin
-                 if module_name = ctx.Species_gen_basics.scc_current_unit then
+                 if module_name = ctx.Context.scc_current_unit then
                    (begin
                    (* Exactly like when it is method call from a species that *)
                    (* is not the current but is implicitely in the current    *)
@@ -176,7 +173,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ident =
                    (* compilation unit.                                       *)
                    if List.mem
                        coll_name
-                       ctx.Species_gen_basics.scc_species_parameters_names then
+                       ctx.Context.scc_species_parameters_names then
                      (begin
                      let prefix =
                        "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^
@@ -217,19 +214,19 @@ let generate_constant ctx cst =
   match cst.Parsetree.ast_desc with
    | Parsetree.C_int str ->
        (* Integers are directly mapped in Coq. *)
-       Format.fprintf ctx.Species_gen_basics.scc_out_fmter "%s" str
+       Format.fprintf ctx.Context.scc_out_fmter "%s" str
    | Parsetree.C_float _str ->
        (* [Unsure] *)
-       Format.fprintf ctx.Species_gen_basics.scc_out_fmter "C_float"
+       Format.fprintf ctx.Context.scc_out_fmter "C_float"
    | Parsetree.C_bool str ->
        (* [true] maps on Coq "true". [false] maps on Coq "false". *)
-       Format.fprintf ctx.Species_gen_basics.scc_out_fmter "%s" str
+       Format.fprintf ctx.Context.scc_out_fmter "%s" str
    | Parsetree.C_string _str ->
        (* [Unsure] *)
-       Format.fprintf ctx.Species_gen_basics.scc_out_fmter "C_string"
+       Format.fprintf ctx.Context.scc_out_fmter "C_string"
    | Parsetree.C_char _c ->
        (* [Unsure] *)
-       Format.fprintf ctx.Species_gen_basics.scc_out_fmter "C_char"
+       Format.fprintf ctx.Context.scc_out_fmter "C_char"
 ;;
 
 
@@ -239,7 +236,7 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
   let mapping_info =
     Env.CoqGenEnv.find_constructor
       ~loc: cstr_expr.Parsetree.ast_loc
-      ~current_unit: ctx.Species_gen_basics.scc_current_unit cstr_expr env in
+      ~current_unit: ctx.Context.scc_current_unit cstr_expr env in
 (* [Unsure]
     let (_, coq_binding) =
       try
@@ -255,23 +252,23 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
           (Externals_ml_generation.No_external_constructor_coq_def
              cstr_expr) in
     (* Now directly generate the name the constructor is mapped onto. *)
-    Format.fprintf ctx.Species_gen_basics.scc_out_fmter "%s" ocaml_binding
+    Format.fprintf ctx.Context.scc_out_fmter "%s" ocaml_binding
   with
   | Env.Unbound_constructor (_, _) -> assert false
 *)
   (match cstr_expr.Parsetree.ast_desc with
    | Parsetree.CI (Parsetree.Vname name) ->
-       Format.fprintf ctx.Species_gen_basics.scc_out_fmter "%a"
+       Format.fprintf ctx.Context.scc_out_fmter "%a"
          Parsetree_utils.pp_vname_with_operators_expanded name
    | Parsetree.CI (Parsetree.Qualified (fname, name)) ->
        (* If the constructor belongs to the current      *)
        (* compilation unit then one must not qualify it. *)
-       if fname <> ctx.Species_gen_basics.scc_current_unit then
-         Format.fprintf ctx.Species_gen_basics.scc_out_fmter "%s.%a"
+       if fname <> ctx.Context.scc_current_unit then
+         Format.fprintf ctx.Context.scc_out_fmter "%s.%a"
            fname          (* No module name capitalization in Coq. *)
            Parsetree_utils.pp_vname_with_operators_expanded name
        else
-         Format.fprintf ctx.Species_gen_basics.scc_out_fmter "%a"
+         Format.fprintf ctx.Context.scc_out_fmter "%a"
            Parsetree_utils.pp_vname_with_operators_expanded name) ;
   (* Returns the number of "_" that must be printed after the constructor. *)
   mapping_info.Env.CoqGenInformation.cmi_num_polymorphics_extra_args
@@ -280,7 +277,7 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
 
 
 let generate_pattern ctx env pattern =
-  let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
+  let out_fmter = ctx.Context.scc_out_fmter in
   let rec rec_gen_pat pat =
     match pat.Parsetree.ast_desc with
      | Parsetree.P_const constant -> generate_constant ctx constant
@@ -330,7 +327,7 @@ let generate_pattern ctx env pattern =
 
 
 let rec let_binding_compile ctx ~local_idents ~self_as ~is_rec env bd =
-  let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
+  let out_fmter = ctx.Context.scc_out_fmter in
   (* Generate the bound name. *)
   Format.fprintf out_fmter "%a"
     Parsetree_utils.pp_vname_with_operators_expanded
@@ -348,17 +345,17 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~is_rec env bd =
       (Some def_scheme) params_names in
   (* Build the print context. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Species_gen_basics.scc_current_unit ;
+    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
     Types.cpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
-           ctx.Species_gen_basics.scc_current_species) ;
+           ctx.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping =
       (* Throw the [collection_carrier_mapping_info] *)
       (* in the printing context.                    *)
       List.map
         (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
-        ctx.Species_gen_basics.scc_collections_carrier_mapping } in
+        ctx.Context.scc_collections_carrier_mapping } in
   (* We are printing each parameter's type. These types in fact belong *)
   (* to a same type scheme. Hence, they may share variables together.  *)
   (* For this reason, we first purge the printing variable mapping and *)
@@ -451,7 +448,7 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~is_rec env bd =
 
 
 and let_in_def_compile ctx ~local_idents ~self_as env let_def =
-  let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
+  let out_fmter = ctx.Context.scc_out_fmter in
   let is_rec =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
      | Parsetree.RF_no_rec -> false
@@ -496,20 +493,20 @@ and let_in_def_compile ctx ~local_idents ~self_as env let_def =
 
 and generate_expr ctx ~local_idents ~self_as initial_env
     initial_expression =
-  let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
+  let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the coq type print context. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Species_gen_basics.scc_current_unit ;
+    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
     Types.cpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
-           ctx.Species_gen_basics.scc_current_species) ;
+           ctx.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping =
       (* Throw the [collection_carrier_mapping_info] *)
       (* in the printing context.                    *)
       List.map
         (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
-        ctx.Species_gen_basics.scc_collections_carrier_mapping } in
+        ctx.Context.scc_collections_carrier_mapping } in
 
   let rec rec_generate_expr loc_idents env expression =
     (* Now, dissecate the expression core. *)
@@ -554,7 +551,7 @@ and generate_expr ctx ~local_idents ~self_as initial_env
            let nb_polymorphic_args =
              Env.CoqGenEnv.find_value
                ~loc: ident.Parsetree.ast_loc
-               ~current_unit: ctx.Species_gen_basics.scc_current_unit
+               ~current_unit: ctx.Context.scc_current_unit
                ident env in
            for i = 0 to nb_polymorphic_args - 1 do
              Format.fprintf out_fmter "@ _"
@@ -652,20 +649,20 @@ and generate_expr ctx ~local_idents ~self_as initial_env
 
 let generate_prop ctx ~local_idents ~self_as initial_env
     initial_proposition =
-  let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
+  let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the coq type print context. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Species_gen_basics.scc_current_unit ;
+    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
     Types.cpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
-           ctx.Species_gen_basics.scc_current_species) ;
+           ctx.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping =
       (* Throw the [collection_carrier_mapping_info] *)
       (* in the printing context.                    *)
       List.map
         (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
-        ctx.Species_gen_basics.scc_collections_carrier_mapping } in
+        ctx.Context.scc_collections_carrier_mapping } in
   let rec rec_generate_prop loc_idents env proposition =
     match proposition.Parsetree.ast_desc with
      | Parsetree.Pr_forall (vnames, ty_expr, prop)
@@ -847,7 +844,7 @@ let generate_parameter_species_expr ~current_unit ppf species_expr =
 
 
 (* ********************************************************************** *)
-(* Species_gen_basics.species_compil_context ->                           *)
+(* Context.species_compil_context ->                                      *)
 (*   Env.TypeInformation.species_field list -> unit                       *)
 (** {b Descr}: Generate the Coq code of a species parameters. It outputs
       both the parameters names and their type as a Coq expression.
@@ -861,36 +858,35 @@ let generate_parameter_species_expr ~current_unit ppf species_expr =
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
 let generate_record_type_parameters ctx species_fields =
-  let ppf = ctx.Species_gen_basics.scc_out_fmter in
+  let ppf = ctx.Context.scc_out_fmter in
   (* We first abstract the species parameters. *)
   List.iter
     (fun ((param_ty_mod, param_ty_coll), (param_name, param_kind)) ->
       Format.fprintf ppf "@[<1>(%s :@ " param_name ;
       (match param_kind with
-       | Species_gen_basics.CCMI_is -> Format.fprintf ppf "Set"
-       | Species_gen_basics.CCMI_in_or_not_param ->
-           if param_ty_mod <> ctx.Species_gen_basics.scc_current_unit then
+       | Context.CCMI_is -> Format.fprintf ppf "Set"
+       | Context.CCMI_in_or_not_param ->
+           if param_ty_mod <> ctx.Context.scc_current_unit then
              Format.fprintf ppf "%s." param_ty_mod ;
            Format.fprintf ppf "%s_T" param_ty_coll) ;
       Format.fprintf ppf ")@ @]")
-    ctx.Species_gen_basics.scc_collections_carrier_mapping ;
+    ctx.Context.scc_collections_carrier_mapping ;
   (* Now, we will find the methods of the parameters we decl-depend  *)
   (* on in the Coq type expressions. Such dependencies can only      *)
   (* appear through properties and theorems bodies.                  *)
-  let species_parameters_names =
-    ctx.Species_gen_basics.scc_species_parameters_names in
+  let species_parameters_names = ctx.Context.scc_species_parameters_names in
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Species_gen_basics.scc_current_unit ;
+    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
     Types.cpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
-           ctx.Species_gen_basics.scc_current_species) ;
+           ctx.Context.scc_current_species) ;
       Types.cpc_collections_carrier_mapping =
       (* Throw the [collection_carrier_mapping_info] *)
       (* in the printing context.                    *)
       List.map
         (fun (ctype, (mapped_name, _)) -> (ctype, mapped_name))
-        ctx.Species_gen_basics.scc_collections_carrier_mapping } in
+        ctx.Context.scc_collections_carrier_mapping } in
   (* We first build the lists of dependent methods for each *)
   (* property and theorem fields.                           *)
   let deps_lists_for_fields =
@@ -913,8 +909,7 @@ let generate_record_type_parameters ctx species_fields =
                 (fun species_param_name accu ->
                   let meths_from_param =
                     Param_dep_analysis.param_deps_prop
-                      ~current_species:
-                      ctx.Species_gen_basics.scc_current_species
+                      ~current_species: ctx.Context.scc_current_species
                       species_param_name prop in
                   (* Return a couple binding the species parameter's name *)
                   (* with the methods of it we found as required for the  *)
@@ -967,12 +962,11 @@ let generate_record_type_parameters ctx species_fields =
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
 let generate_record_type ctx env species_descr =
-  let out_fmter = ctx.Species_gen_basics.scc_out_fmter in
+  let out_fmter = ctx.Context.scc_out_fmter in
   let collections_carrier_mapping =
-    ctx.Species_gen_basics.scc_collections_carrier_mapping in
+    ctx.Context.scc_collections_carrier_mapping in
   (* The header of the Coq record definition for the species. *)
-  let (my_fname, my_species_name) =
-    ctx.Species_gen_basics.scc_current_species in
+  let (my_fname, my_species_name) = ctx.Context.scc_current_species in
   (* Directly trasform into a string, that's easier. *)
   let my_species_name = Parsetree_utils.name_of_vname my_species_name in
   Format.fprintf out_fmter "@[<2>Record %s " my_species_name ;
@@ -988,15 +982,15 @@ let generate_record_type ctx env species_descr =
   (* each time. *)
   let collections_carrier_mapping =
     ((my_fname, my_species_name),
-     ((my_species_name ^ "_T"), Species_gen_basics.CCMI_in_or_not_param)) ::
+     ((my_species_name ^ "_T"), Context.CCMI_in_or_not_param)) ::
     collections_carrier_mapping in
   (* Create the coq type print context. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Species_gen_basics.scc_current_unit ;
+    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
     Types.cpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
-           ctx.Species_gen_basics.scc_current_species) ;
+           ctx.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping =
       (* Throw the [collection_carrier_mapping_info] in the printing context. *)
       List.map

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.1 2008-02-27 13:42:49 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.2 2008-02-28 13:35:23 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -150,4 +150,105 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
    decl_children,
    def_children,
    (List.rev !revd_lambda_lifts))
+;;
+
+
+
+type abstraction_info = {
+  ai_used_species_parameter_tys : Parsetree.vname list ;
+  ai_dependencies_from_params :
+    (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ;
+  ai_min_coq_env : MinEnv.min_coq_env_element list
+} ;;
+
+
+
+type field_abstraction_info =
+  | FAI_sig of Env.TypeInformation.sig_field_info
+  | FAI_let of (Env.TypeInformation.let_field_info * abstraction_info)
+  | FAI_let_rec of (Env.TypeInformation.let_field_info * abstraction_info) list
+  | FAI_theorem of (Env.TypeInformation.theorem_field_info * abstraction_info)
+  | FAI_property of Env.TypeInformation.property_field_info
+;;
+
+
+
+let compute_abstractions_for_fields ctx fields =
+  List.map
+    (function
+      | Env.TypeInformation.SF_sig si -> FAI_sig si
+      | Env.TypeInformation.SF_let ((_, name, _, _, body, _) as li) ->
+          let (used_species_parameter_tys, dependencies_from_params,
+               decl_children, def_children, _) =
+            compute_lambda_liftings_for_field
+              ~current_unit: ctx.Context.scc_current_unit
+              ~current_species: ctx.Context.scc_current_species
+              ctx.Context.scc_species_parameters_names
+              ctx.Context.scc_dependency_graph_nodes name
+              (FBK_expr body) in
+          (* Compute the visible universe of the method. *)
+          let universe =
+            VisUniverse.visible_universe
+              ctx.Context.scc_dependency_graph_nodes decl_children
+              def_children in
+          (* Now, its minimal Coq typing environment. *)
+          let min_coq_env = MinEnv.minimal_typing_environment universe fields in
+          let abstr_info = {
+            ai_used_species_parameter_tys = used_species_parameter_tys ;
+            ai_dependencies_from_params = dependencies_from_params ;
+            ai_min_coq_env = min_coq_env } in
+          FAI_let (li, abstr_info)
+      | Env.TypeInformation.SF_let_rec l ->
+          let deps_infos =
+            List.map
+              (fun ((_, name, _, _, body, _) as li) ->
+                let (used_species_parameter_tys, dependencies_from_params,
+                     decl_children, def_children, _) =
+                  compute_lambda_liftings_for_field
+                    ~current_unit: ctx.Context.scc_current_unit
+                    ~current_species: ctx.Context.scc_current_species
+                    ctx.Context.scc_species_parameters_names
+                    ctx.Context.scc_dependency_graph_nodes name
+                    (FBK_expr body) in
+                (* Compute the visible universe of the method. *)
+                let universe =
+                  VisUniverse.visible_universe
+                    ctx.Context.scc_dependency_graph_nodes
+                    decl_children def_children in
+                (* Now, its minimal Coq typing environment. *)
+                let min_coq_env =
+                  MinEnv.minimal_typing_environment universe fields in
+                let abstr_info = {
+                  ai_used_species_parameter_tys = used_species_parameter_tys ;
+                  ai_dependencies_from_params = dependencies_from_params ;
+                  ai_min_coq_env = min_coq_env } in
+                (li, abstr_info))
+              l in
+          FAI_let_rec deps_infos
+      | Env.TypeInformation.SF_theorem ((_, name, _, prop, _, _) as ti) ->
+          let (used_species_parameter_tys, dependencies_from_params,
+               decl_children, def_children, _) =
+            compute_lambda_liftings_for_field
+              ~current_unit: ctx.Context.scc_current_unit
+              ~current_species: ctx.Context.scc_current_species
+              ctx.Context.scc_species_parameters_names
+              ctx.Context.scc_dependency_graph_nodes name
+              (FBK_prop prop) in
+          (* Compute the visible universe of the theorem. *)
+          let universe =
+            VisUniverse.visible_universe
+              ctx.Context.scc_dependency_graph_nodes decl_children
+              def_children in
+          (* Now, its minimal Coq typing environment. *)
+          let min_coq_env = MinEnv.minimal_typing_environment universe fields in
+          let abstr_info = {
+            ai_used_species_parameter_tys = used_species_parameter_tys ;
+            ai_dependencies_from_params = dependencies_from_params ;
+            ai_min_coq_env = min_coq_env } in
+          FAI_theorem (ti, abstr_info)
+      | Env.TypeInformation.SF_property pi ->
+          (* [Unsure] Pas besoin de connaitre les dépendances sur "rep" ?
+             Pas besoin de notion d'univers ? De paramètres d'espèce ? *)
+          FAI_property pi)
+    fields
 ;;

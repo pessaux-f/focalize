@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2008-02-27 12:43:27 pessaux Exp $
+# $Id: Makefile,v 1.10 2008-02-28 13:35:23 pessaux Exp $
 
 include ./Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/
@@ -13,8 +13,8 @@ all::
 	$(CD) basement ; $(MAKE) all
 	$(CD) parser ; $(MAKE) all
 	$(CD) typing ; $(MAKE) all
-	$(CD) mlcodegen ; $(MAKE) all
 	$(CD) commoncodegen ; $(MAKE) all
+	$(CD) mlcodegen ; $(MAKE) all
 	$(CD) coqcodegen ; $(MAKE) all
 	$(CD) toplevel ; $(MAKE) all
 	$(CD) lib ; $(MAKE) all
