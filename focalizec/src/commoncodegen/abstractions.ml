@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.2 2008-02-28 13:35:23 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.3 2008-03-04 13:53:03 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -173,7 +173,13 @@ type field_abstraction_info =
 
 
 
-let compute_abstractions_for_fields ctx fields =
+(**
+    To be usable for OCaml generation, the [with_def_deps] flag
+    enables to forget the def-dependencies and their implied
+    transitive decl-dependencies. In effect, in OCaml, only
+    decl-dependencies are relevant.
+*)
+let compute_abstractions_for_fields ~with_def_deps ctx fields =
   List.map
     (function
       | Env.TypeInformation.SF_sig si -> FAI_sig si
@@ -189,10 +195,12 @@ let compute_abstractions_for_fields ctx fields =
           (* Compute the visible universe of the method. *)
           let universe =
             VisUniverse.visible_universe
+              ~with_def_deps
               ctx.Context.scc_dependency_graph_nodes decl_children
               def_children in
           (* Now, its minimal Coq typing environment. *)
-          let min_coq_env = MinEnv.minimal_typing_environment universe fields in
+          let min_coq_env =
+            MinEnv.minimal_typing_environment universe fields in
           let abstr_info = {
             ai_used_species_parameter_tys = used_species_parameter_tys ;
             ai_dependencies_from_params = dependencies_from_params ;
@@ -213,6 +221,7 @@ let compute_abstractions_for_fields ctx fields =
                 (* Compute the visible universe of the method. *)
                 let universe =
                   VisUniverse.visible_universe
+                    ~with_def_deps
                     ctx.Context.scc_dependency_graph_nodes
                     decl_children def_children in
                 (* Now, its minimal Coq typing environment. *)
@@ -237,6 +246,7 @@ let compute_abstractions_for_fields ctx fields =
           (* Compute the visible universe of the theorem. *)
           let universe =
             VisUniverse.visible_universe
+              ~with_def_deps
               ctx.Context.scc_dependency_graph_nodes decl_children
               def_children in
           (* Now, its minimal Coq typing environment. *)

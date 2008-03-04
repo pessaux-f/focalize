@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.mli,v 1.2 2008-02-28 13:35:23 pessaux Exp $ *)
+(* $Id: abstractions.mli,v 1.3 2008-03-04 13:53:03 pessaux Exp $ *)
 
 type field_body_kind =
   | FBK_expr of Parsetree.expr
@@ -45,5 +45,5 @@ type field_abstraction_info =
   | FAI_property of Env.TypeInformation.property_field_info
 
 val compute_abstractions_for_fields :
-  Context.species_compil_context -> Env.TypeInformation.species_field list ->
-    field_abstraction_info list
+  with_def_deps : bool -> Context.species_compil_context ->
+    Env.TypeInformation.species_field list -> field_abstraction_info list

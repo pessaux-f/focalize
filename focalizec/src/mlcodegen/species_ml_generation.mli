@@ -11,14 +11,15 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.mli,v 1.5 2008-02-28 13:35:23 pessaux Exp $ *)
+(* $Id: species_ml_generation.mli,v 1.6 2008-03-04 13:53:03 pessaux Exp $ *)
 
 
 val species_compile :
-   Env.MlGenEnv.t -> current_unit:Types.fname -> Format.formatter ->
+   Env.MlGenEnv.t -> current_unit: Types.fname -> Format.formatter ->
     Parsetree.species_def -> Env.TypeInformation.species_description ->
       Dep_analysis.name_node list ->
-        Env.MlGenInformation.collection_generator_info option
+        (Env.MlGenInformation.method_info list *
+         (Env.MlGenInformation.collection_generator_info option))
 
 val collection_compile :
   Env.MlGenEnv.t -> current_unit: Types.fname -> Format.formatter ->

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.32 2008-02-28 17:36:46 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.33 2008-03-04 13:53:03 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -61,9 +61,7 @@ type compiled_field_memory = {
   cfm_dependencies_from_parameters :
     (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ;
   (** The positional list of method names appearing in the minimal Coq typing
-      environment. Note that for Sig, Let, Let_rec and Property, this list
-      is always empty. The notion of minimal environment is only required for
-      theorems. *)
+      environment. *)
   cfm_coq_min_typ_env_names : Parsetree.vname list
 } ;;
 
@@ -332,7 +330,7 @@ let generate_defined_method ctx print_ctx env min_coq_env
 (* ********************************************************************** *)
 let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
     used_species_parameter_tys dependencies_from_params
-    (from, name, params, scheme, body, _) =
+    (from, name, params, scheme, body) =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* First of all, only methods defined in the current species must *)
   (* be generated. Inherited methods ARE NOT generated again !      *)
@@ -802,11 +800,6 @@ let generate_methods ctx print_ctx env generated_fields field =
          (* then be automatically abstracted by Coq in the "property".    *)
          (* Then, for methods generators where lambda-abstraction has     *)
          (* been done, we will apply these generators to this variable.   *)
-         (* [Unsure] En fait, comme on n'utilise les générateurs de       *)
-         (* méthodes dans les générateurs de collection et qu'à ce moment *)
-         (* toutes les methodes sont définies, si ça se trouve on n'aura  *)
-         (* même pas à utiliser la Variable, maisd directement la VRAIE   *)
-         (* méthodes.                                                     *)
          Format.fprintf out_fmter
            "@[<2>Variable self_%a :@ %a.@]@\n"
            Parsetree_utils.pp_vname_with_operators_expanded name
@@ -815,7 +808,7 @@ let generate_methods ctx print_ctx env generated_fields field =
          end) ;
        (* Nothing to keep for the collection generator. *)
        CSF_sig name
-   | Abstractions.FAI_let ((from, name, params, scheme, body, deps_rep),
+   | Abstractions.FAI_let ((from, name, params, scheme, body, _),
                            abstraction_info) ->
        (* No recursivity, then the method cannot call itself in its body *)
        (* then no need to set the [scc_lambda_lift_params_mapping] of    *)
@@ -826,7 +819,7 @@ let generate_methods ctx print_ctx env generated_fields field =
            ~let_connect: LC_first_non_rec
            abstraction_info.Abstractions.ai_used_species_parameter_tys
            abstraction_info.Abstractions.ai_dependencies_from_params
-           (from, name, params, scheme, body, deps_rep) in
+           (from, name, params, scheme, body) in
        (* Now, build the [compiled_field_memory], even if the method  *)
        (* was not really generated because it was inherited.          *)
        let compiled_field = {
@@ -1177,6 +1170,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     out_fmter print_ctx species_descr.Env.TypeInformation.spe_sig_methods ;
   let field_abstraction_infos =
     Abstractions.compute_abstractions_for_fields
+      ~with_def_deps: true
       ctx' species_descr.Env.TypeInformation.spe_sig_methods in
   (* Generate for each method of a species parameter we        *)
   (* decl-depend on and don't def-depend on, a Coq "Variable". *)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.8 2007-12-05 16:41:35 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.9 2008-03-04 13:53:03 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -58,11 +58,14 @@ let toplevel_compile env ~current_unit out_fmter = function
   | Infer.PCM_collection (coll_def, coll_descr, dep_graph) ->
       Species_ml_generation.collection_compile
         env ~current_unit out_fmter coll_def coll_descr dep_graph ;
-      (* Collection do not have collection generator, then simply add *)
-      (* them in the environment with None.                           *)
+      (* Collections don't have parameters or any remaining abstraction. *)
+      (* Moreover, since we can never inherit of a collection, just      *)
+      (* forget all methods information, it will never be used.          *)
+      (* Collections do not have collection generator, then simply add *)
+      (* them in the environment with None.                            *)
       Env.MlGenEnv.add_species
         ~loc: coll_def.Parsetree.ast_loc
-        coll_def.Parsetree.ast_desc.Parsetree.cd_name None env
+        coll_def.Parsetree.ast_desc.Parsetree.cd_name ([], None) env
   | Infer.PCM_type (type_def_name, type_descr) ->
       (* Create the initial context for compiling the type definition. *)
       let ctx = {

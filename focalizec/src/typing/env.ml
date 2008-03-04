@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.66 2008-02-28 10:26:05 pessaux Exp $ *)
+(* $Id: env.ml,v 1.67 2008-03-04 13:53:03 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -633,11 +633,21 @@ module MlGenInformation = struct
       (Parsetree.vname * Parsetree_utils.DepNameSet.t) list
   }
 
+  type method_info = {
+    mi_name : Parsetree.vname ;        (** The field name. *)
+    mi_dependencies_from_parameters :
+      (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ;  (** The
+        positional list of methods from the species parameters abstracted by
+        lambda-lifting. *)
+    mi_abstracted_methods : Parsetree.vname list   (** The positional list
+        of methods from ourselves abstracted by lambda-lifting. *)
+    }
+
   type species_binding_info =
     (** Optionnal because species that are non fully defined do not have
         any collection generator although they are entered in the
         environment. *)
-    collection_generator_info option
+    (method_info list * (collection_generator_info option))
 
   (** The list of mappings according to external languages to know to which
       string the record type field name corresponds. *)
@@ -683,7 +693,7 @@ module CoqGenInformation = struct
         positional list of methods from the species parameters abstracted by
         lambda-lifting. *)
     mi_abstracted_methods : Parsetree.vname list   (** The positional list
-        of methods from ourselves abstrated by lambda-lifting. *)
+        of methods from ourselves abstracted by lambda-lifting. *)
     }
 
   type species_binding_info = method_info list
