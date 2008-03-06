@@ -11,24 +11,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.mli,v 1.3 2008-03-04 13:53:03 pessaux Exp $ *)
+(* $Id: abstractions.mli,v 1.4 2008-03-06 09:35:52 pessaux Exp $ *)
 
 type field_body_kind =
   | FBK_expr of Parsetree.expr
   | FBK_prop of Parsetree.prop
-
-
-(* {Unsure] Doit disparaitre de l'interface lorsque Caml et coq procéderont de
-  la même façon ! *)
-val compute_lambda_liftings_for_field :
-  current_unit: Types.fname ->current_species: Parsetree.qualified_species ->
-    Parsetree.vname list -> Dep_analysis.name_node list -> Parsetree.vname ->
-      field_body_kind ->
-        ((Parsetree.vname list) *
-         (Parsetree.vname * Parsetree_utils.DepNameSet.t) list *
-         (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *
-         (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *
-         (string * Types.type_simple) list)
 
 type abstraction_info = {
   ai_used_species_parameter_tys : Parsetree.vname list ;
