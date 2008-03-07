@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.75 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.76 2008-03-07 10:55:32 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -522,17 +522,30 @@ def_let:
   | opt_doc let_binding { mk_doc $1 $2.ast_desc }
 ;
 
+/** Since logical let is followed by a prop, and since props embedd expressions,
+  at parsing stage, everything is temporarily considered to be a prop. At
+  scoping stage, a verification will be performed: if the logical_flag is
+  [LF_no_logical] then we will ensure that the prop is a [Pr_expr] and remove
+  the constructor to get the effective [exp] that is the body of the real
+  "Let". Otherwise we will keep the prop as it is, since the binding is a
+  logical binding.
+  The only exception is for externals that are never logical bindings ! */
 binding:
-  | bound_vname EQUAL expr
-    { mk { b_name = $1; b_params = []; b_type = None; b_body = $3; } }
+  | bound_vname EQUAL prop
+    { mk { b_name = $1; b_params = []; b_type = None;
+	   b_body = Parsetree.BB_logical $3; } }
   | bound_vname EQUAL INTERNAL type_expr EXTERNAL external_expr
-    { mk { b_name = $1; b_params = []; b_type = Some $4; b_body = mk (E_external $6); } }
-  | bound_vname IN type_expr EQUAL expr
-    { mk { b_name = $1; b_params = []; b_type = Some $3; b_body = $5; } }
-  | bound_vname LPAREN param_list RPAREN EQUAL expr
-    { mk { b_name = $1; b_params = $3; b_type = None; b_body = $6; } }
-  | bound_vname LPAREN param_list RPAREN IN type_expr EQUAL expr
-    { mk { b_name = $1; b_params = $3; b_type = Some $6; b_body = $8; } }
+    { mk { b_name = $1; b_params = []; b_type = Some $4;
+	   b_body = Parsetree.BB_computational (mk (E_external $6)); } }
+  | bound_vname IN type_expr EQUAL prop
+    { mk { b_name = $1; b_params = []; b_type = Some $3;
+	   b_body = Parsetree.BB_logical $5; } }
+  | bound_vname LPAREN param_list RPAREN EQUAL prop
+    { mk { b_name = $1; b_params = $3; b_type = None;
+	   b_body = Parsetree.BB_logical $6; } }
+  | bound_vname LPAREN param_list RPAREN IN type_expr EQUAL prop
+    { mk { b_name = $1; b_params = $3; b_type = Some $6;
+	   b_body = Parsetree.BB_logical $8; } }
 ;
 
 param_list:

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.16 2008-01-25 15:21:10 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.17 2008-03-07 10:55:32 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -303,7 +303,11 @@ and subst_let_binding ~current_unit c1 c2 binding =
        | None -> None
        | Some ty_expr -> Some (subst_type_expr c1 c2 ty_expr)) in
     let b_body' =
-      subst_expr ~current_unit c1 c2 binding_desc.Parsetree.b_body in
+      (match binding_desc.Parsetree.b_body with
+       | Parsetree.BB_logical p ->
+           Parsetree.BB_logical (subst_prop ~current_unit c1 c2 p)
+       | Parsetree.BB_computational e ->
+           Parsetree.BB_computational (subst_expr ~current_unit c1 c2 e)) in
     let desc' = { binding_desc with
        Parsetree.b_params = b_params';
        Parsetree.b_type = b_type';
@@ -329,7 +333,7 @@ and subst_let_definition ~current_unit c1 c2 let_def =
       Parsetree.ast_type =
         subst_ast_node_type_information c1 c2 let_def.Parsetree.ast_type;
       Parsetree.ast_desc = desc' }
-;;
+
 
 
 
@@ -341,7 +345,7 @@ and subst_let_definition ~current_unit c1 c2 let_def =
 
     {b Rem} : Exported outside this module.                            *)
 (* ******************************************************************* *)
-let subst_prop ~current_unit c1 c2 initial_prop_expr =
+and subst_prop ~current_unit c1 c2 initial_prop_expr =
   let rec rec_subst prop_expr =
     let new_desc =
       (match prop_expr.Parsetree.ast_desc with
@@ -381,6 +385,15 @@ let subst_prop ~current_unit c1 c2 initial_prop_expr =
 
 
 
+let subst_binding_body ~current_unit c1 c2 = function
+  | Parsetree.BB_computational e ->
+      Parsetree.BB_computational (subst_expr ~current_unit c1 c2 e)
+  | Parsetree.BB_logical p ->
+      Parsetree.BB_logical (subst_prop ~current_unit c1 c2 p)
+;;
+
+
+
 let subst_species_field ~current_unit c1 c2 = function
   | Env.TypeInformation.SF_sig (from, vname, scheme) ->
       (begin
@@ -408,9 +421,9 @@ let subst_species_field ~current_unit c1 c2 = function
                ~and_abstract: (Some c2) ty) in
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
-      let body' = subst_expr ~current_unit c1 c2 body in
+      let body' = subst_binding_body ~current_unit c1 c2 body in
       Env.TypeInformation.SF_let
-	(from, vname, params_names, scheme', body', dep)
+        (from, vname, params_names, scheme', body', dep)
       end)
   | Env.TypeInformation.SF_let_rec l ->
       (begin
@@ -426,7 +439,7 @@ let subst_species_field ~current_unit c1 c2 = function
              ~and_abstract: (Some c2) ty) in
             Types.end_definition ();
             let scheme' = Types.generalize ty' in
-            let body' = subst_expr ~current_unit c1 c2 body in
+            let body' = subst_binding_body ~current_unit c1 c2 body in
             (from, vname, params_names, scheme', body', dep))
           l in
       Env.TypeInformation.SF_let_rec l'
@@ -447,7 +460,7 @@ let subst_species_field ~current_unit c1 c2 = function
       let scheme' = Types.generalize ty' in
       let body' = subst_prop ~current_unit c1 c2 body in
       Env.TypeInformation.SF_theorem
-	(from, vname, scheme', body', proof, deps_rep)
+        (from, vname, scheme', body', proof, deps_rep)
       end)
   | Env.TypeInformation.SF_property (from, vname, scheme, body, deps_rep) ->
       (begin

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.19 2008-02-27 13:42:49 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.20 2008-03-07 10:55:32 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -392,8 +392,11 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
   (* Here, each parameter name of the binding may mask a "in"-parameter. *)
   let local_idents' = params_names @ local_idents in
   (* Now, let's generate the bound body. *)
-  generate_expr ctx ~local_idents: local_idents' env
-    bd.Parsetree.ast_desc.Parsetree.b_body
+  match bd.Parsetree.ast_desc.Parsetree.b_body with
+   | Parsetree.BB_computational e ->
+       generate_expr ctx ~local_idents: local_idents' env e
+   | Parsetree.BB_logical _ -> assert false
+    
 
 
 
@@ -430,33 +433,40 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
 and let_def_compile ctx ~local_idents env let_def bound_schemes =
-  let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
-  (* Generates the binder ("rec" or non-"rec"). *)
-  Format.fprintf out_fmter "@[<2>let%s@ "
-    (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-     | Parsetree.RF_no_rec -> ""
-     | Parsetree.RF_rec -> " rec"   (* NON-breakable space in front. *)) ;
-  (* Now generate each bound definition. *)
-  (match (let_def.Parsetree.ast_desc.Parsetree.ld_bindings, bound_schemes) with
-   | ([], []) ->
-       (* The "let" construct should always at least bind one identifier ! *)
-       assert false
-   | ([one_bnd], [one_scheme]) ->
-       let_binding_compile ctx ~local_idents env one_bnd one_scheme
-   | ((first_bnd :: next_bnds), (first_scheme :: next_schemes)) ->
-       let_binding_compile ctx ~local_idents env first_bnd first_scheme ;
-       List.iter2
-         (fun binding scheme ->
-           Format.fprintf out_fmter "@]@\n@[<2>and " ;
-           let_binding_compile ctx ~local_idents env binding scheme)
-         next_bnds
-         next_schemes
-   | (_, _) ->
-       (* Because the FoCaL has been parsed and typechecked, we must never    *)
-       (* have a different number of bound identifiers and bound-identifiers' *)
-       (* type schemes. If this arise, then we have a serious bug somewhere.  *)
-       assert false) ;
-  Format.fprintf out_fmter "@]"
+  (* For OCaml, logical lets are not generated. *)
+  if let_def.Parsetree.ast_desc.Parsetree.ld_logical =
+     Parsetree.LF_no_logical then
+    (begin
+    let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
+    (* Generates the binder ("rec" or non-"rec"). *)
+    Format.fprintf out_fmter "@[<2>let%s@ "
+      (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
+       | Parsetree.RF_no_rec -> ""
+       | Parsetree.RF_rec -> " rec"   (* NON-breakable space in front. *)) ;
+    (* Now generate each bound definition. *)
+    (match (let_def.Parsetree.ast_desc.Parsetree.ld_bindings, bound_schemes)
+    with
+     | ([], []) ->
+         (* The "let" construct should always at least bind one identifier ! *)
+         assert false
+     | ([one_bnd], [one_scheme]) ->
+         let_binding_compile ctx ~local_idents env one_bnd one_scheme
+     | ((first_bnd :: next_bnds), (first_scheme :: next_schemes)) ->
+         let_binding_compile ctx ~local_idents env first_bnd first_scheme ;
+         List.iter2
+           (fun binding scheme ->
+             Format.fprintf out_fmter "@]@\n@[<2>and " ;
+             let_binding_compile ctx ~local_idents env binding scheme)
+           next_bnds
+           next_schemes
+     | (_, _) ->
+         (* Because the FoCaL has been parsed and typechecked, we must *)
+         (* never have a different number of bound identifiers and     *)
+         (* bound-identifiers' type schemes. If this arise, then we    *)
+         (* have a serious bug somewhere.                              *)
+         assert false) ;
+    Format.fprintf out_fmter "@]"
+    end)
 
 
 

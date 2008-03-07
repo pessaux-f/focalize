@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.67 2008-03-04 13:53:03 pessaux Exp $ *)
+(* $Id: env.ml,v 1.68 2008-03-07 10:55:32 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -323,8 +323,8 @@ module TypeInformation = struct
      Parsetree.vname *       (** Name of the let-bound definition. *)
      (** Parameters of the let-bound definition. *)
      (Parsetree.vname list) *
-     Types.type_scheme *     (** Type scheme of the let-bound definition. *)
-     Parsetree.expr *        (** Body of the let-bound definition. *)
+     Types.type_scheme *       (** Type scheme of the let-bound definition. *)
+     Parsetree.binding_body *  (** Body of the let-bound definition. *)
      (** Tells if the method has dependencies on the carrier ("rep"). *)
      dependency_on_rep)
 

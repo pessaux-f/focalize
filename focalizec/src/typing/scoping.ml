@@ -11,9 +11,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.39 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.40 2008-03-07 10:55:32 pessaux Exp $ *)
 
-open Parsetree;;
+open Parsetree
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -47,6 +47,24 @@ open Parsetree;;
              phase.                                                        *)
 (* *********************************************************************** *)
 
+
+
+(* ****************************************************************** *)
+(** {b Descr} : Exception raised when a let that is NOT a logical let
+      tries syntactically to bind a name to a [prop]. Computationnal
+      let can't contain a property. This is only restricted to
+      logical let. Since props embedd exprs, the parser always parse
+      a prop. Durign scoping pass, if the logical_flag of the let is
+      [LF_no_logical], then we ensure that the parsed prop is indeed
+      of the form [Pr_expr], then we remove this constructor and turn
+      the binding_body into an expression body.
+
+   {b Rem} : Exported outside this module.                            *)
+(* ****************************************************************** *)
+exception Non_logical_let_cant_define_prop of
+  (Parsetree.vname *     (** The guilty bound name. *)
+   Location.t)           (** The location of the prop bound to the name. *)
+;;
 
 
 (* ************************************************************************ *)
@@ -261,13 +279,13 @@ let (extend_env_with_implicit_gen_vars_from_type_exprs,
               (begin
               (* Just handle the special where the ident is a type variable. *)
               if not (List.mem variable_qname !seen_vars) then
-        (begin
-        seen_vars := variable_qname :: !seen_vars;
-        Env.ScopingEnv.add_type
-          ~loc: ident.Parsetree.ast_loc
-          variable_qname Env.ScopeInformation.TBI_builtin_or_var
-          accu_env
-        end)
+                (begin
+                seen_vars := variable_qname :: !seen_vars;
+                Env.ScopingEnv.add_type
+                  ~loc: ident.Parsetree.ast_loc
+                  variable_qname Env.ScopeInformation.TBI_builtin_or_var
+                  accu_env
+                end)
               else accu_env
               end)
           | _ -> accu_env
@@ -617,8 +635,8 @@ let rec verify_external_binding ~type_def_body_loc external_bindings
               Handy.list_mem_n_remove vname bound_names
           | (other, _) ->
               raise
-        (Invalid_external_binding_identifier
-           (binding.Parsetree.ast_loc, other))) in
+                (Invalid_external_binding_identifier
+                   (binding.Parsetree.ast_loc, other))) in
        (* Continue with the remaining bindings and the list of bound *)
        (* names in which we suppressed the current binding name.     *)
        verify_external_binding ~type_def_body_loc bindings rem_bound_names
@@ -1025,11 +1043,32 @@ and scope_let_definition ~toplevel_let ctx env let_def =
                   (scope_type_expr ctx env_with_ty_constraints_variables tye) in
           (param_vname, scoped_tye_opt))
         let_binding_descr.Parsetree.b_params in
-    (* Now scope the body. *)
+    (* Now scope the body. We ensure that bindings of a non-logical let      *)
+    (* are props of the form [Pr_expr] and if so, we remove this constructor *)
+    (* and turn the binding_body to a [BB_computational].                    *)
     let scoped_body =
-      scope_expr
-        ctx env_with_ty_constraints_variables
-        let_binding_descr.Parsetree.b_body in
+      (match let_binding_descr.Parsetree.b_body with
+       | Parsetree.BB_logical prop ->
+           if let_def_descr.Parsetree.ld_logical = Parsetree.LF_logical then
+             Parsetree.BB_logical
+	       (scope_prop ctx env_with_ty_constraints_variables prop)
+           else
+             (begin
+             match prop.Parsetree.ast_desc with
+              | Parsetree.Pr_expr expr ->
+                  (* Turn the prop into an expression   *)
+                  (* since we are not in a logical let. *)
+                  Parsetree.BB_computational
+                    (scope_expr ctx env_with_ty_constraints_variables expr)
+              | _ ->
+                  raise
+                    (Non_logical_let_cant_define_prop
+                       (let_binding_descr.Parsetree.b_name,
+                        let_binding.Parsetree.ast_loc))
+             end)
+       | Parsetree.BB_computational expr ->
+           Parsetree.BB_computational
+             (scope_expr ctx env_with_ty_constraints_variables expr)) in
     (* Now scope the optionnal body's type. *)
     let scoped_b_type =
       (match let_binding_descr.Parsetree.b_type with
@@ -1056,7 +1095,7 @@ and scope_let_definition ~toplevel_let ctx env let_def =
     List.map (fun b -> b.Parsetree.ast_desc.Parsetree.b_name)
       let_def_descr.Parsetree.ld_bindings in
   (scoped_let_def, final_env, bound_names)
-;;
+
 
 
 
@@ -1066,7 +1105,7 @@ and scope_let_definition ~toplevel_let ctx env let_def =
 
    {b Rem} : Not exported outside this module.                             *)
 (* *********************************************************************** *)
-let rec scope_prop ctx env prop =
+and scope_prop ctx env prop =
   let new_desc =
     (match prop.Parsetree.ast_desc with
      | Parsetree.Pr_forall (vnames, ty_expr, p) ->

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.37 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.38 2008-03-07 10:55:32 pessaux Exp $ *)
 
 
 (* *********************************************************** *)
@@ -669,6 +669,18 @@ and pp_let_def ppf = pp_ast pp_let_def_desc ppf
 
 
 (* ****************************************************************** *)
+(* Format.formatter -> Parsetree.binding_body -> unit                 *)
+(** {b Descr} : Pretty prints a [binding_body] value as FoCal source.
+
+    {b Rem} : Not exported ouside this module.                        *)
+(* ****************************************************************** *)
+and pp_binding_body ppf = function
+  | Parsetree.BB_logical prop -> pp_prop ppf prop
+  | Parsetree.BB_computational expr -> pp_expr ppf expr
+
+
+
+(* ****************************************************************** *)
 (* pp_binding_desc : Format.formatter -> Parsetree.binding_desc ->    *)
 (*          unit                                                      *)
 (** {b Descr} : Pretty prints a [binding_desc] value as FoCal source.
@@ -692,7 +704,7 @@ and pp_binding_desc ppf bd =
     end);
     Format.fprintf ppf "%a@ =@ %a"
       (Handy.pp_generic_option " in " pp_type_expr) bd.Parsetree.b_type
-      pp_expr bd.Parsetree.b_body
+      pp_binding_body bd.Parsetree.b_body
 (* ************************************************************* *)
 (* pp_binding : Format.formatter -> Parsetree.binding -> unit    *)
 (** {b Descr} : Pretty prints a [binding] value as FoCal source.

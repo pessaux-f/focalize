@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: ast_equal.ml,v 1.3 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: ast_equal.ml,v 1.4 2008-03-07 10:55:32 pessaux Exp $ *)
 
 (* ********************************************************************** *)
 (** {b Descr} : This module performs test equality of the AST expression.
@@ -236,9 +236,6 @@ and let_def let_definition1 let_definition2 =
   (let_definition1_desc.Parsetree.ld_rec =
    let_definition2_desc.Parsetree.ld_rec)
   &&
-  (let_definition1_desc.Parsetree.ld_logical =
-   let_definition2_desc.Parsetree.ld_logical)
-  &&
   (let_definition1_desc.Parsetree.ld_local =
    let_definition2_desc.Parsetree.ld_local)
   &&
@@ -269,8 +266,12 @@ and bindind bnd1 bnd2 =
         | (_, _) -> false))
      bnd1_desc.Parsetree.b_params bnd2_desc.Parsetree.b_params)
   &&
-  (expr bnd1_desc.Parsetree.b_body bnd2_desc.Parsetree.b_body)
-;;
+  (match (bnd1_desc.Parsetree.b_body, bnd2_desc.Parsetree.b_body) with
+   | ((Parsetree.BB_computational e1), (Parsetree.BB_computational e2)) ->
+       expr e1 e2
+   | ((Parsetree.BB_logical p1), (Parsetree.BB_logical p2)) -> prop p1 p2
+   | (_, _) -> false)
+
 
 
 
@@ -280,7 +281,7 @@ and bindind bnd1 bnd2 =
 
     {b Rem} : Exported outside this module.      *)
 (* ********************************************* *)
-let rec prop prop1 prop2 =
+and prop prop1 prop2 =
   match (prop1.Parsetree.ast_desc, prop2.Parsetree.ast_desc) with
    | ((Parsetree.Pr_forall (vnames1, ty_expr1, p1)),
       (Parsetree.Pr_forall (vnames2, ty_expr2, p2)))

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.29 2008-02-22 18:06:29 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.30 2008-03-07 10:55:32 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -89,6 +89,13 @@ try Check_file.main () with
            expected
            Handy.pp_set_bold Handy.pp_reset_effects
            used_with
+     | Scoping.Non_logical_let_cant_define_prop (name, at) ->
+          Format.fprintf Format.err_formatter
+           "%a:@\n@[%tNon-logical@ let@ must@ not@ bind%t@ '%t%a%t'@ %tto@ a@ property%t.@]@."
+	   Location.pp_location at
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined Sourcify.pp_vname name Handy.pp_reset_effects
+           Handy.pp_set_bold Handy.pp_reset_effects
 (* *************************** *)
 (* Generic environments stuff. *)
      | Env.Unbound_constructor (vname, at) ->

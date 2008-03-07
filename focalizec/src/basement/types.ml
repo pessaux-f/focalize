@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.46 2008-02-28 17:36:46 pessaux Exp $ *)
+(* $Id: types.ml,v 1.47 2008-03-07 10:55:32 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -28,7 +28,7 @@ type fname = string ;;
 
     {b Rem} : Clearly exported outside this module. *)
 (* ************************************************ *)
-type collection_name = string
+type collection_name = string ;;
 
 
 
@@ -756,6 +756,28 @@ let refers_to_self_p ty =
      | ST_tuple tys -> List.exists test tys
      | ST_construct (_, args) -> List.exists test args
      | ST_self_rep -> true
+     | ST_species_rep _ -> false in
+  test ty
+;;
+
+
+
+(* ********************************************************************* *)
+(* type_simple -> bool                                                   *)
+(** {b Descr} : Check if a [type_simple] contains a reference to "prop".
+
+    {b Rem} : Exported oustide this module.                              *)
+(* ********************************************************************* *)
+let refers_to_prop_p ty =
+  let rec test t =
+    let t =  repr t in
+    match t with
+     | ST_var _ -> false
+     | ST_arrow (ty1, ty2) -> test ty1 || test ty2
+     | ST_tuple tys -> List.exists test tys
+     | ST_construct (cstr_name, args) ->
+         cstr_name = ("basics", "prop") || List.exists test args
+     | ST_self_rep -> false
      | ST_species_rep _ -> false in
   test ty
 ;;

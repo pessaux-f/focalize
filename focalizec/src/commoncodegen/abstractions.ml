@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.3 2008-03-04 13:53:03 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.4 2008-03-07 10:55:32 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -186,12 +186,16 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
       | Env.TypeInformation.SF_let ((_, name, _, _, body, _) as li) ->
           let (used_species_parameter_tys, dependencies_from_params,
                decl_children, def_children, _) =
+            let body_as_fbk =
+              match body with
+               | Parsetree.BB_logical p -> FBK_prop p
+               | Parsetree.BB_computational e -> FBK_expr e in
             compute_lambda_liftings_for_field
               ~current_unit: ctx.Context.scc_current_unit
               ~current_species: ctx.Context.scc_current_species
               ctx.Context.scc_species_parameters_names
               ctx.Context.scc_dependency_graph_nodes name
-              (FBK_expr body) in
+              body_as_fbk in
           (* Compute the visible universe of the method. *)
           let universe =
             VisUniverse.visible_universe
@@ -210,6 +214,10 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
           let deps_infos =
             List.map
               (fun ((_, name, _, _, body, _) as li) ->
+                let body_as_fbk =
+                  match body with
+                   | Parsetree.BB_logical p -> FBK_prop p
+                   | Parsetree.BB_computational e -> FBK_expr e in
                 let (used_species_parameter_tys, dependencies_from_params,
                      decl_children, def_children, _) =
                   compute_lambda_liftings_for_field
@@ -217,7 +225,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
                     ~current_species: ctx.Context.scc_current_species
                     ctx.Context.scc_species_parameters_names
                     ctx.Context.scc_dependency_graph_nodes name
-                    (FBK_expr body) in
+                    body_as_fbk in
                 (* Compute the visible universe of the method. *)
                 let universe =
                   VisUniverse.visible_universe

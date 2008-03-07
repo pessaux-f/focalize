@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.103 2008-02-12 15:28:41 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.104 2008-03-07 10:55:32 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -517,24 +517,26 @@ let make_implicit_var_mapping_from_prop prop_expression =
 
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
-let rec is_non_expansive ~current_unit env expr =
+let rec expr_is_non_expansive ~current_unit env expr =
   match expr.Parsetree.ast_desc with
   | Parsetree.E_const _ -> true
   | Parsetree.E_var _ -> true
   | Parsetree.E_let (let_def, body) ->
       List.for_all
         (fun binding ->
-         let bound_expr = binding.Parsetree.ast_desc.Parsetree.b_body in
-         (* Be careful. Consider the comment in the function    *)
-         (* [typecheck_let_definition] dealing with body hiding *)
-         (* the functional aspect of the whole definition.      *)
-         binding.Parsetree.ast_desc.Parsetree.b_params <> [] ||
-         is_non_expansive ~current_unit env bound_expr)
-        let_def.Parsetree.ast_desc.Parsetree.ld_bindings &&
-      is_non_expansive ~current_unit env body
+          let body = binding.Parsetree.ast_desc.Parsetree.b_body in
+          (* Be careful. Consider the comment in the function    *)
+          (* [typecheck_let_definition] dealing with body hiding *)
+          (* the functional aspect of the whole definition.      *)
+          binding.Parsetree.ast_desc.Parsetree.b_params <> []
+          ||
+          binding_body_is_non_expansive ~current_unit env body)
+        let_def.Parsetree.ast_desc.Parsetree.ld_bindings
+      &&
+      expr_is_non_expansive ~current_unit env body
   | Parsetree.E_fun _ -> true
   | Parsetree.E_tuple exprs ->
-      List.for_all (is_non_expansive ~current_unit env) exprs
+      List.for_all (expr_is_non_expansive ~current_unit env) exprs
   | Parsetree.E_record lbl_exp_list ->
       List.for_all
         (fun (lbl, e) ->
@@ -543,18 +545,40 @@ let rec is_non_expansive ~current_unit env expr =
               ~loc: expr.Parsetree.ast_loc ~current_unit lbl env in
           lbl_descr.Env.TypeInformation.field_mut =
             Env.TypeInformation.FM_immutable &&
-          is_non_expansive ~current_unit env e)
+          expr_is_non_expansive ~current_unit env e)
         lbl_exp_list
-  | Parsetree.E_record_access (e, _) -> is_non_expansive ~current_unit env e
+  | Parsetree.E_record_access (e, _) ->
+      expr_is_non_expansive ~current_unit env e
   | Parsetree.E_constr (_, exprs) ->
-      List.for_all (is_non_expansive ~current_unit env) exprs
-  | Parsetree.E_paren e -> is_non_expansive ~current_unit env e
+      List.for_all (expr_is_non_expansive ~current_unit env) exprs
+  | Parsetree.E_paren e -> expr_is_non_expansive ~current_unit env e
   | Parsetree.E_external _ ->
       (* [Unsure]. Needed to make external functions generalized but should   *)
       (* be guarded by something because in fact the real external definition *)
       (* may indeed by EXPANSIVE !                                            *)
       true
   | _ -> false
+
+
+
+and prop_is_non_expansive ~current_unit env prop =
+  match prop.Parsetree.ast_desc with
+   | Parsetree.Pr_imply (p1, p2) | Parsetree.Pr_or (p1, p2)
+   | Parsetree.Pr_and (p1, p2) | Parsetree.Pr_equiv  (p1, p2) ->
+       (prop_is_non_expansive ~current_unit env p1) &&
+       (prop_is_non_expansive ~current_unit env p2)
+   | Parsetree.Pr_expr e -> expr_is_non_expansive ~current_unit env e
+   | Parsetree.Pr_not p | Parsetree.Pr_paren p
+   | Parsetree.Pr_forall (_, _, p) | Parsetree.Pr_exists (_, _, p) ->
+       prop_is_non_expansive ~current_unit env p
+
+
+
+and binding_body_is_non_expansive ~current_unit env = function
+  | Parsetree.BB_computational e ->
+      expr_is_non_expansive ~current_unit env e
+  | Parsetree.BB_logical p ->
+      prop_is_non_expansive ~current_unit env p
 ;;
 
 
@@ -1072,9 +1096,9 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
         (* a function and is non_expansive whatever the body is.   *)
         if not is_a_field &&
            (binding_desc.Parsetree.b_params <> [] ||
-            is_non_expansive
+            binding_body_is_non_expansive
               ~current_unit: ctx.current_unit env
-             binding_desc.Parsetree.b_body) then
+              binding_desc.Parsetree.b_body) then
           (begin
           (* The body expression will be authorised to be generalized. *)
           Types.begin_definition () ;
@@ -1164,7 +1188,7 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
         if non_expansive then Types.begin_definition () ;
         (* Guess the body's type. *)
         let infered_body_ty =
-          typecheck_expr
+          typecheck_binding_body
             ctx_with_tv_vars_constraints local_env
             binding_desc.Parsetree.b_body in
         (* If there is some constraint on this type, then unify with it. *)
@@ -1345,6 +1369,16 @@ and typecheck_prop ~in_proof ctx env prop =
   prop.Parsetree.ast_type <- Parsetree.ANTI_type final_ty ;
   Types.check_for_decl_dep_on_self final_ty ;
   final_ty
+
+
+
+and typecheck_binding_body ctx env = function
+  | Parsetree.BB_logical p ->
+      (* Because these props only appear in a logical let, *)
+      (* they are not in the context of a proof !          *)
+      typecheck_prop ctx env ~in_proof: false p
+  | Parsetree.BB_computational e -> typecheck_expr ctx env e
+
 
 
 

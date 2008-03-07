@@ -47,7 +47,7 @@ module TypeInformation :
       (Parsetree.qualified_species * Parsetree.vname * Types.type_scheme)
     type let_field_info =
       (Parsetree.qualified_species * Parsetree.vname * (Parsetree.vname list) *
-       Types.type_scheme * Parsetree.expr * dependency_on_rep)
+       Types.type_scheme * Parsetree.binding_body * dependency_on_rep)
 
     type theorem_field_info =
       (Parsetree.qualified_species * Parsetree.vname * Types.type_scheme *

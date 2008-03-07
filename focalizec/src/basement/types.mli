@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.31 2008-02-28 17:36:46 pessaux Exp $ *)
+(* $Id: types.mli,v 1.32 2008-03-07 10:55:32 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -59,6 +59,7 @@ val type_self : unit -> type_simple
 val is_bool_type : type_simple -> bool
 
 val refers_to_self_p : type_simple -> bool
+val refers_to_prop_p : type_simple -> bool
 
 val subst_type_simple :
   type_collection -> type_collection -> type_simple -> type_simple

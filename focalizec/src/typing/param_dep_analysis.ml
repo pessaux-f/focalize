@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.8 2007-12-10 10:14:07 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.9 2008-03-07 10:55:32 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -21,7 +21,7 @@
               generate the Coq/OCaml code.                              *)
 (* ******************************************************************** *)
 
-open Parsetree;;
+open Parsetree
 
 (* ********************************************************************* *)
 (* current_species: Parsetree.qualified_vname -> Parsetree.vname ->      *)
@@ -106,7 +106,7 @@ let param_deps_ident ~current_species param_coll_name local_idents ident =
 
   {b Rem} : Not exported outside this module.                               *)
 (* ************************************************************************ *)
-let __param_deps_expr ~current_species param_coll_name start_local_idents
+let rec __param_deps_expr ~current_species param_coll_name start_local_idents
     expression =
   let rec rec_deps local_idents expr =
     match expr.Parsetree.ast_desc with
@@ -150,9 +150,13 @@ let __param_deps_expr ~current_species param_coll_name start_local_idents
             let local_idents' =
               (List.map fst binding.Parsetree.ast_desc.Parsetree.b_params) @
               local_idents in
-            let body = binding.Parsetree.ast_desc.Parsetree.b_body in
-            Parsetree_utils.DepNameSet.union
-              accu_deps (rec_deps local_idents' body))
+            let deps =
+              (match binding.Parsetree.ast_desc.Parsetree.b_body with
+               | Parsetree.BB_logical p ->
+                   __param_deps_prop
+                     ~current_species param_coll_name local_idents' p
+               | Parsetree.BB_computational e -> rec_deps local_idents' e) in
+            Parsetree_utils.DepNameSet.union accu_deps deps)
           (rec_deps local_idents in_expr)
           let_def.Parsetree.ast_desc.Parsetree.ld_bindings
     | Parsetree.E_record fields ->
@@ -182,7 +186,32 @@ let __param_deps_expr ~current_species param_coll_name start_local_idents
   (* **************** *)
   (* Now, do the job. *)
   rec_deps start_local_idents expression
-;;
+
+
+
+and __param_deps_prop ~current_species param_coll_name start_local_idents
+    proposition =
+  let rec rec_deps local_idents prop =
+    match prop.Parsetree.ast_desc with
+     | Parsetree.Pr_forall (vnames, _, prop')
+     | Parsetree.Pr_exists (vnames, _, prop') ->
+         (* Here, the quantifid names may mask a "in"-parameter. *)
+        rec_deps (vnames @ local_idents) prop'
+     | Parsetree.Pr_imply (prop1, prop2)
+     | Parsetree.Pr_or (prop1, prop2)
+     | Parsetree.Pr_and (prop1, prop2)
+     | Parsetree.Pr_equiv (prop1, prop2) ->
+         let deps1 = rec_deps local_idents prop1 in
+         let deps2 = rec_deps local_idents prop2 in
+         Parsetree_utils.DepNameSet.union deps1 deps2
+     | Parsetree.Pr_not prop' -> rec_deps local_idents prop'
+     | Parsetree.Pr_expr expr ->
+         __param_deps_expr ~current_species param_coll_name local_idents expr
+     | Parsetree.Pr_paren prop' -> rec_deps local_idents prop' in
+  (* **************** *)
+  (* Now, do the job. *)
+  rec_deps start_local_idents proposition
+ ;;
 
 
 
@@ -210,33 +239,6 @@ let __param_deps_expr ~current_species param_coll_name start_local_idents
 let param_deps_expr ~current_species param_coll_name expression =
   __param_deps_expr ~current_species param_coll_name [] expression
 ;;
-
-
-
-
-let __param_deps_prop ~current_species param_coll_name start_local_idents
-    proposition =
-  let rec rec_deps local_idents prop =
-    match prop.Parsetree.ast_desc with
-     | Parsetree.Pr_forall (vnames, _, prop')
-     | Parsetree.Pr_exists (vnames, _, prop') ->
-         (* Here, the quantifid names may mask a "in"-parameter. *)
-        rec_deps (vnames @ local_idents) prop'
-     | Parsetree.Pr_imply (prop1, prop2)
-     | Parsetree.Pr_or (prop1, prop2)
-     | Parsetree.Pr_and (prop1, prop2)
-     | Parsetree.Pr_equiv (prop1, prop2) ->
-         let deps1 = rec_deps local_idents prop1 in
-         let deps2 = rec_deps local_idents prop2 in
-         Parsetree_utils.DepNameSet.union deps1 deps2
-     | Parsetree.Pr_not prop' -> rec_deps local_idents prop'
-     | Parsetree.Pr_expr expr ->
-         __param_deps_expr ~current_species param_coll_name local_idents expr
-     | Parsetree.Pr_paren prop' -> rec_deps local_idents prop' in
-  (* **************** *)
-  (* Now, do the job. *)
-  rec_deps start_local_idents proposition
- ;;
 
 
 

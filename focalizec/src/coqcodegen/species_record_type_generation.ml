@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.20 2008-02-28 17:36:46 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.21 2008-03-07 10:55:32 pessaux Exp $ *)
 
 
 
@@ -436,8 +436,10 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~is_rec env bd =
   (* Here, each parameter name of the binding may mask a "in"-parameter. *)
   let local_idents' = params_names @ local_idents in
   (* Now, let's generate the bound body. *)
-  generate_expr ctx ~local_idents: local_idents' ~self_as env'
-    bd.Parsetree.ast_desc.Parsetree.b_body ;
+  (match bd.Parsetree.ast_desc.Parsetree.b_body with
+   | Parsetree.BB_computational e ->
+       generate_expr ctx ~local_idents: local_idents' ~self_as env' e
+   | Parsetree.BB_logical _ -> assert false) ;
   (* Finally, we record, even if it was already done in [env'] the number *)
   (* of extra arguments due to polymorphism the current bound identifier  *)
   (* has.                                                                 *)
@@ -448,6 +450,8 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~is_rec env bd =
 
 
 and let_in_def_compile ctx ~local_idents ~self_as env let_def =
+  if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
+    failwith "Coq compilation of logical let in TODO" ;  (* [Unsure]. *)
   let out_fmter = ctx.Context.scc_out_fmter in
   let is_rec =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.33 2008-03-04 13:53:03 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.34 2008-03-07 10:55:32 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -309,8 +309,13 @@ let generate_defined_method ctx print_ctx env min_coq_env
   (* Generates the body's code of the method.                       *)
   (* No local idents in the context because we just enter the scope *)
   (* of a species fields and so we are not under a core expression. *)
-  Species_record_type_generation.generate_expr
-    new_ctx ~local_idents: [] ~self_as: how_to_print_Self env body ;
+  (match body with
+   | Parsetree.BB_computational e ->
+       Species_record_type_generation.generate_expr
+         new_ctx ~local_idents: [] ~self_as: how_to_print_Self env e
+   | Parsetree.BB_logical p ->
+       Species_record_type_generation.generate_prop
+         new_ctx ~local_idents: [] ~self_as: how_to_print_Self env p) ;
   (* Done... Then, final carriage return. *)
   Format.fprintf out_fmter ".@]@\n" ;
   abstracted_methods
@@ -825,7 +830,10 @@ let generate_methods ctx print_ctx env generated_fields field =
        let compiled_field = {
          cfm_from_species = from ;
          cfm_method_name = name ;
-         cfm_method_body = CMB_expr body ;
+         cfm_method_body =
+           (match body with
+            | Parsetree.BB_computational e -> CMB_expr e
+            | Parsetree.BB_logical p -> CMB_prop p) ;
          cfm_used_species_parameter_tys =
            abstraction_info.Abstractions.ai_used_species_parameter_tys ;
          cfm_dependencies_from_parameters =

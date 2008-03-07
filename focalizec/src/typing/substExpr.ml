@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substExpr.ml,v 1.11 2008-01-25 15:21:10 pessaux Exp $ *)
+(* $Id: substExpr.ml,v 1.12 2008-03-07 10:55:32 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs substitution of a value name [name_x]
@@ -188,9 +188,16 @@ and subst_let_binding ~param_unit ~bound_variables name_x by_expr binding =
   let bound_variables' =
     (List.map fst binding_desc.Parsetree.b_params) @ bound_variables in
   let b_body' =
-    subst_expr
-      ~param_unit ~bound_variables: bound_variables' name_x by_expr
-      binding_desc.Parsetree.b_body in
+    (match binding_desc.Parsetree.b_body with
+     | Parsetree.BB_computational expr ->
+         Parsetree.BB_computational
+           (subst_expr
+              ~param_unit ~bound_variables: bound_variables' name_x by_expr
+              expr)
+     | Parsetree.BB_logical prop ->
+         Parsetree.BB_logical
+           (subst_prop ~param_unit ~bound_variables: bound_variables'
+              name_x by_expr prop)) in
   let desc' = { binding_desc with Parsetree.b_body = b_body' } in
   ({ binding with Parsetree.ast_desc = desc' }, binding_desc.Parsetree.b_name)
 
@@ -250,11 +257,11 @@ and subst_let_definition ~param_unit ~bound_variables name_x by_expr let_def =
        let desc' = { let_def_desc with Parsetree.ld_bindings = bindings' } in
        ({ let_def with Parsetree.ast_desc = desc' }, bound_variables')
        end)
-;;
 
 
 
-let subst_prop ~param_unit ~bound_variables name_x by_expr initial_prop_expr =
+
+and subst_prop ~param_unit ~bound_variables name_x by_expr initial_prop_expr =
   (* Just  local recursive function to save the stack. *)
   let rec rec_subst rec_bound_vars prop_expr =
     (* Substitute in the AST node description. *)
@@ -299,13 +306,25 @@ let subst_prop ~param_unit ~bound_variables name_x by_expr initial_prop_expr =
 
 
 
+let subst_binding_body ~param_unit ~bound_variables name_x by_expr = function
+  | Parsetree.BB_computational e ->
+      Parsetree.BB_computational
+        (subst_expr ~param_unit ~bound_variables name_x by_expr e)
+  | Parsetree.BB_logical p ->
+      Parsetree.BB_logical
+        (subst_prop ~param_unit ~bound_variables name_x by_expr p)
+;;
+
+
+
 let subst_species_field ~param_unit name_x by_expr field =
   match field with
   | Env.TypeInformation.SF_sig (_, _, _) -> field   (* Nowhere to substitute. *)
   | Env.TypeInformation.SF_let (from, vname, params_names, scheme, body, dep) ->
       (begin
       let bound_variables = [vname] in
-      let body' = subst_expr ~param_unit ~bound_variables name_x by_expr body in
+      let body' =
+        subst_binding_body ~param_unit ~bound_variables name_x by_expr body in
       Env.TypeInformation.SF_let (from, vname, params_names, scheme, body', dep)
       end)
   | Env.TypeInformation.SF_let_rec l ->
@@ -315,7 +334,8 @@ let subst_species_field ~param_unit name_x by_expr field =
         List.map
           (fun (from, vname, params_names, scheme, body, dep) ->
             let body' =
-              subst_expr ~param_unit ~bound_variables name_x by_expr body in
+              subst_binding_body
+                ~param_unit ~bound_variables name_x by_expr body in
             (from, vname, params_names, scheme, body', dep))
           l in
       Env.TypeInformation.SF_let_rec l'

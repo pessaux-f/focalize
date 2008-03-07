@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.33 2008-02-01 12:33:10 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.34 2008-03-07 10:55:32 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -47,7 +47,7 @@ exception Ill_formed_species of Parsetree.qualified_vname ;;
 
     {b Rem} : Not exported outside this module.                       *)
 (* ****************************************************************** *)
-let expr_decl_dependencies ~current_species expression =
+let rec expr_decl_dependencies ~current_species expression =
   (* Let's just make a local function to save the stack, avoid *)
   (* passing each time the parameter [~current_species].       *)
   let rec rec_depend expr =
@@ -125,9 +125,12 @@ let expr_decl_dependencies ~current_species expression =
          let in_expr_deps = rec_depend in_expr in
          List.fold_left
            (fun accu_deps binding ->
-             Parsetree_utils.DepNameSet.union
-               (rec_depend binding.Parsetree.ast_desc.Parsetree.b_body)
-               accu_deps)
+             let deps =
+             (match binding.Parsetree.ast_desc.Parsetree.b_body with
+              | Parsetree.BB_logical p ->
+                  prop_decl_dependencies ~current_species p
+              | Parsetree.BB_computational e ->rec_depend e) in
+             Parsetree_utils.DepNameSet.union deps accu_deps)
            in_expr_deps
            let_def.Parsetree.ast_desc.Parsetree.ld_bindings
      | Parsetree.E_record labels_exprs ->
@@ -153,7 +156,7 @@ let expr_decl_dependencies ~current_species expression =
      | Parsetree.E_external _ -> Parsetree_utils.DepNameSet.empty
      | Parsetree.E_paren e -> rec_depend e in
   rec_depend expression
-;;
+
 
 
 
@@ -166,7 +169,7 @@ let expr_decl_dependencies ~current_species expression =
 
     {b Rem} : Not exported outside this module.                     *)
 (* **************************************************************** *)
-let prop_decl_dependencies ~current_species initial_prop_expression =
+and prop_decl_dependencies ~current_species initial_prop_expression =
   let rec rec_depend prop_expression =
     match prop_expression.Parsetree.ast_desc with
      | Parsetree.Pr_forall (_, _, prop)
@@ -363,6 +366,13 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
 
 
 
+let binding_body_decl_dependencies ~current_species = function
+  | Parsetree.BB_computational e -> expr_decl_dependencies ~current_species e
+  | Parsetree.BB_logical p -> prop_decl_dependencies ~current_species p
+;;
+
+
+
 (* ******************************************************************** *)
 (* current_species: Parsetree.qualified_vname ->                        *)
 (*   Env.TypeInformation.species_field -> Parsetree_utils.DepNameSet.t  *)
@@ -374,7 +384,7 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
 let field_only_decl_dependencies ~current_species = function
   | Env.TypeInformation.SF_sig (_, _, _) -> Parsetree_utils.DepNameSet.empty
   | Env.TypeInformation.SF_let (_, _, _, _, body, rep_deps) ->
-      let body_deps = expr_decl_dependencies ~current_species body in
+      let body_deps = binding_body_decl_dependencies ~current_species body in
       (* Take into account dependencies on the carrier. *)
       if rep_deps.Env.TypeInformation.dor_decl then
         Parsetree_utils.DepNameSet.add
@@ -394,7 +404,7 @@ let field_only_decl_dependencies ~current_species = function
       let deps_of_l =
         List.fold_left
           (fun accu_deps (_, _, _, _, body, rep_deps) ->
-            let d = expr_decl_dependencies ~current_species body in
+            let d = binding_body_decl_dependencies ~current_species body in
             (* Take into account dependencies on the carrier. *)
             let d' =
               if rep_deps.Env.TypeInformation.dor_decl then
@@ -630,7 +640,7 @@ let union_y_clock_x_etc ~current_species x_name fields =
 
 (* ******************************************************************** *)
 (* current_species: Parsetree.qualified_vname ->                        *)
-(*   (Parsetree.vname * Parsetree.expr) ->                              *)
+(*   (Parsetree.vname * Parsetree.binding_body) ->                      *)
 (*     Env.TypeInformation.species_field list ->                        *)
 (*       Parsetree_utils.DepNameSet.t                                   *)
 (** {b Descr} : Compute the dependencies of a sig, let or let-rec bound
@@ -659,7 +669,7 @@ let in_species_decl_dependencies_for_one_function_name ~current_species
             (* names bound by sig, let or let-rec fields, these cases *)
             (* should never arise !                                   *)
             assert false)
-      where_x then expr_decl_dependencies ~current_species body
+      where_x then binding_body_decl_dependencies ~current_species body
   else union_y_clock_x_etc ~current_species name fields
 ;;
 

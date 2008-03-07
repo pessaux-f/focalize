@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.32 2008-03-04 13:53:03 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.33 2008-03-07 10:55:32 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -229,15 +229,21 @@ let generate_record_type ctx species_descr =
           if (Parsetree_utils.name_of_vname n) <> "rep" then
             (begin
             let ty = Types.specialize sch in
-            Format.fprintf out_fmter "(* From species %a. *)@\n"
-              Sourcify.pp_qualified_species from ;
-            (* Since we are printing a whole type scheme, it is stand-alone *)
-            (* and we don't need to keep name sharing with anythin else.    *)
-            Format.fprintf out_fmter "@[<2>%a : %a ;@]@\n"
-              Parsetree_utils.pp_vname_with_operators_expanded n
-              (Types.pp_type_simple_to_ml
-                 ~current_unit: ctx.Context.scc_current_unit
-                 ~reuse_mapping: false collections_carrier_mapping) ty
+            (* If the type of the sig refers to type "Prop", then the sig  *)
+            (* is related to a logical let and hence must not be generated *)
+            (* in OCaml.                                                   *)
+            if not (Types.refers_to_prop_p ty) then
+              (begin
+              Format.fprintf out_fmter "(* From species %a. *)@\n"
+                Sourcify.pp_qualified_species from ;
+              (* Since we are printing a whole type scheme, it is stand-alone *)
+              (* and we don't need to keep name sharing with anythin else.    *)
+              Format.fprintf out_fmter "@[<2>%a : %a ;@]@\n"
+                Parsetree_utils.pp_vname_with_operators_expanded n
+                (Types.pp_type_simple_to_ml
+                   ~current_unit: ctx.Context.scc_current_unit
+                   ~reuse_mapping: false collections_carrier_mapping) ty
+              end)
             end)
           end)
       | Env.TypeInformation.SF_let_rec l ->
@@ -378,6 +384,28 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
 
 
 
+(* ******************************************************************** *)
+(** {b Descr} : Build the list of abstract parameters according to the
+    information found in the [abstraction_info] [ai]. This is similar
+    to create the list of strings represented by the sequence of
+    parameters of a method due to its dependencies.
+    This list first starts by the parameters coming from the species
+    parameters's methods the current method depends on.
+    Then come the parameters coming from the methods of ourselves we
+    depend on.
+
+    {b Args} :
+      - [ai] : The [abstraction_info] of a method, recording this
+        method's dependencies.
+
+    {b Return} :
+      - The list of names corresponding to the arguments lambda-lifting
+        the dependencies (those from methods of the species parameters
+        first, in the order of species parameters, then those from the
+        methods of ourselves).
+
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
 let make_params_list_from_abstraction_info ai =
   (* Build the list by side effect in reverse order for efficiency. *)
   let the_list_reversed = ref [] in
@@ -428,11 +456,34 @@ let make_params_list_from_abstraction_info ai =
 
 
 
+(* ********************************************************************* *)
+(** {b Descr} : Really dumps the OCaml code for ONE species Let or
+    Let_rec binding.
 
+    {b Args} :
+      - [ctx] : The current generation context
 
-(** {b Descr} : Really dumps the OCaml code for a species field.
-    The [~let_connect] parameter tells whether we must start de function
-    binding with "let" or "and".                                         *)
+      - [env] : The current generation environment.
+
+      - [min_coq_env] : The current minimal environment of the
+        method.
+
+      - [~let_connect] flag telling whether we must start the function
+        binding with "let" or "and".
+
+      - [dependencies_from_params] : The information giving for each
+        species parameter, the set of methods the current method depends
+        on.
+
+      - [(from, name, params, scheme, body)] : The constitutive elements
+        of the method.
+
+    {b Return} :
+      - The list of methods names from ourselves the current method
+        depends on.
+
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
 let generate_one_field_binding ctx env min_coq_env ~let_connect
     dependencies_from_params (from, name, params, scheme, body) =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -592,25 +643,32 @@ let generate_methods ctx env field =
        None
    | Abstractions.FAI_let ((from, name, params, scheme, body, _),
                            abstraction_info) ->
-       (* No recursivity, then the method cannot call itself in its body *)
-       (* then no need to set the [scc_lambda_lift_params_mapping] of    *)
-       (* the context.                                                   *)
-       let coq_min_typ_env_names =
-         generate_one_field_binding
-           ctx env abstraction_info.Abstractions.ai_min_coq_env
-           ~let_connect: LC_first_non_rec
-           abstraction_info.Abstractions.ai_dependencies_from_params
-           (from, name, params, (Some scheme), body) in
-       (* Now, build the [compiled_field_memory], even if the method  *)
-       (* was not really generated because it was inherited.          *)
-       let compiled_field = {
-         cfm_from_species = from ;
-         cfm_method_name = name ;
-         cfm_method_body = body ;
-         cfm_dependencies_from_parameters =
-           abstraction_info.Abstractions.ai_dependencies_from_params ;
-         cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
-       Some (CSF_let compiled_field)
+       (begin
+       match body with
+        | Parsetree.BB_logical _ ->
+            (* In OCaml, logical lets are not generated. *)
+            None
+        | Parsetree.BB_computational body_expr ->
+            (* No recursivity, then the method cannot call itself in its body *)
+            (* then no need to set the [scc_lambda_lift_params_mapping] of    *)
+            (* the context.                                                   *)
+            let coq_min_typ_env_names =
+              generate_one_field_binding
+                ctx env abstraction_info.Abstractions.ai_min_coq_env
+                ~let_connect: LC_first_non_rec
+                abstraction_info.Abstractions.ai_dependencies_from_params
+                (from, name, params, (Some scheme), body_expr) in
+            (* Now, build the [compiled_field_memory], even if the method  *)
+            (* was not really generated because it was inherited.          *)
+            let compiled_field = {
+              cfm_from_species = from ;
+              cfm_method_name = name ;
+              cfm_method_body = body_expr ;
+              cfm_dependencies_from_parameters =
+              abstraction_info.Abstractions.ai_dependencies_from_params ;
+              cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
+            Some (CSF_let compiled_field)
+       end)
    | Abstractions.FAI_let_rec l ->
        (begin
        match l with
@@ -619,47 +677,63 @@ let generate_methods ctx env field =
             (* must at least bind one identifier !          *)
             assert false
         | ((from, name, params, scheme, body, _), first_ai) :: q ->
-            (* Extend the context with the mapping between these *)
-            (* recursive functions and their extra arguments.    *)
-            let ctx' = {
-              ctx with
-                Context.scc_lambda_lift_params_mapping =
-                  List.map
-                    (fun ((_, n, _, _, _, _), ai) ->
-                      (n, make_params_list_from_abstraction_info ai))
+            (begin
+            match body with
+             | Parsetree.BB_logical _ ->
+                 (* In OCaml, logical lets are not generated. *)
+                 None
+             | Parsetree.BB_computational body_expr ->
+                 (* Extend the context with the mapping between these *)
+                 (* recursive functions and their extra arguments.    *)
+                 let ctx' = {
+                   ctx with
+                   Context.scc_lambda_lift_params_mapping =
+                   List.map
+                     (fun ((_, n, _, _, _, _), ai) ->
+                       (n, make_params_list_from_abstraction_info ai))
                      l } in
-            (* Now, generate the first method, introduced by "let rec". *)
-            let first_coq_min_typ_env_names =
-              generate_one_field_binding
-                ctx' env first_ai.Abstractions.ai_min_coq_env
-                ~let_connect: LC_first_rec
-                first_ai.Abstractions.ai_dependencies_from_params
-                (from, name, params, (Some scheme), body) in
-            let first_compiled = {
-              cfm_from_species = from ;
-              cfm_method_name = name ;
-              cfm_method_body = body ;
-              cfm_dependencies_from_parameters =
-                first_ai.Abstractions.ai_dependencies_from_params ;
-              cfm_coq_min_typ_env_names = first_coq_min_typ_env_names } in
-            (* Finally, generate the remaining  methods, introduced by "and". *)
-            let rem_compiled =
-              List.map
-                (fun ((from, name, params, scheme, body, _), ai) ->
-                  let coq_min_typ_env_names =
-                    generate_one_field_binding
-                      ctx' env ai.Abstractions.ai_min_coq_env
-                      ~let_connect: LC_following
-                      ai.Abstractions.ai_dependencies_from_params
-                      (from, name, params, (Some scheme), body) in
-                  { cfm_from_species = from ;
-                    cfm_method_name = name ;
-                    cfm_method_body = body ;
-                    cfm_dependencies_from_parameters =
-                      ai.Abstractions.ai_dependencies_from_params ;
-                    cfm_coq_min_typ_env_names = coq_min_typ_env_names })
-                q in
-            Some (CSF_let_rec (first_compiled :: rem_compiled))
+                 (* Now, generate the first method, introduced by "let rec". *)
+                 let first_coq_min_typ_env_names =
+                   generate_one_field_binding
+                     ctx' env first_ai.Abstractions.ai_min_coq_env
+                     ~let_connect: LC_first_rec
+                     first_ai.Abstractions.ai_dependencies_from_params
+                     (from, name, params, (Some scheme), body_expr) in
+                 let first_compiled = {
+                   cfm_from_species = from ;
+                   cfm_method_name = name ;
+                   cfm_method_body = body_expr ;
+                   cfm_dependencies_from_parameters =
+                   first_ai.Abstractions.ai_dependencies_from_params ;
+                   cfm_coq_min_typ_env_names = first_coq_min_typ_env_names } in
+                 (* Finally, generate the remaining  methods, *)
+                 (* introduced by "and".                      *)
+                 let rem_compiled =
+                   List.map
+                     (fun ((from, name, params, scheme, body, _), ai) ->
+                       let body_e =
+                         (match body with
+                          | Parsetree.BB_logical _ ->
+                              (* If the first one was not a logical, then   *)
+                              (* the remaning ones must not be otherwise    *)
+                              (* the check done at scoping time is bugged ! *)
+                              assert false
+                          | Parsetree.BB_computational e -> e) in
+                       let coq_min_typ_env_names =
+                         generate_one_field_binding
+                           ctx' env ai.Abstractions.ai_min_coq_env
+                           ~let_connect: LC_following
+                           ai.Abstractions.ai_dependencies_from_params
+                           (from, name, params, (Some scheme), body_e) in
+                       { cfm_from_species = from ;
+                         cfm_method_name = name ;
+                         cfm_method_body = body_e ;
+                         cfm_dependencies_from_parameters =
+                         ai.Abstractions.ai_dependencies_from_params ;
+                         cfm_coq_min_typ_env_names = coq_min_typ_env_names })
+                     q in
+                 Some (CSF_let_rec (first_compiled :: rem_compiled))
+            end)
        end)
    | Abstractions.FAI_theorem ((_, name, _, _, _, _), _)
    | Abstractions.FAI_property (_, name, _, _, _) ->
@@ -1376,4 +1450,3 @@ let collection_compile env ~current_unit out_fmter coll_def coll_descr
     assert false
   end)
 ;;
-

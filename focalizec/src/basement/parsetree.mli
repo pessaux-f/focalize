@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.29 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.30 2008-03-07 10:55:32 pessaux Exp $ *)
 
 (** {2 The Focalize abstract syntax tree.} *)
 
@@ -296,19 +296,21 @@ and let_def_desc = {
 }
 
 and binding = binding_desc ast
+and binding_body =
+  | BB_logical of prop
+  | BB_computational of expr
 and binding_desc = {
   b_name : vname;
   b_params : (vname * type_expr option) list;
   b_type : type_expr option;
-  b_body : expr;
+  b_body : binding_body;
 }
-;;
 
 (** {3 Proofs.} *)
 
 (** {6 Propositions.} *)
 
-type prop = prop_desc ast
+and prop = prop_desc ast
 and prop_desc =
   | Pr_forall of vname list * type_expr * prop
   | Pr_exists of vname list * type_expr * prop
