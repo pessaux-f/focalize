@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.34 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.35 2008-03-07 14:53:31 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -44,8 +44,6 @@ type compiled_field_memory = {
   cfm_from_species : Parsetree.qualified_species ;
   (** The method's name. *)
   cfm_method_name : Parsetree.vname ;
-  (** The method's body. *)
-  cfm_method_body  : compiled_method_body ;
   (* The positionnal list of species parameter carriers appearing in the
      type of the method. They lead to extra arguments of type "Set" and
      must be instanciated by the correct type when applying the method's
@@ -830,10 +828,6 @@ let generate_methods ctx print_ctx env generated_fields field =
        let compiled_field = {
          cfm_from_species = from ;
          cfm_method_name = name ;
-         cfm_method_body =
-           (match body with
-            | Parsetree.BB_computational e -> CMB_expr e
-            | Parsetree.BB_logical p -> CMB_prop p) ;
          cfm_used_species_parameter_tys =
            abstraction_info.Abstractions.ai_used_species_parameter_tys ;
          cfm_dependencies_from_parameters =
@@ -855,7 +849,6 @@ let generate_methods ctx print_ctx env generated_fields field =
        let compiled_field = {
          cfm_from_species = from ;
          cfm_method_name = name ;
-         cfm_method_body = CMB_prop prop ;
          cfm_used_species_parameter_tys =
            abstraction_info.Abstractions.ai_used_species_parameter_tys ;
          cfm_dependencies_from_parameters =

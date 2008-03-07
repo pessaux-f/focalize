@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.33 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.34 2008-03-07 14:53:31 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -287,8 +287,6 @@ type compiled_field_memory = {
   cfm_from_species : Parsetree.qualified_species ;
   (** The method's name. *)
   cfm_method_name : Parsetree.vname ;
-  (** The method's body. *)
-  cfm_method_body  : Parsetree.expr ;
   (** The list mapping for each species parameter, the methods the current
       method depends on. By lambda-lifting, these methods induce extra
       parameters named as "_p_" +  species parameter name + "_" + called
@@ -663,7 +661,6 @@ let generate_methods ctx env field =
             let compiled_field = {
               cfm_from_species = from ;
               cfm_method_name = name ;
-              cfm_method_body = body_expr ;
               cfm_dependencies_from_parameters =
               abstraction_info.Abstractions.ai_dependencies_from_params ;
               cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
@@ -702,7 +699,6 @@ let generate_methods ctx env field =
                  let first_compiled = {
                    cfm_from_species = from ;
                    cfm_method_name = name ;
-                   cfm_method_body = body_expr ;
                    cfm_dependencies_from_parameters =
                    first_ai.Abstractions.ai_dependencies_from_params ;
                    cfm_coq_min_typ_env_names = first_coq_min_typ_env_names } in
@@ -727,9 +723,8 @@ let generate_methods ctx env field =
                            (from, name, params, (Some scheme), body_e) in
                        { cfm_from_species = from ;
                          cfm_method_name = name ;
-                         cfm_method_body = body_e ;
                          cfm_dependencies_from_parameters =
-                         ai.Abstractions.ai_dependencies_from_params ;
+                           ai.Abstractions.ai_dependencies_from_params ;
                          cfm_coq_min_typ_env_names = coq_min_typ_env_names })
                      q in
                  Some (CSF_let_rec (first_compiled :: rem_compiled))
