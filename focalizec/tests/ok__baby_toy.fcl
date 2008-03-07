@@ -58,19 +58,21 @@ type foc_diag ('a) =
 type foc_record ('a) =
   internal  { hcode = int ; contents = 'a; }
   external
-  | caml -> "'a Focvasives.foc_record"
+  | caml -> "'a Ok__baby_toy_externals.bbt_record"
   | coq -> "Focq.foc_record ['a]"
 
   and hcode =
-  | caml -> "Focvasives.fv_hashing_code"
+  | caml -> "Ok__baby_toy_externals.bbt_hashing_code"
   | coq -> "Focq.hc"
 
   and contents =
-  | caml -> "Focvasives.fv_contents"
+  | caml -> "Ok__baby_toy_externals.bbt_contents"
   | coq -> "Focq.conts"
 ;;
 let junk = { hcode = 42 ; contents = "Same same..." } ;;
 if true then junk else { hcode = 43 ; contents = "Not same..." } ;;
+basics#print_string (junk.contents) ;;
+basics#print_string ("\n") ;;
 
 let a in foc_diag (int) = (1, 4) ;;
 

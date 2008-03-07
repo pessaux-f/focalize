@@ -25,6 +25,7 @@ ok_all: $(OK_TEST_FILES)
 	  ../toplevel/check_file -c $$i; \
 	done; \
 	# Compile the generated OCaml code.
+	ocamlc -w a -c ok__baby_toy_externals.ml
 	for i in $(OK_TEST_FILES:.foc=.ml); do \
 	  echo "OCamllizing $$i"; \
 	  ocamlc -w a -I ../lib/ -I . ../lib/focvasives.cmo ../lib/basics.cmo $$i -o $$i.out; \
@@ -39,4 +40,6 @@ ko_all: $(KO_TEST_FILES)
 
 
 clean:
-	rm -f *.fo *.mangled *~ .*~ *.cm* *.o *.ml *.v *.out
+	rm -f *.fo *.mangled *~ .*~ *.cm* *.o *.out
+	rm -f $(OK_TEST_FILES:.foc=.v) $(KO_TEST_FILES:.foc=.v)
+	rm -f $(OK_TEST_FILES:.foc=.ml) $(KO_TEST_FILES:.foc=.ml)
