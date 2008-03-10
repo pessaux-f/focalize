@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.40 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.41 2008-03-10 12:37:35 pessaux Exp $ *)
 
 open Parsetree
 
@@ -103,7 +103,7 @@ exception Module_not_specified_as_used of
 
     {b Rem} : Exported outside this module.                                *)
 (* *********************************************************************** *)
-exception Self_cant_parameterize_itself of Location.t;;
+exception Self_cant_parameterize_itself of Location.t ;;
 
 
 
@@ -118,7 +118,7 @@ exception Self_cant_parameterize_itself of Location.t;;
 
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
-exception Is_parameter_only_coll_ident of Location.t;;
+exception Is_parameter_only_coll_ident of Location.t ;;
 
 
 
@@ -153,7 +153,7 @@ exception Invalid_external_binding_identifier of (Location.t * Parsetree.vname)
 
 
 
-exception Invalid_external_binding_number of Location.t;;
+exception Invalid_external_binding_number of Location.t ;;
 
 
 
@@ -171,9 +171,8 @@ type scoping_context = {
   current_unit : Types.fname;
   (** The list of "use"-d modules. Not file with paths and extension : just
       module name (ex: "Basics"). *)
-  used_modules : Types.fname list;
-}
-;;
+  used_modules : Types.fname list
+} ;;
 
 let vname_of_qvname = function
   | Parsetree.Vname vname | Parsetree.Qualified (_, vname) -> vname
@@ -1553,8 +1552,7 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
   | Parsetree.E_constr (cstr_expr, []) ->
       (* We re-construct a fake ident from the constructor expression *)
       (* just to be able to lookup inside the environment.            *)
-      let Parsetree.CI qvname =
-        cstr_expr.Parsetree.ast_desc in
+      let Parsetree.CI qvname = cstr_expr.Parsetree.ast_desc in
       let pseudo_ident = { cstr_expr with
         Parsetree.ast_desc = Parsetree.I_global qvname } in
       let species_info =
@@ -1572,8 +1570,7 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
           Parsetree.ast_desc =
             Parsetree.CI (Qualified (hosting_file, vname_of_qvname qvname)) } in
       { initial_expr with
-          Parsetree.ast_desc =
-            Parsetree.E_constr (scoped_cstr_expr, []) }
+          Parsetree.ast_desc = Parsetree.E_constr (scoped_cstr_expr, []) }
   | Parsetree.E_paren expr ->
       scope_expr_collection_cstr_for_is_param ctx env expr
   | _ -> raise (Is_parameter_only_coll_ident initial_expr.Parsetree.ast_loc)

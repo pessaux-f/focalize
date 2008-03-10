@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.104 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.105 2008-03-10 12:37:35 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -81,7 +81,7 @@ exception Bad_type_arity of
 
     {b Rem} : Exported outside this module.                              *)
 (* ********************************************************************* *)
-exception Rep_multiply_defined of Location.t;;
+exception Rep_multiply_defined of Location.t ;;
 
 
 
@@ -2081,8 +2081,7 @@ let apply_species_arguments ctx env base_spe_descr params =
               let substd_meths =
                 List.map
                   (SubstColl.subst_species_field
-                     ~current_unit: ctx.current_unit
-                     (SubstColl.SCK_coll c1) c2)
+                     ~current_unit: ctx.current_unit (SubstColl.SCK_coll c1) c2)
                   accu_meths in
               let new_substs = (c1, c2) :: accu_substs in
               (substd_meths, new_substs)
@@ -2137,8 +2136,8 @@ let typecheck_species_expr ctx env species_expr =
     Parsetree.ANTI_type species_carrier_type ;
   (* Now, create the "species type" (a somewhat of signature). *)
   let species_methods =
-    apply_species_arguments ctx env
-      species_species_description
+    apply_species_arguments
+      ctx env species_species_description
       species_expr_desc.Parsetree.se_params in
   (* Record the type in the AST node. *)
   species_expr.Parsetree.ast_type <- Parsetree.ANTI_type species_carrier_type ;
