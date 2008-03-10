@@ -149,7 +149,8 @@ species Toy inherits Basic_object =
   theorem same_is_not_different : all x y in Self,
      !different(x, y) <-> ( !equal(x, y))
   proof:
-    by definition of different ;
+    by definition of Self!different
+      property !different, different ;
 
 end
 ;;

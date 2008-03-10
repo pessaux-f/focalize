@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.76 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.77 2008-03-10 13:00:17 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -647,7 +647,7 @@ fact_list:
 ;
 
 fact:
-  | DEFINITION OF property_ident_comma_list { mk (F_def $3) }
+  | DEFINITION OF definition_ident_comma_list { mk (F_def $3) }
   | HYPOTHESIS proof_hyp_list { mk (F_hypothesis $2) }
   | PROPERTY property_ident_comma_list { mk (F_property ($2)) }
   | THEOREM property_ident_comma_list { mk (F_property ($2)) }
@@ -918,6 +918,18 @@ property_ident:
     { mk_local_expr_ident $1 }
   | opt_lident SHARP property_vname
     { mk_global_expr_ident $1 $3 }
+  | opt_qualified_vname BANG property_vname
+    { mk_method_expr_ident $1 $3 }     /* "by property C!foo" is allowed. */
+;
+
+/* In a proof, "by definition" is always refering to something local      */
+/* to the species. Hence, it is not allowed to say "by definition C!foo". */
+/* We enforce this in the syntax.                                         */
+definition_ident:
+  | property_vname
+    { mk_local_expr_ident $1 }
+  | opt_lident SHARP property_vname
+    { mk_global_expr_ident $1 $3 }
 ;
 
 carrier_ident:
@@ -929,6 +941,11 @@ species_ident:
     { mk_local_ident $1 }
   | species_glob_ident
     { $1 }
+;
+
+definition_ident_comma_list:
+  | definition_ident COMMA definition_ident_comma_list { $1 :: $3 }
+  | definition_ident { [$1] }
 ;
 
 property_ident_comma_list:
