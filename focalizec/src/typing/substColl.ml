@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.17 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.18 2008-03-10 15:26:43 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -88,44 +88,42 @@ let subst_expr_ident ~current_unit c1 c2 ident =
   (* Substitute in the AST node description. *)
   let new_desc =
     match ident.Parsetree.ast_desc with
-    | Parsetree.EI_local _ | Parsetree.EI_global _
-    | Parsetree.EI_method (None, _) ->
-      (* No collection name inside, hence nothing to change. *)
-      ident.Parsetree.ast_desc
-    | Parsetree.EI_method (Some coll_qvname, vname) ->
-      match c1 with
-      | SCK_self ->
-        (* Because Self is a special constructor, an expr_ident can't  *)
-        (* be Self. Then in this case, the substitution is identity.   *)
-        ident.Parsetree.ast_desc
-      | SCK_coll effective_coll_ty ->
-        let coll_ty =
-          match coll_qvname with
-          | Parsetree.Vname coll_vname ->
-            (* If no module specifier appears in the ident, then it *)
-            (* implicitely refers to the current compilation unit.  *)
-            (* Should never happen because the scoping pass should  *)
-            (* have made the hosting module explicit.               *)
-            (current_unit, Parsetree_utils.name_of_vname coll_vname)
-          | Parsetree.Qualified (modname, coll_vname) ->
-            (modname, Parsetree_utils.name_of_vname coll_vname) in
-        (* Attention, [c2] is a [Types.collection_type], then it has *)
-        (* to be transformed into a [Parsetree.vname] before being   *)
-        (* inserted in the [Parsetree.EI_method]. Because collection *)
-        (* names are always capitalized, the transformation is       *)
-        (* trivially to surround [c2] byt a [Parsetree.Vuident].     *)
-        if coll_ty = effective_coll_ty then
-          let new_species_qvname =
-            Parsetree.Qualified (fst c2, Parsetree.Vuident (snd c2)) in
-          Parsetree.EI_method
-            (Some new_species_qvname, vname)
-        else ident.Parsetree.ast_desc in
+     | Parsetree.EI_local _ | Parsetree.EI_global _
+     | Parsetree.EI_method (None, _) ->
+         (* No collection name inside, hence nothing to change. *)
+         ident.Parsetree.ast_desc
+     | Parsetree.EI_method (Some coll_qvname, vname) ->
+         match c1 with
+          | SCK_self ->
+              (* Because Self is a special constructor, an expr_ident can't  *)
+              (* be Self. Then in this case, the substitution is identity.   *)
+              ident.Parsetree.ast_desc
+          | SCK_coll effective_coll_ty ->
+              let coll_ty =
+                match coll_qvname with
+                 | Parsetree.Vname coll_vname ->
+                     (* If no module specifier appears in the ident, then it *)
+                     (* implicitely refers to the current compilation unit.  *)
+                     (* Should never happen because the scoping pass should  *)
+                     (* have made the hosting module explicit.               *)
+                     (current_unit, Parsetree_utils.name_of_vname coll_vname)
+                 | Parsetree.Qualified (modname, coll_vname) ->
+                     (modname, Parsetree_utils.name_of_vname coll_vname) in
+              (* Attention, [c2] is a [Types.collection_type], then it has *)
+              (* to be transformed into a [Parsetree.vname] before being   *)
+              (* inserted in the [Parsetree.EI_method]. Because collection *)
+              (* names are always capitalized, the transformation is       *)
+              (* trivially to surround [c2] byt a [Parsetree.Vuident].     *)
+              if coll_ty = effective_coll_ty then
+                let new_species_qvname =
+                  Parsetree.Qualified (fst c2, Parsetree.Vuident (snd c2)) in
+                Parsetree.EI_method
+                  (Some new_species_qvname, vname)
+              else ident.Parsetree.ast_desc in
   (* Substitute in the AST node type. *)
   let new_type =
     subst_ast_node_type_information c1 c2 ident.Parsetree.ast_type in
-  { ident with
-      Parsetree.ast_desc = new_desc;
-      Parsetree.ast_type = new_type; }
+  { ident with Parsetree.ast_desc = new_desc ; Parsetree.ast_type = new_type }
 ;;
 
 
@@ -245,9 +243,9 @@ let rec subst_expr ~current_unit c1 c2 expression =
            let bindings' =
              List.map
                (fun (pat, expr) ->
-         let pat' = subst_pattern c1 c2 pat in
-         let expr' = rec_subst expr in
-         (pat', expr'))
+                 let pat' = subst_pattern c1 c2 pat in
+                 let expr' = rec_subst expr in
+                 (pat', expr'))
                bindings in
            Parsetree.E_match (matched_expr', bindings')
        | Parsetree.E_if (e_cond, e_then, e_else) ->
@@ -315,7 +313,7 @@ and subst_let_binding ~current_unit c1 c2 binding =
     { binding with
         (* Substitute in the AST node type. *)
         Parsetree.ast_type =
-          subst_ast_node_type_information c1 c2 binding.Parsetree.ast_type;
+          subst_ast_node_type_information c1 c2 binding.Parsetree.ast_type ;
         Parsetree.ast_desc = desc' }
 
 
@@ -331,7 +329,7 @@ and subst_let_definition ~current_unit c1 c2 let_def =
   { let_def with
      (* Substitute in the AST node type. *)
       Parsetree.ast_type =
-        subst_ast_node_type_information c1 c2 let_def.Parsetree.ast_type;
+        subst_ast_node_type_information c1 c2 let_def.Parsetree.ast_type ;
       Parsetree.ast_desc = desc' }
 
 
@@ -435,9 +433,9 @@ let subst_species_field ~current_unit c1 c2 = function
               (match c1 with
                | SCK_coll c -> Types.subst_type_simple c c2 ty
                | SCK_self ->
-           Types.copy_type_simple_but_variables
-             ~and_abstract: (Some c2) ty) in
-            Types.end_definition ();
+                   Types.copy_type_simple_but_variables
+                     ~and_abstract: (Some c2) ty) in
+            Types.end_definition () ;
             let scheme' = Types.generalize ty' in
             let body' = subst_binding_body ~current_unit c1 c2 body in
             (from, vname, params_names, scheme', body', dep))
