@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: ast_equal.ml,v 1.4 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: ast_equal.ml,v 1.5 2008-03-14 14:43:59 pessaux Exp $ *)
 
 (* ********************************************************************** *)
 (** {b Descr} : This module performs test equality of the AST expression.
@@ -21,11 +21,11 @@
               It is unclear whether the physical equality would be
               sufficient. Hence we implement here a custom structural
               equality to determine if 2 expressions have the same
-              form.
+              form modulo alph-conversion of the free identifiers.
               In particular, we are only interested in comparing only
               the [Parsetree.ast_desc] field.
               Currently, the comparison is done on the skeleton of the
-              expression WITHOUT alpha-conversion equivalence.            *)
+              expression.                                                 *)
 (* ********************************************************************** *)
 
 
@@ -50,10 +50,16 @@ let ident (ident1 : Parsetree.ident) (ident2 : Parsetree.ident) =
 
     {b Rem} : Not exported outside this module.                     *)
 (* **************************************************************** *)
-let expr_ident (ident1 : Parsetree.expr_ident) (ident2 : Parsetree.expr_ident) =
-  (* Because scoping has been done, we can safely perform a simple structural *)
-  (* equality on the [Parsetree.ast_desc] field of the [ident] .              *)
-  ident1.Parsetree.ast_desc = ident2.Parsetree.ast_desc
+let expr_ident alpha_eq_map (ident1 : Parsetree.expr_ident)
+    (ident2 : Parsetree.expr_ident) =
+  match (ident1.Parsetree.ast_desc, ident2.Parsetree.ast_desc) with
+   | ((Parsetree.EI_local vname1), (Parsetree.EI_local vname2)) ->
+       List.mem (vname1, vname2) alpha_eq_map
+   | (_, _) ->
+       (* In any other cases (EI_global, EI_method), the alpha-conversion *)
+       (* does not apply. Hence, the comparison is simply the structural  *)
+       (* equality on the [ast_desc] field.                               *)
+       ident1.Parsetree.ast_desc = ident2.Parsetree.ast_desc
 ;;
 
 
@@ -107,27 +113,43 @@ let constant (cst1 : Parsetree.constant) (cst2 : Parsetree.constant) =
 
 
 
-(* *********************************************** *)
-(* Parsetree.pattern -> Parsetree.pattern -> bool  *)
-(** {b Descr} : Tests the equality of 2 [pattern]s.
+(* ********************************************************************** *)
+(* Parsetree.pattern -> Parsetree.pattern ->                              *)
+(*   (bool * (Parsetree.vname * Parsetree.vname) list)                    *)
+(** {b Descr} : Tests the equality of 2 [pattern]s and returns the new
+    alpha-conversion bindings if any induced by the pattern and that
+    mut be added while comparing the expressions related to the patterns.
 
-    {b Rem} : Not exported outside this module.    *)
-(* *********************************************** *)
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
 let rec pattern pattern1 pattern2 =
   match (pattern1.Parsetree.ast_desc, pattern2.Parsetree.ast_desc) with
-   | ((Parsetree.P_const c1), (Parsetree.P_const c2)) -> constant c1 c2
-   | ((Parsetree.P_var n1), (Parsetree.P_var n2)) -> n1 = n2
+   | ((Parsetree.P_const c1), (Parsetree.P_const c2)) ->
+       ((constant c1 c2), [])
+   | ((Parsetree.P_var n1), (Parsetree.P_var n2)) -> (true, [(n1, n2)])
    | ((Parsetree.P_as (p1, n1)), (Parsetree.P_as (p2, n2))) ->
-       (pattern p1 p2) && (n1 = n2)
-   | (Parsetree.P_wild, Parsetree.P_wild) -> true
+       let (pat_eq, aplhac) = pattern p1 p2 in
+        (pat_eq, ((n1, n2) :: aplhac))
+   | (Parsetree.P_wild, Parsetree.P_wild) -> (true, [])
    | ((Parsetree.P_constr (id1, pats1)), (Parsetree.P_constr (id2, pats2))) ->
-       (constructor_ident id1 id2) && (List.for_all2 pattern pats1 pats2)
+       let (pats_eqs, aplhacs) = List.split (List.map2 pattern pats1 pats2) in
+       let pats_eq = List.for_all (fun b -> b) pats_eqs in
+       (((constructor_ident id1 id2) && pats_eq),
+        (List.flatten aplhacs))
    | ((Parsetree.P_record labs_pats1), (Parsetree.P_record labs_pats2)) ->
-       List.for_all2
-         (fun (lab1, pat1) (lab2, pat2) -> (lab1 = lab2) && (pattern pat1 pat2))
-         labs_pats1 labs_pats2
+       let (pats_eqs, aplhacs) =
+         List.split
+           (List.map2
+              (fun (lab1, pat1) (lab2, pat2) ->
+                let (pat_eq, alphac) = pattern pat1 pat2 in
+                (((lab1 = lab2) && pat_eq), alphac))
+              labs_pats1 labs_pats2) in
+       let pats_eq = List.for_all (fun b -> b) pats_eqs in
+       (pats_eq, (List.flatten aplhacs))
    | ((Parsetree.P_tuple pats1), (Parsetree.P_tuple pats2)) ->
-       List.for_all2 pattern pats1 pats2
+       let (pats_eqs, aplhacs) = List.split (List.map2 pattern pats1 pats2) in
+       let pats_eq = List.for_all (fun b -> b) pats_eqs in
+       (pats_eq, (List.flatten aplhacs))
    | ((Parsetree.P_paren p1), (Parsetree.P_paren p2)) -> pattern p1 p2
    | (_, (Parsetree.P_paren p2)) ->
        (* Consider that parentheses are non-significant. *)
@@ -135,7 +157,7 @@ let rec pattern pattern1 pattern2 =
    | ((Parsetree.P_paren p1), _) ->
        (* Consider that parentheses are non-significant. *)
        pattern p1 pattern2
-   | (_, _) -> false
+   | (_, _) -> (false, [])
 ;;
 
 
@@ -169,57 +191,106 @@ let rec type_expr ty_expr1 ty_expr2 =
 
 
 
+(* ************************************************************************* *)
+(** {b Descr} : "Normalise" a [prop] by flattening all consecutive \foralls
+    binding idents to the same type_expr. Do same thing to consecutive
+    \exists.
+    This allows to consider that "\forall x : A \forall y in A" is
+    equal to "\forall x y in A".
+    We proceed by deep search first.
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+let rec normalise_prop prop =
+  match prop.Parsetree.ast_desc with
+   | Parsetree.Pr_forall (vnames, ty_expr, p) ->
+       (begin
+       match (normalise_prop p).Parsetree.ast_desc with
+        | Parsetree.Pr_forall (vnames', ty_expr', p') ->
+            (* If bound idents have the same type, then *)
+            (* collapse into one uniq [Pr_forall].      *)
+            if type_expr ty_expr ty_expr' then
+              { prop with Parsetree.ast_desc =
+                  Parsetree.Pr_forall (vnames @ vnames', ty_expr', p') }
+            else prop
+        | _ -> prop
+       end)
+  | Parsetree.Pr_exists (vnames, ty_expr, p) ->
+       (begin
+       match (normalise_prop p).Parsetree.ast_desc with
+        | Parsetree.Pr_exists (vnames', ty_expr', p') ->
+            (* If bound idents have the same type, then *)
+            (* collapse into one uniq [Pr_exists].      *)
+            if type_expr ty_expr ty_expr' then
+              { prop with Parsetree.ast_desc =
+                  Parsetree.Pr_exists (vnames @ vnames', ty_expr', p') }
+            else prop
+        | _ -> prop
+       end)
+  | _ -> prop
+;;
+
+
+
 (* ******************************************** *)
 (* Parsetree.expr -> Parsetree.expr -> bool     *)
 (** {b Descr} : Tests the equality of 2 [expr]s.
 
     {b Rem} : Not exported outside this module. *)
 (* ******************************************** *)
-let rec expr expression1 expression2 =
+let rec expr alpha_eq_map expression1 expression2 =
   match (expression1.Parsetree.ast_desc, expression2.Parsetree.ast_desc) with
    | (Parsetree.E_self, Parsetree.E_self) -> true
    | ((Parsetree.E_const c1), (Parsetree.E_const c2)) -> constant c1 c2
    | ((Parsetree.E_fun (vnames1, e1)), (Parsetree.E_fun (vnames2, e2))) ->
-       (vnames1 = vnames2) && (expr e1 e2)
-   | ((Parsetree.E_var id1), (Parsetree.E_var id2)) -> expr_ident id1 id2
+       (vnames1 = vnames2) && (expr alpha_eq_map e1 e2)
+   | ((Parsetree.E_var id1), (Parsetree.E_var id2)) ->
+       expr_ident alpha_eq_map id1 id2
    | ((Parsetree.E_app (e1, es1)), (Parsetree.E_app (e2, es2))) ->
-       (expr e1 e2) && (List.for_all2 expr es1 es2)
+       (expr alpha_eq_map e1 e2) && (List.for_all2 (expr alpha_eq_map) es1 es2)
    | ((Parsetree.E_constr (ce1, es1)), (Parsetree.E_constr (ce2, es2))) ->
-       (constructor_ident ce1 ce2) && (List.for_all2 expr es1 es2)
+       (constructor_ident ce1 ce2) &&
+       (List.for_all2 (expr alpha_eq_map) es1 es2)
    | ((Parsetree.E_match (e1, pats_es1)), (Parsetree.E_match (e2, pats_es2))) ->
-       (expr e1 e2) &&
+       (expr alpha_eq_map e1 e2) &&
        (List.for_all2
-          (fun (pat1, e1) (pat2, e2) -> (pattern pat1 pat2) && (expr e1 e2))
+          (fun (pat1, e1) (pat2, e2) ->
+            let (pat_eq, extra_alpha_mapping) = pattern pat1 pat2 in
+            let alpha_eq_map' = extra_alpha_mapping @ alpha_eq_map in
+            pat_eq && (expr alpha_eq_map' e1 e2))
           pats_es1 pats_es2)
    | ((Parsetree.E_if (e1, e1', e1'')), (Parsetree.E_if (e2, e2', e2''))) ->
-       (expr e1 e2) && (expr e1' e2') && (expr e1'' e2'')
+       (expr alpha_eq_map e1 e2) && (expr alpha_eq_map e1' e2') &&
+       (expr alpha_eq_map e1'' e2'')
    | ((Parsetree.E_let (ldef1, e1)), (Parsetree.E_let (ldef2, e2))) ->
-       (let_def ldef1 ldef2) && (expr e1 e2)
+       (let_def alpha_eq_map ldef1 ldef2) && (expr alpha_eq_map e1 e2)
    | ((Parsetree.E_record labs_es1), (Parsetree.E_record labs_es2)) ->
        List.for_all2
-         (fun (lab1, e1) (lab2, e2) -> (lab1 = lab2) && (expr e1 e2))
+         (fun (lab1, e1) (lab2, e2) -> (lab1 = lab2) &&
+           (expr alpha_eq_map e1 e2))
          labs_es1 labs_es2
    | ((Parsetree.E_record_access (e1, lab1)),
       (Parsetree.E_record_access (e2, lab2))) ->
-        (expr e1 e2) && (lab1 = lab2)
+        (expr alpha_eq_map e1 e2) && (lab1 = lab2)
    | ((Parsetree.E_record_with (e1, labs_es1)),
       (Parsetree.E_record_with (e2, labs_es2))) ->
-        (expr e1 e2) &&
+        (expr alpha_eq_map e1 e2) &&
         (List.for_all2
-           (fun (lab1, e1) (lab2, e2) -> (lab1 = lab2) && (expr e1 e2))
+           (fun (lab1, e1) (lab2, e2) ->
+             (lab1 = lab2) && (expr alpha_eq_map e1 e2))
            labs_es1 labs_es2)
    | ((Parsetree.E_tuple es1), (Parsetree.E_tuple es2)) ->
-       List.for_all2 expr es1 es2
+       List.for_all2 (expr alpha_eq_map) es1 es2
    | ((Parsetree.E_external ee1), (Parsetree.E_external ee2)) ->
        external_expr ee1 ee2
    | ((Parsetree.E_paren e1), (Parsetree.E_paren e2)) ->
-       expr e1 e2
+       expr alpha_eq_map e1 e2
    | (_, (Parsetree.E_paren e2)) ->
        (* Consider that parentheses are non-significant. *)
-       expr expression1 e2
+       expr alpha_eq_map expression1 e2
    | ((Parsetree.E_paren e1), _) ->
        (* Consider that parentheses are non-significant. *)
-       expr e1 expression2
+       expr alpha_eq_map e1 expression2
    | (_, _) -> false
 
 
@@ -230,7 +301,7 @@ let rec expr expression1 expression2 =
 
     {b Rem} : Not exported outside this module.     *)
 (* ************************************************ *)
-and let_def let_definition1 let_definition2 =
+and let_def alpha_eq_map let_definition1 let_definition2 =
   let let_definition1_desc = let_definition1.Parsetree.ast_desc in
   let let_definition2_desc = let_definition2.Parsetree.ast_desc in
   (let_definition1_desc.Parsetree.ld_rec =
@@ -240,7 +311,8 @@ and let_def let_definition1 let_definition2 =
    let_definition2_desc.Parsetree.ld_local)
   &&
   (List.for_all2
-     bindind let_definition1_desc.Parsetree.ld_bindings
+     (binding alpha_eq_map)
+     let_definition1_desc.Parsetree.ld_bindings
      let_definition2_desc.Parsetree.ld_bindings)
 
 
@@ -251,15 +323,19 @@ and let_def let_definition1 let_definition2 =
 
     {b Rem} : Not exported outside this module.     *)
 (* ************************************************ *)
-and bindind bnd1 bnd2 =
+and binding alpha_eq_map bnd1 bnd2 =
   let bnd1_desc = bnd1.Parsetree.ast_desc in
   let bnd2_desc = bnd2.Parsetree.ast_desc in
+  (* We extend the alpha-conversion mapping with the parameters. *)
+  let alpha_eq_map' =
+    (List.map2 (fun (n1, _) (n2, _) -> (n1, n2))
+       bnd1_desc.Parsetree.b_params bnd2_desc.Parsetree.b_params)
+    @ alpha_eq_map in
+  (* The bound names must be identical. *)
   (bnd1_desc.Parsetree.b_name = bnd2_desc.Parsetree.b_name)
   &&
   (List.for_all2
-     (fun (n1, te_opt1) (n2, te_opt2) ->
-       (n1 = n2)
-       &&
+     (fun (_, te_opt1) (_, te_opt2) ->
        (match (te_opt1, te_opt2) with
         | (None, None) -> true
         | ((Some te1), (Some te2)) -> type_expr te1 te2
@@ -268,10 +344,10 @@ and bindind bnd1 bnd2 =
   &&
   (match (bnd1_desc.Parsetree.b_body, bnd2_desc.Parsetree.b_body) with
    | ((Parsetree.BB_computational e1), (Parsetree.BB_computational e2)) ->
-       expr e1 e2
-   | ((Parsetree.BB_logical p1), (Parsetree.BB_logical p2)) -> prop p1 p2
+       expr alpha_eq_map' e1 e2
+   | ((Parsetree.BB_logical p1), (Parsetree.BB_logical p2)) ->
+       prop alpha_eq_map' p1 p2
    | (_, _) -> false)
-
 
 
 
@@ -281,26 +357,49 @@ and bindind bnd1 bnd2 =
 
     {b Rem} : Exported outside this module.      *)
 (* ********************************************* *)
-and prop prop1 prop2 =
-  match (prop1.Parsetree.ast_desc, prop2.Parsetree.ast_desc) with
-   | ((Parsetree.Pr_forall (vnames1, ty_expr1, p1)),
-      (Parsetree.Pr_forall (vnames2, ty_expr2, p2)))
-   | ((Parsetree.Pr_exists (vnames1, ty_expr1, p1)),
-      (Parsetree.Pr_exists (vnames2, ty_expr2, p2))) ->
-        vnames1 = vnames2 && (type_expr ty_expr1 ty_expr2) && (prop p1 p2)
-   | ((Parsetree.Pr_imply (p1, p1')), (Parsetree.Pr_imply (p2, p2')))
-   | ((Parsetree.Pr_or (p1, p1')), (Parsetree.Pr_or (p2, p2')))
-   | ((Parsetree.Pr_and (p1, p1')), (Parsetree.Pr_and (p2, p2')))
-   | ((Parsetree.Pr_equiv (p1, p1')), (Parsetree.Pr_equiv (p2, p2'))) ->
-       (prop p1 p2) && (prop p1' p2')
-   | ((Parsetree.Pr_not p1), (Parsetree.Pr_not p2)) -> prop p1 p2
-   | ((Parsetree.Pr_expr e1), (Parsetree.Pr_expr e2)) -> expr e1 e2
-   | ((Parsetree.Pr_paren p1), (Parsetree.Pr_paren p2)) -> prop p1 p2
-   | ((Parsetree.Pr_paren p1), _) ->
-       (* Consider that parentheses are non-significant. *)
-       prop p1 prop2
-   | (_, (Parsetree.Pr_paren p2)) ->
-       (* Consider that parentheses are non-significant. *)
-       prop prop1 p2
-   | (_, _) -> false
+and prop initial_alpha_eq_map initial_prop1 initial_prop2 =
+  let rec __internal_prop alpha_eq_map prop1 prop2 =
+    match (prop1.Parsetree.ast_desc, prop2.Parsetree.ast_desc) with
+     | ((Parsetree.Pr_forall (vnames1, ty_expr1, p1)),
+        (Parsetree.Pr_forall (vnames2, ty_expr2, p2)))
+     | ((Parsetree.Pr_exists (vnames1, ty_expr1, p1)),
+        (Parsetree.Pr_exists (vnames2, ty_expr2, p2))) ->
+          (begin
+          try
+            let alpha_eq_map' = (List.combine vnames1 vnames2) @ alpha_eq_map in
+            (type_expr ty_expr1 ty_expr2) &&
+            (prop alpha_eq_map' p1 p2)
+          with Invalid_argument ("List.combine") ->
+            (* If there is not the same number of quantified variables, *)
+            (* then the 2 props are different.  *)
+            false
+          end)
+     | ((Parsetree.Pr_imply (p1, p1')), (Parsetree.Pr_imply (p2, p2')))
+     | ((Parsetree.Pr_or (p1, p1')), (Parsetree.Pr_or (p2, p2')))
+     | ((Parsetree.Pr_and (p1, p1')), (Parsetree.Pr_and (p2, p2')))
+     | ((Parsetree.Pr_equiv (p1, p1')), (Parsetree.Pr_equiv (p2, p2'))) ->
+         (prop alpha_eq_map p1 p2) && (prop alpha_eq_map p1' p2')
+     | ((Parsetree.Pr_not p1), (Parsetree.Pr_not p2)) ->
+         prop alpha_eq_map p1 p2
+     | ((Parsetree.Pr_expr e1), (Parsetree.Pr_expr e2)) ->
+         expr alpha_eq_map e1 e2
+     | ((Parsetree.Pr_paren p1), (Parsetree.Pr_paren p2)) ->
+         prop alpha_eq_map p1 p2
+     | ((Parsetree.Pr_paren p1), _) ->
+         (* Consider that parentheses are non-significant. *)
+         prop alpha_eq_map p1 prop2
+     | (_, (Parsetree.Pr_paren p2)) ->
+         (* Consider that parentheses are non-significant. *)
+         prop alpha_eq_map prop1 p2
+     | (_, _) -> false in
+
+  (* Now, really apply [__internal_prop] after having normalised the props. *)
+  let prop1' = normalise_prop initial_prop1 in
+  let prop2' = normalise_prop initial_prop2 in
+  __internal_prop initial_alpha_eq_map prop1' prop2'
 ;;
+
+
+
+(** The wrapper to make the alpha-conversion mapping hidden. *)
+let prop_equal_p p1 p2 = prop [] p1 p2 ;;

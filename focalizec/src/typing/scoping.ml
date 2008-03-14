@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.41 2008-03-10 12:37:35 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.42 2008-03-14 14:43:59 pessaux Exp $ *)
 
 open Parsetree
 
@@ -1050,7 +1050,7 @@ and scope_let_definition ~toplevel_let ctx env let_def =
        | Parsetree.BB_logical prop ->
            if let_def_descr.Parsetree.ld_logical = Parsetree.LF_logical then
              Parsetree.BB_logical
-	       (scope_prop ctx env_with_ty_constraints_variables prop)
+               (scope_prop ctx env_with_ty_constraints_variables prop)
            else
              (begin
              match prop.Parsetree.ast_desc with
@@ -1547,8 +1547,7 @@ let rec scope_species_fields ctx env = function
 
 let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
-  | Parsetree.E_self ->
-      raise (Self_cant_parameterize_itself initial_expr.Parsetree.ast_loc)
+  | Parsetree.E_self -> initial_expr
   | Parsetree.E_constr (cstr_expr, []) ->
       (* We re-construct a fake ident from the constructor expression *)
       (* just to be able to lookup inside the environment.            *)

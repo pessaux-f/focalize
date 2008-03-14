@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.mli,v 1.16 2007-12-21 14:47:35 pessaux Exp $ *)
+(* $Id: sourcify.mli,v 1.17 2008-03-14 14:43:59 pessaux Exp $ *)
 
 (** Printing source files from AST. *)
 
@@ -33,3 +33,5 @@ val pp_file : Format.formatter -> Parsetree.file -> unit
 (* Exported for debug. To disapear from interface. *)
 val pp_expr : Format.formatter -> Parsetree.expr -> unit
 val pp_coll_def : Format.formatter -> Parsetree.coll_def -> unit
+val pp_species_expr : Format.formatter -> Parsetree.species_expr -> unit
+val pp_prop  : Format.formatter -> Parsetree.prop -> unit

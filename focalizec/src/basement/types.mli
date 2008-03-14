@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.32 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: types.mli,v 1.33 2008-03-14 14:43:59 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -61,10 +61,16 @@ val is_bool_type : type_simple -> bool
 val refers_to_self_p : type_simple -> bool
 val refers_to_prop_p : type_simple -> bool
 
+type substitution_by_replacement_collection_kind =
+  | SBRCK_coll of type_collection
+  | SBRCK_self
+
 val subst_type_simple :
-  type_collection -> type_collection -> type_simple -> type_simple
+  type_collection -> substitution_by_replacement_collection_kind ->
+    type_simple -> type_simple
 val subst_type_scheme :
-  type_collection -> type_collection -> type_scheme -> type_scheme
+  type_collection -> substitution_by_replacement_collection_kind ->
+    type_scheme -> type_scheme
 
 (** Manipulation of type schemes: generalization, instanciation, generation of
 a (closed) type scheme from a type without unknowns. *)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.18 2008-03-10 15:26:43 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.19 2008-03-14 14:43:59 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -32,10 +32,10 @@
 
     {b Rem} : Exported outside this module.                                   *)
 (* ************************************************************************** *)
-type substitution_collection_kind =
+type substitution_replaced_collection_kind =
     (** The collection to replace is the one named in the argument. *)
-  | SCK_coll of Types.type_collection
-  | SCK_self          (** The collection to replace is Self. *)
+  | SRCK_coll of Types.type_collection
+  | SRCK_self          (** The collection to replace is Self. *)
 ;;
 
 
@@ -55,16 +55,37 @@ let subst_ast_node_type_information c1 c2 = function
   | Parsetree.ANTI_type ty ->
       (begin
       match c1 with
-       | SCK_coll c -> Parsetree.ANTI_type (Types.subst_type_simple c c2 ty)
-       | SCK_self ->
-           Parsetree.ANTI_type
-             (Types.copy_type_simple_but_variables ~and_abstract: (Some c2) ty)
+       | SRCK_coll c -> Parsetree.ANTI_type (Types.subst_type_simple c c2 ty)
+       | SRCK_self ->
+           (begin
+           let ty' =
+             (match c2 with
+              | Types.SBRCK_self ->
+                  (* If the substitution is to replace by Self, then leave *)
+                  (* the Self occurrences in the type, only copy it.       *)
+                  Types.copy_type_simple_but_variables ~and_abstract: None ty
+              | Types.SBRCK_coll c2_ty ->
+                  Types.copy_type_simple_but_variables
+                    ~and_abstract: (Some c2_ty) ty) in
+               Parsetree.ANTI_type ty'
+           end)
       end)
   | Parsetree.ANTI_scheme sch ->
       (begin
       match c1 with
-       | SCK_coll c -> Parsetree.ANTI_scheme (Types.subst_type_scheme c c2 sch)
-       | SCK_self -> Parsetree.ANTI_scheme (Types.abstract_in_scheme c2 sch)
+       | SRCK_coll c -> Parsetree.ANTI_scheme (Types.subst_type_scheme c c2 sch)
+       | SRCK_self ->
+           (begin
+           match c2 with
+            | Types.SBRCK_coll c2_ty ->
+                Parsetree.ANTI_scheme (Types.abstract_in_scheme c2_ty sch)
+            | Types.SBRCK_self ->
+                (* Just copy the scheme, because replacing  *)
+                (* Self by Self is identity. *)
+                let new_ty = Types.specialize sch in
+                let sch' = Types.generalize new_ty in
+                Parsetree.ANTI_scheme sch'
+           end)
       end)
 ;;
 
@@ -73,13 +94,46 @@ let subst_ast_node_type_information c1 c2 = function
 (* substitution_collection_kind -> Types.type_collection ->    *)
 (*   Parsetree.ident -> Parsetree.ident                        *)
 let subst_ident c1 c2 ident =
-  (* Substitution in the AST node description is trivially empty.          *)
-  (* Because [idents] can only be [I_local] of [I_global] stuff, there is  *)
-  (* never collection names inside, hence nothing to change in the [desc]. *)
   (* Substitute in the AST node type. *)
   let new_type =
     subst_ast_node_type_information c1 c2 ident.Parsetree.ast_type in
-  { ident with Parsetree.ast_type = new_type }
+  match c1 with
+   | SRCK_self ->
+       (* We are asked to replace "Self"...          *)
+       (* Since an ident is not Self, nothing to do. *)
+       Parsetree.TE_ident { ident with Parsetree.ast_type = new_type }
+       | SRCK_coll (c1_mod, c1_name) -> 
+           (begin
+           match ident.Parsetree.ast_desc with
+            | Parsetree.I_local _ ->
+                (* No substitution on local identifiers. *)
+                Parsetree.TE_ident
+                  { ident with Parsetree.ast_type = new_type }
+            | Parsetree.I_global (Parsetree.Vname _) ->
+                (* Should never happen since scoping pass should *)
+                (* have explicitely scoped the identifiers.      *)
+                assert false
+            | Parsetree.I_global (Parsetree.Qualified (id_mod, id_name)) ->
+                (* Perform the substitution only if *)
+                (* the ident is equal to c1.        *)
+                if c1_mod = id_mod && (Parsetree.Vuident c1_name) = id_name then
+                  (begin
+                  match c2 with
+                   | Types.SBRCK_coll (c2_mod, c2_name) ->
+                       Parsetree.TE_ident
+                         { ident with Parsetree.ast_type = new_type ;
+                           Parsetree.ast_desc =
+                             Parsetree.I_global
+                               (Parsetree.Qualified
+                                  (c2_mod, (Parsetree.Vuident c2_name))) }
+                   | Types.SBRCK_self  ->
+                       (* Directly replace The ident by a "Self". *)
+                       Parsetree.TE_self
+                  end)
+                else
+                  Parsetree.TE_ident
+                    { ident with Parsetree.ast_type = new_type }
+           end)
 ;;
 
 
@@ -94,11 +148,11 @@ let subst_expr_ident ~current_unit c1 c2 ident =
          ident.Parsetree.ast_desc
      | Parsetree.EI_method (Some coll_qvname, vname) ->
          match c1 with
-          | SCK_self ->
+          | SRCK_self ->
               (* Because Self is a special constructor, an expr_ident can't  *)
               (* be Self. Then in this case, the substitution is identity.   *)
               ident.Parsetree.ast_desc
-          | SCK_coll effective_coll_ty ->
+          | SRCK_coll effective_coll_ty ->
               let coll_ty =
                 match coll_qvname with
                  | Parsetree.Vname coll_vname ->
@@ -115,10 +169,15 @@ let subst_expr_ident ~current_unit c1 c2 ident =
               (* names are always capitalized, the transformation is       *)
               (* trivially to surround [c2] byt a [Parsetree.Vuident].     *)
               if coll_ty = effective_coll_ty then
-                let new_species_qvname =
-                  Parsetree.Qualified (fst c2, Parsetree.Vuident (snd c2)) in
-                Parsetree.EI_method
-                  (Some new_species_qvname, vname)
+                (begin
+                match c2 with
+                 | Types.SBRCK_coll c2_ty ->
+                     let new_species_qvname =
+                       Parsetree.Qualified
+                         (fst c2_ty, Parsetree.Vuident (snd c2_ty)) in
+                     Parsetree.EI_method (Some new_species_qvname, vname)
+                 | Types.SBRCK_self -> Parsetree.EI_method (None, vname)
+                end)
               else ident.Parsetree.ast_desc in
   (* Substitute in the AST node type. *)
   let new_type =
@@ -185,16 +244,59 @@ let subst_type_expr c1 c2 type_expression =
     (* Substitute in the AST node description. *)
     let new_desc =
       (match ty_expr.Parsetree.ast_desc with
-       | Parsetree.TE_ident ident ->
-           Parsetree.TE_ident (subst_ident c1 c2 ident)
+       | Parsetree.TE_ident ident -> subst_ident c1 c2 ident
        | Parsetree.TE_fun (t1, t2) ->
            Parsetree.TE_fun ((rec_subst t1), (rec_subst t2))
        | Parsetree.TE_app (ident, tys) ->
+           (begin
            let ident' = subst_ident c1 c2 ident in
            let tys' = List.map rec_subst tys in
-           Parsetree.TE_app (ident', tys')
+           match ident' with
+            | Parsetree.TE_ident id -> Parsetree.TE_app (id, tys')
+            | Parsetree.TE_self ->
+                (* The substitution transformed an ident into "Self". In *)
+                (* this case, the arguments of the constructeur must be  *)
+                (* non-existant because by construction, species types   *)
+                (* have no parameters. If that's not the case, then      *)
+                (* there's something wrong in the compiler.              *)
+                if tys' <> [] then assert false ;
+                ident'
+            | _ ->
+                (* The function [subst_ident] can't return something else. *)
+                assert false
+           end)
        | Parsetree.TE_prod tys -> Parsetree.TE_prod (List.map rec_subst tys)
-       | Parsetree.TE_self
+       | Parsetree.TE_self ->
+           (begin
+           match c1 with
+            | SRCK_self ->
+                (begin
+                (* We are asked to replace "Self"... *)
+                match c2 with
+                 | Types.SBRCK_coll (c2_mod, c2_name) ->
+                     let new_ident_desc =
+                       Parsetree.I_global
+                         (Parsetree.Qualified
+                            (c2_mod, (Parsetree.Vuident c2_name))) in
+                     let new_ident = {
+                       Parsetree.ast_loc = Location.none ;
+                       Parsetree.ast_desc = new_ident_desc ;
+                       Parsetree.ast_doc = [] ;
+                       Parsetree.ast_type =
+                         Parsetree.ANTI_type
+                           (Types.type_rep_species
+                              ~species_module: c2_mod ~species_name: c2_name)
+                       } in
+                     Parsetree.TE_ident new_ident
+                 | Types.SBRCK_self ->
+                     (* Replacing Self by Self is identity. *)
+                     ty_expr.Parsetree.ast_desc
+                end)
+            | _ ->
+                (* Since the substitution tries to replace a    *)
+                (* collection other than Self, no change to do. *)
+                ty_expr.Parsetree.ast_desc
+           end)
        | Parsetree.TE_prop -> ty_expr.Parsetree.ast_desc
        | Parsetree.TE_paren ty -> Parsetree.TE_paren (rec_subst ty)) in
     (* Substitute in the AST node type. *)
@@ -399,10 +501,18 @@ let subst_species_field ~current_unit c1 c2 = function
       let ty = Types.specialize scheme in
       let ty' =
         (match c1 with
-         | SCK_coll c -> Types.subst_type_simple c c2 ty
-         | SCK_self ->
-             Types.copy_type_simple_but_variables
-               ~and_abstract: (Some c2) ty) in
+         | SRCK_coll c -> Types.subst_type_simple c c2 ty
+         | SRCK_self ->
+             begin
+             match c2 with
+              | Types.SBRCK_self ->
+                  (* If the substitution is to replace by Self, then leave *)
+                  (* the Self occurrences in the type, only copy it.       *)
+                  Types.copy_type_simple_but_variables ~and_abstract: None ty
+              | Types.SBRCK_coll c2_ty ->
+                  Types.copy_type_simple_but_variables
+                    ~and_abstract: (Some c2_ty) ty
+             end) in
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       Env.TypeInformation.SF_sig (from, vname, scheme')
@@ -413,10 +523,18 @@ let subst_species_field ~current_unit c1 c2 = function
       let ty = Types.specialize scheme in
       let ty' =
         (match c1 with
-         | SCK_coll c -> Types.subst_type_simple c c2 ty
-         | SCK_self ->
-             Types.copy_type_simple_but_variables
-               ~and_abstract: (Some c2) ty) in
+         | SRCK_coll c -> Types.subst_type_simple c c2 ty
+         | SRCK_self ->
+             begin
+             match c2 with
+              | Types.SBRCK_self ->
+                  (* If the substitution is to replace by Self, then leave *)
+                  (* the Self occurrences in the type, only copy it.       *)
+                  Types.copy_type_simple_but_variables ~and_abstract: None ty
+              | Types.SBRCK_coll c2_ty ->
+                  Types.copy_type_simple_but_variables
+                    ~and_abstract: (Some c2_ty) ty
+             end) in
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_binding_body ~current_unit c1 c2 body in
@@ -431,10 +549,20 @@ let subst_species_field ~current_unit c1 c2 = function
             let ty = Types.specialize scheme in
             let ty' =
               (match c1 with
-               | SCK_coll c -> Types.subst_type_simple c c2 ty
-               | SCK_self ->
-                   Types.copy_type_simple_but_variables
-                     ~and_abstract: (Some c2) ty) in
+               | SRCK_coll c -> Types.subst_type_simple c c2 ty
+               | SRCK_self ->
+                   begin
+                   match c2 with
+                    | Types.SBRCK_self ->
+                        (* If the substitution is to replace by Self, then  *)
+                        (* leave the Self occurrences in the type, only     *)
+                        (* copy it.                                         *)
+                        Types.copy_type_simple_but_variables
+                          ~and_abstract: None ty
+                    | Types.SBRCK_coll c2_ty ->
+                        Types.copy_type_simple_but_variables
+                          ~and_abstract: (Some c2_ty) ty
+                   end) in
             Types.end_definition () ;
             let scheme' = Types.generalize ty' in
             let body' = subst_binding_body ~current_unit c1 c2 body in
@@ -450,10 +578,18 @@ let subst_species_field ~current_unit c1 c2 = function
       let ty = Types.specialize scheme in
       let ty' =
         (match c1 with
-         | SCK_coll c -> Types.subst_type_simple c c2 ty
-         | SCK_self ->
-             Types.copy_type_simple_but_variables
-               ~and_abstract: (Some c2) ty) in
+         | SRCK_coll c -> Types.subst_type_simple c c2 ty
+         | SRCK_self ->
+             begin
+             match c2 with
+              | Types.SBRCK_self ->
+                  (* If the substitution is to replace by Self, then leave *)
+                  (* the Self occurrences in the type, only copy it.       *)
+                  Types.copy_type_simple_but_variables ~and_abstract: None ty
+              | Types.SBRCK_coll c2_ty ->
+                  Types.copy_type_simple_but_variables
+                    ~and_abstract: (Some c2_ty) ty
+             end) in
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_prop ~current_unit c1 c2 body in
@@ -466,10 +602,18 @@ let subst_species_field ~current_unit c1 c2 = function
       let ty = Types.specialize scheme in
       let ty' =
         (match c1 with
-         | SCK_coll c -> Types.subst_type_simple c c2 ty
-         | SCK_self ->
-             Types.copy_type_simple_but_variables
-               ~and_abstract: (Some c2) ty) in
+         | SRCK_coll c -> Types.subst_type_simple c c2 ty
+         | SRCK_self ->
+             begin
+             match c2 with
+              | Types.SBRCK_self ->
+                  (* If the substitution is to replace by Self, then leave *)
+                  (* the Self occurrences in the type, only copy it.       *)
+                  Types.copy_type_simple_but_variables ~and_abstract: None ty
+              | Types.SBRCK_coll c2_ty ->
+                  Types.copy_type_simple_but_variables
+                    ~and_abstract: (Some c2_ty) ty
+             end) in
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_prop ~current_unit c1 c2 body in

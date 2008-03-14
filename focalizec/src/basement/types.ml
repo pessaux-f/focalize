@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.47 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: types.ml,v 1.48 2008-03-14 14:43:59 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -905,6 +905,24 @@ let unify ~loc ~self_manifest type1 type2 =
 
 
 
+(* ********************************************************************* *)
+(** {b Descr} : Describes the kind of collection must be used to replace
+    while performing a substitution on types.
+    This type definition should be in the collection management module,
+    but since it also operate on types' structure (which is abstract
+    outside here) the only solution is to put it here.
+
+    {b Rem} : Exported outside this module.                              *)
+(* ********************************************************************* *)
+type substitution_by_replacement_collection_kind =
+  (** The collection to put instead of the replaced is the one named in
+      the argument. *)
+  | SBRCK_coll of type_collection
+  | SBRCK_self  (** The collection to put instead of the replaced is Self. *)
+;;
+
+
+
 (* ************************************************************************* *)
 (* type_collection -> type_collection -> type_simple -> type_simple          *)
 (** {b Descr} : Performs the collection name substitution
@@ -944,7 +962,12 @@ let subst_type_simple (fname1, spe_name1) c2 =
          ST_construct (name, List.map rec_copy args)
      | ST_self_rep -> ST_self_rep
      | ST_species_rep (fname, coll_name) ->
-         if fname = fname1 && coll_name = spe_name1 then ST_species_rep c2
+         if fname = fname1 && coll_name = spe_name1 then
+           (begin
+           match c2 with
+            | SBRCK_coll c2_ty -> ST_species_rep c2_ty
+            | SBRCK_self -> ST_self_rep
+           end)
          else ty in
   (* ******************** *)
   (* The function itself. *)

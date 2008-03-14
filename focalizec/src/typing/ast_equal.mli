@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: ast_equal.mli,v 1.1 2007-09-04 15:02:44 pessaux Exp $ *)
+(* $Id: ast_equal.mli,v 1.2 2008-03-14 14:43:59 pessaux Exp $ *)
 
-val prop : Parsetree.prop -> Parsetree.prop -> bool
+val prop_equal_p : Parsetree.prop -> Parsetree.prop -> bool
  
