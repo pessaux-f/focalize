@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.35 2008-03-07 14:53:31 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.36 2008-03-17 14:04:13 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -387,15 +387,15 @@ let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
           species_param_type_name)
   used_species_parameter_tys ;
   (* Next, the extra arguments due to the species parameters methods we *)
-  (* depends on. They are "Variables" previously declared and named:     *)
-  (* species parameter name + "_" + method name.                         *)
+  (* depends on. They are "Variables" previously declared and named:    *)
+  (* species "_p_" + parameter name + "_" + method name.                *)
   List.iter
     (fun (species_param_name, meths_from_param) ->
       let prefix = Parsetree_utils.name_of_vname species_param_name in
       Parsetree_utils.DepNameSet.iter
         (fun (meth, _) ->
           (* Don't print the type to prevent being too verbose. *)
-          Format.fprintf out_fmter "@ %s_%a"
+          Format.fprintf out_fmter "@ _p_%s_%a"
             prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
         meths_from_param)
     dependencies_from_params ;
@@ -721,7 +721,7 @@ let generate_theorem ctx print_ctx env min_coq_env
         ~current_unit: ctx.Context.scc_current_unit from name env
       end) in
   (* In any case, if the method is declared or inherited, we apply *)
-  (* the theorem generator  to the "local" methods "self_xxx".     *)
+  (* the theorem generator to the "local" methods "self_xxx".      *)
   Format.fprintf out_fmter "@[<2>Let self_%a :@ "
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   Species_record_type_generation.generate_prop
@@ -855,8 +855,9 @@ let generate_methods ctx print_ctx env generated_fields field =
            abstraction_info.Abstractions.ai_dependencies_from_params ;
          cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
        CSF_theorem compiled_field
-   | Abstractions.FAI_property (from, name, _, prop, _) ->
+   | Abstractions.FAI_property ((from, name, _, prop, _), _abstraction_info) ->
        (* [Unsure] Pas besoin de connaitre les dépendances sur "rep" ? *)
+       (* Et sur les parametres ? *)
        (* "Property"s lead to a Coq "Hypothesis". *)
        Format.fprintf out_fmter "(* From species %a. *)@\n"
          Sourcify.pp_qualified_species from ;
@@ -1054,15 +1055,21 @@ let generate_variables_for_species_parameters_methods ctx print_ctx
                 fai.Abstractions.ai_dependencies_from_params @
                 !accu_found_dependencies)
             l
-      | Abstractions.FAI_theorem (_, _) ->
-          (* [Unsure] *)
-          ()
+      | Abstractions.FAI_theorem (_, fai) ->
+          accu_found_dependencies :=
+            fai.Abstractions.ai_dependencies_from_params @
+            !accu_found_dependencies
       | Abstractions.FAI_property _ ->
           (* [Unsure] *)
           ())
     field_abstraction_infos ;
   (* Now print the Coq "Variable"s, avoiding to print several times the same. *)
-  (* The naming scheme of the methods is species param name + method name.    *)
+  (* The naming scheme of the methods is "_p_" + species param name + method  *)
+  (* name. Naming them this way permits automatically Hypothesis to connect   *)
+  (* the names of abstracted methods from the parameters to these Variables.  *)
+  (* This enables sharing the code generation routine for both properties,    *)
+  (* theorems and record type where species parameters' methods we depend on  *)
+  (* are always abstracted under the name "_p_" + ...                         *)
   if !accu_found_dependencies <> [] then
     (begin
     let out_fmter = ctx.Context.scc_out_fmter in
@@ -1082,7 +1089,7 @@ let generate_variables_for_species_parameters_methods ctx print_ctx
               (* method there is no reason to see "Self" appearing, the way  *)
               (* to print "Self" passed to [pp_type_simple_to_coq] has no    *)
               (* importance.                                                 *)
-              Format.fprintf out_fmter "@[<2>Variable %a_%a :@ %a.@]@\n"
+              Format.fprintf out_fmter "@[<2>Variable _p_%a_%a :@ %a.@]@\n"
                 Parsetree_utils.pp_vname_with_operators_expanded spe_param_name
                 Parsetree_utils.pp_vname_with_operators_expanded meth_name
                 (Types.pp_type_simple_to_coq

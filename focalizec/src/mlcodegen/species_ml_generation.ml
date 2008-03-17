@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.34 2008-03-07 14:53:31 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.35 2008-03-17 14:04:14 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -731,7 +731,7 @@ let generate_methods ctx env field =
             end)
        end)
    | Abstractions.FAI_theorem ((_, name, _, _, _, _), _)
-   | Abstractions.FAI_property (_, name, _, _, _) ->
+   | Abstractions.FAI_property ((_, name, _, _, _), _) ->
        (* Properties and theorems are purely  *)
        (* discarded in the Ocaml translation. *)
        if Configuration.get_verbose () then

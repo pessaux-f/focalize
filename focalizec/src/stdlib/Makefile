@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2008-02-26 13:00:56 pessaux Exp $
+# $Id: Makefile,v 1.5 2008-03-17 14:04:14 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file
@@ -8,7 +8,7 @@ FOCC = ../toplevel/check_file
 # the case of let foo (x in unit) = ...
 CAMLBYT = ocamlc
 CAMLBIN = ocamlc
-
+COQC = coqc
 
 FOC_COMP_FLAGS =
 
@@ -27,9 +27,7 @@ EXTERNALOBJS = focvasives.cmo sets_orders_externals.cmo
 
 
 
-all:: $(EXTERNALOBJS) $(FOCMLS) $(FOCVS) $(FOCCMOS)
-	$(RM) -f basics.v
-	$(LN) -s ../tmp_basics.v basics.v
+all:: $(EXTERNALOBJS) $(FOCMLS) $(FOCVS) basics_special_case $(FOCCMOS) $(FOCVOS)
 
 doc:: $(BYTOBJS)
 	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)
@@ -41,7 +39,12 @@ clean::
 depend:
 	$(CAMLDEP) *.mli *.ml > ./.depend
 
-.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .foc .fo
+basics_special_case:
+	$(RM) -f basics.v
+	$(LN) -s ../tmp_basics.v basics.v
+	$(COQC) basics.v
+
+.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .foc .fo .v .vo
 
 .foc.fo .foc.ml .foc.v:
 	$(FOCC) $(FOC_COMP_FLAGS) -c $<
@@ -61,5 +64,7 @@ depend:
 .mll.ml:
 	$(CAMLLEX) $<
 
+.v.vo:
+	$(COQC) $<
 
 include .depend

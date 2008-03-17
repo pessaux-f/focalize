@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.4 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.5 2008-03-17 14:04:13 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -168,7 +168,7 @@ type field_abstraction_info =
   | FAI_let of (Env.TypeInformation.let_field_info * abstraction_info)
   | FAI_let_rec of (Env.TypeInformation.let_field_info * abstraction_info) list
   | FAI_theorem of (Env.TypeInformation.theorem_field_info * abstraction_info)
-  | FAI_property of Env.TypeInformation.property_field_info
+  | FAI_property of (Env.TypeInformation.property_field_info * abstraction_info)
 ;;
 
 
@@ -264,9 +264,27 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
             ai_dependencies_from_params = dependencies_from_params ;
             ai_min_coq_env = min_coq_env } in
           FAI_theorem (ti, abstr_info)
-      | Env.TypeInformation.SF_property pi ->
-          (* [Unsure] Pas besoin de connaitre les dépendances sur "rep" ?
-             Pas besoin de notion d'univers ? De paramètres d'espèce ? *)
-          FAI_property pi)
+      | Env.TypeInformation.SF_property ((_, name, _, prop, _) as pi) ->
+          let (used_species_parameter_tys, dependencies_from_params,
+               decl_children, def_children, _) =
+            compute_lambda_liftings_for_field
+              ~current_unit: ctx.Context.scc_current_unit
+              ~current_species: ctx.Context.scc_current_species
+              ctx.Context.scc_species_parameters_names
+              ctx.Context.scc_dependency_graph_nodes name
+              (FBK_prop prop) in
+          (* Compute the visible universe of the theorem. *)
+          let universe =
+            VisUniverse.visible_universe
+              ~with_def_deps
+              ctx.Context.scc_dependency_graph_nodes decl_children
+              def_children in
+          (* Now, its minimal Coq typing environment. *)
+          let min_coq_env = MinEnv.minimal_typing_environment universe fields in
+          let abstr_info = {
+            ai_used_species_parameter_tys = used_species_parameter_tys ;
+            ai_dependencies_from_params = dependencies_from_params ;
+            ai_min_coq_env = min_coq_env } in
+          FAI_property (pi, abstr_info))
     fields
 ;;
