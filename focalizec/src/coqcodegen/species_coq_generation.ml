@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.36 2008-03-17 14:04:13 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.37 2008-03-20 12:29:41 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -70,7 +70,7 @@ type compiled_species_fields =
   | CSF_let of compiled_field_memory
   | CSF_let_rec of compiled_field_memory list
   | CSF_theorem of compiled_field_memory
-  | CSF_property of Parsetree.vname (* [Unsure] *)
+  | CSF_property of compiled_field_memory
 ;;
 
 
@@ -252,8 +252,8 @@ let generate_defined_method ctx print_ctx env min_coq_env
                Format.fprintf out_fmter "@ (%a :@ "
                  Parsetree_utils.pp_vname_with_operators_expanded n ;
                Species_record_type_generation.generate_prop
-                 new_ctx ~local_idents: [] ~self_as: how_to_print_Self env
-                 b ;
+                 new_ctx ~local_idents: [] ~self_as: how_to_print_Self
+                 ~in_hyp_or_theo: false env b ;
                Format.fprintf out_fmter ")" ;
                [n])
          min_coq_env) in
@@ -310,10 +310,12 @@ let generate_defined_method ctx print_ctx env min_coq_env
   (match body with
    | Parsetree.BB_computational e ->
        Species_record_type_generation.generate_expr
-         new_ctx ~local_idents: [] ~self_as: how_to_print_Self env e
+         new_ctx ~local_idents: [] ~self_as: how_to_print_Self
+         ~in_hyp_or_theo: false env e
    | Parsetree.BB_logical p ->
        Species_record_type_generation.generate_prop
-         new_ctx ~local_idents: [] ~self_as: how_to_print_Self env p) ;
+         new_ctx ~local_idents: [] ~self_as: how_to_print_Self
+         ~in_hyp_or_theo: false env p) ;
   (* Done... Then, final carriage return. *)
   Format.fprintf out_fmter ".@]@\n" ;
   abstracted_methods
@@ -387,15 +389,15 @@ let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
           species_param_type_name)
   used_species_parameter_tys ;
   (* Next, the extra arguments due to the species parameters methods we *)
-  (* depends on. They are "Variables" previously declared and named:    *)
-  (* species "_p_" + parameter name + "_" + method name.                *)
+  (* depends on. They are "Variables" previously declared and named:     *)
+  (* species parameter name + "_" + method name.                         *)
   List.iter
     (fun (species_param_name, meths_from_param) ->
       let prefix = Parsetree_utils.name_of_vname species_param_name in
       Parsetree_utils.DepNameSet.iter
         (fun (meth, _) ->
           (* Don't print the type to prevent being too verbose. *)
-          Format.fprintf out_fmter "@ _p_%s_%a"
+          Format.fprintf out_fmter "@ %s_%a"
             prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
         meths_from_param)
     dependencies_from_params ;
@@ -466,7 +468,7 @@ let find_compiled_field_memory name fields =
     generator for this theorem in this species.
     It returns the list of methods of ourselves we depend on and that were
     abstracted by a "Variable abst_..." in the current Coq theorem's section
-    according to th minimal coq environment.
+    according to the minimal coq environment.
 
     {b Rem}: Not exported outside this module.                               *)
 (* ************************************************************************* *)
@@ -609,7 +611,8 @@ let generate_defined_theorem ctx print_ctx env min_coq_env generated_fields
                Format.fprintf out_fmter "@[<2>Let abst_%a :@ "
                  Parsetree_utils.pp_vname_with_operators_expanded name ;
                Species_record_type_generation.generate_prop
-                 ctx ~local_idents: [] ~self_as: Types.CSR_abst env body ;
+                 ctx ~local_idents: [] ~self_as: Types.CSR_abst
+                 ~in_hyp_or_theo: true env body ;
                Format.fprintf out_fmter " :=@ " ;
                (* Generate the application of the method generator.   *)
                (* Since one cannot depend from something that is not  *)
@@ -653,7 +656,8 @@ let generate_defined_theorem ctx print_ctx env min_coq_env generated_fields
                  Parsetree_utils.pp_vname_with_operators_expanded name ;
                (* Rem: no local idents in the context at this point. *)
                Species_record_type_generation.generate_prop
-                 ctx ~local_idents: [] ~self_as: Types.CSR_abst env body ;
+                 ctx ~local_idents: [] ~self_as: Types.CSR_abst
+                 ~in_hyp_or_theo: true env body ;
                Format.fprintf out_fmter ".@]@\n" ;
                (* Method abstracted by a "Variable". Hence will *)
                (* be an argument of the theorem generator.      *)
@@ -666,7 +670,8 @@ let generate_defined_theorem ctx print_ctx env min_coq_env generated_fields
     Parsetree_utils.pp_vname_with_operators_expanded curr_species_name
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   Species_record_type_generation.generate_prop
-    ~local_idents: [] ~self_as: Types.CSR_abst ctx env prop ;
+    ~local_idents: [] ~self_as: Types.CSR_abst
+    ~in_hyp_or_theo: true ctx env prop ;
   Format.fprintf out_fmter ".@]@\n" ;
   (* Generate "assert"s to be sure that Coq will really abstract *)
   (* in the section all the "Variable"s we created for detected  *)
@@ -725,7 +730,8 @@ let generate_theorem ctx print_ctx env min_coq_env
   Format.fprintf out_fmter "@[<2>Let self_%a :@ "
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   Species_record_type_generation.generate_prop
-    ~local_idents: [] ~self_as: Types.CSR_self ctx env prop ;
+    ~local_idents: [] ~self_as: Types.CSR_self ~in_hyp_or_theo: true
+    ctx env prop ;
   (* The theorem generator's name... If the generator *)
   (* is in another module,  then qualify its name.    *)
   Format.fprintf out_fmter " :=@ " ;
@@ -855,19 +861,33 @@ let generate_methods ctx print_ctx env generated_fields field =
            abstraction_info.Abstractions.ai_dependencies_from_params ;
          cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
        CSF_theorem compiled_field
-   | Abstractions.FAI_property ((from, name, _, prop, _), _abstraction_info) ->
-       (* [Unsure] Pas besoin de connaitre les dépendances sur "rep" ? *)
-       (* Et sur les parametres ? *)
-       (* "Property"s lead to a Coq "Hypothesis". *)
+   | Abstractions.FAI_property ((from, name, _, prop, _), abstraction_info) ->
+       (* "Property"s lead to a Coq "Hypothesis". Inherited properties *)
+       (* are always generated again by just enouncing their body.     *)
        Format.fprintf out_fmter "(* From species %a. *)@\n"
          Sourcify.pp_qualified_species from ;
        Format.fprintf out_fmter
          "@[<2>Hypothesis self_%a :@ "
          Parsetree_utils.pp_vname_with_operators_expanded name ;
+       (* Be careful, in Hypothesis, methods from species parameters we *)
+       (* depend on are NOT "_p_..." (the naming scheme used when we    *)
+       (* use extra parameters to lambda-lift). Instead, one must refer *)
+       (* To the Variables created in the Chapter and that are named by *)
+       (* species parameter name + method name.                         *)
        Species_record_type_generation.generate_prop
-         ~local_idents: [] ~self_as: Types.CSR_self ctx env prop ;
+         ~local_idents: [] ~self_as: Types.CSR_self
+         ~in_hyp_or_theo: true ctx env prop ;
        Format.fprintf out_fmter ".@]@\n" ;
-       CSF_property name
+       let compiled_field = {
+         cfm_from_species = from ;
+         cfm_method_name = name ;
+         cfm_used_species_parameter_tys =
+           abstraction_info.Abstractions.ai_used_species_parameter_tys ;
+         cfm_dependencies_from_parameters =
+           abstraction_info.Abstractions.ai_dependencies_from_params ;
+         cfm_coq_min_typ_env_names = [] (* Leave blank because never used. *)
+         } in
+       CSF_property compiled_field
 ;;
 
 
@@ -1044,7 +1064,9 @@ let generate_variables_for_species_parameters_methods ctx print_ctx
   List.iter
     (function
       | Abstractions.FAI_sig _ -> ()
-      | Abstractions.FAI_let (_, fai) ->
+      | Abstractions.FAI_let (_, fai)
+      | Abstractions.FAI_theorem (_, fai)
+      | Abstractions.FAI_property (_, fai) ->
           accu_found_dependencies :=
             fai.Abstractions.ai_dependencies_from_params @
             !accu_found_dependencies
@@ -1054,22 +1076,10 @@ let generate_variables_for_species_parameters_methods ctx print_ctx
               accu_found_dependencies :=
                 fai.Abstractions.ai_dependencies_from_params @
                 !accu_found_dependencies)
-            l
-      | Abstractions.FAI_theorem (_, fai) ->
-          accu_found_dependencies :=
-            fai.Abstractions.ai_dependencies_from_params @
-            !accu_found_dependencies
-      | Abstractions.FAI_property _ ->
-          (* [Unsure] *)
-          ())
+            l)
     field_abstraction_infos ;
   (* Now print the Coq "Variable"s, avoiding to print several times the same. *)
-  (* The naming scheme of the methods is "_p_" + species param name + method  *)
-  (* name. Naming them this way permits automatically Hypothesis to connect   *)
-  (* the names of abstracted methods from the parameters to these Variables.  *)
-  (* This enables sharing the code generation routine for both properties,    *)
-  (* theorems and record type where species parameters' methods we depend on  *)
-  (* are always abstracted under the name "_p_" + ...                         *)
+  (* The naming scheme of the methods is species param name + method name.    *)
   if !accu_found_dependencies <> [] then
     (begin
     let out_fmter = ctx.Context.scc_out_fmter in
@@ -1089,7 +1099,7 @@ let generate_variables_for_species_parameters_methods ctx print_ctx
               (* method there is no reason to see "Self" appearing, the way  *)
               (* to print "Self" passed to [pp_type_simple_to_coq] has no    *)
               (* importance.                                                 *)
-              Format.fprintf out_fmter "@[<2>Variable _p_%a_%a :@ %a.@]@\n"
+              Format.fprintf out_fmter "@[<2>Variable %a_%a :@ %a.@]@\n"
                 Parsetree_utils.pp_vname_with_operators_expanded spe_param_name
                 Parsetree_utils.pp_vname_with_operators_expanded meth_name
                 (Types.pp_type_simple_to_coq
@@ -1223,10 +1233,16 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                      Env.CoqGenInformation.mi_abstracted_methods =
                        cfm.cfm_coq_min_typ_env_names })
                  compiled_field_memories
-           | CSF_property vname ->
-               [ { Env.CoqGenInformation.mi_name = vname ;
-                   Env.CoqGenInformation.mi_dependencies_from_parameters = [] ;
-                   Env.CoqGenInformation.mi_abstracted_methods = [] }])
+           | CSF_property compiled_field_memory ->
+               [ { Env.CoqGenInformation.mi_name =
+                     compiled_field_memory.cfm_method_name ;
+                   Env.CoqGenInformation.mi_dependencies_from_parameters =
+                     compiled_field_memory.cfm_dependencies_from_parameters ;
+                   (* For properties, this list should always be [] since *)
+                   (* we do not compute the visible universe since it is  *)
+                   (* never used.                                         *)
+                   Env.CoqGenInformation.mi_abstracted_methods =
+                     compiled_field_memory.cfm_coq_min_typ_env_names }])
          compiled_fields) in
   species_binding_info
 ;;
