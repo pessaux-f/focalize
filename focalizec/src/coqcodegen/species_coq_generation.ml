@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.37 2008-03-20 12:29:41 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.38 2008-03-21 10:49:53 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -562,8 +562,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env generated_fields
                  Parsetree_utils.pp_vname_with_operators_expanded name ;
                (* Now, recover from the already generated fields, *)
                (* what to apply to this generator.                *)
-               let memory =
-                 find_compiled_field_memory name generated_fields in
+               let memory = find_compiled_field_memory name generated_fields in
                (* We first instanciate the parameters corresponding to   *)
                (* the carriers types of species parameters and appearing *)
                (* in the method's type.                                  *)
@@ -702,8 +701,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env generated_fields
 
 
 
-let generate_theorem ctx print_ctx env min_coq_env
-    used_species_parameter_tys dependencies_from_params generated_fields
+let generate_theorem ctx print_ctx env min_coq_env generated_fields
     (from, name, prop, _) =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* A "theorem" defined in the species leads to a Coq *)
@@ -746,30 +744,18 @@ let generate_theorem ctx print_ctx env min_coq_env
   (* Because we don't print any types, no need to extend the collection   *)
   (* carrier mapping at this point.                                       *)
   (* Now, apply to each extra parameter coming from the lambda liftings.  *)
-  (* First, the extra arguments that represent the types of the species   *)
-  (* parameters used in the method. It is always the species name + "_T". *)
-  List.iter
-     (fun species_param_type_name ->
-       (* [Unsure] Je voudrais bien trouver un cas qui passe là-dedans !!! *)
-       Format.fprintf out_fmter "@ %a_T"
-         Parsetree_utils.pp_vname_with_operators_expanded
-         species_param_type_name)
-  used_species_parameter_tys ;
-  (* Apply the species parameters' methods we use. *)
-  List.iter
-    (fun (species_param_name, meths) ->
-      (* Each created variable was species parameter name, followed *)
-      (* by "_", followed by the method's name.                     *)
-      let prefix = (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
-      Parsetree_utils.DepNameSet.iter
-        (fun (meth, _) ->
-          Format.fprintf out_fmter "@ %s%a"
-            prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
-        meths)
-    dependencies_from_params ;
-  (* And now apply its arguments with the local "Self_xxx" definitions. *)
-  (* These arguments are those from the minimal environment that are    *)
-  (* "only declared".                                                   *)
+  (* ATTENTION: Since in theorem generation, we directly use the Variables  *)
+  (* declared in the Chapter and representing the methods of the parameters *)
+  (* we depend on, there is no lambda-lifting for methods from these        *)
+  (* parameters. In fact we took a shortcut by directly inlining these      *)
+  (* Variable instead of lambda-lifting. So for the theorem generator       *)
+  (* application, we now skip the application of parameters induced by the  *)
+  (* methods of the species parameters we depend on.                        *)
+  (* Same thing for the Variable representing carriers of parameters we     *)
+  (* depend on.                                                             *)
+  (* So, we now apply its arguments with the local "Self_xxx" definitions.  *)
+  (* These arguments are those from the minimal environment that are "only  *)
+  (* declared".                                                             *)
   List.iter
     (fun dep_meth_vname ->
       if dep_meth_vname = Parsetree.Vlident "rep" then
@@ -848,10 +834,7 @@ let generate_methods ctx print_ctx env generated_fields field =
        let coq_min_typ_env_names =
          generate_theorem
            ctx print_ctx env abstraction_info.Abstractions.ai_min_coq_env
-           abstraction_info.Abstractions.ai_used_species_parameter_tys
-           abstraction_info.Abstractions.ai_dependencies_from_params
-           generated_fields
-           (from, name, prop, deps_on_rep) in
+           generated_fields (from, name, prop, deps_on_rep) in
        let compiled_field = {
          cfm_from_species = from ;
          cfm_method_name = name ;

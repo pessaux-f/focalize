@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.5 2008-03-17 14:04:13 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.6 2008-03-21 10:49:53 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -38,22 +38,13 @@ type field_body_kind =
 (*         ((Parsetree.vname list) *                                        *)
 (*          (Parsetree.vname * Parsetree_utils.DepNameSet.t) list *         *)
 (*          (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *  *)
-(*          (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *  *)
-(*          (string * Types.type_simple) list)                              *)
+(*          (Dep_analysis.name_node * Dep_analysis.dependency_kind) list)   *)
 (** {b Descr} : Pre-process a field before its compilation to OCaml. We
         compute here the information related to the extra parameters
         a method will have by lambda-lifting due to the species parameters
         and the dependencies of the method.
         We extract the methods we decl-depend on,the methods we def-depend
-        on, the methods of the species parameters we depend on, and finally
-        the list of formal parameters (name and type) the method will have
-        due to the decl and params dependencies infos we computed. This
-        last list will be straight printed by the code generator, but will
-        also be recorded in the context for the case we need to generate
-        the code of a recursive method. This way, the recursive application
-        of the method will have to and will be able to use these extra
-        parameters in addition to those effectively passed in the FoCaL
-        code.
+        on, the methods of the species parameters we depend on.
 
     {b Rem} : Exported oustide this module.                                 *)
 (* ************************************************************************ *)
@@ -98,24 +89,13 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
         (species_param_name, meths_from_param) :: accu)
       species_parameters_names
       [] in
-  (* Build the list by side effect in reverse order for efficiency. *)
-  let revd_lambda_lifts = ref [] in
   let params_appearing_in_types = ref Types.SpeciesCarrierTypeSet.empty in
   (* First, abstract according to the species's parameters the current  *)
   (* method depends on.                                                 *)
   List.iter
-    (fun (species_param_name, meths) ->
-      (* Each abstracted method will be named like "_p_", followed by *)
-      (* the species parameter name, followed by "_", followed by the *)
-      (* method's name.                                               *)
-      let prefix =
-        "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
+    (fun (_, meths) ->
       Parsetree_utils.DepNameSet.iter
-        (fun (meth, meth_ty) ->
-          let llift_name =
-            prefix ^
-            (Parsetree_utils.vname_as_string_with_operators_expanded meth) in
-          revd_lambda_lifts := (llift_name, meth_ty) :: !revd_lambda_lifts ;
+        (fun (_, meth_ty) ->
           (* By the way and by side effect, we remind the   *)
           (* species types appearing the the method's type. *)
           let st_set = Types.get_species_types_in_type meth_ty in
@@ -124,15 +104,6 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
               st_set !params_appearing_in_types)
         meths)
     dependencies_from_params ;
-  (* Now, lambda-lift all the dependencies from our inheritance tree *)
-  (* (i.e methods we depend on) that are only declared.              *)
-  List.iter
-    (fun ({ Dep_analysis.nn_name = dep_name ; Dep_analysis.nn_type = ty }, _) ->
-      let llift_name =
-        "abst_" ^
-        (Parsetree_utils.vname_as_string_with_operators_expanded dep_name) in
-      revd_lambda_lifts := (llift_name, ty) :: !revd_lambda_lifts)
-    decl_children ;
   (* Now compute the set of species parameters types used in the   *)
   (* types of the methods comming from the species parameters that *)
   (* the current field uses. This information is required for Coq  *)
@@ -148,8 +119,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
   (used_species_parameter_tys,
    dependencies_from_params,
    decl_children,
-   def_children,
-   (List.rev !revd_lambda_lifts))
+   def_children)
 ;;
 
 
@@ -185,7 +155,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
       | Env.TypeInformation.SF_sig si -> FAI_sig si
       | Env.TypeInformation.SF_let ((_, name, _, _, body, _) as li) ->
           let (used_species_parameter_tys, dependencies_from_params,
-               decl_children, def_children, _) =
+               decl_children, def_children) =
             let body_as_fbk =
               match body with
                | Parsetree.BB_logical p -> FBK_prop p
@@ -219,7 +189,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
                    | Parsetree.BB_logical p -> FBK_prop p
                    | Parsetree.BB_computational e -> FBK_expr e in
                 let (used_species_parameter_tys, dependencies_from_params,
-                     decl_children, def_children, _) =
+                     decl_children, def_children) =
                   compute_lambda_liftings_for_field
                     ~current_unit: ctx.Context.scc_current_unit
                     ~current_species: ctx.Context.scc_current_species
@@ -244,7 +214,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
           FAI_let_rec deps_infos
       | Env.TypeInformation.SF_theorem ((_, name, _, prop, _, _) as ti) ->
           let (used_species_parameter_tys, dependencies_from_params,
-               decl_children, def_children, _) =
+               decl_children, def_children) =
             compute_lambda_liftings_for_field
               ~current_unit: ctx.Context.scc_current_unit
               ~current_species: ctx.Context.scc_current_species
@@ -266,7 +236,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
           FAI_theorem (ti, abstr_info)
       | Env.TypeInformation.SF_property ((_, name, _, prop, _) as pi) ->
           let (used_species_parameter_tys, dependencies_from_params,
-               decl_children, def_children, _) =
+               decl_children, def_children) =
             compute_lambda_liftings_for_field
               ~current_unit: ctx.Context.scc_current_unit
               ~current_species: ctx.Context.scc_current_species
