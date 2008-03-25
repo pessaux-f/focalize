@@ -54,14 +54,14 @@ let and_b (x, y) =
    match (x, y) with
    | (true, true) -> true
    | (false, false) -> false
-   | (_ , _) -> false    (* Beware the space before the , !!! *)
+   | (_, _) -> false
 ;;
 
 let or_b (x, y) =
    match (x, y) with
    | (true, _) -> true
-   | (_ , true) -> true  (* Beware the space before the , !!! *)
-   | (_ , _) -> false    (* Beware the space before the , !!! *)
+   | (_, true) -> true
+   | (_, _) -> false
 ;;
 
 let not_b (x) in bool =
@@ -77,7 +77,7 @@ let xor_b (x, y) =
 (* Operations on pairs. *)
 let crp (x, y) = (x, y) ;;
 let first (x) = match x with | (v, _ ) -> v ;;
-let scnd (x) = match x with | (_ , v) -> v ;;
+let scnd (x) = match x with | (_, v) -> v ;;
 
 let string_of_int =
   internal int -> string
