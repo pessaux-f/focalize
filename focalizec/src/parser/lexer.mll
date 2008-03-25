@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.27 2007-11-01 18:20:34 weis Exp $ *)
+(* $Id: lexer.mll,v 1.28 2008-03-25 14:18:48 weis Exp $ *)
 
 {
 open Lexing;;
@@ -313,6 +313,8 @@ let blank = [ ' ' '\009' '\012' ]
    Rq:
    - ',' cannot be inside infixes or prefixes (due to proof labels that are
          almost parsable as infixes!)
+   - '_,' cannot be the beginning of an infix, since we want to parse the
+         pattern _, _ as 3 tokens '_' ',' and '_'.
    - '.' cannot be inside infixes or prefixes, since we want to parse
          LIDENT DOT LIDENT
          which, if '.' were in infixes characters, would be parsed as LIDENT
@@ -345,7 +347,9 @@ let start_lowercase_ident =
 
 let start_uppercase_ident = '_'* uppercase_char
 
-let start_infix_ident = '_'* (',' | infix_char)
+let start_infix_ident =
+    ','
+  | '_'* infix_char
 
 let start_prefix_ident = '_'* prefix_char
 
