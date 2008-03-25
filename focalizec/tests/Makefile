@@ -1,14 +1,16 @@
+# $Id: Makefile,v 1.11 2008-03-25 13:21:44 weis Exp $
+
 OK_TEST_FILES = \
-	ok__baby_toy.foc \
-	ok__in_example.foc \
-	ok__in_example2.foc \
-	ok__list.foc \
-	ok__need_re_ordering.foc \
-	ok__odd_even.foc \
-	ok__phd_def_deps.foc \
-	ok__phd_meths_gen.foc \
-	ok__phd_sample.foc
-	#ok__coll_outside.foc
+ ok__baby_toy.foc \
+ ok__in_example.foc \
+ ok__in_example2.foc \
+ ok__list.foc \
+ ok__need_re_ordering.foc \
+ ok__odd_even.foc \
+ ok__phd_def_deps.foc \
+ ok__phd_meths_gen.foc \
+ ok__phd_sample.foc
+ #ok__coll_outside.foc
 
 KO_TEST_FILES = \
 	ko__bad_self_use.foc \
