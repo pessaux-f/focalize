@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.7 2008-04-02 13:37:18 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.8 2008-04-02 15:36:35 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -50,12 +50,6 @@ type field_body_kind =
 (* ************************************************************************ *)
 let compute_lambda_liftings_for_field ~current_unit ~current_species
      species_parameters_names dependency_graph_nodes name body my_type =
-
-Format.eprintf "compute_lambda_liftings_for_field: %s.%a, method %a@\n"
-    (fst current_species)
-    Parsetree_utils.pp_vname_with_operators_expanded (snd current_species)
-    Parsetree_utils.pp_vname_with_operators_expanded name ;
-
   (* Get all the methods we directly decl-depend on. They will   *)
   (* lead each to an extra parameter of the final OCaml function *)
   (* (lambda-lifing). Get the methods we directly def-depend.    *)
@@ -95,16 +89,6 @@ Format.eprintf "compute_lambda_liftings_for_field: %s.%a, method %a@\n"
         (species_param_name, meths_from_param) :: accu)
       species_parameters_names
       [] in
-
-Format.eprintf "Longueur de dependencies_from_params = %d@\n"
-    (List.length dependencies_from_params) ;
-List.iter
-  (fun (spe_param_name, meths) ->
-    Format.eprintf "Dépendance vis-à-vis du paramètre: %a sur %d méthodes@\n"
-      Parsetree_utils.pp_vname_with_operators_expanded spe_param_name
-      (Parsetree_utils.DepNameSet.cardinal meths))
-dependencies_from_params ;
-
   (* By side effect, we remind the species types appearing in our type. *)
   let params_appearing_in_types =
     ref (Types.get_species_types_in_type my_type) in
@@ -114,30 +98,19 @@ dependencies_from_params ;
   List.iter
     (fun (_, meths) ->
       Parsetree_utils.DepNameSet.iter
-        (fun (foo, meth_ty) ->
-
-Format.eprintf "Found a dependency on method %a whose type is %a@\n"
-  Parsetree_utils.pp_vname_with_operators_expanded foo
-  Types.pp_type_simple meth_ty ;
-
+        (fun (_, meth_ty) ->
           let st_set = Types.get_species_types_in_type meth_ty in
           params_appearing_in_types :=
             Types.SpeciesCarrierTypeSet.union
               st_set !params_appearing_in_types)
         meths)
     dependencies_from_params ;
-
   (* Same thing for the methods of ourselves we decl-depend on except on *)
   (* rep that is processed apart.                                        *)
   List.iter
     (fun (node, _) ->
       if node.Dep_analysis.nn_name <> (Parsetree.Vlident "rep") then
         begin
-
-Format.eprintf "Decl sur %a de type %a@\n"
-  Parsetree_utils.pp_vname_with_operators_expanded node.Dep_analysis.nn_name
-  Types.pp_type_simple node.Dep_analysis.nn_type ;
-
         let st_set =
           Types.get_species_types_in_type node.Dep_analysis.nn_type in
         params_appearing_in_types :=
@@ -150,18 +123,12 @@ Format.eprintf "Decl sur %a de type %a@\n"
     (fun (node, _) ->
       if node.Dep_analysis.nn_name <> (Parsetree.Vlident "rep") then
         begin
-
-Format.eprintf "Decl sur %a de type %a@\n"
-  Parsetree_utils.pp_vname_with_operators_expanded node.Dep_analysis.nn_name
-  Types.pp_type_simple node.Dep_analysis.nn_type ;
-
         let st_set =
           Types.get_species_types_in_type node.Dep_analysis.nn_type in
         params_appearing_in_types :=
           Types.SpeciesCarrierTypeSet.union st_set !params_appearing_in_types
         end)
     def_children ;
-
   (* Now compute the set of species parameters types used in the   *)
   (* types of the methods comming from the species parameters that *)
   (* the current field uses. This information is required for Coq  *)
