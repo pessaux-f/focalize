@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.6 2008-03-21 10:49:53 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.7 2008-04-02 13:37:18 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -34,7 +34,7 @@ type field_body_kind =
 (* current_unit: Types.fname ->                                             *)
 (*   current_species: Parsetree.qualified_species ->                        *)
 (*     Parsetree.vname list -> Dep_analysis.name_node list ->               *)
-(*       Parsetree.vname -> field_body_kind ->                              *)
+(*       Parsetree.vname -> field_body_kind -> Types.simple_types           *)
 (*         ((Parsetree.vname list) *                                        *)
 (*          (Parsetree.vname * Parsetree_utils.DepNameSet.t) list *         *)
 (*          (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *  *)
@@ -49,7 +49,13 @@ type field_body_kind =
     {b Rem} : Exported oustide this module.                                 *)
 (* ************************************************************************ *)
 let compute_lambda_liftings_for_field ~current_unit ~current_species
-     species_parameters_names dependency_graph_nodes name body =
+     species_parameters_names dependency_graph_nodes name body my_type =
+
+Format.eprintf "compute_lambda_liftings_for_field: %s.%a, method %a@\n"
+    (fst current_species)
+    Parsetree_utils.pp_vname_with_operators_expanded (snd current_species)
+    Parsetree_utils.pp_vname_with_operators_expanded name ;
+
   (* Get all the methods we directly decl-depend on. They will   *)
   (* lead each to an extra parameter of the final OCaml function *)
   (* (lambda-lifing). Get the methods we directly def-depend.    *)
@@ -89,21 +95,73 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
         (species_param_name, meths_from_param) :: accu)
       species_parameters_names
       [] in
-  let params_appearing_in_types = ref Types.SpeciesCarrierTypeSet.empty in
-  (* First, abstract according to the species's parameters the current  *)
-  (* method depends on.                                                 *)
+
+Format.eprintf "Longueur de dependencies_from_params = %d@\n"
+    (List.length dependencies_from_params) ;
+List.iter
+  (fun (spe_param_name, meths) ->
+    Format.eprintf "Dépendance vis-à-vis du paramètre: %a sur %d méthodes@\n"
+      Parsetree_utils.pp_vname_with_operators_expanded spe_param_name
+      (Parsetree_utils.DepNameSet.cardinal meths))
+dependencies_from_params ;
+
+  (* By side effect, we remind the species types appearing in our type. *)
+  let params_appearing_in_types =
+    ref (Types.get_species_types_in_type my_type) in
+
+  (* By side effect, we remind the species types appearing  *)
+  (* in the species parameters methods' types we depend on. *)
   List.iter
     (fun (_, meths) ->
       Parsetree_utils.DepNameSet.iter
-        (fun (_, meth_ty) ->
-          (* By the way and by side effect, we remind the   *)
-          (* species types appearing the the method's type. *)
+        (fun (foo, meth_ty) ->
+
+Format.eprintf "Found a dependency on method %a whose type is %a@\n"
+  Parsetree_utils.pp_vname_with_operators_expanded foo
+  Types.pp_type_simple meth_ty ;
+
           let st_set = Types.get_species_types_in_type meth_ty in
           params_appearing_in_types :=
             Types.SpeciesCarrierTypeSet.union
               st_set !params_appearing_in_types)
         meths)
     dependencies_from_params ;
+
+  (* Same thing for the methods of ourselves we decl-depend on except on *)
+  (* rep that is processed apart.                                        *)
+  List.iter
+    (fun (node, _) ->
+      if node.Dep_analysis.nn_name <> (Parsetree.Vlident "rep") then
+        begin
+
+Format.eprintf "Decl sur %a de type %a@\n"
+  Parsetree_utils.pp_vname_with_operators_expanded node.Dep_analysis.nn_name
+  Types.pp_type_simple node.Dep_analysis.nn_type ;
+
+        let st_set =
+          Types.get_species_types_in_type node.Dep_analysis.nn_type in
+        params_appearing_in_types :=
+          Types.SpeciesCarrierTypeSet.union st_set !params_appearing_in_types
+        end)
+    decl_children ;
+  (* Same thing for the methods of ourselves we def-depend on except on *)
+  (* rep that is processed apart.                                       *)
+  List.iter
+    (fun (node, _) ->
+      if node.Dep_analysis.nn_name <> (Parsetree.Vlident "rep") then
+        begin
+
+Format.eprintf "Decl sur %a de type %a@\n"
+  Parsetree_utils.pp_vname_with_operators_expanded node.Dep_analysis.nn_name
+  Types.pp_type_simple node.Dep_analysis.nn_type ;
+
+        let st_set =
+          Types.get_species_types_in_type node.Dep_analysis.nn_type in
+        params_appearing_in_types :=
+          Types.SpeciesCarrierTypeSet.union st_set !params_appearing_in_types
+        end)
+    def_children ;
+
   (* Now compute the set of species parameters types used in the   *)
   (* types of the methods comming from the species parameters that *)
   (* the current field uses. This information is required for Coq  *)
@@ -153,7 +211,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
   List.map
     (function
       | Env.TypeInformation.SF_sig si -> FAI_sig si
-      | Env.TypeInformation.SF_let ((_, name, _, _, body, _) as li) ->
+      | Env.TypeInformation.SF_let ((_, name, _, sch, body, _) as li) ->
           let (used_species_parameter_tys, dependencies_from_params,
                decl_children, def_children) =
             let body_as_fbk =
@@ -165,7 +223,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
               ~current_species: ctx.Context.scc_current_species
               ctx.Context.scc_species_parameters_names
               ctx.Context.scc_dependency_graph_nodes name
-              body_as_fbk in
+              body_as_fbk (Types.specialize sch) in
           (* Compute the visible universe of the method. *)
           let universe =
             VisUniverse.visible_universe
@@ -183,7 +241,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
       | Env.TypeInformation.SF_let_rec l ->
           let deps_infos =
             List.map
-              (fun ((_, name, _, _, body, _) as li) ->
+              (fun ((_, name, _, sch, body, _) as li) ->
                 let body_as_fbk =
                   match body with
                    | Parsetree.BB_logical p -> FBK_prop p
@@ -195,7 +253,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
                     ~current_species: ctx.Context.scc_current_species
                     ctx.Context.scc_species_parameters_names
                     ctx.Context.scc_dependency_graph_nodes name
-                    body_as_fbk in
+                    body_as_fbk (Types.specialize sch) in
                 (* Compute the visible universe of the method. *)
                 let universe =
                   VisUniverse.visible_universe
@@ -212,7 +270,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
                 (li, abstr_info))
               l in
           FAI_let_rec deps_infos
-      | Env.TypeInformation.SF_theorem ((_, name, _, prop, _, _) as ti) ->
+      | Env.TypeInformation.SF_theorem ((_, name, sch, prop, _, _) as ti) ->
           let (used_species_parameter_tys, dependencies_from_params,
                decl_children, def_children) =
             compute_lambda_liftings_for_field
@@ -220,7 +278,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
               ~current_species: ctx.Context.scc_current_species
               ctx.Context.scc_species_parameters_names
               ctx.Context.scc_dependency_graph_nodes name
-              (FBK_prop prop) in
+              (FBK_prop prop) (Types.specialize sch) in
           (* Compute the visible universe of the theorem. *)
           let universe =
             VisUniverse.visible_universe
@@ -234,7 +292,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
             ai_dependencies_from_params = dependencies_from_params ;
             ai_min_coq_env = min_coq_env } in
           FAI_theorem (ti, abstr_info)
-      | Env.TypeInformation.SF_property ((_, name, _, prop, _) as pi) ->
+      | Env.TypeInformation.SF_property ((_, name, sch, prop, _) as pi) ->
           let (used_species_parameter_tys, dependencies_from_params,
                decl_children, def_children) =
             compute_lambda_liftings_for_field
@@ -242,7 +300,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
               ~current_species: ctx.Context.scc_current_species
               ctx.Context.scc_species_parameters_names
               ctx.Context.scc_dependency_graph_nodes name
-              (FBK_prop prop) in
+              (FBK_prop prop) (Types.specialize sch) in
           (* Compute the visible universe of the theorem. *)
           let universe =
             VisUniverse.visible_universe
