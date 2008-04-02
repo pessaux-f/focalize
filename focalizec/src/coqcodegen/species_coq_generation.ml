@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.39 2008-04-02 13:37:18 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.40 2008-04-02 15:33:02 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -249,7 +249,7 @@ let generate_defined_method ctx print_ctx env min_coq_env
                Format.fprintf out_fmter "@ (abst_T : Set)" ;
                [Parsetree.Vlident "rep"]
            | MinEnv.MCEE_Declared_computational (n, sch) ->
-               (* Due to e decl-dependency, hence: abstract. *)
+               (* Due to a decl-dependency, hence: abstract. *)
                let ty = Types.specialize sch in
                Format.fprintf out_fmter "@ (abst_%a : %a)"
                  Parsetree_utils.pp_vname_with_operators_expanded n
@@ -527,6 +527,26 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
       Types.cpc_collections_carrier_mapping =
         cc_mapping_extension @
         print_ctx.Types.cpc_collections_carrier_mapping } in
+  (* For each method from the species parameters we depend on, we create a *)
+  (* Variable named "_" + species parameter name + "_" + method name.      *)
+  List.iter
+    (fun (species_param_name, meths_from_param) ->
+      let prefix = "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) in
+      Parsetree_utils.DepNameSet.iter
+        (fun (meth, meth_ty) ->
+          Format.fprintf out_fmter
+            "@[(* Due@ to@ a@ decl-dependency@ on@ method@ '%a'@ of@ \
+            species@ parameter@ '%a'. *)@]@\n"
+            Parsetree_utils.pp_vname_with_operators_expanded species_param_name
+            Parsetree_utils.pp_vname_with_operators_expanded meth ;
+          Format.fprintf out_fmter
+            "@[<2>Variable %s_%a : %a.@]@\n"
+            prefix Parsetree_utils.pp_vname_with_operators_expanded meth
+            (Types.pp_type_simple_to_coq
+              new_print_ctx ~reuse_mapping: false ~self_as: Types.CSR_species)
+            meth_ty)
+        meths_from_param)
+    dependencies_from_params ;
   (* For each method in the minimal Coq typing environment, if it is  *)
   (* only declared, then we abstract them (i.e. make a "Variable"     *)
   (* named "abst_" + the method name and bind its type).              *)
@@ -723,8 +743,8 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
     ~in_hyp: false new_ctx env prop ;
   Format.fprintf out_fmter ".@]@\n" ;
   (* Generate "assert"s to be sure that Coq will really abstract *)
-  (* in the section all the "Variable"s we created for types     *)
-  (* containing species parameters carriers.                     *)
+  (* in the section all the parameters for types containing      *)
+  (* species parameters carriers.                                *)
   List.iter
     (fun species_carrier_ty_name ->
        Format.fprintf out_fmter
@@ -734,7 +754,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
           Parsetree_utils.pp_vname_with_operators_expanded
           species_carrier_ty_name ;
         Format.fprintf out_fmter
-          "@[<2>assert@ (___force_abstraction_%a_T :=@ %a_T).@]@\n"
+          "@[<2>assert@ (___force_abstraction_p_%a_T :=@ _p_%a_T).@]@\n"
           Parsetree_utils.pp_vname_with_operators_expanded
           species_carrier_ty_name
           Parsetree_utils.pp_vname_with_operators_expanded
@@ -815,7 +835,10 @@ let generate_theorem ctx print_ctx env min_coq_env
   Format.fprintf out_fmter "@[<2>Let self_%a :@ "
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   Species_record_type_generation.generate_prop
-    ~local_idents: [] ~self_as: Types.CSR_self ~in_hyp: false ctx env prop ;
+(* [Unsure] Ici ~in_hyp: true est correct, mais le nom du flag n'est pas bon
+   car il ne reflète pas vraiment le fait qu'on soit dans une Hypothesis.
+   A changer ! *)
+    ~local_idents: [] ~self_as: Types.CSR_self ~in_hyp: true ctx env prop ;
   (* The theorem generator's name... If the generator *)
   (* is in another module,  then qualify its name.    *)
   Format.fprintf out_fmter " :=@ " ;
