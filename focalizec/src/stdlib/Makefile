@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2008-03-17 14:04:14 pessaux Exp $
+# $Id: Makefile,v 1.6 2008-04-03 19:34:09 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file
@@ -17,13 +17,15 @@ FOCSRC = basics.foc \
 	iterators.foc \
 	additive_law.foc \
 	multiplicative_law.foc \
-	weak_structures.foc
+	weak_structures.foc \
+	rings_fields.foc
 
 FOCMLS = $(FOCSRC:.foc=.ml)
 FOCCMOS = $(FOCMLS:.ml=.cmo)
 FOCVS = $(FOCSRC:.foc=.v)
 FOCVOS = $(FOCVS:.v=.vo)
-EXTERNALOBJS = focvasives.cmo sets_orders_externals.cmo
+EXTERNALOBJS = focvasives.cmo sets_orders_externals.cmo \
+	weak_structures_externals.cmo
 
 
 

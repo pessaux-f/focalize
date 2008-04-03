@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.106 2008-03-14 14:43:59 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.107 2008-04-03 19:34:09 pessaux Exp $ *)
 
 
 
@@ -1778,7 +1778,9 @@ type typed_species_parameter_argument =
 (* ************************************************************************* *)
 let rec typecheck_expr_as_species_parameter_argument ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
-  | Parsetree.E_self -> TSPA_self
+  | Parsetree.E_self ->
+      Format.eprintf "Self is subspecies by recursion not checked: todo@." ;
+      TSPA_self
   | Parsetree.E_constr (cstr_expr, []) ->
       (* We re-construct a fake ident from the constructor expression *)
       (* just to be able to lookup inside the environment.            *)

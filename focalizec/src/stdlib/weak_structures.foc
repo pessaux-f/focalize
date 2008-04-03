@@ -250,69 +250,111 @@ species Factorial_semi_algebra (R is Factorial_semi_ring)
    sig module_gcd : Self -> R -> R ;
 end ;;
 
-(* SNIPPED
 
 (** types for euclidean division *)
 (* this is a translation of records! needs to be improved *)
-type quo_rem_result a = caml quo_rem_result; ;;
-let cr_qrr (x in 'a,y in 'a) in quo_rem_result('a)= caml cr_qrr;;
-let quot (x in quo_rem_result('a)) in 'a = caml qrr_quot;;
-let rema (x in quo_rem_result('a)) in 'a = caml qrr_rema;;
-let divisionParZero (x) = caml div_zero;;
+type quo_rem_result ('a) =
+  internal
+  external
+  | caml -> "'a Weak_structures_externals.quo_rem_result"
+;;
+
+let cr_qrr =
+  internal 'a -> 'a -> quo_rem_result ('a)
+  external
+  | caml -> "Weak_structures_externals.cr_qrr"
+;;
+
+let quot =
+  internal quo_rem_result ('a) -> 'a
+  external
+  | caml -> "Weak_structures_externals.qrr_quot"
+;;
+
+let rema =
+  internal quo_rem_result ('a) -> 'a
+  external
+  | caml -> "Weak_structures_externals.qrr_rema"
+;;
+
+let divisionParZero =
+  internal 'a -> 'b
+  external
+  | caml -> "Weak_structures_externals.div_zero"
+;;
+
 
 (** euclidean algorithm *)
-species euclidean_semi_ring 
-  inherits factorial_semi_ring =
-   let rec gcd(x,y) = 
-     if self!is_zero(y) then x else self!gcd(y,self!remainder(x,y));
-   sig euclidean_ordering in self -> self -> Prop;
-   property euclidean_order_is_antisymmetric: all x y in self,
-     !is_zero(x) or !is_zero(y) or 
-     (!euclidean_ordering(x,y) -> not(!euclidean_ordering(y,x)));
-   property euclidean_ordering_is_transitive: all x y z in self,
-     not(!is_zero(x)) -> not(!is_zero(y)) -> not(!is_zero(z)) ->
-      !euclidean_ordering(x,y) -> !euclidean_ordering(y,z) ->
-       !euclidean_ordering(x,z);
-   property euclidean_ordering_is_irreflexive: all x in self,
-     not(!is_zero(x)) -> not(!euclidean_ordering(x,x));
-   sig quo_rem in self->self->quo_rem_result(self);
-   let quotient(x,y) = #quot(self!quo_rem(x,y));
-   let remainder(x,y) = #rema(self!quo_rem(x,y));
-   theorem euclidean_relation: all x y in self,
-     !is_zero(y)
-       or
-     !equal (x,!plus(!mult(!quotient(x,y),y),!remainder(x,y)))
-     proof : assumed;
-   property remainder_is_smaller: all x y z in self,
-     !is_zero(y)
-       or
-     (!equal (z,!remainder(x,y)) -> 
-       (!is_zero(z) or  !euclidean_ordering(z,y)));
-   let exquo (x,y) =
-     if self!is_zero(y) then #Failed
-     else 
-      let qr = self!quo_rem(x,y) in
-        if self!is_zero(#rema(qr))
-         then #Unfailed(#quot(qr))
-         else #Failed;
-   proof of exquo_divides = 
-     def:exquo;
-     assumed;
-   proof of gcd_divides = 
-     decl: euclidean_relation;
-     decl: euclidean_ordering;
-     assumed;
-   proof of divisor_is_multiple_of_gcd =
-     decl: euclidean_relation;
-     decl: euclidean_ordering;
-     assumed;
-end
+species Euclidean_semi_ring inherits Factorial_semi_ring =
+  sig quo_rem : Self -> Self -> quo_rem_result (Self) ;
+  let quotient (x, y) = #quot (Self!quo_rem (x, y)) ;
+  let remainder (x, y) = #rema (Self!quo_rem (x, y)) ;
+  let rec gcd (x, y) = 
+    if Self!is_zero (y) then x else Self!gcd (y, Self!remainder (x, y)) ;
+  sig euclidean_ordering : Self -> Self -> prop ;
+  property euclidean_order_is_antisymmetric:
+    all x y in Self,
+      !is_zero (x) or !is_zero (y) or 
+      (!euclidean_ordering (x, y) -> not (!euclidean_ordering (y, x))) ;
+  property euclidean_ordering_is_transitive:
+    all x y z in Self,
+      not (!is_zero (x)) -> not (!is_zero (y)) -> not (!is_zero (z)) ->
+	!euclidean_ordering (x, y) -> !euclidean_ordering (y, z) ->
+	  !euclidean_ordering (x, z) ;
+ property euclidean_ordering_is_irreflexive: all x in Self,
+   not (!is_zero (x)) -> not (!euclidean_ordering (x, x)) ;
+ theorem euclidean_relation: all x y in Self,
+   !is_zero (y)
+   or
+   !equal (x, !plus (!mult (!quotient (x, y), y), !remainder (x, y)))
+   proof : assumed ;
+ property remainder_is_smaller: all x y z in Self,
+   !is_zero (y)
+   or
+   (!equal (z, !remainder (x, y)) -> 
+     (!is_zero (z) or !euclidean_ordering (z, y))) ;
+ let exquo (x, y) =
+    if Self!is_zero (y) then basics#Failed
+    else
+      let qr = Self!quo_rem (x, y) in
+      if Self!is_zero (#rema (qr))
+      then basics#Unfailed (#quot (qr))
+      else basics#Failed ;
+  proof of exquo_divides = 
+    (** SNIPPED by definition of exquo *)
+    assumed ;
+  proof of gcd_divides = 
+    (** SNIPPED by euclidean_relation, euclidean_ordering *)
+    assumed ;
+  proof of divisor_is_multiple_of_gcd =
+    (** SNIPPED by euclidean_relation, euclidean_ordering *)
+    assumed ;
+end ;;
 
 (* glurp, thats enough for now, though some people define semi fields *)
-type bezout_res a = caml_link bezout_res; ;;
-let cr_br (x in 'a,y in 'a, z in 'a) in bezout_res('a)=caml cr_br;; 
-let gcd (x in bezout_res('a))in 'a = caml br_gcd;;
-let coef1 (x in bezout_res('a)) in 'a = caml br_coef1;;
-let coef2 (x in bezout_res('a)) in 'a = caml br_coef2;;
+type bezout_res ('a) =
+ internal
+ external
+  | caml -> "'a Weak_structures_externals.bezout_res"
+;;
+let cr_br =
+  internal 'a -> 'a -> 'a -> bezout_res ('a)
+  external
+  | caml -> "Weak_structures_externals.cr_br"
+;; 
+let gcd =
+  internal bezout_res ('a) -> 'a
+  external
+  | caml -> "Weak_structures_externals.br_gcd"
+;;
+let coef1 =
+  internal bezout_res ('a) -> 'a
+  external
+  | caml -> "Weak_structures_externals.br_coef1"
+;;
+let coef2 =
+  internal bezout_res ('a) -> 'a
+  external
+  | caml -> "Weak_structures_externals.br_coef2"
+;;
 
-*)

@@ -51,12 +51,12 @@ type foc_diag ('a) =
   internal alias ('a * 'a)
   external
   | caml -> "('a * 'a)"
-  | coq -> "{ fst : 'a ; snd : 'a}"
+  | coq -> "{ fst : 'a ; snd : 'a }"
 ;;
 
 (* An external record type. *)
 type foc_record ('a) =
-  internal  { hcode = int ; contents = 'a; }
+  internal  { hcode = int ; contents = 'a }
   external
   | caml -> "'a Ok__baby_toy_externals.bbt_record"
   | coq -> "Focq.foc_record ['a]"

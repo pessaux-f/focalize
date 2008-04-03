@@ -2,6 +2,7 @@ type int =
   internal
   external
   | caml -> "int"
+  | coq -> "Z"
 ;;
 type unit =
   internal
@@ -22,11 +23,13 @@ type string =
   internal
   external
   | caml -> "string"
+  | coq -> "Focvasives_coq.coq_string"  (* Temporary dirty string. *)
 ;;
 type bool =
   internal
   external
   | caml -> "bool"
+  | coq -> "bool"  (* Builtin of Coq *)
 ;;
 
 type list ('a) =
