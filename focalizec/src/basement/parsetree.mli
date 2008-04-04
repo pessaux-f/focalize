@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.30 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.31 2008-04-04 14:34:14 weis Exp $ *)
 
 (** {2 The Focalize abstract syntax tree.} *)
 
@@ -69,11 +69,11 @@ type modname = Types.fname
 ;;
 
 type vname =
-   | Vlident of string  (** Lowercase ident. *)
-   | Vuident of string  (** Capitalized ident. *)
-   | Vpident of string  (** Prefix operator ident. *)
-   | Viident of string  (** Infix operator ident. *)
-   | Vqident of string  (** "Quote" ident for type variables. *)
+   | Vlident of string (** Lowercase ident. *)
+   | Vuident of string (** Capitalized ident. *)
+   | Vpident of string (** Prefix operator ident. *)
+   | Viident of string (** Infix operator ident. *)
+   | Vqident of string (** "Quote" ident for type variables. *)
 (** The type of variables classified by their respective lexical category,
   which can be regular identifiers (lowercase or capitalized), infix, or
   prefix identifiers. *)
@@ -267,7 +267,9 @@ type logical_flag = | LF_no_logical | LF_logical;;
 
 type local_flag = | LF_no_local | LF_local;;
 
-(** {6 Expressions and let definitions.} *)
+(** {3 Proofs.} *)
+
+(** {6 Propositions.} *)
 
 type expr = expr_desc ast
 and expr_desc =
@@ -295,20 +297,19 @@ and let_def_desc = {
   ld_bindings : binding list;
 }
 
+and param_list = (vname * type_expr option) list
+
 and binding = binding_desc ast
 and binding_body =
   | BB_logical of prop
   | BB_computational of expr
 and binding_desc = {
   b_name : vname;
-  b_params : (vname * type_expr option) list;
+  b_params : param_list;
   b_type : type_expr option;
   b_body : binding_body;
+  b_termination_proof : termination_proof option;
 }
-
-(** {3 Proofs.} *)
-
-(** {6 Propositions.} *)
 
 and prop = prop_desc ast
 and prop_desc =
@@ -321,35 +322,31 @@ and prop_desc =
   | Pr_not of prop
   | Pr_expr of expr
   | Pr_paren of prop
-;;
 
 (** {6 Hypotheses, statements and facts.} *)
 
-type hyp = hyp_desc ast
+and hyp = hyp_desc ast
 and hyp_desc =
   | H_var of vname * type_expr
   | H_hyp of vname * prop
   | H_not of vname * expr
-;;
 
-type statement = statement_desc ast
+and statement = statement_desc ast
 and statement_desc = {
   s_hyps : hyp list;
   s_concl : prop option;
 }
-;;
 
-type fact = fact_desc ast
+and fact = fact_desc ast
 and fact_desc =
   | F_def of expr_ident list
   | F_property of expr_ident list
   | F_hypothesis of vname list
   | F_node of node_label list
-;;
 
 (** Proofs. *)
 
-type proof = proof_desc ast
+and proof = proof_desc ast
 and proof_desc =
   | Pf_assumed
   | Pf_auto of fact list
@@ -360,7 +357,30 @@ and proof_node = proof_node_desc ast
 and proof_node_desc =
   | PN_sub of node_label * statement * proof
   | PN_qed of node_label * proof
+
+and termination_proof = termination_proof_desc ast
+and termination_proof_desc =
+    (* The termination proof is structural on the named argument. *)
+  | TP_structural of vname
+    (* The order is computed as a lexicographic order and
+       the termination proof is infered automatically.
+       A hint can be given as a list of facts. *)
+  | TP_lexicographic of fact list
+    (* Give a measure [expr] that proves termination of the recursive function
+       because the [proof] prove that all recursive calls' arguments decrease
+       w.r.t. this measure. *)
+  | TP_measure of expr * param_list * proof
+    (* Gives an order [expr], a list of arguments to compare,
+       a proof that:
+       - the order is well founded,
+       - each recursive call decreases for the order applied to the listed
+         arguments.
+       Those two proofs (or more) are collected into a single proof as a
+       conjunction. *)
+  | TP_order of expr * param_list * proof
 ;;
+
+
 
 (** {3 Species definitions.} *)
 
@@ -373,6 +393,7 @@ type sig_def = sig_def_desc ast
 and sig_def_desc = {
   sig_name : vname;
   sig_type : type_expr;
+  sig_logical : logical_flag;
 }
 ;;
 
@@ -396,6 +417,18 @@ and theorem_def_desc = {
   th_local : local_flag;
   th_stmt : prop;
   th_proof : proof;
+}
+;;
+
+type termination_proof_def = termination_proof_def_desc ast
+and termination_proof_def_desc = {
+  tpd_profiles : termination_proof_profile list;
+  tpd_proof : termination_proof;
+}
+and termination_proof_profile = termination_proof_profile_desc ast
+and termination_proof_profile_desc = {
+  tpp_name : vname;
+  tpp_args : param_list;
 }
 ;;
 
@@ -435,6 +468,7 @@ and species_field_desc =
   | SF_property of property_def
   | SF_theorem of theorem_def
   | SF_proof of proof_def
+  | SF_termination_proof of termination_proof_def
 ;;
 
 (** {3 Collection definitions.} *)
