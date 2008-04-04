@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.77 2008-03-10 13:00:17 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.78 2008-04-04 14:25:29 weis Exp $ *)
 
 open Parsetree;;
 
@@ -137,6 +137,7 @@ let mk_proof_label (s1, s2) =
 %token BAR
 %token <string> BAR_OP
 %token <string> AMPER_OP
+%token TILDA
 %token <string> TILDA_OP
 %token UNDERSCORE
 %token EQUAL
@@ -169,8 +170,10 @@ let mk_proof_label (s1, s2) =
 %token BY
 %token CAML
 %token COLLECTION
+%token CONJUNCTION
 %token COQ
 %token DEFINITION
+%token DISJUNCTION
 %token ELSE
 %token END
 %token EX
@@ -184,14 +187,18 @@ let mk_proof_label (s1, s2) =
 %token IMPLEMENTS
 %token IS
 %token LET
+%token LEXICOGRAPHIC
 %token LOCAL
 %token LOGICAL
 %token MATCH
+%token MEASURE
 %token NOT
 %token NOTATION
 %token OF
+%token ON
 %token OPEN
 %token OR
+%token ORDER
 %token PROOF
 %token PROP
 %token PROPERTY
@@ -203,6 +210,8 @@ let mk_proof_label (s1, s2) =
 %token SIG
 %token SPECIES
 %token STEP
+%token STRUCTURAL
+%token TERMINATION
 %token THEN
 %token THEOREM
 %token TYPE
@@ -221,9 +230,10 @@ let mk_proof_label (s1, s2) =
 /* %nonassoc FUNCTION WITH */          /* below BAR  (match ... with ...) */
 %nonassoc prec_quantifier
 %nonassoc LT_DASH_GT LT_DASH_GT_OP     /* <-> */
-%right    OR                           /* prop or prop */
-%right    AND                          /* above WITH prop and prop */
-%nonassoc NOT                          /* not prop */
+%right    DISJUNCTION                  /* prop \/ prop */
+%right    CONJUNCTION                  /* prop /\ prop */
+%right    AND                          /* let ... and ... */
+%nonassoc TILDA                        /* ~ prop */
 /* %nonassoc THEN */                   /* below ELSE (if ... then ...) */
 %nonassoc ELSE                         /* (if ... then ... else ...) */
 %right    BACKSLASH_OP                 /* e \ e */
@@ -450,6 +460,24 @@ species_field :
   | def_property { mk (SF_property $1) }
   | def_theorem  { mk (SF_theorem $1) }
   | def_proof    { mk (SF_proof $1) }
+  | def_termination_proof
+                 { mk (SF_termination_proof $1) }
+;
+
+def_termination_proof_profiles:
+  | { [] }
+  | def_termination_proof_profiles AND def_termination_proof_profile
+    { $3 :: $1 }
+;
+
+def_termination_proof_profile:
+  | bound_vname LPAREN param_list RPAREN
+    { mk {tpp_name = $1; tpp_args = $3; } }
+;
+
+def_termination_proof:
+  | opt_doc TERMINATION PROOF OF def_termination_proof_profiles EQUAL termination_proof
+    { mk_doc $1 {tpd_profiles = List.rev $5; tpd_proof = $7; } }
 ;
 
 def_proof:
@@ -511,15 +539,15 @@ def_collection:
 
 let_binding:
   | opt_local LET binding
-    { mk {ld_rec = RF_no_rec; ld_logical = LF_no_logical; ld_local = $1;
-          ld_bindings = [ $3 ]} }
+    { mk { ld_rec = RF_no_rec; ld_logical = LF_no_logical; ld_local = $1;
+           ld_bindings = [ $3 ]} }
   | opt_local LET REC binding following_binding_list
     { mk { ld_rec = RF_rec; ld_logical = LF_no_logical; ld_local = $1;
            ld_bindings = $4 :: $5; } }
 ;
 
 def_let:
-  | opt_doc let_binding { mk_doc $1 $2.ast_desc }
+  | opt_doc let_binding { mk_doc $1 ($2.ast_desc) }
 ;
 
 /** Since logical let is followed by a prop, and since props embedd expressions,
@@ -531,21 +559,44 @@ def_let:
   logical binding.
   The only exception is for externals that are never logical bindings ! */
 binding:
-  | bound_vname EQUAL prop
+  | bound_vname EQUAL prop termination_proof_opt
     { mk { b_name = $1; b_params = []; b_type = None;
-	   b_body = Parsetree.BB_logical $3; } }
+	   b_body = Parsetree.BB_logical $3;
+           b_termination_proof = $4;
+          } }
   | bound_vname EQUAL INTERNAL type_expr EXTERNAL external_expr
     { mk { b_name = $1; b_params = []; b_type = Some $4;
-	   b_body = Parsetree.BB_computational (mk (E_external $6)); } }
-  | bound_vname IN type_expr EQUAL prop
+	   b_body = Parsetree.BB_computational (mk (E_external $6));
+           b_termination_proof = None;
+         } }
+  | bound_vname IN type_expr EQUAL prop termination_proof_opt
     { mk { b_name = $1; b_params = []; b_type = Some $3;
-	   b_body = Parsetree.BB_logical $5; } }
-  | bound_vname LPAREN param_list RPAREN EQUAL prop
+	   b_body = Parsetree.BB_logical $5;
+           b_termination_proof = $6;
+         } }
+  | bound_vname LPAREN param_list RPAREN EQUAL prop termination_proof_opt
     { mk { b_name = $1; b_params = $3; b_type = None;
-	   b_body = Parsetree.BB_logical $6; } }
-  | bound_vname LPAREN param_list RPAREN IN type_expr EQUAL prop
+	   b_body = Parsetree.BB_logical $6;
+           b_termination_proof = $7;
+         } }
+  | bound_vname LPAREN param_list RPAREN IN type_expr
+    EQUAL prop termination_proof_opt
     { mk { b_name = $1; b_params = $3; b_type = Some $6;
-	   b_body = Parsetree.BB_logical $8; } }
+	   b_body = Parsetree.BB_logical $8;
+           b_termination_proof = $9;
+          } }
+;
+
+termination_proof_opt:
+  | { None }
+  | TERMINATION PROOF COLON termination_proof { Some $4 }
+;
+
+termination_proof:
+  | STRUCTURAL bound_vname { mk (TP_structural $2) }
+  | LEXICOGRAPHIC fact_list { mk (TP_lexicographic $2) }
+  | MEASURE expr ON param_list proof { mk (TP_measure ($2, $4, $5)) }
+  | ORDER expr ON param_list proof { mk (TP_order ($2, $4, $5)) }
 ;
 
 param_list:
@@ -560,23 +611,29 @@ param:
 
 /**** PROPERTIES & THEOREM DEFINITION ****/
 
+sig_binding:
+  | SIG bound_vname COLON type_expr
+    { { sig_name = $2; sig_type = $4; sig_logical = LF_no_logical; } }
+  | LOGICAL sig_binding
+    { { $2  with sig_logical = LF_logical; }; }
+
 def_sig:
-  | opt_doc SIG bound_vname COLON type_expr
-    { mk_doc $1 {sig_name = $3; sig_type = $5; } }
+  | opt_doc sig_binding
+    { mk_doc $1 $2 }
 ;
 
 def_logical:
-  | opt_doc opt_local LOGICAL binding
-    { mk_doc $1 {ld_rec = RF_no_rec; ld_logical = LF_logical; ld_local = $2;
-                 ld_bindings = [ $4 ]} }
-  | opt_doc opt_local LOGICAL REC binding following_binding_list
-    { mk_doc $1 { ld_rec = RF_rec; ld_logical = LF_logical; ld_local = $2;
-                  ld_bindings = $5 :: $6; } }
+  | opt_doc logical_binding { mk_doc $1 $2.ast_desc }
+;
+
+logical_binding:
+  | LOGICAL let_binding
+    { mk { $2.ast_desc with ld_logical = LF_logical; } }
 ;
 
 def_property:
   | opt_doc PROPERTY property_vname COLON prop
-    { mk_doc $1 {prd_name = $3; prd_prop = $5; } }
+    { mk_doc $1 { prd_name = $3; prd_prop = $5; } }
 ;
 
 def_theorem:
@@ -591,15 +648,15 @@ prop:
     { mk (Pr_forall ($2, $3, $5))}
   | EX bound_vname_list in_type_expr COMMA prop   %prec prec_quantifier
     { mk (Pr_exists ($2, $3, $5))}
-  | NOT prop
+  | TILDA prop
     { mk (Pr_not $2) }
   | LPAREN prop RPAREN
     { mk (Pr_paren $2) }
   | prop DASH_GT prop
     { mk (Pr_imply ($1, $3)) }
-  | prop OR prop
+  | prop DISJUNCTION prop
     { mk (Pr_or ($1, $3)) }
-  | prop AND prop
+  | prop CONJUNCTION prop
     { mk (Pr_and ($1, $3)) }
   | prop LT_DASH_GT prop
     { mk (Pr_equiv ($1, $3)) }
@@ -1081,6 +1138,7 @@ collection_vname:
 property_vname:
   | LIDENT { Vlident $1 }
   | UIDENT { Vuident $1 }
+  | QIDENT { Vqident $1 }
 ;
 
 theorem_vname:
