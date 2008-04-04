@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.78 2008-04-04 14:25:29 weis Exp $ *)
+(* $Id: parser.mly,v 1.79 2008-04-04 14:30:16 weis Exp $ *)
 
 open Parsetree;;
 
@@ -207,7 +207,7 @@ let mk_proof_label (s1, s2) =
 %token REC
 %token REP
 %token SELF
-%token SIG
+%token SIGNATURE
 %token SPECIES
 %token STEP
 %token STRUCTURAL
@@ -612,7 +612,7 @@ param:
 /**** PROPERTIES & THEOREM DEFINITION ****/
 
 sig_binding:
-  | SIG bound_vname COLON type_expr
+  | SIGNATURE bound_vname COLON type_expr
     { { sig_name = $2; sig_type = $4; sig_logical = LF_no_logical; } }
   | LOGICAL sig_binding
     { { $2  with sig_logical = LF_logical; }; }
