@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.28 2008-03-25 14:18:48 weis Exp $ *)
+(* $Id: lexer.mll,v 1.29 2008-04-04 14:31:40 weis Exp $ *)
 
 {
 open Lexing;;
@@ -46,14 +46,18 @@ List.iter
   "implements", IMPLEMENTS;
   "is", IS;
   "let", LET;
+  "lexicographic", LEXICOGRAPHIC;
   "local", LOCAL;
   "logical", LOGICAL;
   "match", MATCH;
+  "measure", MEASURE;
   "not", NOT;
   "notation", NOTATION;
   "of", OF;
   "open", OPEN;
+  "on", ON;
   "or", OR;
+  "order", ORDER;
   "proof", PROOF;
   "prop", PROP;
   "property", PROPERTY;
@@ -61,9 +65,11 @@ List.iter
   "qed", QED;
   "rec", REC;
   "rep", REP;
-  "sig", SIG;
+  "signature", SIGNATURE;
   "species", SPECIES;
   "step", STEP;
+  "structural", STRUCTURAL;
+  "termination", TERMINATION;
   "then", THEN;
   "theorem", THEOREM;
   "true", BOOL "true";
@@ -196,17 +202,19 @@ let mk_prefixop s =
   assert (String.length s > 0);
   match s.[0] with
   | '`' -> BACKQUOTE_OP s
-  | '~' -> TILDA_OP s
+  | '~' -> if String.length s = 1 then TILDA else TILDA_OP s
   | '?' -> QUESTION_OP s
   | '$' -> DOLLAR_OP s
   | '!' ->
     begin match String.length s with
     | 1 -> BANG
-    | _ -> BANG_OP s end
+    | _ -> BANG_OP s
+    end
   | '#' ->
     begin match String.length s with
     | 1 -> SHARP
-    | _ -> SHARP_OP s end
+    | _ -> SHARP_OP s
+    end
   | _ -> assert false
 ;;
 
@@ -219,35 +227,46 @@ let mk_infixop s =
     | 1 -> DASH_OP s
     | _ when s.[1] <> '>' -> DASH_OP s
     | 2 -> DASH_GT
-    | _ -> DASH_GT_OP s end
+    | _ -> DASH_GT_OP s
+    end
   | '*' ->
     begin match String.length s with
     | 1 -> STAR_OP s
     | _ when s.[1] <> '*' -> STAR_OP s
-    | _ -> STAR_STAR_OP s end
-  | '/' -> SLASH_OP s
+    | _ -> STAR_STAR_OP s
+    end
+  | '/' ->
+    begin match String.length s with
+    | 1 -> SLASH_OP s
+    | 2 when s.[1] = '\\' -> CONJUNCTION
+    | _ -> SLASH_OP s
+    end
   | '%' -> PERCENT_OP s
   | '&' -> AMPER_OP s
   | '|' ->
     begin match String.length s with
     | 1 -> BAR
-    | _ -> BAR_OP s end
+    | _ -> BAR_OP s
+    end
   | ',' ->
     begin match String.length s with
     | 1 -> COMMA
-    | _ -> COMMA_OP s end
+    | _ -> COMMA_OP s
+    end
   | ':' ->
     begin match String.length s with
     | 1 -> COLON
     | _ when s.[1] <> ':' -> COLON_OP s
     | 2 -> COLON_COLON
-    | _ -> COLON_COLON_OP s end
+    | _ -> COLON_COLON_OP s
+    end
   | ';' ->
     begin match String.length s with
     | 1 -> SEMI
     | _ when s.[1] <> ';' -> SEMI_OP s
     | 2 -> SEMI_SEMI
-    | _ -> SEMI_SEMI_OP s end
+    | _ -> SEMI_SEMI_OP s
+    end
   | '<' ->
     begin match String.length s with
     | 1 -> LT_OP s
@@ -255,15 +274,22 @@ let mk_infixop s =
     | 2 -> LT_DASH_OP s
     | _ when s.[2] <> '>' -> LT_DASH_OP s
     | 3 -> LT_DASH_GT
-    | _ -> LT_DASH_GT_OP s end
+    | _ -> LT_DASH_GT_OP s
+    end
   | '=' ->
     begin match String.length s with
     | 1 -> EQUAL
-    | _ -> EQ_OP s end
+    | _ -> EQ_OP s
+    end
   | '>' -> GT_OP s
   | '@' -> AT_OP s
   | '^' -> HAT_OP s
-  | '\\' -> BACKSLASH_OP s
+  | '\\' ->
+    begin match String.length s with
+    | 1 -> BACKSLASH_OP s
+    | _ when s.[1] = '/' -> DISJUNCTION
+    | _ -> BACKSLASH_OP s
+    end
   | _ -> assert false
 ;;
 
