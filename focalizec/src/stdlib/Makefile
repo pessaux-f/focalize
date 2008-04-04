@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2008-04-03 19:34:09 pessaux Exp $
+# $Id: Makefile,v 1.7 2008-04-04 08:56:58 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file
@@ -17,8 +17,8 @@ FOCSRC = basics.foc \
 	iterators.foc \
 	additive_law.foc \
 	multiplicative_law.foc \
-	weak_structures.foc \
-	rings_fields.foc
+	weak_structures.foc
+	# rings_fields.foc
 
 FOCMLS = $(FOCSRC:.foc=.ml)
 FOCCMOS = $(FOCMLS:.ml=.cmo)
