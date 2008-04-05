@@ -12,9 +12,9 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.mli,v 1.12 2008-03-07 10:55:32 pessaux Exp $ *) 
+(* $Id: scoping.mli,v 1.13 2008-04-05 18:24:34 weis Exp $ *)
 
-exception Non_logical_let_cant_define_prop of (Parsetree.vname * Location.t)
+exception Non_logical_let_cant_define_logical_expr of (Parsetree.vname * Location.t)
 exception Multiply_used_module of Types.fname
 exception Module_not_specified_as_used of Types.fname
 exception Self_cant_parameterize_itself of Location.t

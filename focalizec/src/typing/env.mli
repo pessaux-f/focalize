@@ -51,11 +51,11 @@ module TypeInformation :
 
     type theorem_field_info =
       (Parsetree.qualified_species * Parsetree.vname * Types.type_scheme *
-       Parsetree.prop * Parsetree.proof * dependency_on_rep)
+       Parsetree.logical_expr * Parsetree.proof * dependency_on_rep)
 
     type property_field_info =
       (Parsetree.qualified_species * Parsetree.vname * Types.type_scheme *
-       Parsetree.prop * dependency_on_rep)
+       Parsetree.logical_expr * dependency_on_rep)
 
     type species_param =
       | SPAR_in of (Parsetree.vname * Types.type_collection)

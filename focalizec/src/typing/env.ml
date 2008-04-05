@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.68 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: env.ml,v 1.69 2008-04-05 18:24:06 weis Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -333,10 +333,10 @@ module TypeInformation = struct
   type theorem_field_info =
     ((** Where the theorem comes from (the most recent in inheritance). *)
      Parsetree.qualified_species *
-     Parsetree.vname *      (** The theorem's name. *)
-     Types.type_scheme *    (** The theorem's type scheme. *)
-     Parsetree.prop *       (** The theorem's body. *)
-     Parsetree.proof *      (** The theorem's proof. *)
+     Parsetree.vname *         (** The theorem's name. *)
+     Types.type_scheme *       (** The theorem's type scheme. *)
+     Parsetree.logical_expr *  (** The theorem's body. *)
+     Parsetree.proof *         (** The theorem's proof. *)
      (** Tells if the theorem has dependencies on the carrier ("rep"). *)
      dependency_on_rep)
 
@@ -345,9 +345,9 @@ module TypeInformation = struct
   type property_field_info =
     ((** Where the property comes from (the most recent in inheritance). *)
      Parsetree.qualified_species *
-     Parsetree.vname *       (** The property's name. *)
-     Types.type_scheme *     (** The property's type scheme. *)
-     Parsetree.prop *        (** The property's body. *)
+     Parsetree.vname *         (** The property's name. *)
+     Types.type_scheme *       (** The property's type scheme. *)
+     Parsetree.logical_expr *  (** The property's body. *)
      (** Tells if the property has dependencies on the carrier ("rep"). *)
      dependency_on_rep)
 
