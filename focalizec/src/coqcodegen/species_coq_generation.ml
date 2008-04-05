@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.40 2008-04-02 15:33:02 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.41 2008-04-05 19:02:51 weis Exp $ *)
 
 
 (* *************************************************************** *)
@@ -35,7 +35,7 @@ type let_connector =
 
 type compiled_method_body =
   | CMB_expr  of Parsetree.expr
-  | CMB_prop of Parsetree.prop
+  | CMB_logical_expr of Parsetree.logical_expr
 ;;
 
 
@@ -261,7 +261,7 @@ let generate_defined_method ctx print_ctx env min_coq_env
            | MinEnv.MCEE_Declared_logical (n, b) ->
                Format.fprintf out_fmter "@ (%a :@ "
                  Parsetree_utils.pp_vname_with_operators_expanded n ;
-               Species_record_type_generation.generate_prop
+               Species_record_type_generation.generate_logical_expr
                  new_ctx ~local_idents: [] ~self_as: how_to_print_Self
                  ~in_hyp: false env b ;
                Format.fprintf out_fmter ")" ;
@@ -323,7 +323,7 @@ let generate_defined_method ctx print_ctx env min_coq_env
          new_ctx ~local_idents: [] ~self_as: how_to_print_Self
          ~in_hyp: false env e
    | Parsetree.BB_logical p ->
-       Species_record_type_generation.generate_prop
+       Species_record_type_generation.generate_logical_expr
          new_ctx ~local_idents: [] ~self_as: how_to_print_Self
          ~in_hyp: false env p) ;
   (* Done... Then, final carriage return. *)
@@ -472,7 +472,7 @@ let find_compiled_field_memory name fields =
 (* Context.species_compil_context -> Types.coq_print_context ->              *)
 (*   Env.CoqGenEnv.t -> min_coq_env_element list ->                          *)
 (*     compiled_species_fields list -> Parsetree.qualified_species ->        *)
-(*       Parsetree.vname -> Parsetree.prop -> Parsetree.vname list           *)
+(*       Parsetree.vname -> Parsetree.logical_expr -> Parsetree.vname list           *)
 (** {b Descr} Gererate the Coq code for a theorem defined in the current
     species (i.e. not inherited). In fact, this generates the theorem
     generator for this theorem in this species.
@@ -484,7 +484,7 @@ let find_compiled_field_memory name fields =
 (* ************************************************************************* *)
 let generate_defined_theorem ctx print_ctx env min_coq_env
     used_species_parameter_tys dependencies_from_params generated_fields
-    from name prop =
+    from name logical_expr =
   let out_fmter = ctx.Context.scc_out_fmter in
   let curr_species_name = (snd ctx.Context.scc_current_species) in
   (* Just a bit of debug. *)
@@ -677,7 +677,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
                  Parsetree_utils.pp_vname_with_operators_expanded name ;
                (* We are generating a Theorem, not a property, *)
                (* hence, not an Hypothesis.                    *)
-               Species_record_type_generation.generate_prop
+               Species_record_type_generation.generate_logical_expr
                  new_ctx ~local_idents: [] ~self_as: Types.CSR_abst
                  ~in_hyp: false env body ;
                Format.fprintf out_fmter " :=@ " ;
@@ -724,7 +724,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
                Format.fprintf out_fmter "@[<2>Variable abst_%a :@ "
                  Parsetree_utils.pp_vname_with_operators_expanded name ;
                (* Rem: no local idents in the context at this point. *)
-               Species_record_type_generation.generate_prop
+               Species_record_type_generation.generate_logical_expr
                  new_ctx ~local_idents: [] ~self_as: Types.CSR_abst
                  ~in_hyp: true env body ;
                Format.fprintf out_fmter ".@]@\n" ;
@@ -738,9 +738,9 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
   Format.fprintf out_fmter "@[<2>Theorem %a__%a :@ "
     Parsetree_utils.pp_vname_with_operators_expanded curr_species_name
     Parsetree_utils.pp_vname_with_operators_expanded name ;
-  Species_record_type_generation.generate_prop
+  Species_record_type_generation.generate_logical_expr
     ~local_idents: [] ~self_as: Types.CSR_abst
-    ~in_hyp: false new_ctx env prop ;
+    ~in_hyp: false new_ctx env logical_expr ;
   Format.fprintf out_fmter ".@]@\n" ;
   (* Generate "assert"s to be sure that Coq will really abstract *)
   (* in the section all the parameters for types containing      *)
@@ -808,7 +808,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
 
 let generate_theorem ctx print_ctx env min_coq_env
     used_species_parameter_tys dependencies_from_params generated_fields
-    (from, name, prop, _) =
+    (from, name, logical_expr, _) =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* A "theorem" defined in the species leads to a Coq *)
   (* "Theorem" enclosed in a dedicated "Section".      *)
@@ -816,7 +816,7 @@ let generate_theorem ctx print_ctx env min_coq_env
     if from = ctx.Context.scc_current_species then
       generate_defined_theorem 
         ctx print_ctx env min_coq_env used_species_parameter_tys
-        dependencies_from_params generated_fields from name prop
+        dependencies_from_params generated_fields from name logical_expr
     else
       (begin
       (* Just a bit of debug/information if requested. *)
@@ -834,11 +834,11 @@ let generate_theorem ctx print_ctx env min_coq_env
   (* the theorem generator to the "local" methods "self_xxx".      *)
   Format.fprintf out_fmter "@[<2>Let self_%a :@ "
     Parsetree_utils.pp_vname_with_operators_expanded name ;
-  Species_record_type_generation.generate_prop
+  Species_record_type_generation.generate_logical_expr
 (* [Unsure] Ici ~in_hyp: true est correct, mais le nom du flag n'est pas bon
    car il ne reflète pas vraiment le fait qu'on soit dans une Hypothesis.
    A changer ! *)
-    ~local_idents: [] ~self_as: Types.CSR_self ~in_hyp: true ctx env prop ;
+    ~local_idents: [] ~self_as: Types.CSR_self ~in_hyp: true ctx env logical_expr ;
   (* The theorem generator's name... If the generator *)
   (* is in another module,  then qualify its name.    *)
   Format.fprintf out_fmter " :=@ " ;
@@ -950,14 +950,14 @@ let generate_methods ctx print_ctx env generated_fields field =
    | Abstractions.FAI_let_rec _l ->
        (* [Unsure]. *)
        CSF_let_rec []
-   | Abstractions.FAI_theorem ((from, name, _, prop, _, deps_on_rep),
+   | Abstractions.FAI_theorem ((from, name, _, logical_expr, _, deps_on_rep),
                                abstraction_info) ->
        let coq_min_typ_env_names =
          generate_theorem
            ctx print_ctx env abstraction_info.Abstractions.ai_min_coq_env
            abstraction_info.Abstractions.ai_used_species_parameter_tys
            abstraction_info.Abstractions.ai_dependencies_from_params
-           generated_fields (from, name, prop, deps_on_rep) in
+           generated_fields (from, name, logical_expr, deps_on_rep) in
        let compiled_field = {
          cfm_from_species = from ;
          cfm_method_name = name ;
@@ -967,7 +967,7 @@ let generate_methods ctx print_ctx env generated_fields field =
            abstraction_info.Abstractions.ai_dependencies_from_params ;
          cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
        CSF_theorem compiled_field
-   | Abstractions.FAI_property ((from, name, _, prop, _), abstraction_info) ->
+   | Abstractions.FAI_property ((from, name, _, logical_expr, _), abstraction_info) ->
        (* "Property"s lead to a Coq "Hypothesis". Inherited properties *)
        (* are always generated again by just enouncing their body.     *)
        Format.fprintf out_fmter "(* From species %a. *)@\n"
@@ -980,8 +980,8 @@ let generate_methods ctx print_ctx env generated_fields field =
        (* use extra parameters to lambda-lift). Instead, one must refer *)
        (* To the Variables created in the Chapter and that are named by *)
        (* species parameter name + method name.                         *)
-       Species_record_type_generation.generate_prop
-         ~local_idents: [] ~self_as: Types.CSR_self ~in_hyp: true ctx env prop ;
+       Species_record_type_generation.generate_logical_expr
+         ~local_idents: [] ~self_as: Types.CSR_self ~in_hyp: true ctx env logical_expr ;
        Format.fprintf out_fmter ".@]@\n" ;
        let compiled_field = {
          cfm_from_species = from ;

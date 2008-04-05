@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.23 2008-04-02 13:37:18 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.24 2008-04-05 19:02:51 weis Exp $ *)
 
 
 
@@ -683,7 +683,7 @@ and generate_expr ctx ~local_idents ~self_as ~in_hyp initial_env
 
 
 
-let generate_prop ctx ~local_idents ~self_as ~in_hyp initial_env
+let generate_logical_expr ctx ~local_idents ~self_as ~in_hyp initial_env
     initial_proposition =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the coq type print context. *)
@@ -695,10 +695,10 @@ let generate_prop ctx ~local_idents ~self_as ~in_hyp initial_env
            ctx.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
-  let rec rec_generate_prop loc_idents env proposition =
+  let rec rec_generate_logical_expr loc_idents env proposition =
     match proposition.Parsetree.ast_desc with
-     | Parsetree.Pr_forall (vnames, ty_expr, prop)
-     | Parsetree.Pr_exists (vnames, ty_expr, prop) ->
+     | Parsetree.Pr_forall (vnames, ty_expr, logical_expr)
+     | Parsetree.Pr_exists (vnames, ty_expr, logical_expr) ->
          (begin
          (* Recover the *scheme* annotating the type expression. *)
          let scheme =
@@ -749,37 +749,37 @@ let generate_prop ctx ~local_idents ~self_as ~in_hyp initial_env
                Env.CoqGenEnv.add_value vname nb_polymorphic_args accu_env)
              env
              vnames in
-         rec_generate_prop loc_idents' env' prop ;
+         rec_generate_logical_expr loc_idents' env' logical_expr ;
          Format.fprintf out_fmter "@]"
          end)
-     | Parsetree.Pr_imply (prop1, prop2) ->
+     | Parsetree.Pr_imply (logical_expr1, logical_expr2) ->
          Format.fprintf out_fmter "@[<2>" ;
-         rec_generate_prop loc_idents env prop1 ;
+         rec_generate_logical_expr loc_idents env logical_expr1 ;
          Format.fprintf out_fmter " ->@ " ;
-         rec_generate_prop loc_idents env prop2 ;
+         rec_generate_logical_expr loc_idents env logical_expr2 ;
          Format.fprintf out_fmter "@]"
-     | Parsetree.Pr_or  (prop1, prop2) ->
+     | Parsetree.Pr_or  (logical_expr1, logical_expr2) ->
          Format.fprintf out_fmter "@[<2>" ;
-         rec_generate_prop loc_idents env prop1 ;
+         rec_generate_logical_expr loc_idents env logical_expr1 ;
          Format.fprintf out_fmter " \\/@ " ;
-         rec_generate_prop loc_idents env prop2 ;
+         rec_generate_logical_expr loc_idents env logical_expr2 ;
          Format.fprintf out_fmter "@]"
-     | Parsetree.Pr_and  (prop1, prop2) ->
+     | Parsetree.Pr_and  (logical_expr1, logical_expr2) ->
          Format.fprintf out_fmter "@[<2>" ;
-         rec_generate_prop loc_idents env prop1 ;
+         rec_generate_logical_expr loc_idents env logical_expr1 ;
          Format.fprintf out_fmter " /\\@ " ;
-         rec_generate_prop loc_idents env prop2 ;
+         rec_generate_logical_expr loc_idents env logical_expr2 ;
          Format.fprintf out_fmter "@]"
-     | Parsetree.Pr_equiv (prop1, prop2) ->
+     | Parsetree.Pr_equiv (logical_expr1, logical_expr2) ->
          Format.fprintf out_fmter "@[<2>" ;
-         rec_generate_prop loc_idents env prop1 ;
+         rec_generate_logical_expr loc_idents env logical_expr1 ;
          Format.fprintf out_fmter " <->@ " ;
-         rec_generate_prop loc_idents env prop2 ;
+         rec_generate_logical_expr loc_idents env logical_expr2 ;
          Format.fprintf out_fmter "@]"
-     | Parsetree.Pr_not prop ->
+     | Parsetree.Pr_not logical_expr ->
          Format.fprintf out_fmter "@[<2>" ;
          Format.fprintf out_fmter "~" ;
-         rec_generate_prop loc_idents env prop ;
+         rec_generate_logical_expr loc_idents env logical_expr ;
          Format.fprintf out_fmter "@]"
      | Parsetree.Pr_expr expr ->
          (* The wrapper surrounding the expression by Coq's *)
@@ -799,14 +799,14 @@ let generate_prop ctx ~local_idents ~self_as ~in_hyp initial_env
          (* The end of the wrapper surrounding  *)
          (* the expression if it has type bool. *)
          if is_bool then Format.fprintf out_fmter ")@]"
-     | Parsetree.Pr_paren prop ->
+     | Parsetree.Pr_paren logical_expr ->
          Format.fprintf out_fmter "@[<1>(" ;
-         rec_generate_prop loc_idents env prop ;
+         rec_generate_logical_expr loc_idents env logical_expr ;
          Format.fprintf out_fmter ")@]" in
 
   (* ************************************************ *)
-  (* Now, let's really do the job of [generate_prop]. *)
-  rec_generate_prop local_idents initial_env initial_proposition
+  (* Now, let's really do the job of [generate_logical_expr]. *)
+  rec_generate_logical_expr local_idents initial_env initial_proposition
 ;;
 
 
@@ -891,8 +891,8 @@ let generate_record_type_parameters ctx species_fields =
         | Env.TypeInformation.SF_sig (_, _, _)
         | Env.TypeInformation.SF_let (_, _, _, _, _, _)
         | Env.TypeInformation.SF_let_rec _-> []
-        | Env.TypeInformation.SF_theorem (_, _, _, prop, _, _)
-        | Env.TypeInformation.SF_property (_, _, _, prop, _) ->
+        | Env.TypeInformation.SF_theorem (_, _, _, logical_expr, _, _)
+        | Env.TypeInformation.SF_property (_, _, _, logical_expr, _) ->
             (* Get the list of the methods from the species parameters the  *)
             (* current prop/theo depends on. Do not [fold_left] to keep the *)
             (* extra parameters in the same order than the species          *)
@@ -904,9 +904,9 @@ let generate_record_type_parameters ctx species_fields =
               List.fold_right
                 (fun species_param_name accu ->
                   let meths_from_param =
-                    Param_dep_analysis.param_deps_prop
+                    Param_dep_analysis.param_deps_logical_expr
                       ~current_species: ctx.Context.scc_current_species
-                      species_param_name prop in
+                      species_param_name logical_expr in
                   (* Return a couple binding the species parameter's name *)
                   (* with the methods of it we found as required for the  *)
                   (* current property/theorem.                            *)
@@ -1037,8 +1037,8 @@ let generate_record_type ctx env species_descr =
             if semi then Format.fprintf out_fmter " ;" ;
             Format.fprintf out_fmter "@]@\n")
           l
-    | Env.TypeInformation.SF_theorem  (from, n, _, prop, _, _)
-    | Env.TypeInformation.SF_property (from, n, _, prop, _) ->
+    | Env.TypeInformation.SF_theorem  (from, n, _, logical_expr, _, _)
+    | Env.TypeInformation.SF_property (from, n, _, logical_expr, _) ->
         (* In the record type, theorems and      *)
         (* properties are displayed in same way. *)
         Format.fprintf out_fmter "(* From species %a. *)@\n"
@@ -1049,9 +1049,9 @@ let generate_record_type ctx env species_descr =
         (* Generate the Coq code representing the proposition. *)
         (* No local idents in the context because we just enter the scope *)
         (* of a species fields and so we are not under a core expression. *)
-        generate_prop ctx
+        generate_logical_expr ctx
           ~local_idents: [] ~self_as: Types.CSR_species
-          ~in_hyp: false env prop ;
+          ~in_hyp: false env logical_expr ;
         if semi then Format.fprintf out_fmter " ;" ;
         Format.fprintf out_fmter "@]@\n" in
   (* Coq syntax required not semi after the last field. That's why   *)

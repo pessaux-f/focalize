@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.31 2008-03-14 14:43:59 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.32 2008-04-05 19:07:21 weis Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -89,7 +89,7 @@ try Check_file.main () with
            expected
            Handy.pp_set_bold Handy.pp_reset_effects
            used_with
-     | Scoping.Non_logical_let_cant_define_prop (name, at) ->
+     | Scoping.Non_logical_let_cant_define_logical_expr (name, at) ->
           Format.fprintf Format.err_formatter
            "%a:@\n@[%tNon-logical@ let@ must@ not@ bind%t@ '%t%a%t'@ %tto@ a@ property%t.@]@."
            Location.pp_location at
