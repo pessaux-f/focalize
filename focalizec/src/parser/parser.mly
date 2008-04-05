@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.79 2008-04-04 14:30:16 weis Exp $ *)
+(* $Id: parser.mly,v 1.80 2008-04-05 16:40:54 weis Exp $ *)
 
 open Parsetree;;
 
@@ -224,46 +224,48 @@ let mk_proof_label (s1, s2) =
 %nonassoc IN
 /* %nonassoc below_SEMI */
 /* %nonassoc SEMI */
-%nonassoc SEMI_OP SEMI_SEMI_OP         /* below EQ ({lbl=...; lbl=...}) */
-/* %nonassoc LET */                    /* above SEMI ( ...; let ... in ...) */
+%nonassoc SEMI_OP SEMI_SEMI_OP     /* below EQ ({lbl=...; lbl=...}) */
+/* %nonassoc LET */                /* above SEMI ( ...; let ... in ...) */
 /* %nonassoc below_WITH */
-/* %nonassoc FUNCTION WITH */          /* below BAR  (match ... with ...) */
+/* %nonassoc FUNCTION WITH */      /* below BAR  (match ... with ...) */
 %nonassoc prec_quantifier
-%nonassoc LT_DASH_GT LT_DASH_GT_OP     /* <-> */
-%right    DISJUNCTION                  /* prop \/ prop */
-%right    CONJUNCTION                  /* prop /\ prop */
-%right    AND                          /* let ... and ... */
-%nonassoc TILDA                        /* ~ prop */
-/* %nonassoc THEN */                   /* below ELSE (if ... then ...) */
-%nonassoc ELSE                         /* (if ... then ... else ...) */
-%right    BACKSLASH_OP                 /* e \ e */
-%nonassoc LT_DASH_OP                   /* below COLON_OP */
-%right    COLON_OP                     /* expr (e := e := e) */
-%nonassoc AS
-%right    BAR                          /* Dangling match (match ... with ...) */
-%left     COMMA COMMA_OP               /* expr/expr_comma_list (e,e,e) */
-%right    DASH_GT DASH_GT_OP           /* core_type2 (t -> t -> t) */
-%right    BAR_OP                       /* expr (e || e || e) */
-%right    AMPER_OP                     /* expr (e && e && e) */
+%nonassoc LT_DASH_GT LT_DASH_GT_OP /* <-> */
+%right    DISJUNCTION              /* logical_expr (le \/ le \/ le)*/
+%right    CONJUNCTION              /* logical_expr (le /\ le /\ le) */
+%nonassoc TILDA                    /* logical_expr (~ le) */
+%right    AND                      /* let ... and ... */
+/* %nonassoc THEN */               /* below ELSE (if ... then ...) */
+%nonassoc ELSE                     /* (if ... then ... else ...) */
+%right    BACKSLASH_OP             /* expr (e \ e \ e) */
+%nonassoc LT_DASH_OP               /* below COLON_OP */
+%right    COLON_OP                 /* expr (e := e := e) */
+%nonassoc AS                       /* pattern (pat as LIDENT) */
+%right    BAR                      /* Dangling match (match ... with ...) */
+%left     COMMA COMMA_OP           /* expr/expr_comma_list (e, e, e) */
+%right    DASH_GT DASH_GT_OP       /* core_type2 (t -> t -> t) */
+%right    BAR_OP                   /* expr (e || e || e) */
+%right    AMPER_OP                 /* expr (e && e && e) */
+%nonassoc TILDA_OP                /* expr (~| e) */
 /* %nonassoc below_EQ */
-%left     EQUAL EQ_OP LT_OP GT_OP      /* expr (e OP e OP e) */
-%right    AT_OP HAT_OP                 /* expr (e OP e OP e) */
-%right    COLON_COLON COLON_COLON_OP   /* expr (e :: e :: e) */
-%left     PLUS_OP DASH_OP              /* expr (e OP e OP e) */
-%left     STAR_OP SLASH_OP             /* expr (e OP e OP e) */
-%left     PERCENT_OP                   /* expr (e OP e OP e) */
-%right    STAR_STAR_OP                 /* expr (e OP e OP e) */
-%nonassoc BACKQUOTE_OP                 /* unary ` ~ ? $ ! continue_infix* */
-%nonassoc TILDA_OP                     /* ~| expr */
-%nonassoc QUESTION_OP
-%nonassoc DOLLAR_OP
-%nonassoc BANG_OP
-%nonassoc prec_unary_minus             /* unary DASH_OP */
-%nonassoc prec_constant_constructor    /* cf. simple_expr (C versus C x) */
-                                       /* above AS BAR COLON_COLON COMMA */
+%left     EQUAL EQ_OP LT_OP GT_OP  /* expr (e OP e OP e) e.g. OP is = */
+%right    AT_OP HAT_OP             /* expr (e OP e OP e) e.g. OP is @ or ^ */
+%right    COLON_COLON COLON_COLON_OP /* expr (e OP e OP e) e.g. OP is :: */
+%left     PLUS_OP DASH_OP          /* expr (e OP e OP e) e.g. OP is + or - */
+%left     STAR_OP SLASH_OP         /* expr (e OP e OP e) e.g. OP is * or / */
+%left     PERCENT_OP               /* expr (e OP e OP e) e.g. OP is % */
+%right    STAR_STAR_OP             /* expr (e OP e OP e) e.g. OP = ** */
+/* Unary prefix operators. */
+%nonassoc BACKQUOTE_OP             /* expr OP e e.g. OP = ` */
+%nonassoc QUESTION_OP              /* expr OP e e.g. OP is ? */
+%nonassoc DOLLAR_OP                /* expr OP e e.g. OP is $ */
+%nonassoc BANG_OP                  /* expr OP e e.g. OP is ! */
+/* Predefined precedences to resolve conflicts. */
+%nonassoc prec_unary_minus         /* unary DASH_OP e.g. DASH_OP is - */
+%nonassoc prec_constant_constructor /* cf. simple_expr (C versus C x) */
+                                   /* above AS BAR COLON_COLON COMMA */
 %nonassoc below_SHARP
-%nonassoc SHARP_OP               /* simple_expr */
-%nonassoc DOT
+%nonassoc SHARP_OP                 /* simple_expr lident # UIDENT */
+%nonassoc DOT                      /* simple_expr (simple_expr . label) */
 %nonassoc below_RPAREN
 %nonassoc RPAREN
 /* Finally, the first tokens of simple_expr are above everything else. */
@@ -550,16 +552,16 @@ def_let:
   | opt_doc let_binding { mk_doc $1 ($2.ast_desc) }
 ;
 
-/** Since logical let is followed by a prop, and since props embedd expressions,
-  at parsing stage, everything is temporarily considered to be a prop. At
+/** Since logical let is followed by a logical_expr, and since logical_exprs embedd expressions,
+  at parsing stage, everything is temporarily considered to be a logical_expr. At
   scoping stage, a verification will be performed: if the logical_flag is
-  [LF_no_logical] then we will ensure that the prop is a [Pr_expr] and remove
+  [LF_no_logical] then we will ensure that the logical_expr is a [Pr_expr] and remove
   the constructor to get the effective [exp] that is the body of the real
-  "Let". Otherwise we will keep the prop as it is, since the binding is a
+  "Let". Otherwise we will keep the logical_expr as it is, since the binding is a
   logical binding.
   The only exception is for externals that are never logical bindings ! */
 binding:
-  | bound_vname EQUAL prop termination_proof_opt
+  | bound_vname EQUAL logical_expr termination_proof_opt
     { mk { b_name = $1; b_params = []; b_type = None;
 	   b_body = Parsetree.BB_logical $3;
            b_termination_proof = $4;
@@ -569,18 +571,18 @@ binding:
 	   b_body = Parsetree.BB_computational (mk (E_external $6));
            b_termination_proof = None;
          } }
-  | bound_vname IN type_expr EQUAL prop termination_proof_opt
+  | bound_vname IN type_expr EQUAL logical_expr termination_proof_opt
     { mk { b_name = $1; b_params = []; b_type = Some $3;
 	   b_body = Parsetree.BB_logical $5;
            b_termination_proof = $6;
          } }
-  | bound_vname LPAREN param_list RPAREN EQUAL prop termination_proof_opt
+  | bound_vname LPAREN param_list RPAREN EQUAL logical_expr termination_proof_opt
     { mk { b_name = $1; b_params = $3; b_type = None;
 	   b_body = Parsetree.BB_logical $6;
            b_termination_proof = $7;
          } }
   | bound_vname LPAREN param_list RPAREN IN type_expr
-    EQUAL prop termination_proof_opt
+    EQUAL logical_expr termination_proof_opt
     { mk { b_name = $1; b_params = $3; b_type = Some $6;
 	   b_body = Parsetree.BB_logical $8;
            b_termination_proof = $9;
@@ -632,33 +634,33 @@ logical_binding:
 ;
 
 def_property:
-  | opt_doc PROPERTY property_vname COLON prop
-    { mk_doc $1 { prd_name = $3; prd_prop = $5; } }
+  | opt_doc PROPERTY property_vname COLON logical_expr
+    { mk_doc $1 { prd_name = $3; prd_logical_expr = $5; } }
 ;
 
 def_theorem:
-  | opt_doc opt_local THEOREM theorem_vname COLON prop PROOF COLON proof
+  | opt_doc opt_local THEOREM theorem_vname COLON logical_expr PROOF COLON proof
     { mk_doc $1
         { th_name = $4; th_local = $2;
           th_stmt = $6; th_proof = $9 } }
 ;
 
-prop:
-  | ALL bound_vname_list in_type_expr COMMA prop  %prec prec_quantifier
+logical_expr:
+  | ALL bound_vname_list in_type_expr COMMA logical_expr  %prec prec_quantifier
     { mk (Pr_forall ($2, $3, $5))}
-  | EX bound_vname_list in_type_expr COMMA prop   %prec prec_quantifier
+  | EX bound_vname_list in_type_expr COMMA logical_expr   %prec prec_quantifier
     { mk (Pr_exists ($2, $3, $5))}
-  | TILDA prop
+  | TILDA logical_expr
     { mk (Pr_not $2) }
-  | LPAREN prop RPAREN
+  | LPAREN logical_expr RPAREN
     { mk (Pr_paren $2) }
-  | prop DASH_GT prop
+  | logical_expr DASH_GT logical_expr
     { mk (Pr_imply ($1, $3)) }
-  | prop DISJUNCTION prop
+  | logical_expr DISJUNCTION logical_expr
     { mk (Pr_or ($1, $3)) }
-  | prop CONJUNCTION prop
+  | logical_expr CONJUNCTION logical_expr
     { mk (Pr_and ($1, $3)) }
-  | prop LT_DASH_GT prop
+  | logical_expr LT_DASH_GT logical_expr
     { mk (Pr_equiv ($1, $3)) }
   | expr %prec below_RPAREN
     { mk (Pr_expr $1) }
@@ -704,43 +706,43 @@ fact_list:
 ;
 
 fact:
-  | DEFINITION OF definition_ident_comma_list { mk (F_def $3) }
-  | HYPOTHESIS proof_hyp_list { mk (F_hypothesis $2) }
+  | DEFINITION OF definition_ident_comma_list { mk (F_definition $3) }
+  | HYPOTHESIS proof_hypothesis_list { mk (F_hypothesis $2) }
   | PROPERTY property_ident_comma_list { mk (F_property ($2)) }
   | THEOREM property_ident_comma_list { mk (F_property ($2)) }
   | STEP proof_label_comma_list { mk (F_node (List.map mk_proof_label $2)) }
 ;
 
-proof_hyp:
+proof_hypothesis:
   | UIDENT { Vuident $1 }
   | LIDENT { Vlident $1 }
 ;
 
-proof_hyp_list:
-  | proof_hyp COMMA proof_hyp_list { $1 :: $3 }
-  | proof_hyp { [ $1 ] }
+proof_hypothesis_list:
+  | proof_hypothesis COMMA proof_hypothesis_list { $1 :: $3 }
+  | proof_hypothesis { [ $1 ] }
 ; 
 
-opt_prop:
+opt_logical_expr:
   | { None }
-  | PROVE prop
+  | PROVE logical_expr
     { Some $2 }
 ;
 
 statement:
-  | hyp_list opt_prop
+  | hypothesis_list opt_logical_expr
     { mk { s_hyps = $1; s_concl = $2; } }
 ;
 
-hyp:
-  | ASSUME bound_vname IN type_expr { mk (H_var ($2, $4)) }
-  | ASSUME proof_hyp COLON prop { mk (H_hyp ($2, $4)) }
-  | NOTATION proof_hyp EQUAL expr { mk (H_not ($2, $4)) }
+hypothesis:
+  | ASSUME bound_vname IN type_expr { mk (H_variable ($2, $4)) }
+  | ASSUME proof_hypothesis COLON logical_expr { mk (H_hypothesis ($2, $4)) }
+  | NOTATION proof_hypothesis EQUAL expr { mk (H_notation ($2, $4)) }
 ;
 
-hyp_list:
+hypothesis_list:
   | { [] }
-  | hyp COMMA hyp_list { $1 :: $3 }
+  | hypothesis COMMA hypothesis_list { $1 :: $3 }
 ;
 
 /**** TYPE EXPRESSIONS ****/
@@ -793,6 +795,8 @@ constructor_ref:
   | opt_lident SHARP constructor_vname
     { mk_global_constructor_ident $1 $3 }
 ;
+
+/* Idents */
 
 glob_ident:
   | opt_lident SHARP bound_vname
@@ -871,6 +875,9 @@ expr:
     { mk (E_if ($2, $4, $6)) }
   | let_binding IN expr
     { mk (E_let ($1, $3)) }
+
+  /* Binary operators */
+
   | expr COLON_COLON expr
     { mk (E_constr (mk_cons (), [$1; $3])) }
   | expr COMMA_OP expr
@@ -921,9 +928,11 @@ expr:
     { mk_infix_application $1 $2 $3 }
   | expr AMPER_OP expr
     { mk_infix_application $1 $2 $3 }
-  | BACKQUOTE_OP expr
-    { mk_prefix_application $1 $2 }
+
+  /* Unary operators. */
   | TILDA_OP expr
+    { mk_prefix_application $1 $2 }
+  | BACKQUOTE_OP expr
     { mk_prefix_application $1 $2 }
   | QUESTION_OP expr
     { mk_prefix_application $1 $2 }
@@ -935,6 +944,7 @@ expr:
     { mk_prefix_application $1 $2 }
   | DASH_OP expr %prec prec_unary_minus
     { mk_prefix_application $1 $2 }
+
   | EXTERNAL external_expr END
     { mk (E_external $2) }
 ;
@@ -970,15 +980,6 @@ expr_ident:
     { mk_local_expr_ident $1 }
 ;
 
-property_ident:
-  | property_vname
-    { mk_local_expr_ident $1 }
-  | opt_lident SHARP property_vname
-    { mk_global_expr_ident $1 $3 }
-  | opt_qualified_vname BANG property_vname
-    { mk_method_expr_ident $1 $3 }     /* "by property C!foo" is allowed. */
-;
-
 /* In a proof, "by definition" is always refering to something local      */
 /* to the species. Hence, it is not allowed to say "by definition C!foo". */
 /* We enforce this in the syntax.                                         */
@@ -987,6 +988,13 @@ definition_ident:
     { mk_local_expr_ident $1 }
   | opt_lident SHARP property_vname
     { mk_global_expr_ident $1 $3 }
+;
+
+property_ident:
+  | definition_ident
+    { $1 }
+  | opt_qualified_vname BANG property_vname
+    { mk_method_expr_ident $1 $3 }     /* "by property C!foo" is allowed. */
 ;
 
 carrier_ident:
