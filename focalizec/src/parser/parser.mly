@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.81 2008-04-05 17:54:25 weis Exp $ *)
+(* $Id: parser.mly,v 1.82 2008-04-05 18:00:00 weis Exp $ *)
 
 open Parsetree;;
 
@@ -294,7 +294,7 @@ phrase:
   | def_theorem SEMI_SEMI { mk (Ph_theorem $1) }
   | def_type SEMI_SEMI { mk (Ph_type $1) }
   | def_species SEMI_SEMI { mk (Ph_species $1) }
-  | def_collection SEMI_SEMI { mk (Ph_coll $1) }
+  | def_collection SEMI_SEMI { mk (Ph_collection $1) }
   | opt_doc OPEN STRING SEMI_SEMI { mk_doc $1 (Ph_open $3) }
   | opt_doc USE STRING SEMI_SEMI { mk_doc $1 (Ph_use $3) }
   | opt_doc expr SEMI_SEMI { mk_doc $1 (Ph_expr $2) }

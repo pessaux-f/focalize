@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.32 2008-04-05 16:35:09 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.33 2008-04-05 18:00:31 weis Exp $ *)
 
 (** {2 The Focalize abstract syntax tree.} *)
 
@@ -443,7 +443,7 @@ and theorem_def_desc = {
 type termination_proof_def = termination_proof_def_desc ast
 and termination_proof_def_desc = {
   tpd_profiles : termination_proof_profile list;
-  tpd_proof : termination_proof;
+  tpd_termination_proof : termination_proof;
 }
 and termination_proof_profile = termination_proof_profile_desc ast
 and termination_proof_profile_desc = {
@@ -493,8 +493,8 @@ and species_field_desc =
 
 (** {3 Collection definitions.} *)
 
-type coll_def = coll_def_desc ast
-and coll_def_desc = {
+type collection_def = collection_def_desc ast
+and collection_def_desc = {
   cd_name : vname;
   cd_body : species_expr;
 }
@@ -510,7 +510,7 @@ and phrase_desc =
   | Ph_use of Types.fname
   | Ph_open of Types.fname
   | Ph_species of species_def
-  | Ph_coll of coll_def
+  | Ph_collection of collection_def
   | Ph_type of type_def
   | Ph_let of let_def
   | Ph_theorem of theorem_def
