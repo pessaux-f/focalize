@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.80 2008-04-05 16:40:54 weis Exp $ *)
+(* $Id: parser.mly,v 1.81 2008-04-05 17:54:25 weis Exp $ *)
 
 open Parsetree;;
 
@@ -479,7 +479,7 @@ def_termination_proof_profile:
 
 def_termination_proof:
   | opt_doc TERMINATION PROOF OF def_termination_proof_profiles EQUAL termination_proof
-    { mk_doc $1 {tpd_profiles = List.rev $5; tpd_proof = $7; } }
+    { mk_doc $1 {tpd_profiles = List.rev $5; tpd_termination_proof = $7; } }
 ;
 
 def_proof:
