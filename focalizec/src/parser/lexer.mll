@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.29 2008-04-04 14:31:40 weis Exp $ *)
+(* $Id: lexer.mll,v 1.30 2008-04-05 16:36:24 weis Exp $ *)
 
 {
 open Lexing;;
@@ -450,10 +450,12 @@ let decimal_literal =
   [ '0'-'9'] ['0'-'9' '_' ]*
 let hex_literal =
   '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f' '_']+
+let oct_literal =
+  '0' ['o' 'O'] ['0'-'7'] ['0'-'7' '_']*
 let bin_literal =
   '0' ['b' 'B'] ['0'-'1' '_']+
 let int_literal =
-  decimal_literal | hex_literal | bin_literal
+  decimal_literal | hex_literal | oct_literal | bin_literal
 let float_literal =
   ['0'-'9'] ['0'-'9' '_']*
   ('.' ['0'-'9' '_']* )?
