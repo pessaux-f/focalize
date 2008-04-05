@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.29 2008-04-04 14:32:51 weis Exp $
+# $Id: Makefile,v 1.30 2008-04-05 16:42:22 weis Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ -I ../basement
@@ -16,7 +16,7 @@ clean::
 	$(RM) parser.ml parser.mli parser.conflicts parser.output
 	$(RM) odoc/*
 
-depend:
+depend: lexer.ml parser.ml
 	$(CAMLDEP) $(CAML_COMP_FLAGS) *.mli *.ml > ./.depend
 
 explain:
@@ -37,10 +37,15 @@ explain:
 .mly.ml:
 	$(CAMLYACC) $<
 
+.mly.mli:
+	$(CAMLYACC) $<
+
 .mll.ml:
 	$(CAMLLEX) $<
 
-lexer.cmo: ../basement/parsetree.cmi parser.cmi
+lexer.cmi: ../basement/parsetree.cmi parser.cmi lexer.ml
+
+parser.cmi: parser.ml
 
 parser.mli: parser.ml
 
