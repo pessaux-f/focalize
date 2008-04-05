@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.8 2008-04-02 15:36:35 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.9 2008-04-05 18:52:44 weis Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -25,7 +25,7 @@
 (* ******************************************************************** *)
 type field_body_kind =
   | FBK_expr of Parsetree.expr
-  | FBK_prop of Parsetree.prop
+  | FBK_logical_expr of Parsetree.logical_expr
 ;;
 
 
@@ -81,8 +81,8 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
            | FBK_expr e ->
                Param_dep_analysis.param_deps_expr
                  ~current_species species_param_name e
-           | FBK_prop p ->
-               Param_dep_analysis.param_deps_prop
+           | FBK_logical_expr p ->
+               Param_dep_analysis.param_deps_logical_expr
                  ~current_species species_param_name p) in
         (* Return a couple binding the species parameter's name with the *)
         (* methods of it we found as required for the current method.    *)
@@ -183,7 +183,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
                decl_children, def_children) =
             let body_as_fbk =
               match body with
-               | Parsetree.BB_logical p -> FBK_prop p
+               | Parsetree.BB_logical p -> FBK_logical_expr p
                | Parsetree.BB_computational e -> FBK_expr e in
             compute_lambda_liftings_for_field
               ~current_unit: ctx.Context.scc_current_unit
@@ -211,7 +211,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
               (fun ((_, name, _, sch, body, _) as li) ->
                 let body_as_fbk =
                   match body with
-                   | Parsetree.BB_logical p -> FBK_prop p
+                   | Parsetree.BB_logical p -> FBK_logical_expr p
                    | Parsetree.BB_computational e -> FBK_expr e in
                 let (used_species_parameter_tys, dependencies_from_params,
                      decl_children, def_children) =
@@ -237,7 +237,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
                 (li, abstr_info))
               l in
           FAI_let_rec deps_infos
-      | Env.TypeInformation.SF_theorem ((_, name, sch, prop, _, _) as ti) ->
+      | Env.TypeInformation.SF_theorem ((_, name, sch, logical_expr, _, _) as ti) ->
           let (used_species_parameter_tys, dependencies_from_params,
                decl_children, def_children) =
             compute_lambda_liftings_for_field
@@ -245,7 +245,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
               ~current_species: ctx.Context.scc_current_species
               ctx.Context.scc_species_parameters_names
               ctx.Context.scc_dependency_graph_nodes name
-              (FBK_prop prop) (Types.specialize sch) in
+              (FBK_logical_expr logical_expr) (Types.specialize sch) in
           (* Compute the visible universe of the theorem. *)
           let universe =
             VisUniverse.visible_universe
@@ -259,7 +259,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
             ai_dependencies_from_params = dependencies_from_params ;
             ai_min_coq_env = min_coq_env } in
           FAI_theorem (ti, abstr_info)
-      | Env.TypeInformation.SF_property ((_, name, sch, prop, _) as pi) ->
+      | Env.TypeInformation.SF_property ((_, name, sch, logical_expr, _) as pi) ->
           let (used_species_parameter_tys, dependencies_from_params,
                decl_children, def_children) =
             compute_lambda_liftings_for_field
@@ -267,7 +267,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
               ~current_species: ctx.Context.scc_current_species
               ctx.Context.scc_species_parameters_names
               ctx.Context.scc_dependency_graph_nodes name
-              (FBK_prop prop) (Types.specialize sch) in
+              (FBK_logical_expr logical_expr) (Types.specialize sch) in
           (* Compute the visible universe of the theorem. *)
           let universe =
             VisUniverse.visible_universe

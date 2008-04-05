@@ -11,11 +11,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.mli,v 1.5 2008-03-17 14:04:13 pessaux Exp $ *)
+(* $Id: abstractions.mli,v 1.6 2008-04-05 18:52:44 weis Exp $ *)
 
 type field_body_kind =
   | FBK_expr of Parsetree.expr
-  | FBK_prop of Parsetree.prop
+  | FBK_logical_expr of Parsetree.logical_expr
 
 type abstraction_info = {
   ai_used_species_parameter_tys : Parsetree.vname list ;

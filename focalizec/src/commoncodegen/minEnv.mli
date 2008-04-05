@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: minEnv.mli,v 1.2 2008-02-28 13:38:56 pessaux Exp $ *) 
+(* $Id: minEnv.mli,v 1.3 2008-04-05 18:52:44 weis Exp $ *) 
 
 type min_coq_env_element =
     MCEE_Declared_carrier
@@ -19,9 +19,9 @@ type min_coq_env_element =
   | MCEE_Declared_computational of (Parsetree.vname * Types.type_scheme)
   | MCEE_Defined_computational of
       (Parsetree.qualified_species * Parsetree.vname * Types.type_scheme)
-  | MCEE_Declared_logical of (Parsetree.vname * Parsetree.prop)
+  | MCEE_Declared_logical of (Parsetree.vname * Parsetree.logical_expr)
   | MCEE_Defined_logical of
-      (Parsetree.qualified_species * Parsetree.vname * Parsetree.prop)
+      (Parsetree.qualified_species * Parsetree.vname * Parsetree.logical_expr)
 
 val minimal_typing_environment :
   VisUniverse.in_the_universe_because VisUniverse.Universe.t ->

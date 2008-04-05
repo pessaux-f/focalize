@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: minEnv.ml,v 1.2 2008-02-28 13:38:56 pessaux Exp $ *)
+(* $Id: minEnv.ml,v 1.3 2008-04-05 18:52:44 weis Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -40,10 +40,10 @@ type min_coq_env_element =
        Parsetree.vname * Types.type_scheme)  (** Defined computational method,
            i.e. Let or Let_rec. *)
   | MCEE_Declared_logical of
-      (Parsetree.vname * Parsetree.prop)  (** Abstract logical property,
+      (Parsetree.vname * Parsetree.logical_expr)  (** Abstract logical property,
            i.e. Property or abstracted Theorem. *)
   | MCEE_Defined_logical of      (** Defined logical property, i.e. Theorem. *)
-      (Parsetree.qualified_species * Parsetree.vname * Parsetree.prop)
+      (Parsetree.qualified_species * Parsetree.vname * Parsetree.logical_expr)
 ;;
 
 
