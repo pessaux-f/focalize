@@ -1,3 +1,7 @@
+04/05/08
+
+No macros in the parser, nor in the lexer!
+
 \subsection{Definitions - usage of syntactic constructs}
 
 As a general rule, the syntactic construct for the definition of a concept
@@ -71,9 +75,6 @@ external val Cons =
  | caml -> "( :: )"
  | coq -> "cons";;
 \end{verbatim}
-
-
-
 
 \subsection{External definitions for types}
 An external directive for a type definition links the type and its
