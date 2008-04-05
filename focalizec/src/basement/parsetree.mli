@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.31 2008-04-04 14:34:14 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.32 2008-04-05 16:35:09 weis Exp $ *)
 
 (** {2 The Focalize abstract syntax tree.} *)
 
@@ -40,8 +40,8 @@ and doc_elem = {
 ;;
 
 type ast_node_type_information =
-  | ANTI_none
   | ANTI_non_relevant
+  | ANTI_none
   | ANTI_type of Types.type_simple
   | ANTI_scheme of Types.type_scheme
 ;;
@@ -54,7 +54,7 @@ type 'a ast = {
    (** The support for documentation. *)
    ast_doc : documentation;
    (** The type of the node. *)
-   mutable ast_type : ast_node_type_information
+   mutable ast_type : ast_node_type_information;
 }
 ;;
 
@@ -62,7 +62,7 @@ type 'a ast = {
 
 (** {6 General names.} *)
 
-type modname = Types.fname
+type module_name = Types.fname
 (** The type of ``module'' names.
   Since there are no modules in Focalize yet, modules are just files and
   module names are just file names. *)
@@ -79,19 +79,24 @@ type vname =
   prefix identifiers. *)
 ;;
 
-type qualified_species = modname * vname
+type qualified_species = module_name * vname
 (** The name of a species qualified with its defining module. *)
 ;;
 
 type qualified_vname =
    | Vname of vname
-   | Qualified of modname * vname
-(** A [vname] with possibly a modulename qualification. *)
+   | Qualified of module_name * vname
+(** A [vname] with possibly a module name qualification. *)
+;;
+
+type qualified_collection_name = qualified_vname
+(** The optionally qualified name of a collection. *)
 ;;
 
 type constructor_name = vname
 (** A constructor name as mentioned in type definitions. *)
 ;;
+
 type label_name = vname
 (** A label name as mentioned in type definitions. *)
 ;;
@@ -105,8 +110,10 @@ type node_label = int * string
 type expr_ident = expr_ident_desc ast
 and expr_ident_desc =
   | EI_local of vname
+    (** Locally bound identifier. *)
   | EI_global of qualified_vname
-  | EI_method of qualified_vname option * vname
+    (** Globally bound identifier optionally qualified. *)
+  | EI_method of qualified_collection_name option * vname
     (** The optional collection name before the "!" sign,
         and the name of the method. *)
 (** The identifiers that appear in expressions: they could be globally or
@@ -191,6 +198,20 @@ and external_code = string
     as unstructured strings of bytes. *)
 ;;
 
+(** {6 External bindings. *)
+
+(** An external binding binds a name of the language to an external
+    expression. *)
+
+type external_bindings = external_bindings_desc ast
+and external_bindings_desc = external_binding list
+(** External bindings are just lists of external bindings. *)
+
+and external_binding = external_binding_desc ast
+and external_binding_desc = (vname * external_expr)
+(** An external binding binds a name to an external expression. *)
+;;
+
 (** {3 Type definitions.} *)
 
 (** Type definitions can be either external type definitions,
@@ -210,28 +231,27 @@ and type_def_body_desc =
     (** External type definitions. *)
   | TDB_external of external_type_def_body
 
+(** {6 External type definitions.} *)
 and external_type_def_body = external_type_def_body_desc ast
 and external_type_def_body_desc = {
   (** The internal view of the externally defined type. *)
   etdb_internal : simple_type_def_body option;
   (** The external view of the externally defined type. *)
   etdb_external : external_expr;
-  (** The external mapping of constructors of labels of the externally
+  (** The external mapping of constructors or labels of the externally
       defined type. *)
   etdb_bindings : external_bindings;
  }
 
+(** {6 Internal type definitions.} *)
 and simple_type_def_body = simple_type_def_body_desc ast
 and simple_type_def_body_desc =
   | STDB_alias of type_expr
+    (** A type alias definition with its aliased type expression. *)
   | STDB_union of (constructor_name * type_expr list) list
+    (** A sum type definition with its list of value constructors. *)
   | STDB_record of (label_name * type_expr) list
-
-and external_bindings = external_bindings_desc ast
-and external_bindings_desc = external_binding list
-
-and external_binding = external_binding_desc ast
-and external_binding_desc = (vname * external_expr)
+    (** A record type definition with its list of labels. *)
 ;;
 
 (** {3 Patterns.} *)
@@ -267,10 +287,6 @@ type logical_flag = | LF_no_logical | LF_logical;;
 
 type local_flag = | LF_no_local | LF_local;;
 
-(** {3 Proofs.} *)
-
-(** {6 Propositions.} *)
-
 type expr = expr_desc ast
 and expr_desc =
   | E_self
@@ -301,7 +317,7 @@ and param_list = (vname * type_expr option) list
 
 and binding = binding_desc ast
 and binding_body =
-  | BB_logical of prop
+  | BB_logical of logical_expr
   | BB_computational of expr
 and binding_desc = {
   b_name : vname;
@@ -311,40 +327,44 @@ and binding_desc = {
   b_termination_proof : termination_proof option;
 }
 
-and prop = prop_desc ast
-and prop_desc =
-  | Pr_forall of vname list * type_expr * prop
-  | Pr_exists of vname list * type_expr * prop
-  | Pr_imply of prop * prop
-  | Pr_or of prop * prop
-  | Pr_and of prop * prop
-  | Pr_equiv of prop * prop
-  | Pr_not of prop
+(** {6 Propositions.} *)
+
+and logical_expr = logical_expr_desc ast
+and logical_expr_desc =
+  | Pr_forall of vname list * type_expr * logical_expr
+  | Pr_exists of vname list * type_expr * logical_expr
+  | Pr_imply of logical_expr * logical_expr
+  | Pr_or of logical_expr * logical_expr
+  | Pr_and of logical_expr * logical_expr
+  | Pr_equiv of logical_expr * logical_expr
+  | Pr_not of logical_expr
   | Pr_expr of expr
-  | Pr_paren of prop
+  | Pr_paren of logical_expr
 
 (** {6 Hypotheses, statements and facts.} *)
 
 and hyp = hyp_desc ast
 and hyp_desc =
-  | H_var of vname * type_expr
-  | H_hyp of vname * prop
-  | H_not of vname * expr
+  | H_variable of vname * type_expr
+  | H_hypothesis of vname * logical_expr
+  | H_notation of vname * expr
 
 and statement = statement_desc ast
 and statement_desc = {
   s_hyps : hyp list;
-  s_concl : prop option;
+  s_concl : logical_expr option;
 }
 
 and fact = fact_desc ast
 and fact_desc =
-  | F_def of expr_ident list
+  | F_definition of expr_ident list
   | F_property of expr_ident list
   | F_hypothesis of vname list
   | F_node of node_label list
 
-(** Proofs. *)
+(** {3 Proofs.} *)
+
+(** {6 Regular proofs.} *)
 
 and proof = proof_desc ast
 and proof_desc =
@@ -357,6 +377,8 @@ and proof_node = proof_node_desc ast
 and proof_node_desc =
   | PN_sub of node_label * statement * proof
   | PN_qed of node_label * proof
+
+(** {6 Termination proofs for recursive functions.} *)
 
 and termination_proof = termination_proof_desc ast
 and termination_proof_desc =
@@ -379,8 +401,6 @@ and termination_proof_desc =
        conjunction. *)
   | TP_order of expr * param_list * proof
 ;;
-
-
 
 (** {3 Species definitions.} *)
 
@@ -407,7 +427,7 @@ and proof_def_desc = {
 type property_def = property_def_desc ast
 and property_def_desc = {
   prd_name : vname;
-  prd_prop : prop;
+  prd_logical_expr : logical_expr;
 }
 ;;
 
@@ -415,7 +435,7 @@ type theorem_def = theorem_def_desc ast
 and theorem_def_desc = {
   th_name : vname;
   th_local : local_flag;
-  th_stmt : prop;
+  th_stmt : logical_expr;
   th_proof : proof;
 }
 ;;
