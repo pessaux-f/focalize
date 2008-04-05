@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.107 2008-04-03 19:34:09 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.108 2008-04-05 18:48:15 weis Exp $ *)
 
 
 
@@ -462,9 +462,9 @@ let make_implicit_var_mapping_from_type_exprs type_expressions =
 
 
 (* ************************************************************************* *)
-(* Parsetree.prop -> (string * Types.type_simple) list                       *)
+(* Parsetree.logical_expr -> (string * Types.type_simple) list                       *)
 (** {b Descr} : Create a fresh variable mapping automatically variables in
-              the type parts of a [prop] as generalized. This is used when
+              the type parts of a [logical_expr] as generalized. This is used when
               one creates a type structure from a theorem expression.
               In effect, in such a context, variables in the type are
               implicitely considered as generalized because the type
@@ -479,12 +479,12 @@ let make_implicit_var_mapping_from_type_exprs type_expressions =
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-let make_implicit_var_mapping_from_prop prop_expression =
+let make_implicit_var_mapping_from_logical_expr logical_expr_expression =
   let mapping = ref [] in
   let rec rec_make pexpr =
     match pexpr.Parsetree.ast_desc with
-    | Parsetree.Pr_forall (_, ty, prop)
-    | Parsetree.Pr_exists (_, ty, prop) ->
+    | Parsetree.Pr_forall (_, ty, logical_expr)
+    | Parsetree.Pr_exists (_, ty, logical_expr) ->
         (* First recover the mapping induced by the type expression. *)
         let mapping_from_ty = make_implicit_var_mapping_from_type_exprs [ty] in
         (* Assuming the current mapping doesn't contain doubles, we *)
@@ -492,20 +492,20 @@ let make_implicit_var_mapping_from_prop prop_expression =
         mapping :=
           Handy.list_concat_uniq_custom_eq
             (fun (n, _) (n', _) -> n = n') mapping_from_ty !mapping ;
-        rec_make prop
-    | Parsetree.Pr_imply (prop1, prop2)
-    | Parsetree.Pr_or (prop1, prop2)
-    | Parsetree.Pr_and (prop1, prop2)
-    | Parsetree.Pr_equiv (prop1, prop2) ->
-        rec_make prop1 ;
-        rec_make prop2
-    | Parsetree.Pr_not prop
-    | Parsetree.Pr_paren prop -> rec_make prop
+        rec_make logical_expr
+    | Parsetree.Pr_imply (logical_expr1, logical_expr2)
+    | Parsetree.Pr_or (logical_expr1, logical_expr2)
+    | Parsetree.Pr_and (logical_expr1, logical_expr2)
+    | Parsetree.Pr_equiv (logical_expr1, logical_expr2) ->
+        rec_make logical_expr1 ;
+        rec_make logical_expr2
+    | Parsetree.Pr_not logical_expr
+    | Parsetree.Pr_paren logical_expr -> rec_make logical_expr
     | Parsetree.Pr_expr _ ->
         (* Inside expressions type variable must be bound by the previous *)
-        (* parts of the prop ! Hence, do not continue searching inside.   *)
+        (* parts of the logical_expr ! Hence, do not continue searching inside.   *)
         () in
-  rec_make prop_expression ;
+  rec_make logical_expr_expression ;
   !mapping
 ;;
 
@@ -562,16 +562,16 @@ let rec expr_is_non_expansive ~current_unit env expr =
 
 
 
-and prop_is_non_expansive ~current_unit env prop =
-  match prop.Parsetree.ast_desc with
+and logical_expr_is_non_expansive ~current_unit env logical_expr =
+  match logical_expr.Parsetree.ast_desc with
    | Parsetree.Pr_imply (p1, p2) | Parsetree.Pr_or (p1, p2)
    | Parsetree.Pr_and (p1, p2) | Parsetree.Pr_equiv  (p1, p2) ->
-       (prop_is_non_expansive ~current_unit env p1) &&
-       (prop_is_non_expansive ~current_unit env p2)
+       (logical_expr_is_non_expansive ~current_unit env p1) &&
+       (logical_expr_is_non_expansive ~current_unit env p2)
    | Parsetree.Pr_expr e -> expr_is_non_expansive ~current_unit env e
    | Parsetree.Pr_not p | Parsetree.Pr_paren p
    | Parsetree.Pr_forall (_, _, p) | Parsetree.Pr_exists (_, _, p) ->
-       prop_is_non_expansive ~current_unit env p
+       logical_expr_is_non_expansive ~current_unit env p
 
 
 
@@ -579,7 +579,7 @@ and binding_body_is_non_expansive ~current_unit env = function
   | Parsetree.BB_computational e ->
       expr_is_non_expansive ~current_unit env e
   | Parsetree.BB_logical p ->
-      prop_is_non_expansive ~current_unit env p
+      logical_expr_is_non_expansive ~current_unit env p
 ;;
 
 
@@ -736,7 +736,7 @@ let typecheck_fact ctx env fact =
   (* No relevant type information to insert in the AST node. *)
   fact.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
   match fact.Parsetree.ast_desc with
-   | Parsetree.F_def expr_idents
+   | Parsetree.F_definition expr_idents
    | Parsetree.F_property expr_idents ->
        List.iter
          (fun expr_ident ->
@@ -1262,43 +1262,43 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
 
 
 (* ************************************************************************* *)
-(* typing_context -> Env.TypingEnv.t -> Parsetree.prop ->                    *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.logical_expr ->                    *)
 (*   Types.type_simple                                                       *)
-(** {b Descr} : Infers the type of a [prop]. This type is always expected
+(** {b Descr} : Infers the type of a [logical_expr]. This type is always expected
               to be [Prop], hence this inference moslty verifies the right
               types usages inside a property and ensures that the final
               type is really [Prop].
               It finally assign the type by side effect in the [ast_type]
-              field of the [prop] node.
+              field of the [logical_expr] node.
               This function takes into account the fact that that carrier
               "rep" must be considered as unknown to prevent def-dependencies
              (C.f. Virgile Prevosto's Phd, section 3.9.4 pages 51 & 52).
              ATTENTION : Because idents (bound by forall and exists) are
              **expressions** and are directly entered in the environment
-             with the type prop, the rule of Virgile telling that expressions
+             with the type logical_expr, the rule of Virgile telling that expressions
              must be of type bool is incorrect. In effect, because idents
-             are expressions and are already types prop, unifying them
+             are expressions and are already types logical_expr, unifying them
              with bool wil always fail. Moreover, this fact may leak all
              around the expression type, then one cannot restrict the check
-             to only say that an expression-ident typed prop is correct.
+             to only say that an expression-ident typed logical_expr is correct.
              This may flood all around the proposition expression. Then
-             in case of an expression, one allows both prop and bool as
+             in case of an expression, one allows both logical_expr and bool as
              types.
              The [~in_proof] boolean enables to abstract Self only in case
-             we infer a [prop]'s type inside a property/theorem definition
+             we infer a [logical_expr]'s type inside a property/theorem definition
              and not in it's proof !
     {b Rem} : Not exported outside this module.                               *)
 (* ************************************************************************** *)
-and typecheck_prop ~in_proof ctx env prop =
+and typecheck_logical_expr ~in_proof ctx env logical_expr =
   (* The local recursive function to save carying and changing the context. *)
   let final_ty =
-    (match prop.Parsetree.ast_desc with
+    (match logical_expr.Parsetree.ast_desc with
      | Parsetree.Pr_forall (vnames, t_expr, pr)
      | Parsetree.Pr_exists (vnames, t_expr, pr) ->
          Types.begin_definition () ;
          let ty = typecheck_type_expr ctx env t_expr in
          Types.end_definition () ;
-         (* Now typecheck the prop's body in the extended environment.     *)
+         (* Now typecheck the logical_expr's body in the extended environment.     *)
          (* Note that as often, the order bindings are inserted in the     *)
          (* environment does not matter since parameters can never depends *)
          (* on each other.                                                 *)
@@ -1311,63 +1311,63 @@ and typecheck_prop ~in_proof ctx env prop =
          (* Fix the type scheme in the [t_expr]. *)
          t_expr.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
          (* And go on with the ody... *)
-         typecheck_prop ~in_proof ctx env' pr
+         typecheck_logical_expr ~in_proof ctx env' pr
      | Parsetree.Pr_imply (pr1, pr2)
      | Parsetree.Pr_or (pr1, pr2)
      | Parsetree.Pr_and (pr1, pr2)
      | Parsetree.Pr_equiv (pr1, pr2) ->
-         let ty1 = typecheck_prop ~in_proof ctx env pr1 in
-         let ty2 = typecheck_prop ~in_proof ctx env pr2 in
+         let ty1 = typecheck_logical_expr ~in_proof ctx env pr1 in
+         let ty2 = typecheck_logical_expr ~in_proof ctx env pr2 in
          ignore
            (Types.unify
-              ~loc: prop.Parsetree.ast_loc ~self_manifest: ctx.self_manifest
+              ~loc: logical_expr.Parsetree.ast_loc ~self_manifest: ctx.self_manifest
               ty1 ty2);
-         (* Enforce the type to be [prop]. *)
+         (* Enforce the type to be [logical_expr]. *)
          let final_ty =
            Types.unify
-             ~loc: prop.Parsetree.ast_loc
+             ~loc: logical_expr.Parsetree.ast_loc
              ~self_manifest: ctx.self_manifest ty1 (Types.type_prop ()) in
          final_ty
      | Parsetree.Pr_not pr ->
-         let ty = typecheck_prop ~in_proof ctx env pr in
-         (* Enforce the type to be [prop]. *)
+         let ty = typecheck_logical_expr ~in_proof ctx env pr in
+         (* Enforce the type to be [logical_expr]. *)
          let final_ty =
            Types.unify
-             ~loc: prop.Parsetree.ast_loc
+             ~loc: logical_expr.Parsetree.ast_loc
              ~self_manifest: ctx.self_manifest ty (Types.type_prop ()) in
          final_ty
      | Parsetree.Pr_expr expr ->
          (* Make the carrier abstract to prevent def-dependencies   *)
          (* with "rep" (c.f Virgile Prevosto's Phd page 52, Fig3.3) *)
-         (* rule [EXPR] only when the current prop appears in a     *)
+         (* rule [EXPR] only when the current logical_expr appears in a     *)
          (* theorem/property definition, not in its proof.          *)
          let ctx' =
            if in_proof then ctx else { ctx with self_manifest = None } in
-         (* Expressions must be typed as [bool] OR [prop]. If *)
-         (* so, then the returned  type is [prop].            *)
+         (* Expressions must be typed as [bool] OR [logical_expr]. If *)
+         (* so, then the returned  type is [logical_expr].            *)
          let ty = typecheck_expr ctx' env expr in
          (try
            (* First try to check if it is typed bool. *)
            ignore
              (Types.unify
-                ~loc: prop.Parsetree.ast_loc
+                ~loc: logical_expr.Parsetree.ast_loc
                 ~self_manifest: ctx'.self_manifest ty (Types.type_bool ()))
           with err ->
            (begin
             try
-             (* If not bool,try to check if it is typed prop. *)
+             (* If not bool,try to check if it is typed logical_expr. *)
              ignore
                (Types.unify
-                  ~loc: prop.Parsetree.ast_loc
+                  ~loc: logical_expr.Parsetree.ast_loc
                   ~self_manifest: ctx'.self_manifest ty (Types.type_prop ()))
             with _ ->
-             (* If it's neither bool nor prop, then restore *)
+             (* If it's neither bool nor logical_expr, then restore *)
              (* the fisrt error cause  for error report.    *)
              raise err
            end));
          Types.type_prop ()
-     | Parsetree.Pr_paren pr -> typecheck_prop ~in_proof ctx env pr) in
-  prop.Parsetree.ast_type <- Parsetree.ANTI_type final_ty ;
+     | Parsetree.Pr_paren pr -> typecheck_logical_expr ~in_proof ctx env pr) in
+  logical_expr.Parsetree.ast_type <- Parsetree.ANTI_type final_ty ;
   Types.check_for_decl_dep_on_self final_ty ;
   final_ty
 
@@ -1375,9 +1375,9 @@ and typecheck_prop ~in_proof ctx env prop =
 
 and typecheck_binding_body ctx env = function
   | Parsetree.BB_logical p ->
-      (* Because these props only appear in a logical let, *)
+      (* Because these logical_exprs only appear in a logical let, *)
       (* they are not in the context of a proof !          *)
-      typecheck_prop ctx env ~in_proof: false p
+      typecheck_logical_expr ctx env ~in_proof: false p
   | Parsetree.BB_computational e -> typecheck_expr ctx env e
 
 
@@ -1433,14 +1433,14 @@ and typecheck_statement ctx env statement =
       (fun hyp accu_env ->
         let (name, ty) =
           (match hyp.Parsetree.ast_desc with
-           | Parsetree.H_var (vname, type_expr) ->
+           | Parsetree.H_variable (vname, type_expr) ->
                (vname, (typecheck_type_expr ctx accu_env type_expr))
-           | Parsetree.H_hyp (vname, prop) ->
+           | Parsetree.H_hypothesis (vname, logical_expr) ->
                (* Be careful, because we are not in a theorem/property *)
                (* description, but in its proof, we must not make Self *)
                (* abstract here !                                      *)
-               (vname, (typecheck_prop ~in_proof: true ctx accu_env prop))
-           | Parsetree.H_not (vname, expr) ->
+               (vname, (typecheck_logical_expr ~in_proof: true ctx accu_env logical_expr))
+           | Parsetree.H_notation (vname, expr) ->
                (vname, (typecheck_expr ctx accu_env expr))) in
         (* Record the type information in the AST node. *)
         hyp.Parsetree.ast_type <- Parsetree.ANTI_type ty ;
@@ -1454,9 +1454,9 @@ and typecheck_statement ctx env statement =
   (* Now, typecheck the conclusion, if some, in the extended environment. *)
   (match statement.Parsetree.ast_desc.Parsetree.s_concl with
    | None -> ()
-   | Some prop ->
+   | Some logical_expr ->
        (* Same remark than above pour Self being not abstract ! *)
-       ignore (typecheck_prop ~in_proof: true ctx env' prop));
+       ignore (typecheck_logical_expr ~in_proof: true ctx env' logical_expr));
   (* Return the environment extended by the possible idents *)
   (* the statement binds via its hypotheses.                *)
   env'
@@ -1482,13 +1482,13 @@ and typecheck_theorem_def ctx env theorem_def =
   (* As stated in the header comment of the function, we already are at  *)
   (* the right binding level.                                            *)
   let vmapp =
-    make_implicit_var_mapping_from_prop
+    make_implicit_var_mapping_from_logical_expr
       theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
   let ctx' = { ctx with tyvars_mapping = vmapp } in
   (* Ensure that Self we be abstract during the theorem's definition *)
   (* type inference by setting [~in_proof: false].                   *)
   let ty =
-    typecheck_prop
+    typecheck_logical_expr
       ~in_proof: false ctx' env
       theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
   (* Record the type information in the AST node. *)
@@ -1663,9 +1663,9 @@ and typecheck_species_fields ctx env = function
              (* Ensure that Self we be abstract during the property's    *)
              (* definition type inference by setting [~in_proof: false]. *)
              let ty =
-               typecheck_prop
+               typecheck_logical_expr
                  ~in_proof: false ctx env
-                 property_def.Parsetree.ast_desc.Parsetree.prd_prop in
+                 property_def.Parsetree.ast_desc.Parsetree.prd_logical_expr in
              Types.end_definition () ;
              (* Check for a decl dependency on "rep". *)
              Types.check_for_decl_dep_on_self ty ;
@@ -1689,7 +1689,7 @@ and typecheck_species_fields ctx env = function
                  (current_species,
                   property_def.Parsetree.ast_desc.Parsetree.prd_name,
                   scheme,
-                  property_def.Parsetree.ast_desc.Parsetree.prd_prop,
+                  property_def.Parsetree.ast_desc.Parsetree.prd_logical_expr,
                   dep_on_rep) in
              (* Record the property's scheme in the AST node. *)
              field.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
@@ -1740,6 +1740,8 @@ and typecheck_species_fields ctx env = function
              (* No extension there. *)
              ([], ctx, env, [proof_def])
              end)
+         | Parsetree.SF_termination_proof _termination_proof_def ->
+             failwith "Not yet implemented."
         end) in
       let (rem_fields_tys, final_ctx, rem_proofs) =
         typecheck_species_fields new_ctx new_env rem_fields in
@@ -1867,21 +1869,21 @@ let abstraction ~current_unit cname fields =
                     (from, vname, (Types.generalize ty')))
                  l
            | Env.TypeInformation.SF_theorem
-               (from, vname, scheme, prop, _, deps_rep)
+               (from, vname, scheme, logical_expr, _, deps_rep)
            | Env.TypeInformation.SF_property
-               (from, vname, scheme, prop, deps_rep) ->
+               (from, vname, scheme, logical_expr, deps_rep) ->
                Types.begin_definition () ;
                let ty = Types.specialize scheme in
                let ty' =
                  Types.copy_type_simple_but_variables
                    ~and_abstract: (Some cname) ty in
                Types.end_definition () ;
-               (* We substitute Self by [cname] in the prop. *)
-               let abstracted_prop =
-                 SubstColl.subst_prop ~current_unit SubstColl.SRCK_self
-                   (Types.SBRCK_coll cname) prop in
+               (* We substitute Self by [cname] in the logical_expr. *)
+               let abstracted_logical_expr =
+                 SubstColl.subst_logical_expr ~current_unit SubstColl.SRCK_self
+                   (Types.SBRCK_coll cname) logical_expr in
                [Env.TypeInformation.SF_property
-                  (from, vname, (Types.generalize ty'), abstracted_prop,
+                  (from, vname, (Types.generalize ty'), abstracted_logical_expr,
                    deps_rep)]) in
         h' @ rec_abstract q in
   (* Do the job now... *)
@@ -2448,7 +2450,7 @@ let collapse_proof proof_of ~current_species fields =
         | Env.TypeInformation.SF_theorem _ ->
           let (collapsed_rem, was_collapsed) = rec_find rem in
           (field :: collapsed_rem, was_collapsed)
-        | Env.TypeInformation.SF_property (_, name, sch, prop, deps_rep) ->
+        | Env.TypeInformation.SF_property (_, name, sch, logical_expr, deps_rep) ->
           (begin
             if name_of_proof_of = name then
               (begin
@@ -2456,7 +2458,7 @@ let collapse_proof proof_of ~current_species fields =
                 (* Change this property into a theorem.        *)
                 let new_field =
                   Env.TypeInformation.SF_theorem
-                    (current_species, name, sch, prop,
+                    (current_species, name, sch, logical_expr,
                      proof_of.Parsetree.pd_proof, deps_rep) in
                 if Configuration.get_verbose () then
                   Format.eprintf
@@ -2880,12 +2882,12 @@ let fields_fusion ~loc ctx phi1 phi2 =
    | (Env.TypeInformation.SF_let_rec rec_meths1,
       Env.TypeInformation.SF_let_rec rec_meths2) ->
         fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2
-   | ((Env.TypeInformation.SF_property (_, n1, sc1, prop1, _)),
-      (Env.TypeInformation.SF_property (_, n2, sc2, prop2, _)))
-   | ((Env.TypeInformation.SF_property (_, n1, sc1, prop1, _)),
-      (Env.TypeInformation.SF_theorem (_, n2, sc2, prop2, _, _)))
-   | ((Env.TypeInformation.SF_theorem (_, n1, sc1, prop1, _, _)),
-      (Env.TypeInformation.SF_theorem (_, n2, sc2, prop2, _, _))) ->
+   | ((Env.TypeInformation.SF_property (_, n1, sc1, logical_expr1, _)),
+      (Env.TypeInformation.SF_property (_, n2, sc2, logical_expr2, _)))
+   | ((Env.TypeInformation.SF_property (_, n1, sc1, logical_expr1, _)),
+      (Env.TypeInformation.SF_theorem (_, n2, sc2, logical_expr2, _, _)))
+   | ((Env.TypeInformation.SF_theorem (_, n1, sc1, logical_expr1, _, _)),
+      (Env.TypeInformation.SF_theorem (_, n2, sc2, logical_expr2, _, _))) ->
         (* First, ensure that the names are the same. *)
         if n1 = n2 then
           (begin
@@ -2897,7 +2899,7 @@ let fields_fusion ~loc ctx phi1 phi2 =
                 (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2)
              with _ -> assert false) ;
             (* Finally, ensure that the propositions are the same. *)
-            if Ast_equal.prop_equal_p prop1 prop2 then
+            if Ast_equal.logical_expr_equal_p logical_expr1 logical_expr2 then
               (* Return the theorem in case of property / theorem and  *)
               (* return the last theorem in case of theorem / theorem. *)
               phi2
@@ -2905,8 +2907,8 @@ let fields_fusion ~loc ctx phi1 phi2 =
                 assert false
            end)
         else assert false
-   | ((Env.TypeInformation.SF_theorem (_, n1, sc1, prop1, _, _)),
-      (Env.TypeInformation.SF_property (_, n2, sc2, prop2, _))) ->
+   | ((Env.TypeInformation.SF_theorem (_, n1, sc1, logical_expr1, _, _)),
+      (Env.TypeInformation.SF_property (_, n2, sc2, logical_expr2, _))) ->
         (* First, ensure that the names are the same. *)
         if n1 = n2 then
           (begin
@@ -2918,7 +2920,7 @@ let fields_fusion ~loc ctx phi1 phi2 =
                 (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2)
              with _ -> assert false);
             (* Finally, ensure that the propositions are the same. *)
-            if Ast_equal.prop_equal_p prop1 prop2
+            if Ast_equal.logical_expr_equal_p logical_expr1 logical_expr2
             then phi1 (* Return the theorem. *)
             else assert false
           end)
@@ -3140,7 +3142,7 @@ let detect_polymorphic_method ~loc = function
 (* ********************************************************************** *)
 type please_compile_me =
   | PCM_no_matter       (** Nothing to do during the compilation pass. *)
-  | PCM_open of (Location.t * Parsetree.modname)
+  | PCM_open of (Location.t * Parsetree.module_name)
   | PCM_species of
       ((** The species expression. *)
         Parsetree.species_def *
@@ -3152,7 +3154,7 @@ type please_compile_me =
         (Dep_analysis.name_node list))
   | PCM_collection of
       ((** The collection expression. *)
-       Parsetree.coll_def *
+       Parsetree.collection_def *
        (** The collection description from the typechecking pass, with
            the list of methods contained in its normalized form, with
            "oldestly" inherited in head of the list and Self replaced by
@@ -3837,10 +3839,10 @@ let typecheck_phrase ctx env phrase =
        (* Store the type information in the phrase's node. *)
        phrase.Parsetree.ast_type <- Parsetree.ANTI_type ty ;
        (compil_info, env')
-   | Parsetree.Ph_coll coll_def ->
+   | Parsetree.Ph_collection collection_def ->
        (* Interface printing stuff is done inside. *)
        let (compil_info, ty, env') =
-         typecheck_collection_def ctx env coll_def in
+         typecheck_collection_def ctx env collection_def in
        (* Store the type information in the phrase's node. *)
        phrase.Parsetree.ast_type <- Parsetree.ANTI_type ty ;
        (compil_info, env')

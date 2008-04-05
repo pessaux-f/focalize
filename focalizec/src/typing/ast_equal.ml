@@ -12,11 +12,11 @@
 (***********************************************************************)
 
 
-(* $Id: ast_equal.ml,v 1.5 2008-03-14 14:43:59 pessaux Exp $ *)
+(* $Id: ast_equal.ml,v 1.6 2008-04-05 18:48:15 weis Exp $ *)
 
 (* ********************************************************************** *)
 (** {b Descr} : This module performs test equality of the AST expression.
-              This feature is mostly needed to compare [prop]s when
+              This feature is mostly needed to compare [logical_expr]s when
               making the fields fusion of properties and theorems fields.
               It is unclear whether the physical equality would be
               sufficient. Hence we implement here a custom structural
@@ -192,7 +192,7 @@ let rec type_expr ty_expr1 ty_expr2 =
 
 
 (* ************************************************************************* *)
-(** {b Descr} : "Normalise" a [prop] by flattening all consecutive \foralls
+(** {b Descr} : "Normalise" a [logical_expr] by flattening all consecutive \foralls
     binding idents to the same type_expr. Do same thing to consecutive
     \exists.
     This allows to consider that "\forall x : A \forall y in A" is
@@ -201,33 +201,33 @@ let rec type_expr ty_expr1 ty_expr2 =
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-let rec normalise_prop prop =
-  match prop.Parsetree.ast_desc with
+let rec normalise_logical_expr logical_expr =
+  match logical_expr.Parsetree.ast_desc with
    | Parsetree.Pr_forall (vnames, ty_expr, p) ->
        (begin
-       match (normalise_prop p).Parsetree.ast_desc with
+       match (normalise_logical_expr p).Parsetree.ast_desc with
         | Parsetree.Pr_forall (vnames', ty_expr', p') ->
             (* If bound idents have the same type, then *)
             (* collapse into one uniq [Pr_forall].      *)
             if type_expr ty_expr ty_expr' then
-              { prop with Parsetree.ast_desc =
+              { logical_expr with Parsetree.ast_desc =
                   Parsetree.Pr_forall (vnames @ vnames', ty_expr', p') }
-            else prop
-        | _ -> prop
+            else logical_expr
+        | _ -> logical_expr
        end)
   | Parsetree.Pr_exists (vnames, ty_expr, p) ->
        (begin
-       match (normalise_prop p).Parsetree.ast_desc with
+       match (normalise_logical_expr p).Parsetree.ast_desc with
         | Parsetree.Pr_exists (vnames', ty_expr', p') ->
             (* If bound idents have the same type, then *)
             (* collapse into one uniq [Pr_exists].      *)
             if type_expr ty_expr ty_expr' then
-              { prop with Parsetree.ast_desc =
+              { logical_expr with Parsetree.ast_desc =
                   Parsetree.Pr_exists (vnames @ vnames', ty_expr', p') }
-            else prop
-        | _ -> prop
+            else logical_expr
+        | _ -> logical_expr
        end)
-  | _ -> prop
+  | _ -> logical_expr
 ;;
 
 
@@ -346,20 +346,20 @@ and binding alpha_eq_map bnd1 bnd2 =
    | ((Parsetree.BB_computational e1), (Parsetree.BB_computational e2)) ->
        expr alpha_eq_map' e1 e2
    | ((Parsetree.BB_logical p1), (Parsetree.BB_logical p2)) ->
-       prop alpha_eq_map' p1 p2
+       logical_expr alpha_eq_map' p1 p2
    | (_, _) -> false)
 
 
 
 (* ********************************************* *)
-(* Parsetree.prop -> Parsetree.prop -> bool      *)
-(** {b Descr} : Tests the equality of 2 [prop]s.
+(* Parsetree.logical_expr -> Parsetree.logical_expr -> bool      *)
+(** {b Descr} : Tests the equality of 2 [logical_expr]s.
 
     {b Rem} : Exported outside this module.      *)
 (* ********************************************* *)
-and prop initial_alpha_eq_map initial_prop1 initial_prop2 =
-  let rec __internal_prop alpha_eq_map prop1 prop2 =
-    match (prop1.Parsetree.ast_desc, prop2.Parsetree.ast_desc) with
+and logical_expr initial_alpha_eq_map initial_logical_expr1 initial_logical_expr2 =
+  let rec __internal_logical_expr alpha_eq_map logical_expr1 logical_expr2 =
+    match (logical_expr1.Parsetree.ast_desc, logical_expr2.Parsetree.ast_desc) with
      | ((Parsetree.Pr_forall (vnames1, ty_expr1, p1)),
         (Parsetree.Pr_forall (vnames2, ty_expr2, p2)))
      | ((Parsetree.Pr_exists (vnames1, ty_expr1, p1)),
@@ -368,38 +368,38 @@ and prop initial_alpha_eq_map initial_prop1 initial_prop2 =
           try
             let alpha_eq_map' = (List.combine vnames1 vnames2) @ alpha_eq_map in
             (type_expr ty_expr1 ty_expr2) &&
-            (prop alpha_eq_map' p1 p2)
+            (logical_expr alpha_eq_map' p1 p2)
           with Invalid_argument ("List.combine") ->
             (* If there is not the same number of quantified variables, *)
-            (* then the 2 props are different.  *)
+            (* then the 2 logical_exprs are different.  *)
             false
           end)
      | ((Parsetree.Pr_imply (p1, p1')), (Parsetree.Pr_imply (p2, p2')))
      | ((Parsetree.Pr_or (p1, p1')), (Parsetree.Pr_or (p2, p2')))
      | ((Parsetree.Pr_and (p1, p1')), (Parsetree.Pr_and (p2, p2')))
      | ((Parsetree.Pr_equiv (p1, p1')), (Parsetree.Pr_equiv (p2, p2'))) ->
-         (prop alpha_eq_map p1 p2) && (prop alpha_eq_map p1' p2')
+         (logical_expr alpha_eq_map p1 p2) && (logical_expr alpha_eq_map p1' p2')
      | ((Parsetree.Pr_not p1), (Parsetree.Pr_not p2)) ->
-         prop alpha_eq_map p1 p2
+         logical_expr alpha_eq_map p1 p2
      | ((Parsetree.Pr_expr e1), (Parsetree.Pr_expr e2)) ->
          expr alpha_eq_map e1 e2
      | ((Parsetree.Pr_paren p1), (Parsetree.Pr_paren p2)) ->
-         prop alpha_eq_map p1 p2
+         logical_expr alpha_eq_map p1 p2
      | ((Parsetree.Pr_paren p1), _) ->
          (* Consider that parentheses are non-significant. *)
-         prop alpha_eq_map p1 prop2
+         logical_expr alpha_eq_map p1 logical_expr2
      | (_, (Parsetree.Pr_paren p2)) ->
          (* Consider that parentheses are non-significant. *)
-         prop alpha_eq_map prop1 p2
+         logical_expr alpha_eq_map logical_expr1 p2
      | (_, _) -> false in
 
-  (* Now, really apply [__internal_prop] after having normalised the props. *)
-  let prop1' = normalise_prop initial_prop1 in
-  let prop2' = normalise_prop initial_prop2 in
-  __internal_prop initial_alpha_eq_map prop1' prop2'
+  (* Now, really apply [__internal_logical_expr] after having normalised the logical_exprs. *)
+  let logical_expr1' = normalise_logical_expr initial_logical_expr1 in
+  let logical_expr2' = normalise_logical_expr initial_logical_expr2 in
+  __internal_logical_expr initial_alpha_eq_map logical_expr1' logical_expr2'
 ;;
 
 
 
 (** The wrapper to make the alpha-conversion mapping hidden. *)
-let prop_equal_p p1 p2 = prop [] p1 p2 ;;
+let logical_expr_equal_p p1 p2 = logical_expr [] p1 p2 ;;

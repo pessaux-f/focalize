@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.9 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.10 2008-04-05 18:48:16 weis Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -97,7 +97,7 @@ let param_deps_ident ~current_species param_coll_name local_idents ident =
 (** {b Descr} : Basically really does the job of [param_deps_expr] but
       has the extra parameter [start_local_idents] allowing to start
       with a non-empty list of identifiers considered as local.
-      This is needed for [__param_deps_prop] that needs to call ourselves
+      This is needed for [__param_deps_logical_expr] that needs to call ourselves
       with its already accumulated list of local identifiers.
       However, outside this module, the exported function [param_deps_expr]
       does not have any local identifier list as parameter because it
@@ -153,7 +153,7 @@ let rec __param_deps_expr ~current_species param_coll_name start_local_idents
             let deps =
               (match binding.Parsetree.ast_desc.Parsetree.b_body with
                | Parsetree.BB_logical p ->
-                   __param_deps_prop
+                   __param_deps_logical_expr
                      ~current_species param_coll_name local_idents' p
                | Parsetree.BB_computational e -> rec_deps local_idents' e) in
             Parsetree_utils.DepNameSet.union accu_deps deps)
@@ -189,25 +189,25 @@ let rec __param_deps_expr ~current_species param_coll_name start_local_idents
 
 
 
-and __param_deps_prop ~current_species param_coll_name start_local_idents
+and __param_deps_logical_expr ~current_species param_coll_name start_local_idents
     proposition =
-  let rec rec_deps local_idents prop =
-    match prop.Parsetree.ast_desc with
-     | Parsetree.Pr_forall (vnames, _, prop')
-     | Parsetree.Pr_exists (vnames, _, prop') ->
+  let rec rec_deps local_idents logical_expr =
+    match logical_expr.Parsetree.ast_desc with
+     | Parsetree.Pr_forall (vnames, _, logical_expr')
+     | Parsetree.Pr_exists (vnames, _, logical_expr') ->
          (* Here, the quantifid names may mask a "in"-parameter. *)
-        rec_deps (vnames @ local_idents) prop'
-     | Parsetree.Pr_imply (prop1, prop2)
-     | Parsetree.Pr_or (prop1, prop2)
-     | Parsetree.Pr_and (prop1, prop2)
-     | Parsetree.Pr_equiv (prop1, prop2) ->
-         let deps1 = rec_deps local_idents prop1 in
-         let deps2 = rec_deps local_idents prop2 in
+        rec_deps (vnames @ local_idents) logical_expr'
+     | Parsetree.Pr_imply (logical_expr1, logical_expr2)
+     | Parsetree.Pr_or (logical_expr1, logical_expr2)
+     | Parsetree.Pr_and (logical_expr1, logical_expr2)
+     | Parsetree.Pr_equiv (logical_expr1, logical_expr2) ->
+         let deps1 = rec_deps local_idents logical_expr1 in
+         let deps2 = rec_deps local_idents logical_expr2 in
          Parsetree_utils.DepNameSet.union deps1 deps2
-     | Parsetree.Pr_not prop' -> rec_deps local_idents prop'
+     | Parsetree.Pr_not logical_expr' -> rec_deps local_idents logical_expr'
      | Parsetree.Pr_expr expr ->
          __param_deps_expr ~current_species param_coll_name local_idents expr
-     | Parsetree.Pr_paren prop' -> rec_deps local_idents prop' in
+     | Parsetree.Pr_paren logical_expr' -> rec_deps local_idents logical_expr' in
   (* **************** *)
   (* Now, do the job. *)
   rec_deps start_local_idents proposition
@@ -243,9 +243,9 @@ let param_deps_expr ~current_species param_coll_name expression =
 
 
 (* current_species: Parsetree.qualified_species -> Parsetree.vname -> *)
-(*   Parsetree.prop -> Parsetree_utils.DepNameSet.t                   *)
-let param_deps_prop ~current_species param_coll_name proposition =
-  __param_deps_prop ~current_species param_coll_name [] proposition
+(*   Parsetree.logical_expr -> Parsetree_utils.DepNameSet.t                   *)
+let param_deps_logical_expr ~current_species param_coll_name proposition =
+  __param_deps_logical_expr ~current_species param_coll_name [] proposition
 ;;
 
 

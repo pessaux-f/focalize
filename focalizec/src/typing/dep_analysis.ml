@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.34 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.35 2008-04-05 18:48:15 weis Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -270,7 +270,7 @@ let fact_decl_n_def_dependencies ~current_species fact =
            Parsetree_utils.DepNameSet.empty
            idents in
        (decl_deps, Parsetree_utils.DepNameSet.empty)
-   | Parsetree.F_def idents ->
+   | Parsetree.F_definition idents ->
        (* These are "def"-dependencies, not "decl" !!! *)
        let def_deps =
          List.fold_left
@@ -289,11 +289,11 @@ let fact_decl_n_def_dependencies ~current_species fact =
 
 let hyp_decl_dependencies ~current_species hyp =
   match hyp.Parsetree.ast_desc with
-   | Parsetree.H_var (_, _) ->
+   | Parsetree.H_variable (_, _) ->
        (* No decl-dependency from type expressions. *)
        Parsetree_utils.DepNameSet.empty
-   | Parsetree.H_hyp (_, prop) -> prop_decl_dependencies ~current_species prop
-   | Parsetree.H_not (_, expr) -> expr_decl_dependencies ~current_species expr
+   | Parsetree.H_hypothesis (_, prop) -> prop_decl_dependencies ~current_species prop
+   | Parsetree.H_notation (_, expr) -> expr_decl_dependencies ~current_species expr
 ;;
 
 

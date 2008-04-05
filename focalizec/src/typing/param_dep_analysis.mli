@@ -12,12 +12,13 @@
 (***********************************************************************)
 
 
-(* $Id: param_dep_analysis.mli,v 1.8 2007-12-10 10:14:07 pessaux Exp $ *)
+(* $Id: param_dep_analysis.mli,v 1.9 2008-04-05 18:48:16 weis Exp $ *)
 
 val param_deps_expr :
   current_species: Parsetree.qualified_species -> Parsetree.vname ->
      Parsetree.expr -> Parsetree_utils.DepNameSet.t
 
-val param_deps_prop :
+val param_deps_logical_expr :
   current_species: Parsetree.qualified_species -> Parsetree.vname ->
-    Parsetree.prop -> Parsetree_utils.DepNameSet.t
+    Parsetree.logical_expr -> Parsetree_utils.DepNameSet.t
+;;
