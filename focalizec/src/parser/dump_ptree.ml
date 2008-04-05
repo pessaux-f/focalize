@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.25 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.26 2008-04-05 18:02:07 weis Exp $ *)
 
 
 
@@ -591,11 +591,23 @@ and pp_proof_def_desc ppf pdd =
     pp_vname pdd.Parsetree.pd_name pp_proof pdd.Parsetree.pd_proof
 and pp_proof_def ppf = pp_ast pp_proof_def_desc ppf
 
+and pp_termination_proof_def_desc ppf tpdd =
+  Format.fprintf ppf "@[<2>{@ %a;@ %a@ }@]"
+    pp_termination_proof_profiles tpdd.Parsetree.tpd_profiles pp_termination_proof tpdd.Parsetree.tpd_termination_proof
+and pp_termination_proof_def ppf = pp_ast pp_termination_proof_def_desc ppf
+
+and pp_termination_proof_profiles ppf =
+  Handy.pp_generic_separated_list "," pp_termination_proof_profile ppf
+
+and pp_termination_proof_profile_desc ppf tppd =
+  Format.fprintf ppf "@[<2>{@ %a;@ %a@ }@]"
+    pp_vname tppd.Parsetree.tpp_name pp_param_list tppd.Parsetree.tpp_args
+and pp_termination_proof_profile ppf = pp_ast pp_termination_proof_profile_desc ppf
 
 
 and pp_property_def_desc ppf pdd =
   Format.fprintf ppf "@[<2>{@ %a;@ %a@ }@]"
-    pp_vname pdd.Parsetree.prd_name pp_prop pdd.Parsetree.prd_prop
+    pp_vname pdd.Parsetree.prd_name pp_logical_expr pdd.Parsetree.prd_logical_expr
 and pp_property_def ppf = pp_ast pp_property_def_desc ppf
 
 
@@ -613,6 +625,8 @@ and pp_species_field_desc ppf = function
       Format.fprintf ppf "@[<2>SF_theorem@ (%a)@]" pp_theorem_def theorem_def
   | Parsetree.SF_proof proof_def ->
       Format.fprintf ppf "@[<2>SF_proof@ (%a)@]" pp_proof_def proof_def
+  | Parsetree.SF_termination_proof termination_proof_def ->
+      Format.fprintf ppf "@[<2>SF_proof@ (%a)@]" pp_termination_proof_def termination_proof_def
 and pp_species_fields ppf =
   Handy.pp_generic_separated_list "," pp_species_field ppf
 and pp_species_field ppf = pp_ast pp_species_field_desc ppf
@@ -630,7 +644,7 @@ and pp_let_def ppf = pp_ast pp_let_def_desc ppf
 
 
 and pp_binding_body ppf = function
-  | Parsetree.BB_logical prop -> pp_prop ppf prop
+  | Parsetree.BB_logical logical_expr -> pp_logical_expr ppf logical_expr
   | Parsetree.BB_computational expr -> pp_expr ppf expr
 
 
@@ -656,14 +670,14 @@ and pp_theorem_def_desc ppf tdd =
   Format.fprintf ppf "@[<2>{@ %a;@ %a;@ %a;@ %a@ }@]"
     pp_vname tdd.Parsetree.th_name
     pp_local_flag tdd.Parsetree.th_local
-    pp_prop tdd.Parsetree.th_stmt
+    pp_logical_expr tdd.Parsetree.th_stmt
     pp_proof tdd.Parsetree.th_proof
 and pp_theorem_def ppf = pp_ast pp_theorem_def_desc ppf
 
 
 
 and pp_fact_desc ppf = function
-  | Parsetree.F_def idents ->
+  | Parsetree.F_definition idents ->
       Format.fprintf ppf "F_def@ (@[<2>[@ %a@ ]@])" pp_expr_idents idents
   | Parsetree.F_property idents ->
       Format.fprintf ppf "F_property@ (@[<2>[@ %a@ ]@])" pp_expr_idents idents
@@ -686,6 +700,27 @@ and pp_proof_desc ppf = function
 and pp_proof ppf = pp_ast pp_proof_desc ppf
 
 
+and pp_termination_proof_desc ppf = function
+  | Parsetree.TP_structural vname ->
+      Format.fprintf ppf "TP_structural %a" pp_vname vname
+  | Parsetree.TP_lexicographic facts ->
+      Format.fprintf ppf "@[<2>TP_lexicographic@ ([@ %a@ ])@]" pp_facts facts
+  | Parsetree.TP_measure (expr, param_list, proof) ->
+      Format.fprintf ppf "@[<2>TP_measure@ (@ %a,@ %a,@ %a@ )@]"
+        pp_expr expr pp_param_list param_list pp_proof proof
+  | Parsetree.TP_order (expr, param_list, proof) ->
+      Format.fprintf ppf "@[<2>TP_order@ (@ %a,@ %a,@ %a@ )@]"
+        pp_expr expr pp_param_list param_list pp_proof proof
+and pp_param_list =
+    (Handy.pp_generic_separated_list
+       ","
+       (fun local_ppf (vname, ty_expr_opt) ->
+         Format.fprintf local_ppf "(%a,@ %a)"
+           pp_vname vname
+           (Handy.pp_generic_explicit_option pp_type_expr) ty_expr_opt))
+and pp_termination_proof ppf = pp_ast pp_termination_proof_desc ppf
+
+
 
 and pp_proof_node_desc ppf = function
   | Parsetree.PN_sub (node_label, stmt, proof) ->
@@ -702,19 +737,19 @@ and proof_node ppf = pp_ast pp_proof_node_desc ppf
 and pp_statement_desc ppf stmt =
   Format.fprintf ppf "{@[<2>[@ %a@ ];@ %a@]@ }"
     pp_hyps stmt.Parsetree.s_hyps
-    (Handy.pp_generic_explicit_option pp_prop) stmt.Parsetree.s_concl
+    (Handy.pp_generic_explicit_option pp_logical_expr) stmt.Parsetree.s_concl
 and pp_statement ppf = pp_ast pp_statement_desc ppf
 
 
 
 and pp_hyp_desc ppf = function
-  | Parsetree.H_var (vname, te) ->
+  | Parsetree.H_variable (vname, te) ->
       Format.fprintf ppf "@[<2>H_var@ (%a,@ %a)@]"
         pp_vname vname pp_type_expr te
-  | Parsetree.H_hyp (vname, prop) ->
+  | Parsetree.H_hypothesis (vname, logical_expr) ->
       Format.fprintf ppf "@[<2>H_hyp@ (%a,@ %a)@]"
-        pp_vname vname pp_prop prop
-  | Parsetree.H_not (vname, expr) ->
+        pp_vname vname pp_logical_expr logical_expr
+  | Parsetree.H_notation (vname, expr) ->
       Format.fprintf ppf "@[<2>H_not@ (%a,@ %a)@]"
         pp_vname vname pp_expr expr
 and pp_hyps ppf = Handy.pp_generic_separated_list "," pp_hyp ppf
@@ -722,25 +757,25 @@ and pp_hyp ppf = pp_ast pp_hyp_desc ppf
 
 
 
-and pp_prop_desc ppf = function
-  | Parsetree.Pr_forall (vnames, type_expr_opt, prop) ->
+and pp_logical_expr_desc ppf = function
+  | Parsetree.Pr_forall (vnames, type_expr_opt, logical_expr) ->
       Format.fprintf ppf "@[<2>Pr_forall@ ([@ %a@ ],@ %a,@ %a)@]"
-        pp_vnames vnames pp_type_expr type_expr_opt pp_prop prop
-  | Parsetree.Pr_exists (vnames, type_expr_opt, prop) ->
+        pp_vnames vnames pp_type_expr type_expr_opt pp_logical_expr logical_expr
+  | Parsetree.Pr_exists (vnames, type_expr_opt, logical_expr) ->
       Format.fprintf ppf "@[<2>Pr_exists@ ([@ %a@ ],@ %a,@ %a)@]"
-        pp_vnames vnames pp_type_expr type_expr_opt pp_prop prop
+        pp_vnames vnames pp_type_expr type_expr_opt pp_logical_expr logical_expr
   | Parsetree.Pr_imply (p1, p2) ->
-      Format.fprintf ppf "@[<2>Pr_imply@ (%a,@ %a)@]" pp_prop p1 pp_prop p2
+      Format.fprintf ppf "@[<2>Pr_imply@ (%a,@ %a)@]" pp_logical_expr p1 pp_logical_expr p2
   | Parsetree.Pr_or (p1, p2) ->
-      Format.fprintf ppf "@[<2>Pr_or@ (%a,@ %a)@]" pp_prop p1 pp_prop p2
+      Format.fprintf ppf "@[<2>Pr_or@ (%a,@ %a)@]" pp_logical_expr p1 pp_logical_expr p2
   | Parsetree.Pr_and (p1, p2) ->
-      Format.fprintf ppf "@[<2>Pr_and@ (%a,@ %a)@]" pp_prop p1 pp_prop p2
+      Format.fprintf ppf "@[<2>Pr_and@ (%a,@ %a)@]" pp_logical_expr p1 pp_logical_expr p2
   | Parsetree.Pr_equiv (p1, p2) ->
-      Format.fprintf ppf "@[<2>Pr_equiv@ (%a,@ %a)@]" pp_prop p1 pp_prop p2
-  | Parsetree.Pr_not p -> Format.fprintf ppf "@[<2>Pr_not@ (%a)@]" pp_prop p
+      Format.fprintf ppf "@[<2>Pr_equiv@ (%a,@ %a)@]" pp_logical_expr p1 pp_logical_expr p2
+  | Parsetree.Pr_not p -> Format.fprintf ppf "@[<2>Pr_not@ (%a)@]" pp_logical_expr p
   | Parsetree.Pr_expr e -> Format.fprintf ppf "@[<2>Pr_expr@ (%a)@]" pp_expr e
-  | Parsetree.Pr_paren p -> Format.fprintf ppf "@[<2>Pr_paren@ (%a)@]" pp_prop p
-and pp_prop ppf = pp_ast pp_prop_desc ppf
+  | Parsetree.Pr_paren p -> Format.fprintf ppf "@[<2>Pr_paren@ (%a)@]" pp_logical_expr p
+and pp_logical_expr ppf = pp_ast pp_logical_expr_desc ppf
 
 
 
@@ -826,22 +861,22 @@ and pp_expr ppf = pp_ast pp_expr_desc ppf
 
 
 (* ************************************************************************** *)
-(* Format.formatter -> Parsetree.coll_def_desc -> unit                        *)
-(** {b Descr} : Pretty prints a [coll_def_desc] value as a Caml-like structure.
+(* Format.formatter -> Parsetree.collection_def_desc -> unit                        *)
+(** {b Descr} : Pretty prints a [collection_def_desc] value as a Caml-like structure.
 
     {b Rem} : Not exported ouside this module.                                *)
 (* ************************************************************************** *)
-let pp_coll_def_desc ppf cdd =
+let pp_collection_def_desc ppf cdd =
   Format.fprintf ppf "{@ %a;@ %a@ }"
     pp_vname cdd.Parsetree.cd_name pp_species_expr cdd.Parsetree.cd_body
 ;;
 (* *********************************************************************** *)
-(* Format.formatter -> Parsetree.coll_def -> unit                          *)
-(** {b Descr} : Pretty prints a [coll_def] value as a Caml-like structure.
+(* Format.formatter -> Parsetree.collection_def -> unit                          *)
+(** {b Descr} : Pretty prints a [collection_def] value as a Caml-like structure.
 
     {b Rem} : Not exported ouside this module.                             *)
 (* *********************************************************************** *)
-let pp_coll_def ppf = pp_ast pp_coll_def_desc ppf;;
+let pp_collection_def ppf = pp_ast pp_collection_def_desc ppf;;
 
 
 
@@ -934,8 +969,8 @@ let pp_phrase_desc ppf = function
   | Parsetree.Ph_open fname -> Format.fprintf ppf "@[<2>Ph_open@ (%s)@]@ " fname
   | Parsetree.Ph_species species_def ->
       Format.fprintf ppf "@[<2>Ph_species@ (%a)@]@ " pp_species_def species_def
-  | Parsetree.Ph_coll coll_def ->
-      Format.fprintf ppf "@[<2>Ph_coll@ (%a)@]@ " pp_coll_def coll_def
+  | Parsetree.Ph_collection collection_def ->
+      Format.fprintf ppf "@[<2>Ph_coll@ (%a)@]@ " pp_collection_def collection_def
   | Parsetree.Ph_type type_def ->
       Format.fprintf ppf "@[<2>Ph_type@ (%a)@]@ " pp_type_def type_def
   | Parsetree.Ph_let let_def ->
