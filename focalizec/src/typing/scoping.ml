@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.42 2008-03-14 14:43:59 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.43 2008-04-05 18:25:32 weis Exp $ *)
 
 open Parsetree
 
@@ -51,19 +51,19 @@ open Parsetree
 
 (* ****************************************************************** *)
 (** {b Descr} : Exception raised when a let that is NOT a logical let
-      tries syntactically to bind a name to a [prop]. Computationnal
+      tries syntactically to bind a name to a [logical_expr]. Computationnal
       let can't contain a property. This is only restricted to
-      logical let. Since props embedd exprs, the parser always parse
-      a prop. Durign scoping pass, if the logical_flag of the let is
-      [LF_no_logical], then we ensure that the parsed prop is indeed
+      logical let. Since logical_exprs embedd exprs, the parser always parse
+      a logical_expr. Durign scoping pass, if the logical_flag of the let is
+      [LF_no_logical], then we ensure that the parsed logical_expr is indeed
       of the form [Pr_expr], then we remove this constructor and turn
       the binding_body into an expression body.
 
    {b Rem} : Exported outside this module.                            *)
 (* ****************************************************************** *)
-exception Non_logical_let_cant_define_prop of
+exception Non_logical_let_cant_define_logical_expr of
   (Parsetree.vname *     (** The guilty bound name. *)
-   Location.t)           (** The location of the prop bound to the name. *)
+   Location.t)           (** The location of the logical_expr bound to the name. *)
 ;;
 
 
@@ -259,11 +259,11 @@ let scoped_expr_ident_desc_from_value_binding_info ~basic_vname = function
 
 
 let (extend_env_with_implicit_gen_vars_from_type_exprs,
-     extend_env_with_implicit_gen_vars_from_prop) =
+     extend_env_with_implicit_gen_vars_from_logical_expr) =
   (* List of the variables names already seen to prevent them to be inserted *)
   (* multiple times in the scoping environment. This list is shared between  *)
-  (* the processing of both the [prop]s and the [type_expr]'s because a      *)
-  (* [prop] may contain [type_expr]s and we don't want to pass and return    *)
+  (* the processing of both the [logical_expr]s and the [type_expr]'s because a      *)
+  (* [logical_expr] may contain [type_expr]s and we don't want to pass and return    *)
   (* each time the list of the "seen variables". This make the code easier.  *)
   let seen_vars = ref [] in
 
@@ -303,25 +303,25 @@ let (extend_env_with_implicit_gen_vars_from_type_exprs,
      | Parsetree.TE_paren inner -> rec_extend_texpr inner accu_env
 
   (* *************************************************** *)
-  (* The local recursive function operating on a [prop]. *)
-  and rec_extend_prop pexpr accu_env =
+  (* The local recursive function operating on a [logical_expr]. *)
+  and rec_extend_logical_expr pexpr accu_env =
     match pexpr.Parsetree.ast_desc with
-     | Parsetree.Pr_forall (_, ty, prop)
-     | Parsetree.Pr_exists (_, ty, prop) ->
+     | Parsetree.Pr_forall (_, ty, logical_expr)
+     | Parsetree.Pr_exists (_, ty, logical_expr) ->
          (* First recover the mapping induced by the type expression. *)
          let env_from_ty = rec_extend_texpr ty accu_env in
-         rec_extend_prop prop env_from_ty
-     | Parsetree.Pr_imply (prop1, prop2)
-     | Parsetree.Pr_or (prop1, prop2)
-     | Parsetree.Pr_and (prop1, prop2)
-     | Parsetree.Pr_equiv (prop1, prop2) ->
-         let env_from_prop1 = rec_extend_prop prop1 accu_env in
-         rec_extend_prop prop2 env_from_prop1
-     | Parsetree.Pr_not prop
-     | Parsetree.Pr_paren prop -> rec_extend_prop prop accu_env
+         rec_extend_logical_expr logical_expr env_from_ty
+     | Parsetree.Pr_imply (logical_expr1, logical_expr2)
+     | Parsetree.Pr_or (logical_expr1, logical_expr2)
+     | Parsetree.Pr_and (logical_expr1, logical_expr2)
+     | Parsetree.Pr_equiv (logical_expr1, logical_expr2) ->
+         let env_from_logical_expr1 = rec_extend_logical_expr logical_expr1 accu_env in
+         rec_extend_logical_expr logical_expr2 env_from_logical_expr1
+     | Parsetree.Pr_not logical_expr
+     | Parsetree.Pr_paren logical_expr -> rec_extend_logical_expr logical_expr accu_env
      | Parsetree.Pr_expr _ ->
          (* Inside expressions type variable must be bound by the previous *)
-         (* parts of the prop ! Hence, do not continue searching inside.   *)
+         (* parts of the logical_expr ! Hence, do not continue searching inside.   *)
          accu_env in
 
   (
@@ -354,9 +354,9 @@ let (extend_env_with_implicit_gen_vars_from_type_exprs,
        type_expressions),
 
    (* *********************************************************************** *)
-   (* extend_env_with_implicit_gen_vars_from_prop :                           *)
+   (* extend_env_with_implicit_gen_vars_from_logical_expr :                           *)
    (** {b Descr} : Insert in the scoping environment the variables present
-              in a type parts of a [prop], considering they are implicitely
+              in a type parts of a [logical_expr], considering they are implicitely
               generalized. This is used when one creates a type structure
               from a theorem expression.
               In effect, in such a context, variables in the type are
@@ -372,9 +372,9 @@ let (extend_env_with_implicit_gen_vars_from_type_exprs,
 
        {b Rem} : Not exported outside this module.                           *)
    (* ********************************************************************** *)
-   (fun env prop_expression ->
+   (fun env logical_expr ->
      seen_vars := [];
-     rec_extend_prop prop_expression env)
+     rec_extend_logical_expr logical_expr env)
   )
 ;;
 
@@ -1043,25 +1043,25 @@ and scope_let_definition ~toplevel_let ctx env let_def =
           (param_vname, scoped_tye_opt))
         let_binding_descr.Parsetree.b_params in
     (* Now scope the body. We ensure that bindings of a non-logical let      *)
-    (* are props of the form [Pr_expr] and if so, we remove this constructor *)
+    (* are logical_exprs of the form [Pr_expr] and if so, we remove this constructor *)
     (* and turn the binding_body to a [BB_computational].                    *)
     let scoped_body =
       (match let_binding_descr.Parsetree.b_body with
-       | Parsetree.BB_logical prop ->
+       | Parsetree.BB_logical logical_expr ->
            if let_def_descr.Parsetree.ld_logical = Parsetree.LF_logical then
              Parsetree.BB_logical
-               (scope_prop ctx env_with_ty_constraints_variables prop)
+               (scope_logical_expr ctx env_with_ty_constraints_variables logical_expr)
            else
              (begin
-             match prop.Parsetree.ast_desc with
+             match logical_expr.Parsetree.ast_desc with
               | Parsetree.Pr_expr expr ->
-                  (* Turn the prop into an expression   *)
+                  (* Turn the logical_expr into an expression   *)
                   (* since we are not in a logical let. *)
                   Parsetree.BB_computational
                     (scope_expr ctx env_with_ty_constraints_variables expr)
               | _ ->
                   raise
-                    (Non_logical_let_cant_define_prop
+                    (Non_logical_let_cant_define_logical_expr
                        (let_binding_descr.Parsetree.b_name,
                         let_binding.Parsetree.ast_loc))
              end)
@@ -1099,14 +1099,14 @@ and scope_let_definition ~toplevel_let ctx env let_def =
 
 
 (* *********************************************************************** *)
-(* scoping_context -> Env.ScopingEnv.t -> Parsetree.prop -> Parsetree.prop *)
-(* {b Descr} : Scopes a [prop] and returns this scoped [prop].
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.logical_expr -> Parsetree.logical_expr *)
+(* {b Descr} : Scopes a [logical_expr] and returns this scoped [logical_expr].
 
    {b Rem} : Not exported outside this module.                             *)
 (* *********************************************************************** *)
-and scope_prop ctx env prop =
+and scope_logical_expr ctx env logical_expr =
   let new_desc =
-    (match prop.Parsetree.ast_desc with
+    (match logical_expr.Parsetree.ast_desc with
      | Parsetree.Pr_forall (vnames, ty_expr, p) ->
          (begin
          let scoped_ty_expr = scope_type_expr ctx env ty_expr in
@@ -1118,7 +1118,7 @@ and scope_prop ctx env prop =
                vname Env.ScopeInformation.SBI_local accu_env)
              env
              vnames in
-         let scoped_p = scope_prop ctx env' p in
+         let scoped_p = scope_logical_expr ctx env' p in
          Parsetree.Pr_forall (vnames, scoped_ty_expr, scoped_p)
          end)
      | Parsetree.Pr_exists (vnames, ty_expr, p) ->
@@ -1132,38 +1132,38 @@ and scope_prop ctx env prop =
               vname Env.ScopeInformation.SBI_local accu_env)
              env
              vnames in
-         let scoped_p = scope_prop ctx env' p in
+         let scoped_p = scope_logical_expr ctx env' p in
          Parsetree.Pr_exists (vnames, scoped_ty_expr, scoped_p)
          end)
      | Parsetree.Pr_imply (p1, p2) ->
-         let scoped_p1 = scope_prop ctx env p1 in
-         let scoped_p2 = scope_prop ctx env p2 in
+         let scoped_p1 = scope_logical_expr ctx env p1 in
+         let scoped_p2 = scope_logical_expr ctx env p2 in
          Parsetree.Pr_imply (scoped_p1, scoped_p2)
      | Parsetree.Pr_or (p1, p2) ->
-         let scoped_p1 = scope_prop ctx env p1 in
-         let scoped_p2 = scope_prop ctx env p2 in
+         let scoped_p1 = scope_logical_expr ctx env p1 in
+         let scoped_p2 = scope_logical_expr ctx env p2 in
          Parsetree.Pr_or (scoped_p1, scoped_p2)
      | Parsetree.Pr_and (p1, p2) ->
-         let scoped_p1 = scope_prop ctx env p1 in
-         let scoped_p2 = scope_prop ctx env p2 in
+         let scoped_p1 = scope_logical_expr ctx env p1 in
+         let scoped_p2 = scope_logical_expr ctx env p2 in
          Parsetree.Pr_and (scoped_p1, scoped_p2)
      | Parsetree.Pr_equiv (p1, p2) ->
-         let scoped_p1 = scope_prop ctx env p1 in
-         let scoped_p2 = scope_prop ctx env p2 in
+         let scoped_p1 = scope_logical_expr ctx env p1 in
+         let scoped_p2 = scope_logical_expr ctx env p2 in
          Parsetree.Pr_equiv (scoped_p1, scoped_p2)
-     | Parsetree.Pr_not p -> Parsetree.Pr_not (scope_prop ctx env p)
+     | Parsetree.Pr_not p -> Parsetree.Pr_not (scope_logical_expr ctx env p)
      | Parsetree.Pr_expr expr -> Parsetree.Pr_expr (scope_expr ctx env expr)
-     | Parsetree.Pr_paren p -> Parsetree.Pr_paren (scope_prop ctx env p)) in
-  { prop with Parsetree.ast_desc = new_desc }
+     | Parsetree.Pr_paren p -> Parsetree.Pr_paren (scope_logical_expr ctx env p)) in
+  { logical_expr with Parsetree.ast_desc = new_desc }
 ;;
 
 
 let (extend_env_with_implicit_gen_vars_from_type_expr,
-     extend_env_with_implicit_gen_vars_from_prop) =
+     extend_env_with_implicit_gen_vars_from_logical_expr) =
   (* List of the variables names already seen to prevent them to be inserted *)
   (* multiple times in the scoping environment. This list is shared between  *)
-  (* the processing of both the [prop]s and the [type_expr]'s because a      *)
-  (* [prop] may contain [type_expr]s and we don't want to pass and return    *)
+  (* the processing of both the [logical_expr]s and the [type_expr]'s because a      *)
+  (* [logical_expr] may contain [type_expr]s and we don't want to pass and return    *)
   (* each time the list of the "seen variables". This make the code easier.  *)
   let seen_vars = ref [] in
 
@@ -1203,25 +1203,25 @@ let (extend_env_with_implicit_gen_vars_from_type_expr,
      | Parsetree.TE_paren inner -> rec_extend_texpr inner accu_env
 
   (* *************************************************** *)
-  (* The local recursive function operating on a [prop]. *)
-  and rec_extend_prop pexpr accu_env =
+  (* The local recursive function operating on a [logical_expr]. *)
+  and rec_extend_logical_expr pexpr accu_env =
     match pexpr.Parsetree.ast_desc with
-     | Parsetree.Pr_forall (_, ty, prop)
-     | Parsetree.Pr_exists (_, ty, prop) ->
+     | Parsetree.Pr_forall (_, ty, logical_expr)
+     | Parsetree.Pr_exists (_, ty, logical_expr) ->
          (* First recover the mapping induced by the type expression. *)
          let env_from_ty = rec_extend_texpr ty accu_env in
-         rec_extend_prop prop env_from_ty
-     | Parsetree.Pr_imply (prop1, prop2)
-     | Parsetree.Pr_or (prop1, prop2)
-     | Parsetree.Pr_and (prop1, prop2)
-     | Parsetree.Pr_equiv (prop1, prop2) ->
-         let env_from_prop1 = rec_extend_prop prop1 accu_env in
-         rec_extend_prop prop2 env_from_prop1
-     | Parsetree.Pr_not prop
-     | Parsetree.Pr_paren prop -> rec_extend_prop prop accu_env
+         rec_extend_logical_expr logical_expr env_from_ty
+     | Parsetree.Pr_imply (logical_expr1, logical_expr2)
+     | Parsetree.Pr_or (logical_expr1, logical_expr2)
+     | Parsetree.Pr_and (logical_expr1, logical_expr2)
+     | Parsetree.Pr_equiv (logical_expr1, logical_expr2) ->
+         let env_from_logical_expr1 = rec_extend_logical_expr logical_expr1 accu_env in
+         rec_extend_logical_expr logical_expr2 env_from_logical_expr1
+     | Parsetree.Pr_not logical_expr
+     | Parsetree.Pr_paren logical_expr -> rec_extend_logical_expr logical_expr accu_env
      | Parsetree.Pr_expr _ ->
          (* Inside expressions type variable must be bound by the previous *)
-         (* parts of the prop ! Hence, do not continue searching inside.   *)
+         (* parts of the logical_expr ! Hence, do not continue searching inside.   *)
          accu_env in
 
   (
@@ -1251,7 +1251,7 @@ let (extend_env_with_implicit_gen_vars_from_type_expr,
 
    (* *********************************************************************** *)
    (** {b Descr} : Insert in the scoping environment the variables present
-              in a type parts of a [prop], considering they are implicitely
+              in a type parts of a [logical_expr], considering they are implicitely
               generalized. This is used when one creates a type structure
               from a theorem expression.
               In effect, in such a context, variables in the type are
@@ -1267,9 +1267,9 @@ let (extend_env_with_implicit_gen_vars_from_type_expr,
 
        {b Rem} : Not exported outside this module.                           *)
    (* ********************************************************************** *)
-   (fun env prop_expression ->
+   (fun env logical_expr_expression ->
      seen_vars := [];
-     rec_extend_prop prop_expression env)
+     rec_extend_logical_expr logical_expr_expression env)
   )
 ;;
 
@@ -1281,9 +1281,11 @@ let scope_sig_def ctx env sig_def =
   let scoped_sig_def = {
     sig_def with
       Parsetree.ast_desc = {
-        Parsetree.sig_name = sig_def_descr.Parsetree.sig_name;
-        Parsetree.sig_type = scoped_type
-      } } in
+        sig_def.Parsetree.ast_desc with
+           Parsetree.sig_name = sig_def_descr.Parsetree.sig_name;
+           Parsetree.sig_type = scoped_type;
+      }
+  } in
   (scoped_sig_def, sig_def_descr.Parsetree.sig_name)
 ;;
 
@@ -1298,7 +1300,7 @@ let scope_sig_def ctx env sig_def =
 let scope_fact ctx env fact =
   let new_desc =
     (match fact.Parsetree.ast_desc with
-     | Parsetree.F_def idents ->
+     | Parsetree.F_definition idents ->
          (begin
          let scoped_idents =
            List.map
@@ -1313,7 +1315,7 @@ let scope_fact ctx env fact =
                    ~basic_vname scope_info in
                { ident with Parsetree.ast_desc = tmp })
              idents in
-         Parsetree.F_def scoped_idents
+         Parsetree.F_definition scoped_idents
          end)
      | Parsetree.F_property idents ->
          (begin
@@ -1358,24 +1360,24 @@ let scope_hyps ctx env hyps =
       let (new_desc, accu_env') =
         (begin
         match hyp_desc with
-         | Parsetree.H_var (vname, type_expr) ->
+         | Parsetree.H_variable (vname, type_expr) ->
              let scoped_type_expr = scope_type_expr ctx accu_env type_expr in
              let env' =
                Env.ScopingEnv.add_value
                  vname Env.ScopeInformation.SBI_local accu_env in
-             ((Parsetree.H_var (vname, scoped_type_expr)), env')
-         | Parsetree.H_hyp (vname, prop) ->
-             let scoped_prop = scope_prop ctx accu_env prop in
+             ((Parsetree.H_variable (vname, scoped_type_expr)), env')
+         | Parsetree.H_hypothesis (vname, logical_expr) ->
+             let scoped_logical_expr = scope_logical_expr ctx accu_env logical_expr in
              let env' =
                Env.ScopingEnv.add_value
                 vname Env.ScopeInformation.SBI_local accu_env in
-             ((Parsetree.H_hyp (vname, scoped_prop)), env')
-         | Parsetree.H_not (vname, expr) ->
+             ((Parsetree.H_hypothesis (vname, scoped_logical_expr)), env')
+         | Parsetree.H_notation (vname, expr) ->
              let scoped_expr = scope_expr ctx accu_env expr in
              let env' =
                Env.ScopingEnv.add_value
                  vname Env.ScopeInformation.SBI_local accu_env in
-             ((Parsetree.H_not (vname, scoped_expr)), env')
+             ((Parsetree.H_notation (vname, scoped_expr)), env')
         end) in
       (accu_env',
        { hyp with Parsetree.ast_desc = new_desc } :: accu_scoped_hyps))
@@ -1390,7 +1392,7 @@ let scope_statement ctx env stmt =
   let scoped_concl =
     (match stmt_desc.Parsetree.s_concl with
      | None -> None
-     | Some prop -> Some (scope_prop ctx env' prop)) in
+     | Some logical_expr -> Some (scope_logical_expr ctx env' logical_expr)) in
   let scoped_stmt_desc = {
     Parsetree.s_hyps = scoped_hyps; Parsetree.s_concl = scoped_concl } in
   ({ stmt with Parsetree.ast_desc = scoped_stmt_desc }, env')
@@ -1438,9 +1440,9 @@ and scope_proof ctx env proof =
 let scope_theorem_def ctx env theo_def =
   let theo_def_desc = theo_def.Parsetree.ast_desc in
   let env' =
-    extend_env_with_implicit_gen_vars_from_prop
+    extend_env_with_implicit_gen_vars_from_logical_expr
       env theo_def_desc.Parsetree.th_stmt in
-  let scoped_stmt = scope_prop ctx env' theo_def_desc.Parsetree.th_stmt in
+  let scoped_stmt = scope_logical_expr ctx env' theo_def_desc.Parsetree.th_stmt in
   let scoped_proof = scope_proof ctx env' theo_def_desc.Parsetree.th_proof in
   let scoped_theo_def_desc = {
     Parsetree.th_name = theo_def_desc.Parsetree.th_name;
@@ -1475,12 +1477,12 @@ let scope_proof_def ctx env proof_def =
 (* ******************************************************************* *)
 let scope_property_def ctx env property_def =
   let property_def_desc = property_def.Parsetree.ast_desc in
-  let scoped_prop = scope_prop ctx env property_def_desc.Parsetree.prd_prop in
+  let scoped_logical_expr = scope_logical_expr ctx env property_def_desc.Parsetree.prd_logical_expr in
   let scoped_property_def = {
     property_def with
       Parsetree.ast_desc = {
         Parsetree.prd_name = property_def_desc.Parsetree.prd_name;
-        Parsetree.prd_prop = scoped_prop
+        Parsetree.prd_logical_expr = scoped_logical_expr
       } } in
   (scoped_property_def, property_def_desc.Parsetree.prd_name)
 ;;
@@ -1519,7 +1521,9 @@ let scope_species_field ctx env field =
          ((Parsetree.SF_theorem scoped_theo), [name])
      | Parsetree.SF_proof proof_def ->
          let (scoped_proof_def, name) = scope_proof_def ctx env proof_def in
-         ((Parsetree.SF_proof scoped_proof_def), [name])) in
+         ((Parsetree.SF_proof scoped_proof_def), [name])
+     | Parsetree.SF_termination_proof _termination_proof_def ->
+         failwith "Not yet implemented") in
   ({ field with Parsetree.ast_desc = new_desc }, method_name_opt)
 ;;
 
@@ -1940,10 +1944,10 @@ let scope_phrase ctx env phrase =
          let (scoped_species_def, env') =
            scope_species_def ctx env species_def in
          ((Parsetree.Ph_species scoped_species_def), env', ctx)
-     | Parsetree.Ph_coll coll_def ->
-         let (scoped_coll_def, env') =
-           scope_collection_def ctx env coll_def in
-         ((Parsetree.Ph_coll scoped_coll_def), env', ctx)
+     | Parsetree.Ph_collection collection_def ->
+         let (scoped_collection_def, env') =
+           scope_collection_def ctx env collection_def in
+         ((Parsetree.Ph_collection scoped_collection_def), env', ctx)
      | Parsetree.Ph_type type_def ->
          let (scoped_ty_def, env') = scope_type_def ctx env type_def in
          ((Parsetree.Ph_type scoped_ty_def), env', ctx)
