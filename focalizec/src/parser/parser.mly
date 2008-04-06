@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.82 2008-04-05 18:00:00 weis Exp $ *)
+(* $Id: parser.mly,v 1.83 2008-04-06 11:29:30 weis Exp $ *)
 
 open Parsetree;;
 
@@ -552,41 +552,52 @@ def_let:
   | opt_doc let_binding { mk_doc $1 ($2.ast_desc) }
 ;
 
-/** Since logical let is followed by a logical_expr, and since logical_exprs embedd expressions,
-  at parsing stage, everything is temporarily considered to be a logical_expr. At
-  scoping stage, a verification will be performed: if the logical_flag is
-  [LF_no_logical] then we will ensure that the logical_expr is a [Pr_expr] and remove
-  the constructor to get the effective [exp] that is the body of the real
-  "Let". Otherwise we will keep the logical_expr as it is, since the binding is a
-  logical binding.
+/** Since logical let is followed by a logical_expr, and since logical_expr
+  embeds all expressions, at parsing stage, everything is temporarily
+  considered to be a logical_expr. At scoping stage, a verification will be
+  performed: if the logical_flag is [LF_no_logical] then we will ensure that
+  the logical_expr is a [Pr_expr] and remove the constructor to get the
+  effective [exp] that is the body of the real "Let". Otherwise we will keep
+  the logical_expr as it is, since the binding is a logical binding.
+
   The only exception is for externals that are never logical bindings ! */
 binding:
   | bound_vname EQUAL logical_expr termination_proof_opt
-    { mk { b_name = $1; b_params = []; b_type = None;
-	   b_body = Parsetree.BB_logical $3;
-           b_termination_proof = $4;
-          } }
+    { mk {
+        b_name = $1; b_params = []; b_type = None;
+        b_body = Parsetree.BB_logical $3;
+        b_termination_proof = $4;
+      }
+    }
   | bound_vname EQUAL INTERNAL type_expr EXTERNAL external_expr
-    { mk { b_name = $1; b_params = []; b_type = Some $4;
-	   b_body = Parsetree.BB_computational (mk (E_external $6));
-           b_termination_proof = None;
-         } }
+    { mk {
+        b_name = $1; b_params = []; b_type = Some $4;
+        b_body = Parsetree.BB_computational (mk (E_external $6));
+        b_termination_proof = None;
+      }
+    }
   | bound_vname IN type_expr EQUAL logical_expr termination_proof_opt
-    { mk { b_name = $1; b_params = []; b_type = Some $3;
-	   b_body = Parsetree.BB_logical $5;
-           b_termination_proof = $6;
-         } }
+    { mk {
+        b_name = $1; b_params = []; b_type = Some $3;
+        b_body = Parsetree.BB_logical $5;
+        b_termination_proof = $6;
+      }
+    }
   | bound_vname LPAREN param_list RPAREN EQUAL logical_expr termination_proof_opt
-    { mk { b_name = $1; b_params = $3; b_type = None;
-	   b_body = Parsetree.BB_logical $6;
-           b_termination_proof = $7;
-         } }
+    { mk {
+        b_name = $1; b_params = $3; b_type = None;
+        b_body = Parsetree.BB_logical $6;
+        b_termination_proof = $7;
+      }
+    }
   | bound_vname LPAREN param_list RPAREN IN type_expr
     EQUAL logical_expr termination_proof_opt
-    { mk { b_name = $1; b_params = $3; b_type = Some $6;
-	   b_body = Parsetree.BB_logical $8;
-           b_termination_proof = $9;
-          } }
+    { mk {
+        b_name = $1; b_params = $3; b_type = Some $6;
+        b_body = Parsetree.BB_logical $8;
+        b_termination_proof = $9;
+      }
+    }
 ;
 
 termination_proof_opt:
@@ -721,7 +732,7 @@ proof_hypothesis:
 proof_hypothesis_list:
   | proof_hypothesis COMMA proof_hypothesis_list { $1 :: $3 }
   | proof_hypothesis { [ $1 ] }
-; 
+;
 
 opt_logical_expr:
   | { None }
@@ -773,15 +784,15 @@ simple_type_expr:
     { mk (TE_app (mk_local_ident (Vlident $1), $3)) }
   | LPAREN type_expr RPAREN
     { mk (TE_paren $2) }
-  | species_vname   /* To have capitalized species names as types. */
+  | species_vname      /* To have capitalized species names as types. */
     { mk (TE_ident (mk_local_ident $1)) }
-  | species_glob_ident     /* To have qualified species names as types. */
+  | species_glob_ident /* To have qualified species names as types. */
     { mk (TE_ident $1) }
 ;
 
 core_type_tuple:
   | simple_type_expr STAR_OP simple_type_expr      { [$1; $3] }
-  | core_type_tuple STAR_OP simple_type_expr        { $1 @ [$3] }
+  | core_type_tuple STAR_OP simple_type_expr       { $1 @ [$3] }
 ;
 
 type_expr_comma_list:
