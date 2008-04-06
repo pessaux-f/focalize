@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.30 2008-04-05 16:36:24 weis Exp $ *)
+(* $Id: lexer.mll,v 1.31 2008-04-06 10:08:28 weis Exp $ *)
 
 {
 open Lexing;;
@@ -9,9 +9,12 @@ type error =
    | Illegal_escape of string
    | Unterminated_comment
    | Uninitiated_comment
+   | Uninitiated_external_code
    | Unterminated_string
    | Unterminated_documentation
+   | Unterminated_external_code
    | Comment_in_string
+   | External_code_in_string
 ;;
 
 exception Error of error * Lexing.position * Lexing.position;;
@@ -65,6 +68,7 @@ List.iter
   "qed", QED;
   "rec", REC;
   "rep", REP;
+  "Self", SELF;
   "signature", SIGNATURE;
   "species", SPECIES;
   "step", STEP;
@@ -78,6 +82,34 @@ List.iter
   "value", VALUE;
   "with", WITH;
 ]
+;;
+
+(* Lexing the external_code tokens. *)
+let initial_external_code_buffer = String.create 256;;
+let external_code_buff = ref initial_external_code_buffer
+and external_code_index = ref 0
+;;
+
+let reset_external_code_buffer () =
+  external_code_buff := initial_external_code_buffer;
+  external_code_index := 0
+;;
+
+let store_external_code_char c =
+  if !external_code_index >= String.length (!external_code_buff) then begin
+    let new_buff = String.create (String.length (!external_code_buff) * 2) in
+    String.blit (!external_code_buff) 0
+                new_buff 0 (String.length (!external_code_buff));
+    external_code_buff := new_buff
+  end;
+  String.unsafe_set (!external_code_buff) (!external_code_index) c;
+  incr external_code_index
+;;
+
+let get_stored_external_code () =
+  let s = String.sub (!external_code_buff) 0 (!external_code_index) in
+  external_code_buff := initial_external_code_buffer;
+  s
 ;;
 
 (* Lexing the documentation tokens. *)
@@ -136,10 +168,10 @@ let get_stored_string () =
   s
 ;;
 
+let external_code_start_pos = ref None;;
 let documentation_start_pos = ref None;;
 let string_start_pos = ref None;;
 let comment_start_pos = ref [];;
-let in_comment () = !comment_start_pos <> [];;
 
 let char_for_backslash = function
   | 'n' -> '\010'
@@ -187,10 +219,6 @@ let update_loc lexbuf file line absolute chars =
     pos_lnum = if absolute then line else pos.pos_lnum + line;
     pos_bol = pos.pos_cnum - chars;
   }
-;;
-
-let mk_external_code s =
-  EXTERNAL_CODE (String.sub s 2 (String.length s - 4))
 ;;
 
 (* The prefix version of a prefix operator. *)
@@ -299,11 +327,14 @@ let string_of_lex_error = function
   | Illegal_character c -> "Illegal character (" ^ (Char.escaped c) ^ ")"
   | Illegal_escape s ->
       "Illegal backslash escape in string or character (" ^ s ^ ")"
-  | Unterminated_comment -> "Comment not terminated"
   | Comment_in_string -> "Non escaped comment separator in string constant"
+  | External_code_in_string -> "Non escaped external code separator in string constant"
   | Uninitiated_comment -> "Comment has not started"
+  | Uninitiated_external_code -> "External code has not started"
+  | Unterminated_comment -> "Comment not terminated"
   | Unterminated_string -> "String literal not terminated"
   | Unterminated_documentation -> "Documentation not terminated"
+  | Unterminated_external_code -> "External code not terminated"
 ;;
 
 }
@@ -467,14 +498,14 @@ rule token = parse
       token lexbuf }
   | blank +
     { token lexbuf }
-  | "Self"
-    { SELF }
   | lowercase_ident
     { let s = Lexing.lexeme lexbuf in
       try Hashtbl.find keyword_table s
       with Not_found -> LIDENT s }
   | uppercase_ident
-    { UIDENT (Lexing.lexeme lexbuf) }
+    { let s = Lexing.lexeme lexbuf in
+      try Hashtbl.find keyword_table s
+      with Not_found -> UIDENT s }
   | "\'" lowercase_ident
     { QIDENT (Lexing.lexeme lexbuf) }
   | int_literal
@@ -503,6 +534,20 @@ rule token = parse
       let esc = String.sub l 1 (String.length l - 1) in
       raise (Error
               (Illegal_escape esc, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
+  | "{*"
+    { reset_external_code_buffer ();
+      external_code_start_pos :=
+        Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
+      external_code lexbuf;
+      begin match !external_code_start_pos with
+      | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
+      | _ -> assert false end;
+      EXTERNAL_CODE (get_stored_external_code ()) }
+  | "*}"
+    { raise
+        (Error (Uninitiated_external_code,
+                lexbuf.lex_start_p,
+                lexbuf.lex_curr_p)) }
   | "(**"
     { reset_documentation_buffer ();
       documentation_start_pos :=
@@ -549,9 +594,6 @@ rule token = parse
     { mk_infixop (Lexing.lexeme lexbuf) }
   | "(" [' ']+ (infix_ident as inner) [' ']+ ")"
     { ident_of_infixop inner }
-
-  | "{*" ([^ '*'] | '*' [^ '}'])* "*}"
-    { mk_external_code (Lexing.lexeme lexbuf) }
 
   | eof { EOF }
   | _
@@ -611,6 +653,8 @@ and string = parse
            lexbuf.lex_curr_p)) }
   | ( "(*" | "*)" )
     { raise (Error (Comment_in_string, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
+  | ( "{*" | "*}" )
+    { raise (Error (External_code_in_string, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
   | ( newline | eof )
     { match !string_start_pos with
       | Some (start_pos, end_pos) ->
@@ -634,3 +678,18 @@ and documentation = parse
   | _
     { store_documentation_char (Lexing.lexeme_char lexbuf 0);
       documentation lexbuf }
+
+and external_code = parse
+  | ( "*}" )
+    { () }
+  | newline
+    { update_loc lexbuf None 1 false 0;
+      external_code lexbuf }
+  | ( eof )
+    { match !external_code_start_pos with
+      | Some (start_pos, end_pos) ->
+        raise (Error (Unterminated_external_code, start_pos, end_pos))
+      | _ -> assert false }
+  | _
+    { store_external_code_char (Lexing.lexeme_char lexbuf 0);
+      external_code lexbuf }
