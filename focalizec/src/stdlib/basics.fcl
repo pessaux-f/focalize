@@ -147,7 +147,7 @@ theorem beq_trans: all x y z in 'a, base_eq (x, y) -> base_eq (y, z) ->
 proof: assumed ;;
 
 theorem int_le_not_gt :
-  all x y in int, int_leq (x, y) -> not (int_gt (x, y))
+  all x y in int, int_leq (x, y) -> ~ (int_gt (x, y))
   proof:
     coq proof
    {* Intros x y; Unfold __g_int_leq __g_int_gt.
@@ -239,7 +239,7 @@ proof:
 ;;
 
 theorem int_lt_irrefl :
-  all x y in int, int_lt (x, y) -> not base_eq (x, y)
+  all x y in int, int_lt (x, y) -> ~ base_eq (x, y)
 proof: assumed ;;
 
 let pred =
@@ -336,7 +336,7 @@ let int_min =
   | coq -> "min" ;;
 
 theorem int_min_le: all x y z in int,
-  (#int_leq (z, x) and #int_leq (z, y)) -> #int_leq (z, #int_min (x, y))
+  (#int_leq (z, x) /\ #int_leq (z, y)) -> #int_leq (z, #int_min (x, y))
 proof:
    coq proof
      {* intros x y z H; elim H; intros H1 H2; clear H;
@@ -345,7 +345,7 @@ proof:
 ;;
 
 theorem int_min_le2: all x y z in int,
-  #int_leq (z, #int_min (x, y)) -> (#int_leq (z, x) and #int_leq (z, y))
+  #int_leq (z, #int_min (x, y)) -> (#int_leq (z, x) /\ #int_leq (z, y))
 proof:
    coq proof
    {*
