@@ -30,10 +30,10 @@ species Zero_check_set inherits Set_with_zero =
      An element satisfying the check should be equal to 0
    *)
   property is_zero_checks_to_zero: all x in Self,
-   (!is_zero (x)) -> ( !equal (x, Self!zero) and !equal (Self!zero, x)) ;
+   (!is_zero (x)) -> ( !equal (x, Self!zero) /\ !equal (Self!zero, x)) ;
 
   property is_zero_substitution_rule: all x y in Self,
-    !is_zero (x) -> (!equal (x, y) or !equal (y, x)) -> !is_zero (y) ;
+    !is_zero (x) -> (!equal (x, y) \/ !equal (y, x)) -> !is_zero (y) ;
 
    (**
       We could deduce that zero verifies the check, using equlity properties
@@ -59,7 +59,7 @@ species Zero_check_set inherits Set_with_zero =
    *)
 
    theorem equals_zero_is_zero_check : all x in Self,
-    ( !equal (!zero, x) or !equal (x, !zero))-> !is_zero (x)
+    ( !equal (!zero, x) \/ !equal (x, !zero))-> !is_zero (x)
      proof:
        by property zero_checks_to_zero, is_zero_substitution_rule
      ;
@@ -71,7 +71,7 @@ species Additive_semi_group inherits Setoid =
  (** @mathml <plus/>
      will be rendered as infix +
 *)
- sig plus : Self-> Self -> Self ;
+ signature plus : Self-> Self -> Self ;
 
 
   (** We state that additive laws are commutative *)
@@ -104,10 +104,10 @@ species Additive_monoid inherits Additive_semi_group, Set_with_zero =
  (** @mathml <plus/>
      will be rendered as infix +
 *)
- sig plus : Self-> Self -> Self;
+ signature plus : Self-> Self -> Self;
 
  property zero_is_neutral : all x in Self,
-   !equal (!plus (x, !zero), x) and !equal (!plus (!zero, x), x) ;
+   !equal (!plus (x, !zero), x) /\ !equal (!plus (!zero, x), x) ;
 
  theorem zero_is_unique : all o in Self,
   (all x in Self, !equal (x, !plus (x, o))) -> !equal (o, !zero)
@@ -142,7 +142,7 @@ species Cancellative_additive_semi_group inherits Additive_semi_group =
   (** The cancellation property *)
   theorem plus_is_regular: all x y z in Self,
     (!equal (!plus (x, y), !plus (x, z)) -> !equal (y, z)
-      and
+     /\
      !equal (!plus (x, z), !plus (y, z)) -> !equal (x, y))
     proof:
       by property plus_is_left_regular, plus_is_right_regular;
@@ -174,9 +174,9 @@ species Zero_check_additive_monoid
    *)
   property is_zero_defines_neutral: all x y o in Self,
     !is_zero (o) -> !equal (x, y) ->
-      ( !equal (x, !plus (o, y)) and
-        !equal (!plus (o, x), y) and
-        !equal (!plus (x, o), y) and
+      ( !equal (x, !plus (o, y)) /\
+        !equal (!plus (o, x), y) /\
+        !equal (!plus (x, o), y) /\
         !equal (x, !plus(y, o))
       );
     (* !is_zero(z) -> !equal(x,y) -> !equal(x,!plus(z,y)); *)
@@ -185,9 +185,9 @@ species Zero_check_additive_monoid
      New property attempting to reduce equality chains
      *)
   property zero_simplifies: all x y in Self,
-    (!equal (!plus (x, !zero), y) or
-     !equal (x, !plus (!zero, y)) or
-     !equal (x, !plus (y, !zero)) or
+    (!equal (!plus (x, !zero), y) /\
+     !equal (x, !plus (!zero, y)) /\
+     !equal (x, !plus (y, !zero)) /\
      !equal (!plus (!zero, x), y))
        -> !equal (x, y) ;
 
@@ -210,7 +210,7 @@ species Zero_check_additive_monoid
   ;
 
  theorem is_zero_defines_unique: all x y in Self,
-   (!is_zero (x) and !is_zero (y)) -> !equal(x, y)
+   (!is_zero (x) /\ !is_zero (y)) -> !equal(x, y)
    proof:
      <1>1 assume x in Self,
           assume y in Self,
@@ -227,7 +227,7 @@ species Zero_check_additive_monoid
 
   proof of zero_is_neutral =
     <1>1 assume x in Self,
-         prove !equal (!plus (x, !zero), x) and !equal (!plus (!zero, x), x)
+         prove !equal (!plus (x, !zero), x) /\ !equal (!plus (!zero, x), x)
          <2>0 prove !equal (x, x) by property equal_reflexive
          <2>1 prove !equal (!plus (x, !zero), x)
               by step <2>0
@@ -287,7 +287,7 @@ species Regular_additive_semi_group
   (** from the cancellation property we define a partial subtraction
       @mathml <minus/>
    *)
-  sig minus : Self -> Self -> Self ;
+  signature minus : Self -> Self -> Self ;
 
    (*
       from these properties we should be able to prove basic
@@ -295,7 +295,7 @@ species Regular_additive_semi_group
     *)
   property minus_is_well_defined: all x y z in Self,
     !equal (x, !plus (z, y)) ->
-      (!equal (!minus (x, y), z) and !equal (!minus (x, z), y)) ;
+      (!equal (!minus (x, y), z) /\ !equal (!minus (x, z), y)) ;
 
   property minus_left_substitution_rule: all x y z in Self,
     !equal (x, y) -> !equal (!minus (x, z), !minus (y, z)) ;
@@ -353,7 +353,7 @@ species Additive_monoid_with_infimum inherits
 
    theorem add_distributes_on_inf: all x y z in Self,
      !equal (!plus (x, !inf (y, z)), !inf (!plus (x, y), !plus (x, z)))
-       and
+       /\
      !equal (!plus (!inf (x, y), z), !inf (!plus (x, z), !plus (y, z)))
      proof: by property add_right_distributes_on_inf,
                         add_left_distributes_on_inf
@@ -417,7 +417,7 @@ species Additive_monoid_with_supremum inherits
 
    theorem add_distributes_on_sup: all x y z in Self,
      !equal(!plus (x, !sup(y, z)), !sup (!plus (x, y), !plus (x, z)))
-       and
+       /\
      !equal(!plus (!sup (x, y), z), !sup (!plus (x, z), !plus (y, z)))
      proof:
        by property add_right_distributes_on_sup, add_left_distributes_on_sup ;
@@ -495,7 +495,7 @@ species Additive_group inherits Cancellative_additive_monoid =
     definition of is_zero ;
 
  (** @mathml <minus/> *)
-  sig opposite : Self -> Self ;
+  signature opposite : Self -> Self ;
   property opposite_is_opposite: all x in Self,
    !equal (!plus (x, !opposite (x)), !zero) ;
 
@@ -683,7 +683,7 @@ species Ordered_additive_group inherits
       the set of negative elements ,
       the zero element and
       the set of positive elements *)
- sig sign : Self -> int ;
+ signature sign : Self -> int ;
  let leq (x, y) = basics#int_leq (!sign (!minus(x, y)), 0) ;
  proof of total_order = assumed ;
  proof of lt_is_not_leq = assumed ;

@@ -15,7 +15,7 @@ open "iterators" ;;
 (** one associative multiplicative binop, this is sometimes called a magma *)
 species Semi_group inherits Setoid =
  (** @mathml <times/>*)
- sig mult : Self -> Self -> Self ;
+ signature mult : Self -> Self -> Self ;
 
   (** associativity rule *)
  property mult_assoc : all x y z in Self,
@@ -51,14 +51,14 @@ species Monoid inherits Setoid_with_one, Semi_group =
 
   (** neutrality *)
   theorem one_is_neutral: all x in Self,
-    !equal (!mult (x, !one), x) and !equal (!mult (!one, x), x)
+    !equal (!mult (x, !one), x) /\ !equal (!mult (!one, x), x)
     proof:
       by property one_is_left_neutral, one_is_right_neutral ;
 
   (** in a monoid the unit element is unique *)
   theorem one_is_unique :
     (all o in Self,
-     (all x in Self, !equal (x, !mult (x, o)) or !equal (x, !mult (o, x)))
+     (all x in Self, !equal (x, !mult (x, o)) \/ !equal (x, !mult (o, x)))
       -> !equal (o, !one))
     proof: by property one_is_neutral, equal_symmetric, equal_transitive ;
 end ;;
@@ -118,7 +118,7 @@ species Monoid_with_absorbant inherits Set_with_zero, Monoid =
 
   theorem zero_absorbes: all x in Self,
     !equal (!mult (x, !zero), !zero)
-    and
+    /\
     !equal (!mult (!zero, x), !zero)
    proof: by property zero_right_absorbes, zero_left_absorbes ;
 end ;;
@@ -133,7 +133,7 @@ species Commutative_integral_monoid_with_absorbant
   inherits Commutative_monoid_with_absorbant =
 
   property mult_is_integral: all x in Self, all a in Self,
-    !equal (!mult (a, x), !zero) -> (!equal(a, !zero) or !equal (x, !zero)) ;
+    !equal (!mult (a, x), !zero) -> (!equal(a, !zero) \/ !equal (x, !zero)) ;
 end ;;
 
 (**
@@ -148,7 +148,7 @@ end ;;
    Here we simply express compatibility with multiplication
  *)
 species Commutative_monoid_with_divisibility inherits Commutative_monoid =
-   sig divides : Self -> Self -> prop ;
+   signature divides : Self -> Self -> prop ;
 
    (** A reflexive relation should be expressed as an extension of equality *)
    property divides_extends_equal: all x y in Self,
@@ -162,7 +162,7 @@ species Commutative_monoid_with_divisibility inherits Commutative_monoid =
       left and right divisibility. Otherwise things are more complicated...
     *)
    property divides_reverses_mult: all x y in Self,
-     !divides(x, !mult(x, y)) and !divides(y, !mult(x, y));
+     !divides(x, !mult(x, y)) /\ !divides(y, !mult(x, y));
 
    property divides_transitive: all x y z in Self,
      !divides(x, y) -> !divides(y, z) -> !divides(x, z);
@@ -206,21 +206,21 @@ species Cancellative_commutative_monoid
 
    (** Left cancellation by non null element *)
    property mult_is_left_regular: all x y z in Self,
-     !equal (!mult (x, y), !mult (x, z)) -> not (!equal (x, !zero)) ->
+     !equal (!mult (x, y), !mult (x, z)) -> ~ (!equal (x, !zero)) ->
        !equal (y, z) ;
 
    (** Right cancellation by non null element *)
    theorem mult_is_right_regular: all x y z in Self,
-     !equal (!mult (y, x), !mult (z, x)) -> not (!equal (x, !zero)) ->
+     !equal (!mult (y, x), !mult (z, x)) -> ~ (!equal (x, !zero)) ->
        !equal(y, z)
      proof: by property mult_is_left_regular, mult_commutes, equal_transitive ;
 
    (** The cancellation property *)
    theorem mult_is_regular: all x y z in Self,
-    (!equal (!mult(x, y), !mult(x, z)) -> not (!equal(x, !zero)) ->
+    (!equal (!mult(x, y), !mult(x, z)) -> ~ (!equal(x, !zero)) ->
       !equal (y, z)
-      and
-     !equal (!mult(x, z), !mult(y, z)) -> not (!equal(z, !zero)) ->
+      /\
+     !equal (!mult(x, z), !mult(y, z)) -> ~ (!equal(z, !zero)) ->
        !equal(x, y))
    proof: by property mult_is_left_regular, mult_is_right_regular ;
 end ;;
@@ -234,11 +234,11 @@ species Regular_monoid
             Commutative_integral_monoid_with_absorbant,
             Cancellative_commutative_monoid =
 
-  sig exquo : Self -> Self -> basics#partiel (Self) ;
+  signature exquo : Self -> Self -> basics#partiel (Self) ;
 
   property exquo_divides: all x y z in Self,
     basics#is_failed (!exquo (x, z))
-      or
+      \/
     !equal (y, basics#non_failed (!exquo (x, z))) -> !equal (x, !mult (z, y)) ;
 
   let recip (x) = Self!exquo (Self!one, x) ;
@@ -262,20 +262,20 @@ species Division_monoid
            Commutative_integral_monoid_with_absorbant,
            Cancellative_commutative_monoid =
   (** @mathml <quotient/> *)
-  sig div : Self -> Self -> Self ;
+  signature div : Self -> Self -> Self ;
 
   property div_divides: all x y in Self,
-    !equal(y, !zero) or !equal (!mult (!div(x, y), y), x) ;
+    !equal(y, !zero) \/ !equal (!mult (!div(x, y), y), x) ;
 
   theorem div_left_substitution_rule: all x_1 x_2 y in Self,
-    !equal(x_1, x_2) -> not (!equal (y, !zero)) ->
+    !equal(x_1, x_2) -> ~ (!equal (y, !zero)) ->
        !equal (!div (x_1, y), !div(x_2, y))
     proof:
     <1>1 assume x_1 in Self,
          assume x_2 in Self,
          assume y in Self,
          assume H_x: !equal(x_1, x_2),
-         assume H_y: not(!equal(y, !zero)),
+         assume H_y: ~(!equal(y, !zero)),
          prove !equal(!div(x_1, y), !div(x_2, y))
          <2>1 prove !equal(!mult(!div(x_1, y), y), x_1)
               by property div_divides hypothesis H_y
@@ -291,7 +291,7 @@ species Division_monoid
     ;
 
   theorem div_right_substitution_rule: all x y_1 y_2 in Self,
-    !equal(y_1, y_2) -> not(!equal(y_1, !zero)) ->
+    !equal(y_1, y_2) -> ~(!equal(y_1, !zero)) ->
        !equal(!div(x, y_1), !div(x, y_2))
     (* [rr]: to do ! *)
     proof:
@@ -299,13 +299,13 @@ species Division_monoid
            assume y_1 in Self,
            assume y_2 in Self,
            assume H_y: !equal(y_1, y_2),
-           assume H_0: not(!equal(y_1, !zero)),
+           assume H_0: ~(!equal(y_1, !zero)),
             prove !equal (!div(x, y_1), !div(x, y_2))
             <2>1 prove !equal(!mult(!div(x, y_1), y_1), x)
                  by property div_divides hypothesis H_0
             <2>2 prove !equal(!mult(!div(x, y_2), y_1), x)
                  <3>1 prove !equal(!mult(!div(x, y_2), y_2), x)
-                      <4>1 prove not(!equal(y_2, !zero))
+                      <4>1 prove ~(!equal(y_2, !zero))
                            by hypothesis H_y, H_0 property equal_transitive
                       <4>2 qed by step <4>1 property div_divides
                  <3>2 prove !equal(!mult(!div(x, y_2), y_1),
@@ -326,7 +326,7 @@ species Division_monoid
       ;
 
   theorem div_really_divides: all x y in Self,
-    !equal(y, !zero) or !divides(!div(x, y), x)
+    !equal(y, !zero) \/ !divides(!div(x, y), x)
     proof:
      <1>1 assume x in Self,
           assume y in Self,
@@ -356,7 +356,7 @@ species Division_monoid
                 by <2>:H_0 def !divides
           <2>2 assume H_1: !different(y, !zero)
                prove !divides(x, y)
-               <3>1 prove not(!equal(x, !zero))
+               <3>1 prove ~(!equal(x, !zero))
                     by <1>:H, <2>:H_1,
                        !equal_transitive, !equal_symmetric,
                        !same_is_not_different
@@ -392,7 +392,7 @@ species Division_monoid
   let inv (x) = Self!div (Self!one, x) ;
 
   theorem inv_substitution_rule: all x_1 x_2 in Self,
-    !equal (x_1, x_2) -> not (!equal (x_1, !zero)) ->
+    !equal (x_1, x_2) -> ~ (!equal (x_1, !zero)) ->
       !equal (!inv (x_1), !inv (x_2))
     proof: by property div_right_substitution_rule
               definition of inv ;
@@ -401,14 +401,14 @@ end ;;
 (* gcd (Original ocaml version by Louis Mandel) *)
 species Factorization_monoid inherits Regular_monoid =
   (** @mathml <gcd/>*)
-  sig gcd : Self-> Self-> Self;
+  signature gcd : Self-> Self-> Self;
   property gcd_divides: all x y z in Self,
     !equal (z, !gcd (x, y)) ->
-      (not (basics#is_failed (!exquo (x, z)))
-        and
-       not (basics#is_failed (!exquo (y, z)))) ;
+      (~ (basics#is_failed (!exquo (x, z)))
+        /\
+       ~ (basics#is_failed (!exquo (y, z)))) ;
   property divisor_is_multiple_of_gcd: all x y d in Self,
-    not (basics#is_failed (!exquo (x, d))) ->
-      not (basics#is_failed (!exquo (y, d))) ->
-        not (basics#is_failed (!exquo (d, !gcd (x, y)))) ;
+    ~ (basics#is_failed (!exquo (x, d))) ->
+      ~ (basics#is_failed (!exquo (y, d))) ->
+        ~ (basics#is_failed (!exquo (d, !gcd (x, y)))) ;
 end ;;

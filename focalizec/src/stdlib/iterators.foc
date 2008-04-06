@@ -14,11 +14,11 @@ species Set_with_zero inherits Setoid =
  (** @mathml <mn>0</mn>
     will be rendered as 0
   *)
-  sig zero : Self ;
+  signature zero : Self ;
   let element = Self!zero ;
-  sig is_zero : Self -> basics#bool ;
+  signature is_zero : Self -> basics#bool ;
   property is_zero_spec: all x in Self,
-    !is_zero(x) <-> (!equal (x, !zero) or !equal (!zero, x)) ;
+    !is_zero(x) <-> (!equal (x, !zero) \/ !equal (!zero, x)) ;
 end ;;
 
 (**
@@ -28,10 +28,10 @@ end ;;
 
 species Enumeration_system inherits Setoid =
 
-  sig start : Self ;
+  signature start : Self ;
 
   (** An abstract successor function *)
-  sig successor : Self -> Self ;
+  signature successor : Self -> Self ;
 
   (** Compatibility with equality *)
   property successor_substitution_rule: all x y in Self,
@@ -45,7 +45,7 @@ species Enumeration_system inherits Setoid =
      predecessor computes the unique y such that successor(y) = x
      This makes sense because predecessor is injective.
    *)
-  sig predecessor : Self -> Self;
+  signature predecessor : Self -> Self;
   property predecessor_reverses_successor : all x y in Self,
      !equal (x, !successor (y)) ->
        !equal (y, !predecessor (x)) ;
@@ -60,11 +60,11 @@ species Enumerated_system
    inherits Enumeration_system, Partial_set =
   (** Zero is not a successor is a Peano axiom *)
   property successor_is_non_trivial: all n in Self,
-    not (!equal (!successor (n), !start));
+    ~ (!equal (!successor (n), !start));
 
   (** Weak injectivity of predecessor is a Peano axiom *)
   property predecessor_is_injective: all n m in Self,
-    not (!equal (n, !start)) -> not (!equal (m, !start)) ->
+    ~ (!equal (n, !start)) -> ~ (!equal (m, !start)) ->
       !equal (!predecessor (n), !predecessor (m)) -> !equal (m, n) ;
 
   (** An induction principle for natural numbers *)
@@ -78,7 +78,7 @@ end ;;
 
 species Function_t_t_t (T is basics#Basic_object) =
   rep = T -> T -> T ;
-  sig f : T -> T -> T ;
+  signature f : T -> T -> T ;
 end ;;
 
 
@@ -105,18 +105,18 @@ end ;;
 species Ordered_Enumeration_system inherits Enumeration_system =
   (** a strict inequality *)
   (* [Usure] : j'ai remplacé la doc par un simple commentaire @mathml <lt/> *)
-  sig lt : Self -> Self -> basics#bool ;
+  signature lt : Self -> Self -> basics#bool ;
   (**  antisymmetry is usually stated for large orderings *)
   property lt_is_anti_symmetric: all x y in Self,
-    !lt (x, y) -> not (!lt (y, x)) ;
-  theorem lt_is_irreflexive: all x in Self, not (!lt(x, x))
+    !lt (x, y) -> ~ (!lt (y, x)) ;
+  theorem lt_is_irreflexive: all x in Self, ~ (!lt(x, x))
     proof: by property lt_is_anti_symmetric ;
   (** Transitivity *)
   property lt_is_transitive: all x y z in Self,
     !lt (x, y) -> !lt (y, z) -> !lt (x, z) ;
   (** We only have three cases *)
   property lt_is_total: all x y in Self,
-    !lt (x, y) or !equal (x, y) or !lt (y, x) ;
+    !lt (x, y) \/ !equal (x, y) \/ !lt (y, x) ;
 
   (** strict ordering enables to define large ordering *)
   (* [Usure] : j'ai remplacé la doc par un simple commentaire @mathml <leq/> *)
@@ -133,7 +133,7 @@ species Ordered_Enumeration_system inherits Enumeration_system =
            prove !equal (x, y)
            <2>1 assume Axy: !lt (x, y),
                 prove !equal (x, y)
-                <3>1 prove not (!lt (y, x))
+                <3>1 prove ~ (!lt (y, x))
                    by hypothesis Axy
                    property lt_is_anti_symmetric
                 <3>2 qed
@@ -143,7 +143,7 @@ species Ordered_Enumeration_system inherits Enumeration_system =
                      definition of leq
            <2>2 assume Ayx: !lt (y, x),
                 prove !equal (x, y)
-                <3>1 prove not (!lt (x, y))
+                <3>1 prove ~ (!lt (x, y))
                        by hypothesis Ayx
                        property lt_is_anti_symmetric
                 <3>2 qed by
@@ -164,9 +164,9 @@ species Ordered_Enumeration_system inherits Enumeration_system =
   property successor_defines_bigger: all x in Self,
     !lt (x, !successor (x)) ;
   property start_is_min: all x in Self,
-    !equal (x, !start) or !lt (!start, x) ;
+    !equal (x, !start) \/ !lt (!start, x) ;
   property successor_defines_infimum: all x y in Self,
-    !leq (x, y) -> not (!equal (x, y)) -> !leq (!successor (x), y);
+    !leq (x, y) -> ~ (!equal (x, y)) -> !leq (!successor (x), y);
 
   (* [rr]:
      To be continued ... One should be able to implement something which
@@ -180,7 +180,7 @@ species Setoid_with_one inherits Setoid =
  (** @mathml <mn>1</mn>
     will be rendered as 1
  *)
- sig one : Self ;
+ signature one : Self ;
  let is_one (x) = Self!equal (x, Self!one) ;
  let element = Self!one ;
 end ;;
@@ -195,7 +195,7 @@ end ;;
 (* species signed_system(nat is Enumeration_system)  *)
 (*   inherits Set_with_zero = *)
 (*   (\** We view this as an embeding *\) *)
-(*   sig of_nat in nat -> Self; *)
+(*   signature of_nat in nat -> Self; *)
 (*   property of_nat_substitution_rule: all x y in nat, *)
 (*     nat!equal(x,y) -> !equal(!of_nat(x), !of_nat(y)); *)
 (*   property of_nat_is_injective: all x y in nat, *)
@@ -203,20 +203,20 @@ end ;;
 
 (*   (\** We view this as an abstract constructor *\) *)
 (*   (\** @mathml <minus/> *\) *)
-(*   sig opposite in nat -> Self; *)
+(*   signature opposite in nat -> Self; *)
 (*   property opposite_substitution_rule: all x y in nat, *)
 (*     !equal(!opposite(x), !opposite(y)); *)
 (*   property opposite_is_injective: all x y in nat, *)
 (*     !equal(!opposite(x),!opposite(y)) -> nat!equal(x,y); *)
 
 (*   (\** abs is a form of inverse of both of_nat and opposite *\) *)
-(*   sig abs in Self -> nat; *)
+(*   signature abs in Self -> nat; *)
 (*   property abs_substitution_rule: all x y in Self,  *)
 (*     !equal(x,y) -> nat!equal(!abs(x),!abs(y)); *)
 (*   property abs_is_idempotent: all x in Self, *)
 (*     nat!equal(!abs(!of_nat(!abs(x))),!abs(x)); *)
 (*   property opposite_and_nat_complete: all x in Self, *)
-(*     !equal(x, !of_nat(!abs(x))) or !equal(x,!opposite(!abs(x))); *)
+(*     !equal(x, !of_nat(!abs(x))) \/ !equal(x,!opposite(!abs(x))); *)
 (*   property opposite_is_involutive: all x in nat, *)
 (*     !equal(!opposite(!abs(!opposite(x))),!of_nat(x)); *)
 
@@ -230,8 +230,8 @@ end ;;
 (*        -1; *)
 
 (*   theorem sign_is_complete: all x in Self, *)
-(*     #int_eq(!sign(x),-1) or *)
-(*     #int_eq(!sign(x),0) or *)
+(*     #int_eq(!sign(x),-1) \/ *)
+(*     #int_eq(!sign(x),0) \/ *)
 (*     #int_eq(!sign(x),1) *)
 (*     proof:  *)
 (*       (\*[rr]: todo *\) *)
@@ -259,7 +259,7 @@ species Dichotomic_system
   property one_successes_zero: !equal (!successor (!zero), !one) ;
 
   (** multiplication by two *)
-  sig mult2 : Self -> Self ;
+  signature mult2 : Self -> Self ;
   (** compatibility with equality *)
   property mult2_substitution_rule: all n m in Self,
    !equal (n, m) -> !equal (!mult2 (n), !mult2 (m)) ;
@@ -269,24 +269,24 @@ species Dichotomic_system
    !equal (!mult2 (n), !mult2 (m)) -> !equal (n, m) ;
 
   (* we can check if an element is even *)
-  sig is_even : Self -> basics#bool ;
+  signature is_even : Self -> basics#bool ;
   property is_even_substitution_rule: all n m in Self,
    !is_even (n) -> !equal (n, m) -> !is_even (m) ;
   (* [rr]: this may be a theorem *)
   property zero_is_even: !is_even (!zero) ;
 
   (* we can check if an element is odd *)
-  sig is_odd : Self -> basics#bool ;
+  signature is_odd : Self -> basics#bool ;
   property is_odd_substitution_rule: all n m in Self,
    !is_odd (n) -> !equal (n, m) -> !is_odd (m) ;
   (* [rr]: this may be a theorem *)
   property one_is_odd: !is_odd (!one) ;
   (* any number is odd or even *)
-  property even_odd_complete: all n in Self, !is_odd (n) or !is_even (n) ;
+  property even_odd_complete: all n in Self, !is_odd (n) \/ !is_even (n) ;
 
   property mult2_produces_even: all n in Self, !is_even (!mult2 (n)) ;
   (** division by two almost inverses multiplication by two *)
-  sig div2 : Self -> Self ;
+  signature div2 : Self -> Self ;
   property div2_inverses_even: all n in Self,
    !is_even (n) -> !equal (!mult2 (!div2 (n)), n) ;
   property div2_inverses_odd: all n in Self,
@@ -298,13 +298,13 @@ species Dichotomic_system
    !is_even (n) -> !is_odd (!successor (n)) ;
 
   theorem zero_images_by_div2: all n in Self, !equal (!div2 (n), !zero) ->
-   (!equal (n, !zero) or !equal (n, !one))
+   (!equal (n, !zero) \/ !equal (n, !one))
   proof: assumed ;
 
 (*    (\** an induction principle for dichotomy *\)  *)
 (*   theorem dichotomic_principle: all p in (Self -> Prop), *)
 (*     p(!zero) -> *)
-(*       (all n in Self, (p(n) -> (p(!mult2(n)) and p(!successor(!mult2(n)))))) -> *)
+(*       (all n in Self, (p(n) -> (p(!mult2(n)) /\ p(!successor(!mult2(n)))))) -> *)
 (*          (all n in Self, p(n)) *)
 (*     proof: assumed *)
 (*     ; *)
@@ -313,8 +313,8 @@ end ;;
 
 
 species Binop (S is basics#Basic_object) inherits basics#Basic_object =
-  sig binop : S -> S -> S ;
-  sig bvalue : S ;
+  signature binop : S -> S -> S ;
+  signature bvalue : S ;
 end ;;
 
 

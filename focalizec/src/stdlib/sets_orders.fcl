@@ -16,7 +16,7 @@ species Setoid inherits Basic_object =
 
   (** @mathml <eq/> *)
   (* sig ( = ) : Self -> Self -> bool ; *)
-  sig equal : Self -> Self -> bool ;
+  signature equal : Self -> Self -> bool ;
 
   (*
   property ``equal is reflexive'' : all x y in Self,
@@ -31,7 +31,7 @@ species Setoid inherits Basic_object =
     !equal(x, y) -> !equal(y, z) -> !equal(x, z) ;
 
   (** element returns some element of our non empty setoid *)
-  sig element : Self ;
+  signature element : Self ;
 
   (** @mathml <neq/> *)
   let different (x, y) = basics#not_b(!equal(x, y)) ;
@@ -42,7 +42,7 @@ species Setoid inherits Basic_object =
     by definition of different ;
 
   theorem different_is_irreflexive: all x in Self,
-    not (!different (x, x))
+    ~ (!different (x, x))
   proof:
     (* by property ``equal is reflexive'', same_is_not_different *)
     by property equal_reflexive, same_is_not_different ;
@@ -68,14 +68,14 @@ species Represented_by (S is Basic_object) inherits Setoid =
 
   (** One should be able to describe which values of s correspond to some
      abstract Self. *)
-  sig represents_some_Self : S -> prop ;
+  signature represents_some_Self : S -> prop;
 
   (** A way to abstract concrete values, not intended to be used by the
      programmer *)
-  sig from_rep : S -> Self;
+  signature from_rep : S -> Self;
 
   (** This property enables to state theorems about abstract Self. *)
-  logical correct_representation (x) =
+  logical let correct_representation (x) =
     !represents_some_Self (!to_rep (x))
   ;
 
@@ -133,7 +133,7 @@ end
 species Pre_order inherits Setoid =
   (** leq(x,y) is x &le; y
       @mathml <leq/> *)
-  sig leq : Self -> Self -> bool;
+  signature leq : Self -> Self -> bool;
 
   property leq_reflexive: all x y in Self,
     !equal(x, y) -> !leq(x, y);
@@ -146,7 +146,7 @@ species Pre_order inherits Setoid =
 
   (** a characteristic property *)
   theorem geq_is_leq: all x y in Self,
-    (!geq(x, y) -> !leq(y, x)) and  (!leq(x, y) -> !geq(y, x))
+    (!geq(x, y) -> !leq(y, x)) /\  (!leq(x, y) -> !geq(y, x))
     proof:
       by definition of geq
   ;
@@ -167,9 +167,9 @@ species Pre_order inherits Setoid =
 
   (** some results about strict and large inequalities *)
   theorem lt_is_not_leq : all x y in Self,
-    ((!lt(x, y) -> (!leq(x, y) and !different(x, y)))
-  and
-     (!leq(x, y) -> (!lt(x, y) or !equal(x, y))))
+    ((!lt(x, y) -> (!leq(x, y) /\ !different(x, y)))
+  /\
+     (!leq(x, y) -> (!lt(x, y) \/ !equal(x, y))))
     proof:
       by definition of lt, different
   ;
@@ -180,9 +180,9 @@ species Pre_order inherits Setoid =
   let gt(x, y) = !lt(y, x);
 
   theorem gt_is_lt: all x y in Self,
-    (!gt(x, y) -> (!geq(x, y) and !different(x, y)))
-      and
-    (!geq(x, y) -> (!gt(x, y) or !equal(x, y)))
+    (!gt(x, y) -> (!geq(x, y) /\ !different(x, y)))
+  /\
+    (!geq(x, y) -> (!gt(x, y) \/ !equal(x, y)))
     proof:
       by property lt_is_not_leq, equal_symmetric
          definition of gt, geq, different
@@ -213,7 +213,7 @@ species Meet_semi_lattice inherits Setoid =
   (* [rr]: need a mathml symbol for that,
      we don't want to use <min/> nor <intersect/>
   *)
-  sig inf : Self -> Self -> Self ;
+  signature inf : Self -> Self -> Self ;
   (** compatibility with equality *)
   property inf_left_substitution_rule : all x y z in Self,
     !equal (x, y) -> !equal (!inf (x, z), !inf (y, z))
@@ -340,7 +340,7 @@ species Join_semi_lattice inherits Setoid =
   (* [rr]: need a mathml symbol for that,
      we don't want to use <max/> nor <union/>
   *)
-  sig sup : Self -> Self -> Self ;
+  signature sup : Self -> Self -> Self ;
   (** compatibility with equality *)
   property sup_left_substitution_rule : all x y z in Self,
     !equal (x, y) -> !equal (!sup (x, z), !sup (y, z))
@@ -619,7 +619,7 @@ A meet semi lattice with an upper bound as neutral element for infimum.
 That is a meet semi lattice with a monoid structure.
 *)
 species Meet_semi_lattice_with_max inherits Meet_semi_lattice =
-  sig max : Self;
+  signature max : Self;
   property max_is_right_neutral: all x in Self,
     !equal(!inf(x, !max), x);
   theorem max_is_left_neutral: all x in Self,
@@ -636,7 +636,7 @@ A meet semi lattice with a lower bound.
 That is a meet semi lattice with an absorbant element
 *)
 species Meet_semi_lattice_with_min inherits Meet_semi_lattice =
-  sig min : Self;
+  signature min : Self;
   property min_right_absorbes: all x in Self,
     !equal(!inf(x, !min), !min);
   theorem min_left_absorbes: all x in Self,
@@ -653,7 +653,7 @@ A join semi lattice with a lower bound as neutral element for supremum.
 That is a join semi lattice with a monoid structure.
 *)
 species Join_semi_lattice_with_min inherits Join_semi_lattice =
-  sig min : Self;
+  signature min : Self;
   property min_is_right_neutral: all x in Self,
     !equal(!sup(x, !min), x);
   theorem min_is_left_neutral: all x in Self,
@@ -673,7 +673,7 @@ A join semi lattice with an upper bound.
 That is a join semi lattice with an absorbant element
 *)
 species Join_semi_lattice_with_max inherits Join_semi_lattice =
-  sig max : Self;
+  signature max : Self;
   property max_right_absorbes: all x in Self,
     !equal(!sup(x, !max), !max);
   theorem max_left_absorbes: all x in Self,
@@ -741,7 +741,7 @@ end
 (** An ordering is total whenever two elements are always comparable *)
 species Ordered_set inherits Partial_order =
 
-  property total_order: all x y in Self, Self!leq(x, y) or Self!leq(y, x);
+  property total_order: all x y in Self, Self!leq(x, y) \/ Self!leq(y, x);
 
   let equal(x, y) = and_b(Self!leq(x, y), Self!leq(y, x));
 
@@ -786,7 +786,7 @@ species Partially_ordered_set_as_meet_semi_lattice
        definition of order_inf;
 
   property inf_is_smaller: all x y in Self,
-    !leq(!inf(x, y), x) and !leq(!inf(x, y), y) ;
+    !leq(!inf(x, y), x) /\ !leq(!inf(x, y), y) ;
 
   property leq_defines_infimum: all x y i in Self,
     !leq(i, x) -> !leq(i, y) -> !leq(i, !inf(x, y));
@@ -868,7 +868,7 @@ species Partially_ordered_set_as_join_semi_lattice
 
   (**  a supremum should be bigger than its arguments *)
   property sup_is_bigger: all x y in Self,
-    !geq(!sup(x, y), x) and !geq(!sup(x, y), y)  ;
+    !geq(!sup(x, y), x) /\ !geq(!sup(x, y), y)  ;
 
   (** Anything bigger than a supremum is bigger than the supremum  *)
   property geq_defines_supremum: all x y s in Self,
@@ -1067,7 +1067,7 @@ species Ordered_set_as_meet_semi_lattice
                         <5>f qed
                              by step <5>1, <5>2
                                 property equal_transitive
-                  <4>2 assume H: not(!leq(y, x)),
+                  <4>2 assume H: ~(!leq(y, x)),
                         prove !equal(x, !inf(y, x))
                         by hypothesis H
                            property equal_reflexive
