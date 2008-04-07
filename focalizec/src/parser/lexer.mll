@@ -1,20 +1,22 @@
-(* $Id: lexer.mll,v 1.31 2008-04-06 10:08:28 weis Exp $ *)
+(* $Id: lexer.mll,v 1.32 2008-04-07 00:05:18 weis Exp $ *)
 
 {
 open Lexing;;
 open Parser;;
 
 type error =
+   | Comment_in_string
+   | Delimited_ident_in_string
+   | External_code_in_string
    | Illegal_character of char
    | Illegal_escape of string
-   | Unterminated_comment
    | Uninitiated_comment
+   | Uninitiated_delimited_ident
    | Uninitiated_external_code
-   | Unterminated_string
+   | Unterminated_comment
    | Unterminated_documentation
    | Unterminated_external_code
-   | Comment_in_string
-   | External_code_in_string
+   | Unterminated_string
 ;;
 
 exception Error of error * Lexing.position * Lexing.position;;
@@ -324,17 +326,19 @@ let mk_infixop s =
 open Format;;
 
 let string_of_lex_error = function
+  | Comment_in_string -> "Non escaped comment separator in string constant"
+  | Delimited_ident_in_string -> "Non escaped delimited ident separator in string constant"
+  | External_code_in_string -> "Non escaped external code separator in string constant"
   | Illegal_character c -> "Illegal character (" ^ (Char.escaped c) ^ ")"
   | Illegal_escape s ->
       "Illegal backslash escape in string or character (" ^ s ^ ")"
-  | Comment_in_string -> "Non escaped comment separator in string constant"
-  | External_code_in_string -> "Non escaped external code separator in string constant"
   | Uninitiated_comment -> "Comment has not started"
+  | Uninitiated_delimited_ident -> "Delimited ident has not started"
   | Uninitiated_external_code -> "External code has not started"
   | Unterminated_comment -> "Comment not terminated"
-  | Unterminated_string -> "String literal not terminated"
   | Unterminated_documentation -> "Documentation not terminated"
   | Unterminated_external_code -> "External code not terminated"
+  | Unterminated_string -> "String literal not terminated"
 ;;
 
 }
@@ -449,16 +453,16 @@ let regular_prefix_ident = start_prefix_ident continue_prefix_ident*
 (** Delimited identifiers. *)
 
 let delimited_lowercase_ident =
-  '`' '`' start_lowercase_ident [^'\'']* '\'' '\''
+  '`' '`' start_lowercase_ident [^'\'' '\n']* '\'' '\''
 
 let delimited_uppercase_ident =
-  '`' '`' start_uppercase_ident [^'\'']* '\'' '\''
+  '`' '`' start_uppercase_ident [^'\'' '\n']* '\'' '\''
 
 let delimited_infix_ident =
-  '`' '`' start_infix_ident [^'\'']* '\'' '\''
+  '`' '`' start_infix_ident [^'\'' '\n']* '\'' '\''
 
 let delimited_prefix_ident =
-  '`' '`' start_prefix_ident [^'\'']* '\'' '\''
+  '`' '`' start_prefix_ident [^'\'' '\n']* '\'' '\''
 
 let lowercase_ident =
     regular_lowercase_ident
@@ -500,12 +504,12 @@ rule token = parse
     { token lexbuf }
   | lowercase_ident
     { let s = Lexing.lexeme lexbuf in
-      try Hashtbl.find keyword_table s
-      with Not_found -> LIDENT s }
+      try Hashtbl.find keyword_table s with
+      | Not_found -> LIDENT s }
   | uppercase_ident
     { let s = Lexing.lexeme lexbuf in
-      try Hashtbl.find keyword_table s
-      with Not_found -> UIDENT s }
+      try Hashtbl.find keyword_table s with
+      | Not_found -> UIDENT s }
   | "\'" lowercase_ident
     { QIDENT (Lexing.lexeme lexbuf) }
   | int_literal
@@ -534,6 +538,15 @@ rule token = parse
       let esc = String.sub l 1 (String.length l - 1) in
       raise (Error
               (Illegal_escape esc, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
+  | "(**"
+    { reset_documentation_buffer ();
+      documentation_start_pos :=
+        Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
+      documentation lexbuf;
+      begin match !documentation_start_pos with
+      | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
+      | _ -> assert false end;
+      DOCUMENTATION (get_stored_documentation ()) }
   | "{*"
     { reset_external_code_buffer ();
       external_code_start_pos :=
@@ -548,15 +561,6 @@ rule token = parse
         (Error (Uninitiated_external_code,
                 lexbuf.lex_start_p,
                 lexbuf.lex_curr_p)) }
-  | "(**"
-    { reset_documentation_buffer ();
-      documentation_start_pos :=
-        Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
-      documentation lexbuf;
-      begin match !documentation_start_pos with
-      | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
-      | _ -> assert false end;
-      DOCUMENTATION (get_stored_documentation ()) }
   | "(*"
     { comment_start_pos := [ lexbuf.lex_start_p, lexbuf.lex_curr_p ];
       comment lexbuf;
@@ -594,6 +598,12 @@ rule token = parse
     { mk_infixop (Lexing.lexeme lexbuf) }
   | "(" [' ']+ (infix_ident as inner) [' ']+ ")"
     { ident_of_infixop inner }
+
+  | "''"
+    { raise
+        (Error (Uninitiated_delimited_ident,
+                lexbuf.lex_start_p,
+                lexbuf.lex_curr_p)) }
 
   | eof { EOF }
   | _
@@ -636,7 +646,7 @@ and string = parse
   | '\\' newline ([' ' '\t'] * as space)
     { update_loc lexbuf None 1 false (String.length space);
       string lexbuf }
-  | '\\' ['(' '\\' '\'' '"' 'n' 't' 'b' 'r' ' ' '*' ')']
+  | '\\' ['(' '\\' '`' '\'' '"' 'n' 't' 'b' 'r' ' ' '*' ')']
     { store_string_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
       string lexbuf }
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
@@ -652,9 +662,23 @@ and string = parse
            lexbuf.lex_start_p,
            lexbuf.lex_curr_p)) }
   | ( "(*" | "*)" )
-    { raise (Error (Comment_in_string, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
+    { raise
+        (Error
+           (Comment_in_string,
+            lexbuf.lex_start_p,
+            lexbuf.lex_curr_p)) }
   | ( "{*" | "*}" )
-    { raise (Error (External_code_in_string, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
+    { raise
+        (Error
+           (External_code_in_string,
+            lexbuf.lex_start_p,
+            lexbuf.lex_curr_p)) }
+  | ( "``" | "''" )
+    { raise
+        (Error
+           (Delimited_ident_in_string,
+            lexbuf.lex_start_p,
+            lexbuf.lex_curr_p)) }
   | ( newline | eof )
     { match !string_start_pos with
       | Some (start_pos, end_pos) ->
@@ -665,12 +689,12 @@ and string = parse
       string lexbuf }
 
 and documentation = parse
-  | ( "*)" )
+  | "*)"
     { () }
   | newline
     { update_loc lexbuf None 1 false 0;
       documentation lexbuf }
-  | ( eof )
+  | eof
     { match !documentation_start_pos with
       | Some (start_pos, end_pos) ->
         raise (Error (Unterminated_documentation, start_pos, end_pos))
@@ -680,12 +704,12 @@ and documentation = parse
       documentation lexbuf }
 
 and external_code = parse
-  | ( "*}" )
+  | "*}"
     { () }
   | newline
     { update_loc lexbuf None 1 false 0;
       external_code lexbuf }
-  | ( eof )
+  | eof
     { match !external_code_start_pos with
       | Some (start_pos, end_pos) ->
         raise (Error (Unterminated_external_code, start_pos, end_pos))
