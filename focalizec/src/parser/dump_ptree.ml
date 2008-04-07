@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.26 2008-04-05 18:02:07 weis Exp $ *)
+(* $Id: dump_ptree.ml,v 1.27 2008-04-07 12:31:11 pessaux Exp $ *)
 
 
 
@@ -593,7 +593,8 @@ and pp_proof_def ppf = pp_ast pp_proof_def_desc ppf
 
 and pp_termination_proof_def_desc ppf tpdd =
   Format.fprintf ppf "@[<2>{@ %a;@ %a@ }@]"
-    pp_termination_proof_profiles tpdd.Parsetree.tpd_profiles pp_termination_proof tpdd.Parsetree.tpd_termination_proof
+    pp_termination_proof_profiles tpdd.Parsetree.tpd_profiles
+    pp_termination_proof tpdd.Parsetree.tpd_termination_proof
 and pp_termination_proof_def ppf = pp_ast pp_termination_proof_def_desc ppf
 
 and pp_termination_proof_profiles ppf =
@@ -602,12 +603,14 @@ and pp_termination_proof_profiles ppf =
 and pp_termination_proof_profile_desc ppf tppd =
   Format.fprintf ppf "@[<2>{@ %a;@ %a@ }@]"
     pp_vname tppd.Parsetree.tpp_name pp_param_list tppd.Parsetree.tpp_args
-and pp_termination_proof_profile ppf = pp_ast pp_termination_proof_profile_desc ppf
+and pp_termination_proof_profile ppf =
+  pp_ast pp_termination_proof_profile_desc ppf
 
 
 and pp_property_def_desc ppf pdd =
   Format.fprintf ppf "@[<2>{@ %a;@ %a@ }@]"
-    pp_vname pdd.Parsetree.prd_name pp_logical_expr pdd.Parsetree.prd_logical_expr
+    pp_vname pdd.Parsetree.prd_name
+    pp_logical_expr pdd.Parsetree.prd_logical_expr
 and pp_property_def ppf = pp_ast pp_property_def_desc ppf
 
 
@@ -626,7 +629,8 @@ and pp_species_field_desc ppf = function
   | Parsetree.SF_proof proof_def ->
       Format.fprintf ppf "@[<2>SF_proof@ (%a)@]" pp_proof_def proof_def
   | Parsetree.SF_termination_proof termination_proof_def ->
-      Format.fprintf ppf "@[<2>SF_proof@ (%a)@]" pp_termination_proof_def termination_proof_def
+      Format.fprintf ppf "@[<2>SF_proof@ (%a)@]"
+        pp_termination_proof_def termination_proof_def
 and pp_species_fields ppf =
   Handy.pp_generic_separated_list "," pp_species_field ppf
 and pp_species_field ppf = pp_ast pp_species_field_desc ppf
@@ -765,16 +769,22 @@ and pp_logical_expr_desc ppf = function
       Format.fprintf ppf "@[<2>Pr_exists@ ([@ %a@ ],@ %a,@ %a)@]"
         pp_vnames vnames pp_type_expr type_expr_opt pp_logical_expr logical_expr
   | Parsetree.Pr_imply (p1, p2) ->
-      Format.fprintf ppf "@[<2>Pr_imply@ (%a,@ %a)@]" pp_logical_expr p1 pp_logical_expr p2
+      Format.fprintf ppf "@[<2>Pr_imply@ (%a,@ %a)@]"
+        pp_logical_expr p1 pp_logical_expr p2
   | Parsetree.Pr_or (p1, p2) ->
-      Format.fprintf ppf "@[<2>Pr_or@ (%a,@ %a)@]" pp_logical_expr p1 pp_logical_expr p2
+      Format.fprintf ppf "@[<2>Pr_or@ (%a,@ %a)@]"
+        pp_logical_expr p1 pp_logical_expr p2
   | Parsetree.Pr_and (p1, p2) ->
-      Format.fprintf ppf "@[<2>Pr_and@ (%a,@ %a)@]" pp_logical_expr p1 pp_logical_expr p2
+      Format.fprintf ppf "@[<2>Pr_and@ (%a,@ %a)@]"
+        pp_logical_expr p1 pp_logical_expr p2
   | Parsetree.Pr_equiv (p1, p2) ->
-      Format.fprintf ppf "@[<2>Pr_equiv@ (%a,@ %a)@]" pp_logical_expr p1 pp_logical_expr p2
-  | Parsetree.Pr_not p -> Format.fprintf ppf "@[<2>Pr_not@ (%a)@]" pp_logical_expr p
+      Format.fprintf ppf "@[<2>Pr_equiv@ (%a,@ %a)@]"
+        pp_logical_expr p1 pp_logical_expr p2
+  | Parsetree.Pr_not p ->
+      Format.fprintf ppf "@[<2>Pr_not@ (%a)@]" pp_logical_expr p
   | Parsetree.Pr_expr e -> Format.fprintf ppf "@[<2>Pr_expr@ (%a)@]" pp_expr e
-  | Parsetree.Pr_paren p -> Format.fprintf ppf "@[<2>Pr_paren@ (%a)@]" pp_logical_expr p
+  | Parsetree.Pr_paren p ->
+      Format.fprintf ppf "@[<2>Pr_paren@ (%a)@]" pp_logical_expr p
 and pp_logical_expr ppf = pp_ast pp_logical_expr_desc ppf
 
 
@@ -861,8 +871,9 @@ and pp_expr ppf = pp_ast pp_expr_desc ppf
 
 
 (* ************************************************************************** *)
-(* Format.formatter -> Parsetree.collection_def_desc -> unit                        *)
-(** {b Descr} : Pretty prints a [collection_def_desc] value as a Caml-like structure.
+(* Format.formatter -> Parsetree.collection_def_desc -> unit                  *)
+(** {b Descr} : Pretty prints a [collection_def_desc] value as a Caml-like
+    structure.
 
     {b Rem} : Not exported ouside this module.                                *)
 (* ************************************************************************** *)
@@ -970,7 +981,8 @@ let pp_phrase_desc ppf = function
   | Parsetree.Ph_species species_def ->
       Format.fprintf ppf "@[<2>Ph_species@ (%a)@]@ " pp_species_def species_def
   | Parsetree.Ph_collection collection_def ->
-      Format.fprintf ppf "@[<2>Ph_coll@ (%a)@]@ " pp_collection_def collection_def
+      Format.fprintf ppf "@[<2>Ph_coll@ (%a)@]@ "
+        pp_collection_def collection_def
   | Parsetree.Ph_type type_def ->
       Format.fprintf ppf "@[<2>Ph_type@ (%a)@]@ " pp_type_def type_def
   | Parsetree.Ph_let let_def ->

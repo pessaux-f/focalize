@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.43 2008-04-05 18:25:32 weis Exp $ *)
+(* $Id: scoping.ml,v 1.44 2008-04-07 12:31:11 pessaux Exp $ *)
 
 open Parsetree
 
@@ -157,6 +157,31 @@ exception Invalid_external_binding_number of Location.t ;;
 
 
 
+(* ********************************************************************* *)
+(** {b Descr} : Exception raised when a termination proof mentions a
+    structural decreasing ident that is not an argument of the function.
+
+    {b Rem} : Exported outside this module.                              *)
+(* ********************************************************************* *)
+exception Structural_termination_only_on_fun_arg of
+  (Location.t * Parsetree.vname)
+;;
+
+
+
+(* ********************************************************************* *)
+(** {b Descr} : Exception raised when a delayed termination proof uses a
+    profile mentionning a method identifier that is not bound to one of
+    the current species methods.
+
+    {b Rem} : Exported outside this module.                              *)
+(* ********************************************************************* *)
+exception Termination_proof_delayed_only_on_self_meth of
+  (Location.t *  Parsetree.vname)
+;;
+
+
+
 (* ************************************************************************* *)
 (** {b Descr} : Datastructure recording various the information required
               and propagated during the scoping pass. It is much more
@@ -262,9 +287,10 @@ let (extend_env_with_implicit_gen_vars_from_type_exprs,
      extend_env_with_implicit_gen_vars_from_logical_expr) =
   (* List of the variables names already seen to prevent them to be inserted *)
   (* multiple times in the scoping environment. This list is shared between  *)
-  (* the processing of both the [logical_expr]s and the [type_expr]'s because a      *)
-  (* [logical_expr] may contain [type_expr]s and we don't want to pass and return    *)
-  (* each time the list of the "seen variables". This make the code easier.  *)
+  (* the processing of both the [logical_expr]s and the [type_expr]'s        *)
+  (* because a [logical_expr] may contain [type_expr]s and we don't want to  *)
+  (* pass and return each time the list of the "seen variables". This make   *)
+  (* the code easier.                                                        *)
   let seen_vars = ref [] in
 
   (* ******************************************************** *)
@@ -761,12 +787,188 @@ let scope_type_def ctx env ty_def =
 
 
 (* *********************************************************************** *)
+(** {b Descr} : Check if the [vname] can successfully be scoped as a local
+    ident in the current environment. This is used several times when we
+    just need to ensure that a [vname] really corresponds to a locally
+    bound name.
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+let can_be_scoped_as_local_p ctx env ~loc vname =
+  (* We embedd the [vname] inside a dummy [ident] in order to lookup. *)
+  let fake_ident = {
+    (* Must be a local ident of the function. *)
+    Parsetree.ast_desc = Parsetree.EI_local vname ;
+    (* Roughly correction as a location, even is not exact. *)
+    Parsetree.ast_loc = loc ;
+    Parsetree.ast_doc = [] ;
+    Parsetree.ast_type = Parsetree.ANTI_none } in
+  let hosting_info =
+      Env.ScopingEnv.find_value
+        ~loc ~current_unit: ctx.current_unit fake_ident env in
+   match hosting_info with
+     | Env.ScopeInformation.SBI_file _
+     | Env.ScopeInformation.SBI_method_of_self
+     | Env.ScopeInformation.SBI_method_of_coll _ -> false
+     | Env.ScopeInformation.SBI_local -> true
+;;
+
+
+
+(* *********************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.fact -> Parsetree.fact *)
+(* {b Descr} : Scopes a [fact] and return this scoped fact].
+
+   {b Rem} : Not exported outside this module.                             *)
+(* *********************************************************************** *)
+let rec scope_fact ctx env fact =
+  let new_desc =
+    (match fact.Parsetree.ast_desc with
+     | Parsetree.F_definition idents ->
+         (begin
+         let scoped_idents =
+           List.map
+             (fun ident ->
+               let basic_vname = unqualified_vname_of_expr_ident ident in
+               let scope_info =
+                 Env.ScopingEnv.find_value
+                   ~loc: ident.Parsetree.ast_loc
+                   ~current_unit: ctx.current_unit ident env in
+               let tmp =
+                 scoped_expr_ident_desc_from_value_binding_info
+                   ~basic_vname scope_info in
+               { ident with Parsetree.ast_desc = tmp })
+             idents in
+         Parsetree.F_definition scoped_idents
+         end)
+     | Parsetree.F_property idents ->
+         (begin
+         let scoped_idents =
+           List.map
+             (fun ident ->
+               let basic_vname = unqualified_vname_of_expr_ident ident in
+               let scope_info =
+                 Env.ScopingEnv.find_value
+                   ~loc: ident.Parsetree.ast_loc
+                   ~current_unit: ctx.current_unit ident env in
+               let tmp =
+                 scoped_expr_ident_desc_from_value_binding_info
+                   ~basic_vname scope_info in
+               { ident with Parsetree.ast_desc = tmp })
+             idents in
+         Parsetree.F_property scoped_idents
+         end)
+     | Parsetree.F_hypothesis _  (* Only vnames, so nothing to scope... *)
+     | Parsetree.F_node _ ->
+         (* [Unsure] They MUST be scoped in order to ensure they exist !
+            TODO ! *)
+         fact.Parsetree.ast_desc) in
+  { fact with Parsetree.ast_desc = new_desc }
+
+
+
+(* ********************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.hyp ->                *)
+(*   (Env.ScopingEnv.t * (Parsetree.hyp list))                            *)
+(** {b Descr} : Scopes a list of [hyp]s and insert them in the current
+              environment. Returns the list of scoped [hyp]s and the
+              initial environment extended with all these hypotheses.
+              This environment will then be suitable to be used by
+              [scope_statement] in order to scope the body of a statement
+              under these hypotheses.
+
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
+and scope_hyps ctx env hyps =
+  List.fold_left
+    (fun (accu_env, accu_scoped_hyps) hyp ->
+      let hyp_desc = hyp.Parsetree.ast_desc in
+      let (new_desc, accu_env') =
+        (begin
+        match hyp_desc with
+         | Parsetree.H_variable (vname, type_expr) ->
+             let scoped_type_expr = scope_type_expr ctx accu_env type_expr in
+             let env' =
+               Env.ScopingEnv.add_value
+                 vname Env.ScopeInformation.SBI_local accu_env in
+             ((Parsetree.H_variable (vname, scoped_type_expr)), env')
+         | Parsetree.H_hypothesis (vname, logical_expr) ->
+             let scoped_logical_expr =
+               scope_logical_expr ctx accu_env logical_expr in
+             let env' =
+               Env.ScopingEnv.add_value
+                vname Env.ScopeInformation.SBI_local accu_env in
+             ((Parsetree.H_hypothesis (vname, scoped_logical_expr)), env')
+         | Parsetree.H_notation (vname, expr) ->
+             let scoped_expr = scope_expr ctx accu_env expr in
+             let env' =
+               Env.ScopingEnv.add_value
+                 vname Env.ScopeInformation.SBI_local accu_env in
+             ((Parsetree.H_notation (vname, scoped_expr)), env')
+        end) in
+      (accu_env',
+       { hyp with Parsetree.ast_desc = new_desc } :: accu_scoped_hyps))
+    (env, [])
+    hyps
+
+
+
+and scope_statement ctx env stmt =
+  let stmt_desc = stmt.Parsetree.ast_desc in
+  let (env', scoped_hyps) = scope_hyps ctx env stmt_desc.Parsetree.s_hyps in
+  let scoped_concl =
+    (match stmt_desc.Parsetree.s_concl with
+     | None -> None
+     | Some logical_expr -> Some (scope_logical_expr ctx env' logical_expr)) in
+  let scoped_stmt_desc = {
+    Parsetree.s_hyps = scoped_hyps; Parsetree.s_concl = scoped_concl } in
+  ({ stmt with Parsetree.ast_desc = scoped_stmt_desc }, env')
+
+
+
+(* ********************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.proof_node ->         *)
+(*   Parsetree.proof_node                                                 *)
+(** {b Descr} : Scopes a [proof_node] and returns a scoped version of it.
+
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
+and scope_proof_node ctx env node =
+  let new_desc =
+    (match node.Parsetree.ast_desc with
+     | Parsetree.PN_sub (node_label, stmt, proof) ->
+         (* Get the environment extended by the scoping of the statement. *)
+         (* In effect, a statement may have hypothesis hence bind idents. *)
+         let (scoped_stmt, env') = scope_statement ctx env stmt in
+         let scoped_proof = scope_proof ctx env' proof in
+         Parsetree.PN_sub (node_label, scoped_stmt, scoped_proof)
+     | Parsetree.PN_qed (node_label, proof) ->
+         let scoped_proof = scope_proof ctx env proof in
+         Parsetree.PN_qed (node_label, scoped_proof)) in
+  { node with Parsetree.ast_desc = new_desc }
+
+
+
+and scope_proof ctx env proof =
+  let new_desc =
+    (match proof.Parsetree.ast_desc with
+     | Parsetree.Pf_assumed
+     | Parsetree.Pf_coq _ -> proof.Parsetree.ast_desc  (* Nothing to scope. *)
+     | Parsetree.Pf_auto facts ->
+         Parsetree.Pf_auto (List.map (scope_fact ctx env) facts)
+     | Parsetree.Pf_node proof_nodes ->
+         Parsetree.Pf_node (List.map (scope_proof_node ctx env) proof_nodes)) in
+  { proof with Parsetree.ast_desc = new_desc }
+
+
+
+(* *********************************************************************** *)
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.expr -> Parsetree.expr *)
 (* {b Descr} : Scopes an [expr] and returns this scoped [expr].
 
    {b Rem} : Not exported outside this module.                             *)
 (* *********************************************************************** *)
-let rec scope_expr ctx env expr =
+and scope_expr ctx env expr =
   let new_desc =
     (match expr.Parsetree.ast_desc with
      | Parsetree.E_self
@@ -955,6 +1157,69 @@ and scope_pattern ctx env pattern =
 
 
 
+and scope_termination_proof ctx env tp =
+  match tp.Parsetree.ast_desc with
+   | Parsetree.TP_structural arg_name ->
+       (* Here, location is not exact but is roughly sufficient *)
+       (* to allow the user to pinpoint where is the problem.   *)
+       if can_be_scoped_as_local_p
+           ctx env ~loc: tp.Parsetree.ast_loc arg_name then tp
+       else
+         (* Wrong ! The structural argument must be an argument *)
+         (* locally bound by the function defintion !           *)
+         raise
+           (Structural_termination_only_on_fun_arg
+              (tp.Parsetree.ast_loc, arg_name))
+   | Parsetree.TP_lexicographic facts ->
+       { tp with
+         Parsetree.ast_desc =
+           Parsetree.TP_lexicographic (List.map (scope_fact ctx env) facts) }
+   | Parsetree.TP_measure (expr, args, proof) ->
+       let scoped_expr = scope_expr ctx env expr in
+       let scoped_args =
+         List.map
+           (fun (arg_name, arg_type) ->
+             (* Same remark than above for the approximative location. *)
+             if not
+                 (can_be_scoped_as_local_p
+                    ctx env ~loc: tp.Parsetree.ast_loc arg_name) then
+               raise
+                 (Structural_termination_only_on_fun_arg
+                    (tp.Parsetree.ast_loc, arg_name)) ;
+             let scoped_arg_ty =
+               match arg_type with
+                | None -> None
+                | Some ty -> Some (scope_type_expr ctx env ty) in
+             (arg_name, scoped_arg_ty))
+           args in
+       let scoped_proof = scope_proof ctx env proof in
+       { tp with
+         Parsetree.ast_desc =
+           Parsetree.TP_measure (scoped_expr, scoped_args, scoped_proof) }
+   | Parsetree.TP_order (expr, args, proof) ->
+       let scoped_expr = scope_expr ctx env expr in
+       let scoped_args =
+         List.map
+           (fun (arg_name, arg_type) ->
+             if not
+                 (can_be_scoped_as_local_p
+                    ctx env ~loc: tp.Parsetree.ast_loc arg_name) then
+               raise
+                 (Structural_termination_only_on_fun_arg
+                    (tp.Parsetree.ast_loc, arg_name)) ;
+             let scoped_arg_ty =
+               match arg_type with
+                | None -> None
+                | Some ty -> Some (scope_type_expr ctx env ty) in
+             (arg_name, scoped_arg_ty))
+           args in
+       let scoped_proof = scope_proof ctx env proof in
+       { tp with
+         Parsetree.ast_desc =
+           Parsetree.TP_order (scoped_expr, scoped_args, scoped_proof) }
+
+
+
 (* **************************************************************** *)
 (* toplevel_let: bool -> scoping_context -> Env.ScopingEnv.t ->     *)
 (*   Parsetree.let_def -> (Parsetree.let_def * Env.ScopingEnv.t *   *)
@@ -1042,15 +1307,16 @@ and scope_let_definition ~toplevel_let ctx env let_def =
                   (scope_type_expr ctx env_with_ty_constraints_variables tye) in
           (param_vname, scoped_tye_opt))
         let_binding_descr.Parsetree.b_params in
-    (* Now scope the body. We ensure that bindings of a non-logical let      *)
-    (* are logical_exprs of the form [Pr_expr] and if so, we remove this constructor *)
-    (* and turn the binding_body to a [BB_computational].                    *)
+    (* Now scope the body. We ensure that bindings of a non-logical let  *)
+    (* are logical_exprs of the form [Pr_expr] and if so, we remove this *)
+    (* constructor and turn the binding_body to a [BB_computational].    *)
     let scoped_body =
       (match let_binding_descr.Parsetree.b_body with
        | Parsetree.BB_logical logical_expr ->
            if let_def_descr.Parsetree.ld_logical = Parsetree.LF_logical then
              Parsetree.BB_logical
-               (scope_logical_expr ctx env_with_ty_constraints_variables logical_expr)
+               (scope_logical_expr
+                  ctx env_with_ty_constraints_variables logical_expr)
            else
              (begin
              match logical_expr.Parsetree.ast_desc with
@@ -1074,13 +1340,21 @@ and scope_let_definition ~toplevel_let ctx env let_def =
        | None -> None
        | Some tye ->
            Some (scope_type_expr ctx env_with_ty_constraints_variables tye)) in
+    (* Now, scope the optional termination proof. *)
+    let scoped_termination_proof =
+      match let_binding_descr.Parsetree.b_termination_proof with
+       | None -> None
+       | Some tp ->
+           Some
+             (scope_termination_proof
+               ctx env_with_ty_constraints_variables tp) in
     let new_binding_desc =
       { let_binding_descr with
-          Parsetree.b_params = scoped_b_params;
-          Parsetree.b_type = scoped_b_type;
-          Parsetree.b_body = scoped_body } in
+          Parsetree.b_params = scoped_b_params ;
+          Parsetree.b_type = scoped_b_type ;
+          Parsetree.b_body = scoped_body ;
+          Parsetree.b_termination_proof = scoped_termination_proof } in
     { let_binding with Parsetree.ast_desc = new_binding_desc } in
-
   let scoped_bindings =
     List.map scope_binding let_def_descr.Parsetree.ld_bindings in
   (* An finally be return the scoped let-definition *)
@@ -1153,18 +1427,21 @@ and scope_logical_expr ctx env logical_expr =
          Parsetree.Pr_equiv (scoped_p1, scoped_p2)
      | Parsetree.Pr_not p -> Parsetree.Pr_not (scope_logical_expr ctx env p)
      | Parsetree.Pr_expr expr -> Parsetree.Pr_expr (scope_expr ctx env expr)
-     | Parsetree.Pr_paren p -> Parsetree.Pr_paren (scope_logical_expr ctx env p)) in
+     | Parsetree.Pr_paren p ->
+         Parsetree.Pr_paren (scope_logical_expr ctx env p)) in
   { logical_expr with Parsetree.ast_desc = new_desc }
 ;;
+
 
 
 let (extend_env_with_implicit_gen_vars_from_type_expr,
      extend_env_with_implicit_gen_vars_from_logical_expr) =
   (* List of the variables names already seen to prevent them to be inserted *)
   (* multiple times in the scoping environment. This list is shared between  *)
-  (* the processing of both the [logical_expr]s and the [type_expr]'s because a      *)
-  (* [logical_expr] may contain [type_expr]s and we don't want to pass and return    *)
-  (* each time the list of the "seen variables". This make the code easier.  *)
+  (* the processing of both the [logical_expr]s and the [type_expr]'s        *)
+  (* because a [logical_expr] may contain [type_expr]s and we don't want to  *)
+  (* pass and return each time the list of the "seen variables". This make   *)
+  (* the code easier.                                                        *)
   let seen_vars = ref [] in
 
   (* ******************************************************** *)
@@ -1215,13 +1492,16 @@ let (extend_env_with_implicit_gen_vars_from_type_expr,
      | Parsetree.Pr_or (logical_expr1, logical_expr2)
      | Parsetree.Pr_and (logical_expr1, logical_expr2)
      | Parsetree.Pr_equiv (logical_expr1, logical_expr2) ->
-         let env_from_logical_expr1 = rec_extend_logical_expr logical_expr1 accu_env in
+         let env_from_logical_expr1 =
+           rec_extend_logical_expr logical_expr1 accu_env in
          rec_extend_logical_expr logical_expr2 env_from_logical_expr1
      | Parsetree.Pr_not logical_expr
-     | Parsetree.Pr_paren logical_expr -> rec_extend_logical_expr logical_expr accu_env
+     | Parsetree.Pr_paren logical_expr ->
+         rec_extend_logical_expr logical_expr accu_env
      | Parsetree.Pr_expr _ ->
          (* Inside expressions type variable must be bound by the previous *)
-         (* parts of the logical_expr ! Hence, do not continue searching inside.   *)
+         (* parts of the logical_expr ! Hence, do not continue searching   *)
+         (* inside.                                                        *)
          accu_env in
 
   (
@@ -1251,9 +1531,9 @@ let (extend_env_with_implicit_gen_vars_from_type_expr,
 
    (* *********************************************************************** *)
    (** {b Descr} : Insert in the scoping environment the variables present
-              in a type parts of a [logical_expr], considering they are implicitely
-              generalized. This is used when one creates a type structure
-              from a theorem expression.
+              in a type parts of a [logical_expr], considering they are
+              implicitely generalized. This is used when one creates a type
+              structure from a theorem expression.
               In effect, in such a context, variables in the type are
               implicitely considered as generalized because the type
               constraint annotating the theorem does not show explicitly
@@ -1282,157 +1562,10 @@ let scope_sig_def ctx env sig_def =
     sig_def with
       Parsetree.ast_desc = {
         sig_def.Parsetree.ast_desc with
-           Parsetree.sig_name = sig_def_descr.Parsetree.sig_name;
-           Parsetree.sig_type = scoped_type;
-      }
+           Parsetree.sig_name = sig_def_descr.Parsetree.sig_name ;
+           Parsetree.sig_type = scoped_type }
   } in
   (scoped_sig_def, sig_def_descr.Parsetree.sig_name)
-;;
-
-
-
-(* *********************************************************************** *)
-(* scoping_context -> Env.ScopingEnv.t -> Parsetree.fact -> Parsetree.fact *)
-(* {b Descr} : Scopes a [fact] and return this scoped fact].
-
-   {b Rem} : Not exported outside this module.                             *)
-(* *********************************************************************** *)
-let scope_fact ctx env fact =
-  let new_desc =
-    (match fact.Parsetree.ast_desc with
-     | Parsetree.F_definition idents ->
-         (begin
-         let scoped_idents =
-           List.map
-             (fun ident ->
-               let basic_vname = unqualified_vname_of_expr_ident ident in
-               let scope_info =
-                 Env.ScopingEnv.find_value
-                   ~loc: ident.Parsetree.ast_loc
-                   ~current_unit: ctx.current_unit ident env in
-               let tmp =
-                 scoped_expr_ident_desc_from_value_binding_info
-                   ~basic_vname scope_info in
-               { ident with Parsetree.ast_desc = tmp })
-             idents in
-         Parsetree.F_definition scoped_idents
-         end)
-     | Parsetree.F_property idents ->
-         (begin
-         let scoped_idents =
-           List.map
-             (fun ident ->
-               let basic_vname = unqualified_vname_of_expr_ident ident in
-               let scope_info =
-                 Env.ScopingEnv.find_value
-                   ~loc: ident.Parsetree.ast_loc
-                   ~current_unit: ctx.current_unit ident env in
-               let tmp =
-                 scoped_expr_ident_desc_from_value_binding_info
-                   ~basic_vname scope_info in
-               { ident with Parsetree.ast_desc = tmp })
-             idents in
-         Parsetree.F_property scoped_idents
-         end)
-     | Parsetree.F_hypothesis _  (* Only vnames, so nothing to scope... *)
-     | Parsetree.F_node _ -> fact.Parsetree.ast_desc) in
-  { fact with Parsetree.ast_desc = new_desc }
-;;
-
-
-
-(* ********************************************************************** *)
-(* scoping_context -> Env.ScopingEnv.t -> Parsetree.hyp ->                *)
-(*   (Env.ScopingEnv.t * (Parsetree.hyp list))                            *)
-(** {b Descr} : Scopes a list of [hyp]s and insert them in the current
-              environment. Returns the list of scoped [hyp]s and the
-              initial environment extended with all these hypotheses.
-              This environment will then be suitable to be used by
-              [scope_statement] in order to scope the body of a statement
-              under these hypotheses.
-
-    {b Rem} : Not exported outside this module.                           *)
-(* ********************************************************************** *)
-let scope_hyps ctx env hyps =
-  List.fold_left
-    (fun (accu_env, accu_scoped_hyps) hyp ->
-      let hyp_desc = hyp.Parsetree.ast_desc in
-      let (new_desc, accu_env') =
-        (begin
-        match hyp_desc with
-         | Parsetree.H_variable (vname, type_expr) ->
-             let scoped_type_expr = scope_type_expr ctx accu_env type_expr in
-             let env' =
-               Env.ScopingEnv.add_value
-                 vname Env.ScopeInformation.SBI_local accu_env in
-             ((Parsetree.H_variable (vname, scoped_type_expr)), env')
-         | Parsetree.H_hypothesis (vname, logical_expr) ->
-             let scoped_logical_expr = scope_logical_expr ctx accu_env logical_expr in
-             let env' =
-               Env.ScopingEnv.add_value
-                vname Env.ScopeInformation.SBI_local accu_env in
-             ((Parsetree.H_hypothesis (vname, scoped_logical_expr)), env')
-         | Parsetree.H_notation (vname, expr) ->
-             let scoped_expr = scope_expr ctx accu_env expr in
-             let env' =
-               Env.ScopingEnv.add_value
-                 vname Env.ScopeInformation.SBI_local accu_env in
-             ((Parsetree.H_notation (vname, scoped_expr)), env')
-        end) in
-      (accu_env',
-       { hyp with Parsetree.ast_desc = new_desc } :: accu_scoped_hyps))
-    (env, [])
-    hyps
-;;
-
-
-let scope_statement ctx env stmt =
-  let stmt_desc = stmt.Parsetree.ast_desc in
-  let (env', scoped_hyps) = scope_hyps ctx env stmt_desc.Parsetree.s_hyps in
-  let scoped_concl =
-    (match stmt_desc.Parsetree.s_concl with
-     | None -> None
-     | Some logical_expr -> Some (scope_logical_expr ctx env' logical_expr)) in
-  let scoped_stmt_desc = {
-    Parsetree.s_hyps = scoped_hyps; Parsetree.s_concl = scoped_concl } in
-  ({ stmt with Parsetree.ast_desc = scoped_stmt_desc }, env')
-;;
-
-
-
-(* ********************************************************************** *)
-(* scoping_context -> Env.ScopingEnv.t -> Parsetree.proof_node ->         *)
-(*   Parsetree.proof_node                                                 *)
-(** {b Descr} : Scopes a [proof_node] and returns a scoped version of it.
-
-    {b Rem} : Not exported outside this module.                           *)
-(* ********************************************************************** *)
-let rec scope_proof_node ctx env node =
-  let new_desc =
-    (match node.Parsetree.ast_desc with
-     | Parsetree.PN_sub (node_label, stmt, proof) ->
-         (* Get the environment extended by the scoping of the statement. *)
-         (* In effect, a statement may have hypothesis hence bind idents. *)
-         let (scoped_stmt, env') = scope_statement ctx env stmt in
-         let scoped_proof = scope_proof ctx env' proof in
-         Parsetree.PN_sub (node_label, scoped_stmt, scoped_proof)
-     | Parsetree.PN_qed (node_label, proof) ->
-         let scoped_proof = scope_proof ctx env proof in
-         Parsetree.PN_qed (node_label, scoped_proof)) in
-  { node with Parsetree.ast_desc = new_desc }
-
-
-
-and scope_proof ctx env proof =
-  let new_desc =
-    (match proof.Parsetree.ast_desc with
-     | Parsetree.Pf_assumed
-     | Parsetree.Pf_coq _ -> proof.Parsetree.ast_desc  (* Nothing to scope. *)
-     | Parsetree.Pf_auto facts ->
-         Parsetree.Pf_auto (List.map (scope_fact ctx env) facts)
-     | Parsetree.Pf_node proof_nodes ->
-         Parsetree.Pf_node (List.map (scope_proof_node ctx env) proof_nodes)) in
-  { proof with Parsetree.ast_desc = new_desc }
 ;;
 
 
@@ -1442,7 +1575,8 @@ let scope_theorem_def ctx env theo_def =
   let env' =
     extend_env_with_implicit_gen_vars_from_logical_expr
       env theo_def_desc.Parsetree.th_stmt in
-  let scoped_stmt = scope_logical_expr ctx env' theo_def_desc.Parsetree.th_stmt in
+  let scoped_stmt =
+    scope_logical_expr ctx env' theo_def_desc.Parsetree.th_stmt in
   let scoped_proof = scope_proof ctx env' theo_def_desc.Parsetree.th_proof in
   let scoped_theo_def_desc = {
     Parsetree.th_name = theo_def_desc.Parsetree.th_name;
@@ -1461,8 +1595,72 @@ let scope_proof_def ctx env proof_def =
   let scoped_proof_def_desc = {
     Parsetree.pd_name = proof_def_desc.Parsetree.pd_name;
     Parsetree.pd_proof = scoped_proof } in
-  ({ proof_def with Parsetree.ast_desc = scoped_proof_def_desc },
-   proof_def_desc.Parsetree.pd_name)
+  { proof_def with Parsetree.ast_desc = scoped_proof_def_desc }
+;;
+
+
+
+let scope_termination_proof_profile ctx env profile =
+  let profile_desc = profile.Parsetree.ast_desc in
+  (* One must first search the function name in the environment.      *)
+  (* We embedd the [vname] inside a dummy [ident] in order to lookup. *)
+  let fake_ident = {
+    Parsetree.ast_desc = Parsetree.EI_local profile_desc.Parsetree.tpp_name ;
+    (* Roughly correction as a location, even is not exact. *)
+    Parsetree.ast_loc = profile.Parsetree.ast_loc ;
+    Parsetree.ast_doc = [] ;
+    Parsetree.ast_type = Parsetree.ANTI_none } in
+  let hosting_info =
+    Env.ScopingEnv.find_value
+      ~loc: profile.Parsetree.ast_loc ~current_unit: ctx.current_unit
+      fake_ident env in
+  match hosting_info with
+   | Env.ScopeInformation.SBI_method_of_self ->
+       (begin
+       (* One can only enounce a delayed termination *)
+       (* proof of method for the current species.   *)
+       (* Now, we should ensure that the parameters provided in the profile *)
+       (* really exist among the method's parameters. But since we do not   *)
+       (* have the previous fields available here, this will be delayed at  *)
+       (* typing -stage.                                                    *)
+       (* We only scope the types if some are specified.                    *)
+       Format.eprintf "Eh, Didou remind to check termination proof args at \
+         typing-stage@." ;
+       let scoped_args =
+         List.map
+           (fun (arg_name, arg_ty) ->
+             let scoped_ty =
+               match arg_ty with
+                | None -> None
+                | Some t -> Some (scope_type_expr ctx env t) in
+             (arg_name, scoped_ty))
+           profile_desc.Parsetree.tpp_args in
+       let scoped_desc = { profile_desc with
+         Parsetree.tpp_args = scoped_args } in
+       { profile with Parsetree.ast_desc = scoped_desc }
+       end)
+   | Env.ScopeInformation.SBI_file _
+   | Env.ScopeInformation.SBI_method_of_coll _
+   | Env.ScopeInformation.SBI_local ->
+       raise
+         (Termination_proof_delayed_only_on_self_meth
+            (profile.Parsetree.ast_loc, profile_desc.Parsetree.tpp_name))
+;;
+
+
+
+let scope_termination_proof_def ctx env termination_proof_def =
+  let desc = termination_proof_def.Parsetree.ast_desc in
+  let scoped_term_proof_profiles =
+    List.map
+      (scope_termination_proof_profile ctx env) desc.Parsetree.tpd_profiles in
+  let scoped_termination_proof =
+    scope_termination_proof ctx env desc.Parsetree.tpd_termination_proof in
+  { termination_proof_def with
+      Parsetree.ast_desc = {
+        Parsetree.tpd_profiles = scoped_term_proof_profiles ;
+        Parsetree.tpd_termination_proof = scoped_termination_proof }
+  }
 ;;
 
 
@@ -1477,7 +1675,8 @@ let scope_proof_def ctx env proof_def =
 (* ******************************************************************* *)
 let scope_property_def ctx env property_def =
   let property_def_desc = property_def.Parsetree.ast_desc in
-  let scoped_logical_expr = scope_logical_expr ctx env property_def_desc.Parsetree.prd_logical_expr in
+  let scoped_logical_expr =
+    scope_logical_expr ctx env property_def_desc.Parsetree.prd_logical_expr in
   let scoped_property_def = {
     property_def with
       Parsetree.ast_desc = {
@@ -1495,8 +1694,9 @@ let scope_property_def ctx env property_def =
 (* {b Descr} : Scopes a species field and return both the scoped
              field and its names as a [vname list] they must be
              inserted later in the scoping environment as a values.
-             Especially, [rep] and [proof] are not methods hence are
-             not values to bind in the environment.
+             Especially, [rep] and [proof] and [termination_proof]
+             are not methods hence are not values to bind in the
+             environment.
 
    {b Rem} : Not exported outside this module.                       *)
 (* ***************************************************************** *)
@@ -1520,10 +1720,12 @@ let scope_species_field ctx env field =
          let (scoped_theo, name) = scope_theorem_def ctx env theo_def in
          ((Parsetree.SF_theorem scoped_theo), [name])
      | Parsetree.SF_proof proof_def ->
-         let (scoped_proof_def, name) = scope_proof_def ctx env proof_def in
-         ((Parsetree.SF_proof scoped_proof_def), [name])
-     | Parsetree.SF_termination_proof _termination_proof_def ->
-         failwith "Not yet implemented") in
+         let scoped_proof_def = scope_proof_def ctx env proof_def in
+         ((Parsetree.SF_proof scoped_proof_def), [])
+     | Parsetree.SF_termination_proof termination_proof_def ->
+         let scoped_termination_proof_def =
+           scope_termination_proof_def ctx env termination_proof_def in
+         ((Parsetree.SF_termination_proof scoped_termination_proof_def), [])) in
   ({ field with Parsetree.ast_desc = new_desc }, method_name_opt)
 ;;
 

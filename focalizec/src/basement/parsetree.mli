@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.33 2008-04-05 18:00:31 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.34 2008-04-07 12:31:11 pessaux Exp $ *)
 
 (** {2 The Focalize abstract syntax tree.} *)
 
@@ -447,8 +447,8 @@ and termination_proof_def_desc = {
 }
 and termination_proof_profile = termination_proof_profile_desc ast
 and termination_proof_profile_desc = {
-  tpp_name : vname;
-  tpp_args : param_list;
+  tpp_name : vname;       (** The function's name. *)
+  tpp_args : param_list;  (** The function's parameters. *)
 }
 ;;
 
