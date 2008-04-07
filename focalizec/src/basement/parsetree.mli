@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.34 2008-04-07 12:31:11 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.35 2008-04-07 13:28:48 pessaux Exp $ *)
 
 (** {2 The Focalize abstract syntax tree.} *)
 
@@ -307,10 +307,11 @@ and expr_desc =
 
 and let_def = let_def_desc ast
 and let_def_desc = {
-  ld_rec : rec_flag;
-  ld_logical : logical_flag;
-  ld_local : local_flag;
-  ld_bindings : binding list;
+  ld_rec : rec_flag ;
+  ld_logical : logical_flag ;
+  ld_local : local_flag ;
+  ld_bindings : binding list ;
+  ld_termination_proof : termination_proof option
 }
 
 and param_list = (vname * type_expr option) list
@@ -323,8 +324,7 @@ and binding_desc = {
   b_name : vname;
   b_params : param_list;
   b_type : type_expr option;
-  b_body : binding_body;
-  b_termination_proof : termination_proof option;
+  b_body : binding_body
 }
 
 (** {6 Propositions.} *)

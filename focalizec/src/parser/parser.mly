@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.84 2008-04-07 00:48:50 weis Exp $ *)
+(* $Id: parser.mly,v 1.85 2008-04-07 13:28:48 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -539,11 +539,11 @@ def_collection:
 
 let_binding:
   | opt_local LET binding
-    { mk { ld_rec = RF_no_rec; ld_logical = LF_no_logical; ld_local = $1;
-           ld_bindings = [ $3 ]} }
-  | opt_local LET REC binding following_binding_list
-    { mk { ld_rec = RF_rec; ld_logical = LF_no_logical; ld_local = $1;
-           ld_bindings = $4 :: $5; } }
+    { mk { ld_rec = RF_no_rec ; ld_logical = LF_no_logical ; ld_local = $1 ;
+           ld_bindings = [$3] ; ld_termination_proof = None } }
+  | opt_local LET REC binding following_binding_list opt_termination_proof
+    { mk { ld_rec = RF_rec; ld_logical = LF_no_logical; ld_local = $1 ;
+           ld_bindings = $4 :: $5 ; ld_termination_proof = $6 } }
 ;
 
 def_let:
@@ -569,46 +569,35 @@ def_logical:
 
   The only exception is for externals that are never logical bindings ! */
 binding:
-  | bound_vname EQUAL logical_expr termination_proof_opt
+ | bound_vname EQUAL logical_expr
     { mk {
-        b_name = $1; b_params = []; b_type = None;
-        b_body = Parsetree.BB_logical $3;
-        b_termination_proof = $4;
-      }
+        b_name = $1 ; b_params = [] ; b_type = None ;
+        b_body = Parsetree.BB_logical $3 }
     }
-
   | bound_vname EQUAL INTERNAL type_expr EXTERNAL external_expr
     { mk {
         b_name = $1; b_params = []; b_type = Some $4;
-        b_body = Parsetree.BB_computational (mk (E_external $6));
-        b_termination_proof = None;
-      }
+        b_body = Parsetree.BB_computational (mk (E_external $6)) }
     }
-  | bound_vname IN type_expr EQUAL logical_expr termination_proof_opt
+  | bound_vname IN type_expr EQUAL logical_expr
     { mk {
-        b_name = $1; b_params = []; b_type = Some $3;
-        b_body = Parsetree.BB_logical $5;
-        b_termination_proof = $6;
-      }
+        b_name = $1 ; b_params = [] ; b_type = Some $3 ;
+        b_body = Parsetree.BB_logical $5 }
     }
-  | bound_vname LPAREN param_list RPAREN EQUAL logical_expr termination_proof_opt
+  | bound_vname LPAREN param_list RPAREN EQUAL logical_expr
     { mk {
-        b_name = $1; b_params = $3; b_type = None;
-        b_body = Parsetree.BB_logical $6;
-        b_termination_proof = $7;
-      }
+        b_name = $1 ; b_params = $3 ; b_type = None ;
+        b_body = Parsetree.BB_logical $6 }
     }
   | bound_vname LPAREN param_list RPAREN IN type_expr
-    EQUAL logical_expr termination_proof_opt
+    EQUAL logical_expr
     { mk {
-        b_name = $1; b_params = $3; b_type = Some $6;
-        b_body = Parsetree.BB_logical $8;
-        b_termination_proof = $9;
-      }
+        b_name = $1 ; b_params = $3 ; b_type = Some $6 ;
+        b_body = Parsetree.BB_logical $8 }
     }
 ;
 
-termination_proof_opt:
+opt_termination_proof:
   | { None }
   | TERMINATION PROOF COLON termination_proof { Some $4 }
 ;

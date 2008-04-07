@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.44 2008-04-07 12:31:11 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.45 2008-04-07 13:28:48 pessaux Exp $ *)
 
 open Parsetree
 
@@ -1340,27 +1340,25 @@ and scope_let_definition ~toplevel_let ctx env let_def =
        | None -> None
        | Some tye ->
            Some (scope_type_expr ctx env_with_ty_constraints_variables tye)) in
-    (* Now, scope the optional termination proof. *)
-    let scoped_termination_proof =
-      match let_binding_descr.Parsetree.b_termination_proof with
-       | None -> None
-       | Some tp ->
-           Some
-             (scope_termination_proof
-               ctx env_with_ty_constraints_variables tp) in
     let new_binding_desc =
       { let_binding_descr with
           Parsetree.b_params = scoped_b_params ;
           Parsetree.b_type = scoped_b_type ;
-          Parsetree.b_body = scoped_body ;
-          Parsetree.b_termination_proof = scoped_termination_proof } in
+          Parsetree.b_body = scoped_body } in
     { let_binding with Parsetree.ast_desc = new_binding_desc } in
   let scoped_bindings =
     List.map scope_binding let_def_descr.Parsetree.ld_bindings in
+  (* Now, scope the optional termination proof. *)
+  let scoped_termination_proof =
+    match let_def_descr.Parsetree.ld_termination_proof with
+     | None -> None
+     | Some tp -> Some (scope_termination_proof ctx final_env tp) in
   (* An finally be return the scoped let-definition *)
   (* and the extended environment.                  *)
   let scoped_let_def_desc = {
-    let_def_descr with Parsetree.ld_bindings = scoped_bindings } in
+    let_def_descr with
+      Parsetree.ld_bindings = scoped_bindings ;
+      Parsetree.ld_termination_proof = scoped_termination_proof } in
   let scoped_let_def = {
     let_def with Parsetree.ast_desc = scoped_let_def_desc } in
   (* We finally get le list of names bound by this let-definition. *)

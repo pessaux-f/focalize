@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.108 2008-04-05 18:48:15 weis Exp $ *)
+(* $Id: infer.ml,v 1.109 2008-04-07 13:28:48 pessaux Exp $ *)
 
 
 
@@ -1237,7 +1237,9 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
           then Types.generalize final_ty
           else Types.trivial_scheme final_ty in
         (* Record the scheme in the AST node of the [binding]. *)
-         binding.Parsetree.ast_type <- Parsetree.ANTI_scheme ty_scheme ;
+        binding.Parsetree.ast_type <- Parsetree.ANTI_scheme ty_scheme ;
+	(* Typecheck the termination proof. [TODO] *)
+
         (* Recover if a def-dependency or a decl-dependency *)
         (* on "rep" was/were found for this binding.        *)
         let dep_on_rep = {
