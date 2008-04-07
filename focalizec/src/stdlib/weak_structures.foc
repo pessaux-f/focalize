@@ -63,7 +63,7 @@ species Left_semi_module (A is Semi_ring)
   inherits Additive_monoid =
   (** @mathml <times/> 
       scalar multiplication *)
-  sig mult : A -> Self -> Self ;
+  signature mult : A -> Self -> Self ;
 
   (** note that !plus and a!plus are commutative ! *)
   property mult_right_distributes_on_plus : all x y in A, all z in Self,
@@ -125,7 +125,7 @@ end ;;
 
 species Semi_algebra (R is Commutative_semi_ring) 
   inherits Semi_ring =
-   sig module_mult : R -> Self -> Self ;
+   signature module_mult : R -> Self -> Self ;
    let lift (x) = Self!module_mult (x, Self!one) ;
    property lift_one : !equal (!lift (R!one), !one) ;
    property lift_additive: all x y in R,
@@ -162,52 +162,52 @@ end ;;
  *)
 species Torsion_free_semi_module (R is Integral_semi_ring)
   inherits Left_semi_module (R) =
-   sig exquo : Self -> R-> partiel (Self) ;
+   signature exquo : Self -> R-> partiel (Self) ;
 
   (** external division *)
   property exquo_divides: all x y in Self, all a in R,
     basics#is_failed (!exquo (x, a))
-    or
+    \/
     !equal (y, basics#non_failed (!exquo (x, a))) -> !equal (x, !mult (a, y)) ;
 
   (** ax=ay implies x=y.  *)
    property mult_is_left_regular: all x in R, all y z in Self,
     !equal (!mult (x, y), !mult (x, z)) ->
-      not (R!equal (x, R!zero)) -> !equal (y, z) ;
+      ~ (R!equal (x, R!zero)) -> !equal (y, z) ;
 
 
 (*   property mult_is_regular: all x in r, all y z in self, *)
-(*     not(r!equal (x,r!zero)) -> !equal (!mult(x,y),!mult(x,z)) -> !equal (y,z); *)
+(*     ~(r!equal (x,r!zero)) -> !equal (!mult(x,y),!mult(x,z)) -> !equal (y,z); *)
 
   (** ax=0 -&gt; x=0 or a=0.*)
   property mult_is_integral: all x in Self, all a in R,
     !equal (!mult (a, x), Self!zero) ->
-      (R!equal (a, R!zero) or !equal (x, Self!zero)) ;
+      (R!equal (a, R!zero) \/ !equal (x, Self!zero)) ;
 
 end ;;
 
 species Torsion_free_semi_algebra(R is Integral_semi_ring)
   inherits Commutative_semi_algebra (R)=
-   sig module_exquo : Self -> R -> partiel (Self) ;
+   signature module_exquo : Self -> R -> partiel (Self) ;
    property module_exquo_divides: all a in R, all x y in Self,
      basics#is_failed (!module_exquo (x, a))
-       or
+       \/
      (!equal (y, basics#non_failed (!module_exquo (x, a))) ->  
        !equal (!module_mult (a, y), x)) ;
   (** ax=ay implies x=y.  *)
    property module_mult_is_regular: all x in R, all y z in Self,
-    not (R!equal (x, R!zero)) -> 
+    ~ (R!equal (x, R!zero)) -> 
       !equal (!module_mult (x, y), !module_mult (x, z)) -> !equal (y, z) ;
 
   (** ax=0 -&gt; x=0 or a=0.*)
    property module_mult_is_integral: all x in Self, all a in R,
     !equal (!module_mult (a, x), Self!zero) ->
-      (R!equal (a, R!zero) or !equal (x, Self!zero)) ;
+      (R!equal (a, R!zero) \/ !equal (x, Self!zero)) ;
 
    let module_recip(a) = Self!module_exquo (Self!one, a) ;
    theorem module_recip_is_inverse: all a in R,
      basics#is_failed (!module_recip (a))
-     or
+     \/
      !is_one (!mult (!lift (a), basics#non_failed (!module_recip (a))))
      proof: assumed ;
 end ;;
@@ -216,7 +216,7 @@ end ;;
 (** division may raise an error *)
 species Division_semi_module (R is Semi_ring) 
   inherits Left_semi_module (R) =
-    sig div : Self -> R -> Self ;
+    signature div : Self -> R -> Self ;
     property div_divides : all x y in Self, all z in R,
      !equal (y, !div (x, z)) -> !equal (x, !mult (z, y)) ;
 end ;;
@@ -231,23 +231,23 @@ end ;;
  *)
 species Factorial_semi_module(R is Integral_semi_ring)
   inherits Torsion_free_semi_module (R) =
-   sig gcd : Self -> R -> R ;
+   signature gcd : Self -> R -> R ;
    property gcd_divides: all x in Self, all y z in R,
      R!equal (z, !gcd (x, y)) -> 
-       (not (basics#is_failed (!exquo (x, z))) 
-       and 
-       not (basics#is_failed (R!exquo (y, z)))) ;
+       (~ (basics#is_failed (!exquo (x, z))) 
+       /\ 
+       ~ (basics#is_failed (R!exquo (y, z)))) ;
 
    property divisor_is_multiple_of_gcd: all x in Self, all y d in R,
-     not (basics#is_failed (!exquo (x, d))) ->
-       not (basics#is_failed (R!exquo (y, d))) -> 
-         not (basics#is_failed (R!exquo (d, !gcd (x, y)))) ;
+     ~ (basics#is_failed (!exquo (x, d))) ->
+       ~ (basics#is_failed (R!exquo (y, d))) -> 
+         ~ (basics#is_failed (R!exquo (d, !gcd (x, y)))) ;
 end ;;
 
 
 species Factorial_semi_algebra (R is Factorial_semi_ring)
   inherits Torsion_free_semi_algebra (R) =
-   sig module_gcd : Self -> R -> R ;
+   signature module_gcd : Self -> R -> R ;
 end ;;
 
 
@@ -286,33 +286,33 @@ let divisionParZero =
 
 (** euclidean algorithm *)
 species Euclidean_semi_ring inherits Factorial_semi_ring =
-  sig quo_rem : Self -> Self -> quo_rem_result (Self) ;
+  signature quo_rem : Self -> Self -> quo_rem_result (Self) ;
   let quotient (x, y) = #quot (Self!quo_rem (x, y)) ;
   let remainder (x, y) = #rema (Self!quo_rem (x, y)) ;
   let rec gcd (x, y) = 
     if Self!is_zero (y) then x else Self!gcd (y, Self!remainder (x, y)) ;
-  sig euclidean_ordering : Self -> Self -> prop ;
+  signature euclidean_ordering : Self -> Self -> prop ;
   property euclidean_order_is_antisymmetric:
     all x y in Self,
-      !is_zero (x) or !is_zero (y) or 
-      (!euclidean_ordering (x, y) -> not (!euclidean_ordering (y, x))) ;
+      !is_zero (x) \/ !is_zero (y) \/ 
+      (!euclidean_ordering (x, y) -> ~ (!euclidean_ordering (y, x))) ;
   property euclidean_ordering_is_transitive:
     all x y z in Self,
-      not (!is_zero (x)) -> not (!is_zero (y)) -> not (!is_zero (z)) ->
+      ~ (!is_zero (x)) -> ~ (!is_zero (y)) -> ~ (!is_zero (z)) ->
 	!euclidean_ordering (x, y) -> !euclidean_ordering (y, z) ->
 	  !euclidean_ordering (x, z) ;
  property euclidean_ordering_is_irreflexive: all x in Self,
-   not (!is_zero (x)) -> not (!euclidean_ordering (x, x)) ;
+   ~ (!is_zero (x)) -> ~ (!euclidean_ordering (x, x)) ;
  theorem euclidean_relation: all x y in Self,
    !is_zero (y)
-   or
+   \/
    !equal (x, !plus (!mult (!quotient (x, y), y), !remainder (x, y)))
    proof : assumed ;
  property remainder_is_smaller: all x y z in Self,
    !is_zero (y)
-   or
+   \/
    (!equal (z, !remainder (x, y)) -> 
-     (!is_zero (z) or !euclidean_ordering (z, y))) ;
+     (!is_zero (z) \/ !euclidean_ordering (z, y))) ;
  let exquo (x, y) =
     if Self!is_zero (y) then basics#Failed
     else
