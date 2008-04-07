@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.83 2008-04-06 11:29:30 weis Exp $ *)
+(* $Id: parser.mly,v 1.84 2008-04-07 00:48:50 weis Exp $ *)
 
 open Parsetree;;
 
@@ -17,11 +17,10 @@ let mk_doc doc desc = {
   ast_loc = mk_loc ();
   ast_desc = desc;
   ast_doc = doc;
-  ast_type = Parsetree.ANTI_none
+  ast_type = Parsetree.ANTI_none;
 };;
 
 let mk d = mk_doc [] d;;
-let mk_no_doc d = mk_doc [] d;;
 
 let mk_local_ident vname = mk (I_local vname);;
 
@@ -35,8 +34,7 @@ let mk_global_ident qual vname =
   mk (I_global (mk_qual_vname qual vname))
 ;;
 
-let mk_global_species_ident qual vname =
-  mk (I_global (mk_qual_vname qual vname));;
+let mk_global_species_ident = mk_global_ident;;
 
 let mk_label_ident qual vname =
   mk (LI (mk_qual_vname qual vname))
@@ -88,8 +86,8 @@ let mk_proof_label (s1, s2) =
 /* Identifiers */
 %token <string> LIDENT /* Lower case ident (e.g. x, _1, or _xY) */
 %token <string> UIDENT /* Upper case ident (e.g. A, _B, or _Ax) */
-%token <string> PIDENT /* Prefix ident  (e.g. ( ! ) ) */
-%token <string> IIDENT /* Infix ident  (e.g ( + ) */
+%token <string> PIDENT /* Prefix ident  (e.g. ( ! ) or ( ~ )) */
+%token <string> IIDENT /* Infix ident  (e.g ( + ) or ( +matrix )) */
 %token <string> QIDENT /* Quoted lower case ident (e.g. 'a ) */
 
 /* Basic constants */
@@ -428,7 +426,7 @@ def_species_param:
 
 def_species_inherits:
   | opt_doc INHERITS species_expr_list { mk_doc $1 $3}
-  | { mk_no_doc [] }
+  | { mk [] }
 
 species_expr_list:
   | species_expr {[ $1 ]}
@@ -437,9 +435,9 @@ species_expr_list:
 
 species_expr:
   | species_ident
-    { mk_no_doc { se_name = $1; se_params = []; } }
+    { mk { se_name = $1; se_params = []; } }
   | species_ident LPAREN species_param_list RPAREN
-    { mk_no_doc { se_name = $1; se_params = $3; } }
+    { mk { se_name = $1; se_params = $3; } }
 
 species_param:
   | expr { mk (SP $1) }
@@ -466,19 +464,19 @@ species_field :
                  { mk (SF_termination_proof $1) }
 ;
 
-def_termination_proof_profiles:
+termination_proof_profiles:
   | { [] }
-  | def_termination_proof_profiles AND def_termination_proof_profile
+  | termination_proof_profiles AND termination_proof_profile
     { $3 :: $1 }
 ;
 
-def_termination_proof_profile:
+termination_proof_profile:
   | bound_vname LPAREN param_list RPAREN
     { mk {tpp_name = $1; tpp_args = $3; } }
 ;
 
 def_termination_proof:
-  | opt_doc TERMINATION PROOF OF def_termination_proof_profiles EQUAL termination_proof
+  | opt_doc TERMINATION PROOF OF termination_proof_profiles EQUAL termination_proof
     { mk_doc $1 {tpd_profiles = List.rev $5; tpd_termination_proof = $7; } }
 ;
 
@@ -512,7 +510,7 @@ simple_rep_type_def:
   | glob_ident LPAREN rep_type_def_comma_list RPAREN
     { RTE_app ($1, $3) }
   | LIDENT LPAREN rep_type_def_comma_list RPAREN   /* To have non-qualified
-                                                      parametreized type
+                                                      parameterized type
                                                       constructors names. */
     { let paramd_cstr = mk_local_ident (Vlident $1) in
       RTE_app (paramd_cstr, $3) }
@@ -552,6 +550,15 @@ def_let:
   | opt_doc let_binding { mk_doc $1 ($2.ast_desc) }
 ;
 
+logical_binding:
+  | LOGICAL let_binding
+    { mk { $2.ast_desc with ld_logical = LF_logical; } }
+;
+
+def_logical:
+  | opt_doc logical_binding { mk_doc $1 $2.ast_desc }
+;
+
 /** Since logical let is followed by a logical_expr, and since logical_expr
   embeds all expressions, at parsing stage, everything is temporarily
   considered to be a logical_expr. At scoping stage, a verification will be
@@ -569,6 +576,7 @@ binding:
         b_termination_proof = $4;
       }
     }
+
   | bound_vname EQUAL INTERNAL type_expr EXTERNAL external_expr
     { mk {
         b_name = $1; b_params = []; b_type = Some $4;
@@ -606,10 +614,10 @@ termination_proof_opt:
 ;
 
 termination_proof:
-  | STRUCTURAL bound_vname { mk (TP_structural $2) }
-  | LEXICOGRAPHIC fact_list { mk (TP_lexicographic $2) }
-  | MEASURE expr ON param_list proof { mk (TP_measure ($2, $4, $5)) }
-  | ORDER expr ON param_list proof { mk (TP_order ($2, $4, $5)) }
+  | opt_doc STRUCTURAL bound_vname { mk_doc $1 (TP_structural $3) }
+  | opt_doc LEXICOGRAPHIC fact_list { mk_doc $1 (TP_lexicographic $3) }
+  | opt_doc MEASURE expr ON param_list proof { mk_doc $1 (TP_measure ($3, $5, $6)) }
+  | opt_doc ORDER expr ON param_list proof { mk_doc $1 (TP_order ($3, $5, $6)) }
 ;
 
 param_list:
@@ -628,20 +636,11 @@ sig_binding:
   | SIGNATURE bound_vname COLON type_expr
     { { sig_name = $2; sig_type = $4; sig_logical = LF_no_logical; } }
   | LOGICAL sig_binding
-    { { $2  with sig_logical = LF_logical; }; }
+    { { $2 with sig_logical = LF_logical; }; }
 
 def_sig:
   | opt_doc sig_binding
     { mk_doc $1 $2 }
-;
-
-def_logical:
-  | opt_doc logical_binding { mk_doc $1 $2.ast_desc }
-;
-
-logical_binding:
-  | LOGICAL let_binding
-    { mk { $2.ast_desc with ld_logical = LF_logical; } }
 ;
 
 def_property:
