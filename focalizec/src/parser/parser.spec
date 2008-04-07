@@ -1,3 +1,60 @@
+07/05/08
+
+We would like to bind a tuple to an expression in one let.
+It means we want to bind patterns instead of bound_vname.
+E.g.
+ let (x, y) = pair
+ let (x, _) = pair
+ let (_, y) = pair
+May be let _ = or let () = ?
+
+The rule
+  | bound_vname EQUAL logical_expr termination_proof_opt
+    { mk {
+        b_name = $1; b_params = []; b_type = None;
+        b_body = Parsetree.BB_logical $3;
+        b_termination_proof = $4;
+      }
+    }
+becomes
+  | bound_pattern EQUAL logical_expr termination_proof_opt
+    { mk {
+        b_name = $1; b_params = []; b_type = None;
+        b_body = Parsetree.BB_logical $3;
+        b_termination_proof = $4;
+      }
+    }
+and we define:
+
+bound_pattern:
+  | bound_vname {mk (BP_var $1)}
+  | UNDERSCORE { mk (BP_wild)}
+  | LPAREN bound_pattern COMMA bound_pattern_comma_list RPAREN
+    { mk (BP_tuple ($2 :: $4)) }*/
+;
+bound_pattern_comma_list:
+  | bound_pattern { [ $1 ] }
+  | bound_pattern COMMA bound_pattern_comma_list { $1 :: $3 }
+;
+
+In parsetree.mli we must add:
+type bound_pattern = bound_pattern_desc ast
+and bound_pattern_desc =
+-- Unless we can prove it exhaustive
+-- | BP_const of constant
+  | BP_var of vname
+-- Useless ?
+--  | BP_as of bound_pattern * vname
+  | BP_wild
+-- Unless we can prove it exhaustive
+--  | BP_constr of constructor_ident * bound_pattern list
+-- Unless we can prove it exhaustive
+--  | BP_record of (label_ident * bound_pattern) list
+  | BP_tuple of bound_pattern list
+-- Is it useful ?
+  | BP_paren of bound_pattern
+;;
+
 04/05/08
 
 No macros in the parser, nor in the lexer!
@@ -16,7 +73,7 @@ usage syntactic pattern.
 Before, the definition of a polymorphic list type was:
 
 \begin{verbatim}
-type list a = 
+type list a =
   caml_link list;
   Nil ([]) in list(a);
   Cons ((::)) in a -> list(a) -> list(a);
@@ -216,7 +273,7 @@ fois si une option non documentée du compilateur ?).
 
 
 *)
-    
+
 
 (* The type t is concrete. *)
 
