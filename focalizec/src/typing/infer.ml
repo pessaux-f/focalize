@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.109 2008-04-07 13:28:48 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.110 2008-04-08 13:03:15 pessaux Exp $ *)
 
 
 
@@ -208,6 +208,29 @@ exception Scheme_contains_type_vars of (
   Parsetree.vname *   (** The method's name whose scheme contains variables. *)
   Types.type_scheme * (** The scheme containing the variables. *)
   Location.t)         (** Location where the issue arises in the source. *)
+;;
+
+
+
+(* ********************************************************************** *)
+(** {b Descr} : Exception raised when a delayed termination proof is told
+    to be related to a function that doesn't exist in the current species.
+
+    {b Rem} : Exported outside this module.                               *)
+(* ********************************************************************** *)
+exception No_function_for_termination_proof of (Location.t * Parsetree.vname)
+;;
+
+
+
+(* ********************************************************************** *)
+(** {b Descr} : Exception raised when a delayed termination proof profile
+    uses a parameter that doesn't exist in the original function.
+
+    {b Rem} : Exported outside this module.                               *)
+(* ********************************************************************** *)
+exception Invalid_parameter_in_delayed_proof_termination of
+  (Location.t * Parsetree.vname)
 ;;
 
 
@@ -462,10 +485,11 @@ let make_implicit_var_mapping_from_type_exprs type_expressions =
 
 
 (* ************************************************************************* *)
-(* Parsetree.logical_expr -> (string * Types.type_simple) list                       *)
+(* Parsetree.logical_expr -> (string * Types.type_simple) list               *)
 (** {b Descr} : Create a fresh variable mapping automatically variables in
-              the type parts of a [logical_expr] as generalized. This is used when
-              one creates a type structure from a theorem expression.
+              the type parts of a [logical_expr] as generalized. This is
+              used when one creates a type structure from a theorem
+              expression.
               In effect, in such a context, variables in the type are
               implicitely considered as generalized because the type
               constraint annotating the theorem does not show
@@ -580,6 +604,29 @@ and binding_body_is_non_expansive ~current_unit env = function
       expr_is_non_expansive ~current_unit env e
   | Parsetree.BB_logical p ->
       logical_expr_is_non_expansive ~current_unit env p
+;;
+
+
+
+let find_function_by_name fct_vname fields =
+  let rec rec_find = function
+    | [] -> raise Not_found
+    | h :: q ->
+        match h with
+         | Env.TypeInformation.SF_let (_, n, args, sch, _, _) ->
+             if n = fct_vname then (args, sch) else rec_find q
+         | Env.TypeInformation.SF_let_rec l ->
+             (begin
+             try
+               let (_, _, args, sch, _, _) =
+                 List.find (fun (_, n, _, _, _, _) -> n = fct_vname) l in
+               (args, sch)
+             with Not_found -> rec_find q
+             end)
+         | Env.TypeInformation.SF_sig (_, _, _)
+         | Env.TypeInformation.SF_theorem (_, _, _, _, _, _)
+         | Env.TypeInformation.SF_property (_, _, _, _, _) -> rec_find q in
+  rec_find fields
 ;;
 
 
@@ -756,14 +803,16 @@ let typecheck_fact ctx env fact =
 
 (* **************************************************************** *)
 (* Parsetree.vname -> Env.TypeInformation.species_field list ->     *)
-(*   Env.TypeInformation.species_field list -> unit                 *)
+(*   Env.TypeInformation.species_field list ->                      *)
+(*     Env.TypeInformation.species_field list                       *)
 (* {b Descr} : Checks if the 2 lists of fields contain methods
            names that overlap. If so then raises en exception
-           [Method_multiply_defined], else silently returns.
+           [Method_multiply_defined], else returns le concatenation
+           of the 2 lists (first @ second)
 
    {Rem} : Not exported outside this module.                        *)
 (* **************************************************************** *)
-let ensure_methods_uniquely_defined current_species l1 l2 =
+let append_and_ensure_method_uniquely_defined current_species l1 l2 =
   (* Just a local flattening function... *)
   let local_flat_fields fields =
     List.fold_right
@@ -788,7 +837,9 @@ let ensure_methods_uniquely_defined current_species l1 l2 =
           if name1 = name2 then
             raise (Method_multiply_defined (name1, current_species)))
         flat_l2)
-    flat_l1
+    flat_l1 ;
+  (* Return the concatenation of the 2 lists if nodoubles have been found. *)
+  l1 @ l2
 ;;
 
 
@@ -1238,8 +1289,6 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
           else Types.trivial_scheme final_ty in
         (* Record the scheme in the AST node of the [binding]. *)
         binding.Parsetree.ast_type <- Parsetree.ANTI_scheme ty_scheme ;
-	(* Typecheck the termination proof. [TODO] *)
-
         (* Recover if a def-dependency or a decl-dependency *)
         (* on "rep" was/were found for this binding.        *)
         let dep_on_rep = {
@@ -1249,6 +1298,10 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
          dep_on_rep))
       let_def_descr.Parsetree.ld_bindings
       pre_env_info in
+  (* Typecheck the termination proof if any. *)
+  (match let_def_descr.Parsetree.ld_termination_proof with
+   | None -> ()
+   | Some tp -> typecheck_termination_proof ctx env' tp) ;
   (* We make the clean environment binding by discarding the location *)
   (* information we kept just to be able to pinpoint accurately the   *)
   (* guilty method in case of one would have variables in its scheme. *)
@@ -1264,31 +1317,31 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
 
 
 (* ************************************************************************* *)
-(* typing_context -> Env.TypingEnv.t -> Parsetree.logical_expr ->                    *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.logical_expr ->            *)
 (*   Types.type_simple                                                       *)
-(** {b Descr} : Infers the type of a [logical_expr]. This type is always expected
-              to be [Prop], hence this inference moslty verifies the right
-              types usages inside a property and ensures that the final
-              type is really [Prop].
-              It finally assign the type by side effect in the [ast_type]
-              field of the [logical_expr] node.
-              This function takes into account the fact that that carrier
-              "rep" must be considered as unknown to prevent def-dependencies
-             (C.f. Virgile Prevosto's Phd, section 3.9.4 pages 51 & 52).
-             ATTENTION : Because idents (bound by forall and exists) are
-             **expressions** and are directly entered in the environment
-             with the type logical_expr, the rule of Virgile telling that expressions
-             must be of type bool is incorrect. In effect, because idents
-             are expressions and are already types logical_expr, unifying them
-             with bool wil always fail. Moreover, this fact may leak all
-             around the expression type, then one cannot restrict the check
-             to only say that an expression-ident typed logical_expr is correct.
-             This may flood all around the proposition expression. Then
-             in case of an expression, one allows both logical_expr and bool as
-             types.
-             The [~in_proof] boolean enables to abstract Self only in case
-             we infer a [logical_expr]'s type inside a property/theorem definition
-             and not in it's proof !
+(** {b Descr} : Infers the type of a [logical_expr]. This type is always
+      expected to be [Prop], hence this inference moslty verifies the right
+      types usages inside a property and ensures that the final type is
+      really [Prop].
+      It finally assign the type by side effect in the [ast_type] field of
+      the [logical_expr] node.
+      This function takes into account the fact that that carrier "rep" must
+      be considered as unknown to prevent def-dependencies (C.f. Virgile
+      Prevosto's Phd, section 3.9.4 pages 51 & 52).
+      ATTENTION : Because idents (bound by forall and exists) are
+      **expressions** and are directly entered in the environment with the
+      type logical_expr, the rule of Virgile telling that expressions must
+      be of type bool is incorrect. In effect, because idents are expressions
+      and are already types logical_expr, unifying them with bool wil always
+      fail. Moreover, this fact may leak all around the expression type, then
+      one cannot restrict the check to only say that an expression-ident
+      typed logical_expr is correct.
+      This may flood all around the proposition expression. Then, in case of
+      an expression, one allows both logical_expr and bool as types.
+      The [~in_proof] boolean enables to abstract Self only in case we infer
+      a [logical_expr]'s type inside a property/theorem definition and not
+      in it's proof !
+
     {b Rem} : Not exported outside this module.                               *)
 (* ************************************************************************** *)
 and typecheck_logical_expr ~in_proof ctx env logical_expr =
@@ -1300,10 +1353,10 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
          Types.begin_definition () ;
          let ty = typecheck_type_expr ctx env t_expr in
          Types.end_definition () ;
-         (* Now typecheck the logical_expr's body in the extended environment.     *)
-         (* Note that as often, the order bindings are inserted in the     *)
-         (* environment does not matter since parameters can never depends *)
-         (* on each other.                                                 *)
+         (* Now typecheck the logical_expr's body in the extended environment.*)
+         (* Note that as often, the order bindings are inserted in the        *)
+         (* environment does not matter since parameters can never depends    *)
+         (* on each other.                                                    *)
          let scheme = Types.generalize ty in
          let env' =
            List.fold_left
@@ -1322,8 +1375,8 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
          let ty2 = typecheck_logical_expr ~in_proof ctx env pr2 in
          ignore
            (Types.unify
-              ~loc: logical_expr.Parsetree.ast_loc ~self_manifest: ctx.self_manifest
-              ty1 ty2);
+              ~loc: logical_expr.Parsetree.ast_loc
+              ~self_manifest: ctx.self_manifest ty1 ty2) ;
          (* Enforce the type to be [logical_expr]. *)
          let final_ty =
            Types.unify
@@ -1339,10 +1392,10 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
              ~self_manifest: ctx.self_manifest ty (Types.type_prop ()) in
          final_ty
      | Parsetree.Pr_expr expr ->
-         (* Make the carrier abstract to prevent def-dependencies   *)
-         (* with "rep" (c.f Virgile Prevosto's Phd page 52, Fig3.3) *)
-         (* rule [EXPR] only when the current logical_expr appears in a     *)
-         (* theorem/property definition, not in its proof.          *)
+         (* Make the carrier abstract to prevent def-dependencies     *)
+         (* with "rep" (c.f Virgile Prevosto's Phd page 52, Fig3.3)   *)
+         (* rule [EXPR] only when the current logical_expr appears in *)
+         (* a theorem/property definition, not in its proof.          *)
          let ctx' =
            if in_proof then ctx else { ctx with self_manifest = None } in
          (* Expressions must be typed as [bool] OR [logical_expr]. If *)
@@ -1441,7 +1494,9 @@ and typecheck_statement ctx env statement =
                (* Be careful, because we are not in a theorem/property *)
                (* description, but in its proof, we must not make Self *)
                (* abstract here !                                      *)
-               (vname, (typecheck_logical_expr ~in_proof: true ctx accu_env logical_expr))
+               (vname,
+                (typecheck_logical_expr
+                   ~in_proof: true ctx accu_env logical_expr))
            | Parsetree.H_notation (vname, expr) ->
                (vname, (typecheck_expr ctx accu_env expr))) in
         (* Record the type information in the AST node. *)
@@ -1458,7 +1513,7 @@ and typecheck_statement ctx env statement =
    | None -> ()
    | Some logical_expr ->
        (* Same remark than above pour Self being not abstract ! *)
-       ignore (typecheck_logical_expr ~in_proof: true ctx env' logical_expr));
+       ignore (typecheck_logical_expr ~in_proof: true ctx env' logical_expr)) ;
   (* Return the environment extended by the possible idents *)
   (* the statement binds via its hypotheses.                *)
   env'
@@ -1502,6 +1557,100 @@ and typecheck_theorem_def ctx env theorem_def =
 
 
 
+(* *********************************************************************** *)
+(** {b Descr} Typechecks a termination proof. This mostly consists in
+    typechecking the inner of the proof, without returning any significant
+    information. This only ensures that inner expressions are well-types
+    and get their "type" bucket set.
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+and typecheck_termination_proof ctx env tp =
+  (* Anyway, a proof has no type... So... *)
+  tp.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
+  match tp.Parsetree.ast_desc with
+   | Parsetree.TP_structural _ ->
+       (* Nothing to record because a [vname] doesn't have a "type" bucket. *)
+       ()
+   | Parsetree.TP_lexicographic facts ->
+       List.iter (typecheck_fact ctx env) facts
+   | Parsetree.TP_measure (expr, _, proof)
+   | Parsetree.TP_order (expr, _, proof) ->
+       (* Nothing to record for the [vname]s because *)
+       (* they do not have any "type" bucket.        *)
+       ignore (typecheck_expr ctx env expr) ;
+       typecheck_proof ctx env proof
+ 
+
+
+(** [previous_fields] is used to recover the methods previously typechecked
+    in the species in order to ensure that the profile refers to an
+    existing method of Self and that specified arguments really exist inside
+    this method. *)
+and typecheck_termination_proof_profile ctx env previous_fields profile =
+  let profile_desc = profile.Parsetree.ast_desc in
+  (* Get the name of the function the termination proof belongs to. *)
+  let fct_vname = profile_desc.Parsetree.tpp_name in
+  (* One must first search the function name in the environment.      *)
+  (* We embedd the [vname] inside a dummy [ident] in order to lookup. *)
+  let fake_ident = {
+    Parsetree.ast_desc = Parsetree.EI_local fct_vname ;
+    (* Roughly correction as a location, even is not exact. *)
+    Parsetree.ast_loc = profile.Parsetree.ast_loc ;
+    Parsetree.ast_doc = [] ;
+    Parsetree.ast_type = Parsetree.ANTI_none } in
+  (* Since we have a [vname], we can't store in the AST any type information. *)
+  (* however we still lookup in the environment to ensure the identifier is   *)
+  (* really defined.                                                          *)
+  ignore
+    (Env.TypingEnv.find_value
+       ~loc: profile.Parsetree.ast_loc
+       ~current_unit: ctx.current_unit fake_ident env) ;
+  (* Now, ensure the method really exist in the current species. *)
+  try
+    let (args_names, scheme) =
+      find_function_by_name fct_vname previous_fields in
+    (* Now, ensure that specified parameters really exist in the *)
+    (* method and that they have the rigth type is specified.    *)
+    let (expected, _, _) =
+      MiscHelpers.bind_parameters_to_types_from_type_scheme
+        (Some scheme) args_names in
+    List.iter
+      (fun (prof_param, prof_opt_ty) ->
+        try
+          (begin
+          (* Because we provided a scheme, when we called the function *)
+          (* [bind_parameters_to_types_from_type_scheme], we are sure  *)
+          (* to get a "Some".                                          *)
+          let expected_ty =
+            (match List.assoc prof_param expected with
+               Some t -> t | _ -> assert false) in
+          match prof_opt_ty with
+           | None -> ()
+           | Some ty_expr ->
+               let ty = typecheck_type_expr ctx env ty_expr in
+               (* Now, unify the mentioned type whith the one found *)
+               (* when we typechecked the original function.        *)
+               ignore
+                 (Types.unify
+                    ~loc: profile.Parsetree.ast_loc
+                    ~self_manifest: ctx.self_manifest expected_ty ty)
+          end)
+        with Not_found ->
+          (* The argument doesn't exist among those of the function. *)
+          raise
+            (Invalid_parameter_in_delayed_proof_termination
+               (profile.Parsetree.ast_loc, prof_param)))
+      profile_desc.Parsetree.tpp_args
+  with Not_found ->
+    (* The function whose the termination proof belongs *)
+    (* to was not found in the current species fields.  *)
+    raise
+      (Scoping.Termination_proof_delayed_only_on_self_meth
+        (profile.Parsetree.ast_loc, fct_vname))
+
+
+
 (* ************************************************************************* *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.species_field ->           *)
 (*   ((Env.TypeInformation.species_field list) * (Parsetree.proof_def list)) *)
@@ -1509,251 +1658,292 @@ and typecheck_theorem_def ctx env theorem_def =
               list. The typing environment is incrementally extended
               with the found methods and used to typecheck the next
               methods.
-              The function returns a quartet whose 3 firts componente are
+              The function returns a 5-uplet whose 3 firts componente are
               suitable to be inserted in the structure of a species's type,
-              and the last one is the "proof-of" fields that have been
-              found among the fields. These "proof-of" must be collapsed
-              with their related property to lead to a theorem before the
-              normalization process starts.
+              and the last ones are the "proof-of" and "termination-proof-of"
+              fields that have been found among the fields . These "proof-of"
+              must be collapsed with their related property to lead to a
+              theorem before the normalization process starts.
+              The "termination-proof-of" must be collapsed with their related
+              "let-rec" definitions also before the normalization process
+              starts.
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-and typecheck_species_fields ctx env = function
-  | [] -> ([(* Fields *)], ctx, [(* Proofs *)])
-  | field :: rem_fields ->
-      let current_species =
-        (match ctx.current_species with None -> assert false | Some n -> n) in
-      let (fields_tys, new_ctx, new_env, new_proofs) =
-        (begin
-         match field.Parsetree.ast_desc with
-         | Parsetree.SF_rep rep_type_def ->
-             (begin
-             let rep_vname = Parsetree.Vlident "rep" in
-             (* On must not defined several rep inside a species. *)
-             if ctx.self_manifest <> None then
-               raise (Method_multiply_defined (rep_vname, current_species));
-             Types.begin_definition () ;
-             let ty = typecheck_rep_type_def ctx env rep_type_def in
-             Types.end_definition () ;
-             (* Before modifying the context, just check that no "rep" *)
-             (* was previously identified. If some, then fails.        *)
-             if ctx.self_manifest <> None then
-               raise (Rep_multiply_defined field.Parsetree.ast_loc);
-             (* Extend the context with the type "rep" is equal to. Beware  *)
-             (* we make a copy of the infered type in order to keep the     *)
-             (* originally infered type aside any further modifications     *)
-             (* that could arise while unifying anywhere "Self" with "its   *)
-             (* known representation". In effect, unification in place      *)
-             (* woudl establish a link by side effect from the              *)
-             (* representation to the type [Types.ST_self_rep], hence       *)
-             (* fooling the explicit structure of what is initially "rep".  *)
-             (* This first would prevent us from being to generate code     *)
-             (* finally relying on the representation of "rep". Furthermore *)
-             (* because of how [Types.unify] handles unification with       *)
-             (* [Types.ST_self_rep] to prevent cycles, unification of this  *)
-             (* **mangled** representation would suceed with any types,     *)
-             (* even those incompatible with the original **correct**       *)
-             (* representation of "rep"'s type !                            *)
-             let ctx' = {
-               ctx with
-                 self_manifest =
-                   Some
-                     (Types.copy_type_simple_but_variables
-                        ~and_abstract: None ty) } in
-             (* Record the type information in the AST node with again a *)
-             (* separate copy so that Self's type that don't risk to be  *)
-             (* unified somewhere, hence that will keep its effective    *)
-             (* structure forever.                                       *)
-             field.Parsetree.ast_type <-
-               Parsetree.ANTI_type
-                 (Types.copy_type_simple_but_variables
-                    ~and_abstract: None ty) ;
-             (* Be careful : methods are not polymorphic (c.f. Virgile    *)
-             (* Prevosto's Phd section 3.3, page 24). No generalization ! *)
-             let rep_scheme = Types.trivial_scheme ty in
-             let field_info =
-               Env.TypeInformation.SF_sig
-                 (current_species, rep_vname, rep_scheme) in
-             (* Record the "rep" scheme in the AST node. *)
-             field.Parsetree.ast_type <- Parsetree.ANTI_scheme rep_scheme ;
-             ([field_info], ctx', env, [(* Proofs *)])
-             end)
-         | Parsetree.SF_sig sig_def ->
-             (begin
-             let sig_def_descr = sig_def.Parsetree.ast_desc in
-             Types.begin_definition () ;
-             let ty =
-               typecheck_type_expr ctx env sig_def_descr.Parsetree.sig_type in
-             Types.end_definition () ;
-             (* Extend the environment with this new method of Self.      *)
-             (* Be careful : methods are not polymorphics (c.f. Virgile   *)
-             (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
-             let scheme = Types.trivial_scheme ty in
-             let env' =
-               Env.TypingEnv.add_value
-                 sig_def_descr.Parsetree.sig_name scheme env in
-             let field_info =
-               Env.TypeInformation.SF_sig
-                 (current_species, sig_def_descr.Parsetree.sig_name, scheme) in
-             (* Record the type information in the AST nodes. *)
-             sig_def.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
-             field.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
-             ([field_info], ctx, env', [(* Proofs *)])
-             end)
-         | Parsetree.SF_let let_def ->
-             (begin
-             (* No relevant type information to record in the AST node. *)
-             field.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
-             (* Don't increase level, this will be done in the let inference. *)
-             (* Be careful : methods are not polymorphics (c.f. Virgile   *)
-             (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
-             let bindings =
-               typecheck_let_definition ~is_a_field: true ctx env let_def in
-             (* Let's build the environment with the bindings for this let. *)
-             let env' =
-               List.fold_left
-                 (fun accu_env (id, ty_scheme, _) ->
-                    Env.TypingEnv.add_value id ty_scheme accu_env)
-                 env bindings in
-             (* We now collect the type information of these methods   *)
-             (* in order to make them suitable for a "type of method". *)
-             match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-             | Parsetree.RF_rec ->
+and typecheck_species_fields initial_ctx initial_env initial_fields =
+  let rec rec_typecheck ctx env accu_fields accu_proofs accu_term_proofs =
+    function
+    | [] -> (accu_fields, ctx, accu_proofs, accu_term_proofs)
+    | field :: rem_fields ->
+        let current_species =
+          (match ctx.current_species with None -> assert false | Some n -> n) in
+        let (fields_tys, new_ctx, new_env, new_proofs, new_termination_proofs) =
+          (begin
+          match field.Parsetree.ast_desc with
+           | Parsetree.SF_rep rep_type_def ->
                (begin
-                let field_infos =
-                  List.map2
-                    (fun (id, ty_scheme, has_def_dep_on_rep) binding ->
-                      let expr = binding.Parsetree.ast_desc.Parsetree.b_body in
+               let rep_vname = Parsetree.Vlident "rep" in
+               (* On must not defined several rep inside a species. *)
+               if ctx.self_manifest <> None then
+                 raise (Method_multiply_defined (rep_vname, current_species)) ;
+               Types.begin_definition () ;
+               let ty = typecheck_rep_type_def ctx env rep_type_def in
+               Types.end_definition () ;
+               (* Before modifying the context, just check that no "rep" *)
+               (* was previously identified. If some, then fails.        *)
+               if ctx.self_manifest <> None then
+                 raise (Rep_multiply_defined field.Parsetree.ast_loc);
+               (* Extend the context with the type "rep" is equal to. Beware  *)
+               (* we make a copy of the infered type in order to keep the     *)
+               (* originally infered type aside any further modifications     *)
+               (* that could arise while unifying anywhere "Self" with "its   *)
+               (* known representation". In effect, unification in place      *)
+               (* woudl establish a link by side effect from the              *)
+               (* representation to the type [Types.ST_self_rep], hence       *)
+               (* fooling the explicit structure of what is initially "rep".  *)
+               (* This first would prevent us from being to generate code     *)
+               (* finally relying on the representation of "rep". Furthermore *)
+               (* because of how [Types.unify] handles unification with       *)
+               (* [Types.ST_self_rep] to prevent cycles, unification of this  *)
+               (* **mangled** representation would suceed with any types,     *)
+               (* even those incompatible with the original **correct**       *)
+               (* representation of "rep"'s type !                            *)
+               let ctx' = {
+                 ctx with
+                   self_manifest =
+                     Some
+                       (Types.copy_type_simple_but_variables
+                          ~and_abstract: None ty) } in
+               (* Record the type information in the AST node with again a *)
+               (* separate copy so that Self's type that don't risk to be  *)
+               (* unified somewhere, hence that will keep its effective    *)
+               (* structure forever.                                       *)
+               field.Parsetree.ast_type <-
+                 Parsetree.ANTI_type
+                   (Types.copy_type_simple_but_variables
+                      ~and_abstract: None ty) ;
+               (* Be careful : methods are not polymorphic (c.f. Virgile    *)
+               (* Prevosto's Phd section 3.3, page 24). No generalization ! *)
+               let rep_scheme = Types.trivial_scheme ty in
+               let field_info =
+                 Env.TypeInformation.SF_sig
+                   (current_species, rep_vname, rep_scheme) in
+               (* Record the "rep" scheme in the AST node. *)
+               field.Parsetree.ast_type <- Parsetree.ANTI_scheme rep_scheme ;
+               ((append_and_ensure_method_uniquely_defined
+                   current_species accu_fields [field_info]),
+                 ctx', env, accu_proofs, accu_term_proofs)
+               end)
+           | Parsetree.SF_sig sig_def ->
+               (begin
+               let sig_def_descr = sig_def.Parsetree.ast_desc in
+               Types.begin_definition () ;
+               let ty =
+                 typecheck_type_expr ctx env sig_def_descr.Parsetree.sig_type in
+               Types.end_definition () ;
+               (* Extend the environment with this new method of Self.      *)
+               (* Be careful : methods are not polymorphics (c.f. Virgile   *)
+               (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
+               let scheme = Types.trivial_scheme ty in
+               let env' =
+                 Env.TypingEnv.add_value
+                   sig_def_descr.Parsetree.sig_name scheme env in
+               let field_info =
+                 Env.TypeInformation.SF_sig
+                   (current_species, sig_def_descr.Parsetree.sig_name,
+                    scheme) in
+               (* Record the type information in the AST nodes. *)
+               sig_def.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
+               field.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
+               ((append_and_ensure_method_uniquely_defined
+                  current_species accu_fields [field_info]),
+                ctx, env', accu_proofs, accu_term_proofs)
+               end)
+           | Parsetree.SF_let let_def ->
+               (begin
+               (* No relevant type information to record in the AST node. *)
+               field.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
+               (* Don't increase level, this will *)
+               (* be done in the let inference.   *)
+               (* Be careful : methods are not polymorphics (c.f. Virgile   *)
+               (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
+               let bindings =
+                 typecheck_let_definition ~is_a_field: true ctx env let_def in
+               (* Let's build the environment with the bindings for this let. *)
+               let env' =
+                 List.fold_left
+                   (fun accu_env (id, ty_scheme, _) ->
+                      Env.TypingEnv.add_value id ty_scheme accu_env)
+                   env bindings in
+               (* We now collect the type information of these methods   *)
+               (* in order to make them suitable for a "type of method". *)
+               match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
+               | Parsetree.RF_rec ->
+                 (begin
+                  let field_infos =
+                    List.map2
+                      (fun (id, ty_scheme, has_def_dep_on_rep) binding ->
+                        let expr =
+                          binding.Parsetree.ast_desc.Parsetree.b_body in
+                        let params_names =
+                          List.map
+                            fst binding.Parsetree.ast_desc.Parsetree.b_params in
+                        (* Note that [expr] below is already typed here. *)
+                        (current_species, id, params_names, ty_scheme, expr,
+                         has_def_dep_on_rep))
+                      bindings
+                      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
+                  (* Recursive, so just 1 field with several names. *)
+                  ((append_and_ensure_method_uniquely_defined
+                      current_species accu_fields
+                      [(Env.TypeInformation.SF_let_rec field_infos)]),
+                   ctx, env', accu_proofs, accu_term_proofs)
+                 end)
+               | Parsetree.RF_no_rec ->
+                 (begin
+                 (* Not recursive, then the list should be only 1 long.  *)
+                 (* Anyway, if that not the case, this does not annoy.   *)
+                 (* So we return a list of n fields with 1 name in each. *)
+                 let field_infos =
+                   List.map2
+                     (fun (id, ty_scheme, has_def_dep_on_rep) binding ->
+                      let expr =
+                        binding.Parsetree.ast_desc.Parsetree.b_body in
                       let params_names =
-                        List.map
-                          fst binding.Parsetree.ast_desc.Parsetree.b_params in
+                        List.map fst
+                          binding.Parsetree.ast_desc.Parsetree.b_params in
                       (* Note that [expr] below is already typed here. *)
-                      (current_species, id, params_names, ty_scheme, expr,
-                       has_def_dep_on_rep))
-                    bindings
-                    let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
-                (* Recursive, so just 1 field with several names. *)
-                ([(Env.TypeInformation.SF_let_rec field_infos)], ctx, env',
-                   [(* Proofs *)])
+                      Env.TypeInformation.SF_let
+                        (current_species, id, params_names, ty_scheme, expr,
+                         has_def_dep_on_rep))
+                     bindings
+                     let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
+                 ((append_and_ensure_method_uniquely_defined
+                     current_species accu_fields field_infos),
+                   ctx, env', accu_proofs, accu_term_proofs)
+                 end)
                end)
-             | Parsetree.RF_no_rec ->
+           | Parsetree.SF_property property_def ->
                (begin
-               (* Not recursive, then the list should be only 1 long.  *)
-               (* Anyway, if that not the case, this does not annoy.   *)
-               (* So we return a list of n fields with 1 name in each. *)
-               let field_infos =
-                 List.map2
-                   (fun (id, ty_scheme, has_def_dep_on_rep) binding ->
-                    let expr =
-                      binding.Parsetree.ast_desc.Parsetree.b_body in
-                    let params_names =
-                      List.map fst
-                        binding.Parsetree.ast_desc.Parsetree.b_params in
-                    (* Note that [expr] below is already typed here. *)
-                    Env.TypeInformation.SF_let
-                      (current_species, id, params_names, ty_scheme, expr,
-                       has_def_dep_on_rep))
-                   bindings
-                   let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
-               (field_infos, ctx, env', [(* Proofs *)])
+               Types.reset_deps_on_rep () ;
+               Types.begin_definition () ;
+               (* Ensure that Self we be abstract during the property's    *)
+               (* definition type inference by setting [~in_proof: false]. *)
+               let ty =
+                 typecheck_logical_expr
+                   ~in_proof: false ctx env
+                   property_def.Parsetree.ast_desc.Parsetree.prd_logical_expr in
+               Types.end_definition () ;
+               (* Check for a decl dependency on "rep". *)
+               Types.check_for_decl_dep_on_self ty ;
+               (* Record the type information in the AST node. *)
+               property_def.Parsetree.ast_type <- Parsetree.ANTI_type ty ;
+               (* Extend the environment. *)
+               (* Be careful : methods are not polymorphics (c.f. Virgile   *)
+               (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
+               let scheme = Types.trivial_scheme ty in
+               let env' =
+                 Env.TypingEnv.add_value
+                   property_def.Parsetree.ast_desc.Parsetree.prd_name
+                   scheme env in
+               (* Recover if a def-dependency or a decl-dependency *)
+               (* on "rep" was/were found for this binding.        *)
+               let dep_on_rep = {
+                 Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
+                 Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep ()
+                 } in
+               let field_info =
+                 Env.TypeInformation.SF_property
+                   (current_species,
+                    property_def.Parsetree.ast_desc.Parsetree.prd_name,
+                    scheme,
+                    property_def.Parsetree.ast_desc.Parsetree.prd_logical_expr,
+                    dep_on_rep) in
+               (* Record the property's scheme in the AST node. *)
+               field.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
+               ((append_and_ensure_method_uniquely_defined
+                  current_species accu_fields [field_info]),
+                 ctx, env', accu_proofs, accu_term_proofs)
                end)
-             end)
-         | Parsetree.SF_property property_def ->
-             (begin
-             Types.reset_deps_on_rep () ;
-             Types.begin_definition () ;
-             (* Ensure that Self we be abstract during the property's    *)
-             (* definition type inference by setting [~in_proof: false]. *)
-             let ty =
-               typecheck_logical_expr
-                 ~in_proof: false ctx env
-                 property_def.Parsetree.ast_desc.Parsetree.prd_logical_expr in
-             Types.end_definition () ;
-             (* Check for a decl dependency on "rep". *)
-             Types.check_for_decl_dep_on_self ty ;
-             (* Record the type information in the AST node. *)
-             property_def.Parsetree.ast_type <- Parsetree.ANTI_type ty ;
-             (* Extend the environment. *)
-             (* Be careful : methods are not polymorphics (c.f. Virgile   *)
-             (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
-             let scheme = Types.trivial_scheme ty in
-             let env' =
-               Env.TypingEnv.add_value
-                 property_def.Parsetree.ast_desc.Parsetree.prd_name
-                 scheme env in
-             (* Recover if a def-dependency or a decl-dependency *)
-             (* on "rep" was/were found for this binding.        *)
-             let dep_on_rep = {
-               Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
-               Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep () } in
-             let field_info =
-               Env.TypeInformation.SF_property
-                 (current_species,
-                  property_def.Parsetree.ast_desc.Parsetree.prd_name,
-                  scheme,
-                  property_def.Parsetree.ast_desc.Parsetree.prd_logical_expr,
-                  dep_on_rep) in
-             (* Record the property's scheme in the AST node. *)
-             field.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
-             ([field_info], ctx, env', [(* Proofs *)])
-             end)
-         | Parsetree.SF_theorem theorem_def ->
-             (begin
-             Types.reset_deps_on_rep () ;
-             Types.begin_definition () ;
-             let ty = typecheck_theorem_def ctx env theorem_def in
-             Types.end_definition () ;
-             (* Check for a decl dependency on "rep". *)
-             Types.check_for_decl_dep_on_self ty ;
-             (* Extend the environment. *)
-             (* Be careful : methods are not polymorphics (c.f. Virgile   *)
-             (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
-             let scheme = Types.trivial_scheme ty in
-             let env' =
-               Env.TypingEnv.add_value
-                theorem_def.Parsetree.ast_desc.Parsetree.th_name scheme env in
-             (* Recover if a def-dependency or a decl-dependency *)
-             (* on "rep" was/were found for this binding.        *)
-             let dep_on_rep = {
-               Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
-               Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep () } in
-             let field_info =
-               Env.TypeInformation.SF_theorem
-                (current_species,
-                 theorem_def.Parsetree.ast_desc.Parsetree.th_name,
-                 scheme,
-                 theorem_def.Parsetree.ast_desc.Parsetree.th_stmt,
-                 theorem_def.Parsetree.ast_desc.Parsetree.th_proof,
-                 dep_on_rep) in
-             (* Record the theorem's scheme in the AST node. *)
-             field.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
-             ([field_info], ctx, env', [(* Proofs *)])
-             end)
-         | Parsetree.SF_proof proof_def ->
-             (begin
-             let proof_def_desc = proof_def.Parsetree.ast_desc in
-             (* Because the type of a proof is not relevant in FoCaL,    *)
-             (* the typechecking of a proof does not returns any type.   *)
-             (* We record the non-relevance of the type in the AST node. *)
-             proof_def.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
-             typecheck_proof ctx env proof_def_desc.Parsetree.pd_proof ;
-             (* No relevant type information to record in the AST node. *)
-             field.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
-             (* No extension there. *)
-             ([], ctx, env, [proof_def])
-             end)
-         | Parsetree.SF_termination_proof _termination_proof_def ->
-             failwith "Not yet implemented."
-        end) in
-      let (rem_fields_tys, final_ctx, rem_proofs) =
-        typecheck_species_fields new_ctx new_env rem_fields in
-      (* Make sure that method names are not *)
-      (* bound several times in the species. *)
-      ensure_methods_uniquely_defined
-        current_species fields_tys rem_fields_tys ;
-      (* And finally the result... *)
-      (fields_tys @ rem_fields_tys, final_ctx, new_proofs @ rem_proofs)
+           | Parsetree.SF_theorem theorem_def ->
+               (begin
+               Types.reset_deps_on_rep () ;
+               Types.begin_definition () ;
+               let ty = typecheck_theorem_def ctx env theorem_def in
+               Types.end_definition () ;
+               (* Check for a decl dependency on "rep". *)
+               Types.check_for_decl_dep_on_self ty ;
+               (* Extend the environment. *)
+               (* Be careful : methods are not polymorphics (c.f. Virgile   *)
+               (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
+               let scheme = Types.trivial_scheme ty in
+               let env' =
+                 Env.TypingEnv.add_value
+                  theorem_def.Parsetree.ast_desc.Parsetree.th_name scheme env in
+               (* Recover if a def-dependency or a decl-dependency *)
+               (* on "rep" was/were found for this binding.        *)
+               let dep_on_rep = {
+                 Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
+                 Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep ()
+                 } in
+               let field_info =
+                 Env.TypeInformation.SF_theorem
+                  (current_species,
+                   theorem_def.Parsetree.ast_desc.Parsetree.th_name,
+                   scheme,
+                   theorem_def.Parsetree.ast_desc.Parsetree.th_stmt,
+                   theorem_def.Parsetree.ast_desc.Parsetree.th_proof,
+                   dep_on_rep) in
+               (* Record the theorem's scheme in the AST node. *)
+               field.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
+               ((append_and_ensure_method_uniquely_defined
+                   current_species accu_fields [field_info]),
+                 ctx, env', accu_proofs, accu_term_proofs)
+               end)
+           | Parsetree.SF_proof proof_def ->
+               (begin
+               let proof_def_desc = proof_def.Parsetree.ast_desc in
+               (* Because the type of a proof is not relevant in FoCaL,    *)
+               (* the typechecking of a proof does not returns any type.   *)
+               (* We record the non-relevance of the type in the AST node. *)
+               proof_def.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
+               typecheck_proof ctx env proof_def_desc.Parsetree.pd_proof ;
+               (* No relevant type information to record in the AST node. *)
+               field.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
+               (* No extension there. *)
+               (accu_fields, ctx, env, accu_proofs @ [proof_def],
+                accu_term_proofs)
+               end)
+           | Parsetree.SF_termination_proof termination_proof_def ->
+               (begin
+               let desc = termination_proof_def.Parsetree.ast_desc in
+               (* Mostly ensure that specified methods exist and *)
+               (* same for their specified parameters names.     *)
+               List.iter
+                  (typecheck_termination_proof_profile ctx env accu_fields)
+                  desc.Parsetree.tpd_profiles ;
+               (* Typecheck the inner proof. *)
+               typecheck_termination_proof
+                  ctx env desc.Parsetree.tpd_termination_proof ;
+               (* No relevant type information to record in the AST node. *)
+               field.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
+               (* No extension there. *)
+               (accu_fields, ctx, env, accu_proofs,
+                accu_term_proofs @ [termination_proof_def])
+               end)
+          end) in
+        let (final_accu_fields, final_ctx, final_accu_proofs,
+             final_termination_proofs) =
+          rec_typecheck
+            new_ctx new_env fields_tys new_proofs new_termination_proofs
+            rem_fields in
+        (* And finally the result... *)
+        (final_accu_fields, final_ctx, final_accu_proofs,
+         final_termination_proofs) in
+    (* Now, really do the job... *)
+    rec_typecheck initial_ctx initial_env [] [] [] initial_fields 
 ;;
+
 
 
 type typed_species_parameter_argument =
@@ -2452,7 +2642,8 @@ let collapse_proof proof_of ~current_species fields =
         | Env.TypeInformation.SF_theorem _ ->
           let (collapsed_rem, was_collapsed) = rec_find rem in
           (field :: collapsed_rem, was_collapsed)
-        | Env.TypeInformation.SF_property (_, name, sch, logical_expr, deps_rep) ->
+        | Env.TypeInformation.SF_property
+                (_, name, sch, logical_expr, deps_rep) ->
           (begin
             if name_of_proof_of = name then
               (begin
@@ -3212,7 +3403,7 @@ let typecheck_species_def ctx env species_def =
       species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc in
   (* Now infer the types of the current field's and recover *)
   (* the context  where we may know the shape of [repr].    *)
-  let (methods_info, ctx', found_proofs_of) =
+  let (methods_info, ctx', found_proofs_of, (* [Unsure] *) _) =
     typecheck_species_fields
       ctx_with_inherited_repr env_with_inherited_methods
       species_def_desc.Parsetree.sd_fields in

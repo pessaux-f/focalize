@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.21 2008-04-05 18:48:16 weis Exp $ *)
+(* $Id: infer.mli,v 1.22 2008-04-08 13:03:15 pessaux Exp $ *)
 
 exception Method_multiply_defined of
   (Parsetree.vname * Parsetree.qualified_species)
@@ -39,6 +39,8 @@ exception Collection_not_fully_defined of
   (Parsetree.qualified_species * Parsetree.vname)
 exception Scheme_contains_type_vars of
   (Parsetree.vname * Types.type_scheme * Location.t)
+exception Invalid_parameter_in_delayed_proof_termination of
+  (Location.t * Parsetree.vname)
 
 type please_compile_me =
   | PCM_no_matter

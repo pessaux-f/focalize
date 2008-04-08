@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.45 2008-04-07 13:28:48 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.46 2008-04-08 13:03:15 pessaux Exp $ *)
 
 open Parsetree
 
@@ -1622,8 +1622,6 @@ let scope_termination_proof_profile ctx env profile =
        (* have the previous fields available here, this will be delayed at  *)
        (* typing -stage.                                                    *)
        (* We only scope the types if some are specified.                    *)
-       Format.eprintf "Eh, Didou remind to check termination proof args at \
-         typing-stage@." ;
        let scoped_args =
          List.map
            (fun (arg_name, arg_ty) ->
