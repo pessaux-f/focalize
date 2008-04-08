@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.32 2008-04-07 00:05:18 weis Exp $ *)
+(* $Id: lexer.mll,v 1.33 2008-04-08 08:13:48 weis Exp $ *)
 
 {
 open Lexing;;
@@ -6,6 +6,7 @@ open Parser;;
 
 type error =
    | Comment_in_string
+   | Comment_in_uniline_comment
    | Delimited_ident_in_string
    | External_code_in_string
    | Illegal_character of char
@@ -326,19 +327,32 @@ let mk_infixop s =
 open Format;;
 
 let string_of_lex_error = function
-  | Comment_in_string -> "Non escaped comment separator in string constant"
-  | Delimited_ident_in_string -> "Non escaped delimited ident separator in string constant"
-  | External_code_in_string -> "Non escaped external code separator in string constant"
-  | Illegal_character c -> "Illegal character (" ^ (Char.escaped c) ^ ")"
+  | Comment_in_string ->
+      "Non escaped comment separator in string constant"
+  | Comment_in_uniline_comment ->
+      "Non escaped comment separator in uniline comment"
+  | Delimited_ident_in_string ->
+      "Non escaped delimited ident separator in string constant"
+  | External_code_in_string ->
+      "Non escaped external code separator in string constant"
+  | Illegal_character c ->
+      "Illegal character (" ^ (Char.escaped c) ^ ")"
   | Illegal_escape s ->
       "Illegal backslash escape in string or character (" ^ s ^ ")"
-  | Uninitiated_comment -> "Comment has not started"
-  | Uninitiated_delimited_ident -> "Delimited ident has not started"
-  | Uninitiated_external_code -> "External code has not started"
-  | Unterminated_comment -> "Comment not terminated"
-  | Unterminated_documentation -> "Documentation not terminated"
-  | Unterminated_external_code -> "External code not terminated"
-  | Unterminated_string -> "String literal not terminated"
+  | Uninitiated_comment ->
+      "Comment has not started"
+  | Uninitiated_delimited_ident ->
+      "Delimited ident has not started"
+  | Uninitiated_external_code ->
+      "External code has not started"
+  | Unterminated_comment ->
+      "Comment not terminated"
+  | Unterminated_documentation ->
+      "Documentation not terminated"
+  | Unterminated_external_code ->
+      "External code not terminated"
+  | Unterminated_string ->
+      "String literal not terminated"
 ;;
 
 }
@@ -570,9 +584,10 @@ rule token = parse
         (Error (Uninitiated_comment,
                 lexbuf.lex_start_p,
                 lexbuf.lex_curr_p)) }
-  | "--" [^ '\010' '\013'] * newline
-    { update_loc lexbuf None 1 false 0;
+  | "--"
+    { uniline_comment lexbuf;
       token lexbuf }
+
   | "#" [' ' '\t']* (['0'-'9']+ as num) [' ' '\t']*
         ("\"" ([^ '\010' '\013' '"' ] * as name) "\"")?
         [^ '\010' '\013'] * newline
@@ -614,6 +629,24 @@ rule token = parse
               lexbuf.lex_start_p,
               lexbuf.lex_curr_p)) }
 
+and uniline_comment = parse
+  | newline
+    { update_loc lexbuf None 1 false 0; }
+  | ( "(*" | "*)" )
+    { raise
+        (Error
+          (Comment_in_uniline_comment,
+           lexbuf.lex_start_p,
+           lexbuf.lex_curr_p)) }
+  | eof
+    { raise
+        (Error
+          (Unterminated_comment,
+           lexbuf.lex_start_p,
+           lexbuf.lex_curr_p)) }
+  | _
+    { uniline_comment lexbuf }
+
 and comment = parse
   | "(*"
     { comment_start_pos :=
@@ -646,7 +679,7 @@ and string = parse
   | '\\' newline ([' ' '\t'] * as space)
     { update_loc lexbuf None 1 false (String.length space);
       string lexbuf }
-  | '\\' ['(' '\\' '`' '\'' '"' 'n' 't' 'b' 'r' ' ' '*' ')']
+  | '\\' ['(' '-' '\\' '`' '\'' '"' 'n' 't' 'b' 'r' ' ' '*' ')']
     { store_string_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
       string lexbuf }
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
@@ -661,7 +694,7 @@ and string = parse
            (Illegal_escape (Lexing.lexeme lexbuf),
            lexbuf.lex_start_p,
            lexbuf.lex_curr_p)) }
-  | ( "(*" | "*)" )
+  | ( "(*" | "*)" "--" )
     { raise
         (Error
            (Comment_in_string,
