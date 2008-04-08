@@ -1,20 +1,16 @@
 Require Export Bool.
 Require Export ZArith.
-
+Require Export Reals.
+Require Export Ascii.
 
 (** The weak proof !!! Give it a Prop, and abracadabra ... it's proved ! *)
 Axiom magic_prove : forall A : Prop, A.
 
 
-(** The type of strings named [string__t]. *)
-Inductive string : Set :=
-  string_make : string.
-Definition string__t := string.
-
-
 (** The type [unit__t] only contains 1 value. *)
 Inductive unit__t : Set :=
   Void : unit__t.
+
 
 (** Alias the type of integers [int__t] to Coq [Z]. *)
 Definition int__t := Z.
@@ -26,6 +22,18 @@ Definition bool__t := bool.
 
 (** Alias the type of propositions [prop__t] to Coq [Prop]. *)
 Definition prop__t := Prop.
+
+
+(** Alias the type of floatting [float__t] to Coq [R]. *)
+Definition float__t := R.
+
+
+(** Alias the type of chars [char__t] to Coq [ascii]. *)
+Definition char__t := ascii.
+
+
+(** Alias the type of strings [string__t] to Coq [string]. *)
+Definition string__t := ascii.
 
 
 (** Exceptions have all the properties we can imagine. That's assumed ! *)

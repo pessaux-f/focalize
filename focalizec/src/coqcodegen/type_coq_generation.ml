@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.1 2008-04-08 15:10:55 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.2 2008-04-08 15:46:08 pessaux Exp $ *)
 
 let type_def_compile ctx env type_def_name type_descr =
   let out_fmter = ctx.Context.rcc_out_fmter in
@@ -42,7 +42,7 @@ let type_def_compile ctx env type_def_name type_descr =
        (* relevant. Indeed, "Self" can only appear inside the scope  *)
        (* of a species, hence never at toplevel, hence never in a    *)
        (* type definition.                                           *)
-       Format.fprintf out_fmter "@[<2>Definition %a__t :=@ %a.@\n@]"
+       Format.fprintf out_fmter "@[<2>Definition %a__t :=@ %a.@]@\n"
          Parsetree_utils.pp_vname_with_operators_expanded type_def_name
          (Types.pp_type_simple_to_coq
             print_ctx ~reuse_mapping: true ~self_as: Types.CSR_self)

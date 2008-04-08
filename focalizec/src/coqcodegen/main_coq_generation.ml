@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.7 2008-04-08 15:10:55 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.8 2008-04-08 15:46:08 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -92,9 +92,11 @@ let root_compile ~current_unit ~out_file_name stuff =
   let out_hd = open_out_bin out_file_name in
   let out_fmter = Format.formatter_of_out_channel out_hd in
   let global_env = ref (Env.CoqGenEnv.empty ()) in
-  (* Always import Coq booleans and integers. Alias int notation to Z. *)
+  (* Always import Coq booleans and integers and floats. *)
+  (* Alias int notation to Z.                            *)
   Format.fprintf out_fmter
-    "Require Export Bool.@\nRequire Export ZArith.@\nOpen Scope Z_scope.@\n@\n" ;
+    "Require Export Bool.@\nRequire Export ZArith.@\nOpen Scope \
+     Z_scope.@\nRequire Export Reals.@\n@\n" ;
   try
     List.iter
       (fun data ->
