@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.20 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.21 2008-04-08 15:10:55 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -49,7 +49,7 @@ let generate_constant out_fmter constant =
 
 
 (* *********************************************************************** *)
-(* Misc_ml_generation.reduced_compil_context ->                            *)
+(* Context.reduced_compil_context ->                                       *)
 (*   local_idents: Parsetree.vname list -> Parsetree.expr_ident -> unit    *)
 (** {b Descr} : Generate the OCaml code from a FoCaL [ident] in the
               context of method generator generation.
@@ -67,7 +67,7 @@ let generate_constant out_fmter constant =
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
 let generate_expr_ident_for_method_generator ctx ~local_idents ident =
-  let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
+  let out_fmter = ctx.Context.rcc_out_fmter in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
        (begin
@@ -88,8 +88,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
        (* a "in"-parameter of the species, we use the same reasoning    *)
        (* that in [param_dep_analysis.ml]. Check justification over     *)
        (* there ! *)
-       if (List.mem vname
-             ctx.Misc_ml_generation.rcc_species_parameters_names) &&
+       if (List.mem vname ctx.Context.rcc_species_parameters_names) &&
          (not (List.mem vname local_idents)) then
          (begin
          (* In fact, a species "in"-parameter. This parameter was of the *)
@@ -113,8 +112,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
          (* its extra parameters if it has some.                      *)
          try
            let extra_args =
-             List.assoc
-               vname ctx.Misc_ml_generation.rcc_lambda_lift_params_mapping in
+             List.assoc vname ctx.Context.rcc_lambda_lift_params_mapping in
            List.iter
              (fun (s, _) ->
                (* Don't print types in OCaml to prevent being to verbose.  *)
@@ -133,7 +131,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
        (* module (i.e. the capitalized [mod_name]). If the module is   *)
        (* the currently compiled one, then do not qualify the          *)
        (* identifier.                                                  *)
-       if mod_name <> ctx.Misc_ml_generation.rcc_current_unit then
+       if mod_name <> ctx.Context.rcc_current_unit then
          Format.fprintf out_fmter "%s.%a"
            (String.capitalize mod_name)
            Parsetree_utils.pp_vname_with_operators_expanded vname
@@ -161,8 +159,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                  (* is implicitely in the current compilation unit. May be  *)
                  (* either a paramater or a toplevel defined collection.    *)
                  if List.mem
-                     coll_name
-                     ctx.Misc_ml_generation.rcc_species_parameters_names then
+                     coll_name ctx.Context.rcc_species_parameters_names then
                    (begin
                    (* It comes from a parameter. To retrieve the related *)
                    (* method name we build it the same way we built it   *)
@@ -191,7 +188,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                  end)
              | Parsetree.Qualified (module_name, coll_name) ->
                  (begin
-                 if module_name = ctx.Misc_ml_generation.rcc_current_unit then
+                 if module_name = ctx.Context.rcc_current_unit then
                    (begin
                    (* Exactly like when it is method call from a species that *)
                    (* is not the current but is implicitely in the current    *)
@@ -199,8 +196,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                    (* a species that is EXPLICITELY in the current            *)
                    (* compilation unit.                                       *)
                    if List.mem
-                       coll_name
-                       ctx.Misc_ml_generation.rcc_species_parameters_names then
+                       coll_name ctx.Context.rcc_species_parameters_names then
                      (begin
                      let prefix =
                        "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^
@@ -237,7 +233,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
 
 
 (* ******************************************************************** *)
-(* Misc_ml_generation.reduced_compil_context ->                         *)
+(* Context.reduced_compil_context ->                                    *)
 (*   Env.MlGenEnv.t -> Parsetree.constructor_ident -> unit              *)
 (** {b Descr} : Generate the OCaml code from a FoCaL [constructor_expr]
               in the context of method generator generation.
@@ -254,8 +250,7 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
     let mapping_info =
       Env.MlGenEnv.find_constructor
         ~loc: cstr_expr.Parsetree.ast_loc
-        ~current_unit: ctx.Misc_ml_generation.rcc_current_unit
-        cstr_expr env in
+        ~current_unit: ctx.Context.rcc_current_unit cstr_expr env in
     let (_, ocaml_binding) =
       try
         List.find
@@ -270,23 +265,23 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
           (Externals_ml_generation.No_external_constructor_caml_def
              cstr_expr) in
     (* Now directly generate the name the constructor is mapped onto. *)
-    Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%s" ocaml_binding
+    Format.fprintf ctx.Context.rcc_out_fmter "%s" ocaml_binding
   with
   | Env.Unbound_constructor (_, _) ->
       (begin
       match cstr_expr.Parsetree.ast_desc with
        | Parsetree.CI (Parsetree.Vname name) ->
-           Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
+           Format.fprintf ctx.Context.rcc_out_fmter "%a"
              Parsetree_utils.pp_vname_with_operators_expanded name
        | Parsetree.CI (Parsetree.Qualified (fname, name)) ->
            (* If the constructor belongs to the current      *)
            (* compilation unit then one must not qualify it. *)
-           if fname <> ctx.Misc_ml_generation.rcc_current_unit then
-             Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%s.%a"
+           if fname <> ctx.Context.rcc_current_unit then
+             Format.fprintf ctx.Context.rcc_out_fmter "%s.%a"
                (String.capitalize fname)
                Parsetree_utils.pp_vname_with_operators_expanded name
            else
-             Format.fprintf ctx.Misc_ml_generation.rcc_out_fmter "%a"
+             Format.fprintf ctx.Context.rcc_out_fmter "%a"
                Parsetree_utils.pp_vname_with_operators_expanded name
       end)
 ;;
@@ -294,7 +289,7 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
 
 
 let generate_pattern ctx env pattern =
-  let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
+  let out_fmter = ctx.Context.rcc_out_fmter in
   let rec rec_gen_pat pat =
     match pat.Parsetree.ast_desc with
      | Parsetree.P_const constant -> generate_constant out_fmter constant
@@ -346,7 +341,7 @@ let generate_pattern ctx env pattern =
 
 
 let rec let_binding_compile ctx ~local_idents env bd opt_sch =
-  let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
+  let out_fmter = ctx.Context.rcc_out_fmter in
   (* Generate the bound name. *)
   Format.fprintf out_fmter "%a"
     Parsetree_utils.pp_vname_with_operators_expanded
@@ -373,9 +368,9 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
            Format.fprintf out_fmter "@ (%a : %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
              (Types.pp_type_simple_to_ml
-                ~current_unit: ctx.Misc_ml_generation.rcc_current_unit
+                ~current_unit: ctx.Context.rcc_current_unit
                 ~reuse_mapping: true
-                ctx.Misc_ml_generation.rcc_collections_carrier_mapping)
+                ctx.Context.rcc_collections_carrier_mapping)
              param_ty
        | None ->
            Format.fprintf out_fmter "@ %a"
@@ -401,7 +396,7 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
 
 
 (* ********************************************************************* *)
-(* Misc_ml_generation.reduced_compil_context -> Env.MlGenEnv.t ->        *)
+(* Context.reduced_compil_context -> Env.MlGenEnv.t ->                   *)
 (*   local_idents: Parsetree.vname list -> Parsetree.let_def ->          *)
 (*     Types.type_scheme list -> unit                                    *)
 (** {b Desrc} : Generates the OCaml code for a FoCaL "let"-definition.
@@ -437,7 +432,7 @@ and let_def_compile ctx ~local_idents env let_def bound_schemes =
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical =
      Parsetree.LF_no_logical then
     (begin
-    let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
+    let out_fmter = ctx.Context.rcc_out_fmter in
     (* Generates the binder ("rec" or non-"rec"). *)
     Format.fprintf out_fmter "@[<2>let%s@ "
       (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
@@ -471,7 +466,7 @@ and let_def_compile ctx ~local_idents env let_def bound_schemes =
 
 
 (* ******************************************************************** *)
-(* Misc_ml_generation.reduced_compil_context ->                         *)
+(* Context.reduced_compil_context ->                                    *)
 (*   local_idents: Parsetree.vname list ->  Env.MlGenEnv.t ->           *)
 (*     Parsetree.expr -> unit                                           *)
 (** {b Descr} : Generate the OCaml code from a FoCaL expression.
@@ -479,7 +474,7 @@ and let_def_compile ctx ~local_idents env let_def bound_schemes =
     {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************** *)
 and generate_expr ctx ~local_idents env initial_expression =
-  let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
+  let out_fmter = ctx.Context.rcc_out_fmter in
   let rec rec_generate loc_idents expr =
     (* Generate the source code for the expression. *)
     match expr.Parsetree.ast_desc with
@@ -666,8 +661,7 @@ and generate_expr ctx ~local_idents env initial_expression =
       let mapping_info =
         Env.MlGenEnv.find_label
           ~loc: label.Parsetree.ast_loc
-          ~current_unit: ctx.Misc_ml_generation.rcc_current_unit
-          label env in
+          ~current_unit: ctx.Context.rcc_current_unit label env in
       let (_, ocaml_binding) =
         try
           List.find

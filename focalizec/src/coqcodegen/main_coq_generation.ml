@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.6 2007-12-21 14:47:35 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.7 2008-04-08 15:10:55 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -61,9 +61,18 @@ let toplevel_compile env ~current_unit out_fmter = function
   | Infer.PCM_collection (_, _, _) ->
       Format.fprintf out_fmter "Infer.PCM_collection TODO@." ;
       (* [Unsure] *) env
-  | Infer.PCM_type (_, _) ->
-      Format.fprintf out_fmter "Infer.PCM_type TODO@." ;
-      (* [Unsure] *) env
+  | Infer.PCM_type (type_def_name, type_descr) ->
+      (* Create the initial context for compiling the type definition. *)
+      let ctx = {
+        Context.rcc_current_unit = current_unit ;
+        (* Not under a species, hence no species parameter. *)
+        Context.rcc_species_parameters_names = [] ;
+        (* Not under a species, hence empty carriers mapping. *)
+        Context.rcc_collections_carrier_mapping = [] ;
+        (* Not in the context of generating a method's body code, then empty. *)
+        Context.rcc_lambda_lift_params_mapping = [] ;
+        Context.rcc_out_fmter = out_fmter } in
+      Type_coq_generation.type_def_compile ctx env type_def_name type_descr
   | Infer.PCM_let_def (_, _) ->
       Format.fprintf out_fmter "Infer.PCM_let_def TODO@." ;
       (* [Unsure] *) env
@@ -117,7 +126,9 @@ let root_compile ~current_unit ~out_file_name stuff =
       (* stuff. Because we don't want these errors to hide the real initial *)
       (* problem that made the code generation impossible, we first process *)
       (* here I/O errors, then will be raise again the initial error.       *)
-      Format.eprintf "Error@ while@ trying@ to@ keep@ trace@ of@ the@ partially@ generated@ Coq@ code:@ %s.@\nInitial@ error@ follows.@."
+      Format.eprintf
+        "Error@ while@ trying@ to@ keep@ trace@ of@ the@ partially@ \
+         generated@ Coq@ code:@ %s.@\nInitial@ error@ follows.@."
         (Printexc.to_string second_error)
       end)
     end) ;

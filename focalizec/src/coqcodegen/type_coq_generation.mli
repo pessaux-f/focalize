@@ -11,14 +11,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.mli,v 1.4 2008-04-08 15:10:55 pessaux Exp $ *)
+(* $Id: type_coq_generation.mli,v 1.1 2008-04-08 15:10:55 pessaux Exp $ *)
 
-
-val let_def_compile :
+val type_def_compile :
   Context.reduced_compil_context ->
-    local_idents: Parsetree.vname list -> Env.MlGenEnv.t ->
-      Parsetree.let_def -> Types.type_scheme option list -> unit
-val generate_expr :
-  Context.reduced_compil_context ->
-    local_idents: Parsetree.vname list -> Env.MlGenEnv.t -> Parsetree.expr ->
-      unit
+  'a -> Parsetree.vname -> Env.TypeInformation.type_description -> 'a

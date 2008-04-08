@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.9 2008-03-04 13:53:03 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.10 2008-04-08 15:10:55 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -69,26 +69,26 @@ let toplevel_compile env ~current_unit out_fmter = function
   | Infer.PCM_type (type_def_name, type_descr) ->
       (* Create the initial context for compiling the type definition. *)
       let ctx = {
-        Misc_ml_generation.rcc_current_unit = current_unit ;
+        Context.rcc_current_unit = current_unit ;
         (* Not under a species, hence no species parameter. *)
-        Misc_ml_generation.rcc_species_parameters_names = [] ;
+        Context.rcc_species_parameters_names = [] ;
         (* Not under a species, hence empty carriers mapping. *)
-        Misc_ml_generation.rcc_collections_carrier_mapping = [] ;
+        Context.rcc_collections_carrier_mapping = [] ;
         (* Not in the context of generating a method's body code, then empty. *)
-        Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
-        Misc_ml_generation.rcc_out_fmter = out_fmter } in
+        Context.rcc_lambda_lift_params_mapping = [] ;
+        Context.rcc_out_fmter = out_fmter } in
       Type_ml_generation.type_def_compile ctx env type_def_name type_descr
   | Infer.PCM_let_def (let_def, def_schemes) ->
       (* Create the initial context for compiling the let-definition. *)
       let ctx = {
-        Misc_ml_generation.rcc_current_unit = current_unit ;
+        Context.rcc_current_unit = current_unit ;
         (* Not under a species, hence no species parameter. *)
-        Misc_ml_generation.rcc_species_parameters_names = [] ;
+        Context.rcc_species_parameters_names = [] ;
         (* Not under a species, hence empty carriers mapping. *)
-        Misc_ml_generation.rcc_collections_carrier_mapping = [] ;
+        Context.rcc_collections_carrier_mapping = [] ;
         (* Not in the context of generating a method's body code, so, empty. *)
-        Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
-        Misc_ml_generation.rcc_out_fmter = out_fmter } in
+        Context.rcc_lambda_lift_params_mapping = [] ;
+        Context.rcc_out_fmter = out_fmter } in
       (* We have the schemes under the hand. Then we will be able    *)
       (* to annotate the parameters of the toplevel let-bound idents *)
       (* with type constraints.                                      *)
@@ -101,14 +101,14 @@ let toplevel_compile env ~current_unit out_fmter = function
   | Infer.PCM_theorem _ -> env  (* Theorems do not lead to OCaml code. *)
   | Infer.PCM_expr expr ->
       let ctx = {
-        Misc_ml_generation.rcc_current_unit = current_unit ;
+        Context.rcc_current_unit = current_unit ;
         (* Not under a species, hence no species parameter. *)
-        Misc_ml_generation.rcc_species_parameters_names = [] ;
+        Context.rcc_species_parameters_names = [] ;
         (* Not under a species, hence empty carriers mapping. *)
-        Misc_ml_generation.rcc_collections_carrier_mapping = [] ;
+        Context.rcc_collections_carrier_mapping = [] ;
         (* Not in the context of generating a method's body code, so, empty. *)
-        Misc_ml_generation.rcc_lambda_lift_params_mapping = [] ;
-        Misc_ml_generation.rcc_out_fmter = out_fmter
+        Context.rcc_lambda_lift_params_mapping = [] ;
+        Context.rcc_out_fmter = out_fmter
       } in
       (* No local idents in the scope because we are at toplevel. *)
       Base_exprs_ml_generation.generate_expr ctx env ~local_idents: [] expr ;

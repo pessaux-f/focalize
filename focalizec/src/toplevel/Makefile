@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.23 2008-04-08 13:03:15 pessaux Exp $
+# $Id: Makefile,v 1.24 2008-04-08 15:10:55 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ -I ../basement -I ../parser -I ../typing \
@@ -46,6 +46,7 @@ ALLBYTOBJS = \
 	\
 	../coqcodegen/species_record_type_generation.cmo \
 	../coqcodegen/species_coq_generation.cmo \
+	../coqcodegen/type_coq_generation.cmo \
 	../coqcodegen/main_coq_generation.cmo \
 	$(BYTOBJS)
 

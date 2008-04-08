@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.41 2008-04-05 19:02:51 weis Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.42 2008-04-08 15:10:55 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -967,7 +967,8 @@ let generate_methods ctx print_ctx env generated_fields field =
            abstraction_info.Abstractions.ai_dependencies_from_params ;
          cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
        CSF_theorem compiled_field
-   | Abstractions.FAI_property ((from, name, _, logical_expr, _), abstraction_info) ->
+   | Abstractions.FAI_property ((from, name, _, logical_expr, _),
+                                abstraction_info) ->
        (* "Property"s lead to a Coq "Hypothesis". Inherited properties *)
        (* are always generated again by just enouncing their body.     *)
        Format.fprintf out_fmter "(* From species %a. *)@\n"

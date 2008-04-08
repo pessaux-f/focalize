@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.36 2008-04-05 18:55:49 weis Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.37 2008-04-08 15:10:55 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -584,14 +584,14 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
     Format.fprintf out_fmter " =@ " ;
     (* Generates the body's code of the method. *)
     let expr_ctx = {
-      Misc_ml_generation.rcc_current_unit = ctx.Context.scc_current_unit ;
-      Misc_ml_generation.rcc_species_parameters_names =
+      Context.rcc_current_unit = ctx.Context.scc_current_unit ;
+      Context.rcc_species_parameters_names =
         ctx.Context.scc_species_parameters_names ;
-      Misc_ml_generation.rcc_collections_carrier_mapping =
+      Context.rcc_collections_carrier_mapping =
         ctx.Context.scc_collections_carrier_mapping ;
-      Misc_ml_generation.rcc_lambda_lift_params_mapping =
+      Context.rcc_lambda_lift_params_mapping =
         ctx.Context.scc_lambda_lift_params_mapping ;
-      Misc_ml_generation.rcc_out_fmter = out_fmter } in
+      Context.rcc_out_fmter = out_fmter } in
     (* No local idents in the context because we just enter the scope *)
     (* of a species fields and so we are not under a core expression. *)
     Base_exprs_ml_generation.generate_expr expr_ctx ~local_idents: [] env body ;
@@ -1119,7 +1119,8 @@ type collection_effective_arguments =
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-let apply_generator_to_parameters ctx env collection_body_params col_gen_params_info =
+let apply_generator_to_parameters ctx env collection_body_params
+    col_gen_params_info =
   let current_unit = ctx.Context.scc_current_unit in
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the assoc list mapping the formal to the effectives parameters. *)
@@ -1209,16 +1210,16 @@ let apply_generator_to_parameters ctx env collection_body_params col_gen_params_
            (begin
            Format.fprintf out_fmter "(@[<1>" ;
            let expr_ctx = {
-             Misc_ml_generation.rcc_current_unit = current_unit ;
+             Context.rcc_current_unit = current_unit ;
              (* Since we are in the context of a collection and since a *)
              (* collection does not have parameters, the                *)
              (* [rcc_species_parameters_names] is trivially empty.      *)
-             Misc_ml_generation.rcc_species_parameters_names = [] ;
-             Misc_ml_generation.rcc_collections_carrier_mapping =
+             Context.rcc_species_parameters_names = [] ;
+             Context.rcc_collections_carrier_mapping =
                ctx.Context.scc_collections_carrier_mapping ;
-             Misc_ml_generation.rcc_lambda_lift_params_mapping =
+             Context.rcc_lambda_lift_params_mapping =
                ctx.Context.scc_lambda_lift_params_mapping ;
-             Misc_ml_generation.rcc_out_fmter = out_fmter } in
+             Context.rcc_out_fmter = out_fmter } in
            (* No local idents in the context because we just enter the scope *)
            (* of a species fields and so we are not under a core expression. *)
            Base_exprs_ml_generation.generate_expr

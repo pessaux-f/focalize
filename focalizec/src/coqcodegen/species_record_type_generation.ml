@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.24 2008-04-05 19:02:51 weis Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.25 2008-04-08 15:10:55 pessaux Exp $ *)
 
 
 
@@ -508,7 +508,7 @@ and let_in_def_compile ctx ~local_idents ~self_as ~in_hyp env let_def =
          assert false
      | [one_bnd] ->
          let_binding_compile
-	   ctx ~local_idents ~self_as ~in_hyp ~is_rec env one_bnd
+           ctx ~local_idents ~self_as ~in_hyp ~is_rec env one_bnd
      | first_bnd :: next_bnds ->
          let accu_env =
            ref

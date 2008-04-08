@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_ml_generation.ml,v 1.6 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: type_ml_generation.ml,v 1.7 2008-04-08 15:10:55 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -29,8 +29,8 @@
     {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
 let print_types_comma_with_same_vmapping_and_empty_carrier_mapping ctx tys =
-  let current_unit = ctx.Misc_ml_generation.rcc_current_unit in
-  let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
+  let current_unit = ctx.Context.rcc_current_unit in
+  let out_fmter = ctx.Context.rcc_out_fmter in
   match tys with
    | [] -> ()
    | [one] ->
@@ -111,7 +111,7 @@ let extend_ml_gen_env_with_type_external_bindings env external_bindings =
     {b Rem} : Exported outside this module.                           *)
 (* ****************************************************************** *)
 let type_def_compile ctx env type_def_name type_descr =
-  let out_fmter = ctx.Misc_ml_generation.rcc_out_fmter in
+  let out_fmter = ctx.Context.rcc_out_fmter in
   (* Type definition header. *)
   Format.fprintf out_fmter "@[<2>type" ;
   (* Get a fresh instance of the type's identity scheme directly   *)
@@ -140,7 +140,7 @@ let type_def_compile ctx env type_def_name type_descr =
        (* Type abbreviation: the body is the abbreviated type. *)
        Format.fprintf out_fmter "%a@] ;;@\n "
          (Types.pp_type_simple_to_ml
-            ~current_unit: ctx.Misc_ml_generation.rcc_current_unit
+            ~current_unit: ctx.Context.rcc_current_unit
             ~reuse_mapping: true [])
          instanciated_body ;
        (* Not an external type definition, so nothing new in the environment. *)
@@ -227,7 +227,7 @@ let type_def_compile ctx env type_def_name type_descr =
                 (* The argument(s) of the constructor. *)
                 Format.fprintf out_fmter " of@ (@[<1>%a@])"
                   (Types.pp_type_simple_to_ml
-                     ~current_unit: ctx.Misc_ml_generation.rcc_current_unit
+                     ~current_unit: ctx.Context.rcc_current_unit
                      ~reuse_mapping: true [])
                   sum_cstr_args)
          sum_constructors_to_print ;
@@ -274,7 +274,7 @@ let type_def_compile ctx env type_def_name type_descr =
            Format.fprintf out_fmter "%a :@ %a ;"
              Parsetree_utils.pp_vname_with_operators_expanded field_name
              (Types.pp_type_simple_to_ml
-                ~current_unit: ctx.Misc_ml_generation.rcc_current_unit
+                ~current_unit: ctx.Context.rcc_current_unit
                 ~reuse_mapping: true [])
              field_ty)
          record_fields_to_print ;
