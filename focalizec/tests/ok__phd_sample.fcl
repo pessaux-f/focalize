@@ -8,8 +8,8 @@ open "basics" ;;
 (* starting page 14.                                                  *)
 (* ****************************************************************** *)
 species Setoide inherits Basic_object =
-  sig ( = ) : Self -> Self -> bool ;
-  sig element : Self ;
+  signature ( = ) : Self -> Self -> bool ;
+  signature element : Self ;
   let different (x, y) = basics#not_b (x = y) ;
 
   property refl : all x in Self, x = x ;
@@ -17,8 +17,8 @@ species Setoide inherits Basic_object =
 end ;;
 
 species Monoide inherits Setoide =
-  sig ( * ) : Self -> Self -> Self ;
-  sig un : Self ;
+  signature ( * ) : Self -> Self -> Self ;
+  signature un : Self ;
   let element = Self! un * !un ;
 end ;;
 
@@ -28,15 +28,15 @@ species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
   let ( = ) (x, y) =
      and_b
        (A!( = ) (basics#first (x), basics#first (y)),
-	B!( = ) (scnd (x), scnd (y))) ;
+        B!( = ) (scnd (x), scnd (y))) ;
   let creer (x, y) in Self = basics#crp (x, y) ;
   let element = Self!creer (A!element, B!element) ;
   let print (x) =
      sc ("(",
-	 sc (A!print (first (x)),
-	     sc (",",
-		 sc (B!print (scnd (x)),
-		     ")")))) ;
+         sc (A!print (first (x)),
+             sc (",",
+                 sc (B!print (scnd (x)),
+                     ")")))) ;
 
   proof of refl = (* by definition of ( = ) *) assumed ;
   proof of symm = assumed ;
@@ -50,7 +50,7 @@ species Monoide_produit (C is Monoide, D is Monoide)
   let un = !creer (C!un, D!un) ;
   let ( * ) (x, y) =
      crp (C!( * ) (first (x), first (y)),
-	  D!( * ) (scnd (x), scnd (y))) ;
+          D!( * ) (scnd (x), scnd (y))) ;
 end ;;
 
 

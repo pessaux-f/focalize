@@ -126,11 +126,10 @@ end ;;
 *)
 
 species Toy inherits Basic_object =
-  sig ( = ) : Self -> Self -> bool
+  signature ( = ) : Self -> Self -> bool
   ;
   property ``equal is reflexive'' : all x y in Self,
-    Self!( = ) (x, x) and
-    x = x
+    Self!( = ) (x, x) /\ x = x
   ;
   property equal_symmetric : all x y in Self,
     Self!equal(x, y) -> !equal(y, x)
@@ -138,7 +137,7 @@ species Toy inherits Basic_object =
   property equal_transitive : all x y z in Self,
     !equal(x, y) -> !equal(y, z) -> !equal(x, z)
   ;
-  sig element : Self
+  signature element : Self
   ;
   let different (x, y) = #not_b(!equal(x, y))
   ;
@@ -152,10 +151,11 @@ species Toy inherits Basic_object =
     by definition of different
       property !different, different ;
 
+  (* Recursive logicals are not anymore syntactically accepted !
   logical rec appartient (x in int, y in int) in prop =
     match x with
     | 0 -> same_is_not_different  (* Pretty strange... *)
-    | _ -> appartient (x, y) ;
+    | _ -> appartient (x, y) ; *)
 
 end
 ;;

@@ -18,8 +18,8 @@ end ;;
 
 
 species A =
-  sig ( = ) : Self -> Self -> bool ;
-  sig element : Self ;
+  signature ( = ) : Self -> Self -> bool ;
+  signature element : Self ;
 
   property refl : all x in Self, x = x ;
 end ;;

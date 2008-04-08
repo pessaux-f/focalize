@@ -15,11 +15,11 @@ species Basic_object =
 end ;;
 
 species S inherits Basic_object =
-  sig a : Self ;
-  sig op : Self -> Self ;
+  signature a : Self ;
+  signature op : Self -> Self ;
   let c = op (a) ;
-  sig p1 : Self -> prop ;
-  sig p2 : Self -> prop ;
+  signature p1 : Self -> prop ;
+  signature p2 : Self -> prop ;
   property p1_p2 : all x in Self, p2 (x) -> p1 (x) ;
   property op_spec : all x in Self, p1 (x) -> p2 (op (x)) ;
   property a_spec : p1 (a) ;

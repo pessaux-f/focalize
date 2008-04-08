@@ -8,7 +8,7 @@ open "basics" ;;
 (* the need for the erasing procedure.                                   *)
 (* ********************************************************************* *)
 species A inherits Basic_object =
-  sig eq : Self -> Self -> bool ;
+  signature eq : Self -> Self -> bool ;
   let id (x in Self) = x ;
   theorem foo : all x in Self, eq (x, id (x))
     proof: by definition of id ;

@@ -44,10 +44,10 @@ species Equalified_object inherits Basic_object =
 end ;;
 
 species List (E is Basic_object) inherits Equalified_object =
-   sig nil : Self ;
-   sig cons : E -> Self -> Self ;
-   sig head : Self -> E ;
-   sig tail : Self -> Self ;
+   signature nil : Self ;
+   signature cons : E -> Self -> Self ;
+   signature head : Self -> E ;
+   signature tail : Self -> Self ;
    let rec map (f, l) =
      if equal (l, nil) then nil
      else
