@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.35 2008-04-07 13:28:48 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.36 2008-04-08 08:14:51 weis Exp $ *)
 
 (** {2 The Focalize abstract syntax tree.} *)
 
@@ -23,15 +23,20 @@
 
 (** {3 The generic polymorphic type of AST nodes.} *)
 
-(** AST documentation support:
+(** AST support for documentation of programs:
     documentation elements are special lexems that can appear in specified
-    nodes according to the grammar of the language.
+    nodes according to the grammar of the language. Roughly speaking,
+    documentation nodes appear in each ``important'' node, before the keyword
+    that introduces the construct.
     A documentation is a list of such documentation elements.
     The contents of documentation elements is free style, provided that the
     documentation element is a legal language comment (hence, the usual end of
     comment marker of the language cannot appear in a documentation element).
     Note that an empty list of documentation elements stands for no
-    documentation at all. *)
+    documentation at all.
+    Documentation elements can be used by specific extra compiler passes that
+    can parse the documentation related to the pass at hand and just ignore
+    the rest of the documentation. *)
 type documentation = doc_elem list
 and doc_elem = {
   de_loc : Location.t;
@@ -40,10 +45,10 @@ and doc_elem = {
 ;;
 
 type ast_node_type_information =
-  | ANTI_non_relevant
-  | ANTI_none
-  | ANTI_type of Types.type_simple
-  | ANTI_scheme of Types.type_scheme
+   | ANTI_non_relevant
+   | ANTI_none
+   | ANTI_type of Types.type_simple
+   | ANTI_scheme of Types.type_scheme
 ;;
 
 type 'a ast = {
@@ -307,11 +312,11 @@ and expr_desc =
 
 and let_def = let_def_desc ast
 and let_def_desc = {
-  ld_rec : rec_flag ;
-  ld_logical : logical_flag ;
-  ld_local : local_flag ;
-  ld_bindings : binding list ;
-  ld_termination_proof : termination_proof option
+  ld_rec : rec_flag;
+  ld_logical : logical_flag;
+  ld_local : local_flag;
+  ld_bindings : binding list;
+  ld_termination_proof : termination_proof option;
 }
 
 and param_list = (vname * type_expr option) list
@@ -324,7 +329,7 @@ and binding_desc = {
   b_name : vname;
   b_params : param_list;
   b_type : type_expr option;
-  b_body : binding_body
+  b_body : binding_body;
 }
 
 (** {6 Propositions.} *)
@@ -382,17 +387,17 @@ and proof_node_desc =
 
 and termination_proof = termination_proof_desc ast
 and termination_proof_desc =
-    (* The termination proof is structural on the named argument. *)
+    (** The termination proof is structural on the named argument. *)
   | TP_structural of vname
-    (* The order is computed as a lexicographic order and
+    (** The order is computed as a lexicographic order and
        the termination proof is infered automatically.
        A hint can be given as a list of facts. *)
   | TP_lexicographic of fact list
-    (* Give a measure [expr] that proves termination of the recursive function
-       because the [proof] prove that all recursive calls' arguments decrease
-       w.r.t. this measure. *)
+    (** Gives a measure [expr] that proves the termination of the recursive
+        function because the [proof] proves that all recursive calls'
+        arguments decrease w.r.t. this measure. *)
   | TP_measure of expr * param_list * proof
-    (* Gives an order [expr], a list of arguments to compare,
+    (** Gives an order [expr], a list of arguments to compare,
        a proof that:
        - the order is well founded,
        - each recursive call decreases for the order applied to the listed
@@ -442,7 +447,9 @@ and theorem_def_desc = {
 
 type termination_proof_def = termination_proof_def_desc ast
 and termination_proof_def_desc = {
+  (** The list of recursive functions that must terminate. *)
   tpd_profiles : termination_proof_profile list;
+  (** Their proof of termination. *)
   tpd_termination_proof : termination_proof;
 }
 and termination_proof_profile = termination_proof_profile_desc ast
