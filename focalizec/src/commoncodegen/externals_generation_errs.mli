@@ -11,10 +11,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: externals_ml_generation.mli,v 1.3 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: externals_generation_errs.mli,v 1.1 2008-04-09 10:19:44 pessaux Exp $ *)
 
 
-exception No_external_value_caml_def of (Parsetree.vname * Location.t)
-exception No_external_type_caml_def of (Parsetree.vname * Location.t)
-exception No_external_constructor_caml_def of Parsetree.constructor_ident
-exception No_external_field_caml_def of Parsetree.label_ident
+exception No_external_value_def of (string * Parsetree.vname * Location.t)
+exception No_external_type_def of (string * Parsetree.vname * Location.t)
+exception No_external_constructor_def of (string * Parsetree.constructor_ident)
+exception No_external_field_def of (string * Parsetree.label_ident)

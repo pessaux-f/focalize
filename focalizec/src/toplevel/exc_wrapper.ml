@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.33 2008-04-08 13:03:15 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.34 2008-04-09 10:19:44 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -320,37 +320,38 @@ try Check_file.main () with
            Handy.pp_reset_effects
            Handy.pp_set_bold Handy.pp_reset_effects
 (* ********************** *)
-(* OCaml code generation. *)
-     | Externals_ml_generation.No_external_value_caml_def (def_name, at) ->
+(* External code generation. *)
+     | Externals_generation_errs.No_external_value_def (lang, def_name, at) ->
          Format.fprintf Format.err_formatter
-           "%a:@\n@[%tNo@ OCaml@ mapping@ given@ for@ the@ external@ value@ \
+           "%a:@\n@[%tNo@ %s@ mapping@ given@ for@ the@ external@ value@ \
             definition%t@ '%t%a%t'.@]@."
            Location.pp_location at
-           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_bold lang Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_vname def_name
            Handy.pp_reset_effects
-     | Externals_ml_generation.No_external_type_caml_def (def_name, at) ->
+     | Externals_generation_errs.No_external_type_def (lang, def_name, at) ->
          Format.fprintf Format.err_formatter
-           "%a:@\n@[%tNo@ OCaml@ mapping@ given@ for@ the@ external@ type@ \
+           "%a:@\n@[%tNo@ %s@ mapping@ given@ for@ the@ external@ type@ \
             definition%t@ '%t%a%t'.@]@."
            Location.pp_location at
-           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_bold lang Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_vname def_name
            Handy.pp_reset_effects
-     | Externals_ml_generation.No_external_constructor_caml_def cstr_ident ->
+     | Externals_generation_errs.No_external_constructor_def
+	 (lang, cstr_ident) ->
          Format.fprintf Format.err_formatter
-           "%a:@\n@[%tNo@ OCaml@ mapping@ given@ for@ the@ external@ sum@ \
+           "%a:@\n@[%tNo@ %s@ mapping@ given@ for@ the@ external@ sum@ \
             type@ constructor%t@ '%t%a%t'.@]@."
            Location.pp_location cstr_ident.Parsetree.ast_loc
-           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_bold lang Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_constructor_ident cstr_ident
            Handy.pp_reset_effects
-     | Externals_ml_generation.No_external_field_caml_def label_ident ->
+     | Externals_generation_errs.No_external_field_def (lang, label_ident) ->
          Format.fprintf Format.err_formatter
-           "%a:@\n@[%tNo@ OCaml@ mapping@ given@ for@ the@ external@ \
+           "%a:@\n@[%tNo@ %s@ mapping@ given@ for@ the@ external@ \
             record@ field%t@ '%t%a%t'.@]@."
            Location.pp_location label_ident.Parsetree.ast_loc
-           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_bold lang Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_label_ident label_ident
            Handy.pp_reset_effects
 (* ********************** *)

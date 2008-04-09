@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.24 2008-04-08 15:10:55 pessaux Exp $
+# $Id: Makefile,v 1.25 2008-04-09 10:19:44 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/ -I ../basement -I ../parser -I ../typing \
@@ -9,7 +9,6 @@ BINOBJS = $(BYTOBJS:.cmo=.cmx)
 
 ALLBYTOBJS = \
 	../basement/installation.cmo \
-	../basement/configuration.cmo \
 	../basement/configuration.cmo \
 	../basement/handy.cmo \
 	../basement/location.cmo \
@@ -36,9 +35,9 @@ ALLBYTOBJS = \
 	../commoncodegen/visUniverse.cmo \
 	../commoncodegen/minEnv.cmo \
 	../commoncodegen/abstractions.cmo \
+	../commoncodegen/externals_generation_errs.cmo \
 	\
 	../mlcodegen/misc_ml_generation.cmo \
-	../mlcodegen/externals_ml_generation.cmo \
         ../mlcodegen/type_ml_generation.cmo \
         ../mlcodegen/base_exprs_ml_generation.cmo \
 	../mlcodegen/species_ml_generation.cmo \

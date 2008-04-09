@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_ml_generation.ml,v 1.7 2008-04-08 15:10:55 pessaux Exp $ *)
+(* $Id: type_ml_generation.ml,v 1.8 2008-04-09 10:19:44 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -167,8 +167,8 @@ let type_def_compile ctx env type_def_name type_descr =
        with Not_found ->
          (* We didn't find any correspondance for OCaml. *)
          raise
-           (Externals_ml_generation.No_external_type_caml_def
-              (type_def_name, external_expr.Parsetree.ast_loc))) ;
+           (Externals_generation_errs.No_external_type_def
+              ("OCaml", type_def_name, external_expr.Parsetree.ast_loc))) ;
        (* Finally, we return the extended code generation environment in *)
        (* which sum constructors or labels are recorded in order to be   *)
        (* able to remind on what to map them when we will see them.      *)

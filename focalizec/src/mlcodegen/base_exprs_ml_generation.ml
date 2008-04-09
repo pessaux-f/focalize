@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.21 2008-04-08 15:10:55 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.22 2008-04-09 10:19:44 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -262,8 +262,8 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
       with Not_found ->
         (* No OCaml mapping found. *)
         raise
-          (Externals_ml_generation.No_external_constructor_caml_def
-             cstr_expr) in
+          (Externals_generation_errs.No_external_constructor_def
+             ("OCaml", cstr_expr)) in
     (* Now directly generate the name the constructor is mapped onto. *)
     Format.fprintf ctx.Context.rcc_out_fmter "%s" ocaml_binding
   with
@@ -611,8 +611,8 @@ and generate_expr ctx ~local_idents env initial_expression =
          with Not_found ->
            (* No OCaml mapping found. *)
            raise
-             (Externals_ml_generation.No_external_value_caml_def
-                ((Parsetree.Vlident "<expr>"), expr.Parsetree.ast_loc))
+             (Externals_generation_errs.No_external_value_def
+                ("OCaml", (Parsetree.Vlident "<expr>"), expr.Parsetree.ast_loc))
          end)
      | Parsetree.E_paren e -> rec_generate loc_idents e
 
@@ -672,7 +672,9 @@ and generate_expr ctx ~local_idents env initial_expression =
             mapping_info
         with Not_found ->
           (* No OCaml mapping found. *)
-          raise (Externals_ml_generation.No_external_field_caml_def label) in
+          raise
+            (Externals_generation_errs.No_external_field_def
+               ("OCaml", label)) in
       Format.fprintf out_fmter "%s" ocaml_binding
     with
     | Env.Unbound_label (_, _) ->
