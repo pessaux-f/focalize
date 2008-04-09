@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.3 2008-04-09 10:19:44 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.4 2008-04-09 13:01:47 pessaux Exp $ *)
 
 
 
@@ -36,6 +36,44 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
            print_ctx ~reuse_mapping: true ~self_as: Types.CSR_self)
         ty)
     tys
+;;
+
+
+
+(** [nb_extra_args] : the number of extra argument of type "Set" used to
+     represent the polymorphism in case where the constructor belongs to a
+     polymorphic type. *)
+let extend_coq_gen_env_with_type_external_bindings env nb_extra_args
+    external_bindings =
+  let rec rec_extend rec_env = function
+    | [] -> rec_env
+    | binding :: rem_bindings ->
+        let (bound_name, bound_external_expr) = binding.Parsetree.ast_desc in
+        let rec_env' =
+          (match bound_name with
+           | Parsetree.Vlident _ ->
+(*
+[Unsure]
+               (* Starting by a lowercase letter means record field name. *)
+               Env.CoqGenEnv.add_label
+                 bound_name bound_external_expr.Parsetree.ast_desc rec_env
+*) failwith "todo"
+           | Parsetree.Vuident _ ->
+               (* Starting by an uppercase letter means sum constructor. *)
+               let cstr_mapping_info = {
+                 Env.CoqGenInformation.cmi_num_polymorphics_extra_args =
+                   nb_extra_args ;
+                 Env.CoqGenInformation.cmi_external_expr =
+                   bound_external_expr.Parsetree.ast_desc } in
+               Env.CoqGenEnv.add_constructor
+                 bound_name cstr_mapping_info rec_env
+           | _ ->
+               (* This syntactically should never arise. *)
+               assert false) in
+        rec_extend rec_env' rem_bindings in
+  (* ********************** *)
+  (* Now, let's do the job. *)
+  rec_extend env external_bindings.Parsetree.ast_desc
 ;;
 
 
@@ -80,7 +118,6 @@ let type_def_compile ctx env type_def_name type_descr =
          instanciated_body ;
        (* Not an external type definition, so nothing new in the environment. *)
        env
-(*
    | Env.TypeInformation.TK_external (external_expr, external_bindings) ->
        (begin
        Format.fprintf out_fmter "@[<2>Definition %a__t@ "
@@ -102,14 +139,17 @@ let type_def_compile ctx env type_def_name type_descr =
        with Not_found ->
          (* We didn't find any correspondance for Coq. *)
          raise
-           (Externals_coq_generation.No_external_type_coq_def
-              (type_def_name, external_expr.Parsetree.ast_loc))) ;
-       (* Finally, we return the extended code generation environment in *)
+           (Externals_generation_errs.No_external_type_def
+              ("Coq", type_def_name, external_expr.Parsetree.ast_loc))) ;
+       (* Compute the number of extra polymorphic-induced *)
+       (* arguments to the constructor.                   *)
+       let nb_extra_args = List.length type_def_params in
+        (* Finally, we return the extended code generation environment in *)
        (* which sum constructors or labels are recorded in order to be   *)
        (* able to remind on what to map them when we will see them.      *)
-       extend_ml_gen_env_with_type_external_bindings env external_bindings
+       extend_coq_gen_env_with_type_external_bindings
+         env nb_extra_args external_bindings
        end)
-*)
    | _ ->
        (* [Unsure] *)
        Format.eprintf "Types in coq todo !!!!!!!!!!!!!!@." ;

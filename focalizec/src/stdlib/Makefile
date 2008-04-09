@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2008-04-05 19:09:06 weis Exp $
+# $Id: Makefile,v 1.9 2008-04-09 13:01:47 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file
@@ -24,7 +24,7 @@ FOCMLS = $(FOCSRC:.foc=.ml)
 FOCCMOS = $(FOCMLS:.ml=.cmo)
 FOCVS = $(FOCSRC:.foc=.v)
 FOCVOS = $(FOCVS:.v=.vo)
-EXTERNALOBJS = focvasives.cmo sets_orders_externals.cmo \
+EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
 	weak_structures_externals.cmo
 
 

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.69 2008-04-05 18:24:06 weis Exp $ *)
+(* $Id: env.ml,v 1.70 2008-04-09 13:01:47 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -680,7 +680,8 @@ module CoqGenInformation = struct
   type constructor_mapping_info = {
     (** The number of extra argument the constructor has due to its
         polymorphism. *)
-    cmi_num_polymorphics_extra_args : int
+    cmi_num_polymorphics_extra_args : int ;
+    cmi_external_expr : Parsetree.external_expr_desc
     }
 
   type label_mapping_info = unit

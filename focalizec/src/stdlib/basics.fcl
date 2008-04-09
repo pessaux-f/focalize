@@ -8,6 +8,7 @@ type unit =
   internal
   external
   | caml -> "unit"
+  | coq -> "coq_builtins.unit"
 ;;
 type float =
   internal
@@ -49,7 +50,7 @@ and Cons =
 let foc_error =
    internal string -> 'a
    external
-    | caml -> "Focvasives.foc_error"
+    | caml -> "Ml_builtins.foc_error"
     | coq -> "foc_error"
 ;;
 
@@ -85,58 +86,58 @@ let scnd (x) = match x with | (_, v) -> v ;;
 let string_of_int =
   internal int -> string
   external
-  | caml -> "Focvasives.string_of_int" ;;
+  | caml -> "Ml_builtins.string_of_int" ;;
 let int_of_string =
   internal string -> int
   external
-  | caml -> "Focvasives.int_of_string" ;;
+  | caml -> "Ml_builtins.int_of_string" ;;
 let print_int =
   internal int -> unit
   external
-  | caml -> "Focvasives.int_print" ;;
+  | caml -> "Ml_builtins.int_print" ;;
 
 (* Operations on integers. *)
 let int_mod =
   internal int -> int -> int
   external
-  | caml -> "Focvasives.int_mod" ;;
+  | caml -> "Ml_builtins.int_mod" ;;
 let int_eq =
   internal int -> int -> bool
   external
-  | caml -> "Focvasives.int_eq"
+  | caml -> "Ml_builtins.int_eq"
   | coq -> "int_eq" ;;
 let int_div =
   internal int -> int -> int
   external
-   | caml -> "Focvasives.int_div" ;;
+   | caml -> "Ml_builtins.int_div" ;;
 let int_lt =
   internal int -> int -> bool
   external
-  | caml -> "Focvasives.int_lt"
+  | caml -> "Ml_builtins.int_lt"
   | coq -> "int_lt" ;;
 let int_leq =
   internal int -> int -> bool
   external
-  | caml -> "Focvasives.int_leq"
+  | caml -> "Ml_builtins.int_leq"
   | coq -> "int_leq" ;;
 let int_geq =
   internal int -> int -> bool
   external
-  | caml -> "Focvasives.int_geq"
+  | caml -> "Ml_builtins.int_geq"
   | coq -> "int_geq" ;;
 let int_gt =
   internal  int -> int -> bool
   external
-  | caml -> "Focvasives.int_gt"
+  | caml -> "Ml_builtins.int_gt"
   | coq -> "int_gt" ;;
 let phys_eq =
   internal 'a ->'a -> bool
   external
-    | caml -> "Focvasives.base_equal" ;;
+    | caml -> "Ml_builtins.base_equal" ;;
 let base_eq =
   internal  'a -> 'a -> bool
   external
-  | caml -> "Focvasives.base_eq"
+  | caml -> "Ml_builtins.base_eq"
   | coq -> "beq" ;;
 
 theorem beq_refl : all x in 'a, base_eq (x, x) proof: assumed ;;
@@ -245,15 +246,15 @@ proof: assumed ;;
 let pred =
   internal int -> int
   external
-  | caml -> "Focvasives.pred" | coq -> "pred" ;;
+  | caml -> "Ml_builtins.pred" | coq -> "pred" ;;
 let int_opp =
   internal  int -> int
   external
-  | caml -> "Focvasives.int_opposite" | coq -> "int_opp" ;;
+  | caml -> "Ml_builtins.int_opposite" | coq -> "int_opp" ;;
 let int_plus =
   internal int -> int -> int
   external
-  | caml -> "Focvasives.int_plus" | coq -> "int_plus" ;;
+  | caml -> "Ml_builtins.int_plus" | coq -> "int_plus" ;;
 
 theorem int_0_plus: all x y in int,
   #base_eq (x, 0) -> #base_eq (#int_plus (x, y), y)
@@ -316,23 +317,23 @@ let succ(x) = #int_plus (x, 1) ;;
 let int_mult =
   internal int -> int -> int
   external
-  | caml -> "Focvasives.int_mult"
+  | caml -> "Ml_builtins.int_mult"
   | coq -> "int_mult" ;;
 let int_minus =
   internal int -> int -> int
   external
-  | caml -> "Focvasives.int_minus"
+  | caml -> "Ml_builtins.int_minus"
   | coq -> "int_moins" ;;
 let int_max =
   internal  int -> int -> int
   external
-  | caml -> "Focvasives.int_max"
+  | caml -> "Ml_builtins.int_max"
   | coq -> "max"
 ;;
 let int_min =
   internal int -> int -> int
   external
-  | caml -> "Focvasives.int_min"
+  | caml -> "Ml_builtins.int_min"
   | coq -> "min" ;;
 
 theorem int_min_le: all x y z in int,
@@ -386,15 +387,15 @@ proof:
 let sc =
   internal  string -> string -> string
   external
-  | caml -> "Focvasives.str_cat" ;;
+  | caml -> "Ml_builtins.str_cat" ;;
 let str_lt =
   internal string -> string -> bool
   external
-  | caml -> "Focvasives.str_lt" ;;
+  | caml -> "Ml_builtins.str_lt" ;;
 let print_string =
   internal string -> unit
   external
-  | caml -> "Focvasives.str_print" ;;
+  | caml -> "Ml_builtins.str_print" ;;
 let print_newline (x in unit) = print_string ("\n") ;;
 
 

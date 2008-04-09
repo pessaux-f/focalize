@@ -1,1 +1,1 @@
-let i_failed r elt = raise (Focvasives.Foc_Failure ("Failed: " ^ r)) ;;
+let i_failed r elt = raise (Ml_builtins.Foc_Failure ("Failed: " ^ r)) ;;

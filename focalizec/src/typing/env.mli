@@ -132,7 +132,8 @@ module MlGenInformation :
 module CoqGenInformation :
   sig
     type constructor_mapping_info = {
-      cmi_num_polymorphics_extra_args : int
+      cmi_num_polymorphics_extra_args : int ;
+      cmi_external_expr : Parsetree.external_expr_desc
     }
 
     type label_mapping_info = unit
