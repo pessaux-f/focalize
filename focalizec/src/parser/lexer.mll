@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.33 2008-04-08 08:13:48 weis Exp $ *)
+(* $Id: lexer.mll,v 1.34 2008-04-09 09:53:21 weis Exp $ *)
 
 {
 open Lexing;;
@@ -7,8 +7,11 @@ open Parser;;
 type error =
    | Comment_in_string
    | Comment_in_uniline_comment
+   | Comment_in_delimited_ident
    | Delimited_ident_in_string
+   | Delimited_ident_in_delimited_ident
    | External_code_in_string
+   | External_code_in_delimited_ident
    | Illegal_character of char
    | Illegal_escape of string
    | Uninitiated_comment
@@ -16,6 +19,7 @@ type error =
    | Uninitiated_external_code
    | Unterminated_comment
    | Unterminated_documentation
+   | Unterminated_delimited_ident
    | Unterminated_external_code
    | Unterminated_string
 ;;
@@ -85,6 +89,18 @@ List.iter
   "value", VALUE;
   "with", WITH;
 ]
+;;
+
+let lident lexbuf =
+  let s = Lexing.lexeme lexbuf in
+  try Hashtbl.find keyword_table s with
+  | Not_found -> LIDENT s
+;;
+
+let uident lexbuf =
+  let s = Lexing.lexeme lexbuf in
+  try Hashtbl.find keyword_table s with
+  | Not_found -> UIDENT s
 ;;
 
 (* Lexing the external_code tokens. *)
@@ -171,9 +187,38 @@ let get_stored_string () =
   s
 ;;
 
+(* Lexing the delimited_ident tokens. *)
+let initial_delimited_ident_buffer = String.create 256;;
+let delimited_ident_buff = ref initial_delimited_ident_buffer
+and delimited_ident_index = ref 0
+;;
+
+let reset_delimited_ident_buffer () =
+  delimited_ident_buff := initial_delimited_ident_buffer;
+  delimited_ident_index := 0
+;;
+
+let store_delimited_ident_char c =
+  if !delimited_ident_index >= String.length (!delimited_ident_buff) then begin
+    let new_buff = String.create (String.length (!delimited_ident_buff) * 2) in
+    String.blit (!delimited_ident_buff) 0
+                new_buff 0 (String.length (!delimited_ident_buff));
+    delimited_ident_buff := new_buff
+  end;
+  String.unsafe_set (!delimited_ident_buff) (!delimited_ident_index) c;
+  incr delimited_ident_index
+;;
+
+let get_stored_delimited_ident () =
+  let s = String.sub (!delimited_ident_buff) 0 (!delimited_ident_index) in
+  delimited_ident_buff := initial_external_code_buffer;
+  s
+;;
+
 let external_code_start_pos = ref None;;
 let documentation_start_pos = ref None;;
 let string_start_pos = ref None;;
+let delimited_ident_start_pos = ref None;;
 let comment_start_pos = ref [];;
 
 let char_for_backslash = function
@@ -331,10 +376,16 @@ let string_of_lex_error = function
       "Non escaped comment separator in string constant"
   | Comment_in_uniline_comment ->
       "Non escaped comment separator in uniline comment"
+  | Comment_in_delimited_ident ->
+      "Non escaped comment separator in delimited ident"
   | Delimited_ident_in_string ->
       "Non escaped delimited ident separator in string constant"
+  | Delimited_ident_in_delimited_ident ->
+      "Non escaped delimited ident separator in delimited ident"
   | External_code_in_string ->
       "Non escaped external code separator in string constant"
+  | External_code_in_delimited_ident ->
+      "Non escaped external code separator in delimited ident"
   | Illegal_character c ->
       "Illegal character (" ^ (Char.escaped c) ^ ")"
   | Illegal_escape s ->
@@ -351,6 +402,8 @@ let string_of_lex_error = function
       "Documentation not terminated"
   | Unterminated_external_code ->
       "External code not terminated"
+  | Unterminated_delimited_ident ->
+      "Delimited ident not terminated"
   | Unterminated_string ->
       "String literal not terminated"
 ;;
@@ -464,6 +517,22 @@ let regular_uppercase_ident = start_uppercase_ident continue_ident*
 let regular_infix_ident = start_infix_ident continue_infix_ident*
 let regular_prefix_ident = start_prefix_ident continue_prefix_ident*
 
+(** Integers. *)
+let decimal_literal =
+  [ '0'-'9'] ['0'-'9' '_' ]*
+let hex_literal =
+  '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f' '_']+
+let oct_literal =
+  '0' ['o' 'O'] ['0'-'7'] ['0'-'7' '_']*
+let bin_literal =
+  '0' ['b' 'B'] ['0'-'1' '_']+
+let int_literal =
+  decimal_literal | hex_literal | oct_literal | bin_literal
+let float_literal =
+  ['0'-'9'] ['0'-'9' '_']*
+  ('.' ['0'-'9' '_']* )?
+  (['e' 'E'] ['+' '-']? ['0'-'9'] ['0'-'9' '_']*)?
+
 (** Delimited identifiers. *)
 
 let delimited_lowercase_ident =
@@ -494,22 +563,6 @@ let prefix_ident =
     regular_prefix_ident
   | delimited_prefix_ident
 
-(** Integers. *)
-let decimal_literal =
-  [ '0'-'9'] ['0'-'9' '_' ]*
-let hex_literal =
-  '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f' '_']+
-let oct_literal =
-  '0' ['o' 'O'] ['0'-'7'] ['0'-'7' '_']*
-let bin_literal =
-  '0' ['b' 'B'] ['0'-'1' '_']+
-let int_literal =
-  decimal_literal | hex_literal | oct_literal | bin_literal
-let float_literal =
-  ['0'-'9'] ['0'-'9' '_']*
-  ('.' ['0'-'9' '_']* )?
-  (['e' 'E'] ['+' '-']? ['0'-'9'] ['0'-'9' '_']*)?
-
 rule token = parse
   | newline
     { update_loc lexbuf None 1 false 0;
@@ -517,15 +570,28 @@ rule token = parse
   | blank +
     { token lexbuf }
   | lowercase_ident
-    { let s = Lexing.lexeme lexbuf in
-      try Hashtbl.find keyword_table s with
-      | Not_found -> LIDENT s }
+    { lident lexbuf }
   | uppercase_ident
-    { let s = Lexing.lexeme lexbuf in
-      try Hashtbl.find keyword_table s with
-      | Not_found -> UIDENT s }
+    { uident lexbuf }
   | "\'" lowercase_ident
     { QIDENT (Lexing.lexeme lexbuf) }
+  | "``" (start_lowercase_ident | start_uppercase_ident |
+          start_infix_ident | start_prefix_ident)
+    { reset_delimited_ident_buffer ();
+      store_delimited_ident_char (Lexing.lexeme_char lexbuf 2);
+      delimited_ident_start_pos :=
+        Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
+      delimited_ident lexbuf;
+      begin match !delimited_ident_start_pos with
+      | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
+      | _ -> assert false end;
+      LIDENT (get_stored_delimited_ident ()) }
+  | "''"
+    { raise
+        (Error (Uninitiated_delimited_ident,
+                lexbuf.lex_start_p,
+                lexbuf.lex_curr_p)) }
+
   | int_literal
     { INT (Lexing.lexeme lexbuf) }
   | float_literal
@@ -614,12 +680,6 @@ rule token = parse
   | "(" [' ']+ (infix_ident as inner) [' ']+ ")"
     { ident_of_infixop inner }
 
-  | "''"
-    { raise
-        (Error (Uninitiated_delimited_ident,
-                lexbuf.lex_start_p,
-                lexbuf.lex_curr_p)) }
-
   | eof { EOF }
   | _
     { raise
@@ -628,6 +688,54 @@ rule token = parse
               (Lexing.lexeme_char lexbuf 0),
               lexbuf.lex_start_p,
               lexbuf.lex_curr_p)) }
+
+and delimited_ident = parse
+  | "''"
+    { () }
+  | '\\' newline ([' ' '\t'] * as space)
+    { update_loc lexbuf None 1 false (String.length space);
+      delimited_ident lexbuf }
+  | '\\' ['(' '-' '\\' '`' '\'' '"' 'n' 't' 'b' 'r' ' ' '*' ')']
+    { store_delimited_ident_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
+      delimited_ident lexbuf }
+  | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
+    { store_delimited_ident_char(char_for_decimal_code lexbuf 1);
+      delimited_ident lexbuf }
+  | '\\' 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F']
+    { store_delimited_ident_char (char_for_hexadecimal_code lexbuf 2);
+      delimited_ident lexbuf }
+  | '\\' _
+    { raise
+        (Error
+           (Illegal_escape (Lexing.lexeme lexbuf),
+           lexbuf.lex_start_p,
+           lexbuf.lex_curr_p)) }
+  | ( "(*" | "*)" "--" )
+    { raise
+        (Error
+           (Comment_in_delimited_ident,
+            lexbuf.lex_start_p,
+            lexbuf.lex_curr_p)) }
+  | ( "{*" | "*}" )
+    { raise
+        (Error
+           (External_code_in_delimited_ident,
+            lexbuf.lex_start_p,
+            lexbuf.lex_curr_p)) }
+  | ( "``" | "''" )
+    { raise
+        (Error
+           (Delimited_ident_in_delimited_ident,
+            lexbuf.lex_start_p,
+            lexbuf.lex_curr_p)) }
+  | ( newline | eof )
+    { match !delimited_ident_start_pos with
+      | Some (start_pos, end_pos) ->
+        raise (Error (Unterminated_delimited_ident, start_pos, end_pos))
+      | _ -> assert false }
+  | _
+    { store_delimited_ident_char (Lexing.lexeme_char lexbuf 0);
+      delimited_ident lexbuf }
 
 and uniline_comment = parse
   | newline
