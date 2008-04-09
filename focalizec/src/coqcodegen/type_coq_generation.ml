@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.4 2008-04-09 13:01:47 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.5 2008-04-09 15:02:05 pessaux Exp $ *)
 
 
 
@@ -135,7 +135,7 @@ let type_def_compile ctx env type_def_name type_descr =
                | (Parsetree.EL_Caml, _)
                | ((Parsetree.EL_external _), _) -> false)
              external_expr.Parsetree.ast_desc in
-         Format.fprintf out_fmter "%s@]@ ;;@\n" coq_binding
+         Format.fprintf out_fmter "%s.@]@.@\n" coq_binding
        with Not_found ->
          (* We didn't find any correspondance for Coq. *)
          raise

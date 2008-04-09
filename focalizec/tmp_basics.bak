@@ -2,6 +2,8 @@ Require Export Bool.
 Require Export ZArith.
 Require Export Reals.
 Require Export Ascii.
+Require Export String.
+
 
 (** The weak proof !!! Give it a Prop, and abracadabra ... it's proved ! *)
 Axiom magic_prove : forall A : Prop, A.
@@ -33,7 +35,7 @@ Definition char__t := ascii.
 
 
 (** Alias the type of strings [string__t] to Coq [string]. *)
-Definition string__t := ascii.
+Definition string__t := string.
 
 
 (** Exceptions have all the properties we can imagine. That's assumed ! *)

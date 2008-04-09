@@ -8,23 +8,25 @@ type unit =
   internal
   external
   | caml -> "unit"
-  | coq -> "coq_builtins.unit"
+  | coq -> "coq_builtins.bi__unit"  (* FoCaLize's Coq definition of builtin. *)
 ;;
 type float =
   internal
   external
   | caml -> "float"
+  | coq -> "R"  (* From the Reals module. *)
 ;;
 type char =
   internal
   external
   | caml -> "char"
+  | coq -> "ascii"
 ;;
 type string =
   internal
   external
   | caml -> "string"
-  | coq -> "Focvasives_coq.coq_string"  (* Temporary dirty string. *)
+  | coq -> "string"  (* From the Ascii module. *)
 ;;
 type bool =
   internal
@@ -39,12 +41,15 @@ type list ('a) =
   | Cons ('a, list ('a))
   external
   | caml -> "'a list"
+  | coq -> "(list __var_a)" (* From the List module. *)
 
 and Nil =
   | caml -> "[]"
+  | coq -> "nil"
 
 and Cons =
   | caml -> "( :: )"
+  | coq -> "cons"
 ;;
 
 let foc_error =

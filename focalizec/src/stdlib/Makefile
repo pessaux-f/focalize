@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2008-04-09 13:01:47 pessaux Exp $
+# $Id: Makefile,v 1.10 2008-04-09 15:02:05 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file
@@ -25,7 +25,8 @@ FOCCMOS = $(FOCMLS:.ml=.cmo)
 FOCVS = $(FOCSRC:.foc=.v)
 FOCVOS = $(FOCVS:.v=.vo)
 EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
-	weak_structures_externals.cmo
+	weak_structures_externals.cmo \
+	coq_builtins.vo weak_structures_externals.vo
 
 
 
@@ -35,7 +36,7 @@ doc:: $(BYTOBJS)
 	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)
 
 clean::
-	$(RM) *~ *.cm* log *.fo $(FOCMLS) $(FOCVS) $(FOCVOS)
+	$(RM) *~ *.cm* log *.fo $(FOCMLS) $(FOCVS) $(FOCVOS) $(EXTERNALOBJS)
 	$(RM) odoc/*
 
 depend:

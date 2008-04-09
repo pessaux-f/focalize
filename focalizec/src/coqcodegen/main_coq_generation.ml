@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.8 2008-04-08 15:46:08 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.9 2008-04-09 15:02:05 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -95,8 +95,14 @@ let root_compile ~current_unit ~out_file_name stuff =
   (* Always import Coq booleans and integers and floats. *)
   (* Alias int notation to Z.                            *)
   Format.fprintf out_fmter
-    "Require Export Bool.@\nRequire Export ZArith.@\nOpen Scope \
-     Z_scope.@\nRequire Export Reals.@\n@\n" ;
+    "Require Export Bool.@\n\
+     Require Export ZArith.@\n\
+     Open Scope Z_scope.@\n\
+     Require Export Reals.@\n\
+     Require Export Ascii.@\n\
+     Require Export String.@\n\
+     Require Export List.@\n\
+     Require Export coq_builtins.@\n@\n" ;
   try
     List.iter
       (fun data ->
