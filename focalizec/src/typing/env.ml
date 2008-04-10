@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.70 2008-04-09 13:01:47 pessaux Exp $ *)
+(* $Id: env.ml,v 1.71 2008-04-10 11:01:51 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -484,7 +484,11 @@ module TypeInformation = struct
     | TK_variant of     (** Sum types. *)
         (Parsetree.constructor_name *   (** Name of sum contructor. *)
          constructor_arity *            (** Arity of sum contructor. *)
-         Types.type_scheme)             (** Type scheme of sum constructor. *)
+         (** Type scheme of sum constructor. A parametrised constructor has
+             a functionnal type taking a tuple and returning the type hosting
+             the constructor. The tuple is compound of all the arguments the
+             constructor has. *)
+         Types.type_scheme)
         list                            (** ... and this for all constructor of
                                             this type. *)
     | TK_record of  (** Record types: list of labels. Any value of a type

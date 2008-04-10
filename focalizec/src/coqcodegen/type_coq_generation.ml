@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.5 2008-04-09 15:02:05 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.6 2008-04-10 11:01:51 pessaux Exp $ *)
 
 
 
@@ -149,6 +149,68 @@ let type_def_compile ctx env type_def_name type_descr =
        (* able to remind on what to map them when we will see them.      *)
        extend_coq_gen_env_with_type_external_bindings
          env nb_extra_args external_bindings
+       end)
+   | Env.TypeInformation.TK_variant cstrs ->
+       (begin
+       (* To ensure variables names sharing, we will unify an instance of   *)
+       (* each constructor result type (remind they have a functional type  *)
+       (* whose arguments are the sum constructor's arguments and result is *)
+       (* the same type that the hosting type itself) with the instance of  *)
+       (* the defined type identity. The only difference with OCaml is that *)
+       (* we keep the complete functionnal type since in Coq constructors   *)
+       (* are really "functions" : one must also write the return type of   *)
+       (* the constructor (that is always the type of the definition        *)
+       (* hosting the constructor.                                          *)
+       let sum_constructors_to_print =
+         List.map
+           (fun (sum_cstr_name, sum_cstr_arity, sum_cstr_scheme) ->
+             (* Recover the scheme of the constructor. *)
+             let sum_cstr_ty = Types.specialize sum_cstr_scheme in
+             try
+               let unified_sum_cstr_ty =
+                 (* If it has argument(s), then it will be functionnal. *)
+                 if sum_cstr_arity = Env.TypeInformation.CA_one then
+                   Types.unify
+                     ~loc: Location.none ~self_manifest: None
+                     (Types.type_arrow
+                        (Types.type_variable ()) instanciated_body)
+                     sum_cstr_ty
+                 else
+                   Types.unify
+                     ~loc: Location.none ~self_manifest: None
+                     instanciated_body sum_cstr_ty in
+               (sum_cstr_name, unified_sum_cstr_ty)
+             with _ ->
+               (* Because program is already well-typed, this *)
+               (* should always succeed.                      *)
+               assert false)
+           cstrs in
+       Format.fprintf out_fmter "@[<2>Inductive %a__t@ "
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
+       (* Print the parameter(s) stuff if any. Do it only now the  *)
+       (* unifications have been done with the sum constructors to *)
+       (* be sure that thanks to unifications, "sames" variables   *)
+       (* will have the "same" name everywhere (i.e. in the        *)
+       (* the parameters enumeration of the type and in the sum    *)
+       (* constructors definitions).                               *)
+       print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
+         print_ctx out_fmter type_def_params ;
+       Format.fprintf out_fmter ":@ Set :=@ " ;
+       (* And finally really print the constructors definitions. *)
+       List.iter
+         (fun (sum_cstr_name, cstr_ty) ->
+           (* The sum constructor name. *)
+           Format.fprintf out_fmter "@\n| %a"
+             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name ;
+           (* The type of the constructor. *)
+           Format.fprintf out_fmter " :@ (@[<1>%a@])"
+             (Types.pp_type_simple_to_coq
+                print_ctx ~reuse_mapping: true ~self_as: Types.CSR_self)
+             cstr_ty)
+         sum_constructors_to_print ;
+       Format.fprintf out_fmter ".@]@\n@\n" ;
+       (* Not an external type definition, so nothing new in the environment. *)
+       env
        end)
    | _ ->
        (* [Unsure] *)
