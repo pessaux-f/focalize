@@ -12,14 +12,15 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.mli,v 1.1 2008-04-08 15:26:02 bartlett Exp $ *)
+(* $Id: recursion.mli,v 1.2 2008-04-10 12:31:41 bartlett Exp $ *)
 
-exception NestedRecursiveCalls
-exception PartialRecursiveCall
+exception NestedRecursiveCalls of Parsetree.vname * Location.t
+exception PartialRecursiveCall of Parsetree.vname * Location.t
+exception MutualRecursion
 
 type binding =
   | B_let of Parsetree.binding
-  | B_match of Parsetree.pattern * Parsetree.expr
+  | B_match of Parsetree.expr * Parsetree.pattern
   | B_condition of Parsetree.expr * bool
 
 val list_recursive_calls:
