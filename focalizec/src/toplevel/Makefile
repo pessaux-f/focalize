@@ -1,7 +1,7 @@
-# $Id: Makefile,v 1.25 2008-04-09 10:19:44 pessaux Exp $
+# $Id: Makefile,v 1.26 2008-04-10 14:32:32 bartlett Exp $
 
 include ../Makefile.config
-CAML_COMP_FLAGS = -I ../../focc/ -I ../basement -I ../parser -I ../typing \
+CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing \
 	-I ../commoncodegen -I ../mlcodegen -I ../coqcodegen
 
 BYTOBJS = check_file.cmo exc_wrapper.cmo
@@ -36,6 +36,7 @@ ALLBYTOBJS = \
 	../commoncodegen/minEnv.cmo \
 	../commoncodegen/abstractions.cmo \
 	../commoncodegen/externals_generation_errs.cmo \
+	../commoncodegen/recursion.cmo \
 	\
 	../mlcodegen/misc_ml_generation.cmo \
         ../mlcodegen/type_ml_generation.cmo \
