@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.48 2008-04-10 13:27:03 bartlett Exp $ *)
+(* $Id: scoping.ml,v 1.49 2008-04-10 14:22:57 bartlett Exp $ *)
 
 open Parsetree
 
@@ -1149,9 +1149,9 @@ and scope_pattern ctx env pattern =
              pats
              ([], env) in
          ((Parsetree.P_tuple scoped_pats), env')
-(*     | Parsetree.P_paren p ->
+     | Parsetree.P_paren p ->
          let (scoped_p, env') = scope_pattern ctx env p in
-         ((Parsetree.P_paren scoped_p), env')*)) in
+         ((Parsetree.P_paren scoped_p), env')) in
   (* Finally, return the whole scoped pattern and the initial     *)
   (* environment extended by the bindings induced by the pattern. *)
   ({ pattern with Parsetree.ast_desc = new_desc }, new_env)
