@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.47 2008-04-10 12:03:41 bartlett Exp $ *)
+(* $Id: scoping.ml,v 1.48 2008-04-10 13:27:03 bartlett Exp $ *)
 
 open Parsetree
 
@@ -1078,9 +1078,9 @@ and scope_expr ctx env expr =
      | Parsetree.E_external _ ->
          (* Nothing to scope since it's only strings. *)
          expr.Parsetree.ast_desc
-(*     | Parsetree.E_paren e ->
+     | Parsetree.E_paren e ->
          let scoped_e = scope_expr ctx env e in
-         Parsetree.E_paren scoped_e *)
+         Parsetree.E_paren scoped_e
      ) in
   { expr with Parsetree.ast_desc = new_desc }
 
@@ -1820,8 +1820,8 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
             Parsetree.CI (Qualified (hosting_file, vname_of_qvname qvname)) } in
       { initial_expr with
           Parsetree.ast_desc = Parsetree.E_constr (scoped_cstr_expr, []) }
-(*  | Parsetree.E_paren expr ->
-      scope_expr_collection_cstr_for_is_param ctx env expr*)
+  | Parsetree.E_paren expr ->
+      scope_expr_collection_cstr_for_is_param ctx env expr
   | _ -> raise (Is_parameter_only_coll_ident initial_expr.Parsetree.ast_loc)
 ;;
 
