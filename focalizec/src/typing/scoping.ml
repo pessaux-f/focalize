@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.46 2008-04-08 13:03:15 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.47 2008-04-10 12:03:41 bartlett Exp $ *)
 
 open Parsetree
 
@@ -1078,9 +1078,10 @@ and scope_expr ctx env expr =
      | Parsetree.E_external _ ->
          (* Nothing to scope since it's only strings. *)
          expr.Parsetree.ast_desc
-     | Parsetree.E_paren e ->
+(*     | Parsetree.E_paren e ->
          let scoped_e = scope_expr ctx env e in
-         Parsetree.E_paren scoped_e) in
+         Parsetree.E_paren scoped_e *)
+     ) in
   { expr with Parsetree.ast_desc = new_desc }
 
 
@@ -1148,22 +1149,44 @@ and scope_pattern ctx env pattern =
              pats
              ([], env) in
          ((Parsetree.P_tuple scoped_pats), env')
-     | Parsetree.P_paren p ->
+(*     | Parsetree.P_paren p ->
          let (scoped_p, env') = scope_pattern ctx env p in
-         ((Parsetree.P_paren scoped_p), env')) in
+         ((Parsetree.P_paren scoped_p), env')*)) in
   (* Finally, return the whole scoped pattern and the initial     *)
   (* environment extended by the bindings induced by the pattern. *)
   ({ pattern with Parsetree.ast_desc = new_desc }, new_env)
 
+(*
+ * scoping_context -> Env.ScopeInformation.t ->
+ * Env.ScopeInformation.t -> Parsetree.termination_proof ->
+ *   (Parsetree.termination_proof * Env.ScopeInformation.t)
+ *)
+(** {b Descr} : Scopes a pattern and return the extended scoping environment
+              that can be used to scope the expression part of the branch.
+    {b Arguments}
+      - [env] : the scoping environment of the functions associated with the
+          termination proof. This environment should not contain any
+          information about the functions being defined, their parameters or
+          their bodies.
+      - [params_env] : an environment that holds the scoping information
+          of each of the functions' parameters (but not the function
+          themselves).
 
-
-and scope_termination_proof ctx env tp =
+    {b Rem} : Not exported outside this module.                              *)
+and scope_termination_proof ctx env params_env tp =
+(*   [params_env] is a special environment used only when the syntax requires
+ * a the programmer to reference one of the parameters of the functions
+ * associated with this termination proof.
+ *   [env] should be used to scope the rest.
+ *   Neither of these environments should know about the associated functions
+ * or their bodies.
+ *)
   match tp.Parsetree.ast_desc with
    | Parsetree.TP_structural arg_name ->
        (* Here, location is not exact but is roughly sufficient *)
        (* to allow the user to pinpoint where is the problem.   *)
        if can_be_scoped_as_local_p
-           ctx env ~loc: tp.Parsetree.ast_loc arg_name then tp
+           ctx params_env ~loc: tp.Parsetree.ast_loc arg_name then tp
        else
          (* Wrong ! The structural argument must be an argument *)
          (* locally bound by the function defintion !           *)
@@ -1182,14 +1205,14 @@ and scope_termination_proof ctx env tp =
              (* Same remark than above for the approximative location. *)
              if not
                  (can_be_scoped_as_local_p
-                    ctx env ~loc: tp.Parsetree.ast_loc arg_name) then
+                    ctx params_env ~loc: tp.Parsetree.ast_loc arg_name) then
                raise
                  (Structural_termination_only_on_fun_arg
                     (tp.Parsetree.ast_loc, arg_name)) ;
              let scoped_arg_ty =
                match arg_type with
                 | None -> None
-                | Some ty -> Some (scope_type_expr ctx env ty) in
+                | Some ty -> Some (scope_type_expr ctx params_env ty) in
              (arg_name, scoped_arg_ty))
            args in
        let scoped_proof = scope_proof ctx env proof in
@@ -1203,14 +1226,14 @@ and scope_termination_proof ctx env tp =
            (fun (arg_name, arg_type) ->
              if not
                  (can_be_scoped_as_local_p
-                    ctx env ~loc: tp.Parsetree.ast_loc arg_name) then
+                    ctx params_env ~loc: tp.Parsetree.ast_loc arg_name) then
                raise
                  (Structural_termination_only_on_fun_arg
                     (tp.Parsetree.ast_loc, arg_name)) ;
              let scoped_arg_ty =
                match arg_type with
                 | None -> None
-                | Some ty -> Some (scope_type_expr ctx env ty) in
+                | Some ty -> Some (scope_type_expr ctx params_env ty) in
              (arg_name, scoped_arg_ty))
            args in
        let scoped_proof = scope_proof ctx env proof in
@@ -1249,17 +1272,24 @@ and scope_let_definition ~toplevel_let ctx env let_def =
   let bind_locality =
     if toplevel_let then Env.ScopeInformation.SBI_file ctx.current_unit
     else Env.ScopeInformation.SBI_local in
+  (* Some useful functions for adding certain elements to the environment *)
+  let add_bound_name env binding =
+    Env.ScopingEnv.add_value
+      binding.Parsetree.ast_desc.Parsetree.b_name
+      bind_locality env in
+  let add_parameters env binding =
+    let add_parameter env (name, _) =
+      Env.ScopingEnv.add_value
+        name Env.ScopeInformation.SBI_local env in
+    List.fold_left add_parameter env
+      binding.Parsetree.ast_desc.Parsetree.b_params
+  in
+
   (* We create the extended environment with the identifiers bound by the *)
   (* definition. This environment will always be the one returned if the  *)
   (* scoping process succeeds.                                            *)
   let final_env =
-    List.fold_left
-      (fun accu_env let_binding ->
-        Env.ScopingEnv.add_value
-          let_binding.Parsetree.ast_desc.Parsetree.b_name
-          bind_locality
-          accu_env)
-      env
+    List.fold_left add_bound_name env
       let_def_descr.Parsetree.ld_bindings in
   (* However, we extend the scoping environment with the let-bound *)
   (* variables only if the definition is recursive.                *)
@@ -1271,13 +1301,7 @@ and scope_let_definition ~toplevel_let ctx env let_def =
     let let_binding_descr = let_binding.Parsetree.ast_desc in
     (* Extend the local environment with the possible arguments *)
     (* if the bound identifier denotes a function...            *)
-    let env_with_params =
-      List.fold_left
-        (fun accu_env (param_vname, _) ->
-          Env.ScopingEnv.add_value
-            param_vname Env.ScopeInformation.SBI_local accu_env)
-        env'
-        let_binding_descr.Parsetree.b_params in
+    let env_with_params = add_parameters env' let_binding in
     (* Get all the type constraints from both the params *)
     (* and the body annotations of the definition.       *)
     let all_ty_constraints =
@@ -1350,9 +1374,18 @@ and scope_let_definition ~toplevel_let ctx env let_def =
     List.map scope_binding let_def_descr.Parsetree.ld_bindings in
   (* Now, scope the optional termination proof. *)
   let scoped_termination_proof =
+    (* In order to scope this proof we need to construct a second
+     * environment which contains the scoped parameters of the
+     * functions being defined
+     * (see documentation on [scope_termination_proof]). *)
+    let env_with_all_params =
+      List.fold_left add_parameters env
+        scoped_bindings in
     match let_def_descr.Parsetree.ld_termination_proof with
      | None -> None
-     | Some tp -> Some (scope_termination_proof ctx final_env tp) in
+     | Some tp ->
+         Some (scope_termination_proof ctx env env_with_all_params tp)
+  in
   (* An finally be return the scoped let-definition *)
   (* and the extended environment.                  *)
   let scoped_let_def_desc = {
@@ -1650,8 +1683,23 @@ let scope_termination_proof_def ctx env termination_proof_def =
   let scoped_term_proof_profiles =
     List.map
       (scope_termination_proof_profile ctx env) desc.Parsetree.tpd_profiles in
+  (* In order to scope this proof we need to construct a second
+     * environment which contains the scoped parameters of the
+     * functions being defined
+     * (see documentation on [scope_termination_proof]). *)
+  let env_with_params =
+    let add_argument env (name, _) =
+      Env.ScopingEnv.add_value name
+        Env.ScopeInformation.SBI_local env in
+    let add_arguments env profile =
+      List.fold_left add_argument env
+        profile.Parsetree.ast_desc.Parsetree.tpp_args in
+    List.fold_left add_arguments env
+      scoped_term_proof_profiles
+  in
   let scoped_termination_proof =
-    scope_termination_proof ctx env desc.Parsetree.tpd_termination_proof in
+    scope_termination_proof ctx env env_with_params
+    desc.Parsetree.tpd_termination_proof in
   { termination_proof_def with
       Parsetree.ast_desc = {
         Parsetree.tpd_profiles = scoped_term_proof_profiles ;
@@ -1772,8 +1820,8 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
             Parsetree.CI (Qualified (hosting_file, vname_of_qvname qvname)) } in
       { initial_expr with
           Parsetree.ast_desc = Parsetree.E_constr (scoped_cstr_expr, []) }
-  | Parsetree.E_paren expr ->
-      scope_expr_collection_cstr_for_is_param ctx env expr
+(*  | Parsetree.E_paren expr ->
+      scope_expr_collection_cstr_for_is_param ctx env expr*)
   | _ -> raise (Is_parameter_only_coll_ident initial_expr.Parsetree.ast_loc)
 ;;
 
