@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.34 2008-04-09 10:19:44 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.35 2008-04-10 12:34:52 bartlett Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -39,7 +39,7 @@ try Check_file.main () with
            Handy.pp_set_underlined fname Handy.pp_reset_effects
      | Check_file.Bad_file_suffix fname ->
          Format.fprintf Format.err_formatter
-           "@[%tInvalid@ file@ extention@ for%t@ '%t%s%t'.@]@."
+           "@[%tInvalid@ file@ extension@ for%t@ '%t%s%t'.@]@."
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined fname Handy.pp_reset_effects
      | Sys_error m ->
@@ -51,7 +51,7 @@ try Check_file.main () with
            Handy.pp_set_bold Handy.pp_reset_effects
      | Configuration.No_input_file ->
          Format.fprintf Format.err_formatter
-           "@[%tNo@ input@ file.@ FoCaL@ is@ cowardly@ and@ gives@ out...%t@]@."
+           "@[%tNo@ input@ file.@ FoCaL@ is@ cowardly@ and@ gives@ up...%t@]@."
            Handy.pp_set_bold Handy.pp_reset_effects
 (* *********************** *)
 (* Lexing / parsing stage. *)
@@ -354,6 +354,23 @@ try Check_file.main () with
            Handy.pp_set_bold lang Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_label_ident label_ident
            Handy.pp_reset_effects
+(* ************************** *)
+(* Recursion analysis errors. *)
+     | Recursion.NestedRecursiveCalls (function_name, at) ->
+         Format.fprintf Format.err_formatter
+           "%a:@\n@[%tRecursive@ call@ to%t@ '%t%a%t'%t@ contains@ nested@ \
+            recursion.%t@]@."
+           Location.pp_location at
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined Sourcify.pp_vname function_name
+           Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
+     | Recursion.PartialRecursiveCall (function_name, at) ->
+         Format.fprintf Format.err_formatter
+           "%a:@\n@[%tRecursive call to%t@ '%t%a%t'%t@ is@ incomplete.%t@]@."
+           Location.pp_location at
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined Sourcify.pp_vname function_name
+           Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
 (* ********************** *)
 (* The ultimate firewall. *)
      | x ->
@@ -363,7 +380,7 @@ try Check_file.main () with
            (Printexc.to_string x)
            Handy.pp_set_videoinv Handy.pp_reset_effects
     end) ;
-    (* Anf anyway, if an exception occured, exit with -1 error code. *)
+    (* And anyway, if an exception occured, exit with -1 error code. *)
     exit (-1)
 ;;
 
