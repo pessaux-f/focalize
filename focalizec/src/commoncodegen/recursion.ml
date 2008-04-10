@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.ml,v 1.2 2008-04-10 12:31:41 bartlett Exp $ *)
+(* $Id: recursion.ml,v 1.3 2008-04-10 14:26:37 bartlett Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function definitions.
@@ -55,13 +55,7 @@ match fexpr.Parsetree.ast_desc with
         || raise (PartialRecursiveCall (function_name, fexpr.Parsetree.ast_loc)))
   | _ -> false
   end
-| Parsetree.E_app _ | Parsetree.E_constr _
-| Parsetree.E_match _ | Parsetree.E_if _
-| Parsetree.E_let _ | Parsetree.E_self
-| Parsetree.E_const _ | Parsetree.E_fun _
-| Parsetree.E_record _ | Parsetree.E_record_access _
-| Parsetree.E_record_with _ | Parsetree.E_external _
-| Parsetree.E_tuple _ -> false
+| _ -> false
 
 (**
   Compiles a list of information about recursive calls made in a function body.
@@ -176,6 +170,8 @@ match expr.Parsetree.ast_desc with
       (List.map list_recursive_calls_in_record_item label_expr_list))
 | Parsetree.E_tuple expr_list ->
     List.concat (List.map (list_recursive_calls function_name argument_list bindings) expr_list)
+| Parsetree.E_paren expr ->
+    list_recursive_calls function_name argument_list bindings expr
 (* The remaining expressions cannot lead to recursive calls *)
 | Parsetree.E_self | Parsetree.E_const _
 | Parsetree.E_external _ -> []
@@ -217,6 +213,8 @@ let rec get_smaller_variables variables bindings =
             (snd (List.split lp_list))
       | Parsetree.P_tuple p_list ->
           List.fold_left (fold_vars_in_pattern_aux true) data p_list
+      | Parsetree.P_paren p ->
+          fold_vars_in_pattern_aux deconstructed_once_flag data p
     in fold_vars_in_pattern_aux false data pattern
   in
 
@@ -251,6 +249,8 @@ let rec get_smaller_variables variables bindings =
     | (Parsetree.E_tuple e_list, Parsetree.P_tuple p_list) ->
         (* tuples are broken down *)
         List.fold_left analyse_match (variable_set, structural_set) (List.combine e_list p_list)
+    | (Parsetree.E_paren e, _) -> analyse_match (variable_set, structural_set) (e, pattern)
+    | (_, Parsetree.P_paren p) -> analyse_match (variable_set, structural_set) (expr, p)
     | _ ->
         (* in this case none of the variables in the pattern are structurally smaller
          * and must therefore be removed from both sets in case they mask variables from
