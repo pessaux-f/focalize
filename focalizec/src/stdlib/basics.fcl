@@ -1,17 +1,23 @@
 type int =
-  internal
+  internal (* Internal#int *)
   external
   | caml -> "int"
   | coq -> "Z"
 ;;
 type unit =
   internal
+  | Unit
   external
   | caml -> "unit"
   | coq -> "coq_builtins.bi__unit"  (* FoCaLize's Coq definition of builtin. *)
+
+and Unit =
+  | caml -> "()"
+  | coq -> "fuck"
 ;;
+
 type float =
-  internal
+  internal (* Internal#float *)
   external
   | caml -> "float"
   | coq -> "R"  (* From the Reals module. *)
@@ -30,9 +36,19 @@ type string =
 ;;
 type bool =
   internal
+  | True
+  | False
   external
   | caml -> "bool"
   | coq -> "bool"  (* Builtin of Coq *)
+
+and True =
+  | caml -> "true"
+  | coq -> "True"
+
+and False =
+  | caml -> "false"
+  | coq -> "False"
 ;;
 
 type list ('a) =

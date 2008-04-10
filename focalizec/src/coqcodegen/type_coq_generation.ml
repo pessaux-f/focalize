@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.6 2008-04-10 11:01:51 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.7 2008-04-10 12:39:36 pessaux Exp $ *)
 
 
 
@@ -212,8 +212,12 @@ let type_def_compile ctx env type_def_name type_descr =
        (* Not an external type definition, so nothing new in the environment. *)
        env
        end)
-   | _ ->
-       (* [Unsure] *)
-       Format.eprintf "Types in coq todo !!!!!!!!!!!!!!@." ;
+   | Env.TypeInformation.TK_record _fields ->
+       (begin
+       (* Like for the sum types, we make use of unification to ensure the *)
+       (* sharing of variables names. We proceed exactly the same way,     *)
+       (* delaying the whole print until we unified into each record-field *)
+       (* type.                                                            *)
        env
+       end)
 ;;

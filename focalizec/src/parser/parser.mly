@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.85 2008-04-07 13:28:48 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.86 2008-04-10 12:39:36 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -73,7 +73,7 @@ let mk_prefix_application s e1 =
 
 let mk_cons () = mk_global_constructor_ident (Some "basics") (Vuident "Cons");;
 let mk_nil () = mk_global_constructor_ident (Some "basics") (Vuident "Nil");;
-let mk_void () = mk_global_constructor_ident (Some "basics") (Vuident "Void");;
+let mk_unit () = mk_global_constructor_ident (Some "basics") (Vuident "Unit");;
 
 let mk_proof_label (s1, s2) =
   try int_of_string s1, s2 with
@@ -856,7 +856,7 @@ simple_expr:
   | LPAREN expr RPAREN
     { mk (E_paren $2) }
   | LPAREN RPAREN
-    { mk (E_constr (mk_void (), [])) }
+    { mk (E_constr (mk_unit (), [])) }
 ;
 
 expr:
@@ -1054,7 +1054,7 @@ pattern:
   | pattern AS LIDENT { mk (P_as ($1, Vlident $3)) }
   | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
   | LPAREN pattern RPAREN { mk (P_paren $2) }
-  | LPAREN RPAREN { mk (P_constr (mk_void (), [])) }
+  | LPAREN RPAREN { mk (P_constr (mk_unit (), [])) }
 ;
 
 pattern_semi_list:
