@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.39 2008-04-05 18:01:56 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.40 2008-04-11 13:52:10 weis Exp $ *)
 
 
 (* *********************************************************** *)
@@ -391,7 +391,15 @@ let pp_local_flag ppf = function
   | Parsetree.LF_local -> Format.fprintf ppf "local@ "
 ;;
 
+let pp_logical_flag ppf = function
+  | Parsetree.LF_no_logical -> ()
+  | Parsetree.LF_logical -> Format.fprintf ppf "logical@ "
+;;
 
+let pp_rec_flag ppf = function
+  | Parsetree.RF_no_rec -> ()
+  | Parsetree.RF_rec -> Format.fprintf ppf "rec@ "
+;;
 
 (* ********************************************************************* *)
 (* pp_let_def_binding_flags :                                            *)
@@ -406,13 +414,10 @@ let pp_local_flag ppf = function
     {b Rem} : Not exported ouside this module.                           *)
 (* ********************************************************************* *)
 let pp_let_def_binding_flags ppf (ld_rec, ld_logical, ld_local) =
-  Format.fprintf ppf "%a" pp_local_flag ld_local;
-  (match ld_logical with
-   | Parsetree.LF_no_logical -> Format.fprintf ppf "let@ "
-   | Parsetree.LF_logical -> Format.fprintf ppf "logical@ ");
-  (match ld_rec with
-   | Parsetree.RF_no_rec -> ()
-   | Parsetree.RF_rec -> Format.fprintf ppf "rec@ ")
+  Format.fprintf ppf "%a%alet %a"
+    pp_local_flag ld_local
+    pp_logical_flag ld_logical
+    pp_rec_flag ld_rec
 ;;
 
 
@@ -599,7 +604,7 @@ and pp_species_param ppf = pp_ast pp_species_param_desc ppf
 
 
 and pp_sig_def_desc ppf sdd =
-  Format.fprintf ppf "@[<2>sig@ %a :@ %a@]"
+  Format.fprintf ppf "@[<2>signature@ %a :@ %a@]"
     pp_vname sdd.Parsetree.sig_name pp_type_expr sdd.Parsetree.sig_type
 and pp_sig_def ppf = pp_ast pp_sig_def_desc ppf
 
