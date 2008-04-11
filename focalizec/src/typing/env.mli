@@ -94,6 +94,7 @@ module TypeInformation :
       | TK_record of
           (Parsetree.vname * field_mutability * Types.type_scheme) list
     type type_description = {
+      type_loc : Location.t ;
       type_kind : type_kind ;
       type_identity : Types.type_scheme ;
       type_params : Types.type_simple list ;
@@ -136,7 +137,7 @@ module CoqGenInformation :
       cmi_external_expr : Parsetree.external_expr_desc
     }
 
-    type label_mapping_info = unit
+    type label_mapping_info = Parsetree.external_expr_desc
 
     type method_info = {
       mi_name : Parsetree.vname ;

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.35 2008-04-10 12:34:52 bartlett Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.36 2008-04-11 08:52:05 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -338,7 +338,7 @@ try Check_file.main () with
            Handy.pp_set_underlined Sourcify.pp_vname def_name
            Handy.pp_reset_effects
      | Externals_generation_errs.No_external_constructor_def
-	 (lang, cstr_ident) ->
+         (lang, cstr_ident) ->
          Format.fprintf Format.err_formatter
            "%a:@\n@[%tNo@ %s@ mapping@ given@ for@ the@ external@ sum@ \
             type@ constructor%t@ '%t%a%t'.@]@."
@@ -354,6 +354,16 @@ try Check_file.main () with
            Handy.pp_set_bold lang Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_label_ident label_ident
            Handy.pp_reset_effects
+(* ************************** *)
+(* Coq code generation errors. *)
+     | Type_coq_generation.Mutable_record_fields_not_in_coq (at, field) ->
+          Format.fprintf Format.err_formatter
+           "%a:@\n@[%tType@ definition@ contains@ a@ mutable@ field%t@ \
+           '%t%a%t'@ %tthat@ can't@ be@ compiled@ to@ Coq.%t@]@."
+           Location.pp_location at
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined Sourcify.pp_vname field
+           Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
 (* ************************** *)
 (* Recursion analysis errors. *)
      | Recursion.NestedRecursiveCalls (function_name, at) ->

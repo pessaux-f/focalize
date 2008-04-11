@@ -11,8 +11,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.mli,v 1.2 2008-04-09 13:01:47 pessaux Exp $ *)
+(* $Id: type_coq_generation.mli,v 1.3 2008-04-11 08:52:05 pessaux Exp $ *)
 
+exception Mutable_record_fields_not_in_coq of (Location.t * Parsetree.vname)
 
 val type_def_compile :
   Context.reduced_compil_context -> Env.CoqGenEnv.t ->

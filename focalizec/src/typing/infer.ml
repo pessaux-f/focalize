@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.110 2008-04-08 13:03:15 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.111 2008-04-11 08:52:05 pessaux Exp $ *)
 
 
 
@@ -2489,6 +2489,7 @@ let typecheck_species_def_params ctx env species_params =
                Parsetree.ANTI_type param_carrier_ty ;
              (* Create the type description of the carrier the parameter is. *)
              let param_carrier_ty_description = {
+               Env.TypeInformation.type_loc = Location.none ;
                Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
                Env.TypeInformation.type_identity =
                Types.generalize param_carrier_ty ;
@@ -3490,6 +3491,7 @@ let typecheck_species_def ctx env species_def =
         (Parsetree_utils.name_of_vname species_def_desc.Parsetree.sd_name) in
   Types.end_definition () ;
   let species_as_type_description = {
+    Env.TypeInformation.type_loc = Location.none ;
     Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract;
     Env.TypeInformation.type_identity = Types.generalize species_carrier_type;
     (* Nevers parameters for a species's carrier type ! *)
@@ -3579,6 +3581,7 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
     Types.build_type_def_scheme
       ~variables: vars_of_mapping  ~body: futur_type_type in
   let proto_descrip = {
+    Env.TypeInformation.type_loc = simple_type_def_body.Parsetree.ast_loc ;
     (* Make an "abstract" proto-type, even if it is of another kind, this *)
     (* is not important because will never be used.                       *)
     Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
@@ -3609,6 +3612,7 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
          Types.build_type_def_scheme
            ~variables: vars_of_mapping ~body: identity_type in
        let ty_descr = {
+	 Env.TypeInformation.type_loc = simple_type_def_body.Parsetree.ast_loc ;
          Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
          Env.TypeInformation.type_identity = identity_scheme ;
          Env.TypeInformation.type_params = vars_of_mapping ;
@@ -3673,6 +3677,7 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
         Types.build_type_def_scheme
           ~variables: vars_of_mapping ~body: futur_type_type in
       let final_type_descr = {
+	Env.TypeInformation.type_loc = simple_type_def_body.Parsetree.ast_loc ;
         Env.TypeInformation.type_kind =
           Env.TypeInformation.TK_variant
             (List.map
@@ -3726,6 +3731,7 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
         Types.build_type_def_scheme
           ~variables: vars_of_mapping ~body: futur_type_type in
       let final_type_descr = {
+	Env.TypeInformation.type_loc = simple_type_def_body.Parsetree.ast_loc ;
         Env.TypeInformation.type_kind =
           Env.TypeInformation.TK_record
             (List.map
@@ -3822,6 +3828,8 @@ let typecheck_external_type_def_body ctx env type_name params
          Types.build_type_def_scheme ~variables: params ~body: ty in
        (* And now make the type's description to insert in the environment. *)
        let ty_descr = {
+	 Env.TypeInformation.type_loc =
+	   external_type_def_body.Parsetree.ast_loc ;
          Env.TypeInformation.type_kind =
            Env.TypeInformation.TK_external
              (external_type_def_body.Parsetree.ast_desc.Parsetree.etdb_external,
@@ -3976,6 +3984,7 @@ let typecheck_collection_def ctx env coll_def =
         (Parsetree_utils.name_of_vname coll_def_desc.Parsetree.cd_name) in
   Types.end_definition () ;
   let collec_as_type_description = {
+    Env.TypeInformation.type_loc = Location.none ;
     Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract;
     Env.TypeInformation.type_identity = Types.generalize collec_carrier_type;
     (* Nevers parameters for a species's carrier type ! *)

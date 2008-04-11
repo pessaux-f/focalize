@@ -11,7 +11,20 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.7 2008-04-10 12:39:36 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.8 2008-04-11 08:52:05 pessaux Exp $ *)
+
+
+(* ********************************************************************** *)
+(* {b Descr} : Exception raise when a record type definition containing a
+      mutable field tries to be translated into Coq. Currently, we don't
+      know how to map mutable records into Coq.
+
+    {b Rem} : Exported outside this module.                               *)
+(* ********************************************************************** *)
+exception Mutable_record_fields_not_in_coq of
+  (Location.t *      (** Location of the type definition hosting the field. *)
+   Parsetree.vname)  (** The mutable field's name. *)
+;;
 
 
 
@@ -52,12 +65,9 @@ let extend_coq_gen_env_with_type_external_bindings env nb_extra_args
         let rec_env' =
           (match bound_name with
            | Parsetree.Vlident _ ->
-(*
-[Unsure]
                (* Starting by a lowercase letter means record field name. *)
                Env.CoqGenEnv.add_label
                  bound_name bound_external_expr.Parsetree.ast_desc rec_env
-*) failwith "todo"
            | Parsetree.Vuident _ ->
                (* Starting by an uppercase letter means sum constructor. *)
                let cstr_mapping_info = {
@@ -212,12 +222,59 @@ let type_def_compile ctx env type_def_name type_descr =
        (* Not an external type definition, so nothing new in the environment. *)
        env
        end)
-   | Env.TypeInformation.TK_record _fields ->
+   | Env.TypeInformation.TK_record fields ->
        (begin
        (* Like for the sum types, we make use of unification to ensure the *)
        (* sharing of variables names. We proceed exactly the same way,     *)
        (* delaying the whole print until we unified into each record-field *)
        (* type.                                                            *)
+       let record_fields_to_print =
+         List.map
+           (fun (field_name, field_mut, field_scheme) ->
+             try
+               let field_ty = Types.specialize field_scheme in
+               let unified_field_ty =
+                 Types.unify
+                   ~loc: Location.none ~self_manifest: None
+                   (Types.type_arrow (Types.type_variable ()) instanciated_body)
+                   field_ty in
+               let field_args = Types.extract_fun_ty_arg unified_field_ty in
+               (field_name, field_mut, field_args)
+             with _ ->
+               (* Because program is already well-typed, this *)
+               (* should always succeed.                      *)
+               assert false)
+           fields in
+       Format.fprintf out_fmter "@[<2>Record@ %a__t@ "
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
+       (* Print the parameter(s) stuff if any. *)
+       print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
+         print_ctx out_fmter type_def_params ;
+       Format.fprintf out_fmter ":@ Type :=@\nmk_%a__t {@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
+       (* And finally really print the fields definitions. We just create a *)
+       (* local handy function to print the trailing semi only if the       *)
+       (* processed field is not the last of the list (Coq syntax need).    *)
+       let rec local_print_fields = function
+         | [] -> ()
+         | (field_name, field_mut, field_ty) :: q ->
+             (* The mutable fields are not yet supported for Coq code. *)
+             if field_mut = Env.TypeInformation.FM_mutable then
+               raise
+                 (Mutable_record_fields_not_in_coq
+                    (type_descr.Env.TypeInformation.type_loc, field_name)) ;
+             Format.fprintf out_fmter "%a :@ %a"
+               Parsetree_utils.pp_vname_with_operators_expanded field_name
+               (Types.pp_type_simple_to_coq
+                  print_ctx ~reuse_mapping: true ~self_as: Types.CSR_self)
+               field_ty ;
+             if q <> [] then Format.fprintf out_fmter " ;" ;
+             Format.fprintf out_fmter "@\n" ;
+             local_print_fields q in
+       (* Do the printing job... *)
+       local_print_fields record_fields_to_print ;
+       Format.fprintf out_fmter " }.@]@\n " ;
+       (* Not an external type definition, so nothing new in the environment. *)
        env
        end)
 ;;

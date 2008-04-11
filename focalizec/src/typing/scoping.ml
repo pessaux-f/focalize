@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.49 2008-04-10 14:22:57 bartlett Exp $ *)
+(* $Id: scoping.ml,v 1.50 2008-04-11 08:52:05 pessaux Exp $ *)
 
 open Parsetree
 
@@ -1080,8 +1080,7 @@ and scope_expr ctx env expr =
          expr.Parsetree.ast_desc
      | Parsetree.E_paren e ->
          let scoped_e = scope_expr ctx env e in
-         Parsetree.E_paren scoped_e
-     ) in
+         Parsetree.E_paren scoped_e) in
   { expr with Parsetree.ast_desc = new_desc }
 
 
@@ -1156,11 +1155,12 @@ and scope_pattern ctx env pattern =
   (* environment extended by the bindings induced by the pattern. *)
   ({ pattern with Parsetree.ast_desc = new_desc }, new_env)
 
-(*
- * scoping_context -> Env.ScopeInformation.t ->
- * Env.ScopeInformation.t -> Parsetree.termination_proof ->
- *   (Parsetree.termination_proof * Env.ScopeInformation.t)
- *)
+
+
+(* ************************************************************************* *)
+(* scoping_context -> Env.ScopeInformation.t ->                              *)
+(*   Env.ScopeInformation.t -> Parsetree.termination_proof ->                *)
+(*    (Parsetree.termination_proof * Env.ScopeInformation.t)                 *)
 (** {b Descr} : Scopes a pattern and return the extended scoping environment
               that can be used to scope the expression part of the branch.
     {b Arguments}
@@ -1173,9 +1173,10 @@ and scope_pattern ctx env pattern =
           themselves).
 
     {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
 and scope_termination_proof ctx env params_env tp =
 (*   [params_env] is a special environment used only when the syntax requires
- * a the programmer to reference one of the parameters of the functions
+ * the programmer to reference one of the parameters of the functions
  * associated with this termination proof.
  *   [env] should be used to scope the rest.
  *   Neither of these environments should know about the associated functions
@@ -1272,24 +1273,26 @@ and scope_let_definition ~toplevel_let ctx env let_def =
   let bind_locality =
     if toplevel_let then Env.ScopeInformation.SBI_file ctx.current_unit
     else Env.ScopeInformation.SBI_local in
-  (* Some useful functions for adding certain elements to the environment *)
-  let add_bound_name env binding =
-    Env.ScopingEnv.add_value
-      binding.Parsetree.ast_desc.Parsetree.b_name
-      bind_locality env in
-  let add_parameters env binding =
-    let add_parameter env (name, _) =
-      Env.ScopingEnv.add_value
-        name Env.ScopeInformation.SBI_local env in
-    List.fold_left add_parameter env
-      binding.Parsetree.ast_desc.Parsetree.b_params
-  in
-
+  (* Just a local function to add the binding's parameters in an         *)
+  (* environment. Handy because this process will be done several times. *)
+  let add_binding_parameters in_env bnd =
+    List.fold_left
+      (fun accu_env (param_vname, _) ->
+        Env.ScopingEnv.add_value
+          param_vname Env.ScopeInformation.SBI_local accu_env)
+      in_env
+      bnd.Parsetree.ast_desc.Parsetree.b_params in
   (* We create the extended environment with the identifiers bound by the *)
   (* definition. This environment will always be the one returned if the  *)
   (* scoping process succeeds.                                            *)
   let final_env =
-    List.fold_left add_bound_name env
+    List.fold_left
+      (fun accu_env let_binding ->
+        Env.ScopingEnv.add_value
+          let_binding.Parsetree.ast_desc.Parsetree.b_name
+          bind_locality
+          accu_env)
+      env
       let_def_descr.Parsetree.ld_bindings in
   (* However, we extend the scoping environment with the let-bound *)
   (* variables only if the definition is recursive.                *)
@@ -1301,7 +1304,7 @@ and scope_let_definition ~toplevel_let ctx env let_def =
     let let_binding_descr = let_binding.Parsetree.ast_desc in
     (* Extend the local environment with the possible arguments *)
     (* if the bound identifier denotes a function...            *)
-    let env_with_params = add_parameters env' let_binding in
+    let env_with_params = add_binding_parameters env' let_binding in
     (* Get all the type constraints from both the params *)
     (* and the body annotations of the definition.       *)
     let all_ty_constraints =
@@ -1379,13 +1382,11 @@ and scope_let_definition ~toplevel_let ctx env let_def =
      * functions being defined
      * (see documentation on [scope_termination_proof]). *)
     let env_with_all_params =
-      List.fold_left add_parameters env
-        scoped_bindings in
+      List.fold_left add_binding_parameters env scoped_bindings in
     match let_def_descr.Parsetree.ld_termination_proof with
      | None -> None
      | Some tp ->
-         Some (scope_termination_proof ctx env env_with_all_params tp)
-  in
+         Some (scope_termination_proof ctx env env_with_all_params tp) in
   (* An finally be return the scoped let-definition *)
   (* and the extended environment.                  *)
   let scoped_let_def_desc = {
@@ -1403,12 +1404,13 @@ and scope_let_definition ~toplevel_let ctx env let_def =
 
 
 
-(* *********************************************************************** *)
-(* scoping_context -> Env.ScopingEnv.t -> Parsetree.logical_expr -> Parsetree.logical_expr *)
+(* ************************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.logical_expr ->           *)
+(*   Parsetree.logical_expr                                                   *)
 (* {b Descr} : Scopes a [logical_expr] and returns this scoped [logical_expr].
 
-   {b Rem} : Not exported outside this module.                             *)
-(* *********************************************************************** *)
+   {b Rem} : Not exported outside this module.                                *)
+(* ************************************************************************** *)
 and scope_logical_expr ctx env logical_expr =
   let new_desc =
     (match logical_expr.Parsetree.ast_desc with

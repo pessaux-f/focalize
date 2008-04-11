@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.71 2008-04-10 11:01:51 pessaux Exp $ *)
+(* $Id: env.ml,v 1.72 2008-04-11 08:52:05 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -252,7 +252,7 @@ module ScopeInformation = struct
         inheritance. Methods from the toplevel ancestor are in head of the
         list. In case of multiple inheritance, we consider that ancestors
         are older from left to right. *)
-    spbi_methods : Parsetree.vname list;
+    spbi_methods : Parsetree.vname list ;
     (** The kind of the species's parameters. The first kind of the list is
         the kind of the first parameter of the species and so on. This
         information is required in order to properly scope effective arguments
@@ -264,7 +264,7 @@ module ScopeInformation = struct
         capitalized then look like a sum type constructor seen from a
         first-class expression point of view) and looked-up into the species
         field of the scoping environment. *)
-    spbi_params_kind : species_parameter_kind list;
+    spbi_params_kind : species_parameter_kind list ;
     (** The information telling how the species is bound (i.e. "scoped"). *)
     spbi_scope : species_scope
   }
@@ -403,12 +403,12 @@ module TypeInformation = struct
       {b Rem} : Exported outside this module.                             *)
   (* ******************************************************************** *)
   type species_description = {
-    spe_is_collection : bool;  (** Whether the species is a collection. *)
-    spe_is_closed : bool;   (** Whether the species is fully defined, even if
+    spe_is_collection : bool ;  (** Whether the species is a collection. *)
+    spe_is_closed : bool ;   (** Whether the species is fully defined, even if
          not turned into a collection. This information
          will be useful to known when collection
          generators must be created. *)
-    spe_sig_params : species_param list;   (** Species parameters. *)
+    spe_sig_params : species_param list ;   (** Species parameters. *)
     (** Method's name, type and body if defined. *)
     spe_sig_methods : species_field list
     }
@@ -447,7 +447,7 @@ module TypeInformation = struct
   (* ********************************************************************* *)
   type constructor_description = {
     (** Arity : 0 or 1 (many = 1 type tuple), (1 = type, not a 1 tuple). *)
-    cstr_arity : constructor_arity;
+    cstr_arity : constructor_arity ;
     (** Full type scheme for this constructor, i.e (args ->) ty result. *)
     cstr_scheme : Types.type_scheme
   }
@@ -467,7 +467,7 @@ module TypeInformation = struct
 
 
   type label_description = {
-    field_mut : field_mutability;    (** Mutability for this field. *)
+    field_mut : field_mutability ;    (** Mutability for this field. *)
     (** Full type scheme for this field, i.e arg -> ty result. *)
     field_scheme : Types.type_scheme
   }
@@ -499,17 +499,18 @@ module TypeInformation = struct
 
 
   type type_description = {
-    type_kind : type_kind;             (** Kind of the type definition. *)
+    type_loc : Location.t ;     (** The type definition's location. *)
+    type_kind : type_kind ;             (** Kind of the type definition. *)
     (** The type scheme representing to what this type is equal to. For
         instance in type 'a t = 'a list, t is TK_abstract with [type_identity]
         representing 'a list.
         If the type is a pure abstract like in type t, then t is TK_abstract
         with [type_identity] representing the type ST_construct ("t", []). *)
-    type_identity : Types.type_scheme;
+    type_identity : Types.type_scheme ;
     (** Parameters of the type. Be careful, they are generalized at the same
         that the above scheme [type_identity] is created. Hence, physical
         sharing exists and is crucial ! *)
-    type_params : Types.type_simple list;
+    type_params : Types.type_simple list ;
     type_arity : int          (** Number of parameters of the type. *)
   }
 
@@ -688,7 +689,9 @@ module CoqGenInformation = struct
     cmi_external_expr : Parsetree.external_expr_desc
     }
 
-  type label_mapping_info = unit
+  (** The list of mappings according to external languages to know to which
+      string the record type field name corresponds. *)
+  type label_mapping_info =  Parsetree.external_expr_desc
 
 
   type method_info = {
@@ -1530,6 +1533,7 @@ module TypingEMAccess = struct
       Types.build_type_def_scheme
         ~variables: list_params ~body: (Types.type_list list_param) in
     let list_type_description = {
+      TypeInformation.type_loc = Location.none ;
       TypeInformation.type_kind =
         TypeInformation.TK_variant [
           (Parsetree.Vlident "[]", TypeInformation.CA_zero, nil_scheme);
