@@ -1,24 +1,27 @@
 %{
-(* $Id: parser.mly,v 1.86 2008-04-10 12:39:36 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.87 2008-04-11 13:51:12 weis Exp $ *)
 
 open Parsetree;;
 
 let mk_loc () = {
     Location.l_beg = Parsing.symbol_start_pos ();
     Location.l_end = Parsing.symbol_end_pos ();
-};;
+}
+;;
 
 let mk_doc_elem de = {
   de_loc = mk_loc ();
   de_desc = de;
-};;
+}
+;;
 
 let mk_doc doc desc = {
   ast_loc = mk_loc ();
   ast_desc = desc;
   ast_doc = doc;
   ast_type = Parsetree.ANTI_none;
-};;
+}
+;;
 
 let mk d = mk_doc [] d;;
 
@@ -41,7 +44,8 @@ let mk_label_ident qual vname =
 ;;
 
 let mk_global_constructor_ident qual vname =
-  mk (CI (mk_qual_vname qual vname));;
+  mk (CI (mk_qual_vname qual vname))
+;;
 
 let mk_local_expr_ident vname =
   mk (EI_local vname)
@@ -56,9 +60,11 @@ let mk_method_expr_ident opt_qualified_vname method_vname =
 ;;
 
 let mk_local_expr_var vname =
-  mk (E_var (mk_local_expr_ident vname));;
+  mk (E_var (mk_local_expr_ident vname))
+;;
 let mk_global_expr_var qual vname =
-  mk (E_var (mk_global_expr_ident qual vname));;
+  mk (E_var (mk_global_expr_ident qual vname))
+;;
 
 let mk_qual_infix_application e1 s qual e2 =
   mk (E_app (mk_global_expr_var qual (Viident s), [e1; e2]))
@@ -77,7 +83,8 @@ let mk_unit () = mk_global_constructor_ident (Some "basics") (Vuident "Unit");;
 
 let mk_proof_label (s1, s2) =
   try int_of_string s1, s2 with
-  | Failure _ -> assert false;;
+  | Failure _ -> assert false
+;;
 
 %}
 
@@ -538,12 +545,12 @@ def_collection:
 /**** FUNCTION & VALUES DEFINITION ****/
 
 let_binding:
-  | opt_local LET binding
-    { mk { ld_rec = RF_no_rec ; ld_logical = LF_no_logical ; ld_local = $1 ;
-           ld_bindings = [$3] ; ld_termination_proof = None } }
+  | opt_local LET binding following_binding_list
+    { mk { ld_rec = RF_no_rec; ld_logical = LF_no_logical; ld_local = $1;
+           ld_bindings = $3 :: $4; ld_termination_proof = None; } }
   | opt_local LET REC binding following_binding_list opt_termination_proof
-    { mk { ld_rec = RF_rec; ld_logical = LF_no_logical; ld_local = $1 ;
-           ld_bindings = $4 :: $5 ; ld_termination_proof = $6 } }
+    { mk { ld_rec = RF_rec; ld_logical = LF_no_logical; ld_local = $1;
+           ld_bindings = $4 :: $5; ld_termination_proof = $6; } }
 ;
 
 def_let:
@@ -571,7 +578,7 @@ def_logical:
 binding:
  | bound_vname EQUAL logical_expr
     { mk {
-        b_name = $1 ; b_params = [] ; b_type = None ;
+        b_name = $1; b_params = []; b_type = None;
         b_body = Parsetree.BB_logical $3 }
     }
   | bound_vname EQUAL INTERNAL type_expr EXTERNAL external_expr
@@ -581,18 +588,18 @@ binding:
     }
   | bound_vname IN type_expr EQUAL logical_expr
     { mk {
-        b_name = $1 ; b_params = [] ; b_type = Some $3 ;
+        b_name = $1; b_params = []; b_type = Some $3;
         b_body = Parsetree.BB_logical $5 }
     }
   | bound_vname LPAREN param_list RPAREN EQUAL logical_expr
     { mk {
-        b_name = $1 ; b_params = $3 ; b_type = None ;
+        b_name = $1; b_params = $3; b_type = None;
         b_body = Parsetree.BB_logical $6 }
     }
   | bound_vname LPAREN param_list RPAREN IN type_expr
     EQUAL logical_expr
     { mk {
-        b_name = $1 ; b_params = $3 ; b_type = Some $6 ;
+        b_name = $1; b_params = $3; b_type = Some $6;
         b_body = Parsetree.BB_logical $8 }
     }
 ;
