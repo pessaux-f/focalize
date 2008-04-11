@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.26 2008-04-11 11:03:18 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.27 2008-04-11 14:49:30 pessaux Exp $ *)
 
 
 
@@ -341,12 +341,10 @@ let generate_pattern ctx env pattern =
      | Parsetree.P_wild -> Format.fprintf out_fmter "_"
      | Parsetree.P_constr (ident, pats) ->
          (begin
-         let nb_poly_args =
-           generate_constructor_ident_for_method_generator ctx env ident in
-         (* Add the "_"'s due to polymorphism of the constructor. *)
-         for i = 0 to nb_poly_args - 1 do
-           Format.fprintf out_fmter "@ _"
-           done ;
+	 ignore(generate_constructor_ident_for_method_generator ctx env ident) ;
+         (* In "match" patterns, extra arguments of the constructor *)
+         (* due to polymorphism never appear in Coq syntax.         *)
+	 if pats <> [] then Format.fprintf out_fmter "@ " ;
          rec_generate_pats_list pats
          end)
      | Parsetree.P_record _labs_pats ->
@@ -558,8 +556,8 @@ and generate_expr ctx ~local_idents ~self_as ~in_hyp initial_env
     (* Now, dissecate the expression core. *)
     match expression.Parsetree.ast_desc with
      | Parsetree.E_self ->
-         (* [Unsure] D'ailleurs, est-ce possible en fait ? *)
-         failwith "generate_expr E_self TODO"
+         (* "Self" is not a first-class value ! *)
+         assert false
      | Parsetree.E_const cst -> generate_constant ctx cst
      | Parsetree.E_fun (vnames, body) ->
          (* Get the type of the function. *)
@@ -613,9 +611,22 @@ and generate_expr ctx ~local_idents ~self_as ~in_hyp initial_env
          Format.fprintf out_fmter "@ " ;
          rec_generate_exprs_list ~comma: false loc_idents env args ;
          Format.fprintf out_fmter ")@]"
-     | Parsetree.E_constr (_cstr_ident, _args) ->
-         (* [Unsure] *)
-         Format.fprintf out_fmter "E_constr"
+     | Parsetree.E_constr (cstr_ident, args) ->
+         (begin
+         let nb_poly_args =
+           generate_constructor_ident_for_method_generator ctx env cstr_ident in
+         (* Add the "_"'s due to polymorphism of the constructor. *)
+         for i = 0 to nb_poly_args - 1 do
+           Format.fprintf out_fmter "@ _"
+         done ;
+         match args with
+          | [] -> ()
+          | _ ->
+              (* If argument(s), enclose by parens to possibly make a tuple. *)
+              Format.fprintf out_fmter "@ @[<1>(" ;
+              rec_generate_exprs_list ~comma: true loc_idents env args ;
+              Format.fprintf out_fmter ")@]"
+         end)
      | Parsetree.E_match (expr, pats_exprs) ->
          (begin
          Format.fprintf out_fmter "@[<1>match " ;

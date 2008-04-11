@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.40 2008-04-11 13:52:10 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.41 2008-04-11 14:49:30 pessaux Exp $ *)
 
 
 (* *********************************************************** *)
@@ -434,7 +434,7 @@ let rec pp_pat_desc ppf = function
       Format.fprintf ppf "%a@ as@ %a" pp_pattern pat pp_vname vname
   | Parsetree.P_wild -> Format.fprintf ppf "_"
   | Parsetree.P_constr (ident, pats) ->
-      Format.fprintf ppf "@[<2>%a@ (%a)@])"
+      Format.fprintf ppf "@[<2>%a@ %a@]"
         pp_constructor_ident ident (pp_patterns ",") pats
   | Parsetree.P_record lab_pat_lst ->
       Format.fprintf ppf "@[<2>{@ %a@ }@])"

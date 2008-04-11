@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.22 2008-04-09 10:19:44 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.23 2008-04-11 14:49:30 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -305,8 +305,8 @@ let generate_pattern ctx env pattern =
      | Parsetree.P_constr (ident, pats) ->
          (begin
          generate_constructor_ident_for_method_generator ctx env ident ;
-         (* Discriminate on the umber of arguments *)
-         (* to know if parens are needed.          *)
+         (* Discriminate on the number of arguments *)
+         (* to know if parens are needed.           *)
          match pats with
           | [] -> ()
           | _ ->

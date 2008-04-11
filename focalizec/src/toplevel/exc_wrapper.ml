@@ -11,7 +11,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.37 2008-04-11 11:03:18 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.38 2008-04-11 14:49:30 pessaux Exp $ *)
+
+
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -393,4 +395,3 @@ try Check_file.main () with
     (* And anyway, if an exception occured, exit with -1 error code. *)
     exit (-1)
 ;;
-

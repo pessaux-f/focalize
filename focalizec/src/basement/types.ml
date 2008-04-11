@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.48 2008-03-14 14:43:59 pessaux Exp $ *)
+(* $Id: types.ml,v 1.49 2008-04-11 14:49:30 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -856,7 +856,7 @@ let unify ~loc ~self_manifest type1 type2 =
      | ((ST_tuple tys1), (ST_tuple tys2)) ->
          let tys3 =
            (try List.map2 rec_unify tys1 tys2 with
-           | Invalid_argument "List.iter2" ->
+           | Invalid_argument "List.map2" ->
                (* In fact, that's an arity mismatch on the tuple. *)
                raise (Conflict (ty1, ty2, loc))) in
          ST_tuple tys3
@@ -864,7 +864,7 @@ let unify ~loc ~self_manifest type1 type2 =
          (if name <> name' then raise (Conflict (ty1, ty2, loc))) ;
          let args'' =
            (try List.map2 rec_unify args args' with
-           | Invalid_argument "List.iter2" ->
+           | Invalid_argument "List.map2" ->
                (* In fact, that's an arity mismatch. *)
                raise
                  (Arity_mismatch

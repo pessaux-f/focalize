@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.111 2008-04-11 08:52:05 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.112 2008-04-11 14:49:30 pessaux Exp $ *)
 
 
 
@@ -692,12 +692,22 @@ let rec typecheck_pattern ctx env pat_desc =
                 Types.specialize cstr_decl.Env.TypeInformation.cstr_scheme in
               (* Recover the type of the sub-patterns by typechecking an  *)
               (* artificial tuple argument compound of the sub-patterns.  *)
-              (* Proceed this way EVEN if there is ONE argument. We then  *)
-              (* in effect have degenerated tuples with only 1 component. *)
+              (* Proceed this way ONLY if there is not only ONE argument  *)
+              (* or if there is only one but already begin a tuple !      *)
+              (* This hack is linked to the same process in the function  *)
+              (* [typecheck_simple_type_def_body]. This way, we ensure    *)
+              (* that constructor argument(s) is (are) always in a tuple, *)
+              (* but never in a trivial tuple containing only one         *)
+              (* component being a tuple. This means that we only add a   *)
+              (* tuple layer if there is not one already.                 *)
+              let hacked_pat =
+                (match nempty_pats with
+                 | [ { Parsetree.ast_desc = Parsetree.P_tuple _ } as p] -> p
+                 | _ ->
+                     { pat_desc with
+                       Parsetree.ast_desc = Parsetree.P_tuple nempty_pats }) in
               let (cstr_arg_ty, sub_bindings) =
-                typecheck_pattern ctx env
-                { pat_desc with
-                  Parsetree.ast_desc = Parsetree.P_tuple nempty_pats } in
+                typecheck_pattern ctx env hacked_pat in
               (* Constructeurs being functions, we will unify [cstr_type]   *)
               (* with an arrow type to ensure that it is really one and     *)
               (* to ensure the arguments types and extract the result type. *)
@@ -3612,7 +3622,7 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
          Types.build_type_def_scheme
            ~variables: vars_of_mapping ~body: identity_type in
        let ty_descr = {
-	 Env.TypeInformation.type_loc = simple_type_def_body.Parsetree.ast_loc ;
+         Env.TypeInformation.type_loc = simple_type_def_body.Parsetree.ast_loc ;
          Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
          Env.TypeInformation.type_identity = identity_scheme ;
          Env.TypeInformation.type_params = vars_of_mapping ;
@@ -3645,16 +3655,30 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
                   Types.generalize futur_type_type } in
               (cstr_name, Env.TypeInformation.CA_zero, cstr_descr)
             | _ ->
-              (* There are some argument(s). So the constructor is *)
-              (* types as a function taking a tuple of argument(s) *)
-              (* and returning the type of the current definition. *)
+              (* There are some argument(s). So the constructor is type as *)
+              (* a function taking a tuple of argument(s)  and returning   *)
+              (* the type of the current definition.                       *)
+              (* Be careful, in accordance with what is done in function   *)
+              (* [typecheck_pattern], we take care of not adding an extra  *)
+              (* tuple layer if the argument of the constructor is already *)
+              (* a tuple. To do this, we add a tuple layer ONLY if there   *)
+              (* is not only ONE argument or if there is only one but      *)
+              (* already begin a tuple ! This way, we ensure that          *)
+              (* constructor argument(s) is (are) always in a tuple, but   *)
+              (* never in a trivial tuple containing only one component    *)
+              (* being a tuple. This means that we only add a tuple layer  *)
+              (* if there is not one already.                              *)
               Types.begin_definition () ;
               let args_ty =
                 List.map
                   (typecheck_type_expr ctx env_with_proto_ourselves)
                   cstr_args in
               (* Make a tuple of the arguments. *)
-              let as_tuple = Types.type_tuple args_ty in
+              let as_tuple =
+                (match cstr_args with
+                  | [ { Parsetree.ast_desc = Parsetree.TE_prod _ } ] ->
+                     List.hd args_ty
+                  | _ -> Types.type_tuple args_ty) in
               let arrow = Types.type_arrow as_tuple futur_type_type in
               Types.end_definition () ;
               let cstr_descr = {
@@ -3677,7 +3701,7 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
         Types.build_type_def_scheme
           ~variables: vars_of_mapping ~body: futur_type_type in
       let final_type_descr = {
-	Env.TypeInformation.type_loc = simple_type_def_body.Parsetree.ast_loc ;
+        Env.TypeInformation.type_loc = simple_type_def_body.Parsetree.ast_loc ;
         Env.TypeInformation.type_kind =
           Env.TypeInformation.TK_variant
             (List.map
@@ -3731,7 +3755,7 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
         Types.build_type_def_scheme
           ~variables: vars_of_mapping ~body: futur_type_type in
       let final_type_descr = {
-	Env.TypeInformation.type_loc = simple_type_def_body.Parsetree.ast_loc ;
+        Env.TypeInformation.type_loc = simple_type_def_body.Parsetree.ast_loc ;
         Env.TypeInformation.type_kind =
           Env.TypeInformation.TK_record
             (List.map
@@ -3828,8 +3852,8 @@ let typecheck_external_type_def_body ctx env type_name params
          Types.build_type_def_scheme ~variables: params ~body: ty in
        (* And now make the type's description to insert in the environment. *)
        let ty_descr = {
-	 Env.TypeInformation.type_loc =
-	   external_type_def_body.Parsetree.ast_loc ;
+         Env.TypeInformation.type_loc =
+           external_type_def_body.Parsetree.ast_loc ;
          Env.TypeInformation.type_kind =
            Env.TypeInformation.TK_external
              (external_type_def_body.Parsetree.ast_desc.Parsetree.etdb_external,
