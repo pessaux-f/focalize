@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.72 2008-04-11 08:52:05 pessaux Exp $ *)
+(* $Id: env.ml,v 1.73 2008-04-11 11:03:18 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -660,7 +660,11 @@ module MlGenInformation = struct
 
   (** The list of mappings according to external languages to know to which
       string the sum type constructor corresponds. For instance, in Caml,
-      "Nil" will be mapped onto "[]" and "Cons" to "( :: )". *)
+      "Nil" will be mapped onto "[]" and "Cons" to "( :: )".  For Ocaml,
+      only constructors coming from "external" sum types are entered in the
+      generation environment. Hence, if a constructor is not found, then this
+      means that it come from a regular FoCaL type definition, not dealing
+      with any external material. *)
   type constructor_mapping_info = Parsetree.external_expr_desc
 
 
@@ -682,11 +686,16 @@ end
 (* *********************************************************************** *)
 (* *********************************************************************** *)
 module CoqGenInformation = struct
+  (** In Coq generation environment ALL the sum types value constructors are
+      entered in the environment because we always need to know their number
+      of extra leading "_" due to polymorphics. If the constructor does not
+      have an external mapping, we simply put "None" in the field
+      [cmi_external_expr]. *)
   type constructor_mapping_info = {
     (** The number of extra argument the constructor has due to its
         polymorphism. *)
     cmi_num_polymorphics_extra_args : int ;
-    cmi_external_expr : Parsetree.external_expr_desc
+    cmi_external_expr : Parsetree.external_expr_desc option
     }
 
   (** The list of mappings according to external languages to know to which

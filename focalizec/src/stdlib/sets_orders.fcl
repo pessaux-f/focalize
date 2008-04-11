@@ -122,7 +122,7 @@ species Partial_set inherits Setoid =
     let ifailed (r in string, elt in Self) in Self =
        external
        | caml -> "Sets_orders_externals.i_failed"
-       | coq -> "i_failed"
+       | coq -> "elt"
        end
     in function reason -> ifailed(reason, !element);
 

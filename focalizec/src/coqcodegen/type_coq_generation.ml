@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.8 2008-04-11 08:52:05 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.9 2008-04-11 11:03:18 pessaux Exp $ *)
 
 
 (* ********************************************************************** *)
@@ -74,7 +74,7 @@ let extend_coq_gen_env_with_type_external_bindings env nb_extra_args
                  Env.CoqGenInformation.cmi_num_polymorphics_extra_args =
                    nb_extra_args ;
                  Env.CoqGenInformation.cmi_external_expr =
-                   bound_external_expr.Parsetree.ast_desc } in
+                   Some bound_external_expr.Parsetree.ast_desc } in
                Env.CoqGenEnv.add_constructor
                  bound_name cstr_mapping_info rec_env
            | _ ->
@@ -110,6 +110,9 @@ let type_def_compile ctx env type_def_name type_descr =
       type_descr.Env.TypeInformation.type_identity type_def_params in
   (* Useless, but just in case.... This does not hurt ! *)
   Types.purge_type_simple_to_ml_variable_mapping () ;
+  (* Compute the number of extra polymorphic-induced *)
+  (* arguments to the constructor.                   *)
+  let nb_extra_args = List.length type_def_params in
   (* Now, generates the type definition's body. *)
   match type_descr.Env.TypeInformation.type_kind with
    | Env.TypeInformation.TK_abstract ->
@@ -151,10 +154,7 @@ let type_def_compile ctx env type_def_name type_descr =
          raise
            (Externals_generation_errs.No_external_type_def
               ("Coq", type_def_name, external_expr.Parsetree.ast_loc))) ;
-       (* Compute the number of extra polymorphic-induced *)
-       (* arguments to the constructor.                   *)
-       let nb_extra_args = List.length type_def_params in
-        (* Finally, we return the extended code generation environment in *)
+       (* Finally, we return the extended code generation environment in *)
        (* which sum constructors or labels are recorded in order to be   *)
        (* able to remind on what to map them when we will see them.      *)
        extend_coq_gen_env_with_type_external_bindings
@@ -219,8 +219,19 @@ let type_def_compile ctx env type_def_name type_descr =
              cstr_ty)
          sum_constructors_to_print ;
        Format.fprintf out_fmter ".@]@\n@\n" ;
-       (* Not an external type definition, so nothing new in the environment. *)
-       env
+       (* Since any variant type constructors must be inserted in the  *)
+       (* environment in order to know the number of extra leading "_" *)
+       (* due to polymorphism, we return the extended environment.     *)
+       List.fold_left
+         (fun accu_env (sum_cstr_name, _) ->
+           Env.CoqGenEnv.add_constructor 
+             sum_cstr_name
+             { Env.CoqGenInformation.cmi_num_polymorphics_extra_args =
+                 nb_extra_args ;
+               Env.CoqGenInformation.cmi_external_expr = None}
+             accu_env)
+         env
+         sum_constructors_to_print
        end)
    | Env.TypeInformation.TK_record fields ->
        (begin

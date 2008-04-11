@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.36 2008-04-11 08:52:05 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.37 2008-04-11 11:03:18 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : Wrapper used to protect the call to the "main". If something
@@ -385,7 +385,7 @@ try Check_file.main () with
 (* The ultimate firewall. *)
      | x ->
          Format.fprintf Format.err_formatter
-           "@[%tUnexpected@ error%t:@ \"%s\".\n%tPlease@ report%t.@]@."
+           "@[%tUnexpected@ error%t:@ \"%s\".@\n%tPlease@ report%t.@]@."
            Handy.pp_set_bold Handy.pp_reset_effects
            (Printexc.to_string x)
            Handy.pp_set_videoinv Handy.pp_reset_effects

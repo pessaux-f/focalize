@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.25 2008-04-08 15:10:55 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.26 2008-04-11 11:03:18 pessaux Exp $ *)
 
 
 
@@ -270,45 +270,57 @@ let generate_constant ctx cst =
 
 
 let generate_constructor_ident_for_method_generator ctx env cstr_expr =
-  let mapping_info =
-    Env.CoqGenEnv.find_constructor
-      ~loc: cstr_expr.Parsetree.ast_loc
-      ~current_unit: ctx.Context.scc_current_unit cstr_expr env in
-(* [Unsure]
-    let (_, coq_binding) =
-      try
-        List.find
-          (function
-            | (Parsetree.EL_Coq, _) -> true
-            | (Parsetree.EL_Caml, _)
-            | ((Parsetree.EL_external _), _) -> false)
-          mapping_info
-      with Not_found ->
-        (* No Coq mapping found. *)
-        raise
-          (Externals_ml_generation.No_external_constructor_coq_def
-             cstr_expr) in
-    (* Now directly generate the name the constructor is mapped onto. *)
-    Format.fprintf ctx.Context.scc_out_fmter "%s" ocaml_binding
-  with
-  | Env.Unbound_constructor (_, _) -> assert false
-*)
-  (match cstr_expr.Parsetree.ast_desc with
-   | Parsetree.CI (Parsetree.Vname name) ->
-       Format.fprintf ctx.Context.scc_out_fmter "%a"
-         Parsetree_utils.pp_vname_with_operators_expanded name
-   | Parsetree.CI (Parsetree.Qualified (fname, name)) ->
-       (* If the constructor belongs to the current      *)
-       (* compilation unit then one must not qualify it. *)
-       if fname <> ctx.Context.scc_current_unit then
-         Format.fprintf ctx.Context.scc_out_fmter "%s.%a"
-           fname          (* No module name capitalization in Coq. *)
-           Parsetree_utils.pp_vname_with_operators_expanded name
-       else
-         Format.fprintf ctx.Context.scc_out_fmter "%a"
-           Parsetree_utils.pp_vname_with_operators_expanded name) ;
-  (* Returns the number of "_" that must be printed after the constructor. *)
-  mapping_info.Env.CoqGenInformation.cmi_num_polymorphics_extra_args
+  try
+    let mapping_info =
+      Env.CoqGenEnv.find_constructor
+        ~loc: cstr_expr.Parsetree.ast_loc
+        ~current_unit: ctx.Context.scc_current_unit cstr_expr env in
+    (match mapping_info.Env.CoqGenInformation.cmi_external_expr with
+     | None ->
+         (begin
+         (* The constructor isn't coming from an external definition. *)
+         match cstr_expr.Parsetree.ast_desc with
+          | Parsetree.CI (Parsetree.Vname name) ->
+              Format.fprintf ctx.Context.scc_out_fmter "%a"
+                Parsetree_utils.pp_vname_with_operators_expanded name
+          | Parsetree.CI (Parsetree.Qualified (fname, name)) ->
+              (* If the constructor belongs to the current      *)
+              (* compilation unit then one must not qualify it. *)
+              if fname <> ctx.Context.scc_current_unit then
+                Format.fprintf ctx.Context.scc_out_fmter "%s.%a"
+                  fname          (* No module name capitalization in Coq. *)
+                  Parsetree_utils.pp_vname_with_operators_expanded name
+              else
+                Format.fprintf ctx.Context.scc_out_fmter "%a"
+                  Parsetree_utils.pp_vname_with_operators_expanded name
+         end)
+     | Some external_expr ->
+         (begin
+         (* The constructor comes from an external definition. *)
+         let (_, coq_binding) =
+           try
+             List.find
+               (function
+                 | (Parsetree.EL_Coq, _) -> true
+                 | (Parsetree.EL_Caml, _)
+                 | ((Parsetree.EL_external _), _) -> false)
+               external_expr
+           with Not_found ->
+             (* No Coq mapping found. *)
+             raise
+               (Externals_generation_errs.No_external_constructor_def
+                  ("Coq", cstr_expr)) in
+         (* Now directly generate the name the constructor is mapped onto. *)
+         Format.fprintf ctx.Context.scc_out_fmter "%s" coq_binding
+         end)) ;
+    (* Always returns the number of "_" that  *)
+    (* must be printed after the constructor. *)
+    mapping_info.Env.CoqGenInformation.cmi_num_polymorphics_extra_args
+  with _ ->
+    (* Since in Coq all the constructors must be inserted in the generation *)
+    (* environment, if we don't find the constructor, then we were wrong    *)
+    (* somewhere else before.                                               *)
+    assert false
 ;;
 
 
@@ -656,9 +668,25 @@ and generate_expr ctx ~local_idents ~self_as ~in_hyp initial_env
               rec_generate_exprs_list ~comma: true loc_idents env exprs ;
               Format.fprintf out_fmter ")@]"
          end)
-     | Parsetree.E_external _ext_expr ->
-         (* [Unsure] *)
-         Format.fprintf out_fmter "E_external"
+     | Parsetree.E_external ext_expr ->
+         (begin
+         try
+           (* Simply a somewhat of verbatim stuff of the Coq translation. *)
+           let (_, coq_binding) =
+             List.find
+               (function
+                 | (Parsetree.EL_Coq, _) -> true
+                 | (Parsetree.EL_Caml, _)
+                 | ((Parsetree.EL_external _), _) -> false)
+               ext_expr.Parsetree.ast_desc in
+           Format.fprintf out_fmter "%s" coq_binding
+         with Not_found ->
+           (* No Coq mapping found. *)
+           raise
+             (Externals_generation_errs.No_external_value_def
+                ("Coq", (Parsetree.Vlident "<expr>"),
+                 expression.Parsetree.ast_loc))
+         end)
      | Parsetree.E_paren expr ->
          Format.fprintf out_fmter "@[<1>(" ;
          rec_generate_expr loc_idents env expr ;
