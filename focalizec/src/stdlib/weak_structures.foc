@@ -282,13 +282,6 @@ let rema =
   | coq -> "weak_structures_externals.qrr_rema _"
 ;;
 
-let divisionParZero =
-  internal 'a -> 'b
-  external
-  | caml -> "Weak_structures_externals.div_zero"
-  | coq -> "[Unsure]"
-;;
-
 
 (** euclidean algorithm *)
 species Euclidean_semi_ring inherits Factorial_semi_ring =
