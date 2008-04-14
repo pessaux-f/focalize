@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.49 2008-04-11 14:49:30 pessaux Exp $ *)
+(* $Id: types.ml,v 1.50 2008-04-14 08:41:51 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1460,3 +1460,70 @@ let rec get_species_types_in_type ty =
      | ST_self_rep -> SpeciesCarrierTypeSet.empty
      | ST_species_rep st -> SpeciesCarrierTypeSet.singleton st
 ;;
+
+
+
+type ctype =
+  | CT_void
+  | CT_ptr of ctype
+  | CT_fun of ctype * ctype list
+  | CT_ident of string
+  | CT_struct of (ctype * string) list
+  | CT_abstract of ctype
+;;
+
+
+
+(* needed to generate structures' labels *)
+let gen_label cpt =
+  let result = Format.sprintf "_%i" !cpt in
+  incr cpt ;
+  result
+;;
+
+
+
+(** FoCal type to C type conversions *)
+(* val type_simple_to_ctype : type_simple -> ctype *)
+let rec type_simple_to_ctype ty =
+  let ty = repr ty in
+  match ty with
+   | ST_var type_variable ->
+       begin
+       match type_variable.tv_value with
+        | TVV_unknown ->
+            (* Types variables are represented by generic pointers. *)
+            CT_ptr CT_void
+        | TVV_known ts -> type_simple_to_ctype ts
+       end
+   | ST_arrow (l, r) ->
+       (* [julius]: we build a C representation of a function. *)
+       begin
+       match type_simple_to_ctype r with
+        | CT_fun (cl, cr) -> CT_fun (cl, (type_simple_to_ctype l) :: cr)
+        | t -> CT_fun (t, [type_simple_to_ctype l])
+       end
+   | ST_tuple l ->
+       let cpt = ref 0 in
+       let fields = List.map
+           (fun x -> (type_simple_to_ctype x, gen_label cpt))
+           l in
+       CT_abstract (CT_ptr (CT_struct fields))
+   | ST_construct ((_, id), []) ->
+       (* Simple type name. *)
+       CT_ident (Format.sprintf "_foc_%s" id)
+   | ST_construct (_, _) ->
+       Format.eprintf
+         "TODO (C generation) : Types.ST_construct (with parameters)@." ;
+       CT_ident "<unknow type>"
+   | ST_self_rep ->
+       Format.eprintf "TODO (C generation) : Types.ST_selt_rep@." ;
+       CT_ident "<unknow type>"
+   | ST_species_rep (_, collection_name) ->
+       CT_ptr (CT_ident collection_name)
+;;
+
+
+
+(* val type_scheme_to_ctype : type_scheme -> ctype *)
+let type_scheme_to_ctype ts = type_simple_to_ctype ts.ts_body ;;
