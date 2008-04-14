@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.29 2008-04-14 11:51:48 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.30 2008-04-14 16:07:32 pessaux Exp $ *)
 
 
 
@@ -445,6 +445,7 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~in_hyp ~is_rec env bd =
            (* type for each parameter name !                            *)
            assert false)
     params_with_type ;
+  (* [Unsure] This heuristic is a pure weak hack...                    *)
   (* If the definition is a recursive function, then one must exhibit  *)
   (* one decreasing argument. Because we don't know which one is, just *)
   (* take one at random... For instance, the first one...              *)

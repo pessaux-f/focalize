@@ -1,0 +1,20 @@
+use "basics" ;;
+open "basics" ;;
+
+
+(* *************************************************************** *)
+(* Must pass.                                                      *)
+(* Example showing simple mutually recursive functions.            *)
+(* However, on Coq side, the {struct x} hack is to weak to get the *)
+(* termination OK. Hence, that's normal that Coq complains like:   *)
+(*     Recursive call to odd has principal argument equal to       *)
+(*     basics.pred x instead of a subterm of x.                    *)
+(* This should be fixed once termination proofs will be corretly   *)
+(* integrated.                                                     *)
+(* *************************************************************** *)
+
+let rec even (x in int) =
+  if int_eq (x, 0) then true else odd (pred (x))
+and odd (y in int) =
+  if int_eq (y, 0) then false else even (pred (y))
+;;

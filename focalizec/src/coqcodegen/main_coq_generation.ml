@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.11 2008-04-14 11:51:48 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.12 2008-04-14 16:07:32 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -68,9 +68,7 @@ let toplevel_let_def_compile ctx env let_def =
                 ~in_hyp: false ~is_rec env first_bnd) in
          List.iter
            (fun binding ->
-             (* We transform "let and" non recursive      *)
-             (* functions into several "let" definitions. *)
-             Format.fprintf out_fmter ".@]@\n@[<2>Let " ;
+             Format.fprintf out_fmter "@]@\n@[<2>with " ;
              accu_env :=
                Species_record_type_generation.let_binding_compile
                  ctx ~local_idents: [] ~self_as: Types.CSR_species
@@ -156,7 +154,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         Context.scc_dependency_graph_nodes = [] ;
         Context.scc_out_fmter = out_fmter } in
       let env' = toplevel_let_def_compile ctx env let_def in
-      Format.fprintf out_fmter "@\n.@\n" ;
+      Format.fprintf out_fmter ".@\n@\n" ;
       env'
   | Infer.PCM_theorem _ ->
       Format.fprintf out_fmter "Infer.PCM_theorem TODO@." ;

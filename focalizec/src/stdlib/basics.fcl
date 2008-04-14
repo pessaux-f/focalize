@@ -13,7 +13,7 @@ type unit =
 
 and Unit =
   | caml -> "()"
-  | coq -> "fuck"
+  | coq -> "coq_builtins.Null"
 ;;
 
 type float =
@@ -131,13 +131,14 @@ let int_mod =
   | caml -> "Ml_builtins.int_mod"
   | coq -> "[Unsure]"
 ;;
+
 let int_eq =
   internal int -> int -> bool
   external
   | caml -> "Ml_builtins.int_eq"
-  | coq -> "int_eq"
   | coq -> "[Unsure]"
 ;;
+
 let int_div =
   internal int -> int -> int
   external
@@ -151,6 +152,7 @@ let int_lt =
   | coq -> "int_lt"
   | coq -> "[Unsure]"
 ;;
+
 let int_leq =
   internal int -> int -> bool
   external
@@ -158,6 +160,7 @@ let int_leq =
   | coq -> "int_leq"
   | coq -> "[Unsure]"
 ;;
+
 let int_geq =
   internal int -> int -> bool
   external
@@ -165,6 +168,7 @@ let int_geq =
   | coq -> "int_geq"
   | coq -> "[Unsure]"
 ;;
+
 let int_gt =
   internal  int -> int -> bool
   external
@@ -172,12 +176,14 @@ let int_gt =
   | coq -> "int_gt"
   | coq -> "[Unsure]"
 ;;
+
 let phys_eq =
   internal 'a ->'a -> bool
   external
     | caml -> "Ml_builtins.base_equal"
     | coq -> "[Unsure]"
 ;;
+
 let base_eq =
   internal  'a -> 'a -> bool
   external
@@ -291,15 +297,23 @@ proof: assumed ;;
 let pred =
   internal int -> int
   external
-  | caml -> "Ml_builtins.pred" | coq -> "pred" ;;
+  | caml -> "Ml_builtins.pred"
+  | coq -> "coq_builtins.bi__int_pred"
+;;
+
 let int_opp =
   internal  int -> int
   external
-  | caml -> "Ml_builtins.int_opposite" | coq -> "int_opp" ;;
+  | caml -> "Ml_builtins.int_opposite"
+  | coq -> "coq_builtins.bi__int_opposite"
+;;
+
 let int_plus =
   internal int -> int -> int
   external
-  | caml -> "Ml_builtins.int_plus" | coq -> "int_plus" ;;
+  | caml -> "Ml_builtins.int_plus"
+  | coq -> "coq_builtins.bi__int_plus"
+;;
 
 theorem int_0_plus: all x y in int,
   #base_eq (x, 0) -> #base_eq (#int_plus (x, y), y)
@@ -363,23 +377,29 @@ let int_mult =
   internal int -> int -> int
   external
   | caml -> "Ml_builtins.int_mult"
-  | coq -> "int_mult" ;;
+  | coq -> "coq_builtins.bi__int_mult"
+;;
+
 let int_minus =
   internal int -> int -> int
   external
   | caml -> "Ml_builtins.int_minus"
-  | coq -> "int_moins" ;;
+  | coq -> "coq_builtins.bi__int_minus"
+;;
+
 let int_max =
   internal  int -> int -> int
   external
   | caml -> "Ml_builtins.int_max"
-  | coq -> "max"
+  | coq -> "coq_builtins.bi__int_max"
 ;;
+
 let int_min =
   internal int -> int -> int
   external
   | caml -> "Ml_builtins.int_min"
-  | coq -> "min" ;;
+  | coq -> "coq_builtins.bi__int_min"
+;;
 
 theorem int_min_le: all x y z in int,
   (#int_leq (z, x) /\ #int_leq (z, y)) -> #int_leq (z, #int_min (x, y))

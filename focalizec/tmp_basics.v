@@ -3,6 +3,7 @@ Require Export ZArith.
 Require Export Reals.
 Require Export Ascii.
 Require Export String.
+Require Export coq_builtins.
 
 
 (** The weak proof !!! Give it a Prop, and abracadabra ... it's proved ! *)
@@ -62,13 +63,25 @@ Definition xor_b (x : bool__t) (y : bool__t) : bool__t :=
 
 Require Export ZArith.
 
-(* [Unsure]. *)
-Definition int_eq (x : int__t) (y : int__t) : bool__t := true.
-Definition int_leq (x : int__t) (y : int__t) : bool__t := true.
-
 
 (* Junky code to have one representative of the string__t type. *)
 Variable ___a_string : string__t.
+
+
+(* Miscellaneous basic functions. *)
+Let int_eq : int__t -> int__t -> bool__t := coq_builtins.bi__int_eq.
+Let int_lt : int__t -> int__t -> bool__t := coq_builtins.bi__int_lt.
+Let int_leq : int__t -> int__t -> bool__t := coq_builtins.bi__int_leq.
+Let int_geq : int__t -> int__t -> bool__t := coq_builtins.bi__int_geq.
+Let int_gt : int__t -> int__t -> bool__t := coq_builtins.bi__int_gt.
+Let pred : int__t -> int__t := coq_builtins.bi__int_pred.
+Let int_opp : int__t -> int__t := coq_builtins.bi__int_opposite.
+Let int_plus : int__t -> int__t -> int__t := coq_builtins.bi__int_plus.
+Let succ (x : int__t) : int__t := (int_plus x 1).
+Let int_mult : int__t -> int__t -> int__t := coq_builtins.bi__int_mult.
+Let int_minus : int__t -> int__t -> int__t := coq_builtins.bi__int_minus.
+Let int_max : int__t -> int__t -> int__t := coq_builtins.bi__int_max.
+Let int_min : int__t -> int__t -> int__t := coq_builtins.bi__int_min.
 
 
 (* Currently partially hand-generated. *)
