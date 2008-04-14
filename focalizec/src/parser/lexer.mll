@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.34 2008-04-09 09:53:21 weis Exp $ *)
+(* $Id: lexer.mll,v 1.35 2008-04-14 09:20:49 pessaux Exp $ *)
 
 {
 open Lexing;;
@@ -41,6 +41,7 @@ List.iter
   "caml", CAML;
   "collection", COLLECTION;
   "coq", COQ;
+  "coq_require", COQ_REQUIRE;
   "definition", DEFINITION;
   "else", ELSE;
   "end", END;

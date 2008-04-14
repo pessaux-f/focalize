@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.10 2008-04-08 15:10:55 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.11 2008-04-14 09:20:49 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -45,6 +45,9 @@ let toplevel_compile env ~current_unit out_fmter = function
       (* One must "open" the ml code generation environment of this module *)
       (* and return the environment extended with these "opened" bindings. *)
       Env.mlgen_open_module ~loc: phrase_loc fname env
+  | Infer.PCM_coq_require _ ->
+      (* Really nothing to do... *)
+      env
   | Infer.PCM_species (species_def, species_descr, dep_graph) ->
       let opt_coll_gen_args =
         Species_ml_generation.species_compile

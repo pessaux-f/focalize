@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.112 2008-04-11 14:49:30 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.113 2008-04-14 09:20:49 pessaux Exp $ *)
 
 
 
@@ -3347,6 +3347,13 @@ let detect_polymorphic_method ~loc = function
 type please_compile_me =
   | PCM_no_matter       (** Nothing to do during the compilation pass. *)
   | PCM_open of (Location.t * Parsetree.module_name)
+  | PCM_coq_require of
+      (* Coq modules to open due to external definitions. This allow to *)
+      (* make external Coq files where these definitions lie visible in *)
+      (* Coq, without having to search in the whole FoCaL source file   *)
+      (* for [external_expr]s that imply a reference to a module in the *)
+      (* string they contain.                                           *)
+      Parsetree.module_name
   | PCM_species of
       ((** The species expression. *)
         Parsetree.species_def *
@@ -4058,6 +4065,9 @@ let typecheck_phrase ctx env phrase =
        (* Store the type information in the phrase's node. *)
        phrase.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
        ((PCM_open (phrase.Parsetree.ast_loc, fname)), env')
+   | Parsetree.Ph_coq_require fname ->
+       (* Really nothing to do... *)
+       ((PCM_coq_require fname), env)
    | Parsetree.Ph_species species_def ->
        (* Interface printing stuff is done inside. *)
        let (compil_info, ty, env') =

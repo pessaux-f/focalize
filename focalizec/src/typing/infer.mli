@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.22 2008-04-08 13:03:15 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.23 2008-04-14 09:20:49 pessaux Exp $ *)
 
 exception Method_multiply_defined of
   (Parsetree.vname * Parsetree.qualified_species)
@@ -45,6 +45,7 @@ exception Invalid_parameter_in_delayed_proof_termination of
 type please_compile_me =
   | PCM_no_matter
   | PCM_open of (Location.t * Parsetree.module_name)
+  | PCM_coq_require of Parsetree.module_name
   | PCM_species of
       (Parsetree.species_def * Env.TypeInformation.species_description *
        (Dep_analysis.name_node list))

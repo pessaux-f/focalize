@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.41 2008-04-11 14:49:30 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.42 2008-04-14 09:20:49 pessaux Exp $ *)
 
 
 (* *********************************************************** *)
@@ -1053,6 +1053,8 @@ let pp_phrase_desc ppf = function
       Format.fprintf ppf "@[<2>use@ \"%s\";;@]" fname
   | Parsetree.Ph_open fname ->
       Format.fprintf ppf "@[<2>open@ \"%s\";;@]" fname
+  | Parsetree.Ph_coq_require fname ->
+      Format.fprintf ppf "@[<2>coq_require@ \"%s\";;@]" fname
   | Parsetree.Ph_species s_def ->
       Format.fprintf ppf "%a;;" pp_species_def s_def
   | Parsetree.Ph_collection collection_def ->

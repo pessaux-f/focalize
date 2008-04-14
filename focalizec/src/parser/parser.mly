@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.87 2008-04-11 13:51:12 weis Exp $ *)
+(* $Id: parser.mly,v 1.88 2008-04-14 09:20:49 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -177,6 +177,7 @@ let mk_proof_label (s1, s2) =
 %token COLLECTION
 %token CONJUNCTION
 %token COQ
+%token COQ_REQUIRE
 %token DEFINITION
 %token DISJUNCTION
 %token ELSE
@@ -302,6 +303,7 @@ phrase:
   | def_collection SEMI_SEMI { mk (Ph_collection $1) }
   | opt_doc OPEN STRING SEMI_SEMI { mk_doc $1 (Ph_open $3) }
   | opt_doc USE STRING SEMI_SEMI { mk_doc $1 (Ph_use $3) }
+  | opt_doc COQ_REQUIRE STRING SEMI_SEMI { mk_doc $1 (Ph_coq_require $3) }
   | opt_doc expr SEMI_SEMI { mk_doc $1 (Ph_expr $2) }
 ;
 

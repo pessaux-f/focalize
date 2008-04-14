@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.9 2008-04-09 15:02:05 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.10 2008-04-14 09:20:49 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -48,6 +48,9 @@ let toplevel_compile env ~current_unit out_fmter = function
       (* One must "open" the coq code generation environment of this module *)
       (* and return the environment extended with these "opened" bindings.  *)
       Env.coqgen_open_module ~loc: phrase_loc modname env
+  | Infer.PCM_coq_require fname ->
+      Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" fname ;
+      env
   | Infer.PCM_species (species_def, species_descr, dep_graph) ->
       let spe_binding_info =
         Species_coq_generation.species_compile

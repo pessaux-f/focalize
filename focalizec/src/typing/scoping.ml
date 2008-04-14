@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.50 2008-04-11 08:52:05 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.51 2008-04-14 09:20:49 pessaux Exp $ *)
 
 open Parsetree
 
@@ -2188,6 +2188,9 @@ let scope_phrase ctx env phrase =
          let env' =
            Env.scope_open_module ~loc: phrase.Parsetree.ast_loc fname env in
          (phrase.Parsetree.ast_desc, env', ctx)
+     | Parsetree.Ph_coq_require _ ->
+         (* Really nothing to do... *)
+         (phrase.Parsetree.ast_desc, env, ctx)
      | Parsetree.Ph_species species_def ->
          let (scoped_species_def, env') =
            scope_species_def ctx env species_def in

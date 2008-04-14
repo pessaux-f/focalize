@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.36 2008-04-08 08:14:51 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.37 2008-04-14 09:20:49 pessaux Exp $ *)
 
 (** {2 The Focalize abstract syntax tree.} *)
 
@@ -516,6 +516,7 @@ type phrase = phrase_desc ast
 and phrase_desc =
   | Ph_use of Types.fname
   | Ph_open of Types.fname
+  | Ph_coq_require of Types.fname
   | Ph_species of species_def
   | Ph_collection of collection_def
   | Ph_type of type_def

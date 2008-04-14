@@ -15,6 +15,7 @@ open "sets_orders" ;;
 open "iterators" ;;
 open "additive_law" ;;
 open "multiplicative_law" ;;
+coq_require "weak_structures_externals" ;;
 
 (** we have an element 1 and an additive law *)
 species Unitary_additive_monoid inherits 
@@ -303,8 +304,8 @@ species Euclidean_semi_ring inherits Factorial_semi_ring =
   property euclidean_ordering_is_transitive:
     all x y z in Self,
       ~ (!is_zero (x)) -> ~ (!is_zero (y)) -> ~ (!is_zero (z)) ->
-	!euclidean_ordering (x, y) -> !euclidean_ordering (y, z) ->
-	  !euclidean_ordering (x, z) ;
+        !euclidean_ordering (x, y) -> !euclidean_ordering (y, z) ->
+          !euclidean_ordering (x, z) ;
  property euclidean_ordering_is_irreflexive: all x in Self,
    ~ (!is_zero (x)) -> ~ (!euclidean_ordering (x, x)) ;
  theorem euclidean_relation: all x y in Self,
