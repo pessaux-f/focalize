@@ -265,27 +265,28 @@ let cr_qrr =
   internal 'a -> 'a -> quo_rem_result ('a)
   external
   | caml -> "Weak_structures_externals.cr_qrr"
-  | coq -> "weak_structures_externals.cr_qrr"
+  | coq -> "weak_structures_externals.cr_qrr _"
 ;;
 
 let quot =
   internal quo_rem_result ('a) -> 'a
   external
   | caml -> "Weak_structures_externals.qrr_quot"
-  | coq -> "weak_structures_externals.qrr_quot"
+  | coq -> "weak_structures_externals.qrr_quot _"
 ;;
 
 let rema =
   internal quo_rem_result ('a) -> 'a
   external
   | caml -> "Weak_structures_externals.qrr_rema"
-  | coq -> "weak_structures_externals.qrr_rema"
+  | coq -> "weak_structures_externals.qrr_rema _"
 ;;
 
 let divisionParZero =
   internal 'a -> 'b
   external
   | caml -> "Weak_structures_externals.div_zero"
+  | coq -> "[Unsure]"
 ;;
 
 

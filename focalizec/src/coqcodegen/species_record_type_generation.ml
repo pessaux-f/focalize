@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.28 2008-04-11 15:04:38 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.29 2008-04-14 11:51:48 pessaux Exp $ *)
 
 
 
@@ -341,12 +341,12 @@ let generate_pattern ctx env pattern =
      | Parsetree.P_wild -> Format.fprintf out_fmter "_"
      | Parsetree.P_constr (ident, pats) ->
          (begin
-	 ignore(generate_constructor_ident_for_method_generator ctx env ident) ;
+         ignore(generate_constructor_ident_for_method_generator ctx env ident) ;
          (* In "match" patterns, extra arguments of the constructor *)
          (* due to polymorphism never appear in Coq syntax.         *)
-	 if pats <> [] then Format.fprintf out_fmter "@ (@[<1>" ;
+         if pats <> [] then Format.fprintf out_fmter "@ (@[<1>" ;
          rec_generate_pats_list pats ;
-	 if pats <> [] then Format.fprintf out_fmter ")@]"
+         if pats <> [] then Format.fprintf out_fmter ")@]"
          end)
      | Parsetree.P_record _labs_pats ->
          Format.eprintf "generate_pattern P_record TODO@."

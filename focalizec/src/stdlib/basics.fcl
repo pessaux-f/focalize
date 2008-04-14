@@ -107,59 +107,83 @@ let scnd (x) = match x with | (_, v) -> v ;;
 let string_of_int =
   internal int -> string
   external
-  | caml -> "Ml_builtins.string_of_int" ;;
+  | caml -> "Ml_builtins.string_of_int"
+  | coq -> "[Unsure]"
+;;
+
 let int_of_string =
   internal string -> int
   external
-  | caml -> "Ml_builtins.int_of_string" ;;
+  | caml -> "Ml_builtins.int_of_string"
+  | coq -> "[Unsure]"
+;;
 let print_int =
   internal int -> unit
   external
-  | caml -> "Ml_builtins.int_print" ;;
+  | caml -> "Ml_builtins.int_print"
+  | coq -> "[Unsure]"
+;;
 
 (* Operations on integers. *)
 let int_mod =
   internal int -> int -> int
   external
-  | caml -> "Ml_builtins.int_mod" ;;
+  | caml -> "Ml_builtins.int_mod"
+  | coq -> "[Unsure]"
+;;
 let int_eq =
   internal int -> int -> bool
   external
   | caml -> "Ml_builtins.int_eq"
-  | coq -> "int_eq" ;;
+  | coq -> "int_eq"
+  | coq -> "[Unsure]"
+;;
 let int_div =
   internal int -> int -> int
   external
-   | caml -> "Ml_builtins.int_div" ;;
+   | caml -> "Ml_builtins.int_div"
+  | coq -> "[Unsure]"
+;;
 let int_lt =
   internal int -> int -> bool
   external
   | caml -> "Ml_builtins.int_lt"
-  | coq -> "int_lt" ;;
+  | coq -> "int_lt"
+  | coq -> "[Unsure]"
+;;
 let int_leq =
   internal int -> int -> bool
   external
   | caml -> "Ml_builtins.int_leq"
-  | coq -> "int_leq" ;;
+  | coq -> "int_leq"
+  | coq -> "[Unsure]"
+;;
 let int_geq =
   internal int -> int -> bool
   external
   | caml -> "Ml_builtins.int_geq"
-  | coq -> "int_geq" ;;
+  | coq -> "int_geq"
+  | coq -> "[Unsure]"
+;;
 let int_gt =
   internal  int -> int -> bool
   external
   | caml -> "Ml_builtins.int_gt"
-  | coq -> "int_gt" ;;
+  | coq -> "int_gt"
+  | coq -> "[Unsure]"
+;;
 let phys_eq =
   internal 'a ->'a -> bool
   external
-    | caml -> "Ml_builtins.base_equal" ;;
+    | caml -> "Ml_builtins.base_equal"
+    | coq -> "[Unsure]"
+;;
 let base_eq =
   internal  'a -> 'a -> bool
   external
   | caml -> "Ml_builtins.base_eq"
-  | coq -> "beq" ;;
+  | coq -> "[Unsure]"
+;;
 
 theorem beq_refl : all x in 'a, base_eq (x, x) proof: assumed ;;
 theorem beq_symm: all x y in 'a, base_eq (x, y) -> base_eq (y, x)
@@ -408,15 +432,23 @@ proof:
 let sc =
   internal  string -> string -> string
   external
-  | caml -> "Ml_builtins.str_cat" ;;
+  | caml -> "Ml_builtins.str_cat"
+  | coq -> "[Unsure]"
+;;
+
 let str_lt =
   internal string -> string -> bool
   external
-  | caml -> "Ml_builtins.str_lt" ;;
+  | caml -> "Ml_builtins.str_lt"
+  | coq -> "[Unsure]"
+;;
+
 let print_string =
   internal string -> unit
   external
-  | caml -> "Ml_builtins.str_print" ;;
+  | caml -> "Ml_builtins.str_print"
+  | coq -> "[Unsure]"
+;;
 let print_newline (x in unit) = print_string ("\n") ;;
 
 

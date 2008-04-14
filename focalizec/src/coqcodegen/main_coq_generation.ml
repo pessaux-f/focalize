@@ -11,14 +11,75 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.10 2008-04-14 09:20:49 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.11 2008-04-14 11:51:48 pessaux Exp $ *)
+
+
+(* ******************************************************************** *)
+(** {b Descr} Exception raised when a toplevel let-definition is tagged
+    "logical".
+
+    {b Rem} : Exported outside this module.                             *)
+(* ******************************************************************** *)
+exception Logical_methods_only_inside_species of Location.t ;;
+
 
 
 (* ************************************************************************** *)
 (** {b Descr} : This module is the entry point for the compilation from FoCaL
       to Coq. It dispatches the compilation of each possible FoCaL entity
-      to the dedicated compilation module.                                    *)
+      to the dedicated compilation module.
+      It also contains the seed of toplevel let definitions code generation.  *)
 (* ************************************************************************** *)
+
+
+
+let toplevel_let_def_compile ctx env let_def =
+  if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
+    raise
+      (Logical_methods_only_inside_species let_def.Parsetree.ast_loc) ;
+  let out_fmter = ctx.Context.scc_out_fmter in
+  let is_rec =
+    (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
+     | Parsetree.RF_no_rec -> false
+     | Parsetree.RF_rec -> true) in
+  (* Generates the binder ("Let" or "Fixpoint"). *)
+  (match is_rec with
+   | false -> Format.fprintf out_fmter "@[<2>Let@ "
+   | true -> Format.fprintf out_fmter "@[<2>Fixpoint@ ") ;
+  (* Now generate each bound definition. Remark that there is no local  *)
+  (* idents in the scope because we are at toplevel. In the same way,   *)
+  (* because we are not under the scope of a species, the way "Self"    *)
+  (* must be printed is non-relevant. We use [Types.CSR_species] by     *)
+  (* default.                                                           *)
+  let env' =
+    (match let_def.Parsetree.ast_desc.Parsetree.ld_bindings with
+     | [] ->
+         (* The "let" construct should always at least bind one identifier ! *)
+         assert false
+     | [one_bnd] ->
+         Species_record_type_generation.let_binding_compile
+           ctx ~local_idents: [] ~self_as: Types.CSR_species ~in_hyp: false
+           ~is_rec env one_bnd
+     | first_bnd :: next_bnds ->
+         let accu_env =
+           ref
+             (Species_record_type_generation.let_binding_compile
+                ctx ~local_idents: [] ~self_as: Types.CSR_species
+                ~in_hyp: false ~is_rec env first_bnd) in
+         List.iter
+           (fun binding ->
+             (* We transform "let and" non recursive      *)
+             (* functions into several "let" definitions. *)
+             Format.fprintf out_fmter ".@]@\n@[<2>Let " ;
+             accu_env :=
+               Species_record_type_generation.let_binding_compile
+                 ctx ~local_idents: [] ~self_as: Types.CSR_species
+                 ~in_hyp: false ~is_rec !accu_env binding)
+           next_bnds ;
+         !accu_env) in
+  Format.fprintf out_fmter "@]" ;
+  env'
+;;
 
 
 
@@ -76,9 +137,27 @@ let toplevel_compile env ~current_unit out_fmter = function
         Context.rcc_lambda_lift_params_mapping = [] ;
         Context.rcc_out_fmter = out_fmter } in
       Type_coq_generation.type_def_compile ctx env type_def_name type_descr
-  | Infer.PCM_let_def (_, _) ->
-      Format.fprintf out_fmter "Infer.PCM_let_def TODO@." ;
-      (* [Unsure] *) env
+  | Infer.PCM_let_def  (let_def, _) ->
+      (* Create the initial context for compiling the let definition. *)
+      (* We would not need a "full" context, a "reduced" one would be *)
+      (* sufficient, but via [let_binding_compile], the function      *)
+      (* [toplevel_let_def_compile] needs a "full". So...             *)
+      let ctx = {
+        Context.scc_current_unit = current_unit ;
+        (* Dummy, since not under a species. *)
+        Context.scc_current_species = ("(**)", (Parsetree.Vuident "(**)")) ;
+        (* Not under a species, hence no species parameter. *)
+        Context.scc_species_parameters_names = [] ;
+        (* Not under a species, hence empty carriers mapping. *)
+        Context.scc_collections_carrier_mapping = [] ;
+        (* Not in the context of generating a method's body code, then empty. *)
+        Context.scc_lambda_lift_params_mapping = [] ;
+        (* Empty, since not under a species. *)
+        Context.scc_dependency_graph_nodes = [] ;
+        Context.scc_out_fmter = out_fmter } in
+      let env' = toplevel_let_def_compile ctx env let_def in
+      Format.fprintf out_fmter "@\n.@\n" ;
+      env'
   | Infer.PCM_theorem _ ->
       Format.fprintf out_fmter "Infer.PCM_theorem TODO@." ;
       (* [Unsure] *) env
