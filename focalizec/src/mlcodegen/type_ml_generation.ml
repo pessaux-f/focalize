@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_ml_generation.ml,v 1.8 2008-04-09 10:19:44 pessaux Exp $ *)
+(* $Id: type_ml_generation.ml,v 1.9 2008-04-15 21:18:33 weis Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -74,6 +74,14 @@ let extend_ml_gen_env_with_type_external_bindings env external_bindings =
                  bound_name bound_external_expr.Parsetree.ast_desc rec_env
            | Parsetree.Vuident _ ->
                (* Starting by an uppercase letter means sum constructor. *)
+               Env.MlGenEnv.add_constructor
+                 bound_name bound_external_expr.Parsetree.ast_desc rec_env
+           | Parsetree.Viident _ ->
+               (* An infix ident means sum constructor. *)
+               Env.MlGenEnv.add_constructor
+                 bound_name bound_external_expr.Parsetree.ast_desc rec_env
+           | Parsetree.Vpident _ ->
+               (* A prefix ident means sum constructor. *)
                Env.MlGenEnv.add_constructor
                  bound_name bound_external_expr.Parsetree.ast_desc rec_env
            | _ ->

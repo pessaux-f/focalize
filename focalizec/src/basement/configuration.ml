@@ -13,12 +13,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.15 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.16 2008-04-15 21:18:33 weis Exp $ *)
 
 
 exception Input_file_already_set ;;
 exception No_input_file ;;
-
 
 let focal_version_number = 0.1 ;;
 

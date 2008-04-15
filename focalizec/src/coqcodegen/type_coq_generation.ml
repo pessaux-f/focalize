@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.9 2008-04-11 11:03:18 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.10 2008-04-15 21:18:33 weis Exp $ *)
 
 
 (* ********************************************************************** *)
@@ -68,7 +68,7 @@ let extend_coq_gen_env_with_type_external_bindings env nb_extra_args
                (* Starting by a lowercase letter means record field name. *)
                Env.CoqGenEnv.add_label
                  bound_name bound_external_expr.Parsetree.ast_desc rec_env
-           | Parsetree.Vuident _ ->
+           | Parsetree.Vuident _ | Parsetree.Viident _ | Parsetree.Vpident _ ->
                (* Starting by an uppercase letter means sum constructor. *)
                let cstr_mapping_info = {
                  Env.CoqGenInformation.cmi_num_polymorphics_extra_args =

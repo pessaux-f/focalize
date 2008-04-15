@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.51 2008-04-14 09:20:49 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.52 2008-04-15 21:18:33 weis Exp $ *)
 
 open Parsetree
 
@@ -657,6 +657,12 @@ let rec verify_external_binding ~type_def_body_loc external_bindings
               Handy.list_mem_n_remove vname bound_names
           | (((Parsetree.Vuident _) as vname), _) ->
               (* Capitalized ident must be mapped on a sum type constructor. *)
+              Handy.list_mem_n_remove vname bound_names
+          | (((Parsetree.Vpident _) as vname), _) ->
+              (* Prefix ident must be mapped on a sum type constructor. *)
+              Handy.list_mem_n_remove vname bound_names
+          | (((Parsetree.Viident _) as vname), _) ->
+              (* Infix ident must be mapped on a sum type constructor. *)
               Handy.list_mem_n_remove vname bound_names
           | (other, _) ->
               raise
