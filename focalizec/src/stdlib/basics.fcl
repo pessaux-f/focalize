@@ -1,85 +1,85 @@
 type int =
   internal (* Internal#int *)
   external
-  | caml -> "int"
-  | coq -> "Z"
+  | caml -> {* int *}
+  | coq -> {* Z *}
 ;;
 type unit =
   internal
-  | Unit
+  | ()
   external
-  | caml -> "unit"
-  | coq -> "coq_builtins.bi__unit"  (* FoCaLize's Coq definition of builtin. *)
+  | caml -> {* unit *}
+  | coq -> {* coq_builtins.bi__unit *}  (* FoCaLize's Coq definition of builtin. *)
 
-and Unit =
-  | caml -> "()"
-  | coq -> "coq_builtins.Null"
+and () =
+  | caml -> {* () *}
+  | coq -> {* coq_builtins.Null *}
 ;;
 
 type float =
   internal (* Internal#float *)
   external
-  | caml -> "float"
-  | coq -> "R"  (* From the Reals module. *)
+  | caml -> {* float *}
+  | coq -> {* R *}  (* From the Reals module. *)
 ;;
 type char =
-  internal
+  internal (* Internal#char *)
   external
-  | caml -> "char"
-  | coq -> "ascii"
+  | caml -> {* char *}
+  | coq -> {* ascii *}
 ;;
 type string =
-  internal
+  internal (* Internal#string *)
   external
-  | caml -> "string"
-  | coq -> "string"  (* From the Ascii module. *)
+  | caml -> {* string *}
+  | coq -> {* string *}  (* From the Ascii module. *)
 ;;
 type bool =
   internal
   | True
   | False
   external
-  | caml -> "bool"
-  | coq -> "bool"  (* Builtin of Coq *)
+  | caml -> {* bool *}
+  | coq -> {* bool *}  (* Builtin of Coq *)
 
 and True =
-  | caml -> "true"
-  | coq -> "True"
+  | caml -> {* true *}
+  | coq -> {* True *}
 
 and False =
-  | caml -> "false"
-  | coq -> "False"
+  | caml -> {* false *}
+  | coq -> {* False *}
 ;;
 
 type list ('a) =
   internal
-  | Nil
-  | Cons ('a, list ('a))
+  | []
+  | ( :: ) (*Cons*) ('a, list ('a))
   external
-  | caml -> "'a list"
-  | coq -> "(list __var_a)" (* From the List module. *)
+  | caml -> {* 'a list *}
+  | coq -> {* (list __var_a) *} (* From the List module. *)
 
-and Nil =
-  | caml -> "[]"
-  | coq -> "nil"
+and [] =
+  | caml -> {* [] *}
+  | coq -> {* nil *}
 
-and Cons =
-  | caml -> "( :: )"
-  | coq -> "cons"
+and ( :: ) (*Cons*) =
+  | caml -> {* ( :: ) *}
+  | coq -> {* cons *}
 ;;
 
 let foc_error =
-   internal string -> 'a
-   external
-    | caml -> "Ml_builtins.foc_error"
-    | coq -> "foc_error"
+  internal string -> 'a
+  external
+   | caml -> {* Ml_builtins.foc_error *}
+   | coq -> {* foc_error *}
 ;;
 
 let and_b (x, y) =
-   match (x, y) with
-   | (true, true) -> true
-   | (false, false) -> false
-   | (_, _) -> false
+  match (x, y) with
+  | (true, true) -> true
+  | (false, false) -> false
+  | (_, _) -> false
 ;;
 
 let or_b (x, y) =
@@ -90,13 +90,13 @@ let or_b (x, y) =
 ;;
 
 let not_b (x) in bool =
-   match x with
-   | true -> false
-   | false -> true
+  match x with
+  | true -> false
+  | false -> true
 ;;
 
 let xor_b (x, y) =
-   or_b (and_b (x, not_b (y)), and_b (not_b (x), y))
+  or_b (and_b (x, not_b (y)), and_b (not_b (x), y))
 ;;
 
 (* Operations on pairs. *)
@@ -107,88 +107,89 @@ let scnd (x) = match x with | (_, v) -> v ;;
 let string_of_int =
   internal int -> string
   external
-  | caml -> "Ml_builtins.string_of_int"
-  | coq -> "[Unsure]"
+  | caml -> {* Ml_builtins.string_of_int *}
+  | coq -> {* [Unsure] *}
 ;;
 
 let int_of_string =
   internal string -> int
   external
-  | caml -> "Ml_builtins.int_of_string"
-  | coq -> "[Unsure]"
+  | caml -> {* Ml_builtins.int_of_string *}
+  | coq -> {* [Unsure] *}
 ;;
 let print_int =
   internal int -> unit
   external
-  | caml -> "Ml_builtins.int_print"
-  | coq -> "[Unsure]"
+  | caml -> {* Ml_builtins.int_print *}
+  | coq -> {* [Unsure] *}
 ;;
 
 (* Operations on integers. *)
 let int_mod =
   internal int -> int -> int
   external
-  | caml -> "Ml_builtins.int_mod"
-  | coq -> "[Unsure]"
+  | caml -> {* Ml_builtins.int_mod *}
+  | coq -> {* [Unsure] *}
 ;;
 
 let int_eq =
   internal int -> int -> bool
   external
-  | caml -> "Ml_builtins.int_eq"
-  | coq -> "[Unsure]"
+  | caml -> {* Ml_builtins.int_eq *}
+  | coq -> {* [Unsure] *}
 ;;
 
 let int_div =
   internal int -> int -> int
   external
-   | caml -> "Ml_builtins.int_div"
-  | coq -> "[Unsure]"
+  | caml -> {* Ml_builtins.int_div *}
+  | coq -> {* [Unsure] *}
 ;;
+
 let int_lt =
   internal int -> int -> bool
   external
-  | caml -> "Ml_builtins.int_lt"
-  | coq -> "int_lt"
-  | coq -> "[Unsure]"
+  | caml -> {* Ml_builtins.int_lt *}
+  | coq -> {* int_lt *}
+  | coq -> {* [Unsure] *}
 ;;
 
 let int_leq =
   internal int -> int -> bool
   external
-  | caml -> "Ml_builtins.int_leq"
-  | coq -> "int_leq"
-  | coq -> "[Unsure]"
+  | caml -> {* Ml_builtins.int_leq *}
+  | coq -> {* int_leq *}
+  | coq -> {* [Unsure] *}
 ;;
 
 let int_geq =
   internal int -> int -> bool
   external
-  | caml -> "Ml_builtins.int_geq"
-  | coq -> "int_geq"
-  | coq -> "[Unsure]"
+  | caml -> {* Ml_builtins.int_geq *}
+  | coq -> {* int_geq *}
+  | coq -> {* [Unsure] *}
 ;;
 
 let int_gt =
   internal  int -> int -> bool
   external
-  | caml -> "Ml_builtins.int_gt"
-  | coq -> "int_gt"
-  | coq -> "[Unsure]"
+  | caml -> {* Ml_builtins.int_gt *}
+  | coq -> {* int_gt *}
+  | coq -> {* [Unsure] *}
 ;;
 
 let phys_eq =
   internal 'a ->'a -> bool
   external
-    | caml -> "Ml_builtins.base_equal"
-    | coq -> "[Unsure]"
+  | caml -> {* Ml_builtins.base_equal *}
+  | coq -> {* [Unsure] *}
 ;;
 
 let base_eq =
   internal  'a -> 'a -> bool
   external
-  | caml -> "Ml_builtins.base_eq"
-  | coq -> "[Unsure]"
+  | caml -> {* Ml_builtins.base_eq *}
+  | coq -> {* [Unsure] *}
 ;;
 
 theorem beq_refl : all x in 'a, base_eq (x, x) proof: assumed ;;
@@ -277,7 +278,8 @@ proof:
      compute in |- *; intros Habs; eapply False_ind; trivial.
      intros a b Habs H; clear H a; compute in Habs; eapply False_ind; trivial.
      intros a b Habs H; clear H a; compute in Habs; eapply False_ind; trivial.
-*} ;;
+  *}
+;;
 
 theorem int_le_trans:
   all x y z in int,  #int_leq(x, y) -> #int_leq (y, z) -> #int_leq(x, z)
@@ -287,7 +289,8 @@ proof:
      apply dec_IsTrue. cut (x <= y)%Z. cut (y <= z)%Z.
      eauto with zarith.
      eapply IsTrue_dec. apply H2.
-     eapply IsTrue_dec; apply H1. *}
+     eapply IsTrue_dec; apply H1.
+  *}
 ;;
 
 theorem int_lt_irrefl :
@@ -297,22 +300,22 @@ proof: assumed ;;
 let pred =
   internal int -> int
   external
-  | caml -> "Ml_builtins.pred"
-  | coq -> "coq_builtins.bi__int_pred"
+  | caml -> {* Ml_builtins.pred *}
+  | coq -> {* coq_builtins.bi__int_pred *}
 ;;
 
 let int_opp =
   internal  int -> int
   external
-  | caml -> "Ml_builtins.int_opposite"
-  | coq -> "coq_builtins.bi__int_opposite"
+  | caml -> {* Ml_builtins.int_opposite *}
+  | coq -> {* coq_builtins.bi__int_opposite *}
 ;;
 
 let int_plus =
   internal int -> int -> int
   external
-  | caml -> "Ml_builtins.int_plus"
-  | coq -> "coq_builtins.bi__int_plus"
+  | caml -> {* Ml_builtins.int_plus *}
+  | coq -> {* coq_builtins.bi__int_plus *}
 ;;
 
 theorem int_0_plus: all x y in int,
@@ -376,29 +379,29 @@ let succ(x) = #int_plus (x, 1) ;;
 let int_mult =
   internal int -> int -> int
   external
-  | caml -> "Ml_builtins.int_mult"
-  | coq -> "coq_builtins.bi__int_mult"
+  | caml -> {* Ml_builtins.int_mult *}
+  | coq -> {* coq_builtins.bi__int_mult *}
 ;;
 
 let int_minus =
   internal int -> int -> int
   external
-  | caml -> "Ml_builtins.int_minus"
-  | coq -> "coq_builtins.bi__int_minus"
+  | caml -> {* Ml_builtins.int_minus *}
+  | coq -> {* coq_builtins.bi__int_minus *}
 ;;
 
 let int_max =
   internal  int -> int -> int
   external
-  | caml -> "Ml_builtins.int_max"
-  | coq -> "coq_builtins.bi__int_max"
+  | caml -> {* Ml_builtins.int_max *}
+  | coq -> {* coq_builtins.bi__int_max *}
 ;;
 
 let int_min =
   internal int -> int -> int
   external
-  | caml -> "Ml_builtins.int_min"
-  | coq -> "coq_builtins.bi__int_min"
+  | caml -> {* Ml_builtins.int_min *}
+  | coq -> {* coq_builtins.bi__int_min *}
 ;;
 
 theorem int_min_le: all x y z in int,
@@ -452,22 +455,22 @@ proof:
 let sc =
   internal  string -> string -> string
   external
-  | caml -> "Ml_builtins.str_cat"
-  | coq -> "[Unsure]"
+  | caml -> {* Ml_builtins.str_cat *}
+  | coq -> {* [Unsure] *}
 ;;
 
 let str_lt =
   internal string -> string -> bool
   external
-  | caml -> "Ml_builtins.str_lt"
-  | coq -> "[Unsure]"
+  | caml -> {* Ml_builtins.str_lt *}
+  | coq -> {* [Unsure] *}
 ;;
 
 let print_string =
   internal string -> unit
   external
-  | caml -> "Ml_builtins.str_print"
-  | coq -> "[Unsure]"
+  | caml -> {* Ml_builtins.str_print *}
+  | coq -> {* [Unsure] *}
 ;;
 let print_newline (x in unit) = print_string ("\n") ;;
 
