@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.88 2008-04-14 09:20:49 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.89 2008-04-15 21:14:43 weis Exp $ *)
 
 open Parsetree;;
 
@@ -121,10 +121,12 @@ let mk_proof_label (s1, s2) =
 /* Nested symbols */
 %token LPAREN
 %token RPAREN
+%token LRPARENS
 %token LBRACE
 %token RBRACE
 %token LBRACKET
 %token RBRACKET
+%token LRBRACKETS
 
 /* General infix and prefix operators */
 %token COMMA
@@ -313,12 +315,8 @@ external_language:
   | STRING { EL_external $1 }
 ;
 
-external_code:
-  | STRING { $1 }
-;
-
 external_expr_one:
-  | BAR external_language DASH_GT external_code { ($2, $4) }
+  | BAR external_language DASH_GT EXTERNAL_CODE { ($2, $4) }
 ;
 
 external_expr_desc:
@@ -858,14 +856,15 @@ simple_expr:
     { mk (E_record $2) }
   | LBRACE simple_expr WITH record_field_list RBRACE
     { mk (E_record_with ($2, $4)) }
+/*  | LRBRACKETS { mk (E_constr (mk_nil (), [])) }*/
   | LBRACKET expr_semi_list RBRACKET
     { $2 }
   | LPAREN expr COMMA expr_comma_list RPAREN
     { mk (E_tuple ($2 :: $4)) }
+/*  | LRPARENS */
+/*    { mk (E_constr (mk_unit (), [])) } */
   | LPAREN expr RPAREN
     { mk (E_paren $2) }
-  | LPAREN RPAREN
-    { mk (E_constr (mk_unit (), [])) }
 ;
 
 expr:
@@ -1058,12 +1057,13 @@ pattern:
   | constructor_ref LPAREN pattern_comma_list RPAREN { mk (P_constr ($1, $3)) }
   | constructor_ref { mk (P_constr ($1, [])) }
   | LBRACKET pattern_semi_list RBRACKET { $2 }
+/*  | LRBRACKETS { mk (P_constr (mk_nil (), [])) }*/
   | pattern COLON_COLON pattern { mk (P_constr (mk_cons (), [$1; $3])) }
   | LBRACE pattern_record_field_list RBRACE { mk (P_record $2) }
   | pattern AS LIDENT { mk (P_as ($1, Vlident $3)) }
   | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
+  | /*LRPARENS { mk (P_constr (mk_unit (), [])) } */
   | LPAREN pattern RPAREN { mk (P_paren $2) }
-  | LPAREN RPAREN { mk (P_constr (mk_unit (), [])) }
 ;
 
 pattern_semi_list:
@@ -1125,8 +1125,8 @@ bound_vname_list:
 ;
 
 external_value_vname:
-  | UIDENT { Vuident $1 }
-  | bound_vname { $1 }
+  | LIDENT { Vlident $1 }
+  | constructor_vname { $1 }
 ;
 
 method_vname:
@@ -1137,6 +1137,8 @@ constructor_vname:
   | UIDENT { Vuident $1 }
   | PIDENT { Vpident $1 }
   | IIDENT { Viident $1 }
+  | LRPARENS { Vuident "()" }
+  | LRBRACKETS { Vuident "[]" }
 ;
 
 label_vname:
