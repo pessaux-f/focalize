@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.35 2008-04-14 09:20:49 pessaux Exp $ *)
+(* $Id: lexer.mll,v 1.36 2008-04-15 21:13:41 weis Exp $ *)
 
 {
 open Lexing;;
@@ -664,8 +664,10 @@ rule token = parse
     { PROOF_LABEL (level, label) }
   | '(' { LPAREN }
   | ')' { RPAREN }
+  | "()" { LRPARENS }
   | '[' { LBRACKET }
   | ']' { RBRACKET }
+  | "[]" { LRBRACKETS }
   | '{' { LBRACE }
   | '}' { RBRACE }
   | '.' { DOT }
