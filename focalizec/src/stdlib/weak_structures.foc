@@ -150,7 +150,7 @@ species Commutative_semi_algebra(R is Commutative_semi_ring)
 end ;;
 
 
-(** in a integral_semi_ring one can divide. if xy=0 then x=0 or y=0.
+(** in an integral_semi_ring one can divide. if xy=0 then x=0 or y=0.
  *)
 species Integral_semi_ring inherits Regular_monoid, Commutative_semi_ring =
   let is_zero (x) = !equal (x, !zero) ;
@@ -257,29 +257,29 @@ end ;;
 type quo_rem_result ('a) =
   internal
   external
-  | caml -> "'a Weak_structures_externals.quo_rem_result"
-  | coq -> "weak_structures_externals.quo_rem_result __var_a"
+  | caml -> {* 'a Weak_structures_externals.quo_rem_result *}
+  | coq -> {* weak_structures_externals.quo_rem_result __var_a *}
 ;;
 
 let cr_qrr =
   internal 'a -> 'a -> quo_rem_result ('a)
   external
-  | caml -> "Weak_structures_externals.cr_qrr"
-  | coq -> "weak_structures_externals.cr_qrr _"
+  | caml -> {* Weak_structures_externals.cr_qrr *}
+  | coq -> {* weak_structures_externals.cr_qrr _ *}
 ;;
 
 let quot =
   internal quo_rem_result ('a) -> 'a
   external
-  | caml -> "Weak_structures_externals.qrr_quot"
-  | coq -> "weak_structures_externals.qrr_quot _"
+  | caml -> {* Weak_structures_externals.qrr_quot *}
+  | coq -> {* weak_structures_externals.qrr_quot _ *}
 ;;
 
 let rema =
   internal quo_rem_result ('a) -> 'a
   external
-  | caml -> "Weak_structures_externals.qrr_rema"
-  | coq -> "weak_structures_externals.qrr_rema _"
+  | caml -> {* Weak_structures_externals.qrr_rema *}
+  | coq -> {* weak_structures_externals.qrr_rema _ *}
 ;;
 
 
@@ -334,31 +334,30 @@ end ;;
 type bezout_res ('a) =
  internal
  external
-  | caml -> "'a Weak_structures_externals.bezout_res"
-  | coq -> "weak_structures_externals.bezout_res __var_a"
+  | caml -> {* 'a Weak_structures_externals.bezout_res *}
+  | coq -> {* weak_structures_externals.bezout_res __var_a *}
 ;;
 let cr_br =
   internal 'a -> 'a -> 'a -> bezout_res ('a)
   external
-  | caml -> "Weak_structures_externals.cr_br"
-  | coq -> "weak_structures_externals.cr_br"
+  | caml -> {* Weak_structures_externals.cr_br *}
+  | coq -> {* weak_structures_externals.cr_br *}
 ;; 
 let gcd =
   internal bezout_res ('a) -> 'a
   external
-  | caml -> "Weak_structures_externals.br_gcd"
-  | coq -> "weak_structures_externals.br_gcd"
+  | caml -> {* Weak_structures_externals.br_gcd *}
+  | coq -> {* weak_structures_externals.br_gcd *}
 ;;
 let coef1 =
   internal bezout_res ('a) -> 'a
   external
-  | caml -> "Weak_structures_externals.br_coef1"
-  | coq -> "weak_structures_externals.br_coef1"
+  | caml -> {* Weak_structures_externals.br_coef1 *}
+  | coq -> {* weak_structures_externals.br_coef1 *}
 ;;
 let coef2 =
   internal bezout_res ('a) -> 'a
   external
-  | caml -> "Weak_structures_externals.br_coef2"
-  | coq -> "weak_structures_externals.br_coef2"
+  | caml -> {* Weak_structures_externals.br_coef2 *}
+  | coq -> {* weak_structures_externals.br_coef2 *}
 ;;
-
