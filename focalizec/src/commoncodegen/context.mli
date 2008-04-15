@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: context.mli,v 1.4 2008-04-08 15:10:55 pessaux Exp $ *)
+(* $Id: context.mli,v 1.5 2008-04-15 15:06:48 pessaux Exp $ *)
 
 
 (* ********************************************************************* *)
@@ -47,7 +47,7 @@ type species_compil_context = {
       in their own body what they must be applied to in addition to their
       explicit arguments (those given by the FoCaL programmer). *)
   scc_lambda_lift_params_mapping :
-    (Parsetree.vname * ((string * Types.type_simple) list)) list ;
+    (Parsetree.vname * (string list)) list ;
   (** The current output formatter where to send the generated code. *)
   scc_out_fmter : Format.formatter
 } ;;
@@ -83,7 +83,7 @@ type reduced_compil_context = {
       in their own body what they must be applied to in addition to their
       explicit arguments (those given by the FoCaL programmer). *)
   rcc_lambda_lift_params_mapping :
-   (Parsetree.vname * ((string * Types.type_simple) list)) list ;
+   (Parsetree.vname * (string list)) list ;
   (** The current output formatter where to send the generated code. *)
   rcc_out_fmter : Format.formatter
 } ;;

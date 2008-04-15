@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.30 2008-04-14 16:07:32 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.31 2008-04-15 15:06:48 pessaux Exp $ *)
 
 
 
@@ -109,8 +109,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ~in_hyp ident =
            let extra_args =
              List.assoc vname ctx.Context.scc_lambda_lift_params_mapping in
            List.iter
-             (fun (s, _) ->
-               (* Ignore type while printing. *)
+             (fun s ->
                Format.fprintf out_fmter "@ %s" s)
              extra_args
             with Not_found -> ()

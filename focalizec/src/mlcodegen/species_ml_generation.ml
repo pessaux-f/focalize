@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.37 2008-04-08 15:10:55 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.38 2008-04-15 15:06:48 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -417,11 +417,10 @@ let make_params_list_from_abstraction_info ai =
         let prefix =
           "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
         Parsetree_utils.DepNameSet.iter
-          (fun (meth, meth_ty) ->
+          (fun (meth, _) ->
             the_list_reversed :=
               (prefix ^
-               (Parsetree_utils.vname_as_string_with_operators_expanded meth),
-               meth_ty)
+               (Parsetree_utils.vname_as_string_with_operators_expanded meth))
               :: !the_list_reversed)
           meths_from_param)
     ai.Abstractions.ai_dependencies_from_params ;
@@ -441,12 +440,11 @@ let make_params_list_from_abstraction_info ai =
           (* In Ocaml generation model, the carrier is never          *)
           (* lambda-lifted then doesn't appear as an extra parameter. *)
           ()
-      | MinEnv.MCEE_Declared_computational (n, sch) ->
+      | MinEnv.MCEE_Declared_computational (n, _) ->
           let llift_name =
             "abst_" ^
             (Parsetree_utils.vname_as_string_with_operators_expanded n) in
-          let ty = Types.specialize sch in
-          the_list_reversed := (llift_name, ty) :: !the_list_reversed)
+          the_list_reversed := llift_name :: !the_list_reversed)
     ai.Abstractions.ai_min_coq_env ;
   (* Finally, reverse the list to keep the right oder. *)
   List.rev !the_list_reversed
@@ -685,10 +683,10 @@ let generate_methods ctx env field =
                  let ctx' = {
                    ctx with
                    Context.scc_lambda_lift_params_mapping =
-                   List.map
-                     (fun ((_, n, _, _, _, _), ai) ->
-                       (n, make_params_list_from_abstraction_info ai))
-                     l } in
+                     List.map
+                       (fun ((_, n, _, _, _, _), ai) ->
+                         (n, make_params_list_from_abstraction_info ai))
+                       l } in
                  (* Now, generate the first method, introduced by "let rec". *)
                  let first_coq_min_typ_env_names =
                    generate_one_field_binding

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.23 2008-04-11 14:49:30 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.24 2008-04-15 15:06:48 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -114,10 +114,10 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
            let extra_args =
              List.assoc vname ctx.Context.rcc_lambda_lift_params_mapping in
            List.iter
-             (fun (s, _) ->
-               (* Don't print types in OCaml to prevent being to verbose.  *)
+             (fun s ->
                (* Ignore "rep" if present because in OCaml code generation *)
                (* model, the carrier is never lambda-lifted.               *)
+(* [Unsure] Je crois que maintenant le test n'est plus nécessaire. *)
                if s <> "abst_rep" then Format.fprintf out_fmter "@ %s" s)
              extra_args
             with Not_found -> ()

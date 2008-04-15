@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.42 2008-04-08 15:10:55 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.43 2008-04-15 15:06:48 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -165,19 +165,11 @@ let generate_defined_method ctx print_ctx env min_coq_env
          Parsetree_utils.pp_vname_with_operators_expanded species_name
          Parsetree_utils.pp_vname_with_operators_expanded name
    | LC_first_rec ->
-       (* [Unsure] *)
-       (*
-         Format.fprintf out_fmter "@[<2>let rec %a"
+       Format.fprintf out_fmter "@[<2>Fixpoint %a"
          Parsetree_utils.pp_vname_with_operators_expanded name
-        *)
-       failwith "TODO 1"
    | LC_following ->
-       (* [Unsure] *)
-       (*
-         Format.fprintf out_fmter "@[<2>and %a"
+       Format.fprintf out_fmter "@[<2>with %a"
          Parsetree_utils.pp_vname_with_operators_expanded name) ;
-        *)
-       failwith "TODO 2") ;
   (* Generate the parameters from the species parameters' types we use. *)
   (* By the way, we get the stuff to add to the current collection      *)
   (* carrier mapping to make so the type expressions representing some  *)
@@ -892,6 +884,70 @@ let generate_theorem ctx print_ctx env min_coq_env
 
 
 
+
+(* [Unsure] Factoriser en mettant un boolean disant si on est en mode Coq ou
+   Caml car c'est franchement pareil que la fonction de même nom utilisée
+   pour Caml ! *)
+let make_params_list_from_abstraction_info ai =
+  (* Build the list by side effect in reverse order for efficiency. *)
+  let the_list_reversed = ref [] in
+  (* First, abstract according to the species's parameters types the *)
+  (* current method depends on.                                      *)
+  List.iter
+    (fun sp_param_ty_name ->
+      (* Each abstracted type name is built like "_p_" + parameter's name *)
+      (* + "_T".                                                         *)
+      let llift_name =
+        "_p_" ^
+        (Parsetree_utils.vname_as_string_with_operators_expanded
+           sp_param_ty_name) ^
+        "_T" in
+      the_list_reversed := llift_name :: !the_list_reversed)
+    ai.Abstractions.ai_used_species_parameter_tys ;
+  (* Next, abstract according to the species's parameters methods the *)
+  (* current method depends on.                                       *)
+    List.iter
+      (fun (species_param_name, meths_from_param) ->
+        (* Each abstracted method will be named like "_p_", followed by *)
+        (* the species parameter name, followed by "_", followed by the *)
+        (* method's name.                                               *)
+        let prefix =
+          "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
+        Parsetree_utils.DepNameSet.iter
+          (fun (meth, _) ->
+            the_list_reversed :=
+              (prefix ^
+               (Parsetree_utils.vname_as_string_with_operators_expanded meth))
+              :: !the_list_reversed)
+          meths_from_param)
+    ai.Abstractions.ai_dependencies_from_params ;
+  (* Next, the extra arguments due to methods of ourselves we depend on. *)
+  (* They are always present in the species under the name "self_...".   *)
+  List.iter
+    (function
+      | MinEnv.MCEE_Defined_carrier _
+      | MinEnv.MCEE_Defined_computational (_, _, _)
+      | MinEnv.MCEE_Defined_logical (_, _, _) ->
+          (* Anything defined is not abstracted. *)
+          ()
+      | MinEnv.MCEE_Declared_logical (_, _) ->
+          failwith "TODO 42"
+      | MinEnv.MCEE_Declared_carrier ->
+          (* The carrier is always abstracted by "abst_T". *)
+          the_list_reversed := "abst_T" :: !the_list_reversed
+      | MinEnv.MCEE_Declared_computational (n, _) ->
+          let llift_name =
+            "abst_" ^
+            (Parsetree_utils.vname_as_string_with_operators_expanded n) in
+          the_list_reversed := llift_name :: !the_list_reversed)
+    ai.Abstractions.ai_min_coq_env ;
+  (* Finally, reverse the list to keep the right oder. *)
+  List.rev !the_list_reversed
+;;
+
+
+
+
 (** generated_fields : The list of previous fields of the species that have
     already be generated. Used while generating theorems to know what to apply
         to the methods generators the theorem depends on. *)
@@ -947,9 +1003,73 @@ let generate_methods ctx print_ctx env generated_fields field =
            abstraction_info.Abstractions.ai_dependencies_from_params ;
          cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
        CSF_let compiled_field
-   | Abstractions.FAI_let_rec _l ->
-       (* [Unsure]. *)
-       CSF_let_rec []
+   | Abstractions.FAI_let_rec l ->
+       (begin
+(* [Unsure] Factorisation ? Vraiment très semblable à OCaml ! *)
+       match l with
+        | [] ->
+            (* A "let", then a fortiori "let rec" construct *)
+            (* must at least bind one identifier !          *)
+            assert false
+        | ((from, name, params, scheme, body, _), first_ai) :: q ->
+            (begin
+            match body with
+             | Parsetree.BB_logical _ ->
+                 failwith "None ? : TODO"
+             | Parsetree.BB_computational _ ->
+                 (* Extend the context with the mapping between these *)
+                 (* recursive functions and their extra arguments.    *)
+                 let ctx' = {
+                   ctx with
+                   Context.scc_lambda_lift_params_mapping =
+                     List.map
+                       (fun ((_, n, _, _, _, _), ai) ->
+                         (n, make_params_list_from_abstraction_info ai))
+                       l } in
+                 (* Now, generate the first method, introduced by "let rec". *)
+                 let first_coq_min_typ_env_names =
+                   generate_one_field_binding
+                     ctx' print_ctx env first_ai.Abstractions.ai_min_coq_env
+                     ~let_connect: LC_first_rec
+                     first_ai.Abstractions.ai_used_species_parameter_tys
+                     first_ai.Abstractions.ai_dependencies_from_params
+                     (from, name, params, scheme, body) in
+                 let first_compiled = {
+                   cfm_from_species = from ;
+                   cfm_method_name = name ;
+                   cfm_used_species_parameter_tys =
+                     first_ai.Abstractions.ai_used_species_parameter_tys ;
+                   cfm_dependencies_from_parameters =
+                     first_ai.Abstractions.ai_dependencies_from_params ;
+                   cfm_coq_min_typ_env_names = first_coq_min_typ_env_names } in
+                 (* Finally, generate the remaining  methods, *)
+                 (* introduced by "and".                      *)
+                 let rem_compiled =
+                   List.map
+                     (fun ((from, name, params, scheme, body, _), ai) ->
+                       (* [Unsure] Ce test est pourri. A voir. *)
+                       (match body with
+                        | Parsetree.BB_logical _ ->
+                            failwith "None ? : TODO"
+                        | Parsetree.BB_computational _ -> ()) ;
+                       let coq_min_typ_env_names =
+                         generate_one_field_binding
+                           ctx' print_ctx env ai.Abstractions.ai_min_coq_env
+                           ~let_connect: LC_following
+                           ai.Abstractions.ai_used_species_parameter_tys
+                           ai.Abstractions.ai_dependencies_from_params
+                           (from, name, params, scheme, body) in
+                       { cfm_from_species = from ;
+                         cfm_method_name = name ;
+                         cfm_used_species_parameter_tys =
+                           ai.Abstractions.ai_used_species_parameter_tys ;
+                         cfm_dependencies_from_parameters =
+                           ai.Abstractions.ai_dependencies_from_params ;
+                         cfm_coq_min_typ_env_names = coq_min_typ_env_names })
+                     q in
+                 CSF_let_rec (first_compiled :: rem_compiled)
+            end)
+       end)
    | Abstractions.FAI_theorem ((from, name, _, logical_expr, _, deps_on_rep),
                                abstraction_info) ->
        let coq_min_typ_env_names =
@@ -982,7 +1102,8 @@ let generate_methods ctx print_ctx env generated_fields field =
        (* To the Variables created in the Chapter and that are named by *)
        (* species parameter name + method name.                         *)
        Species_record_type_generation.generate_logical_expr
-         ~local_idents: [] ~self_as: Types.CSR_self ~in_hyp: true ctx env logical_expr ;
+         ~local_idents: [] ~self_as: Types.CSR_self ~in_hyp: true ctx env
+         logical_expr ;
        Format.fprintf out_fmter ".@]@\n" ;
        let compiled_field = {
          cfm_from_species = from ;
