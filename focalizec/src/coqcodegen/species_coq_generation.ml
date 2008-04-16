@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.43 2008-04-15 15:06:48 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.44 2008-04-16 12:30:32 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -121,27 +121,13 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
 
 
 
-(* ************************************************************************* *)
-(* Context.species_compil_context ->                                         *)
-(*  Types.coq_print_context -> Env.CoqGenEnv.t ->                            *)
-(*    min_coq_env_element list -> Parsetree.vname list ->                    *)
-(*      (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ->             *)
-(*        Parsetree.vname -> Parsetree.expr -> let_connect: let_connector -> *)
-(*          Parsetree.vname list -> Types.type_scheme ->                     *)
-(*            Parsetree.vname list                                           *)
-(** {b Descr} Gererate the Coq code for a method defined in the current
-    species (i.e. not inherited). In fact, this generates the method
-    generator for this method in this species.
-    It returns the list of methods of ourselves we depend on and that were
-    lambda-lifted according to th minimal coq environment.
-
-    {b Rem}: Not exported outside this module.                               *)
-(* ************************************************************************* *)
-let generate_defined_method ctx print_ctx env min_coq_env
-    used_species_parameter_tys dependencies_from_params name
-    body ~let_connect params scheme =
+(** Factorise la genération des abstrations pour let let let-rec.
+    ~rec_let: bool disant si l'on travaille pour la génération d'un let
+    ou d'un let-rec. Ca changera la façon dont on abstrait: "Variables" ou
+    simple paramètres de la fonction. *)
+let generate_defined_let_prelude ~rec_let ctx print_ctx env min_coq_env
+    used_species_parameter_tys dependencies_from_params =
   let out_fmter = ctx.Context.scc_out_fmter in
-  let species_name = snd ctx.Context.scc_current_species in
   (* We need to check if "Self" is abstracted i.e. leads to an extra *)
   (* parameter "(abst_T : Set)" of the method. This is the case if   *)
   (* the method has a decl-dependency on the carrier and no def      *)
@@ -152,24 +138,6 @@ let generate_defined_method ctx print_ctx env min_coq_env
   let how_to_print_Self =
     if List.mem MinEnv.MCEE_Declared_carrier min_coq_env then Types.CSR_abst
     else Types.CSR_self in
-  (* Just a bit of debug. *)
-  if Configuration.get_verbose () then
-    Format.eprintf "Generating Coq code for field '%a'.@."
-      Parsetree_utils.pp_vname_with_operators_expanded name ;
-  (* Start the Coq function definition. *)
-  (match let_connect with
-   | LC_first_non_rec ->
-       (* Beware that the definition corresponding to the *)
-       (* method outside the record type has 2 "_"'s !    *)
-       Format.fprintf out_fmter "@[<2>Definition %a__%a"
-         Parsetree_utils.pp_vname_with_operators_expanded species_name
-         Parsetree_utils.pp_vname_with_operators_expanded name
-   | LC_first_rec ->
-       Format.fprintf out_fmter "@[<2>Fixpoint %a"
-         Parsetree_utils.pp_vname_with_operators_expanded name
-   | LC_following ->
-       Format.fprintf out_fmter "@[<2>with %a"
-         Parsetree_utils.pp_vname_with_operators_expanded name) ;
   (* Generate the parameters from the species parameters' types we use. *)
   (* By the way, we get the stuff to add to the current collection      *)
   (* carrier mapping to make so the type expressions representing some  *)
@@ -182,8 +150,10 @@ let generate_defined_method ctx print_ctx env min_coq_env
           Parsetree_utils.vname_as_string_with_operators_expanded
             species_param_type_name in
         let param_name =  "_p_" ^ as_string ^ "_T" in
-        (* First, generate the parameter. *)
-        Format.fprintf out_fmter "@ (%s :@ Set)" param_name ;
+        (* First, generate the parameter or a "Variable". *)
+        if rec_let then
+          Format.fprintf out_fmter "@[<2>Variable %s :@ Set.@]@\n" param_name
+        else Format.fprintf out_fmter "@ (%s :@ Set)" param_name ;
         (* Return the stuff to extend the collection_carrier_mapping. *)
         ((ctx.Context.scc_current_unit, as_string),
          (param_name, Types.CCMI_is)))
@@ -207,13 +177,22 @@ let generate_defined_method ctx print_ctx env min_coq_env
         "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
       Parsetree_utils.DepNameSet.iter
         (fun (meth, meth_ty) ->
-          Format.fprintf out_fmter "@ (%s%a :@ %a)"
-            prefix
-            Parsetree_utils.pp_vname_with_operators_expanded meth
-            (Types.pp_type_simple_to_coq
-               new_print_ctx ~reuse_mapping: false
-               ~self_as: how_to_print_Self)
-            meth_ty)
+          if rec_let then
+            Format.fprintf out_fmter "@[<2>Variable %s%a :@ %a.@]@\n"
+              prefix
+              Parsetree_utils.pp_vname_with_operators_expanded meth
+              (Types.pp_type_simple_to_coq
+                 new_print_ctx ~reuse_mapping: false
+                 ~self_as: how_to_print_Self)
+              meth_ty
+          else
+            Format.fprintf out_fmter "@ (%s%a :@ %a)"
+              prefix
+              Parsetree_utils.pp_vname_with_operators_expanded meth
+              (Types.pp_type_simple_to_coq
+                 new_print_ctx ~reuse_mapping: false
+                 ~self_as: how_to_print_Self)
+              meth_ty)
         meths)
     dependencies_from_params ;
   (* Generate the parameters denoting methods of ourselves we *)
@@ -228,37 +207,100 @@ let generate_defined_method ctx print_ctx env min_coq_env
                (* abstracted types passed as arguments to the Definition to  *)
                (* represent carriers of the species parameters we depend on. *)
                let ty = Types.specialize sch in
-               Format.fprintf out_fmter "@ (self_T := %a)"
-                 (Types.pp_type_simple_to_coq
-                    new_print_ctx ~reuse_mapping: false
-                    ~self_as: how_to_print_Self) ty ;
+               if rec_let then
+                 Format.fprintf out_fmter "@[<2>Variable self_T := %a.@]@\n"
+                   (Types.pp_type_simple_to_coq
+                      new_print_ctx ~reuse_mapping: false
+                      ~self_as: how_to_print_Self) ty
+               else
+                 Format.fprintf out_fmter "@ (self_T := %a)"
+                   (Types.pp_type_simple_to_coq
+                      new_print_ctx ~reuse_mapping: false
+                      ~self_as: how_to_print_Self) ty ;
                []
            | MinEnv.MCEE_Defined_computational (_, _, _)
            | MinEnv.MCEE_Defined_logical (_, _, _) -> []
            | MinEnv.MCEE_Declared_carrier ->
                (* Note that by construction, the *)
                (* carrier is first in the env.   *)
-               Format.fprintf out_fmter "@ (abst_T : Set)" ;
+               if rec_let then
+                 Format.fprintf out_fmter "@[<2>Variable abst_T : Set.@]@\n"
+               else Format.fprintf out_fmter "@ (abst_T : Set)" ;
                [Parsetree.Vlident "rep"]
            | MinEnv.MCEE_Declared_computational (n, sch) ->
                (* Due to a decl-dependency, hence: abstract. *)
                let ty = Types.specialize sch in
-               Format.fprintf out_fmter "@ (abst_%a : %a)"
-                 Parsetree_utils.pp_vname_with_operators_expanded n
-                 (Types.pp_type_simple_to_coq
-                    new_print_ctx ~reuse_mapping: false
-                    ~self_as: how_to_print_Self)
-                 ty ;
+               if rec_let then
+                 Format.fprintf out_fmter "@[<2>Variable abst_%a : %a.@]@\n"
+                   Parsetree_utils.pp_vname_with_operators_expanded n
+                   (Types.pp_type_simple_to_coq
+                      new_print_ctx ~reuse_mapping: false
+                      ~self_as: how_to_print_Self)
+                   ty
+               else
+                 Format.fprintf out_fmter "@ (abst_%a : %a)"
+                   Parsetree_utils.pp_vname_with_operators_expanded n
+                   (Types.pp_type_simple_to_coq
+                      new_print_ctx ~reuse_mapping: false
+                      ~self_as: how_to_print_Self)
+                   ty ;
                [n]
            | MinEnv.MCEE_Declared_logical (n, b) ->
-               Format.fprintf out_fmter "@ (%a :@ "
-                 Parsetree_utils.pp_vname_with_operators_expanded n ;
+               if rec_let then
+                 Format.fprintf out_fmter "@[<2>Variable %a :@ "
+                   Parsetree_utils.pp_vname_with_operators_expanded n
+               else
+                 Format.fprintf out_fmter "@ (%a :@ "
+                   Parsetree_utils.pp_vname_with_operators_expanded n ;
                Species_record_type_generation.generate_logical_expr
                  new_ctx ~local_idents: [] ~self_as: how_to_print_Self
                  ~in_hyp: false env b ;
-               Format.fprintf out_fmter ")" ;
+               if rec_let then Format.fprintf out_fmter "@].@\n"
+               else Format.fprintf out_fmter ")" ;
                [n])
          min_coq_env) in
+  (abstracted_methods, new_ctx, new_print_ctx, how_to_print_Self)
+;;
+
+
+
+(* ************************************************************************* *)
+(* Context.species_compil_context ->                                         *)
+(*  Types.coq_print_context -> Env.CoqGenEnv.t ->                            *)
+(*    min_coq_env_element list -> Parsetree.vname list ->                    *)
+(*      (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ->             *)
+(*        Parsetree.vname -> Parsetree.expr -> let_connect: let_connector -> *)
+(*          Parsetree.vname list -> Types.type_scheme ->                     *)
+(*            Parsetree.vname list                                           *)
+(** {b Descr} Gererate the Coq code for a method defined in the current
+    species (i.e. not inherited). In fact, this generates the method
+    generator for this method in this species.
+    It returns the list of methods of ourselves we depend on and that were
+    lambda-lifted according to th minimal coq environment.
+
+    {b Rem}: Not exported outside this module.                               *)
+(* ************************************************************************* *)
+let generate_defined_non_recursive_method ctx print_ctx env min_coq_env
+    used_species_parameter_tys dependencies_from_params name
+    body params scheme =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  let species_name = snd ctx.Context.scc_current_species in
+  (* Just a bit of debug. *)
+  if Configuration.get_verbose () then
+    Format.eprintf "Generating Coq code for field '%a'.@."
+      Parsetree_utils.pp_vname_with_operators_expanded name ;
+  (* Start the Coq function definition. *)
+  (* Beware that the definition corresponding to the *)
+  (* method outside the record type has 2 "_"'s !    *)
+  Format.fprintf out_fmter "@[<2>Definition %a__%a"
+    Parsetree_utils.pp_vname_with_operators_expanded species_name
+    Parsetree_utils.pp_vname_with_operators_expanded name ;
+  (* Generate the prelude of the method, i.e the sequence of parameters *)
+  (* and their types induced by the various lamda-liftings.             *)
+  let (abstracted_methods, new_ctx, new_print_ctx, how_to_print_Self) =
+    generate_defined_let_prelude
+      ~rec_let: false ctx print_ctx env min_coq_env
+      used_species_parameter_tys dependencies_from_params in
   (* Add the parameters of the let-binding with their type.   *)
   (* Ignore the result type of the "let" if it's a function   *)
   (* because we never print the type constraint on the result *)
@@ -326,7 +368,8 @@ let generate_defined_method ctx print_ctx env min_coq_env
 
 
 (* ********************************************************************** *)
-(** {b Descr} Generate the coq code for a method of the current species.
+(** {b Descr} Generate the coq code for a non-recursive method of the
+    current species.
     If the method is defined in this species, then it generates the
     method generator. If the method is inherited, it recovers the
     methods abstracted in the generator without generating again the code.
@@ -335,7 +378,7 @@ let generate_defined_method ctx print_ctx env min_coq_env
 
     {b Rem} Not exported outside this module.                             *)
 (* ********************************************************************** *)
-let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
+let generate_non_recursive_field_binding ctx print_ctx env min_coq_env
     used_species_parameter_tys dependencies_from_params
     (from, name, params, scheme, body) =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -343,9 +386,9 @@ let generate_one_field_binding ctx print_ctx env min_coq_env ~let_connect
   (* be generated. Inherited methods ARE NOT generated again !      *)
   let abstracted_methods =
     if from = ctx.Context.scc_current_species then
-      generate_defined_method
+      generate_defined_non_recursive_method
         ctx print_ctx env min_coq_env used_species_parameter_tys
-        dependencies_from_params name body ~let_connect params scheme
+        dependencies_from_params name body params scheme
     else
       (begin
       (* Just a bit of debug/information if requested. *)
@@ -464,7 +507,7 @@ let find_compiled_field_memory name fields =
 (* Context.species_compil_context -> Types.coq_print_context ->              *)
 (*   Env.CoqGenEnv.t -> min_coq_env_element list ->                          *)
 (*     compiled_species_fields list -> Parsetree.qualified_species ->        *)
-(*       Parsetree.vname -> Parsetree.logical_expr -> Parsetree.vname list           *)
+(*       Parsetree.vname -> Parsetree.logical_expr -> Parsetree.vname list   *)
 (** {b Descr} Gererate the Coq code for a theorem defined in the current
     species (i.e. not inherited). In fact, this generates the theorem
     generator for this theorem in this species.
@@ -947,6 +990,54 @@ let make_params_list_from_abstraction_info ai =
 
 
 
+let generate_recursive_let_definition ctx print_ctx env l =
+  match l with
+   | [] ->
+       (* A "let", then a fortiori "let rec" construct *)
+       (* must at least bind one identifier !          *)
+       assert false
+   | [((from, name, _params, _scheme, body, _), ai)] ->
+       (begin
+       match body with
+        | Parsetree.BB_logical _ ->
+            failwith "None ? : TODO"
+        | Parsetree.BB_computational _ ->
+            (* Extend the context with the mapping between these *)
+            (* recursive functions and their extra arguments.    *)
+            let ctx' = {
+              ctx with
+                Context.scc_lambda_lift_params_mapping =
+                  [(name, make_params_list_from_abstraction_info ai)] } in
+            (* Open the "Section" for the recursive definition. *)
+            Format.fprintf ctx.Context.scc_out_fmter
+              "@[<2>Section %a.@\n"
+              Parsetree_utils.pp_vname_with_operators_expanded name ;
+            (* Now, generate the only method, introduced by "let rec". *)
+            let (abstracted_methods, _new_ctx,
+                 _new_print_ctx, _how_to_print_Self) =
+              generate_defined_let_prelude
+                ~rec_let: true ctx' print_ctx env ai.Abstractions.ai_min_coq_env
+                ai.Abstractions.ai_used_species_parameter_tys
+                ai.Abstractions.ai_dependencies_from_params in
+            (* Finalyl close the opened "Section". *)
+            Format.fprintf ctx.Context.scc_out_fmter "End %a.@]@\n"
+              Parsetree_utils.pp_vname_with_operators_expanded name ;
+            let compiled = {
+              cfm_from_species = from ;
+              cfm_method_name = name ;
+              cfm_used_species_parameter_tys =
+                ai.Abstractions.ai_used_species_parameter_tys ;
+              cfm_dependencies_from_parameters =
+                ai.Abstractions.ai_dependencies_from_params ;
+              cfm_coq_min_typ_env_names = abstracted_methods } in
+            CSF_let_rec [compiled]
+       end)
+   | _ :: _ ->
+       (* [Unsure] *)
+       failwith "Mutually recursive functions TODO"
+;;
+
+
 
 (** generated_fields : The list of previous fields of the species that have
     already be generated. Used while generating theorems to know what to apply
@@ -986,9 +1077,8 @@ let generate_methods ctx print_ctx env generated_fields field =
        (* then no need to set the [scc_lambda_lift_params_mapping] of    *)
        (* the context.                                                   *)
        let coq_min_typ_env_names =
-         generate_one_field_binding
+         generate_non_recursive_field_binding
            ctx print_ctx env abstraction_info.Abstractions.ai_min_coq_env
-           ~let_connect: LC_first_non_rec
            abstraction_info.Abstractions.ai_used_species_parameter_tys
            abstraction_info.Abstractions.ai_dependencies_from_params
            (from, name, params, scheme, body) in
@@ -1004,72 +1094,7 @@ let generate_methods ctx print_ctx env generated_fields field =
          cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
        CSF_let compiled_field
    | Abstractions.FAI_let_rec l ->
-       (begin
-(* [Unsure] Factorisation ? Vraiment très semblable à OCaml ! *)
-       match l with
-        | [] ->
-            (* A "let", then a fortiori "let rec" construct *)
-            (* must at least bind one identifier !          *)
-            assert false
-        | ((from, name, params, scheme, body, _), first_ai) :: q ->
-            (begin
-            match body with
-             | Parsetree.BB_logical _ ->
-                 failwith "None ? : TODO"
-             | Parsetree.BB_computational _ ->
-                 (* Extend the context with the mapping between these *)
-                 (* recursive functions and their extra arguments.    *)
-                 let ctx' = {
-                   ctx with
-                   Context.scc_lambda_lift_params_mapping =
-                     List.map
-                       (fun ((_, n, _, _, _, _), ai) ->
-                         (n, make_params_list_from_abstraction_info ai))
-                       l } in
-                 (* Now, generate the first method, introduced by "let rec". *)
-                 let first_coq_min_typ_env_names =
-                   generate_one_field_binding
-                     ctx' print_ctx env first_ai.Abstractions.ai_min_coq_env
-                     ~let_connect: LC_first_rec
-                     first_ai.Abstractions.ai_used_species_parameter_tys
-                     first_ai.Abstractions.ai_dependencies_from_params
-                     (from, name, params, scheme, body) in
-                 let first_compiled = {
-                   cfm_from_species = from ;
-                   cfm_method_name = name ;
-                   cfm_used_species_parameter_tys =
-                     first_ai.Abstractions.ai_used_species_parameter_tys ;
-                   cfm_dependencies_from_parameters =
-                     first_ai.Abstractions.ai_dependencies_from_params ;
-                   cfm_coq_min_typ_env_names = first_coq_min_typ_env_names } in
-                 (* Finally, generate the remaining  methods, *)
-                 (* introduced by "and".                      *)
-                 let rem_compiled =
-                   List.map
-                     (fun ((from, name, params, scheme, body, _), ai) ->
-                       (* [Unsure] Ce test est pourri. A voir. *)
-                       (match body with
-                        | Parsetree.BB_logical _ ->
-                            failwith "None ? : TODO"
-                        | Parsetree.BB_computational _ -> ()) ;
-                       let coq_min_typ_env_names =
-                         generate_one_field_binding
-                           ctx' print_ctx env ai.Abstractions.ai_min_coq_env
-                           ~let_connect: LC_following
-                           ai.Abstractions.ai_used_species_parameter_tys
-                           ai.Abstractions.ai_dependencies_from_params
-                           (from, name, params, scheme, body) in
-                       { cfm_from_species = from ;
-                         cfm_method_name = name ;
-                         cfm_used_species_parameter_tys =
-                           ai.Abstractions.ai_used_species_parameter_tys ;
-                         cfm_dependencies_from_parameters =
-                           ai.Abstractions.ai_dependencies_from_params ;
-                         cfm_coq_min_typ_env_names = coq_min_typ_env_names })
-                     q in
-                 CSF_let_rec (first_compiled :: rem_compiled)
-            end)
-       end)
+       generate_recursive_let_definition ctx print_ctx env l
    | Abstractions.FAI_theorem ((from, name, _, logical_expr, _, deps_on_rep),
                                abstraction_info) ->
        let coq_min_typ_env_names =
