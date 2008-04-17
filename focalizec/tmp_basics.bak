@@ -9,6 +9,10 @@ Require Export coq_builtins.
 (** The weak proof !!! Give it a Prop, and abracadabra ... it's proved ! *)
 Axiom magic_prove : forall A : Prop, A.
 
+Axiom __magic_order__ : forall A : Set, A -> A -> Prop.
+(* Notation made available only in Coq parser, not in Coq output / feedback. *)
+Notation magic_order := (__magic_order__ _) (only parsing).
+
 
 (** The type [unit__t] only contains 1 value. *)
 Inductive unit__t : Set :=

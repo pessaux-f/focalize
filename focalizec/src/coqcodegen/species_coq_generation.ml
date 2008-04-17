@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.44 2008-04-16 12:30:32 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.45 2008-04-17 14:37:09 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -545,7 +545,9 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
             species_param_type_name in
         let param_name =  "_p_" ^ as_string ^ "_T" in
         (* First, generate the Variable. *)
-        Format.fprintf out_fmter "(* Due to a decl-dependency on species parameter carrier type '%s'. *)@\n"
+        Format.fprintf out_fmter
+          "(* Due to a decl-dependency on species parameter carrier \
+           type '%s'. *)@\n"
           as_string ;
         Format.fprintf out_fmter "Variable@ %s :@ Set.@\n" param_name ;
         (* Return the stuff to extend the collection_carrier_mapping. *)
@@ -990,17 +992,51 @@ let make_params_list_from_abstraction_info ai =
 
 
 
+
+(** 
+    Since this function is called after the function
+    [bind_parameters_to_types_from_type_scheme] who was provided a type
+    scheme, the optionnal typec in the list are always or the form [Some] !
+
+    {b Rem} : Not exported outside this module. *)
+let print_types_as_tuple_if_several ~self_as print_ctx out_fmter types =
+  let rec rec_print = function
+    | [] -> assert false
+    | [(_, one)] -> 
+        let ty = match one with None -> assert false | Some t -> t in
+        Format.fprintf out_fmter "%a"
+          (Types.pp_type_simple_to_coq
+             print_ctx ~reuse_mapping: true ~self_as) ty
+    | (_, h) :: q ->
+        let ty = match h with None -> assert false | Some t -> t in
+        Format.fprintf out_fmter "@[<1>(prod %a@ "
+          (Types.pp_type_simple_to_coq
+             print_ctx ~reuse_mapping: true ~self_as) ty ;
+        rec_print q ;
+        Format.fprintf out_fmter ")@]" in
+  (* Since the printing is done in several iteration, one   *)
+  (* must share the variable-mapping all along. Then get    *)
+  (* one fresh, and we will abandon it once print is done.  *)
+  Types.purge_type_simple_to_coq_variable_mapping () ;
+  rec_print types ;
+  Types.purge_type_simple_to_coq_variable_mapping ()
+;;
+
+  
+
 let generate_recursive_let_definition ctx print_ctx env l =
+  let out_fmter = ctx.Context.scc_out_fmter in
   match l with
    | [] ->
        (* A "let", then a fortiori "let rec" construct *)
        (* must at least bind one identifier !          *)
        assert false
-   | [((from, name, _params, _scheme, body, _), ai)] ->
+   | [((from, name, params, scheme, body, _), ai)] ->
        (begin
        match body with
         | Parsetree.BB_logical _ ->
-            failwith "None ? : TODO"
+            (* [Unsure] *)
+            failwith "recursive logical : TODO"
         | Parsetree.BB_computational _ ->
             (* Extend the context with the mapping between these *)
             (* recursive functions and their extra arguments.    *)
@@ -1009,18 +1045,48 @@ let generate_recursive_let_definition ctx print_ctx env l =
                 Context.scc_lambda_lift_params_mapping =
                   [(name, make_params_list_from_abstraction_info ai)] } in
             (* Open the "Section" for the recursive definition. *)
-            Format.fprintf ctx.Context.scc_out_fmter
+            Format.fprintf out_fmter
               "@[<2>Section %a.@\n"
               Parsetree_utils.pp_vname_with_operators_expanded name ;
-            (* Now, generate the only method, introduced by "let rec". *)
-            let (abstracted_methods, _new_ctx,
-                 _new_print_ctx, _how_to_print_Self) =
+            (* Now, generate the prelude of the only method *)
+            (* introduced by "let rec".                     *)
+            let (abstracted_methods, new_ctx,
+                 new_print_ctx, how_to_print_Self) =
               generate_defined_let_prelude
                 ~rec_let: true ctx' print_ctx env ai.Abstractions.ai_min_coq_env
                 ai.Abstractions.ai_used_species_parameter_tys
                 ai.Abstractions.ai_dependencies_from_params in
+            (* We now generate the order. It always has 2 arguments having    *)
+            (* the same type. This type is a tuple if the method hase several *)
+            (* arguments.                                                     *)
+	    Format.fprintf out_fmter
+	      "@\n@\n(* A fake termination order. *)@\n" ;
+            Format.fprintf out_fmter
+              "@[<2>Let __term_order@ (rec_arg@ ini_arg :@ " ;
+            let (params_with_type, _, _) =
+              MiscHelpers.bind_parameters_to_types_from_type_scheme
+                (Some scheme) params in
+            (* Print the tuple that is the method's arguments' types. *)
+            print_types_as_tuple_if_several
+              ~self_as: how_to_print_Self new_print_ctx out_fmter
+              params_with_type ;
+	    (* [Unsure] We use the magic order. *)
+	    Format.fprintf out_fmter
+	      ")@ :=@ basics.magic_order rec_arg@ ini_arg.@]@\n@\n" ;
+            (* We now prove that this order is well-founded. *)
+	    Format.fprintf out_fmter "(* Order well-founded admitted. *)@\n" ;
+            Format.fprintf out_fmter
+              "Let __well_founded_term_order : (well_founded \
+	      __term_order).@\n" ;
+	    (* [Unsure] We use the magic proof. *)
+            Format.fprintf out_fmter "apply basics.magic_prove.@\nQed.@\n" ;
+            (* It's now time to generate the lemmas proving  *)
+            (* that each recursive call decreases.           *)
+            Rec_let_gen.generate_termination_lemmas
+	      new_ctx new_print_ctx env ~in_species: ((* |Unsure] *))
+              name body ;
             (* Finalyl close the opened "Section". *)
-            Format.fprintf ctx.Context.scc_out_fmter "End %a.@]@\n"
+            Format.fprintf out_fmter "End %a.@]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded name ;
             let compiled = {
               cfm_from_species = from ;

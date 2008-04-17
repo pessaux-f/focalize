@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.26 2008-04-10 14:32:32 bartlett Exp $
+# $Id: Makefile,v 1.27 2008-04-17 14:37:09 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing \
@@ -45,6 +45,7 @@ ALLBYTOBJS = \
 	../mlcodegen/main_ml_generation.cmo \
 	\
 	../coqcodegen/species_record_type_generation.cmo \
+	../coqcodegen/rec_let_gen.cmo \
 	../coqcodegen/species_coq_generation.cmo \
 	../coqcodegen/type_coq_generation.cmo \
 	../coqcodegen/main_coq_generation.cmo \
