@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2008-04-09 15:02:05 pessaux Exp $
+# $Id: Makefile,v 1.11 2008-04-17 12:04:19 bartlett Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file
@@ -12,8 +12,9 @@ COQC = coqc
 
 FOC_COMP_FLAGS =
 
-FOCSRC = basics.foc \
+FOCSRC =basics.foc \
 	sets_orders.foc \
+	wellfounded.foc \
 	iterators.foc \
 	additive_law.foc \
 	multiplicative_law.foc \
@@ -26,7 +27,8 @@ FOCVS = $(FOCSRC:.foc=.v)
 FOCVOS = $(FOCVS:.v=.vo)
 EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
 	weak_structures_externals.cmo \
-	coq_builtins.vo weak_structures_externals.vo
+	coq_builtins.vo weak_structures_externals.vo \
+	wellfounded_externals.vo
 
 
 
@@ -39,35 +41,14 @@ clean::
 	$(RM) *~ *.cm* log *.fo $(FOCMLS) $(FOCVS) $(FOCVOS) $(EXTERNALOBJS)
 	$(RM) odoc/*
 
-depend:
+depend: .depend
+
+.depend:
 	$(CAMLDEP) *.mli *.ml > ./.depend
 
 basics_special_case:
 	$(RM) -f basics.v
 	$(LN) -s ../tmp_basics.v basics.v
 	$(COQC) basics.v
-
-.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .foc .fo .v .vo
-
-.foc.fo .foc.ml .foc.v:
-	$(FOCC) $(FOC_COMP_FLAGS) -c $<
-
-.ml.cmo:
-	$(CAMLBYT) -c $<
-
-.mli.cmi:
-	$(CAMLBYT) -c $<
-
-.ml.cmx:
-	$(CAMLBIN) -c $<
-
-.mly.ml:
-	$(CAMLYACC) $<
-
-.mll.ml:
-	$(CAMLLEX) $<
-
-.v.vo:
-	$(COQC) $<
 
 include .depend
