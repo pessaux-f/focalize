@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.46 2008-04-21 11:51:18 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.47 2008-04-21 14:46:33 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1083,8 +1083,7 @@ let generate_recursive_let_definition ctx print_ctx env l =
             (* It's now time to generate the lemmas proving  *)
             (* that each recursive call decreases.           *)
             Rec_let_gen.generate_termination_lemmas
-              new_ctx new_print_ctx env ~in_species: ((* |Unsure] *))
-              name body ;
+              new_ctx new_print_ctx env name body ;
             (* Finalyl close the opened "Section". *)
             Format.fprintf out_fmter "End %a.@]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded name ;

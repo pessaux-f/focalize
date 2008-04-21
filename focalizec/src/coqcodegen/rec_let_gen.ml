@@ -11,57 +11,42 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.1 2008-04-17 17:02:25 pessaux Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.2 2008-04-21 14:46:33 pessaux Exp $ *)
 
 
 
-(** - [~in_species] : Option telling if we are in a species or not
-    (i.e. otherwise, in a toplevel function). If we are in a species
-    then recursion will be detected only on idents that are [EI_method].
-    Otherwise, recursion will be detected only on [EI_local] idents. *)
-let find_recursion_expr_ident name local_idents ~in_species ident =
+(** - Recursion will be detected only on idents that are [EI_local] idents. *)
+let find_recursion_expr_ident name local_idents ident =
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local n ->
-       (* [Unsure] A optimiser car quand on est dans une fct toplevel,
-          comme on ne peut récurser que sur un local ident, c'est lorsque
-          l'on étend les local_idents qu'ils suffit de vérifier que ce que
-          l'on rajoute en étendant ne vient pas masquer [name]. Et dans
-          le cas où on est dans une espèce, ben on ne peut récurser que par
-          un [EI_method]. *)
-       (in_species = None) && (n = name) && (not (List.mem name local_idents))
+       (n = name) && (not (List.mem name local_idents))
    | Parsetree.EI_global _ -> false
    | Parsetree.EI_method (coll_specifier_opt, vname) ->
-       if in_species = None then false
-       else
-         (begin
-         match coll_specifier_opt with
-          | None
-          | Some (Parsetree.Vname (Parsetree.Vuident "Self")) ->
-              (begin
-              (* Method call from the current species. Note that the fact *)
-              (* that [in_species <> None] is already tested above.       *)
-              vname = name
-              end)
-          | Some _ ->
-              (* Method call from a species that is not the current. Hence *)
-              (* no possible recursion accross species frontiers.          *)
-              false
-         end)
+       (begin
+       match coll_specifier_opt with
+        | None
+        | Some (Parsetree.Vname (Parsetree.Vuident "Self")) ->
+            (begin
+            (* Method call from the current species. *)
+            vname = name
+            end)
+        | Some _ ->
+            (* Method call from a species that is not the current. Hence *)
+            (* no possible recursion accross species frontiers.          *)
+            false
+       end)
 ;;
 
 
 
-(** - [~in_species] : Optiontelling if we are in a species or not
-    (i.e. otherwise, in a toplevel function). If we are in a species
-    then recursion will be detected only on idents that are [EI_method].
-    Otherwise, recursion will be detected only on [EI_local] idents.
+(** - Recursion will be detected only on idents that are [EI_local] idents.
     - [current_cond_string] : The list of conditionnal expressions we are
     currently under.
     - [local_idents] : The list of local identifiers defined in the scope.
     They are recorded to ensure that if one of them wears the same name
     than the recursive function, and hence masks it, then we won't confuse
     them and won't think that there is a recursive call. *)
-let rec find_recursion_expr _name ~in_species: _ _current_cond_string _local_idents
+let rec find_recursion_expr _name _current_cond_string _local_idents
     _expression =
 (*
   match expression.Parsetree.ast_desc with
@@ -72,7 +57,7 @@ let rec find_recursion_expr _name ~in_species: _ _current_cond_string _local_ide
        let local_idents' = vnames @ local_idents in
        find_recursion_expr name current_cond_string local_idents' body
    | Parsetree.E_var ident ->
-       if find_recursion_expr_ident name local_idents ~in_species ident then
+       if find_recursion_expr_ident name local_idents ident then
          ...
        else []
    | Parsetree.E_app (fun_expr, args_exprs) ->
@@ -90,20 +75,20 @@ let rec find_recursion_expr _name ~in_species: _ _current_cond_string _local_ide
 ;;
 
 
-let rec find_recursion_prop _name ~in_species: _ _current_cond_string
+let rec find_recursion_prop _name _current_cond_string
     _local_idents _log_expr =
   [] ;;
 
 
-let generate_termination_lemmas _ctx _print_ctx _env ~in_species name body =
+let generate_termination_lemmas _ctx _print_ctx _env name body =
   (* We first recovers the strings of conditionnals under which a    *)
   (* recursive call appears, with it effective argument expressions. *)
   let _cond_strings =
     match body with
      | Parsetree.BB_logical log_expr ->
-         find_recursion_prop name ~in_species [] [] log_expr
+         find_recursion_prop name [] [] log_expr
      | Parsetree.BB_computational expr ->
-         find_recursion_expr name ~in_species [] [] expr in
+         find_recursion_expr name [] [] expr in
   ()
 ;;
 
