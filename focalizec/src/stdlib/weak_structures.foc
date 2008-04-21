@@ -288,9 +288,17 @@ species Euclidean_semi_ring inherits Factorial_semi_ring =
   signature quo_rem : Self -> Self -> quo_rem_result (Self) ;
   let quotient (x, y) = #quot (Self!quo_rem (x, y)) ;
   let remainder (x, y) = #rema (Self!quo_rem (x, y)) ;
+
+(* [Unsure] Temporary to test collection generators until we have recursion. *)
+(*
   let rec gcd (x, y) = 
     if Self!is_zero (y) then x else Self!gcd (y, Self!remainder (x, y)) ;
+*)
+  let  gcd (x, y) = 
+    if Self!is_zero (y) then x else Self!remainder (x, y) ;
+
   signature euclidean_ordering : Self -> Self -> prop ;
+
   property euclidean_order_is_antisymmetric:
     all x y in Self,
       !is_zero (x) \/ !is_zero (y) \/ 
@@ -341,23 +349,23 @@ let cr_br =
   internal 'a -> 'a -> 'a -> bezout_res ('a)
   external
   | caml -> {* Weak_structures_externals.cr_br *}
-  | coq -> {* weak_structures_externals.cr_br *}
+  | coq -> {* weak_structures_externals.cr_br __var_a *}
 ;; 
 let gcd =
   internal bezout_res ('a) -> 'a
   external
   | caml -> {* Weak_structures_externals.br_gcd *}
-  | coq -> {* weak_structures_externals.br_gcd *}
+  | coq -> {* weak_structures_externals.br_gcd __var_a *}
 ;;
 let coef1 =
   internal bezout_res ('a) -> 'a
   external
   | caml -> {* Weak_structures_externals.br_coef1 *}
-  | coq -> {* weak_structures_externals.br_coef1 *}
+  | coq -> {* weak_structures_externals.br_coef1 __var_a *}
 ;;
 let coef2 =
   internal bezout_res ('a) -> 'a
   external
   | caml -> {* Weak_structures_externals.br_coef2 *}
-  | coq -> {* weak_structures_externals.br_coef2 *}
+  | coq -> {* weak_structures_externals.br_coef2 __var_a *}
 ;;
