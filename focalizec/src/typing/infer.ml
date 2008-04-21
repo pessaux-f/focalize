@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.113 2008-04-14 09:20:49 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.114 2008-04-21 12:37:17 pessaux Exp $ *)
 
 
 
@@ -2179,6 +2179,17 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
 
 
 
+let apply_substitutions_reversed_list_on_type reversed_substs ty =
+  (* ATTENTION Do not fold left otherwise substitutions *)
+  (* will be performed in reverse order.                *)
+  List.fold_right
+    (fun (c1, c2) accu_type -> Types.subst_type_simple c1 c2 accu_type)
+    reversed_substs
+    ty
+;;
+
+
+
 let apply_substitutions_reversed_list_on_fields
     ~current_unit fields reversed_substs =
   (* ATTENTION Do not fold left otherwise substitutions *)
@@ -2226,118 +2237,138 @@ let apply_species_arguments ctx env base_spe_descr params =
   let rec rec_apply accu_meths accu_substs accu_self_must_be = function
     | ([], []) -> (accu_meths, accu_self_must_be)
     | ((f_param :: rem_f_params), (e_param :: rem_e_params)) ->
-      let (new_meths, new_accu_substs, new_accu_self_must_be) =
-        (begin
+        let (new_meths, new_accu_substs, new_accu_self_must_be) =
+          (begin
           let (Parsetree.SP e_param_expr) = e_param.Parsetree.ast_desc in
           match f_param with
-          | Env.TypeInformation.SPAR_in (f_name, f_ty) ->
-             (begin
-              (* First, get the argument expression's type. *)
-              let expr_ty = typecheck_expr ctx env e_param_expr in
-              (* The formal's collection type [f_ty] is the name of the *)
-              (* collection that the effective argument is expected to  *)
-              (* be a carrier of. Then one must unify the effective     *)
-              (* expression's type with a "carrier" of the formal       *)
-              (* collection.                                            *)
-              let repr_of_formal =
-                Types.type_rep_species
-                  ~species_module: (fst f_ty) ~species_name: (snd f_ty) in
-              let param_type_for_ast =
-                Types.unify
-                  ~loc: e_param.Parsetree.ast_loc
-                  ~self_manifest: ctx.self_manifest repr_of_formal expr_ty in
-              (* Record the type in the AST node. *)
-              e_param.Parsetree.ast_type <-
-                Parsetree.ANTI_type param_type_for_ast ;
-              (* And now, the new methods where x <- e (in Virgile's thesis) *)
-              (* i.e. here, [f_name] <- [e_param_expr].                      *)
-              let substd_meths =
-                List.map
-                  (SubstExpr.subst_species_field
-                     ~param_unit: (fst f_ty)
-                     f_name e_param_expr.Parsetree.ast_desc)
-                  accu_meths in
-              (substd_meths, accu_substs, accu_self_must_be)
-             end)
-          | Env.TypeInformation.SPAR_is ((f_module, f_name), c1_ty, _) ->
-              (begin
-              let c1 = (f_module, f_name) in
-              (* Get the argument species expression signature and methods. *)
-              (* Note that to be well-typed this expression must ONLY be    *)
-              (* an [E_constr] (because species names are capitalized,      *)
-              (* parsed as sum type constructors) that should be considered *)
-              (* as a species name. C.f. Virgile Prevosto's Phd, section    *)
-              (* 3.8, page 43.                                              *)
-              (* Rule [COLL-INST].                                          *)
-              match typecheck_expr_as_species_parameter_argument
-                   ctx env e_param_expr with
-               | TSPA_non_self ((c2_mod_name, c2_species_name),
-                                expr_sp_description) ->
-                   let substd_c1_ty =
-                     apply_substitutions_reversed_list_on_fields
-                       ~current_unit: ctx.current_unit c1_ty accu_substs in
-                   (* The c2 of Virgile's Phd. *)
-                   let c2 = (c2_mod_name, c2_species_name) in
-                   (* Record the type in the AST node. *)
-                   let param_type_for_ast =
-                     Types.type_rep_species
-                       ~species_module: c2_mod_name
-                       ~species_name: c2_species_name in
-                   e_param.Parsetree.ast_type <-
-                     Parsetree.ANTI_type param_type_for_ast ;
-                   (* Proceed to abstraction and signature compatibility. *)
-                   let big_A_i1_c2 =
-                     abstraction
-                       ~current_unit: ctx.current_unit c2 substd_c1_ty in
-                   (* Ensure that i2 <= A(i1, c2). *)
-                   is_sub_species_of
-                     ~loc: e_param.Parsetree.ast_loc ctx
-                     ~name_should_be_sub_spe: c2
-                     expr_sp_description.Env.TypeInformation.spe_sig_methods
-                     ~name_should_be_over_spe: c1
-                     big_A_i1_c2 ;
-                   (* And now, the new methods where c1 <- c2. *)
-                   let substd_meths =
-                     List.map
-                       (SubstColl.subst_species_field
-                          ~current_unit: ctx.current_unit
-                          (SubstColl.SRCK_coll c1) (Types.SBRCK_coll c2))
-                       accu_meths in
-                   let new_substs =
-                     (c1, (Types.SBRCK_coll c2)) :: accu_substs in
-                   (substd_meths, new_substs, accu_self_must_be)
-               | TSPA_self ->
-                   (* Record the type in the AST node. *)
-                   let param_type_for_ast = Types.type_self () in
-                   e_param.Parsetree.ast_type <-
-                     Parsetree.ANTI_type param_type_for_ast ;
-                   (* No abstraction to do: this would be replacing Self by *)
-                   (* itself ! Moreover, since we don't know yet the set of *)
-                   (* methods Self will have, we delay the signature        *)
-                   (* compatibility to later, reminding that Self is        *)
-                   (* expected to have at least [c1]'s methods.             *)
-                   let new_self_must_be = c1 :: accu_self_must_be in
-                   (* And now, the new methods where c1 <- c2. *)
-                   let substd_meths =
-                     List.map
-                       (SubstColl.subst_species_field
-                          ~current_unit: ctx.current_unit
-                          (SubstColl.SRCK_coll c1) Types.SBRCK_self)
-                       accu_meths in
-                   let new_substs = (c1, Types.SBRCK_self) :: accu_substs in
-                   (substd_meths, new_substs, new_self_must_be)
-              end)
+           | Env.TypeInformation.SPAR_in (f_name, f_ty) ->
+               (begin
+               (* First, get the argument expression's type. *)
+               let expr_ty = typecheck_expr ctx env e_param_expr in
+               (* The formal's collection type [f_ty] is the name of the *)
+               (* collection that the effective argument is expected to  *)
+               (* be a carrier of. Then one must unify the effective     *)
+               (* expression's type with a "carrier" of the formal       *)
+               (* collection.                                            *)
+               let repr_of_formal =
+                 Types.type_rep_species
+                   ~species_module: (fst f_ty) ~species_name: (snd f_ty) in
+               (* We must apply the already seen substitutions to this type  *)
+               (* to ensure that it is tansformed if required to collections *)
+               (* of possible previous "is" parameters. For instance, let's  *)
+               (* take the following code:                                   *)
+               (*    species Me (Naturals is Intmodel, n in Naturals) = ...  *)
+               (*    collection ConcreteInt implements Intmodel ;;           *)
+               (*    collection Foo implements Me                            *)
+               (*      (ConcreteInt, ConcreteInt!un) ;;                      *)
+               (* While typechecking the ConcreteInt!un, we get a type       *)
+               (* Naturals. but since in the Foo collection, Naturals is     *)
+               (* instanciated by the effective ConcreteInt, Naturals        *)
+               (* appears to be incompatible with ConcreteInt. However, in   *)
+               (* Foo, with the first instanciation, we said that Naturals   *)
+               (* IS A ConcreteInt, and we substituted everywhere Naturals   *)
+               (* by ConcreteInt. So idem must we do in the type infered for *)
+               (* the effective argument ConcreteInt!un.                     *)
+               let substed_repr_of_formal =
+                 apply_substitutions_reversed_list_on_type
+                   accu_substs repr_of_formal in
+               let param_type_for_ast =
+                 Types.unify
+                   ~loc: e_param.Parsetree.ast_loc
+                   ~self_manifest: ctx.self_manifest substed_repr_of_formal
+                   expr_ty in
+               (* Record the type in the AST node. *)
+               e_param.Parsetree.ast_type <-
+                 Parsetree.ANTI_type param_type_for_ast ;
+               (* And now, the new methods where x <- e (in Virgile's thesis) *)
+               (* i.e. here, [f_name] <- [e_param_expr].                      *)
+               let substd_meths =
+                 List.map
+                   (SubstExpr.subst_species_field
+                      ~param_unit: (fst f_ty)
+                      f_name e_param_expr.Parsetree.ast_desc)
+                   accu_meths in
+               (substd_meths, accu_substs, accu_self_must_be)
+               end)
+           | Env.TypeInformation.SPAR_is ((f_module, f_name), c1_ty, _) ->
+               (begin
+               let c1 = (f_module, f_name) in
+               (* Get the argument species expression signature and methods. *)
+               (* Note that to be well-typed this expression must ONLY be    *)
+               (* an [E_constr] (because species names are capitalized,      *)
+               (* parsed as sum type constructors) that should be considered *)
+               (* as a species name. C.f. Virgile Prevosto's Phd, section    *)
+               (* 3.8, page 43.                                              *)
+               (* Rule [COLL-INST].                                          *)
+               match typecheck_expr_as_species_parameter_argument
+                    ctx env e_param_expr with
+                | TSPA_non_self ((c2_mod_name, c2_species_name),
+                                 expr_sp_description) ->
+                    let substd_c1_ty =
+                      apply_substitutions_reversed_list_on_fields
+                        ~current_unit: ctx.current_unit c1_ty accu_substs in
+                    (* The c2 of Virgile's Phd. *)
+                    let c2 = (c2_mod_name, c2_species_name) in
+                    (* Record the type in the AST node. *)
+                    let param_type_for_ast =
+                      Types.type_rep_species
+                        ~species_module: c2_mod_name
+                        ~species_name: c2_species_name in
+                    e_param.Parsetree.ast_type <-
+                      Parsetree.ANTI_type param_type_for_ast ;
+                    (* Proceed to abstraction and signature compatibility. *)
+                    let big_A_i1_c2 =
+                      abstraction
+                        ~current_unit: ctx.current_unit c2 substd_c1_ty in
+                    (* Ensure that i2 <= A(i1, c2). *)
+                    is_sub_species_of
+                      ~loc: e_param.Parsetree.ast_loc ctx
+                      ~name_should_be_sub_spe: c2
+                      expr_sp_description.Env.TypeInformation.spe_sig_methods
+                      ~name_should_be_over_spe: c1
+                      big_A_i1_c2 ;
+                    (* And now, the new methods where c1 <- c2. *)
+                    let substd_meths =
+                      List.map
+                        (SubstColl.subst_species_field
+                           ~current_unit: ctx.current_unit
+                           (SubstColl.SRCK_coll c1) (Types.SBRCK_coll c2))
+                        accu_meths in
+                    let new_substs =
+                      (c1, (Types.SBRCK_coll c2)) :: accu_substs in
+                    (substd_meths, new_substs, accu_self_must_be)
+                | TSPA_self ->
+                    (* Record the type in the AST node. *)
+                    let param_type_for_ast = Types.type_self () in
+                    e_param.Parsetree.ast_type <-
+                      Parsetree.ANTI_type param_type_for_ast ;
+                    (* No abstraction to do: this would be replacing Self by *)
+                    (* itself ! Moreover, since we don't know yet the set of *)
+                    (* methods Self will have, we delay the signature        *)
+                    (* compatibility to later, reminding that Self is        *)
+                    (* expected to have at least [c1]'s methods.             *)
+                    let new_self_must_be = c1 :: accu_self_must_be in
+                    (* And now, the new methods where c1 <- c2. *)
+                    let substd_meths =
+                      List.map
+                        (SubstColl.subst_species_field
+                           ~current_unit: ctx.current_unit
+                           (SubstColl.SRCK_coll c1) Types.SBRCK_self)
+                        accu_meths in
+                    let new_substs = (c1, Types.SBRCK_self) :: accu_substs in
+                    (substd_meths, new_substs, new_self_must_be)
+               end)
           end) in
-      rec_apply
-        new_meths new_accu_substs new_accu_self_must_be
-        (rem_f_params, rem_e_params)
+        rec_apply
+          new_meths new_accu_substs new_accu_self_must_be
+          (rem_f_params, rem_e_params)
     | (rem_formals, _) ->
-      (begin
+        (begin
         let rem_formals_len = List.length rem_formals in
         (* To be able to tell "... is applied to too many/to few arguments". *)
         let msg = (if rem_formals_len = 0 then "many" else "few") in
         raise (Parameterized_species_arity_mismatch msg)
-       end) in
+        end) in
   (* Do the job now. *)
   rec_apply
     base_spe_descr.Env.TypeInformation.spe_sig_methods
