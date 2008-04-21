@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.12 2008-04-17 13:18:16 bartlett Exp $
+# $Id: Makefile,v 1.13 2008-04-21 11:51:18 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file
@@ -38,7 +38,7 @@ doc:: $(BYTOBJS)
 
 clean::
 	$(RM) *~ *.cm* log *.fo $(FOCMLS) $(FOCVS) $(FOCVOS) $(EXTERNALOBJS)
-	$(RM) odoc/*
+	$(RM) *.mangled odoc/*
 
 depend:
 	$(CAMLDEP) *.mli *.ml > ./.depend

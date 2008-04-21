@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.38 2008-04-15 15:06:48 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.39 2008-04-21 11:51:18 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1142,7 +1142,8 @@ let apply_generator_to_parameters ctx env collection_body_params
                     (* information.                                          *)
                     if effective_fname = current_unit then
                       (formal,
-                       CEA_collection_name_for_is (Parsetree.Vname effective_vname))
+                       CEA_collection_name_for_is
+                         (Parsetree.Vname effective_vname))
                     else
                       (formal,
                        CEA_collection_name_for_is
@@ -1326,8 +1327,8 @@ let print_implemented_species_as_ocaml_module ~current_unit out_fmter
 
     {b Rem} : Exported outside this module.                              *)
 (* ********************************************************************* *)
-let collection_compile env ~current_unit out_fmter collection_def collection_descr
-    dep_graph =
+let collection_compile env ~current_unit out_fmter collection_def
+    collection_descr dep_graph =
   let collection_name = collection_def.Parsetree.ast_desc.Parsetree.cd_name in
   (* Just a bit of debug. *)
   if Configuration.get_verbose () then

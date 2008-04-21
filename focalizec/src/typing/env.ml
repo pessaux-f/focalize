@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.73 2008-04-11 11:03:18 pessaux Exp $ *)
+(* $Id: env.ml,v 1.74 2008-04-21 11:51:18 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -686,6 +686,23 @@ end
 (* *********************************************************************** *)
 (* *********************************************************************** *)
 module CoqGenInformation = struct
+  type collection_generator_info = {
+    (** The list of species parameters names and kinds the species whose
+        collection generator belongs to has. This list is positionnal, i.e.
+        that the first name of the list is the name of the first species
+        parameter and so on. *)
+    cgi_implemented_species_params_names :
+      (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
+    (** The list mapping for each parameter name, the set of methods the
+        collection generator depends on, hence must be provided an instance
+        to be used. Note that the list is not guaranted to be ordered
+        according to the order of the species parameters names (that's why
+        we have the information about this order given in
+        [species_binding_info]). *)
+    cgi_generator_parameters :
+      (Parsetree.vname * Parsetree_utils.DepNameSet.t) list
+  }
+
   (** In Coq generation environment ALL the sum types value constructors are
       entered in the environment because we always need to know their number
       of extra leading "_" due to polymorphics. If the constructor does not
@@ -713,7 +730,11 @@ module CoqGenInformation = struct
         of methods from ourselves abstracted by lambda-lifting. *)
     }
 
-  type species_binding_info = method_info list
+  type species_binding_info =
+    (** Optionnal because species that are non fully defined do not have
+        any collection generator although they are entered in the
+        environment. *)
+    (method_info list * (collection_generator_info option))
 
   (** The number of extra argument the identifier has due to its
       polymorphism. [Unsure] Certainement useless maintenant. *)
@@ -1662,7 +1683,7 @@ module CoqGenEMAccess = struct
       List.map
         (fun { CoqGenInformation. mi_name = field_name } ->
           (field_name, (BO_absolute 0)))
-        spec_info in
+        (fst spec_info) in
     { constructors = []; labels = []; types = []; values = values_bucket;
       species = [] }
 

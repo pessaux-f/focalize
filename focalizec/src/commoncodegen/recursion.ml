@@ -1,10 +1,10 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*            William Bartlett                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
-(*            William Bartlett                                         *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.ml,v 1.3 2008-04-10 14:26:37 bartlett Exp $ *)
+(* $Id: recursion.ml,v 1.4 2008-04-21 11:51:18 pessaux Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function definitions.
@@ -20,9 +20,9 @@
   the generation of proof obligations.
  *)
 
-exception NestedRecursiveCalls of Parsetree.vname * Location.t
-exception PartialRecursiveCall of Parsetree.vname * Location.t
-exception MutualRecursion
+exception NestedRecursiveCalls of Parsetree.vname * Location.t ;;
+exception PartialRecursiveCall of Parsetree.vname * Location.t ;;
+exception MutualRecursion ;;
 
 (**
   Useful for storing bindings that were made between one point of a program

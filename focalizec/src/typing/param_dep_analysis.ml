@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.10 2008-04-05 18:48:16 weis Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.11 2008-04-21 11:51:18 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -97,8 +97,8 @@ let param_deps_ident ~current_species param_coll_name local_idents ident =
 (** {b Descr} : Basically really does the job of [param_deps_expr] but
       has the extra parameter [start_local_idents] allowing to start
       with a non-empty list of identifiers considered as local.
-      This is needed for [__param_deps_logical_expr] that needs to call ourselves
-      with its already accumulated list of local identifiers.
+      This is needed for [__param_deps_logical_expr] that needs to call
+      ourselves with its already accumulated list of local identifiers.
       However, outside this module, the exported function [param_deps_expr]
       does not have any local identifier list as parameter because it
       must never be called in a context where there would already exists
@@ -189,8 +189,8 @@ let rec __param_deps_expr ~current_species param_coll_name start_local_idents
 
 
 
-and __param_deps_logical_expr ~current_species param_coll_name start_local_idents
-    proposition =
+and __param_deps_logical_expr ~current_species param_coll_name
+    start_local_idents proposition =
   let rec rec_deps local_idents logical_expr =
     match logical_expr.Parsetree.ast_desc with
      | Parsetree.Pr_forall (vnames, _, logical_expr')
@@ -207,7 +207,8 @@ and __param_deps_logical_expr ~current_species param_coll_name start_local_ident
      | Parsetree.Pr_not logical_expr' -> rec_deps local_idents logical_expr'
      | Parsetree.Pr_expr expr ->
          __param_deps_expr ~current_species param_coll_name local_idents expr
-     | Parsetree.Pr_paren logical_expr' -> rec_deps local_idents logical_expr' in
+     | Parsetree.Pr_paren logical_expr' ->
+	 rec_deps local_idents logical_expr' in
   (* **************** *)
   (* Now, do the job. *)
   rec_deps start_local_idents proposition

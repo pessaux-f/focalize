@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.9 2008-04-05 18:52:44 weis Exp $ *)
+(* $Id: abstractions.ml,v 1.10 2008-04-21 11:51:18 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -152,7 +152,9 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
 type abstraction_info = {
   ai_used_species_parameter_tys : Parsetree.vname list ;
   ai_dependencies_from_params :
-    (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ;
+    (Parsetree.vname *                 (** The species parameter name. *)
+     Parsetree_utils.DepNameSet.t)     (** The set of methods we depend on. *)
+  list ;
   ai_min_coq_env : MinEnv.min_coq_env_element list
 } ;;
 

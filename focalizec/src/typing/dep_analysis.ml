@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.35 2008-04-05 18:48:15 weis Exp $ *)
+(* $Id: dep_analysis.ml,v 1.36 2008-04-21 11:51:18 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -292,8 +292,10 @@ let hyp_decl_dependencies ~current_species hyp =
    | Parsetree.H_variable (_, _) ->
        (* No decl-dependency from type expressions. *)
        Parsetree_utils.DepNameSet.empty
-   | Parsetree.H_hypothesis (_, prop) -> prop_decl_dependencies ~current_species prop
-   | Parsetree.H_notation (_, expr) -> expr_decl_dependencies ~current_species expr
+   | Parsetree.H_hypothesis (_, prop) ->
+       prop_decl_dependencies ~current_species prop
+   | Parsetree.H_notation (_, expr) ->
+       expr_decl_dependencies ~current_species expr
 ;;
 
 

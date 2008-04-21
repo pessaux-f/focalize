@@ -2,6 +2,9 @@ Nom du record d'une espèce : le nom de l'espèce.
 
 Nom de paramètre d'espèce : "__p" + le nom de ce paramètre.
 
+Nom de paramètre d'entité: directement le nom du paramètre. Ceci donne*
+d'ailleurs lieu à une "Variable" Coq directement de ce nom.
+
 Nom de type d'espèce : le nom de l'espèce + "_T".
 
 Nom de type : le nom du type + "__t".

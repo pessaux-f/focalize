@@ -132,6 +132,13 @@ module MlGenInformation :
 
 module CoqGenInformation :
   sig
+    type collection_generator_info = {
+      cgi_implemented_species_params_names :
+	(Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
+      cgi_generator_parameters :
+	(Parsetree.vname * Parsetree_utils.DepNameSet.t) list
+    }
+
     type constructor_mapping_info = {
       cmi_num_polymorphics_extra_args : int ;
       cmi_external_expr : Parsetree.external_expr_desc option
@@ -146,7 +153,9 @@ module CoqGenInformation :
       mi_abstracted_methods : Parsetree.vname list
     }
 
-    type species_binding_info = method_info list
+    type species_binding_info =
+      (method_info list * (collection_generator_info option))
+
     type value_mapping_info = int
   end
 
