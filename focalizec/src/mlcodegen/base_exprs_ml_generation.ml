@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.24 2008-04-15 15:06:48 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.25 2008-04-23 13:19:28 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -88,7 +88,9 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
        (* a "in"-parameter of the species, we use the same reasoning    *)
        (* that in [param_dep_analysis.ml]. Check justification over     *)
        (* there ! *)
-       if (List.mem vname ctx.Context.rcc_species_parameters_names) &&
+       if (List.exists
+             (fun (vn, _) -> vn = vname)
+             ctx.Context.rcc_species_parameters_names) &&
          (not (List.mem vname local_idents)) then
          (begin
          (* In fact, a species "in"-parameter. This parameter was of the *)
@@ -158,8 +160,9 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                  (* Method call from a species that is not the current but  *)
                  (* is implicitely in the current compilation unit. May be  *)
                  (* either a paramater or a toplevel defined collection.    *)
-                 if List.mem
-                     coll_name ctx.Context.rcc_species_parameters_names then
+                 if List.exists
+                     (fun (vn, _) -> vn = coll_name)
+                     ctx.Context.rcc_species_parameters_names then
                    (begin
                    (* It comes from a parameter. To retrieve the related *)
                    (* method name we build it the same way we built it   *)
@@ -195,8 +198,9 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                    (* compilation unit : the call is performed to a method    *)
                    (* a species that is EXPLICITELY in the current            *)
                    (* compilation unit.                                       *)
-                   if List.mem
-                       coll_name ctx.Context.rcc_species_parameters_names then
+                   if List.exists
+                       (fun (vn, _) -> vn = coll_name)
+                       ctx.Context.rcc_species_parameters_names then
                      (begin
                      let prefix =
                        "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^

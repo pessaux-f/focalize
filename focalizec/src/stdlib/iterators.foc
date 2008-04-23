@@ -88,7 +88,7 @@ end ;;
  *)
 
 species Iteration (Nat is Enumeration_system, S is basics#Basic_object,
-                   F is Function_t_t_t (S), f in F, zero in S) =
+                   F_binary is Function_t_t_t (S), fct in F_binary, zero in S) =
    rep = basics#unit ;
 (* [Unsure] Temporary to test collection generators until we have recursion. *)
 (*
@@ -100,7 +100,7 @@ let iterate (x in S, n in Nat) in S =
    if Nat!equal (n, Nat!start) then zero
    else
      let foo = Nat!predecessor (n) in
-     F!f (x, x) ;
+     F_binary!f (x, x) ;
 end ;;
 
 

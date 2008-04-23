@@ -50,24 +50,24 @@ type rec_type_poly ('a) =
 type foc_diag ('a) =
   internal alias ('a * 'a)
   external
-  | caml -> "('a * 'a)"
-  | coq -> "{ fst : 'a ; snd : 'a }"
+  | caml -> {* ('a * 'a) *}
+  | coq -> {* { fst : 'a ; snd : 'a } *}
 ;;
 
 (* An external record type. *)
 type foc_record ('a) =
   internal  { hcode = int ; contents = 'a }
   external
-  | caml -> "'a Ok__baby_toy_externals.bbt_record"
-  | coq -> "Focq.foc_record ['a]"
+  | caml -> {* 'a Ok__baby_toy_externals.bbt_record *}
+  | coq -> {* Focq.foc_record ['a] *}
 
   and hcode =
-  | caml -> "Ok__baby_toy_externals.bbt_hashing_code"
-  | coq -> "Focq.hc"
+  | caml -> {* Ok__baby_toy_externals.bbt_hashing_code *}
+  | coq -> {* Focq.hc *}
 
   and contents =
-  | caml -> "Ok__baby_toy_externals.bbt_contents"
-  | coq -> "Focq.conts"
+  | caml -> {* Ok__baby_toy_externals.bbt_contents *}
+  | coq -> {* Focq.conts *}
 ;;
 let junk = { hcode = 42 ; contents = "Same same..." } ;;
 if true then junk else { hcode = 43 ; contents = "Not same..." } ;;

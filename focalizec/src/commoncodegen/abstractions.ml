@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.10 2008-04-21 11:51:18 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.11 2008-04-23 13:19:28 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -30,15 +30,16 @@ type field_body_kind =
 
 
 
-(* ************************************************************************ *)
-(* current_unit: Types.fname ->                                             *)
-(*   current_species: Parsetree.qualified_species ->                        *)
-(*     Parsetree.vname list -> Dep_analysis.name_node list ->               *)
-(*       Parsetree.vname -> field_body_kind -> Types.simple_types           *)
-(*         ((Parsetree.vname list) *                                        *)
-(*          (Parsetree.vname * Parsetree_utils.DepNameSet.t) list *         *)
-(*          (Dep_analysis.name_node * Dep_analysis.dependency_kind) list *  *)
-(*          (Dep_analysis.name_node * Dep_analysis.dependency_kind) list)   *)
+(* ************************************************************************* *)
+(* current_unit: Types.fname ->                                              *)
+(*   current_species: Parsetree.qualified_species ->                         *)
+(*     (Parsetree.vname * Context.species_param_kind) list ->                *)
+(*       Dep_analysis.name_node list ->                                      *)
+(*       Parsetree.vname -> field_body_kind -> Types.simple_types            *)
+(*           ((Parsetree.vname list) *                                       *)
+(*            (Parsetree.vname * Parsetree_utils.DepNameSet.t) list *        *)
+(*            (Dep_analysis.name_node * Dep_analysis.dependency_kind) list * *)
+(*            (Dep_analysis.name_node * Dep_analysis.dependency_kind) list)  *)
 (** {b Descr} : Pre-process a field before its compilation to OCaml. We
         compute here the information related to the extra parameters
         a method will have by lambda-lifting due to the species parameters
@@ -46,8 +47,8 @@ type field_body_kind =
         We extract the methods we decl-depend on,the methods we def-depend
         on, the methods of the species parameters we depend on.
 
-    {b Rem} : Exported oustide this module.                                 *)
-(* ************************************************************************ *)
+    {b Rem} : Exported oustide this module.                                  *)
+(* ************************************************************************* *)
 let compute_lambda_liftings_for_field ~current_unit ~current_species
      species_parameters_names dependency_graph_nodes name body my_type =
   (* Get all the methods we directly decl-depend on. They will   *)
@@ -75,7 +76,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
   (* coming from [A] are first, then come those from [B].               *)
   let dependencies_from_params =
     List.fold_right
-      (fun species_param_name accu ->
+      (fun (species_param_name, species_param_kind) accu ->
         let meths_from_param =
           (match body with
            | FBK_expr e ->
@@ -86,7 +87,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
                  ~current_species species_param_name p) in
         (* Return a couple binding the species parameter's name with the *)
         (* methods of it we found as required for the current method.    *)
-        (species_param_name, meths_from_param) :: accu)
+        (species_param_name, species_param_kind, meths_from_param) :: accu)
       species_parameters_names
       [] in
   (* By side effect, we remind the species types appearing in our type. *)
@@ -96,7 +97,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
   (* By side effect, we remind the species types appearing  *)
   (* in the species parameters methods' types we depend on. *)
   List.iter
-    (fun (_, meths) ->
+    (fun (_, _, meths) ->
       Parsetree_utils.DepNameSet.iter
         (fun (_, meth_ty) ->
           let st_set = Types.get_species_types_in_type meth_ty in
@@ -133,7 +134,9 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
   (* types of the methods comming from the species parameters that *)
   (* the current field uses. This information is required for Coq  *)
   (* since they will lead to extra args of type "Set".             *)
-  let species_param_names = List.map fst dependencies_from_params in
+(* [Unsure] Ne garder seulement les paramètres en "is" ? *)
+  let species_param_names =
+    List.map (fun (x, _, _) -> x) dependencies_from_params in
   let used_species_parameter_tys =
     List.filter
       (fun species_param_name ->
@@ -152,7 +155,8 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
 type abstraction_info = {
   ai_used_species_parameter_tys : Parsetree.vname list ;
   ai_dependencies_from_params :
-    (Parsetree.vname *                 (** The species parameter name. *)
+    (Parsetree.vname *                    (** The species parameter's name. *)
+     Parsetree_utils.species_param_kind * (** The species parameter's kind. *)
      Parsetree_utils.DepNameSet.t)     (** The set of methods we depend on. *)
   list ;
   ai_min_coq_env : MinEnv.min_coq_env_element list

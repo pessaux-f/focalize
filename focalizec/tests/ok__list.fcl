@@ -15,27 +15,32 @@ open "basics" ;;
 let print_bool =
    internal bool -> string
    external
-   | caml -> "string_of_bool"
+   | caml -> {* string_of_bool *}
+   | coq -> {* (* [Unsure] *) *}
 ;;
 let ext_nil =
    internal list ('a)
    external
-   | caml -> "[]"
+   | caml -> {* [] *}
+   | coq -> {* (* [Unsure] *) *}
 ;;
 let ext_cons =
    internal 'a -> list ('a) -> basics#list ('a)
    external
-   | caml -> "(fun e l -> e :: l)"
+   | caml -> {* (fun e l -> e :: l) *}
+   | coq -> {* (* [Unsure] *) *}
 ;;
 let ext_head =
   internal list ('a) -> 'a
   external
-  | caml -> "List.hd"
+  | caml -> {* List.hd *}
+  | coq -> {* (* [Unsure] *) *}
 ;;
 let ext_tail =
   internal list ('a) -> list ('a)
   external
-  | caml -> "List.tl"
+  | caml -> {* List.tl *}
+  | coq -> {* (* [Unsure] *) *}
 ;;
 
 

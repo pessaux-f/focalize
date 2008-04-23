@@ -118,7 +118,8 @@ module MlGenInformation :
     type method_info = {
       mi_name : Parsetree.vname ;
       mi_dependencies_from_parameters :
-        (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ;
+        (Parsetree.vname * Parsetree_utils.species_param_kind *
+         Parsetree_utils.DepNameSet.t) list ;
       mi_abstracted_methods : Parsetree.vname list
     }
 
@@ -134,9 +135,9 @@ module CoqGenInformation :
   sig
     type collection_generator_info = {
       cgi_implemented_species_params_names :
-	(Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
+        (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
       cgi_generator_parameters :
-	(Parsetree.vname * Parsetree_utils.DepNameSet.t) list
+        (Parsetree.vname * Parsetree_utils.DepNameSet.t) list
     }
 
     type constructor_mapping_info = {
@@ -149,7 +150,8 @@ module CoqGenInformation :
     type method_info = {
       mi_name : Parsetree.vname ;
       mi_dependencies_from_parameters :
-        (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ;
+        (Parsetree.vname * Parsetree_utils.species_param_kind *
+         Parsetree_utils.DepNameSet.t) list ;
       mi_abstracted_methods : Parsetree.vname list
     }
 

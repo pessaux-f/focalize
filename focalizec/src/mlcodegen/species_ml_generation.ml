@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.39 2008-04-21 11:51:18 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.40 2008-04-23 13:19:28 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -291,10 +291,14 @@ type compiled_field_memory = {
       method depends on. By lambda-lifting, these methods induce extra
       parameters named as "_p_" +  species parameter name + "_" + called
       method's name we depend on. The first component of each couple is the
-      parameter's name and the second is the set of methods the current
-      method depends on from this species parameter.*)
+      parameter's name and the third is the set of methods the current
+      method depends on from this species parameter. The second component of
+      the tuple indicates if the species parameter is "in" or "is". This is
+      not really used in OCaml code generation. *)
   cfm_dependencies_from_parameters :
-    (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ;
+    (Parsetree.vname * Parsetree_utils.species_param_kind *
+     Parsetree_utils.DepNameSet.t)
+    list ;
   (** The positional list of method names appearing in the minimal Coq typing
       environment. *)
   cfm_coq_min_typ_env_names : Parsetree.vname list
@@ -410,10 +414,12 @@ let make_params_list_from_abstraction_info ai =
   (* First, abstract according to the species's parameters the current  *)
   (* method depends on.                                                 *)
     List.iter
-      (fun (species_param_name, meths_from_param) ->
+      (fun (species_param_name, _, meths_from_param) ->
         (* Each abstracted method will be named like "_p_", followed by *)
         (* the species parameter name, followed by "_", followed by the *)
         (* method's name.                                               *)
+        (* We don't care here about whether the species parameters is   *)
+        (* "in" or "is".                                                *)
         let prefix =
           "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
         Parsetree_utils.DepNameSet.iter
@@ -507,10 +513,12 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
     (* First, abstract according to the species's parameters the current  *)
     (* method depends on.                                                 *)
     List.iter
-      (fun (species_param_name, meths_from_param) ->
+      (fun (species_param_name, _, meths_from_param) ->
         (* Each abstracted method will be named like "_p_", followed by *)
         (* the species parameter name, followed by "_", followed by the *)
         (* method's name.                                               *)
+        (* We don't care here about whether the species parameters is   *)
+        (* "in" or "is".                                                *)
         let prefix =
           "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
         Parsetree_utils.DepNameSet.iter
@@ -660,7 +668,7 @@ let generate_methods ctx env field =
               cfm_from_species = from ;
               cfm_method_name = name ;
               cfm_dependencies_from_parameters =
-              abstraction_info.Abstractions.ai_dependencies_from_params ;
+                abstraction_info.Abstractions.ai_dependencies_from_params ;
               cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
             Some (CSF_let compiled_field)
        end)
@@ -776,9 +784,11 @@ let dump_collection_generator_arguments out_fmter compiled_species_fields =
   (* ************************************************************************ *)
   let rec process_one_field_memory field_memory =
     List.iter
-      (fun (spe_param_name, meths_set) ->
+      (fun (spe_param_name, _, meths_set) ->
         (* Get or create for this species parameter name, the bucket *)
         (* recording all the methods someone depends on.             *)
+        (* We don't care here about whether the species parameters is   *)
+        (* "in" or "is".                                                *)
         let spe_param_bucket =
           (try List.assoc spe_param_name !species_param_names_and_methods
           with Not_found ->
@@ -882,7 +892,9 @@ let generate_collection_generator ctx compiled_species_fields =
     (* according to the same scheme we used at lambda-lifting time:         *)
     (* "_p_" + species parameter name + "_" + called method name.           *)
     List.iter
-      (fun (species_param_name, meths_from_param) ->
+      (fun (species_param_name, _, meths_from_param) ->
+        (* We don't care here about whether the species parameters is   *)
+        (* "in" or "is".                                                *)
         let prefix =
           "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
           "_" in
@@ -993,8 +1005,9 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   let species_parameters_names =
     List.map
       (function
-        | Env.TypeInformation.SPAR_in (n, _) -> n
-        | Env.TypeInformation.SPAR_is ((_, n), _, _) -> Parsetree. Vuident n)
+        | Env.TypeInformation.SPAR_in (n, _) -> (n, Parsetree_utils.SPK_in)
+        | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+            ((Parsetree. Vuident n), Parsetree_utils.SPK_is))
       species_descr.Env.TypeInformation.spe_sig_params in
   (* Create the initial compilation context for this species. *)
   let ctx = {
@@ -1312,10 +1325,10 @@ let print_implemented_species_as_ocaml_module ~current_unit out_fmter
 
 
 
-(* ********************************************************************* *)
-(* current_unit: Types.fname -> Format.formatter -> Env.MlGenEnv.t ->    *)
-(*   Parsetree.collection_def -> Env.TypeInformation.species_description ->    *)
-(*     Dep_analysis.name_node list -> unit                               *)
+(* ************************************************************************ *)
+(* current_unit: Types.fname -> Format.formatter -> Env.MlGenEnv.t ->       *)
+(*   Parsetree.collection_def -> Env.TypeInformation.species_description -> *)
+(*     Dep_analysis.name_node list -> unit                                  *)
 (** {b Descr} : Generate the OCaml code for a collection implementation.
       The compilation model dumps:
        - The record type representing the species actual representation,
@@ -1325,8 +1338,8 @@ let print_implemented_species_as_ocaml_module ~current_unit out_fmter
          via the collection generator application in order to make
          the collection having its own record fields names.
 
-    {b Rem} : Exported outside this module.                              *)
-(* ********************************************************************* *)
+    {b Rem} : Exported outside this module.                                 *)
+(* ************************************************************************ *)
 let collection_compile env ~current_unit out_fmter collection_def
     collection_descr dep_graph =
   let collection_name = collection_def.Parsetree.ast_desc.Parsetree.cd_name in
@@ -1395,11 +1408,13 @@ let collection_compile env ~current_unit out_fmter collection_def
          (* expressions effectively applied.              *)
          let collection_body_params =
            get_implements_effectives
-             collection_def.Parsetree.ast_desc.Parsetree.cd_body.Parsetree.ast_desc.
-               Parsetree.se_params
+             collection_def.Parsetree.ast_desc.
+               Parsetree.cd_body.Parsetree.ast_desc.
+             Parsetree.se_params
              params_info.Env.MlGenInformation.
                cgi_implemented_species_params_names in
-         apply_generator_to_parameters ctx env collection_body_params params_info) ;
+         apply_generator_to_parameters
+           ctx env collection_body_params params_info) ;
     Format.fprintf out_fmter "@ in@]@\n" ;
     (* And now, create the final value representing the effective instance *)
     (* of our collection, borrowing each field from the temporary value    *)

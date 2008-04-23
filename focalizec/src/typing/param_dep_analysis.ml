@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.11 2008-04-21 11:51:18 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.12 2008-04-23 13:19:28 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -46,7 +46,7 @@ let param_deps_ident ~current_species param_coll_name local_idents ident =
      | Parsetree.ANTI_type t -> t) in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local n ->
-       (* Be careful. Because "is" parameters smell like regular local *)
+       (* Be careful. Because "in" parameters smell like regular local *)
        (* identifiers, we must check here if the current identifier is *)
        (* in fact a "in-parameter" of the species. To check this, one  *)
        (* must be careful to possible masking that could exist if a    *)
@@ -208,7 +208,7 @@ and __param_deps_logical_expr ~current_species param_coll_name
      | Parsetree.Pr_expr expr ->
          __param_deps_expr ~current_species param_coll_name local_idents expr
      | Parsetree.Pr_paren logical_expr' ->
-	 rec_deps local_idents logical_expr' in
+         rec_deps local_idents logical_expr' in
   (* **************** *)
   (* Now, do the job. *)
   rec_deps start_local_idents proposition

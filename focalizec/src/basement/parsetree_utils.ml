@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.9 2008-01-25 15:21:10 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.10 2008-04-23 13:19:28 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -169,3 +169,8 @@ let type_coll_from_qualified_species (species_modname, species_vname) =
   (species_modname, (name_of_vname species_vname))
 ;;
 
+
+type species_param_kind =
+  | SPK_in       (** Parameter is an entity parameter ("in"). *)
+  | SPK_is       (** Parameter is a collection parameter ("is"). *)
+;;

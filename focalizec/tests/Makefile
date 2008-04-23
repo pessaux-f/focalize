@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2008-03-25 13:21:44 weis Exp $
+# $Id: Makefile,v 1.12 2008-04-23 13:19:28 pessaux Exp $
 
 OK_TEST_FILES = \
  ok__baby_toy.foc \
@@ -30,7 +30,7 @@ ok_all: $(OK_TEST_FILES)
 	ocamlc -w a -c ok__baby_toy_externals.ml
 	for i in $(OK_TEST_FILES:.foc=.ml); do \
 	  echo "OCamllizing $$i"; \
-	  ocamlc -w a -I ../lib/ -I . ../lib/focvasives.cmo ../lib/basics.cmo $$i -o $$i.out; \
+	  ocamlc -w a -I ../lib/ -I . ../lib/ml_builtins.cmo ../lib/basics.cmo $$i -o $$i.out; \
 	done
 
 ko_all: $(KO_TEST_FILES)

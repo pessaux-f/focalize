@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.31 2008-04-15 15:06:48 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.32 2008-04-23 13:19:28 pessaux Exp $ *)
 
 
 
@@ -77,7 +77,9 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ~in_hyp ident =
        (* a "in"-parameter of the species, we use the same reasoning    *)
        (* that in [param_dep_analysis.ml]. Check justification over     *)
        (* there ! *)
-       if (List.mem vname ctx.Context.scc_species_parameters_names) &&
+       if (List.exists
+             (fun (vn, _) -> vn = vname)
+             ctx.Context.scc_species_parameters_names) &&
          (not (List.mem vname local_idents)) then
          (begin
          (* In fact, a species "in"-parameter. This parameter was of the *)
@@ -156,8 +158,9 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ~in_hyp ident =
                  (* Method call from a species that is not the current but  *)
                  (* is implicitely in the current compilation unit. May be  *)
                  (* either a paramater or a toplevel defined collection.    *)
-                 if List.mem
-                     coll_name ctx.Context.scc_species_parameters_names then
+                 if List.exists
+                     (fun (vn, _) -> vn = coll_name)
+                     ctx.Context.scc_species_parameters_names then
                    (begin
                    (* It comes from a parameter. To retrieve the related *)
                    (* method name we build it the same way we built it   *)
@@ -200,8 +203,8 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ~in_hyp ident =
                    (* compilation unit : the call is performed to a method    *)
                    (* a species that is EXPLICITELY in the current            *)
                    (* compilation unit.                                       *)
-                   if List.mem
-                       coll_name
+                   if List.exists
+                       (fun (vn, _) -> vn = coll_name)
                        ctx.Context.scc_species_parameters_names then
                      (begin
                      (* If we are in an Hypothesis or a Theorem, then the  *)
@@ -940,9 +943,11 @@ let generate_record_type_parameters ctx species_fields =
             (* we want to have the extra parameters due to lambda-lifting   *)
             (* in the Coq record type ordered such as those coming from [A] *)
             (* are first, then come those from [B].                         *)
+            (* We don't care here about whether the species parameters is   *)
+            (* "in" or "is".                                                *)
             let dependencies_from_params =
               List.fold_right
-                (fun species_param_name accu ->
+                (fun (species_param_name, _) accu ->
                   let meths_from_param =
                     Param_dep_analysis.param_deps_logical_expr
                       ~current_species: ctx.Context.scc_current_species
@@ -1068,7 +1073,7 @@ let generate_record_type ctx env species_descr =
             Format.fprintf out_fmter "(* From species %a. *)@\n"
               Sourcify.pp_qualified_species from ;
             (* Field is prefixed by the species name for sake of unicity. *)
-            Format.fprintf out_fmter "%s_%a : %a"
+            Format.fprintf out_fmter "@[<2>%s_%a : %a"
               my_species_name
               Parsetree_utils.pp_vname_with_operators_expanded n
               (Types.pp_type_simple_to_coq
