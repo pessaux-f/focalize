@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: coq_builtins.v,v 1.2 2008-04-14 16:07:32 pessaux Exp $ *)
+(* $Id: coq_builtins.v,v 1.3 2008-04-23 14:54:07 pessaux Exp $ *)
 
 
 Require Export ZArith.
@@ -22,6 +22,9 @@ Set Implicit Arguments.  (* [Unsure] Je ne comprends pas ce que ça fait. *)
 Unset Strict Implicit.   (* [Unsure] Je ne comprends pas ce que ça fait. *)
 Let dec_to_bool (A : Prop) (dec : {A} + {~ A}) :=
   if dec return bool then true else false.
+
+Ltac prove_term_obl term_obl :=
+  intuition.
 
 (* "bi" for "built-in". Don't search anymore... *)
 Inductive bi__unit : Set :=

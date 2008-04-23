@@ -1,10 +1,10 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*            William Bartlett                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
-(*            William Bartlett                                         *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.mli,v 1.2 2008-04-10 12:31:41 bartlett Exp $ *)
+(* $Id: recursion.mli,v 1.3 2008-04-23 14:54:07 pessaux Exp $ *)
 
 exception NestedRecursiveCalls of Parsetree.vname * Location.t
 exception PartialRecursiveCall of Parsetree.vname * Location.t
@@ -20,8 +20,8 @@ exception MutualRecursion
 
 type binding =
   | B_let of Parsetree.binding
-  | B_match of Parsetree.expr * Parsetree.pattern
-  | B_condition of Parsetree.expr * bool
+  | B_match of (Parsetree.expr * Parsetree.pattern)
+  | B_condition of (Parsetree.expr * bool)
 
 val list_recursive_calls:
   Parsetree.vname ->

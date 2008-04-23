@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.48 2008-04-23 13:19:28 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.49 2008-04-23 14:54:07 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1050,15 +1050,29 @@ let print_types_as_tuple_if_several ~self_as print_ctx out_fmter types =
              print_ctx ~reuse_mapping: true ~self_as) ty ;
         rec_print q ;
         Format.fprintf out_fmter ")@]" in
-  (* Since the printing is done in several iteration, one   *)
-  (* must share the variable-mapping all along. Then get    *)
-  (* one fresh, and we will abandon it once print is done.  *)
-  Types.purge_type_simple_to_coq_variable_mapping () ;
-  rec_print types ;
-  Types.purge_type_simple_to_coq_variable_mapping ()
+  rec_print types
 ;;
 
-  
+ 
+ 
+let generate_termination_proof _ctx _print_ctx _env _name = function
+  | None -> ()
+(*     "Variable self_term_order_%a"
+     "Variable self_term_obl_%a" *)
+  | Some _termination_proof -> ()
+     (* Abstraction par lambda *)
+(*     "Definition %a__term_order_%a"
+     "Let self_term_order_%a" *)
+
+     (* Abstraction par Variable *)
+(*     "Section"
+     "Theorem %a__term_obl_%a %a"
+     "End"
+
+     "Let self_term_obl_%a " *)
+;;
+
+
 
 let generate_recursive_let_definition ctx print_ctx env l =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -1073,7 +1087,8 @@ let generate_recursive_let_definition ctx print_ctx env l =
         | Parsetree.BB_logical _ ->
             (* [Unsure] *)
             failwith "recursive logical : TODO"
-        | Parsetree.BB_computational _ ->
+        | Parsetree.BB_computational body_expr ->
+            let species_name = snd (ctx.Context.scc_current_species) in
             (* Extend the context with the mapping between these *)
             (* recursive functions and their extra arguments.    *)
             let ctx' = {
@@ -1096,31 +1111,67 @@ let generate_recursive_let_definition ctx print_ctx env l =
             (* the same type. This type is a tuple if the method hase several *)
             (* arguments.                                                     *)
             Format.fprintf out_fmter
-              "@\n@\n(* A fake termination order. *)@\n" ;
-            Format.fprintf out_fmter
-              "@[<2>Let __term_order@ (rec_arg@ ini_arg :@ " ;
-            let (params_with_type, _, _) =
+              "@\n@\n(* Abstracted termination order. *)@\n" ;
+            Format.fprintf out_fmter "@[<2>Variable __term_order@ :@ " ;
+            let (params_with_type, return_ty_opt, _) =
               MiscHelpers.bind_parameters_to_types_from_type_scheme
                 (Some scheme) params in
+            let return_ty =
+              match return_ty_opt with None -> assert false | Some t -> t in
+            (*  *)
+            Types.purge_type_simple_to_coq_variable_mapping () ;
             (* Print the tuple that is the method's arguments' types. *)
-            print_types_as_tuple_if_several
-              ~self_as: how_to_print_Self new_print_ctx out_fmter
-              params_with_type ;
-            (* [Unsure] We use the magic order. *)
-            Format.fprintf out_fmter
-              ")@ :=@ basics.magic_order rec_arg@ ini_arg.@]@\n@\n" ;
+            Format.fprintf out_fmter "%a -> %a -> Prop.@]@\n"
+              (print_types_as_tuple_if_several ~self_as: how_to_print_Self
+                new_print_ctx) params_with_type
+              (print_types_as_tuple_if_several ~self_as: how_to_print_Self
+                new_print_ctx) params_with_type ;
+
             (* We now prove that this order is well-founded. *)
-            Format.fprintf out_fmter "(* Order well-founded admitted. *)@\n" ;
+            Types.purge_type_simple_to_coq_variable_mapping () ;
+            
+            let recursive_calls =
+              Recursion.list_recursive_calls name params [] body_expr in
             Format.fprintf out_fmter
-              "Let __well_founded_term_order : (well_founded \
-              __term_order).@\n" ;
-            (* [Unsure] We use the magic proof. *)
-            Format.fprintf out_fmter "apply basics.magic_prove.@\nQed.@\n" ;
+              "@[<2>Variable __term_obl : (well_founded __term_order) /\\@ " ;
+
+
+
             (* It's now time to generate the lemmas proving  *)
             (* that each recursive call decreases.           *)
             Rec_let_gen.generate_termination_lemmas
-              new_ctx new_print_ctx env name body ;
-            (* Finalyl close the opened "Section". *)
+              new_ctx new_print_ctx env recursive_calls ;
+            Format.fprintf out_fmter ".@]@\n@\n" ;
+            (* Generate the recursive uncurryed function *)
+            Format.fprintf out_fmter
+              "@[<2>Function %a@ (__arg:@ %a)@ \
+              {wf __term_order __arg}:@ %a@ :=@ @[<2>let (%a) :=@ __arg in@]@ "
+              Parsetree_utils.pp_vname_with_operators_expanded name
+              (print_types_as_tuple_if_several ~self_as: how_to_print_Self
+                new_print_ctx) params_with_type
+              (Types.pp_type_simple_to_coq new_print_ctx ~reuse_mapping: true
+                ~self_as: how_to_print_Self) return_ty
+              (Handy.pp_generic_separated_list ","
+                Parsetree_utils.pp_vname_with_operators_expanded) params ;
+            Species_record_type_generation.generate_expr new_ctx
+              ~local_idents: [] ~self_as: how_to_print_Self ~in_hyp: true
+              env body_expr ;
+            Format.fprintf out_fmter ".@]@\n" ;
+            Format.fprintf out_fmter "@[<v 2>Proof.@ %a Qed.@]@\n"
+              (Handy.pp_generic_n_times ((List.length recursive_calls) + 1)
+                Format.fprintf)
+              "coq_builtins.prove_term_obl __term_obl.@ " ;
+
+            (* Generate the curryed version *)
+            Format.fprintf out_fmter "@[Definition %a__%a %a :=@ %a (%a).@]"
+              Parsetree_utils.pp_vname_with_operators_expanded species_name
+              Parsetree_utils.pp_vname_with_operators_expanded name
+              (Handy.pp_generic_separated_list " "
+                Parsetree_utils.pp_vname_with_operators_expanded) params
+              Parsetree_utils.pp_vname_with_operators_expanded name
+              (Handy.pp_generic_separated_list ","
+                Parsetree_utils.pp_vname_with_operators_expanded) params ;
+            (* Finally close the opened "Section". *)
             Format.fprintf out_fmter "End %a.@]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded name ;
             let compiled = {
@@ -1133,9 +1184,7 @@ let generate_recursive_let_definition ctx print_ctx env l =
               cfm_coq_min_typ_env_names = abstracted_methods } in
             CSF_let_rec [compiled]
        end)
-   | _ :: _ ->
-       (* [Unsure] *)
-       failwith "Mutually recursive functions TODO"
+   | _ :: _ -> raise Recursion.MutualRecursion
 ;;
 
 

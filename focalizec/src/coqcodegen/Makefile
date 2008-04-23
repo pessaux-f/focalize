@@ -1,7 +1,7 @@
-# $Id: Makefile,v 1.6 2008-04-17 14:37:09 pessaux Exp $
+# $Id: Makefile,v 1.7 2008-04-23 14:54:07 pessaux Exp $
 
 include ../Makefile.config
-CAML_COMP_FLAGS = -I ../../focc/ -I ../basement -I ../parser -I ../typing \
+CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing \
 	-I ../commoncodegen
 
 BYTOBJS = species_record_type_generation.cmo rec_let_gen.cmo \

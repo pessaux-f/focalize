@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.12 2008-01-07 17:23:51 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.13 2008-04-23 14:54:07 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -84,6 +84,20 @@ let pp_generic_explicit_option printer_fct ppf = function
 let pp_generic_option some_prefix printer_fct ppf = function
   | None -> ()
   | Some data -> Format.fprintf ppf "%s%a" some_prefix printer_fct data
+;;
+
+
+
+(* ********************************************************** *)
+(*  int -> (Format.formatter -> 'a -> unit) ->                *)
+(*    Format.formatter -> 'a -> unit                          *)
+(** {b Descr} : Pretty prints an item thanks to the provided
+        printing function the specified number of times.
+
+    {b Rem} : Exported ouside this module.                    *)
+(* ********************************************************** *)
+let pp_generic_n_times n printer_fct ppf a =
+  for i = 0 to n - 1 do printer_fct ppf a done
 ;;
 
 

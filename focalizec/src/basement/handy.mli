@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.mli,v 1.11 2008-01-07 17:23:51 pessaux Exp $ *)
+(* $Id: handy.mli,v 1.12 2008-04-23 14:54:07 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -26,6 +26,8 @@ val pp_generic_explicit_option :
 val pp_generic_option :
   string -> (Format.formatter -> 'a -> unit) -> Format.formatter ->
     'a option -> unit
+val pp_generic_n_times :
+  int -> (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a -> unit
 
 val int_to_base_26 : int -> string
 val list_intersect_p : 'a list -> 'a list -> bool
