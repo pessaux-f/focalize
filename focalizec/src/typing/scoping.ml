@@ -11,9 +11,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.52 2008-04-15 21:18:33 weis Exp $ *)
+(* $Id: scoping.ml,v 1.53 2008-04-24 13:30:41 pessaux Exp $ *)
 
-open Parsetree
 
 (* *********************************************************************** *)
 (** {b Desc} : Scoping phase is intended to disambiguate identifiers.
@@ -1018,8 +1017,8 @@ and scope_expr ctx env expr =
          (* to look-up inside the values environment.     *)
          let basic_vname =
            (match cstr_ident.Parsetree.ast_desc with
-            | Parsetree.CI (Vname vname)
-            | Parsetree.CI (Qualified (_, vname)) -> vname) in
+            | Parsetree.CI (Parsetree.Vname vname)
+            | Parsetree.CI (Parsetree.Qualified (_, vname)) -> vname) in
          let pseudo_ident =
            let Parsetree.CI qvname =
              cstr_ident.Parsetree.ast_desc in
@@ -1033,7 +1032,8 @@ and scope_expr ctx env expr =
              ~current_unit: ctx.current_unit pseudo_ident env in
          let scoped_cstr = { cstr_ident with
            Parsetree.ast_desc =
-             Parsetree.CI (Qualified (cstr_hosting_info, basic_vname)) } in
+             Parsetree.CI
+               (Parsetree.Qualified (cstr_hosting_info, basic_vname)) } in
          (* Now, scopes the arguments. *)
          let scoped_args = List.map (scope_expr ctx env) args_exprs in
          Parsetree.E_constr (scoped_cstr, scoped_args)
@@ -1132,7 +1132,8 @@ and scope_pattern ctx env pattern =
          (* Reconstruct a completely scopped constructor. *)
          let scoped_cstr =
            { cstr with Parsetree.ast_desc =
-               Parsetree.CI (Qualified (cstr_host_module, cstr_vname)) } in
+               Parsetree.CI
+                (Parsetree.Qualified (cstr_host_module, cstr_vname)) } in
          ((Parsetree.P_constr (scoped_cstr, scoped_pats)), env')
      | Parsetree.P_record labs_n_pats ->
          (* Same remark than in the case of the arguments of [P_app]. *)
@@ -1825,7 +1826,8 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
       let scoped_cstr_expr = {
         cstr_expr with
           Parsetree.ast_desc =
-            Parsetree.CI (Qualified (hosting_file, vname_of_qvname qvname)) } in
+            Parsetree.CI
+              (Parsetree.Qualified (hosting_file, vname_of_qvname qvname)) } in
       { initial_expr with
           Parsetree.ast_desc = Parsetree.E_constr (scoped_cstr_expr, []) }
   | Parsetree.E_paren expr ->
@@ -1841,15 +1843,14 @@ let scope_species_param ctx env param param_kind =
      | Parsetree.SP expr ->
          (begin
          match param_kind with
-          | Env.ScopeInformation.SPK_is ->
+          | MiscHelpers.SPK_is ->
               (* Note that to be well-typed this expression must ONLY be an *)
               (* [E_constr] (because species names are capitalized, parsed  *)
               (* as sum type constructors) that should be considered as a   *)
               (* species name.                                              *)
               Parsetree.SP
         (scope_expr_collection_cstr_for_is_param ctx env expr)
-          | Env.ScopeInformation.SPK_in ->
-              Parsetree.SP (scope_expr ctx env expr)
+          | MiscHelpers.SPK_in -> Parsetree.SP (scope_expr ctx env expr)
          end)) in
   { param with Parsetree.ast_desc = new_desc }
 ;;
@@ -1884,7 +1885,7 @@ let rec scope_species_expr ctx env species_expr =
     match ident_scope_info.Env.ScopeInformation.spbi_scope with
     | Env.ScopeInformation.SPBI_local -> Parsetree.I_local basic_vname
     | Env.ScopeInformation.SPBI_file hosting_file ->
-      Parsetree.I_global (Qualified (hosting_file, basic_vname)) in
+      Parsetree.I_global (Parsetree.Qualified (hosting_file, basic_vname)) in
   let scoped_ident = {
     se_name_ident with Parsetree.ast_desc = scoped_ident_descr } in
   (* Scopes the effective parameters. *)
@@ -1980,7 +1981,8 @@ let scope_species_params_types ctx env params =
               | Env.ScopeInformation.SPBI_local ->
                   Parsetree.I_local basic_vname
               | Env.ScopeInformation.SPBI_file hosting_file ->
-                  Parsetree.I_global (Qualified (hosting_file, basic_vname)) in
+                  Parsetree.I_global
+                    (Parsetree.Qualified (hosting_file, basic_vname)) in
             let scoped_ident = {
               ident with Parsetree.ast_desc = scoped_ident_descr } in
             (* The parameter is a value belonging to a collection. It's *)
@@ -2104,8 +2106,8 @@ let scope_species_def ctx env species_def =
       List.map
         (fun (_, pkind) ->
           match pkind.Parsetree.ast_desc with
-           | Parsetree.SPT_in _ -> Env.ScopeInformation.SPK_in
-           | Parsetree.SPT_is _ -> Env.ScopeInformation.SPK_is)
+           | Parsetree.SPT_in _ -> MiscHelpers.SPK_in
+           | Parsetree.SPT_is _ -> MiscHelpers.SPK_is)
         species_def_descr.Parsetree.sd_params;
     Env.ScopeInformation.spbi_scope =
       Env.ScopeInformation.SPBI_file ctx.current_unit } in

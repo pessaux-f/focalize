@@ -1,7 +1,7 @@
-# $Id: Makefile,v 1.5 2008-04-08 10:01:43 pessaux Exp $
+# $Id: Makefile,v 1.6 2008-04-24 13:30:41 pessaux Exp $
 
 include ../Makefile.config
-CAML_COMP_FLAGS = -I ../../focc/ 
+CAML_COMP_FLAGS =
 
 BYTOBJS = installation.cmo configuration.cmo handy.cmo location.cmo types.cmo \
 	files.cmo parsetree_utils.cmo miscHelpers.cmo

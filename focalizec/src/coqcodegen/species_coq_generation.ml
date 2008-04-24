@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.49 2008-04-23 14:54:07 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.50 2008-04-24 13:30:41 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1728,8 +1728,8 @@ let ctx' = ctx in
     List.map
       (fun (pname, pkind) ->
         match pkind.Parsetree.ast_desc with
-         | Parsetree.SPT_in _ -> (pname, Env.ScopeInformation.SPK_in)
-         | Parsetree.SPT_is _ -> (pname, Env.ScopeInformation.SPK_is))
+         | Parsetree.SPT_in _ -> (pname, MiscHelpers.SPK_in)
+         | Parsetree.SPT_is _ -> (pname, MiscHelpers.SPK_is))
       species_def_desc.Parsetree.sd_params in
   (* Now check if the species supports a collection generator because fully *)
   (* defined and get the information about which arguments to pass in order *)
@@ -1832,14 +1832,12 @@ let collection_compile env ~current_unit out_fmter collection_def
     Context.scc_lambda_lift_params_mapping = [] ;
     Context.scc_out_fmter = out_fmter } in
   (* The record type representing the collection's type. *)
+(* [Unsure] Peut-être même pas utile le record ! *)
   Species_record_type_generation.generate_record_type ctx env collection_descr ;
   (* We do not want any collection generator. Instead, we will call the  *)
   (* collection generator of the collection we implement and apply it to *)
   (* the functions it needs coming from the collection applied to its    *)
   (* parameters if there are some.                                       *)
-  (* We create the bunch of local "Let self_xxx" recovering their body   *)
-  (* from the "implemented" species.                                     *)
-
   (* Now generate the value representing the effective instance of the   *)
   (* collection. We always name it by collection's name +                *)
   (* "_effective_collection".                                            *)
@@ -1853,8 +1851,44 @@ let collection_compile env ~current_unit out_fmter collection_def
     ~current_unit out_fmter implemented_species_name ;
   (* Append the suffix representing the collection generator's name. *)
   Format.fprintf out_fmter "_collection_create" ;
-  (* We will now apply the "implemented" record-maker to the local methods *)
-  (* we just created above ("Let selx_xxx").                               *)
-
+  (* Finally, we must recover the arguments to apply to this collection    *)
+  (* generator. These arguments of course come from the species parameters *)
+  (* the closed species we implement has (if it has some). We must         *)
+  (* make this application WITH THE RIGHT EFFECTIVE FUNCTIONS and IN THE   *)
+  (* RIGHT ORDER !                                                         *)
+  (begin
+  try
+    let (_, opt_params_info) =
+      Env.CoqGenEnv.find_species
+        ~loc: collection_def.Parsetree.ast_loc ~current_unit
+        implemented_species_name env in
+    (match opt_params_info with
+     | None ->
+         (* The species has no collection generator. Hence it is not a   *)
+         (* fully defined species. This should have be prevented before, *)
+         (* by forbidding to make a collection from a non fully defined  *)
+         (* species !                                                    *)
+         assert false   (* [Unsure] car je crois qu'on n'a pas fait la vérif. *)
+     | Some params_info ->
+         (* Get the names of the collections or the value *)
+         (* expressions effectively applied.              *)
+         let _collection_body_params =
+           MiscHelpers.get_implements_effectives
+             collection_def.Parsetree.ast_desc.
+               Parsetree.cd_body.Parsetree.ast_desc.
+             Parsetree.se_params
+             params_info.Env.CoqGenInformation.
+               cgi_implemented_species_params_names in
+	 if true then failwith "STANDBY ...
+         apply_generator_to_parameters
+           ctx env collection_body_params params_info")
+  with Not_found ->
+    (* Don't see why the species could not be present in the environment.  *)
+    (* The only case would be to make a collection from a collection since *)
+    (* collection are never entered in the environment because it's a non  *)
+    (* sense to make a collection "implementing" a collection !            *)
+    (* [Unsure]. Peut être lever un message d'erreur. *)
+    assert false
+  end) ;
   Format.fprintf out_fmter "@].@\n@\n"
 ;;

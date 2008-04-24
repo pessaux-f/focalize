@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.75 2008-04-23 13:19:28 pessaux Exp $ *)
+(* $Id: env.ml,v 1.76 2008-04-24 13:30:41 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -242,11 +242,6 @@ module ScopeInformation = struct
     | SPBI_local
 
 
-  type species_parameter_kind =
-    | SPK_in
-    | SPK_is
-
-
   type species_binding_info = {
     (** The list of *ALL* the method owned, including those added by
         inheritance. Methods from the toplevel ancestor are in head of the
@@ -264,7 +259,7 @@ module ScopeInformation = struct
         capitalized then look like a sum type constructor seen from a
         first-class expression point of view) and looked-up into the species
         field of the scoping environment. *)
-    spbi_params_kind : species_parameter_kind list ;
+    spbi_params_kind : MiscHelpers.species_parameter_kind list ;
     (** The information telling how the species is bound (i.e. "scoped"). *)
     spbi_scope : species_scope
   }
@@ -627,7 +622,7 @@ module MlGenInformation = struct
         that the first name of the list is the name of the first species
         parameter and so on. *)
     cgi_implemented_species_params_names :
-      (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
+      (Parsetree.vname * MiscHelpers.species_parameter_kind) list ;
     (** The list mapping for each parameter name, the set of methods the
         collection generator depends on, hence must be provided an instance
         to be used. Note that the list is not guaranted to be ordered
@@ -693,7 +688,7 @@ module CoqGenInformation = struct
         that the first name of the list is the name of the first species
         parameter and so on. *)
     cgi_implemented_species_params_names :
-      (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
+      (Parsetree.vname * MiscHelpers.species_parameter_kind) list ;
     (** The list mapping for each parameter name, the set of methods the
         collection generator depends on, hence must be provided an instance
         to be used. Note that the list is not guaranted to be ordered

@@ -1,7 +1,7 @@
-# $Id: Makefile,v 1.30 2008-04-05 16:42:22 weis Exp $
+# $Id: Makefile,v 1.31 2008-04-24 13:30:41 pessaux Exp $
 
 include ../Makefile.config
-CAML_COMP_FLAGS = -I ../../focc/ -I ../basement
+CAML_COMP_FLAGS = -I ../basement
 
 BYTOBJS = lexer.cmo parser.cmo parse_file.cmo dump_ptree.cmo sourcify.cmo
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.40 2008-04-23 13:19:28 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.41 2008-04-24 13:30:41 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1033,8 +1033,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     List.map
       (fun (pname, pkind) ->
         match pkind.Parsetree.ast_desc with
-         | Parsetree.SPT_in _ -> (pname, Env.ScopeInformation.SPK_in)
-         | Parsetree.SPT_is _ -> (pname, Env.ScopeInformation.SPK_is))
+         | Parsetree.SPT_in _ -> (pname, MiscHelpers.SPK_in)
+         | Parsetree.SPT_is _ -> (pname, MiscHelpers.SPK_is))
       species_def_desc.Parsetree.sd_params in
   (* Now check if the species supports a collection generator because fully *)
   (* defined and get the information about which arguments to pass in order *)
@@ -1078,13 +1078,6 @@ let species_compile env ~current_unit out_fmter species_def species_descr
 
 
 
-type collection_effective_arguments =
-  | CEA_collection_name_for_is of Parsetree.qualified_vname
-  | CEA_value_expr_for_in of Parsetree.expr
-;;
-
-
-
 (* ************************************************************************* *)
 (* species_compil_context -> collection_effective_arguments list ->          *)
 (*   Env.MlGenInformation.collection_generator_info -> unit                  *)
@@ -1093,7 +1086,7 @@ type collection_effective_arguments =
     the parameters the collection generator needs and actually applies it to
     correct corresponding functions.
     This "correct corresponding" functions are those from the collection that
-    instanciate the species parameter, but coming from the collection that
+    instanciates the species parameter, but coming from the collection that
     instanciates this species parameter in the freshly defined collection.
 
     For example, let's take "collection A implements B (C, D)", with B being
@@ -1104,7 +1097,7 @@ type collection_effective_arguments =
     (the functions) corresponding to [bar] and [foo] IN THIS ORDER.
 
     In the [param_info] parameter, we know the expected function names and
-    from where they come in term of formal parameter in B (i.e. we need that
+    from where they come in term of formal parameter in B (i.e. we know that
     coming from the formal species parameter "X", a function for "bar" is
     needed and for the formal species parameter "Y", a function for "foo" is
     needed). And the order in which to apply them is implicitly given by the
@@ -1140,14 +1133,15 @@ let apply_generator_to_parameters ctx env collection_body_params
       List.map2
         (fun formal_info effective_info ->
           match (formal_info, effective_info) with
-           | ((formal, Env.ScopeInformation.SPK_is),
-              CEA_collection_name_for_is qualified_vname) ->
+           | ((formal, MiscHelpers.SPK_is),
+              MiscHelpers.CEA_collection_name_for_is qualified_vname) ->
                (begin
                (* "In" parameter. Leads to collection name based stuff. *)
                match qualified_vname with
                 | Parsetree.Vname _ ->
                     (* Assumed to be local to the current unit. *)
-                    (formal, CEA_collection_name_for_is qualified_vname)
+                    (formal,
+                     MiscHelpers.CEA_collection_name_for_is qualified_vname)
                 | Parsetree.Qualified (effective_fname, effective_vname) ->
                     (* If the species belongs to the current unit, then we   *)
                     (* don't need to qualify it in the OCaml generated code. *)
@@ -1155,19 +1149,19 @@ let apply_generator_to_parameters ctx env collection_body_params
                     (* information.                                          *)
                     if effective_fname = current_unit then
                       (formal,
-                       CEA_collection_name_for_is
+                       MiscHelpers.CEA_collection_name_for_is
                          (Parsetree.Vname effective_vname))
                     else
                       (formal,
-                       CEA_collection_name_for_is
+                       MiscHelpers.CEA_collection_name_for_is
                          (Parsetree.Qualified
                             (effective_fname, effective_vname)))
                end)
-           | ((formal, Env.ScopeInformation.SPK_in),
-              (CEA_value_expr_for_in effective_expr)) ->
+           | ((formal, MiscHelpers.SPK_in),
+              (MiscHelpers.CEA_value_expr_for_in effective_expr)) ->
                (begin
                (* "Is" parameter. Leads to direct value based stuff. *)
-               (formal, (CEA_value_expr_for_in effective_expr))
+               (formal, (MiscHelpers.CEA_value_expr_for_in effective_expr))
                end)
            | (_, _) ->
                (* This would mean that we try to apply an effective stuff    *)
@@ -1184,7 +1178,7 @@ let apply_generator_to_parameters ctx env collection_body_params
   List.iter
     (fun (formal_species_param_name, method_names) ->
       match List.assoc formal_species_param_name formal_to_effective_map with
-       | CEA_collection_name_for_is corresponding_effective ->
+       | MiscHelpers.CEA_collection_name_for_is corresponding_effective ->
            (begin
            let
              (corresponding_effective_opt_fname,
@@ -1218,7 +1212,7 @@ let apply_generator_to_parameters ctx env collection_body_params
                  Parsetree_utils.pp_vname_with_operators_expanded meth_name)
              method_names
            end)
-       | CEA_value_expr_for_in expr ->
+       | MiscHelpers.CEA_value_expr_for_in expr ->
            (begin
            Format.fprintf out_fmter "(@[<1>" ;
            let expr_ctx = {
@@ -1239,49 +1233,6 @@ let apply_generator_to_parameters ctx env collection_body_params
            Format.fprintf out_fmter ")@]" ;
            end))
     col_gen_params_info.Env.MlGenInformation.cgi_generator_parameters
-;;
-
-
-
-(* ************************************************************************* *)
-(* Parsetree.species_param list ->                                           *)
-(*   (Parsetree.vname * Env.ScopeInformation.species_parameter_kind) list    *)
-(*     collection_effective_arguments list                                   *)
-(** {b Descr} : Extract the collections names used in an "implements" clause
-       as arguments of the species that it used to make the collection.
-       The parsetree encodes these parameters [Parsetree.expr]s but this
-       is a too large structure for the actual legal parameters expressions.
-       Then we extracts here just the names of effective collections hidden
-       in these [Parsetree.expr]s.
-
-    {b Rem} : Not exported outside this module.                              *)
-(* ************************************************************************* *)
-let get_implements_effectives species_params_exprs species_formals_info =
-  List.map2
-    (fun param_expr (_, param_kind) ->
-      let Parsetree.SP expr = param_expr.Parsetree.ast_desc in
-      match param_kind with
-       | Env.ScopeInformation.SPK_is ->
-           (begin
-           match expr.Parsetree.ast_desc with
-            | Parsetree.E_constr (cstr_ident, []) ->
-                let Parsetree.CI effective_species_name =
-                  cstr_ident.Parsetree.ast_desc in
-                CEA_collection_name_for_is effective_species_name
-            | _ ->
-                (* Collections expressions used as parameters of an      *)
-                (* "implements" clause should always be represented by   *)
-                (* a sum-type value and because these collections are    *)
-                (* not parametrized, this value should have no argument. *)
-                (* If it's not the case here, then we missed something   *)
-                (* before during the analyses !                          *)
-                assert false
-           end)
-       | Env.ScopeInformation.SPK_in ->
-           (* For an entity parameter, all first-class expressions are legal. *)
-           CEA_value_expr_for_in expr)
-    species_params_exprs
-    species_formals_info
 ;;
 
 
@@ -1407,7 +1358,7 @@ let collection_compile env ~current_unit out_fmter collection_def
          (* Get the names of the collections or the value *)
          (* expressions effectively applied.              *)
          let collection_body_params =
-           get_implements_effectives
+           MiscHelpers.get_implements_effectives
              collection_def.Parsetree.ast_desc.
                Parsetree.cd_body.Parsetree.ast_desc.
              Parsetree.se_params
