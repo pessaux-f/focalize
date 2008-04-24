@@ -1,0 +1,30 @@
+use "basics" ;;
+
+(** Arrays for FoC *)
+type array ('a) =
+  internal
+  external
+  | caml -> {* 'a array *}
+  | coq -> {* (* [Unsure] *) *}
+;;
+
+let array_set =
+  internal array ('a) -> basics#int -> 'a -> basics#unit
+  external
+  | caml -> {* Array.set *}
+  | coq -> {* (* [Unsure] *) *}
+;;
+
+let array_create =
+  internal basics#int ->'a -> array ('a)
+  external 
+  | caml -> {* Array.create *}
+  | coq -> {* (* [Unsure] *) *}
+;;
+
+let array_get =
+  internal array ('a) -> basics#int -> 'a
+  external
+  | caml -> {* Array.get *}
+  | coq -> {* (* [Unsure] *) *}
+;;

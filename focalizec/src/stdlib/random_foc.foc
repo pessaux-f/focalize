@@ -1,0 +1,22 @@
+use "basics" ;;
+
+let random_seed =
+  internal basics#int -> basics#unit
+  external
+   | caml -> {* Random_foc_externals.random_seed *}
+   | coq -> {* (* [Unsure] *) *}
+;; 
+
+let random_int =
+  internal basics#int -> basics#int
+  external
+   | caml -> {* Random_foc_externals.random_int *}
+   | coq -> {* (* [Unsure] *) *}
+;;
+
+let random_self_init =
+   internal basics#unit -> basics#unit
+   external
+   | caml -> {* Random_foc_externals.random_self_init *}
+   | coq -> {* (* [Unsure] *) *}
+;;

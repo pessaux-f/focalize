@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.14 2008-04-21 13:22:59 pessaux Exp $
+# $Id: Makefile,v 1.15 2008-04-24 15:00:46 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file
@@ -17,27 +17,41 @@ FOCSRC = basics.foc \
 	iterators.foc \
 	additive_law.foc \
 	multiplicative_law.foc \
-	weak_structures.foc
+	weak_structures.foc \
 #	wellfounded.foc
-# rings_fields.foc
+
+FOCSRC_UNSAFE =	rings_fields.foc \
+	random_foc.foc \
+	integers.foc \
+	array_foc.foc \
+	products_foc.foc
 
 FOCMLS = $(FOCSRC:.foc=.ml)
+FOCMLS_UNSAFE = $(FOCSRC_UNSAFE:.foc=.ml)
+
 FOCCMOS = $(FOCMLS:.ml=.cmo)
+FOCCMOS_UNSAFE = $(FOCMLS_UNSAFE:.ml=.cmo)
+
 FOCVS = $(FOCSRC:.foc=.v)
+
 FOCVOS = $(FOCVS:.v=.vo)
+
 EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
 	weak_structures_externals.cmo \
-	coq_builtins.vo weak_structures_externals.vo
+	coq_builtins.vo weak_structures_externals.vo wellfounded_externals.vo \
+	random_foc_externals.cmo
 
 
 
-all:: $(EXTERNALOBJS) $(FOCMLS) $(FOCVS) basics_special_case $(FOCCMOS) $(FOCVOS)
+
+all:: $(EXTERNALOBJS) $(FOCMLS) $(FOCMLS_UNSAFE) $(FOCVS) basics_special_case $(FOCCMOS) $(FOCCMOS_UNSAFE) $(FOCVOS)
 
 doc:: $(BYTOBJS)
 	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)
 
 clean::
 	$(RM) *~ *.cm* log *.fo $(FOCMLS) $(FOCVS) $(FOCVOS) $(EXTERNALOBJS)
+	$(RM) $(FOCMLS_UNSAFE) $(FOCVS_UNSAFE) $(FOCVOS_UNSAFE)
 	$(RM) *.mangled odoc/*
 
 depend:

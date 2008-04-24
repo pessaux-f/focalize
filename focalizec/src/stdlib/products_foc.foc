@@ -1,0 +1,333 @@
+(**
+   @author Renaud Rioboo
+   @title Products for FoCaL
+   @description cartesian product of two structures, common orderings
+ *)
+use "basics" ;;
+open "basics" ;;
+use "sets_orders" ;;
+use "additive_law" ;;
+use "multiplicative_law" ;;
+use "weak_structures" ;;
+use "rings_fields" ;;
+use "array_foc" ;;
+
+open "sets_orders" ;;
+open "additive_law" ;;
+open "multiplicative_law" ;;
+open "weak_structures" ;;
+open "rings_fields" ;;
+open "array_foc" ;;
+
+(** cartesian set *)
+species Cartesian (S1 is Setoid, S2 is Setoid) inherits Setoid =
+
+  rep = S1 * S2 ;
+
+  (** build an element *)
+  let term (a, b) in Self = (a, b) ;
+
+  (** extracts first component *)
+  let first (a in Self) in S1 = basics#first (a) ;
+
+  theorem first_spec: all a1 in S1, all a2 in S2,
+    S1!equal (a1, !first (!term (a1, a2)))
+    proof :
+      (* by definition of first term ; *)
+      assumed ;
+
+  (** extracts second component *)
+  let scnd (a in Self) in S2 = basics#scnd (a)  ;
+
+  theorem scnd_spec: all a1 in S1, all a2 in S2,
+    S2!equal (a2, !scnd (!term (a1, a2)))
+    proof:
+      (* def: scnd term; *)
+      assumed ;
+
+  let equal(a, b) =
+    let a1 = !first (a) in
+    let a2 = !scnd (a) in
+    let b1 = !first (b) in
+    let b2 = !scnd (b) in
+    basics#and_b (S1!equal (a1, b1), S2!equal (a2, b2)) ;
+
+  proof of equal_reflexive =
+    by property S1!equal_reflexive, S2!equal_reflexive
+    definition of equal ;
+
+  proof of equal_symmetric =
+    by property S1!equal_symmetric, S2!equal_symmetric definition of equal ;
+
+  proof of equal_transitive =
+    by property S1!equal_transitive, S2!equal_transitive
+    definition of equal ;
+
+  theorem pair_cons_spec: all a in Self, all a1 in S1, all a2 in S2,
+    S1!equal (a1, !first (a)) -> S2!equal (a2, !scnd (a)) ->
+       !equal (!term (a1, a2), a)
+    proof:
+      (* def: term first scnd equal; *)
+      assumed ;
+     (* by def !term, !equal; *)
+
+  theorem term_substitution_rule: all a1 b1 in S1, all a2 b2 in S2,
+    S1!equal (a1, b1) -> S2!equal (a2, b2) ->
+      !equal (!term (a1, a2), !term (b1, b2))
+    proof:
+     <1>1 assume a1 in S1,
+          assume b1 in S1,
+          assume a2 in S2,
+          assume b2 in S2,
+          assume H1: S1!equal (a1, b1),
+          assume H2: S2!equal (a2, b2),
+          prove !equal (!term (a1, a2), !term (b1, b2))
+          by
+            hypothesis H1
+            hypothesis H2
+            property first_spec
+            property scnd_spec
+            property pair_cons_spec
+            property S1!equal_transitive
+            property S2!equal_transitive
+     <1>2 qed.
+    ;
+
+  let element = (S1!element, S2!element) ;
+
+  let print (a) =
+     let a1 = basics#first (a) in
+     let a2 = basics#scnd (a) in
+     basics#sc ("(",
+       basics#sc (S1!print (a1),
+         basics#sc (", ",
+           basics#sc (S2!print (a2), ")")))) ;
+end ;;
+
+(** additive product monoid *)
+species Product_additive_monoid (M1 is Additive_monoid, M2 is Additive_monoid)
+  inherits Additive_monoid, Cartesian (M1, M2) =
+  let zero = (M1!zero, M2!zero) ;
+
+  let plus (a, b) =
+    let a1 = !first (a) in
+    let a2 = !scnd (a) in
+    let b1 = !first (b) in
+    let b2 = !scnd (b) in
+    !term (M1!plus (a1, b1), M2!plus (a2, b2)) ;
+
+  proof of plus_commutes =
+    <1>1 assume a in Self,
+         assume b in Self,
+         prove !equal (!plus (a, b), !plus (b, a))
+         <2>1 assume a1 in M1,
+              assume a2 in M2,
+              assume b1 in M1,
+              assume b2 in M2,
+              prove !equal (!term (M1!plus (a1, b1), M2!plus (a2, b2)),
+                           !term (M1!plus (b1, a1), M2!plus (b2, a2)))
+              by property M1!plus_commutes, M2!plus_commutes,
+                !term_substitution_rule
+          <2>f qed by step <2>1 definition of plus
+    <1>f qed.
+    ;
+
+  proof of zero_is_neutral = assumed;
+  proof of plus_is_associative = assumed;
+  proof of plus_right_substitution_rule =
+    <1>0 assume a1 in M1,
+         assume b1 in M1,
+         assume c1 in M1,
+         assume a2 in M2,
+         assume b2 in M2,
+         assume c2 in M2,
+         assume H1: M1!equal (b1, c1),
+         assume H2: M2!equal (b2, c2),
+         prove !equal (!term (M1!plus (a1, b1), M2!plus (a2, b2)),
+                       !term (M1!plus (a1, c1), M2!plus (a2, c2)))
+         by hypothesis H1, H2
+            property M1!plus_right_substitution_rule,
+                     M2!plus_right_substitution_rule,
+                     !term_substitution_rule
+    <1>1 assume a in Self,
+         assume b in Self,
+         assume c in Self,
+         assume H: !equal (b, c),
+         prove !equal (!plus (a, b), !plus (a, c))
+         <2>1 prove  M1!equal (!first (b), !first (c))
+              by hypothesis H definition of equal
+         <2>2 prove  M2!equal (!scnd (b), !scnd (c))
+              by hypothesis H definition of equal
+         <2>f qed by step <2>1, <2>2, <1>0 definition of plus
+    <1>f qed.
+    ;
+
+end;;
+
+(** Product of two regular monoids *)
+species Product_regular_additive_monoid
+         (M1 is Regular_additive_monoid , M2 is Regular_additive_monoid)
+  inherits Regular_additive_monoid, Product_additive_monoid (M1, M2) =
+
+  let is_zero (a) =
+    let a1 = basics#first (a) in
+    let a2 = basics#scnd (a) in
+    basics#and_b (M1!is_zero (a1), M2!is_zero (a2)) ;
+
+  proof of is_zero_spec = assumed ;
+
+  let minus (a, b) =
+    let a1 = basics#first (a) in
+    let a2 = basics#scnd (a) in
+    let b1 = basics#first (b) in
+    let b2 = basics#scnd (b) in
+    (M1!minus (a1, b1), M2!minus (a2, b2)) ;
+
+  proof of plus_is_left_regular = assumed ;
+  proof of minus_is_well_defined = assumed ;
+  proof of minus_right_substitution_rule = assumed ;
+  proof of minus_left_substitution_rule = assumed ;
+end ;;
+
+(** Partial ordering, we have an inf operation *)
+species Product_additive_monoid_with_infimum
+         (M1 is Additive_monoid_with_infimum,
+          M2 is Additive_monoid_with_infimum)
+   inherits Additive_monoid_with_infimum,
+            Product_additive_monoid (M1, M2) =
+
+
+   let inf (a, b) =
+    let a1 = basics#first (a) in
+    let a2 = basics#scnd (a) in
+    let b1 = basics#first (b) in
+    let b2 = basics#scnd (b) in
+    (M1!inf (a1, b1), M2!inf (a2, b2)) ;
+
+   proof of inf_absorbes_add = assumed;
+   proof of inf_commutes = assumed;
+   proof of inf_is_associative = assumed;
+   proof of add_right_distributes_on_inf = assumed;
+   proof of add_left_distributes_on_inf = assumed;
+   proof of inf_idempotent = assumed;
+   proof of inf_left_substitution_rule = assumed;
+
+   let output (a, v1, v2) =
+     let a1 = basics#first (a) in
+     let a2 = basics#scnd (a) in
+     basics#sc (basics#sc (basics#sc(basics#sc (v1, "^"), M1!print (a1)), "*"),
+             basics#sc (basics#sc (v2, "^"), M2!print (a2))) ;
+
+   let print (a) = Self!output (a, "?_1?","?_2?") ;
+
+end ;;
+
+(** Partial ordering, we have a sup operation *)
+species Product_additive_monoid_with_supremum
+         (M1 is Additive_monoid_with_supremum,
+          M2 is Additive_monoid_with_supremum)
+   inherits Additive_monoid_with_supremum, Product_additive_monoid (M1, M2) =
+
+
+   let sup (a, b) =
+    let a1 = basics#first (a) in
+    let a2 = basics#scnd (a) in
+    let b1 = basics#first (b) in
+    let b2 = basics#scnd (b) in
+    (M1!sup (a1, b1), M2!sup (a2, b2)) ;
+
+   proof of sup_commutes = assumed ;
+   proof of sup_absorbes_add = assumed ;
+   proof of sup_is_associative = assumed ;
+   proof of add_right_distributes_on_sup = assumed ;
+   proof of add_left_distributes_on_sup = assumed ;
+   proof of sup_idempotent = assumed ;
+   proof of sup_left_substitution_rule = assumed ;
+
+   let output(a, v1, v2) =
+    let a1 = basics#first (a) in
+    let a2 = basics#scnd (a) in
+    basics#sc
+      (basics#sc (basics#sc (basics#sc (v1, "^"), M1!print (a1)), "*"),
+        basics#sc (basics#sc (v2, "^"), M2!print (a2))) ;
+
+   let print( a) = Self!output (a, "?_1?", "?_2?") ;
+end ;;
+
+
+(** Lexicographic product *)
+species Lexicographic_product_additive_monoid
+         (M1 is Monomial_ordering,
+          M2 is Monomial_ordering)
+   inherits Monomial_ordering,
+            Product_regular_additive_monoid (M1, M2),
+            Product_additive_monoid_with_infimum (M1, M2),
+            Product_additive_monoid_with_supremum (M1, M2) =
+
+   (** lexicgraphic ordering @mathml <leq/> *)
+   let leq (a, b) =
+     let a1 = basics#first (a) in
+     let a2 = basics#scnd (a) in
+     let b1 = basics#first (b) in
+     let b2 = basics#scnd (b) in
+     basics#or_b (M1!lt (a1, b1),
+                  basics#and_b (M1!equal (a1, b1), M2!leq (a2, b2))) ;
+
+   proof of order_compatible_with_cancellation = assumed ;
+   proof of order_compatible_with_plus = assumed ;
+   proof of leq_reflexive = assumed ;
+   proof of leq_antisymmetric = assumed ;
+   proof of leq_transitive = assumed ;
+   proof of leq_refines_order_inf = assumed ;
+   proof of geq_refines_order_sup = assumed ;
+   (* NdV: added 9 Feb 2004. see species total_order for more details. *)
+   proof of total_order = assumed ;
+   proof of lt_is_not_leq = assumed ;
+end ;;
+
+
+(** lexicographic product, naming variables*)
+(* [Unsure] Snipped until we make a String species.
+species Lexicographic_product_additive_monoid_named
+        (M1 is Monomial_ordering,
+         M2 is Monomial_ordering,
+         V1 in string,
+         V2 in string)
+  inherits Lexicographic_product_additive_monoid (M1, M2) =
+
+  let print (x) = basics#sc (basics#sc ("(", !output (x, v1, v2)), ")") ;
+end ;;
+*)
+
+(** reverse lexicographic ordering *)
+species Reverse_lexicographic_product_additive_monoid
+         (M1 is Monomial_ordering, M2 is Monomial_ordering)
+  inherits Monomial_ordering,
+           Product_regular_additive_monoid (M1, M2),
+           Product_additive_monoid_with_infimum (M1, M2),
+           Product_additive_monoid_with_supremum (M1, M2) =
+
+  (** reverse lexicographic ordering @mathml <leq/> *)
+  let leq (a, b) =
+     let a1 = basics#first (a) in
+     let a2 = basics#scnd (a) in
+     let b1 = basics#first (b) in
+     let b2 = basics#scnd (b) in
+     basics#or_b (M2!lt (a2, b2),
+                 basics#and_b (M2!equal (a2, b2), M1!leq (a1, b1))) ;
+
+   proof of order_compatible_with_cancellation = assumed ;
+   proof of order_compatible_with_plus = assumed ;
+   proof of leq_reflexive = assumed ;
+   proof of leq_antisymmetric = assumed ;
+   proof of leq_transitive = assumed ;
+   proof of leq_refines_order_inf = assumed ;
+   proof of geq_refines_order_sup = assumed ;
+   (* NdV: added 9 Feb 2004. see species total_order for more details. *)
+   proof of total_order = assumed ;
+  (* [rr]: this requires checking why proof invalidates *)
+  proof of lt_is_not_leq = assumed ;
+end ;;
+
+
+(* [Unsure] Snipped. *)
