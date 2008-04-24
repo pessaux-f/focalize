@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.38 2008-04-11 14:49:30 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.39 2008-04-24 16:09:48 pessaux Exp $ *)
 
 
 
@@ -243,6 +243,16 @@ try Check_file.main () with
            "%a:@\n@[%tCarrier@ 'rep'@ is@ multiply@ defined%t.@]@."
            Location.pp_location at
            Handy.pp_set_bold Handy.pp_reset_effects
+     | Infer.Rep_multiply_defined_by_multiple_inheritance (prev, newer, at) ->
+         Format.fprintf Format.err_formatter
+           "%a:@\n@[%tCarrier@ 'rep'@ is@ multiply@ defined@ by@ \
+           multiple@ inhritance@ and@ was@formerly@ found@ of@ type%t@ \
+           @[%a@]@ %tand@ newly@ found@ of@ type%t@ @[%a@].@]@."
+           Location.pp_location at
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Types.pp_type_simple prev
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Types.pp_type_simple newer
      | Scoping.Self_cant_parameterize_itself at ->
          Format.fprintf Format.err_formatter
            "%a:@\n@[%t'Self'@ can't@ be@ parameterized@ by@ itself%t.@]@."

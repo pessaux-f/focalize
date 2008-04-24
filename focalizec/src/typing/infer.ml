@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.114 2008-04-21 12:37:17 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.115 2008-04-24 16:09:48 pessaux Exp $ *)
 
 
 
@@ -75,14 +75,34 @@ exception Bad_type_arity of
 
 
 
-(* ********************************************************************* *)
+(* *********************************************************************** *)
 (** {b Descr} : Exception raised when "rep" is defined several times in
-              the same species or when it is defined several time during
-              the inheritance.
+    the same species or when it is defined several time during the
+    inheritance along a single inheritance path (do not deal with
+    multiple "rep" due to multipel inheritance which is taken into account
+    by the exception [Rep_multiply_defined_by_multiple_inheritance]).
+  
 
-    {b Rem} : Exported outside this module.                              *)
-(* ********************************************************************* *)
+    {b Rem} : Exported outside this module.                                *)
+(* *********************************************************************** *)
 exception Rep_multiply_defined of Location.t ;;
+
+
+
+(* ********************************************************************** *)
+(** {b Descr} : Exception raised when "rep" is defined several times in
+    the same species due to multiple inheritance
+    by the exception [Rep_multiply_defined_by_multiple_inheritance]).
+  
+
+    {b Rem} : Exported outside this module.                               *)
+(* ********************************************************************** *)
+exception Rep_multiply_defined_by_multiple_inheritance of
+  (Types.type_simple *   (** Former type found for "rep". *)
+   Types.type_simple *   (** Newer and incompatible type found for "rep". *)
+   Location.t)  (** Location of the whole species where the "rep" was found
+                    inconsistent. *)
+;;
 
 
 
@@ -1702,7 +1722,7 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                (* Before modifying the context, just check that no "rep" *)
                (* was previously identified. If some, then fails.        *)
                if ctx.self_manifest <> None then
-                 raise (Rep_multiply_defined field.Parsetree.ast_loc);
+                 raise (Rep_multiply_defined field.Parsetree.ast_loc) ;
                (* Extend the context with the type "rep" is equal to. Beware  *)
                (* we make a copy of the infered type in order to keep the     *)
                (* originally infered type aside any further modifications     *)
@@ -2611,12 +2631,26 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
                let manifest =
                  (if m_name_as_str = "rep" then
                    (begin
-                    (* Before modifying the context, just check that no *)
-                    (* "rep" was previously identified. If some, then   *)
-                    (* fail.                                            *)
-                    if accu_ctx.self_manifest <> None
-                    then raise (Rep_multiply_defined loc);
-                    Some (Types.specialize meth_scheme)
+                    (* Before modifying the context, just check that no    *)
+                    (* "rep" was previously identified with a different    *)
+                    (* type by multiple inheritance in which case we fail. *)
+                    match accu_ctx.self_manifest with
+                     | None -> Some (Types.specialize meth_scheme)
+                     | Some prev_ty ->
+                         let new_found_self = Types.specialize meth_scheme in
+                         (try
+                           (* Since we don't want any circularity on Self   *)
+                           (* we keep it abstrat during the unification.    *)
+                           (* As the new "Self", we use the MGU of the      *)
+                           (* previous Self's type and the newly found one. *)
+                           Some
+                             (Types.unify
+                                ~loc ~self_manifest: None prev_ty
+                                new_found_self)
+                         with _ ->
+                           raise
+                             (Rep_multiply_defined_by_multiple_inheritance
+                               (prev_ty, new_found_self, loc)))
                    end)
                   else accu_ctx.self_manifest) in (* Else, keep unchanged. *)
                let c = { accu_ctx with self_manifest = manifest } in

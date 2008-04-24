@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.23 2008-04-14 09:20:49 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.24 2008-04-24 16:09:48 pessaux Exp $ *)
 
 exception Method_multiply_defined of
   (Parsetree.vname * Parsetree.qualified_species)
@@ -21,6 +21,9 @@ exception Bad_sum_type_constructor_arity of
   (Parsetree.constructor_ident * Env.TypeInformation.constructor_arity)
 exception Bad_type_arity of (Parsetree.ident * int * int)
 exception Rep_multiply_defined of Location.t
+exception Rep_multiply_defined_by_multiple_inheritance of
+  (Types.type_simple * Types.type_simple * Location.t)
+
 exception Parameterized_species_arity_mismatch of string
 
 exception Not_subspecies_conflicting_field of
