@@ -136,9 +136,9 @@ species Pre_order inherits Setoid =
   signature leq : Self -> Self -> bool;
 
   property leq_reflexive: all x y in Self,
-    !equal(x, y) -> !leq(x, y);
+    !equal (x, y) -> !leq (x, y) ;
   property leq_transitive: all x y  z in Self,
-    !leq(x, y) -> !leq(y, z) -> !leq(x, z) ;
+    !leq (x, y) -> !leq (y, z) -> !leq (x, z) ;
 
    (** we may reverse inequalities by simply changing notations
     @mathml <geq/> *)

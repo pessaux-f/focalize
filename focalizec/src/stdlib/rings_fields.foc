@@ -31,15 +31,15 @@ proof of zero_left_absorbes =
      prove !equal (!mult (!zero, x), !zero)
  <2>2 prove !equal (!mult (!plus (!zero, !one), x), x)
       by property zero_is_neutral, mult_left_substitution_rule,
-	one_is_left_neutral, equal_transitive
+        one_is_left_neutral, equal_transitive
  <2>3 prove !equal (!mult (!plus (!zero, !one), x),
-		   !plus (!mult (!zero, x), !mult (!one, x)))
+                   !plus (!mult (!zero, x), !mult (!one, x)))
       by property mult_right_distributes_on_plus
  <2>4 prove !equal (!plus (!mult (!zero, x), x), x)
       by step <2>2, <2>3 property plus_right_substitution_rule,
          equal_symmetric, equal_transitive, one_is_left_neutral
  <2>5 prove !equal (!plus (!mult (!zero, x), x),
-		   !plus (!zero, x))
+                   !plus (!zero, x))
       by step <2>4
       property zero_is_neutral, equal_transitive, equal_symmetric
  <2>f qed by step <2>5 property plus_is_regular
@@ -60,11 +60,11 @@ proof of zero_right_absorbes =
  <2>1 prove !equal (!plus (x, !opposite (x)), !zero)
       by property opposite_is_opposite
  <2>2 prove !equal (!plus (!mult (x, !plus (!zero, !one)), !opposite (x)),
-		    !zero)
+                    !zero)
       by step <2>0, <2>1
       property plus_left_substitution_rule, equal_transitive
  <2>3 prove !equal (!plus (!plus (!mult (x, !zero),
-				  !mult(x, !one)), !opposite (x)),
+                                  !mult(x, !one)), !opposite (x)),
                     !zero)
    <3>1 prove !equal (!plus (!mult (x, !zero), !mult(x, !one)),
                      !mult (x, !plus (!zero, !one)))
@@ -72,7 +72,7 @@ proof of zero_right_absorbes =
    <3>9 qed by step <2>2, <3>1
            property plus_left_substitution_rule, equal_transitive
  <2>4 prove !equal (!plus (!mult (x, !zero), !plus (!mult (x, !one),
-						    !opposite (x))), !zero)
+                                                    !opposite (x))), !zero)
       by step <2>3 property plus_is_associative, equal_transitive
  <2>7 prove !equal (!plus (!mult (x, !one), !opposite (x)), !zero)
       (*
@@ -140,7 +140,7 @@ end ;;
 
 (** Ordered integral domains *)
 species Ordered_domain inherits Ordered_ring, Integral_domain = end ;;
-	
+        
 
 (** a torsion free algebra is both a faithfull R-module and an R-Algebra *)
 species Torsion_free_algebra (R is Integral_domain)
@@ -236,6 +236,6 @@ species Ordered_field inherits Ordered_gcd_domain, Real_field = end ;;
 (*                Ouf !                                                   *)
 (*                                                                        *)
 
-(* $Id: rings_fields.foc,v 1.1 2008-04-24 15:00:46 pessaux Exp $ *)
+(* $Id: rings_fields.foc,v 1.2 2008-04-25 10:42:27 pessaux Exp $ *)
 
 

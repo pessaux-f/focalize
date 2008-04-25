@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.36 2008-04-15 21:13:41 weis Exp $ *)
+(* $Id: lexer.mll,v 1.37 2008-04-25 10:42:27 pessaux Exp $ *)
 
 {
 open Lexing;;
@@ -520,7 +520,7 @@ let regular_prefix_ident = start_prefix_ident continue_prefix_ident*
 
 (** Integers. *)
 let decimal_literal =
-  [ '0'-'9'] ['0'-'9' '_' ]*
+  ('-')? [ '0'-'9'] ['0'-'9' '_' ]*
 let hex_literal =
   '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f' '_']+
 let oct_literal =
@@ -530,7 +530,7 @@ let bin_literal =
 let int_literal =
   decimal_literal | hex_literal | oct_literal | bin_literal
 let float_literal =
-  ['0'-'9'] ['0'-'9' '_']*
+  ('-')? ['0'-'9'] ['0'-'9' '_']*
   ('.' ['0'-'9' '_']* )?
   (['e' 'E'] ['+' '-']? ['0'-'9'] ['0'-'9' '_']*)?
 

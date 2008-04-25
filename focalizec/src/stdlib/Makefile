@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.15 2008-04-24 15:00:46 pessaux Exp $
+# $Id: Makefile,v 1.16 2008-04-25 10:42:27 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file
@@ -24,7 +24,9 @@ FOCSRC_UNSAFE =	rings_fields.foc \
 	random_foc.foc \
 	integers.foc \
 	array_foc.foc \
-	products_foc.foc
+	products_foc.foc \
+	quotients.foc \
+	small_integers.foc
 
 FOCMLS = $(FOCSRC:.foc=.ml)
 FOCMLS_UNSAFE = $(FOCSRC_UNSAFE:.foc=.ml)

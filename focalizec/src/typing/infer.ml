@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.115 2008-04-24 16:09:48 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.116 2008-04-25 10:42:27 pessaux Exp $ *)
 
 
 
@@ -1460,9 +1460,9 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
 
 and typecheck_binding_body ctx env = function
   | Parsetree.BB_logical p ->
-      (* Because these logical_exprs only appear in a logical let, *)
-      (* they are not in the context of a proof !          *)
-      typecheck_logical_expr ctx env ~in_proof: false p
+      (* Because these logical_exprs only appear in a logical let,       *)
+      (* they are allowed to know Self representation (like in proofs) ! *)
+      typecheck_logical_expr ctx env ~in_proof: true p
   | Parsetree.BB_computational e -> typecheck_expr ctx env e
 
 
@@ -3343,7 +3343,7 @@ let ensure_collection_completely_defined ctx fields =
        end);
       rec_ensure rem_fields in
   (* Now do the job... *)
-  rec_ensure fields;
+  rec_ensure fields ;
   (* Finally, ckeck if the carrier "rep" was actually found. *)
   if not !rep_found then
     (begin
