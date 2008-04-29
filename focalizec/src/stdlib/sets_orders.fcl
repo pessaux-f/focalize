@@ -121,13 +121,13 @@ species Partial_set inherits Setoid =
   let failed in (string -> Self) =
     let ifailed (r in string, elt in Self) in Self =
        external
-       | caml -> {* Sets_orders_externals.i_failed *}
+       | caml -> {* Sets_orders_externals.i_failed r elt *}
        | coq -> {* elt *}
-       end
-    in function reason -> ifailed(reason, !element);
+       end in
+    function reason -> ifailed (reason, !element) ;
+end ;;
 
-end
-;;
+
 
 (** pre orderings are sometimes called quasi orderings *)
 species Pre_order inherits Setoid =
