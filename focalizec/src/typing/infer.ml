@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.117 2008-04-29 13:27:01 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.118 2008-04-29 14:25:28 pessaux Exp $ *)
 
 
 
@@ -3696,6 +3696,14 @@ let typecheck_species_def ctx env species_def =
   List.iter
     (detect_polymorphic_method ~loc: species_def.Parsetree.ast_loc)
     normalized_methods ;
+  (* Now, compute the fields order to prevent ill-formness described in the *)
+  (* [collapse_proofs_of] function's header.                                *)
+  let new_order_for_normalizes =
+    Dep_analysis.compute_fields_reordering
+      ~current_species normalized_methods in
+  (* Now really re-order the normalized fields. *)
+  let reordered_normalized_methods =
+    order_fields_according_to new_order_for_normalizes normalized_methods in
   if Configuration.get_verbose () then
     Format.eprintf
       "Computing dependencies inside species '%a'.@."
@@ -3705,7 +3713,7 @@ let typecheck_species_def ctx env species_def =
   (* before the normalization process), we get its final dependency graph. *)
   let species_dep_graph =
     Dep_analysis.build_dependencies_graph_for_fields
-      ~current_species normalized_methods in
+      ~current_species reordered_normalized_methods in
   (* If asked, generate the dotty output of the dependencies. *)
   (match Configuration.get_dotty_dependencies () with
    | None -> ()
@@ -3717,7 +3725,7 @@ let typecheck_species_def ctx env species_def =
   (* that this is independant of the fact to be a collection.            *)
   let is_closed =
     (try
-       ensure_collection_completely_defined ctx normalized_methods ;
+       ensure_collection_completely_defined ctx reordered_normalized_methods ;
        (* If the check didn't fail, then the species if fully defined. *)
        true with
      | Collection_not_fully_defined _ -> false) in
@@ -3727,7 +3735,7 @@ let typecheck_species_def ctx env species_def =
     Env.TypeInformation.spe_is_collection = false ;
     Env.TypeInformation.spe_is_closed = is_closed ;
     Env.TypeInformation.spe_sig_params = sig_params ;
-    Env.TypeInformation.spe_sig_methods = normalized_methods } in
+    Env.TypeInformation.spe_sig_methods = reordered_normalized_methods } in
   (* Extend the initial environment with the species. Not the environment *)
   (* used to typecheck the internal definitions of the species !!!        *)
   let env_with_species =
