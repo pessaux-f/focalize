@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.41 2008-04-24 13:30:41 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.42 2008-04-29 15:26:13 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -222,7 +222,7 @@ let generate_record_type ctx species_descr =
   List.iter
     (function
       | Env.TypeInformation.SF_sig (from, n, sch)
-      | Env.TypeInformation.SF_let (from, n, _, sch, _, _) ->
+      | Env.TypeInformation.SF_let (from, n, _, sch, _, _, _) ->
           (begin
           (* Skip "rep", because it is a bit different and processed above *)
           (* c.f. function [generate_rep_constraint_in_record_type].       *)
@@ -248,17 +248,24 @@ let generate_record_type ctx species_descr =
           end)
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
-            (fun (from, n, _, sch, _, _) ->
+            (fun (from, n, _, sch, _, _, _) ->
               let ty = Types.specialize sch in
-              Format.fprintf out_fmter "(* From species %a. *)@\n"
-                Sourcify.pp_qualified_species from ;
-              (* Since we are printing a whole type scheme, it is stand-alone *)
-              (* and we don't need to keep name sharing with anythin else.    *)
-              Format.fprintf out_fmter "%a : %a ;@\n"
-                Parsetree_utils.pp_vname_with_operators_expanded n
-                (Types.pp_type_simple_to_ml
-                   ~current_unit: ctx.Context.scc_current_unit
-                   ~reuse_mapping: false collections_carrier_mapping) ty)
+              (* If the type of the sig refers to type "Prop", then the sig  *)
+              (* is related to a logical let and hence must not be generated *)
+              (* in OCaml.                                                   *)
+              if not (Types.refers_to_prop_p ty) then
+                (begin
+                Format.fprintf out_fmter "(* From species %a. *)@\n"
+                  Sourcify.pp_qualified_species from ;
+                (* Since we are printing a whole type scheme, it is   *)
+                (* stand-alone and we don't need to keep name sharing *)
+                (* with anythin else.                                 *)
+                Format.fprintf out_fmter "%a : %a ;@\n"
+                  Parsetree_utils.pp_vname_with_operators_expanded n
+                  (Types.pp_type_simple_to_ml
+                     ~current_unit: ctx.Context.scc_current_unit
+                     ~reuse_mapping: false collections_carrier_mapping) ty
+                end))
             l
       | Env.TypeInformation.SF_theorem  (_, _, _, _, _, _)
       | Env.TypeInformation.SF_property (_, _, _, _, _) ->
@@ -645,7 +652,7 @@ let generate_methods ctx env field =
            Parsetree_utils.pp_vname_with_operators_expanded name ;
        (* Nothing to keep for the collection generator. *)
        None
-   | Abstractions.FAI_let ((from, name, params, scheme, body, _),
+   | Abstractions.FAI_let ((from, name, params, scheme, body, _, _),
                            abstraction_info) ->
        (begin
        match body with
@@ -679,7 +686,7 @@ let generate_methods ctx env field =
             (* A "let", then a fortiori "let rec" construct *)
             (* must at least bind one identifier !          *)
             assert false
-        | ((from, name, params, scheme, body, _), first_ai) :: q ->
+        | ((from, name, params, scheme, body, _, _), first_ai) :: q ->
             (begin
             match body with
              | Parsetree.BB_logical _ ->
@@ -692,7 +699,7 @@ let generate_methods ctx env field =
                    ctx with
                    Context.scc_lambda_lift_params_mapping =
                      List.map
-                       (fun ((_, n, _, _, _, _), ai) ->
+                       (fun ((_, n, _, _, _, _, _), ai) ->
                          (n, make_params_list_from_abstraction_info ai))
                        l } in
                  (* Now, generate the first method, introduced by "let rec". *)
@@ -712,7 +719,7 @@ let generate_methods ctx env field =
                  (* introduced by "and".                      *)
                  let rem_compiled =
                    List.map
-                     (fun ((from, name, params, scheme, body, _), ai) ->
+                     (fun ((from, name, params, scheme, body, _, _), ai) ->
                        let body_e =
                          (match body with
                           | Parsetree.BB_logical _ ->
@@ -1373,29 +1380,39 @@ let collection_compile env ~current_unit out_fmter collection_def
     (* fields names, preventing the need to use those coming fom the       *)
     (* it implements.                                                      *)
     Format.fprintf out_fmter "@[<2>{@ " ;
-    (* Make the record value borrowing every fields from the temporary *)
-    (* value generated by the collection generator.                    *)
+    (* Make the record value borrowing every fields from the temporary  *)
+    (* value generated by the collection generator. Remind that logical *)
+    (* let ARE NOT générated in OCaml, hence must not appear in the     *)
+    (* final record value !                                             *)
     List.iter
       (function
         | Env.TypeInformation.SF_sig (_, _, _)
         | Env.TypeInformation.SF_theorem (_, _, _, _, _, _)
         | Env.TypeInformation.SF_property (_, _, _, _, _) -> ()
-        | Env.TypeInformation.SF_let (_, n, _, _, _, _) ->
-            Format.fprintf out_fmter "%a =@ t."
-              Parsetree_utils.pp_vname_with_operators_expanded n ;
-            print_implemented_species_as_ocaml_module
-              ~current_unit out_fmter implemented_species_name ;
-            Format.fprintf out_fmter ".%a ;@\n"
-              Parsetree_utils.pp_vname_with_operators_expanded n
+        | Env.TypeInformation.SF_let (_, n, _, _, _, _, log_flag) ->
+            (* Generate only if not a logical let ! *)
+            if log_flag = Parsetree.LF_no_logical then
+              (begin
+              Format.fprintf out_fmter "%a =@ t."
+                Parsetree_utils.pp_vname_with_operators_expanded n ;
+              print_implemented_species_as_ocaml_module
+                ~current_unit out_fmter implemented_species_name ;
+              Format.fprintf out_fmter ".%a ;@\n"
+                Parsetree_utils.pp_vname_with_operators_expanded n
+              end)
         | Env.TypeInformation.SF_let_rec l ->
             List.iter
-              (fun (_, n, _, _, _, _) ->
-                Format.fprintf out_fmter "%a =@ t."
-                  Parsetree_utils.pp_vname_with_operators_expanded n ;
-                print_implemented_species_as_ocaml_module
-                  ~current_unit out_fmter implemented_species_name ;
-                Format.fprintf out_fmter ".%a ;@\n"
-                  Parsetree_utils.pp_vname_with_operators_expanded n)
+              (fun (_, n, _, _, _, _, log_flag) ->
+                (* Generate only if not a logical let ! *)
+                if log_flag = Parsetree.LF_no_logical then
+                  (begin
+                  Format.fprintf out_fmter "%a =@ t."
+                    Parsetree_utils.pp_vname_with_operators_expanded n ;
+                  print_implemented_species_as_ocaml_module
+                    ~current_unit out_fmter implemented_species_name ;
+                  Format.fprintf out_fmter ".%a ;@\n"
+                    Parsetree_utils.pp_vname_with_operators_expanded n
+                  end))
               l)
       collection_descr.Env.TypeInformation.spe_sig_methods ;
     (* End the definition of the value representing the effective instance. *)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substExpr.ml,v 1.12 2008-03-07 10:55:32 pessaux Exp $ *)
+(* $Id: substExpr.ml,v 1.13 2008-04-29 15:26:13 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs substitution of a value name [name_x]
@@ -25,7 +25,6 @@
             module name of where the parmaterized species was defined.     *)
 (* *********************************************************************** *)
 
-open Parsetree;;
 
 let subst_E_var ~param_unit ~bound_variables name_x by_expr ident =
   (* Substitute in the AST node description. *)
@@ -34,13 +33,13 @@ let subst_E_var ~param_unit ~bound_variables name_x by_expr ident =
        if vname = name_x && not (List.mem vname bound_variables) then
          by_expr
        else Parsetree.E_var ident
-   | Parsetree.EI_global (Qualified (modname, vname)) ->
+   | Parsetree.EI_global (Parsetree.Qualified (modname, vname)) ->
        if modname = param_unit && vname = name_x &&
           not (List.mem vname bound_variables) then
          by_expr
        else Parsetree.E_var ident
    | Parsetree.EI_method (_, _) -> Parsetree.E_var ident
-   | Parsetree.EI_global (Vname _) ->
+   | Parsetree.EI_global (Parsetree.Vname _) ->
        (* In this case, may be there is some scoping process missing. *)
        assert false
 ;;
@@ -320,23 +319,26 @@ let subst_binding_body ~param_unit ~bound_variables name_x by_expr = function
 let subst_species_field ~param_unit name_x by_expr field =
   match field with
   | Env.TypeInformation.SF_sig (_, _, _) -> field   (* Nowhere to substitute. *)
-  | Env.TypeInformation.SF_let (from, vname, params_names, scheme, body, dep) ->
+  | Env.TypeInformation.SF_let
+      (from, vname, params_names, scheme, body, dep, log_flag) ->
       (begin
       let bound_variables = [vname] in
       let body' =
         subst_binding_body ~param_unit ~bound_variables name_x by_expr body in
-      Env.TypeInformation.SF_let (from, vname, params_names, scheme, body', dep)
+      Env.TypeInformation.SF_let
+	(from, vname, params_names, scheme, body', dep, log_flag)
       end)
   | Env.TypeInformation.SF_let_rec l ->
       (* First get all the recursive bound variables. *)
-      let bound_variables = List.map (fun (_, vname, _, _, _, _) -> vname) l in
+      let bound_variables =
+	List.map (fun (_, vname, _, _, _, _, _) -> vname) l in
       let l' =
         List.map
-          (fun (from, vname, params_names, scheme, body, dep) ->
+          (fun (from, vname, params_names, scheme, body, dep, log_flag) ->
             let body' =
               subst_binding_body
                 ~param_unit ~bound_variables name_x by_expr body in
-            (from, vname, params_names, scheme, body', dep))
+            (from, vname, params_names, scheme, body', dep, log_flag))
           l in
       Env.TypeInformation.SF_let_rec l'
   | Env.TypeInformation.SF_theorem

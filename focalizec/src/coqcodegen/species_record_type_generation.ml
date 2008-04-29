@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.32 2008-04-23 13:19:28 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.33 2008-04-29 15:26:13 pessaux Exp $ *)
 
 
 
@@ -932,7 +932,7 @@ let generate_record_type_parameters ctx species_fields =
     List.map
       (function
         | Env.TypeInformation.SF_sig (_, _, _)
-        | Env.TypeInformation.SF_let (_, _, _, _, _, _)
+        | Env.TypeInformation.SF_let (_, _, _, _, _, _, _)
         | Env.TypeInformation.SF_let_rec _-> []
         | Env.TypeInformation.SF_theorem (_, _, _, logical_expr, _, _)
         | Env.TypeInformation.SF_property (_, _, _, logical_expr, _) ->
@@ -1048,7 +1048,7 @@ let generate_record_type ctx env species_descr =
   (* We must now generate the record's fields types. *)
   let output_one_field ~semi = function
     | Env.TypeInformation.SF_sig (from, n, sch)
-    | Env.TypeInformation.SF_let (from, n, _, sch, _, _) ->
+    | Env.TypeInformation.SF_let (from, n, _, sch, _, _, _) ->
         (begin
         (* Skip "rep", because it is processed just above. *)
         if (Parsetree_utils.name_of_vname n) <> "rep" then
@@ -1068,7 +1068,7 @@ let generate_record_type ctx env species_descr =
         end)
     | Env.TypeInformation.SF_let_rec l ->
         List.iter
-          (fun (from, n, _, sch, _, _) ->
+          (fun (from, n, _, sch, _, _, _) ->
             let ty = Types.specialize sch in
             Format.fprintf out_fmter "(* From species %a. *)@\n"
               Sourcify.pp_qualified_species from ;

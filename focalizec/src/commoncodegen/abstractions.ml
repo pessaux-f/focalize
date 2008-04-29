@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.11 2008-04-23 13:19:28 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.12 2008-04-29 15:26:13 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -184,7 +184,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
   List.map
     (function
       | Env.TypeInformation.SF_sig si -> FAI_sig si
-      | Env.TypeInformation.SF_let ((_, name, _, sch, body, _) as li) ->
+      | Env.TypeInformation.SF_let ((_, name, _, sch, body, _, _) as li) ->
           let (used_species_parameter_tys, dependencies_from_params,
                decl_children, def_children) =
             let body_as_fbk =
@@ -214,7 +214,7 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
       | Env.TypeInformation.SF_let_rec l ->
           let deps_infos =
             List.map
-              (fun ((_, name, _, sch, body, _) as li) ->
+              (fun ((_, name, _, sch, body, _, _) as li) ->
                 let body_as_fbk =
                   match body with
                    | Parsetree.BB_logical p -> FBK_logical_expr p
@@ -243,7 +243,8 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
                 (li, abstr_info))
               l in
           FAI_let_rec deps_infos
-      | Env.TypeInformation.SF_theorem ((_, name, sch, logical_expr, _, _) as ti) ->
+      | Env.TypeInformation.SF_theorem
+          ((_, name, sch, logical_expr, _, _) as ti) ->
           let (used_species_parameter_tys, dependencies_from_params,
                decl_children, def_children) =
             compute_lambda_liftings_for_field
@@ -265,7 +266,8 @@ let compute_abstractions_for_fields ~with_def_deps ctx fields =
             ai_dependencies_from_params = dependencies_from_params ;
             ai_min_coq_env = min_coq_env } in
           FAI_theorem (ti, abstr_info)
-      | Env.TypeInformation.SF_property ((_, name, sch, logical_expr, _) as pi) ->
+      | Env.TypeInformation.SF_property
+          ((_, name, sch, logical_expr, _) as pi) ->
           let (used_species_parameter_tys, dependencies_from_params,
                decl_children, def_children) =
             compute_lambda_liftings_for_field

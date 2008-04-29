@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.20 2008-04-05 18:48:16 weis Exp $ *)
+(* $Id: substColl.ml,v 1.21 2008-04-29 15:26:13 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -517,7 +517,8 @@ let subst_species_field ~current_unit c1 c2 = function
       let scheme' = Types.generalize ty' in
       Env.TypeInformation.SF_sig (from, vname, scheme')
       end)
-  | Env.TypeInformation.SF_let (from, vname, params_names, scheme, body, dep) ->
+  | Env.TypeInformation.SF_let
+      (from, vname, params_names, scheme, body, dep, log_flag) ->
       (begin
       Types.begin_definition () ;
       let ty = Types.specialize scheme in
@@ -539,13 +540,13 @@ let subst_species_field ~current_unit c1 c2 = function
       let scheme' = Types.generalize ty' in
       let body' = subst_binding_body ~current_unit c1 c2 body in
       Env.TypeInformation.SF_let
-        (from, vname, params_names, scheme', body', dep)
+        (from, vname, params_names, scheme', body', dep, log_flag)
       end)
   | Env.TypeInformation.SF_let_rec l ->
       (begin
       let l' =
         List.map
-          (fun (from, vname, params_names, scheme, body, dep) ->
+          (fun (from, vname, params_names, scheme, body, dep, log_flag) ->
             let ty = Types.specialize scheme in
             let ty' =
               (match c1 with
@@ -566,7 +567,7 @@ let subst_species_field ~current_unit c1 c2 = function
             Types.end_definition () ;
             let scheme' = Types.generalize ty' in
             let body' = subst_binding_body ~current_unit c1 c2 body in
-            (from, vname, params_names, scheme', body', dep))
+            (from, vname, params_names, scheme', body', dep, log_flag))
           l in
       Env.TypeInformation.SF_let_rec l'
       end)

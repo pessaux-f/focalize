@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: minEnv.ml,v 1.3 2008-04-05 18:52:44 weis Exp $ *)
+(* $Id: minEnv.ml,v 1.4 2008-04-29 15:26:13 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -64,7 +64,7 @@ let minimal_typing_environment universe species_fields =
   (* factorize code for both [Let] and [Let_rec] fields.   *)
   let process_one_let_binding l_binding =
     try
-      let (from, n, _, sch, _, _) = l_binding in
+      let (from, n, _, sch, _, _, _) = l_binding in
       let reason = VisUniverse.Universe.find n universe in
       if reason = VisUniverse.IU_only_decl then
         (* Keep in the environment, but as abstracted. *)

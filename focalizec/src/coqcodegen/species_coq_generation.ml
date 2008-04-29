@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.50 2008-04-24 13:30:41 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.51 2008-04-29 15:26:13 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1081,7 +1081,7 @@ let generate_recursive_let_definition ctx print_ctx env l =
        (* A "let", then a fortiori "let rec" construct *)
        (* must at least bind one identifier !          *)
        assert false
-   | [((from, name, params, scheme, body, _), ai)] ->
+   | [((from, name, params, scheme, body, _, _), ai)] ->
        (begin
        match body with
         | Parsetree.BB_logical _ ->
@@ -1221,7 +1221,7 @@ let generate_methods ctx print_ctx env generated_fields field =
          end) ;
        (* Nothing to keep for the collection generator. *)
        CSF_sig name
-   | Abstractions.FAI_let ((from, name, params, scheme, body, _),
+   | Abstractions.FAI_let ((from, name, params, scheme, body, _, _),
                            abstraction_info) ->
        (* No recursivity, then the method cannot call itself in its body *)
        (* then no need to set the [scc_lambda_lift_params_mapping] of    *)
@@ -1879,7 +1879,7 @@ let collection_compile env ~current_unit out_fmter collection_def
              Parsetree.se_params
              params_info.Env.CoqGenInformation.
                cgi_implemented_species_params_names in
-	 if true then failwith "STANDBY ...
+         if true then failwith "STANDBY ...
          apply_generator_to_parameters
            ctx env collection_body_params params_info")
   with Not_found ->
