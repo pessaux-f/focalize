@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: ast_equal.ml,v 1.6 2008-04-05 18:48:15 weis Exp $ *)
+(* $Id: ast_equal.ml,v 1.7 2008-04-29 13:27:01 pessaux Exp $ *)
 
 (* ********************************************************************** *)
 (** {b Descr} : This module performs test equality of the AST expression.
@@ -357,9 +357,11 @@ and binding alpha_eq_map bnd1 bnd2 =
 
     {b Rem} : Exported outside this module.      *)
 (* ********************************************* *)
-and logical_expr initial_alpha_eq_map initial_logical_expr1 initial_logical_expr2 =
+and logical_expr initial_alpha_eq_map initial_logical_expr1
+    initial_logical_expr2 =
   let rec __internal_logical_expr alpha_eq_map logical_expr1 logical_expr2 =
-    match (logical_expr1.Parsetree.ast_desc, logical_expr2.Parsetree.ast_desc) with
+    match (logical_expr1.Parsetree.ast_desc,
+           logical_expr2.Parsetree.ast_desc) with
      | ((Parsetree.Pr_forall (vnames1, ty_expr1, p1)),
         (Parsetree.Pr_forall (vnames2, ty_expr2, p2)))
      | ((Parsetree.Pr_exists (vnames1, ty_expr1, p1)),
@@ -378,7 +380,8 @@ and logical_expr initial_alpha_eq_map initial_logical_expr1 initial_logical_expr
      | ((Parsetree.Pr_or (p1, p1')), (Parsetree.Pr_or (p2, p2')))
      | ((Parsetree.Pr_and (p1, p1')), (Parsetree.Pr_and (p2, p2')))
      | ((Parsetree.Pr_equiv (p1, p1')), (Parsetree.Pr_equiv (p2, p2'))) ->
-         (logical_expr alpha_eq_map p1 p2) && (logical_expr alpha_eq_map p1' p2')
+         (logical_expr alpha_eq_map p1 p2) &&
+         (logical_expr alpha_eq_map p1' p2')
      | ((Parsetree.Pr_not p1), (Parsetree.Pr_not p2)) ->
          logical_expr alpha_eq_map p1 p2
      | ((Parsetree.Pr_expr e1), (Parsetree.Pr_expr e2)) ->
@@ -393,7 +396,8 @@ and logical_expr initial_alpha_eq_map initial_logical_expr1 initial_logical_expr
          logical_expr alpha_eq_map logical_expr1 p2
      | (_, _) -> false in
 
-  (* Now, really apply [__internal_logical_expr] after having normalised the logical_exprs. *)
+  (* Now, really apply [__internal_logical_expr] after *)
+  (* having normalised the logical_exprs. *)
   let logical_expr1' = normalise_logical_expr initial_logical_expr1 in
   let logical_expr2' = normalise_logical_expr initial_logical_expr2 in
   __internal_logical_expr initial_alpha_eq_map logical_expr1' logical_expr2'

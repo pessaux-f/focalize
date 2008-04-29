@@ -147,17 +147,16 @@ species Pre_order inherits Setoid =
   (** a characteristic property *)
   theorem geq_is_leq: all x y in Self,
     (!geq(x, y) -> !leq(y, x)) /\  (!leq(x, y) -> !geq(y, x))
-    proof:
-      by definition of geq
+    proof: by definition of geq
   ;
 
   theorem geq_reflexive: all x y in Self, !equal(x, y) -> !geq(x, y)
-  proof: by definition of leq_reflexive, equal_symmetric, geq_is_leq
+  proof: by property leq_reflexive, equal_symmetric, geq_is_leq
   ;
 
   theorem geq_transitive: all x y z in Self,
     !geq(x, y) -> !geq(y, z) -> !geq(x, z)
-    proof: by definition of leq_transitive, geq_is_leq
+    proof: by property leq_transitive, geq_is_leq
   ;
 
 
@@ -201,7 +200,7 @@ species Partial_order inherits Pre_order =
 
   theorem geq_antisymmetric: all x y in Self,
     !geq(x, y) -> !geq(y, x) -> !equal(x, y)
-    proof: by definition of leq_antisymmetric, geq_is_leq
+    proof: by property leq_antisymmetric, geq_is_leq
   ;
 
 end
@@ -320,7 +319,7 @@ species Meet_semi_lattice inherits Setoid =
         <2>1 prove !equal(i, !inf(!inf(i, x), y))
           by hypothesis H1, H2
              property inf_left_substitution_rule,
-             equal_symmetric, equal_transitive
+               equal_symmetric, equal_transitive
              definition of order_inf
         <2>9 qed
           by step <2>1
@@ -489,6 +488,27 @@ species Lattice inherits Meet_semi_lattice, Join_semi_lattice =
        <1>2 qed.
      ;
 
+  (** in a lattice there is only one ordering *)
+   theorem order_sup_refines_order_inf: all x y in Self,
+     (* x = x ^ y ; x v y = (x ^ y) v x = x v (x ^ y) = x *) 
+     !order_inf (y, x) -> !order_sup (x, y)
+     proof:
+       <1>1 assume x in Self,
+            assume y in Self,
+            assume H: !order_inf (y, x),
+            prove !order_sup (x, y)
+         <2>1 prove !equal (!sup (x, y), !sup (x, !inf (x, y)))
+           by hypothesis H
+              property inf_commutes, equal_transitive,
+                sup_right_substitution_rule
+              definition of order_inf
+         <2>2 qed by
+               step <2>1
+               property equal_transitive, equal_symmetric, inf_absorbes_sup
+               definition of order_sup
+       <1>2 qed.
+     ;
+
 (*
      proof:
        (* [rr]: Wow! I couldn't guess this until I performed the latter *)
@@ -570,11 +590,30 @@ species Distributive_lattice
           !sup_left_substitution_rule, !sup_right_substitution_rule,
           !equal_transitive, !equal_symmetric;
        *)
--- ??? What is this decl stuff ???
---      decl: inf_left_distributes inf_commutes
---            sup_left_substitution_rule sup_right_substitution_rule
---            equal_transitive equal_symmetric;
-      assumed;
+       <1>1 assume x in Self,
+            assume y in Self,
+            assume z in Self,
+           prove !equal (!inf (!sup (x, y), z), !sup (!inf (x, z), !inf (y, z)))
+           <2>1 prove !equal (!inf (z, !sup (x, y)),
+                              !sup (!inf (z, x), !inf (z, y)))
+                by property inf_left_distributes
+           <2>2 prove !equal (!inf (!sup (x, y), z), !inf (z, !sup (x, y))) 
+                by property inf_commutes 
+           <2>3 prove !equal (!inf (x, z), !inf (z, x)) by property inf_commutes
+           <2>4 prove !equal (!inf (y, z), !inf (z, y)) by property inf_commutes
+           <2>5 prove !equal (!sup (!inf (x, z), !inf (y, z)),
+                              !sup (!inf (z, x), !inf (y, z))) 
+                by step <2>3 property !sup_left_substitution_rule
+           <2>6 prove !equal (!sup (!inf (z, x), !inf (y, z)),
+                              !sup (!inf (z, x), !inf (z, y))) 
+                by step <2>4 property !sup_right_substitution_rule
+           <2>7 prove !equal (!sup (!inf (x, z), !inf (y, z)),
+                              !sup (!inf (z, x), !inf (z, y)))
+                by step <2>5, <2>6 property equal_transitive
+           <2>9 qed by step <2>1, <2>2, <2>7
+                    property !equal_transitive, !equal_symmetric
+      <1>2 qed.
+;
 
   (** a distributive lattice is always modular *)
   (* [rr]: shouldn't this be simplified ? *)
@@ -760,6 +799,12 @@ species Ordered_set inherits Partial_order =
   let lt(x, y) = not_b (Self!leq(y, x));
   proof of lt_is_not_leq =
     by property total_order definition of lt, different, equal;
+
+  proof of lt_is_not_leq =
+    by property total_order definition of lt, different, equal ;
+
+  proof of lt_is_irreflexive =
+    by property leq_reflexive, equal_reflexive definition of lt ;
 
 end
 ;;

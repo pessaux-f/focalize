@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.116 2008-04-25 10:42:27 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.117 2008-04-29 13:27:01 pessaux Exp $ *)
 
 
 
@@ -1691,9 +1691,11 @@ and typecheck_termination_proof_profile ctx env previous_fields profile =
               The function returns a 5-uplet whose 3 firts componente are
               suitable to be inserted in the structure of a species's type,
               and the last ones are the "proof-of" and "termination-proof-of"
-              fields that have been found among the fields . These "proof-of"
-              must be collapsed with their related property to lead to a
-              theorem before the normalization process starts.
+              fields that have been found among the fields. These "proof-of"
+              must be collapsed with their related property BUT at the
+              inheritance level where the proof is found (not at the one where
+              the property was enounced), to lead to a  theorem before the
+              normalization process starts.
               The "termination-proof-of" must be collapsed with their related
               "let-rec" definitions also before the normalization process
               starts.
@@ -2622,7 +2624,8 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
           (fun (accu_env, accu_ctx) field ->
             match field with
              | Env.TypeInformation.SF_sig (_, meth_name, meth_scheme)
-             | Env.TypeInformation.SF_let (_, meth_name, _, meth_scheme, _, _) ->
+             | Env.TypeInformation.SF_let
+                 (_, meth_name, _, meth_scheme, _, _) ->
                let e =
                  Env.TypingEnv.add_value meth_name meth_scheme accu_env in
                (* Now check if we inherited a [rep]. *)
@@ -2666,12 +2669,10 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
                    l in
                (e, accu_ctx)
              | Env.TypeInformation.SF_theorem  (_, theo_name, t_sch, _, _, _) ->
-               let e =
-                 Env.TypingEnv.add_value theo_name t_sch accu_env in
-               (e, accu_ctx)
+                 let e = Env.TypingEnv.add_value theo_name t_sch accu_env in
+                 (e, accu_ctx)
              | Env.TypeInformation.SF_property (_, prop_name, prop_sch, _, _) ->
-               let e =
-                 Env.TypingEnv.add_value prop_name prop_sch accu_env in
+                 let e = Env.TypingEnv.add_value prop_name prop_sch accu_env in
                  (e, accu_ctx))
           (current_env, current_ctx)
           inh_species_methods in
@@ -2692,58 +2693,122 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
 (* Parsetree.proof_def_desc -> current_species:Parsetree.qualified_vname -> *)
 (*   Env.TypeInformation.species_field list ->                              *)
 (*     (Env.TypeInformation.species_field list * bool)                      *)
-(* {b Descr} : Searches in the list the first SF_property field whose
-             name is equal to the [proof_of]'s name, then convert
-             this property field into a theorem fields by adding the
-             [pd_proof] field of the [proof_of].
-             Then return the initial [fields] list with this field
-             transformed inside and a boolean telling if a change
-             finally occured.
-             This process is used to make Parsetree.SF_proof diseaper,
-             merging their proof in the related property definition in
-             order to create an equivalent theorem instead.
+(* {b Descr} : Searches in the list the first SF_property or SF_theorem
+   field whose name is equal to the [proof_of]'s name, then convert
+   this property field into a theorem fields by adding the [pd_proof] field
+   of the [proof_of].
+   Then return the initial [fields] list with this field transformed inside
+   and a boolean telling if a change finally occured.
+   This process is used to make Parsetree.SF_proof diseaper, merging their
+   proof in the related property definition in order to create an equivalent
+   theorem instead. It also serves to merge proof re-done of a theorem
+   because the user knew that the therem's original proof was invalidated
+   and must be done again.
+
+   ATTENTION:
+   This process must only be done on non-inherited fields since the
+   possibly changed fields remains in the returned fields list. This is
+   wrong in case where the collapse occurs in an inherited field since
+   this changed fields must now be put in the non-inherited fields in
+   order that the rest of the analysis works correctly !
 
    {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************ *)
-let collapse_proof proof_of ~current_species fields =
+let collapse_proof_in_non_inherited proof_of ~current_species fields =
   let name_of_proof_of = proof_of.Parsetree.pd_name in
   let rec rec_find = function
     | [] -> ([], false)
     | field :: rem ->
-      (begin
+        (begin
         match field with
-        | Env.TypeInformation.SF_sig (_, _, _)
-        | Env.TypeInformation.SF_let (_, _, _, _, _, _)
-        | Env.TypeInformation.SF_let_rec _
-        | Env.TypeInformation.SF_theorem _ ->
-          let (collapsed_rem, was_collapsed) = rec_find rem in
-          (field :: collapsed_rem, was_collapsed)
-        | Env.TypeInformation.SF_property
-                (_, name, sch, logical_expr, deps_rep) ->
-          (begin
-            if name_of_proof_of = name then
-              (begin
-                (* We found the property related to the proof. *)
-                (* Change this property into a theorem.        *)
-                let new_field =
-                  Env.TypeInformation.SF_theorem
-                    (current_species, name, sch, logical_expr,
-                     proof_of.Parsetree.pd_proof, deps_rep) in
-                if Configuration.get_verbose () then
-                  Format.eprintf
-                    "Merging property '%a' and proof into theorem.@."
-                    Sourcify.pp_vname name;
+         | Env.TypeInformation.SF_sig (_, _, _)
+         | Env.TypeInformation.SF_let (_, _, _, _, _, _)
+         | Env.TypeInformation.SF_let_rec _ ->
+             let (collapsed_rem, was_collapsed) = rec_find rem in
+             (field :: collapsed_rem, was_collapsed)
+         | Env.TypeInformation.SF_theorem
+             (from, name, sch, logical_expr, _, deps_rep)
+         | Env.TypeInformation.SF_property
+             (from, name, sch, logical_expr, deps_rep) ->
+           (begin
+           if name_of_proof_of = name then
+             (begin
+             assert (from = current_species) ;
+             (* We found the property related to the proof. *)
+             (* Change this property into a theorem.        *)
+             let new_field =
+               Env.TypeInformation.SF_theorem
+                 (current_species, name, sch, logical_expr,
+                  proof_of.Parsetree.pd_proof, deps_rep) in
+             if Configuration.get_verbose () then
+               Format.eprintf
+                 "Merging property '%a' from '%a' and proof from '%a'\
+                 into theorem.@."
+                 Sourcify.pp_vname name
+                 Sourcify.pp_qualified_species from
+                 Sourcify.pp_qualified_species current_species ;
                 (* Stop the search now. Say that a change actually occured. *)
-                (new_field :: rem, true)
-              end)
-            else
-              (begin
-                (* Like the cas where the field was not a [SF_property]. *)
-                let (collapsed_rem, was_collapsed) = rec_find rem in
-                ((field :: collapsed_rem), was_collapsed)
-               end)
+             (new_field :: rem, true)
+             end)
+           else
+             (begin
+             (* Like the cas where the field was not a [SF_property]. *)
+             let (collapsed_rem, was_collapsed) = rec_find rem in
+             ((field :: collapsed_rem), was_collapsed)
+             end)
            end)
-       end) in
+        end) in
+  rec_find fields
+;;
+
+
+
+(** {B Descr} : Same than [collapse_proof_in_non_inherited] but instead o
+    re-insertign the changed field in the fields list, return the list
+    without the field and the changed field aside. *)
+let rec collapse_proof_in_inherited proof_of ~current_species fields =
+  let name_of_proof_of = proof_of.Parsetree.pd_name in
+  let rec rec_find = function
+    | [] -> ([], None)
+    | field :: rem ->
+        (begin
+        match field with
+         | Env.TypeInformation.SF_sig (_, _, _)
+         | Env.TypeInformation.SF_let (_, _, _, _, _, _)
+         | Env.TypeInformation.SF_let_rec _ ->
+             let (collapsed_rem, was_collapsed) = rec_find rem in
+             (field :: collapsed_rem, was_collapsed)
+         | Env.TypeInformation.SF_theorem
+             (from, name, sch, logical_expr, _, deps_rep)
+         | Env.TypeInformation.SF_property
+             (from, name, sch, logical_expr, deps_rep) ->
+             (begin
+             if name_of_proof_of = name then
+               (begin
+               (* We found the property related to the proof. *)
+               (* Change this property into a theorem.        *)
+               let new_field =
+                 Env.TypeInformation.SF_theorem
+                   (current_species, name, sch, logical_expr,
+                    proof_of.Parsetree.pd_proof, deps_rep) in
+               if Configuration.get_verbose () then
+                 Format.eprintf
+                   "Merging property '%a' from '%a' and proof from '%a'\
+                   into theorem.@."
+                   Sourcify.pp_vname name
+                   Sourcify.pp_qualified_species from
+                   Sourcify.pp_qualified_species current_species ;
+               (* Stop the search now. Say that a change actually occured. *)
+               (rem, (Some new_field))
+               end)
+             else
+               (begin
+               (* Like the cas where the field was not a [SF_property]. *)
+               let (collapsed_rem, was_collapsed) = rec_find rem in
+               ((field :: collapsed_rem), was_collapsed)
+               end)
+             end)
+        end) in
   rec_find fields
 ;;
 
@@ -2758,7 +2823,7 @@ let collapse_proof proof_of ~current_species fields =
 (* {b Descr} : Tries to find among [methods], property fields whose proofs
              are separately given in the list of proofs [found_proofs_of].
              Each time the search succeeds, the property and the related
-             proof are merge in a new theorem field, hence discarding the
+             proof are merged in a new theorem field, hence discarding the
              property fiels.
              Because this process is performed before the normalization
              pass, we still require to have 2 separate lists of methods:
@@ -2767,7 +2832,7 @@ let collapse_proof proof_of ~current_species fields =
              For this reason, the search will be done first on the methods
              defined at the current inheritance level (in order to find
              the "most recent") and only if the search failed, we will try
-             it again on the inherited methods?
+             it again on the inherited methods.
 
    {b Rem} : BE CAREFUL, such a merge now require a re-ordering of the
              final fields. In effect, by moving the proof_of field when
@@ -2791,19 +2856,27 @@ let collapse_proofs_of ~current_species found_proofs_of
         (* First, try on the "most recent" methods, i.e. the current *)
         (* inheritance level's ones.                                 *)
         let (collapsed_current, was_collapsed) =
-          collapse_proof
+          collapse_proof_in_non_inherited
             ~current_species found_proof_of.Parsetree.ast_desc accu_current in
         if was_collapsed then (accu_inherited, collapsed_current)
         else
           (begin
             (* No collapse in the current level's       *)
             (* methods, then try on the inherited ones. *)
-            let (collapsed_inherited, was_collapsed) =
-              collapse_proof
+            let (collapsed_inherited, collapsed_option) =
+              collapse_proof_in_inherited
                 ~current_species found_proof_of.Parsetree.ast_desc
                 accu_inherited in
-            if was_collapsed then (collapsed_inherited, accu_current)
-            else (accu_inherited, accu_current)      (* No collapse at all ! *)
+            match collapsed_option with
+             | None ->
+                 (accu_inherited, accu_current)      (* No collapse at all ! *)
+             | Some fresh_theorem ->
+                 (* Transfer the inherited field that had no proof to the *)
+                 (* non-inherited fields list since it received its proof *)
+                 (* now, i.e. in the non-inherited fields !               *)
+                 (* Note that now, in [collapsed_inherited] the collapsed *)
+                 (* field has now disapeared.                             *)
+                 (collapsed_inherited, (fresh_theorem :: accu_current))
            end))
       (revd_inherited_methods_infos, revd_methods_info)
       found_proofs_of in
@@ -3216,6 +3289,10 @@ let fields_fusion ~loc ctx phi1 phi2 =
               page 36. It addresses the problem of "finding i_0 the
               smallest index such as N(phi) inter N(psi_0) <> empty".
 
+              Since the list is ordered in the inheritance direction, i.e.
+              oldest inherited fields in head, the oldest is the first
+              found in the list.
+
     {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
 let oldest_inter_n_field_n_fields phi fields =
@@ -3256,46 +3333,135 @@ let oldest_inter_n_field_n_fields phi fields =
 ;;
 
 
+(** {b Descr} : Implement the silently "described" notion of conflict
+    detection mentionned in Virgile Prevosto's Phd page 57 line 6. *)
+let non_conflicting_fields_p f1 f2 =
+  match (f1, f2) with
+   | (Env.TypeInformation.SF_sig (_, v1, sch1),
+      Env.TypeInformation.SF_sig (_, v2, sch2))
+   | (Env.TypeInformation.SF_let (_, v1, _, sch1, _, _),
+      Env.TypeInformation.SF_sig (_, v2, sch2))
+   | (Env.TypeInformation.SF_sig (_, v1, sch1),
+      Env.TypeInformation.SF_let (_, v2, _, sch2, _, _)) ->
+        (* If signatures/lets wear the same names and have the *)
+        (* same scheme then fields are not conflicting.        *)
+        if v1 = v2 then
+          (begin
+          let ty1 = Types.specialize sch1 in
+          let ty2 = Types.specialize sch2 in
+          try
+            ignore
+              (Types.unify
+                 ~loc: Location.none ~self_manifest: None ty1 ty2) ;
+            (* Unification succeeded so fields have same type. *)
+            true
+          with _ -> false  (* Unification failed, then types are conflicting. *)
+          end)
+        else false (* Not the same fields names, then fields are conflicting. *)
+   | (Env.TypeInformation.SF_sig (_, v1, sch1),
+      (Env.TypeInformation.SF_let_rec l2))
+   | ((Env.TypeInformation.SF_let_rec l2),
+      Env.TypeInformation.SF_sig (_, v1, sch1)) ->
+        (* There is no conflict if one of the rec-bound identifiers wears *)
+        (* the same name than the signature and have the same type.       *)
+        List.exists
+          (fun (_, v, _, sch, _, _) ->
+            if v = v1 then
+              (begin
+              (* For each unification, take a fresh scheme for the signature *)
+              (* to prevent being poluted by previous unifications.          *)
+              let ty1 = Types.specialize sch1 in
+              let t = Types.specialize sch in
+              try
+                ignore
+                  (Types.unify ~loc: Location.none ~self_manifest: None ty1 t) ;
+                (* Unification succeeded so fields have same type. *)
+                true
+              with _ -> false  (* Unification failed: types are conflicting. *)
+              end)
+            else false)
+          l2
+   | (Env.TypeInformation.SF_let (from1, v1, _, _, _, _),
+      Env.TypeInformation.SF_let (from2, v2, _, _, _, _)) ->
+        (* Unless fields are wearing the same name and are coming from the   *)
+        (* same species, we consider that 2 let definitions are conflicting. *)
+        (* We could go further, applying equality modulo alpha-conversion    *)
+        (* but we don't do for the moment.                                   *)
+        (v1 = v2) && (from1 = from2)
+   | (Env.TypeInformation.SF_theorem (from1, v1, _, _, _, _),
+      Env.TypeInformation.SF_theorem (from2, v2, _, _, _, _)) ->
+       (* Since we don't want to inspect proofs, theorems are compatible   *)
+       (* only if they wear the same names and come from the same species. *)
+       (v1 = v2) && (from1 = from2)
+   | (Env.TypeInformation.SF_property (_, v1, _, b1, _),
+      Env.TypeInformation.SF_property (_, v2, _, b2, _)) ->
+        (* Two properties are the same if they are wearing the same *)
+        (* name and have the same logical expression as body.       *)
+        v1 = v2 && Ast_equal.logical_expr_equal_p b1 b2
+   | ((Env.TypeInformation.SF_let_rec l1),
+      (Env.TypeInformation.SF_let_rec l2)) ->
+        (* Same thing than for lets but on all the bound names. *)
+       (begin
+       try
+         List.for_all2
+           (fun (from1, v1, _, _, _, _) (from2, v2, _, _, _, _) ->
+             (from1 = from2) && (v1 = v2))
+           l1 l2
+       with Invalid_argument "List.for_all2" -> false
+       end)
+   | (_, _) -> false
+;;
 
-(* **************************************************************** *)
+
+
+(* ****************************************************************** *)
 (** {b Descr} : Implements the normalization algorithm described in
-              Virgile Prevosto's Phd, Section 3.7.1, page 36 plus
-              its extention to properties and theorems in Section
-              3.9.7, page 57.
+    Virgile Prevosto's Phd, Section 3.7.1, page 36 plus its extention
+    to properties and theorems in Section 3.9.7, page 57.
 
-    {b Rem}: Not exported outside this module.                      *)
-(* **************************************************************** *)
+      ATTENTION: Something that was not told in Virgile's Phd: in
+      case of inheriting a field several times via the SAME parent,
+      erasing must not be performed ! That's like if we did as if
+      there was no erasing to do.
+
+    {b Rem}: Not exported outside this module.                        *)
+(* ****************************************************************** *)
 let normalize_species ~loc ctx methods_info inherited_methods_infos =
   let w1 = ref (inherited_methods_infos @ methods_info) in
   let w2 = ref ([] : Env.TypeInformation.species_field list) in
   let continue = ref true in
   while !continue do
     match !w1 with
-    | [] -> continue := false
-    | phi :: bigX ->
-      (begin
-        match oldest_inter_n_field_n_fields phi !w2 with
-        | (None, _, _) ->
-           w1 := bigX ;
-           w2 := !w2 @ [phi]
-        | (Some psi_i0, head_sniped_w2, tail_sniped_w2) ->
-           (* Extract the names forming the erasing context. *)
-           let psi_i0_names =
-             Dep_analysis.ordered_names_list_of_fields [psi_i0] in
-           w1 :=  (fields_fusion ~loc ctx psi_i0 phi) :: bigX;
-           (* Rather apply the formula Section of Section 3.9.7, page 57. *)
-           (* Hence we erase in the tail of the list, i.e. in fields      *)
-           (* found after [psi_i0].                                       *)
-           let current_species =
-             (match ctx.current_species with
-              | None -> assert false
-              | Some sp_name -> sp_name) in
-           let erased_tail =
-             Dep_analysis.erase_fields_in_context
-               ~current_species psi_i0_names tail_sniped_w2 in
-           w2 := head_sniped_w2 @ erased_tail
-        end)
-  done;
+     | [] -> continue := false
+     | phi :: bigX ->
+         (begin
+         match oldest_inter_n_field_n_fields phi !w2 with
+          | (None, _, _) ->
+              w1 := bigX ;
+              w2 := !w2 @ [phi]
+          | (Some psi_i0, head_sniped_w2, tail_sniped_w2) ->
+              (begin
+              (* Extract the names forming the erasing context. *)
+              let psi_i0_names =
+                Dep_analysis.ordered_names_list_of_fields [psi_i0] in
+              w1 :=  (fields_fusion ~loc ctx psi_i0 phi) :: bigX ;
+              (* Apply the formula Section of Section 3.9.7, page 57.   *)
+              (* Hence we erase in the tail of the list, i.e. in fields *)
+              (* found after [psi_i0].                                  *)
+              let current_species =
+                (match ctx.current_species with
+                 | None -> assert false
+                 | Some sp_name -> sp_name) in
+              (* We only erase if the 2 found fields are conflicting. *)
+              let erased_tail =
+                if non_conflicting_fields_p phi psi_i0 then tail_sniped_w2
+                else
+                  Dep_analysis.erase_fields_in_context
+                    ~current_species psi_i0_names tail_sniped_w2 in
+              w2 := head_sniped_w2 @ erased_tail
+              end)
+         end)
+  done ;
   !w2
 ;;
 
@@ -3495,37 +3661,41 @@ let typecheck_species_def ctx env species_def =
   let (collapsed_inherited_methods_infos, collapsed_methods_info) =
     collapse_proofs_of
       ~current_species found_proofs_of inherited_methods_infos methods_info in
+  (* Now, compute the fields order to prevent ill-formness described in the  *)
+  (* [collapse_proofs_of] function's header. In effect, we may have injected *)
+  (* in the fresh species fields some theorem obtained by merging inherited  *)
+  (* properties whose proofs were given in the current species. Hence, the   *)
+  (* order of insertion may not be correct according to the really defined   *)
+  (* here fields of the species. So, let's reorganize topologically          *)
+  (* according to the dependencies.                                          *)
+  let new_order =
+    Dep_analysis.compute_fields_reordering
+      ~current_species collapsed_methods_info in
+  let reordered_collapsed_methods_info =
+    order_fields_according_to new_order collapsed_methods_info in
   if Configuration.get_verbose () then
     Format.eprintf
       "Normalizing species '%a'.@."
       Sourcify.pp_vname species_def_desc.Parsetree.sd_name;
-  (* Create the list of field "semi-normalized", i.e with inherited methods   *)
+  (* Create the list of field "semi-normalized", i.e. with inherited methods  *)
   (* normalized and in head of the list, and the fresh methods not normalized *)
   (* and in tail of the list.                                                 *)
   let semi_normed_meths =
-    collapsed_inherited_methods_infos @ collapsed_methods_info in
+    collapsed_inherited_methods_infos @ reordered_collapsed_methods_info in
   (* Ensure that the species is well-formed. *)
-  Dep_analysis.ensure_species_well_formed ~current_species semi_normed_meths;
+  Dep_analysis.ensure_species_well_formed ~current_species semi_normed_meths ;
   (* Then one must ensure that each method has the same type everywhere *)
   (* in the inheritance tree and more generaly create the normalised    *)
   (* form of the species.                                               *)
   let normalized_methods =
     normalize_species
-      ~loc: species_def.Parsetree.ast_loc ctx' collapsed_methods_info
+      ~loc: species_def.Parsetree.ast_loc ctx' reordered_collapsed_methods_info
       collapsed_inherited_methods_infos in
   (* Ensure that no method is polymorphic  (c.f. Virgile *)
   (* Prevosto's Phd section 3.3, page 24).               *)
   List.iter
     (detect_polymorphic_method ~loc: species_def.Parsetree.ast_loc)
     normalized_methods ;
-  (* Now, compute the fields order to prevent ill-formness described in the *)
-  (* [collapse_proofs_of] function's header.                                *)
-  let new_order =
-    Dep_analysis.compute_fields_reordering
-      ~current_species normalized_methods in
-  (* Now really re-order the normalized fields. *)
-  let reordered_normalized_methods =
-    order_fields_according_to new_order normalized_methods in
   if Configuration.get_verbose () then
     Format.eprintf
       "Computing dependencies inside species '%a'.@."
@@ -3535,29 +3705,29 @@ let typecheck_species_def ctx env species_def =
   (* before the normalization process), we get its final dependency graph. *)
   let species_dep_graph =
     Dep_analysis.build_dependencies_graph_for_fields
-      ~current_species reordered_normalized_methods in
+      ~current_species normalized_methods in
   (* If asked, generate the dotty output of the dependencies. *)
   (match Configuration.get_dotty_dependencies () with
    | None -> ()
    | Some dirname ->
        Dep_analysis.dependencies_graph_to_dotty
-         ~dirname ~current_species species_dep_graph);
+         ~dirname ~current_species species_dep_graph) ;
   (* Check whether the collection is fully defined. If so, then at code  *)
   (* generation-time, then en collection generator must be created. Note *)
   (* that this is independant of the fact to be a collection.            *)
   let is_closed =
     (try
-       ensure_collection_completely_defined ctx reordered_normalized_methods;
+       ensure_collection_completely_defined ctx normalized_methods ;
        (* If the check didn't fail, then the species if fully defined. *)
        true with
      | Collection_not_fully_defined _ -> false) in
   (* Let's build our "type" information. Since we are managing a species *)
   (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
   let species_description = {
-    Env.TypeInformation.spe_is_collection = false;
-    Env.TypeInformation.spe_is_closed = is_closed;
-    Env.TypeInformation.spe_sig_params = sig_params;
-    Env.TypeInformation.spe_sig_methods = reordered_normalized_methods } in
+    Env.TypeInformation.spe_is_collection = false ;
+    Env.TypeInformation.spe_is_closed = is_closed ;
+    Env.TypeInformation.spe_sig_params = sig_params ;
+    Env.TypeInformation.spe_sig_methods = normalized_methods } in
   (* Extend the initial environment with the species. Not the environment *)
   (* used to typecheck the internal definitions of the species !!!        *)
   let env_with_species =
@@ -3574,10 +3744,10 @@ let typecheck_species_def ctx env species_def =
   Types.end_definition () ;
   let species_as_type_description = {
     Env.TypeInformation.type_loc = Location.none ;
-    Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract;
+    Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
     Env.TypeInformation.type_identity = Types.generalize species_carrier_type;
     (* Nevers parameters for a species's carrier type ! *)
-    Env.TypeInformation.type_params = [];
+    Env.TypeInformation.type_params = [] ;
     Env.TypeInformation.type_arity = 0 } in
   let full_env =
     Env.TypingEnv.add_type
@@ -3596,7 +3766,7 @@ let typecheck_species_def ctx env species_def =
     Format.printf "@[<2>species %a%a@]@\n"
       Sourcify.pp_vname species_def_desc.Parsetree.sd_name
       Env.TypeInformation.pp_species_description species_description
-    end);
+    end) ;
   (PCM_species (species_def, species_description, species_dep_graph),
    species_carrier_type, full_env)
 ;;

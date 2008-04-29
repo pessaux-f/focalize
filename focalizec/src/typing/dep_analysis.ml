@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.36 2008-04-21 11:51:18 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.37 2008-04-29 13:27:01 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -996,7 +996,7 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
     tree_nodes ;
   (* Outputs all the edges between the nodes. *)
   List.iter
-    (fun { nn_name = n; nn_children = children } ->
+    (fun { nn_name = n ; nn_children = children } ->
       List.iter
         (fun ({ nn_name = child_name }, decl_kind) ->
           (* Just make a different style depending on the kind of dependency. *)
@@ -1305,6 +1305,8 @@ let erase_field field =
           Sourcify.pp_vname n Sourcify.pp_qualified_species from ;
       (* Turn the "theorem" into a "property".               *)
       (* Hence, destroys any def-dependency on the carrier ! *)
+(* [Unsure] Recalculer ces dépendances ? Je pense que le plus safe serait
+   de ne pas les changer ! *)
       let deps_rep' = { deps_rep with Env.TypeInformation.dor_def = false } in
       [Env.TypeInformation.SF_property (from, n, sch, prop, deps_rep')]
   | _ -> [field]                       (* Everything else is unchanged. *)
@@ -1326,7 +1328,7 @@ let erase_field field =
     {b Rem} : Exported outside this module.                            *)
 (* ******************************************************************* *)
 let erase_fields_in_context ~current_species context fields =
-  (* Now, the recursive function dealing with each field...*)
+  (* Now, the recursive function dealing with each field... *)
   let rec rec_erase rec_context = function
     | [] -> []
     | m_field :: l_rem_fields ->
@@ -1366,7 +1368,43 @@ let erase_fields_in_context ~current_species context fields =
             (* Intersection is empty. *)
             m_field :: (rec_erase rec_context l_rem_fields)
           else
-            (* Intersection non non-empty. Erase the current field. *)
+            (* Intersection non-empty. Erase the current field. *)
+            (begin
+            (* Useful information if verbose mode enabled. *)
+            if Configuration.get_verbose () then
+              (begin
+              (* Verbose information. *)
+              let (erase_from, erase_names) =
+                (match m_field with
+                 | Env.TypeInformation.SF_let (from, n, _, _, _, _)
+                 | Env.TypeInformation.SF_theorem (from, n, _, _, _, _)
+                 | Env.TypeInformation.SF_property (from, n, _, _, _)
+                 | Env.TypeInformation.SF_sig (from, n, _) -> (from, [n])
+                 | Env.TypeInformation.SF_let_rec flds ->
+                     (* Should nevers fail since "let"s must bind at least *)
+                     (* one identifier.                                    *)
+                     let (from, _, _, _, _, _)  = List.hd flds in
+                     let ns = List.map (fun (_, n, _, _, _, _) -> n) flds in
+                     (from, ns)) in
+              (* Print field(s) name(s) to erase. *)
+              Format.eprintf "Field(s): " ;
+              List.iter
+                (fun n -> Format.eprintf "'%a' " Sourcify.pp_vname n)
+                erase_names ;
+              Format.eprintf  "from '%a' must be erased in context: "
+                Sourcify.pp_qualified_species erase_from ;
+              (* Print the context in which the fields must be erased. *)
+              Parsetree_utils.DepNameSet.iter
+                (fun (n, _) -> Format.eprintf "%a, " Sourcify.pp_vname n)
+                rec_context ;
+              Format.eprintf "@." ;
+              Format.eprintf "since intersection with context is non-empty: " ;
+              Parsetree_utils.DepNameSet.iter
+                (fun (n, _) -> Format.eprintf "%a, " Sourcify.pp_vname n) 
+                (Parsetree_utils.DepNameSet.inter def_deps rec_context) ;
+              Format.eprintf ".@." ;
+              end) ;
+            (* Now, really process erasing. *)
             let erased_m_field = erase_field m_field in
             (* Extent the erasing context with names of the current field. *)
             let new_context =
@@ -1374,6 +1412,7 @@ let erase_fields_in_context ~current_species context fields =
                 rec_context (names_set_of_field m_field) in
             (* And then process the remaining fields. *)
             erased_m_field @ (rec_erase new_context l_rem_fields)
+            end)
       end) in
   (* ***************** *)
   (* Now do the job... *)

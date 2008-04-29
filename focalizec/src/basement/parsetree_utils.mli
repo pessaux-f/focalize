@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.mli,v 1.9 2008-04-23 13:19:28 pessaux Exp $ *)
+(* $Id: parsetree_utils.mli,v 1.10 2008-04-29 13:27:01 pessaux Exp $ *)
 
 val name_of_vname : Parsetree.vname -> string
 (** Extracts the inner string name of the [vname] variable name. *)
@@ -86,6 +86,5 @@ val vname_as_string_with_operators_expanded : Parsetree.vname -> string
 
 val type_coll_from_qualified_species :
   Parsetree.qualified_species -> Types.type_collection
-
 
 type species_param_kind = SPK_in | SPK_is

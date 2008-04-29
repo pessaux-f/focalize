@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.10 2008-04-23 13:19:28 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.11 2008-04-29 13:27:01 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -163,6 +163,7 @@ let vname_as_string_with_operators_expanded = function
   | Parsetree.Vpident s
   | Parsetree.Viident s -> parse_operator_string s
 ;;
+
 
 
 let type_coll_from_qualified_species (species_modname, species_vname) =
