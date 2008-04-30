@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.17 2008-04-30 08:54:36 pessaux Exp $
+# $Id: Makefile,v 1.18 2008-04-30 16:08:18 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file
@@ -27,7 +27,10 @@ FOCSRC_UNSAFE =	rings_fields.foc \
 	products_foc.foc \
 	quotients.foc \
 	small_integers.foc \
-	big_integers.foc
+	big_integers.foc \
+	parse_poly.foc \
+	ensembles_finis.foc
+#	polys_abstract.foc polys_concrete finite_fields fractions finite_factorize
 
 FOCMLS = $(FOCSRC:.foc=.ml)
 FOCMLS_UNSAFE = $(FOCSRC_UNSAFE:.foc=.ml)
@@ -81,6 +84,10 @@ quotients.ml: quotients.foc
 small_integers.ml: small_integers.foc
 	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
 big_integers.ml: big_integers.foc
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+parse_poly.ml: parse_poly.foc
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+polys_abstract.ml: polys_abstract.foc
 	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
 #End temporary
 
