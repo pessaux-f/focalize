@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.77 2008-04-29 15:26:13 pessaux Exp $ *)
+(* $Id: env.ml,v 1.78 2008-04-30 13:57:57 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -91,25 +91,32 @@ let env_list_assoc ~allow_opened searched list =
 
 (* Mostly for debug purpose.
 let debug_env_list_assoc ~allow_opened searched list =
+  let vname_as_string v =
+    (match v with
+     | Parsetree.Vlident n -> "Vlident " ^ n
+     | Parsetree.Vuident n -> "Vuident " ^ n
+     | Parsetree.Vpident n -> "Vpident " ^ n
+     | Parsetree.Viident n -> "Viident " ^ n
+     | Parsetree.Vqident n -> "Vqident " ^ n) in
   let rec rec_assoc = function
     | [] ->
         Format.eprintf "Search failed.\n";
         flush stderr;
         raise Not_found
     | (name, data) :: q ->
-        Format.eprintf "\"%s\" " (Parsetree_utils.name_of_vname name);
+        Format.eprintf "\"%s\" " (vname_as_string name);
         flush stderr;
         if name = searched then
           (begin
           match data with
            | BO_opened (fname, v) ->
                if allow_opened then
-         (begin
-         Format.eprintf
-           "Search successfully ends on opened (\"%s\")...\n" fname;
-         flush stderr;
-         v
-         end)
+                 (begin
+                 Format.eprintf
+                   "Search successfully ends on opened (\"%s\")...\n" fname;
+                 flush stderr ;
+                 v
+                 end)
                else rec_assoc q
            | BO_absolute v ->
                Format.eprintf "Search successfully ends on absolute...\n";
@@ -118,7 +125,8 @@ let debug_env_list_assoc ~allow_opened searched list =
           end)
         else rec_assoc q in
   Format.eprintf
-    "Search starts for \"%s\"...\n" (Parsetree_utils.name_of_vname  searched);
+    "Search starts for \"%s\"... with allow_opened = %b\n"
+    (vname_as_string searched) allow_opened ;
   flush stderr;
   rec_assoc list
 ;;
