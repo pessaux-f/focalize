@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.16 2008-04-25 10:42:27 pessaux Exp $
+# $Id: Makefile,v 1.17 2008-04-30 08:54:36 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file
@@ -26,7 +26,8 @@ FOCSRC_UNSAFE =	rings_fields.foc \
 	array_foc.foc \
 	products_foc.foc \
 	quotients.foc \
-	small_integers.foc
+	small_integers.foc \
+	big_integers.foc
 
 FOCMLS = $(FOCSRC:.foc=.ml)
 FOCMLS_UNSAFE = $(FOCSRC_UNSAFE:.foc=.ml)
@@ -63,6 +64,26 @@ basics_special_case:
 	$(RM) -f basics.v
 	$(LN) -s ../tmp_basics.v basics.v
 	$(COQC) basics.v
+
+# Temporary for no Coq...
+rings_fields.ml: rings_fields.foc
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+random_foc.ml: random_foc.foc
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+integers.ml: integers.foc
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+array_foc.ml: array_foc.foc
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+products_foc.ml: products_foc.foc
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+quotients.ml: quotients.foc
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+small_integers.ml: small_integers.foc
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+big_integers.ml: big_integers.foc
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+#End temporary
+
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .foc .fo .v .vo
 
