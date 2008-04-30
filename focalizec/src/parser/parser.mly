@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.90 2008-04-30 13:56:53 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.91 2008-04-30 15:37:32 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -78,9 +78,9 @@ let mk_prefix_application s e1 =
   mk (E_app (mk_local_expr_var (Vpident s), [e1]))
 ;;
 
-let mk_cons () = mk_global_constructor_ident (Some "basics") (Vuident "Cons");;
-let mk_nil () = mk_global_constructor_ident (Some "basics") (Vuident "Nil");;
-let mk_unit () = mk_global_constructor_ident (Some "basics") (Vuident "Unit");;
+let mk_cons () = mk_global_constructor_ident (Some "basics") (Vuident "::");;
+let mk_nil () = mk_global_constructor_ident (Some "basics") (Vuident "[]");;
+let mk_unit () = mk_global_constructor_ident (Some "basics") (Vuident "()");;
 
 let mk_proof_label (s1, s2) =
   try int_of_string s1, s2 with
