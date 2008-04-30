@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.78 2008-04-30 13:57:57 pessaux Exp $ *)
+(* $Id: env.ml,v 1.79 2008-04-30 15:37:55 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -1274,8 +1274,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
              ~loc ~current_unit opt_module_qual env in
          (* Check if the lookup can return something *)
          (* coming from an opened module.            *)
-         let allow_opened =
-           allow_opened_p current_unit opt_module_qual in
+         let allow_opened = allow_opened_p current_unit opt_module_qual in
          (* Build the complete species name, including its hosting *)
          (* module. If none specified, then this module is the     *)
          (* current one because this means that the species name   *)
@@ -1480,18 +1479,7 @@ module ScopingEMAccess = struct
 
   let find_module = scope_find_module
   let pervasives () =
-    { constructors = [
-        (Parsetree.Vlident "[]", BO_opened ("basics", "basics"));
-        (Parsetree.Viident "::", BO_opened ("basics", "basics"))
-        ];
-      labels = [];
-      types = [
-        ((Parsetree.Vlident "list"),
-         BO_opened
-           ("", ScopeInformation.TBI_builtin_or_var))
-        ];
-      values = [];
-      species = [] }
+    { constructors = []; labels = []; types = []; values = []; species = [] }
 
 
   let make_value_env_from_species_methods species spec_info =
@@ -1551,52 +1539,7 @@ module TypingEMAccess = struct
       {b Rem} : Exported outside this module.                     *)
   (* ************************************************************ *)
   let pervasives () =
-    (* [Unsure] A virer une fois que les listes seront dans basics.foc. *)
-    (* Create the types scheme for "[]". *)
-    let nil_scheme =
-      (let v = Types.type_variable () in
-      Types.generalize (Types.type_list v)) in
-    (* Create the types scheme for "::". *)
-    let cons_scheme =
-      (let v = Types.type_variable () in
-      Types.generalize
-        (Types.type_arrow
-           (Types.type_tuple [v; (Types.type_list v)])
-           (Types.type_list v))) in
-    (* Create the description of the type list. *)
-    let list_param = Types.type_variable () in
-    let list_params = [list_param] in
-    let list_identity =
-      Types.build_type_def_scheme
-        ~variables: list_params ~body: (Types.type_list list_param) in
-    let list_type_description = {
-      TypeInformation.type_loc = Location.none ;
-      TypeInformation.type_kind =
-        TypeInformation.TK_variant [
-          (Parsetree.Vlident "[]", TypeInformation.CA_zero, nil_scheme);
-          (Parsetree.Viident "::", TypeInformation.CA_one, cons_scheme) ];
-      TypeInformation.type_identity = list_identity;
-      TypeInformation.type_params = list_params;
-      TypeInformation.type_arity = 1 } in
-    (* And now the structure of the environment itself. *)
-    {
-     constructors = [
-       (Parsetree.Vlident "[]",
-        BO_opened
-          ("basics", { TypeInformation.cstr_arity = TypeInformation.CA_zero;
-               TypeInformation.cstr_scheme = nil_scheme }));
-        (Parsetree.Viident "::",
-         BO_opened
-           ("basics", { TypeInformation.cstr_arity = TypeInformation.CA_one;
-        TypeInformation.cstr_scheme = cons_scheme }))
-        ];
-     labels = [];
-     types = [
-       ((Parsetree.Vlident "list"), BO_opened ("basics", list_type_description))
-      ];
-    values = [];
-    species = [] }
-
+    { constructors = []; labels = []; types = []; values = []; species = [] }
 
 
   (* ******************************************************************** *)
@@ -1650,8 +1593,7 @@ module MlGenEMAccess = struct
 
   let find_module = mlgen_find_module
   let pervasives () =
-    { constructors = []; labels = []; types = []; values = [];
-      species = [] }
+    { constructors = []; labels = []; types = []; values = []; species = [] }
 
 
   let make_value_env_from_species_methods _species _spec_info =
@@ -1678,8 +1620,7 @@ module CoqGenEMAccess = struct
 
   let find_module = coqgen_find_module
   let pervasives () =
-    { constructors = []; labels = []; types = []; values = [];
-      species = [] }
+    { constructors = []; labels = []; types = []; values = []; species = [] }
 
 
   let make_value_env_from_species_methods _species spec_info =
