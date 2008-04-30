@@ -192,6 +192,9 @@ let base_eq =
   | coq -> {* [Unsure] *}
 ;;
 
+let ( = ) (x, y) = base_eq (x, y) ;;
+
+
 theorem beq_refl : all x in 'a, base_eq (x, x) proof: assumed ;;
 theorem beq_symm: all x y in 'a, base_eq (x, y) -> base_eq (y, x)
   proof: assumed ;;
@@ -317,6 +320,9 @@ let int_plus =
   | caml -> {* Ml_builtins.int_plus *}
   | coq -> {* coq_builtins.bi__int_plus *}
 ;;
+
+let ( + ) (x, y) = int_plus (x, y) ;;
+
 
 theorem int_0_plus: all x y in int,
   #base_eq (x, 0) -> #base_eq (#int_plus (x, y), y)
@@ -458,6 +464,8 @@ let sc =
   | caml -> {* Ml_builtins.str_cat *}
   | coq -> {* [Unsure] *}
 ;;
+
+let ( ^ ) (x, y) = sc (x, y) ;;
 
 let str_lt =
   internal string -> string -> bool
