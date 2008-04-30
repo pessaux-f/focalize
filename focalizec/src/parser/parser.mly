@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.89 2008-04-15 21:14:43 weis Exp $ *)
+(* $Id: parser.mly,v 1.90 2008-04-30 13:56:53 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -66,13 +66,14 @@ let mk_global_expr_var qual vname =
   mk (E_var (mk_global_expr_ident qual vname))
 ;;
 
-let mk_qual_infix_application e1 s qual e2 =
-  mk (E_app (mk_global_expr_var qual (Viident s), [e1; e2]))
-;;
-
+(* Infix operators without scope MUST be parsed as LOCAL ! A global  *)
+(* identifier whose scope is None is reserved for identifiers of the *)
+(* form "#foo", meaning that we want the identifier "foo" being at   *)
+(* the toplevel of the current compilation unit.                     *)
 let mk_infix_application e1 s e2 =
-  mk (E_app (mk_global_expr_var None (Viident s), [e1; e2]))
+  mk (E_app (mk_local_expr_var (Viident s), [e1; e2]))
 ;;
+(* Same comment for prefix operators. *)
 let mk_prefix_application s e1 =
   mk (E_app (mk_local_expr_var (Vpident s), [e1]))
 ;;
@@ -901,8 +902,6 @@ expr:
     { mk_infix_application $1 $2 $3 }
   | expr COLON_OP expr
     { mk_infix_application $1 $2 $3 }
-/*  | expr opt_lident SHARP PLUS_OP expr*/
-/*    { mk_qual_infix_application $1 $2 $4 $5 }*/
   | expr PLUS_OP expr
     { mk_infix_application $1 $2 $3 }
   | expr DASH_OP expr
