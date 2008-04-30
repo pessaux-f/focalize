@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.79 2008-04-30 15:37:55 pessaux Exp $ *)
+(* $Id: env.ml,v 1.80 2008-04-30 16:09:51 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -100,7 +100,7 @@ let debug_env_list_assoc ~allow_opened searched list =
      | Parsetree.Vqident n -> "Vqident " ^ n) in
   let rec rec_assoc = function
     | [] ->
-        Format.eprintf "Search failed.\n";
+        Format.eprintf "\nSearch failed.\n";
         flush stderr;
         raise Not_found
     | (name, data) :: q ->
@@ -113,13 +113,13 @@ let debug_env_list_assoc ~allow_opened searched list =
                if allow_opened then
                  (begin
                  Format.eprintf
-                   "Search successfully ends on opened (\"%s\")...\n" fname;
+                   "@\nSearch successfully ends on opened (\"%s\")...\n" fname;
                  flush stderr ;
                  v
                  end)
                else rec_assoc q
            | BO_absolute v ->
-               Format.eprintf "Search successfully ends on absolute...\n";
+               Format.eprintf "@\nSearch successfully ends on absolute...\n";
                flush stderr ;
                v
           end)

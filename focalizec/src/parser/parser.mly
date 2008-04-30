@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.91 2008-04-30 15:37:32 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.92 2008-04-30 16:09:51 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -78,7 +78,7 @@ let mk_prefix_application s e1 =
   mk (E_app (mk_local_expr_var (Vpident s), [e1]))
 ;;
 
-let mk_cons () = mk_global_constructor_ident (Some "basics") (Vuident "::");;
+let mk_cons () = mk_global_constructor_ident (Some "basics") (Viident "::");;
 let mk_nil () = mk_global_constructor_ident (Some "basics") (Vuident "[]");;
 let mk_unit () = mk_global_constructor_ident (Some "basics") (Vuident "()");;
 
