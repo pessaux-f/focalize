@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.38 2008-04-29 15:26:13 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.39 2008-05-05 13:00:20 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -29,14 +29,6 @@
 
 
 open Parsetree
-
-(* ********************************************************** *)
-(** {b Descr} : Raised if a species appears to be ill-formed.
-
-    {b Rem} : Exported outside this module.                   *)
-(* ********************************************************** *)
-exception Ill_formed_species of Parsetree.qualified_vname ;;
-
 
 
 (* ****************************************************************** *)
@@ -754,6 +746,20 @@ type name_node = {
 
 
 
+(* ********************************************************** *)
+(** {b Descr} : Raised if a species appears to be ill-formed.
+
+    {b Rem} : Exported outside this module.                   *)
+(* ********************************************************** *)
+exception Ill_formed_species of
+  (Parsetree.qualified_vname *  (** Species considered as ill-formed. *)
+   name_node *          (** The field name that trigerred the ill-formation. *)
+   name_node list)   (** The undeclared recusion path discovered, proving that
+                         the species is ill-formed. *)
+;;
+
+
+
 (* ******************************************************************* *)
 (* name_node list ref -> (Parsetree.vname * Types.type_simple) ->      *)
 (*   name_node                                                         *)
@@ -1153,55 +1159,80 @@ let compute_fields_reordering ~current_species fields =
 
 
 
-(* ************************************************************************ *)
-(* name_node -> name_node -> bool                                           *)
+(* ******************************************************************** *)
+(* name_node -> name_node -> (bool * name_node list)                    *)
 (** {b Descr} : Checks for a non trivial path from [start_node] to
-              [start_node]. "Non-trivial" means that the path must at least
-              be of length 1.
+    [start_node]. "Non-trivial" means that the path must at least be of
+    length 1.
+    ATTENTION: Since now "rep" is a field like the others, but does not
+    participate to the path detection, we must prevent search through
+    paths involving "rep", hence stop as soon as we find it, returning
+    [false].
+    By the way, if a path exists, we return the list of nodes forming
+    it.
 
-    {b Rem} : Not exported outside this module.                             *)
-(* ************************************************************************ *)
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
 let is_reachable start_node end_node =
   (* List of already seen nodes. Will be extended during the search. *)
   let seen = ref ([] : name_node list) in
-  let rec rec_search current_node =
+
+  let rec find_on_children path = function
+    | [] -> (false, [])
+    | (n, _) :: q ->
+        match rec_search path n with
+         | (false, _) -> find_on_children path q
+         | found -> found
+
+  and rec_search path current_node =
     (* If the current node was already seen, this means that ... we already  *)
     (* saw it, then we already checked if the [end_node] was in its children *)
     (* and the anwser was NOT. Hence there is no reason to start again the   *)
     (* search, we will get the same answer forever (and loop forever of      *)
     (* course by the way).                                                   *)
-    if List.memq current_node !seen then false
+    if List.memq current_node !seen ||
+       current_node.nn_name = (Parsetree.Vlident "rep") then (false, [])
     else
       (begin
-      (* We check if the current node's children contain en [end_node]. This *)
-      (* way, for each node, we are sure that the possibly found path is not *)
-      (* the trivial path (because we explicitly look inside the children    *)
-      (* and if a node is acceptable in the children, then the path length   *)
-      (* is mandatorily non-null).                                           *)
+      (* We build the path in reverse order for sake of efficiency. *)
+      let path' = current_node :: path in
+      (* We check if the current node's children contain the [end_node]. This *)
+      (* way, for each node, we are sure that the possibly found path is not  *)
+      (* the trivial path (because we explicitly look inside the children     *)
+      (* and if a node is acceptable in the children, then the path length    *)
+      (* is mandatorily non-null).                                            *)
       if List.exists
-          (fun (n, _) -> n == end_node) current_node.nn_children then true
+          (fun (n, _) -> n == end_node) current_node.nn_children then
+        (true, path')
       else
         (begin
         seen := current_node :: !seen ;
         (* The [end_node] was not found in the children, *)
         (* then search in the children.                  *)
-        List.exists (fun (n, _) -> rec_search n) current_node.nn_children
+        find_on_children path' current_node.nn_children
         end)
       end) in
-  (* Start the search. *)
-  rec_search start_node
+  (* Start the search with an empty path history. *)
+  rec_search [] start_node
 ;;
 
 
 
-(* *********************************************************************** *)
-(* name_node list -> -> Parsetree.vname -> Parsetree.vname ->              *)
-(*   Env.TypeInformation.species_field list -> bool                        *)
+(* ****************************************************************** *)
+(* name_node list -> -> Parsetree.vname -> Parsetree.vname ->         *)
+(*   Env.TypeInformation.species_field list ->                        *)
+(*     (name_node * name_node) option                                 *)
 (** {b Descr} : Implements the relation "left-oriented triangle" of
-              Virgile Prevosto's Phd, section 3.5, page 32, definition 17.
+    Virgile Prevosto's Phd, section 3.5, page 32, definition 17.
+    We added a way to simply detect and pinpoint the ill-formation
+    of the species by returning [Some] of the 2 conflicting fields.
+    Then according to the original definition, None means [false] and
+    [Some] means [true] (i.e. there exists a path leading to a
+    ill-formation) and we provide by the way the 2 fields between
+    which the path exists.
 
-    {b Rem} : Not exported outside this module.                            *)
-(* *********************************************************************** *)
+    {b Rem} : Not exported outside this module.                       *)
+(* ****************************************************************** *)
 let left_triangle dep_graph_nodes x1 x2 fields =
   (* Guess the fields where x1 is recursively bound. *)
   let x1_arrow = clockwise_arrow x1 fields in
@@ -1211,22 +1242,33 @@ let left_triangle dep_graph_nodes x1 x2 fields =
   (* product of the names bound by "clockwise-arrow" of [x1] and those *)
   (* bound by "clockwise-arrow" of [x2]. Intuitively, we will apply    *)
   (* this predicate on all possible combinaisons of [y_1] and [y_n].   *)
-  List.exists
-    (fun y1 ->
-      List.exists
-        (fun yn ->
-          (* Search a path in the graph from yn to y2. The lookup for *)
-          (* nodes y1 and yn should never fail because the graph was  *)
-          (* created before.                                          *)
-          let y1_node =
-            List.find (fun node -> node.nn_name = y1) dep_graph_nodes in
-          let yn_node =
-            List.find (fun node -> node.nn_name = yn) dep_graph_nodes in
-          (* Because our graph edges link from yn to y1, we must invert *)
-          (* the start/end nodes.                                       *)
-          is_reachable yn_node y1_node)
-        x2_arrow)
-    x1_arrow
+  let bad_formed = ref None in
+  let check () =
+    List.exists
+      (fun y1 ->
+        List.exists
+          (fun yn ->
+            (* Search a path in the graph from yn to y1. The lookup for *)
+            (* nodes y1 and yn should never fail because the graph was  *)
+            (* created before.                                          *)
+            let y1_node =
+              List.find (fun node -> node.nn_name = y1) dep_graph_nodes in
+            let yn_node =
+              List.find (fun node -> node.nn_name = yn) dep_graph_nodes in
+            (* Because our graph edges link from yn to y1, we must invert *)
+            (* the start/end nodes.                                       *)
+            match is_reachable yn_node y1_node with
+             | (false, _) -> false
+             | (true, found_path) ->
+                 (* That's a bit casual a programming fashion, but it works.. *)
+                 (* This allows to easily return the error reason...          *)
+                 bad_formed := Some (yn_node, y1_node, found_path) ;
+                 true)
+          x2_arrow)
+      x1_arrow in
+  ignore (check ()) ;
+  (* Oooooh, cheater ! *)
+  !bad_formed
 ;;
 
 
@@ -1249,9 +1291,18 @@ let ensure_species_well_formed ~current_species fields =
   List.iter
     (fun x_name ->
       let ill_f = left_triangle dep_graph_nodes x_name x_name fields in
-      if ill_f then
-       let (modname, species_vname) = current_species in
-       raise (Ill_formed_species (Qualified (modname, species_vname))))
+      match ill_f with
+       | Some (node1, _, found_path) ->
+           (* Forget the second node, we always call the *)
+           (* path-search with twice the same name...    *)
+           let (modname, species_vname) = current_species in
+           raise
+             (Ill_formed_species
+                ((Qualified (modname, species_vname)), node1, found_path))
+       | None ->
+           (* No path leading to recursive fields that were not declared *)
+           (* recursive at the origin, hence, all is right...            *)
+           ())
     names
 ;;
 

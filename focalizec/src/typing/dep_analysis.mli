@@ -12,9 +12,8 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.mli,v 1.12 2008-01-29 14:51:44 pessaux Exp $ *)
+(* $Id: dep_analysis.mli,v 1.13 2008-05-05 13:00:20 pessaux Exp $ *)
 
-exception Ill_formed_species of Parsetree.qualified_vname
 
 type decl_dependency_kind = DDK_from_type | DDK_from_body
 
@@ -25,6 +24,9 @@ type name_node = {
   nn_type : Types.type_simple ;
   mutable nn_children : (name_node * dependency_kind) list
 }
+
+exception Ill_formed_species of
+  (Parsetree.qualified_vname * name_node * name_node list)
 
 val ensure_species_well_formed :
   current_species: Parsetree.qualified_species ->

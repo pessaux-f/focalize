@@ -1,6 +1,6 @@
 (*pp basic_ext.cmo*)
 
-(* $Id: ensembles_finis.foc,v 1.1 2008-04-30 16:08:18 pessaux Exp $ *)
+(* $Id: ensembles_finis.foc,v 1.2 2008-05-05 13:00:20 pessaux Exp $ *)
 
 (** Exemple de fichier FoC: Ensembles ordonnés. *)
 use "basics" ;;
@@ -53,7 +53,7 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
      @mathml <in/>
      @latex infix \in
    *)
-  let est_element (x, e)  = !sous_ensemble (!singleton (x), e);
+  let est_element (x in A, e in Self)  = !sous_ensemble (!singleton (x), e);
 
   let equal (x, y)= and_b (!sous_ensemble (x, y), !sous_ensemble (y, x));
 
@@ -279,6 +279,8 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
    definition of ajoute_element ;
 end ;;
 
+
+
 (****************************************************************************)
 
 (** Cas des sous-ensemble d'un ensemble ordonné. *)
@@ -345,15 +347,16 @@ theorem min_inf2:
 end ;;
 
 
+
 (*******************************************************)
 
 (** implantation des sous-ensembles à partir de listes; cas non ordonné. *)
 species Liste (A is Setoid) inherits Ensembles_finis (A) =
 
-  rep = list (A) ;
+  rep = basics#list (A) ;
 
   (** Impression des résultats. *)
-  let print (l) =
+  let print (l in Self) =
     let rec aux (l) =
       match l with
         | basics#[] -> "]"
@@ -362,23 +365,23 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
 
   (** Invariant de representation: les listes ne contiennent pas
      d'éléments en double. *)
-  let rec bien_formee (l in Self) =
+  let rec bien_formee (l in Self) in bool =
     match l with
-      | [ ] -> #True
-      | a :: l -> #and_b (#not_b (!est_element (a, l)), !bien_formee (l)) ;
+      | [ ] -> true
+      | a :: l -> and_b (not_b (!est_element (a, l)), !bien_formee (l)) ;
 
   let vide in Self = [ ] ;
 
-  let singleton (x)= [x] ;
+  let singleton (x in A) in Self = [x] ;
 
-  let est_element (x, e) =
+  let est_element (x in A, e in Self) in basics#bool =
     let rec aux (l) =
       match l with
-        | [ ] -> #False
-        | y :: l -> if A!equal (x, y) then #True else aux (l) in
+        | [ ] -> false
+        | y :: l -> if A!equal (x, y) then true else aux (l) in
     aux (e) ;
 
-  theorem equal_congr_est_element : all s in self, all x y in A,
+  theorem equal_congr_est_element : all s in Self, all x y in A,
    A!equal (x, y) -> !est_element (x, s) -> !est_element (y, s)
   proof :
     (* [Unsure - à laisser ?]
@@ -416,10 +419,10 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
      Elim H7.
    *};
 
-  let rec sous_ensemble (e1, e2) =
-  match e1 with
-    | [ [] ] -> #True
-    | [ x :: l ] -> #and_b (!est_element (x, e2), !sous_ensemble (l, e2)) ;
+  let rec sous_ensemble (e1 in Self, e2 in Self) in bool =
+     match e1 with
+      | [ ] -> true
+      | x :: l -> and_b (!est_element (x, e2), !sous_ensemble (l, e2)) ;
 
   proof of sous_ensemble_spec =
     (* [Unsure - à laisser ?]
@@ -538,7 +541,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
     *};
 
 
-  let ajoute_element (x in a, l in Self) in Self =
+  let ajoute_element (x in A, l in Self) in Self =
     if !est_element (x, l) then l else x :: l ;
 
 
@@ -626,23 +629,30 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
     Assumption.
     *};
 
-  let diff (e1, e2) =
+  let rec remove_element (x in A, l in Self) in Self =
+     match l with
+      | [ ] -> [ ]
+      | y :: l ->
+         if A!equal (x, y) then l
+         else y :: !remove_element (x, l) ;
+
+  let diff (e1 in Self, e2 in Self) =
     let rec aux (accu, l) =
        match l with
-         | [] -> accu
+         | [ ] -> accu
          | x :: l -> aux (!remove_element (x, accu), l) in
     aux (e1, e2) ;
 
-  let raw_cardinal (l in self) in int =
+  let raw_cardinal (l in Self) in int =
      let rec aux (l, x) =
         match l with
-        | [ [] ] -> x
-        | [ _ :: l ] -> aux (l, x + 1) in
+        | [ ] -> x
+        |  _ :: l -> aux (l, x + 1) in
      aux (l, 0) ;
 
    let cardinal (l in Self) in int =
       if !bien_formee (l) then !raw_cardinal (l)
-      else #foc_error ("internal error") ;
+      else foc_error ("internal error") ;
 
 (*
 (*   theorem longueur_vide: self!longueur(self!vide) = 0
@@ -668,11 +678,11 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
           EApply Hrec.
          *}; *)
 *)
-(* Modif : en *)
-let cons(x in a, l in self) in self = x :: l;
+  (* Modif : en *)
+  let cons (x in A, l in Self) in Self = x :: l ;
 
 local theorem cons_bien_formee:
-  all x in a, all l in self,
+  all x in A, all l in Self,
     ~ (!est_element (x, l)) -> !bien_formee (l) -> !bien_formee (!cons (x, l))
    proof:
      (* [Unsure - à laisser ?]
@@ -701,7 +711,7 @@ local theorem cons_bien_formee:
 
    local theorem cons_elem:
    all x y in A, all l in Self,
-    !est_element (y ,!cons (x, l)) -> ~ (A!equal (x, y)) -> !est_element (y, l)
+    !est_element (y, !cons (x, l)) -> ~ (A!equal (x, y)) -> !est_element (y, l)
    proof:
       (* [Unsure - à laisser ?]
          def: cons est_element; *)
@@ -716,8 +726,7 @@ local theorem cons_bien_formee:
      *};
 
   local theorem cons_elem2:
-    all x in A, all l in Self,
-      !est_element (x,!cons (x, l))
+    all x in A, all l in Self, !est_element (x, !cons (x, l))
   proof:
      (* [Unsure - à laisser ?]
         def: est_element cons; *)
@@ -729,7 +738,7 @@ local theorem cons_bien_formee:
 
   local theorem cons_elem3:
     all x y in A, all l in Self,
-      !est_element (y, l) ->!est_element (y, !cons (x, l))
+      !est_element (y, l) -> !est_element (y, !cons (x, l))
    proof:
     (* [Unsure - à laisser ?]
        def: cons est_element; *)
@@ -755,10 +764,10 @@ local theorem cons_bien_formee:
      EAuto with setoid.
      *};
 
-  let rec union (e1, e2) =
+  let rec union (e1 in Self, e2 in Self) =
     match e1 with
-     | [ [] ] -> e2
-     | [ x :: l ] -> !union (L,!ajoute_element (x, e2)) ;
+     | [ ] -> e2
+     | x :: l -> !union (l, !ajoute_element (x, e2)) ;
 
   theorem bien_formee_union:
     all e1 e2 in Self,
@@ -835,10 +844,10 @@ local theorem cons_bien_formee:
       Apply H5;Right;Assumption.
       *};
 
-  let inter(e1, e2)=
+  let inter (e1 in Self, e2 in Self)=
     let rec aux (accu in Self, e) =
       match e with
-        | [] -> accu
+        | [ ] -> accu
         | x :: l -> if !est_element (x, e2) then
              aux (!ajoute_element (x, accu), l)
            else aux (accu, l) in
@@ -926,14 +935,6 @@ theorem bien_formee_inter:
    (* [Unsure - à laisser ?]
       def : bien_formee ; *)
    assumed ;
-
-
-  let rec remove_element (x in A, l in Self) in Self =
-     match l with
-      | [] -> [ ]
-      | y :: l ->
-         if A!equal (x, y) then l
-         else y :: !remove_element (x, l) ;
 
 
    theorem remove_element_spec:
@@ -1284,7 +1285,7 @@ Unfold not; Intros Heq; Absurd (Is_true(abst_est_element x(Cons a2 l2)));EAuto.
 
    theorem ajoute_element_card:
      all x in A, all e in Self,
-       #int_leq (!cardinal (e), !cardinal (!ajoute_element (x, e)))
+       int_leq (!cardinal (e), !cardinal (!ajoute_element (x, e)))
    proof:
    (* [Unsure - à laisser ?]
       decl: ajoute_spec sous_ensemble_spec incl_card; *)
@@ -1299,8 +1300,8 @@ Unfold not; Intros Heq; Absurd (Is_true(abst_est_element x(Cons a2 l2)));EAuto.
   montrer que {a}U l \ {a} \subset l, et appliquer incl_card. Comme a\in {a}U l
   il n'y a plus qu'à conclure avec remove_element_card. *)
    theorem ajoute_element_card2:
-     all x in A, all e in self,
-     #int_leq (!cardinal (!ajoute_element (x, e)), !cardinal (e) + 1)
+     all x in A, all e in Self,
+     int_leq (!cardinal (!ajoute_element (x, e)), !cardinal (e) + 1)
    proof:
    (* [Unsure - à laisser ?]
       decl: ajoute_spec sous_ensemble_spec incl_card
@@ -1467,11 +1468,11 @@ species Liste_triee (A is Ordered_set) inherits
    chaque élément est strictement plus petit que le suivant. *)
    let rec est_triee (l in Self) in bool =
      match l with
-       | [] -> #True
+       | [ ] -> true
        | x :: l ->
           (match l with
-            | [] -> #True
-            | y :: l1 -> #and_b (A!lt (x, y), !est_triee (l))) ;
+            | [ ] -> true
+            | y :: l1 -> and_b (A!lt (x, y), !est_triee (l))) ;
 
   (** le nouvel invariant implique celui de l'espèce parent (non duplication).*)
    theorem invariant_subsumption:
@@ -1509,7 +1510,7 @@ species Liste_triee (A is Ordered_set) inherits
 
    let rec ajoute_element (x, l) =
      match l with
-       | [] -> [ x ]
+       | [ ] -> [ x ]
        | y :: l1 ->
 	   if A!lt (x, y) then x :: l
 	      else if A!equal (x, y) then l
@@ -1654,7 +1655,7 @@ EApply (bottom_properties self_a).
     *};
 
   local theorem cons_elements:
-    all x y in A, all e in self,
+    all x y in A, all e in Self,
       !est_element (y, !cons (x, e)) <-> (A!equal (x, y) \/ !est_element (y, e))
    proof:
    (* [Unsure - à laisser ?]
@@ -1715,7 +1716,7 @@ EApply (bottom_properties self_a).
 
   let raw_min (e in Self) =
     match e with
-     | [] -> A!element
+     | [ ] -> A!element
      | x :: _ -> x ;
 
   theorem raw_min_spec:
@@ -1764,7 +1765,7 @@ EApply (bottom_properties self_a).
    let min (e) =
      if !est_triee (e) then !raw_min (e)
      else (* ne peut pas se produire. *)
-      #foc_error ("liste non triee.") ;
+      foc_error ("liste non triee.") ;
 
   proof of min_spec =
    (* [Unsure - à laisser ?]
@@ -1936,7 +1937,7 @@ EApply (bottom_properties self_a).
        Elim (abst_card_zero_vide l); Auto.
     *};
 
-   theorem invariant7: all s1 s2 in self,
+   theorem invariant7: all s1 s2 in Self,
      !est_triee (s1) -> !est_triee (s2) -> !est_triee (!diff (s1, s2))
    proof:
    (* [Unsure - à laisser ?]
@@ -1958,21 +1959,21 @@ end ;;
 species Entiers_concrets inherits Ordered_set =
   rep = int ;
   let element = 1 ;
-  let equal = #int_eq ;
-  let leq = #int_leq ;
+  let equal = int_eq ;
+  let leq = int_leq ;
 
-  let print = #string_of_int;
-  let parse = #int_of_string;
+  let print = string_of_int ;
+  let parse = int_of_string ;
 
-  proof of equal_reflexive = assumed;
-  proof of equal_symmetric = assumed;
-  proof of equal_transitive = assumed;
+  proof of equal_reflexive = assumed ;
+  proof of equal_symmetric = assumed ;
+  proof of equal_transitive = assumed ;
 
-  proof of leq_reflexive = assumed;
-  proof of leq_antisymmetric= assumed;
-  proof of leq_transitive = assumed;
-  proof of total_order = assumed;
-  proof of lt_is_not_leq = assumed;
+  proof of leq_reflexive = assumed ;
+  proof of leq_antisymmetric= assumed ;
+  proof of leq_transitive = assumed ;
+  proof of total_order = assumed ;
+  proof of lt_is_not_leq = assumed ;
 end ;;
 
 collection Entiers implements Ordered_set ;;
@@ -2010,7 +2011,7 @@ let print_endline (s) = print_string (sc (s,"\n")) ;;
 (* Theoremes pour le fichier util.foc, je suis oblige de les definir ici *)
 (* sinon le compilo ne les voit pas *)
 theorem spec_crp : all x in ('a * 'b) ,
-  x = basics#crp (#first (x), basics#scnd (x))
+  x = basics#crp (basics#first (x), basics#scnd (x))
   proof : assumed ;;
 
 theorem spec_crp_subst : all x1 x2 in 'a, all y1 y2 in 'b,

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.39 2008-04-24 16:09:48 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.40 2008-05-05 13:00:20 pessaux Exp $ *)
 
 
 
@@ -324,13 +324,24 @@ try Check_file.main () with
            Handy.pp_set_bold Handy.pp_reset_effects
 (* ********************** *)
 (* Dependencies analysis. *)
-     | Dep_analysis.Ill_formed_species species_name ->
+     | Dep_analysis.Ill_formed_species (species_name, field_node, found_path) ->
          Format.fprintf Format.err_formatter
-           "@[%tSpecies%t@ '%t%a%t'@ %tis@ not@ well-formed%t.@]@."
+           "@[%tSpecies%t@ %t'%a'%t@ %tis@ not@ well-formed.@ \
+           Field%t@ %t'%a'%t@ %tinvolves@ a@ non-declared@ recursion@ \
+           for@ the@ following@ dependent@ fields:%t@ "
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_qualified_vname species_name
            Handy.pp_reset_effects
            Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined Sourcify.pp_vname
+           field_node.Dep_analysis.nn_name
+           Handy.pp_reset_effects
+           Handy.pp_set_bold Handy.pp_reset_effects ;
+         Format.fprintf Format.err_formatter "%a.@]@."
+           (Handy.pp_generic_separated_list
+             " ->"
+             (fun ppf node -> Sourcify.pp_vname ppf node.Dep_analysis.nn_name))
+           found_path
 (* ********************** *)
 (* External code generation. *)
      | Externals_generation_errs.No_external_value_def (lang, def_name, at) ->
