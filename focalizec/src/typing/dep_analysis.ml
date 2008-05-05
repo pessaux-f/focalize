@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.40 2008-05-05 13:18:21 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.41 2008-05-05 13:25:58 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -27,8 +27,6 @@
               subscripted by s and not a.                                  *)
 (* *********************************************************************** *)
 
-
-open Parsetree
 
 
 (* ****************************************************************** *)
@@ -72,11 +70,11 @@ let rec expr_decl_dependencies ~current_species expression =
         | Parsetree.EI_method (Some coll_specifier, vname) ->
             (begin
              match coll_specifier with
-             | Vname _ ->
+             | Parsetree.Vname _ ->
                (* In this case, may be there is *)
                (* some scoping process missing. *)
                assert false
-             | Qualified (module_name, coll_vname) ->
+             | Parsetree.Qualified (module_name, coll_vname) ->
                if current_species = (module_name, coll_vname) then
                  (* Case c!x in Virgile Prevosto's Phd, section 3.5, *)
                  (* page 30, definition 12.                          *)
@@ -226,8 +224,8 @@ let ident_in_fact_dependencies ~current_species ident =
    | Parsetree.EI_method (Some coll_specifier, vname) ->
        (begin
         match coll_specifier with
-        | Vname _ -> assert false
-        | Qualified (module_name, coll_vname) ->
+        | Parsetree.Vname _ -> assert false
+        | Parsetree.Qualified (module_name, coll_vname) ->
           (* If the module specification and the collection name       *)
           (* match the [current_species] then are are still in the     *)
           (* case of Self. Else we are in the case of another species. *)
@@ -1160,7 +1158,7 @@ let compute_fields_reordering ~current_species fields =
 
 
 (* ******************************************************************** *)
-(* name_node -> name_node -> (bool * name_node list)                    *)
+(* name_node -> name_node -> name_node list                             *)
 (** {b Descr} : Checks for a non trivial path from [start_node] to
     [start_node]. "Non-trivial" means that the path must at least be of
     length 1.
@@ -1168,8 +1166,12 @@ let compute_fields_reordering ~current_species fields =
     participate to the path detection, we must prevent search through
     paths involving "rep", hence stop as soon as we find it, returning
     [false].
-    By the way, if a path exists, we return the list of nodes forming
-    it.
+    If a path exists, we return the list of nodes forming it WITHOUT
+    the last node (the one ending the searched path) since we don't
+    need it for error reporting purpose. Hence, since the searcher path
+    is non-trivial, it always content at least ONE node, i.e. the
+    starting node.
+    If no path is found, we return the empty list.
 
     {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************** *)
@@ -1178,11 +1180,13 @@ let is_reachable start_node end_node =
   let seen = ref ([] : name_node list) in
 
   let rec find_on_children path = function
-    | [] -> (false, [])
+    | [] -> []   (* No path found. *)
     | (n, _) :: q ->
         match rec_search path n with
-         | (false, _) -> find_on_children path q
-         | found -> found
+         | [] ->
+             (* Try to find a path on the other children. *)
+             find_on_children path q
+         | found -> found    (* We found one path. Then stop search. *)
 
   and rec_search path current_node =
     (* If the current node was already seen, this means that ... we already  *)
@@ -1191,7 +1195,7 @@ let is_reachable start_node end_node =
     (* search, we will get the same answer forever (and loop forever of      *)
     (* course by the way).                                                   *)
     if List.memq current_node !seen ||
-       current_node.nn_name = (Parsetree.Vlident "rep") then (false, [])
+       current_node.nn_name = (Parsetree.Vlident "rep") then []
     else
       (begin
       (* We build the path in reverse order for sake of efficiency. *)
@@ -1203,7 +1207,7 @@ let is_reachable start_node end_node =
       (* is mandatorily non-null).                                            *)
       if List.exists
           (fun (n, _) -> n == end_node) current_node.nn_children then
-        (true, path')
+        path'
       else
         (begin
         seen := current_node :: !seen ;
@@ -1214,8 +1218,7 @@ let is_reachable start_node end_node =
       end) in
   (* Start the search with an empty path history *)
   (* and put back the path in the rigth order .  *)
-  let (found, found_path) = rec_search [] start_node in
-  (found, (List.rev found_path))
+  List.rev (rec_search [] start_node)
 ;;
 
 
@@ -1260,8 +1263,8 @@ let left_triangle dep_graph_nodes x1 x2 fields =
             (* Because our graph edges link from yn to y1, we must invert *)
             (* the start/end nodes.                                       *)
             match is_reachable yn_node y1_node with
-             | (false, _) -> false
-             | (true, found_path) ->
+             | [] -> false   (* No path found. *)
+             | found_path ->
                  (* That's a bit casual a programming fashion, but it works.. *)
                  (* This allows to easily return the error reason...          *)
                  bad_formed := Some (yn_node, y1_node, found_path) ;
@@ -1300,7 +1303,8 @@ let ensure_species_well_formed ~current_species fields =
            let (modname, species_vname) = current_species in
            raise
              (Ill_formed_species
-                ((Qualified (modname, species_vname)), node1, found_path))
+                ((Parsetree.Qualified (modname, species_vname)), node1,
+                 found_path))
        | None ->
            (* No path leading to recursive fields that were not declared *)
            (* recursive at the origin, hence, all is right...            *)
