@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.39 2008-05-05 13:00:20 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.40 2008-05-05 13:18:21 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -1212,8 +1212,10 @@ let is_reachable start_node end_node =
         find_on_children path' current_node.nn_children
         end)
       end) in
-  (* Start the search with an empty path history. *)
-  rec_search [] start_node
+  (* Start the search with an empty path history *)
+  (* and put back the path in the rigth order .  *)
+  let (found, found_path) = rec_search [] start_node in
+  (found, (List.rev found_path))
 ;;
 
 
