@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.120 2008-05-06 10:03:03 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.121 2008-05-06 12:17:32 pessaux Exp $ *)
 
 
 
@@ -3114,21 +3114,22 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
           (* computation flag.                                     *)
           if log_flag1 != log_flag2 then
             raise (No_mix_between_logical_defs (loc, n1)) ;
+          Types.begin_definition () ;
           let ty1 = Types.specialize sc1 in
           let ty2 = Types.specialize sc2 in
           Types.reset_deps_on_rep () ;
           (* Ensure that the 2 versions of the method are type-compatible. *)
           ignore
             (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
+          Types.end_definition () ;
           (* And return the seconde one (late binding) with the presence *)
           (* of def-dependency on "rep" updated.                         *)
-          let dep' =
-            { Env.TypeInformation.dor_def =
-                dep2.Env.TypeInformation.dor_def
-                || Types.get_def_dep_on_rep () ;
-              Env.TypeInformation.dor_decl =
-                dep2.Env.TypeInformation.dor_decl
-                || Types.get_decl_dep_on_rep () } in
+          let dep' = {
+            Env.TypeInformation.dor_def =
+              dep2.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () ;
+            Env.TypeInformation.dor_decl =
+              dep2.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep ()
+            } in
           let m2' = (f2, n2, args2, sc2, body2, dep', log_flag2) in
           (m2', rem_of_l2)
          with Not_found ->
@@ -3140,6 +3141,91 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
       fused_meth :: rem_fused_methods in
   (* Go... *)
   Env.TypeInformation.SF_let_rec (rec_fusion rec_meths1 rec_meths2)
+;;
+
+
+
+(** Mainly ensure that the method to replace exists in the bunch of newest
+    recursive methods, ensure that its type is compatible and return the
+    bunch of the newest recursive methods. Hence, the "replaced" method
+    totally disapears. *)
+let fusion_fields_let_let_rec ~loc ctx meth1 rec_meths2 =
+  try
+    let (_, n1, _, sc1, _, _, log_flag1) = meth1 in
+    let (m2, rem_of_l2) = find_and_remain n1 rec_meths2 in
+    let (f2, n2, args2, sc2, body2, dep2, log_flag2) = m2 in
+    (* We don't allow to redefine methods mixing logical and *)
+    (* computation flag.                                     *)
+    if log_flag1 != log_flag2 then
+      raise (No_mix_between_logical_defs (loc, n1)) ;
+    Types.begin_definition () ;
+    let ty1 = Types.specialize sc1 in
+    let ty2 = Types.specialize sc2 in
+    Types.reset_deps_on_rep () ;
+    (* Ensure that the 2 versions of the method are type-compatible. *)
+    ignore
+      (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
+    Types.end_definition () ;
+    (* And return the second one (late binding) with the presence  *)
+    (* of def-dependency on "rep" updated. We re-insert the method *)
+    (* in the remaining bunch of initial recursive method.         *)
+    let dep' =
+      { Env.TypeInformation.dor_def =
+          dep2.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () ;
+        Env.TypeInformation.dor_decl =
+          dep2.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep () } in
+    let m2' = (f2, n2, args2, sc2, body2, dep', log_flag2) in
+    (* No matter if the position of the re-inserted method differs from   *)
+    (* its original place. So, finally as result, if the fusion succeeded *)
+    (* we totally forgot the old non-recursive method and we get the new  *)
+    (* bunch of recursive ones.                                           *)
+    m2' :: rem_of_l2
+  with Not_found ->
+    (* The method doesn't belong to [rec_meths2]. *)
+    assert false (* From Virgile's thesis Lemma 8 p 37 *)
+;;
+
+
+
+(* We accept to merge an old non-recursive method with several new recursive
+   methods. We just insert the newly found method in the bunch ofo the old
+   recursive ones, removing from them the method that has to be replaced by
+   the new one. *)
+let fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2 =
+  try
+    let (f2, n2, args2, sc2, body2, dep2, log_flag2) = meth2 in
+    let (m1, rem_of_l1) = find_and_remain n2 rec_meths1 in
+    let (_, n1, _, sc1, _, _, log_flag1) = m1 in
+    (* We don't allow to redefine methods mixing logical and *)
+    (* computation flag.                                     *)
+    if log_flag1 != log_flag2 then
+      raise (No_mix_between_logical_defs (loc, n1)) ;
+    Types.begin_definition () ;
+    let ty1 = Types.specialize sc1 in
+    let ty2 = Types.specialize sc2 in
+    Types.reset_deps_on_rep () ;
+    (* Ensure that the 2 versions of the method are type-compatible. *)
+    ignore
+      (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
+    Types.end_definition () ;
+    (* And return the first one (late binding) with the presence *)
+    (* of def-dependency on "rep" updated. We re-insert the method *)
+    (* in the remaining bunch of initial recursive method.         *)
+    let dep' =
+      { Env.TypeInformation.dor_def =
+          dep2.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () ;
+        Env.TypeInformation.dor_decl =
+          dep2.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep () } in
+    let m2' = (f2, n2, args2, sc2, body2, dep', log_flag2) in
+    (* No matter if the position of the re-inserted method differs from   *)
+    (* its original place. So, finally as result, if the fusion succeeded *)
+    (* we get the old recursive methods except the one wearing the name   *)
+    (* of newly merged, and this newly merged one is inserted among the   *)
+    (* old recursive ones.                                                *)
+    m2' :: rem_of_l1
+  with Not_found ->
+    (* The method doesn't belong to [rec_meths2]. *)
+    assert false (* From Virgile's thesis Lemma 8 p 37 *)
 ;;
 
 
@@ -3229,18 +3315,20 @@ let fields_fusion ~loc ctx phi1 phi2 =
           } in
         Env.TypeInformation.SF_let
           (from2, n2, pars2, (Types.generalize ty), body, dep', log_flag2)
-   | (Env.TypeInformation.SF_let (_, _, _, _, _, _, _),
-      Env.TypeInformation.SF_let_rec _) ->
-        failwith "fields_fusion let / let rec"
+   | (Env.TypeInformation.SF_let meth1,
+      Env.TypeInformation.SF_let_rec rec_meths2) ->
+        Env.TypeInformation.SF_let_rec
+          (fusion_fields_let_let_rec ~loc ctx meth1 rec_meths2)
    (* *** *)
    | (Env.TypeInformation.SF_let_rec rec_meths,
       Env.TypeInformation.SF_sig (_, n2, sc2)) ->
         (* let rec / sig. *)
         (* Symetric case than for sig / let_rec. *)
         fusion_fields_let_rec_sig ~loc ctx n2 sc2 rec_meths
-   | (Env.TypeInformation.SF_let_rec _,
-      Env.TypeInformation.SF_let (_, _, _, _, _, _, _)) ->
-        failwith "fields_fusion let rec / let"
+   | (Env.TypeInformation.SF_let_rec rec_meths1,
+      Env.TypeInformation.SF_let meth2) ->
+        Env.TypeInformation.SF_let_rec
+          (fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2)
    | (Env.TypeInformation.SF_let_rec rec_meths1,
       Env.TypeInformation.SF_let_rec rec_meths2) ->
         fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2
@@ -3265,8 +3353,7 @@ let fields_fusion ~loc ctx phi1 phi2 =
               (* Return the theorem in case of property / theorem and  *)
               (* return the last theorem in case of theorem / theorem. *)
               phi2
-            else
-                assert false
+            else assert false
            end)
         else assert false
    | ((Env.TypeInformation.SF_theorem (_, n1, sc1, logical_expr1, _, _)),

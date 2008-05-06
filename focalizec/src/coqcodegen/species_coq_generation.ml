@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.51 2008-04-29 15:26:13 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.52 2008-05-06 12:17:32 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1807,6 +1807,118 @@ let print_implemented_species_for_coq ~current_unit out_fmter
 
 
 
+(* [Unsure] Au moins toute la première partie peut être factorisée avec
+  Ocaml. C'est exactment le même code ! *)
+let apply_generator_to_parameters ctx env collection_body_params
+    col_gen_params_info =
+  let current_unit = ctx.Context.scc_current_unit in
+  let out_fmter = ctx.Context.scc_out_fmter in
+  (* Create the assoc list mapping the formal to the effective parameters. *)
+  let formal_to_effective_map =
+    (try
+      List.map2
+        (fun formal_info effective_info ->
+          match (formal_info, effective_info) with
+           | ((formal, MiscHelpers.SPK_is),
+              MiscHelpers.CEA_collection_name_for_is qualified_vname) ->
+               (begin
+               (* "Is" parameter. Leads to collection name based stuff. *)
+               match qualified_vname with
+                | Parsetree.Vname _ ->
+                    (* Assumed to be local to the current unit. *)
+                    (formal,
+                     MiscHelpers.CEA_collection_name_for_is qualified_vname)
+                | Parsetree.Qualified (effective_fname, effective_vname) ->
+                    (* If the species belongs to the current unit, then we   *)
+                    (* don't need to qualify it in the OCaml generated code. *)
+                    (* Then we simply discard its explicit hosting           *)
+                    (* information.                                          *)
+                    if effective_fname = current_unit then
+                      (formal,
+                       MiscHelpers.CEA_collection_name_for_is
+                         (Parsetree.Vname effective_vname))
+                    else
+                      (formal,
+                       MiscHelpers.CEA_collection_name_for_is
+                         (Parsetree.Qualified
+                            (effective_fname, effective_vname)))
+               end)
+           | ((formal, MiscHelpers.SPK_in),
+              (MiscHelpers.CEA_value_expr_for_in effective_expr)) ->
+               (begin
+               (* "In" parameter. Leads to direct value based stuff. *)
+               (formal, (MiscHelpers.CEA_value_expr_for_in effective_expr))
+               end)
+           | (_, _) ->
+               (* This would mean that we try to apply an effective stuff    *)
+               (* in/is-incompatible with the kind of the species parameter. *)
+               (* This should have been caught before by the analyses !      *)
+               assert false)
+        col_gen_params_info.Env.CoqGenInformation.
+          cgi_implemented_species_params_names
+        collection_body_params
+    with Invalid_argument "List.map2" ->
+      assert false  (* The lists length must be equal. *)) in
+  (* Now, generate the argment identifier or expression *)
+  (* for each expected collection generator parameter.  *)
+  List.iter
+    (fun (formal_species_param_name, method_names) ->
+      match List.assoc formal_species_param_name formal_to_effective_map with
+       | MiscHelpers.CEA_collection_name_for_is corresponding_effective ->
+           (begin
+           let
+             (corresponding_effective_opt_fname,
+              corresponding_effective_vname) =
+             match corresponding_effective with
+              | Parsetree.Vname n -> (None, n)
+              | Parsetree.Qualified (m, n) -> ((Some m), n) in
+           Parsetree_utils.DepNameSet.iter
+             (fun (meth_name, _) ->
+               (* If needed, qualify the name of the species in the *)
+               (* Coq code. Don't print the type to prevent being   *)
+               (* too verbose.                                      *)
+               (match corresponding_effective_opt_fname with
+                | Some fname -> Format.fprintf out_fmter "%s." fname
+                | None -> ()) ;
+               (* Species name."effective_collection.". *)
+               Format.fprintf out_fmter "@ %a.effective_collection."
+                 Parsetree_utils.pp_vname_with_operators_expanded
+                 corresponding_effective_vname ;
+               (* If needed, qualify the name of the species *)
+               (* in the Coq code.                           *)
+               (match corresponding_effective_opt_fname with
+                | Some fname -> Format.fprintf out_fmter "%s." fname
+                | None -> ()) ;
+               (* Species name.method name. *)
+               Format.fprintf out_fmter "%a.%a"
+                 Parsetree_utils.pp_vname_with_operators_expanded
+                 corresponding_effective_vname
+                 Parsetree_utils.pp_vname_with_operators_expanded meth_name)
+             method_names
+           end)
+       | MiscHelpers.CEA_value_expr_for_in expr ->
+           (begin
+           Format.fprintf out_fmter "(@[<1>" ;
+           (* No local idents in the context because we just enter the scope  *)
+           (* of a species fields and so we are not under a core expression.  *)
+	   (* For [~in_hyp], since everything must already be defined, we     *)
+           (* must not have anymore abstraction, hence not anymore lambda-    *)
+           (* lifting. So it should be non-relevant to chose a speciel value. *)
+           (* For [~self_as], same thing, no relevant value since the         *)
+           (* application of the generator should not involve any other       *)
+           (* expressions than methods/theorems identifiers.                  *)
+           Species_record_type_generation.generate_expr
+             ctx ~local_idents: []
+             ~self_as: Types.CSR_abst     (* Or what you prefer. *)
+             ~in_hyp: false               (* Or what you prefer. *)
+             env expr ;
+           Format.fprintf out_fmter ")@]" ;
+           end))
+    col_gen_params_info.Env.CoqGenInformation.cgi_generator_parameters
+;;
+
+
+
 let collection_compile env ~current_unit out_fmter collection_def
     collection_descr dep_graph =
   let collection_name = collection_def.Parsetree.ast_desc.Parsetree.cd_name in
@@ -1841,7 +1953,7 @@ let collection_compile env ~current_unit out_fmter collection_def
   (* Now generate the value representing the effective instance of the   *)
   (* collection. We always name it by collection's name +                *)
   (* "_effective_collection".                                            *)
-  Format.fprintf out_fmter "@[<2>Definition %a_effective_collection =@\n"
+  Format.fprintf out_fmter "@[<2>Definition %a_effective_collection :=@\n"
     Sourcify.pp_vname collection_name ;
   (* Now, get the collection generator from the closed species we implement. *)
   let implemented_species_name =
@@ -1872,16 +1984,15 @@ let collection_compile env ~current_unit out_fmter collection_def
      | Some params_info ->
          (* Get the names of the collections or the value *)
          (* expressions effectively applied.              *)
-         let _collection_body_params =
+         let collection_body_params =
            MiscHelpers.get_implements_effectives
              collection_def.Parsetree.ast_desc.
                Parsetree.cd_body.Parsetree.ast_desc.
              Parsetree.se_params
              params_info.Env.CoqGenInformation.
                cgi_implemented_species_params_names in
-         if true then failwith "STANDBY ...
          apply_generator_to_parameters
-           ctx env collection_body_params params_info")
+           ctx env collection_body_params params_info)
   with Not_found ->
     (* Don't see why the species could not be present in the environment.  *)
     (* The only case would be to make a collection from a collection since *)

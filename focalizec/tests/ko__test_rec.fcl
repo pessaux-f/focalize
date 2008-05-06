@@ -5,12 +5,12 @@ use "basics" ;;
 (* introduced by inheritance. This is the basic example justifying   *)
 (* the dependencies computation on species.                          *)
 species A =
-  sig x : Self ;
+  signature x : Self ;
   let y = Self!x ;
 end ;;
 
 species B =
-  sig y : Self ;
+  signature y : Self ;
   let x = Self!y ;
 
   let rec z1 (a) = if true then 42 else Self!z2 (if true then a else 1)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.42 2008-04-29 15:26:13 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.43 2008-05-06 12:17:32 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1088,10 +1088,10 @@ let species_compile env ~current_unit out_fmter species_def species_descr
 (* ************************************************************************* *)
 (* species_compil_context -> collection_effective_arguments list ->          *)
 (*   Env.MlGenInformation.collection_generator_info -> unit                  *)
-(** {b Descr} : This function recovers from the fully defined species the
-    collection implements, the names of its parameters names. Then it gets
-    the parameters the collection generator needs and actually applies it to
-    correct corresponding functions.
+(** {b Descr} : This function recovers from the fully defined species that
+    the collection implements, the names of its parameters names. Then it
+    gets the parameters the collection generator needs and actually applies
+    it to correct corresponding functions.
     This "correct corresponding" functions are those from the collection that
     instanciates the species parameter, but coming from the collection that
     instanciates this species parameter in the freshly defined collection.
@@ -1134,7 +1134,7 @@ let apply_generator_to_parameters ctx env collection_body_params
     col_gen_params_info =
   let current_unit = ctx.Context.scc_current_unit in
   let out_fmter = ctx.Context.scc_out_fmter in
-  (* Create the assoc list mapping the formal to the effectives parameters. *)
+  (* Create the assoc list mapping the formal to the effective parameters. *)
   let formal_to_effective_map =
     (try
       List.map2
@@ -1143,7 +1143,7 @@ let apply_generator_to_parameters ctx env collection_body_params
            | ((formal, MiscHelpers.SPK_is),
               MiscHelpers.CEA_collection_name_for_is qualified_vname) ->
                (begin
-               (* "In" parameter. Leads to collection name based stuff. *)
+               (* "Is" parameter. Leads to collection name based stuff. *)
                match qualified_vname with
                 | Parsetree.Vname _ ->
                     (* Assumed to be local to the current unit. *)
@@ -1167,12 +1167,12 @@ let apply_generator_to_parameters ctx env collection_body_params
            | ((formal, MiscHelpers.SPK_in),
               (MiscHelpers.CEA_value_expr_for_in effective_expr)) ->
                (begin
-               (* "Is" parameter. Leads to direct value based stuff. *)
+               (* "In" parameter. Leads to direct value based stuff. *)
                (formal, (MiscHelpers.CEA_value_expr_for_in effective_expr))
                end)
            | (_, _) ->
                (* This would mean that we try to apply an effective stuff    *)
-               (* in:is-incompatible with the kind of the species parameter. *)
+               (* in/is-incompatible with the kind of the species parameter. *)
                (* This should have been caught before by the analyses !      *)
                assert false)
         col_gen_params_info.Env.MlGenInformation.
@@ -1207,7 +1207,7 @@ let apply_generator_to_parameters ctx env collection_body_params
                  Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname ;
                (* If needed, qualify the name of the species *)
-               (* in the OCaml code. *)
+               (* in the OCaml code.                         *)
                (match corresponding_effective_opt_fname with
                 | Some fname ->
                     Format.fprintf out_fmter "%s." (String.capitalize fname)

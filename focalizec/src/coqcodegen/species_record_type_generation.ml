@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.33 2008-04-29 15:26:13 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.34 2008-05-06 12:17:32 pessaux Exp $ *)
 
 
 
@@ -44,7 +44,7 @@ let simply_pp_to_coq_qualified_vname ~current_unit ppf = function
 
 (**
   [~in_hyp] : Flag telling if the code generation occurs while
-   generating a Coq Hypothesis In this case, each abstracted
+   generating a Coq Hypothesis. In this case, each abstracted
    method will be named like the species parameter name, followed by "_",
    followed by the method's name.
    If we are not in this case, then each abstracted method will be named
