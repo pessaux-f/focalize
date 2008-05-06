@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.119 2008-04-29 15:26:13 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.120 2008-05-06 10:03:03 pessaux Exp $ *)
 
 
 
@@ -3697,13 +3697,6 @@ let typecheck_species_def ctx env species_def =
     Format.eprintf
       "Normalizing species '%a'.@."
       Sourcify.pp_vname species_def_desc.Parsetree.sd_name;
-  (* Create the list of field "semi-normalized", i.e. with inherited methods  *)
-  (* normalized and in head of the list, and the fresh methods not normalized *)
-  (* and in tail of the list.                                                 *)
-  let semi_normed_meths =
-    collapsed_inherited_methods_infos @ reordered_collapsed_methods_info in
-  (* Ensure that the species is well-formed. *)
-  Dep_analysis.ensure_species_well_formed ~current_species semi_normed_meths ;
   (* Then one must ensure that each method has the same type everywhere *)
   (* in the inheritance tree and more generaly create the normalised    *)
   (* form of the species.                                               *)
@@ -3711,6 +3704,8 @@ let typecheck_species_def ctx env species_def =
     normalize_species
       ~loc: species_def.Parsetree.ast_loc ctx' reordered_collapsed_methods_info
       collapsed_inherited_methods_infos in
+  (* Ensure that the species is well-formed. *)
+  Dep_analysis.ensure_species_well_formed ~current_species normalized_methods ;
   (* Ensure that no method is polymorphic  (c.f. Virgile *)
   (* Prevosto's Phd section 3.3, page 24).               *)
   List.iter
