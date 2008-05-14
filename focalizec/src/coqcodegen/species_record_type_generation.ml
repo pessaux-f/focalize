@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.34 2008-05-06 12:17:32 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.35 2008-05-14 10:19:08 pessaux Exp $ *)
 
 
 
@@ -186,9 +186,11 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ~in_hyp ident =
                  else
                    (begin
                    (* It comes from a toplevel stuff, hence not abstracted *)
-                   (* by lambda-lifting.                                   *)
+                   (* by lambda-lifting. Then, we get the field of the     *)
+		   (* collection's record obtained by the collection's     *)
+		   (* effective value.                                     *)
                    Format.fprintf out_fmter
-                     "%a.effective_collection.%a.%a"
+                     "%a_effective_collection.(%a_%a)"
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname

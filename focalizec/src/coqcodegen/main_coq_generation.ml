@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.13 2008-04-23 13:19:28 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.14 2008-05-14 10:19:08 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -121,13 +121,13 @@ let toplevel_compile env ~current_unit out_fmter = function
         species_def.Parsetree.ast_desc.Parsetree.sd_name
         spe_binding_info env
   | Infer.PCM_collection (collection_def, collection_descr, dep_graph) ->
-      Species_coq_generation.collection_compile
-	env ~current_unit out_fmter collection_def collection_descr dep_graph ;
       (* Collections don't have parameters or any remaining abstraction. *)
       (* Moreover, since we can never inherit of a collection, just      *)
       (* forget all methods information, it will never be used.          *)
-      (* Collections do not have collection generator, then simply add *)
-      (* them in the environment with None.                            *)
+      (* Collections do not have collection generator, then simply add   *)
+      (* them in the environment with None.                              *)
+      Species_coq_generation.collection_compile
+        env ~current_unit out_fmter collection_def collection_descr dep_graph ;
       Env.CoqGenEnv.add_species
         ~loc: collection_def.Parsetree.ast_loc
         collection_def.Parsetree.ast_desc.Parsetree.cd_name ([], None) env

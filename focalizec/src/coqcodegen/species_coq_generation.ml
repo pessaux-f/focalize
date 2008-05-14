@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.52 2008-05-06 12:17:32 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.53 2008-05-14 10:19:08 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1785,7 +1785,6 @@ let ctx' = ctx in
          compiled_fields) in
   (species_binding_info, extra_args_from_spe_params)
 ;;
-
 
 
 let print_implemented_species_for_coq ~current_unit out_fmter
