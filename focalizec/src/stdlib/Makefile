@@ -1,7 +1,7 @@
-# $Id: Makefile,v 1.18 2008-04-30 16:08:18 pessaux Exp $
+# $Id: Makefile,v 1.19 2008-05-15 12:13:25 pessaux Exp $
 
 include ../Makefile.config
-FOCC = ../toplevel/check_file
+FOCC = ../toplevel/check_file -no-stdlib-path
 # Jut redefine to remove the warnings because FoCaL has some warnings
 # in its generated code. Especially "Warning Z: unused variable ..."
 # because FoCaL doesn't have the "_" ident which would be usefull in
@@ -54,6 +54,9 @@ all:: $(EXTERNALOBJS) $(FOCMLS) $(FOCMLS_UNSAFE) $(FOCVS) basics_special_case $(
 
 doc:: $(BYTOBJS)
 	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)
+
+install: all
+	echo "TODO"
 
 clean::
 	$(RM) *~ *.cm* log *.fo $(FOCMLS) $(FOCVS) $(FOCVOS) $(EXTERNALOBJS)
