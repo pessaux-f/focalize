@@ -1,5 +1,6 @@
 *.cm*
 *.v
+*.vo
 *.ml
 *.fo
 *.mangled
