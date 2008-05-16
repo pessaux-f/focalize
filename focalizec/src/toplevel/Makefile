@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.28 2008-05-16 07:36:09 pessaux Exp $
+# $Id: Makefile,v 1.29 2008-05-16 14:02:37 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing \
@@ -64,6 +64,25 @@ byt: $(ALLBYTOBJS)
 bin: $(ALLBINOBJS)
 	$(CAMLBIN) $(CAML_COMP_FLAGS) $(ALLBINOBJS) -o check_file.bin
 	ln -sf check_file.bin check_file
+
+fodump: fodump.cmo
+	$(CAMLBYT) $(CAML_COMP_FLAGS) ../basement/installation.cmo \
+	../basement/configuration.cmo \
+	../basement/handy.cmo \
+	../basement/location.cmo \
+	../basement/types.cmo \
+	../basement/files.cmo \
+	../basement/parsetree_utils.cmo \
+	../basement/miscHelpers.cmo \
+	\
+	../parser/lexer.cmo \
+	../parser/parser.cmo \
+	../parser/parse_file.cmo \
+	../parser/dump_ptree.cmo \
+	../parser/sourcify.cmo \
+	\
+	../typing/env.cmo \
+	fodump.cmo -o fodump
 
 install: all
 	echo "TODO"

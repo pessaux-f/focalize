@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.80 2008-04-30 16:09:51 pessaux Exp $ *)
+(* $Id: env.ml,v 1.81 2008-05-16 14:02:37 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -1691,4 +1691,45 @@ let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
      mlgen_toplevel_env', coqgen_toplevel_env') ;
   (* Just don't forget to close the output file... *)
   close_out out_hd
+;;
+
+
+
+
+
+(** Not yet documented. Used to make the debug tool "fodump"... *)
+let inspect_fo_structure ppf fo =
+  let coq_gen_info = fo.ffs_coqgeneration in
+  (* Dump species' and collections' information. *)
+  List.iter
+    (fun (species_vname, envt_binding) ->
+      (* In a fo file, there must only remain bindings really     *)
+      (* introduced by the compilation unit, not by "open" stuf ! *)
+      let (meths, opt_coll_gen) =
+        match envt_binding with
+         | BO_opened (_, _) -> assert false | BO_absolute b -> b in
+      (* Start printing... *)
+      Format.fprintf ppf "@[<2>Species %a@\n" Sourcify.pp_vname species_vname ;
+      Format.fprintf ppf "@[<2>*** Methods:@\n" ;
+      List.iter
+        (fun meth ->
+          (* Just print the method's name for the moment. *)
+          Format.fprintf ppf "Method %a  ...@\n"
+            Sourcify.pp_vname meth.CoqGenInformation.mi_name)
+        meths ;
+      (* Now, check for the collection generator information. *)
+      Format.fprintf ppf "@]@[<2>*** Collection generator:@\n" ;
+      match opt_coll_gen with
+       | None ->  Format.fprintf ppf "None found@."
+       | Some cgi ->
+           Format.fprintf ppf "Some found@." ;
+           (* Info about "implemented" species. *)
+           Format.fprintf ppf "Implemented species params names: %a@\n"
+             (Handy.pp_generic_separated_list ","
+                (fun ppf (pname, _) -> Sourcify.pp_vname ppf pname))
+             cgi.CoqGenInformation.cgi_implemented_species_params_names ;
+           Format.fprintf ppf "@]" ;
+           (* End the species dump box. *)
+           Format.fprintf ppf "@]@\n")
+    coq_gen_info.species
 ;;

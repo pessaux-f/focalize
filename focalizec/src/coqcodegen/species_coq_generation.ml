@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.53 2008-05-14 10:19:08 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.54 2008-05-16 14:02:37 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -398,9 +398,10 @@ let generate_non_recursive_field_binding ctx print_ctx env min_coq_env
       (* Just a bit of debug/information if requested. *)
       if Configuration.get_verbose () then
         Format.eprintf
-          "Field '%a' inherited but not (re)-declared uses inherited \
-           generator.@."
-          Parsetree_utils.pp_vname_with_operators_expanded name ;
+          "Field '%a' inherited from species '%a' but not (re)-declared uses \
+          inherited generator.@."
+          Parsetree_utils.pp_vname_with_operators_expanded name
+          Sourcify.pp_qualified_species from ;
       (* Recover the arguments for abstracted methods *)
       (* of self in the inherited generator.          *)
       find_inherited_method_generator_abstractions
@@ -880,9 +881,10 @@ let generate_theorem ctx print_ctx env min_coq_env
       (* Just a bit of debug/information if requested. *)
       if Configuration.get_verbose () then
         Format.eprintf
-          "Field '%a' inherited but not (re)-declared uses inherited \
-          generator.@."
-          Parsetree_utils.pp_vname_with_operators_expanded name ;
+          "Field '%a' inherited from species '%a' but not (re)-declared uses \
+          inherited generator.@."
+          Parsetree_utils.pp_vname_with_operators_expanded name
+          Sourcify.pp_qualified_species from ;
       (* Recover the arguments for abstracted methods *)
       (* of self in the inherited generator.          *)
       find_inherited_method_generator_abstractions
@@ -1900,7 +1902,7 @@ let apply_generator_to_parameters ctx env collection_body_params
            Format.fprintf out_fmter "(@[<1>" ;
            (* No local idents in the context because we just enter the scope  *)
            (* of a species fields and so we are not under a core expression.  *)
-	   (* For [~in_hyp], since everything must already be defined, we     *)
+           (* For [~in_hyp], since everything must already be defined, we     *)
            (* must not have anymore abstraction, hence not anymore lambda-    *)
            (* lifting. So it should be non-relevant to chose a speciel value. *)
            (* For [~self_as], same thing, no relevant value since the         *)

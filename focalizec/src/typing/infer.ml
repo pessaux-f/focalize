@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.121 2008-05-06 12:17:32 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.122 2008-05-16 14:02:37 pessaux Exp $ *)
 
 
 
@@ -2642,8 +2642,7 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
                let e =
                  Env.TypingEnv.add_value meth_name meth_scheme accu_env in
                (* Now check if we inherited a [rep]. *)
-               let m_name_as_str =
-                 Parsetree_utils.name_of_vname meth_name in
+               let m_name_as_str = Parsetree_utils.name_of_vname meth_name in
                let manifest =
                  (if m_name_as_str = "rep" then
                    (begin
@@ -2656,7 +2655,7 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
                          let new_found_self = Types.specialize meth_scheme in
                          (try
                            (* Since we don't want any circularity on Self   *)
-                           (* we keep it abstrat during the unification.    *)
+                           (* we keep it abstract during the unification.    *)
                            (* As the new "Self", we use the MGU of the      *)
                            (* previous Self's type and the newly found one. *)
                            Some

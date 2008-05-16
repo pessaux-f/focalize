@@ -88,6 +88,21 @@ Let int_max : int__t -> int__t -> int__t := coq_builtins.bi__int_max.
 Let int_min : int__t -> int__t -> int__t := coq_builtins.bi__int_min.
 
 
+
+Section eq.
+Variable beq___A : Set.
+Parameter beq_ : beq___A -> beq___A -> bool.
+End eq.
+Notation beq := (beq_ _) (only parsing).
+
+Definition __g_base_eq_: forall a: Set,  (a)-> (a)-> bool__t :=
+  fun a : Set=>  
+    (fun (x : a) => (fun (y : a) => (beq x y) )).
+Notation  base_eq:= __g_base_eq_.
+
+
+
+
 (* Currently partially hand-generated. *)
 Chapter Basic_object.
   Record Basic_object : Type :=

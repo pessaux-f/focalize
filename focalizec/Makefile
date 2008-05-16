@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2008-02-28 13:35:23 pessaux Exp $
+# $Id: Makefile,v 1.11 2008-05-16 14:02:37 pessaux Exp $
 
 include ./Makefile.config
 CAML_COMP_FLAGS = -I ../../focc/
@@ -40,6 +40,10 @@ doc::
 	$(CD) coqcodegen ; $(MAKE) doc
 	$(CD) toplevel ; $(MAKE) doc
 	$(CD) lib ; $(MAKE) doc
+
+install::
+	$(CD) toplevel ; $(MAKE) install
+	$(CD) lib ; $(MAKE) install
 
 depend:
 	$(CD) basement ; $(MAKE) depend
