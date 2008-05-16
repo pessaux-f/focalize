@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.43 2008-05-06 12:17:32 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.44 2008-05-16 12:34:49 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -617,8 +617,10 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
     (* Just a bit of debug/information if requested. *)
     if Configuration.get_verbose () then
       Format.eprintf
-        "Field '%a' inherited but not (re)-declared is not generated again.@."
-        Parsetree_utils.pp_vname_with_operators_expanded name ;
+        "Field '%a' inherited from species '%a' but not (re)-declared is not \
+        generated again.@."
+        Parsetree_utils.pp_vname_with_operators_expanded name
+        Sourcify.pp_qualified_species from ;
     (* Recover the arguments for abstracted methods *)
       (* of self in the inherited generator.          *)
     find_inherited_method_generator_abstractions
