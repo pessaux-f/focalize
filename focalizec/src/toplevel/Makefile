@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.27 2008-04-17 14:37:09 pessaux Exp $
+# $Id: Makefile,v 1.28 2008-05-16 07:36:09 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing \
@@ -64,6 +64,9 @@ byt: $(ALLBYTOBJS)
 bin: $(ALLBINOBJS)
 	$(CAMLBIN) $(CAML_COMP_FLAGS) $(ALLBINOBJS) -o check_file.bin
 	ln -sf check_file.bin check_file
+
+install: all
+	echo "TODO"
 
 clean::
 	$(RM) *~ *.cm* *.o log check_file.byt check_file.bin check_file
