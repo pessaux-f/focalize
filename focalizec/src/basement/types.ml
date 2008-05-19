@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.50 2008-04-14 08:41:51 pessaux Exp $ *)
+(* $Id: types.ml,v 1.51 2008-05-19 09:14:20 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1241,13 +1241,6 @@ type coq_print_context = {
 
 
 
-type coq_self_representation =
-  | CSR_abst
-  | CSR_self
-  | CSR_species
-;;
-
-
 let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
      purge_type_simple_to_coq_variable_mapping) =
   (* ********************************************************************* *)
@@ -1308,7 +1301,7 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
       Format.fprintf ppf "%s.%s__t" hosting_module constructor_name in
 
 
-  let rec rec_pp_to_coq ctx ~self_as prio ppf ty =
+  let rec rec_pp_to_coq ctx prio ppf ty =
     (* First of all get the "repr" guy ! *)
     let ty = repr ty in
     match ty with
@@ -1319,14 +1312,14 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
         (* Arrow priority: 2. *)
         if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
         Format.fprintf ppf "@[<2>%a@ ->@ %a@]"
-          (rec_pp_to_coq ctx ~self_as 2) ty1
-          (rec_pp_to_coq ctx ~self_as 1) ty2 ;
+          (rec_pp_to_coq ctx 2) ty1
+          (rec_pp_to_coq ctx 1) ty2 ;
         if prio >= 2 then Format.fprintf ppf ")@]"
     | ST_tuple tys ->
         (* Tuple priority: 3. *)
         if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
         Format.fprintf ppf "@[<2>%a@]"
-          (rec_pp_to_coq_tuple_as_pairs ctx ~self_as 3) tys ;
+          (rec_pp_to_coq_tuple_as_pairs ctx 3) tys ;
         if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_construct (type_name, arg_tys) ->
         (begin
@@ -1341,7 +1334,7 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
                (pp_type_name_to_coq ~current_unit: ctx.cpc_current_unit)
                type_name
                (Handy.pp_generic_separated_list " "
-                  (rec_pp_to_coq ctx ~self_as 0)) arg_tys
+                  (rec_pp_to_coq ctx 0)) arg_tys
         end)
     | ST_self_rep ->
         (begin
@@ -1350,21 +1343,39 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
              (* Referencing "Self" outside a species should have *)
              (* been caught earlier, i.e. at typechecking stage. *)
              assert false
-         | Some (species_modname, species_name) ->
+         | Some (species_modname, _) ->
              (begin
              (* Obviously, Self should refer to the current species. *)
              (* This means that the CURRENT species MUST be in the   *)
              (* CURRENT compilation unit !                           *)
              assert (species_modname = ctx.cpc_current_unit) ;
-             (* Chek if "Self" must be kept abstract, i.e. printed like  *)
-             (* "abst_T" (when printing in a field definition) or must   *)
-             (* show the species from which it is the carrier (when      *)
-             (* printing the record type) or must be printed as "self_T" *)
-             (* (when printing in a field's local definition).           *)
-             match self_as with
-              | CSR_abst -> Format.fprintf ppf "abst_T"
-              | CSR_self -> Format.fprintf ppf "self_T"
-              | CSR_species -> Format.fprintf ppf "%s_T" species_name
+             (* Get the way "Self" must be printed. We lookup inside the *)
+             (* collection_carrier_mapping for the hardwired             *)
+             (* [type_collection] (<current_species>, "Self") with       *)
+             (* <current_species> being the one found in the current     *)
+             (* [print_context] (it mst never be [None] since "Self" is  *)
+             (* never bound, hence used, outside a species !).           *)
+             (* This means that when one needs to print a type, the way  *)
+             (* "Self" must be printed must be registered in this        *)
+             (* [collection_carrier_mapping]. If "Self" may be kept      *)
+             (* abstract, i.e. printed like "abst_T" (when printing in a *)
+             (* field definition) or may show the species from which it  *)
+             (* is the carrier (when printing the record type) or must   *)
+             (* be printed as "self_T" (when printing in a field's local *)
+             (* definition), or "abst_T" of "Self_T" when printing a     *)
+             (* theorem depending on if a dependency on "rep" was found  *)
+             (* and leaded to a "Variable abst_T : Set" in the theorem's *)
+             (* sections.                                                *)
+             try
+               let (self_as_string, _) =
+                 List.assoc
+		   (species_modname, "Self")
+		   ctx.cpc_collections_carrier_mapping in
+               Format.fprintf ppf "%s" self_as_string
+             with Not_found ->
+               (* That's a bug: we forgot to insert "Self" in the *)
+               (* [collection_carrier_mapping].                   *)
+               assert false
              end)
         end)
     | ST_species_rep (module_name, collection_name) ->
@@ -1395,28 +1406,28 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
 
       {b Rem} : Not exported outside this module.                          *)
   (* ********************************************************************* *)
-  and rec_pp_to_coq_tuple_as_pairs ctx ~self_as prio ppf = function
+  and rec_pp_to_coq_tuple_as_pairs ctx prio ppf = function
     | [] -> assert false  (* Tuples should never have 0 component. *)
     | [last] ->
-        Format.fprintf ppf "%a" (rec_pp_to_coq ctx ~self_as prio) last
+        Format.fprintf ppf "%a" (rec_pp_to_coq ctx prio) last
     | ty1 :: ty2 :: rem ->
         Format.fprintf ppf "(prod@ %a@ %a)"
-          (rec_pp_to_coq ctx ~self_as prio) ty1
-          (rec_pp_to_coq_tuple_as_pairs ctx ~self_as prio)
+          (rec_pp_to_coq ctx prio) ty1
+          (rec_pp_to_coq_tuple_as_pairs ctx prio)
           (ty2 :: rem) in
 
   (* ************************************************** *)
   (* Now, the real definition of the printing functions *)
   ((* pp_type_simple_to_coq *)
-   (fun ctx ~reuse_mapping ~self_as ppf ty ->
+   (fun ctx ~reuse_mapping ppf ty ->
      (* Only reset the variable mapping if we were not told the opposite. *)
      if not reuse_mapping then reset_type_variables_mapping_to_coq () ;
-    rec_pp_to_coq ctx ~self_as 0 ppf ty),
+    rec_pp_to_coq ctx 0 ppf ty),
    (* pp_type_scheme_to_coq *)
-   (fun ctx ~self_as ppf the_scheme ->
+   (fun ctx ppf the_scheme ->
      reset_type_variables_mapping_to_coq () ;
      Format.fprintf ppf "%a"
-       (rec_pp_to_coq ctx ~self_as 0) the_scheme.ts_body),
+       (rec_pp_to_coq ctx 0) the_scheme.ts_body),
    (* purge_type_simple_to_coq_variable_mapping *)
    (fun () -> reset_type_variables_mapping_to_coq ())
   )

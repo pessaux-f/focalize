@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.34 2008-04-14 08:41:51 pessaux Exp $ *)
+(* $Id: types.mli,v 1.35 2008-05-19 09:14:20 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -130,17 +130,12 @@ type coq_print_context = {
   cpc_collections_carrier_mapping : collection_carrier_mapping
 }
 
-type coq_self_representation =
-  | CSR_abst
-  | CSR_self
-  | CSR_species
 
 val pp_type_simple_to_coq :
   coq_print_context -> reuse_mapping: bool ->
-    self_as: coq_self_representation -> Format.formatter -> type_simple -> unit
+    Format.formatter -> type_simple -> unit
 val pp_type_scheme_to_coq :
-  coq_print_context -> self_as: coq_self_representation -> Format.formatter ->
-    type_scheme -> unit
+  coq_print_context -> Format.formatter -> type_scheme -> unit
 
 val purge_type_simple_to_coq_variable_mapping : unit -> unit
 

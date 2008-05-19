@@ -11,20 +11,37 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.2 2008-04-14 11:51:48 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.3 2008-05-19 09:14:20 pessaux Exp $ *)
 
+
+type self_methods_status =
+  | SMS_abstracted     (** Must be called "abst_<meth>". *)
+  | SMS_from_species   (** Must be called "hosting_species_<meth>". *)
+  | SMS_from_self      (** Must be called "self_<meth>". *)
+  | SMS_todo
+;;
+
+val make_Self_cc_binding_abst_T :
+  current_species: Parsetree.qualified_species ->
+    (Types.type_collection * (string * Types.collection_carrier_mapping_info))
+val make_Self_cc_binding_self_T :
+  current_species: Parsetree.qualified_species ->
+    (Types.type_collection * (string * Types.collection_carrier_mapping_info))
+val make_Self_cc_binding_current_species_T : 
+  current_species: Parsetree.qualified_species ->
+    (Types.type_collection * (string * Types.collection_carrier_mapping_info))
 
 val generate_expr :
   Context.species_compil_context -> local_idents: Parsetree.vname list ->
-    self_as: Types.coq_self_representation -> in_hyp:bool ->
+    self_methods_status: self_methods_status -> in_hyp: bool ->
       Env.CoqGenEnv.t -> Parsetree.expr -> unit
 val generate_logical_expr :
   Context.species_compil_context -> local_idents: Parsetree.vname list ->
-    self_as: Types.coq_self_representation -> in_hyp: bool ->
+    self_methods_status: self_methods_status -> in_hyp: bool ->
       Env.CoqGenEnv.t -> Parsetree.logical_expr -> unit
 val let_binding_compile :
   Context.species_compil_context -> local_idents: Parsetree.vname list ->
-  self_as: Types.coq_self_representation -> in_hyp: bool -> is_rec: bool ->
+  self_methods_status: self_methods_status -> in_hyp: bool -> is_rec: bool ->
     Env.CoqGenEnv.t -> Parsetree.binding -> Env.CoqGenEnv.t
 val generate_record_type :
   Context.species_compil_context ->

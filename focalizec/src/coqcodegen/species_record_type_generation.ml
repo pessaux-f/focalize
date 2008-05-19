@@ -11,7 +11,25 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.35 2008-05-14 10:19:08 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.36 2008-05-19 09:14:20 pessaux Exp $ *)
+
+
+
+(** Just helpers to make a binding for self for a [collection_carrier_mapping]
+    in order to make known how Self must be printed while printing **TYPES** *)
+let make_Self_cc_binding_abst_T  ~current_species =
+  let (module_name, _) = current_species in
+  ((module_name, "Self"), ("abst_T" ,Types.CCMI_in_or_not_param))
+;;
+let make_Self_cc_binding_self_T  ~current_species =
+  let (module_name, _) = current_species in
+  ((module_name, "Self"), ("self_T" ,Types.CCMI_in_or_not_param))
+;;
+let make_Self_cc_binding_current_species_T ~current_species =
+  let (module_name, species_vname) = current_species in
+  let species_name = Parsetree_utils.name_of_vname species_vname in
+  ((module_name, "Self"), ((species_name ^ "_T") ,Types.CCMI_in_or_not_param))
+;;
 
 
 
@@ -42,6 +60,16 @@ let simply_pp_to_coq_qualified_vname ~current_unit ppf = function
 
 
 
+type self_methods_status =
+  | SMS_abstracted     (** Must be called "abst_<meth>". *)
+  | SMS_from_species   (** Must be called "hosting_species_<meth>". *)
+  | SMS_from_self      (** Must be called "self_<meth>". *)
+  | SMS_todo
+;;
+
+
+
+
 (**
   [~in_hyp] : Flag telling if the code generation occurs while
    generating a Coq Hypothesis. In this case, each abstracted
@@ -50,12 +78,13 @@ let simply_pp_to_coq_qualified_vname ~current_unit ppf = function
    If we are not in this case, then each abstracted method will be named
    like "_p_", followed by the species parameter name, followed by "_",
    followed by the method's name.
-   This difference come from the fact that when we generate an hypothesis,
+   This difference comes from the fact that when we generate an hypothesis,
    we do not use the regular lambda-lifting like in the record type or
    Let definitions. Instead of adding extra parameters, we declare Variables
    for each method of the species parameter we depend on and these Variables
    are named as the species parameter name + "_" + the method name. *)
-let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ~in_hyp ident =
+let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status
+    ~in_hyp ident =
   let out_fmter = ctx.Context.scc_out_fmter in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
@@ -93,7 +122,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ~in_hyp ident =
          (* This is right only in case we are not generating code for    *)
          (* a Coq Hypothesis of Theorem (see header of the function for  *)
          (* comment). If we are in an Hypothesis or a Theorem, then the  *)
-         (* naming scheme is only the species parameter name + "-" + the *)
+         (* naming scheme is only the species parameter name + "_" + the *)
          (* method name.                                                 *)
          if not in_hyp then Format.fprintf out_fmter "_p_" ;
          Format.fprintf out_fmter "%a_%a"
@@ -137,18 +166,19 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ~in_hyp ident =
         | Some (Parsetree.Vname (Parsetree.Vuident "Self")) ->
             (begin
             (* Method call from the current species. *)
-            match self_as with
-             | Types.CSR_abst ->
+            match self_methods_status with
+             | SMS_abstracted ->
                  Format.fprintf out_fmter "abst_%a"
                    Parsetree_utils.pp_vname_with_operators_expanded vname
-             | Types.CSR_species ->
+             | SMS_from_species ->
                  Format.fprintf out_fmter "%a_%a"
                    Parsetree_utils.pp_vname_with_operators_expanded
                    (snd ctx.Context.scc_current_species)
                    Parsetree_utils.pp_vname_with_operators_expanded vname
-             | Types.CSR_self ->
+             | SMS_from_self ->
                  Format.fprintf out_fmter "self_%a"
                    Parsetree_utils.pp_vname_with_operators_expanded vname
+             | SMS_todo -> failwith "SMS_todo"
             end)
         | Some coll_specifier ->
             (begin
@@ -187,8 +217,8 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_as ~in_hyp ident =
                    (begin
                    (* It comes from a toplevel stuff, hence not abstracted *)
                    (* by lambda-lifting. Then, we get the field of the     *)
-		   (* collection's record obtained by the collection's     *)
-		   (* effective value.                                     *)
+                   (* collection's record obtained by the collection's     *)
+                   (* effective value.                                     *)
                    Format.fprintf out_fmter
                      "%a_effective_collection.(%a_%a)"
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
@@ -378,7 +408,8 @@ let generate_pattern ctx env pattern =
 
 
 
-let rec let_binding_compile ctx ~local_idents ~self_as ~in_hyp ~is_rec env bd =
+let rec let_binding_compile ctx ~local_idents ~self_methods_status ~in_hyp
+    ~is_rec env bd =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Generate the bound name. *)
   Format.fprintf out_fmter "%a"
@@ -421,7 +452,7 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~in_hyp ~is_rec env bd =
   List.iter
     (fun var ->
        Format.fprintf out_fmter "@ (%a : Set)"
-        (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true ~self_as)
+        (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
         var)
     generalized_instanciated_vars ;
   (* Record NOW in the environment the number of extra arguments  *)
@@ -440,8 +471,7 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~in_hyp ~is_rec env bd =
        | Some param_ty ->
            Format.fprintf out_fmter "@ (%a : %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
-             (Types.pp_type_simple_to_coq
-                print_ctx ~reuse_mapping: true ~self_as)
+             (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
              param_ty
        | None ->
            (* Because we provided a type scheme to the function         *)
@@ -472,7 +502,7 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~in_hyp ~is_rec env bd =
        assert false
    | Some t ->
        Format.fprintf out_fmter "@ :@ %a"
-         (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true ~self_as)
+         (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
          t) ;
   (* Now we don't need anymore the sharing. Hence, clean it. This should not *)
   (* be useful because the other guys usign printing should manage this      *)
@@ -487,7 +517,8 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~in_hyp ~is_rec env bd =
   (* Now, let's generate the bound body. *)
   (match bd.Parsetree.ast_desc.Parsetree.b_body with
    | Parsetree.BB_computational e ->
-       generate_expr ctx ~local_idents: local_idents' ~self_as ~in_hyp env' e
+       generate_expr
+         ctx ~local_idents: local_idents' ~self_methods_status ~in_hyp env' e
    | Parsetree.BB_logical _ -> assert false) ;
   (* Finally, we record, even if it was already done in [env'] the number *)
   (* of extra arguments due to polymorphism the current bound identifier  *)
@@ -498,7 +529,8 @@ let rec let_binding_compile ctx ~local_idents ~self_as ~in_hyp ~is_rec env bd =
 
 
 
-and let_in_def_compile ctx ~local_idents ~self_as ~in_hyp env let_def =
+and let_in_def_compile ctx ~local_idents ~self_methods_status ~in_hyp env
+    let_def =
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
     failwith "Coq compilation of logical let in TODO" ;  (* [Unsure]. *)
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -524,12 +556,13 @@ and let_in_def_compile ctx ~local_idents ~self_as ~in_hyp env let_def =
          assert false
      | [one_bnd] ->
          let_binding_compile
-           ctx ~local_idents ~self_as ~in_hyp ~is_rec env one_bnd
+           ctx ~local_idents ~self_methods_status ~in_hyp ~is_rec env one_bnd
      | first_bnd :: next_bnds ->
          let accu_env =
            ref
              (let_binding_compile
-                ctx ~local_idents ~self_as ~in_hyp ~is_rec env first_bnd) in
+                ctx ~local_idents ~self_methods_status ~in_hyp ~is_rec env
+                first_bnd) in
          List.iter
            (fun binding ->
              (* We transform "let and" non recursive functions *)
@@ -537,7 +570,8 @@ and let_in_def_compile ctx ~local_idents ~self_as ~in_hyp env let_def =
              Format.fprintf out_fmter "@ in@]@\n@[<2>let " ;
              accu_env :=
                let_binding_compile
-                 ctx ~local_idents ~self_as ~in_hyp ~is_rec !accu_env binding)
+                 ctx ~local_idents ~self_methods_status ~in_hyp ~is_rec
+                 !accu_env binding)
            next_bnds ;
            !accu_env) in
   Format.fprintf out_fmter "@]" ;
@@ -545,7 +579,7 @@ and let_in_def_compile ctx ~local_idents ~self_as ~in_hyp env let_def =
 
 
 
-and generate_expr ctx ~local_idents ~self_as ~in_hyp initial_env
+and generate_expr ctx ~local_idents ~self_methods_status ~in_hyp initial_env
     initial_expression =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the coq type print context. *)
@@ -583,7 +617,7 @@ and generate_expr ctx ~local_idents ~self_as ~in_hyp initial_env
                 Format.fprintf out_fmter "(%a :@ %a)@ "
                   Parsetree_utils.pp_vname_with_operators_expanded arg_name
                   (Types.pp_type_simple_to_coq
-                     print_ctx ~reuse_mapping: false ~self_as)
+                     print_ctx ~reuse_mapping: false)
                   arg_ty ;
                 (* Return the remainder of the type to continue. *)
                 res_ty)
@@ -595,7 +629,7 @@ and generate_expr ctx ~local_idents ~self_as ~in_hyp initial_env
      | Parsetree.E_var ident ->
          (begin
          generate_expr_ident_for_E_var
-           ctx ~local_idents: loc_idents ~self_as ~in_hyp ident ;
+           ctx ~local_idents: loc_idents ~self_methods_status ~in_hyp ident ;
          (* Now, add the extra "_"'s if the identifier is polymorphic. *)
          try
            let nb_polymorphic_args =
@@ -665,7 +699,7 @@ and generate_expr ctx ~local_idents ~self_as ~in_hyp initial_env
      | Parsetree.E_let (let_def, in_expr) ->
          let env' =
            let_in_def_compile
-             ctx ~local_idents ~self_as ~in_hyp env let_def in
+             ctx ~local_idents ~self_methods_status ~in_hyp env let_def in
          Format.fprintf out_fmter "@ in@\n" ;
          rec_generate_expr loc_idents env' in_expr
      | Parsetree.E_record _labs_exprs ->
@@ -728,8 +762,8 @@ and generate_expr ctx ~local_idents ~self_as ~in_hyp initial_env
 
 
 
-let generate_logical_expr ctx ~local_idents ~self_as ~in_hyp initial_env
-    initial_proposition =
+let generate_logical_expr ctx ~local_idents ~self_methods_status ~in_hyp
+    initial_env initial_proposition =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the coq type print context. *)
   let print_ctx = {
@@ -768,8 +802,7 @@ let generate_logical_expr ctx ~local_idents ~self_as ~in_hyp initial_env
          List.iter
            (fun var ->
               Format.fprintf out_fmter "@ (%a : Set)"
-               (Types.pp_type_simple_to_coq
-                  print_ctx ~reuse_mapping: true ~self_as)
+               (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
                var)
            generalized_instanciated_vars ;
          (* Now, print the real bound variables. *)
@@ -780,8 +813,7 @@ let generate_logical_expr ctx ~local_idents ~self_as ~in_hyp initial_env
                 Format.fprintf ppf "%s"
                   (Parsetree_utils.vname_as_string_with_operators_expanded vn)))
            vnames
-           (Types.pp_type_simple_to_coq
-              print_ctx ~reuse_mapping: true ~self_as) ty ;
+           (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty ;
          (* IMHO : not really useful, but... doesn't hurt... *)
          Types.purge_type_simple_to_coq_variable_mapping () ;
          (* Here, the bound variables name may mask a "in"-parameter. *)
@@ -840,7 +872,7 @@ let generate_logical_expr ctx ~local_idents ~self_as ~in_hyp initial_env
                 assert false) in
          if is_bool then Format.fprintf out_fmter "@[<2>Is_true (" ;
          generate_expr
-           ctx ~local_idents: loc_idents ~self_as ~in_hyp env expr ;
+           ctx ~local_idents: loc_idents ~self_methods_status ~in_hyp env expr ;
          (* The end of the wrapper surrounding  *)
          (* the expression if it has type bool. *)
          if is_bool then Format.fprintf out_fmter ")@]"
@@ -988,8 +1020,7 @@ let generate_record_type_parameters ctx species_fields =
                  meth) in
             Format.fprintf ppf "(%s : %a)@ "
               llift_name
-              (Types.pp_type_simple_to_coq
-                 print_ctx ~reuse_mapping: false ~self_as: Types.CSR_species) ty
+              (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false) ty
             end))
         meths)
     flat_deps_for_fields
@@ -1012,6 +1043,14 @@ let generate_record_type ctx env species_descr =
   let (my_fname, my_species_name) = ctx.Context.scc_current_species in
   (* Directly trasform into a string, that's easier. *)
   let my_species_name = Parsetree_utils.name_of_vname my_species_name in
+  (* We do not add any bindings to the [collections_carrier_mapping]  *)
+  (* before printing the record type parameters for 2 reasons:        *)
+  (*   - species parameters carriers of the record are in the         *)
+  (*     [collections_carrier_mapping], hence any added binding would *)
+  (*     make think to an extra species parameter, hence to an extra  *)
+  (*     parameter to the record (obviously wrong).                   *)
+  (*   - since species carriers are not recursive, there is no reason *)
+  (*     to have "Self" parametrizing its own record type.            *)
   Format.fprintf out_fmter "@[<2>Record %s " my_species_name ;
   (* Generate the record parameters mapping the species  *)
   (* parameters and the methods from them we depend on ! *)
@@ -1019,25 +1058,30 @@ let generate_record_type ctx env species_descr =
     ctx species_descr.Env.TypeInformation.spe_sig_methods ;
   (* Print the type of the record and it's constructor. *)
   Format.fprintf out_fmter ": Type :=@ mk_%s {@\n" my_species_name  ;
+  (* Always generate the "rep" coercion. *)
+  Format.fprintf out_fmter "@[<2>%s_T :> Set" my_species_name ;
   (* We now extend the collections_carrier_mapping with ourselve known.  *)
   (* Hence, if we refer to our "rep" we will be directly mapped onto the *)
   (* species's name + "_T" without needing to re-construct this name     *)
-  (* each time. *)
+  (* each time. Do same thing for "Self".                                *)
   let collections_carrier_mapping =
+    (make_Self_cc_binding_current_species_T
+       ~current_species: ctx.Context.scc_current_species) ::
     ((my_fname, my_species_name),
      ((my_species_name ^ "_T"), Types.CCMI_in_or_not_param)) ::
     collections_carrier_mapping in
-  (* Create the coq type print context. *)
+  (* We mask the old ctx to take benefit of the new one with the bindings. *)
+  let ctx = {
+    ctx with
+    Context.scc_collections_carrier_mapping = collections_carrier_mapping } in
+  (* Create the coq type print context with the context new bindings. *)
   let print_ctx = {
     Types.cpc_current_unit = ctx.Context.scc_current_unit ;
     Types.cpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-    Types.cpc_collections_carrier_mapping =
-      collections_carrier_mapping } in
-  (* Always generate the "rep" coercion. *)
-  Format.fprintf out_fmter "@[<2>%s_T :> Set" my_species_name ;
+    Types.cpc_collections_carrier_mapping = collections_carrier_mapping } in
   (* Put a trailing semi only if there is other fields to generate. *)
   (match species_descr.Env.TypeInformation.spe_sig_methods with
    | [] -> ()
@@ -1062,8 +1106,7 @@ let generate_record_type ctx env species_descr =
           Format.fprintf out_fmter "@[<2>%s_%a : %a"
             my_species_name
             Parsetree_utils.pp_vname_with_operators_expanded n
-            (Types.pp_type_simple_to_coq
-               print_ctx ~reuse_mapping: false ~self_as: Types.CSR_species) ty ;
+            (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false) ty ;
           if semi then Format.fprintf out_fmter " ;" ;
           Format.fprintf out_fmter "@]@\n"
           end)
@@ -1078,8 +1121,7 @@ let generate_record_type ctx env species_descr =
             Format.fprintf out_fmter "@[<2>%s_%a : %a"
               my_species_name
               Parsetree_utils.pp_vname_with_operators_expanded n
-              (Types.pp_type_simple_to_coq
-                 print_ctx ~reuse_mapping: false ~self_as: Types.CSR_species)
+              (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
               ty ;
             if semi then Format.fprintf out_fmter " ;" ;
             Format.fprintf out_fmter "@]@\n")
@@ -1096,8 +1138,11 @@ let generate_record_type ctx env species_descr =
         (* Generate the Coq code representing the proposition. *)
         (* No local idents in the context because we just enter the scope *)
         (* of a species fields and so we are not under a core expression. *)
+        (* In the record type, methods of "Self" are always named using   *)
+        (* the species name + "_" + the method name; hence print using    *)
+        (* [~self_methods_status] to [SMS_from_species].                  *)
         generate_logical_expr ctx
-          ~local_idents: [] ~self_as: Types.CSR_species
+          ~local_idents: [] ~self_methods_status: SMS_from_species
           ~in_hyp: false env logical_expr ;
         if semi then Format.fprintf out_fmter " ;" ;
         Format.fprintf out_fmter "@]@\n" in

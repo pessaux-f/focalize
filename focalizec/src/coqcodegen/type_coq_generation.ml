@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.10 2008-04-15 21:18:33 weis Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.11 2008-05-19 09:14:20 pessaux Exp $ *)
 
 
 (* ********************************************************************** *)
@@ -45,9 +45,7 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
   List.iter
     (fun ty ->
       Format.fprintf out_fmter "(%a : Set)@ "
-        (Types.pp_type_simple_to_coq
-           print_ctx ~reuse_mapping: true ~self_as: Types.CSR_self)
-        ty)
+        (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty)
     tys
 ;;
 
@@ -123,11 +121,10 @@ let type_def_compile ctx env type_def_name type_descr =
          print_ctx out_fmter type_def_params ;
        (* Since types are toplevel, the way "Self" is printed is non *)
        (* relevant. Indeed, "Self" can only appear inside the scope  *)
-       (* of a species, hence never at toplevel, hence never in a    *)
-       (* type definition.                                           *)
+       (* of a species, hence never at toplevel, hence we don't need *)
+       (* to add any bindind in the [collection_carrier_mapping].    *)
        Format.fprintf out_fmter ":=@ %a.@]@\n"
-         (Types.pp_type_simple_to_coq
-            print_ctx ~reuse_mapping: true ~self_as: Types.CSR_self)
+         (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
          instanciated_body ;
        (* Not an external type definition, so nothing new in the environment. *)
        env
@@ -214,8 +211,7 @@ let type_def_compile ctx env type_def_name type_descr =
              Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name ;
            (* The type of the constructor. *)
            Format.fprintf out_fmter " :@ (@[<1>%a@])"
-             (Types.pp_type_simple_to_coq
-                print_ctx ~reuse_mapping: true ~self_as: Types.CSR_self)
+             (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
              cstr_ty)
          sum_constructors_to_print ;
        Format.fprintf out_fmter ".@]@\n@\n" ;
@@ -276,8 +272,7 @@ let type_def_compile ctx env type_def_name type_descr =
                     (type_descr.Env.TypeInformation.type_loc, field_name)) ;
              Format.fprintf out_fmter "%a :@ %a"
                Parsetree_utils.pp_vname_with_operators_expanded field_name
-               (Types.pp_type_simple_to_coq
-                  print_ctx ~reuse_mapping: true ~self_as: Types.CSR_self)
+               (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
                field_ty ;
              if q <> [] then Format.fprintf out_fmter " ;" ;
              Format.fprintf out_fmter "@\n" ;

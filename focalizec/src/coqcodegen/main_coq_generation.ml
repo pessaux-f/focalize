@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.14 2008-05-14 10:19:08 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.15 2008-05-19 09:14:20 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -46,11 +46,11 @@ let toplevel_let_def_compile ctx env let_def =
   (match is_rec with
    | false -> Format.fprintf out_fmter "@[<2>Let@ "
    | true -> Format.fprintf out_fmter "@[<2>Fixpoint@ ") ;
-  (* Now generate each bound definition. Remark that there is no local  *)
-  (* idents in the scope because we are at toplevel. In the same way,   *)
-  (* because we are not under the scope of a species, the way "Self"    *)
-  (* must be printed is non-relevant. We use [Types.CSR_species] by     *)
-  (* default.                                                           *)
+  (* Now generate each bound definition. Remark that there is no local *)
+  (* idents in the scope because we are at toplevel. In the same way,  *)
+  (* because we are not under the scope of a species, the way "Self"   *)
+  (* must be printed is non-relevant. We use [SMS_from_species] by     *)
+  (* default.                                                          *)
   let env' =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_bindings with
      | [] ->
@@ -58,20 +58,26 @@ let toplevel_let_def_compile ctx env let_def =
          assert false
      | [one_bnd] ->
          Species_record_type_generation.let_binding_compile
-           ctx ~local_idents: [] ~self_as: Types.CSR_species ~in_hyp: false
+           ctx ~local_idents: []
+           ~self_methods_status:
+             Species_record_type_generation.SMS_from_species ~in_hyp: false
            ~is_rec env one_bnd
      | first_bnd :: next_bnds ->
          let accu_env =
            ref
              (Species_record_type_generation.let_binding_compile
-                ctx ~local_idents: [] ~self_as: Types.CSR_species
+                ctx ~local_idents: []
+		~self_methods_status:
+		  Species_record_type_generation.SMS_from_species
                 ~in_hyp: false ~is_rec env first_bnd) in
          List.iter
            (fun binding ->
              Format.fprintf out_fmter "@]@\n@[<2>with " ;
              accu_env :=
                Species_record_type_generation.let_binding_compile
-                 ctx ~local_idents: [] ~self_as: Types.CSR_species
+                 ctx ~local_idents: []
+		 ~self_methods_status:
+		   Species_record_type_generation.SMS_from_species
                  ~in_hyp: false ~is_rec !accu_env binding)
            next_bnds ;
          !accu_env) in
@@ -191,7 +197,7 @@ let root_compile ~current_unit ~out_file_name stuff =
      Require Export String.@\n\
      Require Export List.@\n\
      Require Export coq_builtins.@\n@\n" ;
-  try
+(*  try*)
     List.iter
       (fun data ->
         let new_env =
@@ -202,7 +208,7 @@ let root_compile ~current_unit ~out_file_name stuff =
     Format.fprintf out_fmter "@?" ;
     close_out out_hd ;
     !global_env
-  with whatever ->
+(*  with whatever ->
     (* In any error case, flush the pretty-printer and close the outfile. *)
     Format.fprintf out_fmter "@?" ;
     close_out out_hd ;
@@ -229,5 +235,5 @@ let root_compile ~current_unit ~out_file_name stuff =
       end)
     end) ;
     (* Re-reaise the initial error. *)
-    raise whatever
+    raise whatever *)
 ;;
