@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.55 2008-05-19 09:14:20 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.56 2008-05-19 10:18:10 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -618,6 +618,13 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
             meth_ty)
         meths_from_param)
     dependencies_from_params ;
+  (* In order to print the Theorem, we must check if "rep" belongs to the *)
+  (* minimal coq environment and hence has been abstacted to know how to  *)
+  (* print "Self" (i.e. what to put in the [collection_carrier_mapping]). *)
+  (* If it belongs, then "Self" must be printed "abst_T" otherwise        *)
+  (* "self_T". For this, we maintain a dedicated boolean flag updated by  *)
+  (* side effect.                                                         *)
+  let carrier_belongs_to_min_coq_env = ref false in
   (* For each method in the minimal Coq typing environment, if it is  *)
   (* only declared, then we abstract them (i.e. make a "Variable"     *)
   (* named "abst_" + the method name and bind its type).              *)
@@ -641,6 +648,8 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
                Format.fprintf out_fmter
                  "(* Due to a decl-dependency on 'rep'. *)@\n" ;
                Format.fprintf out_fmter "Variable abst_T : Set.@\n" ;
+               (* Yep, carrier was seen in the minimal Coq environment. *)
+               carrier_belongs_to_min_coq_env := true ;
                (* Carrier is abstract. *)
                [Parsetree.Vlident "rep"]
            | MinEnv.MCEE_Defined_carrier sch ->
@@ -660,6 +669,8 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
                  (Types.pp_type_simple_to_coq
                     new_print_ctx' ~reuse_mapping: false)
                  ty ;
+               (* Yep, carrier was seen in the minimal Coq environment. *)
+               carrier_belongs_to_min_coq_env := true ;
                []
            | MinEnv.MCEE_Declared_computational (name, sch) ->
                (* Generate a comment before the variable. *)
@@ -828,7 +839,20 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
          min_coq_env) in
   (* Finally, the theorem itself. Inside, any method of "Self" is *)
   (* abstracted (i.e. as if it was lambda-lifted), hence named    *)
-  (* "abst_xxx". That's why we use the mode [Types.CSR_abst].     *)
+  (* "abst_xxx". That's why we use the mode [SMS_abstracted].     *)
+  (* Attention, we must enrich the [collection_carrier_mapping]   *)
+  (* with the way to print "Self". We use the dedicated boolean   *)
+  (* flag [carrier_belongs_to_min_coq_env]. See comment at its    *)
+  (* definition for more information.                             *)
+  let new_ctx = {
+    new_ctx with Context.scc_collections_carrier_mapping =
+      (if !carrier_belongs_to_min_coq_env then
+        Species_record_type_generation.make_Self_cc_binding_abst_T
+          ~current_species: new_ctx.Context.scc_current_species
+      else
+        Species_record_type_generation.make_Self_cc_binding_self_T
+          ~current_species: new_ctx.Context.scc_current_species)
+      :: new_ctx.Context.scc_collections_carrier_mapping } in
   Format.fprintf out_fmter "@[<2>Theorem %a__%a :@ "
     Parsetree_utils.pp_vname_with_operators_expanded curr_species_name
     Parsetree_utils.pp_vname_with_operators_expanded name ;

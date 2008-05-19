@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.12 2008-04-23 13:19:28 pessaux Exp $
+# $Id: Makefile,v 1.13 2008-05-19 10:18:10 pessaux Exp $
 
 OK_TEST_FILES = \
  ok__baby_toy.foc \
@@ -24,7 +24,7 @@ ok_all: $(OK_TEST_FILES)
 	# Compile from FoCaL to OCaml.
 	for i in $(OK_TEST_FILES); do \
 	  echo "Focalizing $$i"; \
-	  ../toplevel/check_file -c $$i; \
+	  ../toplevel/check_file -I ../lib -c $$i; \
 	done; \
 	# Compile the generated OCaml code.
 	ocamlc -w a -c ok__baby_toy_externals.ml
@@ -37,7 +37,7 @@ ko_all: $(KO_TEST_FILES)
 	# Compile from FoCaL to OCaml.
 	for i in $(KO_TEST_FILES); do \
 	  echo "Focalizing $$i"; \
-	  ../toplevel/check_file -c $$i; \
+	  ../toplevel/check_file -I ../lib -c $$i; \
 	done
 
 
