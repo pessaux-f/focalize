@@ -37,7 +37,7 @@ species Setoid inherits Basic_object =
   let different (x, y) = basics#not_b(!equal(x, y)) ;
 
   theorem same_is_not_different : all x y in Self,
-     !different(x, y) <-> ( !equal(x, y))
+     !different(x, y) <-> ~( !equal(x, y))
   proof:
     by definition of different ;
 
