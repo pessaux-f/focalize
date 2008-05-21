@@ -106,7 +106,7 @@ let not_b (x) in bool =
 ;;
 
 (* Must be mapped onto OCaml's type list. *)
-basics#Cons (1, basics#Nil) ;;
+1 :: [ ] ;;
 
 species Basic_object =
   let equal (x in Self, y in Self) = true ;
