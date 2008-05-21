@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.56 2008-05-19 10:18:10 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.57 2008-05-21 09:06:01 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -609,8 +609,9 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
           Format.fprintf out_fmter
             "@[(* Due@ to@ a@ decl-dependency@ on@ method@ '%a'@ of@ \
             species@ parameter@ '%a'. *)@]@\n"
-            Parsetree_utils.pp_vname_with_operators_expanded species_param_name
-            Parsetree_utils.pp_vname_with_operators_expanded meth ;
+            Parsetree_utils.pp_vname_with_operators_expanded meth
+            Parsetree_utils.pp_vname_with_operators_expanded
+            species_param_name ;
           Format.fprintf out_fmter
             "@[<2>Variable %s_%a : %a.@]@\n"
             prefix Parsetree_utils.pp_vname_with_operators_expanded meth

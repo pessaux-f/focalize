@@ -246,8 +246,8 @@ species Regular_monoid
   (* [rr]: need to fill those *)
   logical let divides (x, y) = basics#not_b (basics#is_failed (!exquo (y, x))) ;
   proof of divides_extends_equal =
-    (* by definition of divides ; *)
-    assumed ;
+    by definition of divides ;
+    (* assumed ; *)
 
   proof of divides_transitive = assumed ;
   proof of divides_reverses_mult = assumed ;

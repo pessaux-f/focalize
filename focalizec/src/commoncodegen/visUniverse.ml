@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: visUniverse.ml,v 1.3 2008-03-04 13:53:03 pessaux Exp $ *)
+(* $Id: visUniverse.ml,v 1.4 2008-05-21 09:06:01 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : Describes how a method arrives into a visible universe.
@@ -69,8 +69,8 @@ module Universe = Map.Make(UniverseElem) ;;
 
     {b Rem} : Not exported outside this module.                    *)
 (* *************************************************************** *)
-let visible_universe ~with_def_deps dep_graph
-    x_decl_dependencies x_def_dependencies =
+let visible_universe ~with_def_deps dep_graph x_decl_dependencies
+    x_def_dependencies =
   (* First, apply rule 1. Because decl-dependencies are already computed  *)
   (* when computing the visible universe, just take them as parameter     *)
   (* instead of computing them again. We add each method with the tag     *)
@@ -111,36 +111,35 @@ let visible_universe ~with_def_deps dep_graph
         (* cleared and replaced with the tag meaning that this method    *)
         (* comes here thanks to a transitive def-dependency.             *)
         universe := Universe.add n.Dep_analysis.nn_name IU_trans_def !universe ;
+        (* Add the decl-dependencies of this node to the universe. *)
+        List.iter
+          (function
+            | (child_node, (Dep_analysis.DK_decl _)) ->
+                (begin
+                (* If the method already appeared with the tag       *)
+                (* meaning that is comes here thanks to a transitive *)
+                (* def-dep, let it unchanged, otherwise add it with  *)
+                (* the tag meaning that it come here thanks to a     *)
+                (* decl-dep.                                         *)
+                (* In fact the process is simpler: if the method     *)
+                (* already appears in the universe: either it's with *)
+                (* a transitive def-dep, and then no change to do.   *)
+                (* Or it's with de decl-dep tag, and in this case,   *)
+                (* it's useless to add it again with this tag: then  *)
+                (* also no change to do.                             *)
+                if not
+                    (Universe.mem
+                       child_node.Dep_analysis.nn_name !universe) then
+                  universe :=
+                    Universe.add
+                      child_node.Dep_analysis.nn_name IU_only_decl !universe
+                end)
+            | (_, Dep_analysis.DK_def) -> ())
+          n.Dep_analysis.nn_children ;
+        (* Recurse on each def-pedendency child of the current node. *)
         List.iter
           (function
             | (child_node, Dep_analysis.DK_def) ->
-                (* Add the decl-dependencies of this node to the universe. *)
-                List.iter
-                  (function
-                    | (child_node_decl_child, (Dep_analysis.DK_decl _)) ->
-                        (begin
-                        (* If the method already appeared with the tag       *)
-                        (* meaning that is comes here thanks to a transitive *)
-                        (* def-dep, let it unchanged, otherwise add it with  *)
-                        (* the tag meaning that it come here thanks to a     *)
-                        (* decl-dep.                                         *)
-                        (* In fact the process is simpler: if the method     *)
-                        (* already appears in the universe: either it's with *)
-                        (* a transitive def-dep, and then no change to do.   *)
-                        (* Or it's with de decl-dep tag, and in this case,   *)
-                        (* it's useless to add it again with this tag: then  *)
-                        (* also no change to do.                             *)
-                        if not
-                            (Universe.mem
-                               child_node_decl_child.Dep_analysis.nn_name
-                               !universe) then
-                          universe :=
-                            Universe.add
-                              child_node_decl_child.Dep_analysis.nn_name
-                              IU_only_decl !universe
-                        end)
-                    | (_, Dep_analysis.DK_def) -> ())
-                  child_node.Dep_analysis.nn_children ;
                 (* Now recurse to walk deeper in the graph *)
                 (* on def-dependency children only.        *)
                 transitive_addition child_node
@@ -179,7 +178,7 @@ let visible_universe ~with_def_deps dep_graph
                   (* from the "type" of the field having this mode.       *)
                   (* If the child is not already in universe, then add it *)
                   (* with a [IU_only_decl] tag. If it is already in the   *)
-                  (* universe, then do nothing. In effet, either it is    *)
+                  (* universe, then do nothing. In effect, either it is   *)
                   (* inside with a [IU_only_decl] tag and then it is      *)
                   (* useless to add it again.                             *)
                   (* Or it is inside with a [IU_trans_def] and this flag  *)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.41 2008-05-05 13:25:58 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.42 2008-05-21 09:06:01 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -704,6 +704,9 @@ let in_species_decl_n_def_dependencies_for_one_theo_property_name
     of a method. In other words, this means wether it comes from the
     proposition of a theorem/property or if it comes from the proof
     of a theorem.
+    For a "let", the dependency is always considered as coming from
+    the "BODY".
+
     {b Rem} : Exported outside this module.                          *)
 (* ***************************************************************** *)
 type decl_dependency_kind = DDK_from_type | DDK_from_body ;;
@@ -830,8 +833,8 @@ let build_dependencies_graph_for_fields ~current_species fields =
         (fun n accu ->
           let node = find_or_create tree_nodes n in
           (* In "Let/rec" methods, "decl" dependencies  *)
-          (* can only come from the type of the method. *)
-          (node, (DK_decl DDK_from_type)) :: accu)
+          (* can only come from the BODY of the method. *)
+          (node, (DK_decl DDK_from_body)) :: accu)
         n_decl_deps_names
         [] in
     (* Now add an edge from the current name's node to each of the *)
@@ -994,6 +997,14 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
   let out_hd = open_out_bin out_filename in
   (* First, outputs the header of the dotty file. *)
   Printf.fprintf out_hd "digraph G {\n";
+  (* Output the meaning of the colors code just to remind the user. *)
+  Printf.fprintf out_hd "
+\"def dep\" [fontsize=10]
+\"decl dep (in type)\" [fontsize=10]
+\"decl dep (in body)\" [fontsize=10]
+\"def dep\" -> \"def dep\" [color=blue,fontsize=10];
+\"decl dep (in type)\" -> \"decl dep (in type)\" [color=red,fontsize=10];
+\"decl dep (in body)\" -> \"decl dep (in body)\" [color=pink,fontsize=10];\n" ;
   (* Outputs all the nodes og the graph. *)
   List.iter
     (fun { nn_name = n } ->

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.12 2008-04-23 13:19:28 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.13 2008-05-21 09:06:01 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -21,7 +21,6 @@
               generate the Coq/OCaml code.                              *)
 (* ******************************************************************** *)
 
-open Parsetree
 
 (* ********************************************************************* *)
 (* current_species: Parsetree.qualified_vname -> Parsetree.vname ->      *)
@@ -73,14 +72,14 @@ let param_deps_ident ~current_species param_coll_name local_idents ident =
    | Parsetree.EI_method (Some coll_specifier, vname) ->
        (begin
         match coll_specifier with
-        | Vname coll_name ->
+        | Parsetree.Vname coll_name ->
           (* Check it this method call is from the species parameter *)
           (* we are working with. Should never happen because the    *)
           (* scoping pass should make explicit the hosting module.   *)
           if coll_name = param_coll_name then
             Parsetree_utils.DepNameSet.singleton (vname, ident_ty)
           else Parsetree_utils.DepNameSet.empty
-        | Qualified (module_name, coll_name) ->
+        | Parsetree.Qualified (module_name, coll_name) ->
           (* If the module specification matches the one of the *)
           (* current_species and if the collection name matches *)
           (* species parameter then we have a dependency.       *)

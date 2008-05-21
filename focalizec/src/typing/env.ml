@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.81 2008-05-16 14:02:37 pessaux Exp $ *)
+(* $Id: env.ml,v 1.82 2008-05-21 09:06:01 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -590,16 +590,16 @@ module TypeInformation = struct
                        Sourcify.pp_vname v Types.pp_type_scheme s)
                    rem
             end)
-        | SF_theorem (from, vname, ty_scheme, _, _, _) ->
+        | SF_theorem (from, vname, _, body, _, _) ->
             Format.fprintf ppf "(* From species %a. *)@\n"
               Sourcify.pp_qualified_species from ;
             Format.fprintf ppf "theorem %a : %a@\n"
-              Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
-        | SF_property (from, vname, ty_scheme, _, _) ->
+              Sourcify.pp_vname vname Sourcify.pp_logical_expr body
+        | SF_property (from, vname, _, body, _) ->
             Format.fprintf ppf "(* From species %a. *)@\n"
               Sourcify.pp_qualified_species from ;
             Format.fprintf ppf "property %a : %a@\n"
-              Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme)
+              Sourcify.pp_vname vname Sourcify.pp_logical_expr body)
       methods
 
 

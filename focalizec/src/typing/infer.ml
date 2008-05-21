@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.122 2008-05-16 14:02:37 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.123 2008-05-21 09:06:01 pessaux Exp $ *)
 
 
 
@@ -1699,13 +1699,13 @@ and typecheck_termination_proof_profile ctx env previous_fields profile =
               list. The typing environment is incrementally extended
               with the found methods and used to typecheck the next
               methods.
-              The function returns a 5-uplet whose 3 firts componente are
+              The function returns a 5-uplet whose 3 first components are
               suitable to be inserted in the structure of a species's type,
               and the last ones are the "proof-of" and "termination-proof-of"
               fields that have been found among the fields. These "proof-of"
               must be collapsed with their related property BUT at the
               inheritance level where the proof is found (not at the one where
-              the property was enounced), to lead to a  theorem before the
+              the property was enounced), to lead to a theorem before the
               normalization process starts.
               The "termination-proof-of" must be collapsed with their related
               "let-rec" definitions also before the normalization process
@@ -2718,10 +2718,10 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
    and must be done again.
 
    ATTENTION:
-   This process must only be done on non-inherited fields since the
+   This function must only be used on non-inherited fields since the
    possibly changed fields remains in the returned fields list. This is
    wrong in case where the collapse occurs in an inherited field since
-   this changed fields must now be put in the non-inherited fields in
+   the changed field must then be put in the non-inherited fields in
    order that the rest of the analysis works correctly !
 
    {b Rem} : Not exported outside this module.                              *)
@@ -2775,8 +2775,8 @@ let collapse_proof_in_non_inherited proof_of ~current_species fields =
 
 
 
-(** {B Descr} : Same than [collapse_proof_in_non_inherited] but instead o
-    re-insertign the changed field in the fields list, return the list
+(** {B Descr} : Same than [collapse_proof_in_non_inherited] but instead of
+    re-inserting the changed field in the fields list, return the list
     without the field and the changed field aside. *)
 let rec collapse_proof_in_inherited proof_of ~current_species fields =
   let name_of_proof_of = proof_of.Parsetree.pd_name in
@@ -3735,8 +3735,7 @@ let typecheck_species_def ctx env species_def =
   let current_species =
     (ctx.current_unit, species_def_desc.Parsetree.sd_name) in
   if Configuration.get_verbose () then
-    Format.eprintf
-      "Typechecking species '%a'.@."
+    Format.eprintf "Typechecking species '%a'.@."
       Sourcify.pp_vname species_def_desc.Parsetree.sd_name;
   (* First of all, we are in a species !!! *)
   let ctx = { ctx with current_species = Some current_species } in
@@ -3782,7 +3781,7 @@ let typecheck_species_def ctx env species_def =
   if Configuration.get_verbose () then
     Format.eprintf
       "Normalizing species '%a'.@."
-      Sourcify.pp_vname species_def_desc.Parsetree.sd_name;
+      Sourcify.pp_vname species_def_desc.Parsetree.sd_name ;
   (* Then one must ensure that each method has the same type everywhere *)
   (* in the inheritance tree and more generaly create the normalised    *)
   (* form of the species.                                               *)
@@ -3808,10 +3807,10 @@ let typecheck_species_def ctx env species_def =
   if Configuration.get_verbose () then
     Format.eprintf
       "Computing dependencies inside species '%a'.@."
-      Sourcify.pp_vname species_def_desc.Parsetree.sd_name;
-  (* The methods are now completly correct perhaps except for their order  *)
-  (* ("correct" i.e. with no multiple times the same name as it can be     *)
-  (* before the normalization process), we get its final dependency graph. *)
+      Sourcify.pp_vname species_def_desc.Parsetree.sd_name ;
+  (* The methods are now completly correct, i.e. with no multiple times *)
+  (* the same name as it can be before the normalization process, we    *)
+  (* get the species's final dependency graph.                          *)
   let species_dep_graph =
     Dep_analysis.build_dependencies_graph_for_fields
       ~current_species reordered_normalized_methods in
@@ -3866,8 +3865,7 @@ let typecheck_species_def ctx env species_def =
   (* Record the type in the AST node. *)
   species_def.Parsetree.ast_type <- Parsetree.ANTI_type species_carrier_type ;
   if Configuration.get_verbose () then
-    Format.eprintf
-      "Species '%a' accepted.@."
+    Format.eprintf "Species '%a' accepted.@."
       Sourcify.pp_vname species_def_desc.Parsetree.sd_name ;
   (* Interface printing stuff. *)
   if Configuration.get_do_interface_output () then
