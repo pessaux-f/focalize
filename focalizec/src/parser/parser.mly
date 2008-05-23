@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.92 2008-04-30 16:09:51 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.93 2008-05-23 09:42:46 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -225,7 +225,6 @@ let mk_proof_label (s1, s2) =
 %token THEOREM
 %token TYPE
 %token USE
-%token VALUE
 %token WITH
 
 /* Precedences and associativities. */

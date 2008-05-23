@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.37 2008-04-25 10:42:27 pessaux Exp $ *)
+(* $Id: lexer.mll,v 1.38 2008-05-23 09:42:46 pessaux Exp $ *)
 
 {
 open Lexing;;
@@ -87,7 +87,6 @@ List.iter
   "true", BOOL "true";
   "type", TYPE;
   "use", USE;
-  "value", VALUE;
   "with", WITH;
 ]
 ;;
