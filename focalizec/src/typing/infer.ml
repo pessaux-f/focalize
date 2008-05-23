@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.123 2008-05-21 09:06:01 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.124 2008-05-23 09:45:12 pessaux Exp $ *)
 
 
 
@@ -2021,11 +2021,21 @@ let rec typecheck_expr_as_species_parameter_argument ctx env initial_expr =
       Format.eprintf "Self is subspecies by recursion not checked: todo@." ;
       TSPA_self
   | Parsetree.E_constr (cstr_expr, []) ->
-      (* We re-construct a fake ident from the constructor expression *)
-      (* just to be able to lookup inside the environment.            *)
+      (* We re-construct a fake ident from the constructor expression  *)
+      (* just to be able to lookup inside the environment. Be careful, *)
+      (* in order to allow to acces "opened" species, we must check if *)
+      (* we have a qualification (even being [None]) to create either  *)
+      (* a GLOBAL or a LOCAL ident. If we don't have any module        *)
+      (* qualification, we must create a LOCAL ident otherwsise,       *)
+      (* [~allow_opened] in [find_species] will get stucked at [false] *)
+      (* and we won't see the opended species. Otherwise, we create a  *)
+      (* GLOBAL identifier.                                            *)
       let Parsetree.CI id_qvname = cstr_expr.Parsetree.ast_desc in
       let pseudo_ident = { cstr_expr with
-        Parsetree.ast_desc = Parsetree.I_global id_qvname; } in
+        Parsetree.ast_desc =
+          (match id_qvname with
+             | Parsetree.Vname n -> Parsetree.I_local n
+             | Parsetree.Qualified _ -> Parsetree.I_global id_qvname) } in
       let descr =
         Env.TypingEnv.find_species
           ~loc: pseudo_ident.Parsetree.ast_loc

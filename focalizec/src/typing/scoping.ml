@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.53 2008-04-24 13:30:41 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.54 2008-05-23 09:45:12 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1808,11 +1808,21 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
   | Parsetree.E_self -> initial_expr
   | Parsetree.E_constr (cstr_expr, []) ->
-      (* We re-construct a fake ident from the constructor expression *)
-      (* just to be able to lookup inside the environment.            *)
+      (* We re-construct a fake ident from the constructor expression  *)
+      (* just to be able to lookup inside the environment. Be careful, *)
+      (* in order to allow to acces "opened" species, we must check if *)
+      (* we have a qualification (even being [None]) to create either  *)
+      (* a GLOBAL or a LOCAL ident. If we don't have any module        *)
+      (* qualification, we must create a LOCAL ident otherwsise,       *)
+      (* [~allow_opened] in [find_species] will get stucked at [false] *)
+      (* and we won't see the opended species. Otherwise, we create a  *)
+      (* GLOBAL identifier.                                            *)
       let Parsetree.CI qvname = cstr_expr.Parsetree.ast_desc in
       let pseudo_ident = { cstr_expr with
-        Parsetree.ast_desc = Parsetree.I_global qvname } in
+        Parsetree.ast_desc = 
+          (match qvname with
+            | Parsetree.Vname n -> Parsetree.I_local n
+            | Parsetree.Qualified _ -> Parsetree.I_global qvname) } in
       let species_info =
         Env.ScopingEnv.find_species
           ~loc: pseudo_ident.Parsetree.ast_loc
