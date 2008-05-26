@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.41 2008-05-16 07:36:09 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.42 2008-05-26 13:03:15 pessaux Exp $ *)
 
 
 
@@ -246,8 +246,8 @@ try Check_file.main () with
      | Infer.Rep_multiply_defined_by_multiple_inheritance (prev, newer, at) ->
          Format.fprintf Format.err_formatter
            "%a:@\n@[%tCarrier@ 'rep'@ is@ multiply@ defined@ by@ \
-           multiple@ inhritance@ and@ was@ formerly@ found@ of@ type%t@ \
-           @[%a@]@ %tand@ newly@ found@ of@ type%t@ @[%a@].@]@."
+           multiple@ inhritance@ and@ was@ formerly@ found@ of@ type@ %t@ \
+           @[%a@]@ %tand@ newly@ found@ of@ type@ %t@ @[%a@].@]@."
            Location.pp_location at
            Handy.pp_set_bold Handy.pp_reset_effects
            Types.pp_type_simple prev
