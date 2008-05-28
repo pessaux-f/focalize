@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.44 2008-05-16 12:34:49 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.45 2008-05-28 13:37:08 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -436,7 +436,7 @@ let make_params_list_from_abstraction_info ai =
                (Parsetree_utils.vname_as_string_with_operators_expanded meth))
               :: !the_list_reversed)
           meths_from_param)
-    ai.Abstractions.ai_dependencies_from_params ;
+    ai.Abstractions.ai_dependencies_from_params_via_body ;
   (* Next, the extra arguments due to methods of ourselves we depend on. *)
   (* They are always present in the species under the name "self_...".   *)
   List.iter
@@ -669,7 +669,8 @@ let generate_methods ctx env field =
               generate_one_field_binding
                 ctx env abstraction_info.Abstractions.ai_min_coq_env
                 ~let_connect: LC_first_non_rec
-                abstraction_info.Abstractions.ai_dependencies_from_params
+                abstraction_info.Abstractions.
+                  ai_dependencies_from_params_via_body
                 (from, name, params, (Some scheme), body_expr) in
             (* Now, build the [compiled_field_memory], even if the method  *)
             (* was not really generated because it was inherited.          *)
@@ -677,7 +678,8 @@ let generate_methods ctx env field =
               cfm_from_species = from ;
               cfm_method_name = name ;
               cfm_dependencies_from_parameters =
-                abstraction_info.Abstractions.ai_dependencies_from_params ;
+                abstraction_info.Abstractions.
+                  ai_dependencies_from_params_via_body ;
               cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
             Some (CSF_let compiled_field)
        end)
@@ -709,13 +711,14 @@ let generate_methods ctx env field =
                    generate_one_field_binding
                      ctx' env first_ai.Abstractions.ai_min_coq_env
                      ~let_connect: LC_first_rec
-                     first_ai.Abstractions.ai_dependencies_from_params
+                     first_ai.Abstractions.ai_dependencies_from_params_via_body
                      (from, name, params, (Some scheme), body_expr) in
                  let first_compiled = {
                    cfm_from_species = from ;
                    cfm_method_name = name ;
                    cfm_dependencies_from_parameters =
-                   first_ai.Abstractions.ai_dependencies_from_params ;
+                     first_ai.Abstractions.
+                       ai_dependencies_from_params_via_body ;
                    cfm_coq_min_typ_env_names = first_coq_min_typ_env_names } in
                  (* Finally, generate the remaining  methods, *)
                  (* introduced by "and".                      *)
@@ -734,12 +737,13 @@ let generate_methods ctx env field =
                          generate_one_field_binding
                            ctx' env ai.Abstractions.ai_min_coq_env
                            ~let_connect: LC_following
-                           ai.Abstractions.ai_dependencies_from_params
+                           ai.Abstractions.ai_dependencies_from_params_via_body
                            (from, name, params, (Some scheme), body_e) in
                        { cfm_from_species = from ;
                          cfm_method_name = name ;
                          cfm_dependencies_from_parameters =
-                           ai.Abstractions.ai_dependencies_from_params ;
+                           ai.Abstractions.
+                             ai_dependencies_from_params_via_body ;
                          cfm_coq_min_typ_env_names = coq_min_typ_env_names })
                      q in
                  Some (CSF_let_rec (first_compiled :: rem_compiled))
@@ -792,8 +796,19 @@ let dump_collection_generator_arguments out_fmter compiled_species_fields =
                function. Not exported.                                        *)
   (* ************************************************************************ *)
   let rec process_one_field_memory field_memory =
+
+Format.eprintf "dump_collection_generator_arguments processing field %a@."
+  Sourcify.pp_vname field_memory.cfm_method_name ;
+
     List.iter
       (fun (spe_param_name, _, meths_set) ->
+
+Format.eprintf "Trouvé un param name: %a@."
+  Sourcify.pp_vname spe_param_name ;
+if Parsetree_utils.DepNameSet.is_empty meths_set then
+  Format.eprintf "Empty@."
+else Format.eprintf "Non-empty@." ;
+
         (* Get or create for this species parameter name, the bucket *)
         (* recording all the methods someone depends on.             *)
         (* We don't care here about whether the species parameters is   *)
@@ -827,11 +842,18 @@ let dump_collection_generator_arguments out_fmter compiled_species_fields =
   (* "_p_" + species parameter name + "_" + called method name.             *)
   List.iter
     (fun (species_param_name, meths_set) ->
+
+Format.eprintf "Dumping réellement pour %a@."
+  Sourcify.pp_vname species_param_name ;
+
       let prefix =
         "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
         "_" in
       Parsetree_utils.DepNameSet.iter
         (fun (meth, _) ->
+
+Format.eprintf "One more@." ;
+
           (* Don't print the type to prevent being too verbose. *)
           Format.fprintf out_fmter "@ %s%a"
             prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
@@ -1379,7 +1401,7 @@ let collection_compile env ~current_unit out_fmter collection_def
     (* And now, create the final value representing the effective instance *)
     (* of our collection, borrowing each field from the temporary value    *)
     (* obtained above. This way, our collection will have ITS own record   *)
-    (* fields names, preventing the need to use those coming fom the       *)
+    (* fields names, preventing the need to use those coming from the      *)
     (* it implements.                                                      *)
     Format.fprintf out_fmter "@[<2>{@ " ;
     (* Make the record value borrowing every fields from the temporary  *)

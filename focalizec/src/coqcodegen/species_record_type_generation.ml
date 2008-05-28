@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.36 2008-05-19 09:14:20 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.37 2008-05-28 13:37:08 pessaux Exp $ *)
 
 
 
@@ -606,7 +606,7 @@ and generate_expr ctx ~local_idents ~self_methods_status ~in_hyp initial_env
             | Parsetree.ANTI_none | Parsetree.ANTI_non_relevant
             | Parsetree.ANTI_scheme _ -> assert false
             | Parsetree.ANTI_type t -> t) in
-         Format.fprintf out_fmter "@[<2>fun " ;
+         Format.fprintf out_fmter "@[<2>(fun " ;
          (* Now, print each parameter with it's type until we arrive to *)
          (* the return type of the function. DO NOT fold_right !        *)
          ignore
@@ -625,7 +625,7 @@ and generate_expr ctx ~local_idents ~self_methods_status ~in_hyp initial_env
               vnames) ;
          Format.fprintf out_fmter "=>@ " ;
          rec_generate_expr loc_idents env body ;
-         Format.fprintf out_fmter "@]" ;
+         Format.fprintf out_fmter ")@]" ;
      | Parsetree.E_var ident ->
          (begin
          generate_expr_ident_for_E_var
