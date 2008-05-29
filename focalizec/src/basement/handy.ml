@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.13 2008-04-23 14:54:07 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.14 2008-05-29 11:04:23 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -181,26 +181,6 @@ let list_mem_count e l =
 
 
 (* *********************************************************************** *)
-(* 'a list -> 'a list -> ' a list *)
-(** {b Descr} : Assuming that [l2] does not contain doubles, returns the
-              concatenation of elements of [l1] that do not belong to [l2].
-              If [l1] contains doubles, then only one of each will appear
-              in the resulting list.
-              The equality predicate used here is the physical equality.
-
-    {b Rem} : Exported outside this module.                                *)
-(* *********************************************************************** *)
-let list_concat_uniqq l1 l2 =
-  let rec rec_append = function
-    | [] -> l2
-    | h :: q ->
-        if List.memq h l2 then rec_append q else h :: (rec_append q) in
-  rec_append l1
-;;
-
-
-
-(* *********************************************************************** *)
 (* ('a -> 'a -> bool) -> 'a list -> 'a list -> 'a list                     *)
 (** {b Descr} : Assuming that [l2] does not contain doubles, returns the
               concatenation of elements of [l1] that do not belong to [l2].
@@ -223,6 +203,34 @@ let list_concat_uniq_custom_eq eq_fct l1 l2 =
 
 
 
+(* *********************************************************************** *)
+(* 'a list -> 'a list -> ' a list *)
+(** {b Descr} : Assuming that [l2] does not contain doubles, returns the
+              concatenation of elements of [l1] that do not belong to [l2].
+              If [l1] contains doubles, then only one of each will appear
+              in the resulting list.
+              The equality predicate used here is the physical equality.
+
+    {b Rem} : Exported outside this module.                                *)
+(* *********************************************************************** *)
+let list_concat_uniqq l1 l2 = list_concat_uniq_custom_eq ( == ) l1 l2 ;;
+
+
+
+(* *********************************************************************** *)
+(* 'a list -> 'a list -> ' a list *)
+(** {b Descr} : Assuming that [l2] does not contain doubles, returns the
+              concatenation of elements of [l1] that do not belong to [l2].
+              If [l1] contains doubles, then only one of each will appear
+              in the resulting list.
+              The equality predicate used here is the structural equality.
+
+    {b Rem} : Exported outside this module.                                *)
+(* *********************************************************************** *)
+let list_concat_uniq l1 l2 = list_concat_uniq_custom_eq ( = ) l1 l2 ;;
+
+
+
 (* ************************************************************************ *)
 (* ('a -> 'a -> bool) -> 'a -> 'a list -> bool                              *)
 (** {b Descr} : Test if the element [e] belongs to the list [l]. The
@@ -242,8 +250,41 @@ let list_mem_custom_eq eq_fct e l =
 
 
 
+(* ************************************************************************ *)
+(* ('a -> 'a -> bool) -> 'a -> 'a list -> 'a list                           *)
+(** {b Descr} : Add the element [e] in thead of the list [l] if the element
+    doesn't already belong to the list. The used equality function is
+    provided by the argument [eq_fct].
+
+   {b Rem} : Exported outside this module.                                  *)
+(* ************************************************************************ *)
 let list_cons_uniq_custom_eq eq_fct e l =
   if list_mem_custom_eq eq_fct e l then l else e :: l
+;;
+
+
+
+(* ************************************************************************** *)
+(** {b Descr} : Assuming that [l1] doesn't have doubles, that l2 doesn't have
+    doubles, makes the list with elements of both lists but no doubles. The
+    order of the elements is not specified. In fact, elements from [l1] not
+    present in [l2] will appear first in their order in [l1], then elements
+    from [l2] will appear in their order in [l2] last. This means that we
+    always append [l2] to the sub-list of [l1] where elements of [l2] are
+    removed.
+    For example, l1 = [1;3;5]
+                 l2 = [2;3]
+    we get the list [1;2;3;5]
+
+    {b Rem} : Exported outside this module.                                   *)
+(* ************************************************************************** *)
+let merge_uniq_list l1 l2 =
+  let rec rec_merge = function
+    | [] -> l2
+    | h :: q ->
+        if List.mem h l2 then rec_merge q
+        else h :: (rec_merge q) in
+  rec_merge l1
 ;;
 
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.42 2008-05-26 13:03:15 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.43 2008-05-29 11:04:23 pessaux Exp $ *)
 
 
 
@@ -20,6 +20,8 @@
               unexpected arises when proceeding, we exit with the proper
               error code.                                                     *)
 (* ************************************************************************** *)
+Check_file.main () ;;
+(*
 try Check_file.main () with
 | anything ->
     (begin
@@ -416,3 +418,4 @@ try Check_file.main () with
     (* And anyway, if an exception occured, exit with -1 error code. *)
     exit (-1)
 ;;
+*)

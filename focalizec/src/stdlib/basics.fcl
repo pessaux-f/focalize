@@ -193,7 +193,8 @@ let base_eq =
 ;;
 
 let ( = ) (x, y) = base_eq (x, y) ;;
-
+let ( && ) (x, y) = and_b (x, y) ;;
+let ( || ) (x, y) = or_b (x, y) ;;
 
 theorem beq_refl : all x in 'a, base_eq (x, x) proof: assumed ;;
 theorem beq_symm: all x y in 'a, base_eq (x, y) -> base_eq (y, x)

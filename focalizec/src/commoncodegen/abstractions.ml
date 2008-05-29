@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.12 2008-04-29 15:26:13 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.13 2008-05-29 11:04:23 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -44,8 +44,13 @@ type field_body_kind =
         compute here the information related to the extra parameters
         a method will have by lambda-lifting due to the species parameters
         and the dependencies of the method.
-        We extract the methods we decl-depend on,the methods we def-depend
-        on, the methods of the species parameters we depend on.
+        We extract the methods we decl-depend on, the methods we def-depend
+        on, the methods of the species parameters we depend on via our
+        "body" for lets and "type" for theorems and properties.
+        ATTENTION, the set of  the methods of the species parameters we
+        depend on is not complete: it must be completed to achieve the
+        definition 72 page 153 in Virgile Prevosto's Phd. In fact, the
+        present function only implements rule [BODY] !
 
     {b Rem} : Exported oustide this module.                                  *)
 (* ************************************************************************* *)
@@ -74,7 +79,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
   (* species [Foo (A ..., B) ...] we want to have the extra parameters  *)
   (* due to lambda-lifting in the OCaml function ordered such as those  *)
   (* coming from [A] are first, then come those from [B].               *)
-  let dependencies_from_params =
+  let dependencies_from_params_in_bodies =
     List.fold_right
       (fun (species_param_name, species_param_kind) accu ->
         let meths_from_param =
@@ -105,7 +110,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
             Types.SpeciesCarrierTypeSet.union
               st_set !params_appearing_in_types)
         meths)
-    dependencies_from_params ;
+    dependencies_from_params_in_bodies ;
   (* Same thing for the methods of ourselves we decl-depend on except on *)
   (* rep that is processed apart.                                        *)
   List.iter
@@ -136,7 +141,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
   (* since they will lead to extra args of type "Set".             *)
 (* [Unsure] Ne garder seulement les paramètres en "is" ? *)
   let species_param_names =
-    List.map (fun (x, _, _) -> x) dependencies_from_params in
+    List.map (fun (x, _, _) -> x) dependencies_from_params_in_bodies in
   let used_species_parameter_tys =
     List.filter
       (fun species_param_name ->
@@ -145,7 +150,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
           (current_unit, as_string) !params_appearing_in_types)
       species_param_names in
   (used_species_parameter_tys,
-   dependencies_from_params,
+   dependencies_from_params_in_bodies,
    decl_children,
    def_children)
 ;;
@@ -154,7 +159,23 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
 
 type abstraction_info = {
   ai_used_species_parameter_tys : Parsetree.vname list ;
-  ai_dependencies_from_params :
+  (** Dependencies found via [BODY] of definition 72 page 153 of Virgile
+      Prevosto's Phd. *)
+  ai_dependencies_from_params_via_body :
+    (Parsetree.vname *                    (** The species parameter's name. *)
+     Parsetree_utils.species_param_kind * (** The species parameter's kind. *)
+     Parsetree_utils.DepNameSet.t)     (** The set of methods we depend on. *)
+  list ;
+  (** Dependencies found via [TYPE] of definition 72 page 153 of Virgile
+      Prevosto's Phd. *)
+  ai_dependencies_from_params_via_type :
+    (Parsetree.vname *                    (** The species parameter's name. *)
+     Parsetree_utils.species_param_kind * (** The species parameter's kind. *)
+     Parsetree_utils.DepNameSet.t)     (** The set of methods we depend on. *)
+  list ;
+  (** Other dependencies found via [DEF-DEP], [UNIVERSE] and [PRM] of definition
+      72 page 153 of Virgile Prevosto's Phd. *)
+  ai_dependencies_from_params_via_completion :
     (Parsetree.vname *                    (** The species parameter's name. *)
      Parsetree_utils.species_param_kind * (** The species parameter's kind. *)
      Parsetree_utils.DepNameSet.t)     (** The set of methods we depend on. *)
@@ -174,6 +195,169 @@ type field_abstraction_info =
 
 
 
+(** Must never be called with the method "rep". It has no meaning.
+    May return None is the searched field is a signature since a signature
+  do not have any dependencies on methods. *)
+let find_field_abstraction_by_name name abstractions =
+  assert (name <> Parsetree.Vlident "rep") ;
+  let rec rec_find = function
+    | [] -> assert false             (* The search must succeed ! *)
+    | h :: q ->
+        match h with
+         | FAI_sig (_, n, _) ->
+             (* A signature never induce def-dependencies. *)
+             if n = name then None
+             else rec_find q  (* Not the good name, go on searching... *)
+         | FAI_let ((_, n, _, _, _, _, _), abstraction_info)
+         | FAI_theorem ((_, n, _, _, _, _) , abstraction_info)
+         | FAI_property ((_, n, _, _, _), abstraction_info) ->
+             if n = name then Some abstraction_info else rec_find q
+         | FAI_let_rec l ->
+             (begin
+             try
+               let (_, abstraction_info) =
+                 List.find (fun ((_, n, _, _, _, _, _), _) -> n = name) l in
+               Some abstraction_info
+             with Not_found -> rec_find q
+             end) in
+  rec_find abstractions
+;;
+
+
+
+(** Implements rules [TYPE], [DEF-DEP], [UNIVERSE] and [PRM] of the
+    definition 72 page 153 of Virgile Prevosto's Phd. *)
+(* [Unsure] est-ce que les "used_parameters_ty" ne devraient pas être aussi
+  "complétés" ? *)
+let complete_dependencies_from_params ~current_species seen_abstractions
+    species_parameters_names def_children universe opt_proof =
+  (* Rule [TYPE] possible only if a proof is provided. *)
+  let dependencies_from_params_via_type =
+    (match opt_proof with
+     | None ->
+         (* If no proof is given, then there is no dependency, but we must *)
+         (* not simply return the [] because all our "union" functions on  *)
+         (* dependencies rely on a list of sets with 1 set for each        *)
+         (* species parameter name.                                        *)
+         List.fold_right
+           (fun (species_param_name, species_param_kind) accu ->
+             (species_param_name, species_param_kind,
+              Parsetree_utils.DepNameSet.empty) :: accu)
+           species_parameters_names
+           []
+     | Some proof ->
+         (* Same remark about [fold_right] than for the function *)
+         (* [compute_lambda_liftings_for_field] when computing   *)
+         (* [dependencies_from_params_in_bodies].                *)
+         List.fold_right
+           (fun (species_param_name, species_param_kind) accu ->
+             let meths_from_param =
+               Param_dep_analysis.param_deps_proof
+                 ~current_species species_param_name proof in
+             (* Return a couple binding the species parameter's name with the *)
+             (* methods of it we found as required for the current method.    *)
+             (species_param_name, species_param_kind, meths_from_param) :: accu)
+           species_parameters_names
+           []) in
+  (* Rule [DEF-DEP]. Since "rep" is a method like the others, it may appear *)
+  (* in the def-dependencies. However, since "rep" can never induce         *)
+  (* dependencies on species parameters methods, we directly forget it.     *)
+  let abstr_infos_from_all_def_children =
+    List.fold_left
+      (fun accu (def_child, _) ->
+        if def_child.Dep_analysis.nn_name = (Parsetree.Vlident "rep") then accu
+        else
+          (* Get the abstraction info of the child we def-depend on. *)
+          (find_field_abstraction_by_name def_child.Dep_analysis.nn_name
+             seen_abstractions) :: accu)
+      []
+      def_children in
+  (* The "empty" dependencies cannot simple be [] because all our "union" *)
+  (* functions on dependencies rely on a list of sets with 1 set for each *)
+  (* species parameter name. So we create our initial accumulator as the  *)
+  (* list mapping each species parameter name onto the empty dependencies *)
+  (* set.                                                                 *)
+  let empty_initial_deps_accumulator =
+    List.fold_right
+      (fun (species_param_name, species_param_kind) accu ->
+        (species_param_name, species_param_kind,
+         Parsetree_utils.DepNameSet.empty) :: accu)
+      species_parameters_names
+      [] in
+  (* Since methods on which we depend are from Self, all of them share the *)
+  (* same species parameter names, and by construction, each of them have  *)
+  (* the same structure of list (i.e. species parameter names at the same  *)
+  (* place in the list) for their [ai_dependencies_from_params_via_body].  *)
+  (* Hence, instead of making [List.map] on the [species_parameter_names]  *)
+  (* to individually merge the methods from each children for a species    *)
+  (* parameter, we simply make the union (without double) of all the       *)
+  (* [ai_dependencies_from_params_via_body] of the def-children.           *)
+  let dependencies_from_params_via_compl1 =
+    List.fold_left
+      (fun accu_deps_from_params abstr_infos_opt ->
+        match abstr_infos_opt with
+         | Some abstr_infos ->
+             (* We merge the found abstraction info and *)
+             (* the abstraction info accumulator.       *)
+             List.map2
+               (fun (prm_name1, prm_kind1, deps1)
+                    (prm_name2, prm_kind2, deps2) ->
+                 (* A few asserts to ensure the compiler is fine. *)
+                 assert (prm_name1 = prm_name2) ;
+                 assert (prm_kind1 = prm_kind2) ;
+                 let deps = Parsetree_utils.DepNameSet.union deps1 deps2 in
+                 (prm_name1, prm_kind1, deps))
+               abstr_infos.ai_dependencies_from_params_via_body
+               accu_deps_from_params
+         | None ->
+             (* No abstr_infos found, so leave the accumulator as it was. *)
+             accu_deps_from_params)
+      empty_initial_deps_accumulator
+      abstr_infos_from_all_def_children in
+  (* Rule [UNIVERS]. We extend [dependencies_from_params_via_compl1]. *)
+  let dependencies_from_params_via_compl2 =
+    VisUniverse.Universe.fold
+      (fun z_name_in_univ _ accu_deps_from_params ->
+        (* For each z (c.f. notation in Virgile) in the visible universe,    *)
+        (* we must add its [ai_dependencies_from_params_via_type].           *)
+        (* So we must first search the abstraction info of [z_name_in_univ]. *)
+        (* Since "rep" is a method like the others, it may appear in the     *)
+        (* universe. However, since "rep" can never induce dependencies on   *)
+        (* species parameters methods, we directly forget it.                *)
+        if z_name_in_univ = (Parsetree.Vlident "rep") then
+          accu_deps_from_params
+        else
+          (begin
+          let abstr_info_opt =
+            find_field_abstraction_by_name z_name_in_univ seen_abstractions in
+          match abstr_info_opt with
+           | Some abstr_info ->
+               (* Now, add the [ai_dependencies_from_params_via_type] *)
+               (* to the dependencies accumulator.                    *)
+               List.map2
+                 (fun (prm_name1, prm_kind1, deps1)
+                      (prm_name2, prm_kind2, deps2) ->
+                   (* A few asserts to ensure the compiler is fine. *)
+                   assert (prm_name1 = prm_name2) ;
+                   assert (prm_kind1 = prm_kind2) ;
+                   let deps = Parsetree_utils.DepNameSet.union deps1 deps2 in
+                   (prm_name1, prm_kind1, deps))
+                 abstr_info.ai_dependencies_from_params_via_type
+                 accu_deps_from_params
+           | None ->
+               (* No abstr_infos found, so leave the accumulator as it was. *)
+               accu_deps_from_params
+          end))
+      universe
+      dependencies_from_params_via_compl1 in
+  (* Rule [PRM]. *)
+  let dependencies_from_params_via_compl3 =  (* [Unsure] *)
+    dependencies_from_params_via_compl2 in
+ (dependencies_from_params_via_type, dependencies_from_params_via_compl3)
+;;
+
+
+
 (**
     To be usable for OCaml generation, the [with_def_deps] flag
     enables to forget the def-dependencies and their implied
@@ -181,113 +365,200 @@ type field_abstraction_info =
     decl-dependencies are relevant.
 *)
 let compute_abstractions_for_fields ~with_def_deps ctx fields =
-  List.map
-    (function
-      | Env.TypeInformation.SF_sig si -> FAI_sig si
-      | Env.TypeInformation.SF_let ((_, name, _, sch, body, _, _) as li) ->
-          let (used_species_parameter_tys, dependencies_from_params,
-               decl_children, def_children) =
-            let body_as_fbk =
-              match body with
-               | Parsetree.BB_logical p -> FBK_logical_expr p
-               | Parsetree.BB_computational e -> FBK_expr e in
-            compute_lambda_liftings_for_field
-              ~current_unit: ctx.Context.scc_current_unit
-              ~current_species: ctx.Context.scc_current_species
-              ctx.Context.scc_species_parameters_names
-              ctx.Context.scc_dependency_graph_nodes name
-              body_as_fbk (Types.specialize sch) in
-          (* Compute the visible universe of the method. *)
-          let universe =
-            VisUniverse.visible_universe
-              ~with_def_deps
-              ctx.Context.scc_dependency_graph_nodes decl_children
-              def_children in
-          (* Now, its minimal Coq typing environment. *)
-          let min_coq_env =
-            MinEnv.minimal_typing_environment universe fields in
-          let abstr_info = {
-            ai_used_species_parameter_tys = used_species_parameter_tys ;
-            ai_dependencies_from_params = dependencies_from_params ;
-            ai_min_coq_env = min_coq_env } in
-          FAI_let (li, abstr_info)
-      | Env.TypeInformation.SF_let_rec l ->
-          let deps_infos =
-            List.map
-              (fun ((_, name, _, sch, body, _, _) as li) ->
-                let body_as_fbk =
-                  match body with
-                   | Parsetree.BB_logical p -> FBK_logical_expr p
-                   | Parsetree.BB_computational e -> FBK_expr e in
-                let (used_species_parameter_tys, dependencies_from_params,
-                     decl_children, def_children) =
-                  compute_lambda_liftings_for_field
-                    ~current_unit: ctx.Context.scc_current_unit
-                    ~current_species: ctx.Context.scc_current_species
-                    ctx.Context.scc_species_parameters_names
-                    ctx.Context.scc_dependency_graph_nodes name
-                    body_as_fbk (Types.specialize sch) in
-                (* Compute the visible universe of the method. *)
-                let universe =
-                  VisUniverse.visible_universe
-                    ~with_def_deps
-                    ctx.Context.scc_dependency_graph_nodes
-                    decl_children def_children in
-                (* Now, its minimal Coq typing environment. *)
-                let min_coq_env =
-                  MinEnv.minimal_typing_environment universe fields in
-                let abstr_info = {
-                  ai_used_species_parameter_tys = used_species_parameter_tys ;
-                  ai_dependencies_from_params = dependencies_from_params ;
-                  ai_min_coq_env = min_coq_env } in
-                (li, abstr_info))
-              l in
-          FAI_let_rec deps_infos
-      | Env.TypeInformation.SF_theorem
-          ((_, name, sch, logical_expr, _, _) as ti) ->
-          let (used_species_parameter_tys, dependencies_from_params,
-               decl_children, def_children) =
-            compute_lambda_liftings_for_field
-              ~current_unit: ctx.Context.scc_current_unit
-              ~current_species: ctx.Context.scc_current_species
-              ctx.Context.scc_species_parameters_names
-              ctx.Context.scc_dependency_graph_nodes name
-              (FBK_logical_expr logical_expr) (Types.specialize sch) in
-          (* Compute the visible universe of the theorem. *)
-          let universe =
-            VisUniverse.visible_universe
-              ~with_def_deps
-              ctx.Context.scc_dependency_graph_nodes decl_children
-              def_children in
-          (* Now, its minimal Coq typing environment. *)
-          let min_coq_env = MinEnv.minimal_typing_environment universe fields in
-          let abstr_info = {
-            ai_used_species_parameter_tys = used_species_parameter_tys ;
-            ai_dependencies_from_params = dependencies_from_params ;
-            ai_min_coq_env = min_coq_env } in
-          FAI_theorem (ti, abstr_info)
-      | Env.TypeInformation.SF_property
-          ((_, name, sch, logical_expr, _) as pi) ->
-          let (used_species_parameter_tys, dependencies_from_params,
-               decl_children, def_children) =
-            compute_lambda_liftings_for_field
-              ~current_unit: ctx.Context.scc_current_unit
-              ~current_species: ctx.Context.scc_current_species
-              ctx.Context.scc_species_parameters_names
-              ctx.Context.scc_dependency_graph_nodes name
-              (FBK_logical_expr logical_expr) (Types.specialize sch) in
-          (* Compute the visible universe of the theorem. *)
-          let universe =
-            VisUniverse.visible_universe
-              ~with_def_deps
-              ctx.Context.scc_dependency_graph_nodes decl_children
-              def_children in
-          (* Now, its minimal Coq typing environment. *)
-          let min_coq_env = MinEnv.minimal_typing_environment universe fields in
-          let abstr_info = {
-            ai_used_species_parameter_tys = used_species_parameter_tys ;
-            ai_dependencies_from_params = dependencies_from_params ;
-            ai_min_coq_env = min_coq_env } in
-          FAI_property (pi, abstr_info))
-    fields
+  let reversed_abstractions =
+    (* ATTENTION: do not [fold_right] ! We build the list in reverse order *)
+    (* end finally reverse it at the end for sake of efficiency. We        *)
+    (* explicitly [fold_left] to have in our accumulator, the list of      *)
+    (* fields already processed, and in the right order (in their order of *)
+    (* apparition) AND to process fields of the list [fields] in their     *)
+    (* order of apparition. We need this in order to recover the already   *)
+    (* computed dependencies from params on previous fields since this     *)
+    (* info will possibly used to apply rules [DEF-DEP], [UNIVERSE] and    *)
+    (* [PRM] of definition 72 page 153 from Virgile Prevosto's Phd.        *)
+    List.fold_left
+      (fun abstractions_accu current_field ->
+        match current_field with
+         | Env.TypeInformation.SF_sig si -> (FAI_sig si) :: abstractions_accu
+         | Env.TypeInformation.SF_let ((_, name, _, sch, body, _, _) as li) ->
+             (* ATTENTION, the [dependencies_from_params_in_body] is not  *)
+             (* the complete set of dependencies. It must be completed to *)
+             (* fully represent the definition 72 page 153 from Virgile   *)
+             (* Prevosto's Phd.                                           *)
+             let (used_species_parameter_tys,
+                  dependencies_from_params_in_body,
+                  decl_children, def_children) =
+               let body_as_fbk =
+                 match body with
+                  | Parsetree.BB_logical p -> FBK_logical_expr p
+                  | Parsetree.BB_computational e -> FBK_expr e in
+               compute_lambda_liftings_for_field
+                 ~current_unit: ctx.Context.scc_current_unit
+                 ~current_species: ctx.Context.scc_current_species
+                 ctx.Context.scc_species_parameters_names
+                 ctx.Context.scc_dependency_graph_nodes name
+                 body_as_fbk (Types.specialize sch) in
+             (* Compute the visible universe of the method. *)
+             let universe =
+               VisUniverse.visible_universe
+                 ~with_def_deps
+                 ctx.Context.scc_dependency_graph_nodes decl_children
+                 def_children in
+             (* Complete the dependencies from species parameters info. *)
+             let (dependencies_from_params_in_type,
+                  dependencies_from_params_via_compl) =
+               complete_dependencies_from_params
+                 ~current_species: ctx.Context.scc_current_species
+                 abstractions_accu ctx.Context.scc_species_parameters_names
+                 def_children universe None in
+             (* Now, its minimal Coq typing environment. *)
+             let min_coq_env =
+               MinEnv.minimal_typing_environment universe fields in
+             let abstr_info = {
+               ai_used_species_parameter_tys = used_species_parameter_tys ;
+               ai_dependencies_from_params_via_body =
+                 dependencies_from_params_in_body ;
+               ai_dependencies_from_params_via_type =
+                 dependencies_from_params_in_type ;
+               ai_dependencies_from_params_via_completion =
+                 dependencies_from_params_via_compl ;
+               ai_min_coq_env = min_coq_env } in
+             (FAI_let (li, abstr_info)) :: abstractions_accu
+         | Env.TypeInformation.SF_let_rec l ->
+             let deps_infos =
+               List.map
+                 (fun ((_, name, _, sch, body, _, _) as li) ->
+                   let body_as_fbk =
+                     match body with
+                      | Parsetree.BB_logical p -> FBK_logical_expr p
+                      | Parsetree.BB_computational e -> FBK_expr e in
+                   (* ATTENTION, the [dependencies_from_params_in_bodies] is *)
+                   (* not the complete set of dependencies. It must be  to   *)
+                   (* completed fully represent the definition 72 page 153   *)
+                   (* from Virgile Prevosto's Phd.                           *)
+                   let (used_species_parameter_tys,
+                        dependencies_from_params_in_bodies,
+                        decl_children, def_children) =
+                     compute_lambda_liftings_for_field
+                       ~current_unit: ctx.Context.scc_current_unit
+                       ~current_species: ctx.Context.scc_current_species
+                       ctx.Context.scc_species_parameters_names
+                       ctx.Context.scc_dependency_graph_nodes name
+                       body_as_fbk (Types.specialize sch) in
+                   (* Compute the visible universe of the method. *)
+                   let universe =
+                     VisUniverse.visible_universe
+                       ~with_def_deps
+                       ctx.Context.scc_dependency_graph_nodes
+                       decl_children def_children in
+                   (* Complete the dependencies from species parameters info. *)
+                   let (dependencies_from_params_in_type,
+                        dependencies_from_params_via_compl) =
+                     complete_dependencies_from_params
+                       ~current_species: ctx.Context.scc_current_species
+                       abstractions_accu ctx.Context.
+                         scc_species_parameters_names
+                       def_children universe None in
+                   (* Now, its minimal Coq typing environment. *)
+                   let min_coq_env =
+                     MinEnv.minimal_typing_environment universe fields in
+                   let abstr_info = {
+                     ai_used_species_parameter_tys =
+                       used_species_parameter_tys ;
+                     ai_dependencies_from_params_via_body =
+                       dependencies_from_params_in_bodies ;
+                     ai_dependencies_from_params_via_type =
+                       dependencies_from_params_in_type ;
+                     ai_dependencies_from_params_via_completion =
+                       dependencies_from_params_via_compl ;
+                     ai_min_coq_env = min_coq_env } in
+                   (li, abstr_info))
+                 l in
+             (FAI_let_rec deps_infos) :: abstractions_accu
+         | Env.TypeInformation.SF_theorem
+             ((_, name, sch, logical_expr, proof, _) as ti) ->
+               (* ATTENTION, the [dependencies_from_params_in_bodies] is not *)
+               (* the complete set of dependencies. It must be completed to  *)
+               (* fully represent the definition 72 page 153 from Virgile    *)
+               (* Prevosto's Phd.                                            *)
+               let (used_species_parameter_tys,
+                    dependencies_from_params_in_bodies,
+                    decl_children, def_children) =
+                 compute_lambda_liftings_for_field
+                   ~current_unit: ctx.Context.scc_current_unit
+                   ~current_species: ctx.Context.scc_current_species
+                   ctx.Context.scc_species_parameters_names
+                   ctx.Context.scc_dependency_graph_nodes name
+                   (FBK_logical_expr logical_expr) (Types.specialize sch) in
+               (* Compute the visible universe of the theorem. *)
+               let universe =
+                 VisUniverse.visible_universe
+                   ~with_def_deps
+                   ctx.Context.scc_dependency_graph_nodes decl_children
+                   def_children in
+               (* Now, its minimal Coq typing environment. *)
+               let min_coq_env =
+                 MinEnv.minimal_typing_environment universe fields in
+               (* Complete the dependencies from species parameters info. *)
+               let (dependencies_from_params_in_type,
+                    dependencies_from_params_via_compl) =
+                 complete_dependencies_from_params
+                   ~current_species: ctx.Context.scc_current_species
+                   abstractions_accu ctx.Context.scc_species_parameters_names
+                   def_children universe (Some proof) in
+               let abstr_info = {
+                 ai_used_species_parameter_tys = used_species_parameter_tys ;
+                 ai_dependencies_from_params_via_body =
+                   dependencies_from_params_in_bodies ;
+                 ai_dependencies_from_params_via_type =
+                   dependencies_from_params_in_type ;
+                 ai_dependencies_from_params_via_completion =
+                   dependencies_from_params_via_compl ;
+                 ai_min_coq_env = min_coq_env } in
+               (FAI_theorem (ti, abstr_info)) :: abstractions_accu
+         | Env.TypeInformation.SF_property
+             ((_, name, sch, logical_expr, _) as pi) ->
+               (* ATTENTION, the [dependencies_from_params_in_bodies] is not *)
+               (* the complete set of dependencies. It must be completed to  *)
+               (* fully represent the definition 72 page 153 from Virgile    *)
+               (* Prevosto's Phd.                                            *)
+               let (used_species_parameter_tys,
+                    dependencies_from_params_in_bodies,
+                    decl_children, def_children) =
+                 compute_lambda_liftings_for_field
+                   ~current_unit: ctx.Context.scc_current_unit
+                   ~current_species: ctx.Context.scc_current_species
+                   ctx.Context.scc_species_parameters_names
+                   ctx.Context.scc_dependency_graph_nodes name
+                   (FBK_logical_expr logical_expr) (Types.specialize sch) in
+               (* Compute the visible universe of the theorem. *)
+               let universe =
+                 VisUniverse.visible_universe
+                   ~with_def_deps
+                   ctx.Context.scc_dependency_graph_nodes decl_children
+                   def_children in
+               (* Complete the dependencies from species parameters info. *)
+               let (dependencies_from_params_in_type,
+                    dependencies_from_params_via_compl) =
+                 complete_dependencies_from_params
+                   ~current_species: ctx.Context.scc_current_species
+                   abstractions_accu ctx.Context.scc_species_parameters_names
+                   def_children universe None in
+               (* Now, its minimal Coq typing environment. *)
+               let min_coq_env =
+                 MinEnv.minimal_typing_environment universe fields in
+               let abstr_info = {
+                 ai_used_species_parameter_tys = used_species_parameter_tys ;
+                 ai_dependencies_from_params_via_body =
+                   dependencies_from_params_in_bodies ;
+                 ai_dependencies_from_params_via_type =
+                   dependencies_from_params_in_type ;
+                 ai_dependencies_from_params_via_completion =
+                   dependencies_from_params_via_compl ;
+                 ai_min_coq_env = min_coq_env } in
+               (FAI_property (pi, abstr_info)) :: abstractions_accu)
+      []      (* Initial empty abstractions accumulator. *)
+      fields in
+  (* Finally, put the list of abstractions in the right order, i.e. *)
+  (* in the order of apparition of the fields in the species.       *)
+  List.rev reversed_abstractions
 ;;

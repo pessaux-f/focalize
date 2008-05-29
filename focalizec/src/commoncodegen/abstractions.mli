@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.mli,v 1.7 2008-04-23 13:19:28 pessaux Exp $ *)
+(* $Id: abstractions.mli,v 1.8 2008-05-29 11:04:23 pessaux Exp $ *)
 
 type field_body_kind =
   | FBK_expr of Parsetree.expr
@@ -19,7 +19,15 @@ type field_body_kind =
 
 type abstraction_info = {
   ai_used_species_parameter_tys : Parsetree.vname list ;
-  ai_dependencies_from_params :
+  ai_dependencies_from_params_via_body :
+    (Parsetree.vname * Parsetree_utils.species_param_kind *
+     Parsetree_utils.DepNameSet.t)
+    list ;
+  ai_dependencies_from_params_via_type :
+    (Parsetree.vname * Parsetree_utils.species_param_kind *
+     Parsetree_utils.DepNameSet.t)
+    list ;
+  ai_dependencies_from_params_via_completion :
     (Parsetree.vname * Parsetree_utils.species_param_kind *
      Parsetree_utils.DepNameSet.t)
     list ;

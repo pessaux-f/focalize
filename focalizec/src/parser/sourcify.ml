@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.42 2008-04-14 09:20:49 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.43 2008-05-29 11:04:23 pessaux Exp $ *)
 
 
 (* *********************************************************** *)
@@ -823,7 +823,8 @@ and proof_node ppf = pp_ast pp_proof_node_desc ppf
 and pp_statement_desc ppf stmt =
   Format.fprintf ppf "%a@ %a"
     (pp_hyps "") stmt.Parsetree.s_hyps
-    (Handy.pp_generic_option "prove " pp_logical_expr) stmt.Parsetree.s_concl
+    (Handy.pp_generic_option "prove " pp_logical_expr)
+    stmt.Parsetree.s_concl
 and pp_statement ppf = pp_ast pp_statement_desc ppf
 
 
@@ -833,7 +834,8 @@ and pp_hyp_desc ppf = function
       Format.fprintf ppf "@[<2>assume %a in@ %a,@ @]"
         pp_vname vname pp_type_expr te
   | Parsetree.H_hypothesis (vname, prop) ->
-      Format.fprintf ppf "@[<2>assume %a :@ %a,@ @]" pp_vname vname pp_logical_expr prop
+      Format.fprintf ppf "@[<2>assume %a :@ %a,@ @]"
+        pp_vname vname pp_logical_expr prop
   | Parsetree.H_notation (vname, expr) ->
       Format.fprintf ppf "@[<2>notation %a =@ %a,@ @]"
         pp_vname vname pp_expr expr
@@ -845,21 +847,29 @@ and pp_hyp ppf = pp_ast pp_hyp_desc ppf
 and pp_logical_expr_desc ppf = function
   | Parsetree.Pr_forall (vnames, type_expr_opt, prop) ->
       Format.fprintf ppf "@[<2>all@ %a@ in@ %a,@ %a@]"
-        (pp_vnames "") vnames pp_type_expr type_expr_opt pp_logical_expr prop
+        (pp_vnames "") vnames pp_type_expr type_expr_opt
+        pp_logical_expr prop
   | Parsetree.Pr_exists (vnames, type_expr_opt, prop) ->
       Format.fprintf ppf "@[<2>ex@ %a@ in@ %a,@ %a@]"
-        (pp_vnames "") vnames pp_type_expr type_expr_opt pp_logical_expr prop
+        (pp_vnames "") vnames pp_type_expr type_expr_opt
+        pp_logical_expr prop
   | Parsetree.Pr_imply (p1, p2) ->
-      Format.fprintf ppf "@[<2>%a@ ->@ (%a)@]" pp_logical_expr p1 pp_logical_expr p2
+      Format.fprintf ppf "@[<2>%a@ ->@ (%a)@]"
+        pp_logical_expr p1 pp_logical_expr p2
   | Parsetree.Pr_or (p1, p2) ->
-      Format.fprintf ppf "@[<2>(%a@ or@ %a)@]" pp_logical_expr p1 pp_logical_expr p2
+      Format.fprintf ppf "@[<2>(%a@ or@ %a)@]"
+        pp_logical_expr p1 pp_logical_expr p2
   | Parsetree.Pr_and (p1, p2) ->
-      Format.fprintf ppf "@[<2>%a@ and@ %a@]" pp_logical_expr p1 pp_logical_expr p2
+      Format.fprintf ppf "@[<2>%a@ and@ %a@]"
+        pp_logical_expr p1 pp_logical_expr p2
   | Parsetree.Pr_equiv (p1, p2) ->
-      Format.fprintf ppf "@[<2>%a@ <->@ %a@]" pp_logical_expr p1 pp_logical_expr p2
-  | Parsetree.Pr_not p -> Format.fprintf ppf "@[<2>not@ %a@]" pp_logical_expr p
+      Format.fprintf ppf "@[<2>%a@ <->@ %a@]"
+        pp_logical_expr p1 pp_logical_expr p2
+  | Parsetree.Pr_not p ->
+      Format.fprintf ppf "@[<2>not@ %a@]" pp_logical_expr p
   | Parsetree.Pr_expr e -> Format.fprintf ppf "%a" pp_expr e
-  | Parsetree.Pr_paren p -> Format.fprintf ppf "@[<1>(%a)@]" pp_logical_expr p
+  | Parsetree.Pr_paren p ->
+      Format.fprintf ppf "@[<1>(%a)@]" pp_logical_expr p
 and pp_logical_expr ppf = pp_ast pp_logical_expr_desc ppf
 
 

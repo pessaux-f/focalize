@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.45 2008-05-28 13:37:08 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.46 2008-05-29 11:04:23 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -796,19 +796,8 @@ let dump_collection_generator_arguments out_fmter compiled_species_fields =
                function. Not exported.                                        *)
   (* ************************************************************************ *)
   let rec process_one_field_memory field_memory =
-
-Format.eprintf "dump_collection_generator_arguments processing field %a@."
-  Sourcify.pp_vname field_memory.cfm_method_name ;
-
     List.iter
       (fun (spe_param_name, _, meths_set) ->
-
-Format.eprintf "Trouvé un param name: %a@."
-  Sourcify.pp_vname spe_param_name ;
-if Parsetree_utils.DepNameSet.is_empty meths_set then
-  Format.eprintf "Empty@."
-else Format.eprintf "Non-empty@." ;
-
         (* Get or create for this species parameter name, the bucket *)
         (* recording all the methods someone depends on.             *)
         (* We don't care here about whether the species parameters is   *)
@@ -842,18 +831,11 @@ else Format.eprintf "Non-empty@." ;
   (* "_p_" + species parameter name + "_" + called method name.             *)
   List.iter
     (fun (species_param_name, meths_set) ->
-
-Format.eprintf "Dumping réellement pour %a@."
-  Sourcify.pp_vname species_param_name ;
-
       let prefix =
         "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
         "_" in
       Parsetree_utils.DepNameSet.iter
         (fun (meth, _) ->
-
-Format.eprintf "One more@." ;
-
           (* Don't print the type to prevent being too verbose. *)
           Format.fprintf out_fmter "@ %s%a"
             prefix Parsetree_utils.pp_vname_with_operators_expanded meth)

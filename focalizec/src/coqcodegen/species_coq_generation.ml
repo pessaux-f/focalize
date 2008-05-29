@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.57 2008-05-21 09:06:01 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.58 2008-05-29 11:04:23 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1087,7 +1087,7 @@ let make_params_list_from_abstraction_info ai =
                (Parsetree_utils.vname_as_string_with_operators_expanded meth))
               :: !the_list_reversed)
           meths_from_param)
-    ai.Abstractions.ai_dependencies_from_params ;
+    ai.Abstractions.ai_dependencies_from_params_via_body ;
   (* Next, the extra arguments due to methods of ourselves we depend on. *)
   (* They are always present in the species under the name "self_...".   *)
   List.iter
@@ -1189,7 +1189,7 @@ let generate_recursive_let_definition ctx print_ctx env l =
               generate_defined_let_prelude
                 ~rec_let: true ctx' print_ctx env ai.Abstractions.ai_min_coq_env
                 ai.Abstractions.ai_used_species_parameter_tys
-                ai.Abstractions.ai_dependencies_from_params in
+                ai.Abstractions.ai_dependencies_from_params_via_body in
             (* We now generate the order. It always has 2 arguments having    *)
             (* the same type. This type is a tuple if the method hase several *)
             (* arguments.                                                     *)
@@ -1262,7 +1262,7 @@ let generate_recursive_let_definition ctx print_ctx env l =
               cfm_used_species_parameter_tys =
                 ai.Abstractions.ai_used_species_parameter_tys ;
               cfm_dependencies_from_parameters =
-                ai.Abstractions.ai_dependencies_from_params ;
+                ai.Abstractions.ai_dependencies_from_params_via_body ;
               cfm_coq_min_typ_env_names = abstracted_methods } in
             CSF_let_rec [compiled]
        end)
@@ -1317,7 +1317,7 @@ let generate_methods ctx print_ctx env generated_fields field =
          generate_non_recursive_field_binding
            ctx print_ctx env abstraction_info.Abstractions.ai_min_coq_env
            abstraction_info.Abstractions.ai_used_species_parameter_tys
-           abstraction_info.Abstractions.ai_dependencies_from_params
+           abstraction_info.Abstractions.ai_dependencies_from_params_via_body
            (from, name, params, scheme, body) in
        (* Now, build the [compiled_field_memory], even if the method  *)
        (* was not really generated because it was inherited.          *)
@@ -1327,7 +1327,7 @@ let generate_methods ctx print_ctx env generated_fields field =
          cfm_used_species_parameter_tys =
            abstraction_info.Abstractions.ai_used_species_parameter_tys ;
          cfm_dependencies_from_parameters =
-           abstraction_info.Abstractions.ai_dependencies_from_params ;
+           abstraction_info.Abstractions.ai_dependencies_from_params_via_body ;
          cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
        CSF_let compiled_field
    | Abstractions.FAI_let_rec l ->
@@ -1338,7 +1338,7 @@ let generate_methods ctx print_ctx env generated_fields field =
          generate_theorem
            ctx print_ctx env abstraction_info.Abstractions.ai_min_coq_env
            abstraction_info.Abstractions.ai_used_species_parameter_tys
-           abstraction_info.Abstractions.ai_dependencies_from_params
+           abstraction_info.Abstractions.ai_dependencies_from_params_via_body
            generated_fields (from, name, logical_expr, deps_on_rep) in
        let compiled_field = {
          cfm_from_species = from ;
@@ -1346,7 +1346,7 @@ let generate_methods ctx print_ctx env generated_fields field =
          cfm_used_species_parameter_tys =
            abstraction_info.Abstractions.ai_used_species_parameter_tys ;
          cfm_dependencies_from_parameters =
-           abstraction_info.Abstractions.ai_dependencies_from_params ;
+           abstraction_info.Abstractions.ai_dependencies_from_params_via_body ;
          cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
        CSF_theorem compiled_field
    | Abstractions.FAI_property ((from, name, _, logical_expr, _),
@@ -1383,7 +1383,7 @@ let generate_methods ctx print_ctx env generated_fields field =
          cfm_used_species_parameter_tys =
            abstraction_info.Abstractions.ai_used_species_parameter_tys ;
          cfm_dependencies_from_parameters =
-           abstraction_info.Abstractions.ai_dependencies_from_params ;
+           abstraction_info.Abstractions.ai_dependencies_from_params_via_body ;
          cfm_coq_min_typ_env_names = [] (* Leave blank because never used. *)
          } in
        CSF_property compiled_field
@@ -1571,13 +1571,13 @@ let generate_variables_for_species_parameters_methods ctx print_ctx
       | Abstractions.FAI_theorem (_, fai)
       | Abstractions.FAI_property (_, fai) ->
           accu_found_dependencies :=
-            fai.Abstractions.ai_dependencies_from_params @
+            fai.Abstractions.ai_dependencies_from_params_via_body @
             !accu_found_dependencies
       | Abstractions.FAI_let_rec l ->
           List.iter
             (fun (_, fai) ->
               accu_found_dependencies :=
-                fai.Abstractions.ai_dependencies_from_params @
+                fai.Abstractions.ai_dependencies_from_params_via_body @
                 !accu_found_dependencies)
             l)
     field_abstraction_infos ;

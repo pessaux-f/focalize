@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.25 2008-04-23 13:19:28 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.26 2008-05-29 11:04:23 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -489,13 +489,13 @@ and generate_expr ctx ~local_idents env initial_expression =
      | Parsetree.E_fun (args_names, body) ->
          List.iter
            (fun n ->
-             Format.fprintf out_fmter "@[<2>fun@ %a@ ->@ "
+             Format.fprintf out_fmter "@[<2>(fun@ %a@ ->@ "
                Parsetree_utils.pp_vname_with_operators_expanded n)
            args_names ;
          (* Here, the function parameter name may mask a "in"-parameter. *)
          let loc_idents' = args_names @ loc_idents in
          rec_generate loc_idents' body ;
-         Format.fprintf out_fmter "@]"
+         Format.fprintf out_fmter ")@]"
      | Parsetree.E_var ident ->
          generate_expr_ident_for_method_generator
            ctx ~local_idents: loc_idents ident

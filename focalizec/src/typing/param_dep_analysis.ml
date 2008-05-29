@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.13 2008-05-21 09:06:01 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.14 2008-05-29 11:04:23 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -215,6 +215,97 @@ and __param_deps_logical_expr ~current_species param_coll_name
 
 
 
+let param_deps_fact ~current_species param_coll_name fact =
+  match fact.Parsetree.ast_desc with
+   | Parsetree.F_definition expr_idents
+   | Parsetree.F_property expr_idents ->
+       List.fold_left
+	 (fun accu_deps ident ->
+	   let deps = 
+	     param_deps_ident
+	       ~current_species param_coll_name [] ident in
+	   Parsetree_utils.DepNameSet.union deps accu_deps)
+	 Parsetree_utils.DepNameSet.empty
+	 expr_idents
+   | Parsetree.F_hypothesis _
+   | Parsetree.F_node  _ -> Parsetree_utils.DepNameSet.empty
+;;
+
+
+
+
+let param_deps_hyp ~current_species param_coll_name hyp =
+  match hyp.Parsetree.ast_desc with
+   | Parsetree.H_variable (_, _) -> Parsetree_utils.DepNameSet.empty
+   | Parsetree.H_hypothesis (_, prop) ->
+       __param_deps_logical_expr ~current_species param_coll_name [] prop
+   | Parsetree.H_notation (_, expr) ->
+       __param_deps_expr ~current_species param_coll_name [] expr
+;;
+
+
+
+let param_deps_statement ~current_species param_coll_name stmt =
+  let hyps_deps =
+    List.fold_left
+      (fun accu_deps hyp ->
+        let hyp_deps = param_deps_hyp ~current_species param_coll_name hyp in
+        Parsetree_utils.DepNameSet.union accu_deps hyp_deps)
+      Parsetree_utils.DepNameSet.empty
+      stmt.Parsetree.ast_desc.Parsetree.s_hyps in
+  let concl_deps =
+    match stmt.Parsetree.ast_desc.Parsetree.s_concl with
+     | None -> Parsetree_utils.DepNameSet.empty
+     | Some log_expr ->
+         __param_deps_logical_expr
+	   ~current_species param_coll_name [] log_expr in
+  Parsetree_utils.DepNameSet.union hyps_deps concl_deps
+;;
+
+
+
+(* Not exported. *)
+let rec param_deps_proof_node ~current_species param_coll_name proof_node =
+  match proof_node.Parsetree.ast_desc with
+   | Parsetree.PN_sub (_, statement, proof) ->
+       let deps1 =
+         param_deps_statement ~current_species param_coll_name statement in
+       let deps2 =
+         param_deps_proof ~current_species param_coll_name proof in
+       Parsetree_utils.DepNameSet.union deps1 deps2
+   | Parsetree.PN_qed (_, proof) ->
+       param_deps_proof ~current_species param_coll_name proof
+
+
+
+(* current_species: Parsetree.qualified_species ->                      *)
+(*   Parsetree.vname -> Parsetree.proof -> Parsetree_utils.DepNameSet.t *)
+(* Exported. *)
+and param_deps_proof ~current_species param_coll_name proof =
+  match proof.Parsetree.ast_desc with
+   | Parsetree.Pf_assumed
+   | Parsetree.Pf_coq _ ->
+       Parsetree_utils.DepNameSet.empty
+   | Parsetree.Pf_auto facts ->
+       List.fold_left
+         (fun accu_deps fact ->
+           Parsetree_utils.DepNameSet.union
+             accu_deps
+             (param_deps_fact ~current_species param_coll_name fact))
+         Parsetree_utils.DepNameSet.empty
+         facts
+   | Parsetree.Pf_node proof_nodes ->
+       List.fold_left
+         (fun accu_deps p ->
+           Parsetree_utils.DepNameSet.union
+             accu_deps
+	     (param_deps_proof_node ~current_species param_coll_name p))
+         Parsetree_utils.DepNameSet.empty
+         proof_nodes
+;;
+
+
+
 (* ************************************************************************* *)
 (* current_species: Parsetree.qualified_species -> Parsetree.vname ->        *)
 (*   Parsetree.expr -> Parsetree_utils.DepNameSet.t                          *)
@@ -247,5 +338,3 @@ let param_deps_expr ~current_species param_coll_name expression =
 let param_deps_logical_expr ~current_species param_coll_name proposition =
   __param_deps_logical_expr ~current_species param_coll_name [] proposition
 ;;
-
-
