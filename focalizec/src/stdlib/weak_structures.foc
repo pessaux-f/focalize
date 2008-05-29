@@ -139,7 +139,7 @@ species Semi_algebra (R is Commutative_semi_ring)
       !equal (!lift (R!plus (R!mult (a, x), R!mult (b, y))),
               !plus (!mult (!lift (a), !lift (x)),
                      !mult (!lift (b), !lift (y))))
-      proof: assumed ;
+      proof: assumed {* Because todo *} ;
 end ;;
 
 
@@ -210,7 +210,7 @@ species Torsion_free_semi_algebra(R is Integral_semi_ring)
      basics#is_failed (!module_recip (a))
      \/
      !is_one (!mult (!lift (a), basics#non_failed (!module_recip (a))))
-     proof: assumed ;
+     proof: assumed {* Because todo *} ;
 end ;;
 
 
@@ -314,7 +314,8 @@ species Euclidean_semi_ring inherits Factorial_semi_ring =
    !is_zero (y)
    \/
    !equal (x, !plus (!mult (!quotient (x, y), y), !remainder (x, y)))
-   proof : assumed ;
+   proof : assumed {* Because todo *} ;
+
  property remainder_is_smaller: all x y z in Self,
    !is_zero (y)
    \/
@@ -329,13 +330,13 @@ species Euclidean_semi_ring inherits Factorial_semi_ring =
       else basics#Failed ;
   proof of exquo_divides = 
     (** SNIPPED by definition of exquo *)
-    assumed ;
+    assumed {* Because temporarily unvailable in new version *} ;
   proof of gcd_divides = 
     (** SNIPPED by euclidean_relation, euclidean_ordering *)
-    assumed ;
+    assumed {* Because temporarily unvailable in new version *} ;
   proof of divisor_is_multiple_of_gcd =
     (** SNIPPED by euclidean_relation, euclidean_ordering *)
-    assumed ;
+    assumed {* Because temporarily unvailable in new version *} ;
 end ;;
 
 (* glurp, thats enough for now, though some people define semi fields *)

@@ -24,7 +24,7 @@ species Ring inherits Additive_group, Semi_ring =
     by definition of zero,
     property one_is_left_neutral, one_is_left_neutral,
       mult_left_distributes_on_plus *)
-    assumed ;
+    assumed {* Because temporarily unvailable in new version *} ;
 
 proof of zero_left_absorbes =
 <1>1 assume x in Self,
@@ -79,7 +79,7 @@ proof of zero_right_absorbes =
       by <2>1, !one_is_right_neutral, !plus_left_substitution_rule,
          !equal_transitive, !equal_symmetric
       *)
-      assumed
+      assumed {* Because todo *}
  <2>8 prove !equal (!plus (!mult (x, !zero), !zero), !zero)
      by step <2>4, <2>7
      property plus_right_substitution_rule, equal_transitive, equal_symmetric
@@ -101,7 +101,7 @@ end ;;
 species Module (R is Ring) inherits Left_semi_module (R), Additive_group =
     theorem zero_left_absorbes: all x in Self,
       !equal (!mult (R!zero, x), !zero)
-      proof: assumed ;
+      proof: assumed {* Because todo *} ;
 end ;;
 
 (** A commutative ring has commutative multiplication *)
@@ -119,7 +119,7 @@ species Algebra(R is Commutative_ring) inherits Ring, Semi_algebra(R) =
    let opposite (x) = 
      let under_minus_un = R!opposite (R!one) in
        Self!module_mult (under_minus_un, x) ;
-   proof of opposite_is_opposite = assumed ;
+   proof of opposite_is_opposite = assumed {* Because todo *} ;
 end ;;
 
 (** Commutative algebras  are a distinguished class of algebras *)
@@ -135,7 +135,7 @@ species Integral_domain
    (* Ajout de BIBIN Lazar *)
    let unit_canonical (x in Self) in Self = x ;
    (* ax = ay => x=y ou a=0 <-> a(x-y)=0 *)
-   proof of mult_is_left_regular = assumed ;
+   proof of mult_is_left_regular = assumed {* Because todo *} ;
 end ;;
 
 (** Ordered integral domains *)
@@ -150,7 +150,7 @@ species Torsion_free_algebra (R is Integral_domain)
    !is_zero (!lift (a)) -> R!is_zero (a) ;
 
   (* see argument in torsion free modules *)
-  proof of module_mult_is_regular = assumed ;
+  proof of module_mult_is_regular = assumed {* Because todo *} ;
 end ;;
 
 (** module with external division *)
@@ -186,7 +186,7 @@ species Euclidean_domain inherits Euclidean_semi_ring, Gcd_domain =
     !equal (weak_structures#gcd (!bezout (x, y)),
              !plus (!mult (weak_structures#coef1 (!bezout (x, y)), x),
                     !mult (weak_structures#coef2 (!bezout (x, y)), y)))
-    proof: assumed ;
+    proof: assumed {* Because todo *} ;
 end ;;
 
 
@@ -196,13 +196,13 @@ species Skew_field inherits Ring, Division_monoid =
    !is_zero (y) \/ !equal (x, !mult (y, !div (x, y))) ;
   proof of div_divides =
     (** SNIPPED by property div_is_complete ; *)
-    assumed ;
+    assumed {* Because todo *} ;
 end ;;
 
 species Vector_space (F is Skew_field)
  inherits Division_module (F) =
   let opposite (x) = Self!mult (F!opposite (F!one), x) ;
-  proof of opposite_is_opposite = assumed ;
+  proof of opposite_is_opposite = assumed {* Because todo *} ;
 end ;;
 
 species Field inherits Skew_field,
@@ -216,16 +216,16 @@ species Field inherits Skew_field,
      else Self!one ;
   proof of gcd_divides = 
     (** SNIPPED by definition gcd *)
-    assumed ;
+    assumed {* Because temporarily unvailable in new version *} ;
   proof of divisor_is_multiple_of_gcd = 
     (** SNIPPED by definition gcd *)
-    assumed ;
+    assumed {* Because temporarily unvailable in new version *} ;
   let exquo (x, y) = 
     if Self!is_zero(y) then basics#Failed 
     else basics#Unfailed (Self!div (x, y)) ;
   proof of exquo_divides = 
     (** SNIPPED by definition exquo *)
-    assumed ;
+    assumed {* Because temporarily unvailable in new version *} ;
 end ;;
 
 (** real fields, in a real field -1 is no a sum of squares *)
@@ -239,6 +239,6 @@ species Ordered_field inherits Ordered_gcd_domain, Real_field = end ;;
 (*                Ouf !                                                   *)
 (*                                                                        *)
 
-(* $Id: rings_fields.foc,v 1.3 2008-05-21 09:06:01 pessaux Exp $ *)
+(* $Id: rings_fields.foc,v 1.4 2008-05-29 11:36:37 pessaux Exp $ *)
 
 

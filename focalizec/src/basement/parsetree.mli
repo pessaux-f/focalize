@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.37 2008-04-14 09:20:49 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.38 2008-05-29 11:36:36 pessaux Exp $ *)
 
 (** {2 The Focalize abstract syntax tree.} *)
 
@@ -373,7 +373,7 @@ and fact_desc =
 
 and proof = proof_desc ast
 and proof_desc =
-  | Pf_assumed
+  | Pf_assumed of external_code
   | Pf_auto of fact list
   | Pf_coq of string
   | Pf_node of proof_node list

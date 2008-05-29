@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.54 2008-05-23 09:45:12 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.55 2008-05-29 11:36:37 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -957,7 +957,7 @@ and scope_proof_node ctx env node =
 and scope_proof ctx env proof =
   let new_desc =
     (match proof.Parsetree.ast_desc with
-     | Parsetree.Pf_assumed
+     | Parsetree.Pf_assumed _
      | Parsetree.Pf_coq _ -> proof.Parsetree.ast_desc  (* Nothing to scope. *)
      | Parsetree.Pf_auto facts ->
          Parsetree.Pf_auto (List.map (scope_fact ctx env) facts)

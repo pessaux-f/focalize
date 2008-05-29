@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.42 2008-05-21 09:06:01 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.43 2008-05-29 11:36:37 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -314,7 +314,7 @@ let statement_decl_dependencies ~current_species stmt =
 
 let rec proof_decl_n_def_dependencies ~current_species proof =
   match proof.Parsetree.ast_desc with
-   | Parsetree.Pf_assumed
+   | Parsetree.Pf_assumed _
    | Parsetree.Pf_coq _ ->
        (Parsetree_utils.DepNameSet.empty, Parsetree_utils.DepNameSet.empty)
    | Parsetree.Pf_auto facts ->

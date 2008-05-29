@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.12 2008-05-29 11:04:23 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.13 2008-05-29 11:36:37 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -128,7 +128,7 @@ let root_compile ~current_unit ~out_file_name stuff =
   let out_hd = open_out_bin out_file_name in
   let out_fmter = Format.formatter_of_out_channel out_hd in
   let global_env = ref (Env.MlGenEnv.empty ()) in
-(*  try*)
+  try
     List.iter
       (fun data ->
         let new_env =
@@ -139,7 +139,7 @@ let root_compile ~current_unit ~out_file_name stuff =
     Format.fprintf out_fmter "@?" ;
     close_out out_hd ;
     !global_env
-(*  with whatever ->
+  with whatever ->
     (* In any error case, flush the pretty-printer and close the outfile. *)
     Format.fprintf out_fmter "@?" ;
     close_out out_hd ;
@@ -166,4 +166,3 @@ let root_compile ~current_unit ~out_file_name stuff =
     (* Re-reaise the initial error. *)
     raise whatever
 ;;
-*)

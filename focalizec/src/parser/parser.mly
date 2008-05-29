@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.93 2008-05-23 09:42:46 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.94 2008-05-29 11:36:37 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -680,8 +680,9 @@ in_type_expr:
 /**** PROOFS ****/
 
 proof:
-  | opt_doc ASSUMED
-    { mk_doc $1 (Pf_assumed) }
+  | opt_doc ASSUMED EXTERNAL_CODE  /* Trailing is the reason while the */
+                                   /* was not given. */
+    { mk_doc $1 (Pf_assumed $3) }
   | opt_doc BY fact_list
     { mk_doc $1 (Pf_auto $3) }
   | opt_doc COQ PROOF EXTERNAL_CODE

@@ -112,15 +112,15 @@ species Additive_monoid inherits Additive_semi_group, Set_with_zero =
  theorem zero_is_unique : all o in Self,
   (all x in Self, !equal (x, !plus (x, o))) -> !equal (o, !zero)
   proof:
-  	 <1>1 assume o in Self,
-	      assume H1: all x in Self, !equal (x, !plus (x, o)),
-	      prove !equal (o, !zero)
-	     <2>1 prove !equal (!zero, !plus (!zero, o))
-	     	by hypothesis H1
-	     <2>3 prove !equal (o, !zero)
-	        by step <2>1
+         <1>1 assume o in Self,
+              assume H1: all x in Self, !equal (x, !plus (x, o)),
+              prove !equal (o, !zero)
+             <2>1 prove !equal (!zero, !plus (!zero, o))
+                by hypothesis H1
+             <2>3 prove !equal (o, !zero)
+                by step <2>1
                 property zero_is_neutral, equal_transitive, equal_symmetric
-	     <2>4 qed.
+             <2>4 qed.
         <1>2 qed.
   ;
 
@@ -195,19 +195,18 @@ species Zero_check_additive_monoid
     <1>1 assume x in Self,
          prove !equal (x, x)
          <2>1 prove !equal (!plus (!zero, !plus (x, !zero)),
-			    !plus (!plus (!zero, x), !zero))
+                            !plus (!plus (!zero, x), !zero))
               by property plus_is_associative
          <2>2 prove !equal (!plus (x, !zero), !plus (!zero, x))
               by step <2>1
-	      property zero_simplifies
+              property zero_simplifies
          <2>f qed by step <2>2 property zero_simplifies
     <1>2 qed.
     ;
 
   proof of is_zero_substitution_rule =
    (* [rr]: to do *)
-   assumed
-  ;
+   assumed {* Because todo *} ;
 
  theorem is_zero_defines_unique: all x y in Self,
    (!is_zero (x) /\ !is_zero (y)) -> !equal(x, y)
@@ -234,7 +233,7 @@ species Zero_check_additive_monoid
                  property zero_checks_to_zero, is_zero_defines_neutral
          <2>2 prove !equal (!plus (!zero, x), x)
               by step <2>0
-		 property zero_checks_to_zero, is_zero_defines_neutral
+                 property zero_checks_to_zero, is_zero_defines_neutral
          <2>f qed by step <2>1, <2>2
     <1>2 qed.
     ;
@@ -254,7 +253,7 @@ species Zero_check_additive_monoid
                 <3>1 prove !equal (!zero, !zero)
                      by property is_zero_checks_to_zero, zero_checks_to_zero
                 <3>2 qed by step <3>1
-		            property plus_left_substitution_rule
+                            property plus_left_substitution_rule
            <2>f qed by step <2>1 property zero_simplifies
       <1>2 qed by step <1>1 property equals_zero_is_zero_check
     ;
@@ -274,7 +273,7 @@ species Zero_check_additive_monoid
           <2>2 prove !equal (!plus (x, y), !zero)
                by hypothesis Zy
                   step <2>1
-		  property is_zero_defines_neutral
+                  property is_zero_defines_neutral
           <2>f qed by step <2>2 property equal_symmetric
      <1>2 qed by step <1>1 property equals_zero_is_zero_check
    ;
@@ -383,8 +382,8 @@ species Additive_monoid_with_infimum inherits
               by step <2>1, <2>2
               property order_inf_is_reflexive, order_inf_is_transitive
          <2>f qed by step <2>3
-		     property min_spec, order_inf_is_reflexive,
-		       order_inf_is_transitive
+                     property min_spec, order_inf_is_reflexive,
+                       order_inf_is_transitive
     <1>2 assume x in Self,
          prove !equal (!inf (!min, x), !min)
       by step <1>1 property equal_symmetric
@@ -436,13 +435,13 @@ species Additive_monoid_with_supremum inherits
          prove !equal (!sup (x, !min), x)
          <2>1 prove !equal (x, !plus (!min, x))
               by property zero_is_neutral, equal_symmetric,
-		          equal_transitive
+                          equal_transitive
                  definition of min
          <2>2 prove !order_sup (!plus (!min, x), !min)
-		   by property sup_absorbes_add
+                   by property sup_absorbes_add
          <2>3 prove !order_sup (x, !min)
               by step <2>1, <2>2
-		 property order_sup_is_reflexive, order_sup_is_transitive
+                 property order_sup_is_reflexive, order_sup_is_transitive
          <2>f qed by step <2>3
                      property equal_symmetric
                      definition of order_sup
@@ -506,19 +505,19 @@ species Additive_group inherits Cancellative_additive_monoid =
          assume H: !equal (!plus (x, y), !plus (x, z)),
          prove !equal (y, z)
          <2>1 prove !equal(!plus (!opposite (x), !plus (x, y)),
-			   !plus (!opposite (x), !plus (x, z)))
+                           !plus (!opposite (x), !plus (x, z)))
               by hypothesis H
                 property plus_right_substitution_rule
          <2>2 prove !equal (!plus (!opposite (x), !plus (x, y)),
-			    !plus (!plus (!opposite (x), x), y))
+                            !plus (!plus (!opposite (x), x), y))
               by property plus_is_associative
          <2>3 prove !equal (!plus (x, !opposite(x)), !zero)
               by property opposite_is_opposite
          <2>4 prove !equal (!plus (!opposite (x), x), !zero)
               by step <2>3
-		 property plus_commutes, equal_transitive
+                 property plus_commutes, equal_transitive
          <2>5 prove !equal (!plus (!plus (!opposite (x), x), y),
-			    !plus (!zero, y))
+                            !plus (!zero, y))
               by step <2>4
                  property plus_left_substitution_rule
          <2>6 prove !equal (!plus (!zero, y), y)
@@ -528,9 +527,9 @@ species Additive_group inherits Cancellative_additive_monoid =
                  property equal_transitive
          <2>8 prove !equal (!plus (!opposite (x), !plus (x, z)), z)
               (* [rr]: same as above *)
-              assumed
+              assumed {* Because todo *}
          <2>f qed by step <2>1, <2>7, <2>8
-		   property equal_transitive, equal_symmetric
+                   property equal_transitive, equal_symmetric
     <1>2 qed.
   ;
 
@@ -544,7 +543,7 @@ species Additive_group inherits Cancellative_additive_monoid =
           prove !equal (z, !opposite (x))
           <2>1 prove !equal (!opposite (x), z)
                <3>1 prove !equal (!plus (x, !opposite (x)),
-				  !plus (x, z))
+                                  !plus (x, z))
                     <4>1 prove !equal (!plus (x, !opposite (x)), !zero)
                          by property opposite_is_opposite
                     <4>2 prove !equal (!plus(x, z), !zero)
@@ -569,32 +568,32 @@ species Additive_group inherits Cancellative_additive_monoid =
      <1>1 assume x in Self,
           assume y in Self,
           prove !equal (!plus (!plus (x, y),
-			       !plus (!opposite (x), !opposite (y))),
-			!zero)
+                               !plus (!opposite (x), !opposite (y))),
+                        !zero)
           <2>1 prove !equal (!plus (!plus(x, y),
-				    !plus (!opposite (x), !opposite(y))),
-			     !plus (!plus(x, y), !plus (!opposite (y),
-							!opposite (x))))
+                                    !plus (!opposite (x), !opposite(y))),
+                             !plus (!plus(x, y), !plus (!opposite (y),
+                                                        !opposite (x))))
                by property plus_commutes, plus_right_substitution_rule
           <2>2 prove !equal (!plus (!plus (x, y),
-				    !plus (!opposite (y), !opposite (x))),
-			     !plus (x, !plus (y, !plus (!opposite(y),
-							!opposite (x)))))
+                                    !plus (!opposite (y), !opposite (x))),
+                             !plus (x, !plus (y, !plus (!opposite(y),
+                                                        !opposite (x)))))
                by property plus_is_associative, equal_symmetric
           <2>3 prove !equal (!plus (x, !plus (y, !plus (!opposite (y),
-							!opposite (x)))),
-			     !plus (x, !plus (!plus (y, !opposite (y)),
-					      !opposite (x))))
-		 by property plus_is_associative, plus_right_substitution_rule
+                                                        !opposite (x)))),
+                             !plus (x, !plus (!plus (y, !opposite (y)),
+                                              !opposite (x))))
+                 by property plus_is_associative, plus_right_substitution_rule
           <2>4 prove !equal (!plus (!plus (y, !opposite (y)), !opposite (x)),
-			     !plus (!zero, !opposite (x)))
-		   by property opposite_is_opposite, plus_left_substitution_rule
+                             !plus (!zero, !opposite (x)))
+                   by property opposite_is_opposite, plus_left_substitution_rule
           <2>5 prove !equal (!plus (x, !plus (!plus(y, !opposite (y)),
-					      !opposite (x))),
-			     !plus (x, !plus (!zero, !opposite (x))))
-		     by step <2>4 property plus_right_substitution_rule
+                                              !opposite (x))),
+                             !plus (x, !plus (!zero, !opposite (x))))
+                     by step <2>4 property plus_right_substitution_rule
           <2>6 prove !equal (!plus (x, !plus (!zero, !opposite (x))),
-			     !plus (x, !opposite (x)))
+                             !plus (x, !opposite (x)))
                by property zero_is_neutral, plus_right_substitution_rule
           <2>f qed by step <2>1, <2>2, <2>3, <2>5, <2>6
                       property equal_transitive, opposite_is_opposite
@@ -609,7 +608,7 @@ species Additive_group inherits Cancellative_additive_monoid =
           assume H: !equal (x, y),
           prove !equal(!plus(x, !opposite(y)), !zero)
           <2>1 prove !equal (!plus (x, !opposite (y)),
-			     !plus (y, !opposite (y)))
+                             !plus (y, !opposite (y)))
                by hypothesis H property plus_left_substitution_rule
           <2>2 prove !equal (!plus (y, !opposite (y)), !zero)
                by property opposite_is_opposite
@@ -628,17 +627,17 @@ species Additive_group inherits Cancellative_additive_monoid =
            assume y in Self,
            prove !equal (x, !plus (!plus (x, y), !opposite (y)))
            <2>1 prove !equal (!plus (x, !plus (y, !opposite (y))),
-			      !plus (!plus (x, y), !opposite (y)))
+                              !plus (!plus (x, y), !opposite (y)))
                by property plus_is_associative
            <2>2 prove !equal (!plus (y, !opposite (y)), !zero)
                 by property opposite_is_opposite
            <2>3 prove !equal(!plus(x, !plus(y, !opposite(y))),
-			     !plus(x, !zero))
+                             !plus(x, !zero))
                 by step <2>2 property plus_right_substitution_rule
            <2>4 prove !equal (!plus (x, !zero), x)
                 by property zero_is_neutral
            <2>f qed by step <2>1, <2>3, <2>4
-		       property equal_symmetric, equal_transitive
+                       property equal_symmetric, equal_transitive
       <1>f qed by step <1>1 definition of minus
   ;
 
@@ -649,17 +648,17 @@ species Additive_group inherits Cancellative_additive_monoid =
            assume y in Self,
            prove !equal (!plus (x, !plus (y, !opposite (x))), y)
            <2>1 prove !equal (!plus(x, !plus(y, !opposite(x))),
-			      !plus (x, !plus (!opposite (x), y)))
+                              !plus (x, !plus (!opposite (x), y)))
                 by property plus_commutes, plus_right_substitution_rule
            <2>2 prove !equal (!plus (x, !plus (!opposite (x), y)),
-			      !plus (!plus(x, !opposite (x)), y))
+                              !plus (!plus(x, !opposite (x)), y))
                 by property plus_is_associative
            <2>3 prove !equal (!plus (!plus (x, !opposite (x)), y),
-			      !plus (!zero, y))
+                              !plus (!zero, y))
                 by property opposite_is_opposite, plus_left_substitution_rule
            <2>f qed by property equal_transitive
-	            step <2>1, <2>2, <2>3
-	            property zero_is_neutral
+                    step <2>1, <2>2, <2>3
+                    property zero_is_neutral
       <1>f qed by step <1>1 definition of minus
   ;
 
@@ -685,13 +684,13 @@ species Ordered_additive_group inherits
       the set of positive elements *)
  signature sign : Self -> int ;
  let leq (x, y) = basics#int_leq (!sign (!minus(x, y)), 0) ;
- proof of total_order = assumed ;
- proof of lt_is_not_leq = assumed ;
+ proof of total_order = assumed {* Because todo *} ;
+ proof of lt_is_not_leq = assumed {* Because todo *} ;
  let max (x, y) = if !lt (x, y) then y else x ;
  let min (x, y) = if !lt (x, y) then x else y ;
  let is_zero (x) = basics#int_eq (Self!sign (x), 0) ;
 
- proof of order_compatible_with_cancellation = assumed;
+ proof of order_compatible_with_cancellation = assumed {* Because todo *} ;
 (* NdV: 9 Feb 2004: the proof below is rejected as incomplete by Coq.
    I feel that we have to introduce congruence property over opposite to
    achieve the proof. *)
@@ -701,7 +700,7 @@ species Ordered_additive_group inherits
  decl: opposite_is_opposite;
  def: leq minus is_zero;
 *)
-   assumed ;
+   assumed {* Because todo *} ;
 (*
    decl: minus_substracts plus_compat_with_order;
  {*
@@ -721,12 +720,12 @@ species Ordered_additive_group inherits
  *};
 *)
 
- proof of leq_transitive = assumed ;
+ proof of leq_transitive = assumed {* Because todo *} ;
 
 (* [rr]: again, looks wrong to me : x <= y => x-y <= 0, y <= x => y-x <= 0*)
  proof of leq_antisymmetric =
 (*    decl: minus_substracts plus_compat_with_order; *)
-   assumed ;
+   assumed {* Because todo *} ;
 (*
  def: equal;
  {*

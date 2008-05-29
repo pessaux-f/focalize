@@ -249,8 +249,8 @@ species Regular_monoid
     by definition of divides ;
     (* assumed ; *)
 
-  proof of divides_transitive = assumed ;
-  proof of divides_reverses_mult = assumed ;
+  proof of divides_transitive = assumed {* Because todo *} ;
+  proof of divides_reverses_mult = assumed {* Because todo *} ;
 end ;;
 
 (** a division monoid is like a regular monoid but has a division
@@ -343,7 +343,7 @@ species Division_monoid
   logical let divides(x, y) =
     basics#or_b(!equal(y, !zero), basics#not_b (!equal (x, !zero))) ;
 
-  proof of divides_extends_equal = assumed ;
+  proof of divides_extends_equal = assumed {* Because need logical let. *} ;
 (*  
   <1>1 assume x y in Self
              H: !equal(x, y)
@@ -362,7 +362,7 @@ species Division_monoid
     <1>f qed ;
 *)
 
-  proof of divides_reverses_mult = assumed ;
+  proof of divides_reverses_mult = assumed {* Because need logical let. *} ;
 (* [Unsure] Pour quand on aura letprop. *)
 (*
     <1>1 assume x in Self,
@@ -384,7 +384,8 @@ species Division_monoid
 *)
 
 (* [Unsure] Pour quand on aura letprop. *)
-  proof of divides_transitive = (* by definition of divides ; *) assumed ;
+  proof of divides_transitive =
+    (* by definition of divides ; *) assumed {* Because need logical let. *} ;
 
   let inv (x) = Self!div (Self!one, x) ;
 

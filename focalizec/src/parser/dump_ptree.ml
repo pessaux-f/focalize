@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.28 2008-04-14 09:20:49 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.29 2008-05-29 11:36:37 pessaux Exp $ *)
 
 
 
@@ -695,7 +695,8 @@ and pp_fact ppf = pp_ast pp_fact_desc ppf
 
 
 and pp_proof_desc ppf = function
-  | Parsetree.Pf_assumed -> Format.fprintf ppf "Pf_assumed"
+  | Parsetree.Pf_assumed reason ->
+      Format.fprintf ppf "@[<2>Pf_assumed %s@]" reason
   | Parsetree.Pf_auto facts ->
       Format.fprintf ppf "@[<2>Pf_auto@ ([@ %a@ ])@]" pp_facts facts
   | Parsetree.Pf_coq s -> Format.fprintf ppf "Pf_coq@ (%s)" s

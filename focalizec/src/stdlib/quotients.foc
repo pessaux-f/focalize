@@ -5,7 +5,7 @@ Quotient structures
 
 (* *************************************************************************)
 (* Auteur : Louis Mandel   louis.mandel@aemiaif.lip6.fr                   *)
-(* $Id: quotients.foc,v 1.1 2008-04-25 10:42:27 pessaux Exp $      *)
+(* $Id: quotients.foc,v 1.2 2008-05-29 11:36:36 pessaux Exp $      *)
 (**************************************************************************)
 
 use "sets_orders" ;;
@@ -39,22 +39,22 @@ species Quotient_group (G is additive_law#Additive_group,
   rep = G ;
 
   let equal (x, y) = G!equal (x, y) ;
-  proof of equal_reflexive = assumed ;
-  proof of equal_symmetric = assumed ;
-  proof of equal_transitive = assumed ;
+  proof of equal_reflexive = assumed {* Because todo *} ;
+  proof of equal_symmetric = assumed {* Because todo *} ;
+  proof of equal_transitive = assumed {* Because todo *} ;
 
   let to_rep (x in Self) in G = x ;
   let zero = G!zero ;
-  proof of zero_is_neutral = assumed ;
+  proof of zero_is_neutral = assumed {* Because todo *} ;
   let plus (x, y) = Red!reduire (G!plus (x, y)) ;
-  proof of plus_is_right_regular = assumed ;
-  proof of plus_is_left_regular = assumed ;
-  proof of plus_is_associative = assumed ;
-  proof of plus_commutes = assumed ;
-  proof of plus_left_substitution_rule = assumed ;
-  proof of plus_right_substitution_rule = assumed ;
+  proof of plus_is_right_regular = assumed {* Because todo *} ;
+  proof of plus_is_left_regular = assumed {* Because todo *} ;
+  proof of plus_is_associative = assumed {* Because todo *} ;
+  proof of plus_commutes = assumed {* Because todo *} ;
+  proof of plus_left_substitution_rule = assumed {* Because todo *} ;
+  proof of plus_right_substitution_rule = assumed {* Because todo *} ;
   let opposite (x) = Red!reduire (G!opposite (x)) ;
-  proof of opposite_is_opposite = assumed ;
+  proof of opposite_is_opposite = assumed {* Because todo *} ;
   let print = G!print ;
 end ;;
 
@@ -67,14 +67,14 @@ species Quotient_ring (R is rings_fields#Commutative_ring,
   inherits Quotient_group (R, Red, reduire), rings_fields#Commutative_ring =
  (* again we assume that reduire is compatible *)
   let one = R!one ;
-  proof of one_is_left_neutral = assumed ;
+  proof of one_is_left_neutral = assumed {* Because todo *} ;
   let is_one = R!is_one ;
   let mult (x, y) = Red!reduire (R!mult (x, y)) ;
-  proof of mult_left_distributes_on_plus = assumed ;
-  proof of mult_commutes = assumed ;
-  proof of mult_left_substitution_rule = assumed ;
-  proof of mult_right_substitution_rule = assumed ;
-  proof of mult_assoc = assumed ;
+  proof of mult_left_distributes_on_plus = assumed {* Because todo *} ;
+  proof of mult_commutes = assumed {* Because todo *} ;
+  proof of mult_left_substitution_rule = assumed {* Because todo *} ;
+  proof of mult_right_substitution_rule = assumed {* Because todo *} ;
+  proof of mult_assoc = assumed {* Because todo *} ;
 end ;;
 
 (* [Unsure] Snipped.
@@ -94,7 +94,7 @@ species Modular_field (R is rings_fields#Euclidean_domain, n in R)
   inherits Modular_ring (R, n), Field =
 
   (** n is assumed to be prime *)
-  proof of mult_is_integral = assumed ;
+  proof of mult_is_integral = assumed {* Because todo *} ;
 
   (** we define inversion and divison from inversion *)
   let inv (x) = 
@@ -105,7 +105,7 @@ species Modular_field (R is rings_fields#Euclidean_domain, n in R)
    if #is_failed (ig)
    then #foc_error ("ModField: inv: Bad Gcd")
    else  R!remainder (R!mult (based#non_failed (ig), c1), n) ;
-  proof of inv_substitution_rule = assumed ;
+  proof of inv_substitution_rule = assumed {* Because todo *} ;
 
   let div (x, y) = !mult (x, !inv (y)) ;
 
@@ -117,6 +117,6 @@ species Modular_field (R is rings_fields#Euclidean_domain, n in R)
    by property !mult_right_substitution_rule, !inv_substitution_rule
       definition of div ;
 
-  proof of div_is_complete = assumed ;
+  proof of div_is_complete = assumed {* Because todo *} ;
 end ;;
 *)

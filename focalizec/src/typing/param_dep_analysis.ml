@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.14 2008-05-29 11:04:23 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.15 2008-05-29 11:36:37 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -220,13 +220,13 @@ let param_deps_fact ~current_species param_coll_name fact =
    | Parsetree.F_definition expr_idents
    | Parsetree.F_property expr_idents ->
        List.fold_left
-	 (fun accu_deps ident ->
-	   let deps = 
-	     param_deps_ident
-	       ~current_species param_coll_name [] ident in
-	   Parsetree_utils.DepNameSet.union deps accu_deps)
-	 Parsetree_utils.DepNameSet.empty
-	 expr_idents
+         (fun accu_deps ident ->
+           let deps = 
+             param_deps_ident
+               ~current_species param_coll_name [] ident in
+           Parsetree_utils.DepNameSet.union deps accu_deps)
+         Parsetree_utils.DepNameSet.empty
+         expr_idents
    | Parsetree.F_hypothesis _
    | Parsetree.F_node  _ -> Parsetree_utils.DepNameSet.empty
 ;;
@@ -258,7 +258,7 @@ let param_deps_statement ~current_species param_coll_name stmt =
      | None -> Parsetree_utils.DepNameSet.empty
      | Some log_expr ->
          __param_deps_logical_expr
-	   ~current_species param_coll_name [] log_expr in
+           ~current_species param_coll_name [] log_expr in
   Parsetree_utils.DepNameSet.union hyps_deps concl_deps
 ;;
 
@@ -283,7 +283,7 @@ let rec param_deps_proof_node ~current_species param_coll_name proof_node =
 (* Exported. *)
 and param_deps_proof ~current_species param_coll_name proof =
   match proof.Parsetree.ast_desc with
-   | Parsetree.Pf_assumed
+   | Parsetree.Pf_assumed _
    | Parsetree.Pf_coq _ ->
        Parsetree_utils.DepNameSet.empty
    | Parsetree.Pf_auto facts ->
@@ -299,7 +299,7 @@ and param_deps_proof ~current_species param_coll_name proof =
          (fun accu_deps p ->
            Parsetree_utils.DepNameSet.union
              accu_deps
-	     (param_deps_proof_node ~current_species param_coll_name p))
+             (param_deps_proof_node ~current_species param_coll_name p))
          Parsetree_utils.DepNameSet.empty
          proof_nodes
 ;;

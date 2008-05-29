@@ -1,6 +1,6 @@
 (*pp basic_ext.cmo*)
 
-(* $Id: ensembles_finis.foc,v 1.3 2008-05-06 12:17:32 pessaux Exp $ *)
+(* $Id: ensembles_finis.foc,v 1.4 2008-05-29 11:36:36 pessaux Exp $ *)
 
 (** Exemple de fichier FoC: Ensembles ordonnés. *)
 use "basics" ;;
@@ -934,7 +934,7 @@ theorem bien_formee_inter:
   proof:
    (* [Unsure - à laisser ?]
       def : bien_formee ; *)
-   assumed ;
+   assumed {* Because temporarily unvailable in new version *} ;
 
 
    theorem remove_element_spec:
@@ -995,21 +995,21 @@ theorem bien_formee_inter:
            def : remove_element cons vide;
            decl : equal_congr_est_element  cons_elem2
            cons_elem3; *)
-     assumed ;
+     assumed {* Because temporarily unvailable in new version *} ;
 
 
   theorem bien_formee_remove_element:
     all x in A, all e in Self,
       !bien_formee (e)-> !bien_formee (!remove_element (x, e))
-  proof: assumed ;
+  proof: assumed {* Because todo *} ;
 
 
   theorem bien_formee_diff:
     all e1 e2 in Self,
       !bien_formee (e1) -> !bien_formee (e2) -> !bien_formee (!diff (e1, e2))
-  proof: assumed ;
+  proof: assumed {* Because todo *} ;
 
-  proof of diff_spec = assumed ;
+  proof of diff_spec = assumed {* Because todo *} ;
 
 
   proof of vide_card =
@@ -1888,7 +1888,7 @@ EApply (bottom_properties self_a).
      Intros x l Hrec; Case (abst_est_element x s2); Auto.
      *};
 
-   proof of bien_formee_ajoute = assumed;
+   proof of bien_formee_ajoute = assumed {* Because todo *} ;
 
 
    theorem invariant6:
@@ -1965,15 +1965,15 @@ species Entiers_concrets inherits Ordered_set =
   let print = string_of_int ;
   let parse = int_of_string ;
 
-  proof of equal_reflexive = assumed ;
-  proof of equal_symmetric = assumed ;
-  proof of equal_transitive = assumed ;
+  proof of equal_reflexive = assumed {* Because todo *} ;
+  proof of equal_symmetric = assumed {* Because todo *} ;
+  proof of equal_transitive = assumed {* Because todo *} ;
 
-  proof of leq_reflexive = assumed ;
-  proof of leq_antisymmetric= assumed ;
-  proof of leq_transitive = assumed ;
-  proof of total_order = assumed ;
-  proof of lt_is_not_leq = assumed ;
+  proof of leq_reflexive = assumed {* Because todo *} ;
+  proof of leq_antisymmetric= assumed {* Because todo *} ;
+  proof of leq_transitive = assumed {* Because todo *} ;
+  proof of total_order = assumed {* Because todo *} ;
+  proof of lt_is_not_leq = assumed {* Because todo *} ;
 end ;;
 
 collection Entiers implements Entiers_concrets ;;
@@ -2012,24 +2012,24 @@ let print_endline (s) = print_string (sc (s,"\n")) ;;
 (* sinon le compilo ne les voit pas *)
 theorem spec_crp : all x in ('a * 'b) ,
   x = basics#crp (basics#first (x), basics#scnd (x))
-  proof : assumed ;;
+  proof : assumed {* Using trusted external code. *} ;;
 
 theorem spec_crp_subst : all x1 x2 in 'a, all y1 y2 in 'b,
   x1 = x2 /\ y1 = y2 -> basics#crp (x1, y1) = basics#crp(y1, y2)
-  proof : assumed ;;
+  proof : assumed {* Using trusted external code. *} ;;
 
 theorem spec_first : all x in 'a , all y in 'b,
   x = basics#first (basics#crp (x, y))
-  proof : assumed ;;
+  proof : assumed {* Using trusted external code. *} ;;
 
 theorem spec_first_subst : all x y in ('a * 'b),
   x = y -> basics#first (x) = basics#first (y)
-  proof: assumed ;;
+  proof: assumed {* Using trusted external code. *} ;;
 
 theorem spec_scnd : all x in 'a , all y in 'b,
   y = basics#scnd (basics#crp (x, y))
-  proof: assumed ;;
+  proof: assumed {* Using trusted external code. *} ;;
 
 theorem spec_scnd_subst : all x y in ('a * 'b),
   x = y -> basics#scnd(x) = basics#scnd(y)
-  proof: assumed ;;
+  proof: assumed {* Using trusted external code. *} ;;

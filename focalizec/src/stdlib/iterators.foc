@@ -71,7 +71,7 @@ species Enumerated_system
   theorem enumerated_induction: all p in (Self -> prop),
     p (!start) -> (all n in Self, p (n) -> p (!successor (n)))
       -> (all n in Self, p (n))
-    proof : assumed ;
+    proof : assumed {* Because todo *} ;
 end ;;
 
 
@@ -165,7 +165,7 @@ species Ordered_Enumeration_system inherits Enumeration_system =
   theorem leq_is_transitive: all x y z in Self,
     !leq (x, y) -> !leq (y, z) -> !leq (x, z)
     (* [rr]: todo *)
-    proof: assumed;
+    proof: assumed {* Because todo *} ;
 
   (** Properties which state that the ordering
      is induced by the successor function *)
@@ -243,7 +243,7 @@ end ;;
 (*     #int_eq(!sign(x),1) *)
 (*     proof:  *)
 (*       (\*[rr]: todo *\) *)
-(*       assumed *)
+(*       assumed {* Because todo *} *)
 (*     ; *)
 
 (*   (\* [rr]: *)
@@ -307,14 +307,14 @@ species Dichotomic_system
 
   theorem zero_images_by_div2: all n in Self, !equal (!div2 (n), !zero) ->
    (!equal (n, !zero) \/ !equal (n, !one))
-  proof: assumed ;
+  proof: assumed {* Because todo *} ;
 
 (*    (\** an induction principle for dichotomy *\)  *)
 (*   theorem dichotomic_principle: all p in (Self -> Prop), *)
 (*     p(!zero) -> *)
 (*       (all n in Self, (p(n) -> (p(!mult2(n)) /\ p(!successor(!mult2(n)))))) -> *)
 (*          (all n in Self, p(n)) *)
-(*     proof: assumed *)
+(*     proof: assumed {* Because todo *} *)
 (*     ; *)
 
 end ;;
@@ -354,15 +354,15 @@ species Dichotomy (Nat is Dichotomic_system,
 *)
   let dichot (x, n) =
      let n_2 = Nat!div2 (n) in
-	  if Nat!equal (n_2, Nat!zero) then
-	   if Nat!equal (n, Nat!zero) then Bins!bvalue
-	   else (* we know n is 1 *)
-		Bins!binop (x, Bins!bvalue)
-	 else
-	   let e = Bins!bvalue in
-	     if Nat!is_odd (n) then Bins!binop (x, Bins!binop (e, e))
-	     else (* we know it is even *)
-	       Bins!binop (e, e) ;
+          if Nat!equal (n_2, Nat!zero) then
+           if Nat!equal (n, Nat!zero) then Bins!bvalue
+           else (* we know n is 1 *)
+                Bins!binop (x, Bins!bvalue)
+         else
+           let e = Bins!bvalue in
+             if Nat!is_odd (n) then Bins!binop (x, Bins!binop (e, e))
+             else (* we know it is even *)
+               Bins!binop (e, e) ;
 end ;;
 
 (* (\**  *)

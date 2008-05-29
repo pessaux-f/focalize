@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.124 2008-05-23 09:45:12 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.125 2008-05-29 11:36:37 pessaux Exp $ *)
 
 
 
@@ -1493,7 +1493,7 @@ and typecheck_proof ctx env proof =
   (* No relevant type information to insert in the AST node. *)
   proof.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
   match proof.Parsetree.ast_desc with
-  | Parsetree.Pf_assumed -> ()
+  | Parsetree.Pf_assumed _ -> ()
   | Parsetree.Pf_auto facts -> List.iter (typecheck_fact ctx env) facts
   | Parsetree.Pf_coq _ -> ()
   | Parsetree.Pf_node nodes -> List.iter (typecheck_node ctx env) nodes

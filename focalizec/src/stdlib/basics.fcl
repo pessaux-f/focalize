@@ -196,12 +196,13 @@ let ( = ) (x, y) = base_eq (x, y) ;;
 let ( && ) (x, y) = and_b (x, y) ;;
 let ( || ) (x, y) = or_b (x, y) ;;
 
-theorem beq_refl : all x in 'a, base_eq (x, x) proof: assumed ;;
+theorem beq_refl : all x in 'a, base_eq (x, x)
+  proof: assumed {* Import trusted external code. *} ;;
 theorem beq_symm: all x y in 'a, base_eq (x, y) -> base_eq (y, x)
-  proof: assumed ;;
+  proof: assumed {* Import trusted external code. *} ;;
 theorem beq_trans: all x y z in 'a, base_eq (x, y) -> base_eq (y, z) ->
   base_eq (x, z)
-proof: assumed ;;
+proof: assumed {* Import trusted external code. *} ;;
 
 theorem int_le_not_gt :
   all x y in int, int_leq (x, y) -> ~ (int_gt (x, y))
@@ -264,7 +265,8 @@ proof:
 ;;
 
 theorem int_le_refl :
-  all x y in int, base_eq (x, y) -> int_leq (x, y) proof: assumed ;;
+  all x y in int, base_eq (x, y) -> int_leq (x, y)
+  proof: assumed {* Import trusted external code. *} ;;
 
 theorem int_le_antisymm:
   all x y in int, int_leq (x, y) -> int_leq (y, x) -> base_eq (x, y)
@@ -299,7 +301,7 @@ proof:
 
 theorem int_lt_irrefl :
   all x y in int, int_lt (x, y) -> ~ base_eq (x, y)
-proof: assumed ;;
+proof: assumed {* Import trusted external code. *} ;;
 
 let pred =
   internal int -> int
