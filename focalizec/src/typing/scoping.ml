@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.55 2008-05-29 11:36:37 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.56 2008-06-03 15:40:36 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -340,13 +340,16 @@ let (extend_env_with_implicit_gen_vars_from_type_exprs,
      | Parsetree.Pr_or (logical_expr1, logical_expr2)
      | Parsetree.Pr_and (logical_expr1, logical_expr2)
      | Parsetree.Pr_equiv (logical_expr1, logical_expr2) ->
-         let env_from_logical_expr1 = rec_extend_logical_expr logical_expr1 accu_env in
+         let env_from_logical_expr1 =
+           rec_extend_logical_expr logical_expr1 accu_env in
          rec_extend_logical_expr logical_expr2 env_from_logical_expr1
      | Parsetree.Pr_not logical_expr
-     | Parsetree.Pr_paren logical_expr -> rec_extend_logical_expr logical_expr accu_env
+     | Parsetree.Pr_paren logical_expr ->
+         rec_extend_logical_expr logical_expr accu_env
      | Parsetree.Pr_expr _ ->
          (* Inside expressions type variable must be bound by the previous *)
-         (* parts of the logical_expr ! Hence, do not continue searching inside.   *)
+         (* parts of the logical_expr ! Hence, do not continue searching   *)
+         (* inside.                                                        *)
          accu_env in
 
   (
@@ -1804,6 +1807,8 @@ let rec scope_species_fields ctx env = function
 ;;
 
 
+(** Species parameters arguments can only be atomic names of species. Hence
+    they can only look like 0-ary sum type value constructors expressions. *)
 let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
   | Parsetree.E_self -> initial_expr
@@ -1853,14 +1858,15 @@ let scope_species_param ctx env param param_kind =
      | Parsetree.SP expr ->
          (begin
          match param_kind with
-          | MiscHelpers.SPK_is ->
+          | Env.ScopeInformation.SPK_is ->
               (* Note that to be well-typed this expression must ONLY be an *)
               (* [E_constr] (because species names are capitalized, parsed  *)
               (* as sum type constructors) that should be considered as a   *)
               (* species name.                                              *)
               Parsetree.SP
         (scope_expr_collection_cstr_for_is_param ctx env expr)
-          | MiscHelpers.SPK_in -> Parsetree.SP (scope_expr ctx env expr)
+          | Env.ScopeInformation.SPK_in ->
+	      Parsetree.SP (scope_expr ctx env expr)
          end)) in
   { param with Parsetree.ast_desc = new_desc }
 ;;
@@ -2027,7 +2033,7 @@ let scope_species_params_types ctx env params =
                   (* Because parameters are indeed COLLECTION parameters *)
                   (* (i.e. are intended to be finally instanciated to a  *)
                   (* collection), they have no ... parameters, them.     *)
-                  Env.ScopeInformation.spbi_params_kind = [];
+                  Env.ScopeInformation.spbi_params_kind = [] ;
                   Env.ScopeInformation.spbi_methods = species_methods }
                 accu_env in
             (* Now, extend the environment with the name *)
@@ -2116,8 +2122,8 @@ let scope_species_def ctx env species_def =
       List.map
         (fun (_, pkind) ->
           match pkind.Parsetree.ast_desc with
-           | Parsetree.SPT_in _ -> MiscHelpers.SPK_in
-           | Parsetree.SPT_is _ -> MiscHelpers.SPK_is)
+           | Parsetree.SPT_in _ -> Env.ScopeInformation.SPK_in
+           | Parsetree.SPT_is _ -> Env.ScopeInformation.SPK_is)
         species_def_descr.Parsetree.sd_params;
     Env.ScopeInformation.spbi_scope =
       Env.ScopeInformation.SPBI_file ctx.current_unit } in

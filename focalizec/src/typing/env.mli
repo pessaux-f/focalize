@@ -25,11 +25,13 @@ module ScopeInformation :
       | SPBI_file of Types.fname
       | SPBI_local
 
-  type species_binding_info = {
-    spbi_methods : Parsetree.vname list ;
-    spbi_params_kind : MiscHelpers.species_parameter_kind list ;
-    spbi_scope : species_scope
-  }
+    type species_parameter_kind = SPK_in | SPK_is
+
+    type species_binding_info = {
+      spbi_methods : Parsetree.vname list ;
+      spbi_params_kind : species_parameter_kind list ;
+      spbi_scope : species_scope
+    }
   end
 
 
@@ -54,11 +56,19 @@ module TypeInformation :
       (Parsetree.qualified_species * Parsetree.vname * Types.type_scheme *
        Parsetree.logical_expr * dependency_on_rep)
 
+    type simple_species_expr_as_effective_parameter =
+      | SPE_Self
+      | SPE_Species of Parsetree.qualified_vname
+
+    type simple_species_expr = {
+      sse_name : Parsetree.ident ;
+      sse_effective_args : simple_species_expr_as_effective_parameter list
+      }
+
     type species_param =
       | SPAR_in of (Parsetree.vname * Types.type_collection)
       | SPAR_is of
-          (Types.type_collection * (species_field list) *
-           Parsetree.species_expr)
+          (Types.type_collection * (species_field list) * simple_species_expr)
 
     and species_field =
       | SF_sig of sig_field_info
@@ -107,7 +117,7 @@ module MlGenInformation :
   sig
     type collection_generator_info = {
       cgi_implemented_species_params_names :
-        (Parsetree.vname * MiscHelpers.species_parameter_kind) list ;
+        (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
       cgi_generator_parameters :
         (Parsetree.vname * Parsetree_utils.DepNameSet.t) list
     }
@@ -115,8 +125,7 @@ module MlGenInformation :
     type method_info = {
       mi_name : Parsetree.vname ;
       mi_dependencies_from_parameters :
-        (Parsetree.vname * Parsetree_utils.species_param_kind *
-         Parsetree_utils.DepNameSet.t) list ;
+        (TypeInformation.species_param *  Parsetree_utils.DepNameSet.t) list ;
       mi_abstracted_methods : Parsetree.vname list
     }
 
@@ -132,7 +141,7 @@ module CoqGenInformation :
   sig
     type collection_generator_info = {
       cgi_implemented_species_params_names :
-        (Parsetree.vname * MiscHelpers.species_parameter_kind) list ;
+        (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
       cgi_generator_parameters :
         (Parsetree.vname * Parsetree_utils.DepNameSet.t) list
     }
@@ -147,8 +156,7 @@ module CoqGenInformation :
     type method_info = {
       mi_name : Parsetree.vname ;
       mi_dependencies_from_parameters :
-        (Parsetree.vname * Parsetree_utils.species_param_kind *
-         Parsetree_utils.DepNameSet.t) list ;
+        (TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ;
       mi_abstracted_methods : Parsetree.vname list
     }
 

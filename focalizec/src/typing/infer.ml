@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.125 2008-05-29 11:36:37 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.126 2008-06-03 15:40:36 pessaux Exp $ *)
 
 
 
@@ -558,7 +558,8 @@ let make_implicit_var_mapping_from_logical_expr logical_expr_expression =
     | Parsetree.Pr_paren logical_expr -> rec_make logical_expr
     | Parsetree.Pr_expr _ ->
         (* Inside expressions type variable must be bound by the previous *)
-        (* parts of the logical_expr ! Hence, do not continue searching inside.   *)
+        (* parts of the logical_expr ! Hence, do not continue searching   *)
+        (* inside.                                                        *)
         () in
   rec_make logical_expr_expression ;
   !mapping
@@ -1998,6 +1999,59 @@ type typed_species_parameter_argument =
 ;;
 
 
+
+(* ************************************************************************ *)
+(* Env.TypeInformation.species_param ->                                     *)
+(*   (Parsetree.vname * species_parameter_info)                             *)
+(** {Descr}: Transforms an arbitrary expression [Parsetree.expr] used as
+       species parameter expression into a [species_param_expr]. Hence, the
+       invariant that the [Parsetree.expr] can be only a sum type value
+       constructor (possibly enclosed by paren) disapears since we enforce
+       this structurally in the type [species_param_expr].
+
+    {Rem}: Not exported outside this module.                                *)
+(* ************************************************************************ *)
+let rec expr_to_species_param_expr expr =
+  match expr.Parsetree.ast_desc with
+   | Parsetree.E_self -> Env.TypeInformation.SPE_Self
+   | Parsetree.E_constr (cstr_expr, []) ->
+       (begin
+       let Parsetree.CI qualified_vname = cstr_expr.Parsetree.ast_desc in
+       Env.TypeInformation.SPE_Species qualified_vname
+       end)
+   | Parsetree.E_paren expr ->
+       expr_to_species_param_expr expr
+   | _ -> assert false (* Should be caught at scoping pass. *)
+;;
+
+
+
+(* ************************************************************************** *)
+(** {Descr}: Transforms the description of what is a species parameter into
+      a simpler structure than the one used in [Env.TypeInformation]. In fact
+      we want to keep trace of wether a parameter is "is" or "in" and what is
+      its species. For this last point, we transform the arbitrary expression
+      [Parsetree.expr] into a [species_param_expr] where the invariant that
+      the [Parsetree.expr] can be only a sum type value constructor (possibly
+      enclosed by paren) disapears since we enforce this structurally in the
+      type [species_param_expr].
+
+    {Rem}: Exported outside this module.                                      *)
+(* ************************************************************************** *)
+let species_expr_to_species_param_expr species_expr =
+  let species_expr_desc = species_expr.Parsetree.ast_desc in
+  let params =
+    List.map
+      (fun se_param ->
+        let Parsetree.SP expr = se_param.Parsetree.ast_desc in
+        expr_to_species_param_expr expr)
+      species_expr_desc.Parsetree.se_params in
+  { Env.TypeInformation.sse_name = species_expr_desc.Parsetree.se_name ;
+    Env.TypeInformation.sse_effective_args = params }
+;;
+
+
+
 (* ************************************************************************* *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.expr ->                    *)
 (*   (Types.type_collection * Env.TypeInformation.species_description)       *)
@@ -2602,7 +2656,8 @@ let typecheck_species_def_params ctx env species_params =
              let current_spe_param =
                Env.TypeInformation.SPAR_is
                  ((ctx.current_unit, param_name_as_string),
-                  species_expr_fields, species_expr) in
+                  species_expr_fields,
+                  (species_expr_to_species_param_expr species_expr)) in
              (* Finally, we return the fully extended environment and *)
              (* the type of the species application we just built.    *)
              (accu_env''', (current_spe_param :: rem_spe_params),

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: context.mli,v 1.6 2008-04-23 13:19:28 pessaux Exp $ *)
+(* $Id: context.mli,v 1.7 2008-06-03 15:40:36 pessaux Exp $ *)
 
 
 
@@ -37,9 +37,10 @@ type species_compil_context = {
   scc_dependency_graph_nodes : Dep_analysis.name_node list ;
   (** The list of the current species species parameters if we are in the
       scope of a species and if it has some parameters. We record for
-      each parameter it's kind (i.e. "in" or "is"). *)
-  scc_species_parameters_names :
-    (Parsetree.vname * Parsetree_utils.species_param_kind) list ;
+      each parameter it's kind (i.e. "in" or "is"). For "is" parameters, the
+      name is in [Env.TypeInformation.SPAR_is ((_, n), _, _)].
+      For "in" parameters, the name is [Env.TypeInformation.SPAR_is (n, _)]. *)
+  scc_species_parameters_names : Env.TypeInformation.species_param list ;
   (** The current correspondance between collection parameters names and
       the names they are mapped onto in the Coq code and their kind. *)
   scc_collections_carrier_mapping : Types.collection_carrier_mapping ;
@@ -75,9 +76,10 @@ type reduced_compil_context = {
   rcc_current_unit : Types.fname ;
   (** The list of the current species species parameters if we are in the
       scope of a species and if it has some parameters. We record for each
-      parameter it's kind (i.e. "in" or "is"). *)
-  rcc_species_parameters_names :
-   (Parsetree.vname * Parsetree_utils.species_param_kind) list ;
+      parameter it's kind (i.e. "in" or "is"). For "is" parameters, the
+      name is in [Env.TypeInformation.SPAR_is ((_, n), _, _)].
+      For "in" parameters, the name is [Env.TypeInformation.SPAR_is (n, _)]. *)
+  rcc_species_parameters_names : Env.TypeInformation.species_param list ;
   (** The current correspondance between collection types and type variable
       names representing the carrier of a species type in the OCaml code. *)
   rcc_collections_carrier_mapping : Types.collection_carrier_mapping ;

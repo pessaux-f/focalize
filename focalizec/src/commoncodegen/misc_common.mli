@@ -11,10 +11,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: miscHelpers.mli,v 1.3 2008-06-03 15:40:36 pessaux Exp $ *)
+(* $Id: misc_common.mli,v 1.1 2008-06-03 15:40:36 pessaux Exp $ *)
 
-val bind_parameters_to_types_from_type_scheme :
-  Types.type_scheme option -> Parsetree.vname list ->
-    (((Parsetree.vname * Types.type_simple option) list) *
-      (Types.type_simple option) *
-      (Types.type_simple list))
+type collection_effective_arguments =
+  | CEA_collection_name_for_is of Parsetree.qualified_vname
+  | CEA_value_expr_for_in of Parsetree.expr
+
+val get_implements_effectives :
+  Parsetree.species_param_desc Parsetree.ast list ->
+    ('a * Env.ScopeInformation.species_parameter_kind) list ->
+      collection_effective_arguments list

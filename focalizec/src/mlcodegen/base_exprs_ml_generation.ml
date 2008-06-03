@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.26 2008-05-29 11:04:23 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.27 2008-06-03 15:40:36 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -89,7 +89,11 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
        (* that in [param_dep_analysis.ml]. Check justification over     *)
        (* there ! *)
        if (List.exists
-             (fun (vn, _) -> vn = vname)
+             (fun species_param ->
+               match species_param with
+                | Env.TypeInformation.SPAR_in (vn, _) -> vn = vname
+                | Env.TypeInformation.SPAR_is ((_, vn), _, _) ->
+                    (Parsetree.Vuident vn) = vname)
              ctx.Context.rcc_species_parameters_names) &&
          (not (List.mem vname local_idents)) then
          (begin
@@ -161,7 +165,11 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                  (* is implicitely in the current compilation unit. May be  *)
                  (* either a paramater or a toplevel defined collection.    *)
                  if List.exists
-                     (fun (vn, _) -> vn = coll_name)
+                     (fun species_param ->
+                       match species_param with
+                        | Env.TypeInformation.SPAR_in (vn, _) -> vn = coll_name
+                        | Env.TypeInformation.SPAR_is ((_, vn), _, _) ->
+                            (Parsetree.Vuident vn) = coll_name)
                      ctx.Context.rcc_species_parameters_names then
                    (begin
                    (* It comes from a parameter. To retrieve the related *)
@@ -199,7 +207,12 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                    (* a species that is EXPLICITELY in the current            *)
                    (* compilation unit.                                       *)
                    if List.exists
-                       (fun (vn, _) -> vn = coll_name)
+		       (fun species_param ->
+			 match species_param with
+                          | Env.TypeInformation.SPAR_in (vn, _) ->
+			      vn = coll_name
+                          | Env.TypeInformation.SPAR_is ((_, vn), _, _) ->
+                              (Parsetree.Vuident vn) = coll_name)
                        ctx.Context.rcc_species_parameters_names then
                      (begin
                      let prefix =

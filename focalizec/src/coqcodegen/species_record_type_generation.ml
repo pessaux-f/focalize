@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.37 2008-05-28 13:37:08 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.38 2008-06-03 15:40:36 pessaux Exp $ *)
 
 
 
@@ -107,7 +107,11 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status
        (* that in [param_dep_analysis.ml]. Check justification over     *)
        (* there ! *)
        if (List.exists
-             (fun (vn, _) -> vn = vname)
+	     (fun species_param ->
+               match species_param with
+                | Env.TypeInformation.SPAR_in (vn, _) -> vn = vname
+                | Env.TypeInformation.SPAR_is ((_, vn), _, _) ->
+                    (Parsetree.Vuident vn) = vname)
              ctx.Context.scc_species_parameters_names) &&
          (not (List.mem vname local_idents)) then
          (begin
@@ -189,7 +193,11 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status
                  (* is implicitely in the current compilation unit. May be  *)
                  (* either a paramater or a toplevel defined collection.    *)
                  if List.exists
-                     (fun (vn, _) -> vn = coll_name)
+		     (fun species_param ->
+		       match species_param with
+			| Env.TypeInformation.SPAR_in (vn, _) -> vn = coll_name
+			| Env.TypeInformation.SPAR_is ((_, vn), _, _) ->
+			    (Parsetree.Vuident vn) = coll_name)
                      ctx.Context.scc_species_parameters_names then
                    (begin
                    (* It comes from a parameter. To retrieve the related *)
@@ -236,7 +244,12 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status
                    (* a species that is EXPLICITELY in the current            *)
                    (* compilation unit.                                       *)
                    if List.exists
-                       (fun (vn, _) -> vn = coll_name)
+		       (fun species_param ->
+			 match species_param with
+			  | Env.TypeInformation.SPAR_in (vn, _) ->
+			      vn = coll_name
+			  | Env.TypeInformation.SPAR_is ((_, vn), _, _) ->
+			      (Parsetree.Vuident vn) = coll_name)
                        ctx.Context.scc_species_parameters_names then
                      (begin
                      (* If we are in an Hypothesis or a Theorem, then the  *)
@@ -981,7 +994,13 @@ let generate_record_type_parameters ctx species_fields =
             (* "in" or "is".                                                *)
             let dependencies_from_params =
               List.fold_right
-                (fun (species_param_name, _) accu ->
+                (fun species_param accu ->
+		  (* Recover the species parameter's name. *)
+		  let species_param_name =
+		    match species_param with
+		     | Env.TypeInformation.SPAR_in (n, _) -> n
+		     | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+			 Parsetree.Vuident n in
                   let meths_from_param =
                     Param_dep_analysis.param_deps_logical_expr
                       ~current_species: ctx.Context.scc_current_species
@@ -989,7 +1008,7 @@ let generate_record_type_parameters ctx species_fields =
                   (* Return a couple binding the species parameter's name *)
                   (* with the methods of it we found as required for the  *)
                   (* current property/theorem.                            *)
-                  (species_param_name, meths_from_param) :: accu)
+                  (species_param, meths_from_param) :: accu)
                 species_parameters_names
                 [] in
             dependencies_from_params)
@@ -1002,7 +1021,12 @@ let generate_record_type_parameters ctx species_fields =
   let flat_deps_for_fields = List.flatten deps_lists_for_fields in
   let seen = ref [] in
   List.iter
-    (fun (species_param_name, meths) ->
+    (fun (species_param, meths) ->
+      (* Recover the species parameter's name. *)
+      let species_param_name =
+	match species_param with
+	 | Env.TypeInformation.SPAR_in (n, _) -> n
+	 | Env.TypeInformation.SPAR_is ((_, n), _, _) -> Parsetree.Vuident n in
       (* Each abstracted method will be named like "_p_", followed by *)
       (* the species parameter name, followed by "_", followed by the *)
       (* method's name.                                               *)

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.82 2008-05-21 09:06:01 pessaux Exp $ *)
+(* $Id: env.ml,v 1.83 2008-06-03 15:40:36 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -250,6 +250,13 @@ module ScopeInformation = struct
     | SPBI_local
 
 
+
+  type species_parameter_kind =
+    | SPK_in       (** Parameter is an entity parameter ("in"). *)
+    | SPK_is       (** Parameter is a collection parameter ("is"). *)
+
+
+
   type species_binding_info = {
     (** The list of *ALL* the method owned, including those added by
         inheritance. Methods from the toplevel ancestor are in head of the
@@ -267,7 +274,7 @@ module ScopeInformation = struct
         capitalized then look like a sum type constructor seen from a
         first-class expression point of view) and looked-up into the species
         field of the scoping environment. *)
-    spbi_params_kind : MiscHelpers.species_parameter_kind list ;
+    spbi_params_kind : species_parameter_kind list ;
     (** The information telling how the species is bound (i.e. "scoped"). *)
     spbi_scope : species_scope
   }
@@ -357,6 +364,27 @@ module TypeInformation = struct
      dependency_on_rep)
 
 
+  (* ********************************************************************** *)
+  (** {b Descr} : Describes a species expression used a effective argument
+         of a parametrised species. Since an effective parameter os a
+         parametrised species can not have itself effective parameters,
+         the only possible expressions are those denoting "Self" or another
+         atomic species name.
+
+      {Rem}: Exported outside this module.                                  *)
+  (* ********************************************************************** *)
+  type simple_species_expr_as_effective_parameter =
+    (** The name of the species used as species parameter is "Self". *)
+    | SPE_Self
+    (** The name of the species used as species parameter is something else. *)
+    | SPE_Species of Parsetree.qualified_vname
+
+
+  type simple_species_expr = {
+    sse_name : Parsetree.ident ;  (** Name of the base species. *)
+    (* Effective arguments that are applied to it. *)
+    sse_effective_args : simple_species_expr_as_effective_parameter list
+    }
 
   type species_param =
     (** Entity parameter. *)
@@ -374,7 +402,7 @@ module TypeInformation = struct
              expression is kept because Coq code generation need to know it
              in order to make the type expression annotation the parameter
              in the hosting species record type. *)
-         Parsetree.species_expr)
+          simple_species_expr)
 
 
 
@@ -632,7 +660,7 @@ module MlGenInformation = struct
         that the first name of the list is the name of the first species
         parameter and so on. *)
     cgi_implemented_species_params_names :
-      (Parsetree.vname * MiscHelpers.species_parameter_kind) list ;
+      (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
     (** The list mapping for each parameter name, the set of methods the
         collection generator depends on, hence must be provided an instance
         to be used. Note that the list is not guaranted to be ordered
@@ -646,10 +674,11 @@ module MlGenInformation = struct
   type method_info = {
     mi_name : Parsetree.vname ;        (** The field name. *)
     mi_dependencies_from_parameters :
-      (Parsetree.vname * Parsetree_utils.species_param_kind *
-       Parsetree_utils.DepNameSet.t) list ;  (** The
-        positional list of methods from the species parameters abstracted by
-        lambda-lifting. *)
+      ((** The positional list of methods from the species parameters
+           abstracted by lambda-lifting. *)
+       TypeInformation.species_param *
+       (* The set of methods of this parameter on which we have dependencies. *)
+       Parsetree_utils.DepNameSet.t) list ;
     mi_abstracted_methods : Parsetree.vname list   (** The positional list
         of methods from ourselves abstracted by lambda-lifting. *)
     }
@@ -698,7 +727,7 @@ module CoqGenInformation = struct
         that the first name of the list is the name of the first species
         parameter and so on. *)
     cgi_implemented_species_params_names :
-      (Parsetree.vname * MiscHelpers.species_parameter_kind) list ;
+      (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
     (** The list mapping for each parameter name, the set of methods the
         collection generator depends on, hence must be provided an instance
         to be used. Note that the list is not guaranted to be ordered
@@ -729,10 +758,11 @@ module CoqGenInformation = struct
   type method_info = {
     mi_name : Parsetree.vname ;        (** The field name. *)
     mi_dependencies_from_parameters :
-      (Parsetree.vname *
-       Parsetree_utils.species_param_kind *
-       Parsetree_utils.DepNameSet.t) list ;  (** The positional list of methods
-         from the species parameters abstracted by lambda-lifting. *)
+      ((** The positional list of methods from the species parameters
+           abstracted by lambda-lifting. *)
+       TypeInformation.species_param *
+       (* The set of methods of this parameter on which we have dependencies. *)
+       Parsetree_utils.DepNameSet.t) list ;
     mi_abstracted_methods : Parsetree.vname list   (** The positional list
         of methods from ourselves abstracted by lambda-lifting. *)
     }

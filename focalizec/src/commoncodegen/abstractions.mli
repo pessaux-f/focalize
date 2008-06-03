@@ -11,7 +11,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.mli,v 1.8 2008-05-29 11:04:23 pessaux Exp $ *)
+(* $Id: abstractions.mli,v 1.9 2008-06-03 15:40:36 pessaux Exp $ *)
+
+type environment_kind =
+  | EK_ml of Env.MlGenEnv.t
+  | EK_coq of Env.CoqGenEnv.t
 
 type field_body_kind =
   | FBK_expr of Parsetree.expr
@@ -20,16 +24,13 @@ type field_body_kind =
 type abstraction_info = {
   ai_used_species_parameter_tys : Parsetree.vname list ;
   ai_dependencies_from_params_via_body :
-    (Parsetree.vname * Parsetree_utils.species_param_kind *
-     Parsetree_utils.DepNameSet.t)
+    (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t)
     list ;
   ai_dependencies_from_params_via_type :
-    (Parsetree.vname * Parsetree_utils.species_param_kind *
-     Parsetree_utils.DepNameSet.t)
+    (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t)
     list ;
   ai_dependencies_from_params_via_completion :
-    (Parsetree.vname * Parsetree_utils.species_param_kind *
-     Parsetree_utils.DepNameSet.t)
+    (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t)
     list ;
   ai_min_coq_env : MinEnv.min_coq_env_element list
 }
@@ -42,5 +43,5 @@ type field_abstraction_info =
   | FAI_property of (Env.TypeInformation.property_field_info * abstraction_info)
 
 val compute_abstractions_for_fields :
-  with_def_deps : bool -> Context.species_compil_context ->
+  with_def_deps : bool -> environment_kind -> Context.species_compil_context ->
     Env.TypeInformation.species_field list -> field_abstraction_info list

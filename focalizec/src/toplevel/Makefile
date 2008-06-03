@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.29 2008-05-16 14:02:37 pessaux Exp $
+# $Id: Makefile,v 1.30 2008-06-03 15:40:36 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing \
@@ -32,6 +32,7 @@ ALLBYTOBJS = \
 	../typing/param_dep_analysis.cmo \
 	../typing/infer.cmo \
 	\
+	../commoncodegen/misc_common.cmo \
 	../commoncodegen/visUniverse.cmo \
 	../commoncodegen/minEnv.cmo \
 	../commoncodegen/abstractions.cmo \

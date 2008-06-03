@@ -1,9 +1,9 @@
-# $Id: Makefile,v 1.7 2008-04-24 13:30:41 pessaux Exp $
+# $Id: Makefile,v 1.8 2008-06-03 15:40:36 pessaux Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing
 
-BYTOBJS = visUniverse.cmo minEnv.cmo abstractions.cmo \
+BYTOBJS = misc_common.cmo visUniverse.cmo minEnv.cmo abstractions.cmo \
 	externals_generation_errs.cmo recursion.cmo
 
 all:: $(BYTOBJS)
