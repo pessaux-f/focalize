@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.47 2008-06-03 15:40:36 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.48 2008-06-04 12:44:18 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -375,14 +375,14 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
     Parsetree.ast_doc = [] ;
     Parsetree.ast_type = Parsetree.ANTI_none } in
   try
-    let species_info =
+    let (_, species_meths_infos, _) =
       Env.MlGenEnv.find_species
         ~loc: Location.none ~current_unit from_as_ident env in
     (* Now, find the method in the species information. *)
     let method_info =
       List.find
         (fun { Env.MlGenInformation.mi_name = n } -> n = method_name)
-        (fst species_info) in
+        species_meths_infos in
     method_info.Env.MlGenInformation.mi_abstracted_methods
   with _ ->
     (* Because the generator is inherited, the species where it is hosted *)
@@ -1035,17 +1035,13 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   (* and the type variable names representing their carrier.  *)
   let collections_carrier_mapping =
     build_collections_carrier_mapping ~current_unit species_descr in
-  (* Get the list of names of parameters of the species. This       *)
-  (* will be use to compute for each method the set of methods from *)
-  (* the parameters the method depends on.                          *)
-  let species_parameters_names =
-      species_descr.Env.TypeInformation.spe_sig_params in
   (* Create the initial compilation context for this species. *)
   let ctx = {
     Context.scc_current_unit = current_unit ;
     Context.scc_current_species = (current_unit, species_name) ;
     Context.scc_dependency_graph_nodes = dep_graph ;
-    Context.scc_species_parameters_names = species_parameters_names ;
+    Context.scc_species_parameters_names =
+      species_descr.Env.TypeInformation.spe_sig_params ;
     Context.scc_collections_carrier_mapping = collections_carrier_mapping ;
     Context.scc_lambda_lift_params_mapping = [] ;
     Context.scc_out_fmter = out_fmter } in
@@ -1103,8 +1099,9 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                  compiled_field_memories)
          compiled_fields) in
   (* Return what is needed to enter this species *)
-  (* in the  ml generation environnment. *)
-  (species_binding_info, extra_args_from_spe_params)
+  (* in the ml generation environnment.          *)
+  (species_descr.Env.TypeInformation.spe_sig_params, species_binding_info,
+   extra_args_from_spe_params)
 ;;
 
 
@@ -1374,7 +1371,7 @@ let collection_compile env ~current_unit out_fmter collection_def
   (* RIGHT ORDER !                                                         *)
   (begin
   try
-    let (_, opt_params_info) =
+    let (_, _, opt_params_info) =
       Env.MlGenEnv.find_species
         ~loc: collection_def.Parsetree.ast_loc ~current_unit
         implemented_species_name env in

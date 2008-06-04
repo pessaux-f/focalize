@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.59 2008-06-03 15:40:36 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.60 2008-06-04 12:44:18 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -104,14 +104,14 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
     Parsetree.ast_doc = [] ;
     Parsetree.ast_type = Parsetree.ANTI_none } in
   try
-    let species_info =
+    let (_, species_meths_infos, _) =
       Env.CoqGenEnv.find_species
         ~loc: Location.none ~current_unit from_as_ident env in
     (* Now, find the method in the species information. *)
     let method_info =
       List.find
         (fun { Env.CoqGenInformation.mi_name = n } -> n = method_name)
-        (fst species_info) in
+        species_meths_infos in
     method_info.Env.CoqGenInformation.mi_abstracted_methods
   with _ ->
     (* Because the generator is inherited, the species where it is hosted *)
@@ -1470,8 +1470,8 @@ let build_collections_carrier_mapping ~current_unit species_descr =
     a species known before generating its body. It's the same problem for
     the species's parameters that must be bound in the environment, in
     order to inductively known their methods.
-    This function add all this information in the current environment and
-    return the extended environment.
+    This function adds all this information in the current environment
+    and returns the extended environment.
     Note that because in FoCaL methods are not polymorphic, the number
     of extra parameters due to polymorphism is trivially always 0.
 
@@ -1515,13 +1515,15 @@ let extend_env_for_species_def env species_descr =
                  Env.CoqGenInformation.mi_abstracted_methods = [] })
                methods_names in
            (* Because species names are capitalized, we explicitely build *)
-           (* a [Parsetree.Vuident] to wrap the species name string. Not  *)
+           (* a [Parsetree.Vuident] to wrap the species name string.      *)
            (* since we don't need any collection generator information,   *)
            (* we simply build the species binding in the environment by   *)
            (* just putting None inside.                                   *)
+           (* In the same way, a parameter never has itself parameters.   *)
+           (* Hence the list of parameters is trivially empty.            *)
            Env.CoqGenEnv.add_species
              ~loc: Location.none (Parsetree.Vuident param_name)
-             (bound_methods, None) accu_env)
+             ([], bound_methods, None) accu_env)
     env_with_methods_as_values
     species_descr.Env.TypeInformation.spe_sig_params
 ;;
@@ -1902,7 +1904,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                    Env.CoqGenInformation.mi_abstracted_methods =
                      compiled_field_memory.cfm_coq_min_typ_env_names }])
          compiled_fields) in
-  (species_binding_info, extra_args_from_spe_params)
+  (species_descr.Env.TypeInformation.spe_sig_params,
+   species_binding_info, extra_args_from_spe_params)
 ;;
 
 
@@ -2090,7 +2093,7 @@ let collection_compile env ~current_unit out_fmter collection_def
   (* RIGHT ORDER !                                                         *)
   (begin
   try
-    let (_, opt_params_info) =
+    let (_, _, opt_params_info) =
       Env.CoqGenEnv.find_species
         ~loc: collection_def.Parsetree.ast_loc ~current_unit
         implemented_species_name env in

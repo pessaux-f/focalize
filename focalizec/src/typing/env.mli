@@ -100,6 +100,7 @@ module TypeInformation :
                        Types.type_scheme) list
       | TK_record of
           (Parsetree.vname * field_mutability * Types.type_scheme) list
+
     type type_description = {
       type_loc : Location.t ;
       type_kind : type_kind ;
@@ -125,12 +126,15 @@ module MlGenInformation :
     type method_info = {
       mi_name : Parsetree.vname ;
       mi_dependencies_from_parameters :
-        (TypeInformation.species_param *  Parsetree_utils.DepNameSet.t) list ;
+        (TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ;
       mi_abstracted_methods : Parsetree.vname list
     }
 
     type species_binding_info =
-      (method_info list * (collection_generator_info option))
+      ((TypeInformation.species_param list) *
+       (method_info list) *
+       (collection_generator_info option))
+
     type label_mapping_info = Parsetree.external_expr_desc
     type constructor_mapping_info = Parsetree.external_expr_desc
   end
@@ -161,7 +165,9 @@ module CoqGenInformation :
     }
 
     type species_binding_info =
-      (method_info list * (collection_generator_info option))
+      ((TypeInformation.species_param list) *
+       (method_info list) *
+       (collection_generator_info option))
 
     type value_mapping_info = int
   end

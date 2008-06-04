@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.14 2008-06-03 15:40:36 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.15 2008-06-04 12:44:18 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -266,10 +266,6 @@ let find_field_abstraction_by_name name abstractions =
 (* ********************************************************************** *)
 let get_user_of_parameters_with_position ~current_unit species_parameters
     spe_expr =
-
-Format.eprintf "get_user_of_parameters_with_position: | species_parameters | = %d@."
-  (List.length species_parameters) ;
-
   (* Do not [fold_right] otherwise, the counter will be reversed compared *)
   (* to the order of the elements of the list, i.e. otherwise when        *)
   (* processing the last element of the list, the counter will be 0 and   *)
@@ -280,17 +276,10 @@ Format.eprintf "get_user_of_parameters_with_position: | species_parameters | = %
       (fun (accu, counter) effective_arg ->
         match effective_arg with
          | Env.TypeInformation.SPE_Self ->
-
-Format.eprintf "Found effective arg Self@." ;
-
              (* "Self" is never a species parameter ! *)
              (accu, (counter + 1))
          | Env.TypeInformation.SPE_Species eff_arg_qual_vname ->
              (begin
-
-Format.eprintf "Found effective arg: %a@."
-  Sourcify.pp_qualified_vname eff_arg_qual_vname ;
-
              match eff_arg_qual_vname with
               | Parsetree.Qualified (modname, eff_arg_vname)
                 when modname = current_unit ->
@@ -303,9 +292,6 @@ Format.eprintf "Found effective arg: %a@."
                         | Env.TypeInformation.SPAR_in (_, _) ->
                             false      (* "In" parameters are never involved. *)
                         | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
-
-Format.eprintf "Species_parameter Vname: %s@." n ;
-
                             n = eff_arg_name)
                       species_parameters
                   then
@@ -465,9 +451,10 @@ let complete_dependencies_from_params _env ~current_unit ~current_species
   (* parameters it uses as effective argument in which species and at      *)
   (* which position.                                                       *)
   (* For example: species S (Cp is ..., Cp' is S'(Cp))                     *)
-  (* We want to know that Cp' uses Cp as argument for the species S'. So   *)
-  (* we want to get the pair (Cp', [(S', 1)]). If Cp' used another Cq' as  *)
-  (* third argument, we would get the pair (Cp', [(Cp, 1); (Cq, 3)]).      *)
+  (* We want to know that Cp' uses Cp as 1st argument for the species S'.  *)
+  (* So we want to get the pair (Cp', (S', [(Cp, 1)])). If Cp' used        *)
+  (* another Cq' as third argument, we would get the pair:                 *)
+  (* (Cp', (S', [(Cp, 1); (Cq, 3)])).                                      *)
   let parametrised_params_with_their_effective_args_being_params =
     List.map
       (function
@@ -476,9 +463,6 @@ let complete_dependencies_from_params _env ~current_unit ~current_species
             assert false
         | Env.TypeInformation.SPAR_is ((_, n), _, spe_expr) ->
             (* In our example, [n] is Cp'. *)
-
-Format.eprintf "Processing get_user_of_parameters_with_position for: %s@." n ;
-
             (n,
              (get_user_of_parameters_with_position
                 ~current_unit species_parameters spe_expr)))
@@ -488,6 +472,21 @@ Format.eprintf "Processing get_user_of_parameters_with_position for: %s@." n ;
   (* S' corresponding to the position where Cp is applied. Let's call it *)
   (* K. We have now to find all the dependencies (methods y) of K in S'  *)
   (* and we must add them to the dependencies of Cp.                     *)
+(*
+  List.fold_left
+    (fun accu_deps_from_params (cpprim, (sprim, usages)) ->
+      (* Recover the abstraction infos of methods of S'. *)
+      let sprim_meths_abstr_infos =
+        match env with
+         | EK_ml env ->
+             fst
+               (Env.MlGenEnv.find_species
+                  ~loc: Location.none ~current_unit sprim env)
+         | EK_coq env -> 
+             fst
+               (Env.CoqGenEnv.find_species
+                  ~loc: Location.none ~current_unit sprim env) in
+*)
 
 List.iter
   (fun (species_param, (parametrised_species_using, parameters_used)) ->

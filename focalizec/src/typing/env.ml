@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.83 2008-06-03 15:40:36 pessaux Exp $ *)
+(* $Id: env.ml,v 1.84 2008-06-04 12:44:18 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -684,10 +684,15 @@ module MlGenInformation = struct
     }
 
   type species_binding_info =
-    (** Optionnal because species that are non fully defined do not have
-        any collection generator although they are entered in the
-        environment. *)
-    (method_info list * (collection_generator_info option))
+    ((** The list of species parameters of the species with their kind. *)
+     (TypeInformation.species_param list) *
+     (** The list of methods the species has. *)
+     (method_info list) *
+     (** Optionnal because species that are non fully defined do not have
+         any collection generator although they are entered in the
+         environment. *)
+     (collection_generator_info option))
+
 
   (** The list of mappings according to external languages to know to which
       string the record type field name corresponds. *)
@@ -768,10 +773,14 @@ module CoqGenInformation = struct
     }
 
   type species_binding_info =
-    (** Optionnal because species that are non fully defined do not have
-        any collection generator although they are entered in the
-        environment. *)
-    (method_info list * (collection_generator_info option))
+    ((** The list of species parameters of the species with their kind. *)
+     (TypeInformation.species_param list) *
+     (** The list of methods the species has. *)
+     (method_info list) *
+     (** Optionnal because species that are non fully defined do not have
+         any collection generator although they are entered in the
+         environment. *)
+     (collection_generator_info option))
 
   (** The number of extra argument the identifier has due to its
       polymorphism. [Unsure] Certainement useless maintenant. *)
@@ -1653,7 +1662,7 @@ module CoqGenEMAccess = struct
     { constructors = []; labels = []; types = []; values = []; species = [] }
 
 
-  let make_value_env_from_species_methods _species spec_info =
+  let make_value_env_from_species_methods _species (_, meths_info, _) =
     (* Because methods are never polymorphics this was checked before), *)
     (* we can safely insert each method as a value bound to 0 extra     *)
     (* parameters that woud come from ... polymorphism.                 *)
@@ -1661,7 +1670,7 @@ module CoqGenEMAccess = struct
       List.map
         (fun { CoqGenInformation. mi_name = field_name } ->
           (field_name, (BO_absolute 0)))
-        (fst spec_info) in
+        meths_info in
     { constructors = []; labels = []; types = []; values = values_bucket;
       species = [] }
 
@@ -1735,7 +1744,7 @@ let inspect_fo_structure ppf fo =
     (fun (species_vname, envt_binding) ->
       (* In a fo file, there must only remain bindings really     *)
       (* introduced by the compilation unit, not by "open" stuf ! *)
-      let (meths, opt_coll_gen) =
+      let (_, meths, opt_coll_gen) =
         match envt_binding with
          | BO_opened (_, _) -> assert false | BO_absolute b -> b in
       (* Start printing... *)
