@@ -1,11 +1,17 @@
+(** The very basic definitions for focalize code:
+    built-in or (almost) mandatory type definitions;
+    built-in or (almost) mandatory data definitions.
+*)
+
 type int =
   internal (* Internal#int *)
   external
   | caml -> {* int *}
   | coq -> {* Z *}
 ;;
+
 type unit =
-  internal
+  internal (* Internal#unit *)
   | ()
   external
   | caml -> {* unit *}
@@ -22,20 +28,23 @@ type float =
   | caml -> {* float *}
   | coq -> {* R *}  (* From the Reals module. *)
 ;;
+
 type char =
   internal (* Internal#char *)
   external
   | caml -> {* char *}
   | coq -> {* ascii *}
 ;;
+
 type string =
   internal (* Internal#string *)
   external
   | caml -> {* string *}
   | coq -> {* string *}  (* From the Ascii module. *)
 ;;
+
 type bool =
-  internal
+  internal (* Internal#bool *)
   | True
   | False
   external
@@ -104,6 +113,7 @@ let crp (x, y) = (x, y) ;;
 let first (x) = match x with | (v, _ ) -> v ;;
 let scnd (x) = match x with | (_, v) -> v ;;
 
+(* Operations on integers. *)
 let string_of_int =
   internal int -> string
   external
@@ -117,6 +127,7 @@ let int_of_string =
   | caml -> {* Ml_builtins.int_of_string *}
   | coq -> {* [Unsure] *}
 ;;
+
 let print_int =
   internal int -> unit
   external
@@ -124,7 +135,6 @@ let print_int =
   | coq -> {* [Unsure] *}
 ;;
 
-(* Operations on integers. *)
 let int_mod =
   internal int -> int -> int
   external
@@ -460,6 +470,7 @@ proof:
 ;;
 
 (* String operations. *)
+
 (* Concatenation. *)
 let sc =
   internal  string -> string -> string
@@ -483,6 +494,7 @@ let print_string =
   | caml -> {* Ml_builtins.str_print *}
   | coq -> {* [Unsure] *}
 ;;
+
 let print_newline (x in unit) = print_string ("\n") ;;
 
 
