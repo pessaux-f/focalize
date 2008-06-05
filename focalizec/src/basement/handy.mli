@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.mli,v 1.13 2008-05-29 11:04:23 pessaux Exp $ *)
+(* $Id: handy.mli,v 1.14 2008-06-05 15:26:24 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -30,6 +30,7 @@ val pp_generic_n_times :
   int -> (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a -> unit
 
 val int_to_base_26 : int -> string
+val list_assoc_custom_eq : ('a -> 'b -> bool) -> 'b -> ('a * 'c) list -> 'c
 val list_intersect_p : 'a list -> 'a list -> bool
 val list_cons_uniq_eq : 'a -> 'a list -> 'a list
 val list_substract : 'a list -> 'a list -> 'a list

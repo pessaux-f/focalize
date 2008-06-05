@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.15 2008-06-04 12:44:18 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.16 2008-06-05 15:26:24 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -44,6 +44,65 @@ type field_body_kind =
 type environment_kind =
   | EK_ml of Env.MlGenEnv.t
   | EK_coq of Env.CoqGenEnv.t
+;;
+
+
+
+
+(** Dirty but used to have a same structure for [species_binding_info]s coming
+    from [Env.MlGenEnv.t] and [Env.CoqGenEnv.t]. *)
+type private_method_info = {
+  pmi_name : Parsetree.vname ;
+  pmi_dependencies_from_parameters :
+    ((** The positional list of methods from the species parameters
+         abstracted by lambda-lifting. *)
+     Env.TypeInformation.species_param *
+     (* The set of methods of this parameter on which we have dependencies. *)
+     Parsetree_utils.DepNameSet.t) list
+  } ;;
+type private_species_binding_info =
+  ((** The list of species parameters of the species with their kind. *)
+   (Env.TypeInformation.species_param list) *
+   (** The list of methods the species has. *)
+   (private_method_info list))
+;;
+
+
+
+(* ********************************************************************* *)
+(** {b Descr} : Transforms a [Env.MlGenInformation.species_binding_info]
+    into a [private_method_info].
+
+    {b Rem}: Not exported outside this module.                           *)
+(* ********************************************************************* *)
+let ml_species_binding_info_to_private (params, methods, _) =
+  let methods' =
+    List.map
+      (fun ml ->
+        { pmi_name = ml.Env.MlGenInformation.mi_name ;
+          pmi_dependencies_from_parameters =
+            ml.Env.MlGenInformation.mi_dependencies_from_parameters })
+      methods in
+  (params, methods')
+;;
+
+
+
+(* ********************************************************************** *)
+(** {b Descr} : Transforms a [Env.CoqGenInformation.species_binding_info]
+    into a [private_method_info].
+
+    {b Rem}: Not exported outside this module.                            *)
+(* ********************************************************************** *)
+let coq_species_binding_info_to_private (params, methods, _) =
+  let methods' =
+    List.map
+      (fun ml ->
+        { pmi_name = ml.Env.CoqGenInformation.mi_name ;
+          pmi_dependencies_from_parameters =
+            ml.Env.CoqGenInformation.mi_dependencies_from_parameters })
+      methods in
+  (params, methods')
 ;;
 
 
@@ -215,6 +274,34 @@ type abstraction_info = {
 
 
 
+(* ************************************************************************** *)
+(* (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list -> *)
+(*  (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ->*)
+(*   (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list  *)
+(** {b Descr} : Merge 2 lists representing abstraction information into
+      a single one. Each list has the form
+      (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list
+      and it is assumed that the lists have the same length and that the
+      Env.TypeInformation.species_param appear in the same order inthe lists.
+      Such lists represent for each species parameter of a species, the set
+      of methods from the parameter we depend on.
+      Hence, all the lists to merge must have been built in the scope of the
+      same species to ensure these invariants.
+
+    {b Rem} : Exported outside this module.                                  *)
+(* ************************************************************************* *)
+let merge_abstraction_infos ai1 ai2 =
+  List.map2
+    (fun (prm1, deps1) (prm2, deps2) ->
+      (* A few asserts to ensure the compiler is fine. *)
+      assert (prm1 = prm2) ;
+      let deps = Parsetree_utils.DepNameSet.union deps1 deps2 in
+      (prm1, deps))
+    ai1 ai2
+;;
+
+
+
 type field_abstraction_info =
   | FAI_sig of Env.TypeInformation.sig_field_info
   | FAI_let of (Env.TypeInformation.let_field_info * abstraction_info)
@@ -262,6 +349,12 @@ let find_field_abstraction_by_name name abstractions =
      second or whatever).
      ATTENTION: [spe_expr] is assumed to be parametrised !!!
 
+     For example: species S (Cp is ..., Cp' is S'(Cp))
+     We want to know that Cp' uses Cp as 1st argument for the species S'.
+     So we want to get the pair (Cp', (S', [(Cp, 1)])). If Cp' used
+     another Cq' as third argument, we would get the pair:
+     (Cp', (S', [(Cp, 1); (Cq, 3)])).
+
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
 let get_user_of_parameters_with_position ~current_unit species_parameters
@@ -276,7 +369,8 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
       (fun (accu, counter) effective_arg ->
         match effective_arg with
          | Env.TypeInformation.SPE_Self ->
-             (* "Self" is never a species parameter ! *)
+             (* "Self" is never a species parameter. It can be used as     *)
+             (* an effective argument, but NEVER declared as a parameter ! *)
              (accu, (counter + 1))
          | Env.TypeInformation.SPE_Species eff_arg_qual_vname ->
              (begin
@@ -311,11 +405,172 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
 
 
 
+(* ************************************************************************* *)
+(** {b Descr}: Adds the dependencies (i.e. the set of methods names) [~deps]
+    into the [~to_deps] list (being an assoc list (species param name, set
+    of methods names representing the dependencies) in the bucket of the
+    species parameter [~param].
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+let add_param_dependencies ~param_name ~deps ~to_deps =
+  let param_name_as_string =
+    (match param_name with
+     | Parsetree.Vname _ ->
+         (* Scoping pass should have transformed *)
+         (* all [Vname] into [Qualified].        *)
+         assert false
+     | Parsetree.Qualified (_, n) -> Parsetree_utils.name_of_vname n) in
+  let rec rec_add = function
+    | [] -> assert false
+    | (p, d) :: q ->
+        (begin
+        match p with
+         | Env.TypeInformation.SPAR_in (_, _) ->
+             (* "In" parameters are never involved in the process. *)
+             rec_add q
+         | Env.TypeInformation.SPAR_is ((_, name), _, _) ->
+             (* If we are in the bucket of the searched *)
+             (* species parameter, we add.              *)
+             if name = param_name_as_string then
+               (p, (Parsetree_utils.DepNameSet.union deps d)) :: q
+             else rec_add q
+        end) in
+  rec_add to_deps
+;;
+
+
+
+(* [dependencies_from_params] Those computer by all the other rules. *)
+let complete_dependencies_from_params_rule_PRM env ~current_unit
+    species_parameters starting_dependencies_from_params =
+  (* First, we look for "is" parameters themselves parametrised. We hunt in *)
+  (* the [species_parameters], to get some [Env.TypeInformation.SPAR_is]    *)
+  (* whose [simple_species_expr] has a non empty list [sse_effective_args]. *)
+  let params_being_parametrised =
+    List.filter
+      (function
+        | Env.TypeInformation.SPAR_is ((_, _), _, spe_expr) ->
+            (* Keep it only if there are parameters in the expression. *)
+            spe_expr.Env.TypeInformation.sse_effective_args <> []
+        | Env.TypeInformation.SPAR_in (_, _) -> false)
+      species_parameters in
+  (* Now, get for each parametrised parameter of the species, which other  *)
+  (* parameters it uses as effective argument in which species and at      *)
+  (* which position.                                                       *)
+  (* For example: species S (Cp is ..., Cp' is S'(Cp))                     *)
+  (* We want to know that Cp' uses Cp as 1st argument for the species S'.  *)
+  (* So we want to get the pair (Cp', (S', [(Cp, 1)])). If Cp' used        *)
+  (* another Cq' as third argument, we would get the pair:                 *)
+  (* (Cp', (S', [(Cp, 1); (Cq, 3)])).                                      *)
+  let parametrised_params_with_their_effective_args_being_params =
+    List.map
+      (function
+        | Env.TypeInformation.SPAR_in (_, _) ->
+            (* "In" parameters are filtered just above ! *)
+            assert false
+        | Env.TypeInformation.SPAR_is ((_, n), _, spe_expr) ->
+            (* In our example, [n] is Cp'. *)
+            (n,
+             (get_user_of_parameters_with_position
+                ~current_unit species_parameters spe_expr)))
+      params_being_parametrised in
+
+List.iter
+  (fun (species_param, (parametrised_species_using, parameters_used)) ->
+    Format.eprintf "Species parameter %s built applying %a to:@."
+      species_param Sourcify.pp_ident parametrised_species_using ;
+    List.iter
+      (fun (eff_arg, position) ->
+        match eff_arg with
+         | Env.TypeInformation.SPE_Self -> assert false
+         | Env.TypeInformation.SPE_Species qualified_vname ->
+             Format.eprintf "%a at position %d@."
+               Sourcify.pp_qualified_vname qualified_vname position)
+      parameters_used)
+parametrised_params_with_their_effective_args_being_params ;
+
+  (* Now, we know that Cp' is a species parameter built from S' applying *)
+  (* Cp at position 0. We must find the name of the formal parameter in  *)
+  (* S' corresponding to the position where Cp is applied. Let's call it *)
+  (* K. We have now to find all the dependencies (methods y) of K in S'  *)
+  (* and we must add them to the dependencies of Cp.                     *)
+  List.fold_left
+    (fun accu_deps_from_params (cpprim, (sprim, usages)) ->
+      (* Recover the abstraction infos of methods of S'. *)
+      let (sprim_params, sprim_meths_abstr_infos) =
+        (match env with
+         | EK_ml env ->
+             ml_species_binding_info_to_private
+               (Env.MlGenEnv.find_species
+                  ~loc: Location.none ~current_unit sprim env)
+         | EK_coq env -> 
+             coq_species_binding_info_to_private
+               (Env.CoqGenEnv.find_species
+                  ~loc: Location.none ~current_unit sprim env)) in
+      List.fold_left
+        (fun inner_accu_deps_from_params (effective_arg, position) ->
+          (* Here, [effective_arg] is Cp. *)
+          match effective_arg with
+           | Env.TypeInformation.SPE_Self ->
+               (* See remark in [get_user_of_parameters_with_position]. *)
+               assert false
+           | Env.TypeInformation.SPE_Species eff_arg_qual_vname ->
+               (* Here, [eff_arg_qual_vname] is the parameter *)
+               (* in which we will add new dependencies.      *)
+               (* We now get the name of the formal parameter (Cp) of S' *)
+               (* at the position where the effective argument was used. *)
+               let formal_name = List.nth sprim_params position in
+               (* Now, get the z in Deps (s, C_{p'}) (that can be found *)
+               (* in [starting_dependencies_from_params]), ...          *)
+               let all_z =
+                 Handy.list_assoc_custom_eq
+                   (fun x y ->
+                     match x with
+                      | Env.TypeInformation.SPAR_in (_, _) ->
+                          (* Cp' is a "IS" parameter, so non chance to *)
+                          (* find  it amongst the "IN" parameters !    *)
+                          false
+                      | Env.TypeInformation.SPAR_is ((_, n), _, _) -> n = y)
+                   cpprim starting_dependencies_from_params in
+               Parsetree_utils.DepNameSet.fold
+                 (fun z accu_deps_for_zs ->
+                   (* Forall z, we must search the set of methods, y, on *)
+                   (* which z depends on in S' via [formal_name] ...     *)
+                   (* So, first get z's dependencies information. *)
+                   let z_priv_meth_info =
+                     List.find
+                       (fun m_info -> m_info.pmi_name = (fst z))
+                       sprim_meths_abstr_infos in
+                   let z_dependencies =
+                     z_priv_meth_info.pmi_dependencies_from_parameters in
+                   (* Now, find the one correspongind to [formal_name]. *)
+                   let y = List.assoc formal_name z_dependencies in
+                   (* ... and add it to the dependencies of                *)
+                   (* [eff_arg_qual_vname] in the current dependencies     *)
+                   (* accumulator, i.e into [inner_accu_deps_from_params]. *)
+                   add_param_dependencies
+                     ~param_name: eff_arg_qual_vname ~deps: y
+                     ~to_deps: accu_deps_for_zs)
+                 (* Arguments of the deepest [DepNameSet.fold]. *)
+                 all_z
+                 inner_accu_deps_from_params)
+        (* Arguments of the inner [List.fold_left]. *)
+        accu_deps_from_params
+        usages)
+    (* Arguments of the outer [List.fold_left]. *)
+    starting_dependencies_from_params
+    parametrised_params_with_their_effective_args_being_params
+;;
+
+
+
+
 (** Implements rules [TYPE], [DEF-DEP], [UNIVERSE] and [PRM] of the
     definition 72 page 153 of Virgile Prevosto's Phd. *)
 (* [Unsure] est-ce que les "used_parameters_ty" ne devraient pas être aussi
   "complétés" ? *)
-let complete_dependencies_from_params _env ~current_unit ~current_species
+let complete_dependencies_from_params env ~current_unit ~current_species
     seen_abstractions species_parameters def_children universe opt_proof =
   (* Rule [TYPE] possible only if a proof is provided. *)
   let dependencies_from_params_via_type =
@@ -389,12 +644,7 @@ let complete_dependencies_from_params _env ~current_unit ~current_species
          | Some abstr_infos ->
              (* We merge the found abstraction info and *)
              (* the abstraction info accumulator.       *)
-             List.map2
-               (fun (prm1, deps1) (prm2, deps2) ->
-                 (* A few asserts to ensure the compiler is fine. *)
-                 assert (prm1 = prm2) ;
-                 let deps = Parsetree_utils.DepNameSet.union deps1 deps2 in
-                 (prm1, deps))
+             merge_abstraction_infos
                abstr_infos.ai_dependencies_from_params_via_body
                accu_deps_from_params
          | None ->
@@ -422,12 +672,7 @@ let complete_dependencies_from_params _env ~current_unit ~current_species
            | Some abstr_info ->
                (* Now, add the [ai_dependencies_from_params_via_type] *)
                (* to the dependencies accumulator.                    *)
-               List.map2
-                 (fun (prm1, deps1) (prm2, deps2) ->
-                   (* A few asserts to ensure the compiler is fine. *)
-                   assert (prm1 = prm2) ;
-                   let deps = Parsetree_utils.DepNameSet.union deps1 deps2 in
-                   (prm1, deps))
+               merge_abstraction_infos
                  abstr_info.ai_dependencies_from_params_via_type
                  accu_deps_from_params
            | None ->
@@ -436,75 +681,11 @@ let complete_dependencies_from_params _env ~current_unit ~current_species
           end))
       universe
       dependencies_from_params_via_compl1 in
-  (* First, we look for "is" parameters themselves parametrised. We hunt in *)
-  (* the [species_parameters], to get some [Env.TypeInformation.SPAR_is]    *)
-  (* whose [simple_species_expr] has a non empty list [sse_effective_args]. *)
-  let params_being_parametrised =
-    List.filter
-      (function
-        | Env.TypeInformation.SPAR_is ((_, _), _, spe_expr) ->
-            (* Keep it only if there are parameters in the expression. *)
-            spe_expr.Env.TypeInformation.sse_effective_args <> []
-        | Env.TypeInformation.SPAR_in (_, _) -> false)
-      species_parameters in
-  (* Now, get for each parametrised parameter of the species, which other  *)
-  (* parameters it uses as effective argument in which species and at      *)
-  (* which position.                                                       *)
-  (* For example: species S (Cp is ..., Cp' is S'(Cp))                     *)
-  (* We want to know that Cp' uses Cp as 1st argument for the species S'.  *)
-  (* So we want to get the pair (Cp', (S', [(Cp, 1)])). If Cp' used        *)
-  (* another Cq' as third argument, we would get the pair:                 *)
-  (* (Cp', (S', [(Cp, 1); (Cq, 3)])).                                      *)
-  let parametrised_params_with_their_effective_args_being_params =
-    List.map
-      (function
-        | Env.TypeInformation.SPAR_in (_, _) ->
-            (* "In" parameters are filtered just above ! *)
-            assert false
-        | Env.TypeInformation.SPAR_is ((_, n), _, spe_expr) ->
-            (* In our example, [n] is Cp'. *)
-            (n,
-             (get_user_of_parameters_with_position
-                ~current_unit species_parameters spe_expr)))
-      params_being_parametrised in
-  (* Now, we know that Cp' is a species parameter built from S' applying *)
-  (* Cp at position 0. We must find the name of the formal parameter in  *)
-  (* S' corresponding to the position where Cp is applied. Let's call it *)
-  (* K. We have now to find all the dependencies (methods y) of K in S'  *)
-  (* and we must add them to the dependencies of Cp.                     *)
-(*
-  List.fold_left
-    (fun accu_deps_from_params (cpprim, (sprim, usages)) ->
-      (* Recover the abstraction infos of methods of S'. *)
-      let sprim_meths_abstr_infos =
-        match env with
-         | EK_ml env ->
-             fst
-               (Env.MlGenEnv.find_species
-                  ~loc: Location.none ~current_unit sprim env)
-         | EK_coq env -> 
-             fst
-               (Env.CoqGenEnv.find_species
-                  ~loc: Location.none ~current_unit sprim env) in
-*)
-
-List.iter
-  (fun (species_param, (parametrised_species_using, parameters_used)) ->
-    Format.eprintf "Species parameter %s built applying %a to:@."
-      species_param Sourcify.pp_ident parametrised_species_using ;
-    List.iter
-      (fun (eff_arg, position) ->
-        match eff_arg with
-         | Env.TypeInformation.SPE_Self -> assert false
-         | Env.TypeInformation.SPE_Species qualified_vname ->
-             Format.eprintf "%a at position %d@."
-               Sourcify.pp_qualified_vname qualified_vname position)
-      parameters_used)
-parametrised_params_with_their_effective_args_being_params ;
-
-  (* Rule [PRM]. *)
-  let dependencies_from_params_via_compl3 =  (* [Unsure] *)
-    dependencies_from_params_via_compl2 in
+  (* Extend the found dependencies via rule [PRM]. *)
+  let dependencies_from_params_via_compl3 =
+    complete_dependencies_from_params_rule_PRM
+      env ~current_unit species_parameters
+      dependencies_from_params_via_compl2 in
  (dependencies_from_params_via_type, dependencies_from_params_via_compl3)
 ;;
 

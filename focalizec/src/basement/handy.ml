@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.14 2008-05-29 11:04:23 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.15 2008-06-05 15:26:24 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -121,6 +121,16 @@ let rec int_to_base_26 i =
    let ch = (i mod 26) + (Char.code 'a') in
    Char.escaped (Char.chr ch)
    end)
+;;
+
+
+
+let list_assoc_custom_eq eq key lst =
+  let rec rec_assoc = function
+    | [] -> raise Not_found
+    | (h, v) :: q ->
+	if eq h key then v else rec_assoc q in
+  rec_assoc lst
 ;;
 
 

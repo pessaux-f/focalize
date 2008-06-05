@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.mli,v 1.9 2008-06-03 15:40:36 pessaux Exp $ *)
+(* $Id: abstractions.mli,v 1.10 2008-06-05 15:26:24 pessaux Exp $ *)
 
 type environment_kind =
   | EK_ml of Env.MlGenEnv.t
@@ -34,6 +34,11 @@ type abstraction_info = {
     list ;
   ai_min_coq_env : MinEnv.min_coq_env_element list
 }
+
+val merge_abstraction_infos :
+  (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ->
+    (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ->
+      (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list
 
 type field_abstraction_info =
   | FAI_sig of Env.TypeInformation.sig_field_info
