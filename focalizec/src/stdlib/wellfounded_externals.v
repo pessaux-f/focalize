@@ -11,7 +11,7 @@ Open Scope Z_scope.
 
 Section ZwfLtCompat.
   Open Scope Z_scope.
-  Variable A:Type.
+  Variable A:Set.
   Variable f:A->Z.
   Variable R : A -> A -> Prop.
   Variable c:Z.
