@@ -38,8 +38,8 @@ species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
                  sc (B!print (scnd (x)),
                      ")")))) ;
 
-  proof of refl = (* by definition of ( = ) *) assumed ;
-  proof of symm = assumed ;
+  proof of refl = (* by definition of ( = ) *) assumed {* *} ;
+  proof of symm = assumed {* *} ;
 
 end ;;
 
@@ -63,8 +63,8 @@ species Entiers_concrets inherits Monoide =
   let print = basics#string_of_int ;
   let parse = basics#int_of_string ;
 
-  proof of refl = assumed ;
-  proof of symm = assumed ;
+  proof of refl = assumed {* *} ;
+  proof of symm = assumed {* *} ;
 end ;;
 
 collection Les_entiers implements Entiers_concrets ;;

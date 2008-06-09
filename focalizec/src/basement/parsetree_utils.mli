@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.mli,v 1.11 2008-06-03 15:40:36 pessaux Exp $ *)
+(* $Id: parsetree_utils.mli,v 1.12 2008-06-09 12:13:29 pessaux Exp $ *)
 
 val name_of_vname : Parsetree.vname -> string
 (** Extracts the inner string name of the [vname] variable name. *)
@@ -86,3 +86,13 @@ val vname_as_string_with_operators_expanded : Parsetree.vname -> string
 
 val type_coll_from_qualified_species :
   Parsetree.qualified_species -> Types.type_collection
+
+type simple_species_expr_as_effective_parameter =
+  | SPE_Self
+  | SPE_Species of Parsetree.qualified_vname
+  | SPE_Expr_entity
+
+type simple_species_expr = {
+  sse_name : Parsetree.ident ;
+  sse_effective_args : simple_species_expr_as_effective_parameter list
+  }

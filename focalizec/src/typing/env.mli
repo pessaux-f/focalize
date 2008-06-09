@@ -9,6 +9,14 @@ exception Rebound_type of (Parsetree.vname * Location.t)
 exception Rebound_species of (Parsetree.vname * Location.t)
 
 
+type from_history = {
+  fh_initial_apparition : Parsetree.qualified_species ;
+  fh_inherited_along :
+    (Parsetree.qualified_species * Parsetree_utils.simple_species_expr) list
+}
+
+val intitial_inheritance_history : Parsetree.qualified_species -> from_history
+
 module ScopeInformation :
   sig
     type value_binding_info =
@@ -42,33 +50,26 @@ module TypeInformation :
       dor_decl : bool }
 
     type sig_field_info =
-      (Parsetree.qualified_species * Parsetree.vname * Types.type_scheme)
+      (from_history * Parsetree.vname * Types.type_scheme)
+
     type let_field_info =
-      (Parsetree.qualified_species * Parsetree.vname * (Parsetree.vname list) *
+      (from_history * Parsetree.vname * (Parsetree.vname list) *
        Types.type_scheme * Parsetree.binding_body * dependency_on_rep *
        Parsetree.logical_flag)
 
     type theorem_field_info =
-      (Parsetree.qualified_species * Parsetree.vname * Types.type_scheme *
+      (from_history * Parsetree.vname * Types.type_scheme *
        Parsetree.logical_expr * Parsetree.proof * dependency_on_rep)
 
     type property_field_info =
-      (Parsetree.qualified_species * Parsetree.vname * Types.type_scheme *
+      (from_history * Parsetree.vname * Types.type_scheme *
        Parsetree.logical_expr * dependency_on_rep)
-
-    type simple_species_expr_as_effective_parameter =
-      | SPE_Self
-      | SPE_Species of Parsetree.qualified_vname
-
-    type simple_species_expr = {
-      sse_name : Parsetree.ident ;
-      sse_effective_args : simple_species_expr_as_effective_parameter list
-      }
 
     type species_param =
       | SPAR_in of (Parsetree.vname * Types.type_collection)
       | SPAR_is of
-          (Types.type_collection * (species_field list) * simple_species_expr)
+          (Types.type_collection *
+             (species_field list) * Parsetree_utils.simple_species_expr)
 
     and species_field =
       | SF_sig of sig_field_info

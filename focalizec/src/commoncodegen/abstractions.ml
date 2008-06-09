@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.16 2008-06-05 15:26:24 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.17 2008-06-09 12:13:29 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -368,11 +368,14 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
     List.fold_left
       (fun (accu, counter) effective_arg ->
         match effective_arg with
-         | Env.TypeInformation.SPE_Self ->
+         | Parsetree_utils.SPE_Expr_entity ->
+	     (* "In" parameters are never involved. *)
+	     (accu, (counter + 1))
+         | Parsetree_utils.SPE_Self ->
              (* "Self" is never a species parameter. It can be used as     *)
              (* an effective argument, but NEVER declared as a parameter ! *)
              (accu, (counter + 1))
-         | Env.TypeInformation.SPE_Species eff_arg_qual_vname ->
+         | Parsetree_utils.SPE_Species eff_arg_qual_vname ->
              (begin
              match eff_arg_qual_vname with
               | Parsetree.Qualified (modname, eff_arg_vname)
@@ -398,9 +401,9 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
                   assert false
              end))
       ([], 0)
-      spe_expr.Env.TypeInformation.sse_effective_args in
+      spe_expr.Parsetree_utils.sse_effective_args in
   (* Tells that species [sse_name] uses [params_with_pos] as arguments... *)
-  (spe_expr.Env.TypeInformation.sse_name, params_with_pos)
+  (spe_expr.Parsetree_utils.sse_name, params_with_pos)
 ;;
 
 
@@ -452,7 +455,7 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
       (function
         | Env.TypeInformation.SPAR_is ((_, _), _, spe_expr) ->
             (* Keep it only if there are parameters in the expression. *)
-            spe_expr.Env.TypeInformation.sse_effective_args <> []
+            spe_expr.Parsetree_utils.sse_effective_args <> []
         | Env.TypeInformation.SPAR_in (_, _) -> false)
       species_parameters in
   (* Now, get for each parametrised parameter of the species, which other  *)
@@ -483,8 +486,9 @@ List.iter
     List.iter
       (fun (eff_arg, position) ->
         match eff_arg with
-         | Env.TypeInformation.SPE_Self -> assert false
-         | Env.TypeInformation.SPE_Species qualified_vname ->
+	 | Parsetree_utils.SPE_Expr_entity -> assert false
+         | Parsetree_utils.SPE_Self -> assert false
+         | Parsetree_utils.SPE_Species qualified_vname ->
              Format.eprintf "%a at position %d@."
                Sourcify.pp_qualified_vname qualified_vname position)
       parameters_used)
@@ -512,10 +516,10 @@ parametrised_params_with_their_effective_args_being_params ;
         (fun inner_accu_deps_from_params (effective_arg, position) ->
           (* Here, [effective_arg] is Cp. *)
           match effective_arg with
-           | Env.TypeInformation.SPE_Self ->
+           | Parsetree_utils.SPE_Self | Parsetree_utils.SPE_Expr_entity ->
                (* See remark in [get_user_of_parameters_with_position]. *)
                assert false
-           | Env.TypeInformation.SPE_Species eff_arg_qual_vname ->
+           | Parsetree_utils.SPE_Species eff_arg_qual_vname ->
                (* Here, [eff_arg_qual_vname] is the parameter *)
                (* in which we will add new dependencies.      *)
                (* We now get the name of the formal parameter (Cp) of S' *)

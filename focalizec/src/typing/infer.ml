@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.126 2008-06-03 15:40:36 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.127 2008-06-09 12:13:29 pessaux Exp $ *)
 
 
 
@@ -290,6 +290,52 @@ type typing_context = {
 ;;
 
 
+
+
+let methods_history_to_text ~dirname ~current_species methods =
+  (* For each species, a file named with "history_", the species    *)
+  (* name and the suffix ".txt" will be generated in the directory. *)
+  let (current_species_module, current_species_vname) = current_species in
+  let out_filename =
+    Filename.concat
+      dirname
+      ("history_" ^ current_species_module ^ "_" ^
+       (Parsetree_utils.name_of_vname current_species_vname) ^ ".txt") in
+  let out_hd = open_out_bin out_filename in
+  let out_ppf = Format.formatter_of_out_channel out_hd in
+  (* Just a local function to process printing of one method. Will *)
+  (* be handy to iterate on methods of a [SF_let_rec] field.       *)
+  let process_on_method from n =
+    Format.fprintf out_ppf "** Method '%a':@\n" Sourcify.pp_vname n ;
+    Format.fprintf out_ppf "\tInitially appearing in species '%a'@\n"
+      Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
+    List.iter
+      (fun (inherited_from, by_expression) ->
+        Format.fprintf out_ppf "\tAppearing by inheritance in species '%a'@\n"
+          Sourcify.pp_qualified_species inherited_from ;
+        Format.fprintf out_ppf "\t\tVia expression '%a'@\n"
+          Sourcify.pp_simple_species_expr by_expression)
+      from.Env.fh_inherited_along in
+  (* Now, dump information for each field of the species, starting   *)
+  (* by information about ourselves, then closest parent first. This *)
+  (* means that reading the text top-down, we "go back in the past". *)
+  List.iter
+    (function
+      | Env.TypeInformation.SF_sig (from, n, _)
+      | Env.TypeInformation.SF_let (from, n, _, _, _, _, _)
+      | Env.TypeInformation.SF_theorem (from, n, _, _, _, _)
+      | Env.TypeInformation.SF_property (from, n, _, _, _) ->
+          process_on_method from n
+      | Env.TypeInformation.SF_let_rec l ->
+          List.iter
+            (fun (from, n, _, _, _, _, _) -> process_on_method from n)
+            l)
+    methods ;
+  close_out out_hd
+;;
+
+
+  
 
 (* ******************************************************************* *)
 (* typing_context -> Env.Env.ScopeInformation.t ->                     *)
@@ -1771,7 +1817,8 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                let rep_scheme = Types.trivial_scheme ty in
                let field_info =
                  Env.TypeInformation.SF_sig
-                   (current_species, rep_vname, rep_scheme) in
+                  ((Env.intitial_inheritance_history current_species),
+                  rep_vname, rep_scheme) in
                (* Record the "rep" scheme in the AST node. *)
                field.Parsetree.ast_type <- Parsetree.ANTI_scheme rep_scheme ;
                ((append_and_ensure_method_uniquely_defined
@@ -1794,8 +1841,8 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                    sig_def_descr.Parsetree.sig_name scheme env in
                let field_info =
                  Env.TypeInformation.SF_sig
-                   (current_species, sig_def_descr.Parsetree.sig_name,
-                    scheme) in
+                   ((Env.intitial_inheritance_history current_species),
+                     sig_def_descr.Parsetree.sig_name, scheme) in
                (* Record the type information in the AST nodes. *)
                sig_def.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
                field.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
@@ -1833,8 +1880,8 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                           List.map
                             fst binding.Parsetree.ast_desc.Parsetree.b_params in
                         (* Note that [expr] below is already typed here. *)
-                        (current_species, id, params_names, ty_scheme, expr,
-                         has_def_dep_on_rep,
+                        ((Env.intitial_inheritance_history current_species),
+                         id, params_names, ty_scheme, expr, has_def_dep_on_rep,
                          let_def.Parsetree.ast_desc.Parsetree.ld_logical))
                       bindings
                       let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
@@ -1859,8 +1906,8 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                           binding.Parsetree.ast_desc.Parsetree.b_params in
                       (* Note that [expr] below is already typed here. *)
                       Env.TypeInformation.SF_let
-                        (current_species, id, params_names, ty_scheme, expr,
-                         has_def_dep_on_rep,
+                        ((Env.intitial_inheritance_history current_species),
+                         id, params_names, ty_scheme, expr, has_def_dep_on_rep,
                          let_def.Parsetree.ast_desc.Parsetree.ld_logical))
                      bindings
                      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
@@ -1900,7 +1947,7 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                  } in
                let field_info =
                  Env.TypeInformation.SF_property
-                   (current_species,
+                   ((Env.intitial_inheritance_history current_species),
                     property_def.Parsetree.ast_desc.Parsetree.prd_name,
                     scheme,
                     property_def.Parsetree.ast_desc.Parsetree.prd_logical_expr,
@@ -1934,7 +1981,7 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                  } in
                let field_info =
                  Env.TypeInformation.SF_theorem
-                  (current_species,
+                  ((Env.intitial_inheritance_history current_species),
                    theorem_def.Parsetree.ast_desc.Parsetree.th_name,
                    scheme,
                    theorem_def.Parsetree.ast_desc.Parsetree.th_stmt,
@@ -2013,15 +2060,15 @@ type typed_species_parameter_argument =
 (* ************************************************************************ *)
 let rec expr_to_species_param_expr expr =
   match expr.Parsetree.ast_desc with
-   | Parsetree.E_self -> Env.TypeInformation.SPE_Self
+   | Parsetree.E_self -> Parsetree_utils.SPE_Self
    | Parsetree.E_constr (cstr_expr, []) ->
        (begin
        let Parsetree.CI qualified_vname = cstr_expr.Parsetree.ast_desc in
-       Env.TypeInformation.SPE_Species qualified_vname
+       Parsetree_utils.SPE_Species qualified_vname
        end)
    | Parsetree.E_paren expr ->
        expr_to_species_param_expr expr
-   | _ -> assert false (* Should be caught at scoping pass. *)
+   | _ -> Parsetree_utils.SPE_Expr_entity
 ;;
 
 
@@ -2036,7 +2083,7 @@ let rec expr_to_species_param_expr expr =
       enclosed by paren) disapears since we enforce this structurally in the
       type [species_param_expr].
 
-    {Rem}: Exported outside this module.                                      *)
+    {Rem}: Not exported outside this module.                                  *)
 (* ************************************************************************** *)
 let species_expr_to_species_param_expr species_expr =
   let species_expr_desc = species_expr.Parsetree.ast_desc in
@@ -2046,8 +2093,8 @@ let species_expr_to_species_param_expr species_expr =
         let Parsetree.SP expr = se_param.Parsetree.ast_desc in
         expr_to_species_param_expr expr)
       species_expr_desc.Parsetree.se_params in
-  { Env.TypeInformation.sse_name = species_expr_desc.Parsetree.se_name ;
-    Env.TypeInformation.sse_effective_args = params }
+  { Parsetree_utils.sse_name = species_expr_desc.Parsetree.se_name ;
+    Parsetree_utils.sse_effective_args = params }
 ;;
 
 
@@ -2670,6 +2717,44 @@ let typecheck_species_def_params ctx env species_params =
 
 
 
+let extend_from_history ~current_species species_expr_inherited field =
+  let simple_expr = species_expr_to_species_param_expr species_expr_inherited in
+  match field with
+   | Env.TypeInformation.SF_sig (from, n, sch) ->
+       let from' = { from with
+         Env.fh_inherited_along =
+           (current_species, simple_expr) :: from.Env.fh_inherited_along } in
+       Env.TypeInformation.SF_sig (from', n, sch)
+   | Env.TypeInformation.SF_let (from, n, parms, sch, body, rep_deps, lflag) ->
+       let from' = { from with
+         Env.fh_inherited_along =
+           (current_species, simple_expr) :: from.Env.fh_inherited_along } in
+       Env.TypeInformation.SF_let (from', n, parms, sch, body, rep_deps, lflag)
+   | Env.TypeInformation.SF_let_rec l ->
+       let l' =
+         List.map
+           (fun (from, n, parms, sch, body, rep_deps, lflag) ->
+             let from' = { from with
+               Env.fh_inherited_along =
+                 (current_species, simple_expr) ::
+                 from.Env.fh_inherited_along } in
+             (from', n, parms, sch, body, rep_deps, lflag))
+           l in
+       Env.TypeInformation.SF_let_rec l'
+   | Env.TypeInformation.SF_theorem (from, n, sch, body, proof, rep_deps) ->
+       let from' = { from with
+         Env.fh_inherited_along =
+           (current_species, simple_expr) :: from.Env.fh_inherited_along } in
+       Env.TypeInformation.SF_theorem (from', n, sch, body, proof, rep_deps)
+   | Env.TypeInformation.SF_property (from, n, sch, body, rep_deps) ->
+       let from' = { from with
+         Env.fh_inherited_along =
+           (current_species, simple_expr) :: from.Env.fh_inherited_along } in
+       Env.TypeInformation.SF_property (from', n, sch, body, rep_deps)
+;;
+
+
+
 (* ********************************************************************** *)
 (* loc: Location.t -> typing_context -> Env.TypingEnv.t ->                *)
 (* Parsetree.species_expr list ->                                         *)
@@ -2685,10 +2770,16 @@ let typecheck_species_def_params ctx env species_params =
               "rep" is found. In this case, this means that the carrier
               is manifest and changes the typing_context with its
               representation.
+              When adding an inherited method, we record that its "from"
+              information is modified to show that in the history, the
+              method is now in the current species but via an inheritance
+              step. In other words, we cons in [fh_inherited_along] of the
+              inherited method, the (current_species, simple_species_expr
+              from which the method is inherited).
 
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
-let extend_env_with_inherits ~loc ctx env spe_exprs =
+let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
   let rec rec_extend current_ctx current_env accu_found_methods
           accu_self_must_be = function
     | [] -> (accu_found_methods, current_env, current_ctx, accu_self_must_be)
@@ -2697,6 +2788,10 @@ let extend_env_with_inherits ~loc ctx env spe_exprs =
       (* (non extended) and recover its methods names and types. *)
       let (inh_species_methods, self_must_be) =
         typecheck_species_expr current_ctx env inh in
+      (* Change inside inherited fields the history information. *)
+      let inh_species_methods =
+        List.map
+          (extend_from_history ~current_species inh) inh_species_methods in
       let (env', current_ctx')  =
         List.fold_left
           (fun (accu_env, accu_ctx) field ->
@@ -2810,19 +2905,23 @@ let collapse_proof_in_non_inherited proof_of ~current_species fields =
            (begin
            if name_of_proof_of = name then
              (begin
-             assert (from = current_species) ;
-             (* We found the property related to the proof. *)
-             (* Change this property into a theorem.        *)
+             assert (from.Env.fh_initial_apparition = current_species) ;
+             (* We found the property related to the proof. Change this *)
+             (* property into a theorem. Since it's a definition, and   *)
+             (* this definition comes from the current species (i.e.    *)
+             (* not via inheritance, the inheritance history records    *)
+             (* only that the theorem comes from the current species    *)
+             (* without any other history.                              *)
              let new_field =
                Env.TypeInformation.SF_theorem
-                 (current_species, name, sch, logical_expr,
-                  proof_of.Parsetree.pd_proof, deps_rep) in
+                 ((Env.intitial_inheritance_history current_species), name,
+                  sch, logical_expr, proof_of.Parsetree.pd_proof, deps_rep) in
              if Configuration.get_verbose () then
                Format.eprintf
                  "Merging property '%a' from '%a' and proof from '%a'\
                  into theorem.@."
                  Sourcify.pp_vname name
-                 Sourcify.pp_qualified_species from
+                 Sourcify.pp_qualified_species from.Env.fh_initial_apparition
                  Sourcify.pp_qualified_species current_species ;
                 (* Stop the search now. Say that a change actually occured. *)
              (new_field :: rem, true)
@@ -2862,18 +2961,23 @@ let rec collapse_proof_in_inherited proof_of ~current_species fields =
              (begin
              if name_of_proof_of = name then
                (begin
-               (* We found the property related to the proof. *)
-               (* Change this property into a theorem.        *)
+               (* We found the property related to the proof. Change this   *)
+               (* property into a theorem. Since the addition of this proof *)
+               (* leads to an effective definition of the theorem, and this *)
+               (* definition comes from the current species (i.e. not via   *)
+               (* inheritance, the inheritance history records only that    *)
+               (* the theorem comes from the current species without any    *)
+               (* other history.                                            *)
                let new_field =
                  Env.TypeInformation.SF_theorem
-                   (current_species, name, sch, logical_expr,
-                    proof_of.Parsetree.pd_proof, deps_rep) in
+                   ((Env.intitial_inheritance_history current_species), name,
+                    sch, logical_expr, proof_of.Parsetree.pd_proof, deps_rep) in
                if Configuration.get_verbose () then
                  Format.eprintf
                    "Merging property '%a' from '%a' and proof from '%a'\
                    into theorem.@."
                    Sourcify.pp_vname name
-                   Sourcify.pp_qualified_species from
+                   Sourcify.pp_qualified_species from.Env.fh_initial_apparition
                    Sourcify.pp_qualified_species current_species ;
                (* Stop the search now. Say that a change actually occured. *)
                (rem, (Some new_field))
@@ -3558,12 +3662,15 @@ let non_conflicting_fields_p f1 f2 =
         (* same species, we consider that 2 let definitions are conflicting. *)
         (* We could go further, applying equality modulo alpha-conversion    *)
         (* but we don't do for the moment.                                   *)
-        (v1 = v2) && (from1 = from2) && (log1 = log2)
+        (v1 = v2) &&
+        (from1.Env.fh_initial_apparition = from2.Env.fh_initial_apparition) &&
+        (log1 = log2)
    | (Env.TypeInformation.SF_theorem (from1, v1, _, _, _, _),
       Env.TypeInformation.SF_theorem (from2, v2, _, _, _, _)) ->
        (* Since we don't want to inspect proofs, theorems are compatible   *)
        (* only if they wear the same names and come from the same species. *)
-       (v1 = v2) && (from1 = from2)
+       (v1 = v2) &&
+       (from1.Env.fh_initial_apparition = from2.Env.fh_initial_apparition)
    | (Env.TypeInformation.SF_property (_, v1, _, b1, _),
       Env.TypeInformation.SF_property (_, v2, _, b2, _)) ->
         (* Two properties are the same if they are wearing the same *)
@@ -3576,7 +3683,8 @@ let non_conflicting_fields_p f1 f2 =
        try
          List.for_all2
            (fun (from1, v1, _, _, _, _, log1) (from2, v2, _, _, _, _, log2) ->
-             (from1 = from2) && (v1 = v2) && (log1 = log2))
+             (from1.Env.fh_initial_apparition =
+              from2.Env.fh_initial_apparition) && (v1 = v2) && (log1 = log2))
            l1 l2
        with Invalid_argument "List.for_all2" -> false
        end)
@@ -3818,7 +3926,8 @@ let typecheck_species_def ctx env species_def =
        ctx_with_inherited_repr,
        _self_must_be2) = (*** [Unsure] ***)
     extend_env_with_inherits
-      ~loc: species_def.Parsetree.ast_loc ctx env_with_species_params
+      ~current_species ~loc: species_def.Parsetree.ast_loc ctx
+      env_with_species_params
       species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc in
   (* Now infer the types of the current field's and recover *)
   (* the context  where we may know the shape of [repr].    *)
@@ -3901,6 +4010,12 @@ let typecheck_species_def ctx env species_def =
     Env.TypeInformation.spe_is_closed = is_closed ;
     Env.TypeInformation.spe_sig_params = sig_params ;
     Env.TypeInformation.spe_sig_methods = reordered_normalized_methods } in
+  (* If asked, generate the dotty output of the methods history. *)
+  (match Configuration.get_methods_history_to_text () with
+   | None -> ()
+   | Some dirname ->
+       methods_history_to_text
+         ~dirname ~current_species reordered_normalized_methods) ;
   (* Extend the initial environment with the species. Not the environment *)
   (* used to typecheck the internal definitions of the species !!!        *)
   let env_with_species =

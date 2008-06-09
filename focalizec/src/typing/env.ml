@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.84 2008-06-04 12:44:18 pessaux Exp $ *)
+(* $Id: env.ml,v 1.85 2008-06-09 12:13:29 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -187,6 +187,51 @@ let env_from_only_absolute_bindings generic_env =
 
 
 
+(* ***************************************************************** *)
+(** {b Descr} : Describes from where a method comes, keeping all the
+    inheritance steps in memory.
+    For instance:
+      species Foo0 (A0 is Sp0) inherits ... = let v = 1 end ;;
+      species Foo1 (A1 is Sp1) inherits Foo0 = let v = 2 end ;;
+      species Foo2 (A2 is Sp2) inherits Foo1 (Arg2) = end ;;
+      species Foo3 (A3 is Sp3) inherits Foo2 (Arg3) = end ;;
+    For method "v" in "Foo3" :
+      [fh_most_recent_def] : Foo1
+      [fh_inherited_along] : [(Foo3, Arg3); (Foo2, Arg2)].
+
+    {Rem} : Exported outside this module.                            *)
+(* ***************************************************************** *)
+type from_history = {
+  (** The species where the method was defined or declared for the first time.
+      whithout redefinition. All inheritance information prior to a possible
+      redefinition in this species is discarded. *)
+  fh_initial_apparition : Parsetree.qualified_species ;
+  (** The list of species inherited along which the method was not redefined.
+      In head of the list is the most recently inherited species, and in tail
+      are the least recents. There is never overlaping between fields
+      [fh_inherited_along] and [fh_initial_apparition]. This means that if the
+      method is just defined in the current species, then [fh_inherited_along]
+      is empty. For each species in the history, we have the simplified
+      species expression used to build the species we inherited of. *)
+  fh_inherited_along :
+    (Parsetree.qualified_species * Parsetree_utils.simple_species_expr) list
+} ;;
+
+
+
+(* ***************************************************************** *)
+(** {b Descr} : Create an inheritance history by setting the initial
+    apparition of a method.
+
+    {Rem} : Exported outside this module.                            *)
+(* ***************************************************************** *)
+let intitial_inheritance_history species =
+  { fh_initial_apparition = species ;
+    fh_inherited_along = [] }
+;;
+
+
+
 (* *********************************************************************** *)
 (* *********************************************************************** *)
 (* *********************************************************************** *)
@@ -320,16 +365,16 @@ module TypeInformation = struct
 
 
   type sig_field_info =
-    ((** Where the sig comes from (the most recent in inheritance). *)
-     Parsetree.qualified_species *
+    ((** Where the sig comes from (and inheritance history). *)
+     from_history *
      Parsetree.vname *          (** The sig's name. *)
      Types.type_scheme)         (** The sig's type scheme. *)
 
 
 
   type let_field_info =
-    ((** Where the let-bound comes from (the most recent in inheritance). *)
-     Parsetree.qualified_species *
+    ((** Where the let-bound comes from (and inheritance history). *)
+     from_history *
      Parsetree.vname *       (** Name of the let-bound definition. *)
      (** Parameters of the let-bound definition. *)
      (Parsetree.vname list) *
@@ -343,8 +388,8 @@ module TypeInformation = struct
 
 
   type theorem_field_info =
-    ((** Where the theorem comes from (the most recent in inheritance). *)
-     Parsetree.qualified_species *
+    ((** Where the theorem comes from (and inheritance history). *)
+     from_history *
      Parsetree.vname *         (** The theorem's name. *)
      Types.type_scheme *       (** The theorem's type scheme. *)
      Parsetree.logical_expr *  (** The theorem's body. *)
@@ -355,8 +400,8 @@ module TypeInformation = struct
 
 
   type property_field_info =
-    ((** Where the property comes from (the most recent in inheritance). *)
-     Parsetree.qualified_species *
+    ((** Where the property comes from (and inheritance history). *)
+     from_history *
      Parsetree.vname *         (** The property's name. *)
      Types.type_scheme *       (** The property's type scheme. *)
      Parsetree.logical_expr *  (** The property's body. *)
@@ -364,27 +409,6 @@ module TypeInformation = struct
      dependency_on_rep)
 
 
-  (* ********************************************************************** *)
-  (** {b Descr} : Describes a species expression used a effective argument
-         of a parametrised species. Since an effective parameter os a
-         parametrised species can not have itself effective parameters,
-         the only possible expressions are those denoting "Self" or another
-         atomic species name.
-
-      {Rem}: Exported outside this module.                                  *)
-  (* ********************************************************************** *)
-  type simple_species_expr_as_effective_parameter =
-    (** The name of the species used as species parameter is "Self". *)
-    | SPE_Self
-    (** The name of the species used as species parameter is something else. *)
-    | SPE_Species of Parsetree.qualified_vname
-
-
-  type simple_species_expr = {
-    sse_name : Parsetree.ident ;  (** Name of the base species. *)
-    (* Effective arguments that are applied to it. *)
-    sse_effective_args : simple_species_expr_as_effective_parameter list
-    }
 
   type species_param =
     (** Entity parameter. *)
@@ -402,7 +426,7 @@ module TypeInformation = struct
              expression is kept because Coq code generation need to know it
              in order to make the type expression annotation the parameter
              in the hosting species record type. *)
-          simple_species_expr)
+          Parsetree_utils.simple_species_expr)
 
 
 
@@ -592,12 +616,12 @@ module TypeInformation = struct
       (function
         | SF_sig (from, vname, ty_scheme) ->
             Format.fprintf ppf "(* From species %a. *)@\n"
-              Sourcify.pp_qualified_species from ;
+              Sourcify.pp_qualified_species from.fh_initial_apparition ;
             Format.fprintf ppf "sig %a : %a@\n"
               Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
         | SF_let (from, vname, _, ty_scheme, _, _, _) ->
             Format.fprintf ppf "(* From species %a. *)@\n"
-              Sourcify.pp_qualified_species from ;
+              Sourcify.pp_qualified_species from.fh_initial_apparition ;
             Format.fprintf ppf "let %a : %a@\n"
               Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
         | SF_let_rec rec_bounds ->
@@ -606,26 +630,27 @@ module TypeInformation = struct
              | [] -> assert false  (* Empty let rec is non sense ! *)
              | (from, vname, _, ty_scheme, _, _, _) :: rem ->
                  Format.fprintf ppf "(* From species %a. *)@\n"
-                   Sourcify.pp_qualified_species from ;
+                   Sourcify.pp_qualified_species from.fh_initial_apparition ;
                  Format.fprintf ppf "let rec %a : %a@\n"
                    Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme;
                  List.iter
                    (fun (local_from, v, _, s, _, _, _) ->
                      Format.fprintf ppf
                        "(* From species %a. *)@\n"
-                       Sourcify.pp_qualified_species local_from ;
+                       Sourcify.pp_qualified_species
+                       local_from.fh_initial_apparition ;
                      Format.fprintf ppf "and %a : %a@\n"
                        Sourcify.pp_vname v Types.pp_type_scheme s)
                    rem
             end)
         | SF_theorem (from, vname, _, body, _, _) ->
             Format.fprintf ppf "(* From species %a. *)@\n"
-              Sourcify.pp_qualified_species from ;
+              Sourcify.pp_qualified_species from.fh_initial_apparition ;
             Format.fprintf ppf "theorem %a : %a@\n"
               Sourcify.pp_vname vname Sourcify.pp_logical_expr body
         | SF_property (from, vname, _, body, _) ->
             Format.fprintf ppf "(* From species %a. *)@\n"
-              Sourcify.pp_qualified_species from ;
+              Sourcify.pp_qualified_species from.fh_initial_apparition ;
             Format.fprintf ppf "property %a : %a@\n"
               Sourcify.pp_vname vname Sourcify.pp_logical_expr body)
       methods

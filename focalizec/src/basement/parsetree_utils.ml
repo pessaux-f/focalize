@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.12 2008-06-03 15:40:36 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.13 2008-06-09 12:13:29 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -169,3 +169,31 @@ let vname_as_string_with_operators_expanded = function
 let type_coll_from_qualified_species (species_modname, species_vname) =
   (species_modname, (name_of_vname species_vname))
 ;;
+
+
+
+(* ********************************************************************** *)
+(** {b Descr} : Describes a species expression used a effective argument
+       of a parametrised species. Since an effective parameter of a
+       parametrised species can not have itself effective parameters,
+       the only possible expressions are those denoting "Self" or another
+       atomic species name.
+
+    {Rem}: Exported outside this module.                                  *)
+(* ********************************************************************** *)
+type simple_species_expr_as_effective_parameter =
+  (** The name of the species used as species parameter is "Self". *)
+  | SPE_Self
+  (** The name of the species used as species parameter is something else. *)
+  | SPE_Species of Parsetree.qualified_vname
+  (** Regular expression used to instanciate a "in" (i.e. entity) parameter. *)
+  | SPE_Expr_entity
+;;
+
+
+
+type simple_species_expr = {
+  sse_name : Parsetree.ident ;  (** Name of the base species. *)
+  (* Effective arguments that are applied to it. *)
+  sse_effective_args : simple_species_expr_as_effective_parameter list
+  } ;;

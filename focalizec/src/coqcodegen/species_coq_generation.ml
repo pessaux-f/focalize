@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.61 2008-06-05 15:26:24 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.62 2008-06-09 12:13:29 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -41,7 +41,7 @@ type compiled_method_body =
 
 type compiled_field_memory = {
   (** Where the method comes from (the most recent in inheritance). *)
-  cfm_from_species : Parsetree.qualified_species ;
+  cfm_from_species : Env.from_history ;
   (** The method's name. *)
   cfm_method_name : Parsetree.vname ;
   (* The positionnal list of species parameter carriers appearing in the
@@ -401,7 +401,7 @@ let generate_non_recursive_field_binding ctx print_ctx env min_coq_env
   (* First of all, only methods defined in the current species must *)
   (* be generated. Inherited methods ARE NOT generated again !      *)
   let abstracted_methods =
-    if from = ctx.Context.scc_current_species then
+    if from.Env.fh_initial_apparition = ctx.Context.scc_current_species then
       generate_defined_non_recursive_method
         ctx print_ctx env min_coq_env used_species_parameter_tys
         dependencies_from_params name body params scheme
@@ -413,11 +413,12 @@ let generate_non_recursive_field_binding ctx print_ctx env min_coq_env
           "Field '%a' inherited from species '%a' but not (re)-declared uses \
           inherited generator.@."
           Parsetree_utils.pp_vname_with_operators_expanded name
-          Sourcify.pp_qualified_species from ;
+          Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
       (* Recover the arguments for abstracted methods *)
       (* of self in the inherited generator.          *)
       find_inherited_method_generator_abstractions
-        ~current_unit: ctx.Context.scc_current_unit from name env
+        ~current_unit: ctx.Context.scc_current_unit
+        from.Env.fh_initial_apparition name env
       end) in
   (* In any case, if the method is declared or inherited, we generate the *)
   (* "Let self_..." by applying the right method generator. If the method *)
@@ -433,12 +434,13 @@ let generate_non_recursive_field_binding ctx print_ctx env min_coq_env
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* The method generator's name... If the generator *)
   (* is in another module, then qualify its name.    *)
-  if (fst from) <> ctx.Context.scc_current_unit then
-    Format.fprintf out_fmter "%s.%a" (fst from)
-      Parsetree_utils.pp_vname_with_operators_expanded (snd from)
+  let defined_from = from.Env.fh_initial_apparition in
+  if (fst defined_from) <> ctx.Context.scc_current_unit then
+    Format.fprintf out_fmter "%s.%a" (fst defined_from)
+      Parsetree_utils.pp_vname_with_operators_expanded (snd defined_from)
   else
     Format.fprintf out_fmter "%a"
-      Parsetree_utils.pp_vname_with_operators_expanded (snd from) ;
+      Parsetree_utils.pp_vname_with_operators_expanded (snd defined_from) ;
   Format.fprintf out_fmter "__%a"
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* Now, apply to each extra parameter coming from the lambda liftings. *)
@@ -566,7 +568,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
       Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* Put an extra newline before the theorem to make some air ! *)
   Format.fprintf out_fmter "@\n(* From species %a. *)@\n"
-    Sourcify.pp_qualified_species from ;
+    Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
   (* Open a Coq "Section". *)
   Format.fprintf out_fmter "@[<2>Section %a.@\n"
     Parsetree_utils.pp_vname_with_operators_expanded name ;
@@ -725,14 +727,15 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
                     new_print_ctx' ~reuse_mapping: false)
                  ty ;
                (* Generate the application of the method generator. *)
-               if (fst from) <> new_ctx.Context.scc_current_unit then
-                 Format.fprintf out_fmter "%s.%a" (fst from)
+               let defined_from = from.Env.fh_initial_apparition in
+               if (fst defined_from) <> new_ctx.Context.scc_current_unit then
+                 Format.fprintf out_fmter "%s.%a" (fst defined_from)
                    Parsetree_utils.pp_vname_with_operators_expanded
-                   (snd from)
+                   (snd defined_from)
                else
                  Format.fprintf out_fmter "%a"
                    Parsetree_utils.pp_vname_with_operators_expanded
-                   (snd from) ;
+                   (snd defined_from) ;
                Format.fprintf out_fmter "__%a"
                  Parsetree_utils.pp_vname_with_operators_expanded name ;
                (* Now, recover from the already generated fields, *)
@@ -806,12 +809,15 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
                (* in our inheritance and because generators we depend *)
                (* on are obligatorily generated before, we always use *)
                (* the theorem generator.                              *)
-               if (fst from) <> new_ctx.Context.scc_current_unit then
-                 Format.fprintf out_fmter "%s.%a" (fst from)
-                   Parsetree_utils.pp_vname_with_operators_expanded (snd from)
+               let defined_from = from.Env.fh_initial_apparition in
+               if (fst defined_from) <> new_ctx.Context.scc_current_unit then
+                 Format.fprintf out_fmter "%s.%a" (fst defined_from)
+                   Parsetree_utils.pp_vname_with_operators_expanded
+                   (snd defined_from)
                else
                  Format.fprintf out_fmter "%a"
-                   Parsetree_utils.pp_vname_with_operators_expanded (snd from) ;
+                   Parsetree_utils.pp_vname_with_operators_expanded
+                   (snd defined_from) ;
                Format.fprintf out_fmter "__%a"
                  Parsetree_utils.pp_vname_with_operators_expanded name ;
                (* Now, recover from this theorem's minimal environment, *)
@@ -962,7 +968,7 @@ let generate_theorem ctx print_ctx env min_coq_env
   (* A "theorem" defined in the species leads to a Coq *)
   (* "Theorem" enclosed in a dedicated "Section".      *)
   let abstracted_methods =
-    if from = ctx.Context.scc_current_species then
+    if from.Env.fh_initial_apparition = ctx.Context.scc_current_species then
       generate_defined_theorem 
         ctx print_ctx env min_coq_env used_species_parameter_tys
         dependencies_from_params generated_fields from name logical_expr
@@ -974,11 +980,12 @@ let generate_theorem ctx print_ctx env min_coq_env
           "Field '%a' inherited from species '%a' but not (re)-declared uses \
           inherited generator.@."
           Parsetree_utils.pp_vname_with_operators_expanded name
-          Sourcify.pp_qualified_species from ;
+          Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
       (* Recover the arguments for abstracted methods *)
       (* of self in the inherited generator.          *)
       find_inherited_method_generator_abstractions
-        ~current_unit: ctx.Context.scc_current_unit from name env
+        ~current_unit: ctx.Context.scc_current_unit
+        from.Env.fh_initial_apparition name env
       end) in
   (* In any case, if the method is declared or inherited, we apply *)
   (* the theorem generator to the "local" methods "self_xxx".      *)
@@ -1002,12 +1009,13 @@ let generate_theorem ctx print_ctx env min_coq_env
   (* The theorem generator's name... If the generator *)
   (* is in another module, then qualify its name.     *)
   Format.fprintf out_fmter " :=@ " ;
-  if (fst from) <> ctx.Context.scc_current_unit then
-    Format.fprintf out_fmter "%s.%a" (fst from)
-      Parsetree_utils.pp_vname_with_operators_expanded (snd from)
+  let defined_from = from.Env.fh_initial_apparition in
+  if (fst defined_from) <> ctx.Context.scc_current_unit then
+    Format.fprintf out_fmter "%s.%a" (fst defined_from)
+      Parsetree_utils.pp_vname_with_operators_expanded (snd defined_from)
   else
     Format.fprintf out_fmter "%a"
-      Parsetree_utils.pp_vname_with_operators_expanded (snd from) ;
+      Parsetree_utils.pp_vname_with_operators_expanded (snd defined_from) ;
   Format.fprintf out_fmter "__%a"
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* Because we don't print any types, no need to extend the collection   *)
@@ -1324,7 +1332,7 @@ let generate_methods ctx print_ctx env generated_fields field =
          (* polymorphism.                                                 *)
          let ty = Types.specialize sch in
          Format.fprintf out_fmter "(* From species %a. *)@\n"
-           Sourcify.pp_qualified_species from ;
+           Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
          (* Only declared method. Hence appears as a "Variable". In OCaml *)
          (* "sig"s are ignored and methods using them are lambda-lifted.  *)
          (* In Coq, we also lambda-lift this way methods, so the "sig"s   *)
@@ -1404,7 +1412,7 @@ let generate_methods ctx print_ctx env generated_fields field =
        (* "Property"s lead to a Coq "Hypothesis". Inherited properties *)
        (* are always generated again by just enouncing their body.     *)
        Format.fprintf out_fmter "(* From species %a. *)@\n"
-         Sourcify.pp_qualified_species from ;
+         Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
        Format.fprintf out_fmter
          "@[<2>Hypothesis self_%a :@ "
          Parsetree_utils.pp_vname_with_operators_expanded name ;

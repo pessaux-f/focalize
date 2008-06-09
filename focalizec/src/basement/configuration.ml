@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.16 2008-04-15 21:18:33 weis Exp $ *)
+(* $Id: configuration.ml,v 1.17 2008-06-09 12:13:29 pessaux Exp $ *)
 
 
 exception Input_file_already_set ;;
@@ -86,6 +86,12 @@ let (get_dotty_dependencies, set_dotty_dependencies) =
   let dotty_dependencie_out_dir = ref None in
   ((fun () -> !dotty_dependencie_out_dir),
    (fun fname -> dotty_dependencie_out_dir := Some fname))
+;;
+
+let (get_methods_history_to_text, set_methods_history_to_text) =
+  let methods_history_out_dir = ref None in
+  ((fun () -> !methods_history_out_dir),
+   (fun fname -> methods_history_out_dir := Some fname))
 ;;
 
 let (get_raw_ast_dump, set_raw_ast_dump) =

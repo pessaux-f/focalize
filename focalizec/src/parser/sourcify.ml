@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.44 2008-05-29 11:36:37 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.45 2008-06-09 12:13:29 pessaux Exp $ *)
 
 
 (* *********************************************************** *)
@@ -1101,3 +1101,30 @@ let pp_file_desc ppf = function
 (* ********************************************************** *)
 let pp_file ppf = pp_ast pp_file_desc ppf
 ;;
+
+
+
+(** {Rem} : Not exported outside this module. *)
+let pp_simple_species_expr_as_effective_parameter ppf = function
+  | Parsetree_utils.SPE_Self -> Format.fprintf ppf "Self"
+  | Parsetree_utils.SPE_Species qvname ->
+      Format.fprintf ppf "%a" pp_qualified_vname qvname
+  | Parsetree_utils.SPE_Expr_entity ->
+      Format.fprintf ppf "<base expression>"
+;;
+
+
+
+(** Stuff for printing [Parsetree_utils.simple_species_expr] *)
+let pp_simple_species_expr ppf sse =
+  Format.fprintf ppf "@[<2>%a" pp_ident sse.Parsetree_utils.sse_name ;
+  if sse.Parsetree_utils.sse_effective_args <> [] then
+    (begin
+    Format.fprintf ppf "@ (%a)"
+      (Handy.pp_generic_separated_list
+         "," pp_simple_species_expr_as_effective_parameter)
+      sse.Parsetree_utils.sse_effective_args
+    end) ;
+  Format.fprintf ppf "@]"
+;;
+

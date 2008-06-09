@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.25 2008-01-16 13:29:47 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.26 2008-06-09 12:13:29 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -34,6 +34,10 @@ let main () =
        Arg.String (fun path -> Files.add_lib_path path),
        " adds the specified path to the path list where to search for \
          compiled\n\tinterfaces.") ;
+      ("--methods-history-to-text",
+       Arg.String Configuration.set_methods_history_to_text,
+       " dumps species' methods' inheritance history as plain text\n\tfiles \
+         into the argument directory.") ;
       ("--no-ansi-escape",
        Arg.Unit Configuration.unset_fancy_ansi,
        " disables ANSI escape sequences in the error messages.") ;

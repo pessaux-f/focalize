@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.43 2008-05-29 11:36:37 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.44 2008-06-09 12:13:29 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -1005,7 +1005,7 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
 \"def dep\" -> \"def dep\" [color=blue,fontsize=10];
 \"decl dep (in type)\" -> \"decl dep (in type)\" [color=red,fontsize=10];
 \"decl dep (in body)\" -> \"decl dep (in body)\" [color=pink,fontsize=10];\n" ;
-  (* Outputs all the nodes og the graph. *)
+  (* Outputs all the nodes of the graph. *)
   List.iter
     (fun { nn_name = n } ->
       Printf.fprintf out_hd "\"%s\" [shape=box,fontsize=10];\n"
@@ -1350,14 +1350,16 @@ let erase_field field =
       (begin
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
-          Sourcify.pp_vname vname Sourcify.pp_qualified_species from ;
+          Sourcify.pp_vname vname
+          Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
       []  (* No explicit "rep" means ... no "rep". *)
       end)
     else [field]
   | Env.TypeInformation.SF_let (from, vname, _, sch, _, _, _) ->
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
-          Sourcify.pp_vname vname Sourcify.pp_qualified_species from ;
+          Sourcify.pp_vname vname
+          Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
       (* Turn the "let" into a "sig". *)
       [Env.TypeInformation.SF_sig (from, vname, sch)]
   | Env.TypeInformation.SF_let_rec l ->
@@ -1366,13 +1368,15 @@ let erase_field field =
         (fun (from, n, _, sch, _, _, _) ->
           if Configuration.get_verbose () then
             Format.eprintf "Erasing field '%a' coming from '%a'.@."
-              Sourcify.pp_vname n Sourcify.pp_qualified_species from ;
+              Sourcify.pp_vname n
+              Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
           Env.TypeInformation.SF_sig (from, n, sch))
         l
   | Env.TypeInformation.SF_theorem (from, n, sch, prop, _, deps_rep) ->
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
-          Sourcify.pp_vname n Sourcify.pp_qualified_species from ;
+          Sourcify.pp_vname n
+          Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
       (* Turn the "theorem" into a "property".               *)
       (* Hence, destroys any def-dependency on the carrier ! *)
 (* [Unsure] Recalculer ces dépendances ? Je pense que le plus safe serait
@@ -1462,7 +1466,8 @@ let erase_fields_in_context ~current_species context fields =
                 (fun n -> Format.eprintf "'%a' " Sourcify.pp_vname n)
                 erase_names ;
               Format.eprintf  "from '%a' must be erased in context: "
-                Sourcify.pp_qualified_species erase_from ;
+                Sourcify.pp_qualified_species
+                erase_from.Env.fh_initial_apparition ;
               (* Print the context in which the fields must be erased. *)
               Parsetree_utils.DepNameSet.iter
                 (fun (n, _) -> Format.eprintf "%a, " Sourcify.pp_vname n)

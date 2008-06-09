@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.15 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.16 2008-06-09 12:13:29 pessaux Exp $ *)
 
 
 (** The various flags and definitions useful to the internal behaviour of the
@@ -45,6 +45,9 @@ val print_install_dirs : unit -> unit
 
 val get_dotty_dependencies : unit -> string option
 val set_dotty_dependencies : string -> unit
+
+val get_methods_history_to_text : unit -> string option
+val set_methods_history_to_text : string -> unit
 
 val get_raw_ast_dump : unit -> bool
 val set_raw_ast_dump : unit -> unit
