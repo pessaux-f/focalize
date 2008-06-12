@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.18 2008-06-12 12:02:56 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.19 2008-06-12 13:47:33 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -478,22 +478,6 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
              (get_user_of_parameters_with_position
                 ~current_unit species_parameters spe_expr)))
       params_being_parametrised in
-
-List.iter
-  (fun (species_param, (parametrised_species_using, parameters_used)) ->
-    Format.eprintf "Species parameter %s built applying %a to:@."
-      species_param Sourcify.pp_ident parametrised_species_using ;
-    List.iter
-      (fun (eff_arg, position) ->
-        match eff_arg with
-         | Parsetree_utils.SPE_Expr_entity _ -> assert false
-         | Parsetree_utils.SPE_Self -> assert false
-         | Parsetree_utils.SPE_Species qualified_vname ->
-             Format.eprintf "%a at position %d@."
-               Sourcify.pp_qualified_vname qualified_vname position)
-      parameters_used)
-parametrised_params_with_their_effective_args_being_params ;
-
   (* Now, we know that Cp' is a species parameter built from S' applying *)
   (* Cp at position 0. We must find the name of the formal parameter in  *)
   (* S' corresponding to the position where Cp is applied. Let's call it *)

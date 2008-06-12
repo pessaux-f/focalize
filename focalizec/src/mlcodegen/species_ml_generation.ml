@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.50 2008-06-09 12:13:29 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.51 2008-06-12 13:47:33 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -648,11 +648,17 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
         generated again.@."
         Parsetree_utils.pp_vname_with_operators_expanded name
         Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
-    (* Recover the arguments for abstracted methods *)
-    (* of self in the inherited generator.          *)
-    find_inherited_method_generator_abstractions
-      ~current_unit: ctx.Context.scc_current_unit
-      from.Env.fh_initial_apparition name env
+    (* Recover the arguments for abstracted methods of Self in the inherited *)
+    (* generator EXCEPT the info about dependencies on species that are now  *)
+    (* obsolete in the pair we get from the inherited species.               *)
+    let (abstracted_methods, _) =
+      find_inherited_method_generator_abstractions
+        ~current_unit: ctx.Context.scc_current_unit
+        from.Env.fh_initial_apparition name env in
+    (* We always keep the new dependencies on species parameters we *)
+    (* computed. The old ones, those recovered in the inherited     *)
+    (* stuff are only valid in the scope of the inherited species.  *)
+    (abstracted_methods, dependencies_from_params)
     end)
 ;;
 

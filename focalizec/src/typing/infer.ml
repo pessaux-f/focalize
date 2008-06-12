@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.128 2008-06-12 12:02:56 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.129 2008-06-12 13:47:33 pessaux Exp $ *)
 
 
 
@@ -2564,11 +2564,6 @@ let typecheck_species_expr ctx env species_expr =
       species_expr_desc.Parsetree.se_params in
   (* Record the type in the AST node. *)
   species_expr.Parsetree.ast_type <- Parsetree.ANTI_type species_carrier_type ;
-
-Format.eprintf "typecheck_species_expr@." ;
-List.iter (fun f -> Env.print_field_for_debug f) (fst species_methods) ;
-Format.eprintf "@." ;
-
   species_methods
 ;;
 
