@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.51 2008-06-12 13:47:33 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.52 2008-06-12 13:50:09 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -825,18 +825,6 @@ let generate_methods ctx env field =
          depend on. This means that a closed species with no species
          parameters will have NO extra parameters in its collection
          generator.
-         But, in fact NOOOOOOOOO ! Since when a method is inherited, it
-         can have dependencies on species parameters that were in its
-         original species, we still can have parameters even in a closed
-         species with no species parameters.
-         So, before considering that a species parameter leads to a
-         lambda-lifting, we must ensure that is really comes from the
-         current species, current inheritance level. If not, then we
-         must instead not add an extra parameter to the collection
-         generator, and moreover, directly apply related methods
-         generators to the method coming from "effective_collection" of
-         the collection used as effective argument in place of this
-         species parameter that existed in the inherited species.
 
          This function must UNIQUELY find the names of all the extra
          parameters the methods will need to make them arguments of the
