@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.127 2008-06-09 12:13:29 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.128 2008-06-12 12:02:56 pessaux Exp $ *)
 
 
 
@@ -2068,7 +2068,7 @@ let rec expr_to_species_param_expr expr =
        end)
    | Parsetree.E_paren expr ->
        expr_to_species_param_expr expr
-   | _ -> Parsetree_utils.SPE_Expr_entity
+   | _ -> Parsetree_utils.SPE_Expr_entity expr
 ;;
 
 
@@ -2527,7 +2527,8 @@ let apply_species_arguments ctx env base_spe_descr params =
 
 (* **************************************************************** *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.species_expr ->   *)
-(*   Env.TypeInformation.species_field list                         *)
+(*   Env.TypeInformation.species_field list *                       *)
+(*   (Types.fname * Types.collection_name) list                     *)
 (** {b Descr} : Typechecks a species expression, record its type in
               the AST node and return the list of its methods names
               type schemes and possible bodies (the list of fields
@@ -2563,6 +2564,11 @@ let typecheck_species_expr ctx env species_expr =
       species_expr_desc.Parsetree.se_params in
   (* Record the type in the AST node. *)
   species_expr.Parsetree.ast_type <- Parsetree.ANTI_type species_carrier_type ;
+
+Format.eprintf "typecheck_species_expr@." ;
+List.iter (fun f -> Env.print_field_for_debug f) (fst species_methods) ;
+Format.eprintf "@." ;
+
   species_methods
 ;;
 

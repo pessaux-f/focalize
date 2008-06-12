@@ -335,3 +335,5 @@ val make_fo_file :
     MlGenEnv.t -> CoqGenEnv.t -> unit
 
 val inspect_fo_structure : Format.formatter -> fo_file_structure -> unit
+
+val print_field_for_debug : TypeInformation.species_field -> unit

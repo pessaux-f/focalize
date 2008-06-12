@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.85 2008-06-09 12:13:29 pessaux Exp $ *)
+(* $Id: env.ml,v 1.86 2008-06-12 12:02:56 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -192,13 +192,12 @@ let env_from_only_absolute_bindings generic_env =
     inheritance steps in memory.
     For instance:
       species Foo0 (A0 is Sp0) inherits ... = let v = 1 end ;;
-      species Foo1 (A1 is Sp1) inherits Foo0 = let v = 2 end ;;
-      species Foo2 (A2 is Sp2) inherits Foo1 (Arg2) = end ;;
-      species Foo3 (A3 is Sp3) inherits Foo2 (Arg3) = end ;;
+      species Foo1 (A1 is Sp1) inherits Foo0 (A1) = let v = 2 end ;;
+      species Foo2 (A2 is Sp1) inherits Foo1 (A2) = end ;;
+      species Foo3 (A3 is Sp1, A4 is A3) inherits Foo2 (A4) = end ;;
     For method "v" in "Foo3" :
-      [fh_most_recent_def] : Foo1
-      [fh_inherited_along] : [(Foo3, Arg3); (Foo2, Arg2)].
-
+      [fh_initial_apparition] : Foo1
+      [fh_inherited_along] : [(Foo3, Foo2(A4)); (Foo2, Foo1 (A2))]
     {Rem} : Exported outside this module.                            *)
 (* ***************************************************************** *)
 type from_history = {
@@ -1797,3 +1796,30 @@ let inspect_fo_structure ppf fo =
            Format.fprintf ppf "@]@\n")
     coq_gen_info.species
 ;;
+
+
+
+(* [Unsure] Garbage. To diseaper. *)
+let print_field_for_debug = function
+  | TypeInformation.SF_sig (_, n, sch) ->
+      Format.eprintf "signature %a : %a@." Sourcify.pp_vname n
+	Types.pp_type_scheme sch
+  | TypeInformation.SF_let (_, n, args, sch, body, _, _) ->
+      Format.eprintf "let %a " Sourcify.pp_vname n ;
+      List.iter (fun a -> Format.eprintf "%a " Sourcify.pp_vname a) args ;
+      Format.eprintf ": %a " Types.pp_type_scheme sch ;
+      Format.eprintf "= %a@." Sourcify.pp_binding_body body ;
+      Format.eprintf "@."
+  | TypeInformation.SF_let_rec l ->
+      List.iter
+	(fun (_, n, args, sch, body, _, _) ->
+	  Format.eprintf "let rec %a " Sourcify.pp_vname n ;
+	  List.iter (fun a -> Format.eprintf "%a " Sourcify.pp_vname a) args ;
+	  Format.eprintf ": %a " Types.pp_type_scheme sch ;
+	  Format.eprintf "= %a@." Sourcify.pp_binding_body body ;
+	  Format.eprintf "@.")
+	l
+  | TypeInformation.SF_theorem _ | TypeInformation.SF_property _ ->
+      Format.eprintf "Property/Theorem@."
+;;
+

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.17 2008-06-09 12:13:29 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.18 2008-06-12 12:02:56 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -368,9 +368,9 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
     List.fold_left
       (fun (accu, counter) effective_arg ->
         match effective_arg with
-         | Parsetree_utils.SPE_Expr_entity ->
-	     (* "In" parameters are never involved. *)
-	     (accu, (counter + 1))
+         | Parsetree_utils.SPE_Expr_entity _ ->
+             (* "In" parameters are never involved. *)
+             (accu, (counter + 1))
          | Parsetree_utils.SPE_Self ->
              (* "Self" is never a species parameter. It can be used as     *)
              (* an effective argument, but NEVER declared as a parameter ! *)
@@ -486,7 +486,7 @@ List.iter
     List.iter
       (fun (eff_arg, position) ->
         match eff_arg with
-	 | Parsetree_utils.SPE_Expr_entity -> assert false
+         | Parsetree_utils.SPE_Expr_entity _ -> assert false
          | Parsetree_utils.SPE_Self -> assert false
          | Parsetree_utils.SPE_Species qualified_vname ->
              Format.eprintf "%a at position %d@."
@@ -516,7 +516,7 @@ parametrised_params_with_their_effective_args_being_params ;
         (fun inner_accu_deps_from_params (effective_arg, position) ->
           (* Here, [effective_arg] is Cp. *)
           match effective_arg with
-           | Parsetree_utils.SPE_Self | Parsetree_utils.SPE_Expr_entity ->
+           | Parsetree_utils.SPE_Self | Parsetree_utils.SPE_Expr_entity _ ->
                (* See remark in [get_user_of_parameters_with_position]. *)
                assert false
            | Parsetree_utils.SPE_Species eff_arg_qual_vname ->

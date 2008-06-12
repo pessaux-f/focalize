@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.15 2008-06-05 15:26:24 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.16 2008-06-12 12:02:56 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -312,6 +312,22 @@ let list_mem_n_remove elem l =
     | [] -> raise Not_found
     | h :: q -> if h = elem then q else h :: (rec_mem q) in
   rec_mem l                                                     
+;;
+
+
+
+let list_first_index predicate l =
+  let cnt = ref 0 in
+  let rec rec_index = function
+    | [] -> raise Not_found
+    | h :: q ->
+	if predicate h then !cnt
+	else
+	  (begin
+	  incr cnt ;
+	  rec_index q
+	  end) in
+  rec_index l
 ;;
 
 

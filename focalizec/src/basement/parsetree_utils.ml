@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.13 2008-06-09 12:13:29 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.14 2008-06-12 12:02:56 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -187,7 +187,7 @@ type simple_species_expr_as_effective_parameter =
   (** The name of the species used as species parameter is something else. *)
   | SPE_Species of Parsetree.qualified_vname
   (** Regular expression used to instanciate a "in" (i.e. entity) parameter. *)
-  | SPE_Expr_entity
+  | SPE_Expr_entity of Parsetree.expr
 ;;
 
 
