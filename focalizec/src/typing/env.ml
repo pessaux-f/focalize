@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.87 2008-06-13 13:45:11 pessaux Exp $ *)
+(* $Id: env.ml,v 1.88 2008-06-13 15:47:17 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -591,8 +591,9 @@ module TypeInformation = struct
           (match param with
            | SPAR_in (a, _) ->
                Format.fprintf local_ppf "%a in ..." Sourcify.pp_vname a
-           | SPAR_is ((modname, param_name), _, _) ->
-               Format.fprintf local_ppf "%s.%s is ..." modname param_name) ;
+           | SPAR_is ((modname, param_name), _, sp_expr) ->
+               Format.fprintf local_ppf "%s.%s is %a" modname param_name
+		 Sourcify.pp_simple_species_expr sp_expr) ;
           if rem <> [] then
             (begin
             Format.fprintf local_ppf ",@ ";

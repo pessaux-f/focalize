@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.54 2008-06-13 14:33:23 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.55 2008-06-13 15:47:17 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -908,7 +908,24 @@ type parameter_instanciation =
 
 
 
-let follow_instanciations ctx env initial_param_index  inheritance_steps =
+
+let follow_instanciations_for_in_param _ctx initial_param_index
+    inheritance_steps =
+  Format.eprintf
+    "Début de la trace pour le paramètre d'indice %d@." initial_param_index ;
+  let rec rec_follow _param_index = function
+    | [] -> failwith "todo"
+    | _inheritance_step :: _rem_steps -> failwith "todo" in
+  (* We must walk the inheritance steps in reverse order *)
+  (* since it is built with most recent steps in head.   *)
+  rec_follow initial_param_index (List.rev inheritance_steps)
+;;
+	
+
+
+
+let follow_instanciations_for_is_param ctx env initial_param_index
+    inheritance_steps =
   Format.eprintf
     "Début de la trace pour le paramètre d'indice %d@." initial_param_index ;
   let current_species_parameters = ctx.Context.scc_species_parameters_names in
@@ -962,14 +979,7 @@ let follow_instanciations ctx env initial_param_index  inheritance_steps =
           let index_of_instancier =
             Handy.list_first_index
               (function
-                | Env.TypeInformation.SPAR_in (_n, _) ->
-                    (begin
-                    match effective_arg_during_inher with
-                     | Parsetree_utils.SPE_Self -> failwith "Euhhhh1 ?"
-                     | Parsetree_utils.SPE_Species _ -> false
-                     | Parsetree_utils.SPE_Expr_entity _ ->
-                         failwith "A voir1..."
-                    end)
+                | Env.TypeInformation.SPAR_in (_n, _) -> false
                 | Env.TypeInformation.SPAR_is
                     ((formal_mod, formal_name), _, _) ->
                       (begin
@@ -983,9 +993,6 @@ let follow_instanciations ctx env initial_param_index  inheritance_steps =
                                 (* should have been explicitely qualified ! *)
                                 assert false
                             | Parsetree.Qualified (effect_mod, effect_name) ->
-                                Format.eprintf
-                                  "Test avec le paramètre %s#%s...@."
-                                  formal_mod formal_name ;
                                 (effect_mod = formal_mod) &&
                                 ((Parsetree_utils.name_of_vname effect_name) =
                                  formal_name)
@@ -998,7 +1005,7 @@ let follow_instanciations ctx env initial_param_index  inheritance_steps =
           (* history.                                                   *)
           (* So we first get the index of this parameter in the current *)
           (* level species.                                             *)
-          rec_follow  index_of_instancier rem_steps
+          rec_follow index_of_instancier rem_steps
         with Not_found ->
           (begin
           (* We must check if the instanciation is done by a toplevel *)
@@ -1034,7 +1041,7 @@ let follow_instanciations ctx env initial_param_index  inheritance_steps =
                           (Parsetree_utils.name_of_vname effect_name)))
                     end)
                end)
-           | Parsetree_utils.SPE_Expr_entity _ -> failwith "A voir2..."
+           | Parsetree_utils.SPE_Expr_entity _ -> assert false
           end) in
   (* We must walk the inheritance steps in reverse order *)
   (* since it is built with most recent steps in head.   *)
@@ -1088,42 +1095,48 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
       let param_index =
         Handy.list_first_index
           (fun p -> p = species_param) host_species_params in
-      let instancied_with =
-        follow_instanciations
-          ctx env param_index
-          field_memory.cfm_from_species.Env.fh_inherited_along in
-      (* Now really generate the code of by what to instanciate. *)
-      let prefix =
-        (match instancied_with with
-         | PI_by_toplevel_species (spec_mod, spec_name) ->
-             let capitalized_spec_mod = String.capitalize spec_mod in
-             if spec_mod = current_unit then spec_name ^ "."
-             else
-               capitalized_spec_mod ^ "." ^ spec_name ^ "." ^
-               capitalized_spec_mod
-         | PI_by_toplevel_collection (coll_mod, coll_name) ->
-             let capitalized_coll_mod = String.capitalize coll_mod in
-             if coll_mod = current_unit then
-               coll_name ^ ".effective_collection." ^ coll_name ^ "."
-             else capitalized_coll_mod ^ "." ^ coll_name ^
-               ".effective_collection." ^ capitalized_coll_mod ^ "." ^
-               coll_name ^ "."
-         | PI_by_species_parameter prm ->
-             let species_param_name =
-               match prm with
-                | Env.TypeInformation.SPAR_in (n, _) -> n
-                | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
-                    Parsetree.Vuident n in
-             (* We don't care here about whether the species parameters is   *)
-             (* "in" or "is".                                                *)
-             "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
-             "_") in
-      Parsetree_utils.DepNameSet.iter
-        (fun (meth, _) ->
-          (* Don't print the type to prevent being too verbose. *)
-          Format.fprintf out_fmter "@ %s%a"
-            prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
-        meths_from_param)
+      match species_param with
+       | Env.TypeInformation.SPAR_in (_, _) ->
+	   follow_instanciations_for_in_param ctx param_index
+             field_memory.cfm_from_species.Env.fh_inherited_along
+       | Env.TypeInformation.SPAR_is ((_, _), _, _) ->
+	   (begin
+	   (* Instanciation process of "IS" parameter. *)
+	   let instancied_with =
+             follow_instanciations_for_is_param
+               ctx env param_index
+               field_memory.cfm_from_species.Env.fh_inherited_along in
+	   (* Now really generate the code of by what to instanciate. *)
+	   let prefix =
+             (match instancied_with with
+              | PI_by_toplevel_species (spec_mod, spec_name) ->
+		  let capitalized_spec_mod = String.capitalize spec_mod in
+		  if spec_mod = current_unit then spec_name ^ "."
+		  else
+		    capitalized_spec_mod ^ "." ^ spec_name ^ "." ^
+		    capitalized_spec_mod
+              | PI_by_toplevel_collection (coll_mod, coll_name) ->
+		  let capitalized_coll_mod = String.capitalize coll_mod in
+		  if coll_mod = current_unit then
+		    coll_name ^ ".effective_collection." ^ coll_name ^ "."
+		  else capitalized_coll_mod ^ "." ^ coll_name ^
+		    ".effective_collection." ^ capitalized_coll_mod ^ "." ^
+		    coll_name ^ "."
+              | PI_by_species_parameter prm ->
+		  let species_param_name =
+		    match prm with
+                     | Env.TypeInformation.SPAR_in (_, _) -> assert false
+                     | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+			 Parsetree.Vuident n in
+		  "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
+		  "_") in
+	   Parsetree_utils.DepNameSet.iter
+             (fun (meth, _) ->
+               (* Don't print the type to prevent being too verbose. *)
+               Format.fprintf out_fmter "@ %s%a"
+		 prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
+             meths_from_param
+	   end))
     meth_info.Env.MlGenInformation.mi_dependencies_from_parameters ;
 ;;
 
