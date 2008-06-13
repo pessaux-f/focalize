@@ -114,6 +114,10 @@ module TypeInformation :
   end
 
 
+type collection_or_species =
+  | COS_collection
+  | COS_species
+
 
 module MlGenInformation :
   sig
@@ -134,7 +138,7 @@ module MlGenInformation :
     type species_binding_info =
       ((TypeInformation.species_param list) *
        (method_info list) *
-       (collection_generator_info option))
+       (collection_generator_info option) * collection_or_species)
 
     type label_mapping_info = Parsetree.external_expr_desc
     type constructor_mapping_info = Parsetree.external_expr_desc
@@ -168,7 +172,7 @@ module CoqGenInformation :
     type species_binding_info =
       ((TypeInformation.species_param list) *
        (method_info list) *
-       (collection_generator_info option))
+       (collection_generator_info option) * collection_or_species)
 
     type value_mapping_info = int
   end

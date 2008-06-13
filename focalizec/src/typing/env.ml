@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.86 2008-06-12 12:02:56 pessaux Exp $ *)
+(* $Id: env.ml,v 1.87 2008-06-13 13:45:11 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -677,6 +677,20 @@ end
 
 
 
+(* *********************************************************************** *)
+(* {b Descr} : Tells if a "species" found in a code generation environment
+     is a species or a collection. This is used to adapt the access to
+     method generators when creating collection generators.
+
+   {b Rem} : Exported outside this module.                                 *)
+(* *********************************************************************** *)
+type collection_or_species =
+  | COS_collection
+  | COS_species
+;;
+
+
+
 module MlGenInformation = struct
   type collection_generator_info = {
     (** The list of species parameters names and kinds the species whose
@@ -715,7 +729,9 @@ module MlGenInformation = struct
      (** Optionnal because species that are non fully defined do not have
          any collection generator although they are entered in the
          environment. *)
-     (collection_generator_info option))
+     (collection_generator_info option) *
+     (** Tells if the info is bound to a species or a collection. *)
+     collection_or_species)
 
 
   (** The list of mappings according to external languages to know to which
@@ -804,7 +820,9 @@ module CoqGenInformation = struct
      (** Optionnal because species that are non fully defined do not have
          any collection generator although they are entered in the
          environment. *)
-     (collection_generator_info option))
+     (collection_generator_info option) *
+     (** Tells if the info is bound to a species or a collection. *)
+     collection_or_species)
 
   (** The number of extra argument the identifier has due to its
       polymorphism. [Unsure] Certainement useless maintenant. *)
@@ -1686,7 +1704,7 @@ module CoqGenEMAccess = struct
     { constructors = []; labels = []; types = []; values = []; species = [] }
 
 
-  let make_value_env_from_species_methods _species (_, meths_info, _) =
+  let make_value_env_from_species_methods _species (_, meths_info, _, _) =
     (* Because methods are never polymorphics this was checked before), *)
     (* we can safely insert each method as a value bound to 0 extra     *)
     (* parameters that woud come from ... polymorphism.                 *)
@@ -1768,7 +1786,7 @@ let inspect_fo_structure ppf fo =
     (fun (species_vname, envt_binding) ->
       (* In a fo file, there must only remain bindings really     *)
       (* introduced by the compilation unit, not by "open" stuf ! *)
-      let (_, meths, opt_coll_gen) =
+      let (_, meths, opt_coll_gen, coll_or_spe) =
         match envt_binding with
          | BO_opened (_, _) -> assert false | BO_absolute b -> b in
       (* Start printing... *)
@@ -1782,7 +1800,7 @@ let inspect_fo_structure ppf fo =
         meths ;
       (* Now, check for the collection generator information. *)
       Format.fprintf ppf "@]@[<2>*** Collection generator:@\n" ;
-      match opt_coll_gen with
+      (match opt_coll_gen with
        | None ->  Format.fprintf ppf "None found@."
        | Some cgi ->
            Format.fprintf ppf "Some found@." ;
@@ -1791,9 +1809,12 @@ let inspect_fo_structure ppf fo =
              (Handy.pp_generic_separated_list ","
                 (fun ppf (pname, _) -> Sourcify.pp_vname ppf pname))
              cgi.CoqGenInformation.cgi_implemented_species_params_names ;
-           Format.fprintf ppf "@]" ;
-           (* End the species dump box. *)
-           Format.fprintf ppf "@]@\n")
+           Format.fprintf ppf "@]") ;
+       (match coll_or_spe with
+        | COS_species -> Format.fprintf ppf "Is a species.@."
+        | COS_collection -> Format.fprintf ppf "Is a collection.@.") ;
+       (* End the species dump box. *)
+       Format.fprintf ppf "@]@\n")
     coq_gen_info.species
 ;;
 
@@ -1803,7 +1824,7 @@ let inspect_fo_structure ppf fo =
 let print_field_for_debug = function
   | TypeInformation.SF_sig (_, n, sch) ->
       Format.eprintf "signature %a : %a@." Sourcify.pp_vname n
-	Types.pp_type_scheme sch
+        Types.pp_type_scheme sch
   | TypeInformation.SF_let (_, n, args, sch, body, _, _) ->
       Format.eprintf "let %a " Sourcify.pp_vname n ;
       List.iter (fun a -> Format.eprintf "%a " Sourcify.pp_vname a) args ;
@@ -1812,13 +1833,13 @@ let print_field_for_debug = function
       Format.eprintf "@."
   | TypeInformation.SF_let_rec l ->
       List.iter
-	(fun (_, n, args, sch, body, _, _) ->
-	  Format.eprintf "let rec %a " Sourcify.pp_vname n ;
-	  List.iter (fun a -> Format.eprintf "%a " Sourcify.pp_vname a) args ;
-	  Format.eprintf ": %a " Types.pp_type_scheme sch ;
-	  Format.eprintf "= %a@." Sourcify.pp_binding_body body ;
-	  Format.eprintf "@.")
-	l
+        (fun (_, n, args, sch, body, _, _) ->
+          Format.eprintf "let rec %a " Sourcify.pp_vname n ;
+          List.iter (fun a -> Format.eprintf "%a " Sourcify.pp_vname a) args ;
+          Format.eprintf ": %a " Types.pp_type_scheme sch ;
+          Format.eprintf "= %a@." Sourcify.pp_binding_body body ;
+          Format.eprintf "@.")
+        l
   | TypeInformation.SF_theorem _ | TypeInformation.SF_property _ ->
       Format.eprintf "Property/Theorem@."
 ;;

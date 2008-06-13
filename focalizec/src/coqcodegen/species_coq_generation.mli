@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.mli,v 1.3 2008-06-04 12:44:18 pessaux Exp $ *)
+(* $Id: species_coq_generation.mli,v 1.4 2008-06-13 13:45:11 pessaux Exp $ *)
 
 val species_compile :
   Env.CoqGenEnv.t -> current_unit: Types.fname -> Format.formatter ->
@@ -20,7 +20,8 @@ val species_compile :
         Dep_analysis.name_node list ->
           (Env.TypeInformation.species_param list *
            Env.CoqGenInformation.method_info list *
-           (Env.CoqGenInformation.collection_generator_info option))
+           (Env.CoqGenInformation.collection_generator_info option) *
+           Env.collection_or_species)
 
 val collection_compile :
   Env.CoqGenEnv.t -> current_unit: Types.fname -> Format.formatter ->

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.14 2008-06-04 12:44:18 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.15 2008-06-13 13:45:11 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -49,7 +49,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       (* Really nothing to do... *)
       env
   | Infer.PCM_species (species_def, species_descr, dep_graph) ->
-      let opt_coll_gen_args =
+      let species_binding_info =
         Species_ml_generation.species_compile
           env ~current_unit out_fmter species_def species_descr dep_graph in
       (* Return the ml code generation environment extended by the *)
@@ -57,7 +57,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       Env.MlGenEnv.add_species
         ~loc: species_def.Parsetree.ast_loc
         species_def.Parsetree.ast_desc.Parsetree.sd_name
-        opt_coll_gen_args env
+        species_binding_info env
   | Infer.PCM_collection (coll_def, coll_descr, dep_graph) ->
       Species_ml_generation.collection_compile
         env ~current_unit out_fmter coll_def coll_descr dep_graph ;
@@ -68,7 +68,8 @@ let toplevel_compile env ~current_unit out_fmter = function
       (* them in the environment with None.                            *)
       Env.MlGenEnv.add_species
         ~loc: coll_def.Parsetree.ast_loc
-        coll_def.Parsetree.ast_desc.Parsetree.cd_name ([], [], None) env
+        coll_def.Parsetree.ast_desc.Parsetree.cd_name
+	([], [], None, Env.COS_collection) env
   | Infer.PCM_type (type_def_name, type_descr) ->
       (* Create the initial context for compiling the type definition. *)
       let ctx = {

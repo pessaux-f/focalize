@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.62 2008-06-09 12:13:29 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.63 2008-06-13 13:45:11 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -93,20 +93,12 @@ type compiled_species_fields =
 (* ************************************************************************ *)
 let find_inherited_method_generator_abstractions ~current_unit from_species
     method_name env =
-  let (species_module, species_name) = from_species in
-  let from_as_ident_desc =
-    if species_module = current_unit then
-      Parsetree.I_global (Parsetree.Vname species_name)
-    else
-      Parsetree.I_global (Parsetree.Qualified (species_module, species_name)) in
   (* This ident is temporary and created just to lookup in the environment. *)
-  let from_as_ident = {
-    Parsetree.ast_loc = Location.none ;
-    Parsetree.ast_desc = from_as_ident_desc ;
-    Parsetree.ast_doc = [] ;
-    Parsetree.ast_type = Parsetree.ANTI_none } in
+  let from_as_ident =
+    Parsetree_utils.make_pseudo_species_ident
+      ~current_unit from_species in
   try
-    let (_, species_meths_infos, _) =
+    let (_, species_meths_infos, _, _) =
       Env.CoqGenEnv.find_species
         ~loc: Location.none ~current_unit from_as_ident env in
     (* Now, find the method in the species information. *)
@@ -1563,7 +1555,7 @@ let extend_env_for_species_def env species_descr =
            (* Hence the list of parameters is trivially empty.            *)
            Env.CoqGenEnv.add_species
              ~loc: Location.none (Parsetree.Vuident param_name)
-             ([], bound_methods, None) accu_env)
+             ([], bound_methods, None, Env.COS_species) accu_env)
     env_with_methods_as_values
     species_descr.Env.TypeInformation.spe_sig_params
 ;;
@@ -1949,7 +1941,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                      compiled_field_memory.cfm_coq_min_typ_env_names }])
          compiled_fields) in
   (species_descr.Env.TypeInformation.spe_sig_params,
-   species_binding_info, extra_args_from_spe_params)
+   species_binding_info, extra_args_from_spe_params, Env.COS_species)
 ;;
 
 
@@ -2137,7 +2129,7 @@ let collection_compile env ~current_unit out_fmter collection_def
   (* RIGHT ORDER !                                                         *)
   (begin
   try
-    let (_, _, opt_params_info) =
+    let (_, _, opt_params_info, _) =
       Env.CoqGenEnv.find_species
         ~loc: collection_def.Parsetree.ast_loc ~current_unit
         implemented_species_name env in

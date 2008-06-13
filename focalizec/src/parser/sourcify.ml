@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.46 2008-06-12 12:02:56 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.47 2008-06-13 13:45:11 pessaux Exp $ *)
 
 
 (* *********************************************************** *)
@@ -1112,8 +1112,6 @@ let pp_simple_species_expr_as_effective_parameter ppf = function
   | Parsetree_utils.SPE_Expr_entity expr ->
       Format.fprintf ppf "%a" pp_expr expr
 ;;
-
-
 
 (** Stuff for printing [Parsetree_utils.simple_species_expr] *)
 let pp_simple_species_expr ppf sse =

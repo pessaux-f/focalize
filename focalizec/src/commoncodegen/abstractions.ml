@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.19 2008-06-12 13:47:33 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.20 2008-06-13 13:45:11 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -75,7 +75,7 @@ type private_species_binding_info =
 
     {b Rem}: Not exported outside this module.                           *)
 (* ********************************************************************* *)
-let ml_species_binding_info_to_private (params, methods, _) =
+let ml_species_binding_info_to_private (params, methods, _, _) =
   let methods' =
     List.map
       (fun ml ->
@@ -94,7 +94,7 @@ let ml_species_binding_info_to_private (params, methods, _) =
 
     {b Rem}: Not exported outside this module.                            *)
 (* ********************************************************************** *)
-let coq_species_binding_info_to_private (params, methods, _) =
+let coq_species_binding_info_to_private (params, methods, _, _) =
   let methods' =
     List.map
       (fun ml ->

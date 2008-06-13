@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.mli,v 1.21 2008-06-12 12:02:56 pessaux Exp $ *)
+(* $Id: sourcify.mli,v 1.22 2008-06-13 13:45:11 pessaux Exp $ *)
 
 (** Printing source files from AST. *)
 
@@ -29,6 +29,13 @@ val pp_file : Format.formatter -> Parsetree.file -> unit
 val pp_logical_expr : Format.formatter -> Parsetree.logical_expr -> unit
 (** The pretty printer for focalize abstract syntax trees that generates
     focalize source code. *)
+
+(* [Unsure] pp_simple_species_expr_as_effective_parameter is only for debug
+    purpose. *)
+val pp_simple_species_expr_as_effective_parameter :
+Format.formatter ->
+  Parsetree_utils.simple_species_expr_as_effective_parameter -> unit
+
 
 val pp_simple_species_expr :
   Format.formatter -> Parsetree_utils.simple_species_expr -> unit

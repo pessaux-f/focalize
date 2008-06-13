@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.16 2008-06-04 12:44:18 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.17 2008-06-13 13:45:11 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -137,7 +137,8 @@ let toplevel_compile env ~current_unit out_fmter = function
         env ~current_unit out_fmter collection_def collection_descr dep_graph ;
       Env.CoqGenEnv.add_species
         ~loc: collection_def.Parsetree.ast_loc
-        collection_def.Parsetree.ast_desc.Parsetree.cd_name ([], [], None) env
+        collection_def.Parsetree.ast_desc.Parsetree.cd_name
+        ([], [], None, Env.COS_collection) env
   | Infer.PCM_type (type_def_name, type_descr) ->
       (* Create the initial context for compiling the type definition. *)
       let ctx = {
@@ -198,7 +199,7 @@ let root_compile ~current_unit ~out_file_name stuff =
      Require Export String.@\n\
      Require Export List.@\n\
      Require Export coq_builtins.@\n@\n" ;
-(*  try*)
+  try
     List.iter
       (fun data ->
         let new_env =
@@ -209,7 +210,7 @@ let root_compile ~current_unit ~out_file_name stuff =
     Format.fprintf out_fmter "@?" ;
     close_out out_hd ;
     !global_env
-(*  with whatever ->
+  with whatever ->
     (* In any error case, flush the pretty-printer and close the outfile. *)
     Format.fprintf out_fmter "@?" ;
     close_out out_hd ;
@@ -236,5 +237,5 @@ let root_compile ~current_unit ~out_file_name stuff =
       end)
     end) ;
     (* Re-reaise the initial error. *)
-    raise whatever *)
+    raise whatever
 ;;

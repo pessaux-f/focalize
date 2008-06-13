@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.14 2008-06-12 12:02:56 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.15 2008-06-13 13:45:11 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -194,6 +194,32 @@ type simple_species_expr_as_effective_parameter =
 
 type simple_species_expr = {
   sse_name : Parsetree.ident ;  (** Name of the base species. *)
-  (* Effective arguments that are applied to it. *)
+  (** Effective arguments that are applied to it. *)
   sse_effective_args : simple_species_expr_as_effective_parameter list
   } ;;
+
+
+
+(* ********************************************************************* *)
+(* current_unit: Parsetree.module_name -> Parsetree.qualified_species -> *)
+(*   Parsetree.ident                                                     *)
+(** {b Descr} : Creates a fake [Parsetree.ident] from a
+      [Parsetree.qualified_species] in order to be able to lookup in an
+      environment. The ident is "fake" in the sense it has no location
+      no documentation an no type. Then it must only b used when these
+      fields are non-relevant.
+
+    {b Rem} : Exported outside this module.                              *)
+(* ********************************************************************* *)
+let make_pseudo_species_ident ~current_unit (species_mod, species_name) =
+  let ident_desc =
+    if species_mod = current_unit then
+      Parsetree.I_global (Parsetree.Vname species_name)
+    else
+      Parsetree.I_global (Parsetree.Qualified (species_mod, species_name)) in
+  { Parsetree.ast_loc = Location.none ;
+    Parsetree.ast_desc = ident_desc ;
+    Parsetree.ast_doc = [] ;
+    Parsetree.ast_type = Parsetree.ANTI_none }
+;;
+
