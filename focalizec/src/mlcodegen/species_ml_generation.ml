@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.53 2008-06-13 13:45:11 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.54 2008-06-13 14:33:23 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -901,8 +901,8 @@ let dump_collection_generator_arguments out_fmter compiled_species_fields =
 
 
 type parameter_instanciation =
-  | PI_by_toplevel_collection
-  | PI_by_toplevel_species
+  | PI_by_toplevel_collection of Types.type_collection
+  | PI_by_toplevel_species of Types.type_collection
   | PI_by_species_parameter of Env.TypeInformation.species_param
 ;;
 
@@ -1024,10 +1024,14 @@ let follow_instanciations ctx env initial_param_index  inheritance_steps =
                         ~loc: Location.none ~current_unit effect_ident env in
                     if coll_of_spe = Env.COS_collection then
                       (Format.eprintf "Utiliser effective_collection@." ;
-                       PI_by_toplevel_collection)
+                       PI_by_toplevel_collection
+                         (effect_mod,
+                          (Parsetree_utils.name_of_vname effect_name)))
                     else
                       (Format.eprintf "Utiliser la fct de l'espèce.@." ;
-                       PI_by_toplevel_species)
+                       PI_by_toplevel_species
+                         (effect_mod,
+                          (Parsetree_utils.name_of_vname effect_name)))
                     end)
                end)
            | Parsetree_utils.SPE_Expr_entity _ -> failwith "A voir2..."
@@ -1042,6 +1046,7 @@ let follow_instanciations ctx env initial_param_index  inheritance_steps =
 
 let instanciate_parameter_through_inheritance ctx env field_memory =
   let current_unit = ctx.Context.scc_current_unit in
+  let out_fmter = ctx.Context.scc_out_fmter in
   (* We first must search at the origin of the method generator, the     *)
   (* arguments it had. Since the method we are dealing with is inherited *)
   (* it is mandatorily hosted in an existing species reachable via the   *)
@@ -1078,17 +1083,47 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
     meth_info.Env.MlGenInformation.mi_dependencies_from_parameters ;
   (* For each species parameter, we must trace by what it was instanciated. *)
   List.iter
-    (fun (species_param, _meths_from_param) ->
+    (fun (species_param, meths_from_param) ->
       (* Find the index of the parameter in the species's signature .*)
       let param_index =
         Handy.list_first_index
           (fun p -> p = species_param) host_species_params in
-      let _instancied_with =
+      let instancied_with =
         follow_instanciations
           ctx env param_index
           field_memory.cfm_from_species.Env.fh_inherited_along in
-      ()
-    )
+      (* Now really generate the code of by what to instanciate. *)
+      let prefix =
+        (match instancied_with with
+         | PI_by_toplevel_species (spec_mod, spec_name) ->
+             let capitalized_spec_mod = String.capitalize spec_mod in
+             if spec_mod = current_unit then spec_name ^ "."
+             else
+               capitalized_spec_mod ^ "." ^ spec_name ^ "." ^
+               capitalized_spec_mod
+         | PI_by_toplevel_collection (coll_mod, coll_name) ->
+             let capitalized_coll_mod = String.capitalize coll_mod in
+             if coll_mod = current_unit then
+               coll_name ^ ".effective_collection." ^ coll_name ^ "."
+             else capitalized_coll_mod ^ "." ^ coll_name ^
+               ".effective_collection." ^ capitalized_coll_mod ^ "." ^
+               coll_name ^ "."
+         | PI_by_species_parameter prm ->
+             let species_param_name =
+               match prm with
+                | Env.TypeInformation.SPAR_in (n, _) -> n
+                | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+                    Parsetree.Vuident n in
+             (* We don't care here about whether the species parameters is   *)
+             (* "in" or "is".                                                *)
+             "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
+             "_") in
+      Parsetree_utils.DepNameSet.iter
+        (fun (meth, _) ->
+          (* Don't print the type to prevent being too verbose. *)
+          Format.fprintf out_fmter "@ %s%a"
+            prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
+        meths_from_param)
     meth_info.Env.MlGenInformation.mi_dependencies_from_parameters ;
 ;;
 
