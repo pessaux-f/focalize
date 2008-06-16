@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.59 2008-06-16 16:31:57 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.60 2008-06-16 16:55:49 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1201,13 +1201,32 @@ let follow_instanciations_for_is_param ctx env original_param_index
 
 
 
-(** {b Descr} :.....
-    Follow the example below:
+(* ************************************************************************** *)
+(** {b Descr} : This function looks for the real species that defines
+    the method [method_name] of the species [(start_spec_mod,start_spec_name)]
+    along its inheritance tree. The species in which we start looking is one
+    that the instanciation process (during collection generator creation)
+    reported us to be the effective instanciation of a species parameter.
+
+    The example below show shuch a case:
+
+    species Sp0 = let m = 5 ; end ;;
+    species Sp1 inherits Sp0 = rep = int ; let n = 5 ; end ;;
+    species Foo0 (A0 is Sp0) = rep = int ; let v = A0!m ; end ;;
+    species Foo1_1_1 inherits Foo0 (Sp1) = end ;;
+    
+    In Foo1_1_1, wer want to get the OCaml code
+         let local_v = Foo0.v Sp0.m.
+    In effect, the method generator for the method 'm' on which we depend
+    if not really in 'Sp1' ('Sp1' is the effective instanciation of the
+    parameter 'Sp0' of 'Foo0' during inheritance in 'Foo1_1_1').
+    The method generator is in the parent of 'Sp1', i.e. 'Sp0'.
       
-    We just need to recover the species description, find the method's
+    So, we just need to recover the species description, find the method's
     description and see in which species the method was comming "from".
 
-    {b Rem} : Not exported outside this module. *)
+    {b Rem} : Not exported outside this module.                               *)
+(* ************************************************************************** *)
 let find_toplevel_spe_defining_meth_through_inheritance env ~current_unit
     ~start_spec_mod ~start_spec_name ~method_name  =
   try
@@ -1876,9 +1895,10 @@ let print_implemented_species_as_ocaml_module ~current_unit out_fmter
 
 
 (* ************************************************************************ *)
-(* current_unit: Types.fname -> Format.formatter -> Env.MlGenEnv.t ->       *)
-(*   Parsetree.collection_def -> Env.TypeInformation.species_description -> *)
-(*     Dep_analysis.name_node list -> unit                                  *)
+(* Env.MlGenEnv.t -> current_unit: Types.fname -> Format.formatter ->       *)
+(*   Parsetree.collection_def_desc Parsetree.ast ->                         *)
+(*     Env.TypeInformation.species_description ->                           *)
+(*       Dep_analysis.name_node list -> unit                                *)
 (** {b Descr} : Generate the OCaml code for a collection implementation.
       The compilation model dumps:
        - The record type representing the species actual representation,
@@ -2020,3 +2040,4 @@ let collection_compile env ~current_unit out_fmter collection_def
     assert false
   end)
 ;;
+
