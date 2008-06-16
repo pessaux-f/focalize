@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.57 2008-06-16 14:51:11 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.58 2008-06-16 15:21:42 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1255,32 +1255,39 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
       match species_param with
        | Env.TypeInformation.SPAR_in (param_name, _) ->
            (* By construction, in dependencies of "in" parameter, the list *)
-           (* of methods is always 1-length and contains directly the name *)
-           (* of the parameter itself.                                     *)
-           assert ((Parsetree_utils.DepNameSet.cardinal meths_from_param) = 1) ;
-           (* For substitution, we technically need to know in which          *)
-           (* compilation unit the parameter, hence in fact the species, was. *)
-           let (original_param_unit, _) =
-             field_memory.cfm_from_species.Env.fh_initial_apparition in
-           (* We get the FoCaL expression once substitutions are done. *)
-           let instancied_expr =
-             follow_instanciations_for_in_param ctx env param_name
-               original_param_unit original_param_index
-               field_memory.cfm_from_species.Env.fh_inherited_along in
-           (* We must now generate the OCaml code for this FoCaL expression. *)
-           let reduced_ctx = {
-             Context.rcc_current_unit = ctx.Context.scc_current_unit ;
-             Context.rcc_species_parameters_names =
-               ctx.Context.scc_species_parameters_names ;
-             Context.rcc_collections_carrier_mapping =
-               ctx.Context.scc_collections_carrier_mapping ;
-             Context.rcc_lambda_lift_params_mapping =
-               ctx.Context.scc_lambda_lift_params_mapping ;
-             Context.rcc_out_fmter = out_fmter } in
-           Format.fprintf out_fmter "@ @[<1>(" ;
-           Base_exprs_ml_generation.generate_expr
-             reduced_ctx ~local_idents: [] env instancied_expr ;
-           Format.fprintf out_fmter ")@]"
+           (* of methods is always 1-length at most and contains directly  *)
+           (* the name of the parameter itself if it is really used.       *)
+	   let number_meth =
+	     Parsetree_utils.DepNameSet.cardinal meths_from_param in
+           assert (number_meth <= 1) ;
+	   if number_meth = 1 then
+	     (begin
+             (* For substitution, we technically need to know in which     *)
+             (* compilation unit the parameter, hence in fact the species, *)
+	     (* was.                                                       *)
+             let (original_param_unit, _) =
+               field_memory.cfm_from_species.Env.fh_initial_apparition in
+             (* We get the FoCaL expression once substitutions are done. *)
+             let instancied_expr =
+               follow_instanciations_for_in_param ctx env param_name
+		 original_param_unit original_param_index
+		 field_memory.cfm_from_species.Env.fh_inherited_along in
+             (* We must now generate the OCaml *)
+	     (* code for this FoCaL expression. *)
+             let reduced_ctx = {
+               Context.rcc_current_unit = ctx.Context.scc_current_unit ;
+               Context.rcc_species_parameters_names =
+                 ctx.Context.scc_species_parameters_names ;
+               Context.rcc_collections_carrier_mapping =
+                 ctx.Context.scc_collections_carrier_mapping ;
+               Context.rcc_lambda_lift_params_mapping =
+                 ctx.Context.scc_lambda_lift_params_mapping ;
+               Context.rcc_out_fmter = out_fmter } in
+             Format.fprintf out_fmter "@ @[<1>(" ;
+             Base_exprs_ml_generation.generate_expr
+               reduced_ctx ~local_idents: [] env instancied_expr ;
+             Format.fprintf out_fmter ")@]"
+	     end)
        | Env.TypeInformation.SPAR_is ((_, _), _, _) ->
            (begin
            (* Instanciation process of "IS" parameter. *)
