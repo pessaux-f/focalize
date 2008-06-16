@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.56 2008-06-16 12:59:42 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.57 2008-06-16 14:51:11 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -930,22 +930,21 @@ let find_entity_params_with_position params =
 
 let follow_instanciations_for_in_param ctx env original_param_name
     original_param_unit original_param_index inheritance_steps =
-  Format.eprintf
-    "Début de la trace pour le paramètre d'indice %d et de nom '%a'@."
-    original_param_index Sourcify.pp_vname original_param_name ;
   let current_species_parameters = ctx.Context.scc_species_parameters_names in
   let current_unit = ctx.Context.scc_current_unit in
   let rec rec_follow params_unit ent_params accu_instanciated_expr = function
     | [] -> accu_instanciated_expr
     | inheritance_step :: rem_steps ->
+        let (step_species, step_inheritance_expr) = inheritance_step in
         (* Here, we know that the method appears in a species that inherited. *)
         (* We have this species's name and the species expression used during *)
         (* inheritance.                                                       *)
         (* We must look at the effective expression used at the index to      *)
         (* replace each occurrence of the entity parameters by this effective *)
         (* expression.                                                        *)
-        Format.eprintf "La méthode remonte dans l'espèce: %a@."
-          Sourcify.pp_qualified_species (fst inheritance_step) ;
+        if Configuration.get_verbose () then
+          Format.eprintf "This method flows in the derivated species: %a@."
+            Sourcify.pp_qualified_species step_species ;
         (* Process all the substitution to do on each parameter. ATTENTION *)
         (* Do not fold left otherwise substitutions will be performed in   *)
         (* reverse order.                                                  *)
@@ -954,11 +953,13 @@ let follow_instanciations_for_in_param ctx env original_param_name
             (fun (param_name, param_index) accu_expr ->
               let effective_arg_during_inher =
                 List.nth
-                  (snd inheritance_step).Parsetree_utils.sse_effective_args
+                  step_inheritance_expr.Parsetree_utils.sse_effective_args
                   param_index in
-              Format.eprintf "L'argument effectif utilisé est: %a@."
-                Sourcify.pp_simple_species_expr_as_effective_parameter
-                effective_arg_during_inher ;
+              if Configuration.get_verbose () then
+                Format.eprintf "@[<2>Effective expression used to inherit \
+                  in the derivated species:@ %a@]@."
+                  Sourcify.pp_simple_species_expr_as_effective_parameter
+                  effective_arg_during_inher ;
               (* Performs the substitution. *)
               let effective_expr_during_inher =
                 (match effective_arg_during_inher with
@@ -970,13 +971,13 @@ let follow_instanciations_for_in_param ctx env original_param_name
                   ~param_unit: params_unit param_name
                   ~by_expr: effective_expr_during_inher.Parsetree.ast_desc
                   ~in_expr: accu_expr in
-              Format.eprintf "Expression après instanciation: %a@."
-                Sourcify.pp_expr new_accu_expr ;
               new_accu_expr)
             ent_params
             accu_instanciated_expr in
-        Format.eprintf "Expression après TOUTES les instanciations: %a@."
-          Sourcify.pp_expr new_instanciation_expr ;
+        if Configuration.get_verbose () then
+          Format.eprintf "@[<2>Instanciation expression after substitutions \
+            of effective arguments: %a@]@."
+            Sourcify.pp_expr new_instanciation_expr ;
         (* Now we must check the current level species's entity parameters *)
         (* and note their name and positions to try to instanciate them    *)
         (* at the next level.                                              *)
@@ -984,7 +985,7 @@ let follow_instanciations_for_in_param ctx env original_param_name
         (* current_species we are analysing, then it won't be in the     *)
         (* environment. So we first test this before.                    *)
         let curr_level_species_params =
-          if (fst inheritance_step) = ctx.Context.scc_current_species then
+          if step_species = ctx.Context.scc_current_species then
             current_species_parameters
           else
             (begin
@@ -992,9 +993,7 @@ let follow_instanciations_for_in_param ctx env original_param_name
             (* just to lookup in the environment.  *)
             let curr_level_species_ident =
               Parsetree_utils.make_pseudo_species_ident
-                ~current_unit (fst inheritance_step) in
-            Format.eprintf "Recherche de l'espèce '%a'@."
-              Sourcify.pp_ident curr_level_species_ident ;
+                ~current_unit step_species in
             let (sp_prms, _, _, _) =
               Env.MlGenEnv.find_species
                 ~loc: Location.none ~current_unit
@@ -1005,18 +1004,23 @@ let follow_instanciations_for_in_param ctx env original_param_name
           find_entity_params_with_position curr_level_species_params in
 (* OPTIM: si [] alors plus besoin de remonter l'héritage, tout est déjà
    instancié. *)
-        Format.eprintf
-          "On a trouvé les paramètres 'in' suivants de l'espèce courante\
-          '%s#%a' à instancier le prochain coup:@."
-           (fst (fst inheritance_step))
-           Sourcify.pp_vname (snd (fst inheritance_step)) ;
-        List.iter
-          (fun (vn, pos) ->
-            Format.eprintf "\t '%a' position: %d@." Sourcify.pp_vname vn pos)
-          new_params_to_later_instanciate ;
+        if Configuration.get_verbose () then
+          (begin
+          Format.eprintf
+            "We found the following \"in\" parameters of the species \
+            '%s#%a' t current inheritance level and they will possibly be \
+            instanciated next inheritance step:@."
+            (fst step_species)
+            Sourcify.pp_vname (snd step_species) ;
+          List.iter
+            (fun (vn, pos) ->
+              Format.eprintf "\t Parameter '%a' at position: %d@."
+                Sourcify.pp_vname vn pos)
+            new_params_to_later_instanciate
+          end) ;
         (* Finally we must go upward in the inheritance to look for    *)
         (* further possible instanciations of these entity parameters. *)
-        let new_params_unit = (fst (fst inheritance_step)) in
+        let new_params_unit = (fst step_species) in
         rec_follow
           new_params_unit new_params_to_later_instanciate
           new_instanciation_expr rem_steps in
@@ -1049,38 +1053,41 @@ let follow_instanciations_for_in_param ctx env original_param_name
       we go upward (more recent) along the inheritance tree. *)
 let follow_instanciations_for_is_param ctx env original_param_index
     inheritance_steps =
-  Format.eprintf
-    "Début de la trace pour le paramètre d'indice %d@." original_param_index ;
   let current_species_parameters = ctx.Context.scc_species_parameters_names in
   let current_unit = ctx.Context.scc_current_unit in
   let rec rec_follow param_index = function
     | [] ->
-        Format.eprintf
-          "On a remonté tout l'héritage et on instancie par le paramètre %d@."
-          param_index ;
+        if Configuration.get_verbose () then
+          Format.eprintf
+            "Final instanciation by the species %dth species parameter."
+            param_index ;
         PI_by_species_parameter
           (List.nth current_species_parameters param_index)
     | inheritance_step :: rem_steps ->
+        let (step_species, step_inheritance_expr) = inheritance_step in
         (* Here, we know that the method appears in a species that inherited. *)
         (* We have this species's name and the species expression used during *)
         (* inheritance.                                                       *)
         (* We must look at the effective expression used at the index to see  *)
         (* if it's a toplevel collection, toplevel closed species or a        *)
         (* species parameter of our level.                                    *)
-        Format.eprintf "La méthode remonte dans l'espèce: %a@."
-          Sourcify.pp_qualified_species (fst inheritance_step) ;
+        if Configuration.get_verbose () then
+          Format.eprintf "This method flows in the derivated species: %a@."
+            Sourcify.pp_qualified_species step_species ;
         let effective_arg_during_inher =
           List.nth
-            (snd inheritance_step).Parsetree_utils.sse_effective_args
+            step_inheritance_expr.Parsetree_utils.sse_effective_args
             param_index in
-        Format.eprintf "L'argument effectif utilisé est: %a@."
-          Sourcify.pp_simple_species_expr_as_effective_parameter
-          effective_arg_during_inher ;
+        if Configuration.get_verbose () then
+          Format.eprintf "Effective expression used to inherit in the \
+            derivated species:@ %a@."
+            Sourcify.pp_simple_species_expr_as_effective_parameter
+            effective_arg_during_inher ;
         (* First, get the species info of the current level. If it's the *)
         (* current_species we are analysing, then it won't be in the     *)
         (* environment. So we first test this before.                    *)
         let curr_level_species_params =
-          if (fst inheritance_step) = ctx.Context.scc_current_species then
+          if step_species = ctx.Context.scc_current_species then
             current_species_parameters
           else
             (begin
@@ -1088,9 +1095,7 @@ let follow_instanciations_for_is_param ctx env original_param_index
             (* just to lookup in the environment.  *)
             let curr_level_species_ident =
               Parsetree_utils.make_pseudo_species_ident
-                ~current_unit (fst inheritance_step) in
-            Format.eprintf "Recherche de l'espèce '%a'@."
-              Sourcify.pp_ident curr_level_species_ident ;
+                ~current_unit step_species in
             let (sp_prms, _, _, _) =
               Env.MlGenEnv.find_species
                 ~loc: Location.none ~current_unit
@@ -1107,7 +1112,8 @@ let follow_instanciations_for_is_param ctx env original_param_index
                     ((formal_mod, formal_name), _, _) ->
                       (begin
                       match effective_arg_during_inher with
-                       | Parsetree_utils.SPE_Self -> failwith "Euhhhh2 ?"
+                       | Parsetree_utils.SPE_Self ->
+                           failwith "Euhhhh2 ?"  (* [Unsure] *)
                        | Parsetree_utils.SPE_Species qual_vname ->
                            (begin
                            match qual_vname with
@@ -1128,6 +1134,12 @@ let follow_instanciations_for_is_param ctx env original_param_index
           (* history.                                                   *)
           (* So we first get the index of this parameter in the current *)
           (* level species.                                             *)
+          if Configuration.get_verbose () then
+            Format.eprintf
+              "Instanciation by the species %dth species parameter. \
+              Let's continue search along the inheritance tree for further \
+              instanciations.@."
+              index_of_instancier ;
           rec_follow index_of_instancier rem_steps
         with Not_found ->
           (begin
@@ -1136,7 +1148,8 @@ let follow_instanciations_for_is_param ctx env original_param_index
           (* from now to continue walking up along the inheritance    *)
           (* history, there won't be anymore instanciations.          *)
           match effective_arg_during_inher with
-           | Parsetree_utils.SPE_Self -> failwith "Euhhhh3 ?"
+           | Parsetree_utils.SPE_Self ->
+               failwith "Euhhhh3 ?"     (* [Unsure] *)
            | Parsetree_utils.SPE_Species effective_vname ->
                (begin
                match effective_vname with
@@ -1153,15 +1166,23 @@ let follow_instanciations_for_is_param ctx env original_param_index
                       Env.MlGenEnv.find_species
                         ~loc: Location.none ~current_unit effect_ident env in
                     if coll_of_spe = Env.COS_collection then
-                      (Format.eprintf "Utiliser effective_collection@." ;
-                       PI_by_toplevel_collection
-                         (effect_mod,
-                          (Parsetree_utils.name_of_vname effect_name)))
+                      (begin
+                      if Configuration.get_verbose () then
+                        Format.eprintf
+                          "Final instanciation by toplevel collection.@." ;
+                      PI_by_toplevel_collection
+                        (effect_mod,
+                         (Parsetree_utils.name_of_vname effect_name))
+                      end)
                     else
-                      (Format.eprintf "Utiliser la fct de l'espèce.@." ;
-                       PI_by_toplevel_species
-                         (effect_mod,
-                          (Parsetree_utils.name_of_vname effect_name)))
+                      (begin
+                      if Configuration.get_verbose () then
+                        Format.eprintf
+                          "Final instanciation by toplevel species.@." ;
+                      PI_by_toplevel_species
+                        (effect_mod,
+                         (Parsetree_utils.name_of_vname effect_name))
+                      end)
                     end)
                end)
            | Parsetree_utils.SPE_Expr_entity _ -> assert false
@@ -1193,8 +1214,9 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
   let (original_host_species_params, host_method_infos, _, _) =
     Env.MlGenEnv.find_species
       ~loc: Location.none ~current_unit host_ident env in
-  Format.eprintf "Species %a a %d paramètres.@."
-    Sourcify.pp_ident host_ident (List.length original_host_species_params) ;
+  if Configuration.get_verbose () then
+    Format.eprintf "Originally hosting species '%a' has %d parameters.@."
+      Sourcify.pp_ident host_ident (List.length original_host_species_params) ;
   (* We search the dependencies the original method had on its species *)
   (* parameters.                                                       *)
   let meth_info =
@@ -1202,21 +1224,25 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
       (fun inf ->
         inf.Env.MlGenInformation.mi_name = field_memory.cfm_method_name)
       host_method_infos in
-  Format.eprintf "Methode '%a' a les dépendances suivantes:@."
-    Sourcify.pp_vname field_memory.cfm_method_name ;
-  List.iter
-    (fun (species_param, meths_from_param) ->
-      let species_param_name =
-        match species_param with
-         | Env.TypeInformation.SPAR_in (n, _) -> n
-         | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
-             Parsetree.Vuident n in
-      Format.eprintf "\t Paramètre '%a': " Sourcify.pp_vname species_param_name;
-      Parsetree_utils.DepNameSet.iter
-        (fun (meth, _) -> Format.eprintf "%a " Sourcify.pp_vname meth)
-        meths_from_param ;
-      Format.eprintf "@.")
-    meth_info.Env.MlGenInformation.mi_dependencies_from_parameters ;
+  if Configuration.get_verbose () then
+    (begin
+    Format.eprintf "Method '%a' has the following dependencies on parameters:@."
+      Sourcify.pp_vname field_memory.cfm_method_name ;
+    List.iter
+      (fun (species_param, meths_from_param) ->
+        let species_param_name =
+          match species_param with
+           | Env.TypeInformation.SPAR_in (n, _) -> n
+           | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+               Parsetree.Vuident n in
+        Format.eprintf "\t From parameter '%a', dependencies on methods: "
+          Sourcify.pp_vname species_param_name;
+        Parsetree_utils.DepNameSet.iter
+          (fun (meth, _) -> Format.eprintf "%a " Sourcify.pp_vname meth)
+          meths_from_param ;
+        Format.eprintf "@.")
+      meth_info.Env.MlGenInformation.mi_dependencies_from_parameters
+    end) ;
   (* For each species parameter, we must trace by what it was instanciated. *)
   List.iter
     (fun (species_param, meths_from_param) ->
@@ -1307,7 +1333,7 @@ let generate_collection_generator ctx env compiled_species_fields =
   (* Just a bit of debug. *)
   if Configuration.get_verbose () then
     Format.eprintf
-      "@\nSpecies %a is fully defined. Generating its collection generator@."
+      "Species %a is fully defined. Generating its collection generator.@."
       Sourcify.pp_vname current_species_name ;
 
   (* ******************************************************************* *)
@@ -1325,10 +1351,18 @@ let generate_collection_generator ctx env compiled_species_fields =
     Format.fprintf out_fmter "@[<2>let local_%a =@ "
       Parsetree_utils.pp_vname_with_operators_expanded
       field_memory.cfm_method_name ;
+    if Configuration.get_verbose () then
+      Format.eprintf "Generating OCaml code for method generator of '%a'.@."
+        Sourcify.pp_vname field_memory.cfm_method_name ;
     (* Find the method generator to use depending on if it belongs to this *)
     (* inheritance level or if it was inherited from another species.      *)
     if from.Env.fh_initial_apparition = ctx.Context.scc_current_species then
       (begin
+      if Configuration.get_verbose () then
+        Format.eprintf
+          "Method '%a' not inherited, building method generator using \
+          abstracted local species parameters as arguments.@."
+          Sourcify.pp_vname field_memory.cfm_method_name ;
       (* It comes from the current inheritance level.   *)
       (* Then its name is simply the the method's name. *)
       Format.fprintf out_fmter "%a"
@@ -1368,12 +1402,18 @@ let generate_collection_generator ctx env compiled_species_fields =
       (* the the module where the species inhabits if not the same    *)
       (* compilation unit than the current + "." + species name as    *)
       (* module + "." + the method's name.                            *)
-      let defined_from = from.Env.fh_initial_apparition in
-      if (fst defined_from) <> ctx.Context.scc_current_unit then
+      let (defined_from_mod, defined_from_species) =
+        from.Env.fh_initial_apparition in
+      if Configuration.get_verbose () then
+        Format.eprintf
+          "Method '%a' inherited, from '%s#%a'.@."
+          Sourcify.pp_vname field_memory.cfm_method_name defined_from_mod
+          Sourcify.pp_vname defined_from_species ;
+      if defined_from_mod <> ctx.Context.scc_current_unit then
         Format.fprintf out_fmter "%s.@,"
-          (String.capitalize (fst defined_from)) ;
+          (String.capitalize defined_from_mod) ;
       Format.fprintf out_fmter "%a.@,%a"
-        Parsetree_utils.pp_vname_with_operators_expanded (snd defined_from)
+        Parsetree_utils.pp_vname_with_operators_expanded defined_from_species
         Parsetree_utils.pp_vname_with_operators_expanded
         field_memory.cfm_method_name ;
       (* Now, apply the method generator to each of the extra arguments *)
@@ -1395,8 +1435,11 @@ let generate_collection_generator ctx env compiled_species_fields =
         Format.fprintf out_fmter "@ local_%a"
           Parsetree_utils.pp_vname_with_operators_expanded n)
       field_memory.cfm_coq_min_typ_env_names ;
-    (* That's it for this field code generation. *)
-    Format.fprintf out_fmter "@ in@]@\n" in
+    (* That's all for this field code generation. *)
+    Format.fprintf out_fmter "@ in@]@\n" ;
+    if Configuration.get_verbose () then
+      Format.eprintf "End of OCaml code for method generator of '%a'.@."
+        Sourcify.pp_vname field_memory.cfm_method_name in
 
   (* *********************** *)
   (* Now, let's really work. *)
