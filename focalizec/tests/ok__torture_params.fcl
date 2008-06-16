@@ -1,0 +1,205 @@
+use "basics";;
+open "basics";;
+
+(* ***************************************************************** *)
+(* Must pass.                                                        *)
+(* Example showing how to torture parametrised species. It exhibit   *)
+(* various non-trivial cases that must pass and lead to effective    *)
+(* OCaml/Coq code. These examples make heavy use of "in", "is"       *)
+(* parameters and inheritance to shake the compiler's instanciation  *)
+(* of parameters during inheritance.                                 *)
+
+
+(* *********************************************************************** *)
+(* Pass                                                                    *)
+(* *********************************************************************** *)
+species Base =
+  rep = int ;
+  let dummy = 1 ;
+end ;;
+
+species Imp_pair (S1 is Base) =
+  rep = S1 ;
+  let fst (n in Self) in S1 = n ;
+end ;;
+
+species Imp_vote (C is Base, P is Imp_pair (C)) =
+  rep = int ;
+  (* WE EXPECT let local_capteur = capteur _p_P_fst *)
+  let capteur (p1 in P) in C = P!fst(p1) ;
+end ;;
+
+
+collection Coll_capteur implements Base ;;
+
+collection Coll_pair implements Imp_pair (Coll_capteur) ;;
+species Sp_int_imp_vote inherits Imp_vote (Coll_capteur, Coll_pair) =
+(* WE EXPECT
+   let local_capteur =
+     Imp_vote.capteur Coll_pair.effective_collection.Coll_pair.fst
+*)
+end ;;
+(* *********************************************************************** *)
+
+
+
+(* *********************************************************************** *)
+(* Pass                                                                    *)
+(* *********************************************************************** *)
+species Junk =
+  signature foo : int ;
+end ;;
+
+species Imp_junk inherits Junk = let foo = 6 ; end ;;
+
+species Test1 (C is Base, A is Junk, B is Imp_pair (C))
+    inherits Imp_vote (C, B) =
+  (* WE EXPECT let local_bar = bar _p_A_foo in *)
+  (* WE EXPECT let local_capteur = Imp_vote.capteur _p_B_fst in *)
+  let bar = A!foo ;
+end ;;
+
+species Test2 inherits Test1 (Coll_capteur, Imp_junk, Coll_pair) =
+  (* WE EXPECT let local_bar = Test1.bar Imp_junk.foo *)
+  (* WE EXPECT
+     let local_capteur =
+       Imp_vote.Coll_pair.effective_collection.Coll_pair.fst *)
+end ;;
+
+(* ***** *)
+(** Pass *)
+species Test3 inherits Test2  =
+  let f = bar ;
+  (* WE EXPECT let local_bar = Test1.bar Imp_junk.foo *)
+  (* WE EXPECT
+     let local_capteur = Imp_vote.capteur
+       Coll_pair.effective_collection.Coll_pair.fst *)
+  (* WE EXPECT let local_f = f local_bar *)
+end ;;
+(* *********************************************************************** *)
+
+
+
+species Test4 (P is Base) = rep = int ; let m = P!dummy ; end ;;
+species Test5 (A is Base) inherits Test4 (A) = let c (x in int) = m ; end ;;
+
+
+
+
+(* *********************************************************************** *)
+(* Pass                                                                    *)
+(* *********************************************************************** *)
+species Sp0 = let m = 5 ; end ;;
+species Sp1 inherits Sp0 = rep = int ; let n = 5 ; end ;;
+
+species Foo0 (A0 is Sp0) = rep = int ; let v = A0!m ;
+  (* WE EXPECT let local_v = v _p_A0_m *)
+end ;;
+
+species Foo1 (A1 is Sp1) inherits Foo0 (A1) =
+  let _ignore1 = 5 ;
+  (* WE EXPECT let local_v = Foo0.v _p_A1_m *)
+end ;;
+
+species Foo2 (A2 is Sp1) inherits Foo1 (A2) =
+   let _ignore2 = 5 ;
+  (* WE EXPECT let local_v = Foo0.v _p_A2_m *)
+end ;;
+
+species Foo3 (A3 is Sp1, A4 is A3) inherits Foo2 (A4) =
+  let _ignore3 = 5 ; end ;;
+(* *********************************************************************** *)
+
+
+
+(*
+collection Coll_sp1 implements Sp1 ;;
+
+species Foo1_1 inherits Foo0 (Coll_sp1) =
+  let _ignore1 = 5 ;
+  (* WE EXPECT let local_v = Foo0.v Coll_sp1.effective_collection.m *)
+end ;;
+
+
+species Foo1_1_1 inherits Foo0 (Sp1) =
+  let _ignore1 = 5 ;
+  (* WE EXPECT let local_v = Foo0.v Sp0.m. *)
+  (* C'est le cas pourri qui montre qu'il faut parfois aller remonter 
+     l'héritage de ce par quoi on instancie car la méthode peut avoir été
+     elle même héritée ! Comme de Sp0 ici ! *)
+end ;;
+*)
+
+
+
+(* *********************************************************************** *)
+(* Pass                                                                    *)
+(* *********************************************************************** *)
+species Nat =
+  rep = int ; let plus (x in Self, y in Self) in Self = x ; end ;;
+
+collection CNat implements Nat ;;
+
+species Bar00 (a in CNat) = rep = basics#int ;
+  let m = a ;
+  (* WE EXPECT let local_m = m _p_a_a *)
+end ;;
+
+species Bar01 (b in CNat) inherits Bar00 (CNat!plus (b, b)) =
+  let _ignore = 7 ;
+  (* WE EXPECT
+     let local_m = Bar00.m
+       ((CNat.effective_collection.CNat.plus _p_b_b _p_b_b)) *)
+end ;;
+
+species Bar02 (c in CNat, d in CNat) inherits Bar01 (CNat!plus (c, d)) =
+  let _ignore = 8 ;
+  (* WE EXPECT
+     local_m = Bar00.m
+       ((CNat.effective_collection.CNat.plus
+         (CNat.effective_collection.CNat.plus _p_c_c _p_d_d)
+         (CNat.effective_collection.CNat.plus _p_c_c _p_d_d))) *)
+end ;;
+
+species Bar03 (e in CNat, f in CNat) inherits
+  Bar02 (CNat!plus (e, f), f) =
+  let _ignore = 8 ;
+  (* WE EXPECT
+     let local_m = Bar00.m
+       ((CNat.effective_collection.CNat.plus
+         (CNat.effective_collection.CNat.plus
+           (CNat.effective_collection.CNat.plus _p_e_e _p_f_f) _p_f_f)
+         (CNat.effective_collection.CNat.plus
+           (CNat.effective_collection.CNat.plus _p_e_e _p_f_f) _p_f_f))) *)
+end ;;
+(* *********************************************************************** *)
+
+
+
+
+species Gee0 (A0 is Sp0) = rep = int ; let v = A0!m ; end ;;
+species Gee1 (A is Sp0, B is Sp0) inherits Gee0 (Sp0) = let _ignore = 7 ; end ;;
+species Gee2 inherits Gee1 (Sp0, Sp0) = let _ignore = 7 ; end ;;
+
+
+
+(* *********************************************************************** *)
+(* Pass                                                                    *)
+(* *********************************************************************** *)
+species Sp00 = let m = 5 ; end ;;
+species Sp01 inherits Sp0 = rep = int ; let n = 5 ; end ;;
+species Sp02 = rep = int ; let p = 5 ; end ;;
+
+species Foo00 (A0 is Sp00, A00 is Sp02) = rep = int ; let v = (A0!m, A00!p) ;
+  (* WE EXPECT let local_v = Foo00.v _p_A00_p _p_A0_m *)
+end ;;
+
+species Foo01 (A1 is Sp01) inherits Foo00 (A1, Sp02) =
+  let _ignore1 = 5 ;
+  (* WE EXPECT let local_v = Foo00.v _p_A1_m Sp02.p *)
+end ;;
+(* *********************************************************************** *)
+
+
+
+collection Daube implements Sp_int_imp_vote ;;

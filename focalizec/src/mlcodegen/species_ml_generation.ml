@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.55 2008-06-13 15:47:17 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.56 2008-06-16 12:59:42 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -907,27 +907,150 @@ type parameter_instanciation =
 ;;
 
 
+let find_entity_params_with_position params =
+  (* Let's implement this imperative way to spare 1 argument on the stack. *)
+  (* This is the counter used to report the positions of arguments in the  *)
+  (* species signature. Always counting from 0.                            *)
+  let cnt = ref 0 in
+  (* We build the list in reverse order for sake of efficiency. *)
+  let rec rec_find accu = function
+    | [] -> accu
+    | h :: q ->
+        let accu' =
+          (match h with
+           | Env.TypeInformation.SPAR_in (n, _) -> (n, !cnt) :: accu
+           | Env.TypeInformation.SPAR_is ((_, _), _, _) -> accu) in
+        incr cnt ;  (* Always pdate the position for next parameter. *)
+        rec_find accu' q in
+  (* Now really do the job. *)
+  (List.rev (rec_find [] params))
+;;
 
 
-let follow_instanciations_for_in_param _ctx initial_param_index
-    inheritance_steps =
+
+let follow_instanciations_for_in_param ctx env original_param_name
+    original_param_unit original_param_index inheritance_steps =
   Format.eprintf
-    "Début de la trace pour le paramètre d'indice %d@." initial_param_index ;
-  let rec rec_follow _param_index = function
-    | [] -> failwith "todo"
-    | _inheritance_step :: _rem_steps -> failwith "todo" in
+    "Début de la trace pour le paramètre d'indice %d et de nom '%a'@."
+    original_param_index Sourcify.pp_vname original_param_name ;
+  let current_species_parameters = ctx.Context.scc_species_parameters_names in
+  let current_unit = ctx.Context.scc_current_unit in
+  let rec rec_follow params_unit ent_params accu_instanciated_expr = function
+    | [] -> accu_instanciated_expr
+    | inheritance_step :: rem_steps ->
+        (* Here, we know that the method appears in a species that inherited. *)
+        (* We have this species's name and the species expression used during *)
+        (* inheritance.                                                       *)
+        (* We must look at the effective expression used at the index to      *)
+        (* replace each occurrence of the entity parameters by this effective *)
+        (* expression.                                                        *)
+        Format.eprintf "La méthode remonte dans l'espèce: %a@."
+          Sourcify.pp_qualified_species (fst inheritance_step) ;
+        (* Process all the substitution to do on each parameter. ATTENTION *)
+        (* Do not fold left otherwise substitutions will be performed in   *)
+        (* reverse order.                                                  *)
+        let new_instanciation_expr =
+          List.fold_right
+            (fun (param_name, param_index) accu_expr ->
+              let effective_arg_during_inher =
+                List.nth
+                  (snd inheritance_step).Parsetree_utils.sse_effective_args
+                  param_index in
+              Format.eprintf "L'argument effectif utilisé est: %a@."
+                Sourcify.pp_simple_species_expr_as_effective_parameter
+                effective_arg_during_inher ;
+              (* Performs the substitution. *)
+              let effective_expr_during_inher =
+                (match effective_arg_during_inher with
+                 | Parsetree_utils.SPE_Self -> assert false
+                 | Parsetree_utils.SPE_Species _ -> assert false
+                 | Parsetree_utils.SPE_Expr_entity expr -> expr) in
+              let new_accu_expr =
+                SubstExpr.subst_expr
+                  ~param_unit: params_unit param_name
+                  ~by_expr: effective_expr_during_inher.Parsetree.ast_desc
+                  ~in_expr: accu_expr in
+              Format.eprintf "Expression après instanciation: %a@."
+                Sourcify.pp_expr new_accu_expr ;
+              new_accu_expr)
+            ent_params
+            accu_instanciated_expr in
+        Format.eprintf "Expression après TOUTES les instanciations: %a@."
+          Sourcify.pp_expr new_instanciation_expr ;
+        (* Now we must check the current level species's entity parameters *)
+        (* and note their name and positions to try to instanciate them    *)
+        (* at the next level.                                              *)
+        (* First, get the species info of the current level. If it's the *)
+        (* current_species we are analysing, then it won't be in the     *)
+        (* environment. So we first test this before.                    *)
+        let curr_level_species_params =
+          if (fst inheritance_step) = ctx.Context.scc_current_species then
+            current_species_parameters
+          else
+            (begin
+            (* This ident is temporary and created *)
+            (* just to lookup in the environment.  *)
+            let curr_level_species_ident =
+              Parsetree_utils.make_pseudo_species_ident
+                ~current_unit (fst inheritance_step) in
+            Format.eprintf "Recherche de l'espèce '%a'@."
+              Sourcify.pp_ident curr_level_species_ident ;
+            let (sp_prms, _, _, _) =
+              Env.MlGenEnv.find_species
+                ~loc: Location.none ~current_unit
+                curr_level_species_ident env in
+            sp_prms
+            end) in
+        let new_params_to_later_instanciate =
+          find_entity_params_with_position curr_level_species_params in
+(* OPTIM: si [] alors plus besoin de remonter l'héritage, tout est déjà
+   instancié. *)
+        Format.eprintf
+          "On a trouvé les paramètres 'in' suivants de l'espèce courante\
+          '%s#%a' à instancier le prochain coup:@."
+           (fst (fst inheritance_step))
+           Sourcify.pp_vname (snd (fst inheritance_step)) ;
+        List.iter
+          (fun (vn, pos) ->
+            Format.eprintf "\t '%a' position: %d@." Sourcify.pp_vname vn pos)
+          new_params_to_later_instanciate ;
+        (* Finally we must go upward in the inheritance to look for    *)
+        (* further possible instanciations of these entity parameters. *)
+        let new_params_unit = (fst (fst inheritance_step)) in
+        rec_follow
+          new_params_unit new_params_to_later_instanciate
+          new_instanciation_expr rem_steps in
+  (* ***************************** *)
+  (* Now, let's really do the job. *)
   (* We must walk the inheritance steps in reverse order *)
   (* since it is built with most recent steps in head.   *)
-  rec_follow initial_param_index (List.rev inheritance_steps)
+  let fake_original_expr = {
+    Parsetree.ast_loc = Location.none ;
+    Parsetree.ast_desc =
+      Parsetree.E_var {
+        Parsetree.ast_loc = Location.none ;
+        Parsetree.ast_desc = Parsetree.EI_local original_param_name ;
+        Parsetree.ast_doc = [] ;
+        Parsetree.ast_type = Parsetree.ANTI_none } ;
+    Parsetree.ast_doc = [] ;
+    Parsetree.ast_type = Parsetree.ANTI_none } in
+  rec_follow
+    original_param_unit [(original_param_name, original_param_index)]
+    fake_original_expr (List.rev inheritance_steps)
 ;;
-	
+        
 
 
-
-let follow_instanciations_for_is_param ctx env initial_param_index
+(* [original_param_index] : The index of the species parameter in the
+      original species where the method was REALLY defined (not the one
+      where it is inherited). We search by what it was instanciated along
+      the inheritance. Hence, the search starts from the original hosting
+      species, with the original hosting species's parameter's index. Then
+      we go upward (more recent) along the inheritance tree. *)
+let follow_instanciations_for_is_param ctx env original_param_index
     inheritance_steps =
   Format.eprintf
-    "Début de la trace pour le paramètre d'indice %d@." initial_param_index ;
+    "Début de la trace pour le paramètre d'indice %d@." original_param_index ;
   let current_species_parameters = ctx.Context.scc_species_parameters_names in
   let current_unit = ctx.Context.scc_current_unit in
   let rec rec_follow param_index = function
@@ -940,7 +1063,7 @@ let follow_instanciations_for_is_param ctx env initial_param_index
     | inheritance_step :: rem_steps ->
         (* Here, we know that the method appears in a species that inherited. *)
         (* We have this species's name and the species expression used during *)
-        (* in heritance.                                                      *)
+        (* inheritance.                                                       *)
         (* We must look at the effective expression used at the index to see  *)
         (* if it's a toplevel collection, toplevel closed species or a        *)
         (* species parameter of our level.                                    *)
@@ -979,7 +1102,7 @@ let follow_instanciations_for_is_param ctx env initial_param_index
           let index_of_instancier =
             Handy.list_first_index
               (function
-                | Env.TypeInformation.SPAR_in (_n, _) -> false
+                | Env.TypeInformation.SPAR_in (_, _) -> false
                 | Env.TypeInformation.SPAR_is
                     ((formal_mod, formal_name), _, _) ->
                       (begin
@@ -1045,12 +1168,17 @@ let follow_instanciations_for_is_param ctx env initial_param_index
           end) in
   (* We must walk the inheritance steps in reverse order *)
   (* since it is built with most recent steps in head.   *)
-  rec_follow initial_param_index (List.rev inheritance_steps)
+  rec_follow original_param_index (List.rev inheritance_steps)
 ;;
 
 
 
 
+(* We search to instanciate the parameters of the original method generator.
+   Hence we deal with the species parameters of the species where the method
+   was defined ! It must be clear that we do not matter of the parameters of
+   the species who inherited !!! We want to trace by what the parameters of
+   the original hosting species were instanciated along th inheritance. *)
 let instanciate_parameter_through_inheritance ctx env field_memory =
   let current_unit = ctx.Context.scc_current_unit in
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -1062,12 +1190,13 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
   let host_ident =
     Parsetree_utils.make_pseudo_species_ident
       ~current_unit field_memory.cfm_from_species.Env.fh_initial_apparition in
-  let (host_species_params, host_method_infos, _, _) =
+  let (original_host_species_params, host_method_infos, _, _) =
     Env.MlGenEnv.find_species
       ~loc: Location.none ~current_unit host_ident env in
   Format.eprintf "Species %a a %d paramètres.@."
-    Sourcify.pp_ident host_ident (List.length host_species_params) ;
-  (* We search the dependencies the method had on species parameters. *)
+    Sourcify.pp_ident host_ident (List.length original_host_species_params) ;
+  (* We search the dependencies the original method had on its species *)
+  (* parameters.                                                       *)
   let meth_info =
     List.find
       (fun inf ->
@@ -1091,52 +1220,79 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
   (* For each species parameter, we must trace by what it was instanciated. *)
   List.iter
     (fun (species_param, meths_from_param) ->
-      (* Find the index of the parameter in the species's signature .*)
-      let param_index =
+      (* Find the index of the parameter in the species's signature from *)
+      (* where the method was REALLY defined (not the one where it is    *)
+      (* inherited).                                                     *)
+      let original_param_index =
         Handy.list_first_index
-          (fun p -> p = species_param) host_species_params in
+          (fun p -> p = species_param) original_host_species_params in
       match species_param with
-       | Env.TypeInformation.SPAR_in (_, _) ->
-	   follow_instanciations_for_in_param ctx param_index
-             field_memory.cfm_from_species.Env.fh_inherited_along
-       | Env.TypeInformation.SPAR_is ((_, _), _, _) ->
-	   (begin
-	   (* Instanciation process of "IS" parameter. *)
-	   let instancied_with =
-             follow_instanciations_for_is_param
-               ctx env param_index
+       | Env.TypeInformation.SPAR_in (param_name, _) ->
+           (* By construction, in dependencies of "in" parameter, the list *)
+           (* of methods is always 1-length and contains directly the name *)
+           (* of the parameter itself.                                     *)
+           assert ((Parsetree_utils.DepNameSet.cardinal meths_from_param) = 1) ;
+           (* For substitution, we technically need to know in which          *)
+           (* compilation unit the parameter, hence in fact the species, was. *)
+           let (original_param_unit, _) =
+             field_memory.cfm_from_species.Env.fh_initial_apparition in
+           (* We get the FoCaL expression once substitutions are done. *)
+           let instancied_expr =
+             follow_instanciations_for_in_param ctx env param_name
+               original_param_unit original_param_index
                field_memory.cfm_from_species.Env.fh_inherited_along in
-	   (* Now really generate the code of by what to instanciate. *)
-	   let prefix =
+           (* We must now generate the OCaml code for this FoCaL expression. *)
+           let reduced_ctx = {
+             Context.rcc_current_unit = ctx.Context.scc_current_unit ;
+             Context.rcc_species_parameters_names =
+               ctx.Context.scc_species_parameters_names ;
+             Context.rcc_collections_carrier_mapping =
+               ctx.Context.scc_collections_carrier_mapping ;
+             Context.rcc_lambda_lift_params_mapping =
+               ctx.Context.scc_lambda_lift_params_mapping ;
+             Context.rcc_out_fmter = out_fmter } in
+           Format.fprintf out_fmter "@ @[<1>(" ;
+           Base_exprs_ml_generation.generate_expr
+             reduced_ctx ~local_idents: [] env instancied_expr ;
+           Format.fprintf out_fmter ")@]"
+       | Env.TypeInformation.SPAR_is ((_, _), _, _) ->
+           (begin
+           (* Instanciation process of "IS" parameter. *)
+           let instancied_with =
+             follow_instanciations_for_is_param
+               ctx env original_param_index
+               field_memory.cfm_from_species.Env.fh_inherited_along in
+           (* Now really generate the code of by what to instanciate. *)
+           let prefix =
              (match instancied_with with
               | PI_by_toplevel_species (spec_mod, spec_name) ->
-		  let capitalized_spec_mod = String.capitalize spec_mod in
-		  if spec_mod = current_unit then spec_name ^ "."
-		  else
-		    capitalized_spec_mod ^ "." ^ spec_name ^ "." ^
-		    capitalized_spec_mod
+                  let capitalized_spec_mod = String.capitalize spec_mod in
+                  if spec_mod = current_unit then spec_name ^ "."
+                  else
+                    capitalized_spec_mod ^ "." ^ spec_name ^ "." ^
+                    capitalized_spec_mod
               | PI_by_toplevel_collection (coll_mod, coll_name) ->
-		  let capitalized_coll_mod = String.capitalize coll_mod in
-		  if coll_mod = current_unit then
-		    coll_name ^ ".effective_collection." ^ coll_name ^ "."
-		  else capitalized_coll_mod ^ "." ^ coll_name ^
-		    ".effective_collection." ^ capitalized_coll_mod ^ "." ^
-		    coll_name ^ "."
+                  let capitalized_coll_mod = String.capitalize coll_mod in
+                  if coll_mod = current_unit then
+                    coll_name ^ ".effective_collection." ^ coll_name ^ "."
+                  else capitalized_coll_mod ^ "." ^ coll_name ^
+                    ".effective_collection." ^ capitalized_coll_mod ^ "." ^
+                    coll_name ^ "."
               | PI_by_species_parameter prm ->
-		  let species_param_name =
-		    match prm with
+                  let species_param_name =
+                    match prm with
                      | Env.TypeInformation.SPAR_in (_, _) -> assert false
                      | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
-			 Parsetree.Vuident n in
-		  "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
-		  "_") in
-	   Parsetree_utils.DepNameSet.iter
+                         Parsetree.Vuident n in
+                  "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
+                  "_") in
+           Parsetree_utils.DepNameSet.iter
              (fun (meth, _) ->
                (* Don't print the type to prevent being too verbose. *)
                Format.fprintf out_fmter "@ %s%a"
-		 prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
+                 prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
              meths_from_param
-	   end))
+           end))
     meth_info.Env.MlGenInformation.mi_dependencies_from_parameters ;
 ;;
 

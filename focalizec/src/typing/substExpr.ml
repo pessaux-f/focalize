@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substExpr.ml,v 1.13 2008-04-29 15:26:13 pessaux Exp $ *)
+(* $Id: substExpr.ml,v 1.14 2008-06-16 12:59:42 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs substitution of a value name [name_x]
@@ -97,7 +97,7 @@ let rec extend_bound_name_from_pattern bound_variables pattern =
 
     {b Rem} : Not exported outside this module.                        *)
 (* ******************************************************************* *)
-let rec subst_expr ~param_unit ~bound_variables name_x by_expr expression =
+let rec __subst_expr ~param_unit ~bound_variables name_x by_expr expression =
   (* Let's just make a local recursive function to save the stack, avoiding *)
   (* passing each time the 3 arguments [~param_unit], [bound_variables]     *)
   (* [name_x] and [by_expr].                                                *)
@@ -190,7 +190,7 @@ and subst_let_binding ~param_unit ~bound_variables name_x by_expr binding =
     (match binding_desc.Parsetree.b_body with
      | Parsetree.BB_computational expr ->
          Parsetree.BB_computational
-           (subst_expr
+           (__subst_expr
               ~param_unit ~bound_variables: bound_variables' name_x by_expr
               expr)
      | Parsetree.BB_logical prop ->
@@ -294,7 +294,7 @@ and subst_prop ~param_unit ~bound_variables name_x by_expr initial_prop_expr =
            Parsetree.Pr_not (rec_subst rec_bound_vars prop)
      | Parsetree.Pr_expr expr ->
          let expr' =
-           subst_expr ~param_unit ~bound_variables name_x by_expr expr in
+           __subst_expr ~param_unit ~bound_variables name_x by_expr expr in
          Parsetree.Pr_expr expr'
      | Parsetree.Pr_paren prop ->
          Parsetree.Pr_paren (rec_subst rec_bound_vars prop)) in
@@ -308,7 +308,7 @@ and subst_prop ~param_unit ~bound_variables name_x by_expr initial_prop_expr =
 let subst_binding_body ~param_unit ~bound_variables name_x by_expr = function
   | Parsetree.BB_computational e ->
       Parsetree.BB_computational
-        (subst_expr ~param_unit ~bound_variables name_x by_expr e)
+        (__subst_expr ~param_unit ~bound_variables name_x by_expr e)
   | Parsetree.BB_logical p ->
       Parsetree.BB_logical
         (subst_prop ~param_unit ~bound_variables name_x by_expr p)
@@ -316,6 +316,20 @@ let subst_binding_body ~param_unit ~bound_variables name_x by_expr = function
 
 
 
+(* ********************************************************************* *)
+(** {b Descr} : Hides the initially empty [~bound_variables] for calling
+    outside the context of a recursion on the AST. Useful for "in"
+    parameters instanciations while generating collection generators.
+
+   {Rem} : Exported outside this module.                                 *)
+(* ********************************************************************* *)
+let subst_expr ~param_unit name_x ~by_expr ~in_expr =
+  __subst_expr ~param_unit ~bound_variables: [] name_x by_expr in_expr
+;;
+
+
+
+(** {Rem} : Exported outside this module. *)
 let subst_species_field ~param_unit name_x by_expr field =
   match field with
   | Env.TypeInformation.SF_sig (_, _, _) -> field   (* Nowhere to substitute. *)
@@ -326,12 +340,12 @@ let subst_species_field ~param_unit name_x by_expr field =
       let body' =
         subst_binding_body ~param_unit ~bound_variables name_x by_expr body in
       Env.TypeInformation.SF_let
-	(from, vname, params_names, scheme, body', dep, log_flag)
+        (from, vname, params_names, scheme, body', dep, log_flag)
       end)
   | Env.TypeInformation.SF_let_rec l ->
       (* First get all the recursive bound variables. *)
       let bound_variables =
-	List.map (fun (_, vname, _, _, _, _, _) -> vname) l in
+        List.map (fun (_, vname, _, _, _, _, _) -> vname) l in
       let l' =
         List.map
           (fun (from, vname, params_names, scheme, body, dep, log_flag) ->

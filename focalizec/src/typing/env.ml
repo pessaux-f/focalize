@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.88 2008-06-13 15:47:17 pessaux Exp $ *)
+(* $Id: env.ml,v 1.89 2008-06-16 12:59:42 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -593,7 +593,7 @@ module TypeInformation = struct
                Format.fprintf local_ppf "%a in ..." Sourcify.pp_vname a
            | SPAR_is ((modname, param_name), _, sp_expr) ->
                Format.fprintf local_ppf "%s.%s is %a" modname param_name
-		 Sourcify.pp_simple_species_expr sp_expr) ;
+                 Sourcify.pp_simple_species_expr sp_expr) ;
           if rem <> [] then
             (begin
             Format.fprintf local_ppf ",@ ";
@@ -1844,4 +1844,3 @@ let print_field_for_debug = function
   | TypeInformation.SF_theorem _ | TypeInformation.SF_property _ ->
       Format.eprintf "Property/Theorem@."
 ;;
-
