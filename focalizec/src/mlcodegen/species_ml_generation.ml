@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.58 2008-06-16 15:21:42 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.59 2008-06-16 16:31:57 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -291,7 +291,7 @@ let generate_record_type ctx species_descr =
     {b Rem} : Not exported outside this module.                               *)
 (* ************************************************************************** *)
 type compiled_field_memory = {
-  (** Where the method comes from (the most recent in inheritance). *)
+  (** Where the method comes from via inheritance history. *)
   cfm_from_species : Env.from_history ;
   (** The method's name. *)
   cfm_method_name : Parsetree.vname ;
@@ -1050,7 +1050,14 @@ let follow_instanciations_for_in_param ctx env original_param_name
       where it is inherited). We search by what it was instanciated along
       the inheritance. Hence, the search starts from the original hosting
       species, with the original hosting species's parameter's index. Then
-      we go upward (more recent) along the inheritance tree. *)
+      we go upward (more recent) along the inheritance tree.
+   ATTENTION: in case of instanciation by a toplevel species, we return
+   the species used to instanciate the parameter, but we still need afterwards
+   to exactly find in which parent of this species each method we have
+   dependencies on was REALLY defined. This job has to be done after getting
+   the result of thi function. This is architectured like this to allow
+   preventing to compute several times instanciations when they appear to be
+   done by toplevel collections or species parameters. *)
 let follow_instanciations_for_is_param ctx env original_param_index
     inheritance_steps =
   let current_species_parameters = ctx.Context.scc_species_parameters_names in
@@ -1194,6 +1201,44 @@ let follow_instanciations_for_is_param ctx env original_param_index
 
 
 
+(** {b Descr} :.....
+    Follow the example below:
+      
+    We just need to recover the species description, find the method's
+    description and see in which species the method was comming "from".
+
+    {b Rem} : Not exported outside this module. *)
+let find_toplevel_spe_defining_meth_through_inheritance env ~current_unit
+    ~start_spec_mod ~start_spec_name ~method_name  =
+  try
+    (* This ident is temporary and created just to lookup in the environment. *)
+    let species_ident =
+      Parsetree_utils.make_pseudo_species_ident
+        ~current_unit (start_spec_mod, (Parsetree.Vuident start_spec_name)) in
+    (* We get the species' methods information. *)
+    let (_, methods_infos, _, _) =
+      Env.MlGenEnv.find_species
+        ~loc: Location.none ~current_unit species_ident env in
+    (* Now, just search information about the method... *)
+    let meth_info =
+      List.find
+        (fun mi -> mi.Env.MlGenInformation.mi_name = method_name)
+        methods_infos in
+    (* And now, just return the [from_history.fh_initial_apparition]. *)
+    let (mod_name, spec_name) =
+     (meth_info.Env.MlGenInformation.mi_history).Env.fh_initial_apparition in
+    (mod_name, (Parsetree_utils.name_of_vname spec_name))
+  with _ ->
+    (* Since the species is toplevel, the lookup in the environment   *)
+    (* must never fail ! And the method searched must also exist in   *)
+    (* the found species since we were told that it was inherited via *)
+    (* this method. If any failure occurs, then the compiler is wrong *)
+    (* somewhere !                                                    *)
+    assert false
+;;
+
+
+
 
 (* We search to instanciate the parameters of the original method generator.
    Hence we deal with the species parameters of the species where the method
@@ -1257,23 +1302,23 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
            (* By construction, in dependencies of "in" parameter, the list *)
            (* of methods is always 1-length at most and contains directly  *)
            (* the name of the parameter itself if it is really used.       *)
-	   let number_meth =
-	     Parsetree_utils.DepNameSet.cardinal meths_from_param in
+           let number_meth =
+             Parsetree_utils.DepNameSet.cardinal meths_from_param in
            assert (number_meth <= 1) ;
-	   if number_meth = 1 then
-	     (begin
+           if number_meth = 1 then
+             (begin
              (* For substitution, we technically need to know in which     *)
              (* compilation unit the parameter, hence in fact the species, *)
-	     (* was.                                                       *)
+             (* was.                                                       *)
              let (original_param_unit, _) =
                field_memory.cfm_from_species.Env.fh_initial_apparition in
              (* We get the FoCaL expression once substitutions are done. *)
              let instancied_expr =
                follow_instanciations_for_in_param ctx env param_name
-		 original_param_unit original_param_index
-		 field_memory.cfm_from_species.Env.fh_inherited_along in
+                 original_param_unit original_param_index
+                 field_memory.cfm_from_species.Env.fh_inherited_along in
              (* We must now generate the OCaml *)
-	     (* code for this FoCaL expression. *)
+             (* code for this FoCaL expression. *)
              let reduced_ctx = {
                Context.rcc_current_unit = ctx.Context.scc_current_unit ;
                Context.rcc_species_parameters_names =
@@ -1287,7 +1332,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
              Base_exprs_ml_generation.generate_expr
                reduced_ctx ~local_idents: [] env instancied_expr ;
              Format.fprintf out_fmter ")@]"
-	     end)
+             end)
        | Env.TypeInformation.SPAR_is ((_, _), _, _) ->
            (begin
            (* Instanciation process of "IS" parameter. *)
@@ -1296,35 +1341,63 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
                ctx env original_param_index
                field_memory.cfm_from_species.Env.fh_inherited_along in
            (* Now really generate the code of by what to instanciate. *)
-           let prefix =
-             (match instancied_with with
-              | PI_by_toplevel_species (spec_mod, spec_name) ->
-                  let capitalized_spec_mod = String.capitalize spec_mod in
-                  if spec_mod = current_unit then spec_name ^ "."
-                  else
-                    capitalized_spec_mod ^ "." ^ spec_name ^ "." ^
-                    capitalized_spec_mod
-              | PI_by_toplevel_collection (coll_mod, coll_name) ->
-                  let capitalized_coll_mod = String.capitalize coll_mod in
+           (match instancied_with with
+            | PI_by_toplevel_species (spec_mod, spec_name) ->
+                (* We found that a toplevel species provides this method  *)
+                (* because this species is finally used as effective      *)
+                (* parameter. However, may be the method on which we have *)
+                (* a dependency is not directly in this toplevel species. *)
+                (* May be it is in one of its parents. We must search in  *)
+                (* its inheritance to determine exactly in which species  *)
+                (*each method is REALLY defined (not only inherited).     *)
+                Parsetree_utils.DepNameSet.iter
+                  (fun (meth, _) ->
+                    let (real_spec_mod, real_spec_name) =
+                      find_toplevel_spe_defining_meth_through_inheritance
+                        env ~current_unit ~start_spec_mod: spec_mod
+                        ~start_spec_name: spec_name ~method_name: meth in
+                    let capitalized_real_spec_mod =
+                      String.capitalize real_spec_mod in
+                    let prefix =
+                      if real_spec_mod = current_unit then real_spec_name ^ "."
+                      else
+                        capitalized_real_spec_mod ^ "." ^ real_spec_name ^ "." ^
+                        capitalized_real_spec_mod in
+                    Format.fprintf out_fmter "@ %s%a"
+                      prefix Parsetree_utils.pp_vname_with_operators_expanded
+                      meth)
+                  meths_from_param
+            | PI_by_toplevel_collection (coll_mod, coll_name) ->
+                let capitalized_coll_mod = String.capitalize coll_mod in
+                let prefix =
                   if coll_mod = current_unit then
                     coll_name ^ ".effective_collection." ^ coll_name ^ "."
                   else capitalized_coll_mod ^ "." ^ coll_name ^
                     ".effective_collection." ^ capitalized_coll_mod ^ "." ^
-                    coll_name ^ "."
+                    coll_name ^ "." in
+                Parsetree_utils.DepNameSet.iter
+                  (fun (meth, _) ->
+                    (* Don't print the type to prevent being too verbose. *)
+                    Format.fprintf out_fmter "@ %s%a"
+                      prefix Parsetree_utils.pp_vname_with_operators_expanded
+                      meth)
+                  meths_from_param
               | PI_by_species_parameter prm ->
                   let species_param_name =
                     match prm with
                      | Env.TypeInformation.SPAR_in (_, _) -> assert false
                      | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
                          Parsetree.Vuident n in
-                  "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
-                  "_") in
-           Parsetree_utils.DepNameSet.iter
-             (fun (meth, _) ->
-               (* Don't print the type to prevent being too verbose. *)
-               Format.fprintf out_fmter "@ %s%a"
-                 prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
-             meths_from_param
+                  let prefix =
+                    "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
+                    "_" in
+                  Parsetree_utils.DepNameSet.iter
+                    (fun (meth, _) ->
+                      (* Don't print the type to prevent being too verbose. *)
+                      Format.fprintf out_fmter "@ %s%a"
+                        prefix Parsetree_utils.pp_vname_with_operators_expanded
+                        meth)
+                    meths_from_param)
            end))
     meth_info.Env.MlGenInformation.mi_dependencies_from_parameters ;
 ;;
@@ -1579,6 +1652,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
            | Some (CSF_let compiled_field_memory) ->
                [{ Env.MlGenInformation.mi_name =
                     compiled_field_memory.cfm_method_name ;
+                  Env.MlGenInformation.mi_history =
+                    compiled_field_memory.cfm_from_species ;
                   Env.MlGenInformation.mi_dependencies_from_parameters =
                     compiled_field_memory.cfm_dependencies_from_parameters ;
                   Env.MlGenInformation.mi_abstracted_methods =
@@ -1587,6 +1662,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                List.map
                  (fun cfm ->
                    { Env.MlGenInformation.mi_name = cfm.cfm_method_name ;
+                     Env.MlGenInformation.mi_history = cfm.cfm_from_species ;
                      Env.MlGenInformation.mi_dependencies_from_parameters =
                        cfm.cfm_dependencies_from_parameters ;
                      Env.MlGenInformation.mi_abstracted_methods =

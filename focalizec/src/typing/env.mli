@@ -130,6 +130,7 @@ module MlGenInformation :
 
     type method_info = {
       mi_name : Parsetree.vname ;
+      mi_history : from_history ;
       mi_dependencies_from_parameters :
         (TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ;
       mi_abstracted_methods : Parsetree.vname list
@@ -164,6 +165,7 @@ module CoqGenInformation :
 
     type method_info = {
       mi_name : Parsetree.vname ;
+      mi_history : from_history ;
       mi_dependencies_from_parameters :
         (TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ;
       mi_abstracted_methods : Parsetree.vname list

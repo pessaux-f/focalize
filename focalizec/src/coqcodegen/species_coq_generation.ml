@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.63 2008-06-13 13:45:11 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.64 2008-06-16 16:31:57 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -40,7 +40,7 @@ type compiled_method_body =
 
 
 type compiled_field_memory = {
-  (** Where the method comes from (the most recent in inheritance). *)
+  (** Where the method comes from via inheritance history. *)
   cfm_from_species : Env.from_history ;
   (** The method's name. *)
   cfm_method_name : Parsetree.vname ;
@@ -68,7 +68,7 @@ type compiled_field_memory = {
 
 
 type compiled_species_fields =
-  | CSF_sig of Parsetree.vname
+  | CSF_sig of (Env.from_history * Parsetree.vname)
   | CSF_let of compiled_field_memory
   | CSF_let_rec of compiled_field_memory list
   | CSF_theorem of compiled_field_memory
@@ -1345,7 +1345,7 @@ let generate_methods ctx print_ctx env generated_fields field =
            (Types.pp_type_simple_to_coq print_ctx' ~reuse_mapping: false) ty
          end) ;
        (* Nothing to keep for the collection generator. *)
-       CSF_sig name
+       CSF_sig (from, name)
    | Abstractions.FAI_let ((from, name, params, scheme, body, _, _),
                            abstraction_info) ->
        let all_deps_from_params =
@@ -1509,7 +1509,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
 
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
-let extend_env_for_species_def env species_descr =
+let extend_env_for_species_def ~current_species env species_descr =
   (* We first add the species methods. Because methods are not polymorphic,  *)
   (* we can safely bind them to 0 extra parameters-induced-by-polymorphism.  *)
   let species_methods_names =
@@ -1543,6 +1543,9 @@ let extend_env_for_species_def env species_descr =
              List.map
                (fun (n, _) -> {
                  Env.CoqGenInformation.mi_name = n ;
+                 Env.CoqGenInformation.mi_history = {
+                   Env.fh_initial_apparition = current_species ;
+                   Env.fh_inherited_along = [] } ;
                  Env.CoqGenInformation.mi_dependencies_from_parameters = [] ;
                  Env.CoqGenInformation.mi_abstracted_methods = [] })
                methods_names in
@@ -1752,7 +1755,7 @@ let generate_collection_generator ctx compiled_species_fields =
                 Parsetree_utils.pp_vname_with_operators_expanded
                 field_memory.cfm_method_name)
             l
-      | CSF_sig vname ->
+      | CSF_sig (_, vname) ->
           (* In a fully defined species, no sig should remain.  The only *)
           (* exception is "rep" that is **defined** when it appears as a *)
           (* "sig".                                                      *)
@@ -1796,7 +1799,9 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     Context.scc_out_fmter = out_fmter } in
   (* Insert in the environment the value bindings of the species methods *)
   (* and the species bindings for its parameters.                        *)
-  let env' = extend_env_for_species_def env species_descr in
+  let env' =
+    extend_env_for_species_def
+      ~current_species: (current_unit, species_name) env species_descr in
   (* The record type representing the species' type. *)
   Species_record_type_generation.generate_record_type ctx env' species_descr ;
   (* WE DON'T extend the collections_carrier_mapping in the context     *)
@@ -1908,14 +1913,17 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     List.flatten
       (List.map
          (function
-           | CSF_sig vname ->
+           | CSF_sig (from_history, vname) ->
                [{ Env.CoqGenInformation.mi_name = vname ;
+                  Env.CoqGenInformation.mi_history = from_history ;
                   Env.CoqGenInformation.mi_dependencies_from_parameters = [] ;
                   Env.CoqGenInformation.mi_abstracted_methods = [] }]
            | CSF_let compiled_field_memory
            | CSF_theorem compiled_field_memory ->
                [{ Env.CoqGenInformation.mi_name =
                     compiled_field_memory.cfm_method_name ;
+                  Env.CoqGenInformation.mi_history =
+                    compiled_field_memory.cfm_from_species ;
                   Env.CoqGenInformation.mi_dependencies_from_parameters =
                     compiled_field_memory.cfm_dependencies_from_parameters ;
                   Env.CoqGenInformation.mi_abstracted_methods =
@@ -1924,6 +1932,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                List.map
                  (fun cfm ->
                    { Env.CoqGenInformation.mi_name = cfm.cfm_method_name ;
+                     Env.CoqGenInformation.mi_history = cfm.cfm_from_species ;
                      Env.CoqGenInformation.mi_dependencies_from_parameters =
                        cfm.cfm_dependencies_from_parameters ;
                      Env.CoqGenInformation.mi_abstracted_methods =
@@ -1932,6 +1941,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
            | CSF_property compiled_field_memory ->
                [ { Env.CoqGenInformation.mi_name =
                      compiled_field_memory.cfm_method_name ;
+                   Env.CoqGenInformation.mi_history =
+                     compiled_field_memory.cfm_from_species ;
                    Env.CoqGenInformation.mi_dependencies_from_parameters =
                      compiled_field_memory.cfm_dependencies_from_parameters ;
                    (* For properties, this list should always be [] since *)

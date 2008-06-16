@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.89 2008-06-16 12:59:42 pessaux Exp $ *)
+(* $Id: env.ml,v 1.90 2008-06-16 16:31:57 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -712,6 +712,7 @@ module MlGenInformation = struct
 
   type method_info = {
     mi_name : Parsetree.vname ;        (** The field name. *)
+    mi_history : from_history ;        (** Thr field inheritance history. *)
     mi_dependencies_from_parameters :
       ((** The positional list of methods from the species parameters
            abstracted by lambda-lifting. *)
@@ -803,6 +804,7 @@ module CoqGenInformation = struct
 
   type method_info = {
     mi_name : Parsetree.vname ;        (** The field name. *)
+    mi_history : from_history ;        (** Thr field inheritance history. *)
     mi_dependencies_from_parameters :
       ((** The positional list of methods from the species parameters
            abstracted by lambda-lifting. *)
