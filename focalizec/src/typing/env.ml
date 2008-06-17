@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.90 2008-06-16 16:31:57 pessaux Exp $ *)
+(* $Id: env.ml,v 1.91 2008-06-17 10:57:41 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -89,7 +89,7 @@ let env_list_assoc ~allow_opened searched list =
 
 
 
-(* Mostly for debug purpose.
+(* For debug purpose. *)
 let debug_env_list_assoc ~allow_opened searched list =
   let vname_as_string v =
     (match v with
@@ -130,7 +130,7 @@ let debug_env_list_assoc ~allow_opened searched list =
   flush stderr;
   rec_assoc list
 ;;
-*)
+
 
 
 
@@ -960,7 +960,7 @@ let (scope_find_module, type_find_module,
                  to lookup inside the current compilation unit's
                  environment (the current file has the same name than
                  the looked-up module), then returned environment is
-                 the one initiallt passed as argument.
+                 the one initially passed as argument.
 
        {b Rem} : Not exported outside this module.                     *)
    (* **************************************************************** *)
@@ -1132,7 +1132,11 @@ let (scope_find_module, type_find_module,
 (* ************************************************************************* *)
 let allow_opened_p current_unit = function
   | None -> false
-  | Some fname -> current_unit = fname
+  | Some fname -> current_unit = fname  (* [Unsure] Je ne pige plus ce que j'ai
+        voulu faire ici. Même le second tirait du commentaire me semble faux.
+        Il va falloir regarder si en fait cette fonction ne devrait pas
+        toujours ... renvoyer false ... donc ne plus exister. On verra ça en
+        cas de problème de lookup ou sinon lors d'un nettoyage... *)
 ;;
 
 
@@ -1347,10 +1351,9 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
      | Parsetree.EI_method (Some coll_specifier, vname) ->
          let (opt_module_qual, coll_vname) =
            match coll_specifier with
-           | Parsetree.Vname coll_vname ->
-             None, coll_vname
+           | Parsetree.Vname coll_vname -> (None, coll_vname)
            | Parsetree.Qualified (modname, coll_vname) ->
-             Some modname, coll_vname in
+               ((Some modname), coll_vname) in
          (* Recover the environment in where to search,according *)
          (* to if the species is qualified by a module name.     *)
          let env' =
@@ -1358,7 +1361,8 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
              ~loc ~current_unit opt_module_qual env in
          (* Check if the lookup can return something *)
          (* coming from an opened module.            *)
-         let allow_opened = allow_opened_p current_unit opt_module_qual in
+         let allow_opened =
+           (match opt_module_qual with None -> true | Some _ -> false) in
          (* Build the complete species name, including its hosting *)
          (* module. If none specified, then this module is the     *)
          (* current one because this means that the species name   *)
@@ -1391,7 +1395,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
       {b Rem} : Not exported outside this module.                       *)
   (* ****************************************************************** *)
   and find_value_vname ~loc ~allow_opened vname (env : t) =
-    try (*debug_env_list_assoc*) env_list_assoc ~allow_opened vname env.values
+    try (* debug_env_list_assoc *) env_list_assoc ~allow_opened vname env.values
     with Not_found -> raise (Unbound_identifier (vname, loc))
 
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.56 2008-06-03 15:40:36 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.57 2008-06-17 10:57:41 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1866,7 +1866,7 @@ let scope_species_param ctx env param param_kind =
               Parsetree.SP
         (scope_expr_collection_cstr_for_is_param ctx env expr)
           | Env.ScopeInformation.SPK_in ->
-	      Parsetree.SP (scope_expr ctx env expr)
+              Parsetree.SP (scope_expr ctx env expr)
          end)) in
   { param with Parsetree.ast_desc = new_desc }
 ;;
