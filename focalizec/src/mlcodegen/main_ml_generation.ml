@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.16 2008-06-17 09:59:23 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.17 2008-06-17 12:04:57 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -69,7 +69,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       Env.MlGenEnv.add_species
         ~loc: coll_def.Parsetree.ast_loc
         coll_def.Parsetree.ast_desc.Parsetree.cd_name
-	([], [], None, Env.COS_collection) env
+        ([], [], None, Env.COS_collection) env
   | Infer.PCM_type (type_def_name, type_descr) ->
       (* Create the initial context for compiling the type definition. *)
       let ctx = {
@@ -167,4 +167,3 @@ let root_compile ~current_unit ~out_file_name stuff =
     (* Re-reaise the initial error. *)
     raise whatever
 ;;
-
