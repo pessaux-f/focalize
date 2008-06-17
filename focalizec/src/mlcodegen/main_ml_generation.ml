@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.15 2008-06-13 13:45:11 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.16 2008-06-17 09:59:23 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -167,3 +167,4 @@ let root_compile ~current_unit ~out_file_name stuff =
     (* Re-reaise the initial error. *)
     raise whatever
 ;;
+

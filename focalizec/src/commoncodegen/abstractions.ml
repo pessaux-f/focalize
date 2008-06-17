@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.20 2008-06-13 13:45:11 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.21 2008-06-17 09:59:23 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -66,6 +66,26 @@ type private_species_binding_info =
    (** The list of methods the species has. *)
    (private_method_info list))
 ;;
+
+
+
+(* For debugging purpose only.
+let debug_print_dependencies_from_parameters l =
+  List.iter
+    (fun (species_param, methods) ->
+      (match species_param with
+       | Env.TypeInformation.SPAR_is ((mod_name, spe_name), _, _) ->
+           Format.eprintf "From IS-parameter '%s#%s', methods: "
+             mod_name spe_name ;
+       | Env.TypeInformation.SPAR_in (n, _) ->
+           Format.eprintf "From IN-parameter '%a', methods: "
+             Sourcify.pp_vname n) ;
+      Parsetree_utils.DepNameSet.iter
+        (fun (n, _) -> Format.eprintf "%a " Sourcify.pp_vname n) methods ;
+      Format.eprintf "@.")
+    l
+;;
+*)
 
 
 
@@ -509,15 +529,15 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                (* We now get the name of the formal parameter (Cp) of S' *)
                (* at the position where the effective argument was used. *)
                let formal_name = List.nth sprim_params position in
-               (* Now, get the z in Deps (s, C_{p'}) (that can be found *)
+               (* Now, get the z in Deps (S, C_{p'}) (that can be found *)
                (* in [starting_dependencies_from_params]), ...          *)
                let all_z =
                  Handy.list_assoc_custom_eq
                    (fun x y ->
                      match x with
                       | Env.TypeInformation.SPAR_in (_, _) ->
-                          (* Cp' is a "IS" parameter, so non chance to *)
-                          (* find  it amongst the "IN" parameters !    *)
+                          (* Cp' is a "IS" parameter, so no chance to *)
+                          (* find it amongst the "IN" parameters !    *)
                           false
                       | Env.TypeInformation.SPAR_is ((_, n), _, _) -> n = y)
                    cpprim starting_dependencies_from_params in
@@ -532,8 +552,12 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                        sprim_meths_abstr_infos in
                    let z_dependencies =
                      z_priv_meth_info.pmi_dependencies_from_parameters in
-                   (* Now, find the one correspongind to [formal_name]. *)
-                   let y = List.assoc formal_name z_dependencies in
+                   (* Now, find the one corresponding to [formal_name]. If *)
+                   (* none is found in the assoc list that because there   *)
+                   (* no method in the dependencies on this parameter.     *)
+                   let y =
+                     (try List.assoc formal_name z_dependencies with
+                     | Not_found -> Parsetree_utils.DepNameSet.empty) in
                    (* ... and add it to the dependencies of                *)
                    (* [eff_arg_qual_vname] in the current dependencies     *)
                    (* accumulator, i.e into [inner_accu_deps_from_params]. *)

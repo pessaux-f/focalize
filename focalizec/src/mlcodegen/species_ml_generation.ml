@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.60 2008-06-16 16:55:49 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.61 2008-06-17 09:59:23 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -322,6 +322,7 @@ type compiled_field_memory = {
     {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
 type compiled_species_fields =
+  | CSF_sig of compiled_field_memory
   | CSF_let of compiled_field_memory
   | CSF_let_rec of compiled_field_memory list
 ;;
@@ -672,13 +673,17 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
 (* *********************************************************************** *)
 let generate_methods ctx env field =
   match field with
-   | Abstractions.FAI_sig (_, name, _) ->
+   | Abstractions.FAI_sig (from, name, _) ->
        (* Only declared, hence, no code to generate yet ! *)
        if Configuration.get_verbose () then
          Format.eprintf "OCaml code for signature '%a' leads to void code.@."
            Parsetree_utils.pp_vname_with_operators_expanded name ;
-       (* Nothing to keep for the collection generator. *)
-       None
+       let compiled_field = {
+         cfm_from_species = from ;
+         cfm_method_name = name ;
+         cfm_dependencies_from_parameters = [] ;
+         cfm_coq_min_typ_env_names = [] } in
+       Some (CSF_sig compiled_field)
    | Abstractions.FAI_let ((from, name, params, scheme, body, _, _),
                            abstraction_info) ->
        (begin
@@ -870,7 +875,7 @@ let dump_collection_generator_arguments out_fmter compiled_species_fields =
   (* parameter the set of methods we depend on.                 *)
   List.iter
     (function
-      | None -> ()
+      | None | Some (CSF_sig _) -> ()
       | Some (CSF_let field_memory) -> process_one_field_memory field_memory
       | Some (CSF_let_rec l) -> List.iter process_one_field_memory l)
     compiled_species_fields ;
@@ -1568,7 +1573,7 @@ let generate_collection_generator ctx env compiled_species_fields =
   (* Generate the local functions that will be used to fill the record value. *)
   List.iter
     (function
-      | None -> ()
+      | None | Some (CSF_sig _) -> ()
       | Some (CSF_let field_memory) -> process_one_field field_memory
       | Some (CSF_let_rec l) -> List.iter (fun fm -> process_one_field fm) l)
     compiled_species_fields ;
@@ -1581,7 +1586,7 @@ let generate_collection_generator ctx env compiled_species_fields =
   Format.fprintf ctx.Context.scc_out_fmter "@[<2>{ " ;
   List.iter
       (function
-      | None -> ()
+      | None | Some (CSF_sig _) -> ()
       | Some (CSF_let field_memory) ->
           Format.fprintf ctx.Context.scc_out_fmter "%a =@ local_%a ;@\n"
             Parsetree_utils.pp_vname_with_operators_expanded
@@ -1668,6 +1673,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
       (List.map
          (function
            | None -> []
+	   | Some (CSF_sig compiled_field_memory)
            | Some (CSF_let compiled_field_memory) ->
                [{ Env.MlGenInformation.mi_name =
                     compiled_field_memory.cfm_method_name ;
@@ -1809,12 +1815,13 @@ let apply_generator_to_parameters ctx env collection_body_params
                (* If needed, qualify the name of the species in the *)
                (* OCaml code. Don't print the type to prevent being *)
                (* too verbose.                                      *)
+	       Format.fprintf out_fmter "@ " ;
                (match corresponding_effective_opt_fname with
                 | Some fname ->
                     Format.fprintf out_fmter "%s." (String.capitalize fname)
                 | None -> ()) ;
                (* Species name."effective_collection.". *)
-               Format.fprintf out_fmter "@ %a.effective_collection."
+               Format.fprintf out_fmter "%a.effective_collection."
                  Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname ;
                (* If needed, qualify the name of the species *)
@@ -1832,7 +1839,7 @@ let apply_generator_to_parameters ctx env collection_body_params
            end)
        | Misc_common.CEA_value_expr_for_in expr ->
            (begin
-           Format.fprintf out_fmter "(@[<1>" ;
+           Format.fprintf out_fmter "@ (@[<1>" ;
            let expr_ctx = {
              Context.rcc_current_unit = current_unit ;
              (* Since we are in the context of a collection and since a *)
