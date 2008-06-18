@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.62 2008-06-17 12:04:57 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.63 2008-06-18 09:55:07 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -922,13 +922,6 @@ let dump_collection_generator_arguments out_fmter compiled_species_fields =
 
 
 
-type parameter_instanciation =
-  | PI_by_toplevel_collection of Types.type_collection
-  | PI_by_toplevel_species of Types.type_collection
-  | PI_by_species_parameter of Env.TypeInformation.species_param
-;;
-
-
 let find_entity_params_with_position params =
   (* Let's implement this imperative way to spare 1 argument on the stack. *)
   (* This is the counter used to report the positions of arguments in the  *)
@@ -950,6 +943,57 @@ let find_entity_params_with_position params =
 
 
 
+(* ************************************************************************** *)
+(* Context.species_compil_context -> Env.MlGenEnv.t -> Parsetree.vname ->     *)
+(*   Parsetree.module_name -> int ->                                          *)
+(*     (Parsetree.qualified_species * Parsetree_utils.simple_species_expr)    *)
+(*       list -> Parsetree.expr                                               *)
+(** {b Descr} : Takes the index of the parameter we want to instanciate
+      among the list of parameters of the species where this parameter
+      lives. Reminds that this parameter belongs to the species who DEFINED
+      the method we are processing to create the collection generator (i.e. 
+      the method whose method generator is inherited in the currently
+      compiled species).
+
+      When invocated, this function starts processing from the oldest species
+      where the currently compiled method appeared, i.e. the species where
+      it was really DEFINED, and we incrementally, setp by step, go "back"
+      in the futur, to finally arrive at the "present". Along these steps, we
+      substitute all the IN species parameters of an inherited species by
+      all the corresponding effective expressions used in the inheritance
+      expression. So, at the first call, we deal whith only 1 parameter
+      since it is the one we are initially trying to instanciate, but during
+      recursions along the inheritance history, we may have several
+      parameters to instanciate since interleaving inherited species may
+      have several.
+
+      Once the process ends, we return the expression obtained by applying
+      all the found substitutions of effective to formal parameters along
+      the inheritance.
+
+    {b Args} :
+    - [ctx] : The current OCaml code generation context.
+
+    - [env] : The current OCaml code generation environment.
+
+    - [original_param_name] : The name of the species IN parameter we are
+      trying to instanciate.
+
+    - [original_param_unit] : The compilation unit where this parameter
+      appears (in fact, that the compilation unit of the species it belongs
+      to).
+
+    -[original_param_index] : The index of the species parameter in the
+      original species. We search by what it was instanciated along the
+      inheritance. Hence, the search starts from the original hosting
+      species, with the original hosting species's parameter's index. Then
+      we go upward (more recent) along the inheritance tree.
+    - [inheritance_steps] : The inheritance history describing where the
+      currently processed method was defined and how it is propagated by
+      inheritance up to the currently compiled species.
+
+    {Rem} : Not exported outside this module.                                 *)
+(* ************************************************************************** *)
 let follow_instanciations_for_in_param ctx env original_param_name
     original_param_unit original_param_index inheritance_steps =
   let current_species_parameters = ctx.Context.scc_species_parameters_names in
@@ -1024,8 +1068,8 @@ let follow_instanciations_for_in_param ctx env original_param_name
             end) in
         let new_params_to_later_instanciate =
           find_entity_params_with_position curr_level_species_params in
-(* OPTIM: si [] alors plus besoin de remonter l'héritage, tout est déjà
-   instancié. *)
+        (* OPTIM POSSIBLE: si [] alors plus besoin de remonter l'héritage,
+           car tout est déjà instancié. *)
         if Configuration.get_verbose () then
           (begin
           Format.eprintf
@@ -1064,22 +1108,94 @@ let follow_instanciations_for_in_param ctx env original_param_name
     original_param_unit [(original_param_name, original_param_index)]
     fake_original_expr (List.rev inheritance_steps)
 ;;
-        
 
 
-(* [original_param_index] : The index of the species parameter in the
+
+(* ************************************************************************* *)
+(** {b Descr} : Describes by what a parameter of collection generator must
+      be instanciated. In effect, during inheritance "is" (i.e. collection
+      parameters) are instanciated. When creating the collection generator,
+      one must apply each method generator to effective arguments
+      representing the abstractions we did for dependencies on species
+      parameters.
+      Three cases are possible:
+       - [IPI_by_toplevel_collection] : The species parameter was
+         instanciated by a toplevel collection. In this case, the way to
+         reach functions to apply to the method generator is based on the
+         compilation scheme using the
+         "Module_representing_collection.effective_collection.fct"
+         indirection.
+       - [IPI_by_toplevel_species] : The species parameter was instanciated
+         by a toplevel species fully defined. In this case, the way to
+         reach functions to apply to the method generator is directly based
+         on the indirection "Module_representing_species.fct".
+       - [IPI_by_species_parameter] : The species parameter was instanciated
+         by a species parameter of the species who inherits. In this case,
+         we must use the extra parameter added to the collection generator
+         and that lambda-lifts the dependency on the method of this
+         parameter.
+
+    {b Rem} Not exported outside this module.                                *)
+(* ************************************************************************* *)
+type is_parameter_instanciation =
+  | IPI_by_toplevel_collection of Types.type_collection
+  | IPI_by_toplevel_species of Types.type_collection
+  | IPI_by_species_parameter of Env.TypeInformation.species_param
+;;
+
+
+
+(* ************************************************************************** *)
+(* Context.species_compil_context -> Env.MlGenEnv.t -> int ->                 *)
+(*  (Parsetree.qualified_species * Parsetree_utils.simple_species_expr)       *)
+(*    list ->                                                                 *)
+(*      is_parameter_instanciation                                            *)
+(** {b Descr} : Takes the index of the parameter we want to instanciate
+      among the list of parameters of the species where this parameter
+      lives. Reminds that this parameter belongs to the species who DEFINED
+      the method we are processing to create the collection generator (i.e. 
+      the method whose method generator is inherited in the currently
+      compiled species).
+
+      When invocated, this function starts processing from the oldest species
+      where the currently compiled method appeared, i.e. the species where
+      it was really DEFINED, and we incrementally, setp by step, go "back" in
+      the futur, to finally arrive at the "present". Along these steps, we
+      look at the effective argument used for the formal corresponding one in
+      the inheritance expression and substitute this effective to the formal
+      at each step. This process lasts until either the instanciation is
+      done by a toplevel species/collection (in this case, no more
+      instanciation of parameter can be done) or until we arrive in the
+      inheritance level of the currently compiled species.
+
+      Once the process ends, we return the description of by what the initial
+      species parameter was really instanciated all along the inheritance.
+      ATTENTION: in case of instanciation by a toplevel species, we return
+      the species used to instanciate the parameter, but we still need
+      afterwards to exactly find in which parent of this species each method
+      we have dependencies on was REALLY defined. This job has to be done after
+      getting the result of thi function. This is architectured like this to
+      allow preventing to compute several times instanciations when they appear
+      to be done by toplevel collections or species parameters.
+
+    {b Args} :
+    - [ctx] : The current OCaml code generation context.
+
+    - [env] : The current OCaml code generation environment.
+
+    - [original_param_index] : The index of the species parameter in the
       original species where the method was REALLY defined (not the one
       where it is inherited). We search by what it was instanciated along
       the inheritance. Hence, the search starts from the original hosting
       species, with the original hosting species's parameter's index. Then
       we go upward (more recent) along the inheritance tree.
-   ATTENTION: in case of instanciation by a toplevel species, we return
-   the species used to instanciate the parameter, but we still need afterwards
-   to exactly find in which parent of this species each method we have
-   dependencies on was REALLY defined. This job has to be done after getting
-   the result of thi function. This is architectured like this to allow
-   preventing to compute several times instanciations when they appear to be
-   done by toplevel collections or species parameters. *)
+
+    - [inheritance_steps] : The inheritance history describing where the
+      currently processed method was defined and how it is propagated by
+      inheritance up to the currently compiled species.
+
+    {Rem} : Not exported outside this module.                                 *) 
+(* ************************************************************************** *)
 let follow_instanciations_for_is_param ctx env original_param_index
     inheritance_steps =
   let current_species_parameters = ctx.Context.scc_species_parameters_names in
@@ -1090,7 +1206,7 @@ let follow_instanciations_for_is_param ctx env original_param_index
           Format.eprintf
             "Final instanciation by the species %dth species parameter."
             param_index ;
-        PI_by_species_parameter
+        IPI_by_species_parameter
           (List.nth current_species_parameters param_index)
     | inheritance_step :: rem_steps ->
         let (step_species, step_inheritance_expr) = inheritance_step in
@@ -1199,7 +1315,7 @@ let follow_instanciations_for_is_param ctx env original_param_index
                       if Configuration.get_verbose () then
                         Format.eprintf
                           "Final instanciation by toplevel collection.@." ;
-                      PI_by_toplevel_collection
+                      IPI_by_toplevel_collection
                         (effect_mod,
                          (Parsetree_utils.name_of_vname effect_name))
                       end)
@@ -1208,7 +1324,7 @@ let follow_instanciations_for_is_param ctx env original_param_index
                       if Configuration.get_verbose () then
                         Format.eprintf
                           "Final instanciation by toplevel species.@." ;
-                      PI_by_toplevel_species
+                      IPI_by_toplevel_species
                         (effect_mod,
                          (Parsetree_utils.name_of_vname effect_name))
                       end)
@@ -1223,7 +1339,10 @@ let follow_instanciations_for_is_param ctx env original_param_index
 
 
 
-(* ************************************************************************** *)
+(* *************************************************************************** *)
+(*  Env.MlGenEnv.t -> current_unit: Parsetree.module_name ->                   *)
+(*    start_spec_mod: Parsetree.module_name -> start_spec_name: string ->      *)
+(*      method_name: Parsetree.vname -> (Parsetree.module_name * string)       *)
 (** {b Descr} : This function looks for the real species that defines
     the method [method_name] of the species [(start_spec_mod,start_spec_name)]
     along its inheritance tree. The species in which we start looking is one
@@ -1246,9 +1365,22 @@ let follow_instanciations_for_is_param ctx env original_param_index
       
     So, we just need to recover the species description, find the method's
     description and see in which species the method was comming "from".
+    We return the pair containing the species module name and the species
+    name where the method was really DEFINED.
 
-    {b Rem} : Not exported outside this module.                               *)
-(* ************************************************************************** *)
+    {Args}:
+    - [env] : The current OCaml code generation environment.
+
+    - [current_unit] : The current compilation unit.
+
+    - [start_spec_mod] [start_spec_name] : Module and species names from where
+      to start the search and follow ("along the past") the inheritance tree.
+
+    - [method_name] : The name of the method fow which we are searching the
+      definition.
+
+    {b Rem} : Not exported outside this module.                                *)
+(* *************************************************************************** *)
 let find_toplevel_spe_defining_meth_through_inheritance env ~current_unit
     ~start_spec_mod ~start_spec_name ~method_name  =
   try
@@ -1280,12 +1412,54 @@ let find_toplevel_spe_defining_meth_through_inheritance env ~current_unit
 
 
 
+(* ************************************************************************** *)
+(* Context.species_compil_context -> Env.MlGenEnv.t ->                        *)
+(*   compiled_field_memory -> unit                                            *)
+(** {b Descr} : We search to instanciate the parameters (IS and IN) of the
+    method generator of [field_memory]. The parameters we deal with are those
+    coming from the lambda-lifts we did to abstract dependencies of the
+    method described by [field_memory] on species parameters of the species
+    where this method is DEFINED.
+    Hence we deal with the species parameters of the species where the method
+    was DEFINED ! It must be clear that we do not matter of the parameters of
+    the species who inherited !!! We want to trace by what the parameters of
+    the original hosting species were instanciated along the inheritance.
+    So we want to generate the OCaml code that enumerate the arguments to
+    apply to the method generator. These arguments are the methods coming
+    from species parameters on which the current method has dependencies on.
+    The locations from where these methods come depend on the instanciations
+    that have be done during inheritance.
+    This function trace these instanciations to figure out exactly from where
+    these methods come.
+    Process sketch:
+     - Find at the point (i.e. the species) where the method generator of
+       [field_memory] was defined, the species parameters that were existing
+       at this point.
+     - Find the dependencies the original method had on these (its) species
+       parameters.
+     - For each of these parameters, we must trace by what it was
+       instanciated along the inheritance history, (starting from oldest
+       species where the method appeared to most recent) and then generate
+       the corresponding OCaml code.
+       - Find the index of the parameter in the species's signature from
+         where the method was REALLY defined (not the one where it is
+         inherited).
+       - Follow instanciations that have been done on the parameter from
+         past to now along the inheritance history.
+       - If it is a IN parameter then we must generate the code
+         corresponding to the FoCaL expression that instanciated the
+         parameter. This expression is built by applying effective-to-formal
+         arguments substitutions.
+       - If it is a IS parameter, then we must generate for each method we
+         have dependencies on, the OCaml code accessing the Ocaml code of
+         the method inside its module structure (if instanciation is done by
+         a toplevel species/collection) or directly use an existing
+         collection generator parameter (if instanciation is done by a
+         parameter of the species where the method is found inherited, i.e.
+         the species we are currently compiling).
 
-(* We search to instanciate the parameters of the original method generator.
-   Hence we deal with the species parameters of the species where the method
-   was defined ! It must be clear that we do not matter of the parameters of
-   the species who inherited !!! We want to trace by what the parameters of
-   the original hosting species were instanciated along th inheritance. *)
+    {b Rem} : Not exported outside this module.                               *)
+(* ************************************************************************** *)
 let instanciate_parameter_through_inheritance ctx env field_memory =
   let current_unit = ctx.Context.scc_current_unit in
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -1376,21 +1550,23 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
              end)
        | Env.TypeInformation.SPAR_is ((_, _), _, _) ->
            (begin
-           (* Instanciation process of "IS" parameter. *)
+           (* Instanciation process of "IS" parameter. We start processing *)
+           (* from the oldest species where the currently compiled method  *)
+           (* appeared, i.e. the species where it was really DEFINED.      *)
            let instancied_with =
              follow_instanciations_for_is_param
                ctx env original_param_index
                field_memory.cfm_from_species.Env.fh_inherited_along in
            (* Now really generate the code of by what to instanciate. *)
            (match instancied_with with
-            | PI_by_toplevel_species (spec_mod, spec_name) ->
+            | IPI_by_toplevel_species (spec_mod, spec_name) ->
                 (* We found that a toplevel species provides this method  *)
                 (* because this species is finally used as effective      *)
                 (* parameter. However, may be the method on which we have *)
                 (* a dependency is not directly in this toplevel species. *)
                 (* May be it is in one of its parents. We must search in  *)
                 (* its inheritance to determine exactly in which species  *)
-                (*each method is REALLY defined (not only inherited).     *)
+                (* each method is REALLY defined (not only inherited).    *)
                 Parsetree_utils.DepNameSet.iter
                   (fun (meth, _) ->
                     let (real_spec_mod, real_spec_name) =
@@ -1408,7 +1584,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
                       prefix Parsetree_utils.pp_vname_with_operators_expanded
                       meth)
                   meths_from_param
-            | PI_by_toplevel_collection (coll_mod, coll_name) ->
+            | IPI_by_toplevel_collection (coll_mod, coll_name) ->
                 let capitalized_coll_mod = String.capitalize coll_mod in
                 let prefix =
                   if coll_mod = current_unit then
@@ -1423,7 +1599,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
                       prefix Parsetree_utils.pp_vname_with_operators_expanded
                       meth)
                   meths_from_param
-              | PI_by_species_parameter prm ->
+              | IPI_by_species_parameter prm ->
                   let species_param_name =
                     match prm with
                      | Env.TypeInformation.SPAR_in (_, _) -> assert false
