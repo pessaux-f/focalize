@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.27 2008-06-03 15:40:36 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.28 2008-06-19 12:52:46 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -207,10 +207,10 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                    (* a species that is EXPLICITELY in the current            *)
                    (* compilation unit.                                       *)
                    if List.exists
-		       (fun species_param ->
-			 match species_param with
+                       (fun species_param ->
+                         match species_param with
                           | Env.TypeInformation.SPAR_in (vn, _) ->
-			      vn = coll_name
+                              vn = coll_name
                           | Env.TypeInformation.SPAR_is ((_, vn), _, _) ->
                               (Parsetree.Vuident vn) = coll_name)
                        ctx.Context.rcc_species_parameters_names then
@@ -236,11 +236,21 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                    end)
                  else
                    (begin
-                   (* The called method belongs to a species that is not    *)
+                   (* The called method belongs to a collection that is not *)
                    (* ourselves and moreover belongs to another compilation *)
                    (* unit. May be a species from the toplevel of another   *)
                    (* FoCaL source file.                                    *)
-                   failwith "generate_expr_ident_for_method_generator foreign species's module TODO"
+                   let capitalized_modname = String.capitalize module_name in
+                   Format.fprintf out_fmter
+                     "%s.%a.effective_collection.%s.%a.%a"
+                     capitalized_modname
+                     Parsetree_utils.pp_vname_with_operators_expanded
+                     coll_name
+                     capitalized_modname
+                     Parsetree_utils.pp_vname_with_operators_expanded
+                     coll_name
+                     Parsetree_utils.pp_vname_with_operators_expanded
+                     vname
                    end)
                  end)
             end)
