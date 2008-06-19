@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.129 2008-06-12 13:47:33 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.130 2008-06-19 11:52:25 pessaux Exp $ *)
 
 
 
@@ -3980,8 +3980,7 @@ let typecheck_species_def ctx env species_def =
   let reordered_normalized_methods =
     order_fields_according_to new_order_for_normalizes normalized_methods in
   if Configuration.get_verbose () then
-    Format.eprintf
-      "Computing dependencies inside species '%a'.@."
+    Format.eprintf "Computing dependencies inside species '%a'.@."
       Sourcify.pp_vname species_def_desc.Parsetree.sd_name ;
   (* The methods are now completly correct, i.e. with no multiple times *)
   (* the same name as it can be before the normalization process, we    *)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.57 2008-06-17 10:57:41 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.58 2008-06-19 11:52:25 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -995,6 +995,9 @@ and scope_expr ctx env expr =
          Parsetree.E_fun (vnames, scoped_body)
      | Parsetree.E_var ident ->
          (begin
+
+Format.eprintf "Scoping ident: %a@." Sourcify.pp_expr_ident ident ;
+
          (* Here, we will finally use our environment in order  *)
          (* to determine the effective scope of the [ident].    *)
          let basic_vname = unqualified_vname_of_expr_ident ident in
