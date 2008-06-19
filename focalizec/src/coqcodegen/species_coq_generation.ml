@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.64 2008-06-16 16:31:57 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.65 2008-06-19 09:21:36 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2114,7 +2114,6 @@ let collection_compile env ~current_unit out_fmter collection_def
     Context.scc_lambda_lift_params_mapping = [] ;
     Context.scc_out_fmter = out_fmter } in
   (* The record type representing the collection's type. *)
-(* [Unsure] Peut-être même pas utile le record ! *)
   Species_record_type_generation.generate_record_type ctx env collection_descr ;
   (* We do not want any collection generator. Instead, we will call the  *)
   (* collection generator of the collection we implement and apply it to *)

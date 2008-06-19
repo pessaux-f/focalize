@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: files.ml,v 1.10 2007-11-06 10:14:58 pessaux Exp $ *)
+(* $Id: files.ml,v 1.11 2008-06-19 09:21:36 pessaux Exp $ *)
 
 
 (** Paths for libraries lookup. *)
@@ -22,42 +22,44 @@ exception Corrupted_fo of Types.fname ;;
 
 let (add_lib_path, get_lib_paths) =
   let lib_paths = ref ([] : string list) in
-  ((* ************************************************************* *)
-   (* add_lib_path                                                  *)
-   (* string -> unit                                                *)
-   (* {b Descr} : Add a path to the list of filesystem directories
-                where to look for ".fo" (compiled interface) files.
+  ((* ********************************************************************* *)
+   (* string -> unit                                                        *)
+   (* {b Descr} : Add a path to the list of filesystem directories where to
+        look for ".fo" (compiled interface) files. The new path is added in
+        tail of the list, hence will be search after all those already in
+        the list.
 
-      {b Rem} : Exported outside this module.                       *)
-   (* ************************************************************* *)
-   (fun path -> lib_paths := path :: !lib_paths),
+      {b Rem} : Exported outside this module.                               *)
+   (* ********************************************************************* *)
+   (fun path -> lib_paths := !lib_paths @ [path]),
 
 
 
-   (* ************************************************************** *)
-   (* get_lib_paths                                                  *)
-   (* unit -> string list.                                           *)
-   (* {b Descr} : Returns the current list of filesystem directories
-                where to look for ".fo" (compiled interface) files.
+   (* *********************************************************************** *)
+   (* get_lib_paths                                                           *)
+   (* unit -> string list.                                                    *)
+   (* {b Descr} : Returns the current list of filesystem directories where to
+        look for ".fo" (compiled interface) files.
 
-      {b Rem} : Exported outside this module.                        *)
-   (* ************************************************************** *)
+      {b Rem} : Exported outside this module.                                 *)
+   (* *********************************************************************** *)
    (fun () -> !lib_paths))
 ;;
 
 
 
-(* ********************************************************************* *)
-(* Types.fname -> in_channel                                             *)
-(* {b Descr} : try to open a file in read-binary-mode, searching for it
-             in the directories indicated by the "lib_path" if the file
-             has a relative name. Otherwise, if the file has an absolute
-             name, it tries to open it straight.
-             If opening fails, then a [Cant_access_file_in_search_path]
-             exception is raised.
-
-   {b Rem} : Exported outside this module.                               *)
-(* ********************************************************************* *)
+(* ********************************************************************** *)
+(* Types.fname -> in_channel                                              *)
+(* {b Descr} : If the file has a relative name, try to open a file in
+     read-binary-mode, searching for it FIRST in the current directory,
+     then if not found, in the directories indicated by the "lib_path".
+     Otherwise, if the file has an absolute name, it tries to open it
+     straight.
+     If opening fails, then a [Cant_access_file_in_search_path] exception
+     is raised.
+     Search is done in the order the paths appear in the list.
+   {b Rem} : Exported outside this module.                                *)
+(* ********************************************************************** *)
 let open_in_from_lib_paths filename =
   let rec rec_open  = function
     | [] ->
@@ -68,7 +70,11 @@ let open_in_from_lib_paths filename =
     | h :: rem ->
         try open_in_bin (Filename.concat h filename)
         with Sys_error _ -> rec_open rem in
-  if Filename.is_relative filename then rec_open (get_lib_paths ())
+  if Filename.is_relative filename then
+    (begin
+    (* First, try in the current local directory. *)
+    try open_in_bin filename with Sys_error _ -> rec_open (get_lib_paths ())
+    end)
   else open_in_bin filename
 ;;
 

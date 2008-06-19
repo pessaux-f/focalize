@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.17 2008-06-09 12:13:29 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.18 2008-06-19 09:21:36 pessaux Exp $ *)
 
 
 exception Input_file_already_set ;;
@@ -100,13 +100,11 @@ let (get_raw_ast_dump, set_raw_ast_dump) =
    (fun () -> raw_ast_dump := true))
 ;;
 
-
 let (get_generate_ocaml, unset_generate_ocaml) =
   let generate_ocaml = ref true in
   ((fun () -> !generate_ocaml),
    (fun () -> generate_ocaml := false))
 ;;
-
 
 let (get_generate_coq, unset_generate_coq) =
   let generate_coq = ref true in
@@ -114,13 +112,11 @@ let (get_generate_coq, unset_generate_coq) =
    (fun () -> generate_coq := false))
 ;;
 
-
 let (get_fancy_ansi, unset_fancy_ansi) =
   let fancy_ansi = ref true in
   ((fun () -> !fancy_ansi),
    (fun () -> fancy_ansi := false))
 ;;
-
 
 let (get_use_default_lib, unset_use_default_lib) =
   let use_default_lib = ref true in
