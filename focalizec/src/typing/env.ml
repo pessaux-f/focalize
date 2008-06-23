@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.93 2008-06-19 12:44:44 pessaux Exp $ *)
+(* $Id: env.ml,v 1.94 2008-06-23 16:26:25 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -775,14 +775,16 @@ module CoqGenInformation = struct
         parameter and so on. *)
     cgi_implemented_species_params_names :
       (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
-    (** The list mapping for each parameter name, the set of methods the
-        collection generator depends on, hence must be provided an instance
-        to be used. Note that the list is not guaranted to be ordered
-        according to the order of the species parameters names (that's why
-        we have the information about this order given in
+    (** First, the list of species parameters carriers required by the
+	collection generator. Next, the list mapping for each parameter name,
+	the set of methods the collection generator depends on, hence must be
+	provided an instance to be used. Note that the list is not guaranted
+	to be ordered according to the order of the species parameters names
+	(that's why we have the information about this order given in
         [species_binding_info]). *)
     cgi_generator_parameters :
-      (Parsetree.vname * Parsetree_utils.DepNameSet.t) list
+      ((Parsetree.vname list) *
+       ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list))
   }
 
   (** In Coq generation environment ALL the sum types value constructors are

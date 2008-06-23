@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.mli,v 1.15 2008-06-12 12:02:56 pessaux Exp $ *)
+(* $Id: handy.mli,v 1.16 2008-06-23 16:26:25 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -45,6 +45,7 @@ val list_mem_custom_eq : ('a -> 'a -> bool) -> 'a -> 'a list -> bool
 val list_mem_n_remove : 'a -> 'a list -> 'a list
 val merge_uniq_list : 'a list -> 'a list -> 'a list
 val list_first_index : ('a -> bool) -> 'a list -> int
+val option_list_to_list : ('a option) list -> 'a list
 
 val pp_set_shaded : Format.formatter -> unit
 val pp_set_underlined : Format.formatter -> unit

@@ -153,7 +153,9 @@ module CoqGenInformation :
       cgi_implemented_species_params_names :
         (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
       cgi_generator_parameters :
-        (Parsetree.vname * Parsetree_utils.DepNameSet.t) list
+        ((Parsetree.vname list) *
+         ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list))
+
     }
 
     type constructor_mapping_info = {

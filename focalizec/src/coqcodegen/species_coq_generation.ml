@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.65 2008-06-19 09:21:36 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.66 2008-06-23 16:26:25 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -36,43 +36,6 @@ type let_connector =
 type compiled_method_body =
   | CMB_expr  of Parsetree.expr
   | CMB_logical_expr of Parsetree.logical_expr
-;;
-
-
-type compiled_field_memory = {
-  (** Where the method comes from via inheritance history. *)
-  cfm_from_species : Env.from_history ;
-  (** The method's name. *)
-  cfm_method_name : Parsetree.vname ;
-  (* The positionnal list of species parameter carriers appearing in the
-     type of the method. They lead to extra arguments of type "Set" and
-     must be instanciated by the correct type when applying the method's
-     generator. This is mostly due to the fact that in Coq polymorphism
-     is explicit and lead to a dependant type. *)
-  cfm_used_species_parameter_tys : Parsetree.vname list ;
-  (** The list mapping for each species parameter, the methods the current
-      method depends on. By lambda-lifting, these methods induce extra
-      parameters named as "_p_" +  species parameter name + "_" + called
-      method's name we depend on. The first component of each couple is the
-      parameter's name and kind and the second is the set of methods the
-      current method depends on from this species parameter. This contains
-      ALL the dependencies found via definition 72 p 153 in Virgile Prevosto's
-      PhD.*)
-  cfm_dependencies_from_parameters :
-    (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ;
-  (** The positional list of method names appearing in the minimal Coq typing
-      environment. *)
-  cfm_coq_min_typ_env_names : Parsetree.vname list
-} ;;
-
-
-
-type compiled_species_fields =
-  | CSF_sig of (Env.from_history * Parsetree.vname)
-  | CSF_let of compiled_field_memory
-  | CSF_let_rec of compiled_field_memory list
-  | CSF_theorem of compiled_field_memory
-  | CSF_property of compiled_field_memory
 ;;
 
 
@@ -518,14 +481,17 @@ let find_compiled_field_memory name fields =
     | h :: q ->
         (begin
         match h with
-         | CSF_let field_memory
-         | CSF_theorem field_memory ->
-             if field_memory.cfm_method_name = name then field_memory
+         | Misc_common.CSF_let field_memory
+         | Misc_common.CSF_theorem field_memory ->
+             if field_memory.Misc_common.cfm_method_name = name then
+               field_memory
              else find q
-         | CSF_let_rec fields_memories ->
+         | Misc_common.CSF_let_rec fields_memories ->
              (begin
              try
-               List.find (fun fm -> fm.cfm_method_name = name) fields_memories
+               List.find
+                 (fun fm -> fm.Misc_common.cfm_method_name = name)
+                 fields_memories
              with Not_found -> find q
              end)
          | _ -> find q
@@ -745,7 +711,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
                    Format.fprintf out_fmter "@ _p_%a_T"
                      Parsetree_utils.pp_vname_with_operators_expanded
                      species_param_type_name)
-                 memory.cfm_used_species_parameter_tys ;
+                 memory.Misc_common.cfm_used_species_parameter_tys ;
                (* Now apply the abstracted methods from the species *)
                (* parameters we depend on.                          *)
                (* [Unsure] Euh, on fait quoi des "in" ? *)
@@ -765,7 +731,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
                          prefix Parsetree_utils.pp_vname_with_operators_expanded
                          meth)
                      meths_from_param)
-                 memory.cfm_dependencies_from_parameters ;
+                 memory.Misc_common.cfm_dependencies_from_parameters ;
                List.iter
                  (fun dep_name ->
                    if dep_name = (Parsetree.Vlident "rep") then
@@ -774,7 +740,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
                      Format.fprintf out_fmter "@ abst_%a"
                        Parsetree_utils.pp_vname_with_operators_expanded
                        dep_name)
-                 memory.cfm_coq_min_typ_env_names ;
+                 memory.Misc_common.cfm_coq_min_typ_env_names ;
                (* End the application of the generator. *)
                Format.fprintf out_fmter ".@]@\n" ;
                (* Method not abstracted. Hence not an *)
@@ -822,7 +788,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
                    else
                      Format.fprintf out_fmter "@ abst_%a"
                        Parsetree_utils.pp_vname_with_operators_expanded n)
-                 memory.cfm_coq_min_typ_env_names ;
+                 memory.Misc_common.cfm_coq_min_typ_env_names ;
 (* [Unsure] Et on n'applique pas à tout le reste du bastringue, comme dans
    le cas de MCEE_Defined_computational ??? *)
                (* End the application of the generator. *)
@@ -1296,13 +1262,14 @@ let generate_recursive_let_definition ctx print_ctx env l =
             Format.fprintf out_fmter "End %a.@]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded name ;
             let compiled = {
-              cfm_from_species = from ;
-              cfm_method_name = name ;
-              cfm_used_species_parameter_tys =
+              Misc_common.cfm_from_species = from ;
+              Misc_common.cfm_method_name = name ;
+              Misc_common.cfm_used_species_parameter_tys =
                 ai.Abstractions.ai_used_species_parameter_tys ;
-              cfm_dependencies_from_parameters = all_deps_from_params ;
-              cfm_coq_min_typ_env_names = abstracted_methods } in
-            CSF_let_rec [compiled]
+              Misc_common.cfm_dependencies_from_parameters =
+                all_deps_from_params ;
+              Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
+            Misc_common.CSF_let_rec [compiled]
        end)
    | _ :: _ -> raise Recursion.MutualRecursion
 ;;
@@ -1344,8 +1311,15 @@ let generate_methods ctx print_ctx env generated_fields field =
            Parsetree_utils.pp_vname_with_operators_expanded name
            (Types.pp_type_simple_to_coq print_ctx' ~reuse_mapping: false) ty
          end) ;
-       (* Nothing to keep for the collection generator. *)
-       CSF_sig (from, name)
+       (* Nothing very exciting to keep for the collection generator. *)
+       let compiled_field = {
+         Misc_common.cfm_from_species = from ;
+         Misc_common.cfm_method_name = name ;
+         (* Never used for OCaml. *)
+         Misc_common.cfm_used_species_parameter_tys = [] ;
+         Misc_common.cfm_dependencies_from_parameters = [] ;
+         Misc_common.cfm_coq_min_typ_env_names = [] } in
+       Misc_common.CSF_sig compiled_field
    | Abstractions.FAI_let ((from, name, params, scheme, body, _, _),
                            abstraction_info) ->
        let all_deps_from_params =
@@ -1367,13 +1341,13 @@ let generate_methods ctx print_ctx env generated_fields field =
        (* Now, build the [compiled_field_memory], even if the method  *)
        (* was not really generated because it was inherited.          *)
        let compiled_field = {
-         cfm_from_species = from ;
-         cfm_method_name = name ;
-         cfm_used_species_parameter_tys =
+         Misc_common.cfm_from_species = from ;
+         Misc_common.cfm_method_name = name ;
+         Misc_common.cfm_used_species_parameter_tys =
            abstraction_info.Abstractions.ai_used_species_parameter_tys ;
-         cfm_dependencies_from_parameters = all_deps_from_params ;
-         cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
-       CSF_let compiled_field
+         Misc_common.cfm_dependencies_from_parameters = all_deps_from_params ;
+         Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
+       Misc_common.CSF_let compiled_field
    | Abstractions.FAI_let_rec l ->
        generate_recursive_let_definition ctx print_ctx env l
    | Abstractions.FAI_theorem ((from, name, _, logical_expr, _, deps_on_rep),
@@ -1392,13 +1366,13 @@ let generate_methods ctx print_ctx env generated_fields field =
            all_deps_from_params generated_fields
            (from, name, logical_expr, deps_on_rep) in
        let compiled_field = {
-         cfm_from_species = from ;
-         cfm_method_name = name ;
-         cfm_used_species_parameter_tys =
+         Misc_common.cfm_from_species = from ;
+         Misc_common.cfm_method_name = name ;
+         Misc_common.cfm_used_species_parameter_tys =
            abstraction_info.Abstractions.ai_used_species_parameter_tys ;
-         cfm_dependencies_from_parameters = all_deps_from_params ;
-         cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
-       CSF_theorem compiled_field
+         Misc_common.cfm_dependencies_from_parameters = all_deps_from_params ;
+         Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
+       Misc_common.CSF_theorem compiled_field
    | Abstractions.FAI_property ((from, name, _, logical_expr, _),
                                 abstraction_info) ->
        (* "Property"s lead to a Coq "Hypothesis". Inherited properties *)
@@ -1435,14 +1409,14 @@ let generate_methods ctx print_ctx env generated_fields field =
               abstraction_info.Abstractions.
                 ai_dependencies_from_params_via_completion) in
        let compiled_field = {
-         cfm_from_species = from ;
-         cfm_method_name = name ;
-         cfm_used_species_parameter_tys =
+         Misc_common.cfm_from_species = from ;
+         Misc_common.cfm_method_name = name ;
+         Misc_common.cfm_used_species_parameter_tys =
            abstraction_info.Abstractions.ai_used_species_parameter_tys ;
-         cfm_dependencies_from_parameters = all_deps_from_params ;
-         cfm_coq_min_typ_env_names = [] (* Leave blank because never used. *)
+         Misc_common.cfm_dependencies_from_parameters = all_deps_from_params ;
+         Misc_common.cfm_coq_min_typ_env_names = [] (* Leave blank because never used. *)
          } in
-       CSF_property compiled_field
+       Misc_common.CSF_property compiled_field
 ;;
 
 
@@ -1688,29 +1662,108 @@ let generate_variables_for_species_parameters_methods ctx print_ctx
 
 
 
-(** Apply the mk_record to the species parameters carriers representation
-    then to "Self" representation ("self_T"). *)
-let dump_collection_generator_first_arguments ctx out_fmter =
+(* ************************************************************************** *)
+(* Context.species_compil_context -> Format.formatter -> Parsetree.vname list *)
+(** {b Descr} : Apply the mk_record to the species parameters carriers
+      representation then to "Self" representation ("self_T"). Returns the
+      list of the parameters names to later make them public in order to
+      know what must be applied to the collection generator. This list
+      DOES NOT contain the "Self_T" argument that is generated after
+      parameters representing the carriers since it is not a parameter
+      carrier !
+
+    {b Rem} : Not exported outside this module.                               *)
+(* ************************************************************************** *)
+let dump_collection_generator_arguments_for_params_carriers ctx out_fmter =
   (* The species parameters carrier types. *)
-  List.iter
-    (fun ((param_ty_mod, param_ty_coll), (param_name, param_kind)) ->
-      Format.fprintf out_fmter "@ " ;
-      (match param_kind with
-       | Types.CCMI_is ->
-           if param_ty_mod <> ctx.Context.scc_current_unit then
-             Format.fprintf out_fmter "%s." param_ty_mod ;
-           Format.fprintf out_fmter "%s_T" param_ty_coll
-       | Types.CCMI_in_or_not_param ->
-           (* One must use the "Variable" created after the record type to *)
-           (* abstract the "in" parameter. This variable is losely name by *)
-           (* the dependency process as: name of the "is" parameter twice, *)
-           (* separated by "_". In fact, there is no abstraction (i.e.     *)
-           (* lambda-lifting) over "in" parameters.                        *)
-           Format.fprintf out_fmter "%s_%s" param_name param_name))
-    ctx.Context.scc_collections_carrier_mapping ;
+  let params_carriers_extra_args =
+    List.map
+      (fun ((param_ty_mod, param_ty_coll), (param_name, param_kind)) ->
+        (* Note: [param_name] is the generated name in the Coq code. *)
+        Format.fprintf out_fmter "@ " ;
+        (match param_kind with
+         | Types.CCMI_is ->
+             if param_ty_mod <> ctx.Context.scc_current_unit then
+               Format.fprintf out_fmter "%s." param_ty_mod ;
+             Format.fprintf out_fmter "%s_T" param_ty_coll ;
+             (* "IS" parameters are capitalized vnames. *)
+             Parsetree.Vuident param_ty_coll
+         | Types.CCMI_in_or_not_param ->
+             (* One must use the "Variable" created after the record type to *)
+             (* abstract the "in" parameter. This variable is losely name by *)
+             (* the dependency process as: name of the "is" parameter twice, *)
+             (* separated by "_". In fact, there is no abstraction (i.e.     *)
+             (* lambda-lifting) over "in" parameters.                        *)
+             Format.fprintf out_fmter "%s_%s" param_name param_name ;
+             (* "IN" parameters are lowercase vnames. *)
+             Parsetree.Vlident param_ty_coll))
+      ctx.Context.scc_collections_carrier_mapping in
   (* Then, always the "self_T" since the first record field represents *)
   (* what is to be the species carrier (foo_T :> Set.)                 *)
-  Format.fprintf out_fmter "@ self_T"
+  Format.fprintf out_fmter "@ self_T" ;
+  params_carriers_extra_args
+;;
+
+
+
+(* [Unsure], vraiment proche de Caml sauf que l'on ne dumpe pas de code ! *)
+let build_collection_generator_arguments_for_params_methods compiled_fields =
+  (* Let's create an assoc list mapping for each species paramater name *)
+  (* the set of methods names from it that needed to be lambda-lifted,  *)
+  (* hence that will lead to parameters of the collection generator.    *)
+  let species_param_names_and_methods =
+    ref ([] : (Parsetree.vname * Parsetree_utils.DepNameSet.t ref) list) in
+  (* ************************************************************************ *)
+  (** {b Descr} :  Local function to process only one [compiled_field_memory].
+         Handy to factorize the code in both the cases of [CSF_let] and
+         [CSF_let_rec]. This function effectivly accumulates by side effect
+         for each species parameter the set of methods we depend on.
+
+      { b Rem} : Local to the enclosing [dump_collection_generator_arguments]
+               function. Not exported.                                        *)
+  (* ************************************************************************ *)
+  let rec process_one_field_memory field_memory =
+    List.iter
+      (fun (spe_param, meths_set) ->
+        (* Recover the species parameter's name. *)
+        let spe_param_name =
+          match spe_param with
+           | Env.TypeInformation.SPAR_in (n, _) -> n
+           | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+               Parsetree.Vuident n in
+        (* Get or create for this species parameter name, the bucket *)
+        (* recording all the methods someone depends on.             *)
+        (* We don't care here about whether the species parameters is   *)
+        (* "in" or "is".                                                *)
+        let spe_param_bucket =
+          (try List.assoc spe_param_name !species_param_names_and_methods
+          with Not_found ->
+            let bucket = ref Parsetree_utils.DepNameSet.empty in
+            species_param_names_and_methods :=
+              (spe_param_name, bucket) :: !species_param_names_and_methods ;
+            bucket) in
+        (* And now, union the current methods we depend on with *)
+        (* the already previously recorded.                     *)
+        spe_param_bucket :=
+          Parsetree_utils.DepNameSet.union meths_set !spe_param_bucket)
+      field_memory.Misc_common.cfm_dependencies_from_parameters in
+
+  (* ********************************************************** *)
+  (* Now, really work, building by side effect for each species *)
+  (* parameter the set of methods we depend on.                 *)
+  List.iter
+    (function
+      | Misc_common.CSF_sig _ | Misc_common.CSF_property _
+      | Misc_common.CSF_theorem _ -> ()
+      | Misc_common.CSF_let field_memory ->
+          process_one_field_memory field_memory
+      | Misc_common.CSF_let_rec l -> List.iter process_one_field_memory l)
+    compiled_fields ;
+  (* Finally, make this parameters information public by returning it. By     *)
+  (* the way, the ref on the inner set is not anymore needed, then remove it. *)
+  List.map
+    (fun (sp_par_name, meths_set) -> (sp_par_name, !meths_set))
+    !species_param_names_and_methods
 ;;
 
 
@@ -1734,38 +1787,51 @@ let generate_collection_generator ctx compiled_species_fields =
   Format.fprintf out_fmter " :=@ mk_%a"
     Parsetree_utils.pp_vname_with_operators_expanded current_species_name ;
   (* The collection generator first arguments are those corresponding *)
-  (* to the species parameters, hence to the record type parameters.  *)
-  (* All of them are in the [collection_carrier_mapping] of the       *)
-  (* current compilation context.                                     *)
-  dump_collection_generator_first_arguments ctx out_fmter ;
+  (* to the species parameters carriers, hence to the record type     *)
+  (* parameters. All of them are in the [collection_carrier_mapping]  *)
+  (* of the current compilation context. We remind the list of the    *)
+  (* parameters names by the way to later make them public in order   *)
+  (* to know what must be applied to the collection generator.        *)
+  let params_carriers_extra_args =
+    dump_collection_generator_arguments_for_params_carriers ctx out_fmter in
   (* No need to generate the local functions that will be used to fill *)
   (* the record value since in Coq we always generate them. It's       *)
   (* already done !                                                    *)
   (* And now, the record value. *)
   List.iter
     (function
-      | CSF_let field_memory | CSF_theorem field_memory ->
+      | Misc_common.CSF_let field_memory
+      | Misc_common.CSF_theorem field_memory ->
           Format.fprintf ctx.Context.scc_out_fmter "@ self_%a"
             Parsetree_utils.pp_vname_with_operators_expanded
-            field_memory.cfm_method_name
-      | CSF_let_rec l ->
+            field_memory.Misc_common.cfm_method_name
+      | Misc_common.CSF_let_rec l ->
           List.iter
             (fun field_memory ->
               Format.fprintf ctx.Context.scc_out_fmter "@ self_%a"
                 Parsetree_utils.pp_vname_with_operators_expanded
-                field_memory.cfm_method_name)
+                field_memory.Misc_common.cfm_method_name)
             l
-      | CSF_sig (_, vname) ->
+      | Misc_common.CSF_sig field_memory ->
           (* In a fully defined species, no sig should remain.  The only *)
           (* exception is "rep" that is **defined** when it appears as a *)
           (* "sig".                                                      *)
-          if vname <> Parsetree.Vlident "rep" then assert false
-      | CSF_property _ ->
+          if field_memory.Misc_common.cfm_method_name <>
+            Parsetree.Vlident "rep" then assert false
+      | Misc_common.CSF_property _ ->
           (* In a fully defined species, no property should remain. *)
           assert false)
     compiled_species_fields ;
   (* Close the pretty-print box of the "Let collection_create ... :=". *)
-  Format.fprintf ctx.Context.scc_out_fmter ".@]@\n"
+  Format.fprintf ctx.Context.scc_out_fmter ".@]@\n" ;
+  (* Now, recover the names of parameters that must be provided when using   *)
+  (* the collection generator to represent methods of the species parameters *)
+  (* that are abstracted and used by the local "self_xxx" used to create the *)
+  (* collection generator.                                                   *)
+  let params_methods_extra_args =
+    build_collection_generator_arguments_for_params_methods
+      compiled_species_fields in
+  (params_carriers_extra_args, params_methods_extra_args)
 ;;
 
 
@@ -1898,13 +1964,11 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   (* to later call the collection generator.                                *)
   let extra_args_from_spe_params =
     if species_descr.Env.TypeInformation.spe_is_closed then
-      (begin
-      generate_collection_generator ctx compiled_fields ;
       Some
         { Env.CoqGenInformation.cgi_implemented_species_params_names =
             species_params_names_n_kinds ;
-          Env.CoqGenInformation.cgi_generator_parameters = [] }
-      end)
+          Env.CoqGenInformation.cgi_generator_parameters =
+            generate_collection_generator ctx compiled_fields  }
     else None in
   (* The end of the chapter hosting the species. *)
   Format.fprintf out_fmter "@]End %s.@\n@." chapter_name ;
@@ -1913,47 +1977,50 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     List.flatten
       (List.map
          (function
-           | CSF_sig (from_history, vname) ->
-               [{ Env.CoqGenInformation.mi_name = vname ;
-                  Env.CoqGenInformation.mi_history = from_history ;
-                  Env.CoqGenInformation.mi_dependencies_from_parameters = [] ;
-                  Env.CoqGenInformation.mi_abstracted_methods = [] }]
-           | CSF_let compiled_field_memory
-           | CSF_theorem compiled_field_memory ->
+           | Misc_common.CSF_sig compiled_field_memory
+           | Misc_common.CSF_let compiled_field_memory
+           | Misc_common.CSF_theorem compiled_field_memory ->
                [{ Env.CoqGenInformation.mi_name =
-                    compiled_field_memory.cfm_method_name ;
+                    compiled_field_memory.Misc_common.cfm_method_name ;
                   Env.CoqGenInformation.mi_history =
-                    compiled_field_memory.cfm_from_species ;
+                    compiled_field_memory.Misc_common.cfm_from_species ;
                   Env.CoqGenInformation.mi_dependencies_from_parameters =
-                    compiled_field_memory.cfm_dependencies_from_parameters ;
+                    compiled_field_memory.Misc_common.
+                      cfm_dependencies_from_parameters ;
                   Env.CoqGenInformation.mi_abstracted_methods =
-                    compiled_field_memory.cfm_coq_min_typ_env_names }]
-           | CSF_let_rec compiled_field_memories ->
+                    compiled_field_memory.Misc_common.
+                      cfm_coq_min_typ_env_names }]
+           | Misc_common.CSF_let_rec compiled_field_memories ->
                List.map
                  (fun cfm ->
-                   { Env.CoqGenInformation.mi_name = cfm.cfm_method_name ;
-                     Env.CoqGenInformation.mi_history = cfm.cfm_from_species ;
+                   { Env.CoqGenInformation.mi_name =
+                       cfm.Misc_common.cfm_method_name ;
+                     Env.CoqGenInformation.mi_history =
+                       cfm.Misc_common.cfm_from_species ;
                      Env.CoqGenInformation.mi_dependencies_from_parameters =
-                       cfm.cfm_dependencies_from_parameters ;
+                       cfm.Misc_common.cfm_dependencies_from_parameters ;
                      Env.CoqGenInformation.mi_abstracted_methods =
-                       cfm.cfm_coq_min_typ_env_names })
+                       cfm.Misc_common.cfm_coq_min_typ_env_names })
                  compiled_field_memories
-           | CSF_property compiled_field_memory ->
+           | Misc_common.CSF_property compiled_field_memory ->
                [ { Env.CoqGenInformation.mi_name =
-                     compiled_field_memory.cfm_method_name ;
+                     compiled_field_memory.Misc_common.cfm_method_name ;
                    Env.CoqGenInformation.mi_history =
-                     compiled_field_memory.cfm_from_species ;
+                     compiled_field_memory.Misc_common.cfm_from_species ;
                    Env.CoqGenInformation.mi_dependencies_from_parameters =
-                     compiled_field_memory.cfm_dependencies_from_parameters ;
+                     compiled_field_memory.Misc_common.
+                       cfm_dependencies_from_parameters ;
                    (* For properties, this list should always be [] since *)
                    (* we do not compute the visible universe since it is  *)
                    (* never used.                                         *)
                    Env.CoqGenInformation.mi_abstracted_methods =
-                     compiled_field_memory.cfm_coq_min_typ_env_names }])
+                     compiled_field_memory.Misc_common.
+                       cfm_coq_min_typ_env_names }])
          compiled_fields) in
   (species_descr.Env.TypeInformation.spe_sig_params,
    species_binding_info, extra_args_from_spe_params, Env.COS_species)
 ;;
+
 
 
 let print_implemented_species_for_coq ~current_unit out_fmter
@@ -1979,8 +2046,32 @@ let print_implemented_species_for_coq ~current_unit out_fmter
   Ocaml. C'est exactment le même code ! *)
 let apply_generator_to_parameters ctx env collection_body_params
     col_gen_params_info =
+  let (required_species_carriers_params, methods_params) =
+    col_gen_params_info.Env.CoqGenInformation.cgi_generator_parameters in
+
+
+Format.eprintf "Paramètres dus aux carriers de paramètres: " ;
+List.iter
+  (fun n -> Format.eprintf "%a " Sourcify.pp_vname n)
+  required_species_carriers_params ;
+Format.eprintf "@." ;
+List.iter
+  (fun (n, _) ->
+    Format.eprintf "Implements paramètre %a@." Sourcify.pp_vname n)
+col_gen_params_info.Env.CoqGenInformation.cgi_implemented_species_params_names ;
+List.iter
+  (fun (n, deps) ->
+    Format.eprintf "Dépendances sur le paramètre: %a: " Sourcify.pp_vname n ;
+    Parsetree_utils.DepNameSet.iter
+      (fun (p, _) -> Format.eprintf "%a " Sourcify.pp_vname p)
+      deps ;
+    Format.eprintf "@.")
+methods_params ;
+
+
   let current_unit = ctx.Context.scc_current_unit in
   let out_fmter = ctx.Context.scc_out_fmter in
+
   (* Create the assoc list mapping the formal to the effective parameters. *)
   let formal_to_effective_map =
     (try
@@ -2029,6 +2120,34 @@ let apply_generator_to_parameters ctx env collection_body_params
       assert false  (* The lists length must be equal. *)) in
   (* Now, generate the argment identifier or expression *)
   (* for each expected collection generator parameter.  *)
+  (* First, start by generating identifiers for species parameters carriers. *)
+  List.iter
+    (fun param_name ->
+       match List.assoc param_name formal_to_effective_map with
+        | Misc_common.CEA_collection_name_for_is corresponding_effective ->
+            let
+                (corresponding_effective_opt_fname,
+                 corresponding_effective_vname) =
+              match corresponding_effective with
+               | Parsetree.Vname n -> (None, n)
+               | Parsetree.Qualified (m, n) -> ((Some m), n) in
+            (match corresponding_effective_opt_fname with
+             | Some fname -> Format.fprintf out_fmter "%s." fname
+             | None -> ()) ;
+            Format.fprintf out_fmter "@[@ %a_effective_collection.("
+              Parsetree_utils.pp_vname_with_operators_expanded
+              corresponding_effective_vname ;
+            (match corresponding_effective_opt_fname with
+             | Some fname -> Format.fprintf out_fmter "%s." fname
+             | None -> ()) ;
+            Format.fprintf out_fmter "%a_T)@]"
+              Parsetree_utils.pp_vname_with_operators_expanded
+              corresponding_effective_vname ;
+        | Misc_common.CEA_value_expr_for_in _ ->
+            Format.fprintf out_fmter "!!!!!!!")
+    required_species_carriers_params ;
+  (* Now, we generate identifiers for methods of these *)
+  (* species parameters we we have dependencies on.    *)
   List.iter
     (fun (formal_species_param_name, method_names) ->
       match List.assoc formal_species_param_name formal_to_effective_map with
@@ -2049,7 +2168,7 @@ let apply_generator_to_parameters ctx env collection_body_params
                 | Some fname -> Format.fprintf out_fmter "%s." fname
                 | None -> ()) ;
                (* Species name."effective_collection.". *)
-               Format.fprintf out_fmter "@ %a.effective_collection."
+               Format.fprintf out_fmter "@ %a_effective_collection.("
                  Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname ;
                (* If needed, qualify the name of the species *)
@@ -2058,7 +2177,7 @@ let apply_generator_to_parameters ctx env collection_body_params
                 | Some fname -> Format.fprintf out_fmter "%s." fname
                 | None -> ()) ;
                (* Species name.method name. *)
-               Format.fprintf out_fmter "%a.%a"
+               Format.fprintf out_fmter "%a_%a)"
                  Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname
                  Parsetree_utils.pp_vname_with_operators_expanded meth_name)
@@ -2084,7 +2203,7 @@ let apply_generator_to_parameters ctx env collection_body_params
              env expr ;
            Format.fprintf out_fmter ")@]" ;
            end))
-    col_gen_params_info.Env.CoqGenInformation.cgi_generator_parameters
+    methods_params
 ;;
 
 
@@ -2119,20 +2238,21 @@ let collection_compile env ~current_unit out_fmter collection_def
   (* collection generator of the collection we implement and apply it to *)
   (* the functions it needs coming from the collection applied to its    *)
   (* parameters if there are some.                                       *)
-  (* Now generate the value representing the effective instance of the   *)
-  (* collection. We always name it by collection's name +                *)
-  (* "_effective_collection".                                            *)
-  Format.fprintf out_fmter "@[<2>Definition %a_effective_collection :=@\n"
-    Sourcify.pp_vname collection_name ;
-  (* Now, get the collection generator from the closed species we implement. *)
+  (* The temporary value resulting from the application of the collection *)
+  (* generator of the species we implement. We always name it             *)
+  (* "__implemented".                                                     *)
+  Format.fprintf out_fmter "@[<2>Let __implemented :=@ " ;
+  (* We call the "implemented" collection generator, that is named *)
+  (* by the implemented species name + "_collection_create".       *)
   let implemented_species_name =
     collection_def.Parsetree.ast_desc.Parsetree.
       cd_body.Parsetree.ast_desc.Parsetree.se_name in
   print_implemented_species_for_coq
     ~current_unit out_fmter implemented_species_name ;
-  (* Append the suffix representing the collection generator's name. *)
   Format.fprintf out_fmter "_collection_create" ;
-  (* Finally, we must recover the arguments to apply to this collection    *)
+
+
+  (* Now, we must recover the arguments to apply to this collection        *)
   (* generator. These arguments of course come from the species parameters *)
   (* the closed species we implement has (if it has some). We must         *)
   (* make this application WITH THE RIGHT EFFECTIVE FUNCTIONS and IN THE   *)
@@ -2170,5 +2290,8 @@ let collection_compile env ~current_unit out_fmter collection_def
     (* [Unsure]. Peut être lever un message d'erreur. *)
     assert false
   end) ;
-  Format.fprintf out_fmter "@].@\n@\n"
+  (* End of the pretty print box of "__implemented". *)
+  Format.fprintf out_fmter "@].@\n@\n" ;
+  (* End of the pretty print box of the Chapter embedding the collection. *)
+  Format.fprintf out_fmter "End %a.@]@\n@\n" Sourcify.pp_vname collection_name
 ;;

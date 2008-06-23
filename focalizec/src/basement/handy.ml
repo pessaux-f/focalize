@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.16 2008-06-12 12:02:56 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.17 2008-06-23 16:26:25 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -129,7 +129,7 @@ let list_assoc_custom_eq eq key lst =
   let rec rec_assoc = function
     | [] -> raise Not_found
     | (h, v) :: q ->
-	if eq h key then v else rec_assoc q in
+        if eq h key then v else rec_assoc q in
   rec_assoc lst
 ;;
 
@@ -299,14 +299,14 @@ let merge_uniq_list l1 l2 =
 
 
 
-(* ******************************************************************** *)
-(* 'a -> 'a list -> 'a list                                             *)
-(** {b Descr} :  Test if the element [elem] belongs to the list [l] and
+(* ******************************************************************* *)
+(* 'a -> 'a list -> 'a list                                            *)
+(** {b Descr} : Test if the element [elem] belongs to the list [l] and
        remove its (first) occurrence from the returned list. Raises
        [Not_found] if [elem] was not found in [l].
 
-    {b Rem} : Exported outside this module.                             *)
-(* ******************************************************************** *)
+    {b Rem} : Exported outside this module.                            *)
+(* ******************************************************************* *)
 let list_mem_n_remove elem l =
   let rec rec_mem = function
     | [] -> raise Not_found
@@ -321,13 +321,32 @@ let list_first_index predicate l =
   let rec rec_index = function
     | [] -> raise Not_found
     | h :: q ->
-	if predicate h then !cnt
-	else
-	  (begin
-	  incr cnt ;
-	  rec_index q
-	  end) in
+        if predicate h then !cnt
+        else
+          (begin
+          incr cnt ;
+          rec_index q
+          end) in
   rec_index l
+;;
+
+
+
+(* ******************************************************************** *)
+(* ('a option) list-> 'a list                                           *)
+(** {b Descr} : Trnsforms a list of optional values to a list of values
+       only keeping the data carried by elements of the form Some (...).
+       In the result list, elements are in the same order that in the
+       list of options.
+
+    {b Rem} : Exported outside this module.                             *)
+(* ******************************************************************** *)
+let rec option_list_to_list = function
+  | [] -> []
+  | h :: q ->
+      match h with
+       | None -> option_list_to_list q
+       | Some data -> data :: (option_list_to_list q)
 ;;
 
 
