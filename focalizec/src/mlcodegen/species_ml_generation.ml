@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.64 2008-06-23 16:26:25 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.65 2008-06-24 14:30:22 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -24,16 +24,16 @@
 (* current_unit: Types.fname -> Env.TypeInformation.species_description ->  *)
 (*   (Types.type_collection * string) list                                  *)
 (** {b Descr} : Create the correspondance between the collection type of
-              the species definition parameters and the type variables
-              names to be used later during the OCaml translation.
-              For a species parameter [A is/in ... ], the type variable
-              that will be used is "'" + lowercased name of the species
-              parameter + an int unique in this type + "_as_carrier".
-              We need to add an extra int (a stamp) to prevent a same type
-              variable from appearing several time in the tricky case where
-              a IN and a IS parameters wear the same lowercased name. For
-              instance: "species A (F is B, f in F)" where "F" and "f" will
-              lead to a same name of ML type variable: "'f_as_carrier"
+    the species definition parameters and the type variables names to be
+    used later during the OCaml translation. For a species parameter
+    [A is/in ... ], the type variable that will be used is "'" + lowercased
+    name of the species parameter + an int unique in this type +
+    "_as_carrier".
+    We need to add an extra int (a stamp) to prevent a same type variable
+    from appearing several time in the tricky case where a IN and a IS
+    parameters wear the same lowercased name. For instance:
+    "species A (F is B, f in F)" where "F" and "f" will lead to a same name
+    of ML type variable: "'f_as_carrier"
 
     {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
@@ -76,9 +76,8 @@ let build_collections_carrier_mapping ~current_unit species_descr =
 (* ******************************************************************** *)
 (* ('a * (string, 'b)) list -> unit                                     *)
 (** {b Descr} : Helper to print the list of known variables names in
-              a collections carrier mapping as a legal OCaml list of
-              type parameters, i.e, comma separated except for the last
-              one.
+    a collections carrier mapping as a legal OCaml list of type
+    parameters, i.e, comma separated except for the last one.
 
     {b Args} :
       - [out_fmter] : The out channel where to generate the OCaml
@@ -104,10 +103,10 @@ let print_comma_separated_vars_list_from_mapping out_fmter vars_list =
 (* ************************************************************************* *)
 (* species_compil_context -> Env.TypeInformation.species_field list -> unit  *)
 (** {b Descr} : Checks if "rep" is defined. If so, then generate the type
-              constraint reflecting its effective structure. We loosely
-              iterate on the list of fields, stopping at the first occurence
-              of "rep" because, by construction if "rep" is present then it
-              is only once. Hence it is safe to ignore the remaining fields.
+    constraint reflecting its effective structure. We loosely iterate on the
+    list of fields, stopping at the first occurence of "rep" because, by
+    construction if "rep" is present then it is only once. Hence it is safe
+    to ignore the remaining fields.
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
@@ -159,14 +158,13 @@ let generate_rep_constraint_in_record_type ctx fields =
 (* ************************************************************************* *)
 (* species_compil_context -> Env.TypeInformation.species_description -> unit *)
 (** {b Descr} : Generate the record type representing a species. This type
-          contains a field per method. This type is named "me_as_species"
-          to reflect the point that it represents the ML structure
-          representing the FoCaL species.
-          Depending on whether the species has parameters, this record
-          type also has parameters. In any case, it at least has a
-          parameter representing "self as it will be once instanciated"
-          once "we" (i.e. the species) will be really living as a
-          collection.
+    contains a field per method. This type is named "me_as_species" to
+    reflect the point that it represents the ML structure representing the
+    FoCaL species.
+    Depending on whether the species has parameters, this record type also
+    has parameters. In any case, it at least has a parameter representing
+    "self as it will be once instanciated" once "we" (i.e. the species) will
+    be really living as a collection.
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
@@ -278,16 +276,16 @@ let generate_record_type ctx species_descr =
 
 
 
-(* ************************************************************************* *)
+(* *********************************************************************** *)
 (** {b Descr} : Describes when starting the code of a let binding how it
-       must be linked to the possible previous code. If the binding is the
-       first of a non-recursive definition, then it must be introduced by
-       "let ". If it is the first of a recursive definition, then it must be
-       introduced by "let rec ". If it is not the first of a multiple
-       definition, then it must be introduced by "and ".
+    must be linked to the possible previous code. If the binding is the
+    first of a non-recursive definition, then it must be introduced by
+    "let ". If it is the first of a recursive definition, then it must be
+    introduced by "let rec ". If it is not the first of a multiple
+    definition, then it must be introduced by "and ".
 
-    {b Rem} : Not exported outside this module.                              *)
-(* ************************************************************************* *)
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
 type let_connector =
   | LC_first_non_rec   (** The binding is the first of a non-recursive
                            definition. *)
@@ -609,8 +607,8 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
 (* species_compil_context -> Parsetree.vname list ->                       *)
 (*   Env.TypeInformation.species_field -> unit                             *)
 (** {b Desc} : Generates the OCaml code for ONE method field (i.e. for one
-             let-bound construct or for one bunch of items of a
-             let-rec-bound construct.
+    let-bound construct or for one bunch of items of a let-rec-bound
+    construct.
 
     {b Args} :
       - [ctx] : The species-compilation-context merging the various
@@ -816,28 +814,28 @@ let find_entity_params_with_position params =
 (*     (Parsetree.qualified_species * Parsetree_utils.simple_species_expr)    *)
 (*       list -> Parsetree.expr                                               *)
 (** {b Descr} : Takes the index of the parameter we want to instanciate
-      among the list of parameters of the species where this parameter
-      lives. Reminds that this parameter belongs to the species who DEFINED
-      the method we are processing to create the collection generator (i.e. 
-      the method whose method generator is inherited in the currently
-      compiled species).
+    among the list of parameters of the species where this parameter
+    lives. Reminds that this parameter belongs to the species who DEFINED
+    the method we are processing to create the collection generator (i.e. 
+    the method whose method generator is inherited in the currently
+    compiled species).
 
-      When invocated, this function starts processing from the oldest species
-      where the currently compiled method appeared, i.e. the species where
-      it was really DEFINED, and we incrementally, setp by step, go "back"
-      in the futur, to finally arrive at the "present". Along these steps, we
-      substitute all the IN species parameters of an inherited species by
-      all the corresponding effective expressions used in the inheritance
-      expression. So, at the first call, we deal whith only 1 parameter
-      since it is the one we are initially trying to instanciate, but during
-      recursions along the inheritance history, we may have several
-      parameters to instanciate since interleaving inherited species may
-      have several.
+    When invocated, this function starts processing from the oldest species
+    where the currently compiled method appeared, i.e. the species where
+    it was really DEFINED, and we incrementally, setp by step, go "back"
+    in the futur, to finally arrive at the "present". Along these steps, we
+    substitute all the IN species parameters of an inherited species by
+    all the corresponding effective expressions used in the inheritance
+    expression. So, at the first call, we deal whith only 1 parameter
+    since it is the one we are initially trying to instanciate, but during
+    recursions along the inheritance history, we may have several
+    parameters to instanciate since interleaving inherited species may
+    have several.
 
-      Once the process ends, we return the expression obtained by applying
-      all the found substitutions of effective to formal parameters along
-      the inheritance.
-
+    Once the process ends, we return the expression obtained by applying
+    all the found substitutions of effective to formal parameters along
+    the inheritance.
+   
     {b Args} :
     - [ctx] : The current OCaml code generation context.
 
@@ -980,27 +978,27 @@ let follow_instanciations_for_in_param ctx env original_param_name
 
 (* ************************************************************************* *)
 (** {b Descr} : Describes by what a parameter of collection generator must
-      be instanciated. In effect, during inheritance "is" (i.e. collection
-      parameters) are instanciated. When creating the collection generator,
-      one must apply each method generator to effective arguments
-      representing the abstractions we did for dependencies on species
-      parameters.
-      Three cases are possible:
-       - [IPI_by_toplevel_collection] : The species parameter was
-         instanciated by a toplevel collection. In this case, the way to
-         reach functions to apply to the method generator is based on the
-         compilation scheme using the
-         "Module_representing_collection.effective_collection.fct"
-         indirection.
-       - [IPI_by_toplevel_species] : The species parameter was instanciated
-         by a toplevel species fully defined. In this case, the way to
-         reach functions to apply to the method generator is directly based
-         on the indirection "Module_representing_species.fct".
-       - [IPI_by_species_parameter] : The species parameter was instanciated
-         by a species parameter of the species who inherits. In this case,
-         we must use the extra parameter added to the collection generator
-         and that lambda-lifts the dependency on the method of this
-         parameter.
+    be instanciated. In effect, during inheritance "is" (i.e. collection
+    parameters) are instanciated. When creating the collection generator,
+    one must apply each method generator to effective arguments
+    representing the abstractions we did for dependencies on species
+    parameters.
+    Three cases are possible:
+      - [IPI_by_toplevel_collection] : The species parameter was
+        instanciated by a toplevel collection. In this case, the way to
+        reach functions to apply to the method generator is based on the
+        compilation scheme using the
+        "Module_representing_collection.effective_collection.fct"
+        indirection.
+      - [IPI_by_toplevel_species] : The species parameter was instanciated
+        by a toplevel species fully defined. In this case, the way to
+        reach functions to apply to the method generator is directly based
+        on the indirection "Module_representing_species.fct".
+      - [IPI_by_species_parameter] : The species parameter was instanciated
+        by a species parameter of the species who inherits. In this case,
+        we must use the extra parameter added to the collection generator
+        and that lambda-lifts the dependency on the method of this
+        parameter.
 
     {b Rem} Not exported outside this module.                                *)
 (* ************************************************************************* *)
@@ -1018,32 +1016,32 @@ type is_parameter_instanciation =
 (*    list ->                                                                 *)
 (*      is_parameter_instanciation                                            *)
 (** {b Descr} : Takes the index of the parameter we want to instanciate
-      among the list of parameters of the species where this parameter
-      lives. Reminds that this parameter belongs to the species who DEFINED
-      the method we are processing to create the collection generator (i.e. 
-      the method whose method generator is inherited in the currently
-      compiled species).
+    among the list of parameters of the species where this parameter
+    lives. Reminds that this parameter belongs to the species who DEFINED
+    the method we are processing to create the collection generator (i.e. 
+    the method whose method generator is inherited in the currently
+    compiled species).
 
-      When invocated, this function starts processing from the oldest species
-      where the currently compiled method appeared, i.e. the species where
-      it was really DEFINED, and we incrementally, setp by step, go "back" in
-      the futur, to finally arrive at the "present". Along these steps, we
-      look at the effective argument used for the formal corresponding one in
-      the inheritance expression and substitute this effective to the formal
-      at each step. This process lasts until either the instanciation is
-      done by a toplevel species/collection (in this case, no more
-      instanciation of parameter can be done) or until we arrive in the
-      inheritance level of the currently compiled species.
+    When invocated, this function starts processing from the oldest species
+    where the currently compiled method appeared, i.e. the species where
+    it was really DEFINED, and we incrementally, setp by step, go "back" in
+    the futur, to finally arrive at the "present". Along these steps, we
+    look at the effective argument used for the formal corresponding one in
+    the inheritance expression and substitute this effective to the formal
+    at each step. This process lasts until either the instanciation is
+    done by a toplevel species/collection (in this case, no more
+    instanciation of parameter can be done) or until we arrive in the
+    inheritance level of the currently compiled species.
 
-      Once the process ends, we return the description of by what the initial
-      species parameter was really instanciated all along the inheritance.
-      ATTENTION: in case of instanciation by a toplevel species, we return
-      the species used to instanciate the parameter, but we still need
-      afterwards to exactly find in which parent of this species each method
-      we have dependencies on was REALLY defined. This job has to be done after
-      getting the result of thi function. This is architectured like this to
-      allow preventing to compute several times instanciations when they appear
-      to be done by toplevel collections or species parameters.
+    Once the process ends, we return the description of by what the initial
+    species parameter was really instanciated all along the inheritance.
+    ATTENTION: in case of instanciation by a toplevel species, we return
+    the species used to instanciate the parameter, but we still need
+    afterwards to exactly find in which parent of this species each method
+    we have dependencies on was REALLY defined. This job has to be done after
+    getting the result of thi function. This is architectured like this to
+    allow preventing to compute several times instanciations when they appear
+    to be done by toplevel collections or species parameters.
 
     {b Args} :
     - [ctx] : The current OCaml code generation context.
@@ -1337,7 +1335,8 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
   (* This ident is temporary and created just to lookup in the environment. *)
   let host_ident =
     Parsetree_utils.make_pseudo_species_ident
-      ~current_unit field_memory.Misc_common.cfm_from_species.Env.fh_initial_apparition in
+      ~current_unit
+     field_memory.Misc_common.cfm_from_species.Env.fh_initial_apparition in
   let (original_host_species_params, host_method_infos, _, _) =
     Env.MlGenEnv.find_species
       ~loc: Location.none ~current_unit host_ident env in
@@ -1349,7 +1348,8 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
   let meth_info =
     List.find
       (fun inf ->
-        inf.Env.MlGenInformation.mi_name = field_memory.Misc_common.cfm_method_name)
+        inf.Env.MlGenInformation.mi_name =
+        field_memory.Misc_common.cfm_method_name)
       host_method_infos in
   if Configuration.get_verbose () then
     (begin
@@ -1393,12 +1393,14 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
              (* compilation unit the parameter, hence in fact the species, *)
              (* was.                                                       *)
              let (original_param_unit, _) =
-               field_memory.Misc_common.cfm_from_species.Env.fh_initial_apparition in
+               field_memory.Misc_common.cfm_from_species.
+                 Env.fh_initial_apparition in
              (* We get the FoCaL expression once substitutions are done. *)
              let instancied_expr =
                follow_instanciations_for_in_param ctx env param_name
                  original_param_unit original_param_index
-                 field_memory.Misc_common.cfm_from_species.Env.fh_inherited_along in
+                 field_memory.Misc_common.cfm_from_species.
+                   Env.fh_inherited_along in
              (* We must now generate the OCaml *)
              (* code for this FoCaL expression. *)
              let reduced_ctx = {
@@ -1423,7 +1425,8 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
            let instancied_with =
              follow_instanciations_for_is_param
                ctx env original_param_index
-               field_memory.Misc_common.cfm_from_species.Env.fh_inherited_along in
+               field_memory.Misc_common.cfm_from_species.
+                 Env.fh_inherited_along in
            (* Now really generate the code of by what to instanciate. *)
            (match instancied_with with
             | IPI_by_toplevel_species (spec_mod, spec_name) ->
@@ -1934,20 +1937,19 @@ let apply_generator_to_parameters ctx env collection_body_params
 
 
 (* ************************************************************************** *)
-(* current_unit: Types.fname -> Format.formatter -> Parsetree.ident -> unit *)
-(** {b Descr} : Helper that prints a species name as an OCaml module,
-       with module qualification if needed.
-       In other words, each time we need to refer to a module qualification
-       induced by a species, this function prints the the capitalize name
-       of the species, prefixed by its hosting file considered as an OCaml
-       module if this species is not in the current compilation unit.
-       For example, imagine we are in the "foo.foc" file and we need to
-       speak of a record field of a species "S" that lives in the "bar.foc"
-       file. Then because each FoCaL compilation unit is mapped onto an
-       OCaml file (hence an OCaml module corresponding to the file-as-module),
-       it will be printed like "Bar.S". If the species "S" was in the same
-       compilation unit (i.e. "foo.foc"), then it would be printed directly
-       "S".
+(* current_unit: Types.fname -> Format.formatter -> Parsetree.ident -> unit   *)
+(** {b Descr} : Helper that prints a species name as an OCaml module, with
+    module qualification if needed.
+    In other words, each time we need to refer to a module qualification
+    induced by a species, this function prints the the capitalize name of
+    the species, prefixed by its hosting file considered as an OCaml module
+    if this species is not in the current compilation unit.
+    For example, imagine we are in the "foo.foc" file and we need to speak
+    of a record field of a species "S" that lives in the "bar.foc" file.
+    Then because each FoCaL compilation unit is mapped onto an OCaml file
+    (hence an OCaml module corresponding to the file-as-module), it will be
+    printed like "Bar.S". If the species "S" was in the same compilation unit
+    (i.e. "foo.foc"), then it would be printed directly "S".
 
     {b Rem} : Not exported outside this module.                               *)
 (* ************************************************************************** *)
@@ -1968,7 +1970,7 @@ let print_implemented_species_as_ocaml_module ~current_unit out_fmter
          Format.fprintf out_fmter "%s." (String.capitalize fname) ;
        Format.fprintf out_fmter "%s"
          (String.capitalize (Parsetree_utils.name_of_vname vname))
-;;
+;; (* [Unsure] String.capitalize nécessaire ? *)
 
 
 
@@ -1978,13 +1980,13 @@ let print_implemented_species_as_ocaml_module ~current_unit out_fmter
 (*     Env.TypeInformation.species_description ->                           *)
 (*       Dep_analysis.name_node list -> unit                                *)
 (** {b Descr} : Generate the OCaml code for a collection implementation.
-      The compilation model dumps:
-       - The record type representing the species actual representation,
-       - A call the the "implemented" species's collection generator,
-       - And a final value (of type above) representing the actual
-         species and borrowing every fields from the value obtained
-         via the collection generator application in order to make
-         the collection having its own record fields names.
+    The compilation model dumps:
+      - The record type representing the species actual representation,
+      - A call the the "implemented" species's collection generator,
+      - And a final value (of type above) representing the actual species
+        and borrowing every fields from the value obtained via the
+        collection generator application in order to make the collection
+        having its own record fields names.
 
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)

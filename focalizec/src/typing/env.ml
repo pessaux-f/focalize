@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.94 2008-06-23 16:26:25 pessaux Exp $ *)
+(* $Id: env.ml,v 1.95 2008-06-24 14:30:22 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -47,13 +47,13 @@ exception Rebound_species of (Parsetree.vname * Location.t);;
 
 
 
-(* ******************************************************************** *)
+(* ************************************************************************ *)
 (** {b Desc} : Enables to differentiate environment bindings induced by
-             definitions really present in the current compilation unit
-             and bindings introduced by a "open" directive.
+    definitions really present in the current compilation unit and bindings
+    introduced by a "open" directive.
 
-    {b Rem} : Not exported outside this module.                         *)
-(* ******************************************************************** *)
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
 type 'a binding_origin =
     (** The binding comes from the current compilation unit. *)
   | BO_absolute of 'a
@@ -67,9 +67,8 @@ type 'a binding_origin =
 (* ****************************************************************** *)
 (* allow_opened: bool -> 'a -> ('a * 'b binding_origin) list -> 'b *)
 (** {b Descr} : Performs a List.assoc like process, but only return a
-              BO_opened binding if the [~allow_opened] flag is true.
-              Otherwise, continue search until a BO_absolute binding
-              is found.
+    BO_opened binding if the [~allow_opened] flag is true.
+    Otherwise, continue search until a BO_absolute binding is found.
 
     {b Rem} : Not exported outside this module.                       *)
 (* ****************************************************************** *)
@@ -136,11 +135,11 @@ let debug_env_list_assoc ~allow_opened searched list =
 
 (* ********************************************************************* *)
 (** {b Descr} : Type of the generic environments. It is parameterized by
-            the information to bind to identifiers representing:
-            - Sum-types constructors
-            - Record-types labels
-            - Values
-            - Species (and collections)
+    the information to bind to identifiers representing:
+      - Sum-types constructors
+      - Record-types labels
+      - Values
+      - Species (and collections)
 
     {b Rem} : Exported abstract outside this module.                     *)
 (* ********************************************************************* *)
@@ -162,10 +161,10 @@ identifiers. *)
 (* ('a, 'b, 'c, 'd, 'e) generic_env ->                                     *)
 (*   ('a, 'b, 'c, 'd, 'e) generic_env                                      *)
 (* {b Descr} : Filters a [generic_env], keeping only bindings coming from
-             definitions of the current compilation unit, i.e. those
-             tagged [BO_absolute].
-             Such an environment will be suitable to be dumped in a
-             persistent datastructure on disk for the "modules" mechanism.
+   definitions of the current compilation unit, i.e. those tagged
+   [BO_absolute].
+   Such an environment will be suitable to be dumped in a persistent
+   datastructure on disk for the "modules" mechanism.
 
    {b Rem} : Not exported outside this module.                             *)
 (* *********************************************************************** *)
@@ -239,23 +238,22 @@ let intitial_inheritance_history species =
 
 (* *********************************************************************** *)
 (** {b Descr} : This module contains the structure of scoping information
-              used in scoping environments.
+    used in scoping environments.
 
     {b Rem} : This module is exported. Only the type of the environment is
-            abstracted to prevent savage manipulations.                    *)
+    abstracted to prevent savage manipulations.                    *)
 (* *********************************************************************** *)
 module ScopeInformation = struct
-  (* ********************************************************************* *)
-  (* type value_binding_info                                               *)
+  (* *********************************************************************** *)
+  (* type value_binding_info                                                 *)
   (** {b Descr} : Tag each binding in the scopping environment in order to
-              know if the [ident] is currently bound to a global toplevel
-              definition inside a file, if it's a method found in the
-              current species inheritance tree (including itself), if it's
-              a method found in another species inheritance tree or
-              finally if it's a locally bound identifier.
+      know if the [ident] is currently bound to a global toplevel definition
+      inside a file, if it's a method found in the current species
+      inheritance tree (including itself), if it's a method found in another
+      species inheritance tree or finally if it's a locally bound identifier.
 
-      {b Rem} : Exported outside this module.                              *)
-  (* ********************************************************************* *)
+      {b Rem} : Exported outside this module.                                *)
+  (* *********************************************************************** *)
   type value_binding_info =
       (** The ident is at toplevel of a file (including the current file). *)
     | SBI_file of Types.fname
@@ -326,7 +324,7 @@ module ScopeInformation = struct
 
   (* ************************************************************** *)
   (** {b Descr} : Type abbreviation to shorten the structure of the
-                scoping environments.
+      scoping environments.
 
       {b Rem} : Not exported outside this module.                   *)
   (* ************************************************************** *)
@@ -346,15 +344,16 @@ end
 
 (* *********************************************************************** *)
 (** {b Descr} : This module contains the structure of typing information
-              used in typing environments.
+    used in typing environments.
 
     {b Rem} : This module is exported. Only the type of the environment is
-            abstracted to prevent savage manipulations.                    *)
+    abstracted to prevent savage manipulations.                            *)
 (* *********************************************************************** *)
 module TypeInformation = struct
   (* ************************************************************** *)
   (** {Descr} : Records if a method has dependencies on the carrier
-        representation "rep".
+      representation "rep".
+
       {b Rem} : Exported outside this module.                       *)
   (* ************************************************************** *)
   type dependency_on_rep = {
@@ -431,10 +430,10 @@ module TypeInformation = struct
 
   (* ************************************************************************ *)
   (** {b Desc} : Describe the essence of a species field, i.e. if it's
-               a signature, a let-binding, let let-rec-binding, a theorem
-               or a property. Through this description the name, type, body
-               and provenance (and even more if needed to fully describe the
-               field according to its nature) of the field is made available.
+      a signature, a let-binding, let let-rec-binding, a theorem or
+      a property. Through this description the name, type, body and
+      provenance (and even more if needed to fully describe the field
+      according to its nature) of the field is made available.
 
       {b Rem} : Exported outside this module.                                 *)
   (* ************************************************************************ *)
@@ -450,14 +449,13 @@ module TypeInformation = struct
 
 
 
-  (* ******************************************************************** *)
+  (* *********************************************************************** *)
   (** {b Desc} : Describe the essence of a species or collection. This
-               description contains a flag telling if ti's a species or
-               a collection, the possible parameters of the species and a
-               link to all its fields.
+      description contains a flag telling if ti's a species or a collection,
+      the possible parameters of the species and a link to all its fields.
 
-      {b Rem} : Exported outside this module.                             *)
-  (* ******************************************************************** *)
+      {b Rem} : Exported outside this module.                                *)
+  (* *********************************************************************** *)
   type species_description = {
     spe_is_collection : bool ;  (** Whether the species is a collection. *)
     spe_is_closed : bool ;   (** Whether the species is fully defined, even if
@@ -471,36 +469,36 @@ module TypeInformation = struct
 
 
 
-  (* ********************************************************************* *)
+  (* *********************************************************************** *)
   (** {b Descr} : Because sum-type constructors are considered either with
-                not parameter or with only ONE parameter (that can be a
-                tuple), the arity of such a sum-type constructor is
-                only given by the 2 following values.
+      not parameter or with only ONE parameter (that can be a tuple), the
+      arity of such a sum-type constructor is only given by the 2 following
+      values.
 
-      {b Rem} : Exported outside this module.                              *)
-  (* ********************************************************************* *)
+      {b Rem} : Exported outside this module.                                *)
+  (* *********************************************************************** *)
   type constructor_arity =
     | CA_zero   (** Constructor has no argument. *)
     | CA_one    (** Constructor has argument(s). *)
 
 
 
-  (* ********************************************************************* *)
+  (* ************************************************************************ *)
   (** {b Descr} : Description of a sum-type constructor. Contains it's
-                arity and its type scheme. A constructor has a functionnal
-                type whose "argument" is the tuple of types of the
-                constructor's argument and whose "result" has the same
-                type than the type the constructor belongs to.
-                For instance: [type t = Foo of (int * char)] will lead
-                to the constructor [Foo : (int * char) -> t].
-                In the degenerated case of a constructor with only one
-                effective argument, the type of the argument will be
-                a tuple with only 1 component.
-                For instance: [type u = Bar of int] will lead to the
-                constructor [Bar : (int) -> u].
+      arity and its type scheme. A constructor has a functionnal type whose
+      "argument" is the tuple of types of the constructor's argument and
+      whose "result" has the same type than the type the constructor belongs
+      to.
+      For instance: [type t = Foo of (int * char)] will lead to the
+      constructor [Foo : (int * char) -> t].
+      In the degenerated case of a constructor with only one effective
+      argument, the type of the argument will be a tuple with only 1
+      component.
+      For instance: [type u = Bar of int] will lead to the constructor
+      [Bar : (int) -> u].
 
-      {b Rem} : Exported outside this module.                              *)
-  (* ********************************************************************* *)
+      {b Rem} : Exported outside this module.                                 *)
+  (* ************************************************************************ *)
   type constructor_description = {
     (** Arity : 0 or 1 (many = 1 type tuple), (1 = type, not a 1 tuple). *)
     cstr_arity : constructor_arity ;
@@ -512,11 +510,11 @@ module TypeInformation = struct
 
   (* ***************************************************************** *)
   (** {b Descr} : Tells is a record field is "mutable" (i.e. can be
-                modified physically in place) or not.
+      modified physically in place) or not.
 
       {b Rem} : Exported outside this module.
-              Not yet used in FoC. Just there in case... Currently all
-              record fields are non-mutable.                           *)
+      Not yet used in FoC. Just there in case... Currently all
+      record fields are non-mutable.                                   *)
   (* ***************************************************************** *)
   type field_mutability = FM_mutable | FM_immutable
 
@@ -573,7 +571,7 @@ module TypeInformation = struct
 
   (* ************************************************************** *)
   (** {b Descr} : Type abbreviation to shorten the structure of the
-                typing environments.
+      typing environments.
 
       {b Rem} : Not exported outside this module.                   *)
   (* ************************************************************** *)
@@ -680,8 +678,8 @@ end
 
 (* *********************************************************************** *)
 (* {b Descr} : Tells if a "species" found in a code generation environment
-     is a species or a collection. This is used to adapt the access to
-     method generators when creating collection generators.
+   is a species or a collection. This is used to adapt the access to
+   method generators when creating collection generators.
 
    {b Rem} : Exported outside this module.                                 *)
 (* *********************************************************************** *)
@@ -752,7 +750,7 @@ module MlGenInformation = struct
 
   (* ************************************************************** *)
   (** {b Descr} : Type abbreviation to shorten the structure of the
-                scoping environments.
+      scoping environments.
 
       {b Rem} : Not exported outside this module.                   *)
   (* ************************************************************** *)
@@ -776,11 +774,11 @@ module CoqGenInformation = struct
     cgi_implemented_species_params_names :
       (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
     (** First, the list of species parameters carriers required by the
-	collection generator. Next, the list mapping for each parameter name,
-	the set of methods the collection generator depends on, hence must be
-	provided an instance to be used. Note that the list is not guaranted
-	to be ordered according to the order of the species parameters names
-	(that's why we have the information about this order given in
+        collection generator. Next, the list mapping for each parameter name,
+        the set of methods the collection generator depends on, hence must be
+        provided an instance to be used. Note that the list is not guaranted
+        to be ordered according to the order of the species parameters names
+        (that's why we have the information about this order given in
         [species_binding_info]). *)
     cgi_generator_parameters :
       ((Parsetree.vname list) *
@@ -835,7 +833,7 @@ module CoqGenInformation = struct
 
   (* ************************************************************** *)
   (** {b Descr} : Type abbreviation to shorten the structure of the
-                scoping environments.
+      scoping environments.
 
       {b Rem} : Not exported outside this module.                   *)
   (* ************************************************************** *)
@@ -878,9 +876,8 @@ let (scope_find_module, type_find_module,
   (* loc: Location.t -> Types.fname ->                                 *)
   (*   (ScopeInformation.env * TypeInformation.env)                    *)
   (** {b Descr} : Wrapper to lookup inside an external interface file.
-                The lookup also performs a bufferisation to prevent
-                futher calls from accessing again the disk. This
-                should enhance lookup speed.
+      The lookup also performs a bufferisation to prevent futher calls
+      from accessing again the disk. This should enhance lookup speed.
 
       {b Rem} : Not exported outside this module.                      *)
   (* ***************************************************************** *)
@@ -918,9 +915,9 @@ let (scope_find_module, type_find_module,
   (*   ('a, 'b, 'c, 'd, 'e) generic_env ->                                *)
   (*     ('a, 'b, 'c, 'd, 'e) generic_env                                 *)
   (** {b Descr} : Internal wrapper to extend an environment with bindings
-              found in an opened "module"'s environment. Opened bindings
-              are transformed in BO_opened before being added in head to
-              the initial environment.
+      found in an opened "module"'s environment. Opened bindings are
+      transformed in BO_opened before being added in head to the initial
+      environment.
 
       {b Args} :
         - from_fname : The "module" name from where the loaded environment
@@ -952,20 +949,19 @@ let (scope_find_module, type_find_module,
 
 
 
-  ((* **************************************************************** *)
-   (* scope_find_module                                                *)
-   (* loc: Location.t -> current_unit: Types.fname ->                  *)
-   (*    Types.fname option -> ScopeInformation.env ->                 *)
-   (*      ScopeInformation.env                                        *)
+  ((* ****************************************************************** *)
+   (* scope_find_module                                                  *)
+   (* loc: Location.t -> current_unit: Types.fname ->                    *)
+   (*    Types.fname option -> ScopeInformation.env ->                   *)
+   (*      ScopeInformation.env                                          *)
    (** {b Descr} : Wrapper to lookup a scoping environment inside an
-                 external interface file. Note that if it is requested
-                 to lookup inside the current compilation unit's
-                 environment (the current file has the same name than
-                 the looked-up module), then returned environment is
-                 the one initially passed as argument.
+       external interface file. Note that if it is requested to lookup
+       inside the current compilation unit's environment (the current
+       file has the same name than the looked-up module), then returned
+       environment is the one initially passed as argument.
 
-       {b Rem} : Not exported outside this module.                     *)
-   (* **************************************************************** *)
+       {b Rem} : Not exported outside this module.                       *)
+   (* ****************************************************************** *)
    (fun ~loc ~current_unit fname_opt scope_env ->
     match fname_opt with
      | None -> scope_env
@@ -975,20 +971,19 @@ let (scope_find_module, type_find_module,
 
 
 
-   (* **************************************************************** *)
-   (* type_find_module                                                 *)
-   (* loc: Location.t -> current_unit: Types.fname ->                  *)
-   (*   Types.fname option -> TypeInformation.env ->                   *)
-   (*     TypeInformation.env                                          *)
+   (* ****************************************************************** *)
+   (* type_find_module                                                   *)
+   (* loc: Location.t -> current_unit: Types.fname ->                    *)
+   (*   Types.fname option -> TypeInformation.env ->                     *)
+   (*     TypeInformation.env                                            *)
    (** {b Descr} : Wrapper to lookup a typing environment inside an
-                 external interface file. Note that if it is requested
-                 to lookup inside the current compilation unit's
-                 environment (the current file has the same name than
-                 the looked-up module), then returned environment is
-                 the one initiallt passed as argument.
+       external interface file. Note that if it is requested to lookup
+       inside the current compilation unit's environment (the current
+       file has the same name than the looked-up module), then returned
+       environment is the one initiallt passed as argument.
 
-       {b Rem} : Not exported outside this module.                     *)
-   (* **************************************************************** *)
+       {b Rem} : Not exported outside this module.                       *)
+   (* ****************************************************************** *)
    (fun ~loc ~current_unit fname_opt type_env ->
      match fname_opt with
       | None -> type_env
@@ -998,20 +993,19 @@ let (scope_find_module, type_find_module,
 
 
 
-   (* ******************************************************************* *)
-   (* mlgen_find_module                                                   *)
-   (*   loc: Location.t -> current_unit: Types.fname ->                   *)
-   (*   Types.fname option -> MlGenInformation.env ->                     *)
-   (*     MlGenInformation.env                                            *)
+   (* ********************************************************************* *)
+   (* mlgen_find_module                                                     *)
+   (*   loc: Location.t -> current_unit: Types.fname ->                     *)
+   (*   Types.fname option -> MlGenInformation.env ->                       *)
+   (*     MlGenInformation.env                                              *)
    (** {b Descr} : Wrapper to lookup a ml generation environment inside
-                 an external interface file. Note that if it is requested
-                 to lookup inside the current compilation unit's
-                 environment (the current file has the same name than
-                 the looked-up module), then returned environment is
-                 the one initially passed as argument.
+       an external interface file. Note that if it is requested to lookup
+       inside the current compilation unit's environment (the current file
+       has the same name than the looked-up module), then returned
+       environment is the one initially passed as argument.
 
-       {b Rem} : Not exported outside this module.                        *)
-   (* ******************************************************************* *)
+       {b Rem} : Not exported outside this module.                          *)
+   (* ********************************************************************* *)
    (fun ~loc ~current_unit fname_opt mlgen_env ->
      match fname_opt with
       | None -> mlgen_env
@@ -1021,20 +1015,19 @@ let (scope_find_module, type_find_module,
 
 
 
-   (* ******************************************************************* *)
-   (* coqgen_find_module                                                  *)
-   (*   loc: Location.t -> current_unit: Types.fname ->                   *)
-   (*   Types.fname option -> CoqGenInformation.env ->                    *)
-   (*     CoqGenInformation.env                                           *)
+   (* ********************************************************************* *)
+   (* coqgen_find_module                                                    *)
+   (*   loc: Location.t -> current_unit: Types.fname ->                     *)
+   (*   Types.fname option -> CoqGenInformation.env ->                      *)
+   (*     CoqGenInformation.env                                             *)
    (** {b Descr} : Wrapper to lookup a ml generation environment inside
-                 an external interface file. Note that if it is requested
-                 to lookup inside the current compilation unit's
-                 environment (the current file has the same name than
-                 the looked-up module), then returned environment is
-                 the one initially passed as argument.
+       an external interface file. Note that if it is requested to lookup
+       inside the current compilation unit's environment (the current file
+       has the same name than the looked-up module), then returned
+       environment is the one initially passed as argument.
 
-       {b Rem} : Not exported outside this module.                        *)
-   (* ******************************************************************* *)
+       {b Rem} : Not exported outside this module.                          *)
+   (* ********************************************************************* *)
    (fun ~loc ~current_unit fname_opt coqgen_env ->
      match fname_opt with
       | None -> coqgen_env
@@ -1044,48 +1037,45 @@ let (scope_find_module, type_find_module,
 
 
 
-   (* *************************************************************** *)
-   (* scope_open_module                                               *)
-   (* loc: Location.t -> Types.fname -> ScopingEnv.t -> ScopingEnv.t  *)
-   (** {b Descr} : Performs a full "open" directive on a scoping
-                 environment. It add in head of the environment the
-                 bindings found in the "module" content, tagging them
-                 as beeing "opened".
+   (* *********************************************************************** *)
+   (* scope_open_module                                                       *)
+   (* loc: Location.t -> Types.fname -> ScopingEnv.t -> ScopingEnv.t          *)
+   (** {b Descr} : Performs a full "open" directive on a scoping environment.
+       It add in head of the environment the bindings found in the "module"
+       content, tagging them as beeing "opened".
 
-       {b Rem} : Exported outside this module.                        *)
-   (* *************************************************************** *)
+       {b Rem} : Exported outside this module.                                *)
+   (* *********************************************************************** *)
    (fun ~loc fname env ->
      let loaded_scope_env = (internal_find_module ~loc fname).ffs_scoping in
      internal_extend_env fname loaded_scope_env env),
 
 
 
-   (* *************************************************************** *)
-   (* type_open_module                                                *)
-   (* loc: Location.t -> Types.fname -> TypingEnv.t -> TypingEnv.t    *)
+   (* ********************************************************************* *)
+   (* type_open_module                                                      *)
+   (* loc: Location.t -> Types.fname -> TypingEnv.t -> TypingEnv.t          *)
    (** {b Descr} : Performs a full "open" directive on a typing
-                 environment. It add in head of the environment the
-                 bindings found in the "module" content, tagging them
-                 as beeing "opened".
+       environment. It add in head of the environment the bindings found in
+       the "module" content, tagging them as beeing "opened".
 
-       {b Rem} : Exported outside this module.                        *)
-   (* *************************************************************** *)
+       {b Rem} : Exported outside this module.                              *)
+   (* ********************************************************************* *)
    (fun ~loc fname env ->
      let loaded_type_env = (internal_find_module ~loc fname).ffs_typing in
      internal_extend_env fname loaded_type_env env),
 
 
 
-   (* **************************************************************** *)
-   (* mlgen_open_module                                                *)
-   (*   loc: Location.t -> Types.fname -> MlGenEnv.t -> MlGenEnv.t     *)
+   (* ********************************************************************* *)
+   (* mlgen_open_module                                                     *)
+   (*   loc: Location.t -> Types.fname -> MlGenEnv.t -> MlGenEnv.t          *)
    (** {b Descr} : Performs a full "open" directive on a ml generation
-                 environment. It add in head of the environment the
-                 bindings found in the "module" content, tagging them
-                 as beeing "opened".
+       environment. It add in head of the environment the bindings found in
+       the "module" content, tagging them as beeing "opened".
 
-       {b Rem} : Exported outside this module.                         *)
-   (* **************************************************************** *)
+       {b Rem} : Exported outside this module.                              *)
+   (* ********************************************************************* *)
    (fun ~loc fname env ->
      let loaded_mlgen_env =
        (internal_find_module ~loc fname).ffs_mlgeneration in
@@ -1093,16 +1083,15 @@ let (scope_find_module, type_find_module,
 
 
 
-   (* **************************************************************** *)
-   (* coqgen_open_module                                               *)
-   (*   loc: Location.t -> Types.fname ->  CoqGenEnv.t -> CoqGenEnv.t  *)
-   (** {b Descr} : Performs a full "open" directive on a coq
-            generation environment. It add in head of the environment
-            the bindings found in the "module" content, tagging them
-            as beeing "opened".
+   (* ****************************************************************** *)
+   (* coqgen_open_module                                                 *)
+   (*   loc: Location.t -> Types.fname ->  CoqGenEnv.t -> CoqGenEnv.t    *)
+   (** {b Descr} : Performs a full "open" directive on a coq generation
+       environment. It add in head of the environment the bindings found
+       in the "module" content, tagging them as beeing "opened".
 
-       {b Rem} : Exported outside this module.                         *)
-   (* **************************************************************** *)
+       {b Rem} : Exported outside this module.                           *)
+   (* ****************************************************************** *)
    (fun ~loc fname env ->
      let loaded_coqgen_env =
        (internal_find_module ~loc fname).ffs_coqgeneration in
@@ -1115,21 +1104,20 @@ let (scope_find_module, type_find_module,
 (* ************************************************************************* *)
 (* 'a -> 'a option -> bool                                                   *)
 (** {b Descr} : Returns a boolean telling whether the lookup of a QUALIFIED
-              vname whose we have the ** optional qualification** as
-              argument in and environment can succeed on a binding induced
-              by an "open" directive.
-              This is the case except in the 2 following cases:
-                - if the [ident] from where the [vname] is extracted is
-                  an I_global (None, ...). This corresponds to an [ident]
-                  like #Foo, hence meaning that on search for something at
-                  toplevel of the current compilation unit. Hence the right
-                  binding cannot be something "Opened".
-                - if the [ident] from where the [vname] is extracted is
-                  an I_global (Some fname, ...) with current_unit = fname.
-                  This corresponds to an [ident] like doudou#Foo while we
-                  are analysing the file "doudou". It's then also a search
-                  for something at toplevel of the current compilation unit.
-                  Hence the right binding cannot also be something "Opened".
+    vname whose we have the ** optional qualification** as argument in and
+    environment can succeed on a binding induced by an "open" directive.
+    This is the case except in the 2 following cases:
+      - if the [ident] from where the [vname] is extracted is an
+        I_global (None, ...). This corresponds to an [ident] like #Foo,
+        hence meaning that on search for something at toplevel of the
+        current compilation unit. Hence the right binding cannot be
+        something "Opened".
+      - if the [ident] from where the [vname] is extracted is an
+        I_global (Some fname, ...) with current_unit = fname. This
+        corresponds to an [ident] like doudou#Foo while we are analysing the
+        file "doudou". It's then also a search for something at toplevel of
+        the current compilation unit. Hence the right binding cannot also be
+        something "Opened".
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
@@ -1146,16 +1134,15 @@ let allow_opened_p current_unit = function
 
 
 
-(* *********************************************************************** *)
+(* ************************************************************************* *)
 (** {b Descr} : Type of modules used to encapsulate the function allowing
-              to access the environment related to a FoCaL "module" via
-              the persistent data located on the disk.
-              This kind of module will be used as argument of the functor
-              [Make] below in order to generate the environment access
-              functions without having to add to them extra parameters
-              that would the [find_module], [pervasives],
-              [make_value_env_from_species_methods] and
-              [make_value_env_from_collection_methods] functions.
+    to access the environment related to a FoCaL "module" via the persistent
+    data located on the disk.
+    This kind of module will be used as argument of the functor [Make] below
+    in order to generate the environment access functions without having to
+    add to them extra parameters that would the [find_module], [pervasives],
+    [make_value_env_from_species_methods] and
+    [make_value_env_from_collection_methods] functions.
 
     {b Fields} :
       - [constructor_bound_data] : Type of the information bound to a
@@ -1178,10 +1165,10 @@ let allow_opened_p current_unit = function
         environment with the methods of the collection inserted as values.
 
     {b Rem} : Not exported outside this module.
-            This module signature is fully local to this file, it will be
-            internally be used to create the various environment
-            structures (scoping, typing) we need.                         *)
-(* *********************************************************************** *)
+    This module signature is fully local to this file, it will be internally
+    be used to create the various environment structures (scoping, typing)
+    we need.                                                                 *)
+(* ************************************************************************* *)
 module type EnvModuleAccessSig = sig
   type constructor_bound_data
   type label_bound_data
@@ -1212,17 +1199,17 @@ end
 
 
 
-(* ********************************************************************* *)
+(* *********************************************************************** *)
 (** {b Descr} : This functor creates the environment manipulation
-              primitives (lookup and insertion), using the [find_module]
-              function of the argument [EMAccess] to access FoCal
-              "modules" persistent data on disk.
+    primitives (lookup and insertion), using the [find_module] function of
+    the argument [EMAccess] to access FoCal "modules" persistent data on
+    disk.
 
     {b Rem} : Not exported outside this module.
-              This functor is fully local to this file, it will be
-              internally be used to create the various environment
-              structures (scoping, typing) we need.                      *)
-(* ********************************************************************* *)
+    This functor is fully local to this file, it will be internally be
+    used to create the various environment structures (scoping, typing)
+    we need.                                                               *)
+(* *********************************************************************** *)
 module Make(EMAccess : EnvModuleAccessSig) = struct
   (* ************************************************ *)
   (** {b Descr} : The type of the environment itself.
@@ -1237,7 +1224,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (* ***************************************************** *)
   (* unit -> t                                             *)
   (** {b Descr} : Creates a fresh TOTALY empty environment
-        (no even pervasive stuff inside).
+      (no even pervasive stuff inside).
 
       {b Rem} : Exported outside this module.              *)
   (* ***************************************************** *)
@@ -1249,7 +1236,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (* ***************************************************** *)
   (* unit -> t                                             *)
   (** {b Descr} : Creates a fresh environment containing
-                information bound the basic builtins.
+      information bound the basic builtins.
 
       {b Rem} : Exported outside this module.              *)
   (* ***************************************************** *)
@@ -1339,14 +1326,14 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
 
-  (* ************************************************************** *)
-  (* Parsetree.vname -> EMAccess.value_bound_data -> t -> t         *)
-  (** {b Descr} : Return an environment extended with a binding
-                between a value [ident] and the argument [data].
-                The initial environment is passed as last argument.
+  (* ******************************************************************** *)
+  (* Parsetree.vname -> EMAccess.value_bound_data -> t -> t               *)
+  (** {b Descr} : Return an environment extended with a binding between a
+      value [ident] and the argument [data].
+      The initial environment is passed as last argument.
 
-      {b Rem} : Exported outside this module.                       *)
-  (* ************************************************************** *)
+      {b Rem} : Exported outside this module.                             *)
+  (* ******************************************************************** *)
   let add_value ident data (env : t) =
     ({ env with values = (ident, BO_absolute data) :: env.values } : t)
 
@@ -1464,7 +1451,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (* current_unit: loc: Location.t -> Types.fname ->                       *)
   (*   Parsetree.constructor_ident -> t -> EMAccess.constructor_bound_data *)
   (** {b Descr} : Looks-up for a [constructorident] inside the constructors
-        environment.
+      environment.
 
       {b Rem} : Exported outside this module.                              *)
   (* ********************************************************************* *)
@@ -1485,7 +1472,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (*   Parsetree.constructor_name -> t ->                             *)
   (*   EMAccess.constructor_bound_data                           *)
   (** {b Descr} : Looks-up for a [vname] inside the constructors
-                environment.
+      environment.
 
       {b Rem} : Not exported outside this module.                *)
   (* *********************************************************** *)
@@ -1495,15 +1482,14 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
 
-  (* ************************************************************** *)
-  (* Parsetree.vname -> EMAccess.label_bound_data -> t -> t         *)
-  (** {b Descr} : Return an environment extended with a binding
-                between a record field label [lbl_vname] and the
-                argument [data].
-                The initial environment is passed as last argument.
+  (* ******************************************************************** *)
+  (* Parsetree.vname -> EMAccess.label_bound_data -> t -> t               *)
+  (** {b Descr} : Return an environment extended with a binding between a
+      record field label [lbl_vname] and the argument [data].
+      The initial environment is passed as last argument.
 
-      {b Rem} : Exported outside this module.                       *)
-  (* ************************************************************** *)
+      {b Rem} : Exported outside this module.                             *)
+  (* ******************************************************************** *)
   let add_label lbl_vname data (env : t) =
     ({ env with labels = (lbl_vname, BO_absolute data) :: env.labels } : t)
 
@@ -1513,7 +1499,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (* loc: Location.t -> Parsetree.label_ident -> t ->              *)
   (*   EMAccess.label_bound_data                                   *)
   (** {b Descr} : Looks-up for an [ident] inside the record fields
-        labels environment.
+      labels environment.
 
       {b Rem} : Exported outside this module.                      *)
   (* ************************************************************* *)
@@ -1533,7 +1519,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (* loc: Location.t -> allow_opened: bool -> Parsetree.vname ->       *)
   (*   Parsetree.vname -> t -> EMAccess.label_bound_data               *)
   (** {b Descr} : Looks-up for a [vname] inside the record type labels
-         environment.
+      environment.
 
       {b Rem} : Not exported outside this module.                      *)
   (* ***************************************************************** *)
@@ -1543,15 +1529,15 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
 
-  (* ***************************************************************** *)
-  (* loc: Location.t -> Types.type_name -> EMAccess.type_bound_data -> *)
-  (*   t -> t                                                          *)
-  (** {b Descr} : Return an environment extended with a binding
-                between a type [ident] and the argument [data].
-                The initial environment is passed as last argument.
+  (* ******************************************************************** *)
+  (* loc: Location.t -> Types.type_name -> EMAccess.type_bound_data ->    *)
+  (*   t -> t                                                             *)
+  (** {b Descr} : Return an environment extended with a binding between a
+      type [ident] and the argument [data].
+      The initial environment is passed as last argument.
 
-      {b Rem} : Exported outside this module.                          *)
-  (* ***************************************************************** *)
+      {b Rem} : Exported outside this module.                             *)
+  (* ******************************************************************** *)
   let add_type ~loc tyname data (env : t) =
     (* Ensure the type name does not already exists in the *)
     (* current module. This means that this name must not  *)
@@ -1628,20 +1614,19 @@ module ScopingEMAccess = struct
 
   (* ************************************************************************ *)
   (** {b Descr} : The function used while scoping to post-process information
-               bound to values when retrieved from a [I_method] [ident].
-               Because all the methods are entered in the environment as
-               [SBI_method_of_self], we need here to tweak the result to
-               change it into a SBI_method_of_coll otherwise, any method
-               would be considered as applied from [Self] !!!
-               In fact, we need to enter methods in the environment as
-               [SBI_method_of_self] instead of [SBI_method_of_coll]
-               otherwise when we would scope a real method of [Self], if
-               this method was bound to, for instance "KikooSpecies", then
-               once scoped, the AST would return an [ident] explicitly
-               shaped like "KikooSpecies!meth" instead of "Self!meth".
-               This would force the method to be the one of this species
-               at this level in the inheritance, hence forbidding
-               late-binding.
+      bound to values when retrieved from a [I_method] [ident].
+      Because all the methods are entered in the environment as
+      [SBI_method_of_self], we need here to tweak the result to change it
+      into a SBI_method_of_coll otherwise, any method would be considered as
+      applied from [Self] !!!
+      In fact, we need to enter methods in the environment as
+      [SBI_method_of_self] instead of [SBI_method_of_coll] otherwise when we
+      would scope a real method of [Self], if this method was bound to, for
+      instance "KikooSpecies", then once scoped, the AST would return an
+      [ident] explicitly shaped like "KikooSpecies!meth" instead of
+      "Self!meth".
+      This would force the method to be the one of this species at this
+      level in the inheritance, hence forbidding late-binding.
 
      {b Rem} : Exported outside this module, but not outside this file.       *)
   (* ************************************************************************ *)
@@ -1662,14 +1647,13 @@ module TypingEMAccess = struct
   type value_bound_data = Types.type_scheme
   type species_bound_data = TypeInformation.species_description
   let find_module = type_find_module
-  (* ************************************************************ *)
-  (* make_pervasives : unit -> TypeInformation.env                *)
+  (* ********************************************************************** *)
+  (* make_pervasives : unit -> TypeInformation.env                          *)
   (** {b Descr} : Creates a fresh environment containing the type
-        information of the basic built-in primitives,
-        types and constructors.
+      information of the basic built-in primitives, types and constructors.
 
-      {b Rem} : Exported outside this module.                     *)
-  (* ************************************************************ *)
+      {b Rem} : Exported outside this module.                               *)
+  (* ********************************************************************** *)
   let pervasives () =
     { constructors = []; labels = []; types = []; values = []; species = [] }
 
@@ -1678,8 +1662,8 @@ module TypingEMAccess = struct
   (* 'a -> TypeInformation.species_description ->                         *)
   (*   ('b, 'c, 'd, Types.type_scheme, 'e) generic_env                    *)
   (** {b Descr} : Create a fresh environment with the methods, properties
-                and theorems of the species called [spec_name] from the
-                 methods found in [spec_info].
+      and theorems of the species called [spec_name] from the methods
+      found in [spec_info].
 
       {b Rem} : Not exported outside this module.                         *)
   (* ******************************************************************** *)
@@ -1781,10 +1765,10 @@ module CoqGenEnv = Make (CoqGenEMAccess);;
 (* source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t ->   *)
 (*   MlGenEnv.t -> CoqGenEnv.t -> unit                              *)
 (** {b Descr} : Create the "fo file" on disk related to the current
-              compilation unit.
-              This "fo file" contains :
-                - A magic number.
-                - A triplet (scoping env * typing env * mlgen env).
+    compilation unit.
+    This "fo file" contains :
+      - A magic number.
+      - A triplet (scoping env * typing env * mlgen env).
 
     {b Rem} : Exported outside this module.                         *)
 (* **************************************************************** *)

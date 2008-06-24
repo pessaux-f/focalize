@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.39 2008-06-09 12:13:29 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.40 2008-06-24 14:30:22 pessaux Exp $ *)
 
 
 
@@ -37,14 +37,14 @@ let make_Self_cc_binding_current_species_T ~current_species =
 (* current_unit: Parsetree.modname -> Format.formatter ->                   *)
 (*   Parsetree.qualified_vname -> unit                                      *)
 (** {b Descr}: Pretty prints a [Parsetree.qualified_vname] as a Coq regular
-      identifier. If the identifier has a qualification that is different
-      of the current compilation unit, then we use the dot-notation.
-      Otherwise no qualification is printed.
-      No transformation is performed on the ident (no abstraction stuff,
-      no change, no prefix) : the name is directly generated as it is.
-      If the ident , in fact, has no qualification, then the scoping
-      process may have failed earlier because any qualified name must have
-      and explicit qualification after the scoping pass.
+    identifier. If the identifier has a qualification that is different of
+    the current compilation unit, then we use the dot-notation.
+    Otherwise no qualification is printed.
+    No transformation is performed on the ident (no abstraction stuff, no
+    change, no prefix) : the name is directly generated as it is.
+    If the ident , in fact, has no qualification, then the scoping process
+    may have failed earlier because any qualified name must have and
+    explicit qualification after the scoping pass.
 
     { Rem}: Not exported outside this module.                               *)
 (* ************************************************************************ *)
@@ -905,11 +905,10 @@ let generate_logical_expr ctx ~local_idents ~self_methods_status ~in_hyp
 (* current_unit: Parsetree.modname -> Format.formatter -> Parsetree.expr -> *)
 (*   unit                                                                   *)
 (** {b Descr} : Translate an [expr] expected to be a species parameter
-      expression into a Coq type.
-      Because species names are capitalized, they must appear as sum
-      constructors [expr]s. We also allow to have parentheses surrounding
-      the expression. Hence, thsi function only handles these 2 kinds of
-      [expr]s.
+    expression into a Coq type.
+    Because species names are capitalized, they must appear as sum
+    constructors [expr]s. We also allow to have parentheses surrounding the
+    expression. Hence, thsi function only handles these 2 kinds of [expr]s.
 
     {b Rem}: Not exported outside this module.                              *)
 (* ************************************************************************ *)
@@ -933,20 +932,20 @@ let rec generate_expr_as_species_parameter_expression ~current_unit ppf expr =
 
 
 
-(* ********************************************************************** *)
-(* Context.species_compil_context ->                                      *)
-(*   Env.TypeInformation.species_field list -> unit                       *)
+(* *********************************************************************** *)
+(* Context.species_compil_context ->                                       *)
+(*   Env.TypeInformation.species_field list -> unit                        *)
 (** {b Descr}: Generate the Coq code of a species parameters. It outputs
-      both the parameters names and their type as a Coq expression.
-      Either the parameter is a "is" parameter and then it's type will be
-      rebuilt from its species expression.
-      Or it is a "in" parameter and then it's type is a collection type,
-      and is directly the one recorded in the first couple of the
-      collections_carrier_mapping binding for this parameter.
-      Next come the extra parameters coming from the methods we depend
-      on.
-    {b Rem} : Not exported outside this module.                           *)
-(* ********************************************************************** *)
+    both the parameters names and their type as a Coq expression.
+    Either the parameter is a "is" parameter and then it's type will be
+    rebuilt from its species expression.
+    Or it is a "in" parameter and then it's type is a collection type, and
+    is directly the one recorded in the first couple of the
+    collections_carrier_mapping binding for this parameter.
+    Next come the extra parameters coming from the methods we depend on.
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
 let generate_record_type_parameters ctx species_fields =
   let ppf = ctx.Context.scc_out_fmter in
   (* We first abstract the species parameters. *)
@@ -1055,7 +1054,7 @@ let generate_record_type_parameters ctx species_fields =
 (* ************************************************************************* *)
 (* species_compil_context -> Env.TypeInformation.species_description -> unit *)
 (** {b Descr} : Generate the record type representing a species. This type
-          contains a field per method. This type is named as the species.
+    contains a field per method. This type is named as the species.
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.47 2008-06-13 13:45:11 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.48 2008-06-24 14:30:22 pessaux Exp $ *)
 
 
 (* *********************************************************** *)
@@ -59,14 +59,15 @@ let pp_node_labels sep ppf =
 
 
 
-(* ************************************************************************ *)
-(* pp_ast :                                                         *)
-(*   (Format.formatter -> 'a -> unit) ->                                    *)
-(*     Format.formatter -> ('a, string) Parsetree.ast -> unit       *)
-(** {b Descr} : Wrapper to apply pretty-printing only on the 'ast_doc' and
-              'ast_desc' fields of a ast. Ignores all other fields.
-    {b Rem} : Not exported ouside this module.                              *)
-(* ************************************************************************ *)
+(* ******************************************************************* *)
+(* pp_ast :                                                            *)
+(*   (Format.formatter -> 'a -> unit) ->                               *)
+(*     Format.formatter -> ('a, string) Parsetree.ast -> unit          *)
+(** {b Descr} : Wrapper to apply pretty-printing only on the 'ast_doc'
+    and 'ast_desc' fields of a ast. Ignores all other fields.
+
+    {b Rem} : Not exported ouside this module.                         *)
+(* ******************************************************************* *)
 let pp_ast desc_printer_fct ppf ast =
   let print_doc_elem ppf de =
     Format.fprintf ppf "(** %s *)@ " de.Parsetree.de_desc in
@@ -126,7 +127,8 @@ let pp_idents sep ppf = Handy.pp_generic_separated_list sep pp_ident ppf
 (* ********************************************************** *)
 (* Format.formatter -> Parsetree.label_ident_desc -> unit     *)
 (** {b Descr} : Pretty prints a [label_ident_desc] value as a
-       Caml-like structure.
+    Caml-like structure.
+
     {b Rem} : Not exported ouside this module.                 *)
 (* *********************************************************** *)
 let pp_label_ident_desc ppf = function
@@ -137,6 +139,7 @@ let pp_label_ident_desc ppf = function
 (* Format.formatter -> Parsetree.label_ident -> unit               *)
 (** {b Descr} : Pretty prints a [label_ident] value as a Caml-like
        structure.
+
     {b Rem} : Not exported ouside this module.                     *)
 (* *************************************************************** *)
 let pp_label_ident ppf = pp_ast pp_label_ident_desc ppf;;
@@ -186,39 +189,36 @@ let pp_constructor_ident ppf = pp_ast pp_constructor_ident_desc ppf
 
 
 
-(* ******************************************************************** *)
-(*  [Type] expr_desc_fixitude                                           *)
+(* ********************************************************************** *)
+(*  [Type] expr_desc_fixitude                                             *)
 (** [Desc] : Describe wether an [expr_desc] must appears in infix of
-             prefix position as the functionnal part in an applicative
-             expression. If the [expr_desc] is not an identifier
-             expression, then is it considered as having an unspecified
-             "fixitude".
+    prefix position as the functionnal part in an applicative expression.
+    If the [expr_desc] is not an identifier expression, then is it
+    considered as having an unspecified "fixitude".
 
-    {b Rem} : Not exported ouside this module.                          *)
-(* ******************************************************************** *)
+    {b Rem} : Not exported ouside this module.                            *)
+(* ********************************************************************** *)
 type expr_desc_fixitude =
   | Fixitude_prefix     (* The functionnal expression is a prefix identifier. *)
   | Fixitude_infix      (* The functionnal expression is an infix identifier. *)
   | Fixitude_applic     (* The functionnal expression is not an identifier or *)
-        (* is neither infix nor prefix.                       *)
+                        (* is neither infix nor prefix.                       *)
 ;;
 
 
 
-(* ********************************************************************* *)
-(* expr_desc_fixitude : Parsetree.expr_desc -> expr_desc_fixitude        *)
+(* ************************************************************************* *)
+(* expr_desc_fixitude : Parsetree.expr_desc -> expr_desc_fixitude            *)
 (** {b Descr} : Checks wether an [expr_desc] is a legal binary or unary
-              identifier, that can and must appear in infix or prefix
-              position as the functionnal part in an applicative
-              expression. If the [expr_desc] is not an identifier
-              expression, then it is considered as having an unspecified
-              "fixitude". Same thing if the [expr_desc] is an identifier
-              but is a [I_global] or [I_method] using an explicit scope
-              information (in this case, it must always be syntactically
-              used in a regular application way).
+    identifier, that can and must appear in infix or prefix  position as the
+    functionnal part in an applicative expression. If the [expr_desc] is not
+    an identifier expression, then it is considered as having an unspecified
+    "fixitude". Same thing if the [expr_desc] is an identifier but is a
+    [I_global] or [I_method] using an explicit scope information (in this
+    case, it must always be syntactically used in a regular application way).
 
-    {b Rem} : Not exported ouside this module.                           *)
-(* ********************************************************************* *)
+    {b Rem} : Not exported ouside this module.                               *)
+(* ************************************************************************* *)
 let expr_desc_fixitude = function
   | Parsetree.E_var id ->
       (* Discriminate according to the lexical tag. *)
@@ -259,15 +259,14 @@ let rec pp_rep_type_def_desc ppf = function
   | Parsetree.RTE_prod rtds ->
       Format.fprintf ppf "@[<2>(%a)@]" (pp_rep_type_defs "*") rtds
   | Parsetree.RTE_paren rtd -> Format.fprintf ppf "(%a)" pp_rep_type_def rtd
-(* ********************************************************************* *)
-(* pp_rep_type_defs :                                                    *)
-(*   string -> Format.formatter -> Parsetree.rep_type_def list ->        *)
-(*            unit                                                       *)
+(* ******************************************************************** *)
+(* pp_rep_type_defs :                                                   *)
+(*   string -> Format.formatter -> Parsetree.rep_type_def list -> unit  *)
 (** {b Descr} : Pretty prints a [list] of [rep_type_def] value as FoCal
-              source.
+    source.
 
-    {b Rem} : Not exported ouside this module.                           *)
-(* ********************************************************************* *)
+    {b Rem} : Not exported ouside this module.                          *)
+(* ******************************************************************** *)
 and pp_rep_type_defs sep ppf =
   Handy.pp_generic_separated_list sep pp_rep_type_def ppf
 (* ****************************************************************** *)
@@ -304,50 +303,50 @@ let rec pp_type_expr_desc prio ppf = function
     | Parsetree.TE_prop -> Format.fprintf ppf "prop"
     | Parsetree.TE_paren te ->
         Format.fprintf ppf "(%a)" (pp_type_expr_with_prio 0) te
-(* ************************************************************************ *)
-(* int -> string -> Format.formatter -> Parsetree.type_expr list -> unit    *)
+(* ************************************************************************** *)
+(* int -> string -> Format.formatter -> Parsetree.type_expr list -> unit      *)
 (** {b Descr} : Pretty prints a [list] of [type_expr] value as FoCal source
-              using the given current priority.
-              This function is ONLY aimed to be used internally by
-              [pp_type_expr_desc].
+    using the given current priority.
+    This function is ONLY aimed to be used internally by [pp_type_expr_desc].
+
     {b Rem} : Not exported ouside this module.
-              NEVER call somewhere else than in [pp_type_expr_desc]. This
-              is internal stuff !                                            *)
-(* ************************************************************************* *)
+    NEVER call somewhere else than in [pp_type_expr_desc]. This
+    is internal stuff !                                                       *)
+(* ************************************************************************** *)
 and pp_type_exprs_with_prio prio sep ppf =
   Handy.pp_generic_separated_list sep (pp_type_expr_with_prio prio) ppf
-(* ***************************************************************** *)
-(* int -> string -> Format.formatter -> Parsetree.type_expr -> unit  *)
+(* ******************************************************************* *)
+(* int -> string -> Format.formatter -> Parsetree.type_expr -> unit    *)
 (** {b Descr} : Pretty prints a [type_expr] value as FoCal source
-              using the given current priority.
-              This function is ONLY aimed to be used internally by
-              [pp_type_expr_desc], [pp_type_exprs_with_prio] and
-              [pp_type_exprs].
+    using the given current priority.
+    This function is ONLY aimed to be used internally by
+    [pp_type_expr_desc], [pp_type_exprs_with_prio] and[pp_type_exprs].
+
     {b Rem} : Not exported ouside this module.
-              NEVER call somewhere else than in [pp_type_expr_desc],
-              [pp_type_exprs_with_prio] and [pp_type_exprs].
-              is internal stuff !                                    *)
-(* ***************************************************************** *)
+    NEVER call somewhere else than in [pp_type_expr_desc],
+    [pp_type_exprs_with_prio] and [pp_type_exprs].
+    is internal stuff !                                                *)
+(* ******************************************************************* *)
 and pp_type_expr_with_prio prio ppf =
   pp_ast (pp_type_expr_desc prio) ppf
 (* ************************************************************************* *)
 (*  int -> string -> Format.formatter -> Parsetree.type_expr list -> unit    *)
 (** {b Descr} : Pretty prints a [list] of [type_expr] value as FoCal source.
-              The initial priority is 0, hence this function is initial
-              pretty print entry point for 1 list of type expressions.
+    The initial priority is 0, hence this function is initial pretty print
+    entry point for 1 list of type expressions.
+
     {b Rem} : Not exported ouside this module.                               *)
 (* ************************************************************************* *)
 and pp_type_exprs sep ppf =
   Handy.pp_generic_separated_list sep (pp_type_expr_with_prio 0) ppf
-(* *************************************************************** *)
-(* pp_type_expr : Format.formatter -> Parsetree.type_expr -> unit  *)
+(* ***************************************************************** *)
+(* pp_type_expr : Format.formatter -> Parsetree.type_expr -> unit    *)
 (** {b Descr} : Pretty prints a [type_expr] value as FoCal source.
-              The initial priority is 0, hence this function is
-              initial pretty print entry point for 1 type
-              expression.
+    The initial priority is 0, hence this function is initial pretty
+    print entry point for 1 type expression.
 
-    {b Rem} : Not exported ouside this module.                     *)
-(* *************************************************************** *)
+    {b Rem} : Not exported ouside this module.                       *)
+(* ***************************************************************** *)
 and pp_type_expr ppf = pp_ast (pp_type_expr_desc 0) ppf
 ;;
 
@@ -401,18 +400,17 @@ let pp_rec_flag ppf = function
   | Parsetree.RF_rec -> Format.fprintf ppf "rec@ "
 ;;
 
-(* ********************************************************************* *)
-(* pp_let_def_binding_flags :                                            *)
-(*   Format.formatter ->                                                 *)
-(*     (Parsetree.rec_flag * Parsetree.log_flag * Parsetree.loc_flag) -> *)
-(*       unit                                                            *)
+(* *********************************************************************** *)
+(* pp_let_def_binding_flags :                                              *)
+(*   Format.formatter ->                                                   *)
+(*     (Parsetree.rec_flag * Parsetree.log_flag * Parsetree.loc_flag) ->   *)
+(*       unit                                                              *)
 (** {b Descr} : Pretty prints a [let_def_desc] binding kind as FoCal
-              source. It mostly determines if the binding is a "let"
-              or a "logical". Aside this, it add the possible "local"
-              and "rec" flags is needed.
+    source. It mostly determines if the binding is a "let" or a "logical".
+    Aside this, it add the possible "local" and "rec" flags is needed.
 
-    {b Rem} : Not exported ouside this module.                           *)
-(* ********************************************************************* *)
+    {b Rem} : Not exported ouside this module.                             *)
+(* *********************************************************************** *)
 let pp_let_def_binding_flags ppf (ld_rec, ld_logical, ld_local) =
   Format.fprintf ppf "%a%alet %a"
     pp_local_flag ld_local
@@ -562,7 +560,7 @@ and pp_species_def ppf = pp_ast pp_species_def_desc ppf
 (* pp_species_param_type_desc :                                          *)
 (*   Format.formatter -> Parsetree.species_param_type_desc -> unit       *)
 (** {b Descr} : Pretty prints a [species_param_type_desc] value as FoCal
-              source.
+    source.
 
     {b Rem} : Not exported ouside this module.                           *)
 (* ********************************************************************* *)
@@ -574,7 +572,7 @@ and pp_species_param_type_desc ppf = function
 (* pp_species_param_type :                                               *)
 (*   Format.formatter -> Parsetree.species_param_type -> unit            *)
 (** {b Descr} : Pretty prints a [species_param_type_desc] value as FoCal
-              source.
+    source.
 
     {b Rem} : Not exported ouside this module.                           *)
 (* ********************************************************************* *)
