@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.69 2008-06-25 12:03:12 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.70 2008-06-25 15:23:24 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -337,6 +337,213 @@ let generate_defined_non_recursive_method ctx print_ctx env min_coq_env
 
 
 
+
+let instanciate_parameter_through_inheritance ctx env field_name field_history
+    used_species_parameter_tys =
+  let current_unit = ctx.Context.scc_current_unit in
+  let out_fmter = ctx.Context.scc_out_fmter in
+  (* We first must search at the origin of the method generator, the     *)
+  (* arguments it had. Since the method we are dealing with is inherited *)
+  (* it is mandatorily hosted in an existing species reachable via the   *)
+  (* environment.                                                        *)
+  (* This ident is temporary and created just to lookup in the environment. *)
+  let host_ident =
+    Parsetree_utils.make_pseudo_species_ident
+      ~current_unit field_history.Env.fh_initial_apparition in
+  let (original_host_species_params, host_method_infos, _, _) =
+    Env.CoqGenEnv.find_species
+      ~loc: Location.none ~current_unit host_ident env in
+  if Configuration.get_verbose () then
+    Format.eprintf "Originally hosting species '%a' has %d parameters.@."
+      Sourcify.pp_ident host_ident (List.length original_host_species_params) ;
+  (* We search the dependencies the original method had on its species *)
+  (* parameters' methods.                                              *)
+  let meth_info =
+    List.find (fun inf -> inf.Env.mi_name = field_name) host_method_infos in
+  if Configuration.get_verbose () then
+    (begin
+    Format.eprintf "Method '%a' has the following dependencies on parameters:@."
+      Sourcify.pp_vname field_name ;
+    List.iter
+      (fun (species_param, meths_from_param) ->
+        let species_param_name =
+          match species_param with
+           | Env.TypeInformation.SPAR_in (n, _) -> n
+           | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+               Parsetree.Vuident n in
+        Format.eprintf "\t From parameter '%a', dependencies on methods: "
+          Sourcify.pp_vname species_param_name;
+        Parsetree_utils.DepNameSet.iter
+          (fun (meth, _) -> Format.eprintf "%a " Sourcify.pp_vname meth)
+          meths_from_param ;
+        Format.eprintf "@.")
+      meth_info.Env.mi_dependencies_from_parameters
+    end) ;
+  (* Since in Coq, types are explicit, we must also instanciate the type *)
+  (* parameters representing the species parameters carriers. We do this *)
+  (* before adressing the instanciation of the parameters representing   *)
+  (* the species parameters' methods.                                    *)
+  List.iter
+    (fun species_param ->
+      let species_param_as_string =
+        Parsetree_utils.name_of_vname species_param in
+      (* Find the index of the parameter in the species's signature from *)
+      (* where the method was REALLY defined (not the one where it is    *)
+      (* inherited).                                                     *)
+      let original_param_index =
+        Handy.list_first_index
+          (function
+            | Env.TypeInformation.SPAR_in (_, _) -> false
+            | Env.TypeInformation.SPAR_is ((_, p), _, _) ->
+                p = species_param_as_string)
+          original_host_species_params in
+      (* Instanciation process of "IS" parameter. In effect, in the *)
+      (* [used_species_parameter_tys] we can only have reference to *)
+      (* "IS" parameters since we deal with their ... type !        *)
+      (* So, we start processing from the oldest species where    *)
+      (* the currently compiled method appeared, i.e. the species *)
+      (* where it was really DEFINED.                             *)
+      let instancied_with =
+        Misc_common.follow_instanciations_for_is_param
+          ctx (Abstractions.EK_coq env) original_param_index
+          field_history.Env.fh_inherited_along in
+      (* Now really generate the code of by what to instanciate. *)
+      (begin
+      match instancied_with with
+       | Misc_common.IPI_by_toplevel_species (modname, spe_name)
+       | Misc_common.IPI_by_toplevel_collection (modname, spe_name) ->
+           if modname <> ctx.Context.scc_current_unit then
+             Format.fprintf out_fmter "%s." modname ;
+           Format.fprintf out_fmter "%s_T" spe_name
+       | Misc_common.IPI_by_species_parameter prm ->
+           (* In Coq, species parameters are abstracted not by *)
+           (* "_p_species" but by "species_T" !                *)
+           let species_param_name =
+             match prm with
+              | Env.TypeInformation.SPAR_in (_, _) -> assert false
+              | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+                  Parsetree.Vuident n in
+           Format.fprintf out_fmter "@ %a_T"
+             Parsetree_utils.pp_vname_with_operators_expanded
+             species_param_name
+      end))
+    used_species_parameter_tys ;
+  (* Now, we address the instanciation of the species parameters' methods.  *)
+  (* For each species parameter, we must trace by what it was instanciated. *)
+  List.iter
+    (fun (species_param, meths_from_param) ->
+      (* Find the index of the parameter in the species's signature from *)
+      (* where the method was REALLY defined (not the one where it is    *)
+      (* inherited).                                                     *)
+      let original_param_index =
+        Handy.list_first_index
+          (fun p -> p = species_param) original_host_species_params in
+      match species_param with
+       | Env.TypeInformation.SPAR_in (param_name, _) ->
+           (* By construction, in dependencies of "in" parameter, the list *)
+           (* of methods is always 1-length at most and contains directly  *)
+           (* the name of the parameter itself if it is really used.       *)
+           let number_meth =
+             Parsetree_utils.DepNameSet.cardinal meths_from_param in
+           assert (number_meth <= 1) ;
+           if number_meth = 1 then
+             (begin
+             (* For substitution, we technically need to know in which     *)
+             (* compilation unit the parameter, hence in fact the species, *)
+             (* was.                                                       *)
+             let (original_param_unit, _) =
+               field_history.Env.fh_initial_apparition in
+             (* We get the FoCaL expression once substitutions are done. *)
+             let instancied_expr =
+               Misc_common.follow_instanciations_for_in_param
+                 ctx (Abstractions.EK_coq env) param_name
+                 original_param_unit original_param_index
+                 field_history.Env.fh_inherited_along in
+             (* We must now generate the Coq code for this FoCaL expression. *)
+             Format.fprintf out_fmter "@ @[<1>(" ;
+             Species_record_type_generation.generate_expr
+               ctx ~local_idents: []
+               (* Or whatever, "Self" will never appear at this point. *)
+               ~self_methods_status:
+                 Species_record_type_generation.SMS_abstracted
+               (* Use naming scheme species name + "_" + method name to *)
+               (* use Variables instead of regular lambda-lifting.      *)
+               ~in_hyp: true env instancied_expr ;
+             Format.fprintf out_fmter ")@]"
+             end)
+       | Env.TypeInformation.SPAR_is ((_, _), _, _) ->
+           (begin
+           (* Instanciation process of "IS" parameter. We start processing *)
+           (* from the oldest species where the currently compiled method  *)
+           (* appeared, i.e. the species where it was really DEFINED.      *)
+           let instancied_with =
+             Misc_common.follow_instanciations_for_is_param
+               ctx (Abstractions.EK_coq env) original_param_index
+               field_history.Env.fh_inherited_along in
+           (* Now really generate the code of by what to instanciate. *)
+           (match instancied_with with
+            | Misc_common.IPI_by_toplevel_species (spec_mod, spec_name) ->
+                (* We found that a toplevel species provides this method  *)
+                (* because this species is finally used as effective      *)
+                (* parameter. However, may be the method on which we have *)
+                (* a dependency is not directly in this toplevel species. *)
+                (* May be it is in one of its parents. We must search in  *)
+                (* its inheritance to determine exactly in which species  *)
+                (* each method is REALLY defined (not only inherited).    *)
+                Parsetree_utils.DepNameSet.iter
+                  (fun (meth, _) ->
+                    let (real_spec_mod, real_spec_name) =
+                      Misc_common.
+                      find_toplevel_spe_defining_meth_through_inheritance
+                        (Abstractions.EK_coq env) ~current_unit
+                        ~start_spec_mod: spec_mod ~start_spec_name: spec_name
+                        ~method_name: meth in
+                    let prefix =
+                      if real_spec_mod = current_unit then real_spec_name ^ ".("
+                      else
+                        real_spec_mod ^ "." ^ real_spec_name ^ ".(" ^
+                        real_spec_mod in
+                    Format.fprintf out_fmter "@ %s%a)"
+                      prefix Parsetree_utils.pp_vname_with_operators_expanded
+                      meth)
+                  meths_from_param
+            | Misc_common.IPI_by_toplevel_collection (coll_mod, coll_name) ->
+                let prefix =
+                  if coll_mod = current_unit then
+                    coll_name ^ "__effective_collection.(" ^ coll_name ^ "_"
+                  else coll_mod ^ "." ^ coll_name ^
+                    "__effective_collection.(" ^ coll_mod ^ "." ^
+                    coll_name ^ "_" in
+                Parsetree_utils.DepNameSet.iter
+                  (fun (meth, _) ->
+                    (* Don't print the type to prevent being too verbose. *)
+                    Format.fprintf out_fmter "@ %s%a)"
+                      prefix Parsetree_utils.pp_vname_with_operators_expanded
+                      meth)
+                  meths_from_param
+              | Misc_common.IPI_by_species_parameter prm ->
+                  (* In Coq, species parameters are abstracted not by *)
+                  (* "_p_species_xxx" but by "species_xxx" !        *)
+                  let species_param_name =
+                    match prm with
+                     | Env.TypeInformation.SPAR_in (_, _) -> assert false
+                     | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+                         Parsetree.Vuident n in
+                  let prefix =
+                    (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
+                  Parsetree_utils.DepNameSet.iter
+                    (fun (meth, _) ->
+                      (* Don't print the type to prevent being too verbose. *)
+                      Format.fprintf out_fmter "@ %s%a"
+                        prefix Parsetree_utils.pp_vname_with_operators_expanded
+                        meth)
+                    meths_from_param)
+           end))
+    meth_info.Env.mi_dependencies_from_parameters
+;;
+
+
+
 (* ********************************************************************** *)
 (** {b Descr} Generate the coq code for a non-recursive method of the
     current species.
@@ -384,6 +591,9 @@ let generate_non_recursive_field_binding ctx print_ctx env min_coq_env
   (* effect, because in "property"s we don't lambda-lift, to keep late    *)
   (* binding, "property"s always use the "self_..." Coq "Variable"        *)
   (* representing the method.                                             *)
+  (* Note that this process is similar to the one performed while         *)
+  (* generating the "local_xxx" functions in OCaml used to fill the       *)
+  (* record value of the collection generator.                            *)
   Format.fprintf out_fmter "@[<2>Let self_%a :=@ "
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* The method generator's name... If the generator *)
@@ -397,49 +607,64 @@ let generate_non_recursive_field_binding ctx print_ctx env min_coq_env
       Parsetree_utils.pp_vname_with_operators_expanded (snd defined_from) ;
   Format.fprintf out_fmter "__%a"
     Parsetree_utils.pp_vname_with_operators_expanded name ;
-  (* Now, apply to each extra parameter coming from the lambda liftings. *)
-  (* First, the extra arguments that represent the types of the species   *)
-  (* parameters used in the method. It is always the species name + "_T". *)
-  List.iter
-     (fun species_param_type_name ->
-        Format.fprintf out_fmter "@ %a_T"
-          Parsetree_utils.pp_vname_with_operators_expanded
-          species_param_type_name)
-  used_species_parameter_tys ;
-  (* Next, the extra arguments due to the species parameters methods we *)
-  (* depends on. They are "Variables" previously declared and named:    *)
-  (* species parameter name + "_" + method name is coming from "is"     *)
-  (* parameter of simply by the species parameter name if coming from a *)
-  (* "in" parameter.                                                    *)
-  (* Hence, here we care here about whether the species parameters is   *)
-  (* "in" or "is" !                                                     *)
-  List.iter
-    (fun (species_param, meths_from_param) ->
-      match species_param with
-       | Env.TypeInformation.SPAR_is ((_, species_param_name), _, _) ->
-           Parsetree_utils.DepNameSet.iter
-             (fun (meth, _) ->
-               (* Don't print the type to prevent being too verbose. *)
-               Format.fprintf out_fmter "@ %s_%a"
-                 species_param_name
-                 Parsetree_utils.pp_vname_with_operators_expanded meth)
-             meths_from_param
-       | Env.TypeInformation.SPAR_in (_, _) ->
-           (* Since a "in" parameter does not have methods, the list should *)
-           (* trivially be of length 1, with the name of the species.       *)
-           (* The generated identifier's name is the parameter's name twice *)
-           (* (because this last one is computed as the "stuff" a           *)
-           (* dependency was found on, and inthe case of a "in"-parameter,  *)
-           (* the dependency can only be on the parameter's value itself,   *)
-           (* not on any method since there is none !).                     *)
-           Parsetree_utils.DepNameSet.iter
-             (fun (meth, _) ->
-               (* Don't print the type to prevent being too verbose. *)
-               Format.fprintf out_fmter "@ %a_%a"
-                 Parsetree_utils.pp_vname_with_operators_expanded meth
-                 Parsetree_utils.pp_vname_with_operators_expanded meth)
-             meths_from_param)
-    dependencies_from_params ;
+  (* Find the method generator to use depending on if it belongs to this *)
+  (* inheritance level or if it was inherited from another species.      *)
+  if from.Env.fh_initial_apparition = ctx.Context.scc_current_species then
+    (begin
+    (* The method generator was NOT inherited... *)
+    (* Now, apply to each extra parameter coming from the lambda liftings. *)
+    (* First, the extra arguments that represent the types of the species   *)
+    (* parameters used in the method. It is always the species name + "_T". *)
+    List.iter
+       (fun species_param_type_name ->
+          Format.fprintf out_fmter "@ %a_T"
+            Parsetree_utils.pp_vname_with_operators_expanded
+            species_param_type_name)
+    used_species_parameter_tys ;
+    (* Next, the extra arguments due to the species parameters methods we *)
+    (* depends on. They are "Variables" previously declared and named:    *)
+    (* species parameter name + "_" + method name is coming from "is"     *)
+    (* parameter of simply by the species parameter name if coming from a *)
+    (* "in" parameter.                                                    *)
+    (* Hence, here we care here about whether the species parameters is   *)
+    (* "in" or "is" !                                                     *)
+    List.iter
+      (fun (species_param, meths_from_param) ->
+        match species_param with
+         | Env.TypeInformation.SPAR_is ((_, species_param_name), _, _) ->
+             Parsetree_utils.DepNameSet.iter
+               (fun (meth, _) ->
+                 (* Don't print the type to prevent being too verbose. *)
+                 Format.fprintf out_fmter "@ %s_%a"
+                   species_param_name
+                   Parsetree_utils.pp_vname_with_operators_expanded meth)
+               meths_from_param
+         | Env.TypeInformation.SPAR_in (_, _) ->
+             (* Since a "in" parameter does not have methods, the list should *)
+             (* trivially be of length 1, with the name of the species.       *)
+             (* The generated identifier's name is the parameter's name twice *)
+             (* (because this last one is computed as the "stuff" a           *)
+             (* dependency was found on, and inthe case of a "in"-parameter,  *)
+             (* the dependency can only be on the parameter's value itself,   *)
+             (* not on any method since there is none !).                     *)
+             Parsetree_utils.DepNameSet.iter
+               (fun (meth, _) ->
+                 (* Don't print the type to prevent being too verbose. *)
+                 Format.fprintf out_fmter "@ %a_%a"
+                   Parsetree_utils.pp_vname_with_operators_expanded meth
+                   Parsetree_utils.pp_vname_with_operators_expanded meth)
+               meths_from_param)
+      dependencies_from_params
+    end)
+  else
+    (begin
+    (* The method generator WAS inherited... *)
+    instanciate_parameter_through_inheritance
+      ctx env name from used_species_parameter_tys
+    end) ;
+
+
+
   (* Next, the extra arguments due to methods of ourselves we depend on. *)
   (* They are always present in the species under the name "self_...".   *)
   List.iter
@@ -2074,30 +2299,8 @@ let apply_generator_to_parameters ctx env collection_body_params
     col_gen_params_info =
   let (required_species_carriers_params, methods_params) =
     col_gen_params_info.Env.CoqGenInformation.cgi_generator_parameters in
-
-
-Format.eprintf "Paramètres dus aux carriers de paramètres: " ;
-List.iter
-  (fun n -> Format.eprintf "%a " Sourcify.pp_vname n)
-  required_species_carriers_params ;
-Format.eprintf "@." ;
-List.iter
-  (fun (n, _) ->
-    Format.eprintf "Implements paramètre %a@." Sourcify.pp_vname n)
-col_gen_params_info.Env.CoqGenInformation.cgi_implemented_species_params_names ;
-List.iter
-  (fun (n, deps) ->
-    Format.eprintf "Dépendances sur le paramètre: %a: " Sourcify.pp_vname n ;
-    Parsetree_utils.DepNameSet.iter
-      (fun (p, _) -> Format.eprintf "%a " Sourcify.pp_vname p)
-      deps ;
-    Format.eprintf "@.")
-methods_params ;
-
-
   let current_unit = ctx.Context.scc_current_unit in
   let out_fmter = ctx.Context.scc_out_fmter in
-
   (* Create the assoc list mapping the formal to the effective parameters. *)
   let formal_to_effective_map =
     (try

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.67 2008-06-25 12:03:12 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.68 2008-06-25 15:23:24 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1231,7 +1231,9 @@ let generate_collection_generator ctx env compiled_species_fields =
   Format.fprintf out_fmter "@[<2>let collection_create ()" ;
   (* Generate the parameters the collection generator needs to build the   *)
   (* each of the current species's local function (functions corresponding *)
-  (* to the actual method stored in the collection record). By the way,    *)
+  (* to the actual method stored in the collection record).                *)
+  (* These parameters of the generator come from the abstraction of        *)
+  (* methods coming from oru species parameters we depend on. By the way,  *)
   (* recover the list of species parameters linked together with their     *)
   (* methods we need to instanciate in order to apply the collection       *)
   (* generator.                                                            *)
@@ -1244,10 +1246,9 @@ let generate_collection_generator ctx env compiled_species_fields =
     (function
       | Misc_common.CSF_sig _ | Misc_common.CSF_property _
       | Misc_common.CSF_theorem _ -> ()
-      | Misc_common.CSF_let field_memory ->
-          process_one_field field_memory
+      | Misc_common.CSF_let field_memory -> process_one_field field_memory
       | Misc_common.CSF_let_rec l ->
-          List.iter (fun fm -> process_one_field fm) l)
+	  List.iter (fun fm -> process_one_field fm) l)
     compiled_species_fields ;
   (* And now, the record value. We just assign each record fields    *)
   (* corresponding to the current species's method the corresponding *)
