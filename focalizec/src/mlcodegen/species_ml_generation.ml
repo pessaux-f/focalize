@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.65 2008-06-24 14:30:22 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.66 2008-06-25 10:42:54 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1344,7 +1344,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
     Format.eprintf "Originally hosting species '%a' has %d parameters.@."
       Sourcify.pp_ident host_ident (List.length original_host_species_params) ;
   (* We search the dependencies the original method had on its species *)
-  (* parameters.                                                       *)
+  (* parameters' methods.                                              *)
   let meth_info =
     List.find
       (fun inf ->
@@ -1489,8 +1489,102 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
     meth_info.Env.MlGenInformation.mi_dependencies_from_parameters ;
 ;;
 
-    
 
+    
+(* *********************************************************************** *)
+(* Format.formatter -> compiled_species_fields list ->                     *)
+(*  (Parsetree.vname * Parsetree_utils.DepNameSet.t) list                  *)
+(** {b Descr} : Dumps as OCaml code the parameters required to the
+         collection generator in order to make them bound in the
+         collection generator's body. These parameters come from
+         the methods of the species parameters that some of our methods
+         depend on. This means that a closed species with no species
+         parameters will have NO extra parameters in its collection
+         generator.
+
+         This function must UNIQUELY find the names of all the extra
+         parameters the methods will need to make them arguments of the
+         collection generator and record then in a precise order that must
+         be made public for the guys who want to instanciate the collection.
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+let dump_collection_generator_arguments_for_params_methods out_fmter
+    compiled_species_fields =
+  (* Let's create an assoc list mapping for each species paramater name *)
+  (* the set of methods names from it that needed to be lambda-lifted,  *)
+  (* hence that will lead to parameters of the collection generator.    *)
+  let species_param_names_and_methods =
+    ref ([] : (Parsetree.vname * Parsetree_utils.DepNameSet.t ref) list) in
+  (* ************************************************************************ *)
+  (** {b Descr} :  Local function to process only one [compiled_field_memory].
+         Handy to factorize the code in both the cases of [CSF_let] and
+         [CSF_let_rec]. This function effectivly accumulates by side effect
+         for each species parameter the set of methods we depend on.
+
+      { b Rem} : Local to the enclosing [dump_collection_generator_arguments]
+               function. Not exported.                                        *)
+  (* ************************************************************************ *)
+  let rec process_one_field_memory field_memory =
+    List.iter
+      (fun (spe_param, meths_set) ->
+        (* Recover the species parameter's name. *)
+        let spe_param_name =
+          match spe_param with
+           | Env.TypeInformation.SPAR_in (n, _) -> n
+           | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+               Parsetree.Vuident n in
+        (* Get or create for this species parameter name, the bucket *)
+        (* recording all the methods someone depends on.             *)
+        (* We don't care here about whether the species parameters is   *)
+        (* "in" or "is".                                                *)
+        let spe_param_bucket =
+          (try List.assoc spe_param_name !species_param_names_and_methods
+          with Not_found ->
+            let bucket = ref Parsetree_utils.DepNameSet.empty in
+            species_param_names_and_methods :=
+              (spe_param_name, bucket) :: !species_param_names_and_methods ;
+            bucket) in
+        (* And now, union the current methods we depend on with *)
+        (* the already previously recorded.                     *)
+        spe_param_bucket :=
+          Parsetree_utils.DepNameSet.union meths_set !spe_param_bucket)
+      field_memory.Misc_common.cfm_dependencies_from_parameters in
+
+  (* ********************************************************** *)
+  (* Now, really work, building by side effect for each species *)
+  (* parameter the set of methods we depend on.                 *)
+  List.iter
+    (function
+      | Misc_common.CSF_sig _ | Misc_common.CSF_property _
+      | Misc_common.CSF_theorem _ -> ()
+      | Misc_common.CSF_let field_memory ->
+	  process_one_field_memory field_memory
+      | Misc_common.CSF_let_rec l -> List.iter process_one_field_memory l)
+    compiled_species_fields ;
+  (* Now we get the assoc list complete, we can dump the parameters of the  *)
+  (* collection generator. To make them correct with their usage inside the *)
+  (* local functions of the collection generator, we must give them a name  *)
+  (* shaped in the same way, i.e:                                           *)
+  (* "_p_" + species parameter name + "_" + called method name.             *)
+  List.iter
+    (fun (species_param_name, meths_set) ->
+      let prefix =
+        "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
+        "_" in
+      Parsetree_utils.DepNameSet.iter
+        (fun (meth, _) ->
+          (* Don't print the type to prevent being too verbose. *)
+          Format.fprintf out_fmter "@ %s%a"
+            prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
+        !meths_set)
+  !species_param_names_and_methods ;
+  (* Finally, make this parameters information public by returning it. By     *)
+  (* the way, the ref on the inner set is not anymore needed, then remove it. *)
+  List.map
+    (fun (sp_par_name, meths_set) -> (sp_par_name, !meths_set))
+    !species_param_names_and_methods
+;;
 
 
 
@@ -1631,7 +1725,7 @@ let generate_collection_generator ctx env compiled_species_fields =
   (* methods we need to instanciate in order to apply the collection       *)
   (* generator.                                                            *)
   let extra_args_from_spe_params =
-    Misc_common.dump_collection_generator_arguments_for_params_methods
+    dump_collection_generator_arguments_for_params_methods
       out_fmter compiled_species_fields in
   Format.fprintf out_fmter " =@ " ;
   (* Generate the local functions that will be used to fill the record value. *)
@@ -2120,4 +2214,3 @@ let collection_compile env ~current_unit out_fmter collection_def
     assert false
   end)
 ;;
-

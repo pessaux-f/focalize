@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.mli,v 1.2 2008-06-23 16:26:25 pessaux Exp $ *)
+(* $Id: misc_common.mli,v 1.3 2008-06-25 10:42:54 pessaux Exp $ *)
 
 type compiled_field_memory = {
   cfm_from_species : Env.from_history ;
@@ -37,7 +37,3 @@ val get_implements_effectives :
   Parsetree.species_param_desc Parsetree.ast list ->
     ('a * Env.ScopeInformation.species_parameter_kind) list ->
       collection_effective_arguments list
-
-val dump_collection_generator_arguments_for_params_methods :
-  Format.formatter -> compiled_species_fields list ->
-    (Parsetree.vname * Parsetree_utils.DepNameSet.t) list

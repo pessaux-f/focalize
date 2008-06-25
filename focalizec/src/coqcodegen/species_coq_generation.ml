@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.67 2008-06-24 14:30:22 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.68 2008-06-25 10:42:54 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -714,7 +714,6 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
                  memory.Misc_common.cfm_used_species_parameter_tys ;
                (* Now apply the abstracted methods from the species *)
                (* parameters we depend on.                          *)
-               (* [Unsure] Euh, on fait quoi des "in" ? *)
                List.iter
                  (fun (species_param, meths_from_param) ->
                    (* Recover the species parameter's name. *)
@@ -2191,7 +2190,7 @@ methods_params ;
                 | Some fname -> Format.fprintf out_fmter "%s." fname
                 | None -> ()) ;
                (* Species name."effective_collection.". *)
-               Format.fprintf out_fmter "@ %a_effective_collection.("
+               Format.fprintf out_fmter "@ %a__effective_collection.("
                  Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname ;
                (* If needed, qualify the name of the species *)
@@ -2220,7 +2219,7 @@ methods_params ;
            Species_record_type_generation.generate_expr
              ctx ~local_idents: []
              ~self_methods_status:
-              (* Or what you prefer. *)
+               (* Or what you prefer. *)
                Species_record_type_generation.SMS_abstracted
              ~in_hyp: false               (* Or what you prefer. *)
              env expr ;
