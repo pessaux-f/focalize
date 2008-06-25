@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.68 2008-06-25 10:42:54 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.69 2008-06-25 12:03:12 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -67,9 +67,8 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
     (* Now, find the method in the species information. *)
     let method_info =
       List.find
-        (fun { Env.CoqGenInformation.mi_name = n } -> n = method_name)
-        species_meths_infos in
-    method_info.Env.CoqGenInformation.mi_abstracted_methods
+        (fun { Env.mi_name = n } -> n = method_name) species_meths_infos in
+    method_info.Env.mi_abstracted_methods
   with _ ->
     (* Because the generator is inherited, the species where it is hosted *)
     (* MUST be in the environment. Otherwise, something went wrong...     *)
@@ -1515,12 +1514,12 @@ let extend_env_for_species_def ~current_species env species_descr =
            let bound_methods =
              List.map
                (fun (n, _) -> {
-                 Env.CoqGenInformation.mi_name = n ;
-                 Env.CoqGenInformation.mi_history = {
+                 Env.mi_name = n ;
+                 Env.mi_history = {
                    Env.fh_initial_apparition = current_species ;
                    Env.fh_inherited_along = [] } ;
-                 Env.CoqGenInformation.mi_dependencies_from_parameters = [] ;
-                 Env.CoqGenInformation.mi_abstracted_methods = [] })
+                 Env.mi_dependencies_from_parameters = [] ;
+                 Env.mi_abstracted_methods = [] })
                methods_names in
            (* Because species names are capitalized, we explicitely build *)
            (* a [Parsetree.Vuident] to wrap the species name string.      *)
@@ -1978,40 +1977,40 @@ let species_compile env ~current_unit out_fmter species_def species_descr
            | Misc_common.CSF_sig compiled_field_memory
            | Misc_common.CSF_let compiled_field_memory
            | Misc_common.CSF_theorem compiled_field_memory ->
-               [{ Env.CoqGenInformation.mi_name =
+               [{ Env.mi_name =
                     compiled_field_memory.Misc_common.cfm_method_name ;
-                  Env.CoqGenInformation.mi_history =
+                  Env.mi_history =
                     compiled_field_memory.Misc_common.cfm_from_species ;
-                  Env.CoqGenInformation.mi_dependencies_from_parameters =
+                  Env.mi_dependencies_from_parameters =
                     compiled_field_memory.Misc_common.
                       cfm_dependencies_from_parameters ;
-                  Env.CoqGenInformation.mi_abstracted_methods =
+                  Env.mi_abstracted_methods =
                     compiled_field_memory.Misc_common.
                       cfm_coq_min_typ_env_names }]
            | Misc_common.CSF_let_rec compiled_field_memories ->
                List.map
                  (fun cfm ->
-                   { Env.CoqGenInformation.mi_name =
+                   { Env.mi_name =
                        cfm.Misc_common.cfm_method_name ;
-                     Env.CoqGenInformation.mi_history =
+                     Env.mi_history =
                        cfm.Misc_common.cfm_from_species ;
-                     Env.CoqGenInformation.mi_dependencies_from_parameters =
+                     Env.mi_dependencies_from_parameters =
                        cfm.Misc_common.cfm_dependencies_from_parameters ;
-                     Env.CoqGenInformation.mi_abstracted_methods =
+                     Env.mi_abstracted_methods =
                        cfm.Misc_common.cfm_coq_min_typ_env_names })
                  compiled_field_memories
            | Misc_common.CSF_property compiled_field_memory ->
-               [ { Env.CoqGenInformation.mi_name =
+               [ { Env.mi_name =
                      compiled_field_memory.Misc_common.cfm_method_name ;
-                   Env.CoqGenInformation.mi_history =
+                   Env.mi_history =
                      compiled_field_memory.Misc_common.cfm_from_species ;
-                   Env.CoqGenInformation.mi_dependencies_from_parameters =
+                   Env.mi_dependencies_from_parameters =
                      compiled_field_memory.Misc_common.
                        cfm_dependencies_from_parameters ;
                    (* For properties, this list should always be [] since *)
                    (* we do not compute the visible universe since it is  *)
                    (* never used.                                         *)
-                   Env.CoqGenInformation.mi_abstracted_methods =
+                   Env.mi_abstracted_methods =
                      compiled_field_memory.Misc_common.
                        cfm_coq_min_typ_env_names }])
          compiled_fields) in

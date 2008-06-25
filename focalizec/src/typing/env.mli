@@ -118,6 +118,13 @@ type collection_or_species =
   | COS_collection
   | COS_species
 
+type generic_code_gen_method_info = {
+  mi_name : Parsetree.vname ;
+  mi_history : from_history ;
+  mi_dependencies_from_parameters :
+    (TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ;
+  mi_abstracted_methods : Parsetree.vname list
+  }
 
 module MlGenInformation :
   sig
@@ -128,13 +135,7 @@ module MlGenInformation :
         (Parsetree.vname * Parsetree_utils.DepNameSet.t) list
     }
 
-    type method_info = {
-      mi_name : Parsetree.vname ;
-      mi_history : from_history ;
-      mi_dependencies_from_parameters :
-        (TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ;
-      mi_abstracted_methods : Parsetree.vname list
-    }
+    type method_info = generic_code_gen_method_info
 
     type species_binding_info =
       ((TypeInformation.species_param list) *
@@ -165,13 +166,7 @@ module CoqGenInformation :
 
     type label_mapping_info = Parsetree.external_expr_desc
 
-    type method_info = {
-      mi_name : Parsetree.vname ;
-      mi_history : from_history ;
-      mi_dependencies_from_parameters :
-        (TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ;
-      mi_abstracted_methods : Parsetree.vname list
-    }
+    type method_info = generic_code_gen_method_info
 
     type species_binding_info =
       ((TypeInformation.species_param list) *

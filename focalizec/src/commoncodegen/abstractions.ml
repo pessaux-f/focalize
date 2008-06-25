@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.21 2008-06-17 09:59:23 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.22 2008-06-25 12:03:12 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -48,27 +48,6 @@ type environment_kind =
 
 
 
-
-(** Dirty but used to have a same structure for [species_binding_info]s coming
-    from [Env.MlGenEnv.t] and [Env.CoqGenEnv.t]. *)
-type private_method_info = {
-  pmi_name : Parsetree.vname ;
-  pmi_dependencies_from_parameters :
-    ((** The positional list of methods from the species parameters
-         abstracted by lambda-lifting. *)
-     Env.TypeInformation.species_param *
-     (* The set of methods of this parameter on which we have dependencies. *)
-     Parsetree_utils.DepNameSet.t) list
-  } ;;
-type private_species_binding_info =
-  ((** The list of species parameters of the species with their kind. *)
-   (Env.TypeInformation.species_param list) *
-   (** The list of methods the species has. *)
-   (private_method_info list))
-;;
-
-
-
 (* For debugging purpose only.
 let debug_print_dependencies_from_parameters l =
   List.iter
@@ -86,44 +65,6 @@ let debug_print_dependencies_from_parameters l =
     l
 ;;
 *)
-
-
-
-(* ********************************************************************* *)
-(** {b Descr} : Transforms a [Env.MlGenInformation.species_binding_info]
-    into a [private_method_info].
-
-    {b Rem}: Not exported outside this module.                           *)
-(* ********************************************************************* *)
-let ml_species_binding_info_to_private (params, methods, _, _) =
-  let methods' =
-    List.map
-      (fun ml ->
-        { pmi_name = ml.Env.MlGenInformation.mi_name ;
-          pmi_dependencies_from_parameters =
-            ml.Env.MlGenInformation.mi_dependencies_from_parameters })
-      methods in
-  (params, methods')
-;;
-
-
-
-(* ********************************************************************** *)
-(** {b Descr} : Transforms a [Env.CoqGenInformation.species_binding_info]
-    into a [private_method_info].
-
-    {b Rem}: Not exported outside this module.                            *)
-(* ********************************************************************** *)
-let coq_species_binding_info_to_private (params, methods, _, _) =
-  let methods' =
-    List.map
-      (fun ml ->
-        { pmi_name = ml.Env.CoqGenInformation.mi_name ;
-          pmi_dependencies_from_parameters =
-            ml.Env.CoqGenInformation.mi_dependencies_from_parameters })
-      methods in
-  (params, methods')
-;;
 
 
 
@@ -509,13 +450,17 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
       let (sprim_params, sprim_meths_abstr_infos) =
         (match env with
          | EK_ml env ->
-             ml_species_binding_info_to_private
-               (Env.MlGenEnv.find_species
-                  ~loc: Location.none ~current_unit sprim env)
+             (* Just extract the components we need. *)
+             let (a, b, _, _) =
+               Env.MlGenEnv.find_species
+                 ~loc: Location.none ~current_unit sprim env in
+             (a, b)
          | EK_coq env -> 
-             coq_species_binding_info_to_private
-               (Env.CoqGenEnv.find_species
-                  ~loc: Location.none ~current_unit sprim env)) in
+             (* Just extract the components we need. *)
+             let (a, b, _, _) =
+               Env.CoqGenEnv.find_species
+                 ~loc: Location.none ~current_unit sprim env in
+             (a, b)) in
       List.fold_left
         (fun inner_accu_deps_from_params (effective_arg, position) ->
           (* Here, [effective_arg] is Cp. *)
@@ -548,10 +493,10 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                    (* So, first get z's dependencies information. *)
                    let z_priv_meth_info =
                      List.find
-                       (fun m_info -> m_info.pmi_name = (fst z))
+                       (fun m_info -> m_info.Env.mi_name = (fst z))
                        sprim_meths_abstr_infos in
                    let z_dependencies =
-                     z_priv_meth_info.pmi_dependencies_from_parameters in
+                     z_priv_meth_info.Env.mi_dependencies_from_parameters in
                    (* Now, find the one corresponding to [formal_name]. If *)
                    (* none is found in the assoc list that because there   *)
                    (* no method in the dependencies on this parameter.     *)

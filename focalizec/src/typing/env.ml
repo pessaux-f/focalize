@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.95 2008-06-24 14:30:22 pessaux Exp $ *)
+(* $Id: env.ml,v 1.96 2008-06-25 12:03:12 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -689,6 +689,21 @@ type collection_or_species =
 ;;
 
 
+(** {b Descr} : Common for OCaml and Coq code generation environments. *)
+type generic_code_gen_method_info = {
+  mi_name : Parsetree.vname ;        (** The field name. *)
+  mi_history : from_history ;        (** Thr field inheritance history. *)
+  mi_dependencies_from_parameters :
+    ((** The positional list of methods from the species parameters
+         abstracted by lambda-lifting. *)
+     TypeInformation.species_param *
+     (* The set of methods of this parameter on which we have dependencies. *)
+     Parsetree_utils.DepNameSet.t) list ;
+  mi_abstracted_methods : Parsetree.vname list   (** The positional list
+      of methods from ourselves abstracted by lambda-lifting. *)
+  } ;;
+
+
 
 module MlGenInformation = struct
   type collection_generator_info = {
@@ -708,18 +723,7 @@ module MlGenInformation = struct
       (Parsetree.vname * Parsetree_utils.DepNameSet.t) list
   }
 
-  type method_info = {
-    mi_name : Parsetree.vname ;        (** The field name. *)
-    mi_history : from_history ;        (** Thr field inheritance history. *)
-    mi_dependencies_from_parameters :
-      ((** The positional list of methods from the species parameters
-           abstracted by lambda-lifting. *)
-       TypeInformation.species_param *
-       (* The set of methods of this parameter on which we have dependencies. *)
-       Parsetree_utils.DepNameSet.t) list ;
-    mi_abstracted_methods : Parsetree.vname list   (** The positional list
-        of methods from ourselves abstracted by lambda-lifting. *)
-    }
+  type method_info = generic_code_gen_method_info
 
   type species_binding_info =
     ((** The list of species parameters of the species with their kind. *)
@@ -802,18 +806,7 @@ module CoqGenInformation = struct
   type label_mapping_info =  Parsetree.external_expr_desc
 
 
-  type method_info = {
-    mi_name : Parsetree.vname ;        (** The field name. *)
-    mi_history : from_history ;        (** Thr field inheritance history. *)
-    mi_dependencies_from_parameters :
-      ((** The positional list of methods from the species parameters
-           abstracted by lambda-lifting. *)
-       TypeInformation.species_param *
-       (* The set of methods of this parameter on which we have dependencies. *)
-       Parsetree_utils.DepNameSet.t) list ;
-    mi_abstracted_methods : Parsetree.vname list   (** The positional list
-        of methods from ourselves abstracted by lambda-lifting. *)
-    }
+  type method_info = generic_code_gen_method_info
 
   type species_binding_info =
     ((** The list of species parameters of the species with their kind. *)
@@ -1745,10 +1738,9 @@ module CoqGenEMAccess = struct
     (* parameters that woud come from ... polymorphism.                 *)
     let values_bucket =
       List.map
-        (fun { CoqGenInformation. mi_name = field_name } ->
-          (field_name, (BO_absolute 0)))
+        (fun { mi_name = field_name } -> (field_name, (BO_absolute 0)))
         meths_info in
-    { constructors = []; labels = []; types = []; values = values_bucket;
+    { constructors = [] ; labels = [] ; types = [] ; values = values_bucket ;
       species = [] }
 
 
@@ -1831,7 +1823,7 @@ let inspect_fo_structure ppf fo =
         (fun meth ->
           (* Just print the method's name for the moment. *)
           Format.fprintf ppf "Method %a  ...@\n"
-            Sourcify.pp_vname meth.CoqGenInformation.mi_name)
+            Sourcify.pp_vname meth.mi_name)
         meths ;
       (* Now, check for the collection generator information. *)
       Format.fprintf ppf "@]@[<2>*** Collection generator:@\n" ;
