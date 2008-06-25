@@ -144,3 +144,7 @@ Let non_failed (__var_a : Set) (x : partiel__t __var_a) : __var_a :=
    | Failed => __g_foc_error ___a_string
    | Unfailed v => v
   end.
+
+
+
+Definition print_int (x : int__t) := Void.
