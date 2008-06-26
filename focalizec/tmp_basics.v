@@ -148,3 +148,7 @@ Let non_failed (__var_a : Set) (x : partiel__t __var_a) : __var_a :=
 
 
 Definition print_int (x : int__t) := Void.
+Definition print_string (x : string__t) := Void.
+Definition print_newline (x : unit__t) := Void.
+Definition string_of_int (x : int__t) := ___a_string.
+Definition int_of_string (x : string__t) := 42.
