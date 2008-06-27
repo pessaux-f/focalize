@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.130 2008-06-19 11:52:25 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.131 2008-06-27 14:45:42 pessaux Exp $ *)
 
 
 
@@ -4516,8 +4516,8 @@ let typecheck_collection_def ctx env coll_def =
    | Some dirname ->
        Dep_analysis.dependencies_graph_to_dotty
          ~dirname ~current_species collection_dep_graph);
-  (* Let's build our "type" information. Since we are managing a species *)
-  (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
+  (* Let's build our "type" information. Since we are managing a collection *)
+  (* and NOT a species, we must set [spe_is_collection] to [true].          *)
   let collec_description = {
     Env.TypeInformation.spe_is_collection = true;
     Env.TypeInformation.spe_is_closed = true;  (* Obviously, eh ! *)
