@@ -1,4 +1,7 @@
 Require Export Bool.
+Require Export List.
+
+Implicit Arguments map [A B].
 
 Parameter string : Set.
 Parameter string_eq : string -> string -> bool.

@@ -23,6 +23,7 @@ Module PCM.
   }.
   Implicit Arguments mk_ast [A].
   Implicit Arguments desc [A].
+  Implicit Arguments type [A].
 
   Inductive constant : Set :=
   | C_int : string -> constant
@@ -63,6 +64,7 @@ Module PCM.
     ld_local : bool;
     ld_bindings : list (ast (binding A))
   }.
+  Implicit Arguments ld_logical [A].
 
   Definition external_expr : Set := list (prod string string).
 

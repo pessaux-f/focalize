@@ -14,7 +14,43 @@ Module ILNL.
   
   Definition ast : Set -> Set := PCM.ast.
 
-  Definition expr : Set := PCM.expr.
+  Record binding (A : Set) : Set := mk_binding {
+    b_name : vname;
+    b_params : list vname;
+    b_type : ttype;
+    b_body : A
+  }.
+
+  Record let_def (A : Set) : Set := mk_let_def {
+    ld_rec : bool;
+    ld_local : bool;
+    ld_bindings : list (ast (binding A))
+  }.
+
+  Definition external_expr : Set := list (prod string string).
+
+  Definition constant : Set := PCM.constant.
+  
+  Definition ident : Set := PCM.ident.
+
+  Definition pattern : Set := PCM.pattern.
+
+  Inductive expr : Set :=
+  | E_self : expr
+  | E_constant : ast constant -> expr
+  | E_fun : list vname -> ast expr -> expr
+  | E_var : ast ident -> expr
+  | E_app : ast expr -> list (ast expr) -> expr
+  | E_constr : ast ident -> list (ast expr) -> expr
+  | E_match : ast expr -> list (prod (ast pattern) (ast expr)) -> expr
+  | E_if : ast expr -> ast expr -> ast expr -> expr
+  | E_let : ast (let_def (ast expr)) -> ast expr -> expr
+  | E_record : list (prod string (ast expr)) -> expr
+  | E_record_access : ast expr -> string -> expr
+  | E_record_with : ast expr -> list (prod string (ast expr)) -> expr
+  | E_tuple : list (ast expr) -> expr
+  | E_external : ast external_expr -> expr
+  | E_paren : ast expr -> expr.
 
   Record let_field_info : Set := mk_let_field_info {
     lfi_from : history;
@@ -39,8 +75,6 @@ Module ILNL.
   Definition use_info : Set := PCM.use_info.
 
   Definition type_info : Set := PCM.type_info.
-
-  Definition let_def : Set -> Set := PCM.let_def.
 
   Definition let_def_info : Set := ast (let_def (ast expr)).
 
