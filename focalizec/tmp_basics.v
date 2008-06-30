@@ -152,3 +152,17 @@ Definition print_string (x : string__t) := Void.
 Definition print_newline (x : unit__t) := Void.
 Definition string_of_int (x : int__t) := ___a_string.
 Definition int_of_string (x : string__t) := 42.
+Definition sc (x : string__t) (y : string__t) := ___a_string.
+
+Let crp (__var_a : Set) (__var_b : Set) (x : __var_b) (y : __var_a) :
+  (prod __var_b __var_a) := (x, y).
+
+Let first (__var_a : Set) (__var_b : Set) (x : (prod __var_b __var_a)) :
+  __var_b := match x with
+  | (v, _) => v
+end.
+
+Let scnd (__var_a : Set) (__var_b : Set) (x : (prod __var_a __var_b)) :
+  __var_b := match x with
+  | (_, v) => v
+end.
