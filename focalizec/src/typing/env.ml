@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.96 2008-06-25 12:03:12 pessaux Exp $ *)
+(* $Id: env.ml,v 1.97 2008-06-30 11:30:38 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -360,8 +360,6 @@ module TypeInformation = struct
     dor_def : bool  ;  (** Flag for a def-dependency. *)
     dor_decl : bool }  (** Flag for a decl-dependency. *)
 
-
-
   type sig_field_info =
     ((** Where the sig comes from (and inheritance history). *)
      from_history *
@@ -410,12 +408,24 @@ module TypeInformation = struct
 
   type species_param =
     (** Entity parameter. *)
-    | SPAR_in of (Parsetree.vname * Types.type_collection)
+    | SPAR_in of
+        (Parsetree.vname *              (** The name of the "IN" parameter. *)
+         (** The module and name of the species parameter. Indeed, that
+             is the parameter's type-collection. *)
+         Types.type_collection *
+         (** Tells if the type of the parameter is built from a toplevel
+             species, a toplevel collection, or a previous of our species
+             parameters. *)
+         Types.species_collection_kind)
     (** Collection parameter. *)
     | SPAR_is of
         ((** The module and name of the species parameter. Indeed, that
              is the parameter's type-collection. *)
          Types.type_collection *
+         (** Tells if the type of the parameter is built from a toplevel
+             species, a toplevel collection, or a previous of our species
+             parameters. *)
+         Types.species_collection_kind *
          (** The list of fields this parameter has. It is in fact the normalized
              form of the species type the parameter has. *)
          (species_field list) *
@@ -457,7 +467,9 @@ module TypeInformation = struct
       {b Rem} : Exported outside this module.                                *)
   (* *********************************************************************** *)
   type species_description = {
-    spe_is_collection : bool ;  (** Whether the species is a collection. *)
+    spe_kind : Types.species_collection_kind ;  (** Whether the
+	 species is a toplevel collection, a toplevel species or a species
+         parameter. *)
     spe_is_closed : bool ;   (** Whether the species is fully defined, even if
          not turned into a collection. This information
          will be useful to known when collection
@@ -587,9 +599,9 @@ module TypeInformation = struct
       | param :: rem ->
           (begin
           (match param with
-           | SPAR_in (a, _) ->
+           | SPAR_in (a, _, _) ->
                Format.fprintf local_ppf "%a in ..." Sourcify.pp_vname a
-           | SPAR_is ((modname, param_name), _, sp_expr) ->
+           | SPAR_is ((modname, param_name), _, _, sp_expr) ->
                Format.fprintf local_ppf "%s.%s is %a" modname param_name
                  Sourcify.pp_simple_species_expr sp_expr) ;
           if rem <> [] then

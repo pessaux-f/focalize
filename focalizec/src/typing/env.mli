@@ -66,9 +66,11 @@ module TypeInformation :
        Parsetree.logical_expr * dependency_on_rep)
 
     type species_param =
-      | SPAR_in of (Parsetree.vname * Types.type_collection)
+      | SPAR_in of
+          (Parsetree.vname * Types.type_collection *
+	   Types.species_collection_kind)
       | SPAR_is of
-          (Types.type_collection *
+          (Types.type_collection * Types.species_collection_kind *
              (species_field list) * Parsetree_utils.simple_species_expr)
 
     and species_field =
@@ -79,7 +81,7 @@ module TypeInformation :
       | SF_property of property_field_info
 
     type species_description = {
-      spe_is_collection : bool ;
+      spe_kind : Types.species_collection_kind ;
       spe_is_closed : bool ;
       spe_sig_params : species_param list ;
       spe_sig_methods : species_field list

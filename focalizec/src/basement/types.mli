@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.35 2008-05-19 09:14:20 pessaux Exp $ *)
+(* $Id: types.mli,v 1.36 2008-06-30 11:30:38 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -108,9 +108,14 @@ val pp_type_simple : Format.formatter -> type_simple -> unit
 val pp_type_scheme : Format.formatter -> type_scheme -> unit
 val pp_type_collection : Format.formatter -> type_collection -> unit
 
+type species_collection_kind =
+  | SCK_toplevel_collection
+  | SCK_toplevel_species
+  | SCK_species_parameter
+
 type collection_carrier_mapping_info =
   | CCMI_is
-  | CCMI_in_or_not_param
+  | CCMI_in of species_collection_kind
 
 type collection_carrier_mapping =
   (type_collection * (string * collection_carrier_mapping_info)) list

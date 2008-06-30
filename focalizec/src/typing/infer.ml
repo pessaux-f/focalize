@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.131 2008-06-27 14:45:42 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.132 2008-06-30 11:30:38 pessaux Exp $ *)
 
 
 
@@ -2048,7 +2048,7 @@ type typed_species_parameter_argument =
 
 
 (* ************************************************************************ *)
-(* Env.TypeInformation.species_param ->                                     *)
+(* Env.TypingEnv.t -> Env.TypeInformation.species_param ->                  *)
 (*   (Parsetree.vname * species_parameter_info)                             *)
 (** {Descr}: Transforms an arbitrary expression [Parsetree.expr] used as
        species parameter expression into a [species_param_expr]. Hence, the
@@ -2058,16 +2058,26 @@ type typed_species_parameter_argument =
 
     {Rem}: Not exported outside this module.                                *)
 (* ************************************************************************ *)
-let rec expr_to_species_param_expr expr =
+let rec expr_to_species_param_expr ~current_unit env expr =
   match expr.Parsetree.ast_desc with
    | Parsetree.E_self -> Parsetree_utils.SPE_Self
    | Parsetree.E_constr (cstr_expr, []) ->
        (begin
        let Parsetree.CI qualified_vname = cstr_expr.Parsetree.ast_desc in
-       Parsetree_utils.SPE_Species qualified_vname
+       let pseudo_ident = { cstr_expr with
+          Parsetree.ast_desc =
+            (match qualified_vname with
+               | Parsetree.Vname n -> Parsetree.I_local n
+               | Parsetree.Qualified _ -> Parsetree.I_global qualified_vname)
+          } in
+       let species =
+         Env.TypingEnv.find_species
+           ~loc: Location.none ~current_unit pseudo_ident env in
+       Parsetree_utils.SPE_Species
+         (qualified_vname, species.Env.TypeInformation.spe_kind)
        end)
    | Parsetree.E_paren expr ->
-       expr_to_species_param_expr expr
+       expr_to_species_param_expr ~current_unit env expr
    | _ -> Parsetree_utils.SPE_Expr_entity expr
 ;;
 
@@ -2085,13 +2095,13 @@ let rec expr_to_species_param_expr expr =
 
     {Rem}: Not exported outside this module.                                  *)
 (* ************************************************************************** *)
-let species_expr_to_species_param_expr species_expr =
+let species_expr_to_species_param_expr ~current_unit env species_expr =
   let species_expr_desc = species_expr.Parsetree.ast_desc in
   let params =
     List.map
       (fun se_param ->
         let Parsetree.SP expr = se_param.Parsetree.ast_desc in
-        expr_to_species_param_expr expr)
+        expr_to_species_param_expr ~current_unit env expr)
       species_expr_desc.Parsetree.se_params in
   { Parsetree_utils.sse_name = species_expr_desc.Parsetree.se_name ;
     Parsetree_utils.sse_effective_args = params }
@@ -2387,7 +2397,7 @@ let apply_species_arguments ctx env base_spe_descr params =
           (begin
           let (Parsetree.SP e_param_expr) = e_param.Parsetree.ast_desc in
           match f_param with
-           | Env.TypeInformation.SPAR_in (f_name, f_ty) ->
+           | Env.TypeInformation.SPAR_in (f_name, f_ty, _) ->
                (begin
                (* First, get the argument expression's type. *)
                let expr_ty = typecheck_expr ctx env e_param_expr in
@@ -2436,7 +2446,7 @@ let apply_species_arguments ctx env base_spe_descr params =
                    accu_meths in
                (substd_meths, accu_substs, accu_self_must_be)
                end)
-           | Env.TypeInformation.SPAR_is ((f_module, f_name), c1_ty, _) ->
+           | Env.TypeInformation.SPAR_is ((f_module, f_name), _, c1_ty, _) ->
                (begin
                let c1 = (f_module, f_name) in
                (* Get the argument species expression signature and methods. *)
@@ -2527,12 +2537,19 @@ let apply_species_arguments ctx env base_spe_descr params =
 
 (* **************************************************************** *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.species_expr ->   *)
-(*   Env.TypeInformation.species_field list *                       *)
-(*   (Types.fname * Types.collection_name) list                     *)
+(*   ((Env.TypeInformation.species_field list) *                    *)
+(*    ((Types.fname * Types.collection_name) list)) *               *)
+(*   Env.TypeInformation.species_collection_kind                    *)
 (** {b Descr} : Typechecks a species expression, record its type in
-              the AST node and return the list of its methods names
-              type schemes and possible bodies (the list of fields
-              in fact).
+              the AST node and returns:
+                - the list of its methods names type schemes and
+                  possible bodies (the list of fields in fact).
+                - the list of collection-types that "Self" must be
+                  compatible with to ensure that is is really the
+                  case.
+                - the provenance of the base species used to make
+                  the expression (i.e. toplevel  collection, toplevel
+                  species or species parameter)
 
     {b Rem} :Not exported outside this module.                      *)
 (* **************************************************************** *)
@@ -2564,7 +2581,7 @@ let typecheck_species_expr ctx env species_expr =
       species_expr_desc.Parsetree.se_params in
   (* Record the type in the AST node. *)
   species_expr.Parsetree.ast_type <- Parsetree.ANTI_type species_carrier_type ;
-  species_methods
+  (species_methods, species_species_description.Env.TypeInformation.spe_kind)
 ;;
 
 
@@ -2605,12 +2622,15 @@ let typecheck_species_def_params ctx env species_params =
                     (ctx.current_unit, (Parsetree_utils.name_of_vname vname))
                 | Parsetree.I_global (Parsetree.Qualified (fname, vname)) ->
                     (fname, (Parsetree_utils.name_of_vname vname))) in
-             (* Just check that the species exists to avoid raising an  *)
-             (* error at application-time if the species doesn't exist. *)
-             ignore
-               (Env.TypingEnv.find_species
-                  ~loc: ident.Parsetree.ast_loc ~current_unit: ctx.current_unit
-                  ident accu_env) ;
+             (* Check that the species exists to avoid raising an error at *)
+             (* application-time if the species doesn't exist. Get its     *)
+             (* provenance to know if it's a toplevel species, toplevel    *)
+             (* collection or another species parameter. This will be used *)
+             (* to annotate the current species parameter's type.          *)
+             let species_of_param_type =
+               Env.TypingEnv.find_species
+                 ~loc: ident.Parsetree.ast_loc ~current_unit: ctx.current_unit
+                 ident accu_env in
              (* Create the carrier type of the parameter and extend the *)
              (* current environment with this parameter as a value of   *)
              (* the carrier type.                                       *)
@@ -2630,9 +2650,11 @@ let typecheck_species_def_params ctx env species_params =
              (* And now, build the species type of the application. *)
              let (accu_env'', rem_spe_params, rem_accu_self_must_be) =
                rec_typecheck_params accu_env' accu_self_must_be rem in
+             (* Inject in the parameter the provenance of its type. *)
              let current_spe_param =
                Env.TypeInformation.SPAR_in
-                 (param_vname, (param_sp_module, param_sp_name)) in
+                 (param_vname, (param_sp_module, param_sp_name), 
+                  species_of_param_type.Env.TypeInformation.spe_kind) in
              (* Finally, we return the fully extended environment and *)
              (* the type of the species application we just built.    *)
              (accu_env'', (current_spe_param :: rem_spe_params),
@@ -2641,7 +2663,7 @@ let typecheck_species_def_params ctx env species_params =
          | Parsetree.SPT_is species_expr ->
              (begin
              (* First, typecheck the species expression.          *)
-             let (species_expr_fields, self_must_be) =
+             let ((species_expr_fields, self_must_be), base_species_kind) =
                typecheck_species_expr ctx accu_env species_expr in
              (* Create the [species_description] of the parameter *)
              (* and extend the current environment. Because the   *)
@@ -2657,7 +2679,7 @@ let typecheck_species_def_params ctx env species_params =
                  ~current_unit: ctx.current_unit
                  (ctx.current_unit, param_name_as_string) species_expr_fields in
              let param_description = {
-               Env.TypeInformation.spe_is_collection = false ;
+               Env.TypeInformation.spe_kind = Types.SCK_species_parameter ;
                Env.TypeInformation.spe_is_closed = false ;
                Env.TypeInformation.spe_sig_params = [] ;
                Env.TypeInformation.spe_sig_methods = abstracted_methods } in
@@ -2703,9 +2725,11 @@ let typecheck_species_def_params ctx env species_params =
              (* able to verify species signature matching !             *)
              let current_spe_param =
                Env.TypeInformation.SPAR_is
-                 ((ctx.current_unit, param_name_as_string),
+                 ((ctx.current_unit, param_name_as_string), base_species_kind,
                   species_expr_fields,
-                  (species_expr_to_species_param_expr species_expr)) in
+                  (species_expr_to_species_param_expr
+                     ~current_unit: ctx.current_unit accu_env'''
+                     species_expr)) in
              (* Finally, we return the fully extended environment and *)
              (* the type of the species application we just built.    *)
              (accu_env''', (current_spe_param :: rem_spe_params),
@@ -2718,8 +2742,11 @@ let typecheck_species_def_params ctx env species_params =
 
 
 
-let extend_from_history ~current_species species_expr_inherited field =
-  let simple_expr = species_expr_to_species_param_expr species_expr_inherited in
+let extend_from_history ~current_species ~current_unit env
+    species_expr_inherited field =
+  let simple_expr =
+    species_expr_to_species_param_expr
+      ~current_unit env species_expr_inherited in
   match field with
    | Env.TypeInformation.SF_sig (from, n, sch) ->
        let from' = { from with
@@ -2787,12 +2814,14 @@ let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
     | inh :: rem_inhs ->
       (* First typecheck the species expression in the initial   *)
       (* (non extended) and recover its methods names and types. *)
-      let (inh_species_methods, self_must_be) =
+      let ((inh_species_methods, self_must_be), _) =
         typecheck_species_expr current_ctx env inh in
       (* Change inside inherited fields the history information. *)
       let inh_species_methods =
         List.map
-          (extend_from_history ~current_species inh) inh_species_methods in
+          (extend_from_history
+             ~current_species ~current_unit: ctx.current_unit env inh)
+          inh_species_methods in
       let (env', current_ctx')  =
         List.fold_left
           (fun (accu_env, accu_ctx) field ->
@@ -4003,10 +4032,10 @@ let typecheck_species_def ctx env species_def =
        (* If the check didn't fail, then the species if fully defined. *)
        true with
      | Collection_not_fully_defined _ -> false) in
-  (* Let's build our "type" information. Since we are managing a species *)
-  (* and NOT a collection, we must set [spe_is_collection] to [false].   *)
+  (* Let's build our "type" information. Since we are managing a species     *)
+  (* and NOT a collection, we must set [spe_kind] to [SCK_toplevel_species]. *)
   let species_description = {
-    Env.TypeInformation.spe_is_collection = false ;
+    Env.TypeInformation.spe_kind = Types.SCK_toplevel_species ;
     Env.TypeInformation.spe_is_closed = is_closed ;
     Env.TypeInformation.spe_sig_params = sig_params ;
     Env.TypeInformation.spe_sig_methods = reordered_normalized_methods } in
@@ -4487,7 +4516,7 @@ let typecheck_collection_def ctx env coll_def =
   (* First of all, we are in a species !!! *)
   let ctx = { ctx with current_species = Some current_species } in
   (* Typecheck the body's species expression .*)
-  let (species_expr_fields, _self_must_be) =  (*** [Unsure] ***)
+  let ((species_expr_fields, _self_must_be), _) =  (*** [Unsure] ***)
     typecheck_species_expr ctx env coll_def_desc.Parsetree.cd_body in
   (* One must ensure that the collection is *)
   (* really a completely defined species.   *)
@@ -4516,12 +4545,12 @@ let typecheck_collection_def ctx env coll_def =
    | Some dirname ->
        Dep_analysis.dependencies_graph_to_dotty
          ~dirname ~current_species collection_dep_graph);
-  (* Let's build our "type" information. Since we are managing a collection *)
-  (* and NOT a species, we must set [spe_is_collection] to [true].          *)
+  (* Let's build our "type" information. Since we are managing a collection  *)
+  (* and NOT a species, we must set [spe_kind] to [SCK_toplevel_collection]. *)
   let collec_description = {
-    Env.TypeInformation.spe_is_collection = true;
-    Env.TypeInformation.spe_is_closed = true;  (* Obviously, eh ! *)
-    Env.TypeInformation.spe_sig_params = [];
+    Env.TypeInformation.spe_kind = Types.SCK_toplevel_collection  ;
+    Env.TypeInformation.spe_is_closed = true ;            (* Obviously, eh ! *)
+    Env.TypeInformation.spe_sig_params = [] ;
     Env.TypeInformation.spe_sig_methods = collection_fields } in
   (* Add this collection in the environment. *)
   let env_with_collection =

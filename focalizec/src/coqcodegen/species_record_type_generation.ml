@@ -11,24 +11,27 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.40 2008-06-24 14:30:22 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.41 2008-06-30 11:30:38 pessaux Exp $ *)
 
 
 
 (** Just helpers to make a binding for self for a [collection_carrier_mapping]
-    in order to make known how Self must be printed while printing **TYPES** *)
+    in order to make known how Self must be printed while printing **TYPES**
+    The "_T" will be added automatically by the printing routine. We add the
+    species as a [CCMI_is] to have it printed as "xxx_T" and not as an entity
+    parameter. *)
 let make_Self_cc_binding_abst_T  ~current_species =
   let (module_name, _) = current_species in
-  ((module_name, "Self"), ("abst_T" ,Types.CCMI_in_or_not_param))
+  ((module_name, "Self"), ("abst" ,Types.CCMI_is))
 ;;
 let make_Self_cc_binding_self_T  ~current_species =
   let (module_name, _) = current_species in
-  ((module_name, "Self"), ("self_T" ,Types.CCMI_in_or_not_param))
+  ((module_name, "Self"), ("self" ,Types.CCMI_is))
 ;;
 let make_Self_cc_binding_current_species_T ~current_species =
   let (module_name, species_vname) = current_species in
   let species_name = Parsetree_utils.name_of_vname species_vname in
-  ((module_name, "Self"), ((species_name ^ "_T") ,Types.CCMI_in_or_not_param))
+  ((module_name, "Self"), (species_name, Types.CCMI_is))
 ;;
 
 
@@ -109,8 +112,8 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status
        if (List.exists
              (fun species_param ->
                match species_param with
-                | Env.TypeInformation.SPAR_in (vn, _) -> vn = vname
-                | Env.TypeInformation.SPAR_is ((_, vn), _, _) ->
+                | Env.TypeInformation.SPAR_in (vn, _, _) -> vn = vname
+                | Env.TypeInformation.SPAR_is ((_, vn), _, _, _) ->
                     (Parsetree.Vuident vn) = vname)
              ctx.Context.scc_species_parameters_names) &&
          (not (List.mem vname local_idents)) then
@@ -195,8 +198,9 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status
                  if List.exists
                      (fun species_param ->
                        match species_param with
-                        | Env.TypeInformation.SPAR_in (vn, _) -> vn = coll_name
-                        | Env.TypeInformation.SPAR_is ((_, vn), _, _) ->
+                        | Env.TypeInformation.SPAR_in (vn, _, _) ->
+                            vn = coll_name
+                        | Env.TypeInformation.SPAR_is ((_, vn), _, _, _) ->
                             (Parsetree.Vuident vn) = coll_name)
                      ctx.Context.scc_species_parameters_names then
                    (begin
@@ -228,7 +232,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status
                    (* collection's record obtained by the collection's     *)
                    (* effective value.                                     *)
                    Format.fprintf out_fmter
-                     "%a_effective_collection.(%a_%a)"
+                     "%a__effective_collection.(%a_%a)"
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname
@@ -246,9 +250,9 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status
                    if List.exists
                        (fun species_param ->
                          match species_param with
-                          | Env.TypeInformation.SPAR_in (vn, _) ->
+                          | Env.TypeInformation.SPAR_in (vn, _, _) ->
                               vn = coll_name
-                          | Env.TypeInformation.SPAR_is ((_, vn), _, _) ->
+                          | Env.TypeInformation.SPAR_is ((_, vn), _, _, _) ->
                               (Parsetree.Vuident vn) = coll_name)
                        ctx.Context.scc_species_parameters_names then
                      (begin
@@ -269,7 +273,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status
                    else
                      (begin
                      Format.fprintf out_fmter
-                       "%a.effective_collection.%a.%a"
+                       "%a__effective_collection.(%a_%a)"
                        Parsetree_utils.pp_vname_with_operators_expanded
                        coll_name
                        Parsetree_utils.pp_vname_with_operators_expanded
@@ -284,7 +288,13 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status
                    (* ourselves and moreover belongs to another compilation *)
                    (* unit. May be a species from the toplevel of another   *)
                    (* FoCaL source file.                                    *)
-                   failwith "generate_expr_ident_for_E_var foreign species's module TODO"
+                   Format.fprintf out_fmter
+                     "%s.%a__effective_collection.(%s.%a_%a)"
+                     module_name
+                     Parsetree_utils.pp_vname_with_operators_expanded coll_name
+                     module_name
+                     Parsetree_utils.pp_vname_with_operators_expanded coll_name
+                     Parsetree_utils.pp_vname_with_operators_expanded vname
                    end)
                  end)
             end)
@@ -307,7 +317,7 @@ let generate_constant ctx cst =
        Format.fprintf ctx.Context.scc_out_fmter "%s" str
    | Parsetree.C_string _str ->
        (* [Unsure] *)
-       Format.fprintf ctx.Context.scc_out_fmter "C_string"
+       Format.fprintf ctx.Context.scc_out_fmter "basics.___a_string"
    | Parsetree.C_char _c ->
        (* [Unsure] *)
        Format.fprintf ctx.Context.scc_out_fmter "C_char"
@@ -939,9 +949,8 @@ let rec generate_expr_as_species_parameter_expression ~current_unit ppf expr =
     both the parameters names and their type as a Coq expression.
     Either the parameter is a "is" parameter and then it's type will be
     rebuilt from its species expression.
-    Or it is a "in" parameter and then it's type is a collection type, and
-    is directly the one recorded in the first couple of the
-    collections_carrier_mapping binding for this parameter.
+    Or it is a "in" parameter and then it is NOT a parameter of the
+    record.
     Next come the extra parameters coming from the methods we depend on.
 
     {b Rem} : Not exported outside this module.                            *)
@@ -950,15 +959,10 @@ let generate_record_type_parameters ctx species_fields =
   let ppf = ctx.Context.scc_out_fmter in
   (* We first abstract the species parameters. *)
   List.iter
-    (fun ((param_ty_mod, param_ty_coll), (param_name, param_kind)) ->
-      Format.fprintf ppf "@[<1>(%s :@ " param_name ;
-      (match param_kind with
-       | Types.CCMI_is -> Format.fprintf ppf "Set"
-       | Types.CCMI_in_or_not_param ->
-           if param_ty_mod <> ctx.Context.scc_current_unit then
-             Format.fprintf ppf "%s." param_ty_mod ;
-           Format.fprintf ppf "%s_T" param_ty_coll) ;
-      Format.fprintf ppf ")@ @]")
+    (fun ((_, _), (param_name, param_kind)) ->
+      match param_kind with
+       | Types.CCMI_is -> Format.fprintf ppf "@[<1>(%s_T :@ Set)@ @]" param_name
+       | Types.CCMI_in _ -> ())
     ctx.Context.scc_collections_carrier_mapping ;
   (* Now, we will find the methods of the parameters we decl-depend  *)
   (* on in the Coq type expressions. Such dependencies can only      *)
@@ -997,8 +1001,8 @@ let generate_record_type_parameters ctx species_fields =
                   (* Recover the species parameter's name. *)
                   let species_param_name =
                     match species_param with
-                     | Env.TypeInformation.SPAR_in (n, _) -> n
-                     | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+                     | Env.TypeInformation.SPAR_in (n, _, _) -> n
+                     | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
                          Parsetree.Vuident n in
                   let meths_from_param =
                     Param_dep_analysis.param_deps_logical_expr
@@ -1024,8 +1028,9 @@ let generate_record_type_parameters ctx species_fields =
       (* Recover the species parameter's name. *)
       let species_param_name =
         match species_param with
-         | Env.TypeInformation.SPAR_in (n, _) -> n
-         | Env.TypeInformation.SPAR_is ((_, n), _, _) -> Parsetree.Vuident n in
+         | Env.TypeInformation.SPAR_in (n, _, _) -> n
+         | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
+             Parsetree.Vuident n in
       (* Each abstracted method will be named like "_p_", followed by *)
       (* the species parameter name, followed by "_", followed by the *)
       (* method's name.                                               *)
@@ -1090,8 +1095,7 @@ let generate_record_type ctx env species_descr =
   let collections_carrier_mapping =
     (make_Self_cc_binding_current_species_T
        ~current_species: ctx.Context.scc_current_species) ::
-    ((my_fname, my_species_name),
-     ((my_species_name ^ "_T"), Types.CCMI_in_or_not_param)) ::
+    ((my_fname, my_species_name),((my_species_name), Types.CCMI_is)) ::
     collections_carrier_mapping in
   (* We mask the old ctx to take benefit of the new one with the bindings. *)
   let ctx = {

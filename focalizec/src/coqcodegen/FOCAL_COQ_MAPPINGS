@@ -4,6 +4,7 @@ Nom de paramètre d'espèce : "__p" + le nom de ce paramètre.
 
 Nom de paramètre d'entité: le nom du paramètre + "_" + le nom du paramètre.
 Ceci donne d'ailleurs lieu à une "Variable" Coq.
+Par contre, il ne fait pas partie des paramètres du type record.
 
 Nom de type d'espèce : le nom de l'espèce + "_T".
 

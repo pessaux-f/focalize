@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.48 2008-06-24 14:30:22 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.49 2008-06-30 11:30:38 pessaux Exp $ *)
 
 
 (* *********************************************************** *)
@@ -1105,7 +1105,7 @@ let pp_file ppf = pp_ast pp_file_desc ppf
 (** {Rem} : Not exported outside this module. *)
 let pp_simple_species_expr_as_effective_parameter ppf = function
   | Parsetree_utils.SPE_Self -> Format.fprintf ppf "Self"
-  | Parsetree_utils.SPE_Species qvname ->
+  | Parsetree_utils.SPE_Species (qvname, _) ->
       Format.fprintf ppf "%a" pp_qualified_vname qvname
   | Parsetree_utils.SPE_Expr_entity expr ->
       Format.fprintf ppf "%a" pp_expr expr

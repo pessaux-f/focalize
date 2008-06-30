@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.68 2008-06-25 15:23:24 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.69 2008-06-30 11:30:38 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -41,7 +41,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
   let cnt = ref 0 in
   List.map
     (function
-      | Env.TypeInformation.SPAR_is ((_, n_as_string), _, _) ->
+      | Env.TypeInformation.SPAR_is ((_, n_as_string), _, _, _) ->
           (* Build the name of the type variable that will represent *)
           (* this parameter's carrier type seen from OCaml. Just     *)
           (* lowerize the parameter name because collection names    *)
@@ -58,7 +58,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
           let type_coll = (current_unit, n_as_string) in
           (* And now create the binding... *)
           (type_coll, (carrier_type_variable_name, Types.CCMI_is))
-      | Env.TypeInformation.SPAR_in (n, type_coll) ->
+      | Env.TypeInformation.SPAR_in (n, type_coll, provenance) ->
           (* Build the name of the type variable that will represent *)
           (* this parameter's carrier type seen from OCaml. Same     *)
           (* remark than above for lowercase/uppercase.              *)
@@ -67,7 +67,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
             (string_of_int !cnt) ^ "_as_carrier" in
           incr cnt ;
           (type_coll,
-           (carrier_type_variable_name, Types.CCMI_in_or_not_param)))
+           (carrier_type_variable_name, (Types.CCMI_in provenance))))
     species_descr.Env.TypeInformation.spe_sig_params
 ;;
 
@@ -214,7 +214,8 @@ let generate_record_type ctx species_descr =
   let (my_fname, my_species_name) = ctx.Context.scc_current_species in
   let collections_carrier_mapping =
     ((my_fname, (Parsetree_utils.name_of_vname my_species_name)),
-     ("me_as_carrier", Types.CCMI_in_or_not_param)) ::
+     (* [CCMI_is] or whatever, it's not used for OCaml code generation. *)
+     ("me_as_carrier", Types.CCMI_is)) ::
     collections_carrier_mapping in
   (* The record's fields types. *)
   List.iter
@@ -377,8 +378,8 @@ let make_params_list_from_abstraction_info ai =
       (* Recover the species parameter's name. *)
       let species_param_name =
         match species_param with
-         | Env.TypeInformation.SPAR_in (n, _) -> n
-         | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+         | Env.TypeInformation.SPAR_in (n, _, _) -> n
+         | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
              Parsetree.Vuident n in
       (* Each abstracted method will be named like "_p_", followed by *)
       (* the species parameter name, followed by "_", followed by the *)
@@ -482,8 +483,8 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
         (* Recover the species parameter's name. *)
         let species_param_name =
           match species_param with
-           | Env.TypeInformation.SPAR_in (n, _) -> n
-           | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+           | Env.TypeInformation.SPAR_in (n, _, _) -> n
+           | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
                Parsetree.Vuident n in
         (* Each abstracted method will be named like "_p_", followed by *)
         (* the species parameter name, followed by "_", followed by the *)
@@ -867,8 +868,8 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
       (fun (species_param, meths_from_param) ->
         let species_param_name =
           match species_param with
-           | Env.TypeInformation.SPAR_in (n, _) -> n
-           | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+           | Env.TypeInformation.SPAR_in (n, _, _) -> n
+           | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
                Parsetree.Vuident n in
         Format.eprintf "\t From parameter '%a', dependencies on methods: "
           Sourcify.pp_vname species_param_name;
@@ -888,7 +889,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
         Handy.list_first_index
           (fun p -> p = species_param) original_host_species_params in
       match species_param with
-       | Env.TypeInformation.SPAR_in (param_name, _) ->
+       | Env.TypeInformation.SPAR_in (param_name, _, _) ->
            (* By construction, in dependencies of "in" parameter, the list *)
            (* of methods is always 1-length at most and contains directly  *)
            (* the name of the parameter itself if it is really used.       *)
@@ -926,7 +927,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
                reduced_ctx ~local_idents: [] env instancied_expr ;
              Format.fprintf out_fmter ")@]"
              end)
-       | Env.TypeInformation.SPAR_is ((_, _), _, _) ->
+       | Env.TypeInformation.SPAR_is ((_, _), _, _, _) ->
            (begin
            (* Instanciation process of "IS" parameter. We start processing *)
            (* from the oldest species where the currently compiled method  *)
@@ -983,8 +984,8 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
               | Misc_common.IPI_by_species_parameter prm ->
                   let species_param_name =
                     match prm with
-                     | Env.TypeInformation.SPAR_in (_, _) -> assert false
-                     | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+                     | Env.TypeInformation.SPAR_in (_, _, _) -> assert false
+                     | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
                          Parsetree.Vuident n in
                   let prefix =
                     "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
@@ -1042,8 +1043,8 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
         (* Recover the species parameter's name. *)
         let spe_param_name =
           match spe_param with
-           | Env.TypeInformation.SPAR_in (n, _) -> n
-           | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+           | Env.TypeInformation.SPAR_in (n, _, _) -> n
+           | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
                Parsetree.Vuident n in
         (* Get or create for this species parameter name, the bucket *)
         (* recording all the methods someone depends on.             *)
@@ -1152,8 +1153,8 @@ let generate_collection_generator ctx env compiled_species_fields =
           (* Recover the species parameter's name. *)
           let species_param_name =
             match species_param with
-             | Env.TypeInformation.SPAR_in (n, _) -> n
-             | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+             | Env.TypeInformation.SPAR_in (n, _, _) -> n
+             | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
                  Parsetree.Vuident n in
           (* We don't care here about whether the species parameters is   *)
           (* "in" or "is".                                                *)
@@ -1248,7 +1249,7 @@ let generate_collection_generator ctx env compiled_species_fields =
       | Misc_common.CSF_theorem _ -> ()
       | Misc_common.CSF_let field_memory -> process_one_field field_memory
       | Misc_common.CSF_let_rec l ->
-	  List.iter (fun fm -> process_one_field fm) l)
+          List.iter (fun fm -> process_one_field fm) l)
     compiled_species_fields ;
   (* And now, the record value. We just assign each record fields    *)
   (* corresponding to the current species's method the corresponding *)

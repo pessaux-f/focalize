@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.51 2008-05-19 09:14:20 pessaux Exp $ *)
+(* $Id: types.ml,v 1.52 2008-06-30 11:30:38 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1000,16 +1000,21 @@ let pp_type_collection ppf (coll_module, coll_name) =
 
 
 
+type species_collection_kind =
+  | SCK_toplevel_collection
+  | SCK_toplevel_species
+  | SCK_species_parameter
+;;
+
+
+
 (* *********************************************************************** *)
 (* {b Descr}: Describes in the [scc_collections_carrier_mapping] the kind
      of species parameter.
      It can either be a "is" parameter.
-     Otherwise, it is a "in" parameter or not at all a parameter and the
-     type expression that will annotate this parameter (if it appears to be
-     one) in the hosting species's record type is straightly the type
-     (as a [Types.collection_type]) of this parameter. And if it is not a
-     parameter, then in case of need to annotate, the type will be shaped
-     exactly the same way.
+     Otherwise, it is a "in" parameter. For Coq, we hence need to know if
+     the type of this parmeter is built from another of our species
+     parameters of from a toplevel species/collection.
 
    {b Rem} : Exported outside this module.                                 *)
 (* *********************************************************************** *)
@@ -1017,13 +1022,14 @@ type collection_carrier_mapping_info =
     (** The parameter is a "is" parameter. *)
   | CCMI_is
     (** The parameter is a "in" parameter or is not a parameter. *)
-  | CCMI_in_or_not_param
+  | CCMI_in of species_collection_kind
 ;;
 
 
 
 (** Correspondance between collection parameters names and
-    the names they are mapped onto in the Caml/Coq code and their kind. *)
+    the names they are mapped onto in the Caml/Coq code and their kind.
+    Note that in Coq, the mapped name doesn't have the trailing "_T". *)
 type collection_carrier_mapping =
   (type_collection * (string * collection_carrier_mapping_info)) list
 ;;
@@ -1369,9 +1375,9 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
              try
                let (self_as_string, _) =
                  List.assoc
-		   (species_modname, "Self")
-		   ctx.cpc_collections_carrier_mapping in
-               Format.fprintf ppf "%s" self_as_string
+                   (species_modname, "Self")
+                   ctx.cpc_collections_carrier_mapping in
+               Format.fprintf ppf "%s_T" self_as_string
              with Not_found ->
                (* That's a bug: we forgot to insert "Self" in the *)
                (* [collection_carrier_mapping].                   *)
@@ -1381,11 +1387,21 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
     | ST_species_rep (module_name, collection_name) ->
         (begin
         try
-          let (coll_type_variable, _) =
+          let (coll_type_variable, kind) =
             List.assoc
               (module_name, collection_name)
               ctx.cpc_collections_carrier_mapping in
-          Format.fprintf ppf "%s" coll_type_variable
+          match kind with
+           | CCMI_is -> Format.fprintf ppf "%s_T" coll_type_variable
+           | CCMI_in provenance ->
+               (begin
+               match provenance with
+                | SCK_toplevel_collection | SCK_toplevel_species ->
+                    Format.fprintf ppf "%s__effective_collection.(%s_T)"
+                      collection_name collection_name
+                | SCK_species_parameter ->
+                    Format.fprintf ppf "%s_T" coll_type_variable
+               end)
         with Not_found ->
           (* If the carrier is not in the mapping created for the species *)
           (* parameters, that's because the searched species carrier's is *)

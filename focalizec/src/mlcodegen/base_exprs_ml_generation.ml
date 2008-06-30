@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.28 2008-06-19 12:52:46 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.29 2008-06-30 11:30:38 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -91,8 +91,8 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
        if (List.exists
              (fun species_param ->
                match species_param with
-                | Env.TypeInformation.SPAR_in (vn, _) -> vn = vname
-                | Env.TypeInformation.SPAR_is ((_, vn), _, _) ->
+                | Env.TypeInformation.SPAR_in (vn, _, _) -> vn = vname
+                | Env.TypeInformation.SPAR_is ((_, vn), _, _, _) ->
                     (Parsetree.Vuident vn) = vname)
              ctx.Context.rcc_species_parameters_names) &&
          (not (List.mem vname local_idents)) then
@@ -167,8 +167,9 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                  if List.exists
                      (fun species_param ->
                        match species_param with
-                        | Env.TypeInformation.SPAR_in (vn, _) -> vn = coll_name
-                        | Env.TypeInformation.SPAR_is ((_, vn), _, _) ->
+                        | Env.TypeInformation.SPAR_in (vn, _, _) ->
+                            vn = coll_name
+                        | Env.TypeInformation.SPAR_is ((_, vn), _, _, _) ->
                             (Parsetree.Vuident vn) = coll_name)
                      ctx.Context.rcc_species_parameters_names then
                    (begin
@@ -209,9 +210,9 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                    if List.exists
                        (fun species_param ->
                          match species_param with
-                          | Env.TypeInformation.SPAR_in (vn, _) ->
+                          | Env.TypeInformation.SPAR_in (vn, _, _) ->
                               vn = coll_name
-                          | Env.TypeInformation.SPAR_is ((_, vn), _, _) ->
+                          | Env.TypeInformation.SPAR_is ((_, vn), _, _, _) ->
                               (Parsetree.Vuident vn) = coll_name)
                        ctx.Context.rcc_species_parameters_names then
                      (begin
@@ -244,13 +245,10 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                    Format.fprintf out_fmter
                      "%s.%a.effective_collection.%s.%a.%a"
                      capitalized_modname
-                     Parsetree_utils.pp_vname_with_operators_expanded
-                     coll_name
+                     Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      capitalized_modname
-                     Parsetree_utils.pp_vname_with_operators_expanded
-                     coll_name
-                     Parsetree_utils.pp_vname_with_operators_expanded
-                     vname
+                     Parsetree_utils.pp_vname_with_operators_expanded coll_name
+                     Parsetree_utils.pp_vname_with_operators_expanded vname
                    end)
                  end)
             end)

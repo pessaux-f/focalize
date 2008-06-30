@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.ml,v 1.4 2008-06-25 12:03:12 pessaux Exp $ *)
+(* $Id: misc_common.ml,v 1.5 2008-06-30 11:30:38 pessaux Exp $ *)
 
 
 
@@ -136,8 +136,8 @@ let find_entity_params_with_position params =
     | h :: q ->
         let accu' =
           (match h with
-           | Env.TypeInformation.SPAR_in (n, _) -> (n, !cnt) :: accu
-           | Env.TypeInformation.SPAR_is ((_, _), _, _) -> accu) in
+           | Env.TypeInformation.SPAR_in (n, _, _) -> (n, !cnt) :: accu
+           | Env.TypeInformation.SPAR_is ((_, _), _, _, _) -> accu) in
         incr cnt ;  (* Always pdate the position for next parameter. *)
         rec_find accu' q in
   (* Now really do the job. *)
@@ -467,101 +467,69 @@ let follow_instanciations_for_is_param ctx env original_param_index
                  sp_prms
             end) in
         (* Now, really check if its a species parameter. *)
-        try
-          let index_of_instancier =
-            Handy.list_first_index
-              (function
-                | Env.TypeInformation.SPAR_in (_, _) -> false
-                | Env.TypeInformation.SPAR_is
-                    ((formal_mod, formal_name), _, _) ->
-                      (begin
-                      match effective_arg_during_inher with
-                       | Parsetree_utils.SPE_Self ->
-                           failwith "Euhhhh2 ?"  (* [Unsure] *)
-                       | Parsetree_utils.SPE_Species qual_vname ->
-                           (begin
-                           match qual_vname with
-                            | Parsetree.Vname _ ->
-                                (* During scoping and typing, everything    *)
-                                (* should have been explicitely qualified ! *)
-                                assert false
-                            | Parsetree.Qualified (effect_mod, effect_name) ->
-                                (effect_mod = formal_mod) &&
-                                ((Parsetree_utils.name_of_vname effect_name) =
-                                 formal_name)
-                           end)
-                       | Parsetree_utils.SPE_Expr_entity _ ->  false
-                      end))
-              curr_level_species_params in
-          (* We must instanciate by the abstraction corresponding to    *)
-          (* our parameter and continue waking up along the inheritance *)
-          (* history.                                                   *)
-          (* So we first get the index of this parameter in the current *)
-          (* level species.                                             *)
-          if Configuration.get_verbose () then
-            Format.eprintf
-              "Instanciation by the species %dth species parameter. \
-              Let's continue search along the inheritance tree for further \
-              instanciations.@."
-              index_of_instancier ;
-          rec_follow index_of_instancier rem_steps
-        with Not_found ->
-          (begin
-          (* We must check if the instanciation is done by a toplevel *)
-          (* species or a toplevel collection. In any case, no need   *)
-          (* from now to continue walking up along the inheritance    *)
-          (* history, there won't be anymore instanciations.          *)
-          match effective_arg_during_inher with
-           | Parsetree_utils.SPE_Self ->
-               failwith "Euhhhh3 ?"     (* [Unsure] *)
-           | Parsetree_utils.SPE_Species effective_vname ->
-               (begin
-               match effective_vname with
+        match effective_arg_during_inher with
+         | Parsetree_utils.SPE_Self -> failwith "Euhhhh2 ?"  (* [Unsure] *)
+         | Parsetree_utils.SPE_Expr_entity _ -> assert false
+         | Parsetree_utils.SPE_Species (effective_qual_vname, provenance) ->
+             (begin
+             let (effective_mod, effective_name_as_string) =
+               (match effective_qual_vname with
                 | Parsetree.Vname _ ->
                     (* During scoping and typing, everything should *)
                     (* have been explicitely qualified !            *)
                     assert false
-                | Parsetree.Qualified (effect_mod, effect_name) ->
-                    (begin
-                    let effect_ident =
-                      Parsetree_utils.make_pseudo_species_ident
-                        ~current_unit (effect_mod, effect_name) in
-                    let coll_of_spe =
-                      (match env with
-                       | Abstractions.EK_ml env ->
-                           let (_, _, _, data) =
-                             Env.MlGenEnv.find_species
-                               ~loc: Location.none ~current_unit
-                               effect_ident env in
-                           data
-                       | Abstractions.EK_coq env ->
-                           let (_, _, _, data) =
-                             Env.CoqGenEnv.find_species
-                               ~loc: Location.none ~current_unit
-                               effect_ident env in
-                           data) in
-                    if coll_of_spe = Env.COS_collection then
-                      (begin
+                | Parsetree.Qualified (x, y) ->
+                    (x, Parsetree_utils.name_of_vname y)) in
+             match provenance with
+              | Types.SCK_species_parameter ->
+                  (* The instanciation is done by a one *)
+                  (* of our species parameters.         *)
+                  let index_of_instancier =
+                    Handy.list_first_index
+                      (function
+                        | Env.TypeInformation.SPAR_in (_, _, _) -> false
+                        | Env.TypeInformation.SPAR_is
+                            ((formal_mod, formal_name), _, _, _) ->
+                              (effective_mod = formal_mod) &&
+                              (effective_name_as_string = formal_name))
+                      curr_level_species_params in
+                      (* We must instanciate by the abstraction corresponding *)
+                      (* to our parameter and continue waking up along the    *)
+                      (* inheritance history.                                 *)
+                      (* So we first get the index of this parameter in the   *)
+                      (* current level species.                               *)
                       if Configuration.get_verbose () then
                         Format.eprintf
-                          "Final instanciation by toplevel collection.@." ;
-                      IPI_by_toplevel_collection
-                        (effect_mod,
-                         (Parsetree_utils.name_of_vname effect_name))
-                      end)
-                    else
-                      (begin
-                      if Configuration.get_verbose () then
-                        Format.eprintf
-                          "Final instanciation by toplevel species.@." ;
-                      IPI_by_toplevel_species
-                        (effect_mod,
-                         (Parsetree_utils.name_of_vname effect_name))
-                      end)
-                    end)
-               end)
-           | Parsetree_utils.SPE_Expr_entity _ -> assert false
-          end) in
+                          "Instanciation by the species %dth species \
+                          parameter. Let's continue search along the \
+                          inheritance tree for further instanciations.@."
+                          index_of_instancier ;
+                      rec_follow index_of_instancier rem_steps
+              | Types.SCK_toplevel_collection ->
+                  (begin
+                  (* The instanciation is done by a toplevel collection. In *)
+                  (* this case, no need from now to continue walking up     *)
+                  (* along the inheritance history, there won't be anymore  *)
+                  (* instanciations.                                        *)
+                  if Configuration.get_verbose () then
+                    Format.eprintf
+                      "Final instanciation by toplevel collection.@." ;
+                  IPI_by_toplevel_collection
+                    (effective_mod, effective_name_as_string)
+                  end)
+              | Types.SCK_toplevel_species ->
+                  (begin
+                  (* The instanciation is done by a toplevel species. In   *)
+                  (* this case, no need from now to continue walking up    *)
+                  (* along the inheritance history, there won't be anymore *)
+                  (* instanciations.                                       *)
+                  if Configuration.get_verbose () then
+                    Format.eprintf
+                      "Final instanciation by toplevel species.@." ;
+                  IPI_by_toplevel_species
+                    (effective_mod, effective_name_as_string)
+                  end)
+             end) in
   (* We must walk the inheritance steps in reverse order *)
   (* since it is built with most recent steps in head.   *)
   rec_follow original_param_index (List.rev inheritance_steps)

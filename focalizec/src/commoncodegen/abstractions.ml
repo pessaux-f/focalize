@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.22 2008-06-25 12:03:12 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.23 2008-06-30 11:30:38 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -123,8 +123,8 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
         (* Recover the species parameter's name. *)
         let species_param_name =
           match species_param with
-           | Env.TypeInformation.SPAR_in (n, _) -> n
-           | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+           | Env.TypeInformation.SPAR_in (n, _, _) -> n
+           | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
                Parsetree.Vuident n in
         let meths_from_param =
           (match body with
@@ -189,8 +189,9 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
       (fun (species_param, _) ->
         (* Recover the species parameter's name. *)
         match species_param with
-         | Env.TypeInformation.SPAR_in (n, _) -> n
-         | Env.TypeInformation.SPAR_is ((_, n), _, _) -> Parsetree. Vuident n)
+         | Env.TypeInformation.SPAR_in (n, _, _) -> n
+         | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
+             Parsetree. Vuident n)
       dependencies_from_params_in_bodies in
   let used_species_parameter_tys =
     List.filter
@@ -336,7 +337,7 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
              (* "Self" is never a species parameter. It can be used as     *)
              (* an effective argument, but NEVER declared as a parameter ! *)
              (accu, (counter + 1))
-         | Parsetree_utils.SPE_Species eff_arg_qual_vname ->
+         | Parsetree_utils.SPE_Species (eff_arg_qual_vname, _) ->
              (begin
              match eff_arg_qual_vname with
               | Parsetree.Qualified (modname, eff_arg_vname)
@@ -347,9 +348,9 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
                   (* of the current species. If so, we keep in the result ! *)
                   if List.exists
                       (function
-                        | Env.TypeInformation.SPAR_in (_, _) ->
+                        | Env.TypeInformation.SPAR_in (_, _, _) ->
                             false      (* "In" parameters are never involved. *)
-                        | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+                        | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
                             n = eff_arg_name)
                       species_parameters
                   then
@@ -390,10 +391,10 @@ let add_param_dependencies ~param_name ~deps ~to_deps =
     | (p, d) :: q ->
         (begin
         match p with
-         | Env.TypeInformation.SPAR_in (_, _) ->
+         | Env.TypeInformation.SPAR_in (_, _, _) ->
              (* "In" parameters are never involved in the process. *)
              rec_add q
-         | Env.TypeInformation.SPAR_is ((_, name), _, _) ->
+         | Env.TypeInformation.SPAR_is ((_, name), _, _, _) ->
              (* If we are in the bucket of the searched *)
              (* species parameter, we add.              *)
              if name = param_name_as_string then
@@ -414,10 +415,10 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
   let params_being_parametrised =
     List.filter
       (function
-        | Env.TypeInformation.SPAR_is ((_, _), _, spe_expr) ->
+        | Env.TypeInformation.SPAR_is ((_, _), _, _, spe_expr) ->
             (* Keep it only if there are parameters in the expression. *)
             spe_expr.Parsetree_utils.sse_effective_args <> []
-        | Env.TypeInformation.SPAR_in (_, _) -> false)
+        | Env.TypeInformation.SPAR_in (_, _, _) -> false)
       species_parameters in
   (* Now, get for each parametrised parameter of the species, which other  *)
   (* parameters it uses as effective argument in which species and at      *)
@@ -430,10 +431,10 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
   let parametrised_params_with_their_effective_args_being_params =
     List.map
       (function
-        | Env.TypeInformation.SPAR_in (_, _) ->
+        | Env.TypeInformation.SPAR_in (_, _, _) ->
             (* "In" parameters are filtered just above ! *)
             assert false
-        | Env.TypeInformation.SPAR_is ((_, n), _, spe_expr) ->
+        | Env.TypeInformation.SPAR_is ((_, n), _, _, spe_expr) ->
             (* In our example, [n] is Cp'. *)
             (n,
              (get_user_of_parameters_with_position
@@ -468,7 +469,7 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
            | Parsetree_utils.SPE_Self | Parsetree_utils.SPE_Expr_entity _ ->
                (* See remark in [get_user_of_parameters_with_position]. *)
                assert false
-           | Parsetree_utils.SPE_Species eff_arg_qual_vname ->
+           | Parsetree_utils.SPE_Species (eff_arg_qual_vname, _) ->
                (* Here, [eff_arg_qual_vname] is the parameter *)
                (* in which we will add new dependencies.      *)
                (* We now get the name of the formal parameter (Cp) of S' *)
@@ -480,11 +481,11 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                  Handy.list_assoc_custom_eq
                    (fun x y ->
                      match x with
-                      | Env.TypeInformation.SPAR_in (_, _) ->
+                      | Env.TypeInformation.SPAR_in (_, _, _) ->
                           (* Cp' is a "IS" parameter, so no chance to *)
                           (* find it amongst the "IN" parameters !    *)
                           false
-                      | Env.TypeInformation.SPAR_is ((_, n), _, _) -> n = y)
+                      | Env.TypeInformation.SPAR_is ((_, n), _, _, _) -> n = y)
                    cpprim starting_dependencies_from_params in
                Parsetree_utils.DepNameSet.fold
                  (fun z accu_deps_for_zs ->
@@ -551,8 +552,8 @@ let complete_dependencies_from_params env ~current_unit ~current_species
              (* Recover the species parameter's name. *)
              let species_param_name =
                match species_param with
-                | Env.TypeInformation.SPAR_in (n, _) -> n
-                | Env.TypeInformation.SPAR_is ((_, n), _, _) ->
+                | Env.TypeInformation.SPAR_in (n, _, _) -> n
+                | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
                     Parsetree. Vuident n in
              let meths_from_param =
                Param_dep_analysis.param_deps_proof

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.15 2008-06-13 13:45:11 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.16 2008-06-30 11:30:38 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -184,8 +184,10 @@ let type_coll_from_qualified_species (species_modname, species_vname) =
 type simple_species_expr_as_effective_parameter =
   (** The name of the species used as species parameter is "Self". *)
   | SPE_Self
-  (** The name of the species used as species parameter is something else. *)
-  | SPE_Species of Parsetree.qualified_vname
+  (** The name of the species used as species parameter "IS" something else.
+      We tag to know if it "IS" a species parameter, a toplevel collection
+      or a toplevel species. *)
+  | SPE_Species of (Parsetree.qualified_vname * Types.species_collection_kind)
   (** Regular expression used to instanciate a "in" (i.e. entity) parameter. *)
   | SPE_Expr_entity of Parsetree.expr
 ;;
