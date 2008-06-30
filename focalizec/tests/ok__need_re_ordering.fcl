@@ -13,7 +13,7 @@ species Closed_A =
   let element = 1 ;
 
   property refl : all x in Self, x = x ;
-  proof of refl = assumed ;
+  proof of refl = assumed {* For a test, I won't make proofs !!! *} ;
 end ;;
 
 
@@ -26,7 +26,7 @@ end ;;
 
 species B inherits A =
   theorem lemme_bidon : all x in Self, true
-  proof : assumed ;
+  proof : assumed {* For a test, I won't make proofs !!! *} ;
 end ;;
 
 species Closed_C inherits B =

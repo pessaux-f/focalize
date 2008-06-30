@@ -68,7 +68,7 @@ module TypeInformation :
     type species_param =
       | SPAR_in of
           (Parsetree.vname * Types.type_collection *
-	   Types.species_collection_kind)
+           Types.species_collection_kind)
       | SPAR_is of
           (Types.type_collection * Types.species_collection_kind *
              (species_field list) * Parsetree_utils.simple_species_expr)

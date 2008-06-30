@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.97 2008-06-30 11:30:38 pessaux Exp $ *)
+(* $Id: env.ml,v 1.98 2008-06-30 15:54:07 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -468,7 +468,7 @@ module TypeInformation = struct
   (* *********************************************************************** *)
   type species_description = {
     spe_kind : Types.species_collection_kind ;  (** Whether the
-	 species is a toplevel collection, a toplevel species or a species
+         species is a toplevel collection, a toplevel species or a species
          parameter. *)
     spe_is_closed : bool ;   (** Whether the species is fully defined, even if
          not turned into a collection. This information
