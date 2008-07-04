@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.46 2008-06-17 12:04:57 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.47 2008-07-04 13:02:52 pessaux Exp $ *)
 
 
 
@@ -20,6 +20,7 @@
               unexpected arises when proceeding, we exit with the proper
               error code.                                                     *)
 (* ************************************************************************** *)
+
 try Check_file.main () with
 | anything ->
     (begin

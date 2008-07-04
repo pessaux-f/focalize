@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.132 2008-06-30 11:30:38 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.133 2008-07-04 13:02:52 pessaux Exp $ *)
 
 
 
@@ -4521,6 +4521,14 @@ let typecheck_collection_def ctx env coll_def =
   (* One must ensure that the collection is *)
   (* really a completely defined species.   *)
   ensure_collection_completely_defined ctx species_expr_fields ;
+  (* Update the inheritance history, saying that in fact the collection *)
+  (* "inherits" from the "implemented" species.                         *)
+  let species_expr_fields =
+    List.map
+      (extend_from_history
+         ~current_species ~current_unit: ctx.current_unit env
+	 coll_def_desc.Parsetree.cd_body)
+      species_expr_fields in
   let myself_coll_ty =
     (ctx.current_unit,
      (Parsetree_utils.name_of_vname coll_def_desc.Parsetree.cd_name)) in

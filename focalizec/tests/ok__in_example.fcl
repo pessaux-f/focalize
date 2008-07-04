@@ -27,5 +27,10 @@ species Me (Naturals is IntModel, n in Naturals) =
 end ;;
 
 collection ConcreteInt implements IntModel ;;
+collection ConcreteMe implements Me (ConcreteInt, ConcreteInt!un) ;;
+
+(* FAIT FAIRE assert failed dans types.ml !
+   species ConcreteInt inherits IntModel = end ;; *)
+
 
 let n = ConcreteInt!un ;;

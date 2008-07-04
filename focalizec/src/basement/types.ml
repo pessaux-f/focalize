@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.52 2008-06-30 11:30:38 pessaux Exp $ *)
+(* $Id: types.ml,v 1.53 2008-07-04 13:02:52 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1409,9 +1409,11 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
           (* And as always, the type's name representing a species's      *)
           (* carrier is the species's name + "_T".                        *)
           if ctx.cpc_current_unit = module_name then
-            Format.fprintf ppf "%s_T" collection_name
+            Format.fprintf ppf "%s__effective_collection.(%s_T)"
+	      collection_name collection_name
           else
-            Format.fprintf ppf "%s.%s_T" module_name collection_name
+            Format.fprintf ppf "%s.%s__effective_collection.(%s.%s_T)"
+	      module_name collection_name module_name collection_name
         end)
 
   (* ********************************************************************* *)

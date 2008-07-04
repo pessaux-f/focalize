@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.ml,v 1.5 2008-06-30 11:30:38 pessaux Exp $ *)
+(* $Id: misc_common.ml,v 1.6 2008-07-04 13:02:52 pessaux Exp $ *)
 
 
 
@@ -415,7 +415,7 @@ let follow_instanciations_for_is_param ctx env original_param_index
     | [] ->
         if Configuration.get_verbose () then
           Format.eprintf
-            "Final instanciation by the species %dth species parameter."
+            "Final instanciation by the species %dth species parameter.@."
             param_index ;
         IPI_by_species_parameter
           (List.nth current_species_parameters param_index)
