@@ -70,6 +70,8 @@ Require Export ZArith.
 
 (* Junky code to have one representative of the string__t type. *)
 Variable ___a_string : string__t.
+(* Junky code to have one representative of the char__t type. *)
+Variable ___a_char : char__t.
 
 
 (* Miscellaneous basic functions. *)
