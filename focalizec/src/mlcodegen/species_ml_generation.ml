@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.69 2008-06-30 11:30:38 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.70 2008-07-07 16:47:56 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -448,7 +448,11 @@ let make_params_list_from_abstraction_info ai =
 
     {b Return} :
       - The list of methods names from ourselves the current method
-        depends on.
+        depends on and the list of methods from species parameters the
+        current method depends on. This last list can be different from
+        the initially received argument [dependencies_from_params] since
+        some dependencies may come from fields that are not relevant for
+        OCaml (properties, theorems).
 
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
@@ -501,7 +505,7 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
           meths_from_param)
       dependencies_from_params ;
     (* Next, the extra arguments due to methods of ourselves we depend on. *)
-    (* They are always present in the species under the name "self_...".   *)
+    (* They are always present in the species under the name "abst_...".   *)
     let abstracted_methods =
       List.flatten
         (List.map
