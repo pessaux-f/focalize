@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.133 2008-07-04 13:02:52 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.134 2008-07-07 16:47:25 pessaux Exp $ *)
 
 
 
@@ -1441,6 +1441,10 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
          Types.begin_definition () ;
          let ty = typecheck_type_expr ctx env t_expr in
          Types.end_definition () ;
+         (* ATTENTION ! Since the final typre does not involves the type    *)
+         (* of the quantified variables, we must check here is there is     *)
+         (* a dependency on "Self" here otherwise we will miss it forever ! *)
+         Types.check_for_decl_dep_on_self ty ;
          (* Now typecheck the logical_expr's body in the extended environment.*)
          (* Note that as often, the order bindings are inserted in the        *)
          (* environment does not matter since parameters can never depends    *)
@@ -4527,7 +4531,7 @@ let typecheck_collection_def ctx env coll_def =
     List.map
       (extend_from_history
          ~current_species ~current_unit: ctx.current_unit env
-	 coll_def_desc.Parsetree.cd_body)
+         coll_def_desc.Parsetree.cd_body)
       species_expr_fields in
   let myself_coll_ty =
     (ctx.current_unit,
