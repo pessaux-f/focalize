@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.ml,v 1.6 2008-07-04 13:02:52 pessaux Exp $ *)
+(* $Id: misc_common.ml,v 1.7 2008-07-08 15:19:37 pessaux Exp $ *)
 
 
 
@@ -32,6 +32,8 @@ type compiled_field_memory = {
   cfm_from_species : Env.from_history ;
   (** The method's name. *)
   cfm_method_name : Parsetree.vname ;
+  (** The method's type scheme. *)
+  cfm_method_scheme : Types.type_scheme ;
   (* The positionnal list of species parameter carriers appearing in the
      type of the method. They lead to extra arguments of type "Set" and
      must be instanciated by the correct type when applying the method's

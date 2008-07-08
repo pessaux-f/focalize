@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.70 2008-07-07 16:47:56 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.71 2008-07-08 15:19:37 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -625,7 +625,7 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
 (* *********************************************************************** *)
 let generate_methods ctx env field =
   match field with
-   | Abstractions.FAI_sig (from, name, _) ->
+   | Abstractions.FAI_sig (from, name, sch) ->
        (* Only declared, hence, no code to generate yet ! *)
        if Configuration.get_verbose () then
          Format.eprintf "OCaml code for signature '%a' leads to void code.@."
@@ -633,6 +633,7 @@ let generate_methods ctx env field =
        let compiled_field = {
          Misc_common.cfm_from_species = from ;
          Misc_common.cfm_method_name = name ;
+         Misc_common.cfm_method_scheme = sch ;
          (* Never used for OCaml. *)
          Misc_common.cfm_used_species_parameter_tys = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
@@ -668,6 +669,7 @@ let generate_methods ctx env field =
             let compiled_field = {
               Misc_common.cfm_from_species = from ;
               Misc_common.cfm_method_name = name ;
+              Misc_common.cfm_method_scheme = scheme ;
               (* Never used for OCaml. *)
               Misc_common.cfm_used_species_parameter_tys = [] ;
               Misc_common.cfm_dependencies_from_parameters =
@@ -716,6 +718,7 @@ let generate_methods ctx env field =
                  let first_compiled = {
                    Misc_common.cfm_from_species = from ;
                    Misc_common.cfm_method_name = name ;
+                   Misc_common.cfm_method_scheme = scheme ;
                    (* Never used for OCaml. *)
                    Misc_common.cfm_used_species_parameter_tys = [] ;
                    Misc_common.cfm_dependencies_from_parameters =
@@ -750,6 +753,7 @@ let generate_methods ctx env field =
                            (from, name, params, (Some scheme), body_e) in
                        { Misc_common.cfm_from_species = from ;
                          Misc_common.cfm_method_name = name ;
+                         Misc_common.cfm_method_scheme = scheme ;
                          (* Never used for OCaml. *)
                          Misc_common.cfm_used_species_parameter_tys = [] ;
                          Misc_common.cfm_dependencies_from_parameters =
@@ -760,7 +764,7 @@ let generate_methods ctx env field =
                  Some (Misc_common.CSF_let_rec (first_compiled :: rem_compiled))
             end)
        end)
-   | Abstractions.FAI_theorem ((from, name, _, _, _, _), _) ->
+   | Abstractions.FAI_theorem ((from, name, sch, _, _, _), _) ->
        (* Theorems are purely discarded in the Ocaml translation. *)
        if Configuration.get_verbose () then
          Format.eprintf
@@ -769,12 +773,13 @@ let generate_methods ctx env field =
        let compiled_field = {
          Misc_common.cfm_from_species = from ;
          Misc_common.cfm_method_name = name ;
+         Misc_common.cfm_method_scheme = sch ;
          (* Never used for OCaml. *)
          Misc_common.cfm_used_species_parameter_tys = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_coq_min_typ_env_names = [] } in
        Some (Misc_common.CSF_theorem compiled_field)
-   | Abstractions.FAI_property ((from, name, _, _, _), _) ->
+   | Abstractions.FAI_property ((from, name, sch, _, _), _) ->
        (* Properties are purely discarded in the Ocaml translation. *)
        if Configuration.get_verbose () then
          Format.eprintf
@@ -783,6 +788,7 @@ let generate_methods ctx env field =
        let compiled_field = {
          Misc_common.cfm_from_species = from ;
          Misc_common.cfm_method_name = name ;
+         Misc_common.cfm_method_scheme = sch ;
          (* Never used for OCaml. *)
          Misc_common.cfm_used_species_parameter_tys = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
@@ -1238,7 +1244,7 @@ let generate_collection_generator ctx env compiled_species_fields =
   (* each of the current species's local function (functions corresponding *)
   (* to the actual method stored in the collection record).                *)
   (* These parameters of the generator come from the abstraction of        *)
-  (* methods coming from oru species parameters we depend on. By the way,  *)
+  (* methods coming from our species parameters we depend on. By the way,  *)
   (* recover the list of species parameters linked together with their     *)
   (* methods we need to instanciate in order to apply the collection       *)
   (* generator.                                                            *)

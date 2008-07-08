@@ -11,11 +11,12 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.mli,v 1.4 2008-06-25 12:03:12 pessaux Exp $ *)
+(* $Id: misc_common.mli,v 1.5 2008-07-08 15:19:37 pessaux Exp $ *)
 
 type compiled_field_memory = {
   cfm_from_species : Env.from_history ;
   cfm_method_name : Parsetree.vname ;
+  cfm_method_scheme : Types.type_scheme ;
   cfm_used_species_parameter_tys : Parsetree.vname list ;
   cfm_dependencies_from_parameters :
     (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ;

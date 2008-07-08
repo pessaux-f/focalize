@@ -2,6 +2,14 @@ use "basics" ;;
 open "basics" ;;
 
 
+species Bla =
+  signature equal : Self -> Self -> bool ;
+  property equal_reflexive : all x in Self, !equal (x, x) ;
+  theorem equal_reflexive2 : all x in Self, !equal (x, x)
+    proof : assumed {* *} ;
+end ;;
+
+
 (* ****************************************************************** *)
 (* Must pass.                                                         *)
 (* Example showing how now use the "in" parameter whithout allowing   *)
@@ -21,6 +29,8 @@ species Me (Naturals is IntModel, n in Naturals) =
  theorem daube : all x in Self,
     basics#base_eq (n, Naturals!un)
   proof : assumed {* *} ;
+
+  let junk (x in Self) in int = 1 ;
 
   let reduce (x in Naturals) in Self =
     Naturals!modulo (x, n) ;

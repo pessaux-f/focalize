@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.42 2008-06-30 15:54:07 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.43 2008-07-08 15:19:37 pessaux Exp $ *)
 
 
 
@@ -73,21 +73,7 @@ type self_methods_status =
 
 
 
-(**
-  [~in_hyp] : Flag telling if the code generation occurs while
-   generating a Coq Hypothesis. In this case, each abstracted
-   method will be named like the species parameter name, followed by "_",
-   followed by the method's name.
-   If we are not in this case, then each abstracted method will be named
-   like "_p_", followed by the species parameter name, followed by "_",
-   followed by the method's name.
-   This difference comes from the fact that when we generate an hypothesis,
-   we do not use the regular lambda-lifting like in the record type or
-   Let definitions. Instead of adding extra parameters, we declare Variables
-   for each method of the species parameter we depend on and these Variables
-   are named as the species parameter name + "_" + the method name. *)
-let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status
-    ~in_hyp ident =
+let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
   let out_fmter = ctx.Context.scc_out_fmter in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
@@ -126,13 +112,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status
          (* the case of a "in"-parameter, the dependency can only be on  *)
          (* the parameter's value itself, not on any method since there  *)
          (* is none !).                                                  *)
-         (* This is right only in case we are not generating code for    *)
-         (* a Coq Hypothesis of Theorem (see header of the function for  *)
-         (* comment). If we are in an Hypothesis or a Theorem, then the  *)
-         (* naming scheme is only the species parameter name + "_" + the *)
-         (* method name.                                                 *)
-         if not in_hyp then Format.fprintf out_fmter "_p_" ;
-         Format.fprintf out_fmter "%a_%a"
+         Format.fprintf out_fmter "_p_%a_%a"
            Parsetree_utils.pp_vname_with_operators_expanded vname
            Parsetree_utils.pp_vname_with_operators_expanded vname
          end)
@@ -211,16 +191,8 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status
                    (* species parameter. I.e: "_p_", followed by the     *)
                    (* species parameter name, followed by "_", followed  *)
                    (* by the method's name.                              *)
-                   (* If we are in an Hypothesis o a Theorem, then the   *)
-                   (* naming scheme is only the species parameter name + *)
-                   (* "_" + the method name (see function header for     *)
-                   (* comment).                                          *)
                    let prefix =
-                     if in_hyp then
-                       (Parsetree_utils.name_of_vname coll_name) ^ "_"
-                     else
-                       "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^
-                       "_" in
+                     "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^ "_" in
                    Format.fprintf out_fmter "%s%a"
                      prefix
                      Parsetree_utils.pp_vname_with_operators_expanded vname
@@ -256,16 +228,8 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status
                               (Parsetree.Vuident vn) = coll_name)
                        ctx.Context.scc_species_parameters_names then
                      (begin
-                     (* If we are in an Hypothesis or a Theorem, then the  *)
-                     (* naming scheme is only the species parameter name + *)
-                     (* "_" + the method name (see function header for     *)
-                     (* comment).                                          *)
                      let prefix =
-                       if in_hyp then
-                         (Parsetree_utils.name_of_vname coll_name) ^ "_"
-                       else
-                         "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^
-                         "_" in
+                       "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^"_" in
                      Format.fprintf out_fmter "%s%a"
                        prefix Parsetree_utils.pp_vname_with_operators_expanded
                        vname
@@ -431,8 +395,8 @@ let generate_pattern ctx env pattern =
 
 
 
-let rec let_binding_compile ctx ~local_idents ~self_methods_status ~in_hyp
-    ~is_rec env bd =
+let rec let_binding_compile ctx ~local_idents ~self_methods_status ~is_rec
+    env bd =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Generate the bound name. *)
   Format.fprintf out_fmter "%a"
@@ -541,7 +505,7 @@ let rec let_binding_compile ctx ~local_idents ~self_methods_status ~in_hyp
   (match bd.Parsetree.ast_desc.Parsetree.b_body with
    | Parsetree.BB_computational e ->
        generate_expr
-         ctx ~local_idents: local_idents' ~self_methods_status ~in_hyp env' e
+         ctx ~local_idents: local_idents' ~self_methods_status env' e
    | Parsetree.BB_logical _ -> assert false) ;
   (* Finally, we record, even if it was already done in [env'] the number *)
   (* of extra arguments due to polymorphism the current bound identifier  *)
@@ -552,8 +516,7 @@ let rec let_binding_compile ctx ~local_idents ~self_methods_status ~in_hyp
 
 
 
-and let_in_def_compile ctx ~local_idents ~self_methods_status ~in_hyp env
-    let_def =
+and let_in_def_compile ctx ~local_idents ~self_methods_status env let_def =
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
     failwith "Coq compilation of logical let in TODO" ;  (* [Unsure]. *)
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -579,13 +542,12 @@ and let_in_def_compile ctx ~local_idents ~self_methods_status ~in_hyp env
          assert false
      | [one_bnd] ->
          let_binding_compile
-           ctx ~local_idents ~self_methods_status ~in_hyp ~is_rec env one_bnd
+           ctx ~local_idents ~self_methods_status ~is_rec env one_bnd
      | first_bnd :: next_bnds ->
          let accu_env =
            ref
              (let_binding_compile
-                ctx ~local_idents ~self_methods_status ~in_hyp ~is_rec env
-                first_bnd) in
+                ctx ~local_idents ~self_methods_status ~is_rec env first_bnd) in
          List.iter
            (fun binding ->
              (* We transform "let and" non recursive functions *)
@@ -593,7 +555,7 @@ and let_in_def_compile ctx ~local_idents ~self_methods_status ~in_hyp env
              Format.fprintf out_fmter "@ in@]@\n@[<2>let " ;
              accu_env :=
                let_binding_compile
-                 ctx ~local_idents ~self_methods_status ~in_hyp ~is_rec
+                 ctx ~local_idents ~self_methods_status ~is_rec
                  !accu_env binding)
            next_bnds ;
            !accu_env) in
@@ -602,7 +564,7 @@ and let_in_def_compile ctx ~local_idents ~self_methods_status ~in_hyp env
 
 
 
-and generate_expr ctx ~local_idents ~self_methods_status ~in_hyp initial_env
+and generate_expr ctx ~local_idents ~self_methods_status initial_env
     initial_expression =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the coq type print context. *)
@@ -652,7 +614,7 @@ and generate_expr ctx ~local_idents ~self_methods_status ~in_hyp initial_env
      | Parsetree.E_var ident ->
          (begin
          generate_expr_ident_for_E_var
-           ctx ~local_idents: loc_idents ~self_methods_status ~in_hyp ident ;
+           ctx ~local_idents: loc_idents ~self_methods_status ident ;
          (* Now, add the extra "_"'s if the identifier is polymorphic. *)
          try
            let nb_polymorphic_args =
@@ -722,7 +684,7 @@ and generate_expr ctx ~local_idents ~self_methods_status ~in_hyp initial_env
      | Parsetree.E_let (let_def, in_expr) ->
          let env' =
            let_in_def_compile
-             ctx ~local_idents ~self_methods_status ~in_hyp env let_def in
+             ctx ~local_idents ~self_methods_status env let_def in
          Format.fprintf out_fmter "@ in@\n" ;
          rec_generate_expr loc_idents env' in_expr
      | Parsetree.E_record _labs_exprs ->
@@ -785,8 +747,8 @@ and generate_expr ctx ~local_idents ~self_methods_status ~in_hyp initial_env
 
 
 
-let generate_logical_expr ctx ~local_idents ~self_methods_status ~in_hyp
-    initial_env initial_proposition =
+let generate_logical_expr ctx ~local_idents ~self_methods_status initial_env
+    initial_proposition =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the coq type print context. *)
   let print_ctx = {
@@ -895,7 +857,7 @@ let generate_logical_expr ctx ~local_idents ~self_methods_status ~in_hyp
                 assert false) in
          if is_bool then Format.fprintf out_fmter "@[<2>Is_true (" ;
          generate_expr
-           ctx ~local_idents: loc_idents ~self_methods_status ~in_hyp env expr ;
+           ctx ~local_idents: loc_idents ~self_methods_status env expr ;
          (* The end of the wrapper surrounding  *)
          (* the expression if it has type bool. *)
          if is_bool then Format.fprintf out_fmter ")@]"
@@ -1088,7 +1050,7 @@ let generate_record_type ctx env species_descr =
     generate_record_type_parameters
       ctx species_descr.Env.TypeInformation.spe_sig_methods in
   (* Print the type of the record and it's constructor. *)
-  Format.fprintf out_fmter ": Type :=@ mk_%s {@\n" my_species_name  ;
+  Format.fprintf out_fmter ": Type :=@ mk_record {@\n"  ;
   (* Always generate the "rep" coercion. *)
   Format.fprintf out_fmter "@[<2>%s_T :> Set" my_species_name ;
   (* We now extend the collections_carrier_mapping with ourselve known.  *)
@@ -1173,7 +1135,7 @@ let generate_record_type ctx env species_descr =
         (* [~self_methods_status] to [SMS_from_species].                  *)
         generate_logical_expr ctx
           ~local_idents: [] ~self_methods_status: SMS_from_species
-          ~in_hyp: false env logical_expr ;
+          env logical_expr ;
         if semi then Format.fprintf out_fmter " ;" ;
         Format.fprintf out_fmter "@]@\n" in
   (* Coq syntax required not semi after the last field. That's why   *)

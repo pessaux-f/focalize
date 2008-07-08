@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.18 2008-06-30 11:30:38 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.19 2008-07-08 15:19:37 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -60,7 +60,7 @@ let toplevel_let_def_compile ctx env let_def =
          Species_record_type_generation.let_binding_compile
            ctx ~local_idents: []
            ~self_methods_status:
-             Species_record_type_generation.SMS_from_species ~in_hyp: false
+             Species_record_type_generation.SMS_from_species
            ~is_rec env one_bnd
      | first_bnd :: next_bnds ->
          let accu_env =
@@ -69,7 +69,7 @@ let toplevel_let_def_compile ctx env let_def =
                 ctx ~local_idents: []
                 ~self_methods_status:
                   Species_record_type_generation.SMS_from_species
-                ~in_hyp: false ~is_rec env first_bnd) in
+                ~is_rec env first_bnd) in
          List.iter
            (fun binding ->
              Format.fprintf out_fmter "@]@\n@[<2>with " ;
@@ -78,7 +78,7 @@ let toplevel_let_def_compile ctx env let_def =
                  ctx ~local_idents: []
                  ~self_methods_status:
                    Species_record_type_generation.SMS_from_species
-                 ~in_hyp: false ~is_rec !accu_env binding)
+                 ~is_rec !accu_env binding)
            next_bnds ;
          !accu_env) in
   Format.fprintf out_fmter "@]" ;

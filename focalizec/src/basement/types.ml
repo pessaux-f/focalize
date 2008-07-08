@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.53 2008-07-04 13:02:52 pessaux Exp $ *)
+(* $Id: types.ml,v 1.54 2008-07-08 15:19:37 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1355,33 +1355,19 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
              (* This means that the CURRENT species MUST be in the   *)
              (* CURRENT compilation unit !                           *)
              assert (species_modname = ctx.cpc_current_unit) ;
-             (* Get the way "Self" must be printed. We lookup inside the *)
-             (* collection_carrier_mapping for the hardwired             *)
-             (* [type_collection] (<current_species>, "Self") with       *)
-             (* <current_species> being the one found in the current     *)
-             (* [print_context] (it mst never be [None] since "Self" is  *)
-             (* never bound, hence used, outside a species !).           *)
-             (* This means that when one needs to print a type, the way  *)
-             (* "Self" must be printed must be registered in this        *)
-             (* [collection_carrier_mapping]. If "Self" may be kept      *)
-             (* abstract, i.e. printed like "abst_T" (when printing in a *)
-             (* field definition) or may show the species from which it  *)
-             (* is the carrier (when printing the record type) or must   *)
-             (* be printed as "self_T" (when printing in a field's local *)
-             (* definition), or "abst_T" of "Self_T" when printing a     *)
-             (* theorem depending on if a dependency on "rep" was found  *)
-             (* and leaded to a "Variable abst_T : Set" in the theorem's *)
-             (* sections.                                                *)
+             (* If "Self" is kept abstract, then it won't appear in the     *)
+	     (* collection_carrier_mapping and must be printed like         *)
+             (* "abst_T" (for instance when printing in a field definition) *)
+	     (* Otherwise it may show the species from which it is the      *)
+             (* carrier (when printing the record type) and must appear in  *)
+	     (* the collection_carrier_mapping.                             *)
              try
                let (self_as_string, _) =
                  List.assoc
                    (species_modname, "Self")
                    ctx.cpc_collections_carrier_mapping in
                Format.fprintf ppf "%s_T" self_as_string
-             with Not_found ->
-               (* That's a bug: we forgot to insert "Self" in the *)
-               (* [collection_carrier_mapping].                   *)
-               assert false
+             with Not_found ->  Format.fprintf ppf "abst_T"
              end)
         end)
     | ST_species_rep (module_name, collection_name) ->

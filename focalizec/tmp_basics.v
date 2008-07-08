@@ -106,27 +106,20 @@ Notation  base_eq:= __g_base_eq_.
 
 
 (* Currently partially hand-generated. *)
-Chapter Basic_object.
+Module Basic_object.
   Record Basic_object : Type :=
-    mk_Basic_object {
+    mk_record {
     Basic_object_T :> Set ;
     (* From species basics#Basic_object. *)
-    parse : string__t -> Basic_object_T ;
+    Basic_object_parse : string__t -> Basic_object_T ;
     (* From species basics#Basic_object. *)
-    print : Basic_object_T -> string__t ;
-    (* From species basics#basic_object. *)
     Basic_object_print : Basic_object_T -> string__t
     }.
-
-  (* Carrier representation. *)
-  Variable self_T : Set.
   
-  Definition Basic_object__parse (abst_T : Set) (x : string__t) :
-    abst_T := (__g_foc_error ___a_string).
-  Let self_parse := Basic_object__parse self_T.
-  Definition Basic_object__print (abst_T : Set) (x : abst_T) :
-    basics.string__t := ___a_string.
-  Let self_print := Basic_object__print self_T.
+  Definition parse (abst_T : Set) (x : string__t) : abst_T :=
+    (__g_foc_error ___a_string).
+  Definition print (abst_T : Set) (x : abst_T) : string__t :=
+    ___a_string.
 End Basic_object.
 
 Inductive partiel__t (__var_a : Set) : Set := 
