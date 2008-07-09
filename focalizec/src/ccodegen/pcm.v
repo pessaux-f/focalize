@@ -5,12 +5,12 @@ Require Export ast.
 Module PCM.
 
   Record type_ident : Set := mk_type_ident {
-    ti_file : option string;
+    ti_file : string;
     ti_name : string
   }.
 
   Inductive type : Set :=
-  | T_var : string -> type
+  | T_var : int -> type
   | T_arrow : type -> type -> type
   | T_tuple : list_type -> type
   | T_constr : type_ident -> list_type -> type
@@ -217,7 +217,7 @@ Module PCM.
 (*   Parameter theorem_info : Set. *)
 
   Parameter species : Set.
-
+  Parameter dummy_species : species.
   
   Record binding : Set := mk_binding {
     b_info : info;

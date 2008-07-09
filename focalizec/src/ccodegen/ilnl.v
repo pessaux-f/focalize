@@ -4,44 +4,13 @@ Require Import List.
 
 Module ILNL.
   
-(*   Definition ttype : Set := PCM.ttype. *)
-  
-(*   Definition info : Set := PCM.info. *)
-
-(*   Definition ident : Set := PCM.ident. *)
-
-(*   Record binding (A : Set) : Set := mk_binding { *)
-(*     b_info : info; *)
-(*     b_name : vname; *)
-(*     b_params : list ident; *)
-(*     b_body : A *)
-(*   }. *)
-(*   Implicit Arguments mk_binding [A]. *)
-(*   Implicit Arguments b_info [A]. *)
-(*   Implicit Arguments b_name [A]. *)
-(*   Implicit Arguments b_params [A]. *)
-(*   Implicit Arguments b_body [A]. *)
-
-(*   Record let_def (A : Set) : Set := mk_let_def { *)
-(*     ld_rec : bool; *)
-(*     ld_local : bool; *)
-(*     ld_bindings : list (binding A) *)
-(*   }. *)
-(*   Implicit Arguments mk_let_def [A]. *)
-
-(*   Definition external_expr : Set := list (prod string string). *)
-
-(*   Definition constant : Set := PCM.constant. *)
-  
-(*   Definition pattern : Set := PCM.pattern. *)
-
   Record type_ident : Set := mk_type_ident {
-    ti_file : option string;
+    ti_file : string;
     ti_name : string
   }.
 
   Inductive type : Set :=
-  | T_var : string -> type
+  | T_var : int -> type
   | T_arrow : type -> type -> type
   | T_tuple : list_type -> type
   | T_constr : type_ident -> list_type -> type
