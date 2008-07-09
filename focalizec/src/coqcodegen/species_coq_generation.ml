@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.76 2008-07-09 14:52:28 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.77 2008-07-09 15:34:01 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1565,7 +1565,7 @@ traité les methodes de nosu dont on dépend... *)
   (* recover the list of species parameters linked together with their     *)
   (* methods we need to instanciate in order to apply the collection       *)
   (* generator.                                                            *)
-  let _extra_args_from_spe_params =
+  let extra_args_from_spe_params =
     dump_collection_generator_arguments_for_params_methods
       out_fmter compiled_species_fields in
   Format.fprintf out_fmter " :=@ " ;
@@ -1654,7 +1654,7 @@ traité les methodes de nosu dont on dépend... *)
     compiled_species_fields ;
   (* Close the pretty-print box of the "Let collection_create ... :=". *)
   Format.fprintf ctx.Context.scc_out_fmter ".@]@\n" ;
-  params_carriers_extra_args
+  (params_carriers_extra_args, extra_args_from_spe_params)
 ;;
 
 
@@ -1745,9 +1745,15 @@ let species_compile env ~current_unit out_fmter species_def species_descr
       (* mapping that contains the species parameters carriers !   *)
       (* It will be used to remind the arguments to pass to the    *)
       (* record type (i.e. to mk_record).                          *)
-      (* The obtained list of extra parameters due to species parameters   *)
-      (* carriers contains the parameters related to the "IN" parameters ! *)
-      let params_carriers_extra_args =
+      (* The obtained list of extra parameters due to species parameters. *)
+      (* First, the parameters induced by parameters carriers abstracted  *)
+      (* the record type (useful to build a complete record type          *)
+      (* expression). Note that in this first stuff, the carriers of the  *)
+      (* "IN" parameters are here !                                       *)
+      (* Second, we get the abstracted methods from parameters we depend  *)
+      (* on. These methods parametrize the collection generator and will  *)
+      (* have to be provided when creatign a collection.                  *)
+      let (params_carriers_extra_args, params_methods_extra_args) =
         generate_collection_generator
           ctx env' compiled_fields abstracted_params_methods_in_record_type in
       (* Just remove the "IN"/"IS" tag that is not needed to keep in the *)
@@ -1759,7 +1765,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
             species_params_names_n_kinds ;
           Env.CoqGenInformation.cgi_generator_parameters =
             (params_carriers_extra_args_only,
-             abstracted_params_methods_in_record_type (* Only methods. *)) }
+             params_methods_extra_args (* Only methods. *)) }
       end)
     else None in
   (* The end of the module hosting the species. *)
@@ -1891,7 +1897,13 @@ let apply_generator_to_parameters ctx env formal_to_effective_map
         | Misc_common.CEA_value_expr_for_in _ ->
             failwith "Yo to do !")
     required_species_carriers_params in
+  (* Since in the record type we always abstract first by the species    *)
+  (* parameters carriers, so it is in the collection generator. So we    *)
+  (* directly use this fact to apply the generator to the instanciations *)
+  (* of the species parameters carriers.                                 *)
   (* Now, we generate identifiers for methods of these *)
+  print_record_type_args_instanciations
+    out_fmter record_type_args_instanciations ;
   (* species parameters we have dependencies on.       *)
   List.iter
     (fun (formal_species_param_name, method_names) ->
@@ -1912,8 +1924,8 @@ let apply_generator_to_parameters ctx env formal_to_effective_map
                (match corresponding_effective_opt_fname with
                 | Some fname -> Format.fprintf out_fmter "%s." fname
                 | None -> ()) ;
-               (* Species name + "__effective_collection.". *)
-               Format.fprintf out_fmter "@ %a__effective_collection.("
+               (* Species name + ".effective_collection.". *)
+               Format.fprintf out_fmter "@ %a.effective_collection.("
                  Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname ;
                (* If needed, qualify the name of the species *)
@@ -1921,8 +1933,8 @@ let apply_generator_to_parameters ctx env formal_to_effective_map
                (match corresponding_effective_opt_fname with
                 | Some fname -> Format.fprintf out_fmter "%s." fname
                 | None -> ()) ;
-               (* Species name.method name. *)
-               Format.fprintf out_fmter "%a_%a)"
+               (* Species name.rf_method name. *)
+               Format.fprintf out_fmter "%a.rf_%a)"
                  Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname
                  Parsetree_utils.pp_vname_with_operators_expanded meth_name)
