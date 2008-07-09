@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.75 2008-07-09 11:14:45 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.76 2008-07-09 14:52:28 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -940,7 +940,7 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
             Species_record_type_generation.generate_expr
               new_ctx ~local_idents: []
               ~self_methods_status:
-                 Species_record_type_generation.SMS_from_self
+                Species_record_type_generation.SMS_abstracted
               env body_expr ;
             Format.fprintf out_fmter ".@]@\n" ;
             Format.fprintf out_fmter "@[<v 2>Proof.@ %a Qed.@]@\n"
@@ -1373,7 +1373,8 @@ let dump_collection_generator_arguments_for_params_carriers out_fmter lst =
     (fun (param_kind, param_name) ->
       match param_kind with
        | Env.ScopeInformation.SPK_is ->
-           Format.fprintf out_fmter "@ _p_%a_T"
+           (* We need to enforce the type for Coq because I don't know what. *)
+           Format.fprintf out_fmter "@ (_p_%a_T : Set)"
              Parsetree_utils.pp_vname_with_operators_expanded param_name ;
        | Env.ScopeInformation.SPK_in ->
            (* One must use the parameter of the collection generator to   *)
@@ -1848,13 +1849,13 @@ let print_record_type_args_instanciations out_fmter args_instanciations =
       (match corresponding_effective_opt_fname with
        | Some fname -> Format.fprintf out_fmter "%s." fname
        | None -> ()) ;
-      Format.fprintf out_fmter "@[@ %a__effective_collection.("
+      Format.fprintf out_fmter "@[@ %a.effective_collection.("
         Parsetree_utils.pp_vname_with_operators_expanded
         corresponding_effective_vname ;
       (match corresponding_effective_opt_fname with
        | Some fname -> Format.fprintf out_fmter "%s." fname
        | None -> ()) ;
-      Format.fprintf out_fmter "%a_T)@]"
+      Format.fprintf out_fmter "%a.rf_T)@]"
         Parsetree_utils.pp_vname_with_operators_expanded
         corresponding_effective_vname)
     args_instanciations
@@ -1890,11 +1891,8 @@ let apply_generator_to_parameters ctx env formal_to_effective_map
         | Misc_common.CEA_value_expr_for_in _ ->
             failwith "Yo to do !")
     required_species_carriers_params in
-  (* Now really output the Coq source code. *)
-  print_record_type_args_instanciations
-    out_fmter record_type_args_instanciations ;
   (* Now, we generate identifiers for methods of these *)
-  (* species parameters we we have dependencies on.    *)
+  (* species parameters we have dependencies on.       *)
   List.iter
     (fun (formal_species_param_name, method_names) ->
       match List.assoc formal_species_param_name formal_to_effective_map with
@@ -2037,19 +2035,26 @@ let print_implemented_species_as_coq_module ~current_unit out_fmter
 (* ******************************************************************** *)
 let make_collection_effective_record ~current_unit out_fmter
     implemented_species_name collection_descr record_type_args_instanciations =
-  (* The header of the record, always applying "self_T". *)
-  Format.fprintf out_fmter
-    "@[<2>Definition effective_collection :=@ mk_record@ self_T" ;
-    List.iter
+  (* The header of the record. *)
+  Format.fprintf out_fmter "@[<2>mk_record" ;
+  (* Now, always applying to the representation of "Self", i.e "rf_T". *)
+  Format.fprintf out_fmter "@ t.(" ;
+  print_implemented_species_as_coq_module
+    ~current_unit out_fmter implemented_species_name ;
+  Format.fprintf out_fmter ".rf_T" ;
+  print_record_type_args_instanciations
+    out_fmter record_type_args_instanciations ;
+  Format.fprintf out_fmter ")" ;
+  List.iter
     (function
       | Env.TypeInformation.SF_sig (_, _, _)
       | Env.TypeInformation.SF_property (_, _, _, _, _) -> ()
       | Env.TypeInformation.SF_theorem (_, n, _, _, _, _)
       | Env.TypeInformation.SF_let (_, n, _, _, _, _, _) ->
-          Format.fprintf out_fmter "@ __implemented.(" ;
+          Format.fprintf out_fmter "@ t.(" ;
           print_implemented_species_as_coq_module
             ~current_unit out_fmter implemented_species_name ;
-          Format.fprintf out_fmter "_%a"
+          Format.fprintf out_fmter ".rf_%a"
             Parsetree_utils.pp_vname_with_operators_expanded n ;
           print_record_type_args_instanciations
             out_fmter record_type_args_instanciations ;
@@ -2057,10 +2062,10 @@ let make_collection_effective_record ~current_unit out_fmter
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
             (fun (_, n, _, _, _, _, _) ->
-              Format.fprintf out_fmter "@ __implemented.(" ;
+              Format.fprintf out_fmter "@ t.(" ;
               print_implemented_species_as_coq_module
                 ~current_unit out_fmter implemented_species_name ;
-              Format.fprintf out_fmter "_%a"
+              Format.fprintf out_fmter ".rf_%a"
                 Parsetree_utils.pp_vname_with_operators_expanded n ;
               print_record_type_args_instanciations
                 out_fmter record_type_args_instanciations ;
@@ -2124,91 +2129,6 @@ let map_formal_to_effective_in_collection ~current_unit collection_body_params
 
 
 
-let make_collection_local_methods ctx env _formals_to_effectives fields =
-  let out_fmter = ctx.Context.scc_out_fmter in
-  (* Local function to recover for one field the dependencies *)
-  (* it had in the species where it was defined.              *)
-  let process_one_field from name =
-    (* This ident is temporary and created just to lookup in the environment. *)
-    let host_ident =
-      Parsetree_utils.make_pseudo_species_ident
-        ~current_unit: ctx.Context.scc_current_unit
-        from.Env.fh_initial_apparition in
-    let (_, host_method_infos, _, _) =
-      Env.CoqGenEnv.find_species
-        ~loc: Location.none ~current_unit: ctx.Context.scc_current_unit
-        host_ident env in
-    (* We search the dependencies the original method had on its species *)
-    (* parameters' methods.                                              *)
-    let meth_info =
-      List.find (fun inf -> inf.Env.mi_name = name) host_method_infos in
-    (name, from, meth_info.Env.mi_dependencies_from_parameters) in
-
-
-  (* Get the full list of methods we will have to create as "local_xxx" with *)
-  (* their dependencies information in the species where the method was      *)
-  (* defined.                                                                *)
-  let local_meths_to_do =
-    List.fold_right
-      (fun field accu ->
-        match field with
-         | Env.TypeInformation.SF_sig (_, _, _) -> accu
-         | Env.TypeInformation.SF_let (from, name, _, _, _, _, _)
-         | Env.TypeInformation.SF_theorem (from, name, _, _, _, _)
-         | Env.TypeInformation.SF_property (from, name, _, _, _) ->
-             (process_one_field from name) :: accu
-         | Env.TypeInformation.SF_let_rec l ->
-             let m =
-               List.map
-                 (fun (from, name, _, _, _, _, _) ->
-                   process_one_field from name)
-                 l in
-             m @ accu)
-      fields [] in
-
-
-  List.iter
-    (fun (name, from, _used_species_parameter_tys) ->
-      Format.fprintf out_fmter "Let local_%a :=@ "
-        Parsetree_utils.pp_vname_with_operators_expanded name ;
-      (* The method generator's name... If the generator *)
-      (* is in another module, then qualify its name.    *)
-      let defined_from = from.Env.fh_initial_apparition in
-      if (fst defined_from) <> ctx.Context.scc_current_unit then
-        Format.fprintf out_fmter "%s.%a" (fst defined_from)
-          Parsetree_utils.pp_vname_with_operators_expanded (snd defined_from)
-      else
-        Format.fprintf out_fmter "%a"
-          Parsetree_utils.pp_vname_with_operators_expanded (snd defined_from) ;
-      Format.fprintf out_fmter "__%a"
-        Parsetree_utils.pp_vname_with_operators_expanded name ;
-Format.fprintf out_fmter "
-(* Comme on est dans une collection, il n'y a jamais de paramètre d'espèce. *)
-let used_species_parameter_tys = [] in
-      instanciate_parameter_through_inheritance
-        ctx env name from used_species_parameter_tys" ;
-
-(* Et maintenant les methodes de nous même dont on dépend. Elles sont *)
-(* générées avant la courante et se nomment "local_xxx". *)
-  let abstracted_methods =
-    find_inherited_method_generator_abstractions
-        ~current_unit: ctx.Context.scc_current_unit
-        from.Env.fh_initial_apparition name env in
-  List.iter
-    (fun dep_meth_vname ->
-      if dep_meth_vname = Parsetree.Vlident "rep" then
-        Format.fprintf out_fmter "@ self_T"
-      else
-        Format.fprintf out_fmter "@ local_%a"
-          Parsetree_utils.pp_vname_with_operators_expanded dep_meth_vname)
-  abstracted_methods ;
-  
-      Format.fprintf out_fmter ".@\n")
-    local_meths_to_do
-;;
-
-
-
 let collection_compile env ~current_unit out_fmter collection_def
     collection_descr dep_graph =
   let collection_name = collection_def.Parsetree.ast_desc.Parsetree.cd_name in
@@ -2216,8 +2136,8 @@ let collection_compile env ~current_unit out_fmter collection_def
   if Configuration.get_verbose () then
     Format.eprintf "Generating Coq code for collection %a@."
       Sourcify.pp_vname collection_name ;
-  (* Start the "Chapter" encapsulating the collection representation. *)
-  Format.fprintf out_fmter "@[<2>Chapter %a.@\n"
+  (* Start the "Module" encapsulating the collection representation. *)
+  Format.fprintf out_fmter "@[<2>Module %a.@\n"
     Sourcify.pp_vname collection_name ;
   (* Now, establish the mapping between collections available *)
   (* and the names representing their carrier.                *)
@@ -2269,46 +2189,46 @@ let collection_compile env ~current_unit out_fmter collection_def
              Parsetree.se_params
         col_gen_params_info.Env.CoqGenInformation.
           cgi_implemented_species_params_names in
-
-
     let formals_to_effectives =
       map_formal_to_effective_in_collection
         ~current_unit: ctx.Context.scc_current_unit collection_body_params
         col_gen_params_info in
-    make_collection_local_methods
-      ctx env formals_to_effectives
-      collection_descr.Env.TypeInformation.spe_sig_methods ;
-
-
-
-
     (* We do not want any collection generator. Instead, we will call the  *)
     (* collection generator of the collection we implement and apply it to *)
     (* the functions it needs coming from the collection applied to its    *)
     (* parameters if there are some.                                       *)
-    (* The temporary value resulting from the application of the collection *)
-    (* generator of the species we implement. We always name it             *)
-    (* "__implemented".                                                     *)
-    Format.fprintf out_fmter "@[<2>Let __implemented :=@ " ;
+    Format.fprintf out_fmter "@[<2>Let effective_collection :=@ " ;
+    (* The temporary value resulting from the application of *)
+    (* the collection generator mentionned just above...     *)
+    Format.fprintf out_fmter "@[<2>let t :=@\n" ;
     (* We call the "implemented" collection generator, that is named *)
-    (* by the implemented species name + "_collection_create".       *)
+    (* by the implemented species name + ".collection_create".       *)
     print_implemented_species_for_coq
       ~current_unit out_fmter implemented_species_name ;
-    Format.fprintf out_fmter "_collection_create" ;
+    Format.fprintf out_fmter ".collection_create" ;
+    (* Finally, we must recover the arguments to apply to this collection    *)
+    (* generator. These arguments of course come from the species parameters *)
+    (* the closed species we implement has (if it has some). We must         *)
+    (* make this application WITH THE RIGHT EFFECTIVE FUNCTIONS and IN THE   *)
+    (* RIGHT ORDER !                                                         *)
     let record_type_args_instanciations =
       apply_generator_to_parameters
         ctx env formals_to_effectives col_gen_params_info in
     (* Close the pretty print box of the "__implemented". *)
-    Format.fprintf out_fmter ".@]@\n@\n" ;
+    Format.fprintf out_fmter "@ in @]@\n" ;
     (* Get the name of the species we implement. *)
     let implemented_species_name =
       collection_def.Parsetree.ast_desc.Parsetree.
         cd_body.Parsetree.ast_desc.Parsetree.se_name in
-    (* Now, create the effective value of the collection's record. *)
+    (* And now, create the final value representing the effective instance *)
+    (* of our collection, borrowing each field from the temporary value    *)
+    (* obtained above. This way, our collection will have ITS own record   *)
+    (* fields names, preventing the need to use those coming from the      *)
+    (* it implements.                                                      *)
     make_collection_effective_record
       ~current_unit out_fmter implemented_species_name
       collection_descr record_type_args_instanciations ;
-    (* End of the pretty print box of the Chapter embedding the collection. *)
+    (* End of the pretty print box of the Module embedding the collection. *)
     Format.fprintf out_fmter "End %a.@]@\n@\n" Sourcify.pp_vname collection_name
   with Not_found ->
     (* Don't see why the species could not be present in the environment.  *)

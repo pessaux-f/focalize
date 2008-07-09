@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.19 2008-07-08 15:19:37 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.20 2008-07-09 14:52:28 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -59,16 +59,17 @@ let toplevel_let_def_compile ctx env let_def =
      | [one_bnd] ->
          Species_record_type_generation.let_binding_compile
            ctx ~local_idents: []
-           ~self_methods_status:
-             Species_record_type_generation.SMS_from_species
+           (* Or whatever since "Self" does not exist anymore. *)
+           ~self_methods_status: Species_record_type_generation.SMS_from_record
            ~is_rec env one_bnd
      | first_bnd :: next_bnds ->
          let accu_env =
            ref
              (Species_record_type_generation.let_binding_compile
                 ctx ~local_idents: []
+                (* Or whatever since "Self" does not exist anymore. *)
                 ~self_methods_status:
-                  Species_record_type_generation.SMS_from_species
+                  Species_record_type_generation.SMS_from_record
                 ~is_rec env first_bnd) in
          List.iter
            (fun binding ->
@@ -76,8 +77,9 @@ let toplevel_let_def_compile ctx env let_def =
              accu_env :=
                Species_record_type_generation.let_binding_compile
                  ctx ~local_idents: []
+                 (* Or whatever since "Self" does not exist anymore. *)
                  ~self_methods_status:
-                   Species_record_type_generation.SMS_from_species
+                   Species_record_type_generation.SMS_from_record
                  ~is_rec !accu_env binding)
            next_bnds ;
          !accu_env) in

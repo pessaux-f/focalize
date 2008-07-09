@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.43 2008-07-08 15:19:37 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.44 2008-07-09 14:52:28 pessaux Exp $ *)
 
 
 
@@ -24,14 +24,9 @@ let make_Self_cc_binding_abst_T  ~current_species =
   let (module_name, _) = current_species in
   ((module_name, "Self"), ("abst" ,Types.CCMI_is))
 ;;
-let make_Self_cc_binding_self_T  ~current_species =
+let make_Self_cc_binding_rf_T ~current_species =
   let (module_name, _) = current_species in
-  ((module_name, "Self"), ("self" ,Types.CCMI_is))
-;;
-let make_Self_cc_binding_current_species_T ~current_species =
-  let (module_name, species_vname) = current_species in
-  let species_name = Parsetree_utils.name_of_vname species_vname in
-  ((module_name, "Self"), (species_name, Types.CCMI_is))
+  ((module_name, "Self"), ("rf", Types.CCMI_is))
 ;;
 
 
@@ -65,9 +60,8 @@ let simply_pp_to_coq_qualified_vname ~current_unit ppf = function
 
 type self_methods_status =
   | SMS_abstracted     (** Must be called "abst_<meth>". *)
-  | SMS_from_species   (** Must be called "hosting_species_<meth>". *)
-  | SMS_from_self      (** Must be called "self_<meth>". *)
-  | SMS_todo
+  | SMS_from_record    (** Must be called "(hosting_species. if needed)
+                           <rf_meth>". *)
 ;;
 
 
@@ -157,15 +151,9 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
              | SMS_abstracted ->
                  Format.fprintf out_fmter "abst_%a"
                    Parsetree_utils.pp_vname_with_operators_expanded vname
-             | SMS_from_species ->
-                 Format.fprintf out_fmter "%a_%a"
-                   Parsetree_utils.pp_vname_with_operators_expanded
-                   (snd ctx.Context.scc_current_species)
+             | SMS_from_record ->
+                 Format.fprintf out_fmter "rf_%a"
                    Parsetree_utils.pp_vname_with_operators_expanded vname
-             | SMS_from_self ->
-                 Format.fprintf out_fmter "self_%a"
-                   Parsetree_utils.pp_vname_with_operators_expanded vname
-             | SMS_todo -> failwith "SMS_todo"
             end)
         | Some coll_specifier ->
             (begin
@@ -1052,15 +1040,15 @@ let generate_record_type ctx env species_descr =
   (* Print the type of the record and it's constructor. *)
   Format.fprintf out_fmter ": Type :=@ mk_record {@\n"  ;
   (* Always generate the "rep" coercion. *)
-  Format.fprintf out_fmter "@[<2>%s_T :> Set" my_species_name ;
+  Format.fprintf out_fmter "@[<2>rf_T :> Set" ;
   (* We now extend the collections_carrier_mapping with ourselve known.  *)
   (* Hence, if we refer to our "rep" we will be directly mapped onto the *)
-  (* species's name + "_T" without needing to re-construct this name     *)
-  (* each time. Do same thing for "Self".                                *)
+  (* "rf_T" without needing to re-construct this name each time. Do same *)
+  (* thing for "Self".                                                   *)
   let collections_carrier_mapping =
-    (make_Self_cc_binding_current_species_T
-       ~current_species: ctx.Context.scc_current_species) ::
-    ((my_fname, my_species_name),((my_species_name), Types.CCMI_is)) ::
+    (make_Self_cc_binding_rf_T
+      ~current_species: ctx.Context.scc_current_species) ::
+    ((my_fname, my_species_name),(("rf"), Types.CCMI_is)) ::
     collections_carrier_mapping in
   (* We mask the old ctx to take benefit of the new one with the bindings. *)
   let ctx = {
@@ -1095,8 +1083,7 @@ let generate_record_type ctx env species_descr =
           Format.fprintf out_fmter "(* From species %a. *)@\n"
             Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
           (* Field is prefixed by the species name for sake of unicity. *)
-          Format.fprintf out_fmter "@[<2>%s_%a : %a"
-            my_species_name
+          Format.fprintf out_fmter "@[<2>rf_%a : %a"
             Parsetree_utils.pp_vname_with_operators_expanded n
             (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false) ty ;
           if semi then Format.fprintf out_fmter " ;" ;
@@ -1110,8 +1097,7 @@ let generate_record_type ctx env species_descr =
             Format.fprintf out_fmter "(* From species %a. *)@\n"
               Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
             (* Field is prefixed by the species name for sake of unicity. *)
-            Format.fprintf out_fmter "@[<2>%s_%a : %a"
-              my_species_name
+            Format.fprintf out_fmter "@[<2>rf_%a : %a"
               Parsetree_utils.pp_vname_with_operators_expanded n
               (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
               ty ;
@@ -1125,16 +1111,16 @@ let generate_record_type ctx env species_descr =
         Format.fprintf out_fmter "(* From species %a. *)@\n"
           Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
         (* Field is prefixed by the species name for sake of unicity. *)
-        Format.fprintf out_fmter "@[<2>%s_%a :@ "
-          my_species_name Parsetree_utils.pp_vname_with_operators_expanded n ;
+        Format.fprintf out_fmter "@[<2>rf_%a :@ "
+          Parsetree_utils.pp_vname_with_operators_expanded n ;
         (* Generate the Coq code representing the proposition. *)
-        (* No local idents in the context because we just enter the scope *)
-        (* of a species fields and so we are not under a core expression. *)
-        (* In the record type, methods of "Self" are always named using   *)
-        (* the species name + "_" + the method name; hence print using    *)
-        (* [~self_methods_status] to [SMS_from_species].                  *)
+        (* No local idents in the context because we just enter the scope    *)
+        (* of a species fields and so we are not under a core expression.    *)
+        (* In the record type, methods of "Self" are always named using      *)
+        (* "rf_" + the method name; hence print using [~self_methods_status] *)
+        (* to [SMS_from_record].                                             *)
         generate_logical_expr ctx
-          ~local_idents: [] ~self_methods_status: SMS_from_species
+          ~local_idents: [] ~self_methods_status: SMS_from_record
           env logical_expr ;
         if semi then Format.fprintf out_fmter " ;" ;
         Format.fprintf out_fmter "@]@\n" in

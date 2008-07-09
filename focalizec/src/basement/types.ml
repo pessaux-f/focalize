@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.54 2008-07-08 15:19:37 pessaux Exp $ *)
+(* $Id: types.ml,v 1.55 2008-07-09 14:52:28 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1356,11 +1356,11 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
              (* CURRENT compilation unit !                           *)
              assert (species_modname = ctx.cpc_current_unit) ;
              (* If "Self" is kept abstract, then it won't appear in the     *)
-	     (* collection_carrier_mapping and must be printed like         *)
+             (* collection_carrier_mapping and must be printed like         *)
              (* "abst_T" (for instance when printing in a field definition) *)
-	     (* Otherwise it may show the species from which it is the      *)
+             (* Otherwise it may show the species from which it is the      *)
              (* carrier (when printing the record type) and must appear in  *)
-	     (* the collection_carrier_mapping.                             *)
+             (* the collection_carrier_mapping.                             *)
              try
                let (self_as_string, _) =
                  List.assoc
@@ -1393,13 +1393,15 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
           (* parameters, that's because the searched species carrier's is *)
           (* not a species parameter, i.e. it's a toplevel species.       *)
           (* And as always, the type's name representing a species's      *)
-          (* carrier is the species's name + "_T".                        *)
+          (* carrier is the species's name + ".rf_T" with a possible      *)
+          (* module prefix qualification if the species belongs to a file *)
+          (* that is not the currently compiled one.                      *)
           if ctx.cpc_current_unit = module_name then
-            Format.fprintf ppf "%s__effective_collection.(%s_T)"
-	      collection_name collection_name
+            Format.fprintf ppf "%s.effective_collection.(%s.rf_T)"
+              collection_name collection_name
           else
-            Format.fprintf ppf "%s.%s__effective_collection.(%s.%s_T)"
-	      module_name collection_name module_name collection_name
+            Format.fprintf ppf "%s.%s.effective_collection.(%s.%s.rf_T)"
+              module_name collection_name module_name collection_name
         end)
 
   (* ********************************************************************* *)

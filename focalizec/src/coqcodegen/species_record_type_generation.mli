@@ -11,23 +11,15 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.5 2008-07-08 15:19:37 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.6 2008-07-09 14:52:28 pessaux Exp $ *)
 
 
-type self_methods_status =
-  | SMS_abstracted     (** Must be called "abst_<meth>". *)
-  | SMS_from_species   (** Must be called "hosting_species_<meth>". *)
-  | SMS_from_self      (** Must be called "self_<meth>". *)
-  | SMS_todo
-;;
+type self_methods_status = SMS_abstracted | SMS_from_record
 
 val make_Self_cc_binding_abst_T :
   current_species: Parsetree.qualified_species ->
     (Types.type_collection * (string * Types.collection_carrier_mapping_info))
-val make_Self_cc_binding_self_T :
-  current_species: Parsetree.qualified_species ->
-    (Types.type_collection * (string * Types.collection_carrier_mapping_info))
-val make_Self_cc_binding_current_species_T : 
+val make_Self_cc_binding_rf_T : 
   current_species: Parsetree.qualified_species ->
     (Types.type_collection * (string * Types.collection_carrier_mapping_info))
 
