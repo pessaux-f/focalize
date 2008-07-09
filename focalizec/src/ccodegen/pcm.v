@@ -1,98 +1,125 @@
 Require Export List.
 Require Export external.
+Require Export ast.
 
 Module PCM.
 
-  Record type_ident : Set := {
-    ci_file : option string;
-    ci_name : string
+  Record type_ident : Set := mk_type_ident {
+    ti_file : option string;
+    ti_name : string
   }.
 
-  Inductive ttype : Set :=
-  | T_var : string -> ttype
-  | T_arrow : ttype -> ttype -> ttype
-  | T_tuple : list ttype -> ttype
-  | T_constr : type_ident -> list ttype -> ttype
-  | T_self : ttype
-  | T_species : type_ident -> ttype.
+  Inductive type : Set :=
+  | T_var : string -> type
+  | T_arrow : type -> type -> type
+  | T_tuple : list_type -> type
+  | T_constr : type_ident -> list_type -> type
+  | T_self : type
+  | T_species : type_ident -> type
 
-  Record info : Set := mk_info {
-    type : ttype
-  }.
+  with list_type : Set :=
+  | lt_nil : list_type
+  | lt_cons : type -> list_type -> list_type.
 
   Record ident : Set := mk_ident {
     i_info : info;
+    i_type : type;
     i_file : option string;
     i_coll : option string;
     i_name : string
   }.
 
   Inductive constant : Set :=
-  | C_int : info -> string -> constant
-  | C_float : info -> string -> constant
-  | C_bool : info -> string -> constant
-  | C_string : info -> string -> constant
-  | C_char : info -> char -> constant.
+    Constant : constant_desc -> info -> constant
 
-  Parameter vname : Set.
+  with constant_desc : Set :=
+  | C_int : string -> constant_desc
+  | C_float : string -> constant_desc
+  | C_bool : string -> constant_desc
+  | C_string : string -> constant_desc
+  | C_char : char -> constant_desc.
+
+(*   Parameter vname : Set. *)
 
   Inductive pattern : Set :=
-  | P_const : info -> constant -> pattern
-  | P_var : info -> vname -> pattern
-  | P_as : info -> pattern -> vname -> pattern
-  | P_wild : info -> pattern
-  | P_constr : info -> ident -> list pattern -> pattern
-  | P_record : info -> list (prod string pattern) -> pattern
-  | P_tuple : info -> list pattern -> pattern
-  | P_paren : info -> pattern -> pattern.
+    Pattern : pattern_desc -> info -> type -> pattern
 
-  Record binding (A : Set) : Set := mk_binding {
-    b_info : info;
-    b_name : vname;
-    b_params : list ident;
-    b_body : A
+  with pattern_desc : Set :=
+  | P_const : constant -> pattern_desc
+  | P_var : ident -> pattern_desc
+  | P_as : pattern -> ident -> pattern_desc
+  | P_wild : pattern_desc
+  | P_constr : ident -> list_pattern -> pattern_desc
+  | P_record : list_field_pattern -> pattern_desc
+  | P_tuple : list_pattern -> pattern_desc
+  | P_paren : pattern -> pattern_desc
+
+  with list_pattern : Set := 
+  | p_nil : list_pattern
+  | p_cons : pattern -> list_pattern -> list_pattern
+
+  with list_field_pattern : Set :=
+  | pf_nil : list_field_pattern
+  | pf_cons : string -> pattern -> list_field_pattern -> list_field_pattern.
+
+
+  Record external_expr : Set := mk_external_expr {
+    ee_lang : string;
+    ee_code : string
   }.
-
-  Record let_def (A : Set) : Set := mk_let_def {
-    ld_rec : bool;
-    ld_logical : bool;
-    ld_local : bool;
-    ld_bindings : list (binding A)
-  }.
-  Implicit Arguments mk_let_def [A].
-  Implicit Arguments ld_logical [A].
-  Implicit Arguments ld_rec [A].
-  Implicit Arguments ld_local [A].
-  Implicit Arguments ld_bindings [A].
-
-  Definition external_expr : Set := list (prod string string).
 
   Inductive expr : Set :=
-  | E_self : info -> expr
-  | E_constant : info -> constant -> expr
-  | E_fun : info -> list ident -> expr -> expr
-  | E_var : info -> ident -> expr
-  | E_app : info -> expr -> list expr -> expr
-  | E_constr : info -> ident -> list expr -> expr
-  | E_match : info -> expr -> list (prod pattern expr) -> expr
-  | E_if : info -> expr -> expr -> expr -> expr
-  | E_let : info -> let_def expr -> expr -> expr
-  | E_record : info -> list (prod string expr) -> expr
-  | E_record_access : info -> expr -> string -> expr
-  | E_record_with : info ->  expr -> list (prod string expr) -> expr
-  | E_tuple : info -> list expr -> expr
-  | E_external : info -> external_expr -> expr
-  | E_paren : info -> expr -> expr.
+    Expr : expr_desc -> info -> type -> expr
+
+  with expr_desc : Set :=
+  | E_self : expr_desc
+  | E_constant : constant -> expr_desc
+  | E_fun : list ident -> expr -> expr_desc
+  | E_var : ident -> expr_desc
+  | E_app : expr -> list_expr -> expr_desc
+  | E_constr : ident -> list_expr -> expr_desc
+  | E_match : expr -> list_clause -> expr_desc
+  | E_if : expr -> expr -> expr -> expr_desc
+  | E_let : let_expr -> expr -> expr_desc
+  | E_record : list_field -> expr_desc
+  | E_record_access : expr -> string -> expr_desc
+  | E_record_with : expr -> list_field -> expr_desc
+  | E_tuple : list_expr -> expr_desc
+  | E_external : external_expr -> expr_desc
+  | E_paren : expr -> expr_desc
+
+  with list_expr : Set :=
+  | le_nil : list_expr
+  | le_cons : expr -> list_expr -> list_expr
+
+  with list_clause : Set :=
+  | lc_nil : list_clause
+  | lc_cons : pattern -> expr -> list_clause -> list_clause
+
+  with let_expr : Set :=
+  | Let_expr : bool -> bool -> list_binding -> info -> let_expr
+
+  with list_binding : Set :=
+  | b_nil : list_binding
+  | b_cons : ident -> list ident -> expr -> info -> list_binding -> list_binding
+
+  with list_field : Set :=
+  | lf_nil : list_field
+  | lf_cons : string -> expr -> list_field -> list_field.
+
+  Definition typeof (e : expr) : type :=
+    match e with Expr _ _ t => t end.
 
   Record history : Set := mk_history {
     h_initial : ident;
-    h_inherited : list expr
+    h_inherited : list_expr
   }.
 
   Record sig_field_info : Set := mk_sig_field_info {
     sfi_info : info;
     sfi_from : history;
-    sfi_name : vname
+    sfi_name : ident;
+    sfi_type : type
   }.
 
   Parameter logical_expr : Set.
@@ -104,7 +131,7 @@ Module PCM.
   Record let_field_info : Set := mk_let_field_info {
     lfi_info : info;
     lfi_from : history;
-    lfi_name : vname;
+    lfi_name : ident;
     lfi_params : list ident;
     lfi_binding_body : binding_body
   }.
@@ -120,71 +147,114 @@ Module PCM.
   | Sf_theorem : theorem_field_info -> species_field
   | Sf_property : property_field_info -> species_field.
 
-  Record collection_info : Set := mk_collection_info {
-    coll_name : vname;
+  Record collection : Set := mk_collection {
+    coll_name : ident;
     coll_body : list species_field
   }.
 
-  Record open_info : Set := mk_open_info {
-    oi_name : string
-  }.
+(*   Record open_info : Set := mk_open_info { *)
+(*     oi_name : string *)
+(*   }. *)
   
-  Record use_info : Set := mk_use_info {
-    ui_name : string
-  }.
+(*   Record use_info : Set := mk_use_info { *)
+(*     ui_name : string *)
+(*   }. *)
 
-  Parameter species_info : Set.
+(*   Parameter species_info : Set. *)
 
   Inductive type_expr : Set :=
-  | Te_ident : ident -> type_expr
-  | Te_fun : type_expr -> type_expr -> type_expr
-  | Te_app : ident -> list type_expr -> type_expr
-  | Te_prod : list type_expr -> type_expr
-  | Te_self : type_expr
-  | Te_prop : type_expr
-  | Te_paren : type_expr -> type_expr.
+    Type_expr : type_expr_desc -> info -> type_expr
+
+  with type_expr_desc : Set :=
+  | Te_ident : ident -> type_expr_desc
+  | Te_fun : type_expr -> type_expr -> type_expr_desc
+  | Te_app : ident -> list_type_expr -> type_expr_desc
+  | Te_prod : list_type_expr -> type_expr_desc
+  | Te_self : type_expr_desc
+  | Te_prop : type_expr_desc
+  | Te_paren : type_expr -> type_expr_desc
+
+  with list_type_expr : Set :=
+  | lte_nil : list_type_expr
+  | lte_cons : type_expr -> list_type_expr -> list_type_expr.
 
   Inductive simple_type_def_body : Set :=
-  | Stdb_alias : type_expr -> simple_type_def_body
-  | Stdb_union : list (prod vname (list type_expr)) -> simple_type_def_body
-  | Stdb_record : list (prod string type_expr) -> simple_type_def_body.
+    Simple_type_def_body : simple_type_def_body_desc -> info -> simple_type_def_body
+
+  with simple_type_def_body_desc : Set := 
+  | Stdb_alias : 
+    type_expr -> simple_type_def_body_desc
+  | Stdb_union :
+    list (prod ident list_type_expr) -> simple_type_def_body_desc
+  | Stdb_record :
+    list (prod string type_expr) -> simple_type_def_body_desc.
 
   Record external_type_def_body : Set := mk_external_type_def_body {
+    etdb_info : info;
     etdb_internal : option simple_type_def_body;
     etdb_external : external_expr;
-    etdb_bindings : list (prod vname external_expr)
+    etdb_bindings : list (prod ident external_expr)
   }.
 
   Inductive type_def_body : Set :=
-  | Tdb_simple : simple_type_def_body -> type_def_body
-  | Tdb_external : external_type_def_body -> type_def_body.
+    Type_def_body : type_def_body_desc -> info -> type_def_body
 
-  Record type_def : Set := mk_type_info {
-    ti_name : vname;
-    ti_params : list vname;
-    ti_body : type_def_body
+  with type_def_body_desc : Set :=
+  | Tdb_simple : simple_type_def_body -> type_def_body_desc
+  | Tdb_external : external_type_def_body -> type_def_body_desc.
+
+  Record type_def : Set := mk_type_def {
+    td_info : info;
+    td_name : ident;
+    td_params : list ident;
+    td_body : type_def_body
   }.
   
-  Definition type_info : Set := type_def.
+(*   Definition type_info : Set := type_def. *)
 
-  Definition let_def_info : Set := let_def binding_body.
+(*   Definition let_def_info : Set := let_def binding_body. *)
 
-  Parameter theorem_info : Set.
+(*   Parameter theorem_info : Set. *)
 
-  Inductive phrase : Set := 
-  | Phrase_open : open_info -> phrase
-  | Phrase_use : use_info -> phrase
-  | Phrase_species : species_info -> phrase
-  | Phrase_collection : collection_info -> phrase
-  | Phrase_type : type_info -> phrase
-  | Phrase_let_def : let_def_info -> phrase
-  | Phrase_theorem : theorem_info -> phrase
-  | Phrase_expr : expr -> phrase.
+  Parameter species : Set.
+
+  
+  Record binding : Set := mk_binding {
+    b_info : info;
+    b_name : ident;
+    b_params : list ident;
+    b_body : binding_body
+  }.
+
+(*   Parameter let_def : Set. *)
+  Record let_def : Set := mk_let_def {
+    ld_info : info;
+    ld_rec : bool;
+    ld_logical : bool;
+    ld_local : bool;
+    ld_bindings : list binding
+  }.
+
+  Parameter theorem_def : Set.
+ 
+  Inductive phrase : Set :=
+    Phrase : phrase_desc -> info -> phrase
+
+  with phrase_desc : Set :=
+  | Ph_open : string -> phrase_desc
+  | Ph_use : string -> phrase_desc
+  | Ph_species : species -> phrase_desc
+  | Ph_collection : collection -> phrase_desc
+  | Ph_type : type_def -> phrase_desc
+  | Ph_let_def : let_def -> phrase_desc
+  | Ph_theorem : theorem_def -> phrase_desc
+  | Ph_expr : expr -> phrase_desc.
 
   Record file : Set := mk_file {
     file_name : string;
     file_body : list phrase
   }.
+
 
 End PCM.
 

@@ -1,9 +1,9 @@
-# $Id: Makefile,v 1.1 2008-06-30 05:40:55 blond Exp $
+# $Id: Makefile,v 1.2 2008-07-09 06:03:42 blond Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing -I ../commoncodegen
 
-COQOBJS = external.vo pcm.vo ilnl.vo pcm2ilnl.vo extraction.vo
+COQOBJS = external.vo ast.vo pcm.vo ilnl.vo pcm2ilnl.vo extraction.vo
 # ilcaml.vo ilnl2ilcaml.vo 
 
 

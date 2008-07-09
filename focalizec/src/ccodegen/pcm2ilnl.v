@@ -7,371 +7,613 @@ Set Implicit Arguments.
 
 Module PCM2ILNL.
 
-  Record t : Set := mk_env {
-    self_is_prop : bool
-  }.
+(*   (* checks if the ident is the built-in prop type or an alias of it. *) *)
+(*   Parameter is_prop_equivalent : PCM.type_ident -> bool. *)
+
+(*   (* Parameter is_in_prop : t -> PCM.ttype -> bool. *) *)
+(*   Fixpoint is_in_prop (env : t) (t : PCM.ttype) {struct t} : bool := *)
+(*     match t with *)
+(*       | PCM.T_var _ => false *)
+(*       | PCM.T_arrow _ b => is_in_prop env b *)
+(*       | PCM.T_tuple l => forallb (is_in_prop env) l *)
+(*       | PCM.T_constr id _ =>  *)
+(*         (is_prop_equivalent id) || (self_is_prop env) *)
+(*       | PCM.T_self => false *)
+(*       | PCM.T_species _ => false *)
+(*     end. *)
+
+
+
+
+(*   (* Parameter let_params_check : t -> list PCM.vname -> PCM.ttype -> *) *)
+(* (*     prod (list ILNL.vname) (ILNL.ttype). *) *)
+(*   Fixpoint let_params_check (env : t) (l : list PCM.vname) (t : PCM.ttype) *)
+(*     {struct t} : prod (list ILNL.vname) (ILNL.ttype) := *)
+(*     match t with *)
+(*       | PCM.T_arrow a b => *)
+(*         if is_in_prop env a *)
+(*           then  *)
+(*             match l with *)
+(*               | nil => (nil, (PCM.T_self)) (* unspecified *) *)
+(*               | _ :: l' => let_params_check env l' b *)
+(*             end *)
+(*           else *)
+(*             match l with *)
+(*               | nil => (nil, (PCM.T_self)) (* unspecified *) *)
+(*               | h :: l' => *)
+(*                 match let_params_check env l' b with *)
+(*                   | (l'', t') => ((h :: l''), (PCM.T_arrow a t')) *)
+(*                 end  *)
+(*             end  *)
+(*       | _ => (* can't be a prop *) (l, t) *)
+(*     end. *)
   
-  (* checks if the ident is the built-in prop type or an alias of it. *)
-  Parameter is_prop_equivalent : PCM.type_ident -> bool.
+(*   Parameter pattern_is_prop : PCM.pattern -> bool. *)
 
-  (* Parameter is_in_prop : t -> PCM.ttype -> bool. *)
-  Fixpoint is_in_prop (env : t) (t : PCM.ttype) {struct t} : bool :=
-    match t with
-      | PCM.T_var _ => false
-      | PCM.T_arrow _ b => is_in_prop env b
-      | PCM.T_tuple l => forallb (is_in_prop env) l
-      | PCM.T_constr id _ => 
-        (is_prop_equivalent id) || (self_is_prop env)
-      | PCM.T_self => false
-      | PCM.T_species _ => false
-    end.
+(*   Definition pattern_selector (p : PCM.pattern) : bool := *)
+(*     negb (pattern_is_prop p). *)
 
-  (* Parameter sig_elim_prop : t -> PCM.ttype -> PCM.ttype. *)
-  Fixpoint type_elim (env : t) (t : PCM.ttype) {struct t} : PCM.ttype :=
-    match t with
-      | PCM.T_var v => t
-      | PCM.T_arrow a b =>
-        if is_in_prop env a
-          then type_elim env b
-          else PCM.T_arrow (type_elim env a) (type_elim env b)
-      | PCM.T_tuple l =>
-  (* because we already know it's not a full prop tuple *)
-        PCM.T_tuple (filter (fun x => negb (is_in_prop env x)) l)
-      | PCM.T_constr id args => (* idem *) t
-      | PCM.T_self => t
-      | PCM.T_species _ => t
-    end.
-
-
-  (* Parameter let_params_check : t -> list PCM.vname -> PCM.ttype -> *)
-(*     prod (list ILNL.vname) (ILNL.ttype). *)
-  Fixpoint let_params_check (env : t) (l : list PCM.vname) (t : PCM.ttype)
-    {struct t} : prod (list ILNL.vname) (ILNL.ttype) :=
-    match t with
-      | PCM.T_arrow a b =>
-        if is_in_prop env a
-          then 
-            match l with
-              | nil => (nil, (PCM.T_self)) (* unspecified *)
-              | _ :: l' => let_params_check env l' b
-            end
-          else
-            match l with
-              | nil => (nil, (PCM.T_self)) (* unspecified *)
-              | h :: l' =>
-                match let_params_check env l' b with
-                  | (l'', t') => ((h :: l''), (PCM.T_arrow a t'))
-                end 
-            end 
-      | _ => (* can't be a prop *) (l, t)
-    end.
-  
-  Parameter pattern_is_prop : PCM.pattern -> bool.
-
-  Definition pattern_selector (p : PCM.pattern) : bool :=
-    negb (pattern_is_prop p).
-
-(*   Parameter pattern_elim_prop : t -> PCM.pattern -> PCM.pattern. *)
-  Fixpoint pattern_elim (env : t) (p : PCM.pattern) {struct p} : PCM.pattern :=
-    match p with
-      | PCM.P_constr i id l =>
-        (PCM.P_constr
-          (PCM.mk_info (type_elim env (PCM.type i)))
-          id
-          (filter pattern_selector l))
-      | PCM.P_record i l =>
-        (PCM.P_record
-          (PCM.mk_info (type_elim env (PCM.type i)))
-          (filter 
-            (fun x => match x with (_, r) => pattern_selector r end)
-            l))
-      | PCM.P_tuple i l =>
-        (PCM.P_tuple
-          (PCM.mk_info (type_elim env (PCM.type i)))
-          (filter pattern_selector l))
-      | _ => p
-    end.
+(* (*   Parameter pattern_elim_prop : t -> PCM.pattern -> PCM.pattern. *) *)
+(*   Fixpoint pattern_elim (env : t) (p : PCM.pattern) {struct p} : PCM.pattern := *)
+(*     match p with *)
+(*       | PCM.P_constr i id l => *)
+(*         (PCM.P_constr *)
+(*           (PCM.mk_info (type_elim env (PCM.type i))) *)
+(*           id *)
+(*           (filter pattern_selector l)) *)
+(*       | PCM.P_record i l => *)
+(*         (PCM.P_record *)
+(*           (PCM.mk_info (type_elim env (PCM.type i))) *)
+(*           (filter  *)
+(*             (fun x => match x with (_, r) => pattern_selector r end) *)
+(*             l)) *)
+(*       | PCM.P_tuple i l => *)
+(*         (PCM.P_tuple *)
+(*           (PCM.mk_info (type_elim env (PCM.type i))) *)
+(*           (filter pattern_selector l)) *)
+(*       | _ => p *)
+(*     end. *)
               
 
-  Parameter external_expr_elim_prop :
-    t -> PCM.external_expr -> ILNL.external_expr.
+(*   Parameter external_expr_elim_prop : *)
+(*     t -> PCM.external_expr -> ILNL.external_expr. *)
 
-  Parameter binding_elim_prop : 
-    PCM.ttype -> t -> PCM.binding PCM.expr -> ILNL.binding ILNL.expr.
+(*   Parameter binding_elim_prop :  *)
+(*     PCM.ttype -> t -> PCM.binding PCM.expr -> ILNL.binding ILNL.expr. *)
 
-  Parameter expr_is_prop : PCM.expr -> bool.
+(*   Parameter expr_is_prop : PCM.expr -> bool. *)
 
-  Definition expr_selector (e : PCM.expr) : bool :=
-    negb (expr_is_prop e).
+(*   Definition expr_selector (e : PCM.expr) : bool := *)
+(*     negb (expr_is_prop e). *)
 
-(*   Parameter expr_elim_prop : t -> PCM.ast PCM.expr -> ILNL.ast ILNL.expr. *)
-  (* at this stage, we made the hypothesis that the first expression isn't 
-     a prop so we checks only composed expressions constructors *)
-  Fixpoint expr_elim (env : t) (e : PCM.expr) {struct e} : ILNL.expr :=
-    match e with
-      | PCM.E_self i => 
-        ILNL.E_self i
-      
-      | PCM.E_constant i c =>
-        ILNL.E_constant i c
+(*   Parameter ident_is_prop : PCM.ident -> bool. *)
 
-      | PCM.E_fun i l e' =>
-        (ILNL.E_fun
-          (PCM.mk_info (type_elim env (PCM.type i)))
-          (filter (fun x => negb (is_in_prop env (PCM.type (PCM.i_info x)))) l)
-          (expr_elim env e'))
-
-      | PCM.E_var i id =>
-        ILNL.E_var i id
-
-      | PCM.E_app i e' l =>
-        (ILNL.E_app 
-          (PCM.mk_info (type_elim env (PCM.type i)))
-          (expr_elim env e')
-          (map (expr_elim env) (filter expr_selector l)))
-        
-      | PCM.E_constr i id l =>
-        (ILNL.E_constr
-          (PCM.mk_info (type_elim env (PCM.type i)))
-          id
-          (map (expr_elim env) (filter expr_selector l)))
-
-      | PCM.E_match i e' l =>
-        (ILNL.E_match
-          (PCM.mk_info (type_elim env (PCM.type i)))
-          (expr_elim env e')
-          (map (fun x => match x with (l, r) => 
-                           (pattern_elim env l, expr_elim env r) end) l))
-
-      | PCM.E_if i a b c =>
-        (ILNL.E_if
-          (PCM.mk_info (type_elim env (PCM.type i)))
-          (expr_elim env a)
-          (expr_elim env b)
-          (expr_elim env c))
-
-      | PCM.E_let i ld e' =>
-        if PCM.ld_logical ld
-          then expr_elim env e'
-          else
-            (ILNL.E_let 
-              (PCM.mk_info (type_elim env (PCM.type i)))
-              (ILNL.mk_let_def 
-                (PCM.ld_rec ld)
-                (PCM.ld_local ld)
-                (map (binding_elim env) (PCM.ld_bindings ld)))
-              (expr_elim env e'))
-    end
-
-  with binding_elim (env : t) (b : PCM.binding PCM.expr) {struct b}
-    : ILNL.binding ILNL.expr :=
-    (ILNL.mk_binding
-      (PCM.mk_info (type_elim (PCM.b_info b)))
-      (PCM.b_name b)
-      (filter ident_selector (PCM.b_params b))
-      (expr_elim env (PCM.b_body b))).
+(*   Definition ident_selector (id : PCM.ident) : bool := *)
+(*     negb (ident_is_prop id). *)
 
 
-(*       | PCM.E_var id => ILNL.E_var id *)
-(*       | PCM.E_app e' l => *)
-(*         (ILNL.E_app *)
-(*           (ast_elim env expr_elim_prop e') *)
-(*           (map *)
-(*             (ast_elim env expr_elim_prop) *)
-(*             (filter (fun x => negb (is_in_prop env (PCM.type x))) l))) *)
-(*       | PCM.E_constr id l => *)
-(*         (ILNL.E_constr *)
-(*           id *)
-(*           (map *)
-(*             (ast_elim env expr_elim_prop) *)
-(*             (filter (fun x => negb (is_in_prop env (PCM.type x))) l))) *)
-(*       | PCM.E_match e' l => *)
-(*         (ILNL.E_match *)
-(*           (ast_elim env expr_elim_prop e') *)
-(*           (map (fun a => *)
-(*             match a with (l, r) => *)
-(*               (ast_elim env pattern_elim_prop l, *)
-(*                 ast_elim env expr_elim_prop r) *)
-(*             end) l)) *)
-(*       | PCM.E_if a b c => *)
-(*         (ILNL.E_if  *)
-(*           (ast_elim env expr_elim_prop a) *)
-(*           (ast_elim env expr_elim_prop b) *)
-(*           (ast_elim env expr_elim_prop c)) *)
-(*       | PCM.E_let ld e' => *)
-(*         if PCM.ld_logical (PCM.desc ld) *)
-(*           then PCM.desc (ast_elim env expr_elim_prop e') *)
-(*           else  *)
-(*             (ILNL.E_let *)
-(*               (ast_elim env let_def_elim_prop ld)  *)
-(*               (ast_elim env expr_elim_prop e')) *)
-(*       | PCM.E_record fields => *)
-(*         (ILNL.E_record *)
-(*           (map (* eliminate prop terms inside fields *) *)
-(*             (fun x => *)
-(*               match x with *)
-(*                 (l, r) => (l, ast_elim env expr_elim_prop r) *)
-(*               end) *)
-(*             (filter (* eliminating prop fields *) *)
-(*               (fun x => *)
-(*                 match x with *)
-(*                   (_, r) => negb (is_in_prop env (PCM.type r)) *)
-(*                 end) *)
-(*               fields))) *)
-(*       | PCM.E_record_access e' str => *)
-(*         ILNL.E_record_access (ast_elim env expr_elim_prop e') str *)
-(*       | PCM.E_record_with e' l => *)
-(*         (ILNL.E_record_with *)
-(*           (ast_elim env expr_elim_prop e') *)
-(*           (map (* eliminate prop terms inside fields *) *)
-(*             (fun x => *)
-(*               match x with *)
-(*                 (l, r) => (l, ast_elim env expr_elim_prop r) *)
-(*               end) *)
-(*             (filter (* eliminating prop fields *) *)
-(*               (fun x => *)
-(*                 match x with *)
-(*                   (_, r) => negb (is_in_prop env (PCM.type r)) *)
-(*                 end) *)
-(*               l))) *)
-(*       | PCM.E_tuple l => *)
-(*         (ILNL.E_tuple  *)
-(*           (map *)
-(*             (ast_elim env expr_elim_prop) *)
-(*             (filter *)
-(*               (fun x => negb (is_in_prop env (PCM.type x))) *)
-(*               l))) *)
-(*       | PCM.E_external e' => *)
-(*         ILNL.E_external (ast_elim env external_expr_elim_prop e') *)
-(*       | PCM.E_paren e' => *)
-(*         ILNL.E_paren (ast_elim env expr_elim_prop e') *)
-(*       | _ => ILNL.E_self *)
-(*     end *)
-
-(*   with let_def_elim_prop (env : t) (ld : PCM.let_def (PCM.ast PCM.expr)) *)
-(*     {struct ld} : ILNL.let_def (ILNL.ast ILNL.expr) := *)
-(*     (ILNL.mk_let_def *)
-(*       (PCM.ld_rec ld) *)
-(*       (PCM.ld_local ld) *)
-(*       (map *)
-(*         (fun (x : PCM.ast (PCM.binding (PCM.ast PCM.expr))) => *)
-(*           ast_elim env (binding_elim_prop (PCM.type x)) x) *)
-(*         (PCM.ld_bindings ld))). *)
-
-(*   with binding_elim_prop (ty : PCM.ttype) (env : t) *)
-(*     (b : PCM.binding (PCM.ast PCM.expr)) {struct b} *)
-(*     : ILNL.binding (ILNL.ast ILNL.expr) := *)
-(*     let params := map (PCM.bp_name b) in *)
-(*       match let_params_check env params ty with *)
-(*         (l, ty') => *)
-(*         (ILNL.mk_binding  *)
-(*           (ILNL.b_name b)  *)
-(*           l *)
-(*           ty' *)
-(*           (ast_elim env expr_elim_type (PCM.b_body b))) *)
-(*       end. *)
           
 
- (*  Parameter let_elim_prop : t -> PCM.let_field_info -> ILNL.let_field_info. *)
-  Definition let_elim_prop (env : t) (ld : PCM.let_field_info)
-    : ILNL.let_field_info :=
-    match let_params_check env (PCM.lfi_params ld) (PCM.lfi_type ld) with
-      | (l, t) =>
-        match PCM.desc (PCM.lfi_binding_body ld) with
-          | PCM.Bb_logical _ =>
-           (* non specified since the let shoud not be in prop *)
-            (ILNL.mk_let_field_info
-              (PCM.lfi_from ld)
-              (PCM.lfi_name ld)
-              l
-              t
-              (PCM.mk_ast PCM.E_self PCM.T_self))
-          | PCM.Bb_expr e => 
-            (ILNL.mk_let_field_info
-              (PCM.lfi_from ld)
-              (PCM.lfi_name ld)
-              l
-              t
-              (expr_elim_prop env e))
-        end
-    end.
+(*  (*  Parameter let_elim_prop : t -> PCM.let_field_info -> ILNL.let_field_info. *) *)
+(*   Definition let_elim_prop (env : t) (ld : PCM.let_field_info) *)
+(*     : ILNL.let_field_info := *)
+(*     match let_params_check env (PCM.lfi_params ld) (PCM.lfi_type ld) with *)
+(*       | (l, t) => *)
+(*         match PCM.desc (PCM.lfi_binding_body ld) with *)
+(*           | PCM.Bb_logical _ => *)
+(*            (* non specified since the let shoud not be in prop *) *)
+(*             (ILNL.mk_let_field_info *)
+(*               (PCM.lfi_from ld) *)
+(*               (PCM.lfi_name ld) *)
+(*               l *)
+(*               t *)
+(*               (PCM.mk_ast PCM.E_self PCM.T_self)) *)
+(*           | PCM.Bb_expr e =>  *)
+(*             (ILNL.mk_let_field_info *)
+(*               (PCM.lfi_from ld) *)
+(*               (PCM.lfi_name ld) *)
+(*               l *)
+(*               t *)
+(*               (expr_elim_prop env e)) *)
+(*         end *)
+(*     end. *)
             
  
-  (** Checks if the given signature field is the rep specifier. *)
-  Parameter is_rep : PCM.sig_field_info -> bool.
+(*   (** Checks if the given signature field is the rep specifier. *) *)
+(*   Parameter is_rep : PCM.sig_field_info -> bool. *)
 
- (*  Parameter let_rec_elim_prop :  *)
-(*     t -> list PCM.let_field_info -> list ILNL.let_field_info. *)
-  Fixpoint let_rec_elim_prop (env : t) (l : list PCM.let_field_info)
-    {struct l} : list ILNL.let_field_info :=
+(*  (*  Parameter let_rec_elim_prop :  *) *)
+(* (*     t -> list PCM.let_field_info -> list ILNL.let_field_info. *) *)
+(*   Fixpoint let_rec_elim_prop (env : t) (l : list PCM.let_field_info) *)
+(*     {struct l} : list ILNL.let_field_info := *)
+(*     match l with *)
+(*       | nil => nil *)
+(*       | h :: l' => *)
+(*         if is_in_prop env (PCM.lfi_type h) *)
+(*           then let_rec_elim_prop env l' *)
+(*           else (let_elim_prop env h) :: (let_rec_elim_prop env l') *)
+(*     end. *)
+
+
+
+(*   Parameter let_def_elim_prop : PCM.let_def_info -> ILNL.let_def_info. *)
+
+
+
+ 
+  Inductive result (A : Set) : Set := 
+  | Ok : A -> result A
+  | Error : result A.
+
+
+  Record env : Set := mk_env {
+    self_is_prop : bool
+  }.
+
+  Parameter is_rep : PCM.sig_field_info -> bool.
+  Parameter is_in_prop : env -> PCM.type -> bool.
+  Parameter is_ident_prop : string -> bool.
+
+
+(*   Parameter type_ident : env -> PCM.type_ident -> ILNL.type_ident. *)
+  Definition type_ident (e : env) (id : PCM.type_ident) : ILNL.type_ident :=
+    (ILNL.mk_type_ident
+      (PCM.ti_file id)
+      (PCM.ti_name id)).
+
+
+(*   Parameter type : env -> PCM.type -> ILNL.type. *)
+  Fixpoint type (e : env) (t : PCM.type) {struct t} : ILNL.type :=
+    match t with
+      | PCM.T_var v => ILNL.T_var v
+      | PCM.T_arrow a b =>
+        if is_in_prop e a
+          then type e b
+          else ILNL.T_arrow (type e a) (type e b)
+      | PCM.T_tuple l =>
+  (* because we already know it's not a full prop tuple *)
+        ILNL.T_tuple (list_type e l)
+      | PCM.T_constr id args => (* idem *)
+        ILNL.T_constr (type_ident e id) (list_type e args)
+      | PCM.T_self => ILNL.T_self
+      | PCM.T_species id => ILNL.T_species (type_ident e id)
+    end
+
+  with list_type (e : env) (l : PCM.list_type) {struct l} : ILNL.list_type :=
     match l with
-      | nil => nil
-      | h :: l' =>
-        if is_in_prop env (PCM.lfi_type h)
-          then let_rec_elim_prop env l'
-          else (let_elim_prop env h) :: (let_rec_elim_prop env l')
+      | PCM.lt_nil => ILNL.lt_nil
+      | PCM.lt_cons h l' => 
+        if is_in_prop e h
+          then list_type e l'
+          else ILNL.lt_cons (type e h) (list_type e l')
     end.
 
-  Fixpoint species_field (env : t) (l : list PCM.species_field) {struct l}
+ (*  Parameter constant : env -> PCM.constant -> ILNL.constant. *)
+  Definition constant (e : env) (c : PCM.constant) : ILNL.constant :=
+    match c with
+      | PCM.Constant (PCM.C_int s) i => ILNL.Constant (ILNL.C_int s) i
+      | PCM.Constant (PCM.C_float s) i => ILNL.Constant (ILNL.C_float s) i
+      | PCM.Constant (PCM.C_bool s) i => ILNL.Constant (ILNL.C_bool s) i
+      | PCM.Constant (PCM.C_string s) i => ILNL.Constant (ILNL.C_string s) i
+      | PCM.Constant (PCM.C_char c) i => ILNL.Constant (ILNL.C_char c) i
+    end.
+        
+
+(*   Parameter ident : env -> PCM.ident -> ILNL.ident. *)
+  Definition ident (e : env) (id : PCM.ident) : ILNL.ident :=
+    (ILNL.mk_ident
+      (PCM.i_info id)
+      (type e (PCM.i_type id))
+      (PCM.i_file id)
+      (PCM.i_coll id)
+      (PCM.i_name id)).
+
+(*   Parameter list_ident : env -> list PCM.ident -> list ILNL.ident. *)
+  Fixpoint list_ident (e : env) (l : list PCM.ident) {struct l} 
+    : list ILNL.ident :=
+    match l with
+      | nil => nil
+      | h :: t =>
+        if is_in_prop e (PCM.i_type h)
+          then list_ident e t
+          else (ident e h) :: (list_ident e t)
+    end.
+
+  Fixpoint type_expr_is_in_prop (e : env) (t : PCM.type_expr) {struct t}
+    : bool :=
+    match t with
+      | PCM.Type_expr PCM.Te_prop _ => true
+      | PCM.Type_expr (PCM.Te_fun _ b) _ => type_expr_is_in_prop e b
+      | PCM.Type_expr (PCM.Te_paren ty) _ => type_expr_is_in_prop e ty
+      | _ => false
+    end.
+
+  Fixpoint type_expr (e : env) (t : PCM.type_expr) {struct t}
+    : ILNL.type_expr :=
+    match t with
+      | PCM.Type_expr (PCM.Te_ident id) i =>
+        ILNL.Type_expr (ILNL.Te_ident (ident e id)) i
+      | PCM.Type_expr (PCM.Te_fun a b) i => 
+        if type_expr_is_in_prop e b 
+          then type_expr e a
+          else ILNL.Type_expr (ILNL.Te_fun (type_expr e a) (type_expr e b)) i
+      | PCM.Type_expr (PCM.Te_app id args) i =>
+        ILNL.Type_expr (ILNL.Te_app (ident e id) (list_type_expr e args)) i
+      | PCM.Type_expr (PCM.Te_prod l) i =>
+        ILNL.Type_expr (ILNL.Te_prod (list_type_expr e l)) i
+      | PCM.Type_expr PCM.Te_self i =>
+        ILNL.Type_expr ILNL.Te_self i
+      | PCM.Type_expr PCM.Te_prop i => 
+        (* should not happen *)
+        ILNL.Type_expr ILNL.Te_self i
+      | PCM.Type_expr (PCM.Te_paren a) i =>
+        ILNL.Type_expr (ILNL.Te_paren (type_expr e a)) i
+    end
+    
+  with list_type_expr (e : env) (l : PCM.list_type_expr) {struct l}
+    : ILNL.list_type_expr :=
+    match l with
+      | PCM.lte_nil => ILNL.lte_nil
+      | PCM.lte_cons h t => ILNL.lte_cons (type_expr e h) (list_type_expr e t)
+    end.
+
+  Fixpoint list_type_constr (e : env) (l : list (prod PCM.ident PCM.list_type_expr))
+    {struct l} : list (prod ILNL.ident ILNL.list_type_expr) :=
+    match l with
+      | nil => nil
+      | (a, b) :: l' =>
+        (ident e a, list_type_expr e b) :: (list_type_constr e l')
+    end.
+
+  Fixpoint list_type_field (e : env) (l : list (prod string PCM.type_expr))
+    {struct l} : list (prod string ILNL.type_expr) :=
+    match l with
+      | nil => nil
+      | (a, b) :: l' =>
+        (a, type_expr e b) :: (list_type_field e l')
+    end.
+
+  Definition simple_type_def_body (e : env) (t : PCM.simple_type_def_body)
+    : ILNL.simple_type_def_body :=
+    match t with
+      | PCM.Simple_type_def_body (PCM.Stdb_alias te) i =>
+        ILNL.Simple_type_def_body (ILNL.Stdb_alias (type_expr e te)) i
+      | PCM.Simple_type_def_body (PCM.Stdb_union l) i =>
+        ILNL.Simple_type_def_body (ILNL.Stdb_union (list_type_constr e l)) i
+      | PCM.Simple_type_def_body (PCM.Stdb_record l) i =>
+        ILNL.Simple_type_def_body (ILNL.Stdb_record (list_type_field e l)) i
+    end.
+
+  Definition external_expr (e : env) (ee : PCM.external_expr) 
+    : ILNL.external_expr :=
+    (ILNL.mk_external_expr
+      (PCM.ee_lang ee)
+      (PCM.ee_code ee)).
+
+  Definition external_type_def_body (e : env) (et : PCM.external_type_def_body)
+    : ILNL.external_type_def_body :=
+    (ILNL.mk_external_type_def_body
+      (PCM.etdb_info et)
+      (match PCM.etdb_internal et with
+         | None => None
+         | Some ty => Some (simple_type_def_body e ty)
+       end)
+      (external_expr e (PCM.etdb_external et))
+      (map
+        (fun x => match x with (a, b) => (ident e a, external_expr e b) end)
+        (PCM.etdb_bindings et))).
+
+  Definition type_def_body (e : env) (t : PCM.type_def_body) 
+    : ILNL.type_def_body :=
+    match t with
+      | PCM.Type_def_body (PCM.Tdb_simple b) i =>
+        ILNL.Type_def_body (ILNL.Tdb_simple (simple_type_def_body e b)) i
+      | PCM.Type_def_body (PCM.Tdb_external ext) i =>
+        ILNL.Type_def_body (ILNL.Tdb_external (external_type_def_body e ext)) i
+    end.
+
+(*   Parameter type_def : env -> PCM.type_def -> ILNL.type_def. *)
+  Definition type_def (e : env) (td : PCM.type_def) : ILNL.type_def :=
+    (ILNL.mk_type_def
+      (PCM.td_info td)
+      (ident e (PCM.td_name td))
+      (list_ident e (PCM.td_params td))
+      (type_def_body e (PCM.td_body td))).
+
+
+  Fixpoint pattern (e : env) (p : PCM.pattern) {struct p} : ILNL.pattern :=
+    match p with
+      | PCM.Pattern (PCM.P_const c) i t =>
+        ILNL.Pattern (ILNL.P_const (constant e c)) i (type e t)
+
+      | PCM.Pattern (PCM.P_var id) i t =>
+        ILNL.Pattern (ILNL.P_var (ident e id)) i (type e t)
+
+      | PCM.Pattern (PCM.P_as p' id) i t =>
+        ILNL.Pattern (ILNL.P_as (pattern e p') (ident e id)) i (type e t)
+
+      | PCM.Pattern PCM.P_wild i t =>
+        ILNL.Pattern ILNL.P_wild i (type e t)
+
+      | PCM.Pattern (PCM.P_constr id l) i t =>
+        (ILNL.Pattern
+          (ILNL.P_constr (ident e id) (list_pattern e l)) i (type e t))
+
+      | PCM.Pattern (PCM.P_record l) i t =>
+        (ILNL.Pattern (ILNL.P_record (list_field_pattern e l)) i (type e t))
+
+      | PCM.Pattern (PCM.P_tuple l) i t =>
+        (ILNL.Pattern (ILNL.P_tuple (list_pattern e l)) i (type e t))
+
+      | PCM.Pattern (PCM.P_paren p') i t =>
+        ILNL.Pattern (ILNL.P_paren (pattern e p')) i (type e t)
+    end
+
+  with list_pattern (e : env) (l : PCM.list_pattern) {struct l}
+    : ILNL.list_pattern :=
+    match l with
+      | PCM.p_nil => ILNL.p_nil
+      | PCM.p_cons p l' =>
+        ILNL.p_cons (pattern e p) (list_pattern e l')
+    end
+
+  with list_field_pattern (e : env) (l : PCM.list_field_pattern) {struct l}
+    : ILNL.list_field_pattern :=
+    match l with
+      | PCM.pf_nil => ILNL.pf_nil
+      | PCM.pf_cons str p l' =>
+        ILNL.pf_cons str (pattern e p) (list_field_pattern e l')
+    end.
+
+(*   Parameter expr : env -> PCM.expr -> ILNL.expr. *)
+  Fixpoint expr (e : env) (exp : PCM.expr) {struct exp} : ILNL.expr :=
+    match exp with
+      | PCM.Expr PCM.E_self i t =>
+        ILNL.Expr ILNL.E_self i (type e t)
+
+      | PCM.Expr (PCM.E_constant c) i t =>
+        ILNL.Expr (ILNL.E_constant (constant e c)) i (type e t)
+
+      | PCM.Expr (PCM.E_fun args body) i t =>
+        ILNL.Expr (ILNL.E_fun (list_ident e args) (expr e body)) i (type e t)
+
+      | PCM.Expr (PCM.E_var id) i t =>
+        ILNL.Expr (ILNL.E_var (ident e id)) i (type e t)
+
+      | PCM.Expr (PCM.E_app f args) i t =>
+        (ILNL.Expr 
+          (ILNL.E_app (expr e f) (list_expr e args))
+          i (type e t))
+
+      | PCM.Expr (PCM.E_constr id args) i t =>
+        (ILNL.Expr
+          (ILNL.E_constr (ident e id) (list_expr e args))
+          i (type e t))
+
+      | PCM.Expr (PCM.E_match exp l) i t =>
+        (ILNL.Expr
+          (ILNL.E_match (expr e exp) (list_clause e l))
+          i (type e t))
+
+      | PCM.Expr (PCM.E_if a b c) i t =>
+        (ILNL.Expr
+          (ILNL.E_if (expr e a) (expr e b) (expr e c))
+          i (type e t))
+      
+      | PCM.Expr (PCM.E_let le a) i t =>
+        (ILNL.Expr
+          (ILNL.E_let (let_expr e le) (expr e a))
+          i (type e t))
+
+      | PCM.Expr (PCM.E_record l) i t =>
+        (ILNL.Expr
+          (ILNL.E_record (list_field e l))
+          i (type e t))
+
+      | PCM.Expr (PCM.E_record_access exp str) i t =>
+        (ILNL.Expr (ILNL.E_record_access (expr e exp) str) i (type e t))
+
+      | PCM.Expr (PCM.E_record_with exp l) i t =>
+        (ILNL.Expr
+          (ILNL.E_record_with (expr e exp) (list_field e l)) i (type e t))
+
+      | PCM.Expr (PCM.E_tuple l) i t =>
+        (ILNL.Expr (ILNL.E_tuple (list_expr e l)) i (type e t))
+
+      | PCM.Expr (PCM.E_external ee) i t =>
+        (ILNL.Expr (ILNL.E_external (external_expr e ee)) i (type e t))
+
+      | PCM.Expr (PCM.E_paren ee) i t =>
+        (ILNL.Expr (ILNL.E_paren (expr e ee)) i (type e t))
+    end
+
+  with list_expr (e : env) (l : PCM.list_expr) {struct l}
+    : ILNL.list_expr :=
+    match l with
+      | PCM.le_nil => ILNL.le_nil
+      | PCM.le_cons h t =>
+        if is_in_prop e (PCM.typeof h)
+          then list_expr e t
+          else ILNL.le_cons (expr e h) (list_expr e t)
+    end
+    
+  with list_clause (e : env) (l : PCM.list_clause) {struct l}
+    : ILNL.list_clause :=
+    match l with
+      | PCM.lc_nil => ILNL.lc_nil
+      | PCM.lc_cons p exp l' =>
+        ILNL.lc_cons (pattern e p) (expr e exp) (list_clause e l')
+    end
+
+  with let_expr (e : env) (le : PCM.let_expr) {struct le} : ILNL.let_expr :=
+    match le with
+      PCM.Let_expr rec loc binds i =>
+      ILNL.Let_expr rec loc (list_binding e binds) i
+    end
+
+  with list_binding (e : env) (l : PCM.list_binding) {struct l} 
+    : ILNL.list_binding :=
+    match l with
+      | PCM.b_nil => ILNL.b_nil
+      | PCM.b_cons v li body i l'=> 
+        (ILNL.b_cons
+          (ident e v)
+          (list_ident e li)
+          (expr e body) i
+          (list_binding e l'))
+    end
+
+  with list_field (e : env) (l : PCM.list_field) {struct l} : ILNL.list_field :=
+    match l with
+      | PCM.lf_nil => ILNL.lf_nil
+      | PCM.lf_cons str exp l' =>
+        ILNL.lf_cons str (expr e exp) (list_field e l')
+    end.
+
+  Definition history (e : env) (h : PCM.history) : ILNL.history :=
+    (ILNL.mk_history 
+      (ident e (PCM.h_initial h)) 
+      (list_expr e (PCM.h_inherited h))).
+  
+  Fixpoint list_let_field (env : env) (l : list PCM.let_field_info) {struct l}
+    : list ILNL.let_field_info :=
+    match l with
+      | nil => nil
+      | x :: l' =>
+        match PCM.lfi_binding_body x with
+          | PCM.Bb_logical _ => list_let_field env l'
+          | PCM.Bb_expr exp =>
+            (ILNL.mk_let_field_info
+              (PCM.lfi_info x)
+              (history env (PCM.lfi_from x))
+              (ident env (PCM.lfi_name x))
+              (list_ident env (PCM.lfi_params x))
+              (expr env exp)) :: (list_let_field env l')
+        end
+    end.
+
+  Fixpoint species_field (env : env) (l : list PCM.species_field) {struct l}
     : list ILNL.species_field :=
     match l with
       | nil => nil
-      | h :: l' =>
-        match h with
-          | PCM.Sf_sig x => 
-            if is_in_prop env (PCM.sfi_type x)
-              then
-                if is_rep x
-                  then species_field (mk_env true) l'
-                  else species_field env l'
-              else 
-                (ILNL.Sf_sig 
-                  (PCM.mk_sig_field_info 
-                    (PCM.sfi_from x)
-                    (PCM.sfi_name x)
-                    (sig_elim_prop env (PCM.sfi_type x)))) ::
-                (species_field env l')
-          | PCM.Sf_let x => 
-            if is_in_prop env (PCM.lfi_type x)
-              then species_field env l'
-              else 
-                (ILNL.Sf_let (let_elim_prop env x)) :: (species_field env l')
-          | PCM.Sf_let_rec x =>
-            (ILNL.Sf_let_rec (let_rec_elim_prop env x)) 
+
+      | (PCM.Sf_sig x) :: l' =>
+        if is_in_prop env (PCM.sfi_type x)
+          then
+            if is_rep x
+              then species_field (mk_env true) l'
+              else species_field env l'
+          else
+            (ILNL.Sf_sig
+              (ILNL.mk_sig_field_info
+                (PCM.sfi_info x)
+                (history env (PCM.sfi_from x))
+                (ident env (PCM.sfi_name x))
+                (type env (PCM.sfi_type x))))
             :: (species_field env l')
-          | PCM.Sf_theorem _ => species_field env l'
-          | PCM.Sf_property _ => species_field env l'
+
+      | (PCM.Sf_let x) :: l' =>
+        match list_let_field env (x::nil) with
+          | nil => species_field env l'
+          | h :: t => (ILNL.Sf_let h) :: (species_field env l')
         end
+
+      | (PCM.Sf_let_rec x) :: l' =>
+        (ILNL.Sf_let_rec (list_let_field env x)) :: (species_field env l')
+
+      | (PCM.Sf_theorem _) :: l' => species_field env l'
+
+      | (PCM.Sf_property _) :: l' => species_field env l'
     end.
 
-  Parameter let_def_elim_prop : PCM.let_def_info -> ILNL.let_def_info.
+  Definition collection (e : env) (col : PCM.collection) 
+    : ILNL.collection :=
+    (ILNL.mk_collection 
+      (ident e (PCM.coll_name col))
+      (species_field e (PCM.coll_body col))).
+  
+  Fixpoint bindings (e : env) (l : list PCM.binding) {struct l}
+    : list ILNL.binding :=
+    match l with
+      | nil => nil
+      | b :: l' =>
+        match PCM.b_body b with
+          | PCM.Bb_logical _ => bindings e l'
+          | PCM.Bb_expr exp =>
+            (ILNL.mk_binding 
+              (PCM.b_info b)
+              (ident e (PCM.b_name b))
+              (list_ident e (PCM.b_params b))
+              (expr e exp)) :: (bindings e l')
+        end
+    end.
+        
 
-  Fixpoint phrases (env : t) (l : list PCM.phrase) {struct l}
+ (*  Parameter let_def : env -> PCM.let_def -> ILNL.let_def. *)
+  Definition let_def (e : env) (ld : PCM.let_def) : ILNL.let_def :=
+    (ILNL.mk_let_def
+      (PCM.ld_info ld)
+      (PCM.ld_rec ld)
+      (PCM.ld_local ld)
+      (bindings e (PCM.ld_bindings ld))).
+
+  Fixpoint phrases (e : env) (l : list PCM.phrase) {struct l} 
     : list ILNL.phrase :=
     match l with
       | nil => nil
-      | (PCM.Phrase_open x) :: l' =>
-        (ILNL.Phrase_open x) :: (phrases env l') 
-      | (PCM.Phrase_use x) :: l' =>
-        (ILNL.Phrase_use x) :: (phrases env l')
-      | (PCM.Phrase_species _) :: l' =>
-        phrases env l'
-      | (PCM.Phrase_collection x) :: l' =>
-        (ILNL.Phrase_collection 
-          (ILNL.mk_collection_info
-            (PCM.coll_name x)
-            (species_field env (PCM.coll_body x))))
-        :: (phrases env l')
-      | (PCM.Phrase_type x) :: l' =>
-        (ILNL.Phrase_type x) :: (phrases env l')
-      | (PCM.Phrase_let_def x) :: l' =>
-        (ILNL.Phrase_let_def (let_def_elim_prop x)) :: (phrases env l')
-      | (PCM.Phrase_theorem _) :: l' => phrases env l'
-      | (PCM.Phrase_expr x) :: l' =>
-        (ILNL.Phrase_expr x) :: (phrases env l')
+        
+      | (PCM.Phrase (PCM.Ph_open str) i) :: l' =>
+        (ILNL.Phrase (ILNL.Ph_open str) i) :: (phrases e l')
+      
+      | (PCM.Phrase (PCM.Ph_use str) i) :: l' =>
+        (ILNL.Phrase (ILNL.Ph_use str) i) :: (phrases e l')
+
+      | (PCM.Phrase (PCM.Ph_species _) _) :: l' =>
+        (phrases e l')
+
+      | (PCM.Phrase (PCM.Ph_collection c) i) :: l' =>
+        (ILNL.Phrase (ILNL.Ph_collection (collection e c)) i) :: (phrases e l')
+        
+      | (PCM.Phrase (PCM.Ph_type t) i) :: l' =>
+        match PCM.td_body t with
+          | PCM.Type_def_body (PCM.Tdb_simple (PCM.Simple_type_def_body (PCM.Stdb_alias te) _)) _ =>
+            if type_expr_is_in_prop e te
+              then phrases e l'
+              else 
+                (ILNL.Phrase (ILNL.Ph_type (type_def e t)) i) :: (phrases e l')
+          | PCM.Type_def_body (PCM.Tdb_external et) _ =>
+            match PCM.etdb_internal et with
+              | None =>
+                (ILNL.Phrase (ILNL.Ph_type (type_def e t)) i) :: (phrases e l')
+              | Some (PCM.Simple_type_def_body (PCM.Stdb_alias te) _) =>
+                if type_expr_is_in_prop e te
+                  then phrases e l'
+                  else 
+                    (ILNL.Phrase (ILNL.Ph_type (type_def e t)) i) :: (phrases e l')
+              | _ =>
+                (ILNL.Phrase (ILNL.Ph_type (type_def e t)) i) :: (phrases e l')
+            end
+          | _ =>
+            (ILNL.Phrase (ILNL.Ph_type (type_def e t)) i) :: (phrases e l')
+        end
+      | (PCM.Phrase (PCM.Ph_let_def ld) i) :: l' =>
+        if PCM.ld_logical ld
+          then phrases e l'
+          else 
+            (ILNL.Phrase (ILNL.Ph_let_def (let_def e ld)) i) :: (phrases e l')
+
+      | (PCM.Phrase (PCM.Ph_theorem _) _) :: l' =>
+        (phrases e l')
+
+      | (PCM.Phrase (PCM.Ph_expr exp) i) :: l' =>
+        if is_in_prop e (PCM.typeof exp)
+          then phrases e l'
+          else 
+            (ILNL.Phrase (ILNL.Ph_expr (expr e exp)) i) :: (phrases e l')
     end.
 
-  Definition translate (x : t) (s : PCM.file) : ILNL.file :=
-    ILNL.mk_file (PCM.file_name s) (phrases x (PCM.file_body s)).
+  Definition translate (e : env) (f : PCM.file) : ILNL.file :=
+    ILNL.mk_file (PCM.file_name f) (phrases e (PCM.file_body f)).
+
 
 End PCM2ILNL.
