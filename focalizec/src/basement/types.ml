@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.55 2008-07-09 14:52:28 pessaux Exp $ *)
+(* $Id: types.ml,v 1.56 2008-07-09 15:41:30 blond Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1480,67 +1480,47 @@ let rec get_species_types_in_type ty =
 
 
 
-type ctype =
-  | CT_void
-  | CT_ptr of ctype
-  | CT_fun of ctype * ctype list
-  | CT_ident of string
-  | CT_struct of (ctype * string) list
-  | CT_abstract of ctype
+type local_type =
+  | Lt_var of int
+  | Lt_fun of local_type * local_type
+  | Lt_tuple of local_type list
+  | Lt_constr of (string * string) * local_type list
+  | Lt_self
+  | Lt_species of (string * string)
 ;;
 
-
-
-(* needed to generate structures' labels *)
-let gen_label cpt =
-  let result = Format.sprintf "_%i" !cpt in
-  incr cpt ;
-  result
-;;
-
-
-
-(** FoCal type to C type conversions *)
-(* val type_simple_to_ctype : type_simple -> ctype *)
-let rec type_simple_to_ctype ty =
+let rec type_simple_to_local_type ty =
   let ty = repr ty in
   match ty with
    | ST_var type_variable ->
        begin
        match type_variable.tv_value with
         | TVV_unknown ->
-            (* Types variables are represented by generic pointers. *)
-            CT_ptr CT_void
-        | TVV_known ts -> type_simple_to_ctype ts
+	    (* [julius:] it's a "true" polymorphic value *)
+            Lt_var type_variable.tv_level
+        | TVV_known ts ->
+	    (* [julius:] type has been deduced *)
+	    type_simple_to_local_type ts
        end
+   
    | ST_arrow (l, r) ->
-       (* [julius]: we build a C representation of a function. *)
-       begin
-       match type_simple_to_ctype r with
-        | CT_fun (cl, cr) -> CT_fun (cl, (type_simple_to_ctype l) :: cr)
-        | t -> CT_fun (t, [type_simple_to_ctype l])
-       end
+       (* [julius:] no changes. *)
+       Lt_fun (type_simple_to_local_type l, type_simple_to_local_type r)
+
    | ST_tuple l ->
-       let cpt = ref 0 in
-       let fields = List.map
-           (fun x -> (type_simple_to_ctype x, gen_label cpt))
-           l in
-       CT_abstract (CT_ptr (CT_struct fields))
-   | ST_construct ((_, id), []) ->
-       (* Simple type name. *)
-       CT_ident (Format.sprintf "_foc_%s" id)
-   | ST_construct (_, _) ->
-       Format.eprintf
-         "TODO (C generation) : Types.ST_construct (with parameters)@." ;
-       CT_ident "<unknow type>"
+       (* [julius:] no changes. *)
+       Lt_tuple (List.map type_simple_to_local_type l)
+
+   | ST_construct ((f, id), l) ->
+       Lt_constr ((f, id), (List.map type_simple_to_local_type l))
+
    | ST_self_rep ->
-       Format.eprintf "TODO (C generation) : Types.ST_selt_rep@." ;
-       CT_ident "<unknow type>"
-   | ST_species_rep (_, collection_name) ->
-       CT_ptr (CT_ident collection_name)
+       Lt_self
+
+   | ST_species_rep (f, c) ->
+       Lt_species (f, c)
 ;;
 
 
 
-(* val type_scheme_to_ctype : type_scheme -> ctype *)
-let type_scheme_to_ctype ts = type_simple_to_ctype ts.ts_body ;;
+let type_scheme_to_local_type ts = type_simple_to_local_type ts.ts_body ;;

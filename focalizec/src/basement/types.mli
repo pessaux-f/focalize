@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.36 2008-06-30 11:30:38 pessaux Exp $ *)
+(* $Id: types.mli,v 1.37 2008-07-09 15:41:30 blond Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -176,15 +176,15 @@ module SpeciesCarrierTypeSet :
 
 val get_species_types_in_type : type_simple -> SpeciesCarrierTypeSet.t
 
-(** A C type representation. *)
-type ctype =
-  | CT_void
-  | CT_ptr of ctype
-  | CT_fun of ctype * ctype list
-  | CT_ident of string
-  | CT_struct of (ctype * string) list
-  | CT_abstract of ctype
+(** *)
+type local_type =
+  | Lt_var of int
+  | Lt_fun of local_type * local_type
+  | Lt_tuple of local_type list
+  | Lt_constr of (string * string) * local_type list
+  | Lt_self
+  | Lt_species of (string * string)
 
-(** FoCal type to C type conversions *)
-val type_simple_to_ctype : type_simple -> ctype
-val type_scheme_to_ctype : type_scheme -> ctype
+(** *)
+val type_simple_to_local_type : type_simple -> local_type
+val type_scheme_to_local_type : type_scheme -> local_type
