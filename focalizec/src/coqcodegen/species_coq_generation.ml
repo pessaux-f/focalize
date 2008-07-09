@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.77 2008-07-09 15:34:01 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.78 2008-07-09 16:37:45 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1769,7 +1769,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
       end)
     else None in
   (* The end of the module hosting the species. *)
-  Format.fprintf out_fmter "@]End %s.@\n@." module_name ;
+  Format.fprintf out_fmter "@]\nEnd %s.@\n@\n" module_name ;
   (* Now, extract the fields names to create the [species_binding_info]. *)
   let species_binding_info =
     List.flatten
@@ -1855,7 +1855,7 @@ let print_record_type_args_instanciations out_fmter args_instanciations =
       (match corresponding_effective_opt_fname with
        | Some fname -> Format.fprintf out_fmter "%s." fname
        | None -> ()) ;
-      Format.fprintf out_fmter "@[@ %a.effective_collection.("
+      Format.fprintf out_fmter "@ %a.effective_collection.@[<1>("
         Parsetree_utils.pp_vname_with_operators_expanded
         corresponding_effective_vname ;
       (match corresponding_effective_opt_fname with
@@ -1925,7 +1925,7 @@ let apply_generator_to_parameters ctx env formal_to_effective_map
                 | Some fname -> Format.fprintf out_fmter "%s." fname
                 | None -> ()) ;
                (* Species name + ".effective_collection.". *)
-               Format.fprintf out_fmter "@ %a.effective_collection.("
+               Format.fprintf out_fmter "@ %a.effective_collection.(@[<1>"
                  Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname ;
                (* If needed, qualify the name of the species *)
@@ -1934,7 +1934,7 @@ let apply_generator_to_parameters ctx env formal_to_effective_map
                 | Some fname -> Format.fprintf out_fmter "%s." fname
                 | None -> ()) ;
                (* Species name.rf_method name. *)
-               Format.fprintf out_fmter "%a.rf_%a)"
+               Format.fprintf out_fmter "%a.rf_%a)@]"
                  Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname
                  Parsetree_utils.pp_vname_with_operators_expanded meth_name)
@@ -2050,38 +2050,38 @@ let make_collection_effective_record ~current_unit out_fmter
   (* The header of the record. *)
   Format.fprintf out_fmter "@[<2>mk_record" ;
   (* Now, always applying to the representation of "Self", i.e "rf_T". *)
-  Format.fprintf out_fmter "@ t.(" ;
+  Format.fprintf out_fmter "@ t.@[<1>(" ;
   print_implemented_species_as_coq_module
     ~current_unit out_fmter implemented_species_name ;
   Format.fprintf out_fmter ".rf_T" ;
   print_record_type_args_instanciations
     out_fmter record_type_args_instanciations ;
-  Format.fprintf out_fmter ")" ;
+  Format.fprintf out_fmter ")@]" ;
   List.iter
     (function
       | Env.TypeInformation.SF_sig (_, _, _)
       | Env.TypeInformation.SF_property (_, _, _, _, _) -> ()
       | Env.TypeInformation.SF_theorem (_, n, _, _, _, _)
       | Env.TypeInformation.SF_let (_, n, _, _, _, _, _) ->
-          Format.fprintf out_fmter "@ t.(" ;
+          Format.fprintf out_fmter "@ t.@[<1>(" ;
           print_implemented_species_as_coq_module
             ~current_unit out_fmter implemented_species_name ;
           Format.fprintf out_fmter ".rf_%a"
             Parsetree_utils.pp_vname_with_operators_expanded n ;
           print_record_type_args_instanciations
             out_fmter record_type_args_instanciations ;
-          Format.fprintf out_fmter ")"
+          Format.fprintf out_fmter ")@]"
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
             (fun (_, n, _, _, _, _, _) ->
-              Format.fprintf out_fmter "@ t.(" ;
+              Format.fprintf out_fmter "@ t.@[<1>(" ;
               print_implemented_species_as_coq_module
                 ~current_unit out_fmter implemented_species_name ;
               Format.fprintf out_fmter ".rf_%a"
                 Parsetree_utils.pp_vname_with_operators_expanded n ;
               print_record_type_args_instanciations
                 out_fmter record_type_args_instanciations ;
-              Format.fprintf out_fmter ")")
+              Format.fprintf out_fmter ")@]")
             l)
     collection_descr.Env.TypeInformation.spe_sig_methods ;
   (* Close the pretty-print box of the "effective_collection". *)
@@ -2226,7 +2226,7 @@ let collection_compile env ~current_unit out_fmter collection_def
     let record_type_args_instanciations =
       apply_generator_to_parameters
         ctx env formals_to_effectives col_gen_params_info in
-    (* Close the pretty print box of the "__implemented". *)
+    (* Close the pretty print box of the "t". *)
     Format.fprintf out_fmter "@ in @]@\n" ;
     (* Get the name of the species we implement. *)
     let implemented_species_name =
@@ -2240,8 +2240,11 @@ let collection_compile env ~current_unit out_fmter collection_def
     make_collection_effective_record
       ~current_unit out_fmter implemented_species_name
       collection_descr record_type_args_instanciations ;
+    (* Close thre pretty print box of the "effective_collection". *)
+    Format.fprintf out_fmter "@]" ;
     (* End of the pretty print box of the Module embedding the collection. *)
-    Format.fprintf out_fmter "End %a.@]@\n@\n" Sourcify.pp_vname collection_name
+    Format.fprintf out_fmter "@]\nEnd %a.@\n@\n"
+      Sourcify.pp_vname collection_name
   with Not_found ->
     (* Don't see why the species could not be present in the environment.  *)
     (* The only case would be to make a collection from a collection since *)

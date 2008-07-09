@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.44 2008-07-09 14:52:28 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.45 2008-07-09 16:37:45 pessaux Exp $ *)
 
 
 
@@ -192,7 +192,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
                    (* collection's record obtained by the collection's     *)
                    (* effective value.                                     *)
                    Format.fprintf out_fmter
-                     "%a__effective_collection.(%a_%a)"
+                     "%a.effective_collection.(%a.rf_%a)"
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname
@@ -225,7 +225,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
                    else
                      (begin
                      Format.fprintf out_fmter
-                       "%a__effective_collection.(%a_%a)"
+                       "%a.effective_collection.(%a.rf_%a)"
                        Parsetree_utils.pp_vname_with_operators_expanded
                        coll_name
                        Parsetree_utils.pp_vname_with_operators_expanded
@@ -241,7 +241,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
                    (* unit. May be a species from the toplevel of another   *)
                    (* FoCaL source file.                                    *)
                    Format.fprintf out_fmter
-                     "%s.%a__effective_collection.(%s.%a_%a)"
+                     "%s.%a.effective_collection.(%s.%a.rf_%a)"
                      module_name
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      module_name
