@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.56 2008-07-09 15:41:30 blond Exp $ *)
+(* $Id: types.ml,v 1.57 2008-07-10 15:00:59 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1383,7 +1383,7 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
                (begin
                match provenance with
                 | SCK_toplevel_collection | SCK_toplevel_species ->
-                    Format.fprintf ppf "%s__effective_collection.(%s_T)"
+                    Format.fprintf ppf "%s.effective_collection.(%s.rf_T)"
                       collection_name collection_name
                 | SCK_species_parameter ->
                     Format.fprintf ppf "%s_T" coll_type_variable

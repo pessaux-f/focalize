@@ -157,6 +157,7 @@ module CoqGenInformation :
         (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
       cgi_generator_parameters :
         ((Parsetree.vname list) *
+	 ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list) *
          ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list))
 
     }

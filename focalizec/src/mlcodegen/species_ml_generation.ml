@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.71 2008-07-08 15:19:37 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.72 2008-07-10 15:00:59 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1438,7 +1438,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-let apply_generator_to_parameters ctx env collection_body_params
+let apply_collection_generator_to_parameters ctx env collection_body_params
     col_gen_params_info =
   let current_unit = ctx.Context.scc_current_unit in
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -1680,7 +1680,7 @@ let collection_compile env ~current_unit out_fmter collection_def
              Parsetree.se_params
              params_info.Env.MlGenInformation.
                cgi_implemented_species_params_names in
-         apply_generator_to_parameters
+         apply_collection_generator_to_parameters
            ctx env collection_body_params params_info) ;
     Format.fprintf out_fmter "@ in@]@\n" ;
     (* And now, create the final value representing the effective instance *)

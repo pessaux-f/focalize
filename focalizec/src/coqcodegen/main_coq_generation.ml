@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.20 2008-07-09 14:52:28 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.21 2008-07-10 15:00:59 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -153,7 +153,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         Context.rcc_lambda_lift_params_mapping = [] ;
         Context.rcc_out_fmter = out_fmter } in
       Type_coq_generation.type_def_compile ctx env type_def_name type_descr
-  | Infer.PCM_let_def  (let_def, _) ->
+  | Infer.PCM_let_def (let_def, _) ->
       (* Create the initial context for compiling the let definition. *)
       (* We would not need a "full" context, a "reduced" one would be *)
       (* sufficient, but via [let_binding_compile], the function      *)
@@ -241,4 +241,3 @@ let root_compile ~current_unit ~out_file_name stuff =
     (* Re-reaise the initial error. *)
     raise whatever
 ;;
-

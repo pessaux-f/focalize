@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.45 2008-07-09 16:37:45 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.46 2008-07-10 15:00:59 pessaux Exp $ *)
 
 
 
@@ -912,22 +912,34 @@ let rec generate_expr_as_species_parameter_expression ~current_unit ppf expr =
 (* *********************************************************************** *)
 let generate_record_type_parameters ctx species_fields =
   let ppf = ctx.Context.scc_out_fmter in
-  (* We first abstract the species parameters. *)
+  let current_unit = ctx.Context.scc_current_unit in
+  (* We first abstract the species/entity parameters *)
+  (* carriers and entity parameters.                 *)
   List.iter
-    (fun ((_, param_ty_coll), (param_name, param_kind)) ->
+    (fun ((param_ty_mod, param_ty_coll), (param_name, param_kind)) ->
       match param_kind with
-       | Types.CCMI_is -> Format.fprintf ppf "@[<1>(%s_T :@ Set)@ @]" param_name
+       | Types.CCMI_is ->
+           Format.fprintf ppf "@[<1>(%s_T :@ Set)@ @]" param_name
        | Types.CCMI_in provenance ->
+           (* We generate the lambda-lifting for the the type of the   *)
+           (* "IN" parameter here. When we will inspect the methods to *)
+           (* abstract their dependencies on species parameters, we    *)
+           (* the will skip "IN" parameters (that trivially lead to a  *)
+           (* dependency on a pseudo method wearing their name) to     *)
+           (* avoid doubles.                                           *)
            match provenance with
             | Types.SCK_species_parameter ->
-                (* We generate the lambda-lifting for the "IN" parameter    *)
-                (* here. When we will inspect the methods to abstract their *)
-                (* dependencies on species parameters, we the will skip     *)
-                (* "IN" parameters (that trivially lead to a dependency on  *)
-                (* a pseudo method wearing their name) to avoid doubles.    *)
                 Format.fprintf ppf "@[<1>(_p_%s_%s :@ %s_T)@ @]"
                   param_name param_name param_ty_coll
-            | Types.SCK_toplevel_collection | Types.SCK_toplevel_species -> ())
+            | Types.SCK_toplevel_collection | Types.SCK_toplevel_species ->
+                Format.fprintf ppf "@[<1>(_p_%s_%s :@ "
+                  param_name param_name ;
+                if param_ty_mod <> current_unit then
+                  Format.fprintf ppf "%s." param_ty_mod ;
+                Format.fprintf ppf "%s.effective_collection.(" param_ty_coll ;
+                if param_ty_mod <> current_unit then
+                  Format.fprintf ppf "%s." param_ty_mod ;
+                Format.fprintf ppf "%s.rf_T))@ @]" param_ty_coll)
     ctx.Context.scc_collections_carrier_mapping ;
   (* Now, we will find the methods of the parameters we decl-depend  *)
   (* on in the Coq type expressions. Such dependencies can only      *)

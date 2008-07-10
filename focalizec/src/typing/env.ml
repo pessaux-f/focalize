@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.98 2008-06-30 15:54:07 pessaux Exp $ *)
+(* $Id: env.ml,v 1.99 2008-07-10 15:00:59 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -790,14 +790,16 @@ module CoqGenInformation = struct
     cgi_implemented_species_params_names :
       (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
     (** First, the list of species parameters carriers required by the
-        collection generator. Next, the list mapping for each parameter name,
+        mk_record. Third, the list mapping for each parameter name,
         the set of methods the collection generator depends on, hence must be
         provided an instance to be used. Note that the list is not guaranted
         to be ordered according to the order of the species parameters names
         (that's why we have the information about this order given in
         [species_binding_info]). *)
     cgi_generator_parameters :
-      ((Parsetree.vname list) *
+      ((Parsetree.vname list) *   (* For mk_record. *)
+       (* For mk_record only. *)
+       ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list) *
        ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list))
   }
 
