@@ -153,14 +153,18 @@ module MlGenInformation :
 
 module CoqGenInformation :
   sig
+  type collection_generator_parameters = {
+    cgp_abstr_param_carriers_for_record : Parsetree.vname list ;
+    cgp_abstr_param_methods_for_record :
+      (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ;
+    cgp_abstr_param_methods_for_coll_gen :
+      (Parsetree.vname * Parsetree_utils.DepNameSet.t) list
+    }
+
     type collection_generator_info = {
       cgi_implemented_species_params_names :
         (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
-      cgi_generator_parameters :
-        ((Parsetree.vname list) *
-	 ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list) *
-         ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list))
-
+      cgi_generator_parameters : collection_generator_parameters
     }
 
     type constructor_mapping_info = {

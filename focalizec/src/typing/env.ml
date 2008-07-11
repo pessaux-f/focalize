@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.100 2008-07-11 10:07:39 pessaux Exp $ *)
+(* $Id: env.ml,v 1.101 2008-07-11 12:17:40 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -784,6 +784,22 @@ end
 (* *********************************************************************** *)
 (* *********************************************************************** *)
 module CoqGenInformation = struct
+  type collection_generator_parameters = {
+    (* The parameters carriers that have been abstracted in the record type.
+       They must be instancied each time one need to build a record value
+       or a record type. This list contains the crude names of the
+       parameters that can be found in the species declaration. *)
+    cgp_abstr_param_carriers_for_record : Parsetree.vname list ;
+    (* The list of species parameters with their methods the record type
+       depends on (hence was abstracted with). *)
+    cgp_abstr_param_methods_for_record :
+      (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ;
+    (* The list of species parameters with their methods the collection
+       generator depends on (hence was abstracted with). *)
+    cgp_abstr_param_methods_for_coll_gen :
+      (Parsetree.vname * Parsetree_utils.DepNameSet.t) list
+    }
+
   type collection_generator_info = {
     (** The list of species parameters names and kinds the species whose
         collection generator belongs to has. This list is positionnal, i.e.
@@ -798,11 +814,7 @@ module CoqGenInformation = struct
         to be ordered according to the order of the species parameters names
         (that's why we have the information about this order given in
         [species_binding_info]). *)
-    cgi_generator_parameters :
-      ((Parsetree.vname list) *   (* For mk_record. *)
-       (* For mk_record only. *)
-       ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list) *
-       ((Parsetree.vname * Parsetree_utils.DepNameSet.t) list))
+    cgi_generator_parameters : collection_generator_parameters
   }
 
   (** In Coq generation environment ALL the sum types value constructors are
