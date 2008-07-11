@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.ml,v 1.7 2008-07-08 15:19:37 pessaux Exp $ *)
+(* $Id: misc_common.ml,v 1.8 2008-07-11 13:26:50 pessaux Exp $ *)
 
 
 
@@ -615,4 +615,137 @@ let find_toplevel_spe_defining_meth_through_inheritance env ~current_unit
     (* this method. If any failure occurs, then the compiler is wrong *)
     (* somewhere !                                                    *)
     assert false
+;;
+
+
+
+(* *********************************************************************** *)
+(** {b Descr} : Describes when starting the code of a let binding how it
+    must be linked to the possible previous code. If the binding is the
+    first of a non-recursive definition, then it must be introduced by
+    "let ". If it is the first of a recursive definition, then it must be
+    introduced by "let rec ". If it is not the first of a multiple
+    definition, then it must be introduced by "and ".
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+type let_connector =
+  | LC_first_non_rec   (** The binding is the first of a non-recursive
+                           definition. *)
+  | LC_first_rec   (** The binding is the first of a recursive definition. *)
+  | LC_following   (** The binding is not the first of a multiple definition
+                       (don't matter if the definition is recursive or not). *)
+;;
+
+
+
+(* ******************************************************************** *)
+(** {b Descr} : Build the list of abstract parameters according to the
+    information found in the [abstraction_info] [ai]. This is similar
+    to create the list of strings represented by the sequence of
+    parameters of a method due to its dependencies.
+    This list first starts by the parameters coming from the species
+    parameters's methods the current method depends on.
+    Then come the parameters coming from the methods of ourselves we
+    depend on.
+
+    {b Args} :
+      - [care_logical] : Boolean telling if the target language needs
+        logical definitions (i.e. theorems, properties). For instance,
+        is true for Coq and false for OCaml.
+
+      - [care_types] : Boolean telling if the target language needs to
+        explicitely manage abstraction of types. For instance, is true for
+        Coq and false for OCaml.
+
+      - [ai] : The [abstraction_info] of a method, recording this
+        method's dependencies.
+
+    {b Return} :
+      - The list of names corresponding to the arguments lambda-lifting
+        the dependencies (those from methods of the species parameters
+        first, in the order of species parameters, then those from the
+        methods of ourselves).
+
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
+let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
+  (* Build the list by side effect in reverse order for efficiency. *)
+  let the_list_reversed = ref [] in
+  let all_deps_from_params =
+    Abstractions.merge_abstraction_infos
+      ai.Abstractions.ai_dependencies_from_params_via_body
+      (Abstractions.merge_abstraction_infos
+         ai.Abstractions.ai_dependencies_from_params_via_type
+         ai.Abstractions.ai_dependencies_from_params_via_completion) in
+  (* First, abstract according to the species's parameters carriers types the
+     current method depends on only if [care_types] is on. *)
+  if care_types then
+    List.iter
+      (fun sp_param_ty_name ->
+        (* Each abstracted type name is built like "_p_" + parameter's name
+           + "_T". *)
+        let llift_name =
+          "_p_" ^
+          (Parsetree_utils.vname_as_string_with_operators_expanded
+             sp_param_ty_name) ^
+          "_T" in
+        the_list_reversed := llift_name :: !the_list_reversed)
+      ai.Abstractions.ai_used_species_parameter_tys ;
+  (* Next, abstract according to the species's parameters methods the current
+     method depends on. *)
+  List.iter
+    (fun (species_param, meths_from_param) ->
+      (* Recover the species parameter's name. *)
+      let species_param_name =
+        match species_param with
+         | Env.TypeInformation.SPAR_in (n, _, _) -> n
+         | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
+             Parsetree.Vuident n in
+      (* Each abstracted method will be named like "_p_", followed by the
+         species parameter name, followed by "_", followed by the method's
+         name.
+         We don't care here about whether the species parameters is "IN" or
+         "IS". *)
+      let prefix =
+        "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
+      Parsetree_utils.DepNameSet.iter
+        (fun (meth, _) ->
+          the_list_reversed :=
+            (prefix ^
+             (Parsetree_utils.vname_as_string_with_operators_expanded meth))
+            :: !the_list_reversed)
+        meths_from_param)
+    all_deps_from_params ;
+  (* Next, the extra arguments due to methods of ourselves we depend on.
+     They are always present in the species under the name "self_...". *)
+  List.iter
+    (function
+      | MinEnv.MCEE_Defined_carrier _
+      | MinEnv.MCEE_Defined_computational (_, _, _)
+      | MinEnv.MCEE_Defined_logical (_, _, _) ->
+          (* Anything defined is not abstracted. *)
+          ()
+      | MinEnv.MCEE_Declared_logical (_, _) ->
+          (* In Ocaml, (i.e if [care_logical] is [false]) logical properties
+             are forgotten. *)
+          if care_logical then failwith "TODO 42"
+      | MinEnv.MCEE_Declared_carrier ->
+         (* In Ocaml generation model (i.e. if [care_types] is [false], the
+             carrier is never lambda-lifted then doesn't appear as an extra
+             parameter. Hence, we take care of the carrier only in Coq, i.e. if
+             [care_types] is [true]. *)
+          if care_types then
+            (begin
+            (* In Coq, the carrier is always abstracted by "abst_T". *)
+            the_list_reversed := "abst_T" :: !the_list_reversed
+            end)
+      | MinEnv.MCEE_Declared_computational (n, _) ->
+          let llift_name =
+            "abst_" ^
+            (Parsetree_utils.vname_as_string_with_operators_expanded n) in
+          the_list_reversed := llift_name :: !the_list_reversed)
+    ai.Abstractions.ai_min_coq_env ;
+  (* Finally, reverse the list to keep the right oder. *)
+  List.rev !the_list_reversed
 ;;

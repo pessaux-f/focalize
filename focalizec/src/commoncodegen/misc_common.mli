@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.mli,v 1.5 2008-07-08 15:19:37 pessaux Exp $ *)
+(* $Id: misc_common.mli,v 1.6 2008-07-11 13:26:50 pessaux Exp $ *)
 
 type compiled_field_memory = {
   cfm_from_species : Env.from_history ;
@@ -60,3 +60,12 @@ val find_toplevel_spe_defining_meth_through_inheritance :
   Abstractions.environment_kind -> current_unit: Parsetree.module_name ->
     start_spec_mod: Parsetree.module_name -> start_spec_name: string ->
       method_name: Parsetree.vname -> (Parsetree.module_name * string)
+
+type let_connector =
+  | LC_first_non_rec
+  | LC_first_rec
+  | LC_following
+
+val make_params_list_from_abstraction_info :
+  care_logical: bool -> care_types: bool -> Abstractions.abstraction_info ->
+    string list
