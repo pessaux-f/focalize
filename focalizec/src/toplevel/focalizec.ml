@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.26 2008-06-09 12:13:29 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.27 2008-07-11 15:30:30 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -123,19 +123,21 @@ let main () =
     if Configuration.get_generate_ocaml () then
       (begin
       let out_file_name = (Filename.chop_extension input_file_name) ^ ".ml" in
-      Main_ml_generation.root_compile
-        ~current_unit ~out_file_name stuff_to_compile
+      Some
+        (Main_ml_generation.root_compile
+           ~current_unit ~out_file_name stuff_to_compile)
       end)
-    else Env.MlGenEnv.empty () in
+    else None in
   (* Finally, go to the Coq code generation if requested. *)
   let coqgen_toplevel_env =
     if Configuration.get_generate_coq () then
       (begin
       let out_file_name = (Filename.chop_extension input_file_name) ^ ".v" in
-      Main_coq_generation.root_compile
-        ~current_unit ~out_file_name stuff_to_compile
+      Some
+        (Main_coq_generation.root_compile
+           ~current_unit ~out_file_name stuff_to_compile)
       end)
-    else Env.CoqGenEnv.empty () in
+    else None in
   (* Now, generate the persistent interface file. *)
   Env.make_fo_file
     ~source_filename: input_file_name

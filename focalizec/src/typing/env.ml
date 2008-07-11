@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.101 2008-07-11 12:17:40 pessaux Exp $ *)
+(* $Id: env.ml,v 1.102 2008-07-11 15:30:30 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -871,11 +871,45 @@ end
 (* *********************************************************************** *)
 (* *********************************************************************** *)
 
+
+
+(* ************************************************************************ *)
+(* {b Descr} : Exception raised when one tries to use an OCaml code
+   generation environment although the corresponding file has been compiled
+   without OCaml code generation enabled.
+
+   {b Rem} : Exported outside this module.                                  *)
+(* ************************************************************************ *)
+exception No_available_OCaml_code_generation_envt of Types.fname ;;
+
+
+
+(* ************************************************************************* *)
+(* {b Descr} : Exception raised when one tries to use a Coq code generation
+   environment although the corresponding file has been compiled without Coq
+   code generation enabled.
+
+   {b Rem} : Exported outside this module.                                   *)
+(* ************************************************************************* *)
+exception No_available_Coq_code_generation_envt of Types.fname ;;
+
+
+
+(* ************************************************************************** *)
+(** {b Descr} : Struture on disk that records the "object" file once a source
+    file is compiled. "Object" file reminds the scoping, typing environments
+    and the OCaml/Coq code generation environments if the source file was
+    compiled with this target code generation enabled.
+
+    {b Rem} : Exported abstract outside this module.                          *)
+(* ************************************************************************** *)
 type fo_file_structure = {
   ffs_scoping : ScopeInformation.env ;
   ffs_typing : TypeInformation.env ;
-  ffs_mlgeneration : MlGenInformation.env ;
-  ffs_coqgeneration : CoqGenInformation.env }
+  (* Optional since the file may be compiled without OCaml code generation. *)
+  ffs_mlgeneration : MlGenInformation.env option ;
+  (* Optional since the file may be compiled without Coq code generation. *)
+  ffs_coqgeneration : CoqGenInformation.env option }
 ;;
 
 
@@ -1032,7 +1066,11 @@ let (scope_find_module, type_find_module,
       | None -> mlgen_env
       | Some fname ->
           if current_unit = fname then mlgen_env
-          else (internal_find_module ~loc fname).ffs_mlgeneration),
+          else
+            match (internal_find_module ~loc fname).ffs_mlgeneration with
+             | None ->
+                 raise (No_available_OCaml_code_generation_envt fname)
+             | Some e -> e),
 
 
 
@@ -1054,7 +1092,10 @@ let (scope_find_module, type_find_module,
       | None -> coqgen_env
       | Some fname ->
           if current_unit = fname then coqgen_env
-          else (internal_find_module ~loc fname).ffs_coqgeneration),
+          else
+            match (internal_find_module ~loc fname).ffs_coqgeneration with
+             | None -> raise (No_available_Coq_code_generation_envt fname)
+             | Some e -> e),
 
 
 
@@ -1099,7 +1140,10 @@ let (scope_find_module, type_find_module,
    (* ********************************************************************* *)
    (fun ~loc fname env ->
      let loaded_mlgen_env =
-       (internal_find_module ~loc fname).ffs_mlgeneration in
+       match (internal_find_module ~loc fname).ffs_mlgeneration with
+        | None ->
+            raise (No_available_OCaml_code_generation_envt fname)
+        | Some e -> e in
      internal_extend_env fname loaded_mlgen_env env),
 
 
@@ -1115,7 +1159,9 @@ let (scope_find_module, type_find_module,
    (* ****************************************************************** *)
    (fun ~loc fname env ->
      let loaded_coqgen_env =
-       (internal_find_module ~loc fname).ffs_coqgeneration in
+       match (internal_find_module ~loc fname).ffs_coqgeneration with
+        | None -> raise (No_available_Coq_code_generation_envt fname)
+        | Some e -> e in
      internal_extend_env fname loaded_coqgen_env env)
   )
 ;;
@@ -1793,7 +1839,7 @@ module CoqGenEnv = Make (CoqGenEMAccess);;
     {b Rem} : Exported outside this module.                         *)
 (* **************************************************************** *)
 let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
-    mlgen_toplevel_env coqgen_toplevel_env =
+    opt_mlgen_toplevel_env opt_coqgen_toplevel_env =
   (* First, recover from the scoping environment only bindings *)
   (* coming from definitions of our current compilation unit.  *)
   let scoping_toplevel_env' =
@@ -1804,12 +1850,16 @@ let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
     env_from_only_absolute_bindings typing_toplevel_env in
   (* Next, recover from the ml generation environment only bindings *)
   (* coming from definitions of our current compilation unit.        *)
-  let mlgen_toplevel_env' =
-    env_from_only_absolute_bindings mlgen_toplevel_env in
+  let opt_mlgen_toplevel_env' =
+    match opt_mlgen_toplevel_env with
+     | None -> None
+     | Some e -> Some (env_from_only_absolute_bindings e) in
   (* Finally, recover from the coq generation environment only bindings *)
   (* coming from definitions of our current compilation unit.           *)
-  let coqgen_toplevel_env' =
-    env_from_only_absolute_bindings coqgen_toplevel_env in
+  let opt_coqgen_toplevel_env' =
+    match opt_coqgen_toplevel_env with
+     | None -> None
+     | Some e -> Some (env_from_only_absolute_bindings e) in
   let module_name = Filename.chop_extension source_filename in
   let fo_basename = Files.fo_basename_from_module_name module_name in
   (* Add to the module name the path of the currently compiled source *)
@@ -1824,7 +1874,7 @@ let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
   output_value
     out_hd
     (scoping_toplevel_env', typing_toplevel_env',
-     mlgen_toplevel_env', coqgen_toplevel_env') ;
+     opt_mlgen_toplevel_env', opt_coqgen_toplevel_env') ;
   (* Just don't forget to close the output file... *)
   close_out out_hd
 ;;
@@ -1837,40 +1887,47 @@ let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
 let inspect_fo_structure ppf fo =
   let coq_gen_info = fo.ffs_coqgeneration in
   (* Dump species' and collections' information. *)
-  List.iter
-    (fun (species_vname, envt_binding) ->
-      (* In a fo file, there must only remain bindings really     *)
-      (* introduced by the compilation unit, not by "open" stuf ! *)
-      let (_, meths, opt_coll_gen, coll_or_spe) =
-        match envt_binding with
-         | BO_opened (_, _) -> assert false | BO_absolute b -> b in
-      (* Start printing... *)
-      Format.fprintf ppf "@[<2>Species %a@\n" Sourcify.pp_vname species_vname ;
-      Format.fprintf ppf "@[<2>*** Methods:@\n" ;
-      List.iter
-        (fun meth ->
-          (* Just print the method's name for the moment. *)
-          Format.fprintf ppf "Method %a  ...@\n"
-            Sourcify.pp_vname meth.mi_name)
-        meths ;
-      (* Now, check for the collection generator information. *)
-      Format.fprintf ppf "@]@[<2>*** Collection generator:@\n" ;
-      (match opt_coll_gen with
-       | None ->  Format.fprintf ppf "None found@."
-       | Some cgi ->
-           Format.fprintf ppf "Some found@." ;
-           (* Info about "implemented" species. *)
-           Format.fprintf ppf "Implemented species params names: %a@\n"
-             (Handy.pp_generic_separated_list ","
-                (fun ppf (pname, _) -> Sourcify.pp_vname ppf pname))
-             cgi.CoqGenInformation.cgi_implemented_species_params_names ;
-           Format.fprintf ppf "@]") ;
-       (match coll_or_spe with
-        | COS_species -> Format.fprintf ppf "Is a species.@."
-        | COS_collection -> Format.fprintf ppf "Is a collection.@.") ;
-       (* End the species dump box. *)
-       Format.fprintf ppf "@]@\n")
-    coq_gen_info.species
+  match coq_gen_info with
+   | None ->
+       Format.fprintf ppf
+         "Empty Coq data in the fo file. Are you sure the source file was \
+         compiled with the Coq code generation enabled ?@."
+   | Some coq_env_info ->
+       List.iter
+         (fun (species_vname, envt_binding) ->
+           (* In a fo file, there must only remain bindings really     *)
+           (* introduced by the compilation unit, not by "open" stuf ! *)
+           let (_, meths, opt_coll_gen, coll_or_spe) =
+             match envt_binding with
+              | BO_opened (_, _) -> assert false | BO_absolute b -> b in
+           (* Start printing... *)
+           Format.fprintf ppf "@[<2>Species %a@\n"
+             Sourcify.pp_vname species_vname ;
+           Format.fprintf ppf "@[<2>*** Methods:@\n" ;
+           List.iter
+             (fun meth ->
+               (* Just print the method's name for the moment. *)
+               Format.fprintf ppf "Method %a  ...@\n"
+                 Sourcify.pp_vname meth.mi_name)
+             meths ;
+           (* Now, check for the collection generator information. *)
+           Format.fprintf ppf "@]@[<2>*** Collection generator:@\n" ;
+           (match opt_coll_gen with
+            | None ->  Format.fprintf ppf "None found@."
+            | Some cgi ->
+                Format.fprintf ppf "Some found@." ;
+                (* Info about "implemented" species. *)
+                Format.fprintf ppf "Implemented species params names: %a@\n"
+                  (Handy.pp_generic_separated_list ","
+                     (fun ppf (pname, _) -> Sourcify.pp_vname ppf pname))
+                  cgi.CoqGenInformation.cgi_implemented_species_params_names ;
+                Format.fprintf ppf "@]") ;
+           (match coll_or_spe with
+            | COS_species -> Format.fprintf ppf "Is a species.@."
+            | COS_collection -> Format.fprintf ppf "Is a collection.@.") ;
+           (* End the species dump box. *)
+           Format.fprintf ppf "@]@\n")
+         coq_env_info.species
 ;;
 
 

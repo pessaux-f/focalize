@@ -330,6 +330,9 @@ module CoqGenEnv :
   end
 
 
+exception No_available_OCaml_code_generation_envt of Types.fname
+exception No_available_Coq_code_generation_envt of Types.fname
+
 type fo_file_structure
 
 val scope_open_module :
@@ -343,7 +346,7 @@ val coqgen_open_module :
 
 val make_fo_file :
   source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t ->
-    MlGenEnv.t -> CoqGenEnv.t -> unit
+    MlGenEnv.t option -> CoqGenEnv.t option -> unit
 
 val inspect_fo_structure : Format.formatter -> fo_file_structure -> unit
 

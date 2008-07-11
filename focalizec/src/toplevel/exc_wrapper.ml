@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.48 2008-07-08 15:19:37 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.49 2008-07-11 15:30:30 pessaux Exp $ *)
 
 
 
@@ -377,7 +377,18 @@ try Check_file.main () with
            Handy.pp_set_bold lang Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_label_ident label_ident
            Handy.pp_reset_effects
-(* ************************** *)
+(* ***************************** *)
+(* OCaml code generation errors. *)
+     | Env.No_available_OCaml_code_generation_envt file ->
+         Format.fprintf Format.err_formatter
+           "@[%tUnable to find OCaml generation information for compiled \
+           file %t'%t%s.foc%t'%t. Source file may have been compiled without \
+           OCaml code generation \
+           enabled.%t.@]@."
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined file Handy.pp_reset_effects
+           Handy.pp_set_bold Handy.pp_reset_effects
+(* *************************** *)
 (* Coq code generation errors. *)
      | Type_coq_generation.Mutable_record_fields_not_in_coq (at, field) ->
           Format.fprintf Format.err_formatter
@@ -387,6 +398,14 @@ try Check_file.main () with
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_vname field
            Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
+     | Env.No_available_Coq_code_generation_envt file ->
+         Format.fprintf Format.err_formatter
+           "@[%tUnable to find Coq generation information for compiled \
+           file %t'%t%s.foc%t'%t. Source file may have been compiled without \
+	   Coq code generation enabled.%t.@]@."
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined file Handy.pp_reset_effects
+           Handy.pp_set_bold Handy.pp_reset_effects
 (* ************************** *)
 (* Recursion analysis errors. *)
      | Recursion.NestedRecursiveCalls (function_name, at) ->

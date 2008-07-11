@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.84 2008-07-11 14:11:34 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.85 2008-07-11 15:30:30 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -57,7 +57,11 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
       List.find
         (fun { Env.mi_name = n } -> n = method_name) species_meths_infos in
     method_info.Env.mi_abstracted_methods
-  with _ ->
+  with
+  | Env.No_available_Coq_code_generation_envt file ->
+      (* Ok, re-raise it to catch it at toplevel. *)
+      raise (Env.No_available_Coq_code_generation_envt file)
+  | _ ->
     (* Because the generator is inherited, the species where it is hosted
        MUST be in the environment. Otherwise, something went wrong... *)
     assert false
