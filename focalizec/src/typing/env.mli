@@ -123,6 +123,7 @@ type collection_or_species =
 type generic_code_gen_method_info = {
   mi_name : Parsetree.vname ;
   mi_history : from_history ;
+  mi_used_species_parameter_tys : Parsetree.vname list ;
   mi_dependencies_from_parameters :
     (TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ;
   mi_abstracted_methods : Parsetree.vname list

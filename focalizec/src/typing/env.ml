@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.99 2008-07-10 15:00:59 pessaux Exp $ *)
+(* $Id: env.ml,v 1.100 2008-07-11 10:07:39 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -704,7 +704,9 @@ type collection_or_species =
 (** {b Descr} : Common for OCaml and Coq code generation environments. *)
 type generic_code_gen_method_info = {
   mi_name : Parsetree.vname ;        (** The field name. *)
-  mi_history : from_history ;        (** Thr field inheritance history. *)
+  mi_history : from_history ;        (** The field inheritance history. *)
+  (** The positional list of parameters carrier abstracted in the method. *)
+  mi_used_species_parameter_tys : Parsetree.vname list ;
   mi_dependencies_from_parameters :
     ((** The positional list of methods from the species parameters
          abstracted by lambda-lifting. *)

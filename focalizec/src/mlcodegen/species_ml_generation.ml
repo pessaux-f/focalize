@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.72 2008-07-10 15:00:59 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.73 2008-07-11 10:07:39 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1366,6 +1366,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                     compiled_field_memory.Misc_common.cfm_method_name ;
                   Env.mi_history =
                     compiled_field_memory.Misc_common.cfm_from_species ;
+                  (* Never used in OCaml. *)
+                  Env.mi_used_species_parameter_tys = [] ;
                   Env.mi_dependencies_from_parameters =
                     compiled_field_memory.Misc_common.
                       cfm_dependencies_from_parameters ;
@@ -1379,6 +1381,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                        cfm.Misc_common.cfm_method_name ;
                      Env.mi_history =
                        cfm.Misc_common.cfm_from_species ;
+                     (* Never used in OCaml. *)
+                     Env.mi_used_species_parameter_tys = [] ;
                      Env.mi_dependencies_from_parameters =
                        cfm.Misc_common.cfm_dependencies_from_parameters ;
                      Env.mi_abstracted_methods =

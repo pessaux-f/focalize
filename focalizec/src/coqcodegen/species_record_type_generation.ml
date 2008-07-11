@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.46 2008-07-10 15:00:59 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.47 2008-07-11 10:07:39 pessaux Exp $ *)
 
 
 
@@ -1074,11 +1074,11 @@ let generate_record_type ctx env species_descr =
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping = collections_carrier_mapping } in
-  (* Put a trailing semi only if there is other fields to generate. *)
+  (* Put a trailing semi only if there are other fields to generate. *)
   (match species_descr.Env.TypeInformation.spe_sig_methods with
    | [] -> ()
    | [Env.TypeInformation.SF_sig (_, n, _)] ->
-       if (Parsetree_utils.name_of_vname n) <> "rep" then
+       if (Parsetree_utils.name_of_vname n) = "rep" then
          ()   (* Case where there was only 1 field and that field was "rep". *)
        else Format.fprintf out_fmter " ;"
    | _ -> Format.fprintf out_fmter " ;") ;

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.79 2008-07-10 15:00:59 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.80 2008-07-11 10:07:38 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -430,6 +430,125 @@ let generate_defined_non_recursive_method ctx print_ctx env min_coq_env
 
 
 
+(** Finish the job of [instanciate_parameter_through_inheritance] in the
+    case where the parameter has been indentified as a IS parameter. *)
+let instanciate_IS_parameter_through_inheritance ctx env original_param_index
+    field_memory meths_from_param =
+  let current_unit = ctx.Context.scc_current_unit in
+  let out_fmter = ctx.Context.scc_out_fmter in
+  (* Instanciation process of "IS" parameter. We start processing *)
+  (* from the oldest species where the currently compiled method  *)
+  (* appeared, i.e. the species where it was really DEFINED.      *)
+  let instancied_with =
+    Misc_common.follow_instanciations_for_is_param
+      ctx (Abstractions.EK_coq env) original_param_index
+      field_memory.Misc_common.cfm_from_species.Env.fh_inherited_along in
+  (* Now really generate the code of by what to instanciate. *)
+  (match instancied_with with
+   | Misc_common.IPI_by_toplevel_species (spec_mod, spec_name) ->
+       (* We found that a toplevel species provides this method  *)
+       (* because this species is finally used as effective      *)
+       (* parameter. However, may be the method on which we have *)
+       (* a dependency is not directly in this toplevel species. *)
+       (* May be it is in one of its parents. We must search in  *)
+       (* its inheritance to determine exactly in which species  *)
+       (* each method is REALLY defined (not only inherited).    *)
+       Parsetree_utils.DepNameSet.iter
+         (fun (meth, _) ->
+           let (real_spec_mod, real_spec_name) =
+             Misc_common.find_toplevel_spe_defining_meth_through_inheritance
+               (Abstractions.EK_coq env)
+               ~current_unit ~start_spec_mod: spec_mod
+               ~start_spec_name: spec_name
+               ~method_name: meth in
+           (* We directly access the species's Module method since in *)
+           (* a fully defined toplevel species their is no            *)
+           (* "effective_collection".                                 *)
+           let prefix =
+             if real_spec_mod = current_unit then real_spec_name ^ "."
+             else
+               real_spec_mod ^ "." ^ real_spec_name ^ "." ^ real_spec_mod ^
+               "." in
+           Format.fprintf out_fmter "@ %s%a"
+             prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
+         meths_from_param
+   | Misc_common.IPI_by_toplevel_collection (coll_mod, coll_name) ->
+       let prefix =
+         if coll_mod = current_unit then
+           coll_name ^ ".effective_collection.(" ^ coll_name ^ "."
+         else coll_mod ^ "." ^ coll_name ^
+           ".effective_collection.(" ^ coll_mod ^ "." ^ coll_name ^ "." in
+       Parsetree_utils.DepNameSet.iter
+         (fun (meth, _) ->
+           (* Don't print the type to prevent being too verbose. *)
+           Format.fprintf out_fmter "@ %srf_%a)"
+             prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
+         meths_from_param
+   | Misc_common.IPI_by_species_parameter prm ->
+       (* In Coq, species parameters are abstracted by "_p_species_xxx". *)
+       let species_param_name =
+         match prm with
+          | Env.TypeInformation.SPAR_in (_, _, _) -> assert false
+          | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
+              Parsetree.Vuident n in
+       let prefix = (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
+       Parsetree_utils.DepNameSet.iter
+         (fun (meth, _) ->
+           (* Don't print the type to prevent being too verbose. *)
+           Format.fprintf out_fmter "@ _p_%s%a"
+             prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
+         meths_from_param)
+;;
+
+
+
+(** Finish the job of [instanciate_parameter_through_inheritance] in the
+    case where we instanciate parameter's carrier and this parameter has been
+    indentified as a IS parameter. *)
+let instanciate_IS_parameter_carrier_through_inheritance ctx env
+    original_param_index field_memory =
+  let current_unit = ctx.Context.scc_current_unit in
+  let out_fmter = ctx.Context.scc_out_fmter in
+  (* Instanciation process of "IS" parameter. We start processing *)
+  (* from the oldest species where the currently compiled method  *)
+  (* appeared, i.e. the species where it was really DEFINED.      *)
+  let instancied_with =
+    Misc_common.follow_instanciations_for_is_param
+      ctx (Abstractions.EK_coq env) original_param_index
+      field_memory.Misc_common.cfm_from_species.Env.fh_inherited_along in
+  (* Now really generate the code of by what to instanciate. *)
+  match instancied_with with
+   | Misc_common.IPI_by_toplevel_species (spec_mod, spec_name) ->
+       Format.fprintf out_fmter "@ " ;
+       if spec_mod <> current_unit then
+         Format.fprintf out_fmter "%s." spec_mod ;
+       (* [Unsure] Eh oui, dans une toplevel species, on n'a pas de 
+          "effective_collection" via lequel accéder au champ représentant
+          "rep". Faudrait-il dans ce cas générer un champ représentant la
+          "rep", au cas où quelqu'un chercherait à instancier par cette
+          espèce toplevel complète ? *)
+       Format.fprintf out_fmter "%s.??????(" spec_name ;
+       if spec_mod <> current_unit then
+         Format.fprintf out_fmter "%s." spec_mod ;
+       Format.fprintf out_fmter "%s.rf_T" spec_name
+   | Misc_common.IPI_by_toplevel_collection (coll_mod, coll_name) ->
+       Format.fprintf out_fmter "@ " ;
+       if coll_mod <> current_unit then
+         Format.fprintf out_fmter "%s." coll_mod ;
+       Format.fprintf out_fmter "%s.effective_collection.(" coll_name ;
+       if coll_mod <> current_unit then
+         Format.fprintf out_fmter "%s." coll_mod ;
+       Format.fprintf out_fmter "%s.rf_T)" coll_name
+   | Misc_common.IPI_by_species_parameter prm ->
+       (* In Coq, species parameters are abstracted by "_p_species_xxx". *)
+       let species_param_name =
+         match prm with
+          | Env.TypeInformation.SPAR_in (_, _, _) -> assert false
+          | Env.TypeInformation.SPAR_is ((_, n), _, _, _) -> n in
+       Format.fprintf out_fmter "@ _p_%s_T" species_param_name
+;;
+
+
 
 let instanciate_parameter_through_inheritance ctx env field_memory =
   let current_unit = ctx.Context.scc_current_unit in
@@ -474,16 +593,32 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
         Format.eprintf "@.")
       meth_info.Env.mi_dependencies_from_parameters
     end) ;
-   (* Since in Coq, types are explicit, now we apply to each extra parameter  *)
-   (* coming from the lambda liftings that represent the types of the species *)
-   (* parameters used in the method. It is always "_p_" + the species name +  *)
-   (* "_T".                                                                   *)
-    List.iter
-       (fun species_param_type_name ->
-          Format.fprintf out_fmter "@ _p_%a_T"
-            Parsetree_utils.pp_vname_with_operators_expanded
-            species_param_type_name)
-    field_memory.Misc_common.cfm_used_species_parameter_tys ;
+  (* Since in Coq, types are explicit, now we apply to each extra parameter  *)
+  (* coming from the lambda liftings that represent the types of the species *)
+  (* parameters used in the method. The applied stuf is not always "_p_" +   *)
+  (* the species name + "_T" since the species may have no parameters        *)
+  (* the parent one (from where the method generator comes) may have. For    *)
+  (* this reason, we must instanciate the original species parameters (i.e.  *)
+  (* the ones of the species from where the method generator comes).         *)
+  List.iter
+    (fun species_param_type_name ->
+      (* Since we are dealing with carrier types, we are only interested  *)
+      (* by IS parameters. IN parameters have their type abstracted only  *)
+      (* if it is the one of a IS parameter (hence, this last one is a IS *)
+      (* and is found just as said above). If the IN parameter has the    *)
+      (* type of a toplevel species/collection, then this type is not     *)
+      (* abstrated, hence do not need to be instanciated !                *)
+      let as_string = Parsetree_utils.name_of_vname species_param_type_name in
+      let original_param_index =
+        Handy.list_first_index
+          (function
+            | Env.TypeInformation.SPAR_in (_, _, _) -> false
+            | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
+                n = as_string)
+          original_host_species_params in
+      instanciate_IS_parameter_carrier_through_inheritance
+        ctx env original_param_index field_memory)
+    meth_info.Env.mi_used_species_parameter_tys ;
   (* Now, we address the instanciation of the species parameters' methods.  *)
   (* For each species parameter, we must trace by what it was instanciated. *)
   List.iter
@@ -528,74 +663,8 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
              Format.fprintf out_fmter ")@]"
              end)
        | Env.TypeInformation.SPAR_is ((_, _), _, _, _) ->
-           (begin
-           (* Instanciation process of "IS" parameter. We start processing *)
-           (* from the oldest species where the currently compiled method  *)
-           (* appeared, i.e. the species where it was really DEFINED.      *)
-           let instancied_with =
-             Misc_common.follow_instanciations_for_is_param
-               ctx (Abstractions.EK_coq env) original_param_index
-               field_memory.Misc_common.cfm_from_species.
-                 Env.fh_inherited_along in
-           (* Now really generate the code of by what to instanciate. *)
-           (match instancied_with with
-            | Misc_common.IPI_by_toplevel_species (spec_mod, spec_name) ->
-                (* We found that a toplevel species provides this method  *)
-                (* because this species is finally used as effective      *)
-                (* parameter. However, may be the method on which we have *)
-                (* a dependency is not directly in this toplevel species. *)
-                (* May be it is in one of its parents. We must search in  *)
-                (* its inheritance to determine exactly in which species  *)
-                (* each method is REALLY defined (not only inherited).    *)
-                Parsetree_utils.DepNameSet.iter
-                  (fun (meth, _) ->
-                    let (real_spec_mod, real_spec_name) =
-                      Misc_common.
-                      find_toplevel_spe_defining_meth_through_inheritance
-                        (Abstractions.EK_coq env) ~current_unit
-                        ~start_spec_mod: spec_mod ~start_spec_name: spec_name
-                        ~method_name: meth in
-                    let prefix =
-                      if real_spec_mod = current_unit then real_spec_name ^ ".("
-                      else
-                        real_spec_mod ^ "." ^ real_spec_name ^ ".(" ^
-                        real_spec_mod in
-                    Format.fprintf out_fmter "@ %s%a)"
-                      prefix Parsetree_utils.pp_vname_with_operators_expanded
-                      meth)
-                  meths_from_param
-            | Misc_common.IPI_by_toplevel_collection (coll_mod, coll_name) ->
-                let prefix =
-                  if coll_mod = current_unit then
-                    coll_name ^ ".effective_collection.(" ^ coll_name ^ "_"
-                  else coll_mod ^ "." ^ coll_name ^
-                    ".effective_collection.(" ^ coll_mod ^ "." ^
-                    coll_name ^ "_" in
-                Parsetree_utils.DepNameSet.iter
-                  (fun (meth, _) ->
-                    (* Don't print the type to prevent being too verbose. *)
-                    Format.fprintf out_fmter "@ %s%a)"
-                      prefix Parsetree_utils.pp_vname_with_operators_expanded
-                      meth)
-                  meths_from_param
-              | Misc_common.IPI_by_species_parameter prm ->
-                  (* In Coq, species parameters are abstracted by *)
-                  (* "_p_species_xxx".                            *)
-                  let species_param_name =
-                    match prm with
-                     | Env.TypeInformation.SPAR_in (_, _, _) -> assert false
-                     | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
-                         Parsetree.Vuident n in
-                  let prefix =
-                    (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
-                  Parsetree_utils.DepNameSet.iter
-                    (fun (meth, _) ->
-                      (* Don't print the type to prevent being too verbose. *)
-                      Format.fprintf out_fmter "@ _p_%s%a"
-                        prefix Parsetree_utils.pp_vname_with_operators_expanded
-                        meth)
-                    meths_from_param)
-           end))
+           instanciate_IS_parameter_through_inheritance
+             ctx env original_param_index field_memory meths_from_param )
     meth_info.Env.mi_dependencies_from_parameters
 ;;
 
@@ -1187,6 +1256,7 @@ let extend_env_for_species_def ~current_species env species_descr =
                  Env.mi_history = {
                    Env.fh_initial_apparition = current_species ;
                    Env.fh_inherited_along = [] } ;
+                 Env.mi_used_species_parameter_tys = [] ;
                  Env.mi_dependencies_from_parameters = [] ;
                  Env.mi_abstracted_methods = [] })
                methods_names in
@@ -1468,7 +1538,7 @@ let generate_collection_generator ctx env compiled_species_fields
    Misc_common.cfm_coq_min_typ_env_names. Ce ne serait pas un oubli ici ?
 En fait, non, je ne pense pas car on est dans le cas où la méthode n'est
 pas inheritée, donc dans la version courante de la méthode, on a déjà
-traité les methodes de nosu dont on dépend... *)
+traité les methodes de nous dont on dépend... *)
       end)
     else
       (begin
@@ -1777,6 +1847,9 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                     compiled_field_memory.Misc_common.cfm_method_name ;
                   Env.mi_history =
                     compiled_field_memory.Misc_common.cfm_from_species ;
+                  Env.mi_used_species_parameter_tys =
+                    compiled_field_memory.Misc_common.
+                      cfm_used_species_parameter_tys ;
                   Env.mi_dependencies_from_parameters =
                     compiled_field_memory.Misc_common.
                       cfm_dependencies_from_parameters ;
@@ -1790,6 +1863,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                        cfm.Misc_common.cfm_method_name ;
                      Env.mi_history =
                        cfm.Misc_common.cfm_from_species ;
+                     Env.mi_used_species_parameter_tys =
+                       cfm.Misc_common.cfm_used_species_parameter_tys ;
                      Env.mi_dependencies_from_parameters =
                        cfm.Misc_common.cfm_dependencies_from_parameters ;
                      Env.mi_abstracted_methods =
@@ -1800,6 +1875,9 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                      compiled_field_memory.Misc_common.cfm_method_name ;
                    Env.mi_history =
                      compiled_field_memory.Misc_common.cfm_from_species ;
+                   Env.mi_used_species_parameter_tys =
+                     compiled_field_memory.Misc_common.
+                       cfm_used_species_parameter_tys ;
                    Env.mi_dependencies_from_parameters =
                      compiled_field_memory.Misc_common.
                        cfm_dependencies_from_parameters ;
