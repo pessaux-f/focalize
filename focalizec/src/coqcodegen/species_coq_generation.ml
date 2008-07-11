@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.83 2008-07-11 13:26:50 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.84 2008-07-11 14:11:34 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1514,7 +1514,7 @@ traité les methodes de nous dont on dépend... *)
      coming from our species parameters we depend on. By the way, recover the
      list of species parameters linked together with their methods we need to
      instanciate in order to apply the collection generator. *)
-  let extra_args_from_spe_params =
+  let abstr_params_methods_in_coll_gen =
     dump_collection_generator_arguments_for_params_methods
       out_fmter compiled_species_fields in
   Format.fprintf out_fmter " :=@ " ;
@@ -1601,11 +1601,12 @@ traité les methodes de nous dont on dépend... *)
     compiled_species_fields ;
   (* Close the pretty-print box of the "Let collection_create ... :=". *)
   Format.fprintf ctx.Context.scc_out_fmter ".@]@\n" ;
-  (params_carriers_abstr_for_record,  (* Les paramètres dus aux carriers des params
-                                   et servant à instancier les paramètres de
-                                   mk_record. *)
-   extra_args_from_spe_params)  (* Les arguments du générateur de collection
-                                   qui correspondent aux METHODES des params. *)
+  ((* Parameters induced by parameters carriers and used to instanciate the
+      parameters of "mk_record"...*)
+   params_carriers_abstr_for_record,
+   (* Arguments of the collection generator that correspond the the species's
+      parameters methods we depend on. *)
+   abstr_params_methods_in_coll_gen)
 ;;
 
 
@@ -1822,7 +1823,26 @@ let print_implemented_species_for_coq ~current_unit out_fmter
 ;;
 
 
-type record_type_arg_instanciation =
+
+(* ************************************************************************** *)
+(** {b Descr} Type used just to encode the result computed once for all of by
+    what a species IS parameter's carrier or a IN parameter is instanciated.
+    In effect, one not only need to remind a species/collection name, but
+    also, for IN parameters, an expression.
+
+    Remember that IN parameters are included in the record type parameters
+    as coming from the parameters and not from the methods of parameters we
+    depend on. That's the reason why we sometimes skip IN parameters
+    dependencies when on lambda-lift stuff by walking the dependencies from
+    species parameters' methods.
+
+    Since we use the instanciation several time, instead of computing it each
+    time we remind it via this structure and we print it each time we need
+    with the function [print_record_type_carriers_args_instanciations] .
+
+    {b Rem} : Not exported outside this module.                               *)
+(* ************************************************************************** *)
+type record_type_arg_for_carrier_instanciation =
   | RTAI_by_is of ((Types.fname option) * Parsetree.vname)
   | RTAI_by_in of Parsetree.expr
 ;;
@@ -1865,15 +1885,15 @@ let print_record_type_carriers_args_instanciations ctx env args_instanciations =
     abstracted. *)
 let print_methods_from_params_instanciations ctx env formal_to_effective_map l =
   let out_fmter = ctx.Context.scc_out_fmter in
-  (* species parameters we have dependencies on.       *)
+  (* Species parameters we have dependencies on. *)
   List.iter
     (fun (formal_species_param_name, method_names) ->
       match List.assoc formal_species_param_name formal_to_effective_map with
        | Misc_common.CEA_collection_name_for_is corresponding_effective ->
            (begin
            let
-             (corresponding_effective_opt_fname,
-              corresponding_effective_vname) =
+               (corresponding_effective_opt_fname,
+                corresponding_effective_vname) =
              match corresponding_effective with
               | Parsetree.Vname n -> (None, n)
               | Parsetree.Qualified (m, n) -> ((Some m), n) in
@@ -1915,7 +1935,7 @@ let print_methods_from_params_instanciations ctx env formal_to_effective_map l =
              env expr ;
            Format.fprintf out_fmter ")@]" ;
            end))
-l
+    l
 ;;
 
 
@@ -1949,10 +1969,10 @@ let apply_collection_generator_to_parameters ctx env formal_to_effective_map
      parameters carriers, so it is in the collection generator. So we directly
      use this fact to apply the generator to the instanciations of the species
      parameters carriers. *)
-  (* Now, we generate identifiers for methods of these *)
   print_record_type_carriers_args_instanciations
     ctx env record_type_args_instanciations ;
-  (* Species parameters we have dependencies on.       *)
+  (* Now, we generate identifiers for methods of these species parameters we
+     have dependencies on. *)
   print_methods_from_params_instanciations
     ctx env formal_to_effective_map
     col_gen_params_info.Env.CoqGenInformation.
@@ -2078,8 +2098,8 @@ let make_collection_effective_record ctx env implemented_species_name
           (* Apply to the instanciations of the parameters carriers. *)
           print_record_type_carriers_args_instanciations
             ctx env record_type_args_instanciations ;
-          (* Apply to the instanciations of the *)
-          (* parameters methods we depend on.    *)
+          (* Apply to the instanciations of the parameters methods we depend
+              on. *)
           print_methods_from_params_instanciations
             ctx env formals_to_effectives
             record_type_args_instanciations2 ;
@@ -2095,8 +2115,8 @@ let make_collection_effective_record ctx env implemented_species_name
               (* Apply to the instanciations of the parameters carriers. *)
               print_record_type_carriers_args_instanciations
                 ctx env record_type_args_instanciations ;
-              (* Apply to the instanciations of the *)
-              (* parameters methods we depend on.    *)
+              (* Apply to the instanciations of the parameters methods we
+                 depend on. *)
               print_methods_from_params_instanciations
                  ctx env formals_to_effectives
                  record_type_args_instanciations2 ;
@@ -2126,10 +2146,9 @@ let map_formal_to_effective_in_collection ~current_unit collection_body_params
                    (formal,
                     Misc_common.CEA_collection_name_for_is qualified_vname)
                | Parsetree.Qualified (effective_fname, effective_vname) ->
-                   (* If the species belongs to the current unit, then we   *)
-                   (* don't need to qualify it in the OCaml generated code. *)
-                   (* Then we simply discard its explicit hosting           *)
-                   (* information.                                          *)
+                   (* If the species belongs to the current unit, then we don't
+                      need to qualify it in the OCaml generated code. Then we
+                      simply discard its explicit hosting information. *)
                    if effective_fname = current_unit then
                      (formal,
                       Misc_common.CEA_collection_name_for_is
@@ -2147,9 +2166,9 @@ let map_formal_to_effective_in_collection ~current_unit collection_body_params
               (formal, (Misc_common.CEA_value_expr_for_in effective_expr))
               end)
          | (_, _) ->
-             (* This would mean that we try to apply an effective stuff    *)
-             (* in/is-incompatible with the kind of the species parameter. *)
-             (* This should have been caught before by the analyses !      *)
+             (* This would mean that we try to apply an effective stuff
+                IN/IS-incompatible with the kind of the species parameter.
+                This should have been caught before by the analyses ! *)
              assert false)
       col_gen_params_info.Env.CoqGenInformation.
       cgi_implemented_species_params_names
@@ -2190,71 +2209,69 @@ let collection_compile env ~current_unit out_fmter collection_def
   ignore
     (Species_record_type_generation.generate_record_type
       ctx env collection_descr) ;
+  (* We do not want any collection generator. Instead, we will call the
+     collection generator of the collection we implement and apply it to the
+     functions it needs coming from the collection applied to its parameters
+     if there are some. *)
+  Format.fprintf out_fmter "@[<2>Let effective_collection :=@ " ;
+  (* The temporary value resulting from the application of the collection
+     generator mentionned just above... *)
+  Format.fprintf out_fmter "@[<2>let t :=@\n" ;
+  (* Now, get the collection generator from the closed species we implement. *)
+  let implemented_species_name =
+    collection_def.Parsetree.ast_desc.Parsetree.
+      cd_body.Parsetree.ast_desc.Parsetree.se_name in
+  (* We call the "implemented" collection generator, that is named by the
+     implemented species name + ".collection_create". *)
+  print_implemented_species_for_coq
+    ~current_unit out_fmter implemented_species_name ;
+  Format.fprintf out_fmter ".collection_create" ;
+  (* Finally, we must recover the arguments to apply to this collection
+     generator. These arguments of course come from the species parameters the
+     closed species we implement has (if it has some). We must make this
+     application WITH THE RIGHT EFFECTIVE FUNCTIONS and IN THE  RIGHT ORDER ! *)
+  (begin
   try
-    let implemented_species_name =
-      collection_def.Parsetree.ast_desc.Parsetree.
-        cd_body.Parsetree.ast_desc.Parsetree.se_name in
     let (_, _, opt_params_info, _) =
       Env.CoqGenEnv.find_species
         ~loc: collection_def.Parsetree.ast_loc ~current_unit
         implemented_species_name env in
-    let col_gen_params_info =
-      (match opt_params_info with
-       | None ->
-           (* The species has no collection generator. Hence it is not a fully
-              defined species. This should have be prevented before, by
-              forbidding to make a collection from a non fully defined
-              species ! *)
-           assert false (* [Unsure] car je crois qu'on n'a pas fait la vérif. *)
-       | Some pi -> pi) in
-    (* Get the names of the collections or the value expressions effectively
-       applied. *)
-    let collection_body_params =
-      Misc_common.get_implements_effectives
-        collection_def.Parsetree.ast_desc.Parsetree.cd_body.Parsetree.ast_desc.
-             Parsetree.se_params
-        col_gen_params_info.Env.CoqGenInformation.
-          cgi_implemented_species_params_names in
-    let formals_to_effectives =
-      map_formal_to_effective_in_collection
-        ~current_unit: ctx.Context.scc_current_unit collection_body_params
-        col_gen_params_info in
-    (* We do not want any collection generator. Instead, we will call the
-       collection generator of the collection we implement and apply it to the
-       functions it needs coming from the collection applied to its parameters
-       if there are some. *)
-    Format.fprintf out_fmter "@[<2>Let effective_collection :=@ " ;
-    (* The temporary value resulting from the application of the collection
-       generator mentionned just above... *)
-    Format.fprintf out_fmter "@[<2>let t :=@\n" ;
-    (* We call the "implemented" collection generator, that is named by the
-       implemented species name + ".collection_create". *)
-    print_implemented_species_for_coq
-      ~current_unit out_fmter implemented_species_name ;
-    Format.fprintf out_fmter ".collection_create" ;
-    (* Finally, we must recover the arguments to apply to this collection
-       generator. These arguments of course come from the species parameters
-       the closed species we implement has (if it has some). We must make this
-       application WITH THE RIGHT EFFECTIVE FUNCTIONS and IN THE  RIGHT
-       ORDER ! *)
-    let record_type_args_instanciations =
-      apply_collection_generator_to_parameters
-        ctx env formals_to_effectives col_gen_params_info in
-    (* Close the pretty print box of the "t". *)
-    Format.fprintf out_fmter "@ in @]@\n" ;
-    (* Get the name of the species we implement. *)
-    let implemented_species_name =
-      collection_def.Parsetree.ast_desc.Parsetree.
-        cd_body.Parsetree.ast_desc.Parsetree.se_name in
-    (* And now, create the final value representing the effective instance of
-       our collection, borrowing each field from the temporary value obtained
-       above. This way, our collection will have ITS own record fields names,
-       preventing the need to use those coming from the it implements. *)
-    make_collection_effective_record
-      ctx env implemented_species_name
-      collection_descr formals_to_effectives record_type_args_instanciations
-      col_gen_params_info.Env.CoqGenInformation.cgi_generator_parameters.
-        Env.CoqGenInformation.cgp_abstr_param_methods_for_record ;
+    (match opt_params_info with
+     | None ->
+         (* The species has no collection generator. Hence it is not a fully
+            defined species. This should have be prevented before, by
+            forbidding to make a collection from a non fully defined
+            species ! *)
+         assert false (* [Unsure] car je crois qu'on n'a pas fait la vérif. *)
+     | Some params_info ->
+         (* Get the names of the collections or the value expressions
+            effectively applied. *)
+         let collection_body_params =
+           Misc_common.get_implements_effectives
+             collection_def.Parsetree.ast_desc.
+               Parsetree.cd_body.Parsetree.ast_desc.Parsetree.se_params
+             params_info.Env.CoqGenInformation.
+               cgi_implemented_species_params_names in
+         let formals_to_effectives =
+           map_formal_to_effective_in_collection
+             ~current_unit: ctx.Context.scc_current_unit collection_body_params
+             params_info in
+         let record_type_args_instanciations =
+           apply_collection_generator_to_parameters
+             ctx env formals_to_effectives params_info in
+         (* Close the pretty print box of the "t". *)
+         Format.fprintf out_fmter "@ in @]@\n" ;
+         (* And now, create the final value representing the effective
+            instance of our collection, borrowing each field from the
+            temporary value obtained above. This way, our collection will have
+            ITS own record fields names, preventing the need to use those
+            coming from the it implements. *)
+         make_collection_effective_record
+           ctx env implemented_species_name
+           collection_descr formals_to_effectives
+           record_type_args_instanciations
+           params_info.Env.CoqGenInformation.cgi_generator_parameters.
+             Env.CoqGenInformation.cgp_abstr_param_methods_for_record) ;
     (* Close thre pretty print box of the "effective_collection". *)
     Format.fprintf out_fmter "@]" ;
     (* End of the pretty print box of the Module embedding the collection. *)
@@ -2266,4 +2283,5 @@ let collection_compile env ~current_unit out_fmter collection_def
        collection are never entered in the environment because it's a non sense
        to make a collection "implementing" a collection ! *)
     assert false
+  end)
 ;;

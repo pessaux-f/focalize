@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.74 2008-07-11 13:26:50 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.75 2008-07-11 14:11:34 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -42,26 +42,26 @@ let build_collections_carrier_mapping ~current_unit species_descr =
   List.map
     (function
       | Env.TypeInformation.SPAR_is ((_, n_as_string), _, _, _) ->
-          (* Build the name of the type variable that will represent *)
-          (* this parameter's carrier type seen from OCaml. Just     *)
-          (* lowerize the parameter name because collection names    *)
-          (* are always syntactically capitalized and OCaml type     *)
-          (* variable are always syntactically lowercase.            *)
+          (* Build the name of the type variable that will represent this
+             parameter's carrier type seen from OCaml. Just lowerize the
+             parameter name because collection names are always syntactically
+             capitalized and OCaml type variable are always syntactically
+             lowercase. *)
           let carrier_type_variable_name =
             "'" ^ (String.uncapitalize n_as_string) ^ (string_of_int !cnt) ^
             "_as_carrier" in
           incr cnt ;
-          (* Now, build the "collection type" this name will be bound to. *)
-          (* According to how the "collection type" of parameters are     *)
-          (* built, this will be the couple of the current compilation    *)
-          (* unit and the name of the parameter.                          *)
+          (* Now, build the "collection type" this name will be bound to.
+             According to how the "collection type" of parameters are built,
+             this will be the couple of the current compilation unit and the
+             name of the parameter. *)
           let type_coll = (current_unit, n_as_string) in
           (* And now create the binding... *)
           (type_coll, (carrier_type_variable_name, Types.CCMI_is))
       | Env.TypeInformation.SPAR_in (n, type_coll, provenance) ->
-          (* Build the name of the type variable that will represent *)
-          (* this parameter's carrier type seen from OCaml. Same     *)
-          (* remark than above for lowercase/uppercase.              *)
+          (* Build the name of the type variable that will represent this
+             parameter's carrier type seen from OCaml. Same remark than above
+             for lowercase/uppercase. *)
           let carrier_type_variable_name =
             "'" ^ (String.uncapitalize (Parsetree_utils.name_of_vname n)) ^
             (string_of_int !cnt) ^ "_as_carrier" in
@@ -123,8 +123,8 @@ let generate_rep_constraint_in_record_type ctx fields =
                Format.fprintf ctx.Context.scc_out_fmter
                  "(* Carrier's structure explicitly given by \"rep\". *)@\n" ;
                Format.fprintf ctx.Context.scc_out_fmter "@[<2>type " ;
-               (* First, output the type parameters if some, and enclose *)
-               (* them by parentheses if there are several.              *)
+               (* First, output the type parameters if some, and enclose them
+                  by parentheses if there are several. *)
                (match ctx.Context.scc_collections_carrier_mapping with
                 | [] -> ()
                 | [ (_, (only_var_name, _)) ] ->
@@ -193,24 +193,23 @@ let generate_record_type ctx species_descr =
     end) ;
   (* The name of the type. *)
   Format.fprintf out_fmter "me_as_species = {@\n" ;
-  (* We now extend the collections_carrier_mapping with ourselve known.     *)
-  (* This is required when "rep" is defined.                                *)
-  (* Hence, if we refer to our "rep" (i.e. "me_as_carrier"), not to Self, I *)
-  (* mean to a type-collection that is "(our compilation unit, our species  *)
-  (* name)" (that is the case when creating a collection where Self gets    *)
-  (* especially abstracted to "(our compilation unit, our species name)",   *)
-  (* we will be known and we wont get the fully qualified type name,        *)
-  (* otherwise this would lead to a dependency with ourselve in term of     *)
-  (* OCaml module.                                                          *)
-  (* Indeed, we now may refer to our carrier explicitely here in the scope  *)
-  (* of a collection (not species, really collection)  because there is no  *)
-  (* more late binding: here when one say "me", it's not anymore            *)
-  (* "what I will be finally" because we are already "finally". Before, as  *)
-  (* long a species is not a collection, it always refers to itself's type  *)
-  (* as "'me_as_carrier" because late binding prevents known until the last *)
-  (* moment who "we will be". But because now it's the end of the species   *)
-  (* specification, we know really "who we are" and "'me_as_carrier" is     *)
-  (* definitely replaced by "who we really are" : "me_as_carrier".          *)
+  (* We now extend the collections_carrier_mapping with ourselve known.
+     This is required when "rep" is defined.
+     Hence, if we refer to our "rep" (i.e. "me_as_carrier"), not to Self, I
+     mean to a type-collection that is "(our compilation unit, our species
+     name)" (that is the case when creating a collection where Self gets
+     especially abstracted to "(our compilation unit, our species name)", we
+     will be known and we wont get the fully qualified type name, otherwise
+     this would lead to a dependency with ourselve in term of OCaml module.
+     Indeed, we now may refer to our carrier explicitely here in the scope of
+     a collection (not species, really collection)  because there is no more
+     late binding: here when one say "me", it's not anymore "what I will be
+     finally" because we are already "finally". Before, as long a species is
+     not a collection, it always refers to itself's type as "'me_as_carrier"
+     because late binding prevents known until the last moment who "we will
+     be". But because now it's the end of the species specification, we know
+     really "who we are" and "'me_as_carrier" is definitely replaced by
+     "who we really are" : "me_as_carrier". *)
   let (my_fname, my_species_name) = ctx.Context.scc_current_species in
   let collections_carrier_mapping =
     ((my_fname, (Parsetree_utils.name_of_vname my_species_name)),
@@ -223,20 +222,20 @@ let generate_record_type ctx species_descr =
       | Env.TypeInformation.SF_sig (from, n, sch)
       | Env.TypeInformation.SF_let (from, n, _, sch, _, _, _) ->
           (begin
-          (* Skip "rep", because it is a bit different and processed above *)
-          (* c.f. function [generate_rep_constraint_in_record_type].       *)
+          (* Skip "rep", because it is a bit different and processed above
+             c.f. function [generate_rep_constraint_in_record_type]. *)
           if (Parsetree_utils.name_of_vname n) <> "rep" then
             (begin
             let ty = Types.specialize sch in
-            (* If the type of the sig refers to type "Prop", then the sig  *)
-            (* is related to a logical let and hence must not be generated *)
-            (* in OCaml.                                                   *)
+            (* If the type of the sig refers to type "Prop", then the sig
+               is related to a logical let and hence must not be generated in
+               OCaml. *)
             if not (Types.refers_to_prop_p ty) then
               (begin
               Format.fprintf out_fmter "(* From species %a. *)@\n"
                 Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
-              (* Since we are printing a whole type scheme, it is stand-alone *)
-              (* and we don't need to keep name sharing with anythin else.    *)
+              (* Since we are printing a whole type scheme, it is stand-alone
+                 and we don't need to keep name sharing with anythin else. *)
               Format.fprintf out_fmter "@[<2>%a : %a ;@]@\n"
                 Parsetree_utils.pp_vname_with_operators_expanded n
                 (Types.pp_type_simple_to_ml
@@ -249,16 +248,15 @@ let generate_record_type ctx species_descr =
           List.iter
             (fun (from, n, _, sch, _, _, _) ->
               let ty = Types.specialize sch in
-              (* If the type of the sig refers to type "Prop", then the sig  *)
-              (* is related to a logical let and hence must not be generated *)
-              (* in OCaml.                                                   *)
+              (* If the type of the sig refers to type "Prop", then the sig
+                 is related to a logical let and hence must not be generated
+                 in OCaml. *)
               if not (Types.refers_to_prop_p ty) then
                 (begin
                 Format.fprintf out_fmter "(* From species %a. *)@\n"
                   Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
-                (* Since we are printing a whole type scheme, it is   *)
-                (* stand-alone and we don't need to keep name sharing *)
-                (* with anythin else.                                 *)
+                (* Since we are printing a whole type scheme, it is stand-alone
+                   and we don't need to keep name sharing with anythin else. *)
                 Format.fprintf out_fmter "%a : %a ;@\n"
                   Parsetree_utils.pp_vname_with_operators_expanded n
                   (Types.pp_type_simple_to_ml
@@ -268,8 +266,8 @@ let generate_record_type ctx species_descr =
             l
       | Env.TypeInformation.SF_theorem  (_, _, _, _, _, _)
       | Env.TypeInformation.SF_property (_, _, _, _, _) ->
-          (* Properties and theorems are purely  *)
-          (* discarded in the Ocaml translation. *)
+          (* Properties and theorems are purely discarded in the Ocaml
+             translation. *)
           ())
     species_descr.Env.TypeInformation.spe_sig_methods ;
   Format.fprintf out_fmter "@]}@\n"
@@ -314,8 +312,8 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
     (method_info.Env.mi_abstracted_methods,
      method_info.Env.mi_dependencies_from_parameters)
   with _ ->
-    (* Because the generator is inherited, the species where it is hosted *)
-    (* MUST be in the environment. Otherwise, something went wrong...     *)
+    (* Because the generator is inherited, the species where it is hosted
+       MUST be in the environment. Otherwise, something went wrong... *)
     assert false
 ;;
 
@@ -358,8 +356,8 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
   let out_fmter = ctx.Context.scc_out_fmter in
   let collections_carrier_mapping =
      ctx.Context.scc_collections_carrier_mapping in
-  (* First of all, only methods defined in the current species must *)
-  (* be generated. Inherited methods ARE NOT generated again !      *)
+  (* First of all, only methods defined in the current species must be
+     generated. Inherited methods ARE NOT generated again ! *)
   if from.Env.fh_initial_apparition = ctx.Context.scc_current_species then
     (begin
     (* Just a bit of debug. *)
@@ -377,8 +375,8 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
      | Misc_common.LC_following ->
          Format.fprintf out_fmter "@[<2>and %a"
            Parsetree_utils.pp_vname_with_operators_expanded name) ;
-    (* First, abstract according to the species's parameters the current  *)
-    (* method depends on.                                                 *)
+    (* First, abstract according to the species's parameters the current
+       method depends on. *)
     List.iter
       (fun (species_param, meths_from_param) ->
         (* Recover the species parameter's name. *)
@@ -387,11 +385,11 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
            | Env.TypeInformation.SPAR_in (n, _, _) -> n
            | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
                Parsetree.Vuident n in
-        (* Each abstracted method will be named like "_p_", followed by *)
-        (* the species parameter name, followed by "_", followed by the *)
-        (* method's name.                                               *)
-        (* We don't care here about whether the species parameters is   *)
-        (* "in" or "is".                                                *)
+        (* Each abstracted method will be named like "_p_", followed by the
+           species parameter name, followed by "_", followed by the method's
+           name.
+           We don't care here about whether the species parameters is "IN" or
+           "IS". *)
         let prefix =
           "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
         Parsetree_utils.DepNameSet.iter
@@ -401,8 +399,8 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
               prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
           meths_from_param)
       dependencies_from_params ;
-    (* Next, the extra arguments due to methods of ourselves we depend on. *)
-    (* They are always present in the species under the name "abst_...".   *)
+    (* Next, the extra arguments due to methods of ourselves we depend on.
+       They are always present in the species under the name "abst_...". *)
     let abstracted_methods =
       List.flatten
         (List.map
@@ -416,8 +414,8 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
                  (* In Ocaml, logical properties are forgotten. *)
                  []
              | MinEnv.MCEE_Declared_carrier ->
-                 (* In Ocaml generation model, the carrier is never          *)
-                 (* lambda-lifted then doesn't appear as an extra parameter. *)
+                 (* In Ocaml generation model, the carrier is never
+                    lambda-lifted then doesn't appear as an extra parameter. *)
                  []
              | MinEnv.MCEE_Declared_computational (n, _) ->
                  (* Don't print types. *)
@@ -425,20 +423,18 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
                    Parsetree_utils.pp_vname_with_operators_expanded n ;
                  [n])
            min_coq_env) in
-    (* Add the parameters of the let-binding with their type.   *)
-    (* Ignore the result type of the "let" if it's a function   *)
-    (* because we never print the type constraint on the result *)
-    (* of the "let". We only print them in the arguments of the *)
-    (* let-bound ident.                                         *)
-    (* We also ignore the variables used to instanciate the     *)
-    (* polymorphic ones of the scheme because in OCaml          *)
-    (* polymorphism is not explicit.                            *)
+    (* Add the parameters of the let-binding with their type.
+       Ignore the result type of the "let" if it's a function because we never
+       print the type constraint on the result of the "let". We only print
+       them in the arguments of the let-bound ident.
+       We also ignore the variables used to instanciate the polymorphic ones
+       of the scheme because in OCaml polymorphism is not explicit. *)
     let (params_with_type, _, _) =
       MiscHelpers.bind_parameters_to_types_from_type_scheme scheme params in
-    (* We are printing each parameter's type. These types in fact belong *)
-    (* to a same type scheme. Hence, they may share variables together.  *)
-    (* For this reason, we first purge the printing variable mapping and *)
-    (* after, activate its persistence between each parameter printing.  *)
+    (* We are printing each parameter's type. These types in fact belong to a
+       same type scheme. Hence, they may share variables together.
+       For this reason, we first purge the printing variable mapping and after,
+       activate its persistence between each parameter printing. *)
     Types.purge_type_simple_to_ml_variable_mapping () ;
     List.iter
       (fun (param_vname, opt_param_ty) ->
@@ -453,13 +449,13 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
              Format.fprintf out_fmter "@ %a"
                Parsetree_utils.pp_vname_with_operators_expanded param_vname)
       params_with_type ;
-    (* Now we don't need anymore the sharing. Hence, clean it. This should *)
-    (* not be useful because the other guys usign printing should manage   *)
-    (* this themselves (as we did just above by cleaning before activating *)
-    (* the sharing), but anyway, it is safer an not costly. So...          *)
+    (* Now we don't need anymore the sharing. Hence, clean it. This should not
+       be useful because the other guys usign printing should manage this
+       themselves (as we did just above by cleaning before activating the
+       sharing), but anyway, it is safer an not costly. So... *)
     Types.purge_type_simple_to_ml_variable_mapping () ;
-    (* The "=" sign ending the OCaml function's "header". With a *)
-    (* NON-breakable space to prevent uggly hyphenation !        *)
+    (* The "=" sign ending the OCaml function's "header". With a
+       NON-breakable space to prevent uggly hyphenation ! *)
     Format.fprintf out_fmter " =@ " ;
     (* Generates the body's code of the method. *)
     let expr_ctx = {
@@ -471,13 +467,13 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
       Context.rcc_lambda_lift_params_mapping =
         ctx.Context.scc_lambda_lift_params_mapping ;
       Context.rcc_out_fmter = out_fmter } in
-    (* No local idents in the context because we just enter the scope *)
-    (* of a species fields and so we are not under a core expression. *)
+    (* No local idents in the context because we just enter the scope of a
+       species fields and so we are not under a core expression. *)
     Base_exprs_ml_generation.generate_expr expr_ctx ~local_idents: [] env body ;
     (* Done... Then, final carriage return. *)
     Format.fprintf out_fmter "@]@\n" ;
-    (* Since the method is not inherited, the effective dependencies on *)
-    (* species parameters are really those passed as argument.          *)
+    (* Since the method is not inherited, the effective dependencies on species
+       parameters are really those passed as argument. *)
     (abstracted_methods, dependencies_from_params)
     end)
   else
@@ -489,16 +485,16 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
         generated again.@."
         Parsetree_utils.pp_vname_with_operators_expanded name
         Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
-    (* Recover the arguments for abstracted methods of Self in the inherited *)
-    (* generator EXCEPT the info about dependencies on species that are now  *)
-    (* obsolete in the pair we get from the inherited species.               *)
+    (* Recover the arguments for abstracted methods of Self in the inherited
+       generator EXCEPT the info about dependencies on species that are now
+       obsolete in the pair we get from the inherited species. *)
     let (abstracted_methods, _) =
       find_inherited_method_generator_abstractions
         ~current_unit: ctx.Context.scc_current_unit
         from.Env.fh_initial_apparition name env in
-    (* We always keep the new dependencies on species parameters we *)
-    (* computed. The old ones, those recovered in the inherited     *)
-    (* stuff are only valid in the scope of the inherited species.  *)
+    (* We always keep the new dependencies on species parameters we computed.
+       The old ones, those recovered in the inherited stuff are only valid in
+       the scope of the inherited species. *)
     (abstracted_methods, dependencies_from_params)
     end)
 ;;
@@ -544,9 +540,9 @@ let generate_methods ctx env field =
             (* In OCaml, logical lets are not generated. *)
             None
         | Parsetree.BB_computational body_expr ->
-            (* No recursivity, then the method cannot call itself in its body *)
-            (* then no need to set the [scc_lambda_lift_params_mapping] of    *)
-            (* the context.                                                   *)
+            (* No recursivity, then the method cannot call itself in its body
+               then no need to set the [scc_lambda_lift_params_mapping] of the
+               context. *)
             let all_deps_from_params =
               Abstractions.merge_abstraction_infos
                 abstraction_info.Abstractions.
@@ -561,8 +557,8 @@ let generate_methods ctx env field =
                 ctx env abstraction_info.Abstractions.ai_min_coq_env
                 ~let_connect: Misc_common.LC_first_non_rec all_deps_from_params
                 (from, name, params, (Some scheme), body_expr) in
-            (* Now, build the [compiled_field_memory], even if the method  *)
-            (* was not really generated because it was inherited.          *)
+            (* Now, build the [compiled_field_memory], even if the method was
+               not really generated because it was inherited. *)
             let compiled_field = {
               Misc_common.cfm_from_species = from ;
               Misc_common.cfm_method_name = name ;
@@ -588,11 +584,10 @@ let generate_methods ctx env field =
                  (* In OCaml, logical lets are not generated. *)
                  None
              | Parsetree.BB_computational body_expr ->
-                 (* Extend the context with the mapping between these
-                    recursive functions and their extra arguments. Since we are
-                    in OCaml, we don't need to take care of the logical
-                    definitions and of the explicite types abstraction
-                    management. *)
+                 (* Extend the context with the mapping between these recursive
+                    functions and their extra arguments. Since we are in OCaml,
+                    we don't need to take care of the logical definitions and
+                    of the explicite types abstraction management. *)
                  let ctx' = {
                    ctx with
                    Context.scc_lambda_lift_params_mapping =
@@ -1577,12 +1572,12 @@ let collection_compile env ~current_unit out_fmter collection_def
          let collection_body_params =
            Misc_common.get_implements_effectives
              collection_def.Parsetree.ast_desc.
-               Parsetree.cd_body.Parsetree.ast_desc.
-             Parsetree.se_params
+               Parsetree.cd_body.Parsetree.ast_desc.Parsetree.se_params
              params_info.Env.MlGenInformation.
                cgi_implemented_species_params_names in
          apply_collection_generator_to_parameters
            ctx env collection_body_params params_info) ;
+    (* Close the pretty print box of the "t". *)
     Format.fprintf out_fmter "@ in@]@\n" ;
     (* And now, create the final value representing the effective instance of
        our collection, borrowing each field from the temporary value obtained
