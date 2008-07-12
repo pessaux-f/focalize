@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2008-07-09 15:42:19 blond Exp $
+# $Id: Makefile,v 1.4 2008-07-12 17:04:57 blond Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing -I ../commoncodegen
@@ -8,10 +8,10 @@ COQOBJS = external.vo ast.vo pcm.vo ilnl.vo pcm2ilnl.vo extraction.vo
 
 
 GENNAME = ccodegen
-BYTOBJS = imports.cmo $(GENNAME).cmo convert.cmo
+BYTOBJS = imports.cmo $(GENNAME).cmo
 
-CAMLBYT = ocamlc -g -w A -warn-error Aexz
-CAMLBIN = ocamlopt -w A -warn-error Aexz
+CAMLBYT = ocamlc -g -w Ae -warn-error Aexz
+CAMLBIN = ocamlopt -w Ae -warn-error Aexz
 
 all:: $(COQOBJS) $(BYTOBJS)
 
