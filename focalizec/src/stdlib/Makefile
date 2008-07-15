@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.19 2008-05-15 12:13:25 pessaux Exp $
+# $Id: Makefile,v 1.20 2008-07-15 13:18:21 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -18,7 +18,7 @@ FOCSRC = basics.foc \
 	additive_law.foc \
 	multiplicative_law.foc \
 	weak_structures.foc \
-#	wellfounded.foc
+	wellfounded.foc
 
 FOCSRC_UNSAFE =	rings_fields.foc \
 	random_foc.foc \
