@@ -5,6 +5,7 @@ Require Export Reals.
 Require Export Ascii.
 Require Export String.
 Require Export List.
+Require Export Recdef.
 Require Export coq_builtins.
 
 Module Foo.

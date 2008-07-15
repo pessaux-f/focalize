@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.21 2008-07-10 15:00:59 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.22 2008-07-15 13:45:23 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -177,9 +177,28 @@ let toplevel_compile env ~current_unit out_fmter = function
   | Infer.PCM_theorem _ ->
       Format.fprintf out_fmter "Infer.PCM_theorem TODO@." ;
       (* [Unsure] *) env
-  | Infer.PCM_expr _ ->
-      Format.fprintf out_fmter "Infer.PCM_expr TODO@." ;
-      (* [Unsure] *) env
+  | Infer.PCM_expr expr ->
+      (* We compile toplevel expressions as "Check" orders under Coq. *)
+      Format.fprintf out_fmter "@[<1>Check@ (" ;
+      let ctx = {
+        Context.scc_current_unit = current_unit ;
+        (* Dummy, since not under a species. *)
+        Context.scc_current_species = ("(**)", (Parsetree.Vuident "(**)")) ;
+        (* Not under a species, hence no species parameter. *)
+        Context.scc_species_parameters_names = [] ;
+        (* Not under a species, hence empty carriers mapping. *)
+        Context.scc_collections_carrier_mapping = [] ;
+        (* Not in the context of generating a method's body code, then empty. *)
+        Context.scc_lambda_lift_params_mapping = [] ;
+        (* Empty, since not under a species. *)
+        Context.scc_dependency_graph_nodes = [] ;
+        Context.scc_out_fmter = out_fmter } in
+      Species_record_type_generation.generate_expr
+        ctx ~local_idents: []
+        ~self_methods_status: Species_record_type_generation.SMS_from_record
+        env expr ;
+      Format.fprintf out_fmter ").@]@\n@\n" ;
+      env
  ;;
 
 
@@ -200,6 +219,7 @@ let root_compile ~current_unit ~out_file_name stuff =
      Require Export Ascii.@\n\
      Require Export String.@\n\
      Require Export List.@\n\
+     Require Export Recdef.@\n\
      Require Export coq_builtins.@\n@\n" ;
   try
     List.iter
