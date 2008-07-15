@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.15 2008-07-15 11:24:52 pessaux Exp $
+# $Id: Makefile,v 1.16 2008-07-15 13:15:51 pessaux Exp $
 
 OK_TEST_FILES = \
  ok__baby_toy.foc \
@@ -7,6 +7,7 @@ OK_TEST_FILES = \
  ok__in_example2.foc \
  ok__list.foc \
  ok__multiple_inherit.foc \
+ ok__need_inspect_self.foc \
  ok__need_re_ordering.foc \
  ok__odd_even.foc \
  ok__phd_def_deps.foc \

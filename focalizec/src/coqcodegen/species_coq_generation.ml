@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.85 2008-07-11 15:30:30 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.86 2008-07-15 13:15:51 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1058,7 +1058,7 @@ let generate_methods ctx print_ctx env generated_fields = function
 (* ************************************************************************ *)
 (** {b Descr} : Create the correspondance between the collection type of
     the species definition parameters and the names to be used later during
-    the Coq translation.
+    the Coq creation of the record type.
     For a species parameter [A is/in ... ], the name that will be used is
     the name of the species parameter + "_T". No need like in OCaml to add
     a stamp because we don't lowercase names. Hence parameters will never
@@ -1067,7 +1067,7 @@ let generate_methods ctx print_ctx env generated_fields = function
 
     {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
-let build_collections_carrier_mapping ~current_unit species_descr =
+let build_collections_carrier_mapping_for_record ~current_unit species_descr =
   List.map
     (function
       | Env.TypeInformation.SPAR_is ((_, carrier_name), _, _, _) ->
@@ -1631,7 +1631,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   (* Now, establish the mapping between collections available and the names
      representing their carrier for the record type. *)
   let collections_carrier_mapping =
-    build_collections_carrier_mapping ~current_unit species_descr in
+    build_collections_carrier_mapping_for_record ~current_unit species_descr in
   (* Create the initial compilation context for this species. *)
   let ctx = {
     Context.scc_current_unit = current_unit ;
@@ -1643,7 +1643,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     Context.scc_lambda_lift_params_mapping = [] ;
     Context.scc_out_fmter = out_fmter } in
   (* Insert in the environment the value bindings of the species methods and
-     the species bindings for its parameters. Thsi is needed since in Coq
+     the species bindings for its parameters. This is needed since in Coq
      polymorphism is explicit, hence we need to know for each method the extra
      arguments it needs. *)
   let env' =
@@ -2196,7 +2196,8 @@ let collection_compile env ~current_unit out_fmter collection_def
   (* Now, establish the mapping between collections available and the names
      representing their carrier. *)
   let collections_carrier_mapping =
-    build_collections_carrier_mapping ~current_unit collection_descr in
+    build_collections_carrier_mapping_for_record
+      ~current_unit collection_descr in
   (* Create the initial compilation context for this species. *)
   let ctx = {
     Context.scc_current_unit = current_unit ;

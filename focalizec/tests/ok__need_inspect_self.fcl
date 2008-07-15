@@ -1,0 +1,28 @@
+(* ****************************************************************** *)
+(* Must pass.                                                         *)
+(* Example showing how now use the need to inspect the structure of   *)
+(* "rep" while computing the "used_species_parameters_ty" in the case *)
+(* where a method has a def-dependency on Self.                       *)
+(* In effect, in the case of "fst", the "_" pattern does not make     *)
+(* appearing the fact that is has type "B" (yep, "B" is not appearing *)
+(* in the type of "fst" seen outside). Since, not appearing => not    *)
+(* detected => not in the collection carrier mapping computed while   *)
+(* generating the code od "fst" => the species "B" is considered as   *)
+(* not a parameter => type of "B" generated using the                 *)
+(* "effective_collection" mechanisme instead of the lambda-lifted     *)
+(* variable "_p_B_T".                                                 *)
+(* ****************************************************************** *)
+
+
+species Base =
+end ;;
+
+species CartesianProduct (A is Base, B is Base)
+inherits Base =
+  rep = A * B;
+
+  let pair(a in A, b in B) in Self = (a, b);
+
+  let fst (x in Self) = match x with | (a , _) -> a ;
+  let snd (x in Self) = match x with | (_ , b) -> b ;
+end;;

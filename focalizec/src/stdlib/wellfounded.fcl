@@ -27,7 +27,7 @@ species PartialWellOrder inherits Partial_order =
     internal (Self -> Self -> bool) -> prop
     external
     | caml -> {* () *}
-    | coq -> {* wellfounded_externals.wellfounded *}
+    | coq -> {* wellfounded_externals.wellfounded abst_T *}
   ;
 
   property wellfounded_lt: wellfounded(lt);

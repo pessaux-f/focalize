@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.23 2008-06-30 11:30:38 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.24 2008-07-15 13:15:51 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -134,8 +134,8 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
            | FBK_logical_expr p ->
                Param_dep_analysis.param_deps_logical_expr
                  ~current_species species_param_name p) in
-        (* Return a couple binding the species parameter's name with the *)
-        (* methods of it we found as required for the current method.    *)
+        (* Return a couple binding the species parameter's name with the
+	   methods of it we found as required for the current method. *)
         (species_param, meths_from_param) :: accu)
       species_parameters_names
       [] in
@@ -143,8 +143,8 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
   let params_appearing_in_types =
     ref (Types.get_species_types_in_type my_type) in
 
-  (* By side effect, we remind the species types appearing  *)
-  (* in the species parameters methods' types we depend on. *)
+  (* By side effect, we remind the species types appearing in the species
+     parameters methods' types we depend on. *)
   List.iter
     (fun (_, meths) ->
       Parsetree_utils.DepNameSet.iter
@@ -155,8 +155,10 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
               st_set !params_appearing_in_types)
         meths)
     dependencies_from_params_in_bodies ;
-  (* Same thing for the methods of ourselves we decl-depend on except on *)
-  (* rep that is processed apart.                                        *)
+  (* Same thing for the methods of ourselves we decl-depend. Note that if we
+     have a decl-dependency on "rep" then we do not need to inspect its
+     structure to know if it contains references to some species parameter
+     types since this means that the "rep" is still kept abstract. *)
   List.iter
     (fun (node, _) ->
       if node.Dep_analysis.nn_name <> (Parsetree.Vlident "rep") then
@@ -167,17 +169,18 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
           Types.SpeciesCarrierTypeSet.union st_set !params_appearing_in_types
         end)
     decl_children ;
-  (* Same thing for the methods of ourselves we def-depend on except on *)
-  (* rep that is processed apart.                                       *)
+  (* Same thing for the methods of ourselves we def-depend on. Attention, if we
+     have a def-dependency on "rep", we must inspect its structure to know if
+     it contains references to some species parameter since "rep"'s structure
+     will appear in clear, possibly using these species parameters carrier
+     types. So, conversely to just above, we don't make any difference between
+     "rep" and other methods of ourselves. *)
   List.iter
     (fun (node, _) ->
-      if node.Dep_analysis.nn_name <> (Parsetree.Vlident "rep") then
-        begin
-        let st_set =
-          Types.get_species_types_in_type node.Dep_analysis.nn_type in
-        params_appearing_in_types :=
-          Types.SpeciesCarrierTypeSet.union st_set !params_appearing_in_types
-        end)
+      let st_set =
+        Types.get_species_types_in_type node.Dep_analysis.nn_type in
+      params_appearing_in_types :=
+        Types.SpeciesCarrierTypeSet.union st_set !params_appearing_in_types)
     def_children ;
   (* Now compute the set of species parameters types used in the   *)
   (* types of the methods comming from the species parameters that *)
