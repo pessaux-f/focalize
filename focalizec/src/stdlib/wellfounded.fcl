@@ -14,6 +14,8 @@ open "basics";;
 open "sets_orders";;
 coq_require "wellfounded_externals";;
 
+
+
 species PartialWellOrder inherits Partial_order =
   (** The predicate of Wellfoundedness
    * @param r the relation that is said to be well founded
@@ -31,8 +33,12 @@ species PartialWellOrder inherits Partial_order =
   property wellfounded_lt: wellfounded(lt);
 end;;
 
+
+
 species WellOrder inherits PartialWellOrder, Ordered_set =
 end;;
+
+
 
 species RelativeIntegers inherits WellOrder =
   rep = int;
@@ -40,16 +46,16 @@ species RelativeIntegers inherits WellOrder =
   let element = 0;
   let equal = int_eq;
 
-  proof of equal_reflexive = assumed;
-  proof of equal_transitive = assumed;
+  proof of equal_reflexive = assumed {* *} ;
+  proof of equal_transitive = assumed {* *} ;
 
   signature lowerbound: Self;
 
-  let leq(x, y) = and_b(int_leq(lowerbound, y), int_leq(x, y));
+  let leq(x, y) = and_b (int_leq (lowerbound, y), int_leq (x, y)) ;
 
-  let lt(x, y) = and_b(int_leq(lowerbound, y), int_lt(x, y));
+  let lt(x, y) = and_b (int_leq (lowerbound, y), int_lt (x, y)) ;
 
-  proof of wellfounded_lt = assumed; -- TODO import proof from Coq.
+  proof of wellfounded_lt = assumed {* TODO import proof from Coq. *} ;
 end;;
 
 species InverseImage(A is PartialWellOrder) inherits PartialWellOrder =
@@ -58,47 +64,48 @@ species InverseImage(A is PartialWellOrder) inherits PartialWellOrder =
   property compatibility_lt_Alt_meazure: all x y in Self,
     lt(x, y) -> A!lt(meazure(x), meazure(y));
 
-  proof of wellfounded_lt = assumed; -- TODO import proof from Coq.
+  proof of wellfounded_lt = assumed {* TODO import proof from Coq. *} ;
 end;;
 
-species Subrelation(A is PartialWellOrder)
-inherits InverseImage(A) =
+
+
+species Subrelation (A is PartialWellOrder) inherits InverseImage (A) =
   rep = A;
 
   let meazure(x in Self) in A = x;
 end;;
 
-species CartesianProduct(A is Basic_object, B is Basic_object)
+
+
+species CartesianProduct (A is Basic_object, B is Basic_object)
 inherits Basic_object =
   rep = A * B;
 
   let pair(a in A, b in B) in Self = (a, b);
 
-  let fst(x in Self) = match x with | (a , _) -> a;
-  let snd(x in Self) = match x with | (_ , b) -> b;
+  let fst (x in Self) = match x with | (a , _) -> a ;
+  let snd (x in Self) = match x with | (_ , b) -> b ;
 end;;
 
-species LexicographicProduct(A is PartialWellOrder, B is PartialWellOrder)
-inherits CartesianProduct(A, B), PartialWellOrder =
+species LexicographicProduct (A is PartialWellOrder, B is PartialWellOrder)
+inherits CartesianProduct (A, B), PartialWellOrder =
   let lt(x, y) =
     match (x, y) with
     | ((xA, xB), (yA, yB)) ->
-        or_b(A!lt(xA, yA), and_b(A!equal(xA, yA), B!lt(xB, yB)))
-    ;
+        or_b (A!lt (xA, yA), and_b (A!equal (xA, yA), B!lt (xB, yB))) ;
 
-  proof of wellfounded_lt = assumed;
+  proof of wellfounded_lt = assumed {* *} ;
 end;;
 
 
-species RelationalProduct(
-  A is PartialWellOrder,
-  B is PartialWellOrder,
-  C is LexicographicProduct(A, B))
-inherits Subrelation(C) =
-  let lt(x, y) =
-    and_b(A!lt(C!fst(x), C!fst(y)),
-      B!lt(C!snd(x), C!snd(y)));
+species RelationalProduct
+  (A is PartialWellOrder,
+   B is PartialWellOrder,
+   C is LexicographicProduct (A, B))
+inherits Subrelation (C) =
+  let lt (x, y) =
+    and_b (A!lt (C!fst (x), C!fst (y)),
+	   B!lt (C!snd (x), C!snd (y))) ;
 
-  proof of compatibility_lt_Alt_meazure = assumed;
+  proof of compatibility_lt_Alt_meazure = assumed {* *} ;
 end;;
-
