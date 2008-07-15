@@ -1,7 +1,8 @@
-# $Id: Makefile,v 1.14 2008-07-15 09:59:30 pessaux Exp $
+# $Id: Makefile,v 1.15 2008-07-15 11:24:52 pessaux Exp $
 
 OK_TEST_FILES = \
  ok__baby_toy.foc \
+ ok__definition_72_rule_PRM.foc \
  ok__in_example.foc \
  ok__in_example2.foc \
  ok__list.foc \
@@ -49,6 +50,6 @@ ko_all: $(KO_TEST_FILES)
 
 
 clean:
-	rm -f *.fo *.mangled *~ .*~ *.cm* *.o *.out
+	rm -f *.fo *.mangled *~ .*~ *.cm* *.o *.out *.vo
 	rm -f $(OK_TEST_FILES:.foc=.v) $(KO_TEST_FILES:.foc=.v)
 	rm -f $(OK_TEST_FILES:.foc=.ml) $(KO_TEST_FILES:.foc=.ml)

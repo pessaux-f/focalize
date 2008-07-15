@@ -52,7 +52,7 @@ Notation bottom := (__foc_bottom__ _) (only parsing).
 (** Definition of the "raise" function. *)
 Definition __g_foc_error_ (a : Set) (s : string__t) : a := __foc_bottom__ _.
 (* Notation made available only in Coq parser, not in Coq output / feedback. *)
-Notation __g_foc_error := (__g_foc_error_ _) (only parsing).
+Notation foc_error := (__g_foc_error_ _) (only parsing).
 
 Definition or_b (x : bool__t) (y : bool__t) : bool__t :=
   if x then true else y.
@@ -117,7 +117,7 @@ Module Basic_object.
     }.
   
   Definition parse (abst_T : Set) (x : string__t) : abst_T :=
-    (__g_foc_error ___a_string).
+    (foc_error ___a_string).
   Definition print (abst_T : Set) (x : abst_T) : string__t :=
     ___a_string.
 End Basic_object.
@@ -136,7 +136,7 @@ Let is_failed (__var_a : Set) (x : partiel__t __var_a) : bool__t :=
 
 Let non_failed (__var_a : Set) (x : partiel__t __var_a) : __var_a :=
   match x with
-   | Failed => __g_foc_error ___a_string
+   | Failed => foc_error ___a_string
    | Unfailed v => v
   end.
 

@@ -1,0 +1,21 @@
+use "basics" ;;
+open "basics" ;;
+
+(* ************************************************************* *)
+(* Must pass.                                                    *)
+(* Illustrate the need for rule PRM in definition 72 page 153 in *)
+(* Virgile Prevosto's Phd.                                       *)
+(* ************************************************************* *)
+
+species Base =
+  let m = 6 ;
+end ;;
+
+species Sprim (K is Base) =
+  let y = K!m ;
+end ;;
+
+species S (Cp is Base, Cpprim is Sprim (Cp)) =
+  rep = Cpprim ;
+  let x = Cpprim!y ;
+end ;;
