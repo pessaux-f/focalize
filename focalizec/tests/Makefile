@@ -1,15 +1,17 @@
-# $Id: Makefile,v 1.13 2008-05-19 10:18:10 pessaux Exp $
+# $Id: Makefile,v 1.14 2008-07-15 09:59:30 pessaux Exp $
 
 OK_TEST_FILES = \
  ok__baby_toy.foc \
  ok__in_example.foc \
  ok__in_example2.foc \
  ok__list.foc \
+ ok__multiple_inherit.foc \
  ok__need_re_ordering.foc \
  ok__odd_even.foc \
  ok__phd_def_deps.foc \
  ok__phd_meths_gen.foc \
- ok__phd_sample.foc
+ ok__phd_sample.foc \
+ ok__torture_params.foc
  #ok__coll_outside.foc
 
 KO_TEST_FILES = \
@@ -31,6 +33,11 @@ ok_all: $(OK_TEST_FILES)
 	for i in $(OK_TEST_FILES:.foc=.ml); do \
 	  echo "OCamllizing $$i"; \
 	  ocamlc -w a -I ../lib/ -I . ../lib/ml_builtins.cmo ../lib/basics.cmo $$i -o $$i.out; \
+	done; \
+	# Compile the generated Coq code.
+	for i in $(OK_TEST_FILES:.foc=.v); do \
+	  echo "Coquifying $$i"; \
+	  coqc -I ../lib/ $$i; \
 	done
 
 ko_all: $(KO_TEST_FILES)
