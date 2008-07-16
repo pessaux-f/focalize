@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.mli,v 1.23 2008-06-17 10:57:41 pessaux Exp $ *)
+(* $Id: sourcify.mli,v 1.24 2008-07-16 13:24:19 pessaux Exp $ *)
 
 (** Printing source files from AST. *)
 
@@ -49,3 +49,5 @@ val pp_proof : Format.formatter -> Parsetree.proof -> unit
 val pp_binding_body : Format.formatter -> Parsetree.binding_body -> unit
 val pp_expr_ident :
   Format.formatter -> Parsetree.expr_ident_desc Parsetree.ast -> unit
+val pp_binding : Format.formatter -> Parsetree.binding -> unit
+val pp_pattern : Format.formatter -> Parsetree.pattern -> unit

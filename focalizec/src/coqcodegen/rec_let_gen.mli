@@ -11,7 +11,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.mli,v 1.3 2008-04-23 14:54:07 pessaux Exp $ *)
+(* $Id: rec_let_gen.mli,v 1.4 2008-07-16 13:24:19 pessaux Exp $ *)
 
 val generate_termination_lemmas :
-  'a -> 'b -> 'c -> 'e -> unit
+  'a -> 'b -> 'c ->
+    ((Parsetree.vname * Parsetree.expr) list * Recursion.binding list) list ->
+      unit

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.86 2008-07-15 13:15:51 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.87 2008-07-16 13:24:19 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -890,21 +890,29 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
               (print_types_as_tuple_if_several new_print_ctx) params_with_type
               (print_types_as_tuple_if_several new_print_ctx) params_with_type ;
 
+
+
+
+
+
             (* We now prove that this order is well-founded. *)
             Types.purge_type_simple_to_coq_variable_mapping () ;
-            
+            (* Compute the recursive calls information to generate the
+	       termination proof obligation. *)
             let recursive_calls =
               Recursion.list_recursive_calls name params [] body_expr in
+	    (* The Variable representing the termination proof obligation... *)
             Format.fprintf out_fmter
-              "@[<2>Variable __term_obl : (well_founded __term_order) /\\@ " ;
-
-
-
+              "@[<2>Variable __term_obl :" ;
             (* It's now time to generate the lemmas proving that each
-               recursive call decreases. *)
+               recursive call decreases. Each of then will be followed by
+	       a /\ to make the conjunction of all of them. And the latest one
+	       will be used to add the final "well_founded __term_order" to
+	       this big conjunction. *)
             Rec_let_gen.generate_termination_lemmas
               new_ctx new_print_ctx env recursive_calls ;
-            Format.fprintf out_fmter ".@]@\n@\n" ;
+	    (* Alway end by the obligation of well-formation of the order. *)
+            Format.fprintf out_fmter "@ (well_founded __term_order).@]@\n@\n" ;
             (* Generate the recursive uncurryed function *)
             Format.fprintf out_fmter
               "@[<2>Function %a@ (__arg:@ %a)@ \
@@ -926,8 +934,11 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
                 Format.fprintf)
               "coq_builtins.prove_term_obl __term_obl.@ " ;
 
+
+
+
             (* Generate the curryed version *)
-            Format.fprintf out_fmter "@[Definition %a__%a %a :=@ %a (%a).@]"
+            Format.fprintf out_fmter "@[Definition %a__%a %a :=@ %a (%a).@]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded species_name
               Parsetree_utils.pp_vname_with_operators_expanded name
               (Handy.pp_generic_separated_list " "

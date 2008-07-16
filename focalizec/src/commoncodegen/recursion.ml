@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.ml,v 1.5 2008-04-23 14:54:07 pessaux Exp $ *)
+(* $Id: recursion.ml,v 1.6 2008-07-16 13:24:19 pessaux Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function
@@ -100,7 +100,7 @@ let rec list_recursive_calls function_name argument_list bindings expr =
    | Parsetree.E_fun (names, expr) ->
        (* Add the argument to the list and find recursive calls in the *)
        (* function body.                                               *)
-       list_recursive_calls function_name (argument_list@names) bindings expr
+       list_recursive_calls function_name (argument_list @ names) bindings expr
    | Parsetree.E_var _ ->
        if is_recursive_call function_name argument_list [] expr then
          [[], bindings]
@@ -116,7 +116,7 @@ let rec list_recursive_calls function_name argument_list bindings expr =
               (List.map
                  (list_recursive_calls function_name argument_list bindings)
                  argexprlist) with
-          | [] -> [List.combine argument_list argexprlist, bindings]
+          | [] -> [ List.combine argument_list argexprlist, bindings ]
                 (* If no recursive calls are made when calculating the   *)
                 (* arguments, return the arguments (original and used to *)
                 (* make this recursive call) and bindings.               *)
@@ -141,8 +141,8 @@ let rec list_recursive_calls function_name argument_list bindings expr =
        let list_recursive_calls_in_matched_expr =
          list_recursive_calls function_name argument_list bindings matched_expr
        in
-       (* Find the recursive calls in each expression, adding the *)
-       (* proper 'pattern match' binding to the list of bindings. *)
+       (* Find the recursive calls in each expression, adding the proper
+	  'pattern match' binding to the list of bindings. *)
        let list_recursive_calls_for_pattern (p, e) =
          let new_bindings = (B_match (matched_expr, p)) :: bindings in
          list_recursive_calls function_name argument_list new_bindings e in
@@ -153,12 +153,12 @@ let rec list_recursive_calls function_name argument_list bindings expr =
          list_recursive_calls_in_matched_expr
          list_recursive_calls_for_all_patterns
    | Parsetree.E_if (condition, expr_true, expr_false) ->
-       (* [list_recursive_calls_in_condition] calculates the information *)
-       (* pertaining to recursive calls in the condition clause.         *)
+       (* [list_recursive_calls_in_condition] calculates the information
+	  pertaining to recursive calls in the condition clause. *)
        let list_recursive_calls_in_condition =
          list_recursive_calls function_name argument_list bindings condition in
-       (* [list_recursive_calls_in_expr] calculates the information *)
-       (* pertaining to recursive calls in an expression.           *)
+       (* [list_recursive_calls_in_expr] calculates the information
+	  pertaining to recursive calls in an expression. *)
        let list_recursive_calls_in_expr boolean expr =
          let new_bindings = (B_condition (condition, boolean)) :: bindings in
          list_recursive_calls function_name argument_list new_bindings expr in
@@ -236,13 +236,13 @@ let rec list_recursive_calls function_name argument_list bindings expr =
      [variables].
  *)
 let rec get_smaller_variables variables bindings =
-  (* NB: Be wary of inner bindings that mask outer variables !!      *)
-  (* It is assumed that patterns do not contain multiple occurrences *)
-  (* of the same variable.                                           *)
-  (* [fold_vars_in_pattern] performs the given [action] on each    *)
-  (* variable in a given [pattern]. Information as to whether at   *)
-  (* least one deconstructive pattern has been traversed is passed *)
-  (* to the [action] in the form of a flag.                        *)
+  (* NB: Be wary of inner bindings that mask outer variables !!
+     It is assumed that patterns do not contain multiple occurrences of the
+     same variable.
+     [fold_vars_in_pattern] performs the given [action] on each variable in a
+     given [pattern]. Information as to whether at least one deconstructive
+     pattern has been traversed is passed to the [action] in the form of a
+     flag. *)
   let fold_vars_in_pattern action data pattern =
     let rec fold_vars_in_pattern_aux deconstructed_once_flag data pattern =
       match pattern.Parsetree.ast_desc with
