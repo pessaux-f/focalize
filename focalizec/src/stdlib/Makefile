@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.20 2008-07-15 13:18:21 pessaux Exp $
+# $Id: Makefile,v 1.21 2008-07-16 08:29:59 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -73,32 +73,32 @@ basics_special_case:
 
 # Temporary for no Coq...
 rings_fields.ml: rings_fields.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 random_foc.ml: random_foc.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 integers.ml: integers.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 array_foc.ml: array_foc.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 products_foc.ml: products_foc.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 quotients.ml: quotients.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 small_integers.ml: small_integers.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 big_integers.ml: big_integers.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 parse_poly.ml: parse_poly.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 polys_abstract.ml: polys_abstract.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code -c $<
+	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 #End temporary
 
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .foc .fo .v .vo
 
 .foc.fo .foc.ml .foc.v:
-	$(FOCC) $(FOC_COMP_FLAGS) -c $<
+	$(FOCC) $(FOC_COMP_FLAGS) $<
 
 .ml.cmo:
 	$(CAMLBYT) -c $<

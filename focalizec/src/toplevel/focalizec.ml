@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.27 2008-07-11 15:30:30 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.28 2008-07-16 08:29:59 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -20,10 +20,7 @@ exception Bad_file_suffix of string ;;
 (* The main procedure *)
 let main () =
   Arg.parse
-    [ ("-c",
-       Arg.String Configuration.set_input_file_name,
-       " checks input file argument.") ;
-      ("--dot-non-rec-dependencies",
+    [ ("--dot-non-rec-dependencies",
        Arg.String Configuration.set_dotty_dependencies,
        " dumps species non-let-rec- dependencies as dotty\n\tfiles into the \
          argument directory.") ;
