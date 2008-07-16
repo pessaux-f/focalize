@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.57 2008-07-10 15:00:59 pessaux Exp $ *)
+(* $Id: types.ml,v 1.58 2008-07-16 13:23:14 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1336,7 +1336,7 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
                (pp_type_name_to_coq ~current_unit: ctx.cpc_current_unit)
                type_name
          | _ ->
-             Format.fprintf ppf "%a@ %a"
+             Format.fprintf ppf "@[<1>(%a@ %a)@]"
                (pp_type_name_to_coq ~current_unit: ctx.cpc_current_unit)
                type_name
                (Handy.pp_generic_separated_list " "
