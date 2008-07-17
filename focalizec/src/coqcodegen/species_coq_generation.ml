@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.87 2008-07-16 13:24:19 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.88 2008-07-17 14:15:44 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -300,7 +300,7 @@ let generate_field_definifion_prelude ctx print_ctx env min_coq_env
                  ty ;
                [n]
            | MinEnv.MCEE_Declared_logical (n, b) ->
-               Format.fprintf out_fmter "@ (%a :@ "
+               Format.fprintf out_fmter "@ (abst_%a :@ "
                  Parsetree_utils.pp_vname_with_operators_expanded n ;
                (* Methods from Self are printed "abst_XXX" since dependencies
                   have leaded to extra parameters "abst_XXX". *)
