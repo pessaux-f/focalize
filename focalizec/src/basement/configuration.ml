@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.18 2008-06-19 09:21:36 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.18.2.1 2008-07-18 17:21:44 blond Exp $ *)
 
 
 exception Input_file_already_set ;;
@@ -104,6 +104,13 @@ let (get_generate_ocaml, unset_generate_ocaml) =
   let generate_ocaml = ref true in
   ((fun () -> !generate_ocaml),
    (fun () -> generate_ocaml := false))
+;;
+
+(* [julius]: for c generation (default is no). *)
+let (get_generate_c, set_generate_c) =
+  let generate_c = ref false in
+  ((fun () -> !generate_c),
+   (fun () -> generate_c := true))
 ;;
 
 let (get_generate_coq, unset_generate_coq) =

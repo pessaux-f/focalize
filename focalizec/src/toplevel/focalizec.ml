@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.28 2008-07-16 08:29:59 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.28.2.1 2008-07-18 17:21:44 blond Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -44,6 +44,9 @@ let main () =
       ("--no-ocaml-code",
        Arg.Unit Configuration.unset_generate_ocaml,
        " disables the OCaml code generation.") ;
+      ("--c-code",
+       Arg.Unit Configuration.set_generate_c,
+       " enables the C code generation.") ;
       ("-no-stdlib-path",
        Arg.Unit Configuration.unset_use_default_lib,
        " does not include by default the standard library installation\n\t\
@@ -135,6 +138,12 @@ let main () =
            ~current_unit ~out_file_name stuff_to_compile)
       end)
     else None in
+  (* Generating the C code if requested. *)
+  let _ =
+    if Configuration.get_generate_c () then
+      let _ = Pcm.mk_file current_unit stuff_to_compile in
+      ()
+  in
   (* Now, generate the persistent interface file. *)
   Env.make_fo_file
     ~source_filename: input_file_name

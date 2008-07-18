@@ -1,8 +1,9 @@
-# $Id: Makefile,v 1.31 2008-07-11 13:26:50 pessaux Exp $
+# $Id: Makefile,v 1.31.2.1 2008-07-18 17:21:44 blond Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing \
-	-I ../commoncodegen -I ../mlcodegen -I ../coqcodegen
+	-I ../commoncodegen -I ../mlcodegen -I ../coqcodegen \
+	-I ../ccodegen
 
 BYTOBJS = check_file.cmo exc_wrapper.cmo
 BINOBJS = $(BYTOBJS:.cmo=.cmx)
@@ -50,6 +51,9 @@ ALLBYTOBJS = \
 	../coqcodegen/species_coq_generation.cmo \
 	../coqcodegen/type_coq_generation.cmo \
 	../coqcodegen/main_coq_generation.cmo \
+	\
+	../ccodegen/ast.cmo \
+	../ccodegen/pcm.cmo \
 	$(BYTOBJS)
 
 ALLBINOBJS = $(ALLBYTOBJS:.cmo=.cmx)

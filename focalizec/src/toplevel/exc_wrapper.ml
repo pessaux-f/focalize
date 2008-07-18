@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.49 2008-07-11 15:30:30 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.49.2.1 2008-07-18 17:21:44 blond Exp $ *)
 
 
 
@@ -423,6 +423,13 @@ try Check_file.main () with
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_vname function_name
            Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
+(* ********************** *)
+(* C translation.         *)
+     | Pcm.MissingNodeTypeError loc ->
+	 Format.fprintf Format.err_formatter
+	   "%a:@\n@[Type is missing.@]@."
+	   Location.pp_location loc
+
 (* ********************** *)
 (* The ultimate firewall. *)
      | x ->

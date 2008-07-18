@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.21 2008-07-16 08:29:59 pessaux Exp $
+# $Id: Makefile,v 1.21.2.1 2008-07-18 17:21:44 blond Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -10,7 +10,7 @@ CAMLBYT = ocamlc
 CAMLBIN = ocamlc
 COQC = coqc
 
-FOC_COMP_FLAGS =
+FOC_COMP_FLAGS = --c-code
 
 FOCSRC = basics.foc \
 	sets_orders.foc \

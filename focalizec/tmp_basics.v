@@ -1,10 +1,78 @@
 Require Export Bool.
 Require Export ZArith.
+<<<<<<< tmp_basics.v
+Open Scope Z_scope.
+=======
 Require Export Reals.
 Require Export Ascii.
 Require Export String.
+<<<<<<< tmp_basics.v
+>>>>>>> 1.6
+=======
 Require Export coq_builtins.
+>>>>>>> 1.12
 
+<<<<<<< tmp_basics.v
+Infer.PCM_type TODO
+Infer.PCM_type TODO
+Infer.PCM_type TODO
+Infer.PCM_type TODO
+Infer.PCM_type TODO
+Infer.PCM_type TODO
+Infer.PCM_type TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_theorem TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+Infer.PCM_let_def TODO
+=======
 
 (** The weak proof !!! Give it a Prop, and abracadabra ... it's proved ! *)
 Axiom magic_prove : forall A : Prop, A.
@@ -106,7 +174,12 @@ Notation  base_eq:= __g_base_eq_.
 
 
 (* Currently partially hand-generated. *)
+<<<<<<< tmp_basics.v
+>>>>>>> 1.6
+Chapter Basic_object.
+=======
 Module Basic_object.
+>>>>>>> 1.17
   Record Basic_object : Type :=
     mk_record {
     Basic_object_T :> Set ;
@@ -115,12 +188,29 @@ Module Basic_object.
     (* From species basics#Basic_object. *)
     Basic_object_print : Basic_object_T -> string__t
     }.
+<<<<<<< tmp_basics.v
   
+  
+  (* Carrier representation. *)
+  Variable self_T : Set.
+=======
+>>>>>>> 1.17
+  
+<<<<<<< tmp_basics.v
+  Definition Basic_object__parse (abst_T : Set) (x : string__t) : abst_T :=
+    (foc_error C_string).
+  Let self_parse := Basic_object__parse self_T.
+  Definition Basic_object__print (abst_T : Set) (x : abst_T) : string__t :=
+    C_string.
+  Let self_print := Basic_object__print self_T.
+  End Basic_object.
+=======
   Definition parse (abst_T : Set) (x : string__t) : abst_T :=
     (foc_error ___a_string).
   Definition print (abst_T : Set) (x : abst_T) : string__t :=
     ___a_string.
 End Basic_object.
+>>>>>>> 1.17
 
 Inductive partiel__t (__var_a : Set) : Set := 
   | Failed : (partiel__t __var_a)
