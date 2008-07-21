@@ -1,9 +1,9 @@
-# $Id: Makefile,v 1.5.2.1 2008-07-18 14:34:07 blond Exp $
+# $Id: Makefile,v 1.5.2.2 2008-07-21 05:46:23 blond Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../basement -I ../typing
 
-BYTOBJS = ast.cmo pcm.cmo
+BYTOBJS = ast.cmo pcm.cmo extelim.cmo
 
 
 all:: $(BYTOBJS)

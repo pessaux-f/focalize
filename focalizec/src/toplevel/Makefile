@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.31.2.1 2008-07-18 17:21:44 blond Exp $
+# $Id: Makefile,v 1.31.2.2 2008-07-21 05:46:23 blond Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing \
@@ -54,6 +54,7 @@ ALLBYTOBJS = \
 	\
 	../ccodegen/ast.cmo \
 	../ccodegen/pcm.cmo \
+	../ccodegen/extelim.cmo \
 	$(BYTOBJS)
 
 ALLBINOBJS = $(ALLBYTOBJS:.cmo=.cmx)

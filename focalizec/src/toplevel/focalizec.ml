@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.28.2.1 2008-07-18 17:21:44 blond Exp $ *)
+(* $Id: focalizec.ml,v 1.28.2.2 2008-07-21 05:46:23 blond Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -141,7 +141,8 @@ let main () =
   (* Generating the C code if requested. *)
   let _ =
     if Configuration.get_generate_c () then
-      let _ = Pcm.mk_file current_unit stuff_to_compile in
+      let ast = Pcm.mk_file current_unit stuff_to_compile in
+      Extelim.file { Extelim.c_lang = "c" } ast;
       ()
   in
   (* Now, generate the persistent interface file. *)

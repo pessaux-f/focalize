@@ -1,5 +1,5 @@
 type ('a, 'b) ast =
-    { ast_desc : 'a;
+    { mutable ast_desc : 'a;
       ast_type : 'b;
       ast_loc : Location.t option }
 ;;

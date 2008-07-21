@@ -1,3 +1,16 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                   FoCaL compiler (C translation)                    *)
+(*                                                                     *)
+(*            Julien Blond                                             *)
+(*                                                                     *)
+(*                               LIP6  --  Bertin Technologies         *)
+(*                                                                     *)
+(*  Copyright 2008 LIP6 and Bertin Technologies                        *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
 open Ast;;
 
 type type_expr = (type_expr_desc, unit) ast
@@ -136,7 +149,7 @@ and phrase_desc =
 
 type file =
     { file_name : string;
-      file_body : phrase list }
+      mutable file_body : phrase list }
 ;;
 
 
