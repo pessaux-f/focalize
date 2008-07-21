@@ -259,6 +259,7 @@ type quo_rem_result ('a) =
   external
   | caml -> {* 'a Weak_structures_externals.quo_rem_result *}
   | coq -> {* weak_structures_externals.quo_rem_result __var_a *}
+  | "c" -> {* weak_structures_external_quo_rem_result *}
 ;;
 
 let cr_qrr =
@@ -266,6 +267,7 @@ let cr_qrr =
   external
   | caml -> {* Weak_structures_externals.cr_qrr *}
   | coq -> {* weak_structures_externals.cr_qrr _ *}
+  | "c" -> {* weak_structures_external_cr_qrr *}
 ;;
 
 let quot =
@@ -273,6 +275,7 @@ let quot =
   external
   | caml -> {* Weak_structures_externals.qrr_quot *}
   | coq -> {* weak_structures_externals.qrr_quot _ *}
+  | "c" -> {* weak_structures_externals_qrr_quot *}
 ;;
 
 let rema =
@@ -280,6 +283,7 @@ let rema =
   external
   | caml -> {* Weak_structures_externals.qrr_rema *}
   | coq -> {* weak_structures_externals.qrr_rema _ *}
+  | "c" -> {* weak_structures_externals_qrr_rema *}
 ;;
 
 
@@ -345,28 +349,33 @@ type bezout_res ('a) =
  external
   | caml -> {* 'a Weak_structures_externals.bezout_res *}
   | coq -> {* weak_structures_externals.bezout_res __var_a *}
+  | "c" -> {* weak_structures_externals_bezout_res *}
 ;;
 let cr_br =
   internal 'a -> 'a -> 'a -> bezout_res ('a)
   external
   | caml -> {* Weak_structures_externals.cr_br *}
   | coq -> {* weak_structures_externals.cr_br __var_a *}
+  | "c" -> {* weak_structures_external_cr_br *}
 ;; 
 let gcd =
   internal bezout_res ('a) -> 'a
   external
   | caml -> {* Weak_structures_externals.br_gcd *}
   | coq -> {* weak_structures_externals.br_gcd __var_a *}
+  | "c" -> {* weak_structures_externals_br_gcd *}
 ;;
 let coef1 =
   internal bezout_res ('a) -> 'a
   external
   | caml -> {* Weak_structures_externals.br_coef1 *}
   | coq -> {* weak_structures_externals.br_coef1 __var_a *}
+  | "c" -> {* weak_structures_externals_br_coef1 *}
 ;;
 let coef2 =
   internal bezout_res ('a) -> 'a
   external
   | caml -> {* Weak_structures_externals.br_coef2 *}
   | coq -> {* weak_structures_externals.br_coef2 __var_a *}
+  | "c" -> {* weak_structures_externals_br_coef2 *}
 ;;

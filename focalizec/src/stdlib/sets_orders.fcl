@@ -123,6 +123,7 @@ species Partial_set inherits Setoid =
        external
        | caml -> {* Sets_orders_externals.i_failed r elt *}
        | coq -> {* elt *}
+       | "c" -> {* sets_orders_partial_set_failed_ifailed *}
        end in
     function reason -> ifailed (reason, !element) ;
 end ;;

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.49.2.1 2008-07-18 17:21:44 blond Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.49.2.2 2008-07-21 15:54:02 blond Exp $ *)
 
 
 
@@ -427,8 +427,13 @@ try Check_file.main () with
 (* C translation.         *)
      | Pcm.MissingNodeTypeError loc ->
 	 Format.fprintf Format.err_formatter
-	   "%a:@\n@[Type is missing.@]@."
+	   "@[<hov 2>%a:@;@[Type is missing.@]@]@."
 	   Location.pp_location loc
+     | Extelim.MissingExternalBinding (lang, Some loc) ->
+	 Format.fprintf Format.err_formatter
+	   "@[<hov2>%a:@;@[The \"%s\" binding is missing.@]@]@."
+	   Location.pp_location loc
+	   lang
 
 (* ********************** *)
 (* The ultimate firewall. *)

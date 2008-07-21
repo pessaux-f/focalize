@@ -5,6 +5,7 @@ let random_seed =
   external
    | caml -> {* Random_foc_externals.random_seed *}
    | coq -> {* (* [Unsure] *) *}
+   | "c" -> {* random_foc_random_seed *}
 ;; 
 
 let random_int =
@@ -12,6 +13,7 @@ let random_int =
   external
    | caml -> {* Random_foc_externals.random_int *}
    | coq -> {* (* [Unsure] *) *}
+   | "c" -> {* random_foc_random_int *}
 ;;
 
 let random_self_init =
@@ -19,4 +21,5 @@ let random_self_init =
    external
    | caml -> {* Random_foc_externals.random_self_init *}
    | coq -> {* (* [Unsure] *) *}
+   | "c" -> {* random_foc_random_self_init *}
 ;;

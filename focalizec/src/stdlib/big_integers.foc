@@ -18,6 +18,7 @@ let zero_big_int =
   external
   | caml -> {* Big_int.zero_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_zero_big_int *}
 ;;
 
 let unit_big_int =
@@ -25,6 +26,7 @@ let unit_big_int =
   external
   | caml -> {* Big_int.unit_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_unit_big_int *}
 ;;
 
 let minus_big_int =
@@ -32,6 +34,7 @@ let minus_big_int =
   external
   | caml -> {* Big_int.minus_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_minus_big_int *}
 ;;
 
 let abs_big_int =
@@ -39,6 +42,7 @@ let abs_big_int =
   external
   | caml -> {* Big_int.abs_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_abs_big_int *}
 ;;
 
 let add_big_int =
@@ -46,12 +50,14 @@ let add_big_int =
   external
   | caml -> {* Big_int.add_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_add_big_int *}
 ;;
 let succ_big_int =
   internal big_int -> big_int
   external
   | caml -> {* Big_int.succ_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_succ_big_int *}
 ;;
 
 let add_int_big_int =
@@ -59,6 +65,7 @@ let add_int_big_int =
   external
   | caml -> {* Big_int.add_int_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_add_int_big_int *}
 ;;
 
 let sub_big_int =
@@ -66,6 +73,7 @@ let sub_big_int =
   external
   | caml -> {* Big_int.sub_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_sub_big_int *}
 ;;
 
 let pred_big_int =
@@ -73,6 +81,7 @@ let pred_big_int =
   external
   | caml -> {* Big_int.pred_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_pred_big_int *}
 ;;
 
 let mult_big_int =
@@ -80,6 +89,7 @@ let mult_big_int =
   external
   | caml -> {* Big_int.mult_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_mult_big_int *}
 ;;
 
 let mult_int_big_int =
@@ -87,6 +97,7 @@ let mult_int_big_int =
   external
   | caml -> {* Big_int.mult_int_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_mult_int_big_int *}
 ;;
 
 let square_big_int =
@@ -94,6 +105,7 @@ let square_big_int =
   external
   | caml -> {* Big_int.square_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_square_big_int *}
 ;;
 
 let sqrt_big_int =
@@ -101,6 +113,7 @@ let sqrt_big_int =
   external
   | caml -> {* Big_int.sqrt_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_sqrt_big_int *}
 ;;
 
 let quomod_big_int =
@@ -108,6 +121,7 @@ let quomod_big_int =
   external
   | caml -> {* Big_int.quomod_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_quomod_big_int *}
 ;;
 
 let div_big_int =
@@ -115,6 +129,7 @@ let div_big_int =
   external
   | caml -> {* Big_int.div_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_div_big_int *}
 ;;
 
 let mod_big_int =
@@ -122,6 +137,7 @@ let mod_big_int =
   external
   | caml -> {* Big_int.mod_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_mod_big_int *}
 ;;
 
 let gcd_big_int =
@@ -129,6 +145,7 @@ let gcd_big_int =
   external
   | caml -> {* Big_int.gcd_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_gcd_big_int *}
 ;;
 
 let power_int_positive_int =
@@ -136,6 +153,7 @@ let power_int_positive_int =
   external
   | caml -> {* Big_int.power_int_positive_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_power_int_positive_int *}
 ;;
 
 let power_big_int_positive_int =
@@ -143,6 +161,7 @@ let power_big_int_positive_int =
  external
   | caml -> {* Big_int.power_big_int_positive_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_power_big_int_positive_int *}
 ;;
 
 let power_int_positive_big_int =
@@ -150,6 +169,7 @@ let power_int_positive_big_int =
   external
   | caml -> {* Big_int.power_int_positive_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_power_int_positive_big_int *}
 ;;
 
 let power_big_int_positive_big_int =
@@ -157,6 +177,7 @@ let power_big_int_positive_big_int =
   external
   | caml -> {* Big_int.power_big_int_positive_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_power_int_positive_big_int *}
 ;;
 
 let sign_big_int =
@@ -164,6 +185,7 @@ let sign_big_int =
   external
   | caml -> {* Big_int.sign_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_sign_big_int *}
 ;;
 
 let compare_big_int =
@@ -171,6 +193,7 @@ let compare_big_int =
   external
   | caml -> {* Big_int.compare_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_compare_big_int *}
 ;;
 
 let eq_big_int =
@@ -178,6 +201,7 @@ let eq_big_int =
   external
   | caml -> {* Big_int.eq_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_eq_big_int *}
 ;;
 
 let le_big_int =
@@ -185,6 +209,7 @@ let le_big_int =
   external
   | caml -> {* Big_int.le_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_le_big_int *}
 ;;
 
 let ge_big_int =
@@ -192,6 +217,7 @@ let ge_big_int =
   external
   | caml -> {* Big_int.ge_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_ge_big_int *}
 ;;
 
 let lt_big_int =
@@ -199,6 +225,7 @@ let lt_big_int =
   external
   | caml -> {* Big_int.lt_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_lt_big_int *}
 ;;
 
 let gt_big_int =
@@ -206,6 +233,7 @@ let gt_big_int =
   external
   | caml -> {* Big_int.gt_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_gt_big_int *}
 ;;
 
 let max_big_int =
@@ -213,6 +241,7 @@ let max_big_int =
   external
   | caml -> {* Big_int.max_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_max_big_int *}
 ;;
 
 let min_big_int =
@@ -220,6 +249,7 @@ let min_big_int =
   external
   | caml -> {* Big_int.min_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_mon_big_int *}
 ;;
 
 let num_digits_big_int =
@@ -227,6 +257,7 @@ let num_digits_big_int =
   external
   | caml -> {* Big_int.num_digits_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_num_digits_big_int *}
 ;;
 
 let string_of_big_int =
@@ -234,6 +265,7 @@ let string_of_big_int =
   external
   | caml -> {* Big_int.string_of_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_string_of_big_int *}
 ;;
 
 let big_int_of_string =
@@ -241,6 +273,7 @@ let big_int_of_string =
   external
   | caml -> {* Big_int.big_int_of_string *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_big_int_of_string *}
 ;;
 
 let big_int_of_int =
@@ -248,6 +281,7 @@ let big_int_of_int =
   external
   | caml -> {* Big_int.big_int_of_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_big_int_of_int *}
 ;;
 
 let is_int_big_int =
@@ -255,6 +289,7 @@ let is_int_big_int =
   external
   | caml -> {* Big_int.is_int_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_is_int_big_int *}
 ;;
 
 let int_of_big_int =
@@ -262,6 +297,7 @@ let int_of_big_int =
   external
   | caml -> {* Big_int.int_of_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_int_of_big_int *}
 ;;
 
 let float_of_big_int =
@@ -269,6 +305,7 @@ let float_of_big_int =
   external
   | caml -> {* Big_int.float_of_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_float_of_big_int *}
 ;;
 
 let nat_of_big_int =
@@ -276,6 +313,7 @@ let nat_of_big_int =
   external
   | caml -> {* Big_int.nat_of_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_nat_of_big_int *}
 ;;
 
 let big_int_of_nat =
@@ -283,6 +321,7 @@ let big_int_of_nat =
   external
   | caml -> {* Big_int.big_int_of_nat *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_big_int_of_nat *}
 ;;
 
 let base_power_big_int =
@@ -290,6 +329,7 @@ let base_power_big_int =
   external
   | caml -> {* Big_int.base_power_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_base_power_big_int *}
 ;;
 
 let sys_big_int_of_string =
@@ -297,6 +337,7 @@ let sys_big_int_of_string =
   external
   | caml -> {* Big_int.sys_big_int_of_string *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_sys_big_int_of_string *}
 ;;
 
 let round_futur_last_digit =
@@ -304,6 +345,7 @@ let round_futur_last_digit =
   external
   | caml -> {* Big_int.round_futur_last_digit *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_round_futur_last_digit *}
 ;;
 
 let approx_big_int =
@@ -311,6 +353,7 @@ let approx_big_int =
   external
   | caml -> {* Big_int.approx_big_int *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* big_integer_approx_big_int *}
 ;;
 
 use "additive_law" ;;

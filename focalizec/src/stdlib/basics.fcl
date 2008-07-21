@@ -82,6 +82,7 @@ let foc_error =
   external
    | caml -> {* Ml_builtins.foc_error *}
    | coq -> {* foc_error *}
+   | "c" -> {* c_builtin_foc_error *}
 ;;
 
 let and_b (x, y) =
@@ -119,6 +120,7 @@ let string_of_int =
   external
   | caml -> {* Ml_builtins.string_of_int *}
   | coq -> {* [Unsure] *}
+  | "c" -> {* c_builtin_string_of_int *}
 ;;
 
 let int_of_string =
@@ -126,6 +128,7 @@ let int_of_string =
   external
   | caml -> {* Ml_builtins.int_of_string *}
   | coq -> {* [Unsure] *}
+  | "c" -> {* c_builtin_int_of_string *}
 ;;
 
 let print_int =
@@ -133,6 +136,7 @@ let print_int =
   external
   | caml -> {* Ml_builtins.int_print *}
   | coq -> {* [Unsure] *}
+  | "c" -> {* c_builtin_print_int *}
 ;;
 
 let int_mod =
@@ -140,6 +144,7 @@ let int_mod =
   external
   | caml -> {* Ml_builtins.int_mod *}
   | coq -> {* [Unsure] *}
+  | "c" -> {* c_builtin_int_mod *}
 ;;
 
 let int_eq =
@@ -147,6 +152,7 @@ let int_eq =
   external
   | caml -> {* Ml_builtins.int_eq *}
   | coq -> {* [Unsure] *}
+  | "c" -> {* c_builtin_int_eq *}
 ;;
 
 let int_div =
@@ -154,6 +160,7 @@ let int_div =
   external
   | caml -> {* Ml_builtins.int_div *}
   | coq -> {* [Unsure] *}
+  | "c" -> {* c_builtin_int_div *}
 ;;
 
 let int_lt =
@@ -162,6 +169,7 @@ let int_lt =
   | caml -> {* Ml_builtins.int_lt *}
   | coq -> {* int_lt *}
   | coq -> {* [Unsure] *}
+  | "c" -> {* c_builtin_int_lt *}
 ;;
 
 let int_leq =
@@ -170,6 +178,7 @@ let int_leq =
   | caml -> {* Ml_builtins.int_leq *}
   | coq -> {* int_leq *}
   | coq -> {* [Unsure] *}
+  | "c" -> {* c_builtin_int_leq *}
 ;;
 
 let int_geq =
@@ -178,6 +187,7 @@ let int_geq =
   | caml -> {* Ml_builtins.int_geq *}
   | coq -> {* int_geq *}
   | coq -> {* [Unsure] *}
+  | "c" -> {* c_builtin_int_geq *}
 ;;
 
 let int_gt =
@@ -186,6 +196,7 @@ let int_gt =
   | caml -> {* Ml_builtins.int_gt *}
   | coq -> {* int_gt *}
   | coq -> {* [Unsure] *}
+  | "c" -> {* c_builtin_int_gt *}
 ;;
 
 let phys_eq =
@@ -193,6 +204,7 @@ let phys_eq =
   external
   | caml -> {* Ml_builtins.base_equal *}
   | coq -> {* [Unsure] *}
+  | "c" -> {* c_builtin_phys_eq *}
 ;;
 
 let base_eq =
@@ -200,6 +212,7 @@ let base_eq =
   external
   | caml -> {* Ml_builtins.base_eq *}
   | coq -> {* [Unsure] *}
+  | "c" -> {* c_builtin_base_eq *}
 ;;
 
 let ( = ) (x, y) = base_eq (x, y) ;;
@@ -318,6 +331,7 @@ let pred =
   external
   | caml -> {* Ml_builtins.pred *}
   | coq -> {* coq_builtins.bi__int_pred *}
+  | "c" -> {* c_builtin_pred *}
 ;;
 
 let int_opp =
@@ -325,6 +339,7 @@ let int_opp =
   external
   | caml -> {* Ml_builtins.int_opposite *}
   | coq -> {* coq_builtins.bi__int_opposite *}
+  | "c" -> {* c_builtin_int_opp *}
 ;;
 
 let int_plus =
@@ -332,6 +347,7 @@ let int_plus =
   external
   | caml -> {* Ml_builtins.int_plus *}
   | coq -> {* coq_builtins.bi__int_plus *}
+  | "c" -> {* c_builtin_int_plus *}
 ;;
 
 let ( + ) (x, y) = int_plus (x, y) ;;
@@ -400,6 +416,7 @@ let int_mult =
   external
   | caml -> {* Ml_builtins.int_mult *}
   | coq -> {* coq_builtins.bi__int_mult *}
+  | "c" -> {* c_builtin_int_mult *}
 ;;
 
 let int_minus =
@@ -407,6 +424,7 @@ let int_minus =
   external
   | caml -> {* Ml_builtins.int_minus *}
   | coq -> {* coq_builtins.bi__int_minus *}
+  | "c" -> {* c_builtin_int_minus *}
 ;;
 
 let int_max =
@@ -414,6 +432,7 @@ let int_max =
   external
   | caml -> {* Ml_builtins.int_max *}
   | coq -> {* coq_builtins.bi__int_max *}
+  | "c" -> {* c_builtin_int_max *}
 ;;
 
 let int_min =
@@ -421,6 +440,7 @@ let int_min =
   external
   | caml -> {* Ml_builtins.int_min *}
   | coq -> {* coq_builtins.bi__int_min *}
+  | "c" -> {* c_builtin_int_min *}
 ;;
 
 theorem int_min_le: all x y z in int,
@@ -477,6 +497,7 @@ let sc =
   external
   | caml -> {* Ml_builtins.str_cat *}
   | coq -> {* [Unsure] *}
+  | "c" -> {* c_builtin_sc *}
 ;;
 
 let ( ^ ) (x, y) = sc (x, y) ;;
@@ -486,6 +507,7 @@ let str_lt =
   external
   | caml -> {* Ml_builtins.str_lt *}
   | coq -> {* [Unsure] *}
+  | "c" -> {* c_builtin_str_lt *}
 ;;
 
 let print_string =
@@ -493,6 +515,7 @@ let print_string =
   external
   | caml -> {* Ml_builtins.str_print *}
   | coq -> {* [Unsure] *}
+  | "c" -> {* c_builtin_print_string *}
 ;;
 
 let print_newline (x in unit) = print_string ("\n") ;;

@@ -13,6 +13,7 @@ let array_set =
   external
   | caml -> {* Array.set *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* array_array_set *}
 ;;
 
 let array_create =
@@ -20,6 +21,7 @@ let array_create =
   external 
   | caml -> {* Array.create *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* array_array_create *}
 ;;
 
 let array_get =
@@ -27,4 +29,5 @@ let array_get =
   external
   | caml -> {* Array.get *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* array_array_get *}
 ;;
