@@ -6,6 +6,7 @@ type array ('a) =
   external
   | caml -> {* 'a array *}
   | coq -> {* (* [Unsure] *) *}
+  | "c" -> {* array_array *}
 ;;
 
 let array_set =

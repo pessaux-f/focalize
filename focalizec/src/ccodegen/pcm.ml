@@ -98,6 +98,22 @@ and logical_expr_desc =
   | Le_paren of logical_expr
 ;;
 
+module PP =
+  struct
+    open Format
+
+    let ident ppf id =
+      fprintf ppf "@[";
+      let file = id.ast_desc.i_file in
+      if file <> "" then 
+	fprintf ppf "%s#" file;
+      let spc = id.ast_desc.i_spc in
+      if spc <> "" then
+	fprintf ppf "%s!" spc;
+      fprintf ppf "%s@]" id.ast_desc.i_name
+
+  end;;
+
 type history =
     { h_initial : (unit ident) }
 ;;
@@ -121,10 +137,10 @@ and external_binding_desc = ((unit ident) * external_expr)
 
 type type_kind = (type_kind_desc, unit) ast
 and type_kind_desc =
-  | Tk_abstract
   | Tk_external of external_expr * external_binding list
   | Tk_inductive of ((unit ident) * type_expr) list
   | Tk_record of (unit ident * type_expr) list
+  | Tk_alias of type_expr
 ;;
 
 type type_def = (type_def_desc, unit) ast
@@ -272,19 +288,16 @@ let mk_constr_id env cid =
 	mk_ident env ~file:f (mk_vname vn))
 ;;
 
-exception AbstractTypeError of (unit ident);;
-
-let mk_type_kind env id (t : Env.TypeInformation.type_kind) =
+let mk_type_kind env (t : Env.TypeInformation.type_kind) alias =
   mk_uast 
     (match t with
     | Env.TypeInformation.TK_abstract ->
-        (* [julius:] don't know what it means in FoCal. *)
-	raise (AbstractTypeError id)
+	Tk_alias (mk_type_scheme env alias)
 	  
     | Env.TypeInformation.TK_external (ee, eb) ->
 	Tk_external (mk_external_expr ee,
 		     mk_external_bindings env eb)
-
+	  
     | Env.TypeInformation.TK_variant l ->
 	Tk_inductive (List.map (function (cn, _, ts) ->
 	  (mk_uast (mk_ident env (mk_vname cn)), mk_type_scheme env ts)) l)
@@ -688,14 +701,11 @@ let rec mk_phrases env (l : Infer.please_compile_me list) =
 		      ast_type = ();
 		      ast_loc = None } in
       let body = info.Env.TypeInformation.type_kind in
-      { ast_desc =
-	Ph_type { ast_desc = { type_name = type_id;
-			       type_params = List.map (mk_type_simple env) args;
-			       type_body = mk_type_kind env type_id body };
-		  ast_type = ();
-		  ast_loc = None };
-	ast_type = ();
-	ast_loc = None }
+      let alias = info.Env.TypeInformation.type_identity in
+      let tk = { type_name = type_id;
+		 type_params = List.map (mk_type_simple env) args;
+		 type_body = mk_type_kind env body alias } in
+      (mk_uast (Ph_type (mk_uast tk)))
       :: (mk_phrases env l')
 
   | (Infer.PCM_let_def (ld, tys)) :: l' ->

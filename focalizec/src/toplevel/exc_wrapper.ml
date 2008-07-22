@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.49.2.2 2008-07-21 15:54:02 blond Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.49.2.3 2008-07-22 16:50:32 blond Exp $ *)
 
 
 
@@ -431,10 +431,16 @@ try Check_file.main () with
 	   Location.pp_location loc
      | Extelim.MissingExternalBinding (lang, Some loc) ->
 	 Format.fprintf Format.err_formatter
-	   "@[<hov2>%a:@;@[The \"%s\" binding is missing.@]@]@."
+	   "@[<hov 2>%a:@;@[The \"%s\" binding is missing.@]@]@."
 	   Location.pp_location loc
 	   lang
-
+     | Extelim.MissingExternalTypeBinding (lang, id, Some loc) ->
+	 Format.fprintf Format.err_formatter
+	   "@[<hov 2>%a:@;@[The \"%s\" binding for the type %a is missing.@]@]@."
+	   Location.pp_location loc
+	   lang
+	   Pcm.PP.ident id
+	   
 (* ********************** *)
 (* The ultimate firewall. *)
      | x ->

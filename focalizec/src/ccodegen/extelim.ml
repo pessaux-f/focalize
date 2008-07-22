@@ -2,7 +2,13 @@ open Ast;;
 open Pcm;;
 
 type context =
-    { c_lang : string }
+    { c_lang : string;
+      c_constr_mapping : (ident_desc, ident_desc) Hashtbl.t }
+;;
+
+let empty lang =
+  { c_lang = lang;
+    c_constr_mapping = Hashtbl.create 53 }
 ;;
 
 exception MissingExternalBinding of string * Location.t option;;
@@ -19,7 +25,12 @@ let rec expr ctx e =
   | E_fun (_, e') -> expr ctx e'
   | E_var _ -> ()
   | E_app (e', args) -> expr ctx e'; List.iter (expr ctx) args
-  | E_constr (_, args) -> List.iter (expr ctx) args
+  | E_constr (id, args) ->
+      begin (* Check if 'id' is a known external expression. *)
+	try id.ast_desc <- Hashtbl.find ctx.c_constr_mapping id.ast_desc
+	with Not_found -> ()
+      end;
+      List.iter (expr ctx) args
   | E_match (e', l) ->
       expr ctx e'; List.iter (function (_, b) -> expr ctx b) l
   | E_if (a, b, c) -> List.iter (expr ctx) [a; b; c]
@@ -69,9 +80,50 @@ let species_field ctx f =
   | Sf_property (_, le, _) -> logical_expr ctx le
 ;;
 
-let type_def _ _ =
-  Format.printf "TODO : extelim.type_def@.";
-  ()
+exception MissingExternalTypeBinding
+  of string * (unit ident) * Location.t option;;
+exception MissingExternalTypeConstrBinding 
+  of string * (unit ident) * Location.t option;;
+
+let type_kind ctx tk tid =
+  match tk.ast_desc with
+    (* The external case. *)
+    Tk_external (ee, l) ->
+      begin try
+	(* Getting the C alias. *)
+	let type_alias = List.assoc "c" ee.ast_desc in
+	(* Getting the C bindings for thetype constructors. *)
+	let bindings = List.map (fun x -> match x.ast_desc with
+	  (id, ext) -> 
+	    try (id, List.assoc "c" ext.ast_desc)
+	    with Not_found -> 
+	      raise (MissingExternalTypeConstrBinding 
+		       ("c", id, x.ast_loc))) l in
+	(* Adding them into the external elimination context. *)
+	List.iter (function (id, code) ->
+	  Hashtbl.add ctx.c_constr_mapping
+	    id.ast_desc 
+	    { i_file = ""; i_spc = ""; i_name = code }) bindings;
+	(* Setting the alias. *)
+	tk.ast_desc <- 
+	  Tk_alias (mk_uast (TE_ident 
+			       (mk_uast { i_file = "";
+					  i_spc = "";
+					  i_name = type_alias })))
+      with
+	Not_found -> 
+	  raise (MissingExternalTypeBinding ("c", tid, ee.ast_loc))
+      |	anything ->
+	  raise anything
+      end
+
+  | Tk_inductive _
+  | Tk_record _ 
+  | Tk_alias _ -> ()
+;;
+
+let type_def ctx td =
+  type_kind ctx td.ast_desc.type_body td.ast_desc.type_name
 ;;
 
 let phrase ctx ph =

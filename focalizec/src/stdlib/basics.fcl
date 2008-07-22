@@ -8,6 +8,7 @@ type int =
   external
   | caml -> {* int *}
   | coq -> {* Z *}
+  | "c" -> {* int *}
 ;;
 
 type unit =
@@ -16,10 +17,12 @@ type unit =
   external
   | caml -> {* unit *}
   | coq -> {* coq_builtins.bi__unit *}  (* FoCaLize's Coq definition of builtin. *)
+  | "c" -> {* c_builtins_unit *}
 
 and () =
   | caml -> {* () *}
   | coq -> {* coq_builtins.Null *}
+  | "c" -> {* c_builtins_unit_value *}
 ;;
 
 type float =
@@ -27,6 +30,7 @@ type float =
   external
   | caml -> {* float *}
   | coq -> {* R *}  (* From the Reals module. *)
+  | "c" -> {* double *}
 ;;
 
 type char =
@@ -34,6 +38,7 @@ type char =
   external
   | caml -> {* char *}
   | coq -> {* ascii *}
+  | "c" -> {* char *}
 ;;
 
 type string =
@@ -41,6 +46,7 @@ type string =
   external
   | caml -> {* string *}
   | coq -> {* string *}  (* From the Ascii module. *)
+  | "c" -> {* c_builtins_string *}
 ;;
 
 type bool =
@@ -50,14 +56,17 @@ type bool =
   external
   | caml -> {* bool *}
   | coq -> {* bool *}  (* Builtin of Coq *)
+  | "c" -> {* int *}
 
 and True =
   | caml -> {* true *}
   | coq -> {* True *}
+  | "c" -> {* 1 *}
 
 and False =
   | caml -> {* false *}
   | coq -> {* False *}
+  | "c" -> {* 0 *}
 ;;
 
 type list ('a) =
@@ -67,14 +76,17 @@ type list ('a) =
   external
   | caml -> {* 'a list *}
   | coq -> {* (list __var_a) *} (* From the List module. *)
+  | "c" -> {* c_builtins_list *}
 
 and [] =
   | caml -> {* [] *}
   | coq -> {* nil *}
+  | "c" -> {* c_builtins_nil *}
 
 and ( :: ) (*Cons*) =
   | caml -> {* ( :: ) *}
   | coq -> {* cons *}
+  | "c"-> {* c_builtins_cons *}
 ;;
 
 let foc_error =
@@ -347,7 +359,7 @@ let int_plus =
   external
   | caml -> {* Ml_builtins.int_plus *}
   | coq -> {* coq_builtins.bi__int_plus *}
-  | "c" -> {* c_builtin_int_plus *}
+  | "c" -> {* c_builtins_int_plus *}
 ;;
 
 let ( + ) (x, y) = int_plus (x, y) ;;
