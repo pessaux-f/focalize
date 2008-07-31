@@ -81,12 +81,12 @@ type list ('a) =
 and [] =
   | caml -> {* [] *}
   | coq -> {* nil *}
-  | "c" -> {* c_builtins_nil *}
+  | "c" -> {* c_builtins_NIL *}
 
 and ( :: ) (*Cons*) =
   | caml -> {* ( :: ) *}
   | coq -> {* cons *}
-  | "c"-> {* c_builtins_cons *}
+  | "c"-> {* c_builtins_CONS *}
 ;;
 
 let foc_error =

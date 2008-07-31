@@ -8,6 +8,8 @@
 use "basics" ;;
 open "basics" ;;
 
+use "sets_orders";;
+
 use "iterators" ;;
 open "iterators" ;;
 

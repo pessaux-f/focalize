@@ -1,17 +1,11 @@
 type ('a, 'b) ast =
     { mutable ast_desc : 'a;
-      ast_type : 'b;
-      ast_loc : Location.t option }
+      mutable ast_type : 'b;
+      ast_loc : Location.t }
 ;;
 
-let mk_ast ?(loc = None) ty desc =
+let mk_ast loc ty desc =
   { ast_desc = desc;
     ast_type = ty;
-    ast_loc = loc }
-;;
-
-let mk_uast ?(loc = None) desc =
-  { ast_desc = desc;
-    ast_type = ();
     ast_loc = loc }
 ;;

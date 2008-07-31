@@ -2,12 +2,14 @@ open Ast;;
 open Pcm;;
 
 type context =
-    { c_lang : string;
+    { mutable c_file : string;
+      c_lang : string;
       c_constr_mapping : (ident_desc, ident_desc) Hashtbl.t }
 ;;
 
 let empty lang =
-  { c_lang = lang;
+  { c_file = "";
+    c_lang = lang;
     c_constr_mapping = Hashtbl.create 53 }
 ;;
 
@@ -82,12 +84,15 @@ let species_field ctx f =
 
 exception MissingExternalTypeBinding
   of string * (unit ident) * Location.t option;;
-exception MissingExternalTypeConstrBinding 
-  of string * (unit ident) * Location.t option;;
 
 let type_kind ctx tk tid =
   match tk.ast_desc with
     (* The external case. *)
+    (* [julius:] there's a lack of specification on external types    *)
+    (* represented by internal record; Since we don't have any        *) 
+    (* access to this internal representation we can't add the needed *)
+    (* projections aliases... We just have to pray that the labels in *)
+    (* FoCal and C are the same.                                      *)
     Tk_external (ee, l) ->
       begin try
 	(* Getting the C alias. *)
@@ -97,13 +102,13 @@ let type_kind ctx tk tid =
 	  (id, ext) -> 
 	    try (id, List.assoc "c" ext.ast_desc)
 	    with Not_found -> 
-	      raise (MissingExternalTypeConstrBinding 
+	      raise (MissingExternalTypeBinding 
 		       ("c", id, x.ast_loc))) l in
 	(* Adding them into the external elimination context. *)
 	List.iter (function (id, code) ->
 	  Hashtbl.add ctx.c_constr_mapping
 	    id.ast_desc 
-	    { i_file = ""; i_spc = ""; i_name = code }) bindings;
+	    { i_file = ctx.c_file; i_spc = ""; i_name = code }) bindings;
 	(* Setting the alias. *)
 	tk.ast_desc <- 
 	  Tk_alias (mk_uast (TE_ident 
@@ -140,5 +145,6 @@ let phrase ctx ph =
 ;;
 
 let file ctx f =
+  ctx.c_file <- f.file_name; 
   List.iter (phrase ctx) f.file_body
 ;; 
