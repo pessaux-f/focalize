@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.49.2.4 2008-07-31 09:21:06 blond Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.49.2.5 2008-08-03 20:57:54 blond Exp $ *)
 
 
 
@@ -425,51 +425,7 @@ try Check_file.main () with
            Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
 (* ********************** *)
 (* C translation.         *)
-     | Pcm.Disapointed loc ->
-	 Format.fprintf Format.err_formatter
-	   "@[<hov 2>%a :@;@[I'm quite disapointed by this structure o_O@]@]@."
-	   Location.pp_location loc
-     | Cscoping.Unbound (_, sort, id) ->
-	 Format.fprintf Format.err_formatter
-	   "@[<hov 2>%a :@;@[%a %a is unbound.@]@]@."
-	   Location.pp_location id.Ast.ast_loc
-	   (fun ppf -> function
-	       Cscoping.Constructor -> Format.fprintf ppf "Constructor"
-	     | Cscoping.Identifier -> Format.fprintf ppf "Identifier"
-	     | Cscoping.Type -> Format.fprintf ppf "Type"
-	     | Cscoping.Species -> Format.fprintf ppf "Species"
-	     | Cscoping.File -> Format.fprintf ppf "File"
-	     | Cscoping.Projection -> Format.fprintf ppf "Projection") sort
-	   Pcm.PP.ident id
-	   
-(* 	   ; List.iter  *)
-(* 	   (function (id, inter) -> *)
-(* 	     Format.printf "@[<hov 4>%a :@\n" Pcm.PP.ident !id; *)
-(* 	     List.iter (fun x -> Format.printf "%a@\n" Pcm.PP.ident !x) inter; *)
-(* 	     Format.printf "@]@.") *)
-(* 	   (ctx.Cscoping.l_local_table @ ctx.Cscoping.l_table) *)
 
-     | Cscoping.AlreadyBounded id ->
-	 Format.fprintf Format.err_formatter
-	   "@[<hov 2>%a :@;@[%a is already defined.@]@]@."
-	   Location.pp_location id.Ast.ast_loc
-	   Pcm.PP.ident id
-
- (*     | Pcm.MissingNodeTypeError loc -> *)
-(* 	 Format.fprintf Format.err_formatter *)
-(* 	   "@[<hov 2>%a:@;@[Type is missing.@]@]@." *)
-(* 	   Location.pp_location loc *)
-(*      | Extelim.MissingExternalBinding (lang, Some loc) -> *)
-(* 	 Format.fprintf Format.err_formatter *)
-(* 	   "@[<hov 2>%a:@;@[The \"%s\" binding is missing.@]@]@." *)
-(* 	   Location.pp_location loc *)
-(* 	   lang *)
-(*      | Extelim.MissingExternalTypeBinding (lang, id, Some loc) -> *)
-(* 	 Format.fprintf Format.err_formatter *)
-(* 	   "@[<hov 2>%a:@;@[The \"%s\" binding for the type %a is missing.@]@]@." *)
-(* 	   Location.pp_location loc *)
-(* 	   lang *)
-(* 	   Pcm.PP.ident id *)
 	   
 (* ********************** *)
 (* The ultimate firewall. *)

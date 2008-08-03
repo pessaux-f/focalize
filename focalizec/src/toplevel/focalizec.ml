@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.28.2.4 2008-07-31 09:21:06 blond Exp $ *)
+(* $Id: focalizec.ml,v 1.28.2.5 2008-08-03 20:57:54 blond Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -139,15 +139,14 @@ let main () =
       end)
     else None in
   (* Generating the C code if requested. *)
-  let _ =
+  begin
     if Configuration.get_generate_c () then
-      let paths = Files.get_lib_paths () in 
-      let opts = ref [] in
-      if Configuration.get_verbose () then opts := Saving.Verbose :: !opts;
-      let ctx = Compil.Focalize.mk_context paths !opts in
-      let ast = Pcm.mk_file current_unit ast in
-      Compil.Focalize.translate ctx ast input_file_name
-  in
+      begin
+	let Parsetree.File l = scoped_ast.Parsetree.ast_desc in
+	let stuff = (input_file_name, List.combine l stuff_to_compile) in
+	Genc.compile stuff
+      end
+  end;
   (* Now, generate the persistent interface file. *)
   Env.make_fo_file
     ~source_filename: input_file_name
