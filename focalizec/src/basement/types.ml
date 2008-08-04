@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.58 2008-07-16 13:23:14 pessaux Exp $ *)
+(* $Id: types.ml,v 1.58.2.1 2008-08-04 15:37:58 blond Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1478,49 +1478,95 @@ let rec get_species_types_in_type ty =
      | ST_species_rep st -> SpeciesCarrierTypeSet.singleton st
 ;;
 
-
-
-type local_type =
-  | Lt_var of int
-  | Lt_fun of local_type * local_type
-  | Lt_tuple of local_type list
-  | Lt_constr of (string * string) * local_type list
-  | Lt_self
-  | Lt_species of (string * string)
-;;
-
-let rec type_simple_to_local_type ty =
-  let ty = repr ty in
+(* val pp_type_scheme_to_c : *)
+(*     Parsetree.vname -> Format.formatter -> type_scheme -> unit *)
+let rec pp_type_simple_to_c vn ppf ts =
+  let ty = repr ts in
   match ty with
-   | ST_var type_variable ->
-       begin
-       match type_variable.tv_value with
-        | TVV_unknown ->
-	    (* [julius:] it's a "true" polymorphic value *)
-            Lt_var type_variable.tv_level
-        | TVV_known ts ->
-	    (* [julius:] type has been deduced *)
-	    type_simple_to_local_type ts
-       end
+    ST_var tvar ->
+      begin match tvar.tv_value with
+	TVV_unknown ->
+	  Format.fprintf ppf "@[void*@]"
+      |	TVV_known ts ->
+	  pp_type_simple_to_c vn ppf ts
+      end
+  | ST_arrow (l, r) ->
+      let rec decompose ty args =
+	let ty = repr ty in
+	match ty with
+	  ST_arrow (a, b) -> decompose b (args@[a])
+	| ST_var _ | ST_tuple _ | ST_construct _
+	| ST_self_rep | ST_species_rep _ -> (args, ty)
+      in
+      let (args, ret) = decompose r [l] in
+      Format.fprintf ppf "@[%a (*%s) (@["
+	(pp_type_simple_to_c "") ret
+	vn;
+      let rec pp_args = function
+	  [] -> assert false
+	| [e] -> pp_type_simple_to_c "" ppf e
+	| h::t -> 
+	    Format.fprintf ppf "%a,@;" (pp_type_simple_to_c "") h;
+	    pp_args t
+      in pp_args args;
+      Format.fprintf ppf "@])@]"
+  | ST_tuple _ ->
+      Format.fprintf Format.err_formatter "@[TODO : Types.ST_tuple@]@."
+  | ST_construct ((f, id), []) ->
+      Format.fprintf ppf "@[%s_%s@]" f id
+  | ST_construct _ ->
+      Format.fprintf Format.err_formatter "@[TODO : Types.ST_construct (with arguments)@]@."
+  | ST_self_rep ->
+      Format.fprintf ppf "@[void* %s@]" vn 
+  | ST_species_rep _ ->
+      Format.fprintf Format.err_formatter "@[TODO : Types.ST_species_rep@]@."
+	  
+
+let pp_type_scheme_to_c vn ppf ts =
+  pp_type_simple_to_c vn ppf ts.ts_body
+
+(* type local_type = *)
+(*   | Lt_var of int *)
+(*   | Lt_fun of local_type * local_type *)
+(*   | Lt_tuple of local_type list *)
+(*   | Lt_constr of (string * string) * local_type list *)
+(*   | Lt_self *)
+(*   | Lt_species of (string * string) *)
+(* ;; *)
+
+(* let rec type_simple_to_local_type ty = *)
+(*   let ty = repr ty in *)
+(*   match ty with *)
+(*    | ST_var type_variable -> *)
+(*        begin *)
+(*        match type_variable.tv_value with *)
+(*         | TVV_unknown -> *)
+(* 	    (\* [julius:] it's a "true" polymorphic value *\) *)
+(*             Lt_var type_variable.tv_level *)
+(*         | TVV_known ts -> *)
+(* 	    (\* [julius:] type has been deduced *\) *)
+(* 	    type_simple_to_local_type ts *)
+(*        end *)
    
-   | ST_arrow (l, r) ->
-       (* [julius:] no changes. *)
-       Lt_fun (type_simple_to_local_type l, type_simple_to_local_type r)
+(*    | ST_arrow (l, r) -> *)
+(*        (\* [julius:] no changes. *\) *)
+(*        Lt_fun (type_simple_to_local_type l, type_simple_to_local_type r) *)
 
-   | ST_tuple l ->
-       (* [julius:] no changes. *)
-       Lt_tuple (List.map type_simple_to_local_type l)
+(*    | ST_tuple l -> *)
+(*        (\* [julius:] no changes. *\) *)
+(*        Lt_tuple (List.map type_simple_to_local_type l) *)
 
-   | ST_construct ((f, id), l) ->
-       Lt_constr ((f, id), (List.map type_simple_to_local_type l))
+(*    | ST_construct ((f, id), l) -> *)
+(*        Lt_constr ((f, id), (List.map type_simple_to_local_type l)) *)
 
-   | ST_self_rep ->
-       Lt_self
+(*    | ST_self_rep -> *)
+(*        Lt_self *)
 
-   | ST_species_rep (f, c) ->
-       Lt_species (f, c)
-;;
+(*    | ST_species_rep (f, c) -> *)
+(*        Lt_species (f, c) *)
+(* ;; *)
 
 
 
-let type_scheme_to_local_type ts = type_simple_to_local_type ts.ts_body ;;
+(* let type_scheme_to_local_type ts = type_simple_to_local_type ts.ts_body ;; *)
+

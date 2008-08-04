@@ -17,12 +17,12 @@ type unit =
   external
   | caml -> {* unit *}
   | coq -> {* coq_builtins.bi__unit *}  (* FoCaLize's Coq definition of builtin. *)
-  | "c" -> {* c_builtins_unit *}
+  | "c" -> {* void* *}
 
 and () =
   | caml -> {* () *}
   | coq -> {* coq_builtins.Null *}
-  | "c" -> {* c_builtins_unit_value *}
+  | "c" -> {* NULL *}
 ;;
 
 type float =
@@ -30,7 +30,7 @@ type float =
   external
   | caml -> {* float *}
   | coq -> {* R *}  (* From the Reals module. *)
-  | "c" -> {* double *}
+  | "c" -> {* float *}
 ;;
 
 type char =

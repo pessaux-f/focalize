@@ -1,78 +1,11 @@
 Require Export Bool.
 Require Export ZArith.
-<<<<<<< tmp_basics.v
 Open Scope Z_scope.
-=======
 Require Export Reals.
 Require Export Ascii.
 Require Export String.
-<<<<<<< tmp_basics.v
->>>>>>> 1.6
-=======
 Require Export coq_builtins.
->>>>>>> 1.12
 
-<<<<<<< tmp_basics.v
-Infer.PCM_type TODO
-Infer.PCM_type TODO
-Infer.PCM_type TODO
-Infer.PCM_type TODO
-Infer.PCM_type TODO
-Infer.PCM_type TODO
-Infer.PCM_type TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_theorem TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-Infer.PCM_let_def TODO
-=======
 
 (** The weak proof !!! Give it a Prop, and abracadabra ... it's proved ! *)
 Axiom magic_prove : forall A : Prop, A.

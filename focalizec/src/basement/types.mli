@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.37 2008-07-09 15:41:30 blond Exp $ *)
+(* $Id: types.mli,v 1.37.2.1 2008-08-04 15:37:58 blond Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -177,14 +177,7 @@ module SpeciesCarrierTypeSet :
 val get_species_types_in_type : type_simple -> SpeciesCarrierTypeSet.t
 
 (** *)
-type local_type =
-  | Lt_var of int
-  | Lt_fun of local_type * local_type
-  | Lt_tuple of local_type list
-  | Lt_constr of (string * string) * local_type list
-  | Lt_self
-  | Lt_species of (string * string)
-
-(** *)
-val type_simple_to_local_type : type_simple -> local_type
-val type_scheme_to_local_type : type_scheme -> local_type
+val pp_type_simple_to_c :
+    string -> Format.formatter -> type_simple -> unit
+val pp_type_scheme_to_c :
+    string -> Format.formatter -> type_scheme -> unit

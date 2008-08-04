@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.21.2.1 2008-07-18 17:21:44 blond Exp $
+# $Id: Makefile,v 1.21.2.2 2008-08-04 15:37:58 blond Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -9,6 +9,9 @@ FOCC = ../toplevel/check_file -no-stdlib-path
 CAMLBYT = ocamlc
 CAMLBIN = ocamlc
 COQC = coqc
+CC = gcc
+
+CC_FLAGS =
 
 FOC_COMP_FLAGS = --c-code
 
@@ -42,6 +45,12 @@ FOCVS = $(FOCSRC:.foc=.v)
 
 FOCVOS = $(FOCVS:.v=.vo)
 
+FOCCS = $(FOCSRC:.foc=.c)
+FOCCS_UNSAFE = $(FOCSRC_UNSAFE:.foc=.c)
+
+FOCOS = $(FOCCS:.c=.o)
+FOCOS_UNSAFE = $(FOCCS_UNSAFE:.c=.o)
+
 EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
 	weak_structures_externals.cmo \
 	coq_builtins.vo weak_structures_externals.vo wellfounded_externals.vo \
@@ -50,7 +59,7 @@ EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
 
 
 
-all:: $(EXTERNALOBJS) $(FOCMLS) $(FOCMLS_UNSAFE) $(FOCVS) basics_special_case $(FOCCMOS) $(FOCCMOS_UNSAFE) $(FOCVOS)
+all:: $(EXTERNALOBJS) $(FOCCS) $(FOCOS)
 
 doc:: $(BYTOBJS)
 	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)
@@ -60,6 +69,7 @@ install: all
 
 clean::
 	$(RM) *~ *.cm* log *.fo $(FOCMLS) $(FOCVS) $(FOCVOS) $(EXTERNALOBJS)
+	$(RM) $(FOCCS) $(FOCOS)
 	$(RM) $(FOCMLS_UNSAFE) $(FOCVS_UNSAFE) $(FOCVOS_UNSAFE)
 	$(RM) *.mangled odoc/*
 
@@ -95,9 +105,9 @@ polys_abstract.ml: polys_abstract.foc
 #End temporary
 
 
-.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .foc .fo .v .vo
+.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .foc .fo .v .vo .h .c .o
 
-.foc.fo .foc.ml .foc.v:
+.foc.fo .foc.ml .foc.v .foc.c:
 	$(FOCC) $(FOC_COMP_FLAGS) $<
 
 .ml.cmo:
@@ -117,5 +127,8 @@ polys_abstract.ml: polys_abstract.foc
 
 .v.vo:
 	$(COQC) $<
+
+.c.o:
+	$(CC) $(CC_FLAGS) -c $<
 
 include .depend
