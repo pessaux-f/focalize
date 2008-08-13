@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.ml,v 1.8 2008-07-11 13:26:50 pessaux Exp $ *)
+(* $Id: misc_common.ml,v 1.9 2008-08-13 15:55:17 pessaux Exp $ *)
 
 
 
@@ -722,7 +722,7 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
   List.iter
     (function
       | MinEnv.MCEE_Defined_carrier _
-      | MinEnv.MCEE_Defined_computational (_, _, _)
+      | MinEnv.MCEE_Defined_computational (_, _, _, _, _)
       | MinEnv.MCEE_Defined_logical (_, _, _) ->
           (* Anything defined is not abstracted. *)
           ()

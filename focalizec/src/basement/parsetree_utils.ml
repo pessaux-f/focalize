@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.16 2008-06-30 11:30:38 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.17 2008-08-13 15:55:17 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -37,6 +37,26 @@ module DepNameMod = struct
   let compare (n1, _) (n2, _) = compare n1 n2
 end ;;
 module DepNameSet = Set.Make (DepNameMod) ;;
+
+
+
+let depnameset_find predicate set =
+  let found = ref None in
+  try
+    DepNameSet.iter
+      (fun elem ->
+        if predicate elem then
+          begin
+          found := Some elem ;
+          raise Exit
+          end)
+      set ;
+      raise Not_found
+  with Exit ->
+    match !found with
+     | None -> assert false
+     | Some elem -> elem
+;;
 
 
 

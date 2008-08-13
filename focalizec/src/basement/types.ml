@@ -1,3 +1,4 @@
+
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -11,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.58 2008-07-16 13:23:14 pessaux Exp $ *)
+(* $Id: types.ml,v 1.59 2008-08-13 15:55:17 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1036,6 +1037,36 @@ type collection_carrier_mapping =
 
 
 
+(* ************************************************************************ *)
+(** {b Descr} : Just for debug purpose, dumps the content of a collection
+    carrier mapping.
+
+    {b Rem} : Exported outside this module when needed, but should disapear
+    once no more need to debug.                                             *)
+(* ************************************************************************ *)
+let debug_collection_carrier_mapping cmap =
+  Format.eprintf "debug_collection_carrier_mapping START:@." ;
+  List.iter
+    (fun (ty_coll, (mapped_on, cm_info)) ->
+      Format.eprintf "Carrier of '%a' is mapped onto '%s' and is "
+        pp_type_collection ty_coll mapped_on ;
+      match cm_info with
+       | CCMI_is -> Format.eprintf "a IS parameter@."
+       | CCMI_in sp_col_kind ->
+           (begin
+           Format.eprintf "a IN parameter of kind " ;
+           match sp_col_kind with
+            | SCK_toplevel_collection ->
+                Format.eprintf "SCK_toplevel_collection@."
+            | SCK_toplevel_species -> Format.eprintf "SCK_toplevel_species@."
+            | SCK_species_parameter -> Format.eprintf "SCK_species_parameter@."
+           end))
+    cmap ;
+  Format.eprintf "debug_collection_carrier_mapping END.@." ;
+;;
+
+
+
 (* ************************************************************************* *)
 (* reuse_mapping: bool -> (type_collection * string) list ->                 *)
 (*   Format.formatter -> type_simple -> unit                                 *)
@@ -1496,11 +1527,11 @@ let rec type_simple_to_local_type ty =
        begin
        match type_variable.tv_value with
         | TVV_unknown ->
-	    (* [julius:] it's a "true" polymorphic value *)
+            (* [julius:] it's a "true" polymorphic value *)
             Lt_var type_variable.tv_level
         | TVV_known ts ->
-	    (* [julius:] type has been deduced *)
-	    type_simple_to_local_type ts
+            (* [julius:] type has been deduced *)
+            type_simple_to_local_type ts
        end
    
    | ST_arrow (l, r) ->

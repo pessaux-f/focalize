@@ -11,17 +11,17 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.134 2008-07-07 16:47:25 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.135 2008-08-13 15:55:17 pessaux Exp $ *)
 
 
 
-(* *********************************************************************** *)
+(* ********************************************************************** *)
 (** {b Descr} : Exception used to inform that a sum type constructor was
-               used with an incorrect arity. The correct expected arity is
-              stored in the second argument of the exception constructor.
+    used with an incorrect arity. The correct expected arity is stored in
+    the second argument of the exception constructor.
 
-    {b Rem} : Exported outside this module.                                *)
-(* *********************************************************************** *)
+    {b Rem} : Exported outside this module.                               *)
+(* ********************************************************************** *)
 exception Bad_sum_type_constructor_arity of
   (Parsetree.constructor_ident *     (** The name of the misused sum type
          constructor. *)
@@ -34,9 +34,9 @@ exception Bad_sum_type_constructor_arity of
 
 (* ************************************************************************ *)
 (** {b Descr} : Exception raised when a type variable was not found inside
-              the [tyvars_mapping] of current [typing_context]. This means
-              that while typechecking a type definition, its body contains
-              a type variable not specified in the type parameters list.
+    the [tyvars_mapping] of current [typing_context]. This means that while
+    typechecking a type definition, its body contains a type variable not
+    specified in the type parameters list.
 
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
@@ -47,12 +47,12 @@ exception Unbound_type_variable of
 
 
 
-(* ************************************************************************* *)
+(* *********************************************************************** *)
 (** {b Descr} : Exception raised when a method is defined several times in
-              the same species.
+    the same species.
 
-    {b Rem} : Exported outside this module.                                  *)
-(* ************************************************************************* *)
+    {b Rem} : Exported outside this module.                                *)
+(* *********************************************************************** *)
 exception Method_multiply_defined of
   (Parsetree.vname *                (** The method's name. *)
    Parsetree.qualified_species)    (** The species's name and module
@@ -63,7 +63,7 @@ exception Method_multiply_defined of
 
 (* ********************************************************************** *)
 (** {b Descr} : Exception raised when a type constructor is applied to an
-              incorrect number of type arguments.
+    incorrect number of type arguments.
 
     {b Rem} : Exported outside this module.                               *)
 (* ********************************************************************** *)
@@ -127,8 +127,8 @@ exception Not_subspecies_conflicting_field of
 
 (* ******************************************************************* *)
 (** {b Descr} : During subspecies relation checking, a field was found
-              with 2 types that can't be unified because one of them
-              occurs in the other.
+    with 2 types that can't be unified because one of them occurs in
+    the other.
 
     {b Rem} : Exported outside this module.
               Note that I can't really see how this coudl happen...    *)
@@ -148,8 +148,8 @@ exception Not_subspecies_circular_field of
 
 (* ******************************************************************* *)
 (** {b Descr} : During subspecies relation checking, a field was found
-              with 2 types that can't be unified because they do not
-              respect the correct type constructor arity.
+    with 2 types that can't be unified because they do not respect the
+    correct type constructor arity.
 
     {b Rem} : Exported outside this module.
               Note that I can't really see how this coudl happen...    *)
@@ -168,13 +168,12 @@ exception Not_subspecies_arity_mismatch of
 
 
 
-(* ******************************************************************* *)
+(* ********************************************************************* *)
 (** {b Descr} : During subspecies relation checking, a field was not
-              found in the species signature that is considered as the
-              subspecies.
+    found in the species signature that is considered as the subspecies.
 
-    {b Rem} : Exported outside this module.                            *)
-(* ******************************************************************* *)
+    {b Rem} : Exported outside this module.                              *)
+(* ********************************************************************* *)
 exception Not_subspecies_missing_field of
   ((** The collection name that should be a subspecies of the one below. *)
    Types.type_collection *
@@ -201,8 +200,8 @@ exception Parameterized_species_arity_mismatch of
 
 (* *********************************************************************** *)
 (** {b Descr} : During collection creation, it appears that the collection
-              can't be created because at leat one field is only declared
-             and not defined.
+    can't be created because at leat one field is only declared and not
+    defined.
 
     {b Rem} : Exported outside this module.                                *)
 (* *********************************************************************** *)
@@ -212,18 +211,17 @@ exception Collection_not_fully_defined of
 ;;
 
 
-(* ************************************************************************* *)
+(* ************************************************************************** *)
 (** {b Descr} : After generalization, a type scheme contains type variables.
-       (either generalized or non generalized). Because in FoCaL methods
-       are not even polymorphic, we of course also reject any scheme
-       where some polymorphic variable would remain. But because we also
-       don't want to have non instanciated variables in a scheme (those
-       like OCaml's "'_a") we also reject schemes with non-generalized
-       variables. Hence, more globally, we reject schemes containing
-       variables.
+    (either generalized or non generalized). Because in FoCaL methods are not
+    even polymorphic, we of course also reject any scheme where some
+    polymorphic variable would remain. But because we also don't want to
+    have non instanciated variables in a scheme (those like OCaml's "'_a") we
+    also reject schemes with non-generalized variables. Hence, more globally,
+    we reject schemes containing variables.
 
-    {b Rem} : Exported outside this module.                                  *)
-(* ************************************************************************* *)
+    {b Rem} : Exported outside this module.                                   *)
+(* ************************************************************************** *)
 exception Scheme_contains_type_vars of (
   Parsetree.vname *   (** The method's name whose scheme contains variables. *)
   Types.type_scheme * (** The scheme containing the variables. *)
@@ -266,15 +264,15 @@ exception No_mix_between_logical_defs of (Location.t * Parsetree.vname) ;;
 
 
 
-(* ************************************************************************* *)
-(** {b Descr} : Datastructure recording the various information required
-              and propagated during the type inference. It is much more
-              convenient to group the various flags and stuff needed than
-              passing them all the time as arguments of each recursive call.
-              This datastructure serves especially this purpose.
+(* ************************************************************************** *)
+(** {b Descr} : Datastructure recording the various information required and
+    propagated during the type inference. It is much more convenient to
+    group the various flags and stuff needed than passing them all the time
+    as arguments of each recursive call.
+    This datastructure serves especially this purpose.
 
-    {b Rem} : Not exported outside this module.                              *)
-(* ************************************************************************* *)
+    {b Rem} : Not exported outside this module.                               *)
+(* ************************************************************************** *)
 type typing_context = {
   (** The name of the currently analysed compilation unit (i.e. the name
       of the file without extension and not capitalized). *)
@@ -293,8 +291,8 @@ type typing_context = {
 
 
 let methods_history_to_text ~dirname ~current_species methods =
-  (* For each species, a file named with "history_", the species    *)
-  (* name and the suffix ".txt" will be generated in the directory. *)
+  (* For each species, a file named with "history_", the species name and the
+     suffix ".txt" will be generated in the directory. *)
   let (current_species_module, current_species_vname) = current_species in
   let out_filename =
     Filename.concat
@@ -303,8 +301,8 @@ let methods_history_to_text ~dirname ~current_species methods =
        (Parsetree_utils.name_of_vname current_species_vname) ^ ".txt") in
   let out_hd = open_out_bin out_filename in
   let out_ppf = Format.formatter_of_out_channel out_hd in
-  (* Just a local function to process printing of one method. Will *)
-  (* be handy to iterate on methods of a [SF_let_rec] field.       *)
+  (* Just a local function to process printing of one method. Will be handy to
+     iterate on methods of a [SF_let_rec] field. *)
   let process_on_method from n =
     Format.fprintf out_ppf "** Method '%a':@\n" Sourcify.pp_vname n ;
     Format.fprintf out_ppf "\tInitially appearing in species '%a'@\n"
@@ -316,9 +314,9 @@ let methods_history_to_text ~dirname ~current_species methods =
         Format.fprintf out_ppf "\t\tVia expression '%a'@\n"
           Sourcify.pp_simple_species_expr by_expression)
       from.Env.fh_inherited_along in
-  (* Now, dump information for each field of the species, starting   *)
-  (* by information about ourselves, then closest parent first. This *)
-  (* means that reading the text top-down, we "go back in the past". *)
+  (* Now, dump information for each field of the species, starting by
+     information about ourselves, then closest parent first. This means that
+     reading the text top-down, we "go back in the past". *)
   List.iter
     (function
       | Env.TypeInformation.SF_sig (from, n, _)
@@ -337,19 +335,17 @@ let methods_history_to_text ~dirname ~current_species methods =
 
   
 
-(* ******************************************************************* *)
-(* typing_context -> Env.Env.ScopeInformation.t ->                     *)
-(*   Parsetree.type_expr -> Types.type_simple                          *)
+(* ************************************************************************* *)
+(* typing_context -> Env.Env.ScopeInformation.t ->                           *)
+(*   Parsetree.type_expr -> Types.type_simple                                *)
 (** {b Descr} : Translates a type expression into a [type_simple].
-                Variable are translated according to the mapping found
-                inside the current context. Hence, in case this
-                function is used to create the body type of a type
-                definition, if the definition is polymorphic, the
-                parameter-variables must already exist inside  the
-                mapping.
+    Variable are translated according to the mapping found inside the current
+    context. Hence, in case this function is used to create the body type of
+    a type definition, if the definition is polymorphic, the
+    parameter-variables must already exist inside the mapping.
 
-    {b Rem} : Not exported outside this module.                        *)
-(* ******************************************************************* *)
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
 let rec typecheck_type_expr ctx env ty_expr =
   let final_ty =
     (match ty_expr.Parsetree.ast_desc with
@@ -404,9 +400,9 @@ let rec typecheck_type_expr ctx env ty_expr =
                  args_ty_len)) ;
          (* Synthetise the types for the arguments. *)
          let args_ty = List.map (typecheck_type_expr ctx env) args_ty_exprs in
-         (* Now get a fresh instance of the type's type scheme in which *)
-         (* the parameters are directly instanciated by the effective   *)
-         (* arguments the sum type constructor is applied to.           *)
+         (* Now get a fresh instance of the type's type scheme in which the
+	    parameters are directly instanciated by the effective arguments
+	    the sum type constructor is applied to. *)
          Types.specialize_with_args
            ty_descr.Env.TypeInformation.type_identity args_ty
          end)
@@ -427,12 +423,11 @@ let rec typecheck_type_expr ctx env ty_expr =
 (* typing_context -> Env.Env.ScopeInformation.t ->                     *)
 (*   Parsetree.rep_type_def -> Types.type_simple                       *)
 (** {b Descr} : Translates a rep type expression into a [type_simple].
-        This function behaves exactly like [typecheck_type_expr].
-        Variable are translated according to the mapping found inside
-        the current context. Hence, in case this function is used to
-        create the body type of a type definition, if the definition
-        is polymorphic, the parameter-variables must already exist
-        inside the mapping.
+    This function behaves exactly like [typecheck_type_expr].
+    Variable are translated according to the mapping found inside the
+    current context. Hence, in case this function is used to create the
+    body type of a type definition, if the definition is polymorphic,
+    the parameter-variables must already exist inside the mapping.
 
     {b Rem} : Not exported outside this module.                        *)
 (* ******************************************************************* *)
@@ -445,14 +440,14 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
            (match ident.Parsetree.ast_desc with
             | Parsetree.I_local ((Parsetree.Vqident _) as variable_qname) ->
                 (begin
-                (* Just handle the special where [ident] is a type variable.  *)
-                (* Note that for a "rep" type because polymorphism is not     *)
-                (* allowed, this should never be used. We could safely raise  *)
-                (* an error. But, in order to keep this function clean and    *)
-                (* smooth, we will enable this and perform a non-polymorphism *)
-                (* test later on the obtained type. Anyway this kind of test  *)
-                (* is not only required for "rep", but also for all the other *)
-                (* methods (they can't either be polymorphic).                *)
+                (* Just handle the special where [ident] is a type variable.
+                   Note that for a "rep" type because polymorphism is not
+                   allowed, this should never be used. We could safely raise an
+                   error. But, in order to keep this function clean and smooth,
+		   we will enable this and perform a non-polymorphism test
+		   later on the obtained type. Anyway this kind of test is not
+		   only required for "rep", but also for all the other methods
+		   (they can't either be polymorphic). *)
                 try List.assoc variable_qname ctx.tyvars_mapping
                 with Not_found ->
                   raise
@@ -495,9 +490,9 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
          (* Synthetise the types for the arguments. *)
          let args_ty =
            List.map (typecheck_rep_type_def ctx env) args_ty_exprs in
-         (* Now get a fresh instance of the type's type scheme in which *)
-         (* the parameters are directly instanciated by the effective   *)
-         (* arguments the sum type constructor is applied to.           *)
+         (* Now get a fresh instance of the type's type scheme in which the
+	    parameters are directly instanciated by the effective arguments
+	    the sum type constructor is applied to. *)
          Types.specialize_with_args
            ty_descr.Env.TypeInformation.type_identity args_ty
      | Parsetree.RTE_prod (ty_exprs) ->
@@ -514,18 +509,16 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
 (* ************************************************************************* *)
 (* Parsetree.type_expr list -> (Parsetree.vname * Types.type_simple) list    *)
 (** {b Descr} : Create a fresh variable mapping automatically variables in
-              the types as generalized. This is used when one creates a
-              type structure from an external value's type expression.
-              In effect, in such a context, variables in the type are
-              implicitely considered as generalized because the type
-              constraint annotating the external value does not show
-              explicitly "forall-bound-variables".
-              Hence, in an external value definition like:
-              [external value foc_error : string -> 'a = ...]
-              the ['a] must be considered as generalized, then when
-              typechecking this definition the context must have a variable
-              mapping where ['a] is known. Using the present function, one
-              can build such a mapping.
+    the types as generalized. This is used when one creates a type structure
+    from an external value's type expression.
+    In effect, in such a context, variables in the type are implicitely
+    considered as generalized because the type constraint annotating the
+    external value does not show explicitly "forall-bound-variables".
+    Hence, in an external value definition like:
+      [external value foc_error : string -> 'a = ...]
+    the ['a] must be considered as generalized, then when typechecking this
+    definition the context must have a variable mapping where ['a] is known.
+    Using the present function, one can build such a mapping.
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
@@ -537,8 +530,8 @@ let make_implicit_var_mapping_from_type_exprs type_expressions =
         (begin
          match ident.Parsetree.ast_desc with
          | Parsetree.I_local ((Parsetree.Vqident _) as variable_qname) ->
-             (* Just handle the special case where *)
-             (* the ident is a type variable.      *)
+             (* Just handle the special case where the ident is a type
+		variable. *)
              if not (List.mem_assoc variable_qname !mapping) then
                mapping :=
                  (variable_qname, Types.type_variable ()) :: !mapping
@@ -564,19 +557,16 @@ let make_implicit_var_mapping_from_type_exprs type_expressions =
 (* ************************************************************************* *)
 (* Parsetree.logical_expr -> (string * Types.type_simple) list               *)
 (** {b Descr} : Create a fresh variable mapping automatically variables in
-              the type parts of a [logical_expr] as generalized. This is
-              used when one creates a type structure from a theorem
-              expression.
-              In effect, in such a context, variables in the type are
-              implicitely considered as generalized because the type
-              constraint annotating the theorem does not show
-              explicitly "forall-bound-variables".
-              Hence, in an theorem definition like:
-              [theorem beq_refl : all x in 'a, ...]
-              the ['a] must be considered as generalized, then when
-              typechecking this definitionn the context must have a variable
-              mapping where ['a] is known. Using the present function, one
-              can build such a mapping.
+    the type parts of a [logical_expr] as generalized. This is used when one
+    creates a type structure from a theorem expression.
+    In effect, in such a context, variables in the type are implicitely
+    considered as generalized because the type constraint annotating the
+    theorem does not show explicitly "forall-bound-variables".
+    Hence, in an theorem definition like:
+      [theorem beq_refl : all x in 'a, ...]
+    the ['a] must be considered as generalized, then when typechecking this
+    definitionn the context must have a variable mapping where ['a] is known.
+    Using the present function, one can build such a mapping.
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
@@ -588,8 +578,8 @@ let make_implicit_var_mapping_from_logical_expr logical_expr_expression =
     | Parsetree.Pr_exists (_, ty, logical_expr) ->
         (* First recover the mapping induced by the type expression. *)
         let mapping_from_ty = make_implicit_var_mapping_from_type_exprs [ty] in
-        (* Assuming the current mapping doesn't contain doubles, we *)
-        (* extend it by the one got from the  type expression.      *)
+        (* Assuming the current mapping doesn't contain doubles, we extend it
+	   by the one got from the  type expression. *)
         mapping :=
           Handy.list_concat_uniq_custom_eq
             (fun (n, _) (n', _) -> n = n') mapping_from_ty !mapping ;
@@ -603,9 +593,9 @@ let make_implicit_var_mapping_from_logical_expr logical_expr_expression =
     | Parsetree.Pr_not logical_expr
     | Parsetree.Pr_paren logical_expr -> rec_make logical_expr
     | Parsetree.Pr_expr _ ->
-        (* Inside expressions type variable must be bound by the previous *)
-        (* parts of the logical_expr ! Hence, do not continue searching   *)
-        (* inside.                                                        *)
+        (* Inside expressions type variable must be bound by the previous
+           parts of the logical_expr ! Hence, do not continue searching
+           inside. *)
         () in
   rec_make logical_expr_expression ;
   !mapping
@@ -616,7 +606,7 @@ let make_implicit_var_mapping_from_logical_expr logical_expr_expression =
 (* ********************************************************************* *)
 (* current_unit:Types.fname -> Env.TypingEnv.t -> Parsetree.expr -> bool *)
 (** {b Descr} : If returns [true] then one can generalise the expression
-             passed as argument.
+    passed as argument.
 
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
@@ -628,9 +618,9 @@ let rec expr_is_non_expansive ~current_unit env expr =
       List.for_all
         (fun binding ->
           let body = binding.Parsetree.ast_desc.Parsetree.b_body in
-          (* Be careful. Consider the comment in the function    *)
-          (* [typecheck_let_definition] dealing with body hiding *)
-          (* the functional aspect of the whole definition.      *)
+          (* Be careful. Consider the comment in the function
+             [typecheck_let_definition] dealing with body hiding the
+	     functional aspect of the whole definition. *)
           binding.Parsetree.ast_desc.Parsetree.b_params <> []
           ||
           binding_body_is_non_expansive ~current_unit env body)
@@ -656,9 +646,9 @@ let rec expr_is_non_expansive ~current_unit env expr =
       List.for_all (expr_is_non_expansive ~current_unit env) exprs
   | Parsetree.E_paren e -> expr_is_non_expansive ~current_unit env e
   | Parsetree.E_external _ ->
-      (* [Unsure]. Needed to make external functions generalized but should   *)
-      (* be guarded by something because in fact the real external definition *)
-      (* may indeed by EXPANSIVE !                                            *)
+      (* [Unsure]. Needed to make external functions generalized but should be
+	 guarded by something because in fact the real external definition
+	 may indeed by EXPANSIVE ! *)
       true
   | _ -> false
 
@@ -734,9 +724,8 @@ let typecheck_constant constant_desc =
 (* typing_context -> Env.TypingEnv.t -> Parsetree.pattern ->             *)
 (*   Types.type_simple * (Parsetree.vname * Types.type_scheme) list      *)
 (** {b Descr} : Infers the type of a [pattern]. Records this type in the
-              AST node and return the type and a list of bindings
-              that map the variables found in the pattern and their
-              types.
+    AST node and return the type and a list of bindings that map the
+    variables found in the pattern and their types.
 
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
@@ -768,16 +757,16 @@ let rec typecheck_pattern ctx env pat_desc =
           | (nempty_pats, Env.TypeInformation.CA_one) ->
               let cstr_ty =
                 Types.specialize cstr_decl.Env.TypeInformation.cstr_scheme in
-              (* Recover the type of the sub-patterns by typechecking an  *)
-              (* artificial tuple argument compound of the sub-patterns.  *)
-              (* Proceed this way ONLY if there is not only ONE argument  *)
-              (* or if there is only one but already begin a tuple !      *)
-              (* This hack is linked to the same process in the function  *)
-              (* [typecheck_simple_type_def_body]. This way, we ensure    *)
-              (* that constructor argument(s) is (are) always in a tuple, *)
-              (* but never in a trivial tuple containing only one         *)
-              (* component being a tuple. This means that we only add a   *)
-              (* tuple layer if there is not one already.                 *)
+              (* Recover the type of the sub-patterns by typechecking an
+		 artificial tuple argument compound of the sub-patterns.
+		 Proceed this way ONLY if there is not only ONE argument or if
+		 there is only one but already begin a tuple !
+		 This hack is linked to the same process in the function
+		 [typecheck_simple_type_def_body]. This way, we ensure that
+		 constructor argument(s) is (are) always in a tuple, but never
+		 in a trivial tuple containing only one component being a
+		 tuple. This means that we only add a tuple layer if there is
+		 not one already. *)
               let hacked_pat =
                 (match nempty_pats with
                  | [ { Parsetree.ast_desc = Parsetree.P_tuple _ } as p] -> p
@@ -786,9 +775,9 @@ let rec typecheck_pattern ctx env pat_desc =
                        Parsetree.ast_desc = Parsetree.P_tuple nempty_pats }) in
               let (cstr_arg_ty, sub_bindings) =
                 typecheck_pattern ctx env hacked_pat in
-              (* Constructeurs being functions, we will unify [cstr_type]   *)
-              (* with an arrow type to ensure that it is really one and     *)
-              (* to ensure the arguments types and extract the result type. *)
+              (* Constructeurs being functions, we will unify [cstr_type] with
+		 an arrow type to ensure that it is really one and to ensure
+		 the arguments types and extract the result type. *)
               let unified_cstr_ty =
                 Types.unify
                   ~loc: pat_desc.Parsetree.ast_loc
@@ -816,9 +805,8 @@ let rec typecheck_pattern ctx env pat_desc =
            let lbl_ty =
              Types.specialize
                lbl_desc.Env.TypeInformation.field_scheme in
-           (* Now, ensure the 2 sub-pattners types are compatible and *)
-           (* that the resulting record type for the whole pattern is *)
-           (* consistent.                                             *)
+           (* Now, ensure the 2 sub-pattners types are compatible and that the
+	      resulting record type for the whole pattern is consistent. *)
            let unified_field_ty =
              Types.unify
                ~loc: pat.Parsetree.ast_loc
@@ -857,16 +845,16 @@ let typecheck_external_expr ext_expr =
 
 
 
-(* *********************************************************************** *)
-(* typing_context -> Env.TypingEnv.t -> Parsetree.fact -> unit             *)
+(* ************************************************************************ *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.fact -> unit*             *)
 (** {b Descr} : Typechecks a [fact]. Because the type of a fact is not
-            relevant in FoCaL, this function does not returns any type.
-            Its only goal is to verify the type of the AST-sub-expressions
-            where it is relevant and to screw this type in the [ast_type]
-            field of these AST-nodes (i.e especially throug [expr_ident]s.
+    relevant in FoCaL, this function does not returns any type.
+    Its only goal is to verify the type of the AST-sub-expressions where it
+    is relevant and to screw this type in the [ast_type] field of these
+    AST-nodes (i.e especially throug [expr_ident]s.
 
-    {b Rem} : Not exported outside this module.                            *)
-(* *********************************************************************** *)
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
 let typecheck_fact ctx env fact =
   (* No relevant type information to insert in the AST node. *)
   fact.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
@@ -889,17 +877,17 @@ let typecheck_fact ctx env fact =
 
 
 
-(* **************************************************************** *)
-(* Parsetree.vname -> Env.TypeInformation.species_field list ->     *)
-(*   Env.TypeInformation.species_field list ->                      *)
-(*     Env.TypeInformation.species_field list                       *)
+(* ***************************************************************** *)
+(* Parsetree.vname -> Env.TypeInformation.species_field list ->      *)
+(*   Env.TypeInformation.species_field list ->                       *)
+(*     Env.TypeInformation.species_field list                        *)
 (* {b Descr} : Checks if the 2 lists of fields contain methods
-           names that overlap. If so then raises en exception
-           [Method_multiply_defined], else returns le concatenation
-           of the 2 lists (first @ second)
+   names that overlap. If so then raises en exception
+   [Method_multiply_defined], else returns le concatenation of the 2
+   lists (first @ second)
 
-   {Rem} : Not exported outside this module.                        *)
-(* **************************************************************** *)
+   {Rem} : Not exported outside this module.                         *)
+(* ***************************************************************** *)
 let append_and_ensure_method_uniquely_defined current_species l1 l2 =
   (* Just a local flattening function... *)
   let local_flat_fields fields =
@@ -935,7 +923,7 @@ let append_and_ensure_method_uniquely_defined current_species l1 l2 =
 (* ************************************************************************ *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.expr -> Types.type_simple *)
 (** {b Descr} : Infers the type o an [expr] and assign it by side effect in
-              the [ast_type] field of the [expr] node.
+    the [ast_type] field of the [expr] node.
 
     {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
@@ -947,11 +935,11 @@ let rec typecheck_expr ctx env initial_expr =
      | Parsetree.E_fun (arg_vnames, e_body) ->
          (* Create the type for each argument .*)
          let args_ty = List.map (fun _ -> Types.type_variable ()) arg_vnames in
-         (* Build the environment extended by these arguments and types. *)
-         (* Preferably use a fold_left instead of a fold_right, this way *)
-         (* arguments are "cons-ed" in the environment in their order of *)
-         (* declaration. Because arguments can't depend on each other,   *)
-         (* that's not a big matter, but that's cleaner...               *)
+         (* Build the environment extended by these arguments and types
+            Preferably use a fold_left instead of a fold_right, this way
+            arguments are "cons-ed" in the environment in their order of
+            declaration. Because arguments can't depend on each other, that's
+	    not a big matter, but that's cleaner... *)
          let extended_env =
            List.fold_left2
              (fun accu_env arg_name arg_ty ->
@@ -961,18 +949,17 @@ let rec typecheck_expr ctx env initial_expr =
              env arg_vnames args_ty in
          (* Now, typecheck the body i nthe new environment. *)
          let ty_body = typecheck_expr ctx extended_env e_body in
-         (* Remains to build the final functional type. And do not *)
-         (* fold_left, otherwise you'll get a mirrored type !      *)
+         (* Remains to build the final functional type. And do not
+            [fold_left], otherwise you'll get a mirrored type ! *)
          List.fold_right
            (fun arg_ty accu_ty -> Types.type_arrow arg_ty accu_ty)
            args_ty ty_body
      | Parsetree.E_var ident ->
-         (* E_var is never "self" because "self" is a dedicated case. *)
-         (* Now, don't bother with the search order, this has already *)
-         (* be done by both the scoping and the environment build     *)
-         (* process. As reminder, lookup will naturally find the      *)
-         (* ident among local identifiers, in-params, is-params,      *)
-         (* inheritance and finally global identifiers.               *)
+         (* E_var is never "self" because "self" is a dedicated case
+            Now, don't bother with the search order, this has already be done
+	    by both the scoping and the environment build process. As reminder,
+	    lookup will naturally find the ident among local identifiers,
+	    IN-params, IS-params, inheritance and finally global identifiers. *)
          let var_scheme =
            Env.TypingEnv.find_value
              ~loc: ident.Parsetree.ast_loc
@@ -986,8 +973,8 @@ let rec typecheck_expr ctx env initial_expr =
          let ty_exprs = List.map (typecheck_expr ctx env) args_exprs in
          List.fold_left
            (fun accu_fun_ty arg_ty ->
-            (* Temporary functionnal type to unify with *)
-            (* the type of the current applicator.      *)
+            (* Temporary functionnal type to unify with the type of the
+	       current applicator. *)
             let tmp_fun_ty =
               Types.type_arrow arg_ty (Types.type_variable ()) in
             let unified_fun_ty =
@@ -1019,8 +1006,8 @@ let rec typecheck_expr ctx env initial_expr =
                 Types.specialize cstr_decl.Env.TypeInformation.cstr_scheme in
               (* Record the type in the AST node of the [cstr_ident]. *)
               cstr_ident.Parsetree.ast_type <- Parsetree.ANTI_type cstr_ty ;
-              (* Build the shadow tuple type as the *)
-              (* real argument of the constructor.  *)
+              (* Build the shadow tuple type as the real argument of the
+		 constructor. *)
               let cstr_arg_ty = Types.type_tuple tys in
               (* And simulate an application. *)
               let unified_cstr_ty =
@@ -1036,16 +1023,16 @@ let rec typecheck_expr ctx env initial_expr =
                    (cstr_ident, cstr_decl.Env.TypeInformation.cstr_arity)))
      | Parsetree.E_match (matched_expr, bindings) ->
          let matched_expr_ty = ref (typecheck_expr ctx env matched_expr) in
-         (* Let's get a fresh type accumulator  *)
-         (* to unify the clauses' bodies types. *)
+         (* Let's get a fresh type accumulator to unify the clauses' bodies
+	    types. *)
          let result_ty = ref (Types.type_variable ()) in
          (* Process each clause of the match. *)
          List.iter
            (fun (pat, expr) ->
              (* Infer the type and bindings induced by the pattern. *)
              let (pat_ty, bnds) = typecheck_pattern ctx env pat in
-             (* Ensure the matched expression and the pattern have the *)
-             (* same type always keep the type where Self is prefered. *)
+             (* Ensure the matched expression and the pattern have the same
+		type always keep the type where Self is prefered. *)
              matched_expr_ty :=
                Types.unify
                  ~loc: initial_expr.Parsetree.ast_loc
@@ -1099,8 +1086,8 @@ let rec typecheck_expr ctx env initial_expr =
            Env.TypingEnv.find_label
              ~loc: initial_expr.Parsetree.ast_loc
              ~current_unit: ctx.current_unit label env in
-         (* Just remind that labels are types as functions of type     *)
-         (* "type of the field as seen by user -> type od the record". *)
+         (* Just remind that labels are types as functions of type "type of
+	    the field as seen by user -> type od the record". *)
          let label_ty =
            Types.specialize label_desc.Env.TypeInformation.field_scheme in
          let unified_label_ty =
@@ -1125,21 +1112,20 @@ let rec typecheck_expr ctx env initial_expr =
 
 
 
-(* ****************************************************************** *)
-(* Env.TypingEnv.t -> (Types.label_name * Parsetree.expr) list ->     *)
-(*   Parsetree.expr option -> Types.type_simple                       *)
+(* ************************************************************************** *)
+(* Env.TypingEnv.t -> (Types.label_name * Parsetree.expr) list ->             *)
+(*   Parsetree.expr option -> Types.type_simple                               *)
 (** {b Descr} : Performs type inference on record expressions with or
-              without "with" clause. Currently, the labels
-              exhaustivity is not checked. It has to be done when
-              there is no "with" clause.
+    without "with" clause. Currently, the labels exhaustivity is not checked.
+    It has to be done when there is no "with" clause.
 
     {b Args} :
       - env : The current typing environment.
       - fields : The list of fields values of the record expression.
       - opt_with_expr : The optional "with" clause.
 
-    {b Rem} : Not exported outside this module.                      *)
-(* ***************************************************************** *)
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
 and typeckeck_record_expr ctx env fields opt_with_expr =
   (* At then end, must be the type of the host of all these labels. *)
   let result_ty = ref (Types.type_variable ()) in
@@ -1154,9 +1140,9 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
          Types.unify
            ~loc: expr.Parsetree.ast_loc
            ~self_manifest: ctx.self_manifest expr_ty !result_ty) ;
-  (* Now proceed with the labels.                               *)
-  (* Just remind that labels are types as functions of type     *)
-  (* "type of the field as seen by user -> type od the record". *)
+  (* Now proceed with the labels.
+     Just remind that labels are types as functions of type "type of the
+     field as seen by user -> type od the record". *)
   List.iter
     (fun (label, expr) ->
       let expr_ty = typecheck_expr ctx env expr in
@@ -1182,58 +1168,52 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
 
 
 
-(* ************************************************************************ *)
-(* is_a_field: bool -> typing_context -> Env.TypingEnv.t ->                 *)
-(*   Parsetree.let_def -> (Parsetree.vname * Types.type_scheme *            *)
-(*                         Env.TypeInformation.dependency_on_rep) list      *)
+(* ************************************************************************** *)
+(* is_a_field: bool -> typing_context -> Env.TypingEnv.t ->                   *)
+(*   Parsetree.let_def -> (Parsetree.vname * Types.type_scheme *              *)
+(*                         Env.TypeInformation.dependency_on_rep) list        *)
 (** {b Descr} : Infers the list of bindings induced by the let-def and that
-                will extend the current typing environment.
-                Because methods cannot be polymorphic (c.f. Virgile
-                Prevosto's Phd section 3.3, page 24) the parameter
-                [~is_a_field] permits to know if we must generalize
-                or not the let bound identifiers, and even more, if the
-                scheme must be down-leveled to 0 or not. If [~is_a_field]
-                is [true], then the bound identifiers must NOT be
-                generalized and even more, in order to be never
-                generalizable (for instance in another species where the
-                use of this ident is unfortunately done at the same
-                binding level) the scheme's body must be fully toggled
-                with a level equal to 0 ! This way, the obtained scheme
-                will not be polymorphic forever.
-                This flag also enable to clear the flag set by unifications
-                telling if a def-dependency on "rep" was found for a
-                method (i.e. a species field). In case we are dealing with
-                a field, we clear this flag to start a new search. In case
-                In case we are in an nested expression, we continue to
-                accumulate the searh's result by not clearing this flag.
-                Hence the search result will be propagated to the
-                surrounding expression.
-                When this function is called from under a field definition,
-                then this flag must obviously be [true].
+    will extend the current typing environment.
+    Because methods cannot be polymorphic (c.f. Virgile Prevosto's Phd
+    section 3.3, page 24) the parameter [~is_a_field] permits to know if we
+    must generalize or not the let bound identifiers, and even more, if the
+    scheme must be down-leveled to 0 or not. If [~is_a_field] is [true],
+    then the bound identifiers must NOT be generalized and even more, in
+    order to be never generalizable (for instance in another species where
+    the use of this ident is unfortunately done at the same binding level)
+    the scheme's body must be fully toggled with a level equal to 0 ! This
+    way, the obtained scheme will not be polymorphic forever.
+    This flag also enable to clear the flag set by unifications telling if a
+    def-dependency on "rep" was found for a method (i.e. a species field).
+    In case we are dealing with a field, we clear this flag to start a new
+    search. In case we are in an nested expression, we continue to
+    accumulate the searh's result by not clearing this flag.
+    Hence the search result will be propagated to the surrounding expression.
+    When this function is called from under a field definition, then this
+    flag must obviously be [true].
 
-    {b Rem} : Not exported outside this module.                             *)
-(* ************************************************************************ *)
+    {b Rem} : Not exported outside this module.                               *)
+(* ************************************************************************** *)
 and typecheck_let_definition ~is_a_field ctx env let_def =
   (* A [let_definition] doesn't really has a type. Record in the AST node. *)
   let_def.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
   let let_def_descr = let_def.Parsetree.ast_desc in
-  (* Get information to possibly build the pre-environment, *)
-  (* i.e. the induced environment bindings between idents   *)
-  (* and types and if they can be generalised or not.       *)
+  (* Get information to possibly build the pre-environment, i.e. the induced
+     environment bindings between idents and types and if they can be
+     generalised or not. *)
   let pre_env_info =
     List.map
       (fun { Parsetree.ast_desc = binding_desc } ->
-        (* Just use a hack telling that if the expression won't be *)
-        (* generalisable, to typecheck it, we don't change the     *)
-        (* generalisation level, then we won't generalise it.      *)
-        (* Becareful, functions are non_expansive. Because the     *)
-        (* structure of the let-def includes the parameters of the *)
-        (* bound ident, a fun like [let f (x) = body] will not be  *)
-        (* considered as non_expansive if [body] is not because    *)
-        (* [body] hides the function because the arguments are     *)
-        (* recorded in the [b_params] field. Hence, if the list    *)
-        (* [b_params] is not empty, then the bound expression is a *)
-        (* a function and is non_expansive whatever the body is.   *)
+        (* Just use a hack telling that if the expression won't be
+	   generalisable, to typecheck it, we don't change the generalisation
+	   level, then we won't generalise it.
+           Becareful, functions are non_expansive. Because the structure of
+	   the let-def includes the parameters of the bound ident, a fun like
+	   [let f (x) = body] will not be considered as non_expansive if [body]
+	   is not because [body] hides the function because the arguments are
+           recorded in the [b_params] field. Hence, if the list [b_params] is
+	   not empty, then the bound expression is a function and is
+	   non_expansive whatever the body is. *)
         if not is_a_field &&
            (binding_desc.Parsetree.b_params <> [] ||
             binding_body_is_non_expansive

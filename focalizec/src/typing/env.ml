@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.102 2008-07-11 15:30:30 pessaux Exp $ *)
+(* $Id: env.ml,v 1.103 2008-08-13 15:55:17 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -701,7 +701,14 @@ type collection_or_species =
 ;;
 
 
-(** {b Descr} : Common for OCaml and Coq code generation environments. *)
+
+(* ************************************************************************ *)
+(** {b Descr} : Common for OCaml and Coq code generation environments. This
+    represent various information about the methods, their abstraction,
+    their body, their type scheme.
+
+    {b Rem} : Exported outside this module.                                 *)
+(* ************************************************************************ *)
 type generic_code_gen_method_info = {
   mi_name : Parsetree.vname ;        (** The field name. *)
   mi_history : from_history ;        (** The field inheritance history. *)
@@ -715,7 +722,7 @@ type generic_code_gen_method_info = {
      Parsetree_utils.DepNameSet.t) list ;
   mi_abstracted_methods : Parsetree.vname list   (** The positional list
       of methods from ourselves abstracted by lambda-lifting. *)
-  } ;;
+} ;;
 
 
 
@@ -848,8 +855,6 @@ module CoqGenInformation = struct
      (** Tells if the info is bound to a species or a collection. *)
      collection_or_species)
 
-  (** The number of extra argument the identifier has due to its
-      polymorphism. [Unsure] Certainement useless maintenant. *)
   type value_mapping_info = int
 
   (* ************************************************************** *)
@@ -1416,23 +1421,22 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   let rec find_value ~loc ~current_unit ident_ident (env : t) =
     match ident_ident.Parsetree.ast_desc with
      | Parsetree.EI_local vname ->
-         (* No explicit scoping information was provided, hence *)
-         (* opened modules bindings are acceptable.             *)
+         (* No explicit scoping information was provided, hence opened modules
+	    bindings are acceptable. *)
          find_value_vname ~loc ~allow_opened: true vname env
      | Parsetree.EI_global qvname ->
          let (opt_scope, vname) = opt_scope_vname qvname in
          let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
-         (* Check if the lookup can return something *)
-         (* coming from an opened module.            *)
+         (* Check if the lookup can return something coming from an opened
+	    module. *)
          let allow_opened = allow_opened_p current_unit opt_scope in
          find_value_vname ~loc ~allow_opened vname env'
      | Parsetree.EI_method (None, vname) ->
-         (* No collection scope. Then the searched ident must belong  *)
-         (* to the inheritance of Self. First, this means that opened *)
-         (* stuff is forbidden. Next, because the [values] bucket is  *)
-         (* so that inherited methods and our methods belong to it,   *)
-         (* we just have to search for the [vname] inside the current *)
-         (* environment.                                              *)
+         (* No collection scope. Then the searched ident must belong to the
+	    inheritance of Self. First, this means that opened stuff is
+	    forbidden. Next, because the [values] bucket is so that inherited
+	    methods and our methods belong to it, we just have to search for
+	    the [vname] inside the current environment. *)
          find_value_vname ~loc ~allow_opened: false vname env
      | Parsetree.EI_method
          (Some (Parsetree.Vname (Parsetree.Vuident "Self")), vname) ->
@@ -1444,15 +1448,14 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
             | Parsetree.Vname coll_vname -> None, coll_vname
             | Parsetree.Qualified (modname, coll_vname) ->
                 Some modname, coll_vname in
-         (* Recover the environment in where to search,according     *)
-         (* to if the species is qualified by a module name. In this *)
-         (* environment, all the imported bindings are tagged        *)
-         (* [BO_absolute].                                           *)
+         (* Recover the environment in where to search,according to if the
+	    species is qualified by a module name. In this environment, all the
+	    imported bindings are tagged [BO_absolute]. *)
          let env' =
            EMAccess.find_module
              ~loc ~current_unit opt_module_qual env in
-         (* Check if the lookup can return something *)
-         (* coming from an opened module.            *)
+         (* Check if the lookup can return something coming from an opened
+	    module. *)
          let allow_opened =
            (match opt_module_qual with
               None -> true | Some fname -> current_unit = fname) in
@@ -1472,8 +1475,8 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
                 (meths_i, (Parsetree.Qualified (current_unit, coll_vname)))
             | BO_opened (file, meths_i) ->
                 (meths_i, (Parsetree.Qualified (file, coll_vname))) in
-         (* We must now look inside collections and species for the *)
-         (* [coll_vname] in order to recover its methods.           *)
+         (* We must now look inside collections and species for the
+	    [coll_vname] in order to recover its methods. *)
          let available_meths =
            EMAccess.make_value_env_from_species_methods
              real_full_coll_name methods_info in
@@ -1527,8 +1530,8 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
      | Parsetree.CI qvname ->
          let (opt_scope, vname) = opt_scope_vname qvname in
          let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
-         (* Check if the lookup can return something *)
-         (* coming from an opened module.            *)
+         (* Check if the lookup can return something coming from an opened
+	    module. *)
          let allow_opened = allow_opened_p current_unit opt_scope in
          find_constructor_vname ~loc ~allow_opened vname env'
 
@@ -1575,8 +1578,8 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
      | Parsetree.LI qvname ->
          let (opt_scope, vname) = opt_scope_vname qvname in
          let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
-         (* Check if the lookup can return something *)
-         (* coming from an opened module.            *)
+         (* Check if the lookup can return something coming from an opened
+	    module. *)
          let allow_opened = allow_opened_p current_unit opt_scope in
          find_label_vname ~loc ~allow_opened vname env'
 
@@ -1812,7 +1815,7 @@ module CoqGenEMAccess = struct
     (* parameters that woud come from ... polymorphism.                 *)
     let values_bucket =
       List.map
-        (fun { mi_name = field_name } -> (field_name, (BO_absolute 0)))
+	(fun { mi_name = field_name } -> (field_name, (BO_absolute 0)))
         meths_info in
     { constructors = [] ; labels = [] ; types = [] ; values = values_bucket ;
       species = [] }

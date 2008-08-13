@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.49 2008-07-11 15:30:30 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.50 2008-08-13 15:55:17 pessaux Exp $ *)
 
 
 
@@ -402,10 +402,35 @@ try Check_file.main () with
          Format.fprintf Format.err_formatter
            "@[%tUnable to find Coq generation information for compiled \
            file %t'%t%s.foc%t'%t. Source file may have been compiled without \
-	   Coq code generation enabled.%t.@]@."
+           Coq code generation enabled.%t.@]@."
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined file Handy.pp_reset_effects
            Handy.pp_set_bold Handy.pp_reset_effects
+     | Species_coq_generation.Attempt_proof_by_def_of_species_param (at, id) ->
+         Format.fprintf Format.err_formatter
+           "%a:@\n@[%tUsing a species parameter's method %t(%t%a%t)%t in a \
+           Zenon proof with \"by definition\" is not allowed.%t@]@."
+           Location.pp_location at
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined Sourcify.pp_expr_ident id
+           Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
+     | Species_coq_generation.Attempt_proof_by_def_of_declared_method_of_self
+           (at, id) ->
+         Format.fprintf Format.err_formatter
+           "%a:@\n@[%tUsing an only declared method of Self %t(%t%a%t)%t in a \
+           Zenon proof with \"by definition\" is not allowed.%t@]@."
+           Location.pp_location at
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined Sourcify.pp_expr_ident id
+           Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
+     | Species_coq_generation.Attempt_proof_by_def_of_local_ident (at, id) ->
+         Format.fprintf Format.err_formatter
+           "%a:@\n@[%tUsing a local identifier %t(%t%a%t)%t in a \
+           Zenon proof with \"by definition\" is not allowed.%t@]@."
+           Location.pp_location at
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined Sourcify.pp_expr_ident id
+           Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
 (* ************************** *)
 (* Recursion analysis errors. *)
      | Recursion.NestedRecursiveCalls (function_name, at) ->

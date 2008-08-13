@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.47 2008-07-11 10:07:39 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.48 2008-08-13 15:55:17 pessaux Exp $ *)
 
 
 
@@ -430,9 +430,9 @@ let rec let_binding_compile ctx ~local_idents ~self_methods_status ~is_rec
         (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
         var)
     generalized_instanciated_vars ;
-  (* Record NOW in the environment the number of extra arguments  *)
-  (* due to polymorphism the current bound ident has in case of   *)
-  (* recursive definition. Otherwise, it will only be done later. *)
+  (* Record NOW in the environment the number of extra arguments due to
+     polymorphism the current bound ident has in case of recursive definition.
+     Otherwise, it will only be done later. *)
   let nb_polymorphic_args = List.length generalized_instanciated_vars in
   let env' =
     if is_rec then
@@ -449,9 +449,9 @@ let rec let_binding_compile ctx ~local_idents ~self_methods_status ~is_rec
              (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
              param_ty
        | None ->
-           (* Because we provided a type scheme to the function         *)
-           (* [bind_parameters_to_types_from_type_scheme], MUST get one *)
-           (* type for each parameter name !                            *)
+           (* Because we provided a type scheme to the function
+              [bind_parameters_to_types_from_type_scheme], MUST get one type
+	      for each parameter name ! *)
            assert false)
     params_with_type ;
   (* [Unsure] This heuristic is a pure weak hack...                    *)

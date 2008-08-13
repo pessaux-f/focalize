@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: minEnv.ml,v 1.5 2008-06-09 12:13:29 pessaux Exp $ *)
+(* $Id: minEnv.ml,v 1.6 2008-08-13 15:55:17 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -37,13 +37,28 @@ type min_coq_env_element =
            i.e. abstracted Let or abstracted Let_rec or Sig other than "rep". *)
   | MCEE_Defined_computational of
       (Env.from_history *
-       Parsetree.vname * Types.type_scheme)  (** Defined computational method,
-           i.e. Let or Let_rec. *)
+       Parsetree.vname * (Parsetree.vname list) * Types.type_scheme *
+       Parsetree.binding_body)  (** Defined computational method, i.e. Let or
+                                    Let_rec. *)
   | MCEE_Declared_logical of
       (Parsetree.vname * Parsetree.logical_expr)  (** Abstract logical property,
            i.e. Property or abstracted Theorem. *)
   | MCEE_Defined_logical of      (** Defined logical property, i.e. Theorem. *)
       (Env.from_history * Parsetree.vname * Parsetree.logical_expr)
+;;
+
+
+
+let find_coq_env_element_by_name name min_coq_env =
+  List.find
+    (function
+      | MCEE_Declared_carrier
+      | MCEE_Defined_carrier _ -> name = (Parsetree.Vuident "rep")
+      | MCEE_Declared_computational (n, _)
+      | MCEE_Defined_computational (_, n, _, _, _)
+      | MCEE_Declared_logical (n, _)
+      | MCEE_Defined_logical (_, n, _) -> n = name)
+    min_coq_env
 ;;
 
 
@@ -64,14 +79,14 @@ let minimal_typing_environment universe species_fields =
   (* factorize code for both [Let] and [Let_rec] fields.   *)
   let process_one_let_binding l_binding =
     try
-      let (from, n, _, sch, _, _, _) = l_binding in
+      let (from, n, params, sch, body, _, _) = l_binding in
       let reason = VisUniverse.Universe.find n universe in
       if reason = VisUniverse.IU_only_decl then
         (* Keep in the environment, but as abstracted. *)
         [MCEE_Declared_computational (n, sch)]
       else
         (* Otherwise, keep the full definition. *)
-        [MCEE_Defined_computational (from, n, sch)]
+        [MCEE_Defined_computational (from, n, params, sch, body)]
     with Not_found ->
       (* Not in the universe. Hence not in the minimal typing env. *)
       [] in

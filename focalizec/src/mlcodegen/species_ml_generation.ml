@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.76 2008-07-11 15:30:30 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.77 2008-08-13 15:55:17 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -410,7 +410,7 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
         (List.map
            (function
              | MinEnv.MCEE_Defined_carrier _
-             | MinEnv.MCEE_Defined_computational (_, _, _)
+             | MinEnv.MCEE_Defined_computational (_, _, _, _, _)
              | MinEnv.MCEE_Defined_logical (_, _, _) ->
                  (* Anything defined is not abstracted. *)
                  []
@@ -1275,10 +1275,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
            | Misc_common.CSF_let_rec compiled_field_memories ->
                List.map
                  (fun cfm ->
-                   { Env.mi_name =
-                       cfm.Misc_common.cfm_method_name ;
-                     Env.mi_history =
-                       cfm.Misc_common.cfm_from_species ;
+                   { Env.mi_name = cfm.Misc_common.cfm_method_name ;
+                     Env.mi_history = cfm.Misc_common.cfm_from_species ;
                      (* Never used in OCaml. *)
                      Env.mi_used_species_parameter_tys = [] ;
                      Env.mi_dependencies_from_parameters =

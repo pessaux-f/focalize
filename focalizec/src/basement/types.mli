@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.37 2008-07-09 15:41:30 blond Exp $ *)
+(* $Id: types.mli,v 1.38 2008-08-13 15:55:17 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -119,6 +119,8 @@ type collection_carrier_mapping_info =
 
 type collection_carrier_mapping =
   (type_collection * (string * collection_carrier_mapping_info)) list
+
+val debug_collection_carrier_mapping : collection_carrier_mapping -> unit
 
 (** Pretty_printing for types for the OCaml translation. *)
 val pp_type_simple_to_ml :

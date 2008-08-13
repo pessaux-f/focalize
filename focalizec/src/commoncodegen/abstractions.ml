@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.24 2008-07-15 13:15:51 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.25 2008-08-13 15:55:17 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -135,7 +135,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
                Param_dep_analysis.param_deps_logical_expr
                  ~current_species species_param_name p) in
         (* Return a couple binding the species parameter's name with the
-	   methods of it we found as required for the current method. *)
+           methods of it we found as required for the current method. *)
         (species_param, meths_from_param) :: accu)
       species_parameters_names
       [] in
