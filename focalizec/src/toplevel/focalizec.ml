@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.28 2008-07-16 08:29:59 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.29 2008-08-14 09:24:02 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -125,11 +125,12 @@ let main () =
            ~current_unit ~out_file_name stuff_to_compile)
       end)
     else None in
-  (* Finally, go to the Coq code generation if requested. *)
+  (* Finally, go to the Coq code generation if requested and generate the
+     .zv file . *)
   let coqgen_toplevel_env =
     if Configuration.get_generate_coq () then
       (begin
-      let out_file_name = (Filename.chop_extension input_file_name) ^ ".v" in
+      let out_file_name = (Filename.chop_extension input_file_name) ^ ".zv" in
       Some
         (Main_coq_generation.root_compile
            ~current_unit ~out_file_name stuff_to_compile)
