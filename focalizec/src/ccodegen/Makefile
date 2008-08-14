@@ -1,9 +1,9 @@
-# $Id: Makefile,v 1.5.2.4 2008-08-03 20:57:54 blond Exp $
+# $Id: Makefile,v 1.5.2.5 2008-08-14 08:25:37 blond Exp $
 
 include ../Makefile.config
 CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing
 
-BYTOBJS = genc.cmo
+BYTOBJS = ccontext.cmo cast.cmo genc.cmo
 
 
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.58.2.1 2008-08-04 15:37:58 blond Exp $ *)
+(* $Id: types.ml,v 1.58.2.2 2008-08-14 08:25:37 blond Exp $ *)
 
 
 (* **************************************************************** *)
@@ -782,6 +782,18 @@ let refers_to_prop_p ty =
   test ty
 ;;
 
+let is_in_prop ty =
+  let rec test t =
+    let t = repr t in
+    match t with
+      ST_var _ -> false
+    | ST_arrow (_, t') -> test t'
+    | ST_tuple _ -> false
+    | ST_construct (cstr_name, _) -> cstr_name = ("basics", "prop")
+    | ST_self_rep -> false
+    | ST_species_rep _ -> false in
+  test ty
+
 
 let (reset_deps_on_rep,
      get_def_dep_on_rep, set_def_dep_on_rep,
@@ -1478,52 +1490,83 @@ let rec get_species_types_in_type ty =
      | ST_species_rep st -> SpeciesCarrierTypeSet.singleton st
 ;;
 
-(* val pp_type_scheme_to_c : *)
-(*     Parsetree.vname -> Format.formatter -> type_scheme -> unit *)
-let rec pp_type_simple_to_c vn ppf ts =
+
+
+
+type ctype =
+    TypeId of string
+  | Ptr of ctype
+  | Annot of ctype * string
+  | Fun of ctype * ctype list
+  | Param of ctype * ctype list
+  | Struct of string option * (string * ctype) list 
+  | Enum of string option * string list
+  | Union of string option * (string * ctype) list
+
+(* let decompose ty = *)
+(*   let rec aux ty acc = *)
+(*     let ty = repr ty in *)
+(*     match ty with *)
+(*       ST_arrow (a, b) -> aux b (acc@[a]) *)
+(*     | ST_var _ | ST_tuple _ | ST_construct _ *)
+(*     | ST_self_rep | ST_species_rep _ -> (acc, ty) *)
+(*   in *)
+(*   aux ty [] *)
+    
+
+(* val pp_type_scheme_to_c : Format.formatter -> type_scheme -> unit *)
+(* let rec pp_type_simple_to_c ppf ts = *)
+
+let todo str = 
+  Format.fprintf Format.err_formatter "TODO : %s@." str;
+  TypeId (Format.sprintf "<%s>" str)
+
+let rec type_simple_to_c ts =
   let ty = repr ts in
   match ty with
     ST_var tvar ->
       begin match tvar.tv_value with
 	TVV_unknown ->
-	  Format.fprintf ppf "@[void*@]"
+	  Ptr (TypeId "foc_value")
       |	TVV_known ts ->
-	  pp_type_simple_to_c vn ppf ts
+	  type_simple_to_c ts
       end
-  | ST_arrow (l, r) ->
-      let rec decompose ty args =
-	let ty = repr ty in
-	match ty with
-	  ST_arrow (a, b) -> decompose b (args@[a])
-	| ST_var _ | ST_tuple _ | ST_construct _
-	| ST_self_rep | ST_species_rep _ -> (args, ty)
-      in
-      let (args, ret) = decompose r [l] in
-      Format.fprintf ppf "@[%a (*%s) (@["
-	(pp_type_simple_to_c "") ret
-	vn;
-      let rec pp_args = function
-	  [] -> assert false
-	| [e] -> pp_type_simple_to_c "" ppf e
-	| h::t -> 
-	    Format.fprintf ppf "%a,@;" (pp_type_simple_to_c "") h;
-	    pp_args t
-      in pp_args args;
-      Format.fprintf ppf "@])@]"
-  | ST_tuple _ ->
-      Format.fprintf Format.err_formatter "@[TODO : Types.ST_tuple@]@."
-  | ST_construct ((f, id), []) ->
-      Format.fprintf ppf "@[%s_%s@]" f id
-  | ST_construct _ ->
-      Format.fprintf Format.err_formatter "@[TODO : Types.ST_construct (with arguments)@]@."
-  | ST_self_rep ->
-      Format.fprintf ppf "@[void* %s@]" vn 
-  | ST_species_rep _ ->
-      Format.fprintf Format.err_formatter "@[TODO : Types.ST_species_rep@]@."
-	  
 
-let pp_type_scheme_to_c vn ppf ts =
-  pp_type_simple_to_c vn ppf ts.ts_body
+  | ST_arrow (l, r) ->
+      let l' = type_simple_to_c l in
+      let r' = type_simple_to_c r in
+      begin match r' with
+	Fun (a, b) -> Fun (a, l'::b)
+      |	_ -> Fun (r', [l'])
+      end
+
+  | ST_tuple l ->
+      begin match l with
+	[] -> assert false
+      |	[t] -> type_simple_to_c t
+      |	_ ->
+	  let len = List.length l in
+	  Annot (Ptr (TypeId "foc_value"), Format.sprintf "T%i" len)
+      end
+
+  | ST_construct ((f, id), []) ->
+      Ptr (TypeId (Format.sprintf "%s_%s" f id))
+
+  | ST_construct ((f, id), l) ->
+      Param (Ptr (TypeId (Format.sprintf "%s_%s" f id)),
+	     List.map type_simple_to_c l)
+     
+  | ST_self_rep ->
+      todo "ST_self_rep"
+      (* Format.fprintf ppf "@[foc_value* /* Self */@]"  *)
+  | ST_species_rep _ ->
+      todo "ST_species_rep"
+
+
+let type_scheme_to_c ty = type_simple_to_c ty.ts_body
+
+(* let pp_type_scheme_to_c ppf ts = *)
+(*   pp_type_simple_to_c ppf ts.ts_body *)
 
 (* type local_type = *)
 (*   | Lt_var of int *)

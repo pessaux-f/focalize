@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.21.2.2 2008-08-04 15:37:58 blond Exp $
+# $Id: Makefile,v 1.21.2.3 2008-08-14 08:25:37 blond Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -15,13 +15,14 @@ CC_FLAGS =
 
 FOC_COMP_FLAGS = --c-code
 
-FOCSRC = basics.foc \
-	sets_orders.foc \
-	iterators.foc \
-	additive_law.foc \
-	multiplicative_law.foc \
-	weak_structures.foc \
-	wellfounded.foc
+FOCSRC = basics.foc 
+# \
+# 	sets_orders.foc \
+# 	iterators.foc \
+# 	additive_law.foc \
+# 	multiplicative_law.foc \
+# 	weak_structures.foc \
+# 	wellfounded.foc
 
 FOCSRC_UNSAFE =	rings_fields.foc \
 	random_foc.foc \
@@ -51,7 +52,7 @@ FOCCS_UNSAFE = $(FOCSRC_UNSAFE:.foc=.c)
 FOCOS = $(FOCCS:.c=.o)
 FOCOS_UNSAFE = $(FOCCS_UNSAFE:.c=.o)
 
-EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
+EXTERNALOBJS = ml_builtins.cmo c_builtins.o sets_orders_externals.cmo \
 	weak_structures_externals.cmo \
 	coq_builtins.vo weak_structures_externals.vo wellfounded_externals.vo \
 	random_foc_externals.cmo

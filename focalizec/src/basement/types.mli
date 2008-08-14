@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.37.2.1 2008-08-04 15:37:58 blond Exp $ *)
+(* $Id: types.mli,v 1.37.2.2 2008-08-14 08:25:37 blond Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -60,6 +60,7 @@ val is_bool_type : type_simple -> bool
 
 val refers_to_self_p : type_simple -> bool
 val refers_to_prop_p : type_simple -> bool
+val is_in_prop : type_simple -> bool
 
 type substitution_by_replacement_collection_kind =
   | SBRCK_coll of type_collection
@@ -177,7 +178,15 @@ module SpeciesCarrierTypeSet :
 val get_species_types_in_type : type_simple -> SpeciesCarrierTypeSet.t
 
 (** *)
-val pp_type_simple_to_c :
-    string -> Format.formatter -> type_simple -> unit
-val pp_type_scheme_to_c :
-    string -> Format.formatter -> type_scheme -> unit
+type ctype =
+    TypeId of string
+  | Ptr of ctype
+  | Annot of ctype * string
+  | Fun of ctype * ctype list
+  | Param of ctype * ctype list
+  | Struct of string option * (string * ctype) list 
+  | Enum of string option * string list
+  | Union of string option * (string * ctype) list
+
+val type_simple_to_c : type_simple -> ctype
+val type_scheme_to_c : type_scheme -> ctype

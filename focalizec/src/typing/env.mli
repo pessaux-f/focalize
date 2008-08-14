@@ -329,6 +329,18 @@ module CoqGenEnv :
       Parsetree.label_ident -> t -> CoqGenInformation.label_mapping_info
   end
 
+module CGenEnv :
+  sig
+    type t
+    val create : string -> string list -> t
+    val unit_name : t -> string
+    val file_name : t -> string
+    val add_constr : t -> Parsetree.vname -> string -> t
+    val merge : t -> t -> t
+    val mem_eq : t -> string -> bool
+    val add_known_type : t -> string -> t
+    val is_known_type : t -> string -> bool
+  end
 
 exception No_available_OCaml_code_generation_envt of Types.fname
 exception No_available_Coq_code_generation_envt of Types.fname
@@ -344,9 +356,11 @@ val mlgen_open_module :
 val coqgen_open_module :
   loc: Location.t -> Types.fname -> CoqGenEnv.t -> CoqGenEnv.t
 
+val cgen_open_module : loc: Location.t -> Types.fname -> CGenEnv.t
+
 val make_fo_file :
   source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t ->
-    MlGenEnv.t option -> CoqGenEnv.t option -> unit
+    MlGenEnv.t option -> CoqGenEnv.t option -> CGenEnv.t option -> unit
 
 val inspect_fo_structure : Format.formatter -> fo_file_structure -> unit
 

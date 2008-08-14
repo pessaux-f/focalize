@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.28.2.6 2008-08-04 15:37:58 blond Exp $ *)
+(* $Id: focalizec.ml,v 1.28.2.7 2008-08-14 08:25:37 blond Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -139,18 +139,20 @@ let main () =
       end)
     else None in
   (* Generating the C code if requested. *)
-  begin
+  let c_env =
     if Configuration.get_generate_c () then
       begin
 	let Parsetree.File l = scoped_ast.Parsetree.ast_desc in
 	let stuff = List.combine l stuff_to_compile in
-	Genc.compile input_file_name stuff
+	Some (Genc.compile input_file_name stuff)
       end
-  end;
+    else
+      None
+  in
   (* Now, generate the persistent interface file. *)
   Env.make_fo_file
     ~source_filename: input_file_name
     scoping_toplevel_env typing_toplevel_env mlgen_toplevel_env
-    coqgen_toplevel_env ;
+    coqgen_toplevel_env c_env;
   exit 0
 ;;

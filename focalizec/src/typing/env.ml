@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.102 2008-07-11 15:30:30 pessaux Exp $ *)
+(* $Id: env.ml,v 1.102.2.1 2008-08-14 08:25:37 blond Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -866,6 +866,48 @@ end
 
 
 
+(* The C generation environment. *)
+module CGenEnv =
+  struct
+    type t =
+	{ c_file : string;
+	  c_unit : string;
+	  mutable c_constrs : (Parsetree.vname * string) list;
+	  mutable c_eqs : string list;
+	  mutable c_types : string list }
+
+    let create file eqs =
+      { c_file = file;
+	c_unit = Filename.chop_extension (Filename.basename file);
+	c_constrs = [];
+	c_eqs = eqs;
+	c_types = eqs }
+
+    let unit_name x = x.c_unit
+
+    let file_name x = x.c_file
+
+    let add_constr x vn code =
+      x.c_constrs <- (vn, code) :: x.c_constrs;
+      x
+
+    let merge x y =
+      y.c_constrs <- x.c_constrs @ y.c_constrs;
+      y.c_eqs <- x.c_eqs @ y.c_eqs;
+      y.c_types <- x.c_types @ y.c_types;
+      y
+
+    let mem_eq x str =
+      List.mem str x.c_eqs
+
+    let add_known_type x str =
+      x.c_types <- str :: x.c_types;
+      x
+
+    let is_known_type x str =
+      List.mem str x.c_types
+  end
+
 
 (* *********************************************************************** *)
 (* *********************************************************************** *)
@@ -893,7 +935,7 @@ exception No_available_OCaml_code_generation_envt of Types.fname ;;
 (* ************************************************************************* *)
 exception No_available_Coq_code_generation_envt of Types.fname ;;
 
-
+exception No_available_C_code_generation_envt of Types.fname ;;
 
 (* ************************************************************************** *)
 (** {b Descr} : Struture on disk that records the "object" file once a source
@@ -909,7 +951,10 @@ type fo_file_structure = {
   (* Optional since the file may be compiled without OCaml code generation. *)
   ffs_mlgeneration : MlGenInformation.env option ;
   (* Optional since the file may be compiled without Coq code generation. *)
-  ffs_coqgeneration : CoqGenInformation.env option }
+    ffs_coqgeneration : CoqGenInformation.env option;
+  (* Optional since the file may be compiled without C oe generation. *)
+    ffs_cgeneration : CGenEnv.t option
+  }
 ;;
 
 
@@ -917,7 +962,8 @@ type fo_file_structure = {
 let (scope_find_module, type_find_module,
      mlgen_find_module, coqgen_find_module,
      scope_open_module, type_open_module,
-     mlgen_open_module, coqgen_open_module) =
+     mlgen_open_module, coqgen_open_module,
+     cgen_open_module) =
   (* Let's just make the list used to bufferize opened files' content. *)
   (* Because ".fo" files contains always both the scoping and typing   *)
   (* information, once loaded for scoping purpose, the typing info     *)
@@ -1162,7 +1208,13 @@ let (scope_find_module, type_find_module,
        match (internal_find_module ~loc fname).ffs_coqgeneration with
         | None -> raise (No_available_Coq_code_generation_envt fname)
         | Some e -> e in
-     internal_extend_env fname loaded_coqgen_env env)
+     internal_extend_env fname loaded_coqgen_env env),
+
+  (* Get the given module's C code generation environment. *)
+  (fun ~loc fname ->
+    match (internal_find_module ~loc fname).ffs_cgeneration with
+    | None -> raise (No_available_C_code_generation_envt fname)
+    | Some e -> e)
   )
 ;;
 
@@ -1827,6 +1879,8 @@ module CoqGenEnv = Make (CoqGenEMAccess);;
 
 
 
+
+
 (* **************************************************************** *)
 (* source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t ->   *)
 (*   MlGenEnv.t -> CoqGenEnv.t -> unit                              *)
@@ -1839,7 +1893,7 @@ module CoqGenEnv = Make (CoqGenEMAccess);;
     {b Rem} : Exported outside this module.                         *)
 (* **************************************************************** *)
 let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
-    opt_mlgen_toplevel_env opt_coqgen_toplevel_env =
+    opt_mlgen_toplevel_env opt_coqgen_toplevel_env c_env =
   (* First, recover from the scoping environment only bindings *)
   (* coming from definitions of our current compilation unit.  *)
   let scoping_toplevel_env' =
@@ -1874,7 +1928,7 @@ let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
   output_value
     out_hd
     (scoping_toplevel_env', typing_toplevel_env',
-     opt_mlgen_toplevel_env', opt_coqgen_toplevel_env') ;
+     opt_mlgen_toplevel_env', opt_coqgen_toplevel_env', c_env) ;
   (* Just don't forget to close the output file... *)
   close_out out_hd
 ;;
