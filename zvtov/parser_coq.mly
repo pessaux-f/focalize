@@ -1,5 +1,5 @@
 /*  Copyright 2006 INRIA  */
-/*  $Id: parser_coq.mly,v 1.3 2006-06-22 17:09:40 doligez Exp $  */
+/*  $Id: parser_coq.mly,v 1.4 2008-08-14 14:09:23 pessaux Exp $  */
 
 %{
 open Expr;;
@@ -144,7 +144,7 @@ headers:
   | BEGINHEADER headers { () }
 
 coqident:
-  | IDENT { $1 }
+  | IDENT {  $1 }
   | FQN { $1 }
 
 coqexpr:
@@ -237,25 +237,36 @@ coqparam_expr:
 ;
 
 parameter:
-  | PARAMETER id_or_coqexpr COLON_ coqexpr PERIOD_
-      { Hyp $4 }
+  | PARAMETER id_or_coqexpr COLON_ coqexpr PERIOD_         { Hyp $4 }
+
 
 definition:
   | DEFINITION id_or_coqexpr COLON_EQ_ coqparam_expr PERIOD_
-      { let (params, expr) = $4 in  Def($2, params, expr) }
+      { let (params, expr) = $4 in  Def ($2, params, expr) }
+/* Modif par François. A valider, Damien. */
+  | DEFINITION IDENT compact_args COLON_ coqtype COLON_EQ_ coqparam_expr PERIOD_
+      {
+       let compact_params = $3 in
+       let (other_params, expr) = $7 in
+       Def ($2, (compact_params @ other_params), expr)
+     }
+/* Fin modif par François. */
+;
+
+
+/* Modif par François. A valider, Damien. */
+compact_args:
+    /* empty */                                          { [] }
+  | LPAREN_ IDENT COLON_ coqtype RPAREN_ compact_args    { $2 :: $6 }
+;
+/* Fin modif par François. */
+
 
 coq_hyp_def:
-  | DEPENDS ON parameter
-      {
-        $3
-
-      }
-  | DEPENDS ON definition
-      {
-        $3
-      }
-  | parameter  { $1 }
-  | definition { $1 }
+  | DEPENDS ON parameter       { $3 }
+  | DEPENDS ON definition      { $3 }
+  | parameter                  { $1 }
+  | definition                 { $1 }
 ;
 
 coq_hyp_def_list:
