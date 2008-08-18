@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.49 2008-06-30 11:30:38 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.50 2008-08-18 08:46:07 pessaux Exp $ *)
 
 
 (* *********************************************************** *)
@@ -778,9 +778,7 @@ and pp_proof_desc ppf = function
   | Parsetree.Pf_assumed reason ->
       Format.fprintf ppf "@[<2>assumed@ {*%s*}@]" reason
   | Parsetree.Pf_auto facts ->
-      (* Empty facts list means end-of-proof. *)
-      if facts = [] then Format.fprintf ppf ".@ "
-      else Format.fprintf ppf "@[<2>by %a@]" (pp_facts "") facts
+      Format.fprintf ppf "@[<2>by %a@]" (pp_facts "") facts
   | Parsetree.Pf_coq s -> Format.fprintf ppf "@[<2>coq proof@ {*%s*}@]" s
   | Parsetree.Pf_node proof_nodes ->
       Format.fprintf ppf "%a" (pp_proof_nodes "") proof_nodes
