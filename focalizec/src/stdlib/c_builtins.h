@@ -22,6 +22,8 @@ typedef struct foc_value
 
 /* int variant_equal(foc_variant*, foc_variant*); */
 
+foc_value* get_variant_arg(foc_value*, int);
+
 foc_value* mk_tuple(int);
 void set_tuple(foc_value*, int, foc_value*);
 foc_value* get_tuple(foc_value*, int);

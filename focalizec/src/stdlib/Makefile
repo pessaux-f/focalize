@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.21.2.3 2008-08-14 08:25:37 blond Exp $
+# $Id: Makefile,v 1.21.2.4 2008-08-19 21:08:28 blond Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -15,9 +15,9 @@ CC_FLAGS =
 
 FOC_COMP_FLAGS = --c-code
 
-FOCSRC = basics.foc 
+FOCSRC = basics.foc \
+	sets_orders.foc 
 # \
-# 	sets_orders.foc \
 # 	iterators.foc \
 # 	additive_law.foc \
 # 	multiplicative_law.foc \

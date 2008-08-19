@@ -20,6 +20,18 @@ let generate_names n =
     if i = 0 then (gen i)::acc
     else aux (i-1) ((gen i)::acc)
   in aux n []
+
+let rec subst_ctype t t' ty =
+  if ty = t then t'
+  else match ty with
+    Fun (a, l) -> Fun (subst_ctype t t' a, List.map (subst_ctype t t') l)
+  | Param (a, l) -> Param (subst_ctype t t' a, List.map (subst_ctype t t') l)
+  | Struct (s, l) -> 
+      Struct (s, List.map (fun (id, a) -> (id, subst_ctype t t' a)) l)
+  | Union (s, l) -> 
+      Union (s, List.map (fun (id, a) -> (id, subst_ctype t t' a)) l)
+  | Ptr a -> Ptr (subst_ctype t t' a)
+  | _ -> ty
     
 (* let rec pp_list f ppf = function *)
 (*     [] -> () *)
@@ -314,12 +326,24 @@ let anti_elim a =
 	
 let rec result_calculus = function
     [] -> []
-  | [Expr e] -> [Return e]
+  | [Expr e] -> [Affect (Ident "_result", e)]
+  | (If (c, a, b))::t ->
+      (If (c, result_calculus a, result_calculus b)) ::
+      (result_calculus t)
   | h::t -> h::(result_calculus t)
 		 
+let rec skip_elimination = function
+    [] -> []
+  | Skip :: t -> skip_elimination t
+  | (If (c, a, b)) :: t ->
+      (If (c, skip_elimination a, skip_elimination b)) ::
+      (skip_elimination t)
+  | h::t ->
+      h::(skip_elimination t)
 
 	
-let rec compile_let_def =
+let (compile_let_def,
+     compile_expr) =
   
   (* The local variable counter. *)
   let cpt = ref 0 in
@@ -358,7 +382,11 @@ let rec compile_let_def =
 	  compile_binding_body nargs ctx b.ast_desc.b_body in
         (* The body is not directly usable, we need to do some stuff. *)
         (* Adding the result statement. *)
-	let body = result_calculus (body@[last]) in
+	let body = 
+	  (Decl ("_result", ret)) ::
+	  (body@[last]) in
+	let body = skip_elimination body in
+	let body = (result_calculus body)@[Return (Prim (Ident "_result"))] in
 	let params = List.combine nargs args in 
 	let res = res @
 	  [ Export (Signature (false, name, t));
@@ -476,16 +504,15 @@ let rec compile_let_def =
       [] -> (ctx, [], [], Skip) (* Should give an error message ? *)
     | (p, exp)::t ->
 	let (ctx, lifted, equations) = compile_pattern e ctx p in
-	let (ctx, lifted', body', stmts) = compile_expr args ctx exp in 
-	let (ctx, lifted'', body'', stmt) = compile_clauses args e ctx t in
-	let rec eqs2if = function
-	    [] -> Skip
+	let (ctx, lifted', body', stmt) = compile_expr args ctx exp in 
+	let (ctx, lifted'', body'', stmt') = compile_clauses args e ctx t in
+	let rec eqs2if next = function
+	    [] -> body' @ [stmt]
 	  | (body, cond)::t ->
-	      let next = eq2if t in
-	      body @ [If (cond, next, [])]
+	      body @ [If (cond, eqs2if next t, next)]
 	in 
-	(ctx, lifted@lifted'@lifted'', body @, 
-	 If (condition, body'@ [stmts], body'' @ [stmt]))
+	(ctx, lifted@lifted'@lifted'',
+	 eqs2if (body'' @ [stmt']) equations, Skip)
 	  
   and compile_pattern e ctx p =
     begin match p.ast_desc with
@@ -493,16 +520,17 @@ let rec compile_let_def =
 	begin match compile_constant ctx c with
 	  (ctx, lifted, body, Expr (Prim id)) ->
 	    let result =
-	      Call (Access (id, "equal"), [ Expr (Prim id); e ])
+	      Call (Access (id, "equal"), [ Prim id; e ])
 	    in
-	    (ctx, lifted, [([], result)])
+	    (ctx, lifted, [(body, result)])
 	|	_ -> assert false
 	end
 
     | P_var vn ->
 	let name = vname_as_string_with_operators_expanded vn in
 	let ty = anti_elim p in
-	let result = Call (Access (id, "equal"), [ Expr (Prim id); e ]) in
+	let result = Call (Access (Ident name, "equal"),
+			   [ Prim (Ident name); e ]) in
 	(ctx, [],
 	 [ ([ Decl (name, ty); Affect (Ident name, e) ],
 	    result) ])
@@ -521,7 +549,8 @@ let rec compile_let_def =
 	    (fun (c, l, beqs) p ->
 	      let eacc =
 		Call (Ident "get_variant_arg", 
-		      [e; Prim (Constant (sprintf "%i" !index)) ]) in
+		      [ ECast (Ptr (TypeId "foc_value"), e);
+			Prim (Constant (sprintf "%i" !index)) ]) in
 	      let (c, l', beq') = compile_pattern eacc c p in
 	      incr index;
 	      (c, l@l', beqs@beq'))
@@ -529,7 +558,7 @@ let rec compile_let_def =
 	    l 
 	in
 	let result = Equal (Call (Ident "get_disc", [e]), Prim (Ident disc)) in
-	(ctx, lifted, ([], [result])::beqs)
+	(ctx, lifted, ([], result)::beqs)
 	       
     | P_record _ ->
 	todo "P_record"; (ctx, [], [])
@@ -585,7 +614,7 @@ let rec compile_let_def =
 	let local = generate_local_name () in
 	let s' = sprintf "\"%s\"" (String.escaped s) in
 	(ctx, [],
-	 [ Decl (local, Ptr (TypeId "foc_bool"));
+	 [ Decl (local, Ptr (TypeId "foc_string"));
 	   Affect (Ident local,
 		   Call (Ident "mk_foc_string",
 			 [ Prim (Constant s') ])) ],
@@ -595,7 +624,9 @@ let rec compile_let_def =
 	todo "C_char"; (ctx, [], [], Skip)
   in
   
-  compile_let_def'
+  (compile_let_def',
+   compile_expr)
+     
 
 (* 	P_const c -> *)
 (* 	  let cte = compile_constant c in *)
@@ -616,7 +647,53 @@ let rec compile_let_def =
 (* 	  let (ctx, c') = compile_constant ctx c in *)
 (* 	  let equation = [(e, c')] in *)
     
-    
+let compile_species_field spc ctx f =
+  match f with
+    SF_sig _ ->
+      todo "SF_sig"; (ctx, [], [])
+  | SF_let (_, vn, args, ty, bb, _, lf) ->
+      begin match lf with
+	LF_logical -> (ctx, [], [])
+      |	LF_no_logical ->
+	  let name =
+	    sprintf "%s_%s"
+	      spc
+	      (vname_as_string_with_operators_expanded vn) in
+	  let ty = Types.type_scheme_to_c ty in
+	  let ty = 
+	    subst_ctype (TypeId "Self") (TypeId (sprintf "%s_Self" spc)) ty in
+	  let sign = [(name, ty)] in
+	  let nargs = List.map vname_as_string_with_operators_expanded args in
+	  let (ctx, res, body, last) = match bb with
+	    BB_logical _ ->
+	      todo "SF_let : BB_logical"; (ctx, [], [], Skip)
+	  | BB_computational e ->
+	      compile_expr nargs ctx e in
+	  begin match ty with
+	    Fun (ret, targs) ->
+	      let body = 
+		(Decl ("_result", ret)) ::
+		(body@[last]) in
+	      let body = skip_elimination body in
+	      let body = (result_calculus body)@[Return (Prim (Ident "_result"))] in
+	      let params = List.combine nargs targs in 
+	      let res = res @
+		[ Signature (false, name, ty);
+		  Function (ret, name, params, body) ] in
+	      (ctx, sign, res)
+	  | _ ->
+	      todo "SF_sig : Data";
+	      (ctx, [], [])
+	  end
+      end
+
+  | SF_let_rec _ ->
+      todo "SF_let_rec"; (ctx, [], [])
+  | SF_theorem _ ->
+      todo "SF_theorem"; (ctx, [], [])
+  | SF_property _ ->
+      todo "SF_property"; (ctx, [], [])
+
 let compile_phrase ctx (ph, pcm) =
   match (ph.ast_desc, pcm) with
     (Ph_use file, PCM_no_matter) ->
@@ -629,14 +706,23 @@ let compile_phrase ctx (ph, pcm) =
   | (Ph_coq_require _, PCM_coq_require _) ->
       (ctx, [])
 	
-  | (Ph_species _, PCM_species (_, _, _)) ->
-      todo "Ph_species";
-      (ctx, [])
-(*       fprintf ctx.c_hdr "@\n@[@[<hov 2>typedef struct {"; *)
-(*       compile_species_field ctx desc.spe_sig_methods; *)
-(*       fprintf ctx.c_hdr "@]@\n} %a;@]@." *)
-(* 	pp_vname_with_operators_expanded sd.ast_desc.sd_name; *)
-(*       ctx *)
+  | (Ph_species _, PCM_species (spcdef, desc, _)) ->
+      let name =
+	sprintf "%s_%s"
+	  (CGenEnv.unit_name ctx)
+	  (vname_as_string_with_operators_expanded spcdef.ast_desc.sd_name) in
+      let fields = desc.spe_sig_methods in
+      let (ctx, field_types, field_body) = 
+	List.fold_left
+	  (fun (c, ft, fb) a ->
+	    let (c', ft', fb') = compile_species_field name c a in
+	    (c', ft@ft', fb@fb'))
+	  (ctx, [], [])
+	  fields in
+      let self_name = sprintf "%s_Self" name in
+      let self = Export (Typedef (TypeId "foc_value", self_name)) in
+      let body = Export (Typedef (Struct (None, field_types), name)) in
+      (ctx, self::body::field_body)
 	
   | (Ph_theorem _, PCM_theorem _) ->
       (ctx, [])

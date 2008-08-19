@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.58.2.2 2008-08-14 08:25:37 blond Exp $ *)
+(* $Id: types.ml,v 1.58.2.3 2008-08-19 21:08:28 blond Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1557,8 +1557,8 @@ let rec type_simple_to_c ts =
 	     List.map type_simple_to_c l)
      
   | ST_self_rep ->
-      todo "ST_self_rep"
-      (* Format.fprintf ppf "@[foc_value* /* Self */@]"  *)
+      Ptr (TypeId "Self")
+      
   | ST_species_rep _ ->
       todo "ST_species_rep"
 
