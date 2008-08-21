@@ -625,7 +625,7 @@ species Distributive_lattice
          prove !equal(!inf(y, !sup(!inf(x, y), z)),
                       !sup(x, !inf(y, z)))
          <2>0 prove !equal(x, !inf(x, y))
-              by step <1>1 definition of order_inf
+              by hypothesis H definition of order_inf
          <2>1 prove !equal(!inf(y, !sup(!inf(x, y), z)),
                            !sup(!inf(y, !inf(x, y)), !inf(y, z)))
               by property inf_left_distributes
