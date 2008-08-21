@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.59 2008-06-19 12:52:47 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.60 2008-08-21 10:23:37 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -888,36 +888,38 @@ let rec scope_fact ctx env fact =
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
 and scope_hyps ctx env hyps =
-  List.fold_left
-    (fun (accu_env, accu_scoped_hyps) hyp ->
-      let hyp_desc = hyp.Parsetree.ast_desc in
-      let (new_desc, accu_env') =
-        (begin
-        match hyp_desc with
-         | Parsetree.H_variable (vname, type_expr) ->
-             let scoped_type_expr = scope_type_expr ctx accu_env type_expr in
-             let env' =
-               Env.ScopingEnv.add_value
-                 vname Env.ScopeInformation.SBI_local accu_env in
-             ((Parsetree.H_variable (vname, scoped_type_expr)), env')
-         | Parsetree.H_hypothesis (vname, logical_expr) ->
-             let scoped_logical_expr =
-               scope_logical_expr ctx accu_env logical_expr in
-             let env' =
-               Env.ScopingEnv.add_value
-                vname Env.ScopeInformation.SBI_local accu_env in
-             ((Parsetree.H_hypothesis (vname, scoped_logical_expr)), env')
-         | Parsetree.H_notation (vname, expr) ->
-             let scoped_expr = scope_expr ctx accu_env expr in
-             let env' =
-               Env.ScopingEnv.add_value
-                 vname Env.ScopeInformation.SBI_local accu_env in
-             ((Parsetree.H_notation (vname, scoped_expr)), env')
-        end) in
-      (accu_env',
-       { hyp with Parsetree.ast_desc = new_desc } :: accu_scoped_hyps))
-    (env, [])
-    hyps
+  let (final_env, revd_scoped_hyps) =
+    List.fold_left
+      (fun (accu_env, accu_scoped_hyps) hyp ->
+        let hyp_desc = hyp.Parsetree.ast_desc in
+        let (new_desc, accu_env') =
+          (begin
+          match hyp_desc with
+           | Parsetree.H_variable (vname, type_expr) ->
+               let scoped_type_expr = scope_type_expr ctx accu_env type_expr in
+               let env' =
+                 Env.ScopingEnv.add_value
+                   vname Env.ScopeInformation.SBI_local accu_env in
+               ((Parsetree.H_variable (vname, scoped_type_expr)), env')
+           | Parsetree.H_hypothesis (vname, logical_expr) ->
+               let scoped_logical_expr =
+                 scope_logical_expr ctx accu_env logical_expr in
+               let env' =
+                 Env.ScopingEnv.add_value
+                   vname Env.ScopeInformation.SBI_local accu_env in
+               ((Parsetree.H_hypothesis (vname, scoped_logical_expr)), env')
+           | Parsetree.H_notation (vname, expr) ->
+               let scoped_expr = scope_expr ctx accu_env expr in
+               let env' =
+                 Env.ScopingEnv.add_value
+                   vname Env.ScopeInformation.SBI_local accu_env in
+               ((Parsetree.H_notation (vname, scoped_expr)), env')
+          end) in
+        (accu_env',
+         { hyp with Parsetree.ast_desc = new_desc } :: accu_scoped_hyps))
+      (env, [])
+      hyps in
+  (final_env, (List.rev revd_scoped_hyps))
 
 
 

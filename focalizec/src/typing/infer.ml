@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.135 2008-08-13 15:55:17 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.136 2008-08-21 10:23:37 pessaux Exp $ *)
 
 
 
@@ -1553,11 +1553,11 @@ and typecheck_node ctx env node =
 and typecheck_statement ctx env statement =
   (* No relevant type information to insert in the AST node. *)
   statement.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
-  (* Do not fold_left otherwise the hypotheses will be *)
+  (* Do not fold_right otherwise the hypotheses will be *)
   (* processed in reverse order !!!                    *)
   let env' =
-    List.fold_right
-      (fun hyp accu_env ->
+    List.fold_left
+      (fun accu_env hyp ->
         let (name, ty) =
           (match hyp.Parsetree.ast_desc with
            | Parsetree.H_variable (vname, type_expr) ->
@@ -1578,8 +1578,8 @@ and typecheck_statement ctx env statement =
         (* typecheck the conclusion of the statement.                 *)
         let scheme = Types.generalize ty in
         Env.TypingEnv.add_value name scheme accu_env)
-      statement.Parsetree.ast_desc.Parsetree.s_hyps
-      env in
+      env
+      statement.Parsetree.ast_desc.Parsetree.s_hyps in
   (* Now, typecheck the conclusion, if some, in the extended environment. *)
   (match statement.Parsetree.ast_desc.Parsetree.s_concl with
    | None -> ()

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.50 2008-08-13 15:55:17 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.51 2008-08-21 10:23:37 pessaux Exp $ *)
 
 
 
@@ -430,6 +430,31 @@ try Check_file.main () with
            Location.pp_location at
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_expr_ident id
+           Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
+    | Species_coq_generation.Attempt_proof_by_prop_of_local_ident (at, id) ->
+         Format.fprintf Format.err_formatter
+           "%a:@\n@[%tUsing a local identifier %t(%t%a%t)%t in a \
+           Zenon proof with \"by property\" is not allowed.%t@]@."
+           Location.pp_location at
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined Sourcify.pp_expr_ident id
+           Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
+    | Species_coq_generation.Attempt_proof_by_unknown_hypothesis (at, name) ->
+         Format.fprintf Format.err_formatter
+           "%a:@\n@[%tAssumed hypothesis %t'%t%a%t'%t in a Zenon proof was \
+            not found.%t@]@."
+           Location.pp_location at
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined Sourcify.pp_vname name
+           Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
+    | Species_coq_generation.Attempt_proof_by_unknown_step
+        (at, (node_num, node_name)) ->
+         Format.fprintf Format.err_formatter
+           "%a:@\n@[%tStep %t'%t<%d>%s%t'%t in a Zenon proof was not \
+            found.%t@]@."
+           Location.pp_location at
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined node_num node_name
            Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
 (* ************************** *)
 (* Recursion analysis errors. *)

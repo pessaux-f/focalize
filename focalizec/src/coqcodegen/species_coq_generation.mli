@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.mli,v 1.5 2008-08-13 15:55:17 pessaux Exp $ *)
+(* $Id: species_coq_generation.mli,v 1.6 2008-08-21 10:23:37 pessaux Exp $ *)
 
 exception Attempt_proof_by_def_of_species_param of
   (Location.t * Parsetree.expr_ident)
@@ -21,6 +21,16 @@ exception Attempt_proof_by_def_of_declared_method_of_self of
 
 exception Attempt_proof_by_def_of_local_ident of
   (Location.t * Parsetree.expr_ident)
+
+exception Attempt_proof_by_prop_of_local_ident of
+  (Location.t * Parsetree.expr_ident)
+
+exception Attempt_proof_by_unknown_hypothesis of
+  (Location.t * Parsetree.vname)
+
+exception Attempt_proof_by_unknown_step of
+  (Location.t * Parsetree.node_label)
+
 
 val species_compile :
   Env.CoqGenEnv.t -> current_unit: Types.fname -> Format.formatter ->
