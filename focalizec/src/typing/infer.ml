@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.136 2008-08-21 10:23:37 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.137 2008-08-22 14:41:02 pessaux Exp $ *)
 
 
 
@@ -401,8 +401,8 @@ let rec typecheck_type_expr ctx env ty_expr =
          (* Synthetise the types for the arguments. *)
          let args_ty = List.map (typecheck_type_expr ctx env) args_ty_exprs in
          (* Now get a fresh instance of the type's type scheme in which the
-	    parameters are directly instanciated by the effective arguments
-	    the sum type constructor is applied to. *)
+            parameters are directly instanciated by the effective arguments
+            the sum type constructor is applied to. *)
          Types.specialize_with_args
            ty_descr.Env.TypeInformation.type_identity args_ty
          end)
@@ -444,10 +444,10 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
                    Note that for a "rep" type because polymorphism is not
                    allowed, this should never be used. We could safely raise an
                    error. But, in order to keep this function clean and smooth,
-		   we will enable this and perform a non-polymorphism test
-		   later on the obtained type. Anyway this kind of test is not
-		   only required for "rep", but also for all the other methods
-		   (they can't either be polymorphic). *)
+                   we will enable this and perform a non-polymorphism test
+                   later on the obtained type. Anyway this kind of test is not
+                   only required for "rep", but also for all the other methods
+                   (they can't either be polymorphic). *)
                 try List.assoc variable_qname ctx.tyvars_mapping
                 with Not_found ->
                   raise
@@ -491,8 +491,8 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
          let args_ty =
            List.map (typecheck_rep_type_def ctx env) args_ty_exprs in
          (* Now get a fresh instance of the type's type scheme in which the
-	    parameters are directly instanciated by the effective arguments
-	    the sum type constructor is applied to. *)
+            parameters are directly instanciated by the effective arguments
+            the sum type constructor is applied to. *)
          Types.specialize_with_args
            ty_descr.Env.TypeInformation.type_identity args_ty
      | Parsetree.RTE_prod (ty_exprs) ->
@@ -531,7 +531,7 @@ let make_implicit_var_mapping_from_type_exprs type_expressions =
          match ident.Parsetree.ast_desc with
          | Parsetree.I_local ((Parsetree.Vqident _) as variable_qname) ->
              (* Just handle the special case where the ident is a type
-		variable. *)
+                variable. *)
              if not (List.mem_assoc variable_qname !mapping) then
                mapping :=
                  (variable_qname, Types.type_variable ()) :: !mapping
@@ -579,7 +579,7 @@ let make_implicit_var_mapping_from_logical_expr logical_expr_expression =
         (* First recover the mapping induced by the type expression. *)
         let mapping_from_ty = make_implicit_var_mapping_from_type_exprs [ty] in
         (* Assuming the current mapping doesn't contain doubles, we extend it
-	   by the one got from the  type expression. *)
+           by the one got from the  type expression. *)
         mapping :=
           Handy.list_concat_uniq_custom_eq
             (fun (n, _) (n', _) -> n = n') mapping_from_ty !mapping ;
@@ -620,7 +620,7 @@ let rec expr_is_non_expansive ~current_unit env expr =
           let body = binding.Parsetree.ast_desc.Parsetree.b_body in
           (* Be careful. Consider the comment in the function
              [typecheck_let_definition] dealing with body hiding the
-	     functional aspect of the whole definition. *)
+             functional aspect of the whole definition. *)
           binding.Parsetree.ast_desc.Parsetree.b_params <> []
           ||
           binding_body_is_non_expansive ~current_unit env body)
@@ -647,8 +647,8 @@ let rec expr_is_non_expansive ~current_unit env expr =
   | Parsetree.E_paren e -> expr_is_non_expansive ~current_unit env e
   | Parsetree.E_external _ ->
       (* [Unsure]. Needed to make external functions generalized but should be
-	 guarded by something because in fact the real external definition
-	 may indeed by EXPANSIVE ! *)
+         guarded by something because in fact the real external definition
+         may indeed by EXPANSIVE ! *)
       true
   | _ -> false
 
@@ -758,15 +758,15 @@ let rec typecheck_pattern ctx env pat_desc =
               let cstr_ty =
                 Types.specialize cstr_decl.Env.TypeInformation.cstr_scheme in
               (* Recover the type of the sub-patterns by typechecking an
-		 artificial tuple argument compound of the sub-patterns.
-		 Proceed this way ONLY if there is not only ONE argument or if
-		 there is only one but already begin a tuple !
-		 This hack is linked to the same process in the function
-		 [typecheck_simple_type_def_body]. This way, we ensure that
-		 constructor argument(s) is (are) always in a tuple, but never
-		 in a trivial tuple containing only one component being a
-		 tuple. This means that we only add a tuple layer if there is
-		 not one already. *)
+                 artificial tuple argument compound of the sub-patterns.
+                 Proceed this way ONLY if there is not only ONE argument or if
+                 there is only one but already begin a tuple !
+                 This hack is linked to the same process in the function
+                 [typecheck_simple_type_def_body]. This way, we ensure that
+                 constructor argument(s) is (are) always in a tuple, but never
+                 in a trivial tuple containing only one component being a
+                 tuple. This means that we only add a tuple layer if there is
+                 not one already. *)
               let hacked_pat =
                 (match nempty_pats with
                  | [ { Parsetree.ast_desc = Parsetree.P_tuple _ } as p] -> p
@@ -776,8 +776,8 @@ let rec typecheck_pattern ctx env pat_desc =
               let (cstr_arg_ty, sub_bindings) =
                 typecheck_pattern ctx env hacked_pat in
               (* Constructeurs being functions, we will unify [cstr_type] with
-		 an arrow type to ensure that it is really one and to ensure
-		 the arguments types and extract the result type. *)
+                 an arrow type to ensure that it is really one and to ensure
+                 the arguments types and extract the result type. *)
               let unified_cstr_ty =
                 Types.unify
                   ~loc: pat_desc.Parsetree.ast_loc
@@ -806,7 +806,7 @@ let rec typecheck_pattern ctx env pat_desc =
              Types.specialize
                lbl_desc.Env.TypeInformation.field_scheme in
            (* Now, ensure the 2 sub-pattners types are compatible and that the
-	      resulting record type for the whole pattern is consistent. *)
+              resulting record type for the whole pattern is consistent. *)
            let unified_field_ty =
              Types.unify
                ~loc: pat.Parsetree.ast_loc
@@ -939,7 +939,7 @@ let rec typecheck_expr ctx env initial_expr =
             Preferably use a fold_left instead of a fold_right, this way
             arguments are "cons-ed" in the environment in their order of
             declaration. Because arguments can't depend on each other, that's
-	    not a big matter, but that's cleaner... *)
+            not a big matter, but that's cleaner... *)
          let extended_env =
            List.fold_left2
              (fun accu_env arg_name arg_ty ->
@@ -957,9 +957,9 @@ let rec typecheck_expr ctx env initial_expr =
      | Parsetree.E_var ident ->
          (* E_var is never "self" because "self" is a dedicated case
             Now, don't bother with the search order, this has already be done
-	    by both the scoping and the environment build process. As reminder,
-	    lookup will naturally find the ident among local identifiers,
-	    IN-params, IS-params, inheritance and finally global identifiers. *)
+            by both the scoping and the environment build process. As reminder,
+            lookup will naturally find the ident among local identifiers,
+            IN-params, IS-params, inheritance and finally global identifiers. *)
          let var_scheme =
            Env.TypingEnv.find_value
              ~loc: ident.Parsetree.ast_loc
@@ -974,7 +974,7 @@ let rec typecheck_expr ctx env initial_expr =
          List.fold_left
            (fun accu_fun_ty arg_ty ->
             (* Temporary functionnal type to unify with the type of the
-	       current applicator. *)
+               current applicator. *)
             let tmp_fun_ty =
               Types.type_arrow arg_ty (Types.type_variable ()) in
             let unified_fun_ty =
@@ -1007,7 +1007,7 @@ let rec typecheck_expr ctx env initial_expr =
               (* Record the type in the AST node of the [cstr_ident]. *)
               cstr_ident.Parsetree.ast_type <- Parsetree.ANTI_type cstr_ty ;
               (* Build the shadow tuple type as the real argument of the
-		 constructor. *)
+                 constructor. *)
               let cstr_arg_ty = Types.type_tuple tys in
               (* And simulate an application. *)
               let unified_cstr_ty =
@@ -1024,7 +1024,7 @@ let rec typecheck_expr ctx env initial_expr =
      | Parsetree.E_match (matched_expr, bindings) ->
          let matched_expr_ty = ref (typecheck_expr ctx env matched_expr) in
          (* Let's get a fresh type accumulator to unify the clauses' bodies
-	    types. *)
+            types. *)
          let result_ty = ref (Types.type_variable ()) in
          (* Process each clause of the match. *)
          List.iter
@@ -1032,7 +1032,7 @@ let rec typecheck_expr ctx env initial_expr =
              (* Infer the type and bindings induced by the pattern. *)
              let (pat_ty, bnds) = typecheck_pattern ctx env pat in
              (* Ensure the matched expression and the pattern have the same
-		type always keep the type where Self is prefered. *)
+                type always keep the type where Self is prefered. *)
              matched_expr_ty :=
                Types.unify
                  ~loc: initial_expr.Parsetree.ast_loc
@@ -1087,7 +1087,7 @@ let rec typecheck_expr ctx env initial_expr =
              ~loc: initial_expr.Parsetree.ast_loc
              ~current_unit: ctx.current_unit label env in
          (* Just remind that labels are types as functions of type "type of
-	    the field as seen by user -> type od the record". *)
+            the field as seen by user -> type od the record". *)
          let label_ty =
            Types.specialize label_desc.Env.TypeInformation.field_scheme in
          let unified_label_ty =
@@ -1205,15 +1205,15 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
     List.map
       (fun { Parsetree.ast_desc = binding_desc } ->
         (* Just use a hack telling that if the expression won't be
-	   generalisable, to typecheck it, we don't change the generalisation
-	   level, then we won't generalise it.
+           generalisable, to typecheck it, we don't change the generalisation
+           level, then we won't generalise it.
            Becareful, functions are non_expansive. Because the structure of
-	   the let-def includes the parameters of the bound ident, a fun like
-	   [let f (x) = body] will not be considered as non_expansive if [body]
-	   is not because [body] hides the function because the arguments are
+           the let-def includes the parameters of the bound ident, a fun like
+           [let f (x) = body] will not be considered as non_expansive if [body]
+           is not because [body] hides the function because the arguments are
            recorded in the [b_params] field. Hence, if the list [b_params] is
-	   not empty, then the bound expression is a function and is
-	   non_expansive whatever the body is. *)
+           not empty, then the bound expression is a function and is
+           non_expansive whatever the body is. *)
         if not is_a_field &&
            (binding_desc.Parsetree.b_params <> [] ||
             binding_body_is_non_expansive
@@ -2639,25 +2639,23 @@ let typecheck_species_def_params ctx env species_params =
                Env.TypeInformation.SPAR_in
                  (param_vname, (param_sp_module, param_sp_name), 
                   species_of_param_type.Env.TypeInformation.spe_kind) in
-             (* Finally, we return the fully extended environment and *)
-             (* the type of the species application we just built.    *)
+             (* Finally, we return the fully extended environment and the
+                type of the species application we just built. *)
              (accu_env'', (current_spe_param :: rem_spe_params),
               rem_accu_self_must_be)
              end)
          | Parsetree.SPT_is species_expr ->
              (begin
-             (* First, typecheck the species expression.          *)
+             (* First, typecheck the species expression. *)
              let ((species_expr_fields, self_must_be), base_species_kind) =
                typecheck_species_expr ctx accu_env species_expr in
-             (* Create the [species_description] of the parameter *)
-             (* and extend the current environment. Because the   *)
-             (* obtained species is not a declaration, it cannot  *)
-             (* have parameters or inheritance.                   *)
-             (* This leads to a somewhat of "local" species, and  *)
-             (* we will bind it in the species environment under  *)
-             (* an internal name to be able to denote it in the   *)
-             (* type of the application.                          *)
-             (* This internal name is the name of the parameter.  *)
+             (* Create the [species_description] of the parameter and extend
+                the current environment. Because the obtained species is not
+                a declaration, it cannot have parameters or inheritance.
+                This leads to a somewhat of "local" species, and we will bind
+                it in the species environment under an internal name to be
+                able to denote it in the type of the application.
+                This internal name is the name of the parameter. *)
              let abstracted_methods =
                abstraction
                  ~current_unit: ctx.current_unit
@@ -2671,8 +2669,8 @@ let typecheck_species_def_params ctx env species_params =
                Env.TypingEnv.add_species
                  ~loc: species_expr.Parsetree.ast_loc
                  param_vname param_description accu_env in
-             (* Create the carrier type of the parameter *)
-             (* and extend the current environment.      *)
+             (* Create the carrier type of the parameter and extend the
+                current environment. *)
              Types.begin_definition () ;
              let param_carrier_ty =
                Types.type_rep_species ~species_module: ctx.current_unit
@@ -2698,15 +2696,15 @@ let typecheck_species_def_params ctx env species_params =
              (* And now, build the species type of the application. *)
              let (accu_env''', rem_spe_params, rem_accu_self_must_be) =
                rec_typecheck_params accu_env'' accu_self_must_be' rem in
-             (* We keep the [species_expr]'s in the [SPAR_is] structure *)
-             (* because it will be needed for Coq code generation.      *)
-             (* By keeping the current unit and the parameter name, we  *)
-             (* in fact keep the type-collection od the parameter. In   *)
-             (* effect, a "in" parameter is given a type-collection     *)
-             (* is its (module * name). This means that a species       *)
-             (* parameter has a purely local type to the species.       *)
-             (* because we also keep the methods it has, we are still   *)
-             (* able to verify species signature matching !             *)
+             (* We keep the [species_expr]'s in the [SPAR_is] structure because
+                it will be needed for Coq code generation.
+                By keeping the current unit and the parameter name, we in fact
+                keep the type-collection od the parameter. In effect, a "IN"
+                parameter is given a type-collection is its (module * name).
+                This means that a species parameter has a purely local type to
+                the species.
+                Because we also keep the methods it has, we are still able to
+                verify species signature matching ! *)
              let current_spe_param =
                Env.TypeInformation.SPAR_is
                  ((ctx.current_unit, param_name_as_string), base_species_kind,
@@ -2714,8 +2712,8 @@ let typecheck_species_def_params ctx env species_params =
                   (species_expr_to_species_param_expr
                      ~current_unit: ctx.current_unit accu_env'''
                      species_expr)) in
-             (* Finally, we return the fully extended environment and *)
-             (* the type of the species application we just built.    *)
+             (* Finally, we return the fully extended environment and the
+                type of the species application we just built. *)
              (accu_env''', (current_spe_param :: rem_spe_params),
               rem_accu_self_must_be)
              end)
@@ -2767,37 +2765,35 @@ let extend_from_history ~current_species ~current_unit env
 
 
 
-(* ********************************************************************** *)
-(* loc: Location.t -> typing_context -> Env.TypingEnv.t ->                *)
-(* Parsetree.species_expr list ->                                         *)
-(*   (Env.TypeInformation.species_field list *                            *)
-(*    Env.TypingEnv.t * typing_context)                                   *)
+(* *********************************************************************** *)
+(* loc: Location.t -> typing_context -> Env.TypingEnv.t ->                 *)
+(* Parsetree.species_expr list ->                                          *)
+(*   (Env.TypeInformation.species_field list *                             *)
+(*    Env.TypingEnv.t * typing_context)                                    *)
 (** {b Descr} : Extends an environment as value bindings with the methods
-              of the inherited species provided in argument. Methods are
-              added in the same order than their hosting species comes
-              in the inheritance list. This means that the methods of the
-              first inherited species will be deeper in the resulting
-              environment.
-              Extends the typing_context if among the inherited methods
-              "rep" is found. In this case, this means that the carrier
-              is manifest and changes the typing_context with its
-              representation.
-              When adding an inherited method, we record that its "from"
-              information is modified to show that in the history, the
-              method is now in the current species but via an inheritance
-              step. In other words, we cons in [fh_inherited_along] of the
-              inherited method, the (current_species, simple_species_expr
-              from which the method is inherited).
+    of the inherited species provided in argument. Methods are added in
+    the same order than their hosting species comes in the inheritance
+    list. This means that the methods of the first inherited species will
+    be deeper in the resulting environment.
+    Extends the typing_context if among the inherited methods "rep" is
+    found. In this case, this means that the carrier is manifest and
+    changes the typing_context with its representation.
+    When adding an inherited method, we record that its "from" information
+    is modified to show that in the history, the method is now in the
+    current species but via an inheritance step. In other words, we cons
+    in [fh_inherited_along] of the inherited method, the
+    (current_species, simple_species_expr from which the method is
+    inherited).
 
-    {b Rem} : Not exported outside this module.                           *)
-(* ********************************************************************** *)
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
 let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
   let rec rec_extend current_ctx current_env accu_found_methods
           accu_self_must_be = function
     | [] -> (accu_found_methods, current_env, current_ctx, accu_self_must_be)
     | inh :: rem_inhs ->
-      (* First typecheck the species expression in the initial   *)
-      (* (non extended) and recover its methods names and types. *)
+      (* First typecheck the species expression in the initial (non extended)
+         and recover its methods names and types. *)
       let ((inh_species_methods, self_must_be), _) =
         typecheck_species_expr current_ctx env inh in
       (* Change inside inherited fields the history information. *)
@@ -2820,18 +2816,18 @@ let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
                let manifest =
                  (if m_name_as_str = "rep" then
                    (begin
-                    (* Before modifying the context, just check that no    *)
-                    (* "rep" was previously identified with a different    *)
-                    (* type by multiple inheritance in which case we fail. *)
+                    (* Before modifying the context, just check that no "rep"
+                       was previously identified with a different type by
+                       multiple inheritance in which case we fail. *)
                     match accu_ctx.self_manifest with
                      | None -> Some (Types.specialize meth_scheme)
                      | Some prev_ty ->
                          let new_found_self = Types.specialize meth_scheme in
                          (try
-                           (* Since we don't want any circularity on Self   *)
-                           (* we keep it abstract during the unification.    *)
-                           (* As the new "Self", we use the MGU of the      *)
-                           (* previous Self's type and the newly found one. *)
+                           (* Since we don't want any circularity on Self we
+                              keep it abstract during the unification.
+                              As the new "Self", we use the MGU of the previous
+                              Self's type and the newly found one. *)
                            Some
                              (Types.unify
                                 ~loc ~self_manifest: None prev_ty
@@ -2920,12 +2916,12 @@ let collapse_proof_in_non_inherited proof_of ~current_species fields =
            if name_of_proof_of = name then
              (begin
              assert (from.Env.fh_initial_apparition = current_species) ;
-             (* We found the property related to the proof. Change this *)
-             (* property into a theorem. Since it's a definition, and   *)
-             (* this definition comes from the current species (i.e.    *)
-             (* not via inheritance, the inheritance history records    *)
-             (* only that the theorem comes from the current species    *)
-             (* without any other history.                              *)
+             (* We found the property related to the proof. Change this
+                property into a theorem. Since it's a definition, and this
+                definition comes from the current species (i.e. not via
+                inheritance, the inheritance history records only that the
+                theorem comes from the current species without any other
+                history. *)
              let new_field =
                Env.TypeInformation.SF_theorem
                  ((Env.intitial_inheritance_history current_species), name,
@@ -2975,13 +2971,13 @@ let rec collapse_proof_in_inherited proof_of ~current_species fields =
              (begin
              if name_of_proof_of = name then
                (begin
-               (* We found the property related to the proof. Change this   *)
-               (* property into a theorem. Since the addition of this proof *)
-               (* leads to an effective definition of the theorem, and this *)
-               (* definition comes from the current species (i.e. not via   *)
-               (* inheritance, the inheritance history records only that    *)
-               (* the theorem comes from the current species without any    *)
-               (* other history.                                            *)
+               (* We found the property related to the proof. Change this
+                  property into a theorem. Since the addition of this proof
+                  leads to an effective definition of the theorem, and this
+                  definition comes from the current species (i.e. not via
+                  inheritance, the inheritance history records only that
+                  the theorem comes from the current species without any
+                  other history. *)
                let new_field =
                  Env.TypeInformation.SF_theorem
                    ((Env.intitial_inheritance_history current_species), name,
@@ -3016,33 +3012,30 @@ let rec collapse_proof_in_inherited proof_of ~current_species fields =
 (*      (Env.TypeInformation.species_field list *                           *)
 (*       Env.TypeInformation.species_field list)                            *)
 (* {b Descr} : Tries to find among [methods], property fields whose proofs
-             are separately given in the list of proofs [found_proofs_of].
-             Each time the search succeeds, the property and the related
-             proof are merged in a new theorem field, hence discarding the
-             property fiels.
-             Because this process is performed before the normalization
-             pass, we still require to have 2 separate lists of methods:
-              - the inherited ones,
-              - those defined at the current inheritance level.
-             For this reason, the search will be done first on the methods
-             defined at the current inheritance level (in order to find
-             the "most recent") and only if the search failed, we will try
-             it again on the inherited methods.
+   are separately given in the list of proofs [found_proofs_of].
+   Each time the search succeeds, the property and the related proof are
+   merged in a new theorem field, hence discarding the property fiels.
+   Because this process is performed before the normalization pass, we
+   still require to have 2 separate lists of methods:
+     - the inherited ones,
+     - those defined at the current inheritance level.
+   For this reason, the search will be done first on the methods defined at
+   the current inheritance level (in order to find the "most recent") and
+   only if the search failed, we will try it again on the inherited methods.
 
    {b Rem} : BE CAREFUL, such a merge now require a re-ordering of the
-             final fields. In effect, by moving the proof_of field when
-             merging it as a [SF_theorem] located where the initial
-             [SF_property] field was, if the proof (that was originally
-             "later") uses stuff defined between the [SF_property] and
-             the original location of the proof, then this stuff will
-             now appear "after" the proof itself. And this is not
-             well-formed.
-             Not exported outside this module.                              *)
+   final fields. In effect, by moving the proof_of field when merging it as
+   a [SF_theorem] located where the initial [SF_property] field was, if the
+   proof (that was originally "later") uses stuff defined between the
+   [SF_property] and the original location of the proof, then this stuff
+   will now appear "after" the proof itself. And this is not well-formed.
+
+   Not exported outside this module.                              *)
 (* ************************************************************************ *)
 let collapse_proofs_of ~current_species found_proofs_of
       inherited_methods_infos methods_info =
-  (* We must first reverse the lists of methods so that the collapse *)
-  (* procedure will find first the most recent methods.             *)
+  (* We must first reverse the lists of methods so that the collapse
+     procedure will find first the most recent methods. *)
   let revd_inherited_methods_infos = List.rev inherited_methods_infos in
   let revd_methods_info = List.rev methods_info in
   let (revd_collapsed_inherited_methods, revd_collapsed_current_methods) =
@@ -3056,8 +3049,8 @@ let collapse_proofs_of ~current_species found_proofs_of
         if was_collapsed then (accu_inherited, collapsed_current)
         else
           (begin
-            (* No collapse in the current level's       *)
-            (* methods, then try on the inherited ones. *)
+            (* No collapse in the current level's methods, then try on the
+               inherited ones. *)
             let (collapsed_inherited, collapsed_option) =
               collapse_proof_in_inherited
                 ~current_species found_proof_of.Parsetree.ast_desc
@@ -3066,11 +3059,11 @@ let collapse_proofs_of ~current_species found_proofs_of
              | None ->
                  (accu_inherited, accu_current)      (* No collapse at all ! *)
              | Some fresh_theorem ->
-                 (* Transfer the inherited field that had no proof to the *)
-                 (* non-inherited fields list since it received its proof *)
-                 (* now, i.e. in the non-inherited fields !               *)
-                 (* Note that now, in [collapsed_inherited] the collapsed *)
-                 (* field has now disapeared.                             *)
+                 (* Transfer the inherited field that had no proof to the
+                    non-inherited fields list since it received its proof now,
+                    i.e. in the non-inherited fields !
+                    Note that now, in [collapsed_inherited] the collapsed
+                    field has now disapeared. *)
                  (collapsed_inherited, (fresh_theorem :: accu_current))
            end))
       (revd_inherited_methods_infos, revd_methods_info)
@@ -3083,16 +3076,16 @@ let collapse_proofs_of ~current_species found_proofs_of
 
 
 
-(* ********************************************************************** *)
-(* Parsetree.vname -> Env.TypeInformation.species_field list ->           *)
-(*   (Env.TypeInformation.species_field *                                 *)
-(*    (Env.TypeInformation.species_field list))                           *)
+(* ********************************************************************* *)
+(* Parsetree.vname -> Env.TypeInformation.species_field list ->          *)
+(*   (Env.TypeInformation.species_field *                                *)
+(*    (Env.TypeInformation.species_field list))                          *)
 (** {b Descr} : Among the fields list [fields], find the one binding the
-              name [name]. Return both the found field and the list minus
-              this found field.
+    name [name]. Return both the found field and the list minus this
+    found field.
 
-    {b Rem} : Not exported outside this module.                           *)
-(* ********************************************************************** *)
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
 let extract_field_from_list_by_name name fields =
   let rec rec_extract = function
     | [] -> raise Not_found
@@ -3115,23 +3108,23 @@ let extract_field_from_list_by_name name fields =
 
 
 
-(* ********************************************************************* *)
-(* Parsetree.vname list -> Parsetree.vname list                          *)
+(* ******************************************************************** *)
+(* Parsetree.vname list -> Parsetree.vname list                         *)
 (** {b Descr} : Looks for "rep" in the names list [l]. If found, then
-              remove it from its place and put it again but as the first
-              element of the list.
+    remove it from its place and put it again but as the first element
+    of the list.
 
     {b Rem} : Implicitely assumes that "rep" exists at most once in the
-            list [l] (no doubles).
-            Not exported outside this module.                            *)
-(* ********************************************************************* *)
+    list [l] (no doubles).
+    Not exported outside this module.                                   *)
+(* ******************************************************************** *)
 let ensure_rep_in_first l =
   let rec rec_search = function
     | [] -> ([], false)
     | h :: q ->
-        (* If it's "rep", then stop and return the list without "rep". *)
-        (* Of course, by stopping search we assume that "rep" is at    *)
-        (* most once in the list (no doubles).                         *)
+        (* If it's "rep", then stop and return the list without "rep".
+           Of course, by stopping search we assume that "rep" is at most once
+           in the list (no doubles). *)
         if h = Parsetree.Vlident "rep" then (q, true) else
           let (filtered_q, found) = rec_search q in
           (h :: filtered_q, found) in
@@ -3167,19 +3160,19 @@ let order_fields_according_to order fields =
     match (rec_order, rec_fields) with
      | ([], []) -> []
      | ([], _) | (_, []) ->
-         (* If there are spurious fields or names then *)
-         (* it's because we went wrong somewhere ! *)
+         (* If there are spurious fields or names then it's because we went
+            wrong somewhere ! *)
          assert false
      | ((name :: rem_rec_order), _) ->
          (begin
          try
-           (* We first find the field hosting [name]. This field will be *)
-           (* inserted here in the result list. We then must remove from *)
-           (* the order list, all the name rec-bound with [name]. Then   *)
-           (* we continue with this new order and the fields list from   *)
-           (* which we remove the found field. This way, the fields list *)
-           (* in which we search will be smaller and smaller (cool for   *)
-           (* efficiency), and will finish to be empty.                  *)
+           (* We first find the field hosting [name]. This field will be
+              inserted here in the result list. We then must remove from the
+              order list, all the name rec-bound with [name]. Then we continue
+              with this new order and the fields list from which we remove the
+              found field. This way, the fields list in which we search will
+              be smaller and smaller (cool for efficiency), and will finish
+              to be empty. *)
            let (related_field, new_rec_fields) =
              extract_field_from_list_by_name name rec_fields in
            let names_bound =
@@ -3196,26 +3189,25 @@ let order_fields_according_to order fields =
            (* See second ATTENTION in the header of the function. *)
            (rec_reorder rem_rec_order rec_fields)
          end) in
-  (* Now do the job. First, if "rep" is in the order, then *)
-  (* ensure that it is the first in the list.              *)
+  (* Now do the job. First, if "rep" is in the order, then ensure that it is
+     the first in the list. *)
   let order_with_rep_in_front = ensure_rep_in_first order in
   rec_reorder order_with_rep_in_front fields
 ;;
 
 
 
-(* ********************************************************************* *)
-(* loc: Location.t -> typing_context -> Parsetree.vname ->               *)
-(*   Types.type_scheme ->                                                *)
-(*     (Types.species_name * Parsetree.vname * Types.type_scheme *       *)
-(*      Parsetree.expr * Env.TypeInformation.dependency_on_rep) list ->  *)
-(*       Env.TypeInformation.species_field                               *)
+(* ********************************************************************** *)
+(* loc: Location.t -> typing_context -> Parsetree.vname ->                *)
+(*   Types.type_scheme ->                                                 *)
+(*     (Types.species_name * Parsetree.vname * Types.type_scheme *        *)
+(*      Parsetree.expr * Env.TypeInformation.dependency_on_rep) list ->   *)
+(*       Env.TypeInformation.species_field                                *)
 (** {b Descr} : Implements the "fusion" algorithm (c.f [fields_fusion])
-              in the particular case of fusionning 1 field Sig and 1
-              field Let_rec.
+    in the particular case of fusionning 1 field Sig and 1 field Let_rec.
 
-    {b Rem} : Not exported outside this module.                          *)
-(* ********************************************************************* *)
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
 let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
   let rec_meths' =
     List.map
@@ -3252,10 +3244,10 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
 (* 'a -> ('b * 'a * 'c * 'd * 'e * 'f) list ->                          *)
 (*   ('b * 'a * 'c * 'd * 'e * 'f) * ('b * 'a * 'c * 'd * 'e * 'f) list *)
 (* {b Descr} : Searches in the list the first element whose first
-             component is equal to [name], then returns it and the list
-             minus this element.
-             If the searched name is not found in the list, then the
-             exception [Not_found] is raised.
+   component is equal to [name], then returns it and the list minus
+   this element.
+   If the searched name is not found in the list, then the exception
+   [Not_found] is raised.
 
    {b Rem} : Not exported outside this module.                          *)
 (* ******************************************************************** *)
@@ -3279,7 +3271,7 @@ let find_and_remain name meths =
 (*      Parsetree.expr) list ->                                         *)
 (*       Env.TypeInformation.species_field                              *)
 (** {b Descr} : Implements the "fusion" algorithm (c.f [fields_fusion])
-              in the particular case of fusionning 2 fields Let_rec.
+    in the particular case of fusionning 2 fields Let_rec.
 
     {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************** *)
@@ -3292,8 +3284,8 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
         (try
           let (m2, rem_of_l2) = find_and_remain n1 l2 in
           let (f2, n2, args2, sc2, body2, dep2, log_flag2) = m2 in
-          (* We don't allow to redefine methods mixing logical and *)
-          (* computation flag.                                     *)
+          (* We don't allow to redefine methods mixing logical and computation
+             flag. *)
           if log_flag1 != log_flag2 then
             raise (No_mix_between_logical_defs (loc, n1)) ;
           Types.begin_definition () ;
@@ -3304,8 +3296,8 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
           ignore
             (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
           Types.end_definition () ;
-          (* And return the seconde one (late binding) with the presence *)
-          (* of def-dependency on "rep" updated.                         *)
+          (* And return the seconde one (late binding) with the presence of
+             def-dependency on "rep" updated. *)
           let dep' = {
             Env.TypeInformation.dor_def =
               dep2.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () ;
@@ -3317,8 +3309,8 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
          with Not_found ->
           (* The method doesn't belong to l2, then keep this one. *)
           (meth, l2)) in
-      (* Now make the fusion of the remaining of l1 and the remaining  *)
-      (* of l2 (this last one being possibly l2 if the search failed). *)
+      (* Now make the fusion of the remaining of l1 and the remaining of l2
+         (this last one being possibly l2 if the search failed). *)
       let rem_fused_methods = rec_fusion rem1 new_l2 in
       fused_meth :: rem_fused_methods in
   (* Go... *)
@@ -3336,8 +3328,8 @@ let fusion_fields_let_let_rec ~loc ctx meth1 rec_meths2 =
     let (_, n1, _, sc1, _, _, log_flag1) = meth1 in
     let (m2, rem_of_l2) = find_and_remain n1 rec_meths2 in
     let (f2, n2, args2, sc2, body2, dep2, log_flag2) = m2 in
-    (* We don't allow to redefine methods mixing logical and *)
-    (* computation flag.                                     *)
+    (* We don't allow to redefine methods mixing logical and computation
+       flag. *)
     if log_flag1 != log_flag2 then
       raise (No_mix_between_logical_defs (loc, n1)) ;
     Types.begin_definition () ;
@@ -3348,19 +3340,19 @@ let fusion_fields_let_let_rec ~loc ctx meth1 rec_meths2 =
     ignore
       (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
     Types.end_definition () ;
-    (* And return the second one (late binding) with the presence  *)
-    (* of def-dependency on "rep" updated. We re-insert the method *)
-    (* in the remaining bunch of initial recursive method.         *)
+    (* And return the second one (late binding) with the presence of
+       def-dependency on "rep" updated. We re-insert the method in the
+       remaining bunch of initial recursive method. *)
     let dep' =
       { Env.TypeInformation.dor_def =
           dep2.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () ;
         Env.TypeInformation.dor_decl =
           dep2.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep () } in
     let m2' = (f2, n2, args2, sc2, body2, dep', log_flag2) in
-    (* No matter if the position of the re-inserted method differs from   *)
-    (* its original place. So, finally as result, if the fusion succeeded *)
-    (* we totally forgot the old non-recursive method and we get the new  *)
-    (* bunch of recursive ones.                                           *)
+    (* No matter if the position of the re-inserted method differs from its
+       original place. So, finally as result, if the fusion succeeded we
+       totally forgot the old non-recursive method and we get the new bunch of
+       recursive ones. *)
     m2' :: rem_of_l2
   with Not_found ->
     (* The method doesn't belong to [rec_meths2]. *)
@@ -3378,8 +3370,8 @@ let fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2 =
     let (f2, n2, args2, sc2, body2, dep2, log_flag2) = meth2 in
     let (m1, rem_of_l1) = find_and_remain n2 rec_meths1 in
     let (_, n1, _, sc1, _, _, log_flag1) = m1 in
-    (* We don't allow to redefine methods mixing logical and *)
-    (* computation flag.                                     *)
+    (* We don't allow to redefine methods mixing logical and computation
+       flag. *)
     if log_flag1 != log_flag2 then
       raise (No_mix_between_logical_defs (loc, n1)) ;
     Types.begin_definition () ;
@@ -3390,20 +3382,20 @@ let fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2 =
     ignore
       (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
     Types.end_definition () ;
-    (* And return the first one (late binding) with the presence *)
-    (* of def-dependency on "rep" updated. We re-insert the method *)
-    (* in the remaining bunch of initial recursive method.         *)
+    (* And return the first one (late binding) with the presence of
+       def-dependency on "rep" updated. We re-insert the method in the
+       remaining bunch of initial recursive method. *)
     let dep' =
       { Env.TypeInformation.dor_def =
           dep2.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () ;
         Env.TypeInformation.dor_decl =
           dep2.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep () } in
     let m2' = (f2, n2, args2, sc2, body2, dep', log_flag2) in
-    (* No matter if the position of the re-inserted method differs from   *)
-    (* its original place. So, finally as result, if the fusion succeeded *)
-    (* we get the old recursive methods except the one wearing the name   *)
-    (* of newly merged, and this newly merged one is inserted among the   *)
-    (* old recursive ones.                                                *)
+    (* No matter if the position of the re-inserted method differs from its
+       original place. So, finally as result, if the fusion succeeded we get
+       the old recursive methods except the one wearing the name of newly
+       merged, and this newly merged one is inserted among the old recursive
+       ones. *)
     m2' :: rem_of_l1
   with Not_found ->
     (* The method doesn't belong to [rec_meths2]. *)
@@ -3416,11 +3408,11 @@ let fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2 =
 (* loc: Location.t -> typing_context -> Env.TypeInformation.species_field -> *)
 (*   Env.TypeInformation.species_field -> Env.TypeInformation.species_field  *)
 (** {b Descr} : Implements the "fusion" algorithm described in Virgile
-              Prevosto's Phd, Section 3.6, page 35.
-              This basically ensure that 2 fields with at leat 1 common
-              name are type-compatible and select the new field information
-              that summarizes these 2 original fields (implementing the late
-              binding feature by the way).
+    Prevosto's Phd, Section 3.6, page 35.
+    This basically ensure that 2 fields with at leat 1 common name are
+    type-compatible and select the new field information that summarizes
+    these 2 original fields (implementing the late binding feature by the
+    way).
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
@@ -3532,8 +3524,8 @@ let fields_fusion ~loc ctx phi1 phi2 =
              with _ -> assert false) ;
             (* Finally, ensure that the propositions are the same. *)
             if Ast_equal.logical_expr_equal_p logical_expr1 logical_expr2 then
-              (* Return the theorem in case of property / theorem and  *)
-              (* return the last theorem in case of theorem / theorem. *)
+              (* Return the theorem in case of property / theorem and return
+                 the last theorem in case of theorem / theorem. *)
               phi2
             else assert false
            end)
@@ -3568,19 +3560,18 @@ let fields_fusion ~loc ctx phi1 phi2 =
 (*      Env.TypeInformation.species_field list *                            *)
 (*      Env.TypeInformation.species_field list)                             *)
 (** {b Descr} : Searches in the list of fields [fields] the oldest field
-              sharing a name in common with the field [phi]. Then it
-              returns this field of [fields] and the list [fields] itself
-              minus the found field splitted in two parts :
-               - the head formed by the elements before the found field,
-               - the tail formed by the elements after the found field.
-              This function intends to serves in the normalization
-              algorithm described in Virgile Prevosto's Phd, Section 3.7.1,
-              page 36. It addresses the problem of "finding i_0 the
-              smallest index such as N(phi) inter N(psi_0) <> empty".
+    sharing a name in common with the field [phi]. Then it returns this
+    field of [fields] and the list [fields] itself minus the found field
+    splitted in two parts :
+      - the head formed by the elements before the found field,
+      - the tail formed by the elements after the found field.
+    This function intends to serves in the normalization algorithm described
+    in Virgile Prevosto's Phd, Section 3.7.1, page 36. It addresses the
+    problem of "finding i_0 the smallest index such as
+    N(phi) inter N(psi_0) <> empty".
 
-              Since the list is ordered in the inheritance direction, i.e.
-              oldest inherited fields in head, the oldest is the first
-              found in the list.
+    Since the list is ordered in the inheritance direction, i.e. oldest
+    inherited fields in head, the oldest is the first found in the list.
 
     {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
@@ -3593,8 +3584,8 @@ let oldest_inter_n_field_n_fields phi fields =
          List.map (fun (_, v, _, _, _, _, _) -> v) l
      | Env.TypeInformation.SF_theorem (_, v, _, _, _, _) -> [v]
      | Env.TypeInformation.SF_property (_, v, _, _, _) -> [v]) in
-  (* We will now check for an intersection between the list of names *)
-  (* from phi and the names of one field of the argument [fields].   *)
+  (* We will now check for an intersection between the list of names from phi
+     and the names of one field of the argument [fields]. *)
   let rec rec_hunt = function
     | [] -> (None, [], [])
     | f :: rem_f ->
@@ -3632,8 +3623,8 @@ let non_conflicting_fields_p f1 f2 =
       Env.TypeInformation.SF_sig (_, v2, sch2))
    | (Env.TypeInformation.SF_sig (_, v1, sch1),
       Env.TypeInformation.SF_let (_, v2, _, sch2, _, _, _)) ->
-        (* If signatures/lets wear the same names and have the *)
-        (* same scheme then fields are not conflicting.        *)
+        (* If signatures/lets wear the same names and have the same scheme
+           then fields are not conflicting. *)
         if v1 = v2 then
           (begin
           let ty1 = Types.specialize sch1 in
@@ -3651,14 +3642,14 @@ let non_conflicting_fields_p f1 f2 =
       (Env.TypeInformation.SF_let_rec l2))
    | ((Env.TypeInformation.SF_let_rec l2),
       Env.TypeInformation.SF_sig (_, v1, sch1)) ->
-        (* There is no conflict if one of the rec-bound identifiers wears *)
-        (* the same name than the signature and have the same type.       *)
+        (* There is no conflict if one of the rec-bound identifiers wears the
+           same name than the signature and have the same type. *)
         List.exists
           (fun (_, v, _, sch, _, _, _) ->
             if v = v1 then
               (begin
-              (* For each unification, take a fresh scheme for the signature *)
-              (* to prevent being poluted by previous unifications.          *)
+              (* For each unification, take a fresh scheme for the signature
+                 to prevent being poluted by previous unifications. *)
               let ty1 = Types.specialize sch1 in
               let t = Types.specialize sch in
               try
@@ -3672,23 +3663,23 @@ let non_conflicting_fields_p f1 f2 =
           l2
    | (Env.TypeInformation.SF_let (from1, v1, _, _, _, _, log1),
       Env.TypeInformation.SF_let (from2, v2, _, _, _, _, log2)) ->
-        (* Unless fields are wearing the same name and are coming from the   *)
-        (* same species, we consider that 2 let definitions are conflicting. *)
-        (* We could go further, applying equality modulo alpha-conversion    *)
-        (* but we don't do for the moment.                                   *)
+        (* Unless fields are wearing the same name and are coming from the
+           same species, we consider that 2 let definitions are conflicting.
+           We could go further, applying equality modulo alpha-conversion but
+           we don't do for the moment. *)
         (v1 = v2) &&
         (from1.Env.fh_initial_apparition = from2.Env.fh_initial_apparition) &&
         (log1 = log2)
    | (Env.TypeInformation.SF_theorem (from1, v1, _, _, _, _),
       Env.TypeInformation.SF_theorem (from2, v2, _, _, _, _)) ->
-       (* Since we don't want to inspect proofs, theorems are compatible   *)
-       (* only if they wear the same names and come from the same species. *)
+       (* Since we don't want to inspect proofs, theorems are compatible only
+          if they wear the same names and come from the same species. *)
        (v1 = v2) &&
        (from1.Env.fh_initial_apparition = from2.Env.fh_initial_apparition)
    | (Env.TypeInformation.SF_property (_, v1, _, b1, _),
       Env.TypeInformation.SF_property (_, v2, _, b2, _)) ->
-        (* Two properties are the same if they are wearing the same *)
-        (* name and have the same logical expression as body.       *)
+        (* Two properties are the same if they are wearing the same name and
+           have the same logical expression as body. *)
         v1 = v2 && Ast_equal.logical_expr_equal_p b1 b2
    | ((Env.TypeInformation.SF_let_rec l1),
       (Env.TypeInformation.SF_let_rec l2)) ->
@@ -3712,10 +3703,10 @@ let non_conflicting_fields_p f1 f2 =
     Virgile Prevosto's Phd, Section 3.7.1, page 36 plus its extention
     to properties and theorems in Section 3.9.7, page 57.
 
-      ATTENTION: Something that was not told in Virgile's Phd: in
-      case of inheriting a field several times via the SAME parent,
-      erasing must not be performed ! That's like if we did as if
-      there was no erasing to do.
+    ATTENTION: Something that was not told in Virgile's Phd: in case
+    of inheriting a field several times via the SAME parent, erasing
+    must not be performed ! That's like if we did as if there was no
+    erasing to do.
 
     {b Rem}: Not exported outside this module.                        *)
 (* ****************************************************************** *)
@@ -3738,9 +3729,9 @@ let normalize_species ~loc ctx methods_info inherited_methods_infos =
               let psi_i0_names =
                 Dep_analysis.ordered_names_list_of_fields [psi_i0] in
               w1 :=  (fields_fusion ~loc ctx psi_i0 phi) :: bigX ;
-              (* Apply the formula Section of Section 3.9.7, page 57.   *)
-              (* Hence we erase in the tail of the list, i.e. in fields *)
-              (* found after [psi_i0].                                  *)
+              (* Apply the formula Section of Section 3.9.7, page 57.
+                 Hence we erase in the tail of the list, i.e. in fields found
+                 after [psi_i0]. *)
               let current_species =
                 (match ctx.current_species with
                  | None -> assert false
@@ -3760,19 +3751,18 @@ let normalize_species ~loc ctx methods_info inherited_methods_infos =
 
 
 
-(* ******************************************************************* *)
-(* typing_context -> Env.TypeInformation.species_field list -> unit    *)
+(* *********************************************************************** *)
+(* typing_context -> Env.TypeInformation.species_field list -> unit        *)
 (** {b Descr} : Verifies that a species subject to become a collection
-              is really fully defined. This means that this species
-              must not contain any "declared" fields (i.e. SF_sig)
-              except for "repr" who must be declared (of course, its
-              declaration is also its definition !).
+    is really fully defined. This means that this species must not contain
+    any "declared" fields (i.e. SF_sig) except for "rep" who must be
+    declared (of course, its declaration is also its definition !).
 
-    {b Rem} : Not exported outside this module.                        *)
-(* ******************************************************************* *)
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
 let ensure_collection_completely_defined ctx fields =
-  (* Let just make a reference for checking the presence pf "rep" instead *)
-  (* of passing a boolean flag. This way, the function keeps terminal.    *)
+  (* Let just make a reference for checking the presence pf "rep" instead of
+     passing a boolean flag. This way, the function keeps terminal. *)
   let rep_found = ref false in
   let rec rec_ensure = function
     | [] -> ()
@@ -3819,28 +3809,28 @@ let ensure_collection_completely_defined ctx fields =
 (* ************************************************************************ *)
 (* loc: Location.t -> Env.TypeInformation.species_field -> unit             *)
 (** {b Descr} : Detects and reject polymorphic methods. This proces is done
-      once the fusion of inhérited methods and current methods is done.
-      In effect, it is possible to have an inherited signature specifying a
-      non polymorphic type and a definition of this method not specifying the
-      types (hence that could seem polymorphic). The expected behaviour is
-      that the type constraint inherited comes and apply to the method
-      definition to in fact make it non polymorphic.
-      For instance:
-        species A =
-          sig equal : Self -> Self -> basics#bool ;
-        end ;;
-       species B inherits A =
-         let equal (x, y) = true ;
-       end ;;
-      In A "equal" is not polymorphic since its type is explicitely given.
-      However, in "B", no type constraint is done. Hence the "equal" method
-      in B looks 'a -> 'b -> bool. But because it is the same than in A, it
-      really has the type Self -> Self -> bool ad must not be rejected.
-      When the species is normalized and inherited fields a fusionned,
-      unification is performed between fields of the same name. Then the
-      polymorphic-like scheme of "equal" in B gets instancied by the one of
-      "equal" in A, and doesn't look anymore polymorphics. That's why the
-      polymorphic hunt must be done only once fields have been fusionned.
+    once the fusion of inhérited methods and current methods is done.
+    In effect, it is possible to have an inherited signature specifying a
+    non polymorphic type and a definition of this method not specifying the
+    types (hence that could seem polymorphic). The expected behaviour is
+    that the type constraint inherited comes and apply to the method
+    definition to in fact make it non polymorphic.
+    For instance:
+      species A =
+        sig equal : Self -> Self -> basics#bool ;
+      end ;;
+     species B inherits A =
+       let equal (x, y) = true ;
+     end ;;
+    In A "equal" is not polymorphic since its type is explicitely given.
+    However, in "B", no type constraint is done. Hence the "equal" method
+    in B looks 'a -> 'b -> bool. But because it is the same than in A, it
+    really has the type Self -> Self -> bool ad must not be rejected.
+    When the species is normalized and inherited fields a fusionned,
+    unification is performed between fields of the same name. Then the
+    polymorphic-like scheme of "equal" in B gets instancied by the one of
+    "equal" in A, and doesn't look anymore polymorphics. That's why the
+    polymorphic hunt must be done only once fields have been fusionned.
 
     {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
@@ -3861,22 +3851,21 @@ let detect_polymorphic_method ~loc = function
 
 
 
-(* ********************************************************************** *)
+(* ******************************************************************* *)
 (** {b Descr} : Helper-type to record the various information from the
-              typechecking pass needed to go to the code generation pass.
-              This is mostly obvious and self-describing.
+    typechecking pass needed to go to the code generation pass.
+    This is mostly obvious and self-describing.
 
-    {b Rem} : Clearly exported outside this module.                       *)
-(* ********************************************************************** *)
+    {b Rem} : Clearly exported outside this module.                    *)
+(* ******************************************************************* *)
 type please_compile_me =
   | PCM_no_matter       (** Nothing to do during the compilation pass. *)
   | PCM_open of (Location.t * Parsetree.module_name)
   | PCM_coq_require of
-      (* Coq modules to open due to external definitions. This allow to *)
-      (* make external Coq files where these definitions lie visible in *)
-      (* Coq, without having to search in the whole FoCaL source file   *)
-      (* for [external_expr]s that imply a reference to a module in the *)
-      (* string they contain.                                           *)
+      (** Coq modules to open due to external definitions. This allow to make
+         external Coq files where these definitions lie visible in Coq, without
+         having to search in the whole FoCaL source file for [external_expr]s
+         that imply a reference to a module in the string they contain. *)
       Parsetree.module_name
   | PCM_species of
       ((** The species expression. *)
@@ -3909,11 +3898,10 @@ type please_compile_me =
 (* typing_context -> Env.TypingEnv.t -> Parsetree.species_def ->             *)
 (*  (Types.type_simple * Env.TypingEnv.t)                                    *)
 (** {b Descr} : Typechecks a species definition. Il infers its signature and
-              bind it to the species name in the environment. Finally, adds
-              a type binding representing the species's carrier type.
-              Also performs the interface printing stuff of a species.
-              It returns both the extended environment and the species's
-              carrier type.
+    bind it to the species name in the environment. Finally, adds a type
+    binding representing the species's carrier type.
+    Also performs the interface printing stuff of a species.
+    It returns both the extended environment and the species's carrier type.
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
@@ -3926,15 +3914,15 @@ let typecheck_species_def ctx env species_def =
       Sourcify.pp_vname species_def_desc.Parsetree.sd_name;
   (* First of all, we are in a species !!! *)
   let ctx = { ctx with current_species = Some current_species } in
-  (* Extend the environment with the species param and   *)
-  (* synthetize the species type of the current species. *)
+  (* Extend the environment with the species param and synthetize the species
+     type of the current species. *)
   let (env_with_species_params, sig_params, _self_must_be1) =   (*** ***)
     typecheck_species_def_params
       ctx env species_def_desc.Parsetree.sd_params in
-  (* We first load the inherited methods in the environment and  *)
-  (* get their signatures and methods information by the way.    *)
-  (* We also get a possibly new context where the fact that Self *)
-  (* is now manifest is unpdated, in case we inherited a [repr]. *)
+  (* We first load the inherited methods in the environment and get their
+     signatures and methods information by the way.
+     We also get a possibly new context where the fact that Self is now
+     manifest is unpdated, in case we inherited a [repr]. *)
   let (inherited_methods_infos,
        env_with_inherited_methods,
        ctx_with_inherited_repr,
@@ -3943,24 +3931,24 @@ let typecheck_species_def ctx env species_def =
       ~current_species ~loc: species_def.Parsetree.ast_loc ctx
       env_with_species_params
       species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc in
-  (* Now infer the types of the current field's and recover *)
-  (* the context  where we may know the shape of [repr].    *)
+  (* Now infer the types of the current field's and recover the context  where
+     we may know the shape of [repr]. *)
   let (methods_info, ctx', found_proofs_of, (* [Unsure] *) _) =
     typecheck_species_fields
       ctx_with_inherited_repr env_with_inherited_methods
       species_def_desc.Parsetree.sd_fields in
-  (* We first collapse "proof-of"s with their *)
-  (* related property to lead to a theorem.   *)
+  (* We first collapse "proof-of"s with their related property to lead to a
+     theorem. *)
   let (collapsed_inherited_methods_infos, collapsed_methods_info) =
     collapse_proofs_of
       ~current_species found_proofs_of inherited_methods_infos methods_info in
-  (* Now, compute the fields order to prevent ill-formness described in the  *)
-  (* [collapse_proofs_of] function's header. In effect, we may have injected *)
-  (* in the fresh species fields some theorem obtained by merging inherited  *)
-  (* properties whose proofs were given in the current species. Hence, the   *)
-  (* order of insertion may not be correct according to the really defined   *)
-  (* here fields of the species. So, let's reorganize topologically          *)
-  (* according to the dependencies.                                          *)
+  (* Now, compute the fields order to prevent ill-formness described in the
+     [collapse_proofs_of] function's header. In effect, we may have injected in
+     the fresh species fields some theorem obtained by merging inherited
+     properties whose proofs were given in the current species. Hence, the
+     order of insertion may not be correct according to the really defined here
+     fields of the species. So, let's reorganize topologically according to the
+     dependencies. *)
   let new_order =
     Dep_analysis.compute_fields_reordering
       ~current_species collapsed_methods_info in
@@ -3970,22 +3958,22 @@ let typecheck_species_def ctx env species_def =
     Format.eprintf
       "Normalizing species '%a'.@."
       Sourcify.pp_vname species_def_desc.Parsetree.sd_name ;
-  (* Then one must ensure that each method has the same type everywhere *)
-  (* in the inheritance tree and more generaly create the normalised    *)
-  (* form of the species.                                               *)
+  (* Then one must ensure that each method has the same type everywhere in the
+     inheritance tree and more generaly create the normalised form of the
+     species. *)
   let normalized_methods =
     normalize_species
       ~loc: species_def.Parsetree.ast_loc ctx' reordered_collapsed_methods_info
       collapsed_inherited_methods_infos in
   (* Ensure that the species is well-formed. *)
   Dep_analysis.ensure_species_well_formed ~current_species normalized_methods ;
-  (* Ensure that no method is polymorphic  (c.f. Virgile *)
-  (* Prevosto's Phd section 3.3, page 24).               *)
+  (* Ensure that no method is polymorphic  (c.f. Virgile Prevosto's Phd section
+     3.3, page 24). *)
   List.iter
     (detect_polymorphic_method ~loc: species_def.Parsetree.ast_loc)
     normalized_methods ;
-  (* Now, compute the fields order to prevent ill-formness described in the *)
-  (* [collapse_proofs_of] function's header.                                *)
+  (* Now, compute the fields order to prevent ill-formness described in the
+     [collapse_proofs_of] function's header. *)
   let new_order_for_normalizes =
     Dep_analysis.compute_fields_reordering
       ~current_species normalized_methods in
@@ -3995,9 +3983,9 @@ let typecheck_species_def ctx env species_def =
   if Configuration.get_verbose () then
     Format.eprintf "Computing dependencies inside species '%a'.@."
       Sourcify.pp_vname species_def_desc.Parsetree.sd_name ;
-  (* The methods are now completly correct, i.e. with no multiple times *)
-  (* the same name as it can be before the normalization process, we    *)
-  (* get the species's final dependency graph.                          *)
+  (* The methods are now completly correct, i.e. with no multiple times the
+     same name as it can be before the normalization process, we get the
+     species's final dependency graph. *)
   let species_dep_graph =
     Dep_analysis.build_dependencies_graph_for_fields
       ~current_species reordered_normalized_methods in
@@ -4007,17 +3995,17 @@ let typecheck_species_def ctx env species_def =
    | Some dirname ->
        Dep_analysis.dependencies_graph_to_dotty
          ~dirname ~current_species species_dep_graph) ;
-  (* Check whether the collection is fully defined. If so, then at code  *)
-  (* generation-time, then en collection generator must be created. Note *)
-  (* that this is independant of the fact to be a collection.            *)
+  (* Check whether the collection is fully defined. If so, then at code
+     generation-time, then en collection generator must be created. Note that
+     this is independant of the fact to be a collection. *)
   let is_closed =
     (try
        ensure_collection_completely_defined ctx reordered_normalized_methods ;
        (* If the check didn't fail, then the species if fully defined. *)
        true with
      | Collection_not_fully_defined _ -> false) in
-  (* Let's build our "type" information. Since we are managing a species     *)
-  (* and NOT a collection, we must set [spe_kind] to [SCK_toplevel_species]. *)
+  (* Let's build our "type" information. Since we are managing a species
+     and NOT a collection, we must set [spe_kind] to [SCK_toplevel_species]. *)
   let species_description = {
     Env.TypeInformation.spe_kind = Types.SCK_toplevel_species ;
     Env.TypeInformation.spe_is_closed = is_closed ;
@@ -4029,8 +4017,8 @@ let typecheck_species_def ctx env species_def =
    | Some dirname ->
        methods_history_to_text
          ~dirname ~current_species reordered_normalized_methods) ;
-  (* Extend the initial environment with the species. Not the environment *)
-  (* used to typecheck the internal definitions of the species !!!        *)
+  (* Extend the initial environment with the species. Not the environment
+     used to typecheck the internal definitions of the species !!! *)
   let env_with_species =
     Env.TypingEnv.add_species
       ~loc: species_def.Parsetree.ast_loc
@@ -4078,28 +4066,27 @@ let typecheck_species_def ctx env species_def =
 (* Parsetree.simple_type_def_body ->                                        *)
 (*   (Env.TypingEnv.t * Env.TypeInformation.type_description)               *)
 (** {b Descr} : Transforms a simple type definition's body into a somewhat
-             that can be inserted inside the environment. Also generates
-             type constructors in case of a sum type definition and field
-             labels in case of a record type definition.
-             The passed context must already have its [tyvars_mapping]
-             field initialized, telling the link between the type
-             definition's parameters and the type variables they are
-             related to.
-             Both field labels and constructors with arguments are assigned
-             a type scheme like a function taking as argument the field's
-             type (or a tuple with type constructor's arguments types) and
-             returning a ST_construct embedding the record/sum type's name.
-             For instance:
-               [type t = A of int]
-             will create a constructor [A : (int) -> t]
-             where one must note that (int) stands for a degenerated tuple
-             type with only 1 component.
-             For other instance:
-               [type u = { junk : string }]
-             will create a field label [junk : string -> u]
-             Sum type constructors with no argument are typed as constants
-             of this type.
-             Also performs the interface printing stuff is needed.
+    that can be inserted inside the environment. Also generates type
+    constructors in case of a sum type definition and field labels in case
+    of a record type definition.
+    The passed context must already have its [tyvars_mapping] field
+    initialized, telling the link between the type definition's parameters
+    and the type variables they are related to.
+    Both field labels and constructors with arguments are assigned a type
+    scheme like a function taking as argument the field's type (or a tuple
+    with type constructor's arguments types) and returning a ST_construct
+    embedding the record/sum type's name.
+    For instance:
+      [type t = A of int]
+    will create a constructor [A : (int) -> t]
+    where one must note that (int) stands for a degenerated tuple type with
+    only 1 component.
+    For other instance:
+      [type u = { junk : string }]
+    will create a field label [junk : string -> u]
+    Sum type constructors with no argument are typed as constants of this
+    type.
+    Also performs the interface printing stuff is needed.
 
     {b Args} :
       - [~is_repr_of_external] : Boolean telling if the current type
@@ -4121,8 +4108,8 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
   let nb_params = List.length vars_of_mapping in
   (* Insert ourselves in the environment in case of recursive definition. *)
   Types.begin_definition () ;
-  (* Make the type constructor... We know it's vname. Now its hosting *)
-  (* module is the current one because it is defined inside it, eh !  *)
+  (* Make the type constructor... We know it's vname. Now its hosting module
+     is the current one because it is defined inside it, eh ! *)
   let futur_type_type =
     Types.type_basic
       (Types.make_type_constructor
@@ -4134,8 +4121,8 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
       ~variables: vars_of_mapping  ~body: futur_type_type in
   let proto_descrip = {
     Env.TypeInformation.type_loc = simple_type_def_body.Parsetree.ast_loc ;
-    (* Make an "abstract" proto-type, even if it is of another kind, this *)
-    (* is not important because will never be used.                       *)
+    (* Make an "abstract" proto-type, even if it is of another kind, this is
+       not important because will never be used. *)
     Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
     Env.TypeInformation.type_identity = proto_identity ;
     Env.TypeInformation.type_params = vars_of_mapping ;
@@ -4149,8 +4136,8 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
   match simple_type_def_body.Parsetree.ast_desc with
    | Parsetree.STDB_alias ty ->
        (begin
-       (* We do not insert the defined name itself  *)
-       (* to reject recursive type abbreviations.   *)
+       (* We do not insert the defined name itself to reject recursive type
+          abbreviations. *)
        Types.begin_definition () ;
        (* This definition will only add a type name, no new type constructor. *)
        let identity_type =
@@ -4169,9 +4156,9 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
          Env.TypeInformation.type_identity = identity_scheme ;
          Env.TypeInformation.type_params = vars_of_mapping ;
          Env.TypeInformation.type_arity = nb_params } in
-       (* Extend the ORIGINAL environment (not the one where we put our *)
-       (* proto-type) by the type itself. Hence we are sur not to have  *)
-       (* the type twice.                                               *)
+       (* Extend the ORIGINAL environment (not the one where we put our
+          proto-type) by the type itself. Hence we are sur not to have the
+          type twice. *)
        let env' =
          if is_repr_of_external then env
          else
@@ -4183,8 +4170,8 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
        end)
   | Parsetree.STDB_union constructors ->
     (begin
-      (* Now process the constructors of the type. Create the  *)
-      (* list of couples : (constructor name * type_simple).   *)
+      (* Now process the constructors of the type. Create the list of
+         couples : (constructor name * type_simple). *)
       let cstr_bindings =
         List.map
           (fun (cstr_name, cstr_args) ->
@@ -4197,19 +4184,18 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
                   Types.generalize futur_type_type } in
               (cstr_name, Env.TypeInformation.CA_zero, cstr_descr)
             | _ ->
-              (* There are some argument(s). So the constructor is type as *)
-              (* a function taking a tuple of argument(s)  and returning   *)
-              (* the type of the current definition.                       *)
-              (* Be careful, in accordance with what is done in function   *)
-              (* [typecheck_pattern], we take care of not adding an extra  *)
-              (* tuple layer if the argument of the constructor is already *)
-              (* a tuple. To do this, we add a tuple layer ONLY if there   *)
-              (* is not only ONE argument or if there is only one but      *)
-              (* already begin a tuple ! This way, we ensure that          *)
-              (* constructor argument(s) is (are) always in a tuple, but   *)
-              (* never in a trivial tuple containing only one component    *)
-              (* being a tuple. This means that we only add a tuple layer  *)
-              (* if there is not one already.                              *)
+              (* There are some argument(s). So the constructor is type as a
+                 function taking a tuple of argument(s)  and returning the
+                 type of the current definition.
+                 Be careful, in accordance with what is done in function
+                 [typecheck_pattern], we take care of not adding an extra
+                 tuple layer if the argument of the constructor is already
+                 a tuple. To do this, we add a tuple layer ONLY if there is not
+                 only ONE argument or if there is only one but already begin a
+                 tuple ! This way, we ensure that constructor argument(s) is
+                 (are) always in a tuple, but never in a trivial tuple
+                 containing only one component being a tuple. This means that
+                 we only add a tuple layer if there is not one already. *)
               Types.begin_definition () ;
               let args_ty =
                 List.map
@@ -4264,8 +4250,8 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
       (env', final_type_descr)
      end)
   | Parsetree.STDB_record labels ->
-      (* First, we sort the label list in order to get a canonical *)
-      (* representation of a record.                               *)
+      (* First, we sort the label list in order to get a canonical
+         representation of a record. *)
       let labels = Sort.list (fun (n1, _) (n2, _) -> n1 <= n2) labels in
       (* Now typecheck the fields of the record. *)
       let fields_descriptions =
@@ -4359,8 +4345,8 @@ let typecheck_external_type_def_body ctx env type_name params
     external_type_def_body =
   (* An external type definition "has no type". Record in the AST node. *)
   external_type_def_body.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
-  (* Same remark for the [external_expr] and the [external_bindings] *)
-  (* telling how to map this external type definition.               *)
+  (* Same remark for the [external_expr] and the [external_bindings] telling
+     how to map this external type definition. *)
   external_type_def_body.Parsetree.ast_desc.Parsetree.etdb_external.
     Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
   external_type_def_body.Parsetree.ast_desc.Parsetree.etdb_bindings.
@@ -4373,16 +4359,16 @@ let typecheck_external_type_def_body ctx env type_name params
       ext_expr.Parsetree.ast_type <- Parsetree.ANTI_non_relevant)
     external_type_def_body.Parsetree.ast_desc.Parsetree.etdb_bindings.
       Parsetree.ast_desc ;
-  (* We build the type's structure and the environment where *)
-  (* this type's name is bound to this structure.            *)
+  (* We build the type's structure and the environment where this type's name
+     is bound to this structure. *)
   match external_type_def_body.Parsetree.ast_desc.Parsetree.etdb_internal with
    | None ->
        (begin
-       (* We will build an external type of this name with as many *)
-       (* parameters we find in the [ctx.tyvars_mapping] list.     *)
+       (* We will build an external type of this name with as many parameters
+          we find in the [ctx.tyvars_mapping] list. *)
        Types.begin_definition () ;
-       (* Make the type constructor... We know it's vname. Now its hosting *)
-       (* module is the current one because it is defined inside it, eh !  *)
+       (* Make the type constructor... We know it's vname. Now its hosting
+          module is the current one because it is defined inside it, eh ! *)
        let ty =
          Types.type_basic
            (Types.make_type_constructor
@@ -4416,14 +4402,14 @@ let typecheck_external_type_def_body ctx env type_name params
        (final_env, ty_descr)
        end)
    | Some internal_repr ->
-       (* Build the type structure of the "internal" representation. This *)
-       (* will be used to build the real type's structure.                *)
+       (* Build the type structure of the "internal" representation. This will
+          be used to build the real type's structure. *)
        let (env_without_type_def, internal_descr) =
          typecheck_simple_type_def_body
            ctx ~is_repr_of_external: true env type_name internal_repr in
-       (* Force the type to be [TK_external] in order to prevent ot from  *)
-       (* being "generated". Even if this type has an internal structure, *)
-       (* the generated code must always map on its external view !       *)
+       (* Force the type to be [TK_external] in order to prevent ot from
+          being "generated". Even if this type has an internal structure,
+          the generated code must always map on its external view ! *)
        let externalized_descr = {
          internal_descr with
            Env.TypeInformation.type_kind =
@@ -4447,9 +4433,9 @@ let typecheck_type_def ctx env type_def =
   type_def.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
   type_def_desc.Parsetree.td_body.Parsetree.ast_type <-
     Parsetree.ANTI_non_relevant ;
-  (* First, extend the [tyvars_mapping] of the current context with      *)
-  (* parameters of the type definition. The position of variables in the *)
-  (* mapping is and must be the same that in the type's parameters list. *)
+  (* First, extend the [tyvars_mapping] of the current context with parameters
+     of the type definition. The position of variables in the mapping is and
+     must be the same that in the type's parameters list. *)
   Types.begin_definition () ;
   let vmapp =
     List.map
@@ -4471,16 +4457,15 @@ let typecheck_type_def ctx env type_def =
 
 
 
-(* ****************************************************************** *)
-(* typing_context -> Env.TypingEnv.t -> Parsetree.coll_def ->         *)
-(*   (Types.type_simple * Env.TypingEnv.t)                            *)
-(** {b Descr} : Typecheck a definition of collection. It recovers its
-              fields and their types and verifies that the resulting
-              species is fully defined.
-              Once the collection is successfully built, it is added
-              to the current environment.
-              The function returns both the extended environment and
-              the carrier type pf the species.
+(* ************************************************************************* *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.coll_def ->                *)
+(*   (Types.type_simple * Env.TypingEnv.t)                                   *)
+(** {b Descr} : Typecheck a definition of collection. It recovers its fields
+    and their types and verifies that the resulting species is fully defined.
+    Once the collection is successfully built, it is added to the current
+    environment.
+    The function returns both the extended environment and the carrier type
+    pf the species.
 
     {b Args} :
       - [ctx] : Current structure recording the various information
@@ -4489,8 +4474,8 @@ let typecheck_type_def ctx env type_def =
               onto types.
       - [coll_def] : Collection definition to typecheck.
 
-    {b Rem} : Not exported outside this module.                       *)
-(* ****************************************************************** *)
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
 let typecheck_collection_def ctx env coll_def =
   let coll_def_desc = coll_def.Parsetree.ast_desc in
   if Configuration.get_verbose () then
@@ -4502,11 +4487,11 @@ let typecheck_collection_def ctx env coll_def =
   (* Typecheck the body's species expression .*)
   let ((species_expr_fields, _self_must_be), _) =  (*** [Unsure] ***)
     typecheck_species_expr ctx env coll_def_desc.Parsetree.cd_body in
-  (* One must ensure that the collection is *)
-  (* really a completely defined species.   *)
+  (* One must ensure that the collection is really a completely defined
+     species. *)
   ensure_collection_completely_defined ctx species_expr_fields ;
-  (* Update the inheritance history, saying that in fact the collection *)
-  (* "inherits" from the "implemented" species.                         *)
+  (* Update the inheritance history, saying that in fact the collection
+     "inherits" from the "implemented" species. *)
   let species_expr_fields =
     List.map
       (extend_from_history
@@ -4537,8 +4522,8 @@ let typecheck_collection_def ctx env coll_def =
    | Some dirname ->
        Dep_analysis.dependencies_graph_to_dotty
          ~dirname ~current_species collection_dep_graph);
-  (* Let's build our "type" information. Since we are managing a collection  *)
-  (* and NOT a species, we must set [spe_kind] to [SCK_toplevel_collection]. *)
+  (* Let's build our "type" information. Since we are managing a collection
+     and NOT a species, we must set [spe_kind] to [SCK_toplevel_collection]. *)
   let collec_description = {
     Env.TypeInformation.spe_kind = Types.SCK_toplevel_collection  ;
     Env.TypeInformation.spe_is_closed = true ;            (* Obviously, eh ! *)
@@ -4586,10 +4571,10 @@ let typecheck_collection_def ctx env coll_def =
 (* typing_context -> Env.TypingEnv.t -> Parsetree.phrase ->           *)
 (*   (please_compile_me * Env.TypingEnv.t)                            *)
 (** {b Descr} : Performs type inference on a [phrase] and returns the
-                initial environment extended with the possible type
-        bindings induced by the [phrase].
-                Also assign the infered type in the [ast_type] field
-                of the [phrase] node.
+    initial environment extended with the possible type bindings
+    induced by the [phrase].
+    Also assign the infered type in the [ast_type] field of the
+    [phrase] node.
 
     {b Rem} : Not exported outside this module                        *)
 (* ****************************************************************** *)
@@ -4598,8 +4583,8 @@ let typecheck_phrase ctx env phrase =
    | Parsetree.Ph_use _ ->
        (* Store the type information in the phrase's node. *)
        phrase.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
-       (* Nothing to do, the scoping pass already ensured that *)
-       (* "modules" opened or used were previously "use"-d.    *)
+       (* Nothing to do, the scoping pass already ensured that "modules"
+          opened or used were previously "use"-d. *)
        (PCM_no_matter, env)
    | Parsetree.Ph_open fname ->
        (* Load this module interface to extend the current environment. *)
@@ -4637,8 +4622,8 @@ let typecheck_phrase ctx env phrase =
    | Parsetree.Ph_let let_def  ->
        let envt_bindings =
          typecheck_let_definition ~is_a_field: false ctx env let_def in
-       (* Extend the current environment with the *)
-       (* bindings induced the let-definition.    *)
+       (* Extend the current environment with the bindings induced the
+          let-definition. *)
        let env' =
          List.fold_left
            (fun accu_env (id, ty_scheme, _) ->
