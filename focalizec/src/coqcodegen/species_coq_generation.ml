@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.91 2008-08-21 10:23:37 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.92 2008-08-22 14:10:55 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -805,6 +805,36 @@ let find_hypothesis_by_name name l =
 
 
 
+(** {b Descr} : Helper. *)
+let rec find_assumed_variables_and_lemmas_in_hyps = function
+  | [] -> ([], [])
+  | h :: q ->
+      (begin
+      let (found_vars, found_lemmas) =
+        find_assumed_variables_and_lemmas_in_hyps q in
+      match h.Parsetree.ast_desc with
+       | Parsetree.H_variable (n, ty_expr) ->
+           (((n, ty_expr) :: found_vars), found_lemmas)
+       | Parsetree.H_hypothesis (_, body) ->
+           (found_vars, (body :: found_lemmas))
+       | Parsetree.H_notation (_, _) -> (found_vars, found_lemmas)
+      end)
+;;
+
+
+
+(** {b Descr} : Helper. *)
+let rec find_only_PN_subs_in_proof_nodes = function
+  | [] -> []
+  | n :: q ->
+      match n.Parsetree.ast_desc with
+       | Parsetree. PN_sub (node_label, _, _) ->
+           node_label :: (find_only_PN_subs_in_proof_nodes q)
+       | _ -> find_only_PN_subs_in_proof_nodes q
+;;
+
+
+
 let zenonify_by_definition ctx print_ctx env min_coq_env by_def_expr_ident =
   let out_fmter = ctx.Context.scc_out_fmter in
   match by_def_expr_ident.Parsetree.ast_desc with
@@ -1012,6 +1042,54 @@ let zenonify_by_property ctx print_ctx env min_coq_env
 
 
 
+(*
+type zenon_proof_context = {
+  zpc_section_name_seed : string ;
+  zpc_hypotheses : Parsetree.hyp list ;
+  zpc_steps : (Parsetree.node_label * (Parsetree.vname * )) list
+} ;;
+*)
+
+
+type proof_step_availability = {
+  psa_node_label : Parsetree.node_label ;
+  psa_lemma_name : Parsetree.vname ;
+  psa_base_logical_expr : Parsetree.logical_expr ;
+  psa_assumed_variables : (Parsetree.vname * Parsetree.type_expr) list ;
+  psa_assumed_lemmas : Parsetree.logical_expr list
+} ;;
+
+
+
+let add_qualtifications_and_implications ctx print_ctx env avail_info =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  (* First, quantify all the assumed variables. *)
+  List.iter
+    (fun (var_vname, ty_expr) ->
+      (match ty_expr.Parsetree.ast_type with
+       | Parsetree.ANTI_type ty ->
+           Format.fprintf out_fmter "forall %a :@ %a,@ "
+             Parsetree_utils.pp_vname_with_operators_expanded var_vname
+             (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false) ty
+       | _ -> assert false))
+    avail_info.psa_assumed_variables ;
+  (* Now, make a string of implications with the assumed logical expressions. *)
+  let rec print_implications_string = function
+    | [] -> ()
+    | log_expr :: q ->
+        Format.fprintf out_fmter "@[<2>" ;
+        Species_record_type_generation.generate_logical_expr
+          ctx ~local_idents: []
+          ~self_methods_status: Species_record_type_generation.SMS_abstracted
+          env log_expr ;
+        Format.fprintf out_fmter " ->@ " ;
+        print_implications_string q ;
+        Format.fprintf out_fmter "@]" in
+  print_implications_string avail_info.psa_assumed_lemmas
+;;
+
+
+
 (* *********************************************************************** *)
 (** {b Descr} : Generate the Definition and Parameter for Coq that Zenon
     needs to automatically prove the current theorem. Methods used by the
@@ -1059,31 +1137,36 @@ let zenonify_fact ctx print_ctx env min_coq_env dependencies_from_params
            Format.fprintf out_fmter ".@]@\n")
          vnames
    | Parsetree.F_node node_labels ->
-       (* Syntax: "by step ...". We must search amon the [available_steps] the
+       (* Syntax: "by step ...". We must search among the [available_steps] the
           logical expression related to this step and print it in the current
-          auto-proof section as a Parameter. *)
+          auto-proof section as a Parameter. This Parameter must be universally
+          quantified by all the "assume" [H_variable]s found in the available
+          hypotheses and be the consequence of the implications strings
+          compound of all the assumed [H_hypothesis]s found in the closed
+          Sections since its creation. *)
        List.iter
          (fun node_label ->
-           let related_stmt =
-             (try List.assoc node_label available_steps with
+           let avail_info =
+             (try
+               List.find
+                 (fun a -> a.psa_node_label = node_label) available_steps with
              | Not_found ->
                  raise
                    (Attempt_proof_by_unknown_step
                       (fact.Parsetree.ast_loc, node_label))) in
-           match related_stmt.Parsetree.ast_desc.Parsetree.s_concl with
-            | None ->
-                failwith "Damien, on fait quoi ici ?" (* [Unsure]. *)
-            | Some logical_expr ->
-                Format.fprintf out_fmter "(* For step <%d>%s. *)@\n"
-                  (fst node_label) (snd node_label) ;
-                Format.fprintf out_fmter "@[<2>Parameter ??? :@ " ;
-                Species_record_type_generation.generate_logical_expr
-                  ctx ~local_idents: []
-                  ~self_methods_status:
-                  Species_record_type_generation.SMS_abstracted
-                  env logical_expr ;
-                (* Done... Then, final carriage return. *)
-                Format.fprintf out_fmter ".@]@\n")
+           Format.fprintf out_fmter "(* For step <%d>%s. *)@\n"
+             (fst node_label) (snd node_label) ;
+           Format.fprintf out_fmter "@[<2>Parameter %a :@ "
+             Parsetree_utils.pp_vname_with_operators_expanded
+             avail_info.psa_lemma_name ;
+           add_qualtifications_and_implications ctx print_ctx env avail_info ;
+           (* Now, print the lemma's body. *)
+           Species_record_type_generation.generate_logical_expr
+             ctx ~local_idents: []
+             ~self_methods_status: Species_record_type_generation.SMS_abstracted
+             env avail_info.psa_base_logical_expr ;
+           (* Done... Then, final carriage return. *)
+           Format.fprintf out_fmter ".@]@\n")
          node_labels
 ;;
 
@@ -1129,10 +1212,15 @@ let zenonify_hyp ctx print_ctx env hyp =
 (** section_name_seed : the base of name to use if one need to open a fresh
     Section.
     available_hyps : Assoc list mapping any previously seen step onto its
-    related logical expression it demonstrates. *)
-let rec zenonify_proof_node ctx print_ctx env min_coq_env
+    related logical expression it demonstrates and the name given to this
+    lemma.
+    Return new available steps to be added to the already known. Does NOT
+    return the concatenation of fresh ones and already know. Hence, returns
+    and EXTENSION of the steps that must be manually appended !
+ *)
+let rec zenonify_proof_node ~in_nested_proof ctx print_ctx env min_coq_env
     dependencies_from_params available_hyps available_steps section_name_seed
-    node default_aim_name aim =
+    parent_proof_opt node default_aim_name aim =
   let out_fmter = ctx.Context.scc_out_fmter in
   match node.Parsetree.ast_desc with
    | Parsetree.PN_sub ((label_num, label_name), stmt, proof) ->
@@ -1145,8 +1233,8 @@ let rec zenonify_proof_node ctx print_ctx env min_coq_env
           "Hypothesis" of the statement because we will need to print them
           again later if they are mentionned as used in a [F_hypothesis] .*)
        List.iter (zenonify_hyp ctx print_ctx env) stmt_desc.Parsetree.s_hyps ;
-       (* We extend the context of available hypothesis with ne new ones. *)
-       let available_hyps' = stmt_desc.Parsetree.s_hyps @ available_hyps in
+       (* We extend the context of available hypothesis with the new ones. *)
+       let available_hyps' = available_hyps @ stmt_desc.Parsetree.s_hyps in
        (* Finally, we deal with the conclusion of the statement. *)
        let new_aim =
          (match stmt_desc.Parsetree.s_concl with
@@ -1155,46 +1243,79 @@ let rec zenonify_proof_node ctx print_ctx env min_coq_env
        (* Now, handle the nested proof of the conclusion of the statement or
           the default one if there is no new aim provided. *)
        let lemma_name = Parsetree.Vlident ("__" ^ section_name ^ "_LEMMA") in
-       zenonify_proof
-         ctx print_ctx env min_coq_env dependencies_from_params
-         available_hyps' available_steps section_name new_aim lemma_name proof ;
+       let inner_available_steps =
+         zenonify_proof
+           ~in_nested_proof: true ctx print_ctx env min_coq_env
+           dependencies_from_params available_hyps' available_steps section_name
+           new_aim lemma_name parent_proof_opt proof in
        Format.fprintf out_fmter "End __%s.@]@\n" section_name ;
-       ((label_num, label_name), stmt) :: available_steps
+       (* Since we end a Section, all the lemma will have now to be explicitely
+          quantified/implified by the assumed variables and hypotheses. *)
+       let (assumed_variables, assumed_lemmas) =
+         find_assumed_variables_and_lemmas_in_hyps stmt_desc.Parsetree.s_hyps in
+       (* Moreover, lemmas comming from inner proofs will also have to. Hence,
+          since they are deeper, we add the current variables in front since
+          they are abstracted first. Same thing for the abstracted lemmas, we
+          add them in front since they will be a left-er part of implication. *)
+       let inner_available_steps' =
+         List.map
+           (fun avail_info ->
+             { avail_info with
+               psa_assumed_variables =
+                 assumed_variables @ avail_info.psa_assumed_variables ;
+               psa_assumed_lemmas =
+                 assumed_lemmas @ avail_info.psa_assumed_lemmas })
+           inner_available_steps in
+       (* We return the extra steps known thanks to the current [PN_sub] and
+          its nested children. These extra steps will be made available for
+          the rest of the surrounding proof and sibling [PN_sub]/[PN_qed]. *)
+       let extra_available_steps =
+         { psa_node_label = (label_num, label_name) ;
+           psa_lemma_name = lemma_name ;
+           psa_base_logical_expr = new_aim ;
+           psa_assumed_variables = assumed_variables ;
+           psa_assumed_lemmas = assumed_lemmas } :: inner_available_steps' in
+       extra_available_steps
        end)
    | Parsetree.PN_qed ((_label_num, _label_name), proof) ->
-       zenonify_proof ctx print_ctx env min_coq_env
-         dependencies_from_params available_hyps available_steps
-         section_name_seed aim default_aim_name proof ;
-       available_steps
+       let extra_available_steps =
+         zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
+           dependencies_from_params available_hyps available_steps
+           section_name_seed aim default_aim_name parent_proof_opt proof in
+       extra_available_steps
 
 
 
-and zenonify_proof ctx print_ctx env min_coq_env
+and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
     dependencies_from_params available_hyps available_steps section_name_seed
-    aim aim_name proof =
+    aim aim_name parent_proof_opt proof =
   let out_fmter = ctx.Context.scc_out_fmter in
   match proof.Parsetree.ast_desc with
    | Parsetree.Pf_assumed reason ->
        (* Proof is assumed, then simply use "magic_prove". *)
        Format.fprintf out_fmter
          "(* Proof assumed because \"%s\". *)@\n" reason ;
-       Format.fprintf out_fmter "apply basics.magic_prove.@\nQed.@\n"
+       Format.fprintf out_fmter "apply basics.magic_prove.@\nQed.@\n" ;
+       available_steps
    | Parsetree.Pf_coq script ->
        (* Dump verbatim the Coq code. *)
-       Format.fprintf out_fmter "%s@\n" script
+       Format.fprintf out_fmter "%s@\n" script ;
+       available_steps
    | Parsetree.Pf_node nodes ->
-       (* For each successive node, we remember the previously seen steps that
-          will be available for the trailing Qed node. *)
-       let rec rec_dump accu_avail_steps = function
-         | [] -> ()
+       (* For each successive node, we remember the previously seen **extra**
+          steps that will be available for the trailing Qed node. *)
+       let rec rec_dump accu_extra_avail_steps = function
+         | [] -> accu_extra_avail_steps
          | node :: q ->
-             let accu_avail_steps' =
+             let extra_avail_steps =
                zenonify_proof_node
-                 ctx print_ctx env min_coq_env dependencies_from_params
-                 available_hyps accu_avail_steps section_name_seed node aim_name
-                 aim in
-             rec_dump accu_avail_steps' q in
-       rec_dump available_steps nodes
+                 ~in_nested_proof ctx print_ctx env min_coq_env
+                 dependencies_from_params available_hyps
+                 (available_steps @ accu_extra_avail_steps)
+                 section_name_seed (Some proof) node aim_name aim in
+             rec_dump (accu_extra_avail_steps @ extra_avail_steps) q in
+       let extra_available_steps = rec_dump available_steps nodes in
+       (available_steps @ extra_available_steps)
    | Parsetree.Pf_auto facts ->
        (* Generate Zenon's header. *)
        Format.fprintf out_fmter "%%%%begin-auto-proof@\n" ;
@@ -1219,15 +1340,25 @@ and zenonify_proof ctx print_ctx env min_coq_env
           "inline" the Definitions' bodies (in fact, for Hypothesis, since we
           have no body, only declaration, the inlining has no effect since they
           don't have method generator). If the list of facts is empty, this
-          implicitely means "by all the previous steps of this proof level". *)
+          implicitely means "by all the previous steps of THIS proof level",
+          i.e. by the [PN_sub]s of the closest [Pf_node] hosting us. And the
+          closest [Pf_node] hosting us is in our parent proof. *)
        let real_facts =
          (match facts with
           | [] ->
+              let parent_proof_nodes =
+                (match parent_proof_opt with
+                 | None -> assert false
+                 | Some p ->
+                     match p.Parsetree.ast_desc with
+                      | Parsetree.Pf_node ns -> ns
+                      | _ -> assert false) in
               (* Make a pseudo list with all the encountered steps (node
                  labels). *)
               [{ Parsetree.ast_loc = Location.none ;
                  Parsetree.ast_desc =
-                   Parsetree.F_node (List.map fst available_steps) ;
+                   Parsetree.F_node
+                     (find_only_PN_subs_in_proof_nodes parent_proof_nodes) ;
                  Parsetree.ast_doc = [] ;
                  Parsetree.ast_type = Parsetree.ANTI_non_relevant }]
           | _ -> facts) in
@@ -1238,18 +1369,23 @@ and zenonify_proof ctx print_ctx env min_coq_env
          real_facts ;
        (* End of Zenon stuff. *)
        Format.fprintf out_fmter "%%%%end-auto-proof@\n" ;
-       (* Now, let's print the theorem/lemma and prove it. *)
-       Format.fprintf out_fmter "@[<2>Theorem %a :@ "
-         Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
-       Species_record_type_generation.generate_logical_expr
-         ~local_idents: []
-         ~self_methods_status: Species_record_type_generation.SMS_abstracted
-         ctx env aim ;
-       Format.fprintf out_fmter ".@]@\n" ;
-       (* Apply Zenon's result to prove the lemma... *)
-       Format.fprintf out_fmter "apply for_zenon_%a ;@\nauto.@\nQed.@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
-
+       (* Now, let's print the theorem/lemma and prove it unless we are at
+          toplevel (i.e. not in a nested proof). In this last case, this will
+          be done directly by [generate_defined_theorem]. *)
+       if in_nested_proof then
+         (begin
+         Format.fprintf out_fmter "@[<2>Theorem %a :@ "
+           Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
+         Species_record_type_generation.generate_logical_expr
+           ~local_idents: []
+           ~self_methods_status: Species_record_type_generation.SMS_abstracted
+           ctx env aim ;
+         Format.fprintf out_fmter ".@]@\n" ;
+         (* Apply Zenon's result to prove the lemma... *)
+         Format.fprintf out_fmter "apply for_zenon_%a ;@\nauto.@\nQed.@\n"
+           Parsetree_utils.pp_vname_with_operators_expanded aim_name
+         end) ;
+       available_steps
 ;;
 
 
@@ -1307,9 +1443,6 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
        (* Generate the common code for proofs done by Zenon either by [Pf_auto]
           of by [Pf_node]. *)
        print_common_prelude_for_zenon () ;
-
-
-
        (* Get the stuff to add to the current collection carrier mapping to
           make so the type expressions representing some species parameter
           carrier types, will be automatically be mapped onto our freshly
@@ -1338,19 +1471,20 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
            Types.cpc_collections_carrier_mapping =
              cc_mapping_extension @
                print_ctx.Types.cpc_collections_carrier_mapping } in
-
-
        (* Create a unique name seed for Sections of this theorem. *)
        let section_name_seed =
          String.uppercase (Handy.int_to_base_26 (section_gen_sym ())) in
-       zenonify_proof ctx print_ctx env min_coq_env
-         dependencies_from_params
-         [(* No available hypothesis at the beginning. *)]
-         [(* No available steps at the beginning. *)] section_name_seed
-         logical_expr name proof ;
-
-
-
+       (* Handle the proof, telling not to print the Theorem's body once the
+          auto-proof is ended because this will be done directly by
+          [generate_defined_theorem]. *)
+       ignore
+         (zenonify_proof ~in_nested_proof: false ctx print_ctx env min_coq_env
+            dependencies_from_params
+            [(* No available hypothesis at the beginning. *)]
+            [(* No available steps at the beginning. *)] section_name_seed
+            logical_expr name
+            None (* No parent proof at the beginning. *)
+            proof) ;
        (* End the Section. *)
        Format.fprintf out_fmter "End Proof_of_%a.@]@\n@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name
@@ -1419,16 +1553,14 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
        Format.fprintf out_fmter
          "(* Proof assumed because \"%s\". *)@\n" reason ;
        Format.fprintf out_fmter "apply basics.magic_prove.@\nQed.@\n"
-   | Parsetree.Pf_auto _ ->
+   | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
        (* Proof done by Zenon. Apply the temporary theorem. *)
        Format.fprintf out_fmter
          "apply for_zenon_%a ;@\nauto.@\nQed.@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name
    | Parsetree.Pf_coq script ->
        (* Dump verbatim the Coq code. *)
-       Format.fprintf out_fmter "%s@\n" script
-   | Parsetree.Pf_node _nodes ->
-       Format.fprintf out_fmter "NODE TODOOOOOOOOOOOOOOOOOOOOOO !@\n") ;
+       Format.fprintf out_fmter "%s@\n" script) ;
   abstracted_methods
 ;;
 

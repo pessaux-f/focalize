@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.22 2008-08-14 09:24:02 pessaux Exp $
+# $Id: Makefile,v 1.23 2008-08-22 14:10:55 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -108,7 +108,7 @@ polys_abstract.ml: polys_abstract.foc
 	$(FOCC) $(FOC_COMP_FLAGS) $<
 
 .zv.v:
-	$(ZVTOV) $<
+	$(ZVTOV) -zenon "zenon -focalize" $<
 
 .ml.cmo:
 	$(CAMLBYT) -c $<
