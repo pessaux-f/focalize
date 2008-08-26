@@ -20,7 +20,7 @@ let generate_names n =
     if i = 0 then (gen i)::acc
     else aux (i-1) ((gen i)::acc)
   in aux n []
-
+    
 let rec subst_ctype t t' ty =
   if ty = t then t'
   else match ty with
@@ -32,12 +32,12 @@ let rec subst_ctype t t' ty =
       Union (s, List.map (fun (id, a) -> (id, subst_ctype t t' a)) l)
   | Ptr a -> Ptr (subst_ctype t t' a)
   | _ -> ty
-    
+	
 (* let rec pp_list f ppf = function *)
 (*     [] -> () *)
 (*   | [e] -> f ppf e *)
 (*   | h::t -> fprintf ppf "%a,@;%a" f h (pp_list f) t *)
-    
+	
 (* let rec compile_species_field ctx = function *)
 (*     [] -> () *)
 (*   | h::t -> *)
@@ -57,7 +57,7 @@ let rec subst_ctype t t' ty =
 (*       |	SF_property _ -> () *)
 (*       end; *)
 (*       compile_species_field ctx t *)
-    
+	
 let compile_expr_ident ctx ei =
   match ei.ast_desc with
     EI_local vn ->
@@ -93,7 +93,7 @@ let compile_constructor_ident _ ci =
   | CI (Qualified (f, vn)) ->
       let name = vname_as_string_with_operators_expanded vn in
       (sprintf "%s_%s" f name, String.uppercase name)
-
+	
 let external_value ee =
   let rec search = function
       [] -> raise Not_found
@@ -230,7 +230,7 @@ let compile_type ctx (_, vn, desc) =
 	      constr_bodies := !constr_bodies @ [body];
 	      todo "constructor def with multiple arguments"
 	  | ty ->
-	      let cons_name = sprintf "mk_%s" cname in
+	      let cons_name = sprintf "%s_%s" (CGenEnv.unit_name ctx) cname in
 	      let cons_sig =
 		Export (Signature (true, cons_name, Fun (ty, []))) in
 	      mk_sigs := !mk_sigs @ [cons_sig];
@@ -261,7 +261,10 @@ let compile_type ctx (_, vn, desc) =
 				  Ptr (Struct (Some name, [])) ]))::
 		 ("_type", Enum (None, discs))::
 		 ("_arity", TypeId "int")::
-		 [("", Union (None, !constr_bodies))])
+		 (match !constr_bodies with
+		   [] -> []
+		 | bodies ->
+		     [("", Union (None, bodies))]))
 		, name)) in
       (ctx, type_def :: !mk_sigs @ !mk_body)
 	
@@ -324,13 +327,19 @@ let anti_elim a =
 (*   in *)
 (*   lift *)
 	
-let rec result_calculus = function
-    [] -> []
-  | [Expr e] -> [Affect (Ident "_result", e)]
-  | (If (c, a, b))::t ->
-      (If (c, result_calculus a, result_calculus b)) ::
-      (result_calculus t)
-  | h::t -> h::(result_calculus t)
+let result_calculus ty l =
+  let rec result_calculus' = function
+      [] -> []
+    | [Expr e] -> [Affect (Ident "_result", ECast (ty, e))]
+    | (If (c, a, b))::t ->
+	(If (c, result_calculus' a, result_calculus' b)) ::
+	(result_calculus' t)
+    | h::t -> h::(result_calculus' t)
+  in
+  (Decl ("_result", ty)) :: 
+  (result_calculus' l)@
+  [Return (Prim (Ident "_result"))]
+
 		 
 let rec skip_elimination = function
     [] -> []
@@ -340,302 +349,312 @@ let rec skip_elimination = function
       (skip_elimination t)
   | h::t ->
       h::(skip_elimination t)
-
-	
-let (compile_let_def,
-     compile_expr) =
-  
-  (* The local variable counter. *)
-  let cpt = ref 0 in
-  
+	   
+	   
+	   
   (* The local variable name generator. *)
-  let  generate_local_name () =
+let  generate_local_name =
+    (* The local variable counter. *)
+  let cpt = ref 0 in
+  (fun () ->
     let res = sprintf "_local_%i" !cpt in
     incr cpt;
-    res
-  in
-  
-  let rec compile_let_def' ctx (ld, l) =
-    fold 
-      (compile_binding ld)
-      (ctx, []) 
-      (List.combine 
-	 ld.ast_desc.ld_bindings 
-	 (List.map Types.type_scheme_to_c l))
-      
-  and compile_binding _ ctx (b, t) =
+    res)
+    
+let rec compile_let_def ctx (ld, l) =
+  fold 
+    (compile_binding ld)
+    (ctx, []) 
+    (List.combine 
+       ld.ast_desc.ld_bindings 
+       (List.map Types.type_scheme_to_c l))
+    
+and compile_binding _ ctx (b, t) =
     (* We do not compile propositional let. *)
-    match t with
-      Fun (TypeId "basics_prop", _) | TypeId "basics_prop" -> (ctx, [])
-    | Fun (ret, args) ->
+  match t with
+    Fun (TypeId "basics_prop", _) | TypeId "basics_prop" -> (ctx, [])
+  | Fun (ret, args) ->
         (* This is a function definition. *)
-	let name =
-	  (CGenEnv.unit_name ctx)^"_"^
-	  vname_as_string_with_operators_expanded b.ast_desc.b_name in
-	let nargs =
-	  match b.ast_desc.b_params with
-	    [] -> generate_names (List.length args -1)
+      let name =
+	(CGenEnv.unit_name ctx)^"_"^
+	vname_as_string_with_operators_expanded b.ast_desc.b_name in
+      let nargs =
+	match b.ast_desc.b_params with
+	  [] -> generate_names (List.length args -1)
 	        (* We need to name the arguments.*)
-	  | _ -> List.map (function (vn, _) ->
-	      vname_as_string_with_operators_expanded vn) b.ast_desc.b_params in
-	let (ctx, res, body, last) =
-	  compile_binding_body nargs ctx b.ast_desc.b_body in
+	| _ -> List.map (function (vn, _) ->
+	    vname_as_string_with_operators_expanded vn) b.ast_desc.b_params in
+      let (ctx, res, body, last) =
+	compile_binding_body nargs ctx b.ast_desc.b_body in
         (* The body is not directly usable, we need to do some stuff. *)
         (* Adding the result statement. *)
-	let body = 
-	  (Decl ("_result", ret)) ::
-	  (body@[last]) in
-	let body = skip_elimination body in
-	let body = (result_calculus body)@[Return (Prim (Ident "_result"))] in
-	let params = List.combine nargs args in 
-	let res = res @
-	  [ Export (Signature (false, name, t));
-	    Function (ret, name, params, body) ] in
-	(ctx, res)
-	  
-    | _ ->
-	todo "data definition"; (ctx, [])
-  
-  and compile_binding_body args ctx bb =
-    match bb with
-      BB_logical _ ->
-	todo "BB_logical"; (ctx, [], [], Skip)
-    | BB_computational e ->
-	compile_expr args ctx e
+      let body = (body@[last]) in
+      let body = skip_elimination body in
+      let body = result_calculus ret body in
+      let params = List.combine nargs args in 
+      let res = res @
+	[ Export (Signature (false, name, t));
+	  Function (ret, name, params, body) ] in
+      (* Add the function's type into context. *)
+      let ctx = CGenEnv.add_function ctx name t in
+      (ctx, res)
 	
-  and compile_expr args ctx e =
-    match e.ast_desc with
-      E_self -> todo "E_self"; (ctx, [], [], Skip)
-    | E_const c ->
-	compile_constant ctx c
-	  
-    | E_fun _ -> todo "E_fun"; (ctx, [], [], Skip)
-    | E_var ei ->
-	let name = compile_expr_ident ctx ei in
-	(ctx, [], [], Expr (Prim (Ident name)))
-	  
-    | E_app (e', params) ->
+  | _ ->
+      todo "data definition"; (ctx, [])
+	
+and compile_binding_body args ctx bb =
+  match bb with
+    BB_logical _ ->
+      todo "BB_logical"; (ctx, [], [], Skip)
+  | BB_computational e ->
+      compile_expr args ctx e
+	
+and compile_expr args ctx e =
+  match e.ast_desc with
+    E_self -> todo "E_self"; (ctx, [], [], Skip)
+  | E_const c ->
+      compile_constant ctx c
+	
+  | E_fun _ -> todo "E_fun"; (ctx, [], [], Skip)
+  | E_var ei ->
+      let name = compile_expr_ident ctx ei in
+      (ctx, [], [], Expr (Prim (Ident name)))
+	
+  | E_app (e', params) ->
       (* Checking sub-expressions. *)
-	let (ctx, lifted, body, last) = compile_expr args ctx e' in
-	let (ctx, lifted, body, params') =
-	  List.fold_left
-	    (fun (c, l, b, lst) x ->
-	      match compile_expr args c x with
-		(c', l', b', Expr a) -> 
-		  (c', l@l', b@b', lst@[a])
-	      | (c', l', b', Skip) -> 
+      let (ctx, lifted, body, last) = compile_expr args ctx e' in
+      let (ctx, lifted, body, params') =
+	List.fold_left
+	  (fun (c, l, b, lst) x ->
+	    match compile_expr args c x with
+	      (c', l', b', Expr a) -> 
+		(c', l@l', b@b', lst@[a])
+	    | (c', l', b', Skip) -> 
 		(* This is aan error case, It just happens as some expr are *)
 		(* not compiled yet. *)
-		  (c', l', b', lst)
-	      | _ -> assert false)
-	    (ctx, lifted, body, [])
-	    params in
+		(c', l', b', lst)
+	    | _ -> assert false)
+	  (ctx, lifted, body, [])
+	  params in
       (* We must check if the application is total. *)
-	begin match anti_elim e with
-	  Fun (_, _) ->
-	    todo "E_app (lambda-lifting)"; (ctx, [], [], Skip)
-	|	_ ->
-	    begin match last with
-	      Expr (Prim id) ->
-		(ctx, lifted, body, Expr (Call (id, params')))
-	    | _ ->
-		todo "E_app (SSA lifting)"; (ctx, [], [], Skip)
-	    end
-	end
-	  
-    | E_constr _ -> todo "E_constr"; (ctx, [], [], Skip)
-    | E_match (e', clauses) ->
-	begin match compile_expr args ctx e' with
-	  (ctx, lifted, body, Expr exp) ->
-	    let (ctx, lifted', body', exp') = 
-	      compile_clauses args exp ctx clauses in
-	    (ctx, lifted @ lifted', body @ body', exp')
-	|	something -> something
-	end
+      begin match anti_elim e with
+	Fun (_, _) ->
+	  todo "E_app (lambda-lifting)"; (ctx, [], [], Skip)
+      |	_ ->
+	  begin match last with
+	    Expr (Prim id) ->
+	      (ctx, lifted, body, Expr (Call (id, params')))
+	  | _ ->
+	      todo "E_app (SSA lifting)"; (ctx, [], [], Skip)
+	  end
+      end
+	
+  | E_constr (ci, params) -> 
+      let (name, _) = compile_constructor_ident ctx ci in
+      let (ctx, lifted, body, params') =
+	List.fold_left
+	  (fun (c, l, b, lst) x ->
+	    match compile_expr args c x with
+	      (c', l', b', Expr a) -> 
+		(c', l@l', b@b', lst@[a])
+	    | (c', l', b', Skip) -> 
+		(* This is aan error case, It just happens as some expr are *)
+		(* not compiled yet. *)
+		(c', l', b', lst)
+	    | _ -> assert false)
+	  (ctx, [], [], [])
+	  params in
+      (ctx, lifted, body, Expr (Call (Ident name, params'))) 
+
+  | E_match (e', clauses) ->
+      begin match compile_expr args ctx e' with
+	(ctx, lifted, body, Expr exp) ->
+	  let (ctx, lifted', body', exp') = 
+	    compile_clauses args exp ctx clauses in
+	  (ctx, lifted @ lifted', body @ body', exp')
+      |	something -> something
+      end
       (* let (ctx, (lifted, stmts, cexp)) = compile_expr ctx exp in *)
 (*       let (ctx, (lifted', stmts')) = compile_clauses cexp ctx l in *)
 (*       (ctx, (lifted@lifted', stmts@stmts')) *)
-    | E_if _ -> todo "E_if"; (ctx, [], [], Skip)
-    | E_let _ -> todo "E_let"; (ctx, [], [], Skip)
-    | E_record _ -> todo "E_record"; (ctx, [], [], Skip)
-    | E_record_access _ -> todo "E_record_access"; (ctx, [], [], Skip)
-    | E_record_with _ -> todo "E_record_with"; (ctx, [], [], Skip)
-    | E_tuple l ->
+  | E_if _ -> todo "E_if"; (ctx, [], [], Skip)
+  | E_let _ -> todo "E_let"; (ctx, [], [], Skip)
+  | E_record _ -> todo "E_record"; (ctx, [], [], Skip)
+  | E_record_access _ -> todo "E_record_access"; (ctx, [], [], Skip)
+  | E_record_with _ -> todo "E_record_with"; (ctx, [], [], Skip)
+  | E_tuple l ->
       (* Getting the fields expressions. *)
-	let (ctx, lifted, body, le) = List.fold_left 
-	    (fun (ctx, a, b, c) d -> 
-	      match compile_expr args ctx d with
-		(ctx, a', b', Expr c') ->
-		  (ctx, a@a', b@b', c@[c'])
-	      | _ ->
-		  (ctx, a, b, []))
-	    (ctx, [], [], [])
-	    l in
+      let (ctx, lifted, body, le) = List.fold_left 
+	  (fun (ctx, a, b, c) d -> 
+	    match compile_expr args ctx d with
+	      (ctx, a', b', Expr c') ->
+		(ctx, a@a', b@b', c@[c'])
+	    | _ ->
+		(ctx, a, b, []))
+	  (ctx, [], [], [])
+	  l in
       (* Builing the corresponding tuple value. *)
-	let len = List.length l in
-	let local = generate_local_name () in
-	let tuple_value = [
-	  Decl (local, Ptr (TypeId "foc_value"));
-	  Affect (Ident local,
-		  Call (Ident "mk_tuple",
-			[ Prim (Constant (sprintf "%i" len)) ])) ] in
-	let laff =
-	  let cpt = ref 0 in
-	  List.map
-	    (fun x -> 
-	      let res =
-		Expr (Call (Ident "set_tuple",
-			    [ Prim (Ident local);
-			      Prim (Constant (sprintf "%i" !cpt));
-			      x ])) in
-	      incr cpt;
-	      res)
-	    le in
-	(ctx, lifted, body @ tuple_value @ laff, Expr (Prim (Ident local)))
-	  
-    | E_external ee ->
-	let code = external_value ee in
-	let args = List.map (fun x -> Prim (Ident x)) args in
-	let code = Expr (Call (Ident code, args)) in
-	(ctx, [], [], code)
-    | E_paren _ -> todo "E_paren"; (ctx, [], [], Skip)
-	  
-  and compile_clauses args e ctx = function
-      [] -> (ctx, [], [], Skip) (* Should give an error message ? *)
-    | (p, exp)::t ->
-	let (ctx, lifted, equations) = compile_pattern e ctx p in
-	let (ctx, lifted', body', stmt) = compile_expr args ctx exp in 
-	let (ctx, lifted'', body'', stmt') = compile_clauses args e ctx t in
-	let rec eqs2if next = function
-	    [] -> body' @ [stmt]
-	  | (body, cond)::t ->
-	      body @ [If (cond, eqs2if next t, next)]
-	in 
-	(ctx, lifted@lifted'@lifted'',
-	 eqs2if (body'' @ [stmt']) equations, Skip)
-	  
-  and compile_pattern e ctx p =
-    begin match p.ast_desc with
-      P_const c ->
-	begin match compile_constant ctx c with
-	  (ctx, lifted, body, Expr (Prim id)) ->
-	    let result =
-	      Call (Access (id, "equal"), [ Prim id; e ])
-	    in
-	    (ctx, lifted, [(body, result)])
-	|	_ -> assert false
-	end
-
-    | P_var vn ->
-	let name = vname_as_string_with_operators_expanded vn in
-	let ty = anti_elim p in
-	let result = Call (Access (Ident name, "equal"),
-			   [ Prim (Ident name); e ]) in
-	(ctx, [],
-	 [ ([ Decl (name, ty); Affect (Ident name, e) ],
-	    result) ])
-	  
-    | P_as _ ->
-	todo "P_as"; (ctx, [], [])
-	  
-    | P_wild ->
-	(ctx, [], [])
-	  
-    | P_constr (ci, l) ->
-	let (_, disc) = compile_constructor_ident ctx ci in
-	let index = ref 0 in
-	let (ctx, lifted, beqs) =
-	  List.fold_left
-	    (fun (c, l, beqs) p ->
-	      let eacc =
-		Call (Ident "get_variant_arg", 
-		      [ ECast (Ptr (TypeId "foc_value"), e);
-			Prim (Constant (sprintf "%i" !index)) ]) in
-	      let (c, l', beq') = compile_pattern eacc c p in
-	      incr index;
-	      (c, l@l', beqs@beq'))
-	    (ctx, [], [])
-	    l 
-	in
-	let result = Equal (Call (Ident "get_disc", [e]), Prim (Ident disc)) in
-	(ctx, lifted, ([], result)::beqs)
-	       
-    | P_record _ ->
-	todo "P_record"; (ctx, [], [])
-	  
-    | P_tuple l ->
-	let index = ref 0 in
+      let len = List.length l in
+      let local = generate_local_name () in
+      let tuple_value = [
+	Decl (local, Ptr (TypeId "foc_value"));
+	Affect (Ident local,
+		Call (Ident "mk_tuple",
+		      [ Prim (Constant (sprintf "%i" len)) ])) ] in
+      let laff =
+	let cpt = ref 0 in
+	List.map
+	  (fun x -> 
+	    let res =
+	      Expr (Call (Ident "set_tuple",
+			  [ Prim (Ident local);
+			    Prim (Constant (sprintf "%i" !cpt));
+			    x ])) in
+	    incr cpt;
+	    res)
+	  le in
+      (ctx, lifted, body @ tuple_value @ laff, Expr (Prim (Ident local)))
+	
+  | E_external ee ->
+      let code = external_value ee in
+      let args = List.map (fun x -> Prim (Ident x)) args in
+      let code = Expr (Call (Ident code, args)) in
+      (ctx, [], [], code)
+  | E_paren _ -> todo "E_paren"; (ctx, [], [], Skip)
+	
+and compile_clauses args e ctx = function
+    [] -> (ctx, [], [], Skip) (* Should give an error message ? *)
+  | (p, exp)::t ->
+      let (ctx, lifted, equations) = compile_pattern e ctx p in
+      let (ctx, lifted', body', stmt) = compile_expr args ctx exp in 
+      let (ctx, lifted'', body'', stmt') = compile_clauses args e ctx t in
+      let rec eqs2if next = function
+	  [] -> body' @ [stmt]
+	| (body, cond)::t ->
+	    body @ [If (cond, eqs2if next t, next)]
+      in 
+      (ctx, lifted@lifted'@lifted'',
+       eqs2if (body'' @ [stmt']) equations, Skip)
+	
+and compile_pattern e ctx p =
+  begin match p.ast_desc with
+    P_const c ->
+      begin match compile_constant ctx c with
+	(ctx, lifted, body, Expr (Prim id)) ->
+	  let result =
+	    Call (Access (id, "equal"), [ Prim id; e ])
+	  in
+	  (ctx, lifted, [(body, result)])
+      |	_ -> assert false
+      end
+	
+  | P_var vn ->
+      let name = vname_as_string_with_operators_expanded vn in
+      let ty = anti_elim p in
+      let result = Call (Access (Ident name, "equal"),
+			 [ Prim (Ident name); e ]) in
+      (ctx, [],
+       [ ([ Decl (name, ty); Affect (Ident name, e) ],
+	  result) ])
+	
+  | P_as _ ->
+      todo "P_as"; (ctx, [], [])
+	
+  | P_wild ->
+      (ctx, [], [])
+	
+  | P_constr (ci, l) ->
+      let (_, disc) = compile_constructor_ident ctx ci in
+      let index = ref 0 in
+      let (ctx, lifted, beqs) =
 	List.fold_left
-	  (fun (c, l, beq) p ->
+	  (fun (c, l, beqs) p ->
 	    let eacc =
-	      Call (Ident "get_tuple", 
-		    [e; Prim (Constant (sprintf "%i" !index)) ]) in
+	      Call (Ident "get_variant_arg", 
+		    [ ECast (Ptr (TypeId "foc_value"), e);
+		      Prim (Constant (sprintf "%i" !index)) ]) in
 	    let (c, l', beq') = compile_pattern eacc c p in
 	    incr index;
-	    (c, l@l', beq@beq'))
+	    (c, l@l', beqs@beq'))
 	  (ctx, [], [])
-	  l
-	  
-    | P_paren _ ->
-	todo "P_paren"; (ctx, [], [])
-    end
+	  l 
+      in
+      let result = Equal (Call (Ident "get_disc", [e]), Prim (Ident disc)) in
+      (ctx, lifted, ([], result)::beqs)
+	
+  | P_record _ ->
+      todo "P_record"; (ctx, [], [])
+	
+  | P_tuple l ->
+      let index = ref 0 in
+      List.fold_left
+	(fun (c, l, beq) p ->
+	  let eacc =
+	    Call (Ident "get_tuple", 
+		  [e; Prim (Constant (sprintf "%i" !index)) ]) in
+	  let (c, l', beq') = compile_pattern eacc c p in
+	  incr index;
+	  (c, l@l', beq@beq'))
+	(ctx, [], [])
+	l
+	
+  | P_paren _ ->
+      todo "P_paren"; (ctx, [], [])
+  end
     
-
-
-  and compile_constant ctx c =
-    match c.ast_desc with
-      C_int s ->
-	let local = generate_local_name () in
-	(ctx, [], [ Decl (local, Ptr (TypeId "foc_int"));
-		    Affect (Ident local, Call (Ident "mk_foc_int",
-					       [ Prim (Constant s) ])) ],
-	 Expr (Prim (Ident local)))
-	  
-    | C_float s ->
-	let local = generate_local_name () in
-	(ctx, [], [ Decl (local, Ptr (TypeId "foc_float"));
-		    Affect (Ident local, Call (Ident "mk_foc_float",
-					       [ Prim (Constant s) ])) ],
+    
+    
+and compile_constant ctx c =
+  match c.ast_desc with
+    C_int s ->
+      let local = generate_local_name () in
+      (ctx, [], [ Decl (local, Ptr (TypeId "foc_int"));
+		  Affect (Ident local, Call (Ident "mk_foc_int",
+					     [ Prim (Constant s) ])) ],
        Expr (Prim (Ident local)))
-	  
-    | C_bool s ->
-	let local = generate_local_name () in
-	(ctx, [],
-	 [ Decl (local, Ptr (TypeId "foc_bool"));
-	   Affect (Ident local,
-		   Call ((match s with 
-		     "true" -> Ident "mk_foc_true"
-		   | "false" -> Ident "mk_foc_false"
-		   | _ -> assert false),
-			 [])) ],
-	 Expr (Prim (Ident local)))
-	  
-    | C_string s ->
-	let local = generate_local_name () in
-	let s' = sprintf "\"%s\"" (String.escaped s) in
-	(ctx, [],
-	 [ Decl (local, Ptr (TypeId "foc_string"));
-	   Affect (Ident local,
-		   Call (Ident "mk_foc_string",
-			 [ Prim (Constant s') ])) ],
-	 Expr (Prim (Ident local)))
+	
+  | C_float s ->
+      let local = generate_local_name () in
+      (ctx, [], [ Decl (local, Ptr (TypeId "foc_float"));
+		  Affect (Ident local, Call (Ident "mk_foc_float",
+					     [ Prim (Constant s) ])) ],
+       Expr (Prim (Ident local)))
+	
+  | C_bool s ->
+      let local = generate_local_name () in
+      (ctx, [],
+       [ Decl (local, Ptr (TypeId "foc_bool"));
+	 Affect (Ident local,
+		 Call ((match s with 
+		   "true" -> Ident "mk_foc_true"
+		 | "false" -> Ident "mk_foc_false"
+		 | _ -> assert false),
+		       [])) ],
+       Expr (Prim (Ident local)))
+	
+  | C_string s ->
+      let local = generate_local_name () in
+      let s' = sprintf "\"%s\"" (String.escaped s) in
+      (ctx, [],
+       [ Decl (local, Ptr (TypeId "foc_string"));
+	 Affect (Ident local,
+		 Call (Ident "mk_foc_string",
+		       [ Prim (Constant s') ])) ],
+       Expr (Prim (Ident local)))
+	
+  | C_char _ ->
+      todo "C_char"; (ctx, [], [], Skip)
 
-    | C_char _ ->
-	todo "C_char"; (ctx, [], [], Skip)
-  in
   
-  (compile_let_def',
-   compile_expr)
-     
-
+  
 (* 	P_const c -> *)
 (* 	  let cte = compile_constant c in *)
 (* 	  (ctx, (lifted @ lifted', [If (Equal (e, cte), body, body')])) *)
 (*       |	P_var vn -> *)
 (* 	  let name = vname_as_string_with_operators_expanded vn in *)
 (* 	  (ctx, (lifted @ lifted', [Decl (name,])) *)
-    
-    
+  
+  
 (*     [] -> (ctx, ([], [])) *)
 (*   | (p, exp) :: t -> *)
 (*       let (ctx, (lifted, stmts, cexp)) = compile_expr ctx exp in *)
@@ -646,11 +665,21 @@ let (compile_let_def,
 (* 	P_const c -> *)
 (* 	  let (ctx, c') = compile_constant ctx c in *)
 (* 	  let equation = [(e, c')] in *)
-    
+  
 let compile_species_field spc ctx f =
   match f with
-    SF_sig _ ->
-      todo "SF_sig"; (ctx, [], [])
+    SF_sig (_, vn, ty) ->
+      begin match vname_as_string_with_operators_expanded vn with
+	"rep" ->
+	  todo "SF_sig (rep)"; (ctx, [], [])
+      |	name ->
+	  let name = sprintf "%s_%s" spc name in 
+	  let ty = Types.type_scheme_to_c ty in
+	  let ty = 
+	    subst_ctype (TypeId "Self") (TypeId (sprintf "%s_Self" spc)) ty in
+	  let sign = [(name, ty)] in
+	  (ctx, sign, [])
+      end
   | SF_let (_, vn, args, ty, bb, _, lf) ->
       begin match lf with
 	LF_logical -> (ctx, [], [])
@@ -663,19 +692,21 @@ let compile_species_field spc ctx f =
 	  let ty = 
 	    subst_ctype (TypeId "Self") (TypeId (sprintf "%s_Self" spc)) ty in
 	  let sign = [(name, ty)] in
-	  let nargs = List.map vname_as_string_with_operators_expanded args in
-	  let (ctx, res, body, last) = match bb with
-	    BB_logical _ ->
-	      todo "SF_let : BB_logical"; (ctx, [], [], Skip)
-	  | BB_computational e ->
-	      compile_expr nargs ctx e in
 	  begin match ty with
 	    Fun (ret, targs) ->
-	      let body = 
-		(Decl ("_result", ret)) ::
-		(body@[last]) in
+	      let nargs =
+		match args with
+		  [] -> generate_names (List.length targs -1)
+	        (* We need to name the arguments.*)
+		| _ -> List.map vname_as_string_with_operators_expanded args in
+	      let (ctx, res, body, last) = match bb with
+		BB_logical _ ->
+		  todo "SF_let : BB_logical"; (ctx, [], [], Skip)
+	      | BB_computational e ->
+		  compile_expr nargs ctx e in
+	      let body = body@[last] in
 	      let body = skip_elimination body in
-	      let body = (result_calculus body)@[Return (Prim (Ident "_result"))] in
+	      let body = result_calculus ret body in
 	      let params = List.combine nargs targs in 
 	      let res = res @
 		[ Signature (false, name, ty);
@@ -686,13 +717,219 @@ let compile_species_field spc ctx f =
 	      (ctx, [], [])
 	  end
       end
-
+	
   | SF_let_rec _ ->
       todo "SF_let_rec"; (ctx, [], [])
   | SF_theorem _ ->
-      todo "SF_theorem"; (ctx, [], [])
+      (ctx, [], [])
   | SF_property _ ->
-      todo "SF_property"; (ctx, [], [])
+      (ctx, [], [])
+	
+let compile_species_param ctx = function
+    SPAR_in _ ->
+      todo "SPAR_in";
+      (ctx, [])
+  | SPAR_is _ ->
+      todo "SPAR_is";
+      (ctx, [])
+
+let rec resolve_scoping spc ctx args local = function
+    [] -> []
+  | h::t -> 
+      let (local', h') = resolve_scoping_statement spc ctx args local h in
+      h' :: (resolve_scoping spc ctx args (local'@local) t)
+	     
+and resolve_scoping_statement spc ctx args local s =
+  match s with
+    Expr e ->
+      ([], Expr (resolve_scoping_expr spc ctx args local e))
+
+  | Return e ->
+      ([], Return (resolve_scoping_expr spc ctx args local e))
+	
+  | Decl (id, ty) ->
+      ([(id, ty)], s)
+	
+  | Affect (p, e) ->
+      let p' = resolve_scoping_primary_expr spc ctx args local p in
+      let e' = resolve_scoping_expr spc ctx args local e in
+      let result = match (p', e') with
+	(Ident id, ECast (t, e'')) ->
+	  let ty = try List.assoc id local with
+	    Not_found ->
+	      begin try CGenEnv.get_function_type ctx id with
+		Not_found -> assert false
+	      end
+	  in
+	  if t = ty then Affect (p', e'')
+	  else Affect (p', e')
+      
+      |	(Ident id, Call (Ident f, _)) ->
+	  let ty = try List.assoc id local with
+	    Not_found ->
+	      begin try CGenEnv.get_function_type ctx id with
+		Not_found -> assert false
+	      end
+	  in
+	  begin try
+	    let ty' = CGenEnv.get_function_type ctx f in
+	    if ty = ty' then Affect (p', e')
+	    else Affect (p', ECast (ty, e'))
+	  with
+	    Not_found -> Affect (p', e')
+	  end
+ 
+      |	_ -> Affect (p', e')
+      in
+      ([], result)
+	
+  | Skip ->
+      ([], s)
+	
+  | If (e, a, b) ->
+      let a' = resolve_scoping spc ctx args local a in
+      let b' = resolve_scoping spc ctx args local b in
+      ([], If (resolve_scoping_expr spc ctx args local e, a', b'))
+	
+and resolve_scoping_expr spc ctx args local e =
+  match e with
+    Prim ((Ident id) as p) ->
+      begin
+	try
+	  begin match CGenEnv.get_function_type ctx id with
+	    Fun (_, []) ->
+	      Call (Ident id, [])
+	  | Fun (_, arg_types) ->
+	      Call (Ident id,
+		    List.map 
+		      (fun (t, (i, t')) -> 
+			let name = Prim (Ident i) in
+			if t = t' then name else ECast (t, name))
+		      (List.combine arg_types args))
+	  | _ ->
+	      Prim (resolve_scoping_primary_expr spc ctx args local p)
+	  end
+	with
+	  Not_found -> Prim (resolve_scoping_primary_expr spc ctx args local p)
+      end
+  | Prim p ->
+      Prim (resolve_scoping_primary_expr spc ctx args local p)
+      
+  | Call (p, args') ->
+      let p' = resolve_scoping_primary_expr spc ctx args local p in
+      let args'' = List.map (resolve_scoping_expr spc ctx args local) args' in
+      Call (p', args'')
+      
+  | ECast (ty, e) ->
+      ECast (ty, resolve_scoping_expr spc ctx args local e)
+  | Equal (a, b) ->
+      Equal (resolve_scoping_expr spc ctx args local a,
+	     resolve_scoping_expr spc ctx args local b)
+
+and resolve_scoping_primary_expr spc ctx args local p =
+  match p with
+    Ident id ->
+      begin try let _ = List.assoc id local in p
+      with
+	Not_found ->
+	  begin try
+	    let _ = CGenEnv.get_function_type ctx id in
+	    p
+	  with
+	    Not_found ->
+	      let name = sprintf "%s_%s" spc id in
+	      begin try
+		let _ = CGenEnv.get_function_type ctx name in
+		Ident name
+	      with
+		Not_found -> p
+	      end
+	  end
+      end
+  | Concat l ->
+      Concat (List.map (resolve_scoping_primary_expr spc ctx args local) l)
+  | Constant _ -> p
+  | Ref p' ->
+      Ref (resolve_scoping_primary_expr spc ctx args local p')
+  | Cast (ty, p') ->
+      Cast (ty, resolve_scoping_primary_expr spc ctx args local p')
+  | Access (p', str) ->
+      Access (resolve_scoping_primary_expr spc ctx args local p', str)
+
+let compile_collection_field spc ctx = function
+    SF_sig (_, vn, ty) ->
+      begin match vname_as_string_with_operators_expanded vn with
+	"rep" ->
+	  let ty = Types.type_scheme_to_c ty in
+	  let ty = subst_ctype (TypeId "Self") (TypeId spc) ty in
+	  begin match ty with
+	    Ptr ty' -> 
+	      let body = Export (Typedef (ty', spc)) in
+	      (ctx, [body])
+	  | _ -> assert false
+	  end
+      |	_ -> assert false
+      end
+      
+  | SF_let (_, vn, args, ty, bb, _, lf) ->
+      begin match lf with
+	LF_no_logical ->
+	  let name =
+	    sprintf "%s_%s"
+	      spc
+	      (vname_as_string_with_operators_expanded vn) in
+	  let ty = Types.type_scheme_to_c ty in
+	  (* let ty =  *)
+(* 	    subst_ctype (TypeId "Self") (TypeId (sprintf "%s_Self" spc)) ty in *)
+	  begin match ty with
+	    Fun (ret, targs) ->
+	      let signature = Export (Signature (false, name, ty)) in
+	      let nargs =
+		match args with
+		  [] -> generate_names (List.length targs -1)
+	        (* We need to name the arguments.*)
+		| _ -> List.map vname_as_string_with_operators_expanded args in
+	      let (ctx, res, body, last) = match bb with
+		BB_logical _ ->
+		  todo "SF_let : BB_logical"; (ctx, [], [], Skip)
+	      | BB_computational e ->
+		  compile_expr nargs ctx e in
+	      let params = List.combine nargs targs in 
+	      let body = body@[last] in
+	      let body = skip_elimination body in
+	      let body = result_calculus ret body in
+	      let body = resolve_scoping spc ctx params [] body in 
+	      let body = Function (ret, name, params, body) in
+	      let ctx = CGenEnv.add_function ctx name ty in
+	      (ctx, res@(signature::body::[]))
+	  | _ ->
+	      let ty' = Fun (ty, []) in
+	      let signature = Export (Signature (true, name, ty')) in
+	      let nargs = [] in
+	      let (ctx, lifted, body, last) =  match bb with
+		BB_logical _ ->
+		  todo "SF_let : BB_logical"; (ctx, [], [], Skip)
+	      | BB_computational e ->
+		  compile_expr nargs ctx e
+	      in
+	      let body = body@[last] in
+	      let body = skip_elimination body in
+	      let body = result_calculus ty body in
+	      let body = resolve_scoping spc ctx [] [] body in 
+	      let body = Function (ty, name, [], body) in
+	      let ctx = CGenEnv.add_function ctx name ty' in
+	      (ctx, lifted@(signature::body::[]))
+	  end   
+      |	LF_logical ->
+	  (ctx, [])
+      end
+      
+  | SF_let_rec _ ->
+      todo "SF_let_rec collection"; (ctx, [])
+  | SF_theorem _ ->
+      (ctx, [])
+  | SF_property _ ->
+      (ctx, [])
 
 let compile_phrase ctx (ph, pcm) =
   match (ph.ast_desc, pcm) with
@@ -706,30 +943,49 @@ let compile_phrase ctx (ph, pcm) =
   | (Ph_coq_require _, PCM_coq_require _) ->
       (ctx, [])
 	
-  | (Ph_species _, PCM_species (spcdef, desc, _)) ->
-      let name =
-	sprintf "%s_%s"
-	  (CGenEnv.unit_name ctx)
-	  (vname_as_string_with_operators_expanded spcdef.ast_desc.sd_name) in
-      let fields = desc.spe_sig_methods in
-      let (ctx, field_types, field_body) = 
-	List.fold_left
-	  (fun (c, ft, fb) a ->
-	    let (c', ft', fb') = compile_species_field name c a in
-	    (c', ft@ft', fb@fb'))
-	  (ctx, [], [])
-	  fields in
-      let self_name = sprintf "%s_Self" name in
-      let self = Export (Typedef (TypeId "foc_value", self_name)) in
-      let body = Export (Typedef (Struct (None, field_types), name)) in
-      (ctx, self::body::field_body)
+  | (Ph_species _, PCM_species _) (*spcdef, desc*) ->
+      (* let name = *)
+(* 	sprintf "%s_%s" *)
+(* 	  (CGenEnv.unit_name ctx) *)
+(* 	  (vname_as_string_with_operators_expanded spcdef.ast_desc.sd_name) in *)
+(*       let (ctx, params) =  *)
+(* 	List.fold_left *)
+(* 	  (fun (c, l) a -> *)
+(* 	    let (c, l') = compile_species_param c a in *)
+(* 	    (c, l@l')) *)
+(* 	  (ctx, []) *)
+(* 	  desc.spe_sig_params in *)
+(*       let fields = desc.spe_sig_methods in *)
+(*       let (ctx, field_types, field_body) =  *)
+(* 	List.fold_left *)
+(* 	  (fun (c, ft, fb) a -> *)
+(* 	    let (c', ft', fb') = compile_species_field name c a in *)
+(* 	    (c', ft@ft', fb@fb')) *)
+(* 	  (ctx, [], []) *)
+(* 	  fields in *)
+(*       let self_name = sprintf "%s_Self" name in *)
+(*       let self = Export (Typedef (TypeId "foc_value", self_name)) in *)
+(*       let body = Export (Typedef (Struct (None, field_types), name)) in *)
+(*       (ctx, params@(self::body::field_body)) *)
+      (ctx, [])
 	
   | (Ph_theorem _, PCM_theorem _) ->
       (ctx, [])
 	
-  | (Ph_collection _, _) ->
-      todo "Ph_collection";
-      (ctx, [])
+  | (Ph_collection _, PCM_collection (def, desc, _)) ->
+      let name =
+	sprintf "%s_%s"
+	  (CGenEnv.unit_name ctx)
+ 	  (vname_as_string_with_operators_expanded def.ast_desc.cd_name) in 
+      let (ctx, body) =
+	List.fold_left
+	  (fun (c, b) a ->
+	    let (c', b') = compile_collection_field name c a in
+	    (c', b@b'))
+	  (ctx, [])
+	  desc.spe_sig_methods
+      in
+      (ctx, body)
 (*       fprintf err_formatter "@[TODO : Ph_collection@]@."; *)
 (*       ctx *)
 	
@@ -780,6 +1036,7 @@ let compile file l =
 	close_out source_out;
 	raise anything
       end
+	
 	
 	
 	

@@ -340,6 +340,8 @@ module CGenEnv :
     val mem_eq : t -> string -> bool
     val add_known_type : t -> string -> t
     val is_known_type : t -> string -> bool
+    val add_function : t -> string -> Types.ctype -> t
+    val get_function_type : t -> string -> Types.ctype
   end
 
 exception No_available_OCaml_code_generation_envt of Types.fname

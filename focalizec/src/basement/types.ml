@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.58.2.3 2008-08-19 21:08:28 blond Exp $ *)
+(* $Id: types.ml,v 1.58.2.4 2008-08-26 20:56:51 blond Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1559,8 +1559,8 @@ let rec type_simple_to_c ts =
   | ST_self_rep ->
       Ptr (TypeId "Self")
       
-  | ST_species_rep _ ->
-      todo "ST_species_rep"
+  | ST_species_rep (f, c) ->
+      Ptr (TypeId (Format.sprintf "%s_%s" f c))
 
 
 let type_scheme_to_c ty = type_simple_to_c ty.ts_body

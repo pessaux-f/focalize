@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.102.2.1 2008-08-14 08:25:37 blond Exp $ *)
+(* $Id: env.ml,v 1.102.2.2 2008-08-26 20:56:51 blond Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -874,14 +874,16 @@ module CGenEnv =
 	  c_unit : string;
 	  mutable c_constrs : (Parsetree.vname * string) list;
 	  mutable c_eqs : string list;
-	  mutable c_types : string list }
+	  mutable c_types : string list;
+	  mutable c_functions : (string * Types.ctype) list }
 
     let create file eqs =
       { c_file = file;
 	c_unit = Filename.chop_extension (Filename.basename file);
 	c_constrs = [];
 	c_eqs = eqs;
-	c_types = eqs }
+	c_types = eqs;
+	c_functions = [] }
 
     let unit_name x = x.c_unit
 
@@ -895,6 +897,7 @@ module CGenEnv =
       y.c_constrs <- x.c_constrs @ y.c_constrs;
       y.c_eqs <- x.c_eqs @ y.c_eqs;
       y.c_types <- x.c_types @ y.c_types;
+      y.c_functions <- x.c_functions @ y.c_functions;
       y
 
     let mem_eq x str =
@@ -906,6 +909,14 @@ module CGenEnv =
 
     let is_known_type x str =
       List.mem str x.c_types
+
+    let add_function x f ty =
+      x.c_functions <- (f, ty) :: x.c_functions;
+      x
+
+    let get_function_type x f =
+      List.assoc f x.c_functions
+
   end
 
 
