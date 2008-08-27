@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.51 2008-08-27 12:55:18 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.52 2008-08-27 13:29:52 pessaux Exp $ *)
 
 
 (* *********************************************************** *)
@@ -854,10 +854,10 @@ and pp_logical_expr_desc ppf = function
       Format.fprintf ppf "@[<2>%a@ ->@ (%a)@]"
         pp_logical_expr p1 pp_logical_expr p2
   | Parsetree.Pr_or (p1, p2) ->
-      Format.fprintf ppf "@[<2>(%a@ \/@ %a)@]"
+      Format.fprintf ppf "@[<2>(%a@ \\/@ %a)@]"
         pp_logical_expr p1 pp_logical_expr p2
   | Parsetree.Pr_and (p1, p2) ->
-      Format.fprintf ppf "@[<2>%a@ /\@ %a@]"
+      Format.fprintf ppf "@[<2>%a@ /\\@ %a@]"
         pp_logical_expr p1 pp_logical_expr p2
   | Parsetree.Pr_equiv (p1, p2) ->
       Format.fprintf ppf "@[<2>%a@ <->@ %a@]"
