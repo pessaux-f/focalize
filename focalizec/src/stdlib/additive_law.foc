@@ -185,9 +185,9 @@ species Zero_check_additive_monoid
      New property attempting to reduce equality chains
      *)
   property zero_simplifies: all x y in Self,
-    (!equal (!plus (x, !zero), y) /\
-     !equal (x, !plus (!zero, y)) /\
-     !equal (x, !plus (y, !zero)) /\
+    (!equal (!plus (x, !zero), y) \/
+     !equal (x, !plus (!zero, y)) \/
+     !equal (x, !plus (y, !zero)) \/
      !equal (!plus (!zero, x), y))
        -> !equal (x, y) ;
 
