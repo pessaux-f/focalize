@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.137 2008-08-22 14:41:02 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.138 2008-08-27 13:34:39 pessaux Exp $ *)
 
 
 
@@ -3942,18 +3942,6 @@ let typecheck_species_def ctx env species_def =
   let (collapsed_inherited_methods_infos, collapsed_methods_info) =
     collapse_proofs_of
       ~current_species found_proofs_of inherited_methods_infos methods_info in
-  (* Now, compute the fields order to prevent ill-formness described in the
-     [collapse_proofs_of] function's header. In effect, we may have injected in
-     the fresh species fields some theorem obtained by merging inherited
-     properties whose proofs were given in the current species. Hence, the
-     order of insertion may not be correct according to the really defined here
-     fields of the species. So, let's reorganize topologically according to the
-     dependencies. *)
-  let new_order =
-    Dep_analysis.compute_fields_reordering
-      ~current_species collapsed_methods_info in
-  let reordered_collapsed_methods_info =
-    order_fields_according_to new_order collapsed_methods_info in
   if Configuration.get_verbose () then
     Format.eprintf
       "Normalizing species '%a'.@."
@@ -3963,7 +3951,7 @@ let typecheck_species_def ctx env species_def =
      species. *)
   let normalized_methods =
     normalize_species
-      ~loc: species_def.Parsetree.ast_loc ctx' reordered_collapsed_methods_info
+      ~loc: species_def.Parsetree.ast_loc ctx' collapsed_methods_info
       collapsed_inherited_methods_infos in
   (* Ensure that the species is well-formed. *)
   Dep_analysis.ensure_species_well_formed ~current_species normalized_methods ;
@@ -3973,7 +3961,12 @@ let typecheck_species_def ctx env species_def =
     (detect_polymorphic_method ~loc: species_def.Parsetree.ast_loc)
     normalized_methods ;
   (* Now, compute the fields order to prevent ill-formness described in the
-     [collapse_proofs_of] function's header. *)
+     [collapse_proofs_of] function's header. In effect, we may have injected in
+     the fresh species fields some theorem obtained by merging inherited
+     properties whose proofs were given in the current species. Hence, the
+     order of insertion may not be correct according to the really defined here
+     fields of the species. So, let's reorganize topologically according to the
+     dependencies. *)
   let new_order_for_normalizes =
     Dep_analysis.compute_fields_reordering
       ~current_species normalized_methods in
