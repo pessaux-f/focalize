@@ -247,8 +247,8 @@ species Regular_monoid
   (* [rr]: need to fill those *)
   logical let divides (x, y) = basics#not_b (basics#is_failed (!exquo (y, x))) ;
   proof of divides_extends_equal =
-    by definition of divides ;
-    (* assumed ; *)
+    definition of divides
+    assumed {* To do. *} ;
 
   proof of divides_transitive = assumed {* Because todo *} ;
   proof of divides_reverses_mult = assumed {* Because todo *} ;
@@ -344,24 +344,24 @@ species Division_monoid
   logical let divides(x, y) =
     basics#or_b(!equal(y, !zero), basics#not_b (!equal (x, !zero))) ;
 
-  proof of divides_extends_equal = assumed {* Because need logical let. *} ;
-(*  
-  <1>1 assume x y in Self
-             H: !equal(x, y)
-          prove !divides(x, y)
-          <2>1 assume H_0: !equal(y, !zero)
-                prove !divides(x, y)
-                by <2>:H_0 def !divides
-          <2>2 assume H_1: !different(y, !zero)
-               prove !divides(x, y)
-               <3>1 prove ~(!equal(x, !zero))
-                    by <1>:H, <2>:H_1,
-                       !equal_transitive, !equal_symmetric,
+  proof of divides_extends_equal =
+  <1>1 assume x in Self,
+       assume y in Self,
+       assume H: !equal (x, y),
+          prove !divides (x, y)
+          <2>1 assume H_0: !equal (y, !zero),
+                prove !divides (x, y)
+                by hypothesis H_0 definition of divides
+          <2>2 assume H_1: !different (y, !zero),
+               prove !divides (x, y)
+               <3>1 prove ~ (!equal (x, !zero))
+                    by hypothesis H, H_1
+                       property !equal_transitive, !equal_symmetric,
                        !same_is_not_different
-               <3>f qed by <3>1 def !divides
-          <2>f qed by <2>1, <2>2, !same_is_not_different
-    <1>f qed ;
-*)
+               <3>f qed by step <3>1 definition of divides
+          <2>f qed by step <2>1, <2>2 property !same_is_not_different
+    <1>f qed. ;
+
 
   proof of divides_reverses_mult = assumed {* Because need logical let. *} ;
 (* [Unsure] Pour quand on aura letprop. *)
