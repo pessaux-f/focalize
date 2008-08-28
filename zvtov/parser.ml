@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: parser.ml,v 1.17 2007-07-25 19:41:39 doligez Exp $  *)
+(*  $Id: parser.ml,v 1.18 2008-08-28 10:22:08 doligez Exp $  *)
 
 open Misc;;
 open Printf;;
@@ -17,10 +17,10 @@ let rec incr_last = function
   | h::t -> h :: (incr_last t)
 ;;
 
-let prelude () = "\
-  Require Import zenon.\n\
-  Require Import zenon_coqbool.\n\
-  "
+let prelude () = String.concat "" [
+  "Require Import zenon.\n";
+  sprintf "Require Import zenon_%s.\n" !Misc.focal_ext;
+  ]
 ;;
 
 let parse filename lb oc =

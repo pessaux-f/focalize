@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.28 2007-07-25 19:41:39 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.29 2008-08-28 10:22:08 doligez Exp $  *)
 
 open Misc;;
 open Printf;;
@@ -151,13 +151,15 @@ let zenon_loc file (_: string * string) data loc oc =
     close_out tmpoc;
     let cmd =
       if !use_coqterm then
-        Printf.sprintf "%s -p%d -ocoqterm %s %s -wout %s %s >%s"
+        Printf.sprintf "%s -p%d -ocoqterm -x %s %s %s -wout %s %s >%s"
                        !zcmd (translate_progress !progress_level)
+                       !focal_ext
                        !zopt (String.concat " " (List.rev !add_opt))
                        tmp_err tmp_in tmp_out
       else
-        Printf.sprintf "%s -p%d -ocoq %s %s -wout %s %s >%s"
+        Printf.sprintf "%s -p%d -ocoq -x %s %s %s -wout %s %s >%s"
                        !zcmd (translate_progress !progress_level)
+                       !focal_ext
                        !zopt (String.concat " " (List.rev !add_opt))
                        tmp_err tmp_in tmp_out
     in
@@ -217,6 +219,7 @@ let zenon_version () =
 
 let signature () =
   let aopt = String.concat " " (List.rev !add_opt) in
-  Printf.sprintf "%s %s %s\n%s\n%s\n" !zcmd !zopt aopt (zenon_version ())
+  Printf.sprintf "%s -x %s %s %s\n%s\n%s\n" !zcmd !focal_ext
+                 !zopt aopt (zenon_version ())
                  (if !use_coqterm then "term" else "script")
 ;;

@@ -1,5 +1,5 @@
 (*  Copyright 2005 INRIA  *)
-(*  $Id: options.ml,v 1.8 2007-07-25 19:41:39 doligez Exp $  *)
+(*  $Id: options.ml,v 1.9 2008-08-28 10:22:08 doligez Exp $  *)
 
 open Arg;;
 open Misc;;
@@ -14,8 +14,12 @@ let options = ref [
         "    invoke Cime to treat equational problems";
   "-debug", Arg.Set keep_temp_files,
          "   do not remove temporary files";
+  "-new", Arg.Unit (fun () -> Misc.focal_ext := "focal"),
+       "     tell zenon to use the new focalize syntax for booleans";
   "-nocache", Arg.Clear with_cache,
            " do not use nor update the proof cache file";
+  "-old", Arg.Unit (fun () -> Misc.focal_ext := "coqbool"),
+       "     tell zenon to use the old focal syntax for booleans (default)";
   "-p0", Arg.Unit (fun () -> progress_level := 0),
       "      do not display progress info";
   "-p1", Arg.Unit (fun () -> progress_level := 1),
@@ -35,7 +39,7 @@ let options = ref [
                    !zcmd;
   "-zopt", Arg.Set_string zopt,
     Printf.sprintf "<options>     options passed to zenon\n%s(default: \"%s\")"
-                   (String.make 12 ' ') !zopt;
+                   (String.make 12 ' ') ("-x coqbool " ^ !zopt);
   "-zz", Arg.String (fun s -> add_opt := s :: !add_opt),
       "<option>  add <option> to be passed to zenon";
 ];;

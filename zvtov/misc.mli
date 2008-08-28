@@ -1,5 +1,5 @@
 (*  Copyright 2006 INRIA  *)
-(*  $Id: misc.mli,v 1.3 2007-07-25 19:41:39 doligez Exp $  *)
+(*  $Id: misc.mli,v 1.4 2008-08-28 10:22:08 doligez Exp $  *)
 
 exception Error of string;;
 val error : string -> 'a;;
@@ -16,4 +16,5 @@ val use_coqterm : bool ref;;
 val verbose : bool ref;;
 val zcmd : string ref;;
 val zopt : string ref;;
+val focal_ext : string ref;;
 val add_opt : string list ref;;

@@ -1,5 +1,5 @@
 (*  Copyright 2006 INRIA  *)
-(*  $Id: misc.ml,v 1.2 2007-07-25 19:41:39 doligez Exp $  *)
+(*  $Id: misc.ml,v 1.3 2008-08-28 10:22:08 doligez Exp $  *)
 
 exception Error of string;;
 let error msg = raise (Error msg);;
@@ -11,7 +11,8 @@ let progress_level = ref 1;;
 let use_coqterm = ref true;;
 let verbose = ref false;;
 let zcmd = ref "zenon";;
-let zopt = ref "-x coqbool -ifocal -q -short -max-time 1m";;
+let zopt = ref "-ifocal -q -short -max-time 1m";;
+let focal_ext = ref "coqbool";;
 let add_opt = ref [];;
 
 let try_remove f =
