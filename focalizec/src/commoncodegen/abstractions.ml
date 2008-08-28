@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.25 2008-08-13 15:55:17 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.26 2008-08-28 10:33:11 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -48,15 +48,15 @@ type environment_kind =
 
 
 
-(* For debugging purpose only.
+(* For debugging purpose only. *)
 let debug_print_dependencies_from_parameters l =
   List.iter
     (fun (species_param, methods) ->
       (match species_param with
-       | Env.TypeInformation.SPAR_is ((mod_name, spe_name), _, _) ->
+       | Env.TypeInformation.SPAR_is ((mod_name, spe_name), _, _, _) ->
            Format.eprintf "From IS-parameter '%s#%s', methods: "
              mod_name spe_name ;
-       | Env.TypeInformation.SPAR_in (n, _) ->
+       | Env.TypeInformation.SPAR_in (n, _, _) ->
            Format.eprintf "From IN-parameter '%a', methods: "
              Sourcify.pp_vname n) ;
       Parsetree_utils.DepNameSet.iter
@@ -64,7 +64,6 @@ let debug_print_dependencies_from_parameters l =
       Format.eprintf "@.")
     l
 ;;
-*)
 
 
 
@@ -390,19 +389,19 @@ let add_param_dependencies ~param_name ~deps ~to_deps =
          assert false
      | Parsetree.Qualified (_, n) -> Parsetree_utils.name_of_vname n) in
   let rec rec_add = function
-    | [] -> assert false
+    | [] -> []
     | (p, d) :: q ->
         (begin
         match p with
          | Env.TypeInformation.SPAR_in (_, _, _) ->
              (* "In" parameters are never involved in the process. *)
-             rec_add q
+             (p, d) :: (rec_add q)
          | Env.TypeInformation.SPAR_is ((_, name), _, _, _) ->
              (* If we are in the bucket of the searched *)
              (* species parameter, we add.              *)
              if name = param_name_as_string then
                (p, (Parsetree_utils.DepNameSet.union deps d)) :: q
-             else rec_add q
+             else (p, d) :: (rec_add q)
         end) in
   rec_add to_deps
 ;;
