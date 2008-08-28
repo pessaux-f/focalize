@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.60 2008-08-21 10:23:37 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.61 2008-08-28 09:52:26 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -177,6 +177,38 @@ exception Structural_termination_only_on_fun_arg of
 (* ********************************************************************* *)
 exception Termination_proof_delayed_only_on_self_meth of
   (Location.t *  Parsetree.vname)
+;;
+
+
+
+(* ******************************************************************** *)
+(** {b Descr} : Exception raised when a logical expression contains an
+    a \/ with at least one argument being a -> or a <-> without
+    parentheses around this argument.
+    Since this is not clear of how to associate, we prefer to asks the
+    user to explicitely add parentheses.
+
+    {b Rem} : Exported outside this module.                             *)
+(* ******************************************************************** *)
+exception Ambiguous_logical_expression_or of
+  (int *  (** 0 means left argument must be parenthesed, 1 means right. *)
+   Location.t)
+;;
+
+
+
+(* ******************************************************************** *)
+(** {b Descr} : Exception raised when a logical expression contains an
+    a /\ with at least one argument being a -> or a <-> without
+    parentheses around this argument.
+    Since this is not clear of how to associate, we prefer to asks the
+    user to explicitely add parentheses.
+
+    {b Rem} : Exported outside this module.                             *)
+(* ******************************************************************** *)
+exception Ambiguous_logical_expression_and of
+  (int *  (** 0 means left argument must be parenthesed, 1 means right. *)
+   Location.t)
 ;;
 
 
@@ -1420,6 +1452,12 @@ and scope_let_definition ~toplevel_let ctx env let_def =
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.logical_expr ->           *)
 (*   Parsetree.logical_expr                                                   *)
 (* {b Descr} : Scopes a [logical_expr] and returns this scoped [logical_expr].
+   By the way, ensure that there is no ambiguous expression due to implicit
+   operators priority. This is mostly due to non clearly well-known priorities
+   between some operators.
+   We reject /\ or \/ whose at least one argument is a non-parenthesed -> or
+   <-> (FoCaL's parser has not the same associativity than Coq for these
+   cases).
 
    {b Rem} : Not exported outside this module.                                *)
 (* ************************************************************************** *)
@@ -1459,13 +1497,49 @@ and scope_logical_expr ctx env logical_expr =
          let scoped_p2 = scope_logical_expr ctx env p2 in
          Parsetree.Pr_imply (scoped_p1, scoped_p2)
      | Parsetree.Pr_or (p1, p2) ->
+         (begin
+         (* We first ensure that if any argument is a -> or a <->, then it is
+            enclosed between parentheses. *)
+         (match p1.Parsetree.ast_desc with
+          | Parsetree.Pr_imply (_, _)
+          | Parsetree.Pr_equiv (_, _) ->
+              raise
+                (Ambiguous_logical_expression_or
+                  (0, logical_expr.Parsetree.ast_loc))
+          | _ -> ()) ;
+         (match p2.Parsetree.ast_desc with
+          | Parsetree.Pr_imply (_, _)
+          | Parsetree.Pr_equiv (_, _) ->
+              raise
+                (Ambiguous_logical_expression_or
+                  (1, logical_expr.Parsetree.ast_loc))
+          | _ -> ()) ;
          let scoped_p1 = scope_logical_expr ctx env p1 in
          let scoped_p2 = scope_logical_expr ctx env p2 in
          Parsetree.Pr_or (scoped_p1, scoped_p2)
+         end)
      | Parsetree.Pr_and (p1, p2) ->
+         (begin
+         (* We first ensure that if any argument is a -> or a <->, then it is
+            enclosed between parentheses. *)
+         (match p1.Parsetree.ast_desc with
+          | Parsetree.Pr_imply (_, _)
+          | Parsetree.Pr_equiv (_, _) ->
+              raise
+                (Ambiguous_logical_expression_and
+                  (0, logical_expr.Parsetree.ast_loc))
+          | _ -> ()) ;
+         (match p2.Parsetree.ast_desc with
+          | Parsetree.Pr_imply (_, _)
+          | Parsetree.Pr_equiv (_, _) ->
+              raise
+                (Ambiguous_logical_expression_and
+                  (1, logical_expr.Parsetree.ast_loc))
+          | _ -> ()) ;
          let scoped_p1 = scope_logical_expr ctx env p1 in
          let scoped_p2 = scope_logical_expr ctx env p2 in
          Parsetree.Pr_and (scoped_p1, scoped_p2)
+         end)
      | Parsetree.Pr_equiv (p1, p2) ->
          let scoped_p1 = scope_logical_expr ctx env p1 in
          let scoped_p2 = scope_logical_expr ctx env p2 in

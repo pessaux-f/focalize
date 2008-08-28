@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: scoping.mli,v 1.14 2008-04-08 13:03:15 pessaux Exp $ *)
+(* $Id: scoping.mli,v 1.15 2008-08-28 09:52:26 pessaux Exp $ *)
 
 exception Non_logical_let_cant_define_logical_expr of (Parsetree.vname * Location.t)
 exception Multiply_used_module of Types.fname
@@ -25,6 +25,8 @@ exception Structural_termination_only_on_fun_arg of
   (Location.t * Parsetree.vname)
 exception Termination_proof_delayed_only_on_self_meth of
   (Location.t *  Parsetree.vname)
+exception Ambiguous_logical_expression_or of (int * Location.t)
+exception Ambiguous_logical_expression_and of (int * Location.t)
 
 val scope_file :
   Types.fname -> Parsetree.file -> Parsetree.file * Env.ScopingEnv.t

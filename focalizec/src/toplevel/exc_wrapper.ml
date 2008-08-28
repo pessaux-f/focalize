@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.51 2008-08-21 10:23:37 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.52 2008-08-28 09:52:44 pessaux Exp $ *)
 
 
 
@@ -109,6 +109,22 @@ try Check_file.main () with
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_vname name Handy.pp_reset_effects
            Handy.pp_set_bold Handy.pp_reset_effects
+     | Scoping.Ambiguous_logical_expression_or (pos, at) ->
+         let side =
+           (match pos with 0 -> "left" | 1 -> "right" | _ -> assert false) in
+         Format.fprintf Format.err_formatter
+           "%a:@\n@[%tAmbiguous logical expression. Add explicit parentheses \
+           to associate the %s argument of the \\/ properly.%t.@]@."
+           Location.pp_location at
+           Handy.pp_set_bold side Handy.pp_reset_effects
+     | Scoping.Ambiguous_logical_expression_and (pos, at) ->
+         let side =
+           (match pos with 0 -> "left" | 1 -> "right" | _ -> assert false) in
+         Format.fprintf Format.err_formatter
+           "%a:@\n@[%tAmbiguous logical expression. Add explicit parentheses \
+           to associate the %s argument of the /\\ properly.%t.@]@."
+           Location.pp_location at
+           Handy.pp_set_bold side Handy.pp_reset_effects
 (* *************************** *)
 (* Generic environments stuff. *)
      | Env.Unbound_constructor (vname, at) ->
