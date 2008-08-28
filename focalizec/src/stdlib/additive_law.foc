@@ -141,9 +141,9 @@ species Cancellative_additive_semi_group inherits Additive_semi_group =
 
   (** The cancellation property *)
   theorem plus_is_regular: all x y z in Self,
-    (!equal (!plus (x, y), !plus (x, z)) -> !equal (y, z)
+    ((!equal (!plus (x, y), !plus (x, z)) -> !equal (y, z))
      /\
-     !equal (!plus (x, z), !plus (y, z)) -> !equal (x, y))
+     (!equal (!plus (x, z), !plus (y, z)) -> !equal (x, y)))
     proof:
       by property plus_is_left_regular, plus_is_right_regular;
 end ;;

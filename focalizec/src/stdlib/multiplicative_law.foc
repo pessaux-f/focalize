@@ -217,11 +217,11 @@ species Cancellative_commutative_monoid
 
    (** The cancellation property *)
    theorem mult_is_regular: all x y z in Self,
-    (!equal (!mult(x, y), !mult(x, z)) -> ~ (!equal(x, !zero)) ->
-      !equal (y, z)
+    ((!equal (!mult(x, y), !mult(x, z)) -> ~ (!equal(x, !zero)) ->
+      !equal (y, z))
       /\
-     !equal (!mult(x, z), !mult(y, z)) -> ~ (!equal(z, !zero)) ->
-       !equal(x, y))
+     (!equal (!mult(x, z), !mult(y, z)) -> ~ (!equal(z, !zero)) ->
+       !equal(x, y)))
    proof: by property mult_is_left_regular, mult_is_right_regular ;
 end ;;
 
@@ -237,9 +237,10 @@ species Regular_monoid
   signature exquo : Self -> Self -> basics#partiel (Self) ;
 
   property exquo_divides: all x y z in Self,
-    basics#is_failed (!exquo (x, z))
+    (basics#is_failed (!exquo (x, z)))
       \/
-    !equal (y, basics#non_failed (!exquo (x, z))) -> !equal (x, !mult (z, y)) ;
+    (!equal
+     (y, basics#non_failed (!exquo (x, z))) -> !equal (x, !mult (z, y))) ;
 
   let recip (x) = Self!exquo (Self!one, x) ;
 

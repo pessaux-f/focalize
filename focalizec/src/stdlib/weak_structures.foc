@@ -167,9 +167,10 @@ species Torsion_free_semi_module (R is Integral_semi_ring)
 
   (** external division *)
   property exquo_divides: all x y in Self, all a in R,
-    basics#is_failed (!exquo (x, a))
+    (basics#is_failed (!exquo (x, a)))
     \/
-    !equal (y, basics#non_failed (!exquo (x, a))) -> !equal (x, !mult (a, y)) ;
+    (!equal
+     (y, basics#non_failed (!exquo (x, a))) -> !equal (x, !mult (a, y))) ;
 
   (** ax=ay implies x=y.  *)
    property mult_is_left_regular: all x in R, all y z in Self,

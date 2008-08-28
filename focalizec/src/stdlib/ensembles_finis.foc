@@ -1,6 +1,6 @@
 (*pp basic_ext.cmo*)
 
-(* $Id: ensembles_finis.foc,v 1.4 2008-05-29 11:36:36 pessaux Exp $ *)
+(* $Id: ensembles_finis.foc,v 1.5 2008-08-28 09:53:10 pessaux Exp $ *)
 
 (** Exemple de fichier FoC: Ensembles ordonnés. *)
 use "basics" ;;
@@ -2015,7 +2015,7 @@ theorem spec_crp : all x in ('a * 'b) ,
   proof : assumed {* Using trusted external code. *} ;;
 
 theorem spec_crp_subst : all x1 x2 in 'a, all y1 y2 in 'b,
-  x1 = x2 /\ y1 = y2 -> basics#crp (x1, y1) = basics#crp(y1, y2)
+  (x1 = x2 /\ y1 = y2) -> (basics#crp (x1, y1) = basics#crp(y1, y2))
   proof : assumed {* Using trusted external code. *} ;;
 
 theorem spec_first : all x in 'a , all y in 'b,
