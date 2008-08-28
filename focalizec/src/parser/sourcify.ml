@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.52 2008-08-27 13:29:52 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.53 2008-08-28 11:59:54 pessaux Exp $ *)
 
 
 (* *********************************************************** *)
@@ -774,15 +774,35 @@ and pp_fact ppf = pp_ast pp_fact_desc ppf
 
 
 
+and pp_enforced_dependency_desc ppf = function
+  | Parsetree.Ed_definition idents ->
+      Format.fprintf ppf "definition of %a" (pp_expr_idents ",") idents
+  | Parsetree.Ed_property idents ->
+      Format.fprintf ppf "property %a" (pp_expr_idents ",") idents
+and pp_enforced_dependencies sep ppf =
+  Handy.pp_generic_separated_list sep pp_enforced_dependency ppf
+and pp_enforced_dependency ppf = pp_ast pp_enforced_dependency_desc ppf
+
+
+
 and pp_proof_desc ppf = function
-  | Parsetree.Pf_assumed reason ->
-      Format.fprintf ppf "@[<2>assumed@ {*%s*}@]" reason
+  | Parsetree.Pf_assumed (enf_deps, reason) ->
+      Format.fprintf ppf "@[<2>%a"
+	(pp_enforced_dependencies " ") enf_deps ;
+      if enf_deps <> [] then Format.fprintf ppf " " ;
+      Format.fprintf ppf "assumed@ {*%s*}@]" reason
   | Parsetree.Pf_auto facts ->
       Format.fprintf ppf "@[<2>by %a@]" (pp_facts "") facts
-  | Parsetree.Pf_coq s -> Format.fprintf ppf "@[<2>coq proof@ {*%s*}@]" s
+  | Parsetree.Pf_coq (enf_deps, s) ->
+      Format.fprintf ppf "@[<2>%a"
+        (pp_enforced_dependencies " ") enf_deps ;
+      if enf_deps <> [] then Format.fprintf ppf " " ;
+      Format.fprintf ppf "coq proof@ {*%s*}@]" s
   | Parsetree.Pf_node proof_nodes ->
       Format.fprintf ppf "%a" (pp_proof_nodes "") proof_nodes
 and pp_proof ppf = pp_ast pp_proof_desc ppf
+
+
 
 and pp_termination_proof_desc ppf = function
   | Parsetree.TP_structural vname ->

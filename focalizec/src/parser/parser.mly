@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.94 2008-05-29 11:36:37 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.95 2008-08-28 11:59:54 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -680,13 +680,13 @@ in_type_expr:
 /**** PROOFS ****/
 
 proof:
-  | opt_doc ASSUMED EXTERNAL_CODE  /* Trailing is the reason while the */
-                                   /* was not given. */
-    { mk_doc $1 (Pf_assumed $3) }
+  | opt_doc enforced_dependency_list ASSUMED EXTERNAL_CODE  /* Trailing is the
+                                              reason while the was not given. */
+    { mk_doc $1 (Pf_assumed ($2, $4)) }
   | opt_doc BY fact_list
     { mk_doc $1 (Pf_auto $3) }
-  | opt_doc COQ PROOF EXTERNAL_CODE
-    { mk_doc $1 (Pf_coq $4) }
+  | opt_doc COQ PROOF enforced_dependency_list EXTERNAL_CODE
+    { mk_doc $1 (Pf_coq ($4, $5)) }
   | proof_node_list
     { mk (Pf_node $1) }
   | DOT { mk (Pf_auto []) }
@@ -718,6 +718,16 @@ fact:
   | PROPERTY property_ident_comma_list { mk (F_property ($2)) }
   | THEOREM property_ident_comma_list { mk (F_property ($2)) }
   | STEP proof_label_comma_list { mk (F_node (List.map mk_proof_label $2)) }
+;
+
+enforced_dependency_list:
+  | { [ ] }
+  | enforced_dependency enforced_dependency_list { $1 :: $2 }
+;
+
+enforced_dependency:
+  | DEFINITION OF definition_ident_comma_list { mk (Ed_definition $3) }
+  | PROPERTY property_ident_comma_list { mk (Ed_property ($2)) }
 ;
 
 proof_hypothesis:

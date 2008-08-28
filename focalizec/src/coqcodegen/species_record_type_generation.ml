@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.48 2008-08-13 15:55:17 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.49 2008-08-28 11:59:54 pessaux Exp $ *)
 
 
 
@@ -808,13 +808,13 @@ let generate_logical_expr ctx ~local_idents ~self_methods_status initial_env
          Format.fprintf out_fmter " ->@ " ;
          rec_generate_logical_expr loc_idents env logical_expr2 ;
          Format.fprintf out_fmter "@]"
-     | Parsetree.Pr_or  (logical_expr1, logical_expr2) ->
+     | Parsetree.Pr_or (logical_expr1, logical_expr2) ->
          Format.fprintf out_fmter "@[<2>" ;
          rec_generate_logical_expr loc_idents env logical_expr1 ;
          Format.fprintf out_fmter " \\/@ " ;
          rec_generate_logical_expr loc_idents env logical_expr2 ;
          Format.fprintf out_fmter "@]"
-     | Parsetree.Pr_and  (logical_expr1, logical_expr2) ->
+     | Parsetree.Pr_and (logical_expr1, logical_expr2) ->
          Format.fprintf out_fmter "@[<2>" ;
          rec_generate_logical_expr loc_idents env logical_expr1 ;
          Format.fprintf out_fmter " /\\@ " ;

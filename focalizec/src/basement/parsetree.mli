@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.38 2008-05-29 11:36:36 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.39 2008-08-28 11:59:54 pessaux Exp $ *)
 
 (** {2 The Focalize abstract syntax tree.} *)
 
@@ -371,11 +371,16 @@ and fact_desc =
 
 (** {6 Regular proofs.} *)
 
+and enforced_dependency = enforced_dependency_desc ast
+and enforced_dependency_desc =
+  | Ed_definition of expr_ident list
+  | Ed_property of expr_ident list
+
 and proof = proof_desc ast
 and proof_desc =
-  | Pf_assumed of external_code
+  | Pf_assumed of ((enforced_dependency list) * external_code)
   | Pf_auto of fact list
-  | Pf_coq of string
+  | Pf_coq of ((enforced_dependency list) * string)
   | Pf_node of proof_node list
 
 and proof_node = proof_node_desc ast

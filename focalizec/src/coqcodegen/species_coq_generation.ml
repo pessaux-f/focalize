@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.93 2008-08-27 12:53:49 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.94 2008-08-28 11:59:54 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1213,22 +1213,22 @@ let debug_available_steps steps =
   let rec rec_debug = function
     | [] -> ()
     | h :: q ->
-	Format.eprintf "***********@." ;
-	Format.eprintf "\t<%d>%s@."
-	  (fst h.psa_node_label) (snd h.psa_node_label) ;
-	Format.eprintf "\t%a@." Sourcify.pp_vname h.psa_lemma_name ;
-	Format.eprintf "\t%a@."
-	  Sourcify.pp_logical_expr h.psa_base_logical_expr ;
-	List.iter
-	  (fun (n, ty) ->
-	    Format.eprintf "\t\t%a : %a@."
-	      Sourcify.pp_vname n Sourcify.pp_type_expr ty)
-	  h.psa_assumed_variables ;
-	List.iter
-	  (fun log_expr ->
-	    Format.eprintf "\t\t%a@." Sourcify.pp_logical_expr log_expr)
-	  h.psa_assumed_lemmas ;
-	rec_debug q in
+        Format.eprintf "***********@." ;
+        Format.eprintf "\t<%d>%s@."
+          (fst h.psa_node_label) (snd h.psa_node_label) ;
+        Format.eprintf "\t%a@." Sourcify.pp_vname h.psa_lemma_name ;
+        Format.eprintf "\t%a@."
+          Sourcify.pp_logical_expr h.psa_base_logical_expr ;
+        List.iter
+          (fun (n, ty) ->
+            Format.eprintf "\t\t%a : %a@."
+              Sourcify.pp_vname n Sourcify.pp_type_expr ty)
+          h.psa_assumed_variables ;
+        List.iter
+          (fun log_expr ->
+            Format.eprintf "\t\t%a@." Sourcify.pp_logical_expr log_expr)
+          h.psa_assumed_lemmas ;
+        rec_debug q in
   Format.eprintf "debug_available_steps START@." ;
   rec_debug steps ;
   Format.eprintf "debug_available_steps STOP@."
@@ -1307,8 +1307,8 @@ List.iter
 assumed_lemmas ;
 
        (* We return the extra step known thanks to the current [PN_sub] This
-	  extra step will be made available for the rest of the surrounding
-	  proof and sibling [PN_sub]/[PN_qed]. *)
+          extra step will be made available for the rest of the surrounding
+          proof and sibling [PN_sub]/[PN_qed]. *)
        [{ psa_node_label = (label_num, label_name) ;
           psa_lemma_name = lemma_name ;
           psa_base_logical_expr = new_aim ;
@@ -1329,12 +1329,12 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
     aim aim_name parent_proof_opt proof =
   let out_fmter = ctx.Context.scc_out_fmter in
   match proof.Parsetree.ast_desc with
-   | Parsetree.Pf_assumed reason ->
+   | Parsetree.Pf_assumed (_, reason) ->
        (* Proof is assumed, then simply use "magic_prove". *)
        Format.fprintf out_fmter
          "(* Proof assumed because \"%s\". *)@\n" reason ;
        Format.fprintf out_fmter "apply basics.magic_prove.@\nQed.@\n"
-   | Parsetree.Pf_coq script ->
+   | Parsetree.Pf_coq (_, script) ->
        (* Dump verbatim the Coq code. *)
        Format.fprintf out_fmter "%s@\n" script ;
    | Parsetree.Pf_node nodes ->
@@ -1362,10 +1362,10 @@ debug_available_steps extra_avail_steps ;
 
              rec_dump
                (* And not not append in the other way otherwise, the newly
-		  found steps will be in tail of the list and of we look for
-		  a step that has the same name than an older one, we will
-		  find the older one and that's wrong ! (Exactly like just
-		  above). *)
+                  found steps will be in tail of the list and of we look for
+                  a step that has the same name than an older one, we will
+                  find the older one and that's wrong ! (Exactly like just
+                  above). *)
                (extra_avail_steps @ accu_avail_steps) q in
        rec_dump available_steps nodes
    | Parsetree.Pf_auto facts ->
@@ -1604,7 +1604,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
   Format.fprintf out_fmter ".@]@\n" ;
   (* End the proof matter. *)
   (match proof.Parsetree.ast_desc with
-   | Parsetree.Pf_assumed reason ->
+   | Parsetree.Pf_assumed (_, reason) ->
        (* Proof assumed, then simply use "magic_prove". *)
        Format.fprintf out_fmter
          "(* Proof assumed because \"%s\". *)@\n" reason ;
@@ -1614,7 +1614,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
        Format.fprintf out_fmter
          "apply for_zenon_%a ;@\nauto.@\nQed.@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name
-   | Parsetree.Pf_coq script ->
+   | Parsetree.Pf_coq (_, script) ->
        (* Dump verbatim the Coq code. *)
        Format.fprintf out_fmter "%s@\n" script) ;
   abstracted_methods

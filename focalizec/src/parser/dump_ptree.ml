@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.29 2008-05-29 11:36:37 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.30 2008-08-28 11:59:54 pessaux Exp $ *)
 
 
 
@@ -693,13 +693,26 @@ and pp_facts ppf = Handy.pp_generic_separated_list "," pp_fact ppf
 and pp_fact ppf = pp_ast pp_fact_desc ppf
 
 
+and pp_enforced_dependency_desc ppf = function
+  | Parsetree.Ed_definition idents ->
+      Format.fprintf ppf "Ed_definition@ (@[<2>[@ %a@ ]@])"
+        pp_expr_idents idents
+  | Parsetree.Ed_property idents ->
+      Format.fprintf ppf "Ed_property@ (@[<2>[@ %a@ ]@])" pp_expr_idents idents
+and pp_enforced_dependencies ppf =
+  Handy.pp_generic_separated_list "," pp_enforced_dependency ppf
+and pp_enforced_dependency ppf = pp_ast pp_enforced_dependency_desc ppf
+
 
 and pp_proof_desc ppf = function
-  | Parsetree.Pf_assumed reason ->
-      Format.fprintf ppf "@[<2>Pf_assumed %s@]" reason
+  | Parsetree.Pf_assumed (enf_deps, reason) ->
+      Format.fprintf ppf "@[<2>Pf_assumed (%a, {* %s *})@]"
+        pp_enforced_dependencies enf_deps reason
   | Parsetree.Pf_auto facts ->
       Format.fprintf ppf "@[<2>Pf_auto@ ([@ %a@ ])@]" pp_facts facts
-  | Parsetree.Pf_coq s -> Format.fprintf ppf "Pf_coq@ (%s)" s
+  | Parsetree.Pf_coq (enf_deps, s) ->
+      Format.fprintf ppf "@[<2>Pf_coq@ (%a, %s)@]"
+        pp_enforced_dependencies enf_deps s
   | Parsetree.Pf_node proof_nodes ->
       Format.fprintf ppf "@[<2>Pf_node@ ([@ %a@ ])@]" pp_proof_nodes proof_nodes
 and pp_proof ppf = pp_ast pp_proof_desc ppf
