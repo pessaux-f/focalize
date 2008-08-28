@@ -1,5 +1,5 @@
 (*  Copyright 2005 INRIA  *)
-(*  $Id: options.ml,v 1.9 2008-08-28 10:22:08 doligez Exp $  *)
+(*  $Id: options.ml,v 1.10 2008-08-28 12:57:16 doligez Exp $  *)
 
 open Arg;;
 open Misc;;
@@ -40,8 +40,10 @@ let options = ref [
   "-zopt", Arg.Set_string zopt,
     Printf.sprintf "<options>     options passed to zenon\n%s(default: \"%s\")"
                    (String.make 12 ' ') ("-x coqbool " ^ !zopt);
+  "-z", Arg.String (fun s -> add_opt := s :: !add_opt),
+      "<opts> add <opts> to be passed to zenon";
   "-zz", Arg.String (fun s -> add_opt := s :: !add_opt),
-      "<option>  add <option> to be passed to zenon";
+      "<opt> add <opt> to be passed to zenon";
 ];;
 
 let get_options () = !options;;
