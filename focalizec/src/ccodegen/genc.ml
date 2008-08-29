@@ -33,6 +33,17 @@ let rec subst_ctype t t' ty =
   | Ptr a -> Ptr (subst_ctype t t' a)
   | _ -> ty
 	
+let rec type_realize ctx t =
+  match t with
+    TypeId _ -> CGenEnv.normalize_type ctx t
+  | Ptr _ -> t
+  | Annot (t', _) -> type_realize ctx t'
+  | Fun _ -> t
+  | Param _ -> t
+  | Struct _ -> t
+  | Enum _ -> t
+  | Union _ -> t
+
 (* let rec pp_list f ppf = function *)
 (*     [] -> () *)
 (*   | [e] -> f ppf e *)
@@ -160,11 +171,19 @@ let compile_type ctx (_, vn, desc) =
 	    fprintf err_formatter "@[<hov 2>(Warning) %a :@;@[The type \"%s\" must be a record which first field defines the type's structural equality with this signature :@]@;@[int@ equal_%s(@[%s*,@;%s*@]);@]@]@."
 	      Location.pp_location desc.type_loc
 	      code code code code;
+	  (* Memorising the implicit type aliasing. *)
+	  let original = TypeId code in
+	  let alias = TypeId name in
+	  let ctx =
+	    if code <> name then
+	      CGenEnv.add_alias ctx alias original
+	    else ctx in
 	  let res = 
 	    if code = name then
 	      [Export (Comment (sprintf "useless@ alias@ for@ %s" name))]
 	    else
-	      [Export (Typedef (TypeId code, name))] in
+	      [Export (Typedef (original, name))]
+	  in
 	  (* Now, the bindings. *)
 	  if eb.ast_desc <> [] then
 	    fold compile_external_binding (ctx, res) eb.ast_desc
@@ -753,7 +772,7 @@ and resolve_scoping_statement spc ctx args local s =
   | Affect (p, e) ->
       let p' = resolve_scoping_primary_expr spc ctx args local p in
       let e' = resolve_scoping_expr spc ctx args local e in
-      let result = match (p', e') with
+      begin match (p', e') with
 	(Ident id, ECast (t, e'')) ->
 	  let ty = try List.assoc id local with
 	    Not_found ->
@@ -761,10 +780,13 @@ and resolve_scoping_statement spc ctx args local s =
 		Not_found -> assert false
 	      end
 	  in
-	  if t = ty then Affect (p', e'')
-	  else Affect (p', e')
+	  if type_realize ctx t = type_realize ctx ty then 
+	    resolve_scoping_statement spc ctx args local (Affect (p', e''))
+	  else
+	    ([], Affect (p', e'))
       
       |	(Ident id, Call (Ident f, _)) ->
+	  eprintf "### resolve scoping for %s@." f;
 	  let ty = try List.assoc id local with
 	    Not_found ->
 	      begin try CGenEnv.get_function_type ctx id with
@@ -773,16 +795,21 @@ and resolve_scoping_statement spc ctx args local s =
 	  in
 	  begin try
 	    let ty' = CGenEnv.get_function_type ctx f in
-	    if ty = ty' then Affect (p', e')
-	    else Affect (p', ECast (ty, e'))
+	    match ty' with
+	      Fun (ret, _) ->
+		if type_realize ctx ty = type_realize ctx ret then
+		  ([], Affect (p', e'))
+		else 
+		  ([], Affect (p', ECast (ty, e')))
+	    | _ -> assert false
 	  with
-	    Not_found -> Affect (p', e')
+	    Not_found ->
+	      ([], Affect (p', e'))
 	  end
  
-      |	_ -> Affect (p', e')
-      in
-      ([], result)
-	
+      |	_ -> 
+	  ([], Affect (p', e'))
+      end	
   | Skip ->
       ([], s)
 	

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.21.2.5 2008-08-26 20:56:51 blond Exp $
+# $Id: Makefile,v 1.21.2.6 2008-08-29 11:55:46 blond Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -61,7 +61,7 @@ EXTERNALOBJS = ml_builtins.cmo c_builtins.o sets_orders_externals.cmo \
 
 
 
-all:: $(EXTERNALOBJS) $(FOCCS) $(FOCOS) $(FOCCS_UNSAFE) $(FOCOS_UNSAFE)
+all:: $(EXTERNALOBJS) $(FOCCS) $(FOCOS)
 
 doc:: $(BYTOBJS)
 	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)

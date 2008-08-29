@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.102.2.2 2008-08-26 20:56:51 blond Exp $ *)
+(* $Id: env.ml,v 1.102.2.3 2008-08-29 11:55:46 blond Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -875,7 +875,8 @@ module CGenEnv =
 	  mutable c_constrs : (Parsetree.vname * string) list;
 	  mutable c_eqs : string list;
 	  mutable c_types : string list;
-	  mutable c_functions : (string * Types.ctype) list }
+	  mutable c_functions : (string * Types.ctype) list;
+	  mutable c_alias : (Types.ctype * Types.ctype) list }
 
     let create file eqs =
       { c_file = file;
@@ -883,7 +884,8 @@ module CGenEnv =
 	c_constrs = [];
 	c_eqs = eqs;
 	c_types = eqs;
-	c_functions = [] }
+	c_functions = [];
+	c_alias = [] }
 
     let unit_name x = x.c_unit
 
@@ -898,6 +900,7 @@ module CGenEnv =
       y.c_eqs <- x.c_eqs @ y.c_eqs;
       y.c_types <- x.c_types @ y.c_types;
       y.c_functions <- x.c_functions @ y.c_functions;
+      y.c_alias <- x.c_alias @ y.c_alias;
       y
 
     let mem_eq x str =
@@ -916,6 +919,20 @@ module CGenEnv =
 
     let get_function_type x f =
       List.assoc f x.c_functions
+
+    let add_alias x t t' =
+      x.c_alias <- (t, t') :: x.c_alias;
+      x
+
+    let normalize_type x t =
+      let rec aux t = function
+	  [] -> t
+	| (a, b)::q ->
+	    if t = a then aux b q
+	    else aux t q
+      in
+      aux t x.c_alias
+      
 
   end
 
