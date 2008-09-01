@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.94 2008-08-28 11:59:54 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.95 2008-08-31 23:01:49 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -314,7 +314,7 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                   represent carriers of the species parameters we depend on. *)
                let ty = Types.specialize sch in
                if in_section then
-                 Format.fprintf out_fmter "Variable abst_T := %a.@\n"
+                 Format.fprintf out_fmter "Let abst_T := %a.@\n"
                    (Types.pp_type_simple_to_coq
                       new_print_ctx ~reuse_mapping: false)
                    ty
@@ -1208,7 +1208,7 @@ let zenonify_hyp ctx print_ctx env hyp =
 ;;
 
 
-
+(*
 let debug_available_steps steps =
   let rec rec_debug = function
     | [] -> ()
@@ -1233,6 +1233,7 @@ let debug_available_steps steps =
   rec_debug steps ;
   Format.eprintf "debug_available_steps STOP@."
 ;;
+*)
 
 
 
@@ -1252,10 +1253,6 @@ let rec zenonify_proof_node ~in_nested_proof ctx print_ctx env min_coq_env
   match node.Parsetree.ast_desc with
    | Parsetree.PN_sub ((label_num, label_name), stmt, proof) ->
        (begin
-
-Format.eprintf "On est sur le PN_sub <%d>%s@." label_num label_name ;
-Format.eprintf "Le stamement est: %a@." Sourcify.pp_statement stmt ;
-
        (* Start a new nested Section to prove the statement. *)
        let section_name = section_name_seed ^ "_" ^ label_name in
        Format.fprintf out_fmter "@[<2>Section __%s.@\n" section_name ;
@@ -1263,9 +1260,6 @@ Format.eprintf "Le stamement est: %a@." Sourcify.pp_statement stmt ;
        (* First, generate the hypotheses of the statement. We also recover the
           "Hypothesis" of the statement because we will need to print them
           again later if they are mentionned as used in a [F_hypothesis] .*)
-
-Format.eprintf "On va zenonifier les hypothèses du statement@." ;
-
        List.iter (zenonify_hyp ctx print_ctx env) stmt_desc.Parsetree.s_hyps ;
        (* We extend the context of available hypothesis with the new ones. *)
        let available_hyps' = available_hyps @ stmt_desc.Parsetree.s_hyps in
@@ -1277,35 +1271,15 @@ Format.eprintf "On va zenonifier les hypothèses du statement@." ;
        (* Now, handle the nested proof of the conclusion of the statement or
           the default one if there is no new aim provided. *)
        let lemma_name = Parsetree.Vlident ("__" ^ section_name ^ "_LEMMA") in
-
-Format.eprintf "On va zenonifier la preuve imbriquée:@\n%a@."
-  Sourcify.pp_proof proof ;
-
        zenonify_proof
          ~in_nested_proof: true ctx print_ctx env min_coq_env
          dependencies_from_params available_hyps' available_steps section_name
          new_aim lemma_name parent_proof_opt proof ;
        Format.fprintf out_fmter "End __%s.@]@\n" section_name ;
-
-Format.eprintf "Terminé la sous preuve de <%d>%s@." label_num label_name ;
-
        (* Since we end a Section, all the lemma will have now to be explicitely
           quantified/implified by the assumed variables and hypotheses. *)
        let (assumed_variables, assumed_lemmas) =
          find_assumed_variables_and_lemmas_in_hyps stmt_desc.Parsetree.s_hyps in
-
-Format.eprintf "On a trouvé les assumed_variables:@." ;
-List.iter
-  (fun (n, ty) ->
-    Format.eprintf "\t\t%a : %a@."
-      Sourcify.pp_vname n Sourcify.pp_type_expr ty)
-  assumed_variables ;
-Format.eprintf "On a trouvé les assumed_lemmas:@." ;
-List.iter
-  (fun log_expr ->
-    Format.eprintf "\t\t%a@." Sourcify.pp_logical_expr log_expr)
-assumed_lemmas ;
-
        (* We return the extra step known thanks to the current [PN_sub] This
           extra step will be made available for the rest of the surrounding
           proof and sibling [PN_sub]/[PN_qed]. *)
@@ -1338,28 +1312,16 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
        (* Dump verbatim the Coq code. *)
        Format.fprintf out_fmter "%s@\n" script ;
    | Parsetree.Pf_node nodes ->
-Format.eprintf "zenonify_proof du Pf_node@." ;
-Format.eprintf "Avail steps initial.@." ;
-debug_available_steps available_steps ;
-
        (* For each successive node, we remember the previously seen **extra**
           steps that will be available for the trailing Qed node. *)
        let rec rec_dump accu_avail_steps = function
          | [] -> ()
          | node :: q ->
-
-Format.eprintf "Avail steps pour le node courant.@." ;
-debug_available_steps accu_avail_steps ;
-
              let extra_avail_steps =
                zenonify_proof_node
                  ~in_nested_proof ctx print_ctx env min_coq_env
                  dependencies_from_params available_hyps accu_avail_steps
                  section_name_seed (Some proof) node aim_name aim in
-
-Format.eprintf "On a récupéré les nouvelles steps: @." ;
-debug_available_steps extra_avail_steps ;
-
              rec_dump
                (* And not not append in the other way otherwise, the newly
                   found steps will be in tail of the list and of we look for
@@ -1463,11 +1425,6 @@ debug_available_steps extra_avail_steps ;
 let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
     used_species_parameter_tys dependencies_from_params generated_fields
     name logical_expr proof =
-
-Format.eprintf "generate_theorem_section_if_by_zenon pour %a de l'espèce %a@."
-  Sourcify.pp_vname name
-  Sourcify.pp_qualified_species ctx.Context.scc_current_species ;
-
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Local function that prints the common stuff required by Zenon in case
      of proofs done by [Pf_auto] or [Pf_node]. It prints the opening of the

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.24 2008-08-28 10:38:50 pessaux Exp $
+# $Id: Makefile,v 1.25 2008-08-31 23:01:49 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -12,6 +12,7 @@ COQC = coqc
 ZVTOV = zvtov
 
 FOC_COMP_FLAGS =
+COQ_COMP_FLAGS = -I ../../zenon/
 
 FOCSRC = basics.foc \
 	sets_orders.foc \
@@ -45,7 +46,7 @@ FOCZVS_UNSAFE = $(FOCSRC_UNSAFE:.foc=.zv)
 FOCVS = $(FOCZVS:.zv=.v)
 FOCVS_UNSAFE = $(FOCSRC_UNSAFE:.foc=.v)
 
-FOCVOS = $(FOCZVS:.v=.vo)
+FOCVOS = $(FOCVS:.v=.vo)
 FOCVOS_UNSAFE = $(FOCSRC_UNSAFE:.foc=.vo)
 
 EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
@@ -76,7 +77,7 @@ depend:
 basics_special_case:
 	$(RM) -f basics.v
 	$(LN) -s ../tmp_basics.v basics.v
-	$(COQC) basics.v
+	$(COQC) $(COQ_COMP_FLAGS) basics.v
 
 # Temporary for no Coq...
 rings_fields.ml: rings_fields.foc
@@ -126,6 +127,6 @@ polys_abstract.ml: polys_abstract.foc
 	$(CAMLLEX) $<
 
 .v.vo:
-	$(COQC) $<
+	$(COQC) $(COQ_COMP_FLAGS) $<
 
 include .depend
