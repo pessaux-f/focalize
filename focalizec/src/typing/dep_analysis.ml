@@ -11,20 +11,20 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.44 2008-06-09 12:13:29 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.45 2008-09-01 11:53:45 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
-              in Virgile Prevosto's Phd, section 3.5.
+    in Virgile Prevosto's Phd, section 3.5.
 
     {b Rem} : Be careful that in the Phd, the well-formation formula is
-            incorrect. It should be read:
-            x1 <| x2 <=>
-              \ex {y_i}_(i=1..n) such as
-                (y_1 \circarrow x_1 and y_n \circarrow x_2 and
-                 \all j < n, y_j \in \lbag y_j+1 \rbag_s)
-              And in the condition for well-formation, <| must be
-              subscripted by s and not a.                                  *)
+    incorrect. It should be read:
+       x1 <| x2 <=>
+         \ex {y_i}_(i=1..n) such as
+           (y_1 \circarrow x_1 and y_n \circarrow x_2 and
+            \all j < n, y_j \in \lbag y_j+1 \rbag_s)
+    And in the condition for well-formation, <| must be subscripted by
+    s and not a.                                                           *)
 (* *********************************************************************** *)
 
 
@@ -33,13 +33,13 @@
 (* current_species: Parsetree.qualified_vname -> Parsetree.expr ->    *)
 (*  Parsetree_utils.DepNameSet.t                                      *)
 (** {b Descr} : Compute the set of vnames the expression [expression]
-              decl-depends of in the species [~current_species].
+    decl-depends of in the species [~current_species].
 
     {b Rem} : Not exported outside this module.                       *)
 (* ****************************************************************** *)
 let rec expr_decl_dependencies ~current_species expression =
-  (* Let's just make a local function to save the stack, avoid *)
-  (* passing each time the parameter [~current_species].       *)
+  (* Let's just make a local function to save the stack, avoid passing each
+     time the parameter [~current_species]. *)
   let rec rec_depend expr =
     match expr.Parsetree.ast_desc with
      | Parsetree.E_self
@@ -56,28 +56,27 @@ let rec expr_decl_dependencies ~current_species expression =
           | Parsetree.ANTI_type t -> t) in
         match ident.Parsetree.ast_desc with
         | Parsetree.EI_local _ ->
-            (* Because scoping pass already renamed all the identfiers that *)
-            (* "looked like" local identifiers into "method identifiers" if *)
-            (* they indeed denoted methods, we can safely consider that     *)
-            (* remaining "local identifiers" are really local and introduce *)
-            (* no dependency.                                               *)
+            (* Because scoping pass already renamed all the identfiers that
+               "looked like" local identifiers into "method identifiers" if
+               they indeed denoted methods, we can safely consider that
+               remaining "local identifiers" are really local and introduce
+               no dependency. *)
             Parsetree_utils.DepNameSet.empty
         | Parsetree.EI_global _ -> Parsetree_utils.DepNameSet.empty
         | Parsetree.EI_method (None, vname) ->
-            (* Case c!x in Virgile Prevosto's Phd, section 3.5, *)
-            (* page 30, definition 12.                          *)
+            (* Case c!x in Virgile Prevosto's Phd, section 3.5, page 30,
+               definition 12. *)
             Parsetree_utils.DepNameSet.singleton (vname, ident_ty)
         | Parsetree.EI_method (Some coll_specifier, vname) ->
             (begin
              match coll_specifier with
              | Parsetree.Vname _ ->
-               (* In this case, may be there is *)
-               (* some scoping process missing. *)
+               (* In this case, may be there is some scoping process missing. *)
                assert false
              | Parsetree.Qualified (module_name, coll_vname) ->
                if current_species = (module_name, coll_vname) then
-                 (* Case c!x in Virgile Prevosto's Phd, section 3.5, *)
-                 (* page 30, definition 12.                          *)
+                 (* Case c!x in Virgile Prevosto's Phd, section 3.5, page 30,
+                    definition 12. *)
                  Parsetree_utils.DepNameSet.singleton (vname, ident_ty)
                else Parsetree_utils.DepNameSet.empty
              end)
@@ -110,8 +109,8 @@ let rec expr_decl_dependencies ~current_species expression =
            if_expr_deps
            (Parsetree_utils.DepNameSet.union then_expr_deps else_expr_deps)
      | Parsetree.E_let (let_def, in_expr) ->
-         (* No substration here because the let-definition *)
-         (* is NOT a field definition !                    *)
+         (* No substration here because the let-definition is NOT a field
+            definition ! *)
          let in_expr_deps = rec_depend in_expr in
          List.fold_left
            (fun accu_deps binding ->
@@ -150,15 +149,14 @@ let rec expr_decl_dependencies ~current_species expression =
 
 
 
-(* **************************************************************** *)
-(* current_species: Parsetree.qualified_vname -> Parsetree.prop ->  *)
-(*   Parsetree_utils.DepNameSet.t                                   *)
+(* ************************************************************************* *)
+(* current_species: Parsetree.qualified_vname -> Parsetree.prop ->           *)
+(*   Parsetree_utils.DepNameSet.t                                            *)
 (** {b Descr} : Compute the set of vnames the prop expression
-              [initial_prop_expression] decl-depends in the species
-              [~current_species].
+    [initial_prop_expression] decl-depends in the species [~current_species].
 
-    {b Rem} : Not exported outside this module.                     *)
-(* **************************************************************** *)
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
 and prop_decl_dependencies ~current_species initial_prop_expression =
   let rec rec_depend prop_expression =
     match prop_expression.Parsetree.ast_desc with
@@ -186,37 +184,36 @@ and prop_decl_dependencies ~current_species initial_prop_expression =
 (* current_species: Parsetree.qualified_vname -> Parsetree.ident->          *)
 (*   Parsetree_utils.DepNameSet.t                                           *)
 (** {b Descr} : Compute the set of vnames the identifier [ident] represents
-              as dependencies when this ident is located in a [fact].
-              In such a context, the [ident] is in fact a dependency.
-              Depending on wether the ident appears under a "Def" or "Decl"
-              the dependency will be considered as a "decl" or a "def"
-              dependency.
+    as dependencies when this ident is located in a [fact].
+    In such a context, the [ident] is in fact a dependency.
+    Depending on wether the ident appears under a "Def" or "Decl" the
+    dependency will be considered as a "decl" or a "def" dependency.
 
     {b Rem} : MUST only called with idents extracted from a [fact]'s
-            structure !
-            Not exported outside this module.                               *)
+    structure !
+    Not exported outside this module.                               *)
 (* ************************************************************************ *)
 let ident_in_fact_dependencies ~current_species ident =
   (* Recover the ident's type. *)
   let ident_ty =
     (match ident.Parsetree.ast_type with
      | Parsetree.ANTI_none
-     | Parsetree.ANTI_non_relevant
-     | Parsetree.ANTI_scheme  _ -> assert false
+     | Parsetree.ANTI_non_relevant -> assert false
+     | Parsetree.ANTI_scheme sch -> Types.specialize sch
      | Parsetree.ANTI_type t -> t) in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local _ ->
-       (* Because scoping pass already renamed all the identfiers that *)
-       (* "looked like" local identifiers into "method identifiers" if *)
-       (* they indeed denoted methods, we can safely consider that     *)
-       (* remaining "local identifiers" are really local and introduce *)
-       (* no dependency. Furthermore, there is no reason to get here   *)
-       (* real local identifier unless the user put an erroneous fact. *)
+       (* Because scoping pass already renamed all the identfiers that
+          "looked like" local identifiers into "method identifiers" if they
+          indeed denoted methods, we can safely consider that remaining
+          "local identifiers" are really local and introduce no dependency.
+          Furthermore, there is no reason to get here real local identifier
+          unless the user put an erroneous fact. *)
        failwith "To investigate: may be erroneous fact in the proof."
    | Parsetree.EI_global _ ->
-       (* Since dependencies are computed inside A species architecture,   *)
-       (* invocation of a global stuff does not involve dependency because *)
-       (* it does not belong to the currently analyzed species.            *)
+       (* Since dependencies are computed inside A species architecture,
+          invocation of a global stuff does not involve dependency because it
+          does not belong to the currently analyzed species. *)
        Parsetree_utils.DepNameSet.empty
    | Parsetree.EI_method (None, vname) ->
        (* A method of Self. *)
@@ -226,9 +223,9 @@ let ident_in_fact_dependencies ~current_species ident =
         match coll_specifier with
         | Parsetree.Vname _ -> assert false
         | Parsetree.Qualified (module_name, coll_vname) ->
-          (* If the module specification and the collection name       *)
-          (* match the [current_species] then are are still in the     *)
-          (* case of Self. Else we are in the case of another species. *)
+          (* If the module specification and the collection name match the
+             [current_species] then are are still in the case of Self. Else we
+             are in the case of another species. *)
           if (module_name, coll_vname) = current_species then
             (* A method of Self. *)
             Parsetree_utils.DepNameSet.singleton (vname, ident_ty)
@@ -244,7 +241,7 @@ let ident_in_fact_dependencies ~current_species ident =
 (* current_species: Parsetree.qualified_vname -> Parsetree.fact->      *)
 (*   (Parsetree_utils.DepNameSet.t * Parsetree_utils.DepNameSet.t)     *)
 (** {b Descr} : Compute the set of vnames the fact [fact] decl-depends
-              and def-depends of in the species [~current_species].
+    and def-depends of in the species [~current_species].
 
     {b Rem} : Not exported outside this module.                        *)
 (* ******************************************************************* *)
@@ -300,9 +297,9 @@ let statement_decl_dependencies ~current_species stmt =
         Parsetree_utils.DepNameSet.union accu_decl_deps hyp_decl_deps)
       Parsetree_utils.DepNameSet.empty
       stmt_desc.Parsetree.s_hyps in
-  (* An now, accumulate with those of the conclusion *)
+  (* An now, accumulate with those of the conclusion. *)
   match stmt_desc.Parsetree.s_concl with
-   | None ->hyps_decl_deps
+   | None -> hyps_decl_deps
    | Some prop ->
        let prop_decl_defs =
          prop_decl_dependencies ~current_species prop in
@@ -314,9 +311,31 @@ let statement_decl_dependencies ~current_species stmt =
 
 let rec proof_decl_n_def_dependencies ~current_species proof =
   match proof.Parsetree.ast_desc with
-   | Parsetree.Pf_assumed _
-   | Parsetree.Pf_coq _ ->
-       (Parsetree_utils.DepNameSet.empty, Parsetree_utils.DepNameSet.empty)
+   | Parsetree.Pf_assumed (enf_deps, _)
+   | Parsetree.Pf_coq (enf_deps, _) ->
+       List.fold_left
+         (fun (accu_decl, accu_def) dep ->
+           match dep.Parsetree.ast_desc with
+            | Parsetree.Ed_definition idents ->
+                let accu_def' =
+                  List.fold_left
+                    (fun accu ident ->
+                      Parsetree_utils.DepNameSet.union accu
+                        (ident_in_fact_dependencies ~current_species ident))
+                    accu_def
+                    idents in
+                (accu_decl, accu_def')
+            | Parsetree.Ed_property idents ->
+                let accu_decl' =
+                  List.fold_left
+                    (fun accu ident ->
+                      Parsetree_utils.DepNameSet.union accu
+                        (ident_in_fact_dependencies ~current_species ident))
+                    accu_decl
+                    idents in
+                (accu_decl', accu_def))
+         (Parsetree_utils.DepNameSet.empty, Parsetree_utils.DepNameSet.empty)
+         enf_deps
    | Parsetree.Pf_auto facts ->
        (begin
        List.fold_left
@@ -369,7 +388,7 @@ let binding_body_decl_dependencies ~current_species = function
 (* current_species: Parsetree.qualified_vname ->                        *)
 (*   Env.TypeInformation.species_field -> Parsetree_utils.DepNameSet.t  *)
 (** {b Descr} : Compute the set of vnames the argument field depends of
-       in the species [~current_species].
+    in the species [~current_species].
 
     {b Rem} : Exported outside this module.                             *)
 (* ******************************************************************** *)
@@ -412,8 +431,8 @@ let field_only_decl_dependencies ~current_species = function
   | Env.TypeInformation.SF_theorem (_, _, _, body, proof, rep_deps) ->
       (begin
       let body_decl_deps = prop_decl_dependencies ~current_species body in
-      (* Now, recover the explicit "decl" dependencies of  *)
-      (* the proof and ignore here the "def"-dependencies. *)
+      (* Now, recover the explicit "decl" dependencies of the proof and ignore
+         here the "def"-dependencies. *)
       let (proof_deps, _) =
         proof_decl_n_def_dependencies ~current_species proof in
       let deps_without_carrier =
@@ -434,22 +453,21 @@ let field_only_decl_dependencies ~current_species = function
 (* Parsetree.vname -> Env.TypeInformation.species_field list ->          *)
 (*   Env.TypeInformation.species_field list                              *)
 (** {b Descr} : Compute the set of all the names involved in the
-              "clockwise arrow" relation (c.f. Virgile Prevosto's
-              Pdh, section 3.5, page 30) for the name [field_name]
-              in the fields [fields] that must include the inherited
-              fields of the analysed species.
+    "clockwise arrow" relation (c.f. Virgile Prevosto's Pdh, section
+    3.5, page 30) for the name [field_name] in the fields [fields] that
+    must include the inherited fields of the analysed species.
 
     {b Rem} : MUST BE used on a fields list containing all the
-             **normalized inherited fields** of the species and the
-             **non normalized fields of the current inheritance level**.
-             This means that the inherited fields must already be
-             fusionned if they needed, and the current level fields may
-             not be fusionned this the inherited ones.
-             This enables not to have to seach all along the inheritance
-             tree because let rec will be inductively correct (i.e. all
-             the recursive ident will be in ONE field) for inherited
-             fields and keeps the current level fields present in order
-             to check for let rec at this level.                         *)
+    **normalized inherited fields** of the species and the
+    **non normalized fields of the current inheritance level**.
+    This means that the inherited fields must already be fusionned if
+    they needed, and the current level fields may not be fusionned this
+    the inherited ones.
+    This enables not to have to seach all along the inheritance tree
+    because let rec will be inductively correct (i.e. all the recursive
+    idents will be in ONE field) for inherited fields and keeps the
+    current level fields present in order to check for let rec at this
+    level.                                                               *)
 (* ********************************************************************* *)
 let clockwise_arrow field_name fields =
   List.fold_right
@@ -462,9 +480,9 @@ let clockwise_arrow field_name fields =
           if vname = field_name then Handy.list_cons_uniq_eq vname accu
           else accu
        | Env.TypeInformation.SF_let_rec l ->
-           (* Check if the searched field name is among those in this     *)
-           (* recursive let definition. If so, then the relation includes *)
-           (* all the bound names of this recursive let definition.       *)
+           (* Check if the searched field name is among those in this
+              recursive let definition. If so, then the relation includes all
+              the bound names of this recursive let definition. *)
            if List.exists
                (fun (_, vname, _, _, _, _, _) -> vname = field_name) l then
              List.fold_right
@@ -482,7 +500,7 @@ let clockwise_arrow field_name fields =
 (* Parsetree.vname -> Env.TypeInformation.species_field list ->         *)
 (*   Env.TypeInformation.species_field list                             *)
 (** {b Descr} : Computes the set Where as defined in Virgile Prevosto's
-              Phd, section 3.5, page 32, definition 15.
+    Phd, section 3.5, page 32, definition 15.
 
     {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************** *)
@@ -496,9 +514,9 @@ let where field_name fields =
        | Env.TypeInformation.SF_property (_, vname, _, _, _) ->
            if vname = field_name then field :: accu else accu
        | Env.TypeInformation.SF_let_rec l ->
-           (* Check if the searched field name is among those in this     *)
-           (* recursive let definition. If so, then the relation includes *)
-           (* all the bound names of this recursive let definition.       *)
+           (* Check if the searched field name is among those in this recursive
+              let definition. If so, then the relation includes all the bound
+              names of this recursive let definition. *)
            if List.exists
                (fun (_, vname, _, _, _, _, _) -> vname = field_name) l then
              field :: accu
@@ -512,7 +530,7 @@ let where field_name fields =
 (* ******************************************************************* *)
 (* Env.TypeInformation.species_field -> Parsetree_utils.DepNameSet.t   *)
 (** {b Descr} : Just an helper returning the set of all names bound in
-              a species fields.
+    a species fields.
 
     {b Rem} : Not exported outside this module.                        *)
 (* ******************************************************************* *)
@@ -538,11 +556,11 @@ let names_set_of_field = function
 (* Env.TypeInformation.species_field list ->                                *)
 (*   Parsetree_utils.DepNameSet.elt list                                    *)
 (** {b Descr} : Just helper returning the list of all names bound in a list
-              of fields. The resulting list preserves the order the names
-              appear in the list of fields and in the list of names in
-              case of recursive let-def field.
-              Example: [let s; sig y; let rec z ... and t] will give the
-              list [s; y; z; t].
+    of fields. The resulting list preserves the order the names appear in
+    the list of fields and in the list of names in case of recursive
+    let-def field.
+    Example: [let s; sig y; let rec z ... and t] will give the
+    list [s; y; z; t].
 
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
@@ -570,18 +588,18 @@ let ordered_names_list_of_fields fields =
 (* Parsetree.vname -> Env.TypeInformation.species_field list ->       *)
 (*   Env.TypeInformation.species_field                                *)
 (** {b Descr} : Looks for the most recently defined field that
-              let-rec-binds [y_name] among [fields] and return it.
-              This function relies on the fact that the field list is
-              ordered with oldest inherited fields are in head of the
-              list and the most recent are in tail.
+    let-rec-binds [y_name] among [fields] and return it.
+    This function relies on the fact that the field list is ordered
+    with oldest inherited fields are in head of the list and the most
+    recent are in tail.
 
     {b Rem} : Not exported outside this module.                       *)
 (* ****************************************************************** *)
 let find_most_recent_rec_field_binding y_name fields =
-  (* The search is a simple walk in the list, starting by the head and    *)
-  (* going on with the tail. Because fields list is assumed to be ordered *)
-  (* with the oldest inherited fields in head, one will have to reverse   *)
-  (* the initial list of field before applying the present function.      *)
+  (* The search is a simple walk in the list, starting by the head and going
+     on with the tail. Because fields list is assumed to be ordered with the
+     oldest inherited fields in head, one will have to reverse the initial
+     list of field before applying the present function. *)
   let rec rec_search = function
     | [] -> raise Not_found
     | h :: q ->
@@ -614,11 +632,10 @@ let union_y_clock_x_etc ~current_species x_name fields =
   let all_ys = clockwise_arrow x_name fields in
   List.fold_left
     (fun accu_deps y_name ->
-      (* First compute the great union. *)
-      (* We look for the most recently defined field that binds [y_name]. *)
-      (* This way, we really "compute" \Cal B_s (y) because \Cal B is     *)
-      (* defined to return the body of the most recent fiedl in the       *)
-      (* inheritance.                                                     *)
+      (* First compute the great union.
+         We look for the most recently defined field that binds [y_name].
+         This way, we really "compute" \Cal B_s (y) because \Cal B is defined
+         to return the body of the most recent fiedl in the inheritance. *)
       let field_y = find_most_recent_rec_field_binding y_name fields in
       let u =
         Parsetree_utils.DepNameSet.union
@@ -659,9 +676,9 @@ let in_species_decl_dependencies_for_one_function_name ~current_species
         | Env.TypeInformation.SF_let_rec _ -> false
         | Env.TypeInformation.SF_theorem (_, _, _, _, _, _)
         | Env.TypeInformation.SF_property (_, _, _, _, _) ->
-            (* Because this function is intended to be called only on *)
-            (* names bound by sig, let or let-rec fields, these cases *)
-            (* should never arise !                                   *)
+            (* Because this function is intended to be called only on names
+               bound by sig, let or let-rec fields, these cases should never
+               arise ! *)
             assert false)
       where_x then binding_body_decl_dependencies ~current_species body
   else union_y_clock_x_etc ~current_species name fields
@@ -813,10 +830,9 @@ let build_dependencies_graph_for_fields ~current_species fields =
       let node =
         find_or_create
           tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
-      (* Now add an edge from the current name's node to the    *)
-      (* decl-dependencies node of "rep". In "Let/rec" methods, *)
-      (* "decl" dependencies can only come from the type of the *)
-      (* method.                                                *)
+      (* Now add an edge from the current name's node to the decl-dependencies
+         node of "rep". In "Let/rec" methods, "decl" dependencies can only
+         come from the type of the method. *)
       let edge = (node, DK_decl DDK_from_type) in
       n_node.nn_children <-
         Handy.list_cons_uniq_custom_eq
@@ -832,13 +848,13 @@ let build_dependencies_graph_for_fields ~current_species fields =
       Parsetree_utils.DepNameSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
-          (* In "Let/rec" methods, "decl" dependencies  *)
-          (* can only come from the BODY of the method. *)
+          (* In "Let/rec" methods, "decl" dependencies can only come from the
+             BODY of the method. *)
           (node, (DK_decl DDK_from_body)) :: accu)
         n_decl_deps_names
         [] in
-    (* Now add an edge from the current name's node to each of the *)
-    (* decl-dependencies names' nodes.                             *)
+    (* Now add an edge from the current name's node to each of the
+       decl-dependencies names' nodes. *)
     n_node.nn_children <-
       Handy.list_concat_uniq_custom_eq
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
@@ -850,22 +866,22 @@ let build_dependencies_graph_for_fields ~current_species fields =
       let node =
         find_or_create
           tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
-      (* Now add an edge from the current name's node to the *)
-      (* def-dependencies node of "rep".                     *)
+      (* Now add an edge from the current name's node to the def-dependencies
+         node of "rep". *)
       let edge = (node, DK_def) in
       n_node.nn_children <-
         Handy.list_cons_uniq_custom_eq
           (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
           edge n_node.nn_children
       end)
-    (* Note that in a "Let", there cannot be other def-dependencies than *)
-    (* on the carrier. So, non need to check for other def-dependencies *) in
+    (* Note that in a "Let", there cannot be other def-dependencies than on
+       the carrier. So, non need to check for other def-dependencies *) in
 
 
   (* ***************************************************************** *)
   (** {b Descr} : Just make a local function dealing with one property
-              or theorem name.
-              Apply rules from section 3.9.5, page 53, definition 30.  *)
+      or theorem name.
+      Apply rules from section 3.9.5, page 53, definition 30.          *)
   (* ***************************************************************** *)
   let local_build_for_one_theo_property n ty prop_t opt_b dep_on_rep =
     (* Find the dependencies node for the current name. *)
@@ -877,11 +893,10 @@ let build_dependencies_graph_for_fields ~current_species fields =
       let node =
         find_or_create
           tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
-      (* Now add an edge from the current name's node to the   *)
-      (* decl-dependencies node of "rep". Even in a theorem,   *)
-      (*  a decl-dependency on the carrier can only come from  *)
-      (* the type (of course, one can't say in the body, i.e   *)
-      (* in the proof, "by def Self" or "by property Self" !). *)
+      (* Now add an edge from the current name's node to the decl-dependencies
+         node of "rep". Even in a theorem, a decl-dependency on the carrier
+         can only come from the type (of course, one can't say in the body,
+         i.e. in the proof, "by def Self" or "by property Self" !). *)
       let edge = (node, DK_decl DDK_from_type) in
       n_node.nn_children <-
         Handy.list_cons_uniq_custom_eq
@@ -909,8 +924,8 @@ let build_dependencies_graph_for_fields ~current_species fields =
           (node, (DK_decl DDK_from_body)) :: accu)
         n_decl_deps_names_from_body
         n_decl_deps_nodes in
-    (* Now add an edge from the current name's node to each of the *)
-    (* decl-dependencies names' nodes.                             *)
+    (* Now add an edge from the current name's node to each of the
+       decl-dependencies names' nodes. *)
     n_node.nn_children <-
       Handy.list_concat_uniq_custom_eq
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
@@ -923,8 +938,8 @@ let build_dependencies_graph_for_fields ~current_species fields =
           (node, DK_def) :: accu)
         n_def_deps_names
         [] in
-    (* Now add an edge from the current name's node to each of the *)
-    (* def-dependencies names' nodes.                              *)
+    (* Now add an edge from the current name's node to each of the
+       def-dependencies names' nodes. *)
     n_node.nn_children <-
       Handy.list_concat_uniq_custom_eq
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
@@ -986,8 +1001,8 @@ let build_dependencies_graph_for_fields ~current_species fields =
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
 let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
-  (* For each species, a file named with "deps_", the species name *)
-  (* and the suffix ".dot" will be generated in the directory.     *)
+  (* For each species, a file named with "deps_", the species name and the
+     suffix ".dot" will be generated in the directory. *)
   let (current_species_module, current_species_vname) = current_species in
   let out_filename =
     Filename.concat
@@ -1049,15 +1064,15 @@ module NameNodeMap = Map.Make (NameNodeMod);;
 
 
 
-(* ******************************************************************* *)
-(* type name_node -> int                                               *)
+(* ******************************************************************** *)
+(* type name_node -> int                                                *)
 (** {b Descr} : Compute the "out degree" of a node, i.e. the number of
-              DIFFERENT children nodes it has. By different, we mean
-              that 2 edges of different kinds between 2 same nodes are
-              considered as only 1 edge.
+    DIFFERENT children nodes it has. By different, we mean that 2 edges
+    of different kinds between 2 same nodes are considered as only 1
+    edge.
 
-    {b Rem} : Not exported outside this module.                        *)
-(* ******************************************************************* *)
+    {b Rem} : Not exported outside this module.                         *)
+(* ******************************************************************** *)
 let node_out_degree node =
   let count = ref 0 in
   let seen = ref ([] : Parsetree.vname list) in
@@ -1078,21 +1093,20 @@ let node_out_degree node =
 (* current_species: Parsetree.qualified_vname ->                              *)
 (*   Env.TypeInformation.species_field list -> Parsetree.vname list           *)
 (** {b Descr} : Determines the order of apparition of the fields inside a
-              species to prevent fields depending on other fields from
-              appearing before. In others words, this prevents from
-              having [lemma2; lemma1] if the proof of [lemma2] requires
-              [lemma1].
-              We then must make in head of the species, the deepest fields
-              in the dependency graph, before adding those of the immediately
-              upper level, and so on.
-              Hence, this is a kind of reverse-topological sort. In effect
-              in our graph an edge i -> j does not mean that i must be
-              "processed" before j, but exactly the opposite !
+    species to prevent fields depending on other fields from appearing
+    before. In others words, this prevents from having [lemma2; lemma1] if
+    the proof of [lemma2] requires [lemma1].
+    We then must make in head of the species, the deepest fields in the
+    dependency graph, before adding those of the immediately upper level,
+    and so on.
+    Hence, this is a kind of reverse-topological sort. In effect in our graph
+    an edge i -> j does not mean that i must be "processed" before j, but
+    exactly the opposite !
 
     {b Rem} : Because of well-formation properties, this process should never
-              find a cyclic graph. If so, then may be the well-formness
-              process is bugged somewhere-else.
-              Exported outside this module.                                   *)
+    find a cyclic graph. If so, then may be the well-formness process is
+    bugged somewhere-else.
+    Exported outside this module.                                   *)
 (* ************************************************************************** *)
 let compute_fields_reordering ~current_species fields =
   (* First, compute the depency graph of the species fields. *)
@@ -1101,9 +1115,9 @@ let compute_fields_reordering ~current_species fields =
   (* Map recording for each node its "outputs degree", *)
   (* that's to say, the number of children it has.     *)
   let out_degree = ref NameNodeMap.empty in
-  (* First, initialize the out degree of each node, taking care not *)
-  (* to double-count 2 edges of different dependency kind between   *)
-  (* two same nodes.                                                *)
+  (* First, initialize the out degree of each node, taking care not to
+     double-count 2 edges of different dependency kind between two same
+     nodes. *)
   List.iter
     (fun name_node ->
       let nb_distict_children = node_out_degree name_node in
@@ -1121,8 +1135,8 @@ let compute_fields_reordering ~current_species fields =
         out_degree := NameNodeMap.remove node !out_degree
         end)
     !out_degree ;
-  (* The list with the newly ordered fields names. We build it reversed *)
-  (* for sake of efficiency. We will need to reverse it at the end.     *)
+  (* The list with the newly ordered fields names. We build it reversed for
+     sake of efficiency. We will need to reverse it at the end. *)
   let revd_order_list = ref ([] : Parsetree.vname list) in
   (* Now, iterate until the working list gets empty. *)
   (begin
@@ -1134,19 +1148,19 @@ let compute_fields_reordering ~current_species fields =
       (* Search all parents, i, of  j to decrement their out degree. *)
       NameNodeMap.iter
         (fun i i_out_degree ->
-          (* Tests if [j] belongs to [i]'s children, *)
-          (* ignoring the dependency kind.           *)
+          (* Tests if [j] belongs to [i]'s children, ignoring the dependency
+             kind. *)
           let is_i_parent_of_j =
             List.exists (fun (child, _) -> child == j) i.nn_children in
           if is_i_parent_of_j then
             (begin
-            (* The node [j] appears in [i]'s childrens, hence [i] *)
-            (* is right a parent of [j].                          *)
+            (* The node [j] appears in [i]'s childrens, hence [i] is right a
+               parent of [j]. *)
             decr i_out_degree ;
             if !i_out_degree = 0 then
               (begin
-              (* This parent is now of degree 0, it can now be processed *)
-              (* because all its children have already been.             *)
+              (* This parent is now of degree 0, it can now be processed
+                 because all its children have already been. *)
               Queue.push i c_queue ;
               out_degree := NameNodeMap.remove i !out_degree
               end)
@@ -1154,12 +1168,11 @@ let compute_fields_reordering ~current_species fields =
         !out_degree
     done
   with Queue.Empty ->
-    (* If there remain nodes in the [out_degree] table, this means  *)
-    (* that there exists nodes one could not classify because their *)
-    (* degree never reached 0. This corresponds to cycles in the    *)
-    (* graph. Because on well-formness properties, this should      *)
-    (* never appear except if the well-formness algorithm is        *)
-    (* buggy somewhere else.                                        *)
+    (* If there remain nodes in the [out_degree] table, this means that there
+       exists nodes one could not classify because their degree never reached
+       0. This corresponds to cycles in the graph. Because on well-formness
+       properties, this should never appear except if the well-formness
+       algorithm is buggy somewhere else. *)
     if not (NameNodeMap.is_empty !out_degree) then assert false
   end);
   (* And finaly, reverse the order list to get it in the right ... order. *)
@@ -1200,35 +1213,35 @@ let is_reachable start_node end_node =
          | found -> found    (* We found one path. Then stop search. *)
 
   and rec_search path current_node =
-    (* If the current node was already seen, this means that ... we already  *)
-    (* saw it, then we already checked if the [end_node] was in its children *)
-    (* and the anwser was NOT. Hence there is no reason to start again the   *)
-    (* search, we will get the same answer forever (and loop forever of      *)
-    (* course by the way).                                                   *)
+    (* If the current node was already seen, this means that ... we already
+       saw it, then we already checked if the [end_node] was in its children
+       and the anwser was NOT. Hence there is no reason to start again the
+       search, we will get the same answer forever (and loop forever of course
+       by the way). *)
     if List.memq current_node !seen ||
        current_node.nn_name = (Parsetree.Vlident "rep") then []
     else
       (begin
       (* We build the path in reverse order for sake of efficiency. *)
       let path' = current_node :: path in
-      (* We check if the current node's children contain the [end_node]. This *)
-      (* way, for each node, we are sure that the possibly found path is not  *)
-      (* the trivial path (because we explicitly look inside the children     *)
-      (* and if a node is acceptable in the children, then the path length    *)
-      (* is mandatorily non-null).                                            *)
+      (* We check if the current node's children contain the [end_node]. This
+         way, for each node, we are sure that the possibly found path is not
+         the trivial path (because we explicitly look inside the children and
+         if a node is acceptable in the children, then the path length is
+         mandatorily non-null). *)
       if List.exists
           (fun (n, _) -> n == end_node) current_node.nn_children then
         path'
       else
         (begin
         seen := current_node :: !seen ;
-        (* The [end_node] was not found in the children, *)
-        (* then search in the children.                  *)
+        (* The [end_node] was not found in the children, then search in the
+           children. *)
         find_on_children path' current_node.nn_children
         end)
       end) in
-  (* Start the search with an empty path history *)
-  (* and put back the path in the rigth order .  *)
+  (* Start the search with an empty path history and put back the path in the
+     rigth order. *)
   List.rev (rec_search [] start_node)
 ;;
 
@@ -1254,30 +1267,30 @@ let left_triangle dep_graph_nodes x1 x2 fields =
   let x1_arrow = clockwise_arrow x1 fields in
   (* Guess the fields where x2 is recursively bound. *)
   let x2_arrow = clockwise_arrow x2 fields in
-  (* Now we will apply the "well-formness" predicate on the cartesian  *)
-  (* product of the names bound by "clockwise-arrow" of [x1] and those *)
-  (* bound by "clockwise-arrow" of [x2]. Intuitively, we will apply    *)
-  (* this predicate on all possible combinaisons of [y_1] and [y_n].   *)
+  (* Now we will apply the "well-formness" predicate on the cartesian product
+     of the names bound by "clockwise-arrow" of [x1] and those bound by
+     "clockwise-arrow" of [x2]. Intuitively, we will apply this predicate on
+     all possible combinaisons of [y_1] and [y_n]. *)
   let bad_formed = ref None in
   let check () =
     List.exists
       (fun y1 ->
         List.exists
           (fun yn ->
-            (* Search a path in the graph from yn to y1. The lookup for *)
-            (* nodes y1 and yn should never fail because the graph was  *)
-            (* created before.                                          *)
+            (* Search a path in the graph from yn to y1. The lookup for nodes
+               y1 and yn should never fail because the graph was created
+               before. *)
             let y1_node =
               List.find (fun node -> node.nn_name = y1) dep_graph_nodes in
             let yn_node =
               List.find (fun node -> node.nn_name = yn) dep_graph_nodes in
-            (* Because our graph edges link from yn to y1, we must invert *)
-            (* the start/end nodes.                                       *)
+            (* Because our graph edges link from yn to y1, we must invert the
+               start/end nodes. *)
             match is_reachable yn_node y1_node with
              | [] -> false   (* No path found. *)
              | found_path ->
-                 (* That's a bit casual a programming fashion, but it works.. *)
-                 (* This allows to easily return the error reason...          *)
+                 (* That's a bit casual a programming fashion, but it works..
+                    This allows to easily return the error reason... *)
                  bad_formed := Some (yn_node, y1_node, found_path) ;
                  true)
           x2_arrow)
@@ -1293,7 +1306,7 @@ let left_triangle dep_graph_nodes x1 x2 fields =
 (* current_species: Parsetree.qualified_vname ->                            *)
 (*   Env.TypeInformation.species_field list -> unit                         *)
 (** {b Descr} : Checks if a species is well-formed, applying the definition
-              17 in Virgile Prevosto's Phd, section 3.5, page 32
+    17 in Virgile Prevosto's Phd, section 3.5, page 32.
 
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
@@ -1309,38 +1322,36 @@ let ensure_species_well_formed ~current_species fields =
       let ill_f = left_triangle dep_graph_nodes x_name x_name fields in
       match ill_f with
        | Some (node1, _, found_path) ->
-           (* Forget the second node, we always call the *)
-           (* path-search with twice the same name...    *)
+           (* Forget the second node, we always call the path-search with
+              twice the same name... *)
            let (modname, species_vname) = current_species in
            raise
              (Ill_formed_species
                 ((Parsetree.Qualified (modname, species_vname)), node1,
                  found_path))
        | None ->
-           (* No path leading to recursive fields that were not declared *)
-           (* recursive at the origin, hence, all is right...            *)
+           (* No path leading to recursive fields that were not declared
+              recursive at the origin, hence, all is right... *)
            ())
     names
 ;;
 
 
 
-(* ************************************************************************* *)
-(* Env.TypeInformation.species_field ->                                      *)
-(*   Env.TypeInformation.species_field list                                  *)
+(* ************************************************************************ *)
+(* Env.TypeInformation.species_field ->                                     *)
+(*   Env.TypeInformation.species_field list                                 *)
 (** {b Descr} : Implements the erasing procedure of one field described
-              in Virgile Prevosto's Phd, Section 3.9.5, page 53, definition
-              33.
+    in Virgile Prevosto's Phd, Section 3.9.5, page 53, definition 33.
 
     {b Rem} : Not exported outside this module.
-              Because the erasing of one Let_rec leads to several Sig fields
-              this function takes 1 fields and may return several.
-              In the same spirit, because we don't have any "slilent"  Sig
-              for "rep" (of course, "rep" is always a Sig when present), if
-              we find "rep" defined, then the only way to abstract it is to
-              remove it. Hence this function may also return an empty list
-              of fields.                                                     *)
-(* ************************************************************************* *)
+    Because the erasing of one Let_rec leads to several Sig fields this
+    function takes 1 fields and may return several.
+    In the same spirit, because we don't have any "slilent"  Sig for "rep"
+    (of course, "rep" is always a Sig when present), if we find "rep"
+    defined, then the only way to abstract it is to remove it. Hence this
+    function may also return an empty list of fields.                      *)
+(* ************************************************************************ *)
 let erase_field field =
   match field with
   | Env.TypeInformation.SF_sig (from, vname, _) ->
@@ -1377,8 +1388,8 @@ let erase_field field =
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
           Sourcify.pp_vname n
           Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
-      (* Turn the "theorem" into a "property".               *)
-      (* Hence, destroys any def-dependency on the carrier ! *)
+      (* Turn the "theorem" into a "property".
+         Hence, destroys any def-dependency on the carrier ! *)
 (* [Unsure] Recalculer ces dépendances ? Je pense que le plus safe serait
    de ne pas les changer ! *)
       let deps_rep' = { deps_rep with Env.TypeInformation.dor_def = false } in
@@ -1411,20 +1422,20 @@ let erase_fields_in_context ~current_species context fields =
       match m_field with
       | Env.TypeInformation.SF_sig (_, _, _)
       | Env.TypeInformation.SF_property (_, _, _, _, _) ->
-          (* [m_field] is already astracted. If so, then nothing to do on *)
-          (* it and just go on with the remaining fields [l_rem_fields].  *)
+          (* [m_field] is already astracted. If so, then nothing to do on
+             it and just go on with the remaining fields [l_rem_fields].  *)
           m_field :: (rec_erase rec_context l_rem_fields)
       | _ ->
-          (* All other cases. First compute the intersection between *)
-          (* [m_field]'s def-dependencies and the context. This is   *)
-          (* the \lbag\lbag m \rbag\rbag \inter \Cal N formula  of   *)
-          (* definition 33, page 53.                                 *)
+          (* All other cases. First compute the intersection between
+             [m_field]'s def-dependencies and the context. This is the
+             \lbag\lbag m \rbag\rbag \inter \Cal N formula  of definition 33,
+             page 53. *)
           let def_deps =
             (match m_field with
              | Env.TypeInformation.SF_let (_, _, _, _, _, _, _)
              | Env.TypeInformation.SF_let_rec _ ->
-               (* No "def"-dependencies for functions (C.f. definition   *)
-               (* 30 in Virgile Prevosto's Phd, section 3.9.5, page 53). *)
+               (* No "def"-dependencies for functions (C.f. definition 30 in
+                  Virgile Prevosto's Phd, section 3.9.5, page 53). *)
                Parsetree_utils.DepNameSet.empty
              | Env.TypeInformation.SF_theorem (_, _, _, prop, proof, _) ->
                let (_, _, n_def_deps_names) =
@@ -1455,8 +1466,8 @@ let erase_fields_in_context ~current_species context fields =
                  | Env.TypeInformation.SF_property (from, n, _, _, _)
                  | Env.TypeInformation.SF_sig (from, n, _) -> (from, [n])
                  | Env.TypeInformation.SF_let_rec flds ->
-                     (* Should nevers fail since "let"s must bind at least *)
-                     (* one identifier.                                    *)
+                     (* Should nevers fail since "let"s must bind at least one
+                        identifier. *)
                      let (from, _, _, _, _, _, _)  = List.hd flds in
                      let ns = List.map (fun (_, n, _, _, _, _, _) -> n) flds in
                      (from, ns)) in

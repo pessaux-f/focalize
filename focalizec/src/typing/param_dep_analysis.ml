@@ -11,14 +11,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.15 2008-05-29 11:36:37 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.16 2008-09-01 11:53:46 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
-              of a collection parameter an expression "needs" (i.e.
-              depends on).
-              This information is required in order to be able to
-              generate the Coq/OCaml code.                              *)
+    of a collection parameter an expression "needs" (i.e. depends on).
+    This information is required in order to be able to generate the
+    Coq/OCaml code.                                                     *)
 (* ******************************************************************** *)
 
 
@@ -26,12 +25,11 @@
 (* current_species: Parsetree.qualified_vname -> Parsetree.vname ->      *)
 (*  Parsetree.expr_ident -> Parsetree_utils.DepNameSet.t                 *)
 (** {b Descr} : Computes the set of methods names the identifier [ident]
-              represents as involving a dependency with the
-              [param_coll_name] collection name.
-              In fact, either the identifier is a method call from the
-              the same species as [param_coll_name] and is counted as a
-              dependency. Or it is not and then the returned set of
-              dependencies is empty.
+    represents as involving a dependency with the [param_coll_name]
+    collection name.
+    In fact, either the identifier is a method call from the the same
+    species as [param_coll_name] and is counted as a dependency. Or it
+    is not and then the returned set of dependencies is empty.
 
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
@@ -45,20 +43,19 @@ let param_deps_ident ~current_species param_coll_name local_idents ident =
      | Parsetree.ANTI_type t -> t) in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local n ->
-       (* Be careful. Because "in" parameters smell like regular local *)
-       (* identifiers, we must check here if the current identifier is *)
-       (* in fact a "in-parameter" of the species. To check this, one  *)
-       (* must be careful to possible masking that could exist if a    *)
-       (* really local identifier wearing the same name than a "in"    *)
-       (* parameter was bound since the "in"-parameter was bound.      *)
-       (* Because local bound idents can only appear in a "let"        *)
-       (* EXPRESSION (not species fields because it would not be used  *)
-       (* directly by its name but by "!it's name") and can't escape   *)
-       (* this "let" EXPRESSION, and because they only can be more     *)
-       (* recent that the species "in"-paramater definition, to know   *)
-       (* is a more recent ident is wearing the same name that a       *)
-       (* "in"-parameter (hence, masks it) , we just need to check if  *)
-       (* it exists in the list of locally-bound idents.               *)
+       (* Be careful. Because "in" parameters smell like regular local
+          identifiers, we must check here if the current identifier is in fact
+          a "in-parameter" of the species. To check this, one must be careful
+          to possible masking that could exist if a really local identifier
+          wearing the same name than a "IN" parameter was bound since the
+          "IN"-parameter was bound.
+          Because local bound idents can only appear in a "let" EXPRESSION
+          (not species fields because it would not be used directly by its
+          name but by "!it's name") and can't escape this "let" EXPRESSION,
+          and because they only can be more recent that the species
+          "IN"-paramater definition, to know is a more recent ident is wearing
+          the same name that a "IN"-parameter (hence, masks it) , we just
+          need to check if it exists in the list of locally-bound idents. *)
        if param_coll_name = n && not (List.mem n local_idents)
        then Parsetree_utils.DepNameSet.singleton (n, ident_ty)
        else Parsetree_utils.DepNameSet.empty
@@ -66,23 +63,23 @@ let param_deps_ident ~current_species param_coll_name local_idents ident =
        (* These are not a method call, then they induce no dependency. *)
        Parsetree_utils.DepNameSet.empty
    | Parsetree.EI_method (None, _) ->
-       (* A method of self, then induces no dependency *)
-       (* like those were are looking for.             *)
+       (* A method of self, then induces no dependency like those were are
+          looking for. *)
        Parsetree_utils.DepNameSet.empty
    | Parsetree.EI_method (Some coll_specifier, vname) ->
        (begin
         match coll_specifier with
         | Parsetree.Vname coll_name ->
-          (* Check it this method call is from the species parameter *)
-          (* we are working with. Should never happen because the    *)
-          (* scoping pass should make explicit the hosting module.   *)
+          (* Check it this method call is from the species parameter we are
+             working with. Should never happen because the scoping pass
+             should make explicit the hosting module. *)
           if coll_name = param_coll_name then
             Parsetree_utils.DepNameSet.singleton (vname, ident_ty)
           else Parsetree_utils.DepNameSet.empty
         | Parsetree.Qualified (module_name, coll_name) ->
-          (* If the module specification matches the one of the *)
-          (* current_species and if the collection name matches *)
-          (* species parameter then we have a dependency.       *)
+          (* If the module specification matches the one of the current_species
+             and if the collection name matches species parameter then we have
+             a dependency. *)
           if module_name = fst current_species &&
              coll_name = param_coll_name
           then Parsetree_utils.DepNameSet.singleton (vname, ident_ty)
@@ -144,8 +141,8 @@ let rec __param_deps_expr ~current_species param_coll_name start_local_idents
     | Parsetree.E_let (let_def, in_expr) ->
         List.fold_left
           (fun accu_deps binding ->
-            (* Here, each parameter name of the   *)
-            (* binding may mask a "in"-parameter. *)
+            (* Here, each parameter name of the binding may mask a
+               "IN"-parameter. *)
             let local_idents' =
               (List.map fst binding.Parsetree.ast_desc.Parsetree.b_params) @
               local_idents in
@@ -212,6 +209,22 @@ and __param_deps_logical_expr ~current_species param_coll_name
   (* Now, do the job. *)
   rec_deps start_local_idents proposition
  ;;
+
+
+
+let param_deps_enforced_deps_in_proof ~current_species param_coll_name fact =
+  match fact.Parsetree.ast_desc with
+   | Parsetree.Ed_definition expr_idents
+   | Parsetree.Ed_property expr_idents ->
+       List.fold_left
+         (fun accu_deps ident ->
+           let deps = 
+             param_deps_ident
+               ~current_species param_coll_name [] ident in
+           Parsetree_utils.DepNameSet.union deps accu_deps)
+         Parsetree_utils.DepNameSet.empty
+         expr_idents
+;;
 
 
 
@@ -283,9 +296,16 @@ let rec param_deps_proof_node ~current_species param_coll_name proof_node =
 (* Exported. *)
 and param_deps_proof ~current_species param_coll_name proof =
   match proof.Parsetree.ast_desc with
-   | Parsetree.Pf_assumed _
-   | Parsetree.Pf_coq _ ->
-       Parsetree_utils.DepNameSet.empty
+   | Parsetree.Pf_assumed (enforced_deps, _)
+   | Parsetree.Pf_coq (enforced_deps, _) ->
+       List.fold_left
+         (fun accu_deps enf_dep ->
+           Parsetree_utils.DepNameSet.union
+             accu_deps
+             (param_deps_enforced_deps_in_proof
+                ~current_species param_coll_name enf_dep))
+         Parsetree_utils.DepNameSet.empty
+         enforced_deps
    | Parsetree.Pf_auto facts ->
        List.fold_left
          (fun accu_deps fact ->
@@ -310,10 +330,9 @@ and param_deps_proof ~current_species param_coll_name proof =
 (* current_species: Parsetree.qualified_species -> Parsetree.vname ->        *)
 (*   Parsetree.expr -> Parsetree_utils.DepNameSet.t                          *)
 (** {b Descr} : Computes the dependencies of an expression on the collection
-              parameter name [param_coll_name]. In other words, detects
-              which methods of [param_coll_name] (that is considered as
-              a collection (i.e "is") parameter), the current expression
-              needs.
+    parameter name [param_coll_name]. In other words, detects which methods
+    of [param_coll_name] (that is considered as a collection (i.e. "is")
+    parameter), the current expression needs.
 
     {b Args}:
       - ~current_species : The name (module + effective name) of the
@@ -334,7 +353,7 @@ let param_deps_expr ~current_species param_coll_name expression =
 
 
 (* current_species: Parsetree.qualified_species -> Parsetree.vname -> *)
-(*   Parsetree.logical_expr -> Parsetree_utils.DepNameSet.t                   *)
+(*   Parsetree.logical_expr -> Parsetree_utils.DepNameSet.t           *)
 let param_deps_logical_expr ~current_species param_coll_name proposition =
   __param_deps_logical_expr ~current_species param_coll_name [] proposition
 ;;

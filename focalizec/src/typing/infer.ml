@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.138 2008-08-27 13:34:39 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.139 2008-09-01 11:53:45 pessaux Exp $ *)
 
 
 
@@ -1524,9 +1524,27 @@ and typecheck_proof ctx env proof =
   (* No relevant type information to insert in the AST node. *)
   proof.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
   match proof.Parsetree.ast_desc with
-  | Parsetree.Pf_assumed _ -> ()
+  | Parsetree.Pf_assumed (enf_deps, _) | Parsetree.Pf_coq (enf_deps, _) ->
+      (begin
+      List.iter
+        (fun enforced_dep ->
+          match enforced_dep.Parsetree.ast_desc with
+           | Parsetree.Ed_definition expr_idents
+           | Parsetree.Ed_property expr_idents ->
+               List.iter
+                 (fun expr_ident ->
+                   let var_scheme =
+                     Env.TypingEnv.find_value
+                       ~loc: expr_ident.Parsetree.ast_loc
+                       ~current_unit: ctx.current_unit expr_ident env in
+                   let ident_ty = Types.specialize var_scheme in
+                   (* Record the ident's type in the AST node. *)
+                   expr_ident.Parsetree.ast_type <-
+                     Parsetree.ANTI_type ident_ty)
+                 expr_idents)
+        enf_deps
+      end)
   | Parsetree.Pf_auto facts -> List.iter (typecheck_fact ctx env) facts
-  | Parsetree.Pf_coq _ -> ()
   | Parsetree.Pf_node nodes -> List.iter (typecheck_node ctx env) nodes
 
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.61 2008-08-28 09:52:26 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.62 2008-09-01 11:53:46 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -855,6 +855,48 @@ let can_be_scoped_as_local_p ctx env ~loc vname =
 
 
 
+let scope_enforced_deps ctx env enforced_deps =
+  let new_desc =
+    (match enforced_deps.Parsetree.ast_desc with
+     | Parsetree.Ed_definition idents ->
+         (begin
+         let scoped_idents =
+           List.map
+             (fun ident ->
+               let basic_vname = unqualified_vname_of_expr_ident ident in
+               let scope_info =
+                 Env.ScopingEnv.find_value
+                   ~loc: ident.Parsetree.ast_loc
+                   ~current_unit: ctx.current_unit ident env in
+               let tmp =
+                 scoped_expr_ident_desc_from_value_binding_info
+                   ~basic_vname scope_info in
+               { ident with Parsetree.ast_desc = tmp })
+             idents in
+         Parsetree.Ed_definition scoped_idents
+         end)
+     | Parsetree.Ed_property idents ->
+         (begin
+         let scoped_idents =
+           List.map
+             (fun ident ->
+               let basic_vname = unqualified_vname_of_expr_ident ident in
+               let scope_info =
+                 Env.ScopingEnv.find_value
+                   ~loc: ident.Parsetree.ast_loc
+                   ~current_unit: ctx.current_unit ident env in
+               let tmp =
+                 scoped_expr_ident_desc_from_value_binding_info
+                   ~basic_vname scope_info in
+               { ident with Parsetree.ast_desc = tmp })
+             idents in
+         Parsetree.Ed_property scoped_idents
+         end)) in
+  { enforced_deps with Parsetree.ast_desc = new_desc }
+;;
+
+
+
 (* *********************************************************************** *)
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.fact -> Parsetree.fact *)
 (* {b Descr} : Scopes a [fact] and return this scoped fact].
@@ -994,8 +1036,14 @@ and scope_proof_node ctx env node =
 and scope_proof ctx env proof =
   let new_desc =
     (match proof.Parsetree.ast_desc with
-     | Parsetree.Pf_assumed _
-     | Parsetree.Pf_coq _ -> proof.Parsetree.ast_desc  (* Nothing to scope. *)
+     | Parsetree.Pf_assumed (enf_deps, reason) ->
+         let scoped_enforced_deps =
+           List.map (scope_enforced_deps ctx env) enf_deps in
+         Parsetree.Pf_assumed (scoped_enforced_deps, reason)
+     | Parsetree.Pf_coq (enf_deps, script) ->
+         let scoped_enforced_deps =
+           List.map (scope_enforced_deps ctx env) enf_deps in
+         Parsetree.Pf_coq (scoped_enforced_deps, script)
      | Parsetree.Pf_auto facts ->
          Parsetree.Pf_auto (List.map (scope_fact ctx env) facts)
      | Parsetree.Pf_node proof_nodes ->
