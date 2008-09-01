@@ -50,6 +50,12 @@ echo "let install_bin_dir = \"$FOC_INSTALL_BIN\" ;;" >> basement/installation.ml
 echo "let install_lib_dir = \"$FOC_INSTALL_LIB\" ;;" >> basement/installation.ml
 echo "(* End of generated source file. *)"
 
+# Temporarily borrow some Coq files from the installation of the old compiler.
+# Must disapear one day...
+ln -s ../../zenon/zenon.v lib/zenon.v
+ln -s ../../zenon/zenon_coqbool.v lib/zenon_coqbool.v
+
+
 # Summary feedback.
 echo -e "Configuration done for:"
 echo -e "  binaries -> $FOC_INSTALL_BIN"

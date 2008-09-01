@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.25 2008-08-31 23:01:49 pessaux Exp $
+# $Id: Makefile,v 1.26 2008-09-01 10:35:41 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -51,8 +51,8 @@ FOCVOS_UNSAFE = $(FOCSRC_UNSAFE:.foc=.vo)
 
 EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
 	weak_structures_externals.cmo \
-	coq_builtins.vo weak_structures_externals.vo wellfounded_externals.vo \
-	random_foc_externals.cmo
+	zenon.vo zenon_coqbool.vo coq_builtins.vo weak_structures_externals.vo \
+	wellfounded_externals.vo random_foc_externals.cmo
 
 
 
