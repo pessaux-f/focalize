@@ -21,7 +21,7 @@ open "iterators" ;;
 
 (** We state that checking to 0 is a unary operation distinct from equality *)
 species Zero_check_set inherits Set_with_zero =
- (* [Usure] : j'ai remplacé la doc par un simple commentaire
+ (**
     in the theory of zero checks we claim that checking to zero
     is a primitive operation.
   *)
@@ -695,14 +695,14 @@ species Ordered_additive_group inherits
    I feel that we have to introduce congruence property over opposite to
    achieve the proof. *)
  (* [rr]: Hum, this looks wrong to me : x-y <= 0 => x <= y *)
- proof of leq_reflexive  =
+ proof of leq_reflexive =
 (*
- decl: opposite_is_opposite;
- def: leq minus is_zero;
+   property opposite_is_opposite
+   definition of leq minus, is_zero
 *)
    assumed {* Because todo *} ;
 (*
-   decl: minus_substracts plus_compat_with_order;
+   definition of minus_substracts, plus_compat_with_order
  {*
  Intro x.
  Unfold abst_leq; Unfold ordered_additive_group__leq.
@@ -724,10 +724,10 @@ species Ordered_additive_group inherits
 
 (* [rr]: again, looks wrong to me : x <= y => x-y <= 0, y <= x => y-x <= 0*)
  proof of leq_antisymmetric =
-(*    decl: minus_substracts plus_compat_with_order; *)
+(*   definition of minus_substracts, plus_compat_with_order *)
    assumed {* Because todo *} ;
 (*
- def: equal;
+ definition of equal
  {*
  Intros.
  Unfold abst_equal; Unfold ordered_set__equal.

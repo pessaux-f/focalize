@@ -384,9 +384,9 @@ species Division_monoid
                 !mult_commutes, !divides_extends_equal, !divides_transitive;
 *)
 
-(* [Unsure] Pour quand on aura letprop. *)
+
   proof of divides_transitive =
-    (* by definition of divides ; *) assumed {* Because need logical let. *} ;
+    by definition of divides ;
 
   let inv (x) = Self!div (Self!one, x) ;
 
