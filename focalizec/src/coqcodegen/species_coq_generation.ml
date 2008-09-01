@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.95 2008-08-31 23:01:49 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.96 2008-09-01 10:27:23 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1304,11 +1304,33 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
   let out_fmter = ctx.Context.scc_out_fmter in
   match proof.Parsetree.ast_desc with
    | Parsetree.Pf_assumed (_, reason) ->
+       (* Now, print the lemma body. Inside, any method of "Self" is
+          abstracted (without lambda-lift) and named "abst_xxx". That's why we
+          use the mode [SMS_abstracted]. *)
+       Format.fprintf out_fmter "(* Theorem's body. *)@\n" ;
+       Format.fprintf out_fmter "@[<2>Theorem %a :@ "
+	 Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
+       Species_record_type_generation.generate_logical_expr
+         ~local_idents: []
+         ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         ctx env aim ;
+       Format.fprintf out_fmter ".@]@\n" ;
        (* Proof is assumed, then simply use "magic_prove". *)
        Format.fprintf out_fmter
          "(* Proof assumed because \"%s\". *)@\n" reason ;
        Format.fprintf out_fmter "apply basics.magic_prove.@\nQed.@\n"
    | Parsetree.Pf_coq (_, script) ->
+       (* Now, print the lemma body. Inside, any method of "Self" is
+          abstracted (without lambda-lift) and named "abst_xxx". That's why we
+          use the mode [SMS_abstracted]. *)
+       Format.fprintf out_fmter "(* Theorem's body. *)@\n" ;
+       Format.fprintf out_fmter "@[<2>Theorem %a :@ "
+       Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
+       Species_record_type_generation.generate_logical_expr
+         ~local_idents: []
+         ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         ctx env aim ;
+       Format.fprintf out_fmter ".@]@\n" ;
        (* Dump verbatim the Coq code. *)
        Format.fprintf out_fmter "%s@\n" script ;
    | Parsetree.Pf_node nodes ->
