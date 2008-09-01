@@ -363,26 +363,26 @@ species Division_monoid
     <1>f qed. ;
 
 
-  proof of divides_reverses_mult = assumed {* Because need logical let. *} ;
-(* [Unsure] Pour quand on aura letprop. *)
-(*
+  proof of divides_reverses_mult =
     <1>1 assume x in Self,
          assume y in Self,
          prove !divides (x, !mult (x, y))
-         <2>1 assume H_0: !equal (x, !zero)
+         <2>1 assume H_0: !equal (x, !zero),
               prove !divides (x, !mult (x, y))
               <3>1 prove !equal (!mult (x, y), !zero)
-                   by <2>:H_0,
-                      !zero_absorbes, !equal_transitive,
+                   by hypothesis H_0
+                   property !zero_absorbes, !equal_transitive,
                       !mult_left_substitution_rule
-              <3>f qed by <3>1 def !divides
-         <2>2 assume H_1: !different(x, !zero)
-              prove !divides(x, !mult(x,y))
-              by <2>:H_1, !same_is_not_different def !divides
-         <2>f qed by <2>1, <2>2, !same_is_not_different
-    <1>f qed by <1>1,
-                !mult_commutes, !divides_extends_equal, !divides_transitive;
-*)
+              <3>f qed by step <3>1 definition of divides
+         <2>2 assume H_1: !different (x, !zero),
+              prove !divides (x, !mult (x, y))
+              by hypothesis H_1 property !same_is_not_different
+                 definition of divides
+         <2>f qed by step <2>1, <2>2 property !same_is_not_different
+    <1>f qed by step <1>1
+                property !mult_commutes, !divides_extends_equal,
+                  !divides_transitive ;
+
 
 
   proof of divides_transitive =

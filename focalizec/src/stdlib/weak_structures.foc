@@ -330,14 +330,14 @@ species Euclidean_semi_ring inherits Factorial_semi_ring =
       then basics#Unfailed (#quot (qr))
       else basics#Failed ;
   proof of exquo_divides = 
-    (** SNIPPED by definition of exquo *)
-    assumed {* Because temporarily unvailable in new version *} ;
+    definition exquo
+    assumed {* To do ? *} ;
   proof of gcd_divides = 
-    (** SNIPPED by euclidean_relation, euclidean_ordering *)
-    assumed {* Because temporarily unvailable in new version *} ;
+    property euclidean_relation, euclidean_ordering
+    assumed {* To do ? *} ;
   proof of divisor_is_multiple_of_gcd =
-    (** SNIPPED by euclidean_relation, euclidean_ordering *)
-    assumed {* Because temporarily unvailable in new version *} ;
+    property euclidean_relation, euclidean_ordering
+    assumed {* To do ? *} ;
 end ;;
 
 (* glurp, thats enough for now, though some people define semi fields *)
