@@ -330,7 +330,7 @@ species Euclidean_semi_ring inherits Factorial_semi_ring =
       then basics#Unfailed (#quot (qr))
       else basics#Failed ;
   proof of exquo_divides = 
-    definition exquo
+    definition of exquo
     assumed {* To do ? *} ;
   proof of gcd_divides = 
     property euclidean_relation, euclidean_ordering
