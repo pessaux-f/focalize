@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.63 2008-09-02 13:07:02 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.64 2008-09-02 13:28:56 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1732,8 +1732,11 @@ let scope_termination_proof_def ctx env termination_proof_def =
 (* ******************************************************************* *)
 let scope_property_def ctx env property_def =
   let property_def_desc = property_def.Parsetree.ast_desc in
+  let env' =
+    extend_env_with_implicit_gen_vars_from_logical_expr
+      env property_def_desc.Parsetree.prd_logical_expr in
   let scoped_logical_expr =
-    scope_logical_expr ctx env property_def_desc.Parsetree.prd_logical_expr in
+    scope_logical_expr ctx env' property_def_desc.Parsetree.prd_logical_expr in
   let scoped_property_def = {
     property_def with
       Parsetree.ast_desc = {

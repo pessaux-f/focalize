@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.139 2008-09-01 11:53:45 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.140 2008-09-02 13:28:55 pessaux Exp $ *)
 
 
 
@@ -1922,11 +1922,21 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                (begin
                Types.reset_deps_on_rep () ;
                Types.begin_definition () ;
-               (* Ensure that Self we be abstract during the property's    *)
-               (* definition type inference by setting [~in_proof: false]. *)
+               (* For the same reason that in external definition, variables
+                  present in a type expression in a property are implicitely
+                  considered as universally quantified. In effect, there no
+                  syntax to make explicit the quantification. Then we first
+                  create a variable mapping from the type expression to avoid
+                  variable from being "unbound". *)
+               let vmapp =
+                 make_implicit_var_mapping_from_logical_expr
+                   property_def.Parsetree.ast_desc.Parsetree.prd_logical_expr in
+               let ctx' = { ctx with tyvars_mapping = vmapp } in
+               (* Ensure that Self we be abstract during the property's
+                  definition type inference by setting [~in_proof: false]. *)
                let ty =
                  typecheck_logical_expr
-                   ~in_proof: false ctx env
+                   ~in_proof: false ctx' env
                    property_def.Parsetree.ast_desc.Parsetree.prd_logical_expr in
                Types.end_definition () ;
                (* Check for a decl dependency on "rep". *)
@@ -1941,8 +1951,8 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                  Env.TypingEnv.add_value
                    property_def.Parsetree.ast_desc.Parsetree.prd_name
                    scheme env in
-               (* Recover if a def-dependency or a decl-dependency *)
-               (* on "rep" was/were found for this binding.        *)
+               (* Recover if a def-dependency or a decl-dependency on "rep"
+                  was/were found for this binding. *)
                let dep_on_rep = {
                  Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
                  Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep ()
