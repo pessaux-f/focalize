@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.96 2008-09-01 10:27:23 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.97 2008-09-02 14:22:06 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1309,7 +1309,7 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
           use the mode [SMS_abstracted]. *)
        Format.fprintf out_fmter "(* Theorem's body. *)@\n" ;
        Format.fprintf out_fmter "@[<2>Theorem %a :@ "
-	 Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
+         Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
        Species_record_type_generation.generate_logical_expr
          ~local_idents: []
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
@@ -1867,7 +1867,7 @@ let generate_methods ctx print_ctx env generated_fields = function
       Misc_common.CSF_let compiled_field
   | Abstractions.FAI_let_rec l ->
       generate_recursive_let_definition ctx print_ctx env generated_fields l
-  | Abstractions.FAI_theorem ((from, name, sch, logical_expr, pr, _),
+  | Abstractions.FAI_theorem ((from, name, _, logical_expr, pr, _),
                               abstraction_info) ->
       let all_deps_from_params =
         Abstractions.merge_abstraction_infos
@@ -1885,13 +1885,14 @@ let generate_methods ctx print_ctx env generated_fields = function
       let compiled_field = {
         Misc_common.cfm_from_species = from ;
         Misc_common.cfm_method_name = name ;
-        Misc_common.cfm_method_scheme = sch ;
+        Misc_common.cfm_method_scheme =
+          Types.trivial_scheme (Types.type_prop ()) ;
         Misc_common.cfm_used_species_parameter_tys =
           abstraction_info.Abstractions.ai_used_species_parameter_tys ;
         Misc_common.cfm_dependencies_from_parameters = all_deps_from_params ;
         Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
       Misc_common.CSF_theorem compiled_field
-  | Abstractions.FAI_property ((from, name, sch, _, _), abstraction_info) ->
+  | Abstractions.FAI_property ((from, name, _, _, _), abstraction_info) ->
       (* "Property"s are discarded. However we compute their dependencies. *)
       let all_deps_from_params =
         Abstractions.merge_abstraction_infos
@@ -1903,7 +1904,8 @@ let generate_methods ctx print_ctx env generated_fields = function
       let compiled_field = {
         Misc_common.cfm_from_species = from ;
         Misc_common.cfm_method_name = name ;
-        Misc_common.cfm_method_scheme = sch ;
+        Misc_common.cfm_method_scheme =
+          Types.trivial_scheme (Types.type_prop ()) ;
         Misc_common.cfm_used_species_parameter_tys =
           abstraction_info.Abstractions.ai_used_species_parameter_tys ;
         Misc_common.cfm_dependencies_from_parameters = all_deps_from_params ;
@@ -3145,4 +3147,33 @@ let collection_compile env ~current_unit out_fmter collection_def
        to make a collection "implementing" a collection ! *)
     assert false
   end)
+;;
+
+
+
+let toplevel_theorem_compile ctx env theorem_def =
+  let theorem_desc = theorem_def.Parsetree.ast_desc in
+  (* Just a bit of debug. *)
+  if Configuration.get_verbose () then
+    Format.eprintf "Generating Coq code for toplevel theorem %a@."
+      Sourcify.pp_vname theorem_desc.Parsetree.th_name ;
+  (* Make a print context with an empty mapping since we are at toplevel. *)
+  let print_ctx = {
+    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
+    Types.cpc_current_species = None ;
+    Types.cpc_collections_carrier_mapping =
+      ctx.Context.scc_collections_carrier_mapping } in
+  (* Compute the abstraction info for the theorem. In fact this means only
+     computing its def/decl-dependencies on other theorems or properties. *)
+  let abstraction_info =
+    Abstractions.compute_abstractions_for_toplevel_theorem ctx theorem_def in
+  (* We create a fake [Env.from_history]. *)
+  let from = {
+    Env.fh_initial_apparition =
+      (ctx.Context.scc_current_unit, (Parsetree.Vlident "*Toplevel*")) ;
+     Env.fh_inherited_along = [] } in
+  generate_defined_theorem
+    ctx print_ctx env abstraction_info.Abstractions.ai_min_coq_env [] [] []
+    from theorem_desc.Parsetree.th_name theorem_desc.Parsetree.th_stmt
+    theorem_desc.Parsetree.th_proof
 ;;

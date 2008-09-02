@@ -58,12 +58,12 @@ module TypeInformation :
        Parsetree.logical_flag)
 
     type theorem_field_info =
-      (from_history * Parsetree.vname * Types.type_scheme *
+      (from_history * Parsetree.vname * int *
        Parsetree.logical_expr * Parsetree.proof * dependency_on_rep)
 
     type property_field_info =
-      (from_history * Parsetree.vname * Types.type_scheme *
-       Parsetree.logical_expr * dependency_on_rep)
+      (from_history * Parsetree.vname * int * Parsetree.logical_expr *
+       dependency_on_rep)
 
     type species_param =
       | SPAR_in of

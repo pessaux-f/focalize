@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.mli,v 1.10 2008-06-05 15:26:24 pessaux Exp $ *)
+(* $Id: abstractions.mli,v 1.11 2008-09-02 14:22:06 pessaux Exp $ *)
 
 type environment_kind =
   | EK_ml of Env.MlGenEnv.t
@@ -50,3 +50,6 @@ type field_abstraction_info =
 val compute_abstractions_for_fields :
   with_def_deps : bool -> environment_kind -> Context.species_compil_context ->
     Env.TypeInformation.species_field list -> field_abstraction_info list
+
+val compute_abstractions_for_toplevel_theorem :
+  Context.species_compil_context -> Parsetree.theorem_def -> abstraction_info

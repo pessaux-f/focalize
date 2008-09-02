@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.21 2008-04-29 15:26:13 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.22 2008-09-02 14:22:06 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -572,52 +572,16 @@ let subst_species_field ~current_unit c1 c2 = function
       Env.TypeInformation.SF_let_rec l'
       end)
   | Env.TypeInformation.SF_theorem
-      (from, vname, scheme, body, proof, deps_rep) ->
+      (from, vname, num_ty_vars, body, proof, deps_rep) ->
       (begin
       (* No substitution inside the proof. *)
-      Types.begin_definition () ;
-      let ty = Types.specialize scheme in
-      let ty' =
-        (match c1 with
-         | SRCK_coll c -> Types.subst_type_simple c c2 ty
-         | SRCK_self ->
-             begin
-             match c2 with
-              | Types.SBRCK_self ->
-                  (* If the substitution is to replace by Self, then leave *)
-                  (* the Self occurrences in the type, only copy it.       *)
-                  Types.copy_type_simple_but_variables ~and_abstract: None ty
-              | Types.SBRCK_coll c2_ty ->
-                  Types.copy_type_simple_but_variables
-                    ~and_abstract: (Some c2_ty) ty
-             end) in
-      Types.end_definition () ;
-      let scheme' = Types.generalize ty' in
       let body' = subst_logical_expr ~current_unit c1 c2 body in
       Env.TypeInformation.SF_theorem
-        (from, vname, scheme', body', proof, deps_rep)
+        (from, vname, num_ty_vars, body', proof, deps_rep)
       end)
-  | Env.TypeInformation.SF_property (from, vname, scheme, body, deps_rep) ->
+  | Env.TypeInformation.SF_property (from, vname, num_tyvars, body, deps_rep) ->
       (begin
-      Types.begin_definition () ;
-      let ty = Types.specialize scheme in
-      let ty' =
-        (match c1 with
-         | SRCK_coll c -> Types.subst_type_simple c c2 ty
-         | SRCK_self ->
-             begin
-             match c2 with
-              | Types.SBRCK_self ->
-                  (* If the substitution is to replace by Self, then leave *)
-                  (* the Self occurrences in the type, only copy it.       *)
-                  Types.copy_type_simple_but_variables ~and_abstract: None ty
-              | Types.SBRCK_coll c2_ty ->
-                  Types.copy_type_simple_but_variables
-                    ~and_abstract: (Some c2_ty) ty
-             end) in
-      Types.end_definition () ;
-      let scheme' = Types.generalize ty' in
       let body' = subst_logical_expr ~current_unit c1 c2 body in
-      Env.TypeInformation.SF_property (from, vname, scheme', body', deps_rep)
+      Env.TypeInformation.SF_property (from, vname, num_tyvars, body', deps_rep)
       end)
 ;;

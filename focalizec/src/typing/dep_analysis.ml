@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.45 2008-09-01 11:53:45 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.46 2008-09-02 14:22:06 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -535,10 +535,12 @@ let where field_name fields =
     {b Rem} : Not exported outside this module.                        *)
 (* ******************************************************************* *)
 let names_set_of_field = function
+  | Env.TypeInformation.SF_property (_, vname, _, _, _)
+  | Env.TypeInformation.SF_theorem (_, vname, _, _, _, _) ->
+      let ty = Types.type_prop () in
+      Parsetree_utils.DepNameSet.singleton (vname, ty)
   | Env.TypeInformation.SF_sig (_, vname, sch)
-  | Env.TypeInformation.SF_let (_, vname, _, sch, _, _, _)
-  | Env.TypeInformation.SF_theorem (_, vname, sch, _, _, _)
-  | Env.TypeInformation.SF_property (_, vname, sch, _, _)  ->
+  | Env.TypeInformation.SF_let (_, vname, _, sch, _, _, _) ->
       let ty = Types.specialize sch in
       Parsetree_utils.DepNameSet.singleton (vname, ty)
   | Env.TypeInformation.SF_let_rec l ->
@@ -568,11 +570,14 @@ let ordered_names_list_of_fields fields =
   List.fold_right
     (fun field accu ->
       match field with
+       | Env.TypeInformation.SF_property (_, n, _, _, _)
+       | Env.TypeInformation.SF_theorem (_, n, _, _, _, _) ->
+           let ty = Types.type_prop () in
+           (n, ty) :: accu
        | Env.TypeInformation.SF_sig (_, n, sch)
-       | Env.TypeInformation.SF_let (_, n, _, sch, _, _, _)
-       | Env.TypeInformation.SF_theorem (_, n, sch, _, _, _)
-       | Env.TypeInformation.SF_property (_, n, sch, _, _) ->
-           let ty = Types.specialize sch in (n, ty) :: accu
+       | Env.TypeInformation.SF_let (_, n, _, sch, _, _, _) ->
+           let ty = Types.specialize sch in
+           (n, ty) :: accu
        | Env.TypeInformation.SF_let_rec l ->
            List.fold_right
              (fun (_, n, _, sch, _, _, _) accu' ->
@@ -980,11 +985,11 @@ let build_dependencies_graph_for_fields ~current_species fields =
               let ty = Types.specialize sch in
               local_build_for_one_let n ty b deps_on_rep)
             l
-      | Env.TypeInformation.SF_theorem (_, n, sch, prop, body, deps_on_rep) ->
-          let ty = Types.specialize sch in
+      | Env.TypeInformation.SF_theorem (_, n, _, prop, body, deps_on_rep) ->
+          let ty = Types.type_prop () in
           local_build_for_one_theo_property n ty prop (Some body) deps_on_rep
-      | Env.TypeInformation.SF_property (_, n, sch, prop, deps_on_rep) ->
-          let ty = Types.specialize sch in
+      | Env.TypeInformation.SF_property (_, n, _, prop, deps_on_rep) ->
+          let ty = Types.type_prop () in
           local_build_for_one_theo_property n ty prop None deps_on_rep)
     fields ;
   (* Return the list of nodes of the graph. *)
@@ -1383,7 +1388,7 @@ let erase_field field =
               Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
           Env.TypeInformation.SF_sig (from, n, sch))
         l
-  | Env.TypeInformation.SF_theorem (from, n, sch, prop, _, deps_rep) ->
+  | Env.TypeInformation.SF_theorem (from, n, num_ty_vars, prop, _, deps_rep) ->
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
           Sourcify.pp_vname n
@@ -1393,7 +1398,7 @@ let erase_field field =
 (* [Unsure] Recalculer ces dépendances ? Je pense que le plus safe serait
    de ne pas les changer ! *)
       let deps_rep' = { deps_rep with Env.TypeInformation.dor_def = false } in
-      [Env.TypeInformation.SF_property (from, n, sch, prop, deps_rep')]
+      [Env.TypeInformation.SF_property (from, n, num_ty_vars, prop, deps_rep')]
   | _ -> [field]                       (* Everything else is unchanged. *)
 ;;
 

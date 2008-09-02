@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.104 2008-09-02 13:07:02 pessaux Exp $ *)
+(* $Id: env.ml,v 1.105 2008-09-02 14:22:06 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -387,7 +387,9 @@ module TypeInformation = struct
     ((** Where the theorem comes from (and inheritance history). *)
      from_history *
      Parsetree.vname *         (** The theorem's name. *)
-     Types.type_scheme *       (** The theorem's type scheme. *)
+     int *                     (** The number of type variables found in the
+                                   "forall" and "exists" in the theorem's
+                                   logical expression. *)
      Parsetree.logical_expr *  (** The theorem's body. *)
      Parsetree.proof *         (** The theorem's proof. *)
      (** Tells if the theorem has dependencies on the carrier ("rep"). *)
@@ -399,7 +401,9 @@ module TypeInformation = struct
     ((** Where the property comes from (and inheritance history). *)
      from_history *
      Parsetree.vname *         (** The property's name. *)
-     Types.type_scheme *       (** The property's type scheme. *)
+     int *                     (** The number of type variables found in the
+                                   "forall" and "exists" in the property's
+                                   logical expression. *)
      Parsetree.logical_expr *  (** The property's body. *)
      (** Tells if the property has dependencies on the carrier ("rep"). *)
      dependency_on_rep)
@@ -1422,21 +1426,21 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
     match ident_ident.Parsetree.ast_desc with
      | Parsetree.EI_local vname ->
          (* No explicit scoping information was provided, hence opened modules
-	    bindings are acceptable. *)
+            bindings are acceptable. *)
          find_value_vname ~loc ~allow_opened: true vname env
      | Parsetree.EI_global qvname ->
          let (opt_scope, vname) = opt_scope_vname qvname in
          let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
          (* Check if the lookup can return something coming from an opened
-	    module. *)
+            module. *)
          let allow_opened = allow_opened_p current_unit opt_scope in
          find_value_vname ~loc ~allow_opened vname env'
      | Parsetree.EI_method (None, vname) ->
          (* No collection scope. Then the searched ident must belong to the
-	    inheritance of Self. First, this means that opened stuff is
-	    forbidden. Next, because the [values] bucket is so that inherited
-	    methods and our methods belong to it, we just have to search for
-	    the [vname] inside the current environment. *)
+            inheritance of Self. First, this means that opened stuff is
+            forbidden. Next, because the [values] bucket is so that inherited
+            methods and our methods belong to it, we just have to search for
+            the [vname] inside the current environment. *)
          find_value_vname ~loc ~allow_opened: false vname env
      | Parsetree.EI_method
          (Some (Parsetree.Vname (Parsetree.Vuident "Self")), vname) ->
@@ -1449,13 +1453,13 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
             | Parsetree.Qualified (modname, coll_vname) ->
                 Some modname, coll_vname in
          (* Recover the environment in where to search,according to if the
-	    species is qualified by a module name. In this environment, all the
-	    imported bindings are tagged [BO_absolute]. *)
+            species is qualified by a module name. In this environment, all the
+            imported bindings are tagged [BO_absolute]. *)
          let env' =
            EMAccess.find_module
              ~loc ~current_unit opt_module_qual env in
          (* Check if the lookup can return something coming from an opened
-	    module. *)
+            module. *)
          let allow_opened =
            (match opt_module_qual with
               None -> true | Some fname -> current_unit = fname) in
@@ -1476,7 +1480,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
             | BO_opened (file, meths_i) ->
                 (meths_i, (Parsetree.Qualified (file, coll_vname))) in
          (* We must now look inside collections and species for the
-	    [coll_vname] in order to recover its methods. *)
+            [coll_vname] in order to recover its methods. *)
          let available_meths =
            EMAccess.make_value_env_from_species_methods
              real_full_coll_name methods_info in
@@ -1531,7 +1535,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
          let (opt_scope, vname) = opt_scope_vname qvname in
          let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
          (* Check if the lookup can return something coming from an opened
-	    module. *)
+            module. *)
          let allow_opened = allow_opened_p current_unit opt_scope in
          find_constructor_vname ~loc ~allow_opened vname env'
 
@@ -1579,7 +1583,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
          let (opt_scope, vname) = opt_scope_vname qvname in
          let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
          (* Check if the lookup can return something coming from an opened
-	    module. *)
+            module. *)
          let allow_opened = allow_opened_p current_unit opt_scope in
          find_label_vname ~loc ~allow_opened vname env'
 
@@ -1745,10 +1749,14 @@ module TypingEMAccess = struct
       List.fold_left
         (fun accu field ->
           match field with
+           | TypeInformation.SF_property (_, v, _, _, _)
+           | TypeInformation.SF_theorem (_, v, _, _, _, _) ->
+               (* Scheme is trivially "Prop". Donc need to bother about the
+                  binding level, this scheme will never be polymorphic. *)
+               let s = Types.generalize (Types.type_prop ()) in
+               [(v, (BO_absolute s))] @ accu
            | TypeInformation.SF_sig (_, v, s)
-           | TypeInformation.SF_let (_, v, _, s, _, _, _)
-           | TypeInformation.SF_theorem (_, v, s, _, _, _)
-           | TypeInformation.SF_property (_, v, s, _, _) ->
+           | TypeInformation.SF_let (_, v, _, s, _, _, _) ->
                [(v, (BO_absolute s))] @ accu
            | TypeInformation.SF_let_rec l ->
                let l' =
@@ -1815,7 +1823,7 @@ module CoqGenEMAccess = struct
     (* parameters that woud come from ... polymorphism.                 *)
     let values_bucket =
       List.map
-	(fun { mi_name = field_name } -> (field_name, (BO_absolute 0)))
+        (fun { mi_name = field_name } -> (field_name, (BO_absolute 0)))
         meths_info in
     { constructors = [] ; labels = [] ; types = [] ; values = values_bucket ;
       species = [] }

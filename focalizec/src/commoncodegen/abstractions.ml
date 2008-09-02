@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.26 2008-08-28 10:33:11 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.27 2008-09-02 14:22:06 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -48,7 +48,7 @@ type environment_kind =
 
 
 
-(* For debugging purpose only. *)
+(* For debugging purpose only.
 let debug_print_dependencies_from_parameters l =
   List.iter
     (fun (species_param, methods) ->
@@ -64,6 +64,7 @@ let debug_print_dependencies_from_parameters l =
       Format.eprintf "@.")
     l
 ;;
+*)
 
 
 
@@ -141,7 +142,6 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
   (* By side effect, we remind the species types appearing in our type. *)
   let params_appearing_in_types =
     ref (Types.get_species_types_in_type my_type) in
-
   (* By side effect, we remind the species types appearing in the species
      parameters methods' types we depend on. *)
   List.iter
@@ -206,6 +206,30 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
    dependencies_from_params_in_bodies,
    decl_children,
    def_children)
+;;
+
+
+
+(** We are at toplevel, not in the context of a species, so there is no way
+    to have dependencies via species parameters. Hence, we just need to matter
+    about the other toplevel theorems and properties we depend on. *)
+let compute_lambda_liftings_for_toplevel_theorem dependency_graph_nodes name =
+  (* Get all the properties or theorems we directly decl-depend on. Get the
+     properties or theorems we directly def-depend. *)
+  let (decl_children, def_children) =
+    (try
+      let my_node =
+        List.find
+          (fun { Dep_analysis.nn_name = n } -> n = name)
+          dependency_graph_nodes in
+      (* Only keep "decl-dependencies" . *)
+      List.partition
+        (function
+          | (_, Dep_analysis.DK_decl _) -> true
+          | (_, Dep_analysis.DK_def) -> false)
+        my_node.Dep_analysis.nn_children
+    with Not_found -> ([], [])  (* No children at all. *)) in
+  (decl_children, def_children)
 ;;
 
 
@@ -770,7 +794,8 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                  l in
              (FAI_let_rec deps_infos) :: abstractions_accu
          | Env.TypeInformation.SF_theorem
-             ((_, name, sch, logical_expr, proof, _) as ti) ->
+             ((_, name, _, logical_expr, proof, _) as ti) ->
+               let sch = Types.trivial_scheme (Types.type_prop ()) in
                (* ATTENTION, the [dependencies_from_params_in_bodies] is not *)
                (* the complete set of dependencies. It must be completed to  *)
                (* fully represent the definition 72 page 153 from Virgile    *)
@@ -812,7 +837,8 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                  ai_min_coq_env = min_coq_env } in
                (FAI_theorem (ti, abstr_info)) :: abstractions_accu
          | Env.TypeInformation.SF_property
-             ((_, name, sch, logical_expr, _) as pi) ->
+             ((_, name, _, logical_expr, _) as pi) ->
+               let sch = Types.trivial_scheme (Types.type_prop ()) in
                (* ATTENTION, the [dependencies_from_params_in_bodies] is not *)
                (* the complete set of dependencies. It must be completed to  *)
                (* fully represent the definition 72 page 153 from Virgile    *)
@@ -858,4 +884,27 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
   (* Finally, put the list of abstractions in the right order, i.e. *)
   (* in the order of apparition of the fields in the species.       *)
   List.rev reversed_abstractions
+;;
+
+
+
+let compute_abstractions_for_toplevel_theorem ctx theorem =
+  let th_desc = theorem.Parsetree.ast_desc in
+  let (decl_children, def_children) =
+    compute_lambda_liftings_for_toplevel_theorem
+      ctx.Context.scc_dependency_graph_nodes th_desc.Parsetree.th_name in
+  (* Compute the visible universe of the theorem. *)
+  let universe =
+    VisUniverse.visible_universe
+      ~with_def_deps: true
+      ctx.Context.scc_dependency_graph_nodes decl_children def_children in
+  (* Now, its minimal Coq typing environment. *)
+  let min_coq_env = MinEnv.minimal_typing_environment universe [] in
+  let abstr_info = {
+    ai_used_species_parameter_tys = [] ;
+    ai_dependencies_from_params_via_body = [] ;
+    ai_dependencies_from_params_via_type = [] ;
+    ai_dependencies_from_params_via_completion = [] ;
+    ai_min_coq_env = min_coq_env } in
+  abstr_info
 ;;

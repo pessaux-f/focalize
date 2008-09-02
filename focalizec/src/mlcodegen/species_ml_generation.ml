@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.77 2008-08-13 15:55:17 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.78 2008-09-02 14:22:06 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -666,7 +666,7 @@ let generate_methods ctx env field =
                  Some (Misc_common.CSF_let_rec (first_compiled :: rem_compiled))
             end)
        end)
-   | Abstractions.FAI_theorem ((from, name, sch, _, _, _), _) ->
+   | Abstractions.FAI_theorem ((from, name, _, _, _, _), _) ->
        (* Theorems are purely discarded in the Ocaml translation. *)
        if Configuration.get_verbose () then
          Format.eprintf
@@ -675,13 +675,14 @@ let generate_methods ctx env field =
        let compiled_field = {
          Misc_common.cfm_from_species = from ;
          Misc_common.cfm_method_name = name ;
-         Misc_common.cfm_method_scheme = sch ;
+         Misc_common.cfm_method_scheme =
+           Types.trivial_scheme (Types.type_prop ()) ;
          (* Never used for OCaml. *)
          Misc_common.cfm_used_species_parameter_tys = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_coq_min_typ_env_names = [] } in
        Some (Misc_common.CSF_theorem compiled_field)
-   | Abstractions.FAI_property ((from, name, sch, _, _), _) ->
+   | Abstractions.FAI_property ((from, name, _, _, _), _) ->
        (* Properties are purely discarded in the Ocaml translation. *)
        if Configuration.get_verbose () then
          Format.eprintf
@@ -690,7 +691,8 @@ let generate_methods ctx env field =
        let compiled_field = {
          Misc_common.cfm_from_species = from ;
          Misc_common.cfm_method_name = name ;
-         Misc_common.cfm_method_scheme = sch ;
+         Misc_common.cfm_method_scheme =
+           Types.trivial_scheme (Types.type_prop ()) ;
          (* Never used for OCaml. *)
          Misc_common.cfm_used_species_parameter_tys = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.140 2008-09-02 13:28:55 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.141 2008-09-02 14:22:06 pessaux Exp $ *)
 
 
 
@@ -1437,7 +1437,7 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
              env vnames in
          (* Fix the type scheme in the [t_expr]. *)
          t_expr.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
-         (* And go on with the ody... *)
+         (* And go on with the body... *)
          typecheck_logical_expr ~in_proof ctx env' pr
      | Parsetree.Pr_imply (pr1, pr2)
      | Parsetree.Pr_or (pr1, pr2)
@@ -1614,9 +1614,12 @@ and typecheck_statement ctx env statement =
 (* typing_context -> Env.TypingEnv.t -> Parsetree.theorem_def ->          *)
 (*  Types.type_simple                                                     *)
 (** {b Descr } : Typechecks a theorem definition, records its type inside
-            the AST node and returns this type.
-            Note that here we already are in an incremented binding
-            level. Hence it is not useful to call [begin/end definition].
+    the AST node and returns this type.
+    Note that here we already are in an incremented binding level. Hence
+    it is not useful to call [begin/end definition].
+    We also return the number of type variables found in the "forall" and
+    "exists". They will lead to extra "forall ... : Set" in front of the
+    theorem's logical expression.
 
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
@@ -1642,8 +1645,9 @@ and typecheck_theorem_def ctx env theorem_def =
   theorem_def.Parsetree.ast_type <- Parsetree.ANTI_type ty ;
   (* Now, typecheck the proof to fix types inside by side effet. *)
   typecheck_proof ctx' env theorem_def.Parsetree.ast_desc.Parsetree.th_proof ;
-  (* And return the type pf the stamement as type of the theorem.*)
-  ty
+  (* And return the type of the stamement as type of the theorem. Also
+      return the nimber of type variables created. *)
+  (ty, (List.length vmapp))
 
 
 
@@ -1931,8 +1935,12 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                let vmapp =
                  make_implicit_var_mapping_from_logical_expr
                    property_def.Parsetree.ast_desc.Parsetree.prd_logical_expr in
+               (* Get the number of type variables found in the "forall" and
+                  "exists". They will lead to extra "forall ... : Set" in
+                  front of the property's logical expression. *)
+               let num_ty_vars = List.length vmapp in
                let ctx' = { ctx with tyvars_mapping = vmapp } in
-               (* Ensure that Self we be abstract during the property's
+               (* We ensure that Self will be abstract during the property's
                   definition type inference by setting [~in_proof: false]. *)
                let ty =
                  typecheck_logical_expr
@@ -1961,7 +1969,7 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                  Env.TypeInformation.SF_property
                    ((Env.intitial_inheritance_history current_species),
                     property_def.Parsetree.ast_desc.Parsetree.prd_name,
-                    scheme,
+                    num_ty_vars,
                     property_def.Parsetree.ast_desc.Parsetree.prd_logical_expr,
                     dep_on_rep) in
                (* Record the property's scheme in the AST node. *)
@@ -1974,14 +1982,20 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                (begin
                Types.reset_deps_on_rep () ;
                Types.begin_definition () ;
-               let ty = typecheck_theorem_def ctx env theorem_def in
+               (* Get the theorem's type (trivially should be Prop) and the
+                  number of type variables found in the "forall" and "exists".
+                  They will lead to extra "forall ... : Set" in front of the
+                  theorem's logical expression. *)
+               let (ty, num_ty_vars) =
+                 typecheck_theorem_def ctx env theorem_def in
                Types.end_definition () ;
                (* Check for a decl dependency on "rep". *)
                Types.check_for_decl_dep_on_self ty ;
-               (* Extend the environment. *)
-               (* Be careful : methods are not polymorphics (c.f. Virgile   *)
-               (* Prevosto's Phd section 3.3, page 24). No generelization ! *)
+               (* Be careful : methods are not polymorphics (c.f. Virgile
+                  Prevosto's Phd section 3.3, page 24). No generelization !
+                  Anyway, the type of a theorem IS Prop. *)
                let scheme = Types.trivial_scheme ty in
+               (* Extend the environment. *)
                let env' =
                  Env.TypingEnv.add_value
                   theorem_def.Parsetree.ast_desc.Parsetree.th_name scheme env in
@@ -1995,7 +2009,7 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                  Env.TypeInformation.SF_theorem
                   ((Env.intitial_inheritance_history current_species),
                    theorem_def.Parsetree.ast_desc.Parsetree.th_name,
-                   scheme,
+                   num_ty_vars,
                    theorem_def.Parsetree.ast_desc.Parsetree.th_stmt,
                    theorem_def.Parsetree.ast_desc.Parsetree.th_proof,
                    dep_on_rep) in
@@ -2239,22 +2253,16 @@ let abstraction ~current_unit cname fields =
                     (from, vname, (Types.generalize ty')))
                  l
            | Env.TypeInformation.SF_theorem
-               (from, vname, scheme, logical_expr, _, deps_rep)
+               (from, vname, num_ty_vars, logical_expr, _, deps_rep)
            | Env.TypeInformation.SF_property
-               (from, vname, scheme, logical_expr, deps_rep) ->
-               Types.begin_definition () ;
-               let ty = Types.specialize scheme in
-               let ty' =
-                 Types.copy_type_simple_but_variables
-                   ~and_abstract: (Some cname) ty in
-               Types.end_definition () ;
+               (from, vname, num_ty_vars, logical_expr, deps_rep) ->
                (* We substitute Self by [cname] in the logical_expr. *)
                let abstracted_logical_expr =
                  SubstColl.subst_logical_expr ~current_unit SubstColl.SRCK_self
                    (Types.SBRCK_coll cname) logical_expr in
                [Env.TypeInformation.SF_property
-                  (from, vname, (Types.generalize ty'), abstracted_logical_expr,
-                   deps_rep)]) in
+                  (from, vname, num_ty_vars, abstracted_logical_expr,
+                  deps_rep)]) in
         h' @ rec_abstract q in
   (* Do the job now... *)
   rec_abstract fields
@@ -2288,8 +2296,10 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
         | Env.TypeInformation.SF_let_rec l ->
             let l' = List.map (fun (_, v, _, sc, _, _, _) -> (v, sc)) l in
             l' @ accu
-        | Env.TypeInformation.SF_theorem (_, v, sc, _, _, _)
-        | Env.TypeInformation.SF_property (_, v, sc, _, _) -> (v, sc) :: accu)
+        | Env.TypeInformation.SF_theorem (_, v, _, _, _, _)
+        | Env.TypeInformation.SF_property (_, v, _, _, _) ->
+            let sc = Types.trivial_scheme (Types.type_prop ()) in
+            (v, sc) :: accu)
       fields [] in
   let flat_s1 = local_flat_fields s1 in
   let flat_s2 = local_flat_fields s2 in
@@ -2878,10 +2888,12 @@ let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
                    accu_env
                    l in
                (e, accu_ctx)
-             | Env.TypeInformation.SF_theorem  (_, theo_name, t_sch, _, _, _) ->
+             | Env.TypeInformation.SF_theorem  (_, theo_name, _, _, _, _) ->
+                 let t_sch = Types.trivial_scheme (Types.type_prop ()) in
                  let e = Env.TypingEnv.add_value theo_name t_sch accu_env in
                  (e, accu_ctx)
-             | Env.TypeInformation.SF_property (_, prop_name, prop_sch, _, _) ->
+             | Env.TypeInformation.SF_property (_, prop_name, _, _, _) ->
+                 let prop_sch = Types.trivial_scheme (Types.type_prop ()) in
                  let e = Env.TypingEnv.add_value prop_name prop_sch accu_env in
                  (e, accu_ctx))
           (current_env, current_ctx)
@@ -3534,22 +3546,17 @@ let fields_fusion ~loc ctx phi1 phi2 =
    | (Env.TypeInformation.SF_let_rec rec_meths1,
       Env.TypeInformation.SF_let_rec rec_meths2) ->
         fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2
-   | ((Env.TypeInformation.SF_property (_, n1, sc1, logical_expr1, _)),
-      (Env.TypeInformation.SF_property (_, n2, sc2, logical_expr2, _)))
-   | ((Env.TypeInformation.SF_property (_, n1, sc1, logical_expr1, _)),
-      (Env.TypeInformation.SF_theorem (_, n2, sc2, logical_expr2, _, _)))
-   | ((Env.TypeInformation.SF_theorem (_, n1, sc1, logical_expr1, _, _)),
-      (Env.TypeInformation.SF_theorem (_, n2, sc2, logical_expr2, _, _))) ->
+   | ((Env.TypeInformation.SF_property (_, n1, ntyvar1, logical_expr1, _)),
+      (Env.TypeInformation.SF_property (_, n2, ntyvar2, logical_expr2, _)))
+   | ((Env.TypeInformation.SF_property (_, n1, ntyvar1, logical_expr1, _)),
+      (Env.TypeInformation.SF_theorem (_, n2, ntyvar2, logical_expr2, _, _)))
+   | ((Env.TypeInformation.SF_theorem (_, n1, ntyvar1, logical_expr1, _, _)),
+      (Env.TypeInformation.SF_theorem (_, n2, ntyvar2, logical_expr2, _, _))) ->
         (* First, ensure that the names are the same. *)
         if n1 = n2 then
           (begin
-            (* Now ensure that types are the same. *)
-            let ty1 = Types.specialize sc1 in
-            let ty2 = Types.specialize sc2 in
-            (try
-              ignore
-                (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2)
-             with _ -> assert false) ;
+            (* Now ensure that there is the same number ot type variables. *)
+            assert (ntyvar1 = ntyvar2) ;
             (* Finally, ensure that the propositions are the same. *)
             if Ast_equal.logical_expr_equal_p logical_expr1 logical_expr2 then
               (* Return the theorem in case of property / theorem and return
@@ -3558,18 +3565,13 @@ let fields_fusion ~loc ctx phi1 phi2 =
             else assert false
            end)
         else assert false
-   | ((Env.TypeInformation.SF_theorem (_, n1, sc1, logical_expr1, _, _)),
-      (Env.TypeInformation.SF_property (_, n2, sc2, logical_expr2, _))) ->
+   | ((Env.TypeInformation.SF_theorem (_, n1, ntyvar1, logical_expr1, _, _)),
+      (Env.TypeInformation.SF_property (_, n2, ntyvar2, logical_expr2, _))) ->
         (* First, ensure that the names are the same. *)
         if n1 = n2 then
           (begin
-            (* Now ensure that types are the same. *)
-            let ty1 = Types.specialize sc1 in
-            let ty2 = Types.specialize sc2 in
-            (try
-              ignore
-                (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2)
-             with _ -> assert false);
+            (* Now ensure that there is the same number ot type variables. *)
+            assert (ntyvar1 = ntyvar2) ;
             (* Finally, ensure that the propositions are the same. *)
             if Ast_equal.logical_expr_equal_p logical_expr1 logical_expr2
             then phi1 (* Return the theorem. *)
@@ -3863,10 +3865,13 @@ let ensure_collection_completely_defined ctx fields =
     {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
 let detect_polymorphic_method ~loc = function
+  | Env.TypeInformation.SF_theorem (_, _, _, _, _, _)
+  | Env.TypeInformation.SF_property (_, _, _, _, _) ->
+      (* Type of theorems and properties is always trivially "Prop". So it is
+         never ploymorphic. *)
+      ()
   | Env.TypeInformation.SF_sig (_, name, sch)
-  | Env.TypeInformation.SF_let (_, name, _, sch, _, _, _)
-  | Env.TypeInformation.SF_theorem (_, name, sch, _, _, _)
-  | Env.TypeInformation.SF_property (_, name, sch, _, _) ->
+  | Env.TypeInformation.SF_let (_, name, _, sch, _, _, _) ->
       if Types.scheme_contains_variable_p sch then
         raise (Scheme_contains_type_vars (name, sch, loc))
   | Env.TypeInformation.SF_let_rec defs ->
@@ -3916,7 +3921,10 @@ type please_compile_me =
          (Dep_analysis.name_node list))
   | PCM_type of (Parsetree.vname * Env.TypeInformation.type_description)
   | PCM_let_def of (Parsetree.let_def * (Types.type_scheme list))
-  | PCM_theorem of Parsetree.theorem_def
+  | PCM_theorem of
+      (Parsetree.theorem_def *
+       int) (** The number of type variables found in the "forall" and "exists"
+                in the theorem's logical expression. *)
   | PCM_expr of Parsetree.expr
 ;;
 
@@ -4663,9 +4671,13 @@ let typecheck_phrase ctx env phrase =
        ((PCM_let_def (let_def, bound_schemes)), env')
    | Parsetree.Ph_theorem theorem_def ->
        Types.begin_definition () ;
-       let ty = typecheck_theorem_def ctx env theorem_def in
+       (* Get the theorem's type (trivially should be Prop) and the number of
+          type variables found in the "forall" and "exists".
+          They will lead to extra "forall ... : Set" in front of the theorem's
+          logical expression. *)
+       let (ty, num_ty_vars) = typecheck_theorem_def ctx env theorem_def in
        Types.end_definition () ;
-       let scheme = Types.generalize ty in
+       let scheme = Types.trivial_scheme (Types.type_prop ()) in
        let env' =
          Env.TypingEnv.add_value
            theorem_def.Parsetree.ast_desc.Parsetree.th_name scheme env in
@@ -4676,7 +4688,7 @@ let typecheck_phrase ctx env phrase =
            Types.pp_type_simple ty ;
        (* Store the type information in the phrase's node. *)
        phrase.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
-       ((PCM_theorem theorem_def), env')
+       ((PCM_theorem (theorem_def, num_ty_vars)), env')
    | Parsetree.Ph_expr expr ->
        let expr_ty = typecheck_expr ctx env expr in
        (* Store the type information in the phrase's node. *)

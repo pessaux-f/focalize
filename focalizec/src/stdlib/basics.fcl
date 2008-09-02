@@ -244,7 +244,7 @@ let int_div =
   internal int -> int -> int
   external
   | caml -> {* Ml_builtins.int_div *}
-  | coq -> {* Ml_builtins.bi__int_div *}
+  | coq -> {* coq_builtins.bi__int_div *}
 ;;
 
 
