@@ -81,7 +81,7 @@ let foc_error =
   internal string -> 'a
   external
    | caml -> {* Ml_builtins.foc_error *}
-   | coq -> {* foc_error *}
+   | coq -> {* coq_builtins.foc_error *}
 ;;
 
 let and_b (x, y) =
@@ -113,93 +113,154 @@ let crp (x, y) = (x, y) ;;
 let first (x) = match x with | (v, _ ) -> v ;;
 let scnd (x) = match x with | (_, v) -> v ;;
 
-(* Operations on integers. *)
+(* Operations about strings. *)
+let print_int =
+  internal int -> unit
+  external
+  | caml -> {* Ml_builtins.int_print *}
+  | coq -> {* fun (x : int__t) => coq_builtins.Null *}
+;;
+
+let print_newline =
+  internal unit -> unit
+  external
+  | caml -> {* Ml_builtins.int_print *}
+  | coq -> {* fun (x : unit__t) => coq_builtins.Null *}
+;;
+
 let string_of_int =
   internal int -> string
   external
   | caml -> {* Ml_builtins.string_of_int *}
-  | coq -> {* [Unsure] *}
+  | coq -> {* fun (x : int__t) => coq_builtins.___a_string *}
 ;;
 
 let int_of_string =
   internal string -> int
   external
   | caml -> {* Ml_builtins.int_of_string *}
-  | coq -> {* [Unsure] *}
+  | coq -> {* fun (x : string__t) => 42 *}
 ;;
 
-let print_int =
-  internal int -> unit
-  external
-  | caml -> {* Ml_builtins.int_print *}
-  | coq -> {* [Unsure] *}
-;;
 
+
+(* Operations on integers. *)
 let int_mod =
   internal int -> int -> int
   external
   | caml -> {* Ml_builtins.int_mod *}
-  | coq -> {* [Unsure] *}
+  | coq -> {* coq_builtins.bi__int_mod *}
 ;;
 
 let int_eq =
   internal int -> int -> bool
   external
   | caml -> {* Ml_builtins.int_eq *}
-  | coq -> {* [Unsure] *}
-;;
-
-let int_div =
-  internal int -> int -> int
-  external
-  | caml -> {* Ml_builtins.int_div *}
-  | coq -> {* [Unsure] *}
+  | coq -> {* coq_builtins.bi__int_eq *}
 ;;
 
 let int_lt =
   internal int -> int -> bool
   external
   | caml -> {* Ml_builtins.int_lt *}
-  | coq -> {* int_lt *}
-  | coq -> {* [Unsure] *}
+  | coq -> {* coq_builtins.bi__int_lt *}
 ;;
 
 let int_leq =
   internal int -> int -> bool
   external
   | caml -> {* Ml_builtins.int_leq *}
-  | coq -> {* int_leq *}
-  | coq -> {* [Unsure] *}
+  | coq -> {* coq_builtins.bi__int_leq *}
 ;;
 
 let int_geq =
   internal int -> int -> bool
   external
   | caml -> {* Ml_builtins.int_geq *}
-  | coq -> {* int_geq *}
-  | coq -> {* [Unsure] *}
+  | coq -> {* coq_builtins.bi__int_geq *}
 ;;
 
 let int_gt =
   internal  int -> int -> bool
   external
   | caml -> {* Ml_builtins.int_gt *}
-  | coq -> {* int_gt *}
-  | coq -> {* [Unsure] *}
+  | coq -> {* coq_builtins.bi__int_gt *}
 ;;
+
+let pred =
+  internal int -> int
+  external
+  | caml -> {* pred *}
+  | coq -> {*  coq_builtins.bi__int_pred *}
+;;
+
+let int_opp =
+  internal int -> int
+  external
+  | caml -> {* Ml_builtins.int_opposite *}
+  | coq -> {* coq_builtins.bi__int_opposite *}
+;;
+
+let int_plus =
+  internal int -> int -> int
+  external
+  | caml -> {* Ml_builtins.int_plus *}
+  | coq -> {* coq_builtins.bi__int_plus *}
+;;
+
+let succ (x in int) in int = int_plus (x, 1) ;;
+
+let int_mult =
+  internal int -> int -> int
+  external
+  | caml -> {* Ml_builtins.int_mult *}
+  | coq -> {* coq_builtins.bi__int_mult *}
+;;
+
+let int_minus =
+  internal int -> int -> int
+  external
+  | caml -> {* Ml_builtins.int_minus *}
+  | coq -> {* coq_builtins.bi__int_minus *}
+;;
+
+let int_max =
+  internal int -> int -> int
+  external
+  | caml -> {* Ml_builtins.int_max *}
+  | coq -> {* coq_builtins.bi__int_max *}
+;;
+
+
+let int_min =
+  internal int -> int -> int
+  external
+  | caml -> {* Ml_builtins.int_min *}
+  | coq ->{* coq_builtins.bi__int_min *}
+;;
+
+
+let int_div =
+  internal int -> int -> int
+  external
+  | caml -> {* Ml_builtins.int_div *}
+  | coq -> {* Ml_builtins.bi__int_div *}
+;;
+
 
 let phys_eq =
   internal 'a ->'a -> bool
   external
   | caml -> {* Ml_builtins.base_equal *}
-  | coq -> {* [Unsure] *}
+  | coq -> {* coq_builtins.bi__base_eq __var_a *}  (* Wrong, nut don't know to
+                                                      do better. *)
 ;;
 
 let base_eq =
   internal  'a -> 'a -> bool
   external
   | caml -> {* Ml_builtins.base_eq *}
-  | coq -> {* [Unsure] *}
+  | coq -> {* coq_builtins.bi__base_eq __var_a *}
 ;;
 
 let ( = ) (x, y) = base_eq (x, y) ;;
