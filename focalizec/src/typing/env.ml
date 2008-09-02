@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.103 2008-08-13 15:55:17 pessaux Exp $ *)
+(* $Id: env.ml,v 1.104 2008-09-02 13:07:02 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -989,8 +989,8 @@ let (scope_find_module, type_find_module,
       {b Rem} : Not exported outside this moddule.                        *)
   (* ******************************************************************** *)
   let internal_extend_env from_fname loaded_env env =
-    (* Local function to tranform [BO_absolute] into [BO_opened]. Note that   *)
-    (* loaded environments should never contain [BO_opened] taggged bindings. *)
+    (* Local function to tranform [BO_absolute] into [BO_opened]. Note that
+       loaded environments should never contain [BO_opened] taggged bindings. *)
     let absolute_to_opened l =
       List.map
         (function

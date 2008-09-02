@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.62 2008-09-01 11:53:46 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.63 2008-09-02 13:07:02 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -407,28 +407,26 @@ let (extend_env_with_implicit_gen_vars_from_type_exprs,
        {b Rem} : Not exported outside this module.                           *)
    (* ********************************************************************** *)
    (fun env type_expressions ->
-     seen_vars := [];
+     seen_vars := [] ;
      List.fold_left
        (fun env_accu ty_expr -> rec_extend_texpr ty_expr env_accu)
        env
        type_expressions),
 
-   (* *********************************************************************** *)
-   (* extend_env_with_implicit_gen_vars_from_logical_expr :                           *)
+   (* ********************************************************************** *)
+   (* extend_env_with_implicit_gen_vars_from_logical_expr :                  *)
    (** {b Descr} : Insert in the scoping environment the variables present
-              in a type parts of a [logical_expr], considering they are implicitely
-              generalized. This is used when one creates a type structure
-              from a theorem expression.
-              In effect, in such a context, variables in the type are
-              implicitely considered as generalized because the type
-              constraint annotating the theorem does not show explicitly
-              "forall-bound-variables".
-              Hence, in an theorem definition like:
-              [theorem beq_refl : all x in 'a, ...]
-              the ['a] must be considered as generalized, then when
-              typechecking this definitionn the context must have a variable
-              mapping where ['a] is known. Using the present function, one
-              can build such a mapping.
+       in a type parts of a [logical_expr], considering they are implicitely
+       generalized. This is used when one creates a type structure from a
+       theorem expression.
+       In effect, in such a context, variables in the type are implicitely
+       considered as generalized because the type constraint annotating the
+       theorem does not show explicitly "forall-bound-variables".
+       Hence, in an theorem definition like:
+         [theorem beq_refl : all x in 'a, ...]
+       the ['a] must be considered as generalized, then when typechecking
+       this definitionn the context must have a variable mapping where ['a]
+       is known. Using the present function, one can build such a mapping.
 
        {b Rem} : Not exported outside this module.                           *)
    (* ********************************************************************** *)
@@ -1597,127 +1595,6 @@ and scope_logical_expr ctx env logical_expr =
      | Parsetree.Pr_paren p ->
          Parsetree.Pr_paren (scope_logical_expr ctx env p)) in
   { logical_expr with Parsetree.ast_desc = new_desc }
-;;
-
-
-
-let (extend_env_with_implicit_gen_vars_from_type_expr,
-     extend_env_with_implicit_gen_vars_from_logical_expr) =
-  (* List of the variables names already seen to prevent them to be inserted *)
-  (* multiple times in the scoping environment. This list is shared between  *)
-  (* the processing of both the [logical_expr]s and the [type_expr]'s        *)
-  (* because a [logical_expr] may contain [type_expr]s and we don't want to  *)
-  (* pass and return each time the list of the "seen variables". This make   *)
-  (* the code easier.                                                        *)
-  let seen_vars = ref [] in
-
-  (* ******************************************************** *)
-  (* The local recursive function operating on a [type_expr]. *)
-  let rec rec_extend_texpr texpr accu_env =
-    match texpr.Parsetree.ast_desc with
-     | Parsetree.TE_ident ident ->
-         (begin
-         match ident.Parsetree.ast_desc with
-         | Parsetree.I_local ((Parsetree.Vqident _) as variable_qname) ->
-             (begin
-             (* Just handle the special where the ident is a type variable. *)
-             if not (List.mem variable_qname !seen_vars) then
-               (begin
-               seen_vars := variable_qname :: !seen_vars;
-               Env.ScopingEnv.add_type
-                 ~loc: ident.Parsetree.ast_loc
-                 variable_qname Env.ScopeInformation.TBI_builtin_or_var
-                 accu_env
-               end)
-             else accu_env
-             end)
-         | _ -> accu_env
-         end)
-     | Parsetree.TE_fun (ty_expr1, ty_expr2) ->
-         let accu_env1 = rec_extend_texpr ty_expr1 accu_env in
-         rec_extend_texpr ty_expr2 accu_env1
-     | Parsetree.TE_app (_, ty_exprs)
-     | Parsetree.TE_prod ty_exprs ->
-         List.fold_left
-           (fun local_accu_env ty -> rec_extend_texpr ty local_accu_env)
-           accu_env
-           ty_exprs
-     | Parsetree.TE_self
-     | Parsetree.TE_prop -> accu_env
-     | Parsetree.TE_paren inner -> rec_extend_texpr inner accu_env
-
-  (* *************************************************** *)
-  (* The local recursive function operating on a [logical_expr]. *)
-  and rec_extend_logical_expr pexpr accu_env =
-    match pexpr.Parsetree.ast_desc with
-     | Parsetree.Pr_forall (_, ty, logical_expr)
-     | Parsetree.Pr_exists (_, ty, logical_expr) ->
-         (* First recover the mapping induced by the type expression. *)
-         let env_from_ty = rec_extend_texpr ty accu_env in
-         rec_extend_logical_expr logical_expr env_from_ty
-     | Parsetree.Pr_imply (logical_expr1, logical_expr2)
-     | Parsetree.Pr_or (logical_expr1, logical_expr2)
-     | Parsetree.Pr_and (logical_expr1, logical_expr2)
-     | Parsetree.Pr_equiv (logical_expr1, logical_expr2) ->
-         let env_from_logical_expr1 =
-           rec_extend_logical_expr logical_expr1 accu_env in
-         rec_extend_logical_expr logical_expr2 env_from_logical_expr1
-     | Parsetree.Pr_not logical_expr
-     | Parsetree.Pr_paren logical_expr ->
-         rec_extend_logical_expr logical_expr accu_env
-     | Parsetree.Pr_expr _ ->
-         (* Inside expressions type variable must be bound by the previous *)
-         (* parts of the logical_expr ! Hence, do not continue searching   *)
-         (* inside.                                                        *)
-         accu_env in
-
-  (
-   (* ********************************************************************** *)
-   (* extend_env_with_implicit_gen_vars_from_type_expr :                     *)
-   (*   Parsetree.type_expr -> Env.ScopingEnv.t -> Env.ScopingEnv.t          *)
-   (** {b Descr} : Insert in the scoping environment the variables present
-              in a type expression, considering they are implicitely
-              generalized. This is used when one creates a
-              type structure from an external value's type expression.
-              In effect, in such a context, variables in the type are
-              implicitely considered as generalized because the type
-              constraint annotating the external value does not show
-              explicitly "forall-bound-variables".
-              Hence, in an external value definition like:
-              [external value foc_error : string -> 'a = ...]
-              the ['a] must be considered as generalized, then when
-              typechecking this definition the context must have a variable
-              mapping where ['a] is known. Using the present function, one
-              can build such a mapping.
-
-       {b Rem} : Not exported outside this module.                           *)
-   (* ********************************************************************** *)
-   (fun env type_expression ->
-     seen_vars := [];
-     rec_extend_texpr env type_expression),
-
-   (* *********************************************************************** *)
-   (** {b Descr} : Insert in the scoping environment the variables present
-              in a type parts of a [logical_expr], considering they are
-              implicitely generalized. This is used when one creates a type
-              structure from a theorem expression.
-              In effect, in such a context, variables in the type are
-              implicitely considered as generalized because the type
-              constraint annotating the theorem does not show explicitly
-              "forall-bound-variables".
-              Hence, in an theorem definition like:
-              [theorem beq_refl : all x in 'a, ...]
-              the ['a] must be considered as generalized, then when
-              typechecking this definitionn the context must have a variable
-              mapping where ['a] is known. Using the present function, one
-              can build such a mapping.
-
-       {b Rem} : Not exported outside this module.                           *)
-   (* ********************************************************************** *)
-   (fun env logical_expr_expression ->
-     seen_vars := [];
-     rec_extend_logical_expr logical_expr_expression env)
-  )
 ;;
 
 
