@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.141 2008-09-02 14:22:06 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.142 2008-09-02 15:25:17 pessaux Exp $ *)
 
 
 
@@ -1260,28 +1260,6 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
         if is_a_field then Types.reset_deps_on_rep () ;
         let binding_desc =  binding.Parsetree.ast_desc in
         let binding_loc = binding.Parsetree.ast_loc in
-        (* Build a type for the arguments of the bound identier if there are *)
-        (* some. If they have type constraints, then use it as primary type  *)
-        (* instead of using a type variable that we should unify afterwards. *)
-        if non_expansive then Types.begin_definition () ;
-        let args_tys =
-          List.map
-            (fun (_, opt_arg_ty_expr) ->
-              match opt_arg_ty_expr with
-               | None -> Types.type_variable ()
-               | Some ty_expr -> typecheck_type_expr ctx env ty_expr)
-            binding_desc.Parsetree.b_params in
-        if non_expansive then Types.end_definition () ;
-        (* Extend the current environment with the arguments *)
-        (* of the bound identifier if there are some.        *)
-        let local_env =
-          List.fold_left2
-            (fun accu_env (arg_name, _) arg_ty ->
-              Env.TypingEnv.add_value
-                arg_name (Types.trivial_scheme arg_ty) accu_env)
-                env'
-            binding_desc.Parsetree.b_params
-            args_tys in
         (* Get all the type constraints from both the params *)
         (* and the body annotations of the definition.       *)
         let all_ty_constraints =
@@ -1294,15 +1272,38 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
              | None -> []
              | Some tye -> [tye])
             binding_desc.Parsetree.b_params in
-        (* Then, same stuff than for scoping, we add the type variables      *)
-        (* appearing in the type contraints to the current variable_mapping. *)
-        (* These type variable are in effect implicitely generalized !       *)
+        (* Then, same stuff than for scoping, we add the type variables
+           appearing in the type contraints to the current variable_mapping.
+           These type variables are in effect implicitely generalized ! *)
         if non_expansive then Types.begin_definition () ;
         let vmap' =
           make_implicit_var_mapping_from_type_exprs all_ty_constraints in
         if non_expansive then Types.end_definition () ;
         let ctx_with_tv_vars_constraints = {
           ctx with tyvars_mapping = vmap' @ ctx.tyvars_mapping } in
+        (* Build a type for the arguments of the bound identier if there are *)
+        (* some. If they have type constraints, then use it as primary type  *)
+        (* instead of using a type variable that we should unify afterwards. *)
+        if non_expansive then Types.begin_definition () ;
+        let args_tys =
+          List.map
+            (fun (_, opt_arg_ty_expr) ->
+              match opt_arg_ty_expr with
+               | None -> Types.type_variable ()
+               | Some ty_expr ->
+                   typecheck_type_expr ctx_with_tv_vars_constraints env ty_expr)
+            binding_desc.Parsetree.b_params in
+        if non_expansive then Types.end_definition () ;
+        (* Extend the current environment with the arguments *)
+        (* of the bound identifier if there are some.        *)
+        let local_env =
+          List.fold_left2
+            (fun accu_env (arg_name, _) arg_ty ->
+              Env.TypingEnv.add_value
+                arg_name (Types.trivial_scheme arg_ty) accu_env)
+                env'
+            binding_desc.Parsetree.b_params
+            args_tys in
         (* Same hack thant above for the variables *)
         (* that must not be generalised.           *)
         if non_expansive then Types.begin_definition () ;
@@ -1617,7 +1618,7 @@ and typecheck_statement ctx env statement =
     the AST node and returns this type.
     Note that here we already are in an incremented binding level. Hence
     it is not useful to call [begin/end definition].
-    We also return the number of type variables found in the "forall" and
+    We also return the names of type variables found in the "forall" and
     "exists". They will lead to extra "forall ... : Set" in front of the
     theorem's logical expression.
 
@@ -1647,7 +1648,7 @@ and typecheck_theorem_def ctx env theorem_def =
   typecheck_proof ctx' env theorem_def.Parsetree.ast_desc.Parsetree.th_proof ;
   (* And return the type of the stamement as type of the theorem. Also
       return the nimber of type variables created. *)
-  (ty, (List.length vmapp))
+  (ty, (List.map fst vmapp))
 
 
 
@@ -1935,10 +1936,10 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                let vmapp =
                  make_implicit_var_mapping_from_logical_expr
                    property_def.Parsetree.ast_desc.Parsetree.prd_logical_expr in
-               (* Get the number of type variables found in the "forall" and
+               (* Get the names of type variables found in the "forall" and
                   "exists". They will lead to extra "forall ... : Set" in
                   front of the property's logical expression. *)
-               let num_ty_vars = List.length vmapp in
+               let polymorphic_vars_names = List.map fst vmapp in
                let ctx' = { ctx with tyvars_mapping = vmapp } in
                (* We ensure that Self will be abstract during the property's
                   definition type inference by setting [~in_proof: false]. *)
@@ -1969,7 +1970,7 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                  Env.TypeInformation.SF_property
                    ((Env.intitial_inheritance_history current_species),
                     property_def.Parsetree.ast_desc.Parsetree.prd_name,
-                    num_ty_vars,
+                    polymorphic_vars_names,
                     property_def.Parsetree.ast_desc.Parsetree.prd_logical_expr,
                     dep_on_rep) in
                (* Record the property's scheme in the AST node. *)
@@ -1983,10 +1984,10 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                Types.reset_deps_on_rep () ;
                Types.begin_definition () ;
                (* Get the theorem's type (trivially should be Prop) and the
-                  number of type variables found in the "forall" and "exists".
+                  names of type variables found in the "forall" and "exists".
                   They will lead to extra "forall ... : Set" in front of the
                   theorem's logical expression. *)
-               let (ty, num_ty_vars) =
+               let (ty, polymorphic_vars_names) =
                  typecheck_theorem_def ctx env theorem_def in
                Types.end_definition () ;
                (* Check for a decl dependency on "rep". *)
@@ -2009,7 +2010,7 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                  Env.TypeInformation.SF_theorem
                   ((Env.intitial_inheritance_history current_species),
                    theorem_def.Parsetree.ast_desc.Parsetree.th_name,
-                   num_ty_vars,
+                   polymorphic_vars_names,
                    theorem_def.Parsetree.ast_desc.Parsetree.th_stmt,
                    theorem_def.Parsetree.ast_desc.Parsetree.th_proof,
                    dep_on_rep) in
@@ -2253,15 +2254,15 @@ let abstraction ~current_unit cname fields =
                     (from, vname, (Types.generalize ty')))
                  l
            | Env.TypeInformation.SF_theorem
-               (from, vname, num_ty_vars, logical_expr, _, deps_rep)
+               (from, vname, polymorphic_vars_names, logical_expr, _, deps_rep)
            | Env.TypeInformation.SF_property
-               (from, vname, num_ty_vars, logical_expr, deps_rep) ->
+               (from, vname, polymorphic_vars_names, logical_expr, deps_rep) ->
                (* We substitute Self by [cname] in the logical_expr. *)
                let abstracted_logical_expr =
                  SubstColl.subst_logical_expr ~current_unit SubstColl.SRCK_self
                    (Types.SBRCK_coll cname) logical_expr in
                [Env.TypeInformation.SF_property
-                  (from, vname, num_ty_vars, abstracted_logical_expr,
+                  (from, vname, polymorphic_vars_names, abstracted_logical_expr,
                   deps_rep)]) in
         h' @ rec_abstract q in
   (* Do the job now... *)
@@ -3923,8 +3924,9 @@ type please_compile_me =
   | PCM_let_def of (Parsetree.let_def * (Types.type_scheme list))
   | PCM_theorem of
       (Parsetree.theorem_def *
-       int) (** The number of type variables found in the "forall" and "exists"
-                in the theorem's logical expression. *)
+       (Parsetree.vname list)) (** The names of type variables found in the
+                                   "forall" and "exists" in the theorem's
+                                   logical expression. *)
   | PCM_expr of Parsetree.expr
 ;;
 
@@ -4675,7 +4677,8 @@ let typecheck_phrase ctx env phrase =
           type variables found in the "forall" and "exists".
           They will lead to extra "forall ... : Set" in front of the theorem's
           logical expression. *)
-       let (ty, num_ty_vars) = typecheck_theorem_def ctx env theorem_def in
+       let (ty, polymorphic_vars_names) =
+         typecheck_theorem_def ctx env theorem_def in
        Types.end_definition () ;
        let scheme = Types.trivial_scheme (Types.type_prop ()) in
        let env' =
@@ -4688,7 +4691,7 @@ let typecheck_phrase ctx env phrase =
            Types.pp_type_simple ty ;
        (* Store the type information in the phrase's node. *)
        phrase.Parsetree.ast_type <- Parsetree.ANTI_scheme scheme ;
-       ((PCM_theorem (theorem_def, num_ty_vars)), env')
+       ((PCM_theorem (theorem_def, polymorphic_vars_names)), env')
    | Parsetree.Ph_expr expr ->
        let expr_ty = typecheck_expr ctx env expr in
        (* Store the type information in the phrase's node. *)

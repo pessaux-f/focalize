@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.49 2008-08-28 11:59:54 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.50 2008-09-02 15:25:17 pessaux Exp $ *)
 
 
 
@@ -451,7 +451,7 @@ let rec let_binding_compile ctx ~local_idents ~self_methods_status ~is_rec
        | None ->
            (* Because we provided a type scheme to the function
               [bind_parameters_to_types_from_type_scheme], MUST get one type
-	      for each parameter name ! *)
+              for each parameter name ! *)
            assert false)
     params_with_type ;
   (* [Unsure] This heuristic is a pure weak hack...                    *)
@@ -1053,10 +1053,10 @@ let generate_record_type ctx env species_descr =
   Format.fprintf out_fmter ": Type :=@ mk_record {@\n"  ;
   (* Always generate the "rep" coercion. *)
   Format.fprintf out_fmter "@[<2>rf_T :> Set" ;
-  (* We now extend the collections_carrier_mapping with ourselve known.  *)
-  (* Hence, if we refer to our "rep" we will be directly mapped onto the *)
-  (* "rf_T" without needing to re-construct this name each time. Do same *)
-  (* thing for "Self".                                                   *)
+  (* We now extend the collections_carrier_mapping with ourselve known.
+     Hence, if we refer to our "rep" we will be directly mapped onto the
+     "rf_T" without needing to re-construct this name each time. Do same
+     thing for "Self". *)
   let collections_carrier_mapping =
     (make_Self_cc_binding_rf_T
       ~current_species: ctx.Context.scc_current_species) ::
@@ -1116,21 +1116,29 @@ let generate_record_type ctx env species_descr =
             if semi then Format.fprintf out_fmter " ;" ;
             Format.fprintf out_fmter "@]@\n")
           l
-    | Env.TypeInformation.SF_theorem  (from, n, _, logical_expr, _, _)
-    | Env.TypeInformation.SF_property (from, n, _, logical_expr, _) ->
-        (* In the record type, theorems and      *)
-        (* properties are displayed in same way. *)
+    | Env.TypeInformation.SF_theorem
+        (from, n, polymorphic_vars_names, logical_expr, _, _)
+    | Env.TypeInformation.SF_property
+        (from, n, polymorphic_vars_names, logical_expr, _) ->
+        (* In the record type, theorems and properties are displayed in same
+           way. *)
         Format.fprintf out_fmter "(* From species %a. *)@\n"
           Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
         (* Field is prefixed by the species name for sake of unicity. *)
         Format.fprintf out_fmter "@[<2>rf_%a :@ "
           Parsetree_utils.pp_vname_with_operators_expanded n ;
-        (* Generate the Coq code representing the proposition. *)
-        (* No local idents in the context because we just enter the scope    *)
-        (* of a species fields and so we are not under a core expression.    *)
-        (* In the record type, methods of "Self" are always named using      *)
-        (* "rf_" + the method name; hence print using [~self_methods_status] *)
-        (* to [SMS_from_record].                                             *)
+        (* For each type variable, generate a "forall ... : Set, ". *)
+        List.iter
+          (fun var_name ->
+            Format.fprintf out_fmter "forall !!!!%a!!!! : Set,@ "
+              Parsetree_utils.pp_vname_with_operators_expanded var_name)
+          polymorphic_vars_names ;
+        (* Generate the Coq code representing the proposition.
+           No local idents in the context because we just enter the scope of a
+           species fields and so we are not under a core expression.
+           In the record type, methods of "Self" are always named using
+           "rf_" + the method name; hence print using [~self_methods_status]
+           to [SMS_from_record]. *)
         generate_logical_expr ctx
           ~local_idents: [] ~self_methods_status: SMS_from_record
           env logical_expr ;

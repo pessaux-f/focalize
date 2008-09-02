@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.105 2008-09-02 14:22:06 pessaux Exp $ *)
+(* $Id: env.ml,v 1.106 2008-09-02 15:25:17 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -387,7 +387,7 @@ module TypeInformation = struct
     ((** Where the theorem comes from (and inheritance history). *)
      from_history *
      Parsetree.vname *         (** The theorem's name. *)
-     int *                     (** The number of type variables found in the
+     (Parsetree.vname list) *  (** The names of type variables found in the
                                    "forall" and "exists" in the theorem's
                                    logical expression. *)
      Parsetree.logical_expr *  (** The theorem's body. *)
@@ -401,7 +401,7 @@ module TypeInformation = struct
     ((** Where the property comes from (and inheritance history). *)
      from_history *
      Parsetree.vname *         (** The property's name. *)
-     int *                     (** The number of type variables found in the
+     (Parsetree.vname list) *  (** The name of type variables found in the
                                    "forall" and "exists" in the property's
                                    logical expression. *)
      Parsetree.logical_expr *  (** The property's body. *)
