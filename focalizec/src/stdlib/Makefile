@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.27 2008-09-04 09:39:19 doligez Exp $
+# $Id: Makefile,v 1.28 2008-09-04 10:12:50 doligez Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -9,7 +9,7 @@ FOCC = ../toplevel/check_file -no-stdlib-path
 CAMLBYT = ocamlc
 CAMLBIN = ocamlc
 COQC = coqc
-ZVTOV = ../../zvtov/zvtov
+ZVTOV = ../../zvtov/zvtov -zenon ../../zenon/zenon
 
 FOC_COMP_FLAGS =
 COQ_COMP_FLAGS = -I ../../zenon/
@@ -51,7 +51,7 @@ FOCVOS_UNSAFE = $(FOCSRC_UNSAFE:.foc=.vo)
 
 EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
 	weak_structures_externals.cmo \
-	zenon.vo zenon_coqbool.vo coq_builtins.vo weak_structures_externals.vo \
+	coq_builtins.vo weak_structures_externals.vo \
 	wellfounded_externals.vo random_foc_externals.cmo
 
 
@@ -75,8 +75,7 @@ depend:
 	$(CAMLDEP) *.mli *.ml > ./.depend
 
 basics_special_case:
-	$(RM) -f basics.v
-	$(LN) -s ../tmp_basics.v basics.v
+	cp -f ../tmp_basics.v basics.v
 	$(COQC) $(COQ_COMP_FLAGS) basics.v
 
 # Temporary for no Coq...
