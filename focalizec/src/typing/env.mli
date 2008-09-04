@@ -58,11 +58,13 @@ module TypeInformation :
        Parsetree.logical_flag)
 
     type theorem_field_info =
-      (from_history * Parsetree.vname * (Parsetree.vname list) *
+      (from_history * Parsetree.vname *
+       ((Parsetree.vname * Types.type_simple) list) *
        Parsetree.logical_expr * Parsetree.proof * dependency_on_rep)
 
     type property_field_info =
-      (from_history * Parsetree.vname * (Parsetree.vname list) *
+      (from_history * Parsetree.vname *
+       ((Parsetree.vname * Types.type_simple) list) *
        Parsetree.logical_expr * dependency_on_rep)
 
     type species_param =

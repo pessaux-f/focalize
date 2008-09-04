@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.50 2008-09-02 15:25:17 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.51 2008-09-04 14:48:33 pessaux Exp $ *)
 
 
 
@@ -761,23 +761,25 @@ let generate_logical_expr ctx ~local_idents ~self_methods_status initial_env
             | Parsetree.ANTI_scheme s -> s) in
          let (ty, generalized_instanciated_vars) =
            Types.specialize_n_show_instanciated_generalized_vars scheme in
+         (* The header... *)
+         Format.fprintf out_fmter "@[<2>";
+         (* IMHO : not really useful, but... doesn't hurt... *)
+         Types.purge_type_simple_to_coq_variable_mapping () ;
+         (* Now, print the polymorphic extra args. We use the same trick than
+            in [let_binding_compile]. Consult comment over there... *)
+         List.iter
+           (fun var ->
+              Format.fprintf out_fmter "forall %a : Set,@ "
+               (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
+               var)
+           generalized_instanciated_vars ;
          let binder =
            (match proposition.Parsetree.ast_desc with
             | Parsetree.Pr_forall (_, _, _) -> "forall"
             | Parsetree.Pr_exists (_, _, _) -> "exists"
             | _ -> assert false) in
-         (* The header containing the binder... *)
-         Format.fprintf out_fmter "@[<2>%s@ " binder ;
-         (* IMHO : not really useful, but... doesn't hurt... *)
-         Types.purge_type_simple_to_coq_variable_mapping () ;
-         (* Now, print the polymorphic extra args. We use the same trick *)
-         (* than in [let_binding_compile]. Consult comment over there... *)
-         List.iter
-           (fun var ->
-              Format.fprintf out_fmter "@ (%a : Set)"
-               (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
-               var)
-           generalized_instanciated_vars ;
+         (* The binder... *)
+         Format.fprintf out_fmter "%s@ " binder ;
          (* Now, print the real bound variables. *)
          Format.fprintf out_fmter "%a :@ %a,@ "
            (Handy.pp_generic_separated_list
@@ -791,12 +793,13 @@ let generate_logical_expr ctx ~local_idents ~self_methods_status initial_env
          Types.purge_type_simple_to_coq_variable_mapping () ;
          (* Here, the bound variables name may mask a "in"-parameter. *)
          let loc_idents' = vnames @ loc_idents in
-         (* Add the bound variable in the environment. *)
-         let nb_polymorphic_args = List.length generalized_instanciated_vars in
+         (* Add the bound variable in the environment. ATTENTION: inside the
+	    logical expression, the bound variables ARE NOT polymorphic (no
+	    mu-rule). Hence we insert them with 0. *)
          let env' =
            List.fold_left
              (fun accu_env vname ->
-               Env.CoqGenEnv.add_value vname nb_polymorphic_args accu_env)
+               Env.CoqGenEnv.add_value vname 0 accu_env)
              env
              vnames in
          rec_generate_logical_expr loc_idents' env' logical_expr ;
@@ -1117,9 +1120,9 @@ let generate_record_type ctx env species_descr =
             Format.fprintf out_fmter "@]@\n")
           l
     | Env.TypeInformation.SF_theorem
-        (from, n, polymorphic_vars_names, logical_expr, _, _)
+        (from, n, _polymorphic_vars_map, logical_expr, _, _)
     | Env.TypeInformation.SF_property
-        (from, n, polymorphic_vars_names, logical_expr, _) ->
+        (from, n, _polymorphic_vars_map, logical_expr, _) ->
         (* In the record type, theorems and properties are displayed in same
            way. *)
         Format.fprintf out_fmter "(* From species %a. *)@\n"
@@ -1127,12 +1130,6 @@ let generate_record_type ctx env species_descr =
         (* Field is prefixed by the species name for sake of unicity. *)
         Format.fprintf out_fmter "@[<2>rf_%a :@ "
           Parsetree_utils.pp_vname_with_operators_expanded n ;
-        (* For each type variable, generate a "forall ... : Set, ". *)
-        List.iter
-          (fun var_name ->
-            Format.fprintf out_fmter "forall !!!!%a!!!! : Set,@ "
-              Parsetree_utils.pp_vname_with_operators_expanded var_name)
-          polymorphic_vars_names ;
         (* Generate the Coq code representing the proposition.
            No local idents in the context because we just enter the scope of a
            species fields and so we are not under a core expression.

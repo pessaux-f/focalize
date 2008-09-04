@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.106 2008-09-02 15:25:17 pessaux Exp $ *)
+(* $Id: env.ml,v 1.107 2008-09-04 14:48:33 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -387,9 +387,9 @@ module TypeInformation = struct
     ((** Where the theorem comes from (and inheritance history). *)
      from_history *
      Parsetree.vname *         (** The theorem's name. *)
-     (Parsetree.vname list) *  (** The names of type variables found in the
-                                   "forall" and "exists" in the theorem's
-                                   logical expression. *)
+     (** The mapping of type variables found in the "forall" and "exists" in the
+         theorem's logical expression.onto their name. *)
+     ((Parsetree.vname * Types.type_simple) list) *
      Parsetree.logical_expr *  (** The theorem's body. *)
      Parsetree.proof *         (** The theorem's proof. *)
      (** Tells if the theorem has dependencies on the carrier ("rep"). *)
@@ -401,9 +401,9 @@ module TypeInformation = struct
     ((** Where the property comes from (and inheritance history). *)
      from_history *
      Parsetree.vname *         (** The property's name. *)
-     (Parsetree.vname list) *  (** The name of type variables found in the
-                                   "forall" and "exists" in the property's
-                                   logical expression. *)
+     (** The mapping of type variables found in the "forall" and "exists" in the
+         property's logical expression.onto their name. *)
+     ((Parsetree.vname * Types.type_simple) list) *
      Parsetree.logical_expr *  (** The property's body. *)
      (** Tells if the property has dependencies on the carrier ("rep"). *)
      dependency_on_rep)

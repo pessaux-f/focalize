@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.26 2008-09-02 15:25:17 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.27 2008-09-04 14:48:33 pessaux Exp $ *)
 
 exception Method_multiply_defined of
   (Parsetree.vname * Parsetree.qualified_species)
@@ -57,7 +57,8 @@ type please_compile_me =
        (Dep_analysis.name_node list))
   | PCM_type of (Parsetree.vname * Env.TypeInformation.type_description)
   | PCM_let_def of (Parsetree.let_def * (Types.type_scheme list))
-  | PCM_theorem of (Parsetree.theorem_def * (Parsetree.vname list))
+  | PCM_theorem of
+      (Parsetree.theorem_def * ((Parsetree.vname * Types.type_simple) list))
   | PCM_expr of Parsetree.expr
 
 val typecheck_file :
