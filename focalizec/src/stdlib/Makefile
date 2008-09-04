@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.26 2008-09-01 10:35:41 pessaux Exp $
+# $Id: Makefile,v 1.27 2008-09-04 09:39:19 doligez Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -9,7 +9,7 @@ FOCC = ../toplevel/check_file -no-stdlib-path
 CAMLBYT = ocamlc
 CAMLBIN = ocamlc
 COQC = coqc
-ZVTOV = zvtov
+ZVTOV = ../../zvtov/zvtov
 
 FOC_COMP_FLAGS =
 COQ_COMP_FLAGS = -I ../../zenon/
