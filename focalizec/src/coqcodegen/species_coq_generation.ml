@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.97 2008-09-02 14:22:06 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.98 2008-09-04 15:08:49 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1318,7 +1318,7 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
        (* Proof is assumed, then simply use "magic_prove". *)
        Format.fprintf out_fmter
          "(* Proof assumed because \"%s\". *)@\n" reason ;
-       Format.fprintf out_fmter "apply basics.magic_prove.@\nQed.@\n"
+       Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\nQed.@\n"
    | Parsetree.Pf_coq (_, script) ->
        (* Now, print the lemma body. Inside, any method of "Self" is
           abstracted (without lambda-lift) and named "abst_xxx". That's why we
@@ -1587,7 +1587,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
        (* Proof assumed, then simply use "magic_prove". *)
        Format.fprintf out_fmter
          "(* Proof assumed because \"%s\". *)@\n" reason ;
-       Format.fprintf out_fmter "apply basics.magic_prove.@\nQed.@\n"
+       Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\nQed.@\n"
    | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
        (* Proof done by Zenon. Apply the temporary theorem. *)
        Format.fprintf out_fmter
