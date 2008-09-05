@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: coq_builtins.v,v 1.5 2008-09-05 12:04:30 pessaux Exp $ *)
+(* $Id: coq_builtins.v,v 1.6 2008-09-05 14:10:07 pessaux Exp $ *)
 
 Require Import Bool.
 Require Export ZArith.
@@ -434,6 +434,20 @@ Inductive bi__unit : Set :=
     However, since "Prop" is not available for OCaml programs, we can safely
     hard-define it here. *)
 Definition prop__t := Prop.
+
+
+
+
+(* ************************************************************************* *)
+(* Basic operators on booleans. Need to be written the same way that the     *)
+(* one used in Coq and Zenon !!!                                             *)
+(* ************************************************************************* *)
+Let bi__and_b := fun b1 b2 : bool => ifb b1 b2 false.
+Let bi__or_b := fun b1 b2 : bool => ifb b1 true b2.
+Let bi__not_b := fun b : bool => if b then false else true.
+Let bi__xor_b :=
+  fun b1 b2 : bool =>
+    if b1 then if b2 then false else true else if b2 then true else false.
 
 
 (* ************************************************************************* *)

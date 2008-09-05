@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.28 2008-09-04 10:12:50 doligez Exp $
+# $Id: Makefile,v 1.29 2008-09-05 14:10:07 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -57,7 +57,7 @@ EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
 
 
 
-all:: $(EXTERNALOBJS) $(FOCMLS) $(FOCMLS_UNSAFE) $(FOCZVS) basics_special_case $(FOCCMOS) $(FOCCMOS_UNSAFE) $(FOCVS) $(FOCVOS)
+all:: $(EXTERNALOBJS) $(FOCMLS) $(FOCMLS_UNSAFE) $(FOCZVS) $(FOCCMOS) $(FOCCMOS_UNSAFE) $(FOCVS) $(FOCVOS)
 
 doc:: $(BYTOBJS)
 	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)
@@ -74,9 +74,6 @@ clean::
 depend:
 	$(CAMLDEP) *.mli *.ml > ./.depend
 
-basics_special_case:
-	cp -f ../tmp_basics.v basics.v
-	$(COQC) $(COQ_COMP_FLAGS) basics.v
 
 # Temporary for no Coq...
 rings_fields.ml: rings_fields.foc

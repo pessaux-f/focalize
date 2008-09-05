@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ml_builtins.ml,v 1.1 2008-04-09 13:01:47 pessaux Exp $ *)
+(* $Id: ml_builtins.ml,v 1.2 2008-09-05 14:10:07 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -23,26 +23,32 @@
 exception Foc_error of string ;;
 exception Foc_Failure of string ;;
 
-let foc_error msg = raise (Foc_error msg) ;;
-let str_cat x y = x ^ y ;;
-let str_lt (x : string) (y : string) = x < y ;;
-let str_print s = print_string s ;;
-let string_of_int i = string_of_int i ;;
-let int_of_string s = int_of_string s ;;
-let int_mult x y = x * y ;;
-let int_print i = print_int i ;;
-let int_mod x y = x mod y ;;
-let int_eq (x : int) (y : int) = x = y ;;
-let int_div x y = x / y ;;
-let int_lt (x : int) (y : int) = x < y ;;
-let int_leq (x : int) (y : int) = x <= y ;;
-let int_geq (x : int) (y : int) = x >= y ;;
-let int_gt (x : int) (y : int) = x > y ;;
-let base_equal x y = x == y ;;
-let base_eq x y = x = y ;;
-let pred x = x - 1 ;;
-let int_opposite i = - i ;;
-let int_plus x y = x + y ;;
-let int_minus x y = x - y ;;
-let int_max (x : int) (y : int) = max x y ;;
-let int_min (x : int) (y : int) = min x y ;;
+let bi__and_b x y = x && y ;;
+let bi__or_b x y = x || y ;;
+let bi__not_b x = not x ;;
+let bi__xor_b b1 b2 =
+  if b1 then if b2 then false else true else if b2 then true else false ;;
+
+let bi__foc_error msg = raise (Foc_error msg) ;;
+let bi__str_cat x y = x ^ y ;;
+let bi__str_lt (x : string) (y : string) = x < y ;;
+let bi__str_print s = print_string s ;;
+let bi__string_of_int i = string_of_int i ;;
+let bi__int_of_string s = int_of_string s ;;
+let bi__int_mult x y = x * y ;;
+let bi__int_print i = print_int i ;;
+let bi__int_mod x y = x mod y ;;
+let bi__int_eq (x : int) (y : int) = x = y ;;
+let bi__int_div x y = x / y ;;
+let bi__int_lt (x : int) (y : int) = x < y ;;
+let bi__int_leq (x : int) (y : int) = x <= y ;;
+let bi__int_geq (x : int) (y : int) = x >= y ;;
+let bi__int_gt (x : int) (y : int) = x > y ;;
+let bi__base_equal x y = x == y ;;
+let bi__base_eq x y = x = y ;;
+let bi__pred x = x - 1 ;;
+let bi__int_opposite i = - i ;;
+let bi__int_plus x y = x + y ;;
+let bi__int_minus x y = x - y ;;
+let bi__int_max (x : int) (y : int) = max x y ;;
+let bi__int_min (x : int) (y : int) = min x y ;;
