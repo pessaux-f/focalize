@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.99 2008-09-05 12:06:20 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.100 2008-09-05 15:55:22 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1715,7 +1715,7 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
             in
             let (abstracted_methods, new_ctx, new_print_ctx) =
               generate_field_definifion_prelude
-                ~in_section: false ctx' print_ctx
+                ~in_section: true ctx' print_ctx
                 env ai.Abstractions.ai_min_coq_env
                 ai.Abstractions.ai_used_species_parameter_tys
                 all_deps_from_params generated_fields in
