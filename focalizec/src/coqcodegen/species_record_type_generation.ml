@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.51 2008-09-04 14:48:33 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.52 2008-09-05 12:06:20 pessaux Exp $ *)
 
 
 
@@ -269,7 +269,7 @@ let generate_constant ctx cst =
        Format.fprintf ctx.Context.scc_out_fmter "%s" str
    | Parsetree.C_string _str ->
        (* [Unsure] *)
-       Format.fprintf ctx.Context.scc_out_fmter "basics.___a_string"
+       Format.fprintf ctx.Context.scc_out_fmter "coq_builtins.___a_string"
    | Parsetree.C_char _c ->
        (* [Unsure] *)
        Format.fprintf ctx.Context.scc_out_fmter "C_char"
@@ -794,8 +794,8 @@ let generate_logical_expr ctx ~local_idents ~self_methods_status initial_env
          (* Here, the bound variables name may mask a "in"-parameter. *)
          let loc_idents' = vnames @ loc_idents in
          (* Add the bound variable in the environment. ATTENTION: inside the
-	    logical expression, the bound variables ARE NOT polymorphic (no
-	    mu-rule). Hence we insert them with 0. *)
+            logical expression, the bound variables ARE NOT polymorphic (no
+            mu-rule). Hence we insert them with 0. *)
          let env' =
            List.fold_left
              (fun accu_env vname ->

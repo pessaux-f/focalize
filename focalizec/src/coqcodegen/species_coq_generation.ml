@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.98 2008-09-04 15:08:49 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.99 2008-09-05 12:06:20 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1572,7 +1572,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
     generate_field_definifion_prelude
       ~in_section: false ctx print_ctx env min_coq_env
       used_species_parameter_tys dependencies_from_params generated_fields in
-  Format.fprintf out_fmter "@ :@ " ;
+  Format.fprintf out_fmter ":@ " ;
   (* Finally, the theorem itself. Inside, any method of "Self" is abstracted
      (i.e. is lambda-lifted), hence named "abst_xxx". That's why we use the
      mode [SMS_abstracted]. *)
