@@ -19,7 +19,7 @@ type unit =
 
 and () =
   | caml -> {* () *}
-  | coq -> {* coq_builtins.Null *}
+  | coq -> {* coq_builtins.Void *}
 ;;
 
 type float =
@@ -59,6 +59,11 @@ and False =
   | caml -> {* false *}
   | coq -> {* False *}
 ;;
+
+(** Note that is it impossible to alias the type of propositions [prop__t] to
+   Coq [Prop] here since "prop" is a keyword of FoCaLize, hence this makes a
+   crude syntax error. However, "Prop" is not available for OCaml programs, so
+   we can safely hard-define it in coq_builtins.v. *)
 
 type list ('a) =
   internal
@@ -118,14 +123,14 @@ let print_int =
   internal int -> unit
   external
   | caml -> {* Ml_builtins.int_print *}
-  | coq -> {* fun (x : int__t) => coq_builtins.Null *}
+  | coq -> {* fun (x : int__t) => coq_builtins.Void *}
 ;;
 
 let print_newline =
   internal unit -> unit
   external
   | caml -> {* Ml_builtins.int_print *}
-  | coq -> {* fun (x : unit__t) => coq_builtins.Null *}
+  | coq -> {* fun (x : unit__t) => coq_builtins.Void *}
 ;;
 
 let string_of_int =
@@ -140,6 +145,30 @@ let int_of_string =
   external
   | caml -> {* Ml_builtins.int_of_string *}
   | coq -> {* fun (x : string__t) => 42 *}
+;;
+
+(* Concatenation. *)
+let sc =
+  internal  string -> string -> string
+  external
+  | caml -> {* Ml_builtins.str_cat *}
+  | coq -> {* fun (x : string__t) (y : string__t) => coq_builtins.___a_string *}
+;;
+
+let ( ^ ) (x, y) = sc (x, y) ;;
+
+let str_lt =
+  internal string -> string -> bool
+  external
+  | caml -> {* Ml_builtins.str_lt *}
+  | coq -> {* fun (x : string__t) (y : string__t) => true *}
+;;
+
+let print_string =
+  internal string -> unit
+  external
+  | caml -> {* Ml_builtins.str_print *}
+  | coq -> {* fun (x : string__t) => coq_builtins.Void *}
 ;;
 
 
@@ -207,6 +236,8 @@ let int_plus =
   | caml -> {* Ml_builtins.int_plus *}
   | coq -> {* coq_builtins.bi__int_plus *}
 ;;
+
+let ( + ) (x, y) = int_plus (x, y) ;;
 
 let succ (x in int) in int = int_plus (x, 1) ;;
 
@@ -280,6 +311,7 @@ theorem int_le_not_gt :
   proof:
     coq proof
    {* intros x y; unfold int_leq, int_gt in |- *.
+      unfold bi__int_leq , bi__int_gt.
       elim (Z_le_dec x y).
       intros H.
       intros b; clear b.
@@ -288,7 +320,8 @@ theorem int_le_not_gt :
       apply Zle_not_gt; trivial.
       trivial.
       compute in |- *; trivial.
-      compute in |- *; trivial. *}
+      compute in |- *; trivial.
+      Qed. *}
 ;;
 
 theorem int_lt_le_trans :
@@ -296,7 +329,7 @@ theorem int_lt_le_trans :
 proof:
   coq proof
   {* intros x y z.
-     unfold int_lt, int_leq in |- *.
+     unfold int_lt, int_leq, bi__int_lt, bi__int_leq in |- *.
      elim (Z_lt_dec x y).
      elim (Z_le_dec y z).
      intros Hle Hlt foo bar; clear foo bar.
@@ -305,24 +338,8 @@ proof:
      intros H; absurd (x < z)%Z; trivial.
      apply (Zlt_le_trans x y z); trivial.
      intros b a H Habs; compute in |- *; contradiction.
-     intros b H; compute in H; contradiction. *}
-;;
-
-theorem int_lt_le_trans :
-  all x y z in int, int_lt (x, y) -> int_leq (y, z) -> int_lt (x, z)
-proof:
-  coq proof
-  {* intros x y z.
-     unfold int_lt, int_leq in |- *.
-     elim (Z_lt_dec x y).
-     elim (Z_le_dec y z).
-     intros Hle Hlt foo bar; clear foo bar.
-     elim (Z_lt_dec x z).
-     intros H; compute in |- *; trivial.
-     intros H; absurd (x < z)%Z; trivial.
-     apply (Zlt_le_trans x y z); trivial.
-     intros b a H Habs; compute in |- *; contradiction.
-     intros b H; compute in H; contradiction. *}
+     intros b H; compute in H; contradiction.
+     Qed. *}
 ;;
 
 theorem int_le_refl :
@@ -334,7 +351,7 @@ theorem int_le_antisymm:
 proof:
   coq proof
   {* intros x y.
-     unfold int_leq in |- *.
+     unfold int_leq, bi__int_leq in |- *.
      elim (Z_le_dec x y); elim (Z_le_dec y x).
      intros H1 H2.
      intros b c; clear b c.
@@ -345,6 +362,7 @@ proof:
      compute in |- *; intros Habs; eapply False_ind; trivial.
      intros a b Habs H; clear H a; compute in Habs; eapply False_ind; trivial.
      intros a b Habs H; clear H a; compute in Habs; eapply False_ind; trivial.
+     Qed.
   *}
 ;;
 
@@ -352,11 +370,12 @@ theorem int_le_trans:
   all x y z in int,  #int_leq(x, y) -> #int_leq (y, z) -> #int_leq(x, z)
 proof:
   coq proof
-  {* unfold int_leq in |- *; intros x y z H1 H2.
+  {* unfold int_leq, bi__int_leq in |- *; intros x y z H1 H2.
      apply dec_IsTrue. cut (x <= y)%Z. cut (y <= z)%Z.
      eauto with zarith.
      eapply IsTrue_dec. apply H2.
      eapply IsTrue_dec; apply H1.
+     Qed.
   *}
 ;;
 
@@ -364,39 +383,19 @@ theorem int_lt_irrefl :
   all x y in int, int_lt (x, y) -> ~ base_eq (x, y)
 proof: assumed {* Import trusted external code. *} ;;
 
-let pred =
-  internal int -> int
-  external
-  | caml -> {* Ml_builtins.pred *}
-  | coq -> {* coq_builtins.bi__int_pred *}
-;;
-
-let int_opp =
-  internal  int -> int
-  external
-  | caml -> {* Ml_builtins.int_opposite *}
-  | coq -> {* coq_builtins.bi__int_opposite *}
-;;
-
-let int_plus =
-  internal int -> int -> int
-  external
-  | caml -> {* Ml_builtins.int_plus *}
-  | coq -> {* coq_builtins.bi__int_plus *}
-;;
-
-let ( + ) (x, y) = int_plus (x, y) ;;
 
 
 theorem int_0_plus: all x y in int,
   #base_eq (x, 0) -> #base_eq (#int_plus (x, y), y)
 proof:
   coq proof
-  {* unfold int_plus, __g_base_eq_ in |- *; intros x y Hxz;
+  {* unfold int_plus, bi__int_plus, __g_base_eq_ in |- *; intros x y Hxz;
+     unfold base_eq; unfold bi__base_eq;
      apply EQ_base_eq; replace x with 0%Z; eauto with zarith.
      symmetry  in |- *.
      apply decidable.
-     apply Z_eq_dec. assumption. *}
+     apply Z_eq_dec. assumption.
+     Qed. *}
 ;;
 
 theorem int_lt_le_S:
@@ -404,8 +403,10 @@ theorem int_lt_le_S:
 proof:
   coq proof
   {* unfold int_lt, int_leq, int_plus in |- *; intros x y Hlt;
+     unfold bi__int_lt, bi__int_leq, bi__int_plus;
      apply dec_IsTrue; fold (Zsucc x) in |- *; apply Zlt_le_succ;
-     trivial. exact (IsTrue_dec Hlt). *}
+     trivial. exact (IsTrue_dec Hlt).
+     Qed. *}
 ;;
 
 theorem int_plus_assoc: all x y z in int,
@@ -413,15 +414,20 @@ theorem int_plus_assoc: all x y z in int,
 proof:
   coq proof
     {* unfold int_plus, __g_base_eq_ in |- *; intros x y z;
-       apply EQ_base_eq; auto with zarith. *}
+       unfold base_eq; unfold bi__base_eq;
+       apply EQ_base_eq; auto with zarith.
+       Qed. *}
 ;;
 
 theorem int_plus_commute: all x y  in int,
   #base_eq (#int_plus (x, y), #int_plus (y, x))
 proof:
   coq proof {*
-    unfold int_plus, __g_base_eq_ in |- *; intros x y; apply EQ_base_eq;
-    auto with zarith. *}
+    unfold int_plus, __g_base_eq_ in |- *; intros x y;
+    unfold base_eq; unfold bi__base_eq;
+    apply EQ_base_eq;
+    auto with zarith.
+    Qed. *}
 ;;
 
 theorem int_plus_plus:  all x y z t in int,
@@ -430,9 +436,11 @@ theorem int_plus_plus:  all x y z t in int,
 proof:
   coq proof
   {* unfold int_plus, __g_base_eq_ in |- *; intros x y z t H1 H2;
+     unfold base_eq; unfold bi__base_eq;
      apply EQ_base_eq; replace y with x. replace t with z. reflexivity.
      apply decidable. apply Z_eq_dec. assumption.
-     apply decidable. apply Z_eq_dec. assumption. *}
+     apply decidable. apply Z_eq_dec. assumption.
+     Qed. *}
 ;;
 
 theorem int_le_plus_plus: all x y z t in int,
@@ -441,37 +449,10 @@ theorem int_le_plus_plus: all x y z t in int,
 proof:
    coq proof
      {* unfold int_plus, int_leq in |- *; intros x y z t H1 H2;
+        unfold bi__int_leq, bi__int_plus, bi__int_plus;
         apply dec_IsTrue; apply Zplus_le_compat;
-        [ exact (IsTrue_dec H1) | exact (IsTrue_dec H2) ]. *}
-;;
-
-let succ(x) = #int_plus (x, 1) ;;
-let int_mult =
-  internal int -> int -> int
-  external
-  | caml -> {* Ml_builtins.int_mult *}
-  | coq -> {* coq_builtins.bi__int_mult *}
-;;
-
-let int_minus =
-  internal int -> int -> int
-  external
-  | caml -> {* Ml_builtins.int_minus *}
-  | coq -> {* coq_builtins.bi__int_minus *}
-;;
-
-let int_max =
-  internal  int -> int -> int
-  external
-  | caml -> {* Ml_builtins.int_max *}
-  | coq -> {* coq_builtins.bi__int_max *}
-;;
-
-let int_min =
-  internal int -> int -> int
-  external
-  | caml -> {* Ml_builtins.int_min *}
-  | coq -> {* coq_builtins.bi__int_min *}
+        [ exact (IsTrue_dec H1) | exact (IsTrue_dec H2) ].
+        Qed. *}
 ;;
 
 theorem int_min_le: all x y z in int,
@@ -479,22 +460,30 @@ theorem int_min_le: all x y z in int,
 proof:
    coq proof
      {* intros x y z H; elim H; intros H1 H2; clear H;
-        unfold int_min in |- *; elim (Z_lt_dec x y);
-        intros H; trivial. *}
+        unfold int_min in |- *;
+        unfold bi__int_min;
+        elim (Z_lt_dec x y);
+        intros H; trivial.
+        Qed. *}
 ;;
 
+(*** ??? ********* *)
 theorem int_min_le2: all x y z in int,
   #int_leq (z, #int_min (x, y)) -> (#int_leq (z, x) /\ #int_leq (z, y))
 proof:
    coq proof
    {*
    intros x y z; unfold int_min in |- *.
+   unfold bi__int_min.
    case (Z_lt_dec x y); intros H1 H2; split; trivial.
    apply int_le_trans with x; trivial.
-   unfold int_leq in |- *; apply dec_IsTrue; apply Zlt_le_weak; trivial.
+   unfold int_leq in |- *;
+   unfold int_leq, bi__int_leq;
+   apply dec_IsTrue; apply Zlt_le_weak; trivial.
    apply int_le_trans with y; trivial.
-   unfold int_leq in |- *; apply dec_IsTrue.
+   unfold int_leq in |- *; unfold bi__int_leq; apply dec_IsTrue.
    elim (Zle_or_lt y x); trivial.   intros Habs; absurd (x < y)%Z; trivial.
+   Qed.
  *}
 ;;
 
@@ -503,9 +492,12 @@ theorem int_plus_minus: all x y z in int,
 proof:
    coq proof
    {*
-   intros x y z; unfold int_plus, int_minus, base_eq_ in |- *;
-   intros H; apply EQ_base_eq; apply Zplus_minus_eq;
+   intros x y z; unfold int_plus, int_minus, base_eq in |- *;
+   intros H;
+   unfold bi__base_eq, bi__int_minus;
+   apply EQ_base_eq; apply Zplus_minus_eq;
    symmetry  in |- *; apply (decidable _ _ _ (Z_eq_dec (x + y) z) H).
+   Qed.
  *}
  ;;
 
@@ -514,39 +506,15 @@ theorem int_minus_plus: all x y z in int,
 proof:
    coq proof
    {*
-   intros x y z; unfold int_plus, int_minus, base_eq_ in |- *;
-   intros H; apply EQ_base_eq; rewrite <- (Zplus_minus y x);
+   intros x y z; unfold int_plus, int_minus, base_eq in |- *;
+   intros H;
+   unfold bi__base_eq, bi__int_minus;
+   apply EQ_base_eq; rewrite <- (Zplus_minus y x);
    apply Zplus_eq_compat; trivial; apply decidable. apply Z_eq_dec. assumption.
+   Qed.
    *}
 ;;
 
-(* String operations. *)
-
-(* Concatenation. *)
-let sc =
-  internal  string -> string -> string
-  external
-  | caml -> {* Ml_builtins.str_cat *}
-  | coq -> {* [Unsure] *}
-;;
-
-let ( ^ ) (x, y) = sc (x, y) ;;
-
-let str_lt =
-  internal string -> string -> bool
-  external
-  | caml -> {* Ml_builtins.str_lt *}
-  | coq -> {* [Unsure] *}
-;;
-
-let print_string =
-  internal string -> unit
-  external
-  | caml -> {* Ml_builtins.str_print *}
-  | coq -> {* [Unsure] *}
-;;
-
-let print_newline (x in unit) = print_string ("\n") ;;
 
 
 (*                                                                       *)
