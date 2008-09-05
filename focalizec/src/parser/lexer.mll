@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.38 2008-05-23 09:42:46 pessaux Exp $ *)
+(* $Id: lexer.mll,v 1.39 2008-09-05 12:22:22 weis Exp $ *)
 
 {
 open Lexing;;
@@ -277,7 +277,7 @@ let ident_of_infixop s = IIDENT s;;
 let mk_prefixop s =
   assert (String.length s > 0);
   match s.[0] with
-  | '`' -> BACKQUOTE_OP s
+  | '`' (* ` Helping emacs *)-> BACKQUOTE_OP s
   | '~' -> if String.length s = 1 then TILDA else TILDA_OP s
   | '?' -> QUESTION_OP s
   | '$' -> DOLLAR_OP s
@@ -387,7 +387,7 @@ let string_of_lex_error = function
   | External_code_in_delimited_ident ->
       "Non escaped external code separator in delimited ident"
   | Illegal_character c ->
-      "Illegal character (" ^ (Char.escaped c) ^ ")"
+      "Illegal character (" ^ Char.escaped c ^ ")"
   | Illegal_escape s ->
       "Illegal backslash escape in string or character (" ^ s ^ ")"
   | Uninitiated_comment ->
@@ -462,7 +462,7 @@ let inside_ident =
 let infix_char =
   [ '+' '-' '*' '/' '%' '&' '|' ':' ';' '<' '=' '>' '@' '^' '\\' ]
 let prefix_char =
-  [ '`' '~' '?' '$' '!' '#' ]
+  [ '`' '~' '?' '$' '!' '#' ] (* ` helping emacs. *)
 let fix_char =
     infix_char
   | prefix_char
@@ -834,9 +834,6 @@ and string = parse
 and documentation = parse
   | "*)"
     { () }
-  | newline
-    { update_loc lexbuf None 1 false 0;
-      documentation lexbuf }
   | eof
     { match !documentation_start_pos with
       | Some (start_pos, end_pos) ->
@@ -849,9 +846,6 @@ and documentation = parse
 and external_code = parse
   | "*}"
     { () }
-  | newline
-    { update_loc lexbuf None 1 false 0;
-      external_code lexbuf }
   | eof
     { match !external_code_start_pos with
       | Some (start_pos, end_pos) ->
