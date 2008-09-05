@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.59 2008-08-13 15:55:17 pessaux Exp $ *)
+(* $Id: types.ml,v 1.60 2008-09-05 12:05:40 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -262,7 +262,7 @@ let type_unit () = type_basic ("basics", "unit") [] ;;
 
 let type_arrow t1 t2 = ST_arrow (t1, t2) ;;
 
-let type_prop () = type_basic ("basics", "prop") [] ;;
+let type_prop () = type_basic ("coq_builtins", "prop") [] ;;
 
 let type_tuple tys = ST_tuple tys ;;
 
@@ -777,7 +777,7 @@ let refers_to_prop_p ty =
      | ST_arrow (ty1, ty2) -> test ty1 || test ty2
      | ST_tuple tys -> List.exists test tys
      | ST_construct (cstr_name, args) ->
-         cstr_name = ("basics", "prop") || List.exists test args
+         cstr_name = ("coq_builtins", "prop") || List.exists test args
      | ST_self_rep -> false
      | ST_species_rep _ -> false in
   test ty
@@ -1205,17 +1205,17 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
         if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_construct (type_name, arg_tys) ->
         (begin
-        (* Priority of arguments of a sum type constructor :       *)
-        (* like tuples if only one argument : 3                    *)
-        (* otherwise 0 if already a tuple because we force parens. *)
+        (* Priority of arguments of a sum type constructor :
+           like tuples if only one argument : 3
+           otherwise 0 if already a tuple because we force parens. *)
         match arg_tys with
          | [] ->
-             (* Just the special case for type "prop" that maps onto bool... *)
-             (* The problem is that we can't really "define" "prop" in the   *)
-             (* file "basic.foc" because "prop" is a keyword. Hence, we make *)
-             (* directmy the shortcut between "prop" and the type "bool"     *)
-             (* defined in the "basic.foc" file .                            *)
-             if type_name = ("basics", "prop") then
+             (* Just the special case for type "prop" that maps onto bool...
+                The problem is that we can't really "define" "prop" in the
+                file "basic.foc" because "prop" is a keyword. Hence, we make
+                directly the shortcut between "prop" and the type "bool"
+                defined in the "coq_builtins.v" file. *)
+             if type_name = ("coq_builtins", "prop") then
                Format.fprintf ppf "Basics._focty_bool"
              else
                Format.fprintf ppf "%a"
@@ -1232,9 +1232,9 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
                (pp_type_name_to_ml ~current_unit) type_name
         end)
     | ST_self_rep ->
-        (* Here is the major difference with the regular [pp_type_simple]. *)
-        (* We print the type variable that represents our carrier in the   *)
-        (* OCaml translation.                                              *)
+        (* Here is the major difference with the regular [pp_type_simple].
+           We print the type variable that represents our carrier in the
+           OCaml translation. *)
         Format.fprintf ppf "'me_as_carrier"
     | ST_species_rep (module_name, collection_name) ->
         (begin
@@ -1420,13 +1420,13 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
                     Format.fprintf ppf "%s_T" coll_type_variable
                end)
         with Not_found ->
-          (* If the carrier is not in the mapping created for the species *)
-          (* parameters, that's because the searched species carrier's is *)
-          (* not a species parameter, i.e. it's a toplevel species.       *)
-          (* And as always, the type's name representing a species's      *)
-          (* carrier is the species's name + ".rf_T" with a possible      *)
-          (* module prefix qualification if the species belongs to a file *)
-          (* that is not the currently compiled one.                      *)
+          (* If the carrier is not in the mapping created for the species
+             parameters, that's because the searched species carrier's is not
+             a species parameter, i.e. it's a toplevel species.
+             And as always, the type's name representing a species's carrier
+             is the species's name + ".rf_T" with a possible module prefix
+             qualification if the species belongs to a file that is not the
+             currently compiled one. *)
           if ctx.cpc_current_unit = module_name then
             Format.fprintf ppf "%s.effective_collection.(%s.rf_T)"
               collection_name collection_name
