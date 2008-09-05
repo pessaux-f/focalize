@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.39 2008-09-05 12:22:22 weis Exp $ *)
+(* $Id: lexer.mll,v 1.40 2008-09-05 13:11:17 weis Exp $ *)
 
 {
 open Lexing;;
@@ -277,7 +277,7 @@ let ident_of_infixop s = IIDENT s;;
 let mk_prefixop s =
   assert (String.length s > 0);
   match s.[0] with
-  | '`' (* ` Helping emacs *)-> BACKQUOTE_OP s
+  | '`' (* ` Helping emacs *) -> BACKQUOTE_OP s
   | '~' -> if String.length s = 1 then TILDA else TILDA_OP s
   | '?' -> QUESTION_OP s
   | '$' -> DOLLAR_OP s
@@ -413,6 +413,32 @@ let string_of_lex_error = function
 let newline = '\010'
 let blank = [ ' ' '\009' '\012' ]
 
+(** {3 Numbers} *)
+
+(** {6 Integers} *)
+
+let decimal_literal =
+  [ '0'-'9'] ['0'-'9' '_' ]*
+let hex_literal =
+  '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f' '_']+
+let oct_literal =
+  '0' ['o' 'O'] ['0'-'7'] ['0'-'7' '_']*
+let bin_literal =
+  '0' ['b' 'B'] ['0'-'1' '_']+
+let int_literal =
+  decimal_literal | hex_literal | oct_literal | bin_literal
+let integer_literal =
+  ('-')? int_literal
+
+(** {6 Floating point numbers} *)
+
+let float_literal =
+  ('-')? ['0'-'9'] ['0'-'9' '_']*
+  ('.' ['0'-'9' '_']* )?
+  (['e' 'E'] ['+' '-']? ['0'-'9'] ['0'-'9' '_']*)?
+
+(** {3 Identifiers} *)
+
 (** Identifiers can be:
    - alphanumerical,
    - infix,
@@ -510,30 +536,14 @@ let continue_infix_ident =
 
   In a _U_ b the token _U_ is not an infix but an uppercase ident. *)
 
-(** Identifiers *)
+(** {6 Regular identifiers} *)
 
 let regular_lowercase_ident = start_lowercase_ident continue_ident*
 let regular_uppercase_ident = start_uppercase_ident continue_ident*
 let regular_infix_ident = start_infix_ident continue_infix_ident*
 let regular_prefix_ident = start_prefix_ident continue_prefix_ident*
 
-(** Integers. *)
-let decimal_literal =
-  ('-')? [ '0'-'9'] ['0'-'9' '_' ]*
-let hex_literal =
-  '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f' '_']+
-let oct_literal =
-  '0' ['o' 'O'] ['0'-'7'] ['0'-'7' '_']*
-let bin_literal =
-  '0' ['b' 'B'] ['0'-'1' '_']+
-let int_literal =
-  decimal_literal | hex_literal | oct_literal | bin_literal
-let float_literal =
-  ('-')? ['0'-'9'] ['0'-'9' '_']*
-  ('.' ['0'-'9' '_']* )?
-  (['e' 'E'] ['+' '-']? ['0'-'9'] ['0'-'9' '_']*)?
-
-(** Delimited identifiers. *)
+(** {6 Delimited identifiers} *)
 
 let delimited_lowercase_ident =
   '`' '`' start_lowercase_ident [^'\'' '\n']* '\'' '\''
@@ -547,6 +557,7 @@ let delimited_infix_ident =
 let delimited_prefix_ident =
   '`' '`' start_prefix_ident [^'\'' '\n']* '\'' '\''
 
+(** {6 Identifiers} *)
 let lowercase_ident =
     regular_lowercase_ident
   | delimited_lowercase_ident
@@ -562,6 +573,8 @@ let infix_ident =
 let prefix_ident =
     regular_prefix_ident
   | delimited_prefix_ident
+
+(** {3 The main lexer. *)
 
 rule token = parse
   | newline
@@ -592,7 +605,7 @@ rule token = parse
                 lexbuf.lex_start_p,
                 lexbuf.lex_curr_p)) }
 
-  | int_literal
+  | integer_literal
     { INT (Lexing.lexeme lexbuf) }
   | float_literal
     { FLOAT (Lexing.lexeme lexbuf) }
@@ -701,7 +714,7 @@ and delimited_ident = parse
     { store_delimited_ident_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
       delimited_ident lexbuf }
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
-    { store_delimited_ident_char(char_for_decimal_code lexbuf 1);
+    { store_delimited_ident_char (char_for_decimal_code lexbuf 1);
       delimited_ident lexbuf }
   | '\\' 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F']
     { store_delimited_ident_char (char_for_hexadecimal_code lexbuf 2);
@@ -710,8 +723,8 @@ and delimited_ident = parse
     { raise
         (Error
            (Illegal_escape (Lexing.lexeme lexbuf),
-           lexbuf.lex_start_p,
-           lexbuf.lex_curr_p)) }
+            lexbuf.lex_start_p,
+            lexbuf.lex_curr_p)) }
   | ( "(*" | "*)" "--" )
     { raise
         (Error
@@ -724,7 +737,7 @@ and delimited_ident = parse
            (External_code_in_delimited_ident,
             lexbuf.lex_start_p,
             lexbuf.lex_curr_p)) }
-  | ( "``" | "''" )
+  | "``"
     { raise
         (Error
            (Delimited_ident_in_delimited_ident,
