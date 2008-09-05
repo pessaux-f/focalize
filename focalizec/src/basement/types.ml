@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.61 2008-09-05 15:55:22 pessaux Exp $ *)
+(* $Id: types.ml,v 1.62 2008-09-05 16:07:31 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1123,16 +1123,16 @@ let debug_collection_carrier_mapping cmap =
     {b Rem} : Exported outside this module.                                  *)
 (* ************************************************************************* *)
 let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
-  (* ********************************************************************* *)
-  (* ((type_variable * string) list) ref                                   *)
+  (* ********************************************************************** *)
+  (* ((type_variable * string) list) ref                                    *)
   (** {b Descr} : The mapping giving for each variable already seen the
                 name used to denote it while printing it.
 
       {b Rem} : Not exported. This mapping is purely local to the
-              pretty-print function of type into the OCaml syntax. It is
-              especially not shared with the type printing routine used to
-              generate the FoCaL feedback and the Coq code.                *)
-  (* ********************************************************************* *)
+      pretty-print function of type into the OCaml syntax. It is especially
+      not shared with the type printing routine used to generate the FoCaL
+      feedback and the Coq code.                *)
+  (* ********************************************************************** *)
   let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
 
   (* ********************************************************************* *)
@@ -1360,8 +1360,8 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
         if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_construct (type_name, arg_tys) ->
         (begin
-        (* Priority of arguments of a sum type constructor : *)
-        (* like an regular application : 0.                  *)
+        (* Priority of arguments of a sum type constructor : like an regular
+	   application : 0. *)
         match arg_tys with
          | [] -> Format.fprintf ppf "%a"
                (pp_type_name_to_coq ~current_unit: ctx.cpc_current_unit)
@@ -1377,21 +1377,21 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
         (begin
         match ctx.cpc_current_species with
          | None ->
-             (* Referencing "Self" outside a species should have *)
-             (* been caught earlier, i.e. at typechecking stage. *)
+             (* Referencing "Self" outside a species should have been caught
+		earlier, i.e. at typechecking stage. *)
              assert false
          | Some (species_modname, _) ->
              (begin
-             (* Obviously, Self should refer to the current species. *)
-             (* This means that the CURRENT species MUST be in the   *)
-             (* CURRENT compilation unit !                           *)
+             (* Obviously, Self should refer to the current species. This
+		means that the CURRENT species MUST be in the CURRENT
+		compilation unit ! *)
              assert (species_modname = ctx.cpc_current_unit) ;
-             (* If "Self" is kept abstract, then it won't appear in the     *)
-             (* collection_carrier_mapping and must be printed like         *)
-             (* "abst_T" (for instance when printing in a field definition) *)
-             (* Otherwise it may show the species from which it is the      *)
-             (* carrier (when printing the record type) and must appear in  *)
-             (* the collection_carrier_mapping.                             *)
+             (* If "Self" is kept abstract, then it won't appear in the
+                collection_carrier_mapping and must be printed like "abst_T"
+		(for instance when printing in a field definition). Otherwise
+		it may show the species from which it is the carrier (when
+		printing the record type) and must appear in the
+		collection_carrier_mapping. *)
              try
                let (self_as_string, _) =
                  List.assoc

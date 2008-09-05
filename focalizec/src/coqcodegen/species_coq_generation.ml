@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.100 2008-09-05 15:55:22 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.101 2008-09-05 16:07:31 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1647,11 +1647,16 @@ let print_types_as_tuple_if_several print_ctx out_fmter types =
           (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty
     | (_, h) :: q ->
         let ty = match h with None -> assert false | Some t -> t in
-        Format.fprintf out_fmter "@[<1>(prod %a@ "
+        Format.fprintf out_fmter "%a@ *@ "
           (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty ;
-        rec_print q ;
-        Format.fprintf out_fmter ")@]" in
-  rec_print types
+        rec_print q in
+  match types with
+   | [] -> assert false
+   | [(_, _)] -> rec_print types
+   | _ ->
+       Format.fprintf out_fmter "(@[<1>(" ;
+       rec_print types ;
+       Format.fprintf out_fmter ")%%type@])"
 ;;
 
  
