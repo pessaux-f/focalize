@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.101 2008-09-05 16:07:31 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.102 2008-09-07 07:15:34 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2326,8 +2326,8 @@ traité les methodes de nous dont on dépend... *)
           Sourcify.pp_vname field_memory.Misc_common.cfm_method_name
           defined_from_mod Sourcify.pp_vname defined_from_species ;
       if defined_from_mod <> ctx.Context.scc_current_unit then
-        Format.fprintf out_fmter "%s.@," defined_from_mod ;
-      Format.fprintf out_fmter "%a.@,%a"
+        Format.fprintf out_fmter "%s." defined_from_mod ;
+      Format.fprintf out_fmter "%a.%a"
         Parsetree_utils.pp_vname_with_operators_expanded defined_from_species
         Parsetree_utils.pp_vname_with_operators_expanded
         field_memory.Misc_common.cfm_method_name ;

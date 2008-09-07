@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.29 2008-09-05 14:10:07 pessaux Exp $
+# $Id: Makefile,v 1.30 2008-09-07 07:15:34 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -69,7 +69,7 @@ clean::
 	$(RM) *~ *.cm* log *.fo $(FOCMLS) $(FOCZVS) $(FOCVS) $(FOCVOS)
 	$(RM) $(EXTERNALOBJS)
 	$(RM) $(FOCMLS_UNSAFE) $(FOCZVS_UNSAFE) $(FOCVS_UNSAFE) $(FOCVOS_UNSAFE)
-	$(RM) *.mangled odoc/*
+	$(RM) *.mangled odoc/* *.pfc
 
 depend:
 	$(CAMLDEP) *.mli *.ml > ./.depend
