@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.17 2008-08-13 15:55:17 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.18 2008-09-08 11:06:11 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -244,4 +244,3 @@ let make_pseudo_species_ident ~current_unit (species_mod, species_name) =
     Parsetree.ast_doc = [] ;
     Parsetree.ast_type = Parsetree.ANTI_none }
 ;;
-
