@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.143 2008-09-04 14:48:33 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.144 2008-09-10 10:29:19 pessaux Exp $ *)
 
 
 
@@ -187,8 +187,8 @@ exception Not_subspecies_missing_field of
 
 (* ******************************************************************* *)
 (** {b Descr} : During a parameterized species application, the number
-              of provided arguments is incorrect compared to the
-              number of expected arguments.
+    of provided arguments is incorrect compared to the number of
+    expected arguments.
 
     {b Rem} : Exported outside this module.                            *)
 (* ******************************************************************* *)
@@ -533,8 +533,7 @@ let make_implicit_var_mapping_from_type_exprs type_expressions =
              (* Just handle the special case where the ident is a type
                 variable. *)
              if not (List.mem_assoc variable_qname !mapping) then
-               mapping :=
-                 (variable_qname, Types.type_variable ()) :: !mapping
+               mapping := (variable_qname, Types.type_variable ()) :: !mapping
          | _ -> ()
          end)
     | Parsetree.TE_fun (ty_expr1, ty_expr2) ->
@@ -1051,7 +1050,7 @@ let rec typecheck_expr ctx env initial_expr =
                Types.unify
                  ~loc: initial_expr.Parsetree.ast_loc
                  ~self_manifest: ctx.self_manifest !result_ty clause_ty)
-           bindings;
+           bindings ;
          (* Return the type of the bodies' clauses. *)
          !result_ty
      | Parsetree.E_if (e_cond, e_then, e_else) ->
@@ -1224,28 +1223,28 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
           Types.begin_definition () ;
           let ty = Types.type_variable () in
           Types.end_definition () ;
-          (* Say "true" to mean "generalizable" (implies that a  *)
-          (* begin/end_definition have been performed) .         *)
+          (* Say "true" to mean "generalizable" (implies that a
+             begin/end_definition have been performed). *)
           (binding_desc.Parsetree.b_name, ty, true)
           end)
         else
           (begin
           (* The body expression won't be authorised to be generalised. *)
           let ty = Types.type_variable () in
-          (* Say "false" to mean "NON-generalisable" (implies that *)
-          (* no begin/end_definition have been performed) .        *)
+          (* Say "false" to mean "NON-generalisable" (implies that no
+             begin/end_definition have been performed). *)
           (binding_desc.Parsetree.b_name, ty, false)
           end))
       let_def_descr.Parsetree.ld_bindings in
-  (* Now let's address the bindings bodies ! If the definition is recursive *)
-  (* then we extend the current environment with the assumed types.         *)
+  (* Now let's address the bindings bodies ! If the definition is recursive
+     then we extend the current environment with the assumed types. *)
   let env' =
     if let_def_descr.Parsetree.ld_rec = Parsetree.RF_no_rec then env
     else
       List.fold_left
         (fun accu_env (vname, ty, _) ->
-          (* No generalisation (polymorphism) of the function *)
-          (* inside its body (that's would be Mu-rule).       *)
+          (* No generalisation (polymorphism) of the function inside its body
+             (that's would be Mu-rule). *)
           let scheme = Types.trivial_scheme ty in
           Env.TypingEnv.add_value vname scheme accu_env)
         env pre_env_info in
@@ -1253,15 +1252,15 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
   let tmp_env_bindings =
     List.map2
       (fun binding (_, assumed_ty, non_expansive) ->
-        (* Clear the status of whether def/decl-dependency on "rep" exist if *)
-        (* the let-definition is a species field. Otherwise, keep if as it   *)
-        (* is in order to accumulate the information for the global          *)
-        (* surrounding expression.                                           *)
+        (* Clear the status of whether def/decl-dependency on "rep" exist if
+           the let-definition is a species field. Otherwise, keep if as it is
+           in order to accumulate the information for the global surrounding
+           expression. *)
         if is_a_field then Types.reset_deps_on_rep () ;
         let binding_desc =  binding.Parsetree.ast_desc in
         let binding_loc = binding.Parsetree.ast_loc in
-        (* Get all the type constraints from both the params *)
-        (* and the body annotations of the definition.       *)
+        (* Get all the type constraints from both the params and the body
+           annotations of the definition. *)
         let all_ty_constraints =
           List.fold_left
             (fun accu (_, tye_opt) ->
@@ -1281,9 +1280,9 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
         if non_expansive then Types.end_definition () ;
         let ctx_with_tv_vars_constraints = {
           ctx with tyvars_mapping = vmap' @ ctx.tyvars_mapping } in
-        (* Build a type for the arguments of the bound identier if there are *)
-        (* some. If they have type constraints, then use it as primary type  *)
-        (* instead of using a type variable that we should unify afterwards. *)
+        (* Build a type for the arguments of the bound identier if there are
+           some. If they have type constraints, then use it as primary type
+           instead of using a type variable that we should unify afterwards. *)
         if non_expansive then Types.begin_definition () ;
         let args_tys =
           List.map
@@ -1312,10 +1311,10 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
           typecheck_binding_body
             ctx_with_tv_vars_constraints local_env
             binding_desc.Parsetree.b_body in
-        (* If there is some constraint on this type, then unify with it. *)
-        (* But anyway KEEP the constraint for type ! Unification is only *)
-        (* there to ensure compatibility between the infered type and    *)
-        (* the proposed constraint !                                     *)
+        (* If there is some constraint on this type, then unify with it.
+           But anyway KEEP the constraint for type ! Unification is only
+           there to ensure compatibility between the infered type and the
+           proposed constraint ! *)
         let infered_body_ty_with_constraint =
           (match binding_desc.Parsetree.b_type with
            | None -> infered_body_ty
@@ -1329,12 +1328,12 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
                   constraint_ty infered_body_ty);
              (* As said above, KEEP the constraint as the final type ! *)
              constraint_ty) in
-        (* Now, reconstruct the functional type from the body's and args' *)
-        (* types. DO NOT fold_left, otherwise the fun type gets mirored ! *)
-        (* By the way, be careful to create the type arrow with the right *)
-        (* binding level, and especially, not outside the binding level   *)
-        (* used to infer the body !!! That's why the end_definition is    *)
-        (* done AFTER having created the [complete_ty].                   *)
+        (* Now, reconstruct the functional type from the body's and args'
+           types. DO NOT fold_left, otherwise the fun type gets mirored !
+           By the way, be careful to create the type arrow with the right
+           binding level, and especially, not outside the binding level used
+           to infer the body !!! That's why the end_definition is done AFTER
+           having created the [complete_ty]. *)
         let complete_ty =
           List.fold_right
             (fun arg_ty accu_ty -> Types.type_arrow arg_ty accu_ty)
@@ -1475,14 +1474,14 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
              ~self_manifest: ctx.self_manifest ty (Types.type_prop ()) in
          final_ty
      | Parsetree.Pr_expr expr ->
-         (* Make the carrier abstract to prevent def-dependencies     *)
-         (* with "rep" (c.f Virgile Prevosto's Phd page 52, Fig3.3)   *)
-         (* rule [EXPR] only when the current logical_expr appears in *)
-         (* a theorem/property definition, not in its proof.          *)
+         (* Make the carrier abstract to prevent def-dependencies with "rep"
+            (c.f Virgile Prevosto's Phd page 52, Fig3.3) rule [EXPR] only when
+            the current logical_expr appears in a theorem/property definition,
+            not in its proof. *)
          let ctx' =
            if in_proof then ctx else { ctx with self_manifest = None } in
-         (* Expressions must be typed as [bool] OR [logical_expr]. If *)
-         (* so, then the returned  type is [logical_expr].            *)
+         (* Expressions must be typed as [bool] OR [logical_expr]. If  so, then
+            the returned  type is [logical_expr]. *)
          let ty = typecheck_expr ctx' env expr in
          (try
            (* First try to check if it is typed bool. *)
@@ -1499,8 +1498,8 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
                   ~loc: logical_expr.Parsetree.ast_loc
                   ~self_manifest: ctx'.self_manifest ty (Types.type_prop ()))
             with _ ->
-             (* If it's neither bool nor logical_expr, then restore *)
-             (* the fisrt error cause  for error report.    *)
+             (* If it's neither bool nor logical_expr, then restore the fisrt
+                error cause  for error report. *)
              raise err
            end));
          Types.type_prop ()
@@ -1513,24 +1512,24 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
 
 and typecheck_binding_body ctx env = function
   | Parsetree.BB_logical p ->
-      (* Because these logical_exprs only appear in a logical let,       *)
-      (* they are allowed to know Self representation (like in proofs) ! *)
+      (* Because these logical_exprs only appear in a logical let, they are
+         allowed to know Self representation (like in proofs) ! *)
       typecheck_logical_expr ctx env ~in_proof: true p
   | Parsetree.BB_computational e -> typecheck_expr ctx env e
 
 
 
 
-(* ************************************************************************* *)
-(* typing_context -> Env.TypingEnv.t -> Parsetree.proof -> unit              *)
+(* ********************************************************************* *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.proof -> unit          *)
 (** {b Descr} : Typechecks a [proof]. Because the type of a proof is not
-              relevant in FoCaL, this function does not returns any type.
-              Its only goal is to verify the type of the AST-sub-expressions
-              where it is relevant and to screw this type in the [ast_type]
-              field of these AST-nodes (i.e especially throug [statement]s.
+    relevant in FoCaL, this function does not returns any type. Its only
+    goal is to verify the type of the AST-sub-expressions where it is
+    relevant and to screw this type in the [ast_type] field of these
+    AST-nodes (i.e especially throug [statement]s.
 
-    {b Rem} : Not exported outside this module.                              *)
-(* ************************************************************************* *)
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
 and typecheck_proof ctx env proof =
   (* No relevant type information to insert in the AST node. *)
   proof.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
@@ -1574,16 +1573,16 @@ and typecheck_node ctx env node =
 (* ******************************************************************** *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.statement -> unit     *)
 (** {b Descr} : Typechecks a [statement]. Hypotheses are entered in the
-              current environment before typechecking the optional
-              [s_concl] proposition.
+    current environment before typechecking the optional [s_concl]
+    proposition.
 
     {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************** *)
 and typecheck_statement ctx env statement =
   (* No relevant type information to insert in the AST node. *)
   statement.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
-  (* Do not fold_right otherwise the hypotheses will be *)
-  (* processed in reverse order !!!                    *)
+  (* Do not fold_right otherwise the hypotheses will be processed in reverse
+     order !!! *)
   let env' =
     List.fold_left
       (fun accu_env hyp ->
@@ -1592,9 +1591,9 @@ and typecheck_statement ctx env statement =
            | Parsetree.H_variable (vname, type_expr) ->
                (vname, (typecheck_type_expr ctx accu_env type_expr))
            | Parsetree.H_hypothesis (vname, logical_expr) ->
-               (* Be careful, because we are not in a theorem/property *)
-               (* description, but in its proof, we must not make Self *)
-               (* abstract here !                                      *)
+               (* Be careful, because we are not in a theorem/property
+                  description, but in its proof, we must not make Self
+                  abstract here ! *)
                (vname,
                 (typecheck_logical_expr
                    ~in_proof: true ctx accu_env logical_expr))
@@ -1602,9 +1601,9 @@ and typecheck_statement ctx env statement =
                (vname, (typecheck_expr ctx accu_env expr))) in
         (* Record the type information in the AST node. *)
         hyp.Parsetree.ast_type <- Parsetree.ANTI_type ty ;
-        (* Extend the environment for the next hypotheses and finally *)
-        (* to build the complete environment that will be used to     *)
-        (* typecheck the conclusion of the statement.                 *)
+        (* Extend the environment for the next hypotheses and finally to build
+           the complete environment that will be used to typecheck the
+           conclusion of the statement. *)
         let scheme = Types.generalize ty in
         Env.TypingEnv.add_value name scheme accu_env)
       env
@@ -2133,7 +2132,7 @@ let rec expr_to_species_param_expr ~current_unit env expr =
 (* ************************************************************************ *)
 (** {Descr}: Transforms the description of what is a species parameter into
     a simpler structure than the one used in [Env.TypeInformation]. In fact
-    we want to keep trace of wether a parameter is "is" or "in" and what is
+    we want to keep trace of wether a parameter is "IS" or "IN" and what is
     its species. For this last point, we transform the arbitrary expression
     [Parsetree.expr] into a [species_param_expr] where the invariant that
     the [Parsetree.expr] can be only a sum type value constructor (possibly

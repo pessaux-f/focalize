@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.28 2008-09-10 08:14:47 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.29 2008-09-10 10:29:19 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -256,12 +256,12 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
           | (_, Dep_analysis.DK_def) -> false)
         my_node.Dep_analysis.nn_children
     with Not_found -> ([], [])  (* No children at all. *)) in
-  (* Get the list of the methods from the species parameters the current *)
-  (* method depends on. Do not [fold_left] to keep the extra parameters  *)
-  (* in the same order than the species parameters order. I.e. for a    *)
-  (* species [Foo (A ..., B) ...] we want to have the extra parameters  *)
-  (* due to lambda-lifting in the OCaml function ordered such as those  *)
-  (* coming from [A] are first, then come those from [B].               *)
+  (* Get the list of the methods from the species parameters the current
+     method depends on. Do not [fold_left] to keep the extra parameters in the
+     same order than the species parameters order. I.e. for a species
+     [Foo (A ..., B) ...] we want to have the extra parameters due to
+     lambda-lifting in the OCaml function ordered such as those coming from
+     [A] are first, then come those from [B]. *)
   let dependencies_from_params_in_bodies =
     List.fold_right
       (fun species_param accu ->
@@ -711,19 +711,19 @@ let complete_dependencies_from_params env ~current_unit ~current_species
   let dependencies_from_params_via_type =
     (match opt_proof with
      | None ->
-         (* If no proof is given, then there is no dependency, but we must *)
-         (* not simply return the [] because all our "union" functions on  *)
-         (* dependencies rely on a list of sets with 1 set for each        *)
-         (* species parameter name.                                        *)
+         (* If no proof is given, then there is no dependency, but we must
+            not simply return the [] because all our "union" functions on
+            dependencies rely on a list of sets with 1 set for each species
+	    parameter name. *)
          List.fold_right
            (fun species_param accu ->
              (species_param, Parsetree_utils.ParamDepNameSet.empty) :: accu)
            species_parameters
            []
      | Some proof ->
-         (* Same remark about [fold_right] than for the function *)
-         (* [compute_lambda_liftings_for_field] when computing   *)
-         (* [dependencies_from_params_in_bodies].                *)
+         (* Same remark about [fold_right] than for the function
+            [compute_lambda_liftings_for_field] when computing
+            [dependencies_from_params_in_bodies]. *)
          List.fold_right
            (fun species_param accu ->
              (* Recover the species parameter's name. *)
@@ -736,14 +736,14 @@ let complete_dependencies_from_params env ~current_unit ~current_species
                Param_dep_analysis.param_deps_proof
                  ~current_species (species_param_name, species_param_meths)
                  proof in
-             (* Return a couple binding the species parameter's name with the *)
-             (* methods of it we found as required for the current method.    *)
+             (* Return a couple binding the species parameter's name with the
+		methods of it we found as required for the current method. *)
              (species_param, meths_from_param) :: accu)
            species_parameters
            []) in
-  (* Rule [DEF-DEP]. Since "rep" is a method like the others, it may appear *)
-  (* in the def-dependencies. However, since "rep" can never induce         *)
-  (* dependencies on species parameters methods, we directly forget it.     *)
+  (* Rule [DEF-DEP]. Since "rep" is a method like the others, it may appear
+     in the def-dependencies. However, since "rep" can never induce
+     dependencies on species parameters methods, we directly forget it. *)
   let abstr_infos_from_all_def_children =
     List.fold_left
       (fun accu (def_child, _) ->
@@ -754,32 +754,32 @@ let complete_dependencies_from_params env ~current_unit ~current_species
              seen_abstractions) :: accu)
       []
       def_children in
-  (* The "empty" dependencies cannot simple be [] because all our "union" *)
-  (* functions on dependencies rely on a list of sets with 1 set for each *)
-  (* species parameter name. So we create our initial accumulator as the  *)
-  (* list mapping each species parameter name onto the empty dependencies *)
-  (* set.                                                                 *)
+  (* The "empty" dependencies cannot simple be [] because all our "union"
+     functions on dependencies rely on a list of sets with 1 set for each
+     species parameter name. So we create our initial accumulator as the
+     list mapping each species parameter name onto the empty dependencies
+     set. *)
   let empty_initial_deps_accumulator =
     List.fold_right
       (fun species_param accu ->
         (species_param, Parsetree_utils.ParamDepNameSet.empty) :: accu)
       species_parameters
       [] in
-  (* Since methods on which we depend are from Self, all of them share the *)
-  (* same species parameter names, and by construction, each of them have  *)
-  (* the same structure of list (i.e. species parameter names at the same  *)
-  (* place in the list) for their [ai_dependencies_from_params_via_body].  *)
-  (* Hence, instead of making [List.map] on the [species_parameter_names]  *)
-  (* to individually merge the methods from each children for a species    *)
-  (* parameter, we simply make the union (without double) of all the       *)
-  (* [ai_dependencies_from_params_via_body] of the def-children.           *)
+  (* Since methods on which we depend are from Self, all of them share the
+     same species parameter names, and by construction, each of them have the
+     same structure of list (i.e. species parameter names at the same place in
+     the list) for their [ai_dependencies_from_params_via_body].
+     Hence, instead of making [List.map] on the [species_parameter_names] to
+     individually merge the methods from each children for a species parameter,
+     we simply make the union (without double) of all the
+     [ai_dependencies_from_params_via_body] of the def-children. *)
   let dependencies_from_params_via_compl1 =
     List.fold_left
       (fun accu_deps_from_params abstr_infos_opt ->
         match abstr_infos_opt with
          | Some abstr_infos ->
-             (* We merge the found abstraction info and *)
-             (* the abstraction info accumulator.       *)
+             (* We merge the found abstraction info and the abstraction info
+		accumulator. *)
              merge_abstraction_infos
                abstr_infos.ai_dependencies_from_params_via_body
                accu_deps_from_params
@@ -792,12 +792,12 @@ let complete_dependencies_from_params env ~current_unit ~current_species
   let dependencies_from_params_via_compl2 =
     VisUniverse.Universe.fold
       (fun z_name_in_univ _ accu_deps_from_params ->
-        (* For each z (c.f. notation in Virgile) in the visible universe,    *)
-        (* we must add its [ai_dependencies_from_params_via_type].           *)
-        (* So we must first search the abstraction info of [z_name_in_univ]. *)
-        (* Since "rep" is a method like the others, it may appear in the     *)
-        (* universe. However, since "rep" can never induce dependencies on   *)
-        (* species parameters methods, we directly forget it.                *)
+        (* For each z (c.f. notation in Virgile) in the visible universe, we
+	   must add its [ai_dependencies_from_params_via_type].
+           So we must first search the abstraction info of [z_name_in_univ].
+           Since "rep" is a method like the others, it may appear in the
+           universe. However, since "rep" can never induce dependencies on
+           species parameters methods, we directly forget it. *)
         if z_name_in_univ = (Parsetree.Vlident "rep") then
           accu_deps_from_params
         else
@@ -806,8 +806,8 @@ let complete_dependencies_from_params env ~current_unit ~current_species
             find_field_abstraction_by_name z_name_in_univ seen_abstractions in
           match abstr_info_opt with
            | Some abstr_info ->
-               (* Now, add the [ai_dependencies_from_params_via_type] *)
-               (* to the dependencies accumulator.                    *)
+               (* Now, add the [ai_dependencies_from_params_via_type] to the
+		  dependencies accumulator. *)
                merge_abstraction_infos
                  abstr_info.ai_dependencies_from_params_via_type
                  accu_deps_from_params
