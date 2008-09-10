@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.52 2008-09-05 12:06:20 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.53 2008-09-10 08:14:47 pessaux Exp $ *)
 
 
 
@@ -59,6 +59,7 @@ let simply_pp_to_coq_qualified_vname ~current_unit ppf = function
 
 
 type self_methods_status =
+  | SMS_from_param of Parsetree.vname  (** Must be called "_p_Param_<meth>". *)
   | SMS_abstracted     (** Must be called "abst_<meth>". *)
   | SMS_from_record    (** Must be called "(hosting_species. if needed)
                            <rf_meth>". *)
@@ -153,6 +154,11 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
                    Parsetree_utils.pp_vname_with_operators_expanded vname
              | SMS_from_record ->
                  Format.fprintf out_fmter "rf_%a"
+                   Parsetree_utils.pp_vname_with_operators_expanded vname
+             | SMS_from_param spe_param_name ->
+		 Format.fprintf out_fmter "_p_%a_%a"
+		   Parsetree_utils.pp_vname_with_operators_expanded
+		   spe_param_name
                    Parsetree_utils.pp_vname_with_operators_expanded vname
             end)
         | Some coll_specifier ->
@@ -410,20 +416,19 @@ let rec let_binding_compile ctx ~local_idents ~self_methods_status ~is_rec
            ctx.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
-  (* We are printing each parameter's type. These types in fact belong *)
-  (* to a same type scheme. Hence, they may share variables together.  *)
-  (* For this reason, we first purge the printing variable mapping and *)
-  (* after, activate its persistence between each parameter printing.  *)
+  (* We are printing each parameter's type. These types in fact belong to a
+     same type scheme. Hence, they may share variables together.
+     For this reason, we first purge the printing variable mapping and after,
+     activate its persistence between each parameter printing. *)
   Types.purge_type_simple_to_coq_variable_mapping () ;
-  (* If the original scheme is polymorphic, then we must ad extra Coq  *)
-  (* parameters of type "Set" for each of the generalized variables.   *)
-  (* Hence, printing the variables used to instanciate the polymorphic *)
-  (* ones in front of the function, they will appear and moreover they *)
-  (* will be "tagged" as "seen" in the variable mapping. Hence, when   *)
-  (* we will print the arguments having these variables as type, the   *)
-  (* same variable name will be used, hence establishing the correct   *)
-  (* link between the type of the variable and the type variable of    *)
-  (* the function argument's type.                                     *)
+  (* If the original scheme is polymorphic, then we must ad extra Coq
+     parameters of type "Set" for each of the generalized variables. Hence,
+     printing the variables used to instanciate the polymorphic ones in front
+     of the function, they will appear and moreover they will be "tagged" as
+     "seen" in the variable mapping. Hence, when we will print the arguments
+     having these variables as type, the same variable name will be used,
+     hence establishing the correct link between the type of the variable and
+     the type variable of the function argument's type. *)
   List.iter
     (fun var ->
        Format.fprintf out_fmter "@ (%a : Set)"
@@ -455,11 +460,11 @@ let rec let_binding_compile ctx ~local_idents ~self_methods_status ~is_rec
            assert false)
     params_with_type ;
   (* [Unsure] This heuristic is a pure weak hack...                    *)
-  (* If the definition is a recursive function, then one must exhibit  *)
-  (* one decreasing argument. Because we don't know which one is, just *)
-  (* take one at random... For instance, the first one...              *)
-  (* If there is no parameter, then the binding is not a function and  *)
-  (* we do not need to exhibit any decreasing argument.                *)
+  (* If the definition is a recursive function, then one must exhibit one
+     decreasing argument. Because we don't know which one is, just take one at
+     random... For instance, the first one...
+     If there is no parameter, then the binding is not a function and we do
+     not need to exhibit any decreasing argument. *)
   if is_rec then
     (begin
     match params_with_type with
@@ -471,21 +476,21 @@ let rec let_binding_compile ctx ~local_idents ~self_methods_status ~is_rec
   (* Now, print the result type of the "let". *)
   (match result_ty with
    | None ->
-       (* Because we provided a type scheme to the function         *)
-       (* [bind_parameters_to_types_from_type_scheme], MUST get one *)
-       (* type for the result value of the "let".                   *)
+       (* Because we provided a type scheme to the function
+          [bind_parameters_to_types_from_type_scheme], MUST get one type for
+          the result value of the "let". *)
        assert false
    | Some t ->
        Format.fprintf out_fmter "@ :@ %a"
          (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
          t) ;
-  (* Now we don't need anymore the sharing. Hence, clean it. This should not *)
-  (* be useful because the other guys usign printing should manage this      *)
-  (* themselves (as we did just above by cleaning before activating the      *)
-  (* sharing), but anyway, it is safer an not costly. So...                  *)
+  (* Now we don't need anymore the sharing. Hence, clean it. This should not
+     be useful because the other guys usign printing should manage this
+     themselves (as we did just above by cleaning before activating the
+     sharing), but anyway, it is safer an not costly. So... *)
   Types.purge_type_simple_to_coq_variable_mapping () ;
-  (* Output now the ":=" sign ending the Coq function's "header".     *)
-  (* With a NON-breakable space before to prevent uggly hyphenation ! *)
+  (* Output now the ":=" sign ending the Coq function's "header".
+     With a NON-breakable space before to prevent uggly hyphenation ! *)
   Format.fprintf out_fmter " :=@ " ;
   (* Here, each parameter name of the binding may mask a "in"-parameter. *)
   let local_idents' = params_names @ local_idents in
@@ -495,9 +500,8 @@ let rec let_binding_compile ctx ~local_idents ~self_methods_status ~is_rec
        generate_expr
          ctx ~local_idents: local_idents' ~self_methods_status env' e
    | Parsetree.BB_logical _ -> assert false) ;
-  (* Finally, we record, even if it was already done in [env'] the number *)
-  (* of extra arguments due to polymorphism the current bound identifier  *)
-  (* has.                                                                 *)
+  (* Finally, we record, even if it was already done in [env'] the number of
+     extra arguments due to polymorphism the current bound identifier has. *)
   Env.CoqGenEnv.add_value
     bd.Parsetree.ast_desc.Parsetree.b_name nb_polymorphic_args env
 
@@ -517,8 +521,8 @@ and let_in_def_compile ctx ~local_idents ~self_methods_status env let_def =
     (match is_rec with
      | false -> ""
      | true ->
-         (* [Unsure] We don't known now how to compile several local mutually *)
-         (* recursive functions. *)
+         (* [Unsure] We don't known now how to compile several local mutually
+            recursive functions. *)
          if (List.length let_def.Parsetree.ast_desc.Parsetree.ld_bindings) > 1
          then failwith "TODO: local mutual recursive functions." ;
          " fix"   (* NON-breakable space in front. *)) ;
@@ -538,8 +542,8 @@ and let_in_def_compile ctx ~local_idents ~self_methods_status env let_def =
                 ctx ~local_idents ~self_methods_status ~is_rec env first_bnd) in
          List.iter
            (fun binding ->
-             (* We transform "let and" non recursive functions *)
-             (* into several "let in" definitions.             *)
+             (* We transform "let and" non recursive functions into several
+                "let in" definitions. *)
              Format.fprintf out_fmter "@ in@]@\n@[<2>let " ;
              accu_env :=
                let_binding_compile
@@ -580,8 +584,8 @@ and generate_expr ctx ~local_idents ~self_methods_status initial_env
             | Parsetree.ANTI_scheme _ -> assert false
             | Parsetree.ANTI_type t -> t) in
          Format.fprintf out_fmter "@[<2>(fun " ;
-         (* Now, print each parameter with it's type until we arrive to *)
-         (* the return type of the function. DO NOT fold_right !        *)
+         (* Now, print each parameter with it's type until we arrive to the
+            return type of the function. DO NOT fold_right ! *)
          ignore
            (List.fold_left
               (fun accu_ty arg_name ->
@@ -913,7 +917,7 @@ let rec generate_expr_as_species_parameter_expression ~current_unit ppf expr =
 
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
-let generate_record_type_parameters ctx species_fields =
+let generate_record_type_parameters ctx env species_fields =
   let ppf = ctx.Context.scc_out_fmter in
   let current_unit = ctx.Context.scc_current_unit in
   (* We first abstract the species/entity parameters *)
@@ -959,7 +963,8 @@ let generate_record_type_parameters ctx species_fields =
   (* We first build the lists of dependent methods for each *)
   (* property and theorem fields.                           *)
   let deps_for_fields =
-    ref ([] : (Parsetree.vname * (Parsetree_utils.DepNameSet.t ref)) list) in
+    ref ([] :
+	 (Parsetree.vname * (Parsetree_utils.ParamDepNameSet.t ref)) list) in
   List.iter
     (function
       | Env.TypeInformation.SF_sig (_, _, _)
@@ -974,18 +979,19 @@ let generate_record_type_parameters ctx species_fields =
               match species_param with
                | Env.TypeInformation.SPAR_in (_, _, _) ->
                    ()   (* Skip to avoid double (c.f. comment above). *)
-               | Env.TypeInformation.SPAR_is ((_, spe_param_name), _, _, _) ->
+               | Env.TypeInformation.SPAR_is
+                   ((_, spe_param_name), _, spe_param_meths, _) ->
                    let spe_param_name = Parsetree.Vuident spe_param_name in
                    let meths_from_param =
                      Param_dep_analysis.param_deps_logical_expr
                        ~current_species: ctx.Context.scc_current_species
-                       spe_param_name logical_expr in
+                       (spe_param_name, spe_param_meths) logical_expr in
                    (* Merge the found dependencies by side effect. *)
                    try
                      let param_bucket =
                        List.assoc spe_param_name !deps_for_fields in
                      param_bucket :=
-                       Parsetree_utils.DepNameSet.union
+                       Parsetree_utils.ParamDepNameSet.union
                          meths_from_param !param_bucket
                    with Not_found ->
                      deps_for_fields :=
@@ -1003,14 +1009,23 @@ let generate_record_type_parameters ctx species_fields =
       let prefix =
         "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
         "_" in
-      Parsetree_utils.DepNameSet.iter
-        (fun (meth, ty) ->
+      Parsetree_utils.ParamDepNameSet.iter
+        (fun (meth, meth_ty_kind) ->
           let llift_name =
             prefix ^
             (Parsetree_utils.vname_as_string_with_operators_expanded meth) in
-          Format.fprintf ppf "(%s : %a)@ "
-            llift_name
-            (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false) ty)
+	  match meth_ty_kind with
+	   | Parsetree_utils.DNI_computational ty ->
+               Format.fprintf ppf "(%s : %a)@ "
+		 llift_name
+		 (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
+		 ty
+	   | Parsetree_utils.DNI_logical lexpr ->
+	       Format.fprintf ppf "(%s : " llift_name ;
+	       generate_logical_expr ctx
+		 ~local_idents: [] ~self_methods_status: SMS_from_record
+		 env lexpr ;
+	       Format.fprintf ppf ")@ ")
         !meths ;
       (* Just to avoid having the reference escaping... *)
       (species_param_name, !meths))
@@ -1051,7 +1066,7 @@ let generate_record_type ctx env species_descr =
   (* parameters and the methods from them we depend on ! *)
   let abstracted_params_methods_in_record_type =
     generate_record_type_parameters
-      ctx species_descr.Env.TypeInformation.spe_sig_methods in
+      ctx env species_descr.Env.TypeInformation.spe_sig_methods in
   (* Print the type of the record and it's constructor. *)
   Format.fprintf out_fmter ": Type :=@ mk_record {@\n"  ;
   (* Always generate the "rep" coercion. *)

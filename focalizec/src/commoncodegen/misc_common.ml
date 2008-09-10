@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.ml,v 1.9 2008-08-13 15:55:17 pessaux Exp $ *)
+(* $Id: misc_common.ml,v 1.10 2008-09-10 08:14:47 pessaux Exp $ *)
 
 
 
@@ -50,7 +50,8 @@ type compiled_field_memory = {
       ALL the dependencies found via definition 72 p 153 in Virgile Prevosto's
       PhD. *)
   cfm_dependencies_from_parameters :
-    (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ;
+    (Env.TypeInformation.species_param *
+       Parsetree_utils.ParamDepNameSet.t) list ;
   (** The positional list of method names appearing in the minimal Coq typing
       environment. *)
   cfm_coq_min_typ_env_names : Parsetree.vname list
@@ -709,7 +710,7 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
          "IS". *)
       let prefix =
         "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
-      Parsetree_utils.DepNameSet.iter
+      Parsetree_utils.ParamDepNameSet.iter
         (fun (meth, _) ->
           the_list_reversed :=
             (prefix ^

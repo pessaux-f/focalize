@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.mli,v 1.13 2008-05-05 13:00:20 pessaux Exp $ *)
+(* $Id: dep_analysis.mli,v 1.14 2008-09-10 08:14:47 pessaux Exp $ *)
 
 
 type decl_dependency_kind = DDK_from_type | DDK_from_body
@@ -33,11 +33,12 @@ val ensure_species_well_formed :
     Env.TypeInformation.species_field list -> unit
 
 val ordered_names_list_of_fields :
-  Env.TypeInformation.species_field list -> Parsetree_utils.DepNameSet.elt list
+  Env.TypeInformation.species_field list ->
+    (Parsetree.vname * Types.type_simple) list
 
 val erase_fields_in_context :
   current_species: Parsetree.qualified_species ->
-    Parsetree_utils.DepNameSet.elt list ->
+    Parsetree_utils.SelfDepNameSet.elt list ->
       Env.TypeInformation.species_field list ->
         Env.TypeInformation.species_field list
 

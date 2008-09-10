@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.27 2008-09-02 14:22:06 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.28 2008-09-10 08:14:47 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -65,6 +65,151 @@ let debug_print_dependencies_from_parameters l =
     l
 ;;
 *)
+
+
+let rec get_species_types_in_type_annots_of_logical_expr lexpr =
+  match lexpr.Parsetree.ast_desc with
+   | Parsetree.Pr_forall (_, type_expr, logical_expr)
+   | Parsetree.Pr_exists (_, type_expr, logical_expr) ->
+       (* No need to recurse inside the [type_expr] structure. We just use
+          the type annotation inserted during typechecking phase in the
+          [ast_node]. *)
+       let tys1 =
+         (match type_expr.Parsetree.ast_type with
+          | Parsetree.ANTI_non_relevant
+          | Parsetree.ANTI_none
+          | Parsetree.ANTI_scheme _ -> assert false
+          | Parsetree.ANTI_type t -> Types.get_species_types_in_type t) in
+       let tys2 =
+         get_species_types_in_type_annots_of_logical_expr logical_expr in
+       Types.SpeciesCarrierTypeSet.union tys1 tys2
+   | Parsetree.Pr_imply (logical_expr1, logical_expr2)
+   | Parsetree.Pr_or (logical_expr1, logical_expr2)
+   | Parsetree.Pr_and (logical_expr1, logical_expr2)
+   | Parsetree.Pr_equiv (logical_expr1, logical_expr2) ->
+       let tys1 =
+         get_species_types_in_type_annots_of_logical_expr logical_expr1 in
+       let tys2 =
+         get_species_types_in_type_annots_of_logical_expr logical_expr2 in
+       Types.SpeciesCarrierTypeSet.union tys1 tys2
+   | Parsetree.Pr_expr expr ->
+       get_species_types_in_type_annots_of_expr expr
+   | Parsetree.Pr_not logical_expr
+   | Parsetree.Pr_paren logical_expr ->
+       get_species_types_in_type_annots_of_logical_expr logical_expr
+
+
+
+and get_species_types_in_type_annots_of_expr expr =
+  match expr.Parsetree.ast_desc with
+   | Parsetree.E_self
+   | Parsetree.E_const _
+   | Parsetree.E_var _
+   | Parsetree.E_external _ -> Types.SpeciesCarrierTypeSet.empty
+   | Parsetree.E_app (e, es) ->
+       List.fold_left
+         (fun accu e ->
+           Types.SpeciesCarrierTypeSet.union accu
+             (get_species_types_in_type_annots_of_expr e))
+         (get_species_types_in_type_annots_of_expr e)
+         es
+   | Parsetree.E_constr (_, es)
+   | Parsetree.E_tuple es ->
+       List.fold_left
+         (fun accu e ->
+           Types.SpeciesCarrierTypeSet.union accu
+             (get_species_types_in_type_annots_of_expr e))
+         Types.SpeciesCarrierTypeSet.empty
+         es
+   | Parsetree.E_match (e, pats_exprs) ->
+       List.fold_left
+         (fun accu (_, e) ->
+           (* No type annotation in patterns, so no need to inspect their
+              structure. *)
+           let tys = get_species_types_in_type_annots_of_expr e in
+           Types.SpeciesCarrierTypeSet.union tys accu)
+         (get_species_types_in_type_annots_of_expr e)
+         pats_exprs
+   | Parsetree.E_if (e1, e2, e3) ->
+       let tys1 = get_species_types_in_type_annots_of_expr e1 in
+       let tys2 = get_species_types_in_type_annots_of_expr e2 in
+       let tys3 = get_species_types_in_type_annots_of_expr e3 in
+       Types.SpeciesCarrierTypeSet.union tys1
+         (Types.SpeciesCarrierTypeSet.union tys2 tys3)
+   | Parsetree.E_let (let_def, e) ->
+       let tys = get_species_types_in_type_annots_of_let_def let_def in
+       Types.SpeciesCarrierTypeSet.union
+         tys (get_species_types_in_type_annots_of_expr e)
+   | Parsetree.E_record fields ->
+       List.fold_left
+         (fun accu (_, e) ->
+           Types.SpeciesCarrierTypeSet.union accu
+             (get_species_types_in_type_annots_of_expr e))
+         Types.SpeciesCarrierTypeSet.empty
+         fields
+   | Parsetree.E_record_with (e, fields) ->
+       List.fold_left
+         (fun accu (_, e) ->
+           Types.SpeciesCarrierTypeSet.union accu
+             (get_species_types_in_type_annots_of_expr e))
+         (get_species_types_in_type_annots_of_expr e)
+         fields
+   | Parsetree.E_fun (_, e)
+   | Parsetree.E_paren e
+   | Parsetree.E_record_access (e, _) ->
+       get_species_types_in_type_annots_of_expr e
+
+
+
+and get_species_types_in_type_annots_of_let_binding let_binding =
+  let let_binding_desc = let_binding.Parsetree.ast_desc in
+  (* First, extract the types used in the parameters bound by the binding. *)
+  let tys_from_params =
+    List.fold_left
+      (fun accu (_, ty_expr_opt) ->
+        match ty_expr_opt with
+         | None -> accu
+         | Some ty_expr ->
+             let tys =
+               (match ty_expr.Parsetree.ast_type with
+                | Parsetree.ANTI_non_relevant
+                | Parsetree.ANTI_none
+                | Parsetree.ANTI_scheme _ -> assert false
+                | Parsetree.ANTI_type t -> Types.get_species_types_in_type t) in
+             Types.SpeciesCarrierTypeSet.union tys accu)
+      Types.SpeciesCarrierTypeSet.empty
+      let_binding_desc.Parsetree.b_params in
+  (* Now, get the types used in the return type of the binding. *)
+  let tys_with_ret =
+    (match let_binding_desc.Parsetree.b_type with
+     | None -> tys_from_params
+     | Some type_expr ->
+         match type_expr.Parsetree.ast_type with
+          | Parsetree.ANTI_non_relevant
+          | Parsetree.ANTI_none
+          | Parsetree.ANTI_scheme _ -> assert false
+          | Parsetree.ANTI_type t ->
+              Types.SpeciesCarrierTypeSet.union
+                tys_from_params (Types.get_species_types_in_type t)) in
+  (* And now, get the types used in the body of the binding. *)
+  match let_binding_desc.Parsetree.b_body with
+   | Parsetree.BB_logical lexpr ->
+       Types.SpeciesCarrierTypeSet.union
+         tys_with_ret (get_species_types_in_type_annots_of_logical_expr lexpr)
+   | Parsetree.BB_computational e ->
+       Types.SpeciesCarrierTypeSet.union
+         tys_with_ret (get_species_types_in_type_annots_of_expr e)
+
+
+
+and get_species_types_in_type_annots_of_let_def let_def =
+  List.fold_left
+    (fun accu binding ->
+      let tys = get_species_types_in_type_annots_of_let_binding binding in
+      Types.SpeciesCarrierTypeSet.union accu tys)
+    Types.SpeciesCarrierTypeSet.empty
+    let_def.Parsetree.ast_desc.Parsetree.ld_bindings
+;;
 
 
 
@@ -121,19 +266,20 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
     List.fold_right
       (fun species_param accu ->
         (* Recover the species parameter's name. *)
-        let species_param_name =
+        let (species_param_name, species_param_meths) =
           match species_param with
-           | Env.TypeInformation.SPAR_in (n, _, _) -> n
-           | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
-               Parsetree.Vuident n in
+           | Env.TypeInformation.SPAR_in (n, _, _) -> (n, [])
+           | Env.TypeInformation.SPAR_is ((_, n), _, meths, _) ->
+               ((Parsetree.Vuident n), meths) in
         let meths_from_param =
           (match body with
            | FBK_expr e ->
                Param_dep_analysis.param_deps_expr
-                 ~current_species species_param_name e
+                 ~current_species (species_param_name, species_param_meths) e
            | FBK_logical_expr p ->
                Param_dep_analysis.param_deps_logical_expr
-                 ~current_species species_param_name p) in
+                 ~current_species
+                 (species_param_name, species_param_meths) p) in
         (* Return a couple binding the species parameter's name with the
            methods of it we found as required for the current method. *)
         (species_param, meths_from_param) :: accu)
@@ -146,9 +292,14 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
      parameters methods' types we depend on. *)
   List.iter
     (fun (_, meths) ->
-      Parsetree_utils.DepNameSet.iter
-        (fun (_, meth_ty) ->
-          let st_set = Types.get_species_types_in_type meth_ty in
+      Parsetree_utils.ParamDepNameSet.iter
+        (fun (_, meth_kind) ->
+          let st_set =
+            (match meth_kind with
+             | Parsetree_utils.DNI_computational meth_ty ->
+                 Types.get_species_types_in_type meth_ty
+             | Parsetree_utils.DNI_logical lexpr ->
+                 get_species_types_in_type_annots_of_logical_expr lexpr) in
           params_appearing_in_types :=
             Types.SpeciesCarrierTypeSet.union
               st_set !params_appearing_in_types)
@@ -241,21 +392,21 @@ type abstraction_info = {
   ai_dependencies_from_params_via_body :
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
-     Parsetree_utils.DepNameSet.t)     (** The set of methods we depend on. *)
+     Parsetree_utils.ParamDepNameSet.t)  (** The set of methods we depend on. *)
   list ;
   (** Dependencies found via [TYPE] of definition 72 page 153 of Virgile
       Prevosto's Phd. *)
   ai_dependencies_from_params_via_type :
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
-     Parsetree_utils.DepNameSet.t)     (** The set of methods we depend on. *)
+     Parsetree_utils.ParamDepNameSet.t)  (** The set of methods we depend on. *)
   list ;
   (** Other dependencies found via [DEF-DEP], [UNIVERSE] and [PRM] of definition
       72 page 153 of Virgile Prevosto's Phd. *)
   ai_dependencies_from_params_via_completion :
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
-     Parsetree_utils.DepNameSet.t)     (** The set of methods we depend on. *)
+     Parsetree_utils.ParamDepNameSet.t)  (** The set of methods we depend on. *)
   list ;
   ai_min_coq_env : MinEnv.min_coq_env_element list
 } ;;
@@ -283,7 +434,7 @@ let merge_abstraction_infos ai1 ai2 =
     (fun (prm1, deps1) (prm2, deps2) ->
       (* A few asserts to ensure the compiler is fine. *)
       assert (prm1 = prm2) ;
-      let deps = Parsetree_utils.DepNameSet.union deps1 deps2 in
+      let deps = Parsetree_utils.ParamDepNameSet.union deps1 deps2 in
       (prm1, deps))
     ai1 ai2
 ;;
@@ -424,7 +575,7 @@ let add_param_dependencies ~param_name ~deps ~to_deps =
              (* If we are in the bucket of the searched *)
              (* species parameter, we add.              *)
              if name = param_name_as_string then
-               (p, (Parsetree_utils.DepNameSet.union deps d)) :: q
+               (p, (Parsetree_utils.ParamDepNameSet.union deps d)) :: q
              else (p, d) :: (rec_add q)
         end) in
   rec_add to_deps
@@ -513,7 +664,7 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                           false
                       | Env.TypeInformation.SPAR_is ((_, n), _, _, _) -> n = y)
                    cpprim starting_dependencies_from_params in
-               Parsetree_utils.DepNameSet.fold
+               Parsetree_utils.ParamDepNameSet.fold
                  (fun z accu_deps_for_zs ->
                    (* Forall z, we must search the set of methods, y, on *)
                    (* which z depends on in S' via [formal_name] ...     *)
@@ -529,7 +680,7 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                    (* no method in the dependencies on this parameter.     *)
                    let y =
                      (try List.assoc formal_name z_dependencies with
-                     | Not_found -> Parsetree_utils.DepNameSet.empty) in
+                     | Not_found -> Parsetree_utils.ParamDepNameSet.empty) in
                    (* ... and add it to the dependencies of                *)
                    (* [eff_arg_qual_vname] in the current dependencies     *)
                    (* accumulator, i.e into [inner_accu_deps_from_params]. *)
@@ -566,7 +717,7 @@ let complete_dependencies_from_params env ~current_unit ~current_species
          (* species parameter name.                                        *)
          List.fold_right
            (fun species_param accu ->
-             (species_param, Parsetree_utils.DepNameSet.empty) :: accu)
+             (species_param, Parsetree_utils.ParamDepNameSet.empty) :: accu)
            species_parameters
            []
      | Some proof ->
@@ -576,14 +727,15 @@ let complete_dependencies_from_params env ~current_unit ~current_species
          List.fold_right
            (fun species_param accu ->
              (* Recover the species parameter's name. *)
-             let species_param_name =
+             let (species_param_name, species_param_meths) =
                match species_param with
-                | Env.TypeInformation.SPAR_in (n, _, _) -> n
-                | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
-                    Parsetree. Vuident n in
+                | Env.TypeInformation.SPAR_in (n, _, _) -> (n, [])
+                | Env.TypeInformation.SPAR_is ((_, n), _, meths, _) ->
+                    ((Parsetree. Vuident n), meths) in
              let meths_from_param =
                Param_dep_analysis.param_deps_proof
-                 ~current_species species_param_name proof in
+                 ~current_species (species_param_name, species_param_meths)
+                 proof in
              (* Return a couple binding the species parameter's name with the *)
              (* methods of it we found as required for the current method.    *)
              (species_param, meths_from_param) :: accu)
@@ -610,7 +762,7 @@ let complete_dependencies_from_params env ~current_unit ~current_species
   let empty_initial_deps_accumulator =
     List.fold_right
       (fun species_param accu ->
-        (species_param, Parsetree_utils.DepNameSet.empty) :: accu)
+        (species_param, Parsetree_utils.ParamDepNameSet.empty) :: accu)
       species_parameters
       [] in
   (* Since methods on which we depend are from Self, all of them share the *)

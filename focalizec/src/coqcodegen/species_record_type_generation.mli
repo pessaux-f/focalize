@@ -11,10 +11,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.6 2008-07-09 14:52:28 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.7 2008-09-10 08:14:47 pessaux Exp $ *)
 
 
-type self_methods_status = SMS_abstracted | SMS_from_record
+type self_methods_status =
+  | SMS_from_param of Parsetree.vname
+  | SMS_abstracted
+  | SMS_from_record
 
 val make_Self_cc_binding_abst_T :
   current_species: Parsetree.qualified_species ->
@@ -38,4 +41,4 @@ val let_binding_compile :
 val generate_record_type :
   Context.species_compil_context ->
     Env.CoqGenEnv.t -> Env.TypeInformation.species_description ->
-      (Parsetree.vname * Parsetree_utils.DepNameSet.t) list
+      (Parsetree.vname * Parsetree_utils.ParamDepNameSet.t) list

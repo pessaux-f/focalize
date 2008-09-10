@@ -127,7 +127,7 @@ type generic_code_gen_method_info = {
   mi_history : from_history ;
   mi_used_species_parameter_tys : Parsetree.vname list ;
   mi_dependencies_from_parameters :
-    (TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ;
+    (TypeInformation.species_param * Parsetree_utils.ParamDepNameSet.t) list ;
   mi_abstracted_methods : Parsetree.vname list
   }
 
@@ -137,7 +137,7 @@ module MlGenInformation :
       cgi_implemented_species_params_names :
         (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
       cgi_generator_parameters :
-        (Parsetree.vname * Parsetree_utils.DepNameSet.t) list
+        (Parsetree.vname * Parsetree_utils.ParamDepNameSet.t) list
     }
 
     type method_info = generic_code_gen_method_info
@@ -158,9 +158,9 @@ module CoqGenInformation :
   type collection_generator_parameters = {
     cgp_abstr_param_carriers_for_record : Parsetree.vname list ;
     cgp_abstr_param_methods_for_record :
-      (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ;
+      (Parsetree.vname * Parsetree_utils.ParamDepNameSet.t) list ;
     cgp_abstr_param_methods_for_coll_gen :
-      (Parsetree.vname * Parsetree_utils.DepNameSet.t) list
+      (Parsetree.vname * Parsetree_utils.ParamDepNameSet.t) list
     }
 
     type collection_generator_info = {

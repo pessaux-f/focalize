@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.18 2008-09-08 11:06:11 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.19 2008-09-10 08:14:47 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -22,28 +22,43 @@ let name_of_vname = function
 ;;
 
 
-(* *************************************************************** *)
-(** {b Descr} : Module stuff to create sets of [Parsetree.vname]s.
-              This will serves to make sets of methods [vname]s in
-              order to represent dependencies.
-              We also keep the name's scheme in order to be able
-              to annotate it if required during Coq code
-              generation.
 
-    {b Rem} : Not exported outside this module.                    *)
-(* *************************************************************** *)
-module DepNameMod = struct
+(* ************************************************************************* *)
+(** {b Descr} : Module stuff to create sets of [Parsetree.vname]s.
+    This will serves to make sets of methods [vname]s in order to represent
+    dependencies of methods of "Self".
+    We also keep the name's scheme in order to be able to annotate it if
+    required during Coq code generation.
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+module SelfDepNameMod = struct
   type t = (Parsetree.vname * Types.type_simple)
   let compare (n1, _) (n2, _) = compare n1 n2
 end ;;
-module DepNameSet = Set.Make (DepNameMod) ;;
+module SelfDepNameSet = Set.Make (SelfDepNameMod) ;;
 
 
 
-let depnameset_find predicate set =
+type dependency_name_kind =
+  | DNI_computational of Types.type_simple
+  | DNI_logical of Parsetree.logical_expr
+;;
+
+
+
+module ParamDepNameMod = struct
+  type t = (Parsetree.vname * dependency_name_kind)
+  let compare (n1, _) (n2, _) = compare n1 n2
+end ;;
+module ParamDepNameSet = Set.Make (ParamDepNameMod) ;;
+
+
+
+let paramdepnameset_find predicate set =
   let found = ref None in
   try
-    DepNameSet.iter
+    ParamDepNameSet.iter
       (fun elem ->
         if predicate elem then
           begin
