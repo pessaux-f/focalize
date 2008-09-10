@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.47 2008-09-10 08:14:47 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.48 2008-09-10 15:12:27 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -43,7 +43,7 @@ let rec expr_decl_dependencies ~current_species expression =
   let rec rec_depend expr =
     match expr.Parsetree.ast_desc with
      | Parsetree.E_self
-     | Parsetree.E_const _ -> Parsetree_utils.SelfDepNameSet.empty
+     | Parsetree.E_const _ -> Parsetree_utils.SelfDepSet.empty
      | Parsetree.E_fun (_, body) -> rec_depend body
      | Parsetree.E_var ident ->
        (begin
@@ -61,12 +61,12 @@ let rec expr_decl_dependencies ~current_species expression =
                they indeed denoted methods, we can safely consider that
                remaining "local identifiers" are really local and introduce
                no dependency. *)
-            Parsetree_utils.SelfDepNameSet.empty
-        | Parsetree.EI_global _ -> Parsetree_utils.SelfDepNameSet.empty
+            Parsetree_utils.SelfDepSet.empty
+        | Parsetree.EI_global _ -> Parsetree_utils.SelfDepSet.empty
         | Parsetree.EI_method (None, vname) ->
             (* Case c!x in Virgile Prevosto's Phd, section 3.5, page 30,
                definition 12. *)
-            Parsetree_utils.SelfDepNameSet.singleton (vname, ident_ty)
+            Parsetree_utils.SelfDepSet.singleton (vname, ident_ty)
         | Parsetree.EI_method (Some coll_specifier, vname) ->
             (begin
              match coll_specifier with
@@ -77,37 +77,37 @@ let rec expr_decl_dependencies ~current_species expression =
                if current_species = (module_name, coll_vname) then
                  (* Case c!x in Virgile Prevosto's Phd, section 3.5, page 30,
                     definition 12. *)
-                 Parsetree_utils.SelfDepNameSet.singleton (vname, ident_ty)
-               else Parsetree_utils.SelfDepNameSet.empty
+                 Parsetree_utils.SelfDepSet.singleton (vname, ident_ty)
+               else Parsetree_utils.SelfDepSet.empty
              end)
        end)
      | Parsetree.E_app (fun_expr, args_exprs) ->
          let fun_expr_deps = rec_depend fun_expr in
          List.fold_left
            (fun accu_deps e ->
-             Parsetree_utils.SelfDepNameSet.union (rec_depend e) accu_deps)
+             Parsetree_utils.SelfDepSet.union (rec_depend e) accu_deps)
            fun_expr_deps
            args_exprs
      | Parsetree.E_constr (_, args_exprs) ->
          List.fold_left
            (fun accu_deps e ->
-             Parsetree_utils.SelfDepNameSet.union (rec_depend e) accu_deps)
-           Parsetree_utils.SelfDepNameSet.empty
+             Parsetree_utils.SelfDepSet.union (rec_depend e) accu_deps)
+           Parsetree_utils.SelfDepSet.empty
            args_exprs
      | Parsetree.E_match (matched_e, pats_exprs) ->
          let matched_e_deps = rec_depend matched_e in
          List.fold_left
            (fun accu_deps (_, e) ->
-             Parsetree_utils.SelfDepNameSet.union (rec_depend e) accu_deps)
+             Parsetree_utils.SelfDepSet.union (rec_depend e) accu_deps)
            matched_e_deps
            pats_exprs
      | Parsetree.E_if (if_expr, then_expr, else_expr) ->
          let if_expr_deps = rec_depend if_expr in
          let then_expr_deps = rec_depend  then_expr in
          let else_expr_deps = rec_depend else_expr in
-         Parsetree_utils.SelfDepNameSet.union
+         Parsetree_utils.SelfDepSet.union
            if_expr_deps
-           (Parsetree_utils.SelfDepNameSet.union then_expr_deps else_expr_deps)
+           (Parsetree_utils.SelfDepSet.union then_expr_deps else_expr_deps)
      | Parsetree.E_let (let_def, in_expr) ->
          (* No substration here because the let-definition is NOT a field
             definition ! *)
@@ -119,30 +119,30 @@ let rec expr_decl_dependencies ~current_species expression =
               | Parsetree.BB_logical p ->
                   prop_decl_dependencies ~current_species p
               | Parsetree.BB_computational e ->rec_depend e) in
-             Parsetree_utils.SelfDepNameSet.union deps accu_deps)
+             Parsetree_utils.SelfDepSet.union deps accu_deps)
            in_expr_deps
            let_def.Parsetree.ast_desc.Parsetree.ld_bindings
      | Parsetree.E_record labels_exprs ->
          List.fold_left
            (fun accu_deps (_, e) ->
-             Parsetree_utils.SelfDepNameSet.union (rec_depend e) accu_deps)
-           Parsetree_utils.SelfDepNameSet.empty
+             Parsetree_utils.SelfDepSet.union (rec_depend e) accu_deps)
+           Parsetree_utils.SelfDepSet.empty
            labels_exprs
      | Parsetree.E_record_access (e, _) -> rec_depend e
      | Parsetree.E_record_with (e, labels_exprs) ->
          let e_deps = rec_depend e in
          List.fold_left
            (fun accu_deps (_, e) ->
-             Parsetree_utils.SelfDepNameSet.union (rec_depend e) accu_deps)
+             Parsetree_utils.SelfDepSet.union (rec_depend e) accu_deps)
            e_deps
            labels_exprs
      | Parsetree.E_tuple exprs ->
          List.fold_left
            (fun accu_deps e ->
-             Parsetree_utils.SelfDepNameSet.union (rec_depend e) accu_deps)
-           Parsetree_utils.SelfDepNameSet.empty
+             Parsetree_utils.SelfDepSet.union (rec_depend e) accu_deps)
+           Parsetree_utils.SelfDepSet.empty
            exprs
-     | Parsetree.E_external _ -> Parsetree_utils.SelfDepNameSet.empty
+     | Parsetree.E_external _ -> Parsetree_utils.SelfDepSet.empty
      | Parsetree.E_paren e -> rec_depend e in
   rec_depend expression
 
@@ -170,7 +170,7 @@ and prop_decl_dependencies ~current_species initial_prop_expression =
      | Parsetree.Pr_equiv (prop1, prop2) ->
          let prop1_decl_deps = rec_depend prop1 in
          let prop2_decl_deps = rec_depend prop2 in
-         (Parsetree_utils.SelfDepNameSet.union prop1_decl_deps prop2_decl_deps)
+         (Parsetree_utils.SelfDepSet.union prop1_decl_deps prop2_decl_deps)
      | Parsetree.Pr_expr expr ->
          expr_decl_dependencies ~current_species expr in
   (* **************** *)
@@ -214,10 +214,10 @@ let ident_in_fact_dependencies ~current_species ident =
        (* Since dependencies are computed inside A species architecture,
           invocation of a global stuff does not involve dependency because it
           does not belong to the currently analyzed species. *)
-       Parsetree_utils.SelfDepNameSet.empty
+       Parsetree_utils.SelfDepSet.empty
    | Parsetree.EI_method (None, vname) ->
        (* A method of Self. *)
-       Parsetree_utils.SelfDepNameSet.singleton (vname, ident_ty)
+       Parsetree_utils.SelfDepSet.singleton (vname, ident_ty)
    | Parsetree.EI_method (Some coll_specifier, vname) ->
        (begin
         match coll_specifier with
@@ -228,10 +228,10 @@ let ident_in_fact_dependencies ~current_species ident =
              are in the case of another species. *)
           if (module_name, coll_vname) = current_species then
             (* A method of Self. *)
-            Parsetree_utils.SelfDepNameSet.singleton (vname, ident_ty)
+            Parsetree_utils.SelfDepSet.singleton (vname, ident_ty)
            else
             (* Method from another species, then no dep. *)
-            Parsetree_utils.SelfDepNameSet.empty
+            Parsetree_utils.SelfDepSet.empty
        end)
 ;;
 
@@ -252,25 +252,25 @@ let fact_decl_n_def_dependencies ~current_species fact =
        let decl_deps =
          List.fold_left
            (fun accu ident ->
-             Parsetree_utils.SelfDepNameSet.union accu
+             Parsetree_utils.SelfDepSet.union accu
                (ident_in_fact_dependencies ~current_species ident))
-           Parsetree_utils.SelfDepNameSet.empty
+           Parsetree_utils.SelfDepSet.empty
            idents in
-       (decl_deps, Parsetree_utils.SelfDepNameSet.empty)
+       (decl_deps, Parsetree_utils.SelfDepSet.empty)
    | Parsetree.F_definition idents ->
        (* These are "def"-dependencies, not "decl" !!! *)
        let def_deps =
          List.fold_left
            (fun accu ident ->
-             Parsetree_utils.SelfDepNameSet.union accu
+             Parsetree_utils.SelfDepSet.union accu
                (ident_in_fact_dependencies ~current_species ident))
-           Parsetree_utils.SelfDepNameSet.empty
+           Parsetree_utils.SelfDepSet.empty
            idents in
-       (Parsetree_utils.SelfDepNameSet.empty, def_deps)
+       (Parsetree_utils.SelfDepSet.empty, def_deps)
    | Parsetree.F_hypothesis _
    | Parsetree.F_node _ ->
-       (Parsetree_utils.SelfDepNameSet.empty,
-        Parsetree_utils.SelfDepNameSet.empty)
+       (Parsetree_utils.SelfDepSet.empty,
+        Parsetree_utils.SelfDepSet.empty)
 ;;
 
 
@@ -279,7 +279,7 @@ let hyp_decl_dependencies ~current_species hyp =
   match hyp.Parsetree.ast_desc with
    | Parsetree.H_variable (_, _) ->
        (* No decl-dependency from type expressions. *)
-       Parsetree_utils.SelfDepNameSet.empty
+       Parsetree_utils.SelfDepSet.empty
    | Parsetree.H_hypothesis (_, prop) ->
        prop_decl_dependencies ~current_species prop
    | Parsetree.H_notation (_, expr) ->
@@ -295,8 +295,8 @@ let statement_decl_dependencies ~current_species stmt =
     List.fold_left
       (fun accu_decl_deps hyp ->
         let hyp_decl_deps = hyp_decl_dependencies ~current_species hyp in
-        Parsetree_utils.SelfDepNameSet.union accu_decl_deps hyp_decl_deps)
-      Parsetree_utils.SelfDepNameSet.empty
+        Parsetree_utils.SelfDepSet.union accu_decl_deps hyp_decl_deps)
+      Parsetree_utils.SelfDepSet.empty
       stmt_desc.Parsetree.s_hyps in
   (* An now, accumulate with those of the conclusion. *)
   match stmt_desc.Parsetree.s_concl with
@@ -304,7 +304,7 @@ let statement_decl_dependencies ~current_species stmt =
    | Some prop ->
        let prop_decl_defs =
          prop_decl_dependencies ~current_species prop in
-       Parsetree_utils.SelfDepNameSet.union hyps_decl_deps prop_decl_defs
+       Parsetree_utils.SelfDepSet.union hyps_decl_deps prop_decl_defs
 
 ;;
 
@@ -321,7 +321,7 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
                 let accu_def' =
                   List.fold_left
                     (fun accu ident ->
-                      Parsetree_utils.SelfDepNameSet.union accu
+                      Parsetree_utils.SelfDepSet.union accu
                         (ident_in_fact_dependencies ~current_species ident))
                     accu_def
                     idents in
@@ -330,13 +330,13 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
                 let accu_decl' =
                   List.fold_left
                     (fun accu ident ->
-                      Parsetree_utils.SelfDepNameSet.union accu
+                      Parsetree_utils.SelfDepSet.union accu
                         (ident_in_fact_dependencies ~current_species ident))
                     accu_decl
                     idents in
                 (accu_decl', accu_def))
-         (Parsetree_utils.SelfDepNameSet.empty,
-          Parsetree_utils.SelfDepNameSet.empty)
+         (Parsetree_utils.SelfDepSet.empty,
+          Parsetree_utils.SelfDepSet.empty)
          enf_deps
    | Parsetree.Pf_auto facts ->
        (begin
@@ -345,12 +345,12 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
            let (fact_decl_deps, fact_def_deps) =
              fact_decl_n_def_dependencies ~current_species fact in
            (* Return both "decl" and "def" dependencies. *)
-           ((Parsetree_utils.SelfDepNameSet.union
+           ((Parsetree_utils.SelfDepSet.union
                accu_decl_deps fact_decl_deps),
-            (Parsetree_utils.SelfDepNameSet.union
+            (Parsetree_utils.SelfDepSet.union
                accu_def_deps fact_def_deps)))
-         (Parsetree_utils.SelfDepNameSet.empty,
-          Parsetree_utils.SelfDepNameSet.empty)
+         (Parsetree_utils.SelfDepSet.empty,
+          Parsetree_utils.SelfDepSet.empty)
          facts
        end)
    | Parsetree.Pf_node proof_nodes ->
@@ -365,18 +365,18 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
           (* Statement only have decl-dependencies. *)
           let stmt_decl_deps =
             statement_decl_dependencies ~current_species stmt in
-          ((Parsetree_utils.SelfDepNameSet.union
+          ((Parsetree_utils.SelfDepSet.union
               sub_proof_decl_deps stmt_decl_deps),
            sub_proof_def_deps)
               | Parsetree.PN_qed (_, p) ->
           proof_decl_n_def_dependencies ~current_species p) in
            (* Return both "decl" and "def" dependencies. *)
-           ((Parsetree_utils.SelfDepNameSet.union
+           ((Parsetree_utils.SelfDepSet.union
                accu_decl_deps proof_node_decl_deps),
-            (Parsetree_utils.SelfDepNameSet.union
+            (Parsetree_utils.SelfDepSet.union
                accu_def_deps proof_node_def_deps)))
-         (Parsetree_utils.SelfDepNameSet.empty,
-          Parsetree_utils.SelfDepNameSet.empty)
+         (Parsetree_utils.SelfDepSet.empty,
+          Parsetree_utils.SelfDepSet.empty)
          proof_nodes
        end)
 ;;
@@ -400,12 +400,12 @@ let binding_body_decl_dependencies ~current_species = function
 (* ******************************************************************** *)
 let field_only_decl_dependencies ~current_species = function
   | Env.TypeInformation.SF_sig (_, _, _) ->
-      Parsetree_utils.SelfDepNameSet.empty
+      Parsetree_utils.SelfDepSet.empty
   | Env.TypeInformation.SF_let (_, _, _, _, body, rep_deps, _) ->
       let body_deps = binding_body_decl_dependencies ~current_species body in
       (* Take into account dependencies on the carrier. *)
       if rep_deps.Env.TypeInformation.dor_decl then
-        Parsetree_utils.SelfDepNameSet.add
+        Parsetree_utils.SelfDepSet.add
           ((Parsetree.Vlident "rep"), (Types.type_self ())) body_deps
       else body_deps
   | Env.TypeInformation.SF_let_rec l ->
@@ -415,9 +415,9 @@ let field_only_decl_dependencies ~current_species = function
         List.fold_left
           (fun accu_set (_, n, _, _, _, _, _) ->
             (* Give a dummy type variable as type... *)
-            Parsetree_utils.SelfDepNameSet.add
+            Parsetree_utils.SelfDepSet.add
               (n, Types.type_variable ()) accu_set)
-          Parsetree_utils.SelfDepNameSet.empty
+          Parsetree_utils.SelfDepSet.empty
           l in
       (* Now, compute the dependencies on all the rec-bound-names. *)
       let deps_of_l =
@@ -427,14 +427,14 @@ let field_only_decl_dependencies ~current_species = function
             (* Take into account dependencies on the carrier. *)
             let d' =
               if rep_deps.Env.TypeInformation.dor_decl then
-                Parsetree_utils.SelfDepNameSet.add
+                Parsetree_utils.SelfDepSet.add
                   ((Parsetree.Vlident "rep"), (Types.type_self ())) d
               else d in
-            Parsetree_utils.SelfDepNameSet.union d' accu_deps)
-          Parsetree_utils.SelfDepNameSet.empty
+            Parsetree_utils.SelfDepSet.union d' accu_deps)
+          Parsetree_utils.SelfDepSet.empty
           l in
       (* And now, remove the rec-bound-names from the dependencies. *)
-      Parsetree_utils.SelfDepNameSet.diff deps_of_l names_of_l
+      Parsetree_utils.SelfDepSet.diff deps_of_l names_of_l
       end)
   | Env.TypeInformation.SF_theorem (_, _, _, body, proof, rep_deps) ->
       (begin
@@ -444,10 +444,10 @@ let field_only_decl_dependencies ~current_species = function
       let (proof_deps, _) =
         proof_decl_n_def_dependencies ~current_species proof in
       let deps_without_carrier =
-        Parsetree_utils.SelfDepNameSet.union body_decl_deps proof_deps in
+        Parsetree_utils.SelfDepSet.union body_decl_deps proof_deps in
       (* Take into account dependencies on the carrier. *)
       if rep_deps.Env.TypeInformation.dor_decl then
-        Parsetree_utils.SelfDepNameSet.add
+        Parsetree_utils.SelfDepSet.add
           ((Parsetree.Vlident "rep"), (Types.type_self ())) deps_without_carrier
       else deps_without_carrier
       end)
@@ -546,17 +546,17 @@ let names_set_of_field = function
   | Env.TypeInformation.SF_property (_, vname, _, _, _)
   | Env.TypeInformation.SF_theorem (_, vname, _, _, _, _) ->
       let ty = Types.type_prop () in
-      Parsetree_utils.SelfDepNameSet.singleton (vname, ty)
+      Parsetree_utils.SelfDepSet.singleton (vname, ty)
   | Env.TypeInformation.SF_sig (_, vname, sch)
   | Env.TypeInformation.SF_let (_, vname, _, sch, _, _, _) ->
       let ty = Types.specialize sch in
-      Parsetree_utils.SelfDepNameSet.singleton (vname, ty)
+      Parsetree_utils.SelfDepSet.singleton (vname, ty)
   | Env.TypeInformation.SF_let_rec l ->
       List.fold_left
         (fun accu_names (_, n, _, sch, _, _, _) ->
           let ty = Types.specialize sch in
-          Parsetree_utils.SelfDepNameSet.add (n, ty) accu_names)
-        Parsetree_utils.SelfDepNameSet.empty
+          Parsetree_utils.SelfDepSet.add (n, ty) accu_names)
+        Parsetree_utils.SelfDepSet.empty
         l
 ;;
 
@@ -651,12 +651,12 @@ let union_y_clock_x_etc ~current_species x_name fields =
          to return the body of the most recent fiedl in the inheritance. *)
       let field_y = find_most_recent_rec_field_binding y_name fields in
       let u =
-        Parsetree_utils.SelfDepNameSet.union
+        Parsetree_utils.SelfDepSet.union
           (field_only_decl_dependencies ~current_species field_y) accu_deps in
       (*  Then remove the recursive bound names. *)
       let rec_bound_names = names_set_of_field field_y in
-      Parsetree_utils.SelfDepNameSet.diff u rec_bound_names)
-    Parsetree_utils.SelfDepNameSet.empty
+      Parsetree_utils.SelfDepSet.diff u rec_bound_names)
+    Parsetree_utils.SelfDepSet.empty
     all_ys
 ;;
 
@@ -721,8 +721,8 @@ let in_species_decl_n_def_dependencies_for_one_theo_property_name
     (match opt_body with
      | None ->
          (* No body, then no "def" not "decl"-dependencies. *)
-         (Parsetree_utils.SelfDepNameSet.empty,
-          Parsetree_utils.SelfDepNameSet.empty)
+         (Parsetree_utils.SelfDepSet.empty,
+          Parsetree_utils.SelfDepSet.empty)
      | Some proof -> proof_decl_n_def_dependencies ~current_species proof) in
   (t_prop_decl_deps, opt_body_decl_deps, opt_body_def_deps)
 ;;
@@ -859,7 +859,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
         ~current_species (n, b) fields in
     (* Now, find the decl-dependencies nodes for these names. *)
     let n_deps_nodes =
-      Parsetree_utils.SelfDepNameSet.fold
+      Parsetree_utils.SelfDepSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
           (* In "Let/rec" methods, "decl" dependencies can only come from the
@@ -925,14 +925,14 @@ let build_dependencies_graph_for_fields ~current_species fields =
         ~current_species (prop_t, opt_b) in
     (* Now, find the decl-dependencies nodes for these names. *)
     let n_decl_deps_nodes =
-      Parsetree_utils.SelfDepNameSet.fold
+      Parsetree_utils.SelfDepSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
           (node, (DK_decl DDK_from_type)) :: accu)
         n_decl_deps_names_from_type
         [] in
     let n_decl_deps_nodes =
-      Parsetree_utils.SelfDepNameSet.fold
+      Parsetree_utils.SelfDepSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
           (node, (DK_decl DDK_from_body)) :: accu)
@@ -946,7 +946,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
         n_decl_deps_nodes n_node.nn_children ;
     (* Now, find the def-dependencies nodes for these names. *)
     let n_def_deps_nodes =
-      Parsetree_utils.SelfDepNameSet.fold
+      Parsetree_utils.SelfDepSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
           (node, DK_def) :: accu)
@@ -1450,7 +1450,7 @@ let erase_fields_in_context ~current_species context fields =
              | Env.TypeInformation.SF_let_rec _ ->
                (* No "def"-dependencies for functions (C.f. definition 30 in
                   Virgile Prevosto's Phd, section 3.9.5, page 53). *)
-               Parsetree_utils.SelfDepNameSet.empty
+               Parsetree_utils.SelfDepSet.empty
              | Env.TypeInformation.SF_theorem (_, _, _, prop, proof, _) ->
                let (_, _, n_def_deps_names) =
                  in_species_decl_n_def_dependencies_for_one_theo_property_name
@@ -1462,8 +1462,8 @@ let erase_fields_in_context ~current_species context fields =
                  (* Can not arise because these cases were matched above. *)
                  assert false) in
           (* Compute the intersection with the context... *)
-          if Parsetree_utils.SelfDepNameSet.is_empty
-               (Parsetree_utils.SelfDepNameSet.inter def_deps rec_context) then
+          if Parsetree_utils.SelfDepSet.is_empty
+               (Parsetree_utils.SelfDepSet.inter def_deps rec_context) then
             (* Intersection is empty. *)
             m_field :: (rec_erase rec_context l_rem_fields)
           else
@@ -1494,21 +1494,21 @@ let erase_fields_in_context ~current_species context fields =
                 Sourcify.pp_qualified_species
                 erase_from.Env.fh_initial_apparition ;
               (* Print the context in which the fields must be erased. *)
-              Parsetree_utils.SelfDepNameSet.iter
+              Parsetree_utils.SelfDepSet.iter
                 (fun (n, _) -> Format.eprintf "%a, " Sourcify.pp_vname n)
                 rec_context ;
               Format.eprintf "@." ;
               Format.eprintf "since intersection with context is non-empty: " ;
-              Parsetree_utils.SelfDepNameSet.iter
+              Parsetree_utils.SelfDepSet.iter
                 (fun (n, _) -> Format.eprintf "%a, " Sourcify.pp_vname n) 
-                (Parsetree_utils.SelfDepNameSet.inter def_deps rec_context) ;
+                (Parsetree_utils.SelfDepSet.inter def_deps rec_context) ;
               Format.eprintf ".@." ;
               end) ;
             (* Now, really process erasing. *)
             let erased_m_field = erase_field m_field in
             (* Extent the erasing context with names of the current field. *)
             let new_context =
-              Parsetree_utils.SelfDepNameSet.union
+              Parsetree_utils.SelfDepSet.union
                 rec_context (names_set_of_field m_field) in
             (* And then process the remaining fields. *)
             erased_m_field @ (rec_erase new_context l_rem_fields)
@@ -1519,7 +1519,7 @@ let erase_fields_in_context ~current_species context fields =
   (* Build once for all the set on names contained in the context list. *)
   let context_as_set =
     List.fold_left
-      (fun accu n -> Parsetree_utils.SelfDepNameSet.add n accu)
-      Parsetree_utils.SelfDepNameSet.empty context in
+      (fun accu n -> Parsetree_utils.SelfDepSet.add n accu)
+      Parsetree_utils.SelfDepSet.empty context in
   rec_erase context_as_set fields
 ;;

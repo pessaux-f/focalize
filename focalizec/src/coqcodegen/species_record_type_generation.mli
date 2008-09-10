@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.8 2008-09-10 12:57:35 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.9 2008-09-10 15:12:27 pessaux Exp $ *)
 
 
 type self_methods_status =
@@ -44,4 +44,4 @@ val let_binding_compile :
 val generate_record_type :
   Context.species_compil_context ->
     Env.CoqGenEnv.t -> Env.TypeInformation.species_description ->
-      (Parsetree.vname * Parsetree_utils.ParamDepNameSet.t) list
+      (Parsetree.vname * Parsetree_utils.ParamDepSet.t) list

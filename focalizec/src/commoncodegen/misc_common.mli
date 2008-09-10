@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.mli,v 1.7 2008-09-10 08:14:47 pessaux Exp $ *)
+(* $Id: misc_common.mli,v 1.8 2008-09-10 15:12:27 pessaux Exp $ *)
 
 type compiled_field_memory = {
   cfm_from_species : Env.from_history ;
@@ -19,8 +19,7 @@ type compiled_field_memory = {
   cfm_method_scheme : Types.type_scheme ;
   cfm_used_species_parameter_tys : Parsetree.vname list ;
   cfm_dependencies_from_parameters :
-    (Env.TypeInformation.species_param *
-       Parsetree_utils.ParamDepNameSet.t) list ;
+    (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list ;
   cfm_coq_min_typ_env_names : Parsetree.vname list
 }
 

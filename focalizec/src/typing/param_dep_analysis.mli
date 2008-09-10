@@ -12,19 +12,19 @@
 (***********************************************************************)
 
 
-(* $Id: param_dep_analysis.mli,v 1.11 2008-09-10 08:14:47 pessaux Exp $ *)
+(* $Id: param_dep_analysis.mli,v 1.12 2008-09-10 15:12:27 pessaux Exp $ *)
 
 val param_deps_expr :
   current_species: Parsetree.qualified_species ->
     (Parsetree.vname * (Env.TypeInformation.species_field list)) ->
-      Parsetree.expr -> Parsetree_utils.ParamDepNameSet.t
+      Parsetree.expr -> Parsetree_utils.ParamDepSet.t
 
 val param_deps_logical_expr :
   current_species: Parsetree.qualified_species ->
     (Parsetree.vname * (Env.TypeInformation.species_field list)) ->
-      Parsetree.logical_expr -> Parsetree_utils.ParamDepNameSet.t
+      Parsetree.logical_expr -> Parsetree_utils.ParamDepSet.t
 
 val param_deps_proof :
   current_species: Parsetree.qualified_species ->
     (Parsetree.vname * (Env.TypeInformation.species_field list)) ->
-      Parsetree.proof -> Parsetree_utils.ParamDepNameSet.t
+      Parsetree.proof -> Parsetree_utils.ParamDepSet.t

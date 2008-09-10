@@ -11,12 +11,12 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.mli,v 1.17 2008-09-10 08:14:47 pessaux Exp $ *)
+(* $Id: parsetree_utils.mli,v 1.18 2008-09-10 15:12:27 pessaux Exp $ *)
 
 val name_of_vname : Parsetree.vname -> string
 (** Extracts the inner string name of the [vname] variable name. *)
 
-module SelfDepNameSet :
+module SelfDepSet :
   sig
     type elt = (Parsetree.vname * Types.type_simple)
     type t
@@ -46,13 +46,13 @@ module SelfDepNameSet :
     val split : elt -> t -> t * bool * t
   end
 
-type dependency_name_kind =
-  | DNI_computational of Types.type_simple
-  | DNI_logical of Parsetree.logical_expr
+type dependency_elem_type_kind =
+  | DETK_computational of Types.type_simple
+  | DETK_logical of Parsetree.logical_expr
 
-module ParamDepNameSet :
+module ParamDepSet :
   sig
-    type elt = (Parsetree.vname * dependency_name_kind)
+    type elt = (Parsetree.vname * dependency_elem_type_kind)
     type t
     val empty : t
     val is_empty : t -> bool
@@ -80,8 +80,8 @@ module ParamDepNameSet :
     val split : elt -> t -> t * bool * t
   end
 
-val paramdepnameset_find :
-  (ParamDepNameSet.elt -> bool) -> ParamDepNameSet.t -> ParamDepNameSet.elt
+val param_dep_set_find :
+  (ParamDepSet.elt -> bool) -> ParamDepSet.t -> ParamDepSet.elt
 
 module VnameSet :
   sig

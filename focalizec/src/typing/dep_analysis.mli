@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.mli,v 1.14 2008-09-10 08:14:47 pessaux Exp $ *)
+(* $Id: dep_analysis.mli,v 1.15 2008-09-10 15:12:27 pessaux Exp $ *)
 
 
 type decl_dependency_kind = DDK_from_type | DDK_from_body
@@ -38,7 +38,7 @@ val ordered_names_list_of_fields :
 
 val erase_fields_in_context :
   current_species: Parsetree.qualified_species ->
-    Parsetree_utils.SelfDepNameSet.elt list ->
+    Parsetree_utils.SelfDepSet.elt list ->
       Env.TypeInformation.species_field list ->
         Env.TypeInformation.species_field list
 

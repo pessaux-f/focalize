@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.54 2008-09-10 12:57:35 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.55 2008-09-10 15:12:27 pessaux Exp $ *)
 
 
 
@@ -161,9 +161,9 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
                  Format.fprintf out_fmter "rf_%a"
                    Parsetree_utils.pp_vname_with_operators_expanded vname
              | SMS_from_param spe_param_name ->
-		 Format.fprintf out_fmter "_p_%a_%a"
-		   Parsetree_utils.pp_vname_with_operators_expanded
-		   spe_param_name
+                 Format.fprintf out_fmter "_p_%a_%a"
+                   Parsetree_utils.pp_vname_with_operators_expanded
+                   spe_param_name
                    Parsetree_utils.pp_vname_with_operators_expanded vname
             end)
         | Some coll_specifier ->
@@ -968,8 +968,7 @@ let generate_record_type_parameters ctx env species_fields =
   (* We first build the lists of dependent methods for each *)
   (* property and theorem fields.                           *)
   let deps_for_fields =
-    ref ([] :
-	 (Parsetree.vname * (Parsetree_utils.ParamDepNameSet.t ref)) list) in
+    ref ([] : (Parsetree.vname * (Parsetree_utils.ParamDepSet.t ref)) list) in
   List.iter
     (function
       | Env.TypeInformation.SF_sig (_, _, _)
@@ -996,7 +995,7 @@ let generate_record_type_parameters ctx env species_fields =
                      let param_bucket =
                        List.assoc spe_param_name !deps_for_fields in
                      param_bucket :=
-                       Parsetree_utils.ParamDepNameSet.union
+                       Parsetree_utils.ParamDepSet.union
                          meths_from_param !param_bucket
                    with Not_found ->
                      deps_for_fields :=
@@ -1014,23 +1013,23 @@ let generate_record_type_parameters ctx env species_fields =
       let prefix =
         "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
         "_" in
-      Parsetree_utils.ParamDepNameSet.iter
+      Parsetree_utils.ParamDepSet.iter
         (fun (meth, meth_ty_kind) ->
           let llift_name =
             prefix ^
             (Parsetree_utils.vname_as_string_with_operators_expanded meth) in
-	  match meth_ty_kind with
-	   | Parsetree_utils.DNI_computational ty ->
+          match meth_ty_kind with
+           | Parsetree_utils.DETK_computational ty ->
                Format.fprintf ppf "(%s : %a)@ "
-		 llift_name
-		 (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
-		 ty
-	   | Parsetree_utils.DNI_logical lexpr ->
-	       Format.fprintf ppf "(%s : " llift_name ;
-	       generate_logical_expr ctx
-		 ~local_idents: [] ~self_methods_status: SMS_from_record
-		 env lexpr ;
-	       Format.fprintf ppf ")@ ")
+                 llift_name
+                 (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
+                 ty
+           | Parsetree_utils.DETK_logical lexpr ->
+               Format.fprintf ppf "(%s : " llift_name ;
+               generate_logical_expr ctx
+                 ~local_idents: [] ~self_methods_status: SMS_from_record
+                 env lexpr ;
+               Format.fprintf ppf ")@ ")
         !meths ;
       (* Just to avoid having the reference escaping... *)
       (species_param_name, !meths))

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.108 2008-09-10 08:14:47 pessaux Exp $ *)
+(* $Id: env.ml,v 1.109 2008-09-10 15:12:27 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -723,7 +723,7 @@ type generic_code_gen_method_info = {
          abstracted by lambda-lifting. *)
      TypeInformation.species_param *
      (* The set of methods of this parameter on which we have dependencies. *)
-     Parsetree_utils.ParamDepNameSet.t) list ;
+     Parsetree_utils.ParamDepSet.t) list ;
   mi_abstracted_methods : Parsetree.vname list   (** The positional list
       of methods from ourselves abstracted by lambda-lifting. *)
 } ;;
@@ -745,7 +745,7 @@ module MlGenInformation = struct
         we have the information about this order given in
         [species_binding_info]). *)
     cgi_generator_parameters :
-      (Parsetree.vname * Parsetree_utils.ParamDepNameSet.t) list
+      (Parsetree.vname * Parsetree_utils.ParamDepSet.t) list
   }
 
   type method_info = generic_code_gen_method_info
@@ -804,11 +804,11 @@ module CoqGenInformation = struct
     (* The list of species parameters with their methods the record type
        depends on (hence was abstracted with). *)
     cgp_abstr_param_methods_for_record :
-      (Parsetree.vname * Parsetree_utils.ParamDepNameSet.t) list ;
+      (Parsetree.vname * Parsetree_utils.ParamDepSet.t) list ;
     (* The list of species parameters with their methods the collection
        generator depends on (hence was abstracted with). *)
     cgp_abstr_param_methods_for_coll_gen :
-      (Parsetree.vname * Parsetree_utils.ParamDepNameSet.t) list
+      (Parsetree.vname * Parsetree_utils.ParamDepSet.t) list
     }
 
   type collection_generator_info = {

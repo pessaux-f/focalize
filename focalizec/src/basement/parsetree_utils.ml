@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.19 2008-09-10 08:14:47 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.20 2008-09-10 15:12:27 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -24,41 +24,62 @@ let name_of_vname = function
 
 
 (* ************************************************************************* *)
-(** {b Descr} : Module stuff to create sets of [Parsetree.vname]s.
+(** {b Descr} : Module stuff to create sets of [Parsetree.vname]s with their
+    type.
     This will serves to make sets of methods [vname]s in order to represent
-    dependencies of methods of "Self".
-    We also keep the name's scheme in order to be able to annotate it if
-    required during Coq code generation.
+    dependencies of methods of "Self" on methods of "Self".
+    We keep the name's scheme in order to be able to annotate it if required
+    during Coq code generation.
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-module SelfDepNameMod = struct
+module SelfDepMod = struct
   type t = (Parsetree.vname * Types.type_simple)
   let compare (n1, _) (n2, _) = compare n1 n2
 end ;;
-module SelfDepNameSet = Set.Make (SelfDepNameMod) ;;
+module SelfDepSet = Set.Make (SelfDepMod) ;;
 
 
 
-type dependency_name_kind =
-  | DNI_computational of Types.type_simple
-  | DNI_logical of Parsetree.logical_expr
+(* ************************************************************************ *)
+(* {b Descr} Allows to embedd in sets of dependencies on species parameters
+   either the type scheme of the method if it is computational or the
+   logical expression if it it a logical property. This comes from the fact
+   that "type" of a computational method is its ML-like type but for
+   logical methods (theorem/property), it is its logical property.
+
+   {b Rem} : Exported outside this module.                                  *)
+(* ************************************************************************ *)
+type dependency_elem_type_kind =
+  | DETK_computational of Types.type_simple
+  | DETK_logical of Parsetree.logical_expr
 ;;
 
 
+(* ************************************************************************* *)
+(** {b Descr} : Module stuff to create sets of [Parsetree.vname]s with either
+    their ML-like type or their logical expression.
+    This will serves to make sets of methods [vname]s in order to represent
+    dependencies of methods of "Self" on methods of species parameters.
+    We keep the name's scheme or logical expression (depending on wether the
+    method we depend on is computational or logical) in order to be able to
+    annotate it or print its body (for logical expressions) if required
+    during Coq code generation.
 
-module ParamDepNameMod = struct
-  type t = (Parsetree.vname * dependency_name_kind)
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+module ParamDepMod = struct
+  type t = (Parsetree.vname * dependency_elem_type_kind)
   let compare (n1, _) (n2, _) = compare n1 n2
 end ;;
-module ParamDepNameSet = Set.Make (ParamDepNameMod) ;;
+module ParamDepSet = Set.Make (ParamDepMod) ;;
 
 
 
-let paramdepnameset_find predicate set =
+let param_dep_set_find predicate set =
   let found = ref None in
   try
-    ParamDepNameSet.iter
+    ParamDepSet.iter
       (fun elem ->
         if predicate elem then
           begin

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.30 2008-09-10 12:57:35 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.31 2008-09-10 15:12:27 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -289,7 +289,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
                Param_dep_analysis.param_deps_logical_expr
                  ~current_species
                  (species_param_name, species_param_meths) p
-           | FBK_proof None -> Parsetree_utils.ParamDepNameSet.empty
+           | FBK_proof None -> Parsetree_utils.ParamDepSet.empty
            | FBK_proof (Some proof) ->
                (* Implements rule BODY of the definition 72 page 153 of
                   Virgile Prevosto's Phd. for theorems and properties. *)
@@ -308,13 +308,13 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
      parameters methods' types we depend on. *)
   List.iter
     (fun (_, meths) ->
-      Parsetree_utils.ParamDepNameSet.iter
+      Parsetree_utils.ParamDepSet.iter
         (fun (_, meth_kind) ->
           let st_set =
             (match meth_kind with
-             | Parsetree_utils.DNI_computational meth_ty ->
+             | Parsetree_utils.DETK_computational meth_ty ->
                  Types.get_species_types_in_type meth_ty
-             | Parsetree_utils.DNI_logical lexpr ->
+             | Parsetree_utils.DETK_logical lexpr ->
                  get_species_types_in_type_annots_of_logical_expr lexpr) in
           params_appearing_in_types :=
             Types.SpeciesCarrierTypeSet.union
@@ -408,21 +408,21 @@ type abstraction_info = {
   ai_dependencies_from_params_via_body :
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
-     Parsetree_utils.ParamDepNameSet.t)  (** The set of methods we depend on. *)
+     Parsetree_utils.ParamDepSet.t)  (** The set of methods we depend on. *)
   list ;
   (** Dependencies found via [TYPE] of definition 72 page 153 of Virgile
       Prevosto's Phd. *)
   ai_dependencies_from_params_via_type :
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
-     Parsetree_utils.ParamDepNameSet.t)  (** The set of methods we depend on. *)
+     Parsetree_utils.ParamDepSet.t)  (** The set of methods we depend on. *)
   list ;
   (** Other dependencies found via [DEF-DEP], [UNIVERSE] and [PRM] of definition
       72 page 153 of Virgile Prevosto's Phd. *)
   ai_dependencies_from_params_via_completion :
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
-     Parsetree_utils.ParamDepNameSet.t)  (** The set of methods we depend on. *)
+     Parsetree_utils.ParamDepSet.t)  (** The set of methods we depend on. *)
   list ;
   ai_min_coq_env : MinEnv.min_coq_env_element list
 } ;;
@@ -450,7 +450,7 @@ let merge_abstraction_infos ai1 ai2 =
     (fun (prm1, deps1) (prm2, deps2) ->
       (* A few asserts to ensure the compiler is fine. *)
       assert (prm1 = prm2) ;
-      let deps = Parsetree_utils.ParamDepNameSet.union deps1 deps2 in
+      let deps = Parsetree_utils.ParamDepSet.union deps1 deps2 in
       (prm1, deps))
     ai1 ai2
 ;;
@@ -591,7 +591,7 @@ let add_param_dependencies ~param_name ~deps ~to_deps =
              (* If we are in the bucket of the searched *)
              (* species parameter, we add.              *)
              if name = param_name_as_string then
-               (p, (Parsetree_utils.ParamDepNameSet.union deps d)) :: q
+               (p, (Parsetree_utils.ParamDepSet.union deps d)) :: q
              else (p, d) :: (rec_add q)
         end) in
   rec_add to_deps
@@ -680,7 +680,7 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                           false
                       | Env.TypeInformation.SPAR_is ((_, n), _, _, _) -> n = y)
                    cpprim starting_dependencies_from_params in
-               Parsetree_utils.ParamDepNameSet.fold
+               Parsetree_utils.ParamDepSet.fold
                  (fun z accu_deps_for_zs ->
                    (* Forall z, we must search the set of methods, y, on *)
                    (* which z depends on in S' via [formal_name] ...     *)
@@ -696,7 +696,7 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                    (* no method in the dependencies on this parameter.     *)
                    let y =
                      (try List.assoc formal_name z_dependencies with
-                     | Not_found -> Parsetree_utils.ParamDepNameSet.empty) in
+                     | Not_found -> Parsetree_utils.ParamDepSet.empty) in
                    (* ... and add it to the dependencies of                *)
                    (* [eff_arg_qual_vname] in the current dependencies     *)
                    (* accumulator, i.e into [inner_accu_deps_from_params]. *)
@@ -735,7 +735,7 @@ let complete_dependencies_from_params env ~current_unit ~current_species
             set. *)
          List.fold_right
            (fun species_param accu ->
-             (species_param, Parsetree_utils.ParamDepNameSet.empty) :: accu)
+             (species_param, Parsetree_utils.ParamDepSet.empty) :: accu)
            species_parameters
            []
      | FTK_logical lexpr ->
@@ -780,7 +780,7 @@ let complete_dependencies_from_params env ~current_unit ~current_species
   let empty_initial_deps_accumulator =
     List.fold_right
       (fun species_param accu ->
-        (species_param, Parsetree_utils.ParamDepNameSet.empty) :: accu)
+        (species_param, Parsetree_utils.ParamDepSet.empty) :: accu)
       species_parameters
       [] in
   (* Since methods on which we depend are from Self, all of them share the

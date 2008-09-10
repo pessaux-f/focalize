@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.79 2008-09-10 08:14:47 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.80 2008-09-10 15:12:27 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -396,7 +396,7 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
            "IS". *)
         let prefix =
           "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
-        Parsetree_utils.ParamDepNameSet.iter
+        Parsetree_utils.ParamDepSet.iter
           (fun (meth, _) ->
           (* Don't print the type to prevent being too verbose. *)
             Format.fprintf out_fmter "@ %s%a"
@@ -786,7 +786,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
                Parsetree.Vuident n in
         Format.eprintf "\t From parameter '%a', dependencies on methods: "
           Sourcify.pp_vname species_param_name;
-        Parsetree_utils.ParamDepNameSet.iter
+        Parsetree_utils.ParamDepSet.iter
           (fun (meth, _) -> Format.eprintf "%a " Sourcify.pp_vname meth)
           meths_from_param ;
         Format.eprintf "@.")
@@ -806,7 +806,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
               methods is always 1-length at most and contains directly the
               name of the parameter itself if it is really used. *)
            let number_meth =
-             Parsetree_utils.ParamDepNameSet.cardinal meths_from_param in
+             Parsetree_utils.ParamDepSet.cardinal meths_from_param in
            assert (number_meth <= 1) ;
            if number_meth = 1 then
              (begin
@@ -859,7 +859,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
                    of its parents. We must search in its inheritance to
                    determine exactly in which species each method is REALLY
                    defined (not only inherited). *)
-                Parsetree_utils.ParamDepNameSet.iter
+                Parsetree_utils.ParamDepSet.iter
                   (fun (meth, _) ->
                     let (real_spec_mod, real_spec_name) =
                       Misc_common.
@@ -886,7 +886,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
                   else capitalized_coll_mod ^ "." ^ coll_name ^
                     ".effective_collection." ^ capitalized_coll_mod ^ "." ^
                     coll_name ^ "." in
-                Parsetree_utils.ParamDepNameSet.iter
+                Parsetree_utils.ParamDepSet.iter
                   (fun (meth, _) ->
                     (* Don't print the type to prevent being too verbose. *)
                     Format.fprintf out_fmter "@ %s%a"
@@ -902,7 +902,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
                   let prefix =
                     "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
                     "_" in
-                  Parsetree_utils.ParamDepNameSet.iter
+                  Parsetree_utils.ParamDepSet.iter
                     (fun (meth, _) ->
                       (* Don't print the type to prevent being too verbose. *)
                       Format.fprintf out_fmter "@ %s%a"
@@ -939,7 +939,7 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
      set of methods names from it that needed to be lambda-lifted, hence that
      will lead to parameters of the collection generator. *)
   let species_param_names_and_methods =
-    ref ([] : (Parsetree.vname * Parsetree_utils.ParamDepNameSet.t ref) list) in
+    ref ([] : (Parsetree.vname * Parsetree_utils.ParamDepSet.t ref) list) in
   (* ************************************************************************ *)
   (** {b Descr} :  Local function to process only one [compiled_field_memory].
          Handy to factorize the code in both the cases of [CSF_let] and
@@ -965,14 +965,14 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
         let spe_param_bucket =
           (try List.assoc spe_param_name !species_param_names_and_methods
           with Not_found ->
-            let bucket = ref Parsetree_utils.ParamDepNameSet.empty in
+            let bucket = ref Parsetree_utils.ParamDepSet.empty in
             species_param_names_and_methods :=
               (spe_param_name, bucket) :: !species_param_names_and_methods ;
             bucket) in
         (* And now, union the current methods we depend on with the already
            previously recorded. *)
         spe_param_bucket :=
-          Parsetree_utils.ParamDepNameSet.union meths_set !spe_param_bucket)
+          Parsetree_utils.ParamDepSet.union meths_set !spe_param_bucket)
       field_memory.Misc_common.cfm_dependencies_from_parameters in
 
   (* ********************************************************** *)
@@ -996,7 +996,7 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
       let prefix =
         "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
         "_" in
-      Parsetree_utils.ParamDepNameSet.iter
+      Parsetree_utils.ParamDepSet.iter
         (fun (meth, _) ->
           (* Don't print the type to prevent being too verbose. *)
           Format.fprintf out_fmter "@ %s%a"
@@ -1073,7 +1073,7 @@ let generate_collection_generator ctx env compiled_species_fields =
           let prefix =
             "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
             "_" in
-          Parsetree_utils.ParamDepNameSet.iter
+          Parsetree_utils.ParamDepSet.iter
             (fun (meth, _) ->
               (* Don't print the type to prevent being too verbose. *)
               Format.fprintf out_fmter "@ %s%a"
@@ -1403,7 +1403,7 @@ let apply_collection_generator_to_parameters ctx env collection_body_params
              match corresponding_effective with
               | Parsetree.Vname n -> (None, n)
               | Parsetree.Qualified (m, n) -> ((Some m), n) in
-           Parsetree_utils.ParamDepNameSet.iter
+           Parsetree_utils.ParamDepSet.iter
              (fun (meth_name, _) ->
                (* If needed, qualify the name of the species in the OCaml
                   code. Don't print the type to prevent being too verbose. *)
