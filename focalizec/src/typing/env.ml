@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.102.2.3 2008-08-29 11:55:46 blond Exp $ *)
+(* $Id: env.ml,v 1.102.2.4 2008-09-10 06:39:43 blond Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -894,6 +894,9 @@ module CGenEnv =
     let add_constr x vn code =
       x.c_constrs <- (vn, code) :: x.c_constrs;
       x
+
+    let get_constr x vn =
+      List.assoc vn x.c_constrs
 
     let merge x y =
       y.c_constrs <- x.c_constrs @ y.c_constrs;

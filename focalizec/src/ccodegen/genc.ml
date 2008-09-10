@@ -96,10 +96,16 @@ let compile_expr_ident ctx ei =
 	(vname_as_string_with_operators_expanded s)
 	(vname_as_string_with_operators_expanded vn)
 	
-let compile_constructor_ident _ ci =
+let compile_constructor_ident ctx ci =
   match ci.ast_desc with
     CI (Vname vn) ->
-      let name = vname_as_string_with_operators_expanded vn in
+      (* Getting the C definition of the constructor if any. *)
+      let name =
+	try 
+	  CGenEnv.get_constr ctx vn
+	with Not_found ->
+	  vname_as_string_with_operators_expanded vn
+      in
       (name, String.uppercase name)
   | CI (Qualified (f, vn)) ->
       let name = vname_as_string_with_operators_expanded vn in
@@ -786,7 +792,6 @@ and resolve_scoping_statement spc ctx args local s =
 	    ([], Affect (p', e'))
       
       |	(Ident id, Call (Ident f, _)) ->
-	  eprintf "### resolve scoping for %s@." f;
 	  let ty = try List.assoc id local with
 	    Not_found ->
 	      begin try CGenEnv.get_function_type ctx id with
@@ -892,6 +897,12 @@ let compile_collection_field spc ctx = function
 	  begin match ty with
 	    Ptr ty' -> 
 	      let body = Export (Typedef (ty', spc)) in
+	      (ctx, [body])
+	  | Annot (Ptr ty', str) ->
+	      let body = Export (Typedef (Annot (ty', str), spc)) in
+	      (ctx, [body])
+	  | Param (Ptr ty', l) ->
+	      let body = Export (Typedef (Param (ty', l), spc)) in
 	      (ctx, [body])
 	  | _ -> assert false
 	  end

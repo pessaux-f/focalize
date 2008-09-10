@@ -336,6 +336,7 @@ module CGenEnv :
     val unit_name : t -> string
     val file_name : t -> string
     val add_constr : t -> Parsetree.vname -> string -> t
+    val get_constr : t -> Parsetree.vname -> string
     val merge : t -> t -> t
     val mem_eq : t -> string -> bool
     val add_known_type : t -> string -> t
