@@ -7,6 +7,8 @@ open Format
 open Types
 open Cast
   
+let debug = ref true
+
 let todo str =
   fprintf err_formatter "TODO : %s@." str
     
@@ -14,6 +16,54 @@ let fold f (ctx, res) l =
   List.fold_left 
     (fun (c, l') a -> let (c', a') = f c a in (c', l'@a')) (ctx, res) l
     
+
+let vname2string = function
+  | Parsetree.Vlident s
+  | Parsetree.Vuident s
+  | Parsetree.Vqident s
+  | Parsetree.Vpident s
+  | Parsetree.Viident s -> 
+      let renamed_operator = ref "" in
+      String.iter
+	(fun character ->
+	  let str_tail =
+            (match character with
+            | '`' -> "_bquote_"
+            | '~' -> "_tilda_"
+            | '?' -> "_question_"
+            | '$' -> "_dollar_"
+            | '!' -> "_bang_"
+            | '#' -> "_sharp_"
+            | '+' -> "_plus_"
+            | '-' -> "_minus_"
+            | '*' -> "_star_"
+            | '/' -> "_slash_"
+            | '%' -> "_percent_"
+            | '&' -> "_ampers_"
+            | '|' -> "_pipe_"
+            | ',' -> "_comma_"
+            | ':' -> "_colon_"
+            | ';' -> "_semi_"
+            | '<' -> "_lt_"
+            | '=' -> "_eq_"
+            | '>' -> "_gt_"
+            | '@' -> "_at_"
+            | '^' -> "_hat_"
+            | '\\' -> "_bslash"
+	    | '[' ->  "_lbrack_"
+	    | ']' -> "_rbrack_"
+            | whatever ->
+             (* For any other character, keep it unchanged. *)
+		let s = " " in
+		s.[0] <- whatever ;
+		s) in
+      (* Appending on string is not very efficient, but *)
+      (* this should not be a real matter here ! *)
+	  renamed_operator := !renamed_operator ^ str_tail)
+	s ;
+  (* Just return the "translated" identifier name. *)
+      !renamed_operator
+
 let generate_names n =
   let gen = sprintf "a%i" in
   let rec aux i acc =
@@ -73,28 +123,28 @@ let compile_expr_ident ctx ei =
   match ei.ast_desc with
     EI_local vn ->
       sprintf "%s"
-	(vname_as_string_with_operators_expanded vn)
+	(vname2string vn)
   | EI_global (Vname vn) ->
       sprintf "%s_%s"
 	(CGenEnv.unit_name ctx)
-	(vname_as_string_with_operators_expanded vn)
+	(vname2string vn)
   | EI_global (Qualified (f, vn)) ->
       sprintf "%s_%s"
 	f
-	(vname_as_string_with_operators_expanded vn)
+	(vname2string vn)
   | EI_method (None, vn) ->
       sprintf "%s"
-	(vname_as_string_with_operators_expanded vn)
+	(vname2string vn)
   | EI_method (Some (Vname s), vn) ->
       sprintf "%s_%s_%s"
 	(CGenEnv.unit_name ctx)
-	(vname_as_string_with_operators_expanded s)
-	(vname_as_string_with_operators_expanded vn)
+	(vname2string s)
+	(vname2string vn)
   | EI_method (Some (Qualified (f, s)), vn) ->
       sprintf "%s_%s_%s"
 	f
-	(vname_as_string_with_operators_expanded s)
-	(vname_as_string_with_operators_expanded vn)
+	(vname2string s)
+	(vname2string vn)
 	
 let compile_constructor_ident ctx ci =
   match ci.ast_desc with
@@ -104,12 +154,17 @@ let compile_constructor_ident ctx ci =
 	try 
 	  CGenEnv.get_constr ctx vn
 	with Not_found ->
-	  vname_as_string_with_operators_expanded vn
+	  vname2string vn
       in
       (name, String.uppercase name)
   | CI (Qualified (f, vn)) ->
-      let name = vname_as_string_with_operators_expanded vn in
-      (sprintf "%s_%s" f name, String.uppercase name)
+      (* Getting the C definition of the constructor if any. *)
+      try 
+	let name = CGenEnv.get_constr ctx vn in
+	(name, "")
+      with Not_found ->
+	let name = vname2string vn in
+	(sprintf "%s_%s" f name, String.uppercase name)
 	
 let external_value ee =
   let rec search = function
@@ -156,7 +211,7 @@ exception Non_valid_type_identifier of string * char * Location.t
 let compile_type ctx (_, vn, desc) =
   let name =
     (CGenEnv.unit_name ctx)^"_"^
-    (vname_as_string_with_operators_expanded vn) in
+    (vname2string vn) in
   match desc.type_kind with
     TK_abstract ->
       todo "TK_abstract";
@@ -213,7 +268,7 @@ let compile_type ctx (_, vn, desc) =
       in
       List.iter
 	(function (vn, _, t) ->
-	  let cname = vname_as_string_with_operators_expanded vn in
+	  let cname = vname2string vn in
 	  constr_names := !constr_names @ [cname];
 	  match Types.type_scheme_to_c t with
 	    Fun (_, []) -> assert false
@@ -386,6 +441,140 @@ let  generate_local_name =
     incr cpt;
     res)
     
+
+let rec resolve_scoping spc ctx args local = function
+    [] -> []
+  | h::t -> 
+      let (local', h') = resolve_scoping_statement spc ctx args local h in
+      h' :: (resolve_scoping spc ctx args (local'@local) t)
+	     
+and resolve_scoping_statement spc ctx args local s =
+  match s with
+    Expr e ->
+      ([], Expr (resolve_scoping_expr spc ctx args local e))
+
+  | Return e ->
+      ([], Return (resolve_scoping_expr spc ctx args local e))
+	
+  | Decl (id, ty) ->
+      ([(id, ty)], s)
+	
+  | Affect (p, e) ->
+      let p' = resolve_scoping_primary_expr spc ctx args local p in
+      let e' = resolve_scoping_expr spc ctx args local e in
+      begin match (p', e') with
+	(Ident id, ECast (t, e'')) ->
+	  let ty = try List.assoc id local with
+	    Not_found ->
+	      begin try CGenEnv.get_function_type ctx id with
+		Not_found -> assert false
+	      end
+	  in
+	  if type_realize ctx t = type_realize ctx ty then 
+	    resolve_scoping_statement spc ctx args local (Affect (p', e''))
+	  else
+	    ([], Affect (p', e'))
+      
+      |	(Ident id, Call (Ident f, _)) ->
+	  let ty = try List.assoc id local with
+	    Not_found ->
+	      begin try CGenEnv.get_function_type ctx id with
+		Not_found -> assert false
+	      end
+	  in
+	  begin try
+	    let ty' = CGenEnv.get_function_type ctx f in
+	    match ty' with
+	      Fun (ret, _) ->
+		if type_realize ctx ty = type_realize ctx ret then
+		  ([], Affect (p', e'))
+		else 
+		  ([], Affect (p', ECast (ty, e')))
+	    | _ -> assert false
+	  with
+	    Not_found ->
+	      ([], Affect (p', e'))
+	  end
+ 
+      |	_ -> 
+	  ([], Affect (p', e'))
+      end	
+  | Skip ->
+      ([], s)
+	
+  | If (e, a, b) ->
+      let a' = resolve_scoping spc ctx args local a in
+      let b' = resolve_scoping spc ctx args local b in
+      ([], If (resolve_scoping_expr spc ctx args local e, a', b'))
+	
+and resolve_scoping_expr spc ctx args local e =
+  match e with
+    Prim ((Ident id) as p) ->
+      if !debug then
+	eprintf "### (scoping) resolving %s.@." id;
+      begin
+	try
+	  begin match CGenEnv.get_function_type ctx id with
+	    Fun (_, []) ->
+	      Call (Ident id, [])
+	  | Fun (_, arg_types) ->
+	      Call (Ident id,
+		    List.map 
+		      (fun (t, (i, t')) -> 
+			let name = Prim (Ident i) in
+			if t = t' then name else ECast (t, name))
+		      (List.combine arg_types args))
+	  | _ ->
+	      Prim (resolve_scoping_primary_expr spc ctx args local p)
+	  end
+	with
+	  Not_found -> Prim (resolve_scoping_primary_expr spc ctx args local p)
+      end
+  | Prim p ->
+      Prim (resolve_scoping_primary_expr spc ctx args local p)
+      
+  | Call (p, args') ->
+      let p' = resolve_scoping_primary_expr spc ctx args local p in
+      let args'' = List.map (resolve_scoping_expr spc ctx args local) args' in
+      Call (p', args'')
+      
+  | ECast (ty, e) ->
+      ECast (ty, resolve_scoping_expr spc ctx args local e)
+  | Equal (a, b) ->
+      Equal (resolve_scoping_expr spc ctx args local a,
+	     resolve_scoping_expr spc ctx args local b)
+
+and resolve_scoping_primary_expr spc ctx args local p =
+  match p with
+    Ident id ->
+      begin try let _ = List.assoc id local in p
+      with
+	Not_found ->
+	  begin try
+	    let _ = CGenEnv.get_function_type ctx id in
+	    p
+	  with
+	    Not_found ->
+	      let name = sprintf "%s_%s" spc id in
+	      begin try
+		let _ = CGenEnv.get_function_type ctx name in
+		Ident name
+	      with
+		Not_found -> p
+	      end
+	  end
+      end
+  | Concat l ->
+      Concat (List.map (resolve_scoping_primary_expr spc ctx args local) l)
+  | Constant _ -> p
+  | Ref p' ->
+      Ref (resolve_scoping_primary_expr spc ctx args local p')
+  | Cast (ty, p') ->
+      Cast (ty, resolve_scoping_primary_expr spc ctx args local p')
+  | Access (p', str) ->
+      Access (resolve_scoping_primary_expr spc ctx args local p', str)
+
+
 let rec compile_let_def ctx (ld, l) =
   fold 
     (compile_binding ld)
@@ -395,28 +584,31 @@ let rec compile_let_def ctx (ld, l) =
        (List.map Types.type_scheme_to_c l))
     
 and compile_binding _ ctx (b, t) =
+  print_string "ùzaphgiahgnan@\n";
     (* We do not compile propositional let. *)
   match t with
     Fun (TypeId "basics_prop", _) | TypeId "basics_prop" -> (ctx, [])
   | Fun (ret, args) ->
-        (* This is a function definition. *)
+         (* This is a function definition. *)
       let name =
 	(CGenEnv.unit_name ctx)^"_"^
-	vname_as_string_with_operators_expanded b.ast_desc.b_name in
+	vname2string b.ast_desc.b_name in
       let nargs =
 	match b.ast_desc.b_params with
 	  [] -> generate_names (List.length args -1)
 	        (* We need to name the arguments.*)
 	| _ -> List.map (function (vn, _) ->
-	    vname_as_string_with_operators_expanded vn) b.ast_desc.b_params in
+	    vname2string vn) b.ast_desc.b_params in
       let (ctx, res, body, last) =
 	compile_binding_body nargs ctx b.ast_desc.b_body in
         (* The body is not directly usable, we need to do some stuff. *)
         (* Adding the result statement. *)
+      let params = List.combine nargs args in 
       let body = (body@[last]) in
       let body = skip_elimination body in
       let body = result_calculus ret body in
-      let params = List.combine nargs args in 
+      let body = resolve_scoping "" ctx params [] body in 
+      let ctx = CGenEnv.add_function ctx name t in
       let res = res @
 	[ Export (Signature (false, name, t));
 	  Function (ret, name, params, body) ] in
@@ -574,7 +766,7 @@ and compile_pattern e ctx p =
       end
 	
   | P_var vn ->
-      let name = vname_as_string_with_operators_expanded vn in
+      let name = vname2string vn in
       let ty = anti_elim p in
       let result = Call (Access (Ident name, "equal"),
 			 [ Prim (Ident name); e ]) in
@@ -589,7 +781,7 @@ and compile_pattern e ctx p =
       (ctx, [], [])
 	
   | P_constr (ci, l) ->
-      let (_, disc) = compile_constructor_ident ctx ci in
+      let (func, disc) = compile_constructor_ident ctx ci in
       let index = ref 0 in
       let (ctx, lifted, beqs) =
 	List.fold_left
@@ -604,7 +796,11 @@ and compile_pattern e ctx p =
 	  (ctx, [], [])
 	  l 
       in
-      let result = Equal (Call (Ident "get_disc", [e]), Prim (Ident disc)) in
+      let result = 
+	Equal (Call (Ident "get_variant_type", [e]),
+	       match disc with
+		 "" -> Call (Ident (sprintf "%s_type" func), [])
+	       | _ -> Prim (Ident disc)) in
       (ctx, lifted, ([], result)::beqs)
 	
   | P_record _ ->
@@ -676,7 +872,7 @@ and compile_constant ctx c =
 (* 	  let cte = compile_constant c in *)
 (* 	  (ctx, (lifted @ lifted', [If (Equal (e, cte), body, body')])) *)
 (*       |	P_var vn -> *)
-(* 	  let name = vname_as_string_with_operators_expanded vn in *)
+(* 	  let name = vname2string vn in *)
 (* 	  (ctx, (lifted @ lifted', [Decl (name,])) *)
   
   
@@ -694,7 +890,7 @@ and compile_constant ctx c =
 let compile_species_field spc ctx f =
   match f with
     SF_sig (_, vn, ty) ->
-      begin match vname_as_string_with_operators_expanded vn with
+      begin match vname2string vn with
 	"rep" ->
 	  todo "SF_sig (rep)"; (ctx, [], [])
       |	name ->
@@ -712,7 +908,7 @@ let compile_species_field spc ctx f =
 	  let name =
 	    sprintf "%s_%s"
 	      spc
-	      (vname_as_string_with_operators_expanded vn) in
+	      (vname2string vn) in
 	  let ty = Types.type_scheme_to_c ty in
 	  let ty = 
 	    subst_ctype (TypeId "Self") (TypeId (sprintf "%s_Self" spc)) ty in
@@ -723,7 +919,7 @@ let compile_species_field spc ctx f =
 		match args with
 		  [] -> generate_names (List.length targs -1)
 	        (* We need to name the arguments.*)
-		| _ -> List.map vname_as_string_with_operators_expanded args in
+		| _ -> List.map vname2string args in
 	      let (ctx, res, body, last) = match bb with
 		BB_logical _ ->
 		  todo "SF_let : BB_logical"; (ctx, [], [], Skip)
@@ -758,139 +954,62 @@ let compile_species_param ctx = function
       todo "SPAR_is";
       (ctx, [])
 
-let rec resolve_scoping spc ctx args local = function
-    [] -> []
-  | h::t -> 
-      let (local', h') = resolve_scoping_statement spc ctx args local h in
-      h' :: (resolve_scoping spc ctx args (local'@local) t)
-	     
-and resolve_scoping_statement spc ctx args local s =
-  match s with
-    Expr e ->
-      ([], Expr (resolve_scoping_expr spc ctx args local e))
 
-  | Return e ->
-      ([], Return (resolve_scoping_expr spc ctx args local e))
-	
-  | Decl (id, ty) ->
-      ([(id, ty)], s)
-	
-  | Affect (p, e) ->
-      let p' = resolve_scoping_primary_expr spc ctx args local p in
-      let e' = resolve_scoping_expr spc ctx args local e in
-      begin match (p', e') with
-	(Ident id, ECast (t, e'')) ->
-	  let ty = try List.assoc id local with
-	    Not_found ->
-	      begin try CGenEnv.get_function_type ctx id with
-		Not_found -> assert false
-	      end
-	  in
-	  if type_realize ctx t = type_realize ctx ty then 
-	    resolve_scoping_statement spc ctx args local (Affect (p', e''))
-	  else
-	    ([], Affect (p', e'))
-      
-      |	(Ident id, Call (Ident f, _)) ->
-	  let ty = try List.assoc id local with
-	    Not_found ->
-	      begin try CGenEnv.get_function_type ctx id with
-		Not_found -> assert false
-	      end
-	  in
-	  begin try
-	    let ty' = CGenEnv.get_function_type ctx f in
-	    match ty' with
-	      Fun (ret, _) ->
-		if type_realize ctx ty = type_realize ctx ret then
-		  ([], Affect (p', e'))
-		else 
-		  ([], Affect (p', ECast (ty, e')))
-	    | _ -> assert false
-	  with
-	    Not_found ->
-	      ([], Affect (p', e'))
-	  end
- 
-      |	_ -> 
-	  ([], Affect (p', e'))
-      end	
-  | Skip ->
-      ([], s)
-	
-  | If (e, a, b) ->
-      let a' = resolve_scoping spc ctx args local a in
-      let b' = resolve_scoping spc ctx args local b in
-      ([], If (resolve_scoping_expr spc ctx args local e, a', b'))
-	
-and resolve_scoping_expr spc ctx args local e =
-  match e with
-    Prim ((Ident id) as p) ->
-      begin
-	try
-	  begin match CGenEnv.get_function_type ctx id with
-	    Fun (_, []) ->
-	      Call (Ident id, [])
-	  | Fun (_, arg_types) ->
-	      Call (Ident id,
-		    List.map 
-		      (fun (t, (i, t')) -> 
-			let name = Prim (Ident i) in
-			if t = t' then name else ECast (t, name))
-		      (List.combine arg_types args))
-	  | _ ->
-	      Prim (resolve_scoping_primary_expr spc ctx args local p)
-	  end
-	with
-	  Not_found -> Prim (resolve_scoping_primary_expr spc ctx args local p)
-      end
-  | Prim p ->
-      Prim (resolve_scoping_primary_expr spc ctx args local p)
-      
-  | Call (p, args') ->
-      let p' = resolve_scoping_primary_expr spc ctx args local p in
-      let args'' = List.map (resolve_scoping_expr spc ctx args local) args' in
-      Call (p', args'')
-      
-  | ECast (ty, e) ->
-      ECast (ty, resolve_scoping_expr spc ctx args local e)
-  | Equal (a, b) ->
-      Equal (resolve_scoping_expr spc ctx args local a,
-	     resolve_scoping_expr spc ctx args local b)
-
-and resolve_scoping_primary_expr spc ctx args local p =
-  match p with
-    Ident id ->
-      begin try let _ = List.assoc id local in p
-      with
-	Not_found ->
-	  begin try
-	    let _ = CGenEnv.get_function_type ctx id in
-	    p
-	  with
-	    Not_found ->
-	      let name = sprintf "%s_%s" spc id in
-	      begin try
-		let _ = CGenEnv.get_function_type ctx name in
-		Ident name
-	      with
-		Not_found -> p
-	      end
-	  end
-      end
-  | Concat l ->
-      Concat (List.map (resolve_scoping_primary_expr spc ctx args local) l)
-  | Constant _ -> p
-  | Ref p' ->
-      Ref (resolve_scoping_primary_expr spc ctx args local p')
-  | Cast (ty, p') ->
-      Cast (ty, resolve_scoping_primary_expr spc ctx args local p')
-  | Access (p', str) ->
-      Access (resolve_scoping_primary_expr spc ctx args local p', str)
+let compile_let_info spc ctx (_, vn, args, ty, bb, _, lf) =
+   match lf with
+     LF_no_logical ->
+       let name = sprintf "%s_%s" spc (vname2string vn) in
+       if !debug then
+	 eprintf "### compiling %s.@." name;
+       let ty = Types.type_scheme_to_c ty in
+	  (* let ty =  *)
+(* 	    subst_ctype (TypeId "Self") (TypeId (sprintf "%s_Self" spc)) ty in *)
+       begin match ty with
+	 Fun (ret, targs) ->
+	   let signature = Export (Signature (false, name, ty)) in
+	   let nargs =
+	     match args with
+	       [] -> generate_names (List.length targs -1)
+	        (* We need to name the arguments.*)
+	     | _ -> List.map vname2string args in
+	   let (ctx, res, body, last) = match bb with
+	     BB_logical _ ->
+	       todo "SF_let : BB_logical"; (ctx, [], [], Skip)
+	   | BB_computational e ->
+	       compile_expr nargs ctx e in
+	   let ctx = CGenEnv.add_function ctx name ty in
+	   let params = List.combine nargs targs in 
+	   let body = body@[last] in
+	   let body = skip_elimination body in
+	   let body = result_calculus ret body in
+	   let body = resolve_scoping spc ctx params [] body in 
+	   let body = Function (ret, name, params, body) in
+	   (ctx, res@(signature::body::[]))
+       | _ ->
+	   let ty' = Fun (ty, []) in
+	   let signature = Export (Signature (true, name, ty')) in
+	   let nargs = [] in
+	   let (ctx, lifted, body, last) =  match bb with
+	     BB_logical _ ->
+	       todo "SF_let : BB_logical"; (ctx, [], [], Skip)
+	   | BB_computational e ->
+	       compile_expr nargs ctx e
+	   in
+	   let ctx = CGenEnv.add_function ctx name ty' in
+	   let body = body@[last] in
+	   let body = skip_elimination body in
+	   let body = result_calculus ty body in
+	   let body = resolve_scoping spc ctx [] [] body in 
+	   let body = Function (ty, name, [], body) in
+	   (ctx, lifted@(signature::body::[]))
+       end   
+   | LF_logical ->
+       (ctx, [])
+	 
 
 let compile_collection_field spc ctx = function
     SF_sig (_, vn, ty) ->
-      begin match vname_as_string_with_operators_expanded vn with
+      begin match vname2string vn with
 	"rep" ->
 	  let ty = Types.type_scheme_to_c ty in
 	  let ty = subst_ctype (TypeId "Self") (TypeId spc) ty in
@@ -909,61 +1028,12 @@ let compile_collection_field spc ctx = function
       |	_ -> assert false
       end
       
-  | SF_let (_, vn, args, ty, bb, _, lf) ->
-      begin match lf with
-	LF_no_logical ->
-	  let name =
-	    sprintf "%s_%s"
-	      spc
-	      (vname_as_string_with_operators_expanded vn) in
-	  let ty = Types.type_scheme_to_c ty in
-	  (* let ty =  *)
-(* 	    subst_ctype (TypeId "Self") (TypeId (sprintf "%s_Self" spc)) ty in *)
-	  begin match ty with
-	    Fun (ret, targs) ->
-	      let signature = Export (Signature (false, name, ty)) in
-	      let nargs =
-		match args with
-		  [] -> generate_names (List.length targs -1)
-	        (* We need to name the arguments.*)
-		| _ -> List.map vname_as_string_with_operators_expanded args in
-	      let (ctx, res, body, last) = match bb with
-		BB_logical _ ->
-		  todo "SF_let : BB_logical"; (ctx, [], [], Skip)
-	      | BB_computational e ->
-		  compile_expr nargs ctx e in
-	      let params = List.combine nargs targs in 
-	      let body = body@[last] in
-	      let body = skip_elimination body in
-	      let body = result_calculus ret body in
-	      let body = resolve_scoping spc ctx params [] body in 
-	      let body = Function (ret, name, params, body) in
-	      let ctx = CGenEnv.add_function ctx name ty in
-	      (ctx, res@(signature::body::[]))
-	  | _ ->
-	      let ty' = Fun (ty, []) in
-	      let signature = Export (Signature (true, name, ty')) in
-	      let nargs = [] in
-	      let (ctx, lifted, body, last) =  match bb with
-		BB_logical _ ->
-		  todo "SF_let : BB_logical"; (ctx, [], [], Skip)
-	      | BB_computational e ->
-		  compile_expr nargs ctx e
-	      in
-	      let body = body@[last] in
-	      let body = skip_elimination body in
-	      let body = result_calculus ty body in
-	      let body = resolve_scoping spc ctx [] [] body in 
-	      let body = Function (ty, name, [], body) in
-	      let ctx = CGenEnv.add_function ctx name ty' in
-	      (ctx, lifted@(signature::body::[]))
-	  end   
-      |	LF_logical ->
-	  (ctx, [])
-      end
+  | SF_let (hist, vn, args, ty, bb, dep, lf) ->
+      compile_let_info spc ctx (hist, vn, args, ty, bb, dep, lf)
       
-  | SF_let_rec _ ->
-      todo "SF_let_rec collection"; (ctx, [])
+  | SF_let_rec l ->
+      fold (compile_let_info spc) (ctx, []) l
+
   | SF_theorem _ ->
       (ctx, [])
   | SF_property _ ->
@@ -985,7 +1055,7 @@ let compile_phrase ctx (ph, pcm) =
       (* let name = *)
 (* 	sprintf "%s_%s" *)
 (* 	  (CGenEnv.unit_name ctx) *)
-(* 	  (vname_as_string_with_operators_expanded spcdef.ast_desc.sd_name) in *)
+(* 	  (vname2string spcdef.ast_desc.sd_name) in *)
 (*       let (ctx, params) =  *)
 (* 	List.fold_left *)
 (* 	  (fun (c, l) a -> *)
@@ -1014,7 +1084,7 @@ let compile_phrase ctx (ph, pcm) =
       let name =
 	sprintf "%s_%s"
 	  (CGenEnv.unit_name ctx)
- 	  (vname_as_string_with_operators_expanded def.ast_desc.cd_name) in 
+ 	  (vname2string def.ast_desc.cd_name) in 
       let (ctx, body) =
 	List.fold_left
 	  (fun (c, b) a ->

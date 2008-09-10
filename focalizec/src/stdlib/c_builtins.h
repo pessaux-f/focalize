@@ -22,6 +22,7 @@ typedef struct foc_value
 
 /* int variant_equal(foc_variant*, foc_variant*); */
 
+int get_variant_type(foc_value*);
 foc_value* get_variant_arg(foc_value*, int);
 
 foc_value* mk_tuple(int);
@@ -58,18 +59,20 @@ foc_string* mk_foc_string(char*);
 typedef foc_value foc_bool;
 /* struct foc_bool; */
 /* typedef struct foc_bool foc_bool; */
-/* typedef enum {TRUE, FALSE} foc_bool_type; */
-/* inline foc_bool_type get_foc_bool_type(foc_bool*); */
+typedef enum {TRUE, FALSE} foc_bool_type;
+inline foc_bool_type mk_foc_true_type(foc_bool*);
 inline foc_bool* mk_foc_true(void);
+inline foc_bool_type mk_foc_false_type(foc_bool*);
 inline foc_bool* mk_foc_false(void);
 
 typedef foc_value foc_list;
 /* struct foc_list; */
 /* typedef struct foc_list foc_list; */
-/* typedef enum {NIL, CONS} foc_list_type; */
-/* inline foc_list_type get_foc_list_type(foc_list*); */
-/* inline foc_list* mk_foc_nil(void); */
-/* foc_list* mk_foc_cons(foc_value*, foc_list*); */
+typedef enum { NIL, CONS } foc_list_type;
+inline foc_list_type mk_foc_nil_type(void);
+inline foc_list* mk_foc_nil(void);
+inline foc_list_type mk_foc_cons_type(void);
+foc_list* mk_foc_cons(foc_value*, foc_list*);
 
 foc_value* c_builtins_foc_error(foc_string*);
 
