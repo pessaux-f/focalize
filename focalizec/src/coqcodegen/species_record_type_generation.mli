@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.7 2008-09-10 08:14:47 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.8 2008-09-10 12:57:35 pessaux Exp $ *)
 
 
 type self_methods_status =
@@ -24,6 +24,9 @@ val make_Self_cc_binding_abst_T :
     (Types.type_collection * (string * Types.collection_carrier_mapping_info))
 val make_Self_cc_binding_rf_T : 
   current_species: Parsetree.qualified_species ->
+    (Types.type_collection * (string * Types.collection_carrier_mapping_info))
+val make_Self_cc_binding_species_param :
+  current_species: Parsetree.qualified_species -> Parsetree.vname ->
     (Types.type_collection * (string * Types.collection_carrier_mapping_info))
 
 val generate_expr :

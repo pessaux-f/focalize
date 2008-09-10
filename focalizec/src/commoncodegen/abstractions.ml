@@ -11,21 +11,28 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.29 2008-09-10 10:29:19 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.30 2008-09-10 12:57:35 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
 (** {b Descr} : Describes if the argument passed to the function
-      [compute_lambda_liftings_for_field] is the body of a "let" or of
-      a "property/theorem". This allows the function to process at once
-      both the case of the liftings computation for expressions and
-      propositions.
+    [compute_lambda_liftings_for_field] is the body of a "let", "logical
+    let" or of a "property/theorem". This allows the function to process
+    at once the case of the liftings computation for expressions,
+    propositions and proofs.
 
     {b Rem} : Exported outside this module.                             *)
 (* ******************************************************************** *)
 type field_body_kind =
   | FBK_expr of Parsetree.expr
   | FBK_logical_expr of Parsetree.logical_expr
+  | FBK_proof of Parsetree.proof option
+;;
+
+
+type field_type_kind =
+  | FTK_computational
+  | FTK_logical of Parsetree.logical_expr
 ;;
 
 
@@ -77,8 +84,10 @@ let rec get_species_types_in_type_annots_of_logical_expr lexpr =
        let tys1 =
          (match type_expr.Parsetree.ast_type with
           | Parsetree.ANTI_non_relevant
-          | Parsetree.ANTI_none
-          | Parsetree.ANTI_scheme _ -> assert false
+          | Parsetree.ANTI_none -> assert false
+          | Parsetree.ANTI_scheme sch ->
+              let t = Types.specialize sch in
+              Types.get_species_types_in_type t
           | Parsetree.ANTI_type t -> Types.get_species_types_in_type t) in
        let tys2 =
          get_species_types_in_type_annots_of_logical_expr logical_expr in
@@ -279,7 +288,14 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
            | FBK_logical_expr p ->
                Param_dep_analysis.param_deps_logical_expr
                  ~current_species
-                 (species_param_name, species_param_meths) p) in
+                 (species_param_name, species_param_meths) p
+           | FBK_proof None -> Parsetree_utils.ParamDepNameSet.empty
+           | FBK_proof (Some proof) ->
+               (* Implements rule BODY of the definition 72 page 153 of
+                  Virgile Prevosto's Phd. for theorems and properties. *)
+               Param_dep_analysis.param_deps_proof
+                 ~current_species (species_param_name, species_param_meths)
+                 proof) in
         (* Return a couple binding the species parameter's name with the
            methods of it we found as required for the current method. *)
         (species_param, meths_from_param) :: accu)
@@ -700,27 +716,29 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
 
 
 
-
 (** Implements rules [TYPE], [DEF-DEP], [UNIVERSE] and [PRM] of the
     definition 72 page 153 of Virgile Prevosto's Phd. *)
 (* [Unsure] est-ce que les "used_parameters_ty" ne devraient pas être aussi
   "complétés" ? *)
 let complete_dependencies_from_params env ~current_unit ~current_species
-    seen_abstractions species_parameters def_children universe opt_proof =
-  (* Rule [TYPE] possible only if a proof is provided. *)
+    seen_abstractions species_parameters def_children universe type_kind =
+  (* Rule [TYPE] possible only if a logical expression is provided. In effect,
+     in a type scheme, species_parameters can never appear since it is a
+     ML-like type. *)
   let dependencies_from_params_via_type =
-    (match opt_proof with
-     | None ->
-         (* If no proof is given, then there is no dependency, but we must
-            not simply return the [] because all our "union" functions on
-            dependencies rely on a list of sets with 1 set for each species
-	    parameter name. *)
+    (match type_kind with
+     | FTK_computational ->
+         (* The "empty" dependencies cannot simple be [] because all our "union"
+            functions on dependencies rely on a list of sets with 1 set for each
+            species parameter name. So we create our initial accumulator as the
+            list mapping each species parameter name onto the empty dependencies
+            set. *)
          List.fold_right
            (fun species_param accu ->
              (species_param, Parsetree_utils.ParamDepNameSet.empty) :: accu)
            species_parameters
            []
-     | Some proof ->
+     | FTK_logical lexpr ->
          (* Same remark about [fold_right] than for the function
             [compute_lambda_liftings_for_field] when computing
             [dependencies_from_params_in_bodies]. *)
@@ -733,11 +751,11 @@ let complete_dependencies_from_params env ~current_unit ~current_species
                 | Env.TypeInformation.SPAR_is ((_, n), _, meths, _) ->
                     ((Parsetree. Vuident n), meths) in
              let meths_from_param =
-               Param_dep_analysis.param_deps_proof
+               Param_dep_analysis.param_deps_logical_expr
                  ~current_species (species_param_name, species_param_meths)
-                 proof in
+                 lexpr in
              (* Return a couple binding the species parameter's name with the
-		methods of it we found as required for the current method. *)
+                methods of it we found as required for the current method. *)
              (species_param, meths_from_param) :: accu)
            species_parameters
            []) in
@@ -779,7 +797,7 @@ let complete_dependencies_from_params env ~current_unit ~current_species
         match abstr_infos_opt with
          | Some abstr_infos ->
              (* We merge the found abstraction info and the abstraction info
-		accumulator. *)
+                accumulator. *)
              merge_abstraction_infos
                abstr_infos.ai_dependencies_from_params_via_body
                accu_deps_from_params
@@ -793,7 +811,7 @@ let complete_dependencies_from_params env ~current_unit ~current_species
     VisUniverse.Universe.fold
       (fun z_name_in_univ _ accu_deps_from_params ->
         (* For each z (c.f. notation in Virgile) in the visible universe, we
-	   must add its [ai_dependencies_from_params_via_type].
+           must add its [ai_dependencies_from_params_via_type].
            So we must first search the abstraction info of [z_name_in_univ].
            Since "rep" is a method like the others, it may appear in the
            universe. However, since "rep" can never induce dependencies on
@@ -807,7 +825,7 @@ let complete_dependencies_from_params env ~current_unit ~current_species
           match abstr_info_opt with
            | Some abstr_info ->
                (* Now, add the [ai_dependencies_from_params_via_type] to the
-		  dependencies accumulator. *)
+                  dependencies accumulator. *)
                merge_abstraction_infos
                  abstr_info.ai_dependencies_from_params_via_type
                  accu_deps_from_params
@@ -879,7 +897,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                  env ~current_unit: ctx.Context.scc_current_unit
                  ~current_species: ctx.Context.scc_current_species
                  abstractions_accu ctx.Context.scc_species_parameters_names
-                 def_children universe None in
+                 def_children universe FTK_computational in
              (* Now, its minimal Coq typing environment. *)
              let min_coq_env =
                MinEnv.minimal_typing_environment universe fields in
@@ -928,7 +946,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                        ~current_unit: ctx.Context.scc_current_unit
                        abstractions_accu ctx.Context.
                          scc_species_parameters_names
-                       def_children universe None in
+                       def_children universe FTK_computational in
                    (* Now, its minimal Coq typing environment. *)
                    let min_coq_env =
                      MinEnv.minimal_typing_environment universe fields in
@@ -960,7 +978,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                    ~current_species: ctx.Context.scc_current_species
                    ctx.Context.scc_species_parameters_names
                    ctx.Context.scc_dependency_graph_nodes name
-                   (FBK_logical_expr logical_expr) (Types.specialize sch) in
+                   (FBK_proof (Some proof)) (Types.specialize sch) in
                (* Compute the visible universe of the theorem. *)
                let universe =
                  VisUniverse.visible_universe
@@ -977,7 +995,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                    env ~current_species: ctx.Context.scc_current_species
                    ~current_unit: ctx.Context.scc_current_unit
                    abstractions_accu ctx.Context.scc_species_parameters_names
-                   def_children universe (Some proof) in
+                   def_children universe (FTK_logical logical_expr) in
                let abstr_info = {
                  ai_used_species_parameter_tys = used_species_parameter_tys ;
                  ai_dependencies_from_params_via_body =
@@ -1003,7 +1021,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                    ~current_species: ctx.Context.scc_current_species
                    ctx.Context.scc_species_parameters_names
                    ctx.Context.scc_dependency_graph_nodes name
-                   (FBK_logical_expr logical_expr) (Types.specialize sch) in
+                   (FBK_proof None) (Types.specialize sch) in
                (* Compute the visible universe of the theorem. *)
                let universe =
                  VisUniverse.visible_universe
@@ -1017,7 +1035,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                    env ~current_species: ctx.Context.scc_current_species
                    ~current_unit: ctx.Context.scc_current_unit
                    abstractions_accu ctx.Context.scc_species_parameters_names
-                   def_children universe None in
+                   def_children universe (FTK_logical logical_expr) in
                (* Now, its minimal Coq typing environment. *)
                let min_coq_env =
                  MinEnv.minimal_typing_environment universe fields in

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.103 2008-09-10 08:14:47 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.104 2008-09-10 12:57:35 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -299,15 +299,26 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                       new_print_ctx ~reuse_mapping: false)
                    meth_ty
              | Parsetree_utils.DNI_logical lexpr ->
+                 (* Inside the logical expression of the method of the parameter
+                    "Self" must be printed as "_p_param_name_T" .*)
+                 let self_map =
+                   Species_record_type_generation.
+                     make_Self_cc_binding_species_param
+                       ~current_species: ctx.Context.scc_current_species
+                        species_param_name in
+                 let new_ctx' = { new_ctx with
+                   Context.scc_collections_carrier_mapping =
+                     self_map ::
+                       new_ctx.Context.scc_collections_carrier_mapping } in
                  Format.fprintf out_fmter "Variable %s%a :@ "
                    prefix
                    Parsetree_utils.pp_vname_with_operators_expanded meth ;
                  Species_record_type_generation.generate_logical_expr
-                   new_ctx ~local_idents: []
+                   new_ctx' ~local_idents: []
                    ~self_methods_status:
                      (Species_record_type_generation.SMS_from_param
-			species_param_name)
-		   env lexpr ;
+                        species_param_name)
+                   env lexpr ;
                  Format.fprintf out_fmter ".@\n"
             end)
           else
@@ -320,15 +331,26 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                       new_print_ctx ~reuse_mapping: false)
                    meth_ty
              | Parsetree_utils.DNI_logical lexpr ->
+                 (* Inside the logical expression of the method of the parameter
+                    "Self" must be printed as "_p_param_name_T" .*)
+                 let self_map =
+                   Species_record_type_generation.
+                     make_Self_cc_binding_species_param
+                       ~current_species: ctx.Context.scc_current_species
+                        species_param_name in
+                 let new_ctx' = { new_ctx with
+                   Context.scc_collections_carrier_mapping =
+                     self_map ::
+                       new_ctx.Context.scc_collections_carrier_mapping } in
                  Format.fprintf out_fmter "@ (%s%a :@ "
                    prefix
                    Parsetree_utils.pp_vname_with_operators_expanded meth ;
                  Species_record_type_generation.generate_logical_expr
-                   new_ctx ~local_idents: []
+                   new_ctx' ~local_idents: []
                    ~self_methods_status:
                      (Species_record_type_generation.SMS_from_param
-			species_param_name)
-		   env lexpr ;
+                        species_param_name)
+                   env lexpr ;
                  Format.fprintf out_fmter ")"
             end))
         meths)
@@ -1074,6 +1096,18 @@ let zenonify_by_property ctx print_ctx env min_coq_env
                             ~reuse_mapping: false)
                          meth_ty
                    | Parsetree_utils.DNI_logical lexpr ->
+                       (* Inside the logical expression of the method of the
+                          parameter "Self" must be printed as
+                          "_p_param_name_T" .*)
+                       let self_map =
+                         Species_record_type_generation.
+                           make_Self_cc_binding_species_param
+                             ~current_species: ctx.Context.scc_current_species
+                              param_name in
+                       let ctx' = { ctx with
+                         Context.scc_collections_carrier_mapping =
+                           self_map ::
+                             ctx.Context.scc_collections_carrier_mapping } in
                        Format.fprintf out_fmter
                          "@[<2>Parameter _p_%a_%a :@ "
                          Parsetree_utils.pp_vname_with_operators_expanded
@@ -1081,10 +1115,10 @@ let zenonify_by_property ctx print_ctx env min_coq_env
                          Parsetree_utils.pp_vname_with_operators_expanded
                          vname ;
                        Species_record_type_generation.generate_logical_expr
-                         ctx ~local_idents: []
+                         ctx' ~local_idents: []
                          ~self_methods_status:
                            (Species_record_type_generation.SMS_from_param
-			      param_name)
+                              param_name)
                          env lexpr ;
                        Format.fprintf out_fmter ".@]@\n"
                   end)

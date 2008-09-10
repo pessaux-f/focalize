@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.53 2008-09-10 08:14:47 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.54 2008-09-10 12:57:35 pessaux Exp $ *)
 
 
 
@@ -27,6 +27,11 @@ let make_Self_cc_binding_abst_T  ~current_species =
 let make_Self_cc_binding_rf_T ~current_species =
   let (module_name, _) = current_species in
   ((module_name, "Self"), ("rf", Types.CCMI_is))
+;;
+let make_Self_cc_binding_species_param ~current_species spe_param_name =
+  let (module_name, _) = current_species in
+  ((module_name, "Self"),
+   (("_p_" ^ (Parsetree_utils.name_of_vname spe_param_name)), Types.CCMI_is))
 ;;
 
 

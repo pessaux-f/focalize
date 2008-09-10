@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.mli,v 1.12 2008-09-10 08:14:47 pessaux Exp $ *)
+(* $Id: abstractions.mli,v 1.13 2008-09-10 12:57:35 pessaux Exp $ *)
 
 type environment_kind =
   | EK_ml of Env.MlGenEnv.t
@@ -20,6 +20,7 @@ type environment_kind =
 type field_body_kind =
   | FBK_expr of Parsetree.expr
   | FBK_logical_expr of Parsetree.logical_expr
+  | FBK_proof of Parsetree.proof option
 
 type abstraction_info = {
   ai_used_species_parameter_tys : Parsetree.vname list ;
