@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.104 2008-09-10 12:57:35 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.105 2008-09-10 13:47:51 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -253,7 +253,7 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
         let param_name =  "_p_" ^ as_string in
         (* First, generate the parameter. *)
         if in_section then
-          Format.fprintf out_fmter "Variable %s_T :@ Set.@\n" param_name
+          Format.fprintf out_fmter "@[<2>Variable %s_T :@ Set.@]@\n" param_name
         else Format.fprintf out_fmter "@ (%s_T :@ Set)" param_name ;
         (* Return the stuff to extend the collection_carrier_mapping. *)
         ((ctx.Context.scc_current_unit, as_string),
@@ -293,7 +293,7 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
             (begin
             match meth_ty_kind with
              | Parsetree_utils.DNI_computational meth_ty ->
-                 Format.fprintf out_fmter "Variable %s%a :@ %a.@\n"
+                 Format.fprintf out_fmter "@[<2>Variable %s%a :@ %a.@]@\n"
                    prefix Parsetree_utils.pp_vname_with_operators_expanded meth
                    (Types.pp_type_simple_to_coq
                       new_print_ctx ~reuse_mapping: false)
@@ -310,7 +310,7 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                    Context.scc_collections_carrier_mapping =
                      self_map ::
                        new_ctx.Context.scc_collections_carrier_mapping } in
-                 Format.fprintf out_fmter "Variable %s%a :@ "
+                 Format.fprintf out_fmter "@[<2>Variable %s%a :@ "
                    prefix
                    Parsetree_utils.pp_vname_with_operators_expanded meth ;
                  Species_record_type_generation.generate_logical_expr
@@ -319,7 +319,7 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                      (Species_record_type_generation.SMS_from_param
                         species_param_name)
                    env lexpr ;
-                 Format.fprintf out_fmter ".@\n"
+                 Format.fprintf out_fmter "@].@\n"
             end)
           else
             (begin
@@ -401,14 +401,14 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
            | MinEnv.MCEE_Declared_carrier ->
                (* Note that by construction, the carrier is first in the env. *)
                if in_section then
-                 Format.fprintf out_fmter "Variable abst_T : Set.@\n"
+                 Format.fprintf out_fmter "@[<2>Variable abst_T : Set.@]@\n"
                else Format.fprintf out_fmter "@ (abst_T : Set)" ;
                [Parsetree.Vlident "rep"]
            | MinEnv.MCEE_Declared_computational (n, sch) ->
                (* Due to a decl-dependency, hence: abstract. *)
                let ty = Types.specialize sch in
                if in_section then
-                 Format.fprintf out_fmter "Variable abst_%a : %a.@\n"
+                 Format.fprintf out_fmter "@[<2>Variable abst_%a : %a.@]@\n"
                    Parsetree_utils.pp_vname_with_operators_expanded n
                    (Types.pp_type_simple_to_coq
                       new_print_ctx ~reuse_mapping: false)
@@ -422,7 +422,7 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                [n]
            | MinEnv.MCEE_Declared_logical (n, b) ->
                if in_section then
-                 Format.fprintf out_fmter "Hypothesis abst_%a :@ "
+                 Format.fprintf out_fmter "@[<2>Hypothesis abst_%a :@ "
                    Parsetree_utils.pp_vname_with_operators_expanded n
                else
                  Format.fprintf out_fmter "@ (abst_%a :@ "
@@ -433,7 +433,7 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                  new_ctx ~local_idents: []
                  ~self_methods_status:
                    Species_record_type_generation.SMS_abstracted env b ;
-               if in_section then Format.fprintf out_fmter ".@\n"
+               if in_section then Format.fprintf out_fmter ".@]@\n"
                else Format.fprintf out_fmter ")" ;
                [n])
          min_coq_env) in

@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.62 2008-09-05 16:07:31 pessaux Exp $ *)
+(* $Id: types.ml,v 1.63 2008-09-10 13:47:51 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -133,44 +133,43 @@ type type_scheme = {
 
 
 
-(* *********************************************************************** *)
+(* ********************************************************************* *)
 (** {b Descr} : Exception meaning that the 2 arguments types cannot be
-              unified. The location related to the point where unification
-              occured is provided for error reporting purposes.            *)
-(* *********************************************************************** *)
+    unified. The location related to the point where unification occured
+    is provided for error reporting purposes.                            *)
+(* ********************************************************************* *)
 exception Conflict of (type_simple * type_simple * Location.t) ;;
 
 
 
-(* ****************************************************************** *)
+(* **************************************************************** *)
 (** {b Descr} : Exception meaning that a circularity would occur if
-             the unification of these 2 types was performed.
-             In other words, the first type occurs inside the second. *)
-(* ****************************************************************** *)
+    the unification of these 2 types was performed.
+    In other words, the first type occurs inside the second.        *)
+(* **************************************************************** *)
 exception Circularity of (type_simple * type_simple * Location.t) ;;
 
 
 
-(* ********************************************************************** *)
+(* *********************************************************************** *)
 (** {b Descr} : A functional type constructor has been used with the wrong
-            number of arguments. The exception carries on the name of the
-            type and the conflicting arities.                             *)
-(* ********************************************************************** *)
+    number of arguments. The exception carries on the name of the type and
+    the conflicting arities.                                               *)
+(* *********************************************************************** *)
 exception Arity_mismatch of (type_name * int * int  * Location.t) ;;
 
 
 
-(* ******************************************************************** *)
-(* type_simple -> type_simple                                           *)
+(* ********************************************************************* *)
+(* type_simple -> type_simple                                            *)
 (** {b Descr} : Returns the canonical representation of a type.
-              Compression is performed only one level each time. The
-              day the next levels may be needed, this will be during an
-              unification, and [repr] will be called if needed to get a
-              deeper canonical representation of the type (i.e. the
-              canonical representation of its subterms).
+    Compression is performed only one level each time. The day the next
+    levels may be needed, this will be during an unification, and [repr]
+    will be called if needed to get a deeper canonical representation of
+    the type (i.e. the canonical representation of its subterms).
 
-    {b Rem} : Not exported outside this module.                         *)
-(* ******************************************************************** *)
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
 let rec repr = function
   | ST_var ({ tv_value = TVV_known ty1 } as var) ->
       let val_of_ty1 = repr ty1 in
@@ -183,37 +182,37 @@ let rec repr = function
 
 let (begin_definition, end_definition, current_binding_level, type_variable) =
   let current_binding_level = ref 0 in
-  ((* ****************************************************************** *)
-   (* begin_definition : unit -> unit                                    *)
+  ((* ******************************************************************* *)
+   (* begin_definition : unit -> unit                                     *)
    (* {b Descr} : Must be called BEFORE every potentially generalizable
-                definition. It increases the binding level to enable
-                generalization once we go back to a lower level.
+      definition. It increases the binding level to enable generalization
+      once we go back to a lower level.
 
-      {b Rem} : Exported outside this module.                            *)
-   (* ****************************************************************** *)
+      {b Rem} : Exported outside this module.                             *)
+   (* ******************************************************************* *)
    (fun () -> incr current_binding_level),
 
 
 
-   (* ****************************************************************** *)
-   (* end_definition : unit -> unit                                    *)
+   (* ******************************************************************** *)
+   (* end_definition : unit -> unit                                        *)
    (* {b Descr} : Must be called AFTER every potentially generalizable
-                definition. It decreases the binding level to prevent
-                generalization of higher binding level type variables.
+      definition. It decreases the binding level to prevent generalization
+      of higher binding level type variables.
 
-      {b Rem} : Exported outside this module.                            *)
-   (* ****************************************************************** *)
+      {b Rem} : Exported outside this module.                              *)
+   (* ******************************************************************** *)
    (fun () -> decr current_binding_level),
 
 
 
-   (* ***************************************************************** *)
-   (* current_binding_level: unit -> int                                *)
+   (* **************************************************************** *)
+   (* current_binding_level: unit -> int                               *)
    (* {b Descr} : Returns the current binding level, i.e. the level of
-                variables than be generalized if they are of a level
-                strictly greater than the current binding level.
-      {b Rem} : Not exported outside this module.                       *)
-   (* ***************************************************************** *)
+      variables than be generalized if they are of a level strictly
+      greater than the current binding level.
+      {b Rem} : Not exported outside this module.                      *)
+   (* **************************************************************** *)
    (fun () -> !current_binding_level),
 
 
@@ -230,16 +229,15 @@ let (begin_definition, end_definition, current_binding_level, type_variable) =
 
 
 
-(* ************************************************************************* *)
-(* fname -> string -> type_name                                              *)
+(* ********************************************************************** *)
+(* fname -> string -> type_name                                           *)
 (** { b Descr } : Creates a type constructor whose basic name is
-                [constructor_name] and hosting module is [hosting_module].
-                For instance, "int" coming from the module "basics.foc"
-                will be represented by [("basics", "int")].
-                This allows to record in a type constructor both the
-                constructor name and the hosting file where this constructor
-                was defined.                                                 *)
-(* ************************************************************************* *)
+    [constructor_name] and hosting module is [hosting_module].
+    For instance, "int" coming from the module "basics.foc" will be
+    represented by [("basics", "int")].
+    This allows to record in a type constructor both the constructor name
+    and the hosting file where this constructor was defined.              *)
+(* ********************************************************************** *)
 let make_type_constructor hosting_module constructor_name =
   (hosting_module, constructor_name)
 ;;
@@ -278,14 +276,14 @@ let type_rep_species ~species_module ~species_name =
 
 
 
-(* ******************************************************************* *)
-(* type_simple -> bool                                                 *)
+(* ***************************************************************** *)
+(* type_simple -> bool                                               *)
 (** {b Descr}: Verifies if the type is "bool". This is used in Coq
-      generation to determine if an expression must be surrounded by a
-      wrapper applying Coq's "Is_true".
+    generation to determine if an expression must be surrounded by a
+    wrapper applying Coq's "Is_true".
 
-    {b Rem}: Exported outside this module.                             *)
-(* ******************************************************************* *)
+    {b Rem}: Exported outside this module.                           *)
+(* ***************************************************************** *)
 let is_bool_type ty =
   let ty = repr ty in
   match ty with
@@ -314,29 +312,29 @@ let (pp_type_simple, pp_type_scheme) =
   (* ********************************************************************* *)
   let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
 
-  (* ********************************************************************* *)
-  (* int ref                                                               *)
+  (* ******************************************************************* *)
+  (* int ref                                                             *)
   (** {b Descr} : The counter counting the number of different variables
-                already seen hence printed. It serves to generate a fresh
-                name to new variables to print.
+      already seen hence printed. It serves to generate a fresh name to
+      new variables to print.
 
       {b Rem} : Not exported. This counter is purely local to the
-              pretty-print function of type into the FoCal syntax. It is
-              especially not shared with the type printing routine used to
-              generate the OCaml or Coq code.                              *)
-  (* ********************************************************************* *)
+      pretty-print function of type into the FoCal syntax. It is
+      especially not shared with the type printing routine used to
+      generate the OCaml or Coq code.                                    *)
+  (* ******************************************************************* *)
   let type_variables_counter = ref 0 in
 
-  (* ******************************************************************** *)
-  (* unit -> unit                                                         *)
-  (** {b Descr} : Resets the variables names mapping an counter. This
-               allows to stop name-sharing between type prints.
+  (* ************************************************************* *)
+  (* unit -> unit                                                  *)
+  (** {b Descr} : Resets the variables names mapping an counter.
+      This allows to stop name-sharing between type prints.
 
      {b Rem} : Not exported. This counter is purely local to the
-              pretty-print function of type into the FoCal syntax. It is
-              especially not shared with the type printing routine used to
-              generate the OCaml or Coq code.                              *)
-  (* ********************************************************************* *)
+      pretty-print function of type into the FoCal syntax. It is
+      especially not shared with the type printing routine used to
+      generate the OCaml or Coq code.                              *)
+  (* ************************************************************* *)
   let reset_type_variables_mapping () =
     type_variable_names_mapping := [] ;
     type_variables_counter := 0 in
@@ -374,9 +372,9 @@ let (pp_type_simple, pp_type_scheme) =
         if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_construct (type_name, arg_tys) ->
         (begin
-        (* Priority of arguments of a sum type constructor :       *)
-        (* like tuples if only one argument : 3                    *)
-        (* otherwise 0 if already a tuple because we force parens. *)
+        (* Priority of arguments of a sum type constructor :
+           like tuples if only one argument : 3
+           otherwise 0 if already a tuple because we force parens. *)
         match arg_tys with
          | [] -> Format.fprintf ppf "%a" pp_type_name type_name
          | _ ->
@@ -428,8 +426,8 @@ let (specialize,
          if var.tv_level <> generic_level then ty
          else
            (begin
-           (* If the variable was not yet seen, generate a fresh copy *)
-           (* and remind that the variable is now already seen.       *)
+           (* If the variable was not yet seen, generate a fresh copy and
+	      remind that the variable is now already seen. *)
            try List.assq var !seen
            with Not_found ->
              let fresh_var = type_variable () in
@@ -447,17 +445,16 @@ let (specialize,
 
 
 
-  ((* ******************************************************************** *)
-   (* specialize                                                           *)
-   (* type_scheme -> type_simple                                           *)
+  ((* ********************************************************************* *)
+   (* specialize                                                            *)
+   (* type_scheme -> type_simple                                            *)
    (* {b Descr} : Instanciates a type scheme. This means that is makes a
-                copy of its body, replacing generalized variables by fresh
-                variables. If a generalized variable appears several times
-                it will be replace by the same fresh variable at these
-                different locations.
+      copy of its body, replacing generalized variables by fresh variables.
+      If a generalized variable appears several times it will be replace
+      by the same fresh variable at these different locations.
 
-      {b Rem} : Exported oustide this module.                              *)
-   (* ******************************************************************** *)
+      {b Rem} : Exported oustide this module.                               *)
+   (* ********************************************************************* *)
    (fun scheme ->
      (* Copy the type scheme's body. *)
      let instance = copy_type_simple scheme.ts_body in
@@ -467,19 +464,19 @@ let (specialize,
 
 
 
-   (* ******************************************************************* *)
-   (* specialize_with_args                                                *)
-   (* type_scheme -> type_simple list -> type_simple                      *)
+   (* *************************************************************** *)
+   (* specialize_with_args                                            *)
+   (* type_scheme -> type_simple list -> type_simple                  *)
    (* {b Descr} : Performs the same job than [specialize] on the type
-                scheme but directly instanciate the scheme's parameters
-                by the types provided in the list.
+      scheme but directly instanciate the scheme's parameters by the
+      types provided in the list.
 
-      {b Rem} : Exported oustide this module.                             *)
-   (* ******************************************************************* *)
+      {b Rem} : Exported oustide this module.                         *)
+   (* *************************************************************** *)
    (fun scheme tys ->
-     (* Initialize the variable mapping with the types to simulate the *)
-     (* fact that these variables have already be seen and are bound   *)
-     (* the types we want them to be instanciated with.                *)
+     (* Initialize the variable mapping with the types to simulate the fact
+	that these variables have already be seen and are bound the types we
+	want them to be instanciated with. *)
      List.iter2 (fun var ty -> seen := (var, ty) :: !seen) scheme.ts_vars tys ;
      (* Copy the type scheme's body. *)
      let instance = copy_type_simple scheme.ts_body in
@@ -493,8 +490,8 @@ let (specialize,
    (* specialize_n_show_instanciated_generalized_vars                 *)
    (* type_scheme -> (type_simple * (type_simple list))               *)
    (* {b Descr} : Like [specialize] but also return the list of fresh
-         variables that were created to instanciate the generalized
-         variables of the type scheme.
+      variables that were created to instanciate the generalized
+      variables of the type scheme.
 
       {b Rem} : Exported oustide this module.                         *)
    (* *************************************************************** *)
@@ -512,18 +509,18 @@ let (specialize,
 
 
 
-(* ********************************************************************* *)
-(* and_abstract: (fname * collection_name) option -> type_simple ->      *)
-(*   type_simple                                                         *)
+(* ******************************************************************** *)
+(* and_abstract: (fname * collection_name) option -> type_simple ->     *)
+(*   type_simple                                                        *)
 (** {b Descr} : Copies the [ty] type expression (hence breaking sharing
-              with the original one except for variables : these one are
-              NOT "freshly copied" but remain shared between the copied
-              and original types) and replaces occurrences of [Self] by
-              the given collection's [~and_abstract] collection's
-              carrier type if provided (i.e. different from [None]).
+    with the original one except for variables : these one are NOT
+    "freshly copied" but remain shared between the copied and original
+    types) and replaces occurrences of [Self] by the given collection's
+    [~and_abstract] collection's carrier type if provided
+    (i.e. different from [None]).
 
-    {b Rem} Exported outside this module.                                *)
-(* ********************************************************************* *)
+    {b Rem} Exported outside this module.                               *)
+(* ******************************************************************** *)
 let copy_type_simple_but_variables ~and_abstract =
   let seen = ref [] in
   (* Internal recursive copy same stuff than for [specialize] stuff. *)
@@ -532,8 +529,8 @@ let copy_type_simple_but_variables ~and_abstract =
     match ty with
      | ST_var var ->
          (begin
-         (* The abstraction must never change     *)
-         (* variables to prevent sharing breaks ! *)
+         (* The abstraction must never change variables to prevent sharing
+	    breaks ! *)
          try List.assq var !seen
          with Not_found ->
            seen := (var, ty) :: !seen ;
@@ -564,14 +561,14 @@ let copy_type_simple_but_variables ~and_abstract =
 (* ************************************************************************ *)
 (* type_collection -> type_scheme -> type_scheme                            *)
 (** {b Descr} : Like [copy_type_simple_but_variables] but operate on the
-      [type_simple] making the scheme's body. This function is needed for
-      the collection substitution because we make it also operating on the
-      [Parsetree.ast_type] field of the AST.
+    [type_simple] making the scheme's body. This function is needed for
+    the collection substitution because we make it also operating on the
+    [Parsetree.ast_type] field of the AST.
 
     {Rem} : Because the compiler doesn't use the [Parsetree.ast_type] field
-      of the AST, the result of this function will never be used internally
-      by the compiler.
-      Exported outside this module.                                         *)
+    of the AST, the result of this function will never be used internally
+    by the compiler.
+    Exported outside this module.                                           *)
 (* ************************************************************************ *)
 let abstract_in_scheme coll_to_abstract sch =
   let body' =
@@ -591,8 +588,8 @@ let abstract_in_scheme coll_to_abstract sch =
     {b Rem} : Exported oustide this module.                        *)
 (* *************************************************************** *)
 let generalize =
-  (* The list of found generalizable variables. *)
-  (* We accumulate inside it by side effect.    *)
+  (* The list of found generalizable variables. We accumulate inside it by
+     side effect. *)
   let found_ty_parameters = ref ([] : type_variable list) in
   (* Internal recursive hunt for generalizable variables inside the type. *)
   let rec find_parameters ty =
@@ -630,11 +627,11 @@ let build_type_def_scheme ~variables ~body =
          | ST_var var -> var.tv_level <- generic_level ; var
          | _ -> assert false)
       variables in
-  (* And make a scheme with the type [ty] as body and the variables [var] *)
-  (* as parameter, KEEPING their order ! In effect, the position of the   *)
-  (* variables are important un a type definition :                       *)
-  (* "type ('a, 'b) = ('a * 'b)" is different of type                     *)
-  (* "type ('b * 'a) = ('a * 'b)"                                         *)
+  (* And make a scheme with the type [ty] as body and the variables [var]
+     as parameter, KEEPING their order ! In effect, the position of the
+     variables are important in a type definition:
+        "type ('a, 'b) = ('a * 'b)" is different of type
+        "type ('b * 'a) = ('a * 'b)". *)
   { ts_vars = vars ; ts_body = body }
 ;;
 
@@ -659,14 +656,14 @@ let rec lowerize_levels max_level ty =
 
 
 
-(* ************************************************************************ *)
+(* *********************************************************************** *)
 (** {b Descr} : Checks if a scheme contains type variables (generalized or
-       not generalized).
-       Such a check is required because species methods are not polymorphic
-       (c.f. Virgile Prevosto's Phd section 3.3, page 24).
+    not generalized).
+    Such a check is required because species methods are not polymorphic
+    (c.f. Virgile Prevosto's Phd section 3.3, page 24).
 
-    {b Rem} : Exported oustide this module.                                 *)
-(* ************************************************************************ *)
+    {b Rem} : Exported oustide this module.                                *)
+(* *********************************************************************** *)
 let scheme_contains_variable_p scheme =
   let rec rec_check ty =
     let ty = repr ty in
@@ -682,26 +679,26 @@ let scheme_contains_variable_p scheme =
 
 
 
-(* ************************************************************************ *)
-(* type_simple -> type_simple                                               *)
-(** {b Descr} : Extracts from a functionnal type the right-hand part of the
-      arrow. This function assumes that the type IS an arrow and must be
-      called only with an arrow type. It is designed to recover the part of
-      a functional type that results from a unification. Hence, if the
-      unification didn't provide a functional type, it will have failed,
-      hence the current function will not be called. If the unification
-      succeeded in creating a functionnal type, then the current function
-      will be called and will really be provided a functionnal type and
-      will not fail.
-      This mechanism is needed because our unification principle is not
-      only "in place". In fact the assignments performed by side effect
-      implement correct usual unification but do not priviligiate Self to
-      be returned. This last point is ensured by the returned type after
-      a unification (and not by the physical equality ensured by the
-      "in-place" modifications of the unification).
+(* *********************************************************************** *)
+(* type_simple -> type_simple                                              *)
+(** {b Descr} : Extracts from a functionnal type the right-hand part of
+    the arrow. This function assumes that the type IS an arrow and must be
+    called only with an arrow type. It is designed to recover the part of
+    a functional type that results from a unification. Hence, if the
+    unification didn't provide a functional type, it will have failed,
+    hence the current function will not be called. If the unification
+    succeeded in creating a functionnal type, then the current function
+    will be called and will really be provided a functionnal type and
+    will not fail.
+    This mechanism is needed because our unification principle is not
+    only "in place". In fact the assignments performed by side effect
+    implement correct usual unification but do not priviligiate Self to
+    be returned. This last point is ensured by the returned type after
+    a unification (and not by the physical equality ensured by the
+    "in-place" modifications of the unification).
 
-    {b Rem} : Exported outside this module.                                 *)
-(* ************************************************************************ *)
+    {b Rem} : Exported outside this module.                                *)
+(* *********************************************************************** *)
 let extract_fun_ty_result ty =
   let ty = repr ty in
   match ty with
@@ -711,26 +708,26 @@ let extract_fun_ty_result ty =
 
 
 
-(* ************************************************************************ *)
-(* type_simple -> type_simple                                               *)
+(* *********************************************************************** *)
+(* type_simple -> type_simple                                              *)
 (** {b Descr} : Extracts from a functionnal type the left-hand part of the
-      arrow. This function assumes that the type IS an arrow and must be
-      called only with an arrow type. It is designed to recover the part of
-      a functional type that results from a unification. Hence, if the
-      unification didn't provide a functional type, it will have failed,
-      hence the current function will not be called. If the unification
-      succeeded in creating a functionnal type, then the current function
-      will be called and will really be provided a functionnal type and
-      will not fail.
-      This mechanism is needed because our unification principle is not
-      only "in place". In fact the assignments performed by side effect
-      implement correct usual unification but do not priviligiate Self to
-      be returned. This last point is ensured by the returned type after
-      a unification (and not by the physical equality ensured by the
-      "in-place" modifications of the unification).
+    arrow. This function assumes that the type IS an arrow and must be
+    called only with an arrow type. It is designed to recover the part of
+    a functional type that results from a unification. Hence, if the
+    unification didn't provide a functional type, it will have failed,
+    hence the current function will not be called. If the unification
+    succeeded in creating a functionnal type, then the current function
+    will be called and will really be provided a functionnal type and
+    will not fail.
+    This mechanism is needed because our unification principle is not
+    only "in place". In fact the assignments performed by side effect
+    implement correct usual unification but do not priviligiate Self to
+    be returned. This last point is ensured by the returned type after
+    a unification (and not by the physical equality ensured by the
+    "in-place" modifications of the unification).
 
-    {b Rem} : Exported outside this module.                                 *)
-(* ************************************************************************ *)
+    {b Rem} : Exported outside this module.                                *)
+(* *********************************************************************** *)
 let extract_fun_ty_arg ty =
   let ty = repr ty in
   match ty with
@@ -927,7 +924,7 @@ type substitution_by_replacement_collection_kind =
 (* ************************************************************************* *)
 (* type_collection -> type_collection -> type_simple -> type_simple          *)
 (** {b Descr} : Performs the collection name substitution
-              [(fname1, spe_name1)] <- [c2] inside a [type_simple].
+    [(fname1, spe_name1)] <- [c2] inside a [type_simple].
 
     {b Args} :
       - [(fname1, spe_name1)] : The "collection type" to replace.
@@ -937,8 +934,8 @@ type substitution_by_replacement_collection_kind =
 (* ************************************************************************* *)
 let subst_type_simple (fname1, spe_name1) c2 =
   let seen = ref [] in
-  (* Internal recursive copy same stuff than for [specialize] stuff *)
-  (* except that the generalization possibility does't matter here. *)
+  (* Internal recursive copy same stuff than for [specialize] stuff except
+     that the generalization possibility does't matter here. *)
   let rec rec_copy ty =
     let ty = repr ty in
     match ty with
@@ -947,12 +944,12 @@ let subst_type_simple (fname1, spe_name1) c2 =
          try List.assq var !seen
          with Not_found ->
            let fresh_var = type_variable () in
-           (* Be careful, it's a copy, not a specialization ! Hence   *)
-           (* the original level of the type must be kept ! The fresh *)
-           (* variable is create at the [current_binding_level], then *)
-           (* in case the original one was created at a lower generic *)
-           (* level, we [lowerize_levels] taking the level max equal  *)
-           (* to the level of the original variable.                  *)
+           (* Be careful, it's a copy, not a specialization ! Hence the
+	      original level of the type must be kept ! The fresh variable is
+	      create at the [current_binding_level], then in case the original
+	      one was created at a lower generic level, we [lowerize_levels]
+	      taking the level max equal to the level of the original
+	      variable. *)
            lowerize_levels var.tv_level fresh_var ;
            seen := (var, fresh_var) :: !seen ;
            fresh_var
@@ -1009,16 +1006,16 @@ type species_collection_kind =
 
 
 
-(* *********************************************************************** *)
+(* ********************************************************************** *)
 (* {b Descr}: Describes in the [scc_collections_carrier_mapping] the kind
-     of species parameter.
-     It can either be a "is" parameter.
-     Otherwise, it is a "in" parameter. For Coq, we hence need to know if
-     the type of this parmeter is built from another of our species
-     parameters of from a toplevel species/collection.
+   of species parameter.
+   It can either be a "IS" parameter.
+   Otherwise, it is a "IN" parameter. For Coq, we hence need to know if
+   the type of this parmeter is built from another of our species
+   parameters of from a toplevel species/collection.
 
-   {b Rem} : Exported outside this module.                                 *)
-(* *********************************************************************** *)
+   {b Rem} : Exported outside this module.                                *)
+(* ********************************************************************** *)
 type collection_carrier_mapping_info =
     (** The parameter is a "is" parameter. *)
   | CCMI_is
@@ -1135,30 +1132,30 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
   (* ********************************************************************** *)
   let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
 
-  (* ********************************************************************* *)
-  (* int ref                                                               *)
+  (* ******************************************************************* *)
+  (* int ref                                                             *)
   (** {b Descr} : The counter counting the number of different variables
-                already seen hence printed. It serves to generate a fresh
-                name to new variables to print.
+      already seen hence printed. It serves to generate a fresh name to
+      new variables to print.
 
       {b Rem} : Not exported. This counter is purely local to the
-              pretty-print function of type into the FoCal syntax. It is
-              especially not shared with the type printing routine used to
-              generate the FoCaL feedback and the Coq code.                *)
-  (* ********************************************************************* *)
+      pretty-print function of type into the FoCal syntax. It is
+      especially not shared with the type printing routine used to
+      generate the FoCaL feedback and the Coq code.                      *)
+  (* ******************************************************************* *)
   let type_variables_counter = ref 0 in
 
-  (* ******************************************************************** *)
-  (* unit -> unit                                                         *)
-  (** {b Descr} : Resets the variables names mapping an counter. This
-               allows to stop name-sharing between type prints.
+  (* ************************************************************* *)
+  (* unit -> unit                                                  *)
+  (** {b Descr} : Resets the variables names mapping an counter.
+      This allows to stop name-sharing between type prints.
 
      {b Rem} : Exported outside this module.
-             Hoever, this counter is purely local to the pretty-print
-             function of type into the FoCal syntax. It is especially not
-             shared with the type printing routine used to generate the
-             FoCaL feedback and the Coq code.                             *)
-  (* ******************************************************************** *)
+      However, this counter is purely local to the pretty-print
+      function of type into the FoCal syntax. It is especially not
+      shared with the type printing routine used to generate the
+      FoCaL feedback and the Coq code.                             *)
+  (* ************************************************************* *)
   let reset_type_variables_mapping_to_ml () =
     type_variable_names_mapping := [] ;
     type_variables_counter := 0 in
@@ -1185,8 +1182,8 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
     let ty = repr ty in
     match ty with
     | ST_var var ->
-        (* Read the justification in the current function's header about *)
-        (* the fact that we amways consider variables as generalized.    *)
+        (* Read the justification in the current function's header about the
+	   fact that we amways consider variables as generalized. *)
         let ty_variable_name = get_or_make_type_variable_name_to_ml var in
         Format.fprintf ppf "'%s" ty_variable_name
     | ST_arrow (ty1, ty2) ->
@@ -1244,11 +1241,11 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
               (module_name, collection_name) collections_carrier_mapping in
           Format.fprintf ppf "%s" coll_type_variable
         with Not_found ->
-          (* If the carrier is not in the mapping created for the species *)
-          (* parameters, that's because the searched species carrier's is *)
-          (* not a species parameter, i.e. it's a toplevel species.       *)
-          (* And as always, the type's name representing a species's      *)
-          (* carrier is "me_as_carrier".                                  *)
+          (* If the carrier is not in the mapping created for the species
+             parameters, that's because the searched species carrier's is not
+	     a species parameter, i.e. it's a toplevel species.
+             And as always, the type's name representing a species's carrier
+	     is "me_as_carrier". *)
           if current_unit = module_name then
             Format.fprintf ppf "%s.me_as_carrier" collection_name
           else
@@ -1280,16 +1277,16 @@ type coq_print_context = {
 
 let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
      purge_type_simple_to_coq_variable_mapping) =
-  (* ********************************************************************* *)
-  (* ((type_simple * string) list) ref                                     *)
-  (** {b Descr} : The mapping giving for each variable already seen the
-                name used to denote it while printing it.
+  (* ************************************************************** *)
+  (* ((type_simple * string) list) ref                              *)
+  (** {b Descr} : The mapping giving for each variable already seen
+      the name used to denote it while printing it.
 
       {b Rem} : Not exported. This mapping is purely local to the
-              pretty-print function of type into the FoCal syntax. It is
-              especially not shared with the type printing routine used to
-              generate the OCaml code or the FoCaL feedback.               *)
-  (* ********************************************************************* *)
+      pretty-print function of type into the FoCal syntax. It is
+      especially not shared with the type printing routine used to
+      generate the OCaml code or the FoCaL feedback.               *)
+  (* ************************************************************* *)
   let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
 
   (* ************************************************************** *)
