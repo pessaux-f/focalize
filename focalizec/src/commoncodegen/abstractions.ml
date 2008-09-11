@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.32 2008-09-11 12:42:08 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.33 2008-09-11 13:56:48 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -302,7 +302,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
       species_parameters_names
       [] in
   (* By side effect, we remind the species types appearing in our type. *)
-  let params_appearing_in_types =
+  let carriers_appearing_in_types =
     ref (Types.get_species_types_in_type my_type) in
   (* By side effect, we remind the species types appearing in the species
      parameters methods' types we depend on. *)
@@ -316,9 +316,9 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
                  Types.get_species_types_in_type meth_ty
              | Parsetree_utils.DETK_logical lexpr ->
                  get_species_types_in_type_annots_of_logical_expr lexpr) in
-          params_appearing_in_types :=
+          carriers_appearing_in_types :=
             Types.SpeciesCarrierTypeSet.union
-              st_set !params_appearing_in_types)
+              st_set !carriers_appearing_in_types)
         meths)
     dependencies_from_params_in_bodies ;
   (* Same thing for the methods of ourselves we decl-depend. Note that if we
@@ -331,8 +331,8 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
         begin
         let st_set =
           Types.get_species_types_in_type node.Dep_analysis.nn_type in
-        params_appearing_in_types :=
-          Types.SpeciesCarrierTypeSet.union st_set !params_appearing_in_types
+        carriers_appearing_in_types :=
+          Types.SpeciesCarrierTypeSet.union st_set !carriers_appearing_in_types
         end)
     decl_children ;
   (* Same thing for the methods of ourselves we def-depend on. Attention, if we
@@ -345,8 +345,8 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
     (fun (node, _) ->
       let st_set =
         Types.get_species_types_in_type node.Dep_analysis.nn_type in
-      params_appearing_in_types :=
-        Types.SpeciesCarrierTypeSet.union st_set !params_appearing_in_types)
+      carriers_appearing_in_types :=
+        Types.SpeciesCarrierTypeSet.union st_set !carriers_appearing_in_types)
     def_children ;
   (* Now compute the set of species parameters types used in the types of the
      methods comming from the species parameters that the current field uses.
@@ -367,7 +367,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
       (fun species_param_name ->
         let as_string = Parsetree_utils.name_of_vname species_param_name in
         Types.SpeciesCarrierTypeSet.mem
-          (current_unit, as_string) !params_appearing_in_types)
+          (current_unit, as_string) !carriers_appearing_in_types)
       species_param_names in
   (used_species_parameter_tys,
    dependencies_from_params_in_bodies,
@@ -601,6 +601,58 @@ let add_param_dependencies ~param_name ~deps ~to_deps =
              else (p, d) :: (rec_add q)
         end) in
   rec_add to_deps
+;;
+
+
+
+let complete_used_species_parameters_ty ~current_unit species_params initial_set
+    deps_in_type deps_via_compl =
+    (* By side effect, we remind the species types appearing in our type. *)
+  let carriers_appearing_in_types = ref Types.SpeciesCarrierTypeSet.empty in
+  (* Just the local function that will be used twice to process each
+     dependencies set. *)
+  let process_one_deps_set deps_set =
+    List.iter
+      (fun (_, meths) ->
+        Parsetree_utils.ParamDepSet.iter
+          (fun (_, meth_kind) ->
+            let st_set =
+              (match meth_kind with
+               | Parsetree_utils.DETK_computational meth_ty ->
+                   Types.get_species_types_in_type meth_ty
+               | Parsetree_utils.DETK_logical lexpr ->
+                   get_species_types_in_type_annots_of_logical_expr lexpr) in
+            carriers_appearing_in_types :=
+              Types.SpeciesCarrierTypeSet.union
+                st_set !carriers_appearing_in_types)
+          meths)
+      deps_set in
+  (* Now, process the first set. *)
+  process_one_deps_set deps_in_type ;
+  (* Now, process the second set. *)
+  process_one_deps_set deps_via_compl ;
+  (* Just recover the parameters names. *)
+(* [Unsure] Ne garder seulement les paramètres en "is" ? *)
+  let species_param_names =
+    List.map
+      (fun species_param ->
+        (* Recover the species parameter's name. *)
+        match species_param with
+         | Env.TypeInformation.SPAR_in (n, _, _) -> n
+         | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
+             Parsetree. Vuident n)
+      species_params in
+  (* And now, filter in the accumulator the carriers that are among our
+     species parameters. *)
+  let extra_params_carriers =
+    List.filter
+      (fun species_param_name ->
+        let as_string = Parsetree_utils.name_of_vname species_param_name in
+        Types.SpeciesCarrierTypeSet.mem
+          (current_unit, as_string) !carriers_appearing_in_types)
+      species_param_names in
+  (* And finally, make the union with the initial set of carriers. *)
+  Handy.list_concat_uniq initial_set extra_params_carriers
 ;;
 
 
@@ -915,11 +967,22 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                  ~current_species: ctx.Context.scc_current_species
                  abstractions_accu ctx.Context.scc_species_parameters_names
                  def_children universe FTK_computational in
+             (* Now, we complete the species parameters carriers seen by
+                taking into account types of methods obtained by the
+                completion of the dependencies on parameters achieved by
+                [complete_dependencies_from_params]. *)
+             let all_used_species_parameter_tys =
+               complete_used_species_parameters_ty
+                 ~current_unit: ctx.Context.scc_current_unit
+                 ctx.Context.scc_species_parameters_names
+                 used_species_parameter_tys
+                 dependencies_from_params_in_type
+                 dependencies_from_params_via_compl in
              (* Now, its minimal Coq typing environment. *)
              let min_coq_env =
                MinEnv.minimal_typing_environment universe fields in
              let abstr_info = {
-               ai_used_species_parameter_tys = used_species_parameter_tys ;
+               ai_used_species_parameter_tys = all_used_species_parameter_tys ;
                ai_dependencies_from_params_via_body =
                  dependencies_from_params_in_body ;
                ai_dependencies_from_params_via_type =
@@ -964,12 +1027,23 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                        abstractions_accu ctx.Context.
                          scc_species_parameters_names
                        def_children universe FTK_computational in
+                   (* Now, we complete the species parameters carriers seen
+                      by taking into account types of methods obtained by
+                      the completion of the dependencies on parameters achieved
+                      by [complete_dependencies_from_params]. *)
+                   let all_used_species_parameter_tys =
+                     complete_used_species_parameters_ty
+                       ~current_unit: ctx.Context.scc_current_unit
+                       ctx.Context.scc_species_parameters_names
+                       used_species_parameter_tys
+                       dependencies_from_params_in_type
+                       dependencies_from_params_via_compl in
                    (* Now, its minimal Coq typing environment. *)
                    let min_coq_env =
                      MinEnv.minimal_typing_environment universe fields in
                    let abstr_info = {
                      ai_used_species_parameter_tys =
-                       used_species_parameter_tys ;
+                       all_used_species_parameter_tys ;
                      ai_dependencies_from_params_via_body =
                        dependencies_from_params_in_bodies ;
                      ai_dependencies_from_params_via_type =
@@ -1013,8 +1087,20 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                    ~current_unit: ctx.Context.scc_current_unit
                    abstractions_accu ctx.Context.scc_species_parameters_names
                    def_children universe (FTK_logical logical_expr) in
+               (* Now, we complete the species parameters carriers seen by
+                  taking into account types of methods obtained by the
+                  completion of the dependencies on parameters achieved by
+                  [complete_dependencies_from_params]. *)
+               let all_used_species_parameter_tys =
+                 complete_used_species_parameters_ty
+                   ~current_unit: ctx.Context.scc_current_unit
+                   ctx.Context.scc_species_parameters_names
+                   used_species_parameter_tys
+                   dependencies_from_params_in_type
+                   dependencies_from_params_via_compl in
                let abstr_info = {
-                 ai_used_species_parameter_tys = used_species_parameter_tys ;
+                 ai_used_species_parameter_tys =
+                   all_used_species_parameter_tys ;
                  ai_dependencies_from_params_via_body =
                    dependencies_from_params_in_bodies ;
                  ai_dependencies_from_params_via_type =
@@ -1053,11 +1139,23 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                    ~current_unit: ctx.Context.scc_current_unit
                    abstractions_accu ctx.Context.scc_species_parameters_names
                    def_children universe (FTK_logical logical_expr) in
+               (* Now, we complete the species parameters carriers seen by
+                  taking into account types of methods obtained by the
+                  completion of the dependencies on parameters achieved by
+                  [complete_dependencies_from_params]. *)
+               let all_used_species_parameter_tys =
+                 complete_used_species_parameters_ty
+                   ~current_unit: ctx.Context.scc_current_unit
+                   ctx.Context.scc_species_parameters_names
+                   used_species_parameter_tys
+                   dependencies_from_params_in_type
+                   dependencies_from_params_via_compl in
                (* Now, its minimal Coq typing environment. *)
                let min_coq_env =
                  MinEnv.minimal_typing_environment universe fields in
                let abstr_info = {
-                 ai_used_species_parameter_tys = used_species_parameter_tys ;
+                 ai_used_species_parameter_tys =
+                   all_used_species_parameter_tys ;
                  ai_dependencies_from_params_via_body =
                    dependencies_from_params_in_bodies ;
                  ai_dependencies_from_params_via_type =
