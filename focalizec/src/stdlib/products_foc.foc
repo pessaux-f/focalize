@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: products_foc.foc,v 1.4 2008-09-11 11:59:03 pessaux Exp $ *)
+(* $Id: products_foc.foc,v 1.5 2008-09-11 14:55:02 pessaux Exp $ *)
 
 (** Cartesian product of two structures, common orderings. *)
 
@@ -43,8 +43,8 @@ species Cartesian (S1 is Setoid, S2 is Setoid) inherits Setoid =
   theorem first_spec: all a1 in S1, all a2 in S2,
     S1!equal (a1, !first (!term (a1, a2)))
     proof :
-      (* by definition of first term ; *)
-      assumed {* Because temporarily unvailable in new version *} ;
+      definition of first, term
+      assumed {* To do *} ;
 
   (** extracts second component *)
   let scnd (a in Self) in S2 = basics#scnd (a)  ;
