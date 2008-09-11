@@ -1,8 +1,18 @@
-(**
-   @author Renaud Rioboo
-   @title Products for FoCaL
-   @description cartesian product of two structures, common orderings
- *)
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Renaud Rioboo                                            *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: products_foc.foc,v 1.4 2008-09-11 11:59:03 pessaux Exp $ *)
+
+(** Cartesian product of two structures, common orderings. *)
+
 use "basics" ;;
 open "basics" ;;
 use "sets_orders" ;;
@@ -42,8 +52,8 @@ species Cartesian (S1 is Setoid, S2 is Setoid) inherits Setoid =
   theorem scnd_spec: all a1 in S1, all a2 in S2,
     S2!equal (a2, !scnd (!term (a1, a2)))
     proof:
-      (* def: scnd term; *)
-      assumed {* Because temporarily unvailable in new version *} ;
+      definition of scnd, term
+      assumed {* To do *} ;
 
   let equal(a, b) =
     let a1 = !first (a) in
@@ -67,8 +77,8 @@ species Cartesian (S1 is Setoid, S2 is Setoid) inherits Setoid =
     S1!equal (a1, !first (a)) -> S2!equal (a2, !scnd (a)) ->
        !equal (!term (a1, a2), a)
     proof:
-      (* def: term first scnd equal; *)
-      assumed {* Because temporarily unvailable in new version *} ;
+      definition of term, first, scnd, equal
+      assumed {* To do *} ;
      (* by def !term, !equal; *)
 
   theorem term_substitution_rule: all a1 b1 in S1, all a2 b2 in S2,
@@ -83,13 +93,9 @@ species Cartesian (S1 is Setoid, S2 is Setoid) inherits Setoid =
           assume H2: S2!equal (a2, b2),
           prove !equal (!term (a1, a2), !term (b1, b2))
           by
-            hypothesis H1
-            hypothesis H2
-            property first_spec
-            property scnd_spec
-            property pair_cons_spec
-            property S1!equal_transitive
-            property S2!equal_transitive
+            hypothesis H1, H2
+            property first_spec, scnd_spec, pair_cons_spec,
+              S1!equal_transitive, S2!equal_transitive
      <1>2 qed.
     ;
 
