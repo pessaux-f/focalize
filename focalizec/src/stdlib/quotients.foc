@@ -1,11 +1,25 @@
-(** 
-@author Renaud Rioboo based on Louis Mandel's code
-Quotient structures 
-*)
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
 
-(* *************************************************************************)
+(* $Id: quotients.foc,v 1.3 2008-09-11 09:29:01 pessaux Exp $ *)
+
+(** Renaud Rioboo based on Louis Mandel's code.
+    Quotient structures. *)
+
+(* ************************************************************************)
 (* Auteur : Louis Mandel   louis.mandel@aemiaif.lip6.fr                   *)
-(* $Id: quotients.foc,v 1.2 2008-05-29 11:36:36 pessaux Exp $      *)
 (**************************************************************************)
 
 use "sets_orders" ;;
