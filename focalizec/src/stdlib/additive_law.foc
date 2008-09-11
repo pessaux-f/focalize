@@ -1,15 +1,26 @@
-(**
-   @title Additive laws
-   @author The FoC Project
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
 
-   The FoCaL library does not intend to model binary laws which are not
+(* $Id: additive_law.foc,v 1.9 2008-09-11 09:26:21 pessaux Exp $ *)
+
+(** The FoCaL library does not intend to model binary laws which are not
    associative, thus some mathematical notions such as magmas (groupoids) are
    meaningless in the library. For additive notations we restrict to abelian
    or commutative laws with neutral elements.
 
-   By additive laws we thus mean abelian moinoids with additive notation.
-
-*)
+   By additive laws we thus mean abelian moinoids with additive notation. *)
 
 
 use "basics" ;;

@@ -1,9 +1,21 @@
-(**
- @title Multiplicative laws
- @author The FoC Project
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
 
-Common properties of multiplicative laws
-*)
+(* $Id: multiplicative_law.foc,v 1.12 2008-09-11 09:26:21 pessaux Exp $ *)
+
+(** Common properties of multiplicative laws. *)
 
 use "basics" ;;
 use "sets_orders" ;;

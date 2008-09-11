@@ -1,9 +1,21 @@
-(**
- @title FoC Project. Basic algebra.
- @author The FoC project
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
 
-Basic sets operations, orderings and lattices.
-*)
+(* $Id: sets_orders.fcl,v 1.13 2008-09-11 09:26:21 pessaux Exp $ *)
+
+(** Basic sets operations, orderings and lattices. *)
 
 -- This is a file in new syntax!
 

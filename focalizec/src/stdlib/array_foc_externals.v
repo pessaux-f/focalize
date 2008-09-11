@@ -6,36 +6,25 @@
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
-(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: random_foc.foc,v 1.3 2008-09-11 09:26:21 pessaux Exp $ *)
+(* $Id: array_foc_externals.v,v 1.1 2008-09-11 09:26:21 pessaux Exp $ *)
 
-use "basics" ;;
-open "basics" ;;
-coq_require "random_foc_externals" ;;
+Require basics.
 
-let random_seed =
-  internal basics#int -> basics#unit
-  external
-   | caml -> {* Random_foc_externals.random_seed *}
-   | coq -> {* random_foc_externals.random_seed *}
-;; 
+(* ********************************* *)
+(* Dummy mapping of arrays into Coq. *)
 
-let random_int =
-  internal basics#int -> basics#int
-  external
-   | caml -> {* Random_foc_externals.random_int *}
-   | coq -> {* random_foc_externals.random_int *}
-;;
+Inductive bi__array (a : Set) : Set := .
 
-let random_self_init =
-   internal basics#unit -> basics#unit
-   external
-   | caml -> {* Random_foc_externals.random_self_init *}
-   | coq -> {* random_foc_externals.random_self_init *}
-;;
+Parameter bi__array_set : forall a : Set,
+  (bi__array a) -> basics.int__t -> a -> basics.unit__t.
+
+Parameter bi__array_create : forall a : Set, basics.int__t -> a-> bi__array a.
+
+Parameter bi__array_get : forall a: Set, (bi__array a) -> basics.int__t -> a.

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.30 2008-09-07 07:15:34 pessaux Exp $
+# $Id: Makefile,v 1.31 2008-09-11 09:26:21 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -20,13 +20,13 @@ FOCSRC = basics.foc \
 	additive_law.foc \
 	multiplicative_law.foc \
 	weak_structures.foc \
-	wellfounded.foc
-
-FOCSRC_UNSAFE =	rings_fields.foc \
+	wellfounded.foc \
+	rings_fields.foc \
 	random_foc.foc \
 	integers.foc \
-	array_foc.foc \
-	products_foc.foc \
+	array_foc.foc
+
+FOCSRC_UNSAFE = products_foc.foc \
 	quotients.foc \
 	small_integers.foc \
 	big_integers.foc \
@@ -52,7 +52,8 @@ FOCVOS_UNSAFE = $(FOCSRC_UNSAFE:.foc=.vo)
 EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
 	weak_structures_externals.cmo \
 	coq_builtins.vo weak_structures_externals.vo \
-	wellfounded_externals.vo random_foc_externals.cmo
+	wellfounded_externals.vo random_foc_externals.cmo \
+	array_foc_externals.vo
 
 
 
@@ -76,14 +77,6 @@ depend:
 
 
 # Temporary for no Coq...
-rings_fields.ml: rings_fields.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
-random_foc.ml: random_foc.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
-integers.ml: integers.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
-array_foc.ml: array_foc.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 products_foc.ml: products_foc.foc
 	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 quotients.ml: quotients.foc
@@ -97,6 +90,9 @@ parse_poly.ml: parse_poly.foc
 polys_abstract.ml: polys_abstract.foc
 	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 #End temporary
+
+# Special rules for exceptions.
+array_foc_externals.vo: basics.vo
 
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .foc .fo .zv .v .vo

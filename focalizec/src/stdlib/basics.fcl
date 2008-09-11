@@ -1,7 +1,23 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: basics.fcl,v 1.24 2008-09-11 09:26:21 pessaux Exp $ *)
+
 (** The very basic definitions for focalize code:
-    built-in or (almost) mandatory type definitions;
-    built-in or (almost) mandatory data definitions.
-*)
+    built-in or (almost) mandatory type definitions,
+    built-in or (almost) mandatory data definitions. *)
 
 type int =
   internal (* Internal#int *)

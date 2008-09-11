@@ -1,9 +1,21 @@
-(**
-   @title FoC Project. Basic algebra.
-   @author The FoC project
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
 
-   Basic techniques to iterate a process including very simple numbers
- *)
+(* $Id: iterators.foc,v 1.8 2008-09-11 09:26:21 pessaux Exp $ *)
+
+(** Basic techniques to iterate a process including very simple numbers. *)
 
 
 use "sets_orders" ;;

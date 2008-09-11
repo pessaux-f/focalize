@@ -1,9 +1,21 @@
-(**                                                                      
- @title FoC Project. Basic algebra.                       
- @author The FoC project
-We define here some weak notions such as rings with no subtraction.
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
 
-*)
+(* $Id: weak_structures.foc,v 1.14 2008-09-11 09:26:21 pessaux Exp $ *)
+
+(** We define here some weak notions such as rings with no subtraction. *)
 
 use "basics" ;;
 use "sets_orders" ;;

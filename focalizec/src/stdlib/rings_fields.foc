@@ -1,9 +1,21 @@
-(**                                                                      
- @title FoC Project. Basic algebra.                       
- @author The FoC Project
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
 
-Definitions for Rings, Modules, Algebras and Fields
-*)
+(* $Id: rings_fields.foc,v 1.5 2008-09-11 09:26:21 pessaux Exp $ *)
+
+(** Definitions for Rings, Modules, Algebras and Fields. *)
 
 use "basics" ;;
 use "sets_orders" ;;
@@ -170,6 +182,7 @@ end ;;
 
 
 species Euclidean_domain inherits Euclidean_semi_ring, Gcd_domain =
+ (* [Unsure] Commenté jusqu'à ce que l'on intègre le travail de William
  let rec bez_aux (p1, c11, c12, p2, c21, c22) =
    if Self!is_zero (p2) then weak_structures#cr_br (p1, c11, c12)
    else
@@ -178,6 +191,20 @@ species Euclidean_domain inherits Euclidean_semi_ring, Gcd_domain =
     let p3 = weak_structures#rema (qr) in
      Self!bez_aux (p2, c21, c22, p3, Self!minus (c11, Self!mult (q, c21)),
                    Self!minus (c12, Self!mult (q, c22))) ;
+  *)
+
+(* Version dégénérée ci-dessous. *)
+ let bez_aux (p1, c11, c12, p2, c21, c22) =
+   if Self!is_zero (p2) then weak_structures#cr_br (p1, c11, c12)
+   else
+    let qr = Self!quo_rem (p1, p2) in
+    let q =  weak_structures#quot (qr) in
+    let p3 = weak_structures#rema (qr) in
+    let _dummy_tmp = (p2, c21, c22, p3, Self!minus (c11, Self!mult (q, c21)),
+                      Self!minus (c12, Self!mult (q, c22))) in
+    weak_structures#cr_br (p1, c11, c12) ;
+(* Fin de version dégénérée. *)
+
 
  let bezout (p, q) =
     Self!bez_aux (p, Self!one, Self!zero, q, Self!zero, Self!one) ;
@@ -239,6 +266,4 @@ species Ordered_field inherits Ordered_gcd_domain, Real_field = end ;;
 (*                Ouf !                                                   *)
 (*                                                                        *)
 
-(* $Id: rings_fields.foc,v 1.4 2008-05-29 11:36:37 pessaux Exp $ *)
-
-
+(* $Id: rings_fields.foc,v 1.5 2008-09-11 09:26:21 pessaux Exp $ *)
