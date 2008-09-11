@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.31 2008-09-10 15:12:27 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.32 2008-09-11 12:42:08 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -233,16 +233,16 @@ and get_species_types_in_type_annots_of_let_def let_def =
 (*            (Dep_analysis.name_node * Dep_analysis.dependency_kind) list * *)
 (*            (Dep_analysis.name_node * Dep_analysis.dependency_kind) list)  *)
 (** {b Descr} : Pre-process a field before its compilation to OCaml. We
-        compute here the information related to the extra parameters
-        a method will have by lambda-lifting due to the species parameters
-        and the dependencies of the method.
-        We extract the methods we decl-depend on, the methods we def-depend
-        on, the methods of the species parameters we depend on via our
-        "body" for lets and "type" for theorems and properties.
-        ATTENTION, the set of  the methods of the species parameters we
-        depend on is not complete: it must be completed to achieve the
-        definition 72 page 153 in Virgile Prevosto's Phd. In fact, the
-        present function only implements rule [BODY] !
+    compute here the information related to the extra parameters a method
+    will have by lambda-lifting due to the species parameters and the
+    dependencies of the method.
+    We extract the methods we decl-depend on, the methods we def-depend on,
+    the methods of the species parameters we depend on via our "body" for
+    lets and "type" for theorems and properties.
+    ATTENTION, the set of  the methods of the species parameters we depend
+    on is not complete: it must be completed to achieve the definition 72
+    page 153 in Virgile Prevosto's Phd. In fact, the present function only
+    implements rule [BODY] !
 
     {b Rem} : Exported oustide this module.                                  *)
 (* ************************************************************************* *)
@@ -348,10 +348,10 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
       params_appearing_in_types :=
         Types.SpeciesCarrierTypeSet.union st_set !params_appearing_in_types)
     def_children ;
-  (* Now compute the set of species parameters types used in the   *)
-  (* types of the methods comming from the species parameters that *)
-  (* the current field uses. This information is required for Coq  *)
-  (* since they will lead to extra args of type "Set".             *)
+  (* Now compute the set of species parameters types used in the types of the
+     methods comming from the species parameters that the current field uses.
+     This information is required for Coq since they will lead to extra args
+     of type "Set". *)
 (* [Unsure] Ne garder seulement les paramètres en "is" ? *)
   let species_param_names =
     List.map
@@ -434,14 +434,14 @@ type abstraction_info = {
 (*  (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list ->*)
 (*   (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list  *)
 (** {b Descr} : Merge 2 lists representing abstraction information into
-      a single one. Each list has the form
+    a single one. Each list has the form
       (Env.TypeInformation.species_param * Parsetree_utils.DepNameSet.t) list
-      and it is assumed that the lists have the same length and that the
-      Env.TypeInformation.species_param appear in the same order inthe lists.
-      Such lists represent for each species parameter of a species, the set
-      of methods from the parameter we depend on.
-      Hence, all the lists to merge must have been built in the scope of the
-      same species to ensure these invariants.
+    and it is assumed that the lists have the same length and that the
+    Env.TypeInformation.species_param appear in the same order inthe lists.
+    Such lists represent for each species parameter of a species, the set
+    of methods from the parameter we depend on.
+    Hence, all the lists to merge must have been built in the scope of the
+    same species to ensure these invariants.
 
     {b Rem} : Exported outside this module.                                  *)
 (* ************************************************************************* *)
@@ -514,11 +514,10 @@ let find_field_abstraction_by_name name abstractions =
 (* ********************************************************************** *)
 let get_user_of_parameters_with_position ~current_unit species_parameters
     spe_expr =
-  (* Do not [fold_right] otherwise, the counter will be reversed compared *)
-  (* to the order of the elements of the list, i.e. otherwise when        *)
-  (* processing the last element of the list, the counter will be 0 and   *)
-  (* once on the first element of the list it will be length of the list  *)
-  (* minus 1.                                                             *)
+  (* Do not [fold_right] otherwise, the counter will be reversed compared to
+    the order of the elements of the list, i.e. otherwise when processing the
+     last element of the list, the counter will be 0 and once on the first
+     element of the list it will be length of the list minus 1. *)
   let (params_with_pos, _) =
     List.fold_left
       (fun (accu, counter) effective_arg ->
@@ -527,8 +526,8 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
              (* "In" parameters are never involved. *)
              (accu, (counter + 1))
          | Parsetree_utils.SPE_Self ->
-             (* "Self" is never a species parameter. It can be used as     *)
-             (* an effective argument, but NEVER declared as a parameter ! *)
+             (* "Self" is never a species parameter. It can be used as an
+                effective argument, but NEVER declared as a parameter ! *)
              (accu, (counter + 1))
          | Parsetree_utils.SPE_Species (eff_arg_qual_vname, _) ->
              (begin
@@ -537,8 +536,8 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
                 when modname = current_unit ->
                   let eff_arg_name =
                     Parsetree_utils.name_of_vname eff_arg_vname in
-                  (* We check if this [eff_arg_name] is a species parameter *)
-                  (* of the current species. If so, we keep in the result ! *)
+                  (* We check if this [eff_arg_name] is a species parameter of
+                     the current species. If so, we keep in the result ! *)
                   if List.exists
                       (function
                         | Env.TypeInformation.SPAR_in (_, _, _) ->
@@ -564,6 +563,13 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
 
 
 (* ************************************************************************* *)
+(* param_name: Parsetree.qualified_vname ->                                  *)
+(*   deps:Parsetree_utils.ParamDepSet.t ->                                   *)
+(*    to_deps:                                                               *)
+(*      (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t)  *)
+(*        list ->                                                            *)
+(*  (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t)      *)
+(*    list                                                                   *)
 (** {b Descr}: Adds the dependencies (i.e. the set of methods names) [~deps]
     into the [~to_deps] list (being an assoc list (species param name, set
     of methods names representing the dependencies) in the bucket of the
@@ -575,8 +581,8 @@ let add_param_dependencies ~param_name ~deps ~to_deps =
   let param_name_as_string =
     (match param_name with
      | Parsetree.Vname _ ->
-         (* Scoping pass should have transformed *)
-         (* all [Vname] into [Qualified].        *)
+         (* Scoping pass should have transformed all [Vname] into
+            [Qualified]. *)
          assert false
      | Parsetree.Qualified (_, n) -> Parsetree_utils.name_of_vname n) in
   let rec rec_add = function
@@ -588,8 +594,8 @@ let add_param_dependencies ~param_name ~deps ~to_deps =
              (* "In" parameters are never involved in the process. *)
              (p, d) :: (rec_add q)
          | Env.TypeInformation.SPAR_is ((_, name), _, _, _) ->
-             (* If we are in the bucket of the searched *)
-             (* species parameter, we add.              *)
+             (* If we are in the bucket of the searched species parameter, we
+                add. *)
              if name = param_name_as_string then
                (p, (Parsetree_utils.ParamDepSet.union deps d)) :: q
              else (p, d) :: (rec_add q)
@@ -599,12 +605,23 @@ let add_param_dependencies ~param_name ~deps ~to_deps =
 
 
 
-(* [dependencies_from_params] Those computer by all the other rules. *)
+(* ************************************************************************ *)
+(* environment_kind -> current_unit:Parsetree.module_name ->                *)
+(*   Env.TypeInformation.species_param list ->                              *)
+(*    (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t)   *)
+(*       list ->                                                            *)
+(*      (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) *)
+(*         list                                                             *)
+(* {b Args}:
+     - [dependencies_from_params] Those computer by all the other rules.
+
+   {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************ *)
 let complete_dependencies_from_params_rule_PRM env ~current_unit
     species_parameters starting_dependencies_from_params =
-  (* First, we look for "is" parameters themselves parametrised. We hunt in *)
-  (* the [species_parameters], to get some [Env.TypeInformation.SPAR_is]    *)
-  (* whose [simple_species_expr] has a non empty list [sse_effective_args]. *)
+  (* First, we look for "is" parameters themselves parametrised. We hunt in
+     the [species_parameters], to get some [Env.TypeInformation.SPAR_is]
+     whose [simple_species_expr] has a non empty list [sse_effective_args]. *)
   let params_being_parametrised =
     List.filter
       (function
@@ -613,14 +630,14 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
             spe_expr.Parsetree_utils.sse_effective_args <> []
         | Env.TypeInformation.SPAR_in (_, _, _) -> false)
       species_parameters in
-  (* Now, get for each parametrised parameter of the species, which other  *)
-  (* parameters it uses as effective argument in which species and at      *)
-  (* which position.                                                       *)
-  (* For example: species S (Cp is ..., Cp' is S'(Cp))                     *)
-  (* We want to know that Cp' uses Cp as 1st argument for the species S'.  *)
-  (* So we want to get the pair (Cp', (S', [(Cp, 1)])). If Cp' used        *)
-  (* another Cq' as third argument, we would get the pair:                 *)
-  (* (Cp', (S', [(Cp, 1); (Cq, 3)])).                                      *)
+  (* Now, get for each parametrised parameter of the species, which other
+     parameters it uses as effective argument in which species and at
+     which position.
+     For example: species S (Cp is ..., Cp' is S'(Cp))
+     We want to know that Cp' uses Cp as 1st argument for the species S'.
+     So we want to get the pair (Cp', (S', [(Cp, 1)])). If Cp' used another
+     Cq' as third argument, we would get the pair:
+     (Cp', (S', [(Cp, 1); (Cq, 3)])). *)
   let parametrised_params_with_their_effective_args_being_params =
     List.map
       (function
@@ -633,11 +650,11 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
              (get_user_of_parameters_with_position
                 ~current_unit species_parameters spe_expr)))
       params_being_parametrised in
-  (* Now, we know that Cp' is a species parameter built from S' applying *)
-  (* Cp at position 0. We must find the name of the formal parameter in  *)
-  (* S' corresponding to the position where Cp is applied. Let's call it *)
-  (* K. We have now to find all the dependencies (methods y) of K in S'  *)
-  (* and we must add them to the dependencies of Cp.                     *)
+  (* Now, we know that Cp' is a species parameter built from S' applying Cp at
+     position 0. We must find the name of the formal parameter in S'
+     corresponding to the position where Cp is applied. Let's call it K. We
+     have now to find all the dependencies (methods y) of K in S' and we must
+     add them to the dependencies of Cp. *)
   List.fold_left
     (fun accu_deps_from_params (cpprim, (sprim, usages)) ->
       (* Recover the abstraction infos of methods of S'. *)
@@ -663,43 +680,43 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                (* See remark in [get_user_of_parameters_with_position]. *)
                assert false
            | Parsetree_utils.SPE_Species (eff_arg_qual_vname, _) ->
-               (* Here, [eff_arg_qual_vname] is the parameter *)
-               (* in which we will add new dependencies.      *)
-               (* We now get the name of the formal parameter (Cp) of S' *)
-               (* at the position where the effective argument was used. *)
+               (* Here, [eff_arg_qual_vname] is the parameter in which we will
+                  add new dependencies.
+                  We now get the name of the formal parameter (Cp) of S' at
+                  the position where the effective argument was used. *)
                let formal_name = List.nth sprim_params position in
-               (* Now, get the z in Deps (S, C_{p'}) (that can be found *)
-               (* in [starting_dependencies_from_params]), ...          *)
+               (* Now, get the z in Deps (S, C_{p'}) (that can be found in
+                  [starting_dependencies_from_params]), ... *)
                let all_z =
                  Handy.list_assoc_custom_eq
                    (fun x y ->
                      match x with
                       | Env.TypeInformation.SPAR_in (_, _, _) ->
-                          (* Cp' is a "IS" parameter, so no chance to *)
-                          (* find it amongst the "IN" parameters !    *)
+                          (* Cp' is a "IS" parameter, so no chance to find it
+                             amongst the "IN" parameters ! *)
                           false
                       | Env.TypeInformation.SPAR_is ((_, n), _, _, _) -> n = y)
                    cpprim starting_dependencies_from_params in
                Parsetree_utils.ParamDepSet.fold
                  (fun z accu_deps_for_zs ->
-                   (* Forall z, we must search the set of methods, y, on *)
-                   (* which z depends on in S' via [formal_name] ...     *)
-                   (* So, first get z's dependencies information. *)
+                   (* Forall z, we must search the set of methods, y, on which
+                      z depends on in S' via [formal_name] ...
+                      So, first get z's dependencies information. *)
                    let z_priv_meth_info =
                      List.find
                        (fun m_info -> m_info.Env.mi_name = (fst z))
                        sprim_meths_abstr_infos in
                    let z_dependencies =
                      z_priv_meth_info.Env.mi_dependencies_from_parameters in
-                   (* Now, find the one corresponding to [formal_name]. If *)
-                   (* none is found in the assoc list that because there   *)
-                   (* no method in the dependencies on this parameter.     *)
+                   (* Now, find the one corresponding to [formal_name]. If
+                      none is found in the assoc list that because there no
+                      method in the dependencies on this parameter. *)
                    let y =
                      (try List.assoc formal_name z_dependencies with
                      | Not_found -> Parsetree_utils.ParamDepSet.empty) in
-                   (* ... and add it to the dependencies of                *)
-                   (* [eff_arg_qual_vname] in the current dependencies     *)
-                   (* accumulator, i.e into [inner_accu_deps_from_params]. *)
+                   (* ... and add it to the dependencies of
+                      [eff_arg_qual_vname] in the current dependencies
+                      accumulator, i.e into [inner_accu_deps_from_params]. *)
                    add_param_dependencies
                      ~param_name: eff_arg_qual_vname ~deps: y
                      ~to_deps: accu_deps_for_zs)
@@ -853,24 +870,24 @@ let complete_dependencies_from_params env ~current_unit ~current_species
 *)
 let compute_abstractions_for_fields ~with_def_deps env ctx fields =
   let reversed_abstractions =
-    (* ATTENTION: do not [fold_right] ! We build the list in reverse order *)
-    (* end finally reverse it at the end for sake of efficiency. We        *)
-    (* explicitly [fold_left] to have in our accumulator, the list of      *)
-    (* fields already processed, and in the right order (in their order of *)
-    (* apparition) AND to process fields of the list [fields] in their     *)
-    (* order of apparition. We need this in order to recover the already   *)
-    (* computed dependencies from params on previous fields since this     *)
-    (* info will possibly used to apply rules [DEF-DEP], [UNIVERSE] and    *)
-    (* [PRM] of definition 72 page 153 from Virgile Prevosto's Phd.        *)
+    (* ATTENTION: do not [fold_right] ! We build the list in reverse order
+       end finally reverse it at the end for sake of efficiency. We explicitly
+       [fold_left] to have in our accumulator, the list of fields already
+       processed, and in the right order (in their order of apparition) AND to
+       process fields of the list [fields] in their order of apparition. We
+       need this in order to recover the already computed dependencies from
+       params on previous fields since this info will possibly used to apply
+       rules [DEF-DEP], [UNIVERSE] and [PRM] of definition 72 page 153 from
+       Virgile Prevosto's Phd. *)
     List.fold_left
       (fun abstractions_accu current_field ->
         match current_field with
          | Env.TypeInformation.SF_sig si -> (FAI_sig si) :: abstractions_accu
          | Env.TypeInformation.SF_let ((_, name, _, sch, body, _, _) as li) ->
-             (* ATTENTION, the [dependencies_from_params_in_body] is not  *)
-             (* the complete set of dependencies. It must be completed to *)
-             (* fully represent the definition 72 page 153 from Virgile   *)
-             (* Prevosto's Phd.                                           *)
+             (* ATTENTION, the [dependencies_from_params_in_body] is not
+                the complete set of dependencies. It must be completed to
+                fully represent the definition 72 page 153 from Virgile
+                Prevosto's Phd. *)
              let (used_species_parameter_tys,
                   dependencies_from_params_in_body,
                   decl_children, def_children) =
@@ -919,10 +936,10 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                      match body with
                       | Parsetree.BB_logical p -> FBK_logical_expr p
                       | Parsetree.BB_computational e -> FBK_expr e in
-                   (* ATTENTION, the [dependencies_from_params_in_bodies] is *)
-                   (* not the complete set of dependencies. It must be  to   *)
-                   (* completed fully represent the definition 72 page 153   *)
-                   (* from Virgile Prevosto's Phd.                           *)
+                   (* ATTENTION, the [dependencies_from_params_in_bodies] is
+                      not the complete set of dependencies. It must be  to
+                      completed fully represent the definition 72 page 153
+                      from Virgile Prevosto's Phd. *)
                    let (used_species_parameter_tys,
                         dependencies_from_params_in_bodies,
                         decl_children, def_children) =
@@ -966,10 +983,10 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
          | Env.TypeInformation.SF_theorem
              ((_, name, _, logical_expr, proof, _) as ti) ->
                let sch = Types.trivial_scheme (Types.type_prop ()) in
-               (* ATTENTION, the [dependencies_from_params_in_bodies] is not *)
-               (* the complete set of dependencies. It must be completed to  *)
-               (* fully represent the definition 72 page 153 from Virgile    *)
-               (* Prevosto's Phd.                                            *)
+               (* ATTENTION, the [dependencies_from_params_in_bodies] is not
+                  the complete set of dependencies. It must be completed to
+                  fully represent the definition 72 page 153 from Virgile
+                  Prevosto's Phd. *)
                let (used_species_parameter_tys,
                     dependencies_from_params_in_bodies,
                     decl_children, def_children) =
@@ -1009,10 +1026,10 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
          | Env.TypeInformation.SF_property
              ((_, name, _, logical_expr, _) as pi) ->
                let sch = Types.trivial_scheme (Types.type_prop ()) in
-               (* ATTENTION, the [dependencies_from_params_in_bodies] is not *)
-               (* the complete set of dependencies. It must be completed to  *)
-               (* fully represent the definition 72 page 153 from Virgile    *)
-               (* Prevosto's Phd.                                            *)
+               (* ATTENTION, the [dependencies_from_params_in_bodies] is not
+                  the complete set of dependencies. It must be completed to
+                  fully represent the definition 72 page 153 from Virgile
+                  Prevosto's Phd. *)
                let (used_species_parameter_tys,
                     dependencies_from_params_in_bodies,
                     decl_children, def_children) =
@@ -1051,8 +1068,8 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                (FAI_property (pi, abstr_info)) :: abstractions_accu)
       []      (* Initial empty abstractions accumulator. *)
       fields in
-  (* Finally, put the list of abstractions in the right order, i.e. *)
-  (* in the order of apparition of the fields in the species.       *)
+  (* Finally, put the list of abstractions in the right order, i.e. in the
+     order of apparition of the fields in the species. *)
   List.rev reversed_abstractions
 ;;
 
