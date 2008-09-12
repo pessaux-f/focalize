@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rings_fields.foc,v 1.5 2008-09-11 09:26:21 pessaux Exp $ *)
+(* $Id: rings_fields.foc,v 1.6 2008-09-12 09:28:00 pessaux Exp $ *)
 
 (** Definitions for Rings, Modules, Algebras and Fields. *)
 
@@ -32,11 +32,10 @@ open "weak_structures" ;;
 species Ring inherits Additive_group, Semi_ring =
   let zero = Self!minus (Self!one, Self!one) ;
   proof of zero_is_neutral =
-    (** SNIPPED
-    by definition of zero,
+    definition of zero
     property one_is_left_neutral, one_is_left_neutral,
-      mult_left_distributes_on_plus *)
-    assumed {* Because temporarily unvailable in new version *} ;
+      mult_left_distributes_on_plus
+    assumed {* Todo *} ;
 
 proof of zero_left_absorbes =
 <1>1 assume x in Self,
@@ -222,7 +221,7 @@ species Skew_field inherits Ring, Division_monoid =
   property div_is_complete: all x y in Self,
    !is_zero (y) \/ !equal (x, !mult (y, !div (x, y))) ;
   proof of div_divides =
-    (** SNIPPED by property div_is_complete ; *)
+    property div_is_complete
     assumed {* Because todo *} ;
 end ;;
 
@@ -242,17 +241,17 @@ species Field inherits Skew_field,
      if basics#and_b (Self!is_zero (x), Self!is_zero (y)) then Self!zero
      else Self!one ;
   proof of gcd_divides = 
-    (** SNIPPED by definition gcd *)
-    assumed {* Because temporarily unvailable in new version *} ;
+    definition of gcd
+    assumed {* Todo *} ;
   proof of divisor_is_multiple_of_gcd = 
-    (** SNIPPED by definition gcd *)
-    assumed {* Because temporarily unvailable in new version *} ;
+    definition of gcd
+    assumed {* Because todo *} ;
   let exquo (x, y) = 
     if Self!is_zero(y) then basics#Failed 
     else basics#Unfailed (Self!div (x, y)) ;
   proof of exquo_divides = 
-    (** SNIPPED by definition exquo *)
-    assumed {* Because temporarily unvailable in new version *} ;
+    definition of exquo
+    assumed {* Because todo *} ;
 end ;;
 
 (** real fields, in a real field -1 is no a sum of squares *)
@@ -266,4 +265,4 @@ species Ordered_field inherits Ordered_gcd_domain, Real_field = end ;;
 (*                Ouf !                                                   *)
 (*                                                                        *)
 
-(* $Id: rings_fields.foc,v 1.5 2008-09-11 09:26:21 pessaux Exp $ *)
+(* $Id: rings_fields.foc,v 1.6 2008-09-12 09:28:00 pessaux Exp $ *)
