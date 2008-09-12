@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: quotients.foc,v 1.3 2008-09-11 09:29:01 pessaux Exp $ *)
+(* $Id: quotients.foc,v 1.4 2008-09-12 09:56:19 pessaux Exp $ *)
 
 (** Renaud Rioboo based on Louis Mandel's code.
     Quotient structures. *)
@@ -29,7 +29,6 @@ use "weak_structures" ;;
 use "rings_fields" ;;
 
 open "weak_structures" ;;
-
 
 
 species Function_reduire (T is additive_law#Additive_group) =

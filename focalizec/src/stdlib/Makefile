@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.31 2008-09-11 09:26:21 pessaux Exp $
+# $Id: Makefile,v 1.32 2008-09-12 09:56:19 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -24,11 +24,11 @@ FOCSRC = basics.foc \
 	rings_fields.foc \
 	random_foc.foc \
 	integers.foc \
-	array_foc.foc
+	array_foc.foc \
+	products_foc.foc \
+	quotients.foc
 
-FOCSRC_UNSAFE = products_foc.foc \
-	quotients.foc \
-	small_integers.foc \
+FOCSRC_UNSAFE =	small_integers.foc \
 	big_integers.foc \
 	parse_poly.foc \
 	ensembles_finis.foc
@@ -77,10 +77,6 @@ depend:
 
 
 # Temporary for no Coq...
-products_foc.ml: products_foc.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
-quotients.ml: quotients.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 small_integers.ml: small_integers.foc
 	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 big_integers.ml: big_integers.foc

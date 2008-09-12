@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.17 2008-06-17 12:04:57 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.18 2008-09-12 09:56:19 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -40,7 +40,7 @@
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
 let toplevel_compile env ~current_unit out_fmter = function
-  | Infer.PCM_no_matter -> env
+  | Infer.PCM_use (_, _) -> env
   | Infer.PCM_open (phrase_loc, fname) ->
       (* One must "open" the ml code generation environment of this module *)
       (* and return the environment extended with these "opened" bindings. *)

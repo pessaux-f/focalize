@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.144 2008-09-10 10:29:19 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.145 2008-09-12 09:56:19 pessaux Exp $ *)
 
 
 
@@ -3910,7 +3910,7 @@ let detect_polymorphic_method ~loc = function
     {b Rem} : Clearly exported outside this module.                    *)
 (* ******************************************************************* *)
 type please_compile_me =
-  | PCM_no_matter       (** Nothing to do during the compilation pass. *)
+  | PCM_use of (Location.t * Parsetree.module_name)
   | PCM_open of (Location.t * Parsetree.module_name)
   | PCM_coq_require of
       (** Coq modules to open due to external definitions. This allow to make
@@ -4628,12 +4628,12 @@ let typecheck_collection_def ctx env coll_def =
 (* ****************************************************************** *)
 let typecheck_phrase ctx env phrase =
   match phrase.Parsetree.ast_desc with
-   | Parsetree.Ph_use _ ->
+   | Parsetree.Ph_use fname ->
        (* Store the type information in the phrase's node. *)
        phrase.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
        (* Nothing to do, the scoping pass already ensured that "modules"
           opened or used were previously "use"-d. *)
-       (PCM_no_matter, env)
+       ((PCM_use (phrase.Parsetree.ast_loc, fname)), env)
    | Parsetree.Ph_open fname ->
        (* Load this module interface to extend the current environment. *)
        let env' =

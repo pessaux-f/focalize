@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.23 2008-09-02 14:22:06 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.24 2008-09-12 09:56:19 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -26,9 +26,9 @@ exception Logical_methods_only_inside_species of Location.t ;;
 
 (* ************************************************************************** *)
 (** {b Descr} : This module is the entry point for the compilation from FoCaL
-      to Coq. It dispatches the compilation of each possible FoCaL entity
-      to the dedicated compilation module.
-      It also contains the seed of toplevel let definitions code generation.  *)
+    to Coq. It dispatches the compilation of each possible FoCaL entity to
+    the dedicated compilation module.
+    It also contains the seed of toplevel let definitions code generation.  *)
 (* ************************************************************************** *)
 
 
@@ -46,11 +46,10 @@ let toplevel_let_def_compile ctx env let_def =
   (match is_rec with
    | false -> Format.fprintf out_fmter "@[<2>Let@ "
    | true -> Format.fprintf out_fmter "@[<2>Fixpoint@ ") ;
-  (* Now generate each bound definition. Remark that there is no local *)
-  (* idents in the scope because we are at toplevel. In the same way,  *)
-  (* because we are not under the scope of a species, the way "Self"   *)
-  (* must be printed is non-relevant. We use [SMS_from_species] by     *)
-  (* default.                                                          *)
+  (* Now generate each bound definition. Remark that there is no local idents
+     in the scope because we are at toplevel. In the same way, because we are
+     not under the scope of a species, the way "Self" must be printed is
+     non-relevant. We use [SMS_from_species] by default. *)
   let env' =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_bindings with
      | [] ->
@@ -89,31 +88,31 @@ let toplevel_let_def_compile ctx env let_def =
 
 
 
-(* *********************************************************************** *)
+(* ********************************************************************* *)
 (** {b Descr} : Dispatch the Coq code generation of a toplevel structure
-              to the various more specialized code generation routines.
+    to the various more specialized code generation routines.
 
     {b Arg} :
       - [current_unit] : The name of the current compilation unit (i.e.
-                       the name of the file without extension and not
-                       capitalized).
+        the name of the file without extension and not capitalized).
       - [out_fmter] : The out channel where to generate the Coq source
-                    code.
+        code.
       - unnamed : The structure for which the Coq source code has to be
-                generated.
+        generated.
 
-    {b Rem} : Not exported outside this module.                            *)
-(* *********************************************************************** *)
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
 let toplevel_compile env ~current_unit out_fmter = function
-  | Infer.PCM_no_matter -> env
-  | Infer.PCM_open (phrase_loc, modname) ->
-      (* One must let known that the module is required. In fact it should *)
-      (* also be "Import" but because the compiler always generate fully   *)
-      (* qualified stuff, the notion of "opended" is not needed anymore    *)
-      (* in the code generated for Coq.                                    *)
+  | Infer.PCM_use (_, modname) ->
+      (* One must let known that the module is required. *)
       Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" modname ;
-      (* One must "open" the coq code generation environment of this module *)
-      (* and return the environment extended with these "opened" bindings.  *)
+      env
+  | Infer.PCM_open (phrase_loc, modname) ->
+      (* One must "open" the coq code generation environment of this module
+         and return the environment extended with these "opened" bindings.
+         In fact it should also be "Import" but because the compiler always
+         generate fully qualified stuff, the notion of "opended" is not
+         needed anymore in the code generated for Coq. *)
       Env.coqgen_open_module ~loc: phrase_loc modname env
   | Infer.PCM_coq_require fname ->
       Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" fname ;
@@ -122,19 +121,19 @@ let toplevel_compile env ~current_unit out_fmter = function
       let spe_binding_info =
         Species_coq_generation.species_compile
           ~current_unit env out_fmter species_def species_descr dep_graph in
-      (* Return the coq code generation environment extended *)
-      (* by the current species's information.               *)
+      (* Return the coq code generation environment extended by the current
+         species's information. *)
       Env.CoqGenEnv.add_species
         ~loc: species_def.Parsetree.ast_loc
         species_def.Parsetree.ast_desc.Parsetree.sd_name
         spe_binding_info env
   | Infer.PCM_collection (collection_def, collection_descr, dep_graph) ->
-      (* Collections don't have parameters or any remaining abstraction. *)
-      (* Moreover, since we can never inherit of a collection, just      *)
-      (* forget all methods information, it will never be used.          *)
-      (* Collections do not have collection generator, then simply add   *)
-      (* them in the environment with None.                              *)
-      (* Finally, collections do not have any parameters, so empty list! *)
+      (* Collections don't have parameters or any remaining abstraction.
+         Moreover, since we can never inherit of a collection, just forget all
+         methods information, it will never be used.
+         Collections do not have collection generator, then simply add them in
+         the environment with None.
+         Finally, collections do not have any parameters, so empty list! *)
       Species_coq_generation.collection_compile
         env ~current_unit out_fmter collection_def collection_descr dep_graph ;
       Env.CoqGenEnv.add_species
@@ -154,10 +153,10 @@ let toplevel_compile env ~current_unit out_fmter = function
         Context.rcc_out_fmter = out_fmter } in
       Type_coq_generation.type_def_compile ctx env type_def_name type_descr
   | Infer.PCM_let_def (let_def, _) ->
-      (* Create the initial context for compiling the let definition. *)
-      (* We would not need a "full" context, a "reduced" one would be *)
-      (* sufficient, but via [let_binding_compile], the function      *)
-      (* [toplevel_let_def_compile] needs a "full". So...             *)
+      (* Create the initial context for compiling the let definition.
+         We would not need a "full" context, a "reduced" one would be
+         sufficient, but via [let_binding_compile], the function
+         [toplevel_let_def_compile] needs a "full". So... *)
       let ctx = {
         Context.scc_current_unit = current_unit ;
         (* Dummy, since not under a species. *)
@@ -225,8 +224,8 @@ let root_compile ~current_unit ~out_file_name stuff =
   let out_hd = open_out_bin out_file_name in
   let out_fmter = Format.formatter_of_out_channel out_hd in
   let global_env = ref (Env.CoqGenEnv.empty ()) in
-  (* Always import Coq booleans and integers and floats. *)
-  (* Alias int notation to Z.                            *)
+  (* Always import Coq booleans and integers and floats.
+     Alias int notation to Z. *)
   Format.fprintf out_fmter
     "Require Export Bool.@\n\
      Require Export ZArith.@\n\
@@ -254,20 +253,20 @@ let root_compile ~current_unit ~out_file_name stuff =
     close_out out_hd ;
     (begin
     try
-      (* And rename it to prevent an incorrecty Coq source file  *)
-      (* from remaining, but to still keep a trace of what could *)
-      (* be generated until the error arose.                     *)
+      (* And rename it to prevent an incorrecty Coq source file from
+         remaining, but to still keep a trace of what could be generated until
+         the error arose. *)
       let trace_filename = out_file_name ^ ".mangled" in
-      (* If the file of trace already exists, then first *)
-      (* discard it to prevent OS file I/O errors.       *)
+      (* If the file of trace already exists, then first discard it to prevent
+         OS file I/O errors. *)
       if Sys.file_exists trace_filename then Sys.remove trace_filename ;
       Sys.rename out_file_name trace_filename ;
     with second_error ->
       (begin
-      (* Here we want to catch errors that can arise during the trace file  *)
-      (* stuff. Because we don't want these errors to hide the real initial *)
-      (* problem that made the code generation impossible, we first process *)
-      (* here I/O errors, then will be raise again the initial error.       *)
+      (* Here we want to catch errors that can arise during the trace file
+         stuff. Because we don't want these errors to hide the real initial
+         problem that made the code generation impossible, we first process
+         here I/O errors, then will be raise again the initial error. *)
       Format.eprintf
         "Error@ while@ trying@ to@ keep@ trace@ of@ the@ partially@ \
          generated@ Coq@ code:@ %s.@\nInitial@ error@ follows.@."
