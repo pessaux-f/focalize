@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.32 2008-09-12 09:56:19 pessaux Exp $
+# $Id: Makefile,v 1.33 2008-09-12 10:05:30 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -26,10 +26,10 @@ FOCSRC = basics.foc \
 	integers.foc \
 	array_foc.foc \
 	products_foc.foc \
-	quotients.foc
+	quotients.foc \
+	small_integers.foc
 
-FOCSRC_UNSAFE =	small_integers.foc \
-	big_integers.foc \
+FOCSRC_UNSAFE =	big_integers.foc \
 	parse_poly.foc \
 	ensembles_finis.foc
 #	polys_abstract.foc polys_concrete finite_fields fractions finite_factorize
@@ -76,9 +76,7 @@ depend:
 	$(CAMLDEP) *.mli *.ml > ./.depend
 
 
-# Temporary for no Coq...
-small_integers.ml: small_integers.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
+# Were not compiled to Coq in the previous FoCaL compiler...
 big_integers.ml: big_integers.foc
 	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 parse_poly.ml: parse_poly.foc
