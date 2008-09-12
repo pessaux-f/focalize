@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.33 2008-09-11 13:56:48 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.34 2008-09-11 23:14:00 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -66,12 +66,13 @@ let debug_print_dependencies_from_parameters l =
        | Env.TypeInformation.SPAR_in (n, _, _) ->
            Format.eprintf "From IN-parameter '%a', methods: "
              Sourcify.pp_vname n) ;
-      Parsetree_utils.DepNameSet.iter
+      Parsetree_utils.ParamDepSet.iter
         (fun (n, _) -> Format.eprintf "%a " Sourcify.pp_vname n) methods ;
       Format.eprintf "@.")
     l
 ;;
 *)
+
 
 
 let rec get_species_types_in_type_annots_of_logical_expr lexpr =

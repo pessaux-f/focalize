@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.22 2008-09-02 14:22:06 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.23 2008-09-11 23:14:00 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -186,20 +186,63 @@ let subst_expr_ident ~current_unit c1 c2 ident =
 ;;
 
 
+let subst_enforced_dependency ~current_unit c1 c2 enf_dep =
+  let new_desc =
+    (match enf_dep.Parsetree.ast_desc with
+     | Parsetree.Ed_definition expr_idents ->
+         let expr_idents' =
+           List.map (subst_expr_ident ~current_unit c1 c2) expr_idents in
+         Parsetree.Ed_definition expr_idents'
+     | Parsetree.Ed_property expr_idents ->
+         let expr_idents' =
+           List.map (subst_expr_ident ~current_unit c1 c2) expr_idents in
+         Parsetree.Ed_property expr_idents') in
+  (* Substitute in the AST node type. *)
+  let new_type =
+    subst_ast_node_type_information c1 c2 enf_dep.Parsetree.ast_type in
+  (* And finally, make a new AST node. *)
+  { enf_dep with Parsetree.ast_desc = new_desc ; Parsetree.ast_type = new_type }
+;;
 
-(* ************************************************************************ *)
-(* substitution_collection_kind -> Types.type_collection ->                 *)
-(*   Parsetree.pattern -> Parsetree.pattern                                 *)
+
+
+let subst_fact ~current_unit c1 c2 fact =
+  let new_desc =
+    (match fact.Parsetree.ast_desc with
+     | Parsetree.F_definition expr_idents ->
+         let expr_idents' =
+           List.map (subst_expr_ident ~current_unit c1 c2) expr_idents in
+         Parsetree.F_definition expr_idents'
+     | Parsetree.F_property expr_idents ->
+         let expr_idents' =
+           List.map (subst_expr_ident ~current_unit c1 c2) expr_idents in
+         Parsetree.F_property expr_idents'
+     | Parsetree.F_hypothesis _ | Parsetree.F_node _ ->
+         (* No change since no idents that can denote species parameters
+            methods. *)
+         fact.Parsetree.ast_desc) in
+  (* Substitute in the AST node type. *)
+  let new_type =
+    subst_ast_node_type_information c1 c2 fact.Parsetree.ast_type in
+  { fact with Parsetree.ast_desc = new_desc ; Parsetree.ast_type = new_type }
+;;
+
+
+
+(* ************************************************************************* *)
+(* substitution_collection_kind -> Types.type_collection ->                  *)
+(*   Parsetree.pattern -> Parsetree.pattern                                  *)
 (** {b Descr} : Performs the collection name substitution [c1] <- [c2] in
-              a [pattern]. Note that because patterns cannot be collections
-              (there is no collection-pattern), the substitution does not
-              affect the pattern's structure.
-              However, because patterns can be variables and match a
-              collection-value, the type of these variable may be of a
-              collection. Then we need to substitute in the types hooked
-              in the AST's pattern [Parsetree.ast_type] field.
-    {b Rem} : Not exported outside this module.                             *)
-(* ************************************************************************ *)
+    a [pattern]. Note that because patterns cannot be collections (there is
+    no collection-pattern), the substitution does not affect the pattern's
+    structure.
+    However, because patterns can be variables and match a collection-value,
+    the type of these variable may be of a collection. Then we need to
+    substitute in the types hooked in the AST's pattern [Parsetree.ast_type]
+    field.
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
 let subst_pattern c1 c2 pattern =
   (* Let's just make a local recursive function to save the stack, *)
   (* avoiding passing each time the 2 arguments [c1] and [c2].     *)
@@ -228,9 +271,9 @@ let subst_pattern c1 c2 pattern =
     (* Substitute in the AST node type. *)
     let new_type =
       subst_ast_node_type_information c1 c2 pat.Parsetree.ast_type in
-    (* An finally, make a new AST node. *)
+    (* And finally, make a new AST node. *)
     { pat with
-        Parsetree.ast_desc = new_desc; Parsetree.ast_type = new_type } in
+        Parsetree.ast_desc = new_desc ; Parsetree.ast_type = new_type } in
   (* Now, do the job. *)
   rec_subst pattern
 ;;
@@ -302,7 +345,7 @@ let subst_type_expr c1 c2 type_expression =
     (* Substitute in the AST node type. *)
     let new_type =
       subst_ast_node_type_information c1 c2 ty_expr.Parsetree.ast_type in
-    (* An finally, make a new AST node. *)
+    (* And finally, make a new AST node. *)
     { ty_expr with
         Parsetree.ast_desc = new_desc; Parsetree.ast_type = new_type } in
   (* Now, do the job. *)
@@ -378,7 +421,7 @@ let rec subst_expr ~current_unit c1 c2 expression =
     (* Substitute in the AST node type. *)
     let new_type =
       subst_ast_node_type_information c1 c2 initial_expr.Parsetree.ast_type in
-    (* An finally, make a new AST node. *)
+    (* And finally, make a new AST node. *)
     { initial_expr with
         Parsetree.ast_desc = new_desc; Parsetree.ast_type = new_type } in
   (* Do je job now. *)
@@ -473,14 +516,102 @@ and subst_logical_expr ~current_unit c1 c2 initial_logical_expr =
            let logical_expr1' = rec_subst logical_expr1 in
            let logical_expr2' = rec_subst logical_expr2 in
            Parsetree.Pr_equiv (logical_expr1', logical_expr2')
-       | Parsetree.Pr_not logical_expr -> Parsetree.Pr_not (rec_subst logical_expr)
+       | Parsetree.Pr_not logical_expr ->
+           Parsetree.Pr_not (rec_subst logical_expr)
        | Parsetree.Pr_expr expr ->
            let expr' = subst_expr ~current_unit c1 c2 expr in
            Parsetree.Pr_expr expr'
-       | Parsetree.Pr_paren logical_expr -> Parsetree.Pr_paren (rec_subst logical_expr)) in
+       | Parsetree.Pr_paren logical_expr ->
+           Parsetree.Pr_paren (rec_subst logical_expr)) in
     { logical_expr with Parsetree.ast_desc = new_desc } in
   (* Now do the job. *)
   rec_subst initial_logical_expr
+
+
+
+and subst_proof ~current_unit c1 c2 proof =
+  let new_desc =
+    (match proof.Parsetree.ast_desc with
+     | Parsetree.Pf_assumed (enforced_dependencies, external_code) ->
+         let enforced_dependencies' =
+           List.map
+             (subst_enforced_dependency ~current_unit c1 c2)
+             enforced_dependencies in
+         Parsetree.Pf_assumed (enforced_dependencies', external_code)
+     | Parsetree.Pf_auto facts ->
+         let facts' = List.map (subst_fact ~current_unit c1 c2) facts in
+         Parsetree.Pf_auto facts'
+     | Parsetree.Pf_coq (enforced_dependencies, script) ->
+         let enforced_dependencies' =
+           List.map
+             (subst_enforced_dependency ~current_unit c1 c2)
+             enforced_dependencies in
+         Parsetree.Pf_coq (enforced_dependencies', script)
+     | Parsetree.Pf_node proof_nodes ->
+         let proof_nodes' =
+           List.map (subst_proof_node ~current_unit c1 c2) proof_nodes in
+         Parsetree.Pf_node proof_nodes') in
+  (* Substitute in the AST node type. *)
+  let new_type =
+    subst_ast_node_type_information c1 c2 proof.Parsetree.ast_type in
+  (* And finally, make a new AST node. *)
+  { proof with Parsetree.ast_desc = new_desc ; Parsetree.ast_type = new_type }
+
+
+
+and subst_statement ~current_unit c1 c2 statement =
+  let desc = statement.Parsetree.ast_desc in
+  let hyps' = List.map (subst_hyp ~current_unit c1 c2) desc.Parsetree.s_hyps in
+  let concl' =
+    (match desc.Parsetree.s_concl with
+     | None -> None
+     | Some lexpr -> Some (subst_logical_expr ~current_unit c1 c2 lexpr)) in
+  (* Substitute in the AST node type. *)
+  let new_type =
+    subst_ast_node_type_information c1 c2 statement.Parsetree.ast_type in
+  let new_desc = { Parsetree.s_hyps = hyps' ; Parsetree.s_concl = concl' } in
+  (* And finally, make a new AST node. *)
+  { statement with Parsetree.ast_desc = new_desc ;
+    Parsetree.ast_type = new_type }
+
+
+
+and subst_hyp ~current_unit c1 c2 hyp =
+  let new_desc =
+    (match hyp.Parsetree.ast_desc with
+     | Parsetree.H_variable (vname, type_expr) ->
+         let type_expr' = subst_type_expr c1 c2 type_expr in
+         Parsetree.H_variable (vname, type_expr')
+     | Parsetree.H_hypothesis (vname, lexpr) ->
+         let lexpr' = subst_logical_expr ~current_unit c1 c2 lexpr in
+         Parsetree.H_hypothesis (vname, lexpr')
+     | Parsetree.H_notation (vname, expr) ->
+         let expr' = subst_expr ~current_unit c1 c2 expr in
+         Parsetree.H_notation (vname, expr')) in
+  (* Substitute in the AST node type. *)
+  let new_type =
+    subst_ast_node_type_information c1 c2 hyp.Parsetree.ast_type in
+  (* And finally, make a new AST node. *)
+  { hyp with Parsetree.ast_desc = new_desc ; Parsetree.ast_type = new_type }
+
+
+
+and subst_proof_node ~current_unit c1 c2 proof_node =
+  let new_desc =
+    (match proof_node.Parsetree.ast_desc with
+     | Parsetree.PN_sub (node_label, statement, proof) ->
+         let statement' = subst_statement ~current_unit c1 c2 statement in
+         let proof' = subst_proof ~current_unit c1 c2 proof in
+         Parsetree.PN_sub (node_label, statement', proof')
+     | Parsetree.PN_qed (node_label, proof) ->
+         let proof' = subst_proof ~current_unit c1 c2 proof in
+         Parsetree.PN_qed (node_label, proof')) in
+  (* Substitute in the AST node type. *)
+  let new_type =
+    subst_ast_node_type_information c1 c2 proof_node.Parsetree.ast_type in
+  (* And finally, make a new AST node. *)
+  { proof_node with Parsetree.ast_desc = new_desc ;
+    Parsetree.ast_type = new_type }
 ;;
 
 
@@ -574,10 +705,10 @@ let subst_species_field ~current_unit c1 c2 = function
   | Env.TypeInformation.SF_theorem
       (from, vname, num_ty_vars, body, proof, deps_rep) ->
       (begin
-      (* No substitution inside the proof. *)
       let body' = subst_logical_expr ~current_unit c1 c2 body in
+      let proof' = subst_proof ~current_unit c1 c2 proof in
       Env.TypeInformation.SF_theorem
-        (from, vname, num_ty_vars, body', proof, deps_rep)
+        (from, vname, num_ty_vars, body', proof', deps_rep)
       end)
   | Env.TypeInformation.SF_property (from, vname, num_tyvars, body, deps_rep) ->
       (begin

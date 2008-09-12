@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.mli,v 1.14 2008-09-10 15:12:27 pessaux Exp $ *)
+(* $Id: abstractions.mli,v 1.15 2008-09-11 23:14:00 pessaux Exp $ *)
 
 type environment_kind =
   | EK_ml of Env.MlGenEnv.t
@@ -55,3 +55,9 @@ val compute_abstractions_for_fields :
 
 val compute_abstractions_for_toplevel_theorem :
   Context.species_compil_context -> Parsetree.theorem_def -> abstraction_info
+
+(* For debugging purpose only.
+val debug_print_dependencies_from_parameters :
+  (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list ->
+    unit
+*)
