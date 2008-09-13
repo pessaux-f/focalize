@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.33 2008-09-12 10:05:30 pessaux Exp $
+# $Id: Makefile,v 1.34 2008-09-13 04:25:23 pessaux Exp $
 
 include ../Makefile.config
 FOCC = ../toplevel/check_file -no-stdlib-path
@@ -53,7 +53,7 @@ EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
 	weak_structures_externals.cmo \
 	coq_builtins.vo weak_structures_externals.vo \
 	wellfounded_externals.vo random_foc_externals.cmo \
-	array_foc_externals.vo
+	random_foc_externals.vo array_foc_externals.vo
 
 
 
@@ -85,8 +85,11 @@ polys_abstract.ml: polys_abstract.foc
 	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
 #End temporary
 
-# Special rules for exceptions.
+
+# Special rules for exceptions that need to be compiled after basics.foc.
 array_foc_externals.vo: basics.vo
+random_foc_externals.vo: basics.vo
+
 
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .foc .fo .zv .v .vo
