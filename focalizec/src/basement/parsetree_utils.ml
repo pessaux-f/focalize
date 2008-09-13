@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.20 2008-09-10 15:12:27 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.21 2008-09-13 06:13:41 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -102,6 +102,8 @@ module VnameMod = struct
 end ;;
 module VnameSet = Set.Make (VnameMod) ;;
 
+
+
 (* ************************************************************************* *)
 (* Parsetree.pattern -> Parsetree.vname list                                 *)
 (** {b Descr} : Returns the list of local identifiers induced by a pattern.
@@ -183,25 +185,24 @@ let parse_operator_string op_string =
 
 
 
-(* ******************************************************************** *)
-(* Format.formatter -> Parsetree.vname -> unit                          *)
+(* ********************************************************************* *)
+(* Format.formatter -> Parsetree.vname -> unit                           *)
 (** {b Descr} : Pretty prints a [vname] value as OCaml or Coq source.
-              Because FoC allows more infix/prefix operators than OCaml
-              or Coq syntax, it's impossible to crudely translate the
-              string of the [vname] to OCaml or Coq
-              For instance, a FoC infix operator "( **+ )" has no
-              equivalent in OCaml or Coq syntax : "( **+ )" is not a
-              correct operator identifier according to OCaml or Coq.
-              Then, instead of havign particular cases for operators
-              that can be straighforward translated (like "( +)") and
-              the others, we adopt a uniform mapping for infix and
-              prefix operators using the [parse_operator_string]
-              function to transform infix/prefix operators names
-              before printing and straighforwardly print other
-              operators names.
+    Because FoC allows more infix/prefix operators than OCaml or Coq
+    syntax, it's impossible to crudely translate the string of the
+    [vname] to OCaml or Coq.
+    For instance, a FoC infix operator "( **+ )" has no equivalent in
+    OCaml or Coq syntax : "( **+ )" is not a correct operator identifier
+    according to OCaml or Coq.
+    Then, instead of havign particular cases for operators that can be
+    straighforward translated (like "( +)") and the others, we adopt a
+    uniform mapping for infix and prefix operators using the
+    [parse_operator_string] function to transform infix/prefix
+    operators names before printing and straighforwardly print other
+    operators names.
 
-    {b Rem} : Exported ouside this module.                              *)
-(* ******************************************************************** *)
+    {b Rem} : Exported ouside this module.                               *)
+(* ********************************************************************* *)
 let pp_vname_with_operators_expanded ppf = function
   | Parsetree.Vlident s
   | Parsetree.Vuident s
@@ -230,10 +231,10 @@ let type_coll_from_qualified_species (species_modname, species_vname) =
 
 (* ********************************************************************** *)
 (** {b Descr} : Describes a species expression used a effective argument
-       of a parametrised species. Since an effective parameter of a
-       parametrised species can not have itself effective parameters,
-       the only possible expressions are those denoting "Self" or another
-       atomic species name.
+    of a parametrised species. Since an effective parameter of a
+    parametrised species can not have itself effective parameters, the
+    only possible expressions are those denoting "Self" or another atomic
+    species name.
 
     {Rem}: Exported outside this module.                                  *)
 (* ********************************************************************** *)
@@ -262,10 +263,10 @@ type simple_species_expr = {
 (* current_unit: Parsetree.module_name -> Parsetree.qualified_species -> *)
 (*   Parsetree.ident                                                     *)
 (** {b Descr} : Creates a fake [Parsetree.ident] from a
-      [Parsetree.qualified_species] in order to be able to lookup in an
-      environment. The ident is "fake" in the sense it has no location
-      no documentation an no type. Then it must only b used when these
-      fields are non-relevant.
+    [Parsetree.qualified_species] in order to be able to lookup in an
+    environment. The ident is "fake" in the sense it has no location no
+    documentation an no type. Then it must only b used when these fields
+    are non-relevant.
 
     {b Rem} : Exported outside this module.                              *)
 (* ********************************************************************* *)

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.109 2008-09-10 15:12:27 pessaux Exp $ *)
+(* $Id: env.ml,v 1.110 2008-09-13 06:13:41 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -88,7 +88,7 @@ let env_list_assoc ~allow_opened searched list =
 
 
 
-(* For debug purpose. *)
+(* For debug purpose.
 let debug_env_list_assoc ~allow_opened searched list =
   let vname_as_string v =
     (match v with
@@ -129,7 +129,7 @@ let debug_env_list_assoc ~allow_opened searched list =
   flush stderr;
   rec_assoc list
 ;;
-
+*)
 
 
 
@@ -148,7 +148,7 @@ type ('constrs, 'labels, 'types, 'values, 'species) generic_env = {
   labels : (Parsetree.vname * ('labels binding_origin)) list;
   types : (Parsetree.vname * ('types binding_origin)) list;
   (** [idents] Contains functions methods and more generally any let-bound
-identifiers. *)
+      identifiers. *)
   values : (Parsetree.vname * ('values binding_origin)) list;
   (** [species] Contains both species and collections. *)
   species : (Parsetree.vname * ('species binding_origin)) list
@@ -706,6 +706,13 @@ type collection_or_species =
 
 
 
+type method_type_kind =
+  | MTK_computational of Types.type_scheme
+  | MTK_logical of Parsetree.logical_expr
+;;
+
+
+
 (* ************************************************************************ *)
 (** {b Descr} : Common for OCaml and Coq code generation environments. This
     represent various information about the methods, their abstraction,
@@ -716,6 +723,9 @@ type collection_or_species =
 type generic_code_gen_method_info = {
   mi_name : Parsetree.vname ;        (** The field name. *)
   mi_history : from_history ;        (** The field inheritance history. *)
+  (** The "type" of the method, i.e. a ML-like type if computational or a
+      logical property if logical. *)
+  mi_type_kind : method_type_kind ;
   (** The positional list of parameters carrier abstracted in the method. *)
   mi_used_species_parameter_tys : Parsetree.vname list ;
   mi_dependencies_from_parameters :
@@ -1943,7 +1953,7 @@ let inspect_fo_structure ppf fo =
 
 
 
-(* [Unsure] Garbage. To diseaper. *)
+(* For debug purpose.
 let print_field_for_debug = function
   | TypeInformation.SF_sig (_, n, sch) ->
       Format.eprintf "signature %a : %a@." Sourcify.pp_vname n
@@ -1966,3 +1976,4 @@ let print_field_for_debug = function
   | TypeInformation.SF_theorem _ | TypeInformation.SF_property _ ->
       Format.eprintf "Property/Theorem@."
 ;;
+*)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.mli,v 1.7 2008-09-02 14:22:06 pessaux Exp $ *)
+(* $Id: species_coq_generation.mli,v 1.8 2008-09-13 06:13:41 pessaux Exp $ *)
 
 exception Attempt_proof_by_def_of_species_param of
   (Location.t * Parsetree.expr_ident)
@@ -46,7 +46,8 @@ val collection_compile :
   Env.CoqGenEnv.t -> current_unit: Types.fname -> Format.formatter ->
     Parsetree.collection_def_desc Parsetree.ast ->
       Env.TypeInformation.species_description ->
-        Dep_analysis.name_node list -> unit
+        Dep_analysis.name_node list ->
+	  Env.CoqGenInformation.method_info list
 
 val toplevel_theorem_compile :
   Context.species_compil_context -> Env.CoqGenEnv.t ->

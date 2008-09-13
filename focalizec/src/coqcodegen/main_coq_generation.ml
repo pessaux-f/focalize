@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.24 2008-09-12 09:56:19 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.25 2008-09-13 06:13:41 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -129,17 +129,17 @@ let toplevel_compile env ~current_unit out_fmter = function
         spe_binding_info env
   | Infer.PCM_collection (collection_def, collection_descr, dep_graph) ->
       (* Collections don't have parameters or any remaining abstraction.
-         Moreover, since we can never inherit of a collection, just forget all
-         methods information, it will never be used.
          Collections do not have collection generator, then simply add them in
          the environment with None.
          Finally, collections do not have any parameters, so empty list! *)
-      Species_coq_generation.collection_compile
-        env ~current_unit out_fmter collection_def collection_descr dep_graph ;
+      let collection_methods =
+        Species_coq_generation.collection_compile
+          env ~current_unit out_fmter collection_def collection_descr
+          dep_graph in
       Env.CoqGenEnv.add_species
         ~loc: collection_def.Parsetree.ast_loc
         collection_def.Parsetree.ast_desc.Parsetree.cd_name
-        ([], [], None, Env.COS_collection) env
+        ([], collection_methods, None, Env.COS_collection) env
   | Infer.PCM_type (type_def_name, type_descr) ->
       (* Create the initial context for compiling the type definition. *)
       let ctx = {

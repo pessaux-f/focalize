@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.80 2008-09-10 15:12:27 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.81 2008-09-13 06:13:41 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -530,7 +530,7 @@ let generate_methods ctx env field =
        let compiled_field = {
          Misc_common.cfm_from_species = from ;
          Misc_common.cfm_method_name = name ;
-         Misc_common.cfm_method_scheme = sch ;
+         Misc_common.cfm_method_scheme = Env.MTK_computational sch ;
          (* Never used for OCaml. *)
          Misc_common.cfm_used_species_parameter_tys = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
@@ -566,7 +566,7 @@ let generate_methods ctx env field =
             let compiled_field = {
               Misc_common.cfm_from_species = from ;
               Misc_common.cfm_method_name = name ;
-              Misc_common.cfm_method_scheme = scheme ;
+              Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
               (* Never used for OCaml. *)
               Misc_common.cfm_used_species_parameter_tys = [] ;
               Misc_common.cfm_dependencies_from_parameters =
@@ -619,7 +619,8 @@ let generate_methods ctx env field =
                  let first_compiled = {
                    Misc_common.cfm_from_species = from ;
                    Misc_common.cfm_method_name = name ;
-                   Misc_common.cfm_method_scheme = scheme ;
+                   Misc_common.cfm_method_scheme =
+                     Env.MTK_computational scheme ;
                    (* Never used for OCaml. *)
                    Misc_common.cfm_used_species_parameter_tys = [] ;
                    Misc_common.cfm_dependencies_from_parameters =
@@ -655,7 +656,8 @@ let generate_methods ctx env field =
                            (from, name, params, (Some scheme), body_e) in
                        { Misc_common.cfm_from_species = from ;
                          Misc_common.cfm_method_name = name ;
-                         Misc_common.cfm_method_scheme = scheme ;
+                         Misc_common.cfm_method_scheme =
+                           Env.MTK_computational scheme ;
                          (* Never used for OCaml. *)
                          Misc_common.cfm_used_species_parameter_tys = [] ;
                          Misc_common.cfm_dependencies_from_parameters =
@@ -666,7 +668,7 @@ let generate_methods ctx env field =
                  Some (Misc_common.CSF_let_rec (first_compiled :: rem_compiled))
             end)
        end)
-   | Abstractions.FAI_theorem ((from, name, _, _, _, _), _) ->
+   | Abstractions.FAI_theorem ((from, name, _, lexpr, _, _), _) ->
        (* Theorems are purely discarded in the Ocaml translation. *)
        if Configuration.get_verbose () then
          Format.eprintf
@@ -675,14 +677,13 @@ let generate_methods ctx env field =
        let compiled_field = {
          Misc_common.cfm_from_species = from ;
          Misc_common.cfm_method_name = name ;
-         Misc_common.cfm_method_scheme =
-           Types.trivial_scheme (Types.type_prop ()) ;
+         Misc_common.cfm_method_scheme = Env.MTK_logical lexpr ;
          (* Never used for OCaml. *)
          Misc_common.cfm_used_species_parameter_tys = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_coq_min_typ_env_names = [] } in
        Some (Misc_common.CSF_theorem compiled_field)
-   | Abstractions.FAI_property ((from, name, _, _, _), _) ->
+   | Abstractions.FAI_property ((from, name, _, lexpr, _), _) ->
        (* Properties are purely discarded in the Ocaml translation. *)
        if Configuration.get_verbose () then
          Format.eprintf
@@ -691,8 +692,7 @@ let generate_methods ctx env field =
        let compiled_field = {
          Misc_common.cfm_from_species = from ;
          Misc_common.cfm_method_name = name ;
-         Misc_common.cfm_method_scheme =
-           Types.trivial_scheme (Types.type_prop ()) ;
+         Misc_common.cfm_method_scheme = Env.MTK_logical lexpr ;
          (* Never used for OCaml. *)
          Misc_common.cfm_used_species_parameter_tys = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
@@ -1266,6 +1266,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                     compiled_field_memory.Misc_common.cfm_method_name ;
                   Env.mi_history =
                     compiled_field_memory.Misc_common.cfm_from_species ;
+                  Env.mi_type_kind =
+                    compiled_field_memory.Misc_common.cfm_method_scheme ;
                   (* Never used in OCaml. *)
                   Env.mi_used_species_parameter_tys = [] ;
                   Env.mi_dependencies_from_parameters =
@@ -1279,6 +1281,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                  (fun cfm ->
                    { Env.mi_name = cfm.Misc_common.cfm_method_name ;
                      Env.mi_history = cfm.Misc_common.cfm_from_species ;
+                     Env.mi_type_kind = cfm.Misc_common.cfm_method_scheme ;
                      (* Never used in OCaml. *)
                      Env.mi_used_species_parameter_tys = [] ;
                      Env.mi_dependencies_from_parameters =

@@ -122,9 +122,14 @@ type collection_or_species =
   | COS_collection
   | COS_species
 
+type method_type_kind =
+  | MTK_computational of Types.type_scheme
+  | MTK_logical of Parsetree.logical_expr
+
 type generic_code_gen_method_info = {
   mi_name : Parsetree.vname ;
   mi_history : from_history ;
+  mi_type_kind : method_type_kind ;
   mi_used_species_parameter_tys : Parsetree.vname list ;
   mi_dependencies_from_parameters :
     (TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list ;
@@ -352,4 +357,6 @@ val make_fo_file :
 
 val inspect_fo_structure : Format.formatter -> fo_file_structure -> unit
 
+(* For debug purpose.
 val print_field_for_debug : TypeInformation.species_field -> unit
+*)

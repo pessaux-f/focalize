@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.106 2008-09-10 15:12:27 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.107 2008-09-13 06:13:41 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -139,6 +139,13 @@ let find_compiled_field_memory name fields =
          | _ -> find q
         end) in
   find fields
+;;
+
+
+
+let find_method_type_kind_by_name vname coll_meths =
+  let method_info = List.find (fun mi -> mi.Env.mi_name = vname) coll_meths in
+  method_info.Env.mi_type_kind
 ;;
 
 
@@ -1054,11 +1061,67 @@ let zenonify_by_property ctx print_ctx env min_coq_env
                     else None) in
              match param_to_search_opt with
               | None ->
+                  (begin
                   (* The method comes from another module's species. Hence it
-                     is for sure from a toplevel species. And this is not
-                     correct since the methods used for proofs must only come
-                     from our methods or species parameters' ones. *)
-                  failwith "I think this is a toplevel species method (2)."
+                     is for sure from a toplevel species. We must recover its
+                     type. *)
+                  let fake_ident = {
+(* [Unsure] faire plus propre pour ne pas matcher 2 fois sur qcollname. *)
+                    Parsetree.ast_desc =
+                      (match qcollname with
+                        | Parsetree.Vname _ -> assert false
+                        | Parsetree.Qualified (mod_name, param_name) ->
+                            Parsetree.I_global
+                              (Parsetree.Qualified (mod_name, param_name))) ;
+                    (* Roughly correction as a location, even is not exact. *)
+                    Parsetree.ast_loc = by_prop_expr_ident.Parsetree.ast_loc ;
+                    Parsetree.ast_doc = [] ;
+                    Parsetree.ast_type = Parsetree.ANTI_none } in
+
+(* [Unsure] cradddd aussi ! *)
+let param_name =
+(match qcollname with
+  | Parsetree.Vname _ -> assert false
+  | Parsetree.Qualified (_, param_name) -> param_name) in
+
+                  let (_, coll_info, _, _) =
+                    Env.CoqGenEnv.find_species
+                      ~loc: by_prop_expr_ident.Parsetree.ast_loc
+                      ~current_unit: ctx.Context.scc_current_unit
+                      fake_ident env in
+                  (* Now, look for the of the method. *)
+                  let meth_ty_kind =
+                    find_method_type_kind_by_name vname coll_info in
+                  (* A bit of comment. *)
+                  Format.fprintf out_fmter
+                    "(* For toplevel collection's method used via \"by \
+                    property %a\". *)@\n"
+                    Sourcify.pp_expr_ident by_prop_expr_ident ;
+                  match meth_ty_kind with
+                   | Env.MTK_computational meth_sch ->
+                       let meth_ty = Types.specialize meth_sch in
+                       Format.fprintf out_fmter
+                         "@[<2>Parameter ???%a_%a :@ %a.@]@\n"
+                         Parsetree_utils.pp_vname_with_operators_expanded
+                         param_name
+                         Parsetree_utils.pp_vname_with_operators_expanded vname
+                         (Types.pp_type_simple_to_coq print_ctx
+                            ~reuse_mapping: false)
+                         meth_ty
+                   | Env.MTK_logical lexpr ->
+                       Format.fprintf out_fmter
+                         "@[<2>Parameter !!!%a_%a :@ "
+                         Parsetree_utils.pp_vname_with_operators_expanded
+                         param_name
+                         Parsetree_utils.pp_vname_with_operators_expanded
+                         vname ;
+                       Species_record_type_generation.generate_logical_expr
+                         ctx ~local_idents: []
+                         ~self_methods_status:
+                           Species_record_type_generation.SMS_from_record
+                         env lexpr ;
+                       Format.fprintf out_fmter ".@]@\n"
+                  end)
               | Some param_name ->
                   (begin
                   (* The method belongs to a species parameters. We first get
@@ -1882,7 +1945,7 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
             let compiled = {
               Misc_common.cfm_from_species = from ;
               Misc_common.cfm_method_name = name ;
-              Misc_common.cfm_method_scheme = scheme ;
+              Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
               Misc_common.cfm_used_species_parameter_tys =
                 ai.Abstractions.ai_used_species_parameter_tys ;
               Misc_common.cfm_dependencies_from_parameters =
@@ -1908,7 +1971,7 @@ let generate_methods ctx print_ctx env generated_fields = function
       let compiled_field = {
         Misc_common.cfm_from_species = from ;
         Misc_common.cfm_method_name = name ;
-        Misc_common.cfm_method_scheme = sch ;
+        Misc_common.cfm_method_scheme = Env.MTK_computational sch ;
         (* Since no code is generated for "sig", no need to get bored with
            species parameters carriers that may appear in the type of the
            "sig". *)
@@ -1942,7 +2005,7 @@ let generate_methods ctx print_ctx env generated_fields = function
       let compiled_field = {
         Misc_common.cfm_from_species = from ;
         Misc_common.cfm_method_name = name ;
-        Misc_common.cfm_method_scheme = scheme ;
+        Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
         Misc_common.cfm_used_species_parameter_tys =
           abstraction_info.Abstractions.ai_used_species_parameter_tys ;
         Misc_common.cfm_dependencies_from_parameters = all_deps_from_params ;
@@ -1968,14 +2031,13 @@ let generate_methods ctx print_ctx env generated_fields = function
       let compiled_field = {
         Misc_common.cfm_from_species = from ;
         Misc_common.cfm_method_name = name ;
-        Misc_common.cfm_method_scheme =
-          Types.trivial_scheme (Types.type_prop ()) ;
+        Misc_common.cfm_method_scheme = Env.MTK_logical logical_expr ;
         Misc_common.cfm_used_species_parameter_tys =
           abstraction_info.Abstractions.ai_used_species_parameter_tys ;
         Misc_common.cfm_dependencies_from_parameters = all_deps_from_params ;
         Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
       Misc_common.CSF_theorem compiled_field
-  | Abstractions.FAI_property ((from, name, _, _, _), abstraction_info) ->
+  | Abstractions.FAI_property ((from, name, _, lexpr, _), abstraction_info) ->
       (* "Property"s are discarded. However we compute their dependencies. *)
       let all_deps_from_params =
         Abstractions.merge_abstraction_infos
@@ -1987,8 +2049,7 @@ let generate_methods ctx print_ctx env generated_fields = function
       let compiled_field = {
         Misc_common.cfm_from_species = from ;
         Misc_common.cfm_method_name = name ;
-        Misc_common.cfm_method_scheme =
-          Types.trivial_scheme (Types.type_prop ()) ;
+        Misc_common.cfm_method_scheme = Env.MTK_logical lexpr ;
         Misc_common.cfm_used_species_parameter_tys =
           abstraction_info.Abstractions.ai_used_species_parameter_tys ;
         Misc_common.cfm_dependencies_from_parameters = all_deps_from_params ;
@@ -2053,6 +2114,27 @@ let make_carrier_mapping_using_lambda_lifts lst =
 
 
 
+let make_meths_type_kinds species_fields =
+  List.fold_right
+    (fun field accu ->
+      match field with
+       | Env.TypeInformation.SF_property (_, n, _, lexpr, _)
+       | Env.TypeInformation.SF_theorem (_, n, _, lexpr, _, _) ->
+           (n, (Env.MTK_logical lexpr)) :: accu
+       | Env.TypeInformation.SF_sig (_, n, sch)
+       | Env.TypeInformation.SF_let (_, n, _, sch, _, _, _) ->
+           (n, (Env.MTK_computational sch)) :: accu
+       | Env.TypeInformation.SF_let_rec l ->
+           List.fold_right
+             (fun (_, n, _, sch, _, _, _) accu' ->
+               (n, (Env.MTK_computational sch)) :: accu')
+             l accu)
+    species_fields
+    []
+;;
+
+
+
 (* ********************************************************************** *)
 (* Env.CoqGenEnv.t -> Env.TypeInformation.species_description ->          *)
 (*   Env.CoqGenEnv.t                                                      *)
@@ -2093,23 +2175,23 @@ let extend_env_for_species_def ~current_species env species_descr =
               environment. *)
            accu_env
        | Env.TypeInformation.SPAR_is ((_, param_name), _, param_methods, _) ->
-           let methods_names =
-             Dep_analysis.ordered_names_list_of_fields param_methods in
+           let methods_n_kinds = make_meths_type_kinds param_methods in
            (* A "IS" parameter is a collection. Hence it is fully instanciated
               and doesn't have anymore lifted extra parameters. Then the
               built [method_info] is trivially empty about
               [mi_dependencies_from_parameters] and [mi_abstracted_methods]. *)
            let bound_methods =
              List.map
-               (fun (n, _) -> {
+               (fun (n, tk) -> {
                  Env.mi_name = n ;
                  Env.mi_history = {
                    Env.fh_initial_apparition = current_species ;
                    Env.fh_inherited_along = [] } ;
+                 Env.mi_type_kind = tk ;
                  Env.mi_used_species_parameter_tys = [] ;
                  Env.mi_dependencies_from_parameters = [] ;
                  Env.mi_abstracted_methods = [] })
-               methods_names in
+               methods_n_kinds in
            (* Because species names are capitalized, we explicitely build a
               [Parsetree.Vuident] to wrap the species name string.
               Since we don't need any collection generator information, we
@@ -2474,9 +2556,11 @@ traité les methodes de nous dont on dépend... *)
           if field_memory.Misc_common.cfm_method_name =
              Parsetree.Vlident "rep" then
             (begin
+            let sch =
+              (match field_memory.Misc_common.cfm_method_scheme with
+               | Env.MTK_computational s -> s | _ -> assert false) in
              let (type_from_scheme, generalized_instanciated_vars) =
-               Types.specialize_n_show_instanciated_generalized_vars
-                 field_memory.Misc_common.cfm_method_scheme in
+               Types.specialize_n_show_instanciated_generalized_vars sch in
              (* Because "rep" is never polymorphic, its type must never
                 contain instanciated variables coming from the scheme. *)
              assert (generalized_instanciated_vars = []) ;
@@ -2696,6 +2780,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                     compiled_field_memory.Misc_common.cfm_method_name ;
                   Env.mi_history =
                     compiled_field_memory.Misc_common.cfm_from_species ;
+                  Env.mi_type_kind =
+                    compiled_field_memory.Misc_common.cfm_method_scheme ;
                   Env.mi_used_species_parameter_tys =
                     compiled_field_memory.Misc_common.
                       cfm_used_species_parameter_tys ;
@@ -2710,6 +2796,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                  (fun cfm ->
                    { Env.mi_name = cfm.Misc_common.cfm_method_name ;
                      Env.mi_history = cfm.Misc_common.cfm_from_species ;
+                     Env.mi_type_kind = cfm.Misc_common.cfm_method_scheme ;
                      Env.mi_used_species_parameter_tys =
                        cfm.Misc_common.cfm_used_species_parameter_tys ;
                      Env.mi_dependencies_from_parameters =
@@ -2722,6 +2809,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                      compiled_field_memory.Misc_common.cfm_method_name ;
                    Env.mi_history =
                      compiled_field_memory.Misc_common.cfm_from_species ;
+                   Env.mi_type_kind =
+                     compiled_field_memory.Misc_common.cfm_method_scheme ;
                    Env.mi_used_species_parameter_tys =
                      compiled_field_memory.Misc_common.
                        cfm_used_species_parameter_tys ;
@@ -3179,7 +3268,7 @@ let collection_compile env ~current_unit out_fmter collection_def
      application WITH THE RIGHT EFFECTIVE FUNCTIONS and IN THE  RIGHT ORDER ! *)
   (begin
   try
-    let (_, _, opt_params_info, _) =
+    let (_, implemented_species_methods, opt_params_info, _) =
       Env.CoqGenEnv.find_species
         ~loc: collection_def.Parsetree.ast_loc ~current_unit
         implemented_species_name env in
@@ -3223,7 +3312,11 @@ let collection_compile env ~current_unit out_fmter collection_def
     Format.fprintf out_fmter "@]" ;
     (* End of the pretty print box of the Module embedding the collection. *)
     Format.fprintf out_fmter "@]\nEnd %a.@\n@\n"
-      Sourcify.pp_vname collection_name
+      Sourcify.pp_vname collection_name ;
+    (* We now return the methods this collection has in order to put this
+       information in the environment. Teh collections has the same methods
+       thant the species it implements. *)
+    implemented_species_methods
   with Not_found ->
     (* Don't see why the species could not be present in the environment. The
        only case would be to make a collection from a collection since

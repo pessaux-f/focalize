@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.34 2008-09-11 23:14:00 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.35 2008-09-13 06:13:41 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -55,7 +55,7 @@ type environment_kind =
 
 
 
-(* For debugging purpose only.
+(* For debugging purpose only. *)
 let debug_print_dependencies_from_parameters l =
   List.iter
     (fun (species_param, methods) ->
@@ -71,7 +71,7 @@ let debug_print_dependencies_from_parameters l =
       Format.eprintf "@.")
     l
 ;;
-*)
+
 
 
 
@@ -1099,6 +1099,15 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                    used_species_parameter_tys
                    dependencies_from_params_in_type
                    dependencies_from_params_via_compl in
+
+Format.eprintf "Pour théorème : %a@." Sourcify.pp_vname name ;
+Format.eprintf "dependencies_from_params_in_bodies:@." ;
+debug_print_dependencies_from_parameters dependencies_from_params_in_bodies ;
+Format.eprintf "dependencies_from_params_in_type:@." ;
+debug_print_dependencies_from_parameters dependencies_from_params_in_type ;
+Format.eprintf "dependencies_from_params_via_compl:@." ;
+debug_print_dependencies_from_parameters dependencies_from_params_via_compl ;
+
                let abstr_info = {
                  ai_used_species_parameter_tys =
                    all_used_species_parameter_tys ;
