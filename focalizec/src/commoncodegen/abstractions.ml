@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.35 2008-09-13 06:13:41 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.36 2008-09-13 06:33:22 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -788,8 +788,6 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
 
 (** Implements rules [TYPE], [DEF-DEP], [UNIVERSE] and [PRM] of the
     definition 72 page 153 of Virgile Prevosto's Phd. *)
-(* [Unsure] est-ce que les "used_parameters_ty" ne devraient pas être aussi
-  "complétés" ? *)
 let complete_dependencies_from_params env ~current_unit ~current_species
     seen_abstractions species_parameters def_children universe type_kind =
   (* Rule [TYPE] possible only if a logical expression is provided. In effect,
