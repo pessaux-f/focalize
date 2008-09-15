@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.36 2008-09-13 06:33:22 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.37 2008-09-15 09:24:29 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -257,14 +257,14 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
     (try
       let my_node =
         List.find
-          (fun { Dep_analysis.nn_name = n } -> n = name)
+          (fun { DepGraphData.nn_name = n } -> n = name)
           dependency_graph_nodes in
       (* Only keep "decl-dependencies" . *)
       List.partition
         (function
-          | (_, Dep_analysis.DK_decl _) -> true
-          | (_, Dep_analysis.DK_def) -> false)
-        my_node.Dep_analysis.nn_children
+          | (_, DepGraphData.DK_decl _) -> true
+          | (_, DepGraphData.DK_def) -> false)
+        my_node.DepGraphData.nn_children
     with Not_found -> ([], [])  (* No children at all. *)) in
   (* Get the list of the methods from the species parameters the current
      method depends on. Do not [fold_left] to keep the extra parameters in the
@@ -328,10 +328,10 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
      types since this means that the "rep" is still kept abstract. *)
   List.iter
     (fun (node, _) ->
-      if node.Dep_analysis.nn_name <> (Parsetree.Vlident "rep") then
+      if node.DepGraphData.nn_name <> (Parsetree.Vlident "rep") then
         begin
         let st_set =
-          Types.get_species_types_in_type node.Dep_analysis.nn_type in
+          Types.get_species_types_in_type node.DepGraphData.nn_type in
         carriers_appearing_in_types :=
           Types.SpeciesCarrierTypeSet.union st_set !carriers_appearing_in_types
         end)
@@ -345,7 +345,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
   List.iter
     (fun (node, _) ->
       let st_set =
-        Types.get_species_types_in_type node.Dep_analysis.nn_type in
+        Types.get_species_types_in_type node.DepGraphData.nn_type in
       carriers_appearing_in_types :=
         Types.SpeciesCarrierTypeSet.union st_set !carriers_appearing_in_types)
     def_children ;
@@ -388,14 +388,14 @@ let compute_lambda_liftings_for_toplevel_theorem dependency_graph_nodes name =
     (try
       let my_node =
         List.find
-          (fun { Dep_analysis.nn_name = n } -> n = name)
+          (fun { DepGraphData.nn_name = n } -> n = name)
           dependency_graph_nodes in
       (* Only keep "decl-dependencies" . *)
       List.partition
         (function
-          | (_, Dep_analysis.DK_decl _) -> true
-          | (_, Dep_analysis.DK_def) -> false)
-        my_node.Dep_analysis.nn_children
+          | (_, DepGraphData.DK_decl _) -> true
+          | (_, DepGraphData.DK_def) -> false)
+        my_node.DepGraphData.nn_children
     with Not_found -> ([], [])  (* No children at all. *)) in
   (decl_children, def_children)
 ;;
@@ -833,10 +833,10 @@ let complete_dependencies_from_params env ~current_unit ~current_species
   let abstr_infos_from_all_def_children =
     List.fold_left
       (fun accu (def_child, _) ->
-        if def_child.Dep_analysis.nn_name = (Parsetree.Vlident "rep") then accu
+        if def_child.DepGraphData.nn_name = (Parsetree.Vlident "rep") then accu
         else
           (* Get the abstraction info of the child we def-depend on. *)
-          (find_field_abstraction_by_name def_child.Dep_analysis.nn_name
+          (find_field_abstraction_by_name def_child.DepGraphData.nn_name
              seen_abstractions) :: accu)
       []
       def_children in

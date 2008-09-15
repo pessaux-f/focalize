@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.52 2008-08-28 09:52:44 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.53 2008-09-15 09:24:29 pessaux Exp $ *)
 
 
 
@@ -350,13 +350,13 @@ try Check_file.main () with
            Handy.pp_reset_effects
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_vname
-           field_node.Dep_analysis.nn_name
+           field_node.DepGraphData.nn_name
            Handy.pp_reset_effects
            Handy.pp_set_bold Handy.pp_reset_effects ;
          Format.fprintf Format.err_formatter "%a.@]@."
            (Handy.pp_generic_separated_list
              " ->"
-             (fun ppf node -> Sourcify.pp_vname ppf node.Dep_analysis.nn_name))
+             (fun ppf node -> Sourcify.pp_vname ppf node.DepGraphData.nn_name))
            found_path
 (* ********************** *)
 (* External code generation. *)

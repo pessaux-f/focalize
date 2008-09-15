@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: visUniverse.mli,v 1.2 2008-03-04 13:53:03 pessaux Exp $ *)
+(* $Id: visUniverse.mli,v 1.3 2008-09-15 09:24:29 pessaux Exp $ *)
 
 type in_the_universe_because = IU_only_decl | IU_trans_def
 
@@ -34,6 +34,6 @@ module Universe :
   end
 
 val visible_universe :
-  with_def_deps : bool -> Dep_analysis.name_node list ->
-  (Dep_analysis.name_node * 'a) list ->
-  (Dep_analysis.name_node * 'b) list -> in_the_universe_because Universe.t
+  with_def_deps : bool -> DepGraphData.name_node list ->
+  (DepGraphData.name_node * 'a) list ->
+  (DepGraphData.name_node * 'b) list -> in_the_universe_because Universe.t

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: visUniverse.ml,v 1.4 2008-05-21 09:06:01 pessaux Exp $ *)
+(* $Id: visUniverse.ml,v 1.5 2008-09-15 09:24:29 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : Describes how a method arrives into a visible universe.
@@ -80,7 +80,7 @@ let visible_universe ~with_def_deps dep_graph x_decl_dependencies
   let universe = ref Universe.empty in
   List.iter
     (fun (n, _) ->
-      universe := Universe.add n.Dep_analysis.nn_name IU_only_decl !universe)
+      universe := Universe.add n.DepGraphData.nn_name IU_only_decl !universe)
     x_decl_dependencies ;
   (* We take def-dependencies and their transitive *)
   (* implied decl-dependencies only if requested.  *)
@@ -102,19 +102,19 @@ let visible_universe ~with_def_deps dep_graph x_decl_dependencies
     (* found. This way, one unique walk is needed.                 *)
     (* *********************************************************** *)
     let rec transitive_addition n =
-      if not (Parsetree_utils.VnameSet.mem n.Dep_analysis.nn_name !seen) then
+      if not (Parsetree_utils.VnameSet.mem n.DepGraphData.nn_name !seen) then
         (begin
         (* Mark it as seen. *)
-        seen := Parsetree_utils.VnameSet.add n.Dep_analysis.nn_name !seen ;
+        seen := Parsetree_utils.VnameSet.add n.DepGraphData.nn_name !seen ;
         (* Add the node that has def-dependency to the universe. If the  *)
         (* method already appeared with only the decl tag, then it gets  *)
         (* cleared and replaced with the tag meaning that this method    *)
         (* comes here thanks to a transitive def-dependency.             *)
-        universe := Universe.add n.Dep_analysis.nn_name IU_trans_def !universe ;
+        universe := Universe.add n.DepGraphData.nn_name IU_trans_def !universe ;
         (* Add the decl-dependencies of this node to the universe. *)
         List.iter
           (function
-            | (child_node, (Dep_analysis.DK_decl _)) ->
+            | (child_node, (DepGraphData.DK_decl _)) ->
                 (begin
                 (* If the method already appeared with the tag       *)
                 (* meaning that is comes here thanks to a transitive *)
@@ -129,22 +129,22 @@ let visible_universe ~with_def_deps dep_graph x_decl_dependencies
                 (* also no change to do.                             *)
                 if not
                     (Universe.mem
-                       child_node.Dep_analysis.nn_name !universe) then
+                       child_node.DepGraphData.nn_name !universe) then
                   universe :=
                     Universe.add
-                      child_node.Dep_analysis.nn_name IU_only_decl !universe
+                      child_node.DepGraphData.nn_name IU_only_decl !universe
                 end)
-            | (_, Dep_analysis.DK_def) -> ())
-          n.Dep_analysis.nn_children ;
+            | (_, DepGraphData.DK_def) -> ())
+          n.DepGraphData.nn_children ;
         (* Recurse on each def-pedendency child of the current node. *)
         List.iter
           (function
-            | (child_node, Dep_analysis.DK_def) ->
+            | (child_node, DepGraphData.DK_def) ->
                 (* Now recurse to walk deeper in the graph *)
                 (* on def-dependency children only.        *)
                 transitive_addition child_node
-            | (_, (Dep_analysis.DK_decl _)) -> ())
-          n.Dep_analysis.nn_children
+            | (_, (DepGraphData.DK_decl _)) -> ())
+          n.DepGraphData.nn_children
         end) in
     (* Now, start the transitive hunt for each *)
     (* initial def-dependencies nodes.         *)
@@ -167,13 +167,13 @@ let visible_universe ~with_def_deps dep_graph x_decl_dependencies
           let z_node =
             (try
               List.find
-                (fun node -> node.Dep_analysis.nn_name = z_name) dep_graph
+                (fun node -> node.DepGraphData.nn_name = z_name) dep_graph
             with Not_found -> assert false) in
           (* ... For each dependency of the node... *)
           List.iter
             (function
               | (child_node,
-                 (Dep_analysis.DK_decl Dep_analysis.DDK_from_type)) ->
+                 (DepGraphData.DK_decl DepGraphData.DDK_from_type)) ->
                   (* ... Only consider those tagged as coming             *)
                   (* from the "type" of the field having this mode.       *)
                   (* If the child is not already in universe, then add it *)
@@ -184,17 +184,17 @@ let visible_universe ~with_def_deps dep_graph x_decl_dependencies
                   (* Or it is inside with a [IU_trans_def] and this flag  *)
                   (* has a higher priority and must not be changed.       *)
                   if not
-                      (Universe.mem child_node.Dep_analysis.nn_name !universe)
+                      (Universe.mem child_node.DepGraphData.nn_name !universe)
                   then
                     (begin
                     universe :=
                       Universe.add
-                        child_node.Dep_analysis.nn_name IU_only_decl !universe ;
+                        child_node.DepGraphData.nn_name IU_only_decl !universe ;
                     (* Mark that we must continue the fixpoint. *)
                     continue := true ;
                     end)
               | (_, _) -> ())
-            z_node.Dep_analysis.nn_children)
+            z_node.DepGraphData.nn_children)
         !universe
     done
     end) ;

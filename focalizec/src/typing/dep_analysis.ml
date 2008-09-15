@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.48 2008-09-10 15:12:27 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.49 2008-09-15 09:24:29 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -729,55 +729,6 @@ let in_species_decl_n_def_dependencies_for_one_theo_property_name
 
 
 
-(* ***************************************************************** *)
-(** {b Descr} Describes for a "decl" dependency , the 2 cases of its
-    origine. A  "decl" dependency can come from the type or the body
-    of a method. In other words, this means wether it comes from the
-    proposition of a theorem/property or if it comes from the proof
-    of a theorem.
-    For a "let", the dependency is always considered as coming from
-    the "BODY".
-
-    {b Rem} : Exported outside this module.                          *)
-(* ***************************************************************** *)
-type decl_dependency_kind = DDK_from_type | DDK_from_body ;;
-
-
-
-(* ************************************************************** *)
-(** {b Descr} : Describes the kind of dependency between 2 nodes.
-    Can be either "def" or "decl" dependency. Note that "Let",
-     "Sig", and "Let_rec" methods can't have "decl" dependencies.
-
-    {b Rem} : Exported outside this module.                       *)
-(* ************************************************************** *)
-type dependency_kind =
-  | DK_decl of decl_dependency_kind
-  | DK_def
-;;
-
-
-
-(* ******************************************************************* *)
-(** {b Descr} : Strutrure of a node in a dependency graph representing
-    the fact that some names' bodies contain call to non-let-rec-bound
-    othernames (relation \lbag n \rbag in Virgile Prevosto's Phd,
-    section 3.5, definition 16, page 32.
-
-    {b Rem} : Exported outside this module.                            *)
-(* ******************************************************************* *)
-type name_node = {
-  (** Name of the node, i.e. one name of a species fields. *)
-  nn_name : Parsetree.vname ;
-  (** The type of the field wearing this name. *)
-  nn_type : Types.type_simple ;
-  (** Means that the current names depends of the children nodes. I.e. the
-      current name's body contains calls to the children names. *)
-  mutable nn_children : (name_node * dependency_kind) list
-} ;;
-
-
-
 (* ********************************************************** *)
 (** {b Descr} : Raised if a species appears to be ill-formed.
 
@@ -785,16 +736,17 @@ type name_node = {
 (* ********************************************************** *)
 exception Ill_formed_species of
   (Parsetree.qualified_vname *  (** Species considered as ill-formed. *)
-   name_node *          (** The field name that trigerred the ill-formation. *)
-   name_node list)   (** The undeclared recusion path discovered, proving that
-                         the species is ill-formed. *)
+   DepGraphData.name_node *     (** The field name that trigerred the
+                                    ill-formation. *)
+   DepGraphData.name_node list)   (** The undeclared recusion path discovered,
+                                      proving that the species is ill-formed. *)
 ;;
 
 
 
-(* ******************************************************************* *)
-(* name_node list ref -> (Parsetree.vname * Types.type_simple) ->      *)
-(*   name_node                                                         *)
+(* ****************************************************************** *)
+(* DepGraphData.name_node list ref ->                                 *)
+(*  (Parsetree.vname * Types.type_simple) -> DepGraphData.name_node   *)
 (** {b Descr} : Looks for a node labeled [name] in the list of nodes
     [tree_nodes]. If a node with this name is found, then we return
     it. Otherwise, a fresh node is created with [name] as name and no
@@ -802,12 +754,14 @@ exception Ill_formed_species of
     This is mostly a helper for the function
     [build_dependencies_graph_for_fields].
 
-    {b Rem} : Not exported outside this module.                        *)
-(* ******************************************************************* *)
+    {b Rem} : Not exported outside this module.                       *)
+(* ****************************************************************** *)
 let find_or_create tree_nodes (name, ty) =
-  try List.find (fun node -> node.nn_name = name) !tree_nodes
+  try List.find (fun node -> node.DepGraphData.nn_name = name) !tree_nodes
   with Not_found ->
-    let new_node = { nn_name = name ; nn_type = ty ; nn_children = [] } in
+    let new_node = {
+      DepGraphData.nn_name = name ;
+      DepGraphData.nn_type = ty ; DepGraphData.nn_children = [] } in
     tree_nodes := new_node :: !tree_nodes ;
     new_node
 ;;
@@ -816,7 +770,8 @@ let find_or_create tree_nodes (name, ty) =
 
 (* ***************************************************************** *)
 (* current_species: Parsetree.qualified_vname ->                     *)
-(*   Env.TypeInformation.species_field list -> name_node list        *)
+(*   Env.TypeInformation.species_field list ->                       *)
+(*     DepGraphData.name_node list                                   *)
 (** {b Descr} : Build the dependencies graph of the names present in
     the fields list [fields] of the species [~current_species].
     In such a graph, if an arrow exists from n1 to n2, then it means
@@ -826,7 +781,7 @@ let find_or_create tree_nodes (name, ty) =
 (* ***************************************************************** *)
 let build_dependencies_graph_for_fields ~current_species fields =
   (* The root hoot used to remind all the created nodes in the graph. *)
-  let tree_nodes = ref ([] : name_node list) in
+  let tree_nodes = ref ([] : DepGraphData.name_node list) in
 
   (* ********************************************************************* *)
   (** {b Descr} : Just make a local function dealing with one let binding.
@@ -847,11 +802,11 @@ let build_dependencies_graph_for_fields ~current_species fields =
       (* Now add an edge from the current name's node to the decl-dependencies
          node of "rep". In "Let/rec" methods, "decl" dependencies can only
          come from the type of the method. *)
-      let edge = (node, DK_decl DDK_from_type) in
-      n_node.nn_children <-
+      let edge = (node, DepGraphData.DK_decl DepGraphData.DDK_from_type) in
+      n_node.DepGraphData.nn_children <-
         Handy.list_cons_uniq_custom_eq
           (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-          edge n_node.nn_children
+          edge n_node.DepGraphData.nn_children
       end) ;
     (* Find the names decl-dependencies for the current name. *)
     let n_decl_deps_names =
@@ -864,15 +819,15 @@ let build_dependencies_graph_for_fields ~current_species fields =
           let node = find_or_create tree_nodes n in
           (* In "Let/rec" methods, "decl" dependencies can only come from the
              BODY of the method. *)
-          (node, (DK_decl DDK_from_body)) :: accu)
+          (node, (DepGraphData.DK_decl DepGraphData.DDK_from_body)) :: accu)
         n_decl_deps_names
         [] in
     (* Now add an edge from the current name's node to each of the
        decl-dependencies names' nodes. *)
-    n_node.nn_children <-
+    n_node.DepGraphData.nn_children <-
       Handy.list_concat_uniq_custom_eq
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-        n_deps_nodes n_node.nn_children ;
+        n_deps_nodes n_node.DepGraphData.nn_children ;
     (* Now, check if there is a def-dependency on "rep". *)
     if dep_on_rep.Env.TypeInformation.dor_def then
       (begin
@@ -882,11 +837,11 @@ let build_dependencies_graph_for_fields ~current_species fields =
           tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
       (* Now add an edge from the current name's node to the def-dependencies
          node of "rep". *)
-      let edge = (node, DK_def) in
-      n_node.nn_children <-
+      let edge = (node, DepGraphData.DK_def) in
+      n_node.DepGraphData.nn_children <-
         Handy.list_cons_uniq_custom_eq
           (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-          edge n_node.nn_children
+          edge n_node.DepGraphData.nn_children
       end)
     (* Note that in a "Let", there cannot be other def-dependencies than on
        the carrier. So, non need to check for other def-dependencies *) in
@@ -911,11 +866,11 @@ let build_dependencies_graph_for_fields ~current_species fields =
          node of "rep". Even in a theorem, a decl-dependency on the carrier
          can only come from the type (of course, one can't say in the body,
          i.e. in the proof, "by def Self" or "by property Self" !). *)
-      let edge = (node, DK_decl DDK_from_type) in
-      n_node.nn_children <-
+      let edge = (node, DepGraphData.DK_decl DepGraphData.DDK_from_type) in
+      n_node.DepGraphData.nn_children <-
         Handy.list_cons_uniq_custom_eq
           (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-          edge n_node.nn_children
+          edge n_node.DepGraphData.nn_children
       end) ;
     (* Find the names decl and defs dependencies for the current name. *)
     let (n_decl_deps_names_from_type,
@@ -928,36 +883,36 @@ let build_dependencies_graph_for_fields ~current_species fields =
       Parsetree_utils.SelfDepSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
-          (node, (DK_decl DDK_from_type)) :: accu)
+          (node, (DepGraphData.DK_decl DepGraphData.DDK_from_type)) :: accu)
         n_decl_deps_names_from_type
         [] in
     let n_decl_deps_nodes =
       Parsetree_utils.SelfDepSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
-          (node, (DK_decl DDK_from_body)) :: accu)
+          (node, (DepGraphData.DK_decl DepGraphData.DDK_from_body)) :: accu)
         n_decl_deps_names_from_body
         n_decl_deps_nodes in
     (* Now add an edge from the current name's node to each of the
        decl-dependencies names' nodes. *)
-    n_node.nn_children <-
+    n_node.DepGraphData.nn_children <-
       Handy.list_concat_uniq_custom_eq
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-        n_decl_deps_nodes n_node.nn_children ;
+        n_decl_deps_nodes n_node.DepGraphData.nn_children ;
     (* Now, find the def-dependencies nodes for these names. *)
     let n_def_deps_nodes =
       Parsetree_utils.SelfDepSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
-          (node, DK_def) :: accu)
+          (node, DepGraphData.DK_def) :: accu)
         n_def_deps_names
         [] in
     (* Now add an edge from the current name's node to each of the
        def-dependencies names' nodes. *)
-    n_node.nn_children <-
+    n_node.DepGraphData.nn_children <-
       Handy.list_concat_uniq_custom_eq
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-        n_def_deps_nodes n_node.nn_children ;
+        n_def_deps_nodes n_node.DepGraphData.nn_children ;
     (* Now, check if there is a def-dependency on "rep". *)
     if dep_on_rep.Env.TypeInformation.dor_def then
       (begin
@@ -967,11 +922,11 @@ let build_dependencies_graph_for_fields ~current_species fields =
           tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
       (* Now add an edge from the current name's node to the *)
       (* def-dependencies node of "rep".                     *)
-      let edge = (node, DK_def) in
-      n_node.nn_children <-
+      let edge = (node, DepGraphData.DK_def) in
+      n_node.DepGraphData.nn_children <-
         Handy.list_cons_uniq_custom_eq
           (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-          edge n_node.nn_children
+          edge n_node.DepGraphData.nn_children
       end) in
 
   (* *************** *)
@@ -979,11 +934,14 @@ let build_dependencies_graph_for_fields ~current_species fields =
   List.iter
     (function
       | Env.TypeInformation.SF_sig (_, n, sch) ->
-          if not (List.exists (fun node -> node.nn_name = n) !tree_nodes) then
+          if not
+              (List.exists
+                 (fun node -> node.DepGraphData.nn_name = n) !tree_nodes) then
             (begin
             let ty = Types.specialize sch in
             tree_nodes :=
-              { nn_name = n ; nn_type = ty ; nn_children = [] } :: !tree_nodes
+              { DepGraphData.nn_name = n ; DepGraphData.nn_type = ty ;
+                DepGraphData.nn_children = [] } :: !tree_nodes
             end)
       | Env.TypeInformation.SF_let (_, n, _, sch, b, deps_on_rep, _) ->
           let ty = Types.specialize sch in
@@ -1009,7 +967,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
 
 (* ************************************************************************ *)
 (* dirname: string -> current_species: Parsetree.qualified_vname) ->        *)
-(*   name_node list -> unit                                                 *)
+(*   DepGraphData.name_node list -> unit                                    *)
 (** {b Descr} : Prints the dependencies graph of a species in dotty format.
 
     {b Rem} : Exported outside this module.                                 *)
@@ -1036,21 +994,21 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
 \"decl dep (in body)\" -> \"decl dep (in body)\" [color=pink,fontsize=10];\n" ;
   (* Outputs all the nodes of the graph. *)
   List.iter
-    (fun { nn_name = n } ->
+    (fun { DepGraphData.nn_name = n } ->
       Printf.fprintf out_hd "\"%s\" [shape=box,fontsize=10];\n"
         (Parsetree_utils.name_of_vname n))
     tree_nodes ;
   (* Outputs all the edges between the nodes. *)
   List.iter
-    (fun { nn_name = n ; nn_children = children } ->
+    (fun { DepGraphData.nn_name = n ; DepGraphData.nn_children = children } ->
       List.iter
-        (fun ({ nn_name = child_name }, decl_kind) ->
+        (fun ({ DepGraphData.nn_name = child_name }, decl_kind) ->
           (* Just make a different style depending on the kind of dependency. *)
           let (style, color) =
             (match decl_kind with
-             | DK_decl DDK_from_type -> ("", "red")
-             | DK_decl DDK_from_body -> ("", "pink")
-             | DK_def -> ("style=dotted,", "blue")) in
+             | DepGraphData.DK_decl DepGraphData.DDK_from_type -> ("", "red")
+             | DepGraphData.DK_decl DepGraphData.DDK_from_body -> ("", "pink")
+             | DepGraphData.DK_def -> ("style=dotted,", "blue")) in
           Printf.fprintf out_hd
             "\"%s\" -> \"%s\" [%scolor=%s,fontsize=10];"
             (Parsetree_utils.name_of_vname n)
@@ -1064,14 +1022,15 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
 
 
 
-(* ********************************************************* *)
-(** {b Descr} : Module stuff to create maps of [name_node]s.
+(* ********************************************************************* *)
+(** {b Descr} : Module stuff to create maps of [DepGraphData.name_node]s.
 
-    {b Rem} : Not exported outside this module.              *)
-(* ********************************************************* *)
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
 module NameNodeMod = struct
-  type t = name_node
-  let compare nn1 nn2 = compare nn1.nn_name nn2.nn_name
+  type t = DepGraphData.name_node
+  let compare nn1 nn2 =
+    compare nn1.DepGraphData.nn_name nn2.DepGraphData.nn_name
 end
 ;;
 module NameNodeMap = Map.Make (NameNodeMod);;
@@ -1092,12 +1051,12 @@ let node_out_degree node =
   let seen = ref ([] : Parsetree.vname list) in
   List.iter
     (fun (n, _) ->
-      if not (List.mem n.nn_name !seen) then
+      if not (List.mem n.DepGraphData.nn_name !seen) then
         (begin
-        seen := n.nn_name :: !seen ;
+        seen := n.DepGraphData.nn_name :: !seen ;
         incr count
         end))
-    node.nn_children ;
+    node.DepGraphData.nn_children ;
   !count
 ;;
 
@@ -1158,14 +1117,15 @@ let compute_fields_reordering ~current_species fields =
     while true do
       let j = Queue.take c_queue in
       (* [j] can now be output. *)
-      revd_order_list := j.nn_name :: !revd_order_list ;
+      revd_order_list := j.DepGraphData.nn_name :: !revd_order_list ;
       (* Search all parents, i, of  j to decrement their out degree. *)
       NameNodeMap.iter
         (fun i i_out_degree ->
           (* Tests if [j] belongs to [i]'s children, ignoring the dependency
              kind. *)
           let is_i_parent_of_j =
-            List.exists (fun (child, _) -> child == j) i.nn_children in
+            List.exists
+              (fun (child, _) -> child == j) i.DepGraphData.nn_children in
           if is_i_parent_of_j then
             (begin
             (* The node [j] appears in [i]'s childrens, hence [i] is right a
@@ -1196,7 +1156,8 @@ let compute_fields_reordering ~current_species fields =
 
 
 (* ******************************************************************** *)
-(* name_node -> name_node -> name_node list                             *)
+(* DepGraphData.name_node -> DepGraphData.name_node ->                  *)
+(*   DepGraphData.name_node list                                        *)
 (** {b Descr} : Checks for a non trivial path from [start_node] to
     [start_node]. "Non-trivial" means that the path must at least be of
     length 1.
@@ -1215,7 +1176,7 @@ let compute_fields_reordering ~current_species fields =
 (* ******************************************************************** *)
 let is_reachable start_node end_node =
   (* List of already seen nodes. Will be extended during the search. *)
-  let seen = ref ([] : name_node list) in
+  let seen = ref ([] : DepGraphData.name_node list) in
 
   let rec find_on_children path = function
     | [] -> []   (* No path found. *)
@@ -1233,7 +1194,7 @@ let is_reachable start_node end_node =
        search, we will get the same answer forever (and loop forever of course
        by the way). *)
     if List.memq current_node !seen ||
-       current_node.nn_name = (Parsetree.Vlident "rep") then []
+       current_node.DepGraphData.nn_name = (Parsetree.Vlident "rep") then []
     else
       (begin
       (* We build the path in reverse order for sake of efficiency. *)
@@ -1244,14 +1205,15 @@ let is_reachable start_node end_node =
          if a node is acceptable in the children, then the path length is
          mandatorily non-null). *)
       if List.exists
-          (fun (n, _) -> n == end_node) current_node.nn_children then
+          (fun (n, _) -> n == end_node)
+          current_node.DepGraphData.nn_children then
         path'
       else
         (begin
         seen := current_node :: !seen ;
         (* The [end_node] was not found in the children, then search in the
            children. *)
-        find_on_children path' current_node.nn_children
+        find_on_children path' current_node.DepGraphData.nn_children
         end)
       end) in
   (* Start the search with an empty path history and put back the path in the
@@ -1295,9 +1257,11 @@ let left_triangle dep_graph_nodes x1 x2 fields =
                y1 and yn should never fail because the graph was created
                before. *)
             let y1_node =
-              List.find (fun node -> node.nn_name = y1) dep_graph_nodes in
+              List.find
+                (fun node -> node.DepGraphData.nn_name = y1) dep_graph_nodes in
             let yn_node =
-              List.find (fun node -> node.nn_name = yn) dep_graph_nodes in
+              List.find
+                (fun node -> node.DepGraphData.nn_name = yn) dep_graph_nodes in
             (* Because our graph edges link from yn to y1, we must invert the
                start/end nodes. *)
             match is_reachable yn_node y1_node with

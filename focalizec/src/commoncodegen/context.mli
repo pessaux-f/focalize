@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: context.mli,v 1.7 2008-06-03 15:40:36 pessaux Exp $ *)
+(* $Id: context.mli,v 1.8 2008-09-15 09:24:29 pessaux Exp $ *)
 
 
 
@@ -34,7 +34,7 @@ type species_compil_context = {
   (** The name of the current species. *)
   scc_current_species : Parsetree.qualified_species ;
   (** The nodes of the current species's dependency graph. *)
-  scc_dependency_graph_nodes : Dep_analysis.name_node list ;
+  scc_dependency_graph_nodes : DepGraphData.name_node list ;
   (** The list of the current species species parameters if we are in the
       scope of a species and if it has some parameters. We record for
       each parameter it's kind (i.e. "in" or "is"). For "is" parameters, the

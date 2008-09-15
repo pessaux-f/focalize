@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.145 2008-09-12 09:56:19 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.146 2008-09-15 09:24:29 pessaux Exp $ *)
 
 
 
@@ -3926,7 +3926,7 @@ type please_compile_me =
             "oldestly" inherited in head of the list. *)
         Env.TypeInformation.species_description *
         (** The depency graph of the species's methods. *)
-        (Dep_analysis.name_node list))
+        (DepGraphData.name_node list))
   | PCM_collection of
       ((** The collection expression. *)
        Parsetree.collection_def *
@@ -3936,7 +3936,7 @@ type please_compile_me =
            the collection name inside. *)
        Env.TypeInformation.species_description *
          (** The depency graph of the collection's methods. *)
-         (Dep_analysis.name_node list))
+         (DepGraphData.name_node list))
   | PCM_type of (Parsetree.vname * Env.TypeInformation.type_description)
   | PCM_let_def of (Parsetree.let_def * (Types.type_scheme list))
   | PCM_theorem of
