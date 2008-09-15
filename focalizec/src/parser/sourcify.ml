@@ -11,8 +11,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.53 2008-08-28 11:59:54 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.54 2008-09-15 08:26:36 weis Exp $ *)
 
+open Parsetree;;
 
 (* *********************************************************** *)
 (* Format.formatter -> Parsetree.vname -> unit                 *)
@@ -236,7 +237,11 @@ let expr_desc_fixitude = function
       | Parsetree.EI_method (None, vname) -> fixitude_of_vname vname
       | Parsetree.EI_method (Some _, _) -> Fixitude_applic
       end
-  | _ -> Fixitude_applic
+  | E_paren _ | E_external _ | E_tuple _ | E_record_with (_, _)
+  | E_record_access (_, _) | E_record _
+  | E_let (_, _) | E_if (_, _, _) | E_match (_, _)
+  | E_constr (_, _) | E_app (_, _)
+  | E_fun (_, _) | E_const _ | E_self -> Fixitude_applic
 ;;
 
 
