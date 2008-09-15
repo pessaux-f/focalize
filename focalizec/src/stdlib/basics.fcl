@@ -8,7 +8,10 @@ type int =
   external
   | caml -> {* int *}
   | coq -> {* Z *}
-  | "c" -> {* foc_int *}
+  | "c" -> {* int with
+              equality(int_equal) =
+                @inline int int_equal(int x, int y)
+                 { return (x == y); }@ *}
 ;;
 
 type unit =
@@ -18,7 +21,8 @@ type unit =
   | caml -> {* unit *}
   | coq -> {* coq_builtins.bi__unit *} 
      (* FoCaLize's Coq definition of builtin. *)
-  | "c" -> {* foc_unit *}
+  | "c" -> {* void* with
+              equality = @inline int unit_equal*}
 
 and () =
   | caml -> {* () *}

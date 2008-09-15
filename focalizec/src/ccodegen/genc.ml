@@ -6,6 +6,7 @@ open Env.TypeInformation
 open Format
 open Types
 open Cast
+
   
 let debug = ref true
 
@@ -217,42 +218,47 @@ let compile_type ctx (_, vn, desc) =
       todo "TK_abstract";
       (ctx, [])
 	
-  | TK_external (ee, eb) ->
-      begin
-	try
-	  let code = external_value ee in
-	  if String.contains code '*' then
-	    raise (Non_valid_type_identifier (code, '*', ee.ast_loc));
-	  (* Generating a warning if it is not a known type. *)
-	  if
-	    not
-	      (CGenEnv.mem_eq ctx code ||
-	      CGenEnv.is_known_type ctx code)
-	  then
-	    fprintf err_formatter "@[<hov 2>(Warning) %a :@;@[The type \"%s\" must be a record which first field defines the type's structural equality with this signature :@]@;@[int@ equal_%s(@[%s*,@;%s*@]);@]@]@."
-	      Location.pp_location desc.type_loc
-	      code code code code;
-	  (* Memorising the implicit type aliasing. *)
-	  let original = TypeId code in
-	  let alias = TypeId name in
-	  let ctx =
-	    if code <> name then
-	      CGenEnv.add_alias ctx alias original
-	    else ctx in
-	  let res = 
-	    if code = name then
-	      [Export (Comment (sprintf "useless@ alias@ for@ %s" name))]
-	    else
-	      [Export (Typedef (original, name))]
-	  in
-	  (* Now, the bindings. *)
-	  if eb.ast_desc <> [] then
-	    fold compile_external_binding (ctx, res) eb.ast_desc
-	  else
-	    (ctx, res)
-	with
-	  Not_found -> raise (C_def_missing (Some vn, desc.type_loc))
-      end
+  | TK_external (ee, _) ->
+      let code = external_value ee in
+      let (imported_type, type_infos) = Code_parser.parse desc.type_loc code in
+      eprintf "%s@." imported_type;
+      List.iter (fun (a, b) -> eprintf "(%s, %s)@." a b) type_infos;
+      (ctx, [])
+ (*      begin *)
+(* 	try *)
+(* 	  let code = external_value ee in *)
+(* 	  if String.contains code '*' then *)
+(* 	    raise (Non_valid_type_identifier (code, '*', ee.ast_loc)); *)
+(* 	  (\* Generating a warning if it is not a known type. *\) *)
+(* 	  if *)
+(* 	    not *)
+(* 	      (CGenEnv.mem_eq ctx code || *)
+(* 	      CGenEnv.is_known_type ctx code) *)
+(* 	  then *)
+(* 	    fprintf err_formatter "@[<hov 2>(Warning) %a :@;@[The type \"%s\" must be a record which first field defines the type's structural equality with this signature :@]@;@[int@ equal_%s(@[%s*,@;%s*@]);@]@]@." *)
+(* 	      Location.pp_location desc.type_loc *)
+(* 	      code code code code; *)
+(* 	  (\* Memorising the implicit type aliasing. *\) *)
+(* 	  let original = TypeId code in *)
+(* 	  let alias = TypeId name in *)
+(* 	  let ctx = *)
+(* 	    if code <> name then *)
+(* 	      CGenEnv.add_alias ctx alias original *)
+(* 	    else ctx in *)
+(* 	  let res =  *)
+(* 	    if code = name then *)
+(* 	      [Export (Comment (sprintf "useless@ alias@ for@ %s" name))] *)
+(* 	    else *)
+(* 	      [Export (Typedef (original, name))] *)
+(* 	  in *)
+(* 	  (\* Now, the bindings. *\) *)
+(* 	  if eb.ast_desc <> [] then *)
+(* 	    fold compile_external_binding (ctx, res) eb.ast_desc *)
+(* 	  else *)
+(* 	    (ctx, res) *)
+(* 	with *)
+(* 	  Not_found -> raise (C_def_missing (Some vn, desc.type_loc)) *)
+(*       end *)
 	
   | TK_variant l ->
       let constr_names = ref [] in

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.49.2.6 2008-08-14 08:25:37 blond Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.49.2.7 2008-09-15 11:42:41 blond Exp $ *)
 
 
 
@@ -425,6 +425,11 @@ try Check_file.main () with
            Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
 (* ********************** *)
 (* C translation.         *)
+     | Genc.Code_parser.Parse_error (msg, loc) ->
+	 Format.eprintf "@[<hov 2>(Error) %a :@;@[%s@]@]@."
+	   Location.pp_location loc
+	   msg
+
      | Genc.Non_valid_type_identifier (str, c, loc) ->
 	 Format.fprintf Format.err_formatter
 	   "@[<hov 2>(Error) %a :@;@[The@ C@ code@ chunk@ \"%s\"@ contains@ the@ character@ \'%c\'@ which@ is@ not@ usable@ in@ this@ case.@ Please@ use@ an@ alias@ to@ avoid@ special@ symbol@ in@ C@ type@ importation.@]@]@."
