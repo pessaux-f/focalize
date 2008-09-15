@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.40 2008-09-05 13:11:17 weis Exp $ *)
+(* $Id: lexer.mll,v 1.41 2008-09-15 08:27:14 weis Exp $ *)
 
 {
 open Lexing;;
@@ -410,8 +410,11 @@ let string_of_lex_error = function
 
 }
 
-let newline = '\010'
+let newline = '\n' (* ASCII 010 *)
+(* ASCII 32, ASCII 9, ASCII 12 is CTRL-L *)
 let blank = [ ' ' '\009' '\012' ]
+(* Any number of space and tabs. *)
+let whites = [ ' ' '\t' ]*
 
 (** {3 Numbers} *)
 
@@ -667,7 +670,7 @@ rule token = parse
     { uniline_comment lexbuf;
       token lexbuf }
 
-  | "#" [' ' '\t']* (['0'-'9']+ as num) [' ' '\t']*
+  | "#" whites (['0'-'9']+ as num) whites
         ("\"" ([^ '\010' '\013' '"' ] * as name) "\"")?
         [^ '\010' '\013'] * newline
     { update_loc lexbuf name (int_of_string num) true 0;
@@ -707,7 +710,7 @@ rule token = parse
 and delimited_ident = parse
   | "''"
     { () }
-  | '\\' newline ([' ' '\t'] * as space)
+  | '\\' newline (whites as space)
     { update_loc lexbuf None 1 false (String.length space);
       delimited_ident lexbuf }
   | '\\' ['(' '-' '\\' '`' '\'' '"' 'n' 't' 'b' 'r' ' ' '*' ')']
@@ -753,14 +756,17 @@ and delimited_ident = parse
       delimited_ident lexbuf }
 
 and uniline_comment = parse
-  | newline
-    { update_loc lexbuf None 1 false 0; }
   | ( "(*" | "*)" )
     { raise
         (Error
           (Comment_in_uniline_comment,
            lexbuf.lex_start_p,
            lexbuf.lex_curr_p)) }
+  | '\\' newline whites
+    { update_loc lexbuf None 1 false 0;
+      uniline_comment lexbuf }
+  | newline
+    { update_loc lexbuf None 1 false 0; }
   | eof
     { raise
         (Error
@@ -781,17 +787,20 @@ and comment = parse
       | [ _ ] -> comment_start_pos := [];
       | _ :: l -> comment_start_pos := l;
                   comment lexbuf; }
+  | '\\' newline whites
+    { update_loc lexbuf None 1 false 0;
+      comment lexbuf }
+  | newline
+    { update_loc lexbuf None 1 false 0;
+      comment lexbuf }
   | eof
     { match !comment_start_pos with
       | [] -> assert false
       | (start_pos, end_pos) :: _ ->
         comment_start_pos := [];
         raise (Error (Unterminated_comment, start_pos, end_pos)) }
-  | "--" [^ '\010' '\013'] * newline
-    { update_loc lexbuf None 1 false 0;
-      comment lexbuf }
-  | newline
-    { update_loc lexbuf None 1 false 0;
+  | "--"
+    { uniline_comment lexbuf;
       comment lexbuf }
   | _
     { comment lexbuf }
@@ -799,7 +808,7 @@ and comment = parse
 and string = parse
   | '"'
     { () }
-  | '\\' newline ([' ' '\t'] * as space)
+  | '\\' newline (whites as space)
     { update_loc lexbuf None 1 false (String.length space);
       string lexbuf }
   | '\\' ['(' '-' '\\' '`' '\'' '"' 'n' 't' 'b' 'r' ' ' '*' ')']
@@ -852,6 +861,16 @@ and documentation = parse
       | Some (start_pos, end_pos) ->
         raise (Error (Unterminated_documentation, start_pos, end_pos))
       | _ -> assert false }
+  | '\\' newline (whites as space)
+    { for i = 0 to String.length space do
+        store_documentation_char (Lexing.lexeme_char lexbuf i);
+      done;
+      update_loc lexbuf None 1 false 0;
+      documentation lexbuf }
+  | newline
+    { store_documentation_char (Lexing.lexeme_char lexbuf 0);
+      update_loc lexbuf None 1 false 0;
+      documentation lexbuf }
   | _
     { store_documentation_char (Lexing.lexeme_char lexbuf 0);
       documentation lexbuf }
@@ -864,6 +883,16 @@ and external_code = parse
       | Some (start_pos, end_pos) ->
         raise (Error (Unterminated_external_code, start_pos, end_pos))
       | _ -> assert false }
+  | '\\' newline (whites as space)
+    { for i = 0 to String.length space do
+        store_external_code_char (Lexing.lexeme_char lexbuf i);
+      done;
+      update_loc lexbuf None 1 false 0;
+      external_code lexbuf }
+  | newline
+    { store_external_code_char (Lexing.lexeme_char lexbuf 0);
+      update_loc lexbuf None 1 false 0;
+      external_code lexbuf }
   | _
     { store_external_code_char (Lexing.lexeme_char lexbuf 0);
       external_code lexbuf }
