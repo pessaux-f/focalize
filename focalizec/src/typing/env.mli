@@ -73,7 +73,8 @@ module TypeInformation :
            Types.species_collection_kind)
       | SPAR_is of
           (Types.type_collection * Types.species_collection_kind *
-             (species_field list) * Parsetree_utils.simple_species_expr)
+           (species_field list) * Parsetree_utils.simple_species_expr *
+           (DepGraphData.name_node list))
 
     and species_field =
       | SF_sig of sig_field_info
@@ -86,7 +87,8 @@ module TypeInformation :
       spe_kind : Types.species_collection_kind ;
       spe_is_closed : bool ;
       spe_sig_params : species_param list ;
-      spe_sig_methods : species_field list
+      spe_sig_methods : species_field list ;
+      spe_dep_graph : DepGraphData.name_node list
     }
     type constructor_arity = CA_zero | CA_one
     type constructor_description = {
@@ -115,6 +117,7 @@ module TypeInformation :
     }
 
   val pp_species_description : Format.formatter -> species_description -> unit
+  val vname_of_species_param : species_param -> Parsetree.vname
   end
 
 
@@ -126,13 +129,17 @@ type method_type_kind =
   | MTK_computational of Types.type_scheme
   | MTK_logical of Parsetree.logical_expr
 
+type ordered_methods_from_params =
+  | ODFP_methods_list of
+      (Parsetree.vname * Parsetree_utils.dependency_elem_type_kind) list
+
 type generic_code_gen_method_info = {
   mi_name : Parsetree.vname ;
   mi_history : from_history ;
   mi_type_kind : method_type_kind ;
   mi_used_species_parameter_tys : Parsetree.vname list ;
   mi_dependencies_from_parameters :
-    (TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list ;
+    (TypeInformation.species_param * ordered_methods_from_params) list ;
   mi_abstracted_methods : Parsetree.vname list
   }
 
@@ -142,7 +149,7 @@ module MlGenInformation :
       cgi_implemented_species_params_names :
         (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
       cgi_generator_parameters :
-        (Parsetree.vname * Parsetree_utils.ParamDepSet.t) list
+        (Parsetree.vname * ordered_methods_from_params) list
     }
 
     type method_info = generic_code_gen_method_info
@@ -163,9 +170,9 @@ module CoqGenInformation :
   type collection_generator_parameters = {
     cgp_abstr_param_carriers_for_record : Parsetree.vname list ;
     cgp_abstr_param_methods_for_record :
-      (Parsetree.vname * Parsetree_utils.ParamDepSet.t) list ;
+      (Parsetree.vname * ordered_methods_from_params) list ;
     cgp_abstr_param_methods_for_coll_gen :
-      (Parsetree.vname * Parsetree_utils.ParamDepSet.t) list
+      (Parsetree.vname * ordered_methods_from_params) list
     }
 
     type collection_generator_info = {

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.ml,v 1.12 2008-09-13 06:13:41 pessaux Exp $ *)
+(* $Id: misc_common.ml,v 1.13 2008-09-16 14:27:42 pessaux Exp $ *)
 
 
 
@@ -50,7 +50,7 @@ type compiled_field_memory = {
       ALL the dependencies found via definition 72 p 153 in Virgile Prevosto's
       PhD. *)
   cfm_dependencies_from_parameters :
-    (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list ;
+    (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
   (** The positional list of method names appearing in the minimal Coq typing
       environment. *)
   cfm_coq_min_typ_env_names : Parsetree.vname list
@@ -139,7 +139,7 @@ let find_entity_params_with_position params =
         let accu' =
           (match h with
            | Env.TypeInformation.SPAR_in (n, _, _) -> (n, !cnt) :: accu
-           | Env.TypeInformation.SPAR_is ((_, _), _, _, _) -> accu) in
+           | Env.TypeInformation.SPAR_is ((_, _), _, _, _, _) -> accu) in
         incr cnt ;  (* Always pdate the position for next parameter. *)
         rec_find accu' q in
   (* Now really do the job. *)
@@ -491,7 +491,7 @@ let follow_instanciations_for_is_param ctx env original_param_index
                       (function
                         | Env.TypeInformation.SPAR_in (_, _, _) -> false
                         | Env.TypeInformation.SPAR_is
-                            ((formal_mod, formal_name), _, _, _) ->
+                            ((formal_mod, formal_name), _, _, _, _) ->
                               (effective_mod = formal_mod) &&
                               (effective_name_as_string = formal_name))
                       curr_level_species_params in
@@ -700,7 +700,7 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
       let species_param_name =
         match species_param with
          | Env.TypeInformation.SPAR_in (n, _, _) -> n
-         | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
+         | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
              Parsetree.Vuident n in
       (* Each abstracted method will be named like "_p_", followed by the
          species parameter name, followed by "_", followed by the method's

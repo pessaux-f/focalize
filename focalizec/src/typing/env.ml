@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.110 2008-09-13 06:13:41 pessaux Exp $ *)
+(* $Id: env.ml,v 1.111 2008-09-16 14:27:42 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -438,7 +438,10 @@ module TypeInformation = struct
              expression is kept because Coq code generation need to know it
              in order to make the type expression annotation the parameter
              in the hosting species record type. *)
-          Parsetree_utils.simple_species_expr)
+          Parsetree_utils.simple_species_expr *
+          (** The dependency graph of the methods of the species we are a
+              "IS" parameter. *)
+          (DepGraphData.name_node list))
 
 
 
@@ -480,7 +483,9 @@ module TypeInformation = struct
          generators must be created. *)
     spe_sig_params : species_param list ;   (** Species parameters. *)
     (** Method's name, type and body if defined. *)
-    spe_sig_methods : species_field list
+    spe_sig_methods : species_field list ;
+    (** The dependency graph of the methods of the species. *)
+    spe_dep_graph : DepGraphData.name_node list
     }
 
 
@@ -605,7 +610,7 @@ module TypeInformation = struct
           (match param with
            | SPAR_in (a, _, _) ->
                Format.fprintf local_ppf "%a in ..." Sourcify.pp_vname a
-           | SPAR_is ((modname, param_name), _, _, sp_expr) ->
+           | SPAR_is ((modname, param_name), _, _, sp_expr, _) ->
                Format.fprintf local_ppf "%s.%s is %a" modname param_name
                  Sourcify.pp_simple_species_expr sp_expr) ;
           if rem <> [] then
@@ -681,6 +686,13 @@ module TypeInformation = struct
     Format.fprintf ppf "%a =@\n%aend"
       pp_species_param sp_desc.spe_sig_params
       pp_species_methods sp_desc.spe_sig_methods
+
+
+
+  let vname_of_species_param = function
+    | SPAR_in (n, _, _) -> n
+    | SPAR_is ((_, n), _, _, _, _) -> Parsetree.Vuident n
+
 end
 ;;
 
@@ -713,6 +725,21 @@ type method_type_kind =
 
 
 
+(* ********************************************************************** *)
+(** {b Descr} This type is defined just in order to ensure that functions
+    requiring "dependencies on parameters" argument ordered according to
+    their dependency graph will really receive one and will not use an
+    unsorted list.
+
+    {b Rem} : Exported outside this module.                               *)
+(* ********************************************************************** *)
+type ordered_methods_from_params =
+  | ODFP_methods_list of
+      (Parsetree.vname * Parsetree_utils.dependency_elem_type_kind) list
+;;
+
+
+
 (* ************************************************************************ *)
 (** {b Descr} : Common for OCaml and Coq code generation environments. This
     represent various information about the methods, their abstraction,
@@ -733,7 +760,7 @@ type generic_code_gen_method_info = {
          abstracted by lambda-lifting. *)
      TypeInformation.species_param *
      (* The set of methods of this parameter on which we have dependencies. *)
-     Parsetree_utils.ParamDepSet.t) list ;
+     ordered_methods_from_params) list ;
   mi_abstracted_methods : Parsetree.vname list   (** The positional list
       of methods from ourselves abstracted by lambda-lifting. *)
 } ;;
@@ -755,7 +782,7 @@ module MlGenInformation = struct
         we have the information about this order given in
         [species_binding_info]). *)
     cgi_generator_parameters :
-      (Parsetree.vname * Parsetree_utils.ParamDepSet.t) list
+      (Parsetree.vname * ordered_methods_from_params) list
   }
 
   type method_info = generic_code_gen_method_info
@@ -814,11 +841,11 @@ module CoqGenInformation = struct
     (* The list of species parameters with their methods the record type
        depends on (hence was abstracted with). *)
     cgp_abstr_param_methods_for_record :
-      (Parsetree.vname * Parsetree_utils.ParamDepSet.t) list ;
+      (Parsetree.vname * ordered_methods_from_params) list ;
     (* The list of species parameters with their methods the collection
        generator depends on (hence was abstracted with). *)
     cgp_abstr_param_methods_for_coll_gen :
-      (Parsetree.vname * Parsetree_utils.ParamDepSet.t) list
+      (Parsetree.vname * ordered_methods_from_params) list
     }
 
   type collection_generator_info = {

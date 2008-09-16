@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.mli,v 1.16 2008-09-15 09:24:29 pessaux Exp $ *)
+(* $Id: dep_analysis.mli,v 1.17 2008-09-16 14:27:42 pessaux Exp $ *)
 
 
 
@@ -45,3 +45,7 @@ val build_dependencies_graph_for_fields :
 val dependencies_graph_to_dotty :
   dirname: string -> current_species: Parsetree.qualified_species ->
     DepGraphData.name_node list -> unit
+
+val order_species_params_methods :
+  (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list ->
+    (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list

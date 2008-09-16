@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.81 2008-09-13 06:13:41 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.82 2008-09-16 14:27:42 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -41,7 +41,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
   let cnt = ref 0 in
   List.map
     (function
-      | Env.TypeInformation.SPAR_is ((_, n_as_string), _, _, _) ->
+      | Env.TypeInformation.SPAR_is ((_, n_as_string), _, _, _, _) ->
           (* Build the name of the type variable that will represent this
              parameter's carrier type seen from OCaml. Just lowerize the
              parameter name because collection names are always syntactically
@@ -347,11 +347,7 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
 
     {b Return} :
       - The list of methods names from ourselves the current method
-        depends on and the list of methods from species parameters the
-        current method depends on. This last list can be different from
-        the initially received argument [dependencies_from_params] since
-        some dependencies may come from fields that are not relevant for
-        OCaml (properties, theorems).
+        depends.
 
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
@@ -382,13 +378,10 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
     (* First, abstract according to the species's parameters the current
        method depends on. *)
     List.iter
-      (fun (species_param, meths_from_param) ->
+      (fun (species_param, (Env.ODFP_methods_list meths_from_param)) ->
         (* Recover the species parameter's name. *)
         let species_param_name =
-          match species_param with
-           | Env.TypeInformation.SPAR_in (n, _, _) -> n
-           | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
-               Parsetree.Vuident n in
+          Env.TypeInformation.vname_of_species_param species_param in
         (* Each abstracted method will be named like "_p_", followed by the
            species parameter name, followed by "_", followed by the method's
            name.
@@ -396,7 +389,7 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
            "IS". *)
         let prefix =
           "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
-        Parsetree_utils.ParamDepSet.iter
+        List.iter
           (fun (meth, _) ->
           (* Don't print the type to prevent being too verbose. *)
             Format.fprintf out_fmter "@ %s%a"
@@ -476,9 +469,7 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
     Base_exprs_ml_generation.generate_expr expr_ctx ~local_idents: [] env body ;
     (* Done... Then, final carriage return. *)
     Format.fprintf out_fmter "@]@\n" ;
-    (* Since the method is not inherited, the effective dependencies on species
-       parameters are really those passed as argument. *)
-    (abstracted_methods, dependencies_from_params)
+    abstracted_methods
     end)
   else
     (begin
@@ -496,10 +487,7 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
       find_inherited_method_generator_abstractions
         ~current_unit: ctx.Context.scc_current_unit
         from.Env.fh_initial_apparition name env in
-    (* We always keep the new dependencies on species parameters we computed.
-       The old ones, those recovered in the inherited stuff are only valid in
-       the scope of the inherited species. *)
-    (abstracted_methods, dependencies_from_params)
+    abstracted_methods
     end)
 ;;
 
@@ -556,10 +544,13 @@ let generate_methods ctx env field =
                      ai_dependencies_from_params_via_type
                    abstraction_info.Abstractions.
                      ai_dependencies_from_params_via_completion) in
-            let (coq_min_typ_env_names, effective_deps_from_params) =
+            let sorted_deps_from_params =
+              Dep_analysis.order_species_params_methods all_deps_from_params in
+            let coq_min_typ_env_names =
               generate_one_field_binding
                 ctx env abstraction_info.Abstractions.ai_min_coq_env
-                ~let_connect: Misc_common.LC_first_non_rec all_deps_from_params
+                ~let_connect: Misc_common.LC_first_non_rec
+                sorted_deps_from_params
                 (from, name, params, (Some scheme), body_expr) in
             (* Now, build the [compiled_field_memory], even if the method was
                not really generated because it was inherited. *)
@@ -570,7 +561,7 @@ let generate_methods ctx env field =
               (* Never used for OCaml. *)
               Misc_common.cfm_used_species_parameter_tys = [] ;
               Misc_common.cfm_dependencies_from_parameters =
-                effective_deps_from_params ;
+                sorted_deps_from_params ;
               Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
             Some (Misc_common.CSF_let compiled_field)
        end)
@@ -609,12 +600,15 @@ let generate_methods ctx env field =
                           ai_dependencies_from_params_via_type
                         first_ai.Abstractions.
                           ai_dependencies_from_params_via_completion) in
+                 let sorted_deps_from_params =
+                   Dep_analysis.order_species_params_methods
+                     all_deps_from_params in
                  (* Now, generate the first method, introduced by "let rec". *)
-                 let (first_coq_min_typ_env_names,
-                      first_effective_deps_from_params) =
+                 let first_coq_min_typ_env_names =
                    generate_one_field_binding
                      ctx' env first_ai.Abstractions.ai_min_coq_env
-                     ~let_connect: Misc_common.LC_first_rec all_deps_from_params
+                     ~let_connect: Misc_common.LC_first_rec
+                     sorted_deps_from_params
                      (from, name, params, (Some scheme), body_expr) in
                  let first_compiled = {
                    Misc_common.cfm_from_species = from ;
@@ -624,7 +618,7 @@ let generate_methods ctx env field =
                    (* Never used for OCaml. *)
                    Misc_common.cfm_used_species_parameter_tys = [] ;
                    Misc_common.cfm_dependencies_from_parameters =
-                     first_effective_deps_from_params ;
+                     sorted_deps_from_params ;
                    Misc_common.cfm_coq_min_typ_env_names =
                      first_coq_min_typ_env_names } in
                  (* Finally, generate the remaining  methods, introduced by
@@ -648,11 +642,14 @@ let generate_methods ctx env field =
                                 ai_dependencies_from_params_via_type
                               ai.Abstractions.
                                 ai_dependencies_from_params_via_completion) in
-                       let (coq_min_typ_env_names, effective_deps_from_params) =
+                       let sorted_deps_from_params =
+                         Dep_analysis.order_species_params_methods
+                           all_deps_from_params in
+                       let coq_min_typ_env_names =
                          generate_one_field_binding
                            ctx' env ai.Abstractions.ai_min_coq_env
                            ~let_connect: Misc_common.LC_following
-                           all_deps_from_params
+                           sorted_deps_from_params
                            (from, name, params, (Some scheme), body_e) in
                        { Misc_common.cfm_from_species = from ;
                          Misc_common.cfm_method_name = name ;
@@ -661,7 +658,7 @@ let generate_methods ctx env field =
                          (* Never used for OCaml. *)
                          Misc_common.cfm_used_species_parameter_tys = [] ;
                          Misc_common.cfm_dependencies_from_parameters =
-                           effective_deps_from_params ;
+                           sorted_deps_from_params ;
                          Misc_common.cfm_coq_min_typ_env_names =
                            coq_min_typ_env_names })
                      q in
@@ -778,15 +775,12 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
     Format.eprintf "Method '%a' has the following dependencies on parameters:@."
       Sourcify.pp_vname field_memory.Misc_common.cfm_method_name ;
     List.iter
-      (fun (species_param, meths_from_param) ->
+      (fun (species_param, (Env.ODFP_methods_list meths_from_param)) ->
         let species_param_name =
-          match species_param with
-           | Env.TypeInformation.SPAR_in (n, _, _) -> n
-           | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
-               Parsetree.Vuident n in
+          Env.TypeInformation.vname_of_species_param species_param in
         Format.eprintf "\t From parameter '%a', dependencies on methods: "
           Sourcify.pp_vname species_param_name;
-        Parsetree_utils.ParamDepSet.iter
+        List.iter
           (fun (meth, _) -> Format.eprintf "%a " Sourcify.pp_vname meth)
           meths_from_param ;
         Format.eprintf "@.")
@@ -794,7 +788,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
     end) ;
   (* For each species parameter, we must trace by what it was instanciated. *)
   List.iter
-    (fun (species_param, meths_from_param) ->
+    (fun (species_param, (Env.ODFP_methods_list meths_from_param)) ->
       (* Find the index of the parameter in the species's signature from where
          the method was REALLY defined (not the one where it is inherited). *)
       let original_param_index =
@@ -805,8 +799,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
            (* By construction, in dependencies of "in" parameter, the list of
               methods is always 1-length at most and contains directly the
               name of the parameter itself if it is really used. *)
-           let number_meth =
-             Parsetree_utils.ParamDepSet.cardinal meths_from_param in
+           let number_meth = List.length meths_from_param in
            assert (number_meth <= 1) ;
            if number_meth = 1 then
              (begin
@@ -839,7 +832,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
                reduced_ctx ~local_idents: [] env instancied_expr ;
              Format.fprintf out_fmter ")@]"
              end)
-       | Env.TypeInformation.SPAR_is ((_, _), _, _, _) ->
+       | Env.TypeInformation.SPAR_is ((_, _), _, _, _, _) ->
            (begin
            (* Instanciation process of "IS" parameter. We start processing from
               the oldest species where the currently compiled method appeared,
@@ -859,7 +852,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
                    of its parents. We must search in its inheritance to
                    determine exactly in which species each method is REALLY
                    defined (not only inherited). *)
-                Parsetree_utils.ParamDepSet.iter
+                List.iter
                   (fun (meth, _) ->
                     let (real_spec_mod, real_spec_name) =
                       Misc_common.
@@ -886,7 +879,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
                   else capitalized_coll_mod ^ "." ^ coll_name ^
                     ".effective_collection." ^ capitalized_coll_mod ^ "." ^
                     coll_name ^ "." in
-                Parsetree_utils.ParamDepSet.iter
+                List.iter
                   (fun (meth, _) ->
                     (* Don't print the type to prevent being too verbose. *)
                     Format.fprintf out_fmter "@ %s%a"
@@ -897,12 +890,12 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
                   let species_param_name =
                     match prm with
                      | Env.TypeInformation.SPAR_in (_, _, _) -> assert false
-                     | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
+                     | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
                          Parsetree.Vuident n in
                   let prefix =
                     "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
                     "_" in
-                  Parsetree_utils.ParamDepSet.iter
+                  List.iter
                     (fun (meth, _) ->
                       (* Don't print the type to prevent being too verbose. *)
                       Format.fprintf out_fmter "@ %s%a"
@@ -938,8 +931,7 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
   (* Let's create an assoc list mapping for each species paramater name the
      set of methods names from it that needed to be lambda-lifted, hence that
      will lead to parameters of the collection generator. *)
-  let species_param_names_and_methods =
-    ref ([] : (Parsetree.vname * Parsetree_utils.ParamDepSet.t ref) list) in
+  let species_params_and_methods = ref [] in
   (* ************************************************************************ *)
   (** {b Descr} :  Local function to process only one [compiled_field_memory].
          Handy to factorize the code in both the cases of [CSF_let] and
@@ -951,28 +943,27 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
   (* ************************************************************************ *)
   let rec process_one_field_memory field_memory =
     List.iter
-      (fun (spe_param, meths_set) ->
-        (* Recover the species parameter's name. *)
+      (fun (spe_param, (Env.ODFP_methods_list meths_set)) ->
         let spe_param_name =
-          match spe_param with
-           | Env.TypeInformation.SPAR_in (n, _, _) -> n
-           | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
-               Parsetree.Vuident n in
+          Env.TypeInformation.vname_of_species_param spe_param in
         (* Get or create for this species parameter name, the bucket recording
            all the methods someone depends on.
            We don't care here about whether the species parameters is "IN" or
            "IS". *)
         let spe_param_bucket =
-          (try List.assoc spe_param_name !species_param_names_and_methods
+          (try
+            Handy.list_assoc_custom_eq
+              (fun sp n ->
+                (Env.TypeInformation.vname_of_species_param sp) = n)
+              spe_param_name !species_params_and_methods
           with Not_found ->
-            let bucket = ref Parsetree_utils.ParamDepSet.empty in
-            species_param_names_and_methods :=
-              (spe_param_name, bucket) :: !species_param_names_and_methods ;
+            let bucket = ref [] in
+            species_params_and_methods :=
+              (spe_param, bucket) :: !species_params_and_methods ;
             bucket) in
         (* And now, union the current methods we depend on with the already
            previously recorded. *)
-        spe_param_bucket :=
-          Parsetree_utils.ParamDepSet.union meths_set !spe_param_bucket)
+        spe_param_bucket := meths_set @ !spe_param_bucket)
       field_memory.Misc_common.cfm_dependencies_from_parameters in
 
   (* ********************************************************** *)
@@ -986,28 +977,40 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
           process_one_field_memory field_memory
       | Misc_common.CSF_let_rec l -> List.iter process_one_field_memory l)
     compiled_species_fields ;
+  (* Remove the inner ref and transform into a set. *)
+  let species_params_and_methods_no_ref =
+    List.map
+      (fun (a, b) -> (a, (Parsetree_utils.list_to_param_dep_set !b)))
+      !species_params_and_methods in
+  (* We now order the methods of the parameters in accordance with their
+     dependencies. *)
+  let ordered_species_params_names_and_methods =
+    Dep_analysis.order_species_params_methods
+      species_params_and_methods_no_ref in
   (* Now we get the assoc list complete, we can dump the parameters of the
      collection generator. To make them correct with their usage inside the
      local functions of the collection generator, we must give them a name
      shaped in the same way, i.e:
      "_p_" + species parameter name + "_" + called method name. *)
   List.iter
-    (fun (species_param_name, meths_set) ->
+    (fun (species_param, (Env.ODFP_methods_list meths_set)) ->
+      let species_param_name =
+        Env.TypeInformation.vname_of_species_param species_param in
       let prefix =
         "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
         "_" in
-      Parsetree_utils.ParamDepSet.iter
+      List.iter
         (fun (meth, _) ->
           (* Don't print the type to prevent being too verbose. *)
           Format.fprintf out_fmter "@ %s%a"
             prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
-        !meths_set)
-  !species_param_names_and_methods ;
-  (* Finally, make this parameters information public by returning it. By the
-     way, the ref on the inner set is not anymore needed, then remove it. *)
+        meths_set)
+  ordered_species_params_names_and_methods ;
+  (* Finally, make this parameters information public by returning it. *)
   List.map
-    (fun (sp_par_name, meths_set) -> (sp_par_name, !meths_set))
-    !species_param_names_and_methods
+    (fun (species_param, meths) ->
+       ((Env.TypeInformation.vname_of_species_param species_param), meths))
+    ordered_species_params_names_and_methods
 ;;
 
 
@@ -1061,19 +1064,16 @@ let generate_collection_generator ctx env compiled_species_fields =
          to the same scheme we used at lambda-lifting time:
          "_p_" + species parameter name + "_" + called method name. *)
       List.iter
-        (fun (species_param, meths_from_param) ->
+        (fun (species_param, (Env.ODFP_methods_list meths_from_param)) ->
           (* Recover the species parameter's name. *)
           let species_param_name =
-            match species_param with
-             | Env.TypeInformation.SPAR_in (n, _, _) -> n
-             | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
-                 Parsetree.Vuident n in
+            Env.TypeInformation.vname_of_species_param species_param in
           (* We don't care here about whether the species parameters is "IN"
              or "IS". *)
           let prefix =
             "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
             "_" in
-          Parsetree_utils.ParamDepSet.iter
+          List.iter
             (fun (meth, _) ->
               (* Don't print the type to prevent being too verbose. *)
               Format.fprintf out_fmter "@ %s%a"
@@ -1396,7 +1396,7 @@ let apply_collection_generator_to_parameters ctx env collection_body_params
   (* Now, generate the argment identifier or expression for each expected
      collection generator parameter. *)
   List.iter
-    (fun (formal_species_param_name, method_names) ->
+    (fun (formal_species_param_name, (Env.ODFP_methods_list method_names)) ->
       match List.assoc formal_species_param_name formal_to_effective_map with
        | Misc_common.CEA_collection_name_for_is corresponding_effective ->
            (begin
@@ -1406,7 +1406,7 @@ let apply_collection_generator_to_parameters ctx env collection_body_params
              match corresponding_effective with
               | Parsetree.Vname n -> (None, n)
               | Parsetree.Qualified (m, n) -> ((Some m), n) in
-           Parsetree_utils.ParamDepSet.iter
+           List.iter
              (fun (meth_name, _) ->
                (* If needed, qualify the name of the species in the OCaml
                   code. Don't print the type to prevent being too verbose. *)

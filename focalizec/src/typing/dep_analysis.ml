@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.49 2008-09-15 09:24:29 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.50 2008-09-16 14:27:42 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -1063,10 +1063,10 @@ let node_out_degree node =
 
 
 (* ************************************************************************** *)
-(* current_species: Parsetree.qualified_vname ->                              *)
-(*   Env.TypeInformation.species_field list -> Parsetree.vname list           *)
-(** {b Descr} : Determines the order of apparition of the fields inside a
-    species to prevent fields depending on other fields from appearing
+(* DepGraphData.nanem_node list -> Parsetree.vname list                       *)
+(** {b Descr} : Determines the order of apparition of the names inside a
+    species from its dependency graph.
+    The aim is to prevent fields depending on other fields from appearing
     before. In others words, this prevents from having [lemma2; lemma1] if
     the proof of [lemma2] requires [lemma1].
     We then must make in head of the species, the deepest fields in the
@@ -1075,16 +1075,16 @@ let node_out_degree node =
     Hence, this is a kind of reverse-topological sort. In effect in our graph
     an edge i -> j does not mean that i must be "processed" before j, but
     exactly the opposite !
+    If M1 depends on M2 then M2 will in front of M1 in the resulting list.
+    This ways, we are sure that any apparition of M2 in M1 will be bound in
+    the generated codes.
 
     {b Rem} : Because of well-formation properties, this process should never
     find a cyclic graph. If so, then may be the well-formness process is
     bugged somewhere-else.
-    Exported outside this module.                                   *)
+    Not exported outside this module.                                         *)
 (* ************************************************************************** *)
-let compute_fields_reordering ~current_species fields =
-  (* First, compute the depency graph of the species fields. *)
-  let dep_graph_nodes =
-    build_dependencies_graph_for_fields ~current_species fields in
+let ___compute_names_reordering dep_graph_nodes =
   (* Map recording for each node its "outputs degree", *)
   (* that's to say, the number of children it has.     *)
   let out_degree = ref NameNodeMap.empty in
@@ -1151,6 +1151,58 @@ let compute_fields_reordering ~current_species fields =
   end);
   (* And finaly, reverse the order list to get it in the right ... order. *)
   List.rev !revd_order_list
+;;
+
+
+
+(* ************************************************************************** *)
+(* current_species: Parsetree.qualified_vname ->                              *)
+(*   Env.TypeInformation.species_field list -> Parsetree.vname list           *)
+(** {b Descr} : Determines the order of apparition of the fields inside a
+    species to prevent fields depending on other fields from appearing
+    before.
+    Exported outside this module.                                             *)
+(* ************************************************************************** *)
+let compute_fields_reordering ~current_species fields =
+  (* First, compute the depency graph of the species fields. *)
+  let dep_graph_nodes =
+    build_dependencies_graph_for_fields ~current_species fields in
+  ___compute_names_reordering dep_graph_nodes
+;;
+
+
+
+let order_species_params_methods spe_params_n_meths_set =
+  List.map
+    (fun (species_param, meths_set) ->
+      match species_param with
+       | Env.TypeInformation.SPAR_in (_, _, _) ->
+           (* Trivially no problem since "IN" parameters only have 1 method
+              wearing structurally the same name than the parameter. *)
+           (species_param,
+            (Env.ODFP_methods_list
+               (Parsetree_utils.ParamDepSet.elements meths_set)))
+       | Env.TypeInformation.SPAR_is ((_, _), _, _, _, dep_graph) ->
+           (* We first build an ordered list. *)
+           let order =  ___compute_names_reordering dep_graph in
+           (* In this ordered list, we them only keep the names appearing in
+              the original [meths_set] set of names. *)
+           (* Directly make the list containing the elements of the set. This
+              will be easier to manipulate ! *)
+           let meths_set_as_list =
+             Parsetree_utils.ParamDepSet.elements meths_set in
+           let rec prune = function
+             | [] -> []
+             | h :: q ->
+                 (begin
+                 try
+                   let kept =
+                     List.find (fun (n, _) -> n = h) meths_set_as_list in
+                   kept :: (prune q)
+                 with Not_found -> prune q
+                 end) in
+           (species_param, (Env.ODFP_methods_list (prune order))))
+    spe_params_n_meths_set
 ;;
 
 

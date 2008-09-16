@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.55 2008-09-10 15:12:27 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.56 2008-09-16 14:27:42 pessaux Exp $ *)
 
 
 
@@ -99,7 +99,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
              (fun species_param ->
                match species_param with
                 | Env.TypeInformation.SPAR_in (vn, _, _) -> vn = vname
-                | Env.TypeInformation.SPAR_is ((_, vn), _, _, _) ->
+                | Env.TypeInformation.SPAR_is ((_, vn), _, _, _, _) ->
                     (Parsetree.Vuident vn) = vname)
              ctx.Context.scc_species_parameters_names) &&
          (not (List.mem vname local_idents)) then
@@ -179,7 +179,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
                        match species_param with
                         | Env.TypeInformation.SPAR_in (vn, _, _) ->
                             vn = coll_name
-                        | Env.TypeInformation.SPAR_is ((_, vn), _, _, _) ->
+                        | Env.TypeInformation.SPAR_is ((_, vn), _, _, _, _) ->
                             (Parsetree.Vuident vn) = coll_name)
                      ctx.Context.scc_species_parameters_names then
                    (begin
@@ -223,7 +223,7 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
                          match species_param with
                           | Env.TypeInformation.SPAR_in (vn, _, _) ->
                               vn = coll_name
-                          | Env.TypeInformation.SPAR_is ((_, vn), _, _, _) ->
+                          | Env.TypeInformation.SPAR_is ((_, vn), _, _, _, _) ->
                               (Parsetree.Vuident vn) = coll_name)
                        ctx.Context.scc_species_parameters_names then
                      (begin
@@ -967,8 +967,7 @@ let generate_record_type_parameters ctx env species_fields =
         ctx.Context.scc_collections_carrier_mapping } in
   (* We first build the lists of dependent methods for each *)
   (* property and theorem fields.                           *)
-  let deps_for_fields =
-    ref ([] : (Parsetree.vname * (Parsetree_utils.ParamDepSet.t ref)) list) in
+  let deps_for_fields = ref [] in
   List.iter
     (function
       | Env.TypeInformation.SF_sig (_, _, _)
@@ -984,7 +983,7 @@ let generate_record_type_parameters ctx env species_fields =
                | Env.TypeInformation.SPAR_in (_, _, _) ->
                    ()   (* Skip to avoid double (c.f. comment above). *)
                | Env.TypeInformation.SPAR_is
-                   ((_, spe_param_name), _, spe_param_meths, _) ->
+                   ((_, spe_param_name), _, spe_param_meths, _, _) ->
                    let spe_param_name = Parsetree.Vuident spe_param_name in
                    let meths_from_param =
                      Param_dep_analysis.param_deps_logical_expr
@@ -993,27 +992,38 @@ let generate_record_type_parameters ctx env species_fields =
                    (* Merge the found dependencies by side effect. *)
                    try
                      let param_bucket =
-                       List.assoc spe_param_name !deps_for_fields in
+                       Handy.list_assoc_custom_eq
+                         (fun sp n ->
+                           (Env.TypeInformation.vname_of_species_param sp) = n)
+                         spe_param_name !deps_for_fields in
                      param_bucket :=
                        Parsetree_utils.ParamDepSet.union
                          meths_from_param !param_bucket
                    with Not_found ->
                      deps_for_fields :=
-                       (spe_param_name, ref meths_from_param) ::
+                       (species_param, ref meths_from_param) ::
                        !deps_for_fields)
             species_parameters_names)
       species_fields ;
+  (* Just remove the references inside the assoc list. *)
+  let deps_for_fields_no_ref =
+    List.map (fun (a, b) -> (a, !b)) !deps_for_fields in
+  (* We now sort these methods according to the parameters' dependency graph. *)
+  let ordered_deps_for_fields =
+    Dep_analysis.order_species_params_methods deps_for_fields_no_ref in
   (* By the way, returns the list of species params and     *)
   (* methods required to create a value of the type record. *)
   List.map
-    (fun (species_param_name, meths) ->
+    (fun (species_param, (Env.ODFP_methods_list meths)) ->
+      let species_param_name =
+        Env.TypeInformation.vname_of_species_param species_param in
       (* Each abstracted method will be named like "_p_", followed by *)
       (* the species parameter name, followed by "_", followed by the *)
       (* method's name.                                               *)
       let prefix =
         "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
         "_" in
-      Parsetree_utils.ParamDepSet.iter
+      List.iter
         (fun (meth, meth_ty_kind) ->
           let llift_name =
             prefix ^
@@ -1030,10 +1040,10 @@ let generate_record_type_parameters ctx env species_fields =
                  ~local_idents: [] ~self_methods_status: SMS_from_record
                  env lexpr ;
                Format.fprintf ppf ")@ ")
-        !meths ;
+        meths ;
       (* Just to avoid having the reference escaping... *)
-      (species_param_name, !meths))
-    !deps_for_fields
+      (species_param_name, (Env.ODFP_methods_list meths)))
+    ordered_deps_for_fields
 ;;
 
 

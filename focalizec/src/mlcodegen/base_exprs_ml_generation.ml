@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.29 2008-06-30 11:30:38 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.30 2008-09-16 14:27:42 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -92,7 +92,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
              (fun species_param ->
                match species_param with
                 | Env.TypeInformation.SPAR_in (vn, _, _) -> vn = vname
-                | Env.TypeInformation.SPAR_is ((_, vn), _, _, _) ->
+                | Env.TypeInformation.SPAR_is ((_, vn), _, _, _, _) ->
                     (Parsetree.Vuident vn) = vname)
              ctx.Context.rcc_species_parameters_names) &&
          (not (List.mem vname local_idents)) then
@@ -169,7 +169,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                        match species_param with
                         | Env.TypeInformation.SPAR_in (vn, _, _) ->
                             vn = coll_name
-                        | Env.TypeInformation.SPAR_is ((_, vn), _, _, _) ->
+                        | Env.TypeInformation.SPAR_is ((_, vn), _, _, _, _) ->
                             (Parsetree.Vuident vn) = coll_name)
                      ctx.Context.rcc_species_parameters_names then
                    (begin
@@ -212,7 +212,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                          match species_param with
                           | Env.TypeInformation.SPAR_in (vn, _, _) ->
                               vn = coll_name
-                          | Env.TypeInformation.SPAR_is ((_, vn), _, _, _) ->
+                          | Env.TypeInformation.SPAR_is ((_, vn), _, _, _, _) ->
                               (Parsetree.Vuident vn) = coll_name)
                        ctx.Context.rcc_species_parameters_names then
                      (begin

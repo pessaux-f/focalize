@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.21 2008-09-13 06:13:41 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.22 2008-09-16 14:27:42 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -73,6 +73,16 @@ module ParamDepMod = struct
   let compare (n1, _) (n2, _) = compare n1 n2
 end ;;
 module ParamDepSet = Set.Make (ParamDepMod) ;;
+
+
+
+let list_to_param_dep_set l =
+  let rec rec_to_set accu = function
+    | [] -> accu
+    | h :: q ->
+        rec_to_set (ParamDepSet.add h accu) q in
+  rec_to_set ParamDepSet.empty l
+;;
 
 
 

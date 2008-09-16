@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.mli,v 1.18 2008-09-10 15:12:27 pessaux Exp $ *)
+(* $Id: parsetree_utils.mli,v 1.19 2008-09-16 14:27:42 pessaux Exp $ *)
 
 val name_of_vname : Parsetree.vname -> string
 (** Extracts the inner string name of the [vname] variable name. *)
@@ -80,6 +80,8 @@ module ParamDepSet :
     val split : elt -> t -> t * bool * t
   end
 
+val list_to_param_dep_set : ParamDepSet.elt list -> ParamDepSet.t
+
 val param_dep_set_find :
   (ParamDepSet.elt -> bool) -> ParamDepSet.t -> ParamDepSet.elt
 
@@ -135,3 +137,4 @@ type simple_species_expr = {
 val make_pseudo_species_ident :
   current_unit: Parsetree.module_name -> Parsetree.qualified_species ->
     Parsetree.ident
+

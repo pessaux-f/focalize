@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: depGraphData.mli,v 1.1 2008-09-15 09:24:29 pessaux Exp $ *)
+(* $Id: depGraphData.mli,v 1.2 2008-09-16 14:27:42 pessaux Exp $ *)
 
 
 
@@ -57,7 +57,7 @@ type name_node = {
   nn_name : Parsetree.vname ;
   (** The type of the field wearing this name. *)
   nn_type : Types.type_simple ;
-  (** Means that the current names depends of the children nodes. I.e. the
+  (** Means that the current names depends on the children nodes. I.e. the
       current name's body contains calls to the children names. *)
   mutable nn_children : (name_node * dependency_kind) list
 } ;;

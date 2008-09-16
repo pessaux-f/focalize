@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.37 2008-09-15 09:24:29 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.38 2008-09-16 14:27:42 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -60,7 +60,7 @@ let debug_print_dependencies_from_parameters l =
   List.iter
     (fun (species_param, methods) ->
       (match species_param with
-       | Env.TypeInformation.SPAR_is ((mod_name, spe_name), _, _, _) ->
+       | Env.TypeInformation.SPAR_is ((mod_name, spe_name), _, _, _, _) ->
            Format.eprintf "From IS-parameter '%s#%s', methods: "
              mod_name spe_name ;
        | Env.TypeInformation.SPAR_in (n, _, _) ->
@@ -279,7 +279,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
         let (species_param_name, species_param_meths) =
           match species_param with
            | Env.TypeInformation.SPAR_in (n, _, _) -> (n, [])
-           | Env.TypeInformation.SPAR_is ((_, n), _, meths, _) ->
+           | Env.TypeInformation.SPAR_is ((_, n), _, meths, _, _) ->
                ((Parsetree.Vuident n), meths) in
         let meths_from_param =
           (match body with
@@ -360,7 +360,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
         (* Recover the species parameter's name. *)
         match species_param with
          | Env.TypeInformation.SPAR_in (n, _, _) -> n
-         | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
+         | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
              Parsetree. Vuident n)
       dependencies_from_params_in_bodies in
   let used_species_parameter_tys =
@@ -543,7 +543,7 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
                       (function
                         | Env.TypeInformation.SPAR_in (_, _, _) ->
                             false      (* "In" parameters are never involved. *)
-                        | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
+                        | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
                             n = eff_arg_name)
                       species_parameters
                   then
@@ -594,7 +594,7 @@ let add_param_dependencies ~param_name ~deps ~to_deps =
          | Env.TypeInformation.SPAR_in (_, _, _) ->
              (* "In" parameters are never involved in the process. *)
              (p, d) :: (rec_add q)
-         | Env.TypeInformation.SPAR_is ((_, name), _, _, _) ->
+         | Env.TypeInformation.SPAR_is ((_, name), _, _, _, _) ->
              (* If we are in the bucket of the searched species parameter, we
                 add. *)
              if name = param_name_as_string then
@@ -640,7 +640,7 @@ let complete_used_species_parameters_ty ~current_unit species_params initial_set
         (* Recover the species parameter's name. *)
         match species_param with
          | Env.TypeInformation.SPAR_in (n, _, _) -> n
-         | Env.TypeInformation.SPAR_is ((_, n), _, _, _) ->
+         | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
              Parsetree. Vuident n)
       species_params in
   (* And now, filter in the accumulator the carriers that are among our
@@ -678,7 +678,7 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
   let params_being_parametrised =
     List.filter
       (function
-        | Env.TypeInformation.SPAR_is ((_, _), _, _, spe_expr) ->
+        | Env.TypeInformation.SPAR_is ((_, _), _, _, spe_expr, _) ->
             (* Keep it only if there are parameters in the expression. *)
             spe_expr.Parsetree_utils.sse_effective_args <> []
         | Env.TypeInformation.SPAR_in (_, _, _) -> false)
@@ -697,7 +697,7 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
         | Env.TypeInformation.SPAR_in (_, _, _) ->
             (* "In" parameters are filtered just above ! *)
             assert false
-        | Env.TypeInformation.SPAR_is ((_, n), _, _, spe_expr) ->
+        | Env.TypeInformation.SPAR_is ((_, n), _, _, spe_expr, _) ->
             (* In our example, [n] is Cp'. *)
             (n,
              (get_user_of_parameters_with_position
@@ -748,7 +748,8 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                           (* Cp' is a "IS" parameter, so no chance to find it
                              amongst the "IN" parameters ! *)
                           false
-                      | Env.TypeInformation.SPAR_is ((_, n), _, _, _) -> n = y)
+                      | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
+                          n = y)
                    cpprim starting_dependencies_from_params in
                Parsetree_utils.ParamDepSet.fold
                  (fun z accu_deps_for_zs ->
@@ -765,7 +766,11 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                       none is found in the assoc list that because there no
                       method in the dependencies on this parameter. *)
                    let y =
-                     (try List.assoc formal_name z_dependencies with
+                     (try
+                       let (Env.ODFP_methods_list lst) =
+                         List.assoc formal_name z_dependencies in
+                       Parsetree_utils.list_to_param_dep_set lst
+                     with
                      | Not_found -> Parsetree_utils.ParamDepSet.empty) in
                    (* ... and add it to the dependencies of
                       [eff_arg_qual_vname] in the current dependencies
@@ -816,7 +821,7 @@ let complete_dependencies_from_params env ~current_unit ~current_species
              let (species_param_name, species_param_meths) =
                match species_param with
                 | Env.TypeInformation.SPAR_in (n, _, _) -> (n, [])
-                | Env.TypeInformation.SPAR_is ((_, n), _, meths, _) ->
+                | Env.TypeInformation.SPAR_is ((_, n), _, meths, _, _) ->
                     ((Parsetree. Vuident n), meths) in
              let meths_from_param =
                Param_dep_analysis.param_deps_logical_expr
