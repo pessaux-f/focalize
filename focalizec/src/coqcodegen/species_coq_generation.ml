@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.108 2008-09-16 14:27:42 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.109 2008-09-16 15:05:26 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -984,6 +984,158 @@ let zenonify_by_definition ctx print_ctx env min_coq_env by_def_expr_ident =
 
 
 
+(* ******************************************************************* *)
+(** {b Descr} : Helper type used to discriminate in the function
+    [zenonify_by_property_when_qualified_method] the cases where the
+    ident refers to a species parameter of the current species or to a
+    toplevel species (possiliy in another module).
+
+    {b Rem} : Not exported outside this module.                        *)
+(* ******************************************************************* *)
+type species_param_or_topleve_species =
+  | SPOTS_param of Parsetree.vname  (** The ident was refering to a species
+                                        parameter of the current species. *)
+  | SPOTS_toplevel_species of
+      (Parsetree.module_name * (** The ident was refering to a toplevel species
+                                   and here is the module name hosting the
+                                   toplevel species. *)
+       Parsetree.vname) (** The species name the ident was refering to. *)
+;;
+
+
+
+(* *********************************************************************** *)
+(** {b Descr} : Handle the subcase of [zenonify_by_property] in the case
+    where the method used by the proof has a qualified name.
+    This decomposition in 2 functions is mostly to ease readability of the
+    compiler because otherwise the function  [zenonify_by_property] gets
+    really a mess to read !
+
+    {b Args} :
+      - [from_qcollname] : The qualified species name hosting the method
+          used in the proof under a "by property...".
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
+let zenonify_by_property_when_qualified_method ctx print_ctx env
+    dependencies_from_params by_prop_expr_ident from_qcollname meth_vname =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  (* There is a qualification on the method. If this qualification does not
+     have a module name or have a module name that is the same than the
+     current compilation unit, then may be the method comes from a species
+     parameter. *)
+  let param_or_topl_species_to_search_opt =
+    (match from_qcollname with
+     | Parsetree.Vname param_name ->
+         (* Implicitely in the current compilation unit. *)
+         SPOTS_param param_name
+     | Parsetree.Qualified (mod_name, species_name) ->
+         if mod_name = ctx.Context.scc_current_unit then
+           SPOTS_param species_name
+         else SPOTS_toplevel_species (mod_name, species_name)) in
+  match param_or_topl_species_to_search_opt with
+   | SPOTS_toplevel_species (mod_name, topl_species_name) ->
+       (begin
+       (* The method comes from another module's species. Hence it
+          is for sure from a toplevel species. We must recover its
+          type. *)
+       let fake_ident = {
+         Parsetree.ast_desc =
+           Parsetree.I_global
+             (Parsetree.Qualified (mod_name, topl_species_name)) ;
+         (* Roughly correction as a location, even is not exact. *)
+         Parsetree.ast_loc = by_prop_expr_ident.Parsetree.ast_loc ;
+         Parsetree.ast_doc = [] ;
+         Parsetree.ast_type = Parsetree.ANTI_none } in
+       let (_, coll_info, _, _) =
+         Env.CoqGenEnv.find_species
+           ~loc: by_prop_expr_ident.Parsetree.ast_loc
+           ~current_unit: ctx.Context.scc_current_unit fake_ident env in
+       (* Now, look for the of the method. *)
+       let meth_ty_kind = find_method_type_kind_by_name meth_vname coll_info in
+       (* A bit of comment. *)
+       Format.fprintf out_fmter
+         "(* For toplevel collection's method used via \"by \
+         property %a\". *)@\n"
+         Sourcify.pp_expr_ident by_prop_expr_ident ;
+       match meth_ty_kind with
+        | Env.MTK_computational meth_sch ->
+            let meth_ty = Types.specialize meth_sch in
+            Format.fprintf out_fmter
+              "@[<2>Parameter ???%a_%a :@ %a.@]@\n"
+              Parsetree_utils.pp_vname_with_operators_expanded topl_species_name
+              Parsetree_utils.pp_vname_with_operators_expanded meth_vname
+              (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
+              meth_ty
+        | Env.MTK_logical lexpr ->
+            Format.fprintf out_fmter
+              "@[<2>Parameter !!!%a_%a :@ "
+              Parsetree_utils.pp_vname_with_operators_expanded topl_species_name
+              Parsetree_utils.pp_vname_with_operators_expanded meth_vname ;
+            Species_record_type_generation.generate_logical_expr
+              ctx ~local_idents: []
+              ~self_methods_status:
+                Species_record_type_generation.SMS_from_record
+              env lexpr ;
+            Format.fprintf out_fmter ".@]@\n"
+       end)
+   | SPOTS_param param_name ->
+       (begin
+       (* The method belongs to a species parameters. We first get the
+          species parameter's bunch of methods. *)
+       let (Env.ODFP_methods_list param_meths) =
+         Handy.list_assoc_custom_eq 
+           (fun spe_param searched ->
+             match spe_param with
+              | Env.TypeInformation.SPAR_in (_, _, _) ->
+                  (* Proofs never use methods of "IN" parameters. *)
+                  false
+              | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
+                  (Parsetree.Vuident n) = searched)
+           param_name
+           dependencies_from_params in
+       (* Now, get the type of the specified method. *)
+       let (_, meth_ty_kind) =
+         List.find (fun (n, _) -> n = meth_vname) param_meths in
+       (* A bit of comment. *)
+       Format.fprintf out_fmter
+         "(* For species parameter method used via \"by \
+         property %a\". *)@\n"
+         Sourcify.pp_expr_ident by_prop_expr_ident ;
+       (* The method is name by "_p_" + the species parameter's name
+          + "_" + the method's name. *)
+       match meth_ty_kind with
+        | Parsetree_utils.DETK_computational meth_ty ->
+            Format.fprintf out_fmter
+              "@[<2>Parameter _p_%a_%a :@ %a.@]@\n"
+              Parsetree_utils.pp_vname_with_operators_expanded param_name
+              Parsetree_utils.pp_vname_with_operators_expanded meth_vname
+              (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
+              meth_ty
+        | Parsetree_utils.DETK_logical lexpr ->
+            (* Inside the logical expression of the method of the parameter
+               "Self" must be printed as "_p_param_name_T" .*)
+            let self_map =
+              Species_record_type_generation.make_Self_cc_binding_species_param
+                ~current_species: ctx.Context.scc_current_species param_name in
+            let ctx' = { ctx with
+              Context.scc_collections_carrier_mapping =
+                self_map :: ctx.Context.scc_collections_carrier_mapping } in
+            Format.fprintf out_fmter
+              "@[<2>Parameter _p_%a_%a :@ "
+              Parsetree_utils.pp_vname_with_operators_expanded param_name
+              Parsetree_utils.pp_vname_with_operators_expanded meth_vname ;
+            Species_record_type_generation.generate_logical_expr
+              ctx' ~local_idents: []
+              ~self_methods_status:
+                (Species_record_type_generation.SMS_from_param param_name)
+              env lexpr ;
+            Format.fprintf out_fmter ".@]@\n"
+       end)
+;;
+
+
+
 let zenonify_by_property ctx print_ctx env min_coq_env
     dependencies_from_params by_prop_expr_ident =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -1044,146 +1196,9 @@ let zenonify_by_property ctx print_ctx env min_coq_env
                  Format.fprintf out_fmter ".@]@\n"
             end)
         | Some qcollname ->
-            (begin
-            (* There is a qualification on the method. If this qualification
-               does not have a module name or have a module name that is the
-               same than the current compilation unit, then may be the method
-               comes from a species parameter. *)
-             let param_to_search_opt =
-               (match qcollname with
-                | Parsetree.Vname param_name ->
-                    (* Implicitely in the current compilation unit. *)
-                    Some param_name
-                | Parsetree.Qualified (mod_name, param_name) ->
-                    if mod_name = ctx.Context.scc_current_unit then
-                      Some param_name
-                    else None) in
-             match param_to_search_opt with
-              | None ->
-                  (begin
-                  (* The method comes from another module's species. Hence it
-                     is for sure from a toplevel species. We must recover its
-                     type. *)
-                  let fake_ident = {
-(* [Unsure] faire plus propre pour ne pas matcher 2 fois sur qcollname. *)
-                    Parsetree.ast_desc =
-                      (match qcollname with
-                        | Parsetree.Vname _ -> assert false
-                        | Parsetree.Qualified (mod_name, param_name) ->
-                            Parsetree.I_global
-                              (Parsetree.Qualified (mod_name, param_name))) ;
-                    (* Roughly correction as a location, even is not exact. *)
-                    Parsetree.ast_loc = by_prop_expr_ident.Parsetree.ast_loc ;
-                    Parsetree.ast_doc = [] ;
-                    Parsetree.ast_type = Parsetree.ANTI_none } in
-
-(* [Unsure] cradddd aussi ! *)
-let param_name =
-(match qcollname with
-  | Parsetree.Vname _ -> assert false
-  | Parsetree.Qualified (_, param_name) -> param_name) in
-
-                  let (_, coll_info, _, _) =
-                    Env.CoqGenEnv.find_species
-                      ~loc: by_prop_expr_ident.Parsetree.ast_loc
-                      ~current_unit: ctx.Context.scc_current_unit
-                      fake_ident env in
-                  (* Now, look for the of the method. *)
-                  let meth_ty_kind =
-                    find_method_type_kind_by_name vname coll_info in
-                  (* A bit of comment. *)
-                  Format.fprintf out_fmter
-                    "(* For toplevel collection's method used via \"by \
-                    property %a\". *)@\n"
-                    Sourcify.pp_expr_ident by_prop_expr_ident ;
-                  match meth_ty_kind with
-                   | Env.MTK_computational meth_sch ->
-                       let meth_ty = Types.specialize meth_sch in
-                       Format.fprintf out_fmter
-                         "@[<2>Parameter ???%a_%a :@ %a.@]@\n"
-                         Parsetree_utils.pp_vname_with_operators_expanded
-                         param_name
-                         Parsetree_utils.pp_vname_with_operators_expanded vname
-                         (Types.pp_type_simple_to_coq print_ctx
-                            ~reuse_mapping: false)
-                         meth_ty
-                   | Env.MTK_logical lexpr ->
-                       Format.fprintf out_fmter
-                         "@[<2>Parameter !!!%a_%a :@ "
-                         Parsetree_utils.pp_vname_with_operators_expanded
-                         param_name
-                         Parsetree_utils.pp_vname_with_operators_expanded
-                         vname ;
-                       Species_record_type_generation.generate_logical_expr
-                         ctx ~local_idents: []
-                         ~self_methods_status:
-                           Species_record_type_generation.SMS_from_record
-                         env lexpr ;
-                       Format.fprintf out_fmter ".@]@\n"
-                  end)
-              | Some param_name ->
-                  (begin
-                  (* The method belongs to a species parameters. We first get
-                     the species parameter's bunch of methods. *)
-                  let (Env.ODFP_methods_list param_meths) =
-                    Handy.list_assoc_custom_eq 
-                      (fun spe_param searched ->
-                        match spe_param with
-                         | Env.TypeInformation.SPAR_in (_, _, _) ->
-                             (* Proofs never use methods of "IN" parameters. *)
-                             false
-                         | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
-                             (Parsetree.Vuident n) = searched)
-                      param_name
-                      dependencies_from_params in
-                  (* Now, get the type of the specified method. *)
-                  let (_, meth_ty_kind) =
-                    List.find (fun (n, _) -> n = vname) param_meths in
-                  (* A bit of comment. *)
-                  Format.fprintf out_fmter
-                    "(* For species parameter method used via \"by \
-                    property %a\". *)@\n"
-                    Sourcify.pp_expr_ident by_prop_expr_ident ;
-                  (* The method is name by "_p_" + the species parameter's name
-                     + "_" + the method's name. *)
-                  match meth_ty_kind with
-                   | Parsetree_utils.DETK_computational meth_ty ->
-                       Format.fprintf out_fmter
-                         "@[<2>Parameter _p_%a_%a :@ %a.@]@\n"
-                         Parsetree_utils.pp_vname_with_operators_expanded
-                         param_name
-                         Parsetree_utils.pp_vname_with_operators_expanded vname
-                         (Types.pp_type_simple_to_coq print_ctx
-                            ~reuse_mapping: false)
-                         meth_ty
-                   | Parsetree_utils.DETK_logical lexpr ->
-                       (* Inside the logical expression of the method of the
-                          parameter "Self" must be printed as
-                          "_p_param_name_T" .*)
-                       let self_map =
-                         Species_record_type_generation.
-                           make_Self_cc_binding_species_param
-                             ~current_species: ctx.Context.scc_current_species
-                              param_name in
-                       let ctx' = { ctx with
-                         Context.scc_collections_carrier_mapping =
-                           self_map ::
-                             ctx.Context.scc_collections_carrier_mapping } in
-                       Format.fprintf out_fmter
-                         "@[<2>Parameter _p_%a_%a :@ "
-                         Parsetree_utils.pp_vname_with_operators_expanded
-                         param_name
-                         Parsetree_utils.pp_vname_with_operators_expanded
-                         vname ;
-                       Species_record_type_generation.generate_logical_expr
-                         ctx' ~local_idents: []
-                         ~self_methods_status:
-                           (Species_record_type_generation.SMS_from_param
-                              param_name)
-                         env lexpr ;
-                       Format.fprintf out_fmter ".@]@\n"
-                  end)
-            end)
+            zenonify_by_property_when_qualified_method
+              ctx print_ctx env dependencies_from_params by_prop_expr_ident
+              qcollname vname
        end)
 ;;
 
@@ -2991,7 +3006,6 @@ let print_methods_from_params_instanciations ctx env formal_to_effective_map l =
            end))
     l
 ;;
-
 
 
 
