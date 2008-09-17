@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.65 2008-09-16 15:40:29 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.66 2008-09-17 08:22:22 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1962,24 +1962,24 @@ let scope_inheritance ctx env spec_exprs =
 (*      *                                                               *)
 (*      Env.ScopingEnv.t)                                               *)
 (** {b Descr} : Scopes the species parameters of a specied definition
-              and return the scoping environment extended with bindings
-              for theses parameters.
-              This extended environment will be later used to scope
-              the body of the species definition.
+    and return the scoping environment extended with bindings for
+    theses parameters.
+    This extended environment will be later used to scope the body of
+    the species definition.
 
     {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************** *)
 let scope_species_params_types ctx env params =
-  (* Do not fold_right otherwise params will be inserted in reverse order ! *)
-  (* in the environment. Do not fold_left otherwise le list of scoped       *)
-  (* parameters will be reversed ! So what to do ????                       *)
-  (* Eh guy, just fold_left to get the correct environment, and then we     *)
-  (* just reverse the list of the scoped parameters, that's it !            *)
+  (* Do not fold_right otherwise params will be inserted in reverse order in
+     the environment. Do not fold_left otherwise le list of scoped
+     parameters will be reversed ! So what to do ????
+     Eh guy, just fold_left to get the correct environment, and then we just
+     reverse the list of the scoped parameters, that's it ! *)
   let (scoped_params_revd, env') =
     List.fold_left
       (fun (accu_params_revd, accu_env) (param_name, param_kind) ->
-        (* We scope parameters in the environment incrementally extended. *)
-        (* This means that following parameters know previous ones.       *)
+        (* We scope parameters in the environment incrementally extended.
+           This means that following parameters know previous ones. *)
         match param_kind.Parsetree.ast_desc with
         | Parsetree.SPT_in ident ->
             (begin
@@ -1998,9 +1998,9 @@ let scope_species_params_types ctx env params =
                     (Parsetree.Qualified (hosting_file, basic_vname)) in
             let scoped_ident = {
               ident with Parsetree.ast_desc = scoped_ident_descr } in
-            (* The parameter is a value belonging to a collection. It's *)
-            (* type is the "repr" of the collection. Then this leads to *)
-            (* a simple value that will get scoped as local.            *)
+            (* The parameter is a value belonging to a collection. Its type
+               is the "repr" of the collection. Then this leads to a simple
+               value that will get scoped as local. *)
             let accu_env' =
               Env.ScopingEnv.add_value
                param_name Env.ScopeInformation.SBI_local accu_env in
@@ -2012,29 +2012,27 @@ let scope_species_params_types ctx env params =
             end)
         | Parsetree.SPT_is spec_expr ->
             (begin
-            (* The parameter is a collection (indeed, that's its *)
-            (* type). Because collections and species are not    *)
-            (* first-class-value, the environment extention will *)
-            (* Not be done at the "values" level.                *)
+            (* The parameter is a collection (indeed, that's its type). Because
+               collections and species are not first-class-value, the
+               environment extention will not be done at the "values" level. *)
             let (scoped_species_expr, species_methods) =
               scope_species_expr ctx accu_env spec_expr in
-            (* Extend the environment with a "locally defined" collection *)
-            (* having the same methods than those coming from the         *)
-            (* expression.                                                *)
+            (* Extend the environment with a "locally defined" collection
+               having the same methods than those coming from the expression. *)
             let accu_env' =
               Env.ScopingEnv.add_species
                 ~loc: spec_expr.Parsetree.ast_loc
                 param_name
                 { Env.ScopeInformation.spbi_scope =
                     Env.ScopeInformation.SPBI_local;
-                  (* Because parameters are indeed COLLECTION parameters *)
-                  (* (i.e. are intended to be finally instanciated to a  *)
-                  (* collection), they have no ... parameters, them.     *)
+                  (* Because parameters are indeed COLLECTION parameters (i.e.
+                     are intended to be finally instanciated to a collection),
+                     they have no ... parameters, them. *)
                   Env.ScopeInformation.spbi_params_kind = [] ;
                   Env.ScopeInformation.spbi_methods = species_methods }
                 accu_env in
-            (* Now, extend the environment with the name *)
-            (* of the carrier type for this species.     *)
+            (* Now, extend the environment with the name of the carrier type
+               for this species. *)
             let accu_env'' =
               Env.ScopingEnv.add_type
                 ~loc: spec_expr.Parsetree.ast_loc
@@ -2055,55 +2053,53 @@ let scope_species_params_types ctx env params =
 
 
 
-(* *********************************************************************** *)
+(* ************************************************************************ *)
 (** {b Descr} : Scopes a species and returns the environment extended with
               the bindings induced by the species.
 
     {b Rem} : Not exported outside this module.
-            Environment search must proceed in the following order:
-             1) try to find the identifier in local environment
-             2) check if it's a parameter of entity ("in") or
-                collection ("is")
-             4) try to find the ident throughout the hierarchy
-             5) try to find the ident is a global identifier
+    Environment search must proceed in the following order:
+      1) try to find the identifier in local environment
+      2) check if it's a parameter of entity ("in") or
+         collection ("is")
+      4) try to find the ident throughout the hierarchy
+      5) try to find the ident is a global identifier
              else) not found
-            So the order in which the idents are inserted into the
-            environment used to scope the species must respect extentions
-            in the reverse order in order to find the most recently added
-            bindings first !                                               *)
-(* *********************************************************************** *)
+    So the order in which the idents are inserted into the environment used
+    to scope the species must respect extentions in the reverse order in
+    order to find the most recently added bindings first !                  *)
+(* ************************************************************************ *)
 let scope_species_def ctx env species_def =
   let species_def_descr = species_def.Parsetree.ast_desc in
   if Configuration.get_verbose () then
     Format.eprintf
       "Scoping species '%a'.@."
       Sourcify.pp_vname species_def_descr.Parsetree.sd_name;
-  (* A species is not recursive, so no need to     *)
-  (* insert it inside the environment to scope it. *)
-  (* According to the search order, we must first add the parameters    *)
-  (* of collection and entity in their order of apparition then import  *)
-  (* the bindings from the inheritance tree, and finally local bindings *)
-  (* will be automagically be added while scoping the species' body     *)
-  (* (fields).                                                          *)
+  (* A species is not recursive, so no need to insert it inside the
+     environment to scope it.
+     According to the search order, we must first add the parameters of
+     collection and entity in their order of apparition then import the
+     bindings from the inheritance tree, and finally local bindings will be
+     automagically be added while scoping the species' body (fields). *)
   (* So ... the parameters... *)
   let (scoped_params, env_with_params) =
     scope_species_params_types ctx env species_def_descr.Parsetree.sd_params in
-  (* Next ... the inheritance... By the way we get the methods coming *)
-  (* from our ancestors. *)
+  (* Next ... the inheritance... By the way we get the methods coming from our
+     ancestors. *)
   let (scoped_inherits, inherited_methods) =
     scope_inheritance
       ctx env_with_params species_def_descr.Parsetree.sd_inherits in
-  (* We now must extend the environment with the inherited methods. Because *)
-  (* the list of methods contains the olders in head and the youngers in    *)
-  (* tail, we need to [fold_left] Env.ScopingEnv.add_value on it.           *)
+  (* We now must extend the environment with the inherited methods. Because the
+     list of methods contains the olders in head and the youngers in tail, we
+     need to [fold_left] Env.ScopingEnv.add_value on it. *)
   let full_env =
     List.fold_left
       (fun accu_env meth_vname ->
-        (* Because these methods are inherited, they now are methods of   *)
-        (* ourselves, hence methodes of Self. Anyway, as previously told, *)
-        (* all the methods a always inserted as [SBI_method_of_self], the *)
-        (* [find_value] taking care of changing to [SBI_method_of_coll]   *)
-        (* when required.                                                 *)
+        (* Because these methods are inherited, they now are methods of
+           ourselves, hence methodes of Self. Anyway, as previously told, all
+           the methods a always inserted as [SBI_method_of_self], the
+           [find_value] taking care of changing to [SBI_method_of_coll] when
+           required. *)
         Env.ScopingEnv.add_value
           meth_vname Env.ScopeInformation.SBI_method_of_self accu_env)
       env_with_params
@@ -2111,8 +2107,8 @@ let scope_species_def ctx env species_def =
   (* And now the fields in the environment we just built. *)
   let (scoped_fields, method_names) =
     scope_species_fields ctx full_env species_def_descr.Parsetree.sd_fields in
-  (* We must extend the initial environment with our name *)
-  (* bound to a species with the got methods names.       *)
+  (* We must extend the initial environment with our name bound to a species
+     with the got methods names. *)
   let our_info = {
     Env.ScopeInformation.spbi_methods = inherited_methods @ method_names;
     Env.ScopeInformation.spbi_params_kind =
@@ -2151,8 +2147,8 @@ let scope_species_def ctx env species_def =
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.coll_def ->    *)
 (*   (Parsetree.coll_def_desc * Env.ScopingEnv.t)                  *)
 (** {b Descr} : Scopes a collection definition. Returns the scoped
-              definition and the initial environment extended with
-              a binding for this collection inside.
+    definition and the initial environment extended with a binding
+    for this collection inside.
 
     {b Rem} : Not exported outside this module.                    *)
 (* *************************************************************** *)
@@ -2202,8 +2198,8 @@ let scope_phrase ctx env phrase =
          let ctx' = { ctx with used_modules = fname :: ctx.used_modules } in
          (phrase.Parsetree.ast_desc, env, ctx')
      | Parsetree.Ph_open fname ->
-         (* Load this module interface to extend the current environment *)
-         (* only if this "module" was previously "use"-d.                *)
+         (* Load this module interface to extend the current environment only
+            if this "module" was previously "use"-d. *)
          if not (List.mem fname ctx.used_modules) then
            raise (Module_not_specified_as_used fname);
          let env' =
@@ -2224,8 +2220,8 @@ let scope_phrase ctx env phrase =
          let (scoped_ty_def, env') = scope_type_def ctx env type_def in
          ((Parsetree.Ph_type scoped_ty_def), env', ctx)
      | Parsetree.Ph_let let_def ->
-         (* This one can extend the global scoping environment. *)
-         (* The list of bound names does not interest us here.  *)
+         (* This one can extend the global scoping environment.
+            The list of bound names does not interest us here. *)
          let (scoped_let_def, env', _) =
            scope_let_definition ~toplevel_let: true ctx env let_def in
          ((Parsetree.Ph_let scoped_let_def), env', ctx)
@@ -2233,7 +2229,7 @@ let scope_phrase ctx env phrase =
          let (scoped_theo, name) = scope_theorem_def ctx env theo_def in
          let env' =
            Env.ScopingEnv.add_value
-             name Env.ScopeInformation.SBI_method_of_self env in
+             name (Env.ScopeInformation.SBI_file ctx.current_unit) env in
          ((Parsetree.Ph_theorem scoped_theo), env', ctx)
      | Parsetree.Ph_expr expr_def ->
          (* No scoping environment extention here. *)
@@ -2248,9 +2244,9 @@ let scope_phrase ctx env phrase =
 (* scope_file : Types.fname -> Parsetree.file ->                       *)
 (*   (Parsetree.file * Env.ScopingEnv.t)                               *)
 (** {b Descr} : Starts the scoping phase on a whole file. The initial
-              scoping environment is totally empty. Returns the scoped
-              AST structure and the complete toplevel scoping
-              environment obtained after the scoping is finished.
+    scoping environment is totally empty. Returns the scoped AST
+    structure and the complete toplevel scoping environment obtained
+    after the scoping is finished.
 
     {b Rem} : Exported outside this module.                            *)
 (* ******************************************************************* *)
