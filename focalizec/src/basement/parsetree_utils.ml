@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.22 2008-09-16 14:27:42 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.23 2008-09-18 12:20:37 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -290,4 +290,11 @@ let make_pseudo_species_ident ~current_unit (species_mod, species_name) =
     Parsetree.ast_desc = ident_desc ;
     Parsetree.ast_doc = [] ;
     Parsetree.ast_type = Parsetree.ANTI_none }
+;;
+
+
+let make_concatenated_name_from_qualified_vname = function
+  | Parsetree.Vname vname -> name_of_vname vname
+  | Parsetree.Qualified (mod_name, vname) ->
+      mod_name ^ "__" ^(name_of_vname vname)
 ;;

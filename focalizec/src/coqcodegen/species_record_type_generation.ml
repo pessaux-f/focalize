@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.56 2008-09-16 14:27:42 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.57 2008-09-18 12:20:37 pessaux Exp $ *)
 
 
 
@@ -395,7 +395,7 @@ let generate_pattern ctx env pattern =
 
 
 let rec let_binding_compile ctx ~local_idents ~self_methods_status ~is_rec
-    env bd =
+    ~toplevel env bd =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Generate the bound name. *)
   Format.fprintf out_fmter "%a"
@@ -444,10 +444,16 @@ let rec let_binding_compile ctx ~local_idents ~self_methods_status ~is_rec
      polymorphism the current bound ident has in case of recursive definition.
      Otherwise, it will only be done later. *)
   let nb_polymorphic_args = List.length generalized_instanciated_vars in
+  let value_body =
+    if not toplevel then Env.CoqGenInformation.VB_non_toplevel
+    else
+      Env.CoqGenInformation.VB_toplevel_let_bound
+        (params_names, def_scheme, bd.Parsetree.ast_desc.Parsetree.b_body) in
   let env' =
     if is_rec then
       Env.CoqGenEnv.add_value
-        bd.Parsetree.ast_desc.Parsetree.b_name nb_polymorphic_args env
+        bd.Parsetree.ast_desc.Parsetree.b_name
+        (nb_polymorphic_args, value_body) env
     else env in
   (* Now, generate each of the real function's parameter with its type. *)
   List.iter
@@ -508,7 +514,8 @@ let rec let_binding_compile ctx ~local_idents ~self_methods_status ~is_rec
   (* Finally, we record, even if it was already done in [env'] the number of
      extra arguments due to polymorphism the current bound identifier has. *)
   Env.CoqGenEnv.add_value
-    bd.Parsetree.ast_desc.Parsetree.b_name nb_polymorphic_args env
+    bd.Parsetree.ast_desc.Parsetree.b_name
+    (nb_polymorphic_args, value_body) env
 
 
 
@@ -539,12 +546,14 @@ and let_in_def_compile ctx ~local_idents ~self_methods_status env let_def =
          assert false
      | [one_bnd] ->
          let_binding_compile
-           ctx ~local_idents ~self_methods_status ~is_rec env one_bnd
+           ctx ~local_idents ~self_methods_status ~toplevel: false ~is_rec env
+           one_bnd
      | first_bnd :: next_bnds ->
          let accu_env =
            ref
              (let_binding_compile
-                ctx ~local_idents ~self_methods_status ~is_rec env first_bnd) in
+                ctx ~local_idents ~self_methods_status ~toplevel: false
+                ~is_rec env first_bnd) in
          List.iter
            (fun binding ->
              (* We transform "let and" non recursive functions into several
@@ -552,7 +561,7 @@ and let_in_def_compile ctx ~local_idents ~self_methods_status env let_def =
              Format.fprintf out_fmter "@ in@]@\n@[<2>let " ;
              accu_env :=
                let_binding_compile
-                 ctx ~local_idents ~self_methods_status ~is_rec
+                 ctx ~local_idents ~self_methods_status ~is_rec ~toplevel: false
                  !accu_env binding)
            next_bnds ;
            !accu_env) in
@@ -614,7 +623,7 @@ and generate_expr ctx ~local_idents ~self_methods_status initial_env
            ctx ~local_idents: loc_idents ~self_methods_status ident ;
          (* Now, add the extra "_"'s if the identifier is polymorphic. *)
          try
-           let nb_polymorphic_args =
+           let (nb_polymorphic_args, _) =
              Env.CoqGenEnv.find_value
                ~loc: ident.Parsetree.ast_loc
                ~current_unit: ctx.Context.scc_current_unit
@@ -808,7 +817,8 @@ let generate_logical_expr ctx ~local_idents ~self_methods_status initial_env
          let env' =
            List.fold_left
              (fun accu_env vname ->
-               Env.CoqGenEnv.add_value vname 0 accu_env)
+               Env.CoqGenEnv.add_value vname
+                 (0, Env.CoqGenInformation.VB_non_toplevel) accu_env)
              env
              vnames in
          rec_generate_logical_expr loc_idents' env' logical_expr ;

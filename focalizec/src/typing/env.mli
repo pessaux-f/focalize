@@ -195,7 +195,13 @@ module CoqGenInformation :
        (method_info list) *
        (collection_generator_info option) * collection_or_species)
 
-    type value_mapping_info = int
+    type value_body =
+      | VB_non_toplevel
+      | VB_toplevel_let_bound of
+          ((Parsetree.vname list) * Types.type_scheme * Parsetree.binding_body)
+      | VB_toplevel_property of Parsetree.logical_expr
+
+    type value_mapping_info = (int * value_body)
   end
 
 

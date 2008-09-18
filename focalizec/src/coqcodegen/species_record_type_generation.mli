@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.10 2008-09-16 14:27:42 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.11 2008-09-18 12:20:37 pessaux Exp $ *)
 
 
 type self_methods_status =
@@ -39,7 +39,7 @@ val generate_logical_expr :
       Parsetree.logical_expr -> unit
 val let_binding_compile :
   Context.species_compil_context -> local_idents: Parsetree.vname list ->
-  self_methods_status: self_methods_status -> is_rec: bool ->
+  self_methods_status: self_methods_status -> is_rec: bool -> toplevel: bool ->
     Env.CoqGenEnv.t -> Parsetree.binding -> Env.CoqGenEnv.t
 val generate_record_type :
   Context.species_compil_context ->

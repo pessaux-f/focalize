@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.109 2008-09-16 15:05:26 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.110 2008-09-18 12:20:37 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -902,9 +902,44 @@ let zenonify_by_definition ctx print_ctx env min_coq_env by_def_expr_ident =
        raise
          (Attempt_proof_by_def_of_local_ident
             (by_def_expr_ident.Parsetree.ast_loc, by_def_expr_ident))
-   | Parsetree.EI_global _qvname ->
-       (* The stuff is in fact a toplevel definition, not a species method. *)
-       failwith "[Unsure] You are may be using a toplevel definition in proof."
+   | Parsetree.EI_global qvname ->
+       (begin
+       (* The stuff is in fact a toplevel definition, not a species method. We
+           must recover its type kind from the environment. *)
+       let (_, value_body) =
+         Env.CoqGenEnv.find_value
+           ~loc: by_def_expr_ident.Parsetree.ast_loc
+           ~current_unit: ctx.Context.scc_current_unit by_def_expr_ident env in
+                 (* A bit of comment. *)
+       Format.fprintf out_fmter
+         "(* For toplevel definition used via \"by definition of %a\". *)@\n"
+         Sourcify.pp_expr_ident by_def_expr_ident ;
+       let name_for_zenon =
+         Parsetree_utils.make_concatenated_name_from_qualified_vname qvname in
+       match value_body with
+        | Env.CoqGenInformation.VB_non_toplevel -> assert false
+        | Env.CoqGenInformation.VB_toplevel_let_bound (params, scheme, body) ->
+            Format.fprintf out_fmter "@[<2>Definition %s" name_for_zenon ;
+            (* We now generate the sequence of real parameters of the
+               method, not those induced by abstraction and finally the
+               method's body. Anyway, since the used definition is at toplevel,
+               there is no abstraction no notion of "Self", no dependencies. *)
+            generate_defined_non_recursive_method_postlude
+              ctx print_ctx env params scheme body ;
+            (* Done... Then, final carriage return. *)
+            Format.fprintf out_fmter ".@]@\n"
+        | Env.CoqGenInformation.VB_toplevel_property lexpr ->
+            Format.fprintf out_fmter "@[<2>Definition %s :=@ " name_for_zenon ;
+            (* Since the used definition is at toplevel, there is no abstraction
+               no notion of "Self", no dependencies. *)
+            Species_record_type_generation.generate_logical_expr
+              ctx ~local_idents: []
+              ~self_methods_status:
+                Species_record_type_generation.SMS_from_record (* Or anything *)
+              env lexpr ;
+            (* Done... Then, final carriage return. *)
+            Format.fprintf out_fmter ".@]@\n"
+       end)
    | Parsetree.EI_method (qcollname_opt, vname) ->
        (begin
        match qcollname_opt with
@@ -1144,9 +1179,45 @@ let zenonify_by_property ctx print_ctx env min_coq_env
        raise
          (Attempt_proof_by_prop_of_local_ident
             (by_prop_expr_ident.Parsetree.ast_loc, by_prop_expr_ident))
-   | Parsetree.EI_global _qvname ->
+   | Parsetree.EI_global qvname ->
        (* The stuff is in fact a toplevel definition, not a species method. *)
-       failwith "[Unsure] You are may be using a toplevel definition in proof."
+       (begin
+       (* The stuff is in fact a toplevel definition, not a species method. We
+           must recover its type kind from the environment. *)
+       let (_, value_body) =
+         Env.CoqGenEnv.find_value
+           ~loc: by_prop_expr_ident.Parsetree.ast_loc
+           ~current_unit: ctx.Context.scc_current_unit by_prop_expr_ident env in
+                 (* A bit of comment. *)
+       Format.fprintf out_fmter
+         "(* For toplevel definition used via \"by definition of %a\". *)@\n"
+         Sourcify.pp_expr_ident by_prop_expr_ident ;
+       let name_for_zenon =
+         Parsetree_utils.make_concatenated_name_from_qualified_vname qvname in
+       match value_body with
+        | Env.CoqGenInformation.VB_non_toplevel -> assert false
+        | Env.CoqGenInformation.VB_toplevel_let_bound (params, scheme, body) ->
+            Format.fprintf out_fmter "@[<2>Definition %s" name_for_zenon ;
+            (* We now generate the sequence of real parameters of the
+               method, not those induced by abstraction and finally the
+               method's body. Anyway, since the used definition is at toplevel,
+               there is no abstraction no notion of "Self", no dependencies. *)
+            generate_defined_non_recursive_method_postlude
+              ctx print_ctx env params scheme body ;
+            (* Done... Then, final carriage return. *)
+            Format.fprintf out_fmter ".@]@\n"
+        | Env.CoqGenInformation.VB_toplevel_property lexpr ->
+            Format.fprintf out_fmter "@[<2>Definition %s :=@ " name_for_zenon ;
+            (* Since the used definition is at toplevel, there is no abstraction
+               no notion of "Self", no dependencies. *)
+            Species_record_type_generation.generate_logical_expr
+              ctx ~local_idents: []
+              ~self_methods_status:
+                Species_record_type_generation.SMS_from_record (* Or anything *)
+              env lexpr ;
+            (* Done... Then, final carriage return. *)
+            Format.fprintf out_fmter ".@]@\n"
+       end)
    | Parsetree.EI_method (qcollname_opt, vname) ->
        (begin
        match qcollname_opt with
@@ -2181,7 +2252,10 @@ let extend_env_for_species_def ~current_species env species_descr =
       species_descr.Env.TypeInformation.spe_sig_methods in
   let env_with_methods_as_values =
     List.fold_left
-      (fun accu_env (m_name, _) -> Env.CoqGenEnv.add_value m_name 0 accu_env)
+      (fun accu_env (m_name, _) ->
+        (* Methods are trivially not toplevel bound idents. *)
+        Env.CoqGenEnv.add_value
+          m_name (0, Env.CoqGenInformation.VB_non_toplevel) accu_env)
       env
       species_methods_names in
   (* Now, add the species's parameters in the environment. And do not

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.111 2008-09-16 14:27:42 pessaux Exp $ *)
+(* $Id: env.ml,v 1.112 2008-09-18 12:20:37 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -881,7 +881,6 @@ module CoqGenInformation = struct
       string the record type field name corresponds. *)
   type label_mapping_info =  Parsetree.external_expr_desc
 
-
   type method_info = generic_code_gen_method_info
 
   type species_binding_info =
@@ -896,7 +895,19 @@ module CoqGenInformation = struct
      (** Tells if the info is bound to a species or a collection. *)
      collection_or_species)
 
-  type value_mapping_info = int
+  type value_body =
+    | VB_non_toplevel
+    | VB_toplevel_let_bound of
+	((Parsetree.vname list) * Types.type_scheme * Parsetree.binding_body)
+    | VB_toplevel_property of Parsetree.logical_expr
+
+  type value_mapping_info = (int * (** The number of polymorphic type variables
+                                       in the scheme of the ident. This will
+                                       lead to extra "_" following the ident
+                                       when it is used in applicative
+                                       position. *)
+                             value_body) (** The expression bound to the
+                                             ident. *)
 
   (* ************************************************************** *)
   (** {b Descr} : Type abbreviation to shorten the structure of the
@@ -1860,7 +1871,8 @@ module CoqGenEMAccess = struct
     (* parameters that woud come from ... polymorphism.                 *)
     let values_bucket =
       List.map
-        (fun { mi_name = field_name } -> (field_name, (BO_absolute 0)))
+        (fun { mi_name = field_name } ->
+          (field_name, (BO_absolute (0, CoqGenInformation.VB_non_toplevel))))
         meths_info in
     { constructors = [] ; labels = [] ; types = [] ; values = values_bucket ;
       species = [] }
