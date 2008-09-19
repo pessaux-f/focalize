@@ -1,0 +1,26 @@
+# Basic Unix commands
+MAKE = make
+RM = rm -rf
+CD = cd
+LN = ln -sf
+
+# The compilers
+
+# Caml compiler
+CAML_COMP_FLAGS =
+CAMLBYT = ocamlc -g -w A -warn-error Ae $(CAML_COMP_FLAGS)
+CAMLBIN = ocamlopt -w A -warn-error Ae $(CAML_COMP_FLAGS)
+CAMLDOC = ocamldoc
+CAMLYACC = ocamlyacc -v
+CAMLLEX = ocamllex
+CAMLDEP = ocamldep $(CAML_COMP_FLAGS)
+
+# Focalize compiler
+FOCC_COMP_FLAGS =
+FOCC = focc $(FOCC_COMP_FLAGS)
+
+# Coq compiler
+COQ_COMP_FLAGS =
+COQC = coqc $(COQ_COMP_FLAGS)
+
+ZVTOV= zvtov
