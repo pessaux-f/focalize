@@ -4,12 +4,12 @@ BOLDTAG="\033[1m"
 UNDERLINETAG="\033[4m"
 NORMALTAG="\033[0m"
 
-SUB_DIRS = basement parser typing \
+SUB_DIRS="basement parser typing \
   commoncodegen mlcodegen coqcodegen \
   toplevel \
-  stdlib extlib contribs
+  stdlib extlib contribs"
 
-for i in $SUB_DIRS; do
+for i in $SUB_DIRS ; do
   (cd $i; touch .depend; mkdir -p odoc)
 done
 
@@ -42,8 +42,8 @@ echo "(* End of generated source file. *)" >> basement/installation.ml
 
 # Temporarily borrow some Coq files from the installation of the old compiler.
 # Must disapear one day...
-ln -s ../../zenon/zenon.v stdlib/zenon.v
-ln -s ../../zenon/zenon_coqbool.v stdlib/zenon_coqbool.v
+rm -f stdlib/zenon.v; ln -s ../../zenon/zenon.v stdlib/zenon.v
+rm -f stdlib/zenon_coqbool.v; ln -s ../../zenon/zenon_coqbool.v 
 
 
 # Summary feedback.
