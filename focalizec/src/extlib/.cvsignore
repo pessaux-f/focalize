@@ -1,0 +1,10 @@
+*.cm*
+*.zv
+*.pfc
+*.v
+*.vo
+*.ml
+*.fo
+*.mangled
+.depend
+odoc

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2008-09-18 22:45:09 weis Exp $
+# $Id: Makefile,v 1.2 2008-09-18 23:10:22 weis Exp $
 
 ROOTDIR = ..
 
@@ -18,7 +18,6 @@ clean::
 	for i in $(SUBDIRS); do \
 	  ($(CD) $$i; $(MAKE) clean) \
         done
-	$(CD) tests ; $(MAKE) clean
 
 doc::
 	for i in $(SUBDIRS); do \
@@ -26,8 +25,9 @@ doc::
 	done
 
 install::
-	$(CD) toplevel; $(MAKE) install
-	$(CD) stdlib; $(MAKE) install
+	for i in $(SUBDIRS); do \
+	  ($(CD) $$i; $(MAKE) doc) \
+	done
 
 depend::
 	for i in $(SUBDIRS); do \
