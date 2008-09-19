@@ -13,7 +13,12 @@ doc:: $(BYTOBJS)
 
 clean::
 	$(RM) *.cm* *.o *.out *.vo *.fo *~ .*~ log
-	if test -d odoc; then $(RM) odoc/*; fi
+	if test -d tests; then \
+	  ($(CD) tests; $(MAKE) clean); \
+	fi
+	if test -d odoc; then \
+	  $(RM) odoc/*; \
+	fi
 
 depend::
 	$(CAMLDEP) $(CAML_COMP_FLAGS) *.mli *.ml > ./.depend
