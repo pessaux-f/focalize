@@ -1,26 +1,51 @@
-# Basic Unix commands
-MAKE = make
-RM = rm -rf
-CD = cd
-LN = ln -sf
+BINOBJS = $(BYTOBJS:.cmo=.cmx)
 
-# The compilers
+.PHONY: all byt bin clean doc install depend tests
 
-# Caml compiler
-CAML_COMP_FLAGS =
-CAMLBYT = ocamlc -g -w A -warn-error Ae $(CAML_COMP_FLAGS)
-CAMLBIN = ocamlopt -w A -warn-error Ae $(CAML_COMP_FLAGS)
-CAMLDOC = ocamldoc
-CAMLYACC = ocamlyacc -v
-CAMLLEX = ocamllex
-CAMLDEP = ocamldep $(CAML_COMP_FLAGS)
+all:: byt bin
 
-# Focalize compiler
-FOCC_COMP_FLAGS =
-FOCC = focc $(FOCC_COMP_FLAGS)
+byt:: $(BYTOBJS)
 
-# Coq compiler
-COQ_COMP_FLAGS =
-COQC = coqc $(COQ_COMP_FLAGS)
+bin:: $(BINOBJS)
 
-ZVTOV= zvtov
+doc:: $(BYTOBJS)
+	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)
+
+clean::
+	$(RM) *.cm* *.o *.out *.vo *.fo *~ .*~ log
+	if test -d odoc; then $(RM) odoc/*; fi
+
+depend::
+	$(CAMLDEP) $(CAML_COMP_FLAGS) *.mli *.ml > ./.depend
+
+# Only on demand.
+tests::
+	if test -d tests; then ($(CD) tests; $(MAKE) all); fi
+
+.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .foc .fo .zv .v .vo
+
+.ml.cmo:
+	$(CAMLBYT) -c $<
+
+.mli.cmi:
+	$(CAMLBYT) -c $<
+
+.ml.cmx:
+	$(CAMLBIN) -c $<
+
+.mly.ml:
+	$(CAMLYACC) $<
+
+.mll.ml:
+	$(CAMLLEX) $<
+
+.foc.fo .foc.ml .foc.zv:
+	$(FOCC) $<
+
+.zv.v:
+	$(ZVTOV) -new $<
+
+.v.vo:
+	$(COQC) $<
+
+include .depend
