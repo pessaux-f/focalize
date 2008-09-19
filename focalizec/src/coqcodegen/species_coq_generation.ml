@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.110 2008-09-18 12:20:37 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.111 2008-09-19 12:34:54 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1190,24 +1190,21 @@ let zenonify_by_property ctx print_ctx env min_coq_env
            ~current_unit: ctx.Context.scc_current_unit by_prop_expr_ident env in
                  (* A bit of comment. *)
        Format.fprintf out_fmter
-         "(* For toplevel definition used via \"by definition of %a\". *)@\n"
+         "(* For toplevel definition used via \"by property of %a\". *)@\n"
          Sourcify.pp_expr_ident by_prop_expr_ident ;
        let name_for_zenon =
          Parsetree_utils.make_concatenated_name_from_qualified_vname qvname in
        match value_body with
         | Env.CoqGenInformation.VB_non_toplevel -> assert false
-        | Env.CoqGenInformation.VB_toplevel_let_bound (params, scheme, body) ->
-            Format.fprintf out_fmter "@[<2>Definition %s" name_for_zenon ;
-            (* We now generate the sequence of real parameters of the
-               method, not those induced by abstraction and finally the
-               method's body. Anyway, since the used definition is at toplevel,
-               there is no abstraction no notion of "Self", no dependencies. *)
-            generate_defined_non_recursive_method_postlude
-              ctx print_ctx env params scheme body ;
-            (* Done... Then, final carriage return. *)
-            Format.fprintf out_fmter ".@]@\n"
+        | Env.CoqGenInformation.VB_toplevel_let_bound (_, scheme, _) ->
+            (* We just need to print the type of the method. *)
+            let meth_ty = Types.specialize scheme in
+            Format.fprintf out_fmter "@[<2>Parameter %s :@ %a.@]@\n"
+	      name_for_zenon
+	    (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
+              meth_ty
         | Env.CoqGenInformation.VB_toplevel_property lexpr ->
-            Format.fprintf out_fmter "@[<2>Definition %s :=@ " name_for_zenon ;
+            Format.fprintf out_fmter "@[<2>Parameter %s :@ " name_for_zenon ;
             (* Since the used definition is at toplevel, there is no abstraction
                no notion of "Self", no dependencies. *)
             Species_record_type_generation.generate_logical_expr
