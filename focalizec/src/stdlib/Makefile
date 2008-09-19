@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.35 2008-09-18 22:39:00 weis Exp $
+# $Id: Makefile,v 1.36 2008-09-18 23:16:00 weis Exp $
 
 ROOTDIR = ..
 
@@ -60,7 +60,7 @@ EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
 
 include $(ROOTDIR)/Makefile.common
 
-all:: $(EXTERNALOBJS) $(FOCMLS) $(FOCMLS_UNSAFE) \
+byt:: $(EXTERNALOBJS) $(FOCMLS) $(FOCMLS_UNSAFE) \
  $(FOCZVS) $(FOCCMOS) $(FOCCMOS_UNSAFE) $(FOCVS) $(FOCVOS)
 
 install:: all
