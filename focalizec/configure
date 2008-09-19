@@ -9,6 +9,7 @@ SUB_DIRS="basement parser typing \
   toplevel \
   stdlib extlib contribs"
 
+touch .depend
 for i in $SUB_DIRS ; do
   (cd $i; touch .depend; mkdir -p odoc)
 done
