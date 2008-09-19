@@ -1,8 +1,8 @@
-TEST_FILES=sets_orders.foc
+TEST_FILES = sets_orders.foc
 
-tests: all
+tests:: all
 
-all: ../check_file
+all:: ../check_file
 	for i in $(TEST_FILES); do \
 	   ../check_file -c $$i; \
 	done

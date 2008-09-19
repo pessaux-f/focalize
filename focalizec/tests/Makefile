@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.17 2008-07-16 08:29:59 pessaux Exp $
+# $Id: Makefile,v 1.18 2008-09-18 22:39:00 weis Exp $
 
 OK_TEST_FILES = \
  ok__baby_toy.foc \
@@ -22,7 +22,7 @@ KO_TEST_FILES = \
 	ko__test_error.foc \
 	ko__test_rec.foc
 
-all: ok_all ko_all
+all:: ok_all ko_all
 
 ok_all: $(OK_TEST_FILES)
 	# Compile from FoCaL to OCaml.
@@ -34,7 +34,9 @@ ok_all: $(OK_TEST_FILES)
 	ocamlc -w a -c ok__baby_toy_externals.ml
 	for i in $(OK_TEST_FILES:.foc=.ml); do \
 	  echo "OCamllizing $$i"; \
-	  ocamlc -w a -I ../lib/ -I . ../lib/ml_builtins.cmo ../lib/basics.cmo $$i -o $$i.out; \
+	  ocamlc -w a -I ../lib/ \
+	    ../lib/ml_builtins.cmo ../lib/basics.cmo \
+	    $$i -o $$i.out; \
 	done; \
 	# Compile the generated Coq code.
 	for i in $(OK_TEST_FILES:.foc=.v); do \
@@ -50,7 +52,8 @@ ko_all: $(KO_TEST_FILES)
 	done
 
 
-clean:
-	rm -f *.fo *.mangled *~ .*~ *.cm* *.o *.out *.vo
-	rm -f $(OK_TEST_FILES:.foc=.v) $(KO_TEST_FILES:.foc=.v)
-	rm -f $(OK_TEST_FILES:.foc=.ml) $(KO_TEST_FILES:.foc=.ml)
+clean::
+	$(RM) *.cm* *.o *.out *.vo *.fo *~ .*~ log
+	$(RM) *.mangled
+	$(RM) $(OK_TEST_FILES:.foc=.v) $(KO_TEST_FILES:.foc=.v)
+	$(RM) $(OK_TEST_FILES:.foc=.ml) $(KO_TEST_FILES:.foc=.ml)

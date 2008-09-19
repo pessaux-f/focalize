@@ -1,17 +1,20 @@
-# $Id: Makefile,v 1.34 2008-09-13 04:25:23 pessaux Exp $
+# $Id: Makefile,v 1.35 2008-09-18 22:39:00 weis Exp $
 
-include ../Makefile.config
-FOCC = ../toplevel/check_file -no-stdlib-path
+ROOTDIR = ..
+
+include $(ROOTDIR)/Makefile.config
+
 # Jut redefine to remove the warnings because FoCaL has some warnings
 # in its generated code. Especially "Warning Z: unused variable ..."
 # because FoCaL doesn't have the "_" ident which would be usefull in
 # the case of let foo (x in unit) = ...
-CAMLBYT = ocamlc
-CAMLBIN = ocamlc
-COQC = coqc
+CAMLBYT = ocamlc -w A
+CAMLBIN = ocamlc -w A
+
+FOCC = ../toplevel/check_file -no-stdlib-path
+
 ZVTOV = ../../zvtov/zvtov -zenon ../../zenon/zenon
 
-FOC_COMP_FLAGS =
 COQ_COMP_FLAGS = -I ../../zenon/
 
 FOCSRC = basics.foc \
@@ -55,67 +58,29 @@ EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
 	wellfounded_externals.vo random_foc_externals.cmo \
 	random_foc_externals.vo array_foc_externals.vo
 
+include $(ROOTDIR)/Makefile.common
 
+all:: $(EXTERNALOBJS) $(FOCMLS) $(FOCMLS_UNSAFE) \
+ $(FOCZVS) $(FOCCMOS) $(FOCCMOS_UNSAFE) $(FOCVS) $(FOCVOS)
 
-
-all:: $(EXTERNALOBJS) $(FOCMLS) $(FOCMLS_UNSAFE) $(FOCZVS) $(FOCCMOS) $(FOCCMOS_UNSAFE) $(FOCVS) $(FOCVOS)
-
-doc:: $(BYTOBJS)
-	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)
-
-install: all
+install:: all
 	echo "TODO"
 
 clean::
-	$(RM) *~ *.cm* log *.fo $(FOCMLS) $(FOCZVS) $(FOCVS) $(FOCVOS)
+	$(RM) $(FOCMLS) $(FOCZVS) $(FOCVS) $(FOCVOS)
 	$(RM) $(EXTERNALOBJS)
 	$(RM) $(FOCMLS_UNSAFE) $(FOCZVS_UNSAFE) $(FOCVS_UNSAFE) $(FOCVOS_UNSAFE)
-	$(RM) *.mangled odoc/* *.pfc
-
-depend:
-	$(CAMLDEP) *.mli *.ml > ./.depend
-
+	$(RM) *.mangled *.pfc
 
 # Were not compiled to Coq in the previous FoCaL compiler...
 big_integers.ml: big_integers.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
+	$(FOCC) --no-coq-code $<
 parse_poly.ml: parse_poly.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
+	$(FOCC) --no-coq-code $<
 polys_abstract.ml: polys_abstract.foc
-	$(FOCC) $(FOC_COMP_FLAGS) --no-coq-code $<
+	$(FOCC) --no-coq-code $<
 #End temporary
-
 
 # Special rules for exceptions that need to be compiled after basics.foc.
 array_foc_externals.vo: basics.vo
 random_foc_externals.vo: basics.vo
-
-
-
-.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .foc .fo .zv .v .vo
-
-.foc.fo .foc.ml .foc.zv:
-	$(FOCC) $(FOC_COMP_FLAGS) $<
-
-.zv.v:
-	$(ZVTOV) -new $<
-
-.ml.cmo:
-	$(CAMLBYT) -c $<
-
-.mli.cmi:
-	$(CAMLBYT) -c $<
-
-.ml.cmx:
-	$(CAMLBIN) -c $<
-
-.mly.ml:
-	$(CAMLYACC) $<
-
-.mll.ml:
-	$(CAMLLEX) $<
-
-.v.vo:
-	$(COQC) $(COQ_COMP_FLAGS) $<
-
-include .depend

@@ -1,13 +1,15 @@
-# $Id: Makefile,v 1.31 2008-07-11 13:26:50 pessaux Exp $
+# $Id: Makefile,v 1.32 2008-09-18 22:39:00 weis Exp $
 
-include ../Makefile.config
+ROOTDIR = ..
+
+include $(ROOTDIR)/Makefile.config
+
 CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing \
 	-I ../commoncodegen -I ../mlcodegen -I ../coqcodegen
 
-BYTOBJS = check_file.cmo exc_wrapper.cmo
-BINOBJS = $(BYTOBJS:.cmo=.cmx)
+LOCALBYTOBJS = check_file.cmo exc_wrapper.cmo
 
-ALLBYTOBJS = \
+BYTOBJS = \
 	../basement/installation.cmo \
 	../basement/configuration.cmo \
 	../basement/handy.cmo \
@@ -50,24 +52,24 @@ ALLBYTOBJS = \
 	../coqcodegen/species_coq_generation.cmo \
 	../coqcodegen/type_coq_generation.cmo \
 	../coqcodegen/main_coq_generation.cmo \
-	$(BYTOBJS)
+	$(LOCALBYTOBJS)
 
-ALLBINOBJS = $(ALLBYTOBJS:.cmo=.cmx)
+include $(ROOTDIR)/Makefile.common
 
-ALLOBJS = $(ALLBYTOBJS) $(ALLBINOBJS)
+byt:: check_file.byt
 
-all:: byt #bin
+check_file.byt:
+	$(CAMLBYT) $(BYTOBJS) -o check_file.byt
+	$(LN) check_file.byt check_file
 
-byt: $(ALLBYTOBJS)
-	$(CAMLBYT) $(CAML_COMP_FLAGS) $(ALLBYTOBJS) -o check_file.byt
-	ln -sf check_file.byt check_file
+bin:: check_file.bin
 
-bin: $(ALLBINOBJS)
-	$(CAMLBIN) $(CAML_COMP_FLAGS) $(ALLBINOBJS) -o check_file.bin
-	ln -sf check_file.bin check_file
+check_file.bin:
+	$(CAMLBIN) $(BINOBJS) -o check_file.bin
+	$(LN) check_file.bin check_file
 
 fodump: fodump.cmo
-	$(CAMLBYT) $(CAML_COMP_FLAGS) ../basement/installation.cmo \
+	$(CAMLBYT) ../basement/installation.cmo \
 	../basement/configuration.cmo \
 	../basement/handy.cmo \
 	../basement/location.cmo \
@@ -85,35 +87,8 @@ fodump: fodump.cmo
 	../typing/env.cmo \
 	fodump.cmo -o fodump
 
-install: all
+install:: all
 	echo "TODO"
 
 clean::
-	$(RM) *~ *.cm* *.o log check_file.byt check_file.bin check_file
-	$(RM) odoc/*
-
-doc:: $(BYTOBJS)
-	$(CAMLDOC) $(CAML_COMP_FLAGS) -html -d odoc $(BYTOBJS:.cmo=.ml)
-
-depend:
-	$(CAMLDEP) $(CAML_COMP_FLAGS) *.mli *.ml > ./.depend
-
-.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx 
-
-.ml.cmo:
-	$(CAMLBYT) $(CAML_COMP_FLAGS) -c $<
-
-.mli.cmi:
-	$(CAMLBYT) $(CAML_COMP_FLAGS) -c $<
-
-.ml.cmx:
-	$(CAMLBIN) $(CAML_COMP_FLAGS) -c $<
-
-.mly.ml:
-	$(CAMLYACC) $<
-
-.mll.ml:
-	$(CAMLLEX) $<
-
-
-include .depend
+	$(RM) check_file.byt check_file.bin check_file fodump
