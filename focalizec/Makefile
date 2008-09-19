@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.12 2008-09-18 22:39:00 weis Exp $
+# $Id: Makefile,v 1.13 2008-09-18 23:15:35 weis Exp $
 
 ROOTDIR = .
 
@@ -6,14 +6,21 @@ include $(ROOTDIR)/Makefile.config
 
 SUBDIRS = basement parser typing\
   commoncodegen mlcodegen coqcodegen\
-  toplevel stdlib
+  toplevel stdlib\
+  extlib contribs
 
 include $(ROOTDIR)/Makefile.common
 
-byt bin::
+byt::
 	for i in $(SUBDIRS); do \
 	  echo "$$i ..."; \
-	  ($(CD) $$i; $(MAKE) all) \
+	  ($(CD) $$i; $(MAKE) byt) \
+        done
+
+bin::
+	for i in $(SUBDIRS); do \
+	  echo "$$i ..."; \
+	  ($(CD) $$i; $(MAKE) bin) \
         done
 
 clean::
