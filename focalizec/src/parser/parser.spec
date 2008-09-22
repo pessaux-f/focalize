@@ -437,3 +437,77 @@ scope : 'a ast -> untyped ast
 infer : untyped ast -> Types.simple_type ast
 parse : string -> untyped ast
 pass :  Types.simple_type ast -> quelconque ast
+
+(*
+Suite =E0 notre discussion de aujourd'hui concernant notre
+discussion d'un jour ancien, voil=E0 ce que je voudrais en Focal.
+
+Si j'ai
+
+species toto (a1 is a, b1 is b, c1 is c) =3D
+...
+
+end
+
+Si je veux d=E9finir une esp=E8ce tata qui h=E9rite de toto et qui prend
+les m=EAmes param=E8tres que toto, pouvoir faire
+
+species tata(params of toto)
+inherits toto(params of toto) =3D
+...
+end
+
+Mieux, si je veux en plus rajouter un param=E8tre, je pourrais faire
+
+species tutu(params of toto, d1 is d, e1 is e)
+inherits toto(params of toto) =3D
+end
+
+Plus mieux. Si je veux param=E8tre mon esp=E8ce titi par une collection =20=
+
+toto :
+
+species titi(params of toto, t1 is toto(params of toto), d1 is d, e1 =20
+is e)
+inherits tutu(params of toto,d1)
+end
+
+Encore plus mieux, je pourrais faire.
+
+species tyty(params of toto and tutu))
+inherits toto(params of toto),
+	       tutu(params of tutu) =3D
+
+end
+
+Encore plus mieux, si je peux faire toute combinaison tordue et =20
+grotesque de tous
+les cas de figures pr=E9sent=E9s ci-dessus, et que =E7a marche :-)
+
+Bien s=FBr, je vois =E7a comme une aide syntaxique, c'est-=E0-dire que =
+si =20
+il y a le moindre
+conflit de nom de variables entre les diff=E9rents "params of", le =20
+compilo a le droit de
+me dire gentiment d'aller faire du Java parce que visiblement Focal =20
+c'est trop
+compliqu=E9 pour moi.
+
+Voil=E0, tu sais tout. Si tu as une question, tu peux me la poser :-D
+
+Merci
+
+Charles
+
+
+--
+Charles Morisset
+UPMC - LIP6 - Equipe SPI
+104 av du Pr=E9sident Kennedy
+F-75016 Paris, France
+
++ 33 6 65 13 93 06
++ 33 1 44 27 51 28
+
+http://www-spi.lip6.fr/~morisset/
+*)
