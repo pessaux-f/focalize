@@ -1,3 +1,5 @@
+# $Id: Makefile.common,v 1.4 2008-09-22 14:58:19 weis Exp $
+
 BINOBJS = $(BYTOBJS:.cmo=.cmx)
 
 .PHONY: all byt bin clean doc install depend tests
@@ -12,7 +14,7 @@ doc:: $(BYTOBJS)
 	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)
 
 clean::
-	$(RM) *.cm* *.o *.out *.vo *.fo *~ .*~ log
+	$(RM) *.cm* *.o *.out *.vo *.fo *~ .*~ log *.mangled
 	if test -d tests; then \
 	  ($(CD) tests; $(MAKE) clean); \
 	fi

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.13 2008-09-18 23:15:35 weis Exp $
+# $Id: Makefile,v 1.14 2008-09-22 14:58:19 weis Exp $
 
 ROOTDIR = .
 
@@ -11,35 +11,12 @@ SUBDIRS = basement parser typing\
 
 include $(ROOTDIR)/Makefile.common
 
-byt::
+byt bin clean doc depend::
 	for i in $(SUBDIRS); do \
 	  echo "$$i ..."; \
-	  ($(CD) $$i; $(MAKE) byt) \
+	  ($(CD) $$i; $(MAKE) $@); \
         done
-
-bin::
-	for i in $(SUBDIRS); do \
-	  echo "$$i ..."; \
-	  ($(CD) $$i; $(MAKE) bin) \
-        done
-
-clean::
-	for i in $(SUBDIRS); do \
-	  ($(CD) $$i; $(MAKE) clean) \
-        done
-	$(CD) tests ; $(MAKE) clean
-
-doc::
-	for i in $(SUBDIRS); do \
-	  ($(CD) $$i; $(MAKE) doc) \
-	done
 
 install::
 	$(CD) toplevel; $(MAKE) install
 	$(CD) stdlib; $(MAKE) install
-
-depend::
-	for i in $(SUBDIRS); do \
-	  ($(CD) $$i ; $(MAKE) depend) \
-	done
-

@@ -1,11 +1,15 @@
 TEST_FILES = sets_orders.foc
 
+ROOT_DIR = ../..
+
+CHECK_FILE = $(ROOT_DIR)/toplevel/check_file.byt
+
 tests:: all
 
-all:: ../check_file
+all:: $(CHECK_FILE)
 	for i in $(TEST_FILES); do \
-	   ../check_file -c $$i; \
+	   $(CHECK_FILE) -c $$i; \
 	done
 
-../check_file:
-	cd ..; $(MAKE) all
+$(CHECK_FILE):
+	cd $(ROOT_DIR); $(MAKE) all

@@ -1,17 +1,19 @@
-# $Id: Makefile,v 1.36 2008-09-18 23:16:00 weis Exp $
+# $Id: Makefile,v 1.37 2008-09-22 14:58:19 weis Exp $
 
-ROOTDIR = ..
+ROOT_DIR = ..
 
-include $(ROOTDIR)/Makefile.config
+include $(ROOT_DIR)/Makefile.config
 
-# Jut redefine to remove the warnings because FoCaL has some warnings
+# Just redefine to remove the warnings because FoCaL has some warnings
 # in its generated code. Especially "Warning Z: unused variable ..."
 # because FoCaL doesn't have the "_" ident which would be usefull in
 # the case of let foo (x in unit) = ...
 CAMLBYT = ocamlc -w A
 CAMLBIN = ocamlc -w A
 
-FOCC = ../toplevel/check_file -no-stdlib-path
+CHECK_FILE = $(ROOT_DIR)/toplevel/check_file.byt
+
+FOCC = $(CHECK_FILE) -no-stdlib-path
 
 ZVTOV = ../../zvtov/zvtov -zenon ../../zenon/zenon
 
@@ -32,7 +34,7 @@ FOCSRC = basics.foc \
 	quotients.foc \
 	small_integers.foc
 
-FOCSRC_UNSAFE =	big_integers.foc \
+FOCSRC_UNSAFE = big_integers.foc \
 	parse_poly.foc \
 	ensembles_finis.foc
 #	polys_abstract.foc polys_concrete finite_fields fractions finite_factorize
@@ -58,9 +60,9 @@ EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
 	wellfounded_externals.vo random_foc_externals.cmo \
 	random_foc_externals.vo array_foc_externals.vo
 
-include $(ROOTDIR)/Makefile.common
+include $(ROOT_DIR)/Makefile.common
 
-byt:: $(EXTERNALOBJS) $(FOCMLS) $(FOCMLS_UNSAFE) \
+byt:: $(CHECK_FILE) $(EXTERNALOBJS) $(FOCMLS) $(FOCMLS_UNSAFE) \
  $(FOCZVS) $(FOCCMOS) $(FOCCMOS_UNSAFE) $(FOCVS) $(FOCVOS)
 
 install:: all
@@ -84,3 +86,6 @@ polys_abstract.ml: polys_abstract.foc
 # Special rules for exceptions that need to be compiled after basics.foc.
 array_foc_externals.vo: basics.vo
 random_foc_externals.vo: basics.vo
+
+$(CHECK_FILE):
+	cd $(ROOT_DIR); $(MAKE) all

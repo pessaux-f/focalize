@@ -1,4 +1,8 @@
-# $Id: Makefile,v 1.18 2008-09-18 22:39:00 weis Exp $
+# $Id: Makefile,v 1.19 2008-09-22 14:58:19 weis Exp $
+
+ROOT_DIR = ..
+
+CHECK_FILE = $(ROOT_DIR)/toplevel/check_file.byt
 
 OK_TEST_FILES = \
  ok__baby_toy.foc \
@@ -22,13 +26,13 @@ KO_TEST_FILES = \
 	ko__test_error.foc \
 	ko__test_rec.foc
 
-all:: ok_all ko_all
+all:: $(CHECK_FILE) ok_all ko_all
 
 ok_all: $(OK_TEST_FILES)
 	# Compile from FoCaL to OCaml.
 	for i in $(OK_TEST_FILES); do \
 	  echo "Focalizing $$i"; \
-	  ../toplevel/check_file -I ../lib $$i; \
+	  $(CHECK_FILE) -I ../lib $$i; \
 	done; \
 	# Compile the generated OCaml code.
 	ocamlc -w a -c ok__baby_toy_externals.ml
@@ -48,12 +52,13 @@ ko_all: $(KO_TEST_FILES)
 	# Compile from FoCaL to OCaml.
 	for i in $(KO_TEST_FILES); do \
 	  echo "Focalizing $$i"; \
-	  ../toplevel/check_file -I ../lib $$i; \
+	  $(CHECK_FILE) -I ../lib $$i; \
 	done
 
 
 clean::
-	$(RM) *.cm* *.o *.out *.vo *.fo *~ .*~ log
-	$(RM) *.mangled
 	$(RM) $(OK_TEST_FILES:.foc=.v) $(KO_TEST_FILES:.foc=.v)
 	$(RM) $(OK_TEST_FILES:.foc=.ml) $(KO_TEST_FILES:.foc=.ml)
+
+$(CHECK_FILE):
+	cd $(ROOT_DIR); $(MAKE) all

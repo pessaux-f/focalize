@@ -1,36 +1,22 @@
+# $Id: Makefile,v 1.2 2008-09-22 14:58:19 weis Exp $
+
 # Makefile for access control models
 
-FOCC=../../toplevel/./check_file
+ROOT_DIR = ../..
 
-CAMLC=ocamlc
+include $(ROOT_DIR)/Makefile.config
 
-ZENONC=zvtov
+CHECK_FILE = $(ROOT_DIR)/toplevel/check_file.byt
+FOCC = $(CHECK_FILE)
 
-COQC=coqc
+include $(ROOT_DIR)/Makefile.common
 
-WARN=-w a
+all:: access_control.fo hru.fo rbac.fo ticket.fo unix.fo
 
-all: access_control.fo hru.fo rbac.fo ticket.fo unix.fo
-
-clean:
-	rm -f *.fo *.ml *.mli *.cmi *.cmo *.zv *.v *.pfc
+clean::
+	$(RM) *.ml *.mli *.zv *.v *.pfc
 
 .PRECIOUS: *.mli *.fo
 
-.SUFFIXES: .foc .fo .ml .mli .cmi .cmo .zv .v .vo
-
-.foc.fo:
-	$(FOCC) $<
-
-.ml.cmo:
-	if test -e $*.mli; then make $*.cmi; fi
-	$(CAMLC) $(WARN) -c $<
-
-.mli.cmi:
-	$(CAMLC) $(WARN) -c $<
-
-.zv.v:
-	$(ZENONC) $<
-
-.v.vo:
-	$(COQC) $<
+$(CHECK_FILE):
+	cd $(ROOT_DIR); $(MAKE) all

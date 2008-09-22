@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.32 2008-09-18 22:39:00 weis Exp $
+# $Id: Makefile,v 1.33 2008-09-22 14:58:19 weis Exp $
 
 ROOTDIR = ..
 
@@ -56,17 +56,23 @@ BYTOBJS = \
 
 include $(ROOTDIR)/Makefile.common
 
-byt:: check_file.byt
+.PHONY: check_file_byt_link check_file_bin_link
 
-check_file.byt:
-	$(CAMLBYT) $(BYTOBJS) -o check_file.byt
+byt:: check_file_byt_link
+
+check_file_byt_link: check_file.byt
 	$(LN) check_file.byt check_file
 
-bin:: check_file.bin
+check_file.byt: $(BYTOBJS)
+	$(CAMLBYT) $(BYTOBJS) -o $@
 
-check_file.bin:
-	$(CAMLBIN) $(BINOBJS) -o check_file.bin
+bin:: check_file_bin_link
+
+check_file_bin_link: check_file.bin
 	$(LN) check_file.bin check_file
+
+check_file.bin: $(BINOBJS)
+	$(CAMLBIN) $(BINOBJS) -o $@
 
 fodump: fodump.cmo
 	$(CAMLBYT) ../basement/installation.cmo \
