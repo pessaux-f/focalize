@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.41 2008-09-15 08:27:14 weis Exp $ *)
+(* $Id: lexer.mll,v 1.42 2008-09-22 14:56:23 weis Exp $ *)
 
 {
 open Lexing;;
@@ -602,7 +602,7 @@ rule token = parse
       | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
       | _ -> assert false end;
       LIDENT (get_stored_delimited_ident ()) }
-  | "''"
+  | "\'\'"
     { raise
         (Error (Uninitiated_delimited_ident,
                 lexbuf.lex_start_p,
@@ -621,15 +621,15 @@ rule token = parse
       | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
       | _ -> assert false end;
       STRING (get_stored_string ()) }
-  | "'" [^ '\\' '\'' '\010'] "'"
+  | "\'" [^ '\\' '\'' '\010'] "\'"
     { CHAR (Lexing.lexeme_char lexbuf 1) }
-  | "'\\" ['\\' '\'' '"' 'n' 't' 'b' 'r' ' '] "'"
+  | "\'\\" ['\\' '\'' '\"' 'n' 't' 'b' 'r' ' '] "\'"
     { CHAR (char_for_backslash (Lexing.lexeme_char lexbuf 2)) }
-  | "'\\" ['0'-'9'] ['0'-'9'] ['0'-'9'] "'"
+  | "\'\\" ['0'-'9'] ['0'-'9'] ['0'-'9'] "\'"
     { CHAR (char_for_decimal_code lexbuf 2) }
-  | "'\\" 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F'] "'"
+  | "\'\\" 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F'] "\'"
     { CHAR (char_for_hexadecimal_code lexbuf 3) }
-  | "'\\" _
+  | "\'\\" _
     { let l = Lexing.lexeme lexbuf in
       let esc = String.sub l 1 (String.length l - 1) in
       raise (Error
@@ -671,7 +671,7 @@ rule token = parse
       token lexbuf }
 
   | "#" whites (['0'-'9']+ as num) whites
-        ("\"" ([^ '\010' '\013' '"' ] * as name) "\"")?
+        ("\"" ([^ '\010' '\013' '\"' ] * as name) "\"")?
         [^ '\010' '\013'] * newline
     { update_loc lexbuf name (int_of_string num) true 0;
       token lexbuf }
@@ -708,13 +708,13 @@ rule token = parse
               lexbuf.lex_curr_p)) }
 
 and delimited_ident = parse
-  | "''"
+  | "\'\'"
     { () }
+  | '\\' ['(' '-' '\\' '`' '\'' '\"' 'n' 't' 'b' 'r' ' ' '*' ')']
+    { store_delimited_ident_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
+      delimited_ident lexbuf }
   | '\\' newline (whites as space)
     { update_loc lexbuf None 1 false (String.length space);
-      delimited_ident lexbuf }
-  | '\\' ['(' '-' '\\' '`' '\'' '"' 'n' 't' 'b' 'r' ' ' '*' ')']
-    { store_delimited_ident_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
       delimited_ident lexbuf }
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
     { store_delimited_ident_char (char_for_decimal_code lexbuf 1);
@@ -781,6 +781,9 @@ and comment = parse
     { comment_start_pos :=
         (lexbuf.lex_start_p, lexbuf.lex_curr_p) :: !comment_start_pos;
       comment lexbuf; }
+  | '\\' '*'
+    { update_loc lexbuf None 1 false 0;
+      comment lexbuf }
   | "*)"
     { match !comment_start_pos with
       | [] -> assert false
@@ -806,13 +809,13 @@ and comment = parse
     { comment lexbuf }
 
 and string = parse
-  | '"'
+  | '\"'
     { () }
+  | '\\' ['(' '-' '\\' '`' '\'' '\"' 'n' 't' 'b' 'r' ' ' '*' ')']
+    { store_string_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
+      string lexbuf }
   | '\\' newline (whites as space)
     { update_loc lexbuf None 1 false (String.length space);
-      string lexbuf }
-  | '\\' ['(' '-' '\\' '`' '\'' '"' 'n' 't' 'b' 'r' ' ' '*' ')']
-    { store_string_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
       string lexbuf }
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
     { store_string_char(char_for_decimal_code lexbuf 1);
@@ -838,7 +841,7 @@ and string = parse
            (External_code_in_string,
             lexbuf.lex_start_p,
             lexbuf.lex_curr_p)) }
-  | ( "``" | "''" )
+  | ( "``" | "\'\'" )
     { raise
         (Error
            (Delimited_ident_in_string,
@@ -856,6 +859,9 @@ and string = parse
 and documentation = parse
   | "*)"
     { () }
+  | '\\' '*'
+    { store_documentation_char (Lexing.lexeme_char lexbuf 1);
+      documentation lexbuf }
   | eof
     { match !documentation_start_pos with
       | Some (start_pos, end_pos) ->
@@ -878,6 +884,9 @@ and documentation = parse
 and external_code = parse
   | "*}"
     { () }
+  | '\\' '*'
+    { store_external_code_char (Lexing.lexeme_char lexbuf 1);
+      external_code lexbuf }
   | eof
     { match !external_code_start_pos with
       | Some (start_pos, end_pos) ->
