@@ -1,0 +1,1155 @@
+(* $Id: trust_management.fcl,v 1.1 2008-09-22 11:55:33 habib Exp $ *)
+
+use "basics" ;;
+open "basics" ;;
+use "sets_orders" ;;
+open "sets_orders" ;;
+use "ensembles_finis" ;;
+open "ensembles_finis" ;;
+
+(*****************************************************************************)
+(*                 Definition des parametres d'une politique                 *)
+(*****************************************************************************)
+
+let ( && ) (x, y) = and_b (x, y) ;;
+let ( || ) (x, y) = or_b (x, y) ;;
+
+
+
+species Set_of (A is Setoid) inherits Ensembles_finis (A) =
+
+  (* forall(E, P) is true iff for any x in E, P(x) is true *)
+  signature forall : Self -> (A -> bool) -> bool ;
+
+  (*
+  property equal_prop :
+    all set1 set2 in Self, all x in A,
+      equal(set1, set2) ->
+        Self!est_element(x, set1) ->
+          !est_element(x, set2);
+
+  property singleton_prop :
+    all x1 x2 in A,
+      !est_element(x1, !singleton(x2)) ->
+        A!equal(x1, x2);
+  *)
+end ;;
+
+
+
+species Rho inherits Setoid = end ;;
+
+
+
+species Subjects inherits Setoid = end ;;
+
+
+
+species Objects inherits Setoid = end ;;
+
+
+
+species Access_mode inherits Setoid =
+
+  signature read : Self ;
+  signature write : Self ;
+end ;;
+
+
+
+species Access(S is Subjects, O is Objects, M is Access_mode) inherits Setoid =
+
+  signature get_s : Self -> S ;
+  signature get_o : Self -> O ;
+  signature get_m : Self -> M ;
+  signature create : S -> O -> M -> Self ;
+
+  (*
+  property access_equal :
+    all s1 s2 in S, all o1 o2 in O, all m1 m2 in M,
+        !equal(!create(s1, o1, m1), !create(s2, o2, m2)) ->
+          (S!equal(s1, s2) /\ O!equal(o1, o2) /\ M!equal(m1, m2));
+  *)
+end ;;
+
+species States(Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
+               A is Access(S, O, M), S_a is Set_of(A)) inherits Setoid =
+
+  signature lambda : Self -> S_a ;
+  signature add : Self -> A -> Self ;
+  signature del : Self -> A -> Self ;
+
+  (*
+  property lambda_prop :
+    all st1 st2 in self,
+      !equal(st1, st2) ->
+        S_a!equal(!lambda(st1), !lambda(st2));
+
+  property add_prop :
+    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+      !equal(!add(st1, A!create(s1, o1, m1)), st2) ->
+        S_a!equal(!lambda(st2),
+                  S_a!union(!lambda(st1),
+                            S_a!singleton(A!create(s1, o1, m1))));
+
+  property add_mem :
+    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+      !equal(!add(st1, A!create(s1, o1, m1)), st2) ->
+        S_a!est_element(A!create(s1, o1, m1), !lambda(st2));
+
+  property del_prop :
+    all st1 in Self, all a1 in A, all s1 in S, all o1 in O, all m1 in M,
+      S_a!est_element(a1, !lambda(!del(st1, A!create(s1, o1, m1)))) ->
+        S_a!est_element(a1, !lambda(st1));
+
+  property del_mem :
+    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+      !equal(!del(st1, A!create(s1, o1, m1)), st2) ->
+        ~ S_a!est_element(A!create(s1, o1, m1), !lambda(st2));
+*)
+end ;;
+
+
+
+(*****************************************************************************)
+(*                       Definition d'une politique                          *)
+(*****************************************************************************)
+
+species Policy (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
+                A is Access (S, O, M), S_a is Set_of (A))
+  inherits States (Rh, S, O, M, A, S_a) =
+
+  signature omega : Self -> prop;
+end ;;
+
+
+
+(*****************************************************************************)
+(*                 Definition des parametres d'un modele                     *)
+(*****************************************************************************)
+
+species Requests inherits Setoid = end ;;
+
+
+
+species Decisions inherits Setoid =
+
+  signature yes : Self ;
+  signature no : Self ;
+
+  (*
+  property yes_is_not_no :
+    all x in Self,
+      ~ (!equal(x, !yes) /\ !equal(x, !no));
+  *)
+end ;;
+
+
+
+(*
+species Semantics_requests (Rh is Rho,
+                            S is Subjects, O is Objects, M is Access_mode,
+                            A is Access (S, O, M), S_a is Set_o f(A),
+                            R is Requests)
+  inherits States (Rh, S, O, M, A, S_a) =
+
+  signature sem_req : R -> Self -> prop ;
+end ;;
+*)
+
+
+
+species Models (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
+                A is Access (S, O, M), S_a is Set_of (A),
+                R is Requests,
+                D is Decisions)
+  inherits Policy (Rh, S, O, M, A, S_a) =
+        (* Semantics_requests(Rh, S, O, M, A, S_a, R) =
+
+  logical let secure(tau in R -> Self -> (d * Self)) =
+    all st1 st2 in Self, all r1 in R, all d1 in D,
+      tau(r1, st1) = (d1, st2) ->
+        !omega(st1) ->
+          !omega(st2);
+
+  logical let correct(tau in R -> Self -> (d * Self)) =
+    all st1 st2 in Self, all r1 in R, all d1 in D,
+      tau(r1, st1) = (d1, st2) ->
+        D!equal(d1, D!yes) ->
+          !sem_req(r1, st2);
+  *)
+end ;;
+
+
+
+(*****************************************************************************)
+(*                 Instanciation dans le cas general                         *)
+(*****************************************************************************)
+
+species Requests_gal(S is Subjects, O is Objects, M is Access_mode)
+  inherits Requests =
+
+  signature get_s : Self -> S ;
+  signature get_o : Self -> O ;
+  signature get_m : Self -> M ;
+  signature is_get : Self -> bool ;
+  signature is_rel : Self -> bool ;
+
+  (*
+  property get_or_rel :
+    all x in Self,
+      !is_get(x) \/ !is_rel(x);
+
+  property get_is_not_rel :
+    all x in Self,
+      ~ (!is_get(x) /\ !is_rel(x));
+  *)
+end ;;
+
+
+
+(*
+species Semantics_requests_gal(Rh is Rho,
+                               S is Subjects, O is Objects, M is Access_mode,
+                               A is Access(S, O, M), S_a is Set_of(A),
+                               R is Requests_gal(S, O, M))
+  inherits Semantics_requests(Rh, S, O, M, A, S_a, R) =
+
+  logical let sem_req_get(r1, st1) =
+    R!is_get(r1) ->
+      S_a!est_element(A!create(R!get_s(r1), R!get_o(r1), R!get_m(r1)),
+                      !lambda(st1));
+
+  logical let sem_req_rel(r1, st1) =
+    R!is_rel(r1) ->
+      ~ S_a!est_element(A!create(R!get_s(r1), R!get_o(r1), R!get_m(r1)),
+                          !lambda(st1));
+
+  logical let sem_req(r1, st1) =
+    !sem_req_get(r1, st1) /\ !sem_req_rel(r1, st1);
+end ;;
+*)
+
+
+
+(*****************************************************************************)
+(*                             Trust Management                              *)
+(*****************************************************************************)
+
+species Rho_tm inherits Rho = end ;;
+
+
+
+species Depth_tm inherits Setoid =
+
+  signature zero : Self ;
+end ;;
+
+
+
+species Quad (S1 is Setoid, S2 is Setoid, S3 is Setoid,
+              S4 is Setoid) inherits Setoid =
+
+  rep = (S1 * S2 * S3 * S4);
+
+  signature first : Self -> S1 ;
+  signature second : Self -> S2 ;
+  signature third : Self -> S3 ;
+  signature fourth : Self -> S4 ;
+
+end ;;
+
+
+
+species Quint (S1 is Setoid, S2 is Setoid, S3 is Setoid,
+              S4 is Setoid, S5 is Setoid) inherits Setoid =
+  rep = (S1 * S2 * S3 * S4 * S5);
+
+  signature first : Self -> S1 ;
+  signature second : Self -> S2 ;
+  signature third : Self -> S3 ;
+  signature fourth : Self -> S4 ;
+  signature fifth : Self -> S5 ;
+end ;;
+
+
+
+species Sa (S is Subjects, O is Objects,
+            A is Access_mode, D is Depth_tm,
+            Q is Quad (S, O, A, D))
+  inherits Set_of (Q) =
+end ;;
+
+
+
+species Sd (S1 is Subjects, O is Objects,
+            A is Access_mode, S2 is Subjects, D is Depth_tm,
+            Q is Quint (S1, O, A, S2, D))
+  inherits Set_of (Q) =
+end ;;
+
+
+
+type g =
+  internal
+  external
+   | caml -> {* Graph.graph *}
+;;
+
+(* let buildG =  *)
+(*   internal Sa -> Sd -> g *)
+(*   external *)
+(*   | caml -> {* Graph.create_g *};; *)
+
+(* let valideR = *)
+(*    internal g -> Subjects -> Objects -> Access_mode -> Depth_tm -> bool *)
+(*    external *)
+(* | caml -> {* Graph.isInList *};; *)
+
+species States_tm (Rh is Rho_tm, S is Subjects, O is Objects,
+                   M is Access_mode, D is Depth_tm, A is Access (S, O, M),
+                   S_set_a is Set_of (A), Q1 is Quad (S, O, M, D),
+                   Q2 is Quint(S, O, M, S, D),
+                   S_a is Sa (S, O, M, D, Q1), S_d is Sd (S, O, M, S, D, Q2))
+  inherits States (Rh, S, O, M, A, S_set_a) =
+
+  let buildG =
+    internal S_a -> S_d -> g
+    external
+      | caml -> {* Graph.create_g *} ;
+
+  let valideR =
+    internal g -> S -> O -> M -> D -> bool
+    external
+      | caml -> {* Graph.isInList *} ;
+
+  signature a : Self -> O -> M -> S_a ;
+  signature d : Self -> S -> O -> M -> S_d ;
+  signature create_sa : Self -> S_a ;
+  signature create_sd : Self -> S_d ;
+end ;;
+
+
+
+species Policy_tm (Rh is Rho_tm, S is Subjects, O is Objects,
+                   M is Access_mode, D is Depth_tm, A is Access (S, O, M),
+                   S_set_a is Set_of (A), Q1 is Quad (S, O, M, D),
+                   Q2 is Quint (S, O, M, S, D),
+                   S_a is Sa (S, O, M, D, Q1), S_d is Sd (S, O, M, S, D, Q2))
+  inherits
+    States_tm (Rh, S, O, M, D, A, S_set_a, Q1, Q2, S_a, S_d),
+    Policy (Rh, S, O, M, A, S_set_a) =
+
+  logical let omega (st in Self) =
+     all sp in S, all op in O, all mp in M,
+       valideR(buildG (create_sa (st), create_sd (st)), sp, op, mp, D!zero) ;
+end ;;
+
+
+
+species Requests_tm(S is Subjects, O is Objects, M is Access_mode,
+                   D is Depth_tm)
+  inherits Requests_gal(S, O, M) =
+end ;;
+
+
+
+species Models_tm(Rh is Rho_tm, S is Subjects, O is Objects,
+                  M is Access_mode, D is Depth_tm, A is Access (S, O, M),
+                  S_set_a is Set_of (A), R is Requests_tm (S, O, M, D),
+                  Dec is Decisions, Q1 is Quad (S, O, M, D),
+                  Q2 is Quint (S, O, M, S, D),
+                  S_a is Sa (S, O, M, D, Q1), S_d is Sd (S, O, M, S, D, Q2))
+  inherits
+    Policy_tm (Rh, S, O, M, D, A, S_set_a, Q1, Q2, S_a, S_d),
+    Models (Rh, S, O, M, A, S_set_a, R, Dec)  =
+
+  let tau_tm (r1 in R, st1 in Self) =
+     let sp = R!get_s (r1) in
+     let op = R!get_o (r1) in
+     let mp = R!get_m (r1) in
+
+     if (R!is_get (r1)) then
+       if valideR
+	    (buildG (create_sa (st1), create_sd (st1)), sp, op, mp, D!zero)
+       then
+         (Dec!yes, !add(st1, A!create(sp, op, mp)))
+       else (Dec!no, st1)
+     else (Dec!yes, !del(st1, A!create(sp, op, mp))) ;
+end ;;
+
+
+
+(*****************************************************************************)
+(*                                 Exemple                                   *)
+(*****************************************************************************)
+
+
+species S_set_of(A is Setoid) inherits Set_of(A), Liste(A) =
+
+  let rec forall(l, p) =
+     match l with
+     | [ ] -> true
+     | h :: t -> and_b(p(h), !forall(t, p))
+     ;
+
+  let print(l) =
+     let rec aux(ls) =
+        match ls with
+        | [ ] -> "]"
+        | h :: t ->
+            match t with
+            | [ ] -> A!print(h) ^ "]"
+            | _ -> A!print(h) ^ ",\n                     " ^ aux(t)
+     in "[" ^ aux(l);
+
+  let print_mod(l) =
+     let rec aux(ls) =
+        match ls with
+        | [ ] -> ""
+        | h :: t ->
+            match t with
+            | [ ] -> A!print(h) ^ ""
+            | _ -> A!print(h) ^ "" ^ aux(t)
+     in "[" ^ aux(l);
+
+  proof of equal_prop = assumed {* Do do later. *} ;
+
+  proof of singleton_prop = assumed {* Do do later. *} ;
+
+end ;;
+
+species S_setoid inherits Setoid =
+
+  rep = int * string;
+
+  let create(n in int, s in string) in Self = (n, s);
+
+  let equal(s1, s2) =
+     first(s1) = first(s2);
+
+  let element = (0, "element");
+
+  let print(s) = scnd(s);
+
+  proof of equal_reflexive =
+    assumed (*by property beq_refl definition of equal*) {* Do do later. *} ;
+
+  proof of equal_symmetric =
+    assumed(*by property beq_symm definition of equal*) {* Do do later. *} ;
+
+  proof of equal_transitive =
+    assumed(*by property beq_trans definition of equal*) {* Do do later. *} ;
+
+end ;;
+
+species S_rho inherits Rho_tm, S_setoid =
+end ;;
+
+species S_subjects inherits Subjects, S_setoid =
+
+  let pierre = create (1, "Pierre") ;
+  let bob = create (2, "Bob") ;
+  let marie = create (3, "Marie") ;
+  let nathalie = create (4, "Nathalie") ;
+  let subjects_list in list (Self) = [ pierre; bob; marie; nathalie ];
+end ;;
+
+species S_objects inherits Objects, S_setoid =
+
+  let f1 = create (1, "f1") ;
+  let f2 = create (2, "f2") ;
+  let objects_list in list (Self) = [ f1; f2 ];
+end ;;
+
+species S_access_mode inherits Access_mode, S_setoid =
+
+  let read = (1, "read") ;
+  let write = (2, "write") ;
+  let execute in Self = (3, "execute") ;
+end ;;
+
+species S_depth inherits Depth_tm =
+
+  rep = int ;
+  let zero = 0 ;
+  let create (n in int) in Self = n ;
+  let equal(d1, d2) = d1 = d2 ;
+  let element = (-1) ;
+
+  (* let print(d) = "profondeur";*)
+
+  proof of equal_reflexive = assumed {* Do do later. *} ;
+  proof of equal_symmetric = assumed {* Do do later. *} ;
+  proof of equal_transitive = assumed {* Do do later. *} ;
+
+end ;;
+
+species S_access (S_sub is S_subjects, S_obj is S_objects,
+                  S_acc_mod is S_access_mode)
+  inherits Access (S_sub, S_obj, S_acc_mod) =
+
+  rep = (S_sub * (S_obj * S_acc_mod)) ;
+
+  let create(s, o, m) = (s, (o, m)) ;
+  let get_s (a) = first (a) ;
+  let get_o (a) = first (scnd (a)) ;
+  let get_m (a) = scnd (scnd (a)) ;
+
+  let equal(a1, a2) =
+     and_b (and_b (S_sub!equal (!get_s(a1), !get_s (a2)),
+                   S_obj!equal (!get_o(a1), !get_o (a2))),
+            S_acc_mod!equal (!get_m (a1), !get_m (a2))) ;
+
+  let element = !create(S_sub!element, S_obj!element, S_acc_mod!element) ;
+
+  let print(a) =
+     "(" ^ S_sub!print(!get_s(a)) ^
+     "," ^ S_obj!print(!get_o(a)) ^
+     "," ^ S_acc_mod!print(!get_m(a)) ^
+     ")" ;
+
+  proof of equal_reflexive =
+    by property S_sub!equal_reflexive,
+    S_obj!equal_reflexive,
+    S_acc_mod!equal_reflexive
+    definition of equal ;
+
+  proof of equal_symmetric =
+    by property S_sub!equal_symmetric,
+    S_obj!equal_symmetric,
+    S_acc_mod!equal_symmetric
+    definition of equal ;
+
+  proof of equal_transitive =
+    by property S_sub!equal_transitive,
+    S_obj!equal_transitive,
+    S_acc_mod!equal_transitive
+    definition of equal ;
+
+  proof of access_equal = assumed {* Do do later. *} ;
+
+end ;;
+
+species S_decisions inherits Decisions, S_setoid =
+
+  let yes = (1, "yes");
+  let no = (2, "no");
+
+  proof of yes_is_not_no = assumed {* Do do later. *} ;
+end ;;
+
+species S_get_release inherits S_setoid =
+
+  let get in Self = (1, "+");
+  let rel in Self = (2, "-");
+end ;;
+
+species S_requests_tm(S is S_subjects, O is S_objects, M is S_access_mode,
+                      D is Depth_tm,
+                      Sgr is S_get_release)
+  inherits Requests_tm(S, O, M, D) =
+
+  rep = (Sgr * (S * (O * M))) ;
+
+  let create(sgrp in Sgr, sp in S, op in O,
+             mp in M) in Self =
+     (sgrp, (sp, (op, mp)));
+
+  let get_gr(rg in Self) in Sgr = first(rg) ;
+
+  let get_s(rg in Self) in S = first(scnd(rg)) ;
+
+  let get_o(rg in Self) in O = first(scnd(scnd(rg))) ;
+
+  let get_m(rg in Self) in M = scnd(scnd(scnd(rg))) ;
+
+  let is_get(rg in Self) in bool =
+     Sgr!equal(Sgr!get, !get_gr(rg));
+
+  let is_rel(rg in Self) in bool =
+     Sgr!equal(Sgr!rel, !get_gr(rg));
+
+  let equal(rg1 in Self, rg2 in Self) in bool =
+     and_b(
+           and_b(Sgr!equal(!get_gr(rg1), !get_gr(rg2)),
+                 S!equal(!get_s(rg1), !get_s(rg2))),
+           and_b(O!equal(!get_o(rg1), !get_o(rg2)),
+                 M!equal(!get_m(rg1), !get_m(rg2))));
+
+  let element =
+     !create(Sgr!get, S!element, O!element, M!element);
+
+  let print(rg) =
+     "<" ^ Sgr!print(!get_gr(rg)) ^
+     "," ^ S!print(!get_s(rg)) ^
+     "," ^ O!print(!get_o(rg)) ^
+     "," ^ M!print(!get_m(rg)) ^
+     ">";
+
+  proof of equal_reflexive =
+    by property S!equal_reflexive,
+       O!equal_reflexive,
+       M!equal_reflexive,
+       Sgr!equal_reflexive
+    definition of equal;
+
+  proof of equal_symmetric =
+    by property S!equal_symmetric,
+       O!equal_symmetric,
+       M!equal_symmetric,
+       Sgr!equal_symmetric
+    definition of equal;
+
+  proof of equal_transitive =
+    by property S!equal_transitive,
+       O!equal_transitive,
+       M!equal_transitive,
+       Sgr!equal_transitive
+    definition of equal;
+
+end ;;
+
+
+species S_sa(S is Subjects, O is Objects,
+             A is Access_mode, D is Depth_tm,
+             Q is Quad (S, O, A, D)) inherits Sa(S, O, A, D, Q), Liste(Q) =
+
+  let rec forall(l, p) =
+     match l with
+     | [ ] -> true
+     | h :: t -> and_b(p(h), !forall(t, p));
+
+end ;;
+
+
+species S_sd(S is Subjects, O is Objects,
+             A is Access_mode, D is Depth_tm,
+             Q is Quint (S, O, A, S, D)) inherits Sd(S, O, A, S, D, Q),
+              Liste(Q) =
+
+  let rec forall(l, p) =
+     match l with
+     | [ ] -> true
+     | h :: t -> and_b(p(h), !forall(t, p));
+
+end ;;
+
+species S_quad(S1 is Setoid, S2 is Setoid, S3 is Setoid,
+               S4 is Setoid) inherits Quad(S1, S2, S3, S4) =
+
+
+  let create(s1 in S1, s2 in S2, s3 in S3,
+             s4 in S4) in Self = (s1, s2, s3, s4);
+
+  let element = create(S1!element, S2!element, S3!element, S4!element) ;
+
+  let first (x in Self) =
+     match x with
+     | (v, _, _, _) -> v ;
+
+  let second (x in Self) =
+     match x with
+     | (_, v, _, _) -> v ;
+
+  let third (x in Self) =
+     match x with
+     | (_, _, v, _) -> v ;
+
+  let fourth (x in Self) =
+     match x with
+     | (_, _, _, v) -> v ;
+
+  let equal (a1 in Self, a2 in Self) in bool =
+     and_b(and_b(S1!equal(first(a1), first(a2)),
+                 S2!equal(second(a1), second(a2))),
+           and_b(S3!equal(third(a1), third(a2)),
+                 S4!equal(fourth(a1), fourth(a2))));
+
+  proof of equal_reflexive = assumed {* Do do later. *} ;
+  proof of equal_symmetric = assumed {* Do do later. *} ;
+  proof of equal_transitive = assumed {* Do do later. *} ;
+
+end ;;
+
+species S_quint(S1 is Setoid, S2 is Setoid, S3 is Setoid,
+               S4 is Setoid, S5 is Setoid) inherits Quint(S1, S2, S3, S4, S5) =
+
+  let create(s1 in S1, s2 in S2, s3 in S3,
+             s4 in S4, s5 in S5) in Self = (s1, s2, s3, s4, s5);
+
+  let element = create(S1!element, S2!element, S3!element, S4!element,
+                       S5!element) ;
+
+  let first (x in Self) =
+     match x with
+     | (v, _, _, _, _) -> v ;
+
+  let second (x in Self) =
+     match x with
+     | (_, v, _, _, _) -> v ;
+
+  let third (x in Self) =
+     match x with
+     | (_, _, v, _, _) -> v ;
+
+  let fourth (x in Self) =
+     match x with
+     | (_, _, _, v, _) -> v ;
+
+  let fifth (x in Self) =
+     match x with
+     | (_, _, _, _, v) -> v ;
+
+  let equal (a1 in Self, a2 in Self) in bool =
+     and_b(and_b(and_b(S1!equal(first(a1), first(a2)),
+                       S2!equal(second(a1), second(a2))),
+                 and_b(S3!equal(third(a1), third(a2)),
+                       S4!equal(fourth(a1), fourth(a2)))),
+           S5!equal(fifth(a1), fifth(a2)));
+
+  proof of equal_reflexive = assumed {* Do do later. *} ;
+  proof of equal_symmetric = assumed {* Do do later. *} ;
+  proof of equal_transitive = assumed {* Do do later. *} ;
+
+end ;;
+
+species S_models_tm(S_rh is S_rho,
+                    S_sub is S_subjects,
+                    S_obj is S_objects,
+                    S_acc_mod is S_access_mode,
+                    S_dep is S_depth,
+                    S_acc is S_access(S_sub, S_obj, S_acc_mod),
+                    S_set_acc is S_set_of(S_acc),
+                    S_gr is S_get_release,
+                    S_req is S_requests_tm(S_sub, S_obj, S_acc_mod, S_dep,
+                                           S_gr),
+                    S_dec is S_decisions, Q1 is S_quad(S_sub, S_obj, S_acc_mod,
+                                                     S_dep),
+                    Q2 is S_quint(S_sub, S_obj, S_acc_mod, S_sub, S_dep),
+                    S_a is S_sa(S_sub, S_obj, S_acc_mod, S_dep, Q1),
+                    S_d is S_sd(S_sub, S_obj, S_acc_mod, S_dep, Q2))
+  inherits Models_tm(S_rh, S_sub, S_obj, S_acc_mod, S_dep, S_acc, S_set_acc,
+                   S_req, S_dec, Q1, Q2, S_a, S_d) =
+
+  rep = (S_set_acc *
+         ((S_obj -> S_acc_mod -> S_a) *
+          (S_sub -> S_obj -> S_acc_mod -> S_d)));
+
+  let create (s in S_set_acc, sa in (S_obj -> S_acc_mod -> S_a),
+              sd in (S_sub -> S_obj -> S_acc_mod -> S_d)) in Self =
+     (s, (sa, sd)) ;
+
+  let lambda (st in Self) = first (st) ;
+
+  let upsilon (st in Self) in ((S_obj -> S_acc_mod -> S_a) *
+                               (S_sub -> S_obj -> S_acc_mod -> S_d)) =
+     scnd (st) ;
+
+  let add (st, ac) =
+     (S_set_acc!union (!lambda (st), S_set_acc!singleton (ac)), !upsilon (st));
+
+  let del (st, ac) =
+     (S_set_acc!diff (!lambda (st), S_set_acc!singleton (ac)), !upsilon (st)) ;
+
+  let a (st, obj, m) = first (upsilon (st)) (obj, m) ;
+
+  let d (st, sub, obj, m) = scnd (upsilon (st)) (sub, obj, m) ;
+
+  let equal (st1, st2) = S_set_acc!equal (!lambda (st1), !lambda (st2)) ;
+
+  let element in Self =
+     create(S_set_acc!vide,
+            (function obj -> function mode -> S_a!vide),
+            (function subj -> function obj -> function mode ->
+              S_d!vide)) ;
+
+  let print (st) = S_set_acc!print (!lambda (st)) ;
+
+(*
+  let print_right(set_mod,r in S_acc_mod)=
+     if S_set_mod!est_element(r,set_mod) then
+       S_acc_mod!print(r)
+     else
+       "-";
+
+  let print_set_right(set_mod)=
+     !print_right(set_mod,s_acc_mod!read)^
+     !print_right(set_mod,s_acc_mod!write)^
+     !print_right(set_mod,s_acc_mod!execute);
+*)
+
+  let create_sa (st in Self) =
+    let rec aux (l in list(S_obj)) =
+      match l with
+        | [ ] -> S_a!vide
+        | h :: t ->
+           S_a!union (S_a!union (S_a!union (a (st, h, S_acc_mod!read),
+                                            a (st, h, S_acc_mod!write)),
+                                 a (st, h, S_acc_mod!execute)),
+                      aux(t)) in
+    aux (S_obj!objects_list) ;
+
+  let create_sd (st in Self) =
+    let rec aux (l1 in list (S_sub), l2 in list (S_obj)) =
+      match l1 with
+        | [ ] -> S_d!vide
+        | h1 :: t1 ->
+            match l2 with
+              | [ ] -> S_d!vide
+              | h2 :: t2 ->
+                  S_d!union (S_d!union
+                             (S_d!union (d (st, h1, h2, S_acc_mod!read),
+                                         d (st, h1, h2, S_acc_mod!write)),
+                              d (st, h1, h2, S_acc_mod!execute)),
+                             aux(t1, t2)) in
+    aux (S_sub!subjects_list, S_obj!objects_list) ;
+
+  proof of equal_reflexive =
+    by property S_set_acc!equal_reflexive definition of equal ;
+
+  proof of equal_symmetric =
+    by property S_set_acc!equal_symmetric definition of equal ;
+
+  proof of equal_transitive =
+    by property S_set_acc!equal_transitive definition of equal ;
+
+end ;;
+
+
+collection C_rho implements S_rho ;;
+
+collection C_subjects implements S_subjects ;;
+
+collection C_objects implements S_objects ;;
+
+collection C_access_mode implements S_access_mode ;;
+
+collection C_depth implements S_depth ;;
+
+collection C_access
+  implements S_access(C_subjects, C_objects, C_access_mode) ;;
+
+collection C_set_of_access implements S_set_of(C_access) ;;
+
+collection C_decisions implements S_decisions ;;
+
+collection C_get_release implements S_get_release ;;
+
+collection C_requests_tm
+  implements S_requests_tm (C_subjects, C_objects, C_access_mode, C_depth,
+                            C_get_release) ;;
+
+collection C_quad implements S_quad (C_subjects, C_objects, C_access_mode,
+                                     C_depth) ;;
+
+collection C_quint implements S_quint (C_subjects, C_objects, C_access_mode,
+                                       C_subjects, C_depth) ;;
+
+collection C_sa implements S_sa(C_subjects, C_objects, C_access_mode, C_depth,
+                                C_quad) ;;
+
+collection C_sd implements S_sd(C_subjects, C_objects, C_access_mode, C_depth,
+                                C_quint) ;;
+
+collection C_models_tm
+  implements S_models_tm(C_rho, C_subjects, C_objects, C_access_mode, C_depth,
+                         C_access, C_set_of_access, C_get_release,
+                         C_requests_tm, C_decisions, C_quad, C_quint, C_sa,
+                         C_sd) ;;
+
+let a_ex(o, m) =
+   let rec rec_a_ex(l) =
+      match l with
+      | [ ] -> C_sa!vide
+      | h :: t -> if (C_subjects!equal(h, C_subjects!pierre) &&
+                               C_objects!equal(o, C_objects!f1) &&
+                               C_access_mode!equal(m, C_access_mode!execute))
+      then C_sa!union(C_sa!singleton(C_quad!create(C_subjects!pierre,
+                       C_objects!f1,
+                       C_access_mode!execute,
+                       C_depth!create(8))), rec_a_ex(t))
+      else if (C_subjects!equal(h, C_subjects!bob) &&
+               C_objects!equal(o, C_objects!f1) &&
+               C_access_mode!equal(m, C_access_mode!execute))
+      then C_sa!union(C_sa!singleton(C_quad!create(C_subjects!bob,
+                       C_objects!f1,
+                       C_access_mode!execute,
+                       C_depth!create(5))), rec_a_ex(t))
+      else rec_a_ex(t)
+in rec_a_ex(C_subjects!subjects_list);;
+
+let d_ex(s, o, m) =
+
+   if (C_subjects!equal(s, C_subjects!pierre) &&
+       C_objects!equal(o, C_objects!f1) &&
+       C_access_mode!equal(m, C_access_mode!execute))
+   then
+     C_sd!union(C_sd!singleton(C_quint!create(C_subjects!pierre,
+                                                C_objects!f1,
+                                                C_access_mode!execute,
+                                                C_subjects!marie,
+                                                C_depth!create(3))),
+                  C_sd!singleton(C_quint!create(C_subjects!pierre,
+                                                C_objects!f1,
+                                                C_access_mode!execute,
+                                                C_subjects!bob,
+                                                C_depth!create(7))))
+   else if (C_subjects!equal(s, C_subjects!bob) &&
+            C_objects!equal(o, C_objects!f1) &&
+            C_access_mode!equal(m, C_access_mode!execute))
+   then
+     C_sd!union(C_sd!singleton(C_quint!create(C_subjects!bob,
+                                                C_objects!f1,
+                                                C_access_mode!execute,
+                                                C_subjects!marie,
+                                                C_depth!create(3))),
+                  C_sd!singleton(C_quint!create(C_subjects!bob,
+                                                C_objects!f1,
+                                                C_access_mode!execute,
+                                                C_subjects!pierre,
+                                                C_depth!create(6))))
+   else
+     C_sd!vide
+;;
+
+print_string("Exemple d'execution :\n\n");;
+
+let rec fct2 (y, z) = fct2 (y, z) ;;
+let rec fct3 (x, y, z) = fct3 (x, y, z) ;;
+
+let st0 = C_models_tm!create(C_set_of_access!vide,
+                             a_ex,
+                             d_ex);;
+
+print_string("           Etat0 : " ^ C_models_tm!print(st0) ^ "\n");;
+
+let req0 = C_requests_tm!create(C_get_release!get,
+                                C_subjects!bob,
+                                C_objects!f1,
+                                C_access_mode!execute);;
+
+print_string("Requete0 : " ^ C_requests_tm!print(req0) ^ "\n");;
+
+let rep0 = C_models_tm!tau_tm(req0, st0);;
+
+let dec0 = first(rep0);;
+
+let st1 = scnd(rep0);;
+
+print_string("Reponse0 : Decision0 : " ^
+              C_decisions!print(dec0) ^
+              "\n");;
+
+print_string("           Etat1 : " ^
+             C_models_tm!print(#st1) ^
+              "\n");;
+
+print_string("\n--------------------------------------------------------\n");;
+
+let req1 = C_requests_tm!create(C_get_release!get,
+                                    C_subjects!bob,
+                                    C_objects!f2,
+                                    C_access_mode!execute);;
+
+print_string("Requete1 : " ^ C_requests_tm!print(#req1) ^ "\n");;
+
+let rep1 = C_models_tm!tau_tm(#req1, #st1);;
+
+let dec1 = first(#rep1);;
+
+let st2 = scnd(#rep1);;
+
+print_string("Reponse1 : Decision1 : " ^
+              C_decisions!print(#dec1) ^
+              "\n");;
+
+print_string("           Etat2 : " ^
+              C_models_tm!print(#st2) ^
+              "\n");;
+
+print_string("\n--------------------------------------------------------\n");;
+
+let req2 = C_requests_tm!create(C_get_release!get,
+                                    C_subjects!bob,
+                                    C_objects!f1,
+                                    C_access_mode!read);;
+
+print_string("Requete2 : " ^ C_requests_tm!print(#req2) ^ "\n");;
+
+let rep2 = C_models_tm!tau_tm(#req2, #st1);;
+
+let dec2 = first(#rep2);;
+
+let st3 = scnd(#rep2);;
+
+print_string("Reponse2 : Decision2 : " ^
+              C_decisions!print(#dec2) ^
+              "\n");;
+
+print_string("           Etat3 : " ^
+              C_models_tm!print(#st3) ^
+              "\n");;
+
+print_string("\n--------------------------------------------------------\n");;
+
+let req3 = C_requests_tm!create(C_get_release!get,
+                                    C_subjects!marie,
+                                    C_objects!f1,
+                                    C_access_mode!execute);;
+
+print_string("Requete3 : " ^ C_requests_tm!print(#req3) ^ "\n");;
+
+let rep3 = C_models_tm!tau_tm(#req3, #st1);;
+
+let dec3 = first(#rep3);;
+
+let st4 = scnd(#rep3);;
+
+print_string("Reponse3 : Decision3 : " ^
+              C_decisions!print(#dec3) ^
+              "\n");;
+
+print_string("           Etat4 : " ^
+              C_models_tm!print(#st4) ^
+              "\n");;
+
+print_string("\n--------------------------------------------------------\n");;
+
+let req4 = C_requests_tm!create(C_get_release!get,
+                                    C_subjects!nathalie,
+                                    C_objects!f1,
+                                    C_access_mode!execute);;
+
+print_string("Requete4 : " ^ C_requests_tm!print(#req4) ^ "\n");;
+
+let rep4 = C_models_tm!tau_tm(#req4, #st1);;
+
+let dec4 = first(#rep4);;
+
+let st5 = scnd(#rep4);;
+
+print_string("Reponse4 : Decision4 : " ^
+              C_decisions!print(#dec4) ^
+              "\n");;
+
+print_string("           Etat5 : " ^
+              C_models_tm!print(#st5) ^
+              "\n");;
+
+print_string("\n--------------------------------------------------------\n");;
+
+let req5 = C_requests_tm!create(C_get_release!rel,
+                                    C_subjects!bob,
+                                    C_objects!f1,
+                                    C_access_mode!execute);;
+
+print_string("Requete5 : " ^ C_requests_tm!print(#req5) ^ "\n");;
+
+let rep5 = C_models_tm!tau_tm(#req5, #st1);;
+
+let dec5 = first(#rep5);;
+
+let st6 = scnd(#rep5);;
+
+print_string("Reponse5 : Decision5 : " ^
+              C_decisions!print(#dec5) ^
+              "\n");;
+
+print_string("           Etat6 : " ^
+              C_models_tm!print(#st6) ^
+              "\n");;
+
+print_string("\n--------------------------------------------------------\n");;
+
+let req6 = C_requests_tm!create(C_get_release!rel,
+                                    C_subjects!bob,
+                                    C_objects!f2,
+                                    C_access_mode!execute);;
+
+print_string("Requete6 : " ^ C_requests_tm!print(#req6) ^ "\n");;
+
+let rep6 = C_models_tm!tau_tm(#req6, #st1);;
+
+let dec6 = first(#rep6);;
+
+let st7 = scnd(#rep6);;
+
+print_string("Reponse6 : Decision6 : " ^
+              C_decisions!print(#dec6) ^
+              "\n");;
+
+print_string("           Etat7 : " ^
+              C_models_tm!print(#st7) ^
+              "\n");;
+
+print_string("\n--------------------------------------------------------\n");;
+
+let req7 = C_requests_tm!create(C_get_release!rel,
+                                    C_subjects!bob,
+                                    C_objects!f1,
+                                    C_access_mode!read);;
+
+print_string("Requete7 : " ^ C_requests_tm!print(#req7) ^ "\n");;
+
+let rep7 = C_models_tm!tau_tm(#req7, #st1);;
+
+let dec7 = first(#rep7);;
+
+let st8 = scnd(#rep7);;
+
+print_string("Reponse7 : Decision7 : " ^
+              C_decisions!print(#dec7) ^
+              "\n");;
+
+print_string("           Etat8 : " ^
+              C_models_tm!print(#st8) ^
+              "\n");;
+
+print_string("\n--------------------------------------------------------\n");;
+
+let req8 = C_requests_tm!create(C_get_release!rel,
+                                    C_subjects!nathalie,
+                                    C_objects!f1,
+                                    C_access_mode!execute);;
+
+print_string("Requete8 : " ^ C_requests_tm!print(#req8) ^ "\n");;
+
+let rep8 = C_models_tm!tau_tm(#req8, #st1);;
+
+let dec8 = first(#rep8);;
+
+let st9 = scnd(#rep8);;
+
+print_string("Reponse8 : Decision8 : " ^
+              C_decisions!print(#dec8) ^
+              "\n");;
+
+print_string("           Etat9 : " ^
+              C_models_tm!print(#st9) ^
+              "\n");;
+
+print_string("\n--------------------------------------------------------\n");;
+
+let req9 = C_requests_tm!create(C_get_release!get,
+                                    C_subjects!nathalie,
+                                    C_objects!f1,
+                                    C_access_mode!execute);;
+
+print_string("Requete9 : " ^ C_requests_tm!print(#req9) ^ "\n");;
+
+let rep9 = C_models_tm!tau_tm(#req9, #st1);;
+
+let dec9 = first(#rep9);;
+
+let st10 = scnd(#rep9);;
+
+print_string("Reponse9 : Decision9 : " ^
+              C_decisions!print(#dec9) ^
+              "\n");;
+
+print_string("           Etat10 : " ^
+              C_models_tm!print(#st10) ^
+              "\n");;
+
+print_string("\n--------------------------------------------------------\n");;
