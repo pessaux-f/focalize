@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.58 2008-09-23 06:11:30 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.59 2008-09-23 13:36:52 pessaux Exp $ *)
 
 
 
@@ -123,30 +123,16 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
             recursive one. In effect, in this last case, a Section has been
             created with all the abstrations the function requires. So no need
             to apply each recursive call. *)
-         match in_recursive_let_section_of with
-          | None ->
-              (try
-              (* We are not in a recursive definition, so we can apply to the
-                 lambda-lifted extra arguments. *)
-                let extra_args =
-                  List.assoc vname ctx.Context.scc_lambda_lift_params_mapping in
-                List.iter
-                  (fun s ->
-                    Format.fprintf out_fmter "@ %s" s)
-                  extra_args
-                 with Not_found -> ())
-          | Some current_rec_fun ->
-              (* The call is not recursive, so we can apply to the lambda-lifted
-                 extra arguments. *)
-              if current_rec_fun <> vname then
-              (try
-                let extra_args =
-                  List.assoc vname ctx.Context.scc_lambda_lift_params_mapping in
-                List.iter
-                  (fun s ->
-                    Format.fprintf out_fmter "@ %s" s)
-                  extra_args
-                 with Not_found -> ())
+         if not (List.mem vname in_recursive_let_section_of) then
+           (begin
+            try
+            (* We are not in a recursive definition, so we can apply to the
+               lambda-lifted extra arguments. *)
+            let extra_args =
+               List.assoc vname ctx.Context.scc_lambda_lift_params_mapping in
+             List.iter (fun s -> Format.fprintf out_fmter "@ %s" s) extra_args
+              with Not_found -> ()
+             end)
          end)
        end)
    | Parsetree.EI_global (Parsetree.Vname _) ->
@@ -410,8 +396,8 @@ let generate_pattern ctx env pattern =
 
 
 
-let rec let_binding_compile ctx ~local_idents ~self_methods_status ~is_rec
-    ~toplevel env bd =
+let rec let_binding_compile ctx ~in_recursive_let_section_of
+    ~local_idents ~self_methods_status ~is_rec ~toplevel env bd =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Generate the bound name. *)
   Format.fprintf out_fmter "%a"
@@ -525,8 +511,10 @@ let rec let_binding_compile ctx ~local_idents ~self_methods_status ~is_rec
   (match bd.Parsetree.ast_desc.Parsetree.b_body with
    | Parsetree.BB_computational e ->
        let in_recursive_let_section_of =
-          if is_rec then Some bd.Parsetree.ast_desc.Parsetree.b_name
-          else None in
+          if is_rec then
+            bd.Parsetree.ast_desc.Parsetree.b_name ::
+            in_recursive_let_section_of
+          else in_recursive_let_section_of in
        generate_expr
          ctx
          ~in_recursive_let_section_of ~local_idents: local_idents'
@@ -541,7 +529,8 @@ let rec let_binding_compile ctx ~local_idents ~self_methods_status ~is_rec
 
 
 
-and let_in_def_compile ctx ~local_idents ~self_methods_status env let_def =
+and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
+      ~self_methods_status env let_def =
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
     failwith "Coq compilation of logical let in TODO" ;  (* [Unsure]. *)
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -567,13 +556,15 @@ and let_in_def_compile ctx ~local_idents ~self_methods_status env let_def =
          assert false
      | [one_bnd] ->
          let_binding_compile
-           ctx ~local_idents ~self_methods_status ~toplevel: false ~is_rec env
+           ctx ~in_recursive_let_section_of ~local_idents
+           ~self_methods_status ~toplevel: false ~is_rec env
            one_bnd
      | first_bnd :: next_bnds ->
          let accu_env =
            ref
              (let_binding_compile
-                ctx ~local_idents ~self_methods_status ~toplevel: false
+                ctx ~in_recursive_let_section_of ~local_idents
+                ~self_methods_status ~toplevel: false
                 ~is_rec env first_bnd) in
          List.iter
            (fun binding ->
@@ -582,7 +573,8 @@ and let_in_def_compile ctx ~local_idents ~self_methods_status env let_def =
              Format.fprintf out_fmter "@ in@]@\n@[<2>let " ;
              accu_env :=
                let_binding_compile
-                 ctx ~local_idents ~self_methods_status ~is_rec ~toplevel: false
+                 ctx ~in_recursive_let_section_of ~local_idents
+                 ~self_methods_status ~is_rec ~toplevel: false
                  !accu_env binding)
            next_bnds ;
            !accu_env) in
@@ -712,7 +704,8 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
      | Parsetree.E_let (let_def, in_expr) ->
          let env' =
            let_in_def_compile
-             ctx ~local_idents ~self_methods_status env let_def in
+             ctx ~in_recursive_let_section_of ~local_idents
+             ~self_methods_status env let_def in
          Format.fprintf out_fmter "@ in@\n" ;
          rec_generate_expr loc_idents env' in_expr
      | Parsetree.E_record _labs_exprs ->
@@ -1070,7 +1063,7 @@ let generate_record_type_parameters ctx env species_fields =
            | Parsetree_utils.DETK_logical lexpr ->
                Format.fprintf ppf "(%s : " llift_name ;
                generate_logical_expr ctx
-                 ~in_recursive_let_section_of: None ~local_idents: []
+                 ~in_recursive_let_section_of: [] ~local_idents: []
                  ~self_methods_status: SMS_from_record env lexpr ;
                Format.fprintf ppf ")@ ")
         meths ;
@@ -1199,7 +1192,7 @@ let generate_record_type ctx env species_descr =
            "rf_" + the method name; hence print using [~self_methods_status]
            to [SMS_from_record]. *)
         generate_logical_expr ctx
-          ~in_recursive_let_section_of: None ~local_idents: []
+          ~in_recursive_let_section_of: [] ~local_idents: []
           ~self_methods_status: SMS_from_record env logical_expr ;
         if semi then Format.fprintf out_fmter " ;" ;
         Format.fprintf out_fmter "@]@\n" in

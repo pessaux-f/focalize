@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.12 2008-09-23 06:11:30 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.13 2008-09-23 13:36:52 pessaux Exp $ *)
 
 
 type self_methods_status =
@@ -22,29 +22,37 @@ type self_methods_status =
 val make_Self_cc_binding_abst_T :
   current_species: Parsetree.qualified_species ->
     (Types.type_collection * (string * Types.collection_carrier_mapping_info))
+
 val make_Self_cc_binding_rf_T : 
   current_species: Parsetree.qualified_species ->
     (Types.type_collection * (string * Types.collection_carrier_mapping_info))
+
 val make_Self_cc_binding_species_param :
   current_species: Parsetree.qualified_species -> Parsetree.vname ->
     (Types.type_collection * (string * Types.collection_carrier_mapping_info))
 
 val generate_expr :
   Context.species_compil_context ->
-    in_recursive_let_section_of: Parsetree.vname option ->
+    in_recursive_let_section_of: Parsetree.vname list ->
       local_idents: Parsetree.vname list ->
         self_methods_status: self_methods_status -> Env.CoqGenEnv.t ->
           Parsetree.expr -> unit
+
 val generate_logical_expr :
   Context.species_compil_context ->
-    in_recursive_let_section_of: Parsetree.vname option ->
+    in_recursive_let_section_of: Parsetree.vname list ->
       local_idents: Parsetree.vname list ->
         self_methods_status: self_methods_status -> Env.CoqGenEnv.t ->
       Parsetree.logical_expr -> unit
+
 val let_binding_compile :
-  Context.species_compil_context -> local_idents: Parsetree.vname list ->
-  self_methods_status: self_methods_status -> is_rec: bool -> toplevel: bool ->
-    Env.CoqGenEnv.t -> Parsetree.binding -> Env.CoqGenEnv.t
+  Context.species_compil_context ->
+    in_recursive_let_section_of: Parsetree.vname list ->
+      local_idents: Parsetree.vname list ->
+        self_methods_status: self_methods_status -> is_rec: bool ->
+          toplevel: bool -> Env.CoqGenEnv.t -> Parsetree.binding ->
+            Env.CoqGenEnv.t
+
 val generate_record_type :
   Context.species_compil_context ->
     Env.CoqGenEnv.t -> Env.TypeInformation.species_description ->
