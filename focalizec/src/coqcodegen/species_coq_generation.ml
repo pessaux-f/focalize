@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.114 2008-09-23 13:53:17 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.115 2008-09-23 14:47:20 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -3024,10 +3024,11 @@ let print_record_type_carriers_args_instanciations ctx env args_instanciations =
     (function
       | RTAI_by_is (corresponding_effective_opt_fname,
                     corresponding_effective_vname) ->
+          Format.fprintf out_fmter "@ " ;
           (match corresponding_effective_opt_fname with
            | Some fname -> Format.fprintf out_fmter "%s." fname
            | None -> ()) ;
-          Format.fprintf out_fmter "@ %a.effective_collection.@[<1>("
+          Format.fprintf out_fmter "%a.effective_collection.@[<1>("
             Parsetree_utils.pp_vname_with_operators_expanded
             corresponding_effective_vname ;
           (match corresponding_effective_opt_fname with
@@ -3068,11 +3069,12 @@ let print_methods_from_params_instanciations ctx env formal_to_effective_map l =
              (fun (meth_name, _) ->
                (* If needed, qualify the name of the species in the Coq code.
                   Don't print the type to prevent being too verbose. *)
+	       Format.fprintf out_fmter "@ " ;
                (match corresponding_effective_opt_fname with
                 | Some fname -> Format.fprintf out_fmter "%s." fname
                 | None -> ()) ;
                (* Species name + ".effective_collection.". *)
-               Format.fprintf out_fmter "@ %a.effective_collection.(@[<1>"
+               Format.fprintf out_fmter "%a.effective_collection.(@[<1>"
                  Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname ;
                (* If needed, qualify the name of the species in the Coq code. *)
@@ -3088,7 +3090,7 @@ let print_methods_from_params_instanciations ctx env formal_to_effective_map l =
            end)
        | Misc_common.CEA_value_expr_for_in expr ->
            (begin
-           Format.fprintf out_fmter "(@[<1>" ;
+           Format.fprintf out_fmter "@ (@[<1>" ;
            (* No local idents in the context because we just enter the scope
               of a species fields and so we are not under a core expression.
               For [~self_as], same thing, no relevant value since the
