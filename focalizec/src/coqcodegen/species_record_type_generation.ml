@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.57 2008-09-18 12:20:37 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.58 2008-09-23 06:11:30 pessaux Exp $ *)
 
 
 
@@ -73,28 +73,26 @@ type self_methods_status =
 
 
 
-let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
+let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
+   ~self_methods_status ident =
   let out_fmter = ctx.Context.scc_out_fmter in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
        (begin
-       (* Thanks to the scoping pass, identifiers remaining "local" are *)
-       (* either really let-bound in the context of the expression,     *)
-       (* hence have a direct mapping between FoCaL and OCaml code, or  *)
-       (* species "in"-parameters and then must be mapped onto the      *)
-       (* lambda-lifted parameter introduced for it in the context of   *)
-       (* the current species.                                          *)
-       (* Be careful, because a recursive method called in its body is  *)
-       (* scoped AS LOCAL ! And because recursive methods do not have   *)
-       (* dependencies together, there is no way to recover the extra   *)
-       (* parameters to apply to them in this configuration. Hence, to  *)
-       (* avoid forgetting these extra arguments, we must use here the  *)
-       (* information recorded in the context, i.e. the extra arguments *)
-       (* of the recursive functions.                                   *)
-       (* To check if a "smelling local" identifier is really local or  *)
-       (* a "in"-parameter of the species, we use the same reasoning    *)
-       (* that in [param_dep_analysis.ml]. Check justification over     *)
-       (* there ! *)
+       (* Thanks to the scoping pass, identifiers remaining "local" are either
+          really let-bound in the context of the expression, hence have a
+          direct mapping between FoCaL and OCaml code, or species
+          "IN"-parameters and then must be mapped onto the lambda-lifted
+          parameter introduced for it in the context of the current species.
+          Be careful, because a recursive method called in its body is scoped
+          AS LOCAL ! And because recursive methods do not have dependencies
+          together, there is no way to recover the extra parameters to apply to
+          them in this configuration. Hence, to avoid forgetting these extra
+          arguments, we must use here the information recorded in the context,
+          i.e. the extra arguments of the recursive functions.
+          To check if a "smelling local" identifier is really local or a
+          "IN"-parameter of the species, we use the same reasoning that in
+          [param_dep_analysis.ml]. Check justification over there ! *)
        if (List.exists
              (fun species_param ->
                match species_param with
@@ -104,14 +102,13 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
              ctx.Context.scc_species_parameters_names) &&
          (not (List.mem vname local_idents)) then
          (begin
-         (* In fact, a species "in"-parameter. This parameter was of the *)
-         (* form "foo in C". Then it's naming scheme will be "_p_" +     *)
-         (* the species parameter's name + the method's name that is     *)
-         (* trivially the parameter's name again (because this last one  *)
-         (* is computed as the "stuff" a dependency was found on, and in *)
-         (* the case of a "in"-parameter, the dependency can only be on  *)
-         (* the parameter's value itself, not on any method since there  *)
-         (* is none !).                                                  *)
+         (* In fact, a species "IN"-parameter. This parameter was of the form
+            "foo in C". Then it's naming scheme will be "_p_" + the species
+            parameter's name + the method's name that is trivially the
+            parameter's name again (because this last one is computed as the
+            "stuff" a dependency was found on, and in the case of a
+            "IN"-parameter, the dependency can only be on the parameter's value
+            itself, not on any method since there is none !). *)
          Format.fprintf out_fmter "_p_%a_%a"
            Parsetree_utils.pp_vname_with_operators_expanded vname
            Parsetree_utils.pp_vname_with_operators_expanded vname
@@ -121,16 +118,35 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
          (* Really a local identifier or a call to a recursive method. *)
          Format.fprintf out_fmter "%a"
            Parsetree_utils.pp_vname_with_operators_expanded vname ;
-         (* Because this method can be recursive, we must apply it to *)
-         (* its extra parameters if it has some.                      *)
-         try
-           let extra_args =
-             List.assoc vname ctx.Context.scc_lambda_lift_params_mapping in
-           List.iter
-             (fun s ->
-               Format.fprintf out_fmter "@ %s" s)
-             extra_args
-            with Not_found -> ()
+         (* Because this method can be recursive, we must apply it to its
+            extra parameters if it has some ONLY if the function IS NOT a
+            recursive one. In effect, in this last case, a Section has been
+            created with all the abstrations the function requires. So no need
+            to apply each recursive call. *)
+         match in_recursive_let_section_of with
+          | None ->
+              (try
+              (* We are not in a recursive definition, so we can apply to the
+                 lambda-lifted extra arguments. *)
+                let extra_args =
+                  List.assoc vname ctx.Context.scc_lambda_lift_params_mapping in
+                List.iter
+                  (fun s ->
+                    Format.fprintf out_fmter "@ %s" s)
+                  extra_args
+                 with Not_found -> ())
+          | Some current_rec_fun ->
+              (* The call is not recursive, so we can apply to the lambda-lifted
+                 extra arguments. *)
+              if current_rec_fun <> vname then
+              (try
+                let extra_args =
+                  List.assoc vname ctx.Context.scc_lambda_lift_params_mapping in
+                List.iter
+                  (fun s ->
+                    Format.fprintf out_fmter "@ %s" s)
+                  extra_args
+                 with Not_found -> ())
          end)
        end)
    | Parsetree.EI_global (Parsetree.Vname _) ->
@@ -198,10 +214,10 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
                    end)
                  else
                    (begin
-                   (* It comes from a toplevel stuff, hence not abstracted *)
-                   (* by lambda-lifting. Then, we get the field of the     *)
-                   (* collection's record obtained by the collection's     *)
-                   (* effective value.                                     *)
+                   (* It comes from a toplevel stuff, hence not abstracted by
+                      lambda-lifting. Then, we get the field of the
+                      collection's record obtained by the collection's effective
+                      value. *)
                    Format.fprintf out_fmter
                      "%a.effective_collection.(%a.rf_%a)"
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
@@ -213,11 +229,11 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
                  (begin
                  if module_name = ctx.Context.scc_current_unit then
                    (begin
-                   (* Exactly like when it is method call from a species that *)
-                   (* is not the current but is implicitely in the current    *)
-                   (* compilation unit : the call is performed to a method    *)
-                   (* a species that is EXPLICITELY in the current            *)
-                   (* compilation unit.                                       *)
+                   (* Exactly like when it is method call from a species that
+                      is not the current but is implicitely in the current
+                      compilation unit : the call is performed to a method a
+                      species that is EXPLICITELY in the current compilation
+                      unit. *)
                    if List.exists
                        (fun species_param ->
                          match species_param with
@@ -247,10 +263,10 @@ let generate_expr_ident_for_E_var ctx ~local_idents ~self_methods_status ident =
                    end)
                  else
                    (begin
-                   (* The called method belongs to a species that is not    *)
-                   (* ourselves and moreover belongs to another compilation *)
-                   (* unit. May be a species from the toplevel of another   *)
-                   (* FoCaL source file.                                    *)
+                   (* The called method belongs to a species that is not
+                      ourselves and moreover belongs to another compilation
+                      unit. May be a species from the toplevel of another
+                      FoCaL source file. *)
                    Format.fprintf out_fmter
                      "%s.%a.effective_collection.(%s.%a.rf_%a)"
                      module_name
@@ -304,8 +320,8 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
               Format.fprintf ctx.Context.scc_out_fmter "%a"
                 Parsetree_utils.pp_vname_with_operators_expanded name
           | Parsetree.CI (Parsetree.Qualified (fname, name)) ->
-              (* If the constructor belongs to the current      *)
-              (* compilation unit then one must not qualify it. *)
+              (* If the constructor belongs to the current compilation unit
+                 then one must not qualify it. *)
               if fname <> ctx.Context.scc_current_unit then
                 Format.fprintf ctx.Context.scc_out_fmter "%s.%a"
                   fname          (* No module name capitalization in Coq. *)
@@ -333,13 +349,13 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
          (* Now directly generate the name the constructor is mapped onto. *)
          Format.fprintf ctx.Context.scc_out_fmter "%s" coq_binding
          end)) ;
-    (* Always returns the number of "_" that  *)
-    (* must be printed after the constructor. *)
+    (* Always returns the number of "_" that must be printed after the
+       constructor. *)
     mapping_info.Env.CoqGenInformation.cmi_num_polymorphics_extra_args
   with _ ->
-    (* Since in Coq all the constructors must be inserted in the generation *)
-    (* environment, if we don't find the constructor, then we were wrong    *)
-    (* somewhere else before.                                               *)
+    (* Since in Coq all the constructors must be inserted in the generation
+       environment, if we don't find the constructor, then we were wrong
+       somewhere else before. *)
     assert false
 ;;
 
@@ -362,8 +378,8 @@ let generate_pattern ctx env pattern =
      | Parsetree.P_constr (ident, pats) ->
          (begin
          ignore(generate_constructor_ident_for_method_generator ctx env ident) ;
-         (* In "match" patterns, extra arguments of the constructor *)
-         (* due to polymorphism never appear in Coq syntax.         *)
+         (* In "match" patterns, extra arguments of the constructor due to
+            polymorphism never appear in Coq syntax. *)
          if pats <> [] then Format.fprintf out_fmter "@ (@[<1>" ;
          rec_generate_pats_list pats ;
          if pats <> [] then Format.fprintf out_fmter ")@]"
@@ -508,8 +524,13 @@ let rec let_binding_compile ctx ~local_idents ~self_methods_status ~is_rec
   (* Now, let's generate the bound body. *)
   (match bd.Parsetree.ast_desc.Parsetree.b_body with
    | Parsetree.BB_computational e ->
+       let in_recursive_let_section_of =
+          if is_rec then Some bd.Parsetree.ast_desc.Parsetree.b_name
+          else None in
        generate_expr
-         ctx ~local_idents: local_idents' ~self_methods_status env' e
+         ctx
+         ~in_recursive_let_section_of ~local_idents: local_idents'
+         ~self_methods_status env' e
    | Parsetree.BB_logical _ -> assert false) ;
   (* Finally, we record, even if it was already done in [env'] the number of
      extra arguments due to polymorphism the current bound identifier has. *)
@@ -570,8 +591,8 @@ and let_in_def_compile ctx ~local_idents ~self_methods_status env let_def =
 
 
 
-and generate_expr ctx ~local_idents ~self_methods_status initial_env
-    initial_expression =
+and generate_expr ctx ~in_recursive_let_section_of ~local_idents
+    ~self_methods_status initial_env initial_expression =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the coq type print context. *)
   let print_ctx = {
@@ -620,7 +641,8 @@ and generate_expr ctx ~local_idents ~self_methods_status initial_env
      | Parsetree.E_var ident ->
          (begin
          generate_expr_ident_for_E_var
-           ctx ~local_idents: loc_idents ~self_methods_status ident ;
+           ctx ~in_recursive_let_section_of ~local_idents: loc_idents
+           ~self_methods_status ident ;
          (* Now, add the extra "_"'s if the identifier is polymorphic. *)
          try
            let (nb_polymorphic_args, _) =
@@ -753,8 +775,8 @@ and generate_expr ctx ~local_idents ~self_methods_status initial_env
 
 
 
-let generate_logical_expr ctx ~local_idents ~self_methods_status initial_env
-    initial_proposition =
+let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
+    ~self_methods_status initial_env initial_proposition =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the coq type print context. *)
   let print_ctx = {
@@ -854,22 +876,23 @@ let generate_logical_expr ctx ~local_idents ~self_methods_status initial_env
          rec_generate_logical_expr loc_idents env logical_expr ;
          Format.fprintf out_fmter "@]"
      | Parsetree.Pr_expr expr ->
-         (* The wrapper surrounding the expression by Coq's *)
-         (* "Is_true" if the expression's type is [bool].   *)
+         (* The wrapper surrounding the expression by Coq's "Is_true" if the
+            expression's type is [bool]. *)
          let is_bool =
            (match expr.Parsetree.ast_type with
             | Parsetree.ANTI_type ty -> Types.is_bool_type ty
             | Parsetree.ANTI_none
             | Parsetree.ANTI_non_relevant
             | Parsetree.ANTI_scheme _ ->
-                (* Note that expression never has a *)
-                (* type scheme, but only a type.    *)
+                (* Note that expression never has a type scheme, but only a
+                   type. *)
                 assert false) in
          if is_bool then Format.fprintf out_fmter "@[<2>Is_true (" ;
          generate_expr
-           ctx ~local_idents: loc_idents ~self_methods_status env expr ;
-         (* The end of the wrapper surrounding  *)
-         (* the expression if it has type bool. *)
+           ctx ~in_recursive_let_section_of ~local_idents: loc_idents
+           ~self_methods_status env expr ;
+         (* The end of the wrapper surrounding the expression if it has type
+            bool. *)
          if is_bool then Format.fprintf out_fmter ")@]"
      | Parsetree.Pr_paren logical_expr ->
          Format.fprintf out_fmter "@[<1>(" ;
@@ -897,8 +920,8 @@ let generate_logical_expr ctx ~local_idents ~self_methods_status initial_env
 let rec generate_expr_as_species_parameter_expression ~current_unit ppf expr =
   match expr.Parsetree.ast_desc with
    | Parsetree.E_constr (constr_ident, exprs) ->
-       (* Remember that species names are capitalized. Hence the only legal *)
-       (* core expression denoting species are sum type constructors.       *)
+       (* Remember that species names are capitalized. Hence the only legal
+          core expression denoting species are sum type constructors. *)
        let Parsetree.CI cstr_qual_name = constr_ident.Parsetree.ast_desc in
        Format.fprintf ppf "%a"
          (simply_pp_to_coq_qualified_vname ~current_unit) cstr_qual_name ;
@@ -935,8 +958,8 @@ let rec generate_expr_as_species_parameter_expression ~current_unit ppf expr =
 let generate_record_type_parameters ctx env species_fields =
   let ppf = ctx.Context.scc_out_fmter in
   let current_unit = ctx.Context.scc_current_unit in
-  (* We first abstract the species/entity parameters *)
-  (* carriers and entity parameters.                 *)
+  (* We first abstract the species/entity parameters carriers and entity
+     parameters. *)
   List.iter
     (fun ((param_ty_mod, param_ty_coll), (param_name, param_kind)) ->
       match param_kind with
@@ -963,9 +986,9 @@ let generate_record_type_parameters ctx env species_fields =
                   Format.fprintf ppf "%s." param_ty_mod ;
                 Format.fprintf ppf "%s.rf_T))@ @]" param_ty_coll)
     ctx.Context.scc_collections_carrier_mapping ;
-  (* Now, we will find the methods of the parameters we decl-depend  *)
-  (* on in the Coq type expressions. Such dependencies can only      *)
-  (* appear through properties and theorems bodies.                  *)
+  (* Now, we will find the methods of the parameters we decl-depend on in the
+     Coq type expressions. Such dependencies can only appear through properties
+     and theorems bodies. *)
   let species_parameters_names = ctx.Context.scc_species_parameters_names in
   let print_ctx = {
     Types.cpc_current_unit = ctx.Context.scc_current_unit ;
@@ -975,8 +998,8 @@ let generate_record_type_parameters ctx env species_fields =
            ctx.Context.scc_current_species) ;
       Types.cpc_collections_carrier_mapping =
         ctx.Context.scc_collections_carrier_mapping } in
-  (* We first build the lists of dependent methods for each *)
-  (* property and theorem fields.                           *)
+  (* We first build the lists of dependent methods for each property and
+     theorem fields. *)
   let deps_for_fields = ref [] in
   List.iter
     (function
@@ -985,8 +1008,8 @@ let generate_record_type_parameters ctx env species_fields =
       | Env.TypeInformation.SF_let_rec _-> ()
       | Env.TypeInformation.SF_theorem (_, _, _, logical_expr, _, _)
       | Env.TypeInformation.SF_property (_, _, _, logical_expr, _) ->
-          (* Get the list of the methods from the species parameters the  *)
-          (* current prop/theo depends on.                                *)
+          (* Get the list of the methods from the species parameters the
+             current prop/theo depends on. *)
           List.iter
             (fun species_param ->
               match species_param with
@@ -1021,15 +1044,15 @@ let generate_record_type_parameters ctx env species_fields =
   (* We now sort these methods according to the parameters' dependency graph. *)
   let ordered_deps_for_fields =
     Dep_analysis.order_species_params_methods deps_for_fields_no_ref in
-  (* By the way, returns the list of species params and     *)
-  (* methods required to create a value of the type record. *)
+  (* By the way, returns the list of species params and methods required to
+     create a value of the type record. *)
   List.map
     (fun (species_param, (Env.ODFP_methods_list meths)) ->
       let species_param_name =
         Env.TypeInformation.vname_of_species_param species_param in
-      (* Each abstracted method will be named like "_p_", followed by *)
-      (* the species parameter name, followed by "_", followed by the *)
-      (* method's name.                                               *)
+      (* Each abstracted method will be named like "_p_", followed by the
+         species parameter name, followed by "_", followed by the method's
+         name. *)
       let prefix =
         "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
         "_" in
@@ -1047,8 +1070,8 @@ let generate_record_type_parameters ctx env species_fields =
            | Parsetree_utils.DETK_logical lexpr ->
                Format.fprintf ppf "(%s : " llift_name ;
                generate_logical_expr ctx
-                 ~local_idents: [] ~self_methods_status: SMS_from_record
-                 env lexpr ;
+                 ~in_recursive_let_section_of: None ~local_idents: []
+                 ~self_methods_status: SMS_from_record env lexpr ;
                Format.fprintf ppf ")@ ")
         meths ;
       (* Just to avoid having the reference escaping... *)
@@ -1176,13 +1199,13 @@ let generate_record_type ctx env species_descr =
            "rf_" + the method name; hence print using [~self_methods_status]
            to [SMS_from_record]. *)
         generate_logical_expr ctx
-          ~local_idents: [] ~self_methods_status: SMS_from_record
-          env logical_expr ;
+          ~in_recursive_let_section_of: None ~local_idents: []
+          ~self_methods_status: SMS_from_record env logical_expr ;
         if semi then Format.fprintf out_fmter " ;" ;
         Format.fprintf out_fmter "@]@\n" in
-  (* Coq syntax required not semi after the last field. That's why   *)
-  (* a simple [List.iter] of [output_one_field]'s body doesn't work. *)
-  (* One must separate the case of the last element of the list.     *)
+  (* Coq syntax required not semi after the last field. That's why a simple
+     [List.iter] of [output_one_field]'s body doesn't work.
+     One must separate the case of the last element of the list. *)
   let rec iter_semi_separated = function
     | [] -> ()
     | [last] -> output_one_field ~semi: false last

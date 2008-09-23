@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.11 2008-09-18 12:20:37 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.12 2008-09-23 06:11:30 pessaux Exp $ *)
 
 
 type self_methods_status =
@@ -30,12 +30,16 @@ val make_Self_cc_binding_species_param :
     (Types.type_collection * (string * Types.collection_carrier_mapping_info))
 
 val generate_expr :
-  Context.species_compil_context -> local_idents: Parsetree.vname list ->
-    self_methods_status: self_methods_status -> Env.CoqGenEnv.t ->
-      Parsetree.expr -> unit
+  Context.species_compil_context ->
+    in_recursive_let_section_of: Parsetree.vname option ->
+      local_idents: Parsetree.vname list ->
+        self_methods_status: self_methods_status -> Env.CoqGenEnv.t ->
+          Parsetree.expr -> unit
 val generate_logical_expr :
-  Context.species_compil_context -> local_idents: Parsetree.vname list ->
-    self_methods_status: self_methods_status -> Env.CoqGenEnv.t ->
+  Context.species_compil_context ->
+    in_recursive_let_section_of: Parsetree.vname option ->
+      local_idents: Parsetree.vname list ->
+        self_methods_status: self_methods_status -> Env.CoqGenEnv.t ->
       Parsetree.logical_expr -> unit
 val let_binding_compile :
   Context.species_compil_context -> local_idents: Parsetree.vname list ->

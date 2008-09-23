@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.26 2008-09-18 12:20:37 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.27 2008-09-23 06:11:30 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -221,7 +221,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         Context.scc_dependency_graph_nodes = [] ;
         Context.scc_out_fmter = out_fmter } in
       Species_record_type_generation.generate_expr
-        ctx ~local_idents: []
+        ctx ~local_idents: [] ~in_recursive_let_section_of: None
         ~self_methods_status: Species_record_type_generation.SMS_from_record
         env expr ;
       Format.fprintf out_fmter ").@]@\n@\n" ;

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.111 2008-09-19 12:34:54 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.112 2008-09-23 06:11:30 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -320,8 +320,11 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                  Format.fprintf out_fmter "@[<2>Variable %s%a :@ "
                    prefix
                    Parsetree_utils.pp_vname_with_operators_expanded meth ;
+                 (* Even if we are generating the prelude of a recursive
+                    function, we can't have a recursion via the dependencies
+                    from a species parameter. *)
                  Species_record_type_generation.generate_logical_expr
-                   new_ctx' ~local_idents: []
+                   new_ctx' ~in_recursive_let_section_of: None ~local_idents: []
                    ~self_methods_status:
                      (Species_record_type_generation.SMS_from_param
                         species_param_name)
@@ -352,8 +355,11 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                  Format.fprintf out_fmter "@ (%s%a :@ "
                    prefix
                    Parsetree_utils.pp_vname_with_operators_expanded meth ;
+                 (* Even if we are generating the prelude of a recursive
+                    function, we can't have a recursion via the dependencies
+                    from a species parameter. *)
                  Species_record_type_generation.generate_logical_expr
-                   new_ctx' ~local_idents: []
+                   new_ctx' ~in_recursive_let_section_of: None ~local_idents: []
                    ~self_methods_status:
                      (Species_record_type_generation.SMS_from_param
                         species_param_name)
@@ -435,9 +441,12 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                  Format.fprintf out_fmter "@ (abst_%a :@ "
                    Parsetree_utils.pp_vname_with_operators_expanded n ;
                (* Methods from Self are printed "abst_XXX" since dependencies
-                  have leaded to extra parameters "abst_XXX". *)
+                  have leaded to extra parameters "abst_XXX".
+                  Even if we are generating the prelude of a recursive
+                  function, we can't have a recursion via the dependencies
+                  from other methods of ourselves. *)
                Species_record_type_generation.generate_logical_expr
-                 new_ctx ~local_idents: []
+                 new_ctx ~local_idents: [] ~in_recursive_let_section_of: None
                  ~self_methods_status:
                    Species_record_type_generation.SMS_abstracted env b ;
                if in_section then Format.fprintf out_fmter ".@]@\n"
@@ -505,12 +514,12 @@ let generate_defined_non_recursive_method_postlude ctx print_ctx env params
   (match body with
    | Parsetree.BB_computational e ->
        Species_record_type_generation.generate_expr
-         ctx ~local_idents: []
+         ctx ~local_idents: [] ~in_recursive_let_section_of: None
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          env e
    | Parsetree.BB_logical p ->
        Species_record_type_generation.generate_logical_expr
-         ctx ~local_idents: []
+         ctx ~local_idents: [] ~in_recursive_let_section_of: None
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          env p)
 ;;
@@ -786,7 +795,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
              (* We must now generate the Coq code for this FoCaL expression. *)
              Format.fprintf out_fmter "@ @[<1>(" ;
              Species_record_type_generation.generate_expr
-               ctx ~local_idents: []
+               ctx ~local_idents: [] ~in_recursive_let_section_of: None
                (* Or whatever, "Self" will never appear at this point. *)
                ~self_methods_status:
                  Species_record_type_generation.SMS_abstracted
@@ -933,7 +942,7 @@ let zenonify_by_definition ctx print_ctx env min_coq_env by_def_expr_ident =
             (* Since the used definition is at toplevel, there is no abstraction
                no notion of "Self", no dependencies. *)
             Species_record_type_generation.generate_logical_expr
-              ctx ~local_idents: []
+              ctx ~local_idents: [] ~in_recursive_let_section_of: None
               ~self_methods_status:
                 Species_record_type_generation.SMS_from_record (* Or anything *)
               env lexpr ;
@@ -992,7 +1001,7 @@ let zenonify_by_definition ctx print_ctx env min_coq_env by_def_expr_ident =
                     method's body. Inside, methods we depend on are abstracted
                     by "abst_xxx". *)
                  Species_record_type_generation.generate_logical_expr
-                   ctx ~local_idents: []
+                   ctx ~local_idents: [] ~in_recursive_let_section_of: None
                    ~self_methods_status:
                      Species_record_type_generation.SMS_abstracted env
                    body ;
@@ -1108,7 +1117,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               Parsetree_utils.pp_vname_with_operators_expanded topl_species_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname ;
             Species_record_type_generation.generate_logical_expr
-              ctx ~local_idents: []
+              ctx ~local_idents: [] ~in_recursive_let_section_of: None
               ~self_methods_status:
                 Species_record_type_generation.SMS_from_record
               env lexpr ;
@@ -1161,7 +1170,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               Parsetree_utils.pp_vname_with_operators_expanded param_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname ;
             Species_record_type_generation.generate_logical_expr
-              ctx' ~local_idents: []
+              ctx' ~local_idents: [] ~in_recursive_let_section_of: None
               ~self_methods_status:
                 (Species_record_type_generation.SMS_from_param param_name)
               env lexpr ;
@@ -1200,15 +1209,15 @@ let zenonify_by_property ctx print_ctx env min_coq_env
             (* We just need to print the type of the method. *)
             let meth_ty = Types.specialize scheme in
             Format.fprintf out_fmter "@[<2>Parameter %s :@ %a.@]@\n"
-	      name_for_zenon
-	    (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
+              name_for_zenon
+            (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
               meth_ty
         | Env.CoqGenInformation.VB_toplevel_property lexpr ->
             Format.fprintf out_fmter "@[<2>Parameter %s :@ " name_for_zenon ;
             (* Since the used definition is at toplevel, there is no abstraction
                no notion of "Self", no dependencies. *)
             Species_record_type_generation.generate_logical_expr
-              ctx ~local_idents: []
+              ctx ~local_idents: [] ~in_recursive_let_section_of: None
               ~self_methods_status:
                 Species_record_type_generation.SMS_from_record (* Or anything *)
               env lexpr ;
@@ -1256,7 +1265,7 @@ let zenonify_by_property ctx print_ctx env min_coq_env
                     method's body. Inside, methods we depend on are abstracted
                     by "abst_xxx". *)
                  Species_record_type_generation.generate_logical_expr
-                   ctx ~local_idents: []
+                   ctx ~local_idents: [] ~in_recursive_let_section_of: None
                    ~self_methods_status:
                      Species_record_type_generation.SMS_abstracted
                    env body ;
@@ -1282,7 +1291,7 @@ type proof_step_availability = {
 
 
 
-let add_qualtifications_and_implications ctx print_ctx env avail_info =
+let add_quantifications_and_implications ctx print_ctx env avail_info =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* First, quantify all the assumed variables. *)
   List.iter
@@ -1300,7 +1309,7 @@ let add_qualtifications_and_implications ctx print_ctx env avail_info =
     | log_expr :: q ->
         Format.fprintf out_fmter "@[<1>(" ;
         Species_record_type_generation.generate_logical_expr
-          ctx ~local_idents: []
+          ctx ~local_idents: [] ~in_recursive_let_section_of: None
           ~self_methods_status: Species_record_type_generation.SMS_abstracted
           env log_expr ;
         Format.fprintf out_fmter ") ->@ " ;
@@ -1350,7 +1359,7 @@ let zenonify_fact ctx print_ctx env min_coq_env dependencies_from_params
            Format.fprintf out_fmter "@[<2>Parameter %a :@ "
              Parsetree_utils.pp_vname_with_operators_expanded vname ;
            Species_record_type_generation.generate_logical_expr
-             ctx ~local_idents: []
+             ctx ~local_idents: [] ~in_recursive_let_section_of: None
              ~self_methods_status:
                Species_record_type_generation.SMS_abstracted
              env hyp_logical_expr ;
@@ -1380,10 +1389,10 @@ let zenonify_fact ctx print_ctx env min_coq_env dependencies_from_params
            Format.fprintf out_fmter "@[<2>Parameter %a :@ "
              Parsetree_utils.pp_vname_with_operators_expanded
              avail_info.psa_lemma_name ;
-           add_qualtifications_and_implications ctx print_ctx env avail_info ;
+           add_quantifications_and_implications ctx print_ctx env avail_info ;
            (* Now, print the lemma's body. *)
            Species_record_type_generation.generate_logical_expr
-             ctx ~local_idents: []
+             ctx ~local_idents: [] ~in_recursive_let_section_of: None
              ~self_methods_status: Species_record_type_generation.SMS_abstracted
              env avail_info.psa_base_logical_expr ;
            (* Done... Then, final carriage return. *)
@@ -1413,7 +1422,7 @@ let zenonify_hyp ctx print_ctx env hyp =
        Format.fprintf out_fmter "@[<2>Variable %a :@ "
          Parsetree_utils.pp_vname_with_operators_expanded vname ;
        Species_record_type_generation.generate_logical_expr
-         ~local_idents: []
+         ~local_idents: [] ~in_recursive_let_section_of: None
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          ctx env logical_expr ;
        Format.fprintf out_fmter ".@]@\n"
@@ -1422,7 +1431,7 @@ let zenonify_hyp ctx print_ctx env hyp =
        Format.fprintf out_fmter "@[<2>Let %a :=@ "
          Parsetree_utils.pp_vname_with_operators_expanded vname ;
        Species_record_type_generation.generate_expr
-         ctx ~local_idents: []
+         ctx ~local_idents: [] ~in_recursive_let_section_of: None
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          env expr ;
        Format.fprintf out_fmter ".@]@\n"
@@ -1532,7 +1541,7 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
        Format.fprintf out_fmter "@[<2>Theorem %a :@ "
          Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
        Species_record_type_generation.generate_logical_expr
-         ~local_idents: []
+         ~local_idents: [] ~in_recursive_let_section_of: None
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          ctx env aim ;
        Format.fprintf out_fmter ".@]@\n" ;
@@ -1548,7 +1557,7 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
        Format.fprintf out_fmter "@[<2>Theorem %a :@ "
        Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
        Species_record_type_generation.generate_logical_expr
-         ~local_idents: []
+         ~local_idents: [] ~in_recursive_let_section_of: None
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          ctx env aim ;
        Format.fprintf out_fmter ".@]@\n" ;
@@ -1587,7 +1596,7 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
           use the mode [SMS_abstracted]. *)
        Format.fprintf out_fmter "(* Theorem's body. *)@\n" ;
        Species_record_type_generation.generate_logical_expr
-         ~local_idents: []
+         ~local_idents: [] ~in_recursive_let_section_of: None
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          ctx env aim ;
        Format.fprintf out_fmter
@@ -1634,7 +1643,7 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
          Format.fprintf out_fmter "@[<2>Theorem %a :@ "
            Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
          Species_record_type_generation.generate_logical_expr
-           ~local_idents: []
+           ~local_idents: [] ~in_recursive_let_section_of: None
            ~self_methods_status: Species_record_type_generation.SMS_abstracted
            ctx env aim ;
          Format.fprintf out_fmter ".@]@\n" ;
@@ -1798,7 +1807,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
      (i.e. is lambda-lifted), hence named "abst_xxx". That's why we use the
      mode [SMS_abstracted]. *)
   Species_record_type_generation.generate_logical_expr
-    ~local_idents: []
+    ~local_idents: [] ~in_recursive_let_section_of: None
     ~self_methods_status: Species_record_type_generation.SMS_abstracted
     new_ctx env logical_expr ;
   Format.fprintf out_fmter ".@]@\n" ;
@@ -1901,6 +1910,13 @@ let generate_termination_proof _ctx _print_ctx _env _name = function
 
 
 
+(* ************************************************************************** *)
+(* ************************************************************************** *)
+(* ************************************************************************** *)
+(*** Code pour utiliser le travail de William. Il faut compléter
+     en attendant, je déconnecte pour la release et je remets l'ancienne 
+     verrue
+*)
 let generate_recursive_let_definition ctx print_ctx env generated_fields l =
   let out_fmter = ctx.Context.scc_out_fmter in
   match l with
@@ -1998,12 +2014,22 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
               return_ty
               (Handy.pp_generic_separated_list ","
                 Parsetree_utils.pp_vname_with_operators_expanded) params ;
-(* Ici il faut transformer le tuple ! *)
+            (* We must transform the recursive function's body si that all the
+               recursive calls send their arguments as a unique tuple rather
+               than as several arguments. This is because we "tuplified" the
+               arguments of the recursive function in order to be able to
+               exhibit a lexicographic order if needed. *)
+            let tuplified_body =
+              Rec_let_gen.transform_recursive_calls_args_into_tuple
+                new_ctx ~local_idents: [] name body_expr in
+            (* We specify here that we must not apply recursive calls to the
+               extra arguments due to lambda-liftings. *)
             Species_record_type_generation.generate_expr
               new_ctx ~local_idents: []
+              ~in_recursive_let_section_of: (Some name)
               ~self_methods_status:
                 Species_record_type_generation.SMS_abstracted
-              env body_expr ;
+              env tuplified_body ;
             Format.fprintf out_fmter ".@]@\n" ;
             Format.fprintf out_fmter "@[<v 2>Proof.@ %a Qed.@]@\n"
               (Handy.pp_generic_n_times ((List.length recursive_calls) + 1)
@@ -2039,6 +2065,106 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
    | _ :: _ -> raise Recursion.MutualRecursion
 ;;
 
+(* ************************************************************************** *)
+(* ************************************************************************** *)
+(* ************************************************************************** *)
+
+
+
+(*** Code verrue pour les fonctions récusives. Je le rajoute temporairement
+     pour la release et ça devra dégager lorsque l'on aura repris l'intégration
+     du travail de William.
+
+let generate_recursive_let_definition ctx print_ctx env generated_fields l =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  match l with
+   | [] ->
+       (* A "let", then a fortiori "let rec" construct *)
+       (* must at least bind one identifier !          *)
+       assert false
+   | [((from, name, params, scheme, body, _, _), ai)] ->
+       (begin
+       match body with
+        | Parsetree.BB_logical _ ->
+            (* [Unsure] *)
+            failwith "recursive logical : TODO"
+        | Parsetree.BB_computational _ ->
+            (* Extend the context with the mapping between these *)
+            (* recursive functions and their extra arguments.    *)
+            let ctx' = {
+              ctx with
+                Context.scc_lambda_lift_params_mapping =
+                  [(name,
+                    Misc_common.make_params_list_from_abstraction_info
+                      ~care_logical: true ~care_types: true ai)] } in
+            (* Open the "Section" for the recursive definition. *)
+            Format.fprintf out_fmter
+              "@[<2>Section %a.@\n"
+              Parsetree_utils.pp_vname_with_operators_expanded name ;
+            (* Now, generate the prelude of the only method *)
+            (* introduced by "let rec".                     *)
+            let all_deps_from_params =
+              Abstractions.merge_abstraction_infos
+                ai.Abstractions.ai_dependencies_from_params_via_body
+                (Abstractions.merge_abstraction_infos
+                   ai.Abstractions.ai_dependencies_from_params_via_type
+                   ai.Abstractions.ai_dependencies_from_params_via_completion)
+            in
+            let sorted_deps_from_params =
+              Dep_analysis.order_species_params_methods all_deps_from_params in
+            let (abstracted_methods, new_ctx, new_print_ctx) =
+              generate_field_definifion_prelude
+                ~in_section: true ctx' print_ctx env
+                ai.Abstractions.ai_min_coq_env
+                ai.Abstractions.ai_used_species_parameter_tys
+                sorted_deps_from_params generated_fields in
+            (* We now generate the order. It always has 2 arguments having    *)
+            (* the same type. This type is a tuple if the method hase several *)
+            (* arguments.                                                     *)
+            Format.fprintf out_fmter
+              "@\n@\n(* A fake termination order. *)@\n" ;
+            Format.fprintf out_fmter
+              "@[<2>Let __term_order@ (rec_arg@ ini_arg :@ " ;
+            let (params_with_type, _, _) =
+              MiscHelpers.bind_parameters_to_types_from_type_scheme
+                (Some scheme) params in
+            (* Print the tuple that is the method's arguments' types. *)
+            print_types_as_tuple_if_several
+              new_print_ctx out_fmter params_with_type ;
+            (* [Unsure] We use the magic order. *)
+            Format.fprintf out_fmter
+              ")@ :=@ coq_builtins.magic_order rec_arg@ ini_arg.@]@\n@\n" ;
+            (* We now prove that this order is well-founded. *)
+            Format.fprintf out_fmter "(* Order well-founded admitted. *)@\n" ;
+            Format.fprintf out_fmter
+              "Let __well_founded_term_order : (well_founded \
+              __term_order).@\n" ;
+            (* [Unsure] We use the magic proof. *)
+            Format.fprintf out_fmter
+              "apply coq_builtins.magic_prove.@\nQed.@\n" ;
+            (* It's now time to generate the lemmas proving  *)
+            (* that each recursive call decreases.           *)
+            Rec_let_gen.generate_termination_lemmas
+              new_ctx new_print_ctx env [] ;
+            (* Finalyl close the opened "Section". *)
+            Format.fprintf out_fmter "End %a.@]@\n"
+              Parsetree_utils.pp_vname_with_operators_expanded name ;
+            let compiled = {
+              Misc_common.cfm_from_species = from ;
+              Misc_common.cfm_method_name = name ;
+              Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
+              Misc_common.cfm_used_species_parameter_tys =
+                ai.Abstractions.ai_used_species_parameter_tys ;
+              Misc_common.cfm_dependencies_from_parameters =
+                sorted_deps_from_params ;
+              Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
+            Misc_common.CSF_let_rec [compiled]
+       end)
+   | _ :: _ ->
+       (* [Unsure] *)
+       failwith "Mutually recursive functions TODO"
+;;
+*)
 
 
 (** generated_fields : The list of previous fields of the species that have
@@ -3012,7 +3138,7 @@ let print_record_type_carriers_args_instanciations ctx env args_instanciations =
       | RTAI_by_in expr ->
           Format.fprintf out_fmter "@ " ;
           Species_record_type_generation.generate_expr
-            ctx ~local_idents: []
+            ctx ~local_idents: [] ~in_recursive_let_section_of: None
             ~self_methods_status: Species_record_type_generation.SMS_from_record
             env expr)
     args_instanciations
@@ -3068,7 +3194,7 @@ let print_methods_from_params_instanciations ctx env formal_to_effective_map l =
               application of the generator should not involve any other
               expressions than methods/theorems identifiers. *)
            Species_record_type_generation.generate_expr
-             ctx ~local_idents: []
+             ctx ~local_idents: [] ~in_recursive_let_section_of: None
              ~self_methods_status:
                (* Or what you prefer. *)
                Species_record_type_generation.SMS_abstracted
