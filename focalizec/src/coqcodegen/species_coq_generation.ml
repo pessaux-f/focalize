@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.113 2008-09-23 13:36:52 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.114 2008-09-23 13:53:17 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1910,13 +1910,6 @@ let generate_termination_proof _ctx _print_ctx _env _name = function
 
 
 
-(* ************************************************************************** *)
-(* ************************************************************************** *)
-(* ************************************************************************** *)
-(*** Code pour utiliser le travail de William. Il faut compléter
-     en attendant, je déconnecte pour la release et je remets l'ancienne 
-     verrue
-*)
 let generate_recursive_let_definition ctx print_ctx env generated_fields l =
   let out_fmter = ctx.Context.scc_out_fmter in
   match l with
@@ -1942,9 +1935,10 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
                   [(name,
                     Misc_common.make_params_list_from_abstraction_info
                       ~care_logical: true ~care_types: true ai)] } in
-            (* Open the "Section" for the recursive definition. *)
-            Format.fprintf out_fmter
-              "@[<2>Section %a.@\n"
+            (* Open the "Section" and "Module" for the recursive definition. *)
+            Format.fprintf out_fmter "@[<2>Module Termination_%a_namespace.@\n"
+              Parsetree_utils.pp_vname_with_operators_expanded name ;
+            Format.fprintf out_fmter "@[<2>Section %a.@\n"
               Parsetree_utils.pp_vname_with_operators_expanded name ;
             (* Now, generate the prelude of the only method introduced by
                "let rec". *)
@@ -2048,9 +2042,16 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
               Parsetree_utils.pp_vname_with_operators_expanded name
               (Handy.pp_generic_separated_list ","
                 Parsetree_utils.pp_vname_with_operators_expanded) params ;
-            (* Finally close the opened "Section". *)
+            (* Finally close the opened "Section"and "Module" . *)
             Format.fprintf out_fmter "End %a.@]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded name ;
+            Format.fprintf out_fmter "End Termination_%a_namespace.@]@\n"
+              Parsetree_utils.pp_vname_with_operators_expanded name ;
+(* [Unsure] We must now generate the function applied to its order and
+   termination proof and so on... *)
+
+
+
             let compiled = {
               Misc_common.cfm_from_species = from ;
               Misc_common.cfm_method_name = name ;
