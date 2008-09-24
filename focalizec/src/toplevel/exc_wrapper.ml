@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.53 2008-09-15 09:24:29 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.54 2008-09-24 07:10:28 weis Exp $ *)
 
 
 
@@ -20,7 +20,7 @@
               unexpected arises when proceeding, we exit with the proper
               error code.                                                     *)
 (* ************************************************************************** *)
-try Check_file.main () with
+try Focalizec.main () with
 | anything ->
     (begin
     match anything with
@@ -39,7 +39,7 @@ try Check_file.main () with
            "@[%tInvalid@ or@ corrupted@ compiled@ interface%t@ '%t%s%t'.@]@."
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined fname Handy.pp_reset_effects
-     | Check_file.Bad_file_suffix fname ->
+     | Focalizec.Bad_file_suffix fname ->
          Format.fprintf Format.err_formatter
            "@[%tInvalid@ file@ extension@ for%t@ '%t%s%t'.@]@."
            Handy.pp_set_bold Handy.pp_reset_effects

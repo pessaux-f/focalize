@@ -2,6 +2,6 @@
 *.o
 .depend
 odoc
-check_file.byt
-check_file.bin
+focalizec.byt
+focalizec.bin
 

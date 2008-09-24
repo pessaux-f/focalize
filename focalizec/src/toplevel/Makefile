@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.33 2008-09-22 14:58:19 weis Exp $
+# $Id: Makefile,v 1.34 2008-09-24 07:10:28 weis Exp $
 
 ROOTDIR = ..
 
@@ -7,7 +7,7 @@ include $(ROOTDIR)/Makefile.config
 CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing \
 	-I ../commoncodegen -I ../mlcodegen -I ../coqcodegen
 
-LOCALBYTOBJS = check_file.cmo exc_wrapper.cmo
+LOCALBYTOBJS = focalizec.cmo exc_wrapper.cmo
 
 BYTOBJS = \
 	../basement/installation.cmo \
@@ -56,22 +56,22 @@ BYTOBJS = \
 
 include $(ROOTDIR)/Makefile.common
 
-.PHONY: check_file_byt_link check_file_bin_link
+.PHONY: focalizec_byt_link focalizec_bin_link
 
-byt:: check_file_byt_link
+byt:: focalizec_byt_link
 
-check_file_byt_link: check_file.byt
-	$(LN) check_file.byt check_file
+focalizec_byt_link: focalizec.byt
+	$(LN) focalizec.byt focalizec
 
-check_file.byt: $(BYTOBJS)
+focalizec.byt: $(BYTOBJS)
 	$(CAMLBYT) $(BYTOBJS) -o $@
 
-bin:: check_file_bin_link
+bin:: focalizec_bin_link
 
-check_file_bin_link: check_file.bin
-	$(LN) check_file.bin check_file
+focalizec_bin_link: focalizec.bin
+	$(LN) focalizec.bin focalizec
 
-check_file.bin: $(BINOBJS)
+focalizec.bin: $(BINOBJS)
 	$(CAMLBIN) $(BINOBJS) -o $@
 
 fodump: fodump.cmo
@@ -97,4 +97,4 @@ install:: all
 	echo "TODO"
 
 clean::
-	$(RM) check_file.byt check_file.bin check_file fodump
+	$(RM) focalizec.byt focalizec.bin focalizec fodump

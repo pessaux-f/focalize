@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.37 2008-09-22 14:58:19 weis Exp $
+# $Id: Makefile,v 1.38 2008-09-24 07:14:34 weis Exp $
 
 ROOT_DIR = ..
 
@@ -11,9 +11,14 @@ include $(ROOT_DIR)/Makefile.config
 CAMLBYT = ocamlc -w A
 CAMLBIN = ocamlc -w A
 
-CHECK_FILE = $(ROOT_DIR)/toplevel/check_file.byt
+BYT_FOCAL_COMPILER = $(ROOT_DIR)/toplevel/focalizec.byt
+BIN_FOCAL_COMPILER = $(BYT_FOCAL_COMPILER:.byt=.bin)
 
-FOCC = $(CHECK_FILE) -no-stdlib-path
+FOCAL_COMPILER = $(BYT_FOCAL_COMPILER)
+
+FOCAL_COMP_FLAGS = -no-stdlib-path
+
+#From Makefile.config FOCC = $(FOCAL_COMPILER) $(FOCAL_COMP_FLAGS)
 
 ZVTOV = ../../zvtov/zvtov -zenon ../../zenon/zenon
 
@@ -62,7 +67,7 @@ EXTERNALOBJS = ml_builtins.cmo sets_orders_externals.cmo \
 
 include $(ROOT_DIR)/Makefile.common
 
-byt:: $(CHECK_FILE) $(EXTERNALOBJS) $(FOCMLS) $(FOCMLS_UNSAFE) \
+byt:: $(FOCAL_COMPILER) $(EXTERNALOBJS) $(FOCMLS) $(FOCMLS_UNSAFE) \
  $(FOCZVS) $(FOCCMOS) $(FOCCMOS_UNSAFE) $(FOCVS) $(FOCVOS)
 
 install:: all
@@ -87,5 +92,5 @@ polys_abstract.ml: polys_abstract.foc
 array_foc_externals.vo: basics.vo
 random_foc_externals.vo: basics.vo
 
-$(CHECK_FILE):
+$(BYT_FOCAL_COMPILER) $(BIN_FOCAL_COMPILER):
 	cd $(ROOT_DIR); $(MAKE) all
