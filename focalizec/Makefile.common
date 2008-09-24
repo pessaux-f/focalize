@@ -1,4 +1,4 @@
-# $Id: Makefile.common,v 1.5 2008-09-24 07:37:30 weis Exp $
+# $Id: Makefile.common,v 1.6 2008-09-24 08:01:14 weis Exp $
 
 BINOBJS = $(BYTOBJS:.cmo=.cmx)
 
@@ -47,7 +47,7 @@ tests::
 	$(CAMLLEX) $<
 
 .foc.fo .foc.ml .foc.zv:
-	$(FOCC) $<
+	$(FOCALC) $<
 
 .zv.v:
 	$(ZVTOV) -new $<
