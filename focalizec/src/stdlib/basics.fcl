@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.24 2008-09-11 09:26:21 pessaux Exp $ *)
+(* $Id: basics.fcl,v 1.25 2008-09-24 08:36:36 weis Exp $ *)
 
 (** The very basic definitions for focalize code:
     built-in or (almost) mandatory type definitions,
@@ -101,36 +101,36 @@ and ( :: ) (*Cons*) =
 let foc_error =
   internal string -> 'a
   external
-   | caml -> {* Ml_builtins.bi__foc_error *}
-   | coq -> {* coq_builtins.foc_error *}
+  | caml -> {* Ml_builtins.bi__foc_error *}
+  | coq -> {* coq_builtins.foc_error *}
 ;;
 
 let and_b =
   internal bool -> bool -> bool
   external
-   | caml -> {* Ml_builtins.bi__and_b *}
-   | coq -> {* coq_builtins.bi__and_b *}
+  | caml -> {* Ml_builtins.bi__and_b *}
+  | coq -> {* coq_builtins.bi__and_b *}
 ;;
 
 let or_b =
   internal bool -> bool -> bool
   external
-   | caml -> {* Ml_builtins.bi__or_b *}
-   | coq -> {* coq_builtins.bi__or_b *}
+  | caml -> {* Ml_builtins.bi__or_b *}
+  | coq -> {* coq_builtins.bi__or_b *}
 ;;
 
 let not_b =
   internal bool -> bool
   external
-   | caml -> {* Ml_builtins.bi__not_b *}
-   | coq -> {* coq_builtins.bi__not_b *}
+  | caml -> {* Ml_builtins.bi__not_b *}
+  | coq -> {* coq_builtins.bi__not_b *}
 ;;
 
 let xor_b =
   internal bool -> bool -> bool
   external
-   | caml -> {* Ml_builtins.bi__xor_b *}
-   | coq -> {* coq_builtins.bi__xor_b *}
+  | caml -> {* Ml_builtins.bi__xor_b *}
+  | coq -> {* coq_builtins.bi__xor_b *}
 ;;
 
 
@@ -304,8 +304,8 @@ let phys_eq =
   internal 'a ->'a -> bool
   external
   | caml -> {* Ml_builtins.bi__base_equal *}
-  | coq -> {* coq_builtins.bi__base_eq __var_a *}  (* Wrong, nut don't know to
-                                                      do better. *)
+  | coq -> {* coq_builtins.bi__base_eq __var_a *}
+    (* Wrong, but don't know how to do better. *)
 ;;
 
 let base_eq =
@@ -434,10 +434,10 @@ theorem int_plus_assoc: all x y z in int,
   #base_eq (#int_plus (#int_plus (x, y), z), #int_plus (x, #int_plus (y, z)))
 proof:
   coq proof
-    {* unfold int_plus, __g_base_eq_ in |- *; intros x y z;
-       unfold base_eq; unfold bi__base_eq;
-       apply EQ_base_eq; auto with zarith.
-       Qed. *}
+  {* unfold int_plus, __g_base_eq_ in |- *; intros x y z;
+     unfold base_eq; unfold bi__base_eq;
+     apply EQ_base_eq; auto with zarith.
+     Qed. *}
 ;;
 
 theorem int_plus_commute: all x y  in int,
@@ -469,23 +469,23 @@ theorem int_le_plus_plus: all x y z t in int,
     #int_leq (#int_plus (x, z), #int_plus (y, t))
 proof:
    coq proof
-     {* unfold int_plus, int_leq in |- *; intros x y z t H1 H2;
-        unfold bi__int_leq, bi__int_plus, bi__int_plus;
-        apply dec_IsTrue; apply Zplus_le_compat;
-        [ exact (IsTrue_dec H1) | exact (IsTrue_dec H2) ].
-        Qed. *}
+   {* unfold int_plus, int_leq in |- *; intros x y z t H1 H2;
+      unfold bi__int_leq, bi__int_plus, bi__int_plus;
+      apply dec_IsTrue; apply Zplus_le_compat;
+      [ exact (IsTrue_dec H1) | exact (IsTrue_dec H2) ].
+      Qed. *}
 ;;
 
 theorem int_min_le: all x y z in int,
   (#int_leq (z, x) /\ #int_leq (z, y)) -> #int_leq (z, #int_min (x, y))
 proof:
    coq proof
-     {* intros x y z H; elim H; intros H1 H2; clear H;
-        unfold int_min in |- *;
-        unfold bi__int_min;
-        elim (Z_lt_dec x y);
-        intros H; trivial.
-        Qed. *}
+   {* intros x y z H; elim H; intros H1 H2; clear H;
+      unfold int_min in |- *;
+      unfold bi__int_min;
+      elim (Z_lt_dec x y);
+      intros H; trivial.
+      Qed. *}
 ;;
 
 (*** ??? ********* *)
@@ -494,17 +494,17 @@ theorem int_min_le2: all x y z in int,
 proof:
    coq proof
    {*
-   intros x y z; unfold int_min in |- *.
-   unfold bi__int_min.
-   case (Z_lt_dec x y); intros H1 H2; split; trivial.
-   apply int_le_trans with x; trivial.
-   unfold int_leq in |- *;
-   unfold int_leq, bi__int_leq;
-   apply dec_IsTrue; apply Zlt_le_weak; trivial.
-   apply int_le_trans with y; trivial.
-   unfold int_leq in |- *; unfold bi__int_leq; apply dec_IsTrue.
-   elim (Zle_or_lt y x); trivial.   intros Habs; absurd (x < y)%Z; trivial.
-   Qed.
+      intros x y z; unfold int_min in |- *.
+      unfold bi__int_min.
+      case (Z_lt_dec x y); intros H1 H2; split; trivial.
+      apply int_le_trans with x; trivial.
+      unfold int_leq in |- *;
+      unfold int_leq, bi__int_leq;
+      apply dec_IsTrue; apply Zlt_le_weak; trivial.
+      apply int_le_trans with y; trivial.
+      unfold int_leq in |- *; unfold bi__int_leq; apply dec_IsTrue.
+      elim (Zle_or_lt y x); trivial.   intros Habs; absurd (x < y)%Z; trivial.
+      Qed.
  *}
 ;;
 
@@ -513,12 +513,12 @@ theorem int_plus_minus: all x y z in int,
 proof:
    coq proof
    {*
-   intros x y z; unfold int_plus, int_minus, base_eq in |- *;
-   intros H;
-   unfold bi__base_eq, bi__int_minus;
-   apply EQ_base_eq; apply Zplus_minus_eq;
-   symmetry  in |- *; apply (decidable _ _ _ (Z_eq_dec (x + y) z) H).
-   Qed.
+      intros x y z; unfold int_plus, int_minus, base_eq in |- *;
+      intros H;
+      unfold bi__base_eq, bi__int_minus;
+      apply EQ_base_eq; apply Zplus_minus_eq;
+      symmetry  in |- *; apply (decidable _ _ _ (Z_eq_dec (x + y) z) H).
+      Qed.
  *}
  ;;
 
@@ -527,12 +527,12 @@ theorem int_minus_plus: all x y z in int,
 proof:
    coq proof
    {*
-   intros x y z; unfold int_plus, int_minus, base_eq in |- *;
-   intros H;
-   unfold bi__base_eq, bi__int_minus;
-   apply EQ_base_eq; rewrite <- (Zplus_minus y x);
-   apply Zplus_eq_compat; trivial; apply decidable. apply Z_eq_dec. assumption.
-   Qed.
+      intros x y z; unfold int_plus, int_minus, base_eq in |- *;
+      intros H;
+      unfold bi__base_eq, bi__int_minus;
+      apply EQ_base_eq; rewrite <- (Zplus_minus y x);
+      apply Zplus_eq_compat; trivial; apply decidable. apply Z_eq_dec. assumption.
+      Qed.
    *}
 ;;
 
@@ -558,7 +558,10 @@ type partiel ('a) =
 ;;
 
 
-let is_failed (x) = match x with | Failed -> true | Unfailed (_) -> false ;;
+let is_failed (x) =
+  match x with
+  | Failed -> true
+  | Unfailed (_) -> false ;;
 
 let non_failed (x) =
    match x with
