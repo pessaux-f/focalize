@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: weak_structures.foc,v 1.15 2008-09-23 06:11:30 pessaux Exp $ *)
+(* $Id: weak_structures.foc,v 1.16 2008-09-24 09:15:11 pessaux Exp $ *)
 
 (** We define here some weak notions such as rings with no subtraction. *)
 
@@ -302,8 +302,12 @@ species Euclidean_semi_ring inherits Factorial_semi_ring =
   let quotient (x, y) = #quot (Self!quo_rem (x, y)) ;
   let remainder (x, y) = #rema (Self!quo_rem (x, y)) ;
 
+  (* [Unsure]
   let rec gcd (x, y) = 
     if Self!is_zero (y) then x else Self!gcd (y, Self!remainder (x, y)) ;
+   *)
+  let  gcd (x, y) = 
+    if Self!is_zero (y) then x else Self!remainder (x, y) ;
 
   signature euclidean_ordering : Self -> Self -> prop ;
 
