@@ -13,11 +13,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets_orders.fcl,v 1.13 2008-09-11 09:26:21 pessaux Exp $ *)
+(* $Id: sets_orders.fcl,v 1.14 2008-09-24 08:52:21 weis Exp $ *)
 
 (** Basic sets operations, orderings and lattices. *)
-
--- This is a file in new syntax!
 
 use "basics";;
 open "basics";;
@@ -129,7 +127,7 @@ end
  *)
 species Partial_set inherits Setoid =
 
-  (** this is intended to model failure*)
+  (** this is intended to model failure *)
   let failed in (string -> Self) =
     let ifailed (r in string, elt in Self) in Self =
        external
