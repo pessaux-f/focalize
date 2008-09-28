@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.39 2008-09-24 07:38:00 weis Exp $
+# $Id: Makefile,v 1.40 2008-09-28 14:28:06 rr Exp $
 
 ROOT_DIR = ..
 
@@ -26,22 +26,22 @@ COQ_COMP_FLAGS = -I ../../zenon/
 
 FOCAL_SRC = basics.foc \
 	sets_orders.foc \
-	iterators.foc \
-	additive_law.foc \
-	multiplicative_law.foc \
-	weak_structures.foc \
-	wellfounded.foc \
-	rings_fields.foc \
-	random_foc.foc \
-	integers.foc \
-	array_foc.foc \
-	products_foc.foc \
-	quotients.foc \
-	small_integers.foc
+	wellfounded.foc 
+#	iterators.foc 
+#	additive_law.foc 
+#	multiplicative_law.foc 
+#	weak_structures.foc 
+#	rings_fields.foc 
+#	random_foc.foc 
+#	integers.foc 
+#	array_foc.foc 
+#	products_foc.foc 
+#	quotients.foc 
+#	small_integers.foc
 
-FOCAL_SRC_UNSAFE = big_integers.foc \
-	parse_poly.foc \
+FOCAL_SRC_UNSAFE = \
 	ensembles_finis.foc
+#	big_integers.foc parse_poly.foc
 #	polys_abstract.foc polys_concrete finite_fields fractions finite_factorize
 
 FOCAL_MLS = $(FOCAL_SRC:.foc=.ml)
@@ -63,16 +63,17 @@ FOCAL_VOS = $(FOCAL_VS:.v=.vo)
 FOCAL_VOS_UNSAFE = $(FOCAL_SRC_UNSAFE:.foc=.vo)
 
 EXTERNAL_BYTOBJS =\
-  ml_builtins.cmo sets_orders_externals.cmo\
-  weak_structures_externals.cmo\
-  random_foc_externals.cmo
+  ml_builtins.cmo sets_orders_externals.cmo
+#  weak_structures_externals.cmo
+#  random_foc_externals.cmo
 
 EXTERNAL_BINOBJS = $(EXTERNAL_BYTOBJS:.cmo=.cmx)
 
 EXTERNAL_VOS =\
-	coq_builtins.vo weak_structures_externals.vo\
-	wellfounded_externals.vo\
-	random_foc_externals.vo array_foc_externals.vo
+	coq_builtins.vo \
+	wellfounded_externals.vo
+#	weak_structures_externals.vo
+#	random_foc_externals.vo array_foc_externals.vo
 
 include $(ROOT_DIR)/Makefile.common
 
