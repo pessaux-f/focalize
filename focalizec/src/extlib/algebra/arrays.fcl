@@ -1,0 +1,48 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: arrays.fcl,v 1.1 2008-09-28 14:29:32 rr Exp $ *)
+
+use "basics" ;;
+coq_require "array_foc_externals" ;;
+
+(** Arrays for FoC *)
+type array ('a) =
+  internal
+  external
+  | caml -> {* 'a array *}
+  | coq -> {* array_foc_externals.bi__array __var_a *}
+;;
+
+let array_set =
+  internal array ('a) -> basics#int -> 'a -> basics#unit
+  external
+  | caml -> {* Array.set *}
+  | coq -> {* array_foc_externals.bi__array_set __var_a *}
+;;
+
+let array_create =
+  internal basics#int ->'a -> array ('a)
+  external 
+  | caml -> {* Array.create *}
+  | coq -> {* array_foc_externals.bi__array_create __var_a *}
+;;
+
+let array_get =
+  internal array ('a) -> basics#int -> 'a
+  external
+  | caml -> {* Array.get *}
+  | coq -> {* array_foc_externals.bi__array_get __var_a *}
+;;

@@ -1,0 +1,222 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: small_integers.fcl,v 1.1 2008-09-28 14:29:32 rr Exp $ *)
+
+(** We want here to provide abstract definitions for what is usually called
+   integers. That is natural numbers, and integers. The problem is that. *)
+use "basics" ;;
+open "basics" ;;
+
+use "iterators" ;;
+open "iterators" ;;
+
+use "integers" ;;
+open "integers" ;;
+
+use "weak_structures" ;;
+open "weak_structures" ;;
+
+use "random_foc" ;;
+open "random_foc" ;;
+
+(**
+   small_numbers can be converted to int
+   (from the implementation/runtime system
+ *)
+species Small_numbers_system inherits sets_orders#Partial_set =
+  signature of_int : basics#int -> Self ;
+  signature to_int : Self -> basics#int ;
+end ;;
+
+(** Very simple small integers we simply give definitions *)
+species Basic_small_nats inherits Basic_object =
+  rep = int ;
+  let zero in Self = 0 ;
+  let is_zero (x in Self) = basics#phys_eq (x, 0) ;
+  let one in Self = 1 ;
+  (** We check overflow by testing signs @mathml <plus/> *)
+  let plus (m in Self, n in Self) in Self  =
+     let r = basics#int_plus (m, n) in
+     if basics#int_leq (m, 0) then
+       if basics#int_leq (n, 0) then
+         (* sum of negative is negative *)
+         if basics#int_leq (r, 0) then r
+         else basics#foc_error ("small integer Overflow")
+       else (* negative and positive don't produce overflow *)
+         r
+     else (* x > 0 *)
+       if basics#int_gt (n, 0) then
+         (* sum of positive is positive *)
+         if basics#int_gt (r, 0) then r
+         else basics#foc_error ("small integer Overflow")
+       else (* positive and negative don't produce overflow *)
+         r
+     ;
+  (** We check overflow by testing signs.
+      This is incomplete !
+      @mathml <mult/> *)
+  let mult (m in Self, n in Self) in Self =
+     let r = basics#int_mult (m, n) in
+     if basics#int_leq (m, 0) then
+       if basics#int_leq (n, 0) then
+         (* product of negatives is positive *)
+         if basics#int_geq (r, 0) then r
+         else basics#foc_error ("small integer Overflow")
+       else
+         (* product of negative and positive is negative *)
+         if basics#int_leq (r, 0) then r
+         else basics#foc_error ("small integer Overflow")
+     else (* x > 0 *)
+       if basics#int_gt (n, 0) then
+         (* sum of positives is positive *)
+         if basics#int_gt (r, 0) then r
+         else basics#foc_error ("small integer Overflow")
+       else
+         (* product of positive and negative is negative *)
+         if basics#int_leq (r, 0) then r
+         else basics#foc_error ("small integer Overflow")
+     ;
+
+  let equal (x in Self, y in Self) = basics#phys_eq (x, y) ;
+  let is_one (x in Self ) = basics#phys_eq (x, 1) ;
+  let leq (x in Self, y in Self )= basics#int_leq (x, y) ;
+  (* declared in basic_object *)
+  let parse (x) = basics#int_of_string(x) ;
+  let print (x) = basics#string_of_int(x) ;
+  let quo_rem (m in Self, n in Self) in quo_rem_result (Self) =
+    if basics#phys_eq (n, 0)
+    then basics#foc_error ("Small Numbers: division by zero")
+    else weak_structures#cr_qrr (basics#int_div (m, n), basics#int_mod (m, n)) ;
+
+  logical let euclidean_ordering (n in Self, m in Self) =
+    if basics#int_gt (n, 0) then
+      if basics#int_gt (m, 0)
+      then basics#int_lt (n, m)
+      else basics#int_lt (n, basics#int_opp (m))
+    else
+      if basics#int_gt (m, 0)
+      then basics#int_lt (basics#int_opp (n), m)
+      else basics#int_lt (basics#int_opp (n), basics#int_opp (m)) ;
+end ;;
+
+
+species Basic_small_ints inherits Basic_small_nats =
+  let opposite (x in Self) in Self = basics#int_minus (0, x) ;
+(*   let minus (x in Self, y in Self) in Self = #int_minus (x, y);  *)
+  let sign (x in Self) =
+    if basics#int_lt (x, 0) then -1
+    else
+     if basics#int_gt (x, 0) then 1
+     else 0 ;
+end ;;
+
+species Small_naturals inherits Natural_number_system, Basic_small_nats =
+
+  proof of is_zero_spec = assumed {* Because todo *} ;
+  let random (x) = random_foc#random_int (x) ;
+  let seed (x) = random_foc#random_seed (x) ;
+  let to_int (n in Self) in basics#int = n ;
+  let of_int (n in int) in Self =
+     if basics#int_lt (n, 0)
+     then !failed ("small_naturals!of_int: naturals are positive")
+     else n ;
+  let minus (n, m) =
+     let r = basics#int_minus (n, m) in
+     if basics#int_lt (r, 0) then
+       !failed ("small_naturals!minus: can't substract")
+     else r ;
+
+  proof of equal_reflexive = assumed {* Because todo *} ;
+  proof of equal_symmetric = assumed {* Because todo *} ;
+  proof of equal_transitive = assumed {* Because todo *} ;
+  proof of leq_reflexive = assumed {* Because todo *} ;
+  proof of leq_antisymmetric = assumed {* Because todo *} ;
+  proof of leq_transitive = assumed {* Because todo *} ;
+  proof of lt_is_not_leq = assumed {* Because todo *} ;
+  proof of total_order = assumed {* Because todo *} ;
+  proof of plus_right_substitution_rule = assumed {* Because todo *} ;
+  proof of plus_is_associative = assumed {* Because todo *} ;
+  proof of plus_commutes = assumed {* Because todo *} ;
+  proof of plus_is_left_regular = assumed {* Because toto *} ;
+  proof of zero_is_neutral = assumed {* Because toto *} ;
+  proof of leq_absorbes_add = assumed {* Because toto *} ;
+  proof of sup_absorbes_add = assumed {* Because toto *} ;
+  proof of add_right_distributes_on_sup = assumed {* Because toto *} ;
+  proof of add_left_distributes_on_sup = assumed {* Because toto *} ;
+  proof of inf_absorbes_add = assumed {* Because toto *} ;
+  proof of add_right_distributes_on_inf = assumed {* Because toto *} ;
+  proof of add_left_distributes_on_inf = assumed {* Because toto *} ;
+  proof of order_compatible_with_plus = assumed {* Because toto *} ;
+  proof of zero_left_absorbes = assumed {* Because toto *} ;
+  proof of mult_left_distributes_on_plus = assumed {* Because toto *} ;
+  proof of mult_is_integral = assumed {* Because toto *} ;
+  proof of mult_is_left_regular = assumed {* Because toto *} ;
+  proof of mult_commutes = assumed {* Because toto *} ;
+  proof of mult_left_substitution_rule = assumed {* Because toto *} ;
+  proof of mult_assoc = assumed {* Because toto *} ;
+  proof of one_is_left_neutral = assumed {* Because toto *} ;
+  proof of minus_right_substitution_rule = assumed {* Because toto *} ;
+  proof of minus_left_substitution_rule = assumed {* Because toto *} ;
+  proof of minus_is_well_defined = assumed {* Because toto *} ;
+  proof of euclidean_ordering_is_transitive = assumed {* Because toto *} ;
+  proof of euclidean_order_is_antisymmetric = assumed {* Because toto *} ;
+  proof of euclidean_ordering_is_irreflexive = assumed {* Because toto *} ;
+  proof of remainder_is_smaller = assumed {* Because toto *} ;
+  (* [rr]: this one might be generic *)
+  proof of order_compatible_with_cancellation = assumed {* Because toto *} ;
+end ;;
+
+collection Foc_small_naturals implements Small_naturals ;;
+
+species Small_integers inherits Integer_system, Basic_small_ints =
+
+  let to_int (n in Self) in int = n ;
+  let of_int (n in int) in Self = n ;
+
+  proof of is_zero_spec = assumed {* Because toto *} ;
+  proof of equal_reflexive = assumed {* Because toto *} ;
+  proof of equal_symmetric = assumed {* Because toto *} ;
+  proof of equal_transitive = assumed {* Because toto *} ;
+  proof of leq_reflexive = assumed {* Because toto *} ;
+  proof of leq_antisymmetric = assumed {* Because toto *} ;
+  proof of leq_transitive = assumed {* Because toto *} ;
+  proof of lt_is_not_leq = assumed {* Because toto *} ;
+  proof of total_order = assumed {* Because toto *} ;
+  proof of plus_right_substitution_rule = assumed {* Because toto *} ;
+  proof of plus_is_associative = assumed {* Because toto *} ;
+  proof of plus_commutes = assumed {* Because toto *} ;
+  proof of plus_is_left_regular = assumed {* Because toto *} ;
+  proof of zero_is_neutral = assumed {* Because toto *} ;
+  proof of opposite_is_opposite = assumed {* Because toto *} ;
+
+  proof of order_compatible_with_plus = assumed {* Because toto *} ;
+  proof of zero_left_absorbes = assumed {* Because toto *} ;
+  proof of mult_left_distributes_on_plus = assumed {* Because toto *} ;
+  proof of mult_is_integral = assumed {* Because toto *} ;
+  proof of mult_is_regular = assumed {* Because toto *} ;
+  proof of mult_commutes = assumed {* Because toto *} ;
+  proof of mult_left_substitution_rule = assumed {* Because toto *} ;
+  proof of mult_compat_with_order = assumed {* Because toto *} ;
+  proof of mult_assoc = assumed {* Because toto *} ;
+  proof of one_is_left_neutral = assumed {* Because toto *} ;
+
+  proof of euclidean_ordering_is_transitive = assumed {* Because toto *} ;
+  proof of euclidean_order_is_antisymmetric = assumed {* Because toto *} ;
+  proof of euclidean_ordering_is_irreflexive = assumed {* Because toto *} ;
+  proof of remainder_is_smaller = assumed {* Because toto *} ;
+end ;;
+
+collection Foc_small_integers implements Small_integers ;;

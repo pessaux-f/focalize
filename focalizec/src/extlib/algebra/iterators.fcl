@@ -1,0 +1,381 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: iterators.fcl,v 1.1 2008-09-28 14:29:32 rr Exp $ *)
+
+(** Basic techniques to iterate a process including very simple numbers. *)
+
+
+use "sets_orders" ;;
+open "sets_orders" ;;
+
+(** a set with zero has an element called zero *)
+species Set_with_zero inherits Setoid =
+ (** @mathml <mn>0</mn>
+    will be rendered as 0
+  *)
+  signature zero : Self ;
+  let element = Self!zero ;
+  signature is_zero : Self -> basics#bool ;
+  property is_zero_spec: all x in Self,
+    !is_zero(x) <-> (!equal (x, !zero) \/ !equal (!zero, x)) ;
+end ;;
+
+(**
+   An abstract enumeration system is a system where we have a
+   successor and a predecessor function.
+ *)
+
+species Enumeration_system inherits Setoid =
+
+  signature start : Self ;
+
+  (** An abstract successor function *)
+  signature successor : Self -> Self ;
+
+  (** Compatibility with equality *)
+  property successor_substitution_rule: all x y in Self,
+   !equal (x, y) -> !equal (!successor(x), !successor(y)) ;
+
+  (** Injectivity of successor is a Peano axiom *)
+  property successor_is_injective : all x y in Self,
+     !equal (!successor(x), !successor(y)) -> !equal (x, y) ;
+
+  (**
+     predecessor computes the unique y such that successor(y) = x
+     This makes sense because predecessor is injective.
+   *)
+  signature predecessor : Self -> Self;
+  property predecessor_reverses_successor : all x y in Self,
+     !equal (x, !successor (y)) ->
+       !equal (y, !predecessor (x)) ;
+end ;;
+
+
+(**
+   An abstract enumeration system is a system that could be obtained
+   by stating from the 0 element and iterating the successor function.
+ *)
+species Enumerated_system
+   inherits Enumeration_system, Partial_set =
+  (** Zero is not a successor is a Peano axiom *)
+  property successor_is_non_trivial: all n in Self,
+    ~ (!equal (!successor (n), !start));
+
+  (** Weak injectivity of predecessor is a Peano axiom *)
+  property predecessor_is_injective: all n m in Self,
+    ~ (!equal (n, !start)) -> ~ (!equal (m, !start)) ->
+      !equal (!predecessor (n), !predecessor (m)) -> !equal (m, n) ;
+
+  (** An induction principle for natural numbers *)
+  theorem enumerated_induction: all p in (Self -> prop),
+    p (!start) -> (all n in Self, p (n) -> p (!successor (n)))
+      -> (all n in Self, p (n))
+    proof : assumed {* Because todo *} ;
+end ;;
+
+
+
+species Function_t_t_t (T is basics#Basic_object) =
+  rep = T -> T -> T ;
+  signature f : T -> T -> T ;
+end ;;
+
+
+(**
+   Iteration of an arbitrary binary operation. This is not intended to be
+   effectively used in the library but can be used to specify functions.
+ *)
+
+species Iteration (Nat is Enumeration_system, S is basics#Basic_object,
+                   F_binary is Function_t_t_t (S), fct in F_binary, zero in S) =
+   rep = basics#unit ;
+(* [Unsure]
+   let rec iterate (x in S, n in Nat) in S =
+     if Nat!equal (n, Nat!start) then zero
+     else F_binary!f (x, !iterate (x, Nat!predecessor (n))) ;
+*)
+   let iterate (x in S, n in Nat) in S = x ;
+end ;;
+
+
+
+(**
+  Here we state properties for a total ordering over an enumeration.
+  Implicitely we orient the binary relation x = succ(y)
+  and consider its transitive closure
+ *)
+species Ordered_Enumeration_system inherits Enumeration_system =
+  (** a strict inequality *)
+  (* [Usure] : j'ai remplacé la doc par un simple commentaire @mathml <lt/> *)
+  signature lt : Self -> Self -> basics#bool ;
+  (**  antisymmetry is usually stated for large orderings *)
+  property lt_is_anti_symmetric: all x y in Self,
+    !lt (x, y) -> ~ (!lt (y, x)) ;
+  theorem lt_is_irreflexive: all x in Self, ~ (!lt(x, x))
+    proof: by property lt_is_anti_symmetric ;
+  (** Transitivity *)
+  property lt_is_transitive: all x y z in Self,
+    !lt (x, y) -> !lt (y, z) -> !lt (x, z) ;
+  (** We only have three cases *)
+  property lt_is_total: all x y in Self,
+    !lt (x, y) \/ !equal (x, y) \/ !lt (y, x) ;
+
+  (** strict ordering enables to define large ordering *)
+  (* [Usure] : j'ai remplacé la doc par un simple commentaire @mathml <leq/> *)
+  let leq (x, y) = basics#or_b (!equal (x, y), !lt (x, y)) ;
+  theorem leq_is_reflexive: all x y in Self, !equal (x, y) -> !leq (x, y)
+    proof: by definition of leq ;
+  theorem leq_is_antisymmetric: all x y in Self,
+    !leq (x, y) -> !leq (y, x) -> !equal (x, y)
+    proof:
+      <1>1 assume x in Self,
+           assume y in Self,
+           assume Hxy: !leq (x, y),
+           assume Hyx: !leq (y, x),
+           prove !equal (x, y)
+           <2>1 assume Axy: !lt (x, y),
+                prove !equal (x, y)
+                <3>1 prove ~ (!lt (y, x))
+                   by hypothesis Axy
+                   property lt_is_anti_symmetric
+                <3>2 qed
+                     by step <3>1
+                     hypothesis Hyx
+                     property equal_symmetric
+                     definition of leq
+           <2>2 assume Ayx: !lt (y, x),
+                prove !equal (x, y)
+                <3>1 prove ~ (!lt (x, y))
+                       by hypothesis Ayx
+                       property lt_is_anti_symmetric
+                <3>2 qed by
+                         step <3>1
+                         hypothesis Hxy
+                         definition of leq
+           <2>f qed by step <2>1, <2>2
+                           property lt_is_total
+      <1>2 qed.
+    ;
+  theorem leq_is_transitive: all x y z in Self,
+    !leq (x, y) -> !leq (y, z) -> !leq (x, z)
+    (* [rr]: todo *)
+    proof: assumed {* Because todo *} ;
+
+  (** Properties which state that the ordering
+     is induced by the successor function *)
+  property successor_defines_bigger: all x in Self,
+    !lt (x, !successor (x)) ;
+  property start_is_min: all x in Self,
+    !equal (x, !start) \/ !lt (!start, x) ;
+  property successor_defines_infimum: all x y in Self,
+    !leq (x, y) -> ~ (!equal (x, y)) -> !leq (!successor (x), y);
+
+  (* [rr]:
+     To be continued ... One should be able to implement something which
+     reasonably implement natural numbers
+   *)
+end ;;
+
+
+(** A setoid with one has a special element named one *)
+species Setoid_with_one inherits Setoid =
+ (** @mathml <mn>1</mn>
+    will be rendered as 1
+ *)
+ signature one : Self ;
+ let is_one (x) = Self!equal (x, Self!one) ;
+ let element = Self!one ;
+end ;;
+
+
+(**
+   Here we define two different embedings of an enumeration system
+   @param nat @mathml <mi>N/<mi>
+   into our structure. This should enable to provide negative numbers.
+ *)
+
+(* species signed_system(nat is Enumeration_system)  *)
+(*   inherits Set_with_zero = *)
+(*   (\** We view this as an embeding *\) *)
+(*   signature of_nat in nat -> Self; *)
+(*   property of_nat_substitution_rule: all x y in nat, *)
+(*     nat!equal(x,y) -> !equal(!of_nat(x), !of_nat(y)); *)
+(*   property of_nat_is_injective: all x y in nat, *)
+(*     !equal(!of_nat(x),!of_nat(y)) -> nat!equal(x,y); *)
+
+(*   (\** We view this as an abstract constructor *\) *)
+(*   (\** @mathml <minus/> *\) *)
+(*   signature opposite in nat -> Self; *)
+(*   property opposite_substitution_rule: all x y in nat, *)
+(*     !equal(!opposite(x), !opposite(y)); *)
+(*   property opposite_is_injective: all x y in nat, *)
+(*     !equal(!opposite(x),!opposite(y)) -> nat!equal(x,y); *)
+
+(*   (\** abs is a form of inverse of both of_nat and opposite *\) *)
+(*   signature abs in Self -> nat; *)
+(*   property abs_substitution_rule: all x y in Self,  *)
+(*     !equal(x,y) -> nat!equal(!abs(x),!abs(y)); *)
+(*   property abs_is_idempotent: all x in Self, *)
+(*     nat!equal(!abs(!of_nat(!abs(x))),!abs(x)); *)
+(*   property opposite_and_nat_complete: all x in Self, *)
+(*     !equal(x, !of_nat(!abs(x))) \/ !equal(x,!opposite(!abs(x))); *)
+(*   property opposite_is_involutive: all x in nat, *)
+(*     !equal(!opposite(!abs(!opposite(x))),!of_nat(x)); *)
+
+(*   let sign(x in Self) in int = *)
+(*      if !equal(x,!of_nat(!abs(x))) *)
+(*      then  *)
+(*        if !equal(x,!zero) *)
+(*        then 0 *)
+(*        else 1 *)
+(*      else *)
+(*        -1; *)
+
+(*   theorem sign_is_complete: all x in Self, *)
+(*     #int_eq(!sign(x),-1) \/ *)
+(*     #int_eq(!sign(x),0) \/ *)
+(*     #int_eq(!sign(x),1) *)
+(*     proof:  *)
+(*       (\*[rr]: todo *\) *)
+(*       assumed {* Because todo *} *)
+(*     ; *)
+
+(*   (\* [rr]: *)
+(*      Now one should be able to provide an ordering on Self *)
+(*      extending that of nat and compatible with of_nat and opposite *)
+(*    *\) *)
+
+(* end *)
+
+(* [Usure] : j'ai remplacé la doc par un simple commentaire
+   By a dichotomic system we mean a structure that could be obtained with
+   0, 1, multiplication by two and successor.
+*)
+
+species Dichotomic_system
+  inherits Set_with_zero, Enumeration_system, Setoid_with_one =
+
+  let start = !zero ;
+
+  (** on is the successor of 0 *)
+  property one_successes_zero: !equal (!successor (!zero), !one) ;
+
+  (** multiplication by two *)
+  signature mult2 : Self -> Self ;
+  (** compatibility with equality *)
+  property mult2_substitution_rule: all n m in Self,
+   !equal (n, m) -> !equal (!mult2 (n), !mult2 (m)) ;
+
+  property zero_fixes_mult2: !equal (!mult2 (!zero), !zero) ;
+  property mult2_is_injective: all n m in Self,
+   !equal (!mult2 (n), !mult2 (m)) -> !equal (n, m) ;
+
+  (* we can check if an element is even *)
+  signature is_even : Self -> basics#bool ;
+  property is_even_substitution_rule: all n m in Self,
+   !is_even (n) -> !equal (n, m) -> !is_even (m) ;
+  (* [rr]: this may be a theorem *)
+  property zero_is_even: !is_even (!zero) ;
+
+  (* we can check if an element is odd *)
+  signature is_odd : Self -> basics#bool ;
+  property is_odd_substitution_rule: all n m in Self,
+   !is_odd (n) -> !equal (n, m) -> !is_odd (m) ;
+  (* [rr]: this may be a theorem *)
+  property one_is_odd: !is_odd (!one) ;
+  (* any number is odd or even *)
+  property even_odd_complete: all n in Self, !is_odd (n) \/ !is_even (n) ;
+
+  property mult2_produces_even: all n in Self, !is_even (!mult2 (n)) ;
+  (** division by two almost inverses multiplication by two *)
+  signature div2 : Self -> Self ;
+  property div2_inverses_even: all n in Self,
+   !is_even (n) -> !equal (!mult2 (!div2 (n)), n) ;
+  property div2_inverses_odd: all n in Self,
+   !is_odd (n) -> !equal (!successor (!mult2 (!div2 (n))), n) ;
+
+  property successor_of_odd_is_even: all n in Self,
+   !is_odd (n) -> !is_even (!successor (n)) ;
+  property successor_of_even_is_odd: all n in Self,
+   !is_even (n) -> !is_odd (!successor (n)) ;
+
+  theorem zero_images_by_div2: all n in Self, !equal (!div2 (n), !zero) ->
+   (!equal (n, !zero) \/ !equal (n, !one))
+  proof: assumed {* Because todo *} ;
+
+(*    (\** an induction principle for dichotomy *\)  *)
+(*   theorem dichotomic_principle: all p in (Self -> Prop), *)
+(*     p(!zero) -> *)
+(*       (all n in Self, (p(n) -> (p(!mult2(n)) /\ p(!successor(!mult2(n)))))) -> *)
+(*          (all n in Self, p(n)) *)
+(*     proof: assumed {* Because todo *} *)
+(*     ; *)
+
+end ;;
+
+
+species Binop (S is basics#Basic_object) inherits basics#Basic_object =
+  signature binop : S -> S -> S ;
+  signature bvalue : S ;
+end ;;
+
+
+(**
+   A species to perform dichotomy.
+   The result is the same than that of iteration only if operation f is
+   associative
+*)
+species Dichotomy (Nat is Dichotomic_system,
+                   S is basics#Basic_object,
+                   Bins is Binop (S))
+  inherits basics#Basic_object =
+  rep = basics#unit ;
+
+   (** f(x,f(...f(x,zero))) *)
+  let dichot (x, n) =
+     let n_2 = Nat!div2 (n) in
+          if Nat!equal (n_2, Nat!zero) then
+           if Nat!equal (n, Nat!zero) then Bins!bvalue
+           else (* we know n is 1 *)
+                Bins!binop (x, Bins!bvalue)
+         else
+           let e = Bins!bvalue in
+             if Nat!is_odd (n) then Bins!binop (x, Bins!binop (e, e))
+             else (* we know it is even *)
+               Bins!binop (e, e) ;
+end ;;
+
+(* (\**  *)
+(*    Something where we can perform dichotomy. *)
+(*    The result is the same than that of iteration only if operation f is *)
+(*    associative *)
+(* *\) *)
+(* species dichotomy (s is basic_object, f in s -> s -> s, un  in s)  *)
+(*   inherits basic_object = *)
+(*   rep = unit ; *)
+
+(*    (\** f(x,f(...f(x,un))) *\) *)
+(*     let rec dichot(x,n) = *)
+(*     if #int_eq(#int_mod(n,2),0)  *)
+(*     then *)
+(*      if #int_eq(n,0)  *)
+(*        then un *)
+(*      else  *)
+(*        let e = Self!dichot(x,#int_div(n,2)) in f(e,e) *)
+(*   else *)
+(*     let e = Self!dichot(x,#int_div(n,2)) in  *)
+(*         f(x,f(e,e)) ; *)
+(* end *)

@@ -1,0 +1,130 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: integers.fcl,v 1.1 2008-09-28 14:29:32 rr Exp $ *)
+
+(** We want here to provide abstract definitions for what is usually called 
+   integers. That is natural numbers, and integers. The problem is that. *)
+
+use "basics" ;;
+open "basics" ;;
+
+use "iterators" ;;
+open "iterators" ;;
+
+use "sets_orders" ;;
+use "additive_law" ;;
+use "multiplicative_law" ;;
+use "weak_structures" ;;
+use "rings_fields" ;;
+
+open "sets_orders" ;;
+open "additive_law" ;;
+open "multiplicative_law" ;;
+open "weak_structures" ;;
+open "rings_fields" ;;
+
+use "random_foc" ;;
+open "random_foc" ;;
+
+(**
+   A number system intends to model common properties for integers and 
+   natural numbers
+ *)
+species Number_system
+           (* [rr}: should look at that, might be deducable *)
+  inherits Cancellative_additive_monoid,
+           Euclidean_semi_ring,
+           Dichotomic_system =
+
+  (** multiplication by two is just adding twice *)
+  let mult2 (x) = !plus (x, x) ;
+  proof of mult2_substitution_rule = assumed {* Because todo *} ;
+  proof of mult2_is_injective = assumed {* Because todo *} ;
+  proof of mult2_produces_even = assumed {* Because todo *} ;
+
+  proof of zero_is_even = assumed {* Because todo *} ;
+  proof of zero_fixes_mult2 = assumed {* Because todo *} ;
+
+  (** the successor function is just addition *)
+  let successor (x)= !plus (x, !one) ;
+  proof of successor_substitution_rule =
+    by property !plus_left_substitution_rule
+       definition of successor ;
+  proof of successor_is_injective = 
+    by property !plus_is_regular definition of successor ;
+
+  local let deux = !plus (!one, !one) ;
+  let div2 (n) = !quotient (n, !deux) ;
+
+  (** odd and even can be defined from euclidean division *)
+  let is_even (n) = !is_zero (!remainder (n, !deux)) ;
+  let is_odd (n) = basics#not_b (!is_even (n)) ;
+  proof of even_odd_complete = by definition of is_odd ;
+
+  proof of successor_of_even_is_odd = assumed {* Because todo *} ;
+  proof of successor_of_odd_is_even = assumed {* Because todo *} ;
+  proof of one_is_odd = assumed {* Because todo *} ;
+  proof of is_even_substitution_rule = assumed {* Because todo *} ;
+  proof of is_odd_substitution_rule = assumed {* Because todo *} ;
+
+  proof of div2_inverses_even = assumed {* Because todo *} ;
+  proof of div2_inverses_odd = assumed {* Because todo *} ;
+  proof of one_successes_zero = assumed {* Because todo *} ;
+
+(*   proof of =  assumed; *)
+
+end ;;
+
+(** natural numbers abstraction *)
+species Natural_number_system 
+  inherits Monomial_ordering,
+           Ordered_set_as_lattice, 
+(*            Ordered_enumeration_system, *)
+           Number_system,
+           Enumerated_system =
+
+  proof of successor_is_non_trivial = assumed {* Because todo *} ;
+  (** the predecessor is a partial operation *)
+  let predecessor (n) = !minus (n, !one) ;
+  proof of predecessor_is_injective = assumed {* Because todo *} ;
+  proof of predecessor_reverses_successor = assumed {* Because todo *} ;
+
+  (** used throughout the library *)
+  signature random : Self -> Self; 
+  signature seed : Self -> unit ;
+end ;;
+
+
+(** Integers abstraction, this needs more work *)
+species Integer_system
+  inherits Euclidean_domain, Ordered_ring, Number_system =
+
+
+  (** the predecessor is a total function *)
+  let predecessor (n) = !minus (n, !one) ;
+  (** some properties are common between integers and naturals *)
+  theorem predecessor_is_injective: all x y in Self,
+    !equal (!successor (x), !successor (y)) -> !equal (x, y)
+    proof: assumed {* Because todo *} ;
+
+  theorem predecessor_reverses_successor: all x y in Self,
+    !equal (x, !successor (y)) -> !equal (y, !predecessor (x))
+    proof: assumed {* Because temporarily unvailable in new version *} ;
+(*    proof: by !opposite_is_opposite, !opposite_substitution_rule, *)
+(*              !equal_reflexive, !equal_symmetric, !equal_transitive *)
+(*          def !minus, !predecessor ; *)
+
+end ;;
