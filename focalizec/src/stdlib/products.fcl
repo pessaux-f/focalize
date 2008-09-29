@@ -1,0 +1,322 @@
+(**
+
+   @title Abstract and concrete products.
+   A first attempt to describe products in a abstract way.
+   Here we want to derive some basic functionalities which enable
+   to implement equality without depending too much on the proof assistant.
+   @author Renaud Rioboo
+
+*)
+
+(* [rr]: strictly speakin we only equal and thus sets but no orders *)
+use "basics";;
+use "sets_orders";;
+open "basics";;
+open "sets_orders";;
+
+(* uses type_utils;; *)
+(* open type_utils;; *)
+
+(** a product of two things *)
+species Abstract_product(A is Basic_object, B is Basic_object)
+  inherits Basic_object =
+
+  (** first projection *)
+  signature first: Self -> A;
+
+  (** second projection *)
+  signature second: Self -> B;
+
+  (** builder *)
+  signature term: A -> B -> Self;
+
+end;;
+
+(** 
+   The product of two non empty sets is a non empty set. 
+   We don't define the product if some set is empty since the product 
+   itself is empty.
+
+   Here we explicit two projections and and a builder.
+*)
+species Product_set(A is Setoid, B is Setoid)
+  inherits Setoid, Abstract_product(A, B) =
+
+
+  (** this is a way to express surjectivity of first projection *)
+  property term_preserves_first: all x in A, all y in B,
+    A!equal(!first(!term(x, y)), x) ;
+  (** this is the surjection property *)
+  theorem first_accessibility: all x in A, ex s in Self,
+    A!equal(!first(s), x)
+    proof:
+    <1>1 assume x in A,
+         prove A!equal(!first(!term(x, B!element)), x)
+         by property !term_preserves_first
+    <1>f qed. ;
+
+  (** this is a way to express surjectivity of second projection *)
+  property term_preserves_second: all x in A, all y in B,
+    B!equal(!second(!term(x, y)), y);
+  (** this is the surjection property *)
+  theorem second_accessibility: all x in B, ex s in Self,
+    B!equal(!second(s), x)
+    proof:
+    <1>1 assume x in B,
+         prove B!equal(!second(!term(A!element, x)), x)
+         by property !term_preserves_second
+    <1>f qed. ;
+
+  (** a product is not empty *)
+  let element = !term(A!element, B!element) ;
+
+  (** equality can be derived from first and second *)
+  (** @mathml <eq/> *)
+  let equal(x, y) =
+     basics#and_b(A!equal(!first(x), !first(y)),
+		  B!equal(!second(x), !second(y))) ;
+
+  theorem equal_spec: all x y in Self,
+    (!equal(x, y) 
+      <-> 
+    (A!equal(!first(x), !first(y)) /\ B!equal(!second(x), !second(y))))
+    proof: 
+       by definition of equal ;
+
+  proof of equal_reflexive = 
+    by property A!equal_reflexive, B!equal_reflexive
+       definition of equal ;
+
+  proof of equal_symmetric =
+    by property A!equal_symmetric, B!equal_symmetric
+       definition of equal ;
+
+  proof of equal_transitive =
+    by property A!equal_transitive, B!equal_transitive
+       definition of equal ;
+
+  (** Our definition of equality is coherent with first compenent *)
+  theorem first_substitution_rule: all x y in Self,
+    !equal(x, y) -> A!equal(!first(x), !first(y))
+    proof: by definition of equal ;
+
+  (** Our definition of equality is coherent with second compenent *)
+  theorem second_substitution_rule: all x y in Self,
+    !equal(x, y) -> B!equal(!second(x), !second(y))
+    proof: by definition of equal ;
+    
+  (** consistency between builder and equality, first argument *)
+  theorem term_left_substitution_rule: all x_1 x_2 in A, all y in B,
+    A!equal(x_1, x_2) -> !equal(!term(x_1, y), !term(x_2, y))
+    proof:
+      <1>1 assume x_1 in A,
+           assume x_2 in A,
+           assume y in B,
+           assume H: A!equal(x_1, x_2),
+           prove !equal(!term(x_1, y), !term(x_2, y))
+           <2>1 prove A!equal(!first(!term(x_1, y)), !first(!term(x_2, y)))
+                <3>1 prove A!equal(!first(!term(x_1, y)), x_1)
+                     by property !term_preserves_first
+                <3>2 prove A!equal(!first(!term(x_2, y)), x_2)
+                     by property term_preserves_first
+                <3>f qed by hypothesis H
+                            step <3>1, <3>2
+			    property A!equal_transitive, A!equal_symmetric
+           <2>2 prove B!equal(!second(!term(x_1, y)), !second(!term(x_2, y)))
+                <3>1 prove B!equal(!second(!term(x_1, y)), y)
+                     by property !term_preserves_second
+                <3>2 prove B!equal(!second(!term(x_2, y)), y)
+                     by property !term_preserves_second
+                <3>f qed by
+                     step <3>1, <3>2
+                     property  B!equal_reflexive,
+			       B!equal_transitive, B!equal_symmetric
+           <2>f qed by step <2>1, <2>2
+                       definition of equal
+      <1>f qed. ;
+    
+  (** consistency between builder and equality, second arg *)
+  theorem term_right_substitution_rule: all x in A, all y_1 y_2 in B,
+    B!equal(y_1, y_2) -> !equal(!term(x, y_1), !term(x, y_2))
+    proof:
+      <1>1 assume x in A,
+           assume y_1 in B,
+           assume y_2 in B,
+           assume H: B!equal(y_1, y_2),
+           prove !equal(!term(x, y_1), !term(x, y_2))
+           <2>1 prove A!equal(!first(!term(x, y_1)), !first(!term(x, y_2)))
+                <3>1 prove A!equal(!first(!term(x, y_1)), x)
+                     by property !term_preserves_first
+                <3>2 prove A!equal(!first(!term(x, y_2)), x)
+                     by property !term_preserves_first
+                <3>f qed by step <3>1, <3>2
+                     property A!equal_reflexive,
+			      A!equal_transitive, A!equal_symmetric
+           <2>2 prove B!equal(!second(!term(x, y_1)), !second(!term(x, y_2)))
+                <3>1 prove B!equal(!second(!term(x, y_1)), y_1)
+                     by property !term_preserves_second
+                <3>2 prove B!equal(!second(!term(x, y_2)), y_2)
+                     by property !term_preserves_second
+                <3>f qed by  step <3>1, <3>2
+                             hypothesis H
+			     property B!equal_transitive, B!equal_symmetric
+           <2>f qed by step <2>1, <2>2
+                       definition of equal
+      <1>f qed. ;
+    
+  (** Programmers should use this global consistency property when possible *)
+  theorem term_substitution_rule: all x_1 x_2 in A, all y_1 y_2 in B,
+    A!equal(x_1, x_2) -> B!equal(y_1, y_2) ->
+      !equal(!term(x_1, y_1), !term(x_2, y_2))
+    proof: by
+       property !term_left_substitution_rule, !term_right_substitution_rule,
+                !equal_transitive ;
+
+
+end
+;;
+
+(* (\**  *)
+(*    If we have a function from A to E and a function from B to E *)
+(*    then we also have a function from A x B to E *)
+(* *\) *)
+(* species categorical_property_of_product_set *)
+(*   (a is setoid, *)
+(*    b is setoid, *)
+(*    p is product_set(a, b), *)
+(*    e is setoid, *)
+(*    m_a is morphism(e, a), *)
+(*    m_b is morphism(e, b) *)
+(*    ) *)
+(*   inherits  morphism(e, p) = *)
+
+(*     let morph(x) = p!term(m_a!morph(x), m_b!morph(x)); *)
+(*     proof of morph_substitution_rule = *)
+(*       <1>1 assume x y in e, *)
+(*               H: e!equal(x, y), *)
+(*            prove p!equal(!morph(x), !morph(y)) *)
+(*            <2>1 prove a!equal(p!first(!morph(x)), p!first(!morph(y))) *)
+(*                 <3>1 prove a!equal(p!first(p!term(m_a!morph(x), m_b!morph(x))), *)
+(*                                    p!first(p!term(m_a!morph(y), m_b!morph(y)))) *)
+(*                      <4>1 prove a!equal(m_a!morph(x), m_a!morph(y)) *)
+(*                           by <1>:H, m_a!morph_substitution_rule *)
+(*                      <4>2 prove a!equal(p!first(p!term(m_a!morph(x), *)
+(*                                                        m_b!morph(x))), *)
+(*                                         m_a!morph(x)) *)
+(*                           by p!term_preserves_first *)
+(*                      <4>3 prove a!equal(p!first(p!term(m_a!morph(y), *)
+(*                                                        m_b!morph(y))), *)
+(*                                         m_a!morph(y)) *)
+(*                           by p!term_preserves_first *)
+(*                      <4>f qed by <4>1, <4>2, <4>3, *)
+(*                                  a!equal_transitive, a!equal_symmetric *)
+(*                 <3>f qed by <3>1 def !morph *)
+(*            <2>2 prove b!equal(p!second(!morph(x)), p!second(!morph(y))) *)
+(*                 <3>1 prove b!equal(p!second(p!term(m_a!morph(x), *)
+(* 						   m_b!morph(x))), *)
+(*                                    p!second(p!term(m_a!morph(y), *)
+(* 						   m_b!morph(y)))) *)
+(*                      <4>1 prove b!equal(m_b!morph(x), m_b!morph(y)) *)
+(*                           by <1>:H, m_b!morph_substitution_rule *)
+(*                      <4>2 prove b!equal(p!second(p!term(m_a!morph(x), *)
+(* 							m_b!morph(x))), *)
+(*                                         m_b!morph(x)) *)
+(*                           by p!term_preserves_second *)
+(*                      <4>3 prove b!equal(p!second(p!term(m_a!morph(y), *)
+(* 							m_b!morph(y))), *)
+(*                                         m_b!morph(y)) *)
+(*                           by p!term_preserves_second *)
+(*                      <4>f qed by <4>1, <4>2, <4>3, *)
+(*                                  b!equal_transitive, b!equal_symmetric *)
+(*                 <3>f qed by <3>1 def !morph *)
+(*            <2>f qed by <2>1, <2>2, p!equal_spec *)
+(*       <1>f qed *)
+(*       ; *)
+
+(*     theorem morph_first_factorize: all x in e, *)
+(*       a!equal(p!first(!morph(x)), m_a!morph(x)) *)
+(*       proof: by p!term_preserves_first def !morph; *)
+
+(*     theorem morph_second_factorize: all x in e, *)
+(*       b!equal(p!second(!morph(x)), m_b!morph(x)) *)
+(*       proof: by p!term_preserves_second def !morph; *)
+
+(* end *)
+
+(* (\**  *)
+(*    This is a complete species implementing abstract products using types *)
+(*    which are mapped into products in Ocaml and Coq. *)
+(*    We simply rely on three signatures and two relations, *)
+(*    We need to fill the proof knowing how these are compiled into Coq. *)
+(* *\) *)
+(* species cartesian_product(a is setoid, b is setoid) *)
+(*   inherits product_set(a, b) = *)
+
+(*   rep = a * b; *)
+
+(*   let first(x) = let (x_1, _x_2) = x in x_1; *)
+(*   let second(x) = let (_x_1, x_2) = x in x_2; *)
+(*   let term(x, y) = #crp(x, y); *)
+
+(*   (\** Credits Eric Jaeger *\) *)
+(*   proof of term_preserves_first = *)
+(*     (\* a piece of Coq with help of the compiler *\) *)
+(*     def: equal_a_reflexive; *)
+(*     def: term; *)
+(*     def: first; *)
+(*     {* intros x y; simpl; apply abst_equal_a_reflexive. *} *)
+(*     ; *)
+
+(*   (\** Credits Eric Jaeger *\) *)
+(*   proof of term_preserves_second = *)
+(*     (\* a piece of Coq with help of the compiler*\) *)
+(*     def: equal_b_reflexive; *)
+(*     def: term; *)
+(*     def: second; *)
+(*     {* intros x y; simpl; apply abst_equal_b_reflexive. *} *)
+(*     ; *)
+
+(* end *)
+
+(* (\** *)
+(*    Commonly product by a singleton is isomorphic to the set itself, *)
+(*    this is a use case for our specifications. *)
+(*  *\) *)
+(* species product_singleton(a is abstract_singleton, b is abstract_singleton) *)
+(*   inherits product_set(a, b), abstract_singleton = *)
+
+(*   proof of only_one_element = *)
+(*     <1>1 assume x in self,  *)
+(*          prove !equal(x, !element) *)
+(*          <2>1 prove a!equal(!first(x), !first(!element)) *)
+(*               <3>1 prove a!equal(!first(x), a!element) by a!only_one_element *)
+(*               <3>2 prove a!equal(!first(!element), a!element) *)
+(*                    by !term_preserves_first def !element *)
+(*               <3>3 qed  *)
+(*                    by <3>1, <3>2, *)
+(*                       a!equal_transitive, a!equal_symmetric, a!equal_reflexive *)
+(*          <2>2 prove b!equal(!second(x), !second(!element)) *)
+(*               <3>1 prove b!equal(!second(x), b!element) by b!only_one_element *)
+(*               <3>2 prove b!equal(!second(!element), b!element) *)
+(*                    by !term_preserves_second def !element *)
+(*               <3>3 qed  *)
+(*                    by <3>1, <3>2, *)
+(*                       b!equal_transitive, b!equal_symmetric, b!equal_reflexive *)
+(*          <2>f qed by <2>1, <2>2 def !equal, !equal_a, !equal_b *)
+(*     <1>f qed.; *)
+
+(* end *)
+
+(* (\** A simple instance of the latter *\) *)
+(* species cartesian_singleton(a is abstract_singleton, b is abstract_singleton) *)
+(*   inherits product_singleton(a, b), cartesian_product(a, b) = *)
+(* end *)
+
+(* (\** A final model for products  *\) *)
+(* collection product_singleton_test *)
+(*   implements cartesian_singleton(singleton_1, singleton_2) = *)
+(*   (\* [rr] Hack to include rep types *\) *)
+(*   let _rep_a(a, b) = singleton_1!equal(a, b); *)
+(*   let _rep_b(a, b) = singleton_2!equal(a, b); *)
+(* end *)
+

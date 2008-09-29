@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.40 2008-09-28 14:28:06 rr Exp $
+# $Id: Makefile,v 1.41 2008-09-29 12:03:05 rr Exp $
 
 ROOT_DIR = ..
 
@@ -27,6 +27,7 @@ COQ_COMP_FLAGS = -I ../../zenon/
 FOCAL_SRC = basics.foc \
 	sets_orders.foc \
 	wellfounded.foc 
+#	products.foc
 #	iterators.foc 
 #	additive_law.foc 
 #	multiplicative_law.foc 
