@@ -7,7 +7,7 @@ NORMALTAG="\033[0m"
 SUB_DIRS="basement parser typing \
   commoncodegen mlcodegen coqcodegen \
   toplevel \
-  stdlib extlib contribs"
+  stdlib extlib extlib/algebra contribs"
 
 touch .depend
 for i in $SUB_DIRS ; do

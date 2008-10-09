@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.41 2008-09-29 12:03:05 rr Exp $
+# $Id: Makefile,v 1.42 2008-10-09 09:52:08 pessaux Exp $
 
 ROOT_DIR = ..
 
@@ -20,7 +20,7 @@ FOCAL_COMP_FLAGS = -no-stdlib-path
 
 #From Makefile.config FOCALC = $(FOCAL_COMPILER) $(FOCAL_COMP_FLAGS)
 
-ZVTOV = ../../zvtov/zvtov -zenon ../../zenon/zenon
+ZVTOV = ../../zvtov/zvtov -new -zenon ../../zenon/zenon
 
 COQ_COMP_FLAGS = -I ../../zenon/
 
