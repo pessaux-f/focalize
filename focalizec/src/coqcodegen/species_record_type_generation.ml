@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.59 2008-09-23 13:36:52 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.60 2008-10-10 10:25:16 pessaux Exp $ *)
 
 
 
@@ -69,7 +69,6 @@ type self_methods_status =
   | SMS_from_record    (** Must be called "(hosting_species. if needed)
                            <rf_meth>". *)
 ;;
-
 
 
 
@@ -200,6 +199,18 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                    end)
                  else
                    (begin
+                   if coll_name = (snd ctx.Context.scc_current_species) then
+                     (begin
+                     (* In fact, the name is qualified but with ourself
+                        implicitely in the current compilation unit. Then, we
+                        are not in the case of a toplevel species but in the
+                        case where a substitution replaced Self by ourself.
+                        We then must refer to our local record field. *)
+                     Format.fprintf out_fmter "rf_%a"
+                       Parsetree_utils.pp_vname_with_operators_expanded vname
+                     end)
+                   else
+                     (begin
                    (* It comes from a toplevel stuff, hence not abstracted by
                       lambda-lifting. Then, we get the field of the
                       collection's record obtained by the collection's effective
@@ -209,6 +220,7 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname
+                     end)
                    end)
                  end)
              | Parsetree.Qualified (module_name, coll_name) ->
@@ -229,6 +241,7 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                               (Parsetree.Vuident vn) = coll_name)
                        ctx.Context.scc_species_parameters_names then
                      (begin
+                     (* It comes from one of our species parameters. *)
                      let prefix =
                        "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^"_" in
                      Format.fprintf out_fmter "%s%a"
@@ -237,14 +250,24 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                        end)
                    else
                      (begin
-                     Format.fprintf out_fmter
-                       "%a.effective_collection.(%a.rf_%a)"
-                       Parsetree_utils.pp_vname_with_operators_expanded
-                       coll_name
-                       Parsetree_utils.pp_vname_with_operators_expanded
-                       coll_name
-                       Parsetree_utils.pp_vname_with_operators_expanded
-                       vname
+                     (* It's not from one of our species parameter but it comes
+                        from the current compilation unit. Let's check if the
+                        species is ourself. In this case, liek above we must
+                        refer to our local record field. *)
+                     if coll_name = (snd ctx.Context.scc_current_species) then
+                       Format.fprintf out_fmter "rf_%a"
+                         Parsetree_utils.pp_vname_with_operators_expanded vname
+                     else
+                       (begin
+                       Format.fprintf out_fmter
+                         "%a.effective_collection.(%a.rf_%a)"
+                         Parsetree_utils.pp_vname_with_operators_expanded
+                         coll_name
+                         Parsetree_utils.pp_vname_with_operators_expanded
+                         coll_name
+                         Parsetree_utils.pp_vname_with_operators_expanded
+                         vname
+                       end)
                      end)
                    end)
                  else
@@ -637,11 +660,15 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
            ~self_methods_status ident ;
          (* Now, add the extra "_"'s if the identifier is polymorphic. *)
          try
+           let current_species_name =
+             Some
+               (Parsetree_utils.name_of_vname
+                 (snd ctx.Context.scc_current_species)) in
            let (nb_polymorphic_args, _) =
              Env.CoqGenEnv.find_value
                ~loc: ident.Parsetree.ast_loc
                ~current_unit: ctx.Context.scc_current_unit
-               ident env in
+               ~current_species_name ident env in
            for i = 0 to nb_polymorphic_args - 1 do
              Format.fprintf out_fmter "@ _"
            done

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.147 2008-09-16 14:27:43 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.148 2008-10-10 10:25:16 pessaux Exp $ *)
 
 
 
@@ -860,12 +860,17 @@ let typecheck_fact ctx env fact =
   match fact.Parsetree.ast_desc with
    | Parsetree.F_definition expr_idents
    | Parsetree.F_property expr_idents ->
+       let current_species_name =
+         (match ctx.current_species with
+          | None -> None
+          | Some (_, n) -> Some (Parsetree_utils.name_of_vname n)) in
        List.iter
          (fun expr_ident ->
            let var_scheme =
              Env.TypingEnv.find_value
                ~loc: expr_ident.Parsetree.ast_loc
-               ~current_unit: ctx.current_unit expr_ident env in
+               ~current_unit: ctx.current_unit ~current_species_name
+               expr_ident env in
            let ident_ty = Types.specialize var_scheme in
            (* Record the ident's type in the AST node. *)
            expr_ident.Parsetree.ast_type <- Parsetree.ANTI_type ident_ty)
@@ -927,6 +932,10 @@ let append_and_ensure_method_uniquely_defined current_species l1 l2 =
     {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
 let rec typecheck_expr ctx env initial_expr =
+  let current_species_name =
+    (match ctx.current_species with
+     | None -> None
+     | Some (_, n) -> Some (Parsetree_utils.name_of_vname n)) in
   let final_ty =
     (match initial_expr.Parsetree.ast_desc with
      | Parsetree.E_self -> Types.type_self ()
@@ -962,7 +971,7 @@ let rec typecheck_expr ctx env initial_expr =
          let var_scheme =
            Env.TypingEnv.find_value
              ~loc: ident.Parsetree.ast_loc
-             ~current_unit: ctx.current_unit ident env in
+             ~current_unit: ctx.current_unit ~current_species_name ident env in
          let ident_ty = Types.specialize var_scheme in
          (* Record the [ident]'s type in its AST node. *)
          ident.Parsetree.ast_type <- Parsetree.ANTI_type ident_ty ;
@@ -1531,6 +1540,10 @@ and typecheck_binding_body ctx env = function
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
 and typecheck_proof ctx env proof =
+  let current_species_name =
+    (match ctx.current_species with
+     | None -> None
+     | Some (_, n) -> Some (Parsetree_utils.name_of_vname n)) in
   (* No relevant type information to insert in the AST node. *)
   proof.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
   match proof.Parsetree.ast_desc with
@@ -1546,7 +1559,8 @@ and typecheck_proof ctx env proof =
                    let var_scheme =
                      Env.TypingEnv.find_value
                        ~loc: expr_ident.Parsetree.ast_loc
-                       ~current_unit: ctx.current_unit expr_ident env in
+                       ~current_unit: ctx.current_unit
+                       ~current_species_name expr_ident env in
                    let ident_ty = Types.specialize var_scheme in
                    (* Record the ident's type in the AST node. *)
                    expr_ident.Parsetree.ast_type <-
@@ -1697,6 +1711,10 @@ and typecheck_termination_proof ctx env tp =
     existing method of Self and that specified arguments really exist inside
     this method. *)
 and typecheck_termination_proof_profile ctx env previous_fields profile =
+  let current_species_name =
+    (match ctx.current_species with
+     | None -> None
+     | Some (_, n) -> Some (Parsetree_utils.name_of_vname n)) in
   let profile_desc = profile.Parsetree.ast_desc in
   (* Get the name of the function the termination proof belongs to. *)
   let fct_vname = profile_desc.Parsetree.tpp_name in
@@ -1714,7 +1732,7 @@ and typecheck_termination_proof_profile ctx env previous_fields profile =
   ignore
     (Env.TypingEnv.find_value
        ~loc: profile.Parsetree.ast_loc
-       ~current_unit: ctx.current_unit fake_ident env) ;
+       ~current_unit: ctx.current_unit ~current_species_name fake_ident env) ;
   (* Now, ensure the method really exist in the current species. *)
   try
     let (args_names, scheme) =

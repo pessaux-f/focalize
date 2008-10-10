@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.23 2008-09-11 23:14:00 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.24 2008-10-10 10:25:16 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -102,37 +102,35 @@ let subst_ident c1 c2 ident =
        (* We are asked to replace "Self"...          *)
        (* Since an ident is not Self, nothing to do. *)
        Parsetree.TE_ident { ident with Parsetree.ast_type = new_type }
-       | SRCK_coll (c1_mod, c1_name) -> 
-           (begin
-           match ident.Parsetree.ast_desc with
-            | Parsetree.I_local _ ->
-                (* No substitution on local identifiers. *)
-                Parsetree.TE_ident
-                  { ident with Parsetree.ast_type = new_type }
-            | Parsetree.I_global (Parsetree.Vname _) ->
-                (* Should never happen since scoping pass should *)
-                (* have explicitely scoped the identifiers.      *)
-                assert false
-            | Parsetree.I_global (Parsetree.Qualified (id_mod, id_name)) ->
-                (* Perform the substitution only if *)
-                (* the ident is equal to c1.        *)
-                if c1_mod = id_mod && (Parsetree.Vuident c1_name) = id_name then
-                  (begin
-                  match c2 with
-                   | Types.SBRCK_coll (c2_mod, c2_name) ->
-                       Parsetree.TE_ident
-                         { ident with Parsetree.ast_type = new_type ;
-                           Parsetree.ast_desc =
-                             Parsetree.I_global
-                               (Parsetree.Qualified
-                                  (c2_mod, (Parsetree.Vuident c2_name))) }
-                   | Types.SBRCK_self  ->
-                       (* Directly replace The ident by a "Self". *)
-                       Parsetree.TE_self
-                  end)
-                else
-                  Parsetree.TE_ident
-                    { ident with Parsetree.ast_type = new_type }
+   | SRCK_coll (c1_mod, c1_name) -> 
+       (begin
+       match ident.Parsetree.ast_desc with
+        | Parsetree.I_local _ ->
+            (* No substitution on local identifiers. *)
+            Parsetree.TE_ident { ident with Parsetree.ast_type = new_type }
+        | Parsetree.I_global (Parsetree.Vname _) ->
+            (* Should never happen since scoping pass should *)
+            (* have explicitely scoped the identifiers.      *)
+            assert false
+        | Parsetree.I_global (Parsetree.Qualified (id_mod, id_name)) ->
+            (* Perform the substitution only if *)
+            (* the ident is equal to c1.        *)
+            if c1_mod = id_mod && (Parsetree.Vuident c1_name) = id_name then
+              (begin
+              match c2 with
+               | Types.SBRCK_coll (c2_mod, c2_name) ->
+                   Parsetree.TE_ident
+                     { ident with Parsetree.ast_type = new_type ;
+                       Parsetree.ast_desc =
+                         Parsetree.I_global
+                           (Parsetree.Qualified
+                              (c2_mod, (Parsetree.Vuident c2_name))) }
+               | Types.SBRCK_self  ->
+                   (* Directly replace The ident by a "Self". *)
+                   Parsetree.TE_self
+              end)
+            else
+              Parsetree.TE_ident { ident with Parsetree.ast_type = new_type }
            end)
 ;;
 
@@ -142,10 +140,26 @@ let subst_expr_ident ~current_unit c1 c2 ident =
   (* Substitute in the AST node description. *)
   let new_desc =
     match ident.Parsetree.ast_desc with
-     | Parsetree.EI_local _ | Parsetree.EI_global _
-     | Parsetree.EI_method (None, _) ->
+     | Parsetree.EI_local _ | Parsetree.EI_global _ ->
          (* No collection name inside, hence nothing to change. *)
          ident.Parsetree.ast_desc
+     | Parsetree.EI_method (None, vname) ->
+	 (begin
+	 (* We are implicitely in the case of a method of Self. So, the
+	    substitution has effect only if Self must be substituted. *)
+	 match c1 with
+          | SRCK_self ->
+	      (begin
+	      match c2 with
+               | Types.SBRCK_coll c2_ty ->
+                   let new_species_qvname =
+                     Parsetree.Qualified
+                       (fst c2_ty, Parsetree.Vuident (snd c2_ty)) in
+                   Parsetree.EI_method (Some new_species_qvname, vname)
+               | Types.SBRCK_self -> ident.Parsetree.ast_desc
+	      end)
+	  | SRCK_coll _ -> ident.Parsetree.ast_desc
+	 end)
      | Parsetree.EI_method (Some coll_qvname, vname) ->
          match c1 with
           | SRCK_self ->

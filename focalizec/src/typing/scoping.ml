@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.66 2008-09-17 08:22:22 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.67 2008-10-10 10:25:16 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -220,7 +220,9 @@ exception Ambiguous_logical_expression_and of
 (* ********************************************************************** *)
 type scoping_context = {
   (** The name of the currently analysed compilation unit. *)
-  current_unit : Types.fname;
+  current_unit : Types.fname ;
+  (** The optional name of the currently analysed species. *)
+  current_species : string option ;
   (** The list of "use"-d modules. Not file with paths and extension : just
       module name (ex: "Basics"). *)
   used_modules : Types.fname list
@@ -838,7 +840,8 @@ let can_be_scoped_as_local_p ctx env ~loc vname =
     Parsetree.ast_type = Parsetree.ANTI_none } in
   let hosting_info =
       Env.ScopingEnv.find_value
-        ~loc ~current_unit: ctx.current_unit fake_ident env in
+        ~loc ~current_unit: ctx.current_unit
+        ~current_species_name: ctx.current_species fake_ident env in
    match hosting_info with
      | Env.ScopeInformation.SBI_file _
      | Env.ScopeInformation.SBI_method_of_self
@@ -860,7 +863,8 @@ let scope_enforced_deps ctx env enforced_deps =
                let scope_info =
                  Env.ScopingEnv.find_value
                    ~loc: ident.Parsetree.ast_loc
-                   ~current_unit: ctx.current_unit ident env in
+                   ~current_unit: ctx.current_unit
+                   ~current_species_name: ctx.current_species ident env in
                let tmp =
                  scoped_expr_ident_desc_from_value_binding_info
                    ~basic_vname scope_info in
@@ -877,7 +881,8 @@ let scope_enforced_deps ctx env enforced_deps =
                let scope_info =
                  Env.ScopingEnv.find_value
                    ~loc: ident.Parsetree.ast_loc
-                   ~current_unit: ctx.current_unit ident env in
+                   ~current_unit: ctx.current_unit
+                   ~current_species_name: ctx.current_species ident env in
                let tmp =
                  scoped_expr_ident_desc_from_value_binding_info
                    ~basic_vname scope_info in
@@ -908,7 +913,8 @@ let rec scope_fact ctx env fact =
                let scope_info =
                  Env.ScopingEnv.find_value
                    ~loc: ident.Parsetree.ast_loc
-                   ~current_unit: ctx.current_unit ident env in
+                   ~current_unit: ctx.current_unit
+                   ~current_species_name: ctx.current_species ident env in
                let tmp =
                  scoped_expr_ident_desc_from_value_binding_info
                    ~basic_vname scope_info in
@@ -925,7 +931,8 @@ let rec scope_fact ctx env fact =
                let scope_info =
                  Env.ScopingEnv.find_value
                    ~loc: ident.Parsetree.ast_loc
-                   ~current_unit: ctx.current_unit ident env in
+                   ~current_unit: ctx.current_unit
+                   ~current_species_name: ctx.current_species ident env in
                let tmp =
                  scoped_expr_ident_desc_from_value_binding_info
                    ~basic_vname scope_info in
@@ -1075,7 +1082,8 @@ and scope_expr ctx env expr =
          let hosting_info =
            Env.ScopingEnv.find_value
              ~loc: ident.Parsetree.ast_loc
-             ~current_unit: ctx.current_unit ident env in
+             ~current_unit: ctx.current_unit
+             ~current_species_name: ctx.current_species ident env in
          (* Let's re-construct a completely scoped identifier. *)
          let scoped_ident_descr =
            scoped_expr_ident_desc_from_value_binding_info
@@ -1650,7 +1658,7 @@ let scope_termination_proof_profile ctx env profile =
   let hosting_info =
     Env.ScopingEnv.find_value
       ~loc: profile.Parsetree.ast_loc ~current_unit: ctx.current_unit
-      fake_ident env in
+      ~current_species_name: ctx.current_species fake_ident env in
   match hosting_info with
    | Env.ScopeInformation.SBI_method_of_self ->
        (begin
@@ -2209,12 +2217,22 @@ let scope_phrase ctx env phrase =
          (* Really nothing to do... *)
          (phrase.Parsetree.ast_desc, env, ctx)
      | Parsetree.Ph_species species_def ->
+         let ctx' = { ctx with
+           current_species =
+             Some
+               (Parsetree_utils.name_of_vname
+                  species_def.Parsetree.ast_desc.Parsetree.sd_name) } in
          let (scoped_species_def, env') =
-           scope_species_def ctx env species_def in
+           scope_species_def ctx' env species_def in
          ((Parsetree.Ph_species scoped_species_def), env', ctx)
      | Parsetree.Ph_collection collection_def ->
+         let ctx' = { ctx with
+           current_species =
+             Some
+               (Parsetree_utils.name_of_vname
+                  collection_def.Parsetree.ast_desc.Parsetree.cd_name) } in
          let (scoped_collection_def, env') =
-           scope_collection_def ctx env collection_def in
+           scope_collection_def ctx' env collection_def in
          ((Parsetree.Ph_collection scoped_collection_def), env', ctx)
      | Parsetree.Ph_type type_def ->
          let (scoped_ty_def, env') = scope_type_def ctx env type_def in
@@ -2255,7 +2273,9 @@ let scope_file current_unit file =
    | Parsetree.File phrases ->
        (* Initial context with no "use"-d modules. *)
        let global_ctx =
-         ref { current_unit = current_unit; used_modules = [] } in
+         ref { current_unit = current_unit ;
+               current_species = None ;
+               used_modules = [] } in
        (* Scoping of a file starts with the empty scoping environment. *)
        let global_env = ref (Env.ScopingEnv.pervasives ()) in
        let scoped_phrases =

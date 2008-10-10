@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.115 2008-09-23 14:47:20 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.116 2008-10-10 10:25:16 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -915,10 +915,15 @@ let zenonify_by_definition ctx print_ctx env min_coq_env by_def_expr_ident =
        (begin
        (* The stuff is in fact a toplevel definition, not a species method. We
            must recover its type kind from the environment. *)
+       let current_species_name =
+         Some
+           (Parsetree_utils.name_of_vname
+              (snd ctx.Context.scc_current_species)) in
        let (_, value_body) =
          Env.CoqGenEnv.find_value
            ~loc: by_def_expr_ident.Parsetree.ast_loc
-           ~current_unit: ctx.Context.scc_current_unit by_def_expr_ident env in
+           ~current_unit: ctx.Context.scc_current_unit
+           ~current_species_name by_def_expr_ident env in
                  (* A bit of comment. *)
        Format.fprintf out_fmter
          "(* For toplevel definition used via \"by definition of %a\". *)@\n"
@@ -1105,22 +1110,65 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
        match meth_ty_kind with
         | Env.MTK_computational meth_sch ->
             let meth_ty = Types.specialize meth_sch in
-            Format.fprintf out_fmter
-              "@[<2>Parameter ???%a_%a :@ %a.@]@\n"
+            Format.fprintf out_fmter "@[<2>Parameter " ;
+            if mod_name <> ctx.Context.scc_current_unit then
+              Format.fprintf out_fmter "%s." mod_name ;
+            Format.fprintf out_fmter "%a.effective_collection.("
+              Parsetree_utils.pp_vname_with_operators_expanded
+              topl_species_name ;
+            if mod_name <> ctx.Context.scc_current_unit then
+              Format.fprintf out_fmter "%s." mod_name ;
+            Format.fprintf out_fmter "%a.rf_%a)"
               Parsetree_utils.pp_vname_with_operators_expanded topl_species_name
-              Parsetree_utils.pp_vname_with_operators_expanded meth_vname
+              Parsetree_utils.pp_vname_with_operators_expanded meth_vname ;
+            Format.fprintf out_fmter
+              " :@ %a.@]@\n"
               (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
               meth_ty
         | Env.MTK_logical lexpr ->
             Format.fprintf out_fmter
-              "@[<2>Parameter !!!%a_%a :@ "
+              "@[<2>Parameter " ;
+            if mod_name <> ctx.Context.scc_current_unit then
+              Format.fprintf out_fmter "%s." mod_name ;
+            Format.fprintf out_fmter "%a.effective_collection.("
+              Parsetree_utils.pp_vname_with_operators_expanded
+              topl_species_name ;
+            if mod_name <> ctx.Context.scc_current_unit then
+              Format.fprintf out_fmter "%s." mod_name ;
+            Format.fprintf out_fmter "%a.rf_%a)"
               Parsetree_utils.pp_vname_with_operators_expanded topl_species_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname ;
+            Format.fprintf out_fmter " :@ " ;
+            (* We must substitute Self by the toplevel collection. In effect,
+               each method of Self of this toplevel collection must be called
+               anyway
+                  module.species.effective_collection.(module.species.rf_meth),
+               possibly without module if it is the current one. This is needed
+               only when generating in Zenon's Section the methods to used via
+               "by property" or "by definition" when they are identified to be
+               coming from a toplevel collection. In effect, in the structure we
+               keep to be able to generate the text of these methods for Zenon,
+               we have the body of the method BUT in its environment, that is,
+               with methods of Self referencing the methods of the species.
+               Unfortunately, when we generate the code, we are not in the scope
+               of this species. Hence we must rename on the fly occurrences of
+               Self'methods by explicitely qualifying them. This is hence done
+               by applying a substitution of Self in the body of the method. *)
+            let lexpr' =
+              SubstColl.subst_logical_expr
+                ~current_unit: ctx.Context.scc_current_unit
+                SubstColl.SRCK_self
+                (Types.SBRCK_coll
+                   (mod_name,
+                    (Parsetree_utils.name_of_vname topl_species_name))) lexpr in
+            (* Now, let's dump the code of the modified body. *)
             Species_record_type_generation.generate_logical_expr
               ctx ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
+                (* Or whatever since we substituted Self by the effective
+                   collection. *)
                 Species_record_type_generation.SMS_from_record
-              env lexpr ;
+              env lexpr' ;
             Format.fprintf out_fmter ".@]@\n"
        end)
    | SPOTS_param param_name ->
@@ -1193,10 +1241,15 @@ let zenonify_by_property ctx print_ctx env min_coq_env
        (begin
        (* The stuff is in fact a toplevel definition, not a species method. We
            must recover its type kind from the environment. *)
+       let current_species_name =
+         Some
+           (Parsetree_utils.name_of_vname
+              (snd ctx.Context.scc_current_species)) in
        let (_, value_body) =
          Env.CoqGenEnv.find_value
            ~loc: by_prop_expr_ident.Parsetree.ast_loc
-           ~current_unit: ctx.Context.scc_current_unit by_prop_expr_ident env in
+           ~current_unit: ctx.Context.scc_current_unit
+           ~current_species_name by_prop_expr_ident env in
                  (* A bit of comment. *)
        Format.fprintf out_fmter
          "(* For toplevel definition used via \"by property of %a\". *)@\n"
@@ -3069,7 +3122,7 @@ let print_methods_from_params_instanciations ctx env formal_to_effective_map l =
              (fun (meth_name, _) ->
                (* If needed, qualify the name of the species in the Coq code.
                   Don't print the type to prevent being too verbose. *)
-	       Format.fprintf out_fmter "@ " ;
+               Format.fprintf out_fmter "@ " ;
                (match corresponding_effective_opt_fname with
                 | Some fname -> Format.fprintf out_fmter "%s." fname
                 | None -> ()) ;

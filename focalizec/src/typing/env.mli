@@ -215,7 +215,8 @@ module ScopingEnv :
       Parsetree.vname -> ScopeInformation.value_binding_info -> t -> t
     val find_value :
       loc: Location.t -> current_unit: Types.fname ->
-      Parsetree.expr_ident -> t -> ScopeInformation.value_binding_info
+        current_species_name: string option -> Parsetree.expr_ident -> t ->
+          ScopeInformation.value_binding_info
 
     val add_constructor : Parsetree.constructor_name -> Types.fname -> t -> t
     val find_constructor :
@@ -252,8 +253,9 @@ module TypingEnv :
 
     val add_value : Parsetree.vname -> Types.type_scheme -> t -> t
     val find_value :
-      loc: Location.t -> current_unit: Types.fname -> Parsetree.expr_ident ->
-        t -> Types.type_scheme
+      loc: Location.t -> current_unit: Types.fname ->
+        current_species_name:string option -> Parsetree.expr_ident -> t ->
+          Types.type_scheme
 
     val add_constructor :
       Parsetree.constructor_name ->
@@ -331,8 +333,8 @@ module CoqGenEnv :
       Parsetree.vname -> CoqGenInformation.value_mapping_info -> t -> t
     val find_value :
       loc: Location.t ->
-      current_unit: Types.fname -> Parsetree.expr_ident -> t ->
-        CoqGenInformation.value_mapping_info
+      current_unit: Types.fname -> current_species_name:string option ->
+        Parsetree.expr_ident -> t -> CoqGenInformation.value_mapping_info
 
     val add_constructor :
       Parsetree.constructor_name ->

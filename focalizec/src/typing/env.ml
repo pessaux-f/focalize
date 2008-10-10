@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.112 2008-09-18 12:20:37 pessaux Exp $ *)
+(* $Id: env.ml,v 1.113 2008-10-10 10:25:16 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -898,7 +898,7 @@ module CoqGenInformation = struct
   type value_body =
     | VB_non_toplevel
     | VB_toplevel_let_bound of
-	((Parsetree.vname list) * Types.type_scheme * Parsetree.binding_body)
+        ((Parsetree.vname list) * Types.type_scheme * Parsetree.binding_body)
     | VB_toplevel_property of Parsetree.logical_expr
 
   type value_mapping_info = (int * (** The number of polymorphic type variables
@@ -1465,12 +1465,14 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
   (* ******************************************************************* *)
   (* loc: Location.t -> current_unit: Types.fname ->                     *)
-  (*   Parsetree.expr_ident -> t -> EMAccess.value_bound_data            *)
+  (*   current_species_name: string option ->                            *)
+  (*     Parsetree.expr_ident -> t -> EMAccess.value_bound_data          *)
   (** {b Descr} : Looks-up for an [ident] inside the values environment.
 
       {b Rem} : Exported outside this module.                            *)
   (* ******************************************************************* *)
-  let rec find_value ~loc ~current_unit ident_ident (env : t) =
+  let rec find_value ~loc ~current_unit ~current_species_name ident_ident
+      (env : t) =
     match ident_ident.Parsetree.ast_desc with
      | Parsetree.EI_local vname ->
          (* No explicit scoping information was provided, hence opened modules
@@ -1495,49 +1497,72 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
          (* Like if there was no collection scope (see above). *)
          find_value_vname ~loc ~allow_opened: false vname env
      | Parsetree.EI_method (Some coll_specifier, vname) ->
-         let (opt_module_qual, coll_vname) =
-           match coll_specifier with
-            | Parsetree.Vname coll_vname -> None, coll_vname
-            | Parsetree.Qualified (modname, coll_vname) ->
-                Some modname, coll_vname in
-         (* Recover the environment in where to search,according to if the
-            species is qualified by a module name. In this environment, all the
-            imported bindings are tagged [BO_absolute]. *)
-         let env' =
-           EMAccess.find_module
-             ~loc ~current_unit opt_module_qual env in
-         (* Check if the lookup can return something coming from an opened
-            module. *)
-         let allow_opened =
-           (match opt_module_qual with
-              None -> true | Some fname -> current_unit = fname) in
-         (* First, we search the collection. *)
-         let coll_info =
-           find_species_vname_and_binding_origin
-             ~loc ~allow_opened  coll_vname env' in
-         (* We must now understand if the collection was found via "open" *)
-         (* or not. If yes, then the methods we will import will also     *)
-         (* have to be considered by the post-process                     *)
-         (* [make_value_env_from_species_methods] as coming not from      *)
-         (* [tmp_full_coll_name] but from the species qualified by the    *)
-         (* "opened" module that made it visible without qualification.   *)
-         let (methods_info, real_full_coll_name) =
-           match coll_info with
-            | BO_absolute meths_i ->
-                (meths_i, (Parsetree.Qualified (current_unit, coll_vname)))
-            | BO_opened (file, meths_i) ->
-                (meths_i, (Parsetree.Qualified (file, coll_vname))) in
-         (* We must now look inside collections and species for the
-            [coll_vname] in order to recover its methods. *)
-         let available_meths =
-           EMAccess.make_value_env_from_species_methods
-             real_full_coll_name methods_info in
-         let data =
-           find_value_vname
-             ~loc ~allow_opened vname available_meths in
-         (* Now we apply the post-processing on the found data. *)
-         EMAccess.post_process_method_value_binding
-           real_full_coll_name data
+         (begin
+         (* We handle the case where the searched ident is qualified but the
+            qualification represents the current species in the current unit.
+            This may arise because of substiution performed during typechecking
+            in species signatures. *)
+         let ignore_qualification =
+           (match current_species_name with
+            | None -> false
+            | Some c_s_n ->
+                (match coll_specifier with
+                 | Parsetree.Vname (Parsetree.Vuident species_name) ->
+                     species_name = c_s_n
+                 | Parsetree.Qualified
+                       (modname, (Parsetree.Vuident coll_vname)) ->
+                     coll_vname = c_s_n && modname = current_unit
+                 | _ -> false)) in
+         if ignore_qualification then
+           (* Like if there was no collection scope (see above). *)
+           find_value_vname ~loc ~allow_opened: false vname env
+         else
+           (begin
+           let (opt_module_qual, coll_vname) =
+             match coll_specifier with
+              | Parsetree.Vname coll_vname -> (None, coll_vname)
+              | Parsetree.Qualified (modname, coll_vname) ->
+                  ((Some modname), coll_vname) in
+           (* Recover the environment in where to search,according to if the
+              species is qualified by a module name. In this environment, all
+              the imported bindings are tagged [BO_absolute]. *)
+           let env' =
+             EMAccess.find_module
+               ~loc ~current_unit opt_module_qual env in
+           (* Check if the lookup can return something coming from an opened
+              module. *)
+           let allow_opened =
+             (match opt_module_qual with
+                None -> true | Some fname -> current_unit = fname) in
+           (* First, we search the collection. *)
+           let coll_info =
+             find_species_vname_and_binding_origin
+               ~loc ~allow_opened  coll_vname env' in
+           (* We must now understand if the collection was found via "open" *)
+           (* or not. If yes, then the methods we will import will also     *)
+           (* have to be considered by the post-process                     *)
+           (* [make_value_env_from_species_methods] as coming not from      *)
+           (* [tmp_full_coll_name] but from the species qualified by the    *)
+           (* "opened" module that made it visible without qualification.   *)
+           let (methods_info, real_full_coll_name) =
+             match coll_info with
+              | BO_absolute meths_i ->
+                  (meths_i, (Parsetree.Qualified (current_unit, coll_vname)))
+              | BO_opened (file, meths_i) ->
+                  (meths_i, (Parsetree.Qualified (file, coll_vname))) in
+           (* We must now look inside collections and species for the
+              [coll_vname] in order to recover its methods. *)
+           let available_meths =
+             EMAccess.make_value_env_from_species_methods
+               real_full_coll_name methods_info in
+           let data =
+             find_value_vname
+               ~loc ~allow_opened vname available_meths in
+           (* Now we apply the post-processing on the found data. *)
+           EMAccess.post_process_method_value_binding
+             real_full_coll_name data
+           end)
+         end)
 
 
   (* ****************************************************************** *)
