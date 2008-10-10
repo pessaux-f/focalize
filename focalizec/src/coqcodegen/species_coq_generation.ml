@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.116 2008-10-10 10:25:16 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.117 2008-10-10 12:50:25 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1708,6 +1708,53 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
 
 
 
+let generate_asserts_for_dependencies out_fmter dependencies_from_params
+    min_coq_env =
+  (* Abstract according to the species's parameters the current method depends
+     on. *)
+  List.iter
+    (fun (species_param, (Env.ODFP_methods_list meths_from_param)) ->
+      (* Recover the species parameter's name. *)
+      let species_param_name =
+        match species_param with
+         | Env.TypeInformation.SPAR_in (n, _, _) -> n
+         | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
+             Parsetree.Vuident n in
+      (* Each abstracted method is named like "_p_", followed by the
+         species parameter name, followed by "_", followed by the method's
+         name.
+         We don't care here about whether the species parameters is "in" or
+         "is". *)
+      let prefix =
+        "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
+      List.iter
+        (fun (meth, _) ->
+          Format.fprintf out_fmter
+            "@[<2>assert (__force_use_%s%a :=@ %s%a).@]@\n"
+            prefix Parsetree_utils.pp_vname_with_operators_expanded meth
+            prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
+        meths_from_param)
+    dependencies_from_params ;
+  (* Generate the parameters denoting methods of ourselves we depend on
+     according the the minimal typing environment. *)
+  List.iter
+    (function
+      | MinEnv.MCEE_Defined_carrier _ | MinEnv.MCEE_Declared_carrier ->
+          Format.fprintf out_fmter
+            "@[<2>assert (__force_use_abst_T :=@ abst_T).@]@\n"
+      | MinEnv.MCEE_Defined_computational (_, n, _, _, _)
+      | MinEnv.MCEE_Defined_logical (_, n, _)
+      | MinEnv.MCEE_Declared_computational (n, _)
+      | MinEnv.MCEE_Declared_logical (n, _) ->
+          Format.fprintf out_fmter
+            "@[<2>assert (__force_use_abst_%a :=@ abst_%a).@]@\n"
+            Parsetree_utils.pp_vname_with_operators_expanded n
+            Parsetree_utils.pp_vname_with_operators_expanded n)
+    min_coq_env
+;;
+
+
+
 (* ************************************************************************* *)
 (* {b Descr} : This function generates the Coq Section needed by Zenon ONLY
       if the theorem has to be proved by Zenon. Otherwise, do nothing.
@@ -1803,6 +1850,29 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
             logical_expr name
             None (* No parent proof at the beginning. *)
             proof) ;
+       (* Now, unfortunately when Coq closes a Section, it only abstracts
+          Parameters and Variables really used. Since WE lambda-lift all the
+          dependencies, even if they are not used, we must enforce all the
+          Parameters and Variables declared in the Section to be used. Hence
+          we define a dummy extra Theorem in which we simply put an "assert"
+          on each method we depend on to be sure that Coq will abstract it. *)
+       Format.fprintf out_fmter
+         "(* Dummy theorem to enforce Coq abstractions. *)@\n" ;
+       Format.fprintf out_fmter "@[<2>Theorem " ;
+       Format.fprintf out_fmter "for_zenon_abstracted_%a "
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
+       Format.fprintf out_fmter ":@ " ;
+       Species_record_type_generation.generate_logical_expr
+         ~local_idents: [] ~in_recursive_let_section_of: []
+         ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         ctx env logical_expr ;
+       Format.fprintf out_fmter ".@]@\n" ;
+       (* Now, for each abstracted method we depend on we generate an assert. *)
+       generate_asserts_for_dependencies
+         out_fmter dependencies_from_params min_coq_env ;
+       Format.fprintf out_fmter
+         "apply for_zenon_%a ;@\nauto.@\nQed.@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
        (* End the Section. *)
        Format.fprintf out_fmter "End Proof_of_%a.@]@\n@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name
@@ -1874,7 +1944,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
    | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
        (* Proof done by Zenon. Apply the temporary theorem. *)
        Format.fprintf out_fmter
-         "apply for_zenon_%a ;@\nauto.@\nQed.@\n"
+         "apply for_zenon_abstracted_%a ;@\nauto.@\nQed.@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name
    | Parsetree.Pf_coq (_, script) ->
        (* Dump verbatim the Coq code. *)

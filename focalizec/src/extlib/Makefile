@@ -1,10 +1,10 @@
-# $Id: Makefile,v 1.2 2008-09-18 23:10:22 weis Exp $
+# $Id: Makefile,v 1.3 2008-10-10 12:50:25 pessaux Exp $
 
 ROOTDIR = ..
 
 include $(ROOTDIR)/Makefile.config
 
-SUBDIRS =
+SUBDIRS = algebra
 
 include $(ROOTDIR)/Makefile.common
 

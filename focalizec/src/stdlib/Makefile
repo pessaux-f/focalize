@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.42 2008-10-09 09:52:08 pessaux Exp $
+# $Id: Makefile,v 1.43 2008-10-10 12:50:25 pessaux Exp $
 
 ROOT_DIR = ..
 
@@ -27,23 +27,10 @@ COQ_COMP_FLAGS = -I ../../zenon/
 FOCAL_SRC = basics.foc \
 	sets_orders.foc \
 	wellfounded.foc 
-#	products.foc
-#	iterators.foc 
-#	additive_law.foc 
-#	multiplicative_law.foc 
-#	weak_structures.foc 
-#	rings_fields.foc 
-#	random_foc.foc 
-#	integers.foc 
-#	array_foc.foc 
-#	products_foc.foc 
-#	quotients.foc 
-#	small_integers.foc
+	products.foc
 
 FOCAL_SRC_UNSAFE = \
 	ensembles_finis.foc
-#	big_integers.foc parse_poly.foc
-#	polys_abstract.foc polys_concrete finite_fields fractions finite_factorize
 
 FOCAL_MLS = $(FOCAL_SRC:.foc=.ml)
 FOCAL_MLS_UNSAFE = $(FOCAL_SRC_UNSAFE:.foc=.ml)
