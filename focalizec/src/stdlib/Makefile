@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.43 2008-10-10 12:50:25 pessaux Exp $
+# $Id: Makefile,v 1.44 2008-10-11 08:12:08 pessaux Exp $
 
 ROOT_DIR = ..
 
@@ -26,7 +26,7 @@ COQ_COMP_FLAGS = -I ../../zenon/
 
 FOCAL_SRC = basics.foc \
 	sets_orders.foc \
-	wellfounded.foc 
+	wellfounded.foc \
 	products.foc
 
 FOCAL_SRC_UNSAFE = \
