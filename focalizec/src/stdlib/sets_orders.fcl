@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets_orders.fcl,v 1.14 2008-09-24 08:52:21 weis Exp $ *)
+(* $Id: sets_orders.fcl,v 1.15 2008-10-13 12:15:07 rr Exp $ *)
 
 (** Basic sets operations, orderings and lattices. *)
 
@@ -61,8 +61,58 @@ species Setoid inherits Basic_object =
     !different (x, y) -> !different (y, x)
   proof: by property equal_symmetric, same_is_not_different ;
 
+
 end
 ;;
+
+(**
+   By an Anti_setoid we mean a setoid where appartness id considered as a 
+   primitive operation. We have the same functiuonalities as Setoid!
+*)
+
+species Anti_setoid inherits Basic_object =
+  (** An appartness decidable relation *)
+  signature different: Self -> Self -> bool;
+
+  property different_is_symmetric: all x y in Self,
+    !different (x, y) -> !different (y, x);
+
+  property different_is_irreflexive: all x in Self,
+    ~ (!different (x, x));
+
+  (** 
+     Take two distinct elements then any third element is distinct from 
+     one of the first two
+  *)
+  property different_is_complete: all x y z in Self,
+    !different(x, y) -> (!different(x, z) \/ !different(y, z));
+
+  (** element returns some element of our non empty setoid *)
+  signature element : Self ;
+
+  let equal(x, y) = basics#not_b(!different(x, y));
+
+  theorem same_is_not_different : all x y in Self,
+    !equal(x, y) <-> ~(!different(x, y))
+  proof: by definition of equal ;
+
+  theorem equal_reflexive: all x in Self, !equal(x, x)
+    proof: by property !same_is_not_different, !different_is_irreflexive ;
+
+  theorem equal_symmetric: all x y in Self,
+    Self!equal(x, y) -> !equal(y, x)
+    proof: by property !different_is_symmetric, !same_is_not_different ;
+
+  theorem equal_transitive : all x y z in Self,
+    !equal(x, y) -> !equal(y, z) -> !equal(x, z)
+    proof: 
+      assumed {* *};
+(*      by property !different_is_complete, !different_is_symmetric, *)
+(*                        !different_is_irreflexive, !same_is_not_different ; *)
+
+
+
+end;;
 
 (**
   This is a first attempt to specify representations.

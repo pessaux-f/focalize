@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.44 2008-10-11 08:12:08 pessaux Exp $
+# $Id: Makefile,v 1.45 2008-10-13 12:15:07 rr Exp $
 
 ROOT_DIR = ..
 
@@ -25,6 +25,7 @@ ZVTOV = ../../zvtov/zvtov -new -zenon ../../zenon/zenon
 COQ_COMP_FLAGS = -I ../../zenon/
 
 FOCAL_SRC = basics.foc \
+	sets.foc\
 	sets_orders.foc \
 	wellfounded.foc \
 	products.foc
@@ -51,7 +52,7 @@ FOCAL_VOS = $(FOCAL_VS:.v=.vo)
 FOCAL_VOS_UNSAFE = $(FOCAL_SRC_UNSAFE:.foc=.vo)
 
 EXTERNAL_BYTOBJS =\
-  ml_builtins.cmo sets_orders_externals.cmo
+  ml_builtins.cmo sets_externals.cmo sets_orders_externals.cmo
 #  weak_structures_externals.cmo
 #  random_foc_externals.cmo
 

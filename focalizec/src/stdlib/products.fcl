@@ -10,9 +10,9 @@
 
 (* [rr]: strictly speakin we only equal and thus sets but no orders *)
 use "basics";;
-use "sets_orders";;
+use "sets";;
 open "basics";;
-open "sets_orders";;
+open "sets";;
 
 (* uses type_utils;; *)
 (* open type_utils;; *)
@@ -176,26 +176,27 @@ species Product_set(A is Setoid, B is Setoid)
 end
 ;;
 
-(* (\**  *)
-(*    If we have a function from A to E and a function from B to E *)
-(*    then we also have a function from A x B to E *)
-(* *\) *)
-(* species categorical_property_of_product_set *)
-(*   (a is setoid, *)
-(*    b is setoid, *)
-(*    p is product_set(a, b), *)
-(*    e is setoid, *)
-(*    m_a is morphism(e, a), *)
-(*    m_b is morphism(e, b) *)
-(*    ) *)
-(*   inherits  morphism(e, p) = *)
+(**
+   If we have a function from A to E and a function from B to E
+   then we also have a function from A x B to E
+*)
+species Categorical_property_of_Product_set
+  (A is Setoid,
+   B is Setoid,
+   P is Product_set(A, B),
+   E is Setoid,
+   M_a is sets#Setoid_morphism(E, A),
+   M_b is sets#Setoid_morphism(E, B)
+   )
+  inherits  Setoid_morphism(E, P) =
 
-(*     let morph(x) = p!term(m_a!morph(x), m_b!morph(x)); *)
-(*     proof of morph_substitution_rule = *)
-(*       <1>1 assume x y in e, *)
-(*               H: e!equal(x, y), *)
-(*            prove p!equal(!morph(x), !morph(y)) *)
-(*            <2>1 prove a!equal(p!first(!morph(x)), p!first(!morph(y))) *)
+    let morph(x) = P!term(M_a!morph(x), M_b!morph(x));
+    proof of morph_substitution_rule =
+      <1>1 assume x in E, assume y in E,
+           assume H: E!equal(x, y),
+           prove P!equal(!morph(x), !morph(y))
+           <2>1 prove A!equal(P!first(!morph(x)), P!first(!morph(y)))
+                assumed {* *}
 (*                 <3>1 prove a!equal(p!first(p!term(m_a!morph(x), m_b!morph(x))), *)
 (*                                    p!first(p!term(m_a!morph(y), m_b!morph(y)))) *)
 (*                      <4>1 prove a!equal(m_a!morph(x), m_a!morph(y)) *)
@@ -211,7 +212,8 @@ end
 (*                      <4>f qed by <4>1, <4>2, <4>3, *)
 (*                                  a!equal_transitive, a!equal_symmetric *)
 (*                 <3>f qed by <3>1 def !morph *)
-(*            <2>2 prove b!equal(p!second(!morph(x)), p!second(!morph(y))) *)
+           <2>2 prove B!equal(P!second(!morph(x)), P!second(!morph(y)))
+                assumed {* *}
 (*                 <3>1 prove b!equal(p!second(p!term(m_a!morph(x), *)
 (* 						   m_b!morph(x))), *)
 (*                                    p!second(p!term(m_a!morph(y), *)
@@ -229,19 +231,18 @@ end
 (*                      <4>f qed by <4>1, <4>2, <4>3, *)
 (*                                  b!equal_transitive, b!equal_symmetric *)
 (*                 <3>f qed by <3>1 def !morph *)
-(*            <2>f qed by <2>1, <2>2, p!equal_spec *)
-(*       <1>f qed *)
-(*       ; *)
+           <2>f qed by step <2>1, <2>2 property P!equal_spec
+      <1>f qed. ;
 
-(*     theorem morph_first_factorize: all x in e, *)
-(*       a!equal(p!first(!morph(x)), m_a!morph(x)) *)
-(*       proof: by p!term_preserves_first def !morph; *)
+    theorem morph_first_factorize: all x in E,
+      A!equal(P!first(!morph(x)), M_a!morph(x))
+      proof: by property P!term_preserves_first definition of morph ;
 
-(*     theorem morph_second_factorize: all x in e, *)
-(*       b!equal(p!second(!morph(x)), m_b!morph(x)) *)
-(*       proof: by p!term_preserves_second def !morph; *)
+    theorem morph_second_factorize: all x in E,
+      B!equal(P!second(!morph(x)), M_b!morph(x))
+      proof: by property P!term_preserves_second definition of morph ;
 
-(* end *)
+end;;
 
 (* (\**  *)
 (*    This is a complete species implementing abstract products using types *)
