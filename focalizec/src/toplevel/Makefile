@@ -1,13 +1,26 @@
-# $Id: Makefile,v 1.34 2008-09-24 07:10:28 weis Exp $
+#**********************************************************************#
+#                                                                      #
+#                        FoCaL compiler                                #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 LIP6 and INRIA                                       #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+# $Id: Makefile,v 1.35 2008-10-14 07:00:37 weis Exp $
 
 ROOTDIR = ..
 
 include $(ROOTDIR)/Makefile.config
 
-CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing \
+CAML_INCLUDES = -I ../basement -I ../parser -I ../typing \
 	-I ../commoncodegen -I ../mlcodegen -I ../coqcodegen
 
-LOCALBYTOBJS = focalizec.cmo exc_wrapper.cmo
+LOCAL_BYTOBJS = focalizec.cmo exc_wrapper.cmo
 
 BYTOBJS = \
 	../basement/installation.cmo \
@@ -52,11 +65,11 @@ BYTOBJS = \
 	../coqcodegen/species_coq_generation.cmo \
 	../coqcodegen/type_coq_generation.cmo \
 	../coqcodegen/main_coq_generation.cmo \
-	$(LOCALBYTOBJS)
+	$(LOCAL_BYTOBJS)
 
 include $(ROOTDIR)/Makefile.common
 
-.PHONY: focalizec_byt_link focalizec_bin_link
+.PHONY: focalizec_byt_link focalizec_bin_link focalizec.byt focalizec.bin fodump
 
 byt:: focalizec_byt_link
 

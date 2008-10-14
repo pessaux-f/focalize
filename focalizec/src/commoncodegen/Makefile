@@ -1,10 +1,23 @@
-# $Id: Makefile,v 1.10 2008-09-18 22:39:00 weis Exp $
+#**********************************************************************#
+#                                                                      #
+#                        FoCaL compiler                                #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 LIP6 and INRIA                                       #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+# $Id: Makefile,v 1.11 2008-10-14 07:00:37 weis Exp $
 
 ROOTDIR = ..
 
 include $(ROOTDIR)/Makefile.config
 
-CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing
+CAML_INCLUDES = -I ../basement -I ../parser -I ../typing
 
 BYTOBJS = visUniverse.cmo minEnv.cmo abstractions.cmo misc_common.cmo\
 	externals_generation_errs.cmo recursion.cmo

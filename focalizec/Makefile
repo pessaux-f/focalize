@@ -1,4 +1,17 @@
-# $Id: Makefile,v 1.15 2008-10-13 23:52:08 weis Exp $
+#**********************************************************************#
+#                                                                      #
+#                        FoCaL compiler                                #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 LIP6 and INRIA                                       #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+# $Id: Makefile,v 1.16 2008-10-14 07:00:37 weis Exp $
 
 ROOTDIR = .
 
@@ -19,20 +32,23 @@ all:: lib
 
 byt bin::
 	for i in $(COMPILER_DIRS); do \
-	  echo "$$i ..."; \
+	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) $@); \
+	  echo "<-- $$i"; \
         done
 
 lib:
 	for i in $(LIB_DIRS); do \
-	  echo "$$i ..."; \
+	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) $@); \
+	  echo "<-- $$i"; \
         done
 
 clean doc depend::
-	for i in $(SUBDIRS); do \
-	  echo "$$i ..."; \
+	for i in $(SUB_DIRS); do \
+	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) $@); \
+	  echo "<-- $$i"; \
         done
 
 install::

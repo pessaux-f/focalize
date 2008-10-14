@@ -1,10 +1,23 @@
-# $Id: Makefile,v 1.32 2008-09-18 22:39:00 weis Exp $
+#**********************************************************************#
+#                                                                      #
+#                        FoCaL compiler                                #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 LIP6 and INRIA                                       #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+# $Id: Makefile,v 1.33 2008-10-14 07:00:37 weis Exp $
 
 ROOTDIR = ..
 
 include $(ROOTDIR)/Makefile.config
 
-CAML_COMP_FLAGS = -I ../basement
+CAML_INCLUDES = -I ../basement
 
 BYTOBJS = lexer.cmo parser.cmo parse_file.cmo dump_ptree.cmo sourcify.cmo
 

@@ -1,4 +1,17 @@
-# $Id: Makefile,v 1.5 2008-10-14 00:05:05 weis Exp $
+#**********************************************************************#
+#                                                                      #
+#                        FoCaL compiler                                #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 LIP6 and INRIA                                       #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+# $Id: Makefile,v 1.6 2008-10-14 07:00:37 weis Exp $
 
 ROOTDIR = ..
 
