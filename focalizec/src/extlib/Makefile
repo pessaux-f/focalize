@@ -11,17 +11,17 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.6 2008-10-14 07:00:37 weis Exp $
+# $Id: Makefile,v 1.7 2008-10-14 07:05:56 weis Exp $
 
-ROOTDIR = ..
+ROOT_DIR = ..
 
-include $(ROOTDIR)/Makefile.config
+include $(ROOT_DIR)/Makefile.config
 
 SUBDIRS = algebra
 #Should be
 #SUBDIRS = algebra access_control
 
-include $(ROOTDIR)/Makefile.common
+include $(ROOT_DIR)/Makefile.common
 
 lib: all
 

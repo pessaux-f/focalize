@@ -11,17 +11,17 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.33 2008-10-14 07:00:37 weis Exp $
+# $Id: Makefile,v 1.34 2008-10-14 07:05:56 weis Exp $
 
-ROOTDIR = ..
+ROOT_DIR = ..
 
-include $(ROOTDIR)/Makefile.config
+include $(ROOT_DIR)/Makefile.config
 
 CAML_INCLUDES = -I ../basement
 
 BYTOBJS = lexer.cmo parser.cmo parse_file.cmo dump_ptree.cmo sourcify.cmo
 
-include $(ROOTDIR)/Makefile.common
+include $(ROOT_DIR)/Makefile.common
 
 all:: lexer.ml parser.ml
 

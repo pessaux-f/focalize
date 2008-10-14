@@ -11,16 +11,16 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.4 2008-10-14 07:00:37 weis Exp $
+# $Id: Makefile,v 1.5 2008-10-14 07:05:56 weis Exp $
 
-ROOTDIR = ..
+ROOT_DIR = ..
 
-include $(ROOTDIR)/Makefile.config
+include $(ROOT_DIR)/Makefile.config
 
 # Fill here to add a new directory for a new contribution
-SUBDIRS = 
+SUBDIRS =
 
-include $(ROOTDIR)/Makefile.common
+include $(ROOT_DIR)/Makefile.common
 
 lib: all
 

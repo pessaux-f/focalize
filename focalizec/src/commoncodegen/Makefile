@@ -11,15 +11,15 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.11 2008-10-14 07:00:37 weis Exp $
+# $Id: Makefile,v 1.12 2008-10-14 07:05:55 weis Exp $
 
-ROOTDIR = ..
+ROOT_DIR = ..
 
-include $(ROOTDIR)/Makefile.config
+include $(ROOT_DIR)/Makefile.config
 
 CAML_INCLUDES = -I ../basement -I ../parser -I ../typing
 
 BYTOBJS = visUniverse.cmo minEnv.cmo abstractions.cmo misc_common.cmo\
 	externals_generation_errs.cmo recursion.cmo
 
-include $(ROOTDIR)/Makefile.common
+include $(ROOT_DIR)/Makefile.common

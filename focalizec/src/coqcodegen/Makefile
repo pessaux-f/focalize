@@ -11,11 +11,11 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.9 2008-10-14 07:00:37 weis Exp $
+# $Id: Makefile,v 1.10 2008-10-14 07:05:56 weis Exp $
 
-ROOTDIR = ..
+ROOT_DIR = ..
 
-include $(ROOTDIR)/Makefile.config
+include $(ROOT_DIR)/Makefile.config
 
 CAML_INCLUDES = -I ../basement -I ../parser -I ../typing\
 	-I ../commoncodegen
@@ -24,4 +24,4 @@ BYTOBJS = species_record_type_generation.cmo rec_let_gen.cmo\
 	species_coq_generation.cmo type_coq_generation.cmo\
 	main_coq_generation.cmo
 
-include $(ROOTDIR)/Makefile.common
+include $(ROOT_DIR)/Makefile.common

@@ -11,11 +11,11 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.35 2008-10-14 07:00:37 weis Exp $
+# $Id: Makefile,v 1.36 2008-10-14 07:05:56 weis Exp $
 
-ROOTDIR = ..
+ROOT_DIR = ..
 
-include $(ROOTDIR)/Makefile.config
+include $(ROOT_DIR)/Makefile.config
 
 CAML_INCLUDES = -I ../basement -I ../parser -I ../typing \
 	-I ../commoncodegen -I ../mlcodegen -I ../coqcodegen
@@ -67,7 +67,7 @@ BYTOBJS = \
 	../coqcodegen/main_coq_generation.cmo \
 	$(LOCAL_BYTOBJS)
 
-include $(ROOTDIR)/Makefile.common
+include $(ROOT_DIR)/Makefile.common
 
 .PHONY: focalizec_byt_link focalizec_bin_link focalizec.byt focalizec.bin fodump
 
