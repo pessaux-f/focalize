@@ -1,4 +1,4 @@
-# $Id: Makefile.common,v 1.7 2008-10-13 23:52:45 weis Exp $
+# $Id: Makefile.common,v 1.8 2008-10-14 00:24:34 weis Exp $
 
 BINOBJS = $(BYTOBJS:.cmo=.cmx)
 
@@ -23,7 +23,7 @@ clean::
 	fi
 
 depend::
-	$(CAMLDEP) $(CAML_COMP_FLAGS) *.mli *.ml > ./.depend
+	$(CAMLDEP) *.mli *.ml > ./.depend
 
 # Only on demand.
 tests::
@@ -47,10 +47,10 @@ tests::
 	$(CAMLLEX) $<
 
 .foc.fo .foc.ml .foc.zv:
-	$(FOCALC) $<
+	$(FOCALIZEC) $<
 
 .zv.v:
-	$(ZVTOV) -new $<
+	$(ZVTOV) $<
 
 .v.vo:
 	$(COQC) $<
