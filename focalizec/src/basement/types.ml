@@ -1,4 +1,3 @@
-
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
@@ -12,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.63 2008-09-10 13:47:51 pessaux Exp $ *)
+(* $Id: types.ml,v 1.64 2008-10-14 13:38:07 weis Exp $ *)
 
 
 (* **************************************************************** *)
@@ -231,7 +230,7 @@ let (begin_definition, end_definition, current_binding_level, type_variable) =
 
 (* ********************************************************************** *)
 (* fname -> string -> type_name                                           *)
-(** { b Descr } : Creates a type constructor whose basic name is
+(** {b Descr } : Creates a type constructor whose basic name is
     [constructor_name] and hosting module is [hosting_module].
     For instance, "int" coming from the module "basics.foc" will be
     represented by [("basics", "int")].
