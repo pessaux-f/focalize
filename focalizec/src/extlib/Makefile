@@ -1,10 +1,12 @@
-# $Id: Makefile,v 1.4 2008-10-13 23:49:05 weis Exp $
+# $Id: Makefile,v 1.5 2008-10-14 00:05:05 weis Exp $
 
 ROOTDIR = ..
 
 include $(ROOTDIR)/Makefile.config
 
 SUBDIRS = algebra
+#Should be
+#SUBDIRS = algebra access_control
 
 include $(ROOTDIR)/Makefile.common
 
