@@ -15,6 +15,7 @@ integers.ml
 iterators.ml
 multiplicative_law.ml
 parse_poly.ml
+products.ml
 products_foc.ml
 quotients.ml
 random_foc.ml
