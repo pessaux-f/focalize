@@ -11,7 +11,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.9 2008-10-14 07:00:37 weis Exp $
+# $Id: Makefile.common,v 1.10 2008-10-14 13:37:11 weis Exp $
 
 BINOBJS = $(BYTOBJS:.cmo=.cmx)
 
@@ -24,7 +24,7 @@ byt:: $(BYTOBJS)
 bin:: $(BINOBJS)
 
 doc:: $(BYTOBJS)
-	$(CAMLDOC) -html -d odoc $(BYTOBJS:.cmo=.ml)
+	$(CAMLDOC) $(CAMLINCLUDES) -html -d odoc $(BYTOBJS:.cmo=.ml)
 
 clean::
 	$(RM) *.cm* *.o *.out *.vo *.fo *~ .*~ log *.mangled *.pfc
