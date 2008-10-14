@@ -1,8 +1,8 @@
-# $Id: Makefile.common,v 1.6 2008-09-24 08:01:14 weis Exp $
+# $Id: Makefile.common,v 1.7 2008-10-13 23:52:45 weis Exp $
 
 BINOBJS = $(BYTOBJS:.cmo=.cmx)
 
-.PHONY: all byt bin clean doc install depend tests
+.PHONY: all byt bin clean doc install depend tests lib
 
 all:: byt bin
 
