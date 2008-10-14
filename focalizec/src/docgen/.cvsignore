@@ -1,0 +1,5 @@
+*.cm*
+*.o
+.depend
+odoc
+
