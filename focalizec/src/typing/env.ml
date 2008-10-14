@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.113 2008-10-10 10:25:16 pessaux Exp $ *)
+(* $Id: env.ml,v 1.114 2008-10-14 14:05:10 weis Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -197,7 +197,7 @@ let env_from_only_absolute_bindings generic_env =
     For method "v" in "Foo3" :
       [fh_initial_apparition] : Foo1
       [fh_inherited_along] : [(Foo3, Foo2(A4)); (Foo2, Foo1 (A2))]
-    {Rem} : Exported outside this module.                            *)
+    {b Rem} : Exported outside this module.                            *)
 (* ***************************************************************** *)
 type from_history = {
   (** The species where the method was defined or declared for the first time.
@@ -221,7 +221,7 @@ type from_history = {
 (** {b Descr} : Create an inheritance history by setting the initial
     apparition of a method.
 
-    {Rem} : Exported outside this module.                            *)
+    {b Rem} : Exported outside this module.                            *)
 (* ***************************************************************** *)
 let intitial_inheritance_history species =
   { fh_initial_apparition = species ;
@@ -351,7 +351,7 @@ end
 (* *********************************************************************** *)
 module TypeInformation = struct
   (* ************************************************************** *)
-  (** {Descr} : Records if a method has dependencies on the carrier
+  (** {b Descr} : Records if a method has dependencies on the carrier
       representation "rep".
 
       {b Rem} : Exported outside this module.                       *)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substExpr.ml,v 1.14 2008-06-16 12:59:42 pessaux Exp $ *)
+(* $Id: substExpr.ml,v 1.15 2008-10-14 14:05:10 weis Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs substitution of a value name [name_x]
@@ -321,7 +321,7 @@ let subst_binding_body ~param_unit ~bound_variables name_x by_expr = function
     outside the context of a recursion on the AST. Useful for "in"
     parameters instanciations while generating collection generators.
 
-   {Rem} : Exported outside this module.                                 *)
+   {b Rem} : Exported outside this module.                                 *)
 (* ********************************************************************* *)
 let subst_expr ~param_unit name_x ~by_expr ~in_expr =
   __subst_expr ~param_unit ~bound_variables: [] name_x by_expr in_expr
@@ -329,7 +329,7 @@ let subst_expr ~param_unit name_x ~by_expr ~in_expr =
 
 
 
-(** {Rem} : Exported outside this module. *)
+(** {b Rem} : Exported outside this module. *)
 let subst_species_field ~param_unit name_x by_expr field =
   match field with
   | Env.TypeInformation.SF_sig (_, _, _) -> field   (* Nowhere to substitute. *)

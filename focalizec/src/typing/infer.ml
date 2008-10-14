@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.148 2008-10-10 10:25:16 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.149 2008-10-14 14:05:10 weis Exp $ *)
 
 
 
@@ -890,7 +890,7 @@ let typecheck_fact ctx env fact =
    [Method_multiply_defined], else returns le concatenation of the 2
    lists (first @ second)
 
-   {Rem} : Not exported outside this module.                         *)
+   {b Rem} : Not exported outside this module.                         *)
 (* ***************************************************************** *)
 let append_and_ensure_method_uniquely_defined current_species l1 l2 =
   (* Just a local flattening function... *)
@@ -2114,13 +2114,13 @@ type typed_species_parameter_argument =
 (* ********************************************************************* *)
 (* Env.TypingEnv.t -> Env.TypeInformation.species_param ->               *)
 (*   (Parsetree.vname * species_parameter_info)                          *)
-(** {Descr}: Transforms an arbitrary expression [Parsetree.expr] used as
+(** {b Descr}: Transforms an arbitrary expression [Parsetree.expr] used as
     species parameter expression into a [species_param_expr]. Hence, the
     invariant that the [Parsetree.expr] can be only a sum type value
     constructor (possibly enclosed by paren) disapears since we enforce
     this structurally in the type [species_param_expr].
 
-    {Rem}: Not exported outside this module.                             *)
+    {b Rem}: Not exported outside this module.                             *)
 (* ********************************************************************* *)
 let rec expr_to_species_param_expr ~current_unit env expr =
   match expr.Parsetree.ast_desc with
@@ -2148,7 +2148,7 @@ let rec expr_to_species_param_expr ~current_unit env expr =
 
 
 (* ************************************************************************ *)
-(** {Descr}: Transforms the description of what is a species parameter into
+(** {b Descr}: Transforms the description of what is a species parameter into
     a simpler structure than the one used in [Env.TypeInformation]. In fact
     we want to keep trace of wether a parameter is "IS" or "IN" and what is
     its species. For this last point, we transform the arbitrary expression
@@ -2157,7 +2157,7 @@ let rec expr_to_species_param_expr ~current_unit env expr =
     enclosed by paren) disapears since we enforce this structurally in the
     type [species_param_expr].
 
-    {Rem}: Not exported outside this module.                                *)
+    {b Rem}: Not exported outside this module.                                *)
 (* ************************************************************************ *)
 let species_expr_to_species_param_expr ~current_unit env species_expr =
   let species_expr_desc = species_expr.Parsetree.ast_desc in
