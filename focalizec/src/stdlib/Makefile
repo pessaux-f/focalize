@@ -11,7 +11,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.50 2008-10-14 12:44:25 weis Exp $
+# $Id: Makefile,v 1.51 2008-10-14 12:51:50 rr Exp $
 
 ROOT_DIR = ..
 
@@ -31,8 +31,8 @@ COQ_INCLUDES = -I ../../zenon/
 FOCAL_SRC = basics.foc \
 	sets.foc\
 	sets_orders.foc \
-	wellfounded.foc #\
-#	products.foc
+	wellfounded.foc \
+	products.foc
 
 FOCAL_SRC_UNSAFE = \
 	ensembles_finis.foc
