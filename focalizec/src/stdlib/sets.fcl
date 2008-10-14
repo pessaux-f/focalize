@@ -13,15 +13,20 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets.fcl,v 1.2 2008-10-14 07:33:45 weis Exp $ *)
+(* $Id: sets.fcl,v 1.3 2008-10-14 12:47:51 rr Exp $ *)
 
-(** Basic sets operations, orderings and lattices. *)
+(** 
+   @title Basic sets operations. 
+   @author The FoCaL devolopers Team
+   Basic Set operations
+ *)
+
 
 use "basics";;
 open "basics";;
 
 (** In a setoid, we can test the equality (note for logicians: this is
-   a congruence). The setoid can not be empty. *)
+   a congruence). The setoid must be be non empty. *)
 species Setoid inherits Basic_object =
 
   (** @mathml <eq/> *)
@@ -44,12 +49,12 @@ species Setoid inherits Basic_object =
   signature element : Self ;
 
   (** @mathml <neq/> *)
-  let different (x, y) = basics#not_b(!equal(x, y)) ;
+  let different (x, y) = not_b(!equal(x, y)) ;
 
   theorem same_is_not_different : all x y in Self,
      !different(x, y) <-> ~ (!equal(x, y))
   proof:
-    by definition of different ;
+    by definition of different;
 
   theorem different_is_irreflexive: all x in Self,
     ~ (!different (x, x))
@@ -61,6 +66,16 @@ species Setoid inherits Basic_object =
     !different (x, y) -> !different (y, x)
   proof: by property equal_symmetric, same_is_not_different ;
 
+  (** 
+     Take two distinct elements then any third element is distinct from 
+     one of the first two
+  *)
+  theorem different_is_complete: all x y z in Self,
+    !different(x, y) -> (!different(x, z) \/ !different(y, z))
+    proof:
+      by property !equal_reflexive, !equal_symmetric,
+                  !equal_transitive, !same_is_not_different 
+  ;
 end
 ;;
 
@@ -89,7 +104,8 @@ species Anti_setoid inherits Basic_object =
   (** element returns some element of our non empty setoid *)
   signature element : Self ;
 
-  let equal(x, y) = basics#not_b(!different(x, y));
+  (** Equality is a derived operation *)
+  let equal(x, y) = not_b(!different(x, y));
 
   theorem same_is_not_different : all x y in Self,
     !equal(x, y) <-> ~ (!different(x, y))
@@ -109,7 +125,7 @@ species Anti_setoid inherits Basic_object =
                        !different_is_irreflexive, !same_is_not_different ;
 end
 ;;
-
+  
 (**
    Here we state that in some cases we may view partial operations
    as total operations.
@@ -128,6 +144,28 @@ species Partial_set inherits Setoid =
 end
 ;;
 
+(** Equivalence relations over a set *)
+species Equivalence_relation(S is Setoid) 
+  inherits Basic_object =
+  (**
+     @mathml <equivalent/>
+     will be denoted as infix congruence
+   *)
+    signature equiv: S -> S -> prop;
+    property equiv_symmetric: all x y in S, 
+      !equiv(x, y) -> !equiv(y, x);
+    property equiv_transitive: all x y z in S, 
+      !equiv(x, y) -> !equiv(y, z) -> !equiv(x, z);
+    (** compatibility with equality *)
+    property equal_refines_equiv: all x y in S, 
+       S!equal(x, y) -> !equiv(x, y);
+    theorem equiv_reflexive: all x in S, !equiv(x, x)
+      proof: by property!equal_refines_equiv, S!equal_reflexive;
+end;;
+
+
+
+
 (**
    The FoCaL way to use functions, abstract into a species!
  *)
@@ -145,3 +183,10 @@ end
 ;;
 
 
+(**
+   An automorphism is a function from a set to itself
+ *)
+species Setoid_automorphism(A is Setoid)
+  (** All properties from Setoid_morphism *)
+  inherits Setoid_morphism(A, A) =
+end;;

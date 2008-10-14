@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: products.fcl,v 1.3 2008-10-14 10:22:04 weis Exp $ *)
+(* $Id: products.fcl,v 1.4 2008-10-14 12:47:51 rr Exp $ *)
 
 (**
 
@@ -32,8 +32,6 @@ use "sets";;
 open "basics";;
 open "sets";;
 
-(* uses type_utils;; *)
-(* open type_utils;; *)
 
 (** a product of two things *)
 species Abstract_product(A is Basic_object, B is Basic_object)
@@ -91,7 +89,7 @@ species Product_set(A is Setoid, B is Setoid)
   (** equality can be derived from first and second *)
   (** @mathml <eq/> *)
   let equal(x, y) =
-     basics#and_b(A!equal(!first(x), !first(y)),
+     and_b(A!equal(!first(x), !first(y)),
           B!equal(!second(x), !second(y))) ;
 
   theorem equal_spec: all x y in Self,
@@ -214,43 +212,42 @@ species Categorical_property_of_Product_set
            assume H: E!equal(x, y),
            prove P!equal(!morph(x), !morph(y))
            <2>1 prove A!equal(P!first(!morph(x)), P!first(!morph(y)))
-                assumed {* *}
-(*                 <3>1 prove a!equal(p!first(p!pair(m_a!morph(x), m_b!morph(x))), *)
-(*                                    p!first(p!pair(m_a!morph(y), m_b!morph(y)))) *)
-(*                      <4>1 prove a!equal(m_a!morph(x), m_a!morph(y)) *)
-(*                           by <1>:H, m_a!morph_substitution_rule *)
-(*                      <4>2 prove a!equal(p!first(p!pair(m_a!morph(x), *)
-(*                                                        m_b!morph(x))), *)
-(*                                         m_a!morph(x)) *)
-(*                           by p!pair_preserves_first *)
-(*                      <4>3 prove a!equal(p!first(p!pair(m_a!morph(y), *)
-(*                                                        m_b!morph(y))), *)
-(*                                         m_a!morph(y)) *)
-(*                           by p!pair_preserves_first *)
-(*                      <4>f qed by <4>1, <4>2, <4>3, *)
-(*                                  a!equal_transitive, a!equal_symmetric *)
-(*                 <3>f qed by <3>1 def !morph *)
+                <3>1 prove A!equal(P!first(P!pair(M_a!morph(x), M_b!morph(x))),
+                                   P!first(P!pair(M_a!morph(y), M_b!morph(y))))
+                     <4>1 prove A!equal(M_a!morph(x), M_a!morph(y))
+                          by hypothesis H property M_a!morph_substitution_rule
+                     <4>2 prove A!equal(P!first(P!pair(M_a!morph(x),
+                                                       M_b!morph(x))),
+                                        M_a!morph(x))
+                          by property P!pair_preserves_first
+                     <4>3 prove A!equal(P!first(P!pair(M_a!morph(y),
+                                                       M_b!morph(y))),
+                                        M_a!morph(y))
+                          by property P!pair_preserves_first
+                     <4>f qed by step <4>1, <4>2, <4>3
+                                 property A!equal_transitive, A!equal_symmetric
+                <3>f qed by step <3>1 definition of morph
            <2>2 prove B!equal(P!second(!morph(x)), P!second(!morph(y)))
-                assumed {* *}
-(*                 <3>1 prove b!equal(p!second(p!pair(m_a!morph(x), *)
-(*            m_b!morph(x))), *)
-(*                                    p!second(p!pair(m_a!morph(y), *)
-(*            m_b!morph(y)))) *)
-(*                      <4>1 prove b!equal(m_b!morph(x), m_b!morph(y)) *)
-(*                           by <1>:H, m_b!morph_substitution_rule *)
-(*                      <4>2 prove b!equal(p!second(p!pair(m_a!morph(x), *)
-(*         m_b!morph(x))), *)
-(*                                         m_b!morph(x)) *)
-(*                           by p!pair_preserves_second *)
-(*                      <4>3 prove b!equal(p!second(p!pair(m_a!morph(y), *)
-(*         m_b!morph(y))), *)
-(*                                         m_b!morph(y)) *)
-(*                           by p!pair_preserves_second *)
-(*                      <4>f qed by <4>1, <4>2, <4>3, *)
-(*                                  b!equal_transitive, b!equal_symmetric *)
-(*                 <3>f qed by <3>1 def !morph *)
+                <3>1 prove B!equal(P!second(P!pair(M_a!morph(x),
+						   M_b!morph(x))),
+                                   P!second(P!pair(M_a!morph(y),
+						   M_b!morph(y))))
+                     <4>1 prove B!equal(M_b!morph(x), M_b!morph(y))
+                          by hypothesis H property M_b!morph_substitution_rule
+                     <4>2 prove B!equal(P!second(P!pair(M_a!morph(x),
+							M_b!morph(x))),
+                                        M_b!morph(x))
+                          by property P!pair_preserves_second
+                     <4>3 prove B!equal(P!second(P!pair(M_a!morph(y),
+							M_b!morph(y))),
+                                        M_b!morph(y))
+                          by property P!pair_preserves_second
+                     <4>f qed by step <4>1, <4>2, <4>3
+                                 property B!equal_transitive, B!equal_symmetric
+                <3>f qed by step <3>1 definition of morph
            <2>f qed by step <2>1, <2>2 property P!equal_spec
-      <1>f qed. ;
+      <1>f qed.
+  ;
 
     theorem morph_first_factorize: all x in E,
       A!equal(P!first(!morph(x)), M_a!morph(x))
@@ -262,40 +259,50 @@ species Categorical_property_of_Product_set
 
 end;;
 
-(* (\**  *)
-(*    This is a complete species implementing abstract products using types *)
-(*    which are mapped into products in Ocaml and Coq. *)
-(*    We simply rely on three signatures and two relations, *)
-(*    We need to fill the proof knowing how these are compiled into Coq. *)
-(* *\) *)
-(* species cartesian_product(a is setoid, b is setoid) *)
-(*   inherits product_set(a, b) = *)
+(**
+   This is a complete species implementing abstract products using types
+   which are mapped into products in Ocaml and Coq.
+   We simply rely on three signatures and two relations,
+   We need to fill the proof knowing how these are compiled into Coq.
+*)
 
-(*   rep = a * b; *)
+species Cartesian_product(A is Setoid, B is Setoid)
+  (** 
+     Rule of thumb: 
+      - use intros without parameters -> independant of FoCaL compiler
+      - explicitly use unfold with needed definitions instead of simpl
+      - use apply with properties involved
+   *)
 
-(*   let first(x) = let (x_1, _x_2) = x in x_1; *)
-(*   let second(x) = let (_x_1, x_2) = x in x_2; *)
-(*   let pair(x, y) = #crp(x, y); *)
+  inherits Product_set(A, B) =
 
-(*   (\** Credits Eric Jaeger *\) *)
-(*   proof of pair_preserves_first = *)
-(*     (\* a piece of Coq with help of the compiler *\) *)
-(*     def: equal_a_reflexive; *)
-(*     def: pair; *)
-(*     def: first; *)
-(*     {* intros x y; simpl; apply abst_equal_a_reflexive. *} *)
-(*     ; *)
+  rep = A * B;
 
-(*   (\** Credits Eric Jaeger *\) *)
-(*   proof of pair_preserves_second = *)
-(*     (\* a piece of Coq with help of the compiler*\) *)
-(*     def: equal_b_reflexive; *)
-(*     def: pair; *)
-(*     def: second; *)
-(*     {* intros x y; simpl; apply abst_equal_b_reflexive. *} *)
-(*     ; *)
+  let first(x) = basics#fst(x);
+  let second(x) = basics#snd(x);
+  let pair(x, y) = basics#pair(x, y);
 
-(* end *)
+  (** Credits Eric Jaeger, William Bartlett *)
+  proof of pair_preserves_first =
+    (* a piece of Coq with help of the compiler *)
+     (*[rr]: todo invert syntax of coq proof ? *)
+    coq proof
+    property A!equal_reflexive
+    definition of pair, first
+    (*[rr]: todo add Qed automagically ? *)
+    {* intros; unfold abst_pair, abst_first; apply _p_A_equal_reflexive. Qed.*}
+    ;
+
+  (** Credits Eric Jaeger, William Bartlett  *)
+  proof of pair_preserves_second =
+    (* a piece of Coq with help of the compiler*)
+    coq proof
+    property B!equal_reflexive
+    definition of pair, second
+    {* intros; unfold abst_pair, abst_second; apply _p_B_equal_reflexive. Qed. *}
+    ;
+
+end;;
 
 (* (\** *)
 (*    Commonly product by a singleton is isomorphic to the set itself, *)
