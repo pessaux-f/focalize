@@ -11,7 +11,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.34 2008-10-14 07:05:56 weis Exp $
+# $Id: Makefile,v 1.35 2008-10-14 12:10:22 weis Exp $
 
 ROOT_DIR = ..
 
@@ -30,7 +30,7 @@ clean::
 	$(RM) parser.ml parser.mli parser.conflicts parser.output
 
 depend:: lexer.ml parser.ml
-	$(CAMLDEP) $(CAML_COMP_FLAGS) *.mli *.ml > ./.depend
+	$(CAMLDEP) *.mli *.ml > ./.depend
 
 explain:
 	menhir --explain parser.mly > menhir.out 2>&1
