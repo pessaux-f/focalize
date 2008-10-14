@@ -11,7 +11,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.47 2008-10-14 07:00:37 weis Exp $
+# $Id: Makefile,v 1.48 2008-10-14 07:18:18 weis Exp $
 
 ROOT_DIR = ..
 
@@ -32,8 +32,6 @@ FOCAL_COMPILER = $(BIN_FOCAL_COMPILER)
 FOCAL_COMP_FLAGS = -no-stdlib-path
 
 #From Makefile.config FOCALC = $(FOCAL_COMPILER) $(FOCAL_COMP_FLAGS)
-
-ZVTOV += -new -zenon ../../zenon/zenon
 
 COQ_INCLUDES = -I ../../zenon/
 
