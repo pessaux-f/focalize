@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.95 2008-08-28 11:59:54 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.96 2008-10-14 19:46:19 weis Exp $ *)
 
 open Parsetree;;
 
@@ -1071,7 +1071,7 @@ pattern:
   | LBRACE pattern_record_field_list RBRACE { mk (P_record $2) }
   | pattern AS LIDENT { mk (P_as ($1, Vlident $3)) }
   | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
-  | /*LRPARENS { mk (P_constr (mk_unit (), [])) } */
+/* | LRPARENS { mk (P_constr (mk_unit (), [])) } */
   | LPAREN pattern RPAREN { mk (P_paren $2) }
 ;
 
