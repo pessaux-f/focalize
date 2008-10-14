@@ -1,6 +1,32 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*                                                                     *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: ensembles_finis.foc,v 1.6 2008-10-14 10:32:42 weis Exp $ *)
+
 (*pp basic_ext.cmo*)
 
-(* $Id: ensembles_finis.foc,v 1.5 2008-08-28 09:53:10 pessaux Exp $ *)
+(* $Id: ensembles_finis.foc,v 1.6 2008-10-14 10:32:42 weis Exp $ *)
+
+(**
+
+   @title Finite sets.
+   An attempt to describe finite sets.
+   @author Renaud Rioboo
+
+*)
 
 (** Exemple de fichier FoC: Ensembles ordonnés. *)
 use "basics" ;;
@@ -98,31 +124,30 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
   (** L'ensemble vide est le seul à ne contenir aucun élément. *)
   theorem vide_spec2: all e in Self,
     (all x in A, ~ (!est_element (x, e))) <-> !equal (e, !vide)
-      proof:
-        (* [Unsure - à laisser ?]
-           decl: sous_ensemble_spec extensional vide_spec; *)
-      coq proof
-      {*
-      Intros e; Split.
-      Intros Hnoelem.
-      Elim (abst_extensional e abst_vide).
-      Intros H1 H2; Apply H2; Clear H1 H2.
-      Split.
-      Elim (abst_sous_ensemble_spec e abst_vide);
-      Intros H1 H2; Apply H1; Clear H1 H2.
-      Intros x Hxelem; Absurd (Is_true (abst_est_element x e)); Trivial.
-      Elim (abst_sous_ensemble_spec abst_vide e);
-      Intros H1 H2; Apply H1; Clear H1 H2.
-      Intros x Hxelem; Absurd (Is_true (abst_est_element x abst_vide)); Trivial.
+    proof:
+      (* [Unsure - à laisser ?]
+         decl: sous_ensemble_spec extensional vide_spec; *)
+      coq proof {*
+        Intros e; Split.
+        Intros Hnoelem.
+        Elim (abst_extensional e abst_vide).
+        Intros H1 H2; Apply H2; Clear H1 H2.
+        Split.
+        Elim (abst_sous_ensemble_spec e abst_vide);
+        Intros H1 H2; Apply H1; Clear H1 H2.
+        Intros x Hxelem; Absurd (Is_true (abst_est_element x e)); Trivial.
+        Elim (abst_sous_ensemble_spec abst_vide e);
+        Intros H1 H2; Apply H1; Clear H1 H2.
+        Intros x Hxelem; Absurd (Is_true (abst_est_element x abst_vide)); Trivial.
 
-      Intros Heq.
-      Unfold not; Intros x Hxelem.
-      Absurd (Is_true (abst_est_element x abst_vide)); Trivial.
-      Elim (abst_sous_ensemble_spec e abst_vide);
-      Intros H1 H2; EApply H2; Clear H1 H2; Trivial.
-      Elim (abst_extensional e abst_vide);
-      Intros H1 H2; Elim H1; Auto.
-      *} ;
+        Intros Heq.
+        Unfold not; Intros x Hxelem.
+        Absurd (Is_true (abst_est_element x abst_vide)); Trivial.
+        Elim (abst_sous_ensemble_spec e abst_vide);
+        Intros H1 H2; EApply H2; Clear H1 H2; Trivial.
+        Elim (abst_extensional e abst_vide);
+        Intros H1 H2; Elim H1; Auto.
+      *};
 
   (** Un singleton ne contient qu'un seul élément. *)
   property singleton_spec:
@@ -182,7 +207,7 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
   (** L'ensemble vide a 0 éléments. *)
   property vide_card: basics#( = ) (!cardinal (!vide), 0) ;
 
-  (** L'ensemble vide a 1 élément. *)
+  (** Un singleton est un ensemble à 1 élément. *)
   property singleton_card:
   all x in A, basics#( = ) (!cardinal (!singleton (x)), 1) ;
 
@@ -191,62 +216,61 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
      ~ (!est_element (x,s)) ->
        (!cardinal (!ajoute_element (x, s)) = !cardinal (s) + 1) ; *)
 
-   (** Si un ensemble est inclus dans un autre, il a moins d'élément que lui.*)
+  (** Si un ensemble est inclus dans un autre, il a moins d'élément que lui.*)
   property incl_card : all e1 e2 in Self,
    !sous_ensemble (e1, e2) -> int_leq (!cardinal (e1), !cardinal (e2)) ;
 
-   (** Si un ensemble est strictement inclus dans un autre, il a strictement
+  (** Si un ensemble est strictement inclus dans un autre, il a strictement
       moins d'éléments que lui. *)
   property include_card : all e1 e2 in Self,
    !sous_ensemble (e1, e2) -> ~ (!sous_ensemble (e2, e1)) ->
      int_lt (!cardinal (e1), !cardinal (e2)) ;
 
-   (** Si deux ensembles sont égaux, ils ont même cardinal. *)
+  (** Si deux ensembles sont égaux, ils ont même cardinal. *)
   theorem card_congruence: all e1 e2 in Self,
     !equal (e1, e2) -> basics#( = ) (!cardinal (e1), !cardinal (e2))
-    proof: (* [Unsure -  - à laisser ?]
-            by property incl_card extensional ; *)
-      coq proof
-      {*
-      Intros e1 e2 Heq.
-      Apply int_le_antisymm;
-      EApply abst_incl_card;
-      Elim (abst_extensional e1 e2);
-      Intros He1 He2; Clear He2;
-      Elim (He1 Heq); Trivial.
-      *} ;
+    proof:
+      (* [Unsure -  - à laisser ?]
+         by property incl_card extensional ; *)
+      coq proof {*
+        Intros e1 e2 Heq.
+        Apply int_le_antisymm;
+        EApply abst_incl_card;
+        Elim (abst_extensional e1 e2);
+        Intros He1 He2; Clear He2;
+        Elim (He1 Heq); Trivial.
+      *};
 
-   (** Si un ensemble a pour cardinal 0, c'est l'ensemble vide. *)
-   theorem card_zero_vide: all e in Self,
-     !cardinal (e) = 0 <-> !equal (e, !vide)
-        proof:
-          (* [Unsure -  - à laisser ?]
-          by property
-            card_congruence, vide_card, vide_spec2, incl_card,
-            singleton_card, est_element_spec ; *)
-        coq proof
-          {*
-          Intros e; Split.
-          Intros Hcard.
-          Elim (abst_vide_spec2 e);
-          Intros H1 H2; Apply H1; Clear H1 H2.
-          Intros x. Unfold not; Intros Hxelem.
-          Absurd (Is_true (__g_base_eq  `0` (abst_cardinal  e) )); Auto.
-          2:Apply beq_symm; Trivial.
-          Apply int_lt_irrefl.
-          Apply (int_lt_le_trans `0` `1` (abst_cardinal e)).
-          Unfold __g_int_lt; Apply dec_IsTrue; Compute; Trivial.
-          Apply (int_le_trans `1`
-             (abst_cardinal (abst_singleton x)) (abst_cardinal e)).
-          Apply int_le_refl.
-          Apply beq_symm; Trivial.
-          Elim (abst_est_element_spec x e).
-          Intros H1 H2. Auto.
-          Intros Heq.
-          Apply (beq_trans ? (abst_cardinal e) (abst_cardinal abst_vide) `0` ); Auto.
-       *} ;
+  (** Si un ensemble a pour cardinal 0, c'est l'ensemble vide. *)
+  theorem card_zero_vide: all e in Self,
+    !cardinal (e) = 0 <-> !equal (e, !vide)
+    proof:
+      (* [Unsure -  - à laisser ?]
+         by property
+         card_congruence, vide_card, vide_spec2, incl_card,
+         singleton_card, est_element_spec ; *)
+      coq proof {*
+        Intros e; Split.
+        Intros Hcard.
+        Elim (abst_vide_spec2 e);
+        Intros H1 H2; Apply H1; Clear H1 H2.
+        Intros x. Unfold not; Intros Hxelem.
+        Absurd (Is_true (__g_base_eq  `0` (abst_cardinal  e) )); Auto.
+        2:Apply beq_symm; Trivial.
+        Apply int_lt_irrefl.
+        Apply (int_lt_le_trans `0` `1` (abst_cardinal e)).
+        Unfold __g_int_lt; Apply dec_IsTrue; Compute; Trivial.
+        Apply (int_le_trans `1`
+           (abst_cardinal (abst_singleton x)) (abst_cardinal e)).
+        Apply int_le_refl.
+        Apply beq_symm; Trivial.
+        Elim (abst_est_element_spec x e).
+        Intros H1 H2. Auto.
+        Intros Heq.
+        Apply (beq_trans ? (abst_cardinal e) (abst_cardinal abst_vide) `0` ); Auto.
+     *};
 
- (** Le cardinal de l'union est au plus la somme des cardinaux. *)
+  (** Le cardinal de l'union est au plus la somme des cardinaux. *)
   property union_card : all e1 e2 in Self,
    int_leq (!cardinal (!union (e1, e2)), !cardinal (e1) + !cardinal (e2)) ;
 
@@ -277,7 +301,8 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
         (A!equal (x, y) \/ !est_element (y, s))
    proof: by property !union_spec, !singleton_spec
    definition of ajoute_element ;
-end ;;
+end
+;;
 
 
 
@@ -304,47 +329,47 @@ species Ensembles_finis_ordonnes (A is Ordered_set) inherits
       ~ (!cardinal (e) = 0) ->
         (all x in A, A!lt (x, !min (e)) ->
           (all y in A, !est_element (y, e) -> A!lt (x, y)))
-    proof: (* [Unsure - à laisser ?]
-              by property min_spec ; *)
-    coq proof
-    {*
-    Intros;
-    Elim (abst_min_spec e H);Intros;
-    Generalize (H3 y H1);Intro;
-    Elim ((ordered_set_lt_is_not_leq self_a)  x (abst_min e));Intros;
-    Elim (H5 H0);Intros;
-    Generalize ((ordered_set_leq_transitive self_a) x (abst_min e) y H7 H4);
-    Intro;
-    Elim ((ordered_set_lt_is_not_leq self_a) x y);Intros;
-    Elim (H11 H9);Intros.
-    Assumption.
-    Generalize ((ordered_set_equal_symmetric self_a) x y H12);Intros;
-    Generalize ((ordered_set_leq_reflexive self_a) y x H13);Intros;
-    Generalize ((ordered_set_leq_transitive self_a) y x (abst_min e) H14 H7);
-    Intros;
-    Generalize ((ordered_set_leq_antisymmetric self_a) y (abst_min e) H15 H4);
-    Intros;
-    Generalize ((ordered_set_equal_transitive self_a) x y (abst_min e) H12 H16);
-    Intros;
-    Absurd (Is_true (ordered_set_equal self_a x (abst_min e))).
-    Elim ((ordered_set_different_not_equal self_a) x (abst_min e));Intros.
-    Apply H18;Assumption.
-    Assumption.
-    *};
+    proof:
+      (* [Unsure - à laisser ?]
+          by property min_spec ; *)
+      coq proof {*
+        Intros;
+        Elim (abst_min_spec e H);Intros;
+        Generalize (H3 y H1);Intro;
+        Elim ((ordered_set_lt_is_not_leq self_a)  x (abst_min e));Intros;
+        Elim (H5 H0);Intros;
+        Generalize ((ordered_set_leq_transitive self_a) x (abst_min e) y H7 H4);
+        Intro;
+        Elim ((ordered_set_lt_is_not_leq self_a) x y);Intros;
+        Elim (H11 H9);Intros.
+        Assumption.
+        Generalize ((ordered_set_equal_symmetric self_a) x y H12);Intros;
+        Generalize ((ordered_set_leq_reflexive self_a) y x H13);Intros;
+        Generalize ((ordered_set_leq_transitive self_a) y x (abst_min e) H14 H7);
+        Intros;
+        Generalize ((ordered_set_leq_antisymmetric self_a) y (abst_min e) H15 H4);
+        Intros;
+        Generalize ((ordered_set_equal_transitive self_a) x y (abst_min e) H12 H16);
+        Intros;
+        Absurd (Is_true (ordered_set_equal self_a x (abst_min e))).
+        Elim ((ordered_set_different_not_equal self_a) x (abst_min e));Intros.
+        Apply H18;Assumption.
+        Assumption.
+      *};
 
 (** le minimum est le plus grand des minorants. *)
 theorem min_inf2:
   all e in Self, all x in A,
     ~ (!cardinal (e) = 0) ->
       (all y in A, !est_element (y, e)-> A!lt (x, y)) -> A!lt (x, !min (e))
-   proof:
-     (* [Unsure - à laisser ?]
-        decl: min_spec; *)
-   coq proof
-     {*
-     Intros;Apply H0;Elim (abst_min_spec e H);Intros;Assumption.
-     *} ;
-end ;;
+  proof:
+    (* [Unsure - à laisser ?]
+       decl: min_spec; *)
+    coq proof {*
+      Intros;Apply H0;Elim (abst_min_spec e H);Intros;Assumption.
+    *};
+end
+;;
 
 
 
@@ -367,17 +392,17 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
      d'éléments en double. *)
   let rec bien_formee (l in Self) in bool =
     match l with
-      | [ ] -> true
+      | [] -> true
       | a :: l -> and_b (not_b (!est_element (a, l)), !bien_formee (l)) ;
 
-  let vide in Self = [ ] ;
+  let vide in Self = [] ;
 
   let singleton (x in A) in Self = [x] ;
 
   let est_element (x in A, e in Self) in basics#bool =
     let rec aux (l) =
       match l with
-        | [ ] -> false
+        | [] -> false
         | y :: l -> if A!equal (x, y) then true else aux (l) in
     aux (e) ;
 
@@ -386,49 +411,47 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
   proof :
     (* [Unsure - à laisser ?]
        by definition of est_element ; *)
-   coq proof
-   {*
-     Unfold abst_est_element;Induction s;Simpl;Intros.
-     Elim H0.
-     Cut (setoid_equal self_a y a)=true \/ (setoid_equal self_a y a)=false.
-     2:Elim (setoid_equal self_a y a).
-     2:Left;Trivial.
-     2:Right;Trivial.
-     Intros;Elim H2;Intros.
-     Rewrite H3;Simpl;Trivial.
-     Rewrite H3;Simpl;Apply (H x y H0).
-     Cut (setoid_equal self_a x a)=false -> (liste__est_element x l)=true.
-     2:Intros;Rewrite H4 in H1;Generalize H1;Simpl;Intros;Apply Is_true_eq_true;
-     Assumption.
-     Intros;Apply Is_true_eq_left;Apply H4.
-     Cut (setoid_equal self_a x a)=true \/ (setoid_equal self_a x a)=false.
-     2:Elim (setoid_equal self_a x a).
-     2:Left;Trivial.
-     2:Right;Trivial.
-     Intros;Elim H5;Intros.
-     2:Assumption.
-     Absurd (setoid_equal self_a y a)=false.
-     2:Assumption.
-     Generalize
-     ((setoid_equal_transitive self_a) y x a
-                      ((setoid_equal_symmetric self_a) x y
-                                       H0)
-                      (Is_true_eq_left (setoid_equal self_a x a) H6)).
-     Elim (setoid_equal self_a y a);Simpl;Intros.
-     Discriminate.
-     Elim H7.
-   *};
+    coq proof {*
+      Unfold abst_est_element;Induction s;Simpl;Intros.
+      Elim H0.
+      Cut (setoid_equal self_a y a)=true \/ (setoid_equal self_a y a)=false.
+      2:Elim (setoid_equal self_a y a).
+      2:Left;Trivial.
+      2:Right;Trivial.
+      Intros;Elim H2;Intros.
+      Rewrite H3;Simpl;Trivial.
+      Rewrite H3;Simpl;Apply (H x y H0).
+      Cut (setoid_equal self_a x a)=false -> (liste__est_element x l)=true.
+      2:Intros;Rewrite H4 in H1;Generalize H1;Simpl;Intros;Apply Is_true_eq_true;
+      Assumption.
+      Intros;Apply Is_true_eq_left;Apply H4.
+      Cut (setoid_equal self_a x a)=true \/ (setoid_equal self_a x a)=false.
+      2:Elim (setoid_equal self_a x a).
+      2:Left;Trivial.
+      2:Right;Trivial.
+      Intros;Elim H5;Intros.
+      2:Assumption.
+      Absurd (setoid_equal self_a y a)=false.
+      2:Assumption.
+      Generalize
+      ((setoid_equal_transitive self_a) y x a
+                       ((setoid_equal_symmetric self_a) x y
+                                        H0)
+                       (Is_true_eq_left (setoid_equal self_a x a) H6)).
+      Elim (setoid_equal self_a y a);Simpl;Intros.
+      Discriminate.
+      Elim H7.
+    *};
 
   let rec sous_ensemble (e1 in Self, e2 in Self) in bool =
-     match e1 with
-      | [ ] -> true
-      | x :: l -> and_b (!est_element (x, e2), !sous_ensemble (l, e2)) ;
+    match e1 with
+    | [] -> true
+    | x :: l -> and_b (!est_element (x, e2), !sous_ensemble (l, e2)) ;
 
   proof of sous_ensemble_spec =
     (* [Unsure - à laisser ?]
         def : est_element sous_ensemble; decl : equal_congr_est_element; *)
-    coq proof
-      {*
+    coq proof {*
       Unfold abst_sous_ensemble abst_est_element.
       Intros;Elim s1;Simpl;Intros.
 
@@ -468,38 +491,35 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
       Apply H3.
       Assumption.
       Rewrite H7 in H1;Generalize H1;Simpl;Intro;Assumption.
-      *};
+    *};
 
   theorem bien_formee_vide: !bien_formee (!vide)
     proof:
-     (* [Unsure - à laisser ?]
-        def : bien_formee vide; *)
-   coq proof
-     {*
-     Unfold abst_vide;Unfold abst_bien_formee;Simpl;Trivial.
-     *} ;
+      (* [Unsure - à laisser ?]
+         def : bien_formee vide; *)
+      coq proof {*
+        Unfold abst_vide;Unfold abst_bien_formee;Simpl;Trivial.
+      *};
 
   proof of vide_spec =
     (* [Unsure - à laisser ?]
        def : est_element vide ; *)
-   coq proof
-     {*
-     Unfold abst_est_element abst_vide;Simpl;Unfold not;Intros;Elim H.
-     *};
+    coq proof {*
+      Unfold abst_est_element abst_vide;Simpl;Unfold not;Intros;Elim H.
+    *};
 
   proof of singleton_spec =
-     (* [Unsure - à laisser ?]
-        def : est_element singleton; *)
-     coq proof
-       {*
-       Unfold abst_est_element abst_singleton;Simpl;Intros;Split.
-       Intros;Apply ((setoid_equal_symmetric self_a) y x).
-       Generalize H;Elim (setoid_equal self_a y x);Simpl;Trivial.
-       Intros;Rewrite (Is_true_eq_true
-       (setoid_equal self_a y x)
-       ((setoid_equal_symmetric self_a) x y H)
-       );Simpl;Trivial.
-       *};
+    (* [Unsure - à laisser ?]
+       def : est_element singleton; *)
+    coq proof {*
+      Unfold abst_est_element abst_singleton;Simpl;Intros;Split.
+      Intros;Apply ((setoid_equal_symmetric self_a) y x).
+      Generalize H;Elim (setoid_equal self_a y x);Simpl;Trivial.
+      Intros;Rewrite (Is_true_eq_true
+      (setoid_equal self_a y x)
+      ((setoid_equal_symmetric self_a) x y H)
+      );Simpl;Trivial.
+    *};
 
   theorem bien_formee_singleton:
     all x in A, !bien_formee (!singleton (x))
@@ -507,37 +527,35 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
       (* [Unsure - à laisser ?]
          def : bien_formee singleton vide;
          decl : vide_spec; *)
-     coq proof
-      {*
-      Unfold abst_bien_formee abst_singleton liste__bien_formee
-      liste__singleton;Simpl;Intros;Apply andb_true_intro2.
-      Generalize (abst_vide_spec x);
-      Unfold abst_vide liste__vide;Elim (abst_est_element x (Nil_ self_a));Simpl;
-      Intros.
-      Elim H;Trivial.
-      Trivial.
-      Simpl;Trivial.
+      coq proof {*
+        Unfold abst_bien_formee abst_singleton liste__bien_formee
+        liste__singleton;Simpl;Intros;Apply andb_true_intro2.
+        Generalize (abst_vide_spec x);
+        Unfold abst_vide liste__vide;Elim (abst_est_element x (Nil_ self_a));Simpl;
+        Intros.
+        Elim H;Trivial.
+        Trivial.
+        Simpl;Trivial.
       *};
 
 
   proof of est_element_spec =
     (* [Unsure - à laisser ?]
        decl :sous_ensemble_spec singleton_spec equal_congr_est_element; *)
-   coq proof
-    {*
-    Intros;Split;Intros.
-    Elim (abst_sous_ensemble_spec (abst_singleton x) e);Intros.
-    Apply H0;Intros.
-    Apply abst_equal_congr_est_element with x.
-    Elim (abst_singleton_spec x x0);Intros.
-    Apply H3;Assumption.
-    Assumption.
-    Elim (abst_sous_ensemble_spec (abst_singleton x) e);Intros.
-    Apply H1.
-    Assumption.
-    Elim (abst_singleton_spec x x);Intros.
-    Apply H3.
-    Apply (setoid_equal_reflexive self_a).
+    coq proof {*
+      Intros;Split;Intros.
+      Elim (abst_sous_ensemble_spec (abst_singleton x) e);Intros.
+      Apply H0;Intros.
+      Apply abst_equal_congr_est_element with x.
+      Elim (abst_singleton_spec x x0);Intros.
+      Apply H3;Assumption.
+      Assumption.
+      Elim (abst_sous_ensemble_spec (abst_singleton x) e);Intros.
+      Apply H1.
+      Assumption.
+      Elim (abst_singleton_spec x x);Intros.
+      Apply H3.
+      Apply (setoid_equal_reflexive self_a).
     *};
 
 
@@ -549,63 +567,62 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
     (* [Unsure - à laisser ?]
        def : ajoute_element est_element ;
        decl : equal_congr_est_element; *)
-   coq proof
-    {*
-    Unfold abst_ajoute_element abst_est_element liste__ajoute_element;
-    Intros;Split;Intros.
-    Cut (liste__est_element x s)=true \/ (liste__est_element x s)=false.
-    2:Elim (liste__est_element x s);Simpl.
-    2:Left;Trivial.
-    2:Right;Trivial.
-    Intro;Elim H0;Intro.
-    Rewrite H1 in H;Right;Assumption.
-    Rewrite H1 in H;Generalize H;Simpl;
-    Replace (setoid_equal self_a y x) with (setoid_equal self_a x y).
-    Elim (setoid_equal self_a x y);Simpl;Intros.
-    Left;Trivial.
-    Right;Assumption.
-    Cut (setoid_equal self_a x y)=true \/ (setoid_equal self_a x y)=false.
-    2:Elim (setoid_equal self_a x y);Simpl.
-    2:Left;Trivial.
-    2:Right;Trivial.
-    Cut (setoid_equal self_a y x)=true \/ (setoid_equal self_a y x)=false.
-    2:Elim (setoid_equal self_a y x);Simpl.
-    2:Left;Trivial.
-    2:Right;Trivial.
-    Intros;Elim H2;Intros;Elim H3;Intros.
-    Rewrite H4;Rewrite H5;Trivial.
-    Generalize ((setoid_equal_symmetric self_a) y x);
-    Rewrite H4;Rewrite H5;Simpl;Intros;Elim H6;Trivial.
-    Generalize ((setoid_equal_symmetric self_a) x y);
-    Rewrite H4;Rewrite H5;Simpl;Intros;Elim H6;Trivial.
-    Rewrite H4;Rewrite H5;Trivial.
+    coq proof {*
+      Unfold abst_ajoute_element abst_est_element liste__ajoute_element;
+      Intros;Split;Intros.
+      Cut (liste__est_element x s)=true \/ (liste__est_element x s)=false.
+      2:Elim (liste__est_element x s);Simpl.
+      2:Left;Trivial.
+      2:Right;Trivial.
+      Intro;Elim H0;Intro.
+      Rewrite H1 in H;Right;Assumption.
+      Rewrite H1 in H;Generalize H;Simpl;
+      Replace (setoid_equal self_a y x) with (setoid_equal self_a x y).
+      Elim (setoid_equal self_a x y);Simpl;Intros.
+      Left;Trivial.
+      Right;Assumption.
+      Cut (setoid_equal self_a x y)=true \/ (setoid_equal self_a x y)=false.
+      2:Elim (setoid_equal self_a x y);Simpl.
+      2:Left;Trivial.
+      2:Right;Trivial.
+      Cut (setoid_equal self_a y x)=true \/ (setoid_equal self_a y x)=false.
+      2:Elim (setoid_equal self_a y x);Simpl.
+      2:Left;Trivial.
+      2:Right;Trivial.
+      Intros;Elim H2;Intros;Elim H3;Intros.
+      Rewrite H4;Rewrite H5;Trivial.
+      Generalize ((setoid_equal_symmetric self_a) y x);
+      Rewrite H4;Rewrite H5;Simpl;Intros;Elim H6;Trivial.
+      Generalize ((setoid_equal_symmetric self_a) x y);
+      Rewrite H4;Rewrite H5;Simpl;Intros;Elim H6;Trivial.
+      Rewrite H4;Rewrite H5;Trivial.
 
-    Cut (liste__est_element x s)=true \/ (liste__est_element x s)=false.
-    2:Elim (liste__est_element x s);Simpl.
-    2:Left;Trivial.
-    2:Right;Trivial.
-    Intro;Elim H0;Intro.
-    Elim H;Intro.
-    Rewrite H1.
-    Apply abst_equal_congr_est_element with x.
-    Assumption.
-    Unfold abst_est_element; Rewrite H1;Simpl;Trivial.
-    Rewrite H1.
-    Assumption.
-    Rewrite H1.
-    Elim H;Intros.
-    Simpl;Replace (setoid_equal self_a y x) with true.
-    Simpl;Trivial.
-    Symmetry;Apply Is_true_eq_true;Apply (setoid_equal_symmetric self_a);
-    Assumption.
-    Simpl.
-    Cut (setoid_equal self_a y x)=true \/ (setoid_equal self_a y x)=false.
-    2:Elim (setoid_equal self_a y x);Simpl.
-    2:Left;Trivial.
-    2:Right;Trivial.
-    Intro;Elim H3;Intro.
-    Rewrite H4;Simpl;Trivial.
-    Rewrite H4;Assumption.
+      Cut (liste__est_element x s)=true \/ (liste__est_element x s)=false.
+      2:Elim (liste__est_element x s);Simpl.
+      2:Left;Trivial.
+      2:Right;Trivial.
+      Intro;Elim H0;Intro.
+      Elim H;Intro.
+      Rewrite H1.
+      Apply abst_equal_congr_est_element with x.
+      Assumption.
+      Unfold abst_est_element; Rewrite H1;Simpl;Trivial.
+      Rewrite H1.
+      Assumption.
+      Rewrite H1.
+      Elim H;Intros.
+      Simpl;Replace (setoid_equal self_a y x) with true.
+      Simpl;Trivial.
+      Symmetry;Apply Is_true_eq_true;Apply (setoid_equal_symmetric self_a);
+      Assumption.
+      Simpl.
+      Cut (setoid_equal self_a y x)=true \/ (setoid_equal self_a y x)=false.
+      2:Elim (setoid_equal self_a y x);Simpl.
+      2:Left;Trivial.
+      2:Right;Trivial.
+      Intro;Elim H3;Intro.
+      Rewrite H4;Simpl;Trivial.
+      Rewrite H4;Assumption.
     *};
 
   theorem bien_formee_ajoute:
@@ -614,45 +631,44 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
   proof:
     (* [Unsure - à laisser ?]
        def : bien_formee ajoute_element; *)
- coq proof
-    {*
-    Unfold abst_ajoute_element liste__ajoute_element;Intros;
-    Cut (abst_est_element x l)= true \/ (abst_est_element x l)=false.
-    2:Elim (abst_est_element x l);Simpl.
-    2:Left;Trivial.
-    2:Right;Trivial.
-    Intro;Elim H0;Intro.
-    Rewrite H1;Assumption.
-    Rewrite H1;Unfold abst_bien_formee;Simpl.
-    Apply andb_true_intro2.
-    Rewrite H1;Simpl;Trivial.
-    Assumption.
+    coq proof {*
+      Unfold abst_ajoute_element liste__ajoute_element;Intros;
+      Cut (abst_est_element x l)= true \/ (abst_est_element x l)=false.
+      2:Elim (abst_est_element x l);Simpl.
+      2:Left;Trivial.
+      2:Right;Trivial.
+      Intro;Elim H0;Intro.
+      Rewrite H1;Assumption.
+      Rewrite H1;Unfold abst_bien_formee;Simpl.
+      Apply andb_true_intro2.
+      Rewrite H1;Simpl;Trivial.
+      Assumption.
     *};
 
   let rec remove_element (x in A, l in Self) in Self =
      match l with
-      | [ ] -> [ ]
-      | y :: l ->
-         if A!equal (x, y) then l
-         else y :: !remove_element (x, l) ;
+     | [] -> []
+     | y :: l ->
+       if A!equal (x, y) then l
+       else y :: !remove_element (x, l) ;
 
   let diff (e1 in Self, e2 in Self) =
     let rec aux (accu, l) =
-       match l with
-         | [ ] -> accu
-         | x :: l -> aux (!remove_element (x, accu), l) in
+      match l with
+      | [] -> accu
+      | x :: l -> aux (!remove_element (x, accu), l) in
     aux (e1, e2) ;
 
   let raw_cardinal (l in Self) in int =
-     let rec aux (l, x) =
-        match l with
-        | [ ] -> x
-        |  _ :: l -> aux (l, x + 1) in
-     aux (l, 0) ;
+    let rec aux (l, x) =
+      match l with
+      | [] -> x
+      |  _ :: l -> aux (l, x + 1) in
+    aux (l, 0) ;
 
    let cardinal (l in Self) in int =
-      if !bien_formee (l) then !raw_cardinal (l)
-      else foc_error ("internal error") ;
+     if !bien_formee (l) then !raw_cardinal (l)
+     else foc_error ("internal error") ;
 
 (*
 (*   theorem longueur_vide: self!longueur(self!vide) = 0
@@ -678,74 +694,72 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
           EApply Hrec.
          *}; *)
 *)
-  (* Modif : en *)
-  let cons (x in A, l in Self) in Self = x :: l ;
+   (* Modif : en *)
+   let cons (x in A, l in Self) in Self = x :: l ;
 
-local theorem cons_bien_formee:
-  all x in A, all l in Self,
-    ~ (!est_element (x, l)) -> !bien_formee (l) -> !bien_formee (!cons (x, l))
-   proof:
-     (* [Unsure - à laisser ?]
-        def:bien_formee; *)
-   coq proof
-     {*
-     Unfold abst_bien_formee;Simpl;Intros.
-     Apply andb_true_intro2.
-     Generalize H;Elim (abst_est_element x l);Simpl;Intros.
-     Elim H1;Trivial.
-     Trivial.
-     Assumption.
-     *};
+   local theorem cons_bien_formee:
+     all x in A, all l in Self,
+     ~ (!est_element (x, l)) -> !bien_formee (l) -> !bien_formee (!cons (x, l))
+     proof:
+       (* [Unsure - à laisser ?]
+          def: bien_formee; *)
+       coq proof {*
+         Unfold abst_bien_formee;Simpl;Intros.
+         Apply andb_true_intro2.
+         Generalize H;Elim (abst_est_element x l);Simpl;Intros.
+         Elim H1;Trivial.
+         Trivial.
+         Assumption.
+       *};
 
    local theorem cons_bien_formee_elim:
      all x in A, all l in Self,
-       !bien_formee (!cons (x, l)) ->
-         (!bien_formee (l) /\ ~ (!est_element (x, l)))
-   proof:
-     (* [Unsure - à laisser ?]
-        def: bien_formee cons; *)
-   coq proof
-   {* Intros x l; Unfold abst_bien_formee abst_cons liste__cons; Simpl.
-   Split; EAuto with my_bool.
-   *} ;
+     !bien_formee (!cons (x, l)) ->
+     (!bien_formee (l) /\ ~ (!est_element (x, l)))
+     proof:
+       (* [Unsure - à laisser ?]
+          def: bien_formee cons; *)
+       coq proof {*
+         Intros x l; Unfold abst_bien_formee abst_cons liste__cons; Simpl.
+         Split; EAuto with my_bool.
+       *};
 
    local theorem cons_elem:
-   all x y in A, all l in Self,
-    !est_element (y, !cons (x, l)) -> ~ (A!equal (x, y)) -> !est_element (y, l)
-   proof:
-      (* [Unsure - à laisser ?]
-         def: cons est_element; *)
-     coq proof
-     {*
-     Intros x y l;
-     Unfold abst_cons liste__cons; Simpl.
-     BoolElimNamed '(setoid_equal self_a y x) HBtrue HBfalse.
-     Intros H_ Habs; Absurd (Is_true (setoid_equal self_a x y));
-       Auto with setoid.
-     Trivial.
-     *};
+     all x y in A, all l in Self,
+     !est_element (y, !cons (x, l)) -> ~ (A!equal (x, y)) -> !est_element (y, l)
+     proof:
+        (* [Unsure - à laisser ?]
+           def: cons est_element; *)
+       coq proof {*
+         Intros x y l;
+         Unfold abst_cons liste__cons; Simpl.
+         BoolElimNamed '(setoid_equal self_a y x) HBtrue HBfalse.
+         Intros H_ Habs; Absurd (Is_true (setoid_equal self_a x y));
+           Auto with setoid.
+         Trivial.
+       *};
 
   local theorem cons_elem2:
     all x in A, all l in Self, !est_element (x, !cons (x, l))
-  proof:
-     (* [Unsure - à laisser ?]
-        def: est_element cons; *)
-   coq proof
-    {* Intros x l; Unfold abst_est_element; Simpl;
-       Replace (setoid_equal self_a x x) with true; Simpl; Trivial.
-       Symmetry; Apply Is_true_eq_true; Auto with setoid.
-    *};
+    proof:
+      (* [Unsure - à laisser ?]
+         def: est_element cons; *)
+      coq proof {*
+        Intros x l; Unfold abst_est_element; Simpl;
+        Replace (setoid_equal self_a x x) with true; Simpl; Trivial.
+        Symmetry; Apply Is_true_eq_true; Auto with setoid.
+      *};
 
   local theorem cons_elem3:
     all x y in A, all l in Self,
-      !est_element (y, l) -> !est_element (y, !cons (x, l))
-   proof:
-    (* [Unsure - à laisser ?]
-       def: cons est_element; *)
-   coq proof
-   {*  Intros x y l Hyelem; Unfold abst_est_element; Simpl.
-       Case (setoid_equal ? y x); Simpl; Trivial.
-    *};
+    !est_element (y, l) -> !est_element (y, !cons (x, l))
+    proof:
+      (* [Unsure - à laisser ?]
+         def: cons est_element; *)
+      coq proof {*
+        Intros x y l Hyelem; Unfold abst_est_element; Simpl.
+         Case (setoid_equal ? y x); Simpl; Trivial.
+      *};
 
   local theorem partition:
     all x in A, all e1 e2 in Self,
@@ -766,35 +780,33 @@ local theorem cons_bien_formee:
 
   let rec union (e1 in Self, e2 in Self) =
     match e1 with
-     | [ ] -> e2
-     | x :: l -> !union (l, !ajoute_element (x, e2)) ;
+    | [] -> e2
+    | x :: l -> !union (l, !ajoute_element (x, e2)) ;
 
   theorem bien_formee_union:
     all e1 e2 in Self,
-      !bien_formee (e1) -> !bien_formee (e2) -> !bien_formee (!union (e1, e2))
+    !bien_formee (e1) -> !bien_formee (e2) -> !bien_formee (!union (e1, e2))
     proof:
-    (* [Unsure - à laisser ?]
-       def: union bien_formee ;
-       decl : bien_formee_ajoute cons_bien_formee_elim; *)
-   coq proof
-    {*
-    Induction e1.
-    Simpl;Unfold abst_union;Simpl;Intros;Assumption.
-    Simpl;Unfold abst_union;Simpl;Intros.
-    Apply H.
-    Elim (abst_cons_bien_formee_elim a l);Intros.
-    Assumption.
-    Assumption.
-    Apply abst_bien_formee_ajoute.
-    Assumption.
-    *};
+      (* [Unsure - à laisser ?]
+         def: union bien_formee ;
+         decl : bien_formee_ajoute cons_bien_formee_elim; *)
+      coq proof {*
+        Induction e1.
+        Simpl;Unfold abst_union;Simpl;Intros;Assumption.
+        Simpl;Unfold abst_union;Simpl;Intros.
+        Apply H.
+        Elim (abst_cons_bien_formee_elim a l);Intros.
+        Assumption.
+        Assumption.
+        Apply abst_bien_formee_ajoute.
+        Assumption.
+      *};
 
   proof of union_spec =
     (* [Unsure - à laisser ?]
        def : est_element union;
        decl : ajoute_spec equal_congr_est_element; *)
-   coq proof
-      {*
+    coq proof {*
       Unfold abst_union abst_est_element;Induction s1;Simpl;Intros.
 
       Split.
@@ -842,74 +854,74 @@ local theorem cons_bien_formee:
       Apply H1.
       Right;Elim (abst_ajoute_spec a x s2);Intros.
       Apply H5;Right;Assumption.
-      *};
+    *};
 
   let inter (e1 in Self, e2 in Self)=
     let rec aux (accu in Self, e) =
       match e with
-        | [ ] -> accu
-        | x :: l -> if !est_element (x, e2) then
-             aux (!ajoute_element (x, accu), l)
-           else aux (accu, l) in
+      | [] -> accu
+      | x :: l ->
+        if !est_element (x, e2)
+        then aux (!ajoute_element (x, accu), l)
+        else aux (accu, l) in
     aux (!vide, e1) ;
 
    proof of inter_spec =
-      (* [Unsure - à laisser ?]
-         def : inter cons vide;
-         decl : ajoute_spec equal_congr_est_element cons_elem vide_spec
-           cons_elem2 cons_elem3; *)
-   coq proof
-      {*
-      Unfold abst_inter.
-      Intros s1 s2 x.
-      Split.
-      Generalize
-      ([H:(Is_true(abst_est_element x abst_vide))]
-       (False_ind ((Is_true (abst_est_element x s1)) /\ (Is_true
-      (abst_est_element x s2)))  (abst_vide_spec x H))).
-      Generalize abst_vide.
-      Elim s1.
+     (* [Unsure - à laisser ?]
+        def : inter cons vide;
+        decl : ajoute_spec equal_congr_est_element cons_elem vide_spec
+          cons_elem2 cons_elem3; *)
+     coq proof {*
+       Unfold abst_inter.
+       Intros s1 s2 x.
+       Split.
+       Generalize
+       ([H:(Is_true(abst_est_element x abst_vide))]
+        (False_ind ((Is_true (abst_est_element x s1)) /\ (Is_true
+       (abst_est_element x s2)))  (abst_vide_spec x H))).
+       Generalize abst_vide.
+       Elim s1.
 
-      Simpl;Intros;Split;Intros.
-      Elim (H H0);Intros.
-      Elim H1.
-      Elim (H H0); Trivial.
+       Simpl;Intros;Split;Intros.
+       Elim (H H0);Intros.
+       Elim H1.
+       Elim (H H0); Trivial.
 
-      Simpl. Intros a l Hrec accu Haccu. BoolElimNamed '(abst_est_element a s2) HBtrue HBfalse.
-      Intros Hxelem. BoolElimNamed '(setoid_equal ? x a) Heq Hneq.
-      Split; Trivial. Apply (abst_equal_congr_est_element s2 a x); Auto with setoid.
-      Elim (Hrec (abst_ajoute_element a accu)); Auto.
-      Intros Hxelem2; Elim (abst_ajoute_spec a x accu).
-      Intros H1 H2; Elim (H1 Hxelem2); Trivial; Clear H1 H2.
-      Intros Habs; Absurd (Is_true (setoid_equal ? x a)); Auto with setoid.
-      Rewrite (IsTrue_eq_false ? Hneq) in Haccu; Assumption.
-      BoolElimNamed '(setoid_equal ? x a) Heq Hneq.
-      Intros Hxelem; Split; Trivial. Elim (Hrec accu);  Trivial.
-      Intros Habs; Absurd (Is_true (abst_est_element a s2)); Trivial.
-      Apply (abst_equal_congr_est_element s2 x a); Elim (Haccu Habs); Trivial.
-      Apply Hrec. Rewrite (IsTrue_eq_false ? Hneq) in Haccu. Trivial.
-      Apply proj1 with
-      (Is_true (abst_est_element x abst_vide)) ->
-        (Is_true (abst_est_element x
-          (liste__inter abst_vide abst_est_element abst_ajoute_element s1 s2))).
-      Generalize abst_vide.
-      Elim s1; Simpl. Intros accu; Split; Trivial.
-      Intros H; Elim H; Intros F; Contradiction.
-      Intros a l Hrec. Intros accu. BoolElimNamed '(abst_est_element a s2) HBtrue HBfalse;
-      BoolElimNamed '(setoid_equal ? x a) Heq Hneq.
-      Split; Intros H_; Elim (Hrec (abst_ajoute_element a accu)); Intros H1 H2;
-      Apply H2; Apply (abst_equal_congr_est_element(abst_ajoute_element a accu)a x);
-      Auto with setoid; Elim (abst_ajoute_spec a a accu); Intros H3 H4; Apply  H4;
-      Left;  Trivial with setoid.
-      Split; Intros Hxelem; Elim (Hrec (abst_ajoute_element a accu)); Intros H1 H2.
-      Exact (H1 Hxelem). Apply H2. Elim (abst_ajoute_spec a x accu); Intros H3 H4;
-      Apply H4; Right; Trivial.
-      Split. Intros Habs; Elim Habs; Intros H1 H2;
-      Absurd (Is_true (abst_est_element a s2)); Trivial.
-      Apply (abst_equal_congr_est_element s2 x a ); Auto with setoid.
-      Elim (Hrec accu); Trivial. Exact (Hrec accu).
-
-      *};
+       Simpl. Intros a l Hrec accu Haccu.
+         BoolElimNamed '(abst_est_element a s2) HBtrue HBfalse.
+       Intros Hxelem. BoolElimNamed '(setoid_equal ? x a) Heq Hneq.
+       Split; Trivial. Apply (abst_equal_congr_est_element s2 a x); Auto with setoid.
+       Elim (Hrec (abst_ajoute_element a accu)); Auto.
+       Intros Hxelem2; Elim (abst_ajoute_spec a x accu).
+       Intros H1 H2; Elim (H1 Hxelem2); Trivial; Clear H1 H2.
+       Intros Habs; Absurd (Is_true (setoid_equal ? x a)); Auto with setoid.
+       Rewrite (IsTrue_eq_false ? Hneq) in Haccu; Assumption.
+       BoolElimNamed '(setoid_equal ? x a) Heq Hneq.
+       Intros Hxelem; Split; Trivial. Elim (Hrec accu);  Trivial.
+       Intros Habs; Absurd (Is_true (abst_est_element a s2)); Trivial.
+       Apply (abst_equal_congr_est_element s2 x a); Elim (Haccu Habs); Trivial.
+       Apply Hrec. Rewrite (IsTrue_eq_false ? Hneq) in Haccu. Trivial.
+       Apply proj1 with
+       (Is_true (abst_est_element x abst_vide)) ->
+         (Is_true (abst_est_element x
+           (liste__inter abst_vide abst_est_element abst_ajoute_element s1 s2))).
+       Generalize abst_vide.
+       Elim s1; Simpl. Intros accu; Split; Trivial.
+       Intros H; Elim H; Intros F; Contradiction.
+       Intros a l Hrec. Intros accu. BoolElimNamed '(abst_est_element a s2) HBtrue HBfalse;
+       BoolElimNamed '(setoid_equal ? x a) Heq Hneq.
+       Split; Intros H_; Elim (Hrec (abst_ajoute_element a accu)); Intros H1 H2;
+       Apply H2; Apply (abst_equal_congr_est_element(abst_ajoute_element a accu)a x);
+       Auto with setoid; Elim (abst_ajoute_spec a a accu); Intros H3 H4; Apply  H4;
+       Left;  Trivial with setoid.
+       Split; Intros Hxelem; Elim (Hrec (abst_ajoute_element a accu)); Intros H1 H2.
+       Exact (H1 Hxelem). Apply H2. Elim (abst_ajoute_spec a x accu); Intros H3 H4;
+       Apply H4; Right; Trivial.
+       Split. Intros Habs; Elim Habs; Intros H1 H2;
+       Absurd (Is_true (abst_est_element a s2)); Trivial.
+       Apply (abst_equal_congr_est_element s2 x a ); Auto with setoid.
+       Elim (Hrec accu); Trivial. Exact (Hrec accu).
+     *};
 (*
 Unfold abst_inter.
 Intros s1 s2 x.
@@ -932,367 +944,362 @@ theorem bien_formee_inter:
   all e1 e2 in Self,
     !bien_formee (e1) -> !bien_formee (e2) -> !bien_formee (!inter (e1, e2))
   proof:
-   (* [Unsure - à laisser ?]
-      def : bien_formee ; *)
-   assumed {* Because temporarily unvailable in new version *} ;
-
+    (* [Unsure - à laisser ?]
+       def : bien_formee ; *)
+    assumed {* Because temporarily unvailable in new version *};
 
    theorem remove_element_spec:
      all x y in A, all e in Self,
-       !est_element (y, e) ->
-         (A!equal (x, y) \/ !est_element (y, !remove_element (x, e)))
-   proof:
-     (* [Unsure - à laisser ?]
-        def : remove_element cons vide;
-        decl : equal_congr_est_element  cons_elem2
-        cons_elem3; *)
-   coq proof
-      {*
-      Unfold abst_remove_element;Induction e;Simpl;Intros.
+     !est_element (y, e) ->
+       (A!equal (x, y) \/ !est_element (y, !remove_element (x, e)))
+     proof:
+       (* [Unsure - à laisser ?]
+          def : remove_element cons vide;
+          decl : equal_congr_est_element  cons_elem2
+          cons_elem3; *)
+       coq proof {*
+         Unfold abst_remove_element;Induction e;Simpl;Intros.
 
-      Elim H.
+         Elim H.
 
-      Cut (setoid_equal self_a x a)=true \/ (setoid_equal self_a x a)=false.
-      2:Elim (setoid_equal self_a x a).
-      2:Left;Trivial.
-      2:Right;Trivial.
-      Intro HC;Elim HC;Intro.
+         Cut (setoid_equal self_a x a)=true \/ (setoid_equal self_a x a)=false.
+         2:Elim (setoid_equal self_a x a).
+         2:Left;Trivial.
+         2:Right;Trivial.
+         Intro HC;Elim HC;Intro.
 
-      Rewrite H1.
-      Cut (setoid_equal self_a y a)=true \/ (setoid_equal self_a y a)=false.
-      2:Elim (setoid_equal self_a y a).
-      2:Left;Trivial.
-      2:Right;Trivial.
-      Intro HCC;Elim HCC;Intro.
+         Rewrite H1.
+         Cut (setoid_equal self_a y a)=true \/ (setoid_equal self_a y a)=false.
+         2:Elim (setoid_equal self_a y a).
+         2:Left;Trivial.
+         2:Right;Trivial.
+         Intro HCC;Elim HCC;Intro.
 
-      Left;Apply (setoid_equal_transitive self_a) with a.
-      Rewrite H1;Trivial.
-      Apply (setoid_equal_symmetric self_a);Rewrite H2;Trivial.
-      Rewrite H2 in H0;Right;Assumption.
-      Rewrite H1.
-      Cut (setoid_equal self_a y a)=true \/ (setoid_equal self_a y a)=false.
-      2:Elim (setoid_equal self_a y a).
-      2:Left;Trivial.
-      2:Right;Trivial.
-      Intro HCC;Elim HCC;Intro.
-      Right;Apply abst_equal_congr_est_element with a.
-      Apply (setoid_equal_symmetric self_a);Rewrite H2;Trivial.
-      Generalize abst_cons_elem2;Unfold abst_cons liste__cons;Intro HU;Apply HU.
-      Rewrite H2 in H0;Elim (H H0);Intro.
-      Left;Assumption.
-      Right;Generalize abst_cons_elem3;
-      Unfold abst_cons liste__cons;Intro HU;Apply HU.
-      Assumption.
-      *};
+         Left;Apply (setoid_equal_transitive self_a) with a.
+         Rewrite H1;Trivial.
+         Apply (setoid_equal_symmetric self_a);Rewrite H2;Trivial.
+         Rewrite H2 in H0;Right;Assumption.
+         Rewrite H1.
+         Cut (setoid_equal self_a y a)=true \/ (setoid_equal self_a y a)=false.
+         2:Elim (setoid_equal self_a y a).
+         2:Left;Trivial.
+         2:Right;Trivial.
+         Intro HCC;Elim HCC;Intro.
+         Right;Apply abst_equal_congr_est_element with a.
+         Apply (setoid_equal_symmetric self_a);Rewrite H2;Trivial.
+         Generalize abst_cons_elem2;Unfold abst_cons liste__cons;Intro HU;Apply HU.
+         Rewrite H2 in H0;Elim (H H0);Intro.
+         Left;Assumption.
+         Right;Generalize abst_cons_elem3;
+         Unfold abst_cons liste__cons;Intro HU;Apply HU.
+         Assumption.
+       *};
 
 
   theorem remove_element_spec2:
     all x y in A, all e in Self,
-      !est_element (y, !remove_element (x, e)) ->
-        (A!different (x, y) /\ !est_element (y, e))
-     proof:
-        (* [Unsure - à laisser ?]
-           def : remove_element cons vide;
-           decl : equal_congr_est_element  cons_elem2
-           cons_elem3; *)
-     assumed {* Because temporarily unvailable in new version *} ;
+    !est_element (y, !remove_element (x, e)) ->
+    (A!different (x, y) /\ !est_element (y, e))
+    proof:
+      (* [Unsure - à laisser ?]
+         def : remove_element cons vide;
+         decl : equal_congr_est_element  cons_elem2
+         cons_elem3; *)
+      assumed {* Because temporarily unvailable in new version *};
 
 
   theorem bien_formee_remove_element:
     all x in A, all e in Self,
-      !bien_formee (e)-> !bien_formee (!remove_element (x, e))
-  proof: assumed {* Because todo *} ;
+    !bien_formee (e)-> !bien_formee (!remove_element (x, e))
+    proof: assumed {* Because todo *};
 
 
   theorem bien_formee_diff:
     all e1 e2 in Self,
-      !bien_formee (e1) -> !bien_formee (e2) -> !bien_formee (!diff (e1, e2))
-  proof: assumed {* Because todo *} ;
+    !bien_formee (e1) -> !bien_formee (e2) -> !bien_formee (!diff (e1, e2))
+    proof: assumed {* Because todo *};
 
-  proof of diff_spec = assumed {* Because todo *} ;
-
+  proof of diff_spec = assumed {* Because todo *};
 
   proof of vide_card =
-     (* [Unsure - à laisser ?]
-        def: vide cardinal raw_cardinal;
-        decl: bien_formee_vide; *)
-     coq proof
-      {*
-         Unfold abst_cardinal liste__cardinal.
-         Replace (abst_bien_formee abst_vide) with true.
-         Cbv Beta Zeta Iota Delta -[__g_base_eq_ Is_true].
-         Exact (beq_refl ? `0`).
-         Symmetry; Apply Is_true_eq_true; Trivial.
-       *};
-
-  proof of singleton_card =
-     (* [Unsure - à laisser ?]
-        def: singleton cardinal raw_cardinal;
-        decl: bien_formee_singleton; *)
-     coq proof
-      {* Intros x.
-         Unfold abst_cardinal liste__cardinal.
-        Replace (abst_bien_formee (abst_singleton x)) with true.
-        Cbv Beta Zeta Iota Delta -[__g_base_eq_ Is_true].
-        Exact (beq_refl ? `1`).
-        Symmetry; Apply Is_true_eq_true; Trivial.
+    (* [Unsure - à laisser ?]
+       def: vide cardinal raw_cardinal;
+       decl: bien_formee_vide; *)
+    coq proof {*
+      Unfold abst_cardinal liste__cardinal.
+      Replace (abst_bien_formee abst_vide) with true.
+      Cbv Beta Zeta Iota Delta -[__g_base_eq_ Is_true].
+      Exact (beq_refl ? `0`).
+      Symmetry; Apply Is_true_eq_true; Trivial.
     *};
 
+  proof of singleton_card =
+    (* [Unsure - à laisser ?]
+       def: singleton cardinal raw_cardinal;
+       decl: bien_formee_singleton; *)
+    coq proof {*
+      Intros x.
+      Unfold abst_cardinal liste__cardinal.
+      Replace (abst_bien_formee (abst_singleton x)) with true.
+      Cbv Beta Zeta Iota Delta -[__g_base_eq_ Is_true].
+      Exact (beq_refl ? `1`).
+      Symmetry; Apply Is_true_eq_true; Trivial.
+   *};
+
    local theorem cons_card:
-     all x in A, all e in Self,
-       !cardinal (!cons (x, e)) = !cardinal (e) + 1
+   all x in A, all e in Self,
+   !cardinal (!cons (x, e)) = !cardinal (e) + 1
    proof:
-   (* [Unsure - à laisser ?]
-      def: cons cardinal raw_cardinal; *)
-   coq proof
-      {*  Intros x e; Unfold abst_cardinal liste__cardinal.
-        Case (abst_bien_formee (abst_cons x e)).
+     (* [Unsure - à laisser ?]
+        def: cons cardinal raw_cardinal; *)
+     coq proof {*
+       Intros x e; Unfold abst_cardinal liste__cardinal.
+       Case (abst_bien_formee (abst_cons x e)).
        Case (abst_bien_formee e).
        Unfold abst_cons liste__cons abst_raw_cardinal liste__raw_cardinal.
        Generalize `0`. Elim e.
        Intros z; Apply beq_refl.
        Intros y lo Hrec z1; EApply Hrec.
        Apply (bottom_properties ?
-      ([z](Is_true (__g_base_eq_ int__t (abst_raw_cardinal (abst_cons x e))
-            (__g_int_plus z `1`))))).
-      Apply (bottom_properties ? [z](Is_true
-           (__g_base_eq_ int__t z
-             (__g_int_plus
-               (if (abst_bien_formee e)
-                then (abst_raw_cardinal e)
-                else (__g_foc_error_ int__t string_foo)) `1`)))).
-      *};
+          ([z](Is_true (__g_base_eq_ int__t (abst_raw_cardinal (abst_cons x e))
+              (__g_int_plus z `1`))))).
+       Apply (bottom_properties ? [z](Is_true
+            (__g_base_eq_ int__t z
+              (__g_int_plus
+                (if (abst_bien_formee e)
+                 then (abst_raw_cardinal e)
+                 else (__g_foc_error_ int__t string_foo)) `1`)))).
+     *};
 
   theorem remove_element_card:
     all x in A, all e in Self,
-      !est_element (x, e) ->
-        !cardinal (e) = !cardinal (!remove_element (x, e)) + 1
-     proof:
-       (* [Unsure - à laisser ?]
-          def: remove_element cardinal raw_cardinal vide cons;
-          decl: vide_spec2 equal_reflexive cons_card cons_elem; *)
-     coq proof
-       {*    Intros x; Induction e; Simpl.
-         Intros Habs; Absurd (Is_true(abst_equal Nil abst_vide)).
-         Unfold not; Intros Habs2; Absurd (Is_true (abst_est_element x Nil)).
-        Elim (abst_vide_spec2 Nil); Auto.
-         Trivial.
-         Unfold abst_vide liste__vide; Trivial.
-         Intros a l Hrec Hxelem.
-         BoolElimNamed '(setoid_equal self_a x a) HBtrue HBfalse.
-         Fold (liste__cons a l); Trivial.
-         Apply (beq_trans ? (abst_cardinal (Cons_ self_a a l))
-            (__g_int_plus (abst_cardinal l) `1`) (__g_int_plus
-               (abst_cardinal (Cons_ self_a a (abst_remove_element x l))) `1`)).
-         Fold (liste__cons a l); Trivial.
-         Unfold __g_base_eq_. Apply EQ_base_eq.
-         Apply Zplus_simpl.
-         Unfold __g_base_eq_ in Hrec.
-         Apply (decidable ? ? ?
-             (Z_eq_dec (abst_cardinal l)
-               (abst_cardinal (Cons_ self_a a (abst_remove_element x l))))).
-         Apply (beq_trans ? (abst_cardinal l)
-             (__g_int_plus (abst_cardinal (abst_remove_element x l)) `1`)
-                (abst_cardinal (Cons_ self_a a (abst_remove_element x l)))); Auto.
-         Apply Hrec.
-         Apply (abst_cons_elem a x l); Trivial.
-         Unfold not; Intros Habs; Absurd (Is_true (setoid_equal self_a x a));
-         Auto with setoid.
-         Apply beq_symm.
-         Fold (liste__cons a (abst_remove_element x l)); Apply abst_cons_card.
-         Trivial.
-      *};
+    !est_element (x, e) ->
+    !cardinal (e) = !cardinal (!remove_element (x, e)) + 1
+    proof:
+      (* [Unsure - à laisser ?]
+         def: remove_element cardinal raw_cardinal vide cons;
+         decl: vide_spec2 equal_reflexive cons_card cons_elem; *)
+    coq proof {*
+      Intros x; Induction e; Simpl.
+      Intros Habs; Absurd (Is_true(abst_equal Nil abst_vide)).
+      Unfold not; Intros Habs2; Absurd (Is_true (abst_est_element x Nil)).
+      Elim (abst_vide_spec2 Nil); Auto.
+      Trivial.
+      Unfold abst_vide liste__vide; Trivial.
+      Intros a l Hrec Hxelem.
+      BoolElimNamed '(setoid_equal self_a x a) HBtrue HBfalse.
+      Fold (liste__cons a l); Trivial.
+      Apply (beq_trans ? (abst_cardinal (Cons_ self_a a l))
+         (__g_int_plus (abst_cardinal l) `1`) (__g_int_plus
+            (abst_cardinal (Cons_ self_a a (abst_remove_element x l))) `1`)).
+      Fold (liste__cons a l); Trivial.
+      Unfold __g_base_eq_. Apply EQ_base_eq.
+      Apply Zplus_simpl.
+      Unfold __g_base_eq_ in Hrec.
+      Apply (decidable ? ? ?
+          (Z_eq_dec (abst_cardinal l)
+            (abst_cardinal (Cons_ self_a a (abst_remove_element x l))))).
+      Apply (beq_trans ? (abst_cardinal l)
+          (__g_int_plus (abst_cardinal (abst_remove_element x l)) `1`)
+             (abst_cardinal (Cons_ self_a a (abst_remove_element x l)))); Auto.
+      Apply Hrec.
+      Apply (abst_cons_elem a x l); Trivial.
+      Unfold not; Intros Habs; Absurd (Is_true (setoid_equal self_a x a));
+      Auto with setoid.
+      Apply beq_symm.
+      Fold (liste__cons a (abst_remove_element x l)); Apply abst_cons_card.
+      Trivial.
+    *};
 
    proof of incl_card =
-   (* [Unsure - à laisser ?]
-      def: cardinal sous_ensemble raw_cardinal cons vide;
-      decl: cons_card bien_formee_vide
-      cons_bien_formee_elim vide_spec sous_ensemble_spec
-      cons_elem2 cons_elem equal_congr_est_element
-      remove_element remove_element_card bien_formee_remove_element
-      remove_element_spec2; *)
-   coq proof
-{*
-   Intros e1 e2.
-   Unfold abst_cardinal liste__cardinal.
-   Generalize e1; Clear e1; Elim e2; Clear e2.
-   Induction e1. Intros H_; Clear H_;
-   BoolElimNamed '(abst_bien_formee (Nil_ self_a)) HBtrue HBfalse.
-   Apply int_le_refl; Apply beq_refl.
-   Absurd (Is_true (abst_bien_formee (Nil_ self_a))); Auto.
-   Intros a l Hrec Habs;  Absurd (Is_true (abst_est_element a abst_vide));
-   Trivial.
-   Intros b l2 Hrec.
-   Induction e1.
-   Intros H_. BoolElimNamed '(abst_bien_formee (Cons b l2)) HBtrue HBfalse.
-   BoolElimNamed '(abst_bien_formee Nil) HNil_bf HNil_bff.
-   Apply
-    (int_le_trans  (abst_raw_cardinal Nil) (abst_raw_cardinal l2)
+     (* [Unsure - à laisser ?]
+        def: cardinal sous_ensemble raw_cardinal cons vide;
+        decl: cons_card bien_formee_vide
+        cons_bien_formee_elim vide_spec sous_ensemble_spec
+        cons_elem2 cons_elem equal_congr_est_element
+        remove_element remove_element_card bien_formee_remove_element
+        remove_element_spec2; *)
+     coq proof {*
+       Intros e1 e2.
+       Unfold abst_cardinal liste__cardinal.
+       Generalize e1; Clear e1; Elim e2; Clear e2.
+       Induction e1. Intros H_; Clear H_;
+       BoolElimNamed '(abst_bien_formee (Nil_ self_a)) HBtrue HBfalse.
+       Apply int_le_refl; Apply beq_refl.
+       Absurd (Is_true (abst_bien_formee (Nil_ self_a))); Auto.
+       Intros a l Hrec Habs;  Absurd (Is_true (abst_est_element a abst_vide));
+       Trivial.
+       Intros b l2 Hrec.
+       Induction e1.
+       Intros H_. BoolElimNamed '(abst_bien_formee (Cons b l2)) HBtrue HBfalse.
+       BoolElimNamed '(abst_bien_formee Nil) HNil_bf HNil_bff.
+       Apply
+        (int_le_trans  (abst_raw_cardinal Nil) (abst_raw_cardinal l2)
+           (abst_raw_cardinal (Cons b l2))).
+       Generalize (Hrec Nil); Intros Hrec2.
+       IsTrueRewHyp HNil_bf Hrec2. ReplaceIn '(abst_bien_formee l2) true Hrec2.
+       Auto. Symmetry; Apply Is_true_eq_true.
+       Elim (abst_cons_bien_formee_elim b l2); Trivial.
+       Replace (abst_raw_cardinal (Cons b l2)) with `(abst_raw_cardinal l2) + 1`.
+       Unfold __g_int_leq; Apply dec_IsTrue. EAuto with zarith.
+       Symmetry; EApply (decidable ? ? ?
+           (Z_eq_dec(abst_raw_cardinal(Cons_ self_a b l2))
+             (__g_int_plus (abst_raw_cardinal l2) `1`))).
+       Apply (beq_trans ? (abst_raw_cardinal (Cons_ self_a b l2))
+          (abst_cardinal (Cons b l2)) (__g_int_plus (abst_raw_cardinal l2) `1`)).
+       Unfold abst_cardinal liste__cardinal; IsTrueRew HBtrue.
+       Apply beq_refl.
+       Apply (beq_trans ? (abst_cardinal (Cons b l2))
+          (__g_int_plus (abst_cardinal l2) `1`)
+          (__g_int_plus  (abst_raw_cardinal l2) `1`)).
+       Fold (liste__cons b l2);  Apply abst_cons_card.
+       Unfold abst_cardinal liste__cardinal;
+       Replace (abst_bien_formee l2) with true.
+       Apply beq_refl.
+       Symmetry; Apply Is_true_eq_true;
+       Elim (abst_cons_bien_formee_elim ? ? HBtrue); Trivial.
+       Absurd (Is_true (abst_bien_formee (Nil_ self_a))); Auto.
+       Apply (bottom_properties ?
+           [x](Is_true (__g_int_leq
+               (if (abst_bien_formee (Nil_ self_a))
+                then (abst_raw_cardinal (Nil_ self_a))
+                else (__g_foc_error_ int__t string_foo)) x))).
+       Intros a l Hrec2. Clear Hrec2.
+       BoolElimNamed '(abst_bien_formee (Cons_ self_a a l)) He1bf He1nbf.
+       BoolElimNamed '(abst_bien_formee (Cons_ self_a b l2)) He2bf He2nbf.
+       Intros Hsousens. Elim (Sumbool.sumbool_of_bool
+         (abst_est_element b (Cons a l))); Intros Hbelem; [Replacetrue|Replacefalse].
+       Generalize (Hrec (abst_remove_element b (Cons a l))); Intros Hrec2.
+       Apply (int_le_trans (abst_raw_cardinal (Cons a l))
+       (__g_int_plus (abst_raw_cardinal (abst_remove_element b (Cons a l))) `1`)
        (abst_raw_cardinal (Cons b l2))).
-   Generalize (Hrec Nil); Intros Hrec2.
-   IsTrueRewHyp HNil_bf Hrec2. ReplaceIn '(abst_bien_formee l2) true Hrec2.
-   Auto. Symmetry; Apply Is_true_eq_true.
-   Elim (abst_cons_bien_formee_elim b l2); Trivial.
-   Replace (abst_raw_cardinal (Cons b l2)) with `(abst_raw_cardinal l2) + 1`.
-   Unfold __g_int_leq; Apply dec_IsTrue. EAuto with zarith.
-   Symmetry; EApply (decidable ? ? ?
-       (Z_eq_dec(abst_raw_cardinal(Cons_ self_a b l2))
-         (__g_int_plus (abst_raw_cardinal l2) `1`))).
-   Apply (beq_trans ? (abst_raw_cardinal (Cons_ self_a b l2))
-      (abst_cardinal (Cons b l2)) (__g_int_plus (abst_raw_cardinal l2) `1`)).
-   Unfold abst_cardinal liste__cardinal; IsTrueRew HBtrue.
-   Apply beq_refl.
-   Apply (beq_trans ? (abst_cardinal (Cons b l2))
-      (__g_int_plus (abst_cardinal l2) `1`)
-      (__g_int_plus  (abst_raw_cardinal l2) `1`)).
-  Fold (liste__cons b l2);  Apply abst_cons_card.
-  Unfold abst_cardinal liste__cardinal;
-  Replace (abst_bien_formee l2) with true.
-  Apply beq_refl.
-  Symmetry; Apply Is_true_eq_true;
-  Elim (abst_cons_bien_formee_elim ? ? HBtrue); Trivial.
-  Absurd (Is_true (abst_bien_formee (Nil_ self_a))); Auto.
-  Apply (bottom_properties ?
-      [x](Is_true (__g_int_leq
-          (if (abst_bien_formee (Nil_ self_a))
-           then (abst_raw_cardinal (Nil_ self_a))
-           else (__g_foc_error_ int__t string_foo)) x))).
-Intros a l Hrec2. Clear Hrec2.
-BoolElimNamed '(abst_bien_formee (Cons_ self_a a l)) He1bf He1nbf.
-BoolElimNamed '(abst_bien_formee (Cons_ self_a b l2)) He2bf He2nbf.
-Intros Hsousens. Elim (Sumbool.sumbool_of_bool
-  (abst_est_element b (Cons a l))); Intros Hbelem; [Replacetrue|Replacefalse].
-Generalize (Hrec (abst_remove_element b (Cons a l))); Intros Hrec2.
-Apply (int_le_trans (abst_raw_cardinal (Cons a l))
-(__g_int_plus (abst_raw_cardinal (abst_remove_element b (Cons a l))) `1`)
-(abst_raw_cardinal (Cons b l2))).
-Apply int_le_refl; Generalize (abst_remove_element_card b (Cons a l) Hbelem).
-Unfold abst_cardinal liste__cardinal; IsTrueRew He1bf.
-Replace (abst_bien_formee (abst_remove_element b (Cons_ self_a a l)))
-with true; Trivial; Symmetry; Apply Is_true_eq_true; Auto.
-Apply (int_le_trans (__g_int_plus
- (abst_raw_cardinal (abst_remove_element b (Cons_ self_a a l))) `1`)
-(__g_int_plus (abst_raw_cardinal l2) `1`) (abst_raw_cardinal (Cons b l2))).
-Unfold __g_int_leq; Apply dec_IsTrue; Apply Zle_plus_plus; Trivial with zarith.
-ReplaceIn '(abst_bien_formee (abst_remove_element b (Cons a l))) true Hrec2.
-ReplaceIn '(abst_bien_formee l2) true Hrec2.
-EApply IsTrue_dec; Unfold __g_int_leq in Hrec2; Apply Hrec2.
-Elim (abst_sous_ensemble_spec (abst_remove_element b (Cons a l)) l2);
-Intros H1 H2; Apply H1; Clear H1 H2; Intros x Hxelem.
-Apply (abst_cons_elem b x l2).
-Elim (abst_sous_ensemble_spec (Cons a l) (Cons b l2)); Intros H1 H2;
-Unfold abst_cons liste__cons; Apply H2; Clear H1 H2; Auto.
-Elim (abst_remove_element_spec2 b x (Cons a l)); Auto.
-Elim (abst_remove_element_spec2 b x (Cons a l)); Trivial.
-Elim (setoid_different_not_equal ? b x); Auto.
-Symmetry; Apply Is_true_eq_true; Elim (abst_cons_bien_formee_elim b l2); Auto.
-Symmetry; Apply Is_true_eq_true; Auto.
-Apply int_le_refl; Apply beq_symm.
-Generalize (abst_cons_card b l2); Intros Hcc;
-Unfold abst_cardinal liste__cardinal abst_cons liste__cons in Hcc.
-IsTrueRewHyp He2bf Hcc; ReplaceIn '(abst_bien_formee l2) true Hcc; Trivial.
-Symmetry; Apply Is_true_eq_true; Elim (abst_cons_bien_formee_elim b l2); Auto.
-Apply (int_le_trans (abst_raw_cardinal (Cons_ self_a a l))
-(abst_raw_cardinal l2)  (abst_raw_cardinal (Cons_ self_a b l2))).
-Generalize (Hrec (Cons a l)); IsTrueRew He1bf;
-Replace (abst_bien_formee l2) with true. Intros Hr; Apply Hr.
-Elim (abst_sous_ensemble_spec (Cons a l) l2); Intros H1 H2; Apply H1;
-Clear H1 H2; Intros x Hxelem; Apply (abst_cons_elem b x l2).
-Elim (abst_sous_ensemble_spec (Cons a l) (Cons b l2)); Auto.
-Unfold not; Intros Habs; Absurd (Is_true (abst_est_element b (Cons a l)));
-EAuto with setoid.
-Symmetry; Apply Is_true_eq_true; Elim (abst_cons_bien_formee_elim b l2); Auto.
-Apply (int_le_trans (abst_raw_cardinal l2)
-(__g_int_plus (abst_raw_cardinal l2) `1`) (abst_raw_cardinal (Cons b l2))).
-Unfold __g_int_leq __g_int_plus; Apply dec_IsTrue; EAuto with zarith.
-Apply int_le_refl; Apply beq_symm;
-Generalize (abst_cons_card b l2); Intros Hcc;
-Unfold abst_cardinal liste__cardinal abst_cons liste__cons in Hcc.
-IsTrueRewHyp He2bf Hcc; ReplaceIn '(abst_bien_formee l2) true Hcc; Trivial.
-Symmetry; Apply Is_true_eq_true; Elim (abst_cons_bien_formee_elim b l2); Auto.
-Intros H_; Apply (bottom_properties ? [x](Is_true
-       (__g_int_leq (abst_raw_cardinal (Cons_ self_a a l)) x))).
-Intros H_; Apply (bottom_properties ? [x](Is_true (__g_int_leq x
-         (if (abst_bien_formee (Cons_ self_a b l2))
-          then (abst_raw_cardinal (Cons_ self_a b l2))
-          else (__g_foc_error_ int__t string_foo))))).
- *};
+       Apply int_le_refl; Generalize (abst_remove_element_card b (Cons a l) Hbelem).
+       Unfold abst_cardinal liste__cardinal; IsTrueRew He1bf.
+       Replace (abst_bien_formee (abst_remove_element b (Cons_ self_a a l)))
+       with true; Trivial; Symmetry; Apply Is_true_eq_true; Auto.
+       Apply (int_le_trans (__g_int_plus
+        (abst_raw_cardinal (abst_remove_element b (Cons_ self_a a l))) `1`)
+       (__g_int_plus (abst_raw_cardinal l2) `1`) (abst_raw_cardinal (Cons b l2))).
+       Unfold __g_int_leq; Apply dec_IsTrue; Apply Zle_plus_plus; Trivial with zarith.
+       ReplaceIn '(abst_bien_formee (abst_remove_element b (Cons a l))) true Hrec2.
+       ReplaceIn '(abst_bien_formee l2) true Hrec2.
+       EApply IsTrue_dec; Unfold __g_int_leq in Hrec2; Apply Hrec2.
+       Elim (abst_sous_ensemble_spec (abst_remove_element b (Cons a l)) l2);
+       Intros H1 H2; Apply H1; Clear H1 H2; Intros x Hxelem.
+       Apply (abst_cons_elem b x l2).
+       Elim (abst_sous_ensemble_spec (Cons a l) (Cons b l2)); Intros H1 H2;
+       Unfold abst_cons liste__cons; Apply H2; Clear H1 H2; Auto.
+       Elim (abst_remove_element_spec2 b x (Cons a l)); Auto.
+       Elim (abst_remove_element_spec2 b x (Cons a l)); Trivial.
+       Elim (setoid_different_not_equal ? b x); Auto.
+       Symmetry; Apply Is_true_eq_true; Elim (abst_cons_bien_formee_elim b l2); Auto.
+       Symmetry; Apply Is_true_eq_true; Auto.
+       Apply int_le_refl; Apply beq_symm.
+       Generalize (abst_cons_card b l2); Intros Hcc;
+       Unfold abst_cardinal liste__cardinal abst_cons liste__cons in Hcc.
+       IsTrueRewHyp He2bf Hcc; ReplaceIn '(abst_bien_formee l2) true Hcc; Trivial.
+       Symmetry; Apply Is_true_eq_true; Elim (abst_cons_bien_formee_elim b l2); Auto.
+       Apply (int_le_trans (abst_raw_cardinal (Cons_ self_a a l))
+       (abst_raw_cardinal l2)  (abst_raw_cardinal (Cons_ self_a b l2))).
+       Generalize (Hrec (Cons a l)); IsTrueRew He1bf;
+       Replace (abst_bien_formee l2) with true. Intros Hr; Apply Hr.
+       Elim (abst_sous_ensemble_spec (Cons a l) l2); Intros H1 H2; Apply H1;
+       Clear H1 H2; Intros x Hxelem; Apply (abst_cons_elem b x l2).
+       Elim (abst_sous_ensemble_spec (Cons a l) (Cons b l2)); Auto.
+       Unfold not; Intros Habs; Absurd (Is_true (abst_est_element b (Cons a l)));
+       EAuto with setoid.
+       Symmetry; Apply Is_true_eq_true; Elim (abst_cons_bien_formee_elim b l2); Auto.
+       Apply (int_le_trans (abst_raw_cardinal l2)
+       (__g_int_plus (abst_raw_cardinal l2) `1`) (abst_raw_cardinal (Cons b l2))).
+       Unfold __g_int_leq __g_int_plus; Apply dec_IsTrue; EAuto with zarith.
+       Apply int_le_refl; Apply beq_symm;
+       Generalize (abst_cons_card b l2); Intros Hcc;
+       Unfold abst_cardinal liste__cardinal abst_cons liste__cons in Hcc.
+       IsTrueRewHyp He2bf Hcc; ReplaceIn '(abst_bien_formee l2) true Hcc; Trivial.
+       Symmetry; Apply Is_true_eq_true; Elim (abst_cons_bien_formee_elim b l2); Auto.
+       Intros H_; Apply (bottom_properties ? [x](Is_true
+              (__g_int_leq (abst_raw_cardinal (Cons_ self_a a l)) x))).
+       Intros H_; Apply (bottom_properties ? [x](Is_true (__g_int_leq x
+                (if (abst_bien_formee (Cons_ self_a b l2))
+                 then (abst_raw_cardinal (Cons_ self_a b l2))
+                 else (__g_foc_error_ int__t string_foo))))).
+     *};
 
    theorem non_sous_ensemble_spec:
-     all e1 e2 in Self, ~ (!sous_ensemble (e1, e2)) <->
-       ex x in A, !est_element (x, e1) /\ ~ (!est_element (x, e2))
+   all e1 e2 in Self, ~ (!sous_ensemble (e1, e2)) <->
+   ex x in A, !est_element (x, e1) /\ ~ (!est_element (x, e2))
    proof:
      (* [Unsure - à laisser ?]
         def: sous_ensemble cons vide;
         decl: vide_spec cons_elem cons_elem2 cons_elem3
         equal_congr_est_element; *)
-   coq proof
-{*
- Intros e1 e2; Split; Elim e1; Elim e2.
- Intros Habs; Absurd (Is_true (abst_sous_ensemble Nil Nil)); Trivial.
-Intros a l Hr Habs;
-Absurd (Is_true (abst_sous_ensemble Nil (Cons a l))); Trivial.
- Intros a l H_; Exists a; Split; Auto.
-Fold (liste__cons a l); Trivial.
-Intros a2 l2 Hr1 a1 l1 Hr2.
-Opaque abst_est_element.
-Unfold abst_sous_ensemble; Simpl.
-BoolElimNamed '(abst_est_element a1 (Cons a2 l2)) HBtrue HBfalse; Simpl.
-Intros Hnss2; Elim (Hr2 Hnss2); Intros x Hx; Exists x; Split; Elim Hx; Auto.
-Fold (liste__cons a1 l1); Auto.
-Intros H_; Exists a1; Fold (liste__cons a1 l1); Auto.
-Intros Habs; Elim Habs; Intros x H1; Elim H1; Intros H2 H3; Contradiction.
-Intros a l H_ Habs; Elim Habs; Intros x H1; Elim H1; Intros H2 H3;
-Absurd (Is_true (abst_est_element x Nil)); Auto.
-Intros a l H_ H__; Unfold not; Intros Habs;
-Absurd (Is_true (abst_est_element a Nil)); Auto.
-Intros a2 l2 Hr a1 l1 Hr2 Hx.
-Unfold abst_sous_ensemble; Simpl.
-BoolElimNamed '(abst_est_element a1 (Cons a2 l2)) HBtrue HBfalse; Simpl; Auto with bool.
-Apply Hr2; Elim Hx; Intros x H1; Elim H1; Intros H2 H3; Exists x.
-Split; Trivial. Apply (abst_cons_elem a1 x l1); Trivial.
-Unfold not; Intros Heq; Absurd (Is_true(abst_est_element x(Cons a2 l2)));EAuto.
-*};
-
-   proof of include_card =
-   (* [Unsure - à laisser ?]
-      decl: incl_card sous_ensemble_spec remove_element_spec remove_element_card
-      non_sous_ensemble_spec equal_congr_est_element; *)
-   coq proof
-     {* Intros e1 e2 Hsse1e2 Hnsse2e1.
-     Elim (abst_non_sous_ensemble_spec e2 e1); Intros H1 H2; Elim (H1 Hnsse2e1);
-     Clear H1 H2; Intros x Hx.
-     Apply (int_lt_le_trans (abst_cardinal e1)
-     (__g_int_plus (abst_cardinal (abst_remove_element x e2)) `1`)
-     (abst_cardinal e2)).
-     Unfold __g_int_lt __g_int_plus; Apply dec_IsTrue.
-     Generalize (Zle_lt_reg (abst_cardinal e1)
-     (abst_cardinal (abst_remove_element x e2)) `0` `1`).
-     Rewrite <- (Zplus_n_O (abst_cardinal e1)).
-     Intros H; Apply H.  Unfold __g_int_leq in abst_incl_card.
-     Refine (IsTrue_dec (abst_incl_card e1 (abst_remove_element x e2) ?)).
-     Elim (abst_sous_ensemble_spec e1 (abst_remove_element x e2)); Intros H1 H2;
-     Apply H1; Intros z Hzelem; Clear H H1 H2.
-     Elim (abst_remove_element_spec x z e2).
-     Intros Habs; Absurd (Is_true (abst_est_element x e1)); Elim Hx;
-     Intros Hx1 Hx2; Trivial.
-     Apply (abst_equal_congr_est_element e1 z x); Trivial.
-     Apply setoid_equal_symmetric; Apply Habs. Trivial.
-     Elim (abst_sous_ensemble_spec e1 e2); Auto. Compute; Trivial.
-     Apply int_le_refl; Apply beq_symm; Elim Hx; Auto.
+     coq proof {*
+       Intros e1 e2; Split; Elim e1; Elim e2.
+       Intros Habs; Absurd (Is_true (abst_sous_ensemble Nil Nil)); Trivial.
+       Intros a l Hr Habs;
+       Absurd (Is_true (abst_sous_ensemble Nil (Cons a l))); Trivial.
+        Intros a l H_; Exists a; Split; Auto.
+       Fold (liste__cons a l); Trivial.
+       Intros a2 l2 Hr1 a1 l1 Hr2.
+       Opaque abst_est_element.
+       Unfold abst_sous_ensemble; Simpl.
+       BoolElimNamed '(abst_est_element a1 (Cons a2 l2)) HBtrue HBfalse; Simpl.
+       Intros Hnss2; Elim (Hr2 Hnss2); Intros x Hx; Exists x; Split; Elim Hx; Auto.
+       Fold (liste__cons a1 l1); Auto.
+       Intros H_; Exists a1; Fold (liste__cons a1 l1); Auto.
+       Intros Habs; Elim Habs; Intros x H1; Elim H1; Intros H2 H3; Contradiction.
+       Intros a l H_ Habs; Elim Habs; Intros x H1; Elim H1; Intros H2 H3;
+       Absurd (Is_true (abst_est_element x Nil)); Auto.
+       Intros a l H_ H__; Unfold not; Intros Habs;
+       Absurd (Is_true (abst_est_element a Nil)); Auto.
+       Intros a2 l2 Hr a1 l1 Hr2 Hx.
+       Unfold abst_sous_ensemble; Simpl.
+       BoolElimNamed '(abst_est_element a1 (Cons a2 l2)) HBtrue HBfalse;
+         Simpl; Auto with bool.
+       Apply Hr2; Elim Hx; Intros x H1; Elim H1; Intros H2 H3; Exists x.
+       Split; Trivial. Apply (abst_cons_elem a1 x l1); Trivial.
+       Unfold not; Intros Heq;
+         Absurd (Is_true (abst_est_element x (Cons a2 l2))); EAuto.
      *};
 
+   proof of include_card =
+     (* [Unsure - à laisser ?]
+        decl: incl_card sous_ensemble_spec remove_element_spec remove_element_card
+        non_sous_ensemble_spec equal_congr_est_element; *)
+     coq proof {*
+       Intros e1 e2 Hsse1e2 Hnsse2e1.
+       Elim (abst_non_sous_ensemble_spec e2 e1); Intros H1 H2; Elim (H1 Hnsse2e1);
+       Clear H1 H2; Intros x Hx.
+       Apply (int_lt_le_trans (abst_cardinal e1)
+       (__g_int_plus (abst_cardinal (abst_remove_element x e2)) `1`)
+       (abst_cardinal e2)).
+       Unfold __g_int_lt __g_int_plus; Apply dec_IsTrue.
+       Generalize (Zle_lt_reg (abst_cardinal e1)
+       (abst_cardinal (abst_remove_element x e2)) `0` `1`).
+       Rewrite <- (Zplus_n_O (abst_cardinal e1)).
+       Intros H; Apply H.  Unfold __g_int_leq in abst_incl_card.
+       Refine (IsTrue_dec (abst_incl_card e1 (abst_remove_element x e2) ?)).
+       Elim (abst_sous_ensemble_spec e1 (abst_remove_element x e2)); Intros H1 H2;
+       Apply H1; Intros z Hzelem; Clear H H1 H2.
+       Elim (abst_remove_element_spec x z e2).
+       Intros Habs; Absurd (Is_true (abst_est_element x e1)); Elim Hx;
+       Intros Hx1 Hx2; Trivial.
+       Apply (abst_equal_congr_est_element e1 z x); Trivial.
+       Apply setoid_equal_symmetric; Apply Habs. Trivial.
+       Elim (abst_sous_ensemble_spec e1 e2); Auto. Compute; Trivial.
+       Apply int_le_refl; Apply beq_symm; Elim Hx; Auto.
+     *};
 
    theorem ajoute_element_card:
-     all x in A, all e in Self,
-       int_leq (!cardinal (e), !cardinal (!ajoute_element (x, e)))
+   all x in A, all e in Self,
+   int_leq (!cardinal (e), !cardinal (!ajoute_element (x, e)))
    proof:
-   (* [Unsure - à laisser ?]
-      decl: ajoute_spec sous_ensemble_spec incl_card; *)
-   coq proof
-     {* Intros x e; Elim (abst_sous_ensemble_spec e (abst_ajoute_element x e));
-     Intros H1 H2; Apply abst_incl_card; Apply H1; Clear H1 H2.
-     Intros y Hyelem; Elim (abst_ajoute_spec x y e); Auto.
+     (* [Unsure - à laisser ?]
+        decl: ajoute_spec sous_ensemble_spec incl_card; *)
+     coq proof {*
+       Intros x e; Elim (abst_sous_ensemble_spec e (abst_ajoute_element x e));
+       Intros H1 H2; Apply abst_incl_card; Apply H1; Clear H1 H2.
+       Intros y Hyelem; Elim (abst_ajoute_spec x y e); Auto.
      *};
 
   (* NdV: la preuve ci-dessous est tordue, mais elle evite une def-dependance
@@ -1303,160 +1310,161 @@ Unfold not; Intros Heq; Absurd (Is_true(abst_est_element x(Cons a2 l2)));EAuto.
      all x in A, all e in Self,
      int_leq (!cardinal (!ajoute_element (x, e)), !cardinal (e) + 1)
    proof:
-   (* [Unsure - à laisser ?]
-      decl: ajoute_spec sous_ensemble_spec incl_card
-      remove_element remove_element_spec2 remove_element_card; *)
-   coq proof
-{* Intros x e;
-Apply int_le_trans with (__g_int_plus (abst_cardinal
-   (abst_remove_element x (abst_ajoute_element x e))) `1`).
-Apply int_le_refl; Apply abst_remove_element_card.
-Elim (abst_ajoute_spec x x e); Intros H1 H2; Apply H2;
-Left; Trivial with setoid.
-Apply int_le_plus_plus.
-Apply abst_incl_card; Elim (abst_sous_ensemble_spec
-(abst_remove_element x (abst_ajoute_element x e)) e); Intros H1 H2; Apply H1;
-Clear H1 H2. Intros y Hyelem; Elim (abst_ajoute_spec x y e); Intros H1 H2;
-Elim H1; Clear H1 H2. Intros Hxyeq; Absurd (Is_true(setoid_equal ? x y));
-Trivial.
-Elim (abst_remove_element_spec2 x y (abst_ajoute_element x e) Hyelem).
-Intros H1 H2; Elim (setoid_different_not_equal self_a x y); Auto with setoid.
-Trivial. Elim (abst_remove_element_spec2 ? ? ? Hyelem); Trivial.
-Unfold __g_int_leq; Apply dec_IsTrue; Auto with zarith.
-*};
+     (* [Unsure - à laisser ?]
+        decl: ajoute_spec sous_ensemble_spec incl_card
+        remove_element remove_element_spec2 remove_element_card; *)
+     coq proof {*
+       Intros x e;
+       Apply int_le_trans with (__g_int_plus (abst_cardinal
+          (abst_remove_element x (abst_ajoute_element x e))) `1`).
+       Apply int_le_refl; Apply abst_remove_element_card.
+       Elim (abst_ajoute_spec x x e); Intros H1 H2; Apply H2;
+       Left; Trivial with setoid.
+       Apply int_le_plus_plus.
+       Apply abst_incl_card; Elim (abst_sous_ensemble_spec
+       (abst_remove_element x (abst_ajoute_element x e)) e); Intros H1 H2; Apply H1;
+       Clear H1 H2. Intros y Hyelem; Elim (abst_ajoute_spec x y e); Intros H1 H2;
+       Elim H1; Clear H1 H2. Intros Hxyeq; Absurd (Is_true(setoid_equal ? x y));
+       Trivial.
+       Elim (abst_remove_element_spec2 x y (abst_ajoute_element x e) Hyelem).
+       Intros H1 H2; Elim (setoid_different_not_equal self_a x y); Auto with setoid.
+       Trivial. Elim (abst_remove_element_spec2 ? ? ? Hyelem); Trivial.
+       Unfold __g_int_leq; Apply dec_IsTrue; Auto with zarith.
+     *};
 
    proof of union_card =
-   (* [Unsure - à laisser ?]
-      def: union cons vide;
-      decl: ajoute_element_card2 cons_card vide_card; *)
-   coq proof
-     {* Unfold abst_union; Induction e1; Simpl. Intros e2;
-        Fold (liste__vide); Fold (abst_vide). Apply int_le_refl.
-        Apply beq_symm. Apply int_0_plus. Trivial.
-        Intros a l Hrec e2.
-        Apply int_le_trans with (__g_int_plus (abst_cardinal l)
-          (abst_cardinal (abst_ajoute_element a e2))); Trivial.
-        Apply int_le_trans with (__g_int_plus
-         (__g_int_plus (abst_cardinal l) `1`) (abst_cardinal e2)).
-        Apply int_le_trans with
-         (__g_int_plus (abst_cardinal l) (__g_int_plus (abst_cardinal e2) `1`)).
-        Apply int_le_plus_plus; [Apply int_le_refl; Apply beq_refl | Auto].
-        Apply int_le_refl; Unfold __g_int_leq __g_int_plus __g_base_eq_;
-        Apply EQ_base_eq; Rewrite (Zplus_sym (abst_cardinal e2) `1`);
-        Auto with zarith.
-        Apply int_le_plus_plus; Apply int_le_refl. Apply beq_symm;
-        Fold (liste__cons a l); Auto.
-        Apply beq_refl.
+     (* [Unsure - à laisser ?]
+        def: union cons vide;
+        decl: ajoute_element_card2 cons_card vide_card; *)
+     coq proof {*
+       Unfold abst_union; Induction e1; Simpl. Intros e2;
+       Fold (liste__vide); Fold (abst_vide). Apply int_le_refl.
+       Apply beq_symm. Apply int_0_plus. Trivial.
+       Intros a l Hrec e2.
+       Apply int_le_trans with (__g_int_plus (abst_cardinal l)
+         (abst_cardinal (abst_ajoute_element a e2))); Trivial.
+       Apply int_le_trans with (__g_int_plus
+        (__g_int_plus (abst_cardinal l) `1`) (abst_cardinal e2)).
+       Apply int_le_trans with
+        (__g_int_plus (abst_cardinal l) (__g_int_plus (abst_cardinal e2) `1`)).
+       Apply int_le_plus_plus; [Apply int_le_refl; Apply beq_refl | Auto].
+       Apply int_le_refl; Unfold __g_int_leq __g_int_plus __g_base_eq_;
+       Apply EQ_base_eq; Rewrite (Zplus_sym (abst_cardinal e2) `1`);
+       Auto with zarith.
+       Apply int_le_plus_plus; Apply int_le_refl. Apply beq_symm;
+       Fold (liste__cons a l); Auto.
+       Apply beq_refl.
      *};
 
    proof of inter_card =
      (* [Unsure - à laisser ?]
         decl: incl_card inter_spec sous_ensemble_spec; *)
-   coq proof
-     {*  Intros e1 e2; Apply int_min_le. Split; Apply abst_incl_card.
-      Elim (abst_sous_ensemble_spec (abst_inter e1 e2) e1); Intros H1 H2;
-      Apply H1; Intros x Hxelem; Clear H1 H2.
-      Elim (abst_inter_spec e1 e2 x).  Intros H1 H2; Elim (H1 Hxelem); Trivial.
-      Elim (abst_sous_ensemble_spec (abst_inter e1 e2) e2); Intros H1 H2;
-      Apply H1; Intros x Hxelem; Clear H1 H2.
-      Elim (abst_inter_spec e1 e2 x).  Intros H1 H2; Elim (H1 Hxelem); Trivial.
+     coq proof {*
+       Intros e1 e2; Apply int_min_le. Split; Apply abst_incl_card.
+       Elim (abst_sous_ensemble_spec (abst_inter e1 e2) e1); Intros H1 H2;
+       Apply H1; Intros x Hxelem; Clear H1 H2.
+       Elim (abst_inter_spec e1 e2 x).  Intros H1 H2; Elim (H1 Hxelem); Trivial.
+       Elim (abst_sous_ensemble_spec (abst_inter e1 e2) e2); Intros H1 H2;
+       Apply H1; Intros x Hxelem; Clear H1 H2.
+       Elim (abst_inter_spec e1 e2 x).  Intros H1 H2; Elim (H1 Hxelem); Trivial.
      *};
 
    proof of diff_card =
-   (* [Unsure - à laisser ?]
-      def: diff cons vide cardinal;
-      decl: remove_element_card vide_card sous_ensemble_spec cons_elem2
-      cons_elem3 remove_element_spec cons_bien_formee_elim
-      equal_congr_est_element cons_card; *)
-   coq proof
- {* Unfold 3 abst_cardinal. Unfold liste__cardinal.
-Intros e1 e2; BoolElimNamed '(abst_bien_formee e2) HBtrue HBfalse. Generalize e1;
-Generalize HBtrue; Clear HBtrue; Elim e2. Intros H_1 e3;
-Unfold abst_diff liste__diff; Fold liste__vide.
-Intros H_; Apply beq_symm; Apply beq_trans with
-   (__g_int_plus (abst_cardinal liste__vide) (abst_cardinal e3)).
-Apply int_plus_commute.  Apply int_0_plus. Apply abst_vide_card.
-Intros a l Hrec Hbf e3 Hss. Unfold abst_diff; Simpl.
-Apply beq_trans with
-   (__g_int_plus (abst_cardinal (abst_remove_element a e3)) `1`).
-Apply abst_remove_element_card.
-Elim (abst_sous_ensemble_spec(Cons a l)e3); Intros H1 H2; Apply H2; Trivial.
-Fold (liste__cons a l); Apply abst_cons_elem2.
-Fold (abst_diff (abst_remove_element a e3) l).
-Apply beq_trans with (__g_int_plus (__g_int_plus (abst_cardinal
-      (abst_diff (abst_remove_element a e3) l)) (abst_cardinal l)) `1`).
-Apply int_plus_plus.  Unfold 3 abst_cardinal; Unfold liste__cardinal.
-Elim (abst_cons_bien_formee_elim a l Hbf); Intros Hlbf Hlelem;
-IsTrueRew Hlbf; Apply Hrec; Trivial.
-Elim (abst_sous_ensemble_spec l (abst_remove_element a e3)); Intros H1 H2;
-Apply H1; Intros x Hxelem; Clear H1 H2. Elim (abst_remove_element_spec a x e3).
-Intros Heq; Absurd (Is_true (abst_est_element a l)); EAuto with setoid.
-Trivial. Elim (abst_sous_ensemble_spec (Cons a l) e3); Intros H1 H2; Apply H2;
-Trivial. Fold (liste__cons a l); Apply abst_cons_elem3; Trivial.
-Apply beq_refl. Apply beq_trans with
-(__g_int_plus (abst_cardinal (abst_diff (abst_remove_element a e3) l))
-  (__g_int_plus (abst_cardinal l) `1`)). Apply int_plus_assoc.
-Apply int_plus_plus. Apply beq_refl.
-Replace (abst_raw_cardinal (Cons a l)) with (abst_cardinal (Cons a l)).
-Apply beq_symm; Fold (liste__cons a l); Auto.
-Unfold abst_cardinal liste__cardinal; IsTrueRew Hbf;
-Reflexivity. Intros H; Apply (bottom_properties ?
-  [x](Is_true (__g_base_eq (abst_cardinal e1)
-      (__g_int_plus (abst_cardinal (abst_diff e1 e2)) x)))).
- *};
+     (* [Unsure - à laisser ?]
+        def: diff cons vide cardinal;
+        decl: remove_element_card vide_card sous_ensemble_spec cons_elem2
+        cons_elem3 remove_element_spec cons_bien_formee_elim
+        equal_congr_est_element cons_card; *)
+     coq proof {*
+       Unfold 3 abst_cardinal. Unfold liste__cardinal.
+       Intros e1 e2; BoolElimNamed '(abst_bien_formee e2) HBtrue HBfalse. Generalize e1;
+       Generalize HBtrue; Clear HBtrue; Elim e2. Intros H_1 e3;
+       Unfold abst_diff liste__diff; Fold liste__vide.
+       Intros H_; Apply beq_symm; Apply beq_trans with
+          (__g_int_plus (abst_cardinal liste__vide) (abst_cardinal e3)).
+       Apply int_plus_commute.  Apply int_0_plus. Apply abst_vide_card.
+       Intros a l Hrec Hbf e3 Hss. Unfold abst_diff; Simpl.
+       Apply beq_trans with
+          (__g_int_plus (abst_cardinal (abst_remove_element a e3)) `1`).
+       Apply abst_remove_element_card.
+       Elim (abst_sous_ensemble_spec(Cons a l)e3); Intros H1 H2; Apply H2; Trivial.
+       Fold (liste__cons a l); Apply abst_cons_elem2.
+       Fold (abst_diff (abst_remove_element a e3) l).
+       Apply beq_trans with (__g_int_plus (__g_int_plus (abst_cardinal
+             (abst_diff (abst_remove_element a e3) l)) (abst_cardinal l)) `1`).
+       Apply int_plus_plus.  Unfold 3 abst_cardinal; Unfold liste__cardinal.
+       Elim (abst_cons_bien_formee_elim a l Hbf); Intros Hlbf Hlelem;
+       IsTrueRew Hlbf; Apply Hrec; Trivial.
+       Elim (abst_sous_ensemble_spec l (abst_remove_element a e3)); Intros H1 H2;
+       Apply H1; Intros x Hxelem; Clear H1 H2. Elim (abst_remove_element_spec a x e3).
+       Intros Heq; Absurd (Is_true (abst_est_element a l)); EAuto with setoid.
+       Trivial. Elim (abst_sous_ensemble_spec (Cons a l) e3); Intros H1 H2; Apply H2;
+       Trivial. Fold (liste__cons a l); Apply abst_cons_elem3; Trivial.
+       Apply beq_refl. Apply beq_trans with
+       (__g_int_plus (abst_cardinal (abst_diff (abst_remove_element a e3) l))
+         (__g_int_plus (abst_cardinal l) `1`)). Apply int_plus_assoc.
+       Apply int_plus_plus. Apply beq_refl.
+       Replace (abst_raw_cardinal (Cons a l)) with (abst_cardinal (Cons a l)).
+       Apply beq_symm; Fold (liste__cons a l); Auto.
+       Unfold abst_cardinal liste__cardinal; IsTrueRew Hbf;
+       Reflexivity. Intros H; Apply (bottom_properties ?
+         [x](Is_true (__g_base_eq (abst_cardinal e1)
+             (__g_int_plus (abst_cardinal (abst_diff e1 e2)) x)))).
+     *};
 
    proof of somme_card =
-   (* [Unsure - à laisser ?]
-      decl: diff_card sous_ensemble_spec extensional
-      diff_spec inter_spec union_spec card_congruence; *)
-   coq proof
-{* Intros e1 e2. Apply beq_trans with
-(__g_int_plus (__g_int_plus (abst_cardinal (abst_diff (abst_union e1 e2) e1))
-   (abst_cardinal e1)) (abst_cardinal (abst_inter e1 e2))).
-Apply int_plus_plus. Apply abst_diff_card.
-Elim (abst_sous_ensemble_spec e1 (abst_union e1 e2)). Intros H1 H2; Apply H1;
-Clear H1 H2; Intros x Hxelem. Elim (abst_union_spec e1 e2 x); Intros H1 H2.
-Apply H2; Left; Trivial. Apply beq_refl.
-Apply beq_trans with (__g_int_plus (abst_cardinal e1)
-(__g_int_plus (abst_cardinal (abst_diff (abst_union e1 e2) e1))
-(abst_cardinal (abst_inter e1 e2)))).
-Apply beq_trans with (__g_int_plus(__g_int_plus(abst_cardinal e1)(abst_cardinal
-  (abst_diff(abst_union e1 e2)e1)))(abst_cardinal(abst_inter e1 e2))).
-Apply int_plus_plus. Apply int_plus_commute. Apply beq_refl.
-Apply int_plus_assoc. Apply int_plus_plus. Apply beq_refl.
-Apply beq_trans with (__g_int_plus (abst_cardinal
-(abst_diff e2 (abst_inter e1 e2))) (abst_cardinal (abst_inter e1 e2))).
-Apply int_plus_plus. Apply abst_card_congruence.
-Elim (abst_extensional (abst_diff (abst_union e1 e2) e1)
-(abst_diff e2 (abst_inter e1 e2))). Intros H1 H2; Apply H2. Split; Clear H1 H2.
-Elim (abst_sous_ensemble_spec (abst_diff (abst_union e1 e2) e1)
-(abst_diff e2 (abst_inter e1 e2))); Intros H1 H2; Apply H1. Intros x Hxelem.
-Clear H1 H2. Elim (abst_diff_spec e2 (abst_inter e1 e2) x). Intros H1 H2.
-Apply H2; Split; Clear H1 H2. Elim (abst_diff_spec (abst_union e1 e2) e1 x);
-Intros H1 H2. Elim (H1 Hxelem); Clear H1 H2; Intros H1 H2.
-Elim (abst_union_spec e1 e2 x). Intros H3 H4; Elim (H3 H1).
-Intros Habs; Absurd (Is_true (abst_est_element x e1)); Trivial.
-Trivial. Elim (abst_diff_spec (abst_union e1 e2) e1 x); Intros H1 H2;
-Elim (H1 Hxelem); Clear H1 H2; Intros H1 H2. Unfold not; Intros Habs;
-Absurd (Is_true (abst_est_element x e1)); Trivial.
-Elim (abst_inter_spec e1 e2 x); Intros H3 H4. Elim (H3 Habs); Trivial.
-Elim (abst_sous_ensemble_spec (abst_diff e2 (abst_inter e1 e2))
-(abst_diff (abst_union e1 e2) e1)); Intros H1 H2; Apply H1; Intros x Hxelem;
-Clear H1 H2. Elim (abst_diff_spec (abst_union e1 e2) e1 x); Intros H1 H2;
-Apply H2; Split; Clear H1 H2. Elim (abst_union_spec e1 e2 x); Intros H1 H2.
-Apply H2; Right. Clear H1 H2; Elim (abst_diff_spec e2 (abst_inter e1 e2) x).
-Intros H1 H2; Elim (H1 Hxelem); Trivial. Unfold not; Intros Habs;
-Absurd (Is_true (abst_est_element x (abst_inter e1 e2)));
-Elim (abst_diff_spec e2 (abst_inter e1 e2) x); Intros H1 H2; Elim (H1 Hxelem);
-Trivial.
-Intros Hxelem2 H_; Elim (abst_inter_spec e1 e2 x ); Clear H1 H2; Intros H1 H2.
-Apply H2; Split; Trivial. Apply beq_refl.
-Apply beq_symm. Apply abst_diff_card.
-Elim (abst_sous_ensemble_spec (abst_inter e1 e2) e2); Intros H1 H2; Apply H1;
-Intros x Hxelem; Clear H1 H2. Elim (abst_inter_spec e1 e2 x). Intros H1 H2;
-Elim (H1 Hxelem); Trivial.
-*};
-end ;;
+     (* [Unsure - à laisser ?]
+        decl: diff_card sous_ensemble_spec extensional
+        diff_spec inter_spec union_spec card_congruence; *)
+     coq proof {*
+       Intros e1 e2. Apply beq_trans with
+         (__g_int_plus (__g_int_plus (abst_cardinal (abst_diff (abst_union e1 e2) e1))
+           (abst_cardinal e1)) (abst_cardinal (abst_inter e1 e2))).
+       Apply int_plus_plus. Apply abst_diff_card.
+       Elim (abst_sous_ensemble_spec e1 (abst_union e1 e2)). Intros H1 H2; Apply H1;
+       Clear H1 H2; Intros x Hxelem. Elim (abst_union_spec e1 e2 x); Intros H1 H2.
+       Apply H2; Left; Trivial. Apply beq_refl.
+       Apply beq_trans with (__g_int_plus (abst_cardinal e1)
+       (__g_int_plus (abst_cardinal (abst_diff (abst_union e1 e2) e1))
+       (abst_cardinal (abst_inter e1 e2)))).
+       Apply beq_trans with (__g_int_plus(__g_int_plus(abst_cardinal e1)(abst_cardinal
+         (abst_diff(abst_union e1 e2)e1)))(abst_cardinal(abst_inter e1 e2))).
+       Apply int_plus_plus. Apply int_plus_commute. Apply beq_refl.
+       Apply int_plus_assoc. Apply int_plus_plus. Apply beq_refl.
+       Apply beq_trans with (__g_int_plus (abst_cardinal
+       (abst_diff e2 (abst_inter e1 e2))) (abst_cardinal (abst_inter e1 e2))).
+       Apply int_plus_plus. Apply abst_card_congruence.
+       Elim (abst_extensional (abst_diff (abst_union e1 e2) e1)
+       (abst_diff e2 (abst_inter e1 e2))). Intros H1 H2; Apply H2. Split; Clear H1 H2.
+       Elim (abst_sous_ensemble_spec (abst_diff (abst_union e1 e2) e1)
+       (abst_diff e2 (abst_inter e1 e2))); Intros H1 H2; Apply H1. Intros x Hxelem.
+       Clear H1 H2. Elim (abst_diff_spec e2 (abst_inter e1 e2) x). Intros H1 H2.
+       Apply H2; Split; Clear H1 H2. Elim (abst_diff_spec (abst_union e1 e2) e1 x);
+       Intros H1 H2. Elim (H1 Hxelem); Clear H1 H2; Intros H1 H2.
+       Elim (abst_union_spec e1 e2 x). Intros H3 H4; Elim (H3 H1).
+       Intros Habs; Absurd (Is_true (abst_est_element x e1)); Trivial.
+       Trivial. Elim (abst_diff_spec (abst_union e1 e2) e1 x); Intros H1 H2;
+       Elim (H1 Hxelem); Clear H1 H2; Intros H1 H2. Unfold not; Intros Habs;
+       Absurd (Is_true (abst_est_element x e1)); Trivial.
+       Elim (abst_inter_spec e1 e2 x); Intros H3 H4. Elim (H3 Habs); Trivial.
+       Elim (abst_sous_ensemble_spec (abst_diff e2 (abst_inter e1 e2))
+       (abst_diff (abst_union e1 e2) e1)); Intros H1 H2; Apply H1; Intros x Hxelem;
+       Clear H1 H2. Elim (abst_diff_spec (abst_union e1 e2) e1 x); Intros H1 H2;
+       Apply H2; Split; Clear H1 H2. Elim (abst_union_spec e1 e2 x); Intros H1 H2.
+       Apply H2; Right. Clear H1 H2; Elim (abst_diff_spec e2 (abst_inter e1 e2) x).
+       Intros H1 H2; Elim (H1 Hxelem); Trivial. Unfold not; Intros Habs;
+       Absurd (Is_true (abst_est_element x (abst_inter e1 e2)));
+       Elim (abst_diff_spec e2 (abst_inter e1 e2) x); Intros H1 H2; Elim (H1 Hxelem);
+       Trivial.
+       Intros Hxelem2 H_; Elim (abst_inter_spec e1 e2 x ); Clear H1 H2; Intros H1 H2.
+       Apply H2; Split; Trivial. Apply beq_refl.
+       Apply beq_symm. Apply abst_diff_card.
+       Elim (abst_sous_ensemble_spec (abst_inter e1 e2) e2); Intros H1 H2; Apply H1;
+       Intros x Hxelem; Clear H1 H2. Elim (abst_inter_spec e1 e2 x). Intros H1 H2;
+       Elim (H1 Hxelem); Trivial.
+     *};
+end
+;;
 
 (*********************************************)
 
@@ -1464,30 +1472,29 @@ end ;;
 species Liste_triee (A is Ordered_set) inherits
    Ensembles_finis_ordonnes (A), Liste (A) =
 
-(** invariant de représentation: les listes sont triées dans l'ordre croissant;
-   chaque élément est strictement plus petit que le suivant. *)
+   (** invariant de représentation: les listes sont triées dans l'ordre croissant;
+       chaque élément est strictement plus petit que le suivant. *)
    let rec est_triee (l in Self) in bool =
      match l with
-       | [ ] -> true
-       | x :: l ->
-          (match l with
-            | [ ] -> true
-            | y :: l1 -> and_b (A!lt (x, y), !est_triee (l))) ;
+     | [] -> true
+     | x :: l ->
+        (match l with
+         | [] -> true
+         | y :: l1 -> and_b (A!lt (x, y), !est_triee (l))) ;
 
-  (** le nouvel invariant implique celui de l'espèce parent (non duplication).*)
+   (** le nouvel invariant implique celui de l'espèce parent (non duplication).*)
    theorem invariant_subsumption:
      all l in Self, !est_triee (l) -> !bien_formee (l)
    proof:
-   (* [Unsure - à laisser ?]
-      def: est_triee bien_formee vide cons;
-      decl:  min_inf cons_non_vide card_zero_vide cons_min; *)
-   coq proof
-    {*
+     (* [Unsure - à laisser ?]
+        def: est_triee bien_formee vide cons;
+        decl:  min_inf cons_non_vide card_zero_vide cons_min; *)
+     coq proof {*
        Unfold abst_bien_formee.
        Induction l; Simpl. Auto.
        Intros a l0; Case l0.
        Auto with my_bool.
-      Intros o l1 Hrec Htriee.
+       Intros o l1 Hrec Htriee.
        Apply andb_intro.
        Apply notb_elim.
        Unfold not; Intros Habs; Absurd (Is_true (ordered_set_lt ? a a)).
@@ -1506,218 +1513,213 @@ species Liste_triee (A is Ordered_set) inherits
        Apply (andb_elim2 ? ? Htriee).
        Trivial.
        Apply Hrec; Apply (andb_elim2 ? ? Htriee).
-    *};
+     *};
 
    let rec ajoute_element (x in A, l in Self) =
      match l with
-       | [ ] -> [ x ]
-       | y :: l1 ->
-           if A!lt (x, y) then x :: l
-              else if A!equal (x, y) then l
-              else y :: (!ajoute_element (x, l1)) ;
+     | [] -> [x]
+     | y :: l1 ->
+       if A!lt (x, y) then x :: l else
+       if A!equal (x, y) then l else
+       y :: (!ajoute_element (x, l1)) ;
 
    theorem invariant1: !est_triee (!vide)
    proof:
-   (* [Unsure - à laisser ?]
-      def: est_triee vide; *)
-   coq proof
-     {* Unfold abst_vide liste__vide.
-     Unfold abst_est_triee liste_triee__est_triee.
-     Compute; Auto.
+     (* [Unsure - à laisser ?]
+        def: est_triee vide; *)
+     coq proof {*
+       Unfold abst_vide liste__vide.
+       Unfold abst_est_triee liste_triee__est_triee.
+       Compute; Auto.
      *};
 
    theorem invariant2 : all x in A, !est_triee (!singleton (x))
    proof :
-   (* [Unsure - à laisser ?]
-      def: est_triee singleton; *)
-   coq proof
-   {*
-   Unfold abst_est_triee liste_triee__est_triee abst_singleton liste__singleton.
-   Compute; Trivial.
-   *};
+     (* [Unsure - à laisser ?]
+        def: est_triee singleton; *)
+     coq proof {*
+       Unfold abst_est_triee liste_triee__est_triee abst_singleton liste__singleton.
+       Compute; Trivial.
+     *};
 
 (* pour eviter les def-dependances des enonces des lemmes techniques. *)
 (* local let cons(x in a, l in self) in self = x :: l; *)
 
-
   local theorem cons_element:
     all x in A, all l in Self,
-      !est_element (x, !cons (x, l))
+    !est_element (x, !cons (x, l))
   proof:
-   (* [Unsure - à laisser ?]
-      def: cons est_element; *)
-   coq proof
-     {* Intros x l;
-        Unfold abst_est_element abst_cons liste__est_element liste_triee__cons.
-        Replace (setoid_equal self_a x x) with true.
-        Compute; Trivial.
-        Symmetry.
-        Apply Is_true_eq_true.
-        Apply (setoid_equal_reflexive self_a).
-     *};
+    (* [Unsure - à laisser ?]
+       def: cons est_element; *)
+    coq proof {*
+      Intros x l;
+      Unfold abst_est_element abst_cons liste__est_element liste_triee__cons.
+      Replace (setoid_equal self_a x x) with true.
+      Compute; Trivial.
+      Symmetry.
+      Apply Is_true_eq_true.
+      Apply (setoid_equal_reflexive self_a).
+    *};
 
 
   local theorem cons_non_vide:
     all x in A, all l in Self,
-      ~ (!equal (!cons (x, l), !vide))
+    ~ (!equal (!cons (x, l), !vide))
   proof:
-   (* [Unsure - à laisser ?]
-      decl: cons_element vide_spec2; *)
-   coq proof
-     {*   Intros x l.
-       Unfold not; Intros Heq;
-       Elim (abst_vide_spec2 (abst_cons x l)); Intros H1 H2; Clear H1.
-       Absurd (Is_true (abst_est_element x (abst_cons x l))); EAuto.
-     *};
+    (* [Unsure - à laisser ?]
+       decl: cons_element vide_spec2; *)
+    coq proof {*
+      Intros x l.
+      Unfold not; Intros Heq;
+      Elim (abst_vide_spec2 (abst_cons x l)); Intros H1 H2; Clear H1.
+      Absurd (Is_true (abst_est_element x (abst_cons x l))); EAuto.
+    *};
 
   local theorem cons_ajoute:
     all x in A, all l in Self,
-      !est_triee (l) -> A!lt (x, !min (l)) -> !est_triee (!cons (x, l))
+    !est_triee (l) -> A!lt (x, !min (l)) -> !est_triee (!cons (x, l))
   proof:
-   (* [Unsure - à laisser ?]
-      def: cons est_triee vide ;
-      decl: min_inf card_zero_vide cons_non_vide cons_element; *)
-   coq proof
-     {*
-     Intros x l Hl Hx.
-     Unfold abst_cons.
-     Unfold liste_triee__cons.
-     Simpl.
-     Generalize Hl Hx. Elim l; Trivial.
-     Trivial.
-     Intros a l0 hrec Hl0 Ha.
-     Rewrite and_bandb.
-     Apply andb_true_intro2; Trivial.
-     Apply (abst_min_inf (abst_cons a l0));
-     Trivial.
-     Unfold not; Intros Hcard;
-     Absurd (Is_true (abst_equal (abst_cons a l0) abst_vide)); Auto.
-     Elim (abst_card_zero_vide (abst_cons a l0)); Intros H1 H2; Auto.
-     *};
+    (* [Unsure - à laisser ?]
+       def: cons est_triee vide ;
+       decl: min_inf card_zero_vide cons_non_vide cons_element; *)
+    coq proof {*
+      Intros x l Hl Hx.
+      Unfold abst_cons.
+      Unfold liste_triee__cons.
+      Simpl.
+      Generalize Hl Hx. Elim l; Trivial.
+      Trivial.
+      Intros a l0 hrec Hl0 Ha.
+      Rewrite and_bandb.
+      Apply andb_true_intro2; Trivial.
+      Apply (abst_min_inf (abst_cons a l0));
+      Trivial.
+      Unfold not; Intros Hcard;
+      Absurd (Is_true (abst_equal (abst_cons a l0) abst_vide)); Auto.
+      Elim (abst_card_zero_vide (abst_cons a l0)); Intros H1 H2; Auto.
+    *};
 
    local theorem cons_min:
      all x in A, all l in Self, !est_triee (!cons(x, l)) ->
-       A!equal (x, !min (!cons (x, l)))
+     A!equal (x, !min (!cons (x, l)))
    proof:
-   (* [Unsure - à laisser ?]
-      def: cons min raw_min; *)
-   coq proof
-    {* Intros x l; Unfold abst_min abst_cons liste_triee__min
-        liste_triee__cons abst_raw_min liste_triee__raw_min.
+     (* [Unsure - à laisser ?]
+        def: cons min raw_min; *)
+     coq proof {*
+       Intros x l; Unfold abst_min abst_cons liste_triee__min
+          liste_triee__cons abst_raw_min liste_triee__raw_min.
        Case (abst_est_triee (Cons x l));
-        Auto with ordered_set. Intros H; Contradiction.
+       Auto with ordered_set. Intros H; Contradiction.
      *};
 
    local theorem cons_ajoute2:
      all x in A, all l in Self,
-       (~ (!cardinal (l) = 0)) ->
-         !est_triee (!cons (x, l)) -> (!est_triee (l) /\ A!lt (x, !min (l)))
+     (~ (!cardinal (l) = 0)) ->
+     !est_triee (!cons (x, l)) -> (!est_triee (l) /\ A!lt (x, !min (l)))
    proof:
-   (* [Unsure - à laisser ?]
-      def: cons vide est_triee min raw_min;
-      decl: vide_card; *)
-(*NdV: je ne suis pas tres fier de toutes ces def-dependances, mais
-au moins ca marche... *)
-   coq proof
-{*
-     Intros x l Hcard; Split.
-Generalize H.
-Unfold abst_est_triee liste_triee__est_triee abst_cons liste_triee__cons
-       abst_min liste_triee__min.
-Fold (liste_triee__est_triee l).
-Elim l; Trivial.
-Intros a0 l0 H0 Htrie; EAuto with my_bool.
-Generalize H Hcard.
-Elim l. Intros H1 H2.
-Absurd (Is_true (__g_base_eq_ int__t (abst_cardinal (Nil_ self_a)) `0`)); Auto.
-Intros a l0 Hrec Htriee Hc.
-Unfold abst_est_triee liste_triee__est_triee in Htriee.
-Unfold abst_cons liste_triee__cons in Htriee.
-Unfold abst_min liste_triee__min abst_raw_min liste_triee__raw_min.
-Case  (abst_est_triee (Cons_ self_a a l0)); EAuto with my_bool.
-Unfold __g_foc_error_.
-EApply (bottom_properties self_a).
-*};
+     (* [Unsure - à laisser ?]
+        def: cons vide est_triee min raw_min;
+        decl: vide_card; *)
+     (*NdV: je ne suis pas tres fier de toutes ces def-dependances, mais
+       au moins ca marche... *)
+     coq proof {*
+       Intros x l Hcard; Split.
+       Generalize H.
+       Unfold abst_est_triee liste_triee__est_triee abst_cons liste_triee__cons
+              abst_min liste_triee__min.
+       Fold (liste_triee__est_triee l).
+       Elim l; Trivial.
+       Intros a0 l0 H0 Htrie; EAuto with my_bool.
+       Generalize H Hcard.
+       Elim l. Intros H1 H2.
+       Absurd (Is_true (__g_base_eq_ int__t (abst_cardinal (Nil_ self_a)) `0`)); Auto.
+       Intros a l0 Hrec Htriee Hc.
+       Unfold abst_est_triee liste_triee__est_triee in Htriee.
+       Unfold abst_cons liste_triee__cons in Htriee.
+       Unfold abst_min liste_triee__min abst_raw_min liste_triee__raw_min.
+       Case  (abst_est_triee (Cons_ self_a a l0)); EAuto with my_bool.
+       Unfold __g_foc_error_.
+       EApply (bottom_properties self_a).
+     *};
 
    local theorem cons_triee:
      all x in A, all l in Self, !est_triee (!cons (x, l)) -> !est_triee (l)
    proof:
-   (* [Unsure - à laisser ?]
-      def:est_triee cons; *)
-   coq proof
-   {*
-    Intros x l; Case l. Auto.
-    Intros a l0 Htriee;
-    Unfold abst_est_triee liste_triee__est_triee
-    abst_cons liste_triee__cons in Htriee;
-    Fold (liste_triee__est_triee (Cons a l0)) in Htriee.
-    EAuto with my_bool.
-    *};
+     (* [Unsure - à laisser ?]
+        def:est_triee cons; *)
+     coq proof {*
+       Intros x l; Case l. Auto.
+       Intros a l0 Htriee;
+       Unfold abst_est_triee liste_triee__est_triee
+       abst_cons liste_triee__cons in Htriee;
+       Fold (liste_triee__est_triee (Cons a l0)) in Htriee.
+       EAuto with my_bool.
+     *};
 
   local theorem cons_elements:
     all x y in A, all e in Self,
-      !est_element (y, !cons (x, e)) <-> (A!equal (x, y) \/ !est_element (y, e))
+    !est_element (y, !cons (x, e)) <-> (A!equal (x, y) \/ !est_element (y, e))
    proof:
-   (* [Unsure - à laisser ?]
-      def: cons est_element; *)
-   coq proof
-    {* Intros x y e;
-      Unfold abst_est_element liste__est_element abst_cons liste_triee__cons;
-      Elim e; Elim (Sumbool.sumbool_of_bool (setoid_equal self_a y x));
-      Intros Heq; Rewrite Heq; Auto with setoid ordered_set bool my_bool.
-      Split; Auto.
-      Intros Hor; Elim Hor; Auto.
-      Intros Habs; Rewrite <- Heq; Auto with setoid.
-      Intros a l Hrec; Split.
-      Elim (Sumbool.sumbool_of_bool (setoid_equal self_a y a));
-      Intros Heq1; Rewrite Heq1; Auto with setoid ordered_set bool my_bool.
-      Intros Hyp; Elim Hyp.
-      Intros Habs; Absurd (Is_true (setoid_equal self_a y x)); Auto with setoid.
-      Rewrite Heq; Auto.
-      Case (setoid_equal self_a y a); Auto.
-    *};
+     (* [Unsure - à laisser ?]
+        def: cons est_element; *)
+     coq proof {*
+       Intros x y e;
+       Unfold abst_est_element liste__est_element abst_cons liste_triee__cons;
+       Elim e; Elim (Sumbool.sumbool_of_bool (setoid_equal self_a y x));
+       Intros Heq; Rewrite Heq; Auto with setoid ordered_set bool my_bool.
+       Split; Auto.
+       Intros Hor; Elim Hor; Auto.
+       Intros Habs; Rewrite <- Heq; Auto with setoid.
+       Intros a l Hrec; Split.
+       Elim (Sumbool.sumbool_of_bool (setoid_equal self_a y a));
+       Intros Heq1; Rewrite Heq1; Auto with setoid ordered_set bool my_bool.
+       Intros Hyp; Elim Hyp.
+       Intros Habs; Absurd (Is_true (setoid_equal self_a y x)); Auto with setoid.
+       Rewrite Heq; Auto.
+       Case (setoid_equal self_a y a); Auto.
+     *};
 
    proof of ajoute_spec =
-   (* [Unsure - à laisser ?]
-      def: ajoute_element cons;
-      decl: cons_elements; *)
-   coq proof
-     {*  Intros x y s; Unfold abst_ajoute_element liste_triee__ajoute_element.
-      Split; Elim s; Cbv Zeta; Auto.
-      Elim (abst_cons_elements x y Nil); Auto.
-      Intros a l Hrec.
-      Elim (Sumbool.sumbool_of_bool (ordered_set_lt ? x a));
-      Intros Heq; Rewrite Heq.
-      Elim (abst_cons_elements x y (Cons a l)); Auto.
-      Elim (Sumbool.sumbool_of_bool (ordered_set_equal ? x a));
-     Intros Heq1; Rewrite Heq1; Auto.
-     Elim (abst_cons_elements a y (abst_ajoute_element x l)).
-     Intros H1 H2 Hyelem.
-     Elim (H1 Hyelem). Elim (abst_cons_elements a y l); Auto.
-     Intros Hye; Elim (Hrec Hye); Auto.
-     Elim (abst_cons_elements a y l); Auto.
-     Elim (abst_cons_elements x y Nil); Auto.
-     Intros a l Hrec Hyelem.
-     Elim (Sumbool.sumbool_of_bool (ordered_set_lt ? x a));
-      Intros Heq; Rewrite Heq.
-      Elim (abst_cons_elements x y (Cons a l)); Auto.
-      Elim (Sumbool.sumbool_of_bool (ordered_set_equal ? x a));
-     Intros Heq1; Rewrite Heq1; Auto.
-     Elim Hyelem.
-     Intros Hxy; Elim (abst_cons_elements a y l); Intros H1 H2.
-     Apply H2; Left; EAuto with bool ordered_set.
-     Trivial.
-     Elim (abst_cons_elements a y (abst_ajoute_element x l)); Intros H1 H2;
-     Apply H2; Clear H1 H2.
-     Elim Hyelem; Intros Hyelem2.
-     Auto.
-     Elim (abst_cons_elements a y l); Intros H1 H2; Elim (H1 Hyelem2); Auto.
-     *} ;
+     (* [Unsure - à laisser ?]
+        def: ajoute_element cons;
+        decl: cons_elements; *)
+     coq proof {*
+       Intros x y s; Unfold abst_ajoute_element liste_triee__ajoute_element.
+        Split; Elim s; Cbv Zeta; Auto.
+        Elim (abst_cons_elements x y Nil); Auto.
+        Intros a l Hrec.
+        Elim (Sumbool.sumbool_of_bool (ordered_set_lt ? x a));
+        Intros Heq; Rewrite Heq.
+        Elim (abst_cons_elements x y (Cons a l)); Auto.
+        Elim (Sumbool.sumbool_of_bool (ordered_set_equal ? x a));
+       Intros Heq1; Rewrite Heq1; Auto.
+        Elim (abst_cons_elements a y (abst_ajoute_element x l)).
+       Intros H1 H2 Hyelem.
+        Elim (H1 Hyelem). Elim (abst_cons_elements a y l); Auto.
+       Intros Hye; Elim (Hrec Hye); Auto.
+        Elim (abst_cons_elements a y l); Auto.
+        Elim (abst_cons_elements x y Nil); Auto.
+       Intros a l Hrec Hyelem.
+        Elim (Sumbool.sumbool_of_bool (ordered_set_lt ? x a));
+        Intros Heq; Rewrite Heq.
+        Elim (abst_cons_elements x y (Cons a l)); Auto.
+        Elim (Sumbool.sumbool_of_bool (ordered_set_equal ? x a));
+       Intros Heq1; Rewrite Heq1; Auto.
+       Elim Hyelem.
+       Intros Hxy; Elim (abst_cons_elements a y l); Intros H1 H2.
+       Apply H2; Left; EAuto with bool ordered_set.
+       Trivial.
+       Elim (abst_cons_elements a y (abst_ajoute_element x l)); Intros H1 H2;
+       Apply H2; Clear H1 H2.
+       Elim Hyelem; Intros Hyelem2.
+       Auto.
+       Elim (abst_cons_elements a y l); Intros H1 H2; Elim (H1 Hyelem2); Auto.
+     *};
 
   let raw_min (e in Self) =
     match e with
-     | [ ] -> A!element
-     | x :: _ -> x ;
+    | [] -> A!element
+    | x :: _ -> x ;
 
   theorem raw_min_spec:
     all e in Self,
@@ -1725,42 +1727,42 @@ EApply (bottom_properties self_a).
         (!est_element (!raw_min (e), e) /\
           (all x in A, !est_element (x, e) -> A!leq (!raw_min (e), x)))
    proof:
-   (* [Unsure - à laisser ?]
-      def: raw_min est_triee cons vide;
-      decl: card_zero_vide vide_spec2 cons_elements equal_reflexive
-        cons_ajoute2; *)
-   coq proof
-    {* Induction e.
-    Intros Ht Habs; Absurd (Is_true (abst_equal (Nil_ self_a) abst_vide)); Auto.
-    Intros a l Hrec Htriee H_; Split.
-    Unfold abst_raw_min liste_triee__raw_min.
-    Elim (abst_cons_elements a a l); Intros H1 H2; Apply H2; Left;
-    Auto with ordered_set.
-    Intros x Hx; Clear H_;
-    Unfold abst_raw_min liste_triee__raw_min.
-    Elim (abst_cons_elements a x l); Intros H1 H2; Elim (H1 Hx); Clear H1 H2;
-    Intros Hxelem; Auto with ordered_set.
-    Apply (ordered_set_leq_transitive ? a (abst_raw_min l) x).
-    Generalize Htriee Hxelem; Clear Htriee Hxelem; Case l.
-    Intros H_ Habs; Absurd (Is_true (abst_equal Nil abst_vide)).
-    Elim (abst_vide_spec2 Nil); Intros H1 H2;
-    Absurd (Is_true (abst_est_element x Nil)); Auto.
-    Unfold abst_vide liste__vide; Trivial.
-    Intros a0 l0 Htriee H_; Clear H_.
-    Unfold abst_raw_min liste_triee__raw_min.
-    Unfold abst_est_triee liste_triee__est_triee in Htriee.
-    Rewrite and_bandb in Htriee.
-    Elim (ordered_set_lt_is_not_leq ? a a0).
-    Intros Hlts; Elim (Hlts (andb_elim1 ? ? Htriee)); Auto.
-    Cut ~(Is_true (__g_base_eq (abst_cardinal l) `0`)).
-    Intros Hcard.
-    Cut (Is_true (abst_est_triee l)).
-    Intros Htr; Elim (Hrec Htr Hcard); Auto.
-    Elim (abst_cons_ajoute2 a l); Trivial.
-    Unfold not; Intros Habs; Absurd (Is_true (abst_est_element x l)); Trivial.
-    Elim (abst_vide_spec2 l); Intros H1 H2; Apply H2.
-    Elim (abst_card_zero_vide l); Auto.
-    *};
+     (* [Unsure - à laisser ?]
+        def: raw_min est_triee cons vide;
+        decl: card_zero_vide vide_spec2 cons_elements equal_reflexive
+          cons_ajoute2; *)
+     coq proof {*
+       Induction e.
+       Intros Ht Habs; Absurd (Is_true (abst_equal (Nil_ self_a) abst_vide)); Auto.
+       Intros a l Hrec Htriee H_; Split.
+       Unfold abst_raw_min liste_triee__raw_min.
+       Elim (abst_cons_elements a a l); Intros H1 H2; Apply H2; Left;
+       Auto with ordered_set.
+       Intros x Hx; Clear H_;
+       Unfold abst_raw_min liste_triee__raw_min.
+       Elim (abst_cons_elements a x l); Intros H1 H2; Elim (H1 Hx); Clear H1 H2;
+       Intros Hxelem; Auto with ordered_set.
+       Apply (ordered_set_leq_transitive ? a (abst_raw_min l) x).
+       Generalize Htriee Hxelem; Clear Htriee Hxelem; Case l.
+       Intros H_ Habs; Absurd (Is_true (abst_equal Nil abst_vide)).
+       Elim (abst_vide_spec2 Nil); Intros H1 H2;
+       Absurd (Is_true (abst_est_element x Nil)); Auto.
+       Unfold abst_vide liste__vide; Trivial.
+       Intros a0 l0 Htriee H_; Clear H_.
+       Unfold abst_raw_min liste_triee__raw_min.
+       Unfold abst_est_triee liste_triee__est_triee in Htriee.
+       Rewrite and_bandb in Htriee.
+       Elim (ordered_set_lt_is_not_leq ? a a0).
+       Intros Hlts; Elim (Hlts (andb_elim1 ? ? Htriee)); Auto.
+       Cut ~(Is_true (__g_base_eq (abst_cardinal l) `0`)).
+       Intros Hcard.
+       Cut (Is_true (abst_est_triee l)).
+       Intros Htr; Elim (Hrec Htr Hcard); Auto.
+       Elim (abst_cons_ajoute2 a l); Trivial.
+       Unfold not; Intros Habs; Absurd (Is_true (abst_est_element x l)); Trivial.
+       Elim (abst_vide_spec2 l); Intros H1 H2; Apply H2.
+       Elim (abst_card_zero_vide l); Auto.
+     *};
 
    let min (e) =
      if !est_triee (e) then !raw_min (e)
@@ -1768,139 +1770,136 @@ EApply (bottom_properties self_a).
       foc_error ("liste non triee.") ;
 
   proof of min_spec =
-   (* [Unsure - à laisser ?]
-      def: min;
-      decl: raw_min_spec; *)
-   coq proof
-     {* Intros e Hcard; Unfold abst_min liste_triee__min;
-        Elim (Sumbool.sumbool_of_bool (abst_est_triee e));
-        Intros H; Rewrite H; Auto with bool.
-        Unfold __g_foc_error_.
-        Apply (bottom_properties self_a).
-     *};
+    (* [Unsure - à laisser ?]
+       def: min;
+       decl: raw_min_spec; *)
+    coq proof {*
+      Intros e Hcard; Unfold abst_min liste_triee__min;
+      Elim (Sumbool.sumbool_of_bool (abst_est_triee e));
+      Intros H; Rewrite H; Auto with bool.
+      Unfold __g_foc_error_.
+      Apply (bottom_properties self_a).
+    *};
 
- (*NdV: j'inverse l'ordre des invariants, car celui d'ajoute element est
-   prioritaire. *)
+   (*NdV: j'inverse l'ordre des invariants, car celui d'ajoute element est
+     prioritaire. *)
    theorem invariant3: all s in Self, all x in A,
      !est_triee (s) -> !est_triee (!ajoute_element (x, s))
    proof :
-   (* [Unsure - à laisser ?]
-      def: est_triee ajoute_element cons;
-      decl: cons_ajoute ajoute_spec min_inf2 cons_ajoute2 card_zero_vide
-        vide_spec2
-        min_inf ; *)
-   coq proof
-    {*
-    Intros s x.
-    Elim s.
-    Compute.
-    Trivial.
-    Intros a l Hrec Hs_trie.
-    Unfold abst_ajoute_element liste_triee__ajoute_element.
-    Elim (Sumbool.sumbool_of_bool (ordered_set_lt self_a x a)).
-    Intros case1; Rewrite case1.
-    Unfold abst_est_triee liste_triee__est_triee.
-    Hnf.
-    Rewrite case1.
-    Unfold __g_and_b.
-    Exact Hs_trie.
-    Intros case2; Rewrite case2.
-    Elim (Sumbool.sumbool_of_bool (ordered_set_equal self_a x a)).
-    Intros case3; Rewrite case3.
-    Trivial.
-    Intros case4; Rewrite case4.
-    Fold (liste_triee__ajoute_element x l).
-    Fold (liste_triee__cons a (liste_triee__ajoute_element x l)).
-    Fold (abst_cons a (liste_triee__ajoute_element x l)).
-    Apply abst_cons_ajoute.
-    Apply Hrec.
-    Unfold abst_est_triee in Hs_trie.
-    Unfold liste_triee__est_triee in Hs_trie.
-    Fold (liste_triee__est_triee l) in Hs_trie.
-    Generalize Hs_trie; Elim l; Trivial.
-    Intros a0 l0 H0 Htrie; EAuto with my_bool.
-    Apply abst_min_inf2.
-    Unfold not; Intros Habs;
-    Absurd
-      (Is_true (abst_equal (liste_triee__ajoute_element x l) abst_vide)).
-    Clear Habs; Unfold not; Intros Habs;
-    Absurd (Is_true (abst_est_element x (liste_triee__ajoute_element x l))).
-    Elim (abst_vide_spec2  (liste_triee__ajoute_element x l)).
-    Intros H1 H2; Apply H2; Trivial.
-    Fold (abst_ajoute_element x l); Trivial.
-    Elim (abst_ajoute_spec x x l); Intros H1 H2; Apply H2; Left;
-    Apply ordered_set_equal_reflexive.
-    Elim (abst_card_zero_vide (liste_triee__ajoute_element x l));
-    Intros H1 H2; Auto.
-    Intros y Hyelem.
-    Elim (abst_ajoute_spec x y l); Intros H1 H2; Elim (H1 Hyelem); Clear H1 H2.
-    Intros Hxy.
-    Elim (ordered_set_lt_dec ? a y).
-    Intros Habs; Absurd (Is_true (ordered_set_equal self_a x a));
-    EAuto with ordered_set.
-    Rewrite case4; Auto.
-    Intros Hor; Elim Hor; Clear Hor; Trivial.
-    Intros Habs; Absurd (Is_true (ordered_set_lt self_a x a)).
-    Rewrite case2; Auto.
-    Elim (ordered_set_lt_is_not_leq ? x a); Intros H1 H2.
-    Cut (Is_true (ordered_set_leq self_a x a)).  Intros Hleq.
-    Elim (H2 Hleq); Trivial.
-    Intros Habs1; Absurd (Is_true (ordered_set_equal self_a x a)); Auto.
-    Rewrite case4; Auto.
-    Apply (ordered_set_leq_transitive ? x y a); Auto with ordered_set.
-    Elim (ordered_set_lt_is_not_leq ? y a); Intros H3 H4; Elim (H3 Habs); Trivial.
-    Intros Hyelem2.
-    Cut ~(Is_true (__g_base_eq (abst_cardinal l) `0`)).
-    Intros Hcard.
-    Apply (abst_min_inf l); Trivial.
-    Elim (abst_cons_ajoute2 a l Hcard Hs_trie); Trivial.
-    Unfold not; Intros Habs; Absurd (Is_true (abst_equal l abst_vide)).
-    Unfold not; Intros Habs2; Absurd (Is_true(abst_est_element y l)); Trivial.
-    Elim (abst_vide_spec2 l); Auto.
-    Elim (abst_card_zero_vide l); Auto.
-    *};
+     (* [Unsure - à laisser ?]
+        def: est_triee ajoute_element cons;
+        decl: cons_ajoute ajoute_spec min_inf2 cons_ajoute2 card_zero_vide
+          vide_spec2
+          min_inf ; *)
+     coq proof {*
+       Intros s x.
+       Elim s.
+       Compute.
+       Trivial.
+       Intros a l Hrec Hs_trie.
+       Unfold abst_ajoute_element liste_triee__ajoute_element.
+       Elim (Sumbool.sumbool_of_bool (ordered_set_lt self_a x a)).
+       Intros case1; Rewrite case1.
+       Unfold abst_est_triee liste_triee__est_triee.
+       Hnf.
+       Rewrite case1.
+       Unfold __g_and_b.
+       Exact Hs_trie.
+       Intros case2; Rewrite case2.
+       Elim (Sumbool.sumbool_of_bool (ordered_set_equal self_a x a)).
+       Intros case3; Rewrite case3.
+       Trivial.
+       Intros case4; Rewrite case4.
+       Fold (liste_triee__ajoute_element x l).
+       Fold (liste_triee__cons a (liste_triee__ajoute_element x l)).
+       Fold (abst_cons a (liste_triee__ajoute_element x l)).
+       Apply abst_cons_ajoute.
+       Apply Hrec.
+       Unfold abst_est_triee in Hs_trie.
+       Unfold liste_triee__est_triee in Hs_trie.
+       Fold (liste_triee__est_triee l) in Hs_trie.
+       Generalize Hs_trie; Elim l; Trivial.
+       Intros a0 l0 H0 Htrie; EAuto with my_bool.
+       Apply abst_min_inf2.
+       Unfold not; Intros Habs;
+       Absurd
+         (Is_true (abst_equal (liste_triee__ajoute_element x l) abst_vide)).
+       Clear Habs; Unfold not; Intros Habs;
+       Absurd (Is_true (abst_est_element x (liste_triee__ajoute_element x l))).
+       Elim (abst_vide_spec2  (liste_triee__ajoute_element x l)).
+       Intros H1 H2; Apply H2; Trivial.
+       Fold (abst_ajoute_element x l); Trivial.
+       Elim (abst_ajoute_spec x x l); Intros H1 H2; Apply H2; Left;
+       Apply ordered_set_equal_reflexive.
+       Elim (abst_card_zero_vide (liste_triee__ajoute_element x l));
+       Intros H1 H2; Auto.
+       Intros y Hyelem.
+       Elim (abst_ajoute_spec x y l); Intros H1 H2; Elim (H1 Hyelem); Clear H1 H2.
+       Intros Hxy.
+       Elim (ordered_set_lt_dec ? a y).
+       Intros Habs; Absurd (Is_true (ordered_set_equal self_a x a));
+       EAuto with ordered_set.
+       Rewrite case4; Auto.
+       Intros Hor; Elim Hor; Clear Hor; Trivial.
+       Intros Habs; Absurd (Is_true (ordered_set_lt self_a x a)).
+       Rewrite case2; Auto.
+       Elim (ordered_set_lt_is_not_leq ? x a); Intros H1 H2.
+       Cut (Is_true (ordered_set_leq self_a x a)).  Intros Hleq.
+       Elim (H2 Hleq); Trivial.
+       Intros Habs1; Absurd (Is_true (ordered_set_equal self_a x a)); Auto.
+       Rewrite case4; Auto.
+       Apply (ordered_set_leq_transitive ? x y a); Auto with ordered_set.
+       Elim (ordered_set_lt_is_not_leq ? y a); Intros H3 H4; Elim (H3 Habs); Trivial.
+       Intros Hyelem2.
+       Cut ~(Is_true (__g_base_eq (abst_cardinal l) `0`)).
+       Intros Hcard.
+       Apply (abst_min_inf l); Trivial.
+       Elim (abst_cons_ajoute2 a l Hcard Hs_trie); Trivial.
+       Unfold not; Intros Habs; Absurd (Is_true (abst_equal l abst_vide)).
+       Unfold not; Intros Habs2; Absurd (Is_true(abst_est_element y l)); Trivial.
+       Elim (abst_vide_spec2 l); Auto.
+       Elim (abst_card_zero_vide l); Auto.
+     *};
 
    theorem invariant4 : all s1 s2 in Self,
      (!est_triee (s1) -> !est_triee (s2) -> !est_triee (!union (s1, s2)))
    proof :
-   (* [Unsure - à laisser ?]
-      def: union;
-      decl: invariant3; *)
-   coq proof
-     {*
-     Intros s1 s2 s1_triee; Clear s1_triee; Generalize s2; Clear s2.
-     Elim s1; Unfold abst_union liste__union;
-     Cbv Zeta; Auto.
+     (* [Unsure - à laisser ?]
+        def: union;
+        decl: invariant3; *)
+     coq proof {*
+       Intros s1 s2 s1_triee; Clear s1_triee; Generalize s2; Clear s2.
+       Elim s1; Unfold abst_union liste__union;
+       Cbv Zeta; Auto.
      *};
 
    theorem invariant5 : all s1 s2 in Self,
      (!est_triee (s1) -> !est_triee (s2) -> !est_triee (!inter (s1, s2)))
    proof :
-   (* [Unsure - à laisser ?]
-      def: inter;
-      decl:invariant3 invariant1; *)
-   coq proof
-     {*
-     Intros s1 s2 s1_triee s2_triee; Clear s1_triee s2_triee.
-     Unfold abst_inter liste__inter.
-     Generalize abst_invariant1; Generalize abst_vide.
-     Elim s1; Cbv Zeta; Auto.
-     Intros x l Hrec; Case (abst_est_element x s2); Auto.
+     (* [Unsure - à laisser ?]
+        def: inter;
+        decl:invariant3 invariant1; *)
+     coq proof {*
+       Intros s1 s2 s1_triee s2_triee; Clear s1_triee s2_triee.
+       Unfold abst_inter liste__inter.
+       Generalize abst_invariant1; Generalize abst_vide.
+       Elim s1; Cbv Zeta; Auto.
+       Intros x l Hrec; Case (abst_est_element x s2); Auto.
      *};
 
-   proof of bien_formee_ajoute = assumed {* Because todo *} ;
+   proof of bien_formee_ajoute = assumed {* Because todo *};
 
 
    theorem invariant6:
      all x in A, all s in Self,
        !est_triee (s) -> !est_triee (!remove_element (x, s))
    proof:
-   (* [Unsure - à laisser ?]
-      def: est_triee remove_element cons;
-      decl: cons_ajoute cons_ajoute2 min_inf2 cons_triee cons_non_vide
-      card_zero_vide remove_element_spec2 min_inf vide_spec2; *)
-   coq proof
-      {* Intros x; Induction s; Auto.
+     (* [Unsure - à laisser ?]
+        def: est_triee remove_element cons;
+        decl: cons_ajoute cons_ajoute2 min_inf2 cons_triee cons_non_vide
+        card_zero_vide remove_element_spec2 min_inf vide_spec2; *)
+     coq proof {*
+       Intros x; Induction s; Auto.
        Intros a l Hrec Htriee.
        Unfold abst_remove_element liste__remove_element.
        Case  (setoid_equal self_a x a).
@@ -1940,19 +1939,20 @@ EApply (bottom_properties self_a).
    theorem invariant7: all s1 s2 in Self,
      !est_triee (s1) -> !est_triee (s2) -> !est_triee (!diff (s1, s2))
    proof:
-   (* [Unsure - à laisser ?]
-      def: diff cons;
-      decl: invariant6 cons_triee; *)
-   coq proof
-    {*  Intros e1 e2; Generalize e1; Induction e2; Unfold abst_diff liste__diff;
-        Auto.
-        Intros e3 Htriee1 Htriee2;
-        Fold (liste__diff self_a abst_remove_element
-                 (abst_remove_element a e3) e2).
-        Apply (Hrece2 (abst_remove_element a e3)); Auto.
-        Fold (liste_triee__cons a e2) in Htriee2; EAuto.
-   *};
-end ;;
+     (* [Unsure - à laisser ?]
+        def: diff cons;
+        decl: invariant6 cons_triee; *)
+     coq proof {*
+       Intros e1 e2; Generalize e1; Induction e2; Unfold abst_diff liste__diff;
+       Auto.
+       Intros e3 Htriee1 Htriee2;
+       Fold (liste__diff self_a abst_remove_element
+                (abst_remove_element a e3) e2).
+       Apply (Hrece2 (abst_remove_element a e3)); Auto.
+       Fold (liste_triee__cons a e2) in Htriee2; EAuto.
+     *};
+end
+;;
 
 (**************************************************************)
 
@@ -1965,15 +1965,15 @@ species Entiers_concrets inherits Ordered_set =
   let print = string_of_int ;
   let parse = int_of_string ;
 
-  proof of equal_reflexive = assumed {* Because todo *} ;
-  proof of equal_symmetric = assumed {* Because todo *} ;
-  proof of equal_transitive = assumed {* Because todo *} ;
+  proof of equal_reflexive = assumed {* Because todo *};
+  proof of equal_symmetric = assumed {* Because todo *};
+  proof of equal_transitive = assumed {* Because todo *};
 
-  proof of leq_reflexive = assumed {* Because todo *} ;
-  proof of leq_antisymmetric= assumed {* Because todo *} ;
-  proof of leq_transitive = assumed {* Because todo *} ;
-  proof of total_order = assumed {* Because todo *} ;
-  proof of lt_is_not_leq = assumed {* Because todo *} ;
+  proof of leq_reflexive = assumed {* Because todo *};
+  proof of leq_antisymmetric= assumed {* Because todo *};
+  proof of leq_transitive = assumed {* Because todo *};
+  proof of total_order = assumed {* Because todo *};
+  proof of lt_is_not_leq = assumed {* Because todo *};
 end ;;
 
 collection Entiers implements Entiers_concrets ;;
@@ -1999,7 +1999,7 @@ let impairs =
 
 let total = Ensemble_entiers!union (#pairs, #impairs) ;;
 
-let print_endline (s) = print_string (sc (s,"\n")) ;;
+let print_endline (s) = print_string (s ^ "\n");;
 
 (*
 #print_endline (Ensemble_entiers!print (#pairs)) ;;
@@ -2007,29 +2007,28 @@ let print_endline (s) = print_string (sc (s,"\n")) ;;
 #print_endline (Ensemble_entiers!print (#total)) ;;
 *)
 
-
 (* Theoremes pour le fichier util.foc, je suis oblige de les definir ici *)
 (* sinon le compilo ne les voit pas *)
-theorem spec_crp : all x in ('a * 'b) ,
+theorem spec_crp : all x in ('a * 'b),
   x = basics#crp (basics#first (x), basics#scnd (x))
-  proof : assumed {* Using trusted external code. *} ;;
+  proof : assumed {* Using trusted external code. *};;
 
 theorem spec_crp_subst : all x1 x2 in 'a, all y1 y2 in 'b,
   (x1 = x2 /\ y1 = y2) -> (basics#crp (x1, y1) = basics#crp(y1, y2))
-  proof : assumed {* Using trusted external code. *} ;;
+  proof : assumed {* Using trusted external code. *};;
 
-theorem spec_first : all x in 'a , all y in 'b,
+theorem spec_first : all x in 'a, all y in 'b,
   x = basics#first (basics#crp (x, y))
-  proof : assumed {* Using trusted external code. *} ;;
+  proof : assumed {* Using trusted external code. *};;
 
 theorem spec_first_subst : all x y in ('a * 'b),
   x = y -> basics#first (x) = basics#first (y)
-  proof: assumed {* Using trusted external code. *} ;;
+  proof: assumed {* Using trusted external code. *};;
 
-theorem spec_scnd : all x in 'a , all y in 'b,
+theorem spec_scnd : all x in 'a, all y in 'b,
   y = basics#scnd (basics#crp (x, y))
-  proof: assumed {* Using trusted external code. *} ;;
+  proof: assumed {* Using trusted external code. *};;
 
 theorem spec_scnd_subst : all x y in ('a * 'b),
   x = y -> basics#scnd(x) = basics#scnd(y)
-  proof: assumed {* Using trusted external code. *} ;;
+  proof: assumed {* Using trusted external code. *};;
