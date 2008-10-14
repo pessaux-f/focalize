@@ -1,17 +1,35 @@
-# $Id: Makefile,v 1.14 2008-09-22 14:58:19 weis Exp $
+# $Id: Makefile,v 1.15 2008-10-13 23:52:08 weis Exp $
 
 ROOTDIR = .
 
 include $(ROOTDIR)/Makefile.config
 
-SUBDIRS = basement parser typing\
+COMPILER_DIRS = basement parser typing\
   commoncodegen mlcodegen coqcodegen\
-  toplevel stdlib\
+  toplevel
+
+LIB_DIRS = stdlib\
   extlib contribs
+
+SUB_DIRS = $(COMPILER_DIRS) $(LIB_DIRS)
 
 include $(ROOTDIR)/Makefile.common
 
-byt bin clean doc depend::
+all:: lib
+
+byt bin::
+	for i in $(COMPILER_DIRS); do \
+	  echo "$$i ..."; \
+	  ($(CD) $$i; $(MAKE) $@); \
+        done
+
+lib:
+	for i in $(LIB_DIRS); do \
+	  echo "$$i ..."; \
+	  ($(CD) $$i; $(MAKE) $@); \
+        done
+
+clean doc depend::
 	for i in $(SUBDIRS); do \
 	  echo "$$i ..."; \
 	  ($(CD) $$i; $(MAKE) $@); \
