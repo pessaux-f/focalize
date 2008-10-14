@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2008-10-09 09:48:27 pessaux Exp $
+# $Id: Makefile,v 1.2 2008-10-13 23:47:37 weis Exp $
 
 ROOT_DIR = ../..
 
@@ -72,14 +72,14 @@ EXTERNAL_VOS =\
 
 include $(ROOT_DIR)/Makefile.common
 
-byt:: $(BYT_FOCAL_COMPILER)\
+byt:: \
       $(EXTERNAL_BYTOBJS) $(EXTERNAL_VOS)\
       $(FOCAL_MLS) $(FOCAL_MLS_UNSAFE)\
       $(FOCAL_ZVS)\
       $(FOCAL_BYTOBJS) $(FOCAL_BYTOBJS_UNSAFE)\
       $(FOCAL_VS) $(FOCAL_VOS)
 
-bin:: $(BIN_FOCAL_COMPILER)\
+bin:: \
       $(EXTERNAL_BINOBJS) $(EXTERNAL_VOS)\
       $(FOCAL_MLS) $(FOCAL_MLS_UNSAFE)\
       $(FOCAL_ZVS)\
