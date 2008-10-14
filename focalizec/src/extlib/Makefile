@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2008-10-10 12:50:25 pessaux Exp $
+# $Id: Makefile,v 1.4 2008-10-13 23:49:05 weis Exp $
 
 ROOTDIR = ..
 
@@ -7,6 +7,8 @@ include $(ROOTDIR)/Makefile.config
 SUBDIRS = algebra
 
 include $(ROOTDIR)/Makefile.common
+
+lib: all
 
 byt bin::
 	for i in $(SUBDIRS); do \
