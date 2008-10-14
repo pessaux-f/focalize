@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.83 2008-09-18 12:20:37 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.84 2008-10-14 13:53:46 weis Exp $ *)
 
 
 (* *************************************************************** *)
@@ -938,7 +938,7 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
          [CSF_let_rec]. This function effectivly accumulates by side effect
          for each species parameter the set of methods we depend on.
 
-      { b Rem} : Local to the enclosing [dump_collection_generator_arguments]
+      {b Rem} : Local to the enclosing [dump_collection_generator_arguments]
                function. Not exported.                                        *)
   (* ************************************************************************ *)
   let rec process_one_field_memory field_memory =

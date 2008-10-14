@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.ml,v 1.13 2008-09-16 14:27:42 pessaux Exp $ *)
+(* $Id: misc_common.ml,v 1.14 2008-10-14 13:50:30 weis Exp $ *)
 
 
 
@@ -197,7 +197,7 @@ let find_entity_params_with_position params =
       currently processed method was defined and how it is propagated by
       inheritance up to the currently compiled species.
 
-    {Rem} : Exported outside this module.                                     *)
+    {b Rem} : Exported outside this module.                                     *)
 (* ************************************************************************** *)
 let follow_instanciations_for_in_param ctx env original_param_name
     original_param_unit original_param_index inheritance_steps =
@@ -407,7 +407,7 @@ type is_parameter_instanciation =
       currently processed method was defined and how it is propagated by
       inheritance up to the currently compiled species.
 
-    {Rem} : Exported outside this module.                                    *) 
+    {b Rem} : Exported outside this module.                                    *) 
 (* ************************************************************************* *)
 let follow_instanciations_for_is_param ctx env original_param_index
     inheritance_steps =
@@ -568,7 +568,7 @@ let follow_instanciations_for_is_param ctx env original_param_index
     We return the pair containing the species module name and the species
     name where the method was really DEFINED.
 
-    {Args}:
+    {b Args}:
     - [env] : The current OCaml code generation environment.
 
     - [current_unit] : The current compilation unit.
