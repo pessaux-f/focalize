@@ -14,11 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.foc,v 1.6 2008-10-14 10:32:42 weis Exp $ *)
+(* $Id: ensembles_finis.foc,v 1.7 2008-10-14 11:08:49 weis Exp $ *)
 
 (*pp basic_ext.cmo*)
 
-(* $Id: ensembles_finis.foc,v 1.6 2008-10-14 10:32:42 weis Exp $ *)
+(* $Id: ensembles_finis.foc,v 1.7 2008-10-14 11:08:49 weis Exp $ *)
 
 (**
 
@@ -384,26 +384,26 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
   let print (l in Self) =
     let rec aux (l) =
       match l with
-        | basics#[] -> "]"
-        | x :: l -> (A!print (x)) ^ "," ^ (aux (l)) in
+      | basics#[] -> "]"
+      | x :: l -> (A!print (x)) ^ "," ^ (aux (l)) in
     "[" ^ (aux (l)) ;
 
   (** Invariant de representation: les listes ne contiennent pas
      d'éléments en double. *)
   let rec bien_formee (l in Self) in bool =
     match l with
-      | [] -> true
-      | a :: l -> and_b (not_b (!est_element (a, l)), !bien_formee (l)) ;
+    | basics#[] -> true
+    | a :: l -> and_b (not_b (!est_element (a, l)), !bien_formee (l)) ;
 
-  let vide in Self = [] ;
+  let vide in Self = [ ] ;
 
   let singleton (x in A) in Self = [x] ;
 
   let est_element (x in A, e in Self) in basics#bool =
     let rec aux (l) =
       match l with
-        | [] -> false
-        | y :: l -> if A!equal (x, y) then true else aux (l) in
+      | basics#[] -> false
+      | y :: l -> if A!equal (x, y) then true else aux (l) in
     aux (e) ;
 
   theorem equal_congr_est_element : all s in Self, all x y in A,
@@ -445,7 +445,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
 
   let rec sous_ensemble (e1 in Self, e2 in Self) in bool =
     match e1 with
-    | [] -> true
+    | basics#[] -> true
     | x :: l -> and_b (!est_element (x, e2), !sous_ensemble (l, e2)) ;
 
   proof of sous_ensemble_spec =
@@ -647,7 +647,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
 
   let rec remove_element (x in A, l in Self) in Self =
      match l with
-     | [] -> []
+     | basics#[] -> [ ]
      | y :: l ->
        if A!equal (x, y) then l
        else y :: !remove_element (x, l) ;
@@ -655,14 +655,14 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
   let diff (e1 in Self, e2 in Self) =
     let rec aux (accu, l) =
       match l with
-      | [] -> accu
+      | basics#[] -> accu
       | x :: l -> aux (!remove_element (x, accu), l) in
     aux (e1, e2) ;
 
   let raw_cardinal (l in Self) in int =
     let rec aux (l, x) =
       match l with
-      | [] -> x
+      | basics#[] -> x
       |  _ :: l -> aux (l, x + 1) in
     aux (l, 0) ;
 
@@ -780,7 +780,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
 
   let rec union (e1 in Self, e2 in Self) =
     match e1 with
-    | [] -> e2
+    | basics#[] -> e2
     | x :: l -> !union (l, !ajoute_element (x, e2)) ;
 
   theorem bien_formee_union:
@@ -859,7 +859,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
   let inter (e1 in Self, e2 in Self)=
     let rec aux (accu in Self, e) =
       match e with
-      | [] -> accu
+      | basics#[] -> accu
       | x :: l ->
         if !est_element (x, e2)
         then aux (!ajoute_element (x, accu), l)
@@ -1476,10 +1476,10 @@ species Liste_triee (A is Ordered_set) inherits
        chaque élément est strictement plus petit que le suivant. *)
    let rec est_triee (l in Self) in bool =
      match l with
-     | [] -> true
+     | basics#[] -> true
      | x :: l ->
         (match l with
-         | [] -> true
+         | basics#[] -> true
          | y :: l1 -> and_b (A!lt (x, y), !est_triee (l))) ;
 
    (** le nouvel invariant implique celui de l'espèce parent (non duplication).*)
@@ -1517,7 +1517,7 @@ species Liste_triee (A is Ordered_set) inherits
 
    let rec ajoute_element (x in A, l in Self) =
      match l with
-     | [] -> [x]
+     | basics#[] -> [x]
      | y :: l1 ->
        if A!lt (x, y) then x :: l else
        if A!equal (x, y) then l else
@@ -1718,7 +1718,7 @@ species Liste_triee (A is Ordered_set) inherits
 
   let raw_min (e in Self) =
     match e with
-    | [] -> A!element
+    | basics#[] -> A!element
     | x :: _ -> x ;
 
   theorem raw_min_spec:
