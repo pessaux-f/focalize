@@ -12,12 +12,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.2 2008-10-14 12:28:17 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.3 2008-10-14 13:42:29 pessaux Exp $ *)
 
 
 let gendoc_species_field out_fmt = function
-  | Env.TypeInformation.SF_sig (_, n, _) ->
-      Format.fprintf out_fmt "<LI>Signature: %a</LI>@\n" Sourcify.pp_vname n
+  | Env.TypeInformation.SF_sig (_, n, sch) ->
+      Format.fprintf out_fmt "<LI>Signature: %a : %a</LI>@\n"
+	Sourcify.pp_vname n Types.pp_type_scheme sch
   | Env.TypeInformation.SF_let (_, n, _, _, _, _, _) ->
       Format.fprintf out_fmt "<LI>Let: %a</LI>@\n" Sourcify.pp_vname n
   | Env.TypeInformation.SF_let_rec let_field_infos ->
