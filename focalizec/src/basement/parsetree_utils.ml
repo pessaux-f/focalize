@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.23 2008-09-18 12:20:37 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.24 2008-10-14 13:38:07 weis Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -246,7 +246,7 @@ let type_coll_from_qualified_species (species_modname, species_vname) =
     only possible expressions are those denoting "Self" or another atomic
     species name.
 
-    {Rem}: Exported outside this module.                                  *)
+    {b Rem}: Exported outside this module.                                  *)
 (* ********************************************************************** *)
 type simple_species_expr_as_effective_parameter =
   (** The name of the species used as species parameter is "Self". *)

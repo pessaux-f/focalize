@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.64 2008-10-14 13:38:07 weis Exp $ *)
+(* $Id: types.ml,v 1.65 2008-10-14 13:42:39 weis Exp $ *)
 
 
 (* **************************************************************** *)
@@ -564,7 +564,7 @@ let copy_type_simple_but_variables ~and_abstract =
     the collection substitution because we make it also operating on the
     [Parsetree.ast_type] field of the AST.
 
-    {Rem} : Because the compiler doesn't use the [Parsetree.ast_type] field
+    {b Rem} : Because the compiler doesn't use the [Parsetree.ast_type] field
     of the AST, the result of this function will never be used internally
     by the compiler.
     Exported outside this module.                                           *)
