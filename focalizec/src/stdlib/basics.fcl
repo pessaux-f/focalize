@@ -1,6 +1,7 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
@@ -13,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.26 2008-10-13 23:42:32 weis Exp $ *)
+(* $Id: basics.fcl,v 1.27 2008-10-14 10:17:19 weis Exp $ *)
 
 (** The very basic definitions for focalize code:
     built-in or (almost) mandatory type definitions,
@@ -120,9 +121,6 @@ let or_b =
   | coq -> {* coq_builtins.bi__or_b *}
 ;;
 
-let ( && ) (x, y) = and_b (x, y) ;;
-let ( || ) (x, y) = or_b (x, y) ;;
-
 let not_b =
   internal bool -> bool
   external
@@ -137,10 +135,19 @@ let xor_b =
   | coq -> {* coq_builtins.bi__xor_b *}
 ;;
 
+let ( && ) (x, y) = and_b (x, y);;
+let ( || ) (x, y) = or_b (x, y);;
+let ( ~| ) = not_b;;
+let ( |<>| ) = xor_b;;
+
 (* Operations on pairs. *)
 let crp (x, y) = (x, y) ;;
 let first (x) = match x with | (v, _ ) -> v ;;
 let scnd (x) = match x with | (_, v) -> v ;;
+
+let pair = crp;;
+let fst = first;;
+let snd = scnd;;
 
 (* Basic printing. *)
 let print_int =
