@@ -11,7 +11,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.36 2008-10-14 07:05:56 weis Exp $
+# $Id: Makefile,v 1.37 2008-10-14 07:42:36 weis Exp $
 
 ROOT_DIR = ..
 
@@ -69,23 +69,17 @@ BYTOBJS = \
 
 include $(ROOT_DIR)/Makefile.common
 
-.PHONY: focalizec_byt_link focalizec_bin_link focalizec.byt focalizec.bin fodump
-
-byt:: focalizec_byt_link
-
-focalizec_byt_link: focalizec.byt
-	$(LN) focalizec.byt focalizec
+byt:: focalizec.byt
 
 focalizec.byt: $(BYTOBJS)
 	$(CAMLBYT) $(BYTOBJS) -o $@
+	$(LN) focalizec.byt focalizec
 
-bin:: focalizec_bin_link
-
-focalizec_bin_link: focalizec.bin
-	$(LN) focalizec.bin focalizec
+bin:: focalizec.bin
 
 focalizec.bin: $(BINOBJS)
 	$(CAMLBIN) $(BINOBJS) -o $@
+	$(LN) focalizec.bin focalizec
 
 fodump: fodump.cmo
 	$(CAMLBYT) ../basement/installation.cmo \
