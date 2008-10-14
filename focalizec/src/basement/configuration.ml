@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.18 2008-06-19 09:21:36 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.19 2008-10-14 12:13:21 pessaux Exp $ *)
 
 
 exception Input_file_already_set ;;
@@ -52,6 +52,12 @@ let (get_verbose, set_verbose) =
   let verbose = ref false in
   ((fun () -> !verbose),
    (fun () -> verbose := true))
+;;
+
+let (get_focal_doc, set_focal_doc) =
+  let doc = ref false in
+  ((fun () -> !doc),
+   (fun () -> doc := true))
 ;;
 
 let (get_pretty_print, set_pretty_print) =

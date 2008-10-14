@@ -11,14 +11,14 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.17 2008-10-14 07:05:55 weis Exp $
+# $Id: Makefile,v 1.18 2008-10-14 12:13:21 pessaux Exp $
 
 ROOT_DIR = .
 
 include $(ROOT_DIR)/Makefile.config
 
 COMPILER_DIRS = basement parser typing\
-  commoncodegen mlcodegen coqcodegen\
+  docgen commoncodegen mlcodegen coqcodegen\
   toplevel
 
 LIB_DIRS = stdlib\

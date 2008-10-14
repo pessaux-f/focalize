@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.16 2008-06-09 12:13:29 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.17 2008-10-14 12:13:21 pessaux Exp $ *)
 
 
 (** The various flags and definitions useful to the internal behaviour of the
@@ -26,6 +26,9 @@ val focal_full_version : string
 
 val get_verbose : unit -> bool
 val set_verbose : unit -> unit
+
+val get_focal_doc : unit -> bool
+val set_focal_doc : unit -> unit
 
 val get_pretty_print : unit -> string option
 val set_pretty_print : string -> unit

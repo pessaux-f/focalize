@@ -11,7 +11,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.48 2008-10-14 07:18:18 weis Exp $
+# $Id: Makefile,v 1.49 2008-10-14 12:13:21 pessaux Exp $
 
 ROOT_DIR = ..
 
@@ -21,8 +21,8 @@ include $(ROOT_DIR)/Makefile.config
 # in its generated code. Especially "Warning Z: unused variable ..."
 # because FoCaL doesn't have the "_" ident which would be usefull in
 # the case of let foo (x in unit) = ...
-CAMLBYT = ocamlc -w A
-CAMLBIN = ocamlc -w A
+CAMLBYT = ocamlc
+CAMLBIN = ocamlc
 
 BYT_FOCAL_COMPILER = $(ROOT_DIR)/toplevel/focalizec.byt
 BIN_FOCAL_COMPILER = $(BYT_FOCAL_COMPILER:.byt=.bin)
@@ -38,8 +38,8 @@ COQ_INCLUDES = -I ../../zenon/
 FOCAL_SRC = basics.foc \
 	sets.foc\
 	sets_orders.foc \
-	wellfounded.foc \
-	products.foc
+	wellfounded.foc #\
+#	products.foc
 
 FOCAL_SRC_UNSAFE = \
 	ensembles_finis.foc
@@ -99,19 +99,6 @@ install:: all
 clean::
 	$(RM) $(FOCAL_MLS) $(FOCAL_ZVS) $(FOCAL_VS)
 	$(RM) $(FOCAL_MLS_UNSAFE) $(FOCAL_ZVS_UNSAFE) $(FOCAL_VS_UNSAFE)
-
-# Were not compiled to Coq in the previous FoCaL compiler...
-big_integers.ml: big_integers.foc
-	$(FOCALC) --no-coq-code $<
-parse_poly.ml: parse_poly.foc
-	$(FOCALC) --no-coq-code $<
-polys_abstract.ml: polys_abstract.foc
-	$(FOCALC) --no-coq-code $<
-#End temporary
-
-# Special rules for exceptions that need to be compiled after basics.foc.
-array_foc_externals.vo: basics.vo
-random_foc_externals.vo: basics.vo
 
 $(BYT_FOCAL_COMPILER) $(BIN_FOCAL_COMPILER):
 	cd $(ROOT_DIR); $(MAKE) all

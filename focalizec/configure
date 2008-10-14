@@ -5,7 +5,7 @@ UNDERLINETAG="\033[4m"
 NORMALTAG="\033[0m"
 
 SUB_DIRS="basement parser typing \
-  commoncodegen mlcodegen coqcodegen \
+  docgen commoncodegen mlcodegen coqcodegen \
   toplevel \
   stdlib \
   extlib extlib/algebra extlib/access_control \

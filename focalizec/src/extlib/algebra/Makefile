@@ -11,7 +11,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.3 2008-10-14 07:00:37 weis Exp $
+# $Id: Makefile,v 1.4 2008-10-14 12:13:21 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -108,11 +108,11 @@ clean::
 
 # Were not compiled to Coq in the previous FoCaL compiler...
 big_integers.ml: big_integers.foc
-	$(FOCALC) --no-coq-code $<
+	$(FOCALIZEC) --no-coq-code $<
 parse_poly.ml: parse_poly.foc
-	$(FOCALC) --no-coq-code $<
+	$(FOCALIZEC) --no-coq-code $<
 polys_abstract.ml: polys_abstract.foc
-	$(FOCALC) --no-coq-code $<
+	$(FOCALIZEC) --no-coq-code $<
 #End temporary
 
 

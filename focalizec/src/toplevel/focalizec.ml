@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.29 2008-08-14 09:24:02 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.30 2008-10-14 12:13:21 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -24,6 +24,9 @@ let main () =
        Arg.String Configuration.set_dotty_dependencies,
        " dumps species non-let-rec- dependencies as dotty\n\tfiles into the \
          argument directory.") ;
+      ("-focal-doc",
+       Arg.Unit Configuration.set_focal_doc,
+       " generate documentation.") ;
       ("-i",
        Arg.Unit (fun () -> Configuration.set_do_interface_output true),
        " prints the source file interface.") ;
@@ -115,6 +118,9 @@ let main () =
   (* Typechecks the AST. *)
   let (typing_toplevel_env, stuff_to_compile) =
     Infer.typecheck_file ~current_unit scoped_ast in
+  (* Generate the documentation if requested. *)
+  if Configuration.get_focal_doc () then
+    Main_docgen.gendoc_please_compile_me input_file_name stuff_to_compile ;
   (* Now go to the OCaml code generation if requested. *)
   let mlgen_toplevel_env =
     if Configuration.get_generate_ocaml () then

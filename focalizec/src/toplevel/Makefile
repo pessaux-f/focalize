@@ -11,14 +11,15 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.37 2008-10-14 07:42:36 weis Exp $
+# $Id: Makefile,v 1.38 2008-10-14 12:13:21 pessaux Exp $
 
 ROOT_DIR = ..
 
 include $(ROOT_DIR)/Makefile.config
 
 CAML_INCLUDES = -I ../basement -I ../parser -I ../typing \
-	-I ../commoncodegen -I ../mlcodegen -I ../coqcodegen
+	-I ../commoncodegen -I ../docgen -I ../mlcodegen -I ../coqcodegen
+
 
 LOCAL_BYTOBJS = focalizec.cmo exc_wrapper.cmo
 
@@ -46,6 +47,8 @@ BYTOBJS = \
 	../typing/dep_analysis.cmo \
 	../typing/param_dep_analysis.cmo \
 	../typing/infer.cmo \
+	\
+	../docgen/main_docgen.cmo \
 	\
 	../commoncodegen/visUniverse.cmo \
 	../commoncodegen/minEnv.cmo \
