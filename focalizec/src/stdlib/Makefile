@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.45 2008-10-13 12:15:07 rr Exp $
+# $Id: Makefile,v 1.46 2008-10-13 23:45:32 weis Exp $
 
 ROOT_DIR = ..
 
@@ -14,13 +14,13 @@ CAMLBIN = ocamlc -w A
 BYT_FOCAL_COMPILER = $(ROOT_DIR)/toplevel/focalizec.byt
 BIN_FOCAL_COMPILER = $(BYT_FOCAL_COMPILER:.byt=.bin)
 
-FOCAL_COMPILER = $(BYT_FOCAL_COMPILER)
+FOCAL_COMPILER = $(BIN_FOCAL_COMPILER)
 
 FOCAL_COMP_FLAGS = -no-stdlib-path
 
 #From Makefile.config FOCALC = $(FOCAL_COMPILER) $(FOCAL_COMP_FLAGS)
 
-ZVTOV = ../../zvtov/zvtov -new -zenon ../../zenon/zenon
+ZVTOV += -new -zenon ../../zenon/zenon
 
 COQ_COMP_FLAGS = -I ../../zenon/
 
@@ -66,14 +66,16 @@ EXTERNAL_VOS =\
 
 include $(ROOT_DIR)/Makefile.common
 
-byt:: $(BYT_FOCAL_COMPILER)\
+lib: all
+
+byt:: \
       $(EXTERNAL_BYTOBJS) $(EXTERNAL_VOS)\
       $(FOCAL_MLS) $(FOCAL_MLS_UNSAFE)\
       $(FOCAL_ZVS)\
       $(FOCAL_BYTOBJS) $(FOCAL_BYTOBJS_UNSAFE)\
       $(FOCAL_VS) $(FOCAL_VOS)
 
-bin:: $(BIN_FOCAL_COMPILER)\
+bin:: \
       $(EXTERNAL_BINOBJS) $(EXTERNAL_VOS)\
       $(FOCAL_MLS) $(FOCAL_MLS_UNSAFE)\
       $(FOCAL_ZVS)\
