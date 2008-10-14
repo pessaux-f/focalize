@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.117 2008-10-10 12:50:25 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.118 2008-10-14 13:59:14 weis Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2482,7 +2482,7 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
          [CSF_let_rec]. This function effectivly accumulates by side effect
          for each species parameter the set of methods we depend on.
 
-      { b Rem} : Local to the enclosing [dump_collection_generator_arguments]
+      {b Rem} : Local to the enclosing [dump_collection_generator_arguments]
                function. Not exported.                                        *)
   (* ************************************************************************ *)
   let rec process_one_field_memory field_memory =
@@ -3139,7 +3139,7 @@ type record_type_arg_for_carrier_instanciation =
 
 
 
-(** {Descr} : Prints the instanciation of parameters' carriers that were
+(** {b Descr} : Prints the instanciation of parameters' carriers that were
     abstracted. *)
 let print_record_type_carriers_args_instanciations ctx env args_instanciations =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -3172,7 +3172,7 @@ let print_record_type_carriers_args_instanciations ctx env args_instanciations =
 
 
 
-(** {Descr} : Prints the instanciation of parameters' methods that were
+(** {b Descr} : Prints the instanciation of parameters' methods that were
     abstracted. *)
 let print_methods_from_params_instanciations ctx env formal_to_effective_map l =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -3322,6 +3322,7 @@ let print_implemented_species_as_coq_module ~current_unit out_fmter
 
     leads to the following Coq code:
 
+    {[
       Record Foo0 (A0_T : Set) : Type :=
         mk_Foo0 {
         Foo0_T :> Set ;
@@ -3335,6 +3336,7 @@ let print_implemented_species_as_coq_module ~current_unit out_fmter
         (* From species collgen_for_coq#Foo0. *)
         Coll_v : basics.int__t
         }.
+     ]}
 
     To create the record value for Coll, we must borrow the field "v"
     from Foo0, but since the type Foo0 is parametrised (by A0_T),

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.60 2008-10-10 10:25:16 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.61 2008-10-14 13:59:14 weis Exp $ *)
 
 
 
@@ -49,7 +49,7 @@ let make_Self_cc_binding_species_param ~current_species spe_param_name =
     may have failed earlier because any qualified name must have and
     explicit qualification after the scoping pass.
 
-    { Rem}: Not exported outside this module.                               *)
+    {b Rem}: Not exported outside this module.                               *)
 (* ************************************************************************ *)
 let simply_pp_to_coq_qualified_vname ~current_unit ppf = function
   | Parsetree.Vname _ ->
