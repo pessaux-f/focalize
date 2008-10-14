@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.27 2008-10-14 10:17:19 weis Exp $ *)
+(* $Id: basics.fcl,v 1.28 2008-10-14 12:44:25 weis Exp $ *)
 
 (** The very basic definitions for focalize code:
     built-in or (almost) mandatory type definitions,
@@ -297,7 +297,7 @@ let int_min =
   internal int -> int -> int
   external
   | caml -> {* Ml_builtins.bi__int_min *}
-  | coq ->{* coq_builtins.bi__int_min *}
+  | coq -> {* coq_builtins.bi__int_min *}
 ;;
 
 let int_div =
@@ -558,9 +558,9 @@ theorem int_minus_plus: all x y z in int,
 (*                                                                       *)
 species Basic_object =
   (* Generic print function. *)
-  let print (x in Self) = "<abst>" ;
+  let print (_x in Self) = "<abst>" ;
   (* Generic parse function. *)
-  let parse (x in string) in Self = #foc_error ("not parsable") ;
+  let parse (_x in string) in Self = #foc_error ("not parsable") ;
 end
 ;;
 

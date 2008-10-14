@@ -11,18 +11,11 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.49 2008-10-14 12:13:21 pessaux Exp $
+# $Id: Makefile,v 1.50 2008-10-14 12:44:25 weis Exp $
 
 ROOT_DIR = ..
 
 include $(ROOT_DIR)/Makefile.config
-
-# Just redefine to remove the warnings because FoCaL has some warnings
-# in its generated code. Especially "Warning Z: unused variable ..."
-# because FoCaL doesn't have the "_" ident which would be usefull in
-# the case of let foo (x in unit) = ...
-CAMLBYT = ocamlc
-CAMLBIN = ocamlc
 
 BYT_FOCAL_COMPILER = $(ROOT_DIR)/toplevel/focalizec.byt
 BIN_FOCAL_COMPILER = $(BYT_FOCAL_COMPILER:.byt=.bin)
