@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.150 2008-10-16 13:18:52 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.151 2008-10-16 20:58:15 weis Exp $ *)
 
 
 
@@ -1114,15 +1114,17 @@ let rec typecheck_expr ctx env initial_expr =
          let tys = List.map (typecheck_expr ctx env) exprs in
          Types.type_tuple tys
      | Parsetree.E_external ext_expr -> typecheck_external_expr ext_expr
-     | Parsetree.E_paren expr -> typecheck_expr ctx env expr
      | Parsetree.E_equality (e1, e2) ->
-         let ty1 = typecheck_expr ctx env e1 in
-         let ty2 = typecheck_expr ctx env e2 in
+         let ty_e1 = typecheck_expr ctx env e1 in
+         let ty_e2 = typecheck_expr ctx env e2 in
+         (* Enforce both sides to have the same type. *)
          ignore
            (Types.unify
-             ~loc: initial_expr.Parsetree.ast_loc
-             ~self_manifest: ctx.self_manifest ty1 ty2) ;
-         Types.type_bool ()) in
+              ~loc: initial_expr.Parsetree.ast_loc
+              ~self_manifest: ctx.self_manifest ty_e1 ty_e2);
+         (* Equality returns a boolean. *)
+         Types.type_bool ()
+     | Parsetree.E_paren expr -> typecheck_expr ctx env expr) in
   (* Store the type information in the expression's node. *)
   initial_expr.Parsetree.ast_type <- Parsetree.ANTI_type final_ty ;
   (* Check if the expression has type Self and set the flag according to. *)

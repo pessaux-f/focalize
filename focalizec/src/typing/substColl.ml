@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.25 2008-10-16 13:18:52 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.26 2008-10-16 20:59:41 weis Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -431,11 +431,11 @@ let rec subst_expr ~current_unit c1 c2 expression =
        | Parsetree.E_external _ ->
            (* Because this is in fact just a string, nowhere to substitute . *)
            initial_expr.Parsetree.ast_desc
-       | Parsetree.E_paren expr -> Parsetree.E_paren (rec_subst expr)
        | Parsetree.E_equality (e1, e2) ->
-           let e1' = rec_subst e1 in
-           let e2' = rec_subst e2 in
-           Parsetree.E_equality (e1', e2')) in
+           let e1 = rec_subst e1 in
+           let e2 = rec_subst e2 in
+           Parsetree.E_equality (e1, e2)
+       | Parsetree.E_paren expr -> Parsetree.E_paren (rec_subst expr)) in
     (* Substitute in the AST node type. *)
     let new_type =
       subst_ast_node_type_information c1 c2 initial_expr.Parsetree.ast_type in

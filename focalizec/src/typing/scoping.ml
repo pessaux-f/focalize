@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.68 2008-10-16 13:18:52 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.69 2008-10-16 20:55:59 weis Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1169,6 +1169,10 @@ and scope_expr ctx env expr =
      | Parsetree.E_external _ ->
          (* Nothing to scope since it's only strings. *)
          expr.Parsetree.ast_desc
+     | Parsetree.E_equality (e1, e2) ->
+         let scoped_e1 = scope_expr ctx env e1 in
+         let scoped_e2 = scope_expr ctx env e2 in
+         Parsetree.E_equality (scoped_e1, scoped_e2)
      | Parsetree.E_paren e ->
          let scoped_e = scope_expr ctx env e in
          Parsetree.E_paren scoped_e
