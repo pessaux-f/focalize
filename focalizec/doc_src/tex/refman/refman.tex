@@ -1,14 +1,6 @@
-\documentclass{report}
+\documentclass{book}
 \usepackage[francais]{babel}
-%%\usepackage{dropping}
-\usepackage[T1]{fontenc}
-\usepackage{geometry}
-\usepackage{alltt}
 \usepackage[latin1]{inputenc}
-\usepackage[french]{varioref}
-\usepackage{amssymb}
-\usepackage{amsmath}
-\usepackage{amscd}
 \usepackage{color}
 \usepackage{listings}
 
@@ -27,12 +19,10 @@
   }
 
 \lstset{
-  language=Focal, tabsize=2, frame=single, breaklines=true,
+  language=Focal, tabsize=2, frame=none, breaklines=true,
   basicstyle=\ttfamily, framexleftmargin=1mm, xleftmargin=1mm
 }
 
-
-\geometry{a4paper,twoside,body={5.5in,9in}}
 
 \begin{document}
 
@@ -147,6 +137,11 @@ are enumerated. These methods represent the internal datatype of the
 species, functions to manipulate this datatype and properties that
 must hold in the species.
 
+One important restriction on the type of the methods is that it cannot
+be polymorphic. However, \focal\ provides another mechanism to
+circumvent this restriction, the parameterisation as explained
+further.
+
 A species can hence be seen as an abstract data type. On another hand,
 it can be seen as a kind of object, with its internal state (private
 variables) and its methods.
@@ -164,9 +159,9 @@ There are several kinds of methods:
     data structure as:
     {\scriptsize
       \begin{lstlisting}
-        species IntCouple =
-          rep = (int * int) ;
-        end ;;
+species IntCouple =
+  rep = (int * int) ;
+end ;;
       \end{lstlisting}
     }
     Each ``instance'' of this species will encapsulate \underline{1}
@@ -185,13 +180,13 @@ There are several kinds of methods:
   \item {\bf Signatures}. They introduce the ``prototype'' of a
     function, that is provide their type. As a first introduction,
     types expressions are closely like ML-like type expressions.
-    A signature specifies the name of the operation then its type. For
-    instance:
+    A signature can be viewed as de declaration. It specifies the name
+    of the operation then its type. For instance:
     {\scriptsize
       \begin{lstlisting}
-        species IntStack =
-          signature push : int -> Self -> Self ;
-        end ;;
+ species IntStack =
+   signature push : int -> Self -> Self ;
+ end ;;
       \end{lstlisting}
     }
     As we saw above, {\tt Self} represents the underlying carrier type
@@ -204,13 +199,14 @@ There are several kinds of methods:
     carrier's elements. They are implementations of signatures,
     providing effective code to execute. A function is introduced by
     the {\tt let} keyword. Recursive functions are introduced by
-    {\tt let rec} to make explicit the recursivity.
+    {\tt let rec} to make explicit the recursivity. A function can be
+    viewed as de definition.
     {\scriptsize
       \begin{lstlisting}
-        species IntStack =
-          rep = int list ;
-          let push (v in int, s in Self) = v :: s ;
-        end ;;
+species IntStack =
+  rep = int list ;
+  let push (v in int, s in Self) = v :: s ;
+end ;;
       \end{lstlisting}
     }
 
@@ -218,14 +214,14 @@ There are several kinds of methods:
     describing requierements that functions must meet. When stating a
     property, the proof that it holds is not yet provided. However it
     will have to finally to get a species that can be
-    instanciated.
+    instanciated. A property can be viewed as a declaration.
     {\scriptsize
       \begin{lstlisting}
-        species IntStack =
-          ...
-          property push\_returns\_non\_empty :
-            all v in int, all s in Self, push (v, s) -> ~ is\_empty (s) ;
-        end ;;
+species IntStack =
+  ...
+  property push_returns_non_empty :
+    all v in int, all s in Self, push (v, s) -> ~ is\_empty (s) ;
+end ;;
       \end{lstlisting}
     }
 
@@ -233,32 +229,195 @@ There are several kinds of methods:
     field in a species.The way to give proofs will be seen further.
     {\scriptsize
       \begin{lstlisting}
-        species IntStack2 inherits IntStack =
-          proof of push\_returns\_non\_empty = ... ;            
-        end ;;
+species IntStack2 inherits IntStack =
+  proof of push_returns_non_empty = ... ;            
+end ;;
       \end{lstlisting}
     }
 
   \item {\bf Theorems}. They are properties with their proofs. In
     fact, when defining a property, we only give the statement of a
-    theorem, leaving its proof for later.
+    theorem, leaving its proof for later. A theorem can be viewed as a
+    definition.
     {\scriptsize
       \begin{lstlisting}
-        species IntStack =
-          ...
-          theorem push\_returns\_non\_empty :
-            all v in int, all s in Self, push (v, s) -> ~ is\_empty
-            (s)
-          proof : ... ;
-        end ;;
+species IntStack =
+  ...
+  theorem push_returns_non_empty :
+    all v in int, all s in Self, push (v, s) -> ~ is_empty
+    (s)
+  proof : ... ;
+end ;;
       \end{lstlisting}
     }
 
 \end{itemize}
 
 \subsection{Collections}
-\subsection{Inheritance}
-\subsection{Late-binding}
+A {\bf collection} is a kind o ``instance'' of a complete species. A
+species is said {\em complete} if all its methods are {\em defined},
+i.e. have an implementation. In other words this means that there is
+no more methods only {\em declared}. This notion implies that:
+\begin{itemize}
+  \item The carrier is defined by providing a type definition for
+    {\tt rep}.
+  \item For signature an effective function exists.
+  \item For each property, a proof is given.
+\end{itemize}
+
+Obviously, it is possible to build a species without signatures and
+properties, only providing functions and theorems directly. In this
+case, if the carrier is also defined, then the obtained species is
+trivially complete.
+
+The important point for a species to be complete is that it can be
+turned into effective executable code. In effect, since it is
+complete, all its components are known then can be translated into a
+target code.
+
+The process of getting this effective executable code is by making a
+collection that {\em implements} the species. As a result, one get an
+entity whose internal representation has the type of the carrier of
+the {\em implemented} species and thatcan be manipulated by the
+methods present in this {\em implemented} species. However, the
+manupilations will be done via the collection and not anymore via the
+species.
+
+\begin{lstlisting}
+species Full =
+  rep = int ;
+  let create_random in Self = random_foc#random_int (42) ;
+  let double (x in Self) = x + x ;
+  let print (x in Self) = print_int (x) ;
+end ;;
+
+collection MyFull_Instance implements Full ;;
+
+let v = Full.create_random ;;
+Full.print (v) ;;
+let dv = Full.double () ;;
+Full.print (dv) ;;
+\end{lstlisting}
+
+In the above example, we defined a complete species {\tt Full}. Then
+we ``take an instance'' of such a species by creating the collection
+{\tt MyFull\_Instance}. We can then use methods of this collection on
+values of this collection.
+
+A very important point is that when creating a collection, the
+representation of the carrier contained in the ``implemented'' species
+gets opaque. In other words, the collection becomes an abstract
+datatype. This especially means that it will be impossible to
+manipulate values of the carrier without the collection's
+methods. Moreover, two collections created from a same species will
+not be type-compatible since their carriers got abstracted making now
+impossible to ensure a type equivalence.
+
+As a conclusion, collections are the only way to get something that
+can be executed since they are the terminal items of a
+\focal\ development hierarchy. Since thay are ``terminal'', this also
+means that no method can be added to a collection. Moreover, a
+collection may not be used to create a new species by inheritance (as
+explained in the next section).
+
+
+\subsection{Interfaces}
+The {\bf interface} of a species is the list of the declarations of
+its methods. It corresponds to the end-user point of view, who wants
+to know which functions he can use, and which properties these
+functions have, but doesn't care about the details of the
+implementation.
+
+To get the interface of a species, we keep the methods only declared
+(as previously stated, signatures and properties) and we forget the
+bodies of the defined methods (carrier, functions and theorems).
+Discarding the body of the carrier means we consider it was not given
+at all, for a function we only keep its type and for a theorem we only
+keep its statement. Hence, getting the interface of a species can
+roughly be seen as erasing the carrier, turning the functions into
+signatures and the theorems into properties.
+
+While this abstraction is easy within programming languages, it is not
+always possible when dealing with proofs and properties. Such
+problematic species are rejected by \focal\ and will be described
+later.
+
+
+
+
+\section{Building species}
+In this chapter, we describe the relations between species to build
+incrementally more complex species from previously existing ones. Two
+mechanisms are available for this purpose: parameterisation and
+inheritance.
+
 \subsection{Parameterisation}
+\subsection{Collection parameters}
+Remember that methods cannot be polymorphics. So it seems difficult to
+create a species whose methods work on a carrier having a type
+structure in which we would like to have some parts unconstrained. For
+example, who to implement the well-known polymorphic type of the
+lists ? A list is a structure grouping elements but independently of
+the type of these elements. The only constraint is that all elements
+have the same type. Hence, a ML-like representation of lists would be
+like:
+\begin{lstlisting}
+type 'a list =
+  | Nil
+  | Cons of ('a * 'a list)
+\end{lstlisting}
+
+The {\tt 'a} is then a parameter of the type and is polymorphic.
+In \focal\ we would like to create a species looking like:
+\begin{lstlisting}
+species List =
+  signature nil : Self ;
+  signature cons : 'a -> Self -> Self ;
+end ;;
+\end{lstlisting}
+
+Instead of abstracting the type parameter and leaving it free in the
+context of the species, in \focal\ we parameterise the species by
+another species:
+\begin{lstlisting}
+species List (Elem is Basic_object) =
+  signature nil : Self ;
+  signature cons : Elem -> Self -> Self ;
+end ;;
+\end{lstlisting}
+
+The {\tt Elem} is called a {\bf collection parameter} and is expected
+to be a species having at least the methods of a species called
+{\tt Basic\_object}\footnote{{\tt Basic\_object} is a basic and poor
+species from the standard library, containing only few methods.} with
+the same types. Collection parameters are introduced by the {\tt is}
+keyword. When a parameterised species will be used, \focal\ expects it
+to be applied to effective collection parameters having compatible
+species interfaces. In other words the effective parameter will have
+to present an interface with at least the functions of
+{\tt Basic\_object} and each method will have to have the same type
+than the corresponding one in {\tt Basic\_object}.
+
+Although the parameters looks like a species, why is it called a
+{\bf collection parameter} ? The answer to this question is especially
+important to understand the programming model in \focal. It is called
+a collection because finally, at the terminal nodes of the
+development, this parameter will have to be instanciated by a
+collection, that is an entity where everything is defined ! Imagine
+how to build a code we could execute if a parameter was instanciated
+with an entity with methods only declared\ldots
+
+So, even if the collection parameter {\bf is} a species name,
+\underline{it will not be a species}. It will be
+\underline{a collection having an interface compatible} with the
+interface of the species. Hence, declaring a collection parameter for
+a parameterised species means providing two things: the name of the
+parameter and the signature that the instanciation of this parameter
+must satisfy.
+
+\subsection{Inheritance and its mechanisms}
+\subsubsection{Inheritance}
+\subsubsection{Late-binding}
+
 
 \end{document}
