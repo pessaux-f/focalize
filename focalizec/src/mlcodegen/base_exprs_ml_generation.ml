@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.31 2008-10-16 13:18:52 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.32 2008-10-16 21:01:15 weis Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -639,6 +639,12 @@ and generate_expr ctx ~local_idents env initial_expression =
              (Externals_generation_errs.No_external_value_def
                 ("OCaml", (Parsetree.Vlident "<expr>"), expr.Parsetree.ast_loc))
          end)
+     | Parsetree.E_equality (expr1, expr2) ->
+         Format.fprintf out_fmter "@[<2>" ;
+         rec_generate loc_idents expr1 ;
+         Format.fprintf out_fmter " =@ " ;
+         rec_generate loc_idents expr2 ;
+         Format.fprintf out_fmter "@]"
      | Parsetree.E_paren e -> rec_generate loc_idents e
      | Parsetree.E_equality (e1, e2) ->
          rec_generate loc_idents e1 ;
