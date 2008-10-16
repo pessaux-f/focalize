@@ -1,0 +1,264 @@
+\documentclass{report}
+\usepackage[francais]{babel}
+%%\usepackage{dropping}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{alltt}
+\usepackage[latin1]{inputenc}
+\usepackage[french]{varioref}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amscd}
+\usepackage{color}
+\usepackage{listings}
+
+
+\input{macros}
+
+%% Pour afficher les listings de manière plus sexy... ;)
+\lstdefinelanguage{Focal}
+  {morekeywords={property, let, signature, species, is, in, inherits,
+      all, exists, rep, if, then, else, proof, of, by, definition,
+      collection, implements},
+    sensitive=false,
+    morecomment=[n]{(*}{*)},  %% Autoriser les nested comments
+    morecomment=[n]{(**}{*)},  %% Autoriser les nested comments
+    morestring=[b]",
+  }
+
+\lstset{
+  language=Focal, tabsize=2, frame=single, breaklines=true,
+  basicstyle=\ttfamily, framexleftmargin=1mm, xleftmargin=1mm
+}
+
+
+\geometry{a4paper,twoside,body={5.5in,9in}}
+
+\begin{document}
+
+\chapter{Introduction}
+
+\section{Motivations}
+ The \focal\ project was launched in 1998 by T. Hardin and R. Rioboo
+\cite{HardinRiobooTSI04} with the 
+objective of helping all stages of development of critical software
+within safety and security framework, at least when formal methods are
+required or chosen. The idea was to elaborate a development
+environment able to provide high-level and justified confidence to
+users. One the other hand, this system had to remain easy to use by
+well-trained engineers.
+
+Currently, \focal\ can be seen as still a prototype of an Integrated
+Development Environment (IDE), for a language providing high level
+mechanisms such as inheritance, late binding, redefinition,
+parametrization, etc.  Confidence in proofs submitted by developers
+relies on formal proof verification.
+
+This support language was formally described and designed to provide
+means for formal specification by declaring names and
+properties. Then, design and implementation can incrementally be done
+by adding definitions of functions and proving that the implementation
+meets the specification or design requirements. Thus, developing in
+\focal\ is a kind of refinement process from  formal model to design
+and code, completely done within \focal. Taking the global development
+in consideration within a same environment brings some conciseness,
+helps documentation and reviewing.
+
+A \focal\ development is organised as a hierarchy that may have
+several roots. The upper levels of the hierarchy are built along the
+specification stage while the lower ones correspond to
+implementation. Each node of the hierarchy corresponds to a progress
+toward a complete implementation.  We call here {\em refinement} the
+process of building a top-down hierarchy.
+
+
+\section{Presentation and requirements}
+This manual describes the main constructions of the \focal\ language,
+as well as the main tools given by the \focal\ environment. Basic
+expressions of the \focal\ language are quite similar to the core
+expressions of \ocaml\
+({\tt http://caml.inria.fr}).A prior knowledge of some functional
+languages might be helpful to better understand the \focal's core
+language concepts. Last a good knowledge of \coq\ is needed if you
+intend to manuall write proofs in \focal\. However, this task may be
+helped by the \zenon\ automated theorem prover, as long as the user
+write his proofs using the \zenon\ Proof Language embedded in the
+\focal\ language.
+
+
+
+\section{Output}
+As we will see further, a \focal\ development contains both
+``computational code'' (i.e. code performing operations that lead to
+an effect, a result) and logical properties. When compiled, two
+outputs are generated:
+\begin{itemize}
+  \item The ``computational code'' is compiled into \ocaml\ source
+    that can then be compiled with the \ocaml\ compiler to lead to an
+    executable binary. In this pass, logical properties are discarded
+    since they do not lead to executable code.
+  \item Both the ``computational code'' and the logical properties are
+    compiled into a \coq\ model. This model can then be sent to the
+    \coq\ proof assistant who will verify the consistency of both the
+    ``computational code'' and the logical properties (whose proofs
+    must be obviously provided) of the \focal\ development. This means
+    that the \coq\ code generated is not intended to be used to
+    generate an \ocaml\ source code by automated extraction. As stated
+    above, the executable generation is prefered using directly the
+    generated \ocaml\ code. In this idea, \coq\ acts as an assessor of
+    the development instead of a code generator.
+\end{itemize}
+
+
+
+\section{Basic concepts}
+As stated in the introduction, \focal\ language is designed to build
+an application step by step, going from very abstract specifications
+to the concrete implementation through a hierarchy of structures which
+are quite similar to \emph{classes} in an Object-Oriented context.
+However, as we will insist later, \focal\ is not Object-Oriented as
+C++, Java are. It only owns features ``smelling objects''.
+
+We will now present the basic concepts underlying a
+\focal\ development, that is:
+\begin{itemize}
+  \item Species
+  \item Collections
+  \item Inheritance
+  \item Late-binding
+  \item Parameterisation
+\end{itemize}
+
+\subsection{Species}
+{\bf Species} are the nodes of the \focal\ hierarchy. A species can be
+roughly seen as a list of {\bf methods} or {\bf fields}. Hence, a
+basic species looks like:
+{\scriptsize
+\begin{lstlisting}
+  species Name =
+    ... ;
+    ... ;
+  end ;;
+\end{lstlisting}
+}
+
+Species names are always capitalized. Inside the species' body methods
+are enumerated. These methods represent the internal datatype of the
+species, functions to manipulate this datatype and properties that
+must hold in the species.
+
+A species can hence be seen as an abstract data type. On another hand,
+it can be seen as a kind of object, with its internal state (private
+variables) and its methods.
+
+There are several kinds of methods:
+\begin{itemize}
+  \item The {\bf carrier}. This is a type definition that defines the
+    type of the values embedded in the species. When ``instanciated'',
+    a species will lead to \underline{a value having this type}. This
+    especially means that an instanciation of a species is NOT, like
+    in Object-Oriented languages an entity embedding data and
+    code. The instanciation of a species will be a
+    {\underline value}. The carrier is named {\tt rep}. For instance,
+    we can define a species that implements couples of native integers
+    data structure as:
+    {\scriptsize
+      \begin{lstlisting}
+        species IntCouple =
+          rep = (int * int) ;
+        end ;;
+      \end{lstlisting}
+    }
+    Each ``instance'' of this species will encapsulate \underline{1}
+    value of type ``couple of integers''. This especially means that
+    the species doesn't represent a ``set'' of couples but
+    \underline{1} value that has type {\tt (int * int)}.
+
+    The carrier may remain not specified in a species. However, in
+    order to finally get a fully defined species that will be
+    instanciated, the carrier must be defined \underline{once} at one
+    moment (during inheritance).
+
+    In the context of a species, the type denoted by the carrier is
+    named {\tt Self}.
+
+  \item {\bf Signatures}. They introduce the ``prototype'' of a
+    function, that is provide their type. As a first introduction,
+    types expressions are closely like ML-like type expressions.
+    A signature specifies the name of the operation then its type. For
+    instance:
+    {\scriptsize
+      \begin{lstlisting}
+        species IntStack =
+          signature push : int -> Self -> Self ;
+        end ;;
+      \end{lstlisting}
+    }
+    As we saw above, {\tt Self} represents the underlying carrier type
+    of the current species. Hence an operation pushing an integer onto
+    a stack will take as parameter the integer to push, the stack on
+    which to push and give back a new configuration of stack (where
+    the pushed element is on the top), that is of type {\tt Self}. 
+
+  \item {\bf Functions}. They are operations that are allowed on the
+    carrier's elements. They are implementations of signatures,
+    providing effective code to execute. A function is introduced by
+    the {\tt let} keyword. Recursive functions are introduced by
+    {\tt let rec} to make explicit the recursivity.
+    {\scriptsize
+      \begin{lstlisting}
+        species IntStack =
+          rep = int list ;
+          let push (v in int, s in Self) = v :: s ;
+        end ;;
+      \end{lstlisting}
+    }
+
+  \item {\bf Properties}. They are first order logic propositions
+    describing requierements that functions must meet. When stating a
+    property, the proof that it holds is not yet provided. However it
+    will have to finally to get a species that can be
+    instanciated.
+    {\scriptsize
+      \begin{lstlisting}
+        species IntStack =
+          ...
+          property push\_returns\_non\_empty :
+            all v in int, all s in Self, push (v, s) -> ~ is\_empty (s) ;
+        end ;;
+      \end{lstlisting}
+    }
+
+    Proofs of properties can be done afterwards using a {\tt proof}
+    field in a species.The way to give proofs will be seen further.
+    {\scriptsize
+      \begin{lstlisting}
+        species IntStack2 inherits IntStack =
+          proof of push\_returns\_non\_empty = ... ;            
+        end ;;
+      \end{lstlisting}
+    }
+
+  \item {\bf Theorems}. They are properties with their proofs. In
+    fact, when defining a property, we only give the statement of a
+    theorem, leaving its proof for later.
+    {\scriptsize
+      \begin{lstlisting}
+        species IntStack =
+          ...
+          theorem push\_returns\_non\_empty :
+            all v in int, all s in Self, push (v, s) -> ~ is\_empty
+            (s)
+          proof : ... ;
+        end ;;
+      \end{lstlisting}
+    }
+
+\end{itemize}
+
+\subsection{Collections}
+\subsection{Inheritance}
+\subsection{Late-binding}
+\subsection{Parameterisation}
+
+\end{document}
