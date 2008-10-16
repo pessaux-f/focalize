@@ -1,6 +1,7 @@
 #**********************************************************************#
 #                                                                      #
 #                        FoCaL compiler                                #
+#                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
 #            Damien Doligez                                            #
@@ -11,20 +12,21 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.4 2008-10-14 07:00:37 weis Exp $
+# $Id: Makefile,v 1.5 2008-10-15 23:47:01 weis Exp $
 
 ROOT_DIR = ../..
 
+include $(ROOT_DIR)/Makefile.config
+
 TEST_FILES = sets_orders.foc
 
-CHECK_FILE = $(ROOT_DIR)/toplevel/check_file.byt
+CHECK_FILE = $(ROOT_DIR)/toplevel/focalizec
+
+include $(ROOT_DIR)/Makefile.common
 
 tests:: all
 
-all:: $(CHECK_FILE)
+all::
 	for i in $(TEST_FILES); do \
-	   $(CHECK_FILE) -c $$i; \
+	   $(CHECK_FILE) $$i; \
 	done
-
-$(CHECK_FILE):
-	cd $(ROOT_DIR); $(MAKE) all
