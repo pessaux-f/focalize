@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.28 2008-10-14 12:44:25 weis Exp $ *)
+(* $Id: basics.fcl,v 1.29 2008-10-16 13:18:52 pessaux Exp $ *)
 
 (** The very basic definitions for focalize code:
     built-in or (almost) mandatory type definitions,
@@ -307,23 +307,13 @@ let int_div =
   | coq -> {* coq_builtins.bi__int_div *}
 ;;
 
-(* Polymorphic equalities. *)
-let phys_eq =
-  internal 'a ->'a -> bool
-  external
-  | caml -> {* Ml_builtins.bi__base_equal *}
-  | coq -> {* coq_builtins.bi__base_eq __var_a *}
-    (* Wrong, but don't know how to do better. *)
-;;
-
+(*
 let base_eq =
   internal  'a -> 'a -> bool
   external
   | caml -> {* Ml_builtins.bi__base_eq *}
   | coq -> {* coq_builtins.bi__base_eq __var_a *}
 ;;
-
-let ( = ) (x, y) = base_eq (x, y) ;;
 
 (* Theorems on comparisons. *)
 theorem beq_refl : all x in 'a, base_eq (x, x)
@@ -333,6 +323,7 @@ theorem beq_symm : all x y in 'a, base_eq (x, y) -> base_eq (y, x)
 theorem beq_trans :
   all x y z in 'a, base_eq (x, y) -> base_eq (y, z) -> base_eq (x, z)
   proof: assumed {* Import trusted external code. *} ;;
+*)
 
 theorem int_le_not_gt :
   all x y in int, int_leq (x, y) -> ~ (int_gt (x, y))
@@ -373,12 +364,12 @@ theorem int_lt_le_trans :
 ;;
 
 theorem int_le_refl :
-  all x y in int, base_eq (x, y) -> int_leq (x, y)
+  all x y in int, x = y -> int_leq (x, y)
   proof: assumed {* Import trusted external code. *}
 ;;
 
 theorem int_le_antisymm:
-  all x y in int, int_leq (x, y) -> int_leq (y, x) -> base_eq (x, y)
+  all x y in int, int_leq (x, y) -> int_leq (y, x) -> x = y
   proof:
     coq proof {*
       intros x y.

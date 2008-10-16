@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substExpr.ml,v 1.15 2008-10-14 14:05:10 weis Exp $ *)
+(* $Id: substExpr.ml,v 1.16 2008-10-16 13:18:52 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs substitution of a value name [name_x]
@@ -171,7 +171,11 @@ let rec __subst_expr ~param_unit ~bound_variables name_x by_expr expression =
            (* Because this is in fact just a string, nowhere to substitute . *)
            initial_expr.Parsetree.ast_desc
        | Parsetree.E_paren expr ->
-           Parsetree.E_paren (rec_subst rec_bound_vars expr)) in
+           Parsetree.E_paren (rec_subst rec_bound_vars expr)
+       | Parsetree.E_equality (e1, e2) ->
+	   let e1' = rec_subst rec_bound_vars e1 in
+	   let e2' = rec_subst rec_bound_vars e2 in
+	   Parsetree.E_equality (e1', e2')) in
     (* An finally, make a new AST node. *)
     { initial_expr with Parsetree.ast_desc = new_desc } in
   (* Do je job now. *)

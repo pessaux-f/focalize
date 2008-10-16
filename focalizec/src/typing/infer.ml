@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.149 2008-10-14 14:05:10 weis Exp $ *)
+(* $Id: infer.ml,v 1.150 2008-10-16 13:18:52 pessaux Exp $ *)
 
 
 
@@ -649,6 +649,9 @@ let rec expr_is_non_expansive ~current_unit env expr =
          guarded by something because in fact the real external definition
          may indeed by EXPANSIVE ! *)
       true
+  | Parsetree.E_equality (e1, e2) ->
+      (expr_is_non_expansive ~current_unit env e1) &&
+      (expr_is_non_expansive ~current_unit env e2)
   | _ -> false
 
 
@@ -1111,7 +1114,15 @@ let rec typecheck_expr ctx env initial_expr =
          let tys = List.map (typecheck_expr ctx env) exprs in
          Types.type_tuple tys
      | Parsetree.E_external ext_expr -> typecheck_external_expr ext_expr
-     | Parsetree.E_paren expr -> typecheck_expr ctx env expr) in
+     | Parsetree.E_paren expr -> typecheck_expr ctx env expr
+     | Parsetree.E_equality (e1, e2) ->
+         let ty1 = typecheck_expr ctx env e1 in
+         let ty2 = typecheck_expr ctx env e2 in
+         ignore
+           (Types.unify
+             ~loc: initial_expr.Parsetree.ast_loc
+             ~self_manifest: ctx.self_manifest ty1 ty2) ;
+         Types.type_bool ()) in
   (* Store the type information in the expression's node. *)
   initial_expr.Parsetree.ast_type <- Parsetree.ANTI_type final_ty ;
   (* Check if the expression has type Self and set the flag according to. *)

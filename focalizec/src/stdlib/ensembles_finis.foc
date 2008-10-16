@@ -14,11 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.foc,v 1.8 2008-10-14 12:44:25 weis Exp $ *)
+(* $Id: ensembles_finis.foc,v 1.9 2008-10-16 13:18:52 pessaux Exp $ *)
 
 (*pp basic_ext.cmo*)
 
-(* $Id: ensembles_finis.foc,v 1.8 2008-10-14 12:44:25 weis Exp $ *)
+(* $Id: ensembles_finis.foc,v 1.9 2008-10-16 13:18:52 pessaux Exp $ *)
 
 (**
 
@@ -205,11 +205,11 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
     definition of equal ;
 
   (** L'ensemble vide a 0 éléments. *)
-  property vide_card: basics#( = ) (!cardinal (!vide), 0) ;
+  property vide_card: !cardinal (!vide) = 0 ;
 
   (** Un singleton est un ensemble à 1 élément. *)
   property singleton_card:
-  all x in A, basics#( = ) (!cardinal (!singleton (x)), 1) ;
+  all x in A, !cardinal (!singleton (x)) = 1 ;
 
 (* property ajoute_card:
    all x in a, all s in Self,
@@ -228,7 +228,7 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
 
   (** Si deux ensembles sont égaux, ils ont même cardinal. *)
   theorem card_congruence: all e1 e2 in Self,
-    !equal (e1, e2) -> basics#( = ) (!cardinal (e1), !cardinal (e2))
+    !equal (e1, e2) -> !cardinal (e1) = !cardinal (e2)
     proof:
       (* [Unsure -  - à laisser ?]
          by property incl_card extensional ; *)

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.24 2008-10-10 10:25:16 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.25 2008-10-16 13:18:52 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -144,22 +144,22 @@ let subst_expr_ident ~current_unit c1 c2 ident =
          (* No collection name inside, hence nothing to change. *)
          ident.Parsetree.ast_desc
      | Parsetree.EI_method (None, vname) ->
-	 (begin
-	 (* We are implicitely in the case of a method of Self. So, the
-	    substitution has effect only if Self must be substituted. *)
-	 match c1 with
+         (begin
+         (* We are implicitely in the case of a method of Self. So, the
+            substitution has effect only if Self must be substituted. *)
+         match c1 with
           | SRCK_self ->
-	      (begin
-	      match c2 with
+              (begin
+              match c2 with
                | Types.SBRCK_coll c2_ty ->
                    let new_species_qvname =
                      Parsetree.Qualified
                        (fst c2_ty, Parsetree.Vuident (snd c2_ty)) in
                    Parsetree.EI_method (Some new_species_qvname, vname)
                | Types.SBRCK_self -> ident.Parsetree.ast_desc
-	      end)
-	  | SRCK_coll _ -> ident.Parsetree.ast_desc
-	 end)
+              end)
+          | SRCK_coll _ -> ident.Parsetree.ast_desc
+         end)
      | Parsetree.EI_method (Some coll_qvname, vname) ->
          match c1 with
           | SRCK_self ->
@@ -431,7 +431,11 @@ let rec subst_expr ~current_unit c1 c2 expression =
        | Parsetree.E_external _ ->
            (* Because this is in fact just a string, nowhere to substitute . *)
            initial_expr.Parsetree.ast_desc
-       | Parsetree.E_paren expr -> Parsetree.E_paren (rec_subst expr)) in
+       | Parsetree.E_paren expr -> Parsetree.E_paren (rec_subst expr)
+       | Parsetree.E_equality (e1, e2) ->
+           let e1' = rec_subst e1 in
+           let e2' = rec_subst e2 in
+           Parsetree.E_equality (e1', e2')) in
     (* Substitute in the AST node type. *)
     let new_type =
       subst_ast_node_type_information c1 c2 initial_expr.Parsetree.ast_type in

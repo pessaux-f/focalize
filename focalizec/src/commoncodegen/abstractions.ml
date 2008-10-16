@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.39 2008-09-16 15:10:20 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.40 2008-10-16 13:18:52 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -168,6 +168,10 @@ and get_species_types_in_type_annots_of_expr expr =
    | Parsetree.E_paren e
    | Parsetree.E_record_access (e, _) ->
        get_species_types_in_type_annots_of_expr e
+   | Parsetree.E_equality (e1, e2) ->
+       let tys1 = get_species_types_in_type_annots_of_expr e1 in
+       let tys2 = get_species_types_in_type_annots_of_expr e2 in
+       Types.SpeciesCarrierTypeSet.union tys1 tys2
 
 
 

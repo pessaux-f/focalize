@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.5 2008-09-23 06:11:30 pessaux Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.6 2008-10-16 13:18:52 pessaux Exp $ *)
 
 
 
@@ -143,7 +143,13 @@ let transform_recursive_calls_args_into_tuple ctx ~local_idents recursive_name
            ((Parsetree.E_tuple exprs'), false)
        | Parsetree.E_paren e ->
            let (e', rec_found) = rec_transform_expr e in
-           ((Parsetree.E_paren e'), rec_found) in
+           ((Parsetree.E_paren e'), rec_found)
+       | Parsetree.E_equality (e1, e2) ->
+           let (e1', rec_found1) = rec_transform_expr e1 in
+           if rec_found1 then failwith "Tupling too complex" ;
+           let (e2', rec_found2) = rec_transform_expr e2 in
+           if rec_found2 then failwith "Tupling too complex" ;
+           ((Parsetree.E_equality (e1', e2')), false) in
     ({ initial_expr with Parsetree.ast_desc = new_desc }, recursive_call_found)
 
 

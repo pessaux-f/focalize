@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.39 2008-08-28 11:59:54 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.40 2008-10-16 13:18:52 pessaux Exp $ *)
 
 (** {2 The Focalize abstract syntax tree.} *)
 
@@ -309,6 +309,7 @@ and expr_desc =
   | E_tuple of expr list
   | E_external of external_expr
   | E_paren of expr
+  | E_equality of (expr * expr)
 
 and let_def = let_def_desc ast
 and let_def_desc = {

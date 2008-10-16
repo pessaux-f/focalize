@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: ast_equal.ml,v 1.7 2008-04-29 13:27:01 pessaux Exp $ *)
+(* $Id: ast_equal.ml,v 1.8 2008-10-16 13:18:52 pessaux Exp $ *)
 
 (* ********************************************************************** *)
 (** {b Descr} : This module performs test equality of the AST expression.
@@ -192,9 +192,9 @@ let rec type_expr ty_expr1 ty_expr2 =
 
 
 (* ************************************************************************* *)
-(** {b Descr} : "Normalise" a [logical_expr] by flattening all consecutive \foralls
-    binding idents to the same type_expr. Do same thing to consecutive
-    \exists.
+(** {b Descr} : "Normalise" a [logical_expr] by flattening all consecutive
+    \foralls binding idents to the same type_expr. Do same thing to
+    consecutive \exists.
     This allows to consider that "\forall x : A \forall y in A" is
     equal to "\forall x y in A".
     We proceed by deep search first.
@@ -207,8 +207,8 @@ let rec normalise_logical_expr logical_expr =
        (begin
        match (normalise_logical_expr p).Parsetree.ast_desc with
         | Parsetree.Pr_forall (vnames', ty_expr', p') ->
-            (* If bound idents have the same type, then *)
-            (* collapse into one uniq [Pr_forall].      *)
+            (* If bound idents have the same type, then collapse into one
+	       unique [Pr_forall]. *)
             if type_expr ty_expr ty_expr' then
               { logical_expr with Parsetree.ast_desc =
                   Parsetree.Pr_forall (vnames @ vnames', ty_expr', p') }
@@ -219,8 +219,8 @@ let rec normalise_logical_expr logical_expr =
        (begin
        match (normalise_logical_expr p).Parsetree.ast_desc with
         | Parsetree.Pr_exists (vnames', ty_expr', p') ->
-            (* If bound idents have the same type, then *)
-            (* collapse into one uniq [Pr_exists].      *)
+            (* If bound idents have the same type, then collapse into one
+	       unique [Pr_exists]. *)
             if type_expr ty_expr ty_expr' then
               { logical_expr with Parsetree.ast_desc =
                   Parsetree.Pr_exists (vnames @ vnames', ty_expr', p') }
@@ -291,6 +291,8 @@ let rec expr alpha_eq_map expression1 expression2 =
    | ((Parsetree.E_paren e1), _) ->
        (* Consider that parentheses are non-significant. *)
        expr alpha_eq_map e1 expression2
+   | ((Parsetree.E_equality (e1, e2)), (Parsetree.E_equality (e3, e4))) ->
+       (expr alpha_eq_map e1 e3) && (expr alpha_eq_map e2 e4)
    | (_, _) -> false
 
 
@@ -351,12 +353,12 @@ and binding alpha_eq_map bnd1 bnd2 =
 
 
 
-(* ********************************************* *)
-(* Parsetree.logical_expr -> Parsetree.logical_expr -> bool      *)
+(* ******************************************************** *)
+(* Parsetree.logical_expr -> Parsetree.logical_expr -> bool *)
 (** {b Descr} : Tests the equality of 2 [logical_expr]s.
 
-    {b Rem} : Exported outside this module.      *)
-(* ********************************************* *)
+    {b Rem} : Exported outside this module.                 *)
+(* ******************************************************** *)
 and logical_expr initial_alpha_eq_map initial_logical_expr1
     initial_logical_expr2 =
   let rec __internal_logical_expr alpha_eq_map logical_expr1 logical_expr2 =
@@ -372,8 +374,8 @@ and logical_expr initial_alpha_eq_map initial_logical_expr1
             (type_expr ty_expr1 ty_expr2) &&
             (logical_expr alpha_eq_map' p1 p2)
           with Invalid_argument ("List.combine") ->
-            (* If there is not the same number of quantified variables, *)
-            (* then the 2 logical_exprs are different.  *)
+            (* If there is not the same number of quantified variables, then
+	       the 2 logical_exprs are different. *)
             false
           end)
      | ((Parsetree.Pr_imply (p1, p1')), (Parsetree.Pr_imply (p2, p2')))
@@ -396,8 +398,8 @@ and logical_expr initial_alpha_eq_map initial_logical_expr1
          logical_expr alpha_eq_map logical_expr1 p2
      | (_, _) -> false in
 
-  (* Now, really apply [__internal_logical_expr] after *)
-  (* having normalised the logical_exprs. *)
+  (* Now, really apply [__internal_logical_expr] after having normalised the
+     logical_exprs. *)
   let logical_expr1' = normalise_logical_expr initial_logical_expr1 in
   let logical_expr2' = normalise_logical_expr initial_logical_expr2 in
   __internal_logical_expr initial_alpha_eq_map logical_expr1' logical_expr2'

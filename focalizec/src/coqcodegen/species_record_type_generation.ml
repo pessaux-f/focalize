@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.61 2008-10-14 13:59:14 weis Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.62 2008-10-16 13:18:52 pessaux Exp $ *)
 
 
 
@@ -775,6 +775,10 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          Format.fprintf out_fmter "@[<1>(" ;
          rec_generate_expr loc_idents env expr ;
          Format.fprintf out_fmter ")@]"
+     | Parsetree.E_equality (e1, e2) ->
+         rec_generate_expr loc_idents env e1 ;
+         Format.fprintf out_fmter "@ =@ " ;
+         rec_generate_expr loc_idents env e2
 
 
 

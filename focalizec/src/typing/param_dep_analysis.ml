@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.18 2008-09-10 15:12:27 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.19 2008-10-16 13:18:52 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -226,7 +226,11 @@ let rec __param_deps_expr ~current_species (param_coll_name, param_coll_meths)
               accu_deps (rec_deps local_idents e))
           Parsetree_utils.ParamDepSet.empty
           exprs
-    | Parsetree.E_paren e -> rec_deps local_idents e in
+    | Parsetree.E_paren e -> rec_deps local_idents e
+    | Parsetree.E_equality (e1, e2) ->
+        let deps1 = rec_deps local_idents e1 in
+        let deps2 = rec_deps local_idents e2 in
+        Parsetree_utils.ParamDepSet.union deps1 deps2 in
   (* **************** *)
   (* Now, do the job. *)
   rec_deps start_local_idents expression

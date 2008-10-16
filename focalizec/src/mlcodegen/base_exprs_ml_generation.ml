@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.30 2008-09-16 14:27:42 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.31 2008-10-16 13:18:52 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -640,6 +640,10 @@ and generate_expr ctx ~local_idents env initial_expression =
                 ("OCaml", (Parsetree.Vlident "<expr>"), expr.Parsetree.ast_loc))
          end)
      | Parsetree.E_paren e -> rec_generate loc_idents e
+     | Parsetree.E_equality (e1, e2) ->
+         rec_generate loc_idents e1 ;
+         Format.fprintf out_fmter "@ =@ " ;
+         rec_generate loc_idents e2
 
 
 

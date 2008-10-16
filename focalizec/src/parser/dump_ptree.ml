@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.30 2008-08-28 11:59:54 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.31 2008-10-16 13:18:52 pessaux Exp $ *)
 
 
 
@@ -865,6 +865,8 @@ and pp_expr_desc ppf = function
         pp_external_expr external_expr
   | Parsetree.E_paren expr ->
       Format.fprintf ppf "@[<2>E_paren@ (%a)@]" pp_expr expr
+  | Parsetree.E_equality (e1, e2) ->
+      Format.fprintf ppf "@[<2>E_equality@ (%a, %a)@]" pp_expr e1 pp_expr e2
 (* ******************************************************************* *)
 (* Format.formatter -> Parsetree.expr list -> unit                     *)
 (** {b Descr} : Pretty prints a [list] of [expr] value as a Caml-like

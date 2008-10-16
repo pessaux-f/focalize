@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.ml,v 1.6 2008-07-16 13:24:19 pessaux Exp $ *)
+(* $Id: recursion.ml,v 1.7 2008-10-16 13:18:52 pessaux Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function
@@ -142,7 +142,7 @@ let rec list_recursive_calls function_name argument_list bindings expr =
          list_recursive_calls function_name argument_list bindings matched_expr
        in
        (* Find the recursive calls in each expression, adding the proper
-	  'pattern match' binding to the list of bindings. *)
+          'pattern match' binding to the list of bindings. *)
        let list_recursive_calls_for_pattern (p, e) =
          let new_bindings = (B_match (matched_expr, p)) :: bindings in
          list_recursive_calls function_name argument_list new_bindings e in
@@ -154,11 +154,11 @@ let rec list_recursive_calls function_name argument_list bindings expr =
          list_recursive_calls_for_all_patterns
    | Parsetree.E_if (condition, expr_true, expr_false) ->
        (* [list_recursive_calls_in_condition] calculates the information
-	  pertaining to recursive calls in the condition clause. *)
+          pertaining to recursive calls in the condition clause. *)
        let list_recursive_calls_in_condition =
          list_recursive_calls function_name argument_list bindings condition in
        (* [list_recursive_calls_in_expr] calculates the information
-	  pertaining to recursive calls in an expression. *)
+          pertaining to recursive calls in an expression. *)
        let list_recursive_calls_in_expr boolean expr =
          let new_bindings = (B_condition (condition, boolean)) :: bindings in
          list_recursive_calls function_name argument_list new_bindings expr in
@@ -219,6 +219,12 @@ let rec list_recursive_calls function_name argument_list bindings expr =
    | Parsetree.E_self | Parsetree.E_const _ | Parsetree.E_external _ ->
        (* The remaining expressions cannot lead to recursive calls *)
        []
+   | Parsetree.E_equality (e1, e2) ->
+       let calls1 =
+         list_recursive_calls function_name argument_list bindings e1 in
+       let calls2 =
+         list_recursive_calls function_name argument_list bindings e2 in
+       calls1 @ calls2
 ;;
 
 
