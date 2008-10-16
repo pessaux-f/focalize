@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.97 2008-10-16 13:18:52 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.98 2008-10-16 21:39:31 weis Exp $ *)
 
 open Parsetree;;
 
@@ -263,7 +263,7 @@ let mk_proof_label (s1, s2) =
 %left     PERCENT_OP               /* expr (e OP e OP e) e.g. OP is % */
 %right    STAR_STAR_OP             /* expr (e OP e OP e) e.g. OP = ** */
 /* Unary prefix operators. */
-%nonassoc BACKQUOTE_OP             /* expr OP e e.g. OP = ` */
+%nonassoc BACKQUOTE_OP             /* expr OP e e.g. OP = ` (*`*) */
 %nonassoc QUESTION_OP              /* expr OP e e.g. OP is ? */
 %nonassoc DOLLAR_OP                /* expr OP e e.g. OP is $ */
 %nonassoc BANG_OP                  /* expr OP e e.g. OP is ! */
@@ -623,7 +623,7 @@ param_list:
 
 param:
   | bound_vname { ($1, None) }
-  | bound_vname IN type_expr { ( $1, Some $3) }
+  | bound_vname IN type_expr { ($1, Some $3) }
 ;
 
 /**** PROPERTIES & THEOREM DEFINITION ****/
@@ -848,6 +848,15 @@ opt_qualified_vname:
 
 /**** EXPRESSIONS ****/
 
+expr_ident:
+  | opt_lident SHARP bound_vname
+    { mk_global_expr_ident $1 $3 }
+  | opt_qualified_vname BANG method_vname
+    { mk_method_expr_ident $1 $3 }
+  | bound_vname
+    { mk_local_expr_ident $1 }
+;
+
 simple_expr:
   | constant
     { mk (E_const $1) }
@@ -987,15 +996,6 @@ record_field_list:
     { ($1, $3) :: $5 }
 ;
 
-expr_ident:
-  | opt_lident SHARP bound_vname
-    { mk_global_expr_ident $1 $3 }
-  | opt_qualified_vname BANG method_vname
-    { mk_method_expr_ident $1 $3 }
-  | bound_vname
-    { mk_local_expr_ident $1 }
-;
-
 /* In a proof, "by definition" is always refering to something local      */
 /* to the species. Hence, it is not allowed to say "by definition C!foo". */
 /* We enforce this in the syntax.                                         */
@@ -1066,12 +1066,12 @@ pattern:
   | constructor_ref LPAREN pattern_comma_list RPAREN { mk (P_constr ($1, $3)) }
   | constructor_ref { mk (P_constr ($1, [])) }
   | LBRACKET pattern_semi_list RBRACKET { $2 }
-/*  | LRBRACKETS { mk (P_constr (mk_nil (), [])) }*/
+/* Already in constructor_ref ?| LRBRACKETS { mk (P_constr (mk_nil (), [])) } */
   | pattern COLON_COLON pattern { mk (P_constr (mk_cons (), [$1; $3])) }
   | LBRACE pattern_record_field_list RBRACE { mk (P_record $2) }
   | pattern AS LIDENT { mk (P_as ($1, Vlident $3)) }
   | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
-/* | LRPARENS { mk (P_constr (mk_unit (), [])) } */
+/* Already in constructor_ref ?| LRPARENS { mk (P_constr (mk_unit (), [])) } */
   | LPAREN pattern RPAREN { mk (P_paren $2) }
 ;
 
