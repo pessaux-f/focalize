@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.69 2008-10-16 20:55:59 weis Exp $ *)
+(* $Id: scoping.ml,v 1.70 2008-10-16 21:32:17 weis Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1175,11 +1175,7 @@ and scope_expr ctx env expr =
          Parsetree.E_equality (scoped_e1, scoped_e2)
      | Parsetree.E_paren e ->
          let scoped_e = scope_expr ctx env e in
-         Parsetree.E_paren scoped_e
-     | Parsetree.E_equality (e1, e2) ->
-         let e1' = scope_expr ctx env e1 in
-         let e2' = scope_expr ctx env e2 in
-         Parsetree.E_equality (e1', e2')) in
+         Parsetree.E_paren scoped_e) in
   { expr with Parsetree.ast_desc = new_desc }
 
 

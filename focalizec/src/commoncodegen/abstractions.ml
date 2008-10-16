@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.41 2008-10-16 20:54:50 weis Exp $ *)
+(* $Id: abstractions.ml,v 1.42 2008-10-16 21:32:04 weis Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -169,13 +169,9 @@ and get_species_types_in_type_annots_of_expr expr =
        let tys2 = get_species_types_in_type_annots_of_expr e2 in
        Types.SpeciesCarrierTypeSet.union tys1 tys2
    | Parsetree.E_fun (_, e)
-   | Parsetree.E_paren e
-   | Parsetree.E_record_access (e, _) ->
+   | Parsetree.E_record_access (e, _)
+   | Parsetree.E_paren e ->
        get_species_types_in_type_annots_of_expr e
-   | Parsetree.E_equality (e1, e2) ->
-       let tys1 = get_species_types_in_type_annots_of_expr e1 in
-       let tys2 = get_species_types_in_type_annots_of_expr e2 in
-       Types.SpeciesCarrierTypeSet.union tys1 tys2
 
 
 

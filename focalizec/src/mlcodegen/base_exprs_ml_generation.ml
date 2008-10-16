@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.32 2008-10-16 21:01:15 weis Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.33 2008-10-16 21:34:16 weis Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -646,11 +646,6 @@ and generate_expr ctx ~local_idents env initial_expression =
          rec_generate loc_idents expr2 ;
          Format.fprintf out_fmter "@]"
      | Parsetree.E_paren e -> rec_generate loc_idents e
-     | Parsetree.E_equality (e1, e2) ->
-         rec_generate loc_idents e1 ;
-         Format.fprintf out_fmter "@ =@ " ;
-         rec_generate loc_idents e2
-
 
 
   and rec_generate_exprs_list ~comma loc_idents = function
