@@ -1,4 +1,26 @@
-07/05/08
+#**********************************************************************#
+#                                                                      #
+#                        FoCaL compiler                                #
+#                                                                      #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 LIP6 and INRIA                                       #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+# $Id: parser.spec,v 1.18 2008-10-17 10:23:27 weis Exp $
+
+High level specification of the Focalize lexer
+==============================================
+
+Could be use as a set of drafts for the documentation.
+
+07/05/08: Irrefutable patterns and sccess to component of tuples.
+=================================================================
 
 We would like to bind a tuple to an expression in one let.
 It means we want to bind patterns instead of bound_vname.
