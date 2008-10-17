@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.43 2008-10-16 22:21:35 weis Exp $ *)
+(* $Id: lexer.mll,v 1.44 2008-10-17 10:22:41 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -141,31 +141,33 @@ List.iter
 (** {3 Identifier creation functions} *)
 
 (** {6 Finding keywords and creating lowercase idents} *)
-let lident lexbuf =
+let token_of_lowercase_prefix_ident lexbuf =
   let s = Lexing.lexeme lexbuf in
   try Hashtbl.find keyword_table s with
   | Not_found -> LIDENT s
 ;;
 
 (** {6 Finding keywords and creating uppercase idents} *)
-let uident lexbuf =
+let token_of_uppercase_prefix_ident lexbuf =
   let s = Lexing.lexeme lexbuf in
   try Hashtbl.find keyword_table s with
   | Not_found -> UIDENT s
 ;;
 
 (** {6 Creating identifiers for delimited idents} *)
+let token_of_delimited_ident s = LIDENT s
+;;
 
 (** {6 Creating identifiers for the prefix version versions of symbolic identifiers} *)
 
-let ident_of_prefixop s = PIDENT s;;
-(** The prefix version of a prefix operator. *)
-let ident_of_infixop s = IIDENT s;;
-(** The prefix version of an infix operator. *)
+let token_of_paren_lowercase_prefix_symbol s = PIDENT s;;
+(** The prefix version of a lowercase prefix operator. *)
+let token_of_paren_lowercase_infix_symbol s = IIDENT s;;
+(** The prefix version of a lowercase infix operator. *)
 
 (** {3 Injecting symbolic identifiers strings to lexems} *)
 
-let mk_prefixop s =
+let token_of_lowercase_prefix_symbol s =
   assert (String.length s > 0);
   match s.[0] with
   | '`' (* ` Helping emacs *) -> BACKQUOTE_OP s
@@ -185,7 +187,7 @@ let mk_prefixop s =
   | _ -> assert false
 ;;
 
-let mk_infixop s =
+let token_of_lowercase_infix_symbol s =
   assert (String.length s > 0);
   match s.[0] with
   | '+' -> PLUS_OP s
@@ -436,8 +438,6 @@ let update_loc lexbuf file line absolute chars =
 
 (** {3 The main lexer} *)
 
-(** {3 The main lexer} *)
-
 (** {6 Classifying characters} *)
 let newline = '\010'
 (** ASCII 010 is newline or ['\n']. *)
@@ -511,6 +511,8 @@ let float_literal =
          followed by the infix DOT LIDENT.
          (For instance, r.label would be the two tokens
           LIDENT "r" and DOT_OP ".label"). *)
+
+(** {7 Classification of characters for identifiers} *)
 
 let lowercase_char = [ 'a'-'z' ]
 let uppercase_char = [ 'A'-'Z' ]
@@ -621,9 +623,9 @@ rule token = parse
 
   (* Identifiers *)
   | lowercase_ident
-    { lident lexbuf }
+    { token_of_lowercase_prefix_ident lexbuf }
   | uppercase_ident
-    { uident lexbuf }
+    { token_of_uppercase_prefix_ident lexbuf }
   | "\'" lowercase_ident
     { QIDENT (Lexing.lexeme lexbuf) }
 
@@ -647,23 +649,6 @@ rule token = parse
                 lexbuf.lex_start_p,
                 lexbuf.lex_curr_p)) }
 
-  | "``" (start_lowercase_ident | start_uppercase_ident |
-          start_infix_ident | start_prefix_ident)
-    { reset_delimited_ident_buffer ();
-      store_delimited_ident_char (Lexing.lexeme_char lexbuf 2);
-      delimited_ident_start_pos :=
-        Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
-      delimited_ident lexbuf;
-      begin match !delimited_ident_start_pos with
-      | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
-      | _ -> assert false end;
-      LIDENT (get_stored_delimited_ident ()) }
-  | "\'\'"
-    { raise
-        (Error (Uninitiated_delimited_ident,
-                lexbuf.lex_start_p,
-                lexbuf.lex_curr_p)) }
-
   (* Numbers *)
   | integer_literal
     { INT (Lexing.lexeme lexbuf) }
@@ -680,6 +665,23 @@ rule token = parse
       | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
       | _ -> assert false end;
       STRING (get_stored_string ()) }
+
+  (* Delimited idents *)
+  | "``"
+    (  start_lowercase_ident
+     | start_uppercase_ident
+     | start_infix_ident
+     | start_prefix_ident
+    )
+    { reset_delimited_ident_buffer ();
+      store_delimited_ident_char (Lexing.lexeme_char lexbuf 2);
+      delimited_ident_start_pos :=
+        Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
+      delimited_ident lexbuf;
+      begin match !delimited_ident_start_pos with
+      | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
+      | _ -> assert false end;
+      token_of_delimited_ident (get_stored_delimited_ident ()) }
 
   (* Documentation *)
   | "(**"
@@ -748,14 +750,14 @@ rule token = parse
 
   (* Symbols (or symbolic idents) *)
   | prefix_ident
-    { mk_prefixop (Lexing.lexeme lexbuf) }
-  | "(" [' ']+ (prefix_ident as inner) [' ']+ ")"
-    { ident_of_prefixop inner }
-
+    { token_of_lowercase_prefix_symbol (Lexing.lexeme lexbuf) }
   | infix_ident
-    { mk_infixop (Lexing.lexeme lexbuf) }
+    { token_of_lowercase_infix_symbol (Lexing.lexeme lexbuf) }
+
+  | "(" [' ']+ (prefix_ident as inner) [' ']+ ")"
+    { token_of_paren_lowercase_prefix_symbol inner }
   | "(" [' ']+ (infix_ident as inner) [' ']+ ")"
-    { ident_of_infixop inner }
+    { token_of_paren_lowercase_infix_symbol inner }
 
   | eof { EOF }
   | _
@@ -815,7 +817,7 @@ and delimited_ident = parse
     { store_delimited_ident_char (Lexing.lexeme_char lexbuf 0);
       delimited_ident lexbuf }
 
-  (* Special sub lexer for uni-ligne comments *)
+  (* Special sub lexer for uni-line comments *)
 and uniline_comment = parse
   | ( "(*" | "*)" )
     { raise
@@ -837,7 +839,7 @@ and uniline_comment = parse
   | _
     { uniline_comment lexbuf }
 
-  (* Special sub lexer for multi ligne possibly nested comments *)
+  (* Special sub lexer for multi lines possibly nested comments *)
 and comment = parse
   | "(*"
     { comment_start_pos :=
