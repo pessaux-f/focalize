@@ -1,5 +1,6 @@
-\documentclass{book}
+\documentclass{report}
 \usepackage[francais]{babel}
+\usepackage{times}
 \usepackage[latin1]{inputenc}
 \usepackage{color}
 \usepackage{listings}
@@ -11,7 +12,7 @@
 \lstdefinelanguage{Focal}
   {morekeywords={property, let, signature, species, is, in, inherits,
       all, exists, rep, if, then, else, proof, of, by, definition,
-      collection, implements},
+      collection, implements, Self, match, with, end},
     sensitive=false,
     morecomment=[n]{(*}{*)},  %% Autoriser les nested comments
     morecomment=[n]{(**}{*)},  %% Autoriser les nested comments
@@ -70,7 +71,7 @@ expressions of \ocaml\
 ({\tt http://caml.inria.fr}).A prior knowledge of some functional
 languages might be helpful to better understand the \focal's core
 language concepts. Last a good knowledge of \coq\ is needed if you
-intend to manuall write proofs in \focal\. However, this task may be
+intend to manually write proofs in \focal\. However, this task may be
 helped by the \zenon\ automated theorem prover, as long as the user
 write his proofs using the \zenon\ Proof Language embedded in the
 \focal\ language.
@@ -94,7 +95,7 @@ outputs are generated:
     must be obviously provided) of the \focal\ development. This means
     that the \coq\ code generated is not intended to be used to
     generate an \ocaml\ source code by automated extraction. As stated
-    above, the executable generation is prefered using directly the
+    above, the executable generation is preferred using directly the
     generated \ocaml\ code. In this idea, \coq\ acts as an assessor of
     the development instead of a code generator.
 \end{itemize}
@@ -116,7 +117,7 @@ We will now present the basic concepts underlying a
   \item Collections
   \item Inheritance
   \item Late-binding
-  \item Parameterisation
+  \item Parametrisation
 \end{itemize}
 
 \subsection{Species}
@@ -140,8 +141,8 @@ must hold in the species.
 \label{no-polymorphism-for-methods}
 One important restriction on the type of the methods is that it cannot
 be polymorphic. However, \focal\ provides another mechanism to
-circumvent this restriction, the parameterisation as explained
-further (c.f. \ref{parameterisation}).
+circumvent this restriction, the parametrisation as explained
+further (c.f. \ref{parametrisation}).
 
 A species can hence be seen as an abstract data type. On another hand,
 it can be seen as a kind of object, with its internal state (private
@@ -150,11 +151,11 @@ variables) and its methods.
 There are several kinds of methods:
 \begin{itemize}
   \item The {\bf carrier}. This is a type definition that defines the
-    type of the values embedded in the species. When ``instanciated'',
+    type of the values embedded in the species. When ``instantiated'',
     a species will lead to \underline{a value having this type}. This
-    especially means that an instanciation of a species is NOT, like
+    especially means that an instantiation of a species is NOT, like
     in Object-Oriented languages an entity embedding data and
-    code. The instanciation of a species will be a
+    code. The instantiation of a species will be a
     {\underline value}. The carrier is named {\tt rep}. For instance,
     we can define a species that implements couples of native integers
     data structure as:
@@ -172,7 +173,7 @@ end ;;
 
     The carrier may remain not specified in a species. However, in
     order to finally get a fully defined species that will be
-    instanciated, the carrier must be defined \underline{once} at one
+    instantiated, the carrier must be defined \underline{once} at one
     moment (during inheritance).
 
     In the context of a species, the type denoted by the carrier is
@@ -181,7 +182,7 @@ end ;;
   \item {\bf Signatures}. They introduce the ``prototype'' of a
     function, that is provide their type. As a first introduction,
     types expressions are closely like ML-like type expressions.
-    A signature can be viewed as de declaration. It specifies the name
+    A signature can be viewed as a declaration. It specifies the name
     of the operation then its type. For instance:
     {\scriptsize
       \begin{lstlisting}
@@ -201,7 +202,7 @@ end ;;
     providing effective code to execute. A function is introduced by
     the {\tt let} keyword. Recursive functions are introduced by
     {\tt let rec} to make explicit the recursivity. A function can be
-    viewed as de definition.
+    viewed as a definition.
     {\scriptsize
       \begin{lstlisting}
 species IntStack =
@@ -223,16 +224,16 @@ end ;;
     parentheses.
 
   \item {\bf Properties}. They are first order logic propositions
-    describing requierements that functions must meet. When stating a
+    describing requirements that functions must meet. When stating a
     property, the proof that it holds is not yet provided. However it
     will have to finally to get a species that can be
-    instanciated. A property can be viewed as a declaration.
+    instantiated. A property can be viewed as a declaration.
     {\scriptsize
       \begin{lstlisting}
 species IntStack =
   ...
   property push_returns_non_empty :
-    all v in int, all s in Self, push (v, s) -> ~ is\_empty (s) ;
+    all v in int, all s in Self, push (v, s) -> ~ is_empty (s) ;
 end ;;
       \end{lstlisting}
     }
@@ -294,7 +295,7 @@ collection that {\em implements} the species. As a result, one get an
 entity whose internal representation has the type of the carrier of
 the {\em implemented} species and that can be manipulated by the
 methods present in this {\em implemented} species. However, the
-manupilations will be done via the collection and not anymore via the
+manipulations will be done via the collection and not anymore via the
 species.
 
 {\scriptsize
@@ -331,7 +332,7 @@ impossible to ensure a type equivalence.
 
 As a conclusion, collections are the only way to get something that
 can be executed since they are the terminal items of a
-\focal\ development hierarchy. Since thay are ``terminal'', this also
+\focal\ development hierarchy. Since they are ``terminal'', this also
 means that no method can be added to a collection. Moreover, a
 collection may not be used to create a new species by inheritance (as
 explained in the next section).
@@ -365,11 +366,11 @@ later in \ref{species-constraints}.
 \section{Building species}
 In this chapter, we describe the relations between species to build
 incrementally more complex species from previously existing ones. Two
-mechanisms are available for this purpose: parameterisation and
+mechanisms are available for this purpose: parametrisation and
 inheritance.
 
-\subsection{Parameterisation}
-\label{parameterisation}
+\subsection{Parametrisation}
+\label{parametrisation}
 \subsubsection{Collection parameters}
 \label{collection-parameter}
 Remember that methods cannot be polymorphic
@@ -381,6 +382,7 @@ a structure grouping elements but independently of the type of these
 elements. The only constraint is that all elements have the same
 type. Hence, a ML-like representation of lists would be like:
 {\scriptsize
+\lstset{language=Caml}
 \begin{lstlisting}
 type 'a list =
   | Nil
@@ -400,7 +402,7 @@ end ;;
 }
 
 Instead of abstracting the type parameter and leaving it free in the
-context of the species, in \focal\ we {\em parameterise} the species
+context of the species, in \focal\ we {\em parametrise} the species
 by another species:
 {\scriptsize
 \begin{lstlisting}
@@ -416,7 +418,7 @@ to be a species having at least the methods of a species called
 {\tt Basic\_object}\footnote{{\tt Basic\_object} is a basic and poor
 species from the standard library, containing only few methods.} with
 the same types. Collection parameters are introduced by the {\tt is}
-keyword. When a parameterised species will be used, \focal\ expects it
+keyword. When a parametrised species will be used, \focal\ expects it
 to be applied to effective collection parameters having compatible
 species interfaces (c.f \ref{interface}). In other words the effective
 parameter will have to present an interface with at least the
@@ -445,25 +447,25 @@ Although the parameters looks like a species, why is it called a
 {\bf collection parameter} ? The answer to this question is especially
 important to understand the programming model in \focal. It is called
 a collection because finally, at the terminal nodes of the
-development, this parameter will have to be instanciated by a
+development, this parameter will have to be instantiated by a
 collection, that is an entity where everything is defined ! Imagine
-how to build a code we could execute if a parameter was instanciated
+how to build a code we could execute if a parameter was instantiated
 with an entity with methods only declared\ldots Moreover, the carrier
-of a collection parameter is abstract for the hosting, exactely like
+of a collection parameter is abstract for the hosting, exactly like
 the carrier of a collection is (c.f \ref{collection}).
 
 So, even if the collection parameter ``{\tt is}'' a species name,
 \underline{it will not be a species}. It will be
 \underline{a collection having an interface compatible} with the
 interface of the species. Hence, declaring a collection parameter for
-a parameterised species means providing two things: the name of the
-parameter and the signature that the instanciation of this parameter
+a parametrised species means providing two things: the name of the
+parameter and the signature that the instantiation of this parameter
 must satisfy.
 
 It is important to note that we deal with dependent types here, and
 therefore that the order of the parameters is important. To define the
 type of a parameter, one can use the preceding parameters. For
-instance, if we assume that there exists a parameterised species
+instance, if we assume that there exists a parametrised species
 {\tt List} which declares the basic operations over lists, one can
 specify a new species working on couples of value and lists of values
 like:
@@ -481,11 +483,11 @@ The carrier of this species will represent the type
 first component of the couple is the same than the type of the
 elements of the list in the second component of the couple.
 
-If a collection parameter implements a parameterized species (like in
+If a collection parameter implements a parametrized species (like in
 the example for the species {\tt List}), it must provide an
 instantiation for {\bf all} its parameters. Once again, the preceding
 parameters can be used to achieve this purpose (like we did to create
-our parameter {\tt L}, instanciating the {\tt List}'s parameter by our
+our parameter {\tt L}, instantiating the {\tt List}'s parameter by our
 first collection parameter {\tt E}).
 
 \label{method-qualification}
@@ -534,8 +536,8 @@ species Foo ... =
 end ;;
 \end{lstlisting}
 }
-it is allowed to explicitely qualify the call to {\tt m1} by ``!''
-with no species name, hence impliticely telling ``from myself'':
+it is allowed to explicitly qualify the call to {\tt m1} by ``!''
+with no species name, hence impolitely telling ``from myself'':
 {\scriptsize
 \begin{lstlisting}
 species Foo ... =
@@ -551,12 +553,12 @@ instead of always needing a ``!'' character before each method call.
 
 
 \subsubsection{Entity parameters}
-The other way to parameterise a species is to pass it a
+The other way to parametrise a species is to pass it a
 \underline{value of a certain species carrier}. For instance, in the
-previous section, we made our {\tt List} species parameterised by the
+previous section, we made our {\tt List} species parametrised by the
 ``type'' of the elements in the list. We then used a collection
 parameter. If we now want a species addition modulo 8, we need to
-parameterise our species by the \underline{value 8}, or at least by a
+parametrise our species by the \underline{value 8}, or at least by a
 value of a collection implementing the integers and giving a way to
 have a value representing 8. Such a parameter is called an
 {\bf entity parameter} and is introduced by the keyword {\tt in}.
@@ -575,9 +577,9 @@ value. And it will be possible to create various collections with each
 a specific module value.
 
 Currently, entity parameters must live ``{\tt in}'' a species. It is
-not allowed to specify an entitity parameter living in a basic type
+not allowed to specify an entity parameter living in a basic type
 like {\tt int}, {\tt string}, {\tt bool}\ldots This especially means
-that one must have a collection emmbedding, implementing the type of
+that one must have a collection embedding, implementing the type of
 values we want to use as entity parameters.
 
 
