@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.101 2008-10-17 10:29:17 weis Exp $ *)
+(* $Id: parser.mly,v 1.102 2008-10-17 11:04:26 weis Exp $ *)
 
 open Parsetree;;
 
@@ -233,7 +233,8 @@ let mk_proof_label (s1, s2) =
 %nonassoc IN
 /* %nonassoc below_SEMI */
 /* %nonassoc SEMI */
-%nonassoc SEMI_OP SEMI_SEMI_OP     /* below EQ ({lbl=...; lbl=...}) */
+%nonassoc SEMI_SEMI_OP            /* below EQ ({lbl=...; lbl=...}) */
+%nonassoc SEMI_OP                 /* below EQ ({lbl=...; lbl=...}) */
 /* %nonassoc LET */                /* above SEMI ( ...; let ... in ...) */
 /* %nonassoc below_WITH */
 /* %nonassoc FUNCTION WITH */      /* below BAR  (match ... with ...) */
@@ -250,24 +251,30 @@ let mk_proof_label (s1, s2) =
 %right    COLON_OP                 /* expr (e := e := e) */
 %nonassoc AS                       /* pattern (pat as LIDENT) */
 %right    BAR                      /* Dangling match (match ... with ...) */
-%left     COMMA COMMA_OP           /* expr/expr_comma_list (e, e, e) */
-%right    DASH_GT DASH_GT_OP       /* core_type2 (t -> t -> t) */
+%left     COMMA                    /* expr/expr_comma_list (e, e, e) */
+%left     COMMA_OP                 /* expr/expr_comma_list (e,, e,, e) */
+%right    DASH_GT                  /* core_type2 (t -> t -> t) */
+%right    DASH_GT_OP               /* e ->> e2 */
 %right    BAR_OP                   /* expr (e || e || e) */
 %right    AMPER_OP                 /* expr (e && e && e) */
-%nonassoc TILDA_OP                /* expr (~| e) */
+%nonassoc TILDA_OP                 /* expr (~| e) */
 /* %nonassoc below_EQ */
-%left     EQUAL EQ_OP LT_OP GT_OP  /* expr (e OP e OP e) e.g. OP is = */
-%right    AT_OP HAT_OP             /* expr (e OP e OP e) e.g. OP is @ or ^ */
-%right    COLON_COLON COLON_COLON_OP /* expr (e OP e OP e) e.g. OP is :: */
-%left     PLUS_OP DASH_OP          /* expr (e OP e OP e) e.g. OP is + or - */
-%left     STAR_OP SLASH_OP         /* expr (e OP e OP e) e.g. OP is * or / */
-%left     PERCENT_OP               /* expr (e OP e OP e) e.g. OP is % */
+%left     EQUAL                    /* expr (e OP e OP e) e.g. OP is = */
+%left     EQ_OP                    /* expr (e OP e OP e) e.g. OP starts with = */
+%left     LT_OP GT_OP              /* expr (e OP e OP e) e.g. OP starts with < or > */
+%right    AT_OP                    /* expr (e OP e OP e) e.g. OP starts with @ */
+%right    HAT_OP                   /* expr (e OP e OP e) e.g. OP starts with ^ */
+%right    COLON_COLON              /* expr (e OP e OP e) e.g. OP is :: */
+%right    COLON_COLON_OP           /* expr (e OP e OP e) e.g. OP starts with :: */
+%left     PLUS_OP DASH_OP          /* expr (e OP e OP e) e.g. OP starts with + or - */
+%left     STAR_OP SLASH_OP         /* expr (e OP e OP e) e.g. OP starts with * or / */
+%left     PERCENT_OP               /* expr (e OP e OP e) e.g. OP starts with % */
 %right    STAR_STAR_OP             /* expr (e OP e OP e) e.g. OP = ** */
 /* Unary prefix operators. */
 %nonassoc BACKQUOTE_OP             /* expr OP e e.g. OP = ` (*`*) */
-%nonassoc QUESTION_OP              /* expr OP e e.g. OP is ? */
-%nonassoc DOLLAR_OP                /* expr OP e e.g. OP is $ */
-%nonassoc BANG_OP                  /* expr OP e e.g. OP is ! */
+%nonassoc QUESTION_OP              /* expr OP e e.g. OP starts with ? */
+%nonassoc DOLLAR_OP                /* expr OP e e.g. OP starts with $ */
+%nonassoc BANG_OP                  /* expr OP e e.g. OP starts with ! */
 /* Predefined precedences to resolve conflicts. */
 %nonassoc prec_unary_minus         /* unary DASH_OP e.g. DASH_OP is - */
 %nonassoc prec_constant_constructor /* cf. simple_expr (C versus C x) */
@@ -906,27 +913,50 @@ expr:
 
   /* Binary operators */
 
+  | expr SEMI_SEMI_OP expr
+    { mk_infix_application $1 $2 $3 }
+  | expr SEMI_OP expr
+    { mk_infix_application $1 $2 $3 }
+
+  | expr LT_DASH_GT_OP expr
+    { mk_infix_application $1 $2 $3 }
+
+  | expr BACKSLASH_OP expr
+    { mk_infix_application $1 $2 $3 }
+  | expr LT_DASH_OP expr
+    { mk_infix_application $1 $2 $3 }
+  | expr COLON_OP expr
+    { mk_infix_application $1 $2 $3 }
+
+  | expr COMMA_OP expr
+    { mk_infix_application $1 $2 $3 }
+  | expr DASH_GT_OP expr
+    { mk_infix_application $1 $2 $3 }
+  | expr BAR_OP expr
+    { mk_infix_application $1 $2 $3 }
+  | expr AMPER_OP expr
+    { mk_infix_application $1 $2 $3 }
+
+  | expr EQUAL expr
+    { mk_infix_application $1 "=" $3 }
+    | expr EQ_OP expr
+      { mk_infix_application $1 $2 $3 }
+    | expr LT_OP expr
+      { mk_infix_application $1 $2 $3 }
+    | expr GT_OP expr
+      { mk_infix_application $1 $2 $3 }
+
   | expr COLON_COLON expr
     { mk (E_constr (mk_cons (), [$1; $3])) }
-  | expr COMMA_OP expr
+  | expr COLON_COLON_OP expr
     { mk_infix_application $1 $2 $3 }
   | expr HAT_OP expr
     { mk_infix_application $1 $2 $3 }
   | expr AT_OP expr
     { mk_infix_application $1 $2 $3 }
-  | expr SEMI_OP expr
-    { mk_infix_application $1 $2 $3 }
-  | expr SEMI_SEMI_OP expr
-    { mk_infix_application $1 $2 $3 }
-  | expr COLON_COLON_OP expr
-    { mk_infix_application $1 $2 $3 }
-  | expr COLON_OP expr
-    { mk_infix_application $1 $2 $3 }
   | expr PLUS_OP expr
     { mk_infix_application $1 $2 $3 }
   | expr DASH_OP expr
-    { mk_infix_application $1 $2 $3 }
-  | expr DASH_GT_OP expr
     { mk_infix_application $1 $2 $3 }
   | expr STAR_OP expr
     { mk_infix_application $1 $2 $3 }
@@ -936,24 +966,7 @@ expr:
     { mk_infix_application $1 $2 $3 }
   | expr STAR_STAR_OP expr
     { mk_infix_application $1 $2 $3 }
-  | expr BACKSLASH_OP expr
-    { mk_infix_application $1 $2 $3 }
-  | expr EQ_OP expr
-    { mk_infix_application $1 $2 $3 }
-  | expr EQUAL expr
-    { mk_infix_application $1 $2 $3 }
-  | expr LT_OP expr
-    { mk_infix_application $1 $2 $3 }
-  | expr LT_DASH_OP expr
-    { mk_infix_application $1 $2 $3 }
-  | expr LT_DASH_GT_OP expr
-    { mk_infix_application $1 $2 $3 }
-  | expr GT_OP expr
-    { mk_infix_application $1 $2 $3 }
-  | expr BAR_OP expr
-    { mk_infix_application $1 $2 $3 }
-  | expr AMPER_OP expr
-    { mk_infix_application $1 $2 $3 }
+
 
   /* Unary operators. */
   | TILDA_OP expr
