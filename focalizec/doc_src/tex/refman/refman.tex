@@ -1,4 +1,4 @@
-% $Id: refman.tex,v 1.8 2008-10-17 12:07:24 pessaux Exp $
+% $Id: refman.tex,v 1.9 2008-10-17 12:48:15 pessaux Exp $
 
 \documentclass{report}
 \usepackage[francais]{babel}
@@ -99,8 +99,10 @@ write his proofs using the \zenon\ Proof Language embedded in the
 \section{Output}
 As we will see further, a \focal\ development contains both
 ``computational code'' (i.e. code performing operations that lead to
-an effect, a result) and logical properties. When compiled, two
-outputs are generated:
+an effect, a result) and logical properties.
+
+\smallskip
+When compiled, two outputs are generated:
 \begin{itemize}
   \item The ``computational code'' is compiled into \ocaml\ source
     that can then be compiled with the \ocaml\ compiler to lead to an
@@ -132,6 +134,7 @@ are quite similar to \emph{classes} in an Object-Oriented context.
 However, as we will insist later, \focal\ is not Object-Oriented as
 C++, Java are. It only owns features ``smelling objects''.
 
+\smallskip
 We will now present the basic concepts underlying a
 \focal\ development, that is:
 \begin{itemize}
@@ -165,6 +168,7 @@ methods are enumerated. These methods represent the internal datatype
 of the species, functions\index{function} to manipulate this datatype
 and properties\index{property} that must hold in the species.
 
+\smallskip
 \label{no-polymorphism-for-methods}
 One important restriction on the type of the methods is that it cannot
 be polymorphic\index{polymorphism}. However, \focal\ provides another
@@ -172,12 +176,13 @@ mechanism to circumvent this restriction, the
 parametrisation\index{parametrisation} as explained further
 (c.f. \ref{parametrisation}).
 
+\smallskip
 A species can hence be seen as an abstract data type. On another hand,
 it can be seen as a kind of object, with its internal state (private
-variables) and its methods.
-
-There are several kinds of methods:
+variables) and its methods. There are several kinds of methods:
+\smallskip
 \begin{itemize}
+  \medskip
   \item The {\bf carrier}\index{carrier}. This is a type definition
     that defines the type of the values embedded in the species. When
     ``instantiated'', a species will lead to {\bf a value having this
@@ -199,15 +204,18 @@ end ;;
     the species doesn't represent a ``set'' of couples but
     {\bf 1} value that has type {\tt (int * int)}.
 
+    \smallskip
     The carrier may remain not specified in a species. However, in
     order to finally get a fully defined (or {\em complete}) species
     that will be instantiated, the carrier must be defined
     {\bf once} at one moment (during inheritance as described later in
     section \ref{inheritance}).
 
+    \smallskip
     In the context of a species, the type denoted by the carrier is
     named {\tt Self}.
 
+  \medskip
   \item {\bf Signatures}\index{signature}. They introduce the
     ``prototype'' of a function, that is provide their type. As a
     first introduction, types expressions are closely like ML-like
@@ -226,6 +234,7 @@ end ;;
     which to push and give back a new configuration of stack (where
     the pushed element is on the top), that is of type {\tt Self}. 
 
+  \medskip
   \item {\bf Functions}\index{function}. They are operations that are
     allowed on the carrier's elements. They are implementations of
     signatures, providing effective code to execute. A function is
@@ -251,6 +260,7 @@ end ;;
     declared, without yet effective implementation. We will address
     this point later in detail in section \label{late-binding}.
 
+    \smallskip
     Although \focal\ is a functional language, function application
     must always be total. This means that any function call must be
     provided all the effective arguments of the function. It is still
@@ -259,6 +269,7 @@ end ;;
     function application is ``à la C'', that is with arguments comma
     separated and enclosed by parentheses.
 
+  \medskip
   \item {\bf Properties}\index{property}. They are first order logic
     propositions describing requirements that functions must
     meet. When stating a property, the proof that it holds is not yet
@@ -285,6 +296,7 @@ end ;;
       \end{lstlisting}
     }
 
+  \medskip
   \item {\bf Theorems}\index{theorem}. They are properties with their
     proofs. In fact, when defining a property, we only give the
     statement of a theorem, leaving its proof for later. A theorem can
@@ -322,6 +334,7 @@ words this means that there is no more methods only {\em
   \item For each property, a proof is given.
 \end{itemize}
 
+\smallskip
 Obviously, it is possible to build a species without signatures and
 properties, only providing functions and theorems directly. In this
 case, if the carrier is also defined, then the obtained species is
@@ -363,6 +376,7 @@ we ``take an instance'' of such a species by creating the collection
 {\tt MyFull\_Instance}. We can then use methods of this collection on
 values of this collection.
 
+\smallskip
 A very important point is that when creating a collection, the
 representation of the carrier contained in the ``implemented'' species
 gets opaque. In other words, the collection becomes an abstract
@@ -372,6 +386,7 @@ methods. Moreover, two collections created from a same species will
 not be type-compatible since their carriers got abstracted making now
 impossible to ensure a type equivalence.
 
+\smallskip
 As a conclusion, collections are the only way to get something that
 can be executed since they are the terminal items of a
 \focal\ development hierarchy. Since they are ``terminal'', this also
@@ -392,6 +407,7 @@ to know which functions he can use, and which properties these
 functions have, but doesn't care about the details of the
 implementation.
 
+\smallskip
 To get the interface of a species, we keep the methods only declared
 (as previously stated, signatures and properties) and we forget the
 bodies of the defined methods (carrier, functions and theorems).
@@ -401,6 +417,7 @@ keep its statement. Hence, getting the interface of a species can
 roughly be seen as erasing the carrier, turning the functions into
 signatures and the theorems into properties.
 
+\smallskip
 While this abstraction is easy within programming languages, it is not
 always possible when dealing with proofs and properties. Such
 problematic species are rejected by \focal\ and will be described
@@ -485,6 +502,7 @@ parameter will have to present an interface with at least the
 functions of {\tt Basic\_object} and each method will have to have the
 same type than the corresponding one in {\tt Basic\_object}.
 
+\smallskip
 In the example, we use this parameter in order to build the signature
 of our method {\tt cons}. You may note that species names can be used
 in type expressions. They denote the carrier abstracted of the species
@@ -503,6 +521,7 @@ stands for the type of a function:
     current species.
 \end{itemize}
 
+\smallskip
 Although the parameters looks like a species, why is it called a
 {\bf collection parameter} ? The answer to this question is especially
 important to understand the programming model in \focal. It is called
@@ -521,6 +540,7 @@ declaring a collection parameter for a parametrised species means
 providing two things: the name of the parameter and the signature that
 the instantiation of this parameter must satisfy.
 
+\smallskip
 It is important to note that we deal with dependent types
 \index{type!dependent} here, and
 therefore that the order of the parameters is important. To define the
@@ -543,6 +563,7 @@ The carrier of this species will represent the type
 first component of the couple is the same than the type of the
 elements of the list in the second component of the couple.
 
+\smallskip
 If a collection parameter implements a parametrized species (like in
 the example for the species {\tt List}), it must provide an
 instantiation for {\bf all} its parameters. Once again, the preceding
@@ -550,6 +571,7 @@ parameters can be used to achieve this purpose (like we did to create
 our parameter {\tt L}, instantiating the {\tt List}'s parameter by our
 first collection parameter {\tt E}).
 
+\smallskip
 \label{method-qualification}
 \index{method!qualification}
 At the beginning of the presentation of collection parameters, we used
@@ -564,7 +586,8 @@ our printing method will only have to add parentheses and comma
 around and between what is printed by each parameter's printing
 routine. Hence we now need to know how to call a collection parameter
 method. The syntax used is qualifying the method name by the
-parameter's name, separating them by the ``!'' character.
+parameter's name, separating them by the ``!''\index{bang character}
+character.
 {\scriptsize
 \begin{lstlisting}
 (* Minimal species requirement : having a print routine. *)
@@ -640,6 +663,7 @@ Hence, any collection created from {\tt AddMod8} will embed it modulo
 value. And it will be possible to create various collections with each
 a specific module value.
 
+\smallskip
 Currently, entity parameters must live ``{\tt in}'' a collection. It
 is not allowed to specify an entity parameter living in a basic type
 like {\tt int}, {\tt string}, {\tt bool}\ldots This especially means
@@ -709,6 +733,7 @@ inherited methods are now owned by the species that inherits, they we
 be called exactly like if they were defined ``from scratch'' in the
 species.
 
+\smallskip
 \index{inheritance!multiple}
 Multiple inheritance, i.e. inheriting from several species is
 allowed by specifying several species separated by comma in the
@@ -724,13 +749,14 @@ end ;;
 \end{lstlisting}
 }
 
+\smallskip
 \index{inheritance!parametrised species}
-If a species {\tt S1} inherits from a parameterised species {\tt S0},
+If a species {\tt S1} inherits from a parametrised species {\tt S0},
 it must instantiate all the parameters of {\tt S0}. Because of our
 dependent types\index{type!dependent} framework, if {\tt S1} is itself
-parameterised, it can use its own parameters to do that. Assuming we
+parametrised, it can use its own parameters to do that. Assuming we
 have a species {\tt List} parametrised by a collection parameter
-representing the kind of elements of the list. We now want to derivate
+representing the kind of elements of the list. We now want to derive
 a species {\tt ListUnique} in which elements are present at most
 once. We then want {\tt ListUnique} to inherit from {\tt List} with
 the elements begin the same between {\tt List} and {\tt ListUnique}.
@@ -751,6 +777,18 @@ end ;;
 \end{lstlisting}
 }
 
+\index{inheritance!parametrised by {\tt Self}}
+A species can also inherit of a species parametrised by itself
+(i.e. by {\tt Self}). Although this is rather tricky programming, the
+standard library of \focal\ shows such an example in the file
+{\em weak\_structures.foc} in the species
+{\tt Commutative\_semi\_ring}. In such a case, this implies that the
+current species must finally (when inheritance is resolved) have an
+interface compatible with the interface required by the collection
+parameter of the species we inherit. The \focal\ compiler will then
+collect all the interfaces {\tt Self} must be compatible with due to
+parametrised inheritance and will ensure afterwards that once built,
+{\tt Self} has a really compatible interface.
 
 
 
@@ -766,6 +804,7 @@ something only declared, with no implementation yet. In the same
 order, it is possible to redefine a method already used by an existing
 method.
 
+\smallskip
 \focal\ proposes a mechanism known as {\em late-binding} to solve this
 issue. During compilation, the selected method will be the {\bf most
 recently defined} along the inheritance tree. This especially means
