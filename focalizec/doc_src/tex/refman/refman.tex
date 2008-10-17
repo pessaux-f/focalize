@@ -1,4 +1,4 @@
-% $Id: refman.tex,v 1.10 2008-10-17 14:22:09 pessaux Exp $
+% $Id: refman.tex,v 1.11 2008-10-17 15:11:44 pessaux Exp $
 
 \documentclass{report}
 \usepackage[francais]{babel}
@@ -183,15 +183,16 @@ variables) and its methods. There are several kinds of methods:
 \smallskip
 \begin{itemize}
   \medskip
+  \label{rep-is-method}
   \item The {\bf carrier}\index{carrier}. This is a type definition
-    that defines the type of the values embedded in the species. When
-    ``instantiated'', a species will lead to {\bf a value having this
-    type}. This especially means that an instantiation of a species is
-    NOT, like in Object-Oriented languages an entity embedding data and
-    code. The instantiation of a species will be a
-    {\bf value}. The carrier is named {\tt rep}\index{rep}. For
-    instance, we can define a species that implements couples of
-    native integers data structure as:
+    that defines\index{carrier!defined} the type of the values
+    embedded in the species. When ``instantiated'', a species will
+    lead to {\bf a value having this type}. This especially means that
+    an instantiation of a species is {\bf NOT}, like in
+    Object-Oriented languages an entity embedding data and code. The
+    instantiation of a species will be a {\bf value}. The carrier is
+    named {\tt rep}\index{rep}. For instance, we can define a species
+    that implements couples of native integers data structure as:
     {\scriptsize
       \begin{lstlisting}
 species IntCouple =
@@ -205,11 +206,14 @@ end ;;
     {\bf 1} value that has type {\tt (int * int)}.
 
     \smallskip
-    The carrier may remain not specified in a species. However, in
+    The carrier may remain not {\bf defined} in a species. However, in
     order to finally get a fully defined (or {\em complete}) species
     that will be instantiated, the carrier must be defined
     {\bf once} at one moment (during inheritance as described later in
-    section \ref{inheritance}).
+    section \ref{inheritance}). \index{carrier!declared}However, the
+    carrier is {\bf always implicitly declared}. This means that any
+    species has a carrier that will remain declared until it is {\bf
+    defined} ! 
 
     \smallskip
     In the context of a species, the type denoted by the carrier is
@@ -875,6 +879,7 @@ inheritance tree uses a method {\tt n} freshly {\bf re}defined, then
 this {\bf fresh redefinition} of {\tt n} will be used in the method
 {\tt m}.
 
+\smallskip
 This mechanism enables two programming features:
 \begin{itemize}
   \item The mean to use a method known by its type (i.e. its interface
@@ -901,6 +906,90 @@ of dependencies, depending on their nature:
 \end{itemize}
 In order to understand the difference between, we must inspect further
 the notion of carrier, function, and theorem.
+
+
+
+\paragraph{Decl-dependencies}
+\index{dependency!decl}
+When defining a function, a property or a theorem it is possible to
+use another function or signature. For instance:
+{\scriptsize
+\begin{lstlisting}
+species Bla =
+  signature test : Self -> bool ;
+  let f1 (x in string) = ... ;
+  let f2 (y in Self) = ... f1 ("Eat at Joe's") ... ;
+  property p1 : all x in Self, test (f2 (x)) <-> test (f1 ("So what")) ;
+  theorem t1 : all x in Self, p1 <->  test (f1 ("Bar"))
+  proof: ... ;
+end ;;
+\end{lstlisting}
+}
+
+In this cases, knowing the type of the used methods is sufficient to
+ensure that the using method is well-formed. We remind that the type
+of a function and a signature is the ML-like type. And for a property
+and a theorem, this type is their logical statement. The type of a
+method being provided by its {\bf declaration}, we will call induced
+dependencies {\bf decl-dependencies}.
+
+Such dependencies also arise on the carrier as soon as the type of a
+method makes reference to the type {\tt Self}. Hence we can have
+dependencies on the carrier as well as on other methods (as
+previously stated in \ref{rep-is-method}, {\tt rep} is a method).
+
+Hence, in our example, {\tt test}, {\tt f2}, {\tt f1} (since it is
+used in {\tt p1} and {\t1} as the argument of {\tt test} which expects
+an argument of type {\tt Self}), {\tt p1} and {\tt t1} have a
+decl-dependency on the carrier. Moreover, {\tt f2} has one on
+{\tt f1}. The property {\tt p1} has decl-dependencies on {\tt test},
+{\tt f1} and {\tt f2}. And finally {\tt t1} decl-depends on {\tt p1},
+{\tt test} and {\tt f1}.
+
+
+
+\paragraph{Def-dependencies}
+\index{dependency!def}
+It seems that when {\bf defining} a function, only decl-dependencies
+may appear since the type system of \focal\ only needs the type of the
+functions used by this function. This is right except about the
+carrier. We must remind (c.f. \ref{rep-is-method}) that if {\tt rep}
+is given, then it is {\bf defined} ! If it is not given, then it is
+like if it was only {\bf declared}. Hence a function making usage
+in its body of the known carrier representation (i.e. definition) will
+have a {\bf def-dependency} on the carrier. Such dependencies means
+that to ensure that the using method is well-formed the system need to
+know the {\bf definition} of the entity we depend on.
+
+
+\smallskip
+In the same order, when {\bf using} a signature in another method,
+since signature only contain types, no decl-dependencies can arise.
+
+\smallskip
+\index{dependency!def!on carrier}
+Sligtly differently, when {\bf using} a property in another method,
+since it only contains a ``type'' (i.e. a logical statement), only 
+decl-dependencies appear except on the carrier. For consistency
+reasons going beyond this manuel, the {\bf \focal\ system rejects
+properties having def-dependencies on the carrier}.
+
+\smallskip
+There remains the case of {\bf defining} a theorem. This case is the
+more complex since it can lead to decl-dependencies via its
+proofs. These dependencies are introduce by the statement of the
+proof. We won't explain here the way to introduce them, this will be
+done further in section \ref{zenon-an-dependencies}. First of all, for
+the same reasons than for properties, the {\bf \focal\ system rejects
+theorems having def-dependencies on the carrier}.
+
+Now, what does mean for a theorem to def-depend on a method ? This
+basiclly means that to make the proof of it statement, one must use
+not only the declaration of a method, but also it definition, its
+body.
+
+\paragraph{Erasing during inheritance}
+As a consequence of def-dependencies
 
 
 
