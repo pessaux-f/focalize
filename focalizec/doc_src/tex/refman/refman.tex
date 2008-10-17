@@ -1,4 +1,4 @@
-% $Id: refman.tex,v 1.7 2008-10-17 11:33:03 pessaux Exp $
+% $Id: refman.tex,v 1.8 2008-10-17 12:07:24 pessaux Exp $
 
 \documentclass{report}
 \usepackage[francais]{babel}
@@ -478,7 +478,8 @@ to be a species having at least the methods of a species called
 species from the standard library, containing only few methods.} with
 the same types. Collection parameters are introduced by the {\tt is}
 keyword. When a parametrised species will be used, \focal\ expects it
-to be applied to effective collection parameters having compatible
+to be applied to effective collection parameters having
+{\em compatible}\index{interface!compatibility}
 species interfaces (c.f \ref{interface}). In other words the effective
 parameter will have to present an interface with at least the
 functions of {\tt Basic\_object} and each method will have to have the
@@ -514,14 +515,14 @@ of a collection parameter is abstract for the hosting, exactly like
 the carrier of a collection is (c.f \ref{collection}).
 
 So, even if the collection parameter ``{\tt is}'' a species name,
-\underline{it will not be a species}. It will be
-\underline{a collection having an interface compatible} with the
-interface of the species. Hence, declaring a collection parameter for
-a parametrised species means providing two things: the name of the
-parameter and the signature that the instantiation of this parameter
-must satisfy.
+{\bf it will not be a species}. It will be {\bf a collection having an
+interface compatible} with the interface of the species. Hence,
+declaring a collection parameter for a parametrised species means
+providing two things: the name of the parameter and the signature that
+the instantiation of this parameter must satisfy.
 
-It is important to note that we deal with dependent types here, and
+It is important to note that we deal with dependent types
+\index{type!dependent} here, and
 therefore that the order of the parameters is important. To define the
 type of a parameter, one can use the preceding parameters. For
 instance, if we assume that there exists a parametrised species
@@ -617,11 +618,11 @@ instead of always needing a ``!'' character before each method call.
 \index{parameter!entity}
 \label{entity-parameter}
 The other way to parametrise a species is to pass it a
-\underline{value of a certain species carrier}. For instance, in the
+{\bf value of a certain species carrier}. For instance, in the
 previous section, we made our {\tt List} species parametrised by the
 ``type'' of the elements in the list. We then used a collection
 parameter. If we now want a species addition modulo 8, we need to
-parametrise our species by the \underline{value 8}, or at least by a
+parametrise our species by the {\bf value 8}, or at least by a
 value of a collection implementing the integers and giving a way to
 have a value representing 8. Such a parameter is called an
 {\bf entity parameter} and is introduced by the keyword {\tt in}.
@@ -712,7 +713,7 @@ species.
 Multiple inheritance, i.e. inheriting from several species is
 allowed by specifying several species separated by comma in the
 {\tt inherits} clause. In case of methods appearing in several
-parents, the kept one is the one comming from the rightmost parent in
+parents, the kept one is the one coming from the rightmost parent in
 the {\tt inherits} clause. For instance below, if species {\tt A} and
 {\tt C} provide a method {\tt m}, {\tt C's} one will be kept.
 {\scriptsize
@@ -722,6 +723,34 @@ species Foo inherits A, B, C, D =
 end ;;
 \end{lstlisting}
 }
+
+\index{inheritance!parametrised species}
+If a species {\tt S1} inherits from a parameterised species {\tt S0},
+it must instantiate all the parameters of {\tt S0}. Because of our
+dependent types\index{type!dependent} framework, if {\tt S1} is itself
+parameterised, it can use its own parameters to do that. Assuming we
+have a species {\tt List} parametrised by a collection parameter
+representing the kind of elements of the list. We now want to derivate
+a species {\tt ListUnique} in which elements are present at most
+once. We then want {\tt ListUnique} to inherit from {\tt List} with
+the elements begin the same between {\tt List} and {\tt ListUnique}.
+{\scriptsize
+\begin{lstlisting}
+species List (Elem is ...) =
+  let empty = ... ;
+  let add (e in Elem, l in Self) = ... ;
+  let concat (l1 in Self, l2 in Self) = ... ;
+end ;;
+
+species ListUnique (UElem is ...) inherits List (UElem) =
+  let add (e in Elem, l in Self) =
+    ... (* Ensure the element e is not already present. *) ;
+  let concat (l1 in Self, l2 in Self) =
+    ... (* Ensure elements of l1 present in l2 are not added. *) ;
+end ;;
+\end{lstlisting}
+}
+
 
 
 
@@ -733,7 +762,33 @@ We stated just above (c.f. \ref{inheritance}) that it was possible
 during inheritance to replace a signature by a function or a property
 by a theorem. On another hand, we saw that it was possible to define
 function using a signature (c.f \ref{idea-fun-using-sig}), that is
-something only declared, with no implementation yet.
+something only declared, with no implementation yet. In the same
+order, it is possible to redefine a method already used by an existing
+method.
+
+\focal\ proposes a mechanism known as {\em late-binding} to solve this
+issue. During compilation, the selected method will be the {\bf most
+recently defined} along the inheritance tree. This especially means
+that as long as a method is a signature, in the children the effective
+implementation of the method will remain undefined (that is not a
+problem since in this case the species is not complete, hence cannot
+lead to a collection, i.e. code that can really be executed
+yet). Moreover, if a method {\tt m} previously defined in the
+inheritance tree uses a method {\tt n} freshly {\bf re}defined, then
+this {\bf fresh redefinition} of {\tt n} will be used in the method
+{\tt m}.
+
+This mechanism enable two programming features:
+\begin{itemize}
+  \item The mean to use a method known by its type (i.e. its interface
+    in term of Software Engineering), but for which we do not know, or
+    we don't need or we don't want yet to provide an implementation.
+
+  \item To provide a new implementation of a method, for example more
+    efficient because algorithms exist due to the refinements
+    introduced by the inheriting species, while already having and
+    keeping the initial implementation for the inherited species.
+\end{itemize}
 
 
 
