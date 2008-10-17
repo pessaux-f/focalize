@@ -1,4 +1,4 @@
-% $Id: refman.tex,v 1.9 2008-10-17 12:48:15 pessaux Exp $
+% $Id: refman.tex,v 1.10 2008-10-17 14:22:09 pessaux Exp $
 
 \documentclass{report}
 \usepackage[francais]{babel}
@@ -23,7 +23,7 @@
   }
 
 \lstset{
-  language=Focal, tabsize=2, frame=none, breaklines=true,
+  language=Focal, tabsize=2, frame=single, breaklines=true,
   basicstyle=\ttfamily, framexleftmargin=1mm, xleftmargin=1mm
 }
 
@@ -644,24 +644,38 @@ The other way to parametrise a species is to pass it a
 {\bf value of a certain species carrier}. For instance, in the
 previous section, we made our {\tt List} species parametrised by the
 ``type'' of the elements in the list. We then used a collection
-parameter. If we now want a species addition modulo 8, we need to
-parametrise our species by the {\bf value 8}, or at least by a
+parameter. If we now want a species addition modulo a value, we need
+to parametrise our species by this {\bf value}, or at least by a
 value of a collection implementing the integers and giving a way to
-have a value representing 8. Such a parameter is called an
-{\bf entity parameter} and is introduced by the keyword {\tt in}.
+have a value representing the one we whish. Such a parameter is called
+an {\bf entity parameter} and is introduced by the keyword {\tt in}.
 {\scriptsize
 \begin{lstlisting}
-species AddMod8 (Number is ACollImplentingInts, val_mod in Number) =
+species AddModN (Number is ASpeciesImplentingInts, val_mod in Number) =
   rep = Number ;
   let add (x in Self, y in Self) =
     Number!modulo (Number!add (x, y), val_mod) ;
 end ;;
+
+species
 \end{lstlisting}
 }
 
-Hence, any collection created from {\tt AddMod8} will embed it modulo
+Hence, any collection created from {\tt AddModN} will embed it modulo
 value. And it will be possible to create various collections with each
-a specific module value.
+a specific module value. For instance, assuming that the species
+{\tt AddModN} is complete and have a method {\tt from\_int} able to
+create a value of the carrier from an integer, we can create a
+collection implementing addition modulo 42. We also assume that we
+have a collection {\tt ACollImplentingInts} implementing the
+integers.
+{\scriptsize
+\begin{lstlisting}
+collection AddMod42 implements AddModN
+  (ACollImplentingInts, ACollImplentingInts!from_int (42)) ;;
+\end{lstlisting}
+}
+
 
 \smallskip
 Currently, entity parameters must live ``{\tt in}'' a collection. It
@@ -793,6 +807,50 @@ parametrised inheritance and will ensure afterwards that once built,
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Conclusion on species expressions}
+\index{species!expression}
+At the beginning of this presentation, when dealing with collection
+parameters (section \ref{parametrisation}) we explained that
+collection parameters ``expressions'' were, first, species names. Like
+in the example:
+{\scriptsize
+\begin{lstlisting}
+species List (Elem is Basic_object) = ... ;
+\end{lstlisting}
+}
+
+Then, we learnt about parametrised species and we saw that we can have
+a species parametrised by a parametrised species, like in the example:
+{\scriptsize
+\begin{lstlisting}
+species MyCouple (E is Basic_object, L is List (E)) = ... ;;
+\end{lstlisting}
+}
+
+Going on, we got interested in inheritance and saw we could inherit
+from species that were referenced only by their name, like in:
+{\scriptsize
+\begin{lstlisting}
+species OrderedIntCouple inherits (IntCouple) = ... ;;
+\end{lstlisting}
+}
+
+And finally, we also saw species inheriting from parametrised
+species, like in:
+{\scriptsize
+\begin{lstlisting}
+species ListUnique (UElem is ...) inherits List (UElem) = ... ;;
+\end{lstlisting}
+}
+
+Hence, we can now defined more accurately the notion of {\bf species
+exression} used for both inheritance and parametrisation. It is either
+a simple species name or the application of a parametrised species to
+as many species expressions as the parametrised species has
+parameters.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Late-binding}
 \label{late-binding}
 \index{late-binding}
@@ -817,7 +875,7 @@ inheritance tree uses a method {\tt n} freshly {\bf re}defined, then
 this {\bf fresh redefinition} of {\tt n} will be used in the method
 {\tt m}.
 
-This mechanism enable two programming features:
+This mechanism enables two programming features:
 \begin{itemize}
   \item The mean to use a method known by its type (i.e. its interface
     in term of Software Engineering), but for which we do not know, or
@@ -833,7 +891,19 @@ This mechanism enable two programming features:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Dependencies and erasing}
+We previously saw that methods of a species can use other methods of
+this species and methods from its collection parameters. This induce
+what we call {\bf dependencies}\index{dependency}. There are two kinds
+of dependencies, depending on their nature:
+\begin{itemize}
+  \item {\bf Decl-dependencies}
+  \item {\bf Def-dependencies}
+\end{itemize}
+In order to understand the difference between, we must inspect further
+the notion of carrier, function, and theorem.
 
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \printindex
 \end{document}
