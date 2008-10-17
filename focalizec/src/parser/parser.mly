@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.102 2008-10-17 11:04:26 weis Exp $ *)
+(* $Id: parser.mly,v 1.103 2008-10-17 21:20:43 weis Exp $ *)
 
 open Parsetree;;
 
@@ -134,11 +134,15 @@ let mk_proof_label (s1, s2) =
 %token COMMA
 %token <string> COMMA_OP
 
+%token CONJUNCTION
+%token DISJUNCTION
+%token NEGATION
 %token DASH_GT
 %token <string> DASH_GT_OP
-%token <string> LT_DASH_OP
 %token LT_DASH_GT
 %token <string> LT_DASH_GT_OP
+
+%token <string> LT_DASH_OP
 %token SHARP
 %token <string> SHARP_OP
 %token BANG
@@ -146,7 +150,6 @@ let mk_proof_label (s1, s2) =
 %token BAR
 %token <string> BAR_OP
 %token <string> AMPER_OP
-%token TILDA
 %token <string> TILDA_OP
 %token UNDERSCORE
 %token EQUAL
@@ -179,11 +182,9 @@ let mk_proof_label (s1, s2) =
 %token BY
 %token CAML
 %token COLLECTION
-%token CONJUNCTION
 %token COQ
 %token COQ_REQUIRE
 %token DEFINITION
-%token DISJUNCTION
 %token ELSE
 %token END
 %token EX
@@ -231,52 +232,61 @@ let mk_proof_label (s1, s2) =
 /* Precedences and associativities. */
 
 %nonassoc IN
+%nonassoc SEMI_SEMI_OP             /* expr (e OP e) with OP starting with ";;" */
 /* %nonassoc below_SEMI */
-/* %nonassoc SEMI */
-%nonassoc SEMI_SEMI_OP            /* below EQ ({lbl=...; lbl=...}) */
-%nonassoc SEMI_OP                 /* below EQ ({lbl=...; lbl=...}) */
+/* %nonassoc SEMI                  /* below EQ ({lbl=...; lbl=...}) */
+%nonassoc SEMI_OP                  /* expr (e OP e) with OP starting with ';' */
 /* %nonassoc LET */                /* above SEMI ( ...; let ... in ...) */
 /* %nonassoc below_WITH */
 /* %nonassoc FUNCTION WITH */      /* below BAR  (match ... with ...) */
 %nonassoc prec_quantifier
-%nonassoc LT_DASH_GT LT_DASH_GT_OP /* <-> */
-%right    DISJUNCTION              /* logical_expr (le \/ le \/ le)*/
-%right    CONJUNCTION              /* logical_expr (le /\ le /\ le) */
-%nonassoc TILDA                    /* logical_expr (~ le) */
+%nonassoc LT_DASH_GT LT_DASH_GT_OP
+       /* expr (e OP e) with OP being "<->" or starting with "<->" */
+%right    DISJUNCTION              /* logical_expr (le \/ le \/ e) */
+%right    CONJUNCTION              /* logical_expr (le /\ le /\ e) */
+%nonassoc NEGATION                 /* logical_expr (~ le) */
 %right    AND                      /* let ... and ... */
 /* %nonassoc THEN */               /* below ELSE (if ... then ...) */
 %nonassoc ELSE                     /* (if ... then ... else ...) */
-%right    BACKSLASH_OP             /* expr (e \ e \ e) */
+%right    BACKSLASH_OP             /* expr (e OP e OP e) with OP starting with '\\' */
 %nonassoc LT_DASH_OP               /* below COLON_OP */
-%right    COLON_OP                 /* expr (e := e := e) */
+       /* expr (e OP e) with OP starting with "<-" */
+%right    COLON_OP
+       /* expr (e OP e OP e) with OP starting with ':' (e.g. ":=") */
 %nonassoc AS                       /* pattern (pat as LIDENT) */
 %right    BAR                      /* Dangling match (match ... with ...) */
-%left     COMMA                    /* expr/expr_comma_list (e, e, e) */
-%left     COMMA_OP                 /* expr/expr_comma_list (e,, e,, e) */
-%right    DASH_GT                  /* core_type2 (t -> t -> t) */
-%right    DASH_GT_OP               /* e ->> e2 */
+%left     COMMA COMMA_OP
+       /* expr/expr_comma_list (e OP e OP e) with OP respectively */
+       /* being ',' or starting with ',' */
+%right    DASH_GT DASH_GT_OP
+       /* core_type2 (t -> t -> t) */
+       /* expr (e OP e OP e) wih OP starting with "->" e2) */
 %right    BAR_OP                   /* expr (e || e || e) */
 %right    AMPER_OP                 /* expr (e && e && e) */
 %nonassoc TILDA_OP                 /* expr (~| e) */
 /* %nonassoc below_EQ */
-%left     EQUAL                    /* expr (e OP e OP e) e.g. OP is = */
-%left     EQ_OP                    /* expr (e OP e OP e) e.g. OP starts with = */
-%left     LT_OP GT_OP              /* expr (e OP e OP e) e.g. OP starts with < or > */
-%right    AT_OP                    /* expr (e OP e OP e) e.g. OP starts with @ */
-%right    HAT_OP                   /* expr (e OP e OP e) e.g. OP starts with ^ */
-%right    COLON_COLON              /* expr (e OP e OP e) e.g. OP is :: */
-%right    COLON_COLON_OP           /* expr (e OP e OP e) e.g. OP starts with :: */
-%left     PLUS_OP DASH_OP          /* expr (e OP e OP e) e.g. OP starts with + or - */
-%left     STAR_OP SLASH_OP         /* expr (e OP e OP e) e.g. OP starts with * or / */
-%left     PERCENT_OP               /* expr (e OP e OP e) e.g. OP starts with % */
-%right    STAR_STAR_OP             /* expr (e OP e OP e) e.g. OP = ** */
+%left     EQUAL EQ_OP LT_OP GT_OP
+       /* expr (e OP e OP e) with OP respectively: */
+       /* being '=', starting with '=', '<', or '>' */
+%right    AT_OP HAT_OP
+       /* expr (e OP e OP e) with OP starting with '@' or '^' */
+/*%right    UINFIX */
+/* expr (e OP e OP e) with OP begin a user defined lowercase ident. */
+%right    COLON_COLON COLON_COLON_OP
+       /* expr (e OP e OP e) with OP being "::", or starting with "::" */
+%left     PLUS_OP DASH_OP
+       /* expr (e OP e OP OP e) with OP starting with '+' or '-' */
+%left     STAR_OP SLASH_OP PERCENT_OP
+       /* expr (e OP e OP e) with OP starting with '*', '/', or '%' */
+%right    STAR_STAR_OP
+       /* expr (e OP e OP e) with OP starting with "**" */
 /* Unary prefix operators. */
-%nonassoc BACKQUOTE_OP             /* expr OP e e.g. OP = ` (*`*) */
-%nonassoc QUESTION_OP              /* expr OP e e.g. OP starts with ? */
-%nonassoc DOLLAR_OP                /* expr OP e e.g. OP starts with $ */
-%nonassoc BANG_OP                  /* expr OP e e.g. OP starts with ! */
+%nonassoc BACKQUOTE_OP             /* expr OP e with OP being '\`' */
+%nonassoc QUESTION_OP              /* expr OP e e.g. OP starting with '?' */
+%nonassoc DOLLAR_OP                /* expr OP e e.g. OP starting with '$' */
+%nonassoc BANG_OP                  /* expr OP e with OP starting with '!' */
 /* Predefined precedences to resolve conflicts. */
-%nonassoc prec_unary_minus         /* unary DASH_OP e.g. DASH_OP is - */
+%nonassoc prec_unary_minus         /* unary DASH_OP e.g. DASH_OP is '-' */
 %nonassoc prec_constant_constructor /* cf. simple_expr (C versus C x) */
                                    /* above AS BAR COLON_COLON COMMA */
 %nonassoc below_SHARP
@@ -664,20 +674,20 @@ logical_expr:
     { mk (Pr_forall ($2, $3, $5))}
   | EX bound_vname_list in_type_expr COMMA logical_expr   %prec prec_quantifier
     { mk (Pr_exists ($2, $3, $5))}
-  | TILDA logical_expr
-    { mk (Pr_not $2) }
-  | LPAREN logical_expr RPAREN
-    { mk (Pr_paren $2) }
   | logical_expr DASH_GT logical_expr
     { mk (Pr_imply ($1, $3)) }
+  | logical_expr LT_DASH_GT logical_expr
+    { mk (Pr_equiv ($1, $3)) }
   | logical_expr DISJUNCTION logical_expr
     { mk (Pr_or ($1, $3)) }
   | logical_expr CONJUNCTION logical_expr
     { mk (Pr_and ($1, $3)) }
-  | logical_expr LT_DASH_GT logical_expr
-    { mk (Pr_equiv ($1, $3)) }
+  | NEGATION logical_expr
+    { mk (Pr_not $2) }
   | expr %prec below_RPAREN
     { mk (Pr_expr $1) }
+  | LPAREN logical_expr RPAREN
+    { mk (Pr_paren $2) }
 ;
 
 in_type_expr:
@@ -946,22 +956,22 @@ expr:
     | expr GT_OP expr
       { mk_infix_application $1 $2 $3 }
 
-  | expr COLON_COLON expr
-    { mk (E_constr (mk_cons (), [$1; $3])) }
-  | expr COLON_COLON_OP expr
-    { mk_infix_application $1 $2 $3 }
   | expr HAT_OP expr
     { mk_infix_application $1 $2 $3 }
   | expr AT_OP expr
     { mk_infix_application $1 $2 $3 }
+  | expr COLON_COLON expr
+    { mk (E_constr (mk_cons (), [$1; $3])) }
+  | expr COLON_COLON_OP expr
+    { mk_infix_application $1 $2 $3 }
   | expr PLUS_OP expr
     { mk_infix_application $1 $2 $3 }
-  | expr DASH_OP expr
-    { mk_infix_application $1 $2 $3 }
+    | expr DASH_OP expr
+      { mk_infix_application $1 $2 $3 }
   | expr STAR_OP expr
     { mk_infix_application $1 $2 $3 }
-  | expr SLASH_OP expr
-    { mk_infix_application $1 $2 $3 }
+    | expr SLASH_OP expr
+      { mk_infix_application $1 $2 $3 }
   | expr PERCENT_OP expr
     { mk_infix_application $1 $2 $3 }
   | expr STAR_STAR_OP expr
