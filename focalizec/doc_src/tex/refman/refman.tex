@@ -415,6 +415,31 @@ a parameterised species means providing two things: the name of the
 parameter and the signature that the instanciation of this parameter
 must satisfy.
 
+It is important to note that we deal with dependent types here, and
+therefore that the order of the parameters is important. To define the
+type of a parameter, one can use the preceding parameters. For
+instance, if we assume that there exists a parameterised species
+{\tt List} which declares the basic operations over lists, one can
+specify a new species working on couples of value and lists of values
+like:
+\begin{lstlisting}
+species MyCouple (E is Basic_object, L is List (E)) =
+  rep = (E * L) ;
+  ... ;
+end ;;
+\end{lstlisting}
+
+The carrier of this species will represent the type
+{\tt ('a * ('a list))}. This means that the type of the values in the
+first component of the coupel is the same than the type of the
+elements of the list in the second component of the couple.
+
+.......
+
+If a collection parameter implements a parameterized species, it must provide an
+instantiation for all its parameters. Once again, the preceding parameters can
+be used to achieve this purpose.
+
 \subsection{Inheritance and its mechanisms}
 \subsubsection{Inheritance}
 \subsubsection{Late-binding}
