@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.98 2008-10-16 21:39:31 weis Exp $ *)
+(* $Id: parser.mly,v 1.99 2008-10-16 22:22:37 weis Exp $ *)
 
 open Parsetree;;
 
@@ -125,6 +125,7 @@ let mk_proof_label (s1, s2) =
 %token LRPARENS
 %token LBRACE
 %token RBRACE
+%token LRBRACES
 %token LBRACKET
 %token RBRACKET
 %token LRBRACKETS
@@ -214,7 +215,7 @@ let mk_proof_label (s1, s2) =
 %token PROVE
 %token QED
 %token REC
-%token REP
+%token REPRESENTATION
 %token SELF
 %token SIGNATURE
 %token SPECIES
@@ -493,7 +494,7 @@ def_proof:
 ;
 
 def_rep:
-  | opt_doc REP EQUAL rep_type_def
+  | opt_doc REPRESENTATION EQUAL rep_type_def
     { mk_doc $1 $4 }
 ;
 
