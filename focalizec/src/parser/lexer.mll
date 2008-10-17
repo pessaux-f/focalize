@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.44 2008-10-17 10:22:41 weis Exp $ *)
+(* $Id: lexer.mll,v 1.45 2008-10-17 21:18:43 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -171,7 +171,7 @@ let token_of_lowercase_prefix_symbol s =
   assert (String.length s > 0);
   match s.[0] with
   | '`' (* ` Helping emacs *) -> BACKQUOTE_OP s
-  | '~' -> if String.length s = 1 then TILDA else TILDA_OP s
+  | '~' -> if String.length s = 1 then NEGATION else TILDA_OP s
   | '?' -> QUESTION_OP s
   | '$' -> DOLLAR_OP s
   | '!' ->
