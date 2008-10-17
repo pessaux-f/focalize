@@ -1,9 +1,12 @@
+% $Id: refman.tex,v 1.6 2008-10-17 11:13:16 pessaux Exp $
+
 \documentclass{report}
 \usepackage[francais]{babel}
 \usepackage{times}
 \usepackage[latin1]{inputenc}
 \usepackage{color}
 \usepackage{listings}
+\usepackage{index}
 
 
 \input{macros}
@@ -24,6 +27,7 @@
   basicstyle=\ttfamily, framexleftmargin=1mm, xleftmargin=1mm
 }
 
+\makeindex
 
 \begin{document}
 
@@ -121,8 +125,9 @@ We will now present the basic concepts underlying a
 \end{itemize}
 
 \subsection{Species}
-{\bf Species} are the nodes of the \focal\ hierarchy. A species can be
-roughly seen as a list of {\bf methods} or {\bf fields}. Hence, a
+{\bf Species} \index{species} are the nodes of the
+\focal\ hierarchy. A species can be roughly seen as a list of
+{\bf methods} \index{method} or {\bf fields}\index{field}. Hence, a
 basic species looks like:
 {\scriptsize
 \begin{lstlisting}
@@ -214,14 +219,21 @@ end ;;
     Function can use in their body other methods of the species,
     toplevel function definitions, methods of collections
     (described further in \ref{collection}), or methods of
-    collections parameters (see \ref{collection-parameter}). Although
-    \focal\ is a functional language, function application must always
-    be total. This means that any function call must be provided all
-    the effective arguments of the function. It is still possible to
-    have partial application by eta-expansion. As described further in
-    the core syntax (c.f \ref{core-syntax}), function application is
-    ``à la C'', that is with arguments comma separated and enclosed by
-    parentheses.
+    collections parameters (see \ref{collection-parameter}).
+
+    \label{idea-fun-using-sig}
+    When we say ``other methods of the species'', this includes
+    signatures. This means that it is possible to use something only
+    declared, without yet effective implementation. We will address
+    this point later in detail in section \label{late-binding}.
+
+    Although \focal\ is a functional language, function application
+    must always be total. This means that any function call must be
+    provided all the effective arguments of the function. It is still
+    possible to have partial application by eta-expansion. As
+    described further in the core syntax (c.f \ref{core-syntax}),
+    function application is ``à la C'', that is with arguments comma
+    separated and enclosed by parentheses.
 
   \item {\bf Properties}. They are first order logic propositions
     describing requirements that functions must meet. When stating a
@@ -576,16 +588,92 @@ Hence, any collection created from {\tt AddMod8} will embed it modulo
 value. And it will be possible to create various collections with each
 a specific module value.
 
-Currently, entity parameters must live ``{\tt in}'' a species. It is
-not allowed to specify an entity parameter living in a basic type
+Currently, entity parameters must live ``{\tt in}'' a collection. It
+is not allowed to specify an entity parameter living in a basic type
 like {\tt int}, {\tt string}, {\tt bool}\ldots This especially means
 that one must have a collection embedding, implementing the type of
 values we want to use as entity parameters.
 
 
 \subsection{Inheritance and its mechanisms}
+In this section, we address the second mean to build complex species
+based on existing ones. It will cover the notion of {\em inheritance}
+and its related feature the {\em late-binding}.
+
 \subsubsection{Inheritance}
+\label{inheritance}
+Like in Object-Oriented models, in \focal\ {\em inheritance} is the
+ability to create a species, not from scratch, but integrating methods
+of other species. For instance, assuming we have a species
+{\tt IntCouple} that represent couples of integers, we want to create
+a species {\tt OrderedIntCouple} in which we ensure that the first
+component of the couple is lower or equal to the second. Instead of
+inventing again all the species, we will take advantage of the
+existing {\tt IntCouple} and ``import'' its printing, equality, etc
+functions. However, we will have to change the creation function since
+it must ensure at creation-time of the couple that it is really
+ordered. We also may add new methods in the newly built species. The
+inheritance mechanism also allows to redefine methods already existing
+as long as they keep the same type. To have the same type means for
+functions to have the same ML-like type, and for theorems to have the
+same statement (but not the same proof).
+{\scriptsize
+\begin{lstlisting}
+species IntCouple =
+  rep = (int * int) ;
+  let print (x in Self) = ... ;
+  let create (x in int, y in int) = (x, y) ;
+  let equal (c1, c2) =
+    match (c1, c2) with
+     | ((c11, c12), (c21, c22)) -> c11 = c21 && c12 = c22 ;
+  ...
+end ;;
+
+species OrderedIntCouple inherits (IntCouple) =
+  let create (x in int, y in int) =
+    if x < y then (x, y) else (y, x) ;
+
+  property is_ordered : all c in Self, first (c) <= scnd (c) ;
+end ;;
+\end{lstlisting}
+}
+
+In the example above, {\tt OrderedIntCouple} will have all the methods
+of {\tt IntCouple}, except the redefined ones (here {\tt create}, plus
+the methods exclusively defined in {\tt OrderedIntCouple} (here, the
+property {\tt is\_ordered}) stating that the couple is really
+ordered). During inheritance, it is also possible to redefine a
+signature, replacing it by an effective definition, to redefine a
+property by a theorem and in the same idea, to add a {\tt proof of} to
+a property in order to conceptually redefine is as a theorem. Since
+inherited methods are now owned by the species that inherits, they we
+be called exactly like if they were defined ``from scratch'' in the
+species.
+
+Multiple inheritance, i.e. inheriting from several species is
+allowed by specifying several species separated by comma in the
+{\tt inherits} clause. In case of methods appearing in several
+parents, the kept one is the one comming from the rightmost parent in
+the {\tt inherits} clause. For instance below, if species {\tt A} and
+{\tt C} provide a method {\tt m}, {\tt C's} one will be kept.
+{\scriptsize
+\begin{lstlisting}
+species Foo inherits A, B, C, D =
+  ... m (...) ... ;
+end ;;
+\end{lstlisting}
+}
+
 \subsubsection{Late-binding}
+\label{late-binding}
+We stated just above (c.f. \ref{inheritance}) that it was possible
+during inheritance to replace a signature by a function or a property
+by a theorem. On another hand, we saw that it was possible to define
+function using a signature (c.f \ref{idea-fun-using-sig}), that is
+something only declared, with no implementation yet.
+
+\subsubsection{Dependencies and erasing}
 
 
+\printindex
 \end{document}
