@@ -137,10 +137,11 @@ are enumerated. These methods represent the internal datatype of the
 species, functions to manipulate this datatype and properties that
 must hold in the species.
 
+\label{no-polymorphism-for-methods}
 One important restriction on the type of the methods is that it cannot
 be polymorphic. However, \focal\ provides another mechanism to
 circumvent this restriction, the parameterisation as explained
-further.
+further (c.f. \ref{parameterisation}).
 
 A species can hence be seen as an abstract data type. On another hand,
 it can be seen as a kind of object, with its internal state (private
@@ -209,6 +210,17 @@ species IntStack =
 end ;;
       \end{lstlisting}
     }
+    Function can use in their body other methods of the species,
+    toplevel function definitions, methods of collections
+    (described further in \ref{collection}), or methods of
+    collections parameters (see \ref{collection-parameter}). Although
+    \focal\ is a functional language, function application must always
+    be total. This means that any function call must be provided all
+    the effective arguments of the function. It is still possible to
+    have partial application by eta-expansion. As described further in
+    the core syntax (c.f \ref{core-syntax}), function application is
+    ``à la C'', that is with arguments comma separated and enclosed by
+    parentheses.
 
   \item {\bf Properties}. They are first order logic propositions
     describing requierements that functions must meet. When stating a
@@ -254,10 +266,12 @@ end ;;
 \end{itemize}
 
 \subsection{Collections}
-A {\bf collection} is a kind o ``instance'' of a complete species. A
-species is said {\em complete} if all its methods are {\em defined},
-i.e. have an implementation. In other words this means that there is
-no more methods only {\em declared}. This notion implies that:
+\label{collection}
+A {\bf collection} is a kind o ``instance'' of a {\em complete}
+species. A species is said complete if all its methods are
+{\em defined}, i.e. have an implementation. In other words this means
+that there is no more methods only {\em declared}. This notion implies
+that:
 \begin{itemize}
   \item The carrier is defined by providing a type definition for
     {\tt rep}.
@@ -278,11 +292,12 @@ target code.
 The process of getting this effective executable code is by making a
 collection that {\em implements} the species. As a result, one get an
 entity whose internal representation has the type of the carrier of
-the {\em implemented} species and thatcan be manipulated by the
+the {\em implemented} species and that can be manipulated by the
 methods present in this {\em implemented} species. However, the
 manupilations will be done via the collection and not anymore via the
 species.
 
+{\scriptsize
 \begin{lstlisting}
 species Full =
   rep = int ;
@@ -298,6 +313,7 @@ Full.print (v) ;;
 let dv = Full.double () ;;
 Full.print (dv) ;;
 \end{lstlisting}
+}
 
 In the above example, we defined a complete species {\tt Full}. Then
 we ``take an instance'' of such a species by creating the collection
@@ -322,6 +338,7 @@ explained in the next section).
 
 
 \subsection{Interfaces}
+\label{interface}
 The {\bf interface} of a species is the list of the declarations of
 its methods. It corresponds to the end-user point of view, who wants
 to know which functions he can use, and which properties these
@@ -340,7 +357,7 @@ signatures and the theorems into properties.
 While this abstraction is easy within programming languages, it is not
 always possible when dealing with proofs and properties. Such
 problematic species are rejected by \focal\ and will be described
-later.
+later in \ref{species-constraints}.
 
 
 
@@ -352,39 +369,47 @@ mechanisms are available for this purpose: parameterisation and
 inheritance.
 
 \subsection{Parameterisation}
-\subsection{Collection parameters}
-Remember that methods cannot be polymorphics. So it seems difficult to
-create a species whose methods work on a carrier having a type
-structure in which we would like to have some parts unconstrained. For
-example, who to implement the well-known polymorphic type of the
-lists ? A list is a structure grouping elements but independently of
-the type of these elements. The only constraint is that all elements
-have the same type. Hence, a ML-like representation of lists would be
-like:
+\label{parameterisation}
+\subsubsection{Collection parameters}
+\label{collection-parameter}
+Remember that methods cannot be polymorphic
+(\ref{no-polymorphism-for-methods}). So it seems difficult to create a
+species whose methods work on a carrier having a type structure in
+which we would like to have some parts unconstrained. For example, who
+to implement the well-known polymorphic type of the lists ? A list is
+a structure grouping elements but independently of the type of these
+elements. The only constraint is that all elements have the same
+type. Hence, a ML-like representation of lists would be like:
+{\scriptsize
 \begin{lstlisting}
 type 'a list =
   | Nil
   | Cons of ('a * 'a list)
 \end{lstlisting}
+}
 
 The {\tt 'a} is then a parameter of the type and is polymorphic.
 In \focal\ we would like to create a species looking like:
+{\scriptsize
 \begin{lstlisting}
 species List =
   signature nil : Self ;
   signature cons : 'a -> Self -> Self ;
 end ;;
 \end{lstlisting}
+}
 
 Instead of abstracting the type parameter and leaving it free in the
-context of the species, in \focal\ we parameterise the species by
-another species:
+context of the species, in \focal\ we {\em parameterise} the species
+by another species:
+{\scriptsize
 \begin{lstlisting}
 species List (Elem is Basic_object) =
   signature nil : Self ;
   signature cons : Elem -> Self -> Self ;
 end ;;
 \end{lstlisting}
+}
 
 The {\tt Elem} is called a {\bf collection parameter} and is expected
 to be a species having at least the methods of a species called
@@ -393,10 +418,28 @@ species from the standard library, containing only few methods.} with
 the same types. Collection parameters are introduced by the {\tt is}
 keyword. When a parameterised species will be used, \focal\ expects it
 to be applied to effective collection parameters having compatible
-species interfaces. In other words the effective parameter will have
-to present an interface with at least the functions of
-{\tt Basic\_object} and each method will have to have the same type
-than the corresponding one in {\tt Basic\_object}.
+species interfaces (c.f \ref{interface}). In other words the effective
+parameter will have to present an interface with at least the
+functions of {\tt Basic\_object} and each method will have to have the
+same type than the corresponding one in {\tt Basic\_object}.
+
+In the example, we use this parameter in order to build the signature
+of our method {\tt cons}. You may note that species names can be used
+in type expressions. They denote the carrier abstracted of the species
+whose name is used. By ``abstracted'', it is meant that the
+representation of this carrier is not visible, but we can refer to it
+as an abstract datatype. In other words, {\tt Elem -> Self -> Self}
+stands for the type of a function:
+\begin{itemize}
+  \item taking a value whose type is the carrier type of a species
+    having a compatible interface with the species
+    {\tt Basic\_object}. (This especially means that such a value will
+    have be created using methods of the compatible species),
+  \item taking a value whose type is the carrier type of the current
+    species,
+  \item and returning a value whose type is the carrier type of the
+    current species.
+\end{itemize}
 
 Although the parameters looks like a species, why is it called a
 {\bf collection parameter} ? The answer to this question is especially
@@ -405,9 +448,11 @@ a collection because finally, at the terminal nodes of the
 development, this parameter will have to be instanciated by a
 collection, that is an entity where everything is defined ! Imagine
 how to build a code we could execute if a parameter was instanciated
-with an entity with methods only declared\ldots
+with an entity with methods only declared\ldots Moreover, the carrier
+of a collection parameter is abstract for the hosting, exactely like
+the carrier of a collection is (c.f \ref{collection}).
 
-So, even if the collection parameter {\bf is} a species name,
+So, even if the collection parameter ``{\tt is}'' a species name,
 \underline{it will not be a species}. It will be
 \underline{a collection having an interface compatible} with the
 interface of the species. Hence, declaring a collection parameter for
@@ -422,23 +467,119 @@ instance, if we assume that there exists a parameterised species
 {\tt List} which declares the basic operations over lists, one can
 specify a new species working on couples of value and lists of values
 like:
+{\scriptsize
 \begin{lstlisting}
 species MyCouple (E is Basic_object, L is List (E)) =
   rep = (E * L) ;
   ... ;
 end ;;
 \end{lstlisting}
+}
 
 The carrier of this species will represent the type
 {\tt ('a * ('a list))}. This means that the type of the values in the
-first component of the coupel is the same than the type of the
+first component of the couple is the same than the type of the
 elements of the list in the second component of the couple.
 
-.......
+If a collection parameter implements a parameterized species (like in
+the example for the species {\tt List}), it must provide an
+instantiation for {\bf all} its parameters. Once again, the preceding
+parameters can be used to achieve this purpose (like we did to create
+our parameter {\tt L}, instanciating the {\tt List}'s parameter by our
+first collection parameter {\tt E}).
 
-If a collection parameter implements a parameterized species, it must provide an
-instantiation for all its parameters. Once again, the preceding parameters can
-be used to achieve this purpose.
+\label{method-qualification}
+At the beginning of the presentation of collection parameters, we used
+the parameter to build the carrier of our species. But obviously,
+collection parameters can also be used via their other methods,
+i.e. signatures, functions, properties and theorems. We want to create
+a generic couple species. It will then have two collection parameters,
+one for each component of the couple. If we want to have a printing
+(i.e. returning a string, not making side effect in our example)
+method, we will require that each collection parameter has one. Hence
+our printing method will only have to add parentheses and comma
+around and between what is printed by each parameter's printing
+routine. Hence we now need to know how to call a collection parameter
+method. The syntax used is qualifying the method name by the
+parameter's name, separating them by the ``!'' character.
+{\scriptsize
+\begin{lstlisting}
+(* Minimal species requirement : having a print routine. *)
+species Base_obj =
+  signature print : Self -> string ;
+end ;;
+
+species Couple (C1 is Base_obj, c2 is Base_obj) =
+  rep = (C1 * C2) ;
+  let print (c in Self) =
+    match (c) with
+     | (component1, component2) ->
+       "(" ^ C1!print (component1) ^
+       ", " ^
+       C2!print (component2) ^")" ;
+end ;;
+\end{lstlisting}
+}
+
+Hence, {\tt C1!print (component1)} means ``call the collection
+{\tt C1}'s method {\tt print} with the argument {\tt component1}. The
+qualification mechanism using ``!'' is general and can be used to
+denote the method of any available species/collection, even those of
+ourselves (i.e. {\tt Self}). Hence, in a species instead of calling:
+{\scriptsize
+\begin{lstlisting}
+species Foo ... =
+  let m1 (...) = ... ;
+  let m2 (...) = if ... then ... else m1 (...) ;
+end ;;
+\end{lstlisting}
+}
+it is allowed to explicitely qualify the call to {\tt m1} by ``!''
+with no species name, hence impliticely telling ``from myself'':
+{\scriptsize
+\begin{lstlisting}
+species Foo ... =
+  let m1 (...) = ... ;
+  let m2 (...) = if ... then ... else !m1 (...) ;
+end ;;
+\end{lstlisting}
+}
+In fact, without explicit ``!'', the \focal\ compiler performs the
+name resolution itself, allowing a lighter way of writing programs
+instead of always needing a ``!'' character before each method call.
+
+
+
+\subsubsection{Entity parameters}
+The other way to parameterise a species is to pass it a
+\underline{value of a certain species carrier}. For instance, in the
+previous section, we made our {\tt List} species parameterised by the
+``type'' of the elements in the list. We then used a collection
+parameter. If we now want a species addition modulo 8, we need to
+parameterise our species by the \underline{value 8}, or at least by a
+value of a collection implementing the integers and giving a way to
+have a value representing 8. Such a parameter is called an
+{\bf entity parameter} and is introduced by the keyword {\tt in}.
+{\scriptsize
+\begin{lstlisting}
+species AddMod8 (Number is ACollImplentingInts, val_mod in Number) =
+  rep = Number ;
+  let add (x in Self, y in Self) =
+    Number!modulo (Number!add (x, y), val_mod) ;
+end ;;
+\end{lstlisting}
+}
+
+Hence, any collection created from {\tt AddMod8} will embed it modulo
+value. And it will be possible to create various collections with each
+a specific module value.
+
+Currently, entity parameters must live ``{\tt in}'' a species. It is
+not allowed to specify an entitity parameter living in a basic type
+like {\tt int}, {\tt string}, {\tt bool}\ldots This especially means
+that one must have a collection emmbedding, implementing the type of
+values we want to use as entity parameters.
+
 
 \subsection{Inheritance and its mechanisms}
 \subsubsection{Inheritance}
