@@ -1,4 +1,4 @@
-% $Id: refman.tex,v 1.6 2008-10-17 11:13:16 pessaux Exp $
+% $Id: refman.tex,v 1.7 2008-10-17 11:33:03 pessaux Exp $
 
 \documentclass{report}
 \usepackage[francais]{babel}
@@ -30,9 +30,16 @@
 \makeindex
 
 \begin{document}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Introduction}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Motivations}
  The \focal\ project was launched in 1998 by T. Hardin and R. Rioboo
 \cite{HardinRiobooTSI04} with the 
@@ -67,6 +74,10 @@ toward a complete implementation.  We call here {\em refinement} the
 process of building a top-down hierarchy.
 
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Presentation and requirements}
 This manual describes the main constructions of the \focal\ language,
 as well as the main tools given by the \focal\ environment. Basic
@@ -82,6 +93,9 @@ write his proofs using the \zenon\ Proof Language embedded in the
 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Output}
 As we will see further, a \focal\ development contains both
 ``computational code'' (i.e. code performing operations that lead to
@@ -95,17 +109,21 @@ outputs are generated:
   \item Both the ``computational code'' and the logical properties are
     compiled into a \coq\ model. This model can then be sent to the
     \coq\ proof assistant who will verify the consistency of both the
-    ``computational code'' and the logical properties (whose proofs
-    must be obviously provided) of the \focal\ development. This means
-    that the \coq\ code generated is not intended to be used to
-    generate an \ocaml\ source code by automated extraction. As stated
-    above, the executable generation is preferred using directly the
-    generated \ocaml\ code. In this idea, \coq\ acts as an assessor of
-    the development instead of a code generator.
+    ``computational code'' and the logical properties (whose
+    proofs\index{proof} must be obviously provided) of the
+    \focal\ development. This means that the \coq\ code generated is
+    not intended to be used to generate an \ocaml\ source code by
+    automated extraction. As stated above, the executable generation
+    is preferred using directly the generated \ocaml\ code. In this
+    idea, \coq\ acts as an assessor of the development instead of a
+    code generator.
 \end{itemize}
 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Basic concepts}
 As stated in the introduction, \focal\ language is designed to build
 an application step by step, going from very abstract specifications
@@ -119,11 +137,15 @@ We will now present the basic concepts underlying a
 \begin{itemize}
   \item Species
   \item Collections
+  \item Parametrisation
   \item Inheritance
   \item Late-binding
-  \item Parametrisation
 \end{itemize}
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Species}
 {\bf Species} \index{species} are the nodes of the
 \focal\ hierarchy. A species can be roughly seen as a list of
@@ -138,16 +160,17 @@ basic species looks like:
 \end{lstlisting}
 }
 
-Species names are always capitalized. Inside the species' body methods
-are enumerated. These methods represent the internal datatype of the
-species, functions to manipulate this datatype and properties that
-must hold in the species.
+Species names are always {\bf capitalized}. Inside the species' body
+methods are enumerated. These methods represent the internal datatype
+of the species, functions\index{function} to manipulate this datatype
+and properties\index{property} that must hold in the species.
 
 \label{no-polymorphism-for-methods}
 One important restriction on the type of the methods is that it cannot
-be polymorphic. However, \focal\ provides another mechanism to
-circumvent this restriction, the parametrisation as explained
-further (c.f. \ref{parametrisation}).
+be polymorphic\index{polymorphism}. However, \focal\ provides another
+mechanism to circumvent this restriction, the
+parametrisation\index{parametrisation} as explained further
+(c.f. \ref{parametrisation}).
 
 A species can hence be seen as an abstract data type. On another hand,
 it can be seen as a kind of object, with its internal state (private
@@ -155,15 +178,15 @@ variables) and its methods.
 
 There are several kinds of methods:
 \begin{itemize}
-  \item The {\bf carrier}. This is a type definition that defines the
-    type of the values embedded in the species. When ``instantiated'',
-    a species will lead to \underline{a value having this type}. This
-    especially means that an instantiation of a species is NOT, like
-    in Object-Oriented languages an entity embedding data and
+  \item The {\bf carrier}\index{carrier}. This is a type definition
+    that defines the type of the values embedded in the species. When
+    ``instantiated'', a species will lead to {\bf a value having this
+    type}. This especially means that an instantiation of a species is
+    NOT, like in Object-Oriented languages an entity embedding data and
     code. The instantiation of a species will be a
-    {\underline value}. The carrier is named {\tt rep}. For instance,
-    we can define a species that implements couples of native integers
-    data structure as:
+    {\bf value}. The carrier is named {\tt rep}\index{rep}. For
+    instance, we can define a species that implements couples of
+    native integers data structure as:
     {\scriptsize
       \begin{lstlisting}
 species IntCouple =
@@ -171,24 +194,25 @@ species IntCouple =
 end ;;
       \end{lstlisting}
     }
-    Each ``instance'' of this species will encapsulate \underline{1}
+    Each ``instance'' of this species will encapsulate {\bf 1}
     value of type ``couple of integers''. This especially means that
     the species doesn't represent a ``set'' of couples but
-    \underline{1} value that has type {\tt (int * int)}.
+    {\bf 1} value that has type {\tt (int * int)}.
 
     The carrier may remain not specified in a species. However, in
-    order to finally get a fully defined species that will be
-    instantiated, the carrier must be defined \underline{once} at one
-    moment (during inheritance).
+    order to finally get a fully defined (or {\em complete}) species
+    that will be instantiated, the carrier must be defined
+    {\bf once} at one moment (during inheritance as described later in
+    section \ref{inheritance}).
 
     In the context of a species, the type denoted by the carrier is
     named {\tt Self}.
 
-  \item {\bf Signatures}. They introduce the ``prototype'' of a
-    function, that is provide their type. As a first introduction,
-    types expressions are closely like ML-like type expressions.
-    A signature can be viewed as a declaration. It specifies the name
-    of the operation then its type. For instance:
+  \item {\bf Signatures}\index{signature}. They introduce the
+    ``prototype'' of a function, that is provide their type. As a
+    first introduction, types expressions are closely like ML-like
+    type expressions. A signature can be viewed as a declaration. It
+    specifies the name of the operation then its type. For instance:
     {\scriptsize
       \begin{lstlisting}
  species IntStack =
@@ -202,12 +226,12 @@ end ;;
     which to push and give back a new configuration of stack (where
     the pushed element is on the top), that is of type {\tt Self}. 
 
-  \item {\bf Functions}. They are operations that are allowed on the
-    carrier's elements. They are implementations of signatures,
-    providing effective code to execute. A function is introduced by
-    the {\tt let} keyword. Recursive functions are introduced by
-    {\tt let rec} to make explicit the recursivity. A function can be
-    viewed as a definition.
+  \item {\bf Functions}\index{function}. They are operations that are
+    allowed on the carrier's elements. They are implementations of
+    signatures, providing effective code to execute. A function is
+    introduced by the {\tt let} keyword. Recursive functions are
+    introduced by {\tt let rec} to make explicit the recursivity. A
+    function can be viewed as a definition.
     {\scriptsize
       \begin{lstlisting}
 species IntStack =
@@ -216,7 +240,7 @@ species IntStack =
 end ;;
       \end{lstlisting}
     }
-    Function can use in their body other methods of the species,
+    Functions can use in their body other methods of the species,
     toplevel function definitions, methods of collections
     (described further in \ref{collection}), or methods of
     collections parameters (see \ref{collection-parameter}).
@@ -235,11 +259,11 @@ end ;;
     function application is ``à la C'', that is with arguments comma
     separated and enclosed by parentheses.
 
-  \item {\bf Properties}. They are first order logic propositions
-    describing requirements that functions must meet. When stating a
-    property, the proof that it holds is not yet provided. However it
-    will have to finally to get a species that can be
-    instantiated. A property can be viewed as a declaration.
+  \item {\bf Properties}\index{property}. They are first order logic
+    propositions describing requirements that functions must
+    meet. When stating a property, the proof that it holds is not yet
+    provided. However it will have to finally to get a species that
+    can be instantiated. A property can be viewed as a declaration.
     {\scriptsize
       \begin{lstlisting}
 species IntStack =
@@ -250,8 +274,9 @@ end ;;
       \end{lstlisting}
     }
 
-    Proofs of properties can be done afterwards using a {\tt proof}
-    field in a species.The way to give proofs will be seen further.
+    Proofs\index{proof!delayed} of properties can be done afterwards
+    using a {\tt proof} field in a species.The way to give proofs will
+    be seen further.
     {\scriptsize
       \begin{lstlisting}
 species IntStack2 inherits IntStack =
@@ -260,10 +285,10 @@ end ;;
       \end{lstlisting}
     }
 
-  \item {\bf Theorems}. They are properties with their proofs. In
-    fact, when defining a property, we only give the statement of a
-    theorem, leaving its proof for later. A theorem can be viewed as a
-    definition.
+  \item {\bf Theorems}\index{theorem}. They are properties with their
+    proofs. In fact, when defining a property, we only give the
+    statement of a theorem, leaving its proof for later. A theorem can
+    be viewed as a definition.
     {\scriptsize
       \begin{lstlisting}
 species IntStack =
@@ -278,13 +303,18 @@ end ;;
 
 \end{itemize}
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Collections}
 \label{collection}
-A {\bf collection} is a kind o ``instance'' of a {\em complete}
-species. A species is said complete if all its methods are
-{\em defined}, i.e. have an implementation. In other words this means
-that there is no more methods only {\em declared}. This notion implies
-that:
+\index{collection}
+A {\bf collection} is a kind of ``instance'' of a {\em complete}
+\index{species!complete} species. A species is said complete if all
+its methods are {\em defined}, i.e. have an implementation. In other
+words this means that there is no more methods only {\em
+  declared}. This notion implies that:
 \begin{itemize}
   \item The carrier is defined by providing a type definition for
     {\tt rep}.
@@ -350,8 +380,12 @@ collection may not be used to create a new species by inheritance (as
 explained in the next section).
 
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Interfaces}
 \label{interface}
+\index{interface}
 The {\bf interface} of a species is the list of the declarations of
 its methods. It corresponds to the end-user point of view, who wants
 to know which functions he can use, and which properties these
@@ -374,25 +408,38 @@ later in \ref{species-constraints}.
 
 
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Building species}
 In this chapter, we describe the relations between species to build
 incrementally more complex species from previously existing ones. Two
 mechanisms are available for this purpose: parametrisation and
 inheritance.
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Parametrisation}
+\index{parametrisation}
 \label{parametrisation}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Collection parameters}
+\index{parameter!collection}
+\index{collection!parameter}
 \label{collection-parameter}
-Remember that methods cannot be polymorphic
-(\ref{no-polymorphism-for-methods}). So it seems difficult to create a
-species whose methods work on a carrier having a type structure in
-which we would like to have some parts unconstrained. For example, who
-to implement the well-known polymorphic type of the lists ? A list is
-a structure grouping elements but independently of the type of these
-elements. The only constraint is that all elements have the same
-type. Hence, a ML-like representation of lists would be like:
+Remember that methods cannot be polymorphic\index{polymorphism}
+(c.f. \ref{no-polymorphism-for-methods}). So it seems difficult to
+create a species whose methods work on a carrier having a type
+structure in which we would like to have some parts unconstrained. For
+example, who to implement the well-known polymorphic type of the
+lists ? A list is a structure grouping elements but independently of
+the type of these elements. The only constraint is that all elements
+have the same type. Hence, a ML-like representation of lists would be
+like:
 {\scriptsize
 \lstset{language=Caml}
 \begin{lstlisting}
@@ -503,6 +550,7 @@ our parameter {\tt L}, instantiating the {\tt List}'s parameter by our
 first collection parameter {\tt E}).
 
 \label{method-qualification}
+\index{method!qualification}
 At the beginning of the presentation of collection parameters, we used
 the parameter to build the carrier of our species. But obviously,
 collection parameters can also be used via their other methods,
@@ -564,7 +612,10 @@ instead of always needing a ``!'' character before each method call.
 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Entity parameters}
+\index{parameter!entity}
+\label{entity-parameter}
 The other way to parametrise a species is to pass it a
 \underline{value of a certain species carrier}. For instance, in the
 previous section, we made our {\tt List} species parametrised by the
@@ -595,13 +646,20 @@ that one must have a collection embedding, implementing the type of
 values we want to use as entity parameters.
 
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Inheritance and its mechanisms}
 In this section, we address the second mean to build complex species
 based on existing ones. It will cover the notion of {\em inheritance}
 and its related feature the {\em late-binding}.
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Inheritance}
 \label{inheritance}
+\index{inheritance}
 Like in Object-Oriented models, in \focal\ {\em inheritance} is the
 ability to create a species, not from scratch, but integrating methods
 of other species. For instance, assuming we have a species
@@ -650,6 +708,7 @@ inherited methods are now owned by the species that inherits, they we
 be called exactly like if they were defined ``from scratch'' in the
 species.
 
+\index{inheritance!multiple}
 Multiple inheritance, i.e. inheriting from several species is
 allowed by specifying several species separated by comma in the
 {\tt inherits} clause. In case of methods appearing in several
@@ -664,14 +723,21 @@ end ;;
 \end{lstlisting}
 }
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Late-binding}
 \label{late-binding}
+\index{late-binding}
 We stated just above (c.f. \ref{inheritance}) that it was possible
 during inheritance to replace a signature by a function or a property
 by a theorem. On another hand, we saw that it was possible to define
 function using a signature (c.f \ref{idea-fun-using-sig}), that is
 something only declared, with no implementation yet.
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Dependencies and erasing}
 
 
