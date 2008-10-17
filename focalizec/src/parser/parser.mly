@@ -1,5 +1,5 @@
 %{
-(* $Id: parser.mly,v 1.100 2008-10-17 06:05:57 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.101 2008-10-17 10:29:17 weis Exp $ *)
 
 open Parsetree;;
 
@@ -941,7 +941,7 @@ expr:
   | expr EQ_OP expr
     { mk_infix_application $1 $2 $3 }
   | expr EQUAL expr
-    { mk_infix_application $1 "=" $3 }
+    { mk_infix_application $1 $2 $3 }
   | expr LT_OP expr
     { mk_infix_application $1 $2 $3 }
   | expr LT_DASH_OP expr
