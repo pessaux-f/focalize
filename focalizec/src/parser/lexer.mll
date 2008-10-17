@@ -1,8 +1,12 @@
-(* $Id: lexer.mll,v 1.42 2008-09-22 14:56:23 weis Exp $ *)
+(* $Id: lexer.mll,v 1.43 2008-10-16 22:21:35 weis Exp $ *)
 
 {
+(** {3 The Focalize lexer} *)
+
 open Lexing;;
 open Parser;;
+
+(** {6 Lexing errors} *)
 
 type error =
    | Comment_in_string
@@ -22,9 +26,51 @@ type error =
    | Unterminated_delimited_ident
    | Unterminated_external_code
    | Unterminated_string
+(** The various errors when lexing. *)
 ;;
 
 exception Error of error * Lexing.position * Lexing.position;;
+
+(** {6 Explaining lexing errors} *)
+
+let string_of_lex_error = function
+  | Comment_in_string ->
+      "Non escaped comment separator in string constant"
+  | Comment_in_uniline_comment ->
+      "Non escaped comment separator in uniline comment"
+  | Comment_in_delimited_ident ->
+      "Non escaped comment separator in delimited ident"
+  | Delimited_ident_in_string ->
+      "Non escaped delimited ident separator in string constant"
+  | Delimited_ident_in_delimited_ident ->
+      "Non escaped delimited ident separator in delimited ident"
+  | External_code_in_string ->
+      "Non escaped external code separator in string constant"
+  | External_code_in_delimited_ident ->
+      "Non escaped external code separator in delimited ident"
+  | Illegal_character c ->
+      "Illegal character (" ^ Char.escaped c ^ ")"
+  | Illegal_escape s ->
+      "Illegal backslash escape in string or character (" ^ s ^ ")"
+  | Uninitiated_comment ->
+      "Comment has not started"
+  | Uninitiated_delimited_ident ->
+      "Delimited ident has not started"
+  | Uninitiated_external_code ->
+      "External code has not started"
+  | Unterminated_comment ->
+      "Comment not terminated"
+  | Unterminated_documentation ->
+      "Documentation not terminated"
+  | Unterminated_external_code ->
+      "External code not terminated"
+  | Unterminated_delimited_ident ->
+      "Delimited ident not terminated"
+  | Unterminated_string ->
+      "String literal not terminated"
+;;
+
+(** {6 The keyword table} *)
 
 let keyword_table = Hashtbl.create 42;;
 
@@ -75,7 +121,8 @@ List.iter
   "prove", PROVE;
   "qed", QED;
   "rec", REC;
-  "rep", REP;
+  "rep", REPRESENTATION;
+  "representation", REPRESENTATION;
   "Self", SELF;
   "signature", SIGNATURE;
   "species", SPECIES;
@@ -91,188 +138,32 @@ List.iter
 ]
 ;;
 
+(** {3 Identifier creation functions} *)
+
+(** {6 Finding keywords and creating lowercase idents} *)
 let lident lexbuf =
   let s = Lexing.lexeme lexbuf in
   try Hashtbl.find keyword_table s with
   | Not_found -> LIDENT s
 ;;
 
+(** {6 Finding keywords and creating uppercase idents} *)
 let uident lexbuf =
   let s = Lexing.lexeme lexbuf in
   try Hashtbl.find keyword_table s with
   | Not_found -> UIDENT s
 ;;
 
-(* Lexing the external_code tokens. *)
-let initial_external_code_buffer = String.create 256;;
-let external_code_buff = ref initial_external_code_buffer
-and external_code_index = ref 0
-;;
+(** {6 Creating identifiers for delimited idents} *)
 
-let reset_external_code_buffer () =
-  external_code_buff := initial_external_code_buffer;
-  external_code_index := 0
-;;
+(** {6 Creating identifiers for the prefix version versions of symbolic identifiers} *)
 
-let store_external_code_char c =
-  if !external_code_index >= String.length (!external_code_buff) then begin
-    let new_buff = String.create (String.length (!external_code_buff) * 2) in
-    String.blit (!external_code_buff) 0
-                new_buff 0 (String.length (!external_code_buff));
-    external_code_buff := new_buff
-  end;
-  String.unsafe_set (!external_code_buff) (!external_code_index) c;
-  incr external_code_index
-;;
-
-let get_stored_external_code () =
-  let s = String.sub (!external_code_buff) 0 (!external_code_index) in
-  external_code_buff := initial_external_code_buffer;
-  s
-;;
-
-(* Lexing the documentation tokens. *)
-let initial_documentation_buffer = String.create 256;;
-let documentation_buff = ref initial_documentation_buffer
-and documentation_index = ref 0
-;;
-
-let reset_documentation_buffer () =
-  documentation_buff := initial_documentation_buffer;
-  documentation_index := 0
-;;
-
-let store_documentation_char c =
-  if !documentation_index >= String.length (!documentation_buff) then begin
-    let new_buff = String.create (String.length (!documentation_buff) * 2) in
-    String.blit (!documentation_buff) 0
-                new_buff 0 (String.length (!documentation_buff));
-    documentation_buff := new_buff
-  end;
-  String.unsafe_set (!documentation_buff) (!documentation_index) c;
-  incr documentation_index
-;;
-
-let get_stored_documentation () =
-  let s = String.sub (!documentation_buff) 0 (!documentation_index) in
-  documentation_buff := initial_documentation_buffer;
-  s
-;;
-
-(* Lexing the string tokens. *)
-let initial_string_buffer = String.create 256;;
-let string_buff = ref initial_string_buffer
-and string_index = ref 0
-;;
-
-let reset_string_buffer () =
-  string_buff := initial_string_buffer;
-  string_index := 0
-;;
-
-let store_string_char c =
-  if !string_index >= String.length (!string_buff) then begin
-    let new_buff = String.create (String.length (!string_buff) * 2) in
-      String.blit (!string_buff) 0
-                  new_buff 0 (String.length (!string_buff));
-      string_buff := new_buff
-  end;
-  String.unsafe_set (!string_buff) (!string_index) c;
-  incr string_index
-;;
-
-let get_stored_string () =
-  let s = String.sub (!string_buff) 0 (!string_index) in
-  string_buff := initial_string_buffer;
-  s
-;;
-
-(* Lexing the delimited_ident tokens. *)
-let initial_delimited_ident_buffer = String.create 256;;
-let delimited_ident_buff = ref initial_delimited_ident_buffer
-and delimited_ident_index = ref 0
-;;
-
-let reset_delimited_ident_buffer () =
-  delimited_ident_buff := initial_delimited_ident_buffer;
-  delimited_ident_index := 0
-;;
-
-let store_delimited_ident_char c =
-  if !delimited_ident_index >= String.length (!delimited_ident_buff) then begin
-    let new_buff = String.create (String.length (!delimited_ident_buff) * 2) in
-    String.blit (!delimited_ident_buff) 0
-                new_buff 0 (String.length (!delimited_ident_buff));
-    delimited_ident_buff := new_buff
-  end;
-  String.unsafe_set (!delimited_ident_buff) (!delimited_ident_index) c;
-  incr delimited_ident_index
-;;
-
-let get_stored_delimited_ident () =
-  let s = String.sub (!delimited_ident_buff) 0 (!delimited_ident_index) in
-  delimited_ident_buff := initial_external_code_buffer;
-  s
-;;
-
-let external_code_start_pos = ref None;;
-let documentation_start_pos = ref None;;
-let string_start_pos = ref None;;
-let delimited_ident_start_pos = ref None;;
-let comment_start_pos = ref [];;
-
-let char_for_backslash = function
-  | 'n' -> '\010'
-  | 'r' -> '\013'
-  | 'b' -> '\008'
-  | 't' -> '\009'
-  | c -> c
-;;
-
-let char_for_decimal_code lexbuf i =
-  let c =
-    100 * (Char.code(Lexing.lexeme_char lexbuf i) - 48) +
-     10 * (Char.code(Lexing.lexeme_char lexbuf (i + 1)) - 48) +
-          (Char.code(Lexing.lexeme_char lexbuf (i + 2)) - 48) in
-  if c >= 0 && c <= 255 then Char.chr c else
-    raise
-      (Error (Illegal_escape (Lexing.lexeme lexbuf),
-              lexbuf.lex_start_p,
-              lexbuf.lex_curr_p))
-;;
-
-let char_for_hexadecimal_code lexbuf i =
-  let d1 = Char.code (Lexing.lexeme_char lexbuf i) in
-  let val1 =
-    if d1 >= 97 then d1 - 87 else
-    if d1 >= 65 then d1 - 55 else
-    d1 - 48 in
-  let d2 = Char.code (Lexing.lexeme_char lexbuf (i+1)) in
-  let val2 =
-    if d2 >= 97 then d2 - 87 else
-    if d2 >= 65 then d2 - 55 else
-    d2 - 48 in
-  Char.chr (val1 * 16 + val2)
-;;
-
-let update_loc lexbuf file line absolute chars =
-  let pos = lexbuf.lex_curr_p in
-  let new_file =
-    match file with
-    | None -> pos.pos_fname
-    | Some s -> s in
-  lexbuf.lex_curr_p <- {
-    pos with
-    pos_fname = new_file;
-    pos_lnum = if absolute then line else pos.pos_lnum + line;
-    pos_bol = pos.pos_cnum - chars;
-  }
-;;
-
-(* The prefix version of a prefix operator. *)
 let ident_of_prefixop s = PIDENT s;;
-(* The prefix version of an infix operator. *)
+(** The prefix version of a prefix operator. *)
 let ident_of_infixop s = IIDENT s;;
+(** The prefix version of an infix operator. *)
+
+(** {3 Injecting symbolic identifiers strings to lexems} *)
 
 let mk_prefixop s =
   assert (String.length s > 0);
@@ -369,56 +260,198 @@ let mk_infixop s =
   | _ -> assert false
 ;;
 
-open Format;;
+(** {3 Various auxiliaries to lex special tokens} *)
 
-let string_of_lex_error = function
-  | Comment_in_string ->
-      "Non escaped comment separator in string constant"
-  | Comment_in_uniline_comment ->
-      "Non escaped comment separator in uniline comment"
-  | Comment_in_delimited_ident ->
-      "Non escaped comment separator in delimited ident"
-  | Delimited_ident_in_string ->
-      "Non escaped delimited ident separator in string constant"
-  | Delimited_ident_in_delimited_ident ->
-      "Non escaped delimited ident separator in delimited ident"
-  | External_code_in_string ->
-      "Non escaped external code separator in string constant"
-  | External_code_in_delimited_ident ->
-      "Non escaped external code separator in delimited ident"
-  | Illegal_character c ->
-      "Illegal character (" ^ Char.escaped c ^ ")"
-  | Illegal_escape s ->
-      "Illegal backslash escape in string or character (" ^ s ^ ")"
-  | Uninitiated_comment ->
-      "Comment has not started"
-  | Uninitiated_delimited_ident ->
-      "Delimited ident has not started"
-  | Uninitiated_external_code ->
-      "External code has not started"
-  | Unterminated_comment ->
-      "Comment not terminated"
-  | Unterminated_documentation ->
-      "Documentation not terminated"
-  | Unterminated_external_code ->
-      "External code not terminated"
-  | Unterminated_delimited_ident ->
-      "Delimited ident not terminated"
-  | Unterminated_string ->
-      "String literal not terminated"
+(** {6 Lexing the external_code tokens} *)
+let initial_external_code_buffer = String.create 256;;
+let external_code_buff = ref initial_external_code_buffer
+and external_code_index = ref 0
+;;
+
+let reset_external_code_buffer () =
+  external_code_buff := initial_external_code_buffer;
+  external_code_index := 0
+;;
+
+let store_external_code_char c =
+  if !external_code_index >= String.length (!external_code_buff) then begin
+    let new_buff = String.create (String.length (!external_code_buff) * 2) in
+    String.blit (!external_code_buff) 0
+                new_buff 0 (String.length (!external_code_buff));
+    external_code_buff := new_buff
+  end;
+  String.unsafe_set (!external_code_buff) (!external_code_index) c;
+  incr external_code_index
+;;
+
+let get_stored_external_code () =
+  let s = String.sub (!external_code_buff) 0 (!external_code_index) in
+  external_code_buff := initial_external_code_buffer;
+  s
+;;
+
+(** {6 Lexing the documentation tokens} *)
+let initial_documentation_buffer = String.create 256;;
+let documentation_buff = ref initial_documentation_buffer
+and documentation_index = ref 0
+;;
+
+let reset_documentation_buffer () =
+  documentation_buff := initial_documentation_buffer;
+  documentation_index := 0
+;;
+
+let store_documentation_char c =
+  if !documentation_index >= String.length (!documentation_buff) then begin
+    let new_buff = String.create (String.length (!documentation_buff) * 2) in
+    String.blit (!documentation_buff) 0
+                new_buff 0 (String.length (!documentation_buff));
+    documentation_buff := new_buff
+  end;
+  String.unsafe_set (!documentation_buff) (!documentation_index) c;
+  incr documentation_index
+;;
+
+let get_stored_documentation () =
+  let s = String.sub (!documentation_buff) 0 (!documentation_index) in
+  documentation_buff := initial_documentation_buffer;
+  s
+;;
+
+(** {6 Lexing the string tokens} *)
+let initial_string_buffer = String.create 256;;
+let string_buff = ref initial_string_buffer
+and string_index = ref 0
+;;
+
+let reset_string_buffer () =
+  string_buff := initial_string_buffer;
+  string_index := 0
+;;
+
+let store_string_char c =
+  if !string_index >= String.length (!string_buff) then begin
+    let new_buff = String.create (String.length (!string_buff) * 2) in
+      String.blit (!string_buff) 0
+                  new_buff 0 (String.length (!string_buff));
+      string_buff := new_buff
+  end;
+  String.unsafe_set (!string_buff) (!string_index) c;
+  incr string_index
+;;
+
+let get_stored_string () =
+  let s = String.sub (!string_buff) 0 (!string_index) in
+  string_buff := initial_string_buffer;
+  s
+;;
+
+(** {6 Lexing the delimited_ident tokens} *)
+let initial_delimited_ident_buffer = String.create 256;;
+let delimited_ident_buff = ref initial_delimited_ident_buffer
+and delimited_ident_index = ref 0
+;;
+
+let reset_delimited_ident_buffer () =
+  delimited_ident_buff := initial_delimited_ident_buffer;
+  delimited_ident_index := 0
+;;
+
+let store_delimited_ident_char c =
+  if !delimited_ident_index >= String.length (!delimited_ident_buff) then begin
+    let new_buff = String.create (String.length (!delimited_ident_buff) * 2) in
+    String.blit (!delimited_ident_buff) 0
+                new_buff 0 (String.length (!delimited_ident_buff));
+    delimited_ident_buff := new_buff
+  end;
+  String.unsafe_set (!delimited_ident_buff) (!delimited_ident_index) c;
+  incr delimited_ident_index
+;;
+
+let get_stored_delimited_ident () =
+  let s = String.sub (!delimited_ident_buff) 0 (!delimited_ident_index) in
+  delimited_ident_buff := initial_external_code_buffer;
+  s
+;;
+
+let external_code_start_pos = ref None;;
+let documentation_start_pos = ref None;;
+let string_start_pos = ref None;;
+let delimited_ident_start_pos = ref None;;
+let comment_start_pos = ref [];;
+
+(** {6 Decoding characters} *)
+
+let char_for_backslash = function
+  | 'n' -> '\010'
+  | 'r' -> '\013'
+  | 'b' -> '\008'
+  | 't' -> '\009'
+  | c -> c
+;;
+
+let char_for_decimal_code lexbuf i =
+  let c =
+    100 * (Char.code(Lexing.lexeme_char lexbuf i) - 48) +
+     10 * (Char.code(Lexing.lexeme_char lexbuf (i + 1)) - 48) +
+          (Char.code(Lexing.lexeme_char lexbuf (i + 2)) - 48) in
+  if c >= 0 && c <= 255 then Char.chr c else
+    raise
+      (Error (Illegal_escape (Lexing.lexeme lexbuf),
+              lexbuf.lex_start_p,
+              lexbuf.lex_curr_p))
+;;
+
+let char_for_hexadecimal_code lexbuf i =
+  let d1 = Char.code (Lexing.lexeme_char lexbuf i) in
+  let val1 =
+    if d1 >= 97 then d1 - 87 else
+    if d1 >= 65 then d1 - 55 else
+    d1 - 48 in
+  let d2 = Char.code (Lexing.lexeme_char lexbuf (i+1)) in
+  let val2 =
+    if d2 >= 97 then d2 - 87 else
+    if d2 >= 65 then d2 - 55 else
+    d2 - 48 in
+  Char.chr (val1 * 16 + val2)
+;;
+
+(** {6 Keeping the internal buffer locations up to date} *)
+
+let update_loc lexbuf file line absolute chars =
+  let pos = lexbuf.lex_curr_p in
+  let new_file =
+    match file with
+    | None -> pos.pos_fname
+    | Some s -> s in
+  lexbuf.lex_curr_p <- {
+    pos with
+    pos_fname = new_file;
+    pos_lnum = if absolute then line else pos.pos_lnum + line;
+    pos_bol = pos.pos_cnum - chars;
+  }
 ;;
 
 }
 
-let newline = '\n' (* ASCII 010 *)
-(* ASCII 32, ASCII 9, ASCII 12 is CTRL-L *)
-let blank = [ ' ' '\009' '\012' ]
-(* Any number of space and tabs. *)
+(** {3 The main lexer} *)
+
+(** {3 The main lexer} *)
+
+(** {6 Classifying characters} *)
+let newline = '\010'
+(** ASCII 010 is newline or ['\n']. *)
+let blank = [ '\032' '\009' '\012' ]
+(** ASCII 32 is space, ASCII 9 is tab, ASCII 12 is CTRL-L *)
 let whites = [ ' ' '\t' ]*
+(** Any number of space and tabs (including 0). *)
 
 (** {3 Numbers} *)
 
 (** {6 Integers} *)
+
+(** Integers can be given in binary, octal, decimal, or hexadecimal
+    notation; they may have an optional sign. *)
 
 let decimal_literal =
   [ '0'-'9'] ['0'-'9' '_' ]*
@@ -585,12 +618,35 @@ rule token = parse
       token lexbuf }
   | blank +
     { token lexbuf }
+
+  (* Identifiers *)
   | lowercase_ident
     { lident lexbuf }
   | uppercase_ident
     { uident lexbuf }
   | "\'" lowercase_ident
     { QIDENT (Lexing.lexeme lexbuf) }
+
+  (* Characters *)
+  | "\'" [^ '\\' '\'' '\010'] "\'"
+    { CHAR (Lexing.lexeme_char lexbuf 1) }
+  | "\'\\" ['\\' '\'' '\"' 'n' 't' 'b' 'r' ' '] "\'"
+    { CHAR (char_for_backslash (Lexing.lexeme_char lexbuf 2)) }
+  | "\'\\" ['0'-'9'] ['0'-'9'] ['0'-'9'] "\'"
+    { CHAR (char_for_decimal_code lexbuf 2) }
+  | "\'\\" 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F'] "\'"
+    { CHAR (char_for_hexadecimal_code lexbuf 3) }
+  | "\'\\" _
+    { let l = Lexing.lexeme lexbuf in
+      let esc = String.sub l 1 (String.length l - 1) in
+      raise (Error
+              (Illegal_escape esc, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
+  | "\'\'"
+    { raise
+        (Error (Uninitiated_delimited_ident,
+                lexbuf.lex_start_p,
+                lexbuf.lex_curr_p)) }
+
   | "``" (start_lowercase_ident | start_uppercase_ident |
           start_infix_ident | start_prefix_ident)
     { reset_delimited_ident_buffer ();
@@ -608,10 +664,13 @@ rule token = parse
                 lexbuf.lex_start_p,
                 lexbuf.lex_curr_p)) }
 
+  (* Numbers *)
   | integer_literal
     { INT (Lexing.lexeme lexbuf) }
   | float_literal
     { FLOAT (Lexing.lexeme lexbuf) }
+
+  (* Strings. *)
   | "\""
     { reset_string_buffer ();
       string_start_pos :=
@@ -621,19 +680,8 @@ rule token = parse
       | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
       | _ -> assert false end;
       STRING (get_stored_string ()) }
-  | "\'" [^ '\\' '\'' '\010'] "\'"
-    { CHAR (Lexing.lexeme_char lexbuf 1) }
-  | "\'\\" ['\\' '\'' '\"' 'n' 't' 'b' 'r' ' '] "\'"
-    { CHAR (char_for_backslash (Lexing.lexeme_char lexbuf 2)) }
-  | "\'\\" ['0'-'9'] ['0'-'9'] ['0'-'9'] "\'"
-    { CHAR (char_for_decimal_code lexbuf 2) }
-  | "\'\\" 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F'] "\'"
-    { CHAR (char_for_hexadecimal_code lexbuf 3) }
-  | "\'\\" _
-    { let l = Lexing.lexeme lexbuf in
-      let esc = String.sub l 1 (String.length l - 1) in
-      raise (Error
-              (Illegal_escape esc, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
+
+  (* Documentation *)
   | "(**"
     { reset_documentation_buffer ();
       documentation_start_pos :=
@@ -643,6 +691,8 @@ rule token = parse
       | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
       | _ -> assert false end;
       DOCUMENTATION (get_stored_documentation ()) }
+
+  (* External code *)
   | "{*"
     { reset_external_code_buffer ();
       external_code_start_pos :=
@@ -657,6 +707,8 @@ rule token = parse
         (Error (Uninitiated_external_code,
                 lexbuf.lex_start_p,
                 lexbuf.lex_curr_p)) }
+
+  (* Comments *)
   | "(*"
     { comment_start_pos := [ lexbuf.lex_start_p, lexbuf.lex_curr_p ];
       comment lexbuf;
@@ -670,13 +722,18 @@ rule token = parse
     { uniline_comment lexbuf;
       token lexbuf }
 
+  (* Lines annotations *)
   | "#" whites (['0'-'9']+ as num) whites
         ("\"" ([^ '\010' '\013' '\"' ] * as name) "\"")?
         [^ '\010' '\013'] * newline
     { update_loc lexbuf name (int_of_string num) true 0;
       token lexbuf }
+
+  (* Labels in proofs *)
   | '<' (['0'-'9']+ as level) '>' (['A'-'Z' 'a'-'z' '0'-'9']+ as label)
     { PROOF_LABEL (level, label) }
+
+  (* Usual simple tokens *)
   | '(' { LPAREN }
   | ')' { RPAREN }
   | "()" { LRPARENS }
@@ -685,9 +742,11 @@ rule token = parse
   | "[]" { LRBRACKETS }
   | '{' { LBRACE }
   | '}' { RBRACE }
+  | "{}" { LRBRACES }
   | '.' { DOT }
   | '_' { UNDERSCORE }
 
+  (* Symbols (or symbolic idents) *)
   | prefix_ident
     { mk_prefixop (Lexing.lexeme lexbuf) }
   | "(" [' ']+ (prefix_ident as inner) [' ']+ ")"
@@ -707,6 +766,7 @@ rule token = parse
               lexbuf.lex_start_p,
               lexbuf.lex_curr_p)) }
 
+  (* Special sub lexer for delimited idents *)
 and delimited_ident = parse
   | "\'\'"
     { () }
@@ -755,6 +815,7 @@ and delimited_ident = parse
     { store_delimited_ident_char (Lexing.lexeme_char lexbuf 0);
       delimited_ident lexbuf }
 
+  (* Special sub lexer for uni-ligne comments *)
 and uniline_comment = parse
   | ( "(*" | "*)" )
     { raise
@@ -776,6 +837,7 @@ and uniline_comment = parse
   | _
     { uniline_comment lexbuf }
 
+  (* Special sub lexer for multi ligne possibly nested comments *)
 and comment = parse
   | "(*"
     { comment_start_pos :=
@@ -808,6 +870,7 @@ and comment = parse
   | _
     { comment lexbuf }
 
+  (* Special sub lexer for string lexems *)
 and string = parse
   | '\"'
     { () }
@@ -856,6 +919,7 @@ and string = parse
     { store_string_char (Lexing.lexeme_char lexbuf 0);
       string lexbuf }
 
+  (* Special sub lexer for documentation *)
 and documentation = parse
   | "*)"
     { () }
@@ -881,6 +945,7 @@ and documentation = parse
     { store_documentation_char (Lexing.lexeme_char lexbuf 0);
       documentation lexbuf }
 
+  (* Special sub lexer for external code *)
 and external_code = parse
   | "*}"
     { () }
