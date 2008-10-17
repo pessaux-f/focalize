@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.56 2008-10-16 13:18:52 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.57 2008-10-17 06:05:57 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -241,7 +241,7 @@ let expr_desc_fixitude = function
   | E_record_access (_, _) | E_record _
   | E_let (_, _) | E_if (_, _, _) | E_match (_, _)
   | E_constr (_, _) | E_app (_, _)
-  | E_fun (_, _) | E_const _ | E_self | E_equality (_, _) -> Fixitude_applic
+  | E_fun (_, _) | E_const _ | E_self -> Fixitude_applic
 ;;
 
 
@@ -793,7 +793,7 @@ and pp_enforced_dependency ppf = pp_ast pp_enforced_dependency_desc ppf
 and pp_proof_desc ppf = function
   | Parsetree.Pf_assumed (enf_deps, reason) ->
       Format.fprintf ppf "@[<2>%a"
-        (pp_enforced_dependencies " ") enf_deps ;
+	(pp_enforced_dependencies " ") enf_deps ;
       if enf_deps <> [] then Format.fprintf ppf " " ;
       Format.fprintf ppf "assumed@ {*%s*}@]" reason
   | Parsetree.Pf_auto facts ->
@@ -975,8 +975,6 @@ and pp_expr_desc ppf = function
         pp_external_expr external_expr
   | Parsetree.E_paren expr ->
       Format.fprintf ppf "@[<1>(%a)@]" pp_expr expr
-  | Parsetree.E_equality (e1, e2) ->
-      Format.fprintf ppf "@[<1>%a@ = %a@]" pp_expr e1 pp_expr e2
 and pp_exprs sep ppf = Handy.pp_generic_separated_list sep pp_expr ppf
 and pp_expr ppf = pp_ast pp_expr_desc ppf
 ;;
