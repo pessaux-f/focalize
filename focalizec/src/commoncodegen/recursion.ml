@@ -12,7 +12,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.ml,v 1.9 2008-10-16 21:32:04 weis Exp $ *)
+
+(* $Id: recursion.ml,v 1.10 2008-10-17 07:24:21 pessaux Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function
@@ -217,12 +218,6 @@ let rec list_recursive_calls function_name argument_list bindings expr =
    | Parsetree.E_self | Parsetree.E_const _ | Parsetree.E_external _ ->
        (* The remaining expressions cannot lead to recursive calls *)
        []
-   | Parsetree.E_equality (e1, e2) ->
-       let calls1 =
-         list_recursive_calls function_name argument_list bindings e1 in
-       let calls2 =
-         list_recursive_calls function_name argument_list bindings e2 in
-       calls1 @ calls2
    | Parsetree.E_paren expr ->
        list_recursive_calls function_name argument_list bindings expr
 ;;

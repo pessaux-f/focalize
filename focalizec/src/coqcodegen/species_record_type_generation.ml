@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.64 2008-10-16 21:36:54 weis Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.65 2008-10-17 07:28:39 pessaux Exp $ *)
 
 
 
@@ -771,12 +771,6 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
                 ("Coq", (Parsetree.Vlident "<expr>"),
                  expression.Parsetree.ast_loc))
          end)
-     | Parsetree.E_equality (expr1, expr2) ->
-         Format.fprintf out_fmter "@[<2>" ;
-         rec_generate_expr loc_idents env expr1 ;
-         Format.fprintf out_fmter " =@ " ;
-         rec_generate_expr loc_idents env expr2 ;
-         Format.fprintf out_fmter "@]"
      | Parsetree.E_paren expr ->
          Format.fprintf out_fmter "@[<1>(" ;
          rec_generate_expr loc_idents env expr ;
