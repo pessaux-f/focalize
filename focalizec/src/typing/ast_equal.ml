@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: ast_equal.ml,v 1.8 2008-10-16 13:18:52 pessaux Exp $ *)
+(* $Id: ast_equal.ml,v 1.9 2008-10-17 06:13:34 pessaux Exp $ *)
 
 (* ********************************************************************** *)
 (** {b Descr} : This module performs test equality of the AST expression.
@@ -291,8 +291,6 @@ let rec expr alpha_eq_map expression1 expression2 =
    | ((Parsetree.E_paren e1), _) ->
        (* Consider that parentheses are non-significant. *)
        expr alpha_eq_map e1 expression2
-   | ((Parsetree.E_equality (e1, e2)), (Parsetree.E_equality (e3, e4))) ->
-       (expr alpha_eq_map e1 e3) && (expr alpha_eq_map e2 e4)
    | (_, _) -> false
 
 
