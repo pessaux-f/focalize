@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.48 2008-10-19 16:30:51 weis Exp $ *)
+(* $Id: lexer.mll,v 1.49 2008-10-19 21:44:12 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -151,33 +151,6 @@ List.iter
 ]
 ;;
 
-(** {3 Identifier creation functions} *)
-
-(** {6 Finding keywords and creating lowercase idents} *)
-let token_of_lowercase_prefix_ident lexbuf =
-  let s = Lexing.lexeme lexbuf in
-  try Hashtbl.find keyword_table s with
-  | Not_found -> LIDENT s
-;;
-
-(** {6 Finding keywords and creating uppercase idents} *)
-let token_of_uppercase_prefix_ident lexbuf =
-  let s = Lexing.lexeme lexbuf in
-  try Hashtbl.find keyword_table s with
-  | Not_found -> UIDENT s
-;;
-
-(** {6 Creating identifiers for delimited idents} *)
-let token_of_delimited_ident s = LIDENT s
-;;
-
-(** {6 Creating identifiers for the prefix version versions of symbolic identifiers} *)
-
-let token_of_paren_lowercase_prefix_symbol s = PIDENT s;;
-(** The prefix version of a lowercase prefix operator. *)
-let token_of_paren_lowercase_infix_symbol s = IIDENT s;;
-(** The prefix version of a lowercase infix operator. *)
-
 (** {3 Injecting symbolic identifiers strings to lexems} *)
 
 let token_of_lowercase_prefix_symbol s =
@@ -275,6 +248,69 @@ let token_of_lowercase_infix_symbol s =
     end
   | _ -> assert false
 ;;
+
+(** {3 Identifier creation functions} *)
+
+(** {6 Finding keywords and creating lowercase idents} *)
+let token_of_lowercase_prefix_ident lexbuf =
+  let s = Lexing.lexeme lexbuf in
+  try Hashtbl.find keyword_table s with
+  | Not_found -> LIDENT s
+;;
+
+(** {6 Finding keywords and creating uppercase idents} *)
+let token_of_uppercase_prefix_ident lexbuf =
+  let s = Lexing.lexeme lexbuf in
+  try Hashtbl.find keyword_table s with
+  | Not_found -> UIDENT s
+;;
+
+(** The first meaningful character at the beginning of an ident/symbol,
+    getting rid of initial underscores. *)
+let start_ident_char s =
+  let lim = String.length s - 1 in
+  let rec loop i c =
+    if i > lim then c else
+    let nc = s.[i] in
+    match nc with
+    | '_' -> loop (i + 1) nc
+    | c -> c in
+  loop 0 '_'
+;;
+
+(** {6 Creating tokens for delimited idents} *)
+
+let token_of_delimited_ident s =
+  assert (String.length s <> 0);
+  let c = start_ident_char s in
+  match c with
+  | '_' -> if String.length s = 1 then UNDERSCORE else LIDENT s
+  (* start_lowercase_prefix_ident *)
+  | 'a' .. 'z'
+  | '0' .. '9' -> LIDENT s
+  (* start_uppercase_prefix_ident *)
+  | 'A' .. 'Z' -> UIDENT s
+  (* start_lowercase_infix_symbol *)
+  | ','
+  | '+' | '-' | '*' | '/' | '%' | '&' | '|' | ':' | ';'
+  | '<' | '=' | '>' | '@' | '^' | '\\' ->
+    token_of_lowercase_infix_symbol s
+  (* start_lowercase_prefix_symbol *)
+  | '`' | '~' | '?' | '$' | '!' | '#'  (* ` helping emacs. *) ->
+    token_of_lowercase_prefix_symbol s
+  | _ -> assert false
+(** The first meaningful character at the beginning of a delimited
+  ident/symbol is used to find its associated token.
+*)
+;;
+
+(** {6 Creating tokens for the prefix version of symbolic
+       identifiers} *)
+
+let token_of_paren_lowercase_prefix_symbol s = PIDENT s;;
+(** The prefix version of a lowercase prefix operator. *)
+let token_of_paren_lowercase_infix_symbol s = IIDENT s;;
+(** The prefix version of a lowercase infix operator. *)
 
 (** {3 Various auxiliaries to lex special tokens} *)
 
@@ -646,12 +682,18 @@ let continue_lowercase_infix_symbol =
 
 (** {6 Regular identifiers} *)
 
-let regular_lowercase_ident = start_lowercase_ident continue_ident*
-let regular_uppercase_ident = start_uppercase_ident continue_ident*
+(** {7 Regular prefix identifiers} *)
 
+let regular_lowercase_ident =
+  start_lowercase_prefix_ident continue_lowercase_prefix_ident*
+let regular_uppercase_ident =
+  start_uppercase_prefix_ident continue_uppercase_prefix_ident*
+
+(** {7 Regular prefix symbols} *)
 let regular_lowercase_prefix_symbol =
   start_lowercase_prefix_symbol continue_lowercase_prefix_symbol*
 
+(** {7 Regular infix symbols} *)
 let regular_lowercase_infix_symbol =
   start_lowercase_infix_symbol continue_lowercase_infix_symbol*
 
