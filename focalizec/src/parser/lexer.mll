@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.45 2008-10-17 21:18:43 weis Exp $ *)
+(* $Id: lexer.mll,v 1.46 2008-10-19 14:45:47 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -453,25 +453,55 @@ let whites = [ ' ' '\t' ]*
 (** Integers can be given in binary, octal, decimal, or hexadecimal
     notation; they may have an optional sign. *)
 
-let decimal_literal =
-  [ '0'-'9'] ['0'-'9' '_' ]*
-let hex_literal =
-  '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f' '_']+
-let oct_literal =
-  '0' ['o' 'O'] ['0'-'7'] ['0'-'7' '_']*
-let bin_literal =
-  '0' ['b' 'B'] ['0'-'1' '_']+
-let int_literal =
-  decimal_literal | hex_literal | oct_literal | bin_literal
-let integer_literal =
-  ('-')? int_literal
+(** {7 Classification of characters for integers} *)
+
+let binary_digit = [ '0'-'1' ]
+let octal_digit = [ '0'-'7' ]
+let decimal_digit = [ '0'-'9' ]
+let hexadecimal_digit = [ '0'-'9' 'A'-'F' 'a'-'f' ]
+let sign = [ '+' '-' ]
+
+(** {7 Definition of integer literals} *)
+
+let unsigned_binary_literal = binary_digit ( binary_digit | '_' )*
+let unsigned_octal_literal = octal_digit ( octal_digit | '_' )*
+let unsigned_decimal_literal = decimal_digit ( decimal_digit | '_' )*
+let unsigned_hexadecimal_literal = hexadecimal_digit ( hexadecimal_digit | '_' )*
+
+let unsigned_integer_literal =
+    unsigned_binary_literal
+  | unsigned_octal_literal
+  | unsigned_decimal_literal
+  | unsigned_hexadecimal_literal
+
+let integer_literal = sign? unsigned_integer_literal
 
 (** {6 Floating point numbers} *)
 
-let float_literal =
-  ('-')? ['0'-'9'] ['0'-'9' '_']*
-  ('.' ['0'-'9' '_']* )?
-  (['e' 'E'] ['+' '-']? ['0'-'9'] ['0'-'9' '_']*)?
+(** {7 Classification of characters for floating point numbers} *)
+
+let decimal_literal = sign? unsigned_decimal_literal
+let hexadecimal_literal = sign? unsigned_hexadecimal_literal
+
+let scientific_notation = ['e' 'E']
+
+(** {7 Definition of float literals} *)
+
+let unsigned_decimal_float_literal =
+  unsigned_decimal_literal
+  ('.' unsigned_decimal_literal* )?
+  (scientific_notation decimal_literal)?
+
+let unsigned_hexadecimal_float_literal =
+  unsigned_hexadecimal_literal
+  ('.' unsigned_hexadecimal_literal* )?
+  (scientific_notation hexadecimal_literal)?
+
+let unsigned_float_literal =
+    unsigned_decimal_float_literal
+  | unsigned_hexadecimal_float_literal
+
+let float_literal = sign? unsigned_float_literal
 
 (** {3 Identifiers} *)
 
