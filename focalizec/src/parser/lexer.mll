@@ -1,4 +1,4 @@
-(* $Id: lexer.mll,v 1.46 2008-10-19 14:45:47 weis Exp $ *)
+(* $Id: lexer.mll,v 1.47 2008-10-19 16:21:54 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -188,6 +188,7 @@ let token_of_lowercase_prefix_symbol s =
 ;;
 
 let token_of_lowercase_infix_symbol s =
+  (*prerr_endline (Printf.sprintf "token_of_lowercase_infix_symbol %s" s);*)
   assert (String.length s > 0);
   match s.[0] with
   | '+' -> PLUS_OP s
@@ -544,53 +545,79 @@ let float_literal = sign? unsigned_float_literal
 
 (** {7 Classification of characters for identifiers} *)
 
-let lowercase_char = [ 'a'-'z' ]
-let uppercase_char = [ 'A'-'Z' ]
-let decimal_char = [ '0'-'9' ]
+let lowercase_alphabetic = [ 'a'-'z' ]
+let uppercase_alphabetic = [ 'A'-'Z' ]
 
 let inside_ident =
-    lowercase_char
-  | uppercase_char
-  | decimal_char
+    lowercase_alphabetic
+  | uppercase_alphabetic
+  | decimal_digit
+(** As expected, decimal digits are defined above for numbers, as:
+  {[
+     let decimal_digit = [ '0'-'9' ]
+  ]}
+*)
 
-let infix_char =
+let lowercase_infix_symbol_char =
   [ '+' '-' '*' '/' '%' '&' '|' ':' ';' '<' '=' '>' '@' '^' '\\' ]
-let prefix_char =
+let lowercase_prefix_symbol_char =
   [ '`' '~' '?' '$' '!' '#' ] (* ` helping emacs. *)
-let fix_char =
-    infix_char
-  | prefix_char
 
-(** Identifier classes starter characters. *)
+let inside_symbol =
+    lowercase_infix_symbol_char
+  | lowercase_prefix_symbol_char
 
-let start_lowercase_ident =
-    '_'* lowercase_char
-  | '_'+ decimal_char
+(** {7 Identifier classes starter characters} *)
 
-let start_uppercase_ident = '_'* uppercase_char
+(** {8 Usual identifiers} *)
 
-let start_infix_ident =
+(** Starts a usual ident, such as [f] or [x]. *)
+let start_lowercase_prefix_ident =
+    '_'* lowercase_alphabetic
+  | '_'+ decimal_digit (** Special case for _1, _20, _1b1, _0xFF, ... *)
+
+(** Starts a usual uppercase ident, such as [List] or [None]. *)
+let start_uppercase_prefix_ident =
+    '_'* uppercase_alphabetic
+
+(** {8 Infix symbols} *)
+
+(** Starts a usual lowercase infix symbol, such as [+] or [==]. *)
+let start_lowercase_infix_symbol =
     ','
-  | '_'* infix_char
+  | '_'* lowercase_infix_symbol_char
 
-let start_prefix_ident = '_'* prefix_char
+(** {8 Prefix symbols} *)
 
-(** Identifier classes continuing characters. *)
+(** Starts a usual lowercase prefix symbol, such as [!] or [~]. *)
+let start_lowercase_prefix_symbol =
+    '_'* lowercase_prefix_symbol_char
 
-let continue_ident =
+(** {7 Identifier classes continuing characters} *)
+
+(** {8 Usual identifiers} *)
+
+let continue_lowercase_prefix_ident =
     '_'
   | inside_ident
 
-let continue_prefix_ident =
-    '_'
-  | fix_char
+let continue_uppercase_prefix_ident = continue_lowercase_prefix_ident
 
-let continue_infix_ident =
+(** {8 Prefix symbols} *)
+let continue_lowercase_prefix_symbol =
     '_'
-  | fix_char
+  | inside_symbol
+
+(** {8 Infix symbols} *)
+let continue_lowercase_infix_symbol =
+    '_'
+  | inside_symbol
   | inside_ident
 
-(** Identifier class definitions.
+(** {7 Identifier class definitions} *)
+
+(** Identifiers are divided into several family or "classes":
+
   - regular identifiers, variable names and module names,
   - infix_ident identifiers,
   - prefix identifiers.
@@ -608,39 +635,125 @@ let continue_infix_ident =
 
 let regular_lowercase_ident = start_lowercase_ident continue_ident*
 let regular_uppercase_ident = start_uppercase_ident continue_ident*
-let regular_infix_ident = start_infix_ident continue_infix_ident*
-let regular_prefix_ident = start_prefix_ident continue_prefix_ident*
+
+let regular_lowercase_prefix_symbol =
+  start_lowercase_prefix_symbol continue_lowercase_prefix_symbol*
+
+let regular_lowercase_infix_symbol =
+  start_lowercase_infix_symbol continue_lowercase_infix_symbol*
 
 (** {6 Delimited identifiers} *)
 
-let delimited_lowercase_ident =
-  '`' '`' start_lowercase_ident [^'\'' '\n']* '\'' '\''
+(** Delimited identifiers are way too complex to be discribe by a regular
+    expressions: we handle them with a sub-lexer. *)
 
-let delimited_uppercase_ident =
-  '`' '`' start_uppercase_ident [^'\'' '\n']* '\'' '\''
+(** {7 Delimited regular identifiers} *)
 
-let delimited_infix_ident =
-  '`' '`' start_infix_ident [^'\'' '\n']* '\'' '\''
+(**
+  {[
+  let delimited_lowercase_ident =
+    '`' '`' start_lowercase_prefix_ident [^'\'' '\n']* '\'' '\''
+  let delimited_uppercase_ident =
+    '`' '`' start_uppercase_prefix_ident [^'\'' '\n']* '\'' '\''
+  ]}
+*)
 
-let delimited_prefix_ident =
-  '`' '`' start_prefix_ident [^'\'' '\n']* '\'' '\''
+(** {7 Delimited regular prefix symbols} *)
+
+(**
+  {[
+  let delimited_uppercase_prefix_symbol =
+    '`' '`' start_uppercase_prefix_symbol [^'\'' '\n']* '\'' '\''
+  let delimited_lowercase_prefix_symbol =
+    '`' '`' start_lowercase_prefix_symbol [^'\'' '\n']* '\'' '\''
+  ]}
+*)
+
+(** {7 Delimited regular infix symbols} *)
+
+(**
+  {[
+  let delimited_lowercase_infix_symbol =
+    '`' '`' start_lowercase_infix_symbol [^'\'' '\n']* '\'' '\''
+  let delimited_uppercase_infix_symbol =
+    '`' '`' start_uppercase_infix_symbol [^'\'' '\n']* '\'' '\''
+  ]}
+*)
 
 (** {6 Identifiers} *)
+
+(* The classification of identifiers:
+
+Normal idents for variables and labels of product types
+  lowercase_ident -> lowercase_prefix
+Normal idents for collections and constructors of sum types
+  uppercase_ident -> uppercase_prefix
+
+Symbolic idents for arithmetic operators and the like
+  Infix operators:
+    infix_ident -> symbolic_lowercase_infix
+  Prefix operators:
+    prefix_ident -> symbolic_lowercase_prefix
+
+Symbolic idents for collections and constructors of sum types
+    :continue_infix_ident*:  -> symbolic_uppercase_infix
+    [continue_prefix_ident*]  -> symbolic_uppercase_prefix
+
+    Instead of this continue_*fix_ident class we can use a new class
+    any_char_in_ident ? Or any_char_in_ident_but_colon ?
+
+Problem: we need to parse ``:=''
+
+In, fact we want to distinguish:
+ - ``fixity'' syntactic status of idents
+   (infix, prefix, mixfix (?))
+ - precedence of idents when mixed together
+
+ - ``categorisation'' for the language at hand
+   is this identifier a possible name for:
+    - a simple value ident naming some language expression ?
+    - a function name ?
+    - a bound variable name ?
+    - an operator name ? (e.g. arithmetic operators)
+    - a type name ? (e.g. is [+] a valid type name ? or is it [->] ?)
+    - a type variable name ? (to syntactically disambiguate [int list] from ['a list])
+    - a sum type constructor name ? (e.g. [C] is valid, [::] is valid, [\[\]]
+                                     is valid, [()] is valid)
+    - a record field label name ?
+    - a module name ?
+    - a name for other classes such as
+    - a module type name ?
+    - a species or collection name ?
+
+We distinguish identifiers with their first ``meaningful'' character:
+
+*)
+
+(** {8 Usual identifiers} *)
+
 let lowercase_ident =
     regular_lowercase_ident
-  | delimited_lowercase_ident
-
+(* From main lexer:
+ | delimited_lowercase_ident *)
 let uppercase_ident =
     regular_uppercase_ident
-  | delimited_uppercase_ident
+(* From main lexer:
+  | delimited_uppercase_ident *)
 
-let infix_ident =
-    regular_infix_ident
-  | delimited_infix_ident
+(** {8 Infix symbols} *)
 
-let prefix_ident =
-    regular_prefix_ident
-  | delimited_prefix_ident
+let lowercase_infix_symbol =
+    regular_lowercase_infix_symbol
+  | '`' lowercase_ident '`'
+(* From main lexer:
+  | delimited_lowercase_infix_symbol *)
+
+(** {8 Prefix symbols} *)
+
+let lowercase_prefix_symbol =
+    regular_lowercase_prefix_symbol
+(* From main lexer:
+  | delimited_lowercase_prefix_symbol *)
 
 (** {3 The main lexer. *)
 
@@ -651,13 +764,11 @@ rule token = parse
   | blank +
     { token lexbuf }
 
-  (* Identifiers *)
-  | lowercase_ident
-    { token_of_lowercase_prefix_ident lexbuf }
-  | uppercase_ident
-    { token_of_uppercase_prefix_ident lexbuf }
-  | "\'" lowercase_ident
-    { QIDENT (Lexing.lexeme lexbuf) }
+  (* Numbers *)
+  | integer_literal
+    { INT (Lexing.lexeme lexbuf) }
+  | float_literal
+    { FLOAT (Lexing.lexeme lexbuf) }
 
   (* Characters *)
   | "\'" [^ '\\' '\'' '\010'] "\'"
@@ -673,17 +784,6 @@ rule token = parse
       let esc = String.sub l 1 (String.length l - 1) in
       raise (Error
               (Illegal_escape esc, lexbuf.lex_start_p, lexbuf.lex_curr_p)) }
-  | "\'\'"
-    { raise
-        (Error (Uninitiated_delimited_ident,
-                lexbuf.lex_start_p,
-                lexbuf.lex_curr_p)) }
-
-  (* Numbers *)
-  | integer_literal
-    { INT (Lexing.lexeme lexbuf) }
-  | float_literal
-    { FLOAT (Lexing.lexeme lexbuf) }
 
   (* Strings. *)
   | "\""
@@ -696,12 +796,20 @@ rule token = parse
       | _ -> assert false end;
       STRING (get_stored_string ()) }
 
+  (* Identifiers *)
+  | lowercase_ident
+    { token_of_lowercase_prefix_ident lexbuf }
+  | uppercase_ident
+    { token_of_uppercase_prefix_ident lexbuf }
+  | "\'" lowercase_ident
+    { QIDENT (Lexing.lexeme lexbuf) }
+
   (* Delimited idents *)
   | "``"
-    (  start_lowercase_ident
-     | start_uppercase_ident
-     | start_infix_ident
-     | start_prefix_ident
+    (  start_lowercase_prefix_ident
+     | start_uppercase_prefix_ident
+     | start_lowercase_infix_symbol
+     | start_lowercase_prefix_symbol
     )
     { reset_delimited_ident_buffer ();
       store_delimited_ident_char (Lexing.lexeme_char lexbuf 2);
@@ -712,6 +820,11 @@ rule token = parse
       | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
       | _ -> assert false end;
       token_of_delimited_ident (get_stored_delimited_ident ()) }
+  | "\'\'"
+    { raise
+        (Error (Uninitiated_delimited_ident,
+                lexbuf.lex_start_p,
+                lexbuf.lex_curr_p)) }
 
   (* Documentation *)
   | "(**"
@@ -765,29 +878,44 @@ rule token = parse
   | '<' (['0'-'9']+ as level) '>' (['A'-'Z' 'a'-'z' '0'-'9']+ as label)
     { PROOF_LABEL (level, label) }
 
+  (* Symbols (or symbolic idents) *)
+  | lowercase_prefix_symbol
+    { token_of_lowercase_prefix_symbol (Lexing.lexeme lexbuf) }
+  | lowercase_infix_symbol
+    { token_of_lowercase_infix_symbol (Lexing.lexeme lexbuf) }
+
+  (* Parenthesized infix/prefix symbols *)
+
+  (* Enclosing a prefix/infix symbol into parentheses turn the parentehesized
+     symbol into a regular identifier.
+
+     The parenthesized version of a symbol is thus the ``not applied''
+     version of this symbol:
+       - for an infix symbol, its parenthesized version is its prefix version,
+       - for a prefix symbol, its parenthesized version is its ``not
+     applied'' version.
+
+     The parenthesized version of symbols are usual identifiers: in any
+     context where the parser expects a regular identifier (binding a name in
+     a pattern or a let definition for instance), you can use a symbol via
+     its parenthesized version. *)
+  | "(" [' ']+ (lowercase_prefix_symbol as inner) [' ']+ ")"
+    { token_of_paren_lowercase_prefix_symbol inner }
+  | "(" [' ']+ (lowercase_infix_symbol as inner) [' ']+ ")"
+    { token_of_paren_lowercase_infix_symbol inner }
+
   (* Usual simple tokens *)
   | '(' { LPAREN }
   | ')' { RPAREN }
-  | "()" { LRPARENS }
   | '[' { LBRACKET }
   | ']' { RBRACKET }
-  | "[]" { LRBRACKETS }
   | '{' { LBRACE }
   | '}' { RBRACE }
+  | "()" { LRPARENS }
+  | "[]" { LRBRACKETS }
   | "{}" { LRBRACES }
   | '.' { DOT }
   | '_' { UNDERSCORE }
-
-  (* Symbols (or symbolic idents) *)
-  | prefix_ident
-    { token_of_lowercase_prefix_symbol (Lexing.lexeme lexbuf) }
-  | infix_ident
-    { token_of_lowercase_infix_symbol (Lexing.lexeme lexbuf) }
-
-  | "(" [' ']+ (prefix_ident as inner) [' ']+ ")"
-    { token_of_paren_lowercase_prefix_symbol inner }
-  | "(" [' ']+ (infix_ident as inner) [' ']+ ")"
-    { token_of_paren_lowercase_infix_symbol inner }
 
   | eof { EOF }
   | _
