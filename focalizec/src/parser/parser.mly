@@ -1,5 +1,18 @@
 %{
-(* $Id: parser.mly,v 1.103 2008-10-17 21:20:43 weis Exp $ *)
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*            François Pessaux                                         *)
+(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2006, 2008 LIP6 and INRIA                                *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: parser.mly,v 1.104 2008-10-19 16:30:51 weis Exp $ *)
 
 open Parsetree;;
 

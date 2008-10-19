@@ -1,4 +1,17 @@
-(* $Id: lexer.mll,v 1.47 2008-10-19 16:21:54 weis Exp $ *)
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*            François Pessaux                                         *)
+(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2006, 2008 LIP6 and INRIA                                *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: lexer.mll,v 1.48 2008-10-19 16:30:51 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
