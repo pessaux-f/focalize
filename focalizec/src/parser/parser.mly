@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.104 2008-10-19 16:30:51 weis Exp $ *)
+(* $Id: parser.mly,v 1.105 2008-10-20 07:39:09 weis Exp $ *)
 
 open Parsetree;;
 
@@ -107,9 +107,9 @@ let mk_proof_label (s1, s2) =
 /* Identifiers */
 %token <string> LIDENT /* Lower case ident (e.g. x, _1, or _xY) */
 %token <string> UIDENT /* Upper case ident (e.g. A, _B, or _Ax) */
-%token <string> PIDENT /* Prefix ident  (e.g. ( ! ) or ( ~ )) */
-%token <string> IIDENT /* Infix ident  (e.g ( + ) or ( +matrix )) */
-%token <string> QIDENT /* Quoted lower case ident (e.g. 'a ) */
+%token <string> PLIDENT /* Prefix lowercase ident (e.g. ( ! ) or ( ~ )) */
+%token <string> ILIDENT /* Infix lowercase ident (e.g ( + ) or ( +matrix )) */
+%token <string> QLIDENT /* Quoted lowercase ident (e.g. 'a ) */
 
 /* Basic constants */
 %token <string> INT
@@ -244,6 +244,8 @@ let mk_proof_label (s1, s2) =
 
 /* Precedences and associativities. */
 
+/* Binary operators. */
+
 %nonassoc IN
 %nonassoc SEMI_SEMI_OP             /* expr (e OP e) with OP starting with ";;" */
 /* %nonassoc below_SEMI */
@@ -255,8 +257,8 @@ let mk_proof_label (s1, s2) =
 %nonassoc prec_quantifier
 %nonassoc LT_DASH_GT LT_DASH_GT_OP
        /* expr (e OP e) with OP being "<->" or starting with "<->" */
-%right    DISJUNCTION              /* logical_expr (le \/ le \/ e) */
-%right    CONJUNCTION              /* logical_expr (le /\ le /\ e) */
+%right    DISJUNCTION              /* logical_expr (le \/ le \/ le) */
+%right    CONJUNCTION              /* logical_expr (le /\ le /\ le) */
 %nonassoc NEGATION                 /* logical_expr (~ le) */
 %right    AND                      /* let ... and ... */
 /* %nonassoc THEN */               /* below ELSE (if ... then ...) */
@@ -283,8 +285,8 @@ let mk_proof_label (s1, s2) =
        /* being '=', starting with '=', '<', or '>' */
 %right    AT_OP HAT_OP
        /* expr (e OP e OP e) with OP starting with '@' or '^' */
-/*%right    UINFIX */
-/* expr (e OP e OP e) with OP begin a user defined lowercase ident. */
+/*%right    ILIDENT */
+/* expr (e OP e OP e) with OP being a user defined lowercase ident. */
 %right    COLON_COLON COLON_COLON_OP
        /* expr (e OP e OP e) with OP being "::", or starting with "::" */
 %left     PLUS_OP DASH_OP
@@ -293,11 +295,13 @@ let mk_proof_label (s1, s2) =
        /* expr (e OP e OP e) with OP starting with '*', '/', or '%' */
 %right    STAR_STAR_OP
        /* expr (e OP e OP e) with OP starting with "**" */
+
 /* Unary prefix operators. */
 %nonassoc BACKQUOTE_OP             /* expr OP e with OP being '\`' */
-%nonassoc QUESTION_OP              /* expr OP e e.g. OP starting with '?' */
-%nonassoc DOLLAR_OP                /* expr OP e e.g. OP starting with '$' */
+%nonassoc QUESTION_OP              /* expr OP e with OP starting with '?' */
+%nonassoc DOLLAR_OP                /* expr OP e with OP starting with '$' */
 %nonassoc BANG_OP                  /* expr OP e with OP starting with '!' */
+
 /* Predefined precedences to resolve conflicts. */
 %nonassoc prec_unary_minus         /* unary DASH_OP e.g. DASH_OP is '-' */
 %nonassoc prec_constant_constructor /* cf. simple_expr (C versus C x) */
@@ -809,7 +813,7 @@ simple_type_expr:
     { mk TE_self }
   | PROP
     { mk TE_prop }
-  | QIDENT
+  | QLIDENT
     { mk (TE_ident (mk_local_ident (Vqident $1))) }
   | glob_ident
     { mk (TE_ident $1) }
@@ -948,11 +952,13 @@ expr:
     { mk_infix_application $1 $2 $3 }
   | expr LT_DASH_OP expr
     { mk_infix_application $1 $2 $3 }
+
   | expr COLON_OP expr
     { mk_infix_application $1 $2 $3 }
 
   | expr COMMA_OP expr
     { mk_infix_application $1 $2 $3 }
+
   | expr DASH_GT_OP expr
     { mk_infix_application $1 $2 $3 }
   | expr BAR_OP expr
@@ -973,10 +979,12 @@ expr:
     { mk_infix_application $1 $2 $3 }
   | expr AT_OP expr
     { mk_infix_application $1 $2 $3 }
+
   | expr COLON_COLON expr
     { mk (E_constr (mk_cons (), [$1; $3])) }
   | expr COLON_COLON_OP expr
     { mk_infix_application $1 $2 $3 }
+
   | expr PLUS_OP expr
     { mk_infix_application $1 $2 $3 }
     | expr DASH_OP expr
@@ -985,11 +993,10 @@ expr:
     { mk_infix_application $1 $2 $3 }
     | expr SLASH_OP expr
       { mk_infix_application $1 $2 $3 }
-  | expr PERCENT_OP expr
-    { mk_infix_application $1 $2 $3 }
+    | expr PERCENT_OP expr
+      { mk_infix_application $1 $2 $3 }
   | expr STAR_STAR_OP expr
     { mk_infix_application $1 $2 $3 }
-
 
   /* Unary operators. */
   | TILDA_OP expr
@@ -1159,8 +1166,8 @@ label_ident:
 
 bound_vname:
   | LIDENT { Vlident $1 }
-  | PIDENT { Vpident $1 }
-  | IIDENT { Viident $1 }
+  | PLIDENT { Vpident $1 }
+  | ILIDENT { Viident $1 }
 ;
 
 bound_vname_list:
@@ -1181,8 +1188,6 @@ method_vname:
 
 constructor_vname:
   | UIDENT { Vuident $1 }
-  | PIDENT { Vpident $1 }
-  | IIDENT { Viident $1 }
   | LRPARENS { Vuident "()" }
   | LRBRACKETS { Vuident "[]" }
 ;
@@ -1202,7 +1207,8 @@ collection_vname:
 property_vname:
   | LIDENT { Vlident $1 }
   | UIDENT { Vuident $1 }
-  | QIDENT { Vqident $1 }
+/* Why do we need a quoted identifier for property names ? */
+/*  | QLIDENT { Vqident $1 } */
 ;
 
 theorem_vname:
@@ -1214,6 +1220,6 @@ type_vname:
 ;
 
 type_param_vname:
-  | QIDENT { Vqident $1 }
   | LIDENT { Vlident $1 }
+  | QLIDENT { Vqident $1 }
 ;

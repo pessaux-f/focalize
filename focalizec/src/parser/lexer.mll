@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.50 2008-10-20 06:18:04 weis Exp $ *)
+(* $Id: lexer.mll,v 1.51 2008-10-20 07:39:09 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -280,7 +280,7 @@ let token_of_uppercase_prefix_ident lexbuf =
 
 (** {6 Creating tokens for delimited idents} *)
 
-(** Could be any of PIDENT, IIDENT, UIDENT, UPIDENT, or IIDENT,
+(** Could be any of PLIDENT, ILIDENT, UIDENT, PUIDENT, or IUIDENT,
    according to the triggering character class. *)
 let token_of_delimited_ident s =
   assert (String.length s <> 0);
@@ -309,9 +309,9 @@ let token_of_delimited_ident s =
 (** {6 Creating tokens for the prefix version of symbolic
        identifiers} *)
 
-let token_of_paren_lowercase_prefix_symbol s = PIDENT s;;
+let token_of_paren_lowercase_prefix_symbol s = PLIDENT s;;
 (** The prefix version of a lowercase prefix operator. *)
-let token_of_paren_lowercase_infix_symbol s = IIDENT s;;
+let token_of_paren_lowercase_infix_symbol s = ILIDENT s;;
 (** The prefix version of a lowercase infix operator. *)
 
 (** {3 Various auxiliaries to lex special tokens} *)
@@ -859,7 +859,7 @@ rule token = parse
   | uppercase_ident
     { token_of_uppercase_prefix_ident lexbuf }
   | "\'" lowercase_ident
-    { QIDENT (Lexing.lexeme lexbuf) }
+    { QLIDENT (Lexing.lexeme lexbuf) }
 
   (* Delimited idents *)
   | "``"
