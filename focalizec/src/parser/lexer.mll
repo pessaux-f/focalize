@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.49 2008-10-19 21:44:12 weis Exp $ *)
+(* $Id: lexer.mll,v 1.50 2008-10-20 06:18:04 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -153,6 +153,19 @@ List.iter
 
 (** {3 Injecting symbolic identifiers strings to lexems} *)
 
+(** The first meaningful character at the beginning of an ident/symbol,
+    getting rid of initial underscores. *)
+let start_ident_char s =
+  let lim = String.length s - 1 in
+  let rec loop i c =
+    if i > lim then c else
+    let nc = s.[i] in
+    match nc with
+    | '_' -> loop (i + 1) nc
+    | c -> c in
+  loop 0 '_'
+;;
+
 let token_of_lowercase_prefix_symbol s =
   assert (String.length s > 0);
   match s.[0] with
@@ -265,21 +278,10 @@ let token_of_uppercase_prefix_ident lexbuf =
   | Not_found -> UIDENT s
 ;;
 
-(** The first meaningful character at the beginning of an ident/symbol,
-    getting rid of initial underscores. *)
-let start_ident_char s =
-  let lim = String.length s - 1 in
-  let rec loop i c =
-    if i > lim then c else
-    let nc = s.[i] in
-    match nc with
-    | '_' -> loop (i + 1) nc
-    | c -> c in
-  loop 0 '_'
-;;
-
 (** {6 Creating tokens for delimited idents} *)
 
+(** Could be any of PIDENT, IIDENT, UIDENT, UPIDENT, or IIDENT,
+   according to the triggering character class. *)
 let token_of_delimited_ident s =
   assert (String.length s <> 0);
   let c = start_ident_char s in
