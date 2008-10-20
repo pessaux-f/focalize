@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.51 2008-10-20 07:39:09 weis Exp $ *)
+(* $Id: lexer.mll,v 1.52 2008-10-20 20:48:06 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -151,10 +151,10 @@ List.iter
 ]
 ;;
 
-(** {3 Injecting symbolic identifiers strings to lexems} *)
+(** {3 Tokens for symbols} *)
 
-(** The first meaningful character at the beginning of an ident/symbol,
-    getting rid of initial underscores. *)
+(** Finding the first meaningful character at the beginning of an ident or a
+    symbol, getting rid of initial underscores. *)
 let start_ident_char s =
   let lim = String.length s - 1 in
   let rec loop i c =
@@ -286,6 +286,7 @@ let token_of_delimited_ident s =
   assert (String.length s <> 0);
   let c = start_ident_char s in
   match c with
+  (* String s has only underscores. *)
   | '_' -> if String.length s = 1 then UNDERSCORE else LIDENT s
   (* start_lowercase_prefix_ident *)
   | 'a' .. 'z'
@@ -306,8 +307,10 @@ let token_of_delimited_ident s =
 *)
 ;;
 
-(** {6 Creating tokens for the prefix version of symbolic
-       identifiers} *)
+(** {6 Tokens for parenthesized symbols} *)
+
+(** The prefix version of symbolic identifiers is obtained by enclosing the
+    symbol between parens. *)
 
 let token_of_paren_lowercase_prefix_symbol s = PLIDENT s;;
 (** The prefix version of a lowercase prefix operator. *)
@@ -316,7 +319,7 @@ let token_of_paren_lowercase_infix_symbol s = ILIDENT s;;
 
 (** {3 Various auxiliaries to lex special tokens} *)
 
-(** {6 Lexing the external_code tokens} *)
+(** {6 Lexing the external code tokens} *)
 let initial_external_code_buffer = String.create 256;;
 let external_code_buff = ref initial_external_code_buffer
 and external_code_index = ref 0
@@ -400,7 +403,7 @@ let get_stored_string () =
   s
 ;;
 
-(** {6 Lexing the delimited_ident tokens} *)
+(** {6 Lexing the delimited identifier tokens} *)
 let initial_delimited_ident_buffer = String.create 256;;
 let delimited_ident_buff = ref initial_delimited_ident_buffer
 and delimited_ident_index = ref 0
@@ -609,14 +612,14 @@ let inside_ident =
   ]}
 *)
 
-let lowercase_infix_symbol_char =
+let lowercase_infix_symbolic =
   [ '+' '-' '*' '/' '%' '&' '|' ':' ';' '<' '=' '>' '@' '^' '\\' ]
-let lowercase_prefix_symbol_char =
+let lowercase_prefix_symbolic =
   [ '`' '~' '?' '$' '!' '#' ] (* ` helping emacs. *)
 
 let inside_symbol =
-    lowercase_infix_symbol_char
-  | lowercase_prefix_symbol_char
+    lowercase_infix_symbolic
+  | lowercase_prefix_symbolic
 
 (** {7 Identifier classes starter characters} *)
 
@@ -636,13 +639,13 @@ let start_uppercase_prefix_ident =
 (** Starts a usual lowercase infix symbol, such as [+] or [==]. *)
 let start_lowercase_infix_symbol =
     ','
-  | '_'* lowercase_infix_symbol_char
+  | '_'* lowercase_infix_symbolic
 
 (** {8 Prefix symbols} *)
 
 (** Starts a usual lowercase prefix symbol, such as [!] or [~]. *)
 let start_lowercase_prefix_symbol =
-    '_'* lowercase_prefix_symbol_char
+    '_'* lowercase_prefix_symbolic
 
 (** {7 Identifier classes continuing characters} *)
 
@@ -941,10 +944,10 @@ rule token = parse
   | lowercase_infix_symbol
     { token_of_lowercase_infix_symbol (Lexing.lexeme lexbuf) }
 
-  (* Parenthesized infix/prefix symbols *)
+  (* Parenthesized prefix or infix symbols *)
 
-  (* Enclosing a prefix/infix symbol into parentheses turn the parentehesized
-     symbol into a regular identifier.
+  (* Enclosing a prefix or infix symbol into spaces and parentheses turn the
+     parenthesized symbol into a regular identifier.
 
      The parenthesized version of a symbol is thus the ``not applied''
      version of this symbol:
