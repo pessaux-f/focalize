@@ -1,7 +1,8 @@
 %{
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*            François Pessaux                                         *)
@@ -12,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.105 2008-10-20 07:39:09 weis Exp $ *)
+(* $Id: parser.mly,v 1.106 2008-10-20 21:59:49 weis Exp $ *)
 
 open Parsetree;;
 
@@ -108,8 +109,11 @@ let mk_proof_label (s1, s2) =
 %token <string> LIDENT /* Lower case ident (e.g. x, _1, or _xY) */
 %token <string> UIDENT /* Upper case ident (e.g. A, _B, or _Ax) */
 %token <string> PLIDENT /* Prefix lowercase ident (e.g. ( ! ) or ( ~ )) */
+%token <string> PUIDENT /* Prefix uppercase ident (e.g. ( [!] ) or ( [~] )) */
 %token <string> ILIDENT /* Infix lowercase ident (e.g ( + ) or ( +matrix )) */
+%token <string> IUIDENT /* Infix uppercase ident (e.g ( :: ) or ( :+m: )) */
 %token <string> QLIDENT /* Quoted lowercase ident (e.g. 'a ) */
+%token <string> QUIDENT /* Quoted uppercase ident (e.g. 'C ) */
 
 /* Basic constants */
 %token <string> INT
@@ -897,6 +901,7 @@ simple_expr:
     { mk (E_const $1) }
   | expr_ident
     { mk (E_var $1) }
+/*
   | opt_lident SHARP UIDENT %prec prec_constant_constructor
     { mk (E_constr (mk_global_constructor_ident $1 (Vuident $3), [])) }
   | opt_lident SHARP UIDENT LPAREN expr_comma_list RPAREN
@@ -905,6 +910,7 @@ simple_expr:
     { mk (E_constr (mk_global_constructor_ident None (Vuident $1), [])) }
   | UIDENT LPAREN expr_comma_list RPAREN
     { mk (E_constr (mk_global_constructor_ident None (Vuident $1), $3)) }
+*/
   | simple_expr DOT label_ident
     { mk (E_record_access ($1, $3)) }
   | LBRACE record_field_list RBRACE
@@ -927,6 +933,8 @@ expr:
     { mk E_self }
   | simple_expr %prec below_SHARP
     { $1 }
+  | constructor_ref { mk (E_constr ($1, [])) } %prec prec_constant_constructor
+  | constructor_ref LPAREN expr_comma_list RPAREN { mk (E_constr ($1, $3)) }
   | FUNCTION bound_vname_list DASH_GT expr
     { mk (E_fun ($2, $4)) }
   | expr LPAREN expr_comma_list RPAREN
@@ -1112,6 +1120,8 @@ pattern:
   | LBRACKET pattern_semi_list RBRACKET { $2 }
 /* Already in constructor_ref ?| LRBRACKETS { mk (P_constr (mk_nil (), [])) } */
   | pattern COLON_COLON pattern { mk (P_constr (mk_cons (), [$1; $3])) }
+/*  | pattern IUIDENT pattern
+    { mk (P_constr (mk_global_constructor_ident None (Viident $2), [$1; $3])) } */
   | LBRACE pattern_record_field_list RBRACE { mk (P_record $2) }
   | pattern AS LIDENT { mk (P_as ($1, Vlident $3)) }
   | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
@@ -1188,6 +1198,8 @@ method_vname:
 
 constructor_vname:
   | UIDENT { Vuident $1 }
+  | PUIDENT { Vuident $1 }
+  | IUIDENT { Vuident $1 }
   | LRPARENS { Vuident "()" }
   | LRBRACKETS { Vuident "[]" }
 ;

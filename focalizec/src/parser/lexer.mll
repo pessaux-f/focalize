@@ -1,6 +1,7 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*            François Pessaux                                         *)
@@ -11,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.52 2008-10-20 20:48:06 weis Exp $ *)
+(* $Id: lexer.mll,v 1.53 2008-10-20 21:59:49 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -169,7 +170,7 @@ let start_ident_char s =
 let token_of_lowercase_prefix_symbol s =
   assert (String.length s > 0);
   match s.[0] with
-  | '`' (* ` Helping emacs *) -> BACKQUOTE_OP s
+(*  | '`' (* ` Helping emacs *) -> BACKQUOTE_OP s*)
   | '~' -> if String.length s = 1 then NEGATION else TILDA_OP s
   | '?' -> QUESTION_OP s
   | '$' -> DOLLAR_OP s
@@ -182,6 +183,31 @@ let token_of_lowercase_prefix_symbol s =
     begin match String.length s with
     | 1 -> SHARP
     | _ -> SHARP_OP s
+    end
+  | _ -> assert false
+;;
+
+(* To be revisited. Do we have to further discriminate ? *)
+let token_of_uppercase_prefix_symbol s = PUIDENT s
+;;
+
+(* To be revisited. Do we have to further discriminate ? *)
+let token_of_uppercase_infix_symbol s =
+  (*prerr_endline (Printf.sprintf "token_of_uppercase_infix_symbol %s" s);*)
+  assert (String.length s > 0);
+  match s.[0] with
+  | ',' ->
+    begin match String.length s with
+    | 1 -> COMMA
+    | _ -> COMMA_OP s
+    end
+  | ':' ->
+    begin match String.length s with
+    | 1 -> COLON
+    | n when s.[n - 1] = ':' ->
+      if n = 2 then COLON_COLON else IUIDENT s
+    | _ when s.[1] <> ':' -> COLON_OP s
+    | _ -> COLON_COLON_OP s
     end
   | _ -> assert false
 ;;
@@ -216,18 +242,6 @@ let token_of_lowercase_infix_symbol s =
     begin match String.length s with
     | 1 -> BAR
     | _ -> BAR_OP s
-    end
-  | ',' ->
-    begin match String.length s with
-    | 1 -> COMMA
-    | _ -> COMMA_OP s
-    end
-  | ':' ->
-    begin match String.length s with
-    | 1 -> COLON
-    | _ when s.[1] <> ':' -> COLON_OP s
-    | 2 -> COLON_COLON
-    | _ -> COLON_COLON_OP s
     end
   | ';' ->
     begin match String.length s with
@@ -316,6 +330,11 @@ let token_of_paren_lowercase_prefix_symbol s = PLIDENT s;;
 (** The prefix version of a lowercase prefix operator. *)
 let token_of_paren_lowercase_infix_symbol s = ILIDENT s;;
 (** The prefix version of a lowercase infix operator. *)
+
+let token_of_paren_uppercase_prefix_symbol s = PUIDENT s;;
+(** The prefix version of an uppercase prefix operator. *)
+let token_of_paren_uppercase_infix_symbol s = IUIDENT s;;
+(** The prefix version of an uppercase infix operator. *)
 
 (** {3 Various auxiliaries to lex special tokens} *)
 
@@ -613,13 +632,19 @@ let inside_ident =
 *)
 
 let lowercase_infix_symbolic =
-  [ '+' '-' '*' '/' '%' '&' '|' ':' ';' '<' '=' '>' '@' '^' '\\' ]
+  [ '+' '-' '*' '/' '%' '&' '|' ';' '<' '=' '>' '@' '^' '\\' ]
 let lowercase_prefix_symbolic =
-  [ '`' '~' '?' '$' '!' '#' ] (* ` helping emacs. *)
+  [ '~' '?' '$' '!' '#' ]
+
+let uppercase_infix_symbolic = [ ':' '`']
+  (* ` helping emacs. *)
+
+let uppercase_prefix_symbolic = [ '[' '(' ] (* )] helping emacs. *)
 
 let inside_symbol =
     lowercase_infix_symbolic
   | lowercase_prefix_symbolic
+  | uppercase_infix_symbolic
 
 (** {7 Identifier classes starter characters} *)
 
@@ -638,14 +663,22 @@ let start_uppercase_prefix_ident =
 
 (** Starts a usual lowercase infix symbol, such as [+] or [==]. *)
 let start_lowercase_infix_symbol =
+    '_'* lowercase_infix_symbolic
+
+(** Starts a usual uppercase infix symbol, such as [::] or [:->:]. *)
+let start_uppercase_infix_symbol =
     ','
-  | '_'* lowercase_infix_symbolic
+  | '_'* uppercase_infix_symbolic
 
 (** {8 Prefix symbols} *)
 
 (** Starts a usual lowercase prefix symbol, such as [!] or [~]. *)
 let start_lowercase_prefix_symbol =
     '_'* lowercase_prefix_symbolic
+
+(** Starts a usual uppercase prefix symbol, such as [\[\]] or [()]. *)
+let start_uppercase_prefix_symbol =
+    '_'* uppercase_prefix_symbolic
 
 (** {7 Identifier classes continuing characters} *)
 
@@ -662,11 +695,15 @@ let continue_lowercase_prefix_symbol =
     '_'
   | inside_symbol
 
+let continue_uppercase_prefix_symbol = continue_lowercase_prefix_symbol
+
 (** {8 Infix symbols} *)
 let continue_lowercase_infix_symbol =
     '_'
   | inside_symbol
   | inside_ident
+
+let continue_uppercase_infix_symbol = continue_lowercase_infix_symbol
 
 (** {7 Identifier class definitions} *)
 
@@ -698,9 +735,31 @@ let regular_uppercase_ident =
 let regular_lowercase_prefix_symbol =
   start_lowercase_prefix_symbol continue_lowercase_prefix_symbol*
 
+let regular_uppercase_prefix_symbol =
+  (** We wanted the pseudo regular expression with binding:
+ {[
+  (start_uppercase_prefix_symbol as char)
+  continue_uppercase_prefix_symbol* char
+ ]}
+  To express it, we replace [start_uppercase_prefix_symbol] by all its
+  components, and inline as many regular expressions as chars in
+  the set [start_uppercase_prefix_symbol]. *)
+    '_'* '[' continue_uppercase_prefix_symbol* ']'
+  | '_'* '(' continue_uppercase_prefix_symbol* ')'
+
 (** {7 Regular infix symbols} *)
 let regular_lowercase_infix_symbol =
   start_lowercase_infix_symbol continue_lowercase_infix_symbol*
+
+let regular_uppercase_infix_symbol =
+(** We wanted the pseudo regular expression:
+ {[
+   (start_uppercase_infix_symbol as char)
+   continue_uppercase_infix_symbol* char
+ ]}
+   We write instead the following: *)
+    '_'* ':' continue_uppercase_infix_symbol* ':'
+  | '_'* '`' continue_uppercase_infix_symbol* '`'
 
 (** {6 Delimited identifiers} *)
 
@@ -795,6 +854,7 @@ let lowercase_ident =
     regular_lowercase_ident
 (* From main lexer:
  | delimited_lowercase_ident *)
+
 let uppercase_ident =
     regular_uppercase_ident
 (* From main lexer:
@@ -808,12 +868,23 @@ let lowercase_infix_symbol =
 (* From main lexer:
   | delimited_lowercase_infix_symbol *)
 
+let uppercase_infix_symbol =
+    regular_uppercase_infix_symbol
+  | '`' uppercase_ident '`'
+(* From main lexer:
+  | delimited_uppercase_infix_symbol *)
+
 (** {8 Prefix symbols} *)
 
 let lowercase_prefix_symbol =
     regular_lowercase_prefix_symbol
 (* From main lexer:
   | delimited_lowercase_prefix_symbol *)
+
+let uppercase_prefix_symbol =
+    regular_uppercase_prefix_symbol
+(* From main lexer:
+   | delimited_uppercase_prefix_symbol *)
 
 (** {3 The main lexer. *)
 
@@ -870,6 +941,8 @@ rule token = parse
      | start_uppercase_prefix_ident
      | start_lowercase_infix_symbol
      | start_lowercase_prefix_symbol
+     | start_uppercase_infix_symbol
+     | start_uppercase_prefix_symbol
     )
     { reset_delimited_ident_buffer ();
       store_delimited_ident_char (Lexing.lexeme_char lexbuf 2);
@@ -943,6 +1016,10 @@ rule token = parse
     { token_of_lowercase_prefix_symbol (Lexing.lexeme lexbuf) }
   | lowercase_infix_symbol
     { token_of_lowercase_infix_symbol (Lexing.lexeme lexbuf) }
+  | uppercase_prefix_symbol
+    { token_of_uppercase_prefix_symbol (Lexing.lexeme lexbuf) }
+  | uppercase_infix_symbol
+    { token_of_uppercase_infix_symbol (Lexing.lexeme lexbuf) }
 
   (* Parenthesized prefix or infix symbols *)
 
@@ -963,6 +1040,10 @@ rule token = parse
     { token_of_paren_lowercase_prefix_symbol inner }
   | "(" [' ']+ (lowercase_infix_symbol as inner) [' ']+ ")"
     { token_of_paren_lowercase_infix_symbol inner }
+  | "(" [' ']+ (uppercase_prefix_symbol as inner) [' ']+ ")"
+    { token_of_paren_uppercase_prefix_symbol inner }
+  | "(" [' ']+ (uppercase_infix_symbol as inner) [' ']+ ")"
+    { token_of_paren_uppercase_infix_symbol inner }
 
   (* Usual simple tokens *)
   | '(' { LPAREN }

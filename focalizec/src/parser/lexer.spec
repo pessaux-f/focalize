@@ -12,12 +12,23 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: lexer.spec,v 1.3 2008-10-17 10:24:35 weis Exp $
+# $Id: lexer.spec,v 1.4 2008-10-20 21:59:49 weis Exp $
 
 High level specification of the Focalize lexer
 ==============================================
 
 Could be use as a set of drafts for the documentation.
+
+2008/10/12:
+===========
+Revisit and test '`' starting lexems.
+Generalize treatment of [] and () and :: in parser.
+
+2008/10/20: infix version of prefix ident
+=========================================
+Should we use `ident` (and also `Ident`) to define and use an infix (regular)
+alphanumerical ident ?
+This suggests to remove ` from symbolic uppercase infixes.
 
 2008/10/17: Classifying tokens.
 ===============================
