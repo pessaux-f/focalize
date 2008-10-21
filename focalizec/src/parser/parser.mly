@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.106 2008-10-20 21:59:49 weis Exp $ *)
+(* $Id: parser.mly,v 1.107 2008-10-21 09:55:26 weis Exp $ *)
 
 open Parsetree;;
 
@@ -80,14 +80,13 @@ let mk_global_expr_var qual vname =
   mk (E_var (mk_global_expr_ident qual vname))
 ;;
 
-(* Infix operators without scope MUST be parsed as LOCAL ! A global  *)
-(* identifier whose scope is None is reserved for identifiers of the *)
-(* form "#foo", meaning that we want the identifier "foo" being at   *)
-(* the toplevel of the current compilation unit.                     *)
+(* Infix/Prefix operators without scope MUST be parsed as LOCAL!     *)
+(* A global identifier whose scope is None is reserved for           *)
+(* identifiers of the form "#foo", meaning that we refer to          *)
+(* identifier "foo" at toplevel of the current compilation unit.     *)
 let mk_infix_application e1 s e2 =
   mk (E_app (mk_local_expr_var (Viident s), [e1; e2]))
 ;;
-(* Same comment for prefix operators. *)
 let mk_prefix_application s e1 =
   mk (E_app (mk_local_expr_var (Vpident s), [e1]))
 ;;
@@ -933,8 +932,8 @@ expr:
     { mk E_self }
   | simple_expr %prec below_SHARP
     { $1 }
-  | constructor_ref { mk (E_constr ($1, [])) } %prec prec_constant_constructor
   | constructor_ref LPAREN expr_comma_list RPAREN { mk (E_constr ($1, $3)) }
+  | constructor_ref { mk (E_constr ($1, [])) } %prec prec_constant_constructor
   | FUNCTION bound_vname_list DASH_GT expr
     { mk (E_fun ($2, $4)) }
   | expr LPAREN expr_comma_list RPAREN
