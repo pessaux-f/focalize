@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.54 2008-10-21 09:52:32 weis Exp $ *)
+(* $Id: lexer.mll,v 1.55 2008-10-21 11:06:23 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -747,7 +747,7 @@ let continue_lowercase_prefix_symbol =
 let continue_uppercase_prefix_symbol =
     '_'
   | inside_uppercase_prefix_symbolic
-(* Cannot use continue_lowercase_prefix_symbol *)
+(* Cannot use continue_lowercase_prefix_symbol, nor simple '_' chars *)
 
 (** {8 Infix symbols} *)
 let continue_lowercase_infix_symbol =
@@ -755,6 +755,7 @@ let continue_lowercase_infix_symbol =
   | inside_symbol
   | inside_ident
 
+(* After ':' we can use any lowercase infix symbol character *)
 let continue_uppercase_infix_symbol = continue_lowercase_infix_symbol
 
 (** {7 Identifier class definitions} *)
@@ -796,8 +797,8 @@ let regular_uppercase_prefix_symbol =
   To express it, we replace [start_uppercase_prefix_symbol] by all its
   components, and inline as many regular expressions as chars in
   the set [start_uppercase_prefix_symbol]. *)
-    '_'* '[' continue_uppercase_prefix_symbol* ']'
-  | '_'* '(' continue_uppercase_prefix_symbol* ')'
+    '_'* '[' (inside_uppercase_prefix_symbolic continue_uppercase_prefix_symbol*)? ']'
+  | '_'* '(' (inside_uppercase_prefix_symbolic continue_uppercase_prefix_symbol*)? ')'
 
 (** {7 Regular infix symbols} *)
 let regular_lowercase_infix_symbol =
