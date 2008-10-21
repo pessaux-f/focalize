@@ -1,6 +1,7 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*            François Pessaux                                         *)
@@ -11,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parse_file.mli,v 1.4 2007-09-26 09:29:52 weis Exp $ *)
+(* $Id: parse_file.mli,v 1.5 2008-10-21 14:08:30 weis Exp $ *)
 
 exception Lex_error of (Lexing.position * Lexing.position * string) ;;
 exception Syntax_error of (Lexing.position * Lexing.position) ;;
