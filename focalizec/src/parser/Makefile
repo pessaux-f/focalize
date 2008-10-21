@@ -1,6 +1,6 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaL compiler                                #
+#                        FoCaLize compiler                             #
 #                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.36 2008-10-16 21:39:31 weis Exp $
+# $Id: Makefile,v 1.37 2008-10-21 14:41:55 weis Exp $
 
 ROOT_DIR = ..
 
@@ -20,15 +20,16 @@ include $(ROOT_DIR)/Makefile.config
 
 CAML_INCLUDES = -I ../basement
 
-BYTOBJS = lexer.cmo parser.cmo parse_file.cmo dump_ptree.cmo sourcify.cmo
+BYTOBJS = lexer.cmo parser.cmo parse_file.cmo \
+ dump_ptree.cmo sourcify.cmo sourcify_token.cmo lex_file.cmo
 
 include $(ROOT_DIR)/Makefile.common
-
-all:: lexer.ml parser.ml
 
 clean::
 	$(RM) lexer.ml lexer.mli
 	$(RM) parser.ml parser.mli parser.conflicts parser.output
+	$(RM) menhir.out
+	$(MAKE) depend
 
 depend:: lexer.ml parser.ml
 	$(CAMLDEP) *.mli *.ml > ./.depend
@@ -36,8 +37,8 @@ depend:: lexer.ml parser.ml
 explain:
 	menhir --explain parser.mly > menhir.out 2>&1
 
-lexer.cmi: ../basement/parsetree.cmi parser.cmi lexer.ml
+clean::
+	$(RM) lex_file
+lex_file: $(BYTOBJS)
+	$(CAMLC) lexer.cmo sourcify_token.cmo lex_file.cmo
 
-parser.cmi: parser.ml
-
-parser.mli: parser.ml
