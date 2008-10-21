@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.55 2008-10-21 11:06:23 weis Exp $ *)
+(* $Id: lexer.mll,v 1.56 2008-10-21 14:12:25 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -191,6 +191,7 @@ let token_of_lowercase_prefix_symbol s =
 (* To be revisited. Do we have to further discriminate ? *)
 let token_of_uppercase_prefix_symbol s =
 (*  prerr_endline (Printf.sprintf "token_of_uppercase_prefix_symbol %s" s);*)
+  assert (String.length s > 0);
   PUIDENT s
 ;;
 
@@ -285,6 +286,7 @@ let token_of_lowercase_infix_symbol s =
 let token_of_lowercase_ident lexbuf =
   let s = Lexing.lexeme lexbuf in
 (*  prerr_endline (Printf.sprintf "token_of_lowercase_ident %s" s);*)
+  assert (String.length s > 0);
   try Hashtbl.find keyword_table s with
   | Not_found -> LIDENT s
 ;;
@@ -294,6 +296,7 @@ let token_of_uppercase_ident lexbuf =
 (*  prerr_endline (Printf.sprintf "token_of_uppercase_ident");*)
   let s = Lexing.lexeme lexbuf in
 (*  prerr_endline (Printf.sprintf "token_of_uppercase_ident %s" s);*)
+  assert (String.length s > 0);
   try Hashtbl.find keyword_table s with
   | Not_found -> UIDENT s
 ;;
@@ -302,6 +305,7 @@ let token_of_quoted_lowercase_ident lexbuf =
   let s = Lexing.lexeme lexbuf in
 (*  prerr_endline
     (Printf.sprintf "token_of_quoted_lowercase_ident: %s" s); *)
+  assert (String.length s > 0);
   QLIDENT s
 ;;
 
@@ -310,8 +314,8 @@ let token_of_quoted_lowercase_ident lexbuf =
 (** Could be any of PLIDENT, ILIDENT, UIDENT, PUIDENT, or IUIDENT,
    according to the triggering character class. *)
 let token_of_delimited_ident s =
-  assert (String.length s <> 0);
 (*  prerr_endline (Printf.sprintf "token_of_delimited_ident %s" s);*)
+  assert (String.length s <> 0);
   let c = start_ident_char s in
   match c with
   (* String s has only underscores. *)
@@ -342,19 +346,23 @@ let token_of_delimited_ident s =
 
 let token_of_paren_lowercase_prefix_symbol s =
 (*  prerr_endline (Printf.sprintf "token_of_lowercase_prefix_symbol %s" s);*)
+  assert (String.length s > 0);
   PLIDENT s;;
 (** The prefix version of a lowercase prefix operator. *)
 let token_of_paren_lowercase_infix_symbol s =
 (*  prerr_endline (Printf.sprintf "token_of_lowercase_infix_symbol %s" s);*)
+  assert (String.length s > 0);
   ILIDENT s;;
 (** The prefix version of a lowercase infix operator. *)
 
 let token_of_paren_uppercase_prefix_symbol s =
 (*  prerr_endline (Printf.sprintf "token_of_paren_uppercase_prefix_symbol %s" s);*)
+  assert (String.length s > 0);
   PUIDENT s;;
 (** The prefix version of an uppercase prefix operator. *)
 let token_of_paren_uppercase_infix_symbol s =
 (*  prerr_endline (Printf.sprintf "token_of_paren_uppercase_infix_symbol %s" s);*)
+  assert (String.length s > 0);
   IUIDENT s;;
 (** The prefix version of an uppercase infix operator. *)
 
@@ -559,10 +567,13 @@ let sign = [ '+' '-' ]
 
 (** {7 Definition of integer literals} *)
 
-let unsigned_binary_literal = binary_digit ( binary_digit | '_' )*
-let unsigned_octal_literal = octal_digit ( octal_digit | '_' )*
+let unsigned_binary_literal =
+  '0' [ 'b' 'B' ] binary_digit ( binary_digit | '_' )*
+let unsigned_octal_literal =
+  '0' [ 'o' 'O' ] octal_digit ( octal_digit | '_' )*
 let unsigned_decimal_literal = decimal_digit ( decimal_digit | '_' )*
-let unsigned_hexadecimal_literal = hexadecimal_digit ( hexadecimal_digit | '_' )*
+let unsigned_hexadecimal_literal =
+  '0' [ 'x' 'X' ] hexadecimal_digit ( hexadecimal_digit | '_' )*
 
 let unsigned_integer_literal =
     unsigned_binary_literal
