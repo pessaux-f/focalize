@@ -1,4 +1,4 @@
-% $Id: refman.tex,v 1.11 2008-10-17 15:11:44 pessaux Exp $
+% $Id: refman.tex,v 1.12 2008-10-21 12:07:36 pessaux Exp $
 
 \documentclass{report}
 \usepackage[francais]{babel}
@@ -984,13 +984,61 @@ the same reasons than for properties, the {\bf \focal\ system rejects
 theorems having def-dependencies on the carrier}.
 
 Now, what does mean for a theorem to def-depend on a method ? This
-basiclly means that to make the proof of it statement, one must use
+basiclly means that to make the proof of its statement, one must use
 not only the declaration of a method, but also it definition, its
-body.
+body. For instance, a theorem needs to have visibility on the code of
+a function to have its proof possible.
+
+
 
 \paragraph{Erasing during inheritance}
-As a consequence of def-dependencies
+As a consequence of def-dependencies and late-binding, if a method is
+redefined, all the proofs of theorems having def-dependencies on these
+methods are erased. This means that since the body of the method
+changed, may be the proof is not correct anymore and must be done
+again. In practice, it can happen that the proof still holds, but the
+compiler can't ensur this, hence will turn the theorem into a property
+in the species where the redefinition occured. The developper will
+then have to provide a new proof of the inherited theorem thanks the
+{\tt proof of} field.
 
+
+
+\paragraph{Dependencies on collection parameters}
+Since collection parameters alwas have their carrier abstracted,
+hidden, only {\bf decl-dependencies} can appear in the parametrised
+method using them. Hence they can never lead to erasement. These
+dependencies are only used internally by the \focal\ compiler in order
+to generate it target code. For this reason, we will not focus anymore
+on them.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{More about methods definition}
+We will now examine more technical points in methods definition.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Making proofs}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Recursion and proof obligations}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Core language}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
