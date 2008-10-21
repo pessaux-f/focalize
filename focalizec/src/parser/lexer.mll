@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.53 2008-10-20 21:59:49 weis Exp $ *)
+(* $Id: lexer.mll,v 1.54 2008-10-21 09:52:32 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -168,6 +168,7 @@ let start_ident_char s =
 ;;
 
 let token_of_lowercase_prefix_symbol s =
+(*  prerr_endline (Printf.sprintf "token_of_lowercase_prefix_symbol %s" s);*)
   assert (String.length s > 0);
   match s.[0] with
 (*  | '`' (* ` Helping emacs *) -> BACKQUOTE_OP s*)
@@ -188,12 +189,14 @@ let token_of_lowercase_prefix_symbol s =
 ;;
 
 (* To be revisited. Do we have to further discriminate ? *)
-let token_of_uppercase_prefix_symbol s = PUIDENT s
+let token_of_uppercase_prefix_symbol s =
+(*  prerr_endline (Printf.sprintf "token_of_uppercase_prefix_symbol %s" s);*)
+  PUIDENT s
 ;;
 
 (* To be revisited. Do we have to further discriminate ? *)
 let token_of_uppercase_infix_symbol s =
-  (*prerr_endline (Printf.sprintf "token_of_uppercase_infix_symbol %s" s);*)
+(*  prerr_endline (Printf.sprintf "token_of_uppercase_infix_symbol %s" s);*)
   assert (String.length s > 0);
   match s.[0] with
   | ',' ->
@@ -213,7 +216,7 @@ let token_of_uppercase_infix_symbol s =
 ;;
 
 let token_of_lowercase_infix_symbol s =
-  (*prerr_endline (Printf.sprintf "token_of_lowercase_infix_symbol %s" s);*)
+(*  prerr_endline (Printf.sprintf "token_of_lowercase_infix_symbol %s" s);*)
   assert (String.length s > 0);
   match s.[0] with
   | '+' -> PLUS_OP s
@@ -279,17 +282,27 @@ let token_of_lowercase_infix_symbol s =
 (** {3 Identifier creation functions} *)
 
 (** {6 Finding keywords and creating lowercase idents} *)
-let token_of_lowercase_prefix_ident lexbuf =
+let token_of_lowercase_ident lexbuf =
   let s = Lexing.lexeme lexbuf in
+(*  prerr_endline (Printf.sprintf "token_of_lowercase_ident %s" s);*)
   try Hashtbl.find keyword_table s with
   | Not_found -> LIDENT s
 ;;
 
 (** {6 Finding keywords and creating uppercase idents} *)
-let token_of_uppercase_prefix_ident lexbuf =
+let token_of_uppercase_ident lexbuf =
+(*  prerr_endline (Printf.sprintf "token_of_uppercase_ident");*)
   let s = Lexing.lexeme lexbuf in
+(*  prerr_endline (Printf.sprintf "token_of_uppercase_ident %s" s);*)
   try Hashtbl.find keyword_table s with
   | Not_found -> UIDENT s
+;;
+
+let token_of_quoted_lowercase_ident lexbuf =
+  let s = Lexing.lexeme lexbuf in
+(*  prerr_endline
+    (Printf.sprintf "token_of_quoted_lowercase_ident: %s" s); *)
+  QLIDENT s
 ;;
 
 (** {6 Creating tokens for delimited idents} *)
@@ -298,14 +311,15 @@ let token_of_uppercase_prefix_ident lexbuf =
    according to the triggering character class. *)
 let token_of_delimited_ident s =
   assert (String.length s <> 0);
+(*  prerr_endline (Printf.sprintf "token_of_delimited_ident %s" s);*)
   let c = start_ident_char s in
   match c with
   (* String s has only underscores. *)
   | '_' -> if String.length s = 1 then UNDERSCORE else LIDENT s
-  (* start_lowercase_prefix_ident *)
+  (* start_lowercase_ident *)
   | 'a' .. 'z'
   | '0' .. '9' -> LIDENT s
-  (* start_uppercase_prefix_ident *)
+  (* start_uppercase_ident *)
   | 'A' .. 'Z' -> UIDENT s
   (* start_lowercase_infix_symbol *)
   | ','
@@ -326,14 +340,22 @@ let token_of_delimited_ident s =
 (** The prefix version of symbolic identifiers is obtained by enclosing the
     symbol between parens. *)
 
-let token_of_paren_lowercase_prefix_symbol s = PLIDENT s;;
+let token_of_paren_lowercase_prefix_symbol s =
+(*  prerr_endline (Printf.sprintf "token_of_lowercase_prefix_symbol %s" s);*)
+  PLIDENT s;;
 (** The prefix version of a lowercase prefix operator. *)
-let token_of_paren_lowercase_infix_symbol s = ILIDENT s;;
+let token_of_paren_lowercase_infix_symbol s =
+(*  prerr_endline (Printf.sprintf "token_of_lowercase_infix_symbol %s" s);*)
+  ILIDENT s;;
 (** The prefix version of a lowercase infix operator. *)
 
-let token_of_paren_uppercase_prefix_symbol s = PUIDENT s;;
+let token_of_paren_uppercase_prefix_symbol s =
+(*  prerr_endline (Printf.sprintf "token_of_paren_uppercase_prefix_symbol %s" s);*)
+  PUIDENT s;;
 (** The prefix version of an uppercase prefix operator. *)
-let token_of_paren_uppercase_infix_symbol s = IUIDENT s;;
+let token_of_paren_uppercase_infix_symbol s =
+(*  prerr_endline (Printf.sprintf "token_of_paren_uppercase_infix_symbol %s" s);*)
+  IUIDENT s;;
 (** The prefix version of an uppercase infix operator. *)
 
 (** {3 Various auxiliaries to lex special tokens} *)
@@ -631,71 +653,101 @@ let inside_ident =
   ]}
 *)
 
-let lowercase_infix_symbolic =
-  [ '+' '-' '*' '/' '%' '&' '|' ';' '<' '=' '>' '@' '^' '\\' ]
-let lowercase_prefix_symbolic =
-  [ '~' '?' '$' '!' '#' ]
+(** Characters that can safely be inside any symbol. *)
+let symbolic =
+  [ '/' '%' '&' '|' ';' '<' '=' '>' '@' '^' '\\' ]
 
-let uppercase_infix_symbolic = [ ':' '`']
-  (* ` helping emacs. *)
+(** Characters that can only start an uppercase prefix symbol. *)
+let start_uppercase_prefix_symbolic = [ '[' '(' ] (* )] helping emacs. *)
+(** Characters that can only start an uppercase infix symbol. *)
+let start_uppercase_infix_symbolic = [ ':' '`'] (* ` helping emacs. *)
 
-let uppercase_prefix_symbolic = [ '[' '(' ] (* )] helping emacs. *)
+(** Characters that can only start a lowercase prefix symbol. *)
+let start_lowercase_prefix_symbolic = [ '~' '?' '$' '!' '#' ]
+(** Characters that can start a lowercase infix symbol. *)
+let start_lowercase_infix_symbolic =
+    '*'
+  | sign
+  | symbolic
+
+(** Inside a lowercase symbol, we can repeat any starter for lowercase symbol. *)
+let inside_lowercase_prefix_symbolic =
+    start_lowercase_infix_symbolic
+  | start_lowercase_prefix_symbolic
+(* | start_uppercase_infix_symbolic ??? *)
+
+let inside_lowercase_infix_symbolic = inside_lowercase_prefix_symbolic
+
+(** Inside a '(' or '[' starting uppercase prefix symbol.
+    We cannot have
+    - '*' (to prevent ambiguity with comments)
+    - a sign ('-', '+') to let the lexer generate 2 tokens for (-1) or 3 for
+    (- x).
+    So we restrict characters to be in the safe set for symbols. *)
+let inside_uppercase_prefix_symbolic = symbolic
+
+(** Inside a ':' or '`' starting uppercase prefix symbol.
+    After a ':' or a '`', we can safely use
+    any characters authorized into a lowercase infix symbol. *)
+let inside_uppercase_infix_symbolic = inside_lowercase_infix_symbolic
 
 let inside_symbol =
-    lowercase_infix_symbolic
-  | lowercase_prefix_symbolic
-  | uppercase_infix_symbolic
+    inside_lowercase_infix_symbolic
+  | start_uppercase_infix_symbolic
 
 (** {7 Identifier classes starter characters} *)
 
 (** {8 Usual identifiers} *)
 
 (** Starts a usual ident, such as [f] or [x]. *)
-let start_lowercase_prefix_ident =
+let start_lowercase_ident =
     '_'* lowercase_alphabetic
   | '_'+ decimal_digit (** Special case for _1, _20, _1b1, _0xFF, ... *)
 
 (** Starts a usual uppercase ident, such as [List] or [None]. *)
-let start_uppercase_prefix_ident =
+let start_uppercase_ident =
     '_'* uppercase_alphabetic
 
 (** {8 Infix symbols} *)
 
 (** Starts a usual lowercase infix symbol, such as [+] or [==]. *)
 let start_lowercase_infix_symbol =
-    '_'* lowercase_infix_symbolic
+    '_'* start_lowercase_infix_symbolic
 
 (** Starts a usual uppercase infix symbol, such as [::] or [:->:]. *)
 let start_uppercase_infix_symbol =
     ','
-  | '_'* uppercase_infix_symbolic
+  | '_'* start_uppercase_infix_symbolic
 
 (** {8 Prefix symbols} *)
 
 (** Starts a usual lowercase prefix symbol, such as [!] or [~]. *)
 let start_lowercase_prefix_symbol =
-    '_'* lowercase_prefix_symbolic
+    '_'* start_lowercase_prefix_symbolic
 
 (** Starts a usual uppercase prefix symbol, such as [\[\]] or [()]. *)
 let start_uppercase_prefix_symbol =
-    '_'* uppercase_prefix_symbolic
+    '_'* start_uppercase_prefix_symbolic
 
 (** {7 Identifier classes continuing characters} *)
 
 (** {8 Usual identifiers} *)
 
-let continue_lowercase_prefix_ident =
+let continue_lowercase_ident =
     '_'
   | inside_ident
 
-let continue_uppercase_prefix_ident = continue_lowercase_prefix_ident
+let continue_uppercase_ident = continue_lowercase_ident
 
 (** {8 Prefix symbols} *)
 let continue_lowercase_prefix_symbol =
     '_'
   | inside_symbol
 
-let continue_uppercase_prefix_symbol = continue_lowercase_prefix_symbol
+let continue_uppercase_prefix_symbol =
+    '_'
+  | inside_uppercase_prefix_symbolic
+(* Cannot use continue_lowercase_prefix_symbol *)
 
 (** {8 Infix symbols} *)
 let continue_lowercase_infix_symbol =
@@ -727,9 +779,9 @@ let continue_uppercase_infix_symbol = continue_lowercase_infix_symbol
 (** {7 Regular prefix identifiers} *)
 
 let regular_lowercase_ident =
-  start_lowercase_prefix_ident continue_lowercase_prefix_ident*
+  start_lowercase_ident continue_lowercase_ident*
 let regular_uppercase_ident =
-  start_uppercase_prefix_ident continue_uppercase_prefix_ident*
+  start_uppercase_ident continue_uppercase_ident*
 
 (** {7 Regular prefix symbols} *)
 let regular_lowercase_prefix_symbol =
@@ -758,7 +810,8 @@ let regular_uppercase_infix_symbol =
    continue_uppercase_infix_symbol* char
  ]}
    We write instead the following: *)
-    '_'* ':' continue_uppercase_infix_symbol* ':'
+    ',' continue_uppercase_infix_symbol*
+  | '_'* ':' continue_uppercase_infix_symbol* ':'
   | '_'* '`' continue_uppercase_infix_symbol* '`'
 
 (** {6 Delimited identifiers} *)
@@ -771,9 +824,9 @@ let regular_uppercase_infix_symbol =
 (**
   {[
   let delimited_lowercase_ident =
-    '`' '`' start_lowercase_prefix_ident [^'\'' '\n']* '\'' '\''
+    '`' '`' start_lowercase_ident [^'\'' '\n']* '\'' '\''
   let delimited_uppercase_ident =
-    '`' '`' start_uppercase_prefix_ident [^'\'' '\n']* '\'' '\''
+    '`' '`' start_uppercase_ident [^'\'' '\n']* '\'' '\''
   ]}
 *)
 
@@ -929,16 +982,16 @@ rule token = parse
 
   (* Identifiers *)
   | lowercase_ident
-    { token_of_lowercase_prefix_ident lexbuf }
+    { token_of_lowercase_ident lexbuf }
   | uppercase_ident
-    { token_of_uppercase_prefix_ident lexbuf }
+    { token_of_uppercase_ident lexbuf }
   | "\'" lowercase_ident
-    { QLIDENT (Lexing.lexeme lexbuf) }
+    { token_of_quoted_lowercase_ident lexbuf }
 
   (* Delimited idents *)
   | "``"
-    (  start_lowercase_prefix_ident
-     | start_uppercase_prefix_ident
+    (  start_lowercase_ident
+     | start_uppercase_ident
      | start_lowercase_infix_symbol
      | start_lowercase_prefix_symbol
      | start_uppercase_infix_symbol
@@ -1046,8 +1099,8 @@ rule token = parse
     { token_of_paren_uppercase_infix_symbol inner }
 
   (* Usual simple tokens *)
-  | '(' { LPAREN }
-  | ')' { RPAREN }
+  | '(' { (*prerr_endline (Printf.sprintf "%s" "(");*) LPAREN }
+  | ')' { (*prerr_endline (Printf.sprintf "%s" ")");*) RPAREN }
   | '[' { LBRACKET }
   | ']' { RBRACKET }
   | '{' { LBRACE }
@@ -1056,6 +1109,8 @@ rule token = parse
   | "[]" { LRBRACKETS }
   | "{}" { LRBRACES }
   | '.' { DOT }
+  | ':' { COLON }
+  | ',' { COMMA }
   | '_' { UNDERSCORE }
 
   | eof { EOF }
