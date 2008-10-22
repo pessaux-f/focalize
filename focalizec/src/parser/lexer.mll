@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.58 2008-10-22 09:22:09 weis Exp $ *)
+(* $Id: lexer.mll,v 1.59 2008-10-22 09:24:27 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -164,7 +164,7 @@ let start_ident_char s =
     match nc with
     | '_' -> loop (i + 1) nc
     | c ->
-      prerr_endline (Printf.sprintf "start_ident_char %S is %C, %d" s c i);
+      (*prerr_endline (Printf.sprintf "start_ident_char %S is %C, %d" s c i);*)
       c, i in
   loop 0 '_'
 ;;
