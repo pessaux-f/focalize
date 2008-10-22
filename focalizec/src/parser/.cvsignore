@@ -10,3 +10,4 @@ parser.mli
 parser.output
 parser.conflicts
 a.out
+lex_file
