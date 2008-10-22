@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.37 2008-10-21 14:41:55 weis Exp $
+# $Id: Makefile,v 1.38 2008-10-22 09:07:16 weis Exp $
 
 ROOT_DIR = ..
 
@@ -40,5 +40,5 @@ explain:
 clean::
 	$(RM) lex_file
 lex_file: $(BYTOBJS)
-	$(CAMLC) lexer.cmo sourcify_token.cmo lex_file.cmo
+	$(CAMLBYT) -o lex_file lexer.cmo sourcify_token.cmo lex_file.cmo
 
