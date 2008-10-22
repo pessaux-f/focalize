@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.57 2008-10-22 09:10:46 weis Exp $ *)
+(* $Id: lexer.mll,v 1.58 2008-10-22 09:22:09 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -832,7 +832,7 @@ let regular_uppercase_ident =
 let regular_lowercase_prefix_symbol =
     '_'* '!' (inside_lowercase_prefix_symbolic continue_lowercase_prefix_symbol*)?
   | '_'* '#' (inside_lowercase_prefix_symbolic continue_lowercase_prefix_symbol*)?
-  | start_lowercase_prefix_symbol continue_lowercase_prefix_symbol*
+  | '_'* lowercase_prefix_symbolic continue_lowercase_prefix_symbol*
 
 let regular_uppercase_prefix_symbol =
   (** We wanted the pseudo regular expression with binding:
