@@ -11,7 +11,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.18 2008-10-14 12:13:21 pessaux Exp $
+# $Id: Makefile,v 1.19 2008-10-22 11:51:04 doligez Exp $
 
 ROOT_DIR = .
 
@@ -33,22 +33,22 @@ all:: lib
 byt bin::
 	for i in $(COMPILER_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $@); \
+	  ($(CD) $$i; $(MAKE) $@) || exit; \
 	  echo "<-- $$i"; \
         done
 
 lib:
 	for i in $(LIB_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $@); \
-	  echo "<-- $$i"; \
+	  ($(CD) $$i; $(MAKE) $@) || exit; \
+	  echo "<-- $$i [$$?]"; \
         done
 
 clean doc depend::
 	for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $@); \
-	  echo "<-- $$i"; \
+	  ($(CD) $$i; $(MAKE) $@) || exit; \
+	  echo "<-- $$i [$$?]"; \
         done
 
 install::

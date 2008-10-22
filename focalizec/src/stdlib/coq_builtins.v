@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: coq_builtins.v,v 1.6 2008-09-05 14:10:07 pessaux Exp $ *)
+(* $Id: coq_builtins.v,v 1.7 2008-10-22 11:51:04 doligez Exp $ *)
 
 Require Import Bool.
 Require Export ZArith.
@@ -63,6 +63,28 @@ Axiom
 
 Hint Resolve base_eq_refl base_eq_sym base_eq_trans EQ_base_eq decidable:
   FoCeq.
+
+Theorem zenon_base_eq :
+  (forall (S : Set) (x y : S), {x = y}+{x <> y}) ->
+  forall (S : Set) (x y : S),
+  Is_true (beq_ S x y) -> (x = y -> False) -> False.
+Proof.
+  intros dec S x y h1 h2.
+  apply h2.
+  apply decidable; auto.
+Qed.
+
+Theorem zenon_notbase_eq :
+  forall (S : Set) (x y : S),
+  ~Is_true (beq_ S x y) -> (~ x = y -> False) -> False.
+Proof.
+  intros S x y h1 h2.
+  apply h2.
+  intro h3.
+  apply h1.
+  subst x.
+  apply base_eq_refl.
+Qed.
 
 (* *********************************************************************** *)
 (* *********************************************************************** *)
