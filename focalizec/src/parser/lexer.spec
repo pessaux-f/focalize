@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: lexer.spec,v 1.4 2008-10-20 21:59:49 weis Exp $
+# $Id: lexer.spec,v 1.5 2008-10-22 17:51:30 weis Exp $
 
 High level specification of the Focalize lexer
 ==============================================
@@ -97,6 +97,32 @@ spaces ::= [ ' ' '\t' '\n' '\r' ]
 punctuation ::= [ ',' ';' '.' '(' ')' '[' ']' '{' '}' ]
 
 other ::=
+
+2008/10/14 (PW)
+----------
+The lexer also scans ( [infix] ) to return the internal ident [infix] (and
+similarly for prefix idents).
+We certainly have to decide which infixes are possibly upper case / lower
+case idents.
+
+- () is treated especially: it is uppercase (a constant constructor for unit)
+
+- [] is treated especially: it is uppercase (an infix binary constructor for lists)
+- :: is uppercase: a constructor for lists.
+
+Generalization:
+- [...] is uppercase: a constant constructor.
+  (e.g. [=], [!], or [_|_] for bottom)
+- :...: is uppercase: an infix binary constructor.
+  (e.g. :U: or :+: could be used as a binary infix constructor).
+
+- ( + ) is lowercase: an operator for arithmetics.
+    - * / ** < > =
+    ^ @
+
+- && || ~| |<>| are lowercase
+
+The lexer scans documentation comments (** ... *)
 
 (*******
 Boolean operators: && || ~| (almost as in Caml)
