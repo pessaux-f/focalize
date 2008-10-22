@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.56 2008-10-21 14:12:25 weis Exp $ *)
+(* $Id: lexer.mll,v 1.57 2008-10-22 09:10:46 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -159,31 +159,41 @@ List.iter
 let start_ident_char s =
   let lim = String.length s - 1 in
   let rec loop i c =
-    if i > lim then c else
+    if i > lim then c, i else
     let nc = s.[i] in
     match nc with
     | '_' -> loop (i + 1) nc
-    | c -> c in
+    | c ->
+      prerr_endline (Printf.sprintf "start_ident_char %S is %C, %d" s c i);
+      c, i in
   loop 0 '_'
 ;;
 
 let token_of_lowercase_prefix_symbol s =
 (*  prerr_endline (Printf.sprintf "token_of_lowercase_prefix_symbol %s" s);*)
   assert (String.length s > 0);
-  match s.[0] with
-(*  | '`' (* ` Helping emacs *) -> BACKQUOTE_OP s*)
-  | '~' -> if String.length s = 1 then NEGATION else TILDA_OP s
+  let c, i = start_ident_char s in
+  let length_s = String.length s in
+  let length_mean = length_s - i in
+  match c with
+(*  | '`' (* ` Helping emacs *) ->
+      BACKQUOTE_OP s*)
+  | '~' ->
+    begin match length_s, length_mean with
+    | 1, 1 -> NEGATION
+    | _, _ -> TILDA_OP s
+    end
   | '?' -> QUESTION_OP s
   | '$' -> DOLLAR_OP s
   | '!' ->
-    begin match String.length s with
-    | 1 -> BANG
-    | _ -> BANG_OP s
+    begin match length_s, length_mean with
+    | 1, 1 -> BANG
+    | _, _ -> BANG_OP s
     end
   | '#' ->
-    begin match String.length s with
-    | 1 -> SHARP
-    | _ -> SHARP_OP s
+    begin match length_s, length_mean with
+    | 1, 1 -> SHARP
+    | _, _ -> SHARP_OP s
     end
   | _ -> assert false
 ;;
@@ -199,19 +209,22 @@ let token_of_uppercase_prefix_symbol s =
 let token_of_uppercase_infix_symbol s =
 (*  prerr_endline (Printf.sprintf "token_of_uppercase_infix_symbol %s" s);*)
   assert (String.length s > 0);
-  match s.[0] with
+  let c, i = start_ident_char s in
+  let length_s = String.length s in
+  let length_mean = length_s - i in
+  match c with
   | ',' ->
-    begin match String.length s with
-    | 1 -> COMMA
-    | _ -> COMMA_OP s
+    begin match length_s, length_mean with
+    | 1, 1 -> COMMA
+    | _, _ -> COMMA_OP s
     end
   | ':' ->
-    begin match String.length s with
-    | 1 -> COLON
-    | n when s.[n - 1] = ':' ->
-      if n = 2 then COLON_COLON else IUIDENT s
-    | _ when s.[1] <> ':' -> COLON_OP s
-    | _ -> COLON_COLON_OP s
+    begin match length_s, length_mean with
+    | 1, 1 -> COLON
+    | 2, 2 when s.[i + 1] = ':' -> COLON_COLON
+    | n, _ when s.[n - 1] = ':' -> IUIDENT s
+    | _, _ when s.[1] <> ':' -> COLON_OP s
+    | _, _ -> COLON_COLON_OP s
     end
   | _ -> assert false
 ;;
@@ -219,62 +232,66 @@ let token_of_uppercase_infix_symbol s =
 let token_of_lowercase_infix_symbol s =
 (*  prerr_endline (Printf.sprintf "token_of_lowercase_infix_symbol %s" s);*)
   assert (String.length s > 0);
-  match s.[0] with
+  (* i is the index of the first ``interesting'' char in s. *)
+  let c, i = start_ident_char s in
+  let length_s = String.length s in
+  let length_mean = length_s - i in
+  match c with
   | '+' -> PLUS_OP s
   | '-' ->
-    begin match String.length s with
-    | 1 -> DASH_OP s
-    | _ when s.[1] <> '>' -> DASH_OP s
-    | 2 -> DASH_GT
-    | _ -> DASH_GT_OP s
+    begin match length_s, length_mean with
+    | _, 1 -> DASH_OP s
+    | _, _ when s.[i + 1] <> '>' -> DASH_OP s
+    | 2, 2 -> DASH_GT
+    | _, _ -> DASH_GT_OP s
     end
   | '*' ->
-    begin match String.length s with
-    | 1 -> STAR_OP s
-    | _ when s.[1] <> '*' -> STAR_OP s
-    | _ -> STAR_STAR_OP s
+    begin match length_s, length_mean with
+    | _, 1 -> STAR_OP s
+    | _, _ when s.[i + 1] <> '*' -> STAR_OP s
+    | _, _ -> STAR_STAR_OP s
     end
   | '/' ->
-    begin match String.length s with
-    | 1 -> SLASH_OP s
-    | 2 when s.[1] = '\\' -> CONJUNCTION
-    | _ -> SLASH_OP s
+    begin match length_s, length_mean with
+    | 2, 2 when s.[i + 1] = '\\' -> CONJUNCTION
+    | _, _ -> SLASH_OP s
     end
   | '%' -> PERCENT_OP s
   | '&' -> AMPER_OP s
   | '|' ->
-    begin match String.length s with
-    | 1 -> BAR
-    | _ -> BAR_OP s
+    begin match length_s, length_mean with
+    | 1, 1 -> BAR
+    | _, _ -> BAR_OP s
     end
   | ';' ->
-    begin match String.length s with
-    | 1 -> SEMI
-    | _ when s.[1] <> ';' -> SEMI_OP s
-    | 2 -> SEMI_SEMI
-    | _ -> SEMI_SEMI_OP s
+    begin match length_s, length_mean with
+    | 1, 1 -> SEMI
+    | _, 1 -> SEMI_OP s
+    | _, _ when s.[i + 1] <> ';' -> SEMI_OP s
+    | 2, 2 -> SEMI_SEMI
+    | _, _ -> SEMI_SEMI_OP s
     end
   | '<' ->
-    begin match String.length s with
-    | 1 -> LT_OP s
-    | _ when s.[1] <> '-' -> LT_OP s
-    | 2 -> LT_DASH_OP s
+    begin match length_s, length_mean with
+    | _, 1 -> LT_OP s
+    | _, _ when s.[i + 1] <> '-' -> LT_OP s
+    | _, 2 -> LT_DASH_OP s
     | _ when s.[2] <> '>' -> LT_DASH_OP s
-    | 3 -> LT_DASH_GT
+    | 3, 3 -> LT_DASH_GT
     | _ -> LT_DASH_GT_OP s
     end
   | '=' ->
-    begin match String.length s with
-    | 1 -> EQUAL
-    | _ -> EQ_OP s
+    begin match length_s, length_mean with
+    | 1, 1 -> EQUAL
+    | _, _ -> EQ_OP s
     end
   | '>' -> GT_OP s
   | '@' -> AT_OP s
   | '^' -> HAT_OP s
   | '\\' ->
-    begin match String.length s with
-    | 1 -> BACKSLASH_OP s
-    | _ when s.[1] = '/' -> DISJUNCTION
+    begin match length_s, length_mean with
+    | _, 1 -> BACKSLASH_OP s
+    | 2, 2 when s.[i + 1] = '/' -> DISJUNCTION
     | _ -> BACKSLASH_OP s
     end
   | _ -> assert false
@@ -316,10 +333,11 @@ let token_of_quoted_lowercase_ident lexbuf =
 let token_of_delimited_ident s =
 (*  prerr_endline (Printf.sprintf "token_of_delimited_ident %s" s);*)
   assert (String.length s <> 0);
-  let c = start_ident_char s in
+  let c, _ = start_ident_char s in
+  let length_s = String.length s in
   match c with
   (* String s has only underscores. *)
-  | '_' -> if String.length s = 1 then UNDERSCORE else LIDENT s
+  | '_' -> if length_s = 1 then UNDERSCORE else LIDENT s
   (* start_lowercase_ident *)
   | 'a' .. 'z'
   | '0' .. '9' -> LIDENT s
@@ -673,15 +691,30 @@ let start_uppercase_prefix_symbolic = [ '[' '(' ] (* )] helping emacs. *)
 (** Characters that can only start an uppercase infix symbol. *)
 let start_uppercase_infix_symbolic = [ ':' '`'] (* ` helping emacs. *)
 
-(** Characters that can only start a lowercase prefix symbol. *)
-let start_lowercase_prefix_symbolic = [ '~' '?' '$' '!' '#' ]
+(** Characters that certainly start a lowercase prefix symbol. *)
+let lowercase_prefix_symbolic = [ '~' '?' '$' ]
+(* Andalso characters '!' and '#' as a special case. *)
+(* To revisit:
+  - we want lowercase prefix symbols to follow the same rules as lowercase
+  infix ones (otherwise lexical rules are weird and way too difficult to grasp).
+  - so we need to review the status of '!' and '#': those should obey to
+  special rules for lexing, since
+  * '!' is BANG
+  * '!' start_lowercase_prefix_symbolic *)
+
+let start_lowercase_prefix_symbolic =
+    '!'
+  | '#'
+  | lowercase_prefix_symbolic
+
 (** Characters that can start a lowercase infix symbol. *)
 let start_lowercase_infix_symbolic =
     '*'
   | sign
   | symbolic
 
-(** Inside a lowercase symbol, we can repeat any starter for lowercase symbol. *)
+(** Symbolic characters that may safely appear into a prefix symbol.
+    Inside a lowercase symbol, we can repeat any starter for lowercase symbols. *)
 let inside_lowercase_prefix_symbolic =
     start_lowercase_infix_symbolic
   | start_lowercase_prefix_symbolic
@@ -689,7 +722,7 @@ let inside_lowercase_prefix_symbolic =
 
 let inside_lowercase_infix_symbolic = inside_lowercase_prefix_symbolic
 
-(** Inside a '(' or '[' starting uppercase prefix symbol.
+(** Symbolic characters inside a '(' or '[' starting uppercase prefix symbol.
     We cannot have
     - '*' (to prevent ambiguity with comments)
     - a sign ('-', '+') to let the lexer generate 2 tokens for (-1) or 3 for
@@ -697,12 +730,13 @@ let inside_lowercase_infix_symbolic = inside_lowercase_prefix_symbolic
     So we restrict characters to be in the safe set for symbols. *)
 let inside_uppercase_prefix_symbolic = symbolic
 
-(** Inside a ':' or '`' starting uppercase prefix symbol.
+(** Symbolic characters inside a ':' or '`' starting uppercase prefix symbol.
     After a ':' or a '`', we can safely use
     any characters authorized into a lowercase infix symbol. *)
 let inside_uppercase_infix_symbolic = inside_lowercase_infix_symbolic
 
-let inside_symbol =
+(** Symbolic characters inside any symbol.*)
+let inside_infix_symbol =
     inside_lowercase_infix_symbolic
   | start_uppercase_infix_symbolic
 
@@ -753,7 +787,8 @@ let continue_uppercase_ident = continue_lowercase_ident
 (** {8 Prefix symbols} *)
 let continue_lowercase_prefix_symbol =
     '_'
-  | inside_symbol
+  | inside_infix_symbol
+  | inside_ident
 
 let continue_uppercase_prefix_symbol =
     '_'
@@ -762,10 +797,8 @@ let continue_uppercase_prefix_symbol =
 
 (** {8 Infix symbols} *)
 let continue_lowercase_infix_symbol =
-    '_'
-  | inside_symbol
-  | inside_ident
-
+  continue_lowercase_prefix_symbol
+ 
 (* After ':' we can use any lowercase infix symbol character *)
 let continue_uppercase_infix_symbol = continue_lowercase_infix_symbol
 
@@ -788,7 +821,7 @@ let continue_uppercase_infix_symbol = continue_lowercase_infix_symbol
 
 (** {6 Regular identifiers} *)
 
-(** {7 Regular prefix identifiers} *)
+(** {7 Regular alphanumeric identifiers} *)
 
 let regular_lowercase_ident =
   start_lowercase_ident continue_lowercase_ident*
@@ -797,7 +830,9 @@ let regular_uppercase_ident =
 
 (** {7 Regular prefix symbols} *)
 let regular_lowercase_prefix_symbol =
-  start_lowercase_prefix_symbol continue_lowercase_prefix_symbol*
+    '_'* '!' (inside_lowercase_prefix_symbolic continue_lowercase_prefix_symbol*)?
+  | '_'* '#' (inside_lowercase_prefix_symbolic continue_lowercase_prefix_symbol*)?
+  | start_lowercase_prefix_symbol continue_lowercase_prefix_symbol*
 
 let regular_uppercase_prefix_symbol =
   (** We wanted the pseudo regular expression with binding:
@@ -913,7 +948,7 @@ We distinguish identifiers with their first ``meaningful'' character:
 
 *)
 
-(** {8 Usual identifiers} *)
+(** {8 Usual alphanumeric identifiers} *)
 
 let lowercase_ident =
     regular_lowercase_ident
