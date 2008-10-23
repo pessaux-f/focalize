@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.9 2008-10-17 07:28:39 pessaux Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.10 2008-10-23 08:24:34 pessaux Exp $ *)
 
 
 
@@ -222,24 +222,33 @@ let transform_recursive_calls_args_into_tuple ctx ~local_idents recursive_name
 let generate_termination_lemmas _ctx _print_ctx _env recursive_calls =
   List.iter
     (fun (n_exprs, bindings) ->
+      (* n_exprs: variable initiale de la fct * expr passée lors de l'appel
+	 récursif et qui doit être <. En fait c'est le tuple des vars initiales
+	 qui doit pêtre < au tuple des expr passé lors de l'appel rec. *)
       Format.eprintf "n/expr@." ;
       List.iter
         (fun (n, expr) ->
           Format.eprintf "\tn: %a, expr: %a@."
             Sourcify.pp_vname n Sourcify.pp_expr expr)
         n_exprs ;
+      (* Generer des => entre chaque hypothèse. Parcourit la liste en sens
+	 inverse. *)
       Format.eprintf "bindings@." ;
       List.iter
         (function
           | Recursion.B_let let_binding ->
+              (* Induit forall truc, truc "=" machin. Alpha-conv si affinité. *)
               Format.eprintf "\tB_let, binding: %a@."
                 Sourcify.pp_binding let_binding
           | Recursion.B_match (expr, pattern) ->
+              (* Induit forall variables du pattern, patter "=" expr.
+		 Alpha-conv des vars du pattern. *)
               Format.eprintf "\tB_match,  expr: %a, pattern: %a@."
                 Sourcify.pp_expr expr Sourcify.pp_pattern pattern
           | Recursion.B_condition (expr, bool_val) ->
+	      (* Induit Is_true expr avec ~ si bool_val est false sinon rien. *)
               Format.eprintf "\tB_condition, expr: %a, bool: %b@."
                 Sourcify.pp_expr expr bool_val)
-        bindings)
+        bindings) (* Connection par des ^ *)
     recursive_calls
 ;;
