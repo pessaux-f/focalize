@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.108 2008-10-23 08:24:34 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.109 2008-10-23 16:41:12 weis Exp $ *)
 
 open Parsetree;;
 
@@ -1218,6 +1218,11 @@ collection_vname:
 property_vname:
   | LIDENT { Vlident $1 }
   | UIDENT { Vuident $1 }
+  | PLIDENT { Vpident $1 }
+  | ILIDENT { Viident $1 }
+  | PUIDENT { Vuident $1 }
+  | IUIDENT { Vuident $1 }
+
 /* Why do we need a quoted identifier for property names ? */
 /*  | QLIDENT { Vqident $1 } */
 ;
