@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.29 2008-08-28 10:22:08 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.30 2008-10-23 13:06:47 doligez Exp $  *)
 
 open Misc;;
 open Printf;;
@@ -59,7 +59,7 @@ let output_placeholder oc data =
   let lexbuf = Lexing.from_string data in
   let name = ref "" in
   let end_head = ref (-1) in
-  let first_param = ref (-1) in
+  let theorem_end = ref (-1) in
   let theorem = ref (-1) in
   let tail = ref (-1) in
   let rec loop () =
@@ -75,15 +75,17 @@ let output_placeholder oc data =
         end_head := Lexing.lexeme_end lexbuf;
         loop ();
     | Parser_coq.PARAMETER ->
-        if !first_param < 0 then first_param := Lexing.lexeme_start lexbuf;
+        if !theorem_end < 0 then theorem_end := Lexing.lexeme_start lexbuf;
         loop ();
     | Parser_coq.DEFINITION ->
-        if !first_param < 0 then first_param := Lexing.lexeme_start lexbuf;
+        if !theorem_end < 0 then theorem_end := Lexing.lexeme_start lexbuf;
         loop ();
     | Parser_coq.THEOREM ->
         theorem := Lexing.lexeme_start lexbuf;
+        theorem_end := -1;
         loop ();
     | Parser_coq.ENDPROOF ->
+        if !theorem_end < 0 then theorem_end := Lexing.lexeme_start lexbuf;
         tail := Lexing.lexeme_start lexbuf;
         loop ();
     | Parser_coq.EOF ->
@@ -93,7 +95,7 @@ let output_placeholder oc data =
   loop ();
   let len = String.length data in
   if !tail < 0 then tail := len;
-  if !first_param < 0 then first_param := len;
+  assert (!theorem_end >= 0);
   if !end_head < 0 then end_head := 0;
   if !theorem >= 0 then
     output_string oc (String.sub data !theorem (!tail - !theorem))
@@ -101,7 +103,7 @@ let output_placeholder oc data =
     output_string oc "Theorem ";
     output_string oc !name;
     output_string oc " :\n";
-    output_string oc (String.sub data !end_head (!first_param - !end_head));
+    output_string oc (String.sub data !end_head (!theorem_end - !end_head));
     output_string oc ".\n";
   end;
   output_string oc "Proof. TO_BE_DONE_MANUALLY.\n";
@@ -178,9 +180,8 @@ let zenon_loc file (_: string * string) data loc oc =
         end;
         Cache.add data tmp_out tmp_err;
     | 255 -> (* interrupted *)
-        Printf.eprintf "interrupt\n";
         cleanup ();
-        exit (-1);
+        raise Sys.Break;
     | _ ->
       Printf.eprintf "%s:\n" loc;
       if Sys.file_exists tmp_err then copy_file tmp_err stderr;
