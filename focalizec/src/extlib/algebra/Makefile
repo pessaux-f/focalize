@@ -11,7 +11,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.4 2008-10-14 12:13:21 pessaux Exp $
+# $Id: Makefile,v 1.5 2008-10-23 13:09:43 doligez Exp $
 
 ROOT_DIR = ../..
 
@@ -27,9 +27,9 @@ CAMLBIN = ocamlc -w A -I ../../stdlib
 BYT_FOCAL_COMPILER = $(ROOT_DIR)/toplevel/focalizec.byt
 BIN_FOCAL_COMPILER = $(BYT_FOCAL_COMPILER:.byt=.bin)
 
-FOCAL_COMPILER = $(BYT_FOCAL_COMPILER)
+FOCALIZE_COMPILER = $(BYT_FOCAL_COMPILER)
 
-FOCAL_COMP_FLAGS = -no-stdlib-path -I ../../stdlib
+FOCALIZE_COMP_FLAGS = -no-stdlib-path -I ../../stdlib
 
 #From Makefile.config FOCALC = $(FOCAL_COMPILER) $(FOCAL_COMP_FLAGS)
 
@@ -118,3 +118,6 @@ polys_abstract.ml: polys_abstract.foc
 
 $(BYT_FOCAL_COMPILER) $(BIN_FOCAL_COMPILER):
 	cd $(ROOT_DIR); $(MAKE) all
+
+random_foc_externals.vo: ../../stdlib/basics.vo
+array_foc_externals.vo: ../../stdlib/basics.vo
