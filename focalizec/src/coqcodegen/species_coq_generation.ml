@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.118 2008-10-14 13:59:14 weis Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.119 2008-10-23 13:08:53 doligez Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1667,17 +1667,20 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
           | [] ->
               let parent_proof_nodes =
                 (match parent_proof_opt with
-                 | None -> assert false
+                 | None -> None
                  | Some p ->
                      match p.Parsetree.ast_desc with
-                      | Parsetree.Pf_node ns -> ns
+                      | Parsetree.Pf_node ns -> Some ns
                       | _ -> assert false) in
               (* Make a pseudo list with all the encountered steps (node
                  labels). *)
               [{ Parsetree.ast_loc = Location.none ;
                  Parsetree.ast_desc =
-                   Parsetree.F_node
-                     (find_only_PN_subs_in_proof_nodes parent_proof_nodes) ;
+                   Parsetree.F_node (
+                     match parent_proof_nodes with
+                     | None -> []
+                     | Some x -> find_only_PN_subs_in_proof_nodes x
+                   ) ;
                  Parsetree.ast_doc = [] ;
                  Parsetree.ast_type = Parsetree.ANTI_non_relevant }]
           | _ -> facts) in
