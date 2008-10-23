@@ -1,5 +1,6 @@
 *.cm*
 *.o
+*.annot
 .depend
 odoc
 log

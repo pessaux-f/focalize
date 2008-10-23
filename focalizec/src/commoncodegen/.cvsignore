@@ -3,3 +3,4 @@
 odoc
 *.cm*
 *.o
+*.annot
