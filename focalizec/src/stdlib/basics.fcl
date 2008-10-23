@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.32 2008-10-23 08:24:34 pessaux Exp $ *)
+(* $Id: basics.fcl,v 1.33 2008-10-23 13:10:55 doligez Exp $ *)
 
 (** The very basic definitions for focalize code:
     built-in or (almost) mandatory type definitions,
@@ -421,8 +421,8 @@ theorem int_0_plus: all x y in int,
   #base_eq (x, 0) -> #base_eq (#int_plus (x, y), y)
   proof:
     coq proof {*
-      unfold int_plus, bi__int_plus, __g_base_eq_ in |- *; intros x y Hxz;
-      unfold base_eq; unfold bi__base_eq;
+      unfold int_plus, bi__int_plus in |- *; intros x y Hxz;
+      unfold base_eq;
       apply EQ_base_eq; replace x with 0%Z; eauto with zarith.
       symmetry  in |- *.
       apply decidable.
@@ -447,8 +447,8 @@ theorem int_plus_assoc: all x y z in int,
   #base_eq (#int_plus (#int_plus (x, y), z), #int_plus (x, #int_plus (y, z)))
   proof:
     coq proof {*
-      unfold int_plus, __g_base_eq_ in |- *; intros x y z;
-      unfold base_eq; unfold bi__base_eq;
+      unfold int_plus in |- *; intros x y z;
+      unfold base_eq;
       apply EQ_base_eq; auto with zarith.
       Qed.
     *}
@@ -458,8 +458,8 @@ theorem int_plus_commute: all x y  in int,
   #base_eq (#int_plus (x, y), #int_plus (y, x))
   proof:
     coq proof {*
-      unfold int_plus, __g_base_eq_ in |- *; intros x y;
-      unfold base_eq; unfold bi__base_eq;
+      unfold int_plus in |- *; intros x y;
+      unfold base_eq;
       apply EQ_base_eq;
       auto with zarith.
       Qed.
@@ -471,8 +471,8 @@ theorem int_plus_plus:  all x y z t in int,
   #base_eq (#int_plus (x, z), #int_plus (y, t))
   proof:
     coq proof {*
-      unfold int_plus, __g_base_eq_ in |- *; intros x y z t H1 H2;
-      unfold base_eq; unfold bi__base_eq;
+      unfold int_plus in |- *; intros x y z t H1 H2;
+      unfold base_eq;
       apply EQ_base_eq; replace y with x. replace t with z. reflexivity.
       apply decidable. apply Z_eq_dec. assumption.
       apply decidable. apply Z_eq_dec. assumption.
@@ -531,7 +531,7 @@ theorem int_plus_minus: all x y z in int,
     coq proof {*
       intros x y z; unfold int_plus, int_minus, base_eq in |- *;
       intros H;
-      unfold bi__base_eq, bi__int_minus;
+      unfold bi__int_minus;
       apply EQ_base_eq; apply Zplus_minus_eq;
       symmetry  in |- *; apply (decidable _ _ _ (Z_eq_dec (x + y) z) H).
       Qed.
@@ -544,7 +544,7 @@ theorem int_minus_plus: all x y z in int,
    coq proof {*
      intros x y z; unfold int_plus, int_minus, base_eq in |- *;
      intros H;
-     unfold bi__base_eq, bi__int_minus;
+     unfold bi__int_minus;
      apply EQ_base_eq; rewrite <- (Zplus_minus y x);
      apply Zplus_eq_compat; trivial; apply decidable. apply Z_eq_dec. assumption.
      Qed.

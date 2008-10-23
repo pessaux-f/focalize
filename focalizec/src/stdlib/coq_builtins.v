@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: coq_builtins.v,v 1.7 2008-10-22 11:51:04 doligez Exp $ *)
+(* $Id: coq_builtins.v,v 1.8 2008-10-23 13:10:27 doligez Exp $ *)
 
 Require Import Bool.
 Require Export ZArith.
@@ -31,35 +31,31 @@ Require Export String.
 Section eq.
 Variable beq___A : Set.
 
-Parameter beq_ : beq___A -> beq___A -> bool.
+Parameter bi__base_eq : beq___A -> beq___A -> bool.
 
-Axiom base_eq_refl : forall x : beq___A, Is_true (beq_ x x).
+Axiom base_eq_refl : forall x : beq___A, Is_true (bi__base_eq x x).
 
 Axiom base_eq_sym :
-  forall x y : beq___A, Is_true (beq_ x y) -> Is_true (beq_ y x).
+  forall x y : beq___A, Is_true (bi__base_eq x y) -> Is_true (bi__base_eq y x).
 
 Axiom
   base_eq_trans :
     forall x y z : beq___A,
-    Is_true (beq_ x y) -> Is_true (beq_ y z) -> Is_true (beq_ x z).
+    Is_true (bi__base_eq x y) -> Is_true (bi__base_eq y z) ->
+    Is_true (bi__base_eq x z).
 End eq.
-Notation beq := (beq_ _) (only parsing).
 
 Theorem EQ_base_eq :
- forall (A : Set) (x y : A), x = y -> Is_true (beq_ _ x y).
+ forall (A : Set) (x y : A), x = y -> Is_true (bi__base_eq _ x y).
 Proof.
   intros A x y Heq; rewrite Heq; exact (base_eq_refl A y).
 Qed.
-
-Definition __g_base_eq_ (__var_a : Set) (x : __var_a) (y : __var_a) :=
-   beq_ __var_a x y.
-Notation  bi__base_eq := __g_base_eq_.
 
 (* In case the equality is decidable, it is extensionaly equal to  beq *)
 Axiom
   decidable :
     forall (A : Set) (x y : A),
-    {x = y} + {x <> y} -> Is_true (beq_ _ x y) -> x = y.
+    {x = y} + {x <> y} -> Is_true (bi__base_eq _ x y) -> x = y.
 
 Hint Resolve base_eq_refl base_eq_sym base_eq_trans EQ_base_eq decidable:
   FoCeq.
@@ -67,24 +63,28 @@ Hint Resolve base_eq_refl base_eq_sym base_eq_trans EQ_base_eq decidable:
 Theorem zenon_base_eq :
   (forall (S : Set) (x y : S), {x = y}+{x <> y}) ->
   forall (S : Set) (x y : S),
-  Is_true (beq_ S x y) -> (x = y -> False) -> False.
+  (x = y -> False) -> (Is_true (bi__base_eq S x y) -> False).
 Proof.
-  intros dec S x y h1 h2.
+  intros dec S x y h2 h1.
   apply h2.
   apply decidable; auto.
 Qed.
 
+Definition zenon_base_eq_s := fun D S X Y a b => zenon_base_eq D S X Y b a.
+
 Theorem zenon_notbase_eq :
   forall (S : Set) (x y : S),
-  ~Is_true (beq_ S x y) -> (~ x = y -> False) -> False.
+  (~ x = y -> False) -> (~Is_true (bi__base_eq S x y) -> False).
 Proof.
-  intros S x y h1 h2.
+  intros S x y h2 h1.
   apply h2.
   intro h3.
   apply h1.
   subst x.
   apply base_eq_refl.
 Qed.
+
+Definition zenon_notbase_eq_s := fun S X Y a b => zenon_notbase_eq S X Y b a.
 
 (* *********************************************************************** *)
 (* *********************************************************************** *)
