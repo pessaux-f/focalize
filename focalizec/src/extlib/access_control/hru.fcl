@@ -64,16 +64,13 @@ species S_setoid inherits Setoid =
   let print (s) = scnd (s) ;
 
   proof of equal_reflexive =
-    by property beq_refl
-       definition of equal ;
+    by definition of equal ;
 
   proof of equal_symmetric =
-    by property beq_symm
-       definition of equal ;
+    by definition of equal ;
 
   proof of equal_transitive =
-    by property beq_trans
-       definition of equal ;
+    by definition of equal ;
 
 end ;;
 
@@ -425,15 +422,15 @@ species S_model_acl (Rh is Rho,
   let print (st in Self) in string = S_a!print (lambda (st)) ;
 
   proof of equal_reflexive =
-    by property S_a!equal_reflexive, beq_refl
+    by property S_a!equal_reflexive
        definition of equal ;
 
   proof of equal_symmetric =
-    by property S_a!equal_symmetric, beq_symm
+    by property S_a!equal_symmetric
        definition of equal ;
 
   proof of equal_transitive =
-    by property S_a!equal_transitive, beq_trans
+    by property S_a!equal_transitive
        definition of equal ;
 
   proof of secure_state = assumed {* Because todo *} ;
@@ -623,15 +620,15 @@ species S_model_capabilities (Rh is Rho, S is S_subjects, O is S_objects,
   let print (c in Self) in string = S_a!print (lambda (c)) ;
 
   proof of equal_reflexive =
-    by property S_a!equal_reflexive, beq_refl
+    by property S_a!equal_reflexive
        definition of equal ;
 
   proof of equal_symmetric =
-    by property S_a!equal_symmetric, beq_symm
+    by property S_a!equal_symmetric
        definition of equal ;
 
   proof of equal_transitive =
-    by property S_a!equal_transitive, beq_trans
+    by property S_a!equal_transitive
        definition of equal ;
 
   proof of secure_state = assumed {* Because todo *} ;
