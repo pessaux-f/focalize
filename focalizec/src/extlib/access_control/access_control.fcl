@@ -1021,7 +1021,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                     <8>1 prove equal (st2, add (st1, A!create (Rr!get_s (r1),
 			    				       Rr!get_o (r1),
 							       Rr!get_m (r1))))
-                         by property beq_symm, right_substitution
+                         by property (* beq_symm, *) right_substitution
                             hypothesis H3, H7, H1
                             definition of tau_rbac_acc
                     <8>f qed
@@ -1036,7 +1036,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                   <7>1 prove equal (st2, add (st1, A!create (Rr!get_s (r1),
 							     Rr!get_o (r1),
 							     Rr!get_m (r1))))
-                         by property beq_symm, right_substitution
+                         by property (* beq_symm, *) right_substitution
                             hypothesis H3, H7, H1
 	     	            definition of tau_rbac_acc
 		  <7>f qed
@@ -1076,7 +1076,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 				 (D!yes, add (st1, A!create (Rr!get_s (r1),
 							     Rr!get_o (r1),
 							     Rr!get_m (r1))))
-                           by property beq_refl
+                           by (* property beq_refl *)
                               definition of tau_rbac_acc
 		      <9>2 prove exists_role (st1,
 					      roles_s(st1,
@@ -1105,7 +1105,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 							  Rr!get_m (r1)))))
                            by step <9>3
                               hypothesis H1
-                              property beq_symm, beq_trans
+                              (* property beq_symm, beq_trans *)
                       <9>f qed
                            by step <9>4
                               property right_substitution
@@ -1185,7 +1185,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 							     Rr!get_o (r1),
 							     Rr!get_m (r1))))
                        by hypothesis H3, H7, H1
-	     	          property beq_symm, right_substitution
+	     	          property (* beq_symm, *) right_substitution
                           definition of tau_rbac_acc
 		  <7>f qed
                        by step <7>1
@@ -1197,7 +1197,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 							     Rr!get_o (r1),
 							     Rr!get_m (r1))))
                        by hypothesis H3, H7, H1
-	     	          property beq_symm, right_substitution
+	     	          property (* beq_symm, *) right_substitution
                           definition of tau_rbac_acc
 		  <7>f qed
                        by step <7>1
@@ -1225,7 +1225,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 					    Rr!get_o (r1),
 					    Rr!get_m (r1)))) ->
 	                 tau_rbac_acc (r1, st1) = (D!no, st1)
-                   by property beq_refl
+                   by (* property beq_refl *)
                       definition of tau_rbac_acc
               <5>2 prove (~ exists_role (st1,
 					 roles_s (st1, Rr!get_s (r1)),
@@ -1241,7 +1241,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
               <5>4 prove base_eq ((d1, st2), (D!no, st1))
                    by step <5>3
                       hypothesis H1
-                      property beq_symm, beq_trans
+                      (* property beq_symm, beq_trans *)
               <5>f qed
                    by step <5>4
                       property right_substitution, equal_symmetric
@@ -1270,7 +1270,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 			  				     Rr!get_o (r1),
 							     Rr!get_m (r1))))
                        by hypothesis H1, H4
-	     	          property beq_symm,
+	     	          property (* beq_symm, *)
                                    right_substitution,
                                    Rr!get_is_not_rel
                           definition of tau_rbac_acc
@@ -1287,7 +1287,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 							   Rr!get_o (r1),
 							   Rr!get_m (r1))))
                      by hypothesis H1, H4
-                        property beq_symm,
+                        property (* beq_symm, *)
 	     	                 right_substitution,
 			         Rr!get_is_not_rel
                         definition of tau_rbac_acc
@@ -1325,7 +1325,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 						   Rr!get_o (r1),
 						   Rr!get_m (r1))))
                          by hypothesis H1, H4
-                            property beq_symm,
+                            property (* beq_symm, *)
 	     	                     right_substitution,
                                      Rr!get_is_not_rel
                             definition of tau_rbac_acc
@@ -1360,7 +1360,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 							   Rr!get_o (r1),
 							   Rr!get_m (r1))))
                      by hypothesis H1, H4
-                        property beq_symm,
+                        property (* beq_symm, *)
 	     	                 right_substitution,
 			         Rr!get_is_not_rel
                         definition of tau_rbac_acc
@@ -1374,7 +1374,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 							   Rr!get_o (r1),
 							   Rr!get_m (r1))))
                      by hypothesis H1, H4
-                        property beq_symm,
+                        property (* beq_symm, *)
 	     	                 right_substitution,
 			         Rr!get_is_not_rel
                         definition of tau_rbac_acc
@@ -1443,7 +1443,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                                   (D!yes, add (st1, A!create (Rr!get_s (r1),
 							      Rr!get_o (r1),
 							      Rr!get_m (r1))))
-                            by property beq_refl
+                            by (* property beq_refl *)
                                definition of tau_rbac_acc
                       <9>11 prove exists_role (st1,
 					       roles_s (st1,
@@ -1471,7 +1471,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 							  Rr!get_m (r1)))))
                            by step <9>1
                               hypothesis H1
-                              property beq_symm, beq_trans
+                              (* property beq_symm, beq_trans *)
                       <9>f qed
                            by step <9>2
                               property right_substitution
@@ -1518,7 +1518,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 					     Rr!get_o (r1),
 					     Rr!get_m (r1)))) ->
 			  tau_rbac_acc (r1, st1) = (D!no, st1)
-                    by property beq_refl
+                    by (* property beq_refl *)
                        definition of tau_rbac_acc
               <5>11 prove (~ exists_role (st1,
 					  roles_s (st1, Rr!get_s (r1)),
@@ -1534,7 +1534,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
               <5>2 prove base_eq ((d1, st2), (D!no, st1))
                    by step <5>1
                       hypothesis H1
-                      property beq_symm, beq_trans
+                      (* property beq_symm, beq_trans *)
               <5>3 prove D!equal (d1, D!no)
                    by step <5>2
                       property left_substitution
@@ -1582,7 +1582,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 		               (D!yes, del (st1, A!create (Rr!get_s (r1),
 							   Rr!get_o (r1),
 							   Rr!get_m (r1))))
-                         by property beq_refl
+                         by (* property beq_refl *)
                             definition of tau_rbac_acc
                     <8>2 prove tau_rbac_acc (r1, st1) =
 			       (D!yes, del(st1, A!create (Rr!get_s (r1),
@@ -1599,7 +1599,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 							Rr!get_m (r1)))))
                          by step <8>2
                             hypothesis H1
-                            property beq_symm, beq_trans
+                            (* property beq_symm, beq_trans *)
                     <8>f qed
                          by step <8>3
                             property right_substitution
@@ -1657,7 +1657,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                           (D!yes, add (st1, A!create (Rr!get_s (r1),
 						      Rr!get_o (r1),
 						      Rr!get_m (r1))))
-                    by property beq_refl
+                    by (* property beq_refl *)
                        definition of tau_rbac_acc
               <5>11 prove exists_role (st1,
 				       roles_s (st1, Rr!get_s (r1)),
@@ -1682,7 +1682,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 							      Rr!get_m (r1)))))
                    by step <5>1
                       hypothesis H1
-                      property beq_symm, beq_trans
+                      (* property beq_symm, beq_trans *)
               <5>3 prove D!equal (d1, D!yes)
                    by step <5>2
                       property left_substitution
@@ -1707,7 +1707,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 					    Rr!get_o (r1),
 					    Rr!get_m (r1)))) ->
                          tau_rbac_acc (r1, st1) = (D!no, st1)
-                   by property beq_refl
+                   by (* property beq_refl *)
                       definition of tau_rbac_acc
               <5>2 prove (~ exists_role (st1,
 					 roles_s (st1, Rr!get_s (r1)),
@@ -1723,7 +1723,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
               <5>4 prove base_eq ((d1, st2), (D!no, st1))
                    by step <5>3
                       hypothesis H1
-                      property beq_symm, beq_trans
+                      (* property beq_symm, beq_trans *)
               <5>f qed
                    by step <5>4
                       property right_substitution, equal_symmetric
@@ -1740,7 +1740,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                         (D!yes, del (st1, A!create (Rr!get_s (r1),
 						    Rr!get_o (r1),
 						    Rr!get_m (r1))))
-                  by property beq_refl
+                  by (* property beq_refl *)
                      definition of tau_rbac_acc
             <4>1 prove tau_rbac_acc (r1, st1) =
                        (D!yes, del (st1, A!create (Rr!get_s (r1),
@@ -1755,7 +1755,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 							   Rr!get_m (r1)))))
                  by step <4>1
                     hypothesis H1
-                    property beq_symm, beq_trans
+                    (* property beq_symm, beq_trans *)
             <4>3 prove D!equal (d1, D!yes)
                  by step <4>2
                     property left_substitution
@@ -1801,7 +1801,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                   <7>1 prove equal(st2,
 				   add_ua (st1, Rr!get_u (r1), Rr!get_r (r1)))
                        by hypothesis H3, H1
-                          property beq_symm, right_substitution
+                          property (* beq_symm, *) right_substitution
                           definition of tau_rbac_adm
                   <7>f qed
                        by step <7>1
@@ -1815,7 +1815,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                 <6>1 prove equal (st2,
 				  add_ua (st1, Rr!get_u (r1), Rr!get_r (r1)))
                      by hypothesis H3, H1
-	     	        property beq_symm, right_substitution
+	     	        property (* beq_symm, *) right_substitution
                         definition of tau_rbac_adm
 		<6>f qed
                      by step <6>1
@@ -1850,7 +1850,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 					      Rr!get_u (r1),
 					      Rr!get_r (r1)))
                          by hypothesis H3, H1
-	     	            property beq_symm, right_substitution
+	     	            property (* beq_symm, *) right_substitution
                             definition of tau_rbac_adm
                     <8>f qed
                          by step <8>1
@@ -1867,7 +1867,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                 <6>1 prove equal (st2,
 				  add_ua (st1, Rr!get_u (r1), Rr!get_r (r1)))
                          by hypothesis H3, H1
-	     	            property beq_symm, right_substitution
+	     	            property (* beq_symm, *) right_substitution
                             definition of tau_rbac_adm
 		<6>f qed
                      by step <6>1
@@ -1878,7 +1878,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                 <6>1 prove equal (st2,
 				  add_ua (st1, Rr!get_u (r1), Rr!get_r (r1)))
                      by hypothesis H3, H1
-	     	        property beq_symm, right_substitution
+	     	        property (* beq_symm, *) right_substitution
                         definition of tau_rbac_adm
 		<6>f qed
                      by step <6>1
@@ -1914,7 +1914,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                     <8>1 prove equal(st2,
 				     rm_ua (st1, Rr!get_u (r1), Rr!get_r (r1)))
                          by hypothesis H4, H1, H41
-                            property beq_symm,
+                            property (* beq_symm, *)
                                      Rr!add_ua_then_not_rm_ua,
 			             right_substitution
                             definition of tau_rbac_adm
@@ -1932,7 +1932,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                    <8>1 prove equal (st2,
 				     rm_ua (st1, Rr!get_u (r1), Rr!get_r (r1)))
                         by hypothesis H4, H1, H41
-                           property beq_symm,
+                           property (* beq_symm, *)
                                     Rr!add_ua_then_not_rm_ua,
                                     right_substitution
                            definition of tau_rbac_adm
@@ -1973,7 +1973,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 					       Rr!get_u (r1),
 					       Rr!get_r (r1)))
                            by hypothesis H4, H1, H41
-                              property beq_symm,
+                              property (* beq_symm, *)
 			               Rr!add_ua_then_not_rm_ua,
 				       right_substitution
                               definition of tau_rbac_adm
@@ -1993,7 +1993,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 					       Rr!get_u (r1),
 					       Rr!get_r (r1)))
                        by hypothesis H4, H1, H41
-                          property beq_symm,
+                          property (* beq_symm, *)
 		                   Rr!add_ua_then_not_rm_ua,
                                    right_substitution
                           definition of tau_rbac_adm
@@ -2007,7 +2007,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 						Rr!get_u (r1),
 			  			Rr!get_r (r1)))
                        by hypothesis H4, H1, H41
-                           property beq_symm,
+                           property (* beq_symm, *)
                                     Rr!add_ua_then_not_rm_ua,
                                     right_substitution
                            definition of tau_rbac_adm
@@ -2036,7 +2036,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 						 Rr!get_u (r1),
 						 Rr!get_r (r1))))) ->
                          tau_rbac_adm (r1, st1) = (D!no, st1)
-                   by property beq_refl
+                   by (* property beq_refl *)
                       definition of tau_rbac_adm
               <5>2 prove Rr!is_rm_ua (r1) ->
                          (~ (S_a!forall (lambda (st1),
@@ -2059,7 +2059,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
               <5>5 prove base_eq ((d1, st2), (D!no, st1))
                    by step <5>4
                       hypothesis H1
-                      property beq_symm, beq_trans
+                      (* property beq_symm, beq_trans *)
               <5>f qed
                    by step <5>5
 		      property right_substitution, equal_symmetric
@@ -2089,7 +2089,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 						 Rr!get_m (r1),
 						 Rr!get_r (r1)))
                        by hypothesis H5, H1
-                          property beq_symm,
+                          property (* beq_symm, *)
 		                   Rr!add_pa_then_not_ua,
                                    right_substitution
                           definition of tau_rbac_adm
@@ -2107,7 +2107,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 					       Rr!get_m (r1),
 					       Rr!get_r (r1)))
                      by hypothesis H5, H1
-                        property beq_symm,
+                        property (* beq_symm, *)
 		                 Rr!add_pa_then_not_ua,
                                  right_substitution
                         definition of tau_rbac_adm
@@ -2144,7 +2144,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 						   Rr!get_m (r1),
 						   Rr!get_r (r1)))
                          by hypothesis H5, H1
-                            property beq_symm,
+                            property (* beq_symm, *)
 		                     Rr!add_pa_then_not_ua,
                                      right_substitution
                             definition of tau_rbac_adm
@@ -2165,7 +2165,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 					       Rr!get_m (r1),
 					       Rr!get_r (r1)))
                      by hypothesis H5, H1
-                        property beq_symm,
+                        property (* beq_symm, *)
 		                 Rr!add_pa_then_not_ua,
                                  right_substitution
                         definition of tau_rbac_adm
@@ -2180,7 +2180,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 					       Rr!get_m (r1),
 					       Rr!get_r (r1)))
                      by hypothesis H5, H1
-                        property beq_symm,
+                        property (* beq_symm, *)
 		                 Rr!add_pa_then_not_ua,
                                  right_substitution
                         definition of tau_rbac_adm
@@ -2221,7 +2221,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 			    			  Rr!get_m (r1),
 						  Rr!get_r (r1)))
 			 by hypothesis H6, H1, H61
-                            property beq_symm,
+                            property (* beq_symm, *)
 			             Rr!rm_pa_then_not_add_pa_ua,
                                      right_substitution
                             definition of tau_rbac_adm
@@ -2239,7 +2239,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 						Rr!get_m (r1),
 						Rr!get_r (r1)))
                          by hypothesis H6, H1, H61
-                            property beq_symm,
+                            property (* beq_symm, *)
 		                     Rr!rm_pa_then_not_add_pa_ua,
                                      right_substitution
                             definition of tau_rbac_adm
@@ -2267,7 +2267,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 		  			        Rr!get_m (r1),
 						Rr!get_r (r1)))
                        by hypothesis H6, H1, H61
-                          property beq_symm,
+                          property (* beq_symm, *)
                                    Rr!rm_pa_then_not_add_pa_ua,
                                    right_substitution
                           definition of tau_rbac_adm
@@ -2329,7 +2329,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 						  Rr!get_m (r1),
 						  Rr!get_r (r1))))) ->
                          tau_rbac_adm (r1, st1) = (D!no, st1)
-                    by property beq_refl
+                    by (* property beq_refl *)
                        definition of tau_rbac_adm
               <5>2 prove Rr!is_rm_pa (r1) ->
                          (~ (S_a!forall (lambda (st1),
@@ -2355,7 +2355,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
               <5>5 prove base_eq ((d1, st2), (D!no, st1))
                    by step <5>4
                       hypothesis H1
-                      property beq_symm, beq_trans
+                      (* property beq_symm, beq_trans *)
               <5>f qed
                    by step <5>5
                       property right_substitution, equal_symmetric
@@ -2376,7 +2376,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 			(~ Rr!is_add_pa (r1)) /\
 			(~ Rr!is_rm_pa (r1))) ->
                        tau_rbac_adm (r1, st1) = (D!no, st1)
-                 by property beq_refl
+                 by (* property beq_refl *)
                     definition of tau_rbac_adm
             <4>2 prove tau_rbac_adm (r1, st1) = (D!no, st1)
                  by step <4>1
@@ -2384,7 +2384,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
             <4>3 prove base_eq ((d1, st2), (D!no, st1))
                  by step <4>2
                     hypothesis H1
-                    property beq_trans, beq_symm
+                    (* property beq_trans, beq_symm *)
             <4>f qed
                  by step <4>3
                     property right_substitution, equal_symmetric
@@ -2524,7 +2524,7 @@ species Model_hru (Rh is Rho,
 			     (D!yes, add (st1, A!create (R!get_s (r1),
 							 R!get_o (r1),
 							 R!get_m (r1))))
-                       by property beq_refl
+                       by (* property beq_refl *)
                           definition of tau_hru
                   <7>2 prove fd (A!create (R!get_s (r1),
 					   R!get_o (r1),
@@ -2548,7 +2548,7 @@ species Model_hru (Rh is Rho,
 							   R!get_m (r1)))))
                        by step <7>3
                           hypothesis H1
-                          property beq_trans, beq_symm
+                          (* property beq_trans, beq_symm *)
                   <7>f qed
 		       by step <7>4
 			  property right_substitution
@@ -2611,7 +2611,7 @@ species Model_hru (Rh is Rho,
 					  R!get_o (r1),
                                           R!get_m (r1)))) ->
 			 tau_hru (r1, st1) = (D!no, st1)
-                   by property beq_refl
+                   by (* property beq_refl *)
                       definition of tau_hru
               <5>2 prove (~ fd (A!create (R!get_s (r1),
 					  R!get_o (r1),
@@ -2625,7 +2625,7 @@ species Model_hru (Rh is Rho,
               <5>4 prove base_eq ((d1, st2), (D!no, st1))
                    by step <5>3
                       hypothesis H1
-                      property beq_trans, beq_symm
+                      (* property beq_trans, beq_symm *)
               <5>f qed
 	           by step <5>4
 		      property right_substitution, equal_symmetric
@@ -2650,7 +2650,8 @@ species Model_hru (Rh is Rho,
 						  R!get_o (r1),
 						  R!get_m (r1))))
                    by hypothesis H1, H4
-                      property beq_symm, R!get_is_not_rel, right_substitution
+                      property (* beq_symm, *) 
+			       R!get_is_not_rel, right_substitution
                       definition of tau_hru
               <5>2 assume acc in A,
                    prove S_a!est_element
@@ -2737,7 +2738,7 @@ species Model_hru (Rh is Rho,
 				  (D!yes, add (st1, A!create (R!get_s (r1),
 							      R!get_o (r1),
 							      R!get_m (r1))))
-                            by property beq_refl
+                            by (* property beq_refl *)
                                definition of tau_hru
                        <9>11 prove fd (A!create (R!get_s (r1),
 						 R!get_o (r1),
@@ -2762,7 +2763,7 @@ species Model_hru (Rh is Rho,
 							  R!get_m (r1)))))
                             by step <9>1
                                hypothesis H1
-                               property beq_symm, beq_trans
+                               (* property beq_symm, beq_trans *)
                        <9>f qed
                             by step <9>2
                                property right_substitution
@@ -2805,7 +2806,7 @@ species Model_hru (Rh is Rho,
 					    R!get_o (r1),
                                             R!get_m (r1)))) ->
 			   tau_hru (r1, st1) = (D!no, st1)
-                     by property beq_refl
+                     by (* property beq_refl *)
                         definition of tau_hru
                <5>11 prove (~ fd (A!create (R!get_s (r1),
 					    R!get_o (r1),
@@ -2819,7 +2820,7 @@ species Model_hru (Rh is Rho,
                <5>2 prove base_eq ((d1, st2), (D!no, st1))
                     by step <5>1
                        hypothesis H1
-                       property beq_trans, beq_symm
+                       (* property beq_trans, beq_symm *)
                <5>3 prove D!equal (d1, D!no)
                     by step <5>2
                        property left_substitution
@@ -2869,7 +2870,7 @@ species Model_hru (Rh is Rho,
 		                (D!yes, del (st1, A!create (R!get_s (r1),
 							    R!get_o (r1),
                                                             R!get_m (r1))))
-                          by property beq_refl
+                          by (* property beq_refl *)
                              definition of tau_hru
                      <8>2 prove tau_hru (r1, st1) =
 			       (D!yes, del (st1, A!create(R!get_s (r1),
@@ -2885,7 +2886,7 @@ species Model_hru (Rh is Rho,
 							      R!get_m (r1)))))
                           by step <8>2
                              hypothesis H1
-                             property beq_trans, beq_symm
+                             (* property beq_trans, beq_symm *)
                      <8>f qed
                           by step <8>3
                              property right_substitution
@@ -2945,7 +2946,7 @@ species Model_hru (Rh is Rho,
 			  (D!yes, add (st1, A!create (R!get_s (r1),
 						      R!get_o (r1),
 						      R!get_m (r1))))
-                    by property beq_refl
+                    by (* property beq_refl *)
                        definition of tau_hru
               <5>11 prove fd (A!create (R!get_s (r1),
 					R!get_o (r1),
@@ -2969,7 +2970,7 @@ species Model_hru (Rh is Rho,
 						       R!get_m (r1)))))
                    by step <5>1
                       hypothesis H1
-                      property beq_trans, beq_symm
+                      (* property beq_trans, beq_symm *)
               <5>3 prove D!equal (d1, D!yes)
                    by step <5>2
                       property left_substitution
@@ -2990,7 +2991,7 @@ species Model_hru (Rh is Rho,
 					  R!get_o (r1),
                                           R!get_m (r1)))) ->
 			 tau_hru (r1, st1) = (D!no, st1)
-                   by property beq_refl
+                   by (* property beq_refl *)
                       definition of tau_hru
               <5>2 prove (~ fd (A!create (R!get_s (r1),
 					  R!get_o (r1),
@@ -3004,7 +3005,7 @@ species Model_hru (Rh is Rho,
               <5>4 prove base_eq ((d1, st2), (D!no, st1))
                    by step <5>3
                       hypothesis H1
-                      property beq_symm, beq_trans
+                      (* property beq_symm, beq_trans *)
               <5>f qed
                    by step <5>4
                       property right_substitution, equal_symmetric
@@ -3022,7 +3023,7 @@ species Model_hru (Rh is Rho,
 	                (D!yes, del (st1, A!create (R!get_s (r1),
 						    R!get_o (r1),
 						    R!get_m (r1))))
-                  by property beq_refl
+                  by (* property beq_refl *)
                      definition of tau_hru
             <4>1 prove tau_hru (r1, st1) =
                        (D!yes, del (st1, A!create (R!get_s (r1),
@@ -3038,7 +3039,7 @@ species Model_hru (Rh is Rho,
 						     R!get_m (r1)))))
                  by step <4>1
                     hypothesis H1
-                    property beq_trans, beq_symm
+                    (* property beq_trans, beq_symm *)
             <4>3 prove D!equal (d1, D!yes)
                  by step <4>2
 		    property left_substitution
