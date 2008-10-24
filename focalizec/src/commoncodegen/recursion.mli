@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.mli,v 1.3 2008-04-23 14:54:07 pessaux Exp $ *)
+(* $Id: recursion.mli,v 1.4 2008-10-24 10:42:28 pessaux Exp $ *)
 
 exception NestedRecursiveCalls of Parsetree.vname * Location.t
 exception PartialRecursiveCall of Parsetree.vname * Location.t
@@ -24,15 +24,12 @@ type binding =
   | B_condition of (Parsetree.expr * bool)
 
 val list_recursive_calls:
-  Parsetree.vname ->
-  Parsetree.vname list ->
-  binding list ->
-  Parsetree.expr ->
-  ((Parsetree.vname * Parsetree.expr) list * binding list) list
+  Parsetree.vname -> (Parsetree.vname * Types.type_simple) list ->
+    binding list -> Parsetree.expr ->
+      (((Parsetree.vname * Types.type_simple) * Parsetree.expr) list *
+         binding list)
+        list
 
 val is_structural:
-  Parsetree.vname ->
-  Parsetree.vname list ->
-  Parsetree.vname ->
-  Parsetree.expr ->
-  bool
+  Parsetree.vname -> (Parsetree.vname * Types.type_simple) list ->
+    Parsetree.vname -> Parsetree.expr -> bool

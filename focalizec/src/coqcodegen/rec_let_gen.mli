@@ -11,12 +11,15 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.mli,v 1.5 2008-09-23 06:11:30 pessaux Exp $ *)
+(* $Id: rec_let_gen.mli,v 1.6 2008-10-24 10:42:28 pessaux Exp $ *)
 
 val generate_termination_lemmas :
-  'a -> 'b -> 'c ->
-    ((Parsetree.vname * Parsetree.expr) list * Recursion.binding list) list ->
-      unit
+  Context.species_compil_context -> Types.coq_print_context ->
+    Env.CoqGenEnv.t ->
+      (((Parsetree.vname * Types.type_simple) * Parsetree.expr) list *
+         Recursion.binding list)
+        list ->
+          unit
 
 val transform_recursive_calls_args_into_tuple :
   Context.species_compil_context -> local_idents: Parsetree.vname list ->

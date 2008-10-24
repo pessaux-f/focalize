@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.10 2008-10-23 08:24:34 pessaux Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.11 2008-10-24 10:42:28 pessaux Exp $ *)
 
 
 
@@ -219,36 +219,241 @@ let transform_recursive_calls_args_into_tuple ctx ~local_idents recursive_name
 
 
 
-let generate_termination_lemmas _ctx _print_ctx _env recursive_calls =
+let generate_binding_match ctx env expr pattern =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  let local_idents = Parsetree_utils.get_local_idents_from_pattern pattern in
+  (* Now, generate "pattern = expr". *)
+  Species_record_type_generation.generate_pattern ctx env pattern ;
+  Format.fprintf out_fmter " =@ " ;
+  Species_record_type_generation.generate_expr
+    ctx ~in_recursive_let_section_of: [] ~local_idents
+    ~self_methods_status: Species_record_type_generation.SMS_abstracted
+    env expr
+;;
+
+
+
+let generate_binding_let ctx print_ctx env binding =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  let binding_desc = binding.Parsetree.ast_desc in
+  (* Quantification of the variable was done previously by the function
+     [generate_variables_quantifications]. *)
+  Format.fprintf out_fmter "%a =@ "
+    Parsetree_utils.pp_vname_with_operators_expanded
+    binding_desc.Parsetree.b_name ;
+  (* If the binding has arguments, then it's a function. So for a binding
+     looking like "let f (x, y) = ..." we generate
+     "x = (fun x => fun y => ...)". *)
+  let local_idents =
+    if binding_desc.Parsetree.b_params <> [] then
+      (begin
+      (* It is pretty like [let_binding_compile] in the file
+         [species_record_type_generation.ml]. *)
+      let params_names = List.map fst binding_desc.Parsetree.b_params in
+      (* Recover the type scheme of the bound ident. *)
+      let def_scheme =
+        (match binding.Parsetree.ast_type with
+         | Parsetree.ANTI_none | Parsetree.ANTI_non_relevant
+         | Parsetree.ANTI_type _ -> assert false
+         | Parsetree.ANTI_scheme s -> s) in
+      let (params_with_type, _, generalized_instanciated_vars) =
+        MiscHelpers.bind_parameters_to_types_from_type_scheme
+          (Some def_scheme) params_names in
+      Types.purge_type_simple_to_coq_variable_mapping () ;
+      Format.fprintf out_fmter "(@[<1>" ;
+      (* If the original scheme is polymorphic, then we must ad extra Coq
+         parameters of type "Set" for each of the generalized variables. *)
+      List.iter
+        (fun var ->
+           Format.fprintf out_fmter "fun (%a : Set) =>@ "
+            (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
+            var)
+        generalized_instanciated_vars ;
+      (* Now, generate each of the real function's parameter with its type. *)
+      List.iter
+        (fun (param_vname, pot_param_ty) ->
+          match pot_param_ty with
+           | Some param_ty ->
+               Format.fprintf out_fmter "fun (%a : %a) =>@ "
+                 Parsetree_utils.pp_vname_with_operators_expanded param_vname
+                 (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
+                 param_ty
+           | None ->
+               (* Because we provided a type scheme to the function
+                  [bind_parameters_to_types_from_type_scheme], MUST get one type
+                  for each parameter name ! *)
+               assert false)
+        params_with_type ;
+        params_names
+      end)
+    else
+      [ (* No local identifiers since no parameters to the let binding. *) ] in
+  (* Now, in any case, we print the body of the let binding. *)
+  (match binding_desc.Parsetree.b_body with
+   | Parsetree.BB_computational e ->
+       Species_record_type_generation.generate_expr
+         ctx ~in_recursive_let_section_of: [] ~local_idents
+         ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         env e
+   | Parsetree.BB_logical p ->
+       Species_record_type_generation.generate_logical_expr
+         ctx ~in_recursive_let_section_of: [] ~local_idents
+         ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         env p) ;
+  (* If there were parameters, we must close a parenthesis. *)
+  if binding_desc.Parsetree.b_params <> [] then
+    Format.fprintf out_fmter "@]"
+;;
+
+
+
+let generate_variables_as_tuple out_fmter vars =
+  let rec rec_gen = function
+    | [] -> assert false
+    | [(last, _)] ->
+        Format.fprintf out_fmter "%a"
+          Parsetree_utils.pp_vname_with_operators_expanded last
+    | (h, _) :: q -> 
+        Format.fprintf out_fmter "%a,@ "
+          Parsetree_utils.pp_vname_with_operators_expanded h ;
+        rec_gen q in
+  (* *********************** *)
+  (* Now, really do the job. *)
+  match vars with
+   | [] -> assert false
+   | [(one, _)] ->
+       Format.fprintf out_fmter "%a"
+         Parsetree_utils.pp_vname_with_operators_expanded one
+   | _ ->
+       Format.fprintf out_fmter "(" ;
+       rec_gen vars ;
+       Format.fprintf out_fmter ")"
+;;
+
+
+
+let generate_variables_quantifications out_fmter print_ctx vars bindings =
+  Types.purge_type_simple_to_coq_variable_mapping () ;
+  List.iter
+    (fun (v, ty) ->
+      Format.fprintf out_fmter "forall %a : %a,@ "
+        Parsetree_utils.pp_vname_with_operators_expanded v
+        (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty)
+    vars ;
+  (* Now, quantify the variables bound in the bindings. *)
+  List.iter
+    (function
+      | Recursion.B_let binding ->
+          (begin
+          (* Generate a forall to bind the identifier. *)
+          let scheme =
+            (match binding.Parsetree.ast_type with
+             | Parsetree.ANTI_none | Parsetree.ANTI_non_relevant
+             | Parsetree.ANTI_type _ -> assert false
+             | Parsetree.ANTI_scheme s -> s) in
+          let ty = Types.specialize scheme in
+          Format.fprintf out_fmter "forall %a :@ %a,@ "
+            Parsetree_utils.pp_vname_with_operators_expanded
+            binding.Parsetree.ast_desc.Parsetree.b_name
+            (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false) ty
+          end)
+      | Recursion.B_match (_, pattern) ->
+          (begin
+          let bound_vars =
+            Parsetree_utils.get_local_idents_and_types_from_pattern pattern in
+          Types.purge_type_simple_to_coq_variable_mapping () ;
+          (* Generate a forall for each bound variable. *)
+          List.iter
+            (fun (v, ty_info) ->
+              let t =
+                (match ty_info with
+                 | Parsetree.ANTI_type t -> t
+                 | _ -> assert false) in
+              Format.fprintf out_fmter "forall %a :@ %a,@ "
+                Parsetree_utils.pp_vname_with_operators_expanded v
+                (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) t)
+            bound_vars
+          end)
+      | Recursion.B_condition (_, _) ->
+          (* No possible variable bound, so nothing to do. *)
+          ())
+    bindings
+;;
+
+
+
+let generate_exprs_as_tuple ctx env exprs =
+  match exprs with
+   | [] -> assert false
+   | [one] ->
+       Species_record_type_generation.generate_expr
+         ctx ~in_recursive_let_section_of: [] ~local_idents: []
+         ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         env one
+   | _ ->
+       let fake_tuple_desc = Parsetree.E_tuple exprs in
+       let fake_tuple = {
+         Parsetree.ast_loc = Location.none ;
+         Parsetree.ast_desc = fake_tuple_desc ;
+         Parsetree.ast_doc = [] ;
+         Parsetree.ast_type = Parsetree.ANTI_non_relevant } in
+           Species_record_type_generation.generate_expr
+         ctx ~in_recursive_let_section_of: [] ~local_idents: []
+         ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         env fake_tuple
+;;
+
+
+
+let generate_termination_lemmas ctx print_ctx env recursive_calls =
+  let out_fmter = ctx.Context.scc_out_fmter in
   List.iter
     (fun (n_exprs, bindings) ->
-      (* n_exprs: variable initiale de la fct * expr passée lors de l'appel
-	 récursif et qui doit être <. En fait c'est le tuple des vars initiales
-	 qui doit pêtre < au tuple des expr passé lors de l'appel rec. *)
-      Format.eprintf "n/expr@." ;
-      List.iter
-        (fun (n, expr) ->
-          Format.eprintf "\tn: %a, expr: %a@."
-            Sourcify.pp_vname n Sourcify.pp_expr expr)
-        n_exprs ;
-      (* Generer des => entre chaque hypothèse. Parcourit la liste en sens
-	 inverse. *)
-      Format.eprintf "bindings@." ;
+      (* The list of hypotheses induced by bindings is in *reverse order*.
+         Let's reverse it. *)
+      let bindings = List.rev bindings in
+      Format.fprintf out_fmter "(" ;
+      (* [n_exprs]: (initial variable of the function * expression provided
+         in the recursive call). The expression must hence be < to the initial
+         variable for the function to terminate. In fact that's the tuple of
+         initial variables that must be < to the tuple of expressions provided
+         in the recursive call. *)
+      let (initial_vars, rec_args) = List.split n_exprs in
+      (* For each variable, bind it by a forall. *)
+      generate_variables_quantifications
+        out_fmter print_ctx initial_vars bindings ;
+      (* We must generate the hypotheses and separate them by ->. *)
       List.iter
         (function
           | Recursion.B_let let_binding ->
-              (* Induit forall truc, truc "=" machin. Alpha-conv si affinité. *)
-              Format.eprintf "\tB_let, binding: %a@."
-                Sourcify.pp_binding let_binding
+              (* A "let x = e" induces forall x: ..., x "=" e.
+                 [Unsure] Alpha-conv !!!!!!! *)
+              Format.fprintf out_fmter "(" ;
+              generate_binding_let ctx print_ctx env let_binding ;
+              Format.fprintf out_fmter ") ->@ " ;
           | Recursion.B_match (expr, pattern) ->
-              (* Induit forall variables du pattern, patter "=" expr.
-		 Alpha-conv des vars du pattern. *)
-              Format.eprintf "\tB_match,  expr: %a, pattern: %a@."
-                Sourcify.pp_expr expr Sourcify.pp_pattern pattern
+              (* Induces "forall variables of the pattern, pattern = expr".
+                 [Unsure] Alpha-conv des vars du pattern !!!!!!! *)
+              Format.fprintf out_fmter "(" ;
+              generate_binding_match ctx env expr pattern ;
+              Format.fprintf out_fmter ") ->@ " ;
           | Recursion.B_condition (expr, bool_val) ->
-	      (* Induit Is_true expr avec ~ si bool_val est false sinon rien. *)
-              Format.eprintf "\tB_condition, expr: %a, bool: %b@."
-                Sourcify.pp_expr expr bool_val)
-        bindings) (* Connection par des ^ *)
+              (* Induces "Is_true (expr)" if [bool_val] is true, else
+                 "~ Is_true (expr)" if [bool_val] is false. *)
+              if not bool_val then Format.fprintf out_fmter "~@ " ;
+              Format.fprintf out_fmter "Is_true (@[<1>" ;
+              Species_record_type_generation.generate_expr
+                ctx ~in_recursive_let_section_of: [] ~local_idents: []
+                ~self_methods_status:
+                  Species_record_type_generation.SMS_abstracted env expr ;
+              Format.fprintf out_fmter "@]) ->@ ")
+        bindings ;
+      (* Now, generate the expression that telling the decreasing. *)
+      generate_exprs_as_tuple ctx env rec_args ;
+      Format.fprintf out_fmter " <@ " ;
+      (* Generate a tuple of all the variables. *)
+      generate_variables_as_tuple out_fmter initial_vars ;
+      Format.fprintf out_fmter ")@\n/\\@\n")
+    (* Connected by ^'s. *)
     recursive_calls
 ;;

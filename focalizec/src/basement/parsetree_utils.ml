@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.24 2008-10-14 13:38:07 weis Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.25 2008-10-24 10:42:28 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -135,6 +135,26 @@ let rec get_local_idents_from_pattern pat =
         List.flatten
          (List.map (fun (_, p) -> get_local_idents_from_pattern p) labs_pats)
    | Parsetree.P_paren p -> get_local_idents_from_pattern p
+;;
+
+
+
+let rec get_local_idents_and_types_from_pattern pat =
+  match pat.Parsetree.ast_desc with
+   | Parsetree.P_const _
+   | Parsetree.P_wild -> []
+   | Parsetree.P_var v -> [(v, pat.Parsetree.ast_type)]
+   | Parsetree.P_as (p, v) ->
+       (v, pat.Parsetree.ast_type) ::
+       (get_local_idents_and_types_from_pattern p)
+   | Parsetree.P_tuple ps
+   | Parsetree.P_constr (_, ps) ->
+       List.flatten (List.map get_local_idents_and_types_from_pattern ps)
+   | Parsetree.P_record labs_pats ->
+        List.flatten
+         (List.map
+	    (fun (_, p) -> get_local_idents_and_types_from_pattern p) labs_pats)
+   | Parsetree.P_paren p -> get_local_idents_and_types_from_pattern p
 ;;
 
 

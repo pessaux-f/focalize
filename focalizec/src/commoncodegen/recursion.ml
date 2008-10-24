@@ -13,7 +13,7 @@
 (***********************************************************************)
 
 
-(* $Id: recursion.ml,v 1.10 2008-10-17 07:24:21 pessaux Exp $ *)
+(* $Id: recursion.ml,v 1.11 2008-10-24 10:42:28 pessaux Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function
@@ -99,9 +99,27 @@ let rec list_recursive_calls function_name argument_list bindings expr =
        raise (NestedRecursiveCalls (function_name, expr.Parsetree.ast_loc)) in
   match expr.Parsetree.ast_desc with
    | Parsetree.E_fun (names, expr) ->
+       (* Get the type of the function. *)
+       let fun_ty =
+         (match expr.Parsetree.ast_type with
+          | Parsetree.ANTI_none | Parsetree.ANTI_non_relevant
+          | Parsetree.ANTI_scheme _ -> assert false
+          | Parsetree.ANTI_type t -> t) in
+       let fake_scheme = Types.trivial_scheme fun_ty in
+       let (names_with_types, _, _) =
+         MiscHelpers.bind_parameters_to_types_from_type_scheme
+           (Some fake_scheme) names in
+       (* Just remove the option that must always be Some since we provided
+          a scheme. *)
+       let names_with_types =
+         List.map
+           (fun (n, opt_ty) ->
+             match opt_ty with None -> assert false | Some t -> (n, t))
+           names_with_types in
        (* Add the argument to the list and find recursive calls in the *)
        (* function body.                                               *)
-       list_recursive_calls function_name (argument_list @ names) bindings expr
+       list_recursive_calls
+         function_name (argument_list @ names_with_types) bindings expr
    | Parsetree.E_var _ ->
        if is_recursive_call function_name argument_list [] expr then
          [[], bindings]
@@ -389,9 +407,13 @@ let rec get_smaller_variables variables bindings =
 let is_structural function_name arguments structural_argument body =
   let recursive_calls = list_recursive_calls function_name arguments [] body in
   let analyse_recursive_call (arguments_assoc_list, bindings) =
-    let argument_expr = List.assoc structural_argument arguments_assoc_list in
+    (* Just forget the type while searching in the assoc list. *)
+    let argument_expr =
+      Handy.list_assoc_custom_eq
+        (fun (n1, _) n2 -> n1 = n2)
+        structural_argument arguments_assoc_list in
     match argument_expr.Parsetree.ast_desc with
-     | Parsetree.E_var {Parsetree.ast_desc = Parsetree.EI_local v} ->
+     | Parsetree.E_var { Parsetree.ast_desc = Parsetree.EI_local v } ->
          let smaller_variables =
            get_smaller_variables [structural_argument] bindings in
          List.mem v smaller_variables

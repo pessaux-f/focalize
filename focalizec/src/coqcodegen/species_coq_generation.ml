@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.119 2008-10-23 13:08:53 doligez Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.120 2008-10-24 10:42:28 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1997,12 +1997,10 @@ let generate_theorem ctx print_ctx env min_coq_env used_species_parameter_tys
 let print_types_as_tuple_if_several print_ctx out_fmter types =
   let rec rec_print = function
     | [] -> assert false
-    | [(_, one)] -> 
-        let ty = match one with None -> assert false | Some t -> t in
+    | [(_, ty)] -> 
         Format.fprintf out_fmter "%a"
           (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty
-    | (_, h) :: q ->
-        let ty = match h with None -> assert false | Some t -> t in
+    | (_, ty) :: q ->
         Format.fprintf out_fmter "%a@ *@ "
           (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty ;
         rec_print q in
@@ -2092,6 +2090,13 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
             let (params_with_type, return_ty_opt, _) =
               MiscHelpers.bind_parameters_to_types_from_type_scheme
                 (Some scheme) params in
+            (* Just remove the option that must always be Some since we provided
+               a scheme. *)
+            let params_with_type =
+               List.map
+                 (fun (n, opt_ty) ->
+                   match opt_ty with None -> assert false | Some t -> (n, t))
+                 params_with_type in
             let return_ty =
               match return_ty_opt with None -> assert false | Some t -> t in
             (*  *)
@@ -2111,7 +2116,8 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
             (* Compute the recursive calls information to generate the
                termination proof obligation. *)
             let recursive_calls =
-              Recursion.list_recursive_calls name params [] body_expr in
+              Recursion.list_recursive_calls
+                name params_with_type [] body_expr in
             (* The Variable representing the termination proof obligation... *)
             Format.fprintf out_fmter
               "@[<2>Variable __term_obl :" ;
@@ -2127,13 +2133,24 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
             (* Generate the recursive uncurryed function *)
             Format.fprintf out_fmter
               "@[<2>Function %a@ (__arg:@ %a)@ \
-              {wf __term_order __arg}:@ %a@ :=@ @[<2>let (%a) :=@ __arg in@]@ "
+              {wf __term_order __arg}:@ %a@ :=@ @[<2>let "
               Parsetree_utils.pp_vname_with_operators_expanded name
               (print_types_as_tuple_if_several new_print_ctx) params_with_type
               (Types.pp_type_simple_to_coq new_print_ctx ~reuse_mapping: true)
-              return_ty
-              (Handy.pp_generic_separated_list ","
-                Parsetree_utils.pp_vname_with_operators_expanded) params ;
+              return_ty ;
+            (* Check if we need to generate parens, i.e. if we really have a
+               tuple or just only 1 parameter. *)
+            let print_paren =
+              (match params with
+               | [] -> assert false (* A function always have at least 1 arg. *)
+               | [_] -> false
+               | _ -> true) in
+            if print_paren then Format.fprintf out_fmter "(" ;
+            Format.fprintf out_fmter "%a"
+                (Handy.pp_generic_separated_list ","
+                   Parsetree_utils.pp_vname_with_operators_expanded) params ;
+            if print_paren then Format.fprintf out_fmter ")" ;
+            Format.fprintf out_fmter " :=@ __arg in@]@ " ;
             (* We must transform the recursive function's body si that all the
                recursive calls send their arguments as a unique tuple rather
                than as several arguments. This is because we "tuplified" the
