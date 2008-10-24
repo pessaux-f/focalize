@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.11 2008-10-24 10:42:28 pessaux Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.12 2008-10-24 11:44:20 pessaux Exp $ *)
 
 
 
@@ -448,9 +448,11 @@ let generate_termination_lemmas ctx print_ctx env recursive_calls =
                   Species_record_type_generation.SMS_abstracted env expr ;
               Format.fprintf out_fmter "@]) ->@ ")
         bindings ;
-      (* Now, generate the expression that telling the decreasing. *)
+      (* Now, generate the expression that telling the decreasing applying
+         the "__term_order" Variable. *)
+      Format.fprintf out_fmter "__term_order@ " ;
       generate_exprs_as_tuple ctx env rec_args ;
-      Format.fprintf out_fmter " <@ " ;
+      Format.fprintf out_fmter "@ " ;
       (* Generate a tuple of all the variables. *)
       generate_variables_as_tuple out_fmter initial_vars ;
       Format.fprintf out_fmter ")@\n/\\@\n")
