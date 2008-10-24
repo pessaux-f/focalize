@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.120 2008-10-24 10:42:28 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.121 2008-10-24 13:43:00 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -840,8 +840,8 @@ let generate_non_recursive_field_binding ctx print_ctx env min_coq_env
           not generated again. @."
           Parsetree_utils.pp_vname_with_operators_expanded name
           Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
-      (* Recover the arguments for abstracted methods *)
-      (* of self in the inherited generator.          *)
+      (* Recover the arguments for abstracted methods of Self in the inherited
+    generator. *)
       find_inherited_method_generator_abstractions
         ~current_unit: ctx.Context.scc_current_unit
         from.Env.fh_initial_apparition name env
@@ -2034,8 +2034,198 @@ let generate_termination_proof _ctx _print_ctx _env _name = function
 
 
 
-let generate_recursive_let_definition ctx print_ctx env generated_fields l =
+let generate_defined_recursive_let_definition ctx print_ctx env
+    generated_fields from name params scheme body ai =
   let out_fmter = ctx.Context.scc_out_fmter in
+  match body with
+   | Parsetree.BB_logical _ ->
+       failwith "recursive logical : TODO"  (* [Unsure] *)
+   | Parsetree.BB_computational body_expr ->
+       let species_name = snd (ctx.Context.scc_current_species) in
+       (* Extend the context with the mapping between these recursive
+          functions and their extra arguments. Since we are in Coq, we
+          need to take care of the logical definitions and of the
+          explicite types abstraction management. *)
+       let ctx' = {
+         ctx with
+           Context.scc_lambda_lift_params_mapping =
+             [(name,
+               Misc_common.make_params_list_from_abstraction_info
+                 ~care_logical: true ~care_types: true ai)] } in
+       (* Open the "Section" and "Module" for the recursive definition. *)
+       Format.fprintf out_fmter "@[<2>Module Termination_%a_namespace.@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
+       Format.fprintf out_fmter "@[<2>Section %a.@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
+       (* Now, generate the prelude of the only method introduced by
+          "let rec". *)
+       let all_deps_from_params =
+         Abstractions.merge_abstraction_infos
+           ai.Abstractions.ai_dependencies_from_params_via_body
+           (Abstractions.merge_abstraction_infos
+              ai.Abstractions.ai_dependencies_from_params_via_type
+              ai.Abstractions.ai_dependencies_from_params_via_completion) in
+       let sorted_deps_from_params =
+         Dep_analysis.order_species_params_methods all_deps_from_params in
+       let (abstracted_methods, new_ctx, new_print_ctx) =
+         generate_field_definifion_prelude
+           ~in_section: true ctx' print_ctx env ai.Abstractions.ai_min_coq_env
+           ai.Abstractions.ai_used_species_parameter_tys
+           sorted_deps_from_params generated_fields in
+       (* We now generate the order. It always has 2 arguments having the same
+          type. This type is a tuple if the method hase several arguments. *)
+       Format.fprintf out_fmter
+         "@\n@\n(* Abstracted termination order. *)@\n" ;
+       Format.fprintf out_fmter "@[<2>Variable __term_order@ :@ " ;
+       let (params_with_type, return_ty_opt, _) =
+         MiscHelpers.bind_parameters_to_types_from_type_scheme
+           (Some scheme) params in
+       (* Just remove the option that must always be Some since we provided
+          a scheme. *)
+       let params_with_type =
+         List.map
+           (fun (n, opt_ty) ->
+             match opt_ty with None -> assert false | Some t -> (n, t))
+           params_with_type in
+       let return_ty =
+         match return_ty_opt with None -> assert false | Some t -> t in
+       Types.purge_type_simple_to_coq_variable_mapping () ;
+       (* Print the tuple that is the method's arguments' types. *)
+       Format.fprintf out_fmter "%a -> %a -> Prop.@]@\n"
+         (print_types_as_tuple_if_several new_print_ctx) params_with_type
+         (print_types_as_tuple_if_several new_print_ctx) params_with_type ;
+
+
+
+
+
+
+       (* We now prove that this order is well-founded. *)
+       Types.purge_type_simple_to_coq_variable_mapping () ;
+       (* Compute the recursive calls information to generate the termination
+          proof obligation. *)
+       let recursive_calls =
+         Recursion.list_recursive_calls name params_with_type [] body_expr in
+       (* The Variable representing the termination proof obligation... *)
+       Format.fprintf out_fmter
+         "@[<2>Variable __term_obl :" ;
+       (* It's now time to generate the lemmas proving that each recursive call
+          decreases. Each of then will be followed by a /\ to make the
+          conjunction of all of them. And the latest one will be used to add
+          the final "well_founded __term_order" to this big conjunction. *)
+       Rec_let_gen.generate_termination_lemmas
+         new_ctx new_print_ctx env recursive_calls ;
+       (* Alway end by the obligation of well-formation of the order. *)
+       Format.fprintf out_fmter "@ (well_founded __term_order).@]@\n@\n" ;
+       (* Generate the recursive uncurryed function *)
+       Format.fprintf out_fmter
+         "@[<2>Function %a@ (__arg:@ %a)@ \
+         {wf __term_order __arg}:@ %a@ :=@ @[<2>let "
+         Parsetree_utils.pp_vname_with_operators_expanded name
+         (print_types_as_tuple_if_several new_print_ctx) params_with_type
+         (Types.pp_type_simple_to_coq new_print_ctx ~reuse_mapping: true)
+         return_ty ;
+       (* Check if we need to generate parens, i.e. if we really have a tuple
+          or just only 1 parameter. *)
+       let print_paren =
+         (match params with
+          | [] -> assert false (* A function always have at least 1 arg. *)
+          | [_] -> false
+          | _ -> true) in
+       if print_paren then Format.fprintf out_fmter "(" ;
+       Format.fprintf out_fmter "%a"
+         (Handy.pp_generic_separated_list ","
+            Parsetree_utils.pp_vname_with_operators_expanded) params ;
+       if print_paren then Format.fprintf out_fmter ")" ;
+       Format.fprintf out_fmter " :=@ __arg in@]@ " ;
+       (* We must transform the recursive function's body si that all the
+          recursive calls send their arguments as a unique tuple rather than as
+          several arguments. This is because we "tuplified" the arguments of
+          the recursive function in order to be able to exhibit a lexicographic
+          order if needed. *)
+       let tuplified_body =
+         Rec_let_gen.transform_recursive_calls_args_into_tuple
+           new_ctx ~local_idents: [] name body_expr in
+       (* We specify here that we must not apply recursive calls to the extra
+          arguments due to lambda-liftings. *)
+       Species_record_type_generation.generate_expr
+         new_ctx ~local_idents: [] ~in_recursive_let_section_of: [name]
+         ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         env tuplified_body ;
+       Format.fprintf out_fmter ".@]@\n" ;
+       Format.fprintf out_fmter "@[<v 2>Proof.@ %a Qed.@]@\n"
+         (Handy.pp_generic_n_times ((List.length recursive_calls) + 1)
+            Format.fprintf)
+         (* "coq_builtins.prove_term_obl __term_obl.@\n" ; *)
+         "apply coq_builtins.magic_prove.@\n" ;
+
+
+
+
+       (* Generate the curryed version *)
+       Format.fprintf out_fmter
+         "@[<2>Definition %a__%a %a :=@ %a (%a).@]@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded species_name
+         Parsetree_utils.pp_vname_with_operators_expanded name
+         (Handy.pp_generic_separated_list " "
+            Parsetree_utils.pp_vname_with_operators_expanded) params
+         Parsetree_utils.pp_vname_with_operators_expanded name
+         (Handy.pp_generic_separated_list ","
+            Parsetree_utils.pp_vname_with_operators_expanded) params ;
+       (* Finally close the opened "Section"and "Module" . *)
+       Format.fprintf out_fmter "End %a.@]@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
+       Format.fprintf out_fmter "End Termination_%a_namespace.@]@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
+(* [Unsure] We must now generate the function applied to its order and
+   termination proof and so on... *)
+       Format.fprintf out_fmter "@[<2>Definition %a"
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
+       ignore
+         (generate_field_definifion_prelude
+            ~in_section: false new_ctx new_print_ctx env
+            ai.Abstractions.ai_min_coq_env
+            ai.Abstractions.ai_used_species_parameter_tys
+            sorted_deps_from_params generated_fields) ;
+       Format.fprintf out_fmter " :=@ Termination_%a_namespace.%a__%a@ "
+         Parsetree_utils.pp_vname_with_operators_expanded name
+         Parsetree_utils.pp_vname_with_operators_expanded species_name
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
+       (* We directly apply the abstracted arguments. That's a kind of
+          eta-expansion. *)
+       List.iter
+         (fun n ->
+           if n = Parsetree.Vlident "rep" then
+             Format.fprintf out_fmter "abst_T@ "
+           else
+             Format.fprintf out_fmter "abst_%a@ "
+               Parsetree_utils.pp_vname_with_operators_expanded n)
+         abstracted_methods ;
+       (* We now apply the fake termination order. *)
+       Format.fprintf out_fmter "coq_builtins.magic_order" ;
+       (* Close the pretty print box. *)
+       Format.fprintf out_fmter ".@]@\n" ;
+
+Format.eprintf "On enregistre %a: " Sourcify.pp_vname name ;
+List.iter
+  (fun n -> Format.eprintf "%a@ " Sourcify.pp_vname n) abstracted_methods ;
+Format.eprintf "@." ;
+
+       let compiled = {
+         Misc_common.cfm_from_species = from ;
+         Misc_common.cfm_method_name = name ;
+         Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
+         Misc_common.cfm_used_species_parameter_tys =
+           ai.Abstractions.ai_used_species_parameter_tys ;
+         Misc_common.cfm_dependencies_from_parameters =
+           sorted_deps_from_params ;
+         Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
+       Misc_common.CSF_let_rec [compiled]
+;;
+
+
+
+let generate_recursive_let_definition ctx print_ctx env generated_fields l =
   match l with
    | [] ->
        (* A "let", then a fortiori "let rec" construct *)
@@ -2043,170 +2233,50 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
        assert false
    | [((from, name, params, scheme, body, _, _), ai)] ->
        (begin
-       match body with
-        | Parsetree.BB_logical _ ->
-            (* [Unsure] *)
-            failwith "recursive logical : TODO"
-        | Parsetree.BB_computational body_expr ->
-            let species_name = snd (ctx.Context.scc_current_species) in
-            (* Extend the context with the mapping between these recursive
-               functions and their extra arguments. Since we are in Coq, we
-               need to take care of the logical definitions and of the
-               explicite types abstraction management. *)
-            let ctx' = {
-              ctx with
-                Context.scc_lambda_lift_params_mapping =
-                  [(name,
-                    Misc_common.make_params_list_from_abstraction_info
-                      ~care_logical: true ~care_types: true ai)] } in
-            (* Open the "Section" and "Module" for the recursive definition. *)
-            Format.fprintf out_fmter "@[<2>Module Termination_%a_namespace.@\n"
-              Parsetree_utils.pp_vname_with_operators_expanded name ;
-            Format.fprintf out_fmter "@[<2>Section %a.@\n"
-              Parsetree_utils.pp_vname_with_operators_expanded name ;
-            (* Now, generate the prelude of the only method introduced by
-               "let rec". *)
-            let all_deps_from_params =
-              Abstractions.merge_abstraction_infos
-                ai.Abstractions.ai_dependencies_from_params_via_body
-                (Abstractions.merge_abstraction_infos
-                   ai.Abstractions.ai_dependencies_from_params_via_type
-                   ai.Abstractions.ai_dependencies_from_params_via_completion)
-            in
-            let sorted_deps_from_params =
-              Dep_analysis.order_species_params_methods all_deps_from_params in
-            let (abstracted_methods, new_ctx, new_print_ctx) =
-              generate_field_definifion_prelude
-                ~in_section: true ctx' print_ctx
-                env ai.Abstractions.ai_min_coq_env
-                ai.Abstractions.ai_used_species_parameter_tys
-                sorted_deps_from_params generated_fields in
-            (* We now generate the order. It always has 2 arguments having the
-               same type. This type is a tuple if the method hase several
-               arguments. *)
-            Format.fprintf out_fmter
-              "@\n@\n(* Abstracted termination order. *)@\n" ;
-            Format.fprintf out_fmter "@[<2>Variable __term_order@ :@ " ;
-            let (params_with_type, return_ty_opt, _) =
-              MiscHelpers.bind_parameters_to_types_from_type_scheme
-                (Some scheme) params in
-            (* Just remove the option that must always be Some since we provided
-               a scheme. *)
-            let params_with_type =
-               List.map
-                 (fun (n, opt_ty) ->
-                   match opt_ty with None -> assert false | Some t -> (n, t))
-                 params_with_type in
-            let return_ty =
-              match return_ty_opt with None -> assert false | Some t -> t in
-            (*  *)
-            Types.purge_type_simple_to_coq_variable_mapping () ;
-            (* Print the tuple that is the method's arguments' types. *)
-            Format.fprintf out_fmter "%a -> %a -> Prop.@]@\n"
-              (print_types_as_tuple_if_several new_print_ctx) params_with_type
-              (print_types_as_tuple_if_several new_print_ctx) params_with_type ;
-
-
-
-
-
-
-            (* We now prove that this order is well-founded. *)
-            Types.purge_type_simple_to_coq_variable_mapping () ;
-            (* Compute the recursive calls information to generate the
-               termination proof obligation. *)
-            let recursive_calls =
-              Recursion.list_recursive_calls
-                name params_with_type [] body_expr in
-            (* The Variable representing the termination proof obligation... *)
-            Format.fprintf out_fmter
-              "@[<2>Variable __term_obl :" ;
-            (* It's now time to generate the lemmas proving that each
-               recursive call decreases. Each of then will be followed by
-               a /\ to make the conjunction of all of them. And the latest one
-               will be used to add the final "well_founded __term_order" to
-               this big conjunction. *)
-            Rec_let_gen.generate_termination_lemmas
-              new_ctx new_print_ctx env recursive_calls ;
-            (* Alway end by the obligation of well-formation of the order. *)
-            Format.fprintf out_fmter "@ (well_founded __term_order).@]@\n@\n" ;
-            (* Generate the recursive uncurryed function *)
-            Format.fprintf out_fmter
-              "@[<2>Function %a@ (__arg:@ %a)@ \
-              {wf __term_order __arg}:@ %a@ :=@ @[<2>let "
-              Parsetree_utils.pp_vname_with_operators_expanded name
-              (print_types_as_tuple_if_several new_print_ctx) params_with_type
-              (Types.pp_type_simple_to_coq new_print_ctx ~reuse_mapping: true)
-              return_ty ;
-            (* Check if we need to generate parens, i.e. if we really have a
-               tuple or just only 1 parameter. *)
-            let print_paren =
-              (match params with
-               | [] -> assert false (* A function always have at least 1 arg. *)
-               | [_] -> false
-               | _ -> true) in
-            if print_paren then Format.fprintf out_fmter "(" ;
-            Format.fprintf out_fmter "%a"
-                (Handy.pp_generic_separated_list ","
-                   Parsetree_utils.pp_vname_with_operators_expanded) params ;
-            if print_paren then Format.fprintf out_fmter ")" ;
-            Format.fprintf out_fmter " :=@ __arg in@]@ " ;
-            (* We must transform the recursive function's body si that all the
-               recursive calls send their arguments as a unique tuple rather
-               than as several arguments. This is because we "tuplified" the
-               arguments of the recursive function in order to be able to
-               exhibit a lexicographic order if needed. *)
-            let tuplified_body =
-              Rec_let_gen.transform_recursive_calls_args_into_tuple
-                new_ctx ~local_idents: [] name body_expr in
-            (* We specify here that we must not apply recursive calls to the
-               extra arguments due to lambda-liftings. *)
-            Species_record_type_generation.generate_expr
-              new_ctx ~local_idents: [] ~in_recursive_let_section_of: [name]
-              ~self_methods_status:
-                Species_record_type_generation.SMS_abstracted
-              env tuplified_body ;
-            Format.fprintf out_fmter ".@]@\n" ;
-            Format.fprintf out_fmter "@[<v 2>Proof.@ %a Qed.@]@\n"
-              (Handy.pp_generic_n_times ((List.length recursive_calls) + 1)
-                Format.fprintf)
-              (* "coq_builtins.prove_term_obl __term_obl.@\n" ; *)
-              "apply coq_builtins.magic_prove.@\n" ;
-
-
-
-
-            (* Generate the curryed version *)
-            Format.fprintf out_fmter "@[Definition %a__%a %a :=@ %a (%a).@]@\n"
-              Parsetree_utils.pp_vname_with_operators_expanded species_name
-              Parsetree_utils.pp_vname_with_operators_expanded name
-              (Handy.pp_generic_separated_list " "
-                Parsetree_utils.pp_vname_with_operators_expanded) params
-              Parsetree_utils.pp_vname_with_operators_expanded name
-              (Handy.pp_generic_separated_list ","
-                Parsetree_utils.pp_vname_with_operators_expanded) params ;
-            (* Finally close the opened "Section"and "Module" . *)
-            Format.fprintf out_fmter "End %a.@]@\n"
-              Parsetree_utils.pp_vname_with_operators_expanded name ;
-            Format.fprintf out_fmter "End Termination_%a_namespace.@]@\n"
-              Parsetree_utils.pp_vname_with_operators_expanded name ;
-(* [Unsure] We must now generate the function applied to its order and
-   termination proof and so on... *)
-
-
-
-            let compiled = {
-              Misc_common.cfm_from_species = from ;
-              Misc_common.cfm_method_name = name ;
-              Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
-              Misc_common.cfm_used_species_parameter_tys =
-                ai.Abstractions.ai_used_species_parameter_tys ;
-              Misc_common.cfm_dependencies_from_parameters =
-                sorted_deps_from_params ;
-              Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
-            Misc_common.CSF_let_rec [compiled]
+       (* First of all, only methods defined in the current species must be
+          generated. Inherited methods ARE NOT generated again ! *)
+       if from.Env.fh_initial_apparition = ctx.Context.scc_current_species
+       then
+         generate_defined_recursive_let_definition
+           ctx print_ctx env generated_fields from name params scheme body ai
+       else
+         (begin
+         (* Just a bit of debug/information if requested. *)
+         if Configuration.get_verbose () then
+           Format.eprintf
+             "Field '%a' inherited from species '%a' but not \
+             (re)-declared is not generated again. @."
+             Parsetree_utils.pp_vname_with_operators_expanded name
+             Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
+         let all_deps_from_params =
+           Abstractions.merge_abstraction_infos
+             ai.Abstractions.ai_dependencies_from_params_via_body
+             (Abstractions.merge_abstraction_infos
+                ai.Abstractions.ai_dependencies_from_params_via_type
+                ai.Abstractions.ai_dependencies_from_params_via_completion) in
+         let sorted_deps_from_params =
+           Dep_analysis.order_species_params_methods all_deps_from_params in
+         (* Recover the arguments for abstracted methods of Self in the
+            inherited generator.*)
+         let abstracted_methods =
+           find_inherited_method_generator_abstractions
+             ~current_unit: ctx.Context.scc_current_unit
+             from.Env.fh_initial_apparition name env in
+         (* Now, build the [compiled_field_memory], even if the method was not
+            really generated because it was inherited. *)
+         let compiled_field = {
+           Misc_common.cfm_from_species = from ;
+           Misc_common.cfm_method_name = name ;
+           Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
+           Misc_common.cfm_used_species_parameter_tys =
+             ai.Abstractions.ai_used_species_parameter_tys ;
+           Misc_common.cfm_dependencies_from_parameters =
+             sorted_deps_from_params ;
+           Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
+         Misc_common.CSF_let_rec [compiled_field]
+         end)
        end)
-   | _ :: _ -> raise Recursion.MutualRecursion
+   | _ -> raise Recursion.MutualRecursion
 ;;
 
 
