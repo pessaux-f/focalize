@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.123 2008-10-24 15:52:02 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.124 2008-10-24 16:19:52 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2223,6 +2223,32 @@ let generate_defined_recursive_let_definition ctx print_ctx env
          Parsetree_utils.pp_vname_with_operators_expanded name ;
        (* We directly apply the abstracted arguments. That's a kind of
           eta-expansion. *)
+       List.iter
+         (fun n ->
+           Format.fprintf out_fmter "_p_%a_T@ "
+             Parsetree_utils.pp_vname_with_operators_expanded n)
+         ai.Abstractions.ai_used_species_parameter_tys ;
+       List.iter
+         (fun (sparam, (Env.ODFP_methods_list meths)) ->
+           (* Recover the species parameter's name. *)
+           let species_param_name =
+             match sparam with
+              | Env.TypeInformation.SPAR_in (n, _, _) -> n
+              | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
+                  Parsetree.Vuident n in
+           (* Each abstracted method will be named like "_p_", followed by the
+              species parameter name, followed by "_", followed by the method's
+              name.
+              We don't care here about whether the species parameters is "in" or
+              "is". *)
+           let prefix =
+             "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
+           List.iter
+             (fun (meth, _) ->
+               Format.fprintf out_fmter "%s%a@ "
+                 prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
+             meths)
+         sorted_deps_from_params ;
        List.iter
          (fun n ->
            if n = Parsetree.Vlident "rep" then
