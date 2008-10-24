@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.122 2008-10-24 14:11:30 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.123 2008-10-24 15:52:02 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1595,6 +1595,17 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          ctx env aim ;
        Format.fprintf out_fmter ".@]@\n" ;
+       (* Enforce Hypothesis to be used to prevent Coq from removing it. *)
+       List.iter
+         (fun h ->
+           match h.Parsetree.ast_desc with
+            | Parsetree.H_variable (_, _) | Parsetree.H_notation (_, _) -> ()
+            | Parsetree.H_hypothesis (hn, _) ->
+                Format.fprintf out_fmter
+                  "@[<2>assert (__force_use_%a :=@ %a).@]@\n"
+             Parsetree_utils.pp_vname_with_operators_expanded hn
+             Parsetree_utils.pp_vname_with_operators_expanded hn)
+         available_hyps ;
        (* Proof is assumed, then simply use "magic_prove". *)
        Format.fprintf out_fmter
          "(* Proof assumed because \"%s\". *)@\n" reason ;
@@ -1611,6 +1622,17 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          ctx env aim ;
        Format.fprintf out_fmter ".@]@\n" ;
+       (* Enforce Hypothesis to be used to prevent Coq from removing it. *)
+       List.iter
+         (fun h ->
+           match h.Parsetree.ast_desc with
+            | Parsetree.H_variable (_, _) | Parsetree.H_notation (_, _) -> ()
+            | Parsetree.H_hypothesis (hn, _) ->
+                Format.fprintf out_fmter
+                  "@[<2>assert (__force_use_%a :=@ %a).@]@\n"
+             Parsetree_utils.pp_vname_with_operators_expanded hn
+             Parsetree_utils.pp_vname_with_operators_expanded hn)
+         available_hyps ;
        (* Dump verbatim the Coq code. *)
        Format.fprintf out_fmter "%s@\n" script ;
    | Parsetree.Pf_node nodes ->
@@ -1700,6 +1722,17 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
            ~self_methods_status: Species_record_type_generation.SMS_abstracted
            ctx env aim ;
          Format.fprintf out_fmter ".@]@\n" ;
+         (* Enforce Hypothesis to be used to prevent Coq from removing it. *)
+         List.iter
+           (fun h ->
+             match h.Parsetree.ast_desc with
+              | Parsetree.H_variable (_, _) | Parsetree.H_notation (_, _) -> ()
+              | Parsetree.H_hypothesis (hn, _) ->
+                  Format.fprintf out_fmter
+                    "@[<2>assert (__force_use_%a :=@ %a).@]@\n"
+                    Parsetree_utils.pp_vname_with_operators_expanded hn
+                    Parsetree_utils.pp_vname_with_operators_expanded hn)
+           available_hyps ;
          (* Apply Zenon's result to prove the lemma... *)
          Format.fprintf out_fmter "apply for_zenon_%a ;@\nauto.@\nQed.@\n"
            Parsetree_utils.pp_vname_with_operators_expanded aim_name
@@ -2202,12 +2235,6 @@ let generate_defined_recursive_let_definition ctx print_ctx env
        Format.fprintf out_fmter "coq_builtins.magic_order" ;
        (* Close the pretty print box. *)
        Format.fprintf out_fmter ".@]@\n" ;
-
-Format.eprintf "On enregistre %a: " Sourcify.pp_vname name ;
-List.iter
-  (fun n -> Format.eprintf "%a@ " Sourcify.pp_vname n) abstracted_methods ;
-Format.eprintf "@." ;
-
        let compiled = {
          Misc_common.cfm_from_species = from ;
          Misc_common.cfm_method_name = name ;
