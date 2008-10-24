@@ -14,11 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.foc,v 1.10 2008-10-24 13:35:47 doligez Exp $ *)
+(* $Id: ensembles_finis.foc,v 1.11 2008-10-24 16:15:17 doligez Exp $ *)
 
 (*pp basic_ext.cmo*)
 
-(* $Id: ensembles_finis.foc,v 1.10 2008-10-24 13:35:47 doligez Exp $ *)
+(* $Id: ensembles_finis.foc,v 1.11 2008-10-24 16:15:17 doligez Exp $ *)
 
 (**
 
@@ -214,35 +214,17 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
   theorem card_zero_vide: all e in Self,
     !cardinal (e) = 0 <-> !equal (e, !vide)
     proof:
-      by property !vide_spec2, int_lt_irrefl, int_lt_le_trans, int_le_trans,
-                  int_le_refl, !est_element_spec
-      ;
-(*
-      (* [Unsure -  - à laisser ?]
-         by property
-         card_congruence, vide_card, vide_spec2, incl_card,
-         singleton_card, est_element_spec ; *)
-      coq proof {*
-        Intros e; Split.
-        Intros Hcard.
-        Elim (abst_vide_spec2 e);
-        Intros H1 H2; Apply H1; Clear H1 H2.
-        Intros x. Unfold not; Intros Hxelem.
-        Absurd (Is_true (__g_base_eq  `0` (abst_cardinal  e) )); Auto.
-        2:Apply beq_symm; Trivial.
-        Apply int_lt_irrefl.
-        Apply (int_lt_le_trans `0` `1` (abst_cardinal e)).
-        Unfold __g_int_lt; Apply dec_IsTrue; Compute; Trivial.
-        Apply (int_le_trans `1`
-           (abst_cardinal (abst_singleton x)) (abst_cardinal e)).
-        Apply int_le_refl.
-        Apply beq_symm; Trivial.
-        Elim (abst_est_element_spec x e).
-        Intros H1 H2. Auto.
-        Intros Heq.
-        Apply (beq_trans ? (abst_cardinal e) (abst_cardinal abst_vide) `0` ); Auto.
-     *};
-*)
+    <1>1 assume e in Self,
+         prove !cardinal (e) = 0 <-> !equal (e, !vide)
+      <2>1 prove int_leq (0, !cardinal (e))
+        assumed {* arithmetic 0 =< x *}
+      <2>f qed
+        by property !sous_ensemble_vide, !include_card, !vide_card,
+                    int_lt_irrefl, !incl_card, int_le_antisymm
+           definition of equal
+           step <2>1
+    <1>f qed.
+    ;
 
   (** Le cardinal de l'union est au plus la somme des cardinaux. *)
   property union_card : all e1 e2 in Self,
@@ -304,32 +286,11 @@ species Ensembles_finis_ordonnes (A is Ordered_set) inherits
         (all x in A, A!lt (x, !min (e)) ->
           (all y in A, !est_element (y, e) -> A!lt (x, y)))
     proof:
-      (* [Unsure - à laisser ?]
-          by property min_spec ; *)
-      coq proof {*
-        Intros;
-        Elim (abst_min_spec e H);Intros;
-        Generalize (H3 y H1);Intro;
-        Elim ((ordered_set_lt_is_not_leq self_a)  x (abst_min e));Intros;
-        Elim (H5 H0);Intros;
-        Generalize ((ordered_set_leq_transitive self_a) x (abst_min e) y H7 H4);
-        Intro;
-        Elim ((ordered_set_lt_is_not_leq self_a) x y);Intros;
-        Elim (H11 H9);Intros.
-        Assumption.
-        Generalize ((ordered_set_equal_symmetric self_a) x y H12);Intros;
-        Generalize ((ordered_set_leq_reflexive self_a) y x H13);Intros;
-        Generalize ((ordered_set_leq_transitive self_a) y x (abst_min e) H14 H7);
-        Intros;
-        Generalize ((ordered_set_leq_antisymmetric self_a) y (abst_min e) H15 H4);
-        Intros;
-        Generalize ((ordered_set_equal_transitive self_a) x y (abst_min e) H12 H16);
-        Intros;
-        Absurd (Is_true (ordered_set_equal self_a x (abst_min e))).
-        Elim ((ordered_set_different_not_equal self_a) x (abst_min e));Intros.
-        Apply H18;Assumption.
-        Assumption.
-      *};
+      by property !min_spec, A!lt_is_not_leq, A!leq_transitive,
+                  A!equal_symmetric, A!leq_reflexive, A!leq_transitive,
+                  A!leq_antisymmetric, A!equal_transitive,
+                  A!same_is_not_different
+    ;
 
 (** le minimum est le plus grand des minorants. *)
 theorem min_inf2:
