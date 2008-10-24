@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.152 2008-10-17 06:13:34 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.153 2008-10-24 14:11:30 pessaux Exp $ *)
 
 
 
@@ -1628,8 +1628,8 @@ and typecheck_statement ctx env statement =
    | Some logical_expr ->
        (* Same remark than above pour Self being not abstract ! *)
        ignore (typecheck_logical_expr ~in_proof: true ctx env' logical_expr)) ;
-  (* Return the environment extended by the possible idents *)
-  (* the statement binds via its hypotheses.                *)
+  (* Return the environment extended by the possible idents the statement
+     binds via its hypotheses. *)
   env'
 
 
@@ -1662,7 +1662,7 @@ and typecheck_theorem_def ctx env theorem_def =
       theorem_def.Parsetree.ast_desc.Parsetree.th_stmt in
   Types.end_definition () ;
   let ctx' = { ctx with tyvars_mapping = vmapp } in
-  (* Ensure that Self we be abstract during the theorem's definition type
+  (* Ensure that Self will be abstract during the theorem's definition type
      inference by setting [~in_proof: false]. *)
   let ty =
     typecheck_logical_expr
@@ -2019,14 +2019,12 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
            | Parsetree.SF_theorem theorem_def ->
                (begin
                Types.reset_deps_on_rep () ;
-(* Types.begin_definition () ; *)
                (* Get the theorem's type (trivially should be Prop) and the
                   names of type variables found in the "forall" and "exists".
                   They will lead to extra "forall ... : Set" in front of the
                   theorem's logical expression. *)
                let (ty, polymorphic_vars_map) =
                  typecheck_theorem_def ctx env theorem_def in
-(* Types.end_definition () ; *)
                (* Check for a decl dependency on "rep". *)
                Types.check_for_decl_dep_on_self ty ;
                (* Be careful : methods are not polymorphics (c.f. Virgile
@@ -2379,11 +2377,11 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
                end)
             else false)
           flat_s1 in
-      (* Check if we found the same method name than v2 amoung the v1's . *)
-      (* Note that if 2 fields with the same name were found, then either *)
-      (* they can be unified, hence [found = true], or the unification    *)
-      (* failed, hence we can't be here, since an exception will abort    *)
-      (* the computation !                                                *)
+      (* Check if we found the same method name than v2 amoung the v1's.
+         Note that if 2 fields with the same name were found, then either
+         they can be unified, hence [found = true], or the unification
+         failed, hence we can't be here, since an exception will abort the
+         computation ! *)
       if not found then
         raise
           (Not_subspecies_missing_field
@@ -2394,8 +2392,8 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
 
 
 let apply_substitutions_reversed_list_on_type reversed_substs ty =
-  (* ATTENTION Do not fold left otherwise substitutions *)
-  (* will be performed in reverse order.                *)
+  (* ATTENTION Do not fold left otherwise substitutions will be performed in
+     reverse order. *)
   List.fold_right
     (fun (c1, c2) accu_type -> Types.subst_type_simple c1 c2 accu_type)
     reversed_substs
@@ -2406,8 +2404,8 @@ let apply_substitutions_reversed_list_on_type reversed_substs ty =
 
 let apply_substitutions_reversed_list_on_fields
     ~current_unit fields reversed_substs =
-  (* ATTENTION Do not fold left otherwise substitutions *)
-  (* will be performed in reverse order.                *)
+  (* ATTENTION Do not fold left otherwise substitutions will be performed in
+     reverse order. *)
   List.fold_right
     (fun (c1, c2) accu_fields ->
       List.map
@@ -2459,30 +2457,29 @@ let apply_species_arguments ctx env base_spe_descr params =
                (begin
                (* First, get the argument expression's type. *)
                let expr_ty = typecheck_expr ctx env e_param_expr in
-               (* The formal's collection type [f_ty] is the name of the *)
-               (* collection that the effective argument is expected to  *)
-               (* be a carrier of. Then one must unify the effective     *)
-               (* expression's type with a "carrier" of the formal       *)
-               (* collection.                                            *)
+               (* The formal's collection type [f_ty] is the name of the
+                  collection that the effective argument is expected to be a
+                  carrier of. Then one must unify the effective expression's
+                  type with a "carrier" of the formal collection. *)
                let repr_of_formal =
                  Types.type_rep_species
                    ~species_module: (fst f_ty) ~species_name: (snd f_ty) in
-               (* We must apply the already seen substitutions to this type  *)
-               (* to ensure that it is tansformed if required to collections *)
-               (* of possible previous "is" parameters. For instance, let's  *)
-               (* take the following code:                                   *)
-               (*    species Me (Naturals is Intmodel, n in Naturals) = ...  *)
-               (*    collection ConcreteInt implements Intmodel ;;           *)
-               (*    collection Foo implements Me                            *)
-               (*      (ConcreteInt, ConcreteInt!un) ;;                      *)
-               (* While typechecking the ConcreteInt!un, we get a type       *)
-               (* Naturals. but since in the Foo collection, Naturals is     *)
-               (* instanciated by the effective ConcreteInt, Naturals        *)
-               (* appears to be incompatible with ConcreteInt. However, in   *)
-               (* Foo, with the first instanciation, we said that Naturals   *)
-               (* IS A ConcreteInt, and we substituted everywhere Naturals   *)
-               (* by ConcreteInt. So idem must we do in the type infered for *)
-               (* the effective argument ConcreteInt!un.                     *)
+               (* We must apply the already seen substitutions to this type
+                  to ensure that it is tansformed if required to collections
+                  of possible previous "is" parameters. For instance, let's
+                  take the following code:
+                    species Me (Naturals is Intmodel, n in Naturals) = ...
+                    collection ConcreteInt implements Intmodel ;;
+                    collection Foo implements Me
+                      (ConcreteInt, ConcreteInt!un) ;;
+                  While typechecking the ConcreteInt!un, we get a type
+                  Naturals. but since in the Foo collection, Naturals is
+                  instanciated by the effective ConcreteInt, Naturals appears
+                  to be incompatible with ConcreteInt. However, in Foo, with
+                  the first instanciation, we said that Naturals IS A
+                  ConcreteInt, and we substituted everywhere Naturals by
+                  ConcreteInt. So idem must we do in the type infered for the
+                  effective argument ConcreteInt!un. *)
                let substed_repr_of_formal =
                  apply_substitutions_reversed_list_on_type
                    accu_substs repr_of_formal in
@@ -2507,13 +2504,13 @@ let apply_species_arguments ctx env base_spe_descr params =
            | Env.TypeInformation.SPAR_is ((f_module, f_name), _, c1_ty, _, _) ->
                (begin
                let c1 = (f_module, f_name) in
-               (* Get the argument species expression signature and methods. *)
-               (* Note that to be well-typed this expression must ONLY be    *)
-               (* an [E_constr] (because species names are capitalized,      *)
-               (* parsed as sum type constructors) that should be considered *)
-               (* as a species name. C.f. Virgile Prevosto's Phd, section    *)
-               (* 3.8, page 43.                                              *)
-               (* Rule [COLL-INST].                                          *)
+               (* Get the argument species expression signature and methods.
+                  Note that to be well-typed this expression must ONLY be an
+                  [E_constr] (because species names are capitalized, parsed as
+                  sum type constructors) that should be considered as a
+                  species name. C.f. Virgile Prevosto's Phd, section 3.8,
+                  page 43.
+                  Rule [COLL-INST]. *)
                match typecheck_expr_as_species_parameter_argument
                     ctx env e_param_expr with
                 | TSPA_non_self ((c2_mod_name, c2_species_name),
@@ -2556,11 +2553,11 @@ let apply_species_arguments ctx env base_spe_descr params =
                     let param_type_for_ast = Types.type_self () in
                     e_param.Parsetree.ast_type <-
                       Parsetree.ANTI_type param_type_for_ast ;
-                    (* No abstraction to do: this would be replacing Self by *)
-                    (* itself ! Moreover, since we don't know yet the set of *)
-                    (* methods Self will have, we delay the signature        *)
-                    (* compatibility to later, reminding that Self is        *)
-                    (* expected to have at least [c1]'s methods.             *)
+                    (* No abstraction to do: this would be replacing Self by
+                       itself ! Moreover, since we don't know yet the set of
+                       methods Self will have, we delay the signature
+                       compatibility to later, reminding that Self is expected
+                       to have at least [c1]'s methods. *)
                     let new_self_must_be = c1 :: accu_self_must_be in
                     (* And now, the new methods where c1 <- c2. *)
                     let substd_meths =
@@ -2646,24 +2643,23 @@ let typecheck_species_expr ctx env species_expr =
 
 
 
-(* *********************************************************************** *)
-(* typing_context -> Env.TypingEnv.t ->                                    *)
-(*   (Parsetree.vname * Parsetree.species_param_type) list ->              *)
-(*     (Env.TypingEnv.t * Env.TypeInformation.species_param list *         *)
-(*      Types.type_species)                                                *)
+(* ********************************************************************* *)
+(* typing_context -> Env.TypingEnv.t ->                                  *)
+(*   (Parsetree.vname * Parsetree.species_param_type) list ->            *)
+(*     (Env.TypingEnv.t * Env.TypeInformation.species_param list *       *)
+(*      Types.type_species)                                              *)
 (** {b Descr} : Performs the typechecking of a species definition
-              parameters.
-              It build the species type of the species owning these
-              parameters and return it.
-              It also build the list of [Env.TypeInformation.species_param]
-              that will appear in the hosting species [spe_sig_params]
-              field.
-              It also extend the environment with the species
-              induced by the parameters and the carrier types of
-              these species induced by the parameters.
+    parameters.
+    It build the species type of the species owning these parameters and
+    return it.
+    It also build the list of [Env.TypeInformation.species_param] that
+    will appear in the hosting species [spe_sig_params] field.
+    It also extend the environment with the species induced by the
+    parameters and the carrier types of these species induced by the
+    parameters.
 
-    {b Rem} : Not exported outside this module.                            *)
-(* *********************************************************************** *)
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
 let typecheck_species_def_params ctx env species_params =
   let rec rec_typecheck_params accu_env accu_self_must_be = function
     | [] -> (accu_env, [], accu_self_must_be)
@@ -2673,8 +2669,8 @@ let typecheck_species_def_params ctx env species_params =
         match param_kind.Parsetree.ast_desc with
          | Parsetree.SPT_in ident ->
              (begin
-             (* Recover the module and the species name that the parameter *)
-             (* must be of.                                                *)
+             (* Recover the module and the species name that the parameter
+                must be of. *)
              let (param_sp_module, param_sp_name) =
                (match ident.Parsetree.ast_desc with
                 | Parsetree.I_local vname
@@ -2682,18 +2678,18 @@ let typecheck_species_def_params ctx env species_params =
                     (ctx.current_unit, (Parsetree_utils.name_of_vname vname))
                 | Parsetree.I_global (Parsetree.Qualified (fname, vname)) ->
                     (fname, (Parsetree_utils.name_of_vname vname))) in
-             (* Check that the species exists to avoid raising an error at *)
-             (* application-time if the species doesn't exist. Get its     *)
-             (* provenance to know if it's a toplevel species, toplevel    *)
-             (* collection or another species parameter. This will be used *)
-             (* to annotate the current species parameter's type.          *)
+             (* Check that the species exists to avoid raising an error at
+                application-time if the species doesn't exist. Get its
+                provenance to know if it's a toplevel species, toplevel
+                collection or another species parameter. This will be used to
+                annotate the current species parameter's type. *)
              let species_of_param_type =
                Env.TypingEnv.find_species
                  ~loc: ident.Parsetree.ast_loc ~current_unit: ctx.current_unit
                  ident accu_env in
-             (* Create the carrier type of the parameter and extend the *)
-             (* current environment with this parameter as a value of   *)
-             (* the carrier type.                                       *)
+             (* Create the carrier type of the parameter and extend the
+                current environment with this parameter as a value of the
+                carrier type. *)
              Types.begin_definition () ;
              let param_carrier_ty =
                Types.type_rep_species ~species_module: param_sp_module
@@ -3149,8 +3145,8 @@ let collapse_proofs_of ~current_species found_proofs_of
            end))
       (revd_inherited_methods_infos, revd_methods_info)
       found_proofs_of in
-  (* And then, reverse again the result to get *)
-  (* again the initial and correct order.      *)
+  (* And then, reverse again the result to get again the initial and correct
+     order. *)
   (List.rev revd_collapsed_inherited_methods,
    List.rev revd_collapsed_current_methods)
 ;;

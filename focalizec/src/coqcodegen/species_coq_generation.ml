@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.121 2008-10-24 13:43:00 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.122 2008-10-24 14:11:30 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -467,12 +467,9 @@ let generate_defined_non_recursive_method_postlude ctx print_ctx env params
   (* Ignore the result type of the "let" if it's a function because we never
      print the type constraint on the result of the "let". We only print them
      in the arguments of the let-bound ident. *)
-  (* Because methods are not polymorphic, one should never have instanciate
-     variables. We just check for this. *)
-  let (params_with_type, ending_ty_opt, instanciated_vars) =
+  let (params_with_type, ending_ty_opt, _) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
       (Some scheme) params in
-  assert (instanciated_vars = []) ;
   let ending_ty =
     (match ending_ty_opt with
      | None ->
