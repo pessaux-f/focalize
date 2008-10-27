@@ -14,11 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.foc,v 1.11 2008-10-24 16:15:17 doligez Exp $ *)
+(* $Id: ensembles_finis.foc,v 1.12 2008-10-27 07:52:52 doligez Exp $ *)
 
 (*pp basic_ext.cmo*)
 
-(* $Id: ensembles_finis.foc,v 1.11 2008-10-24 16:15:17 doligez Exp $ *)
+(* $Id: ensembles_finis.foc,v 1.12 2008-10-27 07:52:52 doligez Exp $ *)
 
 (**
 
@@ -298,11 +298,8 @@ theorem min_inf2:
     ~ (!cardinal (e) = 0) ->
       (all y in A, !est_element (y, e)-> A!lt (x, y)) -> A!lt (x, !min (e))
   proof:
-    (* [Unsure - à laisser ?]
-       decl: min_spec; *)
-    coq proof {*
-      Intros;Apply H0;Elim (abst_min_spec e H);Intros;Assumption.
-    *};
+    by property !min_spec
+  ;
 end
 ;;
 
@@ -344,8 +341,10 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
   theorem equal_congr_est_element : all s in Self, all x y in A,
    A!equal (x, y) -> !est_element (x, s) -> !est_element (y, s)
   proof :
-    (* [Unsure - à laisser ?]
-       by definition of est_element ; *)
+    assumed {* Zenon does not handle recursive functions yet *};
+(*
+    by definition of est_element property A!equal_transitive, A!equal_symmetric
+  ;
     coq proof {*
       Unfold abst_est_element;Induction s;Simpl;Intros.
       Elim H0.
@@ -377,6 +376,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
       Discriminate.
       Elim H7.
     *};
+*)
 
   let rec sous_ensemble (e1 in Self, e2 in Self) in bool =
     match e1 with
@@ -384,6 +384,8 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
     | x :: l -> and_b (!est_element (x, e2), !sous_ensemble (l, e2)) ;
 
   proof of sous_ensemble_spec =
+    assumed {* Zenon does not handle recursive functions yet *};
+(*
     (* [Unsure - à laisser ?]
         def : est_element sous_ensemble; decl : equal_congr_est_element; *)
     coq proof {*
@@ -427,14 +429,20 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
       Assumption.
       Rewrite H7 in H1;Generalize H1;Simpl;Intro;Assumption.
     *};
+*)
 
   theorem bien_formee_vide: !bien_formee (!vide)
     proof:
+      assumed {* Zenon does not handle recursive definitions yet *};
+(*
+      by definition of vide, bien_formee
+    ;
       (* [Unsure - à laisser ?]
          def : bien_formee vide; *)
       coq proof {*
         Unfold abst_vide;Unfold abst_bien_formee;Simpl;Trivial.
       *};
+*)
 
   proof of vide_spec =
     (* [Unsure - à laisser ?]
