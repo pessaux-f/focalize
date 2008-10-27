@@ -1,4 +1,4 @@
-% $Id: refman.tex,v 1.12 2008-10-21 12:07:36 pessaux Exp $
+% $Id: refman.tex,v 1.13 2008-10-27 15:50:44 pessaux Exp $
 
 \documentclass{report}
 \usepackage[francais]{babel}
@@ -949,6 +949,7 @@ decl-dependency on the carrier. Moreover, {\tt f2} has one on
 
 
 \paragraph{Def-dependencies}
+\label{def-dependency}
 \index{dependency!def}
 It seems that when {\bf defining} a function, only decl-dependencies
 may appear since the type system of \focal\ only needs the type of the
@@ -971,7 +972,8 @@ since signature only contain types, no decl-dependencies can arise.
 Sligtly differently, when {\bf using} a property in another method,
 since it only contains a ``type'' (i.e. a logical statement), only 
 decl-dependencies appear except on the carrier. For consistency
-reasons going beyond this manuel, the {\bf \focal\ system rejects
+reasons going beyond this manuel but that will be shortly presented
+below in \ref{def-dep-on-carrier}, the {\bf \focal\ system rejects
 properties having def-dependencies on the carrier}.
 
 \smallskip
@@ -992,6 +994,8 @@ a function to have its proof possible.
 
 
 \paragraph{Erasing during inheritance}
+\index{erasing}
+\label{erasing}
 As a consequence of def-dependencies and late-binding, if a method is
 redefined, all the proofs of theorems having def-dependencies on these
 methods are erased. This means that since the body of the method
@@ -1018,7 +1022,108 @@ on them.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{More about methods definition}
-We will now examine more technical points in methods definition.
+We will now examine more technical points in methods definitions.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Well-formation}
+\index{well-formation}
+\focal\ providing late-binding, it is possible to {\bf declare} a
+method {\tt m0} and use it in another {\bf defined method} {\tt m1}.
+
+{\scriptsize
+\begin{lstlisting}
+species S0 =
+  signature m0 : Self ;
+  let m1 = m0 ;
+end ;;
+\end{lstlisting}
+}
+
+In another species {\tt S1}, it is also possible to {\bf declare} a
+method {\tt m1} and use it in another {\bf defined method} {\tt m0}.
+{\scriptsize
+\begin{lstlisting}
+species S1 inherits S0 =
+  signature m1 : Self ;
+  let m0 = x ;
+end ;;
+\end{lstlisting}
+}
+
+As long as these two species live separately no problem arise. Now we
+consider a third species {\tt S2} inheriting from both {\tt S0} and
+{\tt S1}.
+{\scriptsize
+\begin{lstlisting}
+species S2 inherits S0, S1 =
+  ...
+end ;;
+\end{lstlisting}
+}
+
+The inheritance mechanism will take each method {\bf definition} from
+its hosting species: from {\tt S0} for {\tt m1} and from {\tt S1} for
+{\tt m2}. We have hence a configuration where {\tt m0} calls {\tt m1}
+and {\tt m1} calls {\tt m0}, i.e. the two methods ar enow mutually
+recursive although it was not the case where each of them was
+{\bf defined}.
+
+To avoid this situation, we will say that a species is well-formed if
+and only if, one inheritance is resolved, no method initially not
+recursive turn to become recursive. The \focal\ compiler performs this
+analysis and rejects any species that is not compliant to this
+criterion. In the above example, an error would be raised, explaining
+how the mutual recursion (the cycle of dependencies) appears,
+i.e. from {\tt m1} to {\tt m0} (and implicitly back to {\tt m1} from
+{\tt m0}).
+
+\noindent
+{\scriptsize
+{\tt
+Species 'S2' is not well-formed. Field
+'m1' involves a non-declared recursion\\
+for the following dependent fields: m1 -> m0.
+}
+}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Def-dependencies on the carrier}
+\label{def-dep-on-carrier}
+\index{dependency!def!on carrier}
+As we previously said (c.f. \ref{def-dependency}) def-dependencies on
+the carrier are not allowed in properties and theorems. The reason
+comes from the need to create consistent species interfaces. Let's
+consider the following species with the definitions:
+{\scriptsize
+\begin{lstlisting}
+species Counter =
+  rep = int ;
+  let inc (x in Self) = x + 1 ;
+  theorem inc_spec : all x in Self, inc (x) >= x + 1
+    proof ... ;
+end ;;
+\end{lstlisting}
+}
+
+The statement of {\tt inc\_spec} contains a def-dependency on the
+carrier since to typecheck this statement, one need to know that the
+carrier is assigned type {\tt int}. To create the species' interface,
+we must make the carrier abstract, hence hidding the fact is it
+represented by {\tt int}. Without this information it it now
+impossible to typecheck an expression using {\tt inc\_spec} since it
+makes explicit reference to {\tt +}, {\tt <=}, {\tt 1} that are
+operations about {\tt int}.
+
+In practice, such an error is reported as a typechecking error telling
+that {\tt rep} ``is not compatible with type'' {\tt t} where {\tt t}
+is the type expression that was assigned to the carrier (i.e.
+{\tt int} in 
+our example).
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1039,6 +1144,236 @@ We will now examine more technical points in methods definition.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Core language}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Lexical conventions}
+\index{lexical conventions}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Blanks}
+\index{blank}
+The following characters are considered as blanks: space, newline,
+horizontal tabulation, carriage return, line feed and form
+feed. Blanks are ignored, but they separate adjacent identifiers,
+literals and keywords that would otherwise be confused as one single
+identifier, literal or keyword.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Comments}
+\index{comment}
+Comments are introduced by the two characters {\tt (*}, with no
+intervening blanks, and terminated by the characters {\tt *)},
+with no intervening blanks. Comments are treated as blanks.
+Comments can occur inside string or character literals and can be
+nested. They are discarding during the compilation process.
+Example:
+{\scriptsize
+\begin{lstlisting}
+(* Discarded comment. *)
+species S =
+  ...
+  let m (x in Self) = (* Another discarded comment. *)
+  ...
+end ;;
+(* Another discarded comment for the end of file. *)
+\end{lstlisting}
+}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Documentations}
+\index{documentation}
+Documentations are introduced by the three characters {\tt (**},
+with no intervening blanks, and terminated by the two characters
+{\tt *)}, with no intervening blanks.
+Documentation cannot occur inside string or character literals and
+cannot be nested. They must preceed entities they document. This
+especially means that a
+{\bf source file cannot ends by a documentation} otherwise a syntax
+error will be issued.
+
+Conversely to comments, they are kept during the compilation process
+and recorded in the compilation information (``.fo'' files). They can
+be processed by the external documentation tool \focdoc\ provided with
+the \focal\ development environment. Several documentations can be put
+in sequence for the same construct. This allow to embeed inside them
+tags that can be used by third-party tools to discriminate on
+meaningful documentation for them. For more information, consult
+\ref{documentation-generation}.
+Example:
+{\scriptsize
+\begin{lstlisting}
+(** This a documentation for species S. *)
+species S =
+  ...
+  let m (x in Self) =
+    (** [MY_TAG_TEST] Documentation for testers. *)
+    (** [MY_TAG_MAINT] Documentation for maintainers. *)
+    ... ;
+end ;;
+\end{lstlisting}
+}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Identifiers}
+\index{identifier}
+Identifiers are sequences of letters, digits, and {\tt \_} (the
+underscore character), starting with a letter or an underscore.
+Letters contain at least the 52 lowercase and uppercase
+letters from the standard ASCII set. In an identifier, all characters
+are meaningful.
+Examples: {\tt foo}, {\tt bar}, {\tt \_20}, {\tt \_\_\_gee\_42}.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Extended identifiers}
+\index{identifier!extended}
+Moreover, \focal\ has special forms of identifiers to allow using
+spaces inside or extend the notion of operator identifiers.
+\begin{itemize}
+  \item {\bf Quoted identifiers}.
+    \index{identifier!quoted}
+    They start and end by the two characters {\tt ''} (quote) and may
+    contain regular identifiers characters plus spaces. For example:
+    {\tt ``equal is reflexive''}, {\tt ``fermat conjecture''}.
+  \item {\bf Infix/prefix operators}.
+    \index{identifier!operator}\index{operator}
+    \focal allows infix and prefix operators built from a
+    ``starting operator character'' and followed by a sequence of
+    regular identifier or operators characters. For example, all the
+    following are legal operators: 
+    {\tt +}, {\tt ++}, {\tt $\sim$+zero}, {\tt =\_mod\_5}.
+
+    The position in which to use the operator (i.e. infix or prefix)
+    is determined by the position of the first operator character
+    according to the following table:
+    \begin{center}
+    \begin{tabular}{|c|c|}
+    \hline
+    Prefix & Infix \\
+    \hline
+    ` $\sim$ ? \$ ! \#                            &
+    , + - * / \% \& $|$ : ; $<$ = $>$ @ \^\ $\setminus$ \\
+    \hline
+    \end{tabular}
+    \end{center}
+
+    Hence, in the above examples, {\tt +}, {\tt ++} and
+    {\tt =\_mod\_5} will be infix operators and {\tt $\sim$+zero} will
+    be a prefix one.
+
+    This notion of infix/prefix operator does not mean that
+    \focal\ defines all these operators: it means that the programmer
+    is free to lexically define them and use them as regular
+    prefix/infix operators instead of using the regular function
+    application. For instance, instead of creating a function to check
+    if and integer {\tt x} is equal to an integer {\tt y} minus 1
+{\scriptsize
+\begin{lstlisting}
+let is_eq_minus_1 (x, y) = ... ;
+... is_eq_minus_1 (5, 7) ... ;
+\end{lstlisting}
+}
+    it is possible to directly define
+{\scriptsize
+\begin{lstlisting}
+let ( =-one ) (x, y) = ... ;
+... 5 =-one 7 ... ;
+\end{lstlisting}
+}
+    As shown in the example, at definition-time, the syntax requires
+    the operator to be embraced by parentheses. {\bf Attention}: the
+    common error while defining the {\tt *} operator is to embrace it
+    between parentheses but with no spaces around, leading to the
+    lexical entity {\tt (*)} which is a start (or end) of comment,
+    hence to a lexical error. For this reason, we always advice to
+    get the habit of clearly put spaces around the operators names.
+
+    When a prefix or infox operator is defined, it is still possible
+    to use it as a regular function application with the syntax:
+{\scriptsize
+\begin{lstlisting}
+... ( =-one ) (5, 7) ... ;
+\end{lstlisting}
+}
+
+    {\bf Attention} : since the comma character is a possible infix
+    starting character, when using a comma to separate tuples
+    components, be sure to plut a blank behind the comma otherwise,
+    {\tt (0, 1,n)} will be understood as a couple starting with the
+    integer 0 as first component, then gpiong on with the second
+    commponent being the infix application of the operator {\tt ,n} to
+    the integer 1 and nothing, hence leading to a syntax error.
+
+\end{itemize}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Species, collections names}
+\index{species!name}
+As previously introduced, species and collections names are
+capitalized (non-extended) identifiers.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Integer literals}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{String literals}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Character literals}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Floating-point numbers literals}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Proof step bullets}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Reserved keywords}
+The identifiers below are reserved as keywords, and cannot be employed
+otherwise:
+\begin{verbatim}
+   alias        all          and             as
+   assume       assumed      begin           by
+   caml         collection   coq             coq_require
+   definition   else         end             ex
+   external     false        function        hypothesis
+   if           in           inherits        internal
+   implements   is           let             lexicographic
+   local        logical      match           measure
+   not          notation     of              open
+   on           or           order           proof
+   prop         property     prove           qed
+   rec          rep          representation  Self
+   signature    species      step            structural
+   termination  then         theorem         true
+   type         use          with
+\end{verbatim}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
