@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.44 2008-10-27 11:07:30 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.45 2008-10-27 12:43:22 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -349,7 +349,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
     (fun (node, _) ->
       if node.DepGraphData.nn_name <> (Parsetree.Vlident "rep") then
         begin
-        let st_set = (****** Pas suffisant le type ML !!! ******)
+        let st_set =
           Types.get_species_types_in_type node.DepGraphData.nn_type in
         carriers_appearing_in_types :=
           Types.SpeciesCarrierTypeSet.union
@@ -379,7 +379,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
      "rep" and other methods of ourselves. *)
   List.iter
     (fun (node, _) ->
-      let st_set = (****** Pas suffisant le type ML !!! ******)
+      let st_set =
         Types.get_species_types_in_type node.DepGraphData.nn_type in
       carriers_appearing_in_types :=
         Types.SpeciesCarrierTypeSet.union st_set !carriers_appearing_in_types ;

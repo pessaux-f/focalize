@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: iterators.fcl,v 1.2 2008-10-24 16:19:52 pessaux Exp $ *)
+(* $Id: iterators.fcl,v 1.3 2008-10-27 12:43:02 pessaux Exp $ *)
 
 (** Basic techniques to iterate a process including very simple numbers. *)
 
@@ -102,13 +102,9 @@ end ;;
 species Iteration (Nat is Enumeration_system, S is basics#Basic_object,
                    F_binary is Function_t_t_t (S), fct in F_binary, zero in S) =
    rep = basics#unit ;
-(* [Unsure] *)
    let rec iterate (x in S, n in Nat) in S =
      if Nat!equal (n, Nat!start) then zero
      else F_binary!f (x, !iterate (x, Nat!predecessor (n))) ;
-(*
-   let iterate (x in S, n in Nat) in S = x ;
-*)
 end ;;
 
 
