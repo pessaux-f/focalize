@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.43 2008-10-17 07:24:21 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.44 2008-10-27 11:07:30 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -224,6 +224,23 @@ and get_species_types_in_type_annots_of_let_def let_def =
 
 
 
+let get_if_field_logical_statement name fields =
+  let rec rec_get = function
+    | [] -> None
+    | h :: q ->
+        match h with
+         | Env.TypeInformation.SF_sig (_, _, _)
+         | Env.TypeInformation.SF_let (_, _, _, _, _, _, _)
+         | Env.TypeInformation.SF_let_rec _ ->
+             rec_get q
+         | Env.TypeInformation.SF_property (_, n, _, lexpr, _)
+         | Env.TypeInformation.SF_theorem (_, n, _, lexpr, _, _) ->
+             if n = name then Some lexpr else rec_get q in
+  rec_get fields
+;;
+
+
+
 (* ************************************************************************* *)
 (* current_unit: Types.fname ->                                              *)
 (*   current_species: Parsetree.qualified_species ->                         *)
@@ -249,7 +266,8 @@ and get_species_types_in_type_annots_of_let_def let_def =
     {b Rem} : Exported oustide this module.                                  *)
 (* ************************************************************************* *)
 let compute_lambda_liftings_for_field ~current_unit ~current_species
-     species_parameters_names dependency_graph_nodes name body my_type =
+    species_parameters_names dependency_graph_nodes name body my_type
+    all_my_fields =
   (* Get all the methods we directly decl-depend on. They will   *)
   (* lead each to an extra parameter of the final OCaml function *)
   (* (lambda-lifing). Get the methods we directly def-depend.    *)
@@ -331,10 +349,26 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
     (fun (node, _) ->
       if node.DepGraphData.nn_name <> (Parsetree.Vlident "rep") then
         begin
-        let st_set =
+        let st_set = (****** Pas suffisant le type ML !!! ******)
           Types.get_species_types_in_type node.DepGraphData.nn_type in
         carriers_appearing_in_types :=
-          Types.SpeciesCarrierTypeSet.union st_set !carriers_appearing_in_types
+          Types.SpeciesCarrierTypeSet.union
+            st_set !carriers_appearing_in_types ;
+        (* Since for a property or a theorem the ML-like type is not sufficient
+           and we must inspect the logical statement, we recover our field
+           kind. *)
+        match
+           get_if_field_logical_statement
+             node.DepGraphData.nn_name all_my_fields with
+         | None -> ()
+         | Some lexpr ->
+             (* We must find in the logical statement the dependencies on
+                species parameters carriers. *)
+             let from_lexpr_annots =
+               get_species_types_in_type_annots_of_logical_expr lexpr in
+             carriers_appearing_in_types :=
+               Types.SpeciesCarrierTypeSet.union
+                 from_lexpr_annots !carriers_appearing_in_types
         end)
     decl_children ;
   (* Same thing for the methods of ourselves we def-depend on. Attention, if we
@@ -345,10 +379,25 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
      "rep" and other methods of ourselves. *)
   List.iter
     (fun (node, _) ->
-      let st_set =
+      let st_set = (****** Pas suffisant le type ML !!! ******)
         Types.get_species_types_in_type node.DepGraphData.nn_type in
       carriers_appearing_in_types :=
-        Types.SpeciesCarrierTypeSet.union st_set !carriers_appearing_in_types)
+        Types.SpeciesCarrierTypeSet.union st_set !carriers_appearing_in_types ;
+      (* Since for a property or a theorem the ML-like type is not sufficient
+         and we must inspect the logical statement, we recover our field
+         kind. *)
+      match
+         get_if_field_logical_statement
+           node.DepGraphData.nn_name all_my_fields with
+       | None -> ()
+       | Some lexpr ->
+           (* We must find in the logical statement the dependencies on
+              species parameters carriers. *)
+           let from_lexpr_annots =
+             get_species_types_in_type_annots_of_logical_expr lexpr in
+           carriers_appearing_in_types :=
+             Types.SpeciesCarrierTypeSet.union
+               from_lexpr_annots !carriers_appearing_in_types)
     def_children ;
   (* Now compute the set of species parameters types used in the types of the
      methods comming from the species parameters that the current field uses.
@@ -957,7 +1006,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                  ~current_species: ctx.Context.scc_current_species
                  ctx.Context.scc_species_parameters_names
                  ctx.Context.scc_dependency_graph_nodes name
-                 body_as_fbk (Types.specialize sch) in
+                 body_as_fbk (Types.specialize sch) fields in
              (* Compute the visible universe of the method. *)
              let universe =
                VisUniverse.visible_universe
@@ -1016,7 +1065,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                        ~current_species: ctx.Context.scc_current_species
                        ctx.Context.scc_species_parameters_names
                        ctx.Context.scc_dependency_graph_nodes name
-                       body_as_fbk (Types.specialize sch) in
+                       body_as_fbk (Types.specialize sch) fields in
                    (* Compute the visible universe of the method. *)
                    let universe =
                      VisUniverse.visible_universe
@@ -1074,7 +1123,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                    ~current_species: ctx.Context.scc_current_species
                    ctx.Context.scc_species_parameters_names
                    ctx.Context.scc_dependency_graph_nodes name
-                   (FBK_proof (Some proof)) (Types.specialize sch) in
+                   (FBK_proof (Some proof)) (Types.specialize sch) fields in
                (* Compute the visible universe of the theorem. *)
                let universe =
                  VisUniverse.visible_universe
@@ -1129,7 +1178,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                    ~current_species: ctx.Context.scc_current_species
                    ctx.Context.scc_species_parameters_names
                    ctx.Context.scc_dependency_graph_nodes name
-                   (FBK_proof None) (Types.specialize sch) in
+                   (FBK_proof None) (Types.specialize sch) fields in
                (* Compute the visible universe of the theorem. *)
                let universe =
                  VisUniverse.visible_universe
