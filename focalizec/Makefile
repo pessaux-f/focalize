@@ -1,6 +1,7 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaL compiler                                #
+#                        FoCaLize compiler                             #
+#                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
 #            Damien Doligez                                            #
@@ -11,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.19 2008-10-22 11:51:04 doligez Exp $
+# $Id: Makefile,v 1.20 2008-10-28 15:42:46 weis Exp $
 
 ROOT_DIR = .
 
