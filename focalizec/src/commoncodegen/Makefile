@@ -1,6 +1,7 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaL compiler                                #
+#                        FoCaLize compiler                             #
+#                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
 #            Damien Doligez                                            #
@@ -11,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.12 2008-10-14 07:05:55 weis Exp $
+# $Id: Makefile,v 1.13 2008-10-28 15:46:56 weis Exp $
 
 ROOT_DIR = ..
 
@@ -19,7 +20,7 @@ include $(ROOT_DIR)/Makefile.config
 
 CAML_INCLUDES = -I ../basement -I ../parser -I ../typing
 
-BYTOBJS = visUniverse.cmo minEnv.cmo abstractions.cmo misc_common.cmo\
+BYT_OBJS = visUniverse.cmo minEnv.cmo abstractions.cmo misc_common.cmo\
 	externals_generation_errs.cmo recursion.cmo
 
 include $(ROOT_DIR)/Makefile.common

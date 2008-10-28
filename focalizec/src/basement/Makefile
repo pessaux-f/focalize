@@ -1,6 +1,7 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaL compiler                                #
+#                        FoCaLize compiler                             #
+#                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
 #            Damien Doligez                                            #
@@ -11,13 +12,13 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.9 2008-10-14 07:05:55 weis Exp $
+# $Id: Makefile,v 1.10 2008-10-28 15:46:31 weis Exp $
 
 ROOT_DIR = ..
 
 include $(ROOT_DIR)/Makefile.config
 
-BYTOBJS = installation.cmo configuration.cmo handy.cmo location.cmo types.cmo \
+BYT_OBJS = installation.cmo configuration.cmo handy.cmo location.cmo types.cmo \
 	files.cmo parsetree_utils.cmo miscHelpers.cmo
 
 include $(ROOT_DIR)/Makefile.common

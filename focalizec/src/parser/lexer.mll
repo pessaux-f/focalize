@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.59 2008-10-22 09:24:27 weis Exp $ *)
+(* $Id: lexer.mll,v 1.60 2008-10-28 15:48:53 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -174,24 +174,24 @@ let token_of_lowercase_prefix_symbol s =
   assert (String.length s > 0);
   let c, i = start_ident_char s in
   let length_s = String.length s in
-  let length_mean = length_s - i in
+  let length_meaningful = length_s - i in
   match c with
 (*  | '`' (* ` Helping emacs *) ->
       BACKQUOTE_OP s*)
   | '~' ->
-    begin match length_s, length_mean with
+    begin match length_s, length_meaningful with
     | 1, 1 -> NEGATION
     | _, _ -> TILDA_OP s
     end
   | '?' -> QUESTION_OP s
   | '$' -> DOLLAR_OP s
   | '!' ->
-    begin match length_s, length_mean with
+    begin match length_s, length_meaningful with
     | 1, 1 -> BANG
     | _, _ -> BANG_OP s
     end
   | '#' ->
-    begin match length_s, length_mean with
+    begin match length_s, length_meaningful with
     | 1, 1 -> SHARP
     | _, _ -> SHARP_OP s
     end
@@ -211,15 +211,15 @@ let token_of_uppercase_infix_symbol s =
   assert (String.length s > 0);
   let c, i = start_ident_char s in
   let length_s = String.length s in
-  let length_mean = length_s - i in
+  let length_meaningful = length_s - i in
   match c with
   | ',' ->
-    begin match length_s, length_mean with
+    begin match length_s, length_meaningful with
     | 1, 1 -> COMMA
     | _, _ -> COMMA_OP s
     end
   | ':' ->
-    begin match length_s, length_mean with
+    begin match length_s, length_meaningful with
     | 1, 1 -> COLON
     | 2, 2 when s.[i + 1] = ':' -> COLON_COLON
     | n, _ when s.[n - 1] = ':' -> IUIDENT s
@@ -235,36 +235,36 @@ let token_of_lowercase_infix_symbol s =
   (* i is the index of the first ``interesting'' char in s. *)
   let c, i = start_ident_char s in
   let length_s = String.length s in
-  let length_mean = length_s - i in
+  let length_meaningful = length_s - i in
   match c with
   | '+' -> PLUS_OP s
   | '-' ->
-    begin match length_s, length_mean with
+    begin match length_s, length_meaningful with
     | _, 1 -> DASH_OP s
     | _, _ when s.[i + 1] <> '>' -> DASH_OP s
     | 2, 2 -> DASH_GT
     | _, _ -> DASH_GT_OP s
     end
   | '*' ->
-    begin match length_s, length_mean with
+    begin match length_s, length_meaningful with
     | _, 1 -> STAR_OP s
     | _, _ when s.[i + 1] <> '*' -> STAR_OP s
     | _, _ -> STAR_STAR_OP s
     end
   | '/' ->
-    begin match length_s, length_mean with
+    begin match length_s, length_meaningful with
     | 2, 2 when s.[i + 1] = '\\' -> CONJUNCTION
     | _, _ -> SLASH_OP s
     end
   | '%' -> PERCENT_OP s
   | '&' -> AMPER_OP s
   | '|' ->
-    begin match length_s, length_mean with
+    begin match length_s, length_meaningful with
     | 1, 1 -> BAR
     | _, _ -> BAR_OP s
     end
   | ';' ->
-    begin match length_s, length_mean with
+    begin match length_s, length_meaningful with
     | 1, 1 -> SEMI
     | _, 1 -> SEMI_OP s
     | _, _ when s.[i + 1] <> ';' -> SEMI_OP s
@@ -272,7 +272,7 @@ let token_of_lowercase_infix_symbol s =
     | _, _ -> SEMI_SEMI_OP s
     end
   | '<' ->
-    begin match length_s, length_mean with
+    begin match length_s, length_meaningful with
     | _, 1 -> LT_OP s
     | _, _ when s.[i + 1] <> '-' -> LT_OP s
     | _, 2 -> LT_DASH_OP s
@@ -281,7 +281,7 @@ let token_of_lowercase_infix_symbol s =
     | _ -> LT_DASH_GT_OP s
     end
   | '=' ->
-    begin match length_s, length_mean with
+    begin match length_s, length_meaningful with
     | 1, 1 -> EQUAL
     | _, _ -> EQ_OP s
     end
@@ -289,7 +289,7 @@ let token_of_lowercase_infix_symbol s =
   | '@' -> AT_OP s
   | '^' -> HAT_OP s
   | '\\' ->
-    begin match length_s, length_mean with
+    begin match length_s, length_meaningful with
     | _, 1 -> BACKSLASH_OP s
     | 2, 2 when s.[i + 1] = '/' -> DISJUNCTION
     | _ -> BACKSLASH_OP s

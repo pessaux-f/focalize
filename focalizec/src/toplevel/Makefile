@@ -1,6 +1,7 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaL compiler                                #
+#                        FoCaLize compiler                             #
+#                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
 #            Damien Doligez                                            #
@@ -11,19 +12,18 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.38 2008-10-14 12:13:21 pessaux Exp $
+# $Id: Makefile,v 1.39 2008-10-28 15:49:35 weis Exp $
 
 ROOT_DIR = ..
 
 include $(ROOT_DIR)/Makefile.config
 
-CAML_INCLUDES = -I ../basement -I ../parser -I ../typing \
+CAML_INCLUDES = -I ../basement -I ../parser -I ../typing\
 	-I ../commoncodegen -I ../docgen -I ../mlcodegen -I ../coqcodegen
 
+LOCAL_BYT_OBJS = focalizec.cmo exc_wrapper.cmo
 
-LOCAL_BYTOBJS = focalizec.cmo exc_wrapper.cmo
-
-BYTOBJS = \
+BYT_OBJS = \
 	../basement/installation.cmo \
 	../basement/configuration.cmo \
 	../basement/handy.cmo \
@@ -68,24 +68,24 @@ BYTOBJS = \
 	../coqcodegen/species_coq_generation.cmo \
 	../coqcodegen/type_coq_generation.cmo \
 	../coqcodegen/main_coq_generation.cmo \
-	$(LOCAL_BYTOBJS)
+	$(LOCAL_BYT_OBJS)
 
 include $(ROOT_DIR)/Makefile.common
 
 byt:: focalizec.byt
 
-focalizec.byt: $(BYTOBJS)
-	$(CAMLBYT) $(BYTOBJS) -o $@
+focalizec.byt: $(BYT_OBJS)
+	$(CAML_BYT) $(BYT_OBJS) -o $@
 	$(LN) focalizec.byt focalizec
 
 bin:: focalizec.bin
 
-focalizec.bin: $(BINOBJS)
-	$(CAMLBIN) $(BINOBJS) -o $@
+focalizec.bin: $(BIN_OBJS)
+	$(CAML_BIN) $(BIN_OBJS) -o $@
 	$(LN) focalizec.bin focalizec
 
 fodump: fodump.cmo
-	$(CAMLBYT) ../basement/installation.cmo \
+	$(CAML_BYT) ../basement/installation.cmo \
 	../basement/configuration.cmo \
 	../basement/handy.cmo \
 	../basement/location.cmo \

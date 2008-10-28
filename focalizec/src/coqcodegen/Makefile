@@ -1,6 +1,7 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaL compiler                                #
+#                        FoCaLize compiler                             #
+#                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
 #            Damien Doligez                                            #
@@ -11,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.10 2008-10-14 07:05:56 weis Exp $
+# $Id: Makefile,v 1.11 2008-10-28 15:47:10 weis Exp $
 
 ROOT_DIR = ..
 
@@ -20,7 +21,7 @@ include $(ROOT_DIR)/Makefile.config
 CAML_INCLUDES = -I ../basement -I ../parser -I ../typing\
 	-I ../commoncodegen
 
-BYTOBJS = species_record_type_generation.cmo rec_let_gen.cmo\
+BYT_OBJS = species_record_type_generation.cmo rec_let_gen.cmo\
 	species_coq_generation.cmo type_coq_generation.cmo\
 	main_coq_generation.cmo
 
