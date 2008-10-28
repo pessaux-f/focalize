@@ -1,4 +1,4 @@
-% $Id: refman.tex,v 1.14 2008-10-28 10:09:28 pessaux Exp $
+% $Id: refman.tex,v 1.15 2008-10-28 13:34:09 pessaux Exp $
 
 \documentclass{report}
 \usepackage[francais]{babel}
@@ -1352,7 +1352,7 @@ capitalized (non-extended) identifiers.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Integer literals}
-\label{integer}
+\label{integer literals}
 \label{octal}
 \label{hexadecimal}
 \label{binary}
@@ -1377,10 +1377,12 @@ Here are various examples of integers in various bases:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{String literals}
+\label{string literal}
 String literals are sequences of any characters delimited by {\tt "}
-(double quote) characters (ipso facto with no intervening {\tt "}).
+(double quote) characters ({\em ipso facto} with no intervening
+{\tt"}). 
 Escape sequences (meta code to insert characters that can't appears
-simple in a string) available in string literals are summarised in the
+simply in a string) available in string literals are summarised in the
 table below:
 
 \medskip
@@ -1389,15 +1391,15 @@ table below:
   \hline
   Sequence & Character & Comment \\
   \hline
-  $\setminus$n & '$\setminus$010' & Line feed character. \\
+  $\setminus$n & '$\setminus$010' & Line feed. \\
   \hline
-  $\setminus$r & '$\setminus$013' & Carriage return character. \\
+  $\setminus$r & '$\setminus$013' & Carriage return. \\
   \hline
-  $\setminus$b & '$\setminus$008' & \\
+  $\setminus$b & '$\setminus$008' & Backspace. \\
   \hline
-  $\setminus$t & '$\setminus$009' & Tabulation character \\
+  $\setminus$t & '$\setminus$009' & Tabulation. \\
   \hline
-  $\setminus$" & '"'              & Double quote character \\
+  $\setminus$" & '"'              & Double quote. \\
   \hline
   $\setminus$* & '*'              & Since comments cannot appear
                                     inside string, \\
@@ -1413,7 +1415,7 @@ table below:
   \hline
   $\setminus\setminus$ & '\'      & Backslash character. \\
   \hline
-  $\setminus$- & '-' & Minus (dash) character.Like for multiline
+  $\setminus$- & '-' & Minus (dash) character. Like for multiline
                                     comments, \\
                &                  & uniline comments can't
                                     appear in strings. Hence, to \\
@@ -1433,21 +1435,64 @@ table below:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Character literals}
-%%   (* Characters *)
-%%   | "\'" [^ '\\' '\'' '\010'] "\'"
-%%     { CHAR (Lexing.lexeme_char lexbuf 1) }
-%%   | "\'\\" ['\\' '\'' '\"' 'n' 't' 'b' 'r' ' '] "\'"
-%%     { CHAR (char_for_backslash (Lexing.lexeme_char lexbuf 2)) }
-%%   | "\'\\" ['0'-'9'] ['0'-'9'] ['0'-'9'] "\'"
-%%     { CHAR (char_for_decimal_code lexbuf 2) }
-%%   | "\'\\" 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F'] "\'"
-%%     { CHAR (char_for_hexadecimal_code lexbuf 3) }
-%%   | "\'\\" _
+\label{character literals}
+\label{hexadecimal}
+Characters literals are one character enclosed between 2 ``{\tt '}''
+(quote) characters. Example: {\tt 'a'}, {\tt '?'}.
+Escape sequences (meta code to insert characters that can't appears
+simply in a character literal) must also be enclosed by
+quotes. Available escape sequences are summarised in the table below:
+
+\medskip
+\noindent
+\begin{tabular}{|c|c|l|}
+  \hline
+  Sequence & Character & Comment \\
+  \hline
+  $\setminus\setminus$ & '$\setminus$' & Backslash. \\
+  \hline
+  $\setminus$'         & '{\tt '}'  & Quote. \\
+  \hline
+  $\setminus$"         & '"'        & Double quote. \\
+  \hline
+  $\setminus$n         &            & Carriage return. \\
+  \hline
+  $\setminus$t         &            & Tabulation. \\
+  \hline
+  $\setminus$b         &            & Backspace. \\
+  \hline
+  $\setminus$r         &            & Carriage return. \\
+  \hline
+  $\setminus$[0-9][0-9][0-9] & & The character whose ASCII code in
+                                {\bf decimal} is given \\
+               &                  & by the 3 digits following the
+                                  $\setminus$. This sequence is valid \\
+               &                  & for any valid character
+      ASCII code.\\
+  \hline
+  $\setminus$x[0-9a-fA-F][0-9a-fA-F] & & The character whose ASCII code in
+                                {\bf hexadecimal} is given \\
+               &                  & by the 2 digits following the
+                                  $\setminus$. This sequence is valid \\
+               &                  & for any valid character
+      ASCII code.\\
+  \hline
+\end{tabular}
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Floating-point numbers literals}
+Floating-point numbers literals are made of an optional sign ('+' or
+'-') followed by a non-empty sequence of digits followed by a dot
+('.') followed by a possibly empty sequence of digits and finally an
+optional scientific notation ('e' or 'E' followed an optionnal sign
+then by a non-empty sequence of digits. \focal\ allows floats to be
+written in decimal or in hexadecimal. In the first case, digits are
+[0-9]. Example: {\tt 0.}, {\tt -0.1}, {\tt 1.e-10}, {\tt +5E7}.
+In the second case, they are [0-9 a-f A-F] and the number must be
+prefixed by ``0x'' or ``0X''. Example {\tt 0x-F2.E4}, {\tt 0X4.3A},
+{\tt Ox5a.a3eef}, {\tt Ox5a.a3e-ef}.
 
 
 
@@ -1501,7 +1546,7 @@ To generate the final \coq\ code, the ``.zv'' file must be send to
     compiled source file. The output format is suitable to be
     graphically displayed by \dotty\ (free software available via the
     \graphviz\ package). Each species will lead to a \dotty\ file into
-    the argument directory. Files are names by ``deps\_''+ the source
+    the argument directory. Files are names by ``deps\_'' + the source
     file base name (i.e. without path and suffix) + the species name +
     the suffix ``.dot''.
 
@@ -1518,8 +1563,13 @@ To generate the final \coq\ code, the ``.zv'' file must be send to
     directories specified by the $-$I options in their apparition
     order on the command line.
 
-%%   --methods-history-to-text  dumps species' methods' inheritance history as plain text
-%% 	files into the argument directory.
+ \item[*] {\bf $--$methods-history-to-text} {\em directories
+   name}. Dumps the methods' inheritance history of the species
+   present in the compiled. The result is sent as plain text files
+   into the argument directory. For each method of each species a file
+   is generated wearing the name made of ``history\_'' + the source
+   file base name (i.e. without path and suffix) + ``\_'' + the
+   hosting species name + the suffix ``.txt''.
 
   \item[*] {\bf $--$no-ansi-escape}. Disables ANSI escape sequences in
     the error messages. By default, when an error is reported, bold,
@@ -1528,16 +1578,29 @@ To generate the final \coq\ code, the ``.zv'' file must be send to
     may be used if your terminal doesn't support ANSI escape sequences
     or, for example, if compiling under \emacs.
 
-%%   --no-coq-code  disables the Coq code generation.
-%%   --no-ocaml-code  disables the OCaml code generation.
-%%   -no-stdlib-path  does not include by default the standard library installation
-%% 	directory in the search path.
-%%   --pretty  pretty-prints the parse tree of the focal file as a focal source
-%% 	 into the argument file.
-%%   --raw-ast-dump  (undocumented) prints on stderr the raw AST structure after
-%% 	parsing stage.
-%%   --scoped_pretty  (undocumented) pretty-prints the parse tree of the focal file
-%% 	once scoped as a focal source into the argument file.
+  \item[*] {\bf $--$no-coq-code}. Disables the \coq\ code
+    generation. By default \coq\ code is always generated.
+
+  \item[*] {\bf $--$no-ocaml-code}. Disables the \ocaml\ code
+    generation. By default \ocaml\ code is always generated.
+
+  \item[*] {\bf $-$no-stdlib-path}. Does not include the standard
+    library installation directory in the libraries seacrch path. This
+    option is rarely useful and mostly dedicated to the
+    \focal\ compiler build process.
+
+  \item[*] {\bf $--$pretty} {\em file name}. (Undocumented: mostly for
+    debug purpose). Pretty-prints the parse tree of the \focal\ file
+    as a \focal\ source into the argument file.
+
+  \item[*] {\bf $--$raw-ast-dump}. (Undocumented: mostly for debug
+    purpose). Prints on stderr the raw AST structure after parsing
+    stage.
+
+ \item[*] {\bf $--$scoped\_pretty} {\em file name}. (Undocumented:
+   mostly for debug purpose). Pretty-prints the parse tree of the
+   \focal\ file once scoped as a \focal\ source into the argument
+   file.
 
   \item[*] {\bf $--$verbose}. Sets the compiler in verbose mode. It
     will then generate the trace of the steps and operations is does
@@ -1546,10 +1609,13 @@ To generate the final \coq\ code, the ``.zv'' file must be send to
     compilation for people interested in \focal's compilation
     process.
 
-%%   -v  prints the focalize version then exit.
-%%   --version  prints the full focalize version, sub-version and release date,
-%% 	then exit.
-%%   --where  prints the binaries and libraries installation directories then exit.
+  \item[*] {\bf $-$v}. Prints the focalize version then exits.
+
+  \item[*] {\bf $--$version}. Prints the full \focal\ version,
+    sub-version and release date, then exits.
+
+  \item[*] {\bf $--$where}. Prints the binaries and libraries
+    installation directories then exits.
 
   \item[*] {\bf $-$help} {\bf $--$help}. Prints the summary of command
     line options (i.e. this documentation) on the standard output.
