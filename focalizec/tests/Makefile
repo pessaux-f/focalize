@@ -1,6 +1,7 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaL compiler                                #
+#                        FoCaLize compiler                             #
+#                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
 #            Damien Doligez                                            #
@@ -11,11 +12,11 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.20 2008-10-14 07:00:37 weis Exp $
+# $Id: Makefile,v 1.21 2008-10-28 15:58:03 weis Exp $
 
 ROOT_DIR = ..
 
-CHECK_FILE = $(ROOT_DIR)/toplevel/check_file.byt
+CHECK_FILE = $(ROOT_DIR)/toplevel/focalizec
 
 OK_TEST_FILES = \
  ok__baby_toy.foc \
@@ -42,7 +43,7 @@ KO_TEST_FILES = \
 all:: $(CHECK_FILE) ok_all ko_all
 
 ok_all: $(OK_TEST_FILES)
-	# Compile from FoCaL to OCaml.
+	# Compile from Focalize to OCaml.
 	for i in $(OK_TEST_FILES); do \
 	  echo "Focalizing $$i"; \
 	  $(CHECK_FILE) -I ../lib $$i; \
@@ -62,16 +63,12 @@ ok_all: $(OK_TEST_FILES)
 	done
 
 ko_all: $(KO_TEST_FILES)
-	# Compile from FoCaL to OCaml.
+	# Compile from Focalize to OCaml.
 	for i in $(KO_TEST_FILES); do \
 	  echo "Focalizing $$i"; \
 	  $(CHECK_FILE) -I ../lib $$i; \
 	done
 
-
 clean::
 	$(RM) $(OK_TEST_FILES:.foc=.v) $(KO_TEST_FILES:.foc=.v)
 	$(RM) $(OK_TEST_FILES:.foc=.ml) $(KO_TEST_FILES:.foc=.ml)
-
-$(CHECK_FILE):
-	cd $(ROOT_DIR); $(MAKE) all

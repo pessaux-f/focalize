@@ -1,11 +1,25 @@
-# $Id: Makefile,v 1.3 2008-10-14 14:15:52 weis Exp $
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLize compiler                             #
+#                                                                      #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 LIP6 and INRIA                                       #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+# $Id: Makefile,v 1.4 2008-10-28 15:52:23 weis Exp $
 
 ROOT_DIR = ..
 
 include $(ROOT_DIR)/Makefile.config
 
-CAML_COMP_FLAGS = -I ../basement -I ../parser -I ../typing
+CAML_INCLUDES = -I ../basement -I ../parser -I ../typing
 
-BYTOBJS = main_docgen.cmo
+BYT_OBJS = main_docgen.cmo
 
 include $(ROOT_DIR)/Makefile.common
