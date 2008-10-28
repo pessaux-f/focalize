@@ -7,6 +7,7 @@ NORMALTAG="\033[0m"
 SUB_DIRS="basement parser typing \
   docgen commoncodegen mlcodegen coqcodegen \
   toplevel \
+  refman \
   stdlib \
   extlib extlib/algebra extlib/access_control \
   contribs"
