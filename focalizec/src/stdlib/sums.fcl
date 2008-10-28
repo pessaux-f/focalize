@@ -10,8 +10,8 @@
 
 (* [rr]: strictly speakin we only equal and thus sets but no orders *)
 use "basics";;
-use "sets_orders";;
-open "sets_orders";;
+use "sets";;
+open "sets";;
 open "basics";;
 
 
@@ -296,6 +296,71 @@ species Sum_set(A is Setoid, B is Setoid)
 end;;
 
 (** 
+   This is a constructive version of the property that a pair of functions
+   from A to E and from B to E factorize into a function of A+B to E
+ *)
+species Categorical_sum_property
+  (A is Setoid,
+   B is Setoid,
+   E is Setoid,
+   M_a is Setoid_morphism(A, E),
+   M_b is Setoid_morphism(B, E),
+   S is Sum_set(A, B)) inherits Setoid_morphism(S, E) =
+
+  (** An effective way to factor functions *)
+  let morph(x) =
+    if S!first_case(x)
+    then M_a!morph(S!first_term(x))
+    else M_b!morph(S!second_term(x));
+
+  theorem morph_first_substitution_rule: all x y in S,
+    S!equal(x, y) -> S!first_case(x) -> E!equal(!morph(x), !morph(y))
+  proof:
+    <1>1 assume x in S, assume y in S,
+         assume H : S!equal(x, y),
+         assume H_x : S!first_case(x),
+         prove E!equal(!morph(x), !morph(y))
+         <2>1 prove S!first_case(y)
+              by hypothesis H_x, H
+                 property S!equal_spec, S!case_exclusive
+         <2>2 prove E!equal(M_a!morph(S!first_term(x)),
+                            M_a!morph(S!first_term(y)))
+              <3>1 prove A!equal(S!first_term(x), S!first_term(y))
+                   by hypothesis H_x, H
+                      property S!first_term_substitution_rule 
+              <3>f qed by step <3>1 property M_a!morph_substitution_rule
+         <2>f qed by step <2>1, <2>2 hypothesis H_x 
+                     definition of morph
+     <1>f qed.;
+
+  theorem morph_second_substitution_rule: all x y in S,
+    S!equal(x, y) -> S!second_case(x) -> E!equal(!morph(x), !morph(y))
+  proof:
+    <1>1 assume x in S, assume y in S,
+         assume H : S!equal(x, y),
+         assume H_x : S!second_case(x),
+         prove E!equal(!morph(x), !morph(y))
+         <2>1 prove S!second_case(y)
+              by hypothesis H_x, H
+                 property S!equal_spec, S!case_exclusive
+         <2>2 prove E!equal(M_b!morph(S!second_term(x)),
+                            M_b!morph(S!second_term(y)))
+              <3>1 prove B!equal(S!second_term(x), S!second_term(y))
+                   by hypothesis H_x, H
+                      property S!second_term_substitution_rule
+              <3>f qed 
+                   by step <3>1 property M_b!morph_substitution_rule
+         <2>f qed 
+              by step <2>1, <2>2 hypothesis H_x
+                     property S!case_exclusive, S!case_complete
+                     definition of morph
+     <1>f qed.;
+
+
+
+end;;
+
+(** 
    Our specifications of sums implicitely build a new bigger set,
    whereas it is common that we have A + A = A in set theory.
    May be we could rethink the model but 
@@ -353,7 +418,7 @@ species Variant_sum(A is Setoid, B is Setoid) inherits Sum_set(A, B) =
   proof of first_has_case =
     coq proof
     definition of first, first_case
-    {* intros ; unfold abst_first_case, abst_first, Is_true; auto. *}
+    {* intros ; unfold abst_first_case, abst_first; exact I. *}
     ;
 
   (**
@@ -367,7 +432,11 @@ species Variant_sum(A is Setoid, B is Setoid) inherits Sum_set(A, B) =
 
   (** First injection correctness *)
   proof of first_reverses_term =
-    assumed {* *};
+    coq proof
+    definition of first, first_term
+    property A!equal_reflexive
+    {* intros; unfold abst_first, abst_first_term; 
+       apply _p_A_equal_reflexive. Qed. *};
 
   let second(x) = Second(x);
   let second_case(x) = match x with
@@ -380,7 +449,9 @@ species Variant_sum(A is Setoid, B is Setoid) inherits Sum_set(A, B) =
      in type theory
    *)
   proof of second_has_case=
-    assumed {* *};
+    coq proof
+    definition of second, second_case
+    {* intros ; unfold abst_second_case, abst_second; exact I. Qed. *};
 
   (**
      Ill behavior is unspecified, in this case
@@ -394,11 +465,18 @@ species Variant_sum(A is Setoid, B is Setoid) inherits Sum_set(A, B) =
 
   (** Second injection correctness *)
   proof of second_reverses_term =
-    assumed {* *};
+    coq proof
+    definition of second, second_term
+    property B!equal_reflexive
+    {* intros; unfold abst_second, abst_second_term; 
+       apply _p_B_equal_reflexive. Qed. *};
 
   (** Cases cannot mix cases of variant types *)
   proof of case_exclusive =
-    assumed {* *};
+    coq proof
+    definition of first_case, second_case
+    {* intros; unfold first_case, second_case;
+       destruct x; simpl; tauto. Qed. *};
 
 
   (**
@@ -406,7 +484,10 @@ species Variant_sum(A is Setoid, B is Setoid) inherits Sum_set(A, B) =
      every element in a variant is of known kind
    *)
   proof of case_complete =
-    assumed {* *};
+    coq proof
+    definition of first_case, second_case
+    {* intros; unfold first_case, second_case; destruct x;
+       simpl; [left | right]; auto. Qed. *};
 
 end;;
 
