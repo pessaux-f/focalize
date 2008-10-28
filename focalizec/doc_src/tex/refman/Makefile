@@ -1,6 +1,7 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaL compiler                                #
+#                        FoCaLize compiler                             #
+#                                                                      #
 #            François Pessaux                                          #
 #                               LIP6  --  INRIA Rocquencourt           #
 #                                                                      #
@@ -9,24 +10,26 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.1 2008-10-17 11:13:16 pessaux Exp $
+# $Id: Makefile,v 1.2 2008-10-28 16:19:07 weis Exp $
 
-LATEX = latex
-MAKEINDEX = makeindex
-DVIPDF = dvipdf
+ROOT_DIR = ..
 
-TEXFILE = refman.tex
-DVIFILE = $(TEXFILE:.tex=.dvi)
-IDXFILE = $(TEXFILE:.tex=.idx)
+include $(ROOT_DIR)/Makefile.config
 
+TEX_FILES = refman.tex
+DVI_FILES = $(TEX_FILES:.tex=.dvi)
+PS_FILES = $(DVI_FILES:.dvi=.ps)
+PDF_FILES = $(DVI_FILES:.dvi=.pdf)
+#IDX_FILES = $(TEX_FILES:.tex=.idx)
 
-all: $(TEXFILE)
-	$(LATEX) $(TEXFILE)
-	$(MAKEINDEX) $(IDXFILE)
-	$(LATEX) $(TEXFILE)
-	$(DVIPDF) $(DVIFILE)
+BYT_OBJS = $(DVI_FILES) $(PS_FILES) $(PDF_FILES)
+BIN_OBJS = $(BYT_OBJS)
 
+include $(ROOT_DIR)/Makefile.common
 
+all byt bin:: $(TEX_FILES)
 
-clean:
-	rm -f *~ *.aux *.log *.pdf *.dvi *.idx *.ilg *.ind
+refman.dvi: macros.tex
+
+clean::
+	$(RM) *.aux *.log *.pdf *.ps *.dvi *.idx *.ilg *.ind
