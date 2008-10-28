@@ -1,0 +1,429 @@
+(**
+
+   @title Abstract and concrete sums.
+   A first attempt to describe sums in a abstract way.
+   Here we want to derive some basic functionalities which enable
+   to implement equality without depending too much on the proof assistant.
+   @author Renaud Rioboo
+
+*)
+
+(* [rr]: strictly speakin we only equal and thus sets but no orders *)
+use "basics";;
+use "sets_orders";;
+open "sets_orders";;
+open "basics";;
+
+
+(** 
+   A sum of two things, method and property names clash with product since
+   there is nothing that is both a sum and a product.
+   This forbids to inherits from a product and a sum.
+ *)
+species Abstract_sum(A is Basic_object, B is Basic_object)
+  inherits Basic_object =
+
+  (** first builder, name clash with product is intentional. *)
+  signature first: A -> Self;
+  (** an effective way to check if first case is true *)
+  signature first_case: Self -> bool;
+  property first_has_case: all x in A, !first_case(!first(x));
+
+
+  (** second builder, name clash with product is intentional *)
+  signature second: B -> Self;
+  (** an effective way to check if second case is true *)
+  signature second_case: Self -> bool;
+  property second_has_case: all x in B, !second_case(!second(x));
+
+  (**
+     Every element is either first or second case, 
+     this is implicit when using variants.
+   *)
+  property case_complete: all x in Self,
+    !first_case(x) \/ !second_case(x);
+
+  (**
+     First and second case are mutually exclusive,
+     again implicit with variants and disjoint unions
+   *)
+  property case_exclusive: all x in Self,
+    ~(!first_case(x) /\ !second_case(x));
+
+
+end;;
+
+(**
+   This species is intended to abstract the concrete match used in
+   type theoetic models which are traditionally used
+   in conjunction with variant types.
+ *)
+species Sum_set(A is Setoid, B is Setoid)
+  inherits Abstract_sum(A, B), Setoid =
+
+  (** this is a (partial) function which is intended to reverse first *)
+  signature first_term: Self -> A;
+  property first_reverses_term: all x in A,
+    A!equal(!first_term(!first(x)), x);
+
+  (** this is a (partial) function which is intended to reverse second *)
+  signature second_term: Self -> B;
+  property second_reverses_term: all x in B,
+    B!equal(!second_term(!second(x)), x);
+
+(*   (\** hack to help compiler inlining definitions *\) *)
+(*   local let equal_a(x, y) = A!equal(x, y); *)
+(*   local let equal_b(x, y) = B!equal(x, y); *)
+
+  (** Equality defined with protected extractors  *)
+  let equal(x, y) =
+     if basics#and_b(!first_case(x), !first_case(y))
+     then
+       A!equal(!first_term(x), !first_term(y))
+     else 
+       if basics#and_b(!second_case(x), !second_case(y))
+       then B!equal(!second_term(x), !second_term(y))
+       else
+	 (* [rr]: start thinking about this,
+	    an auxiliary function ? Better specs ? *)
+	 false
+  ;
+
+  theorem equal_spec: all x y in Self,
+    !equal(x, y)
+       <->
+     ((!first_case(x) /\
+       !first_case(y) /\
+        A!equal(!first_term(x), !first_term(y)))
+      \/
+      (!second_case(x) /\
+       !second_case(y) /\
+        B!equal(!second_term(x), !second_term(y))))
+    proof: by property !case_exclusive 
+              definition of equal;
+
+  (** Since equality is defined, we prove its reflexity *)
+  proof of equal_reflexive = 
+    by property A!equal_reflexive, B!equal_reflexive, !case_complete, 
+       !equal_spec;
+
+  (** Since equality is defined, we prove its symmetry *)
+  proof of equal_symmetric = 
+    by property A!equal_symmetric, B!equal_symmetric,
+       !equal_spec;
+
+  (** Since equality is defined, we prove its transitivity *)
+  proof of equal_transitive = 
+    by property A!equal_transitive, B!equal_transitive, !case_exclusive,
+       !equal_spec;
+
+  (** 
+     arbitrarily select element from first case, 
+   *)
+  let element = !first(A!element);
+
+  (** specifications are compatible with equality *)
+  theorem first_term_substitution_rule: all x_1 x_2 in Self,
+    !first_case(x_1) -> !equal(x_1, x_2) ->
+      A!equal(!first_term(x_1), !first_term(x_2))
+    proof:
+      <1>1 assume x_1 in Self, assume x_2 in Self,
+           assume H_1: !first_case(x_1),
+           assume H_2: !equal(x_1, x_2),
+           prove A!equal(!first_term(x_1), !first_term(x_2))
+           <2>1 prove ~(!second_case(x_1) /\ !second_case(x_2))
+                by property !case_exclusive hypothesis H_1
+           <2>f qed by step <2>1 hypothesis H_2 property !equal_spec
+      <1>f qed.
+    ;
+
+
+  (**
+     A classical theorem from category theory says that there exists 
+     an injection from A to A + B
+   *)
+  theorem first_is_injective: all x y in A,
+    !equal(!first(x), !first(y)) -> A!equal(x, y)
+    proof:
+      <1>1 assume x in A, assume y in A,
+           assume H: !equal(!first(x), !first(y)),
+           prove A!equal(x, y)
+           <2>1 prove A!equal(!first_term(!first(x)), x) 
+                by property !first_reverses_term
+           <2>2 prove A!equal(!first_term(!first(y)), y)
+                by property !first_reverses_term
+           <2>3 prove A!equal(!first_term(!first(x)), !first_term(!first(y)))
+                <3>1 prove !first_case(!first(x)) by property !first_has_case
+                <3>f qed by 
+                       step <3>1
+		       hypothesis H 
+                       property !first_term_substitution_rule
+           <2>f qed by step <2>1, <2>2, <2>3
+                       property A!equal_reflexive, 
+                                A!equal_symmetric, 
+                                A!equal_transitive
+      <1>f qed.
+    ;
+
+  (** specifications are compatible with equality *)
+  theorem second_term_substitution_rule: all x_1 x_2 in Self,
+    !second_case(x_1) -> !equal(x_1, x_2) ->
+      B!equal(!second_term(x_1), !second_term(x_2))
+    proof:
+      <1>1 assume x_1 in Self, assume x_2 in Self,
+           assume H_1: !second_case(x_1),
+           assume H_2: !equal(x_1, x_2),
+           prove B!equal(!second_term(x_1), !second_term(x_2))
+           <2>1 prove ~(!first_case(x_1) /\ !first_case(x_2))
+                by property !case_exclusive hypothesis H_1
+           <2>f qed by 
+                  step <2>1
+                  hypothesis H_2
+                  property !equal_spec
+      <1>f qed.
+    ;
+
+
+  (**
+     A classical theorem from category theory says that there exists 
+     an injection from B to A + B
+   *)
+  theorem second_is_injective: all x y in B,
+    !equal(!second(x), !second(y)) -> B!equal(x, y)
+    proof:
+      <1>1 assume x in B, assume y in B,
+           assume H: !equal(!second(x), !second(y)),
+           prove B!equal(x, y)
+           <2>1 prove B!equal(!second_term(!second(x)), x) 
+                by property !second_reverses_term
+           <2>2 prove B!equal(!second_term(!second(y)), y)
+                by property !second_reverses_term
+           <2>3 prove B!equal(!second_term(!second(x)),
+			      !second_term(!second(y)))
+                <3>1 prove !second_case(!second(x)) 
+                     by property !second_has_case
+                <3>f qed by 
+                       step <3>1
+                       hypothesis H
+                       property !second_term_substitution_rule
+           <2>f qed by step <2>1, <2>2, <2>3
+                       property B!equal_reflexive, 
+                                B!equal_symmetric, 
+                                B!equal_transitive
+      <1>f qed.
+    ;
+
+  (** specifications are compatible with bollean logic *)
+  theorem first_case_substitution_rule: all x y in Self,
+    !equal(x, y) -> !first_case(x) -> !first_case(y)
+    proof:
+      <1>1 assume x in Self, assume y in Self,
+           assume H: !equal(x, y),
+           assume H_x: !first_case(x),
+           prove !first_case(y)
+           <2>1 prove ~(!second_case(x) /\ !second_case(y))
+                by hypothesis H_x property !case_exclusive
+           <2>2 prove (!first_case(x) /\ !first_case(y) )
+                by step <2>1 hypothesis H property !equal_spec
+           <2>f qed by step <2>2
+      <1>f qed. ;
+    
+(*   (\** specifications are compatible with bollean logic *\) *)
+(*   theorem first_case_full_subtitution_rule: all x y in self, *)
+(*     !equal(x, y) -> (!first_case(x) <-> !first_case(y)) *)
+(*     proof: by !first_case_substitution_rule, !equal_symmetric; *)
+
+
+  (** specifications are compatible with logic *)
+  theorem second_case_subtitution_rule: all x y in Self,
+    !equal(x, y) -> (!second_case(x) -> !second_case(y))
+    proof:
+      <1>1 assume x in Self, assume y in Self,
+           assume H: !equal(x, y),
+           assume H_x: !second_case(x),
+           prove !second_case(y)
+           <2>1 prove ~(!first_case(x) /\ !first_case(y))
+                by  hypothesis H_x property !case_exclusive
+           <2>2 prove (!second_case(x) /\ !second_case(y) )
+                by step <2>1 hypothesis H property !equal_spec
+           <2>f qed by step <2>2
+      <1>f qed.;
+    
+(*   (\** specifications are compatible with boolean logic *\) *)
+(*   theorem second_case_full_subtitution_rule: all x y in self, *)
+(*     !equal(x, y) -> (!second_case(x) <-> !second_case(y)) *)
+(*     proof: by !second_case_subtitution_rule, !equal_symmetric; *)
+
+
+  (**
+     Non effective statement to very logical completeness.
+     A non test case ?
+   *)
+   theorem first_reverses: all x in Self,
+     !first_case(x) -> (ex x_a in A, !equal(!first(x_a), x))
+      proof:
+       <1>1 assume x in Self,
+            assume H: !first_case(x),
+	    prove !equal(!first(!first_term(x)), x)
+            <2>1 prove A!equal(!first_term(!first(!first_term(x))),
+			       !first_term(x))
+                 by property !first_reverses_term
+            <2>2 prove !first_case(!first(!first_term(x)))
+                 by property !first_has_case
+            <2>f qed
+                 by step <2>1, <2>2 hypothesis H property !equal_spec
+       <1>2 qed.; 
+
+   (**
+      Non effective statement to very logical completeness.
+      A non test case ?
+    *)
+   theorem second_reverses: all x in Self,
+     !second_case(x) -> (ex x_b in B, !equal(!second(x_b), x))
+     proof:
+     <1>1 assume x in Self,
+          assume H: !second_case(x),
+          prove !equal(!second(!second_term(x)), x)
+          <2>1 prove B!equal(!second_term(!second(!second_term(x))),
+			     !second_term(x))
+               by property !second_reverses_term
+          <2>2 prove !second_case(!second(!second_term(x)))
+               by property !second_has_case
+          <2>f qed
+               by step <2>1, <2>2 hypothesis H property !equal_spec
+     <1>2 qed.; 
+
+end;;
+
+(** 
+   Our specifications of sums implicitely build a new bigger set,
+   whereas it is common that we have A + A = A in set theory.
+   May be we could rethink the model but 
+   this is the usual model for variant types.
+   We thus recommend to inherit from this species when abstracting variants.
+ *)
+species Disjoint_sum(A is Setoid, B is Setoid)
+  inherits Sum_set(A, B) =
+  (** Each part is strictly included by its components *)
+  theorem sum_is_non_trivial: all x in A, all y in B,
+    ~(!equal(!first(x), !second(y)))
+  proof: by property !first_has_case, !second_has_case, 
+                     !case_exclusive, !equal_spec;
+
+  (** A sum has at least two distinct elements *)
+  theorem sum_has_distinct: ex x in Self, ex y in Self, !different(x, y)
+  proof:
+    <1>1 prove ~(!equal(!first(A!element), !second(B!element)))
+         <2>1 prove ~(!second_case(!first(A!element)))
+              by property !first_has_case, !case_exclusive
+         <2>2 prove ~(!first_case(!second(B!element)))
+              by property  !second_has_case, !case_exclusive
+         <2>f qed by step <2>1, <2>2 property !equal_spec
+    <1>f qed by step <1>1 property !same_is_not_different;
+
+end;;
+
+
+
+(** a concrete container for our objects *)
+type simple_variant('a, 'b) =
+  | First('a)
+  | Second('b)
+;;
+
+(**
+   Abstract sums implemented though variant types,
+   we build concrete injections, testers and extractors
+   needed by our framework.
+ *)
+species Variant_sum(A is Setoid, B is Setoid) inherits Sum_set(A, B) =
+
+  rep = simple_variant(A, B);
+
+  let first(x) = First(x);
+  let first_case(x) = match x with
+    | First(_x) -> true
+    | Second(_x) -> false
+  ;
+
+  (**
+     Compatibilty betwwen first tester and extractor is implicit
+     in type theory
+   *)
+  proof of first_has_case =
+    coq proof
+    definition of first, first_case
+    {* intros ; unfold abst_first_case, abst_first, Is_true; auto. *}
+    ;
+
+  (**
+     Ill behavior is unspecified, in this case
+     we return the sample of A but could have raised error.
+   *)
+  let first_term(x) = match x with
+    | First(x) -> x
+    | Second(_x) -> A!element
+  ;
+
+  (** First injection correctness *)
+  proof of first_reverses_term =
+    assumed {* *};
+
+  let second(x) = Second(x);
+  let second_case(x) = match x with
+    | Second(_x) -> true
+    | First(x) -> false
+  ;
+
+  (**
+     Compatibilty betwwen second tester and extractor is implicit
+     in type theory
+   *)
+  proof of second_has_case=
+    assumed {* *};
+
+  (**
+     Ill behavior is unspecified, in this case
+     we return the sample of B but could have raised error.
+   *)
+  let second_term(x) = match x with
+    | Second(x) -> x
+    | First(_x) -> B!element
+  ;
+
+
+  (** Second injection correctness *)
+  proof of second_reverses_term =
+    assumed {* *};
+
+  (** Cases cannot mix cases of variant types *)
+  proof of case_exclusive =
+    assumed {* *};
+
+
+  (**
+     This is a completeness property,
+     every element in a variant is of known kind
+   *)
+  proof of case_complete =
+    assumed {* *};
+
+end;;
+
+(* (\** A concrete species to specify strict disjoint unions *\) *)
+(* species disjoint_variant_sum(a is setoid) *)
+(*   inherits disjoint_sum(a, a), variant_sum(a, a) = *)
+(* end *)
+
+(* (\**  *)
+(*    A final model for disjoint sums, when are they the same ? *)
+(*  *\) *)
+(* collection disjoint_variant_sum_test  *)
+(*   implements variant_sum(singleton_1, singleton_2) =  *)
+(*   (\* [rr] Hack to include rep types *\) *)
+(*   let _rep_a(a, b) = singleton_1!equal(a, b); *)
+(*   let _rep_b(a, b) = singleton_2!equal(a, b); *)
+(* end *)
+
+
+
