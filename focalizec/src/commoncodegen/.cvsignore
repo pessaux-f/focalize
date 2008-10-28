@@ -1,6 +1,6 @@
-.depend
-.cvsignore
 odoc
+.depend
 *.cm*
+*.annot
 *.o
 *.annot

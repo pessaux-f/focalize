@@ -1,4 +1,5 @@
 *.cm*
+*.annot
 *.zv
 *.pfc
 *.v
