@@ -12,26 +12,30 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.6 2008-10-28 15:54:25 weis Exp $
+# $Id: Makefile,v 1.7 2008-10-29 15:11:21 rr Exp $
 
 ROOT_DIR = ../..
 
 include $(ROOT_DIR)/Makefile.config
+
+# [rr]: changed this to include standard library
+CAML_COMP_FLAGS = -w A -warn-error Ae -dtypes -I $(ROOT_DIR)/stdlib
+
 
 BYT_FOCALIZE_COMPILER = $(ROOT_DIR)/toplevel/focalizec.byt
 BIN_FOCALIZE_COMPILER = $(BYT_FOCALIZE_COMPILER:.byt=.bin)
 
 FOCALIZE_COMPILER = $(BIN_FOCALIZE_COMPILER)
 
-FOCALIZE_COMP_FLAGS = -no-stdlib-path -I ../../stdlib
+FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(ROOT_DIR)/stdlib
 
 #From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
-COQ_INCLUDES = -I ../../../zenon/ -I ../../stdlib
+COQ_INCLUDES = -I $(ROOT_DIR)/../zenon/ -I $(ROOT_DIR)/stdlib
 
 #	products.foc
 FOCALIZE_SRC = \
-	iterators.foc \
+	constants.foc \
 	additive_law.foc \
 	multiplicative_law.foc \
 	weak_structures.foc \
@@ -41,9 +45,10 @@ FOCALIZE_SRC = \
 	array_foc.foc \
 	products_foc.foc \
 	quotients.foc \
-	small_integers.foc
+
 
 FOCALIZE_SRC_UNSAFE = \
+	iterators.foc \
 	big_integers.foc
 #	parse_poly.foc polys_abstract.foc polys_concrete finite_fields fractions finite_factorize
 
@@ -114,6 +119,6 @@ $(BYT_FOCALIZE_COMPILER) $(BIN_FOCALIZE_COMPILER):
 	cd $(ROOT_DIR); $(MAKE) all
 
 # Should be generated ?
-random_foc_externals.vo: ../../stdlib/basics.vo
-array_foc_externals.vo: ../../stdlib/basics.vo
+random_foc_externals.vo: $(ROOT_DIR)/stdlib/basics.vo
+array_foc_externals.vo: $(ROOT_DIR)/stdlib/basics.vo
 # End Should be generated ?
