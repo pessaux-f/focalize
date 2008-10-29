@@ -12,16 +12,13 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.53 2008-10-29 13:42:07 rr Exp $
+# $Id: Makefile,v 1.54 2008-10-29 16:38:30 weis Exp $
 
 ROOT_DIR = ..
 
 include $(ROOT_DIR)/Makefile.config
 
-BYT_FOCALIZE_COMPILER = $(ROOT_DIR)/toplevel/focalizec.byt
-BIN_FOCALIZE_COMPILER = $(BYT_FOCALIZE_COMPILER:.byt=.bin)
-
-FOCALIZE_COMPILER = $(BIN_FOCALIZE_COMPILER)
+FOCALIZE_COMPILER = $(ROOT_DIR)/toplevel/focalizec
 
 FOCALIZE_COMP_FLAGS = -no-stdlib-path
 
@@ -36,9 +33,7 @@ FOCALIZE_SRC = basics.foc \
 	orders.foc \
 	ord_n_latt.foc \
 	sets_orders.foc \
-	wellfounded.foc \
-
-
+	wellfounded.foc
 
 FOCALIZE_SRC_UNSAFE = \
 	ensembles_finis.foc
@@ -98,6 +93,3 @@ install:: all
 clean::
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
 	$(RM) $(FOCALIZE_MLS_UNSAFE) $(FOCALIZE_ZVS_UNSAFE) $(FOCALIZE_VS_UNSAFE)
-
-$(BYT_FOCALIZE_COMPILER) $(BIN_FOCALIZE_COMPILER):
-	cd $(ROOT_DIR); $(MAKE) all
