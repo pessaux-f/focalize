@@ -71,9 +71,6 @@ species Sum_set(A is Setoid, B is Setoid)
   property second_reverses_term: all x in B,
     B!equal(!second_term(!second(x)), x);
 
-(*   (\** hack to help compiler inlining definitions *\) *)
-(*   local let equal_a(x, y) = A!equal(x, y); *)
-(*   local let equal_b(x, y) = B!equal(x, y); *)
 
   (** Equality defined with protected extractors  *)
   let equal(x, y) =
