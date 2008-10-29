@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lex_file.ml,v 1.1 2008-10-21 14:10:04 weis Exp $ *)
+(* $Id: lex_file.ml,v 1.2 2008-10-29 16:29:02 weis Exp $ *)
 
 let lex_file fname =
 
@@ -26,9 +26,7 @@ let lex_file fname =
   while true do
     let tok = Lexer.token lexbuff in
     Format.fprintf ppf "%a@." Sourcify_token.token tok;
-    match tok with
-    | Parser.EOF -> raise Exit
-    | _ -> ()
+    if tok = Parser.EOF then raise Exit
   done
 ;;
 
