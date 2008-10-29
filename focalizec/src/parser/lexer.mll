@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.60 2008-10-28 15:48:53 weis Exp $ *)
+(* $Id: lexer.mll,v 1.61 2008-10-29 16:31:16 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -226,17 +226,30 @@ let token_of_uppercase_infix_symbol s =
     | _, _ when s.[1] <> ':' -> COLON_OP s
     | _, _ -> COLON_COLON_OP s
     end
+  | '`' -> (* A regular uppercase ident enclosed in ` chars. *)
+    begin match length_s, length_meaningful with
+    | 1, 1 -> BACKQUOTE_OP s
+    | n, _ when s.[n - 1] = '`' -> IUIDENT s
+(*FIXME    | _, _ when s.[1] <> '`' -> COLON_OP s*)
+    | _, _ -> BACKQUOTE_OP s
+    end
   | _ -> assert false
 ;;
 
 let token_of_lowercase_infix_symbol s =
 (*  prerr_endline (Printf.sprintf "token_of_lowercase_infix_symbol %s" s);*)
   assert (String.length s > 0);
-  (* i is the index of the first ``interesting'' char in s. *)
+  (* i is the index of character c, the first ``interesting'' char in s. *)
   let c, i = start_ident_char s in
   let length_s = String.length s in
   let length_meaningful = length_s - i in
   match c with
+  | '*' ->
+    begin match length_s, length_meaningful with
+    | _, 1 -> STAR_OP s
+    | _, _ when s.[i + 1] <> '*' -> STAR_OP s
+    | _, _ -> STAR_STAR_OP s
+    end
   | '+' -> PLUS_OP s
   | '-' ->
     begin match length_s, length_meaningful with
@@ -244,12 +257,6 @@ let token_of_lowercase_infix_symbol s =
     | _, _ when s.[i + 1] <> '>' -> DASH_OP s
     | 2, 2 -> DASH_GT
     | _, _ -> DASH_GT_OP s
-    end
-  | '*' ->
-    begin match length_s, length_meaningful with
-    | _, 1 -> STAR_OP s
-    | _, _ when s.[i + 1] <> '*' -> STAR_OP s
-    | _, _ -> STAR_STAR_OP s
     end
   | '/' ->
     begin match length_s, length_meaningful with
@@ -290,10 +297,11 @@ let token_of_lowercase_infix_symbol s =
   | '^' -> HAT_OP s
   | '\\' ->
     begin match length_s, length_meaningful with
-    | _, 1 -> BACKSLASH_OP s
     | 2, 2 when s.[i + 1] = '/' -> DISJUNCTION
     | _ -> BACKSLASH_OP s
     end
+  | '`' -> (* A regular lowercase ident enclosed in ` chars. *)
+    ILIDENT s
   | _ -> assert false
 ;;
 
@@ -318,6 +326,8 @@ let token_of_uppercase_ident lexbuf =
   | Not_found -> UIDENT s
 ;;
 
+(** {6 Quoted idents} *)
+
 let token_of_quoted_lowercase_ident lexbuf =
   let s = Lexing.lexeme lexbuf in
 (*  prerr_endline
@@ -326,10 +336,20 @@ let token_of_quoted_lowercase_ident lexbuf =
   QLIDENT s
 ;;
 
+let token_of_quoted_uppercase_ident lexbuf =
+  let s = Lexing.lexeme lexbuf in
+(*  prerr_endline
+    (Printf.sprintf "token_of_quoted_uppercase_ident: %s" s); *)
+  assert (String.length s > 0);
+  QUIDENT s
+;;
+
 (** {6 Creating tokens for delimited idents} *)
 
-(** Could be any of PLIDENT, ILIDENT, UIDENT, PUIDENT, or IUIDENT,
-   according to the triggering character class. *)
+(** Could be any of LIDENT, UIDENT, PLIDENT, PUIDENT, ILIDENT, IUIDENT,
+   according to the triggering character class.
+   Note that a delimited identifier includes its delimitors.
+ *)
 let token_of_delimited_ident s =
 (*  prerr_endline (Printf.sprintf "token_of_delimited_ident %s" s);*)
   assert (String.length s <> 0);
@@ -344,13 +364,20 @@ let token_of_delimited_ident s =
   (* start_uppercase_ident *)
   | 'A' .. 'Z' -> UIDENT s
   (* start_lowercase_infix_symbol *)
-  | ','
-  | '+' | '-' | '*' | '/' | '%' | '&' | '|' | ':' | ';'
-  | '<' | '=' | '>' | '@' | '^' | '\\' ->
+  | '*'
+  | '+' | '-'
+  | '/' | '%' | '&' | '|' | '<' | '=' | '>' | '@' | '^' | '\\' ->
     token_of_lowercase_infix_symbol s
-  (* start_lowercase_prefix_symbol *)
-  | '`' | '~' | '?' | '$' | '!' | '#'  (* ` helping emacs. *) ->
+  (* start_lowercase_prefix_symbolic *)
+  | '!' | '#'
+  | '~' | '?' | '$'  (* ` helping emacs. *) ->
     token_of_lowercase_prefix_symbol s
+  (* start_uppercase_infix_symbol *)
+  | ':' | '`' -> (* Helping emacs ` *)
+    token_of_uppercase_infix_symbol s
+  (* start_uppercase_prefix_symbol *)
+  | '(' | '[' -> (* Helping Emacs ]) *)
+    token_of_uppercase_prefix_symbol s
   | _ -> assert false
 (** The first meaningful character at the beginning of a delimited
   ident/symbol is used to find its associated token.
@@ -363,12 +390,12 @@ let token_of_delimited_ident s =
     symbol between parens. *)
 
 let token_of_paren_lowercase_prefix_symbol s =
-(*  prerr_endline (Printf.sprintf "token_of_lowercase_prefix_symbol %s" s);*)
+(*  prerr_endline (Printf.sprintf "token_of_paren_lowercase_prefix_symbol %s" s);*)
   assert (String.length s > 0);
   PLIDENT s;;
 (** The prefix version of a lowercase prefix operator. *)
 let token_of_paren_lowercase_infix_symbol s =
-(*  prerr_endline (Printf.sprintf "token_of_lowercase_infix_symbol %s" s);*)
+(*  prerr_endline (Printf.sprintf "token_of_paren_lowercase_infix_symbol %s" s);*)
   assert (String.length s > 0);
   ILIDENT s;;
 (** The prefix version of a lowercase infix operator. *)
@@ -731,8 +758,8 @@ let inside_lowercase_infix_symbolic = inside_lowercase_prefix_symbolic
 let inside_uppercase_prefix_symbolic = symbolic
 
 (** Symbolic characters inside a ':' or '`' starting uppercase prefix symbol.
-    After a ':' or a '`', we can safely use
-    any characters authorized into a lowercase infix symbol. *)
+    After a ':' or a '`', we can safely use any characters authorized into
+    a lowercase infix symbol. *)
 let inside_uppercase_infix_symbolic = inside_lowercase_infix_symbolic
 
 (** Symbolic characters inside any symbol.*)
@@ -962,12 +989,16 @@ let uppercase_ident =
 
 (** {8 Infix symbols} *)
 
+(* +, <= are lowercase infix symbols.
+   - `union` is a lowercase infix symbol. *)
 let lowercase_infix_symbol =
     regular_lowercase_infix_symbol
   | '`' lowercase_ident '`'
 (* From main lexer:
   | delimited_lowercase_infix_symbol *)
 
+(* ::, :!:, :A: are uppercase infix symbols.
+   - `Union` is an uppercase infix symbol. *)
 let uppercase_infix_symbol =
     regular_uppercase_infix_symbol
   | '`' uppercase_ident '`'
@@ -1034,6 +1065,8 @@ rule token = parse
     { token_of_uppercase_ident lexbuf }
   | "\'" lowercase_ident
     { token_of_quoted_lowercase_ident lexbuf }
+  | "\'" uppercase_ident
+    { token_of_quoted_uppercase_ident lexbuf }
 
   (* Delimited idents *)
   | "``"
