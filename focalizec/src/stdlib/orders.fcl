@@ -1,0 +1,130 @@
+use "basics";;
+use "sets";;
+open "basics";;
+open "sets";;
+
+(** pre orderings are sometimes called quasi orderings *)
+species Pre_order inherits Setoid =
+  (** leq(x,y) is x &le; y
+      @mathml <leq/> *)
+  signature leq : Self -> Self -> bool;
+
+  property leq_reflexive : all x y in Self,
+    !equal (x, y) -> !leq (x, y) ;
+  property leq_transitive : all x y z in Self,
+    !leq (x, y) -> !leq (y, z) -> !leq (x, z) ;
+
+   (** we may reverse inequalities by simply changing notations
+    @mathml <geq/> *)
+  let geq(x, y)= !leq(y, x);
+
+  (** a characteristic property *)
+  theorem geq_is_leq : all x y in Self,
+    (!geq(x, y) -> !leq(y, x)) /\  (!leq(x, y) -> !geq(y, x))
+    proof: by definition of geq
+  ;
+
+  theorem geq_reflexive : all x y in Self, !equal(x, y) -> !geq(x, y)
+  proof: by property leq_reflexive, equal_symmetric, geq_is_leq
+  ;
+
+  theorem geq_transitive : all x y z in Self,
+    !geq(x, y) -> !geq(y, z) -> !geq(x, z)
+    proof: by property leq_transitive, geq_is_leq
+  ;
+
+
+  (** strict inequality
+     @mathml <lt/> *)
+  let lt(x, y) = basics#and_b(!leq(x, y), basics#not_b(!equal(x, y)));
+
+  (** some results about strict and large inequalities *)
+  theorem lt_is_not_leq : all x y in Self,
+    ((!lt(x, y) -> (!leq(x, y) /\ !different(x, y)))
+  /\
+     (!leq(x, y) -> (!lt(x, y) \/ !equal(x, y))))
+    proof:
+      by definition of lt, different
+  ;
+
+  theorem lt_is_irreflexive: all x in Self, ~ (!lt(x, x))
+    proof: by property !lt_is_not_leq, !different_is_irreflexive;
+
+  theorem lt_is_transitive: all x y z in Self,
+     !lt(x, y) -> !lt(y, z) -> !lt(x, z)
+     proof:
+       (* [rr]: needs check! proof fails when not assumed! *)
+(*        by property !leq_transitive, !lt_is_not_leq; *)
+       assumed {* *};
+
+  (** @mathml <gt/> *)
+  let gt(x, y) = !lt(y, x);
+
+  theorem gt_is_lt : all x y in Self,
+    !gt(x, y) <-> !lt(y, x)
+    proof:
+      by definition of gt
+  ;
+
+  theorem gt_is_irreflexive: all x in Self, ~ (!lt(x, x))
+    proof: 
+       (* [rr]: needs check! proof fails when not assumed! *)
+(*       by property !gt_is_lt, !different_is_irreflexive; *)
+       assumed {* *};
+
+  theorem gt_is_transitive: all x y z in Self,
+     !gt(x, y) -> !gt(y, z) -> !gt(x, z)
+     proof:
+       by property !lt_is_transitive, !gt_is_lt;
+
+end
+;;
+
+
+(** In a set an ordering is often called a partial order *)
+species Partial_order inherits Pre_order =
+  property leq_antisymmetric :  all x y in Self,
+    !leq(x, y) -> !leq(y, x) -> !equal(x, y)
+  ;
+
+
+  theorem geq_antisymmetric : all x y in Self,
+    !geq(x, y) -> !geq(y, x) -> !equal(x, y)
+    proof: by property leq_antisymmetric, geq_is_leq
+  ;
+
+end
+;;
+
+(** An ordering is total whenever two elements are always comparable *)
+species Ordered_set inherits Partial_order =
+
+  property total_order : all x y in Self, Self!leq(x, y) \/ Self!leq(y, x);
+
+  let equal(x, y) = and_b(Self!leq(x, y), Self!leq(y, x));
+
+  proof of equal_reflexive =
+    by property total_order definition of equal
+  ;
+
+  proof of equal_symmetric =
+    by definition of equal
+  ;
+
+  proof of equal_transitive =
+    by property leq_transitive definition of equal
+  ;
+
+  let lt(x, y) = not_b (Self!leq(y, x));
+  proof of lt_is_not_leq =
+    by property total_order definition of lt, different, equal;
+
+  proof of lt_is_not_leq =
+    by property total_order definition of lt, different, equal ;
+
+  proof of lt_is_irreflexive =
+    by property leq_reflexive, equal_reflexive definition of lt ;
+
+end
+;;
+

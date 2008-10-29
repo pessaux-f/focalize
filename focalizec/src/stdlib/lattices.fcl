@@ -1,0 +1,574 @@
+use "sets";;
+open "sets";;
+
+(** in a meet semi lattice we have an operation inducing an ordering (&lt;=)*)
+species Meet_semi_lattice inherits Setoid =
+  (** the infimum of two elements *)
+  (* [rr]: need a mathml symbol for that,
+     we don't want to use <min/> nor <intersect/>
+  *)
+  signature inf : Self -> Self -> Self ;
+  (** compatibility with equality *)
+  property inf_left_substitution_rule : all x y z in Self,
+    !equal (x, y) -> !equal (!inf (x, z), !inf (y, z))
+  ;
+  (** inf is a commutative law*)
+  property inf_commutes : all x y in Self,
+    !equal(!inf(x, y), !inf(y, x));
+  (**
+     for a  commutative law right congruence is a consequence
+      of left congruence
+   *)
+  theorem inf_right_substitution_rule : all x y z in Self,
+     !equal(y, z) -> !equal(!inf(x, y), !inf(x, z))
+     proof:
+       by property
+          inf_left_substitution_rule,
+          inf_commutes,
+          (*!equal_reflexive,*)
+          equal_transitive
+     ;
+  (** users should use global congruence when possible *)
+  theorem inf_substitution_rule : all x y z t in Self,
+    !equal(x, y) -> !equal(z, t) -> !equal(!inf(x, z), !inf(y, t))
+(*    !equal(x, y) -> !equal(y, t) -> !equal(!inf(x, y), !inf(y, t)) *)
+    proof:
+      by property
+         inf_left_substitution_rule, inf_right_substitution_rule,
+         (* [rr]: if not given reflexivity Zenon fails *)
+         (* [dd]: now it works *)
+         (* [pw]: now it breaks again! *)
+         equal_transitive(*, equal_reflexive*)
+    ;
+  (* inf is an associative law *)
+  property inf_is_associative : all x y z in Self,
+    !equal(!inf(!inf(x, y), z), !inf(x, !inf(y, z)));
+  (* inf is an idempotent law  *)
+  property inf_idempotent : all x y in Self,
+    !equal(x, y) -> !equal(x, !inf(x, y));
+
+  (** order_inf is the least defined ordering compatible with inf *)
+  (* [rr]: need a mathml symbol for that,
+     we don't want to use <leq/>
+  *)
+  let order_inf(x, y) = !equal(x, !inf(x, y));
+  theorem order_inf_is_reflexive : all x y in Self,
+     !equal(x, y) -> !order_inf(x, y)
+     proof :
+       by property inf_idempotent
+       definition of order_inf
+     ;
+
+  theorem order_inf_is_antisymmetric : all x y in Self,
+     !order_inf(x, y) -> !order_inf(y, x) -> !equal(x, y)
+     (* x=inf(x, y) et y=inf(x, y) *)
+     proof:
+       by
+        property inf_commutes, equal_transitive, equal_symmetric
+        definition of order_inf
+     ;
+  theorem order_inf_is_transitive : all x y z in Self,
+     !order_inf(x, y) -> !order_inf(y, z) -> !order_inf(x, z)
+     (* x=inf(x, y) et y=inf(y, z) x=inf(x, inf(y, z))=inf(inf(x, y), z)=inf(x, z)*)
+     proof:
+       <1>1 assume x in Self,
+            assume y in Self,
+            assume z in Self,
+            assume H1 : !order_inf (x, y),
+            assume H2 : !order_inf (y, z),
+            prove !order_inf (x, z)
+         <2>0 prove !equal (x, !inf (x, y))
+           by
+             hypothesis H1
+             definition of order_inf
+         <2>1 prove !equal (x, !inf (x, !inf (y, z)))
+           by
+              step <2>0
+              hypothesis H2
+              property inf_right_substitution_rule, equal_transitive
+              definition of order_inf
+         <2>2 prove !equal (x, !inf (!inf (x, y), z))
+           by
+              step <2>1
+              property inf_is_associative, equal_transitive, equal_symmetric
+         <2>3 prove !equal (x, !inf (x, z))
+              by step <2>2, <2>0
+                 property equal_symmetric, equal_transitive,
+                   inf_left_substitution_rule
+         <2>4 qed
+              by step <2>3
+                 definition of order_inf
+       <1>2 qed.
+     ;
+  (** any element smaller than x and y is smaller than their infimum *)
+  theorem order_inf_is_infimum : all x y i in Self,
+    !order_inf(i, x) -> !order_inf(i, y) ->
+      !order_inf(i, !inf(x, y))
+    proof:
+      <1>1 assume x in Self,
+           assume y in Self,
+           assume i in Self,
+           assume H1 : !order_inf(i, x),
+           assume H2 : !order_inf(i, y),
+           prove !order_inf(i, !inf(x, y))
+        <2>1 prove !equal(i, !inf(!inf(i, x), y))
+          by hypothesis H1, H2
+             property inf_left_substitution_rule,
+               equal_symmetric, equal_transitive
+             definition of order_inf
+        <2>9 qed
+          by step <2>1
+             property inf_is_associative, equal_transitive
+             definition of order_inf
+      <1>2 qed.
+    ;
+
+end
+;;
+
+
+(** in a join semi lattice we have an operation inducing an ordering (&gt;=) *)
+species Join_semi_lattice inherits Setoid =
+
+  (** the supremum of two elements *)
+  (* [rr]: need a mathml symbol for that,
+     we don't want to use <max/> nor <union/>
+  *)
+  signature sup : Self -> Self -> Self ;
+  (** compatibility with equality *)
+  property sup_left_substitution_rule : all x y z in Self,
+    !equal (x, y) -> !equal (!sup (x, z), !sup (y, z))
+  ;
+  property sup_commutes : all x y in Self,
+    !equal(!sup(x, y), !sup(y, x));
+
+  (**
+     for a  commutative law right congruence is a consequence
+      of left congruence
+   *)
+  theorem sup_right_substitution_rule : all x y z in Self,
+     !equal(y, z) -> !equal(!sup(x, y), !sup(x, z))
+     proof:
+       by
+        property sup_left_substitution_rule, sup_commutes, equal_transitive
+     ;
+  (** users should use global congruence when possible *)
+  theorem sup_substitution_rule : all x y z t in Self,
+    !equal(x, y) -> !equal(z, t) -> !equal(!sup(x, z), !sup(y, t))
+(*    !equal(x, y) -> !equal(y, t) -> !equal(!sup(x, y), !sup(y, t)) *)
+    proof:
+      by
+        property sup_left_substitution_rule, sup_right_substitution_rule,
+           (* [rr]: if not given reflexivity Zenon fails *)
+           equal_transitive(*, !equal_reflexive*)
+    ;
+  (* sup is an associative law *)
+  property sup_is_associative : all x y z in Self,
+    !equal(!sup(!sup(x, y), z), !sup(x, !sup(y, z)));
+  (* sup is an idempotent law  *)
+  property sup_idempotent : all x y in Self,
+    !equal(x, y) -> !equal(x, !sup(x, y));
+
+  (** order_sup is the least defined ordering compatible with sup *)
+  (* [rr]: need a mathml symbol for that,
+     we don't want to use <geq/>
+  *)
+  let order_sup(x, y) = !equal(x, !sup(x, y));
+
+  theorem order_sup_is_reflexive : all x y in Self,
+     !equal(x, y) -> !order_sup(x, y)
+     proof:
+       by property sup_idempotent
+          definition of order_sup
+  ;
+
+  theorem order_sup_is_antisymmetric : all x y in Self,
+     !order_sup(x, y) -> !order_sup(y, x) -> !equal(x, y)
+     proof:
+       by property sup_commutes, equal_symmetric, equal_transitive
+          definition of order_sup
+     ;
+
+  theorem order_sup_is_transitive : all x y z in Self,
+     !order_sup(x, y) -> !order_sup(y, z) -> !order_sup(x, z)
+     (* x=inf(x, y) et y=inf(y, z) x=inf(x, inf(y, z)=inf(inf(x, y), z)=inf(x, z)*)
+     proof:
+       <1>1 assume x in Self,
+            assume y in Self,
+            assume z in Self,
+            assume xLTy : !order_sup (x, y),
+            assume yLTz : !order_sup (y, z),
+            prove !order_sup (x, z)
+         <2>1 prove !equal (x, !sup (x, !sup (y, z)))
+           by
+             hypothesis xLTy, yLTz
+             property sup_right_substitution_rule, equal_transitive
+             definition of order_sup
+         <2>2 prove !equal (x, !sup (!sup (x, y), z))
+           by step <2>1
+              property sup_is_associative, equal_transitive, equal_symmetric
+         <2>9 qed
+           by step <2>2
+              hypothesis xLTy
+               property equal_symmetric, equal_transitive,
+                        sup_left_substitution_rule
+               definition of order_sup
+       <1>2 qed.
+     ;
+
+  (** any element bigger than two elements is bigger than their supremum *)
+  theorem order_sup_is_supremum : all x y i in Self,
+    !order_sup(i, x) -> !order_sup(i, y) ->
+      !order_sup(i, !sup(x, y))
+    proof:
+      <1>1 assume x in Self,
+           assume y in Self,
+           assume i in Self,
+           assume H1 : !order_sup(i, x),
+           assume H2 : !order_sup(i, y),
+           prove !order_sup(i, !sup(x, y))
+        <2>1 prove !equal(i, !sup(!sup(i, x), y))
+          by
+           hypothesis H1, H2
+           property sup_left_substitution_rule,
+                    equal_symmetric, equal_transitive
+          definition of order_sup
+        <2>9 qed
+          by step <2>1
+             property sup_is_associative, equal_transitive
+             definition of order_sup
+      <1>2 qed.
+    ;
+
+end
+;;
+
+(** lattices have an inf and sup operation which induce a partial order *)
+
+species Lattice inherits Meet_semi_lattice, Join_semi_lattice =
+
+  (** the first absorbtion law *)
+   property inf_absorbes_sup : all x y in Self,
+     !equal(x, !sup(x, !inf(x, y)));
+
+   (** the second absorbtion law *)
+   property sup_absorbes_inf : all x y in Self,
+     !equal(x, !inf(x, !sup(x, y)));
+
+   (** in a lattice there is only one ordering *)
+   theorem order_inf_refines_order_sup : all x y in Self,
+     !order_sup(y, x) -> !order_inf(x, y)
+     proof:
+       (* x = x v y ; x ^ y = x ^ (x v y) = x *)
+       <1>1 assume x in Self,
+            assume y in Self,
+            assume H : !order_sup(y, x),
+            notation s = !sup (x, y),
+            prove !order_inf(x, y)
+            <2>1 prove !equal(!inf(x, y), x)
+                 <3>1 prove !equal(y, !sup(x, y))
+                      by hypothesis H
+                         property sup_commutes, equal_transitive
+                         definition of order_sup
+                 <3>2 prove !equal(!inf(x, !sup(x, y)), x)
+                      by property sup_absorbes_inf, equal_symmetric
+                 <3>3 prove !equal(!inf(x, y), !inf(x, !sup(x, y)))
+                      by step <3>1
+                      property inf_right_substitution_rule
+                 <3>f qed by step <3>3, <3>2
+                          property equal_transitive
+            <2>z qed by step <2>1
+                        property equal_symmetric
+                        definition of order_inf
+       <1>2 qed.
+     ;
+
+  (** in a lattice there is only one ordering *)
+   theorem order_sup_refines_order_inf : all x y in Self,
+     (* x = x ^ y ; x v y = (x ^ y) v x = x v (x ^ y) = x *) 
+     !order_inf (y, x) -> !order_sup (x, y)
+     proof:
+       <1>1 assume x in Self,
+            assume y in Self,
+            assume H : !order_inf (y, x),
+            prove !order_sup (x, y)
+         <2>1 prove !equal (!sup (x, y), !sup (x, !inf (x, y)))
+           by hypothesis H
+              property inf_commutes, equal_transitive,
+                sup_right_substitution_rule
+              definition of order_inf
+         <2>2 qed by
+               step <2>1
+               property equal_transitive, equal_symmetric, inf_absorbes_sup
+               definition of order_sup
+       <1>2 qed.
+     ;
+
+(*
+     proof:
+       (* [rr]: Wow! I couldn't guess this until I performed the latter *)
+       (* forget it if you have a small computer ! *)
+       by property
+            !inf_commutes, !inf_absorbes_sup, !sup_right_substitution_rule,
+            !equal_symmetric, !equal_transitive
+          definition of !order_inf, !order_sup
+     ;
+*)
+
+end
+;;
+
+(** Modular lattices *)
+species Modular_lattice inherits Lattice =
+
+(** a generalization of ditributivity  *)
+property modular_law : all x y z in Self,
+  !order_inf(x, y) -> !equal(!inf(!sup(x, y), !sup(x, z)),
+                            !inf(y, !sup(!inf(x, y), z)));
+
+end
+;;
+
+-- The doc ``Every distribute lattice is modular'' was
+-- just before the inherits keyword: need to insert it into the species
+-- documentation instead.
+
+(** Distributive lattices
+    Every distribute lattice is modular.
+ *)
+species Distributive_lattice
+
+  inherits Lattice, Modular_lattice =
+  property sup_left_distributes : all x y z in Self,
+    !equal(!sup(x, !inf(y, z)), !inf(!sup(x, y), !sup(x, z)));
+
+  theorem sup_right_distributes : all x y z in Self,
+    !equal(!sup(!inf(x, y), z), !inf(!sup(x, z), !sup(y, z)))
+    proof:
+      (* [rr]: Wow my second proof *)
+      <1>1 assume x in Self,
+           assume y in Self,
+           assume z in Self,
+           prove      !equal(!sup(!inf(x, y), z), !inf(!sup(x, z), !sup(y, z)))
+           <2>1 prove !equal(!sup(z, !inf(x, y)), !inf(!sup(z, x), !sup(z, y)))
+                by property sup_left_distributes
+           <2>2 prove !equal(!sup(!inf(x, y), z), !sup(z, !inf(x, y)))
+                by property sup_commutes
+           <2>3 prove !equal(!sup(x, z), !sup(z, x)) by property sup_commutes
+           <2>4 prove !equal(!sup(y, z), !sup(z, y)) by property sup_commutes
+           <2>5 prove !equal(!inf(!sup(x, z), !sup(y, z)),
+                             !inf(!sup(z, x), !sup(y, z)))
+                by step <2>3
+                   property inf_left_substitution_rule
+           <2>6 prove !equal(!inf(!sup(z, x), !sup(y, z)),
+                             !inf(!sup(z, x), !sup(z, y)))
+                by step <2>4
+                   property inf_right_substitution_rule
+           <2>7 prove !equal(!inf(!sup(x, z), !sup(y, z)),
+                             !inf(!sup(z, x), !sup(z, y)))
+                by step <2>5, <2>6
+                   property equal_transitive
+           <2>9 qed by step <2>1, <2>2, <2>7
+                       property equal_transitive, equal_symmetric
+
+      <1>2 qed.
+    ;
+
+  property inf_left_distributes : all x y z in Self,
+    !equal(!inf(x, !sup(y, z)), !sup(!inf(x, y), !inf(x, z)));
+  theorem inf_right_distributes : all x y z in Self,
+    !equal(!inf(!sup(x, y), z), !sup(!inf(x, z), !inf(y, z)))
+    proof:
+      (* [rr]: see sup_right_distributes above *)
+      (* should be easy but still fails on time limit !
+       by !inf_left_distributes, !inf_commutes,
+          !sup_left_substitution_rule, !sup_right_substitution_rule,
+          !equal_transitive, !equal_symmetric;
+       *)
+       <1>1 assume x in Self,
+            assume y in Self,
+            assume z in Self,
+           prove !equal (!inf (!sup (x, y), z), !sup (!inf (x, z), !inf (y, z)))
+           <2>1 prove !equal (!inf (z, !sup (x, y)),
+                              !sup (!inf (z, x), !inf (z, y)))
+                by property inf_left_distributes
+           <2>2 prove !equal (!inf (!sup (x, y), z), !inf (z, !sup (x, y))) 
+                by property inf_commutes 
+           <2>3 prove !equal (!inf (x, z), !inf (z, x)) by property inf_commutes
+           <2>4 prove !equal (!inf (y, z), !inf (z, y)) by property inf_commutes
+           <2>5 prove !equal (!sup (!inf (x, z), !inf (y, z)),
+                              !sup (!inf (z, x), !inf (y, z))) 
+                by step <2>3 property !sup_left_substitution_rule
+           <2>6 prove !equal (!sup (!inf (z, x), !inf (y, z)),
+                              !sup (!inf (z, x), !inf (z, y))) 
+                by step <2>4 property !sup_right_substitution_rule
+           <2>7 prove !equal (!sup (!inf (x, z), !inf (y, z)),
+                              !sup (!inf (z, x), !inf (z, y)))
+                by step <2>5, <2>6 property equal_transitive
+           <2>9 qed by step <2>1, <2>2, <2>7
+                    property !equal_transitive, !equal_symmetric
+      <1>2 qed.
+;
+
+  (** a distributive lattice is always modular *)
+  (* [rr]: shouldn't this be simplified ? *)
+  proof of modular_law =
+    <1>1 assume x in Self,
+         assume y in Self,
+         assume z in Self,
+         assume H : !order_inf(x, y),
+         prove !equal(!inf(y, !sup(!inf(x, y), z)),
+                      !sup(x, !inf(y, z)))
+         <2>0 prove !equal(x, !inf(x, y))
+              by hypothesis H definition of order_inf
+         <2>1 prove !equal(!inf(y, !sup(!inf(x, y), z)),
+                           !sup(!inf(y, !inf(x, y)), !inf(y, z)))
+              by property inf_left_distributes
+         <2>2 prove !equal(!inf(y, !inf(x, y)), !inf(y, x))
+              by step <2>0
+                 property inf_right_substitution_rule, equal_symmetric
+         <2>3 prove !equal(!sup(!inf(y, !inf(x, y)), !inf(y, z)),
+                           !sup(!inf(y, x), !inf(y, z)))
+              by step <2>2
+                 property sup_left_substitution_rule
+         <2>4 prove !equal(!sup(!inf(y, x), !inf(y, z)),
+                           !sup(x, !inf(y, z)))
+              <3>0 prove !equal(!inf(y, x), x)
+                   by step <2>0
+                      property inf_commutes,
+                               equal_symmetric, equal_transitive
+              <3>2 qed by step <3>0
+                          property sup_left_substitution_rule
+         <2>f qed by step <2>1, <2>3, <2>4 property equal_transitive
+    <1>2 qed by
+           step <1>1
+           property sup_left_distributes, equal_transitive, equal_symmetric
+  ;
+
+end
+;;
+
+(**
+A meet semi lattice with an upper bound as neutral element for infimum.
+That is a meet semi lattice with a monoid structure.
+*)
+species Meet_semi_lattice_with_max inherits Meet_semi_lattice =
+  signature max : Self;
+  property max_is_right_neutral : all x in Self,
+    !equal(!inf(x, !max), x);
+  theorem max_is_left_neutral : all x in Self,
+    !equal(!inf(!max, x), x)
+    proof:
+    by property max_is_right_neutral, inf_commutes, equal_transitive
+    ;
+  let is_max(x) = !equal(x, !max);
+end
+;;
+
+(**
+A meet semi lattice with a lower bound.
+That is a meet semi lattice with an absorbant element
+*)
+species Meet_semi_lattice_with_min inherits Meet_semi_lattice =
+  signature min : Self;
+  property min_right_absorbes : all x in Self,
+    !equal(!inf(x, !min), !min);
+  theorem min_left_absorbes : all x in Self,
+    !equal(!inf(!min, x), !min)
+    proof:
+    by property min_right_absorbes, inf_commutes, equal_transitive
+    ;
+
+end
+;;
+
+(**
+A join semi lattice with a lower bound as neutral element for supremum.
+That is a join semi lattice with a monoid structure.
+*)
+species Join_semi_lattice_with_min inherits Join_semi_lattice =
+  signature min : Self;
+  property min_is_right_neutral : all x in Self,
+    !equal(!sup(x, !min), x);
+  theorem min_is_left_neutral : all x in Self,
+    !equal(!sup(!min, x), x)
+    proof:
+      by property min_is_right_neutral, sup_commutes, equal_transitive
+  ;
+
+  let is_min(x) = Self!equal(x, Self!min)
+  ;
+
+end
+;;
+
+(**
+A join semi lattice with an upper bound.
+That is a join semi lattice with an absorbant element
+*)
+species Join_semi_lattice_with_max inherits Join_semi_lattice =
+  signature max : Self;
+  property max_right_absorbes : all x in Self,
+    !equal(!sup(x, !max), !max);
+  theorem max_left_absorbes : all x in Self,
+    !equal(!sup(!max, x), !max)
+    proof:
+    by property max_right_absorbes, sup_commutes, equal_transitive
+    ;
+
+end
+;;
+
+(** These are commonly named lattices *)
+species Bounded_lattice
+  inherits Lattice,
+           Meet_semi_lattice_with_min,
+           Meet_semi_lattice_with_max,
+           Join_semi_lattice_with_min,
+           Join_semi_lattice_with_max =
+
+  (** absorption laws enable to prove that being absorbant for one law
+      is being neutral for the other *)
+  proof of max_right_absorbes =
+    <1>1 assume x in Self,
+         prove !equal(!sup(x, !max), !max)
+         <2>1 prove !equal(!max, !inf(!max, !sup(!max, x)))
+              by property sup_absorbes_inf
+         <2>2 prove !equal(!inf(!max, !sup(!max, x)), !sup(!max, x))
+              by property max_is_left_neutral
+         <2>3 prove !equal(!max, !sup(!max, x))
+              by step <2>1, <2>2
+                 property equal_transitive
+         <2>f qed
+            by step <2>3
+               property sup_commutes, equal_symmetric, equal_transitive
+    <1>2 qed.
+   ;
+
+  (** absorption laws enable to prove that being absorbant for one law
+      is being neutral for the other *)
+  proof of min_right_absorbes =
+    (* [rr]: fails on size limit !
+       Should be the same than max_right_absorbes which looks trivial.
+       Did I forgot something ?
+    by !min_is_left_neutral,
+       !inf_absorbes_sup,
+       !inf_commutes,
+       !equal_reflexive, !equal_transitive
+    *)
+    <1>1 assume x in Self,
+         prove !equal (!inf (x, !min), !min)
+         <2>1 prove !equal (!min, !sup (!min, !inf (!min, x)))
+              by property inf_absorbes_sup
+         <2>2 prove !equal (!sup (!min, !inf (!min, x)), !inf (!min, x))
+              by property min_is_left_neutral
+         <2>3 prove !equal (!min, !inf (!min, x))
+              by step <2>1, <2>2 property equal_transitive
+         <2>f qed
+            by step <2>3
+               property inf_commutes, equal_symmetric, equal_transitive
+    <1>2 qed.
+    ;
+end
+;;
+
