@@ -1,0 +1,333 @@
+(**                                                                      
+ @title Abstract polynomials
+ @author the FoC Project
+ some polynomials for FoC
+*)
+
+use "basics";;
+use "sets_orders";;
+use "iterators";;
+use "additive_law";;
+use "weak_structures";;
+use "rings_fields";;
+use "integers";;
+
+open "basics";;
+open "sets_orders";;
+open "iterators";;
+open "additive_law";;
+open "weak_structures";;
+open "rings_fields";;
+open "integers";;
+
+(** specifications for the monoid of formal sums of products of elements of 
+    a monoid m whose elements are coefficients and an ordered lattice i of
+    formal exponents of some variable 
+    an element of i is often called a monomial *)
+species Formal_indexed_sum(M is Set_with_zero, 
+      	       	       	       I is Ordered_set)
+  inherits Additive_monoid =
+   signature degree: Self -> I;
+   (** degrees form an additive valuation *)
+   property degree_is_additive: all p q r in Self,
+    ~ (!is_zero(p)) -> ~ (!is_zero(q)) ->
+     !equal(r, !plus(p, q)) -> ~ (!is_zero(r)) ->
+       (I!leq(!degree(r), !degree(p))
+         /\
+        I!leq(!degree(r), !degree(q)));
+   (**
+    any sum p can be written as 
+      monomial(leading_coefficient(p),degree(p)) + reductum(p)
+    *)
+   (* returns the coefficient of highest degree *)
+   signature leading_coefficient: Self -> M;
+
+   property leading_coefficient_is_non_null: all p in Self,
+     M!is_zero(!leading_coefficient(p)) -> !is_zero(p);
+
+   signature reductum: Self -> Self;
+
+   property reductum_has_smaller_degree: all p in Self,
+   ~ (!is_zero(p)) -> ~ (!is_zero(!reductum(p))) -> 
+        I!lt(!degree(!reductum(p)), !degree(p)) ;
+
+   property reductum_of_zero_is_zero: !equal(!reductum(!zero), !zero);
+
+   (* returns an element with coefficient and given degree *)
+   signature monomial: M -> I -> Self ;
+
+   property monomial_is_non_null: all c in M, all d in I,
+    M!is_zero(c) -> !is_zero(!monomial(c, d)) ;
+
+   property monomial_has_degree: all c in M, all d in I,
+     ~ (M!is_zero(c)) -> I!equal(!degree(!monomial(c, d)), d);
+
+   property reductum_is_reductum: all p in Self, all c in M, all d in I,
+    ~ (!is_zero(p)) -> M!equal(c, !leading_coefficient(p)) ->
+      I!equal(d, !degree(p)) -> 
+       !equal(p, !plus(!monomial(c, d), !reductum(p)));
+
+   property monomial_has_coefficient: all c in M, all d in I,
+     (~ (M!is_zero(c))) -> M!equal(!leading_coefficient(!monomial(c, d)), c);
+
+   (** returns the coefficient of a given degree *)
+   let rec coefficient(p in Self, n in I) in M =
+       let d = !degree(p) in
+      if I!lt(d, n)
+      then M!zero
+      else
+        if I!lt(n, d)
+        then !coefficient(!reductum(p), n)
+        else !leading_coefficient(p) ;
+
+(*    (\** returns the list of non null coefficients appearing in the sum  *)
+(*        by decreasing orders of degrees *\) *)
+(*    let rec coefficients(p) = *)
+(*       if !is_zero(p) *)
+(*       then #Nil *)
+(*       else #Cons(!leading_coefficient(p), !coefficients(!reductum(p))) ; *)
+
+ (** suppresses terms with degree bigger or equal than d *)
+   let rec tail(p, d) =
+      if !is_zero(p)
+     then p
+     else
+       let dp = !degree(p) in
+       if I!lt(dp, d)
+       then p
+       else !tail(!reductum(p), d) ;
+
+   theorem leading_coefficient_is_tail_with_degree: all p in Self,
+     !equal(!reductum(p), !tail(p, !degree(p)))
+     proof: assumed {* *};
+
+   theorem tail_has_smaller_degree: all p q in Self, all d in I,
+     !equal(p, !tail(q, d)) -> 
+       ~ (!is_zero(q)) ->  I!lt(!degree(q), d)
+    proof: assumed {* *};
+
+(*    (\** returns the number of monomials *\) *)
+(*    let rec number_of_monomials(p) = *)
+(*      if !is_zero(p) *)
+(*      then 0 *)
+(*      else #succ(!number_of_monomials(!reductum(p))); *)
+
+end;;
+
+(* type spol_res a b c = caml spol_res; ;;  *)
+(* let cr_sr (pc in 'a,pe in 'b, qc in 'a, qe in 'b, r in 'c)  *)
+(*   in spol_res('a,  'b, 'c) = caml cr_sr;; *)
+(* let pre_coef (x in spol_res('a, 'b, 'c)) in 'a = caml pc;; *)
+(* let pre_exp (x in spol_res('a, 'b, 'c)) in 'b = caml pe;; *)
+(* let quo_coef (x in spol_res('a, 'b, 'c)) in 'a = caml qc;; *)
+(* let quo_exp(x in spol_res('a, 'b, 'c)) in 'b = caml qe;; *)
+(* let red(x in spol_res('a, 'b, 'c)) in 'c = caml r;; *)
+
+(** specifications for polynomials over a commutative ring *)
+species Formal_polynomials_commutative_ring
+  (R is Commutative_ring, D is Monomial_ordering)
+  inherits Commutative_algebra(R), Formal_indexed_sum(R, D) =
+    signature generator: D -> Self;
+    signature output: Self -> string -> string;
+    let monomial(v, d) =
+       !module_mult(v, !generator(d));
+
+    theorem monomial_spec: all v in R, all d in D,
+      !equal(!monomial(v, d), !module_mult(v, !generator(d)))
+      proof: by property !equal_reflexive definition of monomial ;
+
+    let fmecg(p in Self, c in R, delta in D, q in Self) in Self =
+      if R!is_zero(c)
+      then p
+      else !plus(p, !mult(!monomial(c, delta), q));
+    theorem fmecg_combines : all p q in Self, all c in R, all delta in D,
+      !equal(!fmecg(p, c, delta, q),
+             !plus(p, !mult(!monomial(c, delta), q)))
+      proof: assumed {* [rr]: todo *};
+end;;
+
+
+(* species formal_polynomials_domain *)
+(*     (rng is integral_domain, deg is monomial_ordering)  *)
+(*     inherits integral_domain, *)
+(*              torsion_free_algebra(rng), *)
+(*              formal_polynomials_commutative_ring(rng,deg) *)
+(*              = *)
+(* end *)
+
+(* (\* Abstract univariate polynomials over a commutative ring *\) *)
+(* species formal_univariate_polynomials_com_ring *)
+(*       (r is commutative_ring, *)
+(*        nat is natural_number_system) *)
+(*   inherits formal_polynomials_commutative_ring(r,nat) *)
+
+(*  = *)
+
+(*   (\** a derivation rule *\) *)
+(*   let differentiate in self -> self = *)
+(*     let pred(n) = nat!predecessor(n) in  *)
+(*     let lc(p) = self!leading_coefficient(p) in  *)
+(*     let reductum(p) = self!reductum(p) in  *)
+(*     let monomial(coeff,deg) = self!monomial(coeff,deg) in  *)
+(*     let degree(p) = self!degree(p) in  *)
+(*     let plus(x,y) = self!plus(x,y) in  *)
+(*     let mult(x,y) = self!module_mult(x,y) in  *)
+(*     let coeff_of_deg = *)
+(*        let foo = unitary_additive_monoid_as_nat_semi_module(nat, r) in *)
+(*        fun d -> foo!of_nat(d) *)
+(*     in *)
+(*     let rec aux(res, p) = *)
+(* 	let deg = degree(p) in *)
+(* 	  if nat!is_min(deg) then *)
+(* 	    res *)
+(* 	  else *)
+(* 	    aux( *)
+(*       	      plus( mult((coeff_of_deg(deg)), (monomial(lc(p), pred(deg)))),  *)
+(*       	       	     res), *)
+(* 	      reductum(p)) *)
+(*     in *)
+(*       aux(self!zero); *)
+
+
+(* end *)
+
+
+(* type pdiv_res b = caml pdiv_res; ;; *)
+(* let cr_pr(x in 'b, y in 'b) in pdiv_res('b) = caml cr_pr;; *)
+(* let pdiv_quo(x in pdiv_res('b)) in 'b = caml pq;; *)
+(* let pdiv_res(x in pdiv_res('b)) in 'b = caml pr;; *)
+
+(* (\** Univariate abstract polynomials over an integral domain *\) *)
+(* species formal_univariate_polynomials_domain *)
+(*   (r is integral_domain, nat is natural_number_system) *)
+(*   inherits formal_polynomials_domain(r, nat), *)
+(*            formal_univariate_polynomials_com_ring(r, nat) = *)
+(*   (\** pseudo division of two polynomials*\) *)
+(*   sig pseudo_divide in self -> self -> pdiv_res(self); *)
+
+(*   (\*[rr]:   try to lift next 3 to dichotomy *\) *)
+(*   local let pow(c,n) = *)
+(*     let dicho = monoid_as_power(nat, r) in *)
+(*     dicho!expt(c,n); *)
+
+(*   local theorem pow_0: all c in r, *)
+(*     r!equal(r!one,!pow(c,nat!zero)) *)
+(*     proof:assumed; *)
+
+(*   local theorem pow_ind: all c in r, all n in nat, *)
+(*     r!equal(!pow(c,nat!successor(n)), r!mult(c,!pow(c,n))) *)
+(*     proof: assumed; *)
+
+(*   (\**  *)
+(*     pseudo division is only defined for non null divisor *)
+(*     and we have *)
+(*      lc(Q)^(|P| -|Q| + 1) P = pquo(p,q) Q + prem(P,Q) *)
+(*    *\) *)
+(*   property pseudo_divide_relation: all p q in self, *)
+(*     !is_zero(q) *)
+(*       or *)
+(*     !equal(!plus(!mult(!pseudo_quotient(p,q), *)
+(* 		       q), *)
+(* 		 !pseudo_remainder(p,q)), *)
+(* 	   !module_mult(!pow(!leading_coefficient(q), *)
+(* 			     nat!successor(nat!minus(!degree(p), !degree(q)))), *)
+(* 			p)); *)
+		 
+(*   property pseudo_remainder_has_lower_degree: all p q rr in self, *)
+(*     not(!is_zero(q)) -> !equal(rr,!pseudo_remainder(p,q)) -> *)
+(*        not(!is_zero(rr)) -> nat!lt(!degree(rr), !degree(q)) *)
+(*     ; *)
+
+(*   (\** pseudo remainder of the pseudo division *\) *)
+(*   let pseudo_remainder(p,q) = #pdiv_res(!pseudo_divide(p,q)); *)
+
+(*   (\** pseudo quotient of the pseudo division *\) *)
+(*   let pseudo_quotient(p,q) = #pdiv_quo(!pseudo_divide(p,q)); *)
+
+(* end *)
+
+(* (\** Univariate abstract polynomials over a gcd_domain *\) *)
+(* species formal_univariate_polynomials_gcd_domain(r is gcd_domain, *)
+(* 			                         nat is natural_number_system) *)
+(*   inherits gcd_domain, *)
+(*            formal_univariate_polynomials_domain(r,nat) = *)
+(* end *)
+
+
+(* (\** Univariate abstract polynomials over a field *\) *)
+(* species formal_univariate_polynomials_field(r is field, *)
+(* 			                    nat is natural_number_system) *)
+(*   inherits euclidean_domain, *)
+(*            formal_univariate_polynomials_domain(r,nat) = *)
+
+(*   (\* assumes q is not null *\) *)
+
+(*   local let rec inner_quo_rem(p, lcq, dq, q, res) = *)
+(*     let dp = !degree(p) in *)
+(*     let cp = !leading_coefficient(p) in *)
+(*     if nat!lt(dq,dp) *)
+(*     then #cr_qrr(res,p) *)
+(*     else  *)
+(*       let diff = nat!minus(dp,dq) in *)
+(*       !inner_quo_rem(!fmecg(!reductum(p),cp,diff,q), *)
+(*                      lcq, *)
+(* 		     dq, *)
+(* 		     q, *)
+(* 		     !plus(!monomial(lcq, diff), res)); *)
+
+
+(*   let quo_rem(p,q) = *)
+(*     if !is_zero(q) *)
+(*     then #foc_error("UPF: division by zero") *)
+(*     else  *)
+(*      !inner_quo_rem(p, *)
+(*                     !leading_coefficient(q), *)
+(*                     !degree(q),  *)
+(*                     !opposite(!reductum(q)), *)
+(*                     !zero); *)
+
+(*   proof of remainder_is_smaller = assumed; *)
+
+(*   letprop euclidean_ordering(p,q) = *)
+(*     nat!lt(!degree(p),!degree(q)); *)
+
+(*   proof of euclidean_ordering_is_transitive = *)
+(*     by nat!lt_is_irreflexive def !euclidean_ordering ; *)
+(*   proof of euclidean_order_is_antisymmetric = assumed; *)
+(*   proof of euclidean_ordering_is_irreflexive = assumed; *)
+
+(*   let monic_gcd(p,q) =  *)
+(*     let g = !gcd(p,q) in *)
+(*     !plus(!monomial(r!one,!degree(g)), *)
+(*           !module_mult(r!inv(!leading_coefficient(g)), *)
+(*                        !reductum(g))); *)
+
+(* end *)
+
+
+(* type rec_struct a b =  *)
+(*   Base in a -> rec_struct(a,b); *)
+(*   Composed in string -> list(rec_struct(a,b)*b)-> rec_struct(a,b); *)
+(* ;; *)
+
+
+(* species algebre_recursive(r is integral_domain, v is monomial_ordering) *)
+(*   inherits commutative_ring, torsion_free_algebra(r) = *)
+(*    rep = rec_struct(r,v); *)
+(*    (\** *)
+(*       wee need to state that *)
+(*         if r is any element of a then Base(a) is a valid rep *)
+(*       and *)
+(*         if p is a valid rep, *)
+(*         if ul is a valid_rep of some polynomial up  *)
+(*         if the degree of up is strictly positive  *)
+(*         then Composed(s,ul,p) is a valid rep *)
+(*     *\) *)
+(*    sig generator in string -> v -> self; *)
+(*   (\* added to facilitate syntax extensions for parsing polynomials *\)  *)
+(*   let ring_parse = r!parse; *)
+(*   let degre_parse = v!parse;   *)
+(* end *)
+ 
+(* $Id: polys_abstract.fcl,v 1.1 2008-10-29 15:30:09 rr Exp $ *)
+
