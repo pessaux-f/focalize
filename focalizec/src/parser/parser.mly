@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.109 2008-10-23 16:41:12 weis Exp $ *)
+(* $Id: parser.mly,v 1.110 2008-10-29 16:32:23 weis Exp $ *)
 
 open Parsetree;;
 
@@ -288,6 +288,7 @@ let mk_proof_label (s1, s2) =
        /* being '=', starting with '=', '<', or '>' */
 %right    AT_OP HAT_OP
        /* expr (e OP e OP e) with OP starting with '@' or '^' */
+/* FIXME: to be added with the precedence of @ ? */
 /*%right    ILIDENT */
 /* expr (e OP e OP e) with OP being a user defined lowercase ident. */
 %right    COLON_COLON COLON_COLON_OP
@@ -300,7 +301,11 @@ let mk_proof_label (s1, s2) =
        /* expr (e OP e OP e) with OP starting with "**" */
 
 /* Unary prefix operators. */
-%nonassoc BACKQUOTE_OP             /* expr OP e with OP being '\`' */
+/* FiXME: to be added. */
+/* %nonassoc PLIDENT */
+       /* expr OP e with OP a lowercase ident enclosed with */
+       /* backquote chars. */
+%nonassoc BACKQUOTE_OP             /* expr OP e with OP starting with '\`' */
 %nonassoc QUESTION_OP              /* expr OP e with OP starting with '?' */
 %nonassoc DOLLAR_OP                /* expr OP e with OP starting with '$' */
 %nonassoc BANG_OP                  /* expr OP e with OP starting with '!' */
@@ -946,6 +951,9 @@ expr:
     { mk (E_let ($1, $3)) }
 
   /* Binary operators */
+/* FIXME: to be added. */
+/*  | expr ILIDENT expr */
+/*    { mk_infix_application $1 $2 $3 } */
 
   | expr SEMI_SEMI_OP expr
     { mk_infix_application $1 $2 $3 }
@@ -1020,6 +1028,9 @@ expr:
     { mk_prefix_application $1 $2 }
   | DASH_OP expr %prec prec_unary_minus
     { mk_prefix_application $1 $2 }
+/* FIXME: to be added. */
+/*  | PLIDENT expr                    */
+/*    { mk_prefix_application $1 $2 } */
 
   | EXTERNAL external_expr END
     { mk (E_external $2) }
