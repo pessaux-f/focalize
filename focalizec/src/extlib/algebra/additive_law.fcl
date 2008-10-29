@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: additive_law.fcl,v 1.1 2008-09-28 14:29:32 rr Exp $ *)
+(* $Id: additive_law.fcl,v 1.2 2008-10-29 15:27:55 rr Exp $ *)
 
 (** The FoCaL library does not intend to model binary laws which are not
    associative, thus some mathematical notions such as magmas (groupoids) are
@@ -24,14 +24,20 @@
 
 
 use "basics" ;;
-use "sets_orders" ;;
-use "iterators" ;;
+use "sets" ;;
+use "orders" ;;
+use "ord_n_latt" ;;
+use "lattices" ;;
+use "constants";;
 open "basics" ;;
-open "sets_orders" ;;
-open "iterators" ;;
+open "sets" ;;
+open "orders" ;;
+open "ord_n_latt" ;;
+open "constants";;
+open "lattices" ;;
 
 (** We state that checking to 0 is a unary operation distinct from equality *)
-species Zero_check_set inherits Set_with_zero =
+species Zero_check_set inherits Setoid_with_zero =
  (**
     in the theory of zero checks we claim that checking to zero
     is a primitive operation.
@@ -111,7 +117,7 @@ species Additive_semi_group inherits Setoid =
 end ;;
 
 (** Monoids with additive notation, these are commutative *)
-species Additive_monoid inherits Additive_semi_group, Set_with_zero =
+species Additive_monoid inherits Additive_semi_group, Setoid_with_zero =
  (** @mathml <plus/>
      will be rendered as infix +
 *)

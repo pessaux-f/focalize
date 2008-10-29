@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: integers.fcl,v 1.1 2008-09-28 14:29:32 rr Exp $ *)
+(* $Id: integers.fcl,v 1.2 2008-10-29 15:27:55 rr Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called 
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -21,16 +21,18 @@
 use "basics" ;;
 open "basics" ;;
 
-use "iterators" ;;
-open "iterators" ;;
+(* use "iterators" ;; *)
+(* open "iterators" ;; *)
 
-use "sets_orders" ;;
+use "sets" ;;
+use "ord_n_latt";;
 use "additive_law" ;;
 use "multiplicative_law" ;;
 use "weak_structures" ;;
 use "rings_fields" ;;
 
-open "sets_orders" ;;
+open "sets" ;;
+open "ord_n_latt";;
 open "additive_law" ;;
 open "multiplicative_law" ;;
 open "weak_structures" ;;
@@ -40,6 +42,137 @@ use "random_foc" ;;
 open "random_foc" ;;
 
 (**
+   An abstract enumeration system is a system where we have a
+   successor and a predecessor function.
+ *)
+
+species Enumeration_system inherits Setoid =
+
+  signature start : Self ;
+
+  (** An abstract successor function *)
+  signature successor : Self -> Self ;
+
+  (** Compatibility with equality *)
+  property successor_substitution_rule: all x y in Self,
+   !equal (x, y) -> !equal (!successor(x), !successor(y)) ;
+
+  (** Injectivity of successor is a Peano axiom *)
+  property successor_is_injective : all x y in Self,
+     !equal (!successor(x), !successor(y)) -> !equal (x, y) ;
+
+  (**
+     predecessor computes the unique y such that successor(y) = x
+     This makes sense because predecessor is injective.
+   *)
+  signature predecessor : Self -> Self;
+  property predecessor_reverses_successor : all x y in Self,
+     !equal (x, !successor (y)) ->
+       !equal (y, !predecessor (x)) ;
+end ;;
+
+
+(**
+   An abstract enumeration system is a system that could be obtained
+   by stating from the 0 element and iterating the successor function.
+ *)
+species Enumerated_system
+   inherits Enumeration_system, Partial_set =
+  (** Zero is not a successor is a Peano axiom *)
+  property successor_is_non_trivial: all n in Self,
+    ~ (!equal (!successor (n), !start));
+
+  (** Weak injectivity of predecessor is a Peano axiom *)
+  property predecessor_is_injective: all n m in Self,
+    ~ (!equal (n, !start)) -> ~ (!equal (m, !start)) ->
+      !equal (!predecessor (n), !predecessor (m)) -> !equal (m, n) ;
+
+  (** An induction principle for natural numbers *)
+  theorem enumerated_induction: all p in (Self -> prop),
+    p (!start) -> (all n in Self, p (n) -> p (!successor (n)))
+      -> (all n in Self, p (n))
+    proof : assumed {* Because todo *} ;
+end ;;
+
+(**
+  Here we state properties for a total ordering over an enumeration.
+  Implicitely we orient the binary relation x = succ(y)
+  and consider its transitive closure
+ *)
+species Ordered_Enumeration_system inherits Enumeration_system =
+  (** a strict inequality *)
+  (* [Usure] : j'ai remplacé la doc par un simple commentaire @mathml <lt/> *)
+  signature lt : Self -> Self -> basics#bool ;
+  (**  antisymmetry is usually stated for large orderings *)
+  property lt_is_anti_symmetric: all x y in Self,
+    !lt (x, y) -> ~ (!lt (y, x)) ;
+  theorem lt_is_irreflexive: all x in Self, ~ (!lt(x, x))
+    proof: by property lt_is_anti_symmetric ;
+  (** Transitivity *)
+  property lt_is_transitive: all x y z in Self,
+    !lt (x, y) -> !lt (y, z) -> !lt (x, z) ;
+  (** We only have three cases *)
+  property lt_is_total: all x y in Self,
+    !lt (x, y) \/ !equal (x, y) \/ !lt (y, x) ;
+
+  (** strict ordering enables to define large ordering *)
+  (* [Usure] : j'ai remplacé la doc par un simple commentaire @mathml <leq/> *)
+  let leq (x, y) = basics#or_b (!equal (x, y), !lt (x, y)) ;
+  theorem leq_is_reflexive: all x y in Self, !equal (x, y) -> !leq (x, y)
+    proof: by definition of leq ;
+  theorem leq_is_antisymmetric: all x y in Self,
+    !leq (x, y) -> !leq (y, x) -> !equal (x, y)
+    proof:
+      <1>1 assume x in Self,
+           assume y in Self,
+           assume Hxy: !leq (x, y),
+           assume Hyx: !leq (y, x),
+           prove !equal (x, y)
+           <2>1 assume Axy: !lt (x, y),
+                prove !equal (x, y)
+                <3>1 prove ~ (!lt (y, x))
+                   by hypothesis Axy
+                   property lt_is_anti_symmetric
+                <3>2 qed
+                     by step <3>1
+                     hypothesis Hyx
+                     property equal_symmetric
+                     definition of leq
+           <2>2 assume Ayx: !lt (y, x),
+                prove !equal (x, y)
+                <3>1 prove ~ (!lt (x, y))
+                       by hypothesis Ayx
+                       property lt_is_anti_symmetric
+                <3>2 qed by
+                         step <3>1
+                         hypothesis Hxy
+                         definition of leq
+           <2>f qed by step <2>1, <2>2
+                           property lt_is_total
+      <1>2 qed.
+    ;
+  theorem leq_is_transitive: all x y z in Self,
+    !leq (x, y) -> !leq (y, z) -> !leq (x, z)
+    (* [rr]: todo *)
+    proof: assumed {* Because todo *} ;
+
+  (** Properties which state that the ordering
+     is induced by the successor function *)
+  property successor_defines_bigger: all x in Self,
+    !lt (x, !successor (x)) ;
+  property start_is_min: all x in Self,
+    !equal (x, !start) \/ !lt (!start, x) ;
+  property successor_defines_infimum: all x y in Self,
+    !leq (x, y) -> ~ (!equal (x, y)) -> !leq (!successor (x), y);
+
+  (* [rr]:
+     To be continued ... One should be able to implement something which
+     reasonably implement natural numbers
+   *)
+end ;;
+
+
+(**
    A number system intends to model common properties for integers and 
    natural numbers
  *)
@@ -47,16 +180,23 @@ species Number_system
            (* [rr}: should look at that, might be deducable *)
   inherits Cancellative_additive_monoid,
            Euclidean_semi_ring,
-           Dichotomic_system =
+           Enumeration_system=
+(*            Dichotomic_system = *)
 
   (** multiplication by two is just adding twice *)
-  let mult2 (x) = !plus (x, x) ;
-  proof of mult2_substitution_rule = assumed {* Because todo *} ;
-  proof of mult2_is_injective = assumed {* Because todo *} ;
-  proof of mult2_produces_even = assumed {* Because todo *} ;
+(*   let mult2 (x) = !plus (x, x) ; *)
+(*   theorem mult2_spec: all x in Self, *)
+(*     !equal(!mult2(x), !plus(x, x)) *)
+(*     proof: by property !equal_reflexive definition of mult2; *)
 
-  proof of zero_is_even = assumed {* Because todo *} ;
-  proof of zero_fixes_mult2 = assumed {* Because todo *} ;
+(*   proof of mult2_substitution_rule = assumed {* Because todo *} ; *)
+(*   proof of mult2_is_injective = assumed {* Because todo *} ; *)
+(*   proof of mult2_produces_even = assumed {* Because todo *} ; *)
+
+(*   proof of zero_is_even = assumed {* Because todo *} ; *)
+(*   proof of zero_fixes_mult2 = assumed {* Because todo *} ; *)
+
+  let start = !zero;
 
   (** the successor function is just addition *)
   let successor (x)= !plus (x, !one) ;
@@ -110,7 +250,9 @@ end ;;
 
 (** Integers abstraction, this needs more work *)
 species Integer_system
-  inherits Euclidean_domain, Ordered_ring, Number_system =
+  inherits Euclidean_domain, 
+           Ordered_ring,
+           Number_system =
 
 
   (** the predecessor is a total function *)

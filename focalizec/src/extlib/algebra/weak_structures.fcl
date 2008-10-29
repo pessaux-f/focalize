@@ -13,20 +13,18 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: weak_structures.fcl,v 1.2 2008-10-24 13:43:00 pessaux Exp $ *)
+(* $Id: weak_structures.fcl,v 1.3 2008-10-29 15:27:55 rr Exp $ *)
 
 (** We define here some weak notions such as rings with no subtraction. *)
 
-use "basics" ;;
-use "sets_orders" ;;
-use "iterators" ;;
+use "basics";;
+use "constants";;
 use "additive_law" ;;
 use "multiplicative_law" ;;
-open "basics" ;;
-open "sets_orders" ;;
-open "iterators" ;;
+open "basics";;
 open "additive_law" ;;
 open "multiplicative_law" ;;
+open "constants";;
 coq_require "weak_structures_externals" ;;
 
 (** we have an element 1 and an additive law *)
@@ -44,14 +42,14 @@ end ;;
    here we give a monoid morphism between natural numbers 
    and an arbitrary monoid. Still need to state its properties.
  *)
-species Embed_naturals
-     (M is Unitary_additive_monoid,
-      Nat is Dichotomic_system,
-      Bins is Binop (M),
-      Dicho is Dichotomy (Nat, M, Bins))
-  inherits Basic_object =
-  let of_nat (n) = Dicho!dichot (M!one, n) ;
-end ;;
+(* species Embed_naturals *)
+(*      (M is Unitary_additive_monoid, *)
+(*       Nat is Dichotomic_system, *)
+(*       Bins is Binop (M), *)
+(*       Dicho is Dichotomy (Nat, M, Bins)) *)
+(*   inherits Basic_object = *)
+(*   let of_nat (n) = Dicho!dichot (M!one, n) ; *)
+(* end ;; *)
 
 (** A semi ring has +,*,1,0 is sometimes called a rig *)
 species Semi_ring inherits Unitary_additive_monoid, Monoid = 
@@ -317,7 +315,8 @@ species Euclidean_semi_ring inherits Factorial_semi_ring =
         !euclidean_ordering (x, y) -> !euclidean_ordering (y, z) ->
           !euclidean_ordering (x, z) ;
  property euclidean_ordering_is_irreflexive: all x in Self,
-   ~ (!is_zero (x)) -> ~ (!euclidean_ordering (x, x)) ;
+   (!is_zero (x)) \/ ~ (!euclidean_ordering (x, x)) ;
+
  theorem euclidean_relation: all x y in Self,
    !is_zero (y)
    \/

@@ -13,16 +13,16 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: multiplicative_law.fcl,v 1.1 2008-09-28 14:29:32 rr Exp $ *)
+(* $Id: multiplicative_law.fcl,v 1.2 2008-10-29 15:27:55 rr Exp $ *)
 
 (** Common properties of multiplicative laws. *)
 
 use "basics" ;;
 use "sets_orders" ;;
-use "iterators";;
+use "constants";;
 open "basics" ;;
 open "sets_orders" ;;
-open "iterators" ;;
+open "constants";;
 
 (** one associative multiplicative binop, this is sometimes called a magma *)
 species Semi_group inherits Setoid =
@@ -77,22 +77,22 @@ end ;;
 
 
 
-species Power_by_dichotomy (M is Monoid,
-                            Nat is Dichotomic_system,
-                            Bins is Binop (M),
-                            Dicho is Dichotomy (Nat, M, Bins))
-    inherits basics#Basic_object =
-  let expt (x, n) = Dicho!dichot (x, n) ;
-end ;;
+(* species Power_by_dichotomy (M is Monoid, *)
+(*                             Nat is Dichotomic_system, *)
+(*                             Bins is Binop (M), *)
+(*                             Dicho is Dichotomy (Nat, M, Bins)) *)
+(*     inherits basics#Basic_object = *)
+(*   let expt (x, n) = Dicho!dichot (x, n) ; *)
+(* end ;; *)
 
 
 
-(* [rr]: this should be renamed *)
-species Power (M is Monoid, Nat is Dichotomic_system,
-               Bins is Binop (M), Dicho is Dichotomy (Nat, M, Bins))
-  inherits Power_by_dichotomy (M, Nat, Bins, Dicho) =
-  rep = unit ;
-end ;;
+(* (\* [rr]: this should be renamed *\) *)
+(* species Power (M is Monoid, Nat is Dichotomic_system, *)
+(*                Bins is Binop (M), Dicho is Dichotomy (Nat, M, Bins)) *)
+(*   inherits Power_by_dichotomy (M, Nat, Bins, Dicho) = *)
+(*   rep = unit ; *)
+(* end ;; *)
 
 
 (** A commutative monoid has a commutative multiplicative law.
@@ -121,7 +121,7 @@ species Commutative_monoid inherits Monoid =
 end ;;
 
 (** Commonly multiplication by zero gives zero  *)
-species Monoid_with_absorbant inherits Set_with_zero, Monoid =
+species Monoid_with_absorbant inherits Setoid_with_zero, Monoid =
   property zero_left_absorbes: all x in Self,
    !equal (!mult (!zero, x), !zero) ;
 

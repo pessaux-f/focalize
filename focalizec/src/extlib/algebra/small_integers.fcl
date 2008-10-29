@@ -13,15 +13,15 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: small_integers.fcl,v 1.1 2008-09-28 14:29:32 rr Exp $ *)
+(* $Id: small_integers.fcl,v 1.2 2008-10-29 15:27:55 rr Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
 use "basics" ;;
 open "basics" ;;
 
-use "iterators" ;;
-open "iterators" ;;
+(* use "iterators" ;; *)
+(* open "iterators" ;; *)
 
 use "integers" ;;
 open "integers" ;;

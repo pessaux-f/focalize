@@ -13,17 +13,17 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rings_fields.fcl,v 1.1 2008-09-28 14:29:32 rr Exp $ *)
+(* $Id: rings_fields.fcl,v 1.2 2008-10-29 15:27:55 rr Exp $ *)
 
 (** Definitions for Rings, Modules, Algebras and Fields. *)
 
-use "basics" ;;
-use "sets_orders" ;;
+(* use "basics" ;; *)
+(* use "sets_orders" ;; *)
 use "additive_law" ;;
 use "multiplicative_law" ;;
 use "weak_structures" ;;
-open "basics" ;;
-open "sets_orders" ;;
+(* open "basics" ;; *)
+(* open "sets_orders" ;; *)
 open "additive_law" ;;
 open "multiplicative_law" ;;
 open "weak_structures" ;;
@@ -265,4 +265,4 @@ species Ordered_field inherits Ordered_gcd_domain, Real_field = end ;;
 (*                Ouf !                                                   *)
 (*                                                                        *)
 
-(* $Id: rings_fields.fcl,v 1.1 2008-09-28 14:29:32 rr Exp $ *)
+(* $Id: rings_fields.fcl,v 1.2 2008-10-29 15:27:55 rr Exp $ *)

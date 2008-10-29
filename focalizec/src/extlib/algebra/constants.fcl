@@ -1,0 +1,48 @@
+
+
+(* for bool *)
+use "basics";;
+open "basics";;
+
+(* for equality *)
+use "sets" ;;
+open "sets" ;;
+
+
+
+(** 
+   A set with zero has an element called zero, 
+   some authors make this a primitive operation .
+*)
+species Setoid_with_zero inherits Setoid =
+ (** @mathml <mn>0</mn>
+    will be rendered as 0
+  *)
+  signature zero : Self ;
+  (** sample element can be definbed to zero *)
+  let element = Self!zero ;
+  (** A unary function which checks to zero *)
+  let is_zero(x) = !equal(x, !zero) ;
+  theorem is_zero_spec: all x in Self,
+    !is_zero(x) <-> (!equal (x, !zero) \/ !equal (!zero, x))
+    proof: by definition of is_zero property !equal_reflexive, !equal_symmetric;
+
+end ;;
+
+(** A setoid with one has a special element named one *)
+species Setoid_with_one inherits Setoid =
+ (** @mathml <mn>1</mn>
+    will be rendered as 1
+ *)
+  signature one : Self ;
+  (** A unary function that checks to one *)
+  let is_one (x) = Self!equal (x, !one) ;
+  let element = Self!one ;
+  theorem is_one_spec: all x in Self,
+    !is_one(x) <-> (!equal (x, !one) \/ !equal (!one, x))
+    proof: by definition of is_one property !equal_reflexive, !equal_symmetric;
+
+end ;;
+
+
+
