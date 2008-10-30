@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.154 2008-10-30 15:18:49 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.155 2008-10-30 16:11:02 pessaux Exp $ *)
 
 
 
@@ -3297,8 +3297,8 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
            let sig_ty = Types.specialize sig_scheme in
            let ty = Types.specialize sc in
            (* Recover the type where Self is prefered. *)
-           let ty' =
-             Types.unify ~loc ~self_manifest: ctx.self_manifest sig_ty ty in
+           ignore
+             (Types.unify ~loc ~self_manifest: ctx.self_manifest sig_ty ty) ;
            Types.end_definition () ;
            let dep_on_rep' = {
              Env.TypeInformation.dor_def =
@@ -3307,8 +3307,8 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
              Env.TypeInformation.dor_decl =
                dep_on_rep.Env.TypeInformation.dor_decl ||
                Types.get_decl_dep_on_rep () } in
-           (from, n, params_names, (Types.generalize ty'), body, dep_on_rep',
-            log_f)
+           (* If a sig is specified, we always keep it as type. *)
+           (from, n, params_names, sig_scheme, body, dep_on_rep', log_f)
           end
         else rec_meth)
       rec_meths in
@@ -3502,9 +3502,10 @@ let fields_fusion ~loc ctx phi1 phi2 =
         Types.begin_definition () ;
         let ty1 = Types.specialize sc1 in
         let ty2 = Types.specialize sc2 in
-        let ty = Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 in
+        ignore (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
         Types.end_definition () ;
-        Env.TypeInformation.SF_sig (from2, n2, (Types.generalize ty))
+        (* If 2 sigs are specified, we always keep the last one as type. *)
+        Env.TypeInformation.SF_sig (from2, n2, sc2)
    | (Env.TypeInformation.SF_sig (_, n1, sc1),
       Env.TypeInformation.SF_let (from2, n2, pars2, sc2, body, dep2, log2))
      when n1 = n2 ->
@@ -3513,7 +3514,7 @@ let fields_fusion ~loc ctx phi1 phi2 =
         Types.begin_definition () ;
         let ty1 = Types.specialize sc1 in
         let ty2 = Types.specialize sc2 in
-        let ty = Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 in
+        ignore (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
         Types.end_definition () ;
         let dep' = {
           Env.TypeInformation.dor_def =
@@ -3521,8 +3522,8 @@ let fields_fusion ~loc ctx phi1 phi2 =
           Env.TypeInformation.dor_decl =
             dep2.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep ()
           } in
-        Env.TypeInformation.SF_let
-          (from2, n2, pars2, (Types.generalize ty), body, dep', log2)
+        (* If a sig is specified, we always keep it as type. *)
+        Env.TypeInformation.SF_let (from2, n2, pars2, sc1, body, dep', log2)
    | (Env.TypeInformation.SF_sig (_, n1, sc1),
       Env.TypeInformation.SF_let_rec rec_meths) ->
         (* sig / let rec. *)
@@ -3535,7 +3536,7 @@ let fields_fusion ~loc ctx phi1 phi2 =
         Types.begin_definition () ;
         let ty1 = Types.specialize sc1 in
         let ty2 = Types.specialize sc2 in
-        let ty = Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 in
+        ignore (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
         Types.end_definition () ;
         let dep' = {
           Env.TypeInformation.dor_def =
@@ -3543,8 +3544,8 @@ let fields_fusion ~loc ctx phi1 phi2 =
           Env.TypeInformation.dor_decl =
             dep1.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep ()
           } in
-        Env.TypeInformation.SF_let
-          (from1, n1, pars1, (Types.generalize ty), body, dep', log1)
+        (* If a sig is specified, we always keep it as type. *)
+        Env.TypeInformation.SF_let (from1, n1, pars1, sc2, body, dep', log1)
    | (Env.TypeInformation.SF_let (_, n1, _, sc1, _, _, log_flag1),
       Env.TypeInformation.SF_let (from2, n2, pars2, sc2, body, dep, log_flag2))
      when n1 = n2 ->
