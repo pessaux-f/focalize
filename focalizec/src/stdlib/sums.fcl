@@ -415,7 +415,7 @@ species Variant_sum(A is Setoid, B is Setoid) inherits Sum_set(A, B) =
   proof of first_has_case =
     coq proof
     definition of first, first_case
-    {* intros ; unfold abst_first_case, abst_first; exact I. *}
+    {* intros ; unfold abst_first_case, abst_first; exact I. Qed. *}
     ;
 
   (**
