@@ -60,16 +60,13 @@ species S_setoid inherits Setoid =
   let print (s) = scnd (s) ;
 
   proof of equal_reflexive =
-    by property beq_refl
-       definition of equal ;
+    by definition of equal ;
 
   proof of equal_symmetric =
-    by property beq_symm
-       definition of equal ;
+    by definition of equal ;
 
   proof of equal_transitive =
-    by property beq_trans
-       definition of equal ;
+    by definition of equal ;
 
 end ;;
 
