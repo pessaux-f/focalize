@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.45 2008-10-27 12:43:22 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.46 2008-10-30 10:37:57 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -73,6 +73,26 @@ let debug_print_dependencies_from_parameters l =
     l
 ;;
 *)
+
+
+
+(* *********************************************************************** *)
+(** {b Descr} Helper that creates the structure denoting an empty species
+    parameters dependencies set. The "empty" dependencies cannot simple be
+    [] because all our "union" functions on dependencies rely on a list of
+    sets with 1 set for each species parameter name. So we create our
+    initial accumulator as the list mapping each species parameter name
+    onto the empty dependencies set.
+
+    {b Rem}: Not exported outside this module.                             *)
+(* *********************************************************************** *)
+let make_empty_param_deps species_parameters_names =
+  List.fold_right
+    (fun species_param accu ->
+      (species_param, Parsetree_utils.ParamDepSet.empty) :: accu)
+    species_parameters_names
+    []
+;;
 
 
 
@@ -509,7 +529,7 @@ let merge_abstraction_infos ai1 ai2 =
 
 
 type field_abstraction_info =
-  | FAI_sig of Env.TypeInformation.sig_field_info
+  | FAI_sig of (Env.TypeInformation.sig_field_info * abstraction_info)
   | FAI_let of (Env.TypeInformation.let_field_info * abstraction_info)
   | FAI_let_rec of (Env.TypeInformation.let_field_info * abstraction_info) list
   | FAI_theorem of (Env.TypeInformation.theorem_field_info * abstraction_info)
@@ -518,19 +538,16 @@ type field_abstraction_info =
 
 
 
-(** Must never be called with the method "rep". It has no meaning.
-    May return None is the searched field is a signature since a signature
-  do not have any dependencies on methods. *)
+(** May return None is the searched field is "rep" since it may not be
+    defined. *)
 let find_field_abstraction_by_name name abstractions =
-  assert (name <> Parsetree.Vlident "rep") ;
   let rec rec_find = function
-    | [] -> assert false             (* The search must succeed ! *)
+    | [] ->
+        if name = (Parsetree.Vlident "rep") then None
+        else assert false
     | h :: q ->
         match h with
-         | FAI_sig (_, n, _) ->
-             (* A signature never induce def-dependencies. *)
-             if n = name then None
-             else rec_find q  (* Not the good name, go on searching... *)
+         | FAI_sig ((_, n, _), abstraction_info) 
          | FAI_let ((_, n, _, _, _, _, _), abstraction_info)
          | FAI_theorem ((_, n, _, _, _, _) , abstraction_info)
          | FAI_property ((_, n, _, _, _), abstraction_info) ->
@@ -656,10 +673,12 @@ let add_param_dependencies ~param_name ~deps ~to_deps =
 
 
 
+(** Add the carriers present in the types of species parameter methods found
+    during the completion done by [complete_dependencies_from_params]. *)
 let complete_used_species_parameters_ty ~current_unit species_params initial_set
-    deps_in_type deps_via_compl =
+    used_species_parameter_tys_via_rep deps_in_type deps_via_compl =
     (* By side effect, we remind the species types appearing in our type. *)
-  let carriers_appearing_in_types = ref Types.SpeciesCarrierTypeSet.empty in
+  let carriers_appearing_in_types = ref used_species_parameter_tys_via_rep in
   (* Just the local function that will be used twice to process each
      dependencies set. *)
   let process_one_deps_set deps_set =
@@ -856,11 +875,7 @@ let complete_dependencies_from_params env ~current_unit ~current_species
             species parameter name. So we create our initial accumulator as the
             list mapping each species parameter name onto the empty dependencies
             set. *)
-         List.fold_right
-           (fun species_param accu ->
-             (species_param, Parsetree_utils.ParamDepSet.empty) :: accu)
-           species_parameters
-           []
+         make_empty_param_deps species_parameters
      | FTK_logical lexpr ->
          (* Same remark about [fold_right] than for the function
             [compute_lambda_liftings_for_field] when computing
@@ -882,17 +897,20 @@ let complete_dependencies_from_params env ~current_unit ~current_species
              (species_param, meths_from_param) :: accu)
            species_parameters
            []) in
-  (* Rule [DEF-DEP]. Since "rep" is a method like the others, it may appear
-     in the def-dependencies. However, since "rep" can never induce
-     dependencies on species parameters methods, we directly forget it. *)
+  (* Rule [DEF-DEP]. *)
+  (* By side effect, we remind the species types appearing in our type. *)
+  let carriers_appearing_in_types = ref Types.SpeciesCarrierTypeSet.empty in
   let abstr_infos_from_all_def_children =
     List.fold_left
       (fun accu (def_child, _) ->
-        if def_child.DepGraphData.nn_name = (Parsetree.Vlident "rep") then accu
-        else
-          (* Get the abstraction info of the child we def-depend on. *)
-          (find_field_abstraction_by_name def_child.DepGraphData.nn_name
-             seen_abstractions) :: accu)
+        let st_set =
+          Types.get_species_types_in_type def_child.DepGraphData.nn_type in
+        carriers_appearing_in_types :=
+          Types.SpeciesCarrierTypeSet.union
+            st_set !carriers_appearing_in_types ;
+        (* Get the abstraction info of the child we def-depend on. *)
+        (find_field_abstraction_by_name def_child.DepGraphData.nn_name
+           seen_abstractions) :: accu)
       []
       def_children in
   (* The "empty" dependencies cannot simple be [] because all our "union"
@@ -901,11 +919,7 @@ let complete_dependencies_from_params env ~current_unit ~current_species
      list mapping each species parameter name onto the empty dependencies
      set. *)
   let empty_initial_deps_accumulator =
-    List.fold_right
-      (fun species_param accu ->
-        (species_param, Parsetree_utils.ParamDepSet.empty) :: accu)
-      species_parameters
-      [] in
+    make_empty_param_deps species_parameters in
   (* Since methods on which we depend are from Self, all of them share the
      same species parameter names, and by construction, each of them have the
      same structure of list (i.e. species parameter names at the same place in
@@ -937,25 +951,27 @@ let complete_dependencies_from_params env ~current_unit ~current_species
            must add its [ai_dependencies_from_params_via_type].
            So we must first search the abstraction info of [z_name_in_univ].
            Since "rep" is a method like the others, it may appear in the
-           universe. However, since "rep" can never induce dependencies on
-           species parameters methods, we directly forget it. *)
-        if z_name_in_univ = (Parsetree.Vlident "rep") then
-          accu_deps_from_params
-        else
-          (begin
-          let abstr_info_opt =
-            find_field_abstraction_by_name z_name_in_univ seen_abstractions in
-          match abstr_info_opt with
-           | Some abstr_info ->
-               (* Now, add the [ai_dependencies_from_params_via_type] to the
-                  dependencies accumulator. *)
-               merge_abstraction_infos
-                 abstr_info.ai_dependencies_from_params_via_type
-                 accu_deps_from_params
-           | None ->
-               (* No abstr_infos found, so leave the accumulator as it was. *)
+           universe. *)
+        let abstr_info_opt =
+          find_field_abstraction_by_name z_name_in_univ seen_abstractions in
+        match abstr_info_opt with
+         | Some abstr_info ->
+             carriers_appearing_in_types :=
+               List.fold_left
+                 (fun  accu tn ->
+                   let tn = Parsetree_utils.name_of_vname tn in
+                   let tn = (current_unit, tn) in
+                   Types.SpeciesCarrierTypeSet.add (tn) accu)
+                 !carriers_appearing_in_types
+                 abstr_info.ai_used_species_parameter_tys ;
+             (* Now, add the [ai_dependencies_from_params_via_type] to the
+                dependencies accumulator. *)
+             merge_abstraction_infos
+               abstr_info.ai_dependencies_from_params_via_type
                accu_deps_from_params
-          end))
+         | None ->
+             (* No abstr_infos found, so leave the accumulator as it was. *)
+             accu_deps_from_params)
       universe
       dependencies_from_params_via_compl1 in
   (* Extend the found dependencies via rule [PRM]. *)
@@ -963,7 +979,8 @@ let complete_dependencies_from_params env ~current_unit ~current_species
     complete_dependencies_from_params_rule_PRM
       env ~current_unit species_parameters
       dependencies_from_params_via_compl2 in
- (dependencies_from_params_via_type, dependencies_from_params_via_compl3)
+ (dependencies_from_params_via_type, dependencies_from_params_via_compl3,
+  !carriers_appearing_in_types)
 ;;
 
 
@@ -988,13 +1005,51 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
     List.fold_left
       (fun abstractions_accu current_field ->
         match current_field with
-         | Env.TypeInformation.SF_sig si -> (FAI_sig si) :: abstractions_accu
+         | Env.TypeInformation.SF_sig ((_, _, sch) as si) ->
+             (* Trivially, sigs can't induce dependencies on methods since
+                they only involve types. However, they may induce species
+                parameters carrier types used. *)
+             let ty = Types.specialize sch in
+             let used_species_parameter_tys =
+               Types.get_species_types_in_type ty in
+             let species_param_names =
+               List.map
+                 (fun species_param ->
+                   (* Recover the species parameter's name. *)
+                   match species_param with
+                    | Env.TypeInformation.SPAR_in (n, _, _) -> n
+                    | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
+                        Parsetree. Vuident n)
+                 ctx.Context.scc_species_parameters_names in
+             let as_set =
+               List.filter
+                 (fun species_param_name ->
+                   let as_string =
+                     Parsetree_utils.name_of_vname species_param_name in
+                   Types.SpeciesCarrierTypeSet.mem
+                     (ctx.Context.scc_current_unit, as_string)
+                     used_species_parameter_tys)
+                 species_param_names in
+             (* The "empty" dependencies cannot simple be [] because all our
+                "union" functions on dependencies rely on a list of sets with 1
+                set for each species parameter name. So we create our initial
+                accumulator as the list mapping each species parameter name
+                onto the empty dependencies set. *)
+             let empty_deps =
+               make_empty_param_deps ctx.Context.scc_species_parameters_names in
+             let abstr_info = {
+               ai_used_species_parameter_tys = as_set ;
+               ai_dependencies_from_params_via_body = empty_deps ;
+               ai_dependencies_from_params_via_type = empty_deps ;
+               ai_dependencies_from_params_via_completion = empty_deps ;
+               ai_min_coq_env = [] } in
+             (FAI_sig (si, abstr_info)) :: abstractions_accu
          | Env.TypeInformation.SF_let ((_, name, _, sch, body, _, _) as li) ->
              (* ATTENTION, the [dependencies_from_params_in_body] is not
                 the complete set of dependencies. It must be completed to
                 fully represent the definition 72 page 153 from Virgile
                 Prevosto's Phd. *)
-             let (used_species_parameter_tys,
+             let (used_species_parameter_tys_in_self_methods_bodies,
                   dependencies_from_params_in_body,
                   decl_children, def_children) =
                let body_as_fbk =
@@ -1013,9 +1068,12 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                  ~with_def_deps
                  ctx.Context.scc_dependency_graph_nodes decl_children
                  def_children in
-             (* Complete the dependencies from species parameters info. *)
+             (* Complete the dependencies from species parameters info. By the
+                way, we record the species parameters carrier appearing in the
+                methods of self that were added during the completion phase. *)
              let (dependencies_from_params_in_type,
-                  dependencies_from_params_via_compl) =
+                  dependencies_from_params_via_compl,
+                  used_species_parameter_tys_in_meths_self_after_completion) =
                complete_dependencies_from_params
                  env ~current_unit: ctx.Context.scc_current_unit
                  ~current_species: ctx.Context.scc_current_species
@@ -1029,7 +1087,8 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                complete_used_species_parameters_ty
                  ~current_unit: ctx.Context.scc_current_unit
                  ctx.Context.scc_species_parameters_names
-                 used_species_parameter_tys
+                 used_species_parameter_tys_in_self_methods_bodies
+                 used_species_parameter_tys_in_meths_self_after_completion
                  dependencies_from_params_in_type
                  dependencies_from_params_via_compl in
              (* Now, its minimal Coq typing environment. *)
@@ -1057,7 +1116,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                       not the complete set of dependencies. It must be  to
                       completed fully represent the definition 72 page 153
                       from Virgile Prevosto's Phd. *)
-                   let (used_species_parameter_tys,
+                   let (used_species_parameter_tys_in_self_methods_bodies,
                         dependencies_from_params_in_bodies,
                         decl_children, def_children) =
                      compute_lambda_liftings_for_field
@@ -1072,9 +1131,13 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                        ~with_def_deps
                        ctx.Context.scc_dependency_graph_nodes
                        decl_children def_children in
-                   (* Complete the dependencies from species parameters info. *)
+                   (* Complete the dependencies from species parameters info.
+                      By the way, we record the species parameters carrier
+                      appearing in the methods of self that were added during
+                      the completion phase. *)
                    let (dependencies_from_params_in_type,
-                        dependencies_from_params_via_compl) =
+                        dependencies_from_params_via_compl,
+                        used_species_parameter_tys_in_meths_self_after_completion) =
                      complete_dependencies_from_params
                        env ~current_species: ctx.Context.scc_current_species
                        ~current_unit: ctx.Context.scc_current_unit
@@ -1089,7 +1152,8 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                      complete_used_species_parameters_ty
                        ~current_unit: ctx.Context.scc_current_unit
                        ctx.Context.scc_species_parameters_names
-                       used_species_parameter_tys
+                       used_species_parameter_tys_in_self_methods_bodies
+                       used_species_parameter_tys_in_meths_self_after_completion
                        dependencies_from_params_in_type
                        dependencies_from_params_via_compl in
                    (* Now, its minimal Coq typing environment. *)
@@ -1115,7 +1179,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                   the complete set of dependencies. It must be completed to
                   fully represent the definition 72 page 153 from Virgile
                   Prevosto's Phd. *)
-               let (used_species_parameter_tys,
+               let (used_species_parameter_tys_in_self_methods_bodies,
                     dependencies_from_params_in_bodies,
                     decl_children, def_children) =
                  compute_lambda_liftings_for_field
@@ -1133,9 +1197,13 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                (* Now, its minimal Coq typing environment. *)
                let min_coq_env =
                  MinEnv.minimal_typing_environment universe fields in
-               (* Complete the dependencies from species parameters info. *)
+               (* Complete the dependencies from species parameters info. By the
+                  way, we record the species parameters carrier appearing in the
+                  methods of self that were added during the completion
+                  phase. *)
                let (dependencies_from_params_in_type,
-                    dependencies_from_params_via_compl) =
+                    dependencies_from_params_via_compl,
+                    used_species_parameter_tys_in_meths_self_after_completion) =
                  complete_dependencies_from_params
                    env ~current_species: ctx.Context.scc_current_species
                    ~current_unit: ctx.Context.scc_current_unit
@@ -1149,7 +1217,8 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                  complete_used_species_parameters_ty
                    ~current_unit: ctx.Context.scc_current_unit
                    ctx.Context.scc_species_parameters_names
-                   used_species_parameter_tys
+                   used_species_parameter_tys_in_self_methods_bodies
+                   used_species_parameter_tys_in_meths_self_after_completion
                    dependencies_from_params_in_type
                    dependencies_from_params_via_compl in
                let abstr_info = {
@@ -1170,7 +1239,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                   the complete set of dependencies. It must be completed to
                   fully represent the definition 72 page 153 from Virgile
                   Prevosto's Phd. *)
-               let (used_species_parameter_tys,
+               let (used_species_parameter_tys_in_self_methods_bodies,
                     dependencies_from_params_in_bodies,
                     decl_children, def_children) =
                  compute_lambda_liftings_for_field
@@ -1185,9 +1254,13 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                    ~with_def_deps
                    ctx.Context.scc_dependency_graph_nodes decl_children
                    def_children in
-               (* Complete the dependencies from species parameters info. *)
+               (* Complete the dependencies from species parameters info. By the
+                  way, we record the species parameters carrier appearing in the
+                  methods of self that were added during the completion
+                  phase. *)
                let (dependencies_from_params_in_type,
-                    dependencies_from_params_via_compl) =
+                    dependencies_from_params_via_compl,
+                    used_species_parameter_tys_in_meths_self_after_completion) =
                  complete_dependencies_from_params
                    env ~current_species: ctx.Context.scc_current_species
                    ~current_unit: ctx.Context.scc_current_unit
@@ -1201,7 +1274,8 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                  complete_used_species_parameters_ty
                    ~current_unit: ctx.Context.scc_current_unit
                    ctx.Context.scc_species_parameters_names
-                   used_species_parameter_tys
+                   used_species_parameter_tys_in_self_methods_bodies
+                   used_species_parameter_tys_in_meths_self_after_completion
                    dependencies_from_params_in_type
                    dependencies_from_params_via_compl in
                (* Now, its minimal Coq typing environment. *)

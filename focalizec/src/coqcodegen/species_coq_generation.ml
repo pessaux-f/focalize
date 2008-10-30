@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.124 2008-10-24 16:19:52 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.125 2008-10-30 10:37:42 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1742,7 +1742,16 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
 
 
 let generate_asserts_for_dependencies out_fmter dependencies_from_params
-    min_coq_env =
+    min_coq_env used_species_parameter_tys =
+  (* Abstract according to the species's parameters carriers the current method
+      depends on. *)
+  List.iter
+    (fun carrier_name ->
+      Format.fprintf out_fmter
+        "@[<2>assert (__force_use_p_%a_T :=@ _p_%a_T).@]@\n"
+        Parsetree_utils.pp_vname_with_operators_expanded carrier_name
+        Parsetree_utils.pp_vname_with_operators_expanded carrier_name)
+    used_species_parameter_tys ;
   (* Abstract according to the species's parameters the current method depends
      on. *)
   List.iter
@@ -1888,7 +1897,8 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
           dependencies, even if they are not used, we must enforce all the
           Parameters and Variables declared in the Section to be used. Hence
           we define a dummy extra Theorem in which we simply put an "assert"
-          on each method we depend on to be sure that Coq will abstract it. *)
+          on each method and species parameter carrier type we depend on to be
+          sure that Coq will abstract it. *)
        Format.fprintf out_fmter
          "(* Dummy theorem to enforce Coq abstractions. *)@\n" ;
        Format.fprintf out_fmter "@[<2>Theorem " ;
@@ -1902,7 +1912,8 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
        Format.fprintf out_fmter ".@]@\n" ;
        (* Now, for each abstracted method we depend on we generate an assert. *)
        generate_asserts_for_dependencies
-         out_fmter dependencies_from_params min_coq_env ;
+         out_fmter dependencies_from_params min_coq_env
+         used_species_parameter_tys ;
        Format.fprintf out_fmter
          "apply for_zenon_%a ;@\nauto.@\nQed.@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name ;
@@ -2335,7 +2346,7 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
     already be generated. Used while generating theorems to know what to apply
         to the methods generators the theorem depends on. *)
 let generate_methods ctx print_ctx env generated_fields = function
-  | Abstractions.FAI_sig (from, name, sch) ->
+  | Abstractions.FAI_sig ((from, name, sch), abstraction_info) ->
       (* Only declared, hence, no code to generate yet ! *)
       if Configuration.get_verbose () then
         Format.eprintf "Coq code for signature '%a' leads to void code.@."
@@ -2348,7 +2359,8 @@ let generate_methods ctx print_ctx env generated_fields = function
         (* Since no code is generated for "sig", no need to get bored with
            species parameters carriers that may appear in the type of the
            "sig". *)
-        Misc_common.cfm_used_species_parameter_tys = [] ;
+        Misc_common.cfm_used_species_parameter_tys =
+          abstraction_info.Abstractions.ai_used_species_parameter_tys ;
         (* Since the "sig " has no code, it can't refer to parameters'
            methods ! *)
         Misc_common.cfm_dependencies_from_parameters = [] ;

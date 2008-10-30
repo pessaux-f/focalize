@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.mli,v 1.15 2008-09-11 23:14:00 pessaux Exp $ *)
+(* $Id: abstractions.mli,v 1.16 2008-10-30 10:37:57 pessaux Exp $ *)
 
 type environment_kind =
   | EK_ml of Env.MlGenEnv.t
@@ -43,7 +43,7 @@ val merge_abstraction_infos :
       (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list
 
 type field_abstraction_info =
-  | FAI_sig of Env.TypeInformation.sig_field_info
+  | FAI_sig of (Env.TypeInformation.sig_field_info * abstraction_info)
   | FAI_let of (Env.TypeInformation.let_field_info * abstraction_info)
   | FAI_let_rec of (Env.TypeInformation.let_field_info * abstraction_info) list
   | FAI_theorem of (Env.TypeInformation.theorem_field_info * abstraction_info)
