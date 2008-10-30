@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.153 2008-10-24 14:11:30 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.154 2008-10-30 15:18:49 pessaux Exp $ *)
 
 
 
@@ -3175,7 +3175,7 @@ let extract_field_from_list_by_name name fields =
            | Env.TypeInformation.SF_theorem (_, n, _, _, _, _)
            | Env.TypeInformation.SF_property (_, n, _, _, _) -> name = n
            | Env.TypeInformation.SF_let_rec l ->
-             List.exists (fun (_, n, _, _, _, _, _) -> name = n) l) in
+               List.exists (fun (_, n, _, _, _, _, _) -> name = n) l) in
         if found then (field, rem) else
           let (found_field, tail) = rec_extract rem in
           (found_field, field :: tail)

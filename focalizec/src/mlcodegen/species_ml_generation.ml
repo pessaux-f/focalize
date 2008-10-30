@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.84 2008-10-14 13:53:46 weis Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.85 2008-10-30 15:19:35 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -510,7 +510,7 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
 (* *********************************************************************** *)
 let generate_methods ctx env field =
   match field with
-   | Abstractions.FAI_sig (from, name, sch) ->
+   | Abstractions.FAI_sig ((from, name, sch), _) ->
        (* Only declared, hence, no code to generate yet ! *)
        if Configuration.get_verbose () then
          Format.eprintf "OCaml code for signature '%a' leads to void code.@."
