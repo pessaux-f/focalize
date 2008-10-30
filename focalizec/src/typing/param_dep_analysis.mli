@@ -12,7 +12,13 @@
 (***********************************************************************)
 
 
-(* $Id: param_dep_analysis.mli,v 1.12 2008-09-10 15:12:27 pessaux Exp $ *)
+(* $Id: param_dep_analysis.mli,v 1.13 2008-10-30 15:39:30 pessaux Exp $ *)
+
+
+val guess_method_computational_or_logical :
+  Parsetree.vname -> Types.type_simple ->
+    Env.TypeInformation.species_field list ->
+      Parsetree_utils.dependency_elem_type_kind
 
 val param_deps_expr :
   current_species: Parsetree.qualified_species ->
