@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
@@ -14,11 +14,15 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.33 2008-10-23 13:10:55 doligez Exp $ *)
+(* $Id: basics.fcl,v 1.34 2008-10-31 09:50:09 weis Exp $ *)
 
-(** The very basic definitions for focalize code:
-    built-in or (almost) mandatory type definitions,
-    built-in or (almost) mandatory data definitions. *)
+(** {3 The very basic definitions for focalize code} *)
+
+(** [basics.fcl] contents:
+    - built-in or (almost) mandatory type definitions,
+    - built-in or (almost) mandatory data definitions. *)
+
+(** {6 Type definitions} *)
 
 type int =
   internal (* Internal#int *)
@@ -99,6 +103,8 @@ and ( :: ) =
   | coq -> {* cons *}
 ;;
 
+(** {6 Basic operations on basic types} *)
+
 let foc_error =
   internal string -> 'a
   external
@@ -106,50 +112,58 @@ let foc_error =
   | coq -> {* coq_builtins.foc_error *}
 ;;
 
-(* Operations on booleans. *)
-let and_b =
+(** Operations on booleans. *)
+let ( && ) =
   internal bool -> bool -> bool
   external
   | caml -> {* Ml_builtins.bi__and_b *}
   | coq -> {* coq_builtins.bi__and_b *}
 ;;
 
-let or_b =
+let ( || ) =
   internal bool -> bool -> bool
   external
   | caml -> {* Ml_builtins.bi__or_b *}
   | coq -> {* coq_builtins.bi__or_b *}
 ;;
 
-let not_b =
+let ( ~| ) =
   internal bool -> bool
   external
   | caml -> {* Ml_builtins.bi__not_b *}
   | coq -> {* coq_builtins.bi__not_b *}
 ;;
 
-let xor_b =
+let ( |<>| ) =
   internal bool -> bool -> bool
   external
   | caml -> {* Ml_builtins.bi__xor_b *}
   | coq -> {* coq_builtins.bi__xor_b *}
 ;;
 
-let ( && ) (x, y) = and_b (x, y);;
-let ( || ) (x, y) = or_b (x, y);;
-let ( ~| ) = not_b;;
-let ( |<>| ) = xor_b;;
+let and_b = ( && );;
+let or_b = ( || );;
+let not_b = ( ~| );;
+let xor_b = ( |<>| );;
 
-(* Operations on pairs. *)
-let crp (x, y) = (x, y) ;;
-let first (x) = match x with | (v, _ ) -> v ;;
-let scnd (x) = match x with | (_, v) -> v ;;
+(** Operations on pairs. *)
+let pair (x, y) = (x, y) ;;
+let fst (x) =
+  match x with
+  | (v, _) -> v
+;;
 
-let pair = crp;;
-let fst = first;;
-let snd = scnd;;
+let snd (x) =
+  match x with
+  | (_, v) -> v
+;;
 
-(* Basic printing. *)
+(* For compatibility only: should be removed ? *)
+let crp = pair;;
+let first = fst;;
+let scnd = snd;;
+
+(** Basic printing. *)
 let print_int =
   internal int -> unit
   external
@@ -178,24 +192,28 @@ let int_of_string =
   | coq -> {* fun (x : string__t) => 42 *}
 ;;
 
-(* Operations on strings. *)
+(** Operations on strings. *)
 
 (* Concatenation. *)
-let sc =
+let ( ^ ) =
   internal string -> string -> string
   external
   | caml -> {* Ml_builtins.bi__str_cat *}
   | coq -> {* fun (x : string__t) (y : string__t) => coq_builtins.___a_string *}
 ;;
 
-let ( ^ ) (x, y) = sc (x, y) ;;
+(* For compatibility only: should be removed ? *)
+let sc = ( ^ );;
 
-let str_lt =
+let ( <^ ) =
   internal string -> string -> bool
   external
   | caml -> {* Ml_builtins.bi__str_lt *}
   | coq -> {* fun (x : string__t) (y : string__t) => true *}
 ;;
+
+(* For compatibility only: should be removed ? *)
+let str_lt = ( <^ );;
 
 let print_string =
   internal string -> unit
@@ -204,7 +222,8 @@ let print_string =
   | coq -> {* fun (x : string__t) => coq_builtins.Void *}
 ;;
 
-(* Operations on integers. *)
+(** Operations on integers. *)
+
 let int_mod =
   internal int -> int -> int
   external
@@ -219,12 +238,16 @@ let int_eq =
   | coq -> {* coq_builtins.bi__int_eq *}
 ;;
 
+let ( =0x ) = int_eq;;
+
 let int_lt =
   internal int -> int -> bool
   external
   | caml -> {* Ml_builtins.bi__int_lt *}
   | coq -> {* coq_builtins.bi__int_lt *}
 ;;
+
+let ( <0x ) = int_lt;;
 
 let int_leq =
   internal int -> int -> bool
@@ -233,6 +256,8 @@ let int_leq =
   | coq -> {* coq_builtins.bi__int_leq *}
 ;;
 
+let ( <=0x ) = int_leq;;
+
 let int_geq =
   internal int -> int -> bool
   external
@@ -240,12 +265,16 @@ let int_geq =
   | coq -> {* coq_builtins.bi__int_geq *}
 ;;
 
+let ( >=0x ) = int_geq;;
+
 let int_gt =
   internal  int -> int -> bool
   external
   | caml -> {* Ml_builtins.bi__int_gt *}
   | coq -> {* coq_builtins.bi__int_gt *}
 ;;
+
+let ( >0x ) = int_gt;;
 
 let pred =
   internal int -> int
@@ -260,6 +289,8 @@ let int_opp =
   | caml -> {* Ml_builtins.bi__int_opposite *}
   | coq -> {* coq_builtins.bi__int_opposite *}
 ;;
+
+let ( ~0x ) = int_opp;;
 
 let int_plus =
   internal int -> int -> int
@@ -279,12 +310,16 @@ let int_mult =
   | coq -> {* coq_builtins.bi__int_mult *}
 ;;
 
+let ( * ) = int_mult;;
+
 let int_minus =
   internal int -> int -> int
   external
   | caml -> {* Ml_builtins.bi__int_minus *}
   | coq -> {* coq_builtins.bi__int_minus *}
 ;;
+
+let ( - ) = int_minus;;
 
 let int_max =
   internal int -> int -> int
@@ -307,8 +342,11 @@ let int_div =
   | coq -> {* coq_builtins.bi__int_div *}
 ;;
 
-(* Polymorphic equalities. *)
-let phys_eq =
+let ( % ) = int_div;;
+
+(** Polymorphic equalities. *)
+
+let physical_equal =
   internal 'a ->'a -> bool
   external
   | caml -> {* Ml_builtins.bi__base_equal *}
@@ -316,19 +354,33 @@ let phys_eq =
     (* Wrong, but don't know how to do better. *)
 ;;
 
-let base_eq =
+let ( == ) = physical_equal
+;;
+
+(* For compatibility only: should be removed ? *)
+let phys_eq = physical_equal
+;;
+
+let syntactic_equal =
   internal  'a -> 'a -> bool
   external
   | caml -> {* Ml_builtins.bi__base_eq *}
   | coq -> {* coq_builtins.bi__base_eq __var_a *}
 ;;
 
-let ( = ) (x, y) = base_eq (x, y) ;;
+let ( = ) = syntactic_equal;;
 
-(* Theorems on comparisons. *)
+(* For compatibility only: should be removed ? *)
+let base_eq = syntactic_equal;;
+
+(** Theorems on comparisons. *)
+
 theorem beq_refl : all x in 'a, base_eq (x, x)
+  (* x = x *)
   proof: assumed {* Import trusted external code. *} ;;
-theorem beq_symm : all x y in 'a, base_eq (x, y) -> base_eq (y, x)
+theorem beq_symm : all x y in 'a,
+  (* x = y -> y = x *)
+  base_eq (x, y) -> base_eq (y, x)
   proof: assumed {* Import trusted external code. *} ;;
 theorem beq_trans :
   all x y z in 'a, base_eq (x, y) -> base_eq (y, z) -> base_eq (x, z)
@@ -415,7 +467,7 @@ theorem int_lt_irrefl :
   proof: assumed {* Import trusted external code. *}
 ;;
 
-(* Theorems on integer operations. *)
+(** Theorems on integer operations. *)
 
 theorem int_0_plus: all x y in int,
   #base_eq (x, 0) -> #base_eq (#int_plus (x, y), y)
@@ -455,6 +507,7 @@ theorem int_plus_assoc: all x y z in int,
 ;;
 
 theorem int_plus_commute: all x y  in int,
+  (* x + y = y + x *)
   #base_eq (#int_plus (x, y), #int_plus (y, x))
   proof:
     coq proof {*
@@ -526,6 +579,7 @@ theorem int_min_le2: all x y z in int,
 ;;
 
 theorem int_plus_minus: all x y z in int,
+  (*   x + y = z -> y = z - x *)
   #base_eq (#int_plus (x, y), z) -> #base_eq (y, #int_minus (z, x))
   proof:
     coq proof {*
@@ -539,23 +593,24 @@ theorem int_plus_minus: all x y z in int,
 ;;
 
 theorem int_minus_plus: all x y z in int,
- #base_eq (#int_minus (x, y), z) -> #base_eq (x, #int_plus (y, z))
- proof:
-   coq proof {*
-     intros x y z; unfold int_plus, int_minus, base_eq in |- *;
-     intros H;
-     unfold bi__int_minus;
-     apply EQ_base_eq; rewrite <- (Zplus_minus y x);
-     apply Zplus_eq_compat; trivial; apply decidable. apply Z_eq_dec. assumption.
-     Qed.
-   *}
+  (*   x - y = z -> x = y + z *)
+  #base_eq (#int_minus (x, y), z) -> #base_eq (x, #int_plus (y, z))
+  proof:
+    coq proof {*
+      intros x y z; unfold int_plus, int_minus, base_eq in |- *;
+      intros H;
+      unfold bi__int_minus;
+      apply EQ_base_eq; rewrite <- (Zplus_minus y x);
+      apply Zplus_eq_compat; trivial; apply decidable. apply Z_eq_dec. assumption.
+      Qed.
+    *}
 ;;
 
-(*  Species                                                              *)
+(** {3 Species} *)
 
-(*  A basic object is a normal blurb on which we do some things          *)
-(*  This is the root of the species' hierarchy                           *)
-(*                                                                       *)
+(** A [Basic_object] value is a normal blurb on which we do some things.
+    This is the root of the species' hierarchy. *)
+
 species Basic_object =
   (* Generic print function. *)
   let print (_x in Self) = "<abst>" ;
@@ -576,7 +631,8 @@ type partiel ('a) =
 let is_failed (x) =
   match x with
   | Failed -> true
-  | Unfailed (_) -> false ;;
+  | Unfailed (_) -> false
+;;
 
 let non_failed (x) =
   match x with
