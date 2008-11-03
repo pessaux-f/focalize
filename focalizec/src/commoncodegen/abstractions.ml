@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.46 2008-10-30 10:37:57 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.47 2008-11-03 13:16:33 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -974,11 +974,16 @@ let complete_dependencies_from_params env ~current_unit ~current_species
              accu_deps_from_params)
       universe
       dependencies_from_params_via_compl1 in
+  (* Join all the found dependencies in a unique bunch so that
+     [complete_dependencies_from_params_rule_PRM] will have 1 bunch to know
+     which ones have already be found. *)
+  let all_found_deps_until_now =
+    merge_abstraction_infos
+      dependencies_from_params_via_type dependencies_from_params_via_compl2 in
   (* Extend the found dependencies via rule [PRM]. *)
   let dependencies_from_params_via_compl3 =
     complete_dependencies_from_params_rule_PRM
-      env ~current_unit species_parameters
-      dependencies_from_params_via_compl2 in
+      env ~current_unit species_parameters all_found_deps_until_now in
  (dependencies_from_params_via_type, dependencies_from_params_via_compl3,
   !carriers_appearing_in_types)
 ;;
