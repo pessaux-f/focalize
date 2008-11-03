@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.48 2008-11-03 15:59:23 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.49 2008-11-03 16:01:11 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -56,7 +56,7 @@ type environment_kind =
 
 
 
-(* For debugging purpose only.
+(* For debugging purpose only. *)
 let debug_print_dependencies_from_parameters l =
   List.iter
     (fun (species_param, methods) ->
@@ -72,7 +72,7 @@ let debug_print_dependencies_from_parameters l =
       Format.eprintf "@.")
     l
 ;;
-*)
+
 
 
 
@@ -900,7 +900,7 @@ let complete_dependencies_from_params env ~current_unit ~current_species
            species_parameters
            []) in
 
-Fomat.eprintf "dependencies_from_params_via_type: " ;
+Format.eprintf "dependencies_from_params_via_type: " ;
 debug_print_dependencies_from_parameters dependencies_from_params_via_type ;
 
 
@@ -951,7 +951,7 @@ debug_print_dependencies_from_parameters dependencies_from_params_via_type ;
       empty_initial_deps_accumulator
       abstr_infos_from_all_def_children in
 
-Fomat.eprintf "dependencies_from_params_via_compl1: " ;
+Format.eprintf "dependencies_from_params_via_compl1: " ;
 debug_print_dependencies_from_parameters dependencies_from_params_via_compl1 ;
 
   (* Rule [UNIVERS]. We extend [dependencies_from_params_via_compl1]. *)
@@ -986,7 +986,7 @@ debug_print_dependencies_from_parameters dependencies_from_params_via_compl1 ;
       universe
       dependencies_from_params_via_compl1 in
 
-Fomat.eprintf "dependencies_from_params_via_compl2: " ;
+Format.eprintf "dependencies_from_params_via_compl2: " ;
 debug_print_dependencies_from_parameters dependencies_from_params_via_compl2 ;
 
   (* Join all the found dependencies in a unique bunch so that
@@ -1000,7 +1000,7 @@ debug_print_dependencies_from_parameters dependencies_from_params_via_compl2 ;
     complete_dependencies_from_params_rule_PRM
       env ~current_unit species_parameters all_found_deps_until_now in
 
-Fomat.eprintf "dependencies_from_params_via_PRM: " ;
+Format.eprintf "dependencies_from_params_via_PRM: " ;
 debug_print_dependencies_from_parameters dependencies_from_params_via_PRM ;
 
   (* Merge the completions. *)
