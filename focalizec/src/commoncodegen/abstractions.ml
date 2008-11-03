@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.47 2008-11-03 13:16:33 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.48 2008-11-03 15:59:23 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -854,7 +854,9 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
         accu_deps_from_params
         usages)
     (* Arguments of the outer [List.fold_left]. *)
-    starting_dependencies_from_params
+    (make_empty_param_deps species_parameters) (* Start from an empty set. We
+                                                  do not accumulate with the
+						  already found dependencies. *)
     parametrised_params_with_their_effective_args_being_params
 ;;
 
@@ -897,6 +899,11 @@ let complete_dependencies_from_params env ~current_unit ~current_species
              (species_param, meths_from_param) :: accu)
            species_parameters
            []) in
+
+Fomat.eprintf "dependencies_from_params_via_type: " ;
+debug_print_dependencies_from_parameters dependencies_from_params_via_type ;
+
+
   (* Rule [DEF-DEP]. *)
   (* By side effect, we remind the species types appearing in our type. *)
   let carriers_appearing_in_types = ref Types.SpeciesCarrierTypeSet.empty in
@@ -943,6 +950,10 @@ let complete_dependencies_from_params env ~current_unit ~current_species
              accu_deps_from_params)
       empty_initial_deps_accumulator
       abstr_infos_from_all_def_children in
+
+Fomat.eprintf "dependencies_from_params_via_compl1: " ;
+debug_print_dependencies_from_parameters dependencies_from_params_via_compl1 ;
+
   (* Rule [UNIVERS]. We extend [dependencies_from_params_via_compl1]. *)
   let dependencies_from_params_via_compl2 =
     VisUniverse.Universe.fold
@@ -974,16 +985,28 @@ let complete_dependencies_from_params env ~current_unit ~current_species
              accu_deps_from_params)
       universe
       dependencies_from_params_via_compl1 in
+
+Fomat.eprintf "dependencies_from_params_via_compl2: " ;
+debug_print_dependencies_from_parameters dependencies_from_params_via_compl2 ;
+
   (* Join all the found dependencies in a unique bunch so that
      [complete_dependencies_from_params_rule_PRM] will have 1 bunch to know
      which ones have already be found. *)
   let all_found_deps_until_now =
     merge_abstraction_infos
       dependencies_from_params_via_type dependencies_from_params_via_compl2 in
-  (* Extend the found dependencies via rule [PRM]. *)
-  let dependencies_from_params_via_compl3 =
+  (* Get the found dependencies via rule [PRM]. *)
+  let dependencies_from_params_via_PRM =
     complete_dependencies_from_params_rule_PRM
       env ~current_unit species_parameters all_found_deps_until_now in
+
+Fomat.eprintf "dependencies_from_params_via_PRM: " ;
+debug_print_dependencies_from_parameters dependencies_from_params_via_PRM ;
+
+  (* Merge the completions. *)
+  let dependencies_from_params_via_compl3 =
+    merge_abstraction_infos
+      dependencies_from_params_via_compl2 dependencies_from_params_via_PRM in
  (dependencies_from_params_via_type, dependencies_from_params_via_compl3,
   !carriers_appearing_in_types)
 ;;
