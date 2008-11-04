@@ -20,8 +20,20 @@ whole compilation unit (and also in other units by using the
 Type definitions require type expressions to build more complex
 datatypes. For this reason we present here the shape of type
 expressions.
-%\begin{syntax}
-%\end{syntax}
+
+\vspace{0.2cm}
+\begin{syntax}
+\syntaxclass{Type expressions:}
+\tau & ::= & lowercase ident   & Type constructor \\
+     & \mid & uppercase ident & Species carrier \\
+     & \mid & {\tt '} lowercase ident & Type variable \\
+     & \mid & ident (\tau \{, \tau \}) & Parameterised type constructor \\
+     & \mid & \tau -> \tau & Functional type \\
+     & \mid & (\tau * \tau \{* \tau \}) & Tuple type \\
+     & \mid & {\tt Self} & Current species carrier \\
+     & \mid & (\tau)
+\end{syntax}
+\vspace{0.2cm}
 
 
 
