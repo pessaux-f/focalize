@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.54 2008-10-29 16:38:30 weis Exp $
+# $Id: Makefile,v 1.55 2008-11-04 11:31:33 pessaux Exp $
 
 ROOT_DIR = ..
 
@@ -33,7 +33,8 @@ FOCALIZE_SRC = basics.foc \
 	orders.foc \
 	ord_n_latt.foc \
 	sets_orders.foc \
-	wellfounded.foc
+	wellfounded.foc \
+	sums.foc
 
 FOCALIZE_SRC_UNSAFE = \
 	ensembles_finis.foc

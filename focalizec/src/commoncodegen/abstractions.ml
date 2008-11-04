@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.50 2008-11-04 09:17:17 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.51 2008-11-04 11:31:33 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -56,7 +56,7 @@ type environment_kind =
 
 
 
-(* For debugging purpose only. *)
+(* For debugging purpose only.
 let debug_print_dependencies_from_parameters l =
   List.iter
     (fun (species_param, methods) ->
@@ -100,7 +100,7 @@ let debug_print_dependencies_from_parameters2 l =
       Format.eprintf "@.")
     l
 ;;
-
+*)
 
 
 
@@ -778,6 +778,113 @@ let complete_used_species_parameters_ty ~current_unit species_params initial_set
 
 
 
+let complete_dependencies_from_params_rule_didou ~current_unit ~via_body
+    ~via_type ~via_completion =
+  (* Join the 3 dependencies sets to lookup for fixpoint in only 1 set. *)
+  let found_dependencies_from_params =
+    merge_abstraction_infos
+      via_body (merge_abstraction_infos via_type via_completion) in
+  (* We create the set that will be the final completion. Hence it at least
+     contains the dependencies initially found in the [via_completion]. *)
+  let new_via_completion = ref via_completion in
+  let changed = ref true in
+  while !changed do
+    changed := false ;   (* Reset the fixpoint reached signal. *)
+    new_via_completion :=
+    List.map2
+      (fun (_, meths_new) (param, meths_old) ->
+        (* [meths_new] : the set of new methods added compared to the set of
+           methods that were initially already found by the previous rules.
+           [meths_old] : the set of new methods freshly added compared to the
+           set of methods that were initially already found by the previous
+           rules. *)
+        match param with
+         | Env.TypeInformation.SPAR_in (_, _, _) -> (param, meths_new)
+         | Env.TypeInformation.SPAR_is
+              (spe_par_name, _, spe_meths, _, dep_graph) ->
+             (* Let's have an accumulator for the set of new methods freshly
+                added in order to work by side effect. This will be much
+                simpler. *)
+             let accu = ref meths_new in
+             (* For each method of the species parameters we already found we
+                depended on via completion... *)
+             Parsetree_utils.ParamDepSet.iter
+               (fun (meth_name, _) ->
+                 (* For all decl-dependency coming from **the type** of the
+                    method of this species parameter, we must add it as a
+                    dependency on this species parameter method. *)
+                 let decl_children =
+                   (try
+                     let my_node =
+                       List.find
+                         (fun { DepGraphData.nn_name = n } -> n = meth_name)
+                         dep_graph in
+                     List.filter
+                       (function
+                         | (_,
+                            (DepGraphData.DK_decl
+                               DepGraphData.DDK_from_type)) -> true
+                         | (_,
+                            (DepGraphData.DK_decl
+                               DepGraphData.DDK_from_body)) -> false
+                                   
+                         | (_, DepGraphData.DK_def) -> false)
+                       my_node.DepGraphData.nn_children
+                   with Not_found -> []  (* No children at all. *)) in
+                 List.iter
+                   (fun (node, _) ->
+                     if node.DepGraphData.nn_name <>
+                        (Parsetree.Vlident "rep") then
+                       (begin
+                       (* We found a method that must be possibly added if it is
+                          not already present in the already found dependencies
+                          and not in the already added dependencies. *)
+                       let mkind =
+                         Param_dep_analysis.guess_method_computational_or_logical
+                           node.DepGraphData.nn_name
+                           node.DepGraphData.nn_type
+                           spe_meths in
+                       let mkind =
+                         match mkind with
+                          | Parsetree_utils.DETK_computational ty ->
+                              let ty' =
+                                Types.copy_type_simple_but_variables
+                                  ~and_abstract: (Some spe_par_name) ty in
+                              Parsetree_utils.DETK_computational ty'
+                          | Parsetree_utils.DETK_logical lexpr ->
+                              let lexpr' =
+                                SubstColl.subst_logical_expr
+                                  ~current_unit SubstColl.SRCK_self
+                                  (Types.SBRCK_coll spe_par_name)
+                                  lexpr in
+                              Parsetree_utils.DETK_logical lexpr' in
+                       let elem = (node.DepGraphData.nn_name, mkind) in
+                       if not
+                           (Parsetree_utils.ParamDepSet.mem elem meths_old) &&
+                          not (Parsetree_utils.ParamDepSet.mem elem !accu) then
+                         (begin
+                         (* We must add the method into the accu since it was
+                            never seen before. *)
+                         accu := Parsetree_utils.ParamDepSet.add elem !accu ;
+                         (* For the fixpoint, we say that it is not yet
+                            reached. *)
+                         changed := true
+                         end)
+                       end))
+                   decl_children)
+               meths_old ;
+             (* Return the new set of added methods. *)
+             (param, !accu))
+      !new_via_completion
+      found_dependencies_from_params
+  done ;
+  !new_via_completion
+;;
+
+
+
+
+
 (* ************************************************************************ *)
 (* environment_kind -> current_unit:Parsetree.module_name ->                *)
 (*   Env.TypeInformation.species_param list ->                              *)
@@ -913,7 +1020,7 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                           (m, (Parsetree_utils.name_of_vname n))) in
                    let substituted_y =
                      subst_param_dep_set
-		       ~current_unit ~replaced ~replaced_by y in
+                       ~current_unit ~replaced ~replaced_by y in
                    (* ... and add it to the dependencies of
                       [eff_arg_qual_vname] in the current dependencies
                       accumulator, i.e into [inner_accu_deps_from_params]. *)
@@ -972,11 +1079,6 @@ let complete_dependencies_from_params env ~current_unit ~current_species
              (species_param, meths_from_param) :: accu)
            species_parameters
            []) in
-
-Format.eprintf "dependencies_from_params_via_type:@." ;
-debug_print_dependencies_from_parameters dependencies_from_params_via_type ;
-
-
   (* Rule [DEF-DEP]. *)
   (* By side effect, we remind the species types appearing in our type. *)
   let carriers_appearing_in_types = ref Types.SpeciesCarrierTypeSet.empty in
@@ -1023,10 +1125,6 @@ debug_print_dependencies_from_parameters dependencies_from_params_via_type ;
              accu_deps_from_params)
       empty_initial_deps_accumulator
       abstr_infos_from_all_def_children in
-
-Format.eprintf "dependencies_from_params_via_compl1:@." ;
-debug_print_dependencies_from_parameters dependencies_from_params_via_compl1 ;
-
   (* Rule [UNIVERS]. We extend [dependencies_from_params_via_compl1]. *)
   let dependencies_from_params_via_compl2 =
     VisUniverse.Universe.fold
@@ -1058,10 +1156,6 @@ debug_print_dependencies_from_parameters dependencies_from_params_via_compl1 ;
              accu_deps_from_params)
       universe
       dependencies_from_params_via_compl1 in
-
-Format.eprintf "dependencies_from_params_via_compl2:@." ;
-debug_print_dependencies_from_parameters dependencies_from_params_via_compl2 ;
-
   (* Join all the found dependencies in a unique bunch so that
      [complete_dependencies_from_params_rule_PRM] will have 1 bunch to know
      which ones have already be found. *)
@@ -1072,10 +1166,6 @@ debug_print_dependencies_from_parameters dependencies_from_params_via_compl2 ;
   let dependencies_from_params_via_PRM =
     complete_dependencies_from_params_rule_PRM
       env ~current_unit species_parameters all_found_deps_until_now in
-
-Format.eprintf "dependencies_from_params_via_PRM:@." ;
-debug_print_dependencies_from_parameters dependencies_from_params_via_PRM ;
-
   (* Merge the completions. *)
   let dependencies_from_params_via_compl3 =
     merge_abstraction_infos
@@ -1180,6 +1270,14 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                  ~current_species: ctx.Context.scc_current_species
                  abstractions_accu ctx.Context.scc_species_parameters_names
                  def_children universe FTK_computational in
+             (* Extra completion by a transitive closure that was missing in
+                Virgile Prevosto's Phd. *)
+             let dependencies_from_params_via_didou =
+               complete_dependencies_from_params_rule_didou
+                 ~current_unit: ctx.Context.scc_current_unit
+                 ~via_body: dependencies_from_params_in_body
+                 ~via_type: dependencies_from_params_in_type
+                 ~via_completion: dependencies_from_params_via_compl in
              (* Now, we complete the species parameters carriers seen by
                 taking into account types of methods obtained by the
                 completion of the dependencies on parameters achieved by
@@ -1191,7 +1289,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                  used_species_parameter_tys_in_self_methods_bodies
                  used_species_parameter_tys_in_meths_self_after_completion
                  dependencies_from_params_in_type
-                 dependencies_from_params_via_compl in
+                 dependencies_from_params_via_didou in
              (* Now, its minimal Coq typing environment. *)
              let min_coq_env =
                MinEnv.minimal_typing_environment universe fields in
@@ -1202,7 +1300,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                ai_dependencies_from_params_via_type =
                  dependencies_from_params_in_type ;
                ai_dependencies_from_params_via_completion =
-                 dependencies_from_params_via_compl ;
+                 dependencies_from_params_via_didou ;
                ai_min_coq_env = min_coq_env } in
              (FAI_let (li, abstr_info)) :: abstractions_accu
          | Env.TypeInformation.SF_let_rec l ->
@@ -1245,6 +1343,14 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                        abstractions_accu ctx.Context.
                          scc_species_parameters_names
                        def_children universe FTK_computational in
+                   (* Extra completion by a transitive closure that was missing
+                      in Virgile Prevosto's Phd. *)
+                   let dependencies_from_params_via_didou =
+                     complete_dependencies_from_params_rule_didou
+                       ~current_unit: ctx.Context.scc_current_unit
+                       ~via_body: dependencies_from_params_in_bodies
+                       ~via_type: dependencies_from_params_in_type
+                       ~via_completion: dependencies_from_params_via_compl in
                    (* Now, we complete the species parameters carriers seen
                       by taking into account types of methods obtained by
                       the completion of the dependencies on parameters achieved
@@ -1256,7 +1362,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                        used_species_parameter_tys_in_self_methods_bodies
                        used_species_parameter_tys_in_meths_self_after_completion
                        dependencies_from_params_in_type
-                       dependencies_from_params_via_compl in
+                       dependencies_from_params_via_didou in
                    (* Now, its minimal Coq typing environment. *)
                    let min_coq_env =
                      MinEnv.minimal_typing_environment universe fields in
@@ -1268,7 +1374,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                      ai_dependencies_from_params_via_type =
                        dependencies_from_params_in_type ;
                      ai_dependencies_from_params_via_completion =
-                       dependencies_from_params_via_compl ;
+                       dependencies_from_params_via_didou ;
                      ai_min_coq_env = min_coq_env } in
                    (li, abstr_info))
                  l in
@@ -1280,9 +1386,6 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                   the complete set of dependencies. It must be completed to
                   fully represent the definition 72 page 153 from Virgile
                   Prevosto's Phd. *)
-
-Format.eprintf "Abstraction Theorem: %a@." Sourcify.pp_vname name ;
-
                let (used_species_parameter_tys_in_self_methods_bodies,
                     dependencies_from_params_in_bodies,
                     decl_children, def_children) =
@@ -1313,6 +1416,14 @@ Format.eprintf "Abstraction Theorem: %a@." Sourcify.pp_vname name ;
                    ~current_unit: ctx.Context.scc_current_unit
                    abstractions_accu ctx.Context.scc_species_parameters_names
                    def_children universe (FTK_logical logical_expr) in
+               (* Extra completion by a transitive closure that was missing in
+                  Virgile Prevosto's Phd. *)
+               let dependencies_from_params_via_didou =
+                 complete_dependencies_from_params_rule_didou
+                   ~current_unit: ctx.Context.scc_current_unit
+                   ~via_body: dependencies_from_params_in_bodies
+                   ~via_type: dependencies_from_params_in_type
+                   ~via_completion: dependencies_from_params_via_compl in
                (* Now, we complete the species parameters carriers seen by
                   taking into account types of methods obtained by the
                   completion of the dependencies on parameters achieved by
@@ -1324,7 +1435,7 @@ Format.eprintf "Abstraction Theorem: %a@." Sourcify.pp_vname name ;
                    used_species_parameter_tys_in_self_methods_bodies
                    used_species_parameter_tys_in_meths_self_after_completion
                    dependencies_from_params_in_type
-                   dependencies_from_params_via_compl in
+                   dependencies_from_params_via_didou in
                let abstr_info = {
                  ai_used_species_parameter_tys =
                    all_used_species_parameter_tys ;
@@ -1333,7 +1444,7 @@ Format.eprintf "Abstraction Theorem: %a@." Sourcify.pp_vname name ;
                  ai_dependencies_from_params_via_type =
                    dependencies_from_params_in_type ;
                  ai_dependencies_from_params_via_completion =
-                   dependencies_from_params_via_compl ;
+                   dependencies_from_params_via_didou ;
                  ai_min_coq_env = min_coq_env } in
                (FAI_theorem (ti, abstr_info)) :: abstractions_accu
          | Env.TypeInformation.SF_property
@@ -1370,6 +1481,14 @@ Format.eprintf "Abstraction Theorem: %a@." Sourcify.pp_vname name ;
                    ~current_unit: ctx.Context.scc_current_unit
                    abstractions_accu ctx.Context.scc_species_parameters_names
                    def_children universe (FTK_logical logical_expr) in
+               (* Extra completion by a transitive closure that was missing in
+                  Virgile Prevosto's Phd. *)
+               let dependencies_from_params_via_didou =
+                 complete_dependencies_from_params_rule_didou
+                   ~current_unit: ctx.Context.scc_current_unit
+                   ~via_body: dependencies_from_params_in_bodies
+                   ~via_type: dependencies_from_params_in_type
+                   ~via_completion: dependencies_from_params_via_compl in
                (* Now, we complete the species parameters carriers seen by
                   taking into account types of methods obtained by the
                   completion of the dependencies on parameters achieved by
@@ -1381,7 +1500,7 @@ Format.eprintf "Abstraction Theorem: %a@." Sourcify.pp_vname name ;
                    used_species_parameter_tys_in_self_methods_bodies
                    used_species_parameter_tys_in_meths_self_after_completion
                    dependencies_from_params_in_type
-                   dependencies_from_params_via_compl in
+                   dependencies_from_params_via_didou in
                (* Now, its minimal Coq typing environment. *)
                let min_coq_env =
                  MinEnv.minimal_typing_environment universe fields in
@@ -1393,7 +1512,7 @@ Format.eprintf "Abstraction Theorem: %a@." Sourcify.pp_vname name ;
                  ai_dependencies_from_params_via_type =
                    dependencies_from_params_in_type ;
                  ai_dependencies_from_params_via_completion =
-                   dependencies_from_params_via_compl ;
+                   dependencies_from_params_via_didou ;
                  ai_min_coq_env = min_coq_env } in
                (FAI_property (pi, abstr_info)) :: abstractions_accu)
       []      (* Initial empty abstractions accumulator. *)
