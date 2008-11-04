@@ -375,6 +375,84 @@ depth of the bullet and the second part stands for its name. Example:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Name qualification}
+\label{qualified_name}
+\index{qualified name}
+Each compilation unit (i.e. source file) is considered as a kind of
+module. Any definition done at ``toplevel'', in other words, outside
+species and collections is visible all along the source file since its
+apparition. As described further (\ref{toplevel_def}) this includes
+species, collection, type definitions (and their constitutive elements
+like constructors, record fields), toplevel theorems and toplevel
+functions.
+
+If such a definition is required by another compilation unit, it can
+be reached by {\bf qualifying} it's name, i.e. making explicit the
+compilation unit's name before the definition's name using the '\#'
+character as delimiter. Examples:
+
+\begin{itemize}
+  \item {\tt basics\#string} stands for the type definition of
+    {\tt string} coming from the source file ``basics.foc''.
+  \item {\tt  basics\#Basic\_object} stands for the species
+    {\tt Basic\_object} defined in the source file ``basics.foc''.
+  \item {\tt db\#My\_db\_coll!create} stands for the method
+    {\tt create} of a collection {\tt My\_db\_coll} hosted in the
+    source file ``db.foc''.
+\end{itemize}
+
+\index{directive!open}
+The qualification can be omitted by using the {\tt open} directive
+that loads the interface of the argument compilation unit and make it
+directly visible in the scope of the current compilation unit. For
+instance:
+
+{\scriptsize
+\begin{lstlisting}
+species S inherits basics#Basic_object = ... end ;;
+\end{lstlisting}
+}
+can be transformed with no explicit qualification into:
+{\scriptsize
+\begin{lstlisting}
+open "basics";;
+species S inherits Basic_object = ... end ;;
+\end{lstlisting}
+}
+
+After an {\tt open} directive, the definitions of loaded interface are
+added in head of the current scope and mask the ones already existing
+and wearing the same names. For example, in the following program:
+{\scriptsize
+\begin{lstlisting}
+(* Redefine my basic object, containing nothing. *)
+species Basic_object = end ;;
+open "basics";;
+species S inherits Basic_object = ... end ;;
+\end{lstlisting}
+}
+the species {\tt S} inherits from the last {\tt Basic\_object} in the
+scope, that is the one loaded by the {\tt open} directive and not from
+the one defined at the beginning of the program. It is still possible
+to recover the first definition by using the ``empty'' qualification
+{\tt \#Basic\_object} in the definition of {\tt S}:
+{\scriptsize
+\begin{lstlisting}
+(* Redefine my basic object, containing nothing. *)
+species Basic_object = end ;;
+open "basics";;
+species S inherits #Basic_object = ... end ;;
+\end{lstlisting}
+}
+
+The qualification starting by a '\#' character without compilation
+unit name before stands for ``the definition at toplevel of the
+current compilation unit''.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Reserved keywords}
 The identifiers below are reserved as keywords, and cannot be employed
 otherwise:
@@ -401,3 +479,4 @@ otherwise:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Language constructs and syntax}
+\input{constructs_syntax.tex}

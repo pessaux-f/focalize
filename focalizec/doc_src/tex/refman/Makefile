@@ -10,23 +10,16 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.3 2008-11-04 12:27:10 pessaux Exp $
+# $Id: Makefile,v 1.4 2008-11-04 13:36:17 pessaux Exp $
 
 ROOT_DIR = ..
 
 include $(ROOT_DIR)/Makefile.config
 
-TEX_FILES = basic_concepts.tex \
-	core_lang.tex \
-	motivations.tex \
-	proofs.tex \
-	building_species.tex \
-	macros.tex \
-	output.tex \
-	refman.tex \
-	compiler_opts.tex\
-	more_on_meths.tex \
-	pres_requir.tex
+TEX_FILES = macros.tex basic_concepts.tex core_lang.tex motivations.tex \
+	proofs.tex building_species.tex macros.tex output.tex refman.tex \
+	compiler_opts.tex more_on_meths.tex pres_requir.tex \
+	constructs_syntax.tex
 
 DVI_FILE = refman.dvi
 PS_FILE = $(DVI_FILE:.dvi=.ps)
