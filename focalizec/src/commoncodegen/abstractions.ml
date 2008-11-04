@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.49 2008-11-03 16:01:11 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.50 2008-11-04 09:17:17 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -68,7 +68,35 @@ let debug_print_dependencies_from_parameters l =
            Format.eprintf "From IN-parameter '%a', methods: "
              Sourcify.pp_vname n) ;
       Parsetree_utils.ParamDepSet.iter
-        (fun (n, _) -> Format.eprintf "%a " Sourcify.pp_vname n) methods ;
+        (fun (n, k) -> Format.eprintf "\t%a: " Sourcify.pp_vname n ;
+          match k with
+           | Parsetree_utils.DETK_computational t ->
+               Format.eprintf "%a@." Types.pp_type_simple t
+           | Parsetree_utils.DETK_logical e ->
+               Format.eprintf "%a@." Sourcify.pp_logical_expr e)
+        methods ;
+      Format.eprintf "@.")
+    l
+;;
+let debug_print_dependencies_from_parameters2 l =
+  List.iter
+    (fun (species_param, (Env.ODFP_methods_list methods)) ->
+      (match species_param with
+       | Env.TypeInformation.SPAR_is ((mod_name, spe_name), _, _, _, _) ->
+           Format.eprintf "From IS-parameter '%s#%s', methods: "
+             mod_name spe_name ;
+       | Env.TypeInformation.SPAR_in (n, _, _) ->
+           Format.eprintf "From IN-parameter '%a', methods: "
+             Sourcify.pp_vname n) ;
+      List.iter
+        (fun (n, k) ->
+          Format.eprintf "%a " Sourcify.pp_vname n ;
+          match k with
+           | Parsetree_utils.DETK_computational t ->
+               Format.eprintf "%a@." Types.pp_type_simple t
+           | Parsetree_utils.DETK_logical e ->
+               Format.eprintf "%a@." Sourcify.pp_logical_expr e)
+        methods ;
       Format.eprintf "@.")
     l
 ;;
@@ -673,6 +701,29 @@ let add_param_dependencies ~param_name ~deps ~to_deps =
 
 
 
+let subst_param_dep_set ~current_unit ~replaced ~replaced_by in_deps =
+  Parsetree_utils.ParamDepSet.fold
+    (fun (meth_name, dep_kind) accu ->
+      match dep_kind with
+       | Parsetree_utils.DETK_computational ty ->
+           let ty' =
+             Types.subst_type_simple
+               replaced (Types.SBRCK_coll replaced_by) ty in
+           Parsetree_utils.ParamDepSet.add
+             (meth_name, (Parsetree_utils.DETK_computational ty')) accu
+       | Parsetree_utils.DETK_logical lexpr ->
+           let lexpr' =
+             SubstColl.subst_logical_expr
+               ~current_unit (SubstColl.SRCK_coll replaced)
+               (Types.SBRCK_coll replaced_by) lexpr in
+           Parsetree_utils.ParamDepSet.add
+             (meth_name, (Parsetree_utils.DETK_logical lexpr')) accu)
+    in_deps
+    Parsetree_utils.ParamDepSet.empty
+;;
+
+
+
 (** Add the carriers present in the types of species parameter methods found
     during the completion done by [complete_dependencies_from_params]. *)
 let complete_used_species_parameters_ty ~current_unit species_params initial_set
@@ -841,11 +892,33 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                        Parsetree_utils.list_to_param_dep_set lst
                      with
                      | Not_found -> Parsetree_utils.ParamDepSet.empty) in
+                   (* ATTENTION: We must instanciate the formal parameter of
+                      S' by the effective argument provided. This means that
+                      we must replace [formal_name] by [eff_arg_qual_vname] in
+                      the dependencies [y]. In effect, in the bodies/types of
+                      the methods of S', parameters are those of S', not our
+                      current ones we use to instanciate the formal ones of
+                      S' ! To prevent those of S' to remain in the expressions
+                      and be unbound, we do the instanciation here. *)
+                   let replaced =
+                     (match formal_name with
+                      | Env.TypeInformation.SPAR_in (_, _, _) -> assert false
+                      | Env.TypeInformation.SPAR_is (ty_coll, _, _, _, _) ->
+                          ty_coll) in
+                   let replaced_by =
+                     (match eff_arg_qual_vname with
+                      | Parsetree.Vname n ->
+                          (current_unit, (Parsetree_utils.name_of_vname n))
+                      | Parsetree.Qualified (m, n) ->
+                          (m, (Parsetree_utils.name_of_vname n))) in
+                   let substituted_y =
+                     subst_param_dep_set
+		       ~current_unit ~replaced ~replaced_by y in
                    (* ... and add it to the dependencies of
                       [eff_arg_qual_vname] in the current dependencies
                       accumulator, i.e into [inner_accu_deps_from_params]. *)
                    add_param_dependencies
-                     ~param_name: eff_arg_qual_vname ~deps: y
+                     ~param_name: eff_arg_qual_vname ~deps: substituted_y
                      ~to_deps: accu_deps_for_zs)
                  (* Arguments of the deepest [DepNameSet.fold]. *)
                  all_z
@@ -856,7 +929,7 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
     (* Arguments of the outer [List.fold_left]. *)
     (make_empty_param_deps species_parameters) (* Start from an empty set. We
                                                   do not accumulate with the
-						  already found dependencies. *)
+                                                  already found dependencies. *)
     parametrised_params_with_their_effective_args_being_params
 ;;
 
@@ -900,7 +973,7 @@ let complete_dependencies_from_params env ~current_unit ~current_species
            species_parameters
            []) in
 
-Format.eprintf "dependencies_from_params_via_type: " ;
+Format.eprintf "dependencies_from_params_via_type:@." ;
 debug_print_dependencies_from_parameters dependencies_from_params_via_type ;
 
 
@@ -951,7 +1024,7 @@ debug_print_dependencies_from_parameters dependencies_from_params_via_type ;
       empty_initial_deps_accumulator
       abstr_infos_from_all_def_children in
 
-Format.eprintf "dependencies_from_params_via_compl1: " ;
+Format.eprintf "dependencies_from_params_via_compl1:@." ;
 debug_print_dependencies_from_parameters dependencies_from_params_via_compl1 ;
 
   (* Rule [UNIVERS]. We extend [dependencies_from_params_via_compl1]. *)
@@ -986,7 +1059,7 @@ debug_print_dependencies_from_parameters dependencies_from_params_via_compl1 ;
       universe
       dependencies_from_params_via_compl1 in
 
-Format.eprintf "dependencies_from_params_via_compl2: " ;
+Format.eprintf "dependencies_from_params_via_compl2:@." ;
 debug_print_dependencies_from_parameters dependencies_from_params_via_compl2 ;
 
   (* Join all the found dependencies in a unique bunch so that
@@ -1000,7 +1073,7 @@ debug_print_dependencies_from_parameters dependencies_from_params_via_compl2 ;
     complete_dependencies_from_params_rule_PRM
       env ~current_unit species_parameters all_found_deps_until_now in
 
-Format.eprintf "dependencies_from_params_via_PRM: " ;
+Format.eprintf "dependencies_from_params_via_PRM:@." ;
 debug_print_dependencies_from_parameters dependencies_from_params_via_PRM ;
 
   (* Merge the completions. *)
@@ -1207,6 +1280,9 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                   the complete set of dependencies. It must be completed to
                   fully represent the definition 72 page 153 from Virgile
                   Prevosto's Phd. *)
+
+Format.eprintf "Abstraction Theorem: %a@." Sourcify.pp_vname name ;
+
                let (used_species_parameter_tys_in_self_methods_bodies,
                     dependencies_from_params_in_bodies,
                     decl_children, def_children) =

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.27 2008-10-17 06:13:34 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.28 2008-11-04 09:17:17 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -496,7 +496,8 @@ and subst_let_definition ~current_unit c1 c2 let_def =
 
 (* ******************************************************************* *)
 (* current_unit:Types.fname -> substitution_collection_kind ->         *)
-(*   Types.type_collection -> Parsetree.logical_expr -> Parsetree.logical_expr         *)
+(*   Types.type_collection -> Parsetree.logical_expr ->                *)
+(*     Parsetree.logical_expr                                          *)
 (** {b Descr} : Performs the collection name substitution [c1] <- [c2]
               in a [Parsetree.logical_expr].
 

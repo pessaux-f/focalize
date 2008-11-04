@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.125 2008-10-30 10:37:42 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.126 2008-11-04 09:17:17 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2409,8 +2409,17 @@ let generate_methods ctx print_ctx env generated_fields = function
              abstraction_info.Abstractions.ai_dependencies_from_params_via_type
              abstraction_info.Abstractions.
              ai_dependencies_from_params_via_completion) in
+
+Format.eprintf "In theorem %a, all abstr =@." Sourcify.pp_vname name ;
+Abstractions.debug_print_dependencies_from_parameters all_deps_from_params ;
+
       let sorted_deps_from_params =
         Dep_analysis.order_species_params_methods all_deps_from_params in
+
+Format.eprintf "All abstr sorted =@." ;
+Abstractions.debug_print_dependencies_from_parameters2 sorted_deps_from_params ;
+
+
       let coq_min_typ_env_names =
         generate_theorem
           ctx print_ctx env abstraction_info.Abstractions.ai_min_coq_env

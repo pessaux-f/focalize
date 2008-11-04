@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.65 2008-10-14 13:42:39 weis Exp $ *)
+(* $Id: types.ml,v 1.66 2008-11-04 09:17:17 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -426,7 +426,7 @@ let (specialize,
          else
            (begin
            (* If the variable was not yet seen, generate a fresh copy and
-	      remind that the variable is now already seen. *)
+              remind that the variable is now already seen. *)
            try List.assq var !seen
            with Not_found ->
              let fresh_var = type_variable () in
@@ -474,8 +474,8 @@ let (specialize,
    (* *************************************************************** *)
    (fun scheme tys ->
      (* Initialize the variable mapping with the types to simulate the fact
-	that these variables have already be seen and are bound the types we
-	want them to be instanciated with. *)
+        that these variables have already be seen and are bound the types we
+        want them to be instanciated with. *)
      List.iter2 (fun var ty -> seen := (var, ty) :: !seen) scheme.ts_vars tys ;
      (* Copy the type scheme's body. *)
      let instance = copy_type_simple scheme.ts_body in
@@ -529,7 +529,7 @@ let copy_type_simple_but_variables ~and_abstract =
      | ST_var var ->
          (begin
          (* The abstraction must never change variables to prevent sharing
-	    breaks ! *)
+            breaks ! *)
          try List.assq var !seen
          with Not_found ->
            seen := (var, ty) :: !seen ;
@@ -904,7 +904,8 @@ let unify ~loc ~self_manifest type1 type2 =
 
 (* ********************************************************************* *)
 (** {b Descr} : Describes the kind of collection must be used to replace
-    while performing a substitution on types.
+    (i.e. that will be inserted instead of the replaced one) while
+    performing a substitution on types.
     This type definition should be in the collection management module,
     but since it also operate on types' structure (which is abstract
     outside here) the only solution is to put it here.
@@ -944,11 +945,11 @@ let subst_type_simple (fname1, spe_name1) c2 =
          with Not_found ->
            let fresh_var = type_variable () in
            (* Be careful, it's a copy, not a specialization ! Hence the
-	      original level of the type must be kept ! The fresh variable is
-	      create at the [current_binding_level], then in case the original
-	      one was created at a lower generic level, we [lowerize_levels]
-	      taking the level max equal to the level of the original
-	      variable. *)
+              original level of the type must be kept ! The fresh variable is
+              create at the [current_binding_level], then in case the original
+              one was created at a lower generic level, we [lowerize_levels]
+              taking the level max equal to the level of the original
+              variable. *)
            lowerize_levels var.tv_level fresh_var ;
            seen := (var, fresh_var) :: !seen ;
            fresh_var
@@ -1182,7 +1183,7 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
     match ty with
     | ST_var var ->
         (* Read the justification in the current function's header about the
-	   fact that we amways consider variables as generalized. *)
+           fact that we amways consider variables as generalized. *)
         let ty_variable_name = get_or_make_type_variable_name_to_ml var in
         Format.fprintf ppf "'%s" ty_variable_name
     | ST_arrow (ty1, ty2) ->
@@ -1242,9 +1243,9 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
         with Not_found ->
           (* If the carrier is not in the mapping created for the species
              parameters, that's because the searched species carrier's is not
-	     a species parameter, i.e. it's a toplevel species.
+             a species parameter, i.e. it's a toplevel species.
              And as always, the type's name representing a species's carrier
-	     is "me_as_carrier". *)
+             is "me_as_carrier". *)
           if current_unit = module_name then
             Format.fprintf ppf "%s.me_as_carrier" collection_name
           else
@@ -1357,7 +1358,7 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
     | ST_construct (type_name, arg_tys) ->
         (begin
         (* Priority of arguments of a sum type constructor : like an regular
-	   application : 0. *)
+           application : 0. *)
         match arg_tys with
          | [] -> Format.fprintf ppf "%a"
                (pp_type_name_to_coq ~current_unit: ctx.cpc_current_unit)
@@ -1374,20 +1375,20 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
         match ctx.cpc_current_species with
          | None ->
              (* Referencing "Self" outside a species should have been caught
-		earlier, i.e. at typechecking stage. *)
+                earlier, i.e. at typechecking stage. *)
              assert false
          | Some (species_modname, _) ->
              (begin
              (* Obviously, Self should refer to the current species. This
-		means that the CURRENT species MUST be in the CURRENT
-		compilation unit ! *)
+                means that the CURRENT species MUST be in the CURRENT
+                compilation unit ! *)
              assert (species_modname = ctx.cpc_current_unit) ;
              (* If "Self" is kept abstract, then it won't appear in the
                 collection_carrier_mapping and must be printed like "abst_T"
-		(for instance when printing in a field definition). Otherwise
-		it may show the species from which it is the carrier (when
-		printing the record type) and must appear in the
-		collection_carrier_mapping. *)
+                (for instance when printing in a field definition). Otherwise
+                it may show the species from which it is the carrier (when
+                printing the record type) and must appear in the
+                collection_carrier_mapping. *)
              try
                let (self_as_string, _) =
                  List.assoc
