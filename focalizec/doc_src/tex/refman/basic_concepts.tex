@@ -1,0 +1,299 @@
+As stated in the introduction, \focal\ language is designed to build
+an application step by step, going from very abstract specifications
+to the concrete implementation through a hierarchy of structures which
+are quite similar to \emph{classes} in an Object-Oriented context.
+However, as we will insist later, \focal\ is not Object-Oriented as
+C++, Java are. It only owns features ``smelling objects''.
+
+\smallskip
+We will now present the basic concepts underlying a
+\focal\ development, that is:
+\begin{itemize}
+  \item Species
+  \item Collections
+  \item Parametrisation
+  \item Inheritance
+  \item Late-binding
+\end{itemize}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Species}
+{\bf Species} \index{species} are the nodes of the
+\focal\ hierarchy. A species can be roughly seen as a list of
+{\bf methods} \index{method} or {\bf fields}\index{field}. Hence, a
+basic species looks like:
+{\scriptsize
+\begin{lstlisting}
+  species Name =
+    ... ;
+    ... ;
+  end ;;
+\end{lstlisting}
+}
+
+Species names are always {\bf capitalized}. Inside the species' body
+methods are enumerated. These methods represent the internal datatype
+of the species, functions\index{function} to manipulate this datatype
+and properties\index{property} that must hold in the species.
+
+\smallskip
+\label{no-polymorphism-for-methods}
+One important restriction on the type of the methods is that it cannot
+be polymorphic\index{polymorphism}. However, \focal\ provides another
+mechanism to circumvent this restriction, the
+parametrisation\index{parametrisation} as explained further
+(c.f. \ref{parametrisation}).
+
+\smallskip
+A species can hence be seen as an abstract data type. On another hand,
+it can be seen as a kind of object, with its internal state (private
+variables) and its methods. There are several kinds of methods:
+\smallskip
+\begin{itemize}
+  \medskip
+  \label{rep-is-method}
+  \item The {\bf carrier}\index{carrier}. This is a type definition
+    that defines\index{carrier!defined} the type of the values
+    embedded in the species. When ``instantiated'', a species will
+    lead to {\bf a value having this type}. This especially means that
+    an instantiation of a species is {\bf NOT}, like in
+    Object-Oriented languages an entity embedding data and code. The
+    instantiation of a species will be a {\bf value}. The carrier is
+    named {\tt rep}\index{rep}. For instance, we can define a species
+    that implements couples of native integers data structure as:
+    {\scriptsize
+      \begin{lstlisting}
+species IntCouple =
+  rep = (int * int) ;
+end ;;
+      \end{lstlisting}
+    }
+    Each ``instance'' of this species will encapsulate {\bf 1}
+    value of type ``couple of integers''. This especially means that
+    the species doesn't represent a ``set'' of couples but
+    {\bf 1} value that has type {\tt (int * int)}.
+
+    \smallskip
+    The carrier may remain not {\bf defined} in a species. However, in
+    order to finally get a fully defined (or {\em complete}) species
+    that will be instantiated, the carrier must be defined
+    {\bf once} at one moment (during inheritance as described later in
+    section \ref{inheritance}). \index{carrier!declared}However, the
+    carrier is {\bf always implicitly declared}. This means that any
+    species has a carrier that will remain declared until it is {\bf
+    defined} ! 
+
+    \smallskip
+    In the context of a species, the type denoted by the carrier is
+    named {\tt Self}.
+
+  \medskip
+  \item {\bf Signatures}\index{signature}. They introduce the
+    ``prototype'' of a function, that is provide their type. As a
+    first introduction, types expressions are closely like ML-like
+    type expressions. A signature can be viewed as a declaration. It
+    specifies the name of the operation then its type. For instance:
+    {\scriptsize
+      \begin{lstlisting}
+ species IntStack =
+   signature push : int -> Self -> Self ;
+ end ;;
+      \end{lstlisting}
+    }
+    As we saw above, {\tt Self} represents the underlying carrier type
+    of the current species. Hence an operation pushing an integer onto
+    a stack will take as parameter the integer to push, the stack on
+    which to push and give back a new configuration of stack (where
+    the pushed element is on the top), that is of type {\tt Self}. 
+
+  \medskip
+  \item {\bf Functions}\index{function}. They are operations that are
+    allowed on the carrier's elements. They are implementations of
+    signatures, providing effective code to execute. A function is
+    introduced by the {\tt let} keyword. Recursive functions are
+    introduced by {\tt let rec} to make explicit the recursivity. A
+    function can be viewed as a definition.
+    {\scriptsize
+      \begin{lstlisting}
+species IntStack =
+  rep = int list ;
+  let push (v in int, s in Self) = v :: s ;
+end ;;
+      \end{lstlisting}
+    }
+    Functions can use in their body other methods of the species,
+    toplevel function definitions, methods of collections
+    (described further in \ref{collection}), or methods of
+    collections parameters (see \ref{collection-parameter}).
+
+    \label{idea-fun-using-sig}
+    When we say ``other methods of the species'', this includes
+    signatures. This means that it is possible to use something only
+    declared, without yet effective implementation. We will address
+    this point later in detail in section \label{late-binding}.
+
+    \smallskip
+    Although \focal\ is a functional language, function application
+    must always be total. This means that any function call must be
+    provided all the effective arguments of the function. It is still
+    possible to have partial application by eta-expansion. As
+    described further in the core syntax (c.f \ref{core-syntax}),
+    function application is ``à la C'', that is with arguments comma
+    separated and enclosed by parentheses.
+
+  \medskip
+  \item {\bf Properties}\index{property}. They are first order logic
+    propositions describing requirements that functions must
+    meet. When stating a property, the proof that it holds is not yet
+    provided. However it will have to finally to get a species that
+    can be instantiated. A property can be viewed as a declaration.
+    {\scriptsize
+      \begin{lstlisting}
+species IntStack =
+  ...
+  property push_returns_non_empty :
+    all v in int, all s in Self, push (v, s) -> ~ is_empty (s) ;
+end ;;
+      \end{lstlisting}
+    }
+
+    Proofs\index{proof!delayed} of properties can be done afterwards
+    using a {\tt proof} field in a species.The way to give proofs will
+    be seen further.
+    {\scriptsize
+      \begin{lstlisting}
+species IntStack2 inherits IntStack =
+  proof of push_returns_non_empty = ... ;            
+end ;;
+      \end{lstlisting}
+    }
+
+  \medskip
+  \item {\bf Theorems}\index{theorem}. They are properties with their
+    proofs. In fact, when defining a property, we only give the
+    statement of a theorem, leaving its proof for later. A theorem can
+    be viewed as a definition.
+    {\scriptsize
+      \begin{lstlisting}
+species IntStack =
+  ...
+  theorem push_returns_non_empty :
+    all v in int, all s in Self, push (v, s) -> ~ is_empty
+    (s)
+  proof : ... ;
+end ;;
+      \end{lstlisting}
+    }
+
+\end{itemize}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Collections}
+\label{collection}
+\index{collection}
+A {\bf collection} is a kind of ``instance'' of a {\em complete}
+\index{species!complete} species. A species is said complete if all
+its methods are {\em defined}, i.e. have an implementation. In other
+words this means that there is no more methods only {\em
+  declared}. This notion implies that:
+\begin{itemize}
+  \item The carrier is defined by providing a type definition for
+    {\tt rep}.
+  \item For signature an effective function exists.
+  \item For each property, a proof is given.
+\end{itemize}
+
+\smallskip
+Obviously, it is possible to build a species without signatures and
+properties, only providing functions and theorems directly. In this
+case, if the carrier is also defined, then the obtained species is
+trivially complete.
+
+The important point for a species to be complete is that it can be
+turned into effective executable code. In effect, since it is
+complete, all its components are known then can be translated into a
+target code.
+
+The process of getting this effective executable code is by making a
+collection that {\em implements} the species. As a result, one get an
+entity whose internal representation has the type of the carrier of
+the {\em implemented} species and that can be manipulated by the
+methods present in this {\em implemented} species. However, the
+manipulations will be done via the collection and not anymore via the
+species.
+
+{\scriptsize
+\begin{lstlisting}
+species Full =
+  rep = int ;
+  let create_random in Self = random_foc#random_int (42) ;
+  let double (x in Self) = x + x ;
+  let print (x in Self) = print_int (x) ;
+end ;;
+
+collection MyFull_Instance implements Full ;;
+
+let v = Full.create_random ;;
+Full.print (v) ;;
+let dv = Full.double () ;;
+Full.print (dv) ;;
+\end{lstlisting}
+}
+
+In the above example, we defined a complete species {\tt Full}. Then
+we ``take an instance'' of such a species by creating the collection
+{\tt MyFull\_Instance}. We can then use methods of this collection on
+values of this collection.
+
+\smallskip
+A very important point is that when creating a collection, the
+representation of the carrier contained in the ``implemented'' species
+gets opaque. In other words, the collection becomes an abstract
+datatype. This especially means that it will be impossible to
+manipulate values of the carrier without the collection's
+methods. Moreover, two collections created from a same species will
+not be type-compatible since their carriers got abstracted making now
+impossible to ensure a type equivalence.
+
+\smallskip
+As a conclusion, collections are the only way to get something that
+can be executed since they are the terminal items of a
+\focal\ development hierarchy. Since they are ``terminal'', this also
+means that no method can be added to a collection. Moreover, a
+collection may not be used to create a new species by inheritance (as
+explained in the next section).
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Interfaces}
+\label{interface}
+\index{interface}
+The {\bf interface} of a species is the list of the declarations of
+its methods. It corresponds to the end-user point of view, who wants
+to know which functions he can use, and which properties these
+functions have, but doesn't care about the details of the
+implementation.
+
+\smallskip
+To get the interface of a species, we keep the methods only declared
+(as previously stated, signatures and properties) and we forget the
+bodies of the defined methods (carrier, functions and theorems).
+Discarding the body of the carrier means we consider it was not given
+at all, for a function we only keep its type and for a theorem we only
+keep its statement. Hence, getting the interface of a species can
+roughly be seen as erasing the carrier, turning the functions into
+signatures and the theorems into properties.
+
+\smallskip
+While this abstraction is easy within programming languages, it is not
+always possible when dealing with proofs and properties. Such
+problematic species are rejected by \focal\ and will be described
+later in \ref{species-constraints}.

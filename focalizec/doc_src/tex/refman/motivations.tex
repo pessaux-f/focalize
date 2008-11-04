@@ -1,0 +1,31 @@
+ The \focal\ project was launched in 1998 by T. Hardin and R. Rioboo
+\cite{HardinRiobooTSI04} with the 
+objective of helping all stages of development of critical software
+within safety and security framework, at least when formal methods are
+required or chosen. The idea was to elaborate a development
+environment able to provide high-level and justified confidence to
+users. One the other hand, this system had to remain easy to use by
+well-trained engineers.
+
+Currently, \focal\ can be seen as still a prototype of an Integrated
+Development Environment (IDE), for a language providing high level
+mechanisms such as inheritance, late binding, redefinition,
+parametrization, etc.  Confidence in proofs submitted by developers
+relies on formal proof verification.
+
+This support language was formally described and designed to provide
+means for formal specification by declaring names and
+properties. Then, design and implementation can incrementally be done
+by adding definitions of functions and proving that the implementation
+meets the specification or design requirements. Thus, developing in
+\focal\ is a kind of refinement process from  formal model to design
+and code, completely done within \focal. Taking the global development
+in consideration within a same environment brings some conciseness,
+helps documentation and reviewing.
+
+A \focal\ development is organised as a hierarchy that may have
+several roots. The upper levels of the hierarchy are built along the
+specification stage while the lower ones correspond to
+implementation. Each node of the hierarchy corresponds to a progress
+toward a complete implementation.  We call here {\em refinement} the
+process of building a top-down hierarchy.
