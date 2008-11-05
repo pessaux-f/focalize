@@ -24,14 +24,14 @@ expressions.
 \vspace{0.2cm}
 \begin{syntax}
 \syntaxclass{Type expressions:}
-\tau & ::= & lowercase ident   & Type constructor \\
-     & \mid & uppercase ident & Species carrier \\
-     & \mid & {\tt '} lowercase ident & Type variable \\
-     & \mid & ident (\tau \{, \tau \}) & Parameterised type constructor \\
+\tau & ::= & lowercase\ ident   & Type constructor \\
+     & \mid & uppercase\ ident & Species carrier \\
+     & \mid & {\tt '}lowercase\ ident & Type variable \\
+     & \mid & uppercase\ ident (\tau \{, \tau \}) & Parameterised type constructor \\
      & \mid & \tau -> \tau & Functional type \\
      & \mid & (\tau * \tau \{* \tau \}) & Tuple type \\
      & \mid & {\tt Self} & Current species carrier \\
-     & \mid & (\tau)
+     & \mid & (\tau) & Parenthesed type expression
 \end{syntax}
 \vspace{0.2cm}
 

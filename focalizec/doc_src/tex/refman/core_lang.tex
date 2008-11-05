@@ -95,8 +95,20 @@ end ;;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Identifiers}
+\subsection{Basic identifiers}
 \index{identifier}
+\vspace{0.2cm}
+\begin{syntax}
+\syntaxclass{Basic identifiers:}
+lower & ::= &  a \ldots z & \\
+upper & ::= &  A \ldots Z & \\
+letter & ::= & lower \mid upper & \\
+lident & ::= & (lower | \_) \{ letter \mid 0 \ldots 0 \mid \_ \} & \\
+uident & ::= & upper \{ letter \mid 0 \ldots 0 \mid \_ \} & \\
+ident & ::= & lident | uident
+\end{syntax}
+\vspace{0.2cm}
+
 Identifiers are sequences of letters, digits, and {\tt \_} (the
 underscore character), starting with a letter or an underscore.
 Letters contain at least the 52 lowercase and uppercase
