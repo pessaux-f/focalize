@@ -100,11 +100,12 @@ end ;;
 \vspace{0.2cm}
 \begin{syntax}
 \syntaxclass{Basic identifiers:}
-lower & ::= &  a \ldots z & \\
-upper & ::= &  A \ldots Z & \\
+digit & ::= & 0 \ldots 9 & \\
+lower & ::= & a \ldots z & \\
+upper & ::= & A \ldots Z & \\
 letter & ::= & lower \mid upper & \\
-lident & ::= & (lower | \_) \{ letter \mid 0 \ldots 0 \mid \_ \} & \\
-uident & ::= & upper \{ letter \mid 0 \ldots 0 \mid \_ \} & \\
+lident & ::= & (lower | \_) \{ letter \mid digit \mid \_ \} & \\
+uident & ::= & upper \{ letter \mid digit \mid \_ \} & \\
 ident & ::= & lident | uident
 \end{syntax}
 \vspace{0.2cm}
@@ -151,6 +152,18 @@ spaces inside or extend the notion of operator identifiers.
     \hline
     \end{tabular}
     \end{center}
+
+    \begin{syntax}
+    \syntaxclass{\hspace{1cm} Infix/prefix operators:}
+    prefix\_char & ::= & ` \ \sim\ ?\ \$\ !\ \#\ & \\
+    infix\_char & ::= &
+        ,\ +\ -\ *\ /\ \%\ \&\ \mid\ :\ ;\ <\ =\ >\ @ \wedge\ \setminus & \\
+    prefix\_op & ::= & prefix\_char
+        \{ letter \mid prefix\_char \mid infix\_char \mid digit \mid \_ \}* & \\
+    infix\_op & ::= & infix\_char
+        \{ letter \mid prefix\_char \mid infix\_char \mid digit \mid \_ \}* & \\
+    op & ::= & infix\_op | prefix\_op
+    \end{syntax}
 
     Hence, in the above examples, {\tt +}, {\tt ++} and
     {\tt =\_mod\_5} will be infix operators and {\tt $\sim$+zero} will
@@ -219,6 +232,28 @@ capitalized (non-extended) identifiers.
 \label{octal}
 \label{hexadecimal}
 \label{binary}
+\begin{syntax}
+\syntaxclass{Integer literals:}
+binary\_digit & ::= & 0 \mid 1 & \\
+octal\_digit & ::= & 0 \ldots 7 & \\
+decimal\_digit & ::= & 0 \ldots 9 & \\
+hexadecimal\_digit & ::= & 0 \ldots 9 \mid A \ldots F \mid a \ldots f & \\
+sign & ::= & + \mid - & \\
+unsigned\_binary\_literal & ::= &
+  0 \{ b \mid B \}\ binary\_digit\ \{ binary\_digit \mid \_ \}* & \\
+unsigned\_octal\_literal & ::= &
+  0 \{ o \mid O \}\ octal\_digit\ \{ octal\_digit \mid \_ \}* & \\
+unsigned\_decimal\_literal & ::= &
+  decimal\_digit \{ decimal\_digit \mid \_ \} * & \\
+unsigned\_hexadecimal\_literal & ::= &
+  0 \{ x \mid X \}\ hexadecimal\_digit\ \{ hexadecimal\_digit \mid \_ \}* & \\
+unsigned\_integer_literal & ::= & unsigned\_binary\_literal \\
+& & \mid unsigned\_octal\_literal & \\
+& & \mid unsigned\_decimal\_literal \\
+& & \mid unsigned\_hexadecimal\_literal & \\
+integer\_literal & ::= & sign?\ unsigned\_integer\_literal
+\end{syntax}
+
 An integer literal is a sequence of one or more digits, optionally
 preceded by a minus or plus sign and/or a base prefix. By default,
 i.e. without base prefix, indegers are in decimal. For instance:
@@ -349,6 +384,22 @@ quotes. Available escape sequences are summarised in the table below:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Floating-point numbers literals}
+\begin{syntax}
+\syntaxclass{Float literals:}
+decimal_literal & ::= & sign?\ unsigned\_decimal\_literal & \\
+hexadecimal\_literal & ::= & sign?\ unsigned\_hexadecimal\_literal & \\
+scientific\_notation & ::= & e \mid E & \\
+unsigned\_decimal\_float\_literal & ::= & unsigned\_decimal\_literal & \\
+& &  \{ .\ unsigned\_decimal\_literal* \} ? & \\
+& &  \{ scientific\_notation\ decimal\_literal \}? & \\
+unsigned\_hexadecimal\_float\_literal & ::= & unsigned\_hexadecimal\_literal &\\
+& & \{ .\ unsigned\_hexadecimal\_literal* \} ? \\
+& & \{ scientific\_notation\ hexadecimal\_literal \} ? & \\
+unsigned\_float\_literal & ::= & unsigned\_decimal\_float\_literal & \\
+& & \mid unsigned\_hexadecimal\_float\_literal & \\
+float\_literal & ::= & sign?\ unsigned\_float\_literal
+\end{syntax}
+
 Floating-point numbers literals are made of an optional sign ('+' or
 '-') followed by a non-empty sequence of digits followed by a dot
 ('.') followed by a possibly empty sequence of digits and finally an
