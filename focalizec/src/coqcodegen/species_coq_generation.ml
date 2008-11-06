@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.128 2008-11-06 11:03:19 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.129 2008-11-06 20:16:27 doligez Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1615,7 +1615,7 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
           abstracted (without lambda-lift) and named "abst_xxx". That's why we
           use the mode [SMS_abstracted]. *)
        Format.fprintf out_fmter "(* Theorem's body. *)@\n" ;
-       Format.fprintf out_fmter "@[<2>Theorem %a :@ "
+       Format.fprintf out_fmter "@[<2>Theorem for_zenon_%a :@ "
        Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
        Species_record_type_generation.generate_logical_expr
          ~local_idents: [] ~in_recursive_let_section_of: []

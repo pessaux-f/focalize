@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.65 2008-10-17 07:28:39 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.66 2008-11-06 20:16:27 doligez Exp $ *)
 
 
 
@@ -389,15 +389,20 @@ let generate_pattern ctx env pattern =
          ignore(generate_constructor_ident_for_method_generator ctx env ident) ;
          (* In "match" patterns, extra arguments of the constructor due to
             polymorphism never appear in Coq syntax. *)
+(* Changed by Damien: constructors are curried in Coq *)
+         Format.fprintf out_fmter "@ " ;
+         rec_generate_pats_list ~comma: false pats ;
+(* old version:
          if pats <> [] then Format.fprintf out_fmter "@ (@[<1>" ;
-         rec_generate_pats_list pats ;
+         rec_generate_pats_list ~comma: true pats ;
          if pats <> [] then Format.fprintf out_fmter ")@]"
+END of changed by Damien. *)
          end)
      | Parsetree.P_record _labs_pats ->
          Format.eprintf "generate_pattern P_record TODO@."
      | Parsetree.P_tuple pats ->
          Format.fprintf out_fmter "(@[<1>" ;
-         rec_generate_pats_list pats ;
+         rec_generate_pats_list ~comma: true pats ;
          Format.fprintf out_fmter ")@]"
      | Parsetree.P_paren p ->
          Format.fprintf out_fmter "(@[<1>" ;
@@ -405,13 +410,14 @@ let generate_pattern ctx env pattern =
          Format.fprintf out_fmter ")@]"
 
 
-  and rec_generate_pats_list = function
+  and rec_generate_pats_list ~comma = function
     | [] -> ()
     | [last] -> rec_gen_pat last
     | h :: q ->
         rec_gen_pat h ;
-        Format.fprintf out_fmter ",@ " ;
-        rec_generate_pats_list q in
+        if comma then Format.fprintf out_fmter ",";
+        Format.fprintf out_fmter "@ " ;
+        rec_generate_pats_list ~comma: comma q in
   (* ********************** *)
   (* Now, let's do the job. *)
   rec_gen_pat pattern
@@ -685,19 +691,27 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          Format.fprintf out_fmter ")@]"
      | Parsetree.E_constr (cstr_ident, args) ->
          (begin
-         let nb_poly_args =
+         Format.fprintf out_fmter "@[<1>(@@" ;
+         let _nb_poly_args =
            generate_constructor_ident_for_method_generator ctx env cstr_ident in
          (* Add the "_"'s due to polymorphism of the constructor. *)
-         for i = 0 to nb_poly_args - 1 do
+         for i = 0 to _nb_poly_args - 1 do
            Format.fprintf out_fmter "@ _"
          done ;
-         match args with
+         begin match args with
           | [] -> ()
           | _ ->
+(* changed by Damien: in Coq, constructors are curried, not tupled *)
+              Format.fprintf out_fmter "@ " ;
+              rec_generate_exprs_list ~comma: false loc_idents env args ;
+(* old version
               (* If argument(s), enclose by parens to possibly make a tuple. *)
               Format.fprintf out_fmter "@ @[<1>(" ;
               rec_generate_exprs_list ~comma: true loc_idents env args ;
-              Format.fprintf out_fmter ")@]"
+              Format.fprintf out_fmter ")@]" ;
+END of changed by Damien *)
+         end;
+         Format.fprintf out_fmter ")@]" ;
          end)
      | Parsetree.E_match (expr, pats_exprs) ->
          (begin
