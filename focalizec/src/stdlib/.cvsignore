@@ -26,4 +26,8 @@ sets_orders.ml
 small_integers.ml
 weak_structures.ml
 wellfounded.ml
+sums.ml
+orders.ml
+ord_n_latt.ml
+lattices.ml
 odoc
