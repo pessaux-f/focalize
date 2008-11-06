@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.127 2008-11-04 11:31:33 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.128 2008-11-06 11:03:19 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -3303,7 +3303,7 @@ let print_record_type_carriers_args_instanciations ctx env args_instanciations =
           (match corresponding_effective_opt_fname with
            | Some fname -> Format.fprintf out_fmter "%s." fname
            | None -> ()) ;
-          Format.fprintf out_fmter "%a.effective_collection.@[<1>("
+          Format.fprintf out_fmter "%a.effective_collection.(@[<1>"
             Parsetree_utils.pp_vname_with_operators_expanded
             corresponding_effective_vname ;
           (match corresponding_effective_opt_fname with
