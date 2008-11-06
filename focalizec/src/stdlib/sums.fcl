@@ -438,7 +438,7 @@ species Variant_sum(A is Setoid, B is Setoid) inherits Sum_set(A, B) =
   let second(x) = Second(x);
   let second_case(x) = match x with
     | Second(_x) -> true
-    | First(x) -> false
+    | First(_x) -> false
   ;
 
   (**
