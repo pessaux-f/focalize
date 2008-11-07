@@ -31,8 +31,8 @@ expressions.
               \terminal{(}\tau \{\terminal{,} \tau\}+\terminal{)} &
                Parametrised type constructor \\
      & \mid & \tau \terminal{\rightarrow} \tau & Functional type \\
-     & \mid & \terminal{(}\tau \terminal{*} \tau \{\terminal{*}\ \tau\}+\terminal{)} &
-               Tuple type \\
+     & \mid & \terminal{(}\tau \terminal{*} \tau
+              \{\terminal{*}\ \tau\}+\terminal{)} & Tuple type \\
      & \mid & \terminal {Self} & Current species carrier \\
      & \mid & \terminal{(}\tau\terminal{)} & Parenthesised type expression
 \end{syntax}
@@ -93,15 +93,16 @@ of type definitions: sum types, aliases and record types.
 
 
 
+\vspace{0.5cm}\noindent{\bf Sum types}
 
-\paragraph{Sum types} provides the way to create new {\bf values} that
+They provide the way to create new {\bf values} that
 will belong to the same {\bf type}. Like {\tt 1} or {\tt 42} are
 {\bf values} of {\bf type} {\tt int}, one may want to have {\tt Red},
 {\tt Blue} and {\tt Green} as the {\bf only} values of a {\tt color}
 type. We says {\bf only} since it means that the created {\tt color}
 type will be inhabited only by these 3 (wished) values. To defined
 such a type, we itemize its values names (that are always capitalized
-identifiers), each one preceded by a ``|'' character :
+identifiers), each one preceded by a ``$\mid$'' character :
 {\scriptsize
 \begin{lstlisting}
 type color =
@@ -111,17 +112,19 @@ type color =
 ;;
 \end{lstlisting}
 }
-Note that the first ``|'' character is required: it is not a
+Note that the first ``$\mid$'' character is required: it is not a
 separator. This espacially means that when writing a sum type
-definition on one line, the first ``|'' must be written:
+definition on one line, the first ``$\mid$'' must be written:
 {\scriptsize
 \begin{lstlisting}
 type color = | Red | Blue | Green ;;
 \end{lstlisting}
 }
-Values of a sum type definitions are also called
-{\bf sum type constructors} (that must not be confused with
-{\bf type constructors} that are the name of a type, here {\tt color}).
+Values of a sum type definitions are built from its
+{\bf sum type constructors}, i.e. from the names enumerated in the
+definition (that must not be confused with the {\bf type constructor}
+that is the name of a type, here {\tt color}). For, instance,
+{\tt Red} is a {\bf value} of our type {\tt color}.
 
 It is possible to define {\bf parametrised} sum type constructors. In
 this case, the constructors may carry a {\bf value}. For instance,
@@ -138,23 +141,29 @@ type card =
 \end{lstlisting}
 }
 Hence, the {\tt Numbered} constructor carries the integer value
-written on the card. It is possible to parametrise constructors by any
-type expression, even recursive.
+written on the card. In our example, here are some values of type
+{\tt card}: {\tt King}, {\tt (Numbered 4)}, {\tt (Numbered 42)}.
+
+It is possible to parametrise constructors by any type expression,
+even recursive.
 \index{type!recursive}
 For instance, the type of lists of boolean $\times$ integer pairs
 could be defined like:
 {\scriptsize
 \begin{lstlisting}
-type b\_i\_list =
+type b_i_list =
   | Empty
-  | Cons ((bool * int) * b\_i\_list)
+  | Cons ((bool * int) * b_i_list)
 ;;
 \end{lstlisting}
 }
 From this type definition, a list is either empty (constructor
 {\tt Empty}) or contains one element in head (the first component of
 the {\tt Cons} constructor) and a trailing list (the second component
-of this constructor).
+of this constructor). Example of value of type {\tt b\_i\_list}:
+{\tt Cons ((false, 2), (Cons ((true, 1), Empty)))}. This list's length
+is 2 and its elements are {\tt (false, 2)} followed by
+{\tt (true, 1)}.
 
 Like for any type definition, it is possible to parametrise the
 {\bf definition}, i.e. create a type with a {\bf type variable} that
@@ -181,25 +190,49 @@ argument of the {\bf type constructor} {\tt list}. For instance,
 {\tt list (list (char))} is the type of lists containing lists of
 characters.
 
+\vspace{0.2cm}
+\begin{syntax}
+\syntaxclass{Sum types definitions:}
+opt\_params & ::= & \epsilon
+    \mid \terminal{(}\ \terminal{'}ident \{\terminal{,} \terminal{'}ident \}*
+    \ \terminal{)} & \\
+opt\_args & ::= & \epsilon
+    \mid \terminal{(}\ \tau\ \{\terminal{,} \tau \}*\ \terminal{)} & \\
+constructor & ::= & \terminal{\mid}\ uident\ opt\_args & \\
+sum\_type\_def & ::= &
+    \terminal{type}\ ident\ opt\_params\  \terminal{=} \  constructor+
+\end{syntax}
+\vspace{0.2cm}
 
 
-\paragraph{Aliases} provide a way to create type abbreviations. It it
-common to manipulate large {\bf type expressions} like for instance, a
-tuple of 5 components: {\tt (int * int * int * int * int)}. However,
-is it not handy to always write this expression each time we
-manipulate it. Moreover, several kind of information can be
-represented by such a tuple. For instance, x, y, z 3D-coordinates and
-temperature and presure. For another example, year, month, day, hours,
-minutes. In these two cases, the manipulated type expression will be
-the same and can' be easily differenciated. Type aliases allows to
-give a name to a (complex) type expression, for sake of redeability or
-to shorten the code. Example:
+
+\vspace{0.5cm}\noindent {\bf Aliases}
+
+They provide a way to create type abbreviations. It it common to
+manipulate large {\bf type expressions} like for instance, a tuple of
+5 components: {\tt (int * int * int * int * int)}. However, is it not
+handy to always write this expression each time we manipulate
+it. Moreover, several kind of information can be represented by such a
+tuple. For instance, x, y, z 3D-coordinates and temperature and
+presure. For another example, year, month, day, hours, minutes. In
+these two cases, the manipulated type expression will be the same and
+can' be easily differenciated. Type aliases allows to give a name to a
+(complex) type expression, for sake of redeability or to shorten the
+code. Example:
 {\scriptsize
 \begin{lstlisting}
 type experiment\_conditions = (int * int * int * int * int) ;;
 type date = (int * int * int * int * int) ;;
 \end{lstlisting}
 }
+
+\vspace{0.2cm}
+\begin{syntax}
+\syntaxclass{Alias type definitions:}
+alias\_type\_def & ::= & \terminal{type}\ ident\ \terminal{=}\ \tau
+\end{syntax}
+\vspace{0.2cm}
+
 In the remaining of the development, the type names
 {\tt  experiment\_conditions} and {\tt date} will be known to be
 tuples of 5 integers and will be compatible with any other type being
@@ -229,15 +262,16 @@ type t4 = t3 (int * bool) ;;
 
 
 
-\paragraph{Record types} provide a way to aggregate data of various
-types, a bit like tuples, but naming the components of the group,
-instead of differenciating them by their position like in
-tuples. Hence, a record type is like the {\tt struct} of C or
-Java-like languages. A record is a sequence of names and types between
-braces. For example:
+\vspace{0.5cm}\noindent {\bf Record types}
+
+They provide a way to aggregate data of various types, a bit like
+tuples, but naming the components of the group, instead of
+differenciating them by their position like in tuples. Hence, a record
+type is like the {\tt struct} of C or Java-like languages. A record is
+a sequence of names and types between braces. For example:
 {\scriptsize
 \begin{lstlisting}
-type experiment\_conditions = {
+type experiment_conditions = {
   x : int ;
   y : int ;
   z : int ;
@@ -258,7 +292,8 @@ type identity = {
 \syntaxclass{Record types definitions:}
 field & ::= & ident\ \terminal{:}\ \tau\ \terminal{;} & \\
 opt\_params & ::= & \epsilon
-    \mid \terminal{(}\ \tau\ \{\terminal{,} \tau \}*\ \terminal{)} & \\
+    \mid \terminal{(}\ \terminal{'}ident \{\terminal{,} \terminal{'}ident \}*
+    \ \terminal{)} & \\
 record\_type\_def & ::= &
     \terminal{type}\ ident\ opt\_params\  \terminal{=}
     \ \terminal{\{} field+ \terminal{\}}

@@ -100,12 +100,13 @@ end ;;
 \vspace{0.2cm}
 \begin{syntax}
 \syntaxclass{Basic identifiers:}
-digit & ::= & 0 \ldots 9 & \\
-lower & ::= & a \ldots z & \\
-upper & ::= & A \ldots Z & \\
+digit & ::= & \terminal{0 }\ldots \terminal{9} & \\
+lower & ::= & \terminal{a} \ldots \terminal{z} & \\
+upper & ::= & \terminal{A} \ldots \terminal{Z} & \\
 letter & ::= & lower \mid upper & \\
-lident & ::= & (lower | \_) \{ letter \mid digit \mid \_ \} & \\
-uident & ::= & upper \{ letter \mid digit \mid \_ \} & \\
+lident & ::= & (lower | \terminal{\_})
+            \{ letter \mid digit \mid \terminal{\_} \} & \\
+uident & ::= & upper \{ letter \mid digit \mid \terminal{\_} \} & \\
 ident & ::= & lident | uident
 \end{syntax}
 \vspace{0.2cm}
@@ -155,13 +156,16 @@ spaces inside or extend the notion of operator identifiers.
 
     \begin{syntax}
     \syntaxclass{\hspace{1cm} Infix/prefix operators:}
-    prefix\_char & ::= & ` \ \sim\ ?\ \$\ !\ \#\ & \\
+    prefix\_char & ::= & \terminal{` \ \sim\ ?\ \$\ !\ \#\ }& \\
     infix\_char & ::= &
-        ,\ +\ -\ *\ /\ \%\ \&\ \mid\ :\ ;\ <\ =\ >\ @ \wedge\ \setminus & \\
+        \terminal{ ,\ +\ -\ *\ /\ \%\ \&\ \mid\ :\ ;\ <\ =\ >\ @ \wedge
+                  \ \setminus} & \\
     prefix\_op & ::= & prefix\_char
-        \{ letter \mid prefix\_char \mid infix\_char \mid digit \mid \_ \}* & \\
+        \{ letter \mid prefix\_char \mid infix\_char
+        \mid digit \mid \terminal{\_} \}* & \\
     infix\_op & ::= & infix\_char
-        \{ letter \mid prefix\_char \mid infix\_char \mid digit \mid \_ \}* & \\
+        \{ letter \mid prefix\_char \mid infix\_char
+        \mid digit \mid \terminal{\_} \}* & \\
     op & ::= & infix\_op | prefix\_op
     \end{syntax}
 
@@ -234,19 +238,24 @@ capitalized (non-extended) identifiers.
 \label{binary}
 \begin{syntax}
 \syntaxclass{Integer literals:}
-binary\_digit & ::= & 0 \mid 1 & \\
-octal\_digit & ::= & 0 \ldots 7 & \\
-decimal\_digit & ::= & 0 \ldots 9 & \\
-hexadecimal\_digit & ::= & 0 \ldots 9 \mid A \ldots F \mid a \ldots f & \\
-sign & ::= & + \mid - & \\
+binary\_digit & ::= & \terminal{0} \mid \terminal{1} & \\
+octal\_digit & ::= & \terminal{0} \ldots \terminal{7} & \\
+decimal\_digit & ::= & \terminal{0} \ldots \terminal{9} & \\
+hexadecimal\_digit & ::= & \terminal{0} \ldots \terminal{9}
+       \mid \terminal{A} \ldots \terminal{F}
+       \mid \terminal{a} \ldots \terminal{f} & \\
+sign & ::= & \terminal{+} \mid \terminal{-} & \\
 unsigned\_binary\_literal & ::= &
-  0 \{ b \mid B \}\ binary\_digit\ \{ binary\_digit \mid \_ \}* & \\
+  \terminal{0} \{ \terminal{b} \mid \terminal{B} \}
+  \ binary\_digit\ \{ binary\_digit \mid \terminal{\_} \}* & \\
 unsigned\_octal\_literal & ::= &
-  0 \{ o \mid O \}\ octal\_digit\ \{ octal\_digit \mid \_ \}* & \\
+  \terminal{0} \{ \terminal{o} \mid \terminal{O} \}
+  \ octal\_digit\ \{ octal\_digit \mid \terminal{\_} \}* & \\
 unsigned\_decimal\_literal & ::= &
-  decimal\_digit \{ decimal\_digit \mid \_ \} * & \\
+  decimal\_digit \{ decimal\_digit \mid \terminal{\_} \} * & \\
 unsigned\_hexadecimal\_literal & ::= &
-  0 \{ x \mid X \}\ hexadecimal\_digit\ \{ hexadecimal\_digit \mid \_ \}* & \\
+  \terminal{0} \{ \terminal{x} \mid \terminal{X} \}
+  \ hexadecimal\_digit\ \{ hexadecimal\_digit \mid \terminal{\_} \}* & \\
 unsigned\_integer_literal & ::= & unsigned\_binary\_literal \\
 & & \mid unsigned\_octal\_literal & \\
 & & \mid unsigned\_decimal\_literal \\
@@ -388,12 +397,12 @@ quotes. Available escape sequences are summarised in the table below:
 \syntaxclass{Float literals:}
 decimal_literal & ::= & sign?\ unsigned\_decimal\_literal & \\
 hexadecimal\_literal & ::= & sign?\ unsigned\_hexadecimal\_literal & \\
-scientific\_notation & ::= & e \mid E & \\
+scientific\_notation & ::= & \terminal{e} \mid \terminal{E} & \\
 unsigned\_decimal\_float\_literal & ::= & unsigned\_decimal\_literal & \\
-& &  \{ .\ unsigned\_decimal\_literal* \} ? & \\
+& &  \{ \terminal{.}\ unsigned\_decimal\_literal* \} ? & \\
 & &  \{ scientific\_notation\ decimal\_literal \}? & \\
 unsigned\_hexadecimal\_float\_literal & ::= & unsigned\_hexadecimal\_literal &\\
-& & \{ .\ unsigned\_hexadecimal\_literal* \} ? \\
+& & \{ \terminal{.}\ unsigned\_hexadecimal\_literal* \} ? \\
 & & \{ scientific\_notation\ hexadecimal\_literal \} ? & \\
 unsigned\_float\_literal & ::= & unsigned\_decimal\_float\_literal & \\
 & & \mid unsigned\_hexadecimal\_float\_literal & \\
@@ -419,7 +428,9 @@ prefixed by ``0x'' or ``0X''. Example {\tt 0x-F2.E4}, {\tt 0X4.3A},
 \index{proof!step bullet}
 \begin{syntax}
 \syntaxclass{Proof step bullets:}
-proof\_step\_bullet & ::= & < \{ 0 \ldots 9 \}+\ >\ letter+
+proof\_step\_bullet & ::= &
+   \terminal{<} \{ \terminal{0} \ldots \terminal{9} \}+\ \terminal{>}
+   \ letter+
 \end{syntax}
 
 A proof step bullet is a non-negative non-signed integer literal
