@@ -42,11 +42,11 @@ end ;;
 
 
 Comments spanning on only one line start by the two characters
-{\tt --} and are implicitely ended by the end-of-line character.
+{\tt --} and are implicitly ended by the end-of-line character.
 Example:
 {\scriptsize
 \begin{lstlisting}
--- Discarded uniline comment.
+-- Discarded uni-line comment.
 species S =
   let m (x in Self) = -- Another discarded comment.
   ...
@@ -64,7 +64,7 @@ Documentations are introduced by the three characters {\tt (**},
 with no intervening blanks, and terminated by the two characters
 {\tt *)}, with no intervening blanks.
 Documentation cannot occur inside string or character literals and
-cannot be nested. They must preceed entities they document. This
+cannot be nested. They must precede entities they document. This
 especially means that a
 {\bf source file cannot ends by a documentation} otherwise a syntax
 error will be issued.
@@ -73,7 +73,7 @@ Conversely to comments, they are kept during the compilation process
 and recorded in the compilation information (``.fo'' files). They can
 be processed by the external documentation tool \focdoc\ provided with
 the \focal\ development environment. Several documentations can be put
-in sequence for the same construct. This allow to embeed inside them
+in sequence for the same construct. This allow to embed inside them
 tags that can be used by third-party tools to discriminate on
 meaningful documentation for them. For more information, consult
 \ref{documentation-generation}.
@@ -196,7 +196,7 @@ let ( =-one ) (x, y) = ... ;
     hence to a lexical error. For this reason, we always advice to
     get the habit of clearly put spaces around the operators names.
 
-    When a prefix or infox operator is defined, it is still possible
+    When a prefix or infix operator is defined, it is still possible
     to use it as a regular function application with the syntax:
 {\scriptsize
 \begin{lstlisting}
@@ -206,10 +206,10 @@ let ( =-one ) (x, y) = ... ;
 
     {\bf Attention} : since the comma character is a possible infix
     starting character, when using a comma to separate tuples
-    components, be sure to plut a blank behind the comma otherwise,
+    components, be sure to put a blank behind the comma otherwise,
     {\tt (0, 1,n)} will be understood as a couple starting with the
-    integer 0 as first component, then gpiong on with the second
-    commponent being the infix application of the operator {\tt ,n} to
+    integer 0 as first component, then going on with the second
+    component being the infix application of the operator {\tt ,n} to
     the integer 1 and nothing, hence leading to a syntax error.
 
 \end{itemize}
@@ -256,7 +256,7 @@ integer\_literal & ::= & sign?\ unsigned\_integer\_literal
 
 An integer literal is a sequence of one or more digits, optionally
 preceded by a minus or plus sign and/or a base prefix. By default,
-i.e. without base prefix, indegers are in decimal. For instance:
+i.e. without base prefix, integers are in decimal. For instance:
 {\tt 0}, {\tt -42}, {\tt +36}. \focal\ syntax allows to also specify
 integers in other bases by preceding the digits by the following
 prefixes:
@@ -314,9 +314,9 @@ table below:
   \hline
   $\setminus\setminus$ & '\'      & Backslash character. \\
   \hline
-  $\setminus$- & '-' & Minus (dash) character. Like for multiline
+  $\setminus$- & '-' & Minus (dash) character. Like for multi-line
                                     comments, \\
-               &                  & uniline comments can't
+               &                  & uni-line comments can't
                                     appear in strings. Hence, to \\
                &                  & insert the sequence ``--'', use
                                     twice this escape sequence. \\
@@ -403,7 +403,7 @@ float\_literal & ::= & sign?\ unsigned\_float\_literal
 Floating-point numbers literals are made of an optional sign ('+' or
 '-') followed by a non-empty sequence of digits followed by a dot
 ('.') followed by a possibly empty sequence of digits and finally an
-optional scientific notation ('e' or 'E' followed an optionnal sign
+optional scientific notation ('e' or 'E' followed an optional sign
 then by a non-empty sequence of digits. \focal\ allows floats to be
 written in decimal or in hexadecimal. In the first case, digits are
 [0-9]. Example: {\tt 0.}, {\tt -0.1}, {\tt 1.e-10}, {\tt +5E7}.
@@ -417,6 +417,11 @@ prefixed by ``0x'' or ``0X''. Example {\tt 0x-F2.E4}, {\tt 0X4.3A},
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Proof step bullets}
 \index{proof!step bullet}
+\begin{syntax}
+\syntaxclass{Proof step bullets:}
+proof\_step\_bullet & ::= & < \{ 0 \ldots 9 \}+\ >\ letter+
+\end{syntax}
+
 A proof step bullet is a non-negative non-signed integer literal
 (i.e. a non empty sequence of [0-9] characters) delimited by the
 characters {\tt <} and {\tt >}, followed by a non-empty sequence of
