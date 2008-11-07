@@ -1,3 +1,5 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Types}
 Before dealing with expressions and in general, constructs that allow
 to compute, we first examine datatype definitions since to emit a
@@ -321,8 +323,36 @@ type int_bool_pair = pair (int, bool) ;;
 }
 
 
-\subsection{Carrier (type) definition}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Carrier (type) definition}
+As previously introduced (c.f. \ref{rep-is-method}) the carrier is a
+special kind of method of species that describes the internal
+data structure the species manages. Hence, it is a
+special {\bf type definition}, more accurately a
+{\bf alias type definition}. This means that a carrier {\bf does not
+define a new type}, it only ``assign'' the carrier a {\bf type
+expression} representing the species ``internal state''. Moreover,
+like for any other methods (c.f. \ref{no-polymorphism-for-methods}),
+the carrier must not be polymorphic. This means that is can't contain
+type variables. Defining a species carrier is simply done by adding
+the {\tt rep} method:
+{\scriptsize
+\begin{lstlisting}
+open "basics" ;;
+
+species IntPair =
+  rep = (int * int) ;
+end ;;
+\end{lstlisting}
+}
+Hence, the method {\tt rep} defines the type {\tt Self}'s structure.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Expressions}
 
 \subsection{Value and function definitions}
