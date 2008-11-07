@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.foc,v 1.14 2008-11-06 21:11:22 doligez Exp $ *)
+(* $Id: ensembles_finis.foc,v 1.15 2008-11-07 13:13:47 pessaux Exp $ *)
 
 (*pp basic_ext.cmo*)
 
@@ -1534,7 +1534,7 @@ species Liste_triee (A is Ordered_set) inherits
      | x :: l ->
         (match l with
          | basics#[] -> true
-         | y :: underscore -> and_b (A!lt (x, y), !est_triee (l))) ;
+         | y :: _underscore -> and_b (A!lt (x, y), !est_triee (l))) ;
 
    (** le nouvel invariant implique celui de l'espèce parent (non duplication).*)
    theorem invariant_subsumption:
