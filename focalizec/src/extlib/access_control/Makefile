@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.4 2008-10-28 15:53:50 weis Exp $
+# $Id: Makefile,v 1.5 2008-11-12 10:04:48 habib Exp $
 
 # Makefile for access control models
 
@@ -24,7 +24,7 @@ include $(ROOT_DIR)/Makefile.common
 
 lib: all
 
-all:: access_control.fo hru.fo rbac.fo ticket.fo unix.fo
+all:: ensembles_finis.fo access_control.fo hru.fo rbac.fo ticket.fo unix.fo
 
 clean::
 	$(RM) *.ml *.mli *.zv *.v *.pfc

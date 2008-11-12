@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.foc,v 1.15 2008-11-07 13:13:47 pessaux Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.1 2008-11-12 10:03:57 habib Exp $ *)
 
 (*pp basic_ext.cmo*)
 
