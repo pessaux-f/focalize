@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.57 2008-11-12 10:58:51 habib Exp $
+# $Id: Makefile,v 1.58 2008-11-12 12:00:09 pessaux Exp $
 
 ROOT_DIR = ..
 
@@ -112,3 +112,7 @@ install:: all
 clean::
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
 	$(RM) $(FOCALIZE_MLS_UNSAFE) $(FOCALIZE_ZVS_UNSAFE) $(FOCALIZE_VS_UNSAFE)
+	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BYT_OBJS_UNSAFE)
+	$(RM) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE)
+	$(RM) $(FOCALIZE_VOS) $(FOCALIZE_VOS_UNSAFE)
+	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)
