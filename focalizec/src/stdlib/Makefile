@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.60 2008-11-12 12:25:46 pessaux Exp $
+# $Id: Makefile,v 1.61 2008-11-12 12:33:17 pessaux Exp $
 
 ROOT_DIR = ..
 
@@ -38,6 +38,9 @@ FOCALIZE_SRC = basics.foc \
 	sums.foc
 
 FOCALIZE_SRC_UNSAFE =
+
+FOCALIZE_FOS = $(FOCALIZE_SRC:.foc=.fo)
+FOCALIZE_FOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.foc=.fo)
 
 FOCALIZE_MLS = $(FOCALIZE_SRC:.foc=.ml)
 FOCALIZE_MLS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.foc=.ml)
@@ -90,6 +93,14 @@ bin:: \
 
 install:: all
 	$(MKDIR) $(FOC_INSTALL_LIB)
+	@if [ "(FOCALIZE_FOS)" != "" ] ; then \
+	  echo "Installing (FoCaLize) compiled certified libs." ; \
+	  $(CP) $(FOCALIZE_FOS) $(FOC_INSTALL_LIB)/ ; \
+	fi
+	@if [ "(FOCALIZE_FOS_UNSAFE)" != "" ] ; then \
+	  echo "Installing (FoCaLize) compiled non-certified libs." ; \
+	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(FOC_INSTALL_LIB)/ ; \
+	fi
 	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
 	  echo "Installing (OCaml bytecode) compiled certified libs." ; \
 	  $(CP) $(FOCALIZE_BYT_OBJS) $(FOC_INSTALL_LIB)/ ; \
@@ -128,6 +139,7 @@ install:: all
 	fi
 
 clean::
+	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_FOS_UNSAFE)
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
 	$(RM) $(FOCALIZE_MLS_UNSAFE) $(FOCALIZE_ZVS_UNSAFE) $(FOCALIZE_VS_UNSAFE)
 	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BYT_OBJS_UNSAFE)
