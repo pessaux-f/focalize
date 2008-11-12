@@ -367,19 +367,75 @@ do not lead to \focal\ values.
 \vspace{0.2cm}
 \begin{syntax}
 \syntaxclass{Expressions:}
-exp & ::= & integer-litteral\ \mid\ string-literal & \\
-    &     & \mid\ character-literal \mid\ float-literal & \\
-    &     & \mid\ {\tt true}\ \mid\ {\tt false} & Booleans \\
-    &     & \mid\ [[ident] \terminal{#}]uident &
-                       File-qualified sum type constructor \\
+exp & ::= & integer\_literal & \\
+    &     & \mid\ string\_literal & \\
+    &     & \mid\ character\_literal & \\
+    &     & \mid\ float\_literal & \\
+    &     & \mid\ {\tt true}\ \mid\ {\tt false} & Boolean \\
+    &     & \mid\ [[ident] \terminal{\#}]uident & Sum type constructor
+                                       or species/collection identifier \\
     &     & \mid\ [\terminal{Self}] \terminal{!} uident &
                        Method of the current species \\
-    &     & \mid\ [[lident] \terminal{#}] [uident \terminal{!}] lident & \\
-    &     & \mid\ [[lident] \terminal{#}] [uident \terminal{!}]
+    &     & \mid\ [[ident] \terminal{\#}] [uident \terminal{!}] lident & \\
+    &     & \mid\ [[ident] \terminal{\#}] [uident \terminal{!}]
                \terminal{(} operator \terminal{)} & Infix or prefix
             operator used in functional position \\
-    &     & \terminal{let}\ [\terminal{rec}]\ let-decl \terminal{=}
-               exp\ \terminal{in}\ exp & \\
+    &     & \mid \terminal{let}\ [\terminal{rec}]\ let\_binding
+               \ [\terminal{and}\ let\_binding]* & \\
+    &     & \ \ \ \terminal{in}\ exp & \\
+    &     & \mid \terminal{if}\ exp\ \terminal{then}\ exp
+                 \ \terminal{else}\ exp & Conditional \\
+    &     & \mid \terminal{match}\ exp\ \terminal{with}\ match\_binding+ &
+                     Pattern matching \\
+    &     & \mid exp\ \terminal{(} [exp*] \terminal{)} & Function application \\
+    &     & \mid unary\_operator\ exp & Application of unary operator \\
+    &     & \mid exp\ binary\_operator\ exp & Application of binary operator \\
+    &     & \mid expr\ \terminal{.}[ident\terminal{\#}]lident &
+                 Record field access \\
+    &     & \mid \terminal{\{}\ record\_field\_value+\ \terminal{\}} &
+                                                               Record value \\
+    &     & \mid \terminal{\{}\ exp\ \terminal{with}\ record\_field\_value+
+                  \ \terminal{\}} & Record value clone \\
+    &     & \mid \terminal{(} exp \terminal{)} & Parenthesed expression
+\end{syntax}
+
+\begin{syntax}
+\syntaxclass{Let bindings:}
+let\_binding & ::= & \mid lident\ [\terminal{in}\ type\_expression]
+           \ \terminal{=}\ exp & \\
+   & ::= & \mid lident\
+                \terminal{(}lident\ [\terminal{in} type\_expression] & \\
+   &     &      \hspace{1.3cm} \{\terminal{,}lident
+                    [\terminal{in} type\_expression]\}* \terminal{)} & \\
+   &     &       \ \ \ \ [\terminal{in}\ type\_expression]\ \terminal{=}\ exp &
+\end{syntax}
+
+\begin{syntax}
+\syntaxclass{Match bindings:}
+ match\_binding & ::= &
+   \terminal{\mid}\ pattern\ \terminal{-}\/\terminal{>}\ exp &
+\end{syntax}
+
+\begin{syntax}
+\syntaxclass{Patterns:}
+pattern & ::= & integer\_literal & \\
+    &     & \mid\ string\_literal & \\
+    &     & \mid\ character\_literal & \\
+    &     & \mid\ float\_literal & \\
+    &     & \mid\ {\tt true}\ \mid\ {\tt false} & Boolean \\
+    &     & \mid\ lident & Variable \\
+    &     & \mid [[ident] \terminal{\#}]uident & Sum type constructor \\
+    &     & \mid \_ & ``Catch-all'' pattern \\
+    &     & \mid \terminal{\{}
+                   record\_field\_pattern\
+                   [\terminal{;}\ record\_field\_pattern]*
+                 \terminal{\}} &
+\end{syntax}
+
+\begin{syntax}
+\syntaxclass{Record field value:}
+record\_field\_value & ::= &
+     [[ident] \terminal{\#}] lident\ \terminal{=}\ exp &
 \end{syntax}
 \vspace{0.2cm}
 
