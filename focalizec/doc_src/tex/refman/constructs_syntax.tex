@@ -87,6 +87,7 @@ change of their semantics.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Type definitions}
 \index{type!definition}
+\label{type-definition}
 As stated before, ach type {\bf definition} will lead to a new type
 {\bf constructor} that will be available among the constructors that
 can be used in type {\bf expressions}. Hence, defining a type is the
@@ -371,17 +372,18 @@ exp & ::= & integer\_literal & \\
     &     & \mid\ string\_literal & \\
     &     & \mid\ character\_literal & \\
     &     & \mid\ float\_literal & \\
-    &     & \mid\ {\tt true}\ \mid\ {\tt false} & Boolean \\
+    &     & \mid\ {\tt true}\ \mid\ {\tt false} & Boolean constant \\
     &     & \mid\ [[ident] \terminal{\#}]uident & Sum type constructor
                                        or species/collection identifier \\
     &     & \mid\ [\terminal{Self}] \terminal{!} uident &
                        Method of the current species \\
-    &     & \mid\ [[ident] \terminal{\#}] [uident \terminal{!}] lident & \\
+    &     & \mid\ [[ident] \terminal{\#}] [uident \terminal{!}] lident &
+               Method from specified species/collection \\
     &     & \mid\ [[ident] \terminal{\#}] [uident \terminal{!}]
                \terminal{(} operator \terminal{)} & Infix or prefix
             operator used in functional position \\
     &     & \mid \terminal{let}\ [\terminal{rec}]\ let\_binding
-               \ [\terminal{and}\ let\_binding]* & \\
+               \ \{\terminal{and}\ let\_binding \}* &  Let bound definition \\
     &     & \ \ \ \terminal{in}\ exp & \\
     &     & \mid \terminal{if}\ exp\ \terminal{then}\ exp
                  \ \terminal{else}\ exp & Conditional \\
@@ -392,21 +394,31 @@ exp & ::= & integer\_literal & \\
     &     & \mid exp\ binary\_operator\ exp & Application of binary operator \\
     &     & \mid expr\ \terminal{.}[ident\terminal{\#}]lident &
                  Record field access \\
-    &     & \mid \terminal{\{}\ record\_field\_value+\ \terminal{\}} &
-                                                               Record value \\
-    &     & \mid \terminal{\{}\ exp\ \terminal{with}\ record\_field\_value+
-                  \ \terminal{\}} & Record value clone \\
+    &     & \mid \terminal{\{}\ record\_field\_value & Record value \\
+    &     &     \hspace{0.6cm}  \{\ \terminal{;}\ record\_field\_value\ \}+
+                \ \terminal{\}} & \\
+    &     & \mid \terminal{\{}\ exp\ \terminal{with}\ record\_field\_value &
+                  Record value clone \\
+    &     &      \hspace{1.0cm}  \{\ \terminal{;}\ record\_field\_value\ \}+
+                  \ \terminal{\}} & \\
     &     & \mid \terminal{(} exp \terminal{)} & Parenthesed expression
+\end{syntax}
+
+\begin{syntax}
+\syntaxclass{Record field value:}
+record\_field\_value & ::= &
+     [[ident] \terminal{\#}] lident\ \terminal{=}\ exp &
 \end{syntax}
 
 \begin{syntax}
 \syntaxclass{Let bindings:}
 let\_binding & ::= & \mid lident\ [\terminal{in}\ type\_expression]
-           \ \terminal{=}\ exp & \\
+           \ \terminal{=}\ exp & Definition without parameter \\
    & ::= & \mid lident\
-                \terminal{(}lident\ [\terminal{in} type\_expression] & \\
-   &     &      \hspace{1.3cm} \{\terminal{,}lident
-                    [\terminal{in} type\_expression]\}* \terminal{)} & \\
+                \terminal{(}lident\ [\terminal{in}\ type\_expression] &
+                 Definition with parameter(s) \\
+   &     &      \hspace{1.3cm} \{\ \terminal{,}\ lident
+                  \ [\terminal{in}\ type\_expression]\}* \terminal{)} & \\
    &     &       \ \ \ \ [\terminal{in}\ type\_expression]\ \terminal{=}\ exp &
 \end{syntax}
 
@@ -422,22 +434,222 @@ pattern & ::= & integer\_literal & \\
     &     & \mid\ string\_literal & \\
     &     & \mid\ character\_literal & \\
     &     & \mid\ float\_literal & \\
-    &     & \mid\ {\tt true}\ \mid\ {\tt false} & Boolean \\
+    &     & \mid\ {\tt true}\ \mid\ {\tt false} & Boolean constant \\
     &     & \mid\ lident & Variable \\
-    &     & \mid [[ident] \terminal{\#}]uident & Sum type constructor \\
+    &     & \mid [[ident] \terminal{\#}]uident & 0-ary sum type constructor \\
+    &     & \mid [[ident] \terminal{\#}]uident
+               \ \terminal{(}pattern \{\terminal{,}\ pattern\}*\terminal{)}&
+               N-ary sum type constructor \\
     &     & \mid \_ & ``Catch-all'' pattern \\
     &     & \mid \terminal{\{}
                    record\_field\_pattern\
-                   [\terminal{;}\ record\_field\_pattern]*
-                 \terminal{\}} &
+                   \{ \terminal{;}\ record\_field\_pattern \}*
+                 \terminal{\}} & Record \\
+    &     & \mid \terminal{(} pattern\ \{ \terminal{,}\ pattern\}+
+                  \terminal{)} & Tuple \\
+    &     & \mid \terminal{(} pattern \terminal{)} & Parenthesed pattern
 \end{syntax}
 
 \begin{syntax}
-\syntaxclass{Record field value:}
-record\_field\_value & ::= &
-     [[ident] \terminal{\#}] lident\ \terminal{=}\ exp &
+\syntaxclass{Record field pattern:}
+record\_field\_pattern & ::= &
+     [[ident] \terminal{\#}] lident\ \terminal{=}\ lident &
 \end{syntax}
 \vspace{0.2cm}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Literal expressions}
+The five literal expressions (integer, string, character, float and
+boolean) are evaluated into the constant represented by the literal.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Sum type constructor expressions}
+We presented in section \ref{type-definition} the way to define sum
+types. We saw that {\bf values} of such a {\bf type} are built using
+its constructors.
+
+Hence, for constructors with no argument, the constructor itself is an
+expression that gets evaluated in a value wearing the same
+name.
+
+For constructors with parameters, a value is created by evaluating an
+expression applying the constructor to as many expressions as the
+constructor's arity. Obviously, sub-expressions used as arguments of
+the constructor must we well-typed according to the type of the
+constructor. The obtained value, after evaluation, is writen by the
+name of the constructor followed by the tuple of values provided as
+arguments. For instance, with the folowing type definition:
+{\scriptsize
+\begin{lstlisting}
+type t =
+  | A
+  | B (int * bool)
+;;
+\end{lstlisting}
+}
+the expression {\tt A} is evaluated into $A$, the expression
+{\tt B ((2 + 3), true)} is evaluated into the value $B (5, true)$.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Identifier expressions}
+\label{identifier-expressions}
+An identifier expression (also called ``variable'') is evaluated into
+the value bound to this variable. A variable is said {\bf bound} by
+its definition, i.e. the construct that assigned a value to it. In
+\focal\, there a three ways to bind a variable:
+\begin{itemize}
+  \item By a {\tt let\ ldots in} construct,
+  \item By a toplevel definition ({\tt let} or {\tt theorem}),
+  \item by a method definition,
+  \item by a pattern inside a {\tt match \ldots with} construct,
+  \item or by a function definition where parameters are referenced as
+    variables.
+\end{itemize}
+Each of these cases will be described in their related
+section. Assuming a variable {\tt v} was bound to the result
+{\bf value} of the computation of the {\bf expression} {\tt 2 + 5},
+then each occurrence of {\tt v} in a expression will be ``replaced''
+by 7 in this expression. This is basically the principle of by-value
+evaluation.
+\index{functional value}
+Like in any functional language, a function definition binds an
+identifier to a value functional value that is the evaluation of the
+function's body expression. Such a value is slightly different from
+other ones since it embeds both the code of the function (i.e. a kind
+of evaluation of its body expression) and its environment (i.e. bound
+variable present in the scope of the function). This closure will be
+kept untouched until it appears in a functional application
+expression as described further in \ref{function-application}.
+
+
+
+\medskip
+Identifiers forms differ depending on the classe of entity they refers
+to. In the simplest form, an identifier expression is a lowercase
+identifier. The \focal\ compiler will determine its definition from
+the current scoping context.
+\index{name!resolution}
+\index{name!qualification}
+\index{scoping}
+It searches for the closest definition with this name, starting by the
+local variables present in the current definition (i.e. formal
+parameters if in a function and {\tt let-in} and {\tt match-with}
+bound identifiers). If no variable definition with this name is found,
+the search goes on among the methods of the current species. If a
+method is found with this name, it will be retained, otherwise it
+searches among the past toplevel definitions of the current
+compilation unit.
+\index{directive!open} If no suitable definition is found, then the
+ones imported by the {\tt open} directives are examinated to find one
+with the searched name. Finally if no definition is found, the
+identifier is reported unbound by an error message. Note that
+{\tt open} directive may arise anywhere at toplevel in the source
+code. Hence, the order of search between the current file's toplevel
+definitions and the imported ones by {\tt open} is not really
+separated: the name resolver looks for the most recent definition
+considering that the toplevel definitions and the imported ones are
+ordered according to the apparition of the effective definitions in
+the file themselves and the imported ones. In other words, if a
+toplevel definition exists for an entity {\tt foo}, if later an
+{\tt open} directive imports another {\tt foo}, then this last one
+will be the remained one.
+
+
+
+\medskip
+Identifiers can manually disambiguated in term of compilation unit
+location using the sharp (\#) notation as explained in
+\ref{qualified_name}.
+
+
+
+\medskip
+\index{method!qualification}
+As presented in \ref{method-qualification}, species methods
+identifiers are made explicit using the ``!'' notation. The notation
+{\tt Spe!meth} stands for ``the method {\tt meth} of the species
+{\tt Spe}''. By extension, {\tt !meth} stands for the method
+{\tt meth} of the current species. It is possible to make explicit
+{\tt Self} in the naming scheme using the syntax {\tt Self!meth}. This
+last point could be useful in the case where a more recent local
+identifier would exist in the scope of the current definition, hiding
+a method of our species:
+{\scriptsize
+\begin{lstlisting}
+species S =
+  let m (x in ...) = ... ;
+  let n (y in ...) =
+    ...
+    let m = ... in
+    (* Want to call the *method* "m" with argument "m" !!! *)
+    !m (m) ;
+end ;;
+\end{lstlisting}
+}
+
+Hence, the name resolution mechanism allows to omit the ``!'' but
+making it explicit can help for conflicts resolution. Moreover, when
+invoking species parameters' methods, the name resolution never
+searches among methods of species parameters, hence the explicit ``!''
+notation is required.
+
+As the grammar shows, name qualification by compilation unit and
+hosting species are not incompatible. We can build identifiers like
+{\tt my\_file\#My\_species!my\_method} to refer to the method
+{\tt my\_method} hosted in the species {\tt My\_species} located in
+the \focal\ source file ``my\_file.foc''. These two disambiguation
+means are orthogonal.
+
+
+
+\medskip
+Finally, infix/postfix operators can be used as regular
+identifiers. Usually, an operator is syntactically used according to
+it prefix or infix nature. For instance, the binary {\tt +} operator
+is used in forms like {\tt x + 4}, the unary operator {\tt $\sim$} is
+used in {\tt $\sim$ x}. \focal\ allows to make them visible like an
+identifier of function definition. This allows two things: 
+\begin{itemize}
+  \item Using them in functional position,
+  \item use then as regular identifiers in expressions, for example to
+    pass them as arguments of other functions.
+\end{itemize}
+To get an identifier from an operator, its symbol
+(c.f. \ref{extended-identifiers}) must be surrounded by parentheses.
+For example: {\tt (\ + )}, {\tt (\ !!== )}.
+
+We clearly advice to add spaces around the operator symbol, to prevent
+parentheses from being not separated from it. This especially avoid
+the following common and cryptic error:
+{\scriptsize
+\begin{lstlisting}
+...
+let (*) (x, y) = ...
+\end{lstlisting}
+}
+where unfortunately {\tt (*} is parsed as a begining of comment,
+leading to a syntax error. The symetry obviously arises with the
+{\tt *)} considered as an end of comment. This pitfall exists indeed
+only for the ``{\tt *}-starting'' and ``{\tt *}-ending'' operators,
+but a good practice is to have a homogeneous naming scheme, hence
+always adding extra spaces.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Application expression}
+\label{function-application}
+\index{functional value}
+
+
+
+
+
 
 \subsection{Files and uses directives}
 

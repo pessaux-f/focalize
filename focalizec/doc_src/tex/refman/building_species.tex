@@ -190,7 +190,7 @@ end ;;
 \end{lstlisting}
 }
 it is allowed to explicitly qualify the call to {\tt m1} by ``!''
-with no species name, hence impolitely telling ``from myself'':
+with no species name, hence implicitly telling ``from myself'':
 {\scriptsize
 \begin{lstlisting}
 species Foo ... =
@@ -199,6 +199,8 @@ species Foo ... =
 end ;;
 \end{lstlisting}
 }
+\index{name!resolution}
+\index{scoping}
 In fact, without explicit ``!'', the \focal\ compiler performs the
 name resolution itself, allowing a lighter way of writing programs
 instead of always needing a ``!'' character before each method call.
