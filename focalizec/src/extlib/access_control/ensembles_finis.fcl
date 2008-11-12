@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.1 2008-11-12 10:03:57 habib Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.2 2008-11-12 10:19:04 habib Exp $ *)
 
 (*pp basic_ext.cmo*)
 
@@ -284,13 +284,10 @@ species Ensembles_finis_ordonnes (A is Ordered_set) inherits
         (all x in A, A!lt (x, !min (e)) ->
           (all y in A, !est_element (y, e) -> A!lt (x, y)))
     proof:
-      assumed {* probleme de dependances -- Francois y travaille *}
-(*
       by property !min_spec, A!lt_is_not_leq, A!leq_transitive,
                   A!equal_symmetric, A!leq_reflexive, A!leq_transitive,
                   A!leq_antisymmetric, A!equal_transitive,
                   A!same_is_not_different
-*)
     ;
 
 (** le minimum est le plus grand des minorants. *)
