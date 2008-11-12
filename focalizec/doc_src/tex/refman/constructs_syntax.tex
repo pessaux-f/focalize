@@ -354,8 +354,34 @@ Hence, the method {\tt rep} defines the type {\tt Self}'s structure.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Expressions}
+\label{expressions}
+Expressions are constructs of the language that are evaluated into a
+{bf value} of a certain {\bf type}. Hence values and types are not at
+the same level. Types serve to classify values into categories.
+Although proofs may contain expressions, we will not describe the part
+of \focal\ dealing with them in this section. We will take care of
+them in a next section, in \ref{making-proofs}. In effect, proofs are
+not expressions and live at another level. The reason is that proofs
+do not lead to \focal\ values.
 
-\subsection{Value and function definitions}
+\vspace{0.2cm}
+\begin{syntax}
+\syntaxclass{Expressions:}
+exp & ::= & integer-litteral\ \mid\ string-literal & \\
+    &     & \mid\ character-literal \mid\ float-literal & \\
+    &     & \mid\ {\tt true}\ \mid\ {\tt false} & Booleans \\
+    &     & \mid\ [[ident] \terminal{#}]uident &
+                       File-qualified sum type constructor \\
+    &     & \mid\ [\terminal{Self}] \terminal{!} uident &
+                       Method of the current species \\
+    &     & \mid\ [[lident] \terminal{#}] [uident \terminal{!}] lident & \\
+    &     & \mid\ [[lident] \terminal{#}] [uident \terminal{!}]
+               \terminal{(} operator \terminal{)} & Infix or prefix
+            operator used in functional position \\
+    &     & \terminal{let}\ [\terminal{rec}]\ let-decl \terminal{=}
+               exp\ \terminal{in}\ exp & \\
+\end{syntax}
+\vspace{0.2cm}
 
 \subsection{Files and uses directives}
 

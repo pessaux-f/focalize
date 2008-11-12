@@ -12,11 +12,12 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.55 2008-11-04 11:31:33 pessaux Exp $
+# $Id: Makefile,v 1.56 2008-11-12 10:47:56 pessaux Exp $
 
 ROOT_DIR = ..
 
 include $(ROOT_DIR)/Makefile.config
+include $(ROOT_DIR)/Makefile.install
 
 FOCALIZE_COMPILER = $(ROOT_DIR)/toplevel/focalizec
 
@@ -89,7 +90,25 @@ bin:: \
       $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 install:: all
-	echo "TODO"
+	$(MKDIR) $(FOC_INSTALL_LIB)
+	echo "Installing (OCaml bytecode) compiled certified libs."
+	$(CP) $(FOCALIZE_BYT_OBJS) $(FOC_INSTALL_LIB)/
+	echo "Installing (OCaml bytecode) compiled non-certified libs."
+	$(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(FOC_INSTALL_LIB)/
+	echo "Installing (OCaml native) compiled certified libs."
+	$(CP) $(FOCALIZE_BIN_OBJS) $(FOC_INSTALL_LIB)/
+	echo "Installing (OCaml native) compiled non-certified libs."
+	$(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(FOC_INSTALL_LIB)/
+	echo "Installing (Coq) compiled certified libs."
+	$(CP) $(FOCALIZE_VOS) $(FOC_INSTALL_LIB)/
+	echo "Installing (Coq) compiled non-certified libs."
+	$(CP) $(FOCALIZE_VOS_UNSAFE) $(FOC_INSTALL_LIB)/
+	echo "Installing (OCaml bytecode) external stubs."
+	$(CP) $(EXTERNAL_BYT_OBJS) $(FOC_INSTALL_LIB)/
+	echo "Installing (OCaml native) external stubs."
+	$(CP) $(EXTERNAL_BIN_OBJS) $(FOC_INSTALL_LIB)/
+	echo "Installing (Coq) external stubs."
+	$(CP) $(EXTERNAL_VOS) $(FOC_INSTALL_LIB)/
 
 clean::
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)

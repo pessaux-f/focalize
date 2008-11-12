@@ -12,11 +12,12 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.39 2008-10-28 15:49:35 weis Exp $
+# $Id: Makefile,v 1.40 2008-11-12 10:47:56 pessaux Exp $
 
 ROOT_DIR = ..
 
 include $(ROOT_DIR)/Makefile.config
+include $(ROOT_DIR)/Makefile.install
 
 CAML_INCLUDES = -I ../basement -I ../parser -I ../typing\
 	-I ../commoncodegen -I ../docgen -I ../mlcodegen -I ../coqcodegen
@@ -104,7 +105,8 @@ fodump: fodump.cmo
 	fodump.cmo -o fodump
 
 install:: all
-	echo "TODO"
+	$(CP) focalizec.byt focalizec.bin $(FOC_INSTALL_BIN)/
+	$(LN) $(FOC_INSTALL_BIN)/focalizec.bin $(FOC_INSTALL_BIN)/focalizec
 
 clean::
 	$(RM) focalizec.byt focalizec.bin focalizec fodump
