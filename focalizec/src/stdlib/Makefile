@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.56 2008-11-12 10:47:56 pessaux Exp $
+# $Id: Makefile,v 1.57 2008-11-12 10:58:51 habib Exp $
 
 ROOT_DIR = ..
 
@@ -37,8 +37,7 @@ FOCALIZE_SRC = basics.foc \
 	wellfounded.foc \
 	sums.foc
 
-FOCALIZE_SRC_UNSAFE = \
-	ensembles_finis.foc
+FOCALIZE_SRC_UNSAFE =
 
 FOCALIZE_MLS = $(FOCALIZE_SRC:.foc=.ml)
 FOCALIZE_MLS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.foc=.ml)
