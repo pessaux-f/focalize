@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.20 2008-10-28 15:42:46 weis Exp $
+# $Id: Makefile,v 1.21 2008-11-13 10:15:23 pessaux Exp $
 
 ROOT_DIR = .
 
@@ -55,3 +55,4 @@ clean doc depend::
 install::
 	$(CD) toplevel; $(MAKE) install
 	$(CD) stdlib; $(MAKE) install
+	$(CD) extlib; $(MAKE) install

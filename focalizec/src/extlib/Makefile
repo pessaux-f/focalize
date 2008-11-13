@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.8 2008-10-28 15:53:29 weis Exp $
+# $Id: Makefile,v 1.9 2008-11-13 10:15:23 pessaux Exp $
 
 ROOT_DIR = ..
 
@@ -44,7 +44,7 @@ doc::
 
 install::
 	for i in $(SUB_DIRS); do \
-	  ($(CD) $$i; $(MAKE) doc) \
+	  ($(CD) $$i; $(MAKE) install) \
 	done
 
 depend::

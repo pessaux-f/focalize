@@ -12,11 +12,12 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.7 2008-10-29 15:11:21 rr Exp $
+# $Id: Makefile,v 1.8 2008-11-13 10:15:23 pessaux Exp $
 
 ROOT_DIR = ../..
 
 include $(ROOT_DIR)/Makefile.config
+include $(ROOT_DIR)/Makefile.install
 
 # [rr]: changed this to include standard library
 CAML_COMP_FLAGS = -w A -warn-error Ae -dtypes -I $(ROOT_DIR)/stdlib
@@ -99,11 +100,58 @@ bin:: \
       $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 install:: all
-	echo "TODO"
+	$(MKDIR) $(FOC_INSTALL_LIB)/extlib/algebra
+	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	fi
+	@if [ "$(FOCALIZE_BYT_OBJS_UNSAFE)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	fi
+	@if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	fi
+	@if [ "$(FOCALIZE_BIN_OBJS_UNSAFE)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	fi
+	@if [ "$(FOCALIZE_ZVS)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_ZVS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	fi
+	@if [ "$(FOCALIZE_ZVS_UNSAFE)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_ZVS_UNSAFE) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	fi
+	@if [ "$(FOCALIZE_VS)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_VS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	fi
+	@if [ "$(FOCALIZE_VS_UNSAFE)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_VS_UNSAFE) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	fi
+	@if [ "$(FOCALIZE_VOS)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_VOS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	fi
+	@if [ "$(FOCALIZE_VOS_UNSAFE)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_VOS_UNSAFE) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	fi
+	@if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then \
+	  $(CP) $(EXTERNAL_BYT_OBJS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	fi
+	@if [ "$(EXTERNAL_BIN_OBJS)" != "" ] ; then \
+	  $(CP) $(EXTERNAL_BIN_OBJS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	fi
+	@if [ "$(EXTERNAL_VOS)" != "" ] ; then \
+	  $(CP) $(EXTERNAL_VOS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	fi
+
 
 clean::
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
+	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS)
 	$(RM) $(FOCALIZE_MLS_UNSAFE) $(FOCALIZE_ZVS_UNSAFE) $(FOCALIZE_VS_UNSAFE)
+	$(RM) $(FOCALIZE_BYT_OBJS_UNSAFE) $(FOCALIZE_BIN_OBJS_UNSAFE) $(FOCALIZE_VOS_UNSAFE)
+	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)
+	$(RM) big_integers.ml parse_poly.ml polys_abstract.ml
+	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm*
+	$(RM) big_integers.o parse_poly.o polys_abstract.o
+
 
 # Were not compiled to Coq in the previous FoCaL compiler...
 big_integers.ml: big_integers.foc
