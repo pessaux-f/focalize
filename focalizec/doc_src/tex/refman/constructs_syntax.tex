@@ -2,7 +2,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Types}
 Before dealing with expressions and in general, constructs that allow
-to compute, we first examine datatype definitions since to emit a
+to compute, we first examine data-type definitions since to emit a
 result an algorithm must manipulate data that have a certain type,
 hence must know about their type definitions.
 
@@ -20,7 +20,7 @@ whole compilation unit (and also in other units by using the
 \subsubsection{Type expressions}
 \index{type!expression}
 Type definitions require type expressions to build more complex
-datatypes. For this reason we present here the shape of type
+data-types. For this reason we present here the shape of type
 expressions.
 
 \vspace{0.2cm}
@@ -97,6 +97,7 @@ of type definitions: sum types, aliases and record types.
 
 
 \vspace{0.5cm}\noindent{\bf Sum types}
+\index{type!definition!sum}
 
 They provide the way to create new {\bf values} that
 will belong to the same {\bf type}. Like {\tt 1} or {\tt 42} are
@@ -210,6 +211,7 @@ sum\_type\_def & ::= &
 
 
 \vspace{0.5cm}\noindent {\bf Aliases}
+\index{type!definition!alias}
 
 They provide a way to create type abbreviations. It it common to
 manipulate large {\bf type expressions} like for instance, a tuple of
@@ -224,15 +226,16 @@ can' be easily differentiated. Type aliases allows to give a name to a
 code. Example:
 {\scriptsize
 \begin{lstlisting}
-type experiment\_conditions = (int * int * int * int * int) ;;
-type date = (int * int * int * int * int) ;;
+type experiment\_conditions = alias (int * int * int * int * int) ;;
+type date = alias (int * int * int * int * int) ;;
 \end{lstlisting}
 }
 
 \vspace{0.2cm}
 \begin{syntax}
 \syntaxclass{Alias type definitions:}
-alias\_type\_def & ::= & \terminal{type}\ ident\ \terminal{=}\ \tau
+alias\_type\_def & ::= & \terminal{type}\ ident\ \terminal{=}
+   \ \terminal{alias}\ \tau
 \end{syntax}
 \vspace{0.2cm}
 
@@ -266,6 +269,7 @@ type t4 = t3 (int * bool) ;;
 
 
 \vspace{0.5cm}\noindent {\bf Record types}
+\index{type!definition!record}
 
 They provide a way to aggregate data of various types, a bit like
 tuples, but naming the components of the group, instead of
@@ -499,6 +503,7 @@ the expression {\tt A} is evaluated into $A$, the expression
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Identifier expressions}
 \label{identifier-expressions}
+\index{identifier}
 An identifier expression (also called ``variable'') is evaluated into
 the value bound to this variable. A variable is said {\bf bound} by
 its definition, i.e. the construct that assigned a value to it. In
@@ -644,6 +649,7 @@ always adding extra spaces.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{{tt let-in} expression}
+\index{let-in}
 This expression allows binding a value to an identifier in order to
 evaluate a trailing expression (the ``body'') where this ident may
 appear. During the evaluation of the trailing expression, any
@@ -687,7 +693,7 @@ variable. For example in C:
   int i ;
   ... ;
   i = 10 ;
-  while (i >0) i = i-- ;
+  while (i > 0) i = i-- ;
 }
 ...
 \end{lstlisting}
@@ -736,7 +742,212 @@ application as explained further in \ref{application-expression})
 this function by passing it 2 effectives arguments {\tt 6} and
 {\tt 7} (obviously we expect the result to be $13$).
 
+It is possible to provide type constraints on the return value
+(which is trivially the bound value in case where the definition is
+not a function) and/or (some of) the parameters of a {\tt let-in}
+definition:
+{\scriptsize
+\begin{lstlisting}
+let f (x : int, y) = x + y in
+f (6, 7)
+\end{lstlisting}
+}
+{\scriptsize
+\begin{lstlisting}
+let f (x : int, y) in int = x + y in
+f (6, 7)
+\end{lstlisting}
+}
+{\scriptsize
+\begin{lstlisting}
+let a in int = 3 in
+(a, a)
+\end{lstlisting}
+}
 
+
+
+\medskip
+Let rec et let and !!!!!!!!!!!!!!!!!!!!!!!!! TODO
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Conditional expression}
+\index{if}
+The simple conditional expression {\tt if} $exp_1$ {\tt then}
+$exp_2$ {\tt else} $exp_3$ evaluates the $exp_1$ expression which must
+be of type boolean. If its value is $true$ then the result value of
+the whole expression is the value of $exp_2$, otherwise (i.e. if its
+value is $false$) the value of $exp_3$. This obviously implies that
+$exp_2$ and $exp_3$ must have the same type. This construct is then a
+binary conditional expression (i.e. with 2 branches).
+{\scriptsize
+\begin{lstlisting}
+let f (x) = if x then 1 else 0 in ...
+\end{lstlisting}
+}
+The function {\tt f} will return $1$ if its affective argument
+(provided to {\tt x} is $true$, otherwise it will return $0$.
+{\scriptsize
+\begin{lstlisting}
+let is_to\_small (x) = ... in
+let y = ... in
+let y_corrected = if is_to_small (y) then 0 else y in ...
+\end{lstlisting}
+}
+In this example, we assume we have a function {\tt is\_to\_small}
+checking if a value is ``too small'' and an identifier {\tt y} bound
+to a certain value. The result of the conditional expression bound to
+{\tt y\_corrected} will be either $0$ if the condition is met or $y$
+otherwise.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Match expression}
+\index{match}
+\index{pattern matching}
+The {\tt match-with} construct is a generalised conditional construct
+with pattern-matching. By ``generalised'', we mean that conversely to
+the {\tt if-then-else} which has only 2 branches, the present
+expression can have several. The notion of condition here is not
+anymore a boolean value. Instead, the construct allows to discriminate
+on the different values an expression is evaluated into. The basic
+structure of a {\tt match-with} consists in an examined expression
+followed by an enumeration of cases (call {\bf patterns}) the examined
+expression can have and for each, the result expression to ``return''.
+{\scriptsize
+\begin{lstlisting}
+let x =
+  match ... + ... with
+   | 0 -> "zero"
+   | 5 -> "five"
+   | 1 -> "one"
+   | 10 -> "ten"
+   | _ -> "other" in
+...
+\end{lstlisting}
+}
+The ``examined'' expression in this case is {\tt ... + ...} and we
+assume it has type {\tt int}. We can then react to each (or some of
+the) value of this expression. When it {\bf is equal} to $0$ the
+result of the whole {\tt match-with} expression (bound to the
+identifier {\tt x} is the string ``zero''. When equal to $1$, the
+result is the string ``one'', and so on. The final pattern {\tt \_}
+stands for ``anything that was not in the previous cases'' (also
+called ``catch-all pattern''). Hence, the
+order of the patterns can be important. If the case {\tt $\mid$ \_ ->}
+was put before the case {\tt $\mid$ 1 ->}, then this last case would
+never be reached since the {\tt \_} pattern would have caught the
+discriminated value.
+
+
+
+\smallskip
+As a consequence of the structure of this construct, type constraints
+must be respected in order to have the whole expression well-typed:
+\begin{itemize}
+  \item The type of the examined expression must be compatible with the
+    type of the patterns.
+  \item By trivial consequence, all the patterns must have compatible
+    types.
+  \item The types of all the result expressions in the rightmost parts
+    of the cases must be compatible.
+\end{itemize}
+
+
+
+\medskip
+In addition to this mulmti-branches conditional feature, the
+{\tt match-with} construct provides {\bf pattern matching}. In
+patterns it is possible to insert variables instead of constant
+literals like we did in the example above. If the examined value
+``fits'' ({\bf matches}) the pattern, that is has the same structure
+for specified constants/sum type constructors, then the case of the
+pattern is chosen and the variables of the pattern get bound to the
+parts of the examined expression that are ``at the same place'' than
+these variables. For example:
+{\scriptsize
+\begin{lstlisting}
+let e = ... in
+...
+let x =
+  match e with
+   | (0, 0, 0) -> 1
+   | (0, x, y) -> x + y
+   | (1, 1, x) -> x
+   | (x, y, z) -> x + y + z
+...
+\end{lstlisting}
+}
+According the the typechecking mechanism, the examined expression
+{\tt e} must have here type {\tt (int * int * int)}. The first pattern
+will be chosen if {\tt e} is {\bf equal to} the tuple $(0, 0, 0)$. We
+say here ``equal'' since there is no variable in the pattern, hence
+the only way to fit the pattern is to be simply equal. If this pattern
+is not fitted, the we examine the second pattern. It will be chosen if
+{\tt e} has a $0$ as first component and any integer for the second
+and the third ones. In this case, the result value will be the
+evaluation of the expression {\tt x + y} where x will be bound to the
+effective second component of the value of {\tt e} and {\tt y} will be
+bound to its third component. We can notice that no ``catch-all pattern''
+is needed since the enumerated patterns cover all the possible values
+of tuples with 3 components (look at the last pattern that do not put
+any constraint on the tuple components, hence will catch all the
+remaining cases).
+
+The previous example used tuples as matched expression and patterns,
+but patterns also contain sum type constructors, hence allowing to
+``match'' on any sum type structure. For example:
+{\scriptsize
+\begin{lstlisting}
+type t =
+  | A
+  | B (int)
+  | C (int * int)
+;;
+...
+let e = ... in
+let x =
+  match e with
+   | A -> 0
+   | B (3) -> 4
+   | B (_) -> 10
+   | C (x, 10) -> 5
+   | C (_, y) -> y
+;;
+\end{lstlisting}
+}
+This example shows different cases following the structure of the type
+{\tt t}. It can be noticed that the ``catch-all'' pattern can be used
+inside compound patterns. In fact, the ``catch-all'' pattern acts like
+a variable that would never be used in the rightmost part of the
+case. It is however preferable to use ``{\tt \_}'' instead of a
+variable since \ocaml\ generates warning for unused variables and the
+generated \ocaml\ code generated by \focal\ will not change unused
+variables into ``{\tt \_}''s.
+
+
+\smallskip
+Patterns also allow to match record values, i.e. to match on values of
+the fields:
+{\scriptsize
+\begin{lstlisting}
+type t = { name : string ; birth : int } ;;
+let r = ... in
+let x =
+  match r with
+   | { name = "Benjamin" } -> ...
+   | { name = n ; birth = 2003 } -> ...
+   | { name = n } -> ...
+\end{lstlisting}
+}
+In such a pattern, fields not specified are considered as
+``catch-all'' patterns. Hence, the last case catches all the record
+values not caught before since the field {\tt name}'s value is bound
+to a variable (so, non constraint is put on it) and the field
+{\tt birth} is absent (so, considered as {\tt birth = \_}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Application expression}

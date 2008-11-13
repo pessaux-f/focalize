@@ -42,7 +42,7 @@ end ;;
 The inheritance mechanism will take each method {\bf definition} from
 its hosting species: from {\tt S0} for {\tt m1} and from {\tt S1} for
 {\tt m2}. We have hence a configuration where {\tt m0} calls {\tt m1}
-and {\tt m1} calls {\tt m0}, i.e. the two methods ar enow mutually
+and {\tt m1} calls {\tt m0}, i.e. the two methods are now mutually
 recursive although it was not the case where each of them was
 {\bf defined}.
 
@@ -88,7 +88,7 @@ end ;;
 The statement of {\tt inc\_spec} contains a def-dependency on the
 carrier since to typecheck this statement, one need to know that the
 carrier is assigned type {\tt int}. To create the species' interface,
-we must make the carrier abstract, hence hidding the fact is it
+we must make the carrier abstract, hence hiding the fact is it
 represented by {\tt int}. Without this information it it now
 impossible to typecheck an expression using {\tt inc\_spec} since it
 makes explicit reference to {\tt +}, {\tt <=}, {\tt 1} that are

@@ -77,7 +77,7 @@ of our method {\tt cons}. You may note that species names can be used
 in type expressions. They denote the carrier abstracted of the species
 whose name is used. By ``abstracted'', it is meant that the
 representation of this carrier is not visible, but we can refer to it
-as an abstract datatype. In other words, {\tt Elem -> Self -> Self}
+as an abstract data-type. In other words, {\tt Elem -> Self -> Self}
 stands for the type of a function:
 \begin{itemize}
   \item taking a value whose type is the carrier type of a species
@@ -218,7 +218,7 @@ previous section, we made our {\tt List} species parametrised by the
 parameter. If we now want a species addition modulo a value, we need
 to parametrise our species by this {\bf value}, or at least by a
 value of a collection implementing the integers and giving a way to
-have a value representing the one we whish. Such a parameter is called
+have a value representing the one we wish. Such a parameter is called
 an {\bf entity parameter} and is introduced by the keyword {\tt in}.
 {\scriptsize
 \begin{lstlisting}
@@ -415,7 +415,7 @@ species ListUnique (UElem is ...) inherits List (UElem) = ... ;;
 }
 
 Hence, we can now defined more accurately the notion of {\bf species
-exression} used for both inheritance and parametrisation. It is either
+expression} used for both inheritance and parametrisation. It is either
 a simple species name or the application of a parametrised species to
 as many species expressions as the parametrised species has
 parameters.
@@ -536,10 +536,10 @@ since signature only contain types, no decl-dependencies can arise.
 
 \smallskip
 \index{dependency!def!on carrier}
-Sligtly differently, when {\bf using} a property in another method,
+Slightly differently, when {\bf using} a property in another method,
 since it only contains a ``type'' (i.e. a logical statement), only 
 decl-dependencies appear except on the carrier. For consistency
-reasons going beyond this manuel but that will be shortly presented
+reasons going beyond this manual but that will be shortly presented
 below in \ref{def-dep-on-carrier}, the {\bf \focal\ system rejects
 properties having def-dependencies on the carrier}.
 
@@ -553,7 +553,7 @@ the same reasons than for properties, the {\bf \focal\ system rejects
 theorems having def-dependencies on the carrier}.
 
 Now, what does mean for a theorem to def-depend on a method ? This
-basiclly means that to make the proof of its statement, one must use
+basically means that to make the proof of its statement, one must use
 not only the declaration of a method, but also it definition, its
 body. For instance, a theorem needs to have visibility on the code of
 a function to have its proof possible.
@@ -568,17 +568,17 @@ redefined, all the proofs of theorems having def-dependencies on these
 methods are erased. This means that since the body of the method
 changed, may be the proof is not correct anymore and must be done
 again. In practice, it can happen that the proof still holds, but the
-compiler can't ensur this, hence will turn the theorem into a property
-in the species where the redefinition occured. The developper will
+compiler can't ensure this, hence will turn the theorem into a property
+in the species where the redefinition occurred. The developer will
 then have to provide a new proof of the inherited theorem thanks the
 {\tt proof of} field.
 
 
 
 \paragraph{Dependencies on collection parameters}
-Since collection parameters alwas have their carrier abstracted,
+Since collection parameters always have their carrier abstracted,
 hidden, only {\bf decl-dependencies} can appear in the parametrised
-method using them. Hence they can never lead to erasement. These
+method using them. Hence they can never lead to erasing. These
 dependencies are only used internally by the \focal\ compiler in order
 to generate it target code. For this reason, we will not focus anymore
 on them.

@@ -23,7 +23,8 @@ We will now present the basic concepts underlying a
 \subsection{Species}
 {\bf Species} \index{species} are the nodes of the
 \focal\ hierarchy. A species can be roughly seen as a list of
-{\bf methods} \index{method} or {\bf fields}\index{field}. Hence, a
+{\bf methods} \index{method} or {\bf fields}\index{field}, each ended
+by a semi character (``;'')\index{;;}. Hence, a
 basic species looks like:
 {\scriptsize
 \begin{lstlisting}
@@ -35,9 +36,11 @@ basic species looks like:
 }
 
 Species names are always {\bf capitalized}. Inside the species' body
-methods are enumerated. These methods represent the internal datatype
-of the species, functions\index{function} to manipulate this datatype
-and properties\index{property} that must hold in the species.
+methods are enumerated. These methods represent the internal data-type
+of the species, functions\index{function} to manipulate this data-type
+and properties\index{property} that must hold in the species. As
+any \focal\ toplevel definition, a species is ended by a double semi
+character (``;;'').\index{;;}
 
 \smallskip
 \label{no-polymorphism-for-methods}
@@ -254,7 +257,7 @@ values of this collection.
 A very important point is that when creating a collection, the
 representation of the carrier contained in the ``implemented'' species
 gets opaque. In other words, the collection becomes an abstract
-datatype. This especially means that it will be impossible to
+data-type. This especially means that it will be impossible to
 manipulate values of the carrier without the collection's
 methods. Moreover, two collections created from a same species will
 not be type-compatible since their carriers got abstracted making now
