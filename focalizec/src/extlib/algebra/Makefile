@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.9 2008-11-13 10:33:01 pessaux Exp $
+# $Id: Makefile,v 1.10 2008-11-13 10:37:41 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -112,12 +112,6 @@ install:: all
 	fi
 	@if [ "$(FOCALIZE_BIN_OBJS_UNSAFE)" != "" ] ; then \
 	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(FOC_INSTALL_LIB)/extlib/algebra ; \
-	fi
-	@if [ "$(FOCALIZE_VS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_VS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
-	fi
-	@if [ "$(FOCALIZE_VS_UNSAFE)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_VS_UNSAFE) $(FOC_INSTALL_LIB)/extlib/algebra ; \
 	fi
 	@if [ "$(FOCALIZE_VOS)" != "" ] ; then \
 	  $(CP) $(FOCALIZE_VOS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
