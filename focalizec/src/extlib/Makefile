@@ -12,15 +12,13 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.9 2008-11-13 10:15:23 pessaux Exp $
+# $Id: Makefile,v 1.10 2008-11-13 11:05:11 habib Exp $
 
 ROOT_DIR = ..
 
 include $(ROOT_DIR)/Makefile.config
 
-SUB_DIRS = algebra
-#Should be
-#SUB_DIRS = algebra access_control
+SUB_DIRS = algebra access_control
 
 include $(ROOT_DIR)/Makefile.common
 
@@ -51,4 +49,3 @@ depend::
 	for i in $(SUB_DIRS); do \
 	  ($(CD) $$i ; $(MAKE) depend) \
 	done
-
