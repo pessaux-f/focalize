@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.10 2008-11-13 10:37:41 pessaux Exp $
+# $Id: Makefile,v 1.11 2008-11-13 11:00:54 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -46,10 +46,9 @@ FOCALIZE_SRC = \
 	array_foc.foc \
 	products_foc.foc \
 	quotients.foc \
-
+	iterators.foc
 
 FOCALIZE_SRC_UNSAFE = \
-	iterators.foc \
 	big_integers.foc
 #	parse_poly.foc polys_abstract.foc polys_concrete finite_fields fractions finite_factorize
 
@@ -115,9 +114,6 @@ install:: all
 	fi
 	@if [ "$(FOCALIZE_VOS)" != "" ] ; then \
 	  $(CP) $(FOCALIZE_VOS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
-	fi
-	@if [ "$(FOCALIZE_VOS_UNSAFE)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_VOS_UNSAFE) $(FOC_INSTALL_LIB)/extlib/algebra ; \
 	fi
 	@if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then \
 	  $(CP) $(EXTERNAL_BYT_OBJS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
