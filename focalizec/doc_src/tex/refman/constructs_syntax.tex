@@ -641,6 +641,103 @@ but a good practice is to have a homogeneous naming scheme, hence
 always adding extra spaces.
 
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{{tt let-in} expression}
+This expression allows binding a value to an identifier in order to
+evaluate a trailing expression (the ``body'') where this ident may
+appear. During the evaluation of the trailing expression, any
+occurence of the bound identifier is ``replaced'' by the value bound
+to this identifier. For instance:
+{\scriptsize
+\begin{lstlisting}
+let x = 5 in (x, x)
+\end{lstlisting}
+}
+will bind the evaluation of the {\bf expression} {\tt 5} (i.e. the
+integer {\bf value} $5$) to the identifier {\tt x} and then, the
+evaluation of the body will lead to the tuple {\bf value} $(5, 5)$.
+From the syntax, it is clearly possible to nest {\tt let-in}
+constructs:
+{\scriptsize
+\begin{lstlisting}
+let x = 5 in
+  let y = (x, x) in
+  let z = true in
+  (y, z, y, z)
+\end{lstlisting}
+}
+which leads when evaluated to the value
+$((5,\ 5),\ true,\ (5,\ 5),\ true)$ of type
+{\tt ((int * int) * bool * (int * int) * bool)}.
+
+
+
+\medskip
+\index{identifier binding}
+The notion of ``binding a value to an ident'' is different from the
+notion of assignment of imperative languages. In such languages (like
+C, Java, Pascal,\ldots) a variable is declared, then a value is
+assigned. It is possible to assign several times different values to a
+variable. For example in C:
+{\scriptsize
+\begin{lstlisting}
+...
+{
+  int i ;
+  ... ;
+  i = 10 ;
+  while (i >0) i = i-- ;
+}
+...
+\end{lstlisting}
+}
+The variable {\tt i} is declared, then assigned the initial value
+$10$, then the {\tt while} loop makes it decreasing by successive
+assignments.
+
+In a {\tt let-in} binding construct, an identifier is given a value
+once: it is impossible to change its ``assigned'' value once it is
+bound. We have no assignment construct. Each new definition, binding
+an already bound identifier will hide it from the point of this
+definition. For instance:
+{\scriptsize
+\begin{lstlisting}
+let x = 5 in
+  let y = (x, x) in
+  let x = true in
+  let z = (x, x) in
+  (y, x, y, x)
+\end{lstlisting}
+}
+leads when evaluated to the value $((5,\ 5),\ true, (5,\ 5),\ true)$
+of type {\tt ((int * int) * bool * (int * int) * bool)} when it
+clearly appears that the first value bound to {\tt x} lasts until it
+is bound again: $5$ is used to create {\tt y} but to create
+{\tt z}, the used value of {\tt x} is now $true$.
+
+
+
+\medskip
+The {\tt let-in} construct serves to bind a value to an
+identifier. By consequence, it can be used to bind a functional value
+to an identifier, hence allowing to define {\bf functions}. The only
+difference is that the bound identifier has arguments:
+{\scriptsize
+\begin{lstlisting}
+let f (x, y) = x + y in
+f (6, 7)
+\end{lstlisting}
+}
+In this example, we bind {\tt f} to a function with 2 parameters
+{\tt x} and {\tt y}, whose body is the addition of these 2
+parameters. Then the body of the {\tt let-in} construct uses (by
+application as explained further in \ref{application-expression})
+this function by passing it 2 effectives arguments {\tt 6} and
+{\tt 7} (obviously we expect the result to be $13$).
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Application expression}
 \label{function-application}
