@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.62 2008-11-12 12:34:19 pessaux Exp $
+# $Id: Makefile,v 1.63 2008-11-13 10:45:53 doligez Exp $
 
 ROOT_DIR = ..
 
@@ -91,7 +91,7 @@ bin:: \
       $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE)\
       $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
-install:: all
+install::
 	$(MKDIR) $(FOC_INSTALL_LIB)
 	@if [ "$(FOCALIZE_FOS)" != "" ] ; then \
 	  echo "Installing (FoCaLize) compiled certified libs." ; \
