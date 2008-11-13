@@ -522,6 +522,7 @@ section. Assuming a variable {\tt v} was bound to the result
 then each occurrence of {\tt v} in a expression will be ``replaced''
 by 7 in this expression. This is basically the principle of by-value
 evaluation.
+\label{functional-value}
 \index{functional value}
 Like in any functional language, a function definition binds an
 identifier to a value functional value that is the evaluation of the
@@ -648,7 +649,7 @@ always adding extra spaces.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{{tt let-in} expression}
+\subsubsection{{\tt let-in} expression}
 \index{let-in}
 This expression allows binding a value to an identifier in order to
 evaluate a trailing expression (the ``body'') where this ident may
@@ -768,12 +769,54 @@ let a in int = 3 in
 
 
 \medskip
-Let rec et let and !!!!!!!!!!!!!!!!!!!!!!!!! TODO
+It is possible to define several functions at the same time separating
+each definition by the keyword {\tt and}.
+{\scriptsize
+\begin{lstlisting}
+...
+let f (x) = ...
+and g (y) = ... f (...) ...
+and h (z) = g (...) ... f (...) ... in
+...
+\end{lstlisting}
+}
+This acts exactly like a sequence of {\tt let-in} like in:
+{\scriptsize
+\begin{lstlisting}
+...
+let f (x) = ... in
+let g (y) = ... f (...) ... in
+let h (z) = g (...) ... f (...) ... in
+...
+\end{lstlisting}
+}
+However, this allows to define mutually recursive functions, that is,
+functions that must know each other because in their bodies, they call
+the other functions. In this case, the keyword {\tt let} must be
+followed by the keyword {\tt rec}.
+{\scriptsize
+\begin{lstlisting}
+...
+let rec even (x) =
+   if x = 0 then true else odd (x - 1)
+and odd (y) =
+   if y = 0 then false else even (y - 1) in
+...
+\end{lstlisting}
+}
+
+{\large {\bf Attention:}} in the current version of \focal\ mutually
+recursive functions cannot be compiled into \coq\ code. Only
+\ocaml\ code generation is available. Moreover, for \coq, recursive
+functions imply termination proofs. This last point will be covered in
+the section \ref{recursive-function} especially dedicated to
+recursive (non-mutually) function definitions.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Conditional expression}
+\label{conditional-expression}
 \index{if}
 The simple conditional expression {\tt if} $exp_1$ {\tt then}
 $exp_2$ {\tt else} $exp_3$ evaluates the $exp_1$ expression which must
@@ -930,8 +973,8 @@ variables into ``{\tt \_}''s.
 
 
 \smallskip
-Patterns also allow to match record values, i.e. to match on values of
-the fields:
+Patterns also allow to match record values
+(c.f. \ref{record-expression}), i.e. to match on values of the fields:
 {\scriptsize
 \begin{lstlisting}
 type t = { name : string ; birth : int } ;;
@@ -949,14 +992,52 @@ values not caught before since the field {\tt name}'s value is bound
 to a variable (so, non constraint is put on it) and the field
 {\tt birth} is absent (so, considered as {\tt birth = \_}).
 
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Application expression}
 \label{function-application}
 \index{functional value}
-
-
-
-
+We previously saw that the {\tt let-in} construct allows to define
+functions by binding an identifier to a functional value. Using a
+function by providing it effective arguments to get its result value
+is called {\bf application}. Hence, in an application there are 2
+distincts parts: the applicative part that must be a an expression
+leading to a functional value and the effective arguments that are
+expressions whose value will be provided to the function to make its
+computation. The syntax for application is simply the juxtaposition of
+the applicative expression and the comma-separated expressions used as
+arguments embraced by parentheses:
+{\scriptsize
+\begin{lstlisting}
+let f (x) = ... in
+let g (x, y) = ... f (y) ... in
+g (f (3), 4)
+...
+\end{lstlisting}
+}
+Like described in \ref{functional-value}, during an application,
+arguments expressions to provide to the function are evaluated first
+(however, there is no specification wether left to right or right to
+left) then the body of the function get evaluated ``replacing'' each
+occurrence of each parameter by its related value among those
+effectively passed in the application. For instance, having the
+following function and application:
+{\scriptsize
+\begin{lstlisting}
+let g (x, y) = (y, x) in
+g (true, 1)
+\end{lstlisting}
+}
+during the application {\tt g} is evaluated as a {\bf functional value},
+{\tt true} is evaluated into the boolean {\bf value} $true$, {\tt 1}
+into the integer {\bf value} $1$. The next step of application is then
+to evaluate the body of the {\bf functional value} of {\tt f},
+replacing the formal parameter {\tt x} by the effective argument
+$true$ and {\tt y} by $1$. The body of {\tt f} creates a tuple from
+its 2 arguments, putting {\tt y} in the first component and {\tt x} in
+the second. Hence, the result of the application is the tuple
+{\bf value} $(1,\ true)$.
 
 
 \subsection{Files and uses directives}
