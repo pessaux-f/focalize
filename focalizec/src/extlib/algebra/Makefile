@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.12 2008-11-13 14:50:38 pessaux Exp $
+# $Id: Makefile,v 1.13 2008-11-13 16:46:26 doligez Exp $
 
 ROOT_DIR = ../..
 
@@ -98,7 +98,7 @@ bin:: \
       $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE)\
       $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
-install:: all
+install::
 	$(MKDIR) $(FOC_INSTALL_LIB)/extlib/algebra
 	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
 	  $(CP) $(FOCALIZE_BYT_OBJS) $(FOC_INSTALL_LIB)/extlib/algebra ; \

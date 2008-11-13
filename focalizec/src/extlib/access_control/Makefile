@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.8 2008-11-13 11:05:11 habib Exp $
+# $Id: Makefile,v 1.9 2008-11-13 16:46:26 doligez Exp $
 
 # Makefile for access control models
 
@@ -28,7 +28,7 @@ lib: all
 all:: ensembles_finis.fo access_control.fo hru.fo rbac.fo ticket.fo unix.fo \
 ensembles_finis.v access_control.v hru.v rbac.v ticket.v unix.v
 
-install:: all
+install::
 	$(MKDIR) $(FOC_INSTALL_LIB)/extlib/access_control
 	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
 	  $(CP) $(FOCALIZE_BYT_OBJS) \
