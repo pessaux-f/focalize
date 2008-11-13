@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.129 2008-11-06 20:16:27 doligez Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.130 2008-11-13 10:43:19 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2161,24 +2161,19 @@ let generate_defined_recursive_let_definition ctx print_ctx env
        (* Generate the recursive uncurryed function *)
        Format.fprintf out_fmter
          "@[<2>Function %a@ (__arg:@ %a)@ \
-         {wf __term_order __arg}:@ %a@ :=@ @[<2>let "
+         {wf __term_order __arg}:@ %a@ :=@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name
          (print_types_as_tuple_if_several new_print_ctx) params_with_type
          (Types.pp_type_simple_to_coq new_print_ctx ~reuse_mapping: true)
          return_ty ;
-       (* Check if we need to generate parens, i.e. if we really have a tuple
-          or just only 1 parameter. *)
-       let print_paren =
-         (match params with
-          | [] -> assert false (* A function always have at least 1 arg. *)
-          | [_] -> false
-          | _ -> true) in
-       if print_paren then Format.fprintf out_fmter "(" ;
+       (* Unfortunately, we can't simply generate "let (x, y, ..) := __arg"
+          because Coq only allows pairs as let-binding pattern. So instead,
+          we generate a "match". *)
+       Format.fprintf out_fmter "@[<2>match __arg with@\n| (" ;
        Format.fprintf out_fmter "%a"
          (Handy.pp_generic_separated_list ","
             Parsetree_utils.pp_vname_with_operators_expanded) params ;
-       if print_paren then Format.fprintf out_fmter ")" ;
-       Format.fprintf out_fmter " :=@ __arg in@]@ " ;
+       Format.fprintf out_fmter ") =>@\n" ;
        (* We must transform the recursive function's body si that all the
           recursive calls send their arguments as a unique tuple rather than as
           several arguments. This is because we "tuplified" the arguments of
@@ -2193,7 +2188,9 @@ let generate_defined_recursive_let_definition ctx print_ctx env
          new_ctx ~local_idents: [] ~in_recursive_let_section_of: [name]
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          env tuplified_body ;
-       Format.fprintf out_fmter ".@]@\n" ;
+       (* Print the "end" of the "match" introduced to split the tuple of
+          "__arg". *)
+       Format.fprintf out_fmter "@\nend.@]@\n" ;
        Format.fprintf out_fmter "@[<v 2>Proof.@ %a Qed.@]@\n"
          (Handy.pp_generic_n_times ((List.length recursive_calls) + 1)
             Format.fprintf)
