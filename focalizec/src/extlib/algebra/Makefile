@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.11 2008-11-13 11:00:54 pessaux Exp $
+# $Id: Makefile,v 1.12 2008-11-13 14:50:38 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -45,10 +45,10 @@ FOCALIZE_SRC = \
 	integers.foc \
 	array_foc.foc \
 	products_foc.foc \
-	quotients.foc \
-	iterators.foc
+	quotients.foc
 
 FOCALIZE_SRC_UNSAFE = \
+	iterators.foc \
 	big_integers.foc
 #	parse_poly.foc polys_abstract.foc polys_concrete finite_fields fractions finite_factorize
 
