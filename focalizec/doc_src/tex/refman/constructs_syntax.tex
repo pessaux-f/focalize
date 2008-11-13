@@ -88,7 +88,7 @@ change of their semantics.
 \subsubsection{Type definitions}
 \index{type!definition}
 \label{type-definition}
-As stated before, ach type {\bf definition} will lead to a new type
+As stated before, each type {\bf definition} will lead to a new type
 {\bf constructor} that will be available among the constructors that
 can be used in type {\bf expressions}. Hence, defining a type is the
 way to give a name to a new type structure. \focal\ proposes 3 kinds
@@ -116,7 +116,7 @@ type color =
 \end{lstlisting}
 }
 Note that the first ``$\mid$'' character is required: it is not a
-separator. This espacially means that when writing a sum type
+separator. This especially means that when writing a sum type
 definition on one line, the first ``$\mid$'' must be written:
 {\scriptsize
 \begin{lstlisting}
@@ -170,7 +170,7 @@ is 2 and its elements are {\tt (false, 2)} followed by
 
 Like for any type definition, it is possible to parametrise the
 {\bf definition}, i.e. create a type with a {\bf type variable} that
-can be instanciate by any type expression. For instance, the type
+can be instantiate by any type expression. For instance, the type
 definition of generic (polymorphic) lists may be defined by:
 {\scriptsize
 \begin{lstlisting}
@@ -180,12 +180,12 @@ type list ('a) =
 ;;
 \end{lstlisting}
 }
-A type variable is writen as an identifier preceded by a {\tt '}
+A type variable is written as an identifier preceded by a {\tt '}
 (quote) character. In the above definition, we see that the sum
 constructor {\tt Cons} carries a value of type ``unknown'' (of type
 ``variable'') and the tail of the list, i.e. a value of type
-{\tt list} with its parameter instanciated by the same type
-variable. This explicitely says that all the elements of such a list
+{\tt list} with its parameter instantiated by the same type
+variable. This explicitly says that all the elements of such a list
 have the same type. It is now possible to use the {\tt list} type in
 type {\bf expressions} by providing a type {\bf expression} as
 argument of the {\bf type constructor} {\tt list}. For instance,
@@ -217,10 +217,10 @@ manipulate large {\bf type expressions} like for instance, a tuple of
 handy to always write this expression each time we manipulate
 it. Moreover, several kind of information can be represented by such a
 tuple. For instance, x, y, z 3D-coordinates and temperature and
-presure. For another example, year, month, day, hours, minutes. In
+pressure. For another example, year, month, day, hours, minutes. In
 these two cases, the manipulated type expression will be the same and
-can' be easily differenciated. Type aliases allows to give a name to a
-(complex) type expression, for sake of redeability or to shorten the
+can' be easily differentiated. Type aliases allows to give a name to a
+(complex) type expression, for sake of readability or to shorten the
 code. Example:
 {\scriptsize
 \begin{lstlisting}
@@ -269,7 +269,7 @@ type t4 = t3 (int * bool) ;;
 
 They provide a way to aggregate data of various types, a bit like
 tuples, but naming the components of the group, instead of
-differenciating them by their position like in tuples. Hence, a record
+differentiating them by their position like in tuples. Hence, a record
 type is like the {\tt struct} of C or Java-like languages. A record is
 a sequence of names and types between braces. For example:
 {\scriptsize
@@ -279,7 +279,7 @@ type experiment_conditions = {
   y : int ;
   z : int ;
   temperature : int ;
-  presure : int
+  pressure : int
 } ;;
 
 type identity = {
@@ -311,7 +311,7 @@ type must be provided for each field of the record.
 \end{lstlisting}
 }
 Like in tuples, records can mix types of fields. Like for any type
-definition, it it possible to have parameterised record types:
+definition, it it possible to have parametrised record types:
 {\scriptsize
 \begin{lstlisting}
 type pair ('a, 'b) = {
@@ -401,7 +401,7 @@ exp & ::= & integer\_literal & \\
                   Record value clone \\
     &     &      \hspace{1.0cm}  \{\ \terminal{;}\ record\_field\_value\ \}+
                   \ \terminal{\}} & \\
-    &     & \mid \terminal{(} exp \terminal{)} & Parenthesed expression
+    &     & \mid \terminal{(} exp \terminal{)} & Parenthesised expression
 \end{syntax}
 
 \begin{syntax}
@@ -447,7 +447,7 @@ pattern & ::= & integer\_literal & \\
                  \terminal{\}} & Record \\
     &     & \mid \terminal{(} pattern\ \{ \terminal{,}\ pattern\}+
                   \terminal{)} & Tuple \\
-    &     & \mid \terminal{(} pattern \terminal{)} & Parenthesed pattern
+    &     & \mid \terminal{(} pattern \terminal{)} & Parenthesised pattern
 \end{syntax}
 
 \begin{syntax}
@@ -480,9 +480,9 @@ For constructors with parameters, a value is created by evaluating an
 expression applying the constructor to as many expressions as the
 constructor's arity. Obviously, sub-expressions used as arguments of
 the constructor must we well-typed according to the type of the
-constructor. The obtained value, after evaluation, is writen by the
+constructor. The obtained value, after evaluation, is written by the
 name of the constructor followed by the tuple of values provided as
-arguments. For instance, with the folowing type definition:
+arguments. For instance, with the following type definition:
 {\scriptsize
 \begin{lstlisting}
 type t =
@@ -504,10 +504,10 @@ the value bound to this variable. A variable is said {\bf bound} by
 its definition, i.e. the construct that assigned a value to it. In
 \focal\, there a three ways to bind a variable:
 \begin{itemize}
-  \item By a {\tt let\ ldots in} construct,
+  \item By a {\tt let-in} construct,
   \item By a toplevel definition ({\tt let} or {\tt theorem}),
   \item by a method definition,
-  \item by a pattern inside a {\tt match \ldots with} construct,
+  \item by a pattern inside a {\tt match-with} construct,
   \item or by a function definition where parameters are referenced as
     variables.
 \end{itemize}
@@ -530,7 +530,7 @@ expression as described further in \ref{function-application}.
 
 
 \medskip
-Identifiers forms differ depending on the classe of entity they refers
+Identifiers forms differ depending on the class of entity they refers
 to. In the simplest form, an identifier expression is a lowercase
 identifier. The \focal\ compiler will determine its definition from
 the current scoping context.
@@ -546,7 +546,7 @@ method is found with this name, it will be retained, otherwise it
 searches among the past toplevel definitions of the current
 compilation unit.
 \index{directive!open} If no suitable definition is found, then the
-ones imported by the {\tt open} directives are examinated to find one
+ones imported by the {\tt open} directives are examined to find one
 with the searched name. Finally if no definition is found, the
 identifier is reported unbound by an error message. Note that
 {\tt open} directive may arise anywhere at toplevel in the source
@@ -633,8 +633,8 @@ the following common and cryptic error:
 let (*) (x, y) = ...
 \end{lstlisting}
 }
-where unfortunately {\tt (*} is parsed as a begining of comment,
-leading to a syntax error. The symetry obviously arises with the
+where unfortunately {\tt (*} is parsed as a beginning of comment,
+leading to a syntax error. The symmetry obviously arises with the
 {\tt *)} considered as an end of comment. This pitfall exists indeed
 only for the ``{\tt *}-starting'' and ``{\tt *}-ending'' operators,
 but a good practice is to have a homogeneous naming scheme, hence
