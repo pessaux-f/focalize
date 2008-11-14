@@ -1414,7 +1414,82 @@ technical mechanisms since this problem will be especially addressed
 in section \ref{making-proofs}.
 
 \begin{itemize}
-  \item
+  \item [{\bf Consider the proof as ``assumed''}] This way is the simplest
+    but also the weakest one since it consists in saying that no proof
+    is given and the system must trust the stated statement.
+{\scriptsize
+\begin{lstlisting}
+species S =
+  ...
+  theorem symetry : all x y in Self, Self!equal (x, y) -> equal (y, x)
+  proof : assumed {* Because my good reason. *} ;
+  ...
+end ;;
+\end{lstlisting}
+}
+    Following the {\tt assumed} keyword is a mandatory message used
+    for sake of information, justification, traceability of the proof
+    absence. Although such proofs are not satisfatory in term of
+    confidence in the correctness of the \focal\ program, there are
+    several cases where it may be used, some of them being
+    unavoidable.
+
+    \begin{itemize}
+      \item The first case is simply that the developer does't know
+        (yet ?) how to make the proof, doesn't have time yet to write
+        it, is not interested in proofs but still wants it program to
+        compile to get the executable code.
+
+      \item Second case deals with import of external code, i.e. code
+        not written in \focal\ and considered as external. In this
+        case, since the imported code does not fit the \focal\ model
+        and more accurately, does not have formal properties, it is
+        impossible to make any proof on \focal's side based on the
+        structure of this code and its non-existing implementation
+        properties. In other terms, things coming outside
+        \focal\ universe can not be modeled by \focal. It only can
+        import them providing a binding is given and must trust them.
+
+      \item Last case address ``well-known'' mathematical properties
+        that do not actually hold in computers since they are finite
+        machines, working on bounded arithmetics. The most obvious
+        example is the fact that since an integeris coded on a machine
+        word (often $2^{32}$ or $2^{64}$ bits nowadays), the
+        mathematical property $\forall x \in \cal{N}, x + 1 > x$ does
+        not hold anymore. In effect, taking a 32 bits-long machine
+        word, taking $x = 2^{32} = 4294967296$, the binary
+        configuration of $x$ is all 32 bits equal to 1. Then adding 1
+        one more time would give a binary configuration with the
+        33$^{\textnormal{th}}$ bit (the most significant bit) equal to
+        1 and all the 32 others equal to 0. Since machine the word
+        only contain 32 bits, the most significant of our computation
+        is dropped, leaving only 32 bits equal to 0. And this binary
+        configuration is the integer $0$. Hence we get a case where $x
+        + 1 = 0 < x$.
+
+        \vspace{0.1cm}
+        \begin{center}
+        {\scriptsize
+        \begin{tabular}[h]{|c|c||c|c|c|c|c|c|c|}
+          \hline
+          & & 1 & 1 & 1 & \ldots & 1 & 1 & 1 \\
+          \hline
+          + & & 0 & 0 & 0 & \ldots & 0 & 0 & 1 \\
+          \hline
+          \hline
+          = & {\color{red}1} & 0 & 0 & 0 & \ldots & 0 & 0 & 0 \\
+          \hline
+          = &  & 0 & 0 & 0 & \ldots & 0 & 0 & 0 \\
+          \hline
+        \end{tabular}
+        }
+        \end{center}
+
+        \vspace{0.1cm}
+        However, conceptually, except when dealing with boundaries,
+        this property holds and we need to achieve further proofs. For
+        this reason, assuming the proof is legitimate.
+    \end{itemize}
 \end{itemize}
 
 
