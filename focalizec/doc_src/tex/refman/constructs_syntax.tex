@@ -19,6 +19,7 @@ whole compilation unit (and also in other units by using the
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Type expressions}
 \index{type!expression}
+\index{expression!type}
 Type definitions require type expressions to build more complex
 data-types. For this reason we present here the shape of type
 expressions.
@@ -226,7 +227,7 @@ can' be easily differentiated. Type aliases allows to give a name to a
 code. Example:
 {\scriptsize
 \begin{lstlisting}
-type experiment\_conditions = alias (int * int * int * int * int) ;;
+type experiment_conditions = alias (int * int * int * int * int) ;;
 type date = alias (int * int * int * int * int) ;;
 \end{lstlisting}
 }
@@ -361,6 +362,7 @@ Hence, the method {\tt rep} defines the type {\tt Self}'s structure.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Expressions}
 \label{expressions}
+\index{expression}
 Expressions are constructs of the language that are evaluated into a
 {bf value} of a certain {\bf type}. Hence values and types are not at
 the same level. Types serve to classify values into categories.
@@ -374,39 +376,39 @@ do not lead to \focal\ values.
 \begin{syntax}
 \syntaxclass{Expressions:}
 exp & ::= & integer\_literal & \\
-    &     & \mid\ string\_literal & \\
-    &     & \mid\ character\_literal & \\
-    &     & \mid\ float\_literal & \\
-    &     & \mid\ {\tt true}\ \mid\ {\tt false} & Boolean constant \\
-    &     & \mid\ [[ident] \terminal{\#}]uident & Sum type constructor
+    & \mid & string\_literal & \\
+    & \mid & character\_literal & \\
+    & \mid & float\_literal & \\
+    & \mid & {\tt true}\ \mid\ {\tt false} & Boolean constant \\
+    & \mid & [[ident] \terminal{\#}]uident & Sum type constructor
                                        or species/collection identifier \\
-    &     & \mid\ [\terminal{Self}] \terminal{!} uident &
+    & \mid & [\terminal{Self}] \terminal{!} uident &
                        Method of the current species \\
-    &     & \mid\ [[ident] \terminal{\#}] [uident \terminal{!}] lident &
+    & \mid & [[ident] \terminal{\#}] [uident \terminal{!}] lident &
                Method from specified species/collection \\
-    &     & \mid\ [[ident] \terminal{\#}] [uident \terminal{!}]
+    & \mid & [[ident] \terminal{\#}] [uident \terminal{!}]
                \terminal{(} operator \terminal{)} & Infix or prefix
             operator used in functional position \\
-    &     & \mid \terminal{let}\ [\terminal{rec}]\ let\_binding
+    & \mid & \terminal{let}\ [\terminal{rec}]\ let\_binding
                \ \{\terminal{and}\ let\_binding \}* &  Let bound definition \\
-    &     & \ \ \ \terminal{in}\ exp & \\
-    &     & \mid \terminal{if}\ exp\ \terminal{then}\ exp
+    &      & \ \ \ \terminal{in}\ exp & \\
+    & \mid & \terminal{if}\ exp\ \terminal{then}\ exp
                  \ \terminal{else}\ exp & Conditional \\
-    &     & \mid \terminal{match}\ exp\ \terminal{with}\ match\_binding+ &
+    & \mid & \terminal{match}\ exp\ \terminal{with}\ match\_binding+ &
                      Pattern matching \\
-    &     & \mid exp\ \terminal{(} [exp*] \terminal{)} & Function application \\
-    &     & \mid unary\_operator\ exp & Application of unary operator \\
-    &     & \mid exp\ binary\_operator\ exp & Application of binary operator \\
-    &     & \mid \terminal{\{}\ record\_field\_value & Record value \\
-    &     &     \hspace{0.6cm}  \{\ \terminal{;}\ record\_field\_value\ \}+
+    & \mid & exp\ \terminal{(} [exp*] \terminal{)} & Function application \\
+    & \mid & unary\_operator\ exp & Application of unary operator \\
+    & \mid & exp\ binary\_operator\ exp & Application of binary operator \\
+    & \mid & \terminal{\{}\ record\_field\_value & Record value \\
+    &      &     \hspace{0.6cm}  \{\ \terminal{;}\ record\_field\_value\ \}+
                 \ \terminal{\}} & \\
-    &     & \mid \terminal{\{}\ exp\ \terminal{with}\ record\_field\_value &
+    & \mid & \terminal{\{}\ exp\ \terminal{with}\ record\_field\_value &
                   Record value clone \\
-    &     &      \hspace{1.0cm}  \{\ \terminal{;}\ record\_field\_value\ \}+
+    &      &      \hspace{1.0cm}  \{\ \terminal{;}\ record\_field\_value\ \}+
                   \ \terminal{\}} & \\
-    &     & \mid expr\ \terminal{.}[ident\terminal{\#}]lident &
+    & \mid & expr\ \terminal{.}[ident\terminal{\#}]lident &
                  Record field access \\
-    &     & \mid \terminal{(} exp \terminal{)} & Parenthesised expression
+    & \mid & \terminal{(} exp \terminal{)} & Parenthesised expression
 \end{syntax}
 
 \begin{syntax}
@@ -417,9 +419,9 @@ record\_field\_value & ::= &
 
 \begin{syntax}
 \syntaxclass{Let bindings:}
-let\_binding & ::= & \mid lident\ [\terminal{in}\ type\_expression]
+let\_binding & ::= & lident\ [\terminal{in}\ type\_expression]
            \ \terminal{=}\ exp & Definition without parameter \\
-   & ::= & \mid lident\
+   & \mid & lident\
                 \terminal{(}lident\ [\terminal{in}\ type\_expression] &
                  Definition with parameter(s) \\
    &     &      \hspace{1.3cm} \{\ \terminal{,}\ lident
@@ -436,23 +438,23 @@ let\_binding & ::= & \mid lident\ [\terminal{in}\ type\_expression]
 \begin{syntax}
 \syntaxclass{Patterns:}
 pattern & ::= & integer\_literal & \\
-    &     & \mid\ string\_literal & \\
-    &     & \mid\ character\_literal & \\
-    &     & \mid\ float\_literal & \\
-    &     & \mid\ {\tt true}\ \mid\ {\tt false} & Boolean constant \\
-    &     & \mid\ lident & Variable \\
-    &     & \mid [[ident] \terminal{\#}]uident & 0-ary sum type constructor \\
-    &     & \mid [[ident] \terminal{\#}]uident
+    & \mid & string\_literal & \\
+    & \mid & character\_literal & \\
+    & \mid & float\_literal & \\
+    & \mid & {\tt true}\ \mid\ {\tt false} & Boolean constant \\
+    & \mid & lident & Variable \\
+    & \mid & [[ident] \terminal{\#}]uident & 0-ary sum type constructor \\
+    & \mid  & [[ident] \terminal{\#}]uident
                \ \terminal{(}pattern \{\terminal{,}\ pattern\}*\terminal{)}&
                N-ary sum type constructor \\
-    &     & \mid \_ & ``Catch-all'' pattern \\
-    &     & \mid \terminal{\{}
-                   record\_field\_pattern\
-                   \{ \terminal{;}\ record\_field\_pattern \}*
+    & \mid & \_ & ``Catch-all'' pattern \\
+    & \mid & \terminal{\{}
+               record\_field\_pattern\
+               \{ \terminal{;}\ record\_field\_pattern \}*
                  \terminal{\}} & Record \\
-    &     & \mid \terminal{(} pattern\ \{ \terminal{,}\ pattern\}+
+    & \mid & \terminal{(} pattern\ \{ \terminal{,}\ pattern\}+
                   \terminal{)} & Tuple \\
-    &     & \mid \terminal{(} pattern \terminal{)} & Parenthesised pattern
+    & \mid & \terminal{(} pattern \terminal{)} & Parenthesised pattern
 \end{syntax}
 
 \begin{syntax}
@@ -466,6 +468,8 @@ record\_field\_pattern & ::= &
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Literal expressions}
+\index{expression!literal}
+\index{expression!constant}
 The five literal expressions (integer, string, character, float and
 boolean) are evaluated into the constant represented by the literal.
 
@@ -473,6 +477,7 @@ boolean) are evaluated into the constant represented by the literal.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Sum type constructor expressions}
+\index{expression!sum type constructor}
 We presented in section \ref{type-definition} the way to define sum
 types. We saw that {\bf values} of such a {\bf type} are built using
 its constructors.
@@ -505,6 +510,7 @@ the expression {\tt A} is evaluated into $A$, the expression
 \subsubsection{Identifier expressions}
 \label{identifier-expressions}
 \index{identifier}
+\index{expression!identifier}
 An identifier expression (also called ``variable'') is evaluated into
 the value bound to this variable. A variable is said {\bf bound} by
 its definition, i.e. the construct that assigned a value to it. In
@@ -653,6 +659,7 @@ always adding extra spaces.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{{\tt let-in} expression}
 \index{let-in}
+\index{expression!let-in}
 This expression allows binding a value to an identifier in order to
 evaluate a trailing expression (the ``body'') where this ident may
 appear. During the evaluation of the trailing expression, any
@@ -824,6 +831,7 @@ recursive (non-mutually) function definitions.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Conditional expression}
 \label{conditional-expression}
+\index{expression!if}
 \index{if}
 The simple conditional expression {\tt if} $exp_1$ {\tt then}
 $exp_2$ {\tt else} $exp_3$ evaluates the $exp_1$ expression which must
@@ -857,6 +865,7 @@ otherwise.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Match expression}
 \index{match}
+\index{expression!match}
 \index{pattern matching}
 The {\tt match-with} construct is a generalised conditional construct
 with pattern-matching. By ``generalised'', we mean that conversely to
@@ -1005,6 +1014,7 @@ to a variable (so, non constraint is put on it) and the field
 \subsubsection{Application expression}
 \label{function-application}
 \index{functional value}
+\index{expression!application}
 We previously saw that the {\tt let-in} construct allows to define
 functions by binding an identifier to a functional value. Using a
 function by providing it effective arguments to get its result value
@@ -1050,6 +1060,7 @@ the second. Hence, the result of the application is the tuple
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Operator application expressions}
+\index{expression!operator}
 Since operators are designed to be used in infix or prefix position,
 application of operators consists simply in providing arguments
 according to the operator infix/prefix nature. For infix operators,
@@ -1061,6 +1072,7 @@ operator is in front of the argument expression.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Record expression}
 \label{record-expression}
+\index{expression!record}
 As introduced in \ref{record-type-definition} about type definitions,
 record are defined by labels with their types. Hence, a record
 expression follows the same structure, replacing the type expressions
@@ -1093,6 +1105,7 @@ may qualify the record fields by the ``{\tt\#}'' notation:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Record expression}
 \label{record-clone-expression}
+\index{expression!record!clone}
 It is sometimes useful to create a new value of record by copying a
 few values of an existing one, leaving the other values unchanged. If
 the record type definition contains numerous fields, manually copying
@@ -1135,6 +1148,7 @@ by the ``{\tt\#}'' notation.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Record field access expression}
 \label{record-field-access}
+\index{expression!record!field}
 Once a record value is created by aggregating value of its fields, it
 is possible to recover the value of one field by a dot notation. For
 instance, assuming the type definition and record values of the
@@ -1178,7 +1192,7 @@ of methods. Some methods contain expressions (functions, properties,
 theorems). Function-methods are introduced by the {\tt let} keyword,
 using the same syntax (hence expressions) that the {\tt let-in}
 construct except the fact they do not have a ``{\tt in}'' expression.
-The idea is that the ``{\tt in}'' expression is implicitely the
+The idea is that the ``{\tt in}'' expression is implicitly the
 remaining of the species. Properties and theorems are respectively
 introduced by the keywords {\tt property} and {\tt theorem} and may
 may contain expressions and will have a dedicated section in
@@ -1200,11 +1214,13 @@ end ;;
 
 \medskip
 We also made reference to ``toplevel'' definitions, i.e. definitions
-outside any species. This deals with general functions and genaral
+outside any species. This deals with general functions and general
 theorems, i.e. that do not depend on a particular species. In the same
 idea that above for species methods, functions are are introduced by
-the {\tt let} keyword and don't have a ``{\tt in}'' expression and
-theorems are introduced by the {\tt theorem} keword. As already stated
+the {\tt let} keyword and don't have a ``{\tt in}'' expression, this part
+being implicitly the remaining of the program (i.e. the current
+compilation unit and those using the current).
+Theorems are introduced by the {\tt theorem} keyword. As already stated
 in \ref{topleve-def}, these definitions must be ended by a double semi
 (``{\tt ;;}'').
 {\scriptsize
@@ -1311,3 +1327,123 @@ coq_require "wellfounded_externals";;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Properties, theorems and proofs}
 \label{properties-theorems-proofs}
+\index{theorem}
+\index{property}
+Like instroduced in \ref{species-intro}, properties are first order logic
+propositions and theorems are properties with their proofs. We will
+study here first the structure if logical expressions used to express
+the statements, show properties and theorems form and shorty present
+the 3 available ways to write proofs.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Logical expressions}
+\index{expression!logical}
+Logical expressions are those used to write first order logic
+formulaes.
+\begin{syntax}
+\syntaxclass{Logical expressions:}
+logical\_expr & := & \terminal{all}\ lident\ [,lident]*
+          \ \terminal{in} \ type\_expr & Universal quantification \\
+              & \mid & \terminal{ex}\ lident\ [,lident]*
+          \ \terminal{in} \ type\_expr & Existantial quantification \\
+              & \mid & logical\_expr\ \terminal{-}\/\terminal{>}
+                   \ logical\_expr & Implication \\
+              & \mid & logical\_expr\ \terminal{<}\/\terminal{-}\/\terminal{>}
+                   \ logical\_expr & Equivalence \\
+              & \mid & logical\_expr\ \terminal{/\setminus} \ logical\_expr &
+                              Conjunction \\
+              & \mid & logical\_expr\ \terminal{\setminus/} \ logical\_expr &
+                              Disjunction \\
+              & \mid & \terminal{\sim}\ logical\_expr & Negation \\
+              & \mid & expr & Arbitrary \focal\ expression (atom) \\
+              & \mid & \terminal{(} logical\_expr \terminal{)} &
+                              Parenthesised logical expression
+\end{syntax}
+
+ They contain the usual logical connectors ``imply''
+($\Rightarrow$), ``and'' ($\wedge$), ``or'' ($\vee$), ``there exists''
+($\exists$), ``for all'' ($\forall$), ``is equivalent''
+($\Leftrightarrow$) and ``not'' ($\sim$). Moreover, logical
+expressions embedd the \focal\ expressions used in computational
+methods (i.e. identifiers, conditionals, application, \ldots). This
+allows to have connected propositions using the previously defined
+functions and species methods.
+{\scriptsize
+\begin{lstlisting}
+species S ... =
+  signature gt : Self -> Self -> bool ;  (* Greater than... *)
+  signature geq : Self -> Self -> bool ;  (* Greater or equal... *)
+  signature equal : Self -> Self -> bool ;  (* Equal to... *)
+  signature different : Self -> Self -> bool ;  (* Different of... *)
+
+  property gt_is_lt : all x y in Self,
+    (!gt (x, y) -> (!geq (x, y) /\ !different(x, y)))
+    /\
+    (!geq (x, y) -> (!gt (x, y) \/ !equal(x, y))) ;
+end ;;
+\end{lstlisting}
+}
+Since in logical expressions propositions are truth values, this
+obviously imply that the arbitrary expressions used between connectors
+must have type {\tt bool}.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Properties}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Proofs}
+\focal\ currently provides 3 ways to write proofs. We only give here a
+simple description of these 3 means without going deeply in the
+technical mechanisms since this problem will be especially addressed
+in section \ref{making-proofs}.
+
+\begin{itemize}
+  \item
+\end{itemize}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Theorems}
+Now we know how to write a logical statement and (nearly) how to write
+a proof, the structure of a theorem appears simple since it contains
+both the statement and the proof inside the same construct. The
+theorem is introduced by the keyword {\tt theorem} and the proof by
+the keyword {\tt proof} followed by a colon character (``:'').
+\begin{syntax}
+\syntaxclass{Theorems:}
+theorem & ::= & \terminal{theorem}\ lident\ \terminal{:}\ logical\_expr
+                \ \terminal{proof :}\ proof
+\end{syntax}
+
+\noindent For instance:
+{\scriptsize
+\begin{lstlisting}
+species Meet_semi_lattice inherits Setoid =
+  ...
+  theorem inf_right_substitution_rule : all x y z in Self,
+     equal(y, z) -> equal(!inf(x, y), !inf(x, z))
+     proof:
+       by property
+          inf_left_substitution_rule,
+          inf_commutes,
+          equal_transitive ;
+  ...
+end ;;
+\end{lstlisting}
+}
+The kind of proof used here is written in \focal\ Proof Language and
+must not be a matter of understanding at this point since this
+particular point will be addressed with more details in
+\ref{making-proofs}.
+
+Notice that theorems can be hosted in a species or sometimes at
+``toplevel'' in case of general theorems. Properties can't appear at
+``toplevel'' since there is no want to inherit at toplevel, hence no
+way to give a proof after the property definition in a ``parent''.
