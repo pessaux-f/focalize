@@ -1339,6 +1339,7 @@ the 3 available ways to write proofs.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Logical expressions}
+\label{logical-expressions}
 \index{expression!logical}
 Logical expressions are those used to write first order logic
 formulaes.
@@ -1393,6 +1394,15 @@ must have type {\tt bool}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Properties}
+A property is then a logical expression bound to an identifier. It
+form is the name of the property, a colon character (``:'') and the
+logical expression being its statement. See the example given in
+\ref{logical-expressions}.
+\begin{syntax}
+\syntaxclass{Properties:}
+property & ::= & \terminal{property}\ lident\ \terminal{:}\ logical\_expr
+\end{syntax}
+
 
 
 
@@ -1411,11 +1421,13 @@ in section \ref{making-proofs}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Theorems}
-Now we know how to write a logical statement and (nearly) how to write
-a proof, the structure of a theorem appears simple since it contains
-both the statement and the proof inside the same construct. The
-theorem is introduced by the keyword {\tt theorem} and the proof by
-the keyword {\tt proof} followed by a colon character (``:'').
+Now we know how to write a logical statement and
+(nearly $\stackrel{..}{\sim}$) how
+to write a proof, the structure of a theorem appears simple since it
+contains both the statement and the proof inside the same
+construct. The theorem is introduced by the keyword {\tt theorem} and
+the proof by the keyword {\tt proof} followed by a colon character
+(``:'').
 \begin{syntax}
 \syntaxclass{Theorems:}
 theorem & ::= & \terminal{theorem}\ lident\ \terminal{:}\ logical\_expr
