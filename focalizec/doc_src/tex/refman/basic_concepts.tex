@@ -21,6 +21,7 @@ We will now present the basic concepts underlying a
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Species}
+\label{species-intro}
 {\bf Species} \index{species} are the nodes of the
 \focal\ hierarchy. A species can be roughly seen as a list of
 {\bf methods} \index{method} or {\bf fields}\index{field}, each ended
@@ -38,9 +39,25 @@ basic species looks like:
 Species names are always {\bf capitalized}. Inside the species' body
 methods are enumerated. These methods represent the internal data-type
 of the species, functions\index{function} to manipulate this data-type
-and properties\index{property} that must hold in the species. As
-any \focal\ toplevel definition, a species is ended by a double semi
-character (``;;'').\index{;;}
+and properties\index{property} that must hold in the species.
+
+\label{topleve-def}
+\index{toplevel} 
+In the remaining of this manual, we will call {\bf toplevel
+definition} a definition appearing outside species and
+collections. Such definitions car only be:
+\begin{itemize}
+  \item Species,
+  \item collections,
+  \item type definitions,
+  \item general theorems (not depending on a species),
+  \item general functions (not depending on a species),
+  \item expressions to directly evaluate (hence not really definitions
+  since their value is not bound to any identifier).
+\end{itemize}
+
+As any \focal\ ``toplevel'' definition, a species is
+ended by a double semi character (``;;'').\index{;;}
 
 \smallskip
 \label{no-polymorphism-for-methods}
@@ -128,7 +145,7 @@ end ;;
       \end{lstlisting}
     }
     Functions can use in their body other methods of the species,
-    toplevel function definitions, methods of collections
+    ``toplevel'' function definitions, methods of collections
     (described further in \ref{collection}), or methods of
     collections parameters (see \ref{collection-parameter}).
 

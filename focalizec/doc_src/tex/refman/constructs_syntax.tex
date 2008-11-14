@@ -511,7 +511,7 @@ its definition, i.e. the construct that assigned a value to it. In
 \focal\, there a three ways to bind a variable:
 \begin{itemize}
   \item By a {\tt let-in} construct,
-  \item By a toplevel definition ({\tt let} or {\tt theorem}),
+  \item By a ``toplevel'' definition ({\tt let} or {\tt theorem}),
   \item by a method definition,
   \item by a pattern inside a {\tt match-with} construct,
   \item or by a function definition where parameters are referenced as
@@ -550,21 +550,21 @@ parameters if in a function and {\tt let-in} and {\tt match-with}
 bound identifiers). If no variable definition with this name is found,
 the search goes on among the methods of the current species. If a
 method is found with this name, it will be retained, otherwise it
-searches among the past toplevel definitions of the current
+searches among the past ``toplevel'' definitions of the current
 compilation unit.
 \label{identifier-scoping-and-open}
 \index{directive!open} If no suitable definition is found, then the
 ones imported by the {\tt open} directives are examined to find one
 with the searched name. Finally if no definition is found, the
 identifier is reported unbound by an error message. Note that
-{\tt open} directive may arise anywhere at toplevel in the source
-code. Hence, the order of search between the current file's toplevel
+{\tt open} directive may arise anywhere at ``toplevel'' in the source
+code. Hence, the order of search between the current file's ``toplevel''
 definitions and the imported ones by {\tt open} is not really
 separated: the name resolver looks for the most recent definition
-considering that the toplevel definitions and the imported ones are
+considering that the ``toplevel'' definitions and the imported ones are
 ordered according to the apparition of the effective definitions in
 the file themselves and the imported ones. In other words, if a
-toplevel definition exists for an entity {\tt foo}, if later an
+``toplevel'' definition exists for an entity {\tt foo}, if later an
 {\tt open} directive imports another {\tt foo}, then this last one
 will be the remained one.
 
@@ -1163,6 +1163,80 @@ semantics.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Core language expressions and definitions}
+In the previous sections, we described the syntax of
+expressions. However, expressions rarely appear outside any
+definition. A definition is hence the root, the hooking point where
+expressions are used. It is still possible to have expressions at
+``toplevel'' that will get directly evaluated and not bound to any
+identifier, but this implies these expressions use previously written
+definitions.
+
+\medskip
+As we previously explained (c.f. \ref{species-intro}) species are made
+of methods. Some methods contain expressions (functions, properties,
+theorems). Function-methods are introduced by the {\tt let} keyword,
+using the same syntax (hence expressions) that the {\tt let-in}
+construct except the fact they do not have a ``{\tt in}'' expression.
+The idea is that the ``{\tt in}'' expression is implicitely the
+remaining of the species. Properties and theorems are respectively
+introduced by the keywords {\tt property} and {\tt theorem} and may
+may contain expressions and will have a dedicated section in
+\ref{properties-theorems-proofs} for their detailed explanation.
+{\scriptsize
+\begin{lstlisting}
+open "basics" ;;
+species My_Setoid inherits Basic_object =
+  signature ( = ) : Self -> Self -> bool ;
+  signature element : Self ;
+  let different (x, y) = basics#not_b (x = y) ;
+
+  property refl : all x in Self, x = x ;
+  property symm : all x y in Self, Self!( = ) (x, y) -> y = x ;
+end ;;
+\end{lstlisting}
+}
+
+
+\medskip
+We also made reference to ``toplevel'' definitions, i.e. definitions
+outside any species. This deals with general functions and genaral
+theorems, i.e. that do not depend on a particular species. In the same
+idea that above for species methods, functions are are introduced by
+the {\tt let} keyword and don't have a ``{\tt in}'' expression and
+theorems are introduced by the {\tt theorem} keword. As already stated
+in \ref{topleve-def}, these definitions must be ended by a double semi
+(``{\tt ;;}'').
+{\scriptsize
+\begin{lstlisting}
+let is_failed (x) =
+  match x with
+  | Failed -> true
+  | Unfailed (_) -> false
+;;
+
+theorem int_plus_minus: all x y z in int,
+  (*   x + y = z -> y = z - x *)
+  #base_eq (#int_plus (x, y), z) -> #base_eq (y, #int_minus (z, x))
+  proof:
+    coq proof {*
+      intros x y z;
+      unfold int_plus, int_minus, base_eq, syntactic_equal in |- *;
+      intros H;
+      unfold bi__int_minus;
+      apply EQ_base_eq; apply Zplus_minus_eq;
+      symmetry  in |- *;
+      apply (decidable _ _ _ (Z_eq_dec (x + y) z) H).
+      Qed.
+    *}
+;;
+\end{lstlisting}
+}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Files and uses directives}
 \label{file directive}
 \focal\ provides 3 directives that are not expressions. This means
@@ -1235,4 +1309,5 @@ coq_require "wellfounded_externals";;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Theorems and proofs}
+\subsection{Properties, theorems and proofs}
+\label{properties-theorems-proofs}
