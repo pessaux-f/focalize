@@ -12,7 +12,7 @@ combining previously existing types. They always appear at
 they are a kind of ``global'' definitions that are visible in the
 whole compilation unit (and also in other units by using the
 {\tt open} directive or by qualifying the type name as described in
-\ref{qualified_name}).
+\ref{qualified-name}).
 
 
 
@@ -269,6 +269,7 @@ type t4 = t3 (int * bool) ;;
 
 
 \vspace{0.5cm}\noindent {\bf Record types}
+\label{record-type-definition}
 \index{type!definition!record}
 
 They provide a way to aggregate data of various types, a bit like
@@ -396,8 +397,6 @@ exp & ::= & integer\_literal & \\
     &     & \mid exp\ \terminal{(} [exp*] \terminal{)} & Function application \\
     &     & \mid unary\_operator\ exp & Application of unary operator \\
     &     & \mid exp\ binary\_operator\ exp & Application of binary operator \\
-    &     & \mid expr\ \terminal{.}[ident\terminal{\#}]lident &
-                 Record field access \\
     &     & \mid \terminal{\{}\ record\_field\_value & Record value \\
     &     &     \hspace{0.6cm}  \{\ \terminal{;}\ record\_field\_value\ \}+
                 \ \terminal{\}} & \\
@@ -405,6 +404,8 @@ exp & ::= & integer\_literal & \\
                   Record value clone \\
     &     &      \hspace{1.0cm}  \{\ \terminal{;}\ record\_field\_value\ \}+
                   \ \terminal{\}} & \\
+    &     & \mid expr\ \terminal{.}[ident\terminal{\#}]lident &
+                 Record field access \\
     &     & \mid \terminal{(} exp \terminal{)} & Parenthesised expression
 \end{syntax}
 
@@ -551,6 +552,7 @@ the search goes on among the methods of the current species. If a
 method is found with this name, it will be retained, otherwise it
 searches among the past toplevel definitions of the current
 compilation unit.
+\label{identifier-scoping-and-open}
 \index{directive!open} If no suitable definition is found, then the
 ones imported by the {\tt open} directives are examined to find one
 with the searched name. Finally if no definition is found, the
@@ -571,7 +573,7 @@ will be the remained one.
 \medskip
 Identifiers can manually disambiguated in term of compilation unit
 location using the sharp (\#) notation as explained in
-\ref{qualified_name}.
+\ref{qualified-name}.
 
 
 
@@ -814,6 +816,11 @@ recursive (non-mutually) function definitions.
 
 
 
+\medskip
+{\color{red}To to: logical and local}.
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Conditional expression}
 \label{conditional-expression}
@@ -858,7 +865,7 @@ expression can have several. The notion of condition here is not
 anymore a boolean value. Instead, the construct allows to discriminate
 on the different values an expression is evaluated into. The basic
 structure of a {\tt match-with} consists in an examined expression
-followed by an enumeration of cases (call {\bf patterns}) the examined
+followed by an enumeration of cases (called {\bf patterns}) the examined
 expression can have and for each, the result expression to ``return''.
 {\scriptsize
 \begin{lstlisting}
@@ -1002,7 +1009,7 @@ We previously saw that the {\tt let-in} construct allows to define
 functions by binding an identifier to a functional value. Using a
 function by providing it effective arguments to get its result value
 is called {\bf application}. Hence, in an application there are 2
-distincts parts: the applicative part that must be a an expression
+distinct parts: the applicative part that must be a an expression
 leading to a functional value and the effective arguments that are
 expressions whose value will be provided to the function to make its
 computation. The syntax for application is simply the juxtaposition of
@@ -1018,7 +1025,7 @@ g (f (3), 4)
 }
 Like described in \ref{functional-value}, during an application,
 arguments expressions to provide to the function are evaluated first
-(however, there is no specification wether left to right or right to
+(however, there is no specification whether left to right or right to
 left) then the body of the function get evaluated ``replacing'' each
 occurrence of each parameter by its related value among those
 effectively passed in the application. For instance, having the
@@ -1052,11 +1059,180 @@ operator is in front of the argument expression.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Record field expression}
+\subsubsection{Record expression}
+\label{record-expression}
+As introduced in \ref{record-type-definition} about type definitions,
+record are defined by labels with their types. Hence, a record
+expression follows the same structure, replacing the type expressions
+of the definition by value of these types. For instance, assuming the
+given record type definition, the following example show a possible
+record value: 
+{\scriptsize
+\begin{lstlisting}
+type identity = {
+  name : string ;
+  birth : int ;
+  living : bool
+} ;;
+
+...
+{ name = "Nobody" ; birth = 42 ; living = false }
+...
+\end{lstlisting}
+}
+If the record type definition is in a different compilation unit, you
+may qualify the record fields by the ``{\tt\#}'' notation:
+{\scriptsize
+\begin{lstlisting}
+{ my_file#name = "Nobody" ; my_file#birth = 42 ; my_file#living = false }
+\end{lstlisting}
+}
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Files and uses directives}
+\subsubsection{Record expression}
+\label{record-clone-expression}
+It is sometimes useful to create a new value of record by copying a
+few values of an existing one, leaving the other values unchanged. If
+the record type definition contains numerous fields, manually copying
+the old fields values to create the new record value appears boring
+and error prone:
+{\scriptsize
+\begin{lstlisting}
+type t = { a : int ; b : int ; c : int ; d : int ; e : int ; f : int } ;;
+...
+let v1 = { a = 1 ; b = 2 ; c = 3 d = 4 ; e = 5 ; f = 6 } in
+...
+let v2 = {
+  a = v1.a ; b = v1.b ;
+  c = 5 ;  (* Changed value. *)
+  d = v1.c ;  (* Indeed, developer mistook, he wanted to write "v1.d". *)
+  e = 6 ;  (* Changed value. *)
+  f = v1.f } in
+...
+\end{lstlisting}
+}
+Instead of manually copy the unchanged fields, \focal\ provides a way
+to clone a record value (i.e. to create a {\bf new}, a {\bf fresh}
+value from an existing one only specifying the fields whose values
+differ from the old record value:
+{\scriptsize
+\begin{lstlisting}
+type t = ... (* Like above. *)
+let v1 = ... (* Like above. *)
+...
+let v2 = { v1 with c = 5 ; e = 6 } in
+...
+\end{lstlisting}
+}
+As for other record value expressions, if the record type definition
+is in a different compilation unit, you may qualify the record fields
+by the ``{\tt\#}'' notation.
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Record field access expression}
+\label{record-field-access}
+Once a record value is created by aggregating value of its fields, it
+is possible to recover the value of one field by a dot notation. For
+instance, assuming the type definition and record values of the
+previous example:
+{\scriptsize
+\begin{lstlisting}
+... t1.a ...
+... t2.c ...
+\end{lstlisting}
+}
+respectively get the value of the fields {\tt a} of {\tt v1} and
+{\tt c} of {\tt v2}, that is, $1$ and $5$. If the record type
+definition is in a different compilation unit, you may qualify the
+record fields by the ``{\tt\#}'' notation: {\tt t1.my\_source\#a}.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Parenthesised expression}
+The parentheses can be used around any expression, to enforce the
+associativity or evaluation order of expressions. Simple expressions
+(i.e. atomic) can also be parenthesised without changing their
+semantics.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Files and uses directives}
+\label{file directive}
+\focal\ provides 3 directives that are not expressions. This means
+that they do not lead to values or computation.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{The {\tt use} directive}
+{\color{red}To to}.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{The {\tt open} directive}
+\index{directive!open}
+As previously introduced (c.f. \ref{identifier-scoping-and-open} and
+\ref{qualified-name}) the {\tt open} directive loads in the current
+name resolution (scoping) environment the definitions of the argument
+compilation unit. This prevents the user from having to explicitly
+qualify definitions of this unit by the ``{\tt\#}''
+notation. Definitions imported by the directive hide (``mask'') those
+wearing the same name already defined in the current compilation
+unit from the point the directive appears. Remember that it is however
+possible to recover them, using the ``{\tt\#}'' notation without
+compilation unit name.
+
+This directive is followed by the name of the file to open between
+double quotes without the ``.foc'' extension.
+{\scriptsize
+\begin{lstlisting}
+open "sets";;
+\end{lstlisting}
+}
+will load the definitions of the file ``sets.foc'' in the current name
+resolution (scoping) environment.
+
+The path of the file is never specified. The file
+will be searched in the library search path specified with the
+{\tt -I} option (c.f. \ref{compiler-options}).
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{The {\tt coq\_require} directive}
+\index{directive!coq\_require}
+Some source files of a development may be directly written in \coq\ to
+provide external definitions (more detailed further in
+\ref{interfacing-other-languages}) to import and use in the
+\focal\ source code. In this case, the \coq\ code generated for the
+\focal\ source code must be aware of the need to import the external
+definitions from the manually written \coq\ file. For this reason, the
+\focal\ source must explicitly indicate by the {\tt coq\_require}
+directive that it makes references to definitions hosted in this
+\coq\ source file. For example, the file ``wellfounded.foc'' of the
+standard library needs ``wellfounded\_externals.v'' and signals this
+fact in its early lines of code:
+{\scriptsize
+\begin{lstlisting}
+...
+open "basics";;
+open "sets_orders";;
+coq_require "wellfounded_externals";;
+...
+\end{lstlisting}
+}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Theorems and proofs}
