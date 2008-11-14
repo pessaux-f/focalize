@@ -1490,6 +1490,68 @@ end ;;
         this property holds and we need to achieve further proofs. For
         this reason, assuming the proof is legitimate.
     \end{itemize}
+
+
+  \item [{\bf Write an automated proof script}] \focal\ provides a
+    syntax, the \focal\ Proof Language, to split proofs into steps
+    that may be proved the the \zenon\ theorem prover. Without deeply
+    dive into this syntax that will be examined in
+    \ref{making-proofs}, the idea it to be able to put hypotheses, to
+    demonstrate subgoals that will serve as lemmas for higher level
+    goals and to give \zenon\ hints about definitions or declarations
+    of methods it must use to automatically guess a proof of these
+    goals, then to prove these hypotheses, hence builting a proof tree
+    until the top goal (i.e. the theorem) is proved. Below follows an
+    example of such proof.
+{\scriptsize
+\begin{lstlisting}
+ theorem zero_is_unique : all o in Self,
+  (all x in Self, !equal (x, !plus (x, o))) -> !equal (o, !zero)
+  proof:
+         <1>1 assume o in Self,
+              assume H1: all x in Self, !equal (x, !plus (x, o)),
+              prove !equal (o, !zero)
+             <2>1 prove !equal (!zero, !plus (!zero, o))
+                by hypothesis H1
+             <2>3 prove !equal (o, !zero)
+                by step <2>1
+                property zero_is_neutral, equal_transitive, equal_symmetric
+             <2>4 qed.
+        <1>2 qed.
+  ;
+\end{lstlisting}
+}
+
+  \item [{\bf Write a \coq\ script}] This way is the most difficult
+    and the emergency exit since it means directly writing \coq\ code,
+    requiring the understanding of both \coq\ and the mapping the
+    \focal\ compiler does to generate \coq\ code from \focal\ source
+    code. The section \ref{focal-coq-mapping} is dedicated in
+    explaining how \focal\ definitions are mapped onto
+    \coq\ names. The \coq\ script is introduced by the keywords
+    {\tt coq proof} and surrounded by {\tt \{*} and {\tt *\}}. But,
+    anyway, such a way to make proofs require strong skills and we try
+    as far as possible to provide, in the \focal\ framework, enough
+    powerful tools to prevent the user to directly deal with
+    \coq\ proofs. Below follows an example of such proof.
+{\scriptsize
+\begin{lstlisting}
+theorem int_minus_plus: all x y z in int,
+  (* x - y = z -> x = y + z *)
+  #base_eq (#int_minus (x, y), z) -> #base_eq (x, #int_plus (y, z))
+  proof:
+    coq proof {*
+      intros x y z; unfold int_plus, int_minus, base_eq,
+        syntactic_equal in |- *;
+      intros H;
+      unfold bi__int_minus;
+      apply EQ_base_eq; rewrite <- (Zplus_minus y x);
+      apply Zplus_eq_compat; trivial; apply decidable.
+      apply Z_eq_dec. assumption.
+      Qed.
+    *} ;;
+\end{lstlisting}
+}
 \end{itemize}
 
 
