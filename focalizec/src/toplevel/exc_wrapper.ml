@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.54 2008-09-24 07:10:28 weis Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.55 2008-11-17 09:06:23 pessaux Exp $ *)
 
 
 
@@ -204,6 +204,11 @@ try Focalizec.main () with
            "%a:@\n@[Type@ constructor@ '%a'@ used@ with@ the@ different@ \
             arities@ %d@ and@ %d.@]@."
            Location.pp_location at Types.pp_type_name ty_cstr_name arity1 arity2
+     | Types.Arity_mismatch_unexpected_args (at) ->
+         (* To handle errot message of bugreport #180 (sum type constructor
+            used with no argument although it needs some). *)
+         Format.fprintf Format.err_formatter
+           "%a:@\n@[No expected argument(s).@]@." Location.pp_location at
      | Infer.Scheme_contains_type_vars (field_name, sch, at) ->
          Format.fprintf Format.err_formatter
            "%a:@\n@[%tIn@ field%t@ '%t%a%t'%t,@ type scheme%t@ @[%a@]@ \

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.66 2008-11-04 09:17:17 pessaux Exp $ *)
+(* $Id: types.ml,v 1.67 2008-11-17 09:06:23 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -129,6 +129,18 @@ type type_scheme = {
   ts_body : type_simple    (** Body of the scheme where generalized types
                                have a level equal to [generic_level]. *)
 } ;;
+
+
+
+(* ************************************************************************* *)
+(** {b Descr} : Exception meaning that a sum type constructor was used with
+    no arguments although it requires some. In this case, since constructors
+    arguments are stored a a tuple, one of the type is a tuple with an
+    empty list of types. Hence the error message reported  "Types and ...
+    are not compatible" (c.f. bub report #180). We prefer a more specific
+    error message.                                                           *)
+(* ************************************************************************* *)
+exception Arity_mismatch_unexpected_args of Location.t ;;
 
 
 
@@ -854,8 +866,16 @@ let unify ~loc ~self_manifest type1 type2 =
          let tys3 =
            (try List.map2 rec_unify tys1 tys2 with
            | Invalid_argument "List.map2" ->
-               (* In fact, that's an arity mismatch on the tuple. *)
-               raise (Conflict (ty1, ty2, loc))) in
+               (* In fact, that's an arity mismatch on the tuple. There is a
+                  strange case appearing when using a sum type constructor that
+                  requires arguments without arguments. The type of the
+                  constructor's arguments is an ampty list. Then the conflict is
+                  reported as "Types and ... are not compatible". Hence one of
+                  the type is printed as nothing (c.f. bub report #180).
+                  In this case, we generate a special error message. *)
+               if (List.length tys1) = 0 || (List.length tys2) = 0 then
+                 raise (Arity_mismatch_unexpected_args (loc))
+               else raise (Conflict (ty1, ty2, loc))) in
          ST_tuple tys3
      | (ST_construct (name, args), ST_construct (name', args')) ->
          (if name <> name' then raise (Conflict (ty1, ty2, loc))) ;

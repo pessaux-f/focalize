@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.40 2008-09-08 11:06:11 pessaux Exp $ *)
+(* $Id: types.mli,v 1.41 2008-11-17 09:06:23 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -25,6 +25,7 @@ type type_scheme
 type type_collection = (fname * collection_name)
 
 (** The exceptions raised by the type-checker. *)
+exception Arity_mismatch_unexpected_args of Location.t
 exception Conflict of (type_simple * type_simple * Location.t)
 exception Circularity of (type_simple * type_simple * Location.t)
 exception Arity_mismatch of (type_name * int * int * Location.t)
