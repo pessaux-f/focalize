@@ -1,0 +1,332 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Unable to find file 'name' in the search path.}
+
+{\em Description}: The source file made reference to a \focal\ module
+$name$ (by the {\tt open} or {\tt use} directives, or by explicit
+qualification with the ``\#'' notation but the related
+\focal\ interface file was not found in the current libraries search
+path.
+
+{\em Hints}: Locate in which directory the missing interface file is
+and add this directory to the libraries search path with the {\tt -I}
+compiler option.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Invalid or corrupted compiled interface '$name$'.}
+{\em Description}: The source file made reference to a \focal\ module
+$name$ (by the {\tt open} or {\tt use} directives, or by explicit
+qualification with the ``\#'' notation but the related
+\focal\ interface file was found with an incorrect format.
+
+{\em Hints}: May be the interface was compiled with another version
+of \focal\ or was mangled and you must compile it again with your
+current version.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Invalid file extension for '$name$'.}
+{\em Description}: The \focal\ compiler expects input files to be
+ended by the suffix ``.foc''. If the submitted input file does't end
+by this suffix, this error message arises with the name, $name$ of the
+involved file.
+
+{\em Hints}: Change the extension of the input file name or ensure the
+submitted input file name is the correct one.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{System error - $sysmsg$.}
+{\em Description}: During the compilation process an error related to
+the operating system occured (I/O error, permission error, filesystem
+error, \ldots). The original message $sysmsg$ of the system explaining
+the problem follows the \focal's message.
+
+{\em Hints}: Consult the original message of the system and get an
+appropriate solution depending on this message.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Input file name is already set.}
+{\em Description}: The \focal\ compiler only compiles one file at
+once. If several files are specified on the command line this message
+arises.
+
+{\em Hints}: If several input files are specified, invoque the
+compiler once for each separately. Check if among what is considered
+as an input file, you didn't forget to put a dash (``-'') character,
+hence turning an option into a regular string considered as another
+input file name.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{No input file. FoCaL is cowardly and gives up...}
+{\em Description}: The \focal\ compiler needs one input file to
+compile. If none is supplied, this error message arises.
+
+{\em Hints}: Add the input source file to compile on the commande
+line.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Lexical error $str$}
+{\em Description}: In the currently submitted source file, a sequence
+of characters is not recognised as legal according to the
+\focal\ programming language legal words structure. The involved
+character $str$ follows in the error message.
+
+{\em Hints}: Change the source code at the indicated location.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Syntax error.}
+{\em Description}: In the currently submitted source file, a phrase of
+the program does'nt follow \focal's syntax.
+
+{\em Hints}: Change the source code at the indicated location. It
+sometimes happen that the location gets fuzzy due to the parsing
+process. If the error is not immediate to you, think to have a looak
+around the specified location. If you still can't find out the error,
+have the following emergency process: comment your code and
+incrementally de-comment it to find the point where the error appears
+without having to search in the whole file. Once the error appears,
+have a look at the part of code you de-commented since the previous
+successful compilation and try to guess the syntactic cause.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Unclear syntax error $msg$.}
+{\em Description}: An error occured during the syntactic analysis but
+was not reported to be due to a syntax non-compliance. This error is
+not clearly identified and this message is displayed as post-mortem
+report with the exception $msg$ that caused the error.
+
+{\em Hints}: None
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Module '$m$' was "use" several times.}
+{\em Description}: Several occurrences of a {\tt use} directive
+specify the same module $m$.
+
+{\em Hints}: Remove the spurious occurrences.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Module '$m$' was not declared as "use"}
+{\em Description}: {\color{red}To to once ``use'' really works.}
+
+{\em Hints}: {\color{red}To to once ``use'' really works.}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Species application expression expected $n1$ arguments but
+  was provided $n2$.}
+{\em Description}: A species expression (used in species parameter
+expression or {\tt inherits} clause) applies a species with $n1$
+argument(s) although its definition declared it as using $n2$
+argument(s).
+
+{\em Hints}: Source program to fix.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Non-logical let must not bind '$ident$' to a property.}
+{\em Description}: A {\tt let} construct (not a {\tt logical let})
+attempts to bind the identifier $ident$ to a logical expression
+although it can only bind it to a computational expression.
+
+{\em Hints}: Source program to fix. May be the {\tt let} should be
+turned into a {\tt logical let} if the body of the binding is really a
+logical expression.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Delayed termination proof refers to an unknown method
+  '$ident$' of the species.}
+{\em Description}: A {\tt proof of} clause was found in a species for
+the property $ident$ but this property was not found in the species.
+
+{\em Hints}: Source program to fix.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Ambiguous logical expression. Add explicit parentheses to
+  associate the $side$ argument of the $/\setminus$ properly.}
+{\em Description}: A logical expression contains a
+{\tt $/\setminus$} (logical ``and'') with at least one argument being a
+{\tt -> } (logical ``implication'') or a {\tt <->} (logical
+``equivalence'') without parentheses around the $side$ argument (``left''
+ou ``right''). Since this is not clear of how to associate, we prefer
+to asks the user to explicitely add parentheses.
+
+{\em Hints}: Explicitely add the parentheses to make the association
+non-ambiguous.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Ambiguous logical expression. Add explicit parentheses to
+  associate the $side$ argument of the {\tt $\setminus/$} properly.}
+{\em Description}: A logical expression contains a
+{\tt $\setminus/$} (logical ``or'') with at least one argument being a
+{\tt -> } (logical ``implication'') or a {\tt <->} (logical
+``equivalence'') without parentheses around the $side$ argument (``left''
+ou ``right''). Since this is not clear of how to associate, we prefer
+to asks the user to explicitely add parentheses.
+
+{\em Hints}: Explicitely add the parentheses to make the association
+non-ambiguous.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Unbound sum type constructor '$name$'.}
+{\em Description}: An identifier representing a sum type constructor
+was not found among the available sum type definitions.
+
+{\em Hints}: Source program to fix. Since in core expressions
+capitalized identifiers are considered as sum types constructors, may
+be you tried to use a capitalized name for one of your variables. In
+this case, as any variables, make it starting with a lowercase
+letter. Otherwise, may be your type definition is missing or not
+reachable in the current scope (missing explicit qualification with
+the ``\#'' notation or {\tt open} directive if your type definition is
+hosted in another source file).
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Unbound record field label '$name$'.}
+{\em Description}: An identifier representing a record type label
+was not found among the available record type definitions.
+
+{\em Hints}: Source program to fix. May be your type definition is
+missing or not reachable in the current scope (missing explicit
+qualification with the ``\#'' notation or {\tt open} directive if your
+type definition is hosted in another source file).
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Unbound identifier '$name$'.}
+{\em Description}: An identifier (expected to be bound by a {\tt let},
+a pattern of a function parameter declaration) was not found.
+
+{\em Hints}: Source program to fix. May be your definition should be
+toplevel and is missing or not reachable in the current scope (missing
+explicit qualification with the ``\#'' notation or {\tt open}
+directive if your definition is hosted in another source file).
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Unbound type '$name$'.}
+{\em Description}: The definition of an identifier expected to be a
+type constructor was not found.
+
+May be your type definition is missing or not reachable in the current
+scope (missing explicit qualification with the ``\#'' notation or
+{\tt open} directive if your type definition is hosted in another
+source file).
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Unbound module '$name$'.}
+{\em Description}: A {\tt open} or {\tt use} directive or an explicit
+qualification by the ``\#'' notation makes reference to a module that
+(interface file) was not found in the current libraries search path.
+
+{\em Hints}: Locate in which directory the missing interface file is
+and add this directory to the libraries search path with the {\tt -I}
+compiler option.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Unbound species '$name$'.}
+{\em Description}: The definition of the species $name$ was not found
+in the current scope.
+
+{\em Hints}: May be your species definition is missing or not
+reachable in the current scope (missing explicit qualification with
+the ``\#'' notation or {\tt open} directive if your type definition is
+hosted in another source file).
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Type name '$name$' already bound in the current scope}.
+{\em Description}: In a source file it is not allowed to redefine a
+type definition. This means that each type name definition must be
+unique inside a file. However, it is possible to have several type
+definitions with the same names as long as they are in different
+source files (even if they are used together via {\tt open} directives
+of explicit qualification by the ``\#'' notation).
+
+{\em Hints}: Source program to fix.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Species name '$name$' already bound in the current scope.}
+{\em Description}: In a source file it is not allowed to redefine a
+species definition. This means that each species name definition must
+be unique inside a file. However, it is possible to have several species
+definitions with the same names as long as they are in different
+source files (even if they are used together via {\tt open} directives
+of explicit qualification by the ``\#'' notation).
+
+{\em Hints}: Source program to fix.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Types $t_1$ and $t_2$ are not compatible.}
+{\em Description}: The typechecking system detected a type conflict
+between two expressions $t_1$ and $t_2$ that were expected to be
+type-compatible.
+
+{\em Hints}: Source program to fix. This message sometimes involves
+one the the types being {\tt Self}. This is mostly due to an attempt
+to use the type structure of {\tt rep} although is turned abstracted
+by the collection or parameterisation mechanisms. In this case, ensure
+that you are not trying to make assumptions on the type {\tt Self} of
+a species parameter or a collection.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Type $t_1$ occurs in $t_2$ and would lead to a cycle.}
+{\em Description}: The \focal\ type system does not allow cyclic
+types. This espacially means that a type expression must not be a
+sub-part of itself to prevent cycles.
+
+{\em Hints}: Source program to fix.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Type constructor '$name$' used with the different arities
+  $n1$ and $n$.}
+{\em Description}: A type expression applies a type constructor $name$
+to $n1$ argument(s) although its definition declared it as using $n2$
+argument(s) (or in the other order, depending on the way the error was
+detected: in any way the definition and the uisage of the type involve
+2 different numbers of arguments).
