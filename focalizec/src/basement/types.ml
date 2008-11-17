@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.67 2008-11-17 09:06:23 pessaux Exp $ *)
+(* $Id: types.ml,v 1.68 2008-11-17 10:53:57 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -710,10 +710,22 @@ let scheme_contains_variable_p scheme =
 
     {b Rem} : Exported outside this module.                                *)
 (* *********************************************************************** *)
-let extract_fun_ty_result ty =
+let extract_fun_ty_result ~self_manifest ty =
   let ty = repr ty in
   match ty with
    | ST_arrow (_, res) -> res
+   | ST_self_rep ->
+       (begin
+       (* We must then ensure that "Self" is currently known as being a
+          functional type. *)
+       match self_manifest with
+        | None -> assert false
+        | Some t ->
+            let t = repr t in
+            match t with
+             | ST_arrow (_, res) -> res
+             | _ -> assert false
+       end)
    | _ -> assert false
 ;;
 
@@ -739,10 +751,22 @@ let extract_fun_ty_result ty =
 
     {b Rem} : Exported outside this module.                                *)
 (* *********************************************************************** *)
-let extract_fun_ty_arg ty =
+let extract_fun_ty_arg ~self_manifest ty =
   let ty = repr ty in
   match ty with
    | ST_arrow (arg, _) -> arg
+   | ST_self_rep ->
+       (begin
+       (* We must then ensure that "Self" is currently known as being a
+          functional type. *)
+       match self_manifest with
+        | None -> assert false
+        | Some t ->
+            let t = repr t in
+            match t with
+             | ST_arrow (arg, _) -> arg
+             | _ -> assert false
+       end)
    | _ -> assert false
 ;;
 

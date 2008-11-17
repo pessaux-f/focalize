@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.155 2008-10-30 16:11:02 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.156 2008-11-17 10:53:57 pessaux Exp $ *)
 
 
 
@@ -783,7 +783,9 @@ let rec typecheck_pattern ctx env pat_desc =
                   ~self_manifest: ctx.self_manifest
                   (Types.type_arrow cstr_arg_ty (Types.type_variable ()))
                   cstr_ty in
-              (Types.extract_fun_ty_result unified_cstr_ty, sub_bindings)
+              ((Types.extract_fun_ty_result
+                  ~self_manifest: ctx.self_manifest unified_cstr_ty),
+               sub_bindings)
           | (_, _) ->
               (* Just raise the exception with the right expected arity. *)
               raise
@@ -811,7 +813,9 @@ let rec typecheck_pattern ctx env pat_desc =
                ~loc: pat.Parsetree.ast_loc
                ~self_manifest: ctx.self_manifest lbl_ty
                (Types.type_arrow sub_pat_ty !whole_pat_ty) in
-           whole_pat_ty := Types.extract_fun_ty_result unified_field_ty ;
+           whole_pat_ty :=
+             Types.extract_fun_ty_result
+               ~self_manifest: ctx.self_manifest unified_field_ty ;
            (* Just returns the bindings. *)
            bnds in
          let bindings =
@@ -990,7 +994,8 @@ let rec typecheck_expr ctx env initial_expr =
                 ~loc: initial_expr.Parsetree.ast_loc
                 ~self_manifest: ctx.self_manifest tmp_fun_ty accu_fun_ty in
             (* The result is the positive part of the arrow. *)
-            Types.extract_fun_ty_result unified_fun_ty)
+            Types.extract_fun_ty_result
+              ~self_manifest: ctx.self_manifest unified_fun_ty)
            fun_ty
            ty_exprs
      | Parsetree.E_constr (cstr_ident, exprs) ->
@@ -1024,7 +1029,8 @@ let rec typecheck_expr ctx env initial_expr =
                   ~self_manifest: ctx.self_manifest
                   cstr_ty
                   (Types.type_arrow cstr_arg_ty (Types.type_variable ())) in
-              Types.extract_fun_ty_result unified_cstr_ty
+              Types.extract_fun_ty_result
+                ~self_manifest: ctx.self_manifest unified_cstr_ty
           | (_, _) ->
               raise
                 (Bad_sum_type_constructor_arity
@@ -1103,7 +1109,8 @@ let rec typecheck_expr ctx env initial_expr =
              ~loc: initial_expr.Parsetree.ast_loc
              ~self_manifest: ctx.self_manifest
              (Types.type_arrow (Types.type_variable ()) ty_expr) label_ty in
-         Types.extract_fun_ty_arg unified_label_ty
+         Types.extract_fun_ty_arg
+            ~self_manifest: ctx.self_manifest unified_label_ty
      | Parsetree.E_record_with (with_expr, fields) ->
          typeckeck_record_expr ctx env fields (Some with_expr)
      | Parsetree.E_tuple exprs ->
@@ -1169,7 +1176,9 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
         Types.unify
           ~loc: expr.Parsetree.ast_loc ~self_manifest: ctx.self_manifest
           (Types.type_arrow expr_ty !result_ty) field_ty in
-      result_ty := Types.extract_fun_ty_result unified_field_ty)
+      result_ty :=
+        Types.extract_fun_ty_result
+          ~self_manifest: ctx.self_manifest unified_field_ty)
     fields ;
   Types.check_for_decl_dep_on_self !result_ty ;
   !result_ty
@@ -1741,7 +1750,7 @@ and typecheck_termination_proof_profile ctx env previous_fields profile =
        that they have the rigth type is specified. *)
     let (expected, _, _) =
       MiscHelpers.bind_parameters_to_types_from_type_scheme
-        (Some scheme) args_names in
+        ~self_manifest: ctx.self_manifest (Some scheme) args_names in
     List.iter
       (fun (prof_param, prof_opt_ty) ->
         try

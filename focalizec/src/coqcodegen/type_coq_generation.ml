@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.11 2008-05-19 09:14:20 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.12 2008-11-17 10:53:57 pessaux Exp $ *)
 
 
 (* ********************************************************************** *)
@@ -245,7 +245,11 @@ let type_def_compile ctx env type_def_name type_descr =
                    ~loc: Location.none ~self_manifest: None
                    (Types.type_arrow (Types.type_variable ()) instanciated_body)
                    field_ty in
-               let field_args = Types.extract_fun_ty_arg unified_field_ty in
+               (* We do not have anymore information about "Self"'s
+                  structure... *)
+               let field_args =
+                 Types.extract_fun_ty_arg
+                   ~self_manifest: None unified_field_ty in
                (field_name, field_mut, field_args)
              with _ ->
                (* Because program is already well-typed, this *)

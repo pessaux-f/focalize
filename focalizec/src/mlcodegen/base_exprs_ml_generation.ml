@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.34 2008-10-17 07:25:57 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.35 2008-11-17 10:53:57 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -373,14 +373,16 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
     bd.Parsetree.ast_desc.Parsetree.b_name ;
   (* Generate the parameters if some, with their type constraints. *)
   let params_names = List.map fst bd.Parsetree.ast_desc.Parsetree.b_params in
-  (* We ignore the result type of the "let" if it's a function because *)
-  (* we never print the type constraint on the result of the "let". We *)
-  (* only print them in the arguments of the let-bound ident.          *)
-  (* We also ignore the variables used to instanciate the polymorphic  *)
-  (* ones of the scheme because in OCaml polymorphism is not explicit. *)
+  (* We ignore the result type of the "let" if it's a function because we never
+     print the type constraint on the result of the "let". We only print them
+     in the arguments of the let-bound ident.
+     We also ignore the variables used to instanciate the polymorphic ones of
+     the scheme because in OCaml polymorphism is not explicit.
+     Note by the way thet we do not have anymore information about "Self"'s
+     structure... *)
   let (params_with_type, _, _) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
-      opt_sch params_names in
+      ~self_manifest: None opt_sch params_names in
   (* We are printing each parameter's type. These types in fact belong *)
   (* to a same type scheme. Hence, they may share variables together.  *)
   (* For this reason, we first purge the printing variable mapping and *)

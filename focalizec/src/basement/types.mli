@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.41 2008-11-17 09:06:23 pessaux Exp $ *)
+(* $Id: types.mli,v 1.42 2008-11-17 10:53:57 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -101,8 +101,10 @@ val get_def_dep_on_rep : unit -> bool
 val get_decl_dep_on_rep : unit -> bool
 
 
-val extract_fun_ty_result : type_simple -> type_simple
-val extract_fun_ty_arg : type_simple -> type_simple
+val extract_fun_ty_result :
+  self_manifest: type_simple option -> type_simple -> type_simple
+val extract_fun_ty_arg :
+  self_manifest: type_simple option -> type_simple -> type_simple
 
 (** Pretty_printing for types and type schemes for FoCal. *)
 val pp_type_name : Format.formatter -> type_name -> unit

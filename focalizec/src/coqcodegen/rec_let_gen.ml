@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.12 2008-10-24 11:44:20 pessaux Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.13 2008-11-17 10:53:57 pessaux Exp $ *)
 
 
 
@@ -256,9 +256,10 @@ let generate_binding_let ctx print_ctx env binding =
          | Parsetree.ANTI_none | Parsetree.ANTI_non_relevant
          | Parsetree.ANTI_type _ -> assert false
          | Parsetree.ANTI_scheme s -> s) in
+      (* We do not have anymore information about "Self"'s structure... *)
       let (params_with_type, _, generalized_instanciated_vars) =
         MiscHelpers.bind_parameters_to_types_from_type_scheme
-          (Some def_scheme) params_names in
+          ~self_manifest: None (Some def_scheme) params_names in
       Types.purge_type_simple_to_coq_variable_mapping () ;
       Format.fprintf out_fmter "(@[<1>" ;
       (* If the original scheme is polymorphic, then we must ad extra Coq

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.130 2008-11-13 10:43:19 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.131 2008-11-17 10:53:57 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -466,10 +466,12 @@ let generate_defined_non_recursive_method_postlude ctx print_ctx env params
   (* Add the parameters of the let-binding with their type. *)
   (* Ignore the result type of the "let" if it's a function because we never
      print the type constraint on the result of the "let". We only print them
-     in the arguments of the let-bound ident. *)
+     in the arguments of the let-bound ident.
+     Note by the whay that we do not have anymore information about "Self"'s
+     structure... *)
   let (params_with_type, ending_ty_opt, _) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
-      (Some scheme) params in
+      ~self_manifest: None (Some scheme) params in
   let ending_ty =
     (match ending_ty_opt with
      | None ->
@@ -2118,9 +2120,10 @@ let generate_defined_recursive_let_definition ctx print_ctx env
        Format.fprintf out_fmter
          "@\n@\n(* Abstracted termination order. *)@\n" ;
        Format.fprintf out_fmter "@[<2>Variable __term_order@ :@ " ;
+       (* We do not have anymore information about "Self"'s structure... *)
        let (params_with_type, return_ty_opt, _) =
          MiscHelpers.bind_parameters_to_types_from_type_scheme
-           (Some scheme) params in
+           ~self_manifest: None (Some scheme) params in
        (* Just remove the option that must always be Some since we provided
           a scheme. *)
        let params_with_type =

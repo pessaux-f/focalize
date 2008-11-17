@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: miscHelpers.ml,v 1.3 2008-06-03 15:40:36 pessaux Exp $ *)
+(* $Id: miscHelpers.ml,v 1.4 2008-11-17 10:53:57 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -42,7 +42,8 @@
 
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
-let bind_parameters_to_types_from_type_scheme opt_scheme params_names =
+let bind_parameters_to_types_from_type_scheme ~self_manifest opt_scheme
+    params_names =
   match opt_scheme with
    | None ->
        (* Since we are not given any type information, the binding will *)
@@ -60,9 +61,9 @@ let bind_parameters_to_types_from_type_scheme opt_scheme params_names =
            | [] -> (accu_bindings, (Some ty))
            | h :: q ->
                (* We split the functionnal type. First, get argument type. *)
-               let h_type = Types.extract_fun_ty_arg ty in
+               let h_type = Types.extract_fun_ty_arg ~self_manifest ty in
                (* Next, get the result type. *)
-               let q_type = Types.extract_fun_ty_result ty in
+               let q_type = Types.extract_fun_ty_result ~self_manifest ty in
                (* We bind the current parameter to the "head-type" *)
                (* and continue with the remaining parameters using *)
                (* the "tail-type".                                 *)

@@ -13,7 +13,7 @@
 (***********************************************************************)
 
 
-(* $Id: recursion.ml,v 1.11 2008-10-24 10:42:28 pessaux Exp $ *)
+(* $Id: recursion.ml,v 1.12 2008-11-17 10:53:57 pessaux Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function
@@ -106,9 +106,10 @@ let rec list_recursive_calls function_name argument_list bindings expr =
           | Parsetree.ANTI_scheme _ -> assert false
           | Parsetree.ANTI_type t -> t) in
        let fake_scheme = Types.trivial_scheme fun_ty in
+       (* We do not have anymore information about "Self"'s structure... *)
        let (names_with_types, _, _) =
          MiscHelpers.bind_parameters_to_types_from_type_scheme
-           (Some fake_scheme) names in
+           ~self_manifest: None (Some fake_scheme) names in
        (* Just remove the option that must always be Some since we provided
           a scheme. *)
        let names_with_types =

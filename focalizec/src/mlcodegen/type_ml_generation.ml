@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_ml_generation.ml,v 1.9 2008-04-15 21:18:33 weis Exp $ *)
+(* $Id: type_ml_generation.ml,v 1.10 2008-11-17 10:53:57 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -203,7 +203,10 @@ let type_def_compile ctx env type_def_name type_descr =
                         (Types.type_variable ()) instanciated_body)
                      sum_cstr_ty in
                  let sum_cstr_args =
-                   Types.extract_fun_ty_arg unified_sum_cstr_ty in
+		   (* We do not have anymore information about "Self"'s
+		      structure... *)
+                   Types.extract_fun_ty_arg
+		     ~self_manifest: None unified_sum_cstr_ty in
                  (sum_cstr_name, (Some sum_cstr_args))
                with _ ->
                  (* Because program is already well-typed, this *)
@@ -259,7 +262,11 @@ let type_def_compile ctx env type_def_name type_descr =
                    ~loc: Location.none ~self_manifest: None
                    (Types.type_arrow (Types.type_variable ()) instanciated_body)
                    field_ty in
-               let field_args = Types.extract_fun_ty_arg unified_field_ty in
+	       (* We do not have anymore information about "Self"'s
+		  structure... *)
+               let field_args =
+		 Types.extract_fun_ty_arg
+		   ~self_manifest: None unified_field_ty in
                (field_name, field_mut, field_args)
              with _ ->
                (* Because program is already well-typed, this *)

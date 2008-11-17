@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.85 2008-10-30 15:19:35 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.86 2008-11-17 10:53:57 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -425,9 +425,12 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
        print the type constraint on the result of the "let". We only print
        them in the arguments of the let-bound ident.
        We also ignore the variables used to instanciate the polymorphic ones
-       of the scheme because in OCaml polymorphism is not explicit. *)
+       of the scheme because in OCaml polymorphism is not explicit.
+       Note by the way thet we do not have anymore information about "Self"'s
+       structure... *)
     let (params_with_type, _, _) =
-      MiscHelpers.bind_parameters_to_types_from_type_scheme scheme params in
+      MiscHelpers.bind_parameters_to_types_from_type_scheme
+        ~self_manifest: None scheme params in
     (* We are printing each parameter's type. These types in fact belong to a
        same type scheme. Hence, they may share variables together.
        For this reason, we first purge the printing variable mapping and after,
@@ -614,7 +617,7 @@ let generate_methods ctx env field =
                    Misc_common.cfm_from_species = from ;
                    Misc_common.cfm_method_name = name ;
                    Misc_common.cfm_method_scheme =
-		     Env.MTK_computational scheme ;
+                     Env.MTK_computational scheme ;
                    (* Never used for OCaml. *)
                    Misc_common.cfm_used_species_parameter_tys = [] ;
                    Misc_common.cfm_dependencies_from_parameters =

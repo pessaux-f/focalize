@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.66 2008-11-06 20:16:27 doligez Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.67 2008-11-17 10:53:57 pessaux Exp $ *)
 
 
 
@@ -440,9 +440,10 @@ let rec let_binding_compile ctx ~in_recursive_let_section_of
      | Parsetree.ANTI_none | Parsetree.ANTI_non_relevant
      | Parsetree.ANTI_type _ -> assert false
      | Parsetree.ANTI_scheme s -> s) in
+  (* We do not have anymore information about "Self"'s structure... *)
   let (params_with_type, result_ty, generalized_instanciated_vars) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
-      (Some def_scheme) params_names in
+      ~self_manifest: None (Some def_scheme) params_names in
   (* Build the print context. *)
   let print_ctx = {
     Types.cpc_current_unit = ctx.Context.scc_current_unit ;
@@ -645,8 +646,12 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          ignore
            (List.fold_left
               (fun accu_ty arg_name ->
-                let arg_ty = Types.extract_fun_ty_arg accu_ty in
-                let res_ty = Types.extract_fun_ty_result accu_ty in
+                (* We do not have anymore information about "Self"'s
+                   structure... *)
+                let arg_ty =
+                  Types.extract_fun_ty_arg ~self_manifest: None accu_ty in
+                let res_ty =
+                  Types.extract_fun_ty_result ~self_manifest: None accu_ty in
                 Format.fprintf out_fmter "(%a :@ %a)@ "
                   Parsetree_utils.pp_vname_with_operators_expanded arg_name
                   (Types.pp_type_simple_to_coq
