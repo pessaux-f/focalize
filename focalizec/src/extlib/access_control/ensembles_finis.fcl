@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.2 2008-11-12 10:19:04 habib Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.3 2008-11-18 17:09:35 doligez Exp $ *)
 
 (*pp basic_ext.cmo*)
 
@@ -345,6 +345,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
          assume h4: !est_element (x, basics#[]),
          prove !est_element (y, basics#[])
       assumed {* base case, need to handle fix operator *}
+      (*by hypothesis h4 definition of est_element*)
     <1>2 assume a in A,
          assume s1 in Self,
          assume x in A,
@@ -357,8 +358,8 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
       coq proof {*
         Proof.
         induction s.
-        apply __P_1_LEMMA.
-        apply __P_2_LEMMA.
+        apply __Q_1_LEMMA.
+        apply __Q_2_LEMMA.
         Qed.
       *}
   ;
@@ -677,7 +678,6 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
 *)
    (* Modif : en *)
    let cons (x in A, l in Self) in Self = x :: l ;
-   (* FIXME: cons is reserved by Coq *)
 
    local theorem cons_bien_formee:
      all x in A, all l in Self,
