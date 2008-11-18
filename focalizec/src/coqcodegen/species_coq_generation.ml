@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.131 2008-11-17 10:53:57 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.132 2008-11-18 17:06:47 doligez Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2194,11 +2194,12 @@ let generate_defined_recursive_let_definition ctx print_ctx env
        (* Print the "end" of the "match" introduced to split the tuple of
           "__arg". *)
        Format.fprintf out_fmter "@\nend.@]@\n" ;
-       Format.fprintf out_fmter "@[<v 2>Proof.@ %a Qed.@]@\n"
+       Format.fprintf out_fmter "@[<v 2>Proof.@ %aQed.@]@\n"
          (Handy.pp_generic_n_times ((List.length recursive_calls) + 1)
             Format.fprintf)
          (* "coq_builtins.prove_term_obl __term_obl.@\n" ; *)
          "apply coq_builtins.magic_prove.@\n" ;
+       Format.fprintf out_fmter "@]@\n" ;
 
 
 
