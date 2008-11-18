@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.9 2008-11-13 16:46:26 doligez Exp $
+# $Id: Makefile,v 1.10 2008-11-18 17:06:26 doligez Exp $
 
 # Makefile for access control models
 
@@ -21,6 +21,9 @@ ROOT_DIR = ../..
 include $(ROOT_DIR)/Makefile.config
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/Makefile.install
+
+FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(ROOT_DIR)/stdlib
+COQ_INCLUDES = -I $(ROOT_DIR)/../zenon/ -I $(ROOT_DIR)/stdlib
 
 
 lib: all
