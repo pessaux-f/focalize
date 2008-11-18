@@ -1,7 +1,3 @@
-% $Id: compiler_err_msgs.tex,v 1.2 2008-11-17 15:39:03 pessaux Exp $
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Unable to find file 'name' in the search path.}
 
@@ -33,7 +29,7 @@ current version.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Invalid file extension for '$name$'.}
 {\em Description}: The \focal\ compiler expects input files to be
-ended by the suffix ``.foc''. If the submitted input file does't end
+ended by the suffix ``.foc''. If the submitted input file doesn't end
 by this suffix, this error message arises with the name, $name$ of the
 involved file.
 
@@ -45,7 +41,7 @@ submitted input file name is the correct one.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{System error - $sysmsg$.}
 {\em Description}: During the compilation process an error related to
-the operating system occured (I/O error, permission error, filesystem
+the operating system occurred (I/O error, permission error, file-system
 error, \ldots). The original message $sysmsg$ of the system explaining
 the problem follows the \focal's message.
 
@@ -60,7 +56,7 @@ appropriate solution depending on this message.
 once. If several files are specified on the command line this message
 arises.
 
-{\em Hints}: If several input files are specified, invoque the
+{\em Hints}: If several input files are specified, invoke the
 compiler once for each separately. Check if among what is considered
 as an input file, you didn't forget to put a dash (``-'') character,
 hence turning an option into a regular string considered as another
@@ -73,7 +69,7 @@ input file name.
 {\em Description}: The \focal\ compiler needs one input file to
 compile. If none is supplied, this error message arises.
 
-{\em Hints}: Add the input source file to compile on the commande
+{\em Hints}: Add the input source file to compile on the command
 line.
 
 
@@ -92,23 +88,23 @@ character $str$ follows in the error message.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Syntax error.}
 {\em Description}: In the currently submitted source file, a phrase of
-the program does'nt follow \focal's syntax.
+the program doesn't follow \focal's syntax.
 
 {\em Hints}: Change the source code at the indicated location. It
 sometimes happen that the location gets fuzzy due to the parsing
-process. If the error is not immediate to you, think to have a looak
+process. If the error is not immediate to you, think to have a look at
 around the specified location. If you still can't find out the error,
 have the following emergency process: comment your code and
-incrementally de-comment it to find the point where the error appears
+incrementally uncomment it to find the point where the error appears
 without having to search in the whole file. Once the error appears,
-have a look at the part of code you de-commented since the previous
+have a look at the part of code you uncommented since the previous
 successful compilation and try to guess the syntactic cause.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Unclear syntax error $msg$.}
-{\em Description}: An error occured during the syntactic analysis but
+{\em Description}: An error occurred during the syntactic analysis but
 was not reported to be due to a syntax non-compliance. This error is
 not clearly identified and this message is displayed as post-mortem
 report with the exception $msg$ that caused the error.
@@ -135,11 +131,11 @@ specify the same module $m$.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Species application expression expected $n1$ arguments but
-  was provided $n2$.}
+\section*{Species application expression expected $n_1$ arguments but
+  was provided $n_2$.}
 {\em Description}: A species expression (used in species parameter
-expression or {\tt inherits} clause) applies a species with $n1$
-argument(s) although its definition declared it as using $n2$
+expression or {\tt inherits} clause) applies a species with $n_1$
+argument(s) although its definition declared it as using $n_2$
 argument(s).
 
 {\em Hints}: Source program to fix.
@@ -175,10 +171,10 @@ the property $ident$ but this property was not found in the species.
 {\tt $/\setminus$} (logical ``and'') with at least one argument being a
 {\tt -> } (logical ``implication'') or a {\tt <->} (logical
 ``equivalence'') without parentheses around the $side$ argument (``left''
-ou ``right''). Since this is not clear of how to associate, we prefer
-to asks the user to explicitely add parentheses.
+or ``right''). Since this is not clear of how to associate, we prefer
+to asks the user to explicitly add parentheses.
 
-{\em Hints}: Explicitely add the parentheses to make the association
+{\em Hints}: Explicitly add the parentheses to make the association
 non-ambiguous.
 
 
@@ -190,10 +186,10 @@ non-ambiguous.
 {\tt $\setminus/$} (logical ``or'') with at least one argument being a
 {\tt -> } (logical ``implication'') or a {\tt <->} (logical
 ``equivalence'') without parentheses around the $side$ argument (``left''
-ou ``right''). Since this is not clear of how to associate, we prefer
-to asks the user to explicitely add parentheses.
+or ``right''). Since this is not clear of how to associate, we prefer
+to asks the user to explicitly add parentheses.
 
-{\em Hints}: Explicitely add the parentheses to make the association
+{\em Hints}: Explicitly add the parentheses to make the association
 non-ambiguous.
 
 
@@ -310,7 +306,7 @@ type-compatible.
 {\em Hints}: Source program to fix. This message sometimes involves
 one the the types being {\tt Self}. This is mostly due to an attempt
 to use the type structure of {\tt rep} although is turned abstracted
-by the collection or parameterisation mechanisms. In this case, ensure
+by the collection or parametrisation mechanisms. In this case, ensure
 that you are not trying to make assumptions on the type {\tt Self} of
 a species parameter or a collection.
 
@@ -319,7 +315,7 @@ a species parameter or a collection.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Type $t_1$ occurs in $t_2$ and would lead to a cycle.}
 {\em Description}: The \focal\ type system does not allow cyclic
-types. This espacially means that a type expression must not be a
+types. This especially means that a type expression must not be a
 sub-part of itself to prevent cycles.
 
 {\em Hints}: Source program to fix.
@@ -328,9 +324,34 @@ sub-part of itself to prevent cycles.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Type constructor '$name$' used with the different arities
-  $n1$ and $n$.}
+  $n_1$ and $n_2$.}
 {\em Description}: A type expression applies a type constructor $name$
-to $n1$ argument(s) although its definition declared it as using $n2$
+to $n_1$ argument(s) although its definition declared it as using $n_2$
 argument(s) (or in the other order, depending on the way the error was
-detected: in any way the definition and the uisage of the type involve
+detected: in any way the definition and the usage of the type involve
 2 different numbers of arguments).
+
+{\em Hints}: Source program to fix.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{No expected argument(s).}
+{\em Description}: A type expression applies a type constructor to
+arguments although this constructor needs none.
+
+{\em Hints}: Source program to fix.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{In field '$name$', type scheme $sch$ contains variables than
+  cannot be generalized or is polymorphic.}
+
+{\em Description}: As presented in \ref{no-polymorphism-for-methods},
+species methods cannot be polymorphic. The method $name$ has a
+polymorphic type scheme.
+
+{\em Hints}: Source program to fix. You may explicitly add type
+annotations (constraints) on the arguments or/and return type of your
+method definition.
