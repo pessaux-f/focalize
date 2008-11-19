@@ -209,14 +209,14 @@ species Models (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
   (** (d1,st1) = (d2,st2) &rarr; d1 = d2 *)
   property left_substitution : 
     all d1 d2 in D, all st1 st2 in Self, 
-      base_eq (crp (d1, st1), crp (d2, st2)) -> 
-	D!equal (d1, d2) ;
+    (d1, st1) = (d2, st2) -> 
+      D!equal (d1, d2) ;
 
   (** (d1,st1) = (d2,st2) &rarr; st1 = st2 *)
   property right_substitution : 
     all d1 d2 in D, all st1 st2 in Self, 
-      base_eq (crp (d1, st1), crp (d2, st2)) -> 
-	equal (st1, st2) ;
+    (d1, st1) = (d2, st2) -> 
+      equal (st1, st2) ;
 
 end ;;
 
@@ -1097,12 +1097,10 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 							    Rr!get_m (r1))))
                            by step <9>2
                               hypothesis H7
-                      <9>4 prove base_eq ((d1, st2),
-					  (D!yes,
-					   add (st1,
-						A!create (Rr!get_s (r1),
-							  Rr!get_o (r1),
-							  Rr!get_m (r1)))))
+                      <9>4 prove (d1, st2) = 
+				 (D!yes, add (st1, A!create (Rr!get_s (r1),
+							     Rr!get_o (r1),
+							     Rr!get_m (r1))))
                            by step <9>3
                               hypothesis H1
                               (* property beq_symm, beq_trans *)
@@ -1238,7 +1236,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
               <5>3 prove tau_rbac_acc (r1, st1) = (D!no, st1)
                    by step <5>2
                       hypothesis H8
-              <5>4 prove base_eq ((d1, st2), (D!no, st1))
+              <5>4 prove (d1, st2) = (D!no, st1)
                    by step <5>3
                       hypothesis H1
                       (* property beq_symm, beq_trans *)
@@ -1463,12 +1461,10 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 							    Rr!get_m (r1))))
                            by step <9>11
                               hypothesis H7
-                      <9>2 prove base_eq ((d1, st2),
-					  (D!yes,
-					   add (st1,
-						A!create (Rr!get_s (r1),
-							  Rr!get_o (r1),
-							  Rr!get_m (r1)))))
+                      <9>2 prove (d1, st2) = 
+				 (D!yes, add (st1, A!create (Rr!get_s (r1),
+							     Rr!get_o (r1),
+							     Rr!get_m (r1))))
                            by step <9>1
                               hypothesis H1
                               (* property beq_symm, beq_trans *)
@@ -1531,7 +1527,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
               <5>1 prove tau_rbac_acc (r1, st1) = (D!no, st1)
                    by step <5>11
                       hypothesis H8
-              <5>2 prove base_eq ((d1, st2), (D!no, st1))
+              <5>2 prove (d1, st2) = (D!no, st1)
                    by step <5>1
                       hypothesis H1
                       (* property beq_symm, beq_trans *)
@@ -1591,12 +1587,10 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                          by step <8>1
                             hypothesis H4
                             property Rr!get_is_not_rel
-                    <8>3 prove base_eq ((d1, st2),
-					(D!yes,
-					 del (st1,
-					      A!create (Rr!get_s (r1),
-							Rr!get_o (r1),
-							Rr!get_m (r1)))))
+                    <8>3 prove (d1, st2) = 
+			       (D!yes, del (st1, A!create (Rr!get_s (r1),
+							   Rr!get_o (r1),
+							   Rr!get_m (r1))))
                          by step <8>2
                             hypothesis H1
                             (* property beq_symm, beq_trans *)
@@ -1676,10 +1670,10 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 						     Rr!get_m (r1))))
                    by step <5>11
                       hypothesis H7
-              <5>2 prove base_eq ((d1, st2),
-				  (D!yes, add (st1, A!create (Rr!get_s (r1),
-							      Rr!get_o (r1),
-							      Rr!get_m (r1)))))
+              <5>2 prove (d1, st2) = 
+		         (D!yes, add (st1, A!create (Rr!get_s (r1),
+						     Rr!get_o (r1),
+						     Rr!get_m (r1))))
                    by step <5>1
                       hypothesis H1
                       (* property beq_symm, beq_trans *)
@@ -1720,7 +1714,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
               <5>3 prove tau_rbac_acc (r1, st1) = (D!no, st1)
                    by step <5>2
                       hypothesis H8
-              <5>4 prove base_eq ((d1, st2), (D!no, st1))
+              <5>4 prove (d1, st2) = (D!no, st1)
                    by step <5>3
                       hypothesis H1
                       (* property beq_symm, beq_trans *)
@@ -1749,10 +1743,10 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                  by step <4>10
                     hypothesis H4
                     property Rr!get_is_not_rel
-            <4>2 prove base_eq ((d1, st2),
-				(D!yes, del(st1, A!create (Rr!get_s (r1),
-							   Rr!get_o (r1),
-							   Rr!get_m (r1)))))
+            <4>2 prove (d1, st2) = 
+		       (D!yes, del(st1, A!create (Rr!get_s (r1),
+						  Rr!get_o (r1),
+						  Rr!get_m (r1))))
                  by step <4>1
                     hypothesis H1
                     (* property beq_symm, beq_trans *)
@@ -2056,7 +2050,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
               <5>4 prove tau_rbac_adm (r1, st1) = (D!no, st1)
                    by step <5>3
                       hypothesis H42
-              <5>5 prove base_eq ((d1, st2), (D!no, st1))
+              <5>5 prove (d1, st2) = (D!no, st1)
                    by step <5>4
                       hypothesis H1
                       (* property beq_symm, beq_trans *)
@@ -2352,7 +2346,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
               <5>4 prove tau_rbac_adm (r1, st1) = (D!no, st1)
                    by step <5>3
                       hypothesis H62
-              <5>5 prove base_eq ((d1, st2), (D!no, st1))
+              <5>5 prove (d1, st2) = (D!no, st1)
                    by step <5>4
                       hypothesis H1
                       (* property beq_symm, beq_trans *)
@@ -2381,7 +2375,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
             <4>2 prove tau_rbac_adm (r1, st1) = (D!no, st1)
                  by step <4>1
                     hypothesis H7
-            <4>3 prove base_eq ((d1, st2), (D!no, st1))
+            <4>3 prove (d1, st2) = (D!no, st1)
                  by step <4>2
                     hypothesis H1
                     (* property beq_trans, beq_symm *)
@@ -2541,11 +2535,10 @@ species Model_hru (Rh is Rho,
 							R!get_m (r1))))
                        by step <7>2
                           hypothesis H31
-                  <7>4 prove base_eq ((d1, st2),
-				      (D!yes,
-				       add (st1, A!create (R!get_s (r1),
-							   R!get_o (r1),
-							   R!get_m (r1)))))
+                  <7>4 prove (d1, st2) = 
+		             (D!yes, add (st1, A!create (R!get_s (r1),
+							 R!get_o (r1),
+							 R!get_m (r1))))
                        by step <7>3
                           hypothesis H1
                           (* property beq_trans, beq_symm *)
@@ -2622,7 +2615,7 @@ species Model_hru (Rh is Rho,
               <5>3 prove tau_hru (r1, st1) = (D!no, st1)
                    by step <5>2
                       hypothesis H32
-              <5>4 prove base_eq ((d1, st2), (D!no, st1))
+              <5>4 prove (d1, st2) = (D!no, st1)
                    by step <5>3
                       hypothesis H1
                       (* property beq_trans, beq_symm *)
@@ -2755,12 +2748,10 @@ species Model_hru (Rh is Rho,
 							     R!get_m (r1))))
                             by step <9>11
                                hypothesis H31
-                       <9>2 prove base_eq ((d1, st2),
-					   (D!yes,
-					    add(st1,
-						A!create (R!get_s (r1),
-							  R!get_o (r1),
-							  R!get_m (r1)))))
+                       <9>2 prove (d1, st2) = 
+			          (D!yes, add(st1, A!create (R!get_s (r1),
+							     R!get_o (r1),
+							     R!get_m (r1))))
                             by step <9>1
                                hypothesis H1
                                (* property beq_symm, beq_trans *)
@@ -2817,7 +2808,7 @@ species Model_hru (Rh is Rho,
                <5>1 prove tau_hru (r1, st1) = (D!no, st1)
                     by step <5>11
                        hypothesis H32
-               <5>2 prove base_eq ((d1, st2), (D!no, st1))
+               <5>2 prove (d1, st2) = (D!no, st1)
                     by step <5>1
                        hypothesis H1
                        (* property beq_trans, beq_symm *)
@@ -2879,11 +2870,10 @@ species Model_hru (Rh is Rho,
                           by step <8>1
                              hypothesis H4
                              property R!get_is_not_rel
-                     <8>3 prove base_eq ((d1, st2),
-					 (D!yes,
-					  del (st1, A!create (R!get_s (r1),
-							      R!get_o (r1),
-							      R!get_m (r1)))))
+                     <8>3 prove (d1, st2) = 
+			        (D!yes, del (st1, A!create (R!get_s (r1),
+							    R!get_o (r1),
+							    R!get_m (r1))))
                           by step <8>2
                              hypothesis H1
                              (* property beq_trans, beq_symm *)
@@ -2963,11 +2953,10 @@ species Model_hru (Rh is Rho,
 						     R!get_m (r1))))
                    by step <5>11
                       hypothesis H31
-              <5>2 prove base_eq ((d1, st2),
-				  (D!yes,
-				   add (st1, A!create (R!get_s (r1),
-						       R!get_o (r1),
-						       R!get_m (r1)))))
+              <5>2 prove (d1, st2) = 
+			 (D!yes, add (st1, A!create (R!get_s (r1),
+						     R!get_o (r1),
+						     R!get_m (r1))))
                    by step <5>1
                       hypothesis H1
                       (* property beq_trans, beq_symm *)
@@ -3002,7 +2991,7 @@ species Model_hru (Rh is Rho,
               <5>3 prove tau_hru (r1, st1) = (D!no, st1)
                    by step <5>2
                       hypothesis H32
-              <5>4 prove base_eq ((d1, st2), (D!no, st1))
+              <5>4 prove (d1, st2) = (D!no, st1)
                    by step <5>3
                       hypothesis H1
                       (* property beq_symm, beq_trans *)
@@ -3032,11 +3021,10 @@ species Model_hru (Rh is Rho,
                  by step <4>10
                     hypothesis H4
                     property R!get_is_not_rel
-            <4>2 prove base_eq ((d1, st2),
-				(D!yes,
-				 del (st1, A!create (R!get_s (r1),
-						     R!get_o (r1),
-						     R!get_m (r1)))))
+            <4>2 prove (d1, st2) = 
+	               (D!yes, del (st1, A!create (R!get_s (r1),
+						   R!get_o (r1),
+						   R!get_m (r1))))
                  by step <4>1
                     hypothesis H1
                     (* property beq_trans, beq_symm *)
