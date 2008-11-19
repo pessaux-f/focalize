@@ -16,6 +16,7 @@ write his proofs using the \focal\ Proof Language embedded in the
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Required software}
+\label{required-software}
 To be able to develop with the \focal\ environment, a few third party
 tools are required. All of them can be freely downloaded from their
 related website.
@@ -41,12 +42,57 @@ related website.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Optional software}
+\label{optional-software}
 The \focal\ compiler can generate dependencies graphs from compiled
 source code. It generates them in the format suitable to be processed
 and displayed by the \dotty\ tools suit of the ``Graphwiz'' package. If
 you plan to examine these graphs, you also need to install this
 software from \verb+http://www.graphviz.org/+.
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Operating systems}
+\focal\ was fully developed under Linux using free software. Hence,
+any Unix-based operating system should support \focal. The currently
+tested Unix are: Fedora, Debian, Suse, BSD.
+
+Windows users can run \focal\ via the Unix-like
+environment \cygwin providing both users and developers tools. This
+software is freely distributed and available
+at \verb+http://www.cygwin.com/+.
+
+\smallskip
+\paragraph*{From the official \cygwin\ web site:}
+``{\em Cygwin is a Linux-like environment for Windows. It consists of
+two parts: A DLL (cygwin1.dll) which acts as a Linux API emulation
+layer providing substantial Linux API functionality. A collection of
+tools which provide Linux look and feel.
+\smallskip
+The Cygwin DLL currently works with all recent, commercially released
+x86 32 bit and 64 bit versions of Windows, with the exception of
+Windows CE.
+\smallskip
+Cygwin is not a way to run native linux apps on Windows. You have to
+rebuild your application from source if you want it to run on
+Windows.
+
+Cygwin is not a way to magically make native Windows apps aware of
+UNIX ® functionality, like signals, ptys, etc. Again, you need to
+build your apps from source if you want to take advantage of Cygwin
+functionality.}''
+
+\medskip
+Under \cygwin, the required packages are the same as those listed
+in \ref{required-software} and \ref{optional-software}. As stated
+in \cygwin's citation above, you need to get the sources packages of
+this software and compile them yourself, following information
+provided in these packages.
+
+The installation of \focal\ itself is the same for all operating
+systems and is described in the following section
+(\ref{installation}).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -138,7 +138,7 @@ expression or {\tt inherits} clause) applies a species with $n_1$
 argument(s) although its definition declared it as using $n_2$
 argument(s).
 
-{\em Hints}: Source program to fix.
+{\em Hints}: None.
 
 
 
@@ -280,7 +280,7 @@ definitions with the same names as long as they are in different
 source files (even if they are used together via {\tt open} directives
 of explicit qualification by the ``\#'' notation).
 
-{\em Hints}: Source program to fix.
+{\em Hints}: None.
 
 
 
@@ -293,7 +293,7 @@ definitions with the same names as long as they are in different
 source files (even if they are used together via {\tt open} directives
 of explicit qualification by the ``\#'' notation).
 
-{\em Hints}: Source program to fix.
+{\em Hints}: None.
 
 
 
@@ -318,7 +318,7 @@ a species parameter or a collection.
 types. This especially means that a type expression must not be a
 sub-part of itself to prevent cycles.
 
-{\em Hints}: Source program to fix.
+{\em Hints}: None.
 
 
 
@@ -331,7 +331,7 @@ argument(s) (or in the other order, depending on the way the error was
 detected: in any way the definition and the usage of the type involve
 2 different numbers of arguments).
 
-{\em Hints}: Source program to fix.
+{\em Hints}: None.
 
 
 
@@ -340,7 +340,7 @@ detected: in any way the definition and the usage of the type involve
 {\em Description}: A type expression applies a type constructor to
 arguments although this constructor needs none.
 
-{\em Hints}: Source program to fix.
+{\em Hints}: None.
 
 
 
@@ -363,19 +363,407 @@ method definition.
 \section*{Sum type constructor '$name$' expected $n_1$ argument but
   was used with $n_2$ argument.}
 
+{\em Description}: The sum type constructor $name$ is used with a bad
+number of arguments. It was declared to use $n_1$ arguments but is
+used with $n_2$.
+
+{\em Hints}: None.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Unbound type variable $name$.}
 
+{\em Description}: In a type expression, a type variable $name$ is not
+bound.
+
+{\em Hints}: Source program to fix. May be the type expression appears
+in a parametrised type definition where you forgot to specify the type
+constructor's parameter in head of the definition.
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Method '$mname$' multiply defined in species '$sname$'.}
+
+{\em Description}: Like for toplevel definitions, method definitions
+inside a species must not bind several time the same name. In the
+species $sname$, the methode $mname$ is defined several times.
+
+{\em Hints}: Source program to fix. May be you defined several times
+the same method and in this case, remove one of the definitions. Or if
+the different occurences of $mname$ refer to different conceptual
+functions, change the names to make them different.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Type constructor '$name$' expected $n_1$ arguments but was
   used with $n_2$ arguments.}
+
+{\em Description}: In a type expression, the type constructor $name$
+(not the sum type constructor !) is used with a wrong number of
+arguments. It was declared to have $n_1$ arguments but is used with
+$n_2$.
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Carrier 'rep' is multiply defined.}
+
+{\em Description}: In a species, the method {\tt rep} defining the
+carrier representation is multiply defined in the body of the species
+although at most one definition must be provided.
+
+{\em Hints}: Source program to fix. Remove the spurious definitions.
+
+If the {\tt rep} field is not directly present in the
+body, that is because the species inherits of a parent where the
+carrier is already defined. In this last case, since the parentt's
+structure is already established, you must remove the {\tt rep} field
+in the species where the error was reported.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Carrier 'rep' is multiply defined by multiple inhritance and
+  was formerly found of type $t_1$ and newly found of type $t_2$}.
+
+{\em Description}: In the species, several parents brought by
+inheritance several incompatible definitions of the carrier
+{\tt rep}. The error message reports $t_1$ and $t_2$, two incompatible
+types found for the carrier definition.
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{'Self' can't be parameterized by itself.}
+
+{\em Description}: This error appears when {\tt Self} appears as a
+species identifier used in a species expression that is a parameter of
+the current defined species.
+{\color{red} Unsure, not appearing raised anymore. Check if this is
+  for further analysis or if it is a remaining spurious stuff.}
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{A "is" parameter can only be a collection identifier.}
+
+{\em Description}: In a species expression, a parametrised species by
+an entity parameter ({\tt in}-parameter) is provided an effective
+argument that is not a collection identifier.
+
+{\em Hints}: Source program to fix. Although an entity parameter
+denotes a {\bf value} (and not a {\bf species} like for
+{\tt is}-parameters), this value must have the {\bf type} of a
+collection carrier. Hence in a species expression, a
+{\tt in}-parameter) must be instanciated by a {\tt collection}
+identifier.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Species '$s_1$' is not a subspecies of '$s_2$'. In field
+  '$name$', types $t_1$ and $t_2$ are not compatible.}
+
+{\em Description}: During species parameter instanciation, the
+provided species $s_1$ is not a subspecies of the expected species
+signature $s_2$, because it doesn't have a signature containing at
+least $s_2$'s methods with compatibles types. The wrong field $name$
+is reported with the two types $t_1$ and $t_2$ expected and actually
+found.
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Species '$s_1$' is not a subspecies of '$s_2$'. In field
+  '$fname$', type $t_1$ occurs in $t_2$ and would lead to a cycle.}
+
+{\em Description}: During species parameter instanciation, the
+provided species $s_1$ is not a subspecies of the expected species
+signature $s_2$, since type compatibility check detected a cyclic
+type. This means that the type $t_1$ is a sub-part of itself via the
+type $t_2$.
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Species '$s_1$' is not a subspecies of '$s_2$'. In field
+  '$fname$', the type constructor '$tname$' is used with the different
+  arities $n_1$ and $n_2$.}
+
+{\em Description}: During species parameter instanciation, the
+provided species $s_1$ is not a subspecies of the expected species
+signature $s_2$, since the type constructor (not sum type constructor)
+$tname$ is used with an improper number of arguments $n_1$ versus
+$n_2$.
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Species '$s_1$' is not a subspecies of '$s_2$'. Field '$name$'
+  is not present in '$s_1$'.}
+
+{\em Description}: During species parameter instanciation, the
+provided species $s_1$ is not a subspecies of the expected species
+signature $s_2$, because it doesn't have a signature containing at
+least $s_2$'s methods and especially not the method $name$.
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Species '$sname$' cannot be turned into a collection. Field
+  '$fname$' is not defined.}
+
+{\em Description}: A collection is a completly defined species
+(c.f. \ref{collection}), i.e. a species where {\bf all} the methods
+are {\bf defined} and not only declared. In the species $sname$, the
+method $mname$ is only declared, hence the species is not complete and
+no collection can be extrated from it.
+
+{\em Hints}: Add an effective definition of the method, either by
+writing it code or by inheritance, according to your program model.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{In the delayded termination proof, parameter '$name$' does
+  not refer to a parameter of the original function.}
+
+{\em Description}: As any proof, termination proofs can be made later
+after the function definition. However it must refer to the original
+function's parameters names. In the current proof, the identifier
+$name$ doesn't exist among the original function's parameters.
+
+{\em Hints}: Change the parameter name in the proof to make it
+matching the function definition's ones.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Species 'sname' is not well-formed. Field '$name$' involves
+  a non-declared recursion for the following dependent fields: \ldots}
+
+{\em Description}: The species $sname$ doesn't respect the
+well-formation rule presented in \ref{well-formation}. The chain of
+functions involved in the cycle is given in the error message as a
+sequence of methods names
+$m_1 \rightarrow m_2 \rightarrow \ldots \rightarrow m_n$ with the
+implicit final path $m_n \rightarrow m_1$.
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{No $lang$ mapping given for the external value definition
+  '$name$'.}
+
+{\em Description}: The external value definition allowing to link
+\focal\ code to foreign languges doens't specify how to map the value
+identifier $name$ in the language $lang$.
+
+{\em Hints}: Supply a binding for this language in the external
+definition.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{No $lang$ mapping given for the external type definition
+  '$name$'.}
+
+{\em Description}: The external type definition allowing to link
+\focal\ code to foreign languages doesn't specify how to map the type
+identifier $name$ in the language $lang$.
+
+{\em Hints}: Supply a binding for this language in the external
+definition.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{No $lang$ mapping given for the external sum type
+  constructor '$name$'.}
+
+{\em Description}: The external sum type definition allowing to link
+\focal\ code to foreign languages doesn't specify how to map the sum
+type constructor $name$ in the language $lang$.
+
+{\em Hints}: Supply a binding for this language in the external
+definition.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{No $lang$ mapping given for the external record field
+  '$name$'.}
+
+{\em Description}: The external record type definition allowing to
+link \focal\ code to foreign languages doesn't specify how to map the
+record field $name$ in the language $lang$.
+
+{\em Hints}: Supply a binding for this language in the external
+definition.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Unable to find OCaml generation information for compiled
+  file '$file$'. Source file may have been compiled without OCaml code
+  generation enabled.}
+
+{\em Description}: The \focal\ source file $file$.foc was compiled but
+the object file doesn't contain information about \ocaml\ code
+generation. The \focal\ compiler allows to disable the \ocaml\ code
+production by the {\tt --no-ocaml-code} option. May be this option was used.
+
+{\em Hints}: Invoke the compiler on the source file $file$.foc without
+the {\tt --no-ocaml-code} option.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Type definition contains a mutable field '$name$' that can't
+  be compiled to Coq.}
+
+{\em Description}: {\color{red} Never raised in the current version
+  since mutable record fields are not yet available}.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Unable to find Coq generation information for compiled file
+  '$file$'. Source file may have been compiled without Coq code
+  generation enabled.}
+
+{\em Description}: The \focal\ source file $file$.foc was compiled but
+the object file doesn't contain information about \coq\ code
+generation. The \focal\ compiler allows to disable the \coq\ code
+production by the {\tt --no-coq-code} option. May be this option was used.
+
+{\em Hints}: Invoke the compiler on the source file $file$.foc without
+the {\tt --no-coq-code} option.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Using a species parameter's method ($name$) in a Zenon proof
+  with "by definition" is not allowed.}
+
+{\em Description}: The current proof tries to used the definition of a
+method $name$ of a species parameter. Since species parameters are
+always abstracted, {\bf definitions} (i.e. ``bodies'') of their methods
+are {\bf not} available in the parametrised species. For this reason,
+it is impossible to provide this definition to \zenon.
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Using an only declared method of Self ($name$) in a Zenon
+  proof with "by definition" is not allowed.}
+
+{\em Description}: The current proof tries to used the definition of a
+method $name$ {\bf only declared} in the current species. Since the
+definition is not available, it is impossible to provide it to
+\zenon.
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Using a local identifier ($name$) in a Zenon proof with "by
+  definition" is not allowed.}
+
+{\em Description}: The current proof tries to used a local variable
+$name$, i.e. an identifier not representing a method, hence
+meaningless for \zenon.
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Using a local identifier ($name$) in a Zenon proof with "by
+  property" is not allowed.}
+
+{\em Description}: The current proof tries to used a local variable
+$name$, i.e. an identifier not representing a method, hence
+meaningless for \zenon.
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Assumed hypothesis '$hyp$' in a Zenon proof was not found.}
+
+{\em Description}: The current proof makes a reference to an
+hypothesis $hyp$ that was not found in the current proof tree.
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Step '$<$\ldots$>$\ldots' in a Zenon proof was not found.}
+
+{\em Description}: The current proof makes a reference to an
+proof step that was not found in the current proof tree.
+
+{\em Hints}: None.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Recursive call to '$name$' contains nested recursion.}
+
+{\em Description}: The function contains a recursive call to $name$
+inside a recursive call. The current version of \focal\ doesn't
+support the \coq\ code generation for nested recursive calls.
+
+{\em Hints}: Try to rewrite your function with the nested call
+performed before the outer recursive call. For instance:
+{\scriptsize
+\begin{lstlisting}
+let rec f (x) =
+  ...
+  f (f (bla))
+  ...
+\end{lstlisting}
+}
+should be turned into:
+{\scriptsize
+\begin{lstlisting}
+let rec f (x) =
+  ...
+  let tmp = f (bla) in
+  f (tmp)
+  ...
+\end{lstlisting}
+}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Recursive call to '$name$' is incomplete.}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Unexpected error: "$msg$".Please report.}
