@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.55 2008-11-17 09:06:23 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.56 2008-11-19 15:22:55 pessaux Exp $ *)
 
 
 
@@ -267,7 +267,7 @@ try Focalizec.main () with
      | Infer.Rep_multiply_defined_by_multiple_inheritance (prev, newer, at) ->
          Format.fprintf Format.err_formatter
            "%a:@\n@[%tCarrier@ 'rep'@ is@ multiply@ defined@ by@ \
-           multiple@ inhritance@ and@ was@ formerly@ found@ of@ type@ %t@ \
+           multiple@ inheritance@ and@ was@ formerly@ found@ of@ type@ %t@ \
            @[%a@]@ %tand@ newly@ found@ of@ type@ %t@ @[%a@].@]@."
            Location.pp_location at
            Handy.pp_set_bold Handy.pp_reset_effects
@@ -276,7 +276,7 @@ try Focalizec.main () with
            Types.pp_type_simple newer
      | Scoping.Self_cant_parameterize_itself at ->
          Format.fprintf Format.err_formatter
-           "%a:@\n@[%t'Self'@ can't@ be@ parameterized@ by@ itself%t.@]@."
+           "%a:@\n@[%t'Self'@ can't@ be@ parametrised@ by@ itself%t.@]@."
            Location.pp_location at
            Handy.pp_set_bold Handy.pp_reset_effects
      | Scoping.Is_parameter_only_coll_ident at ->
@@ -335,7 +335,7 @@ try Focalizec.main () with
            Sourcify.pp_vname field_name
      | Infer.Invalid_parameter_in_delayed_proof_termination (at, name) ->
          Format.fprintf Format.err_formatter
-           "%a:@\n@[%tIn@ the@ delayded@ termination@ proof,@ parameter%t@ \
+           "%a:@\n@[%tIn@ the@ delayed@ termination@ proof,@ parameter%t@ \
            %t'%a'%t@ %tdoes@ not@ refer@ to@ a@ parameter@ of@ the@ original@ \
            function.%t@]@."
            Location.pp_location at
