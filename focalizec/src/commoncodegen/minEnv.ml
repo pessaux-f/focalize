@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: minEnv.ml,v 1.6 2008-08-13 15:55:17 pessaux Exp $ *)
+(* $Id: minEnv.ml,v 1.7 2008-11-21 16:54:34 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -75,11 +75,11 @@ let find_coq_env_element_by_name name min_coq_env =
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
 let minimal_typing_environment universe species_fields =
-  (* A local function to process one let-binding. Handy to *)
-  (* factorize code for both [Let] and [Let_rec] fields.   *)
+  (* A local function to process one let-binding. Handy to factorize code for
+     both [Let] and [Let_rec] fields. *)
   let process_one_let_binding l_binding =
     try
-      let (from, n, params, sch, body, _, _) = l_binding in
+      let (from, n, params, sch, body, _, _, _) = l_binding in
       let reason = VisUniverse.Universe.find n universe in
       if reason = VisUniverse.IU_only_decl then
         (* Keep in the environment, but as abstracted. *)
@@ -90,10 +90,10 @@ let minimal_typing_environment universe species_fields =
     with Not_found ->
       (* Not in the universe. Hence not in the minimal typing env. *)
       [] in
-  (* We make a temporary flag that will remind if "rep" appears among the *)
-  (* fields. This is a bit casual, but this avoid searching again in the  *)
-  (* list for this field. We need this because "rep" will be processed    *)
-  (* aside the other Sigs. See below.                                     *)
+  (* We make a temporary flag that will remind if "rep" appears among the
+     fields. This is a bit casual, but this avoid searching again in the list
+     for this field. We need this because "rep" will be processed aside the
+     other Sigs. See below. *)
   let found_rep_field = ref None in
   (* Now the local recursive function that will examine each species field. *)
   let rec build = function
@@ -102,9 +102,9 @@ let minimal_typing_environment universe species_fields =
        let h' =
          (match h with
           | Env.TypeInformation.SF_sig (_, n, sch) ->
-              (* We will process "rep" specially because it may belong to *)
-              (* the universe although not present among the fields. See  *)
-              (* below.                                                   *)
+              (* We will process "rep" specially because it may belong to
+                 the universe although not present among the fields. See
+                 below. *)
               if n <> (Parsetree.Vlident "rep") then
                 (if VisUniverse.Universe.mem n universe then
                   [MCEE_Declared_computational (n, sch)]
@@ -136,13 +136,13 @@ let minimal_typing_environment universe species_fields =
   (* *************************** *)
   (* Now, let do the real job... *)
   let env_without_carrier = build species_fields in
-  (* Now, we need to handle "rep" aside. In effect, it may belong to the   *)
-  (* universe although not present among the fields. Moreover, if present  *)
-  (* among the fields, one must make it "declared" or "defined" depending  *)
-  (* on if it is in the universe via [IU_only_decl] or via [IU_trans_def]. *)
-  (* The regular processing of Sigs doesn't take this last point in        *)
-  (* account. So we proces "rep" aside here. If "rep" has to be added,     *)
-  (* then, always put it in head !                                         *)
+  (* Now, we need to handle "rep" aside. In effect, it may belong to the
+     universe although not present among the fields. Moreover, if present
+     among the fields, one must make it "declared" or "defined" depending
+     on if it is in the universe via [IU_only_decl] or via [IU_trans_def].
+     The regular processing of Sigs doesn't take this last point in account.
+     So we proces "rep" aside here. If "rep" has to be added, then, always put
+     it in head ! *)
   try
     (begin
     let reason = VisUniverse.Universe.find (Parsetree.Vlident "rep") universe in
@@ -151,8 +151,8 @@ let minimal_typing_environment universe species_fields =
          (* A decl-dependency was found even if "rep" is not defined. *)
          MCEE_Declared_carrier :: env_without_carrier
      | (None, VisUniverse.IU_trans_def) ->
-         (* Impossible to have a def-dependency if *)
-         (* the carrier's structure is unknown !   *)
+         (* Impossible to have a def-dependency if the carrier's structure is
+            unknown ! *)
          assert false
      | ((Some _), VisUniverse.IU_only_decl) ->
          (* A decl-dependency was found. No matter what "rep" is. *)

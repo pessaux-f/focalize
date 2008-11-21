@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.ml,v 1.14 2008-10-14 13:50:30 weis Exp $ *)
+(* $Id: misc_common.ml,v 1.15 2008-11-21 16:54:34 pessaux Exp $ *)
 
 
 
@@ -521,10 +521,10 @@ let follow_instanciations_for_is_param ctx env original_param_index
                   end)
               | Types.SCK_toplevel_species ->
                   (begin
-                  (* The instanciation is done by a toplevel species. In   *)
-                  (* this case, no need from now to continue walking up    *)
-                  (* along the inheritance history, there won't be anymore *)
-                  (* instanciations.                                       *)
+                  (* The instanciation is done by a toplevel species. In this
+                     case, no need from now to continue walking up along the
+                     inheritance history, there won't be anymore
+                     instanciations. *)
                   if Configuration.get_verbose () then
                     Format.eprintf
                       "Final instanciation by toplevel species.@." ;
@@ -532,8 +532,8 @@ let follow_instanciations_for_is_param ctx env original_param_index
                     (effective_mod, effective_name_as_string)
                   end)
              end) in
-  (* We must walk the inheritance steps in reverse order *)
-  (* since it is built with most recent steps in head.   *)
+  (* We must walk the inheritance steps in reverse order since it is built
+     with most recent steps in head. *)
   rec_follow original_param_index (List.rev inheritance_steps)
 ;;
 
@@ -609,11 +609,10 @@ let find_toplevel_spe_defining_meth_through_inheritance env ~current_unit
      (meth_info.Env.mi_history).Env.fh_initial_apparition in
     (mod_name, (Parsetree_utils.name_of_vname spec_name))
   with _ ->
-    (* Since the species is toplevel, the lookup in the environment   *)
-    (* must never fail ! And the method searched must also exist in   *)
-    (* the found species since we were told that it was inherited via *)
-    (* this method. If any failure occurs, then the compiler is wrong *)
-    (* somewhere !                                                    *)
+    (* Since the species is toplevel, the lookup in the environment must never
+       fail ! And the method searched must also exist in the found species
+       since we were told that it was inherited via this method. If any
+       failure occurs, then the compiler is wrong somewhere ! *)
     assert false
 ;;
 

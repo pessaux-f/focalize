@@ -54,7 +54,8 @@ module TypeInformation :
 
     type let_field_info =
       (from_history * Parsetree.vname * (Parsetree.vname list) *
-       Types.type_scheme * Parsetree.binding_body * dependency_on_rep *
+       Types.type_scheme * Parsetree.binding_body *
+       (Parsetree.termination_proof option) * dependency_on_rep *
        Parsetree.logical_flag)
 
     type theorem_field_info =

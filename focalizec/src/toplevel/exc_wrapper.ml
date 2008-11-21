@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.58 2008-11-21 10:37:08 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.59 2008-11-21 16:54:34 pessaux Exp $ *)
 
 
 
@@ -357,6 +357,13 @@ try Focalizec.main () with
      | Infer.Parameterized_species_arity_mismatch msg ->
          Format.fprintf Format.err_formatter
            "@[Parameterized@ specie@ is@ applied@ to@ %s@ arguments.@]@."  msg
+     | Infer.Collection_not_fully_defined_missing_term_proof
+           (coll_name, field_name) ->
+         Format.eprintf
+           "@[Species@ '%a'@ cannot@ be@ turned@ into@ a@ collection.@ \
+           Field@ '%a'@ does@ not@ have@ a@ termination@ proof.@]@."
+           Sourcify.pp_qualified_species coll_name
+           Sourcify.pp_vname field_name
      | Infer.Collection_not_fully_defined (coll_name, field_name) ->
          Format.fprintf Format.err_formatter
            "@[Species@ '%a'@ cannot@ be@ turned@ into@ a@ collection.@ \

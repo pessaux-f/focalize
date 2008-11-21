@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.19 2008-10-14 12:13:21 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.20 2008-11-21 16:54:34 pessaux Exp $ *)
 
 
 exception Input_file_already_set ;;
@@ -46,6 +46,12 @@ let print_install_dirs () =
   Format.printf "%s %s@."
     Installation.install_bin_dir Installation.install_lib_dir ;
   exit 0
+;;
+
+let (get_impose_termination_proof, set_impose_termination_proof) =
+  let impose_termination_proof = ref false in
+  ((fun () -> !impose_termination_proof),
+   (fun () -> impose_termination_proof := true))
 ;;
 
 let (get_verbose, set_verbose) =

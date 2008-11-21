@@ -11,16 +11,29 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.158 2008-11-21 10:37:08 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.159 2008-11-21 16:54:34 pessaux Exp $ *)
 
 
 
-(* ******************************************************************** *)
+(* ****************************************************************** *)
+(** {b Descr} : Exception used to inform that a species is not fully
+    defined because a recursive function doesn't have any termination
+    proof.
+
+    {b Rem} : Exported outside this module.                           *)
+(* ****************************************************************** *)
+exception Collection_not_fully_defined_missing_term_proof of
+  (Parsetree.qualified_species * Parsetree.vname)
+;;
+
+
+
+(* **************************************************************** *)
 (** {b Descr} : Exception used to inform that a delayed proof for a
     property was found several time in the same species.
 
-    {b Rem} : Exported outside this module.                             *)
-(* ******************************************************************** *)
+    {b Rem} : Exported outside this module.                         *)
+(* **************************************************************** *)
 exception Proof_of_multiply_defined of
   (Location.t *   (** Location of one of the occurrence of "proof of". *)
    Parsetree.vname *   (** Name of the several time proved property. *)
@@ -349,13 +362,13 @@ let methods_history_to_text ~dirname ~current_species methods =
   List.iter
     (function
       | Env.TypeInformation.SF_sig (from, n, _)
-      | Env.TypeInformation.SF_let (from, n, _, _, _, _, _)
+      | Env.TypeInformation.SF_let (from, n, _, _, _, _, _, _)
       | Env.TypeInformation.SF_theorem (from, n, _, _, _, _)
       | Env.TypeInformation.SF_property (from, n, _, _, _) ->
           process_on_method from n
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
-            (fun (from, n, _, _, _, _, _) -> process_on_method from n)
+            (fun (from, n, _, _, _, _, _, _) -> process_on_method from n)
             l)
     methods ;
   close_out out_hd
@@ -709,13 +722,13 @@ let find_function_by_name fct_vname fields =
     | [] -> raise Not_found
     | h :: q ->
         match h with
-         | Env.TypeInformation.SF_let (_, n, args, sch, _, _, _) ->
+         | Env.TypeInformation.SF_let (_, n, args, sch, _, _, _, _) ->
              if n = fct_vname then (args, sch) else rec_find q
          | Env.TypeInformation.SF_let_rec l ->
              (begin
              try
-               let (_, _, args, sch, _, _, _) =
-                 List.find (fun (_, n, _, _, _, _, _) -> n = fct_vname) l in
+               let (_, _, args, sch, _, _, _, _) =
+                 List.find (fun (_, n, _, _, _, _, _, _) -> n = fct_vname) l in
                (args, sch)
              with Not_found -> rec_find q
              end)
@@ -932,11 +945,11 @@ let append_and_ensure_method_uniquely_defined current_species l1 l2 =
       (fun field accu ->
         match field with
         | Env.TypeInformation.SF_sig (_, v, _)
-        | Env.TypeInformation.SF_let (_, v, _, _, _, _, _)
+        | Env.TypeInformation.SF_let (_, v, _, _, _, _, _, _)
         | Env.TypeInformation.SF_theorem (_, v, _, _, _, _)
         | Env.TypeInformation.SF_property (_, v, _, _, _) -> v :: accu
         | Env.TypeInformation.SF_let_rec l ->
-            let l' = List.map (fun (_, v, _, _, _, _, _) -> v) l in
+            let l' = List.map (fun (_, v, _, _, _, _, _, _) -> v) l in
             l' @ accu)
       fields [] in
   (* Now get the flat list of all the methods names. *)
@@ -1955,7 +1968,12 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                             fst binding.Parsetree.ast_desc.Parsetree.b_params in
                         (* Note that [expr] below is already typed here. *)
                         ((Env.intitial_inheritance_history current_species),
-                         id, params_names, ty_scheme, expr, has_def_dep_on_rep,
+                         id, params_names, ty_scheme, expr,
+                         (* [Unsure] We assign each mutually recursive function
+                            the same proof. This is not correct but anyway, we
+                            only handle unique recursive functions. *)
+                         let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof,
+                         has_def_dep_on_rep,
                          let_def.Parsetree.ast_desc.Parsetree.ld_logical))
                       bindings
                       let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
@@ -1981,7 +1999,12 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                       (* Note that [expr] below is already typed here. *)
                       Env.TypeInformation.SF_let
                         ((Env.intitial_inheritance_history current_species),
-                         id, params_names, ty_scheme, expr, has_def_dep_on_rep,
+                         id, params_names, ty_scheme, expr,
+                         (* Same remark than above, but with the additionnal
+                            stuff that non-recursive functions should anyway
+                            not have proofs since it is useless. *)
+                         let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof,
+                         has_def_dep_on_rep,
                          let_def.Parsetree.ast_desc.Parsetree.ld_logical))
                      bindings
                      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
@@ -2303,7 +2326,7 @@ let abstraction ~current_unit cname fields =
         let h' =
           (match h with
            | Env.TypeInformation.SF_sig (from, vname, scheme)
-           | Env.TypeInformation.SF_let (from, vname, _, scheme, _, _, _) ->
+           | Env.TypeInformation.SF_let (from, vname, _, scheme, _, _, _, _) ->
                Types.begin_definition () ;
                let ty = Types.specialize scheme in
                let ty' =
@@ -2314,7 +2337,7 @@ let abstraction ~current_unit cname fields =
                   (from, vname, (Types.generalize ty'))]
            | Env.TypeInformation.SF_let_rec l ->
                List.map
-                 (fun (from, vname, _, scheme, _, _, _) ->
+                 (fun (from, vname, _, scheme, _, _, _, _) ->
                   Types.begin_definition () ;
                   let ty = Types.specialize scheme in
                   let ty' =
@@ -2364,9 +2387,10 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
       (fun field accu ->
         match field with
         | Env.TypeInformation.SF_sig (_, v, sc)
-        | Env.TypeInformation.SF_let (_, v, _, sc, _, _, _) -> (v, sc) :: accu
+        | Env.TypeInformation.SF_let (_, v, _, sc, _, _, _, _) ->
+            (v, sc) :: accu
         | Env.TypeInformation.SF_let_rec l ->
-            let l' = List.map (fun (_, v, _, sc, _, _, _) -> (v, sc)) l in
+            let l' = List.map (fun (_, v, _, sc, _, _, _, _) -> (v, sc)) l in
             l' @ accu
         | Env.TypeInformation.SF_theorem (_, v, _, _, _, _)
         | Env.TypeInformation.SF_property (_, v, _, _, _) ->
@@ -2848,20 +2872,22 @@ let extend_from_history ~current_species ~current_unit env
          Env.fh_inherited_along =
            (current_species, simple_expr) :: from.Env.fh_inherited_along } in
        Env.TypeInformation.SF_sig (from', n, sch)
-   | Env.TypeInformation.SF_let (from, n, parms, sch, body, rep_deps, lflag) ->
+   | Env.TypeInformation.SF_let
+           (from, n, parms, sch, body, otp, rep_deps, lflag) ->
        let from' = { from with
          Env.fh_inherited_along =
            (current_species, simple_expr) :: from.Env.fh_inherited_along } in
-       Env.TypeInformation.SF_let (from', n, parms, sch, body, rep_deps, lflag)
+       Env.TypeInformation.SF_let
+         (from', n, parms, sch, body, otp, rep_deps, lflag)
    | Env.TypeInformation.SF_let_rec l ->
        let l' =
          List.map
-           (fun (from, n, parms, sch, body, rep_deps, lflag) ->
+           (fun (from, n, parms, sch, body, otp, rep_deps, lflag) ->
              let from' = { from with
                Env.fh_inherited_along =
                  (current_species, simple_expr) ::
                  from.Env.fh_inherited_along } in
-             (from', n, parms, sch, body, rep_deps, lflag))
+             (from', n, parms, sch, body, otp, rep_deps, lflag))
            l in
        Env.TypeInformation.SF_let_rec l'
    | Env.TypeInformation.SF_theorem (from, n, sch, body, proof, rep_deps) ->
@@ -2921,7 +2947,7 @@ let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
             match field with
              | Env.TypeInformation.SF_sig (_, meth_name, meth_scheme)
              | Env.TypeInformation.SF_let
-                 (_, meth_name, _, meth_scheme, _, _, _) ->
+                 (_, meth_name, _, meth_scheme, _, _, _, _) ->
                let e =
                  Env.TypingEnv.add_value meth_name meth_scheme accu_env in
                (* Now check if we inherited a [rep]. *)
@@ -2957,7 +2983,7 @@ let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
                let e =
                  List.fold_left
                    (fun internal_accu_env
-                        (_, meth_name, _, meth_scheme, _, _, _) ->
+                        (_, meth_name, _, meth_scheme, _, _, _, _) ->
                     Env.TypingEnv.add_value
                       meth_name meth_scheme internal_accu_env)
                    accu_env
@@ -3019,7 +3045,7 @@ let collapse_proof_in_non_inherited proof_of ~current_species fields =
         (begin
         match field with
          | Env.TypeInformation.SF_sig (_, _, _)
-         | Env.TypeInformation.SF_let (_, _, _, _, _, _, _)
+         | Env.TypeInformation.SF_let (_, _, _, _, _, _, _, _)
          | Env.TypeInformation.SF_let_rec _ ->
              let (collapsed_rem, was_collapsed) = rec_find rem in
              (field :: collapsed_rem, was_collapsed)
@@ -3075,7 +3101,7 @@ let rec collapse_proof_in_inherited proof_of ~current_species fields =
         (begin
         match field with
          | Env.TypeInformation.SF_sig (_, _, _)
-         | Env.TypeInformation.SF_let (_, _, _, _, _, _, _)
+         | Env.TypeInformation.SF_let (_, _, _, _, _, _, _, _)
          | Env.TypeInformation.SF_let_rec _ ->
              let (collapsed_rem, was_collapsed) = rec_find rem in
              (field :: collapsed_rem, was_collapsed)
@@ -3215,11 +3241,11 @@ let extract_field_from_list_by_name name fields =
         let found =
           (match field with
            | Env.TypeInformation.SF_sig (_, n, _)
-           | Env.TypeInformation.SF_let (_, n, _, _, _, _, _)
+           | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, _)
            | Env.TypeInformation.SF_theorem (_, n, _, _, _, _)
            | Env.TypeInformation.SF_property (_, n, _, _, _) -> name = n
            | Env.TypeInformation.SF_let_rec l ->
-               List.exists (fun (_, n, _, _, _, _, _) -> name = n) l) in
+               List.exists (fun (_, n, _, _, _, _, _, _) -> name = n) l) in
         if found then (field, rem) else
           let (found_field, tail) = rec_extract rem in
           (found_field, field :: tail)
@@ -3332,7 +3358,8 @@ let order_fields_according_to order fields =
 let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
   let rec_meths' =
     List.map
-      (fun ((from, n, params_names, sc, body, dep_on_rep, log_f) as rec_meth) ->
+      (fun ((from, n, params_names, sc, body, otp, dep_on_rep, log_f)
+              as rec_meth) ->
         if n = sig_name then
           begin
            (* Fusion, by unification may induce def dependency on "rep" ! *)
@@ -3340,7 +3367,7 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
            Types.begin_definition () ;
            let sig_ty = Types.specialize sig_scheme in
            let ty = Types.specialize sc in
-           (* Recover the type where Self is prefered. *)
+           (* Don't keep the type where Self is prefered. *)
            ignore
              (Types.unify ~loc ~self_manifest: ctx.self_manifest sig_ty ty) ;
            Types.end_definition () ;
@@ -3352,7 +3379,7 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
                dep_on_rep.Env.TypeInformation.dor_decl ||
                Types.get_decl_dep_on_rep () } in
            (* If a sig is specified, we always keep it as type. *)
-           (from, n, params_names, sig_scheme, body, dep_on_rep', log_f)
+           (from, n, params_names, sig_scheme, body, otp, dep_on_rep', log_f)
           end
         else rec_meth)
       rec_meths in
@@ -3361,21 +3388,22 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
 
 
 
-(* ******************************************************************** *)
-(* 'a -> ('b * 'a * 'c * 'd * 'e * 'f) list ->                          *)
-(*   ('b * 'a * 'c * 'd * 'e * 'f) * ('b * 'a * 'c * 'd * 'e * 'f) list *)
+(* ***************************************************************** *)
+(* 'a -> ('b * 'a * 'c * 'd * 'e * 'f * 'g) list ->                  *)
+(*   ('b * 'a * 'c * 'd * 'e * 'f* 'g) *                             *)
+(*    ('b * 'a * 'c * 'd * 'e * 'f * 'g) list                        *)
 (* {b Descr} : Searches in the list the first element whose first
    component is equal to [name], then returns it and the list minus
    this element.
    If the searched name is not found in the list, then the exception
    [Not_found] is raised.
 
-   {b Rem} : Not exported outside this module.                          *)
-(* ******************************************************************** *)
+   {b Rem} : Not exported outside this module.                       *)
+(* ***************************************************************** *)
 let find_and_remain name meths =
   let rec rec_find = function
     | [] -> raise Not_found
-    | ((_, n, _, _, _, _, _) as meth) :: rem ->
+    | ((_, n, _, _, _, _, _, _) as meth) :: rem ->
         if name = n then (meth, rem) else
           let (found, tail) = rec_find rem in
           (found, (meth :: tail)) in
@@ -3400,11 +3428,11 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
   let rec rec_fusion l1 l2 =
     match l1 with
     | [] -> l2
-    | ((_, n1, _, sc1, _, _, log_flag1) as meth) :: rem1 ->
+    | ((_, n1, _, sc1, _, _, _, log_flag1) as meth) :: rem1 ->
       let (fused_meth, new_l2) =
         (try
           let (m2, rem_of_l2) = find_and_remain n1 l2 in
-          let (f2, n2, args2, sc2, body2, dep2, log_flag2) = m2 in
+          let (f2, n2, args2, sc2, body2, otp2, dep2, log_flag2) = m2 in
           (* We don't allow to redefine methods mixing logical and computation
              flag. *)
           if log_flag1 != log_flag2 then
@@ -3425,7 +3453,7 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
             Env.TypeInformation.dor_decl =
               dep2.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep ()
             } in
-          let m2' = (f2, n2, args2, sc2, body2, dep', log_flag2) in
+          let m2' = (f2, n2, args2, sc2, body2, otp2, dep', log_flag2) in
           (m2', rem_of_l2)
          with Not_found ->
           (* The method doesn't belong to l2, then keep this one. *)
@@ -3446,9 +3474,9 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
     totally disapears. *)
 let fusion_fields_let_let_rec ~loc ctx meth1 rec_meths2 =
   try
-    let (_, n1, _, sc1, _, _, log_flag1) = meth1 in
+    let (_, n1, _, sc1, _, _, _, log_flag1) = meth1 in
     let (m2, rem_of_l2) = find_and_remain n1 rec_meths2 in
-    let (f2, n2, args2, sc2, body2, dep2, log_flag2) = m2 in
+    let (f2, n2, args2, sc2, body2, otp2, dep2, log_flag2) = m2 in
     (* We don't allow to redefine methods mixing logical and computation
        flag. *)
     if log_flag1 != log_flag2 then
@@ -3469,7 +3497,7 @@ let fusion_fields_let_let_rec ~loc ctx meth1 rec_meths2 =
           dep2.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () ;
         Env.TypeInformation.dor_decl =
           dep2.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep () } in
-    let m2' = (f2, n2, args2, sc2, body2, dep', log_flag2) in
+    let m2' = (f2, n2, args2, sc2, body2, otp2, dep', log_flag2) in
     (* No matter if the position of the re-inserted method differs from its
        original place. So, finally as result, if the fusion succeeded we
        totally forgot the old non-recursive method and we get the new bunch of
@@ -3488,9 +3516,9 @@ let fusion_fields_let_let_rec ~loc ctx meth1 rec_meths2 =
    the new one. *)
 let fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2 =
   try
-    let (f2, n2, args2, sc2, body2, dep2, log_flag2) = meth2 in
+    let (f2, n2, args2, sc2, body2, otp2, dep2, log_flag2) = meth2 in
     let (m1, rem_of_l1) = find_and_remain n2 rec_meths1 in
-    let (_, n1, _, sc1, _, _, log_flag1) = m1 in
+    let (_, n1, _, sc1, _, _, _, log_flag1) = m1 in
     (* We don't allow to redefine methods mixing logical and computation
        flag. *)
     if log_flag1 != log_flag2 then
@@ -3511,7 +3539,7 @@ let fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2 =
           dep2.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () ;
         Env.TypeInformation.dor_decl =
           dep2.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep () } in
-    let m2' = (f2, n2, args2, sc2, body2, dep', log_flag2) in
+    let m2' = (f2, n2, args2, sc2, body2, otp2, dep', log_flag2) in
     (* No matter if the position of the re-inserted method differs from its
        original place. So, finally as result, if the fusion succeeded we get
        the old recursive methods except the one wearing the name of newly
@@ -3551,8 +3579,8 @@ let fields_fusion ~loc ctx phi1 phi2 =
         (* If 2 sigs are specified, we always keep the last one as type. *)
         Env.TypeInformation.SF_sig (from2, n2, sc2)
    | (Env.TypeInformation.SF_sig (_, n1, sc1),
-      Env.TypeInformation.SF_let (from2, n2, pars2, sc2, body, dep2, log2))
-     when n1 = n2 ->
+      Env.TypeInformation.SF_let
+          (from2, n2, pars2, sc2, body, opt2, dep2, log2)) when n1 = n2 ->
         (* sig / let. *)
         Types.reset_deps_on_rep () ;
         Types.begin_definition () ;
@@ -3567,13 +3595,15 @@ let fields_fusion ~loc ctx phi1 phi2 =
             dep2.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep ()
           } in
         (* If a sig is specified, we always keep it as type. *)
-        Env.TypeInformation.SF_let (from2, n2, pars2, sc1, body, dep', log2)
+        Env.TypeInformation.SF_let
+          (from2, n2, pars2, sc1, body, opt2, dep', log2)
    | (Env.TypeInformation.SF_sig (_, n1, sc1),
       Env.TypeInformation.SF_let_rec rec_meths) ->
         (* sig / let rec. *)
         fusion_fields_let_rec_sig ~loc ctx n1 sc1 rec_meths
    (* *** *)
-   | (Env.TypeInformation.SF_let (from1, n1, pars1, sc1, body, dep1, log1),
+   | (Env.TypeInformation.SF_let
+        (from1, n1, pars1, sc1, body, otp1, dep1, log1),
       Env.TypeInformation.SF_sig (_, n2, sc2)) when n1 = n2 ->
         (* let / sig. *)
         Types.reset_deps_on_rep () ;
@@ -3589,10 +3619,11 @@ let fields_fusion ~loc ctx phi1 phi2 =
             dep1.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep ()
           } in
         (* If a sig is specified, we always keep it as type. *)
-        Env.TypeInformation.SF_let (from1, n1, pars1, sc2, body, dep', log1)
-   | (Env.TypeInformation.SF_let (_, n1, _, sc1, _, _, log_flag1),
-      Env.TypeInformation.SF_let (from2, n2, pars2, sc2, body, dep, log_flag2))
-     when n1 = n2 ->
+        Env.TypeInformation.SF_let
+          (from1, n1, pars1, sc2, body, otp1, dep', log1)
+   | (Env.TypeInformation.SF_let (_, n1, _, sc1, _, _, _, log_flag1),
+      Env.TypeInformation.SF_let
+          (from2, n2, pars2, sc2, body, otp2, dep, log_flag2)) when n1 = n2 ->
         (* let / let. *)
         (* Late binding : keep the second body ! *)
         if log_flag1 != log_flag2 then
@@ -3610,7 +3641,7 @@ let fields_fusion ~loc ctx phi1 phi2 =
             dep.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep ()
           } in
         Env.TypeInformation.SF_let
-          (from2, n2, pars2, (Types.generalize ty), body, dep', log_flag2)
+          (from2, n2, pars2, (Types.generalize ty), body, otp2, dep', log_flag2)
    | (Env.TypeInformation.SF_let meth1,
       Env.TypeInformation.SF_let_rec rec_meths2) ->
         Env.TypeInformation.SF_let_rec
@@ -3691,9 +3722,9 @@ let oldest_inter_n_field_n_fields phi fields =
   let flat_phi_names =
     (match phi with
      | Env.TypeInformation.SF_sig (_, v, _)
-     | Env.TypeInformation.SF_let (_, v, _, _, _, _, _) -> [v]
+     | Env.TypeInformation.SF_let (_, v, _, _, _, _, _, _) -> [v]
      | Env.TypeInformation.SF_let_rec l ->
-         List.map (fun (_, v, _, _, _, _, _) -> v) l
+         List.map (fun (_, v, _, _, _, _, _, _) -> v) l
      | Env.TypeInformation.SF_theorem (_, v, _, _, _, _) -> [v]
      | Env.TypeInformation.SF_property (_, v, _, _, _) -> [v]) in
   (* We will now check for an intersection between the list of names from phi
@@ -3704,7 +3735,7 @@ let oldest_inter_n_field_n_fields phi fields =
       (begin
         match f with
         | Env.TypeInformation.SF_sig (_, v, _)
-        | Env.TypeInformation.SF_let (_, v, _, _, _, _, _)
+        | Env.TypeInformation.SF_let (_, v, _, _, _, _, _, _)
         | Env.TypeInformation.SF_theorem (_, v, _, _, _, _)
         | Env.TypeInformation.SF_property (_, v, _, _, _) ->
             if List.mem v flat_phi_names then ((Some f), [], rem_f)
@@ -3713,7 +3744,7 @@ let oldest_inter_n_field_n_fields phi fields =
               (* Not found in [f], then add it in the head part. *)
               (found, (f :: head_list), rem_list)
         | Env.TypeInformation.SF_let_rec l ->
-            let names_in_l = List.map (fun (_, v, _, _, _, _, _) -> v) l in
+            let names_in_l = List.map (fun (_, v, _, _, _, _, _, _) -> v) l in
             if Handy.list_intersect_p flat_phi_names names_in_l then
               ((Some f), [], rem_f)
             else
@@ -3731,10 +3762,10 @@ let non_conflicting_fields_p f1 f2 =
   match (f1, f2) with
    | (Env.TypeInformation.SF_sig (_, v1, sch1),
       Env.TypeInformation.SF_sig (_, v2, sch2))
-   | (Env.TypeInformation.SF_let (_, v1, _, sch1, _, _, _),
+   | (Env.TypeInformation.SF_let (_, v1, _, sch1, _, _, _, _),
       Env.TypeInformation.SF_sig (_, v2, sch2))
    | (Env.TypeInformation.SF_sig (_, v1, sch1),
-      Env.TypeInformation.SF_let (_, v2, _, sch2, _, _, _)) ->
+      Env.TypeInformation.SF_let (_, v2, _, sch2, _, _, _, _)) ->
         (* If signatures/lets wear the same names and have the same scheme
            then fields are not conflicting. *)
         if v1 = v2 then
@@ -3757,7 +3788,7 @@ let non_conflicting_fields_p f1 f2 =
         (* There is no conflict if one of the rec-bound identifiers wears the
            same name than the signature and have the same type. *)
         List.exists
-          (fun (_, v, _, sch, _, _, _) ->
+          (fun (_, v, _, sch, _, _, _, _) ->
             if v = v1 then
               (begin
               (* For each unification, take a fresh scheme for the signature
@@ -3773,8 +3804,8 @@ let non_conflicting_fields_p f1 f2 =
               end)
             else false)
           l2
-   | (Env.TypeInformation.SF_let (from1, v1, _, _, _, _, log1),
-      Env.TypeInformation.SF_let (from2, v2, _, _, _, _, log2)) ->
+   | (Env.TypeInformation.SF_let (from1, v1, _, _, _, _, _, log1),
+      Env.TypeInformation.SF_let (from2, v2, _, _, _, _, _, log2)) ->
         (* Unless fields are wearing the same name and are coming from the
            same species, we consider that 2 let definitions are conflicting.
            We could go further, applying equality modulo alpha-conversion but
@@ -3799,7 +3830,8 @@ let non_conflicting_fields_p f1 f2 =
        (begin
        try
          List.for_all2
-           (fun (from1, v1, _, _, _, _, log1) (from2, v2, _, _, _, _, log2) ->
+           (fun (from1, v1, _, _, _, _, _, log1)
+                (from2, v2, _, _, _, _, _, log2) ->
              (from1.Env.fh_initial_apparition =
               from2.Env.fh_initial_apparition) && (v1 = v2) && (log1 = log2))
            l1 l2
@@ -3890,16 +3922,48 @@ let ensure_collection_completely_defined ctx fields =
              | Some curr_spec ->
                raise (Collection_not_fully_defined (curr_spec, vname))
             end)
-        | Env.TypeInformation.SF_let (_, _, _, _, _, _, _) -> ()
-        | Env.TypeInformation.SF_let_rec _ -> ()
+        | Env.TypeInformation.SF_let (_, _, _, _, _, _, _, _) -> ()
+        | Env.TypeInformation.SF_let_rec l ->
+            List.iter
+              (fun (_, vname, _, _, _, otp, _, _) ->
+                if otp = None then
+                  (begin
+                  (* Recursive functions are fully defined if they have
+                     proofs. We only raise an error if the option
+                     "-impose-termination-proof" is enabled. Otherwise we only
+                     generate a warning. *)
+                  match ctx.current_species with
+                   | None -> assert false
+                   | Some curr_spec ->
+                       if Configuration.get_impose_termination_proof () then
+                         raise
+                           (Collection_not_fully_defined_missing_term_proof
+                              (curr_spec, vname))
+                       else
+                         Format.eprintf
+                           "@[Warning: %tSpecies%t@ '%t%a%t'@ %tcannot@ \
+                           be@ turned@ into@ a@ collection.@ Field%t@ \
+                           '%t%a%t'@ %tdoes@ not@ have@ a@ termination@ \
+                           proof.%t@]@."
+                           Handy.pp_set_bold Handy.pp_reset_effects
+                           Handy.pp_set_underlined
+                           Sourcify.pp_qualified_species curr_spec
+                           Handy.pp_reset_effects
+                           Handy.pp_set_bold Handy.pp_reset_effects
+                           Handy.pp_set_underlined
+                           Sourcify.pp_vname vname
+                           Handy.pp_reset_effects
+                           Handy.pp_set_bold Handy.pp_reset_effects
+                  end))
+              l
         | Env.TypeInformation.SF_theorem (_, _, _, _, _, _) -> ()
         | Env.TypeInformation.SF_property (_, vname, _, _, _) ->
-          (begin
+            (begin
             (* A property does not have proof. So, it is not fully defined. *)
             match ctx.current_species with
-            | None -> assert false
-            | Some curr_spec ->
-              raise (Collection_not_fully_defined (curr_spec, vname))
+             | None -> assert false
+             | Some curr_spec ->
+                 raise (Collection_not_fully_defined (curr_spec, vname))
            end)
        end);
       rec_ensure rem_fields in
@@ -3953,12 +4017,12 @@ let detect_polymorphic_method ~loc = function
          never ploymorphic. *)
       ()
   | Env.TypeInformation.SF_sig (_, name, sch)
-  | Env.TypeInformation.SF_let (_, name, _, sch, _, _, _) ->
+  | Env.TypeInformation.SF_let (_, name, _, sch, _, _, _, _) ->
       if Types.scheme_contains_variable_p sch then
         raise (Scheme_contains_type_vars (name, sch, loc))
   | Env.TypeInformation.SF_let_rec defs ->
       List.iter
-        (fun (_, name, _, sch, _, _, _) ->
+        (fun (_, name, _, sch, _, _, _, _) ->
           if Types.scheme_contains_variable_p sch then
             raise (Scheme_contains_type_vars (name, sch, loc)))
         defs

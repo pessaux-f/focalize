@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.30 2008-10-14 12:13:21 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.31 2008-11-21 16:54:34 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -34,6 +34,9 @@ let main () =
        Arg.String (fun path -> Files.add_lib_path path),
        " adds the specified path to the path list where to search for \
          compiled\n\tinterfaces.") ;
+      ("-impose-termination-proof",
+       Arg.Unit Configuration.set_impose_termination_proof,
+       " makes termination proofs of recursive functions mandatory.") ;
       ("--methods-history-to-text",
        Arg.String Configuration.set_methods_history_to_text,
        " dumps species' methods' inheritance history as plain text\n\tfiles \

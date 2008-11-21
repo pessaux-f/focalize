@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.21 2008-10-17 06:13:34 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.22 2008-11-21 16:54:34 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -35,13 +35,13 @@ let guess_method_computational_or_logical meth_name meth_ty among =
         (begin
         match h with
          | Env.TypeInformation.SF_sig (_, n, _)
-         | Env.TypeInformation.SF_let (_, n, _, _, _, _, _) ->
+         | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, _) ->
              if n = meth_name then Parsetree_utils.DETK_computational meth_ty
              else rec_guess q
          | Env.TypeInformation.SF_let_rec let_infos ->
              if
                List.exists
-                 (fun (_, n, _, _, _, _, _) -> n = meth_name) let_infos then
+                 (fun (_, n, _, _, _, _, _, _) -> n = meth_name) let_infos then
                Parsetree_utils.DETK_computational meth_ty
            else rec_guess q
        | Env.TypeInformation.SF_theorem (_, n, _, lexpr, _, _)

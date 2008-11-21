@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.3 2008-11-18 17:09:35 doligez Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.4 2008-11-21 16:54:34 pessaux Exp $ *)
 
 (*pp basic_ext.cmo*)
 
@@ -1527,11 +1527,16 @@ species Liste_triee (A is Ordered_set) inherits
        chaque élément est strictement plus petit que le suivant. *)
    let rec est_triee (l in Self) in bool =
      match l with
-     | basics#[] -> true
-     | x :: l ->
-        (match l with
-         | basics#[] -> true
-         | y :: _underscore -> and_b (A!lt (x, y), !est_triee (l))) ;
+      | basics#[] -> true
+      | x :: l ->
+          (match l with
+           | basics#[] -> true
+           | y :: _underscore -> and_b (A!lt (x, y), !est_triee (l)))
+   termination proof: order 0 on l
+   assumed
+     {* Bidon en attendant qu'on gère vraiment
+        les preuves de terminaison. *} ;
+
 
    (** le nouvel invariant implique celui de l'espèce parent (non duplication).*)
    theorem invariant_subsumption:
@@ -1571,11 +1576,16 @@ species Liste_triee (A is Ordered_set) inherits
 
    let rec ajoute_element (x in A, l in Self) =
      match l with
-     | basics#[] -> [x]
-     | y :: l1 ->
-       if A!lt (x, y) then x :: l else
-       if A!equal (x, y) then l else
-       y :: (!ajoute_element (x, l1)) ;
+      | basics#[] -> [x]
+      | y :: l1 ->
+	  if A!lt (x, y) then x :: l
+	  else
+	    if A!equal (x, y) then l
+	    else y :: (!ajoute_element (x, l1))
+       termination proof: order 0 on l
+       assumed
+	 {* Bidon en attendant qu'on gère vraiment
+            les preuves de terminaison. *} ;
 
    theorem invariant1: !est_triee (!vide)
    proof:

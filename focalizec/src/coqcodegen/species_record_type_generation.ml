@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.67 2008-11-17 10:53:57 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.68 2008-11-21 16:54:34 pessaux Exp $ *)
 
 
 
@@ -172,9 +172,9 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
             match coll_specifier with
              | Parsetree.Vname coll_name ->
                  (begin
-                 (* Method call from a species that is not the current but  *)
-                 (* is implicitely in the current compilation unit. May be  *)
-                 (* either a paramater or a toplevel defined collection.    *)
+                 (* Method call from a species that is not the current but is
+                    implicitely in the current compilation unit. May be
+                    either a paramater or a toplevel defined collection. *)
                  if List.exists
                      (fun species_param ->
                        match species_param with
@@ -184,13 +184,12 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                             (Parsetree.Vuident vn) = coll_name)
                      ctx.Context.scc_species_parameters_names then
                    (begin
-                   (* It comes from a parameter. To retrieve the related *)
-                   (* method name we build it the same way we built it   *)
-                   (* while generating the extra Coq function's          *)
-                   (* parameters due to depdencencies coming from the    *)
-                   (* species parameter. I.e: "_p_", followed by the     *)
-                   (* species parameter name, followed by "_", followed  *)
-                   (* by the method's name.                              *)
+                   (* It comes from a parameter. To retrieve the related
+                      method name we build it the same way we built it
+                      while generating the extra Coq function's parameters due
+                      to depdencencies coming from the species parameter.
+                      I.e: "_p_", followed by the species parameter name,
+                      followed by "_", followed by the method's name. *)
                    let prefix =
                      "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^ "_" in
                    Format.fprintf out_fmter "%s%a"
@@ -1043,8 +1042,8 @@ let generate_record_type_parameters ctx env species_fields =
   List.iter
     (function
       | Env.TypeInformation.SF_sig (_, _, _)
-      | Env.TypeInformation.SF_let (_, _, _, _, _, _, _)
-      | Env.TypeInformation.SF_let_rec _-> ()
+      | Env.TypeInformation.SF_let (_, _, _, _, _, _, _, _)
+      | Env.TypeInformation.SF_let_rec _ -> ()
       | Env.TypeInformation.SF_theorem (_, _, _, logical_expr, _, _)
       | Env.TypeInformation.SF_property (_, _, _, logical_expr, _) ->
           (* Get the list of the methods from the species parameters the
@@ -1190,7 +1189,7 @@ let generate_record_type ctx env species_descr =
   (* We must now generate the record's fields types. *)
   let output_one_field ~semi = function
     | Env.TypeInformation.SF_sig (from, n, sch)
-    | Env.TypeInformation.SF_let (from, n, _, sch, _, _, _) ->
+    | Env.TypeInformation.SF_let (from, n, _, sch, _, _, _, _) ->
         (begin
         (* Skip "rep", because it is processed just above. *)
         if (Parsetree_utils.name_of_vname n) <> "rep" then
@@ -1208,7 +1207,7 @@ let generate_record_type ctx env species_descr =
         end)
     | Env.TypeInformation.SF_let_rec l ->
         List.iter
-          (fun (from, n, _, sch, _, _, _) ->
+          (fun (from, n, _, sch, _, _, _, _) ->
             let ty = Types.specialize sch in
             Format.fprintf out_fmter "(* From species %a. *)@\n"
               Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;

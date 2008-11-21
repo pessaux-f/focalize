@@ -12,8 +12,10 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.31 2008-11-21 10:37:08 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.32 2008-11-21 16:54:34 pessaux Exp $ *)
 
+exception Collection_not_fully_defined_missing_term_proof of
+  (Parsetree.qualified_species * Parsetree.vname)
 exception Proof_of_multiply_defined of
   (Location.t * Parsetree.vname * Location.t)
 exception Proof_of_unknown_property of

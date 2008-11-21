@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.114 2008-10-14 14:05:10 weis Exp $ *)
+(* $Id: env.ml,v 1.115 2008-11-21 16:54:34 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -376,6 +376,8 @@ module TypeInformation = struct
      (Parsetree.vname list) *
      Types.type_scheme *       (** Type scheme of the let-bound definition. *)
      Parsetree.binding_body *  (** Body of the let-bound definition. *)
+     (** The termination proof if provided. *)
+     (Parsetree.termination_proof option) *
      (** Tells if the method has dependencies on the carrier ("rep"). *)
      dependency_on_rep *
      Parsetree.logical_flag)   (** Tells if the let-bound idnetifier is a
@@ -638,7 +640,7 @@ module TypeInformation = struct
               Sourcify.pp_qualified_species from.fh_initial_apparition ;
             Format.fprintf ppf "sig %a : %a@\n"
               Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
-        | SF_let (from, vname, _, ty_scheme, _, _, _) ->
+        | SF_let (from, vname, _, ty_scheme, _, _, _, _) ->
             Format.fprintf ppf "(* From species %a. *)@\n"
               Sourcify.pp_qualified_species from.fh_initial_apparition ;
             Format.fprintf ppf "let %a : %a@\n"
@@ -647,13 +649,13 @@ module TypeInformation = struct
             (begin
             match rec_bounds with
              | [] -> assert false  (* Empty let rec is non sense ! *)
-             | (from, vname, _, ty_scheme, _, _, _) :: rem ->
+             | (from, vname, _, ty_scheme, _, _, _, _) :: rem ->
                  Format.fprintf ppf "(* From species %a. *)@\n"
                    Sourcify.pp_qualified_species from.fh_initial_apparition ;
                  Format.fprintf ppf "let rec %a : %a@\n"
                    Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme;
                  List.iter
-                   (fun (local_from, v, _, s, _, _, _) ->
+                   (fun (local_from, v, _, s, _, _, _, _) ->
                      Format.fprintf ppf
                        "(* From species %a. *)@\n"
                        Sourcify.pp_qualified_species
@@ -1829,12 +1831,12 @@ module TypingEMAccess = struct
                let s = Types.generalize (Types.type_prop ()) in
                [(v, (BO_absolute s))] @ accu
            | TypeInformation.SF_sig (_, v, s)
-           | TypeInformation.SF_let (_, v, _, s, _, _, _) ->
+           | TypeInformation.SF_let (_, v, _, s, _, _, _, _) ->
                [(v, (BO_absolute s))] @ accu
            | TypeInformation.SF_let_rec l ->
                let l' =
                  List.map
-                   (fun (_, v, _, s, _, _, _) -> (v, (BO_absolute s))) l in
+                   (fun (_, v, _, s, _, _, _, _) -> (v, (BO_absolute s))) l in
                l' @ accu)
         []
         spec_info.TypeInformation.spe_sig_methods in

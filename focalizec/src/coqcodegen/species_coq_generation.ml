@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.132 2008-11-18 17:06:47 doligez Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.133 2008-11-21 16:54:34 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2293,7 +2293,7 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
        (* A "let", then a fortiori "let rec" construct *)
        (* must at least bind one identifier !          *)
        assert false
-   | [((from, name, params, scheme, body, _, _), ai)] ->
+   | [((from, name, params, scheme, body, _, _, _), ai)] ->
        (begin
        (* First of all, only methods defined in the current species must be
           generated. Inherited methods ARE NOT generated again ! *)
@@ -2369,7 +2369,7 @@ let generate_methods ctx print_ctx env generated_fields = function
            methods ! *)
         Misc_common.cfm_coq_min_typ_env_names = [] } in
       Misc_common.CSF_sig compiled_field
-  | Abstractions.FAI_let ((from, name, params, scheme, body, _, _),
+  | Abstractions.FAI_let ((from, name, params, scheme, body, _, _, _),
                           abstraction_info) ->
       let all_deps_from_params =
         Abstractions.merge_abstraction_infos
@@ -2514,11 +2514,11 @@ let make_meths_type_kinds species_fields =
        | Env.TypeInformation.SF_theorem (_, n, _, lexpr, _, _) ->
            (n, (Env.MTK_logical lexpr)) :: accu
        | Env.TypeInformation.SF_sig (_, n, sch)
-       | Env.TypeInformation.SF_let (_, n, _, sch, _, _, _) ->
+       | Env.TypeInformation.SF_let (_, n, _, sch, _, _, _, _) ->
            (n, (Env.MTK_computational sch)) :: accu
        | Env.TypeInformation.SF_let_rec l ->
            List.fold_right
-             (fun (_, n, _, sch, _, _, _) accu' ->
+             (fun (_, n, _, sch, _, _, _, _) accu' ->
                (n, (Env.MTK_computational sch)) :: accu')
              l accu)
     species_fields
@@ -3535,7 +3535,7 @@ let make_collection_effective_record ctx env implemented_species_name
       | Env.TypeInformation.SF_sig (_, _, _)
       | Env.TypeInformation.SF_property (_, _, _, _, _) -> ()
       | Env.TypeInformation.SF_theorem (_, n, _, _, _, _)
-      | Env.TypeInformation.SF_let (_, n, _, _, _, _, _) ->
+      | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, _) ->
           Format.fprintf out_fmter "@ t.@[<1>(" ;
           print_implemented_species_as_coq_module
             ~current_unit out_fmter implemented_species_name ;
@@ -3552,7 +3552,7 @@ let make_collection_effective_record ctx env implemented_species_name
           Format.fprintf out_fmter ")@]"
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
-            (fun (_, n, _, _, _, _, _) ->
+            (fun (_, n, _, _, _, _, _, _) ->
               Format.fprintf out_fmter "@ t.@[<1>(" ;
               print_implemented_species_as_coq_module
                 ~current_unit out_fmter implemented_species_name ;

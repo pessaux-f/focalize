@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.86 2008-11-17 10:53:57 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.87 2008-11-21 16:54:34 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -220,7 +220,7 @@ let generate_record_type ctx species_descr =
   List.iter
     (function
       | Env.TypeInformation.SF_sig (from, n, sch)
-      | Env.TypeInformation.SF_let (from, n, _, sch, _, _, _) ->
+      | Env.TypeInformation.SF_let (from, n, _, sch, _, _, _, _) ->
           (begin
           (* Skip "rep", because it is a bit different and processed above
              c.f. function [generate_rep_constraint_in_record_type]. *)
@@ -246,7 +246,7 @@ let generate_record_type ctx species_descr =
           end)
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
-            (fun (from, n, _, sch, _, _, _) ->
+            (fun (from, n, _, sch, _, _, _, _) ->
               let ty = Types.specialize sch in
               (* If the type of the sig refers to type "Prop", then the sig
                  is related to a logical let and hence must not be generated
@@ -527,7 +527,7 @@ let generate_methods ctx env field =
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_coq_min_typ_env_names = [] } in
        Some (Misc_common.CSF_sig compiled_field)
-   | Abstractions.FAI_let ((from, name, params, scheme, body, _, _),
+   | Abstractions.FAI_let ((from, name, params, scheme, body, _, _, _),
                            abstraction_info) ->
        (begin
        match body with
@@ -575,7 +575,7 @@ let generate_methods ctx env field =
             (* A "let", then a fortiori "let rec" construct must at least bind
                one identifier ! *)
             assert false
-        | ((from, name, params, scheme, body, _, _), first_ai) :: q ->
+        | ((from, name, params, scheme, body, _, _, _), first_ai) :: q ->
             (begin
             match body with
              | Parsetree.BB_logical _ ->
@@ -590,7 +590,7 @@ let generate_methods ctx env field =
                    ctx with
                    Context.scc_lambda_lift_params_mapping =
                      List.map
-                       (fun ((_, n, _, _, _, _, _), ai) ->
+                       (fun ((_, n, _, _, _, _, _, _), ai) ->
                          (n,
                           Misc_common.make_params_list_from_abstraction_info
                             ~care_logical: false ~care_types: false ai))
@@ -628,7 +628,7 @@ let generate_methods ctx env field =
                     "and". *)
                  let rem_compiled =
                    List.map
-                     (fun ((from, name, params, scheme, body, _, _), ai) ->
+                     (fun ((from, name, params, scheme, body, _, _, _), ai) ->
                        let body_e =
                          (match body with
                           | Parsetree.BB_logical _ ->
@@ -1602,7 +1602,7 @@ let collection_compile env ~current_unit out_fmter collection_def
         | Env.TypeInformation.SF_sig (_, _, _)
         | Env.TypeInformation.SF_theorem (_, _, _, _, _, _)
         | Env.TypeInformation.SF_property (_, _, _, _, _) -> ()
-        | Env.TypeInformation.SF_let (_, n, _, _, _, _, log_flag) ->
+        | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, log_flag) ->
             (* Generate only if not a logical let ! *)
             if log_flag = Parsetree.LF_no_logical then
               (begin
@@ -1615,7 +1615,7 @@ let collection_compile env ~current_unit out_fmter collection_def
               end)
         | Env.TypeInformation.SF_let_rec l ->
             List.iter
-              (fun (_, n, _, _, _, _, log_flag) ->
+              (fun (_, n, _, _, _, _, _, log_flag) ->
                 (* Generate only if not a logical let ! *)
                 if log_flag = Parsetree.LF_no_logical then
                   (begin

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.51 2008-11-04 11:31:33 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.52 2008-11-21 16:54:34 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -278,7 +278,7 @@ let get_if_field_logical_statement name fields =
     | h :: q ->
         match h with
          | Env.TypeInformation.SF_sig (_, _, _)
-         | Env.TypeInformation.SF_let (_, _, _, _, _, _, _)
+         | Env.TypeInformation.SF_let (_, _, _, _, _, _, _, _)
          | Env.TypeInformation.SF_let_rec _ ->
              rec_get q
          | Env.TypeInformation.SF_property (_, n, _, lexpr, _)
@@ -330,7 +330,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
       List.partition
         (function
           | (_, DepGraphData.DK_decl _) -> true
-          | (_, DepGraphData.DK_def) -> false)
+          | (_, DepGraphData.DK_def _) -> false)
         my_node.DepGraphData.nn_children
     with Not_found -> ([], [])  (* No children at all. *)) in
   (* Get the list of the methods from the species parameters the current
@@ -492,7 +492,7 @@ let compute_lambda_liftings_for_toplevel_theorem dependency_graph_nodes name =
       List.partition
         (function
           | (_, DepGraphData.DK_decl _) -> true
-          | (_, DepGraphData.DK_def) -> false)
+          | (_, DepGraphData.DK_def _) -> false)
         my_node.DepGraphData.nn_children
     with Not_found -> ([], [])  (* No children at all. *)) in
   (decl_children, def_children)
@@ -576,7 +576,7 @@ let find_field_abstraction_by_name name abstractions =
     | h :: q ->
         match h with
          | FAI_sig ((_, n, _), abstraction_info) 
-         | FAI_let ((_, n, _, _, _, _, _), abstraction_info)
+         | FAI_let ((_, n, _, _, _, _, _, _), abstraction_info)
          | FAI_theorem ((_, n, _, _, _, _) , abstraction_info)
          | FAI_property ((_, n, _, _, _), abstraction_info) ->
              if n = name then Some abstraction_info else rec_find q
@@ -584,7 +584,7 @@ let find_field_abstraction_by_name name abstractions =
              (begin
              try
                let (_, abstraction_info) =
-                 List.find (fun ((_, n, _, _, _, _, _), _) -> n = name) l in
+                 List.find (fun ((_, n, _, _, _, _, _, _), _) -> n = name) l in
                Some abstraction_info
              with Not_found -> rec_find q
              end) in
@@ -823,12 +823,14 @@ let complete_dependencies_from_params_rule_didou ~current_unit ~via_body
                        (function
                          | (_,
                             (DepGraphData.DK_decl
-                               DepGraphData.DDK_from_type)) -> true
+                               DepGraphData.DcDK_from_type)) -> true
                          | (_,
                             (DepGraphData.DK_decl
-                               DepGraphData.DDK_from_body)) -> false
-                                   
-                         | (_, DepGraphData.DK_def) -> false)
+                               DepGraphData.DcDK_from_body)) -> false
+                         | (_,
+                            (DepGraphData.DK_decl
+                               DepGraphData.DcDK_from_term_proof)) -> false
+                         | (_, (DepGraphData.DK_def _)) -> false)
                        my_node.DepGraphData.nn_children
                    with Not_found -> []  (* No children at all. *)) in
                  List.iter
@@ -1235,7 +1237,8 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                ai_dependencies_from_params_via_completion = empty_deps ;
                ai_min_coq_env = [] } in
              (FAI_sig (si, abstr_info)) :: abstractions_accu
-         | Env.TypeInformation.SF_let ((_, name, _, sch, body, _, _) as li) ->
+         | Env.TypeInformation.SF_let
+	        ((_, name, _, sch, body, _, _, _) as li) ->
              (* ATTENTION, the [dependencies_from_params_in_body] is not
                 the complete set of dependencies. It must be completed to
                 fully represent the definition 72 page 153 from Virgile
@@ -1306,7 +1309,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
          | Env.TypeInformation.SF_let_rec l ->
              let deps_infos =
                List.map
-                 (fun ((_, name, _, sch, body, _, _) as li) ->
+                 (fun ((_, name, _, sch, body, _, _, _) as li) ->
                    let body_as_fbk =
                      match body with
                       | Parsetree.BB_logical p -> FBK_logical_expr p

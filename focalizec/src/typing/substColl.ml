@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.28 2008-11-04 09:17:17 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.29 2008-11-21 16:54:34 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -631,6 +631,31 @@ and subst_proof_node ~current_unit c1 c2 proof_node =
 
 
 
+let subst_termination_proof ~current_unit c1 c2 proof =
+  let new_desc =
+    (match proof.Parsetree.ast_desc with
+     | Parsetree.TP_structural _ -> proof.Parsetree.ast_desc
+     | Parsetree.TP_lexicographic facts ->
+         let facts' = List.map (subst_fact ~current_unit c1 c2) facts in
+         Parsetree.TP_lexicographic facts'
+     | Parsetree.TP_measure (e, params, pr) ->
+         let e' = subst_expr ~current_unit c1 c2 e in
+         let pr' = subst_proof ~current_unit c1 c2 pr in
+         Parsetree.TP_measure (e', params, pr')
+     | Parsetree.TP_order (e, params, pr) ->
+         let e' = subst_expr ~current_unit c1 c2 e in
+         let pr' = subst_proof ~current_unit c1 c2 pr in
+         Parsetree.TP_order (e', params, pr')) in
+  (* Substitute in the AST node type (useless here, but homogenous). *)
+  let new_type =
+    subst_ast_node_type_information c1 c2 proof.Parsetree.ast_type in
+  (* And finally, make a new AST node. *)
+  { proof with Parsetree.ast_desc = new_desc ;
+    Parsetree.ast_type = new_type }
+;;
+
+
+
 let subst_binding_body ~current_unit c1 c2 = function
   | Parsetree.BB_computational e ->
       Parsetree.BB_computational (subst_expr ~current_unit c1 c2 e)
@@ -664,7 +689,7 @@ let subst_species_field ~current_unit c1 c2 = function
       Env.TypeInformation.SF_sig (from, vname, scheme')
       end)
   | Env.TypeInformation.SF_let
-      (from, vname, params_names, scheme, body, dep, log_flag) ->
+      (from, vname, params_names, scheme, body, opt_proof, dep, log_flag) ->
       (begin
       Types.begin_definition () ;
       let ty = Types.specialize scheme in
@@ -685,14 +710,19 @@ let subst_species_field ~current_unit c1 c2 = function
       Types.end_definition () ;
       let scheme' = Types.generalize ty' in
       let body' = subst_binding_body ~current_unit c1 c2 body in
+      let opt_proof' =
+        (match opt_proof with
+         | None -> None
+         | Some pr -> Some (subst_termination_proof ~current_unit c1 c2 pr)) in
       Env.TypeInformation.SF_let
-        (from, vname, params_names, scheme', body', dep, log_flag)
+        (from, vname, params_names, scheme', body', opt_proof', dep, log_flag)
       end)
   | Env.TypeInformation.SF_let_rec l ->
       (begin
       let l' =
         List.map
-          (fun (from, vname, params_names, scheme, body, dep, log_flag) ->
+          (fun (from, vname, params_names, scheme, body, opt_proof, dep,
+                log_flag) ->
             let ty = Types.specialize scheme in
             let ty' =
               (match c1 with
@@ -713,7 +743,13 @@ let subst_species_field ~current_unit c1 c2 = function
             Types.end_definition () ;
             let scheme' = Types.generalize ty' in
             let body' = subst_binding_body ~current_unit c1 c2 body in
-            (from, vname, params_names, scheme', body', dep, log_flag))
+            let opt_proof' =
+              (match opt_proof with
+               | None -> None
+               | Some pr ->
+                   Some (subst_termination_proof ~current_unit c1 c2 pr)) in
+            (from, vname, params_names, scheme', body', opt_proof',
+             dep, log_flag))
           l in
       Env.TypeInformation.SF_let_rec l'
       end)

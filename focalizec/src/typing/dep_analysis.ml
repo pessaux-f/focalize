@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.54 2008-10-17 06:13:34 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.55 2008-11-21 16:54:34 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -383,6 +383,38 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
 
 
 
+let termination_proof_decl_n_def_dependencies ~current_species t_proof =
+  match t_proof.Parsetree.ast_desc with
+   | Parsetree.TP_structural _ -> 
+       (Parsetree_utils.SelfDepSet.empty,
+        Parsetree_utils.SelfDepSet.empty)
+   | Parsetree.TP_lexicographic facts ->
+       (begin
+       List.fold_left
+         (fun (accu_decl_deps, accu_def_deps) fact ->
+           let (fact_decl_deps, fact_def_deps) =
+             fact_decl_n_def_dependencies ~current_species fact in
+           (* Return both "decl" and "def" dependencies. *)
+           ((Parsetree_utils.SelfDepSet.union
+               accu_decl_deps fact_decl_deps),
+            (Parsetree_utils.SelfDepSet.union
+               accu_def_deps fact_def_deps)))
+         (Parsetree_utils.SelfDepSet.empty,
+          Parsetree_utils.SelfDepSet.empty)
+         facts
+       end)
+   | Parsetree.TP_measure (expr, _,  sub_pr)
+   | Parsetree.TP_order (expr, _,  sub_pr) ->
+       (* No def-dependencies in an [expr]. *)
+       let expr_decl = expr_decl_dependencies ~current_species expr in
+       let (sub_proof_decl_deps, sub_proof_def_deps) =
+         proof_decl_n_def_dependencies ~current_species sub_pr in
+       ((Parsetree_utils.SelfDepSet.union expr_decl sub_proof_decl_deps),
+        sub_proof_def_deps)
+;;
+
+
+
 let binding_body_decl_dependencies ~current_species = function
   | Parsetree.BB_computational e -> expr_decl_dependencies ~current_species e
   | Parsetree.BB_logical p -> prop_decl_dependencies ~current_species p
@@ -401,7 +433,10 @@ let binding_body_decl_dependencies ~current_species = function
 let field_only_decl_dependencies ~current_species = function
   | Env.TypeInformation.SF_sig (_, _, _) ->
       Parsetree_utils.SelfDepSet.empty
-  | Env.TypeInformation.SF_let (_, _, _, _, body, rep_deps, _) ->
+  | Env.TypeInformation.SF_let (_, _, _, _, body, _, rep_deps, _) ->
+      (* We simply ignore the termination proof stuff since for non recursive
+         functions this is not needed. In fact, we could even ensure that
+         there is no proof on a non-recursive function. *)
       let body_deps = binding_body_decl_dependencies ~current_species body in
       (* Take into account dependencies on the carrier. *)
       if rep_deps.Env.TypeInformation.dor_decl then
@@ -413,16 +448,17 @@ let field_only_decl_dependencies ~current_species = function
       (* Create the set of names to remove afterwards. *)
       let names_of_l =
         List.fold_left
-          (fun accu_set (_, n, _, _, _, _, _) ->
+          (fun accu_set (_, n, _, _, _, _, _, _) ->
             (* Give a dummy type variable as type... *)
             Parsetree_utils.SelfDepSet.add
               (n, Types.type_variable ()) accu_set)
           Parsetree_utils.SelfDepSet.empty
           l in
-      (* Now, compute the dependencies on all the rec-bound-names. *)
+      (* Now, compute the dependencies on all the rec-bound-names but we are
+         not interested in proofs yet. *)
       let deps_of_l =
         List.fold_left
-          (fun accu_deps (_, _, _, _, body, rep_deps, _) ->
+          (fun accu_deps (_, _, _, _, body, _, rep_deps, _) ->
             let d = binding_body_decl_dependencies ~current_species body in
             (* Take into account dependencies on the carrier. *)
             let d' =
@@ -482,7 +518,7 @@ let clockwise_arrow field_name fields =
     (fun field accu ->
       match field with
       | Env.TypeInformation.SF_sig (_, vname, _)
-      | Env.TypeInformation.SF_let (_, vname, _, _, _, _, _)
+      | Env.TypeInformation.SF_let (_, vname, _, _, _, _, _, _)
       | Env.TypeInformation.SF_theorem (_, vname, _, _, _, _)
       | Env.TypeInformation.SF_property (_, vname, _, _, _) ->
           if vname = field_name then Handy.list_cons_uniq_eq vname accu
@@ -492,9 +528,9 @@ let clockwise_arrow field_name fields =
               recursive let definition. If so, then the relation includes all
               the bound names of this recursive let definition. *)
            if List.exists
-               (fun (_, vname, _, _, _, _, _) -> vname = field_name) l then
+               (fun (_, vname, _, _, _, _, _, _) -> vname = field_name) l then
              List.fold_right
-               (fun (_, n, _, _, _, _, _) accu' ->
+               (fun (_, n, _, _, _, _, _, _) accu' ->
                  Handy.list_cons_uniq_eq n accu')
                l accu
            else accu)
@@ -517,7 +553,7 @@ let where field_name fields =
     (fun field accu ->
       match field with
        | Env.TypeInformation.SF_sig (_, vname, _)
-       | Env.TypeInformation.SF_let (_, vname, _, _, _, _, _)
+       | Env.TypeInformation.SF_let (_, vname, _, _, _, _, _, _)
        | Env.TypeInformation.SF_theorem (_, vname, _, _, _, _)
        | Env.TypeInformation.SF_property (_, vname, _, _, _) ->
            if vname = field_name then field :: accu else accu
@@ -526,7 +562,7 @@ let where field_name fields =
               let definition. If so, then the relation includes all the bound
               names of this recursive let definition. *)
            if List.exists
-               (fun (_, vname, _, _, _, _, _) -> vname = field_name) l then
+               (fun (_, vname, _, _, _, _, _, _) -> vname = field_name) l then
              field :: accu
            else accu)
     fields
@@ -548,12 +584,12 @@ let names_set_of_field = function
       let ty = Types.type_prop () in
       Parsetree_utils.SelfDepSet.singleton (vname, ty)
   | Env.TypeInformation.SF_sig (_, vname, sch)
-  | Env.TypeInformation.SF_let (_, vname, _, sch, _, _, _) ->
+  | Env.TypeInformation.SF_let (_, vname, _, sch, _, _, _, _) ->
       let ty = Types.specialize sch in
       Parsetree_utils.SelfDepSet.singleton (vname, ty)
   | Env.TypeInformation.SF_let_rec l ->
       List.fold_left
-        (fun accu_names (_, n, _, sch, _, _, _) ->
+        (fun accu_names (_, n, _, sch, _, _, _, _) ->
           let ty = Types.specialize sch in
           Parsetree_utils.SelfDepSet.add (n, ty) accu_names)
         Parsetree_utils.SelfDepSet.empty
@@ -583,12 +619,12 @@ let ordered_names_list_of_fields fields =
            let ty = Types.type_prop () in
            (n, ty) :: accu
        | Env.TypeInformation.SF_sig (_, n, sch)
-       | Env.TypeInformation.SF_let (_, n, _, sch, _, _, _) ->
+       | Env.TypeInformation.SF_let (_, n, _, sch, _, _, _, _) ->
            let ty = Types.specialize sch in
            (n, ty) :: accu
        | Env.TypeInformation.SF_let_rec l ->
            List.fold_right
-             (fun (_, n, _, sch, _, _, _) accu' ->
+             (fun (_, n, _, sch, _, _, _, _) accu' ->
                let ty = Types.specialize sch in (n, ty) :: accu')
              l accu)
     fields
@@ -619,11 +655,12 @@ let find_most_recent_rec_field_binding y_name fields =
         (begin
         match h with
          | Env.TypeInformation.SF_sig (_, _, _)
-         | Env.TypeInformation.SF_let (_, _, _, _, _, _, _)
+         | Env.TypeInformation.SF_let (_, _, _, _, _, _, _, _)
          | Env.TypeInformation.SF_theorem (_, _, _, _, _, _)
          | Env.TypeInformation.SF_property (_, _, _, _, _) -> rec_search q
          | Env.TypeInformation.SF_let_rec l ->
-             if List.exists (fun (_, n, _, _, _, _, _) -> n = y_name) l then h
+             if List.exists (fun (_, n, _, _, _, _, _, _) -> n = y_name) l then
+               h
              else rec_search q
         end) in
   (* Reverse the list so that most recent names are in head. *)
@@ -685,7 +722,7 @@ let in_species_decl_dependencies_for_one_function_name ~current_species
   if List.for_all
       (function
         | Env.TypeInformation.SF_sig (_, _, _)
-        | Env.TypeInformation.SF_let (_, _, _, _, _, _, _) -> true
+        | Env.TypeInformation.SF_let (_, _, _, _, _, _, _, _) -> true
         | Env.TypeInformation.SF_let_rec _ -> false
         | Env.TypeInformation.SF_theorem (_, _, _, _, _, _)
         | Env.TypeInformation.SF_property (_, _, _, _, _) ->
@@ -789,7 +826,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
       Apply the rules section 3.5, page 32, definition  16 to get the
       dependencies.                                                        *)
   (* ********************************************************************* *)
-  let local_build_for_one_let n ty b dep_on_rep =
+  let local_build_for_one_let n ty b opt_term_proof dep_on_rep =
     (* Find the dependencies node for the current name. *)
     let n_node = find_or_create tree_nodes (n, ty) in
     (* Check if there is a decl-dependency on "rep". *)
@@ -802,7 +839,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
       (* Now add an edge from the current name's node to the decl-dependencies
          node of "rep". In "Let/rec" methods, "decl" dependencies can only
          come from the type of the method. *)
-      let edge = (node, DepGraphData.DK_decl DepGraphData.DDK_from_type) in
+      let edge = (node, DepGraphData.DK_decl DepGraphData.DcDK_from_type) in
       n_node.DepGraphData.nn_children <-
         Handy.list_cons_uniq_custom_eq
           (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
@@ -819,7 +856,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
           let node = find_or_create tree_nodes n in
           (* In "Let/rec" methods, "decl" dependencies can only come from the
              BODY of the method. *)
-          (node, (DepGraphData.DK_decl DepGraphData.DDK_from_body)) :: accu)
+          (node, (DepGraphData.DK_decl DepGraphData.DcDK_from_body)) :: accu)
         n_decl_deps_names
         [] in
     (* Now add an edge from the current name's node to each of the
@@ -828,6 +865,45 @@ let build_dependencies_graph_for_fields ~current_species fields =
       Handy.list_concat_uniq_custom_eq
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
         n_deps_nodes n_node.DepGraphData.nn_children ;
+    (* We now process termination proof aside.
+       Find the names decl-dependencies for the current name in the
+       termination proof. *)
+    (begin
+     match opt_term_proof with
+      | None -> ()
+      | Some term_pr ->
+          let (term_pr_decl_names, term_pr_def_names) =
+            termination_proof_decl_n_def_dependencies
+              ~current_species term_pr in
+          (* Now, find the decl-dependencies nodes for these names. *)
+          let n_term_decl_nodes =
+            Parsetree_utils.SelfDepSet.fold
+              (fun n accu ->
+                let node = find_or_create tree_nodes n in
+                (node, (DepGraphData.DK_decl DepGraphData.DcDK_from_term_proof))
+                :: accu)
+              term_pr_decl_names
+              [] in
+          (* Now, find the def-dependencies nodes for these names. *)
+          let n_term_def_nodes =
+            Parsetree_utils.SelfDepSet.fold
+              (fun n accu ->
+                let node = find_or_create tree_nodes n in
+                (node, (DepGraphData.DK_def DepGraphData.DfDK_from_term_proof))
+                :: accu)
+              term_pr_def_names
+              [] in
+          (* Now add an edge from the current name's node to each of the
+             dependencies names' nodes. *)
+          n_node.DepGraphData.nn_children <-
+            Handy.list_concat_uniq_custom_eq
+              (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
+              n_term_decl_nodes n_node.DepGraphData.nn_children ;
+          n_node.DepGraphData.nn_children <-
+            Handy.list_concat_uniq_custom_eq
+              (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
+              n_term_def_nodes n_node.DepGraphData.nn_children
+    end) ;
     (* Now, check if there is a def-dependency on "rep". *)
     if dep_on_rep.Env.TypeInformation.dor_def then
       (begin
@@ -836,8 +912,12 @@ let build_dependencies_graph_for_fields ~current_species fields =
         find_or_create
           tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
       (* Now add an edge from the current name's node to the def-dependencies
-         node of "rep". *)
-      let edge = (node, DepGraphData.DK_def) in
+         node of "rep". We tag it as not coming from the termination proof
+         since anyway if the termination proof refers to "Self", then the
+         parts outside the proof obviously also. Hence, the carrier will
+         always need to be lambda-lifted. *)
+      let edge =
+        (node, (DepGraphData.DK_def DepGraphData.DfDK_not_from_term_proof)) in
       n_node.DepGraphData.nn_children <-
         Handy.list_cons_uniq_custom_eq
           (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
@@ -866,7 +946,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
          node of "rep". Even in a theorem, a decl-dependency on the carrier
          can only come from the type (of course, one can't say in the body,
          i.e. in the proof, "by def Self" or "by property Self" !). *)
-      let edge = (node, DepGraphData.DK_decl DepGraphData.DDK_from_type) in
+      let edge = (node, DepGraphData.DK_decl DepGraphData.DcDK_from_type) in
       n_node.DepGraphData.nn_children <-
         Handy.list_cons_uniq_custom_eq
           (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
@@ -883,14 +963,14 @@ let build_dependencies_graph_for_fields ~current_species fields =
       Parsetree_utils.SelfDepSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
-          (node, (DepGraphData.DK_decl DepGraphData.DDK_from_type)) :: accu)
+          (node, (DepGraphData.DK_decl DepGraphData.DcDK_from_type)) :: accu)
         n_decl_deps_names_from_type
         [] in
     let n_decl_deps_nodes =
       Parsetree_utils.SelfDepSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
-          (node, (DepGraphData.DK_decl DepGraphData.DDK_from_body)) :: accu)
+          (node, (DepGraphData.DK_decl DepGraphData.DcDK_from_body)) :: accu)
         n_decl_deps_names_from_body
         n_decl_deps_nodes in
     (* Now add an edge from the current name's node to each of the
@@ -904,7 +984,8 @@ let build_dependencies_graph_for_fields ~current_species fields =
       Parsetree_utils.SelfDepSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
-          (node, DepGraphData.DK_def) :: accu)
+          (node, (DepGraphData.DK_def DepGraphData.DfDK_not_from_term_proof))
+          :: accu)
         n_def_deps_names
         [] in
     (* Now add an edge from the current name's node to each of the
@@ -922,7 +1003,8 @@ let build_dependencies_graph_for_fields ~current_species fields =
           tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
       (* Now add an edge from the current name's node to the *)
       (* def-dependencies node of "rep".                     *)
-      let edge = (node, DepGraphData.DK_def) in
+      let edge =
+        (node, (DepGraphData.DK_def DepGraphData.DfDK_not_from_term_proof)) in
       n_node.DepGraphData.nn_children <-
         Handy.list_cons_uniq_custom_eq
           (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
@@ -943,14 +1025,15 @@ let build_dependencies_graph_for_fields ~current_species fields =
               { DepGraphData.nn_name = n ; DepGraphData.nn_type = ty ;
                 DepGraphData.nn_children = [] } :: !tree_nodes
             end)
-      | Env.TypeInformation.SF_let (_, n, _, sch, b, deps_on_rep, _) ->
+      | Env.TypeInformation.SF_let (_, n, _, sch, b, _, deps_on_rep, _) ->
           let ty = Types.specialize sch in
-          local_build_for_one_let n ty b deps_on_rep
+          (* ALways ignore the proof if some in non-recursive functions. *)
+          local_build_for_one_let n ty b None deps_on_rep
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
-            (fun (_, n, _, sch, b, deps_on_rep, _) ->
+            (fun (_, n, _, sch, b, opt_term_proof, deps_on_rep, _) ->
               let ty = Types.specialize sch in
-              local_build_for_one_let n ty b deps_on_rep)
+              local_build_for_one_let n ty b opt_term_proof deps_on_rep)
             l
       | Env.TypeInformation.SF_theorem (_, n, _, prop, body, deps_on_rep) ->
           let ty = Types.type_prop () in
@@ -987,11 +1070,15 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
   (* Output the meaning of the colors code just to remind the user. *)
   Printf.fprintf out_hd "
 \"def dep\" [fontsize=10]
+\"def dep (in term proof)\" [fontsize=10]
 \"decl dep (in type)\" [fontsize=10]
 \"decl dep (in body)\" [fontsize=10]
-\"def dep\" -> \"def dep\" [color=blue,fontsize=10];
+\"decl dep (in term proof)\" [fontsize=10]
+\"def dep\" -> \"def dep\" [style=dotted,color=blue,fontsize=10];
+\"def dep (in term proof)\" -> \"def dep (in term proof)\" [style=dotted,color=yellow,fontsize=10];
 \"decl dep (in type)\" -> \"decl dep (in type)\" [color=red,fontsize=10];
-\"decl dep (in body)\" -> \"decl dep (in body)\" [color=pink,fontsize=10];\n" ;
+\"decl dep (in body)\" -> \"decl dep (in body)\" [color=pink,fontsize=10];
+\"decl dep (in term proof)\" -> \"decl dep (in term proof)\" [color=purple,fontsize=10];\n" ;
   (* Outputs all the nodes of the graph. *)
   List.iter
     (fun { DepGraphData.nn_name = n } ->
@@ -1006,9 +1093,14 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
           (* Just make a different style depending on the kind of dependency. *)
           let (style, color) =
             (match decl_kind with
-             | DepGraphData.DK_decl DepGraphData.DDK_from_type -> ("", "red")
-             | DepGraphData.DK_decl DepGraphData.DDK_from_body -> ("", "pink")
-             | DepGraphData.DK_def -> ("style=dotted,", "blue")) in
+             | DepGraphData.DK_decl DepGraphData.DcDK_from_type -> ("", "red")
+             | DepGraphData.DK_decl DepGraphData.DcDK_from_body -> ("", "pink")
+             | DepGraphData.DK_decl DepGraphData.DcDK_from_term_proof ->
+                 ("", "purple")
+             | DepGraphData.DK_def DepGraphData.DfDK_not_from_term_proof ->
+                 ("style=dotted,", "blue")
+             | DepGraphData.DK_def DepGraphData.DfDK_from_term_proof ->
+                 ("style=dotted,", "yellow") ) in
           Printf.fprintf out_hd
             "\"%s\" -> \"%s\" [%scolor=%s,fontsize=10];"
             (Parsetree_utils.name_of_vname n)
@@ -1396,7 +1488,7 @@ let erase_field field =
       []  (* No explicit "rep" means ... no "rep". *)
       end)
     else [field]
-  | Env.TypeInformation.SF_let (from, vname, _, sch, _, _, _) ->
+  | Env.TypeInformation.SF_let (from, vname, _, sch, _, _, _, _) ->
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
           Sourcify.pp_vname vname
@@ -1406,7 +1498,7 @@ let erase_field field =
   | Env.TypeInformation.SF_let_rec l ->
       (* Just turn the whole list into "sig"s. *)
       List.map
-        (fun (from, n, _, sch, _, _, _) ->
+        (fun (from, n, _, sch, _, _, _, _) ->
           if Configuration.get_verbose () then
             Format.eprintf "Erasing field '%a' coming from '%a'.@."
               Sourcify.pp_vname n
@@ -1462,11 +1554,27 @@ let erase_fields_in_context ~current_species context fields =
              page 53. *)
           let def_deps =
             (match m_field with
-             | Env.TypeInformation.SF_let (_, _, _, _, _, _, _)
-             | Env.TypeInformation.SF_let_rec _ ->
-               (* No "def"-dependencies for functions (C.f. definition 30 in
-                  Virgile Prevosto's Phd, section 3.9.5, page 53). *)
-               Parsetree_utils.SelfDepSet.empty
+             | Env.TypeInformation.SF_let (_, _, _, _, _, _, _, _) ->
+                 (* No "def"-dependencies for non-recursive functions
+                    since no proof (C.f. definition 30 in Virgile Prevosto's
+                    Phd, section 3.9.5, page 53). *)
+                 Parsetree_utils.SelfDepSet.empty
+             | Env.TypeInformation.SF_let_rec rec_funs ->
+                 (begin
+                 (* We will get the def-dependencies from the optional
+                    termination proofs. *)
+                 List.fold_left
+                   (fun accu (_, _, _, _, _, opt_term_proof, _, _) ->
+                     match opt_term_proof with
+                      | None -> accu
+                      | Some term_proof ->
+                          let (_, defs) =
+                            termination_proof_decl_n_def_dependencies
+                              ~current_species term_proof in
+                          Parsetree_utils.SelfDepSet.union accu defs)
+                   Parsetree_utils.SelfDepSet.empty
+                   rec_funs
+                 end)
              | Env.TypeInformation.SF_theorem (_, _, _, prop, proof, _) ->
                let (_, _, n_def_deps_names) =
                  in_species_decl_n_def_dependencies_for_one_theo_property_name
@@ -1491,15 +1599,16 @@ let erase_fields_in_context ~current_species context fields =
               (* Verbose information. *)
               let (erase_from, erase_names) =
                 (match m_field with
-                 | Env.TypeInformation.SF_let (from, n, _, _, _, _, _)
+                 | Env.TypeInformation.SF_let (from, n, _, _, _, _, _, _)
                  | Env.TypeInformation.SF_theorem (from, n, _, _, _, _)
                  | Env.TypeInformation.SF_property (from, n, _, _, _)
                  | Env.TypeInformation.SF_sig (from, n, _) -> (from, [n])
                  | Env.TypeInformation.SF_let_rec flds ->
                      (* Should nevers fail since "let"s must bind at least one
                         identifier. *)
-                     let (from, _, _, _, _, _, _)  = List.hd flds in
-                     let ns = List.map (fun (_, n, _, _, _, _, _) -> n) flds in
+                     let (from, _, _, _, _, _, _, _) = List.hd flds in
+                     let ns =
+                       List.map (fun (_, n, _, _, _, _, _, _) -> n) flds in
                      (from, ns)) in
               (* Print field(s) name(s) to erase. *)
               Format.eprintf "Field(s): " ;

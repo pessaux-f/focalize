@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: depGraphData.mli,v 1.2 2008-09-16 14:27:42 pessaux Exp $ *)
+(* $Id: depGraphData.mli,v 1.3 2008-11-21 16:54:34 pessaux Exp $ *)
 
 
 
@@ -26,7 +26,18 @@
 
     {b Rem} : Exported outside this module.                          *)
 (* ***************************************************************** *)
-type decl_dependency_kind = DDK_from_type | DDK_from_body ;;
+type decl_dependency_kind =
+  | DcDK_from_type
+  | DcDK_from_body
+  | DcDK_from_term_proof
+;;
+
+
+
+type def_dependency_kind =
+  | DfDK_not_from_term_proof
+  | DfDK_from_term_proof
+;;
 
 
 
@@ -39,7 +50,7 @@ type decl_dependency_kind = DDK_from_type | DDK_from_body ;;
 (* ************************************************************** *)
 type dependency_kind =
   | DK_decl of decl_dependency_kind
-  | DK_def
+  | DK_def of def_dependency_kind
 ;;
 
 

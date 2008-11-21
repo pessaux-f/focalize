@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: integers.fcl,v 1.2 2008-10-29 15:27:55 rr Exp $ *)
+(* $Id: integers.fcl,v 1.3 2008-11-21 16:54:34 pessaux Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called 
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -212,17 +212,17 @@ species Number_system
   (** odd and even can be defined from euclidean division *)
   let is_even (n) = !is_zero (!remainder (n, !deux)) ;
   let is_odd (n) = basics#not_b (!is_even (n)) ;
-  proof of even_odd_complete = by definition of is_odd ;
 
-  proof of successor_of_even_is_odd = assumed {* Because todo *} ;
-  proof of successor_of_odd_is_even = assumed {* Because todo *} ;
-  proof of one_is_odd = assumed {* Because todo *} ;
-  proof of is_even_substitution_rule = assumed {* Because todo *} ;
-  proof of is_odd_substitution_rule = assumed {* Because todo *} ;
+  -- proof of even_odd_complete = by definition of is_odd ;
+  -- proof of successor_of_even_is_odd = assumed {* Because todo *} ;
+  -- proof of successor_of_odd_is_even = assumed {* Because todo *} ;
+  -- proof of one_is_odd = assumed {* Because todo *} ;
+  -- proof of is_even_substitution_rule = assumed {* Because todo *} ;
+  -- proof of is_odd_substitution_rule = assumed {* Because todo *} ;
 
-  proof of div2_inverses_even = assumed {* Because todo *} ;
-  proof of div2_inverses_odd = assumed {* Because todo *} ;
-  proof of one_successes_zero = assumed {* Because todo *} ;
+  -- proof of div2_inverses_even = assumed {* Because todo *} ;
+  -- proof of div2_inverses_odd = assumed {* Because todo *} ;
+  -- proof of one_successes_zero = assumed {* Because todo *} ;
 
 (*   proof of =  assumed; *)
 

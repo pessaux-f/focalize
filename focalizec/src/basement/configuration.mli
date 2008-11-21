@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.17 2008-10-14 12:13:21 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.18 2008-11-21 16:54:34 pessaux Exp $ *)
 
 
 (** The various flags and definitions useful to the internal behaviour of the
@@ -23,6 +23,9 @@ exception No_input_file
 val focal_version_number : float
 
 val focal_full_version : string
+
+val get_impose_termination_proof : unit -> bool
+val set_impose_termination_proof : unit -> unit
 
 val get_verbose : unit -> bool
 val set_verbose : unit -> unit

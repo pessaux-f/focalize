@@ -12,21 +12,21 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.3 2008-10-14 13:42:29 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.4 2008-11-21 16:54:34 pessaux Exp $ *)
 
 
 let gendoc_species_field out_fmt = function
   | Env.TypeInformation.SF_sig (_, n, sch) ->
       Format.fprintf out_fmt "<LI>Signature: %a : %a</LI>@\n"
-	Sourcify.pp_vname n Types.pp_type_scheme sch
-  | Env.TypeInformation.SF_let (_, n, _, _, _, _, _) ->
+        Sourcify.pp_vname n Types.pp_type_scheme sch
+  | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, _) ->
       Format.fprintf out_fmt "<LI>Let: %a</LI>@\n" Sourcify.pp_vname n
   | Env.TypeInformation.SF_let_rec let_field_infos ->
       Format.fprintf out_fmt "<LI><UL>Let rec@\n" ;
       List.iter
-	(fun (_, n, _, _, _, _, _) ->
-	  Format.fprintf out_fmt "<LI>Let: %a</LI>@\n" Sourcify.pp_vname n)
-	let_field_infos ;
+        (fun (_, n, _, _, _, _, _, _) ->
+          Format.fprintf out_fmt "<LI>Let: %a</LI>@\n" Sourcify.pp_vname n)
+        let_field_infos ;
       Format.fprintf out_fmt "</UL></LI>@\n"
   | Env.TypeInformation.SF_theorem (_, n, _, _, _, _) ->
       Format.fprintf out_fmt "<LI>Theorem: %a</LI>@\n" Sourcify.pp_vname n
@@ -55,12 +55,12 @@ let gendoc_please_compile_me out_fmt = function
       Format.fprintf out_fmt "<H1>Opened module: %s</HY1>@\n" module_name ;
   | Infer.PCM_coq_require module_name ->
       Format.fprintf out_fmt
-	"<H1>Module required for Coq external definitions: %s</HY1>@\n"
-	module_name ;
+        "<H1>Module required for Coq external definitions: %s</HY1>@\n"
+        module_name ;
   | Infer.PCM_species (species_def, species_description, _) ->
       Format.fprintf out_fmt "<H1>Species <B>%a<B></H1@\n"
-	Sourcify.pp_vname species_def.Parsetree.ast_desc.Parsetree.sd_name ;
-	gendoc_species_description out_fmt species_description
+        Sourcify.pp_vname species_def.Parsetree.ast_desc.Parsetree.sd_name ;
+        gendoc_species_description out_fmt species_description
   | Infer.PCM_collection 
       (_collection_def, _species_description, _deps_graph_nodes) -> ()
   | Infer.PCM_type (_vname, _type_description) -> ()

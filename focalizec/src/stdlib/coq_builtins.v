@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: coq_builtins.v,v 1.8 2008-10-23 13:10:27 doligez Exp $ *)
+(* $Id: coq_builtins.v,v 1.9 2008-11-21 16:54:34 pessaux Exp $ *)
 
 Require Import Bool.
 Require Export ZArith.
@@ -443,7 +443,7 @@ Definition __g_foc_error_ (a : Set) (s : string) : a := __foc_bottom__ _.
 (* Notation made available only in Coq parser, not in Coq output / feedback. *)
 Notation foc_error := (__g_foc_error_ _) (only parsing).
 
-Ltac prove_term_obl term_obl := intuition.
+Ltac prove_term_obl term_obl := apply magic_prove.
 
 (* "bi" for "built-in". Don't search anymore... *)
 Inductive bi__unit : Set :=
