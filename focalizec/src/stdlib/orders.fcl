@@ -116,8 +116,6 @@ species Ordered_set inherits Partial_order =
   ;
 
   let lt(x, y) = not_b (Self!leq(y, x));
-  proof of lt_is_not_leq =
-    by property total_order definition of lt, different, equal;
 
   proof of lt_is_not_leq =
     by property total_order definition of lt, different, equal ;
