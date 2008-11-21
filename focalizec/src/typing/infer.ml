@@ -11,7 +11,21 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.157 2008-11-21 10:05:43 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.158 2008-11-21 10:37:08 pessaux Exp $ *)
+
+
+
+(* ******************************************************************** *)
+(** {b Descr} : Exception used to inform that a delayed proof for a
+    property was found several time in the same species.
+
+    {b Rem} : Exported outside this module.                             *)
+(* ******************************************************************** *)
+exception Proof_of_multiply_defined of
+  (Location.t *   (** Location of one of the occurrence of "proof of". *)
+   Parsetree.vname *   (** Name of the several time proved property. *)
+   Location.t)   (** Location of the other occurrence of "proof of". *)
+;;
 
 
 
@@ -23,7 +37,10 @@
     {b Rem} : Exported outside this module.                             *)
 (* ******************************************************************** *)
 exception Proof_of_unknown_property of
-  (Location.t * Parsetree.qualified_species * Parsetree.vname) ;;
+  (Location.t *   (** Location of the detected error. *)
+   Parsetree.qualified_species *   (** Hosting species of the error. *)
+   Parsetree.vname)            (** Name of the proved inexisting property. *)
+;;
 
 
 
@@ -3996,6 +4013,26 @@ type please_compile_me =
 
 
 
+let ensure_no_proof_of_doubles proofs_of =
+  let rec rec_ensure = function
+    | [] -> ()
+    | h :: q ->
+        let h_name = h.Parsetree.ast_desc.Parsetree.pd_name in
+        (* Search in the remaining "proof of"s. *)
+        List.iter
+          (fun p ->
+            
+            if p.Parsetree.ast_desc.Parsetree.pd_name = h_name then
+              raise
+                (Proof_of_multiply_defined
+                   (h.Parsetree.ast_loc, h_name, p.Parsetree.ast_loc)))
+          q ;
+        rec_ensure q in
+  rec_ensure proofs_of
+;;
+
+
+
 (* ************************************************************************* *)
 (* typing_context -> Env.TypingEnv.t -> Parsetree.species_def ->             *)
 (*  (Types.type_simple * Env.TypingEnv.t)                                    *)
@@ -4039,6 +4076,8 @@ let typecheck_species_def ctx env species_def =
     typecheck_species_fields
       ctx_with_inherited_repr env_with_inherited_methods
       species_def_desc.Parsetree.sd_fields in
+  (* We ensure that there is not several times a same "proof of". *)
+  ensure_no_proof_of_doubles found_proofs_of ;
   (* We first collapse "proof-of"s with their related property to lead to a
      theorem. *)
   let (collapsed_inherited_methods_infos, collapsed_methods_info) =

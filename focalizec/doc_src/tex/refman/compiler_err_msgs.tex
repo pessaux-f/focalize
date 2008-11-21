@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.8 2008-11-21 10:05:43 pessaux Exp $
+% $Id: compiler_err_msgs.tex,v 1.9 2008-11-21 10:37:08 pessaux Exp $
 
 
 
@@ -413,8 +413,22 @@ $n_2$.
 {\em Hints}: None.
 
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{In species@ '$sname$', proof of '$pname$' is not related to
+\section*{Delayed proof of '$name$' was found several times in the
+  species. Other occurence is at: $loc$.}
+
+{\em Description}: A delayed proof of the property $name$ was found
+several times in the same species (i.e. not via inheritance but
+directly in the species body). Only one must be kept.
+
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{In species '$sname$', proof of '$pname$' is not related to
   an existing property.}
 
 {\em Description}: In the species $sname$ a delayed proof of the

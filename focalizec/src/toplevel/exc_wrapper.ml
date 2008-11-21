@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.57 2008-11-21 10:05:43 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.58 2008-11-21 10:37:08 pessaux Exp $ *)
 
 
 
@@ -266,6 +266,17 @@ try Focalizec.main () with
            Handy.pp_set_bold Handy.pp_reset_effects
 (* *********************** *)
 (* Species type inference. *)
+     | Infer.Proof_of_multiply_defined (at1, name, at2) ->
+         Format.fprintf Format.err_formatter
+           "%a:@\n@[%tDelayed@ proof@ of%t@ '%t%a%t'@ %twas@ found@ several@ \
+           times@ in@ the@ species.@ Other@ occurence@ is@ at%t:@ %t%a%t.@]@."
+           Location.pp_location at1
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined Sourcify.pp_vname name
+           Handy.pp_reset_effects
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined Location.pp_location at2
+           Handy.pp_reset_effects
      | Infer.Proof_of_unknown_property (at, species, name) ->
          Format.fprintf Format.err_formatter
            "%a:@\n@[%tIn@ species%t@ '%t%a%t'%t,@ proof@ of%t@ '%t%a%t'%t@ is@ \
