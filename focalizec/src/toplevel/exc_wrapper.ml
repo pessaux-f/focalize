@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.56 2008-11-19 15:22:55 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.57 2008-11-21 10:05:43 pessaux Exp $ *)
 
 
 
@@ -254,11 +254,30 @@ try Focalizec.main () with
            Handy.pp_reset_effects
      | Infer.Bad_type_arity (ident, expected, used) ->
          Format.fprintf Format.err_formatter
-           "@[Type@ constructor@ '%a'@ expected@ %d@ arguments@ but@ was@ \
-            used@ with@ %d@ arguments.@]@."
-           Sourcify.pp_ident ident expected used
+           "@[%tType@ constructor%t@ '%t%a%t'@ %texpected%t@ %d@ %targuments@ \
+           but@ was@ used@ with@%t %d@ %targuments%t.@]@."
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined Sourcify.pp_ident ident
+           Handy.pp_reset_effects
+           Handy.pp_set_bold Handy.pp_reset_effects
+           expected
+           Handy.pp_set_bold Handy.pp_reset_effects
+           used
+           Handy.pp_set_bold Handy.pp_reset_effects
 (* *********************** *)
 (* Species type inference. *)
+     | Infer.Proof_of_unknown_property (at, species, name) ->
+         Format.fprintf Format.err_formatter
+           "%a:@\n@[%tIn@ species%t@ '%t%a%t'%t,@ proof@ of%t@ '%t%a%t'%t@ is@ \
+           not@ related@ to@ an@ existing@ property%t.@]@."
+           Location.pp_location at
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined Sourcify.pp_qualified_species species
+           Handy.pp_reset_effects
+           Handy.pp_set_bold Handy.pp_reset_effects
+           Handy.pp_set_underlined Sourcify.pp_vname name
+           Handy.pp_reset_effects
+           Handy.pp_set_bold Handy.pp_reset_effects
      | Infer.Rep_multiply_defined at ->
          Format.fprintf Format.err_formatter
            "%a:@\n@[%tCarrier@ 'rep'@ is@ multiply@ defined%t.@]@."
@@ -402,10 +421,9 @@ try Focalizec.main () with
 (* OCaml code generation errors. *)
      | Env.No_available_OCaml_code_generation_envt file ->
          Format.fprintf Format.err_formatter
-           "@[%tUnable to find OCaml generation information for compiled \
-           file %t'%t%s.foc%t'%t. Source file may have been compiled without \
-           OCaml code generation \
-           enabled.%t.@]@."
+           "@[%tUnable@ to@ find@ OCaml@ generation@ information@ for@ \
+           compiled@ file@ %t'%t%s.foc%t'%t.@ Source@ file@ may@ have@ been@ \
+           compiled@ without@ OCaml@ code@ generation@ enabled.%t.@]@."
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined file Handy.pp_reset_effects
            Handy.pp_set_bold Handy.pp_reset_effects
@@ -421,16 +439,17 @@ try Focalizec.main () with
            Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
      | Env.No_available_Coq_code_generation_envt file ->
          Format.fprintf Format.err_formatter
-           "@[%tUnable to find Coq generation information for compiled \
-           file %t'%t%s.foc%t'%t. Source file may have been compiled without \
-           Coq code generation enabled.%t.@]@."
+           "@[%tUnable@ to@ find@ Coq@ generation@ information@ for@ \
+           compiled@ file@ %t'%t%s.foc%t'%t.@ Source@ file@ may@ have@ been@ \
+           compiled@ without@ Coq@ code@ generation@ enabled.%t.@]@."
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined file Handy.pp_reset_effects
            Handy.pp_set_bold Handy.pp_reset_effects
      | Species_coq_generation.Attempt_proof_by_def_of_species_param (at, id) ->
          Format.fprintf Format.err_formatter
-           "%a:@\n@[%tUsing a species parameter's method %t(%t%a%t)%t in a \
-           Zenon proof with \"by definition\" is not allowed.%t@]@."
+           "%a:@\n@[%tUsing@ a@ species@ parameter's@ method@ \
+           %t(%t%a%t)%t@ in@ a@ Zenon@ proof@ with@ \
+           \"by definition\"@ is@ not@ allowed.%t@]@."
            Location.pp_location at
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_expr_ident id
@@ -438,32 +457,33 @@ try Focalizec.main () with
      | Species_coq_generation.Attempt_proof_by_def_of_declared_method_of_self
            (at, id) ->
          Format.fprintf Format.err_formatter
-           "%a:@\n@[%tUsing an only declared method of Self %t(%t%a%t)%t in a \
-           Zenon proof with \"by definition\" is not allowed.%t@]@."
+           "%a:@\n@[%tUsing@ an@ only@ declared@ method@ of@ Self@ \
+           %t(%t%a%t)%t@ in@ a@ Zenon@ proof@ with@ \"by definition\"@ \
+           is@ not@ allowed.%t@]@."
            Location.pp_location at
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_expr_ident id
            Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
      | Species_coq_generation.Attempt_proof_by_def_of_local_ident (at, id) ->
          Format.fprintf Format.err_formatter
-           "%a:@\n@[%tUsing a local identifier %t(%t%a%t)%t in a \
-           Zenon proof with \"by definition\" is not allowed.%t@]@."
+           "%a:@\n@[%tUsing@ a@ local@ identifier@ %t(%t%a%t)%t@ in@ a@ \
+           Zenon@ proof@ with@ \"by definition\"@ is@ not@ allowed.%t@]@."
            Location.pp_location at
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_expr_ident id
            Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
     | Species_coq_generation.Attempt_proof_by_prop_of_local_ident (at, id) ->
          Format.fprintf Format.err_formatter
-           "%a:@\n@[%tUsing a local identifier %t(%t%a%t)%t in a \
-           Zenon proof with \"by property\" is not allowed.%t@]@."
+           "%a:@\n@[%tUsing@ a@ local@ identifier@ %t(%t%a%t)%t@ in@ a@ \
+           Zenon@ proof@ with@ \"by property\"@ is@ not@ allowed.%t@]@."
            Location.pp_location at
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_expr_ident id
            Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
     | Species_coq_generation.Attempt_proof_by_unknown_hypothesis (at, name) ->
          Format.fprintf Format.err_formatter
-           "%a:@\n@[%tAssumed hypothesis %t'%t%a%t'%t in a Zenon proof was \
-            not found.%t@]@."
+           "%a:@\n@[%tAssumed@ hypothesis@ %t'%t%a%t'%t@ in@ a@ Zenon@ \
+           proof@ was@ not@ found.%t@]@."
            Location.pp_location at
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_vname name
@@ -471,7 +491,7 @@ try Focalizec.main () with
     | Species_coq_generation.Attempt_proof_by_unknown_step
         (at, (node_num, node_name)) ->
          Format.fprintf Format.err_formatter
-           "%a:@\n@[%tStep %t'%t<%d>%s%t'%t in a Zenon proof was not \
+           "%a:@\n@[%tStep@ %t'%t<%d>%s%t'%t@ in@ a@ Zenon@ proof@ was@ not@ \
             found.%t@]@."
            Location.pp_location at
            Handy.pp_set_bold Handy.pp_reset_effects
@@ -489,7 +509,7 @@ try Focalizec.main () with
            Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
      | Recursion.PartialRecursiveCall (function_name, at) ->
          Format.fprintf Format.err_formatter
-           "%a:@\n@[%tRecursive call to%t@ '%t%a%t'%t@ is@ incomplete.%t@]@."
+           "%a:@\n@[%tRecursive@ call@ to%t@ '%t%a%t'%t@ is@ incomplete.%t@]@."
            Location.pp_location at
            Handy.pp_set_bold Handy.pp_reset_effects
            Handy.pp_set_underlined Sourcify.pp_vname function_name

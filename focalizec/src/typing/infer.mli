@@ -12,8 +12,10 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.29 2008-09-15 09:24:29 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.30 2008-11-21 10:05:43 pessaux Exp $ *)
 
+exception Proof_of_unknown_property of
+  (Location.t * Parsetree.qualified_species * Parsetree.vname)
 exception Method_multiply_defined of
   (Parsetree.vname * Parsetree.qualified_species)
 exception Unbound_type_variable of (Location.t * Parsetree.vname)

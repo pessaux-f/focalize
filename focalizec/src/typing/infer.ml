@@ -11,7 +11,19 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.156 2008-11-17 10:53:57 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.157 2008-11-21 10:05:43 pessaux Exp $ *)
+
+
+
+(* ******************************************************************** *)
+(** {b Descr} : Exception used to inform that a delayed proof was found
+    but no property for this proof exist. Since, this a a proof of a
+    non-existing property.
+
+    {b Rem} : Exported outside this module.                             *)
+(* ******************************************************************** *)
+exception Proof_of_unknown_property of
+  (Location.t * Parsetree.qualified_species * Parsetree.vname) ;;
 
 
 
@@ -3143,7 +3155,13 @@ let collapse_proofs_of ~current_species found_proofs_of
                 accu_inherited in
             match collapsed_option with
              | None ->
-                 (accu_inherited, accu_current)      (* No collapse at all ! *)
+                 (* No collapse at all ! This means that we have a proof not
+                    related to an existing property. This is an error. *)
+                 raise
+                   (Proof_of_unknown_property
+                      (found_proof_of.Parsetree.ast_loc,
+                       current_species,
+                       found_proof_of.Parsetree.ast_desc.Parsetree.pd_name))
              | Some fresh_theorem ->
                  (* Transfer the inherited field that had no proof to the
                     non-inherited fields list since it received its proof now,

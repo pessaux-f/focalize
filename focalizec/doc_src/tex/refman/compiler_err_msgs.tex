@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.7 2008-11-19 16:10:21 pessaux Exp $
+% $Id: compiler_err_msgs.tex,v 1.8 2008-11-21 10:05:43 pessaux Exp $
 
 
 
@@ -413,6 +413,20 @@ $n_2$.
 {\em Hints}: None.
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{In species@ '$sname$', proof of '$pname$' is not related to
+  an existing property.}
+
+{\em Description}: In the species $sname$ a delayed proof of the
+property $pname$ was found but the statement of this property doesn't
+exist in the current species even via inheritance.
+
+
+{\em Hints}: May be you forgot to write the property, or you mistook
+on the property name the proof is related to or you forgot to inherit
+from a species having this property.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Carrier 'rep' is multiply defined.}
@@ -424,7 +438,7 @@ although at most one definition must be provided.
 {\em Hints}: Source program to fix. Remove the spurious definitions.
 
 If the {\tt rep} field is not directly present in the
-body, that is because the species inherits of a parent where the
+body, that is because the species inherits from a parent where the
 carrier is already defined. In this last case, since the parent's
 structure is already established, you must remove the {\tt rep} field
 in the species where the error was reported.
