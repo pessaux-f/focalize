@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.9 2008-11-21 10:37:08 pessaux Exp $
+% $Id: compiler_err_msgs.tex,v 1.10 2008-11-21 17:10:36 pessaux Exp $
 
 
 
@@ -569,6 +569,28 @@ no collection can be extracted from it.
 
 {\em Hints}: Add an effective definition of the method, either by
 writing it code or by inheritance, according to your program model.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Species '$sname$' cannot be turned into a collection. Field
+  '$fname$' does not have a termination proof.}
+
+{\em Description}: A collection is a completely defined species
+(c.f. \ref{collection}), i.e. a species where {\bf all} the methods
+are {\bf defined} and in particular proofs of properties are
+done. This also applies to recursive functions which must have a
+termination proof provided. The recursive function $fname$ of the
+species $sname$ doesn't have its termination proof.
+
+This error message only arises if the {\tt -impose-termination-proof}
+option is used on the command line. Otherwise, it is turned into a
+warning and the compiler will automatically generate an assumed
+proof.
+
+{\em Hints}: Add an effective termination proof to the function or do
+not invoke the {\tt -impose-termination-proof} option when compiling
+the source file.
 
 
 

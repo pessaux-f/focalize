@@ -33,6 +33,15 @@ To generate the final \coq\ code, the ``.zv'' file must be send to
     directories specified by the $-$I options in their apparition
     order on the command line.
 
+  \item[*] {\bf $-$impose-termination-proof}. Make termination proofs
+    mandatory for recursive functions. If a recursive function doesn't
+    have its termination proof, then the field will be considered as
+    not fully defined and no collection will be possible based on the
+    species hosting the function. By default this option is not
+    enabled and if a recursive function does not have any termination
+    proof, a warning is printed during compilation when trying to make
+    a collection from this species.
+
  \item[*] {\bf $--$methods-history-to-text} {\em directories
    name}. Dumps the methods' inheritance history of the species
    present in the compiled. The result is sent as plain text files
