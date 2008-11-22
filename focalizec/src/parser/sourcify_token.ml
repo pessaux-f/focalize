@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify_token.ml,v 1.2 2008-11-22 18:47:29 weis Exp $ *)
+(* $Id: sourcify_token.ml,v 1.3 2008-11-22 19:04:59 weis Exp $ *)
 
 open Parser;;
 
@@ -125,6 +125,7 @@ let token ppf = function
   | OPEN -> Format.fprintf ppf "%s" "OPEN"
   | OR -> Format.fprintf ppf "%s" "OR"
   | ORDER -> Format.fprintf ppf "%s" "ORDER"
+  | PRIVATE -> Format.fprintf ppf "%s" "PRIVATE"
   | PROOF -> Format.fprintf ppf "%s" "PROOF"
   | PROP -> Format.fprintf ppf "%s" "PROP"
   | PROPERTY -> Format.fprintf ppf "%s" "PROPERTY"

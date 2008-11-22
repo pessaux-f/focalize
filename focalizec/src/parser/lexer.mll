@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.63 2008-11-22 18:47:29 weis Exp $ *)
+(* $Id: lexer.mll,v 1.64 2008-11-22 19:04:59 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -129,6 +129,7 @@ List.iter
   "on", ON;
   "or", OR;
   "order", ORDER;
+  "private", PRIVATE;
   "proof", PROOF;
   "prop", PROP;
   "property", PROPERTY;

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.113 2008-11-22 18:47:29 weis Exp $ *)
+(* $Id: parser.mly,v 1.114 2008-11-22 19:04:59 weis Exp $ *)
 
 open Parsetree;;
 
@@ -229,6 +229,7 @@ let mk_proof_label (s1, s2) =
 %token OPEN
 %token OR
 %token ORDER
+%token PRIVATE
 %token PROOF
 %token PROP
 %token PROPERTY
@@ -389,6 +390,13 @@ define_type_param_comma_list:
 ;
 
 define_type_body:
+  | opt_doc PRIVATE define_type_body_simple
+/* FIXME: should be handled properly. */
+/*    { mk_doc $1 (TDB_private $3) } */
+    { mk_doc $1 (TDB_simple $3) }
+  | define_type_body_contents { $1 }
+
+define_type_body_contents:
   | opt_doc define_type_body_simple { mk_doc $1 (TDB_simple $2) }
   | opt_doc define_type_body_external { mk_doc $1 (TDB_external $2) }
 ;
@@ -424,8 +432,6 @@ define_type_body_simple:
 
 define_sum:
   | define_constructor_list { $1 }
-/* Fix me: should be handled properly. */
-/*  | PRIVATE define_constructor_list { $1 } */
 ;
 
 define_constructor:
