@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.61 2008-10-29 16:31:16 weis Exp $ *)
+(* $Id: lexer.mll,v 1.62 2008-11-22 12:38:35 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -370,13 +370,13 @@ let token_of_delimited_ident s =
     token_of_lowercase_infix_symbol s
   (* start_lowercase_prefix_symbolic *)
   | '!' | '#'
-  | '~' | '?' | '$'  (* ` helping emacs. *) ->
+  | '~' | '?' | '$'  (* ` Helping emacs. *) ->
     token_of_lowercase_prefix_symbol s
   (* start_uppercase_infix_symbol *)
-  | ':' | '`' -> (* Helping emacs ` *)
+  | ':' | '`' -> (* ` Helping emacs *)
     token_of_uppercase_infix_symbol s
   (* start_uppercase_prefix_symbol *)
-  | '(' | '[' -> (* Helping Emacs ]) *)
+  | '(' | '[' -> (* ]) Helping Emacs *)
     token_of_uppercase_prefix_symbol s
   | _ -> assert false
 (** The first meaningful character at the beginning of a delimited
@@ -392,23 +392,27 @@ let token_of_delimited_ident s =
 let token_of_paren_lowercase_prefix_symbol s =
 (*  prerr_endline (Printf.sprintf "token_of_paren_lowercase_prefix_symbol %s" s);*)
   assert (String.length s > 0);
-  PLIDENT s;;
+  PLIDENT s
+;;
 (** The prefix version of a lowercase prefix operator. *)
 let token_of_paren_lowercase_infix_symbol s =
 (*  prerr_endline (Printf.sprintf "token_of_paren_lowercase_infix_symbol %s" s);*)
   assert (String.length s > 0);
-  ILIDENT s;;
+  ILIDENT s
+;;
 (** The prefix version of a lowercase infix operator. *)
 
 let token_of_paren_uppercase_prefix_symbol s =
 (*  prerr_endline (Printf.sprintf "token_of_paren_uppercase_prefix_symbol %s" s);*)
   assert (String.length s > 0);
-  PUIDENT s;;
+  PUIDENT s
+;;
 (** The prefix version of an uppercase prefix operator. *)
 let token_of_paren_uppercase_infix_symbol s =
 (*  prerr_endline (Printf.sprintf "token_of_paren_uppercase_infix_symbol %s" s);*)
   assert (String.length s > 0);
-  IUIDENT s;;
+  IUIDENT s
+;;
 (** The prefix version of an uppercase infix operator. *)
 
 (** {3 Various auxiliaries to lex special tokens} *)
@@ -569,18 +573,36 @@ let char_for_hexadecimal_code lexbuf i =
 
 (** {6 Keeping the internal buffer locations up to date} *)
 
-let update_loc lexbuf file line absolute chars =
+let update_loc lexbuf fname line absolute chars =
   let pos = lexbuf.lex_curr_p in
-  let new_file =
-    match file with
+  let new_fname =
+    match fname with
     | None -> pos.pos_fname
     | Some s -> s in
   lexbuf.lex_curr_p <- {
     pos with
-    pos_fname = new_file;
+    pos_fname = new_fname;
     pos_lnum = if absolute then line else pos.pos_lnum + line;
     pos_bol = pos.pos_cnum - chars;
   }
+;;
+
+(** Un conditionally set the location as being on line [num],
+    in file [fname]. *)
+let set_loc lexbuf fname num =
+  update_loc lexbuf fname (int_of_string num) true 0
+;;
+
+(** Add one to the current line counter of the file being lexed. *)
+let incr_line_num lexbuf =
+  update_loc lexbuf None 1 false 0
+;;
+
+(** Add one to the current line counter of the file being lexed,
+    knowing that [spaces] chars are skipped at the begeinning of the next
+    line. *)
+let incr_escaped_line_num lexbuf spaces =
+  update_loc lexbuf None 1 false (String.length spaces)
 ;;
 
 }
@@ -714,9 +736,9 @@ let symbolic =
   [ '/' '%' '&' '|' ';' '<' '=' '>' '@' '^' '\\' ]
 
 (** Characters that can only start an uppercase prefix symbol. *)
-let start_uppercase_prefix_symbolic = [ '[' '(' ] (* )] helping emacs. *)
+let start_uppercase_prefix_symbolic = [ '[' '(' ] (* )] Helping emacs. *)
 (** Characters that can only start an uppercase infix symbol. *)
-let start_uppercase_infix_symbolic = [ ':' '`'] (* ` helping emacs. *)
+let start_uppercase_infix_symbolic = [ ':' '`'] (* ` Helping emacs. *)
 
 (** Characters that certainly start a lowercase prefix symbol. *)
 let lowercase_prefix_symbolic = [ '~' '?' '$' ]
@@ -825,7 +847,7 @@ let continue_uppercase_prefix_symbol =
 (** {8 Infix symbols} *)
 let continue_lowercase_infix_symbol =
   continue_lowercase_prefix_symbol
- 
+
 (* After ':' we can use any lowercase infix symbol character *)
 let continue_uppercase_infix_symbol = continue_lowercase_infix_symbol
 
@@ -1021,7 +1043,7 @@ let uppercase_prefix_symbol =
 
 rule token = parse
   | newline
-    { update_loc lexbuf None 1 false 0;
+    { incr_line_num lexbuf;
       token lexbuf }
   | blank +
     { token lexbuf }
@@ -1135,9 +1157,9 @@ rule token = parse
 
   (* Lines annotations *)
   | "#" whites (['0'-'9']+ as num) whites
-        ("\"" ([^ '\010' '\013' '\"' ] * as name) "\"")?
+        ("\"" ([^ '\010' '\013' '\"' ] * as fname) "\"")?
         [^ '\010' '\013'] * newline
-    { update_loc lexbuf name (int_of_string num) true 0;
+    { set_loc lexbuf fname num;
       token lexbuf }
 
   (* Labels in proofs *)
@@ -1206,11 +1228,11 @@ rule token = parse
 and delimited_ident = parse
   | "\'\'"
     { () }
-  | '\\' ['(' '-' '\\' '`' '\'' '\"' 'n' 't' 'b' 'r' ' ' '*' ')']
+  | '\\' [ '(' '-' '\\' '`' '\'' '\"' 'n' 't' 'b' 'r' ' ' '*' ')' ] (* ` Helping emacs *)
     { store_delimited_ident_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
       delimited_ident lexbuf }
   | '\\' newline (whites as space)
-    { update_loc lexbuf None 1 false (String.length space);
+    { incr_escaped_line_num lexbuf space;
       delimited_ident lexbuf }
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
     { store_delimited_ident_char (char_for_decimal_code lexbuf 1);
@@ -1242,7 +1264,13 @@ and delimited_ident = parse
            (Delimited_ident_in_delimited_ident,
             lexbuf.lex_start_p,
             lexbuf.lex_curr_p)) }
-  | ( newline | eof )
+  | newline
+    { incr_line_num lexbuf;
+      match !delimited_ident_start_pos with
+      | Some (start_pos, end_pos) ->
+        raise (Error (Unterminated_delimited_ident, start_pos, end_pos))
+      | _ -> assert false }
+  | eof
     { match !delimited_ident_start_pos with
       | Some (start_pos, end_pos) ->
         raise (Error (Unterminated_delimited_ident, start_pos, end_pos))
@@ -1260,10 +1288,10 @@ and uniline_comment = parse
            lexbuf.lex_start_p,
            lexbuf.lex_curr_p)) }
   | '\\' newline whites
-    { update_loc lexbuf None 1 false 0;
+    { incr_line_num lexbuf;
       uniline_comment lexbuf }
   | newline
-    { update_loc lexbuf None 1 false 0; }
+    { incr_line_num lexbuf; }
   | eof
     { raise
         (Error
@@ -1280,8 +1308,7 @@ and comment = parse
         (lexbuf.lex_start_p, lexbuf.lex_curr_p) :: !comment_start_pos;
       comment lexbuf; }
   | '\\' '*'
-    { update_loc lexbuf None 1 false 0;
-      comment lexbuf }
+    { comment lexbuf }
   | "*)"
     { match !comment_start_pos with
       | [] -> assert false
@@ -1289,10 +1316,10 @@ and comment = parse
       | _ :: l -> comment_start_pos := l;
                   comment lexbuf; }
   | '\\' newline whites
-    { update_loc lexbuf None 1 false 0;
+    { incr_line_num lexbuf;
       comment lexbuf }
   | newline
-    { update_loc lexbuf None 1 false 0;
+    { incr_line_num lexbuf;
       comment lexbuf }
   | eof
     { match !comment_start_pos with
@@ -1310,11 +1337,12 @@ and comment = parse
 and string = parse
   | '\"'
     { () }
-  | '\\' ['(' '-' '\\' '`' '\'' '\"' 'n' 't' 'b' 'r' ' ' '*' ')']
+  | '\\' [ '(' '-' '\\' '`' '\'' '\"' 'n' 't' 'b' 'r' ' ' '*' ')' ]
+    (* ` Helping emacs *)
     { store_string_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
       string lexbuf }
-  | '\\' newline (whites as space)
-    { update_loc lexbuf None 1 false (String.length space);
+  | '\\' newline (whites as spaces)
+    { incr_escaped_line_num lexbuf spaces;
       string lexbuf }
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
     { store_string_char(char_for_decimal_code lexbuf 1);
@@ -1346,7 +1374,13 @@ and string = parse
            (Delimited_ident_in_string,
             lexbuf.lex_start_p,
             lexbuf.lex_curr_p)) }
-  | ( newline | eof )
+  | newline
+    { incr_line_num lexbuf;
+      match !string_start_pos with
+      | Some (start_pos, end_pos) ->
+        raise (Error (Unterminated_string, start_pos, end_pos))
+      | _ -> assert false }
+  | eof
     { match !string_start_pos with
       | Some (start_pos, end_pos) ->
         raise (Error (Unterminated_string, start_pos, end_pos))
@@ -1367,15 +1401,15 @@ and documentation = parse
       | Some (start_pos, end_pos) ->
         raise (Error (Unterminated_documentation, start_pos, end_pos))
       | _ -> assert false }
-  | '\\' newline (whites as space)
-    { for i = 0 to String.length space do
+  | '\\' newline (whites as spaces)
+    { incr_line_num lexbuf;
+      for i = 0 to String.length spaces do
         store_documentation_char (Lexing.lexeme_char lexbuf i);
       done;
-      update_loc lexbuf None 1 false 0;
       documentation lexbuf }
   | newline
-    { store_documentation_char (Lexing.lexeme_char lexbuf 0);
-      update_loc lexbuf None 1 false 0;
+    { incr_line_num lexbuf;
+      store_documentation_char (Lexing.lexeme_char lexbuf 0);
       documentation lexbuf }
   | _
     { store_documentation_char (Lexing.lexeme_char lexbuf 0);
@@ -1393,15 +1427,15 @@ and external_code = parse
       | Some (start_pos, end_pos) ->
         raise (Error (Unterminated_external_code, start_pos, end_pos))
       | _ -> assert false }
-  | '\\' newline (whites as space)
-    { for i = 0 to String.length space do
+  | '\\' newline (whites as spaces)
+    { incr_line_num lexbuf;
+      for i = 0 to String.length spaces do
         store_external_code_char (Lexing.lexeme_char lexbuf i);
       done;
-      update_loc lexbuf None 1 false 0;
       external_code lexbuf }
   | newline
-    { store_external_code_char (Lexing.lexeme_char lexbuf 0);
-      update_loc lexbuf None 1 false 0;
+    { incr_line_num lexbuf;
+      store_external_code_char (Lexing.lexeme_char lexbuf 0);
       external_code lexbuf }
   | _
     { store_external_code_char (Lexing.lexeme_char lexbuf 0);
