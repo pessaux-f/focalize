@@ -1,6 +1,7 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -11,14 +12,12 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ml_builtins.ml,v 1.3 2008-09-24 08:52:21 weis Exp $ *)
-
+(* $Id: ml_builtins.ml,v 1.4 2008-11-22 21:47:35 weis Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module contains the external primitives bound to FoCaL
               in the "basic.foc" file.                                      *)
 (* ************************************************************************ *)
-
 
 exception Foc_error of string ;;
 exception Foc_Failure of string ;;
@@ -44,8 +43,8 @@ let bi__int_lt (x : int) (y : int) = x < y ;;
 let bi__int_leq (x : int) (y : int) = x <= y ;;
 let bi__int_geq (x : int) (y : int) = x >= y ;;
 let bi__int_gt (x : int) (y : int) = x > y ;;
-let bi__base_equal x y = x == y ;;
-let bi__base_eq x y = x = y ;;
+let bi__base_syntactic_equal x y = x = y ;;
+let bi__base_physical_equal x y = x == y ;;
 let bi__pred x = x - 1 ;;
 let bi__int_opposite i = - i ;;
 let bi__int_plus x y = x + y ;;
