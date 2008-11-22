@@ -1,6 +1,7 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Virgile Prevosto                                         *)
 (*            Pierre Weis                                              *)
@@ -12,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: coq_builtins.v,v 1.9 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: coq_builtins.v,v 1.10 2008-11-22 21:48:04 weis Exp $ *)
 
 Require Import Bool.
 Require Export ZArith.
