@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.62 2008-11-22 12:38:35 weis Exp $ *)
+(* $Id: lexer.mll,v 1.63 2008-11-22 18:47:29 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -313,7 +313,7 @@ let token_of_lowercase_ident lexbuf =
 (*  prerr_endline (Printf.sprintf "token_of_lowercase_ident %s" s);*)
   assert (String.length s > 0);
   try Hashtbl.find keyword_table s with
-  | Not_found -> LIDENT s
+  | Not_found -> RLIDENT s
 ;;
 
 (** {6 Finding keywords and creating uppercase idents} *)
@@ -323,7 +323,7 @@ let token_of_uppercase_ident lexbuf =
 (*  prerr_endline (Printf.sprintf "token_of_uppercase_ident %s" s);*)
   assert (String.length s > 0);
   try Hashtbl.find keyword_table s with
-  | Not_found -> UIDENT s
+  | Not_found -> RUIDENT s
 ;;
 
 (** {6 Quoted idents} *)
@@ -346,7 +346,7 @@ let token_of_quoted_uppercase_ident lexbuf =
 
 (** {6 Creating tokens for delimited idents} *)
 
-(** Could be any of LIDENT, UIDENT, PLIDENT, PUIDENT, ILIDENT, IUIDENT,
+(** Could be any of RLIDENT, RUIDENT, PLIDENT, PUIDENT, ILIDENT, IUIDENT,
    according to the triggering character class.
    Note that a delimited identifier includes its delimitors.
  *)
@@ -357,12 +357,12 @@ let token_of_delimited_ident s =
   let length_s = String.length s in
   match c with
   (* String s has only underscores. *)
-  | '_' -> if length_s = 1 then UNDERSCORE else LIDENT s
+  | '_' -> if length_s = 1 then UNDERSCORE else RLIDENT s
   (* start_lowercase_ident *)
   | 'a' .. 'z'
-  | '0' .. '9' -> LIDENT s
+  | '0' .. '9' -> RLIDENT s
   (* start_uppercase_ident *)
-  | 'A' .. 'Z' -> UIDENT s
+  | 'A' .. 'Z' -> RUIDENT s
   (* start_lowercase_infix_symbol *)
   | '*'
   | '+' | '-'
@@ -710,11 +710,11 @@ let float_literal = sign? unsigned_float_literal
    - '_,' cannot be the beginning of an infix, since we want to parse the
          pattern _, _ as 3 tokens '_' ',' and '_'.
    - '.' cannot be inside infixes or prefixes, since we want to parse
-         LIDENT DOT LIDENT
-         which, if '.' were in infixes characters, would be parsed as LIDENT
-         followed by the infix DOT LIDENT.
+         RLIDENT DOT RLIDENT
+         which, if '.' were in infixes characters, would be parsed as RLIDENT
+         followed by the infix DOT RLIDENT.
          (For instance, r.label would be the two tokens
-          LIDENT "r" and DOT_OP ".label"). *)
+          RLIDENT "r" and DOT_OP ".label"). *)
 
 (** {7 Classification of characters for identifiers} *)
 

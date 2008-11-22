@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.112 2008-11-22 18:27:01 weis Exp $ *)
+(* $Id: parser.mly,v 1.113 2008-11-22 18:47:29 weis Exp $ *)
 
 open Parsetree;;
 
@@ -105,8 +105,11 @@ let mk_proof_label (s1, s2) =
 %token EOF
 
 /* Identifiers */
-%token <string> LIDENT  /* Lower case ident (e.g. x, _1, or _xY) */
-%token <string> UIDENT  /* Upper case ident (e.g. A, _B, or _Ax) */
+/* In the following identifier nomenclature, */
+/* R stands for regular, P for prefix, I for Infix, Q for quoted. */
+/* U stands for uppercase, L for lowercase. */
+%token <string> RLIDENT /* Lower case ident (e.g. x, _1, or _xY) */
+%token <string> RUIDENT /* Upper case ident (e.g. A, _B, or _Ax) */
 %token <string> PLIDENT /* Prefix lowercase ident (e.g. ! or ~) */
 %token <string> PUIDENT /* Prefix uppercase ident (e.g. [], [!], or [~]) */
 %token <string> ILIDENT /* Infix lowercase ident (e.g + or +matrix) */
@@ -271,7 +274,7 @@ let mk_proof_label (s1, s2) =
        /* expr (e OP e) with OP starting with "<-" */
 %right    COLON_OP
        /* expr (e OP e OP e) with OP starting with ':' (e.g. ":=") */
-%nonassoc AS                       /* pattern (pat as LIDENT) */
+%nonassoc AS                       /* pattern (pat as RLIDENT) */
 %right    BAR                      /* Dangling match (match ... with ...) */
 %left     COMMA COMMA_OP
        /* expr/expr_comma_list (e OP e OP e) with OP respectively */
@@ -313,13 +316,13 @@ let mk_proof_label (s1, s2) =
 %nonassoc prec_constant_constructor /* cf. simple_expr (C versus C x) */
                                    /* above AS BAR COLON_COLON COMMA */
 %nonassoc below_SHARP
-%nonassoc SHARP_OP                 /* simple_expr lident # UIDENT */
+%nonassoc SHARP_OP                 /* simple_expr lident # RUIDENT */
 %nonassoc DOT                      /* simple_expr (simple_expr . label) */
 %nonassoc below_RPAREN
 %nonassoc RPAREN
 /* Finally, the first tokens of simple_expr are above everything else. */
 /* %nonassoc BEGIN INT FLOAT BOOL STRING CHAR */
-/*          LBRACE LBRACKET LIDENT UIDENT */
+/*          LBRACE LBRACKET RLIDENT RUIDENT */
 %nonassoc LPAREN
 
 %start file
@@ -336,7 +339,6 @@ phrase_list:
   | phrase phrase_list { $1 :: $2 }
 ;
 
-/* a voir: ajouter les expressions a toplevel ? */
 phrase:
   | define_let SEMI_SEMI { mk (Ph_let $1) }
   | define_logical SEMI_SEMI { mk (Ph_let $1) }
@@ -422,8 +424,8 @@ define_type_body_simple:
 
 define_sum:
   | define_constructor_list { $1 }
-/* ajouter les types a constructeurs prives ? */
-/*  | PRIVATE define_constructor_list */
+/* Fix me: should be handled properly. */
+/*  | PRIVATE define_constructor_list { $1 } */
 ;
 
 define_constructor:
@@ -557,11 +559,11 @@ simple_representation_type:
     /* To have qualified species names as representation types. */
   | species_glob_ident
     { RTE_ident $1 }
-  | LIDENT { RTE_ident (mk_local_ident (Vlident $1)) }
+  | RLIDENT { RTE_ident (mk_local_ident (Vlident $1)) }
   | glob_ident LPAREN representation_type_comma_list RPAREN
     { RTE_app ($1, $3) }
     /* To have non-qualified parameterized type constructors names. */
-  | LIDENT LPAREN representation_type_comma_list RPAREN
+  | RLIDENT LPAREN representation_type_comma_list RPAREN
     { let paramd_cstr = mk_local_ident (Vlident $1) in
       RTE_app (paramd_cstr, $3) }
   | LPAREN representation_type RPAREN
@@ -777,8 +779,8 @@ enforced_dependency:
 ;
 
 proof_hypothesis:
-  | UIDENT { Vuident $1 }
-  | LIDENT { Vlident $1 }
+  | RUIDENT { Vuident $1 }
+  | RLIDENT { Vlident $1 }
 ;
 
 proof_hypothesis_list:
@@ -826,7 +828,7 @@ simple_type_expr:
     { mk TE_prop }
   | QLIDENT
     { mk (TE_ident (mk_local_ident (Vqident $1))) }
-  | LIDENT
+  | RLIDENT
     { mk (TE_ident (mk_local_ident (Vlident $1))) }
   | glob_ident
     { mk (TE_ident $1) }
@@ -838,7 +840,7 @@ simple_type_expr:
     { mk (TE_ident $1) }
   | glob_ident LPAREN type_expr_comma_list RPAREN
     { mk (TE_app ($1, $3)) }
-  | LIDENT LPAREN type_expr_comma_list RPAREN
+  | RLIDENT LPAREN type_expr_comma_list RPAREN
     { mk (TE_app (mk_local_ident (Vlident $1), $3)) }
   | LPAREN type_expr RPAREN
     { mk (TE_paren $2) }
@@ -863,7 +865,7 @@ constructor_ref:
     { mk_global_constructor_ident $1 $3 }
 ;
 
-/* Idents */
+/* IDENTIFIERS */
 
 glob_ident:
   | opt_lident SHARP bound_vname
@@ -878,7 +880,7 @@ species_glob_ident:
 /* Only used to prefix global notation (i.e. with '#'). */
 opt_lident:
   | { None }
-  | LIDENT
+  | RLIDENT
     { Some $1 }
 ;
 
@@ -887,12 +889,12 @@ opt_qualified_vname:
   | { None }
   | SELF
     { Some (mk_qual_vname None (Vuident "Self")) }
-  | UIDENT
+  | RUIDENT
     { Some (mk_qual_vname None (Vuident $1)) }
     /* "Module" name qualification. To allow a species name */
     /* to be "module"-scoped in a method call. */
     /* E.g. my_file#My_species!my_method. */
-  | opt_lident SHARP UIDENT
+  | opt_lident SHARP RUIDENT
     { Some (mk_qual_vname $1 (Vuident $3)) }
 ;
 
@@ -1115,7 +1117,7 @@ constant:
 
 pattern:
   | constant { mk (P_const $1) }
-  | LIDENT { mk (P_var (Vlident $1)) }
+  | RLIDENT { mk (P_var (Vlident $1)) }
   | UNDERSCORE { mk (P_wild) }
   | constructor_ref LPAREN pattern_comma_list RPAREN { mk (P_constr ($1, $3)) }
   | constructor_ref { mk (P_constr ($1, [])) }
@@ -1124,7 +1126,7 @@ pattern:
   | pattern IUIDENT pattern
     { mk (P_constr (mk_global_constructor_ident None (Vuident $2), [ $1; $3 ])) }
   | LBRACE pattern_record_field_list RBRACE { mk (P_record $2) }
-  | pattern AS LIDENT { mk (P_as ($1, Vlident $3)) }
+  | pattern AS RLIDENT { mk (P_as ($1, Vlident $3)) }
   | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
   | LPAREN pattern RPAREN { mk (P_paren $2) }
 ;
@@ -1175,7 +1177,7 @@ label_ident:
 ;
 
 bound_vname:
-  | LIDENT { Vlident $1 }
+  | RLIDENT { Vlident $1 }
   | PLIDENT { Vpident $1 }
   | ILIDENT { Viident $1 }
 ;
@@ -1188,7 +1190,7 @@ bound_vname_list:
 ;
 
 external_value_vname:
-  | LIDENT { Vlident $1 }
+  | RLIDENT { Vlident $1 }
   | constructor_vname { $1 }
 ;
 
@@ -1197,7 +1199,7 @@ method_vname:
 ;
 
 constructor_vname:
-  | UIDENT { Vuident $1 }
+  | RUIDENT { Vuident $1 }
   | PUIDENT { Vuident $1 }
   | IUIDENT { Vuident $1 }
   | LRPARENS { Vuident "()" }
@@ -1209,23 +1211,20 @@ label_vname:
 ;
 
 species_vname:
-  | UIDENT { Vuident $1 }
+  | RUIDENT { Vuident $1 }
 ;
 
 collection_vname:
-  | UIDENT { Vuident $1 }
+  | RUIDENT { Vuident $1 }
 ;
 
 property_vname:
-  | LIDENT { Vlident $1 }
-  | UIDENT { Vuident $1 }
+  | RLIDENT { Vlident $1 }
+  | RUIDENT { Vuident $1 }
   | PLIDENT { Vpident $1 }
   | ILIDENT { Viident $1 }
   | PUIDENT { Vuident $1 }
   | IUIDENT { Vuident $1 }
-
-/* Why do we need a quoted identifier for property names ? */
-/*  | QLIDENT { Vqident $1 } */
 ;
 
 theorem_vname:
@@ -1233,10 +1232,10 @@ theorem_vname:
 ;
 
 type_vname:
-  | LIDENT { Vlident $1 }
+  | RLIDENT { Vlident $1 }
 ;
 
 type_param_vname:
-  | LIDENT { Vlident $1 }
+  | RLIDENT { Vlident $1 }
   | QLIDENT { Vqident $1 }
 ;

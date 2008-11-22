@@ -12,14 +12,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify_token.ml,v 1.1 2008-10-21 14:10:04 weis Exp $ *)
+(* $Id: sourcify_token.ml,v 1.2 2008-11-22 18:47:29 weis Exp $ *)
 
 open Parser;;
 
 let token ppf = function
   | EOF -> Format.fprintf ppf "%s" "EOF"
-  | LIDENT s -> Format.fprintf ppf "%s %s" "LIDENT" s
-  | UIDENT s -> Format.fprintf ppf "%s %s" "UIDENT" s
+  | RLIDENT s -> Format.fprintf ppf "%s %s" "RLIDENT" s
+  | RUIDENT s -> Format.fprintf ppf "%s %s" "RUIDENT" s
   | PLIDENT s -> Format.fprintf ppf "%s %s" "PLIDENT" s
   | PUIDENT s -> Format.fprintf ppf "%s %s" "PUIDENT" s
   | ILIDENT s -> Format.fprintf ppf "%s %s" "ILIDENT" s
