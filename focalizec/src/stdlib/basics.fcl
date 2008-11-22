@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.35 2008-11-06 20:09:05 doligez Exp $ *)
+(* $Id: basics.fcl,v 1.36 2008-11-22 21:49:13 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -347,9 +347,9 @@ let ( % ) = int_div;;
 (** Polymorphic equalities. *)
 
 let physical_equal =
-  internal 'a ->'a -> bool
+  internal 'a -> 'a -> bool
   external
-  | caml -> {* Ml_builtins.bi__base_equal *}
+  | caml -> {* Ml_builtins.bi__base_physical_equal *}
   | coq -> {* coq_builtins.bi__base_eq __var_a *}
     (* Wrong, but don't know how to do better. *)
 ;;
@@ -362,9 +362,9 @@ let phys_eq = physical_equal
 ;;
 
 let syntactic_equal =
-  internal  'a -> 'a -> bool
+  internal 'a -> 'a -> bool
   external
-  | caml -> {* Ml_builtins.bi__base_eq *}
+  | caml -> {* Ml_builtins.bi__base_syntactic_equal *}
   | coq -> {* coq_builtins.bi__base_eq __var_a *}
 ;;
 
