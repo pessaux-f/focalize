@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.110 2008-10-29 16:32:23 weis Exp $ *)
+(* $Id: parser.mly,v 1.111 2008-11-22 17:33:23 weis Exp $ *)
 
 open Parsetree;;
 
@@ -85,10 +85,10 @@ let mk_global_expr_var qual vname =
 (* identifiers of the form "#foo", meaning that we refer to          *)
 (* identifier "foo" at toplevel of the current compilation unit.     *)
 let mk_infix_application e1 s e2 =
-  mk (E_app (mk_local_expr_var (Viident s), [e1; e2]))
+  mk (E_app (mk_local_expr_var (Viident s), [ e1; e2 ]))
 ;;
 let mk_prefix_application s e1 =
-  mk (E_app (mk_local_expr_var (Vpident s), [e1]))
+  mk (E_app (mk_local_expr_var (Vpident s), [ e1 ]))
 ;;
 
 let mk_cons () = mk_global_constructor_ident (Some "basics") (Vuident "::");;
@@ -277,7 +277,7 @@ let mk_proof_label (s1, s2) =
        /* expr/expr_comma_list (e OP e OP e) with OP respectively */
        /* being ',' or starting with ',' */
 %right    DASH_GT DASH_GT_OP
-       /* core_type2 (t -> t -> t) */
+       /* type_expr (t -> t -> t) */
        /* expr (e OP e OP e) wih OP starting with "->" e2) */
 %right    BAR_OP                   /* expr (e || e || e) */
 %right    AMPER_OP                 /* expr (e && e && e) */
@@ -340,12 +340,12 @@ phrase_list:
 
 /* a voir: ajouter les expressions a toplevel ? */
 phrase:
-  | def_let SEMI_SEMI { mk (Ph_let $1) }
-  | def_logical SEMI_SEMI { mk (Ph_let $1) }
-  | def_theorem SEMI_SEMI { mk (Ph_theorem $1) }
-  | def_type SEMI_SEMI { mk (Ph_type $1) }
-  | def_species SEMI_SEMI { mk (Ph_species $1) }
-  | def_collection SEMI_SEMI { mk (Ph_collection $1) }
+  | define_let SEMI_SEMI { mk (Ph_let $1) }
+  | define_logical SEMI_SEMI { mk (Ph_let $1) }
+  | define_theorem SEMI_SEMI { mk (Ph_theorem $1) }
+  | define_type SEMI_SEMI { mk (Ph_type $1) }
+  | define_species SEMI_SEMI { mk (Ph_species $1) }
+  | define_collection SEMI_SEMI { mk (Ph_collection $1) }
   | opt_doc OPEN STRING SEMI_SEMI { mk_doc $1 (Ph_open $3) }
   | opt_doc USE STRING SEMI_SEMI { mk_doc $1 (Ph_use $3) }
   | opt_doc COQ_REQUIRE STRING SEMI_SEMI { mk_doc $1 (Ph_coq_require $3) }
@@ -373,28 +373,28 @@ external_expr:
 
 /**** TYPE DEFINITION ****/
 
-def_type:
-  | opt_doc TYPE type_vname def_type_params EQUAL def_type_body
+define_type:
+  | opt_doc TYPE type_vname define_type_params EQUAL define_type_body
     { mk_doc $1 {td_name = $3; td_params = $4; td_body = $6; } }
 ;
 
-def_type_params:
+define_type_params:
   | { [] }
-  | LPAREN def_type_param_comma_list RPAREN { $2 }
+  | LPAREN define_type_param_comma_list RPAREN { $2 }
 ;
 
-def_type_param_comma_list:
+define_type_param_comma_list:
   | type_param_vname { [ $1 ] }
-  | type_param_vname COMMA def_type_param_comma_list { $1 :: $3 }
+  | type_param_vname COMMA define_type_param_comma_list { $1 :: $3 }
 ;
 
-def_type_body:
-  | opt_doc def_type_body_simple { mk_doc $1 (TDB_simple $2) }
-  | opt_doc def_type_body_external { mk_doc $1 (TDB_external $2) }
+define_type_body:
+  | opt_doc define_type_body_simple { mk_doc $1 (TDB_simple $2) }
+  | opt_doc define_type_body_external { mk_doc $1 (TDB_external $2) }
 ;
 
-def_type_body_external:
-  | INTERNAL def_type_body_simple_opt
+define_type_body_external:
+  | INTERNAL define_type_body_simple_opt
     opt_doc EXTERNAL external_expr_desc following_external_binding_list
      { mk { etdb_internal = $2;
             etdb_external = mk_doc $3 $5;
@@ -411,47 +411,47 @@ following_external_binding_list:
   | AND external_binding following_external_binding_list { $2 :: $3 }
 ;
 
-def_type_body_simple_opt:
+define_type_body_simple_opt:
   | { None }
-  | def_type_body_simple { Some $1 }
+  | define_type_body_simple { Some $1 }
 ;
 
-def_type_body_simple:
+define_type_body_simple:
   | ALIAS type_expr { mk (STDB_alias $2) }
-  | def_sum { mk (STDB_union $1) }
-  | def_product { mk (STDB_record $1) }
+  | define_sum { mk (STDB_union $1) }
+  | define_product { mk (STDB_record $1) }
 ;
 
-def_sum:
-  | def_constructor_list { $1 }
+define_sum:
+  | define_constructor_list { $1 }
 /* ajouter les types a constructeurs prives ? */
-/*  | PRIVATE def_constructor_list */
+/*  | PRIVATE define_constructor_list */
 ;
 
-def_constructor:
+define_constructor:
   | constructor_vname { ($1, []) }
   | constructor_vname LPAREN type_expr_comma_list RPAREN { ($1, $3) }
 ;
-def_constructor_list:
-  | BAR def_constructor { [ $2 ] }
-  | BAR def_constructor def_constructor_list { $2 :: $3 }
+define_constructor_list:
+  | BAR define_constructor { [ $2 ] }
+  | BAR define_constructor define_constructor_list { $2 :: $3 }
 ;
 
-def_product:
-  | LBRACE def_record_field_list RBRACE { $2 }
+define_product:
+  | LBRACE define_record_field_list RBRACE { $2 }
 ;
-def_record_field_list:
+define_record_field_list:
   | label_vname EQUAL type_expr opt_semi
     { [ ($1, $3) ] }
-  | label_vname EQUAL type_expr SEMI def_record_field_list
+  | label_vname EQUAL type_expr SEMI define_record_field_list
     { ($1, $3) :: $5 }
 ;
 
 /**** SPECIES ****/
 
-def_species:
+define_species:
   | opt_doc
-    SPECIES species_vname def_species_params def_species_inherits EQUAL
+    SPECIES species_vname define_species_params define_species_inherits EQUAL
       species_fields
     END
     { mk_doc $1
@@ -459,22 +459,22 @@ def_species:
           sd_inherits = $5; sd_fields = $7; } }
 ;
 
-def_species_params:
+define_species_params:
   | { [] }
-  | LPAREN def_species_param_list RPAREN { $2 }
+  | LPAREN define_species_param_list RPAREN { $2 }
 ;
 
-def_species_param_list:
-  | def_species_param { [$1] }
-  | def_species_param COMMA def_species_param_list { $1 :: $3 }
+define_species_param_list:
+  | define_species_param { [ $1 ] }
+  | define_species_param COMMA define_species_param_list { $1 :: $3 }
 ;
 
-def_species_param:
+define_species_param:
   | bound_vname IN carrier_ident { ($1, mk (SPT_in $3)) }
   | collection_vname IS species_expr { ($1, mk (SPT_is $3)) }
 ;
 
-def_species_inherits:
+define_species_inherits:
   | opt_doc INHERITS species_expr_list { mk_doc $1 $3}
   | { mk [] }
 
@@ -494,7 +494,7 @@ species_param:
 ;
 
 species_param_list:
-  | species_param { [$1] }
+  | species_param { [ $1 ] }
   | species_param COMMA species_param_list { $1 :: $3 }
 ;
 
@@ -503,14 +503,14 @@ species_fields:
   | species_field SEMI species_fields { $1 :: $3 }
 
 species_field :
-  | def_rep      { mk (SF_rep $1) }
-  | def_sig      { mk (SF_sig $1) }
-  | def_let      { mk (SF_let $1) }
-  | def_logical  { mk (SF_let $1) }
-  | def_property { mk (SF_property $1) }
-  | def_theorem  { mk (SF_theorem $1) }
-  | def_proof    { mk (SF_proof $1) }
-  | def_termination_proof
+  | define_representation { mk (SF_rep $1) }
+  | define_signature      { mk (SF_sig $1) }
+  | define_let            { mk (SF_let $1) }
+  | define_logical        { mk (SF_let $1) }
+  | define_property       { mk (SF_property $1) }
+  | define_theorem        { mk (SF_theorem $1) }
+  | define_proof          { mk (SF_proof $1) }
+  | define_termination_proof
                  { mk (SF_termination_proof $1) }
 ;
 
@@ -525,62 +525,66 @@ termination_proof_profile:
     { mk {tpp_name = $1; tpp_args = $3; } }
 ;
 
-def_termination_proof:
+define_termination_proof:
   | opt_doc TERMINATION PROOF OF termination_proof_profiles EQUAL termination_proof
     { mk_doc $1 {tpd_profiles = List.rev $5; tpd_termination_proof = $7; } }
 ;
 
-def_proof:
+define_proof:
   | opt_doc PROOF OF property_vname EQUAL proof
     { mk_doc $1 { pd_name = $4; pd_proof = $6; } }
 ;
 
-def_rep:
-  | opt_doc REPRESENTATION EQUAL rep_type_def
+define_representation:
+  | opt_doc REPRESENTATION EQUAL representation_type
     { mk_doc $1 $4 }
 ;
 
-rep_type_def:
-  | simple_rep_type_def
+/**** REPRESENTATION TYPE EXPRESSIONS ****/
+representation_type:
+  | simple_representation_type
     { $1 }
-  | rep_type_tuple
+  | representation_type_tuple
     { RTE_prod (List.map mk $1) }
-  | rep_type_def DASH_GT rep_type_def
+  | representation_type DASH_GT representation_type
     { RTE_fun (mk $1, mk $3) }
 ;
 
-simple_rep_type_def:
+simple_representation_type:
   | glob_ident
     { RTE_ident $1 }
-  | species_vname          /* To have capitalized species names as types. */
+    /* To have capitalized species names as representation types. */
+  | species_vname
     { RTE_ident (mk_local_ident $1) }
-  | species_glob_ident     /* To have qualified species names as types. */
+    /* To have qualified species names as representation types. */
+  | species_glob_ident
     { RTE_ident $1 }
   | LIDENT { RTE_ident (mk_local_ident (Vlident $1)) }
-  | glob_ident LPAREN rep_type_def_comma_list RPAREN
+  | glob_ident LPAREN representation_type_comma_list RPAREN
     { RTE_app ($1, $3) }
-  | LIDENT LPAREN rep_type_def_comma_list RPAREN   /* To have non-qualified
-                                                      parameterized type
-                                                      constructors names. */
+    /* To have non-qualified parameterized type constructors names. */
+  | LIDENT LPAREN representation_type_comma_list RPAREN
     { let paramd_cstr = mk_local_ident (Vlident $1) in
       RTE_app (paramd_cstr, $3) }
-  | LPAREN rep_type_def RPAREN
+  | LPAREN representation_type RPAREN
     { RTE_paren (mk $2) }
 ;
 
-rep_type_tuple:
-  | simple_rep_type_def STAR_OP simple_rep_type_def  { [$1; $3] }
-  | rep_type_tuple STAR_OP simple_rep_type_def        { $1 @ [$3] }
+representation_type_tuple:
+  | simple_representation_type STAR_OP simple_representation_type
+    { [ $1; $3 ] }
+  | representation_type_tuple STAR_OP simple_representation_type
+    { $1 @ [ $3 ] }
 ;
 
-rep_type_def_comma_list:
-  | rep_type_def { [ mk $1 ] }
-  | rep_type_def COMMA rep_type_def_comma_list { mk $1 :: $3 }
+representation_type_comma_list:
+  | representation_type { [ mk $1 ] }
+  | representation_type COMMA representation_type_comma_list { mk $1 :: $3 }
 ;
 
 /**** COLLECTION DEFINITION ****/
 
-def_collection:
+define_collection:
   | opt_doc COLLECTION collection_vname IMPLEMENTS species_expr
     { mk_doc $1 { cd_name = $3; cd_body = $5; } }
 ;
@@ -596,7 +600,7 @@ let_binding:
            ld_bindings = $4 :: $5; ld_termination_proof = $6; } }
 ;
 
-def_let:
+define_let:
   | opt_doc let_binding { mk_doc $1 ($2.ast_desc) }
 ;
 
@@ -605,7 +609,7 @@ logical_binding:
     { mk { $2.ast_desc with ld_logical = LF_logical; } }
 ;
 
-def_logical:
+define_logical:
   | opt_doc logical_binding { mk_doc $1 $2.ast_desc }
 ;
 
@@ -660,7 +664,7 @@ termination_proof:
 ;
 
 param_list:
-  | param { [$1] }
+  | param { [ $1 ] }
   | param COMMA param_list { $1 :: $3 }
 ;
 
@@ -671,23 +675,23 @@ param:
 
 /**** PROPERTIES & THEOREM DEFINITION ****/
 
-sig_binding:
+signature_binding:
   | SIGNATURE bound_vname COLON type_expr
     { { sig_name = $2; sig_type = $4; sig_logical = LF_no_logical; } }
-  | LOGICAL sig_binding
+  | LOGICAL signature_binding
     { { $2 with sig_logical = LF_logical; }; }
 
-def_sig:
-  | opt_doc sig_binding
+define_signature:
+  | opt_doc signature_binding
     { mk_doc $1 $2 }
 ;
 
-def_property:
+define_property:
   | opt_doc PROPERTY property_vname COLON logical_expr
     { mk_doc $1 { prd_name = $3; prd_logical_expr = $5; } }
 ;
 
-def_theorem:
+define_theorem:
   | opt_doc opt_local THEOREM theorem_vname COLON logical_expr PROOF COLON proof
     { mk_doc $1
         { th_name = $4; th_local = $2;
@@ -723,8 +727,9 @@ in_type_expr:
 /**** PROOFS ****/
 
 proof:
-  | opt_doc enforced_dependency_list ASSUMED EXTERNAL_CODE  /* Trailing is the
-                                              reason while the was not given. */
+  | opt_doc enforced_dependency_list ASSUMED EXTERNAL_CODE
+                                     /* Trailing is the reason
+                                        why the proof was not given. */
     { mk_doc $1 (Pf_assumed ($2, $4)) }
   | opt_doc BY fact_list
     { mk_doc $1 (Pf_auto $3) }
@@ -732,7 +737,8 @@ proof:
     { mk_doc $1 (Pf_coq ($4, $5)) }
   | proof_node_list
     { mk (Pf_node $1) }
-  | DOT { mk (Pf_auto []) }
+  | opt_doc DOT
+    { mk_doc $1 (Pf_auto []) }
 ;
 
 proof_node_list:
@@ -809,7 +815,7 @@ hypothesis_list:
 type_expr:
   | simple_type_expr
     { $1 }
-  | core_type_tuple
+  | type_tuple
     { mk (TE_prod $1) }
   | type_expr DASH_GT type_expr
     { mk (TE_fun ($1, $3)) }
@@ -823,30 +829,34 @@ simple_type_expr:
     { mk TE_prop }
   | QLIDENT
     { mk (TE_ident (mk_local_ident (Vqident $1))) }
-  | glob_ident
-    { mk (TE_ident $1) }
   | LIDENT
     { mk (TE_ident (mk_local_ident (Vlident $1))) }
+  | glob_ident
+    { mk (TE_ident $1) }
+    /* To have capitalized species names as types. */
+  | species_vname
+    { mk (TE_ident (mk_local_ident $1)) }
+    /* To have qualified species names as types. */
+  | species_glob_ident
+    { mk (TE_ident $1) }
   | glob_ident LPAREN type_expr_comma_list RPAREN
     { mk (TE_app ($1, $3)) }
   | LIDENT LPAREN type_expr_comma_list RPAREN
     { mk (TE_app (mk_local_ident (Vlident $1), $3)) }
   | LPAREN type_expr RPAREN
     { mk (TE_paren $2) }
-  | species_vname      /* To have capitalized species names as types. */
-    { mk (TE_ident (mk_local_ident $1)) }
-  | species_glob_ident /* To have qualified species names as types. */
-    { mk (TE_ident $1) }
 ;
 
-core_type_tuple:
-  | simple_type_expr STAR_OP simple_type_expr      { [$1; $3] }
-  | core_type_tuple STAR_OP simple_type_expr       { $1 @ [$3] }
+type_tuple:
+  | simple_type_expr STAR_OP simple_type_expr
+    { [ $1; $3 ] }
+  | type_tuple STAR_OP simple_type_expr
+    { $1 @ [ $3 ] }
 ;
 
 type_expr_comma_list:
+  | type_expr { [ $1 ] }
   | type_expr COMMA type_expr_comma_list { $1 :: $3 }
-  | type_expr { [$1] }
 ;
 
 constructor_ref:
@@ -996,7 +1006,7 @@ expr:
     { mk_infix_application $1 $2 $3 }
 
   | expr COLON_COLON expr
-    { mk (E_constr (mk_cons (), [$1; $3])) }
+    { mk (E_constr (mk_cons (), [ $1; $3 ])) }
   | expr COLON_COLON_OP expr
     { mk_infix_application $1 $2 $3 }
 
@@ -1039,9 +1049,9 @@ expr:
 expr_semi_list:
   | { mk (E_constr (mk_nil (), [])) }
   | expr
-    { mk (E_constr (mk_cons (), [$1; mk (E_constr (mk_nil (), []))])) }
+    { mk (E_constr (mk_cons (), [ $1; mk (E_constr (mk_nil (), [])) ])) }
   | expr SEMI expr_semi_list
-    { mk (E_constr (mk_cons (), [$1; $3])) }
+    { mk (E_constr (mk_cons (), [ $1; $3 ])) }
 ;
 
 expr_comma_list:
@@ -1088,22 +1098,22 @@ species_ident:
 
 definition_ident_comma_list:
   | definition_ident COMMA definition_ident_comma_list { $1 :: $3 }
-  | definition_ident { [$1] }
+  | definition_ident { [ $1 ] }
 ;
 
 property_ident_comma_list:
   | property_ident COMMA property_ident_comma_list { $1 :: $3 }
-  | property_ident { [$1] }
+  | property_ident { [ $1 ] }
 ;
 
 proof_label_comma_list:
   | PROOF_LABEL COMMA proof_label_comma_list { $1 :: $3 }
-  | PROOF_LABEL { [$1] }
+  | PROOF_LABEL { [ $1 ] }
 ;
 
 clause_list:
   | BAR clause
-    { [$2] }
+    { [ $2 ] }
   | BAR clause clause_list
     { $2 :: $3 }
 ;
@@ -1129,9 +1139,9 @@ pattern:
   | constructor_ref { mk (P_constr ($1, [])) }
   | LBRACKET pattern_semi_list RBRACKET { $2 }
 /* Already in constructor_ref ?| LRBRACKETS { mk (P_constr (mk_nil (), [])) } */
-  | pattern COLON_COLON pattern { mk (P_constr (mk_cons (), [$1; $3])) }
+  | pattern COLON_COLON pattern { mk (P_constr (mk_cons (), [ $1; $3 ])) }
 /*  | pattern IUIDENT pattern
-    { mk (P_constr (mk_global_constructor_ident None (Viident $2), [$1; $3])) } */
+    { mk (P_constr (mk_global_constructor_ident None (Viident $2), [ $1; $3 ])) } */
   | LBRACE pattern_record_field_list RBRACE { mk (P_record $2) }
   | pattern AS LIDENT { mk (P_as ($1, Vlident $3)) }
   | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
@@ -1142,9 +1152,9 @@ pattern:
 pattern_semi_list:
   | { mk (P_constr (mk_nil (), [])) }
   | pattern
-    { mk (P_constr (mk_cons (), [$1; mk (P_constr (mk_nil (), []))])) }
+    { mk (P_constr (mk_cons (), [ $1; mk (P_constr (mk_nil (), [])) ])) }
   | pattern SEMI pattern_semi_list
-    { mk (P_constr (mk_cons (), [$1; $3])) }
+    { mk (P_constr (mk_cons (), [ $1; $3 ])) }
 ;
 
 pattern_comma_list:
@@ -1194,7 +1204,7 @@ bound_vname_list:
   | bound_vname bound_vname_list
     { $1 :: $2 }
   | bound_vname
-    { [$1] }
+    { [ $1 ] }
 ;
 
 external_value_vname:
