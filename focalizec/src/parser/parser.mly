@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.111 2008-11-22 17:33:23 weis Exp $ *)
+(* $Id: parser.mly,v 1.112 2008-11-22 18:27:01 weis Exp $ *)
 
 open Parsetree;;
 
@@ -105,12 +105,12 @@ let mk_proof_label (s1, s2) =
 %token EOF
 
 /* Identifiers */
-%token <string> LIDENT /* Lower case ident (e.g. x, _1, or _xY) */
-%token <string> UIDENT /* Upper case ident (e.g. A, _B, or _Ax) */
-%token <string> PLIDENT /* Prefix lowercase ident (e.g. ( ! ) or ( ~ )) */
-%token <string> PUIDENT /* Prefix uppercase ident (e.g. ( [!] ) or ( [~] )) */
-%token <string> ILIDENT /* Infix lowercase ident (e.g ( + ) or ( +matrix )) */
-%token <string> IUIDENT /* Infix uppercase ident (e.g ( :: ) or ( :+m: )) */
+%token <string> LIDENT  /* Lower case ident (e.g. x, _1, or _xY) */
+%token <string> UIDENT  /* Upper case ident (e.g. A, _B, or _Ax) */
+%token <string> PLIDENT /* Prefix lowercase ident (e.g. ! or ~) */
+%token <string> PUIDENT /* Prefix uppercase ident (e.g. [], [!], or [~]) */
+%token <string> ILIDENT /* Infix lowercase ident (e.g + or +matrix) */
+%token <string> IUIDENT /* Infix uppercase ident (e.g :: or :+m:) */
 %token <string> QLIDENT /* Quoted lowercase ident (e.g. 'a ) */
 %token <string> QUIDENT /* Quoted uppercase ident (e.g. 'C ) */
 
@@ -288,10 +288,9 @@ let mk_proof_label (s1, s2) =
        /* being '=', starting with '=', '<', or '>' */
 %right    AT_OP HAT_OP
        /* expr (e OP e OP e) with OP starting with '@' or '^' */
-/* FIXME: to be added with the precedence of @ ? */
-/*%right    ILIDENT */
-/* expr (e OP e OP e) with OP being a user defined lowercase ident. */
-%right    COLON_COLON COLON_COLON_OP
+%right    ILIDENT
+       /* expr (e OP e OP e) with OP being a user defined lowercase ident. */
+%right    COLON_COLON COLON_COLON_OP IUIDENT
        /* expr (e OP e OP e) with OP being "::", or starting with "::" */
 %left     PLUS_OP DASH_OP
        /* expr (e OP e OP OP e) with OP starting with '+' or '-' */
@@ -301,8 +300,7 @@ let mk_proof_label (s1, s2) =
        /* expr (e OP e OP e) with OP starting with "**" */
 
 /* Unary prefix operators. */
-/* FiXME: to be added. */
-/* %nonassoc PLIDENT */
+%nonassoc PLIDENT
        /* expr OP e with OP a lowercase ident enclosed with */
        /* backquote chars. */
 %nonassoc BACKQUOTE_OP             /* expr OP e with OP starting with '\`' */
@@ -623,7 +621,7 @@ define_logical:
 
   The only exception is for externals that are never logical bindings ! */
 binding:
- | bound_vname EQUAL logical_expr
+  | bound_vname EQUAL logical_expr
     { mk {
         b_name = $1; b_params = []; b_type = None;
         b_body = Parsetree.BB_logical $3 }
@@ -727,9 +725,8 @@ in_type_expr:
 /**** PROOFS ****/
 
 proof:
+    /* Trailing is the reason why the proof was not given. */
   | opt_doc enforced_dependency_list ASSUMED EXTERNAL_CODE
-                                     /* Trailing is the reason
-                                        why the proof was not given. */
     { mk_doc $1 (Pf_assumed ($2, $4)) }
   | opt_doc BY fact_list
     { mk_doc $1 (Pf_auto $3) }
@@ -892,8 +889,8 @@ opt_qualified_vname:
     { Some (mk_qual_vname None (Vuident "Self")) }
   | UIDENT
     { Some (mk_qual_vname None (Vuident $1)) }
-    /* "Module" name qualification. To allow a species name to be */
-    /* "module"-scoped in a method call. */
+    /* "Module" name qualification. To allow a species name */
+    /* to be "module"-scoped in a method call. */
     /* E.g. my_file#My_species!my_method. */
   | opt_lident SHARP UIDENT
     { Some (mk_qual_vname $1 (Vuident $3)) }
@@ -915,29 +912,16 @@ simple_expr:
     { mk (E_const $1) }
   | expr_ident
     { mk (E_var $1) }
-/*
-  | opt_lident SHARP UIDENT %prec prec_constant_constructor
-    { mk (E_constr (mk_global_constructor_ident $1 (Vuident $3), [])) }
-  | opt_lident SHARP UIDENT LPAREN expr_comma_list RPAREN
-    { mk (E_constr (mk_global_constructor_ident $1 (Vuident $3), $5)) }
-  | UIDENT %prec prec_constant_constructor
-    { mk (E_constr (mk_global_constructor_ident None (Vuident $1), [])) }
-  | UIDENT LPAREN expr_comma_list RPAREN
-    { mk (E_constr (mk_global_constructor_ident None (Vuident $1), $3)) }
-*/
   | simple_expr DOT label_ident
     { mk (E_record_access ($1, $3)) }
   | LBRACE record_field_list RBRACE
     { mk (E_record $2) }
   | LBRACE simple_expr WITH record_field_list RBRACE
     { mk (E_record_with ($2, $4)) }
-/*  | LRBRACKETS { mk (E_constr (mk_nil (), [])) }*/
   | LBRACKET expr_semi_list RBRACKET
     { $2 }
   | LPAREN expr COMMA expr_comma_list RPAREN
     { mk (E_tuple ($2 :: $4)) }
-/*  | LRPARENS */
-/*    { mk (E_constr (mk_unit (), [])) } */
   | LPAREN expr RPAREN
     { mk (E_paren $2) }
 ;
@@ -961,9 +945,8 @@ expr:
     { mk (E_let ($1, $3)) }
 
   /* Binary operators */
-/* FIXME: to be added. */
-/*  | expr ILIDENT expr */
-/*    { mk_infix_application $1 $2 $3 } */
+  | expr ILIDENT expr
+    { mk_infix_application $1 $2 $3 }
 
   | expr SEMI_SEMI_OP expr
     { mk_infix_application $1 $2 $3 }
@@ -1038,9 +1021,8 @@ expr:
     { mk_prefix_application $1 $2 }
   | DASH_OP expr %prec prec_unary_minus
     { mk_prefix_application $1 $2 }
-/* FIXME: to be added. */
-/*  | PLIDENT expr                    */
-/*    { mk_prefix_application $1 $2 } */
+  | PLIDENT expr
+    { mk_prefix_application $1 $2 }
 
   | EXTERNAL external_expr END
     { mk (E_external $2) }
@@ -1138,14 +1120,12 @@ pattern:
   | constructor_ref LPAREN pattern_comma_list RPAREN { mk (P_constr ($1, $3)) }
   | constructor_ref { mk (P_constr ($1, [])) }
   | LBRACKET pattern_semi_list RBRACKET { $2 }
-/* Already in constructor_ref ?| LRBRACKETS { mk (P_constr (mk_nil (), [])) } */
   | pattern COLON_COLON pattern { mk (P_constr (mk_cons (), [ $1; $3 ])) }
-/*  | pattern IUIDENT pattern
-    { mk (P_constr (mk_global_constructor_ident None (Viident $2), [ $1; $3 ])) } */
+  | pattern IUIDENT pattern
+    { mk (P_constr (mk_global_constructor_ident None (Vuident $2), [ $1; $3 ])) }
   | LBRACE pattern_record_field_list RBRACE { mk (P_record $2) }
   | pattern AS LIDENT { mk (P_as ($1, Vlident $3)) }
   | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
-/* Already in constructor_ref ?| LRPARENS { mk (P_constr (mk_unit (), [])) } */
   | LPAREN pattern RPAREN { mk (P_paren $2) }
 ;
 
