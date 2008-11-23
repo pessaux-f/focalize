@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ml_builtins.ml,v 1.4 2008-11-22 21:47:35 weis Exp $ *)
+(* $Id: ml_builtins.ml,v 1.5 2008-11-22 23:30:07 weis Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module contains the external primitives bound to FoCaL
@@ -29,9 +29,9 @@ let bi__xor_b b1 b2 =
   if b1 then if b2 then false else true else if b2 then true else false ;;
 
 let bi__foc_error msg = raise (Foc_error msg) ;;
-let bi__str_cat x y = x ^ y ;;
-let bi__str_lt (x : string) (y : string) = x < y ;;
-let bi__str_print s = print_string s ;;
+let bi__string_concat x y = x ^ y ;;
+let bi__string_lt (x : string) (y : string) = x < y ;;
+let bi__string_print s = print_string s ;;
 let bi__string_of_int i = string_of_int i ;;
 let bi__int_of_string s = int_of_string s ;;
 let bi__int_mult x y = x * y ;;

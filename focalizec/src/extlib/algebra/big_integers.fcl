@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: big_integers.fcl,v 1.1 2008-09-28 14:29:32 rr Exp $ *)
+(* $Id: big_integers.fcl,v 1.2 2008-11-22 23:30:20 weis Exp $ *)
 
 (** Ocamls bigint in FoCaLize. *)
 
@@ -383,7 +383,7 @@ species Integers_big_int inherits integers#Integer_system, Base_big_int =
       if basics#int_eq (s, 0) then basics#foc_error ("must be non zero")
       else
         let qr = #quomod_big_int (mm, ( #mult_int_big_int (s, nn))) in
-        let q = basics#first (qr) in let r = basics#scnd (qr) in
+        let q = basics#fst (qr) in let r = basics#snd (qr) in
         cr_qrr (#mult_int_big_int (s, q), r);
 
   let opposite (x) = #minus_big_int (x) ;

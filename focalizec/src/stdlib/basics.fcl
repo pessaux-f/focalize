@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.36 2008-11-22 21:49:13 weis Exp $ *)
+(* $Id: basics.fcl,v 1.37 2008-11-22 23:30:07 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -141,6 +141,7 @@ let ( |<>| ) =
   | coq -> {* coq_builtins.bi__xor_b *}
 ;;
 
+(* For compatibility only: should be removed ? *)
 let and_b = ( && );;
 let or_b = ( || );;
 let not_b = ( ~| );;
@@ -148,6 +149,7 @@ let xor_b = ( |<>| );;
 
 (** Operations on pairs. *)
 let pair (x, y) = (x, y) ;;
+
 let fst (x) =
   match x with
   | (v, _) -> v
@@ -157,11 +159,6 @@ let snd (x) =
   match x with
   | (_, v) -> v
 ;;
-
-(* For compatibility only: should be removed ? *)
-let crp = pair;;
-let first = fst;;
-let scnd = snd;;
 
 (** Basic printing. *)
 let print_int =
@@ -198,27 +195,24 @@ let int_of_string =
 let ( ^ ) =
   internal string -> string -> string
   external
-  | caml -> {* Ml_builtins.bi__str_cat *}
+  | caml -> {* Ml_builtins.bi__string_concat *}
   | coq -> {* fun (x : string__t) (y : string__t) => coq_builtins.___a_string *}
 ;;
-
-(* For compatibility only: should be removed ? *)
-let sc = ( ^ );;
 
 let ( <^ ) =
   internal string -> string -> bool
   external
-  | caml -> {* Ml_builtins.bi__str_lt *}
+  | caml -> {* Ml_builtins.bi__string_lt *}
   | coq -> {* fun (x : string__t) (y : string__t) => true *}
 ;;
 
 (* For compatibility only: should be removed ? *)
-let str_lt = ( <^ );;
+let string_lt = ( <^ );;
 
 let print_string =
   internal string -> unit
   external
-  | caml -> {* Ml_builtins.bi__str_print *}
+  | caml -> {* Ml_builtins.bi__string_print *}
   | coq -> {* fun (x : string__t) => coq_builtins.Void *}
 ;;
 
