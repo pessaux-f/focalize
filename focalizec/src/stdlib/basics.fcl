@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.37 2008-11-22 23:30:07 weis Exp $ *)
+(* $Id: basics.fcl,v 1.38 2008-11-22 23:50:18 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -206,9 +206,6 @@ let ( <^ ) =
   | coq -> {* fun (x : string__t) (y : string__t) => true *}
 ;;
 
-(* For compatibility only: should be removed ? *)
-let string_lt = ( <^ );;
-
 let print_string =
   internal string -> unit
   external
@@ -224,6 +221,8 @@ let int_mod =
   | caml -> {* Ml_builtins.bi__int_mod *}
   | coq -> {* coq_builtins.bi__int_mod *}
 ;;
+
+let ( % ) = int_mod;;
 
 let int_eq =
   internal int -> int -> bool
@@ -336,7 +335,7 @@ let int_div =
   | coq -> {* coq_builtins.bi__int_div *}
 ;;
 
-let ( % ) = int_div;;
+let ( / ) = int_div;;
 
 (** Polymorphic equalities. *)
 
