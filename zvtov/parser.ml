@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: parser.ml,v 1.18 2008-08-28 10:22:08 doligez Exp $  *)
+(*  $Id: parser.ml,v 1.19 2008-11-24 15:27:44 doligez Exp $  *)
 
 open Misc;;
 open Printf;;
@@ -19,6 +19,7 @@ let rec incr_last = function
 
 let prelude () = String.concat "" [
   "Require Import zenon.\n";
+  "Require Import zenon_inductive.\n";
   sprintf "Require Import zenon_%s.\n" !Misc.focal_ext;
   ]
 ;;

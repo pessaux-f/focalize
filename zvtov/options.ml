@@ -1,5 +1,5 @@
 (*  Copyright 2005 INRIA  *)
-(*  $Id: options.ml,v 1.10 2008-08-28 12:57:16 doligez Exp $  *)
+(*  $Id: options.ml,v 1.11 2008-11-24 15:27:44 doligez Exp $  *)
 
 open Arg;;
 open Misc;;
@@ -15,11 +15,11 @@ let options = ref [
   "-debug", Arg.Set keep_temp_files,
          "   do not remove temporary files";
   "-new", Arg.Unit (fun () -> Misc.focal_ext := "focal"),
-       "     tell zenon to use the new focalize syntax for booleans";
+       "     tell zenon to use the new focalize syntax for booleans (default)";
   "-nocache", Arg.Clear with_cache,
            " do not use nor update the proof cache file";
   "-old", Arg.Unit (fun () -> Misc.focal_ext := "coqbool"),
-       "     tell zenon to use the old focal syntax for booleans (default)";
+       "     tell zenon to use the old focal syntax for booleans";
   "-p0", Arg.Unit (fun () -> progress_level := 0),
       "      do not display progress info";
   "-p1", Arg.Unit (fun () -> progress_level := 1),
@@ -38,8 +38,8 @@ let options = ref [
      Printf.sprintf "<command>    how to invoke zenon (default: \"%s\")"
                    !zcmd;
   "-zopt", Arg.Set_string zopt,
-    Printf.sprintf "<options>     options passed to zenon\n%s(default: \"%s\")"
-                   (String.make 12 ' ') ("-x coqbool " ^ !zopt);
+    Printf.sprintf "<options>     options passed to zenon\n\
+         %s(default: \"-x %s %s\")" (String.make 12 ' ') !focal_ext !zopt;
   "-z", Arg.String (fun s -> add_opt := s :: !add_opt),
       "<opts> add <opts> to be passed to zenon";
   "-zz", Arg.String (fun s -> add_opt := s :: !add_opt),
