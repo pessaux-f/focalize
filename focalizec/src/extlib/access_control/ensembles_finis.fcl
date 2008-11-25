@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.5 2008-11-25 13:11:08 doligez Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.6 2008-11-25 14:08:27 doligez Exp $ *)
 
 (*pp basic_ext.cmo*)
 
@@ -347,7 +347,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
       by hypothesis h4 definition of est_element
     <1>2 assume a in A,
          assume s1 in Self,
-         assume hrec: all s1 in Self, all x y in A,
+         assume hrec: all x y in A,
                         A!equal (x, y) ->
                         !est_element (x, s1) ->
                           !est_element (y, s1),
@@ -356,18 +356,18 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
          assume h3: A!equal (x, y),
          assume h4: !est_element (x, a :: s1),
          prove !est_element (y, a :: s1)
+(*
       by hypothesis hrec, h3, h4
          property A!equal_symmetric, A!equal_transitive
          definition of est_element
-(*
-      assumed {* recursive case, need to investigate *}
 *)
+      assumed {* recursive case, need to investigate *}
     <1>f qed
       coq proof {*
         Proof.
         induction s.
         apply __Q_1_LEMMA.
-        apply __Q_2_LEMMA.
+        apply __Q_2_LEMMA; auto.
         Qed.
       *}
   ;

@@ -12,13 +12,13 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.11 2008-11-21 16:54:34 pessaux Exp $
+# $Id: Makefile,v 1.12 2008-11-25 14:08:27 doligez Exp $
 
 ROOT_DIR = ..
 
 include $(ROOT_DIR)/Makefile.config
 
-SUB_DIRS = algebra #access_control
+SUB_DIRS = algebra access_control
 
 include $(ROOT_DIR)/Makefile.common
 
