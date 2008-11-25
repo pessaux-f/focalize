@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.44 2008-11-25 08:12:39 weis Exp $ *)
+(* $Id: basics.fcl,v 1.45 2008-11-25 08:56:52 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -500,7 +500,7 @@ theorem int_lt_le_trans :
 ;;
 
 theorem int_le_refl :
-  all x y in int, x = y -> int_leq (x, y)
+  all x y in int, x = y -> x <=0x y
   proof: assumed {* Import trusted external code. *}
 ;;
 
@@ -538,14 +538,15 @@ theorem int_le_trans:
 ;;
 
 theorem int_lt_irrefl :
-  all x y in int, int_lt (x, y) -> ~ x = y
+  all x y in int, x <0x y -> ~ x = y
   proof: assumed {* Import trusted external code. *}
 ;;
 
 (** {7 Theorems for integer operations} *)
 
 theorem int_0_plus:
-  all x y in int, x = 0 -> #base_eq (x + y, y)
+  all x y in int, (* x = 0 -> x + y = y *)
+  x = 0 -> #base_eq (x + y, y)
   proof:
     coq proof {*
       unfold int_plus, bi__int_plus in |- *; intros x y Hxz;
@@ -571,7 +572,7 @@ theorem int_lt_le_S:
 ;;
 
 theorem int_plus_assoc:
-  all x y z in int,
+  all x y z in int, (* (x + y) + z = x + (y + z) *)
   #base_eq ((x + y) + z, x + (y + z))
   proof:
     coq proof {*
