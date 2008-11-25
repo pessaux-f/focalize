@@ -1,0 +1,47 @@
+#!/bin/sh
+
+prefix=/usr/local
+bindir='${prefix}/bin'
+xmlrpc=false
+
+while : ; do
+  case $# in 0) break;; esac
+
+  case $1 in
+  -bindir) bindir="$2"; shift;;
+  -prefix) prefix="$2"; shift;;
+  -xmlrpc) xmlrpc=true;;
+  -help|--help)
+     echo "usage: ./configure [options]"
+     echo "  -bindir <dir>        set binary directory for install (default \${prefix})"
+     echo "  -prefix <dir>        set directory prefix for install (default $prefix)"
+     echo "  -help or --help      display help and exit"
+     exit 0
+     ;;
+  *) echo "./configure: bad option '$1'" >&2
+     echo "use option --help for help" >&2
+     exit 2
+     ;;
+  esac
+  shift
+done
+
+if $xmlrpc; then
+  XMLRPCFILE=xmlrpc
+  XMLRPCFLAGS="`ocamlfind query -r -i-format xmlrpc`"
+  XMLRPCLINK="`ocamlfind query -r -predicates bytes -a-format xmlrpc`"
+else
+  XMLRPCFILE=
+  XMLRPCFLAGS=
+  XMLRPCLINK=
+fi
+
+: >.config_var
+echo "prefix=$prefix" >>.config_var
+echo "bindir=$bindir" >>.config_var
+echo "XMLRPCFILE=$XMLRPCFILE" >>.config_var
+echo "XMLRPCFLAGS=$XMLRPCFLAGS" >>.config_var
+echo "XMLRPCLINK=$XMLRPCLINK" >>.config_var
+
+echo "Configuration for zvtov:"
+cat .config_var

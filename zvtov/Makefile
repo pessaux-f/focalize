@@ -1,26 +1,17 @@
 #  Copyright 2004 INRIA
-#  $Id: Makefile.in,v 1.6 2007-07-04 13:16:04 pessaux Exp $
+#  $Id: Makefile,v 1.15 2008-11-25 15:50:46 doligez Exp $
 
-# directories
-prefix		= @prefix@
-exec_prefix	= @exec_prefix@
-bindir		= @bindir@
-foclibdir	= @foclibdir@
+include .config_var
 
 # programs
-CAMLC = @CAMLC@
-CAMLLEX = @CAMLLEX@
-CAMLYACC = @CAMLYACC@
+CAMLC = ocamlc
+CAMLLEX = ocamllex
+CAMLYACC = ocamlyacc
 
 # flags
-DEBUGFLAG	= @DEBUGFLAG@
-XMLRPCFLAGS	= @XMLRPCFLAGS@
-XMLRPCLINK	= @XMLRPCLINK@
+DEBUGFLAG	= -g -dtypes
 CAMLFLAGS	= -warn-error A
 CAMLCFLAGS	= $(CAMLFLAGS) $(DEBUGFLAG) $(XMLRPCFLAGS)
-
-# switches
-XMLRPCFILE	= @XMLRPCFILE@
 
 MODULES = version misc \
           cache \
@@ -35,21 +26,10 @@ PLAIN_MODULES = version misc cache invoke expr invoke_cime $(XMLRPCFILE) \
 
 IMPL = $(MODULES:%=%.ml)
 INTF = $(MODULES:%=%.mli)
-
-# packaging
-PACKAGE_VERSION         = @PACKAGE_VERSION@
-EXTRA_VERSION           = @EXTRA_VERSION@
-
-DIST_DIR                = ../focal-$(PACKAGE_VERSION)$(EXTRA_VERSION)/zvtov
-
-DIST_FILES              = $(LEXERS:=.mll) $(PARSERS:=.mly) $(MODULES:=.mli) \
-                          $(PLAIN_MODULES:=.ml) Makefile.in .depend
-
 OBJBYT = $(MODULES:%=%.cmo)
 
 .PHONY: all
 all: zvtov
-
 
 zvtov: $(OBJBYT)
 	$(CAMLC) $(CAMLCFLAGS) str.cma $(XMLRPCLINK) -o zvtov $(OBJBYT)
@@ -83,12 +63,6 @@ parser_coq.ml: parser_coq.mly
 parser_coq.mli: parser_coq.ml
 	:
 
-
-# distributing files
-.PHONY: dist
-dist:
-	mkdir -p $(DIST_DIR)
-	cp $(DIST_FILES) $(DIST_DIR)
 
 .PHONY: clean
 clean:
