@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.14 2008-10-28 16:22:43 weis Exp $
+# $Id: Makefile.common,v 1.15 2008-11-25 06:45:19 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -44,7 +44,7 @@ depend::
 tests::
 	if test -d tests; then ($(CD) tests; $(MAKE) all); fi
 
-.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .foc .fo .zv .v .vo
+.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .foc .fo .zv .v .vo
 .SUFFIXES: .tex .dvi .ps .pdf .idx
 
 .ml.cmo:
@@ -63,6 +63,9 @@ tests::
 	$(CAML_LEX) $<
 
 .foc.fo .foc.ml .foc.zv:
+	$(FOCALIZEC) $<
+
+.fcl.fo .fcl.ml .fcl.zv:
 	$(FOCALIZEC) $<
 
 .zv.v:
