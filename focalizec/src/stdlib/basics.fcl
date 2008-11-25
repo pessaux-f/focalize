@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.43 2008-11-25 08:11:12 weis Exp $ *)
+(* $Id: basics.fcl,v 1.44 2008-11-25 08:12:39 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -660,7 +660,7 @@ theorem int_min_le2:
 
 theorem int_plus_minus: all x y z in int,
   (*   x + y = z -> y = z - x *)
-  x + y = z -> #base_eq (y, #int_minus (z, x))
+  x + y = z -> #base_eq (y, z - x)
   proof:
     coq proof {*
       intros x y z; unfold int_plus, int_minus, base_eq, syntactic_equal in |- *;
@@ -675,7 +675,7 @@ theorem int_plus_minus: all x y z in int,
 theorem int_minus_plus:
   all x y z in int,
   (*   x - y = z -> x = y + z *)
-  #int_minus (x, y) = z -> #base_eq (x, y + z)
+  x - y = z -> #base_eq (x, y + z)
   proof:
     coq proof {*
       intros x y z; unfold int_plus, int_minus, base_eq, syntactic_equal in |- *;
