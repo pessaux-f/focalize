@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.133 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.134 2008-11-25 13:30:36 doligez Exp $ *)
 
 
 (* *************************************************************** *)
@@ -928,7 +928,7 @@ let zenonify_by_definition ctx print_ctx env min_coq_env by_def_expr_ident =
          "(* For toplevel definition used via \"by definition of %a\". *)@\n"
          Sourcify.pp_expr_ident by_def_expr_ident ;
        let name_for_zenon =
-         Parsetree_utils.make_concatenated_name_from_qualified_vname qvname in
+         Parsetree_utils.make_concatenated_name_with_operators_expanded_from_qualified_vname qvname in
        match value_body with
         | Env.CoqGenInformation.VB_non_toplevel -> assert false
         | Env.CoqGenInformation.VB_toplevel_let_bound (params, scheme, body) ->
@@ -1375,7 +1375,7 @@ let add_quantifications_and_implications ctx print_ctx env avail_info =
 (* *********************************************************************** *)
 (** {b Descr} : Generate the Definition and Parameter for Coq that Zenon
     needs to automatically prove the current theorem. Methods used by the
-    the proof are present in the minimal typing environment or the 
+    the proof are present in the minimal typing environment or the
     parameters dependencies since they induce either a def or a
     decl-dependency. Hence, to recover them, we will search inside these 2
     kinds of information.
@@ -2056,8 +2056,8 @@ let print_types_as_tuple_if_several print_ctx out_fmter types =
        Format.fprintf out_fmter ")%%type@])"
 ;;
 
- 
- 
+
+
 let generate_termination_proof _ctx _print_ctx _env _name = function
   | None -> ()
 (*     "Variable self_term_order_%a"

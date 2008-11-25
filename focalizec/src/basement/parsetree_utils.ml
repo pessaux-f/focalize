@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.26 2008-10-24 16:14:01 doligez Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.27 2008-11-25 13:30:36 doligez Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -224,7 +224,7 @@ let parse_operator_string op_string =
     For instance, a FoC infix operator "( **+ )" has no equivalent in
     OCaml or Coq syntax : "( **+ )" is not a correct operator identifier
     according to OCaml or Coq.
-    Then, instead of havign particular cases for operators that can be
+    Then, instead of having particular cases for operators that can be
     straighforward translated (like "( +)") and the others, we adopt a
     uniform mapping for infix and prefix operators using the
     [parse_operator_string] function to transform infix/prefix
@@ -317,4 +317,11 @@ let make_concatenated_name_from_qualified_vname = function
   | Parsetree.Vname vname -> name_of_vname vname
   | Parsetree.Qualified (mod_name, vname) ->
       mod_name ^ "." ^(name_of_vname vname)
+;;
+
+let make_concatenated_name_with_operators_expanded_from_qualified_vname =
+  function
+  | Parsetree.Vname vname -> vname_as_string_with_operators_expanded vname
+  | Parsetree.Qualified (mod_name, vname) ->
+      mod_name ^ "." ^ (vname_as_string_with_operators_expanded vname)
 ;;

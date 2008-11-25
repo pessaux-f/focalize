@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.mli,v 1.21 2008-10-24 10:42:28 pessaux Exp $ *)
+(* $Id: parsetree_utils.mli,v 1.22 2008-11-25 13:30:36 doligez Exp $ *)
 
 val name_of_vname : Parsetree.vname -> string
 (** Extracts the inner string name of the [vname] variable name. *)
@@ -142,4 +142,7 @@ val make_pseudo_species_ident :
     Parsetree.ident
 
 val make_concatenated_name_from_qualified_vname :
+  Parsetree.qualified_vname -> string
+
+val make_concatenated_name_with_operators_expanded_from_qualified_vname :
   Parsetree.qualified_vname -> string
