@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.45 2008-11-25 08:56:52 weis Exp $ *)
+(* $Id: basics.fcl,v 1.46 2008-11-25 13:50:21 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -286,7 +286,7 @@ let ( + ) =
 
 let int_plus = ( + );;
 
-and does not *)
+and does not. *)
 
 let int_plus =
   internal int -> int -> int
@@ -376,6 +376,13 @@ let int_min =
 
 (** {7 Polymorphic equalities} *)
 
+(** {8 Physical identity} *)
+
+(** A polymorphic predicate to test identity of objects
+ (two objects are considered identical if and only if they are the
+  same object, e.g. the two objects are stored at the same address in the
+  computer memory). *)
+
 let physical_equal =
   internal 'a -> 'a -> bool
   external
@@ -390,6 +397,27 @@ let ( == ) = physical_equal
 (* For compatibility only: should be removed ? *)
 let phys_eq = physical_equal
 ;;
+
+(** {8 Syntactical equality} *)
+
+(** A polymorphic predicate to test equality of obects
+    (two objects are consider equal if and only if they are provably
+    equivalent, i.e. if and only if they have the same
+    semantical meaning, e.g. two character strings with the same character
+    contents). *)
+
+(* FIXME should work
+
+let ( = ) =
+  internal 'a -> 'a -> bool
+  external
+  | caml -> {* Ml_builtins.bi__base_syntactic_equal *}
+  | coq -> {* coq_builtins.bi__base_eq __var_a *}
+;;
+
+let syntactic_equal = ( = );;
+
+and does not. *)
 
 let syntactic_equal =
   internal 'a -> 'a -> bool
