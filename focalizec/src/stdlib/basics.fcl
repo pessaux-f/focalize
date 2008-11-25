@@ -14,13 +14,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.38 2008-11-22 23:50:18 weis Exp $ *)
+(* $Id: basics.fcl,v 1.39 2008-11-25 07:02:38 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
 (** [basics.fcl] contents:
     - built-in or (almost) mandatory type definitions,
-    - built-in or (almost) mandatory data definitions. *)
+    - built-in or (almost) mandatory data definitions,
+    - basic properties and theorems on those types and data. *)
 
 (** {6 Type definitions} *)
 
@@ -112,7 +113,7 @@ let foc_error =
   | coq -> {* coq_builtins.foc_error *}
 ;;
 
-(** Operations on booleans. *)
+(** {7 Operations on booleans} *)
 let ( && ) =
   internal bool -> bool -> bool
   external
@@ -147,8 +148,8 @@ let or_b = ( || );;
 let not_b = ( ~| );;
 let xor_b = ( |<>| );;
 
-(** Operations on pairs. *)
-let pair (x, y) = (x, y) ;;
+(** {7 Operations on pairs} *)
+let pair (x, y) = (x, y);;
 
 let fst (x) =
   match x with
@@ -160,36 +161,7 @@ let snd (x) =
   | (_, v) -> v
 ;;
 
-(** Basic printing. *)
-let print_int =
-  internal int -> unit
-  external
-  | caml -> {* Ml_builtins.bi__int_print *}
-  | coq -> {* fun (x : int__t) => coq_builtins.Void *}
-;;
-
-let print_newline =
-  internal unit -> unit
-  external
-  | caml -> {* Ml_builtins.bi__int_print *}
-  | coq -> {* fun (x : unit__t) => coq_builtins.Void *}
-;;
-
-let string_of_int =
-  internal int -> string
-  external
-  | caml -> {* Ml_builtins.bi__string_of_int *}
-  | coq -> {* fun (x : int__t) => coq_builtins.___a_string *}
-;;
-
-let int_of_string =
-  internal string -> int
-  external
-  | caml -> {* Ml_builtins.bi__int_of_string *}
-  | coq -> {* fun (x : string__t) => 42 *}
-;;
-
-(** Operations on strings. *)
+(** {7 Operations on strings} *)
 
 (* Concatenation. *)
 let ( ^ ) =
@@ -206,32 +178,36 @@ let ( <^ ) =
   | coq -> {* fun (x : string__t) (y : string__t) => true *}
 ;;
 
-let print_string =
-  internal string -> unit
-  external
-  | caml -> {* Ml_builtins.bi__string_print *}
-  | coq -> {* fun (x : string__t) => coq_builtins.Void *}
-;;
+(** {7 Operations on integers} *)
 
-(** Operations on integers. *)
-
-let int_mod =
+let ( % ) =
   internal int -> int -> int
   external
   | caml -> {* Ml_builtins.bi__int_mod *}
   | coq -> {* coq_builtins.bi__int_mod *}
 ;;
 
-let ( % ) = int_mod;;
+let int_mod = ( % );;
 
-let int_eq =
+let ( =0x ) =
   internal int -> int -> bool
   external
   | caml -> {* Ml_builtins.bi__int_eq *}
   | coq -> {* coq_builtins.bi__int_eq *}
 ;;
 
-let ( =0x ) = int_eq;;
+let int_eq = ( =0x );;
+
+(* FIXME should work
+let ( <0x ) =
+  internal int -> int -> bool
+  external
+  | caml -> {* Ml_builtins.bi__int_lt *}
+  | coq -> {* coq_builtins.bi__int_lt *}
+;;
+
+let int_lt = ( <0x );;
+*)
 
 let int_lt =
   internal int -> int -> bool
@@ -242,6 +218,17 @@ let int_lt =
 
 let ( <0x ) = int_lt;;
 
+(* FIXME should work
+let ( <=0x ) =
+  internal int -> int -> bool
+  external
+  | caml -> {* Ml_builtins.bi__int_leq *}
+  | coq -> {* coq_builtins.bi__int_leq *}
+;;
+
+let int_leq = ( <=0x );;
+*)
+
 let int_leq =
   internal int -> int -> bool
   external
@@ -251,6 +238,16 @@ let int_leq =
 
 let ( <=0x ) = int_leq;;
 
+(* FIXME should work
+let ( >=0x ) =
+  internal int -> int -> bool
+  external
+  | caml -> {* Ml_builtins.bi__int_geq *}
+  | coq -> {* coq_builtins.bi__int_geq *}
+;;
+
+let int_geq = ( >=0x );;
+*)
 let int_geq =
   internal int -> int -> bool
   external
@@ -259,6 +256,17 @@ let int_geq =
 ;;
 
 let ( >=0x ) = int_geq;;
+
+(* FIXME should work
+let ( >0x ) =
+  internal  int -> int -> bool
+  external
+  | caml -> {* Ml_builtins.bi__int_gt *}
+  | coq -> {* coq_builtins.bi__int_gt *}
+;;
+
+let int_gt = ( >0x );;
+*)
 
 let int_gt =
   internal  int -> int -> bool
@@ -276,14 +284,25 @@ let pred =
   | coq -> {*  coq_builtins.bi__int_pred *}
 ;;
 
-let int_opp =
+let ( ~0x ) =
   internal int -> int
   external
   | caml -> {* Ml_builtins.bi__int_opposite *}
   | coq -> {* coq_builtins.bi__int_opposite *}
 ;;
 
-let ( ~0x ) = int_opp;;
+let int_opp = ( ~0x );;
+
+(* FIXME
+let ( + ) =
+  internal int -> int -> int
+  external
+  | caml -> {* Ml_builtins.bi__int_plus *}
+  | coq -> {* coq_builtins.bi__int_plus *}
+;;
+
+let int_plus = ( + );;
+*)
 
 let int_plus =
   internal int -> int -> int
@@ -292,27 +311,29 @@ let int_plus =
   | coq -> {* coq_builtins.bi__int_plus *}
 ;;
 
-let ( + ) (x, y) = int_plus (x, y) ;;
+let ( + ) = int_plus;;
 
-let succ (x in int) in int = int_plus (x, 1) ;;
+(* FIXME *)
+(*let succ (x in int) in int = x + 1;;*)
+let succ (x in int) in int = int_plus (x, 1);;
 
-let int_mult =
+let ( * ) =
   internal int -> int -> int
   external
   | caml -> {* Ml_builtins.bi__int_mult *}
   | coq -> {* coq_builtins.bi__int_mult *}
 ;;
 
-let ( * ) = int_mult;;
+let int_mult = ( * );;
 
-let int_minus =
+let ( - ) =
   internal int -> int -> int
   external
   | caml -> {* Ml_builtins.bi__int_minus *}
   | coq -> {* coq_builtins.bi__int_minus *}
 ;;
 
-let ( - ) = int_minus;;
+let int_minus = ( - );;
 
 let int_max =
   internal int -> int -> int
@@ -328,16 +349,16 @@ let int_min =
   | coq -> {* coq_builtins.bi__int_min *}
 ;;
 
-let int_div =
+let ( / ) =
   internal int -> int -> int
   external
   | caml -> {* Ml_builtins.bi__int_div *}
   | coq -> {* coq_builtins.bi__int_div *}
 ;;
 
-let ( / ) = int_div;;
+let int_div = ( / );;
 
-(** Polymorphic equalities. *)
+(** {7 Polymorphic equalities} *)
 
 let physical_equal =
   internal 'a -> 'a -> bool
@@ -366,7 +387,45 @@ let ( = ) = syntactic_equal;;
 (* For compatibility only: should be removed ? *)
 let base_eq = syntactic_equal;;
 
-(** Theorems on comparisons. *)
+(** {7 Basic printing operations} *)
+let print_int =
+  internal int -> unit
+  external
+  | caml -> {* Ml_builtins.bi__int_print *}
+  | coq -> {* fun (x : int__t) => coq_builtins.Void *}
+;;
+
+let print_newline =
+  internal unit -> unit
+  external
+  | caml -> {* Ml_builtins.bi__int_print *}
+  | coq -> {* fun (x : unit__t) => coq_builtins.Void *}
+;;
+
+let string_of_int =
+  internal int -> string
+  external
+  | caml -> {* Ml_builtins.bi__string_of_int *}
+  | coq -> {* fun (x : int__t) => coq_builtins.___a_string *}
+;;
+
+let int_of_string =
+  internal string -> int
+  external
+  | caml -> {* Ml_builtins.bi__int_of_string *}
+  | coq -> {* fun (x : string__t) => 42 *}
+;;
+
+let print_string =
+  internal string -> unit
+  external
+  | caml -> {* Ml_builtins.bi__string_print *}
+  | coq -> {* fun (x : string__t) => coq_builtins.Void *}
+;;
+
+(** {6 Basic theorems and properties} *)
+
+(** {7 Theorems on comparisons} *)
 
 theorem beq_refl : all x in 'a, base_eq (x, x)
   (* x = x *)
@@ -460,7 +519,7 @@ theorem int_lt_irrefl :
   proof: assumed {* Import trusted external code. *}
 ;;
 
-(** Theorems on integer operations. *)
+(** {7 Theorems on integer operations} *)
 
 theorem int_0_plus: all x y in int,
   #base_eq (x, 0) -> #base_eq (#int_plus (x, y), y)
@@ -599,7 +658,7 @@ theorem int_minus_plus: all x y z in int,
     *}
 ;;
 
-(** {3 Species} *)
+(** {3 Basic species} *)
 
 (** A [Basic_object] value is a normal blurb on which we do some things.
     This is the root of the species' hierarchy. *)
