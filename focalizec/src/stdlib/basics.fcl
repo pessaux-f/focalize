@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.39 2008-11-25 07:02:38 weis Exp $ *)
+(* $Id: basics.fcl,v 1.40 2008-11-25 07:29:01 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -180,14 +180,7 @@ let ( <^ ) =
 
 (** {7 Operations on integers} *)
 
-let ( % ) =
-  internal int -> int -> int
-  external
-  | caml -> {* Ml_builtins.bi__int_mod *}
-  | coq -> {* coq_builtins.bi__int_mod *}
-;;
-
-let int_mod = ( % );;
+(** {8 Comparisons on integers} *)
 
 let ( =0x ) =
   internal int -> int -> bool
@@ -247,7 +240,9 @@ let ( >=0x ) =
 ;;
 
 let int_geq = ( >=0x );;
-*)
+
+and does not. *)
+
 let int_geq =
   internal int -> int -> bool
   external
@@ -266,7 +261,8 @@ let ( >0x ) =
 ;;
 
 let int_gt = ( >0x );;
-*)
+
+and does not. *)
 
 let int_gt =
   internal  int -> int -> bool
@@ -277,23 +273,10 @@ let int_gt =
 
 let ( >0x ) = int_gt;;
 
-let pred =
-  internal int -> int
-  external
-  | caml -> {* pred *}
-  | coq -> {*  coq_builtins.bi__int_pred *}
-;;
+(** {8 Arithmetic operations for integers} *)
 
-let ( ~0x ) =
-  internal int -> int
-  external
-  | caml -> {* Ml_builtins.bi__int_opposite *}
-  | coq -> {* coq_builtins.bi__int_opposite *}
-;;
+(* FIXME should work
 
-let int_opp = ( ~0x );;
-
-(* FIXME
 let ( + ) =
   internal int -> int -> int
   external
@@ -302,7 +285,8 @@ let ( + ) =
 ;;
 
 let int_plus = ( + );;
-*)
+
+and does not *)
 
 let int_plus =
   internal int -> int -> int
@@ -313,9 +297,23 @@ let int_plus =
 
 let ( + ) = int_plus;;
 
-(* FIXME *)
-(*let succ (x in int) in int = x + 1;;*)
-let succ (x in int) in int = int_plus (x, 1);;
+let ( - ) =
+  internal int -> int -> int
+  external
+  | caml -> {* Ml_builtins.bi__int_minus *}
+  | coq -> {* coq_builtins.bi__int_minus *}
+;;
+
+let int_minus = ( - );;
+
+let ( ~0x ) =
+  internal int -> int
+  external
+  | caml -> {* Ml_builtins.bi__int_opposite *}
+  | coq -> {* coq_builtins.bi__int_opposite *}
+;;
+
+let int_opp = ( ~0x );;
 
 let ( * ) =
   internal int -> int -> int
@@ -326,14 +324,41 @@ let ( * ) =
 
 let int_mult = ( * );;
 
-let ( - ) =
+let ( / ) =
   internal int -> int -> int
   external
-  | caml -> {* Ml_builtins.bi__int_minus *}
-  | coq -> {* coq_builtins.bi__int_minus *}
+  | caml -> {* Ml_builtins.bi__int_div *}
+  | coq -> {* coq_builtins.bi__int_div *}
 ;;
 
-let int_minus = ( - );;
+let int_div = ( / );;
+
+let ( % ) =
+  internal int -> int -> int
+  external
+  | caml -> {* Ml_builtins.bi__int_mod *}
+  | coq -> {* coq_builtins.bi__int_mod *}
+;;
+
+let int_mod = ( % );;
+
+(* FIXME should work
+let succ (x in int) in int = x + 1;;
+*)
+
+let succ (x in int) in int = int_plus (x, 1);;
+
+let pred =
+  internal int -> int
+  external
+  | caml -> {* pred *}
+  | coq -> {*  coq_builtins.bi__int_pred *}
+;;
+
+(* FIXME should work
+let pred (x in int) in int = x - 1
+;;
+*)
 
 let int_max =
   internal int -> int -> int
@@ -348,15 +373,6 @@ let int_min =
   | caml -> {* Ml_builtins.bi__int_min *}
   | coq -> {* coq_builtins.bi__int_min *}
 ;;
-
-let ( / ) =
-  internal int -> int -> int
-  external
-  | caml -> {* Ml_builtins.bi__int_div *}
-  | coq -> {* coq_builtins.bi__int_div *}
-;;
-
-let int_div = ( / );;
 
 (** {7 Polymorphic equalities} *)
 
