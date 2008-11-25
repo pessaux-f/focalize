@@ -2,6 +2,8 @@ version.cmo: version.cmi
 version.cmx: version.cmi 
 misc.cmo: misc.cmi 
 misc.cmx: misc.cmi 
+options.cmo: version.cmi misc.cmi options.cmi 
+options.cmx: version.cmx misc.cmx options.cmi 
 cache.cmo: misc.cmi cache.cmi 
 cache.cmx: misc.cmx cache.cmi 
 expr.cmo: expr.cmi 
@@ -16,6 +18,8 @@ invoke_cime.cmo: parser_coq.cmi misc.cmi lexer_coq.cmi invoke.cmi expr.cmi \
     invoke_cime.cmi 
 invoke_cime.cmx: parser_coq.cmx misc.cmx lexer_coq.cmx invoke.cmx expr.cmx \
     invoke_cime.cmi 
+xmlrpc.cmo: options.cmi misc.cmi invoke.cmi xmlrpc.cmi 
+xmlrpc.cmx: options.cmx misc.cmx invoke.cmx xmlrpc.cmi 
 token.cmo: token.cmi 
 token.cmx: token.cmi 
 lexer.cmo: token.cmi lexer.cmi 
@@ -24,8 +28,6 @@ parser.cmo: token.cmi misc.cmi lexer.cmi invoke_cime.cmi invoke.cmi \
     parser.cmi 
 parser.cmx: token.cmx misc.cmx lexer.cmx invoke_cime.cmx invoke.cmx \
     parser.cmi 
-options.cmo: version.cmi misc.cmi options.cmi 
-options.cmx: version.cmx misc.cmx options.cmi 
 main.cmo: version.cmi parser.cmi options.cmi misc.cmi invoke.cmi cache.cmi \
     main.cmi 
 main.cmx: version.cmx parser.cmx options.cmx misc.cmx invoke.cmx cache.cmx \

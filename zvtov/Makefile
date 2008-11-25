@@ -1,5 +1,5 @@
 #  Copyright 2004 INRIA
-#  $Id: Makefile,v 1.15 2008-11-25 15:50:46 doligez Exp $
+#  $Id: Makefile,v 1.16 2008-11-25 15:59:15 doligez Exp $
 
 include .config_var
 
@@ -13,10 +13,9 @@ DEBUGFLAG	= -g -dtypes
 CAMLFLAGS	= -warn-error A
 CAMLCFLAGS	= $(CAMLFLAGS) $(DEBUGFLAG) $(XMLRPCFLAGS)
 
-MODULES = version misc \
-          cache \
+MODULES = version misc options cache \
           expr parser_coq lexer_coq invoke invoke_cime \
-          $(XMLRPCFILE) token lexer parser options main
+          $(XMLRPCFILE) token lexer parser main
 
 LEXERS = lexer_coq lexer
 PARSERS = parser_coq

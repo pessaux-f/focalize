@@ -1,5 +1,5 @@
 (*  Copyright 2005 MPI  *)
-(*  $Id: xmlrpc.ml,v 1.2 2005-11-13 22:49:11 doligez Exp $  *)
+(*  $Id: xmlrpc.ml,v 1.3 2008-11-25 15:59:15 doligez Exp $  *)
 
 (* call external provers through the MathServe server. works only if
    the focal file has been compiled with the -tptp option.
@@ -35,9 +35,9 @@ let set_http_client_opt () =
                                    lemma. *)
         connection_timeout = float_of_int (!time + 5);
         (* 5 secs for communication is completely arbitrary... *)
-        verbose_status = !Invoke.progress_level >= 2;
-        verbose_request_contents = !Invoke.progress_level >=2;
-        verbose_response_contents = !Invoke.progress_level >=2
+        verbose_status = !Misc.progress_level >= 2;
+        verbose_request_contents = !Misc.progress_level >=2;
+        verbose_response_contents = !Misc.progress_level >=2
     }
   in XmlRPCNet.handler#set_options my_settings
 
@@ -153,7 +153,7 @@ let handle_fault oc fault =
 (* invoke a new remote call for the given problem. *)
 let remote_call file (statement, name) problem loc oc =
   set_http_client_opt ();
-  if !Invoke.progress_level >= 2 then
+  if !Misc.progress_level >= 2 then
     Printf.eprintf "%s: tptp problem is:\n%s\n%!" loc name;
   let request = new XmlRPCClient.remote !mathserve_server !request in
     try

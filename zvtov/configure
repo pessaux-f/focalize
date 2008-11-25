@@ -1,5 +1,8 @@
 #!/bin/sh
 
+#  Copyright 2008 INRIA
+#  $Id: configure,v 1.13 2008-11-25 15:59:15 doligez Exp $
+
 prefix=/usr/local
 bindir='${prefix}/bin'
 xmlrpc=false
@@ -15,6 +18,7 @@ while : ; do
      echo "usage: ./configure [options]"
      echo "  -bindir <dir>        set binary directory for install (default \${prefix})"
      echo "  -prefix <dir>        set directory prefix for install (default $prefix)"
+     echo "  -xmlrpc              configure with XMLRPC option"
      echo "  -help or --help      display help and exit"
      exit 0
      ;;
@@ -28,8 +32,8 @@ done
 
 if $xmlrpc; then
   XMLRPCFILE=xmlrpc
-  XMLRPCFLAGS="`ocamlfind query -r -i-format xmlrpc`"
-  XMLRPCLINK="`ocamlfind query -r -predicates bytes -a-format xmlrpc`"
+  XMLRPCFLAGS="`ocamlfind query -r -i-format xmlrpc | tr '\012' ' '`"
+  XMLRPCLINK="`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\012' ' '`"
 else
   XMLRPCFILE=
   XMLRPCFLAGS=

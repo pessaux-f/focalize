@@ -1,13 +1,7 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.mli,v 1.14 2007-07-25 19:41:39 doligez Exp $  *)
+(*  $Id: invoke.mli,v 1.15 2008-11-25 15:59:15 doligez Exp $  *)
 
 val set_tptp_option: unit -> unit
-
-(*
-val zenon :
-  string -> string -> string -> int list -> string -> out_channel -> unit
-;;
-*)
 
 val zenon_loc :
   string -> (string * string) ->  string -> string -> out_channel -> unit
