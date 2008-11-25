@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.41 2008-11-25 07:45:46 weis Exp $ *)
+(* $Id: basics.fcl,v 1.42 2008-11-25 08:02:18 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -500,12 +500,12 @@ theorem int_lt_le_trans :
 ;;
 
 theorem int_le_refl :
-  all x y in int, base_eq (x, y) -> int_leq (x, y)
+  all x y in int, x = y -> int_leq (x, y)
   proof: assumed {* Import trusted external code. *}
 ;;
 
 theorem int_le_antisymm:
-  all x y in int, int_leq (x, y) -> int_leq (y, x) -> base_eq (x, y)
+  all x y in int, int_leq (x, y) -> int_leq (y, x) -> x = y
   proof:
     coq proof {*
       intros x y.
@@ -538,14 +538,14 @@ theorem int_le_trans:
 ;;
 
 theorem int_lt_irrefl :
-  all x y in int, int_lt (x, y) -> ~ base_eq (x, y)
+  all x y in int, int_lt (x, y) -> ~ x = y
   proof: assumed {* Import trusted external code. *}
 ;;
 
 (** {7 Theorems for integer operations} *)
 
 theorem int_0_plus:
-  all x y in int, #base_eq (x, 0) -> #base_eq (#int_plus (x, y), y)
+  all x y in int, x = 0 -> #base_eq (#int_plus (x, y), y)
   proof:
     coq proof {*
       unfold int_plus, bi__int_plus in |- *; intros x y Hxz;
@@ -597,7 +597,7 @@ theorem int_plus_commute:
 
 theorem int_plus_plus:
   all x y z t in int,
-  #base_eq (x, y) -> #base_eq (z, t) ->
+  x = y -> z = t ->
   #base_eq (#int_plus (x, z), #int_plus (y, t))
   proof:
     coq proof {*
@@ -660,7 +660,7 @@ theorem int_min_le2:
 
 theorem int_plus_minus: all x y z in int,
   (*   x + y = z -> y = z - x *)
-  #base_eq (#int_plus (x, y), z) -> #base_eq (y, #int_minus (z, x))
+  #int_plus (x, y) = z -> #base_eq (y, #int_minus (z, x))
   proof:
     coq proof {*
       intros x y z; unfold int_plus, int_minus, base_eq, syntactic_equal in |- *;
@@ -675,7 +675,7 @@ theorem int_plus_minus: all x y z in int,
 theorem int_minus_plus:
   all x y z in int,
   (*   x - y = z -> x = y + z *)
-  #base_eq (#int_minus (x, y), z) -> #base_eq (x, #int_plus (y, z))
+  #int_minus (x, y) = z -> #base_eq (x, #int_plus (y, z))
   proof:
     coq proof {*
       intros x y z; unfold int_plus, int_minus, base_eq, syntactic_equal in |- *;
