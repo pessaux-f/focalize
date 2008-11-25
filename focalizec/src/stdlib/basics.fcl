@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.46 2008-11-25 13:50:21 weis Exp $ *)
+(* $Id: basics.fcl,v 1.47 2008-11-25 14:33:10 doligez Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -573,12 +573,11 @@ theorem int_lt_irrefl :
 (** {7 Theorems for integer operations} *)
 
 theorem int_0_plus:
-  all x y in int, (* x = 0 -> x + y = y *)
-  x = 0 -> #base_eq (x + y, y)
+  all x y in int, x = 0 -> x + y = y
   proof:
     coq proof {*
       unfold int_plus, bi__int_plus in |- *; intros x y Hxz;
-      unfold base_eq, syntactic_equal;
+      unfold base_eq, _focop_eq_, syntactic_equal;
       apply EQ_base_eq; replace x with 0%Z; eauto with zarith.
       symmetry  in |- *.
       apply decidable.
