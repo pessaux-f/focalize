@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.42 2008-11-25 08:02:18 weis Exp $ *)
+(* $Id: basics.fcl,v 1.43 2008-11-25 08:11:12 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -545,7 +545,7 @@ theorem int_lt_irrefl :
 (** {7 Theorems for integer operations} *)
 
 theorem int_0_plus:
-  all x y in int, x = 0 -> #base_eq (#int_plus (x, y), y)
+  all x y in int, x = 0 -> #base_eq (x + y, y)
   proof:
     coq proof {*
       unfold int_plus, bi__int_plus in |- *; intros x y Hxz;
@@ -572,7 +572,7 @@ theorem int_lt_le_S:
 
 theorem int_plus_assoc:
   all x y z in int,
-  #base_eq (#int_plus (#int_plus (x, y), z), #int_plus (x, #int_plus (y, z)))
+  #base_eq ((x + y) + z, x + (y + z))
   proof:
     coq proof {*
       unfold int_plus in |- *; intros x y z;
@@ -584,7 +584,7 @@ theorem int_plus_assoc:
 
 theorem int_plus_commute:
   all x y  in int, (* x + y = y + x *)
-  #base_eq (#int_plus (x, y), #int_plus (y, x))
+  #base_eq (x + y, y + x)
   proof:
     coq proof {*
       unfold int_plus in |- *; intros x y;
@@ -598,7 +598,7 @@ theorem int_plus_commute:
 theorem int_plus_plus:
   all x y z t in int,
   x = y -> z = t ->
-  #base_eq (#int_plus (x, z), #int_plus (y, t))
+  #base_eq (x + z, y + t)
   proof:
     coq proof {*
       unfold int_plus in |- *; intros x y z t H1 H2;
@@ -613,7 +613,7 @@ theorem int_plus_plus:
 theorem int_le_plus_plus:
   all x y z t in int,
   #int_leq (x, y) -> #int_leq (z, t) ->
-  #int_leq (#int_plus (x, z), #int_plus (y, t))
+  #int_leq (x + z, y + t)
   proof:
     coq proof {*
       unfold int_plus, int_leq in |- *; intros x y z t H1 H2;
@@ -660,7 +660,7 @@ theorem int_min_le2:
 
 theorem int_plus_minus: all x y z in int,
   (*   x + y = z -> y = z - x *)
-  #int_plus (x, y) = z -> #base_eq (y, #int_minus (z, x))
+  x + y = z -> #base_eq (y, #int_minus (z, x))
   proof:
     coq proof {*
       intros x y z; unfold int_plus, int_minus, base_eq, syntactic_equal in |- *;
@@ -675,7 +675,7 @@ theorem int_plus_minus: all x y z in int,
 theorem int_minus_plus:
   all x y z in int,
   (*   x - y = z -> x = y + z *)
-  #int_minus (x, y) = z -> #base_eq (x, #int_plus (y, z))
+  #int_minus (x, y) = z -> #base_eq (x, y + z)
   proof:
     coq proof {*
       intros x y z; unfold int_plus, int_minus, base_eq, syntactic_equal in |- *;
