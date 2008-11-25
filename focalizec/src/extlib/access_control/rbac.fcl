@@ -14,6 +14,9 @@ open "access_control" ;;
 
 (** RBAC implementation *)
 
+let first = basics#fst;;
+let scnd = basics#snd;;
+
 species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) = 
 
   let rec forall (l, p) =
@@ -600,9 +603,9 @@ species S_models_rbac (S_us is S_users,
 
   proof of del_mem = assumed {* Because todo *} ;
 	      
-  proof of union_spec = assumed {* Because todo *} ;
+  (*proof of union_spec = assumed {* Because todo *} ;*)
 
-  proof of sous_ensemble_spec = assumed {* Because todo *} ;
+  (*proof of sous_ensemble_spec = assumed {* Because todo *} ;*)
 
   proof of add_access_ua = assumed {* Because todo *} ;
 

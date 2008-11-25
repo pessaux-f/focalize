@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.4 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.5 2008-11-25 13:11:08 doligez Exp $ *)
 
 (*pp basic_ext.cmo*)
 
@@ -219,7 +219,7 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
       <2>f qed
         by property !sous_ensemble_vide, !include_card, !vide_card,
                     int_lt_irrefl, !incl_card, int_le_antisymm
-           definition of equal
+           definition of equal, basics#( <0x )
            step <2>1
     <1>f qed.
     ;
@@ -344,16 +344,24 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
          assume h3: A!equal (x, y),
          assume h4: !est_element (x, basics#[]),
          prove !est_element (y, basics#[])
-      assumed {* base case, need to handle fix operator *}
-      (*by hypothesis h4 definition of est_element*)
+      by hypothesis h4 definition of est_element
     <1>2 assume a in A,
          assume s1 in Self,
+         assume hrec: all s1 in Self, all x y in A,
+                        A!equal (x, y) ->
+                        !est_element (x, s1) ->
+                          !est_element (y, s1),
          assume x in A,
          assume y in A,
          assume h3: A!equal (x, y),
          assume h4: !est_element (x, a :: s1),
          prove !est_element (y, a :: s1)
-      assumed {* recursive case, need to handle fix operator *}
+      by hypothesis hrec, h3, h4
+         property A!equal_symmetric, A!equal_transitive
+         definition of est_element
+(*
+      assumed {* recursive case, need to investigate *}
+*)
     <1>f qed
       coq proof {*
         Proof.
@@ -627,12 +635,15 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
     *};
 *)
 
-  let rec remove_element (x in A, l in Self) in Self =
-     match l with
-     | basics#[] -> [ ]
-     | y :: l ->
-       if A!equal (x, y) then l
-       else y :: !remove_element (x, l) ;
+  let remove_element (x in A, l in Self) in Self =
+    let rec aux (l, x) =
+      match l with
+      | basics#[] -> [ ]
+      | y :: l ->
+        if A!equal (x, y) then l
+        else y :: aux (l, x)
+    in
+    aux (l, x) ;
 
   let diff (e1 in Self, e2 in Self) =
     let rec aux (l, accu) =
@@ -2122,6 +2133,8 @@ let print_endline (s) = print_string (s ^ "\n");;
 #print_endline (Ensemble_entiers!print (#total)) ;;
 *)
 
+(* *********** tout ceci devrait etre inutile maintenant
+
 (* Theoremes pour le fichier util.foc, je suis oblige de les definir ici *)
 (* sinon le compilo ne les voit pas *)
 theorem spec_crp : all x in ('a * 'b),
@@ -2147,3 +2160,5 @@ theorem spec_scnd : all x in 'a, all y in 'b,
 theorem spec_scnd_subst : all x y in ('a * 'b),
   x = y -> basics#scnd(x) = basics#scnd(y)
   proof: assumed {* Using trusted external code. *};;
+
+******************* *)

@@ -14,6 +14,9 @@ open "access_control" ;;
 
 (** Tickets implementation  *)
 
+let first = basics#fst;;
+let scnd = basics#snd;;
+
 species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) = 
 
   let rec forall (l, p) =
@@ -593,7 +596,7 @@ species S_models_ticket (S_c is S_tickets,
 
   proof of del_prop = assumed {* Because todo *} ;
 
-  proof of del_prop_bis = assumed {* Because todo *} ;
+  (*proof of del_prop_bis = assumed {* Because todo *} ;*)
 
   proof of add_mem = assumed {* Because todo *} ;
 
