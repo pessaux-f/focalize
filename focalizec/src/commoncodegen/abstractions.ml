@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.52 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.53 2008-11-25 12:59:38 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -32,7 +32,7 @@ type field_body_kind =
 
 
 type field_type_kind =
-  | FTK_computational
+  | FTK_computational of Types.type_simple
   | FTK_logical of Parsetree.logical_expr
 ;;
 
@@ -369,9 +369,31 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
         (species_param, meths_from_param) :: accu)
       species_parameters_names
       [] in
-  (* By side effect, we remind the species types appearing in our type. *)
-  let carriers_appearing_in_types =
-    ref (Types.get_species_types_in_type my_type) in
+  (* By side effect, we will remind the species types appearing. *)
+  let carriers_appearing_in_types = ref Types.SpeciesCarrierTypeSet.empty in
+  (* Attention, for properties and theorems, the type doesn't contain valuable
+     information since it is always "Prop". We must inspect the logical_expr
+     (in fact its type) to check if some quantified variables in the
+     proposition refers to species carrier types. In effect, if the proof or
+     the theorem/property's statement doesn't use some parameters methods,
+     then the [dependencies_from_params_in_bodies] will be empty and when,
+     below, we will search used species parameters tys in "bodies", since no
+     method of the parameterss are used, we will never see that the parameter
+     carriers are indeed used to quantify variables.
+     Example:
+       species Test (A is Setoid, B is Setoid) inherits Setoid =
+         theorem b_is_snd_pair: all a in A, all b in B, true
+         proof: assumed {* *} ;
+       end ;;
+     The body of [b_is_snd_pair] doesn't call any method of A or B. However,
+     carriers of A and B are used to quantiy a and b. *)
+  (match my_type with
+   | FTK_computational t ->
+       carriers_appearing_in_types := Types.get_species_types_in_type t
+   | FTK_logical lexpr ->
+       let params_carriers =
+         get_species_types_in_type_annots_of_logical_expr lexpr in
+       carriers_appearing_in_types := params_carriers) ;
   (* By side effect, we remind the species types appearing in the species
      parameters methods' types we depend on. *)
   List.iter
@@ -1053,7 +1075,7 @@ let complete_dependencies_from_params env ~current_unit ~current_species
      ML-like type. *)
   let dependencies_from_params_via_type =
     (match type_kind with
-     | FTK_computational ->
+     | FTK_computational _ ->
          (* The "empty" dependencies cannot simple be [] because all our "union"
             functions on dependencies rely on a list of sets with 1 set for each
             species parameter name. So we create our initial accumulator as the
@@ -1238,7 +1260,8 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                ai_min_coq_env = [] } in
              (FAI_sig (si, abstr_info)) :: abstractions_accu
          | Env.TypeInformation.SF_let
-	        ((_, name, _, sch, body, _, _, _) as li) ->
+                ((_, name, _, sch, body, _, _, _) as li) ->
+             let method_ty = Types.specialize sch in
              (* ATTENTION, the [dependencies_from_params_in_body] is not
                 the complete set of dependencies. It must be completed to
                 fully represent the definition 72 page 153 from Virgile
@@ -1255,7 +1278,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                  ~current_species: ctx.Context.scc_current_species
                  ctx.Context.scc_species_parameters_names
                  ctx.Context.scc_dependency_graph_nodes name
-                 body_as_fbk (Types.specialize sch) fields in
+                 body_as_fbk (FTK_computational method_ty) fields in
              (* Compute the visible universe of the method. *)
              let universe =
                VisUniverse.visible_universe
@@ -1272,7 +1295,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                  env ~current_unit: ctx.Context.scc_current_unit
                  ~current_species: ctx.Context.scc_current_species
                  abstractions_accu ctx.Context.scc_species_parameters_names
-                 def_children universe FTK_computational in
+                 def_children universe (FTK_computational method_ty) in
              (* Extra completion by a transitive closure that was missing in
                 Virgile Prevosto's Phd. *)
              let dependencies_from_params_via_didou =
@@ -1314,6 +1337,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                      match body with
                       | Parsetree.BB_logical p -> FBK_logical_expr p
                       | Parsetree.BB_computational e -> FBK_expr e in
+                   let method_ty = Types.specialize sch in
                    (* ATTENTION, the [dependencies_from_params_in_bodies] is
                       not the complete set of dependencies. It must be  to
                       completed fully represent the definition 72 page 153
@@ -1326,7 +1350,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                        ~current_species: ctx.Context.scc_current_species
                        ctx.Context.scc_species_parameters_names
                        ctx.Context.scc_dependency_graph_nodes name
-                       body_as_fbk (Types.specialize sch) fields in
+                       body_as_fbk (FTK_computational method_ty) fields in
                    (* Compute the visible universe of the method. *)
                    let universe =
                      VisUniverse.visible_universe
@@ -1345,7 +1369,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                        ~current_unit: ctx.Context.scc_current_unit
                        abstractions_accu ctx.Context.
                          scc_species_parameters_names
-                       def_children universe FTK_computational in
+                       def_children universe (FTK_computational method_ty) in
                    (* Extra completion by a transitive closure that was missing
                       in Virgile Prevosto's Phd. *)
                    let dependencies_from_params_via_didou =
@@ -1384,7 +1408,6 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
              (FAI_let_rec deps_infos) :: abstractions_accu
          | Env.TypeInformation.SF_theorem
              ((_, name, _, logical_expr, proof, _) as ti) ->
-               let sch = Types.trivial_scheme (Types.type_prop ()) in
                (* ATTENTION, the [dependencies_from_params_in_bodies] is not
                   the complete set of dependencies. It must be completed to
                   fully represent the definition 72 page 153 from Virgile
@@ -1397,7 +1420,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                    ~current_species: ctx.Context.scc_current_species
                    ctx.Context.scc_species_parameters_names
                    ctx.Context.scc_dependency_graph_nodes name
-                   (FBK_proof (Some proof)) (Types.specialize sch) fields in
+                   (FBK_proof (Some proof)) (FTK_logical logical_expr) fields in
                (* Compute the visible universe of the theorem. *)
                let universe =
                  VisUniverse.visible_universe
@@ -1452,7 +1475,6 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                (FAI_theorem (ti, abstr_info)) :: abstractions_accu
          | Env.TypeInformation.SF_property
              ((_, name, _, logical_expr, _) as pi) ->
-               let sch = Types.trivial_scheme (Types.type_prop ()) in
                (* ATTENTION, the [dependencies_from_params_in_bodies] is not
                   the complete set of dependencies. It must be completed to
                   fully represent the definition 72 page 153 from Virgile
@@ -1465,7 +1487,7 @@ let compute_abstractions_for_fields ~with_def_deps env ctx fields =
                    ~current_species: ctx.Context.scc_current_species
                    ctx.Context.scc_species_parameters_names
                    ctx.Context.scc_dependency_graph_nodes name
-                   (FBK_proof None) (Types.specialize sch) fields in
+                   (FBK_proof None) (FTK_logical logical_expr) fields in
                (* Compute the visible universe of the theorem. *)
                let universe =
                  VisUniverse.visible_universe
