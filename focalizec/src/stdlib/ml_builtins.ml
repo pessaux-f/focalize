@@ -12,11 +12,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ml_builtins.ml,v 1.5 2008-11-22 23:30:07 weis Exp $ *)
+(* $Id: ml_builtins.ml,v 1.6 2008-11-27 08:45:31 weis Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module contains the external primitives bound to FoCaL
-              in the "basic.foc" file.                                      *)
+              in the "basic.fcl" file.                                      *)
 (* ************************************************************************ *)
 
 exception Foc_error of string ;;
