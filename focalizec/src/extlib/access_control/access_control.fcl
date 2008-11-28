@@ -788,7 +788,7 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
     all st in Self, all sp in S, all op in O, all mo in M, 
       exists_role (st, roles_s (st, sp), pa (st, op, mo)) -> 
 	ep (st, sp, op, mo)
-    proof: 
+    proof = 
       by property Ro!leq_reflexive, exists_role_spec 
          definition of ep ;
 
@@ -799,7 +799,7 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 (* 	  ua (st, user (st, sp), rop) ->  *)
 (* 	    roles_s (st, sp, rop) ->  *)
 (* 	      er (st, sp, rop) *)
-(*     proof: *)
+(*     proof = *)
 (*       by property Ro!leq_reflexive, exists_role_ua_spec  *)
 (*          definition of er ; *)
 
@@ -989,7 +989,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
       tau_rbac_acc (r1, st1) = (d1, st2) ->
 	omega (st1) ->
 	  omega(st2)
-    proof:
+    proof =
       <1>1 assume st1 in Self,
            assume st2 in Self,
            assume r1 in Rr,
@@ -1399,7 +1399,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
       tau_rbac_acc (r1, st1) = (d1, st2) ->
 	D!equal (d1, D!yes) ->
 	  sem_req (r1, st2)
-    proof:
+    proof =
       <1>1 assume st1 in Self,
            assume st2 in Self,
            assume r1 in Rr,
@@ -1622,7 +1622,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
       tau_rbac_acc (r1, st1) = (d1, st2) ->
 	D!equal (d1, D!no) ->
 	  equal (st1, st2)
-    proof:
+    proof =
       <1>1 assume st1 in Self,
            assume st2 in Self,
            assume r1 in Rr,
@@ -1769,7 +1769,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
       tau_rbac_adm (r1, st1) = (d1, st2) ->
 	omega (st1) ->
 	  omega (st2)
-    proof:
+    proof =
       <1>1 assume st1 in Self,
            assume st2 in Self,
            assume r1 in Rr,
@@ -2396,7 +2396,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
       tau_rbac (r1, st1) = (d1, st2) ->
 	omega (st1) ->
 	  omega(st2)
-    proof: by property tau_rbac_acc_secure, tau_rbac_adm_secure
+    proof = by property tau_rbac_acc_secure, tau_rbac_adm_secure
               definition of tau_rbac ;
 
 end ;;
@@ -2473,7 +2473,7 @@ species Model_hru (Rh is Rho,
       tau_hru (r1, st1) = (d1, st2) ->
 	omega (st1) ->
 	  omega (st2)
-    proof:
+    proof =
       <1>1 assume st1 in Self,
            assume st2 in Self,
            assume r1 in R,
@@ -2685,7 +2685,7 @@ species Model_hru (Rh is Rho,
       tau_hru (r1, st1) = (d1, st2) ->
 	D!equal (d1, D!yes) ->
 	  sem_req (r1, st2)
-    proof:
+    proof =
       <1>1 assume st1 in Self,
            assume st2 in Self,
            assume r1 in R,
@@ -2905,7 +2905,7 @@ species Model_hru (Rh is Rho,
       tau_hru (r1, st1) = (d1, st2) ->
 	D!equal (d1, D!no) ->
 	  equal (st1, st2)
-    proof:
+    proof =
       <1>1 assume st1 in Self,
            assume st2 in Self,
            assume r1 in R,
