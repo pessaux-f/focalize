@@ -1,7 +1,10 @@
-% $Id: output.tex,v 1.2 2008-11-17 15:39:03 pessaux Exp $
+% $Id: output.tex,v 1.3 2008-11-28 11:20:40 pessaux Exp $
 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Output}
 As we will see further, a \focal\ development contains both
 ``computational code'' (i.e. code performing operations that lead to
 an effect, a result) and logical properties.
@@ -34,3 +37,100 @@ When compiled, two outputs are generated:
     finding a proof), hence leading to a pure \coq\ code file that can
     be compiled by \coq.
 \end{itemize}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Compiling a source}
+In the current version of the \focal\ compiler, compiling a \focal\
+program involves several steps:
+\begin{enumerate}
+  \item {\bf \focal\ source compilation}. This step takes the \focal\
+    source code and generates the \ocaml\ and/or ``pre-''\coq\ code.
+    You can disable the code generation for one of these languages
+    (see \ref{compiler-options}), or both, in this case, no code is
+    produced and you only get the \focal\ object code produced without
+    anymore else output and the process ends at this point. If you
+    disable one of the target language, then you won't get any
+    generated file for it, hence no need to address its related
+    compilation process described below.
+
+  The command to invoke is {\tt focalizec} with the optional extra
+  directories to include in the search path, depending on other
+  \focal\ files your program depends on. Note that by default, it is
+  useless to specify the standard library installation path since
+  \focal\ will automatically search in it.
+  \begin{center}
+  {\tt focalizec -I mylibs -I myotherlibs source.foc}
+  \end{center}
+  Assuming you generate code for both \ocaml\ and \coq, you will get
+  two generated files: {\tt source.ml} (the \ocaml\ code) and
+  {\tt source.zv} (the ``pre-''\coq\ code).
+
+  \item {\bf \ocaml\ code compilation}. This step takes the generated
+    \ocaml\ code (it is an \ocaml\ source file) and compile it. This
+    is done like any regular \ocaml\ compilation, the only difference
+    is that you must provide to it a search path containing the
+    \focal\ installation path and you own used extra \focal\ source
+    files directories.
+    \begin{verbatim}
+ocamlc -c -I/usr/local/lib/focalize -I mylibs
+   -I myotherlibs source.ml
+    \end{verbatim}
+    This will produce the \ocaml\ object file {\tt source.cmo}. Do
+    this for each of you generated \ocaml\ files. The last action is
+    to make the final link, providing the same search path than above
+    and the {\tt .cmo} files corresponding to all the generated
+    \ocaml\ files from all your \focal\ {\tt .foc} files. You also
+    need to add the {\tt .cmo} files corresponding to the modules of
+    the standard library you use (currently, this must be done by the
+    user, next versions will automate this process).
+    \begin{verbatim}
+ocamlc -I mylibs -I myotherlibs
+  install_dir/ml_builtins.cmo install_dir/basics.cmo
+  install_dir/sets.cmo ...
+  mylibs/src1.cmo mylibs/src2.cmo ...
+  myotherlibs src3.cmo mylibs/src3.cmo ...
+  source1.cmo source2.cmo ...
+  -o exec_name
+    \end{verbatim}
+
+    Note that you can also compile the \ocaml\ code in native mode
+    using the {\tt ocamlopt} version of the \ocaml\ compiler. See
+    \ocaml\ reference manual for more information. In this case, the
+    object files are the {\tt .cmx} files instead of the {\tt .cmo}
+    ones.\\
+    Once this step is done, you have the executable program done.
+
+  \item {\bf ``Pre-''\coq\ code compilation}. This step takes the
+    generated {\tt .zv} file and attempts to produce a real \coq\
+    {\tt .v} source file by replacing proofs written in \focal\ Proof
+    Language by some effective \coq\ proofs found by the \zenon\
+    theorem prover. Note that if \zenon\ fails in finding a proof, a
+    hole will remain in the final \coq\ {\tt .v} file. Such a hole
+    appears as the text ``{\tt TO\_BE\_DONE\_MANUALLY.}'' in place of
+    the effective proof. In this case, \coq\ will obviously fail
+    in compiling the file, so the user must do the proof by hand or
+    modify his original \focal\ source file to get a working proof.
+    For each {\tt .zv} file:
+    \begin{center}
+      {\tt zvtov -new source1.zv}
+    \end{center}
+    For more about the \zenon options, consult section
+    \ref{zenon_options}.
+
+  \item{\bf \coq\ code compilation}. This step takes the generated
+    {\tt .v} code and compile it with \coq. This is done like any
+    regular \coq\ compilation, the only difference is that you must
+    provide to it a search path containing the \focal\ installation
+    path and you own used extra \focal\ source files directories.
+    \begin{verbatim}
+coqc -I/usr/local/lib/focalize -I mylibs
+  -I myotherlibs source.v
+    \end{verbatim}
+    Once this step is done, you have the \coq\ object files and you
+    are sure that \coq\ validated you program model, properties and
+    proofs. The final ``assessor'' of the toolchain accepted your
+    program.
+\end{enumerate}
