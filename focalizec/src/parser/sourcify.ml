@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.57 2008-10-17 06:05:57 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.58 2008-11-28 07:56:53 weis Exp $ *)
 
 open Parsetree;;
 
@@ -750,7 +750,7 @@ and pp_binding ppf = pp_ast pp_binding_desc ppf
     {b Rem} : Not exported ouside this module.                            *)
 (* ********************************************************************** *)
 and pp_theorem_def_desc ppf tdd =
-  Format.fprintf ppf "@[<2>theorem %a :@ %a@ %a@\nproof:@ %a@]"
+  Format.fprintf ppf "@[<2>theorem %a :@ %a@ %a@\nproof =@ %a@]"
     pp_vname tdd.Parsetree.th_name
     pp_local_flag tdd.Parsetree.th_local
     pp_logical_expr tdd.Parsetree.th_stmt
@@ -796,6 +796,8 @@ and pp_proof_desc ppf = function
 	(pp_enforced_dependencies " ") enf_deps ;
       if enf_deps <> [] then Format.fprintf ppf " " ;
       Format.fprintf ppf "assumed@ {*%s*}@]" reason
+  | Parsetree.Pf_auto [] ->
+      Format.fprintf ppf "@[<2>by evidence@]"
   | Parsetree.Pf_auto facts ->
       Format.fprintf ppf "@[<2>by %a@]" (pp_facts "") facts
   | Parsetree.Pf_coq (enf_deps, s) ->

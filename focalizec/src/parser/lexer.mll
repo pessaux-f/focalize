@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.64 2008-11-22 19:04:59 weis Exp $ *)
+(* $Id: lexer.mll,v 1.65 2008-11-28 07:56:53 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -107,6 +107,7 @@ List.iter
   "end", END;
   "ex", EX;
   "external", EXTERNAL;
+  "evidence", EVIDENCE;
   "false", BOOL "false";
   "function", FUNCTION;
   "hypothesis", HYPOTHESIS;

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.114 2008-11-22 19:04:59 weis Exp $ *)
+(* $Id: parser.mly,v 1.115 2008-11-28 07:56:53 weis Exp $ *)
 
 open Parsetree;;
 
@@ -206,6 +206,7 @@ let mk_proof_label (s1, s2) =
 %token DEFINITION
 %token ELSE
 %token END
+%token EVIDENCE
 %token EX
 %token EXTERNAL
 %token FUNCTION
@@ -659,7 +660,7 @@ binding:
 
 opt_termination_proof:
   | { None }
-  | TERMINATION PROOF COLON termination_proof { Some $4 }
+  | TERMINATION PROOF EQUAL termination_proof { Some $4 }
 ;
 
 termination_proof:
@@ -698,7 +699,7 @@ define_property:
 ;
 
 define_theorem:
-  | opt_doc opt_local THEOREM theorem_vname COLON logical_expr PROOF COLON proof
+  | opt_doc opt_local THEOREM theorem_vname COLON logical_expr PROOF EQUAL proof
     { mk_doc $1
         { th_name = $4; th_local = $2;
           th_stmt = $6; th_proof = $9 } }
@@ -762,8 +763,16 @@ proof_node_qed:
 ;
 
 fact_list:
-  | { [ ] }
-  | fact fact_list { $1 :: $2 }
+  | EVIDENCE
+    { [] }
+  | fact facts
+    { $1 :: $2 }
+;
+
+facts:
+  | { [] }
+  | fact facts
+    { $1 :: $2 }
 ;
 
 fact:
