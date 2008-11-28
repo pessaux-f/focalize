@@ -296,7 +296,7 @@ species Ordered_set_as_meet_semi_lattice
 
   theorem order_inf_refines_leq : all x y in Self,
     !leq(x, y) -> !order_inf(x, y)
-    proof:
+    proof =
       by property total_order, total_order, leq_antisymmetric
          definition of inf, order_inf
   ;

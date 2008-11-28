@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.47 2008-11-25 14:33:10 doligez Exp $ *)
+(* $Id: basics.fcl,v 1.48 2008-11-28 10:03:23 pessaux Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -477,21 +477,21 @@ let print_string =
 
 theorem beq_refl :
   all x in 'a, x = x
-  proof: assumed {* Import trusted external code. *} ;;
+  proof = assumed {* Import trusted external code. *} ;;
 
 theorem beq_symm :
   all x y in 'a, x = y -> y = x
-  proof: assumed {* Import trusted external code. *} ;;
+  proof = assumed {* Import trusted external code. *} ;;
 
 theorem beq_trans :
   all x y z in 'a, x = y -> y = z -> x = z
-  proof: assumed {* Import trusted external code. *} ;;
+  proof = assumed {* Import trusted external code. *} ;;
 
 (** {8 Integer comparisons fundamental properties} *)
 
 theorem int_le_not_gt :
   all x y in int, int_leq (x, y) -> ~ (int_gt (x, y))
-  proof:
+  proof =
     coq proof {*
       intros x y; unfold int_leq, int_gt in |- *.
       unfold bi__int_leq , bi__int_gt.
@@ -510,7 +510,7 @@ theorem int_le_not_gt :
 
 theorem int_lt_le_trans :
   all x y z in int, int_lt (x, y) -> int_leq (y, z) -> int_lt (x, z)
-  proof:
+  proof =
     coq proof {*
       intros x y z.
       unfold int_lt, int_leq, bi__int_lt, bi__int_leq in |- *.
@@ -529,12 +529,12 @@ theorem int_lt_le_trans :
 
 theorem int_le_refl :
   all x y in int, x = y -> x <=0x y
-  proof: assumed {* Import trusted external code. *}
+  proof = assumed {* Import trusted external code. *}
 ;;
 
 theorem int_le_antisymm:
   all x y in int, int_leq (x, y) -> int_leq (y, x) -> x = y
-  proof:
+  proof =
     coq proof {*
       intros x y.
       unfold int_leq, bi__int_leq in |- *.
@@ -554,7 +554,7 @@ theorem int_le_antisymm:
 
 theorem int_le_trans:
   all x y z in int,  #int_leq(x, y) -> #int_leq (y, z) -> #int_leq(x, z)
-  proof:
+  proof =
     coq proof {*
       unfold int_leq, bi__int_leq in |- *; intros x y z H1 H2.
       apply dec_IsTrue. cut (x <= y)%Z. cut (y <= z)%Z.
@@ -567,14 +567,14 @@ theorem int_le_trans:
 
 theorem int_lt_irrefl :
   all x y in int, x <0x y -> ~ x = y
-  proof: assumed {* Import trusted external code. *}
+  proof = assumed {* Import trusted external code. *}
 ;;
 
 (** {7 Theorems for integer operations} *)
 
 theorem int_0_plus:
   all x y in int, x = 0 -> x + y = y
-  proof:
+  proof =
     coq proof {*
       unfold int_plus, bi__int_plus in |- *; intros x y Hxz;
       unfold base_eq, _focop_eq_, syntactic_equal;
@@ -588,7 +588,7 @@ theorem int_0_plus:
 
 theorem int_lt_le_S:
   all x y in int, #int_lt (x, y) -> #int_leq (#int_plus (x, 1), y)
-  proof:
+  proof =
     coq proof {*
       unfold int_lt, int_leq, int_plus in |- *; intros x y Hlt;
       unfold bi__int_lt, bi__int_leq, bi__int_plus;
@@ -601,7 +601,7 @@ theorem int_lt_le_S:
 theorem int_plus_assoc:
   all x y z in int, (* (x + y) + z = x + (y + z) *)
   #base_eq ((x + y) + z, x + (y + z))
-  proof:
+  proof =
     coq proof {*
       unfold int_plus in |- *; intros x y z;
       unfold base_eq, syntactic_equal;
@@ -613,7 +613,7 @@ theorem int_plus_assoc:
 theorem int_plus_commute:
   all x y  in int, (* x + y = y + x *)
   #base_eq (x + y, y + x)
-  proof:
+  proof =
     coq proof {*
       unfold int_plus in |- *; intros x y;
       unfold base_eq, syntactic_equal;
@@ -627,7 +627,7 @@ theorem int_plus_plus:
   all x y z t in int,
   x = y -> z = t ->
   #base_eq (x + z, y + t)
-  proof:
+  proof =
     coq proof {*
       unfold int_plus in |- *; intros x y z t H1 H2;
       unfold base_eq, syntactic_equal;
@@ -642,7 +642,7 @@ theorem int_le_plus_plus:
   all x y z t in int,
   #int_leq (x, y) -> #int_leq (z, t) ->
   #int_leq (x + z, y + t)
-  proof:
+  proof =
     coq proof {*
       unfold int_plus, int_leq in |- *; intros x y z t H1 H2;
       unfold bi__int_leq, bi__int_plus, bi__int_plus;
@@ -655,7 +655,7 @@ theorem int_le_plus_plus:
 theorem int_min_le:
   all x y z in int,
   (#int_leq (z, x) /\ #int_leq (z, y)) -> #int_leq (z, #int_min (x, y))
-  proof:
+  proof =
     coq proof {*
       intros x y z H; elim H; intros H1 H2; clear H;
       unfold int_min in |- *;
@@ -670,7 +670,7 @@ theorem int_min_le:
 theorem int_min_le2:
   all x y z in int,
   #int_leq (z, #int_min (x, y)) -> (#int_leq (z, x) /\ #int_leq (z, y))
-  proof:
+  proof =
     coq proof {*
       intros x y z; unfold int_min in |- *.
       unfold bi__int_min.
@@ -689,7 +689,7 @@ theorem int_min_le2:
 theorem int_plus_minus: all x y z in int,
   (*   x + y = z -> y = z - x *)
   x + y = z -> #base_eq (y, z - x)
-  proof:
+  proof =
     coq proof {*
       intros x y z; unfold int_plus, int_minus, base_eq, syntactic_equal in |- *;
       intros H;
@@ -704,7 +704,7 @@ theorem int_minus_plus:
   all x y z in int,
   (*   x - y = z -> x = y + z *)
   x - y = z -> #base_eq (x, y + z)
-  proof:
+  proof =
     coq proof {*
       intros x y z; unfold int_plus, int_minus, base_eq, syntactic_equal in |- *;
       intros H;

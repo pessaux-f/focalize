@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: products.fcl,v 1.4 2008-10-14 12:47:51 rr Exp $ *)
+(* $Id: products.fcl,v 1.5 2008-11-28 10:03:23 pessaux Exp $ *)
 
 (**
 
@@ -65,7 +65,7 @@ species Product_set(A is Setoid, B is Setoid)
   (** this is the surjection property *)
   theorem first_accessibility: all x in A, ex s in Self,
     A!equal(!first(s), x)
-    proof:
+    proof =
     <1>1 assume x in A,
          prove A!equal(!first(!pair(x, B!element)), x)
          by property !pair_preserves_first
@@ -77,7 +77,7 @@ species Product_set(A is Setoid, B is Setoid)
   (** this is the surjection property *)
   theorem second_accessibility: all x in B, ex s in Self,
     B!equal(!second(s), x)
-    proof:
+    proof =
     <1>1 assume x in B,
          prove B!equal(!second(!pair(A!element, x)), x)
          by property !pair_preserves_second
@@ -96,7 +96,7 @@ species Product_set(A is Setoid, B is Setoid)
     (!equal(x, y)
       <->
     (A!equal(!first(x), !first(y)) /\ B!equal(!second(x), !second(y))))
-    proof:
+    proof =
        by definition of equal ;
 
   proof of equal_reflexive =
@@ -114,17 +114,17 @@ species Product_set(A is Setoid, B is Setoid)
   (** Our definition of equality is coherent with first compenent *)
   theorem first_substitution_rule: all x y in Self,
     !equal(x, y) -> A!equal(!first(x), !first(y))
-    proof: by definition of equal ;
+    proof = by definition of equal ;
 
   (** Our definition of equality is coherent with second compenent *)
   theorem second_substitution_rule: all x y in Self,
     !equal(x, y) -> B!equal(!second(x), !second(y))
-    proof: by definition of equal ;
+    proof = by definition of equal ;
 
   (** consistency between builder and equality, first argument *)
   theorem pair_left_substitution_rule: all x_1 x_2 in A, all y in B,
     A!equal(x_1, x_2) -> !equal(!pair(x_1, y), !pair(x_2, y))
-    proof:
+    proof =
       <1>1 assume x_1 in A,
            assume x_2 in A,
            assume y in B,
@@ -154,7 +154,7 @@ species Product_set(A is Setoid, B is Setoid)
   (** consistency between builder and equality, second arg *)
   theorem pair_right_substitution_rule: all x in A, all y_1 y_2 in B,
     B!equal(y_1, y_2) -> !equal(!pair(x, y_1), !pair(x, y_2))
-    proof:
+    proof =
       <1>1 assume x in A,
            assume y_1 in B,
            assume y_2 in B,
@@ -184,7 +184,7 @@ species Product_set(A is Setoid, B is Setoid)
   theorem pair_substitution_rule: all x_1 x_2 in A, all y_1 y_2 in B,
     A!equal(x_1, x_2) -> B!equal(y_1, y_2) ->
       !equal(!pair(x_1, y_1), !pair(x_2, y_2))
-    proof: by
+    proof = by
        property !pair_left_substitution_rule, !pair_right_substitution_rule,
                 !equal_transitive ;
 
@@ -251,11 +251,11 @@ species Categorical_property_of_Product_set
 
     theorem morph_first_factorize: all x in E,
       A!equal(P!first(!morph(x)), M_a!morph(x))
-      proof: by property P!pair_preserves_first definition of morph ;
+      proof = by property P!pair_preserves_first definition of morph ;
 
     theorem morph_second_factorize: all x in E,
       B!equal(P!second(!morph(x)), M_b!morph(x))
-      proof: by property P!pair_preserves_second definition of morph ;
+      proof = by property P!pair_preserves_second definition of morph ;
 
 end;;
 

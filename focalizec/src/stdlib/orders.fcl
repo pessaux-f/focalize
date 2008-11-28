@@ -21,16 +21,16 @@ species Pre_order inherits Setoid =
   (** a characteristic property *)
   theorem geq_is_leq : all x y in Self,
     (!geq(x, y) -> !leq(y, x)) /\  (!leq(x, y) -> !geq(y, x))
-    proof: by definition of geq
+    proof = by definition of geq
   ;
 
   theorem geq_reflexive : all x y in Self, !equal(x, y) -> !geq(x, y)
-  proof: by property leq_reflexive, equal_symmetric, geq_is_leq
+  proof = by property leq_reflexive, equal_symmetric, geq_is_leq
   ;
 
   theorem geq_transitive : all x y z in Self,
     !geq(x, y) -> !geq(y, z) -> !geq(x, z)
-    proof: by property leq_transitive, geq_is_leq
+    proof = by property leq_transitive, geq_is_leq
   ;
 
 
@@ -43,16 +43,16 @@ species Pre_order inherits Setoid =
     ((!lt(x, y) -> (!leq(x, y) /\ !different(x, y)))
   /\
      (!leq(x, y) -> (!lt(x, y) \/ !equal(x, y))))
-    proof:
+    proof =
       by definition of lt, different
   ;
 
   theorem lt_is_irreflexive: all x in Self, ~ (!lt(x, x))
-    proof: by property !lt_is_not_leq, !different_is_irreflexive;
+    proof = by property !lt_is_not_leq, !different_is_irreflexive;
 
   theorem lt_is_transitive: all x y z in Self,
      !lt(x, y) -> !lt(y, z) -> !lt(x, z)
-     proof:
+     proof =
        (* [rr]: needs check! proof fails when not assumed! *)
 (*        by property !leq_transitive, !lt_is_not_leq; *)
        assumed {* *};
@@ -62,19 +62,19 @@ species Pre_order inherits Setoid =
 
   theorem gt_is_lt : all x y in Self,
     !gt(x, y) <-> !lt(y, x)
-    proof:
+    proof =
       by definition of gt
   ;
 
   theorem gt_is_irreflexive: all x in Self, ~ (!lt(x, x))
-    proof: 
+    proof = 
        (* [rr]: needs check! proof fails when not assumed! *)
 (*       by property !gt_is_lt, !different_is_irreflexive; *)
        assumed {* *};
 
   theorem gt_is_transitive: all x y z in Self,
      !gt(x, y) -> !gt(y, z) -> !gt(x, z)
-     proof:
+     proof =
        by property !lt_is_transitive, !gt_is_lt;
 
 end
@@ -90,7 +90,7 @@ species Partial_order inherits Pre_order =
 
   theorem geq_antisymmetric : all x y in Self,
     !geq(x, y) -> !geq(y, x) -> !equal(x, y)
-    proof: by property leq_antisymmetric, geq_is_leq
+    proof = by property leq_antisymmetric, geq_is_leq
   ;
 
 end

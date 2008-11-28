@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets.fcl,v 1.3 2008-10-14 12:47:51 rr Exp $ *)
+(* $Id: sets.fcl,v 1.4 2008-11-28 10:03:23 pessaux Exp $ *)
 
 (** 
    @title Basic sets operations. 
@@ -53,18 +53,18 @@ species Setoid inherits Basic_object =
 
   theorem same_is_not_different : all x y in Self,
      !different(x, y) <-> ~ (!equal(x, y))
-  proof:
+  proof =
     by definition of different;
 
   theorem different_is_irreflexive: all x in Self,
     ~ (!different (x, x))
-  proof:
+  proof =
     (* by property ``equal is reflexive'', same_is_not_different *)
     by property equal_reflexive, same_is_not_different ;
 
   theorem different_is_symmetric: all x y in Self,
     !different (x, y) -> !different (y, x)
-  proof: by property equal_symmetric, same_is_not_different ;
+  proof = by property equal_symmetric, same_is_not_different ;
 
   (** 
      Take two distinct elements then any third element is distinct from 
@@ -72,7 +72,7 @@ species Setoid inherits Basic_object =
   *)
   theorem different_is_complete: all x y z in Self,
     !different(x, y) -> (!different(x, z) \/ !different(y, z))
-    proof:
+    proof =
       by property !equal_reflexive, !equal_symmetric,
                   !equal_transitive, !same_is_not_different 
   ;
@@ -109,18 +109,18 @@ species Anti_setoid inherits Basic_object =
 
   theorem same_is_not_different : all x y in Self,
     !equal(x, y) <-> ~ (!different(x, y))
-  proof: by definition of equal ;
+  proof = by definition of equal ;
 
   theorem equal_reflexive: all x in Self, !equal(x, x)
-    proof: by property !same_is_not_different, !different_is_irreflexive ;
+    proof = by property !same_is_not_different, !different_is_irreflexive ;
 
   theorem equal_symmetric: all x y in Self,
     Self!equal(x, y) -> !equal(y, x)
-    proof: by property !different_is_symmetric, !same_is_not_different ;
+    proof = by property !different_is_symmetric, !same_is_not_different ;
 
   theorem equal_transitive : all x y z in Self,
     !equal(x, y) -> !equal(y, z) -> !equal(x, z)
-    proof:
+    proof =
      by property !different_is_complete, !different_is_symmetric,
                        !different_is_irreflexive, !same_is_not_different ;
 end
@@ -160,7 +160,7 @@ species Equivalence_relation(S is Setoid)
     property equal_refines_equiv: all x y in S, 
        S!equal(x, y) -> !equiv(x, y);
     theorem equiv_reflexive: all x in S, !equiv(x, x)
-      proof: by property!equal_refines_equiv, S!equal_reflexive;
+      proof = by property!equal_refines_equiv, S!equal_reflexive;
 end;;
 
 

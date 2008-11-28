@@ -21,7 +21,7 @@ species Meet_semi_lattice inherits Setoid =
    *)
   theorem inf_right_substitution_rule : all x y z in Self,
      !equal(y, z) -> !equal(!inf(x, y), !inf(x, z))
-     proof:
+     proof =
        by property
           inf_left_substitution_rule,
           inf_commutes,
@@ -32,7 +32,7 @@ species Meet_semi_lattice inherits Setoid =
   theorem inf_substitution_rule : all x y z t in Self,
     !equal(x, y) -> !equal(z, t) -> !equal(!inf(x, z), !inf(y, t))
 (*    !equal(x, y) -> !equal(y, t) -> !equal(!inf(x, y), !inf(y, t)) *)
-    proof:
+    proof =
       by property
          inf_left_substitution_rule, inf_right_substitution_rule,
          (* [rr]: if not given reflexivity Zenon fails *)
@@ -54,7 +54,7 @@ species Meet_semi_lattice inherits Setoid =
   let order_inf(x, y) = !equal(x, !inf(x, y));
   theorem order_inf_is_reflexive : all x y in Self,
      !equal(x, y) -> !order_inf(x, y)
-     proof :
+     proof =
        by property inf_idempotent
        definition of order_inf
      ;
@@ -62,7 +62,7 @@ species Meet_semi_lattice inherits Setoid =
   theorem order_inf_is_antisymmetric : all x y in Self,
      !order_inf(x, y) -> !order_inf(y, x) -> !equal(x, y)
      (* x=inf(x, y) et y=inf(x, y) *)
-     proof:
+     proof =
        by
         property inf_commutes, equal_transitive, equal_symmetric
         definition of order_inf
@@ -70,7 +70,7 @@ species Meet_semi_lattice inherits Setoid =
   theorem order_inf_is_transitive : all x y z in Self,
      !order_inf(x, y) -> !order_inf(y, z) -> !order_inf(x, z)
      (* x=inf(x, y) et y=inf(y, z) x=inf(x, inf(y, z))=inf(inf(x, y), z)=inf(x, z)*)
-     proof:
+     proof =
        <1>1 assume x in Self,
             assume y in Self,
             assume z in Self,
@@ -104,7 +104,7 @@ species Meet_semi_lattice inherits Setoid =
   theorem order_inf_is_infimum : all x y i in Self,
     !order_inf(i, x) -> !order_inf(i, y) ->
       !order_inf(i, !inf(x, y))
-    proof:
+    proof =
       <1>1 assume x in Self,
            assume y in Self,
            assume i in Self,
@@ -148,7 +148,7 @@ species Join_semi_lattice inherits Setoid =
    *)
   theorem sup_right_substitution_rule : all x y z in Self,
      !equal(y, z) -> !equal(!sup(x, y), !sup(x, z))
-     proof:
+     proof =
        by
         property sup_left_substitution_rule, sup_commutes, equal_transitive
      ;
@@ -156,7 +156,7 @@ species Join_semi_lattice inherits Setoid =
   theorem sup_substitution_rule : all x y z t in Self,
     !equal(x, y) -> !equal(z, t) -> !equal(!sup(x, z), !sup(y, t))
 (*    !equal(x, y) -> !equal(y, t) -> !equal(!sup(x, y), !sup(y, t)) *)
-    proof:
+    proof =
       by
         property sup_left_substitution_rule, sup_right_substitution_rule,
            (* [rr]: if not given reflexivity Zenon fails *)
@@ -177,14 +177,14 @@ species Join_semi_lattice inherits Setoid =
 
   theorem order_sup_is_reflexive : all x y in Self,
      !equal(x, y) -> !order_sup(x, y)
-     proof:
+     proof =
        by property sup_idempotent
           definition of order_sup
   ;
 
   theorem order_sup_is_antisymmetric : all x y in Self,
      !order_sup(x, y) -> !order_sup(y, x) -> !equal(x, y)
-     proof:
+     proof =
        by property sup_commutes, equal_symmetric, equal_transitive
           definition of order_sup
      ;
@@ -192,7 +192,7 @@ species Join_semi_lattice inherits Setoid =
   theorem order_sup_is_transitive : all x y z in Self,
      !order_sup(x, y) -> !order_sup(y, z) -> !order_sup(x, z)
      (* x=inf(x, y) et y=inf(y, z) x=inf(x, inf(y, z)=inf(inf(x, y), z)=inf(x, z)*)
-     proof:
+     proof =
        <1>1 assume x in Self,
             assume y in Self,
             assume z in Self,
@@ -220,7 +220,7 @@ species Join_semi_lattice inherits Setoid =
   theorem order_sup_is_supremum : all x y i in Self,
     !order_sup(i, x) -> !order_sup(i, y) ->
       !order_sup(i, !sup(x, y))
-    proof:
+    proof =
       <1>1 assume x in Self,
            assume y in Self,
            assume i in Self,
@@ -258,7 +258,7 @@ species Lattice inherits Meet_semi_lattice, Join_semi_lattice =
    (** in a lattice there is only one ordering *)
    theorem order_inf_refines_order_sup : all x y in Self,
      !order_sup(y, x) -> !order_inf(x, y)
-     proof:
+     proof =
        (* x = x v y ; x ^ y = x ^ (x v y) = x *)
        <1>1 assume x in Self,
             assume y in Self,
@@ -287,7 +287,7 @@ species Lattice inherits Meet_semi_lattice, Join_semi_lattice =
    theorem order_sup_refines_order_inf : all x y in Self,
      (* x = x ^ y ; x v y = (x ^ y) v x = x v (x ^ y) = x *) 
      !order_inf (y, x) -> !order_sup (x, y)
-     proof:
+     proof =
        <1>1 assume x in Self,
             assume y in Self,
             assume H : !order_inf (y, x),
@@ -305,7 +305,7 @@ species Lattice inherits Meet_semi_lattice, Join_semi_lattice =
      ;
 
 (*
-     proof:
+     proof =
        (* [rr]: Wow! I couldn't guess this until I performed the latter *)
        (* forget it if you have a small computer ! *)
        by property
@@ -344,7 +344,7 @@ species Distributive_lattice
 
   theorem sup_right_distributes : all x y z in Self,
     !equal(!sup(!inf(x, y), z), !inf(!sup(x, z), !sup(y, z)))
-    proof:
+    proof =
       (* [rr]: Wow my second proof *)
       <1>1 assume x in Self,
            assume y in Self,
@@ -378,7 +378,7 @@ species Distributive_lattice
     !equal(!inf(x, !sup(y, z)), !sup(!inf(x, y), !inf(x, z)));
   theorem inf_right_distributes : all x y z in Self,
     !equal(!inf(!sup(x, y), z), !sup(!inf(x, z), !inf(y, z)))
-    proof:
+    proof =
       (* [rr]: see sup_right_distributes above *)
       (* should be easy but still fails on time limit !
        by !inf_left_distributes, !inf_commutes,
@@ -458,7 +458,7 @@ species Meet_semi_lattice_with_max inherits Meet_semi_lattice =
     !equal(!inf(x, !max), x);
   theorem max_is_left_neutral : all x in Self,
     !equal(!inf(!max, x), x)
-    proof:
+    proof =
     by property max_is_right_neutral, inf_commutes, equal_transitive
     ;
   let is_max(x) = !equal(x, !max);
@@ -475,7 +475,7 @@ species Meet_semi_lattice_with_min inherits Meet_semi_lattice =
     !equal(!inf(x, !min), !min);
   theorem min_left_absorbes : all x in Self,
     !equal(!inf(!min, x), !min)
-    proof:
+    proof =
     by property min_right_absorbes, inf_commutes, equal_transitive
     ;
 
@@ -492,7 +492,7 @@ species Join_semi_lattice_with_min inherits Join_semi_lattice =
     !equal(!sup(x, !min), x);
   theorem min_is_left_neutral : all x in Self,
     !equal(!sup(!min, x), x)
-    proof:
+    proof =
       by property min_is_right_neutral, sup_commutes, equal_transitive
   ;
 
@@ -512,7 +512,7 @@ species Join_semi_lattice_with_max inherits Join_semi_lattice =
     !equal(!sup(x, !max), !max);
   theorem max_left_absorbes : all x in Self,
     !equal(!sup(!max, x), !max)
-    proof:
+    proof =
     by property max_right_absorbes, sup_commutes, equal_transitive
     ;
 

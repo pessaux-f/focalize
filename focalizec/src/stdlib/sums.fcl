@@ -81,9 +81,9 @@ species Sum_set(A is Setoid, BB is Setoid)
        if basics#and_b(!second_case(x), !second_case(y))
        then BB!equal(!second_term(x), !second_term(y))
        else
-	 (* [rr]: start thinking about this,
-	    an auxiliary function ? Better specs ? *)
-	 false
+         (* [rr]: start thinking about this,
+            an auxiliary function ? Better specs ? *)
+         false
   ;
 
   theorem equal_spec: all x y in Self,
@@ -96,7 +96,7 @@ species Sum_set(A is Setoid, BB is Setoid)
       (!second_case(x) /\
        !second_case(y) /\
         BB!equal(!second_term(x), !second_term(y))))
-    proof: by property !case_exclusive 
+    proof = by property !case_exclusive 
               definition of equal;
 
   (** Since equality is defined, we prove its reflexity *)
@@ -123,7 +123,7 @@ species Sum_set(A is Setoid, BB is Setoid)
   theorem first_term_substitution_rule: all x_1 x_2 in Self,
     !first_case(x_1) -> !equal(x_1, x_2) ->
       A!equal(!first_term(x_1), !first_term(x_2))
-    proof:
+    proof =
       <1>1 assume x_1 in Self, assume x_2 in Self,
            assume H_1: !first_case(x_1),
            assume H_2: !equal(x_1, x_2),
@@ -141,7 +141,7 @@ species Sum_set(A is Setoid, BB is Setoid)
    *)
   theorem first_is_injective: all x y in A,
     !equal(!first(x), !first(y)) -> A!equal(x, y)
-    proof:
+    proof =
       <1>1 assume x in A, assume y in A,
            assume H: !equal(!first(x), !first(y)),
            prove A!equal(x, y)
@@ -153,7 +153,7 @@ species Sum_set(A is Setoid, BB is Setoid)
                 <3>1 prove !first_case(!first(x)) by property !first_has_case
                 <3>f qed by 
                        step <3>1
-		       hypothesis H 
+                       hypothesis H 
                        property !first_term_substitution_rule
            <2>f qed by step <2>1, <2>2, <2>3
                        property A!equal_reflexive, 
@@ -166,7 +166,7 @@ species Sum_set(A is Setoid, BB is Setoid)
   theorem second_term_substitution_rule: all x_1 x_2 in Self,
     !second_case(x_1) -> !equal(x_1, x_2) ->
       BB!equal(!second_term(x_1), !second_term(x_2))
-    proof:
+    proof =
       <1>1 assume x_1 in Self, assume x_2 in Self,
            assume H_1: !second_case(x_1),
            assume H_2: !equal(x_1, x_2),
@@ -187,7 +187,7 @@ species Sum_set(A is Setoid, BB is Setoid)
    *)
   theorem second_is_injective: all x y in BB,
     !equal(!second(x), !second(y)) -> BB!equal(x, y)
-    proof:
+    proof =
       <1>1 assume x in BB, assume y in BB,
            assume H: !equal(!second(x), !second(y)),
            prove BB!equal(x, y)
@@ -196,7 +196,7 @@ species Sum_set(A is Setoid, BB is Setoid)
            <2>2 prove BB!equal(!second_term(!second(y)), y)
                 by property !second_reverses_term
            <2>3 prove BB!equal(!second_term(!second(x)),
-			      !second_term(!second(y)))
+                              !second_term(!second(y)))
                 <3>1 prove !second_case(!second(x)) 
                      by property !second_has_case
                 <3>f qed by 
@@ -213,7 +213,7 @@ species Sum_set(A is Setoid, BB is Setoid)
   (** specifications are compatible with bollean logic *)
   theorem first_case_substitution_rule: all x y in Self,
     !equal(x, y) -> !first_case(x) -> !first_case(y)
-    proof:
+    proof =
       <1>1 assume x in Self, assume y in Self,
            assume H: !equal(x, y),
            assume H_x: !first_case(x),
@@ -228,13 +228,13 @@ species Sum_set(A is Setoid, BB is Setoid)
 (*   (\** specifications are compatible with bollean logic *\) *)
 (*   theorem first_case_full_subtitution_rule: all x y in self, *)
 (*     !equal(x, y) -> (!first_case(x) <-> !first_case(y)) *)
-(*     proof: by !first_case_substitution_rule, !equal_symmetric; *)
+(*     proof = by !first_case_substitution_rule, !equal_symmetric; *)
 
 
   (** specifications are compatible with logic *)
   theorem second_case_subtitution_rule: all x y in Self,
     !equal(x, y) -> (!second_case(x) -> !second_case(y))
-    proof:
+    proof =
       <1>1 assume x in Self, assume y in Self,
            assume H: !equal(x, y),
            assume H_x: !second_case(x),
@@ -249,7 +249,7 @@ species Sum_set(A is Setoid, BB is Setoid)
 (*   (\** specifications are compatible with boolean logic *\) *)
 (*   theorem second_case_full_subtitution_rule: all x y in self, *)
 (*     !equal(x, y) -> (!second_case(x) <-> !second_case(y)) *)
-(*     proof: by !second_case_subtitution_rule, !equal_symmetric; *)
+(*     proof = by !second_case_subtitution_rule, !equal_symmetric; *)
 
 
   (**
@@ -258,12 +258,12 @@ species Sum_set(A is Setoid, BB is Setoid)
    *)
    theorem first_reverses: all x in Self,
      !first_case(x) -> (ex x_a in A, !equal(!first(x_a), x))
-      proof:
+      proof =
        <1>1 assume x in Self,
             assume H: !first_case(x),
-	    prove !equal(!first(!first_term(x)), x)
+            prove !equal(!first(!first_term(x)), x)
             <2>1 prove A!equal(!first_term(!first(!first_term(x))),
-			       !first_term(x))
+                               !first_term(x))
                  by property !first_reverses_term
             <2>2 prove !first_case(!first(!first_term(x)))
                  by property !first_has_case
@@ -277,12 +277,12 @@ species Sum_set(A is Setoid, BB is Setoid)
     *)
    theorem second_reverses: all x in Self,
      !second_case(x) -> (ex x_b in BB, !equal(!second(x_b), x))
-     proof:
+     proof =
      <1>1 assume x in Self,
           assume H: !second_case(x),
           prove !equal(!second(!second_term(x)), x)
           <2>1 prove BB!equal(!second_term(!second(!second_term(x))),
-			     !second_term(x))
+                             !second_term(x))
                by property !second_reverses_term
           <2>2 prove !second_case(!second(!second_term(x)))
                by property !second_has_case
@@ -312,7 +312,7 @@ species Categorical_sum_property
 
   theorem morph_first_substitution_rule: all x y in S,
     S!equal(x, y) -> S!first_case(x) -> E!equal(!morph(x), !morph(y))
-  proof:
+  proof =
     <1>1 assume x in S, assume y in S,
          assume H : S!equal(x, y),
          assume H_x : S!first_case(x),
@@ -332,7 +332,7 @@ species Categorical_sum_property
 
   theorem morph_second_substitution_rule: all x y in S,
     S!equal(x, y) -> S!second_case(x) -> E!equal(!morph(x), !morph(y))
-  proof:
+  proof =
     <1>1 assume x in S, assume y in S,
          assume H : S!equal(x, y),
          assume H_x : S!second_case(x),
@@ -369,12 +369,12 @@ species Disjoint_sum(A is Setoid, B is Setoid)
   (** Each part is strictly included by its components *)
   theorem sum_is_non_trivial: all x in A, all y in B,
     ~(!equal(!first(x), !second(y)))
-  proof: by property !first_has_case, !second_has_case, 
+  proof = by property !first_has_case, !second_has_case, 
                      !case_exclusive, !equal_spec;
 
   (** A sum has at least two distinct elements *)
   theorem sum_has_distinct: ex x in Self, ex y in Self, !different(x, y)
-  proof:
+  proof =
     <1>1 prove ~(!equal(!first(A!element), !second(B!element)))
          <2>1 prove ~(!second_case(!first(A!element)))
               by property !first_has_case, !case_exclusive
