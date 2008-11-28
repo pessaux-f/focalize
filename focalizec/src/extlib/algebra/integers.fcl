@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: integers.fcl,v 1.3 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: integers.fcl,v 1.4 2008-11-28 10:09:22 pessaux Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called 
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -91,7 +91,7 @@ species Enumerated_system
   theorem enumerated_induction: all p in (Self -> prop),
     p (!start) -> (all n in Self, p (n) -> p (!successor (n)))
       -> (all n in Self, p (n))
-    proof : assumed {* Because todo *} ;
+    proof = assumed {* Because todo *} ;
 end ;;
 
 (**
@@ -107,7 +107,7 @@ species Ordered_Enumeration_system inherits Enumeration_system =
   property lt_is_anti_symmetric: all x y in Self,
     !lt (x, y) -> ~ (!lt (y, x)) ;
   theorem lt_is_irreflexive: all x in Self, ~ (!lt(x, x))
-    proof: by property lt_is_anti_symmetric ;
+    proof = by property lt_is_anti_symmetric ;
   (** Transitivity *)
   property lt_is_transitive: all x y z in Self,
     !lt (x, y) -> !lt (y, z) -> !lt (x, z) ;
@@ -119,10 +119,10 @@ species Ordered_Enumeration_system inherits Enumeration_system =
   (* [Usure] : j'ai remplacé la doc par un simple commentaire @mathml <leq/> *)
   let leq (x, y) = basics#or_b (!equal (x, y), !lt (x, y)) ;
   theorem leq_is_reflexive: all x y in Self, !equal (x, y) -> !leq (x, y)
-    proof: by definition of leq ;
+    proof = by definition of leq ;
   theorem leq_is_antisymmetric: all x y in Self,
     !leq (x, y) -> !leq (y, x) -> !equal (x, y)
-    proof:
+    proof =
       <1>1 assume x in Self,
            assume y in Self,
            assume Hxy: !leq (x, y),
@@ -154,7 +154,7 @@ species Ordered_Enumeration_system inherits Enumeration_system =
   theorem leq_is_transitive: all x y z in Self,
     !leq (x, y) -> !leq (y, z) -> !leq (x, z)
     (* [rr]: todo *)
-    proof: assumed {* Because todo *} ;
+    proof = assumed {* Because todo *} ;
 
   (** Properties which state that the ordering
      is induced by the successor function *)
@@ -187,7 +187,7 @@ species Number_system
 (*   let mult2 (x) = !plus (x, x) ; *)
 (*   theorem mult2_spec: all x in Self, *)
 (*     !equal(!mult2(x), !plus(x, x)) *)
-(*     proof: by property !equal_reflexive definition of mult2; *)
+(*     proof = by property !equal_reflexive definition of mult2; *)
 
 (*   proof of mult2_substitution_rule = assumed {* Because todo *} ; *)
 (*   proof of mult2_is_injective = assumed {* Because todo *} ; *)
@@ -260,12 +260,12 @@ species Integer_system
   (** some properties are common between integers and naturals *)
   theorem predecessor_is_injective: all x y in Self,
     !equal (!successor (x), !successor (y)) -> !equal (x, y)
-    proof: assumed {* Because todo *} ;
+    proof = assumed {* Because todo *} ;
 
   theorem predecessor_reverses_successor: all x y in Self,
     !equal (x, !successor (y)) -> !equal (y, !predecessor (x))
-    proof: assumed {* Because temporarily unvailable in new version *} ;
-(*    proof: by !opposite_is_opposite, !opposite_substitution_rule, *)
+    proof = assumed {* Because temporarily unvailable in new version *} ;
+(*    proof = by !opposite_is_opposite, !opposite_substitution_rule, *)
 (*              !equal_reflexive, !equal_symmetric, !equal_transitive *)
 (*          def !minus, !predecessor ; *)
 

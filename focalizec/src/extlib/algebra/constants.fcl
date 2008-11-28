@@ -25,7 +25,8 @@ species Setoid_with_zero inherits Setoid =
   let is_zero(x) = !equal(x, !zero) ;
   theorem is_zero_spec: all x in Self,
     !is_zero(x) <-> (!equal (x, !zero) \/ !equal (!zero, x))
-    proof: by definition of is_zero property !equal_reflexive, !equal_symmetric;
+    proof = by definition of is_zero
+               property !equal_reflexive, !equal_symmetric;
 
 end ;;
 
@@ -40,7 +41,7 @@ species Setoid_with_one inherits Setoid =
   let element = Self!one ;
   theorem is_one_spec: all x in Self,
     !is_one(x) <-> (!equal (x, !one) \/ !equal (!one, x))
-    proof: by definition of is_one property !equal_reflexive, !equal_symmetric;
+    proof = by definition of is_one property !equal_reflexive, !equal_symmetric;
 
 end ;;
 

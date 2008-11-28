@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: weak_structures.fcl,v 1.3 2008-10-29 15:27:55 rr Exp $ *)
+(* $Id: weak_structures.fcl,v 1.4 2008-11-28 10:09:22 pessaux Exp $ *)
 
 (** We define here some weak notions such as rings with no subtraction. *)
 
@@ -149,7 +149,7 @@ species Semi_algebra (R is Commutative_semi_ring)
       !equal (!lift (R!plus (R!mult (a, x), R!mult (b, y))),
               !plus (!mult (!lift (a), !lift (x)),
                      !mult (!lift (b), !lift (y))))
-      proof: assumed {* Because todo *} ;
+      proof = assumed {* Because todo *} ;
 end ;;
 
 
@@ -221,7 +221,7 @@ species Torsion_free_semi_algebra(R is Integral_semi_ring)
      basics#is_failed (!module_recip (a))
      \/
      !is_one (!mult (!lift (a), basics#non_failed (!module_recip (a))))
-     proof: assumed {* Because todo *} ;
+     proof = assumed {* Because todo *} ;
 end ;;
 
 
@@ -321,7 +321,7 @@ species Euclidean_semi_ring inherits Factorial_semi_ring =
    !is_zero (y)
    \/
    !equal (x, !plus (!mult (!quotient (x, y), y), !remainder (x, y)))
-   proof : assumed {* Because todo *} ;
+   proof = assumed {* Because todo *} ;
 
  property remainder_is_smaller: all x y z in Self,
    !is_zero (y)

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: iterators.fcl,v 1.5 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: iterators.fcl,v 1.6 2008-11-28 10:09:22 pessaux Exp $ *)
 
 (** Basic techniques to iterate a process including very simple numbers. *)
 
@@ -46,17 +46,17 @@ species Iteration (Nat is Ordered_Enumeration_system, S is Setoid,
    let rec iterate (x in S, n in Nat) in S =
      if Nat!equal (n, Nat!start) then zero
      else F_binary!binop (x, !iterate (x, Nat!predecessor (n)))
-   termination proof: order Nat!lt on n
+   termination proof = order Nat!lt on n
      assumed {* *};
 
    theorem iterate_spec_base: all x in S,
      S!equal(!iterate(x, Nat!start), zero)
-     proof: assumed {* [rr]: to do *};
+     proof = assumed {* [rr]: to do *};
 
    theorem iterate_spec_ind: all x in S, all n in Nat,
      S!equal(!iterate(x, Nat!successor(n)),
 	     F_binary!binop(x, !iterate(x, n)))
-     proof: assumed {* [rr]: to do *};
+     proof = assumed {* [rr]: to do *};
 
 end ;;
 
@@ -116,14 +116,14 @@ species Dichotomic_system
 
   theorem zero_images_by_div2: all n in Self, !equal (!div2 (n), !zero) ->
    (!equal (n, !zero) \/ !equal (n, !one))
-  proof: assumed {* Because todo *} ;
+  proof = assumed {* Because todo *} ;
 
 (*    (\** an induction principle for dichotomy *\)  *)
 (*   theorem dichotomic_principle: all p in (Self -> Prop), *)
 (*     p(!zero) -> *)
 (*       (all n in Self, (p(n) -> (p(!mult2(n)) /\ p(!successor(!mult2(n)))))) -> *)
 (*          (all n in Self, p(n)) *)
-(*     proof: assumed {* Because todo *} *)
+(*     proof = assumed {* Because todo *} *)
 (*     ; *)
 
 end ;;

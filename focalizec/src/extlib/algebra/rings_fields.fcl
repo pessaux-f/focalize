@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rings_fields.fcl,v 1.4 2008-11-13 10:43:19 pessaux Exp $ *)
+(* $Id: rings_fields.fcl,v 1.5 2008-11-28 10:09:22 pessaux Exp $ *)
 
 (** Definitions for Rings, Modules, Algebras and Fields. *)
 
@@ -112,7 +112,7 @@ end ;;
 species Module (R is Ring) inherits Left_semi_module (R), Additive_group =
     theorem zero_left_absorbes: all x in Self,
       !equal (!mult (R!zero, x), !zero)
-      proof: assumed {* Because todo *} ;
+      proof = assumed {* Because todo *} ;
 end ;;
 
 (** A commutative ring has commutative multiplication *)
@@ -198,7 +198,7 @@ species Euclidean_domain inherits Euclidean_semi_ring, Gcd_domain =
     !equal (weak_structures#gcd (!bezout (x, y)),
              !plus (!mult (weak_structures#coef1 (!bezout (x, y)), x),
                     !mult (weak_structures#coef2 (!bezout (x, y)), y)))
-    proof: assumed {* Because todo *} ;
+    proof = assumed {* Because todo *} ;
 end ;;
 
 
@@ -251,4 +251,4 @@ species Ordered_field inherits Ordered_gcd_domain, Real_field = end ;;
 (*                Ouf !                                                   *)
 (*                                                                        *)
 
-(* $Id: rings_fields.fcl,v 1.4 2008-11-13 10:43:19 pessaux Exp $ *)
+(* $Id: rings_fields.fcl,v 1.5 2008-11-28 10:09:22 pessaux Exp $ *)
