@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.64 2008-11-25 15:21:45 doligez Exp $
+# $Id: Makefile,v 1.65 2008-11-28 09:52:42 pessaux Exp $
 
 ROOT_DIR = ..
 
@@ -147,8 +147,11 @@ clean::
 	$(RM) $(FOCALIZE_VOS) $(FOCALIZE_VOS_UNSAFE)
 	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)
 
-depend:: $(FOCALIZE_SRC)
-	foqdep $@ >>.depend
 
-depend:: $(FOCALIZE_VS)
-	coqdep $@ >>.depend
+depend::
+
+#depend:: $(FOCALIZE_SRC)
+#	foqdep $@ >>.depend
+
+#depend:: $(FOCALIZE_VS)
+#	coqdep $@ >>.depend
