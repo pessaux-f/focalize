@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.22 2008-11-19 16:10:21 pessaux Exp $
+% $Id: constructs_syntax.tex,v 1.23 2008-11-28 10:17:48 pessaux Exp $
 
 
 
@@ -1512,7 +1512,7 @@ end ;;
 \begin{lstlisting}
  theorem zero_is_unique : all o in Self,
   (all x in Self, !equal (x, !plus (x, o))) -> !equal (o, !zero)
-  proof:
+  proof =
          <1>1 assume o in Self,
               assume H1: all x in Self, !equal (x, !plus (x, o)),
               prove !equal (o, !zero)
@@ -1573,7 +1573,7 @@ the proof by the keyword {\tt proof} followed by a colon character
 \begin{syntax}
 \syntaxclass{Theorems:}
 theorem & ::= & \terminal{theorem}\ lident\ \terminal{:}\ logical\_expr
-                \ \terminal{proof :}\ proof
+                \ \terminal{proof =}\ proof
 \end{syntax}
 
 \noindent For instance:
