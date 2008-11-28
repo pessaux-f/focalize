@@ -31,7 +31,7 @@ module ScopeInformation :
 
     type species_scope =
       | SPBI_file of Types.fname
-      | SPBI_local
+      | SPBI_parameter
 
     type species_parameter_kind = SPK_in | SPK_is
 

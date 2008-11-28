@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.71 2008-10-17 06:13:34 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.72 2008-11-28 16:44:20 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1468,10 +1468,9 @@ and scope_let_definition ~toplevel_let ctx env let_def =
     List.map scope_binding let_def_descr.Parsetree.ld_bindings in
   (* Now, scope the optional termination proof. *)
   let scoped_termination_proof =
-    (* In order to scope this proof we need to construct a second
-     * environment which contains the scoped parameters of the
-     * functions being defined
-     * (see documentation on [scope_termination_proof]). *)
+    (* In order to scope this proof we need to construct a second environment
+        which contains the scoped parameters of the functions being defined
+       (see documentation on [scope_termination_proof]). *)
     let env_with_all_params =
       List.fold_left add_binding_parameters env scoped_bindings in
     match let_def_descr.Parsetree.ld_termination_proof with
@@ -1647,8 +1646,8 @@ let scope_proof_def ctx env proof_def =
 
 let scope_termination_proof_profile ctx env profile =
   let profile_desc = profile.Parsetree.ast_desc in
-  (* One must first search the function name in the environment.      *)
-  (* We embedd the [vname] inside a dummy [ident] in order to lookup. *)
+  (* One must first search the function name in the environment. We embedd the
+     [vname] inside a dummy [ident] in order to lookup. *)
   let fake_ident = {
     Parsetree.ast_desc = Parsetree.EI_local profile_desc.Parsetree.tpp_name ;
     (* Roughly correction as a location, even is not exact. *)
@@ -1662,13 +1661,13 @@ let scope_termination_proof_profile ctx env profile =
   match hosting_info with
    | Env.ScopeInformation.SBI_method_of_self ->
        (begin
-       (* One can only enounce a delayed termination *)
-       (* proof of method for the current species.   *)
-       (* Now, we should ensure that the parameters provided in the profile *)
-       (* really exist among the method's parameters. But since we do not   *)
-       (* have the previous fields available here, this will be delayed at  *)
-       (* typing -stage.                                                    *)
-       (* We only scope the types if some are specified.                    *)
+       (* One can only enounce a delayed termination proof of method for the
+          current species.
+          Now, we should ensure that the parameters provided in the profile
+          really exist among the method's parameters. But since we do not
+          have the previous fields available here, this will be delayed at
+          typing -stage.
+          We only scope the types if some are specified. *)
        let scoped_args =
          List.map
            (fun (arg_name, arg_ty) ->
@@ -1697,10 +1696,9 @@ let scope_termination_proof_def ctx env termination_proof_def =
   let scoped_term_proof_profiles =
     List.map
       (scope_termination_proof_profile ctx env) desc.Parsetree.tpd_profiles in
-  (* In order to scope this proof we need to construct a second
-     * environment which contains the scoped parameters of the
-     * functions being defined
-     * (see documentation on [scope_termination_proof]). *)
+  (* In order to scope this proof we need to construct a second environment
+     which contains the scoped parameters of the functions being defined
+     (see documentation on [scope_termination_proof]). *)
   let env_with_params =
     let add_argument env (name, _) =
       Env.ScopingEnv.add_value name
@@ -1727,7 +1725,7 @@ let scope_termination_proof_def ctx env termination_proof_def =
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.property_def ->    *)
 (*   (Parsetree.property_def * Parsetree.vname)                        *)
 (* {b Descr} : Scopes a property definition and return both the scoped
-             roperty definition and its name as a [vname].
+   property definition and its name as a [vname].
 
    {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************* *)
@@ -1753,11 +1751,10 @@ let scope_property_def ctx env property_def =
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.species_field -> *)
 (*   (Parsetree.species_field * (Parsetree.vname list))              *)
 (* {b Descr} : Scopes a species field and return both the scoped
-             field and its names as a [vname list] they must be
-             inserted later in the scoping environment as a values.
-             Especially, [rep] and [proof] and [termination_proof]
-             are not methods hence are not values to bind in the
-             environment.
+   field and its names as a [vname list] they must be inserted later
+   in the scoping environment as a values.
+   Especially, [rep] and [proof] and [termination_proof] are not
+   methods hence are not values to bind in the environment.
 
    {b Rem} : Not exported outside this module.                       *)
 (* ***************************************************************** *)
@@ -1796,9 +1793,9 @@ let rec scope_species_fields ctx env = function
   | [] -> ([], [])
   | field :: rem ->
       let (scoped_field, names) = scope_species_field ctx env field in
-      (* All the methods a always inserted as [SBI_method_of_self], the *)
-      (* [find_value] taking care of changing to [SBI_method_of_coll]   *)
-      (* when required.                                                 *)
+      (* All the methods a always inserted as [SBI_method_of_self], the
+        [find_value] taking care of changing to [SBI_method_of_coll] when
+         required. *)
       let env' =
         List.fold_left
           (fun accu_env method_name ->
@@ -1818,15 +1815,14 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
   | Parsetree.E_self -> initial_expr
   | Parsetree.E_constr (cstr_expr, []) ->
-      (* We re-construct a fake ident from the constructor expression  *)
-      (* just to be able to lookup inside the environment. Be careful, *)
-      (* in order to allow to acces "opened" species, we must check if *)
-      (* we have a qualification (even being [None]) to create either  *)
-      (* a GLOBAL or a LOCAL ident. If we don't have any module        *)
-      (* qualification, we must create a LOCAL ident otherwsise,       *)
-      (* [~allow_opened] in [find_species] will get stucked at [false] *)
-      (* and we won't see the opended species. Otherwise, we create a  *)
-      (* GLOBAL identifier.                                            *)
+      (* We re-construct a fake ident from the constructor expression just to
+         be able to lookup inside the environment. Be careful, in order to
+         allow to acces "opened" species, we must check if we have a
+         qualification (even being [None]) to create either a GLOBAL or a
+         LOCAL ident. If we don't have any module qualification, we must
+         create a LOCAL ident otherwsise, [~allow_opened] in [find_species]
+         will get stucked at [false] and we won't see the opended species.
+         Otherwise, we create a GLOBAL identifier. *)
       let Parsetree.CI qvname = cstr_expr.Parsetree.ast_desc in
       let pseudo_ident = { cstr_expr with
         Parsetree.ast_desc = 
@@ -1837,12 +1833,12 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
         Env.ScopingEnv.find_species
           ~loc: pseudo_ident.Parsetree.ast_loc
           ~current_unit: ctx.current_unit pseudo_ident env in
-      (* Recover the hosting file of the species. If the species is     *)
-      (* local, then the hosting ffile is the current compilation unit. *)
+      (* Recover the hosting file of the species. If the species is a
+         parameter, then the hosting file is the current compilation unit. *)
       let hosting_file =
         (match species_info.Env.ScopeInformation.spbi_scope with
          | Env.ScopeInformation.SPBI_file n -> n
-         | Env.ScopeInformation.SPBI_local -> ctx.current_unit) in
+         | Env.ScopeInformation.SPBI_parameter -> ctx.current_unit) in
       let scoped_cstr_expr = {
         cstr_expr with
           Parsetree.ast_desc =
@@ -1864,10 +1860,10 @@ let scope_species_param ctx env param param_kind =
          (begin
          match param_kind with
           | Env.ScopeInformation.SPK_is ->
-              (* Note that to be well-typed this expression must ONLY be an *)
-              (* [E_constr] (because species names are capitalized, parsed  *)
-              (* as sum type constructors) that should be considered as a   *)
-              (* species name.                                              *)
+              (* Note that to be well-typed this expression must ONLY be an
+                 [E_constr] (because species names are capitalized, parsed as
+                 sum type constructors) that should be considered as a species
+                 name. *)
               Parsetree.SP
         (scope_expr_collection_cstr_for_is_param ctx env expr)
           | Env.ScopeInformation.SPK_in ->
@@ -1882,14 +1878,13 @@ let scope_species_param ctx env param param_kind =
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.species_expr ->     *)
 (*   (Parsetree.species_expr * Parsetree.vname list)                    *)
 (** {b Descr} : Scopes a species expression. Returns the scoped
-              expression, the list of methods names this expression
-              has. This may be used when binding a new collection name
-              (a parameter indeed) to a species expression, in order
-              to "transfer" the methods of the expression to the bound
-              identifier.
-              Hence, in [species ... (C is Spec) = ... C#m], one will
-              be able to check that C really has a [m] method providing
-              that [Spec] has also it.
+    expression, the list of methods names this expression has. This may
+    be used when binding a new collection name (a parameter indeed) to
+    a species expression, in order to "transfer" the methods of the
+    expression to the bound identifier.
+    Hence, in [species ... (C is Spec) = ... C#m], one will be able to
+    check that C really has a [m] method providing that [Spec] has also
+    it.
 
     {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************** *)
@@ -1904,9 +1899,9 @@ let rec scope_species_expr ctx env species_expr =
   let basic_vname = unqualified_vname_of_ident se_name_ident in
   let scoped_ident_descr =
     match ident_scope_info.Env.ScopeInformation.spbi_scope with
-    | Env.ScopeInformation.SPBI_local -> Parsetree.I_local basic_vname
-    | Env.ScopeInformation.SPBI_file hosting_file ->
-      Parsetree.I_global (Parsetree.Qualified (hosting_file, basic_vname)) in
+     | Env.ScopeInformation.SPBI_parameter -> Parsetree.I_local basic_vname
+     | Env.ScopeInformation.SPBI_file hosting_file ->
+         Parsetree.I_global (Parsetree.Qualified (hosting_file, basic_vname)) in
   let scoped_ident = {
     se_name_ident with Parsetree.ast_desc = scoped_ident_descr } in
   (* Scopes the effective parameters. *)
@@ -1917,8 +1912,8 @@ let rec scope_species_expr ctx env species_expr =
         species_expr_descr.Parsetree.se_params
         ident_scope_info.Env.ScopeInformation.spbi_params_kind
     with Invalid_argument ("List.map2") ->
-      (* If List.map2 fails, that's because the 2 lists are of different     *)
-      (* length, then the species is applied to a wrong number of arguments. *)
+      (* If List.map2 fails, that's because the 2 lists are of different
+         lengths, then the species is applied to a wrong number of arguments. *)
       let expected =
         List.length ident_scope_info.Env.ScopeInformation.spbi_params_kind in
       let used_with = List.length species_expr_descr.Parsetree.se_params in
@@ -1935,18 +1930,18 @@ let rec scope_species_expr ctx env species_expr =
 
 
 
-(* *********************************************************************** *)
-(* scoping_context -> Env.ScopingEnv.t ->                                  *)
-(*   (Parsetree.species_expr list) Parsetree.ast_doc ->                    *)
-(*     ((Parsetree.species_expr list) ast_doc * Parsetree.vname list)      *)
+(* ********************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t ->                                 *)
+(*   (Parsetree.species_expr list) Parsetree.ast_doc ->                   *)
+(*     ((Parsetree.species_expr list) ast_doc * Parsetree.vname list)     *)
 (** {b Descr} : Scopes the inheritance specification of a species. This
-              specification  is a list of species expressions. By the way,
-              returns the list of methods inherited from this tree.
-              This list of methods contains those of the first inherited
-              species in head, then the laters...
+    specification  is a list of species expressions. By the way, returns
+    the list of methods inherited from this tree.
+    This list of methods contains those of the first inherited species in
+    head, then the laters...
 
-    {b Rem} : Not exported outside this module.                            *)
-(* *********************************************************************** *)
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
 let scope_inheritance ctx env spec_exprs =
   let spec_exprs_descr = spec_exprs.Parsetree.ast_desc in
   let (scoped_exprs_descs, methods) =
@@ -1999,7 +1994,7 @@ let scope_species_params_types ctx env params =
             let basic_vname = unqualified_vname_of_ident ident in
             let scoped_ident_descr =
               match ident_scope_info.Env.ScopeInformation.spbi_scope with
-              | Env.ScopeInformation.SPBI_local ->
+              | Env.ScopeInformation.SPBI_parameter ->
                   Parsetree.I_local basic_vname
               | Env.ScopeInformation.SPBI_file hosting_file ->
                   Parsetree.I_global
@@ -2032,7 +2027,7 @@ let scope_species_params_types ctx env params =
                 ~loc: spec_expr.Parsetree.ast_loc
                 param_name
                 { Env.ScopeInformation.spbi_scope =
-                    Env.ScopeInformation.SPBI_local;
+                    Env.ScopeInformation.SPBI_parameter ;
                   (* Because parameters are indeed COLLECTION parameters (i.e.
                      are intended to be finally instanciated to a collection),
                      they have no ... parameters, them. *)

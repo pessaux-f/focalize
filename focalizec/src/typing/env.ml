@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.115 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: env.ml,v 1.116 2008-11-28 16:44:19 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -289,7 +289,7 @@ module ScopeInformation = struct
       (** The identifier is a locally bound collection like in the case of a
           "is"-bound parameter (i.e. [c is ...]) where [c] is then considered
           as a local collection). *)
-    | SPBI_local
+    | SPBI_parameter
 
 
 

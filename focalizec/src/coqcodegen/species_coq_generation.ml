@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.135 2008-11-28 09:55:57 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.136 2008-11-28 16:44:19 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1052,6 +1052,20 @@ type species_param_or_topleve_species =
 
 
 
+(** {b Descr} : Helper... *)
+let exists_among_parameters_from_dependencies param_name deps_from_params =
+  List.exists
+    (fun (p ,_) ->
+      match p with
+       | Env.TypeInformation.SPAR_in (_, _, _) -> false
+       | Env.TypeInformation.SPAR_is ((_, p), _, _, _, _) ->
+           (Parsetree.Vuident p) = param_name)
+    deps_from_params
+;;
+
+
+
+
 (* *********************************************************************** *)
 (** {b Descr} : Handle the subcase of [zenonify_by_property] in the case
     where the method used by the proof has a qualified name.
@@ -1068,17 +1082,22 @@ type species_param_or_topleve_species =
 let zenonify_by_property_when_qualified_method ctx print_ctx env
     dependencies_from_params by_prop_expr_ident from_qcollname meth_vname =
   let out_fmter = ctx.Context.scc_out_fmter in
-  (* There is a qualification on the method. If this qualification does not
-     have a module name or have a module name that is the same than the
-     current compilation unit, then may be the method comes from a species
-     parameter. *)
+  (* We search if the [from_qcollname] has the same name than one of the
+     species parameters. For this, either [from_qcollname] has no qualification
+     hence is implicitely in the current compilation unit or is qualified with
+     the same file name that the current compilation unit. *)
   let param_or_topl_species_to_search_opt =
     (match from_qcollname with
      | Parsetree.Vname param_name ->
          (* Implicitely in the current compilation unit. *)
-         SPOTS_param param_name
+         if exists_among_parameters_from_dependencies
+             param_name dependencies_from_params then
+           SPOTS_param param_name
+         else
+           SPOTS_toplevel_species (ctx.Context.scc_current_unit, param_name)
      | Parsetree.Qualified (mod_name, species_name) ->
-         if mod_name = ctx.Context.scc_current_unit then
+         if exists_among_parameters_from_dependencies
+             species_name dependencies_from_params then
            SPOTS_param species_name
          else SPOTS_toplevel_species (mod_name, species_name)) in
   match param_or_topl_species_to_search_opt with
@@ -2201,7 +2220,7 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
               env order_expr ;
             (* Now apply this expression to the 2 tuples of used arguments
                extracted by the 2 "matchs". *)
-	    Format.fprintf out_fmter "@ " ;
+            Format.fprintf out_fmter "@ " ;
             print_idents_as_tuple out_fmter printed1 ;
             Format.fprintf out_fmter "@ " ;
             print_idents_as_tuple out_fmter printed2 ;
