@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.17 2008-06-23 16:26:25 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.18 2008-11-28 09:55:57 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -173,18 +173,35 @@ let list_substract l1 l2 =
 
 
 
-(* ********************************************************************* *)
-(* 'a -> 'a list -> 'a list                                              *)
+(* ********************************************************************** *)
+(* 'a -> 'a list -> int                                                   *)
 (** {b Descr} : Returns the index in the list [l] where the element [e]
               was found. Raises [Not_found] if [e] doesn't belong to [l].
 
-    {b Rem} : Exported outside this module.                              *)
-(* ********************************************************************* *)
+    {b Rem} : Exported outside this module.                               *)
+(* ********************************************************************** *)
 let list_mem_count e l =
   let rec rec_find counter = function
     | [] -> raise Not_found
     | h :: q ->
         if h = e then counter else rec_find (counter + 1) q in
+  rec_find 0 l
+;;
+
+
+
+(* ********************************************************************** *)
+(* ('a -> 'b -> bool) -> 'b -> 'a list -> int                             *)
+(** {b Descr} : Returns the index in the list [l] where the element [e]
+              was found. Raises [Not_found] if [e] doesn't belong to [l].
+
+    {b Rem} : Exported outside this module.                               *)
+(* ********************************************************************** *)
+let list_mem_count_custom_eq eq_fct e l =
+  let rec rec_find counter = function
+    | [] -> raise Not_found
+    | h :: q ->
+        if eq_fct h e then counter else rec_find (counter + 1) q in
   rec_find 0 l
 ;;
 
@@ -242,7 +259,7 @@ let list_concat_uniq l1 l2 = list_concat_uniq_custom_eq ( = ) l1 l2 ;;
 
 
 (* ************************************************************************ *)
-(* ('a -> 'a -> bool) -> 'a -> 'a list -> bool                              *)
+(* ('a -> 'b -> bool) -> 'b -> 'a list -> bool                              *)
 (** {b Descr} : Test if the element [e] belongs to the list [l]. The
               comparision function used to test the equality is provided by
               the argument [eq_fct].
@@ -257,6 +274,7 @@ let list_mem_custom_eq eq_fct e l =
     | h :: q -> if eq_fct h e then true else rec_mem q in
   rec_mem l
 ;;
+
 
 
 

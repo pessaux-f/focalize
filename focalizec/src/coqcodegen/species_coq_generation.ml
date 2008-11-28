@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.134 2008-11-25 13:30:36 doligez Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.135 2008-11-28 09:55:57 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2058,27 +2058,163 @@ let print_types_as_tuple_if_several print_ctx out_fmter types =
 
 
 
-let generate_termination_proof _ctx _print_ctx _env _name = function
-  | None -> ()
-(*     "Variable self_term_order_%a"
-     "Variable self_term_obl_%a" *)
-  | Some _termination_proof -> ()
-     (* Abstraction par lambda *)
-(*     "Definition %a__term_order_%a"
-     "Let self_term_order_%a" *)
+(* ************************************************************** *)
+(* ('a * 'b) list -> ('a * 'c) list -> ('a * bool) list           *)
+(** {Descr}: Find the variables that must be kept in the pattern
+    representing the tuple of a recursive function's arguments
+    the termination order, applies on them. For each variable of
+    the function (i.e. those in the list [fun_params_n_tys]) we
+    make a couple in the result with this variable's name and the
+    boolean value telling if the variable appears in the pattern.
 
-     (* Abstraction par Variable *)
-(*     "Section"
-     "Theorem %a__term_obl_%a %a"
-     "End"
+    {Rem} : Not exported outside this module.                     *)
+(* ************************************************************** *)
+let pattern_from_used_variables fun_params_n_tys vars_used_by_order =
+  let rec rec_find = function
+    | [] -> []
+    | (h, _) :: q ->
+        (* Check if this function parameter is used by the order... *)
+        let component =
+          if Handy.list_mem_custom_eq
+              (fun (n, _) n' -> n = n') h vars_used_by_order then (h, true)
+          else (h, false) in
+        component :: (rec_find q) in
+  rec_find fun_params_n_tys
+;;
 
-     "Let self_term_obl_%a " *)
+
+
+(* ************************************************************************ *)
+(** {b Descr} : Prints the structure of the pattern with for each retained
+    variable (i.e. whose presence = [true]) its name followed by the string
+    [suffix] or "_" if the variable is not retained.
+    Note that the parentheses surrouding the pattern are printed by this
+    function.
+    Returns the list of generated idents as [Vlident]s.
+
+    {Rem} : Not exported outside this module.                               *)
+(* ************************************************************************ *)
+let print_pattern_for_order out_fmter ~var_suffix description =
+  let rec rec_print = function
+    | [] -> assert false
+    | [(last_name, last_presence)] ->
+        (begin
+        if last_presence then
+          (Format.fprintf out_fmter "__%a%s"
+             Parsetree_utils.pp_vname_with_operators_expanded last_name
+             var_suffix ;
+           [Parsetree.Vlident
+              ((Parsetree_utils.name_of_vname last_name) ^ var_suffix)])
+        else 
+          (Format.fprintf out_fmter "_" ;
+           [])
+        end)
+    | (name, presence) :: q ->
+        let printed =
+          if presence then
+            (Format.fprintf out_fmter "__%a%s,@ "
+               Parsetree_utils.pp_vname_with_operators_expanded name
+               var_suffix ;
+             [Parsetree.Vlident
+                ((Parsetree_utils.name_of_vname name) ^ var_suffix)])
+          else
+            (Format.fprintf out_fmter "_,@ " ; []) in
+        printed @ (rec_print q) in
+  Format.fprintf out_fmter "(" ;
+  let printed = rec_print description in
+  Format.fprintf out_fmter ")" ;
+  printed
+;;
+
+
+
+let print_idents_as_tuple out_fmter idents =
+  let rec rec_print = function
+    | [] -> assert false
+    | [last] ->
+        Format.fprintf out_fmter "%a"
+          Parsetree_utils.pp_vname_with_operators_expanded last
+    | h :: q ->
+        Format.fprintf out_fmter "%a,@ "
+          Parsetree_utils.pp_vname_with_operators_expanded h ;
+        rec_print q in
+  Format.fprintf out_fmter "(" ;
+  rec_print idents ;
+  Format.fprintf out_fmter ")"
+;;
+
+
+
+let generate_termination_order ctx print_ctx env name fun_params_n_tys
+    opt_term_pr =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  (* The order's name: the function's name + "_wforder". *)
+  Format.fprintf out_fmter "@[<2>Definition %a_wforder"
+    Parsetree_utils.pp_vname_with_operators_expanded name ;
+  (* [Unsure] Les lambda-lifts... *)
+  (* The 2 arguments of any decent order (i.e. the compared values). *)
+  Format.fprintf out_fmter "@ (__x __y :@ " ;
+  Types.purge_type_simple_to_coq_variable_mapping () ;
+  (* Print the tuple that is the method's arguments' types. *)
+  Format.fprintf out_fmter "%a) :@ Prop :=@ "
+    (print_types_as_tuple_if_several print_ctx) fun_params_n_tys ;
+  (* Now we need to generate the order's body depending on the kind of the used
+     termination method. *)
+  match opt_term_pr with
+   | None ->
+       (* No termination proof is done. We will generate by default an assumed
+          proof. Anyway, the compiler issued a warning to the user. *)
+       Format.fprintf out_fmter "coq_builtins.magic_order@ __x@ __y.@]"
+   | Some term_pr ->
+       (begin
+       match term_pr.Parsetree.ast_desc with
+        | Parsetree.TP_structural _ ->
+            failwith "TODO: structural."  (* [Unsure] *)
+        | Parsetree.TP_lexicographic _ ->
+            failwith "TODO: lexicographic."  (* [Unsure] *)
+        | Parsetree.TP_measure (_, _, _) ->
+            failwith "TODO: measure."  (* [Unsure] *)
+        | Parsetree.TP_order (order_expr, order_args, _proof) ->
+            (* Get the indices of the variables the pattern must bind. *)
+            let pattern_description =
+              pattern_from_used_variables fun_params_n_tys order_args in
+            (* Generate the 2 match to retrieve arguments used by our order. *)
+            Format.fprintf out_fmter "@[<2>match@ __x@ with@\n" ;
+            let printed1 =
+              print_pattern_for_order
+                out_fmter ~var_suffix: "1" pattern_description in
+            Format.fprintf out_fmter " =>@\n" ;
+            Format.fprintf out_fmter "@[<2>match@ __x@ with@\n" ;
+            let printed2 =
+              print_pattern_for_order
+                out_fmter ~var_suffix: "2" pattern_description in
+            Format.fprintf out_fmter " =>@\n(" ;
+            (* Now, generate the Coq translation of the expression of the
+               order. *)
+            let local_idents =
+              printed2 @ printed1 @
+              [ Parsetree.Vlident "__x"; Parsetree.Vlident "__y" ] in
+            Species_record_type_generation.generate_expr
+              ctx ~local_idents ~in_recursive_let_section_of: [name]
+              ~self_methods_status:
+                Species_record_type_generation.SMS_abstracted
+              env order_expr ;
+            (* Now apply this expression to the 2 tuples of used arguments
+               extracted by the 2 "matchs". *)
+	    Format.fprintf out_fmter "@ " ;
+            print_idents_as_tuple out_fmter printed1 ;
+            Format.fprintf out_fmter "@ " ;
+            print_idents_as_tuple out_fmter printed2 ;
+            (* Close the 2 boxes of the "matchs" and the box of the whole
+               "Definition" of the order. *)
+            Format.fprintf out_fmter ")@\nend@]@\nend@].@]@\n"
+       end)
 ;;
 
 
 
 let generate_defined_recursive_let_definition ctx print_ctx env
-    generated_fields from name params scheme body ai =
+    generated_fields from name params scheme body _opt_term_pr ai =
   let out_fmter = ctx.Context.scc_out_fmter in
   match body with
    | Parsetree.BB_logical _ ->
@@ -2098,6 +2234,30 @@ let generate_defined_recursive_let_definition ctx print_ctx env
        (* Open the "Section" and "Module" for the recursive definition. *)
        Format.fprintf out_fmter "@[<2>Module Termination_%a_namespace.@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name ;
+       (* We get the function's parameters and their types. This will serve
+          at various stage, each time we will need to speak about a
+          parameter. *)
+       (* For [bind_parameters_to_types_from_type_scheme], not that we do not
+          have anymore information about "Self"'s structure... *)
+       let (params_with_type, return_ty_opt, _) =
+         MiscHelpers.bind_parameters_to_types_from_type_scheme
+           ~self_manifest: None (Some scheme) params in
+       (* Just remove the option that must always be Some since we provided
+          a scheme. *)
+       let params_with_type =
+         List.map
+           (fun (n, opt_ty) ->
+             match opt_ty with None -> assert false | Some t -> (n, t))
+           params_with_type in
+       let return_ty =
+         match return_ty_opt with None -> assert false | Some t -> t in
+       (* Generate the order. *)
+(* [Unsure] Disablé pour la release Alpha.
+       generate_termination_order
+         ctx' print_ctx env name params_with_type opt_term_pr ;
+*)
+       (* [Unsure] Generate the termination proof. *)
+
        Format.fprintf out_fmter "@[<2>Section %a.@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name ;
        (* Now, generate the prelude of the only method introduced by
@@ -2116,23 +2276,11 @@ let generate_defined_recursive_let_definition ctx print_ctx env
            ai.Abstractions.ai_used_species_parameter_tys
            sorted_deps_from_params generated_fields in
        (* We now generate the order. It always has 2 arguments having the same
-          type. This type is a tuple if the method hase several arguments. *)
+          type. This type is a tuple if the method has several arguments. This
+          type was already computed above for the termination order... *)
        Format.fprintf out_fmter
          "@\n@\n(* Abstracted termination order. *)@\n" ;
        Format.fprintf out_fmter "@[<2>Variable __term_order@ :@ " ;
-       (* We do not have anymore information about "Self"'s structure... *)
-       let (params_with_type, return_ty_opt, _) =
-         MiscHelpers.bind_parameters_to_types_from_type_scheme
-           ~self_manifest: None (Some scheme) params in
-       (* Just remove the option that must always be Some since we provided
-          a scheme. *)
-       let params_with_type =
-         List.map
-           (fun (n, opt_ty) ->
-             match opt_ty with None -> assert false | Some t -> (n, t))
-           params_with_type in
-       let return_ty =
-         match return_ty_opt with None -> assert false | Some t -> t in
        Types.purge_type_simple_to_coq_variable_mapping () ;
        (* Print the tuple that is the method's arguments' types. *)
        Format.fprintf out_fmter "%a -> %a -> Prop.@]@\n"
@@ -2293,14 +2441,15 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
        (* A "let", then a fortiori "let rec" construct *)
        (* must at least bind one identifier !          *)
        assert false
-   | [((from, name, params, scheme, body, _, _, _), ai)] ->
+   | [((from, name, params, scheme, body, opt_term_pr, _, _), ai)] ->
        (begin
        (* First of all, only methods defined in the current species must be
           generated. Inherited methods ARE NOT generated again ! *)
        if from.Env.fh_initial_apparition = ctx.Context.scc_current_species
        then
          generate_defined_recursive_let_definition
-           ctx print_ctx env generated_fields from name params scheme body ai
+           ctx print_ctx env generated_fields from name params scheme body
+           opt_term_pr ai
        else
          (begin
          (* Just a bit of debug/information if requested. *)
