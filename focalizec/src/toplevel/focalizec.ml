@@ -1,17 +1,18 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*            François Pessaux                                         *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.31 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.32 2008-11-29 20:20:53 weis Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -24,8 +25,8 @@ let main () =
        Arg.String Configuration.set_dotty_dependencies,
        " dumps species non-let-rec- dependencies as dotty\n\tfiles into the \
          argument directory.") ;
-      ("-focal-doc",
-       Arg.Unit Configuration.set_focal_doc,
+      ("-focalize-doc",
+       Arg.Unit Configuration.set_focalize_doc,
        " generate documentation.") ;
       ("-i",
        Arg.Unit (fun () -> Configuration.set_do_interface_output true),
@@ -56,23 +57,23 @@ let main () =
          directory in the search path.") ;
       ("--pretty",
        Arg.String Configuration.set_pretty_print,
-       " pretty-prints the parse tree of the focal file as a focal \
+       " pretty-prints the parse tree of the focalize file as a focalize \
          source\n\t into the argument file.") ;
       ("--raw-ast-dump",
        Arg.Unit Configuration.set_raw_ast_dump,
        " (undocumented) prints on stderr the raw AST structure \
-         after\n\tparsing stage.") ;
+         after\n\tthe parsing stage.") ;
       ("--scoped_pretty",
        Arg.String Configuration.set_pretty_scoped,
-       " (undocumented) pretty-prints the parse tree of the focal \
-         file\n\tonce scoped as a focal source into the argument file.") ;
+       " (undocumented) pretty-prints the parse tree of the focalize \
+         file\n\tonce scoped as a focalize source into the argument file.") ;
       ("--verbose",
        Arg.Unit Configuration.set_verbose,
        " be verbose.") ;
-      ("-v", Arg.Unit Configuration.print_focal_short_version,
+      ("-v", Arg.Unit Configuration.print_focalize_short_version,
        " prints the focalize version then exit.") ;
       ("--version",
-       Arg.Unit Configuration.print_focal_full_version,
+       Arg.Unit Configuration.print_focalize_full_version,
        " prints the full focalize version, sub-version and release date,\n\t\
          then exit.") ;
        ("--where",
@@ -81,12 +82,12 @@ let main () =
           exit.")
      ]
     Configuration.set_input_file_name
-    "Usage: focal_check <options> <.foc file>" ;
+    "Usage: focalize_check <options> <.fcl file>" ;
   (* First, let's lex and parse the input source file. *)
   let input_file_name = Configuration.get_input_file_name () in
   (* Create the current compilation unit "fname". In fact, this *)
   (* is the current filename without dirname and extention.     *)
-  if not (Filename.check_suffix input_file_name ".foc") then
+  if not (Filename.check_suffix input_file_name ".fcl") then
     raise (Bad_file_suffix input_file_name) ;
   let current_unit =
     Filename.chop_extension (Filename.basename input_file_name) in
@@ -98,7 +99,7 @@ let main () =
   (* Hard-dump the AST if requested. *)
   if Configuration.get_raw_ast_dump () then
     Dump_ptree.pp_file Format.err_formatter ast ;
-  (* Pretty the AST as a new-focal-syntax source if requested. *)
+  (* Pretty the AST as a new-focalize-syntax source if requested. *)
   (match Configuration.get_pretty_print () with
    | None -> ()
    | Some fname ->
@@ -122,7 +123,7 @@ let main () =
   let (typing_toplevel_env, stuff_to_compile) =
     Infer.typecheck_file ~current_unit scoped_ast in
   (* Generate the documentation if requested. *)
-  if Configuration.get_focal_doc () then
+  if Configuration.get_focalize_doc () then
     Main_docgen.gendoc_please_compile_me input_file_name stuff_to_compile ;
   (* Now go to the OCaml code generation if requested. *)
   let mlgen_toplevel_env =
