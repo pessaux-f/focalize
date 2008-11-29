@@ -1,22 +1,24 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: files.ml,v 1.11 2008-06-19 09:21:36 pessaux Exp $ *)
+(* $Id: files.ml,v 1.12 2008-11-29 20:26:52 weis Exp $ *)
 
 
 (** Paths for libraries lookup. *)
-exception Cant_access_file_in_search_path of Types.fname ;;
-exception Corrupted_fo of Types.fname ;;
+exception Cant_access_file_in_search_path of Types.fname;;
+exception Corrupted_fo of Types.fname;;
 
 
 
@@ -102,19 +104,19 @@ let fo_basename_from_module_name module_name =
 
    {b Rem} : Exported abstract outside this module.                    *)
 (* ******************************************************************* *)
-type magic = (char * char * char * char) ;;
+type magic = (char * char * char * char);;
 
 
 
 (* ************************************************************* *)
 (* magic                                                         *)
-(** {b Descr} : Magic number used to identify FoCaL ".fo" files.
+(** {b Descr} : Magic number used to identify FoCaLize ".fo" files.
               Currently, it the sequence of the 4 characters of
               the string ".FO ".
 
     {b Rem} : Exported abstract outside this module.             *)
 (* ************************************************************* *)
-let fo_magic = ('.', 'F', 'O', ' ') ;;
+let fo_magic = ('.', 'F', 'O', ' ');;
 
 
 
@@ -123,15 +125,15 @@ let check_magic in_handle (expected0, expected1, expected2, expected3) =
   let (magic1 : char) = input_value in_handle in
   let (magic2 : char) = input_value in_handle in
   let (magic3 : char) = input_value in_handle in
-  expected0 = magic0 && expected1 = magic1 && expected2 = magic2 && 
+  expected0 = magic0 && expected1 = magic1 && expected2 = magic2 &&
   expected3 = magic3
 ;;
 
 
 
 let write_magic out_handle (magic0, magic1, magic2, magic3) =
-  output_value out_handle magic0 ;
-  output_value out_handle magic1 ;
-  output_value out_handle magic2 ;
+  output_value out_handle magic0;
+  output_value out_handle magic1;
+  output_value out_handle magic2;
   output_value out_handle magic3
 ;;
