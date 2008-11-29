@@ -1,17 +1,19 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.18 2008-11-28 09:55:57 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.19 2008-11-29 20:35:30 weis Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -99,31 +101,6 @@ let pp_generic_option some_prefix printer_fct ppf = function
 let pp_generic_n_times n printer_fct ppf a =
   for i = 0 to n - 1 do printer_fct ppf a done
 ;;
-
-
-
-(* ************************************************************************* *)
-(* int -> string                                                             *)
-(* {b Descr} : Transforms an integer to a string compound of only a-z chars.
-              Used to write type variables names. In fact, that only a
-              integer->base 26 printer (thar I stole in my PhD code :)).
-
-   {b Rem} : Exported outside this module.                                   *)
-(* ************************************************************************* *)
-let rec int_to_base_26 i =
- if i >= 26 then
-   (begin
-   let ch = (i mod 26) + (Char.code 'a') in
-   (int_to_base_26 (i / 26)) ^ Char.escaped (Char.chr ch)
-   end)
-   else
-   (begin
-   let ch = (i mod 26) + (Char.code 'a') in
-   Char.escaped (Char.chr ch)
-   end)
-;;
-
-
 
 let list_assoc_custom_eq eq key lst =
   let rec rec_assoc = function
