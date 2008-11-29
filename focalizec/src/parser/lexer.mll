@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.65 2008-11-28 07:56:53 weis Exp $ *)
+(* $Id: lexer.mll,v 1.66 2008-11-29 20:14:50 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -137,7 +137,6 @@ List.iter
   "prove", PROVE;
   "qed", QED;
   "rec", REC;
-  "rep", REPRESENTATION;
   "representation", REPRESENTATION;
   "Self", SELF;
   "signature", SIGNATURE;

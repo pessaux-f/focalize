@@ -5,6 +5,7 @@
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*            François Pessaux                                         *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2008 LIP6 and INRIA                                      *)
@@ -12,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify_token.ml,v 1.4 2008-11-28 07:56:53 weis Exp $ *)
+(* $Id: sourcify_token.ml,v 1.5 2008-11-29 20:14:50 weis Exp $ *)
 
 open Parser;;
 

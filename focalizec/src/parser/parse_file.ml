@@ -1,23 +1,22 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*                                                                     *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*            François Pessaux                                         *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parse_file.ml,v 1.8 2007-11-21 16:34:15 pessaux Exp $ *)
+(* $Id: parse_file.ml,v 1.9 2008-11-29 20:14:50 weis Exp $ *)
 
-
-exception Lex_error of (Lexing.position * Lexing.position * string) ;;
-exception Syntax_error of (Lexing.position * Lexing.position) ;;
-exception Unclear_error of (string * Lexing.position * Lexing.position) ;;
-
+exception Lex_error of Lexing.position * Lexing.position * string;;
+exception Syntax_error of Lexing.position * Lexing.position;;
+exception Unclear_error of string * Lexing.position * Lexing.position;;
 
 let wrap parsing_fun lexbuf =
   let ast = parsing_fun Lexer.token lexbuf in
@@ -41,14 +40,14 @@ let parse_file fname =
   let ic = open_in_bin fname in
   let lexbuff = Lexing.from_channel ic in
   lexbuff.Lexing.lex_curr_p <-
-    { Lexing.pos_fname = fname; pos_lnum = 1; pos_bol = 0; pos_cnum = 0; } ;
+    { Lexing.pos_fname = fname; pos_lnum = 1; pos_bol = 0; pos_cnum = 0; };
   try
     let ast =
       try implementation lexbuff with
       | x ->
-          close_in ic ;
+          close_in ic;
           raise x in
-    close_in ic ;
+    close_in ic;
     ast
   with
   | Lexer.Error (err, sp, ep) ->
@@ -56,9 +55,9 @@ let parse_file fname =
   | Parsing.Parse_error ->
       let sp = Lexing.lexeme_start_p lexbuff in
       let ep = Lexing.lexeme_end_p lexbuff in
-      raise (Syntax_error (sp, ep)) ;
+      raise (Syntax_error (sp, ep));
   | x ->
       let sp = Lexing.lexeme_start_p lexbuff in
       let ep = Lexing.lexeme_end_p lexbuff in
-      raise (Unclear_error (Printexc.to_string x, sp, ep)) ;
+      raise (Unclear_error (Printexc.to_string x, sp, ep));
 ;;

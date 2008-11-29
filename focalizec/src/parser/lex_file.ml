@@ -5,6 +5,7 @@
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*            François Pessaux                                         *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2008 LIP6 and INRIA                                      *)
@@ -12,14 +13,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lex_file.ml,v 1.2 2008-10-29 16:29:02 weis Exp $ *)
+(* $Id: lex_file.ml,v 1.3 2008-11-29 20:14:50 weis Exp $ *)
 
 let lex_file fname =
 
   let ic = open_in_bin fname in
   let lexbuff = Lexing.from_channel ic in
   lexbuff.Lexing.lex_curr_p <-
-    { Lexing.pos_fname = fname; pos_lnum = 1; pos_bol = 0; pos_cnum = 0; } ;
+    { Lexing.pos_fname = fname; pos_lnum = 1; pos_bol = 0; pos_cnum = 0; };
 
   let ppf = Format.err_formatter in
 
@@ -37,4 +38,5 @@ let main () =
 ;;
 
 try main () with
-| Exit -> exit 0;;
+| Exit -> exit 0
+;;

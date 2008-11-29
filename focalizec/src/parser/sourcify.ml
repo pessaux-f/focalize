@@ -1,17 +1,19 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.58 2008-11-28 07:56:53 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.59 2008-11-29 20:14:50 weis Exp $ *)
 
 open Parsetree;;
 
@@ -644,7 +646,7 @@ and pp_property_def ppf = pp_ast pp_property_def_desc ppf
 
 and pp_species_field_desc ppf = function
   | Parsetree.SF_rep rep_type_def ->
-      Format.fprintf ppf "@[<2>rep@ =@ %a@;@]" pp_rep_type_def rep_type_def
+      Format.fprintf ppf "@[<2>representation@ =@ %a@;@]" pp_rep_type_def rep_type_def
   | Parsetree.SF_sig sig_def ->
       Format.fprintf ppf "%a@;" pp_sig_def sig_def
   | Parsetree.SF_let let_def ->

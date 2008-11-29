@@ -6,6 +6,7 @@
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*            François Pessaux                                         *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2006, 2008 LIP6 and INRIA                                *)
@@ -13,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.115 2008-11-28 07:56:53 weis Exp $ *)
+(* $Id: parser.mly,v 1.116 2008-11-29 20:14:50 weis Exp $ *)
 
 open Parsetree;;
 
