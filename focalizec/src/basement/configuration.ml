@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -8,43 +8,42 @@
 (*                                                                     *)
 (*                    LIP6  --  INRIA Rocquencourt                     *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.20 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.21 2008-11-29 20:23:34 weis Exp $ *)
 
+exception Input_file_already_set;;
+exception No_input_file;;
 
-exception Input_file_already_set ;;
-exception No_input_file ;;
+let focalize_version_number = 0.1;;
 
-let focal_version_number = 0.1 ;;
-
-let focal_short_version =
-  Printf.sprintf "%.2f" focal_version_number
+let focalize_short_version =
+  Printf.sprintf "%.2f" focalize_version_number
 ;;
 
-let focal_full_version =
-  Printf.sprintf "%s %s" focal_short_version "alpha"
+let focalize_full_version =
+  Printf.sprintf "%s %s" focalize_short_version "alpha"
 ;;
 
-let print_focal_version v =
-  prerr_endline (Printf.sprintf "The Focal compiler, version %s" v);
+let print_focalize_version v =
+  prerr_endline (Printf.sprintf "The Focalize compiler, version %s" v);
   exit 0
 ;;
 
-let print_focal_short_version () =
-  print_focal_version focal_short_version
+let print_focalize_short_version () =
+  print_focalize_version focalize_short_version
 ;;
 
-let print_focal_full_version () =
-  print_focal_version focal_full_version
+let print_focalize_full_version () =
+  print_focalize_version focalize_full_version
 ;;
 
 let print_install_dirs () =
   Format.printf "%s %s@."
-    Installation.install_bin_dir Installation.install_lib_dir ;
+    Installation.install_bin_dir Installation.install_lib_dir;
   exit 0
 ;;
 
@@ -60,7 +59,7 @@ let (get_verbose, set_verbose) =
    (fun () -> verbose := true))
 ;;
 
-let (get_focal_doc, set_focal_doc) =
+let (get_focalize_doc, set_focalize_doc) =
   let doc = ref false in
   ((fun () -> !doc),
    (fun () -> doc := true))
