@@ -400,7 +400,7 @@ type simple_variant('a, 'b) =
  *)
 species Variant_sum(A is Setoid, B is Setoid) inherits Sum_set(A, B) =
 
-  rep = simple_variant(A, B);
+  representation = simple_variant(A, B);
 
   let first(x) = First(x);
   let first_case(x) = match x with
@@ -498,7 +498,7 @@ end;;
 (*  *\) *)
 (* collection disjoint_variant_sum_test  *)
 (*   implements variant_sum(singleton_1, singleton_2) =  *)
-(*   (\* [rr] Hack to include rep types *\) *)
+(*   (\* [rr] Hack to include representation types *\) *)
 (*   let _rep_a(a, b) = singleton_1!equal(a, b); *)
 (*   let _rep_b(a, b) = singleton_2!equal(a, b); *)
 (* end *)

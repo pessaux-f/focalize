@@ -1,6 +1,7 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*                                                                     *)
 (*            William Bartlett                                         *)
 (*                      ENSIIE - LIP6  -  INRIA Rocquencourt           *)
 (*                                                                     *)
@@ -9,7 +10,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: wellfounded.fcl,v 1.4 2008-09-11 09:26:21 pessaux Exp $ *)
+(* $Id: wellfounded.fcl,v 1.5 2008-11-30 22:26:05 weis Exp $ *)
 
 (* Definition (import) of the notion of wellfoundedness.
    Since this notion is not defineable in Focal, this library is a veritable
@@ -21,8 +22,6 @@ use "sets_orders";;
 open "basics";;
 open "sets_orders";;
 coq_require "wellfounded_externals";;
-
-
 
 species PartialWellOrder inherits Partial_order =
   (** The predicate of Wellfoundedness
@@ -38,7 +37,7 @@ species PartialWellOrder inherits Partial_order =
     | coq -> {* wellfounded_externals.wellfounded abst_T *}
   ;
 
-  property wellfounded_lt: wellfounded(lt);
+  property wellfounded_lt: wellfounded (lt);
 end;;
 
 
@@ -49,7 +48,8 @@ end;;
 
 
 species RelativeIntegers inherits WellOrder =
-  rep = int;
+
+  representation = int;
 
   let element = 0;
   let equal = int_eq;
@@ -59,18 +59,19 @@ species RelativeIntegers inherits WellOrder =
 
   signature lowerbound: Self;
 
-  let leq(x, y) = and_b (int_leq (lowerbound, y), int_leq (x, y)) ;
+  let leq (x, y) = and_b (int_leq (lowerbound, y), int_leq (x, y)) ;
 
-  let lt(x, y) = and_b (int_leq (lowerbound, y), int_lt (x, y)) ;
+  let lt (x, y) = and_b (int_leq (lowerbound, y), int_lt (x, y)) ;
 
   proof of wellfounded_lt = assumed {* TODO import proof from Coq. *} ;
 end;;
 
-species InverseImage(A is PartialWellOrder) inherits PartialWellOrder =
+species InverseImage (A is PartialWellOrder) inherits PartialWellOrder =
+
   signature meazure: Self -> A;
 
   property compatibility_lt_Alt_meazure: all x y in Self,
-    lt(x, y) -> A!lt(meazure(x), meazure(y));
+    lt (x, y) -> A!lt (meazure (x), meazure (y));
 
   proof of wellfounded_lt = assumed {* TODO import proof from Coq. *} ;
 end;;
@@ -78,26 +79,29 @@ end;;
 
 
 species Subrelation (A is PartialWellOrder) inherits InverseImage (A) =
-  rep = A;
 
-  let meazure(x in Self) in A = x;
+  representation = A;
+
+  let meazure (x in Self) in A = x;
 end;;
 
 
 
 species CartesianProduct (A is Basic_object, B is Basic_object)
-inherits Basic_object =
-  rep = A * B;
+        inherits Basic_object =
 
-  let pair(a in A, b in B) in Self = (a, b);
+  representation = A * B;
+
+  let pair (a in A, b in B) in Self = (a, b);
 
   let fst (x in Self) = match x with | (a , _) -> a ;
   let snd (x in Self) = match x with | (_ , b) -> b ;
 end;;
 
 species LexicographicProduct (A is PartialWellOrder, B is PartialWellOrder)
-inherits CartesianProduct (A, B), PartialWellOrder =
-  let lt(x, y) =
+  inherits CartesianProduct (A, B), PartialWellOrder =
+
+  let lt (x, y) =
     match (x, y) with
     | ((xA, xB), (yA, yB)) ->
         or_b (A!lt (xA, yA), and_b (A!equal (xA, yA), B!lt (xB, yB))) ;
@@ -110,7 +114,8 @@ species RelationalProduct
   (A is PartialWellOrder,
    B is PartialWellOrder,
    C is LexicographicProduct (A, B))
-inherits Subrelation (C) =
+  inherits Subrelation (C) =
+
   let lt (x, y) =
     and_b (A!lt (C!fst (x), C!fst (y)),
            B!lt (C!snd (x), C!snd (y))) ;

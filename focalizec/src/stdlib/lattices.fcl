@@ -1,9 +1,26 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            Renaud Rioboo                                            *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: lattices.fcl,v 1.3 2008-11-30 22:26:05 weis Exp $ *)
+
 use "sets";;
 open "sets";;
 
-(** in a meet semi lattice we have an operation inducing an ordering (&lt;=)*)
+(** In a meet semi lattice we have an operation inducing an ordering (&lt;=). *)
 species Meet_semi_lattice inherits Setoid =
-  (** the infimum of two elements *)
+  (** The infimum of two elements *)
   (* [rr]: need a mathml symbol for that,
      we don't want to use <min/> nor <intersect/>
   *)
@@ -14,13 +31,13 @@ species Meet_semi_lattice inherits Setoid =
   ;
   (** inf is a commutative law*)
   property inf_commutes : all x y in Self,
-    !equal(!inf(x, y), !inf(y, x));
+    !equal (!inf (x, y), !inf (y, x));
   (**
      for a  commutative law right congruence is a consequence
       of left congruence
    *)
   theorem inf_right_substitution_rule : all x y z in Self,
-     !equal(y, z) -> !equal(!inf(x, y), !inf(x, z))
+     !equal (y, z) -> !equal (!inf (x, y), !inf (x, z))
      proof =
        by property
           inf_left_substitution_rule,
@@ -30,8 +47,8 @@ species Meet_semi_lattice inherits Setoid =
      ;
   (** users should use global congruence when possible *)
   theorem inf_substitution_rule : all x y z t in Self,
-    !equal(x, y) -> !equal(z, t) -> !equal(!inf(x, z), !inf(y, t))
-(*    !equal(x, y) -> !equal(y, t) -> !equal(!inf(x, y), !inf(y, t)) *)
+    !equal (x, y) -> !equal (z, t) -> !equal (!inf (x, z), !inf (y, t))
+(*    !equal (x, y) -> !equal (y, t) -> !equal (!inf (x, y), !inf (y, t)) *)
     proof =
       by property
          inf_left_substitution_rule, inf_right_substitution_rule,
@@ -42,34 +59,34 @@ species Meet_semi_lattice inherits Setoid =
     ;
   (* inf is an associative law *)
   property inf_is_associative : all x y z in Self,
-    !equal(!inf(!inf(x, y), z), !inf(x, !inf(y, z)));
+    !equal (!inf (!inf (x, y), z), !inf (x, !inf (y, z)));
   (* inf is an idempotent law  *)
   property inf_idempotent : all x y in Self,
-    !equal(x, y) -> !equal(x, !inf(x, y));
+    !equal (x, y) -> !equal (x, !inf (x, y));
 
   (** order_inf is the least defined ordering compatible with inf *)
   (* [rr]: need a mathml symbol for that,
      we don't want to use <leq/>
   *)
-  let order_inf(x, y) = !equal(x, !inf(x, y));
+  let order_inf (x, y) = !equal (x, !inf (x, y));
   theorem order_inf_is_reflexive : all x y in Self,
-     !equal(x, y) -> !order_inf(x, y)
+     !equal (x, y) -> !order_inf (x, y)
      proof =
        by property inf_idempotent
        definition of order_inf
      ;
 
   theorem order_inf_is_antisymmetric : all x y in Self,
-     !order_inf(x, y) -> !order_inf(y, x) -> !equal(x, y)
-     (* x=inf(x, y) et y=inf(x, y) *)
+     !order_inf (x, y) -> !order_inf (y, x) -> !equal (x, y)
+     (* x=inf (x, y) et y=inf (x, y) *)
      proof =
        by
         property inf_commutes, equal_transitive, equal_symmetric
         definition of order_inf
      ;
   theorem order_inf_is_transitive : all x y z in Self,
-     !order_inf(x, y) -> !order_inf(y, z) -> !order_inf(x, z)
-     (* x=inf(x, y) et y=inf(y, z) x=inf(x, inf(y, z))=inf(inf(x, y), z)=inf(x, z)*)
+     !order_inf (x, y) -> !order_inf (y, z) -> !order_inf (x, z)
+     (* x=inf (x, y) et y=inf (y, z) x=inf (x, inf (y, z))=inf (inf (x, y), z)=inf (x, z)*)
      proof =
        <1>1 assume x in Self,
             assume y in Self,
@@ -102,16 +119,16 @@ species Meet_semi_lattice inherits Setoid =
      ;
   (** any element smaller than x and y is smaller than their infimum *)
   theorem order_inf_is_infimum : all x y i in Self,
-    !order_inf(i, x) -> !order_inf(i, y) ->
-      !order_inf(i, !inf(x, y))
+    !order_inf (i, x) -> !order_inf (i, y) ->
+      !order_inf (i, !inf (x, y))
     proof =
       <1>1 assume x in Self,
            assume y in Self,
            assume i in Self,
-           assume H1 : !order_inf(i, x),
-           assume H2 : !order_inf(i, y),
-           prove !order_inf(i, !inf(x, y))
-        <2>1 prove !equal(i, !inf(!inf(i, x), y))
+           assume H1 : !order_inf (i, x),
+           assume H2 : !order_inf (i, y),
+           prove !order_inf (i, !inf (x, y))
+        <2>1 prove !equal (i, !inf (!inf (i, x), y))
           by hypothesis H1, H2
              property inf_left_substitution_rule,
                equal_symmetric, equal_transitive
@@ -285,7 +302,7 @@ species Lattice inherits Meet_semi_lattice, Join_semi_lattice =
 
   (** in a lattice there is only one ordering *)
    theorem order_sup_refines_order_inf : all x y in Self,
-     (* x = x ^ y ; x v y = (x ^ y) v x = x v (x ^ y) = x *) 
+     (* x = x ^ y ; x v y = (x ^ y) v x = x v (x ^ y) = x *)
      !order_inf (y, x) -> !order_sup (x, y)
      proof =
        <1>1 assume x in Self,
@@ -392,15 +409,15 @@ species Distributive_lattice
            <2>1 prove !equal (!inf (z, !sup (x, y)),
                               !sup (!inf (z, x), !inf (z, y)))
                 by property inf_left_distributes
-           <2>2 prove !equal (!inf (!sup (x, y), z), !inf (z, !sup (x, y))) 
-                by property inf_commutes 
+           <2>2 prove !equal (!inf (!sup (x, y), z), !inf (z, !sup (x, y)))
+                by property inf_commutes
            <2>3 prove !equal (!inf (x, z), !inf (z, x)) by property inf_commutes
            <2>4 prove !equal (!inf (y, z), !inf (z, y)) by property inf_commutes
            <2>5 prove !equal (!sup (!inf (x, z), !inf (y, z)),
-                              !sup (!inf (z, x), !inf (y, z))) 
+                              !sup (!inf (z, x), !inf (y, z)))
                 by step <2>3 property !sup_left_substitution_rule
            <2>6 prove !equal (!sup (!inf (z, x), !inf (y, z)),
-                              !sup (!inf (z, x), !inf (z, y))) 
+                              !sup (!inf (z, x), !inf (z, y)))
                 by step <2>4 property !sup_right_substitution_rule
            <2>7 prove !equal (!sup (!inf (x, z), !inf (y, z)),
                               !sup (!inf (z, x), !inf (z, y)))

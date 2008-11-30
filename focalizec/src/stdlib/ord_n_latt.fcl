@@ -67,7 +67,7 @@ species Partially_ordered_set_as_meet_semi_lattice
     <1>f qed.
   ;
 
-  (** details left as exercice for the reader *)
+  (** details left as an exercice for the reader *)
   proof of inf_commutes =
     by property leq_defines_infimum, leq_antisymmetric, inf_is_smaller
   ;

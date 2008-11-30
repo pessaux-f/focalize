@@ -1,7 +1,8 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaLize compiler                            *)
-(*            FranÃ§ois Pessaux                                         *)
+(*                                                                     *)
+(*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
@@ -11,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets_externals.ml,v 1.1 2008-10-13 12:15:07 rr Exp $ *)
+(* $Id: sets_externals.ml,v 1.2 2008-11-30 22:26:05 weis Exp $ *)
 
 let i_failed r _elt =
   raise (Ml_builtins.Foc_Failure ("Failed: " ^ r))
