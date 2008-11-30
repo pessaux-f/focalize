@@ -5,6 +5,7 @@
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
 #            Damien Doligez                                            #
+#                                                                      #
 #                               LIP6  --  INRIA Rocquencourt           #
 #                                                                      #
 #  Copyright 2004, 2008 INRIA                                          #
@@ -12,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: Makefile,v 1.17 2008-11-30 11:46:31 weis Exp $
+#  $Id: Makefile,v 1.18 2008-11-30 12:22:07 weis Exp $
 
 include .config_var
 

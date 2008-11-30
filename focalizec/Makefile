@@ -5,6 +5,7 @@
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
 #            Damien Doligez                                            #
+#                                                                      #
 #                               LIP6  --  INRIA Rocquencourt           #
 #                                                                      #
 #  Copyright 2008 LIP6 and INRIA                                       #
@@ -12,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.21 2008-11-13 10:15:23 pessaux Exp $
+# $Id: Makefile,v 1.22 2008-11-30 12:22:07 weis Exp $
 
 ROOT_DIR = .
 
