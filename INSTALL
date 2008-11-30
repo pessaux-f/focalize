@@ -1,0 +1,47 @@
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLize compiler                             #
+#                                                                      #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                                                                      #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 INRIA                                                #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+#  $Id: INSTALL,v 1.1 2008-11-30 12:38:41 weis Exp $
+
+Licence: New BSD Licence (see the file LICENSE for details)
+
+Prerequisites (optional):
+  - ImageMagick (optional)
+  - Ghostscript (optional)
+
+Compile and install with:
+  configure
+  make
+  make install
+
+The software will compile and install in turn:
+ - Ocaml
+ - Camlp5
+ - Coq
+ - zenon
+ - zvtov
+ - focalizec
+
+For checking the proofs with coqc, add this to your $HOME/.coqrc file:
+  Add LoadPath "/usr/local/lib/zenon".
+If you specified an alternate libdir when configuring focalize, you will
+need to adjust this command accordingly.
+
+Web site: http://focalize.inria.fr/
+Discussion: focalize-users@inria.fr
+Bug reports for installation: Pierre.Weis@inria.fr
+Bug reports for the compiler: http://focalize.inria.fr/
+ (Find and click on the ``Bug Tracking'' link)
+Contact developers: focalize-devel@inria.fr
