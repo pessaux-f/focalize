@@ -1,6 +1,7 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
@@ -13,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: quotients.fcl,v 1.1 2008-09-28 14:29:32 rr Exp $ *)
+(* $Id: quotients.fcl,v 1.2 2008-11-30 22:34:17 weis Exp $ *)
 
 (** Renaud Rioboo based on Louis Mandel's code.
     Quotient structures. *)
@@ -32,7 +33,7 @@ open "weak_structures" ;;
 
 
 species Function_reduire (T is additive_law#Additive_group) =
-  rep = T -> T ;
+  representation = T -> T ;
   signature reduire : T -> T ;
 end ;;
 
@@ -46,10 +47,10 @@ species Quotient_group (G is additive_law#Additive_group,
  (* here we assume that reduire is compatible with some equivalence relation *)
   inherits additive_law#Additive_group =
 
-  (** 
-    an element of g should be reduced 
+  (**
+    an element of g should be reduced
   *)
-  rep = G ;
+  representation = G ;
 
   let equal (x, y) = G!equal (x, y) ;
   proof of equal_reflexive = assumed {* Because todo *} ;
@@ -95,7 +96,7 @@ end ;;
 (**
 This is the quotient of a ring by a principal ideal
 *)
-species Modular_ring (R is rings_fields#Euclidean_domain, n in R) 
+species Modular_ring (R is rings_fields#Euclidean_domain, n in R)
     inherits Quotient_ring (R, (function x -> R!remainder (x, n))) =
 end ;;
 
@@ -110,10 +111,10 @@ species Modular_field (R is rings_fields#Euclidean_domain, n in R)
   proof of mult_is_integral = assumed {* Because todo *} ;
 
   (** we define inversion and divison from inversion *)
-  let inv (x) = 
+  let inv (x) =
    let res = R!bezout (x, n) in
    let g = weak_structures#gcd (res) in
-   let c1 = weak_structures#coef1 (res) in      
+   let c1 = weak_structures#coef1 (res) in
    let ig = R!recip (g) in
    if #is_failed (ig)
    then #foc_error ("ModField: inv: Bad Gcd")
@@ -122,11 +123,11 @@ species Modular_field (R is rings_fields#Euclidean_domain, n in R)
 
   let div (x, y) = !mult (x, !inv (y)) ;
 
-  proof of div_left_substitution_rule = 
+  proof of div_left_substitution_rule =
    by property !mult_left_substitution_rule
       definition of div ;
 
-  proof of div_right_substitution_rule = 
+  proof of div_right_substitution_rule =
    by property !mult_right_substitution_rule, !inv_substitution_rule
       definition of div ;
 

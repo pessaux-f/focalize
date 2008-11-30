@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: products.fcl,v 1.5 2008-11-28 10:03:23 pessaux Exp $ *)
+(* $Id: products.fcl,v 1.6 2008-11-30 22:33:06 weis Exp $ *)
 
 (**
 
@@ -276,7 +276,7 @@ species Cartesian_product(A is Setoid, B is Setoid)
 
   inherits Product_set(A, B) =
 
-  rep = A * B;
+  representation = A * B;
 
   let first(x) = basics#fst(x);
   let second(x) = basics#snd(x);
@@ -341,7 +341,7 @@ end;;
 (* (\** A final model for products  *\) *)
 (* collection product_singleton_test *)
 (*   implements cartesian_singleton(singleton_1, singleton_2) = *)
-(*   (\* [rr] Hack to include rep types *\) *)
+(*   (\* [rr] Hack to include representation types *\) *)
 (*   let _rep_a(a, b) = singleton_1!equal(a, b); *)
 (*   let _rep_b(a, b) = singleton_2!equal(a, b); *)
 (* end *)
