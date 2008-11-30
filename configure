@@ -15,18 +15,13 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.1 2008-11-30 12:22:47 weis Exp $
+#  $Id: configure,v 1.2 2008-11-30 21:49:16 weis Exp $
 
 prefix=/usr/local
 
 set_dirs () {
   bindir="${prefix}/bin"
 }
-
-#!/bin/sh
-
-#  Copyright 2004 INRIA
-#  $Id: configure,v 1.1 2008-11-30 12:22:47 weis Exp $
 
 check(){
   type "$1" >/dev/null 2>&1
@@ -37,20 +32,11 @@ prefix=/usr/local
 
 set_dirs () {
   bindir="${prefix}/bin"
-  libdir="${prefix}/lib/zenon"
+  libdir="${prefix}/lib/focalize"
 }
 
 set_dirs
 debug=true
-
-if check convert; then convert=convert; else convert=:; fi
-if check coqc; then coqc=coqc; else coqc=:; fi
-if check gs; then gs=gs; else gs=:; fi
-
-sum=:
-for i in sum md5 md5sum md5deep sha1deep sha256deep; do
-  if check $i; then sum=$i; break; fi
-done
 
 while : ; do
   case $# in 0) break;; esac
@@ -98,22 +84,24 @@ done
 
 if $debug; then
   bytdebugflags="-g"
-  optdebugflags="-dtypes"
+  bindebugflags="-dtypes"
 else
   bytdebugflags=
-  optdebugflags=
+  bindebugflags=
 fi
 
 sed -e "s,@BINDIR@,$bindir," \
     -e "s,@LIBDIR@,$libdir," \
     -e "s,@prefix@,$prefix," \
     -e "s,@BYTDEBUGFLAGS@,$bytdebugflags," \
-    -e "s,@OPTDEBUGFLAGS@,$optdebugflags," \
+    -e "s,@BINDEBUGFLAGS@,$bindebugflags," \
     -e "s,@CONVERT@,$convert," \
     -e "s,@COQC@,$coqc," \
     -e "s,@GS@,$gs," \
     -e "s,@SUM@,$sum," \
     <.config_var.in >.config_var
 
-echo "Configuration summary for zenon:"
+touch ./.depend tarballs/.depend
+
+echo "Configuration summary for focalize:"
 cat .config_var
