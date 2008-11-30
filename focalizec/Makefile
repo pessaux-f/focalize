@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.22 2008-11-30 12:22:07 weis Exp $
+# $Id: Makefile,v 1.23 2008-11-30 21:56:28 weis Exp $
 
 ROOT_DIR = .
 
@@ -23,10 +23,11 @@ COMPILER_DIRS = basement parser typing\
   docgen commoncodegen mlcodegen coqcodegen\
   toplevel
 
-LIB_DIRS = stdlib\
-  extlib contribs
+LIB_DIRS = stdlib extlib contribs
 
 SUB_DIRS = $(COMPILER_DIRS) $(LIB_DIRS)
+
+COMPILER_INSTALL_DIRS = toplevel stdlib $(LIB_DIRS)
 
 include $(ROOT_DIR)/Makefile.common
 
@@ -54,6 +55,8 @@ clean doc depend::
         done
 
 install::
-	$(CD) toplevel; $(MAKE) install
-	$(CD) stdlib; $(MAKE) install
-	$(CD) extlib; $(MAKE) install
+	for i in $(COMPILER_INSTALL_DIRS); do \
+	  echo "--> $$i ..."; \
+	  ($(CD) $$i; $(MAKE) $@) || exit; \
+	  echo "<-- $$i [$$?]"; \
+        done
