@@ -1,18 +1,20 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.53 2008-11-25 12:59:38 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.54 2008-11-29 23:41:13 weis Exp $ *)
 
 
 (* ******************************************************************** *)

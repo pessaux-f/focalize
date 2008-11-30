@@ -1,10 +1,12 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*                                                                     *)
 (*            William Bartlett                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -12,8 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-
-(* $Id: recursion.ml,v 1.12 2008-11-17 10:53:57 pessaux Exp $ *)
+(* $Id: recursion.ml,v 1.13 2008-11-29 23:41:14 weis Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function

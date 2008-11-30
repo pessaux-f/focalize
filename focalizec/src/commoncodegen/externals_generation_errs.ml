@@ -1,17 +1,19 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                      *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: externals_generation_errs.ml,v 1.1 2008-04-09 10:19:44 pessaux Exp $ *)
+(* $Id: externals_generation_errs.ml,v 1.2 2008-11-29 23:41:13 weis Exp $ *)
 
 
 (* ************************************************************************ *)

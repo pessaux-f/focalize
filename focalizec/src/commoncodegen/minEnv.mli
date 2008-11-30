@@ -1,17 +1,19 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: minEnv.mli,v 1.5 2008-08-13 15:55:17 pessaux Exp $ *) 
+(* $Id: minEnv.mli,v 1.6 2008-11-29 23:41:14 weis Exp $ *)
 
 type min_coq_env_element =
     MCEE_Declared_carrier
@@ -23,10 +25,13 @@ type min_coq_env_element =
   | MCEE_Declared_logical of (Parsetree.vname * Parsetree.logical_expr)
   | MCEE_Defined_logical of
       (Env.from_history * Parsetree.vname * Parsetree.logical_expr)
+;;
 
 val find_coq_env_element_by_name :
   Parsetree.vname -> min_coq_env_element list -> min_coq_env_element
+;;
 
 val minimal_typing_environment :
   VisUniverse.in_the_universe_because VisUniverse.Universe.t ->
   Env.TypeInformation.species_field list -> min_coq_env_element list
+;;

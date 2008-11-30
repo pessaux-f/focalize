@@ -1,17 +1,19 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: visUniverse.ml,v 1.6 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: visUniverse.ml,v 1.7 2008-11-29 23:41:14 weis Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : Describes how a method arrives into a visible universe.
