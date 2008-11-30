@@ -1,0 +1,89 @@
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLize compiler                             #
+#                                                                      #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                                                                      #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 LIP6 and INRIA                                       #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+# $Id: Makefile.common,v 1.1 2008-11-30 21:47:14 weis Exp $
+
+BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
+
+.PHONY: all byt bin clean doc install depend tests lib
+
+all:: byt bin
+
+byt:: $(BYT_OBJS)
+
+bin:: $(BIN_OBJS)
+
+doc:: $(BYT_OBJS)
+	$(MKDIR) odoc
+	$(CAML_DOC) $(CAML_INCLUDES) -html -d odoc $(BYT_OBJS:.cmo=.ml)
+
+clean::
+	$(RM) *.cm* *.o *.a *.annot *.out *.vo *.fo *~ .*~ log *.mangled *.pfc
+	if test -d tests; then \
+	  ($(CD) tests; $(MAKE) clean); \
+	fi
+	if test -d odoc; then \
+	  $(RM) odoc/*; \
+	fi
+
+depend::
+	$(CAML_DEP) *.mli *.ml > ./.depend
+
+# Only on demand.
+tests::
+	if test -d tests; then ($(CD) tests; $(MAKE) all); fi
+
+.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .foc .fo .zv .v .vo
+.SUFFIXES: .tex .dvi .ps .pdf .idx
+
+.ml.cmo:
+	$(CAML_BYT) -c $<
+
+.mli.cmi:
+	$(CAML_BYT) -c $<
+
+.ml.cmx:
+	$(CAML_BIN) -c $<
+
+.mly.ml:
+	$(CAML_YACC) $<
+
+.mll.ml:
+	$(CAML_LEX) $<
+
+.foc.fo .foc.ml .foc.zv:
+	$(FOCALIZEC) $<
+
+.fcl.fo .fcl.ml .fcl.zv:
+	$(FOCALIZEC) $<
+
+.zv.v:
+	$(ZVTOV) $<
+
+.v.vo:
+	$(COQC) $<
+
+.tex.dvi:
+	$(LATEX) $<
+	$(MAKE) $(<:.tex=.idx)
+	$(LATEX) $<
+.tex.idx:
+	$(MAKEINDEX) $(<:.tex=.idx)
+.dvi.ps:
+	$(DVIPS) $<
+.dvi.pdf:
+	$(DVIPDF) $<
+
+include .depend
