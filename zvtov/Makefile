@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: Makefile,v 1.18 2008-11-30 12:22:07 weis Exp $
+#  $Id: Makefile,v 1.19 2008-11-30 21:53:56 weis Exp $
 
 include .config_var
 
@@ -44,9 +44,9 @@ INTF = $(MODULES:%=%.mli)
 BYTOBJS = $(MODULES:%=%.cmo)
 BINOBJS = $(MODULES:%=%.cmx)
 
-.PHONY: all
+.PHONY: all byt bin
 
-all: byt bin
+all: byt bin zvtov
 
 byt: $(BYTOBJS)
 	$(CAMLBYT) $(CAMLBYTFLAGS) str.cma $(XMLRPCLINK) -o zvtov.byt $(BYTOBJS)
@@ -55,6 +55,13 @@ byt: $(BYTOBJS)
 bin: $(BINOBJS)
 	$(CAMLBIN) $(CAMLBINFLAGS) str.cmxa $(XMLRPCLINK) -o zvtov.bin $(BINOBJS)
 	cp -p zvtov.bin zvtov
+
+zvtov: zvtov.byt
+	if test -x zvtov.bin; then \
+	  cp zvtov.bin zvtov; \
+        else \
+	  cp zvtov.byt zvtov; \
+	fi
 
 .PHONY: install
 install:
