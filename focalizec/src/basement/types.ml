@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
@@ -13,11 +13,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.69 2008-11-29 22:48:55 weis Exp $ *)
+(* $Id: types.ml,v 1.70 2008-11-29 23:23:18 weis Exp $ *)
 
 
 (* **************************************************************** *)
-(** {b Descr} : File ("module") name (without the ".foc" extension).
+(** {b Descr} : File ("module") name (without the ".fcl" extension).
 
     {b Rem} : Clearly exported outside this module.                  *)
 (* **************************************************************** *)
@@ -60,7 +60,7 @@ let generic_level = 100000000 ;;
 
 
 (* ************************************************* *)
-(** {b Descr} : Describes the type algebra of Focal.
+(** {b Descr} : Describes the type algebra of FoCaLize.
 
     {b Rem} : Exported opaque outside this module.   *)
 (* ************************************************* *)
@@ -319,7 +319,7 @@ let (pp_type_simple, pp_type_scheme) =
                 name used to denote it while printing it.
 
       {b Rem} : Not exported. This mapping is purely local to the
-              pretty-print function of type into the FoCal syntax. It is
+              pretty-print function of type into the FoCaLize syntax. It is
               especially not shared with the type printing routine used to
               generate the OCaml or Coq code.                              *)
   (* ********************************************************************* *)
@@ -332,7 +332,7 @@ let (pp_type_simple, pp_type_scheme) =
       new variables to print.
 
       {b Rem} : Not exported. This counter is purely local to the
-      pretty-print function of type into the FoCal syntax. It is
+      pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
       generate the OCaml or Coq code.                                    *)
   (* ******************************************************************* *)
@@ -344,7 +344,7 @@ let (pp_type_simple, pp_type_scheme) =
       This allows to stop name-sharing between type prints.
 
      {b Rem} : Not exported. This counter is purely local to the
-      pretty-print function of type into the FoCal syntax. It is
+      pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
       generate the OCaml or Coq code.                              *)
   (* ************************************************************* *)
@@ -1173,7 +1173,7 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
 
       {b Rem} : Not exported. This mapping is purely local to the
       pretty-print function of type into the OCaml syntax. It is especially
-      not shared with the type printing routine used to generate the FoCaL
+      not shared with the type printing routine used to generate the FoCaLize
       feedback and the Coq code.                *)
   (* ********************************************************************** *)
   let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
@@ -1185,9 +1185,9 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
       new variables to print.
 
       {b Rem} : Not exported. This counter is purely local to the
-      pretty-print function of type into the FoCal syntax. It is
+      pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
-      generate the FoCaL feedback and the Coq code.                      *)
+      generate the FoCaLize feedback and the Coq code.                      *)
   (* ******************************************************************* *)
   let type_variables_counter = ref 0 in
 
@@ -1198,9 +1198,9 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
 
      {b Rem} : Exported outside this module.
       However, this counter is purely local to the pretty-print
-      function of type into the FoCal syntax. It is especially not
+      function of type into the FoCaLize syntax. It is especially not
       shared with the type printing routine used to generate the
-      FoCaL feedback and the Coq code.                             *)
+      FoCaLize feedback and the Coq code.                             *)
   (* ************************************************************* *)
   let reset_type_variables_mapping_to_ml () =
     type_variable_names_mapping := [] ;
@@ -1329,9 +1329,9 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
       the name used to denote it while printing it.
 
       {b Rem} : Not exported. This mapping is purely local to the
-      pretty-print function of type into the FoCal syntax. It is
+      pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
-      generate the OCaml code or the FoCaL feedback.               *)
+      generate the OCaml code or the FoCaLize feedback.               *)
   (* ************************************************************* *)
   let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
 
@@ -1342,7 +1342,7 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
       fresh name to new variables to print.
 
       {b Rem} : Not exported. This counter is purely local to the
-      pretty-print function of type into the FoCal syntax. It is
+      pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
       generate the OCaml or Coq code.                               *)
   (* ************************************************************** *)
@@ -1354,7 +1354,7 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
       This allows to stop name-sharing between type prints.
 
       {b Rem} : Not exported. This counter is purely local to the
-      pretty-print function of type into the FoCal syntax. It is
+      pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
       generate the OCaml or Coq code.                              *)
   (* ************************************************************* *)
@@ -1479,9 +1479,9 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
         end)
 
   (* ********************************************************************* *)
-  (** {b Descr} : Encodes FoCaL tuples into nested pairs because Coq
+  (** {b Descr} : Encodes FoCaLize tuples into nested pairs because Coq
       doesn't have tuples with abitrary arity: it just has pairs.
-      Associativity is on the left, i.e, a FoCaL tuple "(1, 2, 3, 4)" will
+      Associativity is on the left, i.e, a FoCaLize tuple "(1, 2, 3, 4)" will
       be mapped onto the Coq "(prod 1 (prod 2 (prod 3 4)))" data structure.
 
       {b Rem} : Not exported outside this module.                          *)

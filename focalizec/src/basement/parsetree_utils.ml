@@ -1,17 +1,19 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.27 2008-11-25 13:30:36 doligez Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.28 2008-11-29 23:23:18 weis Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -178,7 +180,7 @@ let parse_operator_string op_string =
     (fun character ->
       let str_tail =
         (match character with
-         | '`' -> "_focop_bquote_"
+         | '`' (* ` Helping emacs *) -> "_focop_bquote_"
          | '~' -> "_focop_tilda_"
          | '?' -> "_focop_question_"
          | '$' -> "_focop_dollar_"

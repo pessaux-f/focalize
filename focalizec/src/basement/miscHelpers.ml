@@ -1,17 +1,19 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: miscHelpers.ml,v 1.4 2008-11-17 10:53:57 pessaux Exp $ *)
+(* $Id: miscHelpers.ml,v 1.5 2008-11-29 23:23:18 weis Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -24,7 +26,7 @@
               mapping between the parameters names and their related type.
               It dissecates method's the type scheme (more accurately, an
               instance of it), "removing" arrows parameter after parameter.
-              Because the typechecking pass is already done, the FoCaL
+              Because the typechecking pass is already done, the FoCaLize
               program is well-typed, hence, the type of the method must
               have "as many arrows as" the method has parameters. If this
               is not the case, then we have a bug somewhere else in the

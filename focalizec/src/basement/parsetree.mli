@@ -1,19 +1,21 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*            François Pessaux                                         *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.43 2008-10-17 06:01:43 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.44 2008-11-29 23:23:18 weis Exp $ *)
 
-(** {2 The Focalize abstract syntax tree.} *)
+(** {2 The Focalize abstract syntax tree} *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -21,7 +23,9 @@
    The disambiguation pass has to resolve global/local/method
    classification for idents. *)
 
-(** {3 The generic polymorphic type of AST nodes.} *)
+(** {3 The generic polymorphic type of AST nodes} *)
+
+(** {6 Parsed documentation} *)
 
 (** AST support for documentation of programs:
     documentation elements are special lexems that can appear in specified
@@ -44,12 +48,16 @@ and doc_elem = {
 }
 ;;
 
+(** {6 Type information provision in the AST} *)
+
 type ast_node_type_information =
    | ANTI_non_relevant
    | ANTI_none
    | ANTI_type of Types.type_simple
    | ANTI_scheme of Types.type_scheme
 ;;
+
+(** {6 The polymorphic AST} *)
 
 type 'a ast = {
    (** The location in the source of the AST node. *)
@@ -63,9 +71,9 @@ type 'a ast = {
 }
 ;;
 
-(** {3 Names of the various entities.} *)
+(** {3 Names of the various entities} *)
 
-(** {6 General names.} *)
+(** {6 General names} *)
 
 type module_name = Types.fname
 (** The type of ``module'' names.
@@ -110,7 +118,7 @@ type node_label = int * string
 (** A node label in a proof as a intger level and a string label. *)
 ;;
 
-(** {6 Identifiers specific to expressions and patterns.} *)
+(** {6 Identifiers specific to expressions and patterns} *)
 
 type expr_ident = expr_ident_desc ast
 and expr_ident_desc =
@@ -139,7 +147,7 @@ and label_ident_desc =
     This is always a global lowercase qualified identifier. *)
 ;;
 
-(** {6 Other identifiers.} *)
+(** {6 Other identifiers} *)
 
 type ident = ident_desc ast
 and ident_desc =
@@ -149,9 +157,9 @@ and ident_desc =
     in the parse trees. *)
 ;;
 
-(** {3 Type expressions.} *)
+(** {3 Type expressions} *)
 
-(** Types for representations of collections. *)
+(** {6 Types for representations of collections} *)
 
 type rep_type_def = rep_type_def_desc ast
 and rep_type_def_desc =
@@ -162,7 +170,7 @@ and rep_type_def_desc =
   | RTE_paren of rep_type_def
 ;;
 
-(** Types for all other entites: values, constructors, ... *)
+(** {6 Types for all other entites: values, constructors, ...} *)
 
 type type_expr = type_expr_desc ast
 and type_expr_desc =
@@ -175,9 +183,9 @@ and type_expr_desc =
   | TE_paren of type_expr
 ;;
 
-(** {3 External definitions for values and constructors.} *)
+(** {3 External definitions for values and constructors} *)
 
-(** {6 External languages name definitions.} *)
+(** {6 External languages name definitions} *)
 
 (** The external languages known to the compiler are [Caml] and [Coq].
     Any other language can be mentioned as external using its name
@@ -189,7 +197,7 @@ type external_language =
   | EL_external of string
 ;;
 
-(** {6 External expressions.} *)
+(** {6 External expressions} *)
 
 (** An external expression is a list that binds an external language name
     to an expression in this language.*)
@@ -213,11 +221,11 @@ and external_bindings_desc = external_binding list
 (** External bindings are just lists of external bindings. *)
 
 and external_binding = external_binding_desc ast
-and external_binding_desc = (vname * external_expr)
+and external_binding_desc = vname * external_expr
 (** An external binding binds a name to an external expression. *)
 ;;
 
-(** {3 Type definitions.} *)
+(** {3 Type definitions} *)
 
 (** Type definitions can be either external type definitions,
     or simple type definitions of the language. *)
@@ -236,7 +244,7 @@ and type_def_body_desc =
     (** External type definitions. *)
   | TDB_external of external_type_def_body
 
-(** {6 External type definitions.} *)
+(** {6 External type definitions} *)
 and external_type_def_body = external_type_def_body_desc ast
 and external_type_def_body_desc = {
   (** The internal view of the externally defined type. *)
@@ -248,7 +256,7 @@ and external_type_def_body_desc = {
   etdb_bindings : external_bindings;
  }
 
-(** {6 Internal type definitions.} *)
+(** {6 Internal type definitions} *)
 and simple_type_def_body = simple_type_def_body_desc ast
 and simple_type_def_body_desc =
   | STDB_alias of type_expr
@@ -259,7 +267,7 @@ and simple_type_def_body_desc =
     (** A record type definition with its list of labels. *)
 ;;
 
-(** {3 Patterns.} *)
+(** {3 Patterns} *)
 
 type constant = constant_desc ast
 and constant_desc =
@@ -282,9 +290,9 @@ and pat_desc =
   | P_paren of pattern
 ;;
 
-(** {3 Expressions.} *)
+(** {3 Expressions} *)
 
-(** {6 Various flags for let definitions.} *)
+(** {6 Various flags for let definitions} *)
 
 type rec_flag = | RF_no_rec | RF_rec;;
 
@@ -332,7 +340,7 @@ and binding_desc = {
   b_body : binding_body;
 }
 
-(** {6 Propositions.} *)
+(** {6 Propositions} *)
 
 and logical_expr = logical_expr_desc ast
 and logical_expr_desc =
@@ -346,7 +354,7 @@ and logical_expr_desc =
   | Pr_expr of expr
   | Pr_paren of logical_expr
 
-(** {6 Hypotheses, statements and facts.} *)
+(** {6 Hypotheses, statements and facts} *)
 
 and hyp = hyp_desc ast
 and hyp_desc =
@@ -367,9 +375,9 @@ and fact_desc =
   | F_hypothesis of vname list
   | F_node of node_label list
 
-(** {3 Proofs.} *)
+(** {3 Proofs} *)
 
-(** {6 Regular proofs.} *)
+(** {6 Regular proofs} *)
 
 and enforced_dependency = enforced_dependency_desc ast
 and enforced_dependency_desc =
@@ -378,9 +386,9 @@ and enforced_dependency_desc =
 
 and proof = proof_desc ast
 and proof_desc =
-  | Pf_assumed of ((enforced_dependency list) * external_code)
+  | Pf_assumed of enforced_dependency list * external_code
   | Pf_auto of fact list
-  | Pf_coq of ((enforced_dependency list) * string)
+  | Pf_coq of enforced_dependency list * external_code
   | Pf_node of proof_node list
 
 and proof_node = proof_node_desc ast
@@ -388,7 +396,7 @@ and proof_node_desc =
   | PN_sub of node_label * statement * proof
   | PN_qed of node_label * proof
 
-(** {6 Termination proofs for recursive functions.} *)
+(** {6 Termination proofs for recursive functions} *)
 
 and termination_proof = termination_proof_desc ast
 and termination_proof_desc =
@@ -412,9 +420,9 @@ and termination_proof_desc =
   | TP_order of expr * param_list * proof
 ;;
 
-(** {3 Species definitions.} *)
+(** {3 Species definitions} *)
 
-(** {6 Intra species definitions.} *)
+(** {6 Intra species definitions} *)
 
 (** Signatures, proofs, theorems, and property definitions that
     may appear inside species.} *)
@@ -464,7 +472,7 @@ and termination_proof_profile_desc = {
 }
 ;;
 
-(** {6 Species expressions.} *)
+(** {6 Species expressions} *)
 
 type species_expr = species_expr_desc ast
 and species_expr_desc = {
@@ -477,7 +485,7 @@ and species_param_desc =
   | SP of expr
 ;;
 
-(** {6 Species definitions.} *)
+(** {6 Species definitions} *)
 
 type species_def = species_def_desc ast
 and species_def_desc = {
@@ -503,7 +511,7 @@ and species_field_desc =
   | SF_termination_proof of termination_proof_def
 ;;
 
-(** {3 Collection definitions.} *)
+(** {3 Collection definitions} *)
 
 type collection_def = collection_def_desc ast
 and collection_def_desc = {
@@ -512,7 +520,7 @@ and collection_def_desc = {
 }
 ;;
 
-(** {3 Toplevel entities.} *)
+(** {3 Toplevel entities} *)
 
 type expr_def = expr
 ;;

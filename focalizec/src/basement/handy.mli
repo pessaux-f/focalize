@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
@@ -8,12 +8,12 @@
 (*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007,2008 LIP6 and INRIA                                 *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.mli,v 1.18 2008-11-29 20:35:30 weis Exp $ *)
+(* $Id: handy.mli,v 1.19 2008-11-29 23:23:18 weis Exp $ *)
 
 
 (** Pretty printing tools. *)
