@@ -1,29 +1,52 @@
 #!/bin/sh
 
-#  Copyright 2008 INRIA
-#  $Id: configure,v 1.13 2008-11-25 15:59:15 doligez Exp $
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLize compiler                             #
+#                                                                      #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 INRIA                                                #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+#  $Id: configure,v 1.14 2008-11-30 11:48:31 weis Exp $
 
 prefix=/usr/local
-bindir='${prefix}/bin'
+
+set_dirs () {
+  bindir="${prefix}/bin"
+}
+
+set_dirs
 xmlrpc=false
 
 while : ; do
   case $# in 0) break;; esac
 
   case $1 in
-  -bindir) bindir="$2"; shift;;
-  -prefix) prefix="$2"; shift;;
-  -xmlrpc) xmlrpc=true;;
-  -help|--help)
+  -bindir | --bindir) bindir="$2"; shift;;
+  -prefix | --prefix) prefix="$2"; set_dirs; shift;;
+  -xmlrpc | --xmlrpc) xmlrpc=true;;
+  -help | --help)
      echo "usage: ./configure [options]"
-     echo "  -bindir <dir>        set binary directory for install (default \${prefix})"
-     echo "  -prefix <dir>        set directory prefix for install (default $prefix)"
-     echo "  -xmlrpc              configure with XMLRPC option"
-     echo "  -help or --help      display help and exit"
+     echo "options are:"
+     echo "  [-]-bindir <directory>";
+     echo "    set the binary directory for installation (default ${bindir})."
+     echo "  [-]-prefix <directory>";
+     echo "    set the directory prefix for installation (default ${prefix})."
+     echo "  [-]-xmlrpc";
+     echo "    configure with XMLRPC option on."
+     echo "  [-]-help";
+     echo "    display help and exit"
      exit 0
      ;;
   *) echo "./configure: bad option '$1'" >&2
-     echo "use option --help for help" >&2
+     echo "For help, use ./configure -help" >&2
      exit 2
      ;;
   esac
@@ -41,11 +64,12 @@ else
 fi
 
 : >.config_var
+
 echo "prefix=$prefix" >>.config_var
 echo "bindir=$bindir" >>.config_var
 echo "XMLRPCFILE=$XMLRPCFILE" >>.config_var
 echo "XMLRPCFLAGS=$XMLRPCFLAGS" >>.config_var
 echo "XMLRPCLINK=$XMLRPCLINK" >>.config_var
 
-echo "Configuration for zvtov:"
+echo "Configuration summary for zvtov:"
 cat .config_var
