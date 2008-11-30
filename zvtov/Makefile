@@ -1,17 +1,32 @@
-#  Copyright 2004 INRIA
-#  $Id: Makefile,v 1.16 2008-11-25 15:59:15 doligez Exp $
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLize compiler                             #
+#                                                                      #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2004, 2008 INRIA                                          #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+#  $Id: Makefile,v 1.17 2008-11-30 11:46:31 weis Exp $
 
 include .config_var
 
 # programs
-CAMLC = ocamlc
+CAMLBYT = ocamlc
+CAMLBIN = ocamlopt
 CAMLLEX = ocamllex
 CAMLYACC = ocamlyacc
 
 # flags
 DEBUGFLAG	= -g -dtypes
-CAMLFLAGS	= -warn-error A
-CAMLCFLAGS	= $(CAMLFLAGS) $(DEBUGFLAG) $(XMLRPCFLAGS)
+COMPFLAGS	= -warn-error A
+CAMLBYTFLAGS	= $(COMPFLAGS) $(DEBUGFLAG) $(XMLRPCFLAGS)
+CAMLBINFLAGS	= $(COMPFLAGS) $(DEBUGFLAG) $(XMLRPCFLAGS)
 
 MODULES = version misc options cache \
           expr parser_coq lexer_coq invoke invoke_cime \
@@ -25,30 +40,40 @@ PLAIN_MODULES = version misc cache invoke expr invoke_cime $(XMLRPCFILE) \
 
 IMPL = $(MODULES:%=%.ml)
 INTF = $(MODULES:%=%.mli)
-OBJBYT = $(MODULES:%=%.cmo)
+BYTOBJS = $(MODULES:%=%.cmo)
+BINOBJS = $(MODULES:%=%.cmx)
 
 .PHONY: all
-all: zvtov
 
-zvtov: $(OBJBYT)
-	$(CAMLC) $(CAMLCFLAGS) str.cma $(XMLRPCLINK) -o zvtov $(OBJBYT)
+all: byt bin
+
+byt: $(BYTOBJS)
+	$(CAMLBYT) $(CAMLBYTFLAGS) str.cma $(XMLRPCLINK) -o zvtov.byt $(BYTOBJS)
+	cp -p zvtov.byt zvtov
+
+bin: $(BINOBJS)
+	$(CAMLBIN) $(CAMLBINFLAGS) str.cmxa $(XMLRPCLINK) -o zvtov.bin $(BINOBJS)
+	cp -p zvtov.bin zvtov
 
 .PHONY: install
 install:
-	mkdir -p "$(DESTDIR)$(bindir)"
-	cp zvtov $(DESTDIR)$(bindir)/
+	mkdir -p "$(bindir)"
+	cp -p zvtov "$(bindir)"/
 
 .PHONY: uninstall
 uninstall:
-	rm -f $(bindir)/zvtov
+	rm -f "$(bindir)"/zvtov
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
 .ml.cmo:
-	$(CAMLC) $(CAMLCFLAGS) -c $*.ml
+	$(CAMLBYT) $(CAMLBYTFLAGS) -c $*.ml
+
+.ml.cmx:
+	$(CAMLBIN) $(CAMLBINFLAGS) -c $*.ml
 
 .mli.cmi:
-	$(CAMLC) $(CAMLCFLAGS) -c $*.mli
+	$(CAMLBYT) $(CAMLBYTFLAGS) -c $*.mli
 
 lexer.ml: lexer.mll
 	$(CAMLLEX) lexer.mll
@@ -65,10 +90,10 @@ parser_coq.mli: parser_coq.ml
 
 .PHONY: clean
 clean:
-	rm -f *.cmo *.cmi *.annot
+	rm -f *.cm* *.o *.annot
 	rm -f lexer_coq.ml parser_coq.ml
 	rm -f parser_coq.mli
-	rm -f zvtov
+	rm -f zvtov *.bin *.byt
 
 .PHONY: realclean
 realclean: clean
