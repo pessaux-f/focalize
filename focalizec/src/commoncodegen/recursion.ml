@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.ml,v 1.13 2008-11-29 23:41:14 weis Exp $ *)
+(* $Id: recursion.ml,v 1.14 2008-11-29 23:47:30 weis Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function
@@ -38,12 +38,14 @@ type binding =
   | B_let of Parsetree.binding (** The variable was bound to the expression. *)
   | B_match of
       (** The expression matched and the pattern. *)
-      (Parsetree.expr * Parsetree.pattern)
+      Parsetree.expr * Parsetree.pattern
   | B_condition of
       (** The expression was tested and has the given truth value. *)
-      (Parsetree.expr * bool)
+      Parsetree.expr * bool
 ;;
 
+type typed_vname = Parsetree.vname * Types.type_simple
+;;
 
 
 (**

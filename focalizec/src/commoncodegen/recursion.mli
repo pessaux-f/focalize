@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.mli,v 1.5 2008-11-29 23:41:14 weis Exp $ *)
+(* $Id: recursion.mli,v 1.6 2008-11-29 23:47:30 weis Exp $ *)
 
 exception NestedRecursiveCalls of Parsetree.vname * Location.t;;
 exception PartialRecursiveCall of Parsetree.vname * Location.t;;
@@ -22,8 +22,8 @@ exception MutualRecursion;;
 
 type binding =
   | B_let of Parsetree.binding
-  | B_match of (Parsetree.expr * Parsetree.pattern)
-  | B_condition of (Parsetree.expr * bool)
+  | B_match of Parsetree.expr * Parsetree.pattern
+  | B_condition of Parsetree.expr * bool
 ;;
 
 type typed_vname = Parsetree.vname * Types.type_simple
