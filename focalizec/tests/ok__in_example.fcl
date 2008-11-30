@@ -17,14 +17,14 @@ end ;;
 (* species (collection more accurately) type !                        *)
 (* ****************************************************************** *)
 species IntModel inherits Basic_object =
-  rep = basics#int ;
+  representation = basics#int ;
   let un in Self = 1 ;
   let modulo (a, b) = if true then a else (if false then b else un) ;
 end ;;
 
 
 species Me (Naturals is IntModel, n in Naturals) =
-  rep = Naturals ;
+  representation = Naturals ;
 
  theorem daube : all x in Self,
     basics#base_eq (n, Naturals!un)

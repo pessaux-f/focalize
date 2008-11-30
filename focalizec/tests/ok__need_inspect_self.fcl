@@ -1,7 +1,7 @@
 (* ****************************************************************** *)
 (* Must pass.                                                         *)
 (* Example showing how now use the need to inspect the structure of   *)
-(* "rep" while computing the "used_species_parameters_ty" in the case *)
+(* "representation" while computing the "used_species_parameters_ty" in the case *)
 (* where a method has a def-dependency on Self.                       *)
 (* In effect, in the case of "fst", the "_" pattern does not make     *)
 (* appearing the fact that is has type "B" (yep, "B" is not appearing *)
@@ -19,7 +19,7 @@ end ;;
 
 species CartesianProduct (A is Base, B is Base)
 inherits Base =
-  rep = A * B;
+  representation = A * B;
 
   let pair(a in A, b in B) in Self = (a, b);
 

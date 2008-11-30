@@ -23,7 +23,7 @@ species Monoide inherits Setoide =
 end ;;
 
 species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
-  rep = (A * B) ;
+  representation = (A * B) ;
 
   let ( = ) (x, y) =
      and_b
@@ -55,7 +55,7 @@ end ;;
 
 
 species Entiers_concrets inherits Monoide =
-  rep = basics#int ;
+  representation = basics#int ;
 
   let un = 1 ;
   let ( * ) = basics#int_mult ;

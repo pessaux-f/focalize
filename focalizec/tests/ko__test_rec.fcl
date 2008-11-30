@@ -18,5 +18,5 @@ species B =
 end ;;
 
 species C inherits A, B =
-  rep = basics#int ;
+  representation = basics#int ;
 end ;;

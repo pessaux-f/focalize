@@ -12,7 +12,7 @@ species My_basic_object =
 end ;;
 
 species Test inherits My_basic_object =
-  rep = basics#int ;
+  representation = basics#int ;
   (* (EX1) let create (x) in Self = basics#int_of_string (x) ; *)
   let print (x in Self) = basics#print_int (x) ;
   let create (x in basics#int) in Self = x ;
@@ -23,7 +23,7 @@ collection CTest implements Test ;;
 
 
 species Dummy (a in CTest) =
-  rep = basics#string ;
+  representation = basics#string ;
   let x = a ;
   let print (msg) =
      let ignore1 = basics#print_string (msg) in

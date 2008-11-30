@@ -117,8 +117,8 @@ type sum = | Couic | Couac ;;
 (* Not allowed because methods are not polymorphic ! *)
 (*
 species TestAbstract =
-  rep = sum ;
-  sig element : Self ;
+  representation = sum ;
+  signature element : Self ;
 
   let f (x) = if true then #Couic else element ;
   let g (y) = if true then element else #Couic ;

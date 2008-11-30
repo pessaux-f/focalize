@@ -14,17 +14,17 @@ open "basics";;
 (* Pass                                                                    *)
 (* *********************************************************************** *)
 species Base =
-  rep = int ;
+  representation = int ;
   let dummy = 1 ;
 end ;;
 
 species Imp_pair (S1 is Base) =
-  rep = S1 ;
+  representation = S1 ;
   let fst (n in Self) in S1 = n ;
 end ;;
 
 species Imp_vote (C is Base, P is Imp_pair (C)) =
-  rep = int ;
+  representation = int ;
   (* WE EXPECT let local_capteur = capteur _p_P_fst *)
   let capteur (p1 in P) in C = P!fst(p1) ;
 end ;;
@@ -80,7 +80,7 @@ end ;;
 
 
 
-species Test4 (P is Base) = rep = int ; let m = P!dummy ; end ;;
+species Test4 (P is Base) = representation = int ; let m = P!dummy ; end ;;
 species Test5 (A is Base) inherits Test4 (A) = let c (x in int) = m ; end ;;
 
 
@@ -90,9 +90,9 @@ species Test5 (A is Base) inherits Test4 (A) = let c (x in int) = m ; end ;;
 (* Pass                                                                    *)
 (* *********************************************************************** *)
 species Sp0 = let m = 5 ; end ;;
-species Sp1 inherits Sp0 = rep = int ; let n = 5 ; end ;;
+species Sp1 inherits Sp0 = representation = int ; let n = 5 ; end ;;
 
-species Foo0 (A0 is Sp0) = rep = int ; let v = A0!m ;
+species Foo0 (A0 is Sp0) = representation = int ; let v = A0!m ;
   (* WE EXPECT let local_v = v _p_A0_m *)
 end ;;
 
@@ -136,11 +136,11 @@ end ;;
 (* Pass                                                                    *)
 (* *********************************************************************** *)
 species Nat =
-  rep = int ; let plus (x in Self, y in Self) in Self = x ; end ;;
+  representation = int ; let plus (x in Self, y in Self) in Self = x ; end ;;
 
 collection CNat implements Nat ;;
 
-species Bar00 (a in CNat) = rep = basics#int ;
+species Bar00 (a in CNat) = representation = basics#int ;
   let m = a ;
   (* WE EXPECT let local_m = m _p_a_a *)
 end ;;
@@ -177,7 +177,7 @@ end ;;
 
 
 
-species Gee0 (A0 is Sp0) = rep = int ; let v = A0!m ; end ;;
+species Gee0 (A0 is Sp0) = representation = int ; let v = A0!m ; end ;;
 species Gee1 (A is Sp0, B is Sp0) inherits Gee0 (Sp0) = let _ignore = 7 ; end ;;
 species Gee2 inherits Gee1 (Sp0, Sp0) = let _ignore = 7 ; end ;;
 
@@ -187,10 +187,10 @@ species Gee2 inherits Gee1 (Sp0, Sp0) = let _ignore = 7 ; end ;;
 (* Pass                                                                    *)
 (* *********************************************************************** *)
 species Sp00 = let m = 5 ; end ;;
-species Sp01 inherits Sp0 = rep = int ; let n = 5 ; end ;;
-species Sp02 = rep = int ; let p = 5 ; end ;;
+species Sp01 inherits Sp0 = representation = int ; let n = 5 ; end ;;
+species Sp02 = representation = int ; let p = 5 ; end ;;
 
-species Foo00 (A0 is Sp00, A00 is Sp02) = rep = int ; let v = (A0!m, A00!p) ;
+species Foo00 (A0 is Sp00, A00 is Sp02) = representation = int ; let v = (A0!m, A00!p) ;
   (* WE EXPECT let local_v = Foo00.v _p_A00_p _p_A0_m *)
 end ;;
 

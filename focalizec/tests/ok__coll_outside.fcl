@@ -9,7 +9,7 @@ open "basics" ;;
 (* ****************************************************************** *)
 
 species Contrete_int inherits Basic_object =
-  rep = basics#int ;
+  representation = basics#int ;
   let printer (x in Self) = print_int (x) ;
   let create (x in int) in Self = 15 ;
 end ;;
@@ -17,7 +17,7 @@ collection Int implements Contrete_int ;;
 
 
 species Contrete_couple_ints inherits Basic_object =
-  rep = (Int * Int) ;
+  representation = (Int * Int) ;
   let create (x in int) in Self = crp ((Int!create (x)), (Int!create (x))) ;
 
   let printer (x in Self) =

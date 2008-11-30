@@ -8,7 +8,7 @@ open "basics" ;;
 (* ************************************************** *)
 
 species OddEven =
-  rep = basics#int ;
+  representation = basics#int ;
 
   let cinq in Self = 5 ;
 

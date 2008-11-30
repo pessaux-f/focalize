@@ -15,7 +15,7 @@ species A inherits Basic_object =
 end ;;
 
 species B inherits A =
-  rep = basics#int ;
+  representation = basics#int ;
   proof of foo = by definition of id ;
   let id (x in Self) = int_plus (x, 1) ;
 end ;;

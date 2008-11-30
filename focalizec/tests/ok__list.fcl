@@ -64,7 +64,7 @@ species List (E is Basic_object) inherits Equalified_object =
 end ;;
 
 species Concrete_list (E is Basic_object) inherits List (E) =
-  rep = basics#list (E) ;
+  representation = basics#list (E) ;
   let nil in Self = ext_nil ;
   let cons (e, l) in Self = ext_cons (e, l) ;
   let head (l in Self) in E = ext_head (l) ;
@@ -72,13 +72,13 @@ species Concrete_list (E is Basic_object) inherits List (E) =
 end ;;
 
 species Contrete_int inherits Basic_object =
-  rep = basics#int ;
+  representation = basics#int ;
   let print = string_of_int ;
 end ;;
 collection Int implements Contrete_int ;;
 
 species Contrete_bool inherits Basic_object =
-  rep = basics#bool ;
+  representation = basics#bool ;
   let print = print_bool ;
 end ;;
 collection Bool implements Contrete_bool ;;

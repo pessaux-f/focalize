@@ -16,6 +16,6 @@ species Sprim (K is Base) =
 end ;;
 
 species S (Cp is Base, Cpprim is Sprim (Cp)) =
-  rep = Cpprim ;
+  representation = Cpprim ;
   let x = Cpprim!y ;
 end ;;

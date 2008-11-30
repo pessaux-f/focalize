@@ -11,13 +11,13 @@ species Poly =
 end ;;
 
 species Id_bool (X is Poly) =
-  rep = basics#unit ;
+  representation = basics#unit ;
 
   let elt = X!id (true) ;
 end ;;
 
 species Id_int inherits Poly =
-  rep = basics#unit ;
+  representation = basics#unit ;
 
   let id (x) = if true then 1 else x ;
 end ;;
