@@ -1,0 +1,119 @@
+#!/bin/sh
+
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLize compiler                             #
+#                                                                      #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                                                                      #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 INRIA                                                #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+#  $Id: configure,v 1.1 2008-11-30 12:22:47 weis Exp $
+
+prefix=/usr/local
+
+set_dirs () {
+  bindir="${prefix}/bin"
+}
+
+#!/bin/sh
+
+#  Copyright 2004 INRIA
+#  $Id: configure,v 1.1 2008-11-30 12:22:47 weis Exp $
+
+check(){
+  type "$1" >/dev/null 2>&1
+}
+
+# Default settings
+prefix=/usr/local
+
+set_dirs () {
+  bindir="${prefix}/bin"
+  libdir="${prefix}/lib/zenon"
+}
+
+set_dirs
+debug=true
+
+if check convert; then convert=convert; else convert=:; fi
+if check coqc; then coqc=coqc; else coqc=:; fi
+if check gs; then gs=gs; else gs=:; fi
+
+sum=:
+for i in sum md5 md5sum md5deep sha1deep sha256deep; do
+  if check $i; then sum=$i; break; fi
+done
+
+while : ; do
+  case $# in 0) break;; esac
+  case "$1" in
+    -prefix | --prefix) prefix="$2"; set_dirs; shift 2;;
+    -bindir | --bindir) bindir="$2"; shift 2;;
+    -libdir | --libdir) libdir="$2"; shift 2;;
+    -convert | --convert) convert="$2"; shift 2;;
+    -coqc | --coqc) coqc="$2"; shift 2;;
+    -debug | --debug | --enable-debug) debug=true; shift;;
+    -gs | --gs) gs="$2"; shift 2;;
+    -nodebug | --nodebug | --disable-debug) debug=false; shift;;
+    -sum | --sum) sum="$2"; shift 2;;
+    -help | --help)
+       echo "usage: ./configure [options]"
+       echo "options are:"
+       echo "  [-]-bindir <directory>"
+       echo "    set the binary directory for installation (default ${bindir})"
+       echo "  [-]-libdir <directory>"
+       echo "    set the library directory for installation (default ${libdir})"
+       echo "  [-]-prefix <directory>"
+       echo "    set the directory prefix for installation (default ${prefix})"
+       echo "  [-]-convert <executable-file>"
+       echo "    set absolute path for the command convert."
+       echo "  [-]-coq <executable-file>"
+       echo "    set absolute path for the command coqc."
+       echo "  [-]-debug | [-]-enable-debug"
+       echo "    enable debugging"
+       echo "  [-]-gs <executable-file>"
+       echo "    set absolute path for the command gs."
+       echo "  [-]-nodebug | --disable-debug"
+       echo "    disable debugging"
+       echo "  [-]-sum <executable-file>"
+       echo "    set absolute path for the check-sum command."
+       echo "  [-]-help";
+       echo "    display help and exit"
+       exit 0
+       ;;
+    *) echo "./configure: bad option '$1'" >&2
+       echo "For help, use ./configure -help" >&2
+       exit 2
+       ;;
+  esac
+done
+
+if $debug; then
+  bytdebugflags="-g"
+  optdebugflags="-dtypes"
+else
+  bytdebugflags=
+  optdebugflags=
+fi
+
+sed -e "s,@BINDIR@,$bindir," \
+    -e "s,@LIBDIR@,$libdir," \
+    -e "s,@prefix@,$prefix," \
+    -e "s,@BYTDEBUGFLAGS@,$bytdebugflags," \
+    -e "s,@OPTDEBUGFLAGS@,$optdebugflags," \
+    -e "s,@CONVERT@,$convert," \
+    -e "s,@COQC@,$coqc," \
+    -e "s,@GS@,$gs," \
+    -e "s,@SUM@,$sum," \
+    <.config_var.in >.config_var
+
+echo "Configuration summary for zenon:"
+cat .config_var
