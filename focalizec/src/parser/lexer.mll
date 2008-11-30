@@ -5,6 +5,7 @@
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*            François Pessaux                                         *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2006, 2008 LIP6 and INRIA                                *)
@@ -12,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.66 2008-11-29 20:14:50 weis Exp $ *)
+(* $Id: lexer.mll,v 1.67 2008-11-29 23:24:01 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
