@@ -1,22 +1,23 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6   -  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: iterators.fcl,v 1.6 2008-11-28 10:09:22 pessaux Exp $ *)
+(* $Id: iterators.fcl,v 1.7 2008-11-30 23:12:09 weis Exp $ *)
 
 (** Basic techniques to iterate a process including very simple numbers. *)
-
 
 use "sets" ;;
 open "sets" ;;
@@ -27,12 +28,11 @@ open "constants" ;;
 use "integers" ;;
 open "integers" ;;
 
-
 species Binop (S is Setoid) inherits basics#Basic_object =
   signature binop : S -> S -> S ;
   property binop_substitution_rule: all x_1 x_2 y_1 y_2 in S,
-    S!equal(x_1, x_2) -> S!equal(y_1, y_2) -> 
-      S!equal(!binop(x_1, y_1), !binop(x_2, y_2));
+    S!equal (x_1, x_2) -> S!equal (y_1, y_2) -> 
+      S!equal (!binop (x_1, y_1), !binop (x_2, y_2));
 end ;;
 
 (**
@@ -41,8 +41,8 @@ end ;;
  *)
 
 species Iteration (Nat is Ordered_Enumeration_system, S is Setoid,
-                   F_binary is Binop(S), zero in S) =
-   rep = basics#unit ;
+                   F_binary is Binop (S), zero in S) =
+   representation = basics#unit ;
    let rec iterate (x in S, n in Nat) in S =
      if Nat!equal (n, Nat!start) then zero
      else F_binary!binop (x, !iterate (x, Nat!predecessor (n)))
@@ -50,12 +50,12 @@ species Iteration (Nat is Ordered_Enumeration_system, S is Setoid,
      assumed {* *};
 
    theorem iterate_spec_base: all x in S,
-     S!equal(!iterate(x, Nat!start), zero)
+     S!equal (!iterate (x, Nat!start), zero)
      proof = assumed {* [rr]: to do *};
 
    theorem iterate_spec_ind: all x in S, all n in Nat,
-     S!equal(!iterate(x, Nat!successor(n)),
-	     F_binary!binop(x, !iterate(x, n)))
+     S!equal (!iterate (x, Nat!successor (n)),
+	     F_binary!binop (x, !iterate (x, n)))
      proof = assumed {* [rr]: to do *};
 
 end ;;
@@ -120,9 +120,9 @@ species Dichotomic_system
 
 (*    (\** an induction principle for dichotomy *\)  *)
 (*   theorem dichotomic_principle: all p in (Self -> Prop), *)
-(*     p(!zero) -> *)
-(*       (all n in Self, (p(n) -> (p(!mult2(n)) /\ p(!successor(!mult2(n)))))) -> *)
-(*          (all n in Self, p(n)) *)
+(*     p (!zero) -> *)
+(*       (all n in Self, (p(n) -> (p (!mult2 (n)) /\ p (!successor (!mult2 (n)))))) -> *)
+(*          (all n in Self, p (n)) *)
 (*     proof = assumed {* Because todo *} *)
 (*     ; *)
 
@@ -137,12 +137,12 @@ end ;;
 *)
 species Dichotomy (Nat is Dichotomic_system,
                    S is Setoid,
-                   Bins is Binop(S),
+                   Bins is Binop (S),
                    stop in S)
   inherits basics#Basic_object =
-  rep = basics#unit ;
+  representation = basics#unit ;
 
-   (** f(x,f(...f(x,stop))) *)
+   (** f (x,f (...f (x,stop))) *)
   let rec dichot (x in S, n in Nat) in S =
      let n_2 = Nat!div2 (n) in
      if Nat!equal (n_2, Nat!zero)
@@ -152,7 +152,7 @@ species Dichotomy (Nat is Dichotomic_system,
        else (* we know n is 1 *)
          Bins!binop (x, stop)
      else
-       let e = !dichot(x, n_2) in
+       let e = !dichot (x, n_2) in
        if Nat!is_odd (n)
        then Bins!binop (x, Bins!binop (e, e))
        else (* we know it is even *)
