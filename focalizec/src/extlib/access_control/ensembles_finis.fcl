@@ -1,22 +1,21 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  -  INRIA Rocquencourt           *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.7 2008-11-28 10:15:26 pessaux Exp $ *)
-
-(*pp basic_ext.cmo*)
+(* $Id: ensembles_finis.fcl,v 1.8 2008-12-01 12:26:36 weis Exp $ *)
 
 (**
 
@@ -26,7 +25,7 @@
 
 *)
 
-(** Exemple de fichier FoC: Ensembles ordonnés. *)
+(** Exemple de fichier FoCaLize: Ensembles ordonnés. *)
 use "basics" ;;
 open "basics" ;;
 use "sets_orders" ;;
@@ -308,14 +307,14 @@ end
 (** implantation des sous-ensembles à partir de listes; cas non ordonné. *)
 species Liste (A is Setoid) inherits Ensembles_finis (A) =
 
-  rep = basics#list (A) ;
+  representation = basics#list (A) ;
 
   (** Impression des résultats. *)
   let print (l in Self) =
     let rec aux (l) =
       match l with
       | basics#[] -> "]"
-      | x :: l -> (A!print (x)) ^ "," ^ (aux (l)) in
+      | x :: l -> A!print (x) ^ "," ^ aux (l) in
     "[" ^ (aux (l)) ;
 
   (** Invariant de representation: les listes ne contiennent pas
@@ -2083,7 +2082,7 @@ end
 (**************************************************************)
 
 species Entiers_concrets inherits Ordered_set =
-  rep = int ;
+  representation = int ;
   let element = 1 ;
   let equal = int_eq ;
   let leq = int_leq ;
@@ -2135,30 +2134,30 @@ let print_endline (s) = print_string (s ^ "\n");;
 
 (* *********** tout ceci devrait etre inutile maintenant
 
-(* Theoremes pour le fichier util.foc, je suis oblige de les definir ici *)
+(* Theoremes pour le fichier util.fcl, je suis oblige de les definir ici *)
 (* sinon le compilo ne les voit pas *)
-theorem spec_crp : all x in ('a * 'b),
-  x = basics#crp (basics#first (x), basics#scnd (x))
+theorem spec_pair : all x in ('a * 'b),
+  x = basics#pair (basics#fst (x), basics#snd (x))
   proof : assumed {* Using trusted external code. *};;
 
-theorem spec_crp_subst : all x1 x2 in 'a, all y1 y2 in 'b,
-  (x1 = x2 /\ y1 = y2) -> (basics#crp (x1, y1) = basics#crp(x2, y2))
+theorem spec_pair_subst : all x1 x2 in 'a, all y1 y2 in 'b,
+  (x1 = x2 /\ y1 = y2) -> (basics#pair (x1, y1) = basics#pair(x2, y2))
   proof : assumed {* Using trusted external code. *};;
 
-theorem spec_first : all x in 'a, all y in 'b,
-  x = basics#first (basics#crp (x, y))
+theorem spec_fst : all x in 'a, all y in 'b,
+  x = basics#fst (basics#pair (x, y))
   proof : assumed {* Using trusted external code. *};;
 
-theorem spec_first_subst : all x y in ('a * 'b),
-  x = y -> basics#first (x) = basics#first (y)
+theorem spec_fst_subst : all x y in ('a * 'b),
+  x = y -> basics#fst (x) = basics#fst (y)
   proof = assumed {* Using trusted external code. *};;
 
-theorem spec_scnd : all x in 'a, all y in 'b,
-  y = basics#scnd (basics#crp (x, y))
+theorem spec_snd : all x in 'a, all y in 'b,
+  y = basics#snd (basics#pair (x, y))
   proof = assumed {* Using trusted external code. *};;
 
-theorem spec_scnd_subst : all x y in ('a * 'b),
-  x = y -> basics#scnd(x) = basics#scnd(y)
+theorem spec_snd_subst : all x y in ('a * 'b),
+  x = y -> basics#snd(x) = basics#snd(y)
   proof = assumed {* Using trusted external code. *};;
 
 ******************* *)
