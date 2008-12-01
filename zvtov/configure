@@ -14,31 +14,32 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.14 2008-11-30 11:48:31 weis Exp $
+#  $Id: configure,v 1.15 2008-12-01 15:17:01 weis Exp $
 
-prefix=/usr/local
+PREFIX=/usr/local
 
 set_dirs () {
-  bindir="${prefix}/bin"
+  BINDIR="${PREFIX}/bin"
 }
 
 set_dirs
-xmlrpc=false
+
+XMLRPC=false
 
 while : ; do
   case $# in 0) break;; esac
 
   case $1 in
-  -bindir | --bindir) bindir="$2"; shift;;
-  -prefix | --prefix) prefix="$2"; set_dirs; shift;;
-  -xmlrpc | --xmlrpc) xmlrpc=true;;
+  -bindir | --bindir) BINDIR="$2"; shift;;
+  -prefix | --prefix) PREFIX="$2"; set_dirs; shift;;
+  -xmlrpc | --xmlrpc) XMLRPC=true;;
   -help | --help)
      echo "usage: ./configure [options]"
      echo "options are:"
      echo "  [-]-bindir <directory>";
-     echo "    set the binary directory for installation (default ${bindir})."
+     echo "    set the binary directory for installation (default ${BINDIR})."
      echo "  [-]-prefix <directory>";
-     echo "    set the directory prefix for installation (default ${prefix})."
+     echo "    set the directory prefix for installation (default ${PREFIX})."
      echo "  [-]-xmlrpc";
      echo "    configure with XMLRPC option on."
      echo "  [-]-help";
@@ -53,7 +54,7 @@ while : ; do
   shift
 done
 
-if $xmlrpc; then
+if $XMLRPC; then
   XMLRPCFILE=xmlrpc
   XMLRPCFLAGS="`ocamlfind query -r -i-format xmlrpc | tr '\012' ' '`"
   XMLRPCLINK="`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\012' ' '`"
@@ -65,8 +66,8 @@ fi
 
 : >.config_var
 
-echo "prefix=$prefix" >>.config_var
-echo "bindir=$bindir" >>.config_var
+echo "PREFIX=$PREFIX" >>.config_var
+echo "BINDIR=$BINDIR" >>.config_var
 echo "XMLRPCFILE=$XMLRPCFILE" >>.config_var
 echo "XMLRPCFLAGS=$XMLRPCFLAGS" >>.config_var
 echo "XMLRPCLINK=$XMLRPCLINK" >>.config_var

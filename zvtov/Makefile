@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: Makefile,v 1.19 2008-11-30 21:53:56 weis Exp $
+#  $Id: Makefile,v 1.20 2008-12-01 15:17:01 weis Exp $
 
 include .config_var
 
@@ -65,12 +65,12 @@ zvtov: zvtov.byt
 
 .PHONY: install
 install:
-	mkdir -p "$(bindir)"
-	cp -p zvtov "$(bindir)"/
+	mkdir -p "$(BINDIR)"
+	cp -p zvtov "$(BINDIR)"/
 
 .PHONY: uninstall
 uninstall:
-	rm -f "$(bindir)"/zvtov
+	rm -f "$(BINDIR)"/zvtov
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
