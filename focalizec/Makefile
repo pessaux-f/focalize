@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.23 2008-11-30 21:56:28 weis Exp $
+# $Id: Makefile,v 1.24 2008-12-01 18:50:03 weis Exp $
 
 ROOT_DIR = .
 
@@ -34,28 +34,28 @@ include $(ROOT_DIR)/Makefile.common
 all:: lib
 
 byt bin::
-	for i in $(COMPILER_DIRS); do \
+	@for i in $(COMPILER_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) $@) || exit; \
 	  echo "<-- $$i"; \
         done
 
 lib:
-	for i in $(LIB_DIRS); do \
+	@for i in $(LIB_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) $@) || exit; \
 	  echo "<-- $$i [$$?]"; \
         done
 
 clean doc depend::
-	for i in $(SUB_DIRS); do \
+	@for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) $@) || exit; \
 	  echo "<-- $$i [$$?]"; \
         done
 
 install::
-	for i in $(COMPILER_INSTALL_DIRS); do \
+	@for i in $(COMPILER_INSTALL_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) $@) || exit; \
 	  echo "<-- $$i [$$?]"; \
