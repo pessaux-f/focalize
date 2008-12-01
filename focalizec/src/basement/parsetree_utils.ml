@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.28 2008-11-29 23:23:18 weis Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.29 2008-12-01 12:41:08 weis Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -163,16 +163,26 @@ let rec get_local_idents_and_types_from_pattern pat =
 
 (* ********************************************************************* *)
 (* string -> string                                                      *)
-(** {b Descr} : Translate a FoC operator name to a legal OCaml function
-              name, preventing the versatile FoC operators names from
-              being lexically incorrect if straighforwardly converted
-              into OCaml identifiers.
-              The transformation is pretty stupid, replacing all the
-              legal "symbolic" characters available for FoC prefix/infix
-              idents (extracted from the lexer definitions) by a regular
-              string.
+(** {b Descr} : Translate a FoCaLize operator name to a legal OCaml or Coq
+              function name, preventing the versatile FoCaLize operators
+              names from being lexically incorrect if straighforwardly
+              converted into OCaml or Coq identifiers.
+              The transformation is pretty simple and stupid (read
+              sturdy :), replacing all the legal "symbolic" characters
+              available for FoCaLize prefix/infix idents (extracted from
+              the lexer definitions) by a regular string describing it.
 
-    {b Rem} : Not exported outsidethis module.                           *)
+    {b Rem} : Not exported outside this module.
+
+    {b Rem} : This function should not be defined here but in the lexical
+    analyser directory, in order to be up to date with the lexem
+    definitions. To be even safer, we should define the full range of tokens
+    in the [vname] type: we still lack the prefix upper and infix upper
+    classes of idents; this would correct and simplify the definition of
+    [parse_operator_string], which is still wrong, since it does not handle
+    the bunch of particular cases it should treat to (re)-discover the true
+    class of identifiers, if we want to correctly treat them.  *)
+
 (* ********************************************************************* *)
 let parse_operator_string op_string =
   let renamed_operator = ref "" in
@@ -180,33 +190,40 @@ let parse_operator_string op_string =
     (fun character ->
       let str_tail =
         (match character with
-         | '`' (* ` Helping emacs *) -> "_focop_bquote_"
-         | '~' -> "_focop_tilda_"
-         | '?' -> "_focop_question_"
-         | '$' -> "_focop_dollar_"
-         | '!' -> "_focop_bang_"
-         | '#' -> "_focop_sharp_"
-         | '+' -> "_focop_plus_"
-         | '-' -> "_focop_minus_"
-         | '*' -> "_focop_star_"
-         | '/' -> "_focop_slash_"
-         | '%' -> "_focop_percent_"
-         | '&' -> "_focop_ampers_"
-         | '|' -> "_focop_pipe_"
-         | ',' -> "_focop_comma_"
-         | ':' -> "_focop_colon_"
-         | ';' -> "_focop_semi_"
-         | '<' -> "_focop_lt_"
-         | '=' -> "_focop_eq_"
-         | '>' -> "_focop_gt_"
-         | '@' -> "_focop_at_"
-         | '^' -> "_focop_hat_"
-         | '\\' -> "_focop_bslash"
-         | whatever ->
+         | '`' (* ` Helping emacs *) -> "_backquote_"
+         | '~' -> "_tilda_"
+         | '?' -> "_question_"
+         | '$' -> "_dollar_"
+         | '!' -> "_bang_"
+         | '#' -> "_sharp_"
+         | '+' -> "_plus_"
+         | '-' -> "_dash_"
+         | '*' -> "_star_"
+         | '/' -> "_slash_"
+         | '%' -> "_percent_"
+         | '&' -> "_amper_"
+         | '|' -> "_bar_"
+         | ',' -> "_comma_"
+         | ':' -> "_colon_"
+         | ';' -> "_semi_"
+         | '<' -> "_lt_"
+         | '=' -> "_equal_"
+         | '>' -> "_gt_"
+         | '@' -> "_at_"
+         | '^' -> "_hat_"
+         | '\\' -> "_backslash_"
+           (* In case we have a delimited ident with strange chars in it. *)
+         | ' ' -> "_space_"
+         | '.' -> "_dot_"
+         | '(' -> "_lparen_"
+         | ')' -> "_rparen_"
+         | '[' -> "_lbracket_"
+         | ']' -> "_rbracket_"
+         | '{' -> "_lbrace_"
+         | '}' -> "_rbrace_"
+         | c ->
              (* For any other character, keep it unchanged. *)
-             let s = " " in
-             s.[0] <- whatever ;
-             s) in
+             String.make 1 c) in
       (* Appending on string is not very efficient, but *)
       (* this should not be a real matter here ! *)
       renamed_operator := !renamed_operator ^ str_tail)
@@ -215,11 +232,22 @@ let parse_operator_string op_string =
   !renamed_operator
 ;;
 
-
+let vname_as_string_with_operators_expanded = function
+  | Parsetree.Vlident s
+  | Parsetree.Vqident s -> s
+  | Parsetree.Vuident "()" | Vuident "[]" | Vuident "::" -> s
+  | Parsetree.Vuident s ->
+      assert (String.length s > 0);
+      begin match s.[0] with
+      | 'A' .. 'Z' -> s
+      | _ -> parse_operator_string s end
+  | Parsetree.Vpident s
+  | Parsetree.Viident s -> parse_operator_string s
+;;
 
 (* ********************************************************************* *)
 (* Format.formatter -> Parsetree.vname -> unit                           *)
-(** {b Descr} : Pretty prints a [vname] value as OCaml or Coq source.
+(** {b Descr} : Pretty prints a [vname] value as an OCaml or Coq source ident.
     Because FoC allows more infix/prefix operators than OCaml or Coq
     syntax, it's impossible to crudely translate the string of the
     [vname] to OCaml or Coq.
@@ -229,31 +257,15 @@ let parse_operator_string op_string =
     Then, instead of having particular cases for operators that can be
     straighforward translated (like "( +)") and the others, we adopt a
     uniform mapping for infix and prefix operators using the
-    [parse_operator_string] function to transform infix/prefix
-    operators names before printing and straighforwardly print other
-    operators names.
+    [vname_as_string_with_operators_expanded] function to transform
+    infix/prefix operators names before printing and straighforwardly
+    print other operators names.
 
     {b Rem} : Exported ouside this module.                               *)
 (* ********************************************************************* *)
-let pp_vname_with_operators_expanded ppf = function
-  | Parsetree.Vlident s
-  | Parsetree.Vuident s
-  | Parsetree.Vqident s -> Format.fprintf ppf "%s" s
-  | Parsetree.Vpident s
-  | Parsetree.Viident s -> Format.fprintf ppf "%s" (parse_operator_string s)
+let pp_vname_with_operators_expanded ppf vname =
+  Format.fprintf ppf "%s" (vname_as_string_with_operators_expanded vname)
 ;;
-
-
-
-let vname_as_string_with_operators_expanded = function
-  | Parsetree.Vlident s
-  | Parsetree.Vuident s
-  | Parsetree.Vqident s -> s
-  | Parsetree.Vpident s
-  | Parsetree.Viident s -> parse_operator_string s
-;;
-
-
 
 let type_coll_from_qualified_species (species_modname, species_vname) =
   (species_modname, (name_of_vname species_vname))
