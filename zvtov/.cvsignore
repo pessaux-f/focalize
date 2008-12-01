@@ -3,6 +3,8 @@
 *.output
 gmon.out
 .config_var
+*.byt
+*.bin
 zvtov
 lexer.ml
 lexer_coq.ml

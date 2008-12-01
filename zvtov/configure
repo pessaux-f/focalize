@@ -7,6 +7,7 @@
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
 #            Damien Doligez                                            #
+#                                                                      #
 #                               LIP6  --  INRIA Rocquencourt           #
 #                                                                      #
 #  Copyright 2008 INRIA                                                #
@@ -14,30 +15,30 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.15 2008-12-01 15:17:01 weis Exp $
+#  $Id: configure,v 1.16 2008-12-01 18:45:04 weis Exp $
 
+# Default settings
 PREFIX=/usr/local
+USE_XMLRPC=false
 
 set_dirs () {
-  BINDIR="${PREFIX}/bin"
+  BIN_DIR="${PREFIX}/bin"
 }
 
 set_dirs
-
-XMLRPC=false
 
 while : ; do
   case $# in 0) break;; esac
 
   case $1 in
-  -bindir | --bindir) BINDIR="$2"; shift;;
+  -bindir | --bindir) BIN_DIR="$2"; shift;;
   -prefix | --prefix) PREFIX="$2"; set_dirs; shift;;
-  -xmlrpc | --xmlrpc) XMLRPC=true;;
+  -xmlrpc | --xmlrpc) USE_XMLRPC=true;;
   -help | --help)
      echo "usage: ./configure [options]"
      echo "options are:"
      echo "  [-]-bindir <directory>";
-     echo "    set the binary directory for installation (default ${BINDIR})."
+     echo "    set the binary directory for installation (default ${BIN_DIR})."
      echo "  [-]-prefix <directory>";
      echo "    set the directory prefix for installation (default ${PREFIX})."
      echo "  [-]-xmlrpc";
@@ -54,12 +55,12 @@ while : ; do
   shift
 done
 
-if $XMLRPC; then
-  XMLRPCFILE=xmlrpc
+if $USE_XMLRPC; then
+  XMLRPC=xmlrpc
   XMLRPCFLAGS="`ocamlfind query -r -i-format xmlrpc | tr '\012' ' '`"
   XMLRPCLINK="`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\012' ' '`"
 else
-  XMLRPCFILE=
+  XMLRPC=
   XMLRPCFLAGS=
   XMLRPCLINK=
 fi
@@ -67,8 +68,8 @@ fi
 : >.config_var
 
 echo "PREFIX=$PREFIX" >>.config_var
-echo "BINDIR=$BINDIR" >>.config_var
-echo "XMLRPCFILE=$XMLRPCFILE" >>.config_var
+echo "BIN_DIR=$BIN_DIR" >>.config_var
+echo "XMLRPC=$XMLRPC" >>.config_var
 echo "XMLRPCFLAGS=$XMLRPCFLAGS" >>.config_var
 echo "XMLRPCLINK=$XMLRPCLINK" >>.config_var
 

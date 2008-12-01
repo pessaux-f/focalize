@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: Makefile,v 1.20 2008-12-01 15:17:01 weis Exp $
+#  $Id: Makefile,v 1.21 2008-12-01 18:45:04 weis Exp $
 
 include .config_var
 
@@ -31,12 +31,12 @@ CAMLBINFLAGS	= $(COMPFLAGS) $(DEBUGFLAG) $(XMLRPCFLAGS)
 
 MODULES = version misc options cache \
           expr parser_coq lexer_coq invoke invoke_cime \
-          $(XMLRPCFILE) token lexer parser main
+          $(XMLRPC) token lexer parser main
 
 LEXERS = lexer_coq lexer
 PARSERS = parser_coq
 
-PLAIN_MODULES = version misc cache invoke expr invoke_cime $(XMLRPCFILE) \
+PLAIN_MODULES = version misc cache invoke expr invoke_cime $(XMLRPC) \
                 token parser options main
 
 IMPL = $(MODULES:%=%.ml)
@@ -65,12 +65,12 @@ zvtov: zvtov.byt
 
 .PHONY: install
 install:
-	mkdir -p "$(BINDIR)"
-	cp -p zvtov "$(BINDIR)"/
+	mkdir -p "$(BIN_DIR)"
+	cp -p zvtov "$(BIN_DIR)"/
 
 .PHONY: uninstall
 uninstall:
-	rm -f "$(BINDIR)"/zvtov
+	rm -f "$(BIN_DIR)"/zvtov
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
