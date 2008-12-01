@@ -15,64 +15,68 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.2 2008-11-30 21:49:16 weis Exp $
+#  $Id: configure,v 1.3 2008-12-01 19:21:30 weis Exp $
 
-prefix=/usr/local
-
-set_dirs () {
-  bindir="${prefix}/bin"
-}
-
-check(){
+check () {
   type "$1" >/dev/null 2>&1
 }
 
 # Default settings
-prefix=/usr/local
+PREFIX=/usr/local
+DEBUG=true
+USE_XMLRPC=false
 
 set_dirs () {
-  bindir="${prefix}/bin"
-  libdir="${prefix}/lib/focalize"
+  BIN_DIR="${PREFIX}/bin"
+  LIB_DIR="${PREFIX}/lib/focalize"
 }
 
 set_dirs
-debug=true
 
 while : ; do
   case $# in 0) break;; esac
   case "$1" in
-    -prefix | --prefix) prefix="$2"; set_dirs; shift 2;;
-    -bindir | --bindir) bindir="$2"; shift 2;;
-    -libdir | --libdir) libdir="$2"; shift 2;;
-    -convert | --convert) convert="$2"; shift 2;;
-    -coqc | --coqc) coqc="$2"; shift 2;;
-    -debug | --debug | --enable-debug) debug=true; shift;;
-    -gs | --gs) gs="$2"; shift 2;;
-    -nodebug | --nodebug | --disable-debug) debug=false; shift;;
-    -sum | --sum) sum="$2"; shift 2;;
+    -prefix | --prefix) PREFIX="$2"; set_dirs; shift 2;;
+    -bindir | --bindir) BIN_DIR="$2"; shift 2;;
+    -libdir | --libdir) LIB_DIR="$2"; shift 2;;
+    -convert | --convert) CONVERT="$2"; shift 2;;
+    -coqc | --coqc) COQC="$2"; shift 2;;
+    -debug | --debug | --enable-debug) DEBUG=true; shift;;
+    -gs | --gs) GS="$2"; shift 2;;
+    -nodebug | --nodebug | --disable-debug) DEBUG=false; shift;;
+    -sum | --sum) SUM="$2"; shift 2;;
     -help | --help)
        echo "usage: ./configure [options]"
-       echo "options are:"
+       echo
+       echo "general options are:"
+       echo
        echo "  [-]-bindir <directory>"
-       echo "    set the binary directory for installation (default ${bindir})"
+       echo "    set the binary directory for installation (default ${BIN_DIR})"
        echo "  [-]-libdir <directory>"
-       echo "    set the library directory for installation (default ${libdir})"
+       echo "    set the library directory for installation (default ${LIB_DIR})"
        echo "  [-]-prefix <directory>"
-       echo "    set the directory prefix for installation (default ${prefix})"
+       echo "    set the directory prefix for installation (default ${PREFIX})"
+       echo "  [-]-debug | [-]-enable-debug"
+       echo "    enable debugging"
+       echo "  [-]-nodebug | --disable-debug"
+       echo "    disable debugging"
+       echo "  [-]-help";
+       echo "    display help and exit"
+       echo
+       echo "options specific to zenon are:"
+       echo
        echo "  [-]-convert <executable-file>"
        echo "    set absolute path for the command convert."
        echo "  [-]-coq <executable-file>"
        echo "    set absolute path for the command coqc."
-       echo "  [-]-debug | [-]-enable-debug"
-       echo "    enable debugging"
        echo "  [-]-gs <executable-file>"
        echo "    set absolute path for the command gs."
-       echo "  [-]-nodebug | --disable-debug"
-       echo "    disable debugging"
        echo "  [-]-sum <executable-file>"
        echo "    set absolute path for the check-sum command."
-       echo "  [-]-help";
-       echo "    display help and exit"
+       echo
+       echo "options for zvtov are:"
+       echo "  [-]-xmlrpc";
+       echo "    configure zvtov with XMLRPC option on."
        exit 0
        ;;
     *) echo "./configure: bad option '$1'" >&2
@@ -82,26 +86,45 @@ while : ; do
   esac
 done
 
-if $debug; then
-  bytdebugflags="-g"
-  bindebugflags="-dtypes"
+if $DEBUG; then
+  BYT_DEBUG_FLAGS="-g"
+  BIN_DEBUG_FLAGS="-dtypes"
 else
-  bytdebugflags=
-  bindebugflags=
+  BYT_DEBUG_FLAGS=
+  BIN_DEBUG_FLAGS=
 fi
 
-sed -e "s,@BINDIR@,$bindir," \
-    -e "s,@LIBDIR@,$libdir," \
-    -e "s,@prefix@,$prefix," \
-    -e "s,@BYTDEBUGFLAGS@,$bytdebugflags," \
-    -e "s,@BINDEBUGFLAGS@,$bindebugflags," \
-    -e "s,@CONVERT@,$convert," \
-    -e "s,@COQC@,$coqc," \
-    -e "s,@GS@,$gs," \
-    -e "s,@SUM@,$sum," \
+if $USE_XMLRPC; then
+  XMLRPC=xmlrpc
+  XMLRPC_FLAGS="`ocamlfind query -r -i-format xmlrpc | tr '\012' ' '`"
+  XMLRPC_LINK="`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\012' ' '`"
+else
+  XMLRPC=
+  XMLRPC_FLAGS=
+  XMLRPC_LINK=
+fi
+
+sed -e "s,@BIN_DIR@,$BIN_DIR," \
+    -e "s,@LIB_DIR@,$LIB_DIR," \
+    -e "s,@PREFIX@,$PREFIX," \
+    -e "s,@BYT_DEBUG_FLAGS@,$BYT_DEBUG_FLAGS," \
+    -e "s,@BIN_DEBUG_FLAGS@,$BIN_DEBUG_FLAGS," \
+\
+    -e "s,@CONVERT@,$CONVERT," \
+    -e "s,@COQC@,$COQC," \
+    -e "s,@GS@,$GS," \
+    -e "s,@SUM@,$SUM," \
+\
+    -e "s,@XMLRPC@,$XMLRPC," \
+    -e "s,@XMLRPC_FLAGS@,$XMLRPC_FLAGS," \
+    -e "s,@XMLRPC_LINK@,$XMLRPC_LINK," \
     <.config_var.in >.config_var
 
-touch ./.depend tarballs/.depend
+touch ./.depend
+touch tarballs/.depend
+cp .config_var zenon/
+cp .config_var zvtov/
+cp .config_var focalizec/
 
 echo "Configuration summary for focalize:"
 cat .config_var
