@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.67 2008-11-29 23:24:01 weis Exp $ *)
+(* $Id: lexer.mll,v 1.68 2008-12-01 12:28:21 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -378,7 +378,7 @@ let token_of_delimited_ident s =
   | ':' | '`' -> (* ` Helping emacs *)
     token_of_uppercase_infix_symbol s
   (* start_uppercase_prefix_symbol *)
-  | '(' | '[' -> (* ]) Helping Emacs *)
+  | '(' | '[' | '{' -> (* ]) Helping Emacs *)
     token_of_uppercase_prefix_symbol s
   | _ -> assert false
 (** The first meaningful character at the beginning of a delimited
@@ -738,7 +738,7 @@ let symbolic =
   [ '/' '%' '&' '|' ';' '<' '=' '>' '@' '^' '\\' ]
 
 (** Characters that can only start an uppercase prefix symbol. *)
-let start_uppercase_prefix_symbolic = [ '[' '(' ] (* )] Helping emacs. *)
+let start_uppercase_prefix_symbolic = [ '[' '(' '{' ] (* )] Helping emacs. *)
 (** Characters that can only start an uppercase infix symbol. *)
 let start_uppercase_infix_symbolic = [ ':' '`'] (* ` Helping emacs. *)
 
@@ -773,7 +773,7 @@ let inside_lowercase_prefix_symbolic =
 
 let inside_lowercase_infix_symbolic = inside_lowercase_prefix_symbolic
 
-(** Symbolic characters inside a '(' or '[' starting uppercase prefix symbol.
+(** Symbolic characters inside a '(', '[', or '{' starting uppercase prefix symbol.
     We cannot have
     - '*' (to prevent ambiguity with comments)
     - a sign ('-', '+') to let the lexer generate 2 tokens for (-1) or 3 for
@@ -896,6 +896,7 @@ let regular_uppercase_prefix_symbol =
   the set [start_uppercase_prefix_symbol]. *)
     '_'* '[' (inside_uppercase_prefix_symbolic continue_uppercase_prefix_symbol*)? ']'
   | '_'* '(' (inside_uppercase_prefix_symbolic continue_uppercase_prefix_symbol*)? ')'
+  | '_'* '{' (inside_uppercase_prefix_symbolic continue_uppercase_prefix_symbol*)? '}'
 
 (** {7 Regular infix symbols} *)
 let regular_lowercase_infix_symbol =
@@ -1230,7 +1231,8 @@ rule token = parse
 and delimited_ident = parse
   | "\'\'"
     { () }
-  | '\\' [ '(' '-' '\\' '`' '\'' '\"' 'n' 't' 'b' 'r' ' ' '*' ')' ] (* ` Helping emacs *)
+  | '\\' [ '(' '{' '-' '\\' '`' '\'' '\"' 'n' 't' 'b' 'r' ' ' '*' '}' ')' ]
+    (* ` Helping emacs *)
     { store_delimited_ident_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
       delimited_ident lexbuf }
   | '\\' newline (whites as space)
@@ -1339,7 +1341,7 @@ and comment = parse
 and string = parse
   | '\"'
     { () }
-  | '\\' [ '(' '-' '\\' '`' '\'' '\"' 'n' 't' 'b' 'r' ' ' '*' ')' ]
+  | '\\' [ '(' '{' '-' '\\' '`' '\'' '\"' 'n' 't' 'b' 'r' ' ' '*' '}' ')' ]
     (* ` Helping emacs *)
     { store_string_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
       string lexbuf }
