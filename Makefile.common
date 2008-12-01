@@ -13,11 +13,11 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.1 2008-11-30 21:47:14 weis Exp $
+# $Id: Makefile.common,v 1.2 2008-12-01 22:16:49 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
-.PHONY: all byt bin clean doc install depend tests lib
+.PHONY: all byt bin clean doc install uninstall depend tests lib
 
 all:: byt bin
 
@@ -45,7 +45,7 @@ depend::
 tests::
 	if test -d tests; then ($(CD) tests; $(MAKE) all); fi
 
-.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .foc .fo .zv .v .vo
+.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .fo .zv .v .vo
 .SUFFIXES: .tex .dvi .ps .pdf .idx
 
 .ml.cmo:
@@ -62,9 +62,6 @@ tests::
 
 .mll.ml:
 	$(CAML_LEX) $<
-
-.foc.fo .foc.ml .foc.zv:
-	$(FOCALIZEC) $<
 
 .fcl.fo .fcl.ml .fcl.zv:
 	$(FOCALIZEC) $<

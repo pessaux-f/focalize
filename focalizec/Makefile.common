@@ -13,11 +13,11 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.16 2008-12-01 17:25:24 weis Exp $
+# $Id: Makefile.common,v 1.17 2008-12-01 22:16:49 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
-.PHONY: all byt bin clean doc install depend tests lib
+.PHONY: all byt bin clean doc install uninstall depend tests lib
 
 all:: byt bin
 
