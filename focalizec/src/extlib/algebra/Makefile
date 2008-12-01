@@ -5,6 +5,7 @@
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
 #            Damien Doligez                                            #
+#                                                                      #
 #                               LIP6  --  INRIA Rocquencourt           #
 #                                                                      #
 #  Copyright 2008 LIP6 and INRIA                                       #
@@ -12,11 +13,13 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.15 2008-12-01 19:10:57 weis Exp $
+# $Id: Makefile,v 1.16 2008-12-01 20:40:22 weis Exp $
 
 ROOT_DIR = ../..
 
 include $(ROOT_DIR)/Makefile.config
+
+LIB_INSTALL_DIR = $(LIB_DIR)/focalize/algebra
 
 # [rr]: changed this to include standard library
 CAML_COMP_FLAGS = -w A -warn-error Ae -dtypes -I $(ROOT_DIR)/stdlib
@@ -98,30 +101,30 @@ bin:: \
       $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 install::
-	$(MKDIR) $(FOCALIZE_INSTALL_LIB)/extlib/algebra
+	$(MKDIR) $(LIB_INSTALL_DIR)
 	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(FOCALIZE_BYT_OBJS_UNSAFE)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(FOCALIZE_BIN_OBJS_UNSAFE)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(FOCALIZE_VOS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_VOS) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_BYT_OBJS) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(EXTERNAL_BIN_OBJS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_BIN_OBJS) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(EXTERNAL_BIN_OBJS) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(EXTERNAL_VOS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_VOS) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/ ; \
 	fi
 
 
@@ -144,10 +147,6 @@ parse_poly.ml: parse_poly.fcl
 polys_abstract.ml: polys_abstract.fcl
 	$(FOCALIZEC) --no-coq-code $<
 #End temporary
-
-
-$(BYT_FOCALIZE_COMPILER) $(BIN_FOCALIZE_COMPILER):
-	cd $(ROOT_DIR); $(MAKE) all
 
 # Should be generated ?
 random_foc_externals.vo: $(ROOT_DIR)/stdlib/basics.vo

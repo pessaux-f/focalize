@@ -15,7 +15,9 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.3 2008-12-01 19:21:30 weis Exp $
+#  $Id: configure,v 1.4 2008-12-01 20:38:43 weis Exp $
+
+ABSOLUTE_ROOT_DIR=`pwd`
 
 check () {
   type "$1" >/dev/null 2>&1
@@ -28,7 +30,7 @@ USE_XMLRPC=false
 
 set_dirs () {
   BIN_DIR="${PREFIX}/bin"
-  LIB_DIR="${PREFIX}/lib/focalize"
+  LIB_DIR="${PREFIX}/lib"
 }
 
 set_dirs
@@ -104,9 +106,10 @@ else
   XMLRPC_LINK=
 fi
 
-sed -e "s,@BIN_DIR@,$BIN_DIR," \
-    -e "s,@LIB_DIR@,$LIB_DIR," \
+sed -e "s,@ABSOLUTE_ROOT_DIR@,$ABSOLUTE_ROOT_DIR," \
     -e "s,@PREFIX@,$PREFIX," \
+    -e "s,@BIN_DIR@,$BIN_DIR," \
+    -e "s,@LIB_DIR@,$LIB_DIR," \
     -e "s,@BYT_DEBUG_FLAGS@,$BYT_DEBUG_FLAGS," \
     -e "s,@BIN_DEBUG_FLAGS@,$BIN_DEBUG_FLAGS," \
 \

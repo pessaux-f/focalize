@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.66 2008-12-01 18:47:51 weis Exp $
+# $Id: Makefile,v 1.67 2008-12-01 20:40:22 weis Exp $
 
 ROOT_DIR = ..
 
@@ -21,6 +21,8 @@ include $(ROOT_DIR)/Makefile.config
 FOCALIZE_COMPILER = $(ROOT_DIR)/toplevel/focalizec
 
 FOCALIZE_COMP_FLAGS = -no-stdlib-path
+
+LIB_INSTALL_DIR = $(LIB_DIR)/focalize
 
 #From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
@@ -91,50 +93,50 @@ bin:: \
       $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 install::
-	$(MKDIR) $(LIB_DIR)
+	$(MKDIR) $(LIB_INSTALL_DIR)
 	@if [ "$(FOCALIZE_FOS)" != "" ] ; then \
 	  echo "Installing (FoCaLize) compiled certified libs." ; \
-	  $(CP) $(FOCALIZE_FOS) $(LIB_DIR)/ ; \
+	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(FOCALIZE_FOS_UNSAFE)" != "" ] ; then \
 	  echo "Installing (FoCaLize) compiled non-certified libs." ; \
-	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(LIB_DIR)/ ; \
+	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
 	  echo "Installing (OCaml bytecode) compiled certified libs." ; \
-	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_DIR)/ ; \
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(FOCALIZE_BYT_OBJS_UNSAFE)" != "" ] ; then \
 	  echo "Installing (OCaml bytecode) compiled non-certified libs." ; \
-	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(LIB_DIR)/ ; \
+	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then \
 	  echo "Installing (OCaml native) compiled certified libs." ; \
-	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_DIR)/ ; \
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(FOCALIZE_BIN_OBJS_UNSAFE)" != "" ] ; then \
 	  echo "Installing (OCaml native) compiled non-certified libs." ; \
-	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(LIB_DIR)/ ; \
+	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(FOCALIZE_VOS)" != "" ] ; then \
 	  echo "Installing (Coq) compiled certified libs." ; \
-	  $(CP) $(FOCALIZE_VOS) $(LIB_DIR)/ ; \
+	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(FOCALIZE_VOS_UNSAFE)" != "" ] ; then \
 	  echo "Installing (Coq) compiled non-certified libs." ; \
-	  $(CP) $(FOCALIZE_VOS_UNSAFE) $(LIB_DIR)/ ; \
+	  $(CP) $(FOCALIZE_VOS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then \
 	  echo "Installing (OCaml bytecode) external stubs." ; \
-	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_DIR)/ ; \
+	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(EXTERNAL_BIN_OBJS)" != "" ] ; then \
 	  echo "Installing (OCaml native) external stubs." ; \
-	  $(CP) $(EXTERNAL_BIN_OBJS) $(LIB_DIR)/ ; \
+	  $(CP) $(EXTERNAL_BIN_OBJS) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(EXTERNAL_VOS)" != "" ] ; then \
 	  echo "Installing (Coq) external stubs." ; \
-	  $(CP) $(EXTERNAL_VOS) $(LIB_DIR)/ ; \
+	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/ ; \
 	fi
 
 clean::
