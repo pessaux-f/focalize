@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.2 2008-12-01 20:36:58 weis Exp $
+# $Id: Makefile,v 1.3 2008-12-01 22:16:14 weis Exp $
 
 ROOT_DIR = .
 
@@ -28,6 +28,8 @@ COMPILER_DIR = focalizec
 SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(COMPILER_DIR)
 
 include $(ROOT_DIR)/Makefile.common
+
+.PHONY srcs compiler tools
 
 all:: srcs tools compiler
 
@@ -48,18 +50,18 @@ compiler:
 tools:
 	(cd $(CAML_DIR); \
 	 ./configure $(CAML_CONFIGURE_OPTIONS); \
-	 @(MAKE) $(CAML_MAKE_ALL_TARGET); \
-	 @(MAKE) install; \
+	 $(MAKE) $(CAML_MAKE_ALL_TARGET); \
+	 $(MAKE) install; \
 	)
 	(cd $(CAMLP5_DIR); \
 	 ./configure $(CAMLP5_CONFIGURE_OPTIONS); \
-	 @(MAKE) $(CAMLP5_MAKE_ALL_TARGET); \
-	 @(MAKE) install; \
+	 $(MAKE) $(CAMLP5_MAKE_ALL_TARGET); \
+	 $(MAKE) install; \
 	)
 	(cd $(COQ_DIR); \
 	 ./configure $(COQ_CONFIGURE_OPTIONS); \
-	 @(MAKE) $(COQ_MAKE_ALL_TARGET); \
-	 @(MAKE) install; \
+	 $(MAKE) $(COQ_MAKE_ALL_TARGET); \
+	 $(MAKE) install; \
 	)
 
 install uninstall clean doc depend::
