@@ -12,12 +12,11 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.14 2008-11-30 23:16:03 weis Exp $
+# $Id: Makefile,v 1.15 2008-12-01 19:10:57 weis Exp $
 
 ROOT_DIR = ../..
 
 include $(ROOT_DIR)/Makefile.config
-include $(ROOT_DIR)/Makefile.install
 
 # [rr]: changed this to include standard library
 CAML_COMP_FLAGS = -w A -warn-error Ae -dtypes -I $(ROOT_DIR)/stdlib
