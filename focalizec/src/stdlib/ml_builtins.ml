@@ -5,22 +5,23 @@
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ml_builtins.ml,v 1.6 2008-11-27 08:45:31 weis Exp $ *)
+(* $Id: ml_builtins.ml,v 1.7 2008-12-01 12:24:14 weis Exp $ *)
 
 (* ************************************************************************ *)
-(** {b Descr} : This module contains the external primitives bound to FoCaL
-              in the "basic.fcl" file.                                      *)
+(** {b Descr} : This module contains the external primitives bound to FoCaLize
+              in the "basics.fcl" file.                                      *)
 (* ************************************************************************ *)
 
-exception Foc_error of string ;;
-exception Foc_Failure of string ;;
+exception Focalize_error of string ;;
+exception Focalize_Failure of string ;;
 
 let bi__and_b x y = x && y ;;
 let bi__or_b x y = x || y ;;
@@ -28,7 +29,7 @@ let bi__not_b x = not x ;;
 let bi__xor_b b1 b2 =
   if b1 then if b2 then false else true else if b2 then true else false ;;
 
-let bi__foc_error msg = raise (Foc_error msg) ;;
+let bi__focalize_error msg = raise (Focalize_error msg) ;;
 let bi__string_concat x y = x ^ y ;;
 let bi__string_lt (x : string) (y : string) = x < y ;;
 let bi__string_print s = print_string s ;;
