@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.29 2008-12-01 12:41:08 weis Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.30 2008-12-01 12:45:40 weis Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -235,7 +235,7 @@ let parse_operator_string op_string =
 let vname_as_string_with_operators_expanded = function
   | Parsetree.Vlident s
   | Parsetree.Vqident s -> s
-  | Parsetree.Vuident "()" | Vuident "[]" | Vuident "::" -> s
+  | Parsetree.Vuident ("()" | "[]" | "::" as s) -> s
   | Parsetree.Vuident s ->
       assert (String.length s > 0);
       begin match s.[0] with
