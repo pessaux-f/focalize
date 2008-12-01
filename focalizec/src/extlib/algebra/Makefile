@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.13 2008-11-13 16:46:26 doligez Exp $
+# $Id: Makefile,v 1.14 2008-11-30 23:16:03 weis Exp $
 
 ROOT_DIR = ../..
 
@@ -34,26 +34,26 @@ FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(ROOT_DIR)/stdlib
 
 COQ_INCLUDES = -I $(ROOT_DIR)/../zenon/ -I $(ROOT_DIR)/stdlib
 
-#	products.foc
+#	products.fcl
 FOCALIZE_SRC = \
-	constants.foc \
-	additive_law.foc \
-	multiplicative_law.foc \
-	weak_structures.foc \
-	rings_fields.foc \
-	random_foc.foc \
-	integers.foc \
-	array_foc.foc \
-	products_foc.foc \
-	quotients.foc
+	constants.fcl \
+	additive_law.fcl \
+	multiplicative_law.fcl \
+	weak_structures.fcl \
+	rings_fields.fcl \
+	random_foc.fcl \
+	integers.fcl \
+	array_foc.fcl \
+	products_foc.fcl \
+	quotients.fcl
 
 FOCALIZE_SRC_UNSAFE = \
-	iterators.foc \
-	big_integers.foc
-#	parse_poly.foc polys_abstract.foc polys_concrete finite_fields fractions finite_factorize
+	iterators.fcl \
+	big_integers.fcl
+#	parse_poly.fcl polys_abstract.fcl polys_concrete finite_fields fractions finite_factorize
 
-FOCALIZE_MLS = $(FOCALIZE_SRC:.foc=.ml)
-FOCALIZE_MLS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.foc=.ml)
+FOCALIZE_MLS = $(FOCALIZE_SRC:.fcl=.ml)
+FOCALIZE_MLS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.ml)
 
 FOCALIZE_BYT_OBJS = $(FOCALIZE_MLS:.ml=.cmo)
 FOCALIZE_BYT_OBJS_UNSAFE = $(FOCALIZE_MLS_UNSAFE:.ml=.cmo)
@@ -61,14 +61,14 @@ FOCALIZE_BYT_OBJS_UNSAFE = $(FOCALIZE_MLS_UNSAFE:.ml=.cmo)
 FOCALIZE_BIN_OBJS = $(FOCALIZE_BYT_OBJS:.cmo=.cmx)
 FOCALIZE_BIN_OBJS_UNSAFE = $(FOCALIZE_BYT_OBJS_UNSAFE:.cmo=.cmx)
 
-FOCALIZE_ZVS = $(FOCALIZE_SRC:.foc=.zv)
-FOCALIZE_ZVS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.foc=.zv)
+FOCALIZE_ZVS = $(FOCALIZE_SRC:.fcl=.zv)
+FOCALIZE_ZVS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.zv)
 
 FOCALIZE_VS = $(FOCALIZE_ZVS:.zv=.v)
-FOCALIZE_VS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.foc=.v)
+FOCALIZE_VS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.v)
 
 FOCALIZE_VOS = $(FOCALIZE_VS:.v=.vo)
-FOCALIZE_VOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.foc=.vo)
+FOCALIZE_VOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
 
 EXTERNAL_BYT_OBJS =\
 	weak_structures_externals.cmo \
@@ -99,30 +99,30 @@ bin:: \
       $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 install::
-	$(MKDIR) $(FOC_INSTALL_LIB)/extlib/algebra
+	$(MKDIR) $(FOCALIZE_INSTALL_LIB)/extlib/algebra
 	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BYT_OBJS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
 	fi
 	@if [ "$(FOCALIZE_BYT_OBJS_UNSAFE)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
 	fi
 	@if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BIN_OBJS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
 	fi
 	@if [ "$(FOCALIZE_BIN_OBJS_UNSAFE)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
 	fi
 	@if [ "$(FOCALIZE_VOS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_VOS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(FOCALIZE_VOS) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
 	fi
 	@if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_BYT_OBJS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(EXTERNAL_BYT_OBJS) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
 	fi
 	@if [ "$(EXTERNAL_BIN_OBJS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_BIN_OBJS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(EXTERNAL_BIN_OBJS) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
 	fi
 	@if [ "$(EXTERNAL_VOS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_VOS) $(FOC_INSTALL_LIB)/extlib/algebra ; \
+	  $(CP) $(EXTERNAL_VOS) $(FOCALIZE_INSTALL_LIB)/extlib/algebra ; \
 	fi
 
 
@@ -138,11 +138,11 @@ clean::
 
 
 # Were not compiled to Coq in the previous FoCaL compiler...
-big_integers.ml: big_integers.foc
+big_integers.ml: big_integers.fcl
 	$(FOCALIZEC) --no-coq-code $<
-parse_poly.ml: parse_poly.foc
+parse_poly.ml: parse_poly.fcl
 	$(FOCALIZEC) --no-coq-code $<
-polys_abstract.ml: polys_abstract.foc
+polys_abstract.ml: polys_abstract.fcl
 	$(FOCALIZEC) --no-coq-code $<
 #End temporary
 
