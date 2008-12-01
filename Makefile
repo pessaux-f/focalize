@@ -13,26 +13,26 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.1 2008-11-30 21:47:14 weis Exp $
+# $Id: Makefile,v 1.2 2008-12-01 20:36:58 weis Exp $
 
-ROOT_DIR = `pwd`
+ROOT_DIR = .
 
 include $(ROOT_DIR)/Makefile.config
 
-FOCALIZE_TAR_BALLS = tarballs
-
-TOOLS_DIRS = ocaml camlp5 coq zenon zvtov
+# Defined in Makefile.config:
+# TAR_BALLS_DIR
+# EXTERNAL_TOOLS_DIRS
 
 COMPILER_DIR = focalizec
 
-SUB_DIRS = $(TOOLS_DIRS) $(COMPILER_DIR)
+SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(COMPILER_DIR)
 
 include $(ROOT_DIR)/Makefile.common
 
 all:: srcs tools compiler
 
 srcs:
-	for i in $(FOCALIZE_TAR_BALLS); do \
+	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) all) || exit; \
 	  echo "<-- $$i [$$?]"; \
@@ -46,11 +46,21 @@ compiler:
 	done
 
 tools:
-	for i in $(TOOLS_DIRS); do \
-	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) all) || exit; \
-	  echo "<-- $$i [$$?]"; \
-	done
+	(cd $(CAML_DIR); \
+	 ./configure $(CAML_CONFIGURE_OPTIONS); \
+	 @(MAKE) $(CAML_MAKE_ALL_TARGET); \
+	 @(MAKE) install; \
+	)
+	(cd $(CAMLP5_DIR); \
+	 ./configure $(CAMLP5_CONFIGURE_OPTIONS); \
+	 @(MAKE) $(CAMLP5_MAKE_ALL_TARGET); \
+	 @(MAKE) install; \
+	)
+	(cd $(COQ_DIR); \
+	 ./configure $(COQ_CONFIGURE_OPTIONS); \
+	 @(MAKE) $(COQ_MAKE_ALL_TARGET); \
+	 @(MAKE) install; \
+	)
 
 install uninstall clean doc depend::
 	for i in $(SUB_DIRS); do \
