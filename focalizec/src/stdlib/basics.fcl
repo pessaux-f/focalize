@@ -7,14 +7,15 @@
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  -  INRIA Rocquencourt           *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                      *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.48 2008-11-28 10:03:23 pessaux Exp $ *)
+(* $Id: basics.fcl,v 1.49 2008-12-01 12:24:49 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -106,11 +107,11 @@ and ( :: ) =
 
 (** {6 Basic operations on basic types} *)
 
-let foc_error =
+let focalize_error =
   internal string -> 'a
   external
-  | caml -> {* Ml_builtins.bi__foc_error *}
-  | coq -> {* coq_builtins.foc_error *}
+  | caml -> {* Ml_builtins.bi__focalize_error *}
+  | coq -> {* coq_builtins.focalize_error *}
 ;;
 
 (** {7 Operations on booleans} *)
@@ -577,7 +578,7 @@ theorem int_0_plus:
   proof =
     coq proof {*
       unfold int_plus, bi__int_plus in |- *; intros x y Hxz;
-      unfold base_eq, _focop_eq_, syntactic_equal;
+      unfold base_eq, _eq_, syntactic_equal;
       apply EQ_base_eq; replace x with 0%Z; eauto with zarith.
       symmetry  in |- *.
       apply decidable.
@@ -724,7 +725,7 @@ species Basic_object =
   (* Generic print function. *)
   let print (_x in Self) = "<abst>" ;
   (* Generic parse function. *)
-  let parse (_x in string) in Self = #foc_error ("not parsable") ;
+  let parse (_x in string) in Self = #focalize_error ("not parsable") ;
 end
 ;;
 
@@ -745,7 +746,7 @@ let is_failed (x) =
 
 let non_failed (x) =
   match x with
-  | Failed -> foc_error("partial function")
+  | Failed -> focalize_error ("partial function")
   | Unfailed (a) -> a
 ;;
 
