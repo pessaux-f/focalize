@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substExpr.ml,v 1.20 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: substExpr.ml,v 1.21 2008-12-01 14:40:21 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs substitution of a value name [name_x]
@@ -195,7 +195,7 @@ and subst_let_binding ~param_unit ~bound_variables name_x by_expr binding =
               expr)
      | Parsetree.BB_logical prop ->
          Parsetree.BB_logical
-           (subst_prop ~param_unit ~bound_variables: bound_variables'
+           (__subst_prop ~param_unit ~bound_variables: bound_variables'
               name_x by_expr prop)) in
   let desc' = { binding_desc with Parsetree.b_body = b_body' } in
   ({ binding with Parsetree.ast_desc = desc' }, binding_desc.Parsetree.b_name)
@@ -260,7 +260,7 @@ and subst_let_definition ~param_unit ~bound_variables name_x by_expr let_def =
 
 
 
-and subst_prop ~param_unit ~bound_variables name_x by_expr initial_prop_expr =
+and __subst_prop ~param_unit ~bound_variables name_x by_expr initial_prop_expr =
   (* Just  local recursive function to save the stack. *)
   let rec rec_subst rec_bound_vars prop_expr =
     (* Substitute in the AST node description. *)
@@ -311,7 +311,7 @@ let subst_binding_body ~param_unit ~bound_variables name_x by_expr = function
         (__subst_expr ~param_unit ~bound_variables name_x by_expr e)
   | Parsetree.BB_logical p ->
       Parsetree.BB_logical
-        (subst_prop ~param_unit ~bound_variables name_x by_expr p)
+        (__subst_prop ~param_unit ~bound_variables name_x by_expr p)
 ;;
 
 
@@ -325,6 +325,19 @@ let subst_binding_body ~param_unit ~bound_variables name_x by_expr = function
 (* ********************************************************************* *)
 let subst_expr ~param_unit name_x ~by_expr ~in_expr =
   __subst_expr ~param_unit ~bound_variables: [] name_x by_expr in_expr
+;;
+
+
+
+(* ********************************************************************* *)
+(** {b Descr} : Hides the initially empty [~bound_variables] for calling
+    outside the context of a recursion on the AST. Useful for "in"
+    parameters instanciations while generating collection generators.
+
+   {b Rem} : Exported outside this module.                                 *)
+(* ********************************************************************* *)
+let subst_prop ~param_unit name_x by_expr in_prop =
+  __subst_prop ~param_unit ~bound_variables: [] name_x by_expr in_prop
 ;;
 
 
@@ -362,14 +375,16 @@ let subst_species_field ~param_unit name_x by_expr field =
       (begin
       (* No substitution inside the proof. *)
       let bound_variables = [vname] in
-      let body' = subst_prop ~param_unit ~bound_variables name_x by_expr body in
+      let body' =
+        __subst_prop ~param_unit ~bound_variables name_x by_expr body in
       Env.TypeInformation.SF_theorem
         (from, vname, scheme, body', proof, deps_rep)
       end)
   | Env.TypeInformation.SF_property (from, vname, scheme, body, deps_rep) ->
       (begin
       let bound_variables = [vname] in
-      let body' = subst_prop ~param_unit ~bound_variables name_x by_expr body in
+      let body' =
+        __subst_prop ~param_unit ~bound_variables name_x by_expr body in
       Env.TypeInformation.SF_property (from, vname, scheme, body', deps_rep)
       end)
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.136 2008-11-28 16:44:19 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.137 2008-12-01 14:40:43 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2771,8 +2771,7 @@ let extend_env_for_species_def ~current_species env species_descr =
 
 
 
-(* [Unsure] Comme en OCaml sauf que l'on traite aussi les
-  theorem et property. *)
+
 (* *********************************************************************** *)
 (* Format.formatter -> compiled_species_fields list ->                     *)
 (*  (Parsetree.vname * Parsetree_utils.DepNameSet.t) list                  *)
@@ -3743,6 +3742,12 @@ let make_collection_effective_record ctx env implemented_species_name
 
 
 
+(* ************************************************************************ *)
+(* current_unit: Parsetree.module_name ->                                   *)
+(*   Misc_common.collection_effective_arguments list ->                     *)
+(*     Env.CoqGenInformation.collection_generator_info ->                   *)
+(*      (Parsetree.vname * Misc_common.collection_effective_arguments) list *)
+(* ************************************************************************ *)
 let map_formal_to_effective_in_collection ~current_unit collection_body_params
     col_gen_params_info =
   try
@@ -3789,6 +3794,73 @@ let map_formal_to_effective_in_collection ~current_unit collection_body_params
       collection_body_params
   with Invalid_argument "List.map2" ->
     assert false  (* The lists length must be equal. *)
+;;
+
+
+
+let substitute_formal_by_effective_in_coll_meths ~current_unit
+    implemented_species_name form_to_effec meths =
+  (* We must first find out in which file the implemented species is hosted.
+     In effect, its formal parameters will have a [collection_type] with a
+     module name that will be this file, not mandatorily the current
+     compilation unit. *)
+  let formal_parameters_mod_name =
+    (match implemented_species_name.Parsetree.ast_desc with
+     | Parsetree.I_local _ | Parsetree.I_global (Parsetree.Vname _) ->
+         current_unit
+     | Parsetree.I_global (Parsetree.Qualified (mod_name, _)) -> mod_name) in
+  (* Now, in each method... *)
+  List.map
+    (fun meth_info ->
+      (* ... apply the substitution of each formal parameter by the effective
+         one. *)
+      List.fold_left
+        (fun accu_mi (param_vname, effective) ->
+          match effective with
+           | Misc_common.CEA_value_expr_for_in expr ->
+               (begin
+               match accu_mi.Env.mi_type_kind with
+                | Env.MTK_computational _ -> accu_mi
+                | Env.MTK_logical lexpr ->
+                    (* [Unsure] *)
+                    let lexpr' =
+                      SubstExpr.subst_prop
+                        ~param_unit: formal_parameters_mod_name param_vname
+                        expr.Parsetree.ast_desc lexpr in
+                    { accu_mi with Env.mi_type_kind = Env.MTK_logical lexpr' }
+               end)
+           | Misc_common.CEA_collection_name_for_is qcoll ->
+               (begin
+               let param_as_type_coll =
+                 (formal_parameters_mod_name,
+                  (Parsetree_utils.name_of_vname param_vname)) in
+               let effective_as_type_coll =
+                 (match qcoll with
+                  | Parsetree.Vname vn ->
+                      (current_unit, (Parsetree_utils.name_of_vname vn))
+                  | Parsetree.Qualified (modname, vn) ->
+                      (modname, (Parsetree_utils.name_of_vname vn))) in
+               match accu_mi.Env.mi_type_kind with
+                | Env.MTK_computational sch ->
+                    let sch' =
+                      Types.subst_type_scheme
+                        param_as_type_coll
+                        (Types.SBRCK_coll effective_as_type_coll) sch in
+                    { accu_mi with Env.mi_type_kind =
+                        Env.MTK_computational sch' }
+                | Env.MTK_logical lexpr ->
+                    let lexpr' =
+                      SubstColl.subst_logical_expr
+                        ~current_unit
+                        (SubstColl.SRCK_coll param_as_type_coll)
+                        (Types.SBRCK_coll effective_as_type_coll)
+                        lexpr in
+                    { accu_mi with Env.mi_type_kind = Env.MTK_logical lexpr' }
+               end))
+        meth_info
+        form_to_effec
+    )
+    meths
 ;;
 
 
@@ -3851,51 +3923,57 @@ let collection_compile env ~current_unit out_fmter collection_def
       Env.CoqGenEnv.find_species
         ~loc: collection_def.Parsetree.ast_loc ~current_unit
         implemented_species_name env in
-    (match opt_params_info with
-     | None ->
-         (* The species has no collection generator. Hence it is not a fully
-            defined species. This should have be prevented before, by
-            forbidding to make a collection from a non fully defined
-            species ! *)
-         assert false (* [Unsure] car je crois qu'on n'a pas fait la vérif. *)
-     | Some params_info ->
-         (* Get the names of the collections or the value expressions
-            effectively applied. *)
-         let collection_body_params =
-           Misc_common.get_implements_effectives
-             collection_def.Parsetree.ast_desc.
-               Parsetree.cd_body.Parsetree.ast_desc.Parsetree.se_params
-             params_info.Env.CoqGenInformation.
-               cgi_implemented_species_params_names in
-         let formals_to_effectives =
-           map_formal_to_effective_in_collection
-             ~current_unit: ctx.Context.scc_current_unit collection_body_params
-             params_info in
-         let record_type_args_instanciations =
-           apply_collection_generator_to_parameters
-             ctx env formals_to_effectives params_info in
-         (* Close the pretty print box of the "t". *)
-         Format.fprintf out_fmter "@ in @]@\n" ;
-         (* And now, create the final value representing the effective
-            instance of our collection, borrowing each field from the
-            temporary value obtained above. This way, our collection will have
-            ITS own record fields names, preventing the need to use those
-            coming from the it implements. *)
-         make_collection_effective_record
-           ctx env implemented_species_name
-           collection_descr formals_to_effectives
-           record_type_args_instanciations
-           params_info.Env.CoqGenInformation.cgi_generator_parameters.
-             Env.CoqGenInformation.cgp_abstr_param_methods_for_record) ;
+    let substituted_implemented_methods =
+      (match opt_params_info with
+       | None ->
+           (* The species has no collection generator. Hence it is not a fully
+              defined species. This should have be prevented before, by
+              forbidding to make a collection from a non fully defined
+              species ! *)
+           assert false (* [Unsure] car je crois qu'on n'a pas fait la vérif. *)
+       | Some params_info ->
+           (* Get the names of the collections or the value expressions
+              effectively applied. *)
+           let collection_body_params =
+             Misc_common.get_implements_effectives
+               collection_def.Parsetree.ast_desc.
+                 Parsetree.cd_body.Parsetree.ast_desc.Parsetree.se_params
+               params_info.Env.CoqGenInformation.
+                 cgi_implemented_species_params_names in
+           let formals_to_effectives =
+             map_formal_to_effective_in_collection
+               ~current_unit: ctx.Context.scc_current_unit
+               collection_body_params params_info in
+           let record_type_args_instanciations =
+             apply_collection_generator_to_parameters
+               ctx env formals_to_effectives params_info in
+           (* Close the pretty print box of the "t". *)
+           Format.fprintf out_fmter "@ in @]@\n" ;
+           (* And now, create the final value representing the effective
+              instance of our collection, borrowing each field from the
+              temporary value obtained above. This way, our collection will have
+              ITS own record fields names, preventing the need to use those
+              coming from the it implements. *)
+           make_collection_effective_record
+             ctx env implemented_species_name
+             collection_descr formals_to_effectives
+             record_type_args_instanciations
+             params_info.Env.CoqGenInformation.cgi_generator_parameters.
+               Env.CoqGenInformation.cgp_abstr_param_methods_for_record ;
+           substitute_formal_by_effective_in_coll_meths
+             ~current_unit: ctx.Context.scc_current_unit
+             implemented_species_name
+             formals_to_effectives implemented_species_methods) in
     (* Close thre pretty print box of the "effective_collection". *)
     Format.fprintf out_fmter "@]" ;
     (* End of the pretty print box of the Module embedding the collection. *)
     Format.fprintf out_fmter "@]\nEnd %a.@\n@\n"
       Sourcify.pp_vname collection_name ;
     (* We now return the methods this collection has in order to put this
-       information in the environment. Teh collections has the same methods
-       thant the species it implements. *)
-    implemented_species_methods
+       information in the environment. The collections has the same methods
+       than the species it implements. Note that in these methods, formal
+       parameters have been replaced by effective arguments. *)
+    substituted_implemented_methods
   with Not_found ->
     (* Don't see why the species could not be present in the environment. The
        only case would be to make a collection from a collection since
