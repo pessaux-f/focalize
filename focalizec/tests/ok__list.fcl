@@ -45,7 +45,7 @@ let ext_tail =
 
 
 species Equalified_object inherits Basic_object =
-  let equal (x in Self, y in Self) in bool = base_eq (x, y) ;
+  let equal (x in Self, y in Self) in bool = syntactic_equal (x, y) ;
 end ;;
 
 species List (E is Basic_object) inherits Equalified_object =

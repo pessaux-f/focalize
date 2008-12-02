@@ -9,7 +9,7 @@ open "basics" ;;
 (* ******************************************************************** *)
 species Closed_A =
   representation = basics#int ;
-  let ( = ) (x in Self, y in Self) = basics#base_eq (x, y) ;
+  let ( = ) (x in Self, y in Self) = basics#syntactic_equal (x, y) ;
   let element = 1 ;
 
   property refl : all x in Self, x = x ;
@@ -31,7 +31,7 @@ end ;;
 
 species Closed_C inherits B =
   representation = basics#int ;
-  let ( = ) (x in Self, y in Self) = basics#base_eq (x, y) ;
+  let ( = ) (x in Self, y in Self) = basics#syntactic_equal (x, y) ;
   let element = 1 ;
 
   let rec a (x) = let foo = b (1) in 1

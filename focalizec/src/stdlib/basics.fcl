@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.49 2008-12-01 12:24:49 weis Exp $ *)
+(* $Id: basics.fcl,v 1.50 2008-12-02 06:55:14 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -387,16 +387,12 @@ let int_min =
 let physical_equal =
   internal 'a -> 'a -> bool
   external
-  | caml -> {* Ml_builtins.bi__base_physical_equal *}
-  | coq -> {* coq_builtins.bi__base_eq __var_a *}
+  | caml -> {* Ml_builtins.bi__physical_equal *}
+  | coq -> {* coq_builtins.bi__syntactic_equal __var_a *}
     (* Wrong, but don't know how to do better. *)
 ;;
 
 let ( == ) = physical_equal
-;;
-
-(* For compatibility only: should be removed ? *)
-let phys_eq = physical_equal
 ;;
 
 (** {8 Syntactical equality} *)
@@ -412,8 +408,8 @@ let phys_eq = physical_equal
 let ( = ) =
   internal 'a -> 'a -> bool
   external
-  | caml -> {* Ml_builtins.bi__base_syntactic_equal *}
-  | coq -> {* coq_builtins.bi__base_eq __var_a *}
+  | caml -> {* Ml_builtins.bi__syntactic_equal *}
+  | coq -> {* coq_builtins.bi__syntactic_equal __var_a *}
 ;;
 
 let syntactic_equal = ( = );;
@@ -423,14 +419,11 @@ and does not. *)
 let syntactic_equal =
   internal 'a -> 'a -> bool
   external
-  | caml -> {* Ml_builtins.bi__base_syntactic_equal *}
-  | coq -> {* coq_builtins.bi__base_eq __var_a *}
+  | caml -> {* Ml_builtins.bi__syntactic_equal *}
+  | coq -> {* coq_builtins.bi__syntactic_equal __var_a *}
 ;;
 
 let ( = ) = syntactic_equal;;
-
-(* For compatibility only: should be removed ? *)
-let base_eq = syntactic_equal;;
 
 (** {7 Basic printing operations} *)
 let print_int =
@@ -578,8 +571,8 @@ theorem int_0_plus:
   proof =
     coq proof {*
       unfold int_plus, bi__int_plus in |- *; intros x y Hxz;
-      unfold base_eq, _eq_, syntactic_equal;
-      apply EQ_base_eq; replace x with 0%Z; eauto with zarith.
+      unfold syntactic_equal, _equal_;
+      apply EQ_syntactic_equal; replace x with 0%Z; eauto with zarith.
       symmetry  in |- *.
       apply decidable.
       apply Z_eq_dec. assumption.
@@ -601,24 +594,24 @@ theorem int_lt_le_S:
 
 theorem int_plus_assoc:
   all x y z in int, (* (x + y) + z = x + (y + z) *)
-  #base_eq ((x + y) + z, x + (y + z))
+  #syntactic_equal ((x + y) + z, x + (y + z))
   proof =
     coq proof {*
       unfold int_plus in |- *; intros x y z;
-      unfold base_eq, syntactic_equal;
-      apply EQ_base_eq; auto with zarith.
+      unfold syntactic_equal;
+      apply EQ_syntactic_equal; auto with zarith.
       Qed.
     *}
 ;;
 
 theorem int_plus_commute:
   all x y  in int, (* x + y = y + x *)
-  #base_eq (x + y, y + x)
+  #syntactic_equal (x + y, y + x)
   proof =
     coq proof {*
       unfold int_plus in |- *; intros x y;
-      unfold base_eq, syntactic_equal;
-      apply EQ_base_eq;
+      unfold syntactic_equal;
+      apply EQ_syntactic_equal;
       auto with zarith.
       Qed.
     *}
@@ -627,12 +620,12 @@ theorem int_plus_commute:
 theorem int_plus_plus:
   all x y z t in int,
   x = y -> z = t ->
-  #base_eq (x + z, y + t)
+  #syntactic_equal (x + z, y + t)
   proof =
     coq proof {*
       unfold int_plus in |- *; intros x y z t H1 H2;
-      unfold base_eq, syntactic_equal;
-      apply EQ_base_eq; replace y with x. replace t with z. reflexivity.
+      unfold syntactic_equal;
+      apply EQ_syntactic_equal; replace y with x. replace t with z. reflexivity.
       apply decidable. apply Z_eq_dec. assumption.
       apply decidable. apply Z_eq_dec. assumption.
       Qed.
@@ -689,13 +682,13 @@ theorem int_min_le2:
 
 theorem int_plus_minus: all x y z in int,
   (*   x + y = z -> y = z - x *)
-  x + y = z -> #base_eq (y, z - x)
+  x + y = z -> #syntactic_equal (y, z - x)
   proof =
     coq proof {*
-      intros x y z; unfold int_plus, int_minus, base_eq, syntactic_equal in |- *;
+      intros x y z; unfold int_plus, int_minus, syntactic_equal in |- *;
       intros H;
       unfold bi__int_minus;
-      apply EQ_base_eq; apply Zplus_minus_eq;
+      apply EQ_syntactic_equal; apply Zplus_minus_eq;
       symmetry  in |- *; apply (decidable _ _ _ (Z_eq_dec (x + y) z) H).
       Qed.
     *}
@@ -704,13 +697,13 @@ theorem int_plus_minus: all x y z in int,
 theorem int_minus_plus:
   all x y z in int,
   (*   x - y = z -> x = y + z *)
-  x - y = z -> #base_eq (x, y + z)
+  x - y = z -> #syntactic_equal (x, y + z)
   proof =
     coq proof {*
-      intros x y z; unfold int_plus, int_minus, base_eq, syntactic_equal in |- *;
+      intros x y z; unfold int_plus, int_minus, syntactic_equal in |- *;
       intros H;
       unfold bi__int_minus;
-      apply EQ_base_eq; rewrite <- (Zplus_minus y x);
+      apply EQ_syntactic_equal; rewrite <- (Zplus_minus y x);
       apply Zplus_eq_compat; trivial; apply decidable. apply Z_eq_dec. assumption.
       Qed.
     *}

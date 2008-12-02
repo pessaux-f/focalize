@@ -27,7 +27,7 @@ species Me (Naturals is IntModel, n in Naturals) =
   representation = Naturals ;
 
  theorem daube : all x in Self,
-    basics#base_eq (n, Naturals!un)
+    basics#syntactic_equal (n, Naturals!un)
   proof : assumed {* *} ;
 
   let junk (x in Self) in int = 1 ;

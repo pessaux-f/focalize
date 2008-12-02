@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: coq_builtins.v,v 1.11 2008-12-01 12:24:14 weis Exp $ *)
+(* $Id: coq_builtins.v,v 1.12 2008-12-02 06:55:14 weis Exp $ *)
 
 Require Import Bool.
 Require Export ZArith.
@@ -25,62 +25,62 @@ Require Export String.
 
 (* Beware we use Coq [bool] type because we map FoCaLize's [bool] type on it. *)
 Section eq.
-Variable beq___A : Set.
+Variable syntactic_equal___A : Set.
 
-Parameter bi__base_eq : beq___A -> beq___A -> bool.
+Parameter bi__syntactic_equal : syntactic_equal___A -> syntactic_equal___A -> bool.
 
-Axiom base_eq_refl : forall x : beq___A, Is_true (bi__base_eq x x).
+Axiom syntactic_equal_refl : forall x : syntactic_equal___A, Is_true (bi__syntactic_equal x x).
 
-Axiom base_eq_sym :
-  forall x y : beq___A, Is_true (bi__base_eq x y) -> Is_true (bi__base_eq y x).
+Axiom syntactic_equal_sym :
+  forall x y : syntactic_equal___A, Is_true (bi__syntactic_equal x y) -> Is_true (bi__syntactic_equal y x).
 
 Axiom
-  base_eq_trans :
-    forall x y z : beq___A,
-    Is_true (bi__base_eq x y) -> Is_true (bi__base_eq y z) ->
-    Is_true (bi__base_eq x z).
+  syntactic_equal_trans :
+    forall x y z : syntactic_equal___A,
+    Is_true (bi__syntactic_equal x y) -> Is_true (bi__syntactic_equal y z) ->
+    Is_true (bi__syntactic_equal x z).
 End eq.
 
-Theorem EQ_base_eq :
- forall (A : Set) (x y : A), x = y -> Is_true (bi__base_eq _ x y).
+Theorem EQ_syntactic_equal :
+ forall (A : Set) (x y : A), x = y -> Is_true (bi__syntactic_equal _ x y).
 Proof.
-  intros A x y Heq; rewrite Heq; exact (base_eq_refl A y).
+  intros A x y Heq; rewrite Heq; exact (syntactic_equal_refl A y).
 Qed.
 
-(* In case the equality is decidable, it is extensionaly equal to  beq *)
+(* In case the equality is decidable, it is extensionaly equal to beq *)
 Axiom
   decidable :
     forall (A : Set) (x y : A),
-    {x = y} + {x <> y} -> Is_true (bi__base_eq _ x y) -> x = y.
+    {x = y} + {x <> y} -> Is_true (bi__syntactic_equal _ x y) -> x = y.
 
-Hint Resolve base_eq_refl base_eq_sym base_eq_trans EQ_base_eq decidable:
+Hint Resolve syntactic_equal_refl syntactic_equal_sym syntactic_equal_trans EQ_syntactic_equal decidable:
   FoCeq.
 
-Theorem zenon_base_eq :
+Theorem zenon_syntactic_equal :
   (forall (S : Set) (x y : S), {x = y}+{x <> y}) ->
   forall (S : Set) (x y : S),
-  (x = y -> False) -> (Is_true (bi__base_eq S x y) -> False).
+  (x = y -> False) -> (Is_true (bi__syntactic_equal S x y) -> False).
 Proof.
   intros dec S x y h2 h1.
   apply h2.
   apply decidable; auto.
 Qed.
 
-Definition zenon_base_eq_s := fun D S X Y a b => zenon_base_eq D S X Y b a.
+Definition zenon_syntactic_equal_s := fun D S X Y a b => zenon_syntactic_equal D S X Y b a.
 
-Theorem zenon_notbase_eq :
+Theorem zenon_not_yntactic_equal :
   forall (S : Set) (x y : S),
-  (~ x = y -> False) -> (~Is_true (bi__base_eq S x y) -> False).
+  (~ x = y -> False) -> (~Is_true (bi__syntactic_equal S x y) -> False).
 Proof.
   intros S x y h2 h1.
   apply h2.
   intro h3.
   apply h1.
   subst x.
-  apply base_eq_refl.
+  apply syntactic_equal_refl.
 Qed.
 
-Definition zenon_notbase_eq_s := fun S X Y a b => zenon_notbase_eq S X Y b a.
+Definition zenon_not_yntactic_equal_s := fun S X Y a b => zenon_not_yntactic_equal S X Y b a.
 
 (* *********************************************************************** *)
 (* *********************************************************************** *)
