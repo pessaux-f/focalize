@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.50 2008-12-02 06:55:14 weis Exp $ *)
+(* $Id: basics.fcl,v 1.51 2008-12-02 07:12:53 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -571,7 +571,7 @@ theorem int_0_plus:
   proof =
     coq proof {*
       unfold int_plus, bi__int_plus in |- *; intros x y Hxz;
-      unfold syntactic_equal, _equal_;
+      unfold _equal_, syntactic_equal;
       apply EQ_syntactic_equal; replace x with 0%Z; eauto with zarith.
       symmetry  in |- *.
       apply decidable.

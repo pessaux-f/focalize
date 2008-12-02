@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: coq_builtins.v,v 1.12 2008-12-02 06:55:14 weis Exp $ *)
+(* $Id: coq_builtins.v,v 1.13 2008-12-02 07:12:53 weis Exp $ *)
 
 Require Import Bool.
 Require Export ZArith.
@@ -68,7 +68,7 @@ Qed.
 
 Definition zenon_syntactic_equal_s := fun D S X Y a b => zenon_syntactic_equal D S X Y b a.
 
-Theorem zenon_not_yntactic_equal :
+Theorem zenon_not_syntactic_equal :
   forall (S : Set) (x y : S),
   (~ x = y -> False) -> (~Is_true (bi__syntactic_equal S x y) -> False).
 Proof.
@@ -80,7 +80,7 @@ Proof.
   apply syntactic_equal_refl.
 Qed.
 
-Definition zenon_not_yntactic_equal_s := fun S X Y a b => zenon_not_yntactic_equal S X Y b a.
+Definition zenon_not_syntactic_equal_s := fun S X Y a b => zenon_not_syntactic_equal S X Y b a.
 
 (* *********************************************************************** *)
 (* *********************************************************************** *)
