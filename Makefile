@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.4 2008-12-02 06:32:16 weis Exp $
+# $Id: Makefile,v 1.5 2008-12-02 14:21:04 doligez Exp $
 
 ROOT_DIR = .
 
@@ -67,6 +67,6 @@ tools:
 install uninstall clean doc depend::
 	for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $@) || exit; \
+	  ($(CD) $$i && $(MAKE) $@) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
