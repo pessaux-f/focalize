@@ -33,7 +33,7 @@ species Partially_ordered_set_as_meet_semi_lattice
   let order_inf(x, y) = !leq(x, y);
 
   proof of order_inf_is_reflexive =
-    by property leq_reflexive definition of order_inf;
+    by property leq_reflexive, leq_extends_equal definition of order_inf;
 
   proof of order_inf_is_antisymmetric =
     by property leq_antisymmetric definition of order_inf;
@@ -58,8 +58,10 @@ species Partially_ordered_set_as_meet_semi_lattice
          assume y in Self,
          assume H : !equal(x, y),
          prove !equal(x, !inf(x, y))
-         <2>1 prove !leq(x, y) by hypothesis H property leq_reflexive
-         <2>2 prove !leq(x, x) by property leq_reflexive, equal_reflexive
+         <2>1 prove !leq(x, y) 
+              by hypothesis H property leq_reflexive, leq_extends_equal
+         <2>2 prove !leq(x, x) 
+              by property leq_reflexive, equal_reflexive, leq_extends_equal
          <2>3 prove !leq(x, !inf(x, y))
               by step <2>2, <2>1 property leq_defines_infimum
          <2>4 prove !leq(!inf(x, y), x) by property inf_is_smaller
@@ -114,7 +116,7 @@ species Partially_ordered_set_as_join_semi_lattice
   let order_sup(x, y) = !geq(x, y);
 
   proof of order_sup_is_reflexive =
-    by property geq_reflexive
+    by property geq_reflexive, geq_extends_equal
        definition of order_sup;
 
   proof of order_sup_is_antisymmetric =
@@ -141,7 +143,7 @@ species Partially_ordered_set_as_join_semi_lattice
          assume H : !equal(x, y),
          prove !equal(x, !sup(x, y))
          <2>1 prove !geq(x, y)
-                by hypothesis H property geq_reflexive
+                by hypothesis H property geq_reflexive, geq_extends_equal
          <2>2 prove !geq(x, x)
                 by property geq_reflexive, equal_reflexive
          <2>3 prove !geq(x, !sup(x, y))
@@ -274,13 +276,13 @@ species Ordered_set_as_meet_semi_lattice
   let inf(x, y) = if !leq(x, y) then x else y ;
 
   proof of leq_refines_order_inf =
-   by property leq_reflexive
+   by property leq_reflexive, leq_extends_equal
       definition of inf, order_inf
   ;
 
   proof of inf_left_substitution_rule =
     by property equal_reflexive, equal_symmetric,
-                leq_reflexive, leq_transitive
+                leq_reflexive, leq_extends_equal, leq_transitive
        definition of inf
   ;
 
@@ -376,7 +378,7 @@ species Ordered_set_as_join_semi_lattice inherits Ordered_join_semi_lattice =
   ;
 
   proof of geq_refines_order_sup =
-    by property geq_reflexive
+    by property geq_reflexive, geq_extends_equal
        definition of sup, order_sup
   ;
 
@@ -392,7 +394,7 @@ species Ordered_set_as_join_semi_lattice inherits Ordered_join_semi_lattice =
 
   proof of sup_left_substitution_rule =
     by property equal_reflexive, equal_symmetric,
-       leq_reflexive, leq_transitive
+       leq_reflexive, leq_extends_equal, leq_transitive
        definition of sup, geq
   ;
 
