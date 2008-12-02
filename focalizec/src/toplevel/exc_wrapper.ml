@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.62 2008-12-02 11:08:22 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.63 2008-12-02 15:03:49 pessaux Exp $ *)
 
 let print_focalize_exception ppf = function
   (* ********************* *)
@@ -377,11 +377,30 @@ let print_focalize_exception ppf = function
         Handy.pp_set_underlined Sourcify.pp_vname name
         Handy.pp_reset_effects
         Handy.pp_set_bold Handy.pp_reset_effects
+  | Infer.Wrong_type_by_inheritance (at, name, ty1, ty2, from1, from2) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tMethod%t@ %t'%a'%t@ %twas@ found@ with@ incompatible @ \
+        types@ during@ inheritance.@ In@ species%t@ %t'%a'%t:@ \
+        @[%a@],@ %tin@ species%t@ %t'%a'%t:@ @[%a@].@]@."
+        Location.pp_location at
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Sourcify.pp_vname name
+        Handy.pp_reset_effects
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Sourcify.pp_qualified_species
+          from1.Env.fh_initial_apparition
+        Handy.pp_reset_effects
+        Types.pp_type_simple ty1
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Sourcify.pp_qualified_species
+          from2.Env.fh_initial_apparition
+        Handy.pp_reset_effects
+        Types.pp_type_simple ty2
   | Infer.Logical_statements_mismatch (name, sp1, loc1, sp2, loc2) ->
       Format.fprintf ppf
-        "%a:@\n@[%tLogical@ method%t@ %t'%a'%t@ %tappearing@ in@ species%t
-        @ %t'%a'%t@ %tshould@ have@ the@ same@ statement@ than@ in@ species%t
-        @ %t'%a'%t@ %tat%t@ %a@]@."
+        "%a:@\n@[%tLogical@ method%t@ %t'%a'%t@ %tappearing@ in@ species%t@ \
+        %t'%a'%t@ %tshould@ have@ the@ same@ statement@ than@ in@ species%t@ \
+        %t'%a'%t@ %tat%t@ %a@]@."
         Location.pp_location loc1
         Handy.pp_set_bold Handy.pp_reset_effects
         Handy.pp_set_underlined Sourcify.pp_vname name

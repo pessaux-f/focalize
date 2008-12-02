@@ -12,9 +12,12 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.33 2008-12-02 10:31:02 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.34 2008-12-02 15:03:49 pessaux Exp $ *)
 
 
+exception Wrong_type_by_inheritance of
+  (Location.t * Parsetree.vname * Types.type_simple *
+   Types.type_simple * Env.from_history * Env.from_history)
 exception Logical_statements_mismatch of
   (Parsetree.vname * Parsetree.qualified_species *
    Location.t * Parsetree.qualified_species * Location.t)
@@ -33,9 +36,7 @@ exception Bad_type_arity of (Parsetree.ident * int * int)
 exception Rep_multiply_defined of Location.t
 exception Rep_multiply_defined_by_multiple_inheritance of
   (Types.type_simple * Types.type_simple * Location.t)
-
 exception Parameterized_species_arity_mismatch of string
-
 exception Not_subspecies_conflicting_field of
   (Types.type_collection * Types.type_collection * Parsetree.vname *
    Types.type_simple * Types.type_simple * Location.t)

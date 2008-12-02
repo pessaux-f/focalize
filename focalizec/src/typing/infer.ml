@@ -11,8 +11,26 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.160 2008-12-02 10:31:02 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.161 2008-12-02 15:03:49 pessaux Exp $ *)
 
+
+
+
+(* ********************************************************************* *)
+(** {b Descr} : Exception used when the fusion algorithm (leading to the
+    normal form of a species) find 2 computational fields with the same
+    names but not the same ML type.
+
+    {b Rem} : Exported outside this module.                              *)
+(* ********************************************************************* *)
+exception Wrong_type_by_inheritance of
+  (Location.t *         (** Location of the whole hosting species. *)
+   Parsetree.vname *    (** Name of the faulty method. *)
+   Types.type_simple *  (** First type found for the method. *)
+   Types.type_simple *  (** Second type found for the method. *)
+   Env.from_history *   (** History of the first occurrence of the method. *)
+   Env.from_history)    (** History of the second occurrence of the method. *)
+;;
 
 
 
@@ -27,6 +45,7 @@
     Currently, the compiler compares the syntax trees, forgetting
     locations and modulo alpha-conversion to check if 2 logical
     statements are "equal".
+
     {b Rem} : Exported outside this module.                             *)
 (* ******************************************************************** *)
 exception Logical_statements_mismatch of
@@ -1906,7 +1925,7 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                   finally relying on the representation of "rep". Furthermore
                   because of how [Types.unify] handles unification with
                   [Types.ST_self_rep] to prevent cycles, unification of this
-                  **mangled** representation would suceed with any types, even
+                  **mangled** representation would succeed with any types, even
                   those incompatible with the original **CORRECT**
                   representation of "rep"'s type ! *)
                let ctx' = {
@@ -2435,8 +2454,8 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
                let ty1 = Types.specialize sc1 in
                let ty2 = Types.specialize sc2 in
                (begin
-                (* We try to translate type errors into *)
-                (* more significant error messages.     *)
+                (* We try to translate type errors into more significant error
+                   messages. *)
                 try
                   ignore
                     (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2)
@@ -3377,9 +3396,12 @@ let order_fields_according_to order fields =
 (** {b Descr} : Implements the "fusion" algorithm (c.f [fields_fusion])
     in the particular case of fusionning 1 field Sig and 1 field Let_rec.
 
+    {Args}:
+      - [loc] : Location of the whole hosting species expression.
+
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
-let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
+let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme sig_hist rec_meths =
   let rec_meths' =
     List.map
       (fun ((from, n, params_names, sc, body, otp, dep_on_rep, log_f)
@@ -3392,8 +3414,14 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme rec_meths =
            let sig_ty = Types.specialize sig_scheme in
            let ty = Types.specialize sc in
            (* Don't keep the type where Self is prefered. *)
-           ignore
-             (Types.unify ~loc ~self_manifest: ctx.self_manifest sig_ty ty) ;
+           (try
+             ignore
+               (Types.unify ~loc ~self_manifest: ctx.self_manifest sig_ty ty)
+           with _ ->
+             (* Try to have a more comprehensive error message. *)
+             raise
+               (Wrong_type_by_inheritance
+                  (loc, n, sig_ty, ty, sig_hist, from))) ;
            Types.end_definition () ;
            let dep_on_rep' = {
              Env.TypeInformation.dor_def =
@@ -3452,7 +3480,7 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
   let rec rec_fusion l1 l2 =
     match l1 with
     | [] -> l2
-    | ((_, n1, _, sc1, _, _, _, log_flag1) as meth) :: rem1 ->
+    | ((f1, n1, _, sc1, _, _, _, log_flag1) as meth) :: rem1 ->
       let (fused_meth, new_l2) =
         (try
           let (m2, rem_of_l2) = find_and_remain n1 l2 in
@@ -3466,8 +3494,13 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
           let ty2 = Types.specialize sc2 in
           Types.reset_deps_on_rep () ;
           (* Ensure that the 2 versions of the method are type-compatible. *)
-          ignore
-            (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
+          (try
+            ignore
+              (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2)
+          with _ ->
+            (* Try to have a more comprehensive error message. *)
+            raise
+              (Wrong_type_by_inheritance (loc, n1, ty1, ty2, f1, f2))) ;
           Types.end_definition () ;
           (* And return the seconde one (late binding) with the presence of
              def-dependency on "rep" updated. *)
@@ -3498,7 +3531,7 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
     totally disapears. *)
 let fusion_fields_let_let_rec ~loc ctx meth1 rec_meths2 =
   try
-    let (_, n1, _, sc1, _, _, _, log_flag1) = meth1 in
+    let (f1, n1, _, sc1, _, _, _, log_flag1) = meth1 in
     let (m2, rem_of_l2) = find_and_remain n1 rec_meths2 in
     let (f2, n2, args2, sc2, body2, otp2, dep2, log_flag2) = m2 in
     (* We don't allow to redefine methods mixing logical and computation
@@ -3510,8 +3543,12 @@ let fusion_fields_let_let_rec ~loc ctx meth1 rec_meths2 =
     let ty2 = Types.specialize sc2 in
     Types.reset_deps_on_rep () ;
     (* Ensure that the 2 versions of the method are type-compatible. *)
-    ignore
-      (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
+    (try
+      ignore
+        (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2)
+    with _ ->
+      (* Try to have a more comprehensive error message. *)
+      raise (Wrong_type_by_inheritance (loc, n1, ty1, ty2, f1, f2))) ;
     Types.end_definition () ;
     (* And return the second one (late binding) with the presence of
        def-dependency on "rep" updated. We re-insert the method in the
@@ -3542,7 +3579,7 @@ let fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2 =
   try
     let (f2, n2, args2, sc2, body2, otp2, dep2, log_flag2) = meth2 in
     let (m1, rem_of_l1) = find_and_remain n2 rec_meths1 in
-    let (_, n1, _, sc1, _, _, _, log_flag1) = m1 in
+    let (f1, n1, _, sc1, _, _, _, log_flag1) = m1 in
     (* We don't allow to redefine methods mixing logical and computation
        flag. *)
     if log_flag1 != log_flag2 then
@@ -3552,8 +3589,12 @@ let fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2 =
     let ty2 = Types.specialize sc2 in
     Types.reset_deps_on_rep () ;
     (* Ensure that the 2 versions of the method are type-compatible. *)
-    ignore
-      (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
+    (try
+      ignore
+        (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2)
+    with _ ->
+      (* Try to have a more comprehensive error message. *)
+      raise (Wrong_type_by_inheritance (loc, n1, ty2, ty1, f2, f1))) ;
     Types.end_definition () ;
     (* And return the first one (late binding) with the presence of
        def-dependency on "rep" updated. We re-insert the method in the
@@ -3587,22 +3628,29 @@ let fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2 =
     these 2 original fields (implementing the late binding feature by the
     way).
 
+    {Args}:
+      - [loc] : Location of the whole hosting species expression.
+
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
 let fields_fusion ~loc ctx phi1 phi2 =
   match phi1, phi2 with
    (* *** *)
-   | (Env.TypeInformation.SF_sig (_, n1, sc1),
+   | (Env.TypeInformation.SF_sig (from1, n1, sc1),
       Env.TypeInformation.SF_sig (from2, n2, sc2)) when n1 = n2 ->
         (* sig / sig. *)
         Types.begin_definition () ;
         let ty1 = Types.specialize sc1 in
         let ty2 = Types.specialize sc2 in
-        ignore (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
+        (try
+          ignore (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2)
+        with _ ->
+          (* Try to have a more comprehensive error message. *)
+          raise (Wrong_type_by_inheritance (loc, n1, ty1, ty2, from1, from2))) ;
         Types.end_definition () ;
         (* If 2 sigs are specified, we always keep the last one as type. *)
         Env.TypeInformation.SF_sig (from2, n2, sc2)
-   | (Env.TypeInformation.SF_sig (_, n1, sc1),
+   | (Env.TypeInformation.SF_sig (from1, n1, sc1),
       Env.TypeInformation.SF_let
           (from2, n2, pars2, sc2, body, opt2, dep2, log2)) when n1 = n2 ->
         (* sig / let. *)
@@ -3610,7 +3658,11 @@ let fields_fusion ~loc ctx phi1 phi2 =
         Types.begin_definition () ;
         let ty1 = Types.specialize sc1 in
         let ty2 = Types.specialize sc2 in
-        ignore (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
+        (try
+          ignore (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2)
+        with _ ->
+          (* Try to have a more comprehensive error message. *)
+          raise (Wrong_type_by_inheritance (loc, n1, ty1, ty2, from1, from2))) ;
         Types.end_definition () ;
         let dep' = {
           Env.TypeInformation.dor_def =
@@ -3621,20 +3673,24 @@ let fields_fusion ~loc ctx phi1 phi2 =
         (* If a sig is specified, we always keep it as type. *)
         Env.TypeInformation.SF_let
           (from2, n2, pars2, sc1, body, opt2, dep', log2)
-   | (Env.TypeInformation.SF_sig (_, n1, sc1),
+   | (Env.TypeInformation.SF_sig (from1, n1, sc1),
       Env.TypeInformation.SF_let_rec rec_meths) ->
         (* sig / let rec. *)
-        fusion_fields_let_rec_sig ~loc ctx n1 sc1 rec_meths
+        fusion_fields_let_rec_sig ~loc ctx n1 sc1 from1 rec_meths
    (* *** *)
    | (Env.TypeInformation.SF_let
         (from1, n1, pars1, sc1, body, otp1, dep1, log1),
-      Env.TypeInformation.SF_sig (_, n2, sc2)) when n1 = n2 ->
+      Env.TypeInformation.SF_sig (from2, n2, sc2)) when n1 = n2 ->
         (* let / sig. *)
         Types.reset_deps_on_rep () ;
         Types.begin_definition () ;
         let ty1 = Types.specialize sc1 in
         let ty2 = Types.specialize sc2 in
-        ignore (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2) ;
+        (try
+          ignore (Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2)
+        with _ ->
+          (* Try to have a more comprehensive error message. *)
+          raise (Wrong_type_by_inheritance (loc, n1, ty1, ty2, from1, from2))) ;
         Types.end_definition () ;
         let dep' = {
           Env.TypeInformation.dor_def =
@@ -3645,7 +3701,7 @@ let fields_fusion ~loc ctx phi1 phi2 =
         (* If a sig is specified, we always keep it as type. *)
         Env.TypeInformation.SF_let
           (from1, n1, pars1, sc2, body, otp1, dep', log1)
-   | (Env.TypeInformation.SF_let (_, n1, _, sc1, _, _, _, log_flag1),
+   | (Env.TypeInformation.SF_let (from1, n1, _, sc1, _, _, _, log_flag1),
       Env.TypeInformation.SF_let
           (from2, n2, pars2, sc2, body, otp2, dep, log_flag2)) when n1 = n2 ->
         (* let / let. *)
@@ -3656,7 +3712,12 @@ let fields_fusion ~loc ctx phi1 phi2 =
         Types.begin_definition () ;
         let ty1 = Types.specialize sc1 in
         let ty2 = Types.specialize sc2 in
-        let ty = Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2 in
+        let ty =
+          (try Types.unify ~loc ~self_manifest: ctx.self_manifest ty1 ty2
+          with _ ->
+            (* Try to have a more comprehensive error message. *)
+            raise
+              (Wrong_type_by_inheritance (loc, n1, ty1, ty2, from1, from2))) in
         Types.end_definition () ;
         let dep' = {
           Env.TypeInformation.dor_def =
@@ -3672,10 +3733,10 @@ let fields_fusion ~loc ctx phi1 phi2 =
           (fusion_fields_let_let_rec ~loc ctx meth1 rec_meths2)
    (* *** *)
    | (Env.TypeInformation.SF_let_rec rec_meths,
-      Env.TypeInformation.SF_sig (_, n2, sc2)) ->
+      Env.TypeInformation.SF_sig (from2, n2, sc2)) ->
         (* let rec / sig. *)
         (* Symetric case than for sig / let_rec. *)
-        fusion_fields_let_rec_sig ~loc ctx n2 sc2 rec_meths
+        fusion_fields_let_rec_sig ~loc ctx n2 sc2 from2 rec_meths
    | (Env.TypeInformation.SF_let_rec rec_meths1,
       Env.TypeInformation.SF_let meth2) ->
         Env.TypeInformation.SF_let_rec
@@ -3888,6 +3949,9 @@ let non_conflicting_fields_p f1 f2 =
     of inheriting a field several times via the SAME parent, erasing
     must not be performed ! That's like if we did as if there was no
     erasing to do.
+
+    {Args}:
+      - [loc] : Location of the whole hosting species expression.
 
     {b Rem}: Not exported outside this module.                        *)
 (* ****************************************************************** *)
