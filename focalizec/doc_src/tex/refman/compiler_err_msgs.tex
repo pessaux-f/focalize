@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.12 2008-12-02 11:29:50 pessaux Exp $
+% $Id: compiler_err_msgs.tex,v 1.13 2008-12-02 15:13:39 pessaux Exp $
 
 
 
@@ -648,6 +648,21 @@ the current detection ability of the \focal\ compiler.
 
 {\em Hints}: Rewrite the two properties to make them syntactically
 equal.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Method '$name$' was found with incompatible types during
+  inheritance. In species '$sname_1$': $t_1$, in species '$sname_2$':
+  $t_2$.}
+{\em Description}: By inheritance, two definitions and/or signatures
+are present with the same name $name$ in a species but their types are
+not the same. Since types of methods must be the same all along the
+inheritance tree, the compiler reject the method. The message points
+the two species, $sname_1$ and $sname_2$, hosting the method and the
+types, $t_1$ and $t_2$, found for each occurrence of this method.
+
+{\em Hints}: None.
 
 
 
