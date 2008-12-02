@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.10 2008-11-21 17:10:36 pessaux Exp $
+% $Id: compiler_err_msgs.tex,v 1.11 2008-12-02 11:26:52 pessaux Exp $
 
 
 
@@ -605,6 +605,49 @@ $name$ doesn't exist among the original function's parameters.
 
 {\em Hints}: Change the parameter name in the proof to make it
 matching the function definition's ones.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Logical method '$mname$' appearing in species
+  '$sname_1$' should have the same statement than in the species
+  '$sname_2$' at $location$.} 
+{\em Description}: By inheritance, two properties or theorems are
+present with the same name $mname$ in a species but their statements
+are not the same. Since types of methods must be the same all along the
+inheritance tree and since the ``type'' of a logical method is its
+statement, the compiler reject the method.
+
+The question of how to say that two logical expressions are equal is
+in general undecidable. The compiler compares the syntactic structure
+of the statements modulo $\alpha$-conversion (i.e. if variables names
+differ consistently from one expression to the other, this is taken
+into account; this way, {\tt forall x y in Self, x = y} is considered
+as equal to {\tt forall foo t in Self, foo = t}).
+
+This comparison can appear too weak in some cases like:
+{\scriptsize
+\begin{lstlisting}
+property equal_transitive:
+  all x y z in Self,
+    (!equal(x, y) /\ !equal(y, z)) -> !equal(x, z) ;
+\end{lstlisting}
+}
+versus
+{\scriptsize
+\begin{lstlisting}
+  property equal_transitive:
+    all x y z in Self,
+      !equal (x, y) -> !equal (y, z) -> !equal (x, z) ;
+\end{lstlisting}
+}
+where $/\setminus$ in the first form is replaced by -$>$ in the
+second. The two versions of the property are equivalents, but beyond
+the current detection ability of the \focal\ compiler.
+
+
+{\em Hints}: Rewrite the two properties to make them syntactically
+equal.
 
 
 
