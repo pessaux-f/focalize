@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.3 2008-12-01 22:16:14 weis Exp $
+# $Id: Makefile,v 1.4 2008-12-02 06:32:16 weis Exp $
 
 ROOT_DIR = .
 
@@ -29,7 +29,7 @@ SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(COMPILER_DIR)
 
 include $(ROOT_DIR)/Makefile.common
 
-.PHONY srcs compiler tools
+.PHONY: srcs compiler tools
 
 all:: srcs tools compiler
 
