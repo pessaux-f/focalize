@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.8 2008-12-01 12:26:36 weis Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.9 2008-12-02 07:17:54 weis Exp $ *)
 
 (**
 
@@ -660,7 +660,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
 
    let cardinal (l in Self) in int =
      if !bien_formee (l) then !raw_cardinal (l)
-     else foc_error ("internal error") ;
+     else focalize_error ("internal error") ;
 
 (*
 (*   theorem longueur_vide: self!longueur(self!vide) = 0
@@ -1098,7 +1098,7 @@ theorem bien_formee_inter:
               (__g_int_plus
                 (if (abst_bien_formee e)
                  then (abst_raw_cardinal e)
-                 else (__g_foc_error_ int__t string_foo)) `1`)))).
+                 else (__g_focalize_error_ int__t string_foo)) `1`)))).
      *};
 *)
 
@@ -1199,7 +1199,7 @@ theorem bien_formee_inter:
            [x](Is_true (__g_int_leq
                (if (abst_bien_formee (Nil_ self_a))
                 then (abst_raw_cardinal (Nil_ self_a))
-                else (__g_foc_error_ int__t string_foo)) x))).
+                else (__g_focalize_error_ int__t string_foo)) x))).
        Intros a l Hrec2. Clear Hrec2.
        BoolElimNamed '(abst_bien_formee (Cons_ self_a a l)) He1bf He1nbf.
        BoolElimNamed '(abst_bien_formee (Cons_ self_a b l2)) He2bf He2nbf.
@@ -1258,7 +1258,7 @@ theorem bien_formee_inter:
        Intros H_; Apply (bottom_properties ? [x](Is_true (__g_int_leq x
                 (if (abst_bien_formee (Cons_ self_a b l2))
                  then (abst_raw_cardinal (Cons_ self_a b l2))
-                 else (__g_foc_error_ int__t string_foo))))).
+                 else (__g_focalize_error_ int__t string_foo))))).
      *};
 *)
 
@@ -1732,7 +1732,7 @@ species Liste_triee (A is Ordered_set) inherits
        Unfold abst_cons liste_triee__cons in Htriee.
        Unfold abst_min liste_triee__min abst_raw_min liste_triee__raw_min.
        Case  (abst_est_triee (Cons_ self_a a l0)); EAuto with my_bool.
-       Unfold __g_foc_error_.
+       Unfold __g_focalize_error_.
        EApply (bottom_properties self_a).
      *};
 *)
@@ -1874,7 +1874,7 @@ species Liste_triee (A is Ordered_set) inherits
    let min (e) =
      if !est_triee (e) then !raw_min (e)
      else (* ne peut pas se produire. *)
-      foc_error ("liste non triee.") ;
+      focalize_error ("liste non triee.") ;
 
   proof of min_spec =
      assumed {* old proof needs to be translated *};
@@ -1886,7 +1886,7 @@ species Liste_triee (A is Ordered_set) inherits
       Intros e Hcard; Unfold abst_min liste_triee__min;
       Elim (Sumbool.sumbool_of_bool (abst_est_triee e));
       Intros H; Rewrite H; Auto with bool.
-      Unfold __g_foc_error_.
+      Unfold __g_focalize_error_.
       Apply (bottom_properties self_a).
     *};
 *)

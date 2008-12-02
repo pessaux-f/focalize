@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: big_integers.fcl,v 1.3 2008-11-30 23:18:30 weis Exp $ *)
+(* $Id: big_integers.fcl,v 1.4 2008-12-02 07:16:41 weis Exp $ *)
 
 (** Ocamls bigint in FoCaLize. *)
 
@@ -382,9 +382,9 @@ species Integers_big_int inherits integers#Integer_system, Base_big_int =
     let nn = n in
     let mm = m in
       let s = #sign_big_int (nn) in
-      if basics#int_eq (s, 0) then basics#foc_error ("must be non zero")
+      if basics#int_eq (s, 0) then basics#focalize_error ("must be non zero")
       else
-        let qr = #quomod_big_int (mm, ( #mult_int_big_int (s, nn))) in
+        let qr = #quomod_big_int (mm, (#mult_int_big_int (s, nn))) in
         let q = basics#fst (qr) in let r = basics#snd (qr) in
         cr_qrr (#mult_int_big_int (s, q), r);
 
