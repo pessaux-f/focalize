@@ -7,5 +7,6 @@
 *.ml
 *.fo
 *.mangled
+*.coz
 .depend
 odoc
