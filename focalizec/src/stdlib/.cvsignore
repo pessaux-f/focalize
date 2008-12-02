@@ -6,6 +6,7 @@
 *.vo
 *.fo
 *.mangled
+*.coz
 .depend
 additive_law.ml
 array_foc.ml
