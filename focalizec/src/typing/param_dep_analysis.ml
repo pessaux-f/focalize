@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.22 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.23 2008-12-02 14:12:19 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -389,9 +389,41 @@ and param_deps_proof ~current_species (param_coll_name, param_coll_meths)
 
 
 
+(* ***************************************************************** *)
+(* current_species: Parsetree.qualified_species ->                   *)
+(*   (Parsetree.vname * (Env.TypeInformation.species_field list)) -> *)
+(*     Parsetree.termination_proof -> Parsetree_utils.ParamDepSet.t  *)
+(* ***************************************************************** *)
+let param_deps_termination_proof ~current_species
+    (param_coll_name, param_coll_meths) t_proof =
+  match t_proof.Parsetree.ast_desc with
+   | Parsetree.TP_structural _ -> Parsetree_utils.ParamDepSet.empty
+   | Parsetree.TP_lexicographic facts ->
+       List.fold_left
+         (fun accu_deps fact ->
+           Parsetree_utils.ParamDepSet.union
+             accu_deps
+             (param_deps_fact
+                ~current_species (param_coll_name, param_coll_meths) fact))
+         Parsetree_utils.ParamDepSet.empty
+         facts
+   | Parsetree.TP_measure (expr, _,  sub_pr)
+   | Parsetree.TP_order (expr, _,  sub_pr) ->
+       let deps_in_pr =
+         param_deps_proof ~current_species (param_coll_name, param_coll_meths)
+           sub_pr in
+       let deps_in_expr =
+         __param_deps_expr ~current_species (param_coll_name, param_coll_meths)
+           [] expr in
+       Parsetree_utils.ParamDepSet.union deps_in_pr deps_in_expr
+;;
+
+
+
 (* ************************************************************************* *)
-(* current_species: Parsetree.qualified_species -> Parsetree.vname ->        *)
-(*   Parsetree.expr -> Parsetree_utils.ParamDepSet.t                     *)
+(* current_species: Parsetree.qualified_species ->                           *)
+(*   (Parsetree.vname * (Env.TypeInformation.species_field list)) ->         *)
+(*     Parsetree.expr -> Parsetree_utils.ParamDepSet.t                       *)
 (** {b Descr} : Computes the dependencies of an expression on the collection
     parameter name [param_coll_name]. In other words, detects which methods
     of [param_coll_name] (that is considered as a collection (i.e. "is")
@@ -417,8 +449,11 @@ let param_deps_expr ~current_species (param_coll_name, param_coll_meths)
 
 
 
-(* current_species: Parsetree.qualified_species -> Parsetree.vname -> *)
-(*   Parsetree.logical_expr -> Parsetree_utils.ParamDepSet.t          *)
+(* ***************************************************************** *)
+(* current_species: Parsetree.qualified_species ->                   *)
+(*   (Parsetree.vname * (Env.TypeInformation.species_field list)) -> *)
+(*     Parsetree.logical_expr -> Parsetree_utils.ParamDepSet.t       *)
+(* ***************************************************************** *)
 let param_deps_logical_expr ~current_species
     (param_coll_name, param_coll_meths) proposition =
   __param_deps_logical_expr

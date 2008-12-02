@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: param_dep_analysis.mli,v 1.13 2008-10-30 15:39:30 pessaux Exp $ *)
+(* $Id: param_dep_analysis.mli,v 1.14 2008-12-02 14:12:19 pessaux Exp $ *)
 
 
 val guess_method_computational_or_logical :
@@ -34,3 +34,8 @@ val param_deps_proof :
   current_species: Parsetree.qualified_species ->
     (Parsetree.vname * (Env.TypeInformation.species_field list)) ->
       Parsetree.proof -> Parsetree_utils.ParamDepSet.t
+
+val param_deps_termination_proof :
+  current_species: Parsetree.qualified_species ->
+    (Parsetree.vname * (Env.TypeInformation.species_field list)) ->
+      Parsetree.termination_proof -> Parsetree_utils.ParamDepSet.t
