@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.137 2008-12-01 14:40:43 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.138 2008-12-02 17:34:58 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1681,7 +1681,7 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
        (* Location is not the while theorem, but its body instead. I think
           this is sufficient *)
        Format.fprintf out_fmter "%%%%location: [%a]@\n"
-         Location.pp_location aim.Parsetree.ast_loc ;
+         Location.pp_location proof.Parsetree.ast_loc ;
        Format.fprintf out_fmter "%%%%name: for_zenon_%a@\n@\n"
          Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
        (* Now, print the lemma body. Inside, any method of "Self" is
