@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: products.fcl,v 1.6 2008-11-30 22:33:06 weis Exp $ *)
+(* $Id: products.fcl,v 1.7 2008-12-02 14:45:18 rr Exp $ *)
 
 (**
 
@@ -278,9 +278,9 @@ species Cartesian_product(A is Setoid, B is Setoid)
 
   representation = A * B;
 
-  let first(x) = basics#fst(x);
-  let second(x) = basics#snd(x);
-  let pair(x, y) = basics#pair(x, y);
+  let first(x) = match x with | (r, _) -> r ;
+  let second(x) = match x with | (_, r) -> r ;
+  let pair(x, y) = (x, y);
 
   (** Credits Eric Jaeger, William Bartlett *)
   proof of pair_preserves_first =
