@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.61 2008-12-02 10:31:02 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.62 2008-12-02 11:08:22 pessaux Exp $ *)
 
 let print_focalize_exception ppf = function
   (* ********************* *)
@@ -380,7 +380,7 @@ let print_focalize_exception ppf = function
   | Infer.Logical_statements_mismatch (name, sp1, loc1, sp2, loc2) ->
       Format.fprintf ppf
         "%a:@\n@[%tLogical@ method%t@ %t'%a'%t@ %tappearing@ in@ species%t
-        @ %t'%a'%t@ %tshould@ have@ the@ same@ statement@ as@ in@ species%t
+        @ %t'%a'%t@ %tshould@ have@ the@ same@ statement@ than@ in@ species%t
         @ %t'%a'%t@ %tat%t@ %a@]@."
         Location.pp_location loc1
         Handy.pp_set_bold Handy.pp_reset_effects
