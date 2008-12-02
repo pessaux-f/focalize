@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.63 2008-12-02 15:03:49 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.64 2008-12-02 15:07:53 pessaux Exp $ *)
 
 let print_focalize_exception ppf = function
   (* ********************* *)
@@ -379,7 +379,7 @@ let print_focalize_exception ppf = function
         Handy.pp_set_bold Handy.pp_reset_effects
   | Infer.Wrong_type_by_inheritance (at, name, ty1, ty2, from1, from2) ->
       Format.fprintf ppf
-        "%a:@\n@[%tMethod%t@ %t'%a'%t@ %twas@ found@ with@ incompatible @ \
+        "%a:@\n@[%tMethod%t@ %t'%a'%t@ %twas@ found@ with@ incompatible@ \
         types@ during@ inheritance.@ In@ species%t@ %t'%a'%t:@ \
         @[%a@],@ %tin@ species%t@ %t'%a'%t:@ @[%a@].@]@."
         Location.pp_location at
