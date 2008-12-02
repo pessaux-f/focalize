@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.67 2008-12-01 20:40:22 weis Exp $
+# $Id: Makefile,v 1.68 2008-12-02 13:43:02 pessaux Exp $
 
 ROOT_DIR = ..
 
@@ -28,23 +28,23 @@ LIB_INSTALL_DIR = $(LIB_DIR)/focalize
 
 COQ_INCLUDES = -I ../../zenon/
 
-FOCALIZE_SRC = basics.foc \
-	sets.foc\
-	products.foc \
-	lattices.foc\
-	orders.foc \
-	ord_n_latt.foc \
-	sets_orders.foc \
-	wellfounded.foc \
-	sums.foc
+FOCALIZE_SRC = basics.fcl \
+	sets.fcl\
+	products.fcl \
+	lattices.fcl\
+	orders.fcl \
+	ord_n_latt.fcl \
+	sets_orders.fcl \
+	wellfounded.fcl \
+	sums.fcl
 
 FOCALIZE_SRC_UNSAFE =
 
-FOCALIZE_FOS = $(FOCALIZE_SRC:.foc=.fo)
-FOCALIZE_FOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.foc=.fo)
+FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
+FOCALIZE_FOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.fo)
 
-FOCALIZE_MLS = $(FOCALIZE_SRC:.foc=.ml)
-FOCALIZE_MLS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.foc=.ml)
+FOCALIZE_MLS = $(FOCALIZE_SRC:.fcl=.ml)
+FOCALIZE_MLS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.ml)
 
 FOCALIZE_BYT_OBJS = $(FOCALIZE_MLS:.ml=.cmo)
 FOCALIZE_BYT_OBJS_UNSAFE = $(FOCALIZE_MLS_UNSAFE:.ml=.cmo)
@@ -52,14 +52,14 @@ FOCALIZE_BYT_OBJS_UNSAFE = $(FOCALIZE_MLS_UNSAFE:.ml=.cmo)
 FOCALIZE_BIN_OBJS = $(FOCALIZE_BYT_OBJS:.cmo=.cmx)
 FOCALIZE_BIN_OBJS_UNSAFE = $(FOCALIZE_BYT_OBJS_UNSAFE:.cmo=.cmx)
 
-FOCALIZE_ZVS = $(FOCALIZE_SRC:.foc=.zv)
-FOCALIZE_ZVS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.foc=.zv)
+FOCALIZE_ZVS = $(FOCALIZE_SRC:.fcl=.zv)
+FOCALIZE_ZVS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.zv)
 
 FOCALIZE_VS = $(FOCALIZE_ZVS:.zv=.v)
-FOCALIZE_VS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.foc=.v)
+FOCALIZE_VS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.v)
 
 FOCALIZE_VOS = $(FOCALIZE_VS:.v=.vo)
-FOCALIZE_VOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.foc=.vo)
+FOCALIZE_VOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
 
 EXTERNAL_BYT_OBJS =\
   ml_builtins.cmo sets_externals.cmo sets_orders_externals.cmo
