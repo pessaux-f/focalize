@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.60 2008-11-29 20:17:52 weis Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.61 2008-12-02 10:31:02 pessaux Exp $ *)
 
 let print_focalize_exception ppf = function
   (* ********************* *)
@@ -352,10 +352,15 @@ let print_focalize_exception ppf = function
   | Infer.Collection_not_fully_defined_missing_term_proof
         (coll_name, field_name) ->
       Format.eprintf
-        "@[Species@ '%a'@ cannot@ be@ turned@ into@ a@ collection.@ \
-        Field@ '%a'@ does@ not@ have@ a@ termination@ proof.@]@."
-        Sourcify.pp_qualified_species coll_name
-        Sourcify.pp_vname field_name
+        "@[%tSpecies%t@ %t'%a'%t@ %tcannot@ be@ turned@ into@ a@ collection.@ \
+        Field%t@ %t'%a'%t@ %tdoes@ not@ have@ a@ termination@ proof.%t@]@."
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Sourcify.pp_qualified_species coll_name
+        Handy.pp_reset_effects
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Sourcify.pp_vname field_name
+        Handy.pp_reset_effects
+        Handy.pp_set_bold Handy.pp_reset_effects
   | Infer.Collection_not_fully_defined (coll_name, field_name) ->
       Format.fprintf ppf
         "@[Species@ '%a'@ cannot@ be@ turned@ into@ a@ collection.@ \
@@ -372,6 +377,23 @@ let print_focalize_exception ppf = function
         Handy.pp_set_underlined Sourcify.pp_vname name
         Handy.pp_reset_effects
         Handy.pp_set_bold Handy.pp_reset_effects
+  | Infer.Logical_statements_mismatch (name, sp1, loc1, sp2, loc2) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tLogical@ method%t@ %t'%a'%t@ %tappearing@ in@ species%t
+        @ %t'%a'%t@ %tshould@ have@ the@ same@ statement@ as@ in@ species%t
+        @ %t'%a'%t@ %tat%t@ %a@]@."
+        Location.pp_location loc1
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Sourcify.pp_vname name
+        Handy.pp_reset_effects
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Sourcify.pp_qualified_species sp1
+        Handy.pp_reset_effects
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Sourcify.pp_qualified_species sp2
+        Handy.pp_reset_effects
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Location.pp_location loc2
   (* ********************** *)
   (* Dependencies analysis. *)
   | Dep_analysis.Ill_formed_species (species_name, field_node, found_path) ->

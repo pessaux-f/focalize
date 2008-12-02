@@ -12,8 +12,12 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.32 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.33 2008-12-02 10:31:02 pessaux Exp $ *)
 
+
+exception Logical_statements_mismatch of
+  (Parsetree.vname * Parsetree.qualified_species *
+   Location.t * Parsetree.qualified_species * Location.t)
 exception Collection_not_fully_defined_missing_term_proof of
   (Parsetree.qualified_species * Parsetree.vname)
 exception Proof_of_multiply_defined of

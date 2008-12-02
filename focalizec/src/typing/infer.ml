@@ -11,7 +11,31 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.159 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.160 2008-12-02 10:31:02 pessaux Exp $ *)
+
+
+
+
+(* ******************************************************************** *)
+(** {b Descr} : Exception used when two properties or theorems must be
+    merged because they have the same names but it appears that their
+    statement could not be seen as the same. In effect, the meaning of
+    "being the same" for types of computational methods, i.e. for ML
+    types is clear, but for types of logical methods, i.e. for logical
+    expressions, it is not clear and undecidable in general.
+
+    Currently, the compiler compares the syntax trees, forgetting
+    locations and modulo alpha-conversion to check if 2 logical
+    statements are "equal".
+    {b Rem} : Exported outside this module.                             *)
+(* ******************************************************************** *)
+exception Logical_statements_mismatch of
+  (Parsetree.vname *     (** Name of the involved theorem/property. *)
+   Parsetree.qualified_species *  (** First hosting species. *)
+   Location.t *   (** Source location of the first apparition. *)
+   Parsetree.qualified_species *  (** Second hosting species. *)
+   Location.t)  (** Source location of the second apparition. *)
+;;
 
 
 
@@ -3659,12 +3683,13 @@ let fields_fusion ~loc ctx phi1 phi2 =
    | (Env.TypeInformation.SF_let_rec rec_meths1,
       Env.TypeInformation.SF_let_rec rec_meths2) ->
         fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2
-   | ((Env.TypeInformation.SF_property (_, n1, ntyvar1, logical_expr1, _)),
-      (Env.TypeInformation.SF_property (_, n2, ntyvar2, logical_expr2, _)))
-   | ((Env.TypeInformation.SF_property (_, n1, ntyvar1, logical_expr1, _)),
-      (Env.TypeInformation.SF_theorem (_, n2, ntyvar2, logical_expr2, _, _)))
-   | ((Env.TypeInformation.SF_theorem (_, n1, ntyvar1, logical_expr1, _, _)),
-      (Env.TypeInformation.SF_theorem (_, n2, ntyvar2, logical_expr2, _, _))) ->
+   | ((Env.TypeInformation.SF_property (h1, n1, ntyvar1, logical_expr1, _)),
+      (Env.TypeInformation.SF_property (h2, n2, ntyvar2, logical_expr2, _)))
+   | ((Env.TypeInformation.SF_property (h1, n1, ntyvar1, logical_expr1, _)),
+      (Env.TypeInformation.SF_theorem (h2, n2, ntyvar2, logical_expr2, _, _)))
+   | ((Env.TypeInformation.SF_theorem (h1, n1, ntyvar1, logical_expr1, _, _)),
+      (Env.TypeInformation.SF_theorem
+         (h2, n2, ntyvar2, logical_expr2, _, _))) ->
         (* First, ensure that the names are the same. *)
         if n1 = n2 then
           (begin
@@ -3675,11 +3700,17 @@ let fields_fusion ~loc ctx phi1 phi2 =
               (* Return the theorem in case of property / theorem and return
                  the last theorem in case of theorem / theorem. *)
               phi2
-            else assert false
+            else
+              raise
+                (Logical_statements_mismatch
+                   (n1, h1.Env.fh_initial_apparition,
+                    logical_expr1.Parsetree.ast_loc,
+                    h2.Env.fh_initial_apparition, 
+                    logical_expr2.Parsetree.ast_loc))
            end)
         else assert false
-   | ((Env.TypeInformation.SF_theorem (_, n1, ntyvar1, logical_expr1, _, _)),
-      (Env.TypeInformation.SF_property (_, n2, ntyvar2, logical_expr2, _))) ->
+   | ((Env.TypeInformation.SF_theorem (h1, n1, ntyvar1, logical_expr1, _, _)),
+      (Env.TypeInformation.SF_property (h2, n2, ntyvar2, logical_expr2, _))) ->
         (* First, ensure that the names are the same. *)
         if n1 = n2 then
           (begin
@@ -3688,7 +3719,13 @@ let fields_fusion ~loc ctx phi1 phi2 =
             (* Finally, ensure that the propositions are the same. *)
             if Ast_equal.logical_expr_equal_p logical_expr1 logical_expr2
             then phi1 (* Return the theorem. *)
-            else assert false
+            else
+              raise
+                (Logical_statements_mismatch
+                   (n1, h1.Env.fh_initial_apparition,
+                    logical_expr1.Parsetree.ast_loc,
+                    h2.Env.fh_initial_apparition,
+                    logical_expr2.Parsetree.ast_loc))
           end)
         else assert false
    | _ -> assert false (* From Virgile's thesis Lemma 8 p 37 *)
@@ -3941,10 +3978,10 @@ let ensure_collection_completely_defined ctx fields =
                               (curr_spec, vname))
                        else
                          Format.eprintf
-                           "@[Warning: %tSpecies%t@ '%t%a%t'@ %tcannot@ \
+                           "@[Warning: %tSpecies%t@ '%t%a%t'@ %tshould@ not@ \
                            be@ turned@ into@ a@ collection.@ Field%t@ \
                            '%t%a%t'@ %tdoes@ not@ have@ a@ termination@ \
-                           proof.%t@]@."
+                           proof. Proof@ is@ assumed.%t@]@."
                            Handy.pp_set_bold Handy.pp_reset_effects
                            Handy.pp_set_underlined
                            Sourcify.pp_qualified_species curr_spec
