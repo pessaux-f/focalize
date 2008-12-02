@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.9 2008-12-02 07:17:54 weis Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.10 2008-12-02 08:10:05 weis Exp $ *)
 
 (**
 
@@ -31,7 +31,6 @@ open "basics" ;;
 use "sets_orders" ;;
 open "sets_orders" ;;
 
-
 (*********************************************************)
 
 (** sous-ensembles finis d'un ensemble quelconque.
@@ -45,14 +44,14 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
      @mathml <emptyset/>
      @latex \emptyset
    *)
-  signature vide : Self ;
+  signature vide : Self;
   (** ensemble à un élément. *)
   signature singleton : A -> Self;
   (** relation d'inclusion.
      @mathml <subset/>
      @latex infix \subset
    *)
-  signature sous_ensemble : Self -> Self -> bool ;
+  signature sous_ensemble : Self -> Self -> bool;
   (** nombre d'éléments.
      @mathml <card/>
    *)
@@ -76,19 +75,19 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
      @mathml <in/>
      @latex infix \in
    *)
-  let est_element (x in A, e in Self)  = !sous_ensemble (!singleton (x), e);
+  let est_element (x in A, e in Self) = !sous_ensemble (!singleton (x), e);
 
-  let equal (x, y)= and_b (!sous_ensemble (x, y), !sous_ensemble (y, x));
+  let equal (x, y) = and_b (!sous_ensemble (x, y), !sous_ensemble (y, x));
 
-  let leq (x, y) = !sous_ensemble (x, y) ;
+  let leq (x, y) = !sous_ensemble (x, y);
 
-  let element = !singleton (A!element) ;
+  let element = !singleton (A!element);
 
   (** Relation entre l'appartenance et l'inclusion. *)
   theorem est_element_spec:
     all x in A, all e in Self,
       !est_element (x, e) <-> !sous_ensemble (!singleton (x), e)
-    proof = by definition of est_element ;
+    proof = by definition of est_element;
 
 (* def: est_element; *)
 (*       {* Intros x e; Unfold abst_est_element ensembles_finis__est_element; *)
@@ -99,23 +98,23 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
   property sous_ensemble_spec:
     all s1 s2 in Self,
       (all x in A, (!est_element (x, s1) -> !est_element (x, s2))) <->
-        !sous_ensemble (s1, s2) ;
+        !sous_ensemble (s1, s2);
 
   (** Transitivité de l'appartenance. *)
   theorem sous_ensemble_trans:
     all s1 s2 s3 in Self,
       !sous_ensemble (s1, s2) -> !sous_ensemble (s2, s3) ->
         !sous_ensemble (s1, s3)
-    proof = by property !sous_ensemble_spec ;
+    proof = by property !sous_ensemble_spec;
 
 
   (** l'ensemble vide n'a pas d'élément. *)
-  property vide_spec: all x in A, ~ (!est_element (x, !vide)) ;
+  property vide_spec: all x in A, ~ (!est_element (x, !vide));
 
   (** L'ensemble vide est inclus dans tout ensemble. *)
   theorem sous_ensemble_vide: all l in Self, !sous_ensemble (!vide, l)
     proof =
-      by property !vide_spec, !sous_ensemble_spec ;
+      by property !vide_spec, !sous_ensemble_spec;
 
 
   (** L'ensemble vide est le seul à ne contenir aucun élément. *)
@@ -126,27 +125,27 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
 
   (** Un singleton ne contient qu'un seul élément. *)
   property singleton_spec:
-    all x y in A, !est_element (y, !singleton (x)) <-> A!equal (x, y) ;
+    all x y in A, !est_element (y, !singleton (x)) <-> A!equal (x, y);
 
   (** L'union contient exactement les éléments des deux ensembles. *)
   property union_spec:
     all s1 s2 in Self, all x in A,
       !est_element (x, !union (s1, s2))<->
-        (!est_element (x, s1) \/ !est_element (x, s2)) ;
+        (!est_element (x, s1) \/ !est_element (x, s2));
 
   (** L'intersection contient exactement les éléments appartenant à chacun
      des deux ensembles. *)
   property inter_spec:
     all s1 s2 in Self, all x in A,
       !est_element (x, !inter (s1, s2)) <->
-        (!est_element (x, s1) /\ !est_element (x, s2)) ;
+        (!est_element (x, s1) /\ !est_element (x, s2));
 
    (** La différence contient exactement les éléments du premier ensemble qui
       ne sont pas dans le second. *)
   property diff_spec:
     all s1 s2 in Self, all x in A,
       !est_element (x, !diff (s1, s2)) <->
-        (!est_element (x, s1) /\ ~ (!est_element (x, s2))) ;
+        (!est_element (x, s1) /\ ~ (!est_element (x, s2)));
 
 
    (** Deux ensembles sont égaux si et seulement si ils ont exactement les
@@ -154,52 +153,52 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
   theorem extensional:
     all e1 e2 in Self,
       !equal(e1, e2) <-> (!sous_ensemble (e1, e2) /\ !sous_ensemble (e2, e1))
-    proof = by definition of equal ;
+    proof = by definition of equal;
 
 
   (** L'inclusion est réflexive. *)
-  proof of leq_reflexive = by definition of equal, leq ;
+  proof of leq_reflexive = by definition of equal, leq;
 
   (** L'inclusion est antisymétrique. *)
-  proof of leq_antisymmetric = by definition of leq, equal ;
+  proof of leq_antisymmetric = by definition of leq, equal;
 
   (** L'inclusion est transitive. *)
   proof of leq_transitive =
-    by property !sous_ensemble_trans definition of leq ;
+    by property !sous_ensemble_trans definition of leq;
 
   (** L'égalité est réflexive. *)
   proof of equal_reflexive =
     by property !sous_ensemble_spec
-    definition of equal ;
+    definition of equal;
 
   (** L'égalité est symétrique. *)
-  proof of equal_symmetric = by definition of equal ;
+  proof of equal_symmetric = by definition of equal;
 
   (** L'égalité est transitive. *)
   proof of equal_transitive = by property !sous_ensemble_trans
-    definition of equal ;
+    definition of equal;
 
   (** L'ensemble vide a 0 éléments. *)
-  property vide_card: !cardinal (!vide) = 0 ;
+  property vide_card: !cardinal (!vide) = 0;
 
   (** Un singleton est un ensemble à 1 élément. *)
   property singleton_card:
-  all x in A, !cardinal (!singleton (x)) = 1 ;
+  all x in A, !cardinal (!singleton (x)) = 1;
 
 (* property ajoute_card:
    all x in a, all s in Self,
      ~ (!est_element (x,s)) ->
-       (!cardinal (!ajoute_element (x, s)) = !cardinal (s) + 1) ; *)
+       (!cardinal (!ajoute_element (x, s)) = !cardinal (s) + 1); *)
 
   (** Si un ensemble est inclus dans un autre, il a moins d'élément que lui.*)
   property incl_card : all e1 e2 in Self,
-   !sous_ensemble (e1, e2) -> int_leq (!cardinal (e1), !cardinal (e2)) ;
+   !sous_ensemble (e1, e2) -> int_leq (!cardinal (e1), !cardinal (e2));
 
   (** Si un ensemble est strictement inclus dans un autre, il a strictement
       moins d'éléments que lui. *)
   property include_card : all e1 e2 in Self,
    !sous_ensemble (e1, e2) -> ~ (!sous_ensemble (e2, e1)) ->
-     int_lt (!cardinal (e1), !cardinal (e2)) ;
+     int_lt (!cardinal (e1), !cardinal (e2));
 
   (** Si deux ensembles sont égaux, ils ont même cardinal. *)
   theorem card_congruence: all e1 e2 in Self,
@@ -221,31 +220,31 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
            definition of equal, basics#( <0x )
            step <2>1
     <1>f qed.
-    ;
+   ;
 
   (** Le cardinal de l'union est au plus la somme des cardinaux. *)
   property union_card : all e1 e2 in Self,
-   int_leq (!cardinal (!union (e1, e2)), !cardinal (e1) + !cardinal (e2)) ;
+   int_leq (!cardinal (!union (e1, e2)), !cardinal (e1) + !cardinal (e2));
 
   (** Le cardinal de l'intersection est au plus le plus petit des cardinaux. *)
   property inter_card : all e1 e2 in Self,
    int_leq (!cardinal (!inter (e1, e2)),
-            int_min (!cardinal (e1), !cardinal (e2))) ;
+            int_min (!cardinal (e1), !cardinal (e2)));
 
   (** Relation entre les cardinaux de deux ensemble et ceux de leur union
      et de leur intersection. *)
   property somme_card: all e1 e2 in Self,
   !cardinal (!union (e1, e2)) + !cardinal (!inter (e1, e2)) =
-   !cardinal (e1) + !cardinal (e2) ;
+   !cardinal (e1) + !cardinal (e2);
 
   (** Relation entre le cardinal de la différence et ceux des ensembles de
      départ quand le second est inclus dans l'autre. *)
   property diff_card: all e1 e2 in Self,
     !sous_ensemble (e2, e1) ->
-      !cardinal (e1) = !cardinal (!diff (e1, e2)) + !cardinal (e2) ;
+      !cardinal (e1) = !cardinal (!diff (e1, e2)) + !cardinal (e2);
 
   (** Ajouter un élément à un ensemble donner. *)
-  let ajoute_element (x, e) = !union (!singleton (x), e) ;
+  let ajoute_element (x, e) = !union (!singleton (x), e);
 
   (** Si on ajoute un élément à un ensemble, il appartient au nouvel ensemble.*)
   theorem ajoute_spec:
@@ -253,7 +252,7 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
       !est_element (y, !ajoute_element (x, s)) <->
         (A!equal (x, y) \/ !est_element (y, s))
    proof = by property !union_spec, !singleton_spec
-   definition of ajoute_element ;
+   definition of ajoute_element;
 end
 ;;
 
@@ -266,14 +265,14 @@ species Ensembles_finis_ordonnes (A is Ordered_set) inherits
   Ensembles_finis (A) =
 
   (** Le minimum d'un ensemble. *)
-  signature min : Self -> A ;
+  signature min : Self -> A;
 
   (** Le minimum appartient à l'ensemble et est plus petit que tous
      ses autres éléments. *)
   property min_spec : all e in Self,
     ~ (!cardinal (e) = 0) ->
       (!est_element (!min (e), e) /\
-       (all x in A, !est_element (x, e) -> A!leq (!min (e), x))) ;
+       (all x in A, !est_element (x, e) -> A!leq (!min (e), x)));
 
   (** Tout élément plus petit que le minimum est plus petit que n'importe
      quel élément du sous-ensemble. *)
@@ -293,7 +292,7 @@ species Ensembles_finis_ordonnes (A is Ordered_set) inherits
 theorem min_inf2:
   all e in Self, all x in A,
     ~ (!cardinal (e) = 0) ->
-      (all y in A, !est_element (y, e)-> A!lt (x, y)) -> A!lt (x, !min (e))
+      (all y in A, !est_element (y, e) -> A!lt (x, y)) -> A!lt (x, !min (e))
   proof =
     by property !min_spec
   ;
@@ -307,7 +306,7 @@ end
 (** implantation des sous-ensembles à partir de listes; cas non ordonné. *)
 species Liste (A is Setoid) inherits Ensembles_finis (A) =
 
-  representation = basics#list (A) ;
+  representation = basics#list (A);
 
   (** Impression des résultats. *)
   let print (l in Self) =
@@ -315,25 +314,25 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
       match l with
       | basics#[] -> "]"
       | x :: l -> A!print (x) ^ "," ^ aux (l) in
-    "[" ^ (aux (l)) ;
+    "[" ^ (aux (l));
 
   (** Invariant de representation: les listes ne contiennent pas
      d'éléments en double. *)
   let rec bien_formee (l in Self) in bool =
     match l with
     | basics#[] -> true
-    | a :: l -> and_b (not_b (!est_element (a, l)), !bien_formee (l)) ;
+    | a :: l -> and_b (not_b (!est_element (a, l)), !bien_formee (l));
 
-  let vide in Self = [ ] ;
+  let vide in Self = [ ];
 
-  let singleton (x in A) in Self = [x] ;
+  let singleton (x in A) in Self = [x];
 
   let est_element (x in A, e in Self) in basics#bool =
     let rec aux (l) =
       match l with
       | basics#[] -> false
       | y :: l -> if A!equal (x, y) then true else aux (l) in
-    aux (e) ;
+    aux (e);
 
   theorem equal_congr_est_element : all s in Self, all x y in A,
    A!equal (x, y) -> !est_element (x, s) -> !est_element (y, s)
@@ -409,7 +408,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
   let rec sous_ensemble (e1 in Self, e2 in Self) in bool =
     match e1 with
     | basics#[] -> true
-    | x :: l -> and_b (!est_element (x, e2), !sous_ensemble (l, e2)) ;
+    | x :: l -> and_b (!est_element (x, e2), !sous_ensemble (l, e2));
 
   proof of sous_ensemble_spec =
     assumed {* Zenon does not handle recursive functions yet *};
@@ -476,7 +475,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
     assumed {* old proof needs to be translated *};
 (*
     (* [Unsure - à laisser ?]
-       def : est_element vide ; *)
+       def : est_element vide; *)
     coq proof {*
       Unfold abst_est_element abst_vide;Simpl;Unfold not;Intros;Elim H.
     *};
@@ -543,14 +542,14 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
 
 
   let ajoute_element (x in A, l in Self) in Self =
-    if !est_element (x, l) then l else x :: l ;
+    if !est_element (x, l) then l else x :: l;
 
 
   proof of ajoute_spec =
     assumed {* old proof needs to be translated *};
 (*
     (* [Unsure - à laisser ?]
-       def : ajoute_element est_element ;
+       def : ajoute_element est_element;
        decl : equal_congr_est_element; *)
     coq proof {*
       Unfold abst_ajoute_element abst_est_element liste__ajoute_element;
@@ -642,25 +641,25 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
         if A!equal (x, y) then l
         else y :: aux (l, x)
     in
-    aux (l, x) ;
+    aux (l, x);
 
   let diff (e1 in Self, e2 in Self) =
     let rec aux (l, accu) =
       match l with
       | basics#[] -> accu
       | x :: l -> aux (l, !remove_element (x, accu)) in
-    aux (e2, e1) ;
+    aux (e2, e1);
 
   let raw_cardinal (l in Self) in int =
     let rec aux (l, x) =
       match l with
       | basics#[] -> x
       |  _ :: l -> aux (l, x + 1) in
-    aux (l, 0) ;
+    aux (l, 0);
 
    let cardinal (l in Self) in int =
      if !bien_formee (l) then !raw_cardinal (l)
-     else focalize_error ("internal error") ;
+     else focalize_error ("internal error");
 
 (*
 (*   theorem longueur_vide: self!longueur(self!vide) = 0
@@ -687,7 +686,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
          *}; *)
 *)
    (* Modif : en *)
-   let cons (x in A, l in Self) in Self = x :: l ;
+   let cons (x in A, l in Self) in Self = x :: l;
 
    local theorem cons_bien_formee:
      all x in A, all l in Self,
@@ -791,7 +790,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
   let rec union (e1 in Self, e2 in Self) =
     match e1 with
     | basics#[] -> e2
-    | x :: l -> !union (l, !ajoute_element (x, e2)) ;
+    | x :: l -> !union (l, !ajoute_element (x, e2));
 
   theorem bien_formee_union:
     all e1 e2 in Self,
@@ -800,7 +799,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
      assumed {* old proof needs to be translated *};
 (*
       (* [Unsure - à laisser ?]
-         def: union bien_formee ;
+         def: union bien_formee;
          decl : bien_formee_ajoute cons_bien_formee_elim; *)
       coq proof {*
         Induction e1.
@@ -880,7 +879,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
         if !est_element (x, e2)
         then aux (l, !ajoute_element (x, accu))
         else aux (l, accu) in
-    aux (!vide, e1) ;
+    aux (!vide, e1);
 
    proof of inter_spec =
      assumed {* old proof needs to be translated *};
@@ -964,7 +963,7 @@ theorem bien_formee_inter:
     !bien_formee (e1) -> !bien_formee (e2) -> !bien_formee (!inter (e1, e2))
   proof =
     (* [Unsure - à laisser ?]
-       def : bien_formee ; *)
+       def : bien_formee; *)
     assumed {* Because temporarily unvailable in new version *};
 
    theorem remove_element_spec:
@@ -1545,7 +1544,7 @@ species Liste_triee (A is Ordered_set) inherits
    termination proof = order 0 on l
    assumed
      {* Bidon en attendant qu'on gère vraiment
-        les preuves de terminaison. *} ;
+        les preuves de terminaison. *};
 
 
    (** le nouvel invariant implique celui de l'espèce parent (non duplication).*)
@@ -1595,7 +1594,7 @@ species Liste_triee (A is Ordered_set) inherits
        termination proof = order 0 on l
        assumed
          {* Bidon en attendant qu'on gère vraiment
-            les preuves de terminaison. *} ;
+            les preuves de terminaison. *};
 
    theorem invariant1: !est_triee (!vide)
    proof =
@@ -1668,7 +1667,7 @@ species Liste_triee (A is Ordered_set) inherits
      assumed {* old proof needs to be translated *};
 (*
     (* [Unsure - à laisser ?]
-       def: cons est_triee vide ;
+       def: cons est_triee vide;
        decl: min_inf card_zero_vide cons_non_vide cons_element; *)
     coq proof {*
       Intros x l Hl Hx.
@@ -1823,7 +1822,7 @@ species Liste_triee (A is Ordered_set) inherits
   let raw_min (e in Self) =
     match e with
     | basics#[] -> A!element
-    | x :: _ -> x ;
+    | x :: _ -> x;
 
   theorem raw_min_spec:
     all e in Self,
@@ -1874,7 +1873,7 @@ species Liste_triee (A is Ordered_set) inherits
    let min (e) =
      if !est_triee (e) then !raw_min (e)
      else (* ne peut pas se produire. *)
-      focalize_error ("liste non triee.") ;
+      focalize_error ("liste non triee.");
 
   proof of min_spec =
      assumed {* old proof needs to be translated *};
@@ -1902,7 +1901,7 @@ species Liste_triee (A is Ordered_set) inherits
         def: est_triee ajoute_element cons;
         decl: cons_ajoute ajoute_spec min_inf2 cons_ajoute2 card_zero_vide
           vide_spec2
-          min_inf ; *)
+          min_inf; *)
      coq proof {*
        Intros s x.
        Elim s.
@@ -2082,13 +2081,13 @@ end
 (**************************************************************)
 
 species Entiers_concrets inherits Ordered_set =
-  representation = int ;
-  let element = 1 ;
-  let equal = int_eq ;
-  let leq = int_leq ;
+  representation = int;
+  let element = 1;
+  let equal = int_eq;
+  let leq = int_leq;
 
-  let print = string_of_int ;
-  let parse = int_of_string ;
+  let print = string_of_int;
+  let parse = int_of_string;
 
   proof of equal_reflexive = assumed {* Because todo *};
   proof of equal_symmetric = assumed {* Because todo *};
@@ -2099,37 +2098,37 @@ species Entiers_concrets inherits Ordered_set =
   proof of leq_transitive = assumed {* Because todo *};
   proof of total_order = assumed {* Because todo *};
   proof of lt_is_not_leq = assumed {* Because todo *};
-end ;;
+end;;
 
-collection Entiers implements Entiers_concrets ;;
+collection Entiers implements Entiers_concrets;;
 
-collection Ensemble_entiers implements Liste_triee (Entiers) ;;
+collection Ensemble_entiers implements Liste_triee (Entiers);;
 
-let zero = Entiers!parse ("0") ;;
-let un = Entiers!parse ("1") ;;
-let deux = Entiers!parse ("2") ;;
-let trois = Entiers!parse ("3") ;;
-let quatre = Entiers!parse ("4") ;;
+let zero = Entiers!parse ("0");;
+let un = Entiers!parse ("1");;
+let deux = Entiers!parse ("2");;
+let trois = Entiers!parse ("3");;
+let quatre = Entiers!parse ("4");;
 
 let pairs =
    Ensemble_entiers!ajoute_element
    (#quatre,
     Ensemble_entiers!ajoute_element
-    (#zero, Ensemble_entiers!ajoute_element (#deux, Ensemble_entiers!vide))) ;;
+    (#zero, Ensemble_entiers!ajoute_element (#deux, Ensemble_entiers!vide)));;
 
 let impairs =
    Ensemble_entiers!ajoute_element
    (#trois,
-    Ensemble_entiers!ajoute_element (#un, Ensemble_entiers!vide)) ;;
+    Ensemble_entiers!ajoute_element (#un, Ensemble_entiers!vide));;
 
-let total = Ensemble_entiers!union (#pairs, #impairs) ;;
+let total = Ensemble_entiers!union (#pairs, #impairs);;
 
 let print_endline (s) = print_string (s ^ "\n");;
 
 (*
-#print_endline (Ensemble_entiers!print (#pairs)) ;;
-#print_endline (Ensemble_entiers!print (#impairs)) ;;
-#print_endline (Ensemble_entiers!print (#total)) ;;
+#print_endline (Ensemble_entiers!print (#pairs));;
+#print_endline (Ensemble_entiers!print (#impairs));;
+#print_endline (Ensemble_entiers!print (#total));;
 *)
 
 (* *********** tout ceci devrait etre inutile maintenant
