@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.3 2008-12-03 19:10:57 weis Exp $
+# $Id: Makefile,v 1.4 2008-12-03 20:23:35 weis Exp $
 
 ROOT_DIR = ..
 
@@ -24,14 +24,14 @@ all:: $(EXTERNAL_TOOLS_DIRS)
 ../$(CAML_DIR):
 	for i in $(CAML_TAR_BALL); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $(ROOT_DIR); tar xvzf $(TAR_BALLS_DIR_NAME)/$$i) || exit; \
+	  ($(CD) $(ROOT_DIR); $(TARX) $(TAR_BALLS_DIR_NAME)/$$i) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 
 ../$(CAMLP5_DIR):
 	for i in $(CAMLP5_TAR_BALL); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $(ROOT_DIR); tar xvzf $(TAR_BALLS_DIR_NAME)/$$i; \
+	  ($(CD) $(ROOT_DIR); $(TARX) $(TAR_BALLS_DIR_NAME)/$$i; \
            sed -e "s|/bin/bash|/bin/sh|" \
 		< $(CAMLP5_DIR)/configure \
 		> $(CAMLP5_DIR)/.configure; \
@@ -43,7 +43,7 @@ all:: $(EXTERNAL_TOOLS_DIRS)
 ../$(COQ_DIR):
 	for i in $(COQ_TAR_BALL); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $(ROOT_DIR); tar xvzf $(TAR_BALLS_DIR_NAME)/$$i) || exit; \
+	  ($(CD) $(ROOT_DIR); $(TARX) $(TAR_BALLS_DIR_NAME)/$$i) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 
