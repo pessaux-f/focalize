@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.7 2008-12-03 20:24:24 weis Exp $
+# $Id: Makefile,v 1.8 2008-12-03 20:56:39 weis Exp $
 
 ROOT_DIR = .
 
@@ -23,19 +23,17 @@ include $(ROOT_DIR)/Makefile.config
 # TAR_BALLS_DIR
 # EXTERNAL_TOOLS_DIRS
 
-COMPILER_DIR = focalizec
-
-SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(INTERNAL_TOOLS_DIRS) $(COMPILER_DIR)
+SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(INTERNAL_TOOLS_DIRS)
 
 include $(ROOT_DIR)/Makefile.common
 
-.PHONY: tools_src configure_tools build_tools compiler
+.PHONY: external_tools_src external_tools_configure external_tools_build internal_tools_build
 
-all:: tools_src configure_tools build_tools compiler
+all:: external_tools_src external_tools_configure external_tools_build internal_tools_build
 
-tools_srcs: $(EXTERNAL_TOOLS_DIRS)
+external_tools_src: $(EXTERNAL_TOOLS_DIRS)
 
-configure_tools:
+external_tools_configure:
 	(cd $(CAML_DIR); \
 	 ./configure $(CAML_CONFIGURE_OPTIONS); \
 	 $(MAKE) $(CAML_MAKE_ALL_TARGET); \
@@ -49,15 +47,26 @@ configure_tools:
 	 $(MAKE) $(COQ_MAKE_ALL_TARGET); \
 	)
 
-compiler:
-	for i in $(COMPILER_DIR); do \
+external_tools_build: $(EXTERNAL_TOOLS_EXES)
+
+internal_tools_build: $(INTERNAL_TOOLS_EXES)
+
+$(EXTERNAL_TOOLS_DIRS):
+	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) all) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 
-$(EXTERNAL_TOOLS_DIRS):
-	for i in $(TAR_BALLS_DIR); do \
+$(INTERNAL_TOOLS_EXES):
+	for i in $(INTERNAL_TOOLS_DIRS); do \
+	  echo "--> $$i ..."; \
+	  ($(CD) $$i; $(MAKE) all) || exit; \
+	  echo "<-- $$i [$$?]"; \
+	done
+
+$(EXTERNAL_TOOLS_EXES):
+	for i in $(EXTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) all) || exit; \
 	  echo "<-- $$i [$$?]"; \
