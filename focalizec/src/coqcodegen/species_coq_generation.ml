@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.140 2008-12-03 09:07:26 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.141 2008-12-03 10:38:55 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -306,8 +306,8 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                       new_print_ctx ~reuse_mapping: false)
                    meth_ty
              | Parsetree_utils.DETK_logical lexpr ->
-                 (* Inside the logical expression of the method of the parameter
-                    "Self" must be printed as "_p_param_name_T" .*)
+                 (* Inside the logical expression of the method of the
+		    parameter "Self" must be printed as "_p_param_name_T". *)
                  let self_map =
                    Species_record_type_generation.
                      make_Self_cc_binding_species_param
@@ -341,8 +341,8 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                       new_print_ctx ~reuse_mapping: false)
                    meth_ty
              | Parsetree_utils.DETK_logical lexpr ->
-                 (* Inside the logical expression of the method of the parameter
-                    "Self" must be printed as "_p_param_name_T" .*)
+                 (* Inside the logical expression of the method of the
+		    parameter "Self" must be printed as "_p_param_name_T". *)
                  let self_map =
                    Species_record_type_generation.
                      make_Self_cc_binding_species_param
@@ -1224,7 +1224,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               meth_ty
         | Parsetree_utils.DETK_logical lexpr ->
             (* Inside the logical expression of the method of the parameter
-               "Self" must be printed as "_p_param_name_T" .*)
+               "Self" must be printed as "_p_param_name_T". *)
             let self_map =
               Species_record_type_generation.make_Self_cc_binding_species_param
                 ~current_species: ctx.Context.scc_current_species param_name in
@@ -2248,7 +2248,7 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
 
 
 let generate_defined_recursive_let_definition ctx print_ctx env
-    generated_fields from name params scheme body _opt_term_pr ai =
+    generated_fields from name params scheme body opt_term_pr ai =
   let out_fmter = ctx.Context.scc_out_fmter in
   match body with
    | Parsetree.BB_logical _ ->
@@ -2287,9 +2287,9 @@ let generate_defined_recursive_let_definition ctx print_ctx env
          match return_ty_opt with None -> assert false | Some t -> t in
 
        (* Generate the order. *)
-(* [Unsure] Disablé pour la release Alpha.
+(* [Unsure] Disablé pour la release Alpha. *)
        generate_termination_order
-         ctx' print_ctx env name params_with_type opt_term_pr ; *)
+         ctx' print_ctx env name params_with_type opt_term_pr ;
        (* Generate the termination proof. *)
 (* [Unsure] A faire.
        generate_termination_proof ctx' print_ctx env ... ; *)

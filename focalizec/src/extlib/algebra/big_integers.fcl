@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: big_integers.fcl,v 1.4 2008-12-02 07:16:41 weis Exp $ *)
+(* $Id: big_integers.fcl,v 1.5 2008-12-03 10:38:55 pessaux Exp $ *)
 
 (** Ocamls bigint in FoCaLize. *)
 
@@ -361,6 +361,8 @@ species Base_big_int
   let of_int (n) = #big_int_of_int (n) ;
   let print = #string_of_big_int ;
   let parse = #big_int_of_string ;
+
+
 end ;;
 
 collection Foc_basic_integers implements Base_big_int ;;
@@ -404,6 +406,7 @@ species Integers_big_int inherits integers#Integer_system, Base_big_int =
   proof of euclidean_order_is_antisymmetric = assumed {* Because todo *} ;
   proof of euclidean_ordering_is_transitive = assumed {* Because todo *} ;
   proof of remainder_is_smaller = assumed {* Because todo *} ;
+  proof of equal_from_leq = assumed {* Because broken by equal redefinition.*} ;
 end ;;
 
 collection Foc_big_integers implements Integers_big_int ;;

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.116 2008-11-28 16:44:19 pessaux Exp $ *)
+(* $Id: env.ml,v 1.117 2008-12-03 10:38:55 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -2024,7 +2024,7 @@ let print_field_for_debug = function
   | TypeInformation.SF_sig (_, n, sch) ->
       Format.eprintf "signature %a : %a@." Sourcify.pp_vname n
         Types.pp_type_scheme sch
-  | TypeInformation.SF_let (_, n, args, sch, body, _, _) ->
+  | TypeInformation.SF_let (_, n, args, sch, body, _, _, _) ->
       Format.eprintf "let %a " Sourcify.pp_vname n ;
       List.iter (fun a -> Format.eprintf "%a " Sourcify.pp_vname a) args ;
       Format.eprintf ": %a " Types.pp_type_scheme sch ;
@@ -2032,14 +2032,16 @@ let print_field_for_debug = function
       Format.eprintf "@."
   | TypeInformation.SF_let_rec l ->
       List.iter
-        (fun (_, n, args, sch, body, _, _) ->
+        (fun (_, n, args, sch, body, _, _, _) ->
           Format.eprintf "let rec %a " Sourcify.pp_vname n ;
           List.iter (fun a -> Format.eprintf "%a " Sourcify.pp_vname a) args ;
           Format.eprintf ": %a " Types.pp_type_scheme sch ;
           Format.eprintf "= %a@." Sourcify.pp_binding_body body ;
           Format.eprintf "@.")
         l
-  | TypeInformation.SF_theorem _ | TypeInformation.SF_property _ ->
-      Format.eprintf "Property/Theorem@."
+  | TypeInformation.SF_theorem (_, n, _, _, _, _) ->
+      Format.eprintf "Theorem %a@." Sourcify.pp_vname n
+  | TypeInformation.SF_property (_, n, _, _, _) ->
+      Format.eprintf "Property %a@." Sourcify.pp_vname n
 ;;
 *)
