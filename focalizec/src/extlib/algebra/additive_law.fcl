@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: additive_law.fcl,v 1.3 2008-11-28 10:09:22 pessaux Exp $ *)
+(* $Id: additive_law.fcl,v 1.4 2008-12-03 09:49:54 pessaux Exp $ *)
 
 (** The FoCaL library does not intend to model binary laws which are not
    associative, thus some mathematical notions such as magmas (groupoids) are
@@ -26,13 +26,13 @@
 use "basics" ;;
 use "sets" ;;
 use "orders" ;;
-use "ord_n_latt" ;;
+use "orders_and_lattices" ;;
 use "lattices" ;;
 use "constants";;
 open "basics" ;;
 open "sets" ;;
 open "orders" ;;
-open "ord_n_latt" ;;
+open "orders_and_lattices" ;;
 open "constants";;
 open "lattices" ;;
 
@@ -702,7 +702,7 @@ species Ordered_additive_group inherits
  signature sign : Self -> int ;
  let leq (x, y) = basics#int_leq (!sign (!minus(x, y)), 0) ;
  proof of total_order = assumed {* Because todo *} ;
- proof of lt_is_not_leq = assumed {* Because todo *} ;
+ -- proof of lt_is_not_leq = assumed {* Because todo *} ;
  let max (x, y) = if !lt (x, y) then y else x ;
  let min (x, y) = if !lt (x, y) then x else y ;
  let is_zero (x) = basics#int_eq (Self!sign (x), 0) ;

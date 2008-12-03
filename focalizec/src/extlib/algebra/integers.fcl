@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: integers.fcl,v 1.4 2008-11-28 10:09:22 pessaux Exp $ *)
+(* $Id: integers.fcl,v 1.5 2008-12-03 09:49:54 pessaux Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called 
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -25,14 +25,14 @@ open "basics" ;;
 (* open "iterators" ;; *)
 
 use "sets" ;;
-use "ord_n_latt";;
+use "orders_and_lattices";;
 use "additive_law" ;;
 use "multiplicative_law" ;;
 use "weak_structures" ;;
 use "rings_fields" ;;
 
 open "sets" ;;
-open "ord_n_latt";;
+open "orders_and_lattices";;
 open "additive_law" ;;
 open "multiplicative_law" ;;
 open "weak_structures" ;;
