@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.141 2008-12-03 10:38:55 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.142 2008-12-03 10:43:53 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2248,7 +2248,7 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
 
 
 let generate_defined_recursive_let_definition ctx print_ctx env
-    generated_fields from name params scheme body opt_term_pr ai =
+    generated_fields from name params scheme body _opt_term_pr ai =
   let out_fmter = ctx.Context.scc_out_fmter in
   match body with
    | Parsetree.BB_logical _ ->
@@ -2288,8 +2288,8 @@ let generate_defined_recursive_let_definition ctx print_ctx env
 
        (* Generate the order. *)
 (* [Unsure] Disablé pour la release Alpha. *)
-       generate_termination_order
-         ctx' print_ctx env name params_with_type opt_term_pr ;
+(*       generate_termination_order
+         ctx' print_ctx env name params_with_type opt_term_pr ;*)
        (* Generate the termination proof. *)
 (* [Unsure] A faire.
        generate_termination_proof ctx' print_ctx env ... ; *)
