@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.138 2008-12-02 17:34:58 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.139 2008-12-03 08:52:06 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2164,6 +2164,18 @@ let print_idents_as_tuple out_fmter idents =
 
 
 
+(* ************************************************************************ *)
+(** {b Descr}: Dumps the code of the Coq Definition of the "xxx_wforder"
+    according to the kind of the provided termination proof. This order
+    will appear in the statement of the termination obligation as a part of
+    the whole goal. This part will state that this order is well-founded.
+    The parameters of this Definition contains the lambda-lifts induced by
+    dependencies and two tuples of the original arguments of the recursive
+    function. The order will have to be suitable to compare these two
+    tuples.
+
+    {b Rem}: Not exported outside this module.                              *)
+(* ************************************************************************ *)
 let generate_termination_order ctx print_ctx env name fun_params_n_tys
     opt_term_pr =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -2197,7 +2209,10 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
             (* Get the indices of the variables the pattern must bind. *)
             let pattern_description =
               pattern_from_used_variables fun_params_n_tys order_args in
-            (* Generate the 2 match to retrieve arguments used by our order. *)
+            (* Generate the 2 match to retrieve arguments used by our order.
+               If the order uses only the 2nd and 3rd arguments of a 4
+               arguments-function, then the 2 match will only retain the 2nd
+               and 3rd components of the tuple of function'as arguments. *)
             Format.fprintf out_fmter "@[<2>match@ __x@ with@\n" ;
             let printed1 =
               print_pattern_for_order
@@ -2270,12 +2285,14 @@ let generate_defined_recursive_let_definition ctx print_ctx env
            params_with_type in
        let return_ty =
          match return_ty_opt with None -> assert false | Some t -> t in
+
        (* Generate the order. *)
 (* [Unsure] Disablé pour la release Alpha.
        generate_termination_order
-         ctx' print_ctx env name params_with_type opt_term_pr ;
-*)
-       (* [Unsure] Generate the termination proof. *)
+         ctx' print_ctx env name params_with_type opt_term_pr ; *)
+       (* Generate the termination proof. *)
+(* [Unsure] A faire.
+       generate_termination_proof ctx' print_ctx env ... ; *)
 
        Format.fprintf out_fmter "@[<2>Section %a.@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name ;
@@ -2620,6 +2637,9 @@ let generate_methods ctx print_ctx env generated_fields = function
 
 
 (* ************************************************************************ *)
+(* current_unit: Types.fname -> Env.TypeInformation.species_description ->  *)
+(*  (Types.type_collection *                                                *)
+(*    (Types.collection_name * Types.collection_carrier_mapping_info)) list *)
 (** {b Descr} : Create the correspondance between the collection type of
     the species definition parameters and the names to be used later during
     the Coq creation of the record type.
@@ -2674,6 +2694,17 @@ let make_carrier_mapping_using_lambda_lifts lst =
 
 
 
+(* ************************************************************************ *)
+(* Env.TypeInformation.species_field list ->                                *)
+(*  (Parsetree.vname * Env.method_type_kind) list                           *)
+(** {b Descr}: Maps a list of fields to a list of [method_type_kind]. This
+    is used to record for each field if its "type" is a ML-like type or
+    a logical expression.
+    Computational methods will be [MTK_computational] with a [type_scheme].
+    Logical methods will be [MTK_logical] with a [logical_expr].
+
+    {b Rem}: Not exported outside this module.                              *)
+(* ************************************************************************ *)
 let make_meths_type_kinds species_fields =
   List.fold_right
     (fun field accu ->
@@ -2773,8 +2804,8 @@ let extend_env_for_species_def ~current_species env species_descr =
 
 
 (* *********************************************************************** *)
-(* Format.formatter -> compiled_species_fields list ->                     *)
-(*  (Parsetree.vname * Parsetree_utils.DepNameSet.t) list                  *)
+(* Format.formatter -> Misc_common.compiled_species_fields list ->         *)
+(*  (Parsetree.vname * Env.ordered_methods_from_params) list               *)
 (** {b Descr} : Dumps as OCaml code the parameters required to the
          collection generator in order to make them bound in the
          collection generator's body. These parameters come from
@@ -3628,7 +3659,7 @@ let print_implemented_species_as_coq_module ~current_unit out_fmter
 
 
 
-(* ******************************************************************** *)
+(* ********************************************************************** *)
 (** {b Descr} : Creates the effective value of the collection's record.
     The record value borrows every fields from the temporary value
     ("__implemented") generated by the collection generator.
@@ -3676,8 +3707,8 @@ let print_implemented_species_as_coq_module ~current_unit out_fmter
           self_T
           mk_Coll self_T __implemented.(Foo0_v Csp0_effective_collection).
 
-    {b Rem} : Not exported outside this module.                         *)
-(* ******************************************************************** *)
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
 let make_collection_effective_record ctx env implemented_species_name
     collection_descr formals_to_effectives record_type_args_instanciations
     record_type_args_instanciations2 =
@@ -3798,6 +3829,20 @@ let map_formal_to_effective_in_collection ~current_unit collection_body_params
 
 
 
+(* ************************************************************************* *)
+(* current_unit: Parsetree.module_name ->                                    *)
+(*   Parsetree.ident_desc Parsetree.ast ->                                   *)
+(*    (Parsetree.vname * Misc_common.collection_effective_arguments) list -> *)
+(*      Env.generic_code_gen_method_info list ->                             *)
+(*        Env.generic_code_gen_method_info list                              *)
+(** {b Descr}: Replace in a collection methods the formal parameters
+    occurences by the effective parameters provided to create the collection.
+    Hence, future users of the collection will not see anymore occurrences
+    of the parameters but effective collections used to instanciate them.
+    This allows to fix the bug report #187.
+
+    {b Rem}: Not exported outside this module.                               *)
+(* ************************************************************************* *)
 let substitute_formal_by_effective_in_coll_meths ~current_unit
     implemented_species_name form_to_effec meths =
   (* We must first find out in which file the implemented species is hosted.
@@ -3858,8 +3903,7 @@ let substitute_formal_by_effective_in_coll_meths ~current_unit
                     { accu_mi with Env.mi_type_kind = Env.MTK_logical lexpr' }
                end))
         meth_info
-        form_to_effec
-    )
+        form_to_effec)
     meths
 ;;
 
