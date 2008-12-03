@@ -29,6 +29,6 @@ weak_structures.ml
 wellfounded.ml
 sums.ml
 orders.ml
-ord_n_latt.ml
 lattices.ml
+orders_and_lattices.ml
 odoc
