@@ -1,41 +1,43 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6   -  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: randoms.fcl,v 1.1 2008-09-28 14:29:32 rr Exp $ *)
+(* $Id: randoms.fcl,v 1.2 2008-12-03 10:58:03 weis Exp $ *)
 
 use "basics" ;;
 open "basics" ;;
-coq_require "random_foc_externals" ;;
+coq_require "randoms_externals" ;;
 
 let random_seed =
   internal basics#int -> basics#unit
   external
-   | caml -> {* Random_foc_externals.random_seed *}
-   | coq -> {* random_foc_externals.random_seed *}
+   | caml -> {* Randoms_externals.random_seed *}
+   | coq -> {* randoms_externals.random_seed *}
 ;; 
 
 let random_int =
   internal basics#int -> basics#int
   external
-   | caml -> {* Random_foc_externals.random_int *}
-   | coq -> {* random_foc_externals.random_int *}
+   | caml -> {* Randoms_externals.random_int *}
+   | coq -> {* randoms_externals.random_int *}
 ;;
 
 let random_self_init =
    internal basics#unit -> basics#unit
    external
-   | caml -> {* Random_foc_externals.random_self_init *}
-   | coq -> {* random_foc_externals.random_self_init *}
+   | caml -> {* Randoms_externals.random_self_init *}
+   | coq -> {* randoms_externals.random_self_init *}
 ;;

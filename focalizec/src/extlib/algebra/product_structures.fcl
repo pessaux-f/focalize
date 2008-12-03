@@ -1,15 +1,17 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*                                                                     *)
 (*            Renaud Rioboo                                            *)
+(*                                                                     *)
 (*                               LIP6  -  INRIA Rocquencourt           *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: product_structures.fcl,v 1.4 2008-12-03 09:49:54 pessaux Exp $ *)
+(* $Id: product_structures.fcl,v 1.5 2008-12-03 10:58:03 weis Exp $ *)
 
 (** Cartesian product of two structures, common orderings. *)
 
@@ -21,7 +23,7 @@ use "additive_law" ;;
 use "multiplicative_law" ;;
 use "weak_structures" ;;
 use "rings_fields" ;;
-(* use "array_foc" ;; *)
+(* use "arrays" ;; *)
 
 (* open "sets_orders" ;; *)
 open "products";;
@@ -29,7 +31,7 @@ open "additive_law" ;;
 open "multiplicative_law" ;;
 open "weak_structures" ;;
 open "rings_fields" ;;
-(* open "array_foc" ;; *)
+(* open "arrays" ;; *)
 
 
 (** additive product monoid *)

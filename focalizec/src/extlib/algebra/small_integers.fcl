@@ -1,19 +1,21 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6   -  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007,2008 LIP6 and INRIA                                 *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: small_integers.fcl,v 1.2 2008-10-29 15:27:55 rr Exp $ *)
+(* $Id: small_integers.fcl,v 1.3 2008-12-03 10:58:03 weis Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -29,8 +31,8 @@ open "integers" ;;
 use "weak_structures" ;;
 open "weak_structures" ;;
 
-use "random_foc" ;;
-open "random_foc" ;;
+use "randoms" ;;
+open "randoms" ;;
 
 (**
    small_numbers can be converted to int
@@ -126,8 +128,8 @@ end ;;
 species Small_naturals inherits Natural_number_system, Basic_small_nats =
 
   proof of is_zero_spec = assumed {* Because todo *} ;
-  let random (x) = random_foc#random_int (x) ;
-  let seed (x) = random_foc#random_seed (x) ;
+  let random (x) = randoms#random_int (x) ;
+  let seed (x) = randoms#random_seed (x) ;
   let to_int (n in Self) in basics#int = n ;
   let of_int (n in int) in Self =
      if basics#int_lt (n, 0)

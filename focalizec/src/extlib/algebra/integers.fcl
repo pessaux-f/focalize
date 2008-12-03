@@ -1,19 +1,21 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6   -  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: integers.fcl,v 1.5 2008-12-03 09:49:54 pessaux Exp $ *)
+(* $Id: integers.fcl,v 1.6 2008-12-03 10:52:07 weis Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called 
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -38,8 +40,8 @@ open "multiplicative_law" ;;
 open "weak_structures" ;;
 open "rings_fields" ;;
 
-use "random_foc" ;;
-open "random_foc" ;;
+use "randoms" ;;
+open "randoms" ;;
 
 (**
    An abstract enumeration system is a system where we have a
