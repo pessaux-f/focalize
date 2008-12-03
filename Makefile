@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.5 2008-12-02 14:21:04 doligez Exp $
+# $Id: Makefile,v 1.6 2008-12-03 19:11:32 weis Exp $
 
 ROOT_DIR = .
 
@@ -33,12 +33,21 @@ include $(ROOT_DIR)/Makefile.common
 
 all:: srcs tools compiler
 
-srcs:
-	for i in $(TAR_BALLS_DIR); do \
-	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) all) || exit; \
-	  echo "<-- $$i [$$?]"; \
-	done
+srcs: $(EXTERNAL_TOOLS_DIRS)
+
+tools:
+	(cd $(CAML_DIR); \
+	 ./configure $(CAML_CONFIGURE_OPTIONS); \
+	 $(MAKE) $(CAML_MAKE_ALL_TARGET); \
+	)
+	(cd $(CAMLP5_DIR); \
+	 ./configure $(CAMLP5_CONFIGURE_OPTIONS); \
+	 $(MAKE) $(CAMLP5_MAKE_ALL_TARGET); \
+	)
+	(cd $(COQ_DIR); \
+	 ./configure $(COQ_CONFIGURE_OPTIONS); \
+	 $(MAKE) $(COQ_MAKE_ALL_TARGET); \
+	)
 
 compiler:
 	for i in $(COMPILER_DIR); do \
@@ -47,22 +56,12 @@ compiler:
 	  echo "<-- $$i [$$?]"; \
 	done
 
-tools:
-	(cd $(CAML_DIR); \
-	 ./configure $(CAML_CONFIGURE_OPTIONS); \
-	 $(MAKE) $(CAML_MAKE_ALL_TARGET); \
-	 $(MAKE) install; \
-	)
-	(cd $(CAMLP5_DIR); \
-	 ./configure $(CAMLP5_CONFIGURE_OPTIONS); \
-	 $(MAKE) $(CAMLP5_MAKE_ALL_TARGET); \
-	 $(MAKE) install; \
-	)
-	(cd $(COQ_DIR); \
-	 ./configure $(COQ_CONFIGURE_OPTIONS); \
-	 $(MAKE) $(COQ_MAKE_ALL_TARGET); \
-	 $(MAKE) install; \
-	)
+$(EXTERNAL_TOOLS_DIRS):
+	for i in $(TAR_BALLS_DIR); do \
+	  echo "--> $$i ..."; \
+	  ($(CD) $$i; $(MAKE) all) || exit; \
+	  echo "<-- $$i [$$?]"; \
+	done
 
 install uninstall clean doc depend::
 	for i in $(SUB_DIRS); do \
