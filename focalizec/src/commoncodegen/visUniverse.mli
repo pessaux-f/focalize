@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: visUniverse.mli,v 1.5 2008-11-29 23:41:14 weis Exp $ *)
+(* $Id: visUniverse.mli,v 1.6 2008-12-03 09:07:26 pessaux Exp $ *)
 
 type in_the_universe_because =
    | IU_only_decl
@@ -40,7 +40,7 @@ module Universe :
 ;;
 
 val visible_universe :
-  with_def_deps: bool -> DepGraphData.name_node list ->
+  with_def_deps_n_term_pr: bool -> DepGraphData.name_node list ->
   (DepGraphData.name_node * DepGraphData.dependency_kind) list ->
   (DepGraphData.name_node * DepGraphData.dependency_kind) list ->
   in_the_universe_because Universe.t

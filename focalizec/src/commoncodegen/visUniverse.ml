@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: visUniverse.ml,v 1.7 2008-11-29 23:41:14 weis Exp $ *)
+(* $Id: visUniverse.ml,v 1.8 2008-12-03 09:07:26 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : Describes how a method arrives into a visible universe.
@@ -56,22 +56,24 @@ module Universe = Map.Make(UniverseElem) ;;
 
 
 
-(* *************************************************************** *)
-(* with_def_deps : bool (Dep_analysis.name_node * 'a) list ->      *)
-(*   (Dep_analysis.name_node * 'b) list ->                         *)
-(*     in_the_universe_because Universe.t                          *)
-(** {b Descr} : Computes the visible universe of a species field
-    whose decl, def-dependencies and fields are given as argument.
-    This function works according to the definition 57 page 116
-    section 6.4.4 in Virgile Prevosto's Phg.
-    To be usable for OCaml generation, the [with_def_deps] flag
-    enables to forget the def-dependencies and their implied
-    transitive decl-dependencies. In effect, in OCaml, only
-    decl-dependencies are relevant.
+(* ************************************************************************* *)
+(* with_def_deps_n_term_pr : bool (Dep_analysis.name_node * 'a) list ->      *)
+(*   (Dep_analysis.name_node * 'b) list ->                                   *)
+(*     in_the_universe_because Universe.t                                    *)
+(** {b Descr} : Computes the visible universe of a species field whose decl,
+    def-dependencies and fields are given as argument.
+    This function works according to the definition 57 page 116 section
+    6.4.4 in Virgile Prevosto's Phg.
+    To be usable for OCaml generation, the [with_def_deps_n_term_pr] flag
+    enables to forget the def-dependencies and their implied transitive
+    decl-dependencies and the dependencies induced from recursive functions
+    termination proofs. In effect, in OCaml, only decl-dependencies are
+    relevant and since there is no termination proof, dependencies induced
+    by them must be forgotten.
 
-    {b Rem} : Not exported outside this module.                    *)
-(* *************************************************************** *)
-let visible_universe ~with_def_deps dep_graph x_decl_dependencies
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+let visible_universe ~with_def_deps_n_term_pr dep_graph x_decl_dependencies
     x_def_dependencies =
   (* First, apply rule 1. Because decl-dependencies are already computed
      when computing the visible universe, just take them as parameter instead
@@ -82,7 +84,7 @@ let visible_universe ~with_def_deps dep_graph x_decl_dependencies
   let universe = ref Universe.empty in
   (* If we are in coq case, then we also take into account the dependencies
      induced by recursive functions termination proofs. *)
-  if with_def_deps then
+  if with_def_deps_n_term_pr then
     (begin
     List.iter
       (fun (n, _) ->
@@ -107,7 +109,7 @@ let visible_universe ~with_def_deps dep_graph x_decl_dependencies
   (* We take def-dependencies and their transitive implied decl-dependencies
      only if requested. And in this case, we also take def-dependencies coming
      from the recursive functions termination proofs. *)
-  if with_def_deps then
+  if with_def_deps_n_term_pr then
     (begin
     (* Next, apply rule 2 and 3. Add the def-dependencies. Like
        decl-dependencies,  they are already available, so take them as a

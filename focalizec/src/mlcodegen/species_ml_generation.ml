@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.87 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.88 2008-12-03 09:07:26 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1230,7 +1230,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   (* Now, the methods of the species. *)
   let field_abstraction_infos =
     Abstractions.compute_abstractions_for_fields
-      ~with_def_deps: false (Abstractions.EK_ml env)
+      ~with_def_deps_n_term_pr: false (Abstractions.EK_ml env)
       ctx species_descr.Env.TypeInformation.spe_sig_methods in
   let compiled_fields_as_options =
     List.map (generate_methods ctx env) field_abstraction_infos in

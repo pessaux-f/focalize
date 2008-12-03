@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.139 2008-12-03 08:52:06 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.140 2008-12-03 09:07:26 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -3304,7 +3304,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   (* Now, the methods of the species. *)
   let field_abstraction_infos =
     Abstractions.compute_abstractions_for_fields
-      ~with_def_deps: true (Abstractions.EK_coq env')
+      ~with_def_deps_n_term_pr: true (Abstractions.EK_coq env')
       ctx' species_descr.Env.TypeInformation.spe_sig_methods in
   (* Now, generate the Coq code of the methods. *)
   let compiled_fields =
@@ -3960,7 +3960,7 @@ let collection_compile env ~current_unit out_fmter collection_def
   (* Finally, we must recover the arguments to apply to this collection
      generator. These arguments of course come from the species parameters the
      closed species we implement has (if it has some). We must make this
-     application WITH THE RIGHT EFFECTIVE FUNCTIONS and IN THE  RIGHT ORDER ! *)
+     application WITH THE RIGHT EFFECTIVE FUNCTIONS and IN THE RIGHT ORDER ! *)
   (begin
   try
     let (_, implemented_species_methods, opt_params_info, _) =
