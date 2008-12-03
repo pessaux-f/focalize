@@ -1,19 +1,21 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6   -  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007,2008 LIP6 and INRIA                                 *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: arrays.fcl,v 1.2 2008-12-03 10:53:22 weis Exp $ *)
+(* $Id: arrays.fcl,v 1.3 2008-12-03 10:57:58 weis Exp $ *)
 
 use "basics" ;;
 coq_require "arrays_externals" ;;
