@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.19 2008-12-03 12:20:14 weis Exp $
+# $Id: Makefile,v 1.20 2008-12-03 12:51:50 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -136,6 +136,7 @@ clean::
 	$(RM) big_integers.ml parse_poly.ml polys_abstract.ml
 	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm*
 	$(RM) big_integers.o parse_poly.o polys_abstract.o
+	$(RM) *.annot *.glob
 
 
 # Were not compiled to Coq in the previous FoCaL compiler...
