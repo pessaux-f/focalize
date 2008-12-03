@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.6 2008-12-03 19:11:32 weis Exp $
+# $Id: Makefile,v 1.7 2008-12-03 20:24:24 weis Exp $
 
 ROOT_DIR = .
 
@@ -25,17 +25,17 @@ include $(ROOT_DIR)/Makefile.config
 
 COMPILER_DIR = focalizec
 
-SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(COMPILER_DIR)
+SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(INTERNAL_TOOLS_DIRS) $(COMPILER_DIR)
 
 include $(ROOT_DIR)/Makefile.common
 
-.PHONY: srcs compiler tools
+.PHONY: tools_src configure_tools build_tools compiler
 
-all:: srcs tools compiler
+all:: tools_src configure_tools build_tools compiler
 
-srcs: $(EXTERNAL_TOOLS_DIRS)
+tools_srcs: $(EXTERNAL_TOOLS_DIRS)
 
-tools:
+configure_tools:
 	(cd $(CAML_DIR); \
 	 ./configure $(CAML_CONFIGURE_OPTIONS); \
 	 $(MAKE) $(CAML_MAKE_ALL_TARGET); \
