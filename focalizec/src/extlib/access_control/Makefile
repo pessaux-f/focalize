@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.12 2008-12-01 20:40:22 weis Exp $
+# $Id: Makefile,v 1.13 2008-12-04 16:03:28 habib Exp $
 
 # Makefile for access control models
 
@@ -33,7 +33,7 @@ all:: ensembles_finis.fo access_control.fo hru.fo rbac.fo ticket.fo unix.fo \
 ensembles_finis.v access_control.v hru.v rbac.v ticket.v unix.v
 
 install::
-	$(MKDIR) LIB_INSTALL_DIR
+	$(MKDIR) $(LIB_INSTALL_DIR)
 	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
 	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
 	fi
