@@ -15,8 +15,17 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.4 2008-12-01 20:38:43 weis Exp $
+#  $Id: configure,v 1.5 2008-12-05 09:55:31 weis Exp $
 
+# Fix the name and version of the software
+PROJECT_NAME=focalize
+MAIN_VERSION_NUMBER=0
+SUB_VERSION_NUMBER=1
+PATCH_VERSION_NUMBER=rc0
+FULL_VERSION_NUMBER=${MAIN_VERSION_NUMBER}.${SUB_VERSION_NUMBER}.${PATCH_VERSION_NUMBER}
+FULL_PROJECT_NAME=${PROJECT_NAME}-${FULL_VERSION_NUMBER}
+
+# The absolute path of this set of source files.
 ABSOLUTE_ROOT_DIR=`pwd`
 
 check () {
@@ -25,12 +34,18 @@ check () {
 
 # Default settings
 PREFIX=/usr/local
+SHARE_PREFIX=${PREFIX}/share
 DEBUG=true
 USE_XMLRPC=false
+
+INSTALLABLE_DIRS="${PREFIX} ${SHARE_PREFIX}"
 
 set_dirs () {
   BIN_DIR="${PREFIX}/bin"
   LIB_DIR="${PREFIX}/lib"
+  SHARE_DIR="${SHARE_PREFIX}/${FULL_PROJECT_NAME}"
+  SHARE_BIN_DIR="${SHARE_DIR}/bin"
+  SHARE_LIB_DIR="${SHARE_DIR}/lib"
 }
 
 set_dirs
@@ -39,10 +54,10 @@ while : ; do
   case $# in 0) break;; esac
   case "$1" in
     -prefix | --prefix) PREFIX="$2"; set_dirs; shift 2;;
+    -share_prefix | --share_prefix) SHARE_PREFIX="$2"; set_dirs; shift 2;;
     -bindir | --bindir) BIN_DIR="$2"; shift 2;;
     -libdir | --libdir) LIB_DIR="$2"; shift 2;;
     -convert | --convert) CONVERT="$2"; shift 2;;
-    -coqc | --coqc) COQC="$2"; shift 2;;
     -debug | --debug | --enable-debug) DEBUG=true; shift;;
     -gs | --gs) GS="$2"; shift 2;;
     -nodebug | --nodebug | --disable-debug) DEBUG=false; shift;;
@@ -53,11 +68,16 @@ while : ; do
        echo "general options are:"
        echo
        echo "  [-]-bindir <directory>"
-       echo "    set the binary directory for installation (default ${BIN_DIR})"
+       echo "    set the binary directory for installation (default is ${BIN_DIR})"
        echo "  [-]-libdir <directory>"
-       echo "    set the library directory for installation (default ${LIB_DIR})"
+       echo "    set the library directory for installation (default is ${LIB_DIR})"
        echo "  [-]-prefix <directory>"
-       echo "    set the directory prefix for installation (default ${PREFIX})"
+       echo "    set the directory prefix for installation (default is ${PREFIX})"
+       echo "  [-]-share_prefix <directory>"
+       echo "    set the directory prefix for the installation of external tools,"
+       echo "    which must install in ${FULL_PROJECT_NAME}/bin and"
+       echo "    ${FULL_PROJECT_NAME}/lib sub directories of this one,"
+       echo "    (default is ${SHARE_PREFIX})"
        echo "  [-]-debug | [-]-enable-debug"
        echo "    enable debugging"
        echo "  [-]-nodebug | --disable-debug"
@@ -106,15 +126,52 @@ else
   XMLRPC_LINK=
 fi
 
-sed -e "s,@ABSOLUTE_ROOT_DIR@,$ABSOLUTE_ROOT_DIR," \
+abort () {
+  echo
+  echo "configure: ABORTING CONFIGURATION!";
+  echo
+  echo $1
+  echo "Please, choose a writable installation directory using option -prefix"
+  echo "and/or option -share_prefix. (See configure -help for details)."
+  exit 1
+}
+
+check_installation_dirs () {
+  for i in ${INSTALLABLE_DIRS}; do
+    #echo "Checking if we can install in $i...";
+    if test -d $i; then : #echo "  the directory exists: good.";
+      else abort "You cannot install in $i, because it is not a directory."
+    fi
+    if test -w $i; then : #echo "  the directory is writable: good.";
+      else abort "You cannot install in the directory $i, because it is not writable for you.";
+    fi
+    if (touch $i/$$; rm -f $i/$$); then : #echo "  you can install in the directory: good.";
+      else abort "You cannot install in the directory $i, because you cannot write in it.";
+    fi
+  done
+}
+
+check_installation_dirs
+
+sed -e "s,@PROJECT_NAME@,$PROJECT_NAME," \
+    -e "s,@MAIN_VERSION_NUMBER@,$MAIN_VERSION_NUMBER," \
+    -e "s,@SUB_VERSION_NUMBER@,$SUB_VERSION_NUMBER," \
+    -e "s,@PATCH_VERSION_NUMBER@,$PATCH_VERSION_NUMBER," \
+    -e "s,@FULL_VERSION_NUMBER@,$FULL_VERSION_NUMBER," \
+    -e "s,@FULL_PROJECT_NAME@,$FULL_PROJECT_NAME," \
+\
+    -e "s,@ABSOLUTE_ROOT_DIR@,$ABSOLUTE_ROOT_DIR," \
     -e "s,@PREFIX@,$PREFIX," \
     -e "s,@BIN_DIR@,$BIN_DIR," \
     -e "s,@LIB_DIR@,$LIB_DIR," \
+    -e "s,@SHARE_PREFIX@,$SHARE_PREFIX," \
+    -e "s,@SHARE_BIN_DIR@,$SHARE_BIN_DIR," \
+    -e "s,@SHARE_LIB_DIR@,$SHARE_LIB_DIR," \
+\
     -e "s,@BYT_DEBUG_FLAGS@,$BYT_DEBUG_FLAGS," \
     -e "s,@BIN_DEBUG_FLAGS@,$BIN_DEBUG_FLAGS," \
 \
     -e "s,@CONVERT@,$CONVERT," \
-    -e "s,@COQC@,$COQC," \
     -e "s,@GS@,$GS," \
     -e "s,@SUM@,$SUM," \
 \

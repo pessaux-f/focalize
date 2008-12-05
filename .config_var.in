@@ -1,16 +1,34 @@
 #  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.2 2008-12-01 20:36:10 weis Exp $
+#  $Id: .config_var.in,v 1.3 2008-12-05 09:55:31 weis Exp $
 
+# The project id.
+PROJECT_NAME=@PROJECT_NAME@
+MAIN_VERSION_NUMBER=@MAIN_VERSION_NUMBER@
+SUB_VERSION_NUMBER=@SUB_VERSION_NUMBER@
+PATCH_VERSION_NUMBER=@PATCH_VERSION_NUMBER@
+FULL_VERSION_NUMBER=@FULL_VERSION_NUMBER@
+FULL_PROJECT_NAME=@FULL_PROJECT_NAME@
+
+# The project sources directory.
 ABSOLUTE_ROOT_DIR=@ABSOLUTE_ROOT_DIR@
+
+# The directories where the project install its own binaries and libraries.
 PREFIX=@PREFIX@
 BIN_DIR=@BIN_DIR@
 LIB_DIR=@LIB_DIR@
 
+# The directories where the project install its own versions of external
+# tools binaries and libraries.
+SHARE_PREFIX=@SHARE_PREFIX@
+SHARE_BIN_DIR=@SHARE_BIN_DIR@
+SHARE_LIB_DIR=@SHARE_LIB_DIR@
+
+# Compilation flags.
 BYT_DEBUG_FLAGS=@BYT_DEBUG_FLAGS@
 BIN_DEBUG_FLAGS=@BIN_DEBUG_FLAGS@
 
+# Completely external tools (not installed with the project).
 CONVERT=@CONVERT@
-COQC=@COQC@
 GS=@GS@
 SUM=@SUM@
 
