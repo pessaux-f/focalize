@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.68 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.69 2008-12-05 09:29:23 pessaux Exp $ *)
 
 
 
@@ -851,22 +851,32 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
                (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
                var)
            generalized_instanciated_vars ;
-         let binder =
-           (match proposition.Parsetree.ast_desc with
-            | Parsetree.Pr_forall (_, _, _) -> "forall"
-            | Parsetree.Pr_exists (_, _, _) -> "exists"
-            | _ -> assert false) in
-         (* The binder... *)
-         Format.fprintf out_fmter "%s@ " binder ;
-         (* Now, print the real bound variables. *)
-         Format.fprintf out_fmter "%a :@ %a,@ "
-           (Handy.pp_generic_separated_list
-              " "
-              (fun ppf vn ->
-                Format.fprintf ppf "%s"
-                  (Parsetree_utils.vname_as_string_with_operators_expanded vn)))
-           vnames
-           (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty ;
+         (* In Coq, we must write: "forall x y : Set, ..."
+            but "exists x : Set, exists y : Set, ..." so just change the way
+            we print depending on the binder. *)
+         (match proposition.Parsetree.ast_desc with
+          | Parsetree.Pr_forall (_, _, _) ->
+              (* Now, print the binder and the real bound variables. *)
+              Format.fprintf out_fmter "forall@ %a :@ %a,@ "
+                (Handy.pp_generic_separated_list
+                   " "
+                   (fun ppf vn ->
+                     Format.fprintf ppf "%s"
+                       (Parsetree_utils.vname_as_string_with_operators_expanded
+                          vn)))
+                vnames
+                (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty
+          | Parsetree.Pr_exists (_, _, _) ->
+              (* Now, print the real bound variables. *)
+              List.iter
+                (fun vn ->
+                  Format.fprintf out_fmter "exists %s :@ %a,@ "
+                    (Parsetree_utils.vname_as_string_with_operators_expanded
+                       vn)
+                    (Types.pp_type_simple_to_coq
+                       print_ctx ~reuse_mapping: true) ty)
+                vnames
+          | _ -> assert false) ;
          (* IMHO : not really useful, but... doesn't hurt... *)
          Types.purge_type_simple_to_coq_variable_mapping () ;
          (* Here, the bound variables name may mask a "in"-parameter. *)
