@@ -1,4 +1,4 @@
-% $Id: more_on_meths.tex,v 1.5 2008-11-28 10:17:48 pessaux Exp $
+% $Id: more_on_meths.tex,v 1.6 2008-12-05 12:54:00 pessaux Exp $
 
 
 
@@ -82,7 +82,7 @@ consider the following species with the definitions:
 {\scriptsize
 \begin{lstlisting}
 species Counter =
-  rep = int ;
+  representation = int ;
   let inc (x in Self) = x + 1 ;
   theorem inc_spec : all x in Self, inc (x) >= x + 1
     proof = ... ;
@@ -100,7 +100,7 @@ makes explicit reference to {\tt +}, {\tt <=}, {\tt 1} that are
 operations about {\tt int}.
 
 In practice, such an error is reported as a typechecking error telling
-that {\tt rep} ``is not compatible with type'' {\tt t} where {\tt t}
+that {\tt representation} ``is not compatible with type'' {\tt t} where {\tt t}
 is the type expression that was assigned to the carrier (i.e.
 {\tt int} in 
 our example).

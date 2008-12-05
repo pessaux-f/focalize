@@ -1,4 +1,4 @@
-% $Id: basic_concepts.tex,v 1.7 2008-11-28 10:17:48 pessaux Exp $
+% $Id: basic_concepts.tex,v 1.8 2008-12-05 12:54:00 pessaux Exp $
 
 
 
@@ -86,12 +86,12 @@ variables) and its methods. There are several kinds of methods:
     an instantiation of a species is {\bf NOT}, like in
     Object-Oriented languages an entity embedding data and code. The
     instantiation of a species will be a {\bf value}. The carrier is
-    named {\tt rep}\index{rep}. For instance, we can define a species
+    named {\tt rep}\index{representation}. For instance, we can define a species
     that implements couples of native integers data structure as:
     {\scriptsize
       \begin{lstlisting}
 species IntCouple =
-  rep = (int * int) ;
+  representation = (int * int) ;
 end ;;
       \end{lstlisting}
     }
@@ -143,7 +143,7 @@ end ;;
     {\scriptsize
       \begin{lstlisting}
 species IntStack =
-  rep = int list ;
+  representation = int list ;
   let push (v in int, s in Self) = v :: s ;
 end ;;
       \end{lstlisting}
@@ -227,7 +227,7 @@ words this means that there is no more methods only {\em
   declared}. This notion implies that:
 \begin{itemize}
   \item The carrier is defined by providing a type definition for
-    {\tt rep}.
+    {\tt representation}.
   \item For signature an effective function exists.
   \item For each property, a proof is given.
 \end{itemize}
@@ -254,7 +254,7 @@ species.
 {\scriptsize
 \begin{lstlisting}
 species Full =
-  rep = int ;
+  representation = int ;
   let create_random in Self = random_foc#random_int (42) ;
   let double (x in Self) = x + x ;
   let print (x in Self) = print_int (x) ;

@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.13 2008-12-02 15:13:39 pessaux Exp $
+% $Id: compiler_err_msgs.tex,v 1.14 2008-12-05 12:54:00 pessaux Exp $
 
 
 
@@ -309,7 +309,7 @@ type-compatible.
 
 {\em Hints}: Source program to fix. This message sometimes involves
 one the the types being {\tt Self}. This is mostly due to an attempt
-to use the type structure of {\tt rep} although is turned abstracted
+to use the type structure of {\tt representation} although is turned abstracted
 by the collection or parametrisation mechanisms. In this case, ensure
 that you are not trying to make assumptions on the type {\tt Self} of
 a species parameter or a collection.
@@ -443,29 +443,29 @@ from a species having this property.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Carrier 'rep' is multiply defined.}
+\section*{Carrier 'representation' is multiply defined.}
 
-{\em Description}: In a species, the method {\tt rep} defining the
+{\em Description}: In a species, the method {\tt representation} defining the
 carrier representation is multiply defined in the body of the species
 although at most one definition must be provided.
 
 {\em Hints}: Source program to fix. Remove the spurious definitions.
 
-If the {\tt rep} field is not directly present in the
+If the {\tt representation} field is not directly present in the
 body, that is because the species inherits from a parent where the
 carrier is already defined. In this last case, since the parent's
-structure is already established, you must remove the {\tt rep} field
+structure is already established, you must remove the {\tt representation} field
 in the species where the error was reported.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Carrier 'rep' is multiply defined by multiple inheritance and
+\section*{Carrier 'representation'' is multiply defined by multiple inheritance and
   was formerly found of type $t_1$ and newly found of type $t_2$}.
 
 {\em Description}: In the species, several parents brought by
 inheritance several incompatible definitions of the carrier
-{\tt rep}. The error message reports $t_1$ and $t_2$, two incompatible
+{\tt representation}. The error message reports $t_1$ and $t_2$, two incompatible
 types found for the carrier definition.
 
 {\em Hints}: None.

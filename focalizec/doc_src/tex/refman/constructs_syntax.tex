@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.23 2008-11-28 10:17:48 pessaux Exp $
+% $Id: constructs_syntax.tex,v 1.24 2008-12-05 12:54:00 pessaux Exp $
 
 
 
@@ -348,17 +348,17 @@ expression} representing the species ``internal state''. Moreover,
 like for any other methods (c.f. \ref{no-polymorphism-for-methods}),
 the carrier must not be polymorphic. This means that is can't contain
 type variables. Defining a species carrier is simply done by adding
-the {\tt rep} method:
+the {\tt representation} method:
 {\scriptsize
 \begin{lstlisting}
 open "basics" ;;
 
 species IntPair =
-  rep = (int * int) ;
+  representation = (int * int) ;
 end ;;
 \end{lstlisting}
 }
-Hence, the method {\tt rep} defines the type {\tt Self}'s structure.
+Hence, the method {\tt representation} defines the type {\tt Self}'s structure.
 
 
 

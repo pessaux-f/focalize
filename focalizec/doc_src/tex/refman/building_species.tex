@@ -1,4 +1,4 @@
-% $Id: building_species.tex,v 1.6 2008-11-28 10:17:48 pessaux Exp $
+% $Id: building_species.tex,v 1.7 2008-12-05 12:54:00 pessaux Exp $
 
 
 
@@ -125,7 +125,7 @@ like:
 {\scriptsize
 \begin{lstlisting}
 species MyCouple (E is Basic_object, L is List (E)) =
-  rep = (E * L) ;
+  representation = (E * L) ;
   ... ;
 end ;;
 \end{lstlisting}
@@ -169,7 +169,7 @@ species Base_obj =
 end ;;
 
 species Couple (C1 is Base_obj, c2 is Base_obj) =
-  rep = (C1 * C2) ;
+  representation = (C1 * C2) ;
   let print (c in Self) =
     match (c) with
      | (component1, component2) ->
@@ -227,7 +227,7 @@ an {\bf entity parameter} and is introduced by the keyword {\tt in}.
 {\scriptsize
 \begin{lstlisting}
 species AddModN (Number is ASpeciesImplentingInts, val_mod in Number) =
-  rep = Number ;
+  representation = Number ;
   let add (x in Self, y in Self) =
     Number!modulo (Number!add (x, y), val_mod) ;
 end ;;
@@ -292,7 +292,7 @@ same statement (but not the same proof).
 {\scriptsize
 \begin{lstlisting}
 species IntCouple =
-  rep = (int * int) ;
+  representation = (int * int) ;
   let print (x in Self) = ... ;
   let create (x in int, y in int) = (x, y) ;
   let equal (c1, c2) =
@@ -507,7 +507,7 @@ dependencies {\bf decl-dependencies}.
 Such dependencies also arise on the carrier as soon as the type of a
 method makes reference to the type {\tt Self}. Hence we can have
 dependencies on the carrier as well as on other methods (as
-previously stated in \ref{rep-is-method}, {\tt rep} is a method).
+previously stated in \ref{rep-is-method}, {\tt representation} is a method).
 
 Hence, in our example, {\tt test}, {\tt f2}, {\tt f1} (since it is
 used in {\tt p1} and {\t1} as the argument of {\tt test} which expects
