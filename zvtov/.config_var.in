@@ -1,0 +1,16 @@
+#  Copyright 2008 LIP6 and INRIA                                       #
+#  $Id: .config_var.in,v 1.1 2008-12-07 23:50:46 weis Exp $
+
+# The directories where the project installs its own binaries and libraries.
+PREFIX=@PREFIX@
+BIN_DIR=@BIN_DIR@
+
+# Compilation flags.
+BYT_DEBUG_FLAGS=-g
+BIN_DEBUG_FLAGS=-dtypes
+
+# XMLRPC settings
+USE_XMLRPC=@USE_XMLRPC@
+XMLRPC=@XMLRPC@
+XMLRPC_FLAGS=@XMLRPC_FLAGS@
+XMLRPC_LINK=@XMLRPC_LINK@

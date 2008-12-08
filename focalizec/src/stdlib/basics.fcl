@@ -10,12 +10,12 @@
 (*                                                                     *)
 (*                               LIP6  -  INRIA Rocquencourt           *)
 (*                                                                     *)
-(*  Copyright 2007, 2008 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.51 2008-12-02 07:12:53 weis Exp $ *)
+(* $Id: basics.fcl,v 1.52 2008-12-07 23:50:46 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 

@@ -1,5 +1,5 @@
 #  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.3 2008-12-05 09:55:31 weis Exp $
+#  $Id: .config_var.in,v 1.4 2008-12-07 23:50:46 weis Exp $
 
 # The project id.
 PROJECT_NAME=@PROJECT_NAME@
@@ -12,12 +12,12 @@ FULL_PROJECT_NAME=@FULL_PROJECT_NAME@
 # The project sources directory.
 ABSOLUTE_ROOT_DIR=@ABSOLUTE_ROOT_DIR@
 
-# The directories where the project install its own binaries and libraries.
+# The directories where the project installs its own binaries and libraries.
 PREFIX=@PREFIX@
 BIN_DIR=@BIN_DIR@
 LIB_DIR=@LIB_DIR@
 
-# The directories where the project install its own versions of external
+# The directories where the project installs its own versions of external
 # tools binaries and libraries.
 SHARE_PREFIX=@SHARE_PREFIX@
 SHARE_BIN_DIR=@SHARE_BIN_DIR@
@@ -28,10 +28,14 @@ BYT_DEBUG_FLAGS=@BYT_DEBUG_FLAGS@
 BIN_DEBUG_FLAGS=@BIN_DEBUG_FLAGS@
 
 # Completely external tools (not installed with the project).
+
+# External tools for zenon
 CONVERT=@CONVERT@
 GS=@GS@
 SUM=@SUM@
 
+# External tools for zvtov
+USE_XMLRPC=@USE_XMLRPC@
 XMLRPC=@XMLRPC@
 XMLRPC_FLAGS=@XMLRPC_FLAGS@
 XMLRPC_LINK=@XMLRPC_LINK@

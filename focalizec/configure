@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.22 2008-12-01 19:09:18 weis Exp $
+#  $Id: configure,v 1.23 2008-12-07 23:50:46 weis Exp $
 
 # Default settings
 PREFIX=/usr/local
@@ -28,6 +28,50 @@ set_dirs () {
 }
 
 set_dirs
+
+while : ; do
+  case $# in 0) break;; esac
+  case "$1" in
+    -prefix | --prefix) PREFIX="$2"; set_dirs; shift 2;;
+    -bindir | --bindir) BIN_DIR="$2"; shift 2;;
+    -libdir | --libdir) LIB_DIR="$2"; shift 2;;
+    -xmlrpc | --convert) CONVERT="$2"; shift 2;;
+    -coqc | --coqc) COQC="$2"; shift 2;;
+    -debug | --debug | --enable-debug) DEBUG=true; shift;;
+    -gs | --gs) GS="$2"; shift 2;;
+    -nodebug | --nodebug | --disable-debug) DEBUG=false; shift;;
+    -sum | --sum) SUM="$2"; shift 2;;
+    -help | --help)
+       echo "usage: ./configure [options]"
+       echo "options are:"
+       echo "  [-]-bindir <directory>"
+       echo "    set the binary directory for installation (default ${BIN_DIR})"
+       echo "  [-]-libdir <directory>"
+       echo "    set the library directory for installation (default ${LIB_DIR})"
+       echo "  [-]-prefix <directory>"
+       echo "    set the directory prefix for installation (default ${PREFIX})"
+       echo "  [-]-convert <executable-file>"
+       echo "    set absolute path for the command convert."
+       echo "  [-]-coq <executable-file>"
+       echo "    set absolute path for the command coqc."
+       echo "  [-]-debug | [-]-enable-debug"
+       echo "    enable debugging"
+       echo "  [-]-gs <executable-file>"
+       echo "    set absolute path for the command gs."
+       echo "  [-]-nodebug | --disable-debug"
+       echo "    disable debugging"
+       echo "  [-]-sum <executable-file>"
+       echo "    set absolute path for the check-sum command."
+       echo "  [-]-help";
+       echo "    display help and exit"
+       exit 0
+       ;;
+    *) echo "./configure: bad option '$1'" >&2
+       echo "For help, use ./configure -help" >&2
+       exit 2
+       ;;
+  esac
+done
 
 BOLDTAG="\033[1m"
 UNDERLINETAG="\033[4m"

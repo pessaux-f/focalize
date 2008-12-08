@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.5 2008-12-05 09:55:31 weis Exp $
+#  $Id: configure,v 1.6 2008-12-07 23:50:46 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -33,12 +33,48 @@ check () {
 }
 
 # Default settings
+# General defaults
 PREFIX=/usr/local
 SHARE_PREFIX=${PREFIX}/share
 DEBUG=true
-USE_XMLRPC=false
 
-INSTALLABLE_DIRS="${PREFIX} ${SHARE_PREFIX}"
+# Defaults for zenon
+SUM=:
+CONVERT=:
+COQC=:
+GS=:
+
+# Defaults for zvtov
+USE_XMLRPC=false
+XMLRPC=xmlrpc
+XMLRPC_FLAGS="`ocamlfind query -r -i-format xmlrpc | tr '\012' ' '`"
+XMLRPC_LINK="`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\012' ' '`"
+
+# The list of directories that must be installable during configuration.
+INSTALLABLE_DIRS="${SHARE_PREFIX}"
+
+# Aborting procedures.
+abort_configuration () {
+  echo;
+  echo "configure: ABORTING CONFIGURATION!";
+  echo;
+  echo $1;
+}
+
+abort_remedy () {
+  echo;
+  echo $1;
+  echo;
+  echo " (See configure -help for details).";
+  exit 1;
+}
+
+abort_configuration_not_writable_share_prefix_directory () {
+  abort_configuration
+    "You cannot install in the directory $1, because it is not writable for you.";
+  abort_remedy
+    "Please, use option -share_prefix to choose a directory where you have write permission.";
+}
 
 set_dirs () {
   BIN_DIR="${PREFIX}/bin"
@@ -46,41 +82,57 @@ set_dirs () {
   SHARE_DIR="${SHARE_PREFIX}/${FULL_PROJECT_NAME}"
   SHARE_BIN_DIR="${SHARE_DIR}/bin"
   SHARE_LIB_DIR="${SHARE_DIR}/lib"
+  SHARE_MAN_DIR="${SHARE_DIR}/man"
+  SHARE_DOC_DIR="${SHARE_DIR}/doc"
 }
 
 set_dirs
 
 while : ; do
   case $# in 0) break;; esac
+
   case "$1" in
     -prefix | --prefix) PREFIX="$2"; set_dirs; shift 2;;
     -share_prefix | --share_prefix) SHARE_PREFIX="$2"; set_dirs; shift 2;;
     -bindir | --bindir) BIN_DIR="$2"; shift 2;;
     -libdir | --libdir) LIB_DIR="$2"; shift 2;;
     -convert | --convert) CONVERT="$2"; shift 2;;
-    -debug | --debug | --enable-debug) DEBUG=true; shift;;
+    -debug | --debug | --enable_debug) DEBUG=true; shift;;
     -gs | --gs) GS="$2"; shift 2;;
-    -nodebug | --nodebug | --disable-debug) DEBUG=false; shift;;
+    -use_xmlrpc | --use_xmlrpc) USE_XMLRPC=true; shift;;
+    -xmlrpc | --xmlrpc) XMLRPC="$2"; shift 2;;
+    -xmlrpc_flags | --xmlrpc_flags) XMLRPC_FLAGS="$2"; shift 2;;
+    -xmlrpc_link | --xmlrpc_link) XMLRPC_LINK="$2"; shift 2;;
+    -gs | --gs) GS="$2"; shift 2;;
+    -nodebug | --nodebug | --disable_debug) DEBUG=false; shift;;
     -sum | --sum) SUM="$2"; shift 2;;
     -help | --help)
        echo "usage: ./configure [options]"
        echo
        echo "general options are:"
        echo
-       echo "  [-]-bindir <directory>"
-       echo "    set the binary directory for installation (default is ${BIN_DIR})"
-       echo "  [-]-libdir <directory>"
-       echo "    set the library directory for installation (default is ${LIB_DIR})"
-       echo "  [-]-prefix <directory>"
-       echo "    set the directory prefix for installation (default is ${PREFIX})"
        echo "  [-]-share_prefix <directory>"
-       echo "    set the directory prefix for the installation of external tools,"
-       echo "    which must install in ${FULL_PROJECT_NAME}/bin and"
-       echo "    ${FULL_PROJECT_NAME}/lib sub directories of this one,"
-       echo "    (default is ${SHARE_PREFIX})"
-       echo "  [-]-debug | [-]-enable-debug"
+       echo "    set the directory prefix for the installation of external tools."
+       echo "    External tools are mandatory for ${PROJECT_NAME} to work;"
+       echo "    external tools must be built and installed during configuration,"
+       echo "    since they are needed to correctly compile, install, and safely use"
+       echo "    ${PROJECT_NAME}."
+       echo "    External tools install in directory <directory>/${FULL_PROJECT_NAME}/,"
+       echo "    once they have ben built: as a consequence, you must have the"
+       echo "    permission to install files in <directory> to configure ${PROJECT_NAME}."
+       echo "    (Default value for <directory> is ${SHARE_PREFIX}.)"
+       echo "  [-]-prefix <directory>"
+       echo "    set the directory prefix for installation of ${PROJECT_NAME}."
+       echo "    (Default value for <directory> is ${PREFIX}.)"
+       echo "  [-]-bindir <directory>"
+       echo "    set the binary directory for installation of binaries for ${PROJECT_NAME}."
+       echo "    (Default value for <directory> is ${BIN_DIR}.)"
+       echo "  [-]-libdir <directory>"
+       echo "    set the library directory for installation of libraries for ${PROJECT_NAME}."
+       echo "    (Default value for <directory> is ${LIB_DIR}.)"
+       echo "  [-]-debug | [-]-enable_debug"
        echo "    enable debugging"
-       echo "  [-]-nodebug | --disable-debug"
+       echo "  [-]-nodebug | --disable_debug"
        echo "    disable debugging"
        echo "  [-]-help";
        echo "    display help and exit"
@@ -89,7 +141,7 @@ while : ; do
        echo
        echo "  [-]-convert <executable-file>"
        echo "    set absolute path for the command convert."
-       echo "  [-]-coq <executable-file>"
+       echo "  [-]-coqc <executable-file>"
        echo "    set absolute path for the command coqc."
        echo "  [-]-gs <executable-file>"
        echo "    set absolute path for the command gs."
@@ -97,8 +149,18 @@ while : ; do
        echo "    set absolute path for the check-sum command."
        echo
        echo "options for zvtov are:"
-       echo "  [-]-xmlrpc";
-       echo "    configure zvtov with XMLRPC option on."
+       echo "  [-]-use_xmlrpc";
+       echo "    configure zvtov to use xmlrpc."
+       echo "  [-]-xmlrpc <executable-file>";
+       echo "    set absolute path for the command xmlrpc."
+       echo "  [-]-xmlrpc_flags <string>";
+       echo "    set the string option argument to pass to xmlrpc invocations."
+       echo "  (Default value for <string> is:";
+       echo "   \"`ocamlfind query -r -i-format xmlrpc | tr '\012' ' '`\").";
+       echo "  [-]-xmlrpc_link <string>";
+       echo "    set the link options to pass when linking xmlrpc.";
+       echo "  (Default value for <string> is:";
+       echo "   \"`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\012' ' '`\").";
        exit 0
        ;;
     *) echo "./configure: bad option '$1'" >&2
@@ -117,36 +179,30 @@ else
 fi
 
 if $USE_XMLRPC; then
-  XMLRPC=xmlrpc
-  XMLRPC_FLAGS="`ocamlfind query -r -i-format xmlrpc | tr '\012' ' '`"
-  XMLRPC_LINK="`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\012' ' '`"
+  :
 else
   XMLRPC=
   XMLRPC_FLAGS=
   XMLRPC_LINK=
 fi
 
-abort () {
-  echo
-  echo "configure: ABORTING CONFIGURATION!";
-  echo
-  echo $1
-  echo "Please, choose a writable installation directory using option -prefix"
-  echo "and/or option -share_prefix. (See configure -help for details)."
-  exit 1
-}
-
 check_installation_dirs () {
   for i in ${INSTALLABLE_DIRS}; do
     #echo "Checking if we can install in $i...";
     if test -d $i; then : #echo "  the directory exists: good.";
-      else abort "You cannot install in $i, because it is not a directory."
+      else
+        abort_configuration
+          "You cannot install in $i, because it is not a directory.";
+        abort_remedy
+          "Please, create a directory where you can install files and directories.";
     fi
     if test -w $i; then : #echo "  the directory is writable: good.";
-      else abort "You cannot install in the directory $i, because it is not writable for you.";
+      else
+        abort_configuration_not_writable_directory $i;
     fi
     if (touch $i/$$; rm -f $i/$$); then : #echo "  you can install in the directory: good.";
-      else abort "You cannot install in the directory $i, because you cannot write in it.";
+      else
+        abort_configuration_not_writable_directory $i;
     fi
   done
 }
@@ -175,6 +231,7 @@ sed -e "s,@PROJECT_NAME@,$PROJECT_NAME," \
     -e "s,@GS@,$GS," \
     -e "s,@SUM@,$SUM," \
 \
+    -e "s,@USE_XMLRPC@,$USE_XMLRPC," \
     -e "s,@XMLRPC@,$XMLRPC," \
     -e "s,@XMLRPC_FLAGS@,$XMLRPC_FLAGS," \
     -e "s,@XMLRPC_LINK@,$XMLRPC_LINK," \

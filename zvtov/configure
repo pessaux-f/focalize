@@ -15,11 +15,15 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.16 2008-12-01 18:45:04 weis Exp $
+#  $Id: configure,v 1.17 2008-12-07 23:50:46 weis Exp $
 
 # Default settings
 PREFIX=/usr/local
+
 USE_XMLRPC=false
+XMLRPC=xmlrpc
+XMLRPC_FLAGS="`ocamlfind query -r -i-format xmlrpc | tr '\012' ' '`"
+XMLRPC_LINK="`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\012' ' '`"
 
 set_dirs () {
   BIN_DIR="${PREFIX}/bin"
@@ -31,18 +35,32 @@ while : ; do
   case $# in 0) break;; esac
 
   case $1 in
-  -bindir | --bindir) BIN_DIR="$2"; shift;;
-  -prefix | --prefix) PREFIX="$2"; set_dirs; shift;;
-  -xmlrpc | --xmlrpc) USE_XMLRPC=true;;
+  -prefix | --prefix) PREFIX="$2"; set_dirs; shift 2;;
+  -bindir | --bindir) BIN_DIR="$2"; shift 2;;
+  -use_xmlrpc | --use_xmlrpc) USE_XMLRPC=true; shift;;
+  -xmlrpc | --xmlrpc) XMLRPC="$2"; shift 2;;
+  -xmlrpc_flags | --xmlrpc_flags) XMLRPC_FLAGS="$2"; shift 2;;
+  -xmlrpc_link | --xmlrpc_link) XMLRPC_LINK="$2"; shift 2;;
   -help | --help)
      echo "usage: ./configure [options]"
      echo "options are:"
-     echo "  [-]-bindir <directory>";
-     echo "    set the binary directory for installation (default ${BIN_DIR})."
+     echo
      echo "  [-]-prefix <directory>";
      echo "    set the directory prefix for installation (default ${PREFIX})."
-     echo "  [-]-xmlrpc";
-     echo "    configure with XMLRPC option on."
+     echo "  [-]-bindir <directory>";
+     echo "    set the binary directory for installation (default ${BIN_DIR})."
+     echo "  [-]-use_xmlrpc";
+     echo "    configure zvtov to use xmlrpc."
+     echo "  [-]-xmlrpc <executable-file>";
+     echo "    set absolute path for the command xmlrpc."
+     echo "  [-]-xmlrpc_flags <string>";
+     echo "    set the string option argument to pass to xmlrpc invocations."
+     echo "  (Default value for <string> is:";
+     echo "   \"`ocamlfind query -r -i-format xmlrpc | tr '\012' ' '`\").";
+     echo "  [-]-xmlrpc_link <string>";
+     echo "    set the link options to pass when linking xmlrpc.";
+     echo "  (Default value for <string> is:";
+     echo "   \"`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\012' ' '`\").";
      echo "  [-]-help";
      echo "    display help and exit"
      exit 0
@@ -57,21 +75,22 @@ done
 
 if $USE_XMLRPC; then
   XMLRPC=xmlrpc
-  XMLRPCFLAGS="`ocamlfind query -r -i-format xmlrpc | tr '\012' ' '`"
-  XMLRPCLINK="`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\012' ' '`"
+  XMLRPC_FLAGS="`ocamlfind query -r -i-format xmlrpc | tr '\012' ' '`"
+  XMLRPC_LINK="`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\012' ' '`"
 else
   XMLRPC=
-  XMLRPCFLAGS=
-  XMLRPCLINK=
+  XMLRPC_FLAGS=
+  XMLRPC_LINK=
 fi
 
-: >.config_var
-
-echo "PREFIX=$PREFIX" >>.config_var
-echo "BIN_DIR=$BIN_DIR" >>.config_var
-echo "XMLRPC=$XMLRPC" >>.config_var
-echo "XMLRPCFLAGS=$XMLRPCFLAGS" >>.config_var
-echo "XMLRPCLINK=$XMLRPCLINK" >>.config_var
+sed -e "s,@PREFIX@,$PREFIX," \
+    -e "s,@BIN_DIR@,$BIN_DIR," \
+\
+    -e "s,@USE_XMLRPC@,$USE_XMLRPC," \
+    -e "s,@XMLRPC@,$XMLRPC," \
+    -e "s,@XMLRPC_FLAGS@,$XMLRPC_FLAGS," \
+    -e "s,@XMLRPC_LINK@,$XMLRPC_LINK," \
+    <.config_var.in >.config_var
 
 echo "Configuration summary for zvtov:"
 cat .config_var
