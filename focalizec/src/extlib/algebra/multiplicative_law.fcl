@@ -13,15 +13,15 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: multiplicative_law.fcl,v 1.3 2008-11-28 10:09:22 pessaux Exp $ *)
+(* $Id: multiplicative_law.fcl,v 1.4 2008-12-09 13:09:26 rr Exp $ *)
 
 (** Common properties of multiplicative laws. *)
 
 use "basics" ;;
-use "sets_orders" ;;
+use "sets" ;;
 use "constants";;
 open "basics" ;;
-open "sets_orders" ;;
+open "sets" ;;
 open "constants";;
 
 (** one associative multiplicative binop, this is sometimes called a magma *)
@@ -81,7 +81,7 @@ end ;;
 (*                             Nat is Dichotomic_system, *)
 (*                             Bins is Binop (M), *)
 (*                             Dicho is Dichotomy (Nat, M, Bins)) *)
-(*     inherits basics#Basic_object = *)
+(*     inherits Basic_object = *)
 (*   let expt (x, n) = Dicho!dichot (x, n) ; *)
 (* end ;; *)
 
@@ -246,18 +246,18 @@ species Regular_monoid
             Commutative_integral_monoid_with_absorbant,
             Cancellative_commutative_monoid =
 
-  signature exquo : Self -> Self -> basics#partiel (Self) ;
+  signature exquo : Self -> Self -> partiel (Self) ;
 
   property exquo_divides: all x y z in Self,
-    (basics#is_failed (!exquo (x, z)))
+    (is_failed (!exquo (x, z)))
       \/
     (!equal
-     (y, basics#non_failed (!exquo (x, z))) -> !equal (x, !mult (z, y))) ;
+     (y, non_failed (!exquo (x, z))) -> !equal (x, !mult (z, y))) ;
 
   let recip (x) = Self!exquo (Self!one, x) ;
 
   (* [rr]: need to fill those *)
-  logical let divides (x, y) = basics#not_b (basics#is_failed (!exquo (y, x))) ;
+  logical let divides (x, y) = not_b (is_failed (!exquo (y, x))) ;
   proof of divides_extends_equal =
     definition of divides
     assumed {* To do. *} ;
@@ -354,7 +354,7 @@ species Division_monoid
      ;
 
   logical let divides(x, y) =
-    basics#or_b(!equal(y, !zero), basics#not_b (!equal (x, !zero))) ;
+    or_b(!equal(y, !zero), not_b (!equal (x, !zero))) ;
 
   proof of divides_extends_equal =
   <1>1 assume x in Self,
@@ -415,11 +415,11 @@ species Factorization_monoid inherits Regular_monoid =
   signature gcd : Self-> Self-> Self;
   property gcd_divides: all x y z in Self,
     !equal (z, !gcd (x, y)) ->
-      (~ (basics#is_failed (!exquo (x, z)))
+      (~ (is_failed (!exquo (x, z)))
         /\
-       ~ (basics#is_failed (!exquo (y, z)))) ;
+       ~ (is_failed (!exquo (y, z)))) ;
   property divisor_is_multiple_of_gcd: all x y d in Self,
-    ~ (basics#is_failed (!exquo (x, d))) ->
-      ~ (basics#is_failed (!exquo (y, d))) ->
-        ~ (basics#is_failed (!exquo (d, !gcd (x, y)))) ;
+    ~ (is_failed (!exquo (x, d))) ->
+      ~ (is_failed (!exquo (y, d))) ->
+        ~ (is_failed (!exquo (d, !gcd (x, y)))) ;
 end ;;
