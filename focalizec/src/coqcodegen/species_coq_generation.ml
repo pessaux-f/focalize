@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.143 2008-12-09 12:51:58 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.144 2008-12-09 13:36:23 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2119,7 +2119,7 @@ let print_pattern_for_order out_fmter ~var_suffix description =
     | [(last_name, last_presence)] ->
         (begin
         if last_presence then
-          (Format.fprintf out_fmter "__%a%s"
+          (Format.fprintf out_fmter "%a%s"
              Parsetree_utils.pp_vname_with_operators_expanded last_name
              var_suffix ;
            [Parsetree.Vlident
@@ -2131,7 +2131,7 @@ let print_pattern_for_order out_fmter ~var_suffix description =
     | (name, presence) :: q ->
         let printed =
           if presence then
-            (Format.fprintf out_fmter "__%a%s,@ "
+            (Format.fprintf out_fmter "%a%s,@ "
                Parsetree_utils.pp_vname_with_operators_expanded name
                var_suffix ;
              [Parsetree.Vlident
@@ -2233,6 +2233,9 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
             Format.fprintf out_fmter " =>@\n(" ;
             (* Now, generate the Coq translation of the expression of the
                order. *)
+            (* Since the order is an expression of type [bool], we must
+               surround the generated expression by a "Is_true" for Coq. *)
+            Format.fprintf out_fmter "@[<2>Is_true (" ;
             let local_idents =
               printed2 @ printed1 @
               [ Parsetree.Vlident "__x"; Parsetree.Vlident "__y" ] in
@@ -2247,6 +2250,8 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
             print_idents_as_tuple out_fmter printed1 ;
             Format.fprintf out_fmter "@ " ;
             print_idents_as_tuple out_fmter printed2 ;
+            (* Close the parenthese and the box of the "Is_true". *)
+            Format.fprintf out_fmter ")@]" ;
             (* Close the 2 boxes of the "matchs" and the box of the whole
                "Definition" of the order. *)
             Format.fprintf out_fmter ")@\nend@]@\nend@].@]@\n"
