@@ -13,14 +13,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: additive_law.fcl,v 1.4 2008-12-03 09:49:54 pessaux Exp $ *)
+(* $Id: additive_law.fcl,v 1.5 2008-12-09 09:26:12 doligez Exp $ *)
 
 (** The FoCaL library does not intend to model binary laws which are not
    associative, thus some mathematical notions such as magmas (groupoids) are
    meaningless in the library. For additive notations we restrict to abelian
    or commutative laws with neutral elements.
 
-   By additive laws we thus mean abelian moinoids with additive notation. *)
+   By additive laws we thus mean abelian monoids with additive notation. *)
 
 
 use "basics" ;;
