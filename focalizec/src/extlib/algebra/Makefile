@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.20 2008-12-03 12:51:50 pessaux Exp $
+# $Id: Makefile,v 1.21 2008-12-09 13:03:35 rr Exp $
 
 ROOT_DIR = ../..
 
@@ -50,6 +50,7 @@ FOCALIZE_SRC = \
 
 FOCALIZE_SRC_UNSAFE = \
 	iterators.fcl \
+	small_integers.fcl \
 	big_integers.fcl
 #	parse_poly.fcl polys_abstract.fcl polys_concrete finite_fields fractions finite_factorize
 
