@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.144 2008-12-09 13:36:23 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.145 2008-12-09 14:46:23 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2394,12 +2394,20 @@ let generate_defined_recursive_let_definition ctx print_ctx env
        (* Print the "end" of the "match" introduced to split the tuple of
           "__arg". *)
        Format.fprintf out_fmter "@\nend.@]@\n" ;
-       Format.fprintf out_fmter "@[<v 2>Proof.@ %aQed.@]@\n"
+       Format.fprintf out_fmter "@[<v 2>Proof.@\n" ;
+       (* Enforce "Variables" to be used to prevent Coq from removing it. We
+          generate "assert" for this sake. *)
+       generate_asserts_for_dependencies
+         out_fmter sorted_deps_from_params ai.Abstractions.ai_min_coq_env
+         ai.Abstractions.ai_used_species_parameter_tys ;
+       (* Print the proof using the above material. *)
+       Format.fprintf out_fmter "%a"
          (Handy.pp_generic_n_times ((List.length recursive_calls) + 1)
             Format.fprintf)
          (* "coq_builtins.prove_term_obl __term_obl.@\n" ; *)
          "apply coq_builtins.magic_prove.@\n" ;
-       Format.fprintf out_fmter "@]@\n" ;
+       (* Close the pretty print of of the "Function". *)
+       Format.fprintf out_fmter "Qed.@]@\n" ;
 
 
 

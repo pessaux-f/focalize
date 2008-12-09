@@ -14,7 +14,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.57 2008-12-09 13:36:23 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.58 2008-12-09 14:46:23 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -58,7 +58,7 @@ type environment_kind =
 
 
 
-(* For debugging purpose only. *)
+(* For debugging purpose only.
 let debug_print_dependencies_from_parameters l =
   List.iter
     (fun (species_param, methods) ->
@@ -80,7 +80,6 @@ let debug_print_dependencies_from_parameters l =
       Format.eprintf "@.")
     l
 ;;
-(*
 let debug_print_dependencies_from_parameters2 l =
   List.iter
     (fun (species_param, (Env.ODFP_methods_list methods)) ->
@@ -1115,8 +1114,7 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
 (** Implements rules [TYPE], [DEF-DEP], [UNIVERSE] and [PRM] of the
     definition 72 page 153 of Virgile Prevosto's Phd. *)
 let complete_dependencies_from_params env ~current_unit ~current_species
-    seen_abstractions species_parameters def_children universe type_kind
-    _opt_term_pr =
+    seen_abstractions species_parameters def_children universe type_kind =
   (* Rule [TYPE] possible only if a logical expression is provided. In effect,
      in a type scheme, species_parameters can never appear since it is a
      ML-like type. Furthermore, even in case pf termination proof, we have
@@ -1349,7 +1347,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  env ~current_unit: ctx.Context.scc_current_unit
                  ~current_species: ctx.Context.scc_current_species
                  abstractions_accu ctx.Context.scc_species_parameters_names
-                 def_children universe (FTK_computational method_ty) None in
+                 def_children universe (FTK_computational method_ty) in
              (* Extra completion by a transitive closure that was missing in
                 Virgile Prevosto's Phd. *)
              let dependencies_from_params_via_didou =
@@ -1453,8 +1451,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                        ~current_unit: ctx.Context.scc_current_unit
                        abstractions_accu ctx.Context.
                          scc_species_parameters_names
-                       def_children universe (FTK_computational method_ty)
-                       opt_term_pr in
+                       def_children universe (FTK_computational method_ty) in
                    (* Extra completion by a transitive closure that was missing
                       in Virgile Prevosto's Phd. *)
                    let dependencies_from_params_via_didou =
@@ -1527,7 +1524,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    env ~current_species: ctx.Context.scc_current_species
                    ~current_unit: ctx.Context.scc_current_unit
                    abstractions_accu ctx.Context.scc_species_parameters_names
-                   def_children universe (FTK_logical logical_expr) None in
+                   def_children universe (FTK_logical logical_expr) in
                (* Extra completion by a transitive closure that was missing in
                   Virgile Prevosto's Phd. *)
                let dependencies_from_params_via_didou =
@@ -1591,7 +1588,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    env ~current_species: ctx.Context.scc_current_species
                    ~current_unit: ctx.Context.scc_current_unit
                    abstractions_accu ctx.Context.scc_species_parameters_names
-                   def_children universe (FTK_logical logical_expr) None in
+                   def_children universe (FTK_logical logical_expr) in
                (* Extra completion by a transitive closure that was missing in
                   Virgile Prevosto's Phd. *)
                let dependencies_from_params_via_didou =
