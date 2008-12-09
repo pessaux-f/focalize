@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.21 2008-12-09 13:03:35 rr Exp $
+# $Id: Makefile,v 1.22 2008-12-09 13:23:12 weis Exp $
 
 ROOT_DIR = ../..
 
@@ -45,7 +45,7 @@ FOCALIZE_SRC = \
 	randoms.fcl \
 	integers.fcl \
 	arrays.fcl \
-	products_algebra.fcl \
+	product_structures.fcl \
 	quotients.fcl
 
 FOCALIZE_SRC_UNSAFE = \
