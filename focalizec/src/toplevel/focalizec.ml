@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.33 2008-12-09 12:51:58 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.34 2008-12-09 13:02:45 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -27,7 +27,7 @@ let main () =
          argument directory.") ;
       ("--experimental",
        Arg.Unit Configuration.set_experimental,
-       " do not use. Reversed to development team only!") ;
+       " do not use. Fear it! For the development team only!") ;
       ("-focalize-doc",
        Arg.Unit Configuration.set_focalize_doc,
        " generate documentation.") ;
