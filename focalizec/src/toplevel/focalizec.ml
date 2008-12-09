@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.32 2008-11-29 20:20:53 weis Exp $ *)
+(* $Id: focalizec.ml,v 1.33 2008-12-09 12:51:58 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -25,6 +25,9 @@ let main () =
        Arg.String Configuration.set_dotty_dependencies,
        " dumps species non-let-rec- dependencies as dotty\n\tfiles into the \
          argument directory.") ;
+      ("--experimental",
+       Arg.Unit Configuration.set_experimental,
+       " do not use. Reversed to development team only!") ;
       ("-focalize-doc",
        Arg.Unit Configuration.set_focalize_doc,
        " generate documentation.") ;

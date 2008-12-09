@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.142 2008-12-03 10:43:53 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.143 2008-12-09 12:51:58 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -307,7 +307,7 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                    meth_ty
              | Parsetree_utils.DETK_logical lexpr ->
                  (* Inside the logical expression of the method of the
-		    parameter "Self" must be printed as "_p_param_name_T". *)
+                    parameter "Self" must be printed as "_p_param_name_T". *)
                  let self_map =
                    Species_record_type_generation.
                      make_Self_cc_binding_species_param
@@ -342,7 +342,7 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                    meth_ty
              | Parsetree_utils.DETK_logical lexpr ->
                  (* Inside the logical expression of the method of the
-		    parameter "Self" must be printed as "_p_param_name_T". *)
+                    parameter "Self" must be printed as "_p_param_name_T". *)
                  let self_map =
                    Species_record_type_generation.
                      make_Self_cc_binding_species_param
@@ -2177,12 +2177,18 @@ let print_idents_as_tuple out_fmter idents =
     {b Rem}: Not exported outside this module.                              *)
 (* ************************************************************************ *)
 let generate_termination_order ctx print_ctx env name fun_params_n_tys
+    ai sorted_deps_from_params generated_fields (* Only needed for "prelude". *)
     opt_term_pr =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* The order's name: the function's name + "_wforder". *)
   Format.fprintf out_fmter "@[<2>Definition %a_wforder"
     Parsetree_utils.pp_vname_with_operators_expanded name ;
-  (* [Unsure] Les lambda-lifts... *)
+  (* Generate the lambda-lifts for our dependencies. *)
+  let (_, ctx, print_ctx) =
+    generate_field_definifion_prelude
+      ~in_section: false ctx print_ctx env ai.Abstractions.ai_min_coq_env
+      ai.Abstractions.ai_used_species_parameter_tys
+      sorted_deps_from_params generated_fields in
   (* The 2 arguments of any decent order (i.e. the compared values). *)
   Format.fprintf out_fmter "@ (__x __y :@ " ;
   Types.purge_type_simple_to_coq_variable_mapping () ;
@@ -2194,8 +2200,10 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
   match opt_term_pr with
    | None ->
        (* No termination proof is done. We will generate by default an assumed
-          proof. Anyway, the compiler issued a warning to the user. *)
-       Format.fprintf out_fmter "coq_builtins.magic_order@ __x@ __y.@]"
+          proof. Anyway, the compiler issued a warning to the user.
+          Don't forget to close the whole box of the definition and to go to
+          the next line. *)
+       Format.fprintf out_fmter "coq_builtins.magic_order@ __x@ __y.@]@\n"
    | Some term_pr ->
        (begin
        match term_pr.Parsetree.ast_desc with
@@ -2248,7 +2256,7 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
 
 
 let generate_defined_recursive_let_definition ctx print_ctx env
-    generated_fields from name params scheme body _opt_term_pr ai =
+    generated_fields from name params scheme body opt_term_pr ai =
   let out_fmter = ctx.Context.scc_out_fmter in
   match body with
    | Parsetree.BB_logical _ ->
@@ -2285,19 +2293,8 @@ let generate_defined_recursive_let_definition ctx print_ctx env
            params_with_type in
        let return_ty =
          match return_ty_opt with None -> assert false | Some t -> t in
-
-       (* Generate the order. *)
-(* [Unsure] Disablé pour la release Alpha. *)
-(*       generate_termination_order
-         ctx' print_ctx env name params_with_type opt_term_pr ;*)
-       (* Generate the termination proof. *)
-(* [Unsure] A faire.
-       generate_termination_proof ctx' print_ctx env ... ; *)
-
-       Format.fprintf out_fmter "@[<2>Section %a.@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded name ;
-       (* Now, generate the prelude of the only method introduced by
-          "let rec". *)
+      (* Merge all the abstractions infos and sort dependencies on parameters
+         according to their own dependencies. *)
        let all_deps_from_params =
          Abstractions.merge_abstraction_infos
            ai.Abstractions.ai_dependencies_from_params_via_body
@@ -2306,6 +2303,20 @@ let generate_defined_recursive_let_definition ctx print_ctx env
               ai.Abstractions.ai_dependencies_from_params_via_completion) in
        let sorted_deps_from_params =
          Dep_analysis.order_species_params_methods all_deps_from_params in
+       (* Generate the order. *)
+(* [Unsure] *)
+       if (Configuration.get_experimental ()) then
+         generate_termination_order
+           ctx' print_ctx env name params_with_type ai sorted_deps_from_params
+           generated_fields opt_term_pr ;
+       (* Generate the termination proof. *)
+(* [Unsure] A faire.
+       generate_termination_proof ctx' print_ctx env ... ; *)
+
+       Format.fprintf out_fmter "@[<2>Section %a.@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
+       (* Now, generate the prelude of the only method introduced by
+          "let rec". *)
        let (abstracted_methods, new_ctx, new_print_ctx) =
          generate_field_definifion_prelude
            ~in_section: true ctx' print_ctx env ai.Abstractions.ai_min_coq_env

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.20 2008-11-29 23:23:18 weis Exp $ *)
+(* $Id: configuration.mli,v 1.21 2008-12-09 12:51:58 pessaux Exp $ *)
 
 (** {3 The internal configuration of the FoCaLize compiler} *)
 
@@ -26,6 +26,9 @@ exception No_input_file;;
 val focalize_version_number : float;;
 
 val focalize_full_version : string;;
+
+val get_experimental : unit -> bool;;
+val set_experimental : unit -> unit;;
 
 val get_impose_termination_proof : unit -> bool;;
 val set_impose_termination_proof : unit -> unit;;

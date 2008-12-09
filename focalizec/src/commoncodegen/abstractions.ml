@@ -14,7 +14,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.55 2008-12-03 09:07:26 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.56 2008-12-09 12:51:58 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -58,7 +58,7 @@ type environment_kind =
 
 
 
-(* For debugging purpose only.
+(* For debugging purpose only. *)
 let debug_print_dependencies_from_parameters l =
   List.iter
     (fun (species_param, methods) ->
@@ -80,6 +80,7 @@ let debug_print_dependencies_from_parameters l =
       Format.eprintf "@.")
     l
 ;;
+(*
 let debug_print_dependencies_from_parameters2 l =
   List.iter
     (fun (species_param, (Env.ODFP_methods_list methods)) ->
@@ -317,7 +318,7 @@ let get_if_field_logical_statement name fields =
 (* ************************************************************************* *)
 let compute_lambda_liftings_for_field ~current_unit ~current_species
     species_parameters_names dependency_graph_nodes name body my_type
-    all_my_fields =
+    opt_term_pr all_my_fields =
   (* Get all the methods we directly decl-depend on. They will   *)
   (* lead each to an extra parameter of the final OCaml function *)
   (* (lambda-lifing). Get the methods we directly def-depend.    *)
@@ -350,7 +351,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
            | Env.TypeInformation.SPAR_in (n, _, _) -> (n, [])
            | Env.TypeInformation.SPAR_is ((_, n), _, meths, _, _) ->
                ((Parsetree.Vuident n), meths) in
-        let meths_from_param =
+        let meths_from_param1 =
           (match body with
            | FBK_expr e ->
                Param_dep_analysis.param_deps_expr
@@ -366,6 +367,29 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
                Param_dep_analysis.param_deps_proof
                  ~current_species (species_param_name, species_param_meths)
                  proof) in
+	(* TERM STUFF. *)
+	let meths_from_param2 =
+	  (match opt_term_pr with
+	   | None -> Parsetree_utils.ParamDepSet.empty
+	   | Some term_pr ->
+	       match term_pr.Parsetree.ast_desc with
+		| Parsetree.TP_order (expr, _, pr) ->
+		    (begin
+		    let deps1 =
+		      Param_dep_analysis.param_deps_expr
+			~current_species
+			(species_param_name, species_param_meths) expr in
+		    let deps2 =
+		      Param_dep_analysis.param_deps_proof
+			~current_species
+			(species_param_name, species_param_meths) pr in
+			 Parsetree_utils.ParamDepSet.union deps1 deps2
+		    end)
+		| _ -> failwith "todo 123") in
+	let meths_from_param =
+	  Parsetree_utils.ParamDepSet.union
+	    meths_from_param1 meths_from_param2 in
+	(* END TERM STUFF. *)
         (* Return a couple binding the species parameter's name with the
            methods of it we found as required for the current method. *)
         (species_param, meths_from_param) :: accu)
@@ -396,6 +420,22 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
        let params_carriers =
          get_species_types_in_type_annots_of_logical_expr lexpr in
        carriers_appearing_in_types := params_carriers) ;
+  (* TERM STUFF. *)
+  (match opt_term_pr with
+   | None -> ()
+   | Some term_pr ->
+       match term_pr.Parsetree.ast_desc with
+	| Parsetree.TP_order (expr, _, _) ->
+	    let t =
+	      (match expr.Parsetree.ast_type with
+	       | Parsetree.ANTI_type t -> t
+	       | _ -> assert false) in
+	    carriers_appearing_in_types :=
+	      Types.SpeciesCarrierTypeSet.union
+		(Types.get_species_types_in_type t)
+		!carriers_appearing_in_types
+	| _ -> failwith "todo 124") ;
+  (* END TERM STUFF. *)
   (* By side effect, we remind the species types appearing in the species
      parameters methods' types we depend on. *)
   List.iter
@@ -1071,10 +1111,13 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
 (** Implements rules [TYPE], [DEF-DEP], [UNIVERSE] and [PRM] of the
     definition 72 page 153 of Virgile Prevosto's Phd. *)
 let complete_dependencies_from_params env ~current_unit ~current_species
-    seen_abstractions species_parameters def_children universe type_kind =
+    seen_abstractions species_parameters def_children universe type_kind
+    _opt_term_pr =
   (* Rule [TYPE] possible only if a logical expression is provided. In effect,
      in a type scheme, species_parameters can never appear since it is a
-     ML-like type. *)
+     ML-like type. Furthermore, even in case pf termination proof, we have
+     nothing to do since expressions appearing have ML-like types and proofs
+     are not considered as "type". *)
   let dependencies_from_params_via_type =
     (match type_kind with
      | FTK_computational _ ->
@@ -1285,7 +1328,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  ~current_species: ctx.Context.scc_current_species
                  ctx.Context.scc_species_parameters_names
                  ctx.Context.scc_dependency_graph_nodes name
-                 body_as_fbk (FTK_computational method_ty) fields in
+                 body_as_fbk (FTK_computational method_ty) None fields in
              (* Compute the visible universe of the method. *)
              let universe =
                VisUniverse.visible_universe
@@ -1302,7 +1345,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  env ~current_unit: ctx.Context.scc_current_unit
                  ~current_species: ctx.Context.scc_current_species
                  abstractions_accu ctx.Context.scc_species_parameters_names
-                 def_children universe (FTK_computational method_ty) in
+                 def_children universe (FTK_computational method_ty) None in
              (* Extra completion by a transitive closure that was missing in
                 Virgile Prevosto's Phd. *)
              let dependencies_from_params_via_didou =
@@ -1339,7 +1382,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
          | Env.TypeInformation.SF_let_rec l ->
              let deps_infos =
                List.map
-                 (fun ((_, name, _, sch, body, _, _, _) as li) ->
+                 (fun ((_, name, _, sch, body, opt_term_pr, _, _) as li) ->
                    let body_as_fbk =
                      match body with
                       | Parsetree.BB_logical p -> FBK_logical_expr p
@@ -1357,7 +1400,37 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                        ~current_species: ctx.Context.scc_current_species
                        ctx.Context.scc_species_parameters_names
                        ctx.Context.scc_dependency_graph_nodes name
-                       body_as_fbk (FTK_computational method_ty) fields in
+                       body_as_fbk (FTK_computational method_ty) opt_term_pr
+		       fields in
+
+(*
+(match opt_term_pr with
+ | None -> Format.eprintf "Pas de preuve@."
+ | Some term_pr ->
+     (begin
+     match term_pr.Parsetree.ast_desc with
+      | Parsetree.TP_order (order_expr, _, pr) ->
+	  let expr_ty =
+	    (match order_expr.Parsetree.ast_type with
+	     | Parsetree.ANTI_type t -> t
+	     | _ -> assert false) in
+	  let (_used_species_parameter_tys_in_self_methods_bodies2,
+               dependencies_from_params_in_bodies2,
+               _decl_children2, _def_children2) =
+	    compute_lambda_liftings_for_field
+	      ~current_unit: ctx.Context.scc_current_unit
+	      ~current_species: ctx.Context.scc_current_species
+	      ctx.Context.scc_species_parameters_names
+	      ctx.Context.scc_dependency_graph_nodes name
+	      (FBK_proof (Some pr)) (FTK_computational expr_ty) fields in
+	  Format.eprintf "Dépendances trouvées pour %a@."
+	    Sourcify.pp_vname name ;
+	  debug_print_dependencies_from_parameters 
+	    dependencies_from_params_in_bodies2
+      | _ -> failwith "Other termination kinds to do."
+     end)) ;
+*)
+
                    (* Compute the visible universe of the method. *)
                    let universe =
                      VisUniverse.visible_universe
@@ -1376,7 +1449,8 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                        ~current_unit: ctx.Context.scc_current_unit
                        abstractions_accu ctx.Context.
                          scc_species_parameters_names
-                       def_children universe (FTK_computational method_ty) in
+                       def_children universe (FTK_computational method_ty)
+		       opt_term_pr in
                    (* Extra completion by a transitive closure that was missing
                       in Virgile Prevosto's Phd. *)
                    let dependencies_from_params_via_didou =
@@ -1427,7 +1501,8 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    ~current_species: ctx.Context.scc_current_species
                    ctx.Context.scc_species_parameters_names
                    ctx.Context.scc_dependency_graph_nodes name
-                   (FBK_proof (Some proof)) (FTK_logical logical_expr) fields in
+                   (FBK_proof (Some proof)) (FTK_logical logical_expr)
+		   None fields in
                (* Compute the visible universe of the theorem. *)
                let universe =
                  VisUniverse.visible_universe
@@ -1448,7 +1523,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    env ~current_species: ctx.Context.scc_current_species
                    ~current_unit: ctx.Context.scc_current_unit
                    abstractions_accu ctx.Context.scc_species_parameters_names
-                   def_children universe (FTK_logical logical_expr) in
+                   def_children universe (FTK_logical logical_expr) None in
                (* Extra completion by a transitive closure that was missing in
                   Virgile Prevosto's Phd. *)
                let dependencies_from_params_via_didou =
@@ -1494,7 +1569,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    ~current_species: ctx.Context.scc_current_species
                    ctx.Context.scc_species_parameters_names
                    ctx.Context.scc_dependency_graph_nodes name
-                   (FBK_proof None) (FTK_logical logical_expr) fields in
+                   (FBK_proof None) (FTK_logical logical_expr) None fields in
                (* Compute the visible universe of the theorem. *)
                let universe =
                  VisUniverse.visible_universe
@@ -1512,7 +1587,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    env ~current_species: ctx.Context.scc_current_species
                    ~current_unit: ctx.Context.scc_current_unit
                    abstractions_accu ctx.Context.scc_species_parameters_names
-                   def_children universe (FTK_logical logical_expr) in
+                   def_children universe (FTK_logical logical_expr) None in
                (* Extra completion by a transitive closure that was missing in
                   Virgile Prevosto's Phd. *)
                let dependencies_from_params_via_didou =

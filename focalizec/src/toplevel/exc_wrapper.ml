@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.65 2008-12-05 12:54:00 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.66 2008-12-09 12:51:58 pessaux Exp $ *)
 
 let print_focalize_exception ppf = function
   (* ********************* *)
@@ -197,7 +197,7 @@ let print_focalize_exception ppf = function
          arities@ %d@ and@ %d.@]@."
         Location.pp_location at Types.pp_type_name ty_cstr_name arity1 arity2
   | Types.Arity_mismatch_unexpected_args (at) ->
-      (* To handle errot message of bug report #180 (sum type constructor
+      (* To handle error message of bug report #180 (sum type constructor
          used with no argument although it needs some). *)
       Format.fprintf ppf
         "%a:@\n@[No expected argument(s).@]@." Location.pp_location at
