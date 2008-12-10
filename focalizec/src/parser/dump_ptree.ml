@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.33 2008-11-29 20:14:50 weis Exp $ *)
+(* $Id: dump_ptree.ml,v 1.34 2008-12-10 08:59:17 weis Exp $ *)
 
 (* *********************************************************************** *)
 (* pp_position : Format.formatter -> Lexing.position -> unit               *)
@@ -914,8 +914,8 @@ let pp_collection_def ppf = pp_ast pp_collection_def_desc ppf;;
 
     {b Rem} : Not exported ouside this module.                          *)
 (* ******************************************************************** *)
-let pp_tmp_TD_union ppf l =
-  Format.fprintf ppf "@[<2>STDB_union ([@ %a@ ])@]"
+let pp_tmp_RTD_union ppf l =
+  Format.fprintf ppf "@[<2>RTDB_union ([@ %a@ ])@]"
     (Handy.pp_generic_separated_list
        ","
        (fun local_ppf (constr_name, type_exprs) ->
@@ -925,20 +925,20 @@ let pp_tmp_TD_union ppf l =
 ;;
 
 
-let pp_simple_type_def_body_desc ppf = function
-  | Parsetree.STDB_alias te ->
-      Format.fprintf ppf "@[<2>STDB_alias@ (%a)@]" pp_type_expr te
-  | Parsetree.STDB_union l -> Format.fprintf ppf "%a" pp_tmp_TD_union l
-  | Parsetree.STDB_record lab_exprs ->
-      Format.fprintf ppf "@[<2>STDB_record@ ([@ %a@ ])@]"
+let pp_regular_type_def_body_desc ppf = function
+  | Parsetree.RTDB_alias te ->
+      Format.fprintf ppf "@[<2>RTDB_alias@ (%a)@]" pp_type_expr te
+  | Parsetree.RTDB_union l -> Format.fprintf ppf "%a" pp_tmp_RTD_union l
+  | Parsetree.RTDB_record lab_exprs ->
+      Format.fprintf ppf "@[<2>RTDB_record@ ([@ %a@ ])@]"
         (Handy.pp_generic_separated_list
            ","
            (fun local_ppf (lab, e) ->
              Format.fprintf local_ppf "(%a, %a)" pp_vname lab pp_type_expr e))
         lab_exprs
 ;;
-let pp_simple_type_def_body ppf =
-  pp_ast pp_simple_type_def_body_desc ppf;;
+let pp_regular_type_def_body ppf =
+  pp_ast pp_regular_type_def_body_desc ppf;;
 
 
 
@@ -953,11 +953,9 @@ let pp_external_bindings ppf ebs =
     ebs.Parsetree.ast_desc
 ;;
 
-
-
 let pp_external_type_def_body_desc ppf ex_tydef_body =
   Format.fprintf ppf "{@[<2>%a;@ %a;@ %a@]@ }"
-    (Handy.pp_generic_explicit_option pp_simple_type_def_body)
+    (Handy.pp_generic_explicit_option pp_regular_type_def_body)
     ex_tydef_body.Parsetree.etdb_internal
     pp_external_expr ex_tydef_body.Parsetree.etdb_external
     pp_external_bindings ex_tydef_body.Parsetree.etdb_bindings
@@ -966,13 +964,29 @@ let pp_external_type_def_body ppf =
   pp_ast pp_external_type_def_body_desc ppf
 ;;
 
-let pp_type_def_body_desc ppf = function
-  | Parsetree.TDB_simple simple_tydef_body ->
-      Format.fprintf ppf "@[<2>TDB_simple@ ([@ %a@ ])@]"
-        pp_simple_type_def_body simple_tydef_body
-  | Parsetree.TDB_external external_tydef_body ->
-      Format.fprintf ppf "@[<2>TDB_external@ ([@ %a@ ])@]"
+let pp_type_def_body_simple_desc ppf = function
+  | Parsetree.TDBS_regular regular_tydef_body ->
+      Format.fprintf ppf "@[<2>TDBS_regular@ ([@ %a@ ])@]"
+        pp_regular_type_def_body regular_tydef_body
+  | Parsetree.TDBS_external external_tydef_body ->
+      Format.fprintf ppf "@[<2>TDBS_external@ ([@ %a@ ])@]"
         pp_external_type_def_body external_tydef_body
+;;
+let pp_type_def_body_simple ppf = pp_ast pp_type_def_body_simple_desc ppf;;
+
+let pp_type_def_body_desc ppf = function
+  | Parsetree.TDB_abstract tydef_body_simple ->
+      Format.fprintf ppf "@[<2>TDB_abstract@ ([@ %a@ ])@]"
+        pp_type_def_body_simple tydef_body_simple
+  | Parsetree.TDB_private tydef_body_simple ->
+      Format.fprintf ppf "@[<2>TDB_private@ ([@ %a@ ])@]"
+        pp_type_def_body_simple tydef_body_simple
+  | Parsetree.TDB_public tydef_body_simple ->
+      Format.fprintf ppf "@[<2>TDB_public@ ([@ %a@ ])@]"
+        pp_type_def_body_simple tydef_body_simple
+  | Parsetree.TDB_relational tydef_body_simple ->
+      Format.fprintf ppf "@[<2>TDB_relational@ ([@ %a@ ])@]"
+        pp_type_def_body_simple tydef_body_simple
 ;;
 let pp_type_def_body ppf = pp_ast pp_type_def_body_desc ppf;;
 

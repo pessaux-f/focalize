@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.44 2008-11-29 23:23:18 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.45 2008-12-10 08:59:17 weis Exp $ *)
 
 (** {2 The Focalize abstract syntax tree} *)
 
@@ -239,16 +239,23 @@ and type_def_desc = {
 
 and type_def_body = type_def_body_desc ast
 and type_def_body_desc =
+  | TDB_abstract of type_def_body_simple
+  | TDB_private of type_def_body_simple
+  | TDB_public of type_def_body_simple
+  | TDB_relational of type_def_body_simple
+
+and type_def_body_simple = type_def_body_simple_desc ast
+and type_def_body_simple_desc =
     (** Regular type definitions (unions, records, and aliases). *)
-  | TDB_simple of simple_type_def_body
+  | TDBS_regular of regular_type_def_body
     (** External type definitions. *)
-  | TDB_external of external_type_def_body
+  | TDBS_external of external_type_def_body
 
 (** {6 External type definitions} *)
 and external_type_def_body = external_type_def_body_desc ast
 and external_type_def_body_desc = {
   (** The internal view of the externally defined type. *)
-  etdb_internal : simple_type_def_body option;
+  etdb_internal : regular_type_def_body option;
   (** The external view of the externally defined type. *)
   etdb_external : external_expr;
   (** The external mapping of constructors or labels of the externally
@@ -256,14 +263,14 @@ and external_type_def_body_desc = {
   etdb_bindings : external_bindings;
  }
 
-(** {6 Internal type definitions} *)
-and simple_type_def_body = simple_type_def_body_desc ast
-and simple_type_def_body_desc =
-  | STDB_alias of type_expr
+(** {6 Regular (internal) type definitions} *)
+and regular_type_def_body = regular_type_def_body_desc ast
+and regular_type_def_body_desc =
+  | RTDB_alias of type_expr
     (** A type alias definition with its aliased type expression. *)
-  | STDB_union of (constructor_name * type_expr list) list
+  | RTDB_union of (constructor_name * type_expr list) list
     (** A sum type definition with its list of value constructors. *)
-  | STDB_record of (label_name * type_expr) list
+  | RTDB_record of (label_name * type_expr) list
     (** A record type definition with its list of labels. *)
 ;;
 

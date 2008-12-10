@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.161 2008-12-02 15:03:49 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.162 2008-12-10 08:59:17 weis Exp $ *)
 
 
 
@@ -846,7 +846,7 @@ let rec typecheck_pattern ctx env pat_desc =
                  Proceed this way ONLY if there is not only ONE argument or if
                  there is only one but already begin a tuple !
                  This hack is linked to the same process in the function
-                 [typecheck_simple_type_def_body]. This way, we ensure that
+                 [typecheck_regular_type_def_body]. This way, we ensure that
                  constructor argument(s) is (are) always in a tuple, but never
                  in a trivial tuple containing only one component being a
                  tuple. This means that we only add a tuple layer if there is
@@ -4363,7 +4363,7 @@ let typecheck_species_def ctx env species_def =
 
 (* ************************************************************************ *)
 (* typing_context -> is_repr_of_external: bool -> Env.TypingEnv.t ->        *)
-(* Parsetree.simple_type_def_body ->                                        *)
+(* Parsetree.regular_type_def_body ->                                        *)
 (*   (Env.TypingEnv.t * Env.TypeInformation.type_description)               *)
 (** {b Descr} : Transforms a simple type definition's body into a somewhat
     that can be inserted inside the environment. Also generates type
@@ -4400,8 +4400,8 @@ let typecheck_species_def ctx env species_def =
 
     {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
-let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
-    simple_type_def_body =
+let typecheck_regular_type_def_body ctx ~is_repr_of_external env type_name
+    regular_type_def_body =
   (* Recover on which type variables the parameters are mapped. *)
   let vars_of_mapping = List.map snd ctx.tyvars_mapping in
   (* Get the type constructor's arity. *)
@@ -4420,7 +4420,7 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
     Types.build_type_def_scheme
       ~variables: vars_of_mapping  ~body: futur_type_type in
   let proto_descrip = {
-    Env.TypeInformation.type_loc = simple_type_def_body.Parsetree.ast_loc ;
+    Env.TypeInformation.type_loc = regular_type_def_body.Parsetree.ast_loc ;
     (* Make an "abstract" proto-type, even if it is of another kind, this is
        not important because will never be used. *)
     Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
@@ -4430,11 +4430,11 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
   (* Extend the environment with ourselves' proto-type. *)
   let env_with_proto_ourselves =
     Env.TypingEnv.add_type
-      ~loc: simple_type_def_body.Parsetree.ast_loc type_name
+      ~loc: regular_type_def_body.Parsetree.ast_loc type_name
       proto_descrip env in
   (* Process the body of the type definition. *)
-  match simple_type_def_body.Parsetree.ast_desc with
-   | Parsetree.STDB_alias ty ->
+  match regular_type_def_body.Parsetree.ast_desc with
+   | Parsetree.RTDB_alias ty ->
        (begin
        (* We do not insert the defined name itself to reject recursive type
           abbreviations. *)
@@ -4444,14 +4444,14 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
          typecheck_type_expr ctx env_with_proto_ourselves ty in
        Types.end_definition () ;
        (* Record the type representing this body in the AST node. *)
-       simple_type_def_body.Parsetree.ast_type <-
+       regular_type_def_body.Parsetree.ast_type <-
          Parsetree.ANTI_type identity_type ;
        (* Generalize the got type to get the real identity. *)
        let identity_scheme =
          Types.build_type_def_scheme
            ~variables: vars_of_mapping ~body: identity_type in
        let ty_descr = {
-         Env.TypeInformation.type_loc = simple_type_def_body.Parsetree.ast_loc ;
+         Env.TypeInformation.type_loc = regular_type_def_body.Parsetree.ast_loc ;
          Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
          Env.TypeInformation.type_identity = identity_scheme ;
          Env.TypeInformation.type_params = vars_of_mapping ;
@@ -4463,12 +4463,12 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
          if is_repr_of_external then env
          else
            Env.TypingEnv.add_type
-             ~loc: simple_type_def_body.Parsetree.ast_loc type_name
+             ~loc: regular_type_def_body.Parsetree.ast_loc type_name
              ty_descr env in
        (* Return the extended environment and the type description. *)
        (env', ty_descr)
        end)
-  | Parsetree.STDB_union constructors ->
+  | Parsetree.RTDB_union constructors ->
     (begin
       (* Now process the constructors of the type. Create the list of
          couples : (constructor name * type_simple). *)
@@ -4522,14 +4522,14 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
           env
           cstr_bindings in
       (* Record the type representing this body in the AST node. *)
-      simple_type_def_body.Parsetree.ast_type <-
+      regular_type_def_body.Parsetree.ast_type <-
         Parsetree.ANTI_type futur_type_type ;
       (* Now add the type itself. *)
       let type_identity =
         Types.build_type_def_scheme
           ~variables: vars_of_mapping ~body: futur_type_type in
       let final_type_descr = {
-        Env.TypeInformation.type_loc = simple_type_def_body.Parsetree.ast_loc ;
+        Env.TypeInformation.type_loc = regular_type_def_body.Parsetree.ast_loc ;
         Env.TypeInformation.type_kind =
           Env.TypeInformation.TK_variant
             (List.map
@@ -4544,12 +4544,12 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
         if is_repr_of_external then env_with_constructors
         else
           Env.TypingEnv.add_type
-            ~loc: simple_type_def_body.Parsetree.ast_loc type_name
+            ~loc: regular_type_def_body.Parsetree.ast_loc type_name
             final_type_descr env_with_constructors in
       (* Return the extended environment and the type description. *)
       (env', final_type_descr)
      end)
-  | Parsetree.STDB_record labels ->
+  | Parsetree.RTDB_record labels ->
       (* First, we sort the label list in order to get a canonical
          representation of a record. *)
       let labels = Sort.list (fun (n1, _) (n2, _) -> n1 <= n2) labels in
@@ -4576,14 +4576,14 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
           env
           fields_descriptions in
       (* Record the type representing this body in the AST node. *)
-      simple_type_def_body.Parsetree.ast_type <-
+      regular_type_def_body.Parsetree.ast_type <-
         Parsetree.ANTI_type futur_type_type ;
       (* Now add the type itself. *)
       let type_identity =
         Types.build_type_def_scheme
           ~variables: vars_of_mapping ~body: futur_type_type in
       let final_type_descr = {
-        Env.TypeInformation.type_loc = simple_type_def_body.Parsetree.ast_loc ;
+        Env.TypeInformation.type_loc = regular_type_def_body.Parsetree.ast_loc ;
         Env.TypeInformation.type_kind =
           Env.TypeInformation.TK_record
             (List.map
@@ -4600,7 +4600,7 @@ let typecheck_simple_type_def_body ctx ~is_repr_of_external env type_name
       if is_repr_of_external then env_with_labels
       else
         Env.TypingEnv.add_type
-          ~loc: simple_type_def_body.Parsetree.ast_loc
+          ~loc: regular_type_def_body.Parsetree.ast_loc
           type_name final_type_descr env_with_labels in
     (* Return the extended environment and the type description. *)
     (env', final_type_descr)
@@ -4705,7 +4705,7 @@ let typecheck_external_type_def_body ctx env type_name params
        (* Build the type structure of the "internal" representation. This will
           be used to build the real type's structure. *)
        let (env_without_type_def, internal_descr) =
-         typecheck_simple_type_def_body
+         typecheck_regular_type_def_body
            ctx ~is_repr_of_external: true env type_name internal_repr in
        (* Force the type to be [TK_external] in order to prevent ot from
           being "generated". Even if this type has an internal structure,
@@ -4727,12 +4727,28 @@ let typecheck_external_type_def_body ctx env type_name params
 
 
 
+let typecheck_type_def_body_simple
+  ctx env td_name params type_def_body_simple =
+  (* A type definition "has no type". Record in the AST node. *)
+  type_def_body_simple.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
+  match type_def_body_simple.Parsetree.ast_desc with
+   | Parsetree.TDBS_regular regular_type_def_body ->
+       typecheck_regular_type_def_body
+         ctx ~is_repr_of_external:false env td_name regular_type_def_body
+   | Parsetree.TDBS_external external_type_def_body ->
+       typecheck_external_type_def_body ctx env td_name params external_type_def_body
+;;
+
 let typecheck_type_def ctx env type_def =
   let type_def_desc = type_def.Parsetree.ast_desc in
   (* A type definition "has no type". Record in the AST node. *)
   type_def.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
   type_def_desc.Parsetree.td_body.Parsetree.ast_type <-
     Parsetree.ANTI_non_relevant ;
+  let { Parsetree.td_name = type_def_name;
+        Parsetree.td_params = type_def_params;
+        Parsetree.td_body = type_def_body;
+      } = type_def_desc in
   (* First, extend the [tyvars_mapping] of the current context with parameters
      of the type definition. The position of variables in the mapping is and
      must be the same that in the type's parameters list. *)
@@ -4740,18 +4756,22 @@ let typecheck_type_def ctx env type_def =
   let vmapp =
     List.map
       (fun var_name -> (var_name, Types.type_variable ()))
-      type_def_desc.Parsetree.td_params in
+      type_def_params in
   Types.end_definition () ;
   let new_ctx = { ctx with tyvars_mapping = vmapp } in
-  match type_def_desc.Parsetree.td_body.Parsetree.ast_desc with
-   | Parsetree.TDB_simple simple_def_body ->
-       typecheck_simple_type_def_body
-         new_ctx ~is_repr_of_external: false env
-         type_def_desc.Parsetree.td_name simple_def_body
-   | Parsetree.TDB_external external_type_def_body ->
-       typecheck_external_type_def_body
-         new_ctx env type_def_desc.Parsetree.td_name
-         (List.map snd vmapp) external_type_def_body
+  match type_def_body.Parsetree.ast_desc with
+   | Parsetree.TDB_abstract type_def_body_simple ->
+       typecheck_type_def_body_simple new_ctx env
+         type_def_name (List.map snd vmapp) type_def_body_simple
+   | Parsetree.TDB_private type_def_body_simple ->
+       typecheck_type_def_body_simple new_ctx env
+         type_def_name (List.map snd vmapp) type_def_body_simple
+   | Parsetree.TDB_public type_def_body_simple ->
+       typecheck_type_def_body_simple new_ctx env
+         type_def_name (List.map snd vmapp) type_def_body_simple
+   | Parsetree.TDB_relational type_def_body_simple ->
+       typecheck_type_def_body_simple new_ctx env
+         type_def_name (List.map snd vmapp) type_def_body_simple
 ;;
 
 

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.59 2008-11-29 20:14:50 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.60 2008-12-10 08:59:17 weis Exp $ *)
 
 open Parsetree;;
 
@@ -1008,11 +1008,11 @@ let pp_tmp_TD_union ppf l =
 
 
 
-let pp_simple_type_def_body_desc ppf = function
-  | Parsetree.STDB_alias te ->
+let pp_regular_type_def_body_desc ppf = function
+  | Parsetree.RTDB_alias te ->
       Format.fprintf ppf "@[<2>alias@ %a@]" pp_type_expr te
-  | Parsetree.STDB_union l -> Format.fprintf ppf "%a" pp_tmp_TD_union l
-  | Parsetree.STDB_record lab_exprs ->
+  | Parsetree.RTDB_union l -> Format.fprintf ppf "%a" pp_tmp_TD_union l
+  | Parsetree.RTDB_record lab_exprs ->
       Format.fprintf ppf "@[<2>{@ %a@ }@]"
         (Handy.pp_generic_separated_list
            ";"
@@ -1020,8 +1020,8 @@ let pp_simple_type_def_body_desc ppf = function
              Format.fprintf local_ppf "%a@ =@ %a" pp_vname lab pp_type_expr e))
         lab_exprs
 ;;
-let pp_simple_type_def_body ppf =
-  pp_ast pp_simple_type_def_body_desc ppf
+let pp_regular_type_def_body ppf =
+  pp_ast pp_regular_type_def_body_desc ppf
 ;;
 
 
@@ -1043,9 +1043,9 @@ let pp_external_type_def_body_desc ppf ex_tydef_body =
   Format.fprintf ppf "internal";
   (match ex_tydef_body.Parsetree.etdb_internal with
    | None -> Format.fprintf ppf "@\n"
-   | Some simple_tydef_body ->
+   | Some regular_tydef_body ->
        Format.fprintf ppf "@ %a@\n"
-         pp_simple_type_def_body simple_tydef_body);
+         pp_regular_type_def_body regular_tydef_body);
   Format.fprintf ppf "external@ %a@\n"
     pp_external_expr ex_tydef_body.Parsetree.etdb_external;
   Format.fprintf ppf "%a"
@@ -1057,14 +1057,30 @@ let pp_external_type_def_body ppf =
 
 
 
-let pp_type_def_body_desc ppf = function
-  | Parsetree.TDB_simple simple_tydef_body ->
-      Format.fprintf ppf "%a" pp_simple_type_def_body simple_tydef_body
-  | Parsetree.TDB_external external_tydef_body ->
+let pp_type_def_body_simple_desc ppf = function
+  | Parsetree.TDBS_regular regular_tydef_body ->
+      Format.fprintf ppf "%a" pp_regular_type_def_body regular_tydef_body
+  | Parsetree.TDBS_external external_tydef_body ->
       Format.fprintf ppf "%a" pp_external_type_def_body external_tydef_body
 ;;
-let pp_type_def_body ppf = pp_ast pp_type_def_body_desc ppf
+let pp_type_def_body_simple ppf = pp_ast pp_type_def_body_simple_desc ppf
 ;;
+
+let pp_type_def_body_desc ppf = function
+  | Parsetree.TDB_abstract tydef_body_simple ->
+      Format.fprintf ppf "@[<2>abstract@ ([@ %a@ ])@]"
+        pp_type_def_body_simple tydef_body_simple
+  | Parsetree.TDB_private tydef_body_simple ->
+      Format.fprintf ppf "@[<2>private@ ([@ %a@ ])@]"
+        pp_type_def_body_simple tydef_body_simple
+  | Parsetree.TDB_public tydef_body_simple ->
+      Format.fprintf ppf "@[<2>public@ ([@ %a@ ])@]"
+        pp_type_def_body_simple tydef_body_simple
+  | Parsetree.TDB_relational tydef_body_simple ->
+      Format.fprintf ppf "@[<2>relational@ ([@ %a@ ])@]"
+        pp_type_def_body_simple tydef_body_simple
+;;
+let pp_type_def_body ppf = pp_ast pp_type_def_body_desc ppf;;
 
 
 

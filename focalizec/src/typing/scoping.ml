@@ -1,17 +1,19 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.72 2008-11-28 16:44:20 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.73 2008-12-10 08:59:17 weis Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -541,13 +543,13 @@ let rec scope_type_expr ctx env ty_expr =
 
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
-let scope_simple_type_def_body ctx env env_to_extend sty_def_body =
+let scope_regular_type_def_body ctx env env_to_extend sty_def_body =
   let (scoped_desc, new_env, bound_names) =
     (match sty_def_body.Parsetree.ast_desc with
-     | Parsetree.STDB_alias ty_expr ->
-         let descr = Parsetree.STDB_alias (scope_type_expr ctx env ty_expr) in
+     | Parsetree.RTDB_alias ty_expr ->
+         let descr = Parsetree.RTDB_alias (scope_type_expr ctx env ty_expr) in
          (descr, env_to_extend, [])
-     | Parsetree.STDB_union constructors ->
+     | Parsetree.RTDB_union constructors ->
          (begin
          (* This will extend the scoping environment with the sum type
             constructors. Do not fold_left otherwise you'll reverse the order
@@ -567,11 +569,11 @@ let scope_simple_type_def_body ctx env env_to_extend sty_def_body =
              constructors
              (env_to_extend, []) in
          let sum_cstr_names = List.map fst constructors in
-         ((Parsetree.STDB_union scoped_constructors),
+         ((Parsetree.RTDB_union scoped_constructors),
           env_to_extend',
           sum_cstr_names)
          end)
-     | Parsetree.STDB_record fields ->
+     | Parsetree.RTDB_record fields ->
          (begin
          (* This will extend the scoping environment with the record type
             fields labels. Do not fold_left otherwise you'll reverse the order
@@ -590,7 +592,7 @@ let scope_simple_type_def_body ctx env env_to_extend sty_def_body =
              fields
              (env_to_extend, []) in
          let record_field_names = List.map fst fields in
-         ((Parsetree.STDB_record scoped_fields),
+         ((Parsetree.RTDB_record scoped_fields),
           env_to_extend',
           record_field_names)
          end)) in
@@ -713,7 +715,7 @@ let scope_external_type_def_body ctx env_with_params env tdef_body =
      | None -> (None, env, [])
      | Some internal_repr ->
          let (scoped_internal_repr, env', names) =
-           scope_simple_type_def_body ctx env_with_params env internal_repr in
+           scope_regular_type_def_body ctx env_with_params env internal_repr in
          ((Some scoped_internal_repr), env', names)) in
   (* Then, the [etdb_external] being simple bindings toward the external
      languages, there nothing to scope inside.
@@ -734,34 +736,70 @@ let scope_external_type_def_body ctx env_with_params env tdef_body =
 
 (* ******************************************************************** *)
 (* scoping_context -> Env.ScopingEnv.t ->  Env.ScopingEnv.t ->          *)
-(*   Parsetree.type_def_body_desc ->                                    *)
-(*     (Parsetree.type_def_body_desc * Env.ScopingEnv.t)                *)
-(* {b Descr} : Scopes a [type_def_body] and returns this scoped
-   [type_def_body].
+(*   Parsetree.type_def_body_simple_desc ->                             *)
+(*     (Parsetree.type_def_body_simple_desc * Env.ScopingEnv.t)         *)
+(* {b Descr} : Scopes a [type_def_body_simple] and returns this scoped
+   [type_def_body_simple].
    Takes 2 scoping environments because we need one with the parameters
    type variables if the definition has some and another where they are
-   not. C.f. comment in the function [scope_simple_type_def_body].
+   not. C.f. comment in the function [scope_regular_type_def_body].
 
    {b Rem} : Not exported outside this module.                          *)
 (* ******************************************************************** *)
-let scope_type_def_body ctx env_with_params env ty_def_body =
-  match ty_def_body.Parsetree.ast_desc with
-   | Parsetree.TDB_simple simple_type_def_body ->
+let scope_type_def_body_simple ctx env_with_params env ty_def_body_simple =
+  match ty_def_body_simple.Parsetree.ast_desc with
+   | Parsetree.TDBS_regular regular_type_def_body ->
        let (scoped_sty_def, env', _) =
-         scope_simple_type_def_body
-           ctx env_with_params env simple_type_def_body in
-       let scoped_ty_def_body = {
-         ty_def_body with
-           Parsetree.ast_desc = Parsetree.TDB_simple scoped_sty_def } in
-       (scoped_ty_def_body, env')
-   | Parsetree.TDB_external external_tdef_body ->
+         scope_regular_type_def_body
+           ctx env_with_params env regular_type_def_body in
+       let scoped_ty_def_body_simple = {
+         ty_def_body_simple with
+           Parsetree.ast_desc = Parsetree.TDBS_regular scoped_sty_def } in
+       (scoped_ty_def_body_simple, env')
+   | Parsetree.TDBS_external external_tdef_body ->
        let (scoped_external_tdef_body, env') =
          scope_external_type_def_body
            ctx env_with_params env external_tdef_body in
+       let scoped_ty_def_body_simple = {
+         ty_def_body_simple with
+           Parsetree.ast_desc =
+             Parsetree.TDBS_external scoped_external_tdef_body } in
+       (scoped_ty_def_body_simple, env')
+;;
+
+let scope_type_def_body ctx env_with_params env ty_def_body =
+  match ty_def_body.Parsetree.ast_desc with
+   | Parsetree.TDB_abstract type_def_body_simple ->
+       let (scoped_sty_def, env') =
+         scope_type_def_body_simple
+           ctx env_with_params env type_def_body_simple in
        let scoped_ty_def_body = {
          ty_def_body with
-           Parsetree.ast_desc =
-             Parsetree.TDB_external scoped_external_tdef_body } in
+           Parsetree.ast_desc = Parsetree.TDB_abstract scoped_sty_def } in
+       (scoped_ty_def_body, env')
+   | Parsetree.TDB_private type_def_body_simple ->
+       let (scoped_sty_def, env') =
+         scope_type_def_body_simple
+           ctx env_with_params env type_def_body_simple in
+       let scoped_ty_def_body = {
+         ty_def_body with
+           Parsetree.ast_desc = Parsetree.TDB_private scoped_sty_def } in
+       (scoped_ty_def_body, env')
+   | Parsetree.TDB_public type_def_body_simple ->
+       let (scoped_sty_def, env') =
+         scope_type_def_body_simple
+           ctx env_with_params env type_def_body_simple in
+       let scoped_ty_def_body = {
+         ty_def_body with
+           Parsetree.ast_desc = Parsetree.TDB_public scoped_sty_def } in
+       (scoped_ty_def_body, env')
+   | Parsetree.TDB_relational type_def_body_simple ->
+       let (scoped_sty_def, env') =
+         scope_type_def_body_simple
+           ctx env_with_params env type_def_body_simple in
+       let scoped_ty_def_body = {
+         ty_def_body with
+           Parsetree.ast_desc = Parsetree.TDB_relational scoped_sty_def } in
        (scoped_ty_def_body, env')
 ;;
 
@@ -799,7 +837,7 @@ let scope_type_def ctx env ty_def =
           param_vname Env.ScopeInformation.TBI_builtin_or_var accu_env)
       env_with_type
       ty_def_descr.Parsetree.td_params in
-  (* Now scope de definition's body. *)
+  (* Now scope the definition's body. *)
   let (scoped_body, env_from_def) =
     scope_type_def_body ctx env_with_params env
       ty_def_descr.Parsetree.td_body in

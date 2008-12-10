@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.68 2008-12-01 12:28:21 weis Exp $ *)
+(* $Id: lexer.mll,v 1.69 2008-12-10 08:59:17 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -91,6 +91,7 @@ let keyword_table = Hashtbl.create 42;;
 
 List.iter
  (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok) [
+  "abstract", ABSTRACT;
   "alias", ALIAS;
   "all", ALL;
   "and", AND;
@@ -136,8 +137,10 @@ List.iter
   "prop", PROP;
   "property", PROPERTY;
   "prove", PROVE;
+  "public", PUBLIC;
   "qed", QED;
   "rec", REC;
+  "relational", RELATIONAL;
   "representation", REPRESENTATION;
   "Self", SELF;
   "signature", SIGNATURE;

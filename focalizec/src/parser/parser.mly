@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.116 2008-11-29 20:14:50 weis Exp $ *)
+(* $Id: parser.mly,v 1.117 2008-12-10 08:59:17 weis Exp $ *)
 
 open Parsetree;;
 
@@ -192,6 +192,7 @@ let mk_proof_label (s1, s2) =
 %token DOT
 
 /* Keywords */
+%token ABSTRACT
 %token ALL
 %token ALIAS
 %token AND
@@ -236,8 +237,10 @@ let mk_proof_label (s1, s2) =
 %token PROP
 %token PROPERTY
 %token PROVE
+%token PUBLIC
 %token QED
 %token REC
+%token RELATIONAL
 %token REPRESENTATION
 %token SELF
 %token SIGNATURE
@@ -392,19 +395,31 @@ define_type_param_comma_list:
 ;
 
 define_type_body:
-  | opt_doc PRIVATE define_type_body_simple
-/* FIXME: should be handled properly. */
-/*    { mk_doc $1 (TDB_private $3) } */
-    { mk_doc $1 (TDB_simple $3) }
-  | define_type_body_contents { $1 }
+  | opt_doc ABSTRACT define_type_body_private
+    { mk_doc $1 (TDB_abstract $3) }
+  | opt_doc PRIVATE define_type_body_private
+    { mk_doc $1 (TDB_private $3) }
+  | opt_doc RELATIONAL define_type_body_private
+    { mk_doc $1 (TDB_relational $3) }
+  | opt_doc PUBLIC define_type_body_contents
+    { mk_doc $1 (TDB_public $3) }
+  | define_type_body_contents
+    { mk (TDB_public $1) }
+;
+
+/* To be completed: should also have bindings. */
+define_type_body_private:
+  | define_type_body_contents
+    { $1 }
+;
 
 define_type_body_contents:
-  | opt_doc define_type_body_simple { mk_doc $1 (TDB_simple $2) }
-  | opt_doc define_type_body_external { mk_doc $1 (TDB_external $2) }
+  | opt_doc define_type_body_regular { mk_doc $1 (TDBS_regular $2) }
+  | opt_doc define_type_body_external { mk_doc $1 (TDBS_external $2) }
 ;
 
 define_type_body_external:
-  | INTERNAL define_type_body_simple_opt
+  | INTERNAL define_type_body_regular_opt
     opt_doc EXTERNAL external_expr_desc following_external_binding_list
      { mk { etdb_internal = $2;
             etdb_external = mk_doc $3 $5;
@@ -421,15 +436,15 @@ following_external_binding_list:
   | AND external_binding following_external_binding_list { $2 :: $3 }
 ;
 
-define_type_body_simple_opt:
+define_type_body_regular_opt:
   | { None }
-  | define_type_body_simple { Some $1 }
+  | define_type_body_regular { Some $1 }
 ;
 
-define_type_body_simple:
-  | ALIAS type_expr { mk (STDB_alias $2) }
-  | define_sum { mk (STDB_union $1) }
-  | define_product { mk (STDB_record $1) }
+define_type_body_regular:
+  | ALIAS type_expr { mk (RTDB_alias $2) }
+  | define_sum { mk (RTDB_union $1) }
+  | define_product { mk (RTDB_record $1) }
 ;
 
 define_sum:
