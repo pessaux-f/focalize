@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.145 2008-12-09 14:46:23 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.146 2008-12-10 16:08:08 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -189,43 +189,11 @@ let generate_def_dependency_equivalence ctx generated_fields from name =
      generator. *)
   let memory = find_compiled_field_memory name generated_fields in
   (* We first instanciate the parameters corresponding to the carriers types 
-     of species parameters and appearing in the method's type. *)
-  List.iter
-    (fun species_param_type_name ->
-      (* Because species parameters' carriers are mapped to "_p_" + the
-         species parameter's name + "T", we must apply the definition to
-         arguments folowing this naming scheme. *)
-      Format.fprintf out_fmter "@ _p_%a_T"
-        Parsetree_utils.pp_vname_with_operators_expanded
-        species_param_type_name)
-    memory.Misc_common.cfm_used_species_parameter_tys ;
-  (* Now apply the abstracted methods from the species params we depend on. *)
-  List.iter
-    (fun (species_param, (Env.ODFP_methods_list meths_from_param)) ->
-      (* Recover the species parameter's name. *)
-      let species_param_name =
-        match species_param with
-         | Env.TypeInformation.SPAR_in (n, _, _) -> n
-         | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
-             Parsetree.Vuident n in
-      let prefix =
-        Parsetree_utils.name_of_vname species_param_name in
-      List.iter
-        (fun (meth, _) ->
-          Format.fprintf out_fmter "@ _p_%s_%a"
-            prefix Parsetree_utils.pp_vname_with_operators_expanded
-            meth)
-        meths_from_param)
-    memory.Misc_common.cfm_dependencies_from_parameters ;
-  (* And finally, apply to the methods from ourselves we depend on. *)
-  List.iter
-    (fun dep_name ->
-      if dep_name = (Parsetree.Vlident "rep") then
-        Format.fprintf out_fmter "@ abst_T"
-      else
-        Format.fprintf out_fmter "@ abst_%a"
-          Parsetree_utils.pp_vname_with_operators_expanded
-          dep_name)
+     of species parameters and appearing in the method's type, then the
+     abstracted methods from the species params we depend on. *)
+  Species_record_type_generation.generate_method_lambda_lifted_arguments
+    out_fmter memory.Misc_common.cfm_used_species_parameter_tys
+    memory.Misc_common.cfm_dependencies_from_parameters
     memory.Misc_common.cfm_coq_min_typ_env_names
 ;;
 
@@ -235,6 +203,7 @@ let generate_def_dependency_equivalence ctx generated_fields from name =
     donc les abstractions dues aux types des paramètres d'espèce, puis
     aux méthodes des paramètres d'espèce dont on dépend, puis enfin aux
     méthodes de nous-mêmes dont on dépend.
+    En cas de non-Section, on met l'espace de séparation AVANT.
 
   Args:
     - [~in_section] : True when this function is called to generate abstractions
@@ -2260,6 +2229,44 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
 
 
 
+let generate_termination_proof ctx print_ctx env name
+    ai
+    sorted_deps_from_params generated_fields (* Only needed for "prelude". *)
+    recursive_calls =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  Format.fprintf out_fmter "@[<2>Theorem %a_termination"
+    Parsetree_utils.pp_vname_with_operators_expanded name ;
+  (* Generate the lambda-lifts for our dependencies. *)
+  let (abstracted_methods, new_ctx, new_print_ctx) =
+    generate_field_definifion_prelude
+      ~in_section: false ctx print_ctx env ai.Abstractions.ai_min_coq_env
+      ai.Abstractions.ai_used_species_parameter_tys
+      sorted_deps_from_params generated_fields in
+  Format.fprintf out_fmter "@ :@[@ " ;
+  (* Generate the statement of the theorem representing the termination proof
+     obligation. *)
+  let explicit_order =
+    Some
+      (name, ai.Abstractions.ai_used_species_parameter_tys,
+       sorted_deps_from_params, abstracted_methods) in
+  Rec_let_gen.generate_termination_lemmas
+    new_ctx new_print_ctx env ~explicit_order recursive_calls ;
+  (* Alway end by the obligation of well-formation of the order. *)
+  Format.fprintf out_fmter "@ (well_founded (%a_wforder"
+    Parsetree_utils.pp_vname_with_operators_expanded name ;
+  (* Apply the order to its arguments due to lambda-lifts. *)
+  Species_record_type_generation.generate_method_lambda_lifted_arguments
+    out_fmter ai.Abstractions.ai_used_species_parameter_tys
+    sorted_deps_from_params abstracted_methods ;
+  Format.fprintf out_fmter ")).@]@\n@\n" ;
+  (* Now, manage the proof of this termination theorem. *)
+  (* [Unsure] TODO. *)
+  Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\n" ;
+  Format.fprintf out_fmter "Qed.@]@\n"
+;;
+
+
+
 let generate_defined_recursive_let_definition ctx print_ctx env
     generated_fields from name params scheme body opt_term_pr ai =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -2314,10 +2321,16 @@ let generate_defined_recursive_let_definition ctx print_ctx env
          generate_termination_order
            ctx' print_ctx env name params_with_type ai sorted_deps_from_params
            generated_fields opt_term_pr ;
+       (* Compute the recursive calls information to generate the termination
+          proof obligation. *)
+       let recursive_calls =
+         Recursion.list_recursive_calls name params_with_type [] body_expr in
        (* Generate the termination proof. *)
-(* [Unsure] A faire.
-       generate_termination_proof ctx' print_ctx env ... ; *)
-
+(* [Unsure] *)
+       if (Configuration.get_experimental ()) then
+       generate_termination_proof ctx' print_ctx env name
+         ai sorted_deps_from_params generated_fields recursive_calls ;
+       (* Start the "Section" containing the definition of the "Function". *)
        Format.fprintf out_fmter "@[<2>Section %a.@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name ;
        (* Now, generate the prelude of the only method introduced by
@@ -2338,18 +2351,8 @@ let generate_defined_recursive_let_definition ctx print_ctx env
        Format.fprintf out_fmter "%a -> %a -> Prop.@]@\n"
          (print_types_as_tuple_if_several new_print_ctx) params_with_type
          (print_types_as_tuple_if_several new_print_ctx) params_with_type ;
-
-
-
-
-
-
        (* We now prove that this order is well-founded. *)
        Types.purge_type_simple_to_coq_variable_mapping () ;
-       (* Compute the recursive calls information to generate the termination
-          proof obligation. *)
-       let recursive_calls =
-         Recursion.list_recursive_calls name params_with_type [] body_expr in
        (* The Variable representing the termination proof obligation... *)
        Format.fprintf out_fmter
          "@[<2>Variable __term_obl :" ;
@@ -2358,7 +2361,7 @@ let generate_defined_recursive_let_definition ctx print_ctx env
           conjunction of all of them. And the latest one will be used to add
           the final "well_founded __term_order" to this big conjunction. *)
        Rec_let_gen.generate_termination_lemmas
-         new_ctx new_print_ctx env recursive_calls ;
+         new_ctx new_print_ctx env ~explicit_order: None recursive_calls ;
        (* Alway end by the obligation of well-formation of the order. *)
        Format.fprintf out_fmter "@ (well_founded __term_order).@]@\n@\n" ;
        (* Generate the recursive uncurryed function *)
@@ -3065,43 +3068,22 @@ let generate_collection_generator ctx env compiled_species_fields
         field_memory.Misc_common.cfm_method_name ;
       (* Now, apply the method generator to each of the extra arguments induced
          by the various lambda-lifting we previously performed.
-         First, the species parameters carriers we used. *)
-      List.iter
-        (fun species_param_type_name ->
-          Format.fprintf out_fmter "@ _p_%a_T"
-            Parsetree_utils.pp_vname_with_operators_expanded
-            species_param_type_name)
-        field_memory.Misc_common.cfm_used_species_parameter_tys ;
-      (* Next, the extra arguments due to the species parameters methods we
+         First, the species parameters carriers we used.
+         Next, the extra arguments due to the species parameters methods we
          depends on. Here we will not use them to lambda-lift them this time,
          but to apply them ! The name used for application is formed according
          to the same scheme we used at lambda-lifting time:
          "_p_" + species parameter name + "_" + called method name. *)
-      List.iter
-        (fun (species_param, (Env.ODFP_methods_list meths_from_param)) ->
-          (* Recover the species parameter's name. *)
-          let species_param_name =
-            match species_param with
-             | Env.TypeInformation.SPAR_in (n, _, _) -> n
-             | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
-                 Parsetree.Vuident n in
-          (* We don't care here about whether the species parameters is "IN"
-             or "IS". *)
-          let prefix =
-            "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
-            "_" in
-          List.iter
-            (fun (meth, _) ->
-              (* Don't print the type to prevent being too verbose. *)
-              Format.fprintf out_fmter "@ %s%a"
-                prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
-            meths_from_param)
+      Species_record_type_generation.generate_method_lambda_lifted_arguments
+	out_fmter
+        field_memory.Misc_common.cfm_used_species_parameter_tys
         field_memory.Misc_common.cfm_dependencies_from_parameters
 (* [Unsure] Euh, tiens, avant on appliquait aussi aux trucs de
    Misc_common.cfm_coq_min_typ_env_names. Ce ne serait pas un oubli ici ?
 En fait, non, je ne pense pas car on est dans le cas où la méthode n'est
 pas inheritée, donc dans la version courante de la méthode, on a déjà
 traité les methodes de nous dont on dépend... *)
+        []
       end)
     else
       (begin

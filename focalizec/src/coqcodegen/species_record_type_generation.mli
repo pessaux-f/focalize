@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.14 2008-10-24 10:42:28 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.15 2008-12-10 16:08:08 pessaux Exp $ *)
 
 
 type self_methods_status =
@@ -30,6 +30,12 @@ val make_Self_cc_binding_rf_T :
 val make_Self_cc_binding_species_param :
   current_species: Parsetree.qualified_species -> Parsetree.vname ->
     (Types.type_collection * (string * Types.collection_carrier_mapping_info))
+
+val generate_method_lambda_lifted_arguments :
+  Format.formatter -> Parsetree.vname list ->
+    (Env.TypeInformation.species_param *
+     Env.ordered_methods_from_params) list ->
+       Parsetree.vname list -> unit
 
 val generate_pattern :
   Context.species_compil_context -> Env.CoqGenEnv.t -> Parsetree.pattern -> unit

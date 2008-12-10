@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.13 2008-11-17 10:53:57 pessaux Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.14 2008-12-10 16:08:08 pessaux Exp $ *)
 
 
 
@@ -406,7 +406,18 @@ let generate_exprs_as_tuple ctx env exprs =
 
 
 
-let generate_termination_lemmas ctx print_ctx env recursive_calls =
+(** [explicit_order] : Serves to use this function for both the code generation
+    in the Section of the recursive function and outside.
+    In the first case, the order is represented by a Variable ("__term_order")
+    with no need to apply any argument since abstractions are done by Variables
+    in the Section.
+    In the second case, the order is the really defined one and is called by
+    function's name + "_wforder". In this second case, since we manage
+    ourselves explicitely the abstractions and we are not in a Section, we must
+    explicitely apply the order to the stuff it needs due to extra arguments
+    induced by the various dependencies. *)
+let generate_termination_lemmas ctx print_ctx env ~explicit_order
+    recursive_calls =
   let out_fmter = ctx.Context.scc_out_fmter in
   List.iter
     (fun (n_exprs, bindings) ->
@@ -450,8 +461,19 @@ let generate_termination_lemmas ctx print_ctx env recursive_calls =
               Format.fprintf out_fmter "@]) ->@ ")
         bindings ;
       (* Now, generate the expression that telling the decreasing applying
-         the "__term_order" Variable. *)
-      Format.fprintf out_fmter "__term_order@ " ;
+         the "__term_order" Variable or the really defined order if we were
+         provided one by the argument [~explicit_order] with its arguments to
+         apply due to lambda-liftings. *)
+      (match explicit_order with
+       | None ->
+           Format.fprintf out_fmter "__term_order@ "
+       | Some (fun_name, ai, sorted_deps_from_params, abstracted_methods) ->
+           Format.fprintf out_fmter "(%a_wforder"
+             Parsetree_utils.pp_vname_with_operators_expanded fun_name ;
+           Species_record_type_generation.generate_method_lambda_lifted_arguments
+             out_fmter ai sorted_deps_from_params abstracted_methods ;
+           Format.fprintf out_fmter ")@ ") ;
+      (* Now, generate the arguments to provide to the order. *)
       generate_exprs_as_tuple ctx env rec_args ;
       Format.fprintf out_fmter "@ " ;
       (* Generate a tuple of all the variables. *)

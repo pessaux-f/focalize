@@ -11,7 +11,50 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.69 2008-12-05 09:29:23 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.70 2008-12-10 16:08:08 pessaux Exp $ *)
+
+
+
+let generate_method_lambda_lifted_arguments out_fmter
+    used_species_parameter_tys sorted_deps_from_params abstracted_methods =
+  (* We first instanciate the parameters corresponding to the carriers types of
+     species parameters and appearing in the method's type *)
+  List.iter
+    (fun n ->
+      Format.fprintf out_fmter "@ _p_%a_T"
+        Parsetree_utils.pp_vname_with_operators_expanded n)
+    used_species_parameter_tys ;
+  (* Now apply the abstracted methods from the species params we depend on. *)
+  List.iter
+    (fun (sparam, (Env.ODFP_methods_list meths)) ->
+      (* Recover the species parameter's name. *)
+      let species_param_name =
+        match sparam with
+         | Env.TypeInformation.SPAR_in (n, _, _) -> n
+         | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
+             Parsetree.Vuident n in
+      (* Each abstracted method will be named like "_p_", followed by the
+         species parameter name, followed by "_", followed by the method's
+         name.
+         We don't care here about whether the species parameters is "in" or
+         "is". *)
+      let prefix =
+        "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
+      List.iter
+        (fun (meth, _) ->
+          Format.fprintf out_fmter "@ %s%a"
+            prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
+        meths)
+    sorted_deps_from_params ;
+  (* And finally, apply to the methods from ourselves we depend on. *)
+  List.iter
+    (fun n ->
+      if n = Parsetree.Vlident "rep" then Format.fprintf out_fmter "@ abst_T"
+      else
+        Format.fprintf out_fmter "@ abst_%a"
+          Parsetree_utils.pp_vname_with_operators_expanded n)
+    abstracted_methods
+;;
 
 
 
