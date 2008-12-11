@@ -10,16 +10,16 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.5 2008-11-13 16:28:13 pessaux Exp $
+# $Id: Makefile,v 1.6 2008-12-11 15:56:36 hardin Exp $
 
 ROOT_DIR = ..
 
 include $(ROOT_DIR)/Makefile.config
 
-TEX_FILES = macros.tex basic_concepts.tex core_lang.tex motivations.tex \
+TEX_FILES = macros.tex basic_concepts.tex lexical_conventions.tex motivations.tex \
 	proofs.tex building_species.tex macros.tex output.tex refman.tex \
 	compiler_opts.tex more_on_meths.tex pres_requir.tex \
-	constructs_syntax.tex
+	constructs_syntax.tex bibli.bib 
 
 
 include $(ROOT_DIR)/Makefile.common
@@ -27,6 +27,7 @@ include $(ROOT_DIR)/Makefile.common
 all:: $(TEX_FILES)
 	latex refman.tex
 	makeindex refman
+	bibtex refman
 	latex refman.tex
 	dvipdf refman.dvi
 
