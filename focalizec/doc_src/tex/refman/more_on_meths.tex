@@ -1,4 +1,4 @@
-% $Id: more_on_meths.tex,v 1.6 2008-12-05 12:54:00 pessaux Exp $
+% $Id: more_on_meths.tex,v 1.7 2008-12-11 10:48:24 hardin Exp $
 
 
 
@@ -52,7 +52,7 @@ recursive although it was not the case where each of them was
 {\bf defined}.
 
 To avoid this situation, we will say that a species is well-formed if
-and only if, one inheritance is resolved, no method initially not
+and only if, once inheritance is resolved, no method initially not
 recursive turn to become recursive. The \focal\ compiler performs this
 analysis and rejects any species that is not compliant to this
 criterion. In the above example, an error would be raised, explaining
@@ -72,11 +72,11 @@ for the following dependent fields: m1 -> m0.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Def-dependencies on the carrier}
-\label{def-dep-on-carrier}
-\index{dependency!def!on carrier}
+\subsection{Def-dependencies on the representation}
+\label{def-dep-on-representation}
+\index{dependency!def!on representation}
 As we previously said (c.f. \ref{def-dependency}) def-dependencies on
-the carrier are not allowed in properties and theorems. The reason
+the representation are not allowed in properties and theorems. The reason
 comes from the need to create consistent species interfaces. Let's
 consider the following species with the definitions:
 {\scriptsize
@@ -91,16 +91,16 @@ end ;;
 }
 
 The statement of {\tt inc\_spec} contains a def-dependency on the
-carrier since to typecheck this statement, one need to know that the
-carrier is assigned type {\tt int}. To create the species' interface,
-we must make the carrier abstract, hence hiding the fact is it
-represented by {\tt int}. Without this information it it now
-impossible to typecheck an expression using {\tt inc\_spec} since it
+representation since to typecheck this statement, one need to know that the
+representation is  {\tt int}. To create the species' interface,
+we must make the representation abstract, hence hiding the fact that
+it is {\tt int}. Without this information it it now
+impossible to typecheck  {\tt inc\_spec}  body since it
 makes explicit reference to {\tt +}, {\tt <=}, {\tt 1} that are
 operations about {\tt int}.
 
 In practice, such an error is reported as a typechecking error telling
 that {\tt representation} ``is not compatible with type'' {\tt t} where {\tt t}
-is the type expression that was assigned to the carrier (i.e.
+is the type expression that was assigned to the representation (i.e.
 {\tt int} in 
 our example).

@@ -1,4 +1,4 @@
-% $Id: core_lang.tex,v 1.11 2008-12-05 12:54:00 pessaux Exp $
+% $Id: core_lang.tex,v 1.12 2008-12-11 10:48:24 hardin Exp $
 
 
 
@@ -30,7 +30,7 @@ Comments (possibly spanning) on several lines are introduced by the
 two characters {\tt (*}, with no intervening blanks, and terminated by
 the characters {\tt *)}, with no intervening blanks. Comments are
 treated as blanks. Comments can occur inside string or character
-literals and can be nested. They are discarding during the compilation
+literals and can be nested. They are discarded during the compilation
 process. Example:
 {\scriptsize
 \begin{lstlisting}
@@ -67,13 +67,13 @@ end ;;
 Documentations are introduced by the three characters {\tt (**},
 with no intervening blanks, and terminated by the two characters
 {\tt *)}, with no intervening blanks.
-Documentation cannot occur inside string or character literals and
-cannot be nested. They must precede entities they document. This
+Documentations cannot occur inside string or character literals and
+cannot be nested. They must precede the construct  they document. This
 especially means that a
-{\bf source file cannot ends by a documentation} otherwise a syntax
+{\bf source file cannot end by a documentation} otherwise a syntax
 error will be issued.
 
-Conversely to comments, they are kept during the compilation process
+Unlike comments, documentations are kept during the compilation process
 and recorded in the compilation information (``.fo'' files). They can
 be processed by the external documentation tool \focdoc\ provided with
 the \focal\ development environment. Several documentations can be put
@@ -139,9 +139,9 @@ spaces inside or extend the notion of operator identifiers.
     {\tt ``equal is reflexive''}, {\tt ``fermat conjecture''}.
   \item {\bf Infix/prefix operators}.
     \index{identifier!operator}\index{operator}
-    \focal allows infix and prefix operators built from a
+    \focal\ allows infix and prefix operators built from a
     ``starting operator character'' and followed by a sequence of
-    regular identifier or operators characters. For example, all the
+    regular identifiers or operator characters. For example, all the
     following are legal operators: 
     {\tt +}, {\tt ++}, {\tt $\sim$+zero}, {\tt =\_mod\_5}.
 
@@ -227,10 +227,10 @@ let ( =-one ) (x, y) = ... ;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Species, collections names}
-\index{species!name}
-As previously introduced, species and collections names are
-capitalized (non-extended) identifiers.
+\subsection{Species and collection names}
+\index{species!name} As previously introduced, species, collection
+names and collection parameters are capitalized, non-extended
+identifiers.
 
 
 
@@ -261,7 +261,7 @@ unsigned\_decimal\_literal & ::= &
 unsigned\_hexadecimal\_literal & ::= &
   \terminal{0} \{ \terminal{x} \mid \terminal{X} \}
   \ hexadecimal\_digit\ \{ hexadecimal\_digit \mid \terminal{\_} \}* & \\
-unsigned\_integer_literal & ::= & unsigned\_binary\_literal \\
+unsigned\_integer\_literal & ::= & unsigned\_binary\_literal \\
 & & \mid unsigned\_octal\_literal & \\
 & & \mid unsigned\_decimal\_literal \\
 & & \mid unsigned\_hexadecimal\_literal & \\
@@ -294,7 +294,7 @@ Here are various examples of integers in various bases:
 String literals are sequences of any characters delimited by {\tt "}
 (double quote) characters ({\em ipso facto} with no intervening
 {\tt"}). 
-Escape sequences (meta code to insert characters that can't appears
+Escape sequences (meta code to insert characters that can't appear
 simply in a string) available in string literals are summarised in the
 table below:
 
@@ -351,7 +351,7 @@ table below:
 \subsection{Character literals}
 \label{character literals}
 \label{hexadecimal}
-Characters literals are one character enclosed between 2 ``{\tt '}''
+Characters literals are composed of one character enclosed between 2 ``{\tt '}''
 (quote) characters. Example: {\tt 'a'}, {\tt '?'}.
 Escape sequences (meta code to insert characters that can't appears
 simply in a character literal) must also be enclosed by
@@ -397,10 +397,10 @@ quotes. Available escape sequences are summarised in the table below:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Floating-point numbers literals}
+\subsection{Floating-point number literals}
 \begin{syntax}
 \syntaxclass{Float literals:}
-decimal_literal & ::= & sign?\ unsigned\_decimal\_literal & \\
+decimal\_literal & ::= & sign?\ unsigned\_decimal\_literal & \\
 hexadecimal\_literal & ::= & sign?\ unsigned\_hexadecimal\_literal & \\
 scientific\_notation & ::= & \terminal{e} \mid \terminal{E} & \\
 unsigned\_decimal\_float\_literal & ::= & unsigned\_decimal\_literal & \\
@@ -465,26 +465,27 @@ depth of the bullet and the second part stands for its name. Example:
 \index{name!resolution}
 \index{name!qualification}
 Each compilation unit (i.e. source file) is considered as a kind of
-module. Any definition done at ``toplevel'', in other words, outside
-species and collections is visible all along the source file since its
-apparition. As previously described (\ref{toplevel-def}) this includes
-species, collection, type definitions (and their constitutive elements
+module. Any toplevel-definition (thus outside
+species and collections) is visible all along the source file since its
+apparition. As previously described (\ref{toplevel-def})
+toplevel-definitions  include
+species, collections, type definitions (and their constitutive elements
 like constructors, record fields), ``toplevel'' theorems and
 ``toplevel'' functions.
 
-If such a definition is required by another compilation unit, it can
-be reached by {\bf qualifying} it's name, i.e. making explicit the
+If a toplevel-definition is required by another compilation unit, it can
+be reached by {\bf qualifying} its name, i.e. making explicit the
 compilation unit's name before the definition's name using the '\#'
 character as delimiter. Examples:
 
 \begin{itemize}
   \item {\tt basics\#string} stands for the type definition of
-    {\tt string} coming from the source file ``basics.foc''.
+    {\tt string} coming from the source file ``basics.fcl''.
   \item {\tt  basics\#Basic\_object} stands for the species
-    {\tt Basic\_object} defined in the source file ``basics.foc''.
+    {\tt Basic\_object} defined in the source file ``basics.fcl''.
   \item {\tt db\#My\_db\_coll!create} stands for the method
     {\tt create} of a collection {\tt My\_db\_coll} hosted in the
-    source file ``db.foc''.
+    source file ``db.fcl''.
 \end{itemize}
 
 \index{directive!open}
@@ -506,7 +507,7 @@ species S inherits Basic_object = ... end ;;
 \end{lstlisting}
 }
 
-After an {\tt open} directive, the definitions of loaded interface are
+After an {\tt open} directive, the definitions of loaded interfaces are
 added in head of the current scope and mask the ones already existing
 and wearing the same names. For example, in the following program:
 {\scriptsize

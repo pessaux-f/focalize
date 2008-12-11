@@ -1,24 +1,67 @@
-% $Id: motivations.tex,v 1.2 2008-11-17 15:39:03 pessaux Exp $
+% $Id: motivations.tex,v 1.3 2008-12-11 10:48:24 hardin Exp $
 
 
 
 The \focal\ project was launched in 1998 by T. Hardin and R. Rioboo
-\cite{HardinRiobooTSI04} with the 
-objective of helping all stages of development of critical software
-within safety and security framework, at least when formal methods are
-required or chosen. The idea was to elaborate a development
-environment able to provide high-level and justified confidence to
-users. One the other hand, this system had to remain easy to use by
-well-trained engineers.
+\cite{HardinRiobooTSI04} \footnote{They were members of the SPI (Semantics, Proofs,
+Implementations) team of the LIP6 (Lab. Informatique de Paris 6)
+at Universit\'e Pierre et Marie Curie (UMPC), Paris}
+ with the 
+objective of helping all stages of  development of critical software
+within safety and security domains. The  methods used in these domains are evolving,
+ad-hoc and empirical approaches  being replaced by more formal
+methods. For example, for high levels of safety, formal models of the
+requirement/specification phase are more and more considered as they
+allow mechanized proofs, test or static analysis of the required
+properties.  In the same way, high level assurance in system security asks for
+the use of true formal methods along the process of software
+development and is often required for the specification level.
+Thus  the project was to elaborate an Integrated
+Development Environment (IDE) able to provide high-level and justified confidence to
+users, but remaining easy to use by well-trained engineers.
 
-Currently, \focal\ can be seen as still a prototype of an Integrated
-Development Environment (IDE), for a language providing high level
+To ease developing high integrity systems with numerous software
+components, an Integrated Development Environment (IDE) should provide
+tools to formally express specifications, to describe design and
+coding and to ensure that specification requirements are met by the
+corresponding code. This is not
+enough. First, standards of critical systems ask for pertinent
+documentation which has to be maintained along all the revisions
+during the system life cycle. Second, the evaluation conformance
+process of software is by nature a sceptical analysis. Thus, any proof
+of code correctness must be easily redone at request and traceability
+must be eased. Third, design
+and coding are difficult tasks. Research in software engineering has
+demonstrated the help provided by some object-oriented 
+features as inheritance, late binding and early research works on
+programming languages have pointed out the importance of abstraction
+mechanism such as modularity to help invariant maintaining. There are
+a lot of other points which should also be considered when designing
+an IDE for safe and/or secure systems to ensure conformance with high
+Evaluation Assurance or Safety Integrity Levels (EAL-5,7 or SIL 3,4)
+and to ease the evaluation process according to various standards
+(e.g. IEC61508, CC, ...): handling of non-functional contents of
+specification, handling of dysfunctional behaviors and vulnerabilities
+from the true beginning of development and fault avoidance, fault
+detection by validation testing, vulnerability and safety analysis.
+
+Currently, \focal\  can be seen as an IDE still in development, which attempts
+to give a positive solution to the three requirements identified above,
+the other items being currently under consideration.
+ It provides
+means for the developers to formally express their specifications and
+to go step by step (in an incremental approach) to design and
+implementation while proving that
+such an implementation meets its specification or design
+requirements. Its language offers  high level
 mechanisms such as inheritance, late binding, redefinition,
-parametrization, etc.  Confidence in proofs submitted by developers
-relies on formal proof verification.
+parametrization, etc.  Confidence in proofs submitted by developers or
+automatically done 
+relies on formal proof verification.  It also provides some automation of documentation
+production and management. 
 
-This support language was formally described and designed to provide
-means for formal specification by declaring names and
+A formal specification can be built by declaring names of functions
+and values and introducing
 properties. Then, design and implementation can incrementally be done
 by adding definitions of functions and proving that the implementation
 meets the specification or design requirements. Thus, developing in
@@ -33,3 +76,30 @@ specification stage while the lower ones correspond to
 implementation. Each node of the hierarchy corresponds to a progress
 toward a complete implementation.  We call here {\em refinement} the
 process of building a top-down hierarchy.
+
+\focal\ semantics was initially specified in \coq, which brings a
+satisfactory confidence in the language's correctness\cite{BoulmePhD00}. On the other
+side, the correction of the compiler against \focal's semantics is
+proved (by hand) \cite{TPHOL2002,TLCA2005,PrevostoJAR02}.
+
+
+\focal\ has already been used to develop huge examples. In fact, when
+the project was launched, only one specific domain was considered, the
+one of Computer Algebra. Algorithms used in this domain can be rather
+intricated and difficult to test and this is not rare that computer
+algebra systems issue a bad result, due to semantical flaws, compiler
+anomalies, etc.  Thus, Rioboo~\cite{ } developed a huge a computer algebra
+library, which  offers  full specification
+and implementation of usual algebraic structures up to multivariate
+polynomial rings with complex algorithms.  The point was to measure
+how \focal\ can help to render mathematical specifications and also to
+measure efficiency of the produced code. Such a library is very useful
+when formalising the algebra of access control models (another huge
+example) using
+implementations of orderings, lattices and boolean
+algebras\cite{fcsarspa06,MorissetPhd}. \focal{} was also very
+successfully used to formalize airport security
+regulations~\cite{EDEMOI-All}.
+
+
+

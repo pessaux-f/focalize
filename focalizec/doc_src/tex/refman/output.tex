@@ -1,11 +1,11 @@
-% $Id: output.tex,v 1.3 2008-11-28 11:20:40 pessaux Exp $
+% $Id: output.tex,v 1.4 2008-12-11 10:48:24 hardin Exp $
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Output}
-As we will see further, a \focal\ development contains both
+\subsection{Outputs}
+A \focal\ development contains both
 ``computational code'' (i.e. code performing operations that lead to
 an effect, a result) and logical properties.
 
@@ -49,10 +49,10 @@ program involves several steps:
   \item {\bf \focal\ source compilation}. This step takes the \focal\
     source code and generates the \ocaml\ and/or ``pre-''\coq\ code.
     You can disable the code generation for one of these languages
-    (see \ref{compiler-options}), or both, in this case, no code is
+    (see page \ref{compiler-options}), or both, in this case, no code is
     produced and you only get the \focal\ object code produced without
     anymore else output and the process ends at this point. If you
-    disable one of the target language, then you won't get any
+    disable one of the target languages, then you won't get any
     generated file for it, hence no need to address its related
     compilation process described below.
 
@@ -72,14 +72,14 @@ program involves several steps:
     \ocaml\ code (it is an \ocaml\ source file) and compile it. This
     is done like any regular \ocaml\ compilation, the only difference
     is that you must provide to it a search path containing the
-    \focal\ installation path and you own used extra \focal\ source
+    \focal\ installation path and your own used extra \focal\ source
     files directories.
     \begin{verbatim}
 ocamlc -c -I/usr/local/lib/focalize -I mylibs
    -I myotherlibs source.ml
     \end{verbatim}
     This will produce the \ocaml\ object file {\tt source.cmo}. Do
-    this for each of you generated \ocaml\ files. The last action is
+    this for each of your generated \ocaml\ files. The last action is
     to make the final link, providing the same search path than above
     and the {\tt .cmo} files corresponding to all the generated
     \ocaml\ files from all your \focal\ {\tt .foc} files. You also
@@ -117,14 +117,14 @@ ocamlc -I mylibs -I myotherlibs
     \begin{center}
       {\tt zvtov -new source1.zv}
     \end{center}
-    For more about the \zenon options, consult section
+    For more about the \zenon\ options, consult section
     \ref{zenon_options}.
 
   \item{\bf \coq\ code compilation}. This step takes the generated
-    {\tt .v} code and compile it with \coq. This is done like any
+    {\tt .v} code and compiles it with \coq. This is done like any
     regular \coq\ compilation, the only difference is that you must
     provide to it a search path containing the \focal\ installation
-    path and you own used extra \focal\ source files directories.
+    path and your own used extra \focal\ source files directories.
     \begin{verbatim}
 coqc -I/usr/local/lib/focalize -I mylibs
   -I myotherlibs source.v

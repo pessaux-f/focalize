@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.14 2008-12-05 12:54:00 pessaux Exp $
+% $Id: compiler_err_msgs.tex,v 1.15 2008-12-11 10:48:24 hardin Exp $
 
 
 
@@ -33,7 +33,7 @@ current version.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Invalid file extension for '$name$'.}
 {\em Description}: The \focal\ compiler expects input files to be
-ended by the suffix ``.foc''. If the submitted input file doesn't end
+ended by the suffix ``.fcl''. If the submitted input file doesn't end
 by this suffix, this error message arises with the name, $name$ of the
 involved file.
 
@@ -95,9 +95,9 @@ character $str$ follows in the error message.
 the program doesn't follow \focal's syntax.
 
 {\em Hints}: Change the source code at the indicated location. It
-sometimes happen that the location gets fuzzy due to the parsing
-process. If the error is not immediate to you, think to have a look at
-around the specified location. If you still can't find out the error,
+sometimes happens that the location gets fuzzy due to the parsing
+process. If the error is not immediate to you, explore the neighbours of
+ the specified location. If you still can't find out the error,
 have the following emergency process: comment your code and
 incrementally uncomment it to find the point where the error appears
 without having to search in the whole file. Once the error appears,
@@ -175,8 +175,7 @@ the property $ident$ but this property was not found in the species.
 {\tt $/\setminus$} (logical ``and'') with at least one argument being a
 {\tt -> } (logical ``implication'') or a {\tt <->} (logical
 ``equivalence'') without parentheses around the $side$ argument (``left''
-or ``right''). Since this is not clear of how to associate, we prefer
-to asks the user to explicitly add parentheses.
+or ``right''). Since this is not clear of how to associate, we  ask the user to explicitly add parentheses.
 
 {\em Hints}: Explicitly add the parentheses to make the association
 non-ambiguous.
@@ -190,8 +189,7 @@ non-ambiguous.
 {\tt $\setminus/$} (logical ``or'') with at least one argument being a
 {\tt -> } (logical ``implication'') or a {\tt <->} (logical
 ``equivalence'') without parentheses around the $side$ argument (``left''
-or ``right''). Since this is not clear of how to associate, we prefer
-to asks the user to explicitly add parentheses.
+or ``right''). Since this is not clear of how to associate, we  ask the user to explicitly add parentheses.
 
 {\em Hints}: Explicitly add the parentheses to make the association
 non-ambiguous.
@@ -269,14 +267,14 @@ in the current scope.
 
 {\em Hints}: May be your species definition is missing or not
 reachable in the current scope (missing explicit qualification with
-the ``\#'' notation or {\tt open} directive if your type definition is
+the ``\#'' notation or {\tt open} directive if your species definition is
 hosted in another source file).
 
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Type name '$name$' already bound in the current scope}.
+\section*{Type name '$name$' already bound in the current scope}
 {\em Description}: In a source file it is not allowed to redefine a
 type definition. This means that each type name definition must be
 unique inside a file. However, it is possible to have several type
@@ -307,12 +305,11 @@ of explicit qualification by the ``\#'' notation).
 between two expressions $t_1$ and $t_2$ that were expected to be
 type-compatible.
 
-{\em Hints}: Source program to fix. This message sometimes involves
-one the the types being {\tt Self}. This is mostly due to an attempt
-to use the type structure of {\tt representation} although is turned abstracted
-by the collection or parametrisation mechanisms. In this case, ensure
-that you are not trying to make assumptions on the type {\tt Self} of
-a species parameter or a collection.
+{\em Hints}: Source program to fix. This is mostly due to an attempt
+to use the type of a {\tt representation} although it is turned
+abstracted by the collection or parametrisation mechanisms. In this
+case, ensure that you are not trying to make assumptions on the type
+ of a collection parameter or a collection.
 
 
 
@@ -364,8 +361,8 @@ method definition.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Sum type constructor '$name$' expected $n_1$ argument but
-  was used with $n_2$ argument.}
+\section*{Sum type constructor '$name$' expected $n_1$ arguments but
+  was used with $n_2$ arguments.}
 
 {\em Description}: The sum type constructor $name$ is used with a bad
 number of arguments. It was declared to use $n_1$ arguments but is
@@ -391,7 +388,7 @@ constructor's parameter in head of the definition.
 \section*{Method '$mname$' multiply defined in species '$sname$'.}
 
 {\em Description}: Like for toplevel definitions, method definitions
-inside a species must not bind several time the same name. In the
+inside a species must not bind several times the same name. In the
 species $sname$, the methode $mname$ is defined several times.
 
 {\em Hints}: Source program to fix. May be you defined several times
@@ -443,30 +440,30 @@ from a species having this property.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Carrier 'representation' is multiply defined.}
+\section*{Representation is multiply defined.}
 
-{\em Description}: In a species, the method {\tt representation} defining the
-carrier representation is multiply defined in the body of the species
-although at most one definition must be provided.
+{\em Description}: In a species, the method {\tt representation} is
+multiply defined in the body of the species although at most one
+definition must be provided.
 
 {\em Hints}: Source program to fix. Remove the spurious definitions.
 
-If the {\tt representation} field is not directly present in the
+If the {\tt representation} method is not directly present in the
 body, that is because the species inherits from a parent where the
 carrier is already defined. In this last case, since the parent's
-structure is already established, you must remove the {\tt representation} field
+structure is already established, you must remove the {\tt representation} method
 in the species where the error was reported.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Carrier 'representation'' is multiply defined by multiple inheritance and
-  was formerly found of type $t_1$ and newly found of type $t_2$}.
+\section*{Representation is multiply defined by multiple
+  inheritance and was formerly found of type $t_1$ and newly found of
+  type $t_2$}.
 
 {\em Description}: In the species, several parents brought by
-inheritance several incompatible definitions of the carrier
-{\tt representation}. The error message reports $t_1$ and $t_2$, two incompatible
-types found for the carrier definition.
+inheritance several incompatible definitions of the representation. The error message reports $t_1$ and $t_2$, two incompatible
+types found for the representation definition.
 
 {\em Hints}: None.
 
@@ -486,71 +483,71 @@ the current defined species.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{A "is" parameter can only be a collection identifier.}
+\section*{A "in" parameter can only be an identifier of a collection.}
 
 {\em Description}: In a species expression, a parametrised species by
 an entity parameter ({\tt in}-parameter) is provided an effective
 argument that is not a collection identifier.
 
 {\em Hints}: Source program to fix. Although an entity parameter
-denotes a {\bf value} (and not a {\bf species} like for
+denotes a {\bf value} (and not a {\bf collection} like for
 {\tt is}-parameters), this value must have the {\bf type} of a
-collection carrier. Hence in a species expression, a
+collection interface. Hence in a species expression, a
 {\tt in}-parameter) must be instantiated by a {\tt collection}
 identifier.
 
-
+{\color{red} revoir avec FP}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Species '$s_1$' is not a subspecies of '$s_2$'. In field
+\section*{Collection '$s_1$' is not compatible with '$s_2$'. In field
   '$name$', types $t_1$ and $t_2$ are not compatible.}
 
-{\em Description}: During species parameter instantiation, the
-provided species $s_1$ is not a subspecies of the expected species
-signature $s_2$, because it doesn't have a signature containing at
+{\em Description}: During collection parameter instantiation, the
+interface of the provided collection  $s_1$ is not compatible with the
+interface  $s_2$, because it doesn't have a signature containing at
 least $s_2$'s methods with compatibles types. The wrong field $name$
 is reported with the two types $t_1$ and $t_2$ expected and actually
 found.
 
 {\em Hints}: None.
 
-
+{\color{red} revoir avec FP}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Species '$s_1$' is not a subspecies of '$s_2$'. In field
+\section*{Collection '$s_1$' is not compatible with '$s_2$'. In field
   '$fname$', type $t_1$ occurs in $t_2$ and would lead to a cycle.}
 
-{\em Description}: During species parameter instantiation, the
-provided species $s_1$ is not a subspecies of the expected species
-signature $s_2$, since type compatibility check detected a cyclic
+{\em Description}: During collection parameter instantiation, the
+interface of the 
+provided collection  $s_1$ is not compatible with the interface $s_2$, since type compatibility check detected a cyclic
 type. This means that the type $t_1$ is a sub-part of itself via the
 type $t_2$.
 
 {\em Hints}: None.
 
 
-
+{\color{red} revoir avec FP}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Species '$s_1$' is not a subspecies of '$s_2$'. In field
+\section*{Collection  '$s_1$' is not compatible with '$s_2$'. In field
   '$fname$', the type constructor '$tname$' is used with the different
   arities $n_1$ and $n_2$.}
 
-{\em Description}: During species parameter instantiation, the
-provided species $s_1$ is not a subspecies of the expected species
-signature $s_2$, since the type constructor (not sum type constructor)
+{\em Description}:  During collection parameter instantiation, the
+interface of the 
+provided collection  $s_1$ is not compatible with the interface $s_2$, since the type constructor (not sum type constructor)
 $tname$ is used with an improper number of arguments $n_1$ versus
 $n_2$.
 
 {\em Hints}: None.
 
-
+{\color{red} revoir avec FP}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Species '$s_1$' is not a subspecies of '$s_2$'. Field '$name$'
+\section*{ Collection  '$s_1$' is not compatible with  '$s_2$'. Field '$name$'
   is not present in '$s_1$'.}
 
-{\em Description}: During species parameter instantiation, the
-provided species $s_1$ is not a subspecies of the expected species
-signature $s_2$, because it doesn't have a signature containing at
+{\em Description}:  During collection parameter instantiation, the
+interface of the 
+provided collection  $s_1$ is not compatible with the interface $s_2$, because it doesn't have a signature containing at
 least $s_2$'s methods and especially not the method $name$.
 
 {\em Hints}: None.
@@ -561,7 +558,7 @@ least $s_2$'s methods and especially not the method $name$.
 \section*{Species '$sname$' cannot be turned into a collection. Field
   '$fname$' is not defined.}
 
-{\em Description}: A collection is a completely defined species
+{\em Description}: A collection is built  out of a  completely defined species
 (c.f. \ref{collection}), i.e. a species where {\bf all} the methods
 are {\bf defined} and not only declared. In the species $sname$, the
 method $mname$ is only declared, hence the species is not complete and
@@ -576,7 +573,7 @@ writing it code or by inheritance, according to your program model.
 \section*{Species '$sname$' cannot be turned into a collection. Field
   '$fname$' does not have a termination proof.}
 
-{\em Description}: A collection is a completely defined species
+{\em Description}: A collection is built  out of a completely defined species
 (c.f. \ref{collection}), i.e. a species where {\bf all} the methods
 are {\bf defined} and in particular proofs of properties are
 done. This also applies to recursive functions which must have a
@@ -609,65 +606,7 @@ matching the function definition's ones.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Logical method '$mname$' appearing in species
-  '$sname_1$' should have the same statement than in the species
-  '$sname_2$' at $location$.} 
-{\em Description}: By inheritance, two properties or theorems are
-present with the same name $mname$ in a species but their statements
-are not the same. Since types of methods must be the same all along the
-inheritance tree and since the ``type'' of a logical method is its
-statement, the compiler reject the method.
-
-The question of how to say that two logical expressions are equal is
-in general undecidable. The compiler compares the syntactic structure
-of the statements modulo $\alpha$-conversion (i.e. if variables names
-differ consistently from one expression to the other, this is taken
-into account; this way, {\tt forall x y in Self, x = y} is considered
-as equal to {\tt forall foo t in Self, foo = t}).
-
-This comparison can appear too weak in some cases like:
-{\scriptsize
-\begin{lstlisting}
-property equal_transitive:
-  all x y z in Self,
-    (!equal(x, y) /\ !equal(y, z)) -> !equal(x, z) ;
-\end{lstlisting}
-}
-versus
-{\scriptsize
-\begin{lstlisting}
-  property equal_transitive:
-    all x y z in Self,
-      !equal (x, y) -> !equal (y, z) -> !equal (x, z) ;
-\end{lstlisting}
-}
-where $/\setminus$ in the first form is replaced by -$>$ in the
-second. The two versions of the property are equivalents, but beyond
-the current detection ability of the \focal\ compiler.
-
-
-{\em Hints}: Rewrite the two properties to make them syntactically
-equal.
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Method '$name$' was found with incompatible types during
-  inheritance. In species '$sname_1$': $t_1$, in species '$sname_2$':
-  $t_2$.}
-{\em Description}: By inheritance, two definitions and/or signatures
-are present with the same name $name$ in a species but their types are
-not the same. Since types of methods must be the same all along the
-inheritance tree, the compiler reject the method. The message points
-the two species, $sname_1$ and $sname_2$, hosting the method and the
-types, $t_1$ and $t_2$, found for each occurrence of this method.
-
-{\em Hints}: None.
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Species '$sname$' is not well-formed. Field '$name$' involves
+\section*{Species 'sname' is not well-formed. Field '$name$' involves
   a non-declared recursion for the following dependent fields: \ldots}
 
 {\em Description}: The species $sname$ doesn't respect the
@@ -738,7 +677,7 @@ definition.
   file '$file$'. Source file may have been compiled without OCaml code
   generation enabled.}
 
-{\em Description}: The \focal\ source file $file$.foc was compiled but
+{\em Description}: The \focal\ source file $file$.fcl was compiled but
 the object file doesn't contain information about \ocaml\ code
 generation. The \focal\ compiler allows to disable the \ocaml\ code
 production by the {\tt --no-ocaml-code} option. May be this option was used.
@@ -762,7 +701,7 @@ the {\tt --no-ocaml-code} option.
   '$file$'. Source file may have been compiled without Coq code
   generation enabled.}
 
-{\em Description}: The \focal\ source file $file$.foc was compiled but
+{\em Description}: The \focal\ source file $file$.fcl was compiled but
 the object file doesn't contain information about \coq\ code
 generation. The \focal\ compiler allows to disable the \coq\ code
 production by the {\tt --no-coq-code} option. May be this option was used.
@@ -773,7 +712,7 @@ the {\tt --no-coq-code} option.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Using a species parameter's method ($name$) in a Zenon proof
+\section*{Using a collection parameter's method ($name$) in a Zenon proof
   with "by definition" is not allowed.}
 
 {\em Description}: The current proof tries to used the definition of a

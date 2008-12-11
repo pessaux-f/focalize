@@ -1,7 +1,7 @@
-% $Id: refman.tex,v 1.32 2008-12-05 12:54:00 pessaux Exp $
+% $Id: refman.tex,v 1.33 2008-12-11 10:48:24 hardin Exp $
 
 \documentclass{report}
-\usepackage[francais]{babel}
+\usepackage[english]{babel}
 \usepackage{times}
 \usepackage[latin1]{inputenc}
 \usepackage{color}
@@ -43,23 +43,69 @@
 \begin{center}
 {\Huge \textbf{\focal\ Reference Manual}}
 \end{center}
+
+
 \begin{center}
-{\LARGE \textbf{Version 0.00000001 modulo $\epsilon$}} \\
+{\LARGE \textbf{Version 1} }
+
 \smallskip
-{\LARGE \textbf{November, 2008}} \\
+
+{\LARGE \textbf{December 2008}} 
 \end{center}
 
 \vspace{3cm}
 
 \begin{center}
-{\Large \textbf{The \focal\ development team}} \\
-\mbox{} \vspace{2cm} \\
-{\Large \textbf{Conservatoire National des Arts et M\'etiers (CNAM)}} \\
-\mbox{} \\
-{\Large \textbf{Institut National de Recherche en Informatique et Automatique (INRIA)}} \\
-\mbox{} \\
-{\Large \textbf{Laboratoire d'Informatique de Paris 6 (LIP6) - SPI team}}
+{\Large \textbf{The \focal\  team}} 
+\mbox{} \vspace{2cm}
 \end{center}
+
+\bigskip
+
+{\large\em Philippe Ayrault (SPI-LIP6), William Bartlett (CPR-CEDRIC), Julien
+Blond(SPI-LIP6), Sylvain Boulm\'e (SPI-LIP6), Matthieu Carlier
+(CPR-CEDRIC), Damien Doligez (GALLIUM -INRIA), David Delahaye
+(CPR-CEDRIC), Catherine Dubois (CPR-CEDRIC), Jean-Fr\'ed\'eric Etienne
+(CPR-CEDRIC), St\'ephane Fechter (SPI-LIP6), Mathieu Jaume (SPI-LIP6),
+Lionel Habib (SPI-LIP6), Th\'er\`ese Hardin (SPI-LIP6),Charles
+Morisset (SPI-LIP6), Ivan Noyer (SPI-LIP6), Fran\c{c}ois Pessaux
+(SPI-LIP6), Virgile Prevosto (SPI-LIP6), Renaud Rioboo (CPR-CEDRC),
+Lien Tran (SPI-LIP6), Pierre Weis (ESTIME-INRIA)}
+
+\bigskip
+
+{\em SPI (Semantics, Proofs and Implementations) is a team of LIP6,
+(Laboratoire d'Informatique de Paris 6) of UPMC (Pierre and Marie Curie
+University)\footnote{UPMC-LIP6, 
+104 avenue du Pr\'esident Kennedy, Paris 75016, France,
+\email{Firstname.Lastname@lip6.fr}}.}
+
+\bigskip
+
+
+{\em CPR (Conception et Programmation Raisonn\'ees) is a team of CEDRIC
+(Centre d'Etudes et de Recherches du CNAM) of CNAM (Conservatoire National
+des Arts et M\'etiers)\footnote{CNAM-CEDRIC,
+292 rue Saint Martin, 75003, Paris, France
+\email{Firstname.Lastname@cnam.fr}} and ENSIIE (Ecole Nationale d'Informatique pour
+l'Industrie et l'Entreprise)\footnote{ENSIIE-CEDRIC,
+1 Square de la R\'esistance, 91025 Evry Cedex, France, 
+\email{Lastname@ensiie.fr}}. }
+ 
+\bigskip
+{\em
+ESTIME and GALLIUM are of INRIA Rocquencourt\footnote{INRIA, Projet ESTIM,
+  Bat 8. Domaine de Voluceau, Rocquencourt, BP 105, F-78153 Le
+  Chesnay, France, \email{Firstname.Lastname@inria.fr}}
+}
+
+% % {\Large \textbf{CPR team, CEDRIC, Conservatoire National des Arts %et M\'etiers (CNAM) }} \\
+% % \mbox{} \\
+% % {\Large \textbf{Institut National de Recherche en Informatique et
+% %     Automatique (INRIA) }} \\
+% % \mbox{} \\
+% % {\Large \textbf{Universit\'e Pierre et Marie Curie (UPMC) - LIP6-S%PI team}}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \setcounter{tocdepth}{5}
@@ -67,35 +113,41 @@
 \tableofcontents
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{General Presentation}
+\input{introduction.tex}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Introduction}
+The \focal\ project was first partially supported by LIP6 (Projet LIP6
+1997) then by the Ministery of Research (Action Modulogic) and is
+currently partially supported by the French SSURF ANR project
+ANR-06-SETI-016 (Safety and Security UndeR Focal).
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Motivations}
 \input{motivations.tex}
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{A glimpse of \focal}
+
+\input{glimpse.tex}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Presentation and requirements}
+
+\chapter{Installing and Compiling}
 \input{pres_requir.tex}
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Compilation process and output}
+
+\section{Compilation process and outputs}
 \input{output.tex}
 
 
@@ -103,61 +155,39 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{The \focal\ model}
+
 \section{Basic concepts}
 \input{basic_concepts.tex}
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{The \focal\ model}
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Building species}
 \input{building_species.tex}
 
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{More about methods definition}
 \input{more_on_meths.tex}
 
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{The core language}
 \input{core_lang.tex}
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Making proofs in \focal\ Proof Language}
 \label{making-proofs}
 \input{proofs.tex}
 
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Recursive function definitions}
 \label{recursive-function}
 \index{function!recursive}
+
 \index{recursion}
 In the current alpha-release, recursive functions are not quite handled
 in \coq\ code generation. We are still working on them and should be soon
@@ -165,10 +195,6 @@ available with material to provide termination proofs.
 %\input{.tex}
 
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Compiler options}
 \input{compiler_opts.tex}
@@ -189,10 +215,6 @@ available with material to provide termination proofs.
 % modèle du code généré en coq et en caml ??
 
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Compiler error messages}
 \label{compiler-error-mesgs}
@@ -202,5 +224,8 @@ available with material to provide termination proofs.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{abbrv}
+\bibliography{bibli}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
 \printindex
 \end{document}
