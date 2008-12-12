@@ -1,5 +1,7 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.\" \$Id: focalizec.man,v 1.1 2008-12-12 10:44:03 weis Exp $
+.\" \$Id: focalizec.man,v 1.2 2008-12-12 10:46:43 weis Exp $
+.\"
+.\"
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
@@ -18,8 +20,7 @@
 .\" for manpage-specific macros, see man(7)
 .SH NAME
 .B $(package)
-\-\- a general purpose text file generator with a programmatic approach
-in the spirit of functional programming.
+\-\- a compiler for the FoCaLize language.
 .UR http://focalize.inria.fr/
 (http://focalize.inria.fr/)
 .UE
@@ -28,7 +29,7 @@ in the spirit of functional programming.
 $(capitalize $package) version $package_version
 .SH SYNOPSIS
 .B $package
-.RI [ options ]\ [ source\ file ]\ [ target\ file ] ...
+.RI [ options ]\ [ source\ file ] ...
 .SH DESCRIPTION
 The 
 .B $package
