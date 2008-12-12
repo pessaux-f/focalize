@@ -12,13 +12,13 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.71 2008-12-12 08:01:04 weis Exp $
+# $Id: Makefile,v 1.72 2008-12-12 08:55:31 weis Exp $
 
 ROOT_DIR = ../..
 
 include $(ROOT_DIR)/Makefile.config
 
-FOCALIZE_COMPILER = $(ROOT_DIR)/toplevel/focalizec
+FOCALIZE_COMPILER = ../toplevel/focalizec
 
 FOCALIZE_COMP_FLAGS = -no-stdlib-path
 
@@ -26,7 +26,9 @@ LIB_INSTALL_DIR = $(LIB_DIR)/focalize
 
 #From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
-COQ_INCLUDES = -I ../../zenon/
+ZENON_DIR = $(ROOT_DIR)/../zenon/
+
+COQ_INCLUDES = -I $(ZENON_DIR)
 
 FOCALIZE_SRC = basics.fcl \
 	sets.fcl\
