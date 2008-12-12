@@ -1,0 +1,67 @@
+#*********************************************************************#
+#                                                                     #
+#                                Htmlc                                #
+#                                                                     #
+#            Pierre Weis, projet Cristal, INRIA Rocquencourt          #
+#                                                                     #
+#  Copyright 1997 Institut National de Recherche en Informatique et   #
+#  en Automatique.  Distributed only by permission.                   #
+#                                                                     #
+#*********************************************************************#
+
+# $Id: Makefile.html,v 1.1 2008-12-12 10:40:19 weis Exp $
+
+# Makefile for HTML files generation.
+
+# From a list of source files (.html files) generates the
+# corresponding objects (.htm files) using Htmlc.
+
+# Usage: fill in the HTMLC and FILES variables below, then
+# make (or make all) will rebuild the whole thing
+# make clean will remove all the generated files
+
+RM=rm -f
+
+# The Htmlc compiler with its include path options
+HTMLC=htmlc -I Includes -env env
+
+# Prefix before regular names
+PACKAGE=focalizec
+
+# The list of source files
+FILES=$(PACKAGE)-index.html $(PACKAGE)-fra.html $(PACKAGE)-eng.html \
+      copyright-fra.html copyright-eng.html
+MANFILES=$(PACKAGE).man
+
+######## This part should automatically handle the generation of
+######## object files
+
+# The list of object files
+OBJS=$(FILES:.html=.htm)
+MANOBJS=$(MANFILES:.man=.1)
+
+all: $(OBJS) $(MANOBJS)
+
+copyright-fra.htm: Includes/copyright-fra.html
+	$(RM) $@
+	$(HTMLC) -f $< -t $@
+
+copyright-eng.htm: Includes/copyright-eng.html
+	$(RM) $@
+	$(HTMLC) -f $< -t $@
+
+$(OBJS) : Includes/*.html
+
+clean::
+	$(RM) $(OBJS) $(MANOBJS) *~
+	cd Includes; $(RM) *~
+
+.SUFFIXES:
+.SUFFIXES: .htm .html .man .1
+
+.html.htm:
+	$(RM) $@
+	$(HTMLC) -f $< -t $@
+.man.1:
+	$(RM) $@
+	$(HTMLC) -f $< -t $@
