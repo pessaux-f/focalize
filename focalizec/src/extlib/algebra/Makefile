@@ -13,7 +13,9 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.24 2008-12-12 09:46:14 weis Exp $
+# $Id: Makefile,v 1.25 2008-12-12 09:53:45 weis Exp $
+
+# Makefile for algebra structures implementations
 
 ROOT_DIR = ../../..
 
