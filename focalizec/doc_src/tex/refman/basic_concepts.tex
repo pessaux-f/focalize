@@ -1,7 +1,4 @@
-% $Id: basic_concepts.tex,v 1.9 2008-12-11 10:48:24 hardin Exp $
-
-
-
+% $Id: basic_concepts.tex,v 1.10 2008-12-12 08:24:54 weis Exp $
 
 As stated in section \ref{glimpse}, the \focal\ language is designed
 to build an application step by step, going from very abstract
@@ -11,8 +8,7 @@ classes in an Object-Oriented context.  {\em However, despite of
 inheritance and late-binding features, \focal\ is definitively not an
 Object-Oriented language as C++, Java, etc.  are.}
 
- In the following 
-we  present the basic concepts underlying a
+ In the following we  present the basic concepts underlying a
 \focal\ development, that is:
 \begin{itemize}
 \item Top-level definitions
@@ -23,13 +19,13 @@ we  present the basic concepts underlying a
   \item Late-binding
 \end{itemize}
 To ensure that this part can be read independently of the section
-\ref{glimpse}, we duplicate some explanations. 
+\ref{glimpse}, we duplicate some explanations.
 
 \subsection{Top-level Definitions}
 \label{topleve-def}
-\index{toplevel} 
-We call {\bf toplevel-definition} (just one word)  a definition  which appears outside species and
-collections. Such definitions can  only be:
+\index{toplevel}
+We call {\bf toplevel-definition} (just one word) a definition which
+appears outside species and collections. Such definitions can only be:
 \begin{itemize}
   \item Species,
   \item collections,
@@ -39,17 +35,15 @@ collections. Such definitions can  only be:
   \item expressions to be directly evaluated (but there is no way to
     bind their value to an identifier).
 \end{itemize}
-Any toplevel-definition is
-ended by a double semi-character (``;;'').\index{;;}
+Any toplevel-definition is terminated by a double semi-character (``;;'').\index{;;}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Species}
 \label{species-intro}
 {\bf Species} \index{species} are the nodes of the
-\focal\ hierarchy. A species is  a sequence of
-{\bf methods} \index{method} or {\bf fields}\index{field}, each ended
-by a semi character (``;'')\index{;;}. Hence, a
-basic species looks like:
+\focal\ hierarchy. A species is a sequence of
+{\bf methods} \index{method} or {\bf fields}\index{field}, each one being terminated
+by a semi character (``;'')\index{;;}. Hence, a basic species looks like:
 {\scriptsize
 \begin{lstlisting}
   species Name =
@@ -59,8 +53,8 @@ basic species looks like:
 \end{lstlisting}
 }
 
-Species names are always {\bf capitalized}. As any toplevel-definition, a species is
-ended by a double semi-character (``;;'').\index{;;} There are several kinds of methods:
+Species names are always {\bf capitalized}. As any toplevel-definition, a species ends
+with a double semi-character (``;;'').\index{;;} There are several kinds of methods:
 \smallskip
 \begin{itemize}
   \medskip
@@ -82,9 +76,7 @@ ended by a double semi-character (``;;'').\index{;;} There are several kinds of 
   (directly or by \ref{inheritance}).
 
 
-In the context of a species, the
-  representation is denoted by {\tt Self}.
-
+In the context of a species, the representation is denoted by {\tt Self}.
 
 %  For instance, we can define a species to manipulate couples of native integers  as:
 %     {\scriptsize
@@ -96,8 +88,6 @@ In the context of a species, the
 % end ;;
 %       \end{lstlisting}
 %     }
-
-
 
 
 \item {\bf Signatures}\index{signature}. They introduce names of
@@ -114,11 +104,10 @@ In the context of a species, the
       \end{lstlisting}
     } 
 
-As we saw above, {\tt Self} represents the representation (thus a type)
-     of the current species. Hence an operation pushing an integer
-    onto a stack  takes as parameter the integer to push, the stack
-    on which to push and give back a new stack, that is, an entity of
-    type {\tt Self}.
+  As we saw above, {\tt Self} represents the representation (thus a type) of
+  the current species. Hence an operation pushing an integer onto a stack takes
+  as parameter the integer to push, the stack on which to push and give back a
+  new stack, that is, an entity of type {\tt Self}.
 
   \medskip
 
@@ -138,7 +127,7 @@ end ;;
       \end{lstlisting}
     }
 
- Function parameters can be entities (that is, values) of the
+    Function parameters can be entities (that is, values) of the
     species itself (which type is the representation, thus denoted by
     {\tt Self}), entities of known collections, values of known types.
 
@@ -166,8 +155,7 @@ end ;;
 \item {\bf Properties}\index{property}. They are first order logic
   formulae containing names already introduced. When stating a
   property, the proof that it holds is not yet provided (but will have
-  to be ultimately  provided). A
-  property can be viewed as a declaration. 
+  to be ultimately  provided). A property can be viewed as a declaration.
 
  {\scriptsize
       \begin{lstlisting}
@@ -186,7 +174,7 @@ end ;;
     {\scriptsize
       \begin{lstlisting}
 species IntStack2 inherits IntStack =
-  proof of push_returns_non_empty = ... ;            
+  proof of push_returns_non_empty = ... ;
 end ;;
       \end{lstlisting}
     }
@@ -225,11 +213,11 @@ parametrisation\index{parametrisation} as explained further
  A species is said {\em complete}\index{species!complete} if all
 its methods are {\em defined}, i.e. have an implementation. In other
 words this means that there is no more methods only {\em
-  declared}. This notion implies that:
+ declared}. This notion implies that:
 \begin{itemize}
-  \item The representation has been associated with a type definition. 
+  \item The representation has been associated with a type definition.
   \item Every declaration is associated to a definition.
-  \item A proof is given for every property. 
+  \item A proof is given for every property.
 \end{itemize}
 
 \smallskip
@@ -253,7 +241,7 @@ to know which functions he can use, and which properties these
 functions have, but doesn't care about the details of the
 implementation.
 
-\smallskip 
+\smallskip
 
 The interface of a species is obtained by keeping the
 signatures and properties and retaining only the signatures of the let
@@ -274,13 +262,13 @@ An interface has a name, which is the name of the underlying
 species. There should be no confusion between species names and
 interface names as interface names are only used to qualify formal
 collection parameters (see section \ref{collection-parameter}) and to
-apply methods of collection parameters. 
+apply methods of collection parameters.
 
 
 
 \subsection{Collections}
 \label{collection}
-\index{collection} 
+\index{collection}
 
 A {\bf collection} is a kind of ``grey box'', built from a {\em
   complete} species by abstraction of the representation. A collection
@@ -296,7 +284,7 @@ common instantiation of all the components of $I_2$.
 
 Note that creating a collection from it  is the
 only way to turn methods of a complete species into executable
-code. This point is emphasized by the syntax: 
+code. This point is emphasized by the syntax:
 
 {\tt collection} {\em name-collection} {\tt implements} {\em name-species}
 
@@ -306,9 +294,7 @@ Thus, implementing a complete species creates a collection, which is a
 kind of abstract data-type. This especially
 means that entities of the collection cannot be directly
 created or manipulated as their type is not accessible.  So they can
-only  be
-manipulated by the methods of the {\em implemented} species.
-
+only  be manipulated by the methods of the {\em implemented} species.
 
 
 {\scriptsize

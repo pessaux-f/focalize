@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.8 2008-12-12 08:11:38 weis Exp $
+# $Id: Makefile,v 1.9 2008-12-12 08:24:54 weis Exp $
 
 ROOT_DIR = ../../../..
 
@@ -32,4 +32,4 @@ all:: $(TEX_FILES)
 	dvipdf refman.dvi
 
 clean::
-	$(RM) *.aux *.log *.pdf *.ps *.dvi *.idx *.ilg *.ind
+	$(RM) *.aux *.log *.pdf *.ps *.dvi *.idx *.ilg *.ind *.toc
