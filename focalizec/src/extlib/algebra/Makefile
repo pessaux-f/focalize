@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.23 2008-12-12 08:01:04 weis Exp $
+# $Id: Makefile,v 1.24 2008-12-12 09:46:14 weis Exp $
 
 ROOT_DIR = ../../..
 
@@ -21,20 +21,19 @@ include $(ROOT_DIR)/Makefile.config
 
 LIB_INSTALL_DIR = $(LIB_DIR)/focalize/algebra
 
-# [rr]: changed this to include standard library
-CAML_COMP_FLAGS = -w A -warn-error Ae -dtypes -I $(ROOT_DIR)/stdlib
+ZENON_DIR = $(ROOT_DIR)/../zenon/
 
+STDLIB_DIR = $(ROOT_DIR)/src/stdlib
 
-BYT_FOCALIZE_COMPILER = $(ROOT_DIR)/toplevel/focalizec.byt
-BIN_FOCALIZE_COMPILER = $(BYT_FOCALIZE_COMPILER:.byt=.bin)
+FOCALIZE_COMPILER = $(ROOT_DIR)/src/toplevel/focalizec
 
-FOCALIZE_COMPILER = $(BIN_FOCALIZE_COMPILER)
-
-FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(ROOT_DIR)/stdlib
+FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(STDLIB_DIR)
 
 #From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
-COQ_INCLUDES = -I $(ROOT_DIR)/../zenon/ -I $(ROOT_DIR)/stdlib
+CAML_COMP_FLAGS = -w A -warn-error Ae -dtypes -I $(STDLIB_DIR)
+
+COQ_INCLUDES = -I $(ZENON_DIR) -I $(STDLIB_DIR)
 
 FOCALIZE_SRC = \
 	constants.fcl \
@@ -150,6 +149,6 @@ polys_abstract.ml: polys_abstract.fcl
 #End temporary
 
 # Should be generated ?
-randoms_externals.vo: $(ROOT_DIR)/stdlib/basics.vo
-arrays_externals.vo: $(ROOT_DIR)/stdlib/basics.vo
+randoms_externals.vo: $(STDLIB_DIR)/basics.vo
+arrays_externals.vo: $(STDLIB_DIR)/basics.vo
 # End Should be generated ?
