@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.17 2008-12-01 22:16:49 weis Exp $
+# $Id: Makefile.common,v 1.18 2008-12-12 10:54:47 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -58,7 +58,7 @@ tests::
 	$(CAML_BIN) -c $<
 
 .mly.ml:
-	$(CAML_YACC) $<
+	$(CAML_YAC) $<
 
 .mll.ml:
 	$(CAML_LEX) $<
