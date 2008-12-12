@@ -10,16 +10,16 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.7 2008-12-12 08:01:04 weis Exp $
+# $Id: Makefile,v 1.8 2008-12-12 08:11:38 weis Exp $
 
-ROOT_DIR = ../..
+ROOT_DIR = ../../../..
 
 include $(ROOT_DIR)/Makefile.config
 
 TEX_FILES = macros.tex basic_concepts.tex lexical_conventions.tex motivations.tex \
 	proofs.tex building_species.tex macros.tex output.tex refman.tex \
 	compiler_opts.tex more_on_meths.tex pres_requir.tex \
-	constructs_syntax.tex bibli.bib 
+	constructs_syntax.tex bibli.bib
 
 
 include $(ROOT_DIR)/Makefile.common
