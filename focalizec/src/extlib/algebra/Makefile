@@ -13,9 +13,9 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.22 2008-12-09 13:23:12 weis Exp $
+# $Id: Makefile,v 1.23 2008-12-12 08:01:04 weis Exp $
 
-ROOT_DIR = ../..
+ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
 

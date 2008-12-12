@@ -13,11 +13,11 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.13 2008-12-04 16:03:28 habib Exp $
+# $Id: Makefile,v 1.14 2008-12-12 08:01:04 weis Exp $
 
 # Makefile for access control models
 
-ROOT_DIR = ../..
+ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
 include $(ROOT_DIR)/Makefile.common

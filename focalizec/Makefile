@@ -13,21 +13,21 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.24 2008-12-01 18:50:03 weis Exp $
+# $Id: Makefile,v 1.25 2008-12-12 07:57:06 weis Exp $
 
 ROOT_DIR = .
 
 include $(ROOT_DIR)/Makefile.config
 
-COMPILER_DIRS = basement parser typing\
-  docgen commoncodegen mlcodegen coqcodegen\
-  toplevel
+COMPILER_DIRS = src/basement src/parser src/typing\
+  src/docgen src/commoncodegen src/mlcodegen src/coqcodegen\
+  src/toplevel
 
-LIB_DIRS = stdlib extlib contribs
+LIB_DIRS = src/stdlib src/extlib src/contribs
 
 SUB_DIRS = $(COMPILER_DIRS) $(LIB_DIRS)
 
-COMPILER_INSTALL_DIRS = toplevel stdlib $(LIB_DIRS)
+COMPILER_INSTALL_DIRS = src/toplevel src/stdlib $(LIB_DIRS)
 
 include $(ROOT_DIR)/Makefile.common
 
