@@ -13,19 +13,31 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.14 2008-12-12 08:01:04 weis Exp $
+# $Id: Makefile,v 1.15 2008-12-12 09:52:56 weis Exp $
 
 # Makefile for access control models
 
 ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
-include $(ROOT_DIR)/Makefile.common
 
 LIB_INSTALL_DIR = $(LIB_DIR)/focalize/extlib/access_control
 
-FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(ROOT_DIR)/stdlib
-COQ_INCLUDES = -I $(ROOT_DIR)/../zenon/ -I $(ROOT_DIR)/stdlib
+ZENON_DIR = $(ROOT_DIR)/../zenon/
+
+STDLIB_DIR = $(ROOT_DIR)/src/stdlib
+
+FOCALIZE_COMPILER = $(ROOT_DIR)/src/toplevel/focalizec
+
+FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(STDLIB_DIR)
+
+#From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
+
+CAML_COMP_FLAGS = -w A -warn-error Ae -dtypes -I $(STDLIB_DIR)
+
+COQ_INCLUDES = -I $(ZENON_DIR) -I $(STDLIB_DIR)
+
+include $(ROOT_DIR)/Makefile.common
 
 lib: all
 
