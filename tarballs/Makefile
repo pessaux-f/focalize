@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.4 2008-12-03 20:23:35 weis Exp $
+# $Id: Makefile,v 1.5 2008-12-14 11:31:40 weis Exp $
 
 ROOT_DIR = ..
 
@@ -35,8 +35,8 @@ all:: $(EXTERNAL_TOOLS_DIRS)
            sed -e "s|/bin/bash|/bin/sh|" \
 		< $(CAMLP5_DIR)/configure \
 		> $(CAMLP5_DIR)/.configure; \
-	   mv $(CAMLP5_DIR)/.configure $(CAMLP5_DIR)/configure; \
-	   chmod +x $(CAMLP5_DIR)/configure) || exit; \
+	   $(MV) $(CAMLP5_DIR)/.configure $(CAMLP5_DIR)/configure; \
+	   $(CHMODRX) $(CAMLP5_DIR)/configure) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 
