@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.7 2008-12-08 11:14:50 weis Exp $
+#  $Id: configure,v 1.8 2008-12-14 11:43:21 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -36,6 +36,7 @@ check () {
 # General defaults
 PREFIX=/usr/local
 SHARE_PREFIX=${PREFIX}/share
+SHARE_PROJECT_DIR=${SHARE_PREFIX}/${FULL_PROJECT_NAME}
 DEBUG=true
 
 # Defaults for zenon
@@ -47,43 +48,44 @@ GS=:
 # Defaults for zvtov
 USE_XMLRPC=false
 XMLRPC=xmlrpc
-XMLRPC_FLAGS="`ocamlfind query -r -i-format xmlrpc | tr '\012' ' '`"
-XMLRPC_LINK="`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\012' ' '`"
+XMLRPC_FLAGS=""
+XMLRPC_LINK=""
 
 # The list of directories that must be installable during configuration.
-INSTALLABLE_DIRS="${SHARE_PREFIX}"
+CONFIGURATION_INSTALLABLE_DIRS="${SHARE_PREFIX}"
 
 # Aborting procedures.
 abort_configuration () {
   echo;
   echo "configure: ABORTING CONFIGURATION!";
   echo;
-  echo $1;
+  echo "$1"
 }
 
 abort_remedy () {
   echo;
-  echo $1;
-  echo;
-  echo " (See configure -help for details).";
-  exit 1;
+  echo "$1";
+  echo "(See configure -help for details).";
+  exit 1
 }
 
 abort_configuration_not_writable_share_prefix_directory () {
-  abort_configuration
+  abort_configuration \
     "You cannot install in the directory $1, because it is not writable for you.";
-  abort_remedy
-    "Please, use option -share_prefix to choose a directory where you have write permission.";
+  abort_remedy \
+    "Please, use configure with the \"-share_prefix\" option set to a writable directory.";
 }
 
 set_dirs () {
   BIN_DIR="${PREFIX}/bin"
   LIB_DIR="${PREFIX}/lib"
-  SHARE_DIR="${SHARE_PREFIX}/${FULL_PROJECT_NAME}"
-  SHARE_BIN_DIR="${SHARE_DIR}/bin"
-  SHARE_LIB_DIR="${SHARE_DIR}/lib"
-  SHARE_MAN_DIR="${SHARE_DIR}/man"
-  SHARE_DOC_DIR="${SHARE_DIR}/doc"
+  DOC_DIR="${PREFIX}/doc"
+  MAN_DIR="${PREFIX}/man"
+  SHARE_PROJECT_DIR="${SHARE_PREFIX}/${FULL_PROJECT_NAME}"
+  SHARE_BIN_DIR="${SHARE_PROJECT_DIR}/bin"
+  SHARE_LIB_DIR="${SHARE_PROJECT_DIR}/lib"
+  SHARE_MAN_DIR="${SHARE_PROJECT_DIR}/man"
+  SHARE_DOC_DIR="${SHARE_PROJECT_DIR}/doc"
 }
 
 set_dirs
@@ -112,24 +114,31 @@ while : ; do
        echo "general options are:"
        echo
        echo "  [-]-share_prefix <directory>"
-       echo "    set the directory prefix for the installation of external tools."
-       echo "    External tools are mandatory for ${PROJECT_NAME} to work;"
-       echo "    external tools must be built and installed during configuration,"
+       echo "    set <directory> as the directory prefix for the installation of external tools."
+       echo "    External tools are mandatory for ${PROJECT_NAME} to work."
+       echo "    External tools must be built and installed during configuration,"
        echo "    since they are needed to correctly compile, install, and safely use"
        echo "    ${PROJECT_NAME}."
-       echo "    External tools install in directory <directory>/${FULL_PROJECT_NAME}/,"
-       echo "    once they have ben built: as a consequence, you must have the"
-       echo "    permission to install files in <directory> to configure ${PROJECT_NAME}."
+       echo "    External tools install in the directory <directory>/${FULL_PROJECT_NAME}/,"
+       echo "    once they have ben built."
+       echo "    as a consequence, you must have the permission to install directories"
+       echo "    and files in <directory> to properly configure ${PROJECT_NAME}."
        echo "    (Default value for <directory> is ${SHARE_PREFIX}.)"
        echo "  [-]-prefix <directory>"
-       echo "    set the directory prefix for installation of ${PROJECT_NAME}."
+       echo "    set <directory> as the directory prefix for installation of ${PROJECT_NAME}."
        echo "    (Default value for <directory> is ${PREFIX}.)"
        echo "  [-]-bindir <directory>"
-       echo "    set the binary directory for installation of binaries for ${PROJECT_NAME}."
+       echo "    set <directory> as the binary directory for installation of binaries for ${PROJECT_NAME}."
        echo "    (Default value for <directory> is ${BIN_DIR}.)"
        echo "  [-]-libdir <directory>"
-       echo "    set the library directory for installation of libraries for ${PROJECT_NAME}."
+       echo "    set <directory> as the library directory for installation of libraries for ${PROJECT_NAME}."
        echo "    (Default value for <directory> is ${LIB_DIR}.)"
+       echo "  [-]-docdir <directory>"
+       echo "    set <directory> as the directory for installation of documentation for ${PROJECT_NAME}."
+       echo "    (Default value for <directory> is ${DOC_DIR}.)"
+       echo "  [-]-mandir <directory>"
+       echo "    set <directory> as the directory for installation of man pages for ${PROJECT_NAME}."
+       echo "    (Default value for <directory> is ${MAN_DIR}.)"
        echo "  [-]-debug | [-]-enable_debug"
        echo "    enable debugging"
        echo "  [-]-nodebug | --disable_debug"
@@ -157,11 +166,11 @@ while : ; do
        echo "  [-]-xmlrpc_flags <string>";
        echo "    set the string option argument to pass to xmlrpc invocations."
        echo "  (Default value for <string> is:";
-       echo "   \"`ocamlfind query -r -i-format xmlrpc | tr '\012' ' '`\").";
+       echo "   \"\`ocamlfind query -r -i-format xmlrpc | tr '\\\\012' ' '\`\").";
        echo "  [-]-xmlrpc_link <string>";
        echo "    set the link options to pass when linking xmlrpc.";
        echo "  (Default value for <string> is:";
-       echo "   \"`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\012' ' '`\").";
+       echo "   \"\`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\\\\012' ' '\`\").";
        exit 0
        ;;
     *) echo "./configure: bad option '$1'" >&2
@@ -171,39 +180,56 @@ while : ; do
   esac
 done
 
-if $DEBUG; then
+set_XMLRPC_FLAGS () {
+  if test -n XMLRPC_FLAGS; then
+    if check "ocamlfind"; then
+      XMLRPC_FLAGS="`ocamlfind query -r -i-format xmlrpc | tr '\012' ' '`"
+    fi 
+  fi
+}
+
+set_XMLRPC_LINK () {
+  if test -n XMLRPC_FLAGS; then
+    if check "ocamlfind"; then
+      XMLRPC_LINK="`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\012' ' '`"
+    fi
+  fi
+}
+
+set_XMLRPC () {
+ set_XMLRPC_FLAGS;
+ set_XMLRPC_LINK;
+}
+
+set_DEBUG () {
   BYT_DEBUG_FLAGS="-g"
   BIN_DEBUG_FLAGS="-dtypes"
-else
-  BYT_DEBUG_FLAGS=
-  BIN_DEBUG_FLAGS=
-fi
+}
 
-if $USE_XMLRPC; then
-  :
-else
-  XMLRPC=
-  XMLRPC_FLAGS=
-  XMLRPC_LINK=
-fi
+if $DEBUG; then set_DEBUG; fi
 
+if $USE_XMLRPC; then set_XMLRPC; fi
+  
 check_installation_dirs () {
-  for i in ${INSTALLABLE_DIRS}; do
-    #echo "Checking if we can install in $i...";
-    if test -d $i; then : #echo "  the directory exists: good.";
+  for i in ${CONFIGURATION_INSTALLABLE_DIRS}; do
+    echo "Checking if we can install in $i...";
+    if test -d $i; then echo "  the directory exists: good.";
       else
+        echo "  the directory does not exist: unrecoverable failure.";
         abort_configuration
           "You cannot install in $i, because it is not a directory.";
         abort_remedy
           "Please, create a directory where you can install files and directories.";
     fi
-    if test -w $i; then : #echo "  the directory is writable: good.";
+    if test -w $i; then echo "  the directory is writable: good.";
       else
-        abort_configuration_not_writable_directory $i;
+        echo "  the directory is not writable: unrecoverable failure.";
+        abort_configuration_not_writable_share_prefix_directory "$i";
     fi
-    if (touch $i/$$; rm -f $i/$$); then : #echo "  you can install in the directory: good.";
+    if (touch $i/$$; rm -f $i/$$); then echo "  you can install in the directory: good.";
       else
-        abort_configuration_not_writable_directory $i;
+        echo "  you cannot install in the directory: unrecoverable failure.";
+        abort_configuration_not_writable_share_prefix_directory "$i";
     fi
   done
 }
@@ -221,9 +247,14 @@ sed -e "s,@PROJECT_NAME@,$PROJECT_NAME," \
     -e "s,@PREFIX@,$PREFIX," \
     -e "s,@BIN_DIR@,$BIN_DIR," \
     -e "s,@LIB_DIR@,$LIB_DIR," \
+    -e "s,@DOC_DIR@,$DOC_DIR," \
+    -e "s,@MAN_DIR@,$MAN_DIR," \
     -e "s,@SHARE_PREFIX@,$SHARE_PREFIX," \
+    -e "s,@SHARE_PROJECT_DIR@,$SHARE_PROJECT_DIR," \
     -e "s,@SHARE_BIN_DIR@,$SHARE_BIN_DIR," \
     -e "s,@SHARE_LIB_DIR@,$SHARE_LIB_DIR," \
+    -e "s,@SHARE_DOC_DIR@,$SHARE_DOC_DIR," \
+    -e "s,@SHARE_MAN_DIR@,$SHARE_MAN_DIR," \
 \
     -e "s,@BYT_DEBUG_FLAGS@,$BYT_DEBUG_FLAGS," \
     -e "s,@BIN_DEBUG_FLAGS@,$BIN_DEBUG_FLAGS," \
