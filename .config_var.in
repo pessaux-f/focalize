@@ -1,5 +1,5 @@
 #  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.5 2008-12-08 11:16:25 weis Exp $
+#  $Id: .config_var.in,v 1.6 2008-12-14 11:45:55 weis Exp $
 
 # The project id.
 PROJECT_NAME=@PROJECT_NAME@
@@ -16,12 +16,17 @@ ABSOLUTE_ROOT_DIR=@ABSOLUTE_ROOT_DIR@
 PREFIX=@PREFIX@
 BIN_DIR=@BIN_DIR@
 LIB_DIR=@LIB_DIR@
+DOC_DIR=@DOC_DIR@
+MAN_DIR=@MAN_DIR@
 
 # The directories where the project install its own specific versions
 # of external tools binaries and libraries.
 SHARE_PREFIX=@SHARE_PREFIX@
+SHARE_PROJECT_DIR=@SHARE_PROJECT_DIR@
 SHARE_BIN_DIR=@SHARE_BIN_DIR@
 SHARE_LIB_DIR=@SHARE_LIB_DIR@
+SHARE_MAN_DIR=@SHARE_MAN_DIR@
+SHARE_DOC_DIR=@SHARE_DOC_DIR@
 
 # Compilation flags.
 BYT_DEBUG_FLAGS=@BYT_DEBUG_FLAGS@
