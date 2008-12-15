@@ -1,0 +1,25 @@
+species Foo =
+  let m = 1 ;
+end ;;
+
+species Bar =
+  let m = 2 ;
+end ;;
+
+(* From species ok__multiple_inherit#Bar. *)
+species Gee inherits Foo, Bar = end ;;
+
+(* From species ok__multiple_inherit#Foo. *)
+species Buz inherits Bar, Foo = end ;;
+
+(* From species ok__multiple_inherit#Foo. *)
+species Oups1 inherits Foo, Bar, Bar, Foo = end ;;
+
+(* From species ok__multiple_inherit#Foo. *)
+species Oups2 inherits Foo, Bar, Bar, Foo, Buz = end ;;
+
+(* From species ok__multiple_inherit#Bar. *)
+species Oups3 inherits Foo, Bar, Bar, Foo, Buz, Bar = end ;;
+
+(* From species ok__multiple_inherit#Foo. *)
+species Oups4 inherits Foo, Oups3, Bar, Foo, Buz, Oups2 = end ;;
