@@ -14,7 +14,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.58 2008-12-09 14:46:23 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.59 2008-12-15 16:41:15 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -375,7 +375,8 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
            | None -> Parsetree_utils.ParamDepSet.empty
            | Some term_pr ->
                match term_pr.Parsetree.ast_desc with
-                | Parsetree.TP_order (expr, _, pr) ->
+                | Parsetree.TP_order (expr, _, pr)
+                | Parsetree.TP_measure (expr, _, pr) ->
                     (begin
                     let deps1 =
                       Param_dep_analysis.param_deps_expr
@@ -429,7 +430,8 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
    | None -> ()
    | Some term_pr ->
        match term_pr.Parsetree.ast_desc with
-        | Parsetree.TP_order (expr, _, _) ->
+        | Parsetree.TP_order (expr, _, _)
+        | Parsetree.TP_measure (expr, _, _) ->
             let t =
               (match expr.Parsetree.ast_type with
                | Parsetree.ANTI_type t -> t
@@ -1404,35 +1406,6 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                        ctx.Context.scc_dependency_graph_nodes name
                        body_as_fbk (FTK_computational method_ty) opt_term_pr
                        fields in
-
-(*
-(match opt_term_pr with
- | None -> Format.eprintf "Pas de preuve@."
- | Some term_pr ->
-     (begin
-     match term_pr.Parsetree.ast_desc with
-      | Parsetree.TP_order (order_expr, _, pr) ->
-          let expr_ty =
-            (match order_expr.Parsetree.ast_type with
-             | Parsetree.ANTI_type t -> t
-             | _ -> assert false) in
-          let (_used_species_parameter_tys_in_self_methods_bodies2,
-               dependencies_from_params_in_bodies2,
-               _decl_children2, _def_children2) =
-            compute_lambda_liftings_for_field
-              ~current_unit: ctx.Context.scc_current_unit
-              ~current_species: ctx.Context.scc_current_species
-              ctx.Context.scc_species_parameters_names
-              ctx.Context.scc_dependency_graph_nodes name
-              (FBK_proof (Some pr)) (FTK_computational expr_ty) fields in
-          Format.eprintf "Dépendances trouvées pour %a@."
-            Sourcify.pp_vname name ;
-          debug_print_dependencies_from_parameters 
-            dependencies_from_params_in_bodies2
-      | _ -> failwith "Other termination kinds to do."
-     end)) ;
-*)
-
                    (* Compute the visible universe of the method. *)
                    let universe =
                      VisUniverse.visible_universe

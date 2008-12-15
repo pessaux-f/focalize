@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.28 2008-09-23 13:36:52 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.29 2008-12-15 16:41:15 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -255,6 +255,11 @@ let root_compile ~current_unit ~out_file_name stuff =
      Require Export List.@\n\
      Require Export Recdef.@\n\
      Require Export coq_builtins.@\n@\n" ;
+  if Configuration.get_experimental () then
+    Format.fprintf out_fmter
+      "(* Below: to prevent Function to apply heuristics that would@\n\
+	  the expected aim in recursive functions termination proofs. *)@\n@\n\
+       Set Function_raw_tcc.@\n@\n" ;
   try
     List.iter
       (fun data ->

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.146 2008-12-10 16:08:08 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.147 2008-12-15 16:41:15 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2177,12 +2177,62 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
        (begin
        match term_pr.Parsetree.ast_desc with
         | Parsetree.TP_structural _ ->
-            failwith "TODO: structural."  (* [Unsure] *)
+            failwith "TODO: structural1."  (* [Unsure] *)
         | Parsetree.TP_lexicographic _ ->
-            failwith "TODO: lexicographic."  (* [Unsure] *)
-        | Parsetree.TP_measure (_, _, _) ->
-            failwith "TODO: measure."  (* [Unsure] *)
-        | Parsetree.TP_order (order_expr, order_args, _proof) ->
+            failwith "TODO: lexicographic1."  (* [Unsure] *)
+        | Parsetree.TP_measure (measure_expr, measure_args, _) ->
+            (begin
+            (* Get the indices of the variables the pattern must bind. *)
+            let pattern_description =
+              pattern_from_used_variables fun_params_n_tys measure_args in
+            (* Generate the 2 match to retrieve arguments used by our order.
+               If the order uses only the 2nd and 3rd arguments of a 4
+               arguments-function, then the 2 match will only retain the 2nd
+               and 3rd components of the tuple of function'as arguments. *)
+            Format.fprintf out_fmter "@[<2>match@ __x@ with@\n" ;
+            let printed1 =
+              print_pattern_for_order
+                out_fmter ~var_suffix: "1" pattern_description in
+            Format.fprintf out_fmter " =>@\n" ;
+            Format.fprintf out_fmter "@[<2>match@ __x@ with@\n" ;
+            let printed2 =
+              print_pattern_for_order
+                out_fmter ~var_suffix: "2" pattern_description in
+            Format.fprintf out_fmter " =>@\n(" ;
+            (* Now, generate the Coq translation of the measure expression
+               applied to both tuples of arguments and linked by the <
+               relation. *)
+            Format.fprintf out_fmter "@[<2>wellfounded.RelInt.lt@ " ;
+            let local_idents =
+              printed2 @ printed1 @
+              [ Parsetree.Vlident "__x"; Parsetree.Vlident "__y" ] in
+            Format.fprintf out_fmter "(" ;
+            Species_record_type_generation.generate_expr
+              ctx ~local_idents ~in_recursive_let_section_of: [name]
+              ~self_methods_status:
+                Species_record_type_generation.SMS_abstracted
+              env measure_expr ;
+            (* Now apply this expression to the first tuple of used arguments
+               extracted by the 2 "matchs". *)
+            Format.fprintf out_fmter "@ " ;
+            print_idents_as_tuple out_fmter printed1 ;
+            Format.fprintf out_fmter ")@ (" ;
+            Species_record_type_generation.generate_expr
+              ctx ~local_idents ~in_recursive_let_section_of: [name]
+              ~self_methods_status:
+                Species_record_type_generation.SMS_abstracted
+              env measure_expr ;
+            Format.fprintf out_fmter "@ " ;
+            print_idents_as_tuple out_fmter printed2 ;
+            Format.fprintf out_fmter ")" ;
+            (* Close the box of the "wellfounded.RelInt.lt". *)
+            Format.fprintf out_fmter "@]" ;
+            (* Close the 2 boxes of the "matchs" and the box of the whole
+               "Definition" of the order. *)
+            Format.fprintf out_fmter ")@\nend@]@\nend@].@]@\n"
+            end)
+        | Parsetree.TP_order (order_expr, order_args, _) ->
+            (begin
             (* Get the indices of the variables the pattern must bind. *)
             let pattern_description =
               pattern_from_used_variables fun_params_n_tys order_args in
@@ -2224,6 +2274,7 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
             (* Close the 2 boxes of the "matchs" and the box of the whole
                "Definition" of the order. *)
             Format.fprintf out_fmter ")@\nend@]@\nend@].@]@\n"
+            end)
        end)
 ;;
 
@@ -2232,7 +2283,7 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
 let generate_termination_proof ctx print_ctx env name
     ai
     sorted_deps_from_params generated_fields (* Only needed for "prelude". *)
-    recursive_calls =
+    recursive_calls opt_term_pr =
   let out_fmter = ctx.Context.scc_out_fmter in
   Format.fprintf out_fmter "@[<2>Theorem %a_termination"
     Parsetree_utils.pp_vname_with_operators_expanded name ;
@@ -2259,10 +2310,36 @@ let generate_termination_proof ctx print_ctx env name
     out_fmter ai.Abstractions.ai_used_species_parameter_tys
     sorted_deps_from_params abstracted_methods ;
   Format.fprintf out_fmter ")).@]@\n@\n" ;
-  (* Now, manage the proof of this termination theorem. *)
-  (* [Unsure] TODO. *)
-  Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\n" ;
-  Format.fprintf out_fmter "Qed.@]@\n"
+  (* Now, manage the proof of this termination theorem if some is provided. *)
+  (match opt_term_pr with
+   | None ->
+       Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\nQed."
+   | Some term_pr ->
+       (begin
+       match term_pr.Parsetree.ast_desc with
+        | Parsetree.TP_structural _ ->
+            failwith "TODO: structural2."  (* [Unsure] *)
+        | Parsetree.TP_lexicographic _ ->
+            failwith "TODO: lexicographic2."  (* [Unsure] *)
+        | Parsetree.TP_measure (_, _, proof)
+        | Parsetree.TP_order (_, _, proof) ->
+            (match proof.Parsetree.ast_desc with
+             | Parsetree.Pf_assumed (_, reason) ->
+                 (* Proof assumed, then simply use "magic_prove". *)
+                 Format.fprintf out_fmter
+                   "(* Proof assumed because \"%s\". *)@\n" reason ;
+                 Format.fprintf out_fmter
+                   "apply coq_builtins.magic_prove.@\nQed."
+             | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
+                 (* Proof done by Zenon. Apply the temporary theorem. *)
+                 Format.fprintf out_fmter
+                   "apply for_zenon_abstracted_%a ;@\nauto.@\nQed."
+                   Parsetree_utils.pp_vname_with_operators_expanded name
+             | Parsetree.Pf_coq (_, script) ->
+                 (* Dump verbatim the Coq code. *)
+                 Format.fprintf out_fmter "%s" script) ;
+       end)) ;
+  Format.fprintf out_fmter "@]@\n"
 ;;
 
 
@@ -2329,7 +2406,8 @@ let generate_defined_recursive_let_definition ctx print_ctx env
 (* [Unsure] *)
        if (Configuration.get_experimental ()) then
        generate_termination_proof ctx' print_ctx env name
-         ai sorted_deps_from_params generated_fields recursive_calls ;
+         ai sorted_deps_from_params generated_fields recursive_calls
+         opt_term_pr ;
        (* Start the "Section" containing the definition of the "Function". *)
        Format.fprintf out_fmter "@[<2>Section %a.@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name ;
@@ -2404,11 +2482,14 @@ let generate_defined_recursive_let_definition ctx print_ctx env
          out_fmter sorted_deps_from_params ai.Abstractions.ai_min_coq_env
          ai.Abstractions.ai_used_species_parameter_tys ;
        (* Print the proof using the above material. *)
-       Format.fprintf out_fmter "%a"
-         (Handy.pp_generic_n_times ((List.length recursive_calls) + 1)
-            Format.fprintf)
-         (* "coq_builtins.prove_term_obl __term_obl.@\n" ; *)
-         "apply coq_builtins.magic_prove.@\n" ;
+       if Configuration.get_experimental () then
+         Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\n"
+           (* "coq_builtins.prove_term_obl __term_obl.@\n" ; *)
+       else
+         Format.fprintf out_fmter "%a"
+           (Handy.pp_generic_n_times ((List.length recursive_calls) + 1)
+              Format.fprintf)
+           "apply coq_builtins.magic_prove.@\n" ;
        (* Close the pretty print of of the "Function". *)
        Format.fprintf out_fmter "Qed.@]@\n" ;
 
@@ -3075,7 +3156,7 @@ let generate_collection_generator ctx env compiled_species_fields
          to the same scheme we used at lambda-lifting time:
          "_p_" + species parameter name + "_" + called method name. *)
       Species_record_type_generation.generate_method_lambda_lifted_arguments
-	out_fmter
+        out_fmter
         field_memory.Misc_common.cfm_used_species_parameter_tys
         field_memory.Misc_common.cfm_dependencies_from_parameters
 (* [Unsure] Euh, tiens, avant on appliquait aussi aux trucs de
