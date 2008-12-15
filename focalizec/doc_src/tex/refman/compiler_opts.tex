@@ -20,7 +20,12 @@ To generate the final \coq\ code, the ``.zv'' file must be send to
     file base name (i.e. without path and suffix) + the species name +
     the suffix ``.dot''.
 
-  \item[*] {\bf $-$focal-doc} Generates documentation..... TODO.
+  \item[*] {\bf $-$focal-doc} Generates documentation. Not currently
+    complete. Reserved for future extensions.
+
+  \item[*] {\bf $--$experimental} Reserved for development purpose.
+    Never use. Invoking the compiler with this option may trigger
+    unpredictable results.
 
   \item[*] {\bf $-$i}. Prints the interfaces of the species present in
     the compiled source file. Result is sent to the standard output.
@@ -29,7 +34,7 @@ To generate the final \coq\ code, the ``.zv'' file must be send to
     directory to the path list where to search for compiled
     interfaces. Several $-$I options can be used. The search order is
     in the standard library directory first (unless the
-    $-$no-stdlib-path the option is used, see below), then in the
+    $-$no-stdlib-path option is used, see below), then in the
     directories specified by the $-$I options in their apparition
     order on the command line.
 
@@ -42,7 +47,7 @@ To generate the final \coq\ code, the ``.zv'' file must be send to
     proof, a warning is printed during compilation when trying to make
     a collection from this species.
 
- \item[*] {\bf $--$methods-history-to-text} {\em directories
+ \item[*] {\bf $--$methods-history-to-text} {\em directory
    name}. Dumps the methods' inheritance history of the species
    present in the compiled. The result is sent as plain text files
    into the argument directory. For each method of each species a file
@@ -63,7 +68,7 @@ To generate the final \coq\ code, the ``.zv'' file must be send to
   \item[*] {\bf $--$no-ocaml-code}. Disables the \ocaml\ code
     generation. By default \ocaml\ code is always generated.
 
-  \item[*] {\bf $-$no-stdlib-path}. Does not include the standard
+   \item[*] {\bf $-$no-stdlib-path}. Does not include the standard
     library installation directory in the libraries seacrch path. This
     option is rarely useful and mostly dedicated to the
     \focal\ compiler build process.
