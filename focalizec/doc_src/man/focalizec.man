@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.\" \$Id: focalizec.man,v 1.3 2008-12-12 10:51:13 weis Exp $
+.\" \$Id: focalizec.man,v 1.4 2008-12-15 14:37:48 pessaux Exp $
 .\"
 .\"
 .\" First parameter, NAME, should be all caps
@@ -29,28 +29,177 @@
 $(capitalize $package) version $package_version
 .SH SYNOPSIS
 .B $package
-.RI [ options ]\ [ source\ file ] ...
+.RI [ options ]\ [ source\ file ]
 .SH DESCRIPTION
 The 
 .B $package
-compiler is a compiler for the $(focal) language.
+compiler is a compiler for the $(focal) language. It takes a input one
+source file that gets compiled to
+.B OCaml
+and or pre-
+.B Coq
+source codes depending of the selected options. By default both these
+target languages are generated. During the compilation process an
+object file (ended by the suffix
+.I .fo
+) is also generated for separate compilation purposes.
+
+The generated
+.B OCaml
+code can directly be passed to the
+.B Objective Caml
+compiler to finally get an executable linking all the generated files
+of your
+$(focal)
+development.
+
+The generated pre-
+.B Coq
+sources are files ended by a
+.I .zv
+suffix and need to be sent to the
+.B Zenon
+automated theorem prover by invoking the command
+.B zvtov
+in order to get a pure
+.B Coq
+source file ended with the suffix
+.I .v
+.
+
+Hence the generation process is the following:
+    file.fcl --
+.B focalizec
+--> file.ml and/or file.zv.
+    file.ml --
+.B ocaml/ocamlopt ...
+--> executable.
+    file.zv --
+.B zvtov
+--> file.v
+    file.v --
+.B coqc
+--> file.vo
 
 .SH OPTIONS
 Options are :
 .TP
+.B --dot-non-rec-dependencies \<dirname\>
+Dumps non-let-rec dependencies of the species present in the compiled
+source file. The output format is suitable to be graphically displayed
+by
+.B dotty
+(free software available via the
+.B graphviz
+package). Each species will lead to a dotty file into the argument
+directory. Files are names by
+.I deps_
++ the source file base name (i.e. without path and suffix) + the
+species name + the suffix
+.I .dot
+.
+.TP
+.B --experimental
+Reserved for development purpose. Never use. Invoking the compiler
+with this option may trigger unpredictable results.
+.TP
+.B -focalize-doc
+Generate documentation.
+.B Not currently complete. Reserved for futur usage.
+.TP
+.B -i
+Prints the interfaces of the species present in the compiled source
+file. Result is sent to the standard output.
+.TP
 .B \-I \<dirname\>
-Add directory \<dirname\> in front of the list of directories searched
-for inclusion of files.
+Adds the \<dirname\> directory to the path list where to search for
+compiled interfaces. Several
+.B -I
+options can be used. The search order is in the standard library
+directory first (unless the
+.B -no-stdlib-path
+option is used, see below), then in the directories specified by the
+.B -I
+options in their apparition order on the command line.
+.TP
+.B -impose-termination-proof
+Make termination proofs mandatory for recursive functions. If a
+recursive function doesn't have its termination proof, then the field
+will be considered as not fully defined and no collection will be
+possible based on the species hosting the function. By default this
+option is not enabled and if a recursive function does not have any
+termination proof, a warning is printed during compilation when trying
+to make a collection from this species.
+.TP
+.B --methods-history-to-text \<dirname\>
+Dumps the methods' inheritance history of the species present in the
+compiled. The result is sent as plain text files into the \<dirname\>
+directory. For each method of each species a file is generated wearing
+the name made of
+.I history_
++ the source file base name (i.e. without path and suffix) +
+.I _
++ the hosting species name + the suffix
+.I .txt
+.
+.TP
+.B --no-ansi-escape
+Disables ANSI escape sequences in the error messages. By default, when
+an error is reported, bold, italic, underline fonts are used to make
+easier reading the message. Using this option removes all these text
+attributes and may be used if your terminal doesn't support ANSI
+escape sequences or, for example, if compiling under
+.B emacs
+.
+.TP
+.B --no-coq-code
+Disables the
+.B Coq
+code generation. By default coq code is always generated.
+.TP
+.B --no-ocaml-code
+Disables the
+.B OCaml
+code generation. By default OCaml code is always generated.
+.TP
+.B -no-stdlib-path
+Does not include the standard library installation directory in the
+libraries seacrch path. This option is rarely useful and mostly
+dedicated to the $(focal) compiler build process.
+.TP
+.B --pretty \<file\>
+Undocumented: mostly for debug purpose. Pretty-prints the parse tree
+of the $(focal) file as a $(focal) source into the argument file.
+.TP
+.B --raw-ast-dump
+Undocumented: mostly for debug purpose. Prints on stderr the raw AST
+structure after parsing stage.
+.TP
+.B --scoped_pretty \<file\>
+Undocumented: mostly for debug purpose. Pretty-prints the parse tree
+of the $(focal) file once scoped as a $(focal) source into the
+file \<file\>.
+.TP
+.B --verbose.
+Sets the compiler in verbose mode. It will then generate the trace of
+the steps and operations is does during, the compilation. This feature
+is mostly used for debugging purpose but can also explain the
+elaboration of the model during compilation for people interested in
+$(focal)'s compilation process. 
 .TP
 .B \-v
 Print the
 .B $package
-version number.
+version number then exits.
 .TP
 .B \-version
 Print the
 .B $package
-long version number.
+full version, sub-version and release date, then exits.
+.TP
+.B --where
+Prints the binaries and libraries installation directories then
+exits.
 .TP
 .B \-help
 Display this list of options.
@@ -67,6 +216,18 @@ The
 .B $package
 user's manual (http://$(focal).inria.fr/eng.htm)
 (french version at http://$(focal).inria.fr/fra.htm).
+
+.BR
+.B zvtov
+(1)
+.B zenon
+(1)
+.B ocamlc
+(1)
+.B ocamlopt
+(1)
+.B coqc
+(1)
 .SH AUTHORS
 François Pessaux <François.Pessaux@lip6.fr>
 Pierre Weis <Pierre.Weis@inria.fr>
