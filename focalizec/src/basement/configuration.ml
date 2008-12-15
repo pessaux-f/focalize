@@ -13,15 +13,16 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.22 2008-12-09 12:51:58 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.23 2008-12-15 17:52:06 pessaux Exp $ *)
 
 exception Input_file_already_set;;
 exception No_input_file;;
 
-let focalize_version_number = 0.1;;
+let focalize_version_number = (0, 1, 0) ;;
 
 let focalize_short_version =
-  Printf.sprintf "%.2f" focalize_version_number
+  let (major, minor, patch_level) = focalize_version_number in
+  Printf.sprintf "%d.%d.%d" major minor patch_level
 ;;
 
 let focalize_full_version =

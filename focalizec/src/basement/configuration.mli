@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.21 2008-12-09 12:51:58 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.22 2008-12-15 17:52:06 pessaux Exp $ *)
 
 (** {3 The internal configuration of the FoCaLize compiler} *)
 
@@ -23,7 +23,7 @@
 exception Input_file_already_set;;
 exception No_input_file;;
 
-val focalize_version_number : float;;
+val focalize_version_number : (int * int * int) ;;
 
 val focalize_full_version : string;;
 

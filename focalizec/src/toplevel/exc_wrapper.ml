@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.68 2008-12-15 17:09:45 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.69 2008-12-15 17:52:06 pessaux Exp $ *)
 
 let print_focalize_exception ppf = function
   (* ********************* *)
@@ -28,7 +28,8 @@ let print_focalize_exception ppf = function
         Handy.pp_set_bold Handy.pp_reset_effects
   | Files.Corrupted_fo fname ->
       Format.fprintf ppf
-        "@[%tInvalid@ or@ corrupted@ compiled@ interface%t@ '%t%s%t'.@]@."
+        "@[%tInvalid@ or@ corrupted@ compiled@ interface%t@ '%t%s%t'. May@ \
+        be@ it@ was@ compiled@ with@ another@ version@ of@ the@ compiler.@]@."
         Handy.pp_set_bold Handy.pp_reset_effects
         Handy.pp_set_underlined fname Handy.pp_reset_effects
   | Focalizec.Bad_file_suffix fname ->

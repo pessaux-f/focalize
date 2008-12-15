@@ -13,12 +13,12 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: files.ml,v 1.12 2008-11-29 20:26:52 weis Exp $ *)
+(* $Id: files.ml,v 1.13 2008-12-15 17:52:06 pessaux Exp $ *)
 
 
 (** Paths for libraries lookup. *)
-exception Cant_access_file_in_search_path of Types.fname;;
-exception Corrupted_fo of Types.fname;;
+exception Cant_access_file_in_search_path of Types.fname ;;
+exception Corrupted_fo of Types.fname ;;
 
 
 
@@ -91,8 +91,8 @@ let open_in_from_lib_paths filename =
     {b Rem} : Exported outside this module.                       *)
 (* ************************************************************** *)
 let fo_basename_from_module_name module_name =
-  (* Remove the path if some, because fnames can be used *)
-  (* with a path in the "use" and "open" directives.     *)
+  (* Remove the path if some, because fnames can be used with a path in the
+     "use" and "open" directives. *)
   (Filename.basename module_name) ^ ".fo"
 ;;
 
@@ -121,19 +121,41 @@ let fo_magic = ('.', 'F', 'O', ' ');;
 
 
 let check_magic in_handle (expected0, expected1, expected2, expected3) =
-  let (magic0 : char) = input_value in_handle in
-  let (magic1 : char) = input_value in_handle in
-  let (magic2 : char) = input_value in_handle in
-  let (magic3 : char) = input_value in_handle in
-  expected0 = magic0 && expected1 = magic1 && expected2 = magic2 &&
-  expected3 = magic3
+  try
+    let (magic0 : char) = input_value in_handle in
+    let (magic1 : char) = input_value in_handle in
+    let (magic2 : char) = input_value in_handle in
+    let (magic3 : char) = input_value in_handle in
+    (* First check that the file is really a ".fo" file. *)
+    let good_format =
+      expected0 = magic0 && expected1 = magic1 && expected2 = magic2 &&
+      expected3 = magic3 in
+    if good_format then
+      (begin
+      (* Now, ensure that it was generated with the current version of the
+	 compiler. *)
+      let (read_major : int) = input_value in_handle in
+      let (read_minor : int) = input_value in_handle in
+      let (read_patch_level : int) = input_value in_handle in
+      let (major, minor, patch_level) = Configuration.focalize_version_number in
+      read_major = major && read_minor = minor && read_patch_level = patch_level
+      end)
+    else false
+  with End_of_file ->
+    (* If we can't even read the magic information then the file is corrupted
+       or not a FoCaLize object file. *)
+    false
 ;;
 
 
 
 let write_magic out_handle (magic0, magic1, magic2, magic3) =
-  output_value out_handle magic0;
-  output_value out_handle magic1;
-  output_value out_handle magic2;
-  output_value out_handle magic3
+  output_value out_handle magic0 ;
+  output_value out_handle magic1 ;
+  output_value out_handle magic2 ;
+  output_value out_handle magic3 ;
+  let (major, minor, patch_level) = Configuration.focalize_version_number in
+  output_value out_handle major ;
+  output_value out_handle minor ;
+  output_value out_handle patch_level
 ;;
