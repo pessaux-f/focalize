@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.15 2008-12-11 10:48:24 hardin Exp $
+% $Id: compiler_err_msgs.tex,v 1.16 2008-12-15 14:58:26 pessaux Exp $
 
 
 
@@ -542,13 +542,24 @@ $n_2$.
 {\color{red} revoir avec FP}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{ Collection  '$s_1$' is not compatible with  '$s_2$'. Field '$name$'
+\section*{Collection  '$s_1$' is not compatible with  '$s_2$'. Field '$name$'
   is not present in '$s_1$'.}
 
 {\em Description}:  During collection parameter instantiation, the
 interface of the 
-provided collection  $s_1$ is not compatible with the interface $s_2$, because it doesn't have a signature containing at
+provided collection  $s_1$ is not compatible with the interface $s_2$,
+because it doesn't have a signature containing at
 least $s_2$'s methods and especially not the method $name$.
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Parameterized specie is applied to $n$ arguments.}
+
+{\em Description}: A parameterized species is applied to a wrong
+number $n$ of effective arguments.
 
 {\em Hints}: None.
 
