@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.147 2008-12-15 16:41:15 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.148 2008-12-15 17:09:45 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2631,7 +2631,9 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
          Misc_common.CSF_let_rec [compiled_field]
          end)
        end)
-   | _ -> raise Recursion.MutualRecursion
+   | ((_, name1, _, _, _, _, _, _), _) ::
+     ((_, name2, _, _, _, _, _, _), _) :: _ ->
+       raise (Recursion.MutualRecursion (name1, name2))
 ;;
 
 

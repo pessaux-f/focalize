@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.ml,v 1.14 2008-11-29 23:47:30 weis Exp $ *)
+(* $Id: recursion.ml,v 1.15 2008-12-15 17:09:45 pessaux Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function
@@ -25,7 +25,7 @@
 
 exception NestedRecursiveCalls of Parsetree.vname * Location.t ;;
 exception PartialRecursiveCall of Parsetree.vname * Location.t ;;
-exception MutualRecursion ;;
+exception MutualRecursion of (Parsetree.vname * Parsetree.vname) ;;
 
 
 

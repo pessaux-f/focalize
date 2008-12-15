@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.67 2008-12-15 15:00:36 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.68 2008-12-15 17:09:45 pessaux Exp $ *)
 
 let print_focalize_exception ppf = function
   (* ********************* *)
@@ -563,6 +563,18 @@ let print_focalize_exception ppf = function
         Handy.pp_reset_effects Handy.pp_set_bold Handy.pp_reset_effects
   (* ************************** *)
   (* Recursion analysis errors. *)
+  | Recursion.MutualRecursion (name1, name2) ->
+      Format.fprintf ppf
+        "@[%tMutual@ recursion@ is not@ yet@ supported@ for@ Coq@ code@ \
+        generation.@ At@ least@ functions%t@ '%t%a%t'@ %tand%t@ \
+        '%t%a%t'@ %tare@ involved@ in@ a@ mutual@ recursion%t.@]@."
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Sourcify.pp_vname name1
+        Handy.pp_reset_effects
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Sourcify.pp_vname name2
+        Handy.pp_reset_effects
+        Handy.pp_set_bold Handy.pp_reset_effects
   | Recursion.NestedRecursiveCalls (function_name, at) ->
       Format.fprintf ppf
         "%a:@\n@[%tRecursive@ call@ to%t@ '%t%a%t'%t@ contains@ nested@ \
