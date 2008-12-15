@@ -6,7 +6,7 @@ species Bla =
   signature equal : Self -> Self -> bool ;
   property equal_reflexive : all x in Self, !equal (x, x) ;
   theorem equal_reflexive2 : all x in Self, !equal (x, x)
-    proof : assumed {* *} ;
+    proof = assumed {* *} ;
 end ;;
 
 
@@ -28,7 +28,7 @@ species Me (Naturals is IntModel, n in Naturals) =
 
  theorem daube : all x in Self,
     basics#syntactic_equal (n, Naturals!un)
-  proof : assumed {* *} ;
+  proof = assumed {* *} ;
 
   let junk (x in Self) in int = 1 ;
 

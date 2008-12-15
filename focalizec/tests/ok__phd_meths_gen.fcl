@@ -8,7 +8,7 @@ open "basics" ;;
 (* ************************************************************* *)
 species Basic_object =
   let print (x in Self) = "<abst>" ;
-  let parse (x in string) in Self = foc_error ("not parsable") ;
+  let parse (x in string) in Self = focalize_error ("not parsable") ;
   let equal (x in Self, y) =
      let useless = if true then x else y in
      true ;
@@ -23,6 +23,6 @@ species S inherits Basic_object =
   property p1_p2 : all x in Self, p2 (x) -> p1 (x) ;
   property op_spec : all x in Self, p1 (x) -> p2 (op (x)) ;
   property a_spec : p1 (a) ;
-  theorem t1 : p2 (c) proof : by definition of c property op_spec, a_spec ;
-  theorem t2 : p1 (c) proof : by property t1, p1_p2 ;
+  theorem t1 : p2 (c) proof = by definition of c property op_spec, a_spec ;
+  theorem t2 : p1 (c) proof = by property t1, p1_p2 ;
 end ;;

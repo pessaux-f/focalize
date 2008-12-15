@@ -26,7 +26,7 @@ end ;;
 
 species B inherits A =
   theorem lemme_bidon : all x in Self, true
-  proof : assumed {* For a test, I won't make proofs !!! *} ;
+  proof = assumed {* For a test, I won't make proofs !!! *} ;
 end ;;
 
 species Closed_C inherits B =

@@ -12,33 +12,33 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.21 2008-10-28 15:58:03 weis Exp $
+# $Id: Makefile,v 1.22 2008-12-15 16:41:46 pessaux Exp $
 
 ROOT_DIR = ..
 
-CHECK_FILE = $(ROOT_DIR)/toplevel/focalizec
+CHECK_FILE = $(ROOT_DIR)/src/toplevel/focalizec
 
 OK_TEST_FILES = \
- ok__baby_toy.foc \
- ok__definition_72_rule_PRM.foc \
- ok__in_example.foc \
- ok__in_example2.foc \
- ok__list.foc \
- ok__multiple_inherit.foc \
- ok__need_inspect_self.foc \
- ok__need_re_ordering.foc \
- ok__odd_even.foc \
- ok__phd_def_deps.foc \
- ok__phd_meths_gen.foc \
- ok__phd_sample.foc \
- ok__torture_params.foc
- #ok__coll_outside.foc
+ ok__baby_toy.fcl \
+ ok__definition_72_rule_PRM.fcl \
+ ok__in_example.fcl \
+ ok__in_example2.fcl \
+ ok__list.fcl \
+ ok__multiple_inherit.fcl \
+ ok__need_inspect_self.fcl \
+ ok__need_re_ordering.fcl \
+ ok__odd_even.fcl \
+ ok__phd_def_deps.fcl \
+ ok__phd_meths_gen.fcl \
+ ok__phd_sample.fcl \
+ ok__torture_params.fcl
+ #ok__coll_outside.fcl
 
 KO_TEST_FILES = \
-	ko__bad_self_use.foc \
-	ko__param_toy.foc \
-	ko__test_error.foc \
-	ko__test_rec.foc
+	ko__bad_self_use.fcl \
+	ko__param_toy.fcl \
+	ko__test_error.fcl \
+	ko__test_rec.fcl
 
 all:: $(CHECK_FILE) ok_all ko_all
 
@@ -50,14 +50,14 @@ ok_all: $(OK_TEST_FILES)
 	done; \
 	# Compile the generated OCaml code.
 	ocamlc -w a -c ok__baby_toy_externals.ml
-	for i in $(OK_TEST_FILES:.foc=.ml); do \
+	for i in $(OK_TEST_FILES:.fcl=.ml); do \
 	  echo "OCamllizing $$i"; \
 	  ocamlc -w a -I ../lib/ \
 	    ../lib/ml_builtins.cmo ../lib/basics.cmo \
 	    $$i -o $$i.out; \
 	done; \
 	# Compile the generated Coq code.
-	for i in $(OK_TEST_FILES:.foc=.v); do \
+	for i in $(OK_TEST_FILES:.fcl=.v); do \
 	  echo "Coquifying $$i"; \
 	  coqc -I ../lib/ $$i; \
 	done
@@ -70,5 +70,6 @@ ko_all: $(KO_TEST_FILES)
 	done
 
 clean::
-	$(RM) $(OK_TEST_FILES:.foc=.v) $(KO_TEST_FILES:.foc=.v)
-	$(RM) $(OK_TEST_FILES:.foc=.ml) $(KO_TEST_FILES:.foc=.ml)
+	$(RM) $(OK_TEST_FILES:.fcl=.v) $(KO_TEST_FILES:.fcl=.v)
+	$(RM) $(OK_TEST_FILES:.fcl=.ml) $(KO_TEST_FILES:.fcl=.ml)
+	$(RM) *.annot *.glob *.pfc *.zv *~

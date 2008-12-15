@@ -11,7 +11,7 @@ species A inherits Basic_object =
   signature eq : Self -> Self -> bool ;
   let id (x in Self) = x ;
   theorem foo : all x in Self, eq (x, id (x))
-    proof: by definition of id ;
+    proof = by definition of id ;
 end ;;
 
 species B inherits A =
