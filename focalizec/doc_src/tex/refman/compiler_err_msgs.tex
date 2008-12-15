@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.16 2008-12-15 14:58:26 pessaux Exp $
+% $Id: compiler_err_msgs.tex,v 1.17 2008-12-15 17:15:57 pessaux Exp $
 
 
 
@@ -790,6 +790,23 @@ hypothesis $hyp$ that was not found in the current proof tree.
 proof step that was not found in the current proof tree.
 
 {\em Hints}: None.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Mutual recursion is not yet supported for Coq code
+  generation. At least functions '$name_1$' and '$name_2$' are
+  involved in a mutual recursion.}
+
+{\em Description}: The current version of \focal\ does not yet handle
+\coq\ code generation for mutual recursive functions. At least the two
+functions $name_1$ and $name_2$ were found as mutually recursive but
+may be the recursion involves more functions. It is then impossible to
+produce \coq\ source code.
+
+
+{\em Hints}: Until this feature is available in \focal\, do not try to
+generate the \coq\ code for the source file containing these functions
+by using the {\tt --no-coq-code} option.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
