@@ -1,4 +1,4 @@
-% $Id: glimpse.tex,v 1.2 2008-12-11 15:56:36 hardin Exp $
+% $Id: glimpse.tex,v 1.3 2008-12-15 22:50:38 hardin Exp $
 \def\bbbn{{\rm I\!N}} 
 \label{glimpse}
 Before entering the precise description of \focal\ we give an
@@ -7,7 +7,7 @@ presentation of near all its features, to help further reading of the
 reference manual. Every construction or feature of \focal\ will be
 entirely described in the following chapters. 
 
-\subsection{The Basic Brick}
+\section{The Basic Brick}
 
 The primitive entity of a \focal\ development is the
 {\em species}. It can be viewed as a record grouping ``things'' related
@@ -168,7 +168,7 @@ allowed in \focal\ and, it is
 always the last version  which is  kept as the effective {\em definition}
 inside the species.
 
-\subsection{Type of Species, Interfaces and Collections}
+\section{Type of Species, Interfaces and Collections}
 \label{species-type}
 \label{species-interface}
 The {\em type} of a {\em species} is obtained by removing definitions
@@ -214,7 +214,7 @@ only usable through the methods of its interface, but having the
 guarantee that all methods/theorems are defined/proved. 
 
 
-\subsection{Combining Bricks by Inheritance}
+\section{Combining Bricks by Inheritance}
 
 A \focal\ development is organised as a hierarchy which may have
 several roots. Usually the upper levels of the hierarchy are built during the
@@ -289,7 +289,7 @@ unifier of these two types as its own type.
 
 
 
-\subsection{Combining Bricks by Parameterisation}
+\section{Combining Bricks by Parameterisation}
 
 Until now we are only able to enrich {\em species}. 
 However, we sometimes need to use a {\em species}, not to take over
@@ -301,7 +301,7 @@ independent of the structure of each component it is made of. A pair
 can be seen as {\em parameterised} by its two components.
 Following this idea, \focal\ allows two flavors of parameterisation.
 
-\subsubsection{Parameterisation by Collection Parameters}
+\subsection{Parameterisation by Collection Parameters}
 
 We first introduce the {\em collection parameters}. They are
 {\em collections} that the hosting species may use through their
@@ -396,7 +396,7 @@ weak to be usable. We choose to always hide  the {\em representation} of a
 hosting {\em species}. Hence the introduction of the  notion of {\em collection}, obtained
   by abstracting the representation from a complete species. 
 
-\subsubsection{Parameterisation by Entity Parameters}
+\subsection{Parameterisation by Entity Parameters}
 
 Let us imagine we want to make a {\em species} working on natural numbers
 modulo a certain value.  In the expression $5 {\tt\ modulo\ } 2\ is\ 1$, both $5$ and $2$
@@ -444,7 +444,7 @@ modulo, but will always use the {\em same} value {\tt n} of the modulo
 everywhere inside the {\em species}.
 
 
-\subsection{The Final Brick}
+\section{The Final Brick}
 
 As briefly introduced in \ref{species-interface}, a {\em species}
 needs to be fully defined to lead to executable code for its functions
@@ -494,7 +494,7 @@ possibly breaking invariants required by the internals of the
 
 
 
-\subsection{Properties,  Theorems and  Proofs}
+\section{Properties,  Theorems and  Proofs}
 \label{focal-proof-language}
 
 \focal\ aims not only to write programs, it intends to encompass both
@@ -577,7 +577,7 @@ the \focal\ part since it does not belong to it. Expressing properties
 of the \focal\ part may need to express properties on the imported
 code, that cannot be formally proved, then must be ``assumed''.
 
-\subsection{Around the Language}
+\section{Around the Language}
 
 In the previous sections, we presented \focal\ through its programming
 model and shortly its syntax. We especially investigated the various
@@ -590,7 +590,7 @@ redefined in arithmetics modulo {\tt 2} if boolean values are used to
  represent the two values). It is also a very convenient tool to
 maintain software. 
 
-\subsubsection{Consistency of the Software}
+\subsection{Consistency of the Software}
 
 All along the development cycle of a \focal\ program, the compiler
 keeps trace of dependencies between {\em species}, their
@@ -619,7 +619,7 @@ Jaume propose a \emph{coding style} to minimize the number of proofs
 to be redone in the case of a redefinition, by a certain kind of
 modularisation of the proofs.
 
-\subsubsection{Code Generation}
+\subsection{Code Generation}
 
 \focal\ currently compiles programs toward two languages, \ocaml\ to
 get an executable piece of software, and \coq\ to have a formal model
@@ -637,7 +637,7 @@ the system developed in \focal.
 
 \def\focaltest{FocalTest}
 
-\subsubsection{Tests}
+\subsection{Tests}
 \focal\ incorporates a tool named {\em \focaltest}
 \cite{CarlierDuboisLNCS2008} for Integration/Validation testing. It
 allows to confront automatically a property of the specification with
@@ -657,7 +657,7 @@ The testable properties are required to be broken down into a precondition and a
 
 
 
-\subsubsection{Documentation}
+\subsection{Documentation}
 
 The tool called \focdoc\ \cite{MaarekCalculemus03} automatically
 generates documentation, thus the documentation of a component is

@@ -227,7 +227,7 @@ let ( =-one ) (x, y) = ... ;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Species and collection names}
-\index{species!name} As previously introduced, species, collection
+\index{species!name} Species, collection
 names and collection parameters are capitalized, non-extended
 identifiers.
 
@@ -460,18 +460,19 @@ depth of the bullet and the second part stands for its name. Example:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Name qualification}
 \label{qualified-name}
-\index{qualified name}
-\index{name!resolution}
-\index{name!qualification}
-Each compilation unit (i.e. source file) is considered as a kind of
-module. Any toplevel-definition (thus outside
-species and collections) is visible all along the source file since its
-apparition. As previously described (\ref{toplevel-def})
-toplevel-definitions  include
-species, collections, type definitions (and their constitutive elements
-like constructors, record fields), ``toplevel'' theorems and
-``toplevel'' functions.
+\index{qualified name} \index{name!resolution}
+\index{name!qualification} 
 
+Name qualification is done according to the
+compilation unit status. 
+
+
+As precisely described in section (\ref{toplevel-def}), 
+toplevel-definitions include species, collections, type definitions
+(and their constitutive elements like constructors, record fields),
+toplevel-theorems and toplevel-functions.  Any toplevel-definition (thus outside species
+and collections) is visible all along the compilation unit since its
+apparition.
 If a toplevel-definition is required by another compilation unit, it can
 be reached by {\bf qualifying} its name, i.e. making explicit the
 compilation unit's name before the definition's name using the '\#'
@@ -506,10 +507,10 @@ species S inherits Basic_object = ... end ;;
 \end{lstlisting}
 }
 
-After an {\tt open} directive, the definitions of loaded interfaces are
-added in head of the current scope and mask the ones already existing
-and wearing the same names. For example, in the following program:
-{\scriptsize
+After an {\tt open} directive, the definitions of loaded (object files
+of) compilation units are added in head of the current scope and mask
+the ones already existing and wearing the same names. For example, in
+the following program: {\scriptsize
 \begin{lstlisting}
 (* Redefine my basic object, containing nothing. *)
 species Basic_object = end ;;
