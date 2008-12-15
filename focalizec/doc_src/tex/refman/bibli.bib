@@ -3,7 +3,98 @@
 %%% mode: latex
 %%% TeX-master: t
 %%% End: 
-$Id: bibli.bib,v 1.1 2008-12-11 10:48:24 hardin Exp $
+$Id: bibli.bib,v 1.2 2008-12-15 15:19:45 hardin Exp $
+
+%%%%%%%%%%Ordered by alphabetic ordering on the name of the first author %%%%%
+@InProceedings{TTSS08,
+author = "P. Ayrault and T. Hardin and F. Pessaux", 
+title ="{Development life cycle of critical software under FoCal}",
+booktitle = "{Harnessing Theories for Tool Support in Software-TTSS'08}",   
+year = 2008, 
+editor = "{ENTCS-Elsevier}" ,
+pages=""
+} 
+
+
+@ARTICLE{BM07,
+  author = {J. Blond and C. Morisset},
+  title = {Un moniteur de r\'ef\'erence s\^ur d'une base de donn\'ees},
+   year = {2007},
+volume = {26},
+number = {9},
+pages = {1091--1110},
+journal={Technique et Science Informatiques},
+editor= {Herm\`es}  
+}
+@InProceedings{bm06,
+author = "J. Blond and C. Morisset", 
+title ="{Formalisation et implantation d'une politique de s\'ecurit\'e 
+d'une base de donn\'ees}",
+booktitle = "{JFLA'2006}",   
+year = 2006, 
+editor = "{INRIA}" ,
+pages="71--86"
+} 
+
+@inproceedings{ZenonBDD ,
+  author    = "Bonichon, Richard and Delahaye, David and Doligez, Damien",
+  title     = "\zenon{}: An {E}xtensible {A}utomated {T}heorem {P}rover
+               {P}roducing {C}heckable {P}roofs",
+  booktitle = "Logic for Programming Artificial Intelligence and Reasoning
+               (LPAR)",
+  publisher = "Springer",
+  series    = "LNCS/LNAI",
+  address   = "Yerevan (Armenia)",
+  volume    = 4790,
+  pages     = "151--165",
+  month     = oct,
+  year      = 2007
+}
+
+
+@PHDTHESIS{BoulmePhD00,
+  AUTHOR = {S. Boulm\'e},
+  TITLE = {Sp\'ecification d'un environnement d\'edi\'e \`a la programmation certifi\'ee de biblioth\`eques de Calcul Formel},
+  SCHOOL = {Universit\'e Paris 6},
+  YEAR = 2000,
+  TYPE = {Th\`ese de Doctorat}
+}
+
+
+@inproceedings{BHR2,
+	author = "S. Boulm\'e and T. Hardin and V. M\'enissier-Morain and R. Rioboo",
+	title = {On the way to certify Computer Algebra Systems},
+	booktitle = "Calculemus 99",
+	institution="ENTCS",
+	year = 1999,
+       volume = 23,
+        publisher = "Elsevier",
+}
+	
+
+@InProceedings{ThRRCalculemus,
+  author = 	 {S. Boulm\'e and T. Hardin and R. Rioboo},
+  title = 	 {Some Hints for polynomials in the {F}oc project},
+  booktitle = 	 {Calculemus 2001 Proceedings},
+  year =	 2001,
+  month =	 {June}
+}
+
+
+
+@InProceedings{CarlierDuboisLNCS2008,
+  title =	"Functional Testing in the Focal Environment",
+  author =	"M.Carlier and C.Dubois",
+  booktitle =	"Tests and Proofs, Second International Conference,
+		 {TAP} 2008, Prato, Italy, April 9-11, 2008.
+		 Proceedings",
+  publisher =	"Springer",
+  year = 	"2008",
+  volume =	"4966",
+  editor =	"B.Beckert and R.H{\"a}hnle",
+  pages =	"84--98",
+  series =	"Lecture Notes in Computer Science",
+}
 
 @inproceedings{EDEMOI-All,
   author    = "Delahaye, David and \'Etienne, Jean-Fr\'ed\'eric and Vigui\'e
@@ -31,14 +122,76 @@ $Id: bibli.bib,v 1.1 2008-12-11 10:48:24 hardin Exp $
   year      = 2008
 }
 
-	
 
-@InProceedings{ThRRCalculemus,
-  author = 	 {S. Boulm\'e and T. Hardin and R. Rioboo},
-  title = 	 {Some Hints for polynomials in the {F}oc project},
-  booktitle = 	 {Calculemus 2001 Proceedings},
-  year =	 2001,
-  month =	 {June}
+@inproceedings{EDEMOI-Proof,
+  author    = "Delahaye, David and Étienne, Jean-Frédéric and Viguié
+               Donzeau-Gouge, Véronique",
+  title     = "Reasoning about {A}irport {S}ecurity {R}egulations using the
+               \focal{} {E}nvironment",
+  booktitle = "International Symposium on Leveraging Applications of Formal
+               Methods, Verification and Validation (ISoLA)",
+  publisher = "IEEE CS Press",
+  pages     = "45--52",
+  month     = nov,
+  year      = 2006
+}
+
+@inproceedings{EDEMOI-Model,
+  author    = "Delahaye, David and Étienne, Jean-Frédéric and Viguié
+               Donzeau-Gouge, Véronique",
+  title     = "{C}ertifying {A}irport {S}ecurity {R}egulations using the
+               \focal{} {E}nvironment",
+  booktitle = "Formal Methods (FM)",
+  publisher = "Springer",
+  series    = "LNCS",
+  volume    = 4085,
+  pages     = "48--63",
+  month     = aug,
+  year      = 2006
+}
+
+@Misc{zenon0.4.1,
+  author =	 {D. Doligez},
+  title =	 {Zenon, version 0.4.1},
+  howpublished = {\url{http://focal.inria.fr/zenon/}},
+  year =	 2006
+}
+
+@inproceedings{TFP04,
+  author    = {C. Dubois and
+               T. Hardin and
+               V. Viguié Donzeau-Gouge},
+  title     = {Building certified components within FOCAL},
+  pages     = {33-48},
+  editor    = {Hans-Wolfgang Loidl},
+  booktitle     = {Revised Selected Papers from the Fifth Symposium on Trends
+               in Functional Programming, TFP 2004, M{\"u}nchen, Germany},
+  publisher = {Intellect},
+  series    = {Trends in Functional Programming},
+  volume    = {5},
+  year      = {2006},
+}
+
+ 
+@TechReport{ghjrr,
+  Author         = {E. Gureghian and Th. Hardin and M. Jaume},
+  Title          = {A full formalisation of the {B}ell and {L}apadula security model}, 
+  Institution    = {Univ. Paris 6, LIP6},
+number =       "2003-007",
+  year           = 2003,
+} 
+
+
+@inproceedings{ias08,
+  title={A formal comparison of the Bell \& LaPadula and RBAC
+models},
+  author={L. Habib and M. Jaume and C. Morisset},
+  booktitle={Information Assurance and Security ({IAS'08})
+International Conference on Information Technology, 
+{ITCC}},
+  year="2008",
+  pages="To appear",
+  publisher="{IEEE CS Press}"
 }
 
 @Article{HardinRiobooTSI04,
@@ -50,18 +203,15 @@ $Id: bibli.bib,v 1.1 2008-12-11 10:48:24 hardin Exp $
   journal =      {RSTI - L'objet}
 }
 
-@ARTICLE{BM07,
-  author = {J. Blond and C. Morisset},
-  title = {Un moniteur de r\'ef\'erence s\^ur d'une base de donn\'ees},
-   year = {2007},
-volume = {26},
-number = {9},
-pages = {1091--1110},
-journal={Technique et Science Informatiques},
-editor= {Herm\`es}  
+
+@InProceedings{traps,
+  title={A few remarks about developing secure systems in B},
+  author={E.Jaeger and T.Hardin},
+  year="2008",
+booktitle = "{HASE 2008}", 
+editor = "{IEEE}" ,
+  note="{}"
 }
-
-
 
 @article{jias06,
 	author = {M. Jaume and C. Morisset},
@@ -71,116 +221,6 @@ editor= {Herm\`es}
 	volume = {2},
 	year = {2006}
 }
-@inproceedings{BHR2,
-	author = "S. Boulm\'e and T. Hardin and V. M\'enissier-Morain and R. Rioboo",
-	title = {On the way to certify Computer Algebra Systems},
-	booktitle = "Calculemus 99",
-	institution="ENTCS",
-	year = 1999,
-       volume = 23,
-        publisher = "Elsevier",
-}
-@PHDTHESIS{BoulmePhD00,
-  AUTHOR = {S. Boulm\'e},
-  TITLE = {Sp\'ecification d'un environnement d\'edi\'e \`a la programmation certifi\'ee de biblioth\`eques de Calcul Formel},
-  SCHOOL = {Universit\'e Paris 6},
-  YEAR = 2000,
-  TYPE = {Th\`ese de Doctorat}
-}
-@INPROCEEDINGS{TPHOL2002,
-  KEY = 3,
-  AUTHOR = {V. Prevosto and D. Doligez and T. Hardin},
-  TITLE = {Algebraic Structure and Dependent Records},
-  BOOKTITLE = {{TPHOL}s'2002},
-  YEAR = 2002,
-  PUBLISHER = {Springer-Verlag},
-  VOLUME = {2410},
-  SERIES = {LNCS}
-}
-
-
-
-@INPROCEEDINGS{TLCA2005,
-  AUTHOR = {V. Prevosto and S. Boulm\'e},
-  TITLE = {Proof Contexts with Late Binding},
-  BOOKTITLE = {Typed Lambda Calculi and Applications},
-  YEAR = 2005,
-  PUBLISHER = {Springer},
-  SERIES = {LNCS},
-  VOLUME = {3461},
-  PAGES = {324-338}
-}
-
-@inproceedings{Zenon,
-  author    = "Bonichon, Richard and Delahaye, David and Doligez, Damien",
-  title     = "\zenon{}: An {E}xtensible {A}utomated {T}heorem {P}rover
-               {P}roducing {C}heckable {P}roofs",
-  booktitle = "Logic for Programming Artificial Intelligence and Reasoning
-               (LPAR)",
-  publisher = "Springer",
-  series    = "LNCS/LNAI",
-  address   = "Yerevan (Armenia)",
-  volume    = 4790,
-  pages     = "151--165",
-  month     = oct,
-  year      = 2007
-}
-
-@Misc{zenon0.4.1,
-  author =	 {D. Doligez},
-  title =	 {Zenon, version 0.4.1},
-  howpublished = {\url{http://focal.inria.fr/zenon/}},
-  year =	 2006
-}
-
-@InProceedings{PrevostoJaume2003,
-  author =       {V. Prevosto and M. Jaume},
-  title =        {Making Proofs in a hierarchy of Mathematical Structures},
-  booktitle =    {Proceedings of the 11th Calculemus Symposium},
-  year =         2003,
-  address =      {Rome},
-  month =        {sep}
-}
-
-@InProceedings{MaarekCalculemus03,
-  author =       {M. Maarek and V. Prevosto},
-  title =        {FoCDoC: The Documentation System of FoC},
-  booktitle =    {Proceedings of the 11th Calculemus Symposium},
-  year =         2003,
-  address =      {Rome},
-  month =        {sep}
-}
-
-@InProceedings{CarlierDuboisLNCS2008,
-  title =	"Functional Testing in the Focal Environment",
-  author =	"M.Carlier and C.Dubois",
-  booktitle =	"Tests and Proofs, Second International Conference,
-		 {TAP} 2008, Prato, Italy, April 9-11, 2008.
-		 Proceedings",
-  publisher =	"Springer",
-  year = 	"2008",
-  volume =	"4966",
-  editor =	"B.Beckert and R.H{\"a}hnle",
-  pages =	"84--98",
-  series =	"Lecture Notes in Computer Science",
-}
-
-@MANUAL{ocaml,
-AUTHOR="{{OCaml Development Team}}",
-TITLE="OCAML Reference Manual Version 3.08",
-ORGANIZATION="INRIA-Rocquencourt",
-YEAR=2004
-}
-
-
-@mastersthesis{CMDEA,
-	author = {C. Morisset},
-	title = {Formalisation et implantation d'un mod\`ele de contr\^ole 
-d'acc\`es dans l'atelier {F}ocal},
-	school = {Universit\'e Paris 6},
-	year = 2004
-}
-
 
 
 
@@ -219,64 +259,43 @@ International Conference on Information Technology,
 }
 
 
-@inproceedings{ias08,
-  title={A formal comparison of the Bell \& LaPadula and RBAC
-models},
-  author={L. Habib and M. Jaume and C. Morisset},
-  booktitle={Information Assurance and Security ({IAS'08})
-International Conference on Information Technology, 
-{ITCC}},
-  year="2008",
-  pages="To appear",
-  publisher="{IEEE CS Press}"
-}
-
-@TechReport{ghjrr,
-  Author         = {E. Gureghian and Th. Hardin and M. Jaume},
-  Title          = {A full formalisation of the {B}ell and {L}apadula security model}, 
+@TechReport{acrr1,
+  Author         = {M. Jaume and C. Morisset},
+  Title          = {On specifying, implementing and comparing access control
+models. {A} {S}emantical {F}ramework}, 
   Institution    = {Univ. Paris 6, LIP6},
-number =       "2003-007",
-  year           = 2003,
-} 
-
-
-
-@ARTICLE{PrevostoJAR02,
-  AUTHOR = {V. Prevosto and D. Doligez},
-  TITLE = {Algorithms and Proof Inheritance in the {Foc} language},
-  JOURNAL = {Journal of Automated Reasoning},
-  YEAR = 2002,
-  VOLUME = 29,
-  NUMBER = {3-4},
-  PAGES = {337-363},
-  MONTH = {dec}
+number =       "2007",
+  year           = 2007,
 }
 
-@Manual{foc03,
-  author = {Focal project},
-  title ={ {Focal}, version 0.2
-                  {Tutorial and reference manual}},
-ORGANIZATION="LIP6 -- INRIA -- CNAM",
-  month =	{sept},
-  year =	 2004,
-  note =	 {Distribution available at: 
-                  {\tt http://focal.inria.fr}}
+@InProceedings{MaarekCalculemus03,
+  author =       {M. Maarek and V. Prevosto},
+  title =        {FoCDoC: The Documentation System of FoC},
+  booktitle =    {Proceedings of the 11th Calculemus Symposium},
+  year =         2003,
+  address =      {Rome},
+  month =        {sep}
 }
 
-@Manual{sqlite,
-  note =	 {Sqlite:
-                  {\tt http://www.sqlite.org/}}
+@mastersthesis{CMDEA,
+	author = {C. Morisset},
+	title = {Formalisation et implantation d'un mod\`ele de contr\^ole 
+d'acc\`es dans l'atelier {F}ocal},
+	school = {Universit\'e Paris 6},
+	year = 2004
 }
-
-
-@PhdThesis{rr,
-  author = 	 {R. Rioboo},
-  title = 	 {Programmer le Calcul Formel, des Algorithmes \`a 
-la S\'emantique},
-  school = 	 {Univ. Paris 6},
-  year = 	 2002
+@MANUAL{CM,
+AUTHOR="C. Morisset",
+TITLE="Formal methods in practice: Safe access control in a database",
+ORGANIZATION="Submitted.",
+YEAR=2005
 }
-
+@phdthesis{MorissetPhd,
+	author = {C. Morisset},
+	title = {S\'emantique des syst\`emes de contr\^ole d'acc\`es},
+	school = {Universit\'e Pierre et Marie Curie - Paris 6},
+	year = {2007}
+}
 
 @PhdThesis{PrevostoPhD03,
   author =       {V. Prevosto},
@@ -294,40 +313,80 @@ la S\'emantique},
   month =        {sep}
 }
 
-
-@InProceedings{dhv04,
-  author =       "Dubois, Catherine and Hardin, Th\'er\`ese and Vigui\'e
-                  Donzeau-Gouge, V\'eronique",
-  year =         "2004",
-  title =        "Building certified components within Focal",
-  booktitle =    "Symposium on Trends in Functional
-Programming"
+@INPROCEEDINGS{TPHOL2002,
+  KEY = 3,
+  AUTHOR = {V. Prevosto and D. Doligez and T. Hardin},
+  TITLE = {Algebraic Structure and Dependent Records},
+  BOOKTITLE = {{TPHOL}s'2002},
+  YEAR = 2002,
+  PUBLISHER = {Springer-Verlag},
+  VOLUME = {2410},
+  SERIES = {LNCS}
 }
 
-@MANUAL{Coq95,
-AUTHOR="Logical Project",
-TITLE="The Coq Proof Assistant Reference Manual",
+
+@ARTICLE{PrevostoJAR02,
+  AUTHOR = {V. Prevosto and D. Doligez},
+  TITLE = {Algorithms and Proof Inheritance in the {Foc} language},
+  JOURNAL = {Journal of Automated Reasoning},
+  YEAR = 2002,
+  VOLUME = 29,
+  NUMBER = {3-4},
+  PAGES = {337-363},
+  MONTH = {dec}
+}
+
+
+@INPROCEEDINGS{TLCA2005,
+  AUTHOR = {V. Prevosto and S. Boulm\'e},
+  TITLE = {Proof Contexts with Late Binding},
+  BOOKTITLE = {Typed Lambda Calculi and Applications},
+  YEAR = 2005,
+  PUBLISHER = {Springer},
+  SERIES = {LNCS},
+  VOLUME = {3461},
+  PAGES = {324-338}
+}
+
+@InProceedings{PrevostoJaume2003,
+  author =       {V. Prevosto and M. Jaume},
+  title =        {Making Proofs in a hierarchy of Mathematical Structures},
+  booktitle =    {Proceedings of the 11th Calculemus Symposium},
+  year =         2003,
+  address =      {Rome},
+  month =        {sep}
+}
+
+
+@MANUAL{ocaml,
+AUTHOR="{{OCaml Development Team}}",
+TITLE="OCAML Reference Manual Version 3.08",
 ORGANIZATION="INRIA-Rocquencourt",
-YEAR=2006
+YEAR=2004
 }
 
-@MANUAL{CM,
-AUTHOR="C. Morisset",
-TITLE="Formal methods in practice: Safe access control in a database",
-ORGANIZATION="Submitted.",
-YEAR=2005
+@Manual{foc03,
+  author = {Focal project},
+  title ={ {Focal}, version 0.2
+                  {Tutorial and reference manual}},
+ORGANIZATION="LIP6 -- INRIA -- CNAM",
+  month =	{sept},
+  year =	 2004,
+  note =	 {Distribution available at: 
+                  {\tt http://focal.inria.fr}}
 }
 
-@InProceedings{bm06,
-author = "J. Blond and C. Morisset", 
-title ="{Formalisation et implantation d'une politique de s\'ecurit\'e 
-d'une base de donn\'ees}",
-booktitle = "{JFLA'2006}",   
-year = 2006, 
-editor = "{INRIA}" ,
-pages="71--86"
-} 
 
+@PhdThesis{rr,
+  author = 	 {R. Rioboo},
+  title = 	 {Programmer le Calcul Formel, des Algorithmes \`a 
+la S\'emantique},
+  school = 	 {Univ. Paris 6},
+  year = 	 2002
+}
+
+
+%%%%%%%%%%%%%% MASTER THESIS %%%%%%%%%%%%%%%%
 @mastersthesis{Habib07,
  author       =   {L. Habib},
  title           =   {Formalisation, comparaison et implantation d'un
@@ -347,7 +406,7 @@ de politiques de contr\^ole d'acc\`es avec l'atelier Focal},
  year         =   {2008}
 }
 
-
+%%%%%%%%%%%%%%%%% OUTSIDE FOCAL %%%%%%%%%%%%%%%
 @book{B-Book,
   author    = "Abrial, J. R.",
   title     = "The {\sf B} Book, Assigning Programs to Meanings",
@@ -357,27 +416,26 @@ de politiques de contr\^ole d'acc\`es avec l'atelier Focal},
   note      = "ISBN 0521496195"
 }
 
-@phdthesis{MorissetPhd,
-	author = {C. Morisset},
-	title = {S\'emantique des syst\`emes de contr\^ole d'acc\`es},
-	school = {Universit\'e Pierre et Marie Curie - Paris 6},
-	year = {2007}
+
+
+
+
+@MANUAL{Coq95,
+AUTHOR="Logical Project",
+TITLE="The Coq Proof Assistant Reference Manual",
+ORGANIZATION="INRIA-Rocquencourt",
+YEAR=2006
 }
 
-@TechReport{acrr1,
-  Author         = {M. Jaume and C. Morisset},
-  Title          = {On specifying, implementing and comparing access control
-models. {A} {S}emantical {F}ramework}, 
-  Institution    = {Univ. Paris 6, LIP6},
-number =       "2007",
-  year           = 2007,
+
+@Manual{sqlite,
+  note =	 {Sqlite:
+                  {\tt http://www.sqlite.org/}}
 }
- 
-@InProceedings{traps,
-  title={A few remarks about developing secure systems in B},
-  author={E.Jaeger and T.Hardin},
-  year="2008",
-booktitle = "{HASE 2008}", 
-editor = "{IEEE}" ,
-  note="{}"
+
+
+@misc{EDEMOI,
+  author = "{The \edemoi{} Project}",
+  year   = 2003,
+  note   = "\\\texttt{http\string://www-lsr.imag.fr/EDEMOI/}"
 }

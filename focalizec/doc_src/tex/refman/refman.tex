@@ -1,4 +1,4 @@
-% $Id: refman.tex,v 1.35 2008-12-11 16:00:02 hardin Exp $
+% $Id: refman.tex,v 1.36 2008-12-15 15:19:45 hardin Exp $
 
 \documentclass{report}
 \usepackage[english]{babel}
@@ -38,41 +38,92 @@
 
 \begin{document}
 
-\vspace{4cm}
+\vspace*{3cm}
 
-\begin{center}
-{\Huge \textbf{\focal\ Reference Manual}}
-\end{center}
+
 
 
 \begin{center}
+
+{\Huge \textbf{\focal}}
+
+
+\vspace*{3cm}
+
+{\Huge \textbf{Reference Manual}}
+
+
+\vspace*{2cm}
+
 {\LARGE \textbf{Version 1} }
 
-\smallskip
+\vspace*{1cm}
 
 {\LARGE \textbf{December 2008}} 
+
+
+\vspace*{3cm}
+
+
+{\Large \textbf{Authors}}
+ 
+\mbox{} \vspace*{2cm}
+
+{\large\em Th\'er\`ese Hardin, Fran\c{c}ois Pessaux}
 \end{center}
 
-\vspace{3cm}
+
+
+
+%%%% please add your name as soon as you modify the tex - Th-%%%
+
+
+\newpage
 
 \begin{center}
-{\Large \textbf{The \focal\  team}} 
-\mbox{} \vspace{2cm}
+{\Huge \textbf{About \focal}}
 \end{center}
+
 
 \bigskip
 
-{\large\em Philippe Ayrault (SPI-LIP6), William Bartlett (CPR-CEDRIC), Julien
+
+
+
+
+
+{\large\em \focal\ is the result of a collective work of several researchers,
+listed in the following, who designed, defined, compiled, studied,  extended,
+used and debugged the preceding versions. They were helped by many
+students who had a summer internship under their supervision. They
+would like to thank all these students and more generally all the
+persons who brought some contribution to \focal. }
+
+
+ \vspace*{2cm}
+
+\begin{center}
+{\Large \textbf{ \focal\  contributors}} 
+\mbox{} \vspace*{2cm}
+\end{center}
+
+
+{\large Philippe Ayrault (SPI-LIP6), William Bartlett (CPR-CEDRIC), Julien
 Blond(SPI-LIP6), Sylvain Boulm\'e (SPI-LIP6), Matthieu Carlier
-(CPR-CEDRIC), Damien Doligez (GALLIUM -INRIA), David Delahaye
+(CPR-CEDRIC),  Damien Doligez (GALLIUM -INRIA), David Delahaye
 (CPR-CEDRIC), Catherine Dubois (CPR-CEDRIC), Jean-Fr\'ed\'eric Etienne
 (CPR-CEDRIC), St\'ephane Fechter (SPI-LIP6), Mathieu Jaume (SPI-LIP6),
 Lionel Habib (SPI-LIP6), Th\'er\`ese Hardin (SPI-LIP6),Charles
 Morisset (SPI-LIP6), Ivan Noyer (SPI-LIP6), Fran\c{c}ois Pessaux
 (SPI-LIP6), Virgile Prevosto (SPI-LIP6), Renaud Rioboo (CPR-CEDRC),
-Lien Tran (SPI-LIP6), Pierre Weis (ESTIME-INRIA)}
+Lien Tran (SPI-LIP6), V\'eronique Vigui\'e Donzeau-Gouge (CPR-CNAM) Pierre Weis (ESTIME-INRIA)}
 
 \bigskip
+
+\begin{center}
+{\large \textbf{and their institutions}} 
+\mbox{} \vspace*{2cm}
+\end{center}
 
 {\em SPI (Semantics, Proofs and Implementations) is a team of LIP6,
 (Laboratoire d'Infor\-matique de Paris 6) of UPMC (Pierre and Marie Curie
@@ -99,12 +150,23 @@ ESTIME and GALLIUM are teams of INRIA Rocquencourt\footnote{INRIA,
   Chesnay, France, \email{Firstname.Lastname@inria.fr}}
 }
 
-% % {\Large \textbf{CPR team, CEDRIC, Conservatoire National des Arts %et M\'etiers (CNAM) }} \\
-% % \mbox{} \\
-% % {\Large \textbf{Institut National de Recherche en Informatique et
-% %     Automatique (INRIA) }} \\
-% % \mbox{} \\
-% % {\Large \textbf{Universit\'e Pierre et Marie Curie (UPMC) - LIP6-S%PI team}}
+
+\bigskip
+
+\bigskip
+
+
+\begin{center}
+{\Large \textbf{Thanks}} 
+\mbox{} \vspace*{2cm}
+\end{center}
+
+The \focal\ project was first partially supported by LIP6 (Projet LIP6
+1997) then by the Ministery of Research (Action Modulogic) and is
+currently partially supported by the French SSURF ANR project
+ANR-06-SETI-016 (Safety and Security UndeR Focal). This project also
+benefited of strong collaborations with EDEMOI ANR project and with
+BERTIN and SAFERIVER companies.  
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -116,29 +178,28 @@ ESTIME and GALLIUM are teams of INRIA Rocquencourt\footnote{INRIA,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{General Presentation}
-\input{introduction.tex}
 
-The \focal\ project was first partially supported by LIP6 (Projet LIP6
-1997) then by the Ministery of Research (Action Modulogic) and is
-currently partially supported by the French SSURF ANR project
-ANR-06-SETI-016 (Safety and Security UndeR Focal).
+\newpage
 
-\section{Motivations}
+\section*{Introduction}
+
+%%%% Intro to give a short description of motivations and milestones
+%%%% in the development. 
 \input{motivations.tex}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{A glimpse of \focal}
+\chapter{Overview}
+%%%% a smooth introduction to focal main concepts before entering the
+%%%% true reference manual. 
 
 \input{glimpse.tex}
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{Installing and Compiling}
 \input{pres_requir.tex}

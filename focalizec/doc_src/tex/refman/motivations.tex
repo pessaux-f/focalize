@@ -1,4 +1,4 @@
-% $Id: motivations.tex,v 1.3 2008-12-11 10:48:24 hardin Exp $
+% $Id: motivations.tex,v 1.4 2008-12-15 15:19:45 hardin Exp $
 
 
 
@@ -69,37 +69,78 @@ meets the specification or design requirements. Thus, developing in
 and code, completely done within \focal. Taking the global development
 in consideration within a same environment brings some conciseness,
 helps documentation and reviewing.
-
-A \focal\ development is organised as a hierarchy that may have
+Thus a \focal\ development is organised as a hierarchy that may have
 several roots. The upper levels of the hierarchy are built along the
 specification stage while the lower ones correspond to
-implementation. Each node of the hierarchy corresponds to a progress
-toward a complete implementation.  We call here {\em refinement} the
-process of building a top-down hierarchy.
-
-\focal\ semantics was initially specified in \coq, which brings a
-satisfactory confidence in the language's correctness\cite{BoulmePhD00}. On the other
-side, the correction of the compiler against \focal's semantics is
-proved (by hand) \cite{TPHOL2002,TLCA2005,PrevostoJAR02}.
+implementation and each  node of the hierarchy corresponds to a progress
+toward a complete implementation. 
 
 
-\focal\ has already been used to develop huge examples. In fact, when
-the project was launched, only one specific domain was considered, the
-one of Computer Algebra. Algorithms used in this domain can be rather
-intricated and difficult to test and this is not rare that computer
-algebra systems issue a bad result, due to semantical flaws, compiler
-anomalies, etc.  Thus, Rioboo~\cite{ } developed a huge a computer algebra
+\bigskip
+
+\bigskip When the \focal\ project was launched by Hardin and Rioboo,
+only one specific domain was considered, the one of Computer
+Algebra. Algorithms used in this domain can be rather intricated and
+difficult to test and this is not rare that computer algebra systems
+issue a bad result, due to semantical flaws, compiler anomalies,
+etc. Thus the idea was to design a langage allowing to specify the
+mathematics underlying these algorithms and to go step by step to
+different kinds of implementations according to the specifities of the
+problem under consideration\footnote{For example Computer Algebra
+Librairies use several different representations of polynomials
+according to the treatment to be done}. The first step was to design
+the semantics of such a language, trying to fit to several
+requirements: easing the expression of mathematical statements, clear
+distinction between the mathematical structure (semi-ring, polynomial,
+..)  and its different implementations, easing the development
+(modularity, inheritance, parameterisation, abstraction, ..), runtime
+efficiency and confidence in the whole development (mechanised proofs,
+..).  After an initial phase of conceptual design, the \focal\
+semantics was submitted to a double test. On one hand, this semantics
+was specified in \coq\ and in a categorical model of type theories by
+S. Boulm\'e (see his thesis\cite{BoulmePhD00}), a point which
+enlighted the borders of this apporach, regarding the logical
+background. On the other hand, before designing the syntax, it was
+needed to study the development style in such a
+language. R. Rioboo~\cite{ThRRCalculemus,HardinRiobooTSI04} used the
+\ocaml\ language to try different solutions which are recorded in
+~\cite{HardinRiobooTSI04}. 
+
+Then the time came to design the syntax of
+the language and the compiler. To overcome inconsistencies risks, an
+original dependency analysis was incorporated into the compiler
+(V. Prevosto thesis\cite{PrevostoPhD03,TPHOL2002,PrevostoJAR02}) and the correction
+of the compiler (mostly written by V. Prevosto) against \focal's
+semantics is proved (by hand) \cite{TLCA2005}, a point which brings a
+satisfactory confidence in the language's correctness. Then
+Rioboo~\cite{ } began the development of a huge  computer algebra
 library, which  offers  full specification
 and implementation of usual algebraic structures up to multivariate
-polynomial rings with complex algorithms.  The point was to measure
-how \focal\ can help to render mathematical specifications and also to
-measure efficiency of the produced code. Such a library is very useful
-when formalising the algebra of access control models (another huge
-example) using
-implementations of orderings, lattices and boolean
-algebras\cite{fcsarspa06,MorissetPhd}. \focal{} was also very
-successfully used to formalize airport security
-regulations~\cite{EDEMOI-All}.
+polynomial rings with complex algorithms,   first as  a way to extensively test
+the language and ( quite satisfactory)
+efficiency  of the produced code and then to provide a standard library
+of mathematical backgrounds.  And D. Doligez\cite{ZenonBDD}  started the
+development of \zenon, an automatic prover based on tableaux method,
+which takes a \focal\ statement and tries to build a proof of it and,
+when succeeds,  issues a \coq\ term. More  recently, M. Carlier and
+C. Dubois\cite{CarlierDuboisLNCS2008} enterprised the development of a test tool for \focal. 
+
+\focal\ has already been used to develop huge examples such as  the
+standard library and the computer algebra library. The library
+dedicated to the algebra of access control models, developed by
+M. Jaume and C. Morisset\cite{jias06,fcsarspa06,MorissetPhd}, 
+ is   another huge example, which borrows implementations of orderings,
+lattices and boolean algebras to the computer algebra library.   \focal{} was also very
+successfully used to formalize airport security regulations, a work by 
+D. Delahaye, J.-F. Etienne, C.  Dubois, V. Donzeau-Gouge
+~\cite{EDEMOI-All,EDEMOI-Model,EDEMOI-Proof}. This last work led to
+the development of a translator\cite{Focal-UML}  from \focal\ to UML
+for documentation purposes. 
+
+We would like to mention  several works about safety and/or security
+concerns within \focal\  and specially the definition of a safety life
+cycle by P. Ayrault, T. Hardin and F. Pessaux \cite{TTSS08} and the study of some traps
+within formal methods by E. Jaegerand T. Hardin\cite{traps}. 
 
 
 
