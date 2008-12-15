@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.66 2008-12-09 12:51:58 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.67 2008-12-15 15:00:36 pessaux Exp $ *)
 
 let print_focalize_exception ppf = function
   (* ********************* *)
@@ -309,7 +309,7 @@ let print_focalize_exception ppf = function
         Handy.pp_set_bold Handy.pp_reset_effects
   | Infer.Not_subspecies_conflicting_field (c1, c2, field, ty1, ty2, at) ->
       Format.fprintf ppf
-        "%a:@\n@[%tSpecies%t@ '%t%a%t'@ %tis@ not@ a@ subspecies@ \
+        "%a:@\n@[%tCollection%t@ '%t%a%t'@ %tis@ not@ a@ subspecies@ \
          of%t@ '%t%a%t'.@ In@ field@ '%a',@ types@ @[%a@]@ and@ @[%a@]@ \
          are@ not@ compatible.@]@."
         Location.pp_location at
@@ -323,17 +323,30 @@ let print_focalize_exception ppf = function
         Types.pp_type_simple ty2
   | Infer.Not_subspecies_circular_field (c1, c2, field, ty1, ty2, at) ->
       Format.fprintf ppf
-        "%a:@\n@[Species@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ In@ \
-         field@ '%a',@ type@ @[%a@]@ occurs@ in@ @[%a@]@ and@ would@ \
-         lead@ to@ a@ cycle.@]@."
+        "%a:@\n@[%tCollection%t@ '%t%a%t'@ %tis@ not@ a@ subspecies@ of%t@ \
+        '%t%a%t'.@ %tIn@ field%t@ '%t%a%t',@ %ttype%t@ @[%t%a@%t]@ %toccurs@ \
+        in%t@ @[%t%a%t@]@ %tand@ would@ lead@ to@ a@ cycle%t.@]@."
         Location.pp_location at
-        Types.pp_type_collection c1 Types.pp_type_collection c2
-        Sourcify.pp_vname field Types.pp_type_simple ty1
-        Types.pp_type_simple ty2
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Types.pp_type_collection c1
+        Handy.pp_reset_effects
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Types.pp_type_collection c2
+        Handy.pp_reset_effects
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Sourcify.pp_vname field
+        Handy.pp_reset_effects
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Types.pp_type_simple ty1
+        Handy.pp_reset_effects
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Types.pp_type_simple ty2
+        Handy.pp_reset_effects
+        Handy.pp_set_bold Handy.pp_reset_effects
   | Infer.Not_subspecies_arity_mismatch
       (c1, c2, field, ty_name, ar1, ar2, at) ->
         Format.fprintf ppf
-          "%a:@\n@[Species@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ \
+          "%a:@\n@[Collection@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ \
            In@ field@ '%a',@ the@ type@ constructor@ '%a'@ is@ used@ \
            with@ the@ different@ arities@ %d@ and@ %d.@]@."
           Location.pp_location at
@@ -341,7 +354,7 @@ let print_focalize_exception ppf = function
           Sourcify.pp_vname field Types.pp_type_name ty_name ar1 ar2
   | Infer.Not_subspecies_missing_field (c1, c2, field, at) ->
       Format.fprintf ppf
-        "%a:@\n@[Species@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ \
+        "%a:@\n@[Collection@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ \
          Field@ '%a'@ is@ not@ present@ in@ '%a'.@]@."
         Location.pp_location at
         Types.pp_type_collection c1 Types.pp_type_collection c2
@@ -498,7 +511,7 @@ let print_focalize_exception ppf = function
         Handy.pp_set_bold Handy.pp_reset_effects
   | Species_coq_generation.Attempt_proof_by_def_of_species_param (at, id) ->
       Format.fprintf ppf
-        "%a:@\n@[%tUsing@ a@ species@ parameter's@ method@ \
+        "%a:@\n@[%tUsing@ a@ collection@ parameter's@ method@ \
         %t(%t%a%t)%t@ in@ a@ Zenon@ proof@ with@ \
         \"by definition\"@ is@ not@ allowed.%t@]@."
         Location.pp_location at
