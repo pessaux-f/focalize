@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.\" \$Id: focalizec.man,v 1.4 2008-12-15 14:37:48 pessaux Exp $
+.\" \$Id: focalizec.man,v 1.5 2008-12-15 15:08:22 pessaux Exp $
 .\"
 .\"
 .\" First parameter, NAME, should be all caps
@@ -105,7 +105,7 @@ with this option may trigger unpredictable results.
 .TP
 .B -focalize-doc
 Generate documentation.
-.B Not currently complete. Reserved for futur usage.
+.B Not currently complete. Reserved for future usage.
 .TP
 .B -i
 Prints the interfaces of the species present in the compiled source
@@ -155,7 +155,7 @@ escape sequences or, for example, if compiling under
 .B --no-coq-code
 Disables the
 .B Coq
-code generation. By default coq code is always generated.
+code generation. By default Coq code is always generated.
 .TP
 .B --no-ocaml-code
 Disables the
@@ -164,7 +164,7 @@ code generation. By default OCaml code is always generated.
 .TP
 .B -no-stdlib-path
 Does not include the standard library installation directory in the
-libraries seacrch path. This option is rarely useful and mostly
+libraries search path. This option is rarely useful and mostly
 dedicated to the $(focal) compiler build process.
 .TP
 .B --pretty \<file\>
@@ -238,3 +238,6 @@ version 0.0.1.
 .P
 Laboratoire d'Informatique de l'université Paris 6,
 Institut National de Recherche en Informatique et en Automatique ($(this_year))
+
+\"  LocalWords:  UE OCaml Coq fo Caml pre zv Zenon zvtov fcl ocaml ocamlopt vo
+\"  LocalWords:  coqc TP dirname graphviz deps focalize emacs
