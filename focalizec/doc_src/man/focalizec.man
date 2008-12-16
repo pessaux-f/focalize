@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.\" \$Id: focalizec.man,v 1.5 2008-12-15 15:08:22 pessaux Exp $
+.\" \$Id: focalizec.man,v 1.6 2008-12-16 11:31:14 pessaux Exp $
 .\"
 .\"
 .\" First parameter, NAME, should be all caps
@@ -36,13 +36,11 @@ The
 compiler is a compiler for the $(focal) language. It takes a input one
 source file that gets compiled to
 .B OCaml
-and or pre-
-.B Coq
+and or pre-\fBCoq\fP
 source codes depending of the selected options. By default both these
 target languages are generated. During the compilation process an
 object file (ended by the suffix
-.I .fo
-) is also generated for separate compilation purposes.
+\fI.fo\fP) is also generated for separate compilation purposes.
 
 The generated
 .B OCaml
@@ -53,8 +51,7 @@ of your
 $(focal)
 development.
 
-The generated pre-
-.B Coq
+The generated pre-\fBCoq\fP
 sources are files ended by a
 .I .zv
 suffix and need to be sent to the
@@ -64,16 +61,15 @@ automated theorem prover by invoking the command
 in order to get a pure
 .B Coq
 source file ended with the suffix
-.I .v
-.
+\fI.v\fP.
 
 Hence the generation process is the following:
     file.fcl --
 .B focalizec
---> file.ml and/or file.zv.
+--> file.ml and/or file.zv
     file.ml --
 .B ocaml/ocamlopt ...
---> executable.
+--> executable
     file.zv --
 .B zvtov
 --> file.v
@@ -96,8 +92,7 @@ directory. Files are names by
 .I deps_
 + the source file base name (i.e. without path and suffix) + the
 species name + the suffix
-.I .dot
-.
+\fI.dot\fP.
 .TP
 .B --experimental
 Reserved for development purpose. Never use. Invoking the compiler
@@ -140,8 +135,7 @@ the name made of
 + the source file base name (i.e. without path and suffix) +
 .I _
 + the hosting species name + the suffix
-.I .txt
-.
+\fI.txt\fP.
 .TP
 .B --no-ansi-escape
 Disables ANSI escape sequences in the error messages. By default, when
@@ -149,8 +143,7 @@ an error is reported, bold, italic, underline fonts are used to make
 easier reading the message. Using this option removes all these text
 attributes and may be used if your terminal doesn't support ANSI
 escape sequences or, for example, if compiling under
-.B emacs
-.
+\fBemacs\fP.
 .TP
 .B --no-coq-code
 Disables the
