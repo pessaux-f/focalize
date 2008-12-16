@@ -16,10 +16,10 @@ open "access_control" ;;
 
 species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) =
 
-  let rec forall (l, p) =
+  let rec for_all (l, p) =
      match l with
      | [ ] -> true
-     | h :: t -> and_b(p (h), forall (t, p)) ;
+     | h :: t -> and_b(p (h), for_all (t, p)) ;
 
   let print (l) =
      let rec aux (ls) =

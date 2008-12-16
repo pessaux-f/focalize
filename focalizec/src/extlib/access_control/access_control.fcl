@@ -17,8 +17,8 @@ open "ensembles_finis" ;;
 (** Set_of is a stub species inheriting Ensembles_finis *)
 species Set_of (A is Setoid) inherits Ensembles_finis (A) = 
 
-  (** forall(E, P) is true iff for any x in E, P(x) is true *)
-  signature forall : Self -> (A -> bool) -> bool ;
+  (** for_all(E, P) is true iff for any x in E, P(x) is true *)
+  signature for_all : Self -> (A -> bool) -> bool ;
 
   (**
      If two sets set1 and set2 are equal and if x belongs to set1 
@@ -367,7 +367,7 @@ species Models_blp (Rh is Rho_blp,
      if R!is_get (r1) then 
        if M!equal (M!read, R!get_m (r1)) then (* R = <+,s,o,read> *)
 	 if Rh!order_inf (f_o (st1, o1), f_s (st1, s1)) then 
-	   if S_a!forall (lambda (st1), 
+	   if S_a!for_all (lambda (st1), 
 	                  function a1 -> 
 			    let o2 = A!get_o (a1) in 
 			    or_b (M!different (M!write, A!get_m (a1)), 
@@ -379,7 +379,7 @@ species Models_blp (Rh is Rho_blp,
 	 else (D!no, st1) (* s has a lower level of security than o *)
        else 
 	 if M!equal (M!write, R!get_m (r1)) then  (* R = <+,s,o,write> *)
-	   if S_a!forall (lambda (st1), 
+	   if S_a!for_all (lambda (st1), 
 	                  function a1 -> 
 			    let o2 = A!get_o (a1) in 
 			    or_b (M!different (M!read, A!get_m (a1)), 
@@ -928,7 +928,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      else if Rr!is_rm_ua (r1) then 
        let u1 = Rr!get_u (r1) in
        let ro1 = Rr!get_r (r1) in
-       if S_a!forall (lambda (st1), iter_ua (st1, u1, ro1)) 
+       if S_a!for_all (lambda (st1), iter_ua (st1, u1, ro1)) 
        then (D!yes, rm_ua (st1, u1, ro1))
        else (D!no, st1)
      else if Rr!is_add_pa (r1) then 
@@ -940,7 +940,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
        let o1 = Rr!get_o (r1) in 
        let m1 = Rr!get_m (r1) in 
        let ro1 = Rr!get_r (r1) in 
-       if S_a!forall (lambda (st1), iter_pa (st1, o1, m1, ro1)) 
+       if S_a!for_all (lambda (st1), iter_pa (st1, o1, m1, ro1)) 
        then (D!yes, rm_pa (st1, o1, m1, ro1))
        else (D!no, st1)
      else (D!no, st1) ;
@@ -952,23 +952,23 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      else tau_rbac_adm (r1, st1) ;
 
   (** Problem ro1 ro2 *)
-  property forall_spec_ua_1 : 
+  property for_all_spec_ua_1 : 
     all st1 st2 in Self, all u1 u2 in U, all ro1 ro2 in Ro, 
-      S_a!forall (lambda (st1), iter_ua (st1, u1, ro1)) -> 
+      S_a!for_all (lambda (st1), iter_ua (st1, u1, ro1)) -> 
 	equal (st2, rm_ua (st1, u2, ro2)) -> 
-	  S_a!forall (lambda(st2), iter_ua (st2, u1, ro1)) ;
+	  S_a!for_all (lambda(st2), iter_ua (st2, u1, ro1)) ;
 
   (** Problem ro1 ro2 *)
-  property forall_spec_ua_2 : 
+  property for_all_spec_ua_2 : 
     all st1 in Self, all u1 u2 in U, all ro1 ro2 in Ro, 
-      S_a!forall (lambda (st1), iter_ua (st1, u1, ro1)) -> 
+      S_a!for_all (lambda (st1), iter_ua (st1, u1, ro1)) -> 
 	ua (st1, u2, ro2) ;
 
   (** Specification of the function iter_pa *)
   property iter_pa_spec : 
     all st1 in Self, all s1 in S, all o1 o2 in O, all m1 m2 in M, 
       all ro1 in Ro, 
-	S_a!forall (lambda (st1), iter_pa (st1, o1, m1, ro1)) -> 
+	S_a!for_all (lambda (st1), iter_pa (st1, o1, m1, ro1)) -> 
 	  S_a!est_element (A!create (s1, o2, m2), lambda (st1)) -> 
             exists_role (rm_pa (st1, o1, m1, ro1), 
 	       		 roles_s (rm_pa (st1, o1, m1, ro1), s1), 
@@ -1888,7 +1888,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                   definition of omega
         <2>2 assume H4: Rr!is_rm_ua (r1),
              prove omega (st2)
-          <3>1 assume H41: S_a!forall (lambda (st1), iter_ua (st1,
+          <3>1 assume H41: S_a!for_all (lambda (st1), iter_ua (st1,
 							      Rr!get_u (r1),
 							      Rr!get_r (r1))),
                prove omega (st2)
@@ -1920,7 +1920,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                        by step <7>1, <7>2
                <6>2 assume ro2 in Ro,
                     prove ua (st2, user (st2, s1), ro2)
-                 <7>1 prove S_a!forall (lambda (st2), iter_ua (st2,
+                 <7>1 prove S_a!for_all (lambda (st2), iter_ua (st2,
 							       Rr!get_u (r1),
 							       Rr!get_r (r1)))
                    <8>1 prove equal (st2,
@@ -1933,10 +1933,10 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                    <8>f qed
                         by step <8>1
                            hypothesis H41
-                           property forall_spec_ua_1
+                           property for_all_spec_ua_1
                  <7>f qed
                       by step <7>1
-                         property forall_spec_ua_2
+                         property for_all_spec_ua_2
                 <6>f qed
                      by step <6>1, <6>2
                         definition of er
@@ -2017,7 +2017,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
             <4>f qed
                  by step <4>1, <4>2
                     definition of omega
-          <3>2 assume H42: ~ (S_a!forall (lambda (st1),
+          <3>2 assume H42: ~ (S_a!for_all (lambda (st1),
 					  iter_ua (st1,
 						   Rr!get_u (r1),
 						   Rr!get_r (r1)))),
@@ -2025,7 +2025,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
             <4>1 prove equal (st1 , st2)
               <5>1 prove (~ Rr!is_add_ua (r1)) ->
 		         Rr!is_rm_ua (r1) ->
-                         (~ (S_a!forall (lambda(st1),
+                         (~ (S_a!for_all (lambda(st1),
 					 iter_ua(st1,
 						 Rr!get_u (r1),
 						 Rr!get_r (r1))))) ->
@@ -2033,14 +2033,14 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                    by (* property beq_refl *)
                       definition of tau_rbac_adm
               <5>2 prove Rr!is_rm_ua (r1) ->
-                         (~ (S_a!forall (lambda (st1),
+                         (~ (S_a!for_all (lambda (st1),
 					 iter_ua(st1,
 						 Rr!get_u (r1),
 						 Rr!get_r (r1))))) ->
                          tau_rbac_adm (r1, st1) = (D!no, st1)
                    by step <5>1
                       property Rr!add_ua_then_not_rm_ua
-              <5>3 prove (~ (S_a!forall (lambda(st1),
+              <5>3 prove (~ (S_a!for_all (lambda(st1),
 					 iter_ua(st1,
 						 Rr!get_u (r1),
 						 Rr!get_r (r1))))) ->
@@ -2192,7 +2192,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                   definition of omega
         <2>4 assume H6: Rr!is_rm_pa (r1),
              prove omega (st2)
-          <3>1 assume H61: S_a!forall (lambda (st1), iter_pa (st1,
+          <3>1 assume H61: S_a!for_all (lambda (st1), iter_pa (st1,
 							      Rr!get_o (r1),
 							      Rr!get_m (r1),
 							      Rr!get_r (r1))),
@@ -2265,7 +2265,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                                    Rr!rm_pa_then_not_add_pa_ua,
                                    right_substitution
                           definition of tau_rbac_adm
-                  <7>2 prove S_a!forall (lambda (st1), iter_pa (st1,
+                  <7>2 prove S_a!for_all (lambda (st1), iter_pa (st1,
 								Rr!get_o (r1),
 								Rr!get_m (r1),
 								Rr!get_r (r1)))
@@ -2306,7 +2306,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
             <4>f qed
                  by step <4>1, <4>2
                     definition of omega
-          <3>2 assume H62: ~ (S_a!forall (lambda (st1),
+          <3>2 assume H62: ~ (S_a!for_all (lambda (st1),
 					  iter_pa (st1,
 						   Rr!get_o (r1),
 						   Rr!get_m (r1),
@@ -2317,7 +2317,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 		         (~ Rr!is_rm_ua (r1)) ->
                          (~ Rr!is_add_pa (r1)) ->
 			 Rr!is_rm_pa (r1) ->
-                         (~ (S_a!forall (lambda (st1),
+                         (~ (S_a!for_all (lambda (st1),
 					 iter_pa (st1,
 						  Rr!get_o (r1),
 						  Rr!get_m (r1),
@@ -2326,7 +2326,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                     by (* property beq_refl *)
                        definition of tau_rbac_adm
               <5>2 prove Rr!is_rm_pa (r1) ->
-                         (~ (S_a!forall (lambda (st1),
+                         (~ (S_a!for_all (lambda (st1),
 					 iter_pa (st1,
 						  Rr!get_o (r1),
 						  Rr!get_m (r1),
@@ -2335,7 +2335,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                    by step <5>1
                       hypothesis H6
                       property Rr!rm_pa_then_not_add_pa_ua
-              <5>3 prove (~ (S_a!forall (lambda (st1),
+              <5>3 prove (~ (S_a!for_all (lambda (st1),
 					 iter_pa (st1,
 						  Rr!get_o (r1),
 						  Rr!get_m (r1),
@@ -3606,7 +3606,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
        let sg = R!get_g (r1) in
        if and_b (and_b (su (st, sp), 
 			ag (st, sg)), 
-		 S_a!forall (lambda (st), 
+		 S_a!for_all (lambda (st), 
 			     predicate_inactive (st, sg)))
        then (D!yes, rm_ag (st, sg))
        else (D!no, st)
@@ -3636,7 +3636,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
          (* <-right,s,o,a,DP> *)
 	 if and_b (or_b (S!equal (ss, f_p (st, so)), 
 			 su (st, ss)), 
-		   S_a!forall (lambda (st), 
+		   S_a!for_all (lambda (st), 
 			       predicate_right_dp (st, ss, so, sm)))
 	 then (D!yes, rm_dp (st, so, sm))
 	 else (D!no, st)
@@ -3644,13 +3644,13 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
          (* <-right,s,o,a,DG> *)
 	 if and_b (or_b (S!equal (ss, f_p (st, so)), 
 			 su (st, ss)), 
-		   S_a!forall (lambda (st), 
+		   S_a!for_all (lambda (st), 
 			       predicate_right_dg (st, so, sm)))
 	 then (D!yes, rm_dg (st, so, sm))
 	 else (D!no, st)
        else if and_b (or_b (S!equal (ss, f_p (st, so)), 
 			    su (st, ss)), 
-		      S_a!forall (lambda (st), 
+		      S_a!for_all (lambda (st), 
 				  predicate_right_do (st, so, sm)))
             (* <-right,s,o,a,DO> *)
        then (D!yes, rm_do (st, so, sm))
@@ -3661,7 +3661,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
        let so = R!get_o (r1) in
        let ss2 = R!get_s2 (r1) in
        if and_b (su (st, ss), 
-		 S_a!forall (lambda (st), predicate_chown (st, so, ss2)))
+		 S_a!for_all (lambda (st), predicate_chown (st, so, ss2)))
        then (D!yes, chown (st, so, ss2))
        else (D!no, st)
      else if R!is_chgrp (r1) then 
@@ -3670,7 +3670,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
        let so = R!get_o (r1) in
        let sg = R!get_g (r1) in
        if and_b (su (st, ss), 
-		 S_a!forall (lambda (st), 
+		 S_a!for_all (lambda (st), 
 			     predicate_chgrp (st, so, sg)))
        then (D!yes, chgrp (st, so, sg))
        else (D!no, st)
@@ -3680,7 +3680,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
        let sg = R!get_g (r1) in
        (* <+group,s1,s2,g> *) 
        if and_b (su (st, ss), 
-		 S_a!forall (lambda (st),  
+		 S_a!for_all (lambda (st),  
 			     predicate_pls_grp (st, sg, ss2)))
        then (D!yes, add_g_s (st, ss2, sg))
        else (D!no, st)
@@ -3690,7 +3690,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
        let sg = R!get_g (r1) in
        (* <-group,s1,s2,g> *)
        if and_b (and_b (su (st, ss), 
-			S_a!forall (lambda (st), 
+			S_a!for_all (lambda (st), 
 				    predicate_mns_grp (st, sg, ss2))), 
 		 S_g!est_element (sg, f_s (st, ss2)))
        then (D!yes, rm_g_s (st, ss2, sg))
@@ -3914,7 +3914,7 @@ species Models_ticket (C is Tickets, Rh is Rho_ticket (C),
        let c1 = R!get_c (r1) in
        let o1 = R!get_o (r1) in
        let m1 = R!get_m (r1) in
-       if S_a!forall (lambda (st1), iter_ticket (st1, c1, o1, m1)) 
+       if S_a!for_all (lambda (st1), iter_ticket (st1, c1, o1, m1)) 
        then (D!yes, map_ticket (rm_uc (rm_t (st1, o1, m1, c1), c1), c1))
        else (D!no, st1)
      else if R!is_pass (r1) then 
