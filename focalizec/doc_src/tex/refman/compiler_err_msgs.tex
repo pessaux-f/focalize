@@ -1,39 +1,41 @@
-% $Id: compiler_err_msgs.tex,v 1.18 2008-12-15 17:52:06 pessaux Exp $
+% $Id: compiler_err_msgs.tex,v 1.19 2008-12-16 20:29:05 hardin Exp $
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Unable to find file 'name' in the search path.}
 
-{\em Description}: The source file made reference to a \focal\ module
+{\em Description}: The source file made reference to a \focal\
+compilation unit 
 $name$ (by the {\tt open} or {\tt use} directives, or by explicit
 qualification with the ``\#'' notation but the related
-\focal\ interface file was not found in the current libraries search
+\focal\ file was not found in the current libraries search
 path.
 
-{\em Hints}: Locate in which directory the missing interface file is
+{\em Hints}: Locate in which directory the missing  file is
 and add this directory to the libraries search path with the {\tt -I}
 compiler option.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Invalid or corrupted compiled interface '$name$'. May be it
+\section*{Invalid or corrupted compilation unit '$name$'. May be it
   was compiled with another version of the compiler.}
-{\em Description}: The source file made reference to a \focal\ module
+{\em Description}: The source file made reference to a \focal\
+compilation unit
 $name$ (by the {\tt open} or {\tt use} directives, or by explicit
 qualification with the ``\#'' notation but the related
-\focal\ interface file was found with an incorrect format.
+\focal\  file was found with an incorrect format.
 
-{\em Hints}: May be the interface was compiled with another version
-of \focal\ or was mangled and you must compile it again with your
-current version.
+{\em Hints}: May be the compilation unit was compiled with another
+version of \focal\ or was mangled and you must compile it again with
+your current version.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Invalid file extension for '$name$'.}
-{\em Description}: The \focal\ compiler expects input files to be
+{\em Description}: The \focal\ compiler expects compilation units to be
 ended by the suffix ``.fcl''. If the submitted input file doesn't end
 by this suffix, this error message arises with the name, $name$ of the
 involved file.
@@ -57,13 +59,13 @@ appropriate solution depending on this message.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Input file name is already set.}
-{\em Description}: The \focal\ compiler only compiles one file at
+{\em Description}: The \focal\ compiler only compiles a compilation unit at
 once. If several files are specified on the command line this message
 arises.
 
-{\em Hints}: If several input files are specified, invoke the
-compiler once for each separately. Check if among what is considered
-as an input file, you didn't forget to put a dash (``-'') character,
+{\em Hints}: If several input files are specified, invoke the compiler
+once for each separately. Check if among what is considered as a
+compilation unit, you didn't forget to put a dash (``-'') character,
 hence turning an option into a regular string considered as another
 input file name.
 
@@ -91,7 +93,7 @@ character $str$ follows in the error message.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Syntax error.}
+\section*{Syntax error}
 {\em Description}: In the currently submitted source file, a phrase of
 the program doesn't follow \focal's syntax.
 
@@ -119,24 +121,26 @@ report with the exception $msg$ that caused the error.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Module '$m$' was "use" several times.}
-{\em Description}: Several occurrences of a {\tt use} directive
-specify the same module $m$.
+\section*{Compilation unit '$m$' was "use" several times.}
+{\em Description}: undocumented
 
-{\em Hints}: Remove the spurious occurrences.
+% Several occurrences of a {\tt use} directive
+% specify the same compilation unit $m$.
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Module '$m$' was not declared as "use"}
-{\em Description}: {\color{red}To to once ``use'' really works.}
-
-{\em Hints}: {\color{red}To to once ``use'' really works.}
+% {\em Hints}: Remove the spurious occurrences.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Species application expression expected $n_1$ arguments but
+\section*{Compilation unit '$m$' was not declared as "use"}
+{\em Description}: Undocumented
+
+% {\em Hints}: {\color{red}To to once ``use'' really works.}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Parameterised species  expected $n_1$ arguments but
   was provided $n_2$.}
 {\em Description}: A species expression (used in species parameter
 expression or {\tt inherits} clause) applies a species with $n_1$
@@ -198,18 +202,18 @@ non-ambiguous.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Unbound sum type constructor '$name$'.}
-{\em Description}: An identifier representing a sum type constructor
+\section*{Unbound sum type value constructor '$name$'.}
+{\em Description}: An identifier representing a sum type value constructor
 was not found among the available sum type definitions.
 
 {\em Hints}: Source program to fix. Since in core expressions
-capitalized identifiers are considered as sum types constructors, may
-be you tried to use a capitalized name for one of your variables. In
-this case, as any variables, make it starting with a lowercase
-letter. Otherwise, may be your type definition is missing or not
-reachable in the current scope (missing explicit qualification with
-the ``\#'' notation or {\tt open} directive if your type definition is
-hosted in another source file).
+capitalized identifiers are considered as sum type value constructors,
+may be you tried to use a capitalized name for one of your
+variables. In this case, as any variables, make it starting with a
+lowercase letter. Otherwise, may be your type definition is missing or
+not reachable in the current scope (missing explicit qualification
+with the ``\#'' notation or {\tt open} directive if your type
+definition is hosted in another source file).
 
 
 
@@ -250,12 +254,12 @@ source file).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Unbound module '$name$'.}
-{\em Description}: A {\tt open} or {\tt use} directive or an explicit
-qualification by the ``\#'' notation makes reference to a module that
-(interface file) was not found in the current libraries search path.
+\section*{Unbound compilation unit '$name$'.}  {\em Description}: A
+{\tt open} or {\tt use} directive or an explicit qualification by the
+``\#'' notation makes reference to a compilation unit that was not
+found in the current libraries search path.
 
-{\em Hints}: Locate in which directory the missing interface file is
+{\em Hints}: Locate in which directory the missing  file is
 and add this directory to the libraries search path with the {\tt -I}
 compiler option.
 
@@ -362,7 +366,7 @@ method definition.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Sum type constructor '$name$' expected $n_1$ arguments but
+\section*{Sum type  value constructor '$name$' expected $n_1$ arguments but
   was used with $n_2$ arguments.}
 
 {\em Description}: The sum type constructor $name$ is used with a bad
@@ -451,7 +455,7 @@ definition must be provided.
 
 If the {\tt representation} method is not directly present in the
 body, that is because the species inherits from a parent where the
-carrier is already defined. In this last case, since the parent's
+representation is already defined. In this last case, since the parent's
 structure is already established, you must remove the {\tt representation} method
 in the species where the error was reported.
 
@@ -686,10 +690,10 @@ definition.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Unable to find OCaml generation information for compiled
-  file '$file$'. Source file may have been compiled without OCaml code
+  file '$file$'. Compilation unit may have been compiled without OCaml code
   generation enabled.}
 
-{\em Description}: The \focal\ source file $file$.fcl was compiled but
+{\em Description}: The \focal\ compilation unit file $file$.fcl was compiled but
 the object file doesn't contain information about \ocaml\ code
 generation. The \focal\ compiler allows to disable the \ocaml\ code
 production by the {\tt --no-ocaml-code} option. May be this option was used.
@@ -710,13 +714,14 @@ the {\tt --no-ocaml-code} option.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Unable to find Coq generation information for compiled file
-  '$file$'. Source file may have been compiled without Coq code
+  '$file$'. Compilation unit may have been compiled without Coq code
   generation enabled.}
 
-{\em Description}: The \focal\ source file $file$.fcl was compiled but
-the object file doesn't contain information about \coq\ code
-generation. The \focal\ compiler allows to disable the \coq\ code
-production by the {\tt --no-coq-code} option. May be this option was used.
+{\em Description}: The \focal\ compilation unit $file$.fcl was
+compiled but the object file doesn't contain information about \coq\
+code generation. The \focal\ compiler allows to disable the \coq\ code
+production by the {\tt --no-coq-code} option. May be this option was
+used.
 
 {\em Hints}: Invoke the compiler on the source file $file$.foc without
 the {\tt --no-coq-code} option.

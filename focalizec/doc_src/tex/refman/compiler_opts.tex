@@ -3,11 +3,11 @@
 When invoking the \focal\ compiler with the {\tt focalizec} command,
 various command line options can be provided. If no option is
 specified, the default behaviour is to compile the source file
-provided as argument and generate both the \ocaml\ and the
+provided as argument and to generate both the \ocaml\ and the
 \coq\ codes. The result file names wear the same prefix than the
 \focal\ source file and are suffixed by ``.ml'' for the generated
 \ocaml\ code and ``.zv'' for the generated pre-\coq\ code.
-To generate the final \coq\ code, the ``.zv'' file must be send to
+To generate the final \coq\ code, the ``.zv'' file must be sent to
 \zenon\ via the {\tt zvtov} command.
 
 \begin{itemize}
@@ -31,8 +31,8 @@ To generate the final \coq\ code, the ``.zv'' file must be send to
     the compiled source file. Result is sent to the standard output.
 
   \item[*] {\bf $-$I} {\em directory name}. Adds the specified
-    directory to the path list where to search for compiled
-    interfaces. Several $-$I options can be used. The search order is
+    directory to the path list where to search for 
+    compilation units. Several $-$I options can be used. The search order is
     in the standard library directory first (unless the
     $-$no-stdlib-path option is used, see below), then in the
     directories specified by the $-$I options in their apparition
@@ -41,7 +41,7 @@ To generate the final \coq\ code, the ``.zv'' file must be send to
   \item[*] {\bf $-$impose-termination-proof}. Make termination proofs
     mandatory for recursive functions. If a recursive function doesn't
     have its termination proof, then the field will be considered as
-    not fully defined and no collection will be possible based on the
+    not fully defined and no collection will be built on the
     species hosting the function. By default this option is not
     enabled and if a recursive function does not have any termination
     proof, a warning is printed during compilation when trying to make
@@ -49,7 +49,7 @@ To generate the final \coq\ code, the ``.zv'' file must be send to
 
  \item[*] {\bf $--$methods-history-to-text} {\em directory
    name}. Dumps the methods' inheritance history of the species
-   present in the compiled. The result is sent as plain text files
+   present in the compilation unit. The result is sent as plain text files
    into the argument directory. For each method of each species a file
    is generated wearing the name made of ``history\_'' + the source
    file base name (i.e. without path and suffix) + ``\_'' + the
@@ -88,7 +88,7 @@ To generate the final \coq\ code, the ``.zv'' file must be send to
 
   \item[*] {\bf $--$verbose}. Sets the compiler in verbose mode. It
     will then generate the trace of the steps and operations is does
-    during, the compilation. This feature is mostly used for debugging
+    during the compilation. This feature is mostly used for debugging
     purpose but can also explain the elaboration of the model during
     compilation for people interested in \focal's compilation
     process.
