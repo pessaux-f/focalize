@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.162 2008-12-10 08:59:17 weis Exp $ *)
+(* $Id: infer.ml,v 1.163 2008-12-16 13:09:59 pessaux Exp $ *)
 
 
 
@@ -4309,7 +4309,7 @@ let typecheck_species_def ctx env species_def =
     Env.TypeInformation.spe_kind = Types.SCK_toplevel_species ;
     Env.TypeInformation.spe_is_closed = is_closed ;
     Env.TypeInformation.spe_sig_params = sig_params ;
-    Env.TypeInformation. spe_sig_methods = reordered_normalized_methods ;
+    Env.TypeInformation.spe_sig_methods = reordered_normalized_methods ;
     Env.TypeInformation.spe_dep_graph = species_dep_graph } in
   (* If asked, generate the dotty output of the methods history. *)
   (match Configuration.get_methods_history_to_text () with
@@ -4451,7 +4451,8 @@ let typecheck_regular_type_def_body ctx ~is_repr_of_external env type_name
          Types.build_type_def_scheme
            ~variables: vars_of_mapping ~body: identity_type in
        let ty_descr = {
-         Env.TypeInformation.type_loc = regular_type_def_body.Parsetree.ast_loc ;
+         Env.TypeInformation.type_loc =
+	   regular_type_def_body.Parsetree.ast_loc ;
          Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
          Env.TypeInformation.type_identity = identity_scheme ;
          Env.TypeInformation.type_params = vars_of_mapping ;
