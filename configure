@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.8 2008-12-14 11:43:21 weis Exp $
+#  $Id: configure,v 1.9 2008-12-16 14:07:30 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -275,5 +275,11 @@ cp .config_var zenon/
 cp .config_var zvtov/
 cp .config_var focalizec/
 
+echo "***********************************"
 echo "Configuration summary for focalize:"
+echo
 cat .config_var
+echo
+echo "***********************************"
+
+make configure
