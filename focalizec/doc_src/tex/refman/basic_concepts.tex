@@ -1,4 +1,4 @@
-% $Id: basic_concepts.tex,v 1.10 2008-12-12 08:24:54 weis Exp $
+% $Id: basic_concepts.tex,v 1.11 2008-12-16 17:32:00 hardin Exp $
 
 As stated in section \ref{glimpse}, the \focal\ language is designed
 to build an application step by step, going from very abstract
@@ -8,7 +8,7 @@ classes in an Object-Oriented context.  {\em However, despite of
 inheritance and late-binding features, \focal\ is definitively not an
 Object-Oriented language as C++, Java, etc.  are.}
 
- In the following we  present the basic concepts underlying a
+ In the following we  focus on the basic concepts underlying a
 \focal\ development, that is:
 \begin{itemize}
 \item Top-level definitions
@@ -21,16 +21,18 @@ Object-Oriented language as C++, Java, etc.  are.}
 To ensure that this part can be read independently of the section
 \ref{glimpse}, we duplicate some explanations.
 
+\section{Basic concepts}
+
 \subsection{Top-level Definitions}
 \label{topleve-def}
 \index{toplevel}
 We call {\bf toplevel-definition} (just one word) a definition which
 appears outside species and collections. Such definitions can only be:
 \begin{itemize}
-  \item Species,
+  \item Species 
   \item collections,
   \item type definitions,
-  \item general theorems (not depending on a species),
+  \item general theorems (not depending on a species) 
   \item general functions (not depending on a species),
   \item expressions to be directly evaluated (but there is no way to
     bind their value to an identifier).
@@ -59,12 +61,11 @@ with a double semi-character (``;;'').\index{;;} There are several kinds of meth
 \begin{itemize}
   \medskip
   \label{rep-is-method}
-\item The {\bf representation}\index{representation}. This is a type
-  definition that defines\index{representation!defined} the type of
-  the entities manipulated in the species.  The representation is
-  bound to a \focal\ type (see \ref{focal-type}) which is similar,
-  roughly speaking, to a ML type. Thus, the representation can be a
-  type variable and then is said to be ``not yet defined'' or ``only
+\item The {\bf representation}\index{representation}. It
+  defines\index{representation!defined} the type of the entities
+  manipulated in the species and is a kind of alias type (see section
+  \ref{representation-type}). The representation can be a type
+  variable and then is said to be ``not yet defined'' or ``only
   declared'' and is not explicitly introduced
   \index{representation!declared}.  It can be bound to a type defined
   by a more complex type expression possibly containing type variables
@@ -72,8 +73,8 @@ with a double semi-character (``;;'').\index{;;} There are several kinds of meth
   obtained by inheritance or is introduced by the keyword {\tt
     representation}\index{representation} followed by {\tt =} followed
   by a type expression.  Ultimately to get a {\em complete} (fully
-  defined) species, the representation must be a fully instantiated type
-  (directly or by \ref{inheritance}).
+  defined) species, the representation must be a fully instantiated
+  type (directly or by \ref{inheritance}).
 
 
 In the context of a species, the representation is denoted by {\tt Self}.
@@ -88,12 +89,14 @@ In the context of a species, the representation is denoted by {\tt Self}.
 % end ;;
 %       \end{lstlisting}
 %     }
-
+Note that a representation is never a polymorphic type. When it is
+only declared, it is a type variable, which can receive only one
+instantiation. In other words, this type variable is not universally
+quantified, as are the type variables of polymorphic types. 
 
 \item {\bf Signatures}\index{signature}. They introduce names of
-  constants and functions, uniquely providing their type. Types
-  expressions are  ML-like type expressions. A signature
-  begins with the keyword {\tt signatre} followed by the introduced
+  constants and functions, uniquely providing their type as a type expression. A signature
+  begins with the keyword {\tt signature} followed by the introduced
   name followed by {\tt :} followed by a type expression. For
   instance: 
 {\scriptsize
@@ -141,13 +144,14 @@ end ;;
     functions only introduced by their
     signatures. This means that it is possible to use something only
     declared, without yet effective implementation. We will address
-    this point later in detail in section \label{late-binding}.
+    this point later in detail in section\label{late-binding}.
 
     \smallskip
     Although \focal\ is a functional language, function application
     must always be total. This means that any function call must be
     provided all the effective arguments of the function. As
-    described further in the core syntax (c.f \ref{core-syntax}),
+    previously
+    described  in the core syntax (c.f \ref{function-application}),
     function application is ``à la C'', that is with arguments comma
     separated and enclosed by parentheses.
 
@@ -256,11 +260,11 @@ into properties.
 While this abstraction is easy within programming languages, it is not
 always possible when dealing with proofs and properties. Such
 problematic species are rejected by \focal\ and will be described
-later in \ref{species-constraints}.
+later in \ref{dependencies}.
 
-An interface has a name, which is the name of the underlying
-species. There should be no confusion between species names and
-interface names as interface names are only used to qualify formal
+ An interface has a {\bf  name}, {\em which is the name of the underlying
+species}. There should be no confusion between species names and
+interface names as interface names are only used to declare formal
 collection parameters (see section \ref{collection-parameter}) and to
 apply methods of collection parameters.
 
@@ -273,20 +277,17 @@ apply methods of collection parameters.
 A {\bf collection} is a kind of ``grey box'', built from a {\em
   complete} species by abstraction of the representation. A collection
 has exactly the same sequence of methods than the complete species
-underlying it, apart the representation which is hidden.
-
-The interface of a collection is, roughly speaking, the one of the
-complete species it implements. The interface $I_1$ of a collection
-$C_1$ is {\em compatible} with an interface $I_2$ if $I_1$ contains a
-common instantiation of all the components of $I_2$.
-
-\medskip
-
+underlying it, apart the representation which is hidden. 
 Note that creating a collection from it  is the
 only way to turn methods of a complete species into executable
 code. This point is emphasized by the syntax:
 
 {\tt collection} {\em name-collection} {\tt implements} {\em name-species}
+
+The interface of a collection is the one of the
+complete species it implements. The interface $I_1$ of a collection
+$C_1$ is {\em compatible} with an interface $I_2$ if $I_1$ contains
+ all the components of $I_2$.
 
 \medskip
 
@@ -317,8 +318,9 @@ Full.print (dv) ;;
 
 In the above example, we define a complete species {\tt Full}. Then
 we  create the collection
-{\tt MyFull\_Instance}. We can then use methods of this collection on
-entities of this collection.
+{\tt MyFull\_Instance}. And we use methods of this collection to
+create entities of this collection. We print the result of the evaluation of
+the top-level definitions of {\tt v} and {\tt dv}. 
 
 \smallskip
 

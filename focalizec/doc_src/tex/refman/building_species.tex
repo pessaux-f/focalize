@@ -1,29 +1,27 @@
-% $Id: building_species.tex,v 1.8 2008-12-11 10:48:24 hardin Exp $
+% $Id: building_species.tex,v 1.9 2008-12-16 17:32:00 hardin Exp $
 
 
-
-In this chapter, we describe the two mechanisms to build
-incrementally more complex species from previously existing ones: parametrisation and
-inheritance.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Parametrisation}
+\section{Parametrisation}
 \index{parametrisation}
 \label{parametrisation}
 
-
+This section describes a first mechanism to incrementally build new
+species from existing ones: the parametrisation. 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Collection parameters}
+\subsection{Collection parameters}
 \index{parameter!collection}
 \index{collection!parameter}
 \label{collection-parameter}
 Remember that methods cannot be polymorphic\index{polymorphism}
 (c.f. \ref{no-polymorphism-for-methods}). For
-example, how to implement the well-known polymorphic type of the
-lists ? A list is a structure grouping elements but independently of
+example, how to implement the well-known polymorphic type of 
+lists ?  Grouping elements in a list does not
+depend  of
 the type of these elements. The only constraint is that all elements
 have the same type. Hence, a ML-like representation of lists would be
 like:
@@ -36,10 +34,11 @@ type 'a list =
 \end{lstlisting}
 }
 
-The {\tt 'a} is then a parameter of the type, which is indeed a
-polymorphic ML type.
-In \focal\ we would like to create a species looking like:
-{\scriptsize
+The {\tt 'a} is a parameter of the constructor type {\tt list}, which
+is indeed a polymorphic ML type. 
+
+ In \focal\ we would like to create a
+species looking like: {\scriptsize
 \begin{lstlisting}
 species List =
   signature nil : Self ;
@@ -67,15 +66,12 @@ example, {\tt Basic\_object} is a pre-defined species  from the
 standard library, containing only few methods and this name is used
 here to denote the interface of this species.   A
 collection parameter can be instantiated by any collection which
-interface ``contains'' at least the interface which name follows the
-{\tt is} keyword. More precisely, a collection can be used as an
-effective parameter if its interface is {\em
+interface is {\em
   compatible}\index{interface!compatibility} with the one required by
 the parameterized species (c.f \ref{interface}). In the example, any
 effective parameter instantiating {\tt Elem} is a collection which
-interface contains at least the methods of {\tt Basic\_object}, the
-type of each of them being an instantiation of the type of the
-corresponding one in {\tt Basic\_object}.
+interface contains at least the methods  listed in the interface of
+{\tt Basic\_object}. 
 
 \smallskip
 In the example, we use the parameter {\tt Elem} to build the signature
@@ -95,29 +91,31 @@ stands for the type of a function:
     current species.
 \end{itemize}
 
-\smallskip Why a {\bf collection parameter} and not a ``species
-parameter''? The answer to this question is especially important to
+\noindent{\bf Why a collection parameter and not a species
+parameter? }
+
+The answer to this question is especially important to
 understand the programming model in \focal. It is a {\bf collection
   parameter} because ultimately, at the terminal nodes of the
 development, this parameter will have to be instantiated by an entity
-where everything is defined, that is a collection ! Imagine how to
+where everything is defined, so at least a complete species.   Imagine how to
 build an executable code if a parameter can be instantiated by a
 species with some methods only declared\ldots This is the first
 reason. 
  
-Thus the representation of
-a collection parameter is abstract for the hosting, exactly as is the
-representation of a collection is (c.f \ref{collection}). Remember that
-properties mentionned in the collection interface have been proved in
-the underlying complete species. Indeed in the hosting species, these
-theorems can be used as lemmas to do current proofs. If the
-collection representation was not abstracted, then some methods of the
-hosting species would have the ability to directly manipulate entities
-of the collection parameter, with the risk of breaking some invariants
-of the collection parameter. This is the second reason. 
+Remember that properties mentionned in the collection interface have
+been proved in the underlying complete species. Indeed in the hosting
+species, these theorems can be used as lemmas to do current proofs. If
+the collection representation was not abstracted, then some methods of
+the hosting species would have the ability to directly manipulate
+entities of the collection parameter, with the risk of breaking some
+invariants of the collection parameter.  This is the second reason.
+Thus the representation of a collection parameter is abstract for the
+hosting, exactly as is the representation of a collection (c.f
+\ref{collection}).
 
 To summarize, declaring a collection parameter for a parametrised
-species means providing two things: the name of the parameter and the
+species means providing two things: the (capitalized) name of the parameter and the
 interface (denoted by a species name) that the instantiation of this
 parameter must satisfy.
 
@@ -144,9 +142,9 @@ The representation of this species  represents the type
 first component of the couple is the same than the type of the
 elements of the list in the second component of the couple.
 
-\smallskip
+
 A parametrized species (like in
-the example  the species {\tt List}) cannot be only partially
+the example  the species {\tt MyCouple}) cannot be only partially
 instantiated.  An
 instantiation for {\bf all} its parameters is required. 
 
@@ -155,23 +153,23 @@ instantiation for {\bf all} its parameters is required.
 % our parameter {\tt L}, instantiating the {\tt List}'s parameter by our
 % first collection parameter {\tt E}).
 
-\smallskip
+\medskip
 \label{method-qualification}
 \index{method!qualification}
-Till now, in the example we used
-the parameter to build the representation of our species. But obviously,
-collection parameters can also be used via their other methods,
-i.e. signatures, functions, properties and theorems. Suppose that we want to create
-a  species describing a notion of generic couple. This species uses two collection parameters,
-one for each component of the couple. If we want to have a printing
-(i.e. returning a string, not making side effect in our example)
-method, we  require that each collection parameter provides one. Hence
-our printing method will only have to add parentheses and comma
-around and between what is printed by each parameter's printing
-routine. Hence we now need to know how to call a collection parameter
-method. The syntax is to give the method name followed by the
-parameter's name, separating them by the ``!''\index{bang character}
-character.
+The previous example  used
+a parameter to build the representation of the species. 
+Collection parameters can also be used via their other methods,
+i.e. signatures, functions, properties and theorems, denoted by the
+parameter's name followed by  the ``!''\index{bang character}
+character followed by the method name. 
+
+To create a species describing a notion of generic couple, it sufices
+to use two collection parameters, one for each component of the
+couple. To define a printing (i.e. returning a string, not making side
+effect in our example) method, it suffices to require each collection
+parameter to provide one. Now the printing method has only to
+add parentheses and comma around and between what is printed by each
+parameter's printing routine.  
 {\scriptsize
 \begin{lstlisting}
 (* Minimal species requirement : having a print routine. *)
@@ -225,13 +223,15 @@ instead of always needing a ``!'' character before each method call.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Entity parameters}
+\subsection{Entity parameters}
 \index{parameter!entity}
 \label{entity-parameter}
 There is a second kind of parameter: the {\bf entity-parameter}. Such
 a parameter can be instantiated by an {\bf entity of a certain
-  collection}.  To obtain a species offering addition modulo an
-integer value, we need to parametrise it by an entity of a collection
+  collection}.  
+
+For example, to obtain a species offering addition modulo an
+integer value, we need to parameterise it by an entity of a collection
 implementing the integers and to give a way to build an entity
 representing the value of the modulo. Such a parameter is called an
 {\bf entity parameter} and is introduced by the keyword {\tt in}.
@@ -249,7 +249,7 @@ species
 }
 
 Hence, any collection created from {\tt AddModN} embeds the addition
-modulo the effective value instantiating {\tt val\_mod}. it is then
+modulo the effective value instantiating {\tt val\_mod}. It is then
 possible to create various collections with each a specific modulo
 value. For instance, assuming that the species {\tt AddModN} is
 complete and have a method {\tt from\_int} able to create a value of
@@ -272,41 +272,50 @@ collection AddMod42 implements AddModN
 collection. It is not allowed to specify an entity parameter living in
 a basic type like {\tt int}, {\tt string}, {\tt bool}\ldots This
 especially means that these basic types must be embedded in a
-collection if we want to use on of their values  as an entity parameter.
+collection if we want to use  their values  as  entity parameters.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Inheritance and its mechanisms}
-In this section, we address the second mean to build complex species
+\section{Inheritance and its mechanisms}
+In this section, we address the second mechanism to build complex species
 based on existing ones. It will cover the notion of {\em inheritance}
 and its related feature the {\em late-binding}.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Inheritance}
+\subsection{Inheritance}
 \label{inheritance}
 \index{inheritance} \focal\ {\em inheritance} is the ability to create
 a species, not from scratch, but by integrating methods of other
 species.  The inheritance mechanism also allows to redefine methods
-already existing as long as they keep ``the same'' type. To have the
-same type means for functions that their type is an instanciation of
-the type f the redefined function, according to some instantiation of
-type variables, thus to some instantiation of collection
-parameters. For theorems to have the same type is simply to have the
-same statement (but proofs can differ).
+already existing as long as they keep the same type expression.  For
+theorems to have the same type is simply to have the same statement
+(but proofs can differ).
+
+During inheritance, it is also possible to replace a signature by an
+effective definition, to redefine a property by a theorem and in the
+same idea, to add a {\tt proof of} to a property in order to
+conceptually redefine it as a theorem. Moreover new methods can be
+added to the inheriting species.
+
+Since inherited methods are
+owned by the species that inherits, they are called exactly like if
+they were defined ``from scratch'' in the species.
 
 For instance, assuming we have a species {\tt IntCouple} that
 represent couples of integers, we want to create a species {\tt
   OrderedIntCouple} in which we ensure that the first component of the
 couple is lower or equal to the second. Instead of inventing again all
 the species, we will take advantage of the existing {\tt IntCouple}
-and ``import'' its printing, equality, etc functions. However, we will
-have to change the creation function since it must ensure at
-creation-time of a couple that it is indeed ordered. We also may add
-new methods in the newly built species. 
+and ``import'' all its methods. However, we will have to change the
+creation function since it must ensure at creation-time of a couple
+(so at run-time) that it is indeed ordered.  {\tt OrderedIntCouple}
+has all the methods of {\tt IntCouple}, except {\tt create} which is
+redefined and the property {\tt is\_ordered}) stating that the couple
+is really ordered).
 
  {\scriptsize
 \begin{lstlisting}
@@ -314,9 +323,7 @@ species IntCouple =
   representation = (int * int) ;
   let print (x in Self) = ... ;
   let create (x in int, y in int) = (x, y) ;
-  let equal (c1, c2) =
-    match (c1, c2) with
-     | ((c11, c12), (c21, c22)) -> c11 = c21 && c12 = c22 ;
+  let first (c1, c2) = c1 ; 
   ...
 end ;;
 
@@ -329,32 +336,50 @@ end ;;
 \end{lstlisting}
 }
 
-In the example above, {\tt OrderedIntCouple} has all the methods
-of {\tt IntCouple}, except the redefined ones (here {\tt create}, plus
-the methods newly defined in {\tt OrderedIntCouple} (here, the
-property {\tt is\_ordered}) stating that the couple is really
-ordered).
 
- During inheritance, it is also possible to redefine a
-signature, replacing it by an effective definition, to redefine a
-property by a theorem and in the same idea, to add a {\tt proof of} to
-a property in order to conceptually redefine is as a theorem. Since
-inherited methods are now owned by the species that inherits, they are called exactly like if they were defined ``from scratch'' in the
-species.
+
 
 \smallskip
 \index{inheritance!multiple}
-Multiple inheritance, i.e. inheriting from several species is
+{\bf Multiple inheritance}, i.e. inheriting from several species is
 allowed by specifying several species separated by comma in the
-{\tt inherits} clause. In case of methods appearing in several
-parents, there are several cases. Either, all the methods are only
-signatures. As they have the same name, they have
-compatible types, the one with the most instantiated type is
-retained. Or some of these methods have already received
-definitions. Then the definition which is retained for the inheriting
-species is the one  coming from the rightmost parent in
-the {\tt inherits} clause. For instance below, if species {\tt A} and
-{\tt C} provide a method {\tt m}, {\tt C's} one will be kept.
+{\tt inherits} clause. The inheriting species inherits of all the
+methods of inherited species. In case of a same name appears in
+several inherited species, the compiler proceeds as follows. 
+
+If all the inherited species have only declared representations, then
+the representation of the inheriting species is only declared, unless
+it is defined in this inheriting species. If some representations are
+declared, the other ones being defined, then the totally defined
+representations of inherited species must be the same and this is also
+the one of the inheriting species. In the following example, species
+{\tt S3} will be rejected while species {\tt S4} has {\tt int} as
+representation.
+
+{\scriptsize
+\begin{lstlisting}
+species S0; -- no defined representation
+end;; 
+species S1 =
+representation = int ; .. end ;;
+species S2 =
+representation = bool; ... end;;
+species S3 inherits S1, S2 = ... end;;
+species S4 inherits S0, S1 = ... end;;
+\end{lstlisting}
+}
+
+If some methods of inherited species have the same name, if they are
+all signatures or properties, if these species have no parameters,
+then signatures must be identical, properties must be identical. If
+some of these methods have already received definitions, if they have
+the same type, then the definition which is retained for the
+inheriting species is the one coming from the rightmost defined parent
+in the {\tt inherits} clause. For instance below, if species {\tt A},
+{\tt B} 
+and {\tt C} provide a method {\tt m} which is defined in {\tt A} and
+{\tt B} but only declared in {\tt C}, then {\tt B!m} is the one which
+is inherited.
 {\scriptsize
 \begin{lstlisting}
 species Foo inherits A, B, C, D =
@@ -365,10 +390,13 @@ end ;;
 
 \smallskip
 \index{inheritance!parametrised species}
+\noindent{\bf Inheritance and parametrisation}
 If a species {\tt S1} inherits from a parametrised species {\tt S0},
-it must instantiate all the parameters of {\tt S0}. Because of our
+it must instantiate all the parameters of {\tt S0}. Due to the
 dependent types\index{type!dependent} framework, if {\tt S1} is itself
-parametrised, it can use its own parameters to do that. Assuming we
+parametrised, it can use its own parameters to do that. 
+
+Assume we
 have a species {\tt List} parametrised by a collection parameter
 representing the kind of elements of the list. We want to derive
 a species {\tt ListUnique} in which elements are present at most
@@ -378,6 +406,7 @@ once. We build {\tt ListUnique} by inheriting from {\tt
 {\scriptsize
 \begin{lstlisting}
 species List (Elem is ...) =
+  representation = Elem list;
   let empty = ... ;
   let add (e in Elem, l in Self) = ... ;
   let concat (l1 in Self, l2 in Self) = ... ;
@@ -390,31 +419,44 @@ species ListUnique (UElem is ...) inherits List (UElem) =
     ... (* Ensure elements of l1 present in l2 are not added. *) ;
 end ;;
 \end{lstlisting}
-}
+} {\tt UElem} is a formal collection parameter of {\tt ListUnique}
+which acts as an effective collection parameter in the expression {\tt
+  ListUnique}. The representation of {\tt ListUnique} is {\tt UElem
+  list}. The representation of {\tt UElem} is hidden: it denotes a
+collection. But, the value constructors of the type {\tt list} are
+available, for instance, for pattern-matching.  
+
+As a consequence, if two methods in inherited species have the same
+name and if at least one of them is itself a parameterised one, then
+the signatures of these methods are no longer required to be identical
+but their type must have a common instance after instanciation of the
+collection parameters.
 
 \index{inheritance!parametrised by {\tt Self}}
+\noindent{\bf Species inheriting species parameterised by {\tt Self}} 
 A species can also inherit from a species parametrised by itself
 (i.e. by {\tt Self}). Although this is rather tricky programming, the
-standard library of \focal\ shows such an example in the file
-{\em weak\_structures.fcl} in the species
-{\tt Commutative\_semi\_ring}. Indeed this species specifies the fact
-that a commutative semi-ring is a semi-ring on itself (as a semi-ring of
-scalars).  In such a case, this implies that the
-current species must finally (when inheritance is resolved) have an
-interface compatible with the interface required by the collection
-parameter of the inherited species. The \focal\ compiler collects 
-the parts of the interface of {\tt Self}  obtained either by
-inheritance or directly in the species body. Then  it checks that the
-obtained interface is indeed compatible with the required interfaces
-of the parameterized inherited species. if so, the compiler is able to
-build the new species. Thus the compiler builds a kind of fix-point
-but it is known at compile-time that this process will terminate. 
+standard library of \focal\ shows such an example in the file {\em
+  weak\_structures.fcl} in the species {\tt
+  Commutative\_semi\_ring}. Indeed this species specifies the fact
+that a commutative semi-ring is a semi-ring on itself (as a semi-ring
+of scalars).  In such a case, this implies that the current species
+must finally (when inheritance is resolved) have an interface
+compatible with the interface required by the collection parameter of
+the inherited species. The \focal\ compiler collects the parts of the
+interface of {\tt Self} obtained either by inheritance or directly in
+the species body. Then it checks that the obtained interface is indeed
+compatible with the required interfaces of the parameterized inherited
+species. if so, the compiler is able to build the new species. Thus
+the compiler tries to build a kind of fix-point but  this process is
+always terminating, issuing either the new species or rejecting it in
+case of interface non-compliance. 
 
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Conclusion on species expressions}
+\subsection{Species expressions}
 \index{species!expression}
 % At the beginning of this presentation, when dealing with collection
 % parameters (section \ref{parametrisation}) we explained that
@@ -462,7 +504,9 @@ parameters.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Late-binding}
+\section{Late-binding and dependencies}
+
+\subsection{Late-binding}
 \label{late-binding}
 \index{late-binding} When building by multiple inheritance
 (c.f. \ref{inheritance}) some signatures can be replaced by functions
@@ -502,7 +546,7 @@ This mechanism enables two programming features:
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Dependencies and erasing}
+\subsection{Dependencies and erasing}\label{dependencies}
 We previously saw that methods of a species can use other methods of
 this species and methods from its collection parameters. This induce
 what we call {\bf dependencies}\index{dependency}. There are two kinds
@@ -516,7 +560,7 @@ the notion of representation, function, and theorem.
 
 
 
-\paragraph{Decl-dependencies}
+\subsubsection{Decl-dependencies}
 \index{dependency!decl}
 When defining a function, a property or a theorem it is possible to
 use another functions or signatures. For instance:
@@ -533,18 +577,14 @@ end ;;
 \end{lstlisting}
 }
 
-In this cases, knowing the type of the used methods is sufficient to
-ensure that the using method is well-formed. We remind that the type
-of a function and a signature is the ML-like type. And for a property
-and a theorem, this type is their logical statement. The type of a
+In this cases, knowing the type (or the logical statement) of the used methods is sufficient to
+ensure that the using method is well-formed. The type of a
 method being provided by its {\bf declaration}, we will call these induced
 dependencies {\bf decl-dependencies}.
 
 Such dependencies also arise on the representation as soon as the type
 of a method makes reference to the type {\tt Self}. Hence we can have
-dependencies on the representation as well as on other methods (as
-previously stated in \ref{rep-is-method}, {\tt representation} is a
-method).
+dependencies on the representation as well as on other methods.
 
 Hence, in our example, {\tt test}, {\tt f2}, {\tt f1} (since it is
 used in {\tt p1} and {\tt t1} as the argument of {\tt test} which expects
@@ -556,15 +596,14 @@ decl-dependency on the representation. Moreover, {\tt f2} has one on
 
 
 
-\paragraph{Def-dependencies}
+\subsubsection{Def-dependencies}
 \label{def-dependency}
 \index{dependency!def} 
 A method $m$ has a 
-{\bf def-dependency} over another one $p$ (differing from the
-representation)  if the system needs to
+{\bf def-dependency} over another one $p$ if the system needs to
 know the {\bf definition} of $p$   to ensure that $m$ is well-formed.
 
-A definition of function can create only only decl-dependencies on
+A definition of function can create  only decl-dependencies on
 methods differing from the representation since the type system of
 \focal\ only needs the types of the names present in the body of this
 function. Note also that when {\bf using} a signature in another
@@ -584,7 +623,7 @@ but that will be shortly presented below in
 \smallskip There remains the case of theorems. This case is the most
 complex since it can lead to def-dependencies in proofs.  For the same
 reasons than for properties, the {\bf \focal\ system rejects theorems
-  having def-dependencies on the representation}. Other
+  which statements have def-dependencies on the representation}. Other
 def-dependencies are accepted.  These dependencies must be introduced
 by the statement of the proof (with a syntax given in section
 \ref{zenon-an-dependencies}).  Now, what does mean for a theorem to
@@ -592,11 +631,11 @@ def-depend on a method ? This basically means that to make the proof
 of the theorem statement, one must use not only the declaration of a
 method, but also its definition, its body. For instance, a theorem
 needs to have visibility on the code of a function to have its proof
-possible. This is a needed and powerful feature. 
+possible. This is a needed and powerful feature.
 
 
 
-\paragraph{Erasing during inheritance}
+\subsubsection{Erasing during inheritance}
 \index{erasing}
 \label{erasing}
 As a consequence of def-dependencies and late-binding, if a method is
@@ -606,15 +645,15 @@ changed, may be the proof is not correct anymore and must be done
 again. In practice, it can happen that the proof still holds, but the
 compiler can't ensure this, hence will turn the theorem into a property
 in the species where the redefinition occurred. The developer will
-then have to provide a new proof of the inherited theorem thanks the
+then have to provide a new proof of the inherited theorem thanks to the
 {\tt proof of} field.
 
 
 
-\paragraph{Dependencies on collection parameters}
+\subsubsection{Dependencies on collection parameters}
 Since collection parameters always have their representation abstracted,
 hidden, only {\bf decl-dependencies} can appear in the parametrised
-method using them. Hence they can never lead to erasing. These
+species using them. Hence they can never lead to erasing. These
 dependencies are only used internally by the \focal\ compiler in order
 to generate the target code. For this reason, we will not focus anymore
 on them.
