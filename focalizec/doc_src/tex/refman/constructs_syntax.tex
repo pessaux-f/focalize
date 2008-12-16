@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.29 2008-12-16 11:19:02 pessaux Exp $
+% $Id: constructs_syntax.tex,v 1.30 2008-12-16 14:52:36 hardin Exp $
 
 
 \section{Language constructs and syntax}
@@ -908,33 +908,48 @@ functions imply termination proofs. This last point will be covered in
 the section \ref{recursive-function} especially dedicated to
 recursive (non-mutually) function definitions.
 
-\medskip
-\noindent{\bf Logical let}
+
+
+\subsubsection{{\tt logical let}}
 As seen above, the {\tt let-in} construct is used to bind
 computational expressions. Logical expressions described further
 in \ref{properties-theorems-proofs} are first order logic
 formulae. We would sometimes like to have parametrised logical
-expressions, i.e. a kind of function returning a logical proposition.
+expressions, i.e. a kind of functions returning a logical proposition.
 
-For instance we may want to express that for a certain $x$, and a
-certain $y$, $x$ is lower than $y$ and that $x+y<10$.
+Suppose we want,  for a certain value of $x$ and $y$, to use the fact
+``$x<y$ and $x+y < 10$'' (which holds or not) to build more complex
+logical expressions. 
 
-A first approach would be to think to a logical proposition like:
-$\forall x, y : {\tt int}, x < y /\setminus x+y<10$. But this is wrong
-since this does not hold for any $x$ and any $y$.
+A first attempt is to use the logical expression $x < y /\setminus
+x+y<10$ where $x$ and $y$ are considered as fresh (free)
+variables. But there is no way in the language of properties to
+instantiate $x$ and $y$ by different integer values in order to obtain
+a proposition (regardless of its truth value). 
 
-Trying $\exists x, y : {\tt int}, x < y /\setminus x+y<10$ is not
-anymore a solution since this doesn't express the fact that we want
-one day to chose a particular $x$ and a particular $y$.
+Another attempt is to introduce a property bound to the proposition
+$\forall x, y : {\tt int}, x < y /\setminus x+y<10$. It does not fit
+because there is no provided way to substitute $x$ and $y$ by integer
+values: there is no syntactical construction for elimination of a
+universal (nor existential) quantifier in the language of properties
+(note that elimination can be done during a proof).
 
-The point here is that we do not want to express a property to prove
-or a theorem but a logical expression that may be part of a property
-and/or theorem. And under the assumptions in the environment of the
-theorem/property, may be this logical expression will lead to a
-statement that holds.
+% Replacing the proposition by $\exists x, y : {\tt int}, x < y
+% /\setminus x+y<10$ does not help as we want to chose a particular $x$
+% and a particular $y$
 
-\focal\ provide the {\tt logical let} construct allowing to achieve
-such definitions. Our example would be expressed by:
+% The point here is that we do not want to express a property to prove
+% or a theorem but a logical expression that may be part of a property
+% and/or theorem. And under the assumptions in the environment of the
+% theorem/property, may be this logical expression will lead to a
+% statement that holds.
+
+
+To allow functional bindings in logical expressions \focal\ provide
+the {\tt logical let} construct. It serves to introduce a
+parameterised logical expression,  which can be applied to effective
+arguments to obtain a logical proposition.  Our example would be
+expressed by: 
 {\scriptsize
 \begin{lstlisting}
 use "basics" ;;
@@ -948,9 +963,10 @@ end ;
 \end{lstlisting}
 }
 
-Since {\tt logical let} binds an identifier to logical expression, the
+Since {\tt logical let} binds an identifier to a logical expression, the
 body of the definition {\bf must} obviously {\bf be of type}
-{\tt bool}. Once defined, {\tt f} can be used as a regular function in
+{\tt bool}. Once defined, {\tt f} can be used as a regular function,
+but only in
 properties and theorems statements. For instance:
 {\scriptsize
 \begin{lstlisting}
@@ -966,7 +982,8 @@ species S =
 end ;
 \end{lstlisting}
 }
-
+See other examples in the standard library where this construction is
+used to define associativity, commutativity, \ldots
 
 % TODO local.
 
