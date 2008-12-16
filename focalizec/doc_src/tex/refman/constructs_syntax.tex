@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.28 2008-12-15 22:50:38 hardin Exp $
+% $Id: constructs_syntax.tex,v 1.29 2008-12-16 11:19:02 pessaux Exp $
 
 
 \section{Language constructs and syntax}
@@ -37,10 +37,10 @@ types (constructors):
   \item {\tt string} for strings literals.
 \end{itemize}
 
- New   type constructors are introduced by  {\bf type
-  definitions}. 
-Types constructors can be parametrised by  {\bf type expressions} separated
-by commas and between parentheses.
+New type constructors are introduced by
+{\bf type definitions}. 
+Types constructors can be parametrised by  {\bf type expressions}
+separated by commas and between parentheses.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Type expressions}
@@ -116,11 +116,13 @@ of type definitions: aliases, sum types and record types.
 
 Aliases provide a way to create type abbreviations. It is not handy to
 manipulate large {\bf type expressions} like for instance, a tuple of
-5 components: {\tt (int * int * int * int * int)}. Moreover, several kind of information can be represented by such a
+5 components: {\tt (int * int * int * int * int)}. Moreover, several
+kind of information can be represented by such a
 tuple. For instance, x, y, z 3D-coordinates and temperature and
 pressure. For another example, year, month, day, hours, minutes. In
 these two cases, the manipulated type expression is the same and
-the two uses cannot be easily differentiated. Type aliases allows to give a name to a
+the two uses cannot be easily differentiated. Type aliases allows to
+give a name to a
 (complex) type expression, for sake of readability or to shorten the
 code. Example:
 {\scriptsize
@@ -629,7 +631,8 @@ identifier is {\bf reported unbound} by an error message.
 
  Note that an
 {\tt open} directive may arise anywhere at toplevel in the source
-code. Hence, the order of search between the current file's toplevel-definitions and the imported ones by {\tt open} is not really
+code. Hence, the order of search between the current file's
+toplevel-definitions and the imported ones by {\tt open} is not really
 separated: the name resolver looks for the most recent definition
 considering that the toplevel-definitions and the imported ones are
 ordered according to the apparition of the effective definitions in
@@ -728,8 +731,8 @@ analyzer.
 % I'm not sure that this is true. I don't want to find a counter example
 % though.
 % In fact we do not need a counterexample:
-% addind spaces is not a good practice: it is mandatory! In focalize, (+) never means the prefix
-% version of + !!
+% addind spaces is not a good practice: it is mandatory! In focalize,
+% (+) never means the prefix version of + !!
 
 
 
@@ -766,7 +769,8 @@ returns the value $((5,\ 5),\ true,\ (5,\ 5),\ true)$ of type
 
 \medskip
 \index{identifier binding}
-Note that the notion of ``binding an identifier to a value'' is essentially different from the
+Note that the notion of ``binding an identifier to a value'' is
+essentially different from the
 notion of assignment in imperative languages. In such languages (like
 C, Java, Pascal,\ldots) a variable is first {\em declared}, then a value is
 {\em assigned} to the variable. It is thus possible to assign a variable
@@ -886,7 +890,7 @@ bodies call these other functions and their definition require a
 non-nested evaluation of each function.  In this case, the keyword
 {\tt let} must be followed by the keyword {\tt rec}. 
 
- {\scriptsize
+{\scriptsize
 \begin{lstlisting}
 ...
 let rec even (x) =
@@ -905,7 +909,66 @@ the section \ref{recursive-function} especially dedicated to
 recursive (non-mutually) function definitions.
 
 \medskip
-{\color{red}To to: logical and local}.
+\noindent{\bf Logical let}
+As seen above, the {\tt let-in} construct is used to bind
+computational expressions. Logical expressions described further
+in \ref{properties-theorems-proofs} are first order logic
+formulae. We would sometimes like to have parametrised logical
+expressions, i.e. a kind of function returning a logical proposition.
+
+For instance we may want to express that for a certain $x$, and a
+certain $y$, $x$ is lower than $y$ and that $x+y<10$.
+
+A first approach would be to think to a logical proposition like:
+$\forall x, y : {\tt int}, x < y /\setminus x+y<10$. But this is wrong
+since this does not hold for any $x$ and any $y$.
+
+Trying $\exists x, y : {\tt int}, x < y /\setminus x+y<10$ is not
+anymore a solution since this doesn't express the fact that we want
+one day to chose a particular $x$ and a particular $y$.
+
+The point here is that we do not want to express a property to prove
+or a theorem but a logical expression that may be part of a property
+and/or theorem. And under the assumptions in the environment of the
+theorem/property, may be this logical expression will lead to a
+statement that holds.
+
+\focal\ provide the {\tt logical let} construct allowing to achieve
+such definitions. Our example would be expressed by:
+{\scriptsize
+\begin{lstlisting}
+use "basics" ;;
+open "basics" ;;
+
+species S =
+  ...
+  logical let f (x : in int, y in int) = x < y /\ x + y < 10 ;
+  ...
+end ;
+\end{lstlisting}
+}
+
+Since {\tt logical let} binds an identifier to logical expression, the
+body of the definition {\bf must} obviously {\bf be of type}
+{\tt bool}. Once defined, {\tt f} can be used as a regular function in
+properties and theorems statements. For instance:
+{\scriptsize
+\begin{lstlisting}
+use "basics" ;;
+open "basics" ;;
+
+species S =
+  ...
+  let m (x in Self) = ... ;
+  logical let f (x : in int, y in int) = x < y /\ x + y < 10 ;
+  ...
+  property p : all a in Self, all b, c in int, f (c, b) => f (m (a), b) ;
+end ;
+\end{lstlisting}
+}
+
+
+% TODO local.
 
 
 
