@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.17 2008-12-17 13:06:12 habib Exp $
+# $Id: Makefile,v 1.18 2008-12-17 16:00:42 habib Exp $
 
 # Makefile for access control models
 
@@ -77,9 +77,6 @@ EXTERNAL_BYT_OBJS =
 EXTERNAL_VOS = 
 
 lib: all
-
-# all:: ensembles_finis.fo access_control.fo hru.fo rbac.fo ticket.fo unix.fo \
-# ensembles_finis.v access_control.v hru.v rbac.v ticket.v unix.v
 
 byt:: \
       $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
