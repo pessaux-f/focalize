@@ -407,7 +407,7 @@ species S_models_ticket (S_c is S_tickets,
             else aux (t)
      in aux (snd (snd (snd (snd (st))))) ;
 
-  let exists_ticket (st in Self,
+  let exists_ticket (_st in Self,
              fuc in (S_c -> bool),
              fw in (S_c -> bool),
              ft in (S_c -> bool)) in bool =

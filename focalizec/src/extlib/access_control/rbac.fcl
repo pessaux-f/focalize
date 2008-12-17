@@ -440,13 +440,13 @@ species S_models_rbac (S_us is S_users,
             else aux (t)
      in aux (fst (snd (upsilon (st)))) ;
 
-  let pa (st, obj, mod, ro) =
+  let pa (st, obj, mo, ro) =
      let rec aux (l) =
         match l with
         | [ ] -> false
         | h :: t ->
             if and_b (and_b (S_obj!equal (obj, fst (fst (h))),
-             S_acc_mod!equal (mod, snd (fst (h)))),
+             S_acc_mod!equal (mo, snd (fst (h)))),
               S_ro!equal (ro, snd (h)))
             then true
             else aux (t)
@@ -463,7 +463,7 @@ species S_models_rbac (S_us is S_users,
             else aux (t)
      in aux (snd (snd (snd (upsilon (st))))) ;
 
-  let exists_role (st, fr, fp) =
+  let exists_role (_st , fr, fp) =
      let rec aux (l) =
         match l with
         | [ ] -> false
@@ -473,7 +473,7 @@ species S_models_rbac (S_us is S_users,
             else aux (t)
      in aux (S_ro!roles_list) ;
 
-  let exists_role_ua (st, fr, fp) =
+  let exists_role_ua (_st, fr, fp) =
      let rec aux (l) =
         match l with
         | [ ] -> false
@@ -529,7 +529,7 @@ species S_models_rbac (S_us is S_users,
   let equal (st1, st2) = S_set_acc!equal (lambda (st1), lambda (st2)) ;
 
   let element = create (S_set_acc!vide,
-        (function su -> S_us!element),
+        (function _su -> S_us!element),
         [ ],
         [ ],
         [ ]) ;
