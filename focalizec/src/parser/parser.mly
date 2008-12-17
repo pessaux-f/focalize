@@ -14,13 +14,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.117 2008-12-10 08:59:17 weis Exp $ *)
+(* $Id: parser.mly,v 1.118 2008-12-17 18:26:26 weis Exp $ *)
 
 open Parsetree;;
 
 let mk_loc () = {
-    Location.l_beg = Parsing.symbol_start_pos ();
-    Location.l_end = Parsing.symbol_end_pos ();
+  Location.l_beg = Parsing.symbol_start_pos ();
+  Location.l_end = Parsing.symbol_end_pos ();
 }
 ;;
 
@@ -208,7 +208,6 @@ let mk_proof_label (s1, s2) =
 %token DEFINITION
 %token ELSE
 %token END
-%token EVIDENCE
 %token EX
 %token EXTERNAL
 %token FUNCTION
@@ -227,6 +226,7 @@ let mk_proof_label (s1, s2) =
 %token MEASURE
 %token NOT
 %token NOTATION
+%token OBVIOUS
 %token OF
 %token ON
 %token OPEN
@@ -753,6 +753,8 @@ proof:
     /* Trailing is the reason why the proof was not given. */
   | opt_doc enforced_dependency_list ASSUMED EXTERNAL_CODE
     { mk_doc $1 (Pf_assumed ($2, $4)) }
+  | opt_doc OBVIOUS
+    { mk_doc $1 (Pf_auto []) }
   | opt_doc BY fact_list
     { mk_doc $1 (Pf_auto $3) }
   | opt_doc COQ PROOF enforced_dependency_list EXTERNAL_CODE
@@ -779,8 +781,6 @@ proof_node_qed:
 ;
 
 fact_list:
-  | EVIDENCE
-    { [] }
   | fact facts
     { $1 :: $2 }
 ;
