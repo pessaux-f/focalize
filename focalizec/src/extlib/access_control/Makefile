@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.15 2008-12-12 09:52:56 weis Exp $
+# $Id: Makefile,v 1.16 2008-12-17 10:02:45 habib Exp $
 
 # Makefile for access control models
 
@@ -39,10 +39,58 @@ COQ_INCLUDES = -I $(ZENON_DIR) -I $(STDLIB_DIR)
 
 include $(ROOT_DIR)/Makefile.common
 
+FOCALIZE_SRC = \
+	ensembles_finis.fcl \
+	access_control.fcl \
+	hru.fcl \
+	rbac.fcl \
+	ticket.fcl \
+	unix.fcl
+
+FOCALIZE_SRC_UNSAFE =
+
+FOCALIZE_MLS = $(FOCALIZE_SRC:.fcl=.ml)
+FOCALIZE_MLS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.ml)
+
+FOCALIZE_BYT_OBJS = $(FOCALIZE_MLS:.ml=.cmo)
+FOCALIZE_BYT_OBJS_UNSAFE = $(FOCALIZE_MLS_UNSAFE:.ml=.cmo)
+
+FOCALIZE_BIN_OBJS = $(FOCALIZE_BYT_OBJS:.cmo=.cmx)
+FOCALIZE_BIN_OBJS_UNSAFE = $(FOCALIZE_BYT_OBJS_UNSAFE:.cmo=.cmx)
+
+FOCALIZE_ZVS = $(FOCALIZE_SRC:.fcl=.zv)
+FOCALIZE_ZVS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.zv)
+
+FOCALIZE_VS = $(FOCALIZE_ZVS:.zv=.v)
+FOCALIZE_VS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.v)
+
+FOCALIZE_VOS = $(FOCALIZE_VS:.v=.vo)
+FOCALIZE_VOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
+
+EXTERNAL_BIN_OBJS = $(EXTERNAL_BYT_OBJS:.cmo=.cmx)
+
+EXTERNAL_BYT_OBJS = 
+
+EXTERNAL_VOS = 
+
 lib: all
 
-all:: ensembles_finis.fo access_control.fo hru.fo rbac.fo ticket.fo unix.fo \
-ensembles_finis.v access_control.v hru.v rbac.v ticket.v unix.v
+# all:: ensembles_finis.fo access_control.fo hru.fo rbac.fo ticket.fo unix.fo \
+# ensembles_finis.v access_control.v hru.v rbac.v ticket.v unix.v
+
+byt:: \
+      $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
+      $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
+      $(FOCALIZE_ZVS)\
+      $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BYT_OBJS_UNSAFE)\
+      $(FOCALIZE_VS)
+
+bin:: \
+      $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
+      $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
+      $(FOCALIZE_ZVS)\
+      $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE)\
+      $(FOCALIZE_VS)
 
 install::
 	$(MKDIR) $(LIB_INSTALL_DIR)
@@ -72,4 +120,4 @@ install::
 	fi
 
 clean::
-	$(RM) *.ml *.mli *.zv *.v *.pfc
+	$(RM) *.fo *.ml *.mli *.zv *.v *.vo *.pfc *.glob

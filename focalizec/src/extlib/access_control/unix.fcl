@@ -185,11 +185,11 @@ species S_rho_unix (S_g is S_groups)
 
 species S_rights inherits Rights, S_setoid =
 
-  let dp = (1, "dp") ;
+  let d_p = (1, "dp") ;
 
-  let dg = (2, "dg") ;
+  let d_g = (2, "dg") ;
 
-  let do = (3, "do") ;
+  let d_o = (3, "do") ;
 
 end ;;
 
@@ -243,17 +243,17 @@ species S_requests_unix (S is S_subjects, O is S_objects, M is S_access_mode,
 
   let is_rm_right (rg) = Sgr!equal (Sgr!m_right, get_gr (rg)) ;
 
-  let is_dp (rg) =
+  let is_d_p (rg) =
      and_b (or_b (is_add_right (rg), is_rm_right(rg)),
-            Z!equal (get_z (rg), Z!dp)) ;
+            Z!equal (get_z (rg), Z!d_p)) ;
 
-  let is_dg (rg) =
+  let is_d_g (rg) =
      and_b (or_b (is_add_right (rg), is_rm_right (rg)),
-            Z!equal (get_z (rg), Z!dg)) ;
+            Z!equal (get_z (rg), Z!d_g)) ;
 
-  let is_do (rg) =
+  let is_d_o (rg) =
      and_b (or_b (is_add_right (rg), is_rm_right (rg)),
-            Z!equal (get_z (rg), Z!do)) ;
+            Z!equal (get_z (rg), Z!d_o)) ;
 
   let is_chown (rg) = Sgr!equal (Sgr!chown, get_gr (rg)) ;
 
@@ -368,9 +368,9 @@ species S_models_unix (S_grp is S_groups,
        ((S_obj -> S_sub) * (* f_p *)
         ((S_obj -> S_grp) * (* f_g *)
          ((S_sub -> S_set_grp) * (* f_s *)
-          ((S_obj -> S_set_mod) * (* f_dp *)
-           ((S_obj -> S_set_mod) * (* f_dg *)
-            (S_obj -> S_set_mod))))))))) ; (* f_do *)
+          ((S_obj -> S_set_mod) * (* f_d_p *)
+           ((S_obj -> S_set_mod) * (* f_d_g *)
+            (S_obj -> S_set_mod))))))))) ; (* f_d_o *)
 
   let create (s in S_set_acc,
               a in list (S_grp),
@@ -390,8 +390,8 @@ species S_models_unix (S_grp is S_groups,
         ((S_obj -> S_sub) * (* f_p *)
          ((S_obj -> S_grp) * (* f_g *)
           ((S_sub -> S_set_grp) * (* f_s *)
-           ((S_obj -> S_set_mod) * (* f_dp *)
-            ((S_obj -> S_set_mod) * (* f_dg *)
+           ((S_obj -> S_set_mod) * (* f_d_p *)
+            ((S_obj -> S_set_mod) * (* f_d_g *)
              (S_obj -> S_set_mod)))))))) =
      snd (st) ;
 
@@ -430,13 +430,13 @@ species S_models_unix (S_grp is S_groups,
   let f_s (st, sub) =
      fst (snd (snd (snd (snd (upsilon (st)))))) (sub) ;
 
-  let f_dp (st, obj) =
+  let f_d_p (st, obj) =
      fst (snd (snd (snd (snd (snd (upsilon (st))))))) (obj) ;
 
-  let f_dg (st, obj) =
+  let f_d_g (st, obj) =
      fst (snd (snd (snd (snd (snd (snd (upsilon (st)))))))) (obj) ;
 
-  let f_do (st, obj) =
+  let f_d_o (st, obj) =
      snd (snd (snd (snd (snd (snd (snd (upsilon (st)))))))) (obj) ;
 
   let add_ag (st, grp) =
@@ -445,9 +445,9 @@ species S_models_unix (S_grp is S_groups,
              (f_p (st),
               (f_g (st),
                (f_s (st),
-        (f_dp (st),
-         (f_dg (st),
-          f_do (st))))))))) ;
+        (f_d_p (st),
+         (f_d_g (st),
+          f_d_o (st))))))))) ;
 
   let rm_ag (st, grp) =
      let rec aux (li, g) =
@@ -462,9 +462,9 @@ species S_models_unix (S_grp is S_groups,
         (f_p (st),
          (f_g (st),
           (f_s (st),
-           (f_dp (st),
-            (f_dg (st),
-             f_do (st))))))))) ;
+           (f_d_p (st),
+            (f_d_g (st),
+             f_d_o (st))))))))) ;
 
   let add_su (st, s) =
      (lambda (st), (fst (upsilon (st)),
@@ -472,9 +472,9 @@ species S_models_unix (S_grp is S_groups,
              (f_p (st),
               (f_g (st),
                (f_s (st),
-        (f_dp (st),
-         (f_dg (st),
-          f_do (st))))))))) ;
+        (f_d_p (st),
+         (f_d_g (st),
+          f_d_o (st))))))))) ;
 
   let rm_su (st, s) =
      let rec aux (li, s) =
@@ -489,9 +489,9 @@ species S_models_unix (S_grp is S_groups,
         (f_p (st),
          (f_g (st),
           (f_s (st),
-           (f_dp (st),
-            (f_dg (st),
-             f_do (st))))))))) ;
+           (f_d_p (st),
+            (f_d_g (st),
+             f_d_o (st))))))))) ;
 
   let chown (st, o, s) =
      let aux (st, ob) =
@@ -504,9 +504,9 @@ species S_models_unix (S_grp is S_groups,
            (aux (st),
             (f_g (st),
              (f_s (st),
-              (f_dp (st),
-               (f_dg (st),
-        f_do (st))))))))) ;
+              (f_d_p (st),
+               (f_d_g (st),
+        f_d_o (st))))))))) ;
 
   let chgrp(st, o, g) =
      let aux (st, ob) =
@@ -519,9 +519,9 @@ species S_models_unix (S_grp is S_groups,
            (f_p(st),
             (aux (st),
              (f_s (st),
-              (f_dp (st),
-               (f_dg (st),
-        f_do (st))))))))) ;
+              (f_d_p (st),
+               (f_d_g (st),
+        f_d_o (st))))))))) ;
 
   let add_g_s (st, s, g) =
      let aux (st, sub) =
@@ -534,9 +534,9 @@ species S_models_unix (S_grp is S_groups,
            (f_p (st),
             (f_g (st),
              (aux (st),
-              (f_dp (st),
-               (f_dg (st),
-        f_do(st))))))))) ;
+              (f_d_p (st),
+               (f_d_g (st),
+        f_d_o(st))))))))) ;
 
   let rm_g_s (st, s, g) =
      let aux (st, sub) =
@@ -549,15 +549,15 @@ species S_models_unix (S_grp is S_groups,
            (f_p (st),
             (f_g (st),
              (aux (st),
-              (f_dp (st),
-               (f_dg (st),
-        f_do (st))))))))) ;
+              (f_d_p (st),
+               (f_d_g (st),
+        f_d_o (st))))))))) ;
 
-  let add_dp (st, o, m) =
+  let add_d_p (st, o, m) =
      let aux (st, ob) =
         if S_obj!equal (o, ob)
-        then S_set_mod!union (f_dp (st, o), S_set_mod!singleton (m))
-        else f_dp (st, ob)
+        then S_set_mod!union (f_d_p (st, o), S_set_mod!singleton (m))
+        else f_d_p (st, ob)
      in (lambda (st),
          (fst (upsilon (st)),
           (fst (snd (upsilon (st))),
@@ -565,14 +565,14 @@ species S_models_unix (S_grp is S_groups,
             (f_g (st),
              (f_s (st),
               (aux (st),
-               (f_dg (st),
-        f_do (st))))))))) ;
+               (f_d_g (st),
+        f_d_o (st))))))))) ;
 
-  let rm_dp (st, o, m) =
+  let rm_d_p (st, o, m) =
      let aux (st, ob) =
         if S_obj!equal (o, ob)
-        then S_set_mod!diff (f_dp (st, o), S_set_mod!singleton (m))
-        else f_dp (st, ob)
+        then S_set_mod!diff (f_d_p (st, o), S_set_mod!singleton (m))
+        else f_d_p (st, ob)
      in (lambda (st),
          (fst (upsilon (st)),
           (fst (snd (upsilon (st))),
@@ -580,67 +580,67 @@ species S_models_unix (S_grp is S_groups,
             (f_g (st),
              (f_s (st),
               (aux (st),
-               (f_dg (st),
-        f_do (st))))))))) ;
+               (f_d_g (st),
+        f_d_o (st))))))))) ;
 
-  let add_dg (st, o, m) =
+  let add_d_g (st, o, m) =
      let aux (st, ob) =
         if S_obj!equal (o, ob)
-        then S_set_mod!union (f_dg (st, o), S_set_mod!singleton (m))
-        else f_dg (st, ob)
+        then S_set_mod!union (f_d_g (st, o), S_set_mod!singleton (m))
+        else f_d_g (st, ob)
      in (lambda (st),
          (fst (upsilon (st)),
           (fst (snd (upsilon (st))),
            (f_p (st),
             (f_g (st),
              (f_s (st),
-              (f_dp (st),
+              (f_d_p (st),
                (aux (st),
-        f_do(st))))))))) ;
+        f_d_o(st))))))))) ;
 
-  let rm_dg (st, o, m) =
+  let rm_d_g (st, o, m) =
      let aux (st, ob) =
         if S_obj!equal (o, ob)
-        then S_set_mod!diff (f_dg (st, o), S_set_mod!singleton (m))
-        else f_dg (st, ob)
+        then S_set_mod!diff (f_d_g (st, o), S_set_mod!singleton (m))
+        else f_d_g (st, ob)
      in (lambda (st),
          (fst (upsilon (st)),
           (fst (snd (upsilon (st))),
            (f_p (st),
             (f_g (st),
              (f_s (st),
-              (f_dp (st),
+              (f_d_p (st),
                (aux (st),
-        f_do (st))))))))) ;
+        f_d_o (st))))))))) ;
 
-  let add_do (st, o, m) =
+  let add_d_o (st, o, m) =
      let aux (st, ob) =
         if S_obj!equal (o, ob)
-        then S_set_mod!union (f_do (st, o), S_set_mod!singleton (m))
-        else f_do (st, ob)
+        then S_set_mod!union (f_d_o (st, o), S_set_mod!singleton (m))
+        else f_d_o (st, ob)
      in (lambda (st),
          (fst (upsilon (st)),
           (fst (snd (upsilon (st))),
            (f_p (st),
             (f_g (st),
              (f_s (st),
-              (f_dp (st),
-               (f_dg (st),
+              (f_d_p (st),
+               (f_d_g (st),
         aux (st))))))))) ;
 
-  let rm_do (st, o, m) =
+  let rm_d_o (st, o, m) =
      let aux (st, ob) =
         if S_obj!equal (o, ob)
-        then S_set_mod!diff (f_do (st, o), S_set_mod!singleton (m))
-        else f_do (st, ob)
+        then S_set_mod!diff (f_d_o (st, o), S_set_mod!singleton (m))
+        else f_d_o (st, ob)
      in (lambda (st),
          (fst (upsilon (st)),
           (fst (snd (upsilon (st))),
            (f_p (st),
             (f_g (st),
              (f_s (st),
-              (f_dp (st),
-               (f_dg (st),
+              (f_d_p (st),
+               (f_d_g (st),
         aux (st))))))))) ;
 
   let equal (st1, st2) = S_set_acc!equal (lambda (st1), lambda (st2)) ;
@@ -676,9 +676,9 @@ species S_models_unix (S_grp is S_groups,
      print_right (set_mod, S_acc_mod!execute) ;
 
   let print_ls (st, obj) =
-     print_set_right (f_dp (st, obj)) ^ " " ^
-     print_set_right (f_dg (st, obj)) ^ " " ^
-     print_set_right (f_do (st, obj)) ^ " " ^
+     print_set_right (f_d_p (st, obj)) ^ " " ^
+     print_set_right (f_d_g (st, obj)) ^ " " ^
+     print_set_right (f_d_o (st, obj)) ^ " " ^
      S_sub!print (f_p (st, obj)) ^ " " ^
      S_grp!print (f_g (st, obj)) ^ " " ^
      S_obj!print (obj) ^ "\n" ;
@@ -803,7 +803,7 @@ let fg_ex (o in C_objects) in C_groups =
    then C_groups!rsa
    else C_groups!element ;;
 
-let fdp_ex (o in C_objects) in C_set_of_mode =
+let fd_p_ex (o in C_objects) in C_set_of_mode =
    if or_b (or_b (or_b (C_objects!equal (o, rapport_pdf),
         C_objects!equal (o, media_java)),
           C_objects!equal (o, tp1_ml)),
@@ -818,7 +818,7 @@ let fdp_ex (o in C_objects) in C_set_of_mode =
    then C_set_of_mode!vide
    else C_set_of_mode!singleton (C_access_mode!element) ;;
 
-let fdg_ex (o in C_objects) in C_set_of_mode =
+let fd_g_ex (o in C_objects) in C_set_of_mode =
    if C_objects!equal (o, rapport_pdf)
    then C_set_of_mode!singleton (C_access_mode!read)
    else if or_b (C_objects!equal (o, media_java),
@@ -833,7 +833,7 @@ let fdg_ex (o in C_objects) in C_set_of_mode =
                        C_set_of_mode!singleton (C_access_mode!write))
    else C_set_of_mode!singleton (C_access_mode!element) ;;
 
-let fdo_ex (o in C_objects) in C_set_of_mode =
+let fd_o_ex (o in C_objects) in C_set_of_mode =
    if or_b (or_b (C_objects!equal (o, rapport_pdf),
           C_objects!equal (o, media_java)),
             C_objects!equal (o, tp1_ml))
@@ -854,9 +854,9 @@ let st0 = C_models_unix!create (C_set_of_access!vide,
         fp_ex,
         fg_ex,
         fs_ex,
-        fdp_ex,
-        fdg_ex,
-        fdo_ex) ;;
+        fd_p_ex,
+        fd_g_ex,
+        fd_o_ex) ;;
 
 let list_obj = [ rapport_pdf; tp1_ml; media_java; hachage_c; projet_tex ] ;;
 
@@ -1330,7 +1330,7 @@ let req16 = C_requests_unix!create (C_get_release!p_right,
             projet_tex,
             C_access_mode!read,
             C_groups!element,
-            C_rights!dp,
+            C_rights!d_p,
             C_subjects!element) ;;
 
 print_string ("Requete16 : " ^ C_requests_unix!print_adm (req16) ^ "\n") ;;
@@ -1357,7 +1357,7 @@ let req17 = C_requests_unix!create (C_get_release!p_right,
             projet_tex,
             C_access_mode!read,
             C_groups!element,
-            C_rights!dp,
+            C_rights!d_p,
             C_subjects!element) ;;
 
 print_string ("Requete17 : " ^ C_requests_unix!print_adm (req17) ^ "\n") ;;
@@ -1384,7 +1384,7 @@ let req18 = C_requests_unix!create (C_get_release!m_right,
             tp1_ml,
             C_access_mode!execute,
             C_groups!element,
-            C_rights!dp,
+            C_rights!d_p,
             C_subjects!element) ;;
 
 print_string ("Requete18 : " ^ C_requests_unix!print_adm (req18) ^ "\n") ;;
@@ -1413,7 +1413,7 @@ let req19 = C_requests_unix!create (C_get_release!m_right,
             tp1_ml,
             C_access_mode!read,
             C_groups!element,
-            C_rights!dp,
+            C_rights!d_p,
                      C_subjects!element) ;;
 
 print_string ("Requete19 : " ^ C_requests_unix!print_adm (req19) ^ "\n") ;;
@@ -1439,7 +1439,7 @@ let req20 = C_requests_unix!create (C_get_release!m_right,
             rapport_pdf,
             C_access_mode!write,
             C_groups!element,
-            C_rights!dp,
+            C_rights!d_p,
                      C_subjects!element) ;;
 
 print_string ("Requete20 : " ^ C_requests_unix!print_adm (req20) ^ "\n") ;;
@@ -1466,7 +1466,7 @@ let req21 = C_requests_unix!create (C_get_release!p_right,
             rapport_pdf,
             C_access_mode!execute,
             C_groups!element,
-            C_rights!dg,
+            C_rights!d_g,
                      C_subjects!element) ;;
 
 print_string ("Requete21 : " ^ C_requests_unix!print_adm (req21) ^ "\n") ;;
@@ -1497,7 +1497,7 @@ let req22 = C_requests_unix!create (C_get_release!p_right,
             projet_tex,
             C_access_mode!read,
             C_groups!element,
-            C_rights!dg,
+            C_rights!d_g,
                      C_subjects!element) ;;
 
 print_string ("Requete22 : " ^ C_requests_unix!print_adm (req22) ^ "\n") ;;
@@ -1524,7 +1524,7 @@ let req23 = C_requests_unix!create (C_get_release!m_right,
             hachage_c,
             C_access_mode!read,
             C_groups!element,
-            C_rights!dg,
+            C_rights!d_g,
                      C_subjects!element) ;;
 
 print_string ("Requete23 : " ^ C_requests_unix!print_adm (req23) ^ "\n") ;;
@@ -1555,7 +1555,7 @@ let req24 = C_requests_unix!create (C_get_release!m_right,
             hachage_c,
             C_access_mode!write,
             C_groups!element,
-            C_rights!dg,
+            C_rights!d_g,
                      C_subjects!element) ;;
 
 print_string ("Requete24 : " ^ C_requests_unix!print_adm (req24) ^ "\n") ;;
@@ -1582,7 +1582,7 @@ let req25 = C_requests_unix!create (C_get_release!m_right,
             tp1_ml,
             C_access_mode!execute,
             C_groups!element,
-            C_rights!dg,
+            C_rights!d_g,
                      C_subjects!element) ;;
 
 print_string ("Requete25 : " ^ C_requests_unix!print_adm (req25) ^ "\n") ;;
@@ -1609,7 +1609,7 @@ let req26 = C_requests_unix!create (C_get_release!p_right,
             rapport_pdf,
             C_access_mode!read,
             C_groups!element,
-            C_rights!do,
+            C_rights!d_o,
                      C_subjects!element) ;;
 
 print_string ("Requete26 : " ^ C_requests_unix!print_adm (req26) ^ "\n") ;;
@@ -1640,7 +1640,7 @@ let req27 = C_requests_unix!create (C_get_release!p_right,
             projet_tex,
             C_access_mode!read,
             C_groups!element,
-            C_rights!do,
+            C_rights!d_o,
                      C_subjects!element) ;;
 
 print_string ("Requete27 : " ^ C_requests_unix!print_adm (req27) ^ "\n") ;;
@@ -1667,7 +1667,7 @@ let req28 = C_requests_unix!create (C_get_release!m_right,
             hachage_c,
             C_access_mode!read,
             C_groups!element,
-            C_rights!do,
+            C_rights!d_o,
                      C_subjects!element) ;;
 
 print_string ("Requete28 : " ^ C_requests_unix!print_adm (req28) ^ "\n") ;;
@@ -1698,7 +1698,7 @@ let req29 = C_requests_unix!create (C_get_release!m_right,
             hachage_c,
             C_access_mode!write,
             C_groups!element,
-            C_rights!do,
+            C_rights!d_o,
                      C_subjects!element) ;;
 
 print_string ("Requete29 : " ^ C_requests_unix!print_adm (req29) ^ "\n") ;;
@@ -1725,7 +1725,7 @@ let req30 = C_requests_unix!create (C_get_release!m_right,
             media_java,
             C_access_mode!read,
             C_groups!element,
-            C_rights!do,
+            C_rights!d_o,
                      C_subjects!element) ;;
 
 print_string ("Requete30 : " ^ C_requests_unix!print_adm (req30) ^ "\n") ;;

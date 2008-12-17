@@ -3147,9 +3147,9 @@ species Rho_unix (G is Groups) inherits Rho = end ;;
    - A function f_p : Objects &rarr; Subjects
    - A function f_g : Objects &rarr; Groups
    - A function f_s : Subjects &rarr; &weierp;(Groups)
-   - A function f_dp : Objects &rarr; &weierp;(Access_mode)
-   - A function f_dg : Objects &rarr; &weierp;(Access_mode)
-   - A function f_do : Objects &rarr; &weierp;(Access_mode)
+   - A function f_d_p : Objects &rarr; &weierp;(Access_mode)
+   - A function f_d_g : Objects &rarr; &weierp;(Access_mode)
+   - A function f_d_o : Objects &rarr; &weierp;(Access_mode)
  *)
 species States_unix (G is Groups, Rh is Rho_unix (G), 
 		     S is Subjects, O is Objects, M is Access_mode, 
@@ -3179,13 +3179,13 @@ species States_unix (G is Groups, Rh is Rho_unix (G),
   signature f_s : Self -> S -> S_g ;
 
   (** Returns the owner's rights of the given object *)
-  signature f_dp : Self -> O -> S_m ;
+  signature f_d_p : Self -> O -> S_m ;
 
   (** Returns the group's rights of the given object *)  
-  signature f_dg : Self -> O -> S_m ;
+  signature f_d_g : Self -> O -> S_m ;
 
   (** Returns the others' rights of the given object *)  
-  signature f_do : Self -> O -> S_m ;
+  signature f_d_o : Self -> O -> S_m ;
 
   (** Add a group to the given state's active groups *)
   signature add_ag : Self -> G -> Self ;
@@ -3218,28 +3218,28 @@ species States_unix (G is Groups, Rh is Rho_unix (G),
   signature rm_g_s : Self -> S -> G -> Self ;
 
   (** Add the given access mode to the owner's rights of the given object *)
-  signature add_dp : Self -> O -> M -> Self ;
+  signature add_d_p : Self -> O -> M -> Self ;
 
   (**
      Remove the given access mode from the owner's rights of the given object
    *)
-  signature rm_dp : Self -> O -> M -> Self ;
+  signature rm_d_p : Self -> O -> M -> Self ;
 
   (** Add the given access mode to the group's rights of the given object *)
-  signature add_dg : Self -> O -> M -> Self ;
+  signature add_d_g : Self -> O -> M -> Self ;
 
   (**
      Remove the given access mode from the group's rights of the given object
    *)
-  signature rm_dg : Self -> O -> M -> Self ;
+  signature rm_d_g : Self -> O -> M -> Self ;
 
   (** Add the given access mode to the others' rights of the given object *)
-  signature add_do : Self -> O -> M -> Self ;
+  signature add_d_o : Self -> O -> M -> Self ;
 
   (**
      Remove the given access mode from the others' rights of the given object
    *)
-  signature rm_do : Self -> O -> M -> Self ;
+  signature rm_d_o : Self -> O -> M -> Self ;
 
 end ;;
 
@@ -3252,25 +3252,25 @@ species Policy_unix (G is Groups, Rh is Rho_unix (G),
     States_unix (G, Rh, S, O, M, A, S_a, S_m, S_g), 
     Policy (Rh, S, O, M, A, S_a) = 
 
-  (** f_p(op) = sp &and; mp &isin; f_dp(op) *)
+  (** f_p(op) = sp &and; mp &isin; f_d_p(op) *)
   logical let owner_access (st in Self) = 
      all sp in S, all op in O, all mp in M, 
        S!equal (f_p (st, op), sp) /\ 
-       S_m!est_element (mp, f_dp (st, op)) ;
+       S_m!est_element (mp, f_d_p (st, op)) ;
 
-  (** f_p(op) &ne; sp &and; f_g(op) &isin; f_s(sp) &and; mp &isin; f_dg(op) *)
+  (** f_p(op) &ne; sp &and; f_g(op) &isin; f_s(sp) &and; mp &isin; f_d_g(op) *)
   logical let group_access (st in Self) = 
      all sp in S, all op in O, all mp in M, 
      (~ S!equal (f_p (st, op), sp)) /\ 
      S_g!est_element (f_g (st, op), f_s (st, sp)) /\ 
-     S_m!est_element (mp, f_dg (st, op)) ;
+     S_m!est_element (mp, f_d_g (st, op)) ;
 
-  (** f_p(op) &ne; sp &and; f_g(op) &notin; f_s(sp) &and; mp &isin; f_do(op) *)
+  (** f_p(op) &ne; sp &and; f_g(op) &notin; f_s(sp) &and; mp &isin; f_d_o(op) *)
   logical let others_access (st in Self) = 
      all sp in S, all op in O, all mp in M, 
      (~ S!equal (f_p (st, op), sp)) /\  
      (~ S_g!est_element (f_g (st, op), f_s (st, sp))) /\ 
-     S_m!est_element (mp, f_do (st, op)) ;
+     S_m!est_element (mp, f_d_o (st, op)) ;
 
   (**
      If an access (sp,op,mp) belongs to the current accesses of a state 
@@ -3293,13 +3293,13 @@ end ;;
 species Rights inherits Setoid = 
 
   (** The right "owner" *)
-  signature dp : Self ;
+  signature d_p : Self ;
 
   (** The right "group" *)
-  signature dg : Self ;
+  signature d_g : Self ;
 
   (** The right "others" *)
-  signature do : Self ;
+  signature d_o : Self ;
 
 end ;;
 
@@ -3363,19 +3363,19 @@ species Requests_adm_unix (S is Subjects, O is Objects, M is Access_mode,
      Returns true if the right involved in the given administrative request 
      is the right "owner", false otherwise
    *)
-  signature is_dp : Self -> bool ;
+  signature is_d_p : Self -> bool ;
 
   (**
      Returns true if the right involved in the given administrative request 
      is the right "group", false otherwise
    *)
-  signature is_dg : Self -> bool ;
+  signature is_d_g : Self -> bool ;
 
   (**
      Returns true if the right involved in the given administrative request 
      is the right "others", false otherwise
    *)
-  signature is_do : Self -> bool ;
+  signature is_d_o : Self -> bool ;
 
   (**
      Returns true if the given administrative request is a "+chown" request, 
@@ -3433,16 +3433,16 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
      let mp = R!get_m (r1) in
      if R!is_get (r1) then 
        if(or_b (or_b (or_b (and_b (S!equal (f_p (st, op), sp), 
-				   S_m!est_element (mp, f_dp (st, op))), 
+				   S_m!est_element (mp, f_d_p (st, op))), 
 			    (and_b (and_b ((not_b (S!equal (f_p (st, op), 
 							    sp))), 
 					   S_g!est_element (f_g (st, op), 
 							    f_s (st, sp))), 
-				    (S_m!est_element (mp, f_dg (st, op)))))), 
+				    (S_m!est_element (mp, f_d_g (st, op)))))), 
 		      (and_b (and_b (not_b (S!equal (f_p (st, op), sp)), 
 				     not_b (S_g!est_element (f_g (st, op), 
 							     f_s (st, sp)))), 
-			      (S_m!est_element (mp, f_do (st, op)))))), 
+			      (S_m!est_element (mp, f_d_o (st, op)))))), 
 		su (st, sp)))
        then (D!yes, add (st, A!create (sp, op, mp)))
        else (D!no, st)
@@ -3460,7 +3460,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
 		   (and_b (and_b (and_b (S_g!est_element (f_g (st, od), 
 							  f_s (st, sp)), 
 					 not_b (S_m!est_element (md, 
-								 f_do (st, 
+								 f_d_o (st, 
 								       od)))), 
 				  G!equal (f_g (st, od), ga)), 
 			   not_b (su (st, sp)))))) ;
@@ -3469,7 +3469,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
      Returns true if the given access ac satisfies the conditions needed to 
      apply the request "+right" with the right "owner", false otherwise
    *)
-  let predicate_right_dp (st, sa, oa, ma, ac) = 
+  let predicate_right_d_p (st, sa, oa, ma, ac) = 
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
@@ -3481,7 +3481,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
      Returns true if the given access ac satisfies the conditions needed to 
      apply the request "+right" with the right "group", false otherwise
    *)
-  let predicate_right_dg (st, oa, ma, ac) = 
+  let predicate_right_d_g (st, oa, ma, ac) = 
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
@@ -3489,14 +3489,14 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
 					M!equal (md, ma)), 
 				 S_g!est_element (f_g (st, od), f_s (st, 
 								     sp))), 
-			  S_m!est_element (md, f_dg (st, od))), 
+			  S_m!est_element (md, f_d_g (st, od))), 
 		   not_b (su (st, sp)))) ;
 
   (**
      Returns true if the given access ac satisfies the conditions needed to 
      apply the request "+right" with the right "others", false otherwise
    *)
-  let predicate_right_do (st, oa, ma, ac) = 
+  let predicate_right_d_o (st, oa, ma, ac) = 
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
@@ -3522,14 +3522,14 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
 		 (or_b (and_b 
 			(and_b 
 			 (S!equal (f_p (st, oa), sp), 
-			  S_m!est_element(md, f_dp (st, oa))), 
+			  S_m!est_element(md, f_d_p (st, oa))), 
 			 or_b (and_b (not_b (S_m!est_element (md, 
-							      f_dg (st, oa))), 
+							      f_d_g (st, oa))), 
 				      not_b (S_g!est_element (f_g (st, oa), 
 							      f_s (st, sp)))), 
-			       not_b (S_m!est_element (md, f_do (st, oa))))), 
+			       not_b (S_m!est_element (md, f_d_o (st, oa))))), 
 			and_b (S!equal (sp, s2a), 
-			       not_b (S_m!est_element (md, f_dp (st, oa))))), 
+			       not_b (S_m!est_element (md, f_d_p (st, oa))))), 
 		  not_b (su (st, sp))), 
 		 not_b (su (st, s2a))))) ;
      
@@ -3552,12 +3552,12 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
 		      S_g!est_element (f_g (st, od), 
 				       f_s (st, sp))), 
 	       not_b (S_g!est_element (ga, f_s (st, sp)))), 
-	      not_b (S_m!est_element (md, f_do (st, od)))), 
+	      not_b (S_m!est_element (md, f_d_o (st, od)))), 
 	     and_b (and_b (and_b (not_b (S!equal (sp, f_p (st, oa))), 
 				  not_b (S_g!est_element (f_g (st, oa), 
 							  f_s (st, sp)))), 
 			   S_g!est_element (ga, f_s (st, sp))), 
-		    not_b (S_m!est_element (md, f_dg (st, od))))))), 
+		    not_b (S_m!est_element (md, f_d_g (st, od))))))), 
 	  not_b (su (st, sp)))) ;
 
   (**
@@ -3574,7 +3574,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
 					G!equal (f_g (st, od), ga)), 
 				 not_b (S_g!est_element (f_g (st, od), 
 							 f_s (st, s2a)))), 
-			  not_b (S_m!est_element (md, f_dg (st, od)))), 
+			  not_b (S_m!est_element (md, f_d_g (st, od)))), 
 		   not_b (su (st, sp)))) ;
 
   (**
@@ -3586,9 +3586,9 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
      not_b (and_b (and_b (and_b (and_b (S!equal (sp, s2a), 
-					S_m!est_element (md, f_dg (st, od))), 
+					S_m!est_element (md, f_d_g (st, od))), 
 				 G!equal (f_g (st, od), ga)), 
-			  not_b (S_m!est_element (md, f_do (st, od)))), 
+			  not_b (S_m!est_element (md, f_d_o (st, od)))), 
 		   not_b (su (st, sp)))) ;
 
   (** Unix administrative transition function *)
@@ -3614,46 +3614,44 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
        let ss = R!get_s (r1) in
        let so = R!get_o (r1) in
        let sm = R!get_m (r1) in
-       let sz = R!get_z (r1) in
        (* same condition for all the requests <+right,...> *)
        if or_b (S!equal (ss, f_p (st, so)), su (st, ss)) then 
-	 if R!is_dp (r1) then 
+	 if R!is_d_p (r1) then 
 	   (* <+right,s,o,a,DP> *)
-	   (D!yes, add_dp (st, so, sm))
-	 else if R!is_dg (r1) then 
+	   (D!yes, add_d_p (st, so, sm))
+	 else if R!is_d_g (r1) then 
 	   (* <+right,s,o,a,DG> *)
-	   (D!yes, add_dg (st, so, sm))
+	   (D!yes, add_d_g (st, so, sm))
 	 else 
            (* <+right,s,o,a,DO> *)
-	   (D!yes, add_do (st, so, sm))
+	   (D!yes, add_d_o (st, so, sm))
        else (D!no, st)
      else  if R!is_rm_right (r1) then 
        let ss = R!get_s (r1) in
        let so = R!get_o (r1) in
        let sm = R!get_m (r1) in
-       let sz = R!get_z (r1) in
-       if R!is_dp (r1) then
+       if R!is_d_p (r1) then
          (* <-right,s,o,a,DP> *)
 	 if and_b (or_b (S!equal (ss, f_p (st, so)), 
 			 su (st, ss)), 
 		   S_a!for_all (lambda (st), 
-			       predicate_right_dp (st, ss, so, sm)))
-	 then (D!yes, rm_dp (st, so, sm))
+			       predicate_right_d_p (st, ss, so, sm)))
+	 then (D!yes, rm_d_p (st, so, sm))
 	 else (D!no, st)
-       else if R!is_dg (r1) then 
+       else if R!is_d_g (r1) then 
          (* <-right,s,o,a,DG> *)
 	 if and_b (or_b (S!equal (ss, f_p (st, so)), 
 			 su (st, ss)), 
 		   S_a!for_all (lambda (st), 
-			       predicate_right_dg (st, so, sm)))
-	 then (D!yes, rm_dg (st, so, sm))
+			       predicate_right_d_g (st, so, sm)))
+	 then (D!yes, rm_d_g (st, so, sm))
 	 else (D!no, st)
        else if and_b (or_b (S!equal (ss, f_p (st, so)), 
 			    su (st, ss)), 
 		      S_a!for_all (lambda (st), 
-				  predicate_right_do (st, so, sm)))
+				  predicate_right_d_o (st, so, sm)))
             (* <-right,s,o,a,DO> *)
-       then (D!yes, rm_do (st, so, sm))
+       then (D!yes, rm_d_o (st, so, sm))
        else (D!no, st)
      else if R!is_chown (r1) then 
        (* <+chown,s1,o,s2> *)
