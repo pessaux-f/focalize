@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: coq_builtins.v,v 1.13 2008-12-02 07:12:53 weis Exp $ *)
+(* $Id: coq_builtins.v,v 1.14 2008-12-17 12:12:16 pessaux Exp $ *)
 
 Require Import Bool.
 Require Export ZArith.
@@ -489,3 +489,6 @@ Let bi__int_geq (x : Z) (y : Z) := dec_to_bool (Z_ge_dec x y).
 
 (* The > on Z * Z. *)
 Let bi__int_gt (x : Z) (y : Z)  := dec_to_bool (Z_gt_dec x y).
+
+(* The absolute value on Z. *)
+Let bi__int_abs (x : Z) := Zabs x.

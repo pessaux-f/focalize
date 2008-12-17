@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ml_builtins.ml,v 1.8 2008-12-02 06:55:14 weis Exp $ *)
+(* $Id: ml_builtins.ml,v 1.9 2008-12-17 12:12:16 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module contains the external primitives bound to FoCaLize
@@ -52,3 +52,4 @@ let bi__int_plus x y = x + y ;;
 let bi__int_minus x y = x - y ;;
 let bi__int_max (x : int) (y : int) = max x y ;;
 let bi__int_min (x : int) (y : int) = min x y ;;
+let bi__int_abs (x : int) = abs x ;;

@@ -10,7 +10,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: wellfounded.fcl,v 1.5 2008-11-30 22:26:05 weis Exp $ *)
+(* $Id: wellfounded.fcl,v 1.6 2008-12-17 12:12:16 pessaux Exp $ *)
 
 (* Definition (import) of the notion of wellfoundedness.
    Since this notion is not defineable in Focal, this library is a veritable
@@ -45,7 +45,9 @@ end;;
 species WellOrder inherits PartialWellOrder, Ordered_set =
 end;;
 
-
+(** Well founded order over integers *)
+let int_wf (x in int, y in int) in bool =
+  int_lt (int_abs (x), int_abs (y)) ;;
 
 species RelativeIntegers inherits WellOrder =
 

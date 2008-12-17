@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.52 2008-12-07 23:50:46 weis Exp $ *)
+(* $Id: basics.fcl,v 1.53 2008-12-17 12:12:16 pessaux Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -181,7 +181,7 @@ let ( <^ ) =
 
 (** {7 Operations on integers} *)
 
-(** {8 Comparisons on integers} *)
+(** {9 Comparisons on integers} *)
 
 let ( =0x ) =
   internal int -> int -> bool
@@ -373,6 +373,13 @@ let int_min =
   external
   | caml -> {* Ml_builtins.bi__int_min *}
   | coq -> {* coq_builtins.bi__int_min *}
+;;
+
+let int_abs =
+  internal int -> int
+  external
+  | caml -> {* Ml_builtins.bi__int_abs *}
+  | coq -> {* coq_builtins.bi__int_abs *}
 ;;
 
 (** {7 Polymorphic equalities} *)
