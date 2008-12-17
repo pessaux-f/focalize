@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: weak_structures.fcl,v 1.4 2008-11-28 10:09:22 pessaux Exp $ *)
+(* $Id: weak_structures.fcl,v 1.5 2008-12-17 12:13:56 pessaux Exp $ *)
 
 (** We define here some weak notions such as rings with no subtraction. *)
 
@@ -302,6 +302,9 @@ species Euclidean_semi_ring inherits Factorial_semi_ring =
 
   let rec gcd (x, y) = 
     if Self!is_zero (y) then x else Self!gcd (y, Self!remainder (x, y)) ;
+  (* termination proof =
+      order euclidean_ordering on y
+      by property well_founded_euclidean_ordering, remainder_is_smaller ; *)
 
   signature euclidean_ordering : Self -> Self -> prop ;
 
