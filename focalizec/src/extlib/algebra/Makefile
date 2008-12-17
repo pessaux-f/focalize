@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.25 2008-12-12 09:53:45 weis Exp $
+# $Id: Makefile,v 1.26 2008-12-17 13:06:12 habib Exp $
 
 # Makefile for algebra structures implementations
 
@@ -21,7 +21,7 @@ ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-LIB_INSTALL_DIR = $(LIB_DIR)/focalize/algebra
+LIB_INSTALL_DIR = $(LIB_DIR)/algebra
 
 ZENON_DIR = $(ROOT_DIR)/../zenon/
 
@@ -54,6 +54,9 @@ FOCALIZE_SRC_UNSAFE = \
 	small_integers.fcl \
 	big_integers.fcl
 #	parse_poly.fcl polys_abstract.fcl polys_concrete finite_fields fractions finite_factorize
+
+FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
+FOCALIZE_FOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.fo)
 
 FOCALIZE_MLS = $(FOCALIZE_SRC:.fcl=.ml)
 FOCALIZE_MLS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.ml)
@@ -103,6 +106,14 @@ bin:: \
 
 install::
 	$(MKDIR) $(LIB_INSTALL_DIR)
+	@if [ "$(FOCALIZE_FOS)" != "" ] ; then \
+	  echo "Installing (FoCaLize) compiled certified libs." ; \
+	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/ ; \
+	fi
+	@if [ "$(FOCALIZE_FOS_UNSAFE)" != "" ] ; then \
+	  echo "Installing (FoCaLize) compiled non-certified libs." ; \
+	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
+	fi
 	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
 	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
 	fi

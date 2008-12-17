@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.16 2008-12-17 10:02:45 habib Exp $
+# $Id: Makefile,v 1.17 2008-12-17 13:06:12 habib Exp $
 
 # Makefile for access control models
 
@@ -21,7 +21,7 @@ ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-LIB_INSTALL_DIR = $(LIB_DIR)/focalize/extlib/access_control
+LIB_INSTALL_DIR = $(LIB_DIR)/access_control
 
 ZENON_DIR = $(ROOT_DIR)/../zenon/
 
@@ -49,6 +49,9 @@ FOCALIZE_SRC = \
 
 FOCALIZE_SRC_UNSAFE =
 
+FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
+FOCALIZE_FOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.fo)
+
 FOCALIZE_MLS = $(FOCALIZE_SRC:.fcl=.ml)
 FOCALIZE_MLS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.ml)
 
@@ -64,8 +67,8 @@ FOCALIZE_ZVS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.zv)
 FOCALIZE_VS = $(FOCALIZE_ZVS:.zv=.v)
 FOCALIZE_VS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.v)
 
-FOCALIZE_VOS = $(FOCALIZE_VS:.v=.vo)
-FOCALIZE_VOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
+# FOCALIZE_VOS = $(FOCALIZE_VS:.v=.vo)
+# FOCALIZE_VOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
 
 EXTERNAL_BIN_OBJS = $(EXTERNAL_BYT_OBJS:.cmo=.cmx)
 
@@ -94,6 +97,14 @@ bin:: \
 
 install::
 	$(MKDIR) $(LIB_INSTALL_DIR)
+	@if [ "$(FOCALIZE_FOS)" != "" ] ; then \
+	  echo "Installing (FoCaLize) compiled certified libs." ; \
+	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/ ; \
+	fi
+	@if [ "$(FOCALIZE_FOS_UNSAFE)" != "" ] ; then \
+	  echo "Installing (FoCaLize) compiled non-certified libs." ; \
+	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
+	fi
 	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
 	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
 	fi

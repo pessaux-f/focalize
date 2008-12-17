@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.72 2008-12-12 08:55:31 weis Exp $
+# $Id: Makefile,v 1.73 2008-12-17 13:05:45 habib Exp $
 
 ROOT_DIR = ../..
 
@@ -22,7 +22,7 @@ FOCALIZE_COMPILER = ../toplevel/focalizec
 
 FOCALIZE_COMP_FLAGS = -no-stdlib-path
 
-LIB_INSTALL_DIR = $(LIB_DIR)/focalize
+LIB_INSTALL_DIR = $(LIB_DIR)
 
 #From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
