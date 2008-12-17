@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.10 2008-12-17 08:55:10 weis Exp $
+#  $Id: configure,v 1.11 2008-12-17 13:57:43 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -229,9 +229,9 @@ check_installation_dirs () {
     if test -d $i; then echo "  the directory exists: good.";
       else
         echo "  the directory does not exist: unrecoverable failure.";
-        abort_configuration
+        abort_configuration \
           "You cannot install in $i, because it is not a directory.";
-        abort_remedy
+        abort_remedy \
           "Please, create a directory where you can install files and directories.";
     fi
     if test -w $i; then echo "  the directory is writable: good.";
