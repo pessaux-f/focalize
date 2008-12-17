@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.9 2008-12-16 14:07:30 weis Exp $
+#  $Id: configure,v 1.10 2008-12-17 08:55:10 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -33,11 +33,16 @@ check () {
 }
 
 # Default settings
-# General defaults
-PREFIX=/usr/local
-SHARE_PREFIX=${PREFIX}/share
-SHARE_PROJECT_DIR=${SHARE_PREFIX}/${FULL_PROJECT_NAME}
-DEBUG=true
+
+# General defaults for the package installation
+DEFAULT_PREFIX=/usr/local
+DEFAULT_LIB_DIR=${DEFAULT_PREFIX}/lib
+DEFAULT_BIN_DIR=${DEFAULT_PREFIX}/bin
+
+# General defaults for the installation of the external tools of the package
+DEFAULT_SHARE_PREFIX=${DEFAULT_PREFIX}/share
+DEFAULT_SHARE_PROJECT_DIR=${DEFAULT_SHARE_PREFIX}/${FULL_PROJECT_NAME}
+DEFAULT_DEBUG=true
 
 # Defaults for zenon
 SUM=:
@@ -46,56 +51,39 @@ COQC=:
 GS=:
 
 # Defaults for zvtov
-USE_XMLRPC=false
+DEFAULT_USE_XMLRPC=false
 XMLRPC=xmlrpc
 XMLRPC_FLAGS=""
 XMLRPC_LINK=""
-
-# The list of directories that must be installable during configuration.
-CONFIGURATION_INSTALLABLE_DIRS="${SHARE_PREFIX}"
 
 # Aborting procedures.
 abort_configuration () {
   echo;
   echo "configure: ABORTING CONFIGURATION!";
   echo;
-  echo "$1"
+  echo "$1";
 }
 
 abort_remedy () {
   echo;
   echo "$1";
   echo "(See configure -help for details).";
-  exit 1
+  exit 1;
 }
 
 abort_configuration_not_writable_share_prefix_directory () {
   abort_configuration \
-    "You cannot install in the directory $1, because it is not writable for you.";
+    "You cannot install external tools in the directory $1: it is not writable for you.";
   abort_remedy \
     "Please, use configure with the \"-share_prefix\" option set to a writable directory.";
 }
-
-set_dirs () {
-  BIN_DIR="${PREFIX}/bin"
-  LIB_DIR="${PREFIX}/lib"
-  DOC_DIR="${PREFIX}/doc"
-  MAN_DIR="${PREFIX}/man"
-  SHARE_PROJECT_DIR="${SHARE_PREFIX}/${FULL_PROJECT_NAME}"
-  SHARE_BIN_DIR="${SHARE_PROJECT_DIR}/bin"
-  SHARE_LIB_DIR="${SHARE_PROJECT_DIR}/lib"
-  SHARE_MAN_DIR="${SHARE_PROJECT_DIR}/man"
-  SHARE_DOC_DIR="${SHARE_PROJECT_DIR}/doc"
-}
-
-set_dirs
 
 while : ; do
   case $# in 0) break;; esac
 
   case "$1" in
-    -prefix | --prefix) PREFIX="$2"; set_dirs; shift 2;;
-    -share_prefix | --share_prefix) SHARE_PREFIX="$2"; set_dirs; shift 2;;
+    -prefix | --prefix) PREFIX="$2"; shift 2;;
+    -share_prefix | --share_prefix) SHARE_PREFIX="$2"; shift 2;;
     -bindir | --bindir) BIN_DIR="$2"; shift 2;;
     -libdir | --libdir) LIB_DIR="$2"; shift 2;;
     -convert | --convert) CONVERT="$2"; shift 2;;
@@ -123,22 +111,22 @@ while : ; do
        echo "    once they have ben built."
        echo "    as a consequence, you must have the permission to install directories"
        echo "    and files in <directory> to properly configure ${PROJECT_NAME}."
-       echo "    (Default value for <directory> is ${SHARE_PREFIX}.)"
+       echo "    (Default value for <directory> is ${DEFAULT_SHARE_PREFIX}.)"
        echo "  [-]-prefix <directory>"
        echo "    set <directory> as the directory prefix for installation of ${PROJECT_NAME}."
-       echo "    (Default value for <directory> is ${PREFIX}.)"
+       echo "    (Default value for <directory> is ${DEFAULT_PREFIX}.)"
        echo "  [-]-bindir <directory>"
        echo "    set <directory> as the binary directory for installation of binaries for ${PROJECT_NAME}."
-       echo "    (Default value for <directory> is ${BIN_DIR}.)"
+       echo "    (Default value for <directory> is ${DEFAULT_BIN_DIR}.)"
        echo "  [-]-libdir <directory>"
        echo "    set <directory> as the library directory for installation of libraries for ${PROJECT_NAME}."
-       echo "    (Default value for <directory> is ${LIB_DIR}.)"
+       echo "    (Default value for <directory> is ${DEFAULT_LIB_DIR}.)"
        echo "  [-]-docdir <directory>"
        echo "    set <directory> as the directory for installation of documentation for ${PROJECT_NAME}."
-       echo "    (Default value for <directory> is ${DOC_DIR}.)"
+       echo "    (Default value for <directory> is ${DEFAULT_DOC_DIR}.)"
        echo "  [-]-mandir <directory>"
        echo "    set <directory> as the directory for installation of man pages for ${PROJECT_NAME}."
-       echo "    (Default value for <directory> is ${MAN_DIR}.)"
+       echo "    (Default value for <directory> is ${DEFAULT_MAN_DIR}.)"
        echo "  [-]-debug | [-]-enable_debug"
        echo "    enable debugging"
        echo "  [-]-nodebug | --disable_debug"
@@ -197,20 +185,45 @@ set_XMLRPC_LINK () {
 }
 
 set_XMLRPC () {
- set_XMLRPC_FLAGS;
- set_XMLRPC_LINK;
+ if test -z $USE_XMLRPC; then USE_XMLRPC=${DEFAULT_XMLRPC}; fi
+ if test $USE_XMLRPC; then
+   set_XMLRPC_FLAGS;
+   set_XMLRPC_LINK;
+ fi;
 }
 
 set_DEBUG () {
-  BYT_DEBUG_FLAGS="-g"
-  BIN_DEBUG_FLAGS="-dtypes"
+  if test -z $DEBUG; then DEBUG=${DEFAULT_DEBUG}; fi
+  if test $DEBUG; then
+    BYT_DEBUG_FLAGS="-g";
+    BIN_DEBUG_FLAGS="-dtypes";
+  fi
 }
 
-if $DEBUG; then set_DEBUG; fi
+set_dirs () {
+  if test -z ${PREFIX}; then PREFIX=${DEFAULT_PREFIX}; fi
+  BIN_DIR="${PREFIX}/bin"
+  LIB_DIR="${PREFIX}/lib"
+  DOC_DIR="${PREFIX}/doc"
+  MAN_DIR="${PREFIX}/man"
+  if test -z ${SHARE_PREFIX}; then SHARE_PREFIX=${DEFAULT_SHARE_PREFIX}; fi
+  SHARE_PROJECT_DIR="${SHARE_PREFIX}/${FULL_PROJECT_NAME}"
+  SHARE_BIN_DIR="${SHARE_PROJECT_DIR}/bin"
+  SHARE_LIB_DIR="${SHARE_PROJECT_DIR}/lib"
+  SHARE_MAN_DIR="${SHARE_PROJECT_DIR}/man"
+  SHARE_DOC_DIR="${SHARE_PROJECT_DIR}/doc"
+}
 
-if $USE_XMLRPC; then set_XMLRPC; fi
-  
+set_variables () {
+  set_DEBUG;
+  set_XMLRPC;
+  set_dirs;
+}
+
+
 check_installation_dirs () {
+  # The list of directories that must be installable during configuration.
+  CONFIGURATION_INSTALLABLE_DIRS="${SHARE_PREFIX}"
   for i in ${CONFIGURATION_INSTALLABLE_DIRS}; do
     echo "Checking if we can install in $i...";
     if test -d $i; then echo "  the directory exists: good.";
@@ -234,52 +247,70 @@ check_installation_dirs () {
   done
 }
 
-check_installation_dirs
+make_config_var () {
+  sed -e "s,@PROJECT_NAME@,$PROJECT_NAME," \
+      -e "s,@MAIN_VERSION_NUMBER@,$MAIN_VERSION_NUMBER," \
+      -e "s,@SUB_VERSION_NUMBER@,$SUB_VERSION_NUMBER," \
+      -e "s,@PATCH_VERSION_NUMBER@,$PATCH_VERSION_NUMBER," \
+      -e "s,@FULL_VERSION_NUMBER@,$FULL_VERSION_NUMBER," \
+      -e "s,@FULL_PROJECT_NAME@,$FULL_PROJECT_NAME," \
+  \
+      -e "s,@ABSOLUTE_ROOT_DIR@,$ABSOLUTE_ROOT_DIR," \
+      -e "s,@PREFIX@,$PREFIX," \
+      -e "s,@BIN_DIR@,$BIN_DIR," \
+      -e "s,@LIB_DIR@,$LIB_DIR," \
+      -e "s,@DOC_DIR@,$DOC_DIR," \
+      -e "s,@MAN_DIR@,$MAN_DIR," \
+      -e "s,@SHARE_PREFIX@,$SHARE_PREFIX," \
+      -e "s,@SHARE_PROJECT_DIR@,$SHARE_PROJECT_DIR," \
+      -e "s,@SHARE_BIN_DIR@,$SHARE_BIN_DIR," \
+      -e "s,@SHARE_LIB_DIR@,$SHARE_LIB_DIR," \
+      -e "s,@SHARE_DOC_DIR@,$SHARE_DOC_DIR," \
+      -e "s,@SHARE_MAN_DIR@,$SHARE_MAN_DIR," \
+  \
+      -e "s,@BYT_DEBUG_FLAGS@,$BYT_DEBUG_FLAGS," \
+      -e "s,@BIN_DEBUG_FLAGS@,$BIN_DEBUG_FLAGS," \
+  \
+      -e "s,@CONVERT@,$CONVERT," \
+      -e "s,@GS@,$GS," \
+      -e "s,@SUM@,$SUM," \
+  \
+      -e "s,@USE_XMLRPC@,$USE_XMLRPC," \
+      -e "s,@XMLRPC@,$XMLRPC," \
+      -e "s,@XMLRPC_FLAGS@,$XMLRPC_FLAGS," \
+      -e "s,@XMLRPC_LINK@,$XMLRPC_LINK," \
+      <.config_var.in >.config_var
+}
 
-sed -e "s,@PROJECT_NAME@,$PROJECT_NAME," \
-    -e "s,@MAIN_VERSION_NUMBER@,$MAIN_VERSION_NUMBER," \
-    -e "s,@SUB_VERSION_NUMBER@,$SUB_VERSION_NUMBER," \
-    -e "s,@PATCH_VERSION_NUMBER@,$PATCH_VERSION_NUMBER," \
-    -e "s,@FULL_VERSION_NUMBER@,$FULL_VERSION_NUMBER," \
-    -e "s,@FULL_PROJECT_NAME@,$FULL_PROJECT_NAME," \
-\
-    -e "s,@ABSOLUTE_ROOT_DIR@,$ABSOLUTE_ROOT_DIR," \
-    -e "s,@PREFIX@,$PREFIX," \
-    -e "s,@BIN_DIR@,$BIN_DIR," \
-    -e "s,@LIB_DIR@,$LIB_DIR," \
-    -e "s,@DOC_DIR@,$DOC_DIR," \
-    -e "s,@MAN_DIR@,$MAN_DIR," \
-    -e "s,@SHARE_PREFIX@,$SHARE_PREFIX," \
-    -e "s,@SHARE_PROJECT_DIR@,$SHARE_PROJECT_DIR," \
-    -e "s,@SHARE_BIN_DIR@,$SHARE_BIN_DIR," \
-    -e "s,@SHARE_LIB_DIR@,$SHARE_LIB_DIR," \
-    -e "s,@SHARE_DOC_DIR@,$SHARE_DOC_DIR," \
-    -e "s,@SHARE_MAN_DIR@,$SHARE_MAN_DIR," \
-\
-    -e "s,@BYT_DEBUG_FLAGS@,$BYT_DEBUG_FLAGS," \
-    -e "s,@BIN_DEBUG_FLAGS@,$BIN_DEBUG_FLAGS," \
-\
-    -e "s,@CONVERT@,$CONVERT," \
-    -e "s,@GS@,$GS," \
-    -e "s,@SUM@,$SUM," \
-\
-    -e "s,@USE_XMLRPC@,$USE_XMLRPC," \
-    -e "s,@XMLRPC@,$XMLRPC," \
-    -e "s,@XMLRPC_FLAGS@,$XMLRPC_FLAGS," \
-    -e "s,@XMLRPC_LINK@,$XMLRPC_LINK," \
-    <.config_var.in >.config_var
+touch_depends () {
+  touch ./.depend;
+  touch tarballs/.depend;
+}
 
-touch ./.depend
-touch tarballs/.depend
-cp .config_var zenon/
-cp .config_var zvtov/
-cp .config_var focalizec/
+configure_auto () {
+  cp -f .config_var zenon/;
+  cp -f .config_var zvtov/;
+  cp -f .config_var focalizec/;
+}
 
-echo "***********************************"
-echo "Configuration summary for focalize:"
-echo
-cat .config_var
-echo
-echo "***********************************"
+summarize_configuration () {
+  echo "***********************************"
+  echo "Configuration summary for focalize:"
+  echo
+  cat .config_var
+  echo
+  echo "***********************************"
+}
 
-make configure
+main () {
+#  parse_arguments;
+  set_variables;
+  check_installation_dirs;
+  make_config_var;
+  touch_depends;
+  configure_auto;
+  summarize_configuration;
+  make configure_external;
+}
+
+main; exit 0
