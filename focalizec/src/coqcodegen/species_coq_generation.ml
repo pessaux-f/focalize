@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.148 2008-12-15 17:09:45 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.149 2008-12-17 12:13:06 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2202,7 +2202,7 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
             (* Now, generate the Coq translation of the measure expression
                applied to both tuples of arguments and linked by the <
                relation. *)
-            Format.fprintf out_fmter "@[<2>wellfounded.RelInt.lt@ " ;
+            Format.fprintf out_fmter "@[<2>Is_true (wellfounded.int_wf@ " ;
             let local_idents =
               printed2 @ printed1 @
               [ Parsetree.Vlident "__x"; Parsetree.Vlident "__y" ] in
@@ -2225,8 +2225,9 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
             Format.fprintf out_fmter "@ " ;
             print_idents_as_tuple out_fmter printed2 ;
             Format.fprintf out_fmter ")" ;
-            (* Close the box of the "wellfounded.RelInt.lt". *)
-            Format.fprintf out_fmter "@]" ;
+            (* Close the parenthesis of "Is_true" and the box of
+               "wellfounded.int_wf". *)
+            Format.fprintf out_fmter ")@]" ;
             (* Close the 2 boxes of the "matchs" and the box of the whole
                "Definition" of the order. *)
             Format.fprintf out_fmter ")@\nend@]@\nend@].@]@\n"
