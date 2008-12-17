@@ -1,9 +1,10 @@
 #  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.1 2008-12-07 23:50:46 weis Exp $
+#  $Id: .config_var.in,v 1.2 2008-12-17 17:19:23 doligez Exp $
 
 # The directories where the project installs its own binaries and libraries.
 PREFIX=@PREFIX@
 BIN_DIR=@BIN_DIR@
+MAN_DIR=@MAN_DIR@
 
 # Compilation flags.
 BYT_DEBUG_FLAGS=-g

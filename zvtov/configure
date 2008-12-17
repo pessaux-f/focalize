@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.17 2008-12-07 23:50:46 weis Exp $
+#  $Id: configure,v 1.18 2008-12-17 17:19:23 doligez Exp $
 
 # Default settings
 PREFIX=/usr/local
@@ -27,6 +27,7 @@ XMLRPC_LINK="`ocamlfind query -r -predicates byte -a-format xmlrpc | tr '\012' '
 
 set_dirs () {
   BIN_DIR="${PREFIX}/bin"
+  MAN_DIR="${PREFIX}/man"
 }
 
 set_dirs
@@ -37,6 +38,7 @@ while : ; do
   case $1 in
   -prefix | --prefix) PREFIX="$2"; set_dirs; shift 2;;
   -bindir | --bindir) BIN_DIR="$2"; shift 2;;
+  -mandir | --mandir) MAN_DIR="$2"; shift 2;;
   -use_xmlrpc | --use_xmlrpc) USE_XMLRPC=true; shift;;
   -xmlrpc | --xmlrpc) XMLRPC="$2"; shift 2;;
   -xmlrpc_flags | --xmlrpc_flags) XMLRPC_FLAGS="$2"; shift 2;;
@@ -85,6 +87,7 @@ fi
 
 sed -e "s,@PREFIX@,$PREFIX," \
     -e "s,@BIN_DIR@,$BIN_DIR," \
+    -e "s,@MAN_DIR@,$MAN_DIR," \
 \
     -e "s,@USE_XMLRPC@,$USE_XMLRPC," \
     -e "s,@XMLRPC@,$XMLRPC," \

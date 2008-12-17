@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: Makefile,v 1.21 2008-12-01 18:45:04 weis Exp $
+#  $Id: Makefile,v 1.22 2008-12-17 17:19:23 doligez Exp $
 
 include .config_var
 
@@ -67,10 +67,13 @@ zvtov: zvtov.byt
 install:
 	mkdir -p "$(BIN_DIR)"
 	cp -p zvtov "$(BIN_DIR)"/
+	mkdir -p "$(MAN_DIR)"/man1
+	cp zvtov.1 "$(MAN_DIR)"/man1/
 
 .PHONY: uninstall
 uninstall:
 	rm -f "$(BIN_DIR)"/zvtov
+	rm -f "$(MAN_DIR)"/man1/zvtov.1
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 

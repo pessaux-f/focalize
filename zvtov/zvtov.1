@@ -1,0 +1,127 @@
+\" $Id: zvtov.1,v 1.1 2008-12-17 17:19:23 doligez Exp $
+
+.TH ZVTOV 1
+
+.SH NAME
+zvtov \- translate .zv file to .v
+
+.SH SYNOPSIS
+.B zvtov
+.RI [ options ] file ...
+.SH DESCRIPTION
+
+The
+.BR zvtov (1)
+command is used to translate the .zv files produced by
+.BR focalize (1)
+into source files for
+.BR coq (1).
+
+.SH OPTIONS
+
+The following command-line options are recognized by
+.BR zvtov (1).
+.TP
+.B \-cime
+Call the
+.BR cime (1)
+program to prove the proof obligations that are equational.  Since
+.B Cime
+does not provide certificates, the resulting .v file will contain
+calls to
+.BR magic_prove .
+.TP
+.B \-debug
+Keep the temporary files that were produced when working.
+.TP
+.B \-new
+Use Zenon's new-style
+.B focal
+extension instead of
+.BR coqbool .
+This is for use with the new
+.BR focalizec (1)
+compiler.  This option is on by default.
+.TP
+.B \-nocache
+Do not use and do not update the .pfc proof cache files.
+.TP
+.B \-old
+Use Zenon's old-style
+.B coqbool
+extension. This is for use with the old
+.BR focc (1)
+compiler.
+.TP
+.B \-p0
+Suppress the display of progress information.
+.TP
+.B \-p1
+Display a progress bar with the source line number of the proof
+obligation on the left. This is the default.
+.TP
+.B \-p2
+Display verbose progress messages.
+.TP
+.B \-script
+Tell
+.B zenon
+to output proofs in
+.BR coq 's
+script format.
+.TP
+.B \-term
+Tell
+.B zenon
+to output proofs in
+.BR coq 's
+term format.  This is the default.
+.TP
+.B \-v
+Print the version string of
+.B zvtov
+and exit.
+.TP
+.B \-verbose
+Print out the calls to external tools
+.RB ( zenon and cime )
+before executing them.
+.TP
+.BI \-zenon \ command
+Set the
+.B zenon
+command name.  The default is
+.BR zenon .
+.TP
+.BI \-zopt \ options
+Set the command line options passed to
+.BR zenon .
+The default is
+.B \-x focal \-x induct \-ifocal \-q \-short \-max-time 5m
+.TP
+.BI \-z \ options
+Add
+.I options
+to the
+.B zenon
+command line.
+.I options
+is treated as a sequence of words separated by white space.
+.TP
+.BI \-zz \ option
+Add
+.I option
+to the
+.B zenon
+command line.
+.I option
+is treated as a single option that may contain white space.
+.TP
+.BR \-help \ or\  \-\-help
+Display a short help message.
+
+.SH SEE ALSO
+.BR cime (1),\ coq (1),\ focalizec (1),\ zenon (1).
+
+.SH AUTHOR
+Damien Doligez, INRIA
