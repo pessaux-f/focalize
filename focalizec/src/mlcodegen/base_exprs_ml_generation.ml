@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.35 2008-11-17 10:53:57 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.36 2008-12-17 12:11:38 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -52,17 +52,16 @@ let generate_constant out_fmter constant =
 (* Context.reduced_compil_context ->                                       *)
 (*   local_idents: Parsetree.vname list -> Parsetree.expr_ident -> unit    *)
 (** {b Descr} : Generate the OCaml code from a FoCaL [ident] in the
-              context of method generator generation.
+    context of method generator generation.
 
-              The most tricky stuff is dealing with [ident] denoting
-              methods (i.e. "!-ed" identifiers).
-              If the method [ident] corresponds to a parameter's method
-              then we use the lambda-lifted principle. Otherwise, this
-              ident is considered as from something not abstracted, coming
-              from a toplevel collection. In this case, it is printed as
-              a field coming from the collection's effective value
-              (i.e. field "effective_collection" of the collection value)
-              with its scoping qualification if there is some.
+    The most tricky stuff is dealing with [ident] denoting methods
+    (i.e. "!-ed" identifiers).
+    If the method [ident] corresponds to a parameter's method then we use
+    the lambda-lifted principle. Otherwise, this ident is considered as
+    from something not abstracted, coming from a toplevel collection. In
+    this case, it is printed as a field coming from the collection's
+    effective value (i.e. field "effective_collection" of the collection
+    value) with its scoping qualification if there is some.
 
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
@@ -71,23 +70,20 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
        (begin
-       (* Thanks to the scoping pass, identifiers remaining "local" are *)
-       (* either really let-bound in the context of the expression,     *)
-       (* hence have a direct mapping between FoCaL and OCaml code, or  *)
-       (* species "in"-parameters and then must be mapped onto the      *)
-       (* lambda-lifted parameter introduced for it in the context of   *)
-       (* the current species.                                          *)
-       (* Be careful, because a recursive method called in its body is  *)
-       (* scoped AS LOCAL ! And because recursive methods do not have   *)
-       (* dependencies together, there is no way to recover the extra   *)
-       (* parameters to apply to them in this configuration. Hence, to  *)
-       (* avoid forgetting these extra arguments, we must use here the  *)
-       (* information recorded in the context, i.e. the extra arguments *)
-       (* of the recursive functions.                                   *)
-       (* To check if a "smelling local" identifier is really local or  *)
-       (* a "in"-parameter of the species, we use the same reasoning    *)
-       (* that in [param_dep_analysis.ml]. Check justification over     *)
-       (* there ! *)
+       (* Thanks to the scoping pass, identifiers remaining "local" are either
+          really let-bound in the context of the expression, hence have a
+          direct mapping between FoCaL and OCaml code, or species
+          "IN"-parameters and then must be mapped onto the lambda-lifted
+          parameter introduced for it in the context of the current species.
+          Be careful, because a recursive method called in its body is scoped
+          AS LOCAL ! And because recursive methods do not have dependencies
+          together, there is no way to recover the extra parameters to apply to
+          them in this configuration. Hence, to avoid forgetting these extra
+          arguments, we must use here the information recorded in the context,
+          i.e. the extra arguments of the recursive functions.
+          To check if a "smelling local" identifier is really local or a
+          "IN"-parameter of the species, we use the same reasoning that in
+          [param_dep_analysis.ml]. Check justification over there ! *)
        if (List.exists
              (fun species_param ->
                match species_param with
@@ -97,14 +93,13 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
              ctx.Context.rcc_species_parameters_names) &&
          (not (List.mem vname local_idents)) then
          (begin
-         (* In fact, a species "in"-parameter. This parameter was of the *)
-         (* form "foo in C". Then it's naming scheme will be "_p_" +     *)
-         (* the species parameter's name + the method's name that is     *)
-         (* trivially the parameter's name again (because this last one  *)
-         (* is computed as the "stuff" a dependency was found on, and in *)
-         (* the case of a "in"-parameter, the dependency can only be on  *)
-         (* the parameter's value itself, not on any method since there  *)
-         (* is none !).                                                  *)
+         (* In fact, a species "in"-parameter. This parameter was of the form
+            "foo in C". Then it's naming scheme will be "_p_" + the species
+            parameter's name + the method's name that is trivially the
+            parameter's name again (because this last one is computed as the
+            "stuff" a dependency was found on, and in the case of a
+            "IN"-parameter, the dependency can only be on the parameter's value
+            itself, not on any method since there is none !). *)
          Format.fprintf out_fmter "_p_%a_%a"
            Parsetree_utils.pp_vname_with_operators_expanded vname
            Parsetree_utils.pp_vname_with_operators_expanded vname
@@ -114,15 +109,15 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
          (* Really a local identifier or a call to a recursive method. *)
          Format.fprintf out_fmter "%a"
            Parsetree_utils.pp_vname_with_operators_expanded vname ;
-         (* Because this method can be recursive, we must apply it to *)
-         (* its extra parameters if it has some.                      *)
+         (* Because this method can be recursive, we must apply it to  its
+            extra parameters if it has some. *)
          try
            let extra_args =
              List.assoc vname ctx.Context.rcc_lambda_lift_params_mapping in
            List.iter
              (fun s ->
-               (* Ignore "rep" if present because in OCaml code generation *)
-               (* model, the carrier is never lambda-lifted.               *)
+               (* Ignore "rep" if present because in OCaml code generation
+                  model, the carrier is never lambda-lifted. *)
 (* [Unsure] Je crois que maintenant le test n'est plus nécessaire. *)
                if s <> "abst_rep" then Format.fprintf out_fmter "@ %s" s)
              extra_args
@@ -133,10 +128,9 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
        (* In this case, may be there is some scoping process missing. *)
        assert false
    | Parsetree.EI_global (Parsetree.Qualified (mod_name, vname)) ->
-       (* Call the OCaml corresponding identifier in the corresponding *)
-       (* module (i.e. the capitalized [mod_name]). If the module is   *)
-       (* the currently compiled one, then do not qualify the          *)
-       (* identifier.                                                  *)
+       (* Call the OCaml corresponding identifier in the corresponding module
+          (i.e. the capitalized [mod_name]). If the module is the currently
+          compiled one, then do not qualify the identifier. *)
        if mod_name <> ctx.Context.rcc_current_unit then
          Format.fprintf out_fmter "%s.%a"
            (String.capitalize mod_name)
@@ -150,9 +144,9 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
         | None
         | Some (Parsetree.Vname (Parsetree.Vuident "Self")) ->
             (begin
-            (* Method call from the current species. This corresponds to *)
-            (* a call to the corresponding lambda-lifted method that is  *)
-            (* represented as an extra parameter of the OCaml function.  *)
+            (* Method call from the current species. This corresponds to a call
+               to the corresponding lambda-lifted method that is represented as
+               an extra parameter of the OCaml function. *)
             Format.fprintf out_fmter "abst_%a"
               Parsetree_utils.pp_vname_with_operators_expanded vname
             end)
@@ -161,9 +155,9 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
             match coll_specifier with
              | Parsetree.Vname coll_name ->
                  (begin
-                 (* Method call from a species that is not the current but  *)
-                 (* is implicitely in the current compilation unit. May be  *)
-                 (* either a paramater or a toplevel defined collection.    *)
+                 (* Method call from a species that is not the current but is
+                    implicitely in the current compilation unit. May be either
+                    a paramater or a toplevel defined collection. *)
                  if List.exists
                      (fun species_param ->
                        match species_param with
@@ -173,13 +167,12 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                             (Parsetree.Vuident vn) = coll_name)
                      ctx.Context.rcc_species_parameters_names then
                    (begin
-                   (* It comes from a parameter. To retrieve the related *)
-                   (* method name we build it the same way we built it   *)
-                   (* while generating the extra OCaml function's        *)
-                   (* parameters due to depdencencies coming from the    *)
-                   (* species parameter. I.e: "_p_", followed by the     *)
-                   (* species parameter name, followed by "_", followed  *)
-                   (* by the method's name.                              *)
+                   (* It comes from a parameter. To retrieve the related
+                      method name we build it the same way we built it while
+                      generating the extra OCaml function's parameters due to
+                      depdencencies coming from the species parameter.
+                      I.e: "_p_", followed by the species parameter name,
+                      followed by "_", followed by the method's name. *)
                    let prefix =
                      "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^
                      "_" in
@@ -202,11 +195,11 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                  (begin
                  if module_name = ctx.Context.rcc_current_unit then
                    (begin
-                   (* Exactly like when it is method call from a species that *)
-                   (* is not the current but is implicitely in the current    *)
-                   (* compilation unit : the call is performed to a method    *)
-                   (* a species that is EXPLICITELY in the current            *)
-                   (* compilation unit.                                       *)
+                   (* Exactly like when it is method call from a species that
+                      is not the current but is implicitely in the current
+                      compilation unit : the call is performed to a method a
+                      species that is EXPLICITELY in the current compilation
+                      unit. *)
                    if List.exists
                        (fun species_param ->
                          match species_param with
@@ -237,10 +230,10 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                    end)
                  else
                    (begin
-                   (* The called method belongs to a collection that is not *)
-                   (* ourselves and moreover belongs to another compilation *)
-                   (* unit. May be a species from the toplevel of another   *)
-                   (* FoCaL source file.                                    *)
+                   (* The called method belongs to a collection that is not
+                      ourselves and moreover belongs to another compilation
+                      unit. May be a species from the toplevel of another
+                      FoCaL source file. *)
                    let capitalized_modname = String.capitalize module_name in
                    Format.fprintf out_fmter
                      "%s.%a.effective_collection.%s.%a.%a"
@@ -261,12 +254,11 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
 (* Context.reduced_compil_context ->                                    *)
 (*   Env.MlGenEnv.t -> Parsetree.constructor_ident -> unit              *)
 (** {b Descr} : Generate the OCaml code from a FoCaL [constructor_expr]
-              in the context of method generator generation.
-              The translation of the FoCaL sum constructor is obtained
-              from the code generation environment. If this environment
-              doesn't contain a binding for the constructor, this means
-              that this constructor directly corresponds to its FoCaL
-              name in the OCaml code.
+    in the context of method generator generation.
+    The translation of the FoCaL sum constructor is obtained from the
+    code generation environment. If this environment doesn't contain a
+    binding for the constructor, this means that this constructor
+    directly corresponds to its FoCaL name in the OCaml code.
 
     {b Rem} : Not exported outside this module.                         *)
 (* ******************************************************************** *)
@@ -299,8 +291,8 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
            Format.fprintf ctx.Context.rcc_out_fmter "%a"
              Parsetree_utils.pp_vname_with_operators_expanded name
        | Parsetree.CI (Parsetree.Qualified (fname, name)) ->
-           (* If the constructor belongs to the current      *)
-           (* compilation unit then one must not qualify it. *)
+           (* If the constructor belongs to the current compilation unit then
+              one must not qualify it. *)
            if fname <> ctx.Context.rcc_current_unit then
              Format.fprintf ctx.Context.rcc_out_fmter "%s.%a"
                (String.capitalize fname)
@@ -330,8 +322,8 @@ let generate_pattern ctx env pattern =
      | Parsetree.P_constr (ident, pats) ->
          (begin
          generate_constructor_ident_for_method_generator ctx env ident ;
-         (* Discriminate on the number of arguments *)
-         (* to know if parens are needed.           *)
+         (* Discriminate on the number of arguments to know if parens are
+            needed. *)
          match pats with
           | [] -> ()
           | _ ->
@@ -383,10 +375,10 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
   let (params_with_type, _, _) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
       ~self_manifest: None opt_sch params_names in
-  (* We are printing each parameter's type. These types in fact belong *)
-  (* to a same type scheme. Hence, they may share variables together.  *)
-  (* For this reason, we first purge the printing variable mapping and *)
-  (* after, activate its persistence between each parameter printing.  *)
+  (* We are printing each parameter's type. These types in fact belong to a
+     same type scheme. Hence, they may share variables together.
+     For this reason, we first purge the printing variable mapping and after,
+     activate its persistence between each parameter printing. *)
   Types.purge_type_simple_to_ml_variable_mapping () ;
   List.iter
     (fun (param_vname, pot_param_ty) ->
@@ -403,13 +395,13 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
            Format.fprintf out_fmter "@ %a"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname)
     params_with_type ;
-  (* Now we don't need anymore the sharing. Hence, clean it. This should not *)
-  (* be useful because the other guys usign printing should manage this      *)
-  (* themselves (as we did just above by cleaning before activating the      *)
-  (* sharing), but anyway, it is safer an not costly. So...                  *)
+  (* Now we don't need anymore the sharing. Hence, clean it. This should not
+     be useful because the other guys usign printing should manage this
+     themselves (as we did just above by cleaning before activating the
+     sharing), but anyway, it is safer an not costly. So... *)
   Types.purge_type_simple_to_ml_variable_mapping () ;
-  (* Output now the "=" sign ending the OCaml function's "header".    *)
-  (* With a NON-breakable space before to prevent uggly hyphenation ! *)
+  (* Output now the "=" sign ending the OCaml function's "header".
+     With a NON-breakable space before to prevent uggly hyphenation ! *)
   Format.fprintf out_fmter " =@ " ;
   (* Here, each parameter name of the binding may mask a "in"-parameter. *)
   let local_idents' = params_names @ local_idents in
@@ -482,10 +474,10 @@ and let_def_compile ctx ~local_idents env let_def bound_schemes =
            next_bnds
            next_schemes
      | (_, _) ->
-         (* Because the FoCaL has been parsed and typechecked, we must *)
-         (* never have a different number of bound identifiers and     *)
-         (* bound-identifiers' type schemes. If this arise, then we    *)
-         (* have a serious bug somewhere.                              *)
+         (* Because the FoCaL has been parsed and typechecked, we must never
+            have a different number of bound identifiers and bound-identifiers'
+            type schemes. If this arise, then we have a serious bug
+            somewhere. *)
          assert false) ;
     Format.fprintf out_fmter "@]"
     end)
@@ -530,6 +522,9 @@ and generate_expr ctx ~local_idents env initial_expression =
          Format.fprintf out_fmter ")@]"
      | Parsetree.E_constr (cstr_expr, exprs) ->
          (begin
+         (* If the constructor has parameters, we force the whole value to be
+            surrounded by parentheses to prevent associativity problems. *)
+         if exprs <> [] then Format.fprintf out_fmter "(" ;
          generate_constructor_ident_for_method_generator ctx env cstr_expr ;
          match exprs with
           | [] -> ()
@@ -537,7 +532,9 @@ and generate_expr ctx ~local_idents env initial_expression =
               (* If argument(s), enclose by parens to possibly make a tuple. *)
               Format.fprintf out_fmter "@ @[<1>(" ;
               rec_generate_exprs_list ~comma: true loc_idents exprs ;
-              Format.fprintf out_fmter ")@]"
+              (* Don't forget to close the parenthesis opened to surround the
+                 whole value. *)
+              Format.fprintf out_fmter ")@])"
          end)
      | Parsetree.E_match (matched_expr, pats_exprs) ->
          (begin
@@ -546,8 +543,8 @@ and generate_expr ctx ~local_idents env initial_expression =
          Format.fprintf out_fmter " with" ;
          List.iter
            (fun (pattern, expr) ->
-             (* My indentation style: indent of 4 between *)
-             (* the pattern and its related processing.   *)
+             (* My indentation style: indent of 4 between the pattern and its
+                related processing. *)
              Format.fprintf out_fmter "@\n@[<4>| " ;
              generate_pattern ctx env pattern ;
              (* Enclose each match-case by begin/end to ensure no confusion. *)
@@ -570,9 +567,9 @@ and generate_expr ctx ~local_idents env initial_expression =
          rec_generate loc_idents expr3 ;
          Format.fprintf out_fmter "@]"
      | Parsetree.E_let (let_def, in_expr) ->
-         (* Here we do not have type contraints under the hand. So give-up  *)
-         (* generating such constraints. Just generate the raw code for the *)
-         (* "let-definition".                                               *)
+         (* Here we do not have type contraints under the hand. So give-up
+            generating such constraints. Just generate the raw code for the
+            "let-definition". *)
          let bound_schemes =
            List.map
              (fun _ -> None)
@@ -597,8 +594,8 @@ and generate_expr ctx ~local_idents env initial_expression =
          end)
      | Parsetree.E_record_with (expr, labs_exprs) ->
          (begin
-         (* Because in OCaml the with construct only starts by an ident, we *)
-         (* create a temporary ident to bind the expression to an ident.    *)
+         (* Because in OCaml the with construct only starts by an ident, we
+            create a temporary ident to bind the expression to an ident. *)
          Format.fprintf out_fmter "@[<2>let __foc_tmp_with_ =@ " ;
          rec_generate loc_idents expr ;
          Format.fprintf out_fmter "@ in@] " ;
@@ -705,8 +702,8 @@ and generate_expr ctx ~local_idents env initial_expression =
       Format.fprintf out_fmter "%s" ocaml_binding
     with
     | Env.Unbound_label (_, _) ->
-        (* If no binding for the field name in the environment, *)
-        (* then it get's directly mapped onto its FoCaL name.   *)
+        (* If no binding for the field name in the environment, then it get's
+           directly mapped onto its FoCaL name. *)
         Format.fprintf out_fmter "%a"
           Misc_ml_generation.pp_to_ocaml_label_ident label in
 
