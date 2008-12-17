@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.149 2008-12-17 12:13:06 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.150 2008-12-17 15:35:08 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2028,11 +2028,15 @@ let generate_theorem ctx print_ctx env min_coq_env used_species_parameter_tys
 let print_types_as_tuple_if_several print_ctx out_fmter types =
   let rec rec_print = function
     | [] -> assert false
-    | [(_, ty)] -> 
-        Format.fprintf out_fmter "%a"
+    | [(_, ty)] ->
+        (* We force parentheses to prevent any associability problems since
+           we don't really print 1 unique type but several arbitrary type
+           expressions we want to group as a tuple. *)
+        Format.fprintf out_fmter "(%a)"
           (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty
     | (_, ty) :: q ->
-        Format.fprintf out_fmter "%a@ *@ "
+        (* Same remark than above for parentheses. *)
+        Format.fprintf out_fmter "(%a)@ *@ "
           (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty ;
         rec_print q in
   match types with
