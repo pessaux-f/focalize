@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.4 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.5 2008-12-17 13:57:04 pessaux Exp $ *)
 
 
 let gendoc_species_field out_fmt = function
@@ -70,14 +70,37 @@ let gendoc_please_compile_me out_fmt = function
 ;;
 
 
+let foo x =
+  List.iter
+    (fun { Parsetree.de_desc = s } -> Format.eprintf "%s@." s)
+    x
+;;
 
-let gendoc_please_compile_me input_file_name pcms =
-  let out_filename = (Filename.chop_extension input_file_name) ^ ".html" in
+
+let gendoc_please_compile_me input_file_name ast_root _pcms =
+  let out_filename = (Filename.chop_extension input_file_name) ^ ".xml" in
   let out_channel = open_out_bin out_filename in
   let out_fmt = Format.formatter_of_out_channel out_channel in
-  Format.fprintf out_fmt "<HTML><BODY>@\n" ;
-  Format.fprintf out_fmt "<TITLE>%s</TITLE>@\n" input_file_name ;
-  List.iter (gendoc_please_compile_me out_fmt) pcms ;
-  Format.fprintf out_fmt "</BODY></HTML>@\n" ;
+  Format.fprintf out_fmt "<?xml version=\"1.0\"?>@\n" ;
+  let tmp = ast_root.Parsetree.ast_doc in
+  foo tmp ;
+  Format.fprintf out_fmt
+    "@[<0>\
+       <html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:mml=\"\
+       http://www.w3.org/1998/Math/MathML\" xmlns:foc=\"\
+       http://focal.inria.fr/site/index\">@\n\
+       @[<0>\
+	 <head>@\n\
+	 <title>BLABLABLA</title>@\n\
+	 <link rel=\"stylesheet\" href=\"focdoc.css\" type=\"text/css\"/>@\n\
+	 </head>\
+       @]@\n\
+       @[<0>\
+	 <body>@\n\
+	 ...@\n\
+	 </body>\
+       @]@\n\
+       </html>\
+     @]@\n" ;
   close_out out_channel
 ;;

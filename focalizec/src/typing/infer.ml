@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.163 2008-12-16 13:09:59 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.164 2008-12-17 13:57:04 pessaux Exp $ *)
 
 
 
@@ -153,7 +153,8 @@ exception Method_multiply_defined of
     {b Rem} : Exported outside this module.                               *)
 (* ********************************************************************** *)
 exception Bad_type_arity of
-  (Parsetree.ident *   (** The name of the misused type constructor. *)
+  (Location.t *
+   Parsetree.ident *   (** The name of the misused type constructor. *)
    int *               (** The expected arity. *)
    int)                (** The arity the constructor was used with. *)
 ;;
@@ -456,7 +457,8 @@ let rec typecheck_type_expr ctx env ty_expr =
                 if ty_descr.Env.TypeInformation.type_arity <> 0 then
                   raise
                     (Bad_type_arity
-                       (ident, ty_descr.Env.TypeInformation.type_arity, 0))
+                       (ty_expr.Parsetree.ast_loc, ident,
+                        ty_descr.Env.TypeInformation.type_arity, 0))
                 else
                   Types.specialize ty_descr.Env.TypeInformation.type_identity in
          (* Record the type in the AST node of the [ident]. *)
@@ -481,7 +483,8 @@ let rec typecheck_type_expr ctx env ty_expr =
          if args_ty_len <> ty_descr.Env.TypeInformation.type_arity then
            raise
              (Bad_type_arity
-                (ty_cstr_ident, ty_descr.Env.TypeInformation.type_arity,
+                (ty_cstr_ident.Parsetree.ast_loc,
+                 ty_cstr_ident, ty_descr.Env.TypeInformation.type_arity,
                  args_ty_len)) ;
          (* Synthetise the types for the arguments. *)
          let args_ty = List.map (typecheck_type_expr ctx env) args_ty_exprs in
@@ -548,7 +551,8 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
                 if ty_descr.Env.TypeInformation.type_arity <> 0 then
                   raise
                     (Bad_type_arity
-                       (ident, ty_descr.Env.TypeInformation.type_arity, 0))
+                       (ident.Parsetree.ast_loc, ident,
+                        ty_descr.Env.TypeInformation.type_arity, 0))
                 else
                   Types.specialize
                     ty_descr.Env.TypeInformation.type_identity) in
@@ -570,8 +574,9 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
          if args_ty_len <> ty_descr.Env.TypeInformation.type_arity then
            raise
              (Bad_type_arity
-        (ty_cstr_ident, ty_descr.Env.TypeInformation.type_arity,
-         args_ty_len));
+                (ty_cstr_ident.Parsetree.ast_loc, ty_cstr_ident,
+                 ty_descr.Env.TypeInformation.type_arity,
+                 args_ty_len));
          (* Synthetise the types for the arguments. *)
          let args_ty =
            List.map (typecheck_rep_type_def ctx env) args_ty_exprs in
@@ -4452,7 +4457,7 @@ let typecheck_regular_type_def_body ctx ~is_repr_of_external env type_name
            ~variables: vars_of_mapping ~body: identity_type in
        let ty_descr = {
          Env.TypeInformation.type_loc =
-	   regular_type_def_body.Parsetree.ast_loc ;
+           regular_type_def_body.Parsetree.ast_loc ;
          Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
          Env.TypeInformation.type_identity = identity_scheme ;
          Env.TypeInformation.type_params = vars_of_mapping ;

@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.34 2008-12-09 13:02:45 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.35 2008-12-17 13:57:04 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -127,7 +127,8 @@ let main () =
     Infer.typecheck_file ~current_unit scoped_ast in
   (* Generate the documentation if requested. *)
   if Configuration.get_focalize_doc () then
-    Main_docgen.gendoc_please_compile_me input_file_name stuff_to_compile ;
+    Main_docgen.gendoc_please_compile_me
+      input_file_name scoped_ast stuff_to_compile ;
   (* Now go to the OCaml code generation if requested. *)
   let mlgen_toplevel_env =
     if Configuration.get_generate_ocaml () then

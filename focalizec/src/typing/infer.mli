@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.34 2008-12-02 15:03:49 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.35 2008-12-17 13:57:04 pessaux Exp $ *)
 
 
 exception Wrong_type_by_inheritance of
@@ -32,7 +32,7 @@ exception Method_multiply_defined of
 exception Unbound_type_variable of (Location.t * Parsetree.vname)
 exception Bad_sum_type_constructor_arity of
   (Parsetree.constructor_ident * Env.TypeInformation.constructor_arity)
-exception Bad_type_arity of (Parsetree.ident * int * int)
+exception Bad_type_arity of (Location.t * Parsetree.ident * int * int)
 exception Rep_multiply_defined of Location.t
 exception Rep_multiply_defined_by_multiple_inheritance of
   (Types.type_simple * Types.type_simple * Location.t)

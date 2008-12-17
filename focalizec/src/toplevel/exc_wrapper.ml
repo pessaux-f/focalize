@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.69 2008-12-15 17:52:06 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.70 2008-12-17 13:57:04 pessaux Exp $ *)
 
 let print_focalize_exception ppf = function
   (* ********************* *)
@@ -194,8 +194,8 @@ let print_focalize_exception ppf = function
         Types.pp_type_simple ty1 Types.pp_type_simple ty2
   | Types.Arity_mismatch (ty_cstr_name, arity1, arity2, at) ->
       Format.fprintf ppf
-        "%a:@\n@[Type@ constructor@ '%a'@ used@ with@ the@ different@ \
-         arities@ %d@ and@ %d.@]@."
+        "%a:@\n@[Type@ constructor@ '%a'@ used@ with@ conflicting@ \
+         arities:@ %d@ and@ %d.@]@."
         Location.pp_location at Types.pp_type_name ty_cstr_name arity1 arity2
   | Types.Arity_mismatch_unexpected_args (at) ->
       (* To handle error message of bug report #180 (sum type constructor
@@ -245,10 +245,11 @@ let print_focalize_exception ppf = function
         Handy.pp_set_bold Handy.pp_reset_effects
         Handy.pp_set_underlined Sourcify.pp_qualified_species s_name
         Handy.pp_reset_effects
-  | Infer.Bad_type_arity (ident, expected, used) ->
+  | Infer.Bad_type_arity (at, ident, expected, used) ->
       Format.fprintf ppf
-        "@[%tType@ constructor%t@ '%t%a%t'@ %texpected%t@ %d@ %targuments@ \
-        but@ was@ used@ with@%t %d@ %targuments%t.@]@."
+        "%a:@\n@[%tType@ constructor%t@ '%t%a%t'@ %tused@ with@ conflicting@ \
+        arities:%t@ %d@ %tand%t@ %d.@]@."
+        Location.pp_location at 
         Handy.pp_set_bold Handy.pp_reset_effects
         Handy.pp_set_underlined Sourcify.pp_ident ident
         Handy.pp_reset_effects
@@ -256,7 +257,6 @@ let print_focalize_exception ppf = function
         expected
         Handy.pp_set_bold Handy.pp_reset_effects
         used
-        Handy.pp_set_bold Handy.pp_reset_effects
   (* *********************** *)
   (* Species type inference. *)
   | Infer.Proof_of_multiply_defined (at1, name, at2) ->
