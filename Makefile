@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.9 2008-12-16 14:08:19 weis Exp $
+# $Id: Makefile,v 1.10 2008-12-17 18:10:40 weis Exp $
 
 ROOT_DIR = .
 
@@ -29,34 +29,47 @@ SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(INTERNAL_TOOLS_DIRS)
 include $(ROOT_DIR)/Makefile.common
 
 .PHONY: configure_external build_external_tools_sources configure_external_tools build_external_tools
-.PHONY: internal_tools_build
+.PHONY: build_internal_tools
 
-all:: configure_external internal_tools_build
+all:: configure_external build_internal_tools
 
-configure_external: ./.config_var build_external_tools_sources configure_external_tools build_external_tools
+configure_external: ./.config_var build_external_tools_sources \
+configure_external_tools build_external_tools install_external_tools
 
 ./.config_var:
 	./configure
 
 build_external_tools_sources: $(EXTERNAL_TOOLS_DIRS)
 
-configure_external_tools: $(CAML_DIR)/config/Makefile
+configure_external_tools: $(CAML_DIR)/config/Makefile $(CAMLP5_DIR)/config/Makefile $(COQ_DIR)/config/Makefile
+
+$(CAML_DIR)/config/Makefile:
 	(cd $(CAML_DIR); \
 	 ./configure $(CAML_CONFIGURE_OPTIONS); \
-	 $(MAKE) $(CAML_MAKE_ALL_TARGET); \
 	)
+
+$(CAMLP5_DIR)/config/Makefile:
 	(cd $(CAMLP5_DIR); \
 	 ./configure $(CAMLP5_CONFIGURE_OPTIONS); \
-	 $(MAKE) $(CAMLP5_MAKE_ALL_TARGET); \
 	)
+
+$(COQ_DIR)/config/Makefile:
 	(cd $(COQ_DIR); \
 	 ./configure $(COQ_CONFIGURE_OPTIONS); \
-	 $(MAKE) $(COQ_MAKE_ALL_TARGET); \
 	)
 
 build_external_tools: $(EXTERNAL_TOOLS_EXES)
 
-build_internal_tools: $(INTERNAL_TOOLS_EXES)
+install_external_tools: $(EXTERNAL_TOOLS_EXES)
+	(cd $(CAML_DIR); \
+	 $(MAKE) install; \
+	)
+	(cd $(CAMLP5_DIR); \
+	 $(MAKE) install; \
+	)
+	(cd $(COQ_DIR); \
+	 $(MAKE) install; \
+	)
 
 $(EXTERNAL_TOOLS_DIRS):
 	for i in $(TAR_BALLS_DIR); do \
@@ -65,15 +78,21 @@ $(EXTERNAL_TOOLS_DIRS):
 	  echo "<-- $$i [$$?]"; \
 	done
 
+$(EXTERNAL_TOOLS_EXES):
+	(cd $(CAML_DIR); \
+	 $(MAKE) $(CAML_MAKE_ALL_TARGET); \
+	)
+	(cd $(CAMLP5_DIR); \
+	 $(MAKE) $(CAMLP5_MAKE_ALL_TARGET); \
+	)
+	(cd $(COQ_DIR); \
+	 $(MAKE) $(COQ_MAKE_ALL_TARGET); \
+	)
+
+build_internal_tools: $(INTERNAL_TOOLS_EXES)
+
 $(INTERNAL_TOOLS_EXES):
 	for i in $(INTERNAL_TOOLS_DIRS); do \
-	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) all) || exit; \
-	  echo "<-- $$i [$$?]"; \
-	done
-
-$(EXTERNAL_TOOLS_EXES):
-	for i in $(EXTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) all) || exit; \
 	  echo "<-- $$i [$$?]"; \
