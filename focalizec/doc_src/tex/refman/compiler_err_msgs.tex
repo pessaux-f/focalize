@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.19 2008-12-16 20:29:05 hardin Exp $
+% $Id: compiler_err_msgs.tex,v 1.20 2008-12-17 13:54:30 pessaux Exp $
 
 
 
@@ -329,7 +329,7 @@ sub-part of itself to prevent cycles.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Type constructor '$name$' used with the different arities
+\section*{Type constructor '$name$' used with conflicting arities:
   $n_1$ and $n_2$.}
 {\em Description}: A type expression applies a type constructor $name$
 to $n_1$ argument(s) although its definition declared it as using $n_2$
@@ -400,19 +400,6 @@ species $sname$, the methode $mname$ is defined several times.
 the same method and in this case, remove one of the definitions. Or if
 the different occurrences of $mname$ refer to different conceptual
 functions, change the names to make them different.
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Type constructor '$name$' expected $n_1$ arguments but was
-  used with $n_2$ arguments.}
-
-{\em Description}: In a type expression, the type constructor $name$
-(not the sum type constructor !) is used with a wrong number of
-arguments. It was declared to have $n_1$ arguments but is used with
-$n_2$.
-
-{\em Hints}: None.
 
 
 
