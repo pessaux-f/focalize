@@ -649,12 +649,12 @@ species S_models_unix (S_grp is S_groups,
      create (S_set_acc!vide,
              [ ],
              [ ],
-             (function s_obj -> S_sub!element),
-             (function s_obj -> S_grp!element),
-             (function s_sub -> S_set_grp!vide),
-             (function s_obj -> S_set_mod!vide),
-             (function s_obj -> S_set_mod!vide),
-             (function s_obj -> S_set_mod!vide)) ;
+             (function _s_obj -> S_sub!element),
+             (function _s_obj -> S_grp!element),
+             (function _s_sub -> S_set_grp!vide),
+             (function _s_obj -> S_set_mod!vide),
+             (function _s_obj -> S_set_mod!vide),
+             (function _s_obj -> S_set_mod!vide)) ;
 
   let print (st) = S_set_acc!print (lambda (st)) ;
 

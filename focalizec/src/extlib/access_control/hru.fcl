@@ -412,8 +412,7 @@ species S_model_acl (Rh is Rho,
   let equal (m1, m2) =
      S_a!equal (lambda (m1), lambda (m2)) ;
 
-  let element = (S_a!vide, (function a -> false)) ;
-
+  let element = (S_a!vide, (function _a -> false)) ;
 
   let print (st in Self) in string = S_a!print (lambda (st)) ;
 
@@ -605,13 +604,13 @@ species S_model_capabilities (Rh is Rho, S is S_subjects, O is S_objects,
      then S_o_m!create ([ C!create (O!ssurf, M!read) ])
      else S_o_m!vide ;
 
-  let capa (sujet in S) in S_o_m = S_o_m!vide ;
+  let capa (_sujet in S) in S_o_m = S_o_m!vide ;
 
   let capabilities (sujet) = cap (sujet) ;
 
   let equal (m1, m2) = S_a!equal (lambda (m1), lambda (m2)) ;
 
-  let element = (S_a!vide, (function a -> false)) ;
+  let element = (S_a!vide, (function _a -> false)) ;
 
   let print (c in Self) in string = S_a!print (lambda (c)) ;
 
