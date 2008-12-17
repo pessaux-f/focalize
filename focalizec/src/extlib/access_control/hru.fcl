@@ -363,15 +363,15 @@ print_string ("\n") ;;
 (** ACL implementation *)
 
 species S_model_acl (Rh is Rho,
-             S is S_subjects, O is S_objects, M is S_access_mode,
-             A is Access (S, O, M), S_a is S_set_of (A),
-             Sgr is S_get_release,
-                     R is S_requests_gal (S, O, M, Sgr),
+		     S is S_subjects, O is S_objects, M is S_access_mode,
+		     A is Access (S, O, M), S_a is S_set_of (A),
+		     Sgr is S_get_release,
+		     R is S_requests_gal (S, O, M, Sgr),
                      D is S_decisions, C is S_couple (S, M),
-             S_s_m is S_set_of (C),
-             C_o_s_s_m is S_couple (O, S_s_m),
-             S_c_o_s_s_m is S_set_of (C_o_s_s_m),
-             Co is S_couple (S_a, S_c_o_s_s_m))
+		     S_s_m is S_set_of (C),
+		     C_o_s_s_m is S_couple (O, S_s_m),
+		     S_c_o_s_s_m is S_set_of (C_o_s_s_m),
+		     Co is S_couple (S_a, S_c_o_s_s_m))
   inherits Model_acl (Rh, S, O, M, A, S_a, R, D, C, S_s_m) =
 
   representation = S_a * (A -> bool) ;
@@ -382,27 +382,23 @@ species S_model_acl (Rh is Rho,
 
   let upsilon (st in Self) = snd (st) ;
 
-  let add (st, ac) = (S_a!union (lambda (st), S_a!singleton (ac)),
-              upsilon (st)) ;
+  let add (st, ac) = 
+     (S_a!union (lambda (st), S_a!singleton (ac)), upsilon (st)) ;
 
-  let del (st, ac) = (S_a!diff (lambda (st), S_a!singleton (ac)),
-              upsilon (st)) ;
+  let del (st, ac) = 
+     (S_a!diff (lambda (st), S_a!singleton (ac)), upsilon (st)) ;
 
   let liste_acl =
      S_c_o_s_s_m!create
      ([ C_o_s_s_m!create (O!ssurf,
-          S_s_m!create ([ C!create (S!mathieu,
-            M!write);
-                                          C!create (S!mathieu,
-            M!read);
-                                          C!create (S!therese,
-            M!write);
-                                          C!create (S!therese,
-            M!read);
-                                          C!create (S!charles,
-            M!read) ]));
-       C_o_s_s_m!create (O!photos_de_vacances,
-         S_s_m!create ([ C!create (S!mathieu, M!write) ])) ]) ;
+			  S_s_m!create ([ C!create (S!mathieu, M!write);
+                                          C!create (S!mathieu, M!read);
+                                          C!create (S!therese, M!write);
+                                          C!create (S!therese, M!read);
+                                          C!create (S!charles, M!read) ]));
+        C_o_s_s_m!create 
+        (O!photos_de_vacances,
+	 S_s_m!create ([ C!create (S!mathieu, M!write) ])) ]) ;
 
   let acl (ob) =
      let rec aux_acl (l in S_c_o_s_s_m) in S_s_m =
