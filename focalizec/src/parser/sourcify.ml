@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.60 2008-12-10 08:59:17 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.61 2008-12-17 18:32:26 weis Exp $ *)
 
 open Parsetree;;
 
@@ -799,7 +799,7 @@ and pp_proof_desc ppf = function
       if enf_deps <> [] then Format.fprintf ppf " " ;
       Format.fprintf ppf "assumed@ {*%s*}@]" reason
   | Parsetree.Pf_auto [] ->
-      Format.fprintf ppf "@[<2>by evidence@]"
+      Format.fprintf ppf "@[<2>obvious@]"
   | Parsetree.Pf_auto facts ->
       Format.fprintf ppf "@[<2>by %a@]" (pp_facts "") facts
   | Parsetree.Pf_coq (enf_deps, s) ->
