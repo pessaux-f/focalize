@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.14 2008-12-18 13:23:24 weis Exp $
+# $Id: Makefile,v 1.15 2008-12-18 13:57:37 weis Exp $
 
 ROOT_DIR = .
 
@@ -37,7 +37,7 @@ all:: configure_external build_internal_tools
 # External tools
 #
 configure_external: ./.config_var install_external_tools_sources \
-configure_external_tools build_external_tools install_external_tools
+configure_external_tools
 
 ./.config_var:
 	./configure
