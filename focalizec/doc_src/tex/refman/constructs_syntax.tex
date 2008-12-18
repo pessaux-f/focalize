@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.32 2008-12-18 15:04:32 hardin Exp $
+% $Id: constructs_syntax.tex,v 1.33 2008-12-18 15:59:45 pessaux Exp $
 
  
 \section{Language constructs and syntax}
@@ -371,19 +371,56 @@ cannot contain variables. But they may contain collection parameters
 as stated in section \ref{collection-parameter}.
 
 A type $t_1$ is an  {\bf instanciation} of a type $t_2$ if $t_1$ is obtained
-by replacing some type variables of $t_2$ by a more defined type
-expression. If $t_2$ is introduced by a top-level definition, then its
-variables can be replaced by any (legal) type expression. Note that if $t_2$
-contains a formal collection parameter (thus an identifier which
-``smells'' like a variable  but which indeed is not a
-variable), then in  $t_1$ this formal parameter can be replaced by an
-effective one. 
+by replacing some type variables of $t_2$ by a ``more defined type
+expression''.
 
+For example, $'a \rightarrow {\tt\ int\ } \rightarrow {\tt\ bool\ }$
+is an instanciation of
+$'a \rightarrow {\tt\ int\ } \rightarrow 'c$ since we replaced
+the variable $'c$ by the type {\tt bool}.
 
+\smallskip
+Two types $t_1$ and $t_2$ are said {\bf compatible}\index{type!compatible}
+if they have a {\bf common} instanciation. For the intuition, this
+means that replacing variables in $t_1$ and replacing variables in
+$t_2$ leads to a same type.
 
-Two types  $t_1$ and  $t_2$  are said {\bf
-  compatible}\index{type!compatible} if they have a common 
-instanciation. 
+For example, we consider the two following types:
+\begin{itemize}
+  \item $t_1 = 'a \rightarrow {\tt\ int\ } \rightarrow 'b \rightarrow 'c$
+  \item $t_2 = {\tt bool\ } \rightarrow 'd \rightarrow 'd \rightarrow 'e$
+\end{itemize}
+
+In $t_1$ we replace: $'a$ by {\tt bool}, and we leave the others
+variables unchanged. We get the new type
+$t'_1 = {\tt bool\ } \rightarrow {\tt\ int\ } \rightarrow 'b \rightarrow 'c$.
+
+In $t_2$, we replace $'d$ by {\tt int}, $'e$ by $'c$. We get the new
+type
+$t'_2 = {\tt bool\ } \rightarrow {\tt\ int\ } \rightarrow 'b \rightarrow 'c$.
+
+The type $t'_1$ is an instanciation of $t_1$. The type $t'_2$ is an
+instanciation of $t_2$. The two types $t'_1$ and $t'_2$ are
+structurally the same. Hence $t_1$ and $t_2$ are {\bf compatible}.
+
+As it can be seen, an instanciation does not need to change all the
+type variables. Only part (or none) of them may be sufficient.
+
+\medskip
+For the sake of intuitive view, compatibility is a generalisation of
+the notion of types being ``equal''. The most trivial instanciation
+appears when the two types do not have any type variables. Hence in
+this case, for them to be compatible is to be structurally equal. We
+find in this case, the common view of ``being a good type'' when for
+instance providing an argument to a function according to the type of
+the expected argument in the function's prototype.
+
+% If $t_2$ is introduced by a top-level definition, then its
+% variables can be replaced by any (legal) type expression. Note that if $t_2$
+% contains a formal collection parameter (thus an identifier which
+% ``smells'' like a variable  but which indeed is not a
+% variable), then in  $t_1$ this formal parameter can be replaced by an
+% effective one. 
 
 
 
