@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.13 2008-12-18 11:36:00 weis Exp $
+#  $Id: configure,v 1.14 2008-12-18 11:38:14 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -169,7 +169,7 @@ while : ; do
        exit 2
        ;;
     *)
-       case $$ in
+       case $# in
          1) SHARE_PREFIX="$1"; shift;;
          *)
            echo "./configure: bad arguments '$@'" >&2
