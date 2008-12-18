@@ -104,8 +104,8 @@ species S_access_mode inherits Access_mode, S_setoid =
 end ;;
 
 species S_access (S_sub is S_subjects,
-          S_obj is S_objects,
-          S_acc_mod is S_access_mode)
+                  S_obj is S_objects,
+                  S_acc_mod is S_access_mode)
   inherits Access (S_sub, S_obj, S_acc_mod) =
 
   representation = S_sub * (S_obj * S_acc_mod) ;
@@ -120,7 +120,7 @@ species S_access (S_sub is S_subjects,
 
   let equal (a1, a2) =
      and_b (and_b (S_sub!equal (get_s (a1), get_s (a2)),
-           S_obj!equal (get_o (a1), get_o (a2))),
+                   S_obj!equal (get_o (a1), get_o (a2))),
             S_acc_mod!equal (get_m (a1), get_m (a2))) ;
 
   let element = create (S_sub!element, S_obj!element, S_acc_mod!element) ;
@@ -214,11 +214,11 @@ species S_rho_ticket (C is S_tickets)
   inherits Rho_ticket (C), S_setoid = end ;;
 
 species S_requests_ticket (S is S_subjects, O is S_objects,
-           M is S_access_mode, Sgr is S_get_release,
-           C is S_tickets)
+                           M is S_access_mode, Sgr is S_get_release,
+                           C is S_tickets)
   inherits Requests_ticket (S, O, M, C) =
 
-  representation = Sgr * (S * (C * (O * (M * (S))))) ;
+  representation = (Sgr * (S * (C * (O * (M * (S)))))) ;
 
   let create (sgrp in Sgr,
               sp1 in S,
@@ -257,11 +257,11 @@ species S_requests_ticket (S is S_subjects, O is S_objects,
 
   let equal (rg1 in Self, rg2 in Self) in bool =
      and_b (and_b (and_b (Sgr!equal (get_gr (rg1), get_gr (rg2)),
-          S!equal (get_s (rg1), get_s (rg2))),
-           and_b (C!equal (get_c (rg1), get_c (rg2)),
-          O!equal (get_o (rg1), get_o (rg2)))),
+                          S!equal (get_s (rg1), get_s (rg2))),
+                   and_b (C!equal (get_c (rg1), get_c (rg2)),
+                          O!equal (get_o (rg1), get_o (rg2)))),
             and_b (M!equal (get_m (rg1), get_m (rg2)),
-           S!equal (get_s2 (rg1), get_s2 (rg2)))) ;
+                   S!equal (get_s2 (rg1), get_s2 (rg2)))) ;
 
   let element =
      create (Sgr!get, S!element, C!element, O!element, M!element, S!element) ;
@@ -327,25 +327,23 @@ species S_requests_ticket (S is S_subjects, O is S_objects,
 end ;;
 
 species S_models_ticket (S_c is S_tickets,
-         S_rh is S_rho_ticket (S_c),
-         S_sub is S_subjects,
-         S_obj is S_objects,
-         S_acc_mod is S_access_mode,
-         S_acc is S_access (S_sub, S_obj, S_acc_mod),
-         S_set_acc is Set_of (S_acc),
-         S_gr is S_get_release,
-         S_req is S_requests_ticket (S_sub, S_obj, S_acc_mod,
-             S_gr, S_c),
-         S_dec is S_decisions)
+                         S_rh is S_rho_ticket (S_c),
+                         S_sub is S_subjects,
+                         S_obj is S_objects,
+                         S_acc_mod is S_access_mode,
+                         S_acc is S_access (S_sub, S_obj, S_acc_mod),
+                         S_set_acc is Set_of (S_acc),
+                         S_gr is S_get_release,
+                         S_req is S_requests_ticket (S_sub, S_obj, S_acc_mod,
+                                                     S_gr, S_c),
+                         S_dec is S_decisions)
   inherits Models_ticket (S_c, S_rh, S_sub, S_obj, S_acc_mod,
-          S_acc, S_set_acc, S_req, S_dec) =
+                          S_acc, S_set_acc, S_req, S_dec) =
 
-  representation =
-    S_set_acc *
-    (list (S_c) *
-     (list ((S_obj * S_acc_mod) * S_c) *
-      (list (S_sub * S_c) *
-       list (S_obj * S_sub)))) ;
+  representation = (S_set_acc * (list (S_c) *
+                                 (list ((S_obj * S_acc_mod) * S_c) *
+                                  (list (S_sub * S_c) *
+                                   list (S_obj * S_sub))))) ;
 
   let create (s in S_set_acc,
               lc in list (S_c),
@@ -390,8 +388,8 @@ species S_models_ticket (S_c is S_tickets,
         | [ ] -> false
         | h :: t ->
             if and_b (and_b (S_obj!equal (o, fst (fst (h))),
-             S_acc_mod!equal (m, snd (fst (h)))),
-              S_c!equal (c, snd (h)))
+                             S_acc_mod!equal (m, snd (fst (h)))),
+                      S_c!equal (c, snd (h)))
             then true
             else aux (t)
      in aux (fst (snd (snd (st)))) ;
@@ -402,15 +400,15 @@ species S_models_ticket (S_c is S_tickets,
         | [ ] -> false
         | h :: t ->
             if and_b (S_obj!equal (o, fst (h)),
-              S_sub!equal (s, snd (h)))
+                      S_sub!equal (s, snd (h)))
             then true
             else aux (t)
      in aux (snd (snd (snd (snd (st))))) ;
 
   let exists_ticket (_st in Self,
-             fuc in (S_c -> bool),
-             fw in (S_c -> bool),
-             ft in (S_c -> bool)) in bool =
+                     fuc in (S_c -> bool),
+                     fw in (S_c -> bool),
+                     ft in (S_c -> bool)) in bool =
      let rec aux (l) =
         match l with
         | [ ] -> false
@@ -432,7 +430,7 @@ species S_models_ticket (S_c is S_tickets,
      (lambda (st), (c :: fst (upsilon (st)),
                     (fst (snd (upsilon (st))),
                      (fst (snd (snd (upsilon (st)))),
-              snd (snd (snd (upsilon (st)))))))) ;
+                      snd (snd (snd (upsilon (st)))))))) ;
 
   let add_w (st in Self, s in S_sub, c in S_c) in Self =
      (lambda (st), (fst (upsilon (st)),
@@ -444,7 +442,7 @@ species S_models_ticket (S_c is S_tickets,
      (lambda (st), (fst (upsilon (st)),
                     (((o, m), c) :: fst (snd (upsilon (st))),
                      (fst (snd (snd (upsilon (st)))),
-              snd (snd (snd (upsilon (st)))))))) ;
+                      snd (snd (snd (upsilon (st)))))))) ;
 
 (*   let rm_uc (st in Self, c in S_c) in Self = *)
 (*      let rec aux (f in list (S_c), l in list (S_c)) = *)
@@ -464,9 +462,9 @@ species S_models_ticket (S_c is S_tickets,
      match l with
      | [ ] ->
          (lambda (st), (f,
-			(fst (snd (upsilon (st))),
-			 (fst (snd (snd (upsilon (st)))),
-			  snd (snd (snd (upsilon (st))))))))
+                        (fst (snd (upsilon (st))),
+                         (fst (snd (snd (upsilon (st)))),
+                          snd (snd (snd (upsilon (st))))))))
      | h :: t ->
          if S_c!equal (c, h)
          then rm_uc_aux (f, t, st, c)
@@ -490,13 +488,13 @@ species S_models_ticket (S_c is S_tickets,
 (*      in aux ([ ], fst (snd (snd (snd (st))))) ; *)
 
   let rec rm_w_aux (f in list (S_sub * S_c), l in list (S_sub * S_c),
-		    st in Self, s in S_sub, c in S_c) =
+                    st in Self, s in S_sub, c in S_c) =
      match l with
      | [ ] ->
          (lambda (st), (fst (upsilon (st)),
-			(fst (snd (upsilon(st))),
-			 (f,
-			  snd (snd (snd (upsilon (st))))))))
+                        (fst (snd (upsilon(st))),
+                         (f,
+                          snd (snd (snd (upsilon (st))))))))
      | h :: t ->
          if and_b (S_sub!equal (s, fst (h)), S_c!equal (c, snd (h)))
          then rm_w_aux (f, t, st, s, c)
@@ -523,18 +521,18 @@ species S_models_ticket (S_c is S_tickets,
 (*      in aux ([ ], fst (snd (snd (st)))) ; *)
 
   let rec rm_t_aux (f in list ((S_obj * S_acc_mod) * S_c),
-		    l in list ((S_obj * S_acc_mod) * S_c),
-		    st in Self, o in S_obj, m in S_acc_mod, c in S_c) =
+                    l in list ((S_obj * S_acc_mod) * S_c),
+                    st in Self, o in S_obj, m in S_acc_mod, c in S_c) =
      match l with
      | [ ] ->
          (lambda (st), (fst (upsilon (st)),
-			(f,
-			 (fst (snd (snd (upsilon (st)))),
-			  snd (snd (snd (upsilon (st))))))))
+                        (f,
+                         (fst (snd (snd (upsilon (st)))),
+                          snd (snd (snd (upsilon (st))))))))
      | h :: t ->
          if and_b (S_obj!equal (o, fst (fst (h))),
-		   and_b (S_acc_mod!equal (m, snd (fst (h))),
-			  S_c!equal (c, snd (h))))
+                   and_b (S_acc_mod!equal (m, snd (fst (h))),
+                          S_c!equal (c, snd (h))))
          then rm_t_aux (f, t, st, o, m, c)
          else rm_t_aux (h :: f, t, st, o, m, c) ;
 
@@ -563,16 +561,16 @@ species S_models_ticket (S_c is S_tickets,
         | h :: t ->
             match t with
             | [ ] ->
-        "((" ^ S_obj!print (fst (fst (h))) ^
-        "," ^ S_acc_mod!print (snd (fst (h))) ^
-        ")," ^ S_c!print (snd (h)) ^
-        ")]"
-            | _ ->
-        "((" ^ S_obj!print (fst (fst (h))) ^
+                "((" ^ S_obj!print (fst (fst (h))) ^
                 "," ^ S_acc_mod!print (snd (fst (h))) ^
                 ")," ^ S_c!print (snd (h)) ^
-        "),\n                     " ^
-        aux (t)
+                ")]"
+            | _ ->
+                "((" ^ S_obj!print (fst (fst (h))) ^
+                "," ^ S_acc_mod!print (snd (fst (h))) ^
+                ")," ^ S_c!print (snd (h)) ^
+                "),\n                     " ^
+                aux (t)
      in "[" ^ aux (l) ;
 
   let print_w (l in list (S_sub * S_c)) in string =
@@ -582,14 +580,14 @@ species S_models_ticket (S_c is S_tickets,
         | h :: t ->
             match t with
             | [ ] ->
-        "(" ^ S_sub!print (fst (h)) ^
-        "," ^ S_c!print (snd (h)) ^
-        ")]"
+                "(" ^ S_sub!print (fst (h)) ^
+                "," ^ S_c!print (snd (h)) ^
+                ")]"
             | _ ->
-        "(" ^ S_sub!print (fst (h)) ^
-        "," ^ S_c!print (snd (h)) ^
-        "),\n                     " ^
-        aux (t)
+                "(" ^ S_sub!print (fst (h)) ^
+                "," ^ S_c!print (snd (h)) ^
+                "),\n                     " ^
+                aux (t)
      in "[" ^ aux (l) ;
 
   let print_owner (l in list (S_obj * S_sub)) in string =
@@ -599,14 +597,14 @@ species S_models_ticket (S_c is S_tickets,
         | h :: t ->
             match t with
             | [ ] ->
-        "(" ^ S_obj!print (fst (h)) ^
-        "," ^ S_sub!print (snd (h)) ^
-        ")]"
+                "(" ^ S_obj!print (fst (h)) ^
+                "," ^ S_sub!print (snd (h)) ^
+                ")]"
             | _ ->
-        "(" ^ S_obj!print (fst (h)) ^
-        "," ^ S_sub!print (snd (h)) ^
-        "),\n                     " ^
-        aux (t)
+                "(" ^ S_obj!print (fst (h)) ^
+                "," ^ S_sub!print (snd (h)) ^
+                "),\n                     " ^
+                aux (t)
      in "[" ^ aux (l) ;
 
   let print (st) in string =
@@ -726,11 +724,11 @@ print_string
    ("           Etat0 : " ^ C_models_ticket!print(st0) ^ "\n") ;;
 
 let req0 = C_requests_ticket!create (C_get_release!generate,
-             C_subjects!s1,
-             C_tickets!c1,
-             o1,
-             C_access_mode!read,
-             C_subjects!element) ;;
+                                     C_subjects!s1,
+                                     C_tickets!c1,
+                                     o1,
+                                     C_access_mode!read,
+                                     C_subjects!element) ;;
 
 print_string ("Requete0 : " ^ C_requests_ticket!print (req0) ^ "\n") ;;
 
@@ -758,11 +756,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req1 = C_requests_ticket!create (C_get_release!generate,
-             C_subjects!s2,
-             C_tickets!c2,
-             o1,
-             C_access_mode!write,
-             C_subjects!element) ;;
+                                     C_subjects!s2,
+                                     C_tickets!c2,
+                                     o1,
+                                     C_access_mode!write,
+                                     C_subjects!element) ;;
 
 print_string ("Requete1 : " ^ C_requests_ticket!print (req1) ^ "\n") ;;
 
@@ -793,11 +791,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req2 = C_requests_ticket!create (C_get_release!get,
-             C_subjects!s4,
-             C_tickets!element,
-             o1,
-             C_access_mode!write,
-             C_subjects!element) ;;
+                                     C_subjects!s4,
+                                     C_tickets!element,
+                                     o1,
+                                     C_access_mode!write,
+                                     C_subjects!element) ;;
 
 print_string ("Requete2 : " ^ C_requests_ticket!print (req2) ^ "\n") ;;
 
@@ -828,11 +826,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req3 = C_requests_ticket!create (C_get_release!get,
-             C_subjects!s1,
-             C_tickets!element,
-             o1,
-             C_access_mode!read,
-             C_subjects!element) ;;
+                                     C_subjects!s1,
+                                     C_tickets!element,
+                                     o1,
+                                     C_access_mode!read,
+                                     C_subjects!element) ;;
 
 print_string ("Requete3 : " ^ C_requests_ticket!print (req3) ^ "\n") ;;
 
@@ -860,11 +858,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req4 = C_requests_ticket!create (C_get_release!remove,
-             C_subjects!element,
-             C_tickets!c1,
-             o1,
-             C_access_mode!read,
-             C_subjects!element) ;;
+                                     C_subjects!element,
+                                     C_tickets!c1,
+                                     o1,
+                                     C_access_mode!read,
+                                     C_subjects!element) ;;
 
 print_string ("Requete4 : " ^ C_requests_ticket!print (req4) ^ "\n") ;;
 
@@ -895,11 +893,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req5 = C_requests_ticket!create (C_get_release!rel,
-             C_subjects!s1,
-             C_tickets!element,
-             o1,
-             C_access_mode!read,
-             C_subjects!element) ;;
+                                     C_subjects!s1,
+                                     C_tickets!element,
+                                     o1,
+                                     C_access_mode!read,
+                                     C_subjects!element) ;;
 
 print_string ("Requete5 : " ^ C_requests_ticket!print (req5) ^ "\n") ;;
 
@@ -930,11 +928,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req6 = C_requests_ticket!create (C_get_release!remove,
-             C_subjects!element,
-             C_tickets!c1,
-             o1,
-             C_access_mode!read,
-             C_subjects!element) ;;
+                                     C_subjects!element,
+                                     C_tickets!c1,
+                                     o1,
+                                     C_access_mode!read,
+                                     C_subjects!element) ;;
 
 print_string ("Requete6 : " ^ C_requests_ticket!print (req6) ^ "\n") ;;
 
@@ -965,11 +963,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req7 = C_requests_ticket!create (C_get_release!pass,
-             C_subjects!s1,
-             C_tickets!c3,
-             C_objects!element,
-             C_access_mode!element,
-             C_subjects!s2) ;;
+                                     C_subjects!s1,
+                                     C_tickets!c3,
+                                     C_objects!element,
+                                     C_access_mode!element,
+                                     C_subjects!s2) ;;
 
 print_string ("Requete7 : " ^ C_requests_ticket!print (req7) ^ "\n") ;;
 
@@ -997,11 +995,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req8 = C_requests_ticket!create (C_get_release!generate,
-             C_subjects!s3,
-             C_tickets!c5,
-             o3,
-             C_access_mode!write,
-             C_subjects!element) ;;
+                                     C_subjects!s3,
+                                     C_tickets!c5,
+                                     o3,
+                                     C_access_mode!write,
+                                     C_subjects!element) ;;
 
 print_string ("Requete8 : " ^ C_requests_ticket!print (req8) ^ "\n") ;;
 
@@ -1032,11 +1030,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req9 = C_requests_ticket!create (C_get_release!pass,
-             C_subjects!s3,
-             C_tickets!c5,
-             C_objects!element,
-             C_access_mode!element,
-             C_subjects!s2) ;;
+                                     C_subjects!s3,
+                                     C_tickets!c5,
+                                     C_objects!element,
+                                     C_access_mode!element,
+                                     C_subjects!s2) ;;
 
 print_string ("Requete9 : " ^ C_requests_ticket!print (req9) ^ "\n") ;;
 
@@ -1070,11 +1068,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req10 = C_requests_ticket!create (C_get_release!get,
-              C_subjects!s2,
-              C_tickets!element,
-              o3,
-              C_access_mode!read,
-              C_subjects!element) ;;
+                                      C_subjects!s2,
+                                      C_tickets!element,
+                                      o3,
+                                      C_access_mode!read,
+                                      C_subjects!element) ;;
 
 print_string ("Requete10 : " ^ C_requests_ticket!print (req10) ^ "\n") ;;
 
@@ -1108,11 +1106,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req11 = C_requests_ticket!create (C_get_release!get,
-              C_subjects!s2,
-              C_tickets!element,
-              o3,
-              C_access_mode!write,
-              C_subjects!element) ;;
+                                      C_subjects!s2,
+                                      C_tickets!element,
+                                      o3,
+                                      C_access_mode!write,
+                                      C_subjects!element) ;;
 
 print_string ("Requete11 : " ^ C_requests_ticket!print (req11) ^ "\n") ;;
 

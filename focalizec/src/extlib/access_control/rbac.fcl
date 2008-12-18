@@ -73,8 +73,8 @@ species S_access_mode inherits Access_mode, S_setoid =
 end ;;
 
 species S_access (S_sub is S_subjects,
-          S_obj is S_objects,
-          S_acc_mod is S_access_mode)
+                  S_obj is S_objects,
+                  S_acc_mod is S_access_mode)
   inherits Access (S_sub, S_obj, S_acc_mod) =
 
   representation = (S_sub * (S_obj * S_acc_mod)) ;
@@ -89,7 +89,7 @@ species S_access (S_sub is S_subjects,
 
   let equal (a1, a2) =
      and_b (and_b (S_sub!equal (get_s (a1), get_s (a2)),
-           S_obj!equal (get_o (a1), get_o (a2))),
+                   S_obj!equal (get_o (a1), get_o (a2))),
             S_acc_mod!equal (get_m (a1), get_m (a2))) ;
 
   let element = create (S_sub!element, S_obj!element, S_acc_mod!element) ;
@@ -190,7 +190,7 @@ species S_roles inherits Roles, S_setoid =
      else if equal (r1, patient) then true
      else if equal (r1, secretaire) then
        if or_b (equal (r2, directeur),
-        equal (r2, secretaire))
+                equal (r2, secretaire))
        then true
        else false
      else if equal (r1, chirurgienChef) then
@@ -203,50 +203,50 @@ species S_roles inherits Roles, S_setoid =
        else false
      else if equal (r1, chirurgien) then
        if or_b (equal (r2, chirurgienChef),
-        equal (r2, chirurgien))
+                equal (r2, chirurgien))
        then true
        else false
      else if equal (r1, radiologisteAssistant) then
        if or_b (equal (r2, radiologiste),
-        equal (r2, radiologisteAssistant))
+                equal (r2, radiologisteAssistant))
        then true
        else false
      else if equal (r1, specialiste) then
        if or_b (or_b (or_b (equal (r2, chirurgien),
-            equal (r2, chirurgienChef)),
-              or_b (equal (r2, radiologisteAssistant),
-            equal (r2, radiologiste))),
-        equal (r2, specialiste))
+                            equal (r2, chirurgienChef)),
+                      or_b (equal (r2, radiologisteAssistant),
+                            equal (r2, radiologiste))),
+                equal (r2, specialiste))
        then true
        else false
      else if equal (r1, generaliste) then
        if or_b (or_b (or_b (equal (r2, chirurgien),
-            equal (r2, chirurgienChef)),
-              or_b (equal (r2, radiologisteAssistant),
-            equal (r2, radiologiste))),
-        or_b (equal (r2, specialiste),
-              equal (r2, generaliste)))
+                            equal (r2, chirurgienChef)),
+                      or_b (equal (r2, radiologisteAssistant),
+                            equal (r2, radiologiste))),
+                or_b (equal (r2, specialiste),
+                      equal (r2, generaliste)))
        then true
        else false
      else if equal (r1, infirmiere) then
        if or_b (or_b (or_b (or_b (equal (r2, chirurgien),
-          equal (r2, chirurgienChef)),
-            or_b (equal (r2, radiologisteAssistant),
-          equal (r2, radiologiste))),
-              or_b (equal (r2, specialiste),
-            equal (r2, generaliste))),
-        equal (r2, infirmiere))
+                                  equal (r2, chirurgienChef)),
+                            or_b (equal (r2, radiologisteAssistant),
+                                  equal (r2, radiologiste))),
+                      or_b (equal (r2, specialiste),
+                            equal (r2, generaliste))),
+                equal (r2, infirmiere))
        then true
        else false
      else if equal (r1, secretaireMedicale) then
        if or_b (or_b (or_b (or_b (equal (r2, chirurgien),
-          equal (r2, chirurgienChef)),
-            or_b (equal (r2, radiologisteAssistant),
-          equal (r2, radiologiste))),
-              or_b (equal (r2, specialiste),
-            equal (r2, generaliste))),
-        or_b (equal (r2, infirmiere),
-              equal (r2, secretaireMedicale)))
+                                  equal (r2, chirurgienChef)),
+                            or_b (equal (r2, radiologisteAssistant),
+                                  equal (r2, radiologiste))),
+                      or_b (equal (r2, specialiste),
+                            equal (r2, generaliste))),
+                or_b (equal (r2, infirmiere),
+                      equal (r2, secretaireMedicale)))
        then true
        else false
      else false ;
@@ -260,11 +260,11 @@ species S_roles inherits Roles, S_setoid =
 end ;;
 
 species S_requests_rbac (S is S_subjects,
-         O is S_objects,
-         M is S_access_mode,
-         Sgr is S_get_release,
-         U is S_users,
-         Ro is S_roles)
+                         O is S_objects,
+                         M is S_access_mode,
+                         Sgr is S_get_release,
+                         U is S_users,
+                         Ro is S_roles)
   inherits Requests_rbac (S, O, M, U, Ro) =
 
   representation = (Sgr * (S * (O * (M * (U * Ro))))) ;
@@ -299,11 +299,11 @@ species S_requests_rbac (S is S_subjects,
 
   let equal (rg1, rg2) =
      and_b (and_b (and_b (Sgr!equal (get_gr (rg1), get_gr (rg2)),
-          S!equal (get_s (rg1), get_s (rg2))),
-           and_b (O!equal (get_o (rg1), get_o (rg2)),
-          M!equal (get_m (rg1), get_m (rg2)))),
+                          S!equal (get_s (rg1), get_s (rg2))),
+                   and_b (O!equal (get_o (rg1), get_o (rg2)),
+                          M!equal (get_m (rg1), get_m (rg2)))),
             and_b (U!equal (get_u (rg1), get_u (rg2)),
-           Ro!equal (get_r (rg1), get_r (rg2)))) ;
+                   Ro!equal (get_r (rg1), get_r (rg2)))) ;
 
   let element =
      create (Sgr!get, S!element, O!element, M!element, U!element, Ro!element) ;
@@ -387,24 +387,24 @@ species S_rho_rbac (S_us is S_users, S_ro is S_roles)
   inherits Rho_rbac (S_us, S_ro), S_setoid = end ;;
 
 species S_models_rbac (S_us is S_users,
-               S_ro is S_roles,
-               S_rh is S_rho_rbac (S_us, S_ro),
-               S_sub is S_subjects,
-               S_obj is S_objects,
-               S_acc_mod is S_access_mode,
+                       S_ro is S_roles,
+                       S_rh is S_rho_rbac (S_us, S_ro),
+                       S_sub is S_subjects,
+                       S_obj is S_objects,
+                       S_acc_mod is S_access_mode,
                        S_acc is S_access (S_sub, S_obj, S_acc_mod),
-               S_set_acc is S_set_of (S_acc),
-               S_gr is S_get_release,
-               S_req is S_requests_rbac (S_sub, S_obj, S_acc_mod,
-         S_gr, S_us, S_ro),
-               S_dec is S_decisions)
+                       S_set_acc is S_set_of (S_acc),
+                       S_gr is S_get_release,
+                       S_req is S_requests_rbac (S_sub, S_obj, S_acc_mod,
+                                                 S_gr, S_us, S_ro),
+                       S_dec is S_decisions)
   inherits Models_rbac (S_us, S_ro, S_rh, S_sub, S_obj, S_acc_mod, S_acc,
-        S_set_acc, S_req, S_dec) =
+                        S_set_acc, S_req, S_dec) =
 
   representation = (S_set_acc * ((S_sub -> S_us) *
-              (list (S_us * S_ro) *
-               (list ((S_obj * S_acc_mod) * S_ro) *
-        list (S_sub * S_ro))))) ;
+                                 (list (S_us * S_ro) *
+                                  (list ((S_obj * S_acc_mod) * S_ro) *
+                                   list (S_sub * S_ro))))) ;
 
   let create (s in S_set_acc,
               ur in (S_sub -> S_us),
@@ -416,9 +416,9 @@ species S_models_rbac (S_us is S_users,
   let lambda (st) = fst (st) ;
 
   let upsilon (st in Self) in ((S_sub -> S_us) *
-               (list (S_us * S_ro) *
-        (list ((S_obj * S_acc_mod) * S_ro) *
-         list (S_sub * S_ro)))) =
+                               (list (S_us * S_ro) *
+                                (list ((S_obj * S_acc_mod) * S_ro) *
+                                 list (S_sub * S_ro)))) =
      snd (st) ;
 
   let add (st, ac) =
@@ -435,7 +435,7 @@ species S_models_rbac (S_us is S_users,
         | [ ] -> false
         | h :: t ->
             if and_b (S_us!equal (us, fst (h)),
-              S_ro!equal (ro, snd (h)))
+                      S_ro!equal (ro, snd (h)))
             then true
             else aux (t)
      in aux (fst (snd (upsilon (st)))) ;
@@ -446,8 +446,8 @@ species S_models_rbac (S_us is S_users,
         | [ ] -> false
         | h :: t ->
             if and_b (and_b (S_obj!equal (obj, fst (fst (h))),
-             S_acc_mod!equal (mo, snd (fst (h)))),
-              S_ro!equal (ro, snd (h)))
+                             S_acc_mod!equal (mo, snd (fst (h)))),
+                      S_ro!equal (ro, snd (h)))
             then true
             else aux (t)
      in aux (fst (snd (snd (upsilon (st))))) ;
@@ -458,7 +458,7 @@ species S_models_rbac (S_us is S_users,
         | [ ] -> false
         | h :: t ->
             if and_b (S_sub!equal (sub, fst (h)),
-              S_ro!equal (ro, snd (h)))
+                      S_ro!equal (ro, snd (h)))
             then true
             else aux (t)
      in aux (snd (snd (snd (upsilon (st))))) ;
@@ -485,18 +485,18 @@ species S_models_rbac (S_us is S_users,
 
   let add_ua (st in Self, u in S_us, r in S_ro) in Self =
      (lambda (st), (fst (upsilon (st)),
-            ((u, r) :: fst (snd (upsilon (st))),
+                    ((u, r) :: fst (snd (upsilon (st))),
                      (fst (snd (snd (upsilon (st)))),
-              snd (snd (snd (upsilon (st)))))))) ;
+                      snd (snd (snd (upsilon (st)))))))) ;
 
   let rm_ua (st in Self, u in S_us, r in S_ro) in Self =
      let rec aux (f in list (S_us * S_ro), l in list (S_us * S_ro)) =
         match l with
         | [ ] ->
             (lambda (st), (fst (upsilon (st)),
-           (f,
-            (fst (snd (snd (upsilon (st)))),
-             snd (snd (snd (upsilon (st))))))))
+                           (f,
+                            (fst (snd (snd (upsilon (st)))),
+                             snd (snd (snd (upsilon (st))))))))
         | h :: t ->
             if and_b (S_us!equal (u, fst (h)), S_ro!equal (r, snd (h)))
             then aux (f, t)
@@ -505,9 +505,9 @@ species S_models_rbac (S_us is S_users,
 
   let add_pa (st in Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self =
      (lambda (st), (fst (upsilon (st)),
-            (fst (snd (upsilon (st))),
+                    (fst (snd (upsilon (st))),
                      (((o, m), r) :: fst (snd (snd (upsilon (st)))),
-              snd (snd (snd (upsilon (st)))))))) ;
+                      snd (snd (snd (upsilon (st)))))))) ;
 
   let rm_pa (st in Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self =
      let rec aux (f in list ((S_obj * S_acc_mod) * S_ro),
@@ -515,24 +515,21 @@ species S_models_rbac (S_us is S_users,
         match l with
         | [ ] ->
             (lambda (st), (fst (upsilon (st)),
-           (fst (snd (upsilon (st))),
-            (f,
-             snd (snd (snd (upsilon (st))))))))
+                           (fst (snd (upsilon (st))),
+                            (f,
+                             snd (snd (snd (upsilon (st))))))))
         | h :: t ->
             if and_b (and_b (S_obj!equal (o, fst (fst (h))),
-             S_acc_mod!equal (m, snd (fst (h)))),
-              S_ro!equal (r, snd (h)))
+                             S_acc_mod!equal (m, snd (fst (h)))),
+                      S_ro!equal (r, snd (h)))
             then aux (f, t)
             else aux (h :: f, t)
      in aux ([ ], fst (snd (snd (upsilon (st))))) ;
 
   let equal (st1, st2) = S_set_acc!equal (lambda (st1), lambda (st2)) ;
 
-  let element = create (S_set_acc!vide,
-        (function _su -> S_us!element),
-        [ ],
-        [ ],
-        [ ]) ;
+  let element = 
+     create (S_set_acc!vide, (function _su -> S_us!element), [ ], [ ], [ ]) ;
 
   let print_ua (l in list (S_us * S_ro)) in string =
      let rec aux (ls in list (S_us * S_ro)) =
@@ -541,14 +538,14 @@ species S_models_rbac (S_us is S_users,
         | h :: t ->
             match t with
             | [ ] ->
-        "(" ^ S_us!print (fst (h)) ^
-        "," ^ S_ro!print (snd (h)) ^
-        ")]"
+                "(" ^ S_us!print (fst (h)) ^
+                "," ^ S_ro!print (snd (h)) ^
+                ")]"
             | _ ->
-        "(" ^ S_us!print (fst (h)) ^
-        "," ^ S_ro!print (snd (h)) ^
-        "),\n                     " ^
-        aux (t)
+                "(" ^ S_us!print (fst (h)) ^
+                "," ^ S_ro!print (snd (h)) ^
+                "),\n                     " ^
+                aux (t)
      in "[" ^ aux (l) ;
 
   let print_pa (l in list ((S_obj * S_acc_mod) * S_ro)) in string =
@@ -558,16 +555,16 @@ species S_models_rbac (S_us is S_users,
         | h :: t ->
             match t with
             | [ ] ->
-        "((" ^ S_obj!print (fst (fst (h))) ^
-        "," ^ S_acc_mod!print (snd (fst (h))) ^
-        ")," ^ S_ro!print (snd (h)) ^
-        ")]"
-            | _ ->
-        "((" ^ S_obj!print (fst (fst (h))) ^
+                "((" ^ S_obj!print (fst (fst (h))) ^
                 "," ^ S_acc_mod!print (snd (fst (h))) ^
                 ")," ^ S_ro!print (snd (h)) ^
-        "),\n                     " ^
-        aux (t)
+                ")]"
+            | _ ->
+                "((" ^ S_obj!print (fst (fst (h))) ^
+                "," ^ S_acc_mod!print (snd (fst (h))) ^
+                ")," ^ S_ro!print (snd (h)) ^
+                "),\n                     " ^
+                aux (t)
      in "[" ^ aux (l) ;
 
   let print (st) in string =
@@ -703,15 +700,15 @@ collection C_roles implements S_roles ;;
 
 collection C_requests_rbac
   implements S_requests_rbac (C_subjects,  C_objects,  C_access_mode,
-              C_get_release, C_users, C_roles) ;;
+                              C_get_release, C_users, C_roles) ;;
 
 collection C_rho_rbac implements S_rho_rbac (C_users, C_roles) ;;
 
 collection C_models_rbac
   implements S_models_rbac (C_users, C_roles, C_rho_rbac,
-            C_subjects, C_objects, C_access_mode,
-            C_access, C_set_of_access,
-            C_get_release, C_requests_rbac, C_decisions) ;;
+                            C_subjects, C_objects, C_access_mode,
+                            C_access, C_set_of_access,
+                            C_get_release, C_requests_rbac, C_decisions) ;;
 
 let s1 = C_subjects!create (1, "s1") ;;
 
@@ -893,19 +890,19 @@ let roles_s_ex in list (C_subjects * C_roles) =
 print_string ("Exemple d'execution :\n\n") ;;
 
 let st0 = C_models_rbac!create (C_set_of_access!vide,
-        user_ex,
-        ua_ex,
-        pa_ex,
-        roles_s_ex) ;;
+                                user_ex,
+                                ua_ex,
+                                pa_ex,
+                                roles_s_ex) ;;
 
 print_string ("Acces0 : " ^ C_models_rbac!print (st0) ^ "\n") ;;
 
 let req0 = C_requests_rbac!create (C_get_release!get,
-          s1,
-          dossierMedecin_1,
-          C_access_mode!write,
-          C_users!element,
-          C_roles!element) ;;
+                                   s1,
+                                   dossierMedecin_1,
+                                   C_access_mode!write,
+                                   C_users!element,
+                                   C_roles!element) ;;
 
 print_string ("Requete0 : " ^ C_requests_rbac!print (req0) ^ "\n") ;;
 
@@ -927,11 +924,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req1 = C_requests_rbac!create (C_get_release!get,
-          s8,
-          ordonnance_1,
-          C_access_mode!write,
-          C_users!element,
-          C_roles!element) ;;
+                                   s8,
+                                   ordonnance_1,
+                                   C_access_mode!write,
+                                   C_users!element,
+                                   C_roles!element) ;;
 
 print_string ("Requete1 : " ^ C_requests_rbac!print (req1) ^ "\n") ;;
 
@@ -953,11 +950,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req2 = C_requests_rbac!create (C_get_release!get,
-          s10,
-          ordonnance_1,
-          C_access_mode!read,
-          C_users!element,
-          C_roles!element) ;;
+                                   s10,
+                                   ordonnance_1,
+                                   C_access_mode!read,
+                                   C_users!element,
+                                   C_roles!element) ;;
 
 print_string ("Requete2 : " ^ C_requests_rbac!print (req2) ^ "\n") ;;
 
@@ -979,11 +976,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req3 = C_requests_rbac!create (C_get_release!get,
-          s6,
-          ordonnance_3,
-          C_access_mode!write,
-          C_users!element,
-          C_roles!element) ;;
+                                   s6,
+                                   ordonnance_3,
+                                   C_access_mode!write,
+                                   C_users!element,
+                                   C_roles!element) ;;
 
 print_string ("Requete3 : " ^ C_requests_rbac!print (req3) ^ "\n") ;;
 
@@ -1005,11 +1002,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req4 = C_requests_rbac!create (C_get_release!get,
-          s3,
-          compteRenduOp_2,
-          C_access_mode!read,
-          C_users!element,
-          C_roles!element) ;;
+                                   s3,
+                                   compteRenduOp_2,
+                                   C_access_mode!read,
+                                   C_users!element,
+                                   C_roles!element) ;;
 
 print_string ("Requete4 : " ^ C_requests_rbac!print (req4) ^ "\n") ;;
 
@@ -1031,11 +1028,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req5 = C_requests_rbac!create (C_get_release!rel,
-          s9,
-          radio_1,
-          C_access_mode!read,
-          C_users!element,
-          C_roles!element) ;;
+                                   s9,
+                                   radio_1,
+                                   C_access_mode!read,
+                                   C_users!element,
+                                   C_roles!element) ;;
 
 print_string ("Requete5 : " ^ C_requests_rbac!print (req5) ^ "\n") ;;
 
@@ -1057,11 +1054,11 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req6 = C_requests_rbac!create (C_get_release!rel,
-          s1,
-          dossierMedecin_1,
-          C_access_mode!write,
-          C_users!element,
-          C_roles!element) ;;
+                                   s1,
+                                   dossierMedecin_1,
+                                   C_access_mode!write,
+                                   C_users!element,
+                                   C_roles!element) ;;
 
 print_string ("Requete6 : " ^ C_requests_rbac!print (req6) ^ "\n") ;;
 

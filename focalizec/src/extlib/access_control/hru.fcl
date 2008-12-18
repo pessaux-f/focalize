@@ -103,8 +103,8 @@ species S_access_mode inherits Access_mode, S_setoid =
 end ;;
 
 species S_access (S_sub is S_subjects,
-          S_obj is S_objects,
-          S_acc_mod is S_access_mode)
+                  S_obj is S_objects,
+                  S_acc_mod is S_access_mode)
   inherits Access (S_sub, S_obj, S_acc_mod) =
 
   representation = S_sub * (S_obj * S_acc_mod) ;
@@ -171,12 +171,12 @@ species S_get_release inherits S_setoid =
 end ;;
 
 species S_requests_gal (S is S_subjects,
-        O is S_objects,
-        M is S_access_mode,
-        Sgr is S_get_release)
+                        O is S_objects,
+                        M is S_access_mode,
+                        Sgr is S_get_release)
   inherits Requests_gal (S, O, M) =
 
-  representation = Sgr * (S * (O * M)) ;
+  representation = (Sgr * (S * (O * M))) ;
 
   let create (g in Sgr, sa in S, oa in O, ma in M) in Self =
      (g, (sa, (oa, ma)));
@@ -195,8 +195,8 @@ species S_requests_gal (S is S_subjects,
 
   let equal (rg1, rg2) =
      and_b (and_b (Sgr!equal (get_gr (rg1), get_gr (rg2)),
-           and_b(S!equal (get_s (rg1), get_s (rg2)),
-         O!equal (get_o (rg1), get_o (rg2)))),
+                   and_b(S!equal (get_s (rg1), get_s (rg2)),
+                         O!equal (get_o (rg1), get_o (rg2)))),
             M!equal (get_m (rg1), get_m (rg2))) ;
 
   let element = create (Sgr!get, S!element, O!element, M!element) ;
@@ -243,18 +243,18 @@ species S_couple (A is Setoid, B is Setoid) inherits Pair (A, B) =
 
   let create (s1, s2) = (s1, s2) ;
 
-  let first (c) = basics#fst (c) ;
+  let first (c) = fst (c) ;
 
   let second(c) = snd (c) ;
 
   let equal (c1, c2) =
-     and_b (A!equal (fst (c1), fst (c2)),
+     and_b (A!equal (first (c1), first (c2)),
             B!equal (second (c1), second (c2))) ;
 
   let element = (A!element, B!element) ;
 
   let print (c in Self) in string =
-     "( " ^ A!print(fst (c)) ^ " , " ^ B!print(second (c)) ^ " )" ;
+     "( " ^ A!print(first (c)) ^ " , " ^ B!print(second (c)) ^ " )" ;
 
   proof of equal_reflexive = by property A!equal_reflexive,
                                          B!equal_reflexive
@@ -287,9 +287,9 @@ collection C_get_release implements S_get_release ;;
 
 collection C_requests_gal
   implements S_requests_gal (C_subjects,
-             C_objects,
-             C_access_mode,
-             C_get_release) ;;
+                             C_objects,
+                             C_access_mode,
+                             C_get_release) ;;
 
 collection C_rho implements S_rho ;;
 
@@ -335,28 +335,28 @@ print_string ("\n") ;;
 print_string ("Acces autorises:\n") ;;
 
 print_string (C_access!print (C_access!create (C_subjects!mathieu,
-               C_objects!ssurf,
-               C_access_mode!write)) ^ "\n") ;;
+                                               C_objects!ssurf,
+                                               C_access_mode!write)) ^ "\n") ;;
 
 print_string (C_access!print (C_access!create (C_subjects!mathieu,
-               C_objects!ssurf,
-               C_access_mode!read)) ^ "\n") ;;
+                                               C_objects!ssurf,
+                                               C_access_mode!read)) ^ "\n") ;;
 
 print_string (C_access!print (C_access!create (C_subjects!therese,
-               C_objects!ssurf,
-               C_access_mode!write)) ^ "\n") ;;
+                                               C_objects!ssurf,
+                                               C_access_mode!write)) ^ "\n") ;;
 
 print_string (C_access!print (C_access!create (C_subjects!therese,
-               C_objects!ssurf,
-               C_access_mode!read)) ^ "\n") ;;
+                                               C_objects!ssurf,
+                                               C_access_mode!read)) ^ "\n") ;;
 
 print_string (C_access!print (C_access!create (C_subjects!charles,
-               C_objects!ssurf,
-               C_access_mode!read)) ^ "\n") ;;
+                                               C_objects!ssurf,
+                                               C_access_mode!read)) ^ "\n") ;;
 
 print_string (C_access!print (C_access!create (C_subjects!mathieu,
-               C_objects!photos_de_vacances,
-               C_access_mode!write)) ^ "\n") ;;
+                                               C_objects!photos_de_vacances,
+                                               C_access_mode!write)) ^ "\n") ;;
 
 print_string ("\n") ;;
 
@@ -452,13 +452,13 @@ end ;;
 
 collection C_model_acl
   implements S_model_acl (C_rho,
-          C_subjects, C_objects, C_access_mode,
-          C_access, C_set_of_access,
-          C_get_release, C_requests_gal,
-          C_decisions,
-          C_couple_s_m, C_set_of_couple_s_m,
-          C_couple_o_s_s_m,
-          C_set_of_c_o_s_s_m, C_states) ;;
+                          C_subjects, C_objects, C_access_mode,
+                          C_access, C_set_of_access,
+                          C_get_release, C_requests_gal,
+                          C_decisions,
+                          C_couple_s_m, C_set_of_couple_s_m,
+                          C_couple_o_s_s_m,
+                          C_set_of_c_o_s_s_m, C_states) ;;
 
 
 print_string ("Exemple implantation ACL\n") ;;
@@ -473,9 +473,9 @@ print_string ("Acces courants: " ^
 (* 1st request *)
 
 let r1 = C_requests_gal!create (C_get_release!get,
-        C_subjects!mathieu,
-        C_objects!ssurf,
-        C_access_mode!write) ;;
+                                C_subjects!mathieu,
+                                C_objects!ssurf,
+                                C_access_mode!write) ;;
 
 print_string (C_requests_gal!print (r1) ^ "\n") ;;
 
@@ -492,9 +492,9 @@ print_string ("Reponse: " ^ C_decisions!print (d1) ^
 (* 1st request bis *)
 
 let r1b = C_requests_gal!create (C_get_release!get,
-         C_subjects!charles,
-         C_objects!ssurf,
-         C_access_mode!read) ;;
+                                 C_subjects!charles,
+                                 C_objects!ssurf,
+                                 C_access_mode!read) ;;
 
 print_string (C_requests_gal!print (r1b) ^ "\n") ;;
 
@@ -511,9 +511,9 @@ print_string ("Reponse: " ^ C_decisions!print (d1) ^
 (* 2nd request *)
 
 let r2 = C_requests_gal!create (C_get_release!get,
-        C_subjects!mathieu,
-        C_objects!photos_de_vacances,
-        C_access_mode!read) ;;
+                                C_subjects!mathieu,
+                                C_objects!photos_de_vacances,
+                                C_access_mode!read) ;;
 
 print_string (C_requests_gal!print (r2) ^ "\n") ;;
 
@@ -530,9 +530,9 @@ print_string ("Reponse: " ^ C_decisions!print (d2) ^
 (* 3rd request *)
 
 let r3 = C_requests_gal!create (C_get_release!rel,
-        C_subjects!therese,
-        C_objects!focal_pas_a_pas,
-        C_access_mode!read) ;;
+                                C_subjects!therese,
+                                C_objects!focal_pas_a_pas,
+                                C_access_mode!read) ;;
 
 print_string (C_requests_gal!print (r3) ^ "\n") ;;
 
@@ -549,9 +549,9 @@ print_string ("Reponse: " ^ C_decisions!print (d3) ^
 (* 4th request *)
 
 let r4 = C_requests_gal!create (C_get_release!rel,
-        C_subjects!mathieu,
-        C_objects!ssurf,
-        C_access_mode!write) ;;
+                                C_subjects!mathieu,
+                                C_objects!ssurf,
+                                C_access_mode!write) ;;
 
 print_string (C_requests_gal!print (r4) ^ "\n") ;;
 
@@ -570,12 +570,12 @@ print_string ("\n") ;;
 (** Capabilities implementation *)
 
 species S_model_capabilities (Rh is Rho, S is S_subjects, O is S_objects,
-              M is S_access_mode,
-              A is Access (S, O, M), S_a is S_set_of (A),
-              Sgr is S_get_release,
-              R is S_requests_gal (S, O, M, Sgr),
-              D is S_decisions,
-              C is S_couple (O, M), S_o_m is S_set_of (C))
+                              M is S_access_mode,
+                              A is Access (S, O, M), S_a is S_set_of (A),
+                              Sgr is S_get_release,
+                              R is S_requests_gal (S, O, M, Sgr),
+                              D is S_decisions,
+                              C is S_couple (O, M), S_o_m is S_set_of (C))
   inherits Model_capabilities (Rh, S, O, M, A, S_a, R, D, C, S_o_m) =
 
   representation = S_a * (A -> bool) ;
@@ -586,11 +586,11 @@ species S_model_capabilities (Rh is Rho, S is S_subjects, O is S_objects,
 
   let upsilon (st in Self) = snd (st) ;
 
-  let add (st, ac) = (S_a!union (lambda (st), S_a!singleton (ac)),
-              upsilon (st)) ;
+  let add (st, ac) = 
+     (S_a!union (lambda (st), S_a!singleton (ac)), upsilon (st)) ;
 
-  let del (st, ac) = (S_a!diff (lambda (st), S_a!singleton (ac)),
-              upsilon (st)) ;
+  let del (st, ac) = 
+     (S_a!diff (lambda (st), S_a!singleton (ac)), upsilon (st)) ;
 
   let cap (suj) in S_o_m =
      if S!equal (suj, S!mathieu)
@@ -650,11 +650,11 @@ end ;;
 
 collection C_model_capabilities
   implements S_model_capabilities(C_rho,
-          C_subjects, C_objects, C_access_mode,
-          C_access, C_set_of_access,
-          C_get_release, C_requests_gal,
-          C_decisions,
-          C_couple_o_m, C_set_of_couple_o_m) ;;
+                                  C_subjects, C_objects, C_access_mode,
+                                  C_access, C_set_of_access,
+                                  C_get_release, C_requests_gal,
+                                  C_decisions,
+                                  C_couple_o_m, C_set_of_couple_o_m) ;;
 
 
 print_string ("Exemple implantation CAPABILITIES\n") ;;
@@ -670,9 +670,9 @@ print_string ("Acces courants: " ^
 (* 1st request *)
 
 let r1c = C_requests_gal!create (C_get_release!get,
-         C_subjects!mathieu,
-         C_objects!ssurf,
-         C_access_mode!write) ;;
+                                 C_subjects!mathieu,
+                                 C_objects!ssurf,
+                                 C_access_mode!write) ;;
 
 print_string (C_requests_gal!print (r1c) ^ "\n") ;;
 
@@ -690,9 +690,9 @@ print_string ("Reponse: " ^ C_decisions!print (d1c) ^
 (* 1st request bis *)
 
 let r1bc = C_requests_gal!create (C_get_release!get,
-          C_subjects!charles,
-          C_objects!ssurf,
-          C_access_mode!read) ;;
+                                  C_subjects!charles,
+                                  C_objects!ssurf,
+                                  C_access_mode!read) ;;
 
 print_string (C_requests_gal!print (r1bc) ^ "\n") ;;
 
@@ -710,9 +710,9 @@ print_string ("Reponse: " ^ C_decisions!print (d1c) ^
 (* 2nd request *)
 
 let r2c = C_requests_gal!create (C_get_release!get,
-         C_subjects!mathieu,
-         C_objects!photos_de_vacances,
-         C_access_mode!read) ;;
+                                 C_subjects!mathieu,
+                                 C_objects!photos_de_vacances,
+                                 C_access_mode!read) ;;
 
 print_string (C_requests_gal!print (r2c) ^ "\n") ;;
 
@@ -730,9 +730,9 @@ print_string ("Reponse: " ^ C_decisions!print (d2c) ^
 (* 3rd request *)
 
 let r3c = C_requests_gal!create (C_get_release!rel,
-         C_subjects!therese,
-         C_objects!focal_pas_a_pas,
-         C_access_mode!read) ;;
+                                 C_subjects!therese,
+                                 C_objects!focal_pas_a_pas,
+                                 C_access_mode!read) ;;
 
 print_string (C_requests_gal!print (r3) ^ "\n") ;;
 
@@ -751,8 +751,8 @@ print_string ("Reponse: " ^ C_decisions!print (d3c) ^
 
 let r4c = C_requests_gal!create (C_get_release!rel,
                                  C_subjects!mathieu,
-				 C_objects!ssurf,
-				 C_access_mode!write) ;;
+                                 C_objects!ssurf,
+                                 C_access_mode!write) ;;
 
 print_string (C_requests_gal!print (r4c) ^ "\n") ;;
 

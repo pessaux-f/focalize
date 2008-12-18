@@ -85,11 +85,11 @@ species S_access_mode inherits Access_mode, S_setoid =
 end ;;
 
 species S_access (S_sub is S_subjects,
-          S_obj is S_objects,
-          S_acc_mod is S_access_mode)
+                  S_obj is S_objects,
+                  S_acc_mod is S_access_mode)
   inherits Access (S_sub, S_obj, S_acc_mod) =
 
-  representation = S_sub * (S_obj * S_acc_mod) ;
+  representation = (S_sub * (S_obj * S_acc_mod)) ;
 
   let create (s, o, m) = (s, (o, m)) ;
 
@@ -101,7 +101,7 @@ species S_access (S_sub is S_subjects,
 
   let equal (a1, a2) =
      and_b (and_b (S_sub!equal (get_s (a1), get_s (a2)),
-           S_obj!equal (get_o (a1), get_o (a2))),
+                   S_obj!equal (get_o (a1), get_o (a2))),
             S_acc_mod!equal (get_m (a1), get_m (a2))) ;
 
   let element = create (S_sub!element, S_obj!element, S_acc_mod!element) ;
@@ -194,10 +194,10 @@ species S_rights inherits Rights, S_setoid =
 end ;;
 
 species S_requests_unix (S is S_subjects, O is S_objects, M is S_access_mode,
-         Sgr is S_get_release, G is S_groups, Z is S_rights)
+                         Sgr is S_get_release, G is S_groups, Z is S_rights)
   inherits Requests_unix (S, O, M, G, Z) =
 
-  representation = Sgr * (S * (O * (M * (G * (Z * S))))) ;
+  representation = (Sgr * (S * (O * (M * (G * (Z * S)))))) ;
 
   let create (rda in Sgr,
               sa in S,
@@ -228,12 +228,12 @@ species S_requests_unix (S is S_subjects, O is S_objects, M is S_access_mode,
 
   let equal (rg1, rg2) =
      and_b (and_b (and_b (Sgr!equal (get_gr (rg1), get_gr (rg2)),
-          and_b (S!equal (get_s (rg1), get_s (rg2)),
-         O!equal (get_o (rg1), get_o (rg2)))),
-           M!equal (get_m (rg1), get_m (rg2))),
+                          and_b (S!equal (get_s (rg1), get_s (rg2)),
+                                 O!equal (get_o (rg1), get_o (rg2)))),
+                   M!equal (get_m (rg1), get_m (rg2))),
             and_b (G!equal (get_g (rg1), get_g (rg2)),
-           and_b (Z!equal (get_z (rg1), get_z (rg2)),
-          S!equal (get_s2 (rg1), get_s2 (rg2))))) ;
+                   and_b (Z!equal (get_z (rg1), get_z (rg2)),
+                          S!equal (get_s2 (rg1), get_s2 (rg2))))) ;
 
   let is_active (rg) = Sgr!equal (Sgr!active, get_gr (rg)) ;
 
@@ -345,22 +345,22 @@ species S_requests_unix (S is S_subjects, O is S_objects, M is S_access_mode,
 end ;;
 
 species S_models_unix (S_grp is S_groups,
-               S_rh is S_rho_unix (S_grp),
-               S_sub is S_subjects,
-               S_obj is S_objects,
-               S_acc_mod is S_access_mode,
+                       S_rh is S_rho_unix (S_grp),
+                       S_sub is S_subjects,
+                       S_obj is S_objects,
+                       S_acc_mod is S_access_mode,
                        S_acc is S_access (S_sub, S_obj, S_acc_mod),
-               S_set_acc is S_set_of (S_acc),
-               S_set_mod is S_set_of (S_acc_mod),
-               S_set_grp is S_set_of (S_grp),
-               S_z is S_rights,
-               S_gr is S_get_release,
-               S_req is S_requests_unix (S_sub, S_obj, S_acc_mod,
-         S_gr, S_grp, S_z),
-               S_dec is S_decisions)
+                       S_set_acc is S_set_of (S_acc),
+                       S_set_mod is S_set_of (S_acc_mod),
+                       S_set_grp is S_set_of (S_grp),
+                       S_z is S_rights,
+                       S_gr is S_get_release,
+                       S_req is S_requests_unix (S_sub, S_obj, S_acc_mod,
+                                                 S_gr, S_grp, S_z),
+                       S_dec is S_decisions)
 
   inherits Models_unix (S_grp, S_rh, S_sub, S_obj, S_acc_mod, S_acc,
-        S_set_acc, S_set_mod, S_set_grp, S_z, S_req, S_dec) =
+                        S_set_acc, S_set_mod, S_set_grp, S_z, S_req, S_dec) =
 
   representation =
     (S_set_acc * (list (S_grp) * (* ag *)
@@ -386,13 +386,13 @@ species S_models_unix (S_grp is S_groups,
   let lambda (st) = fst (st) ;
 
   let upsilon (st in Self) in (list (S_grp) * (* ag *)
-               (list (S_sub) * (* su *)
-        ((S_obj -> S_sub) * (* f_p *)
-         ((S_obj -> S_grp) * (* f_g *)
-          ((S_sub -> S_set_grp) * (* f_s *)
-           ((S_obj -> S_set_mod) * (* f_d_p *)
-            ((S_obj -> S_set_mod) * (* f_d_g *)
-             (S_obj -> S_set_mod)))))))) =
+                               (list (S_sub) * (* su *)
+                                ((S_obj -> S_sub) * (* f_p *)
+                                 ((S_obj -> S_grp) * (* f_g *)
+                                  ((S_sub -> S_set_grp) * (* f_s *)
+                                   ((S_obj -> S_set_mod) * (* f_d_p *)
+                                    ((S_obj -> S_set_mod) * (* f_d_g *)
+                                     (S_obj -> S_set_mod)))))))) =
      snd (st) ;
 
   let add (st, ac) =
@@ -441,13 +441,13 @@ species S_models_unix (S_grp is S_groups,
 
   let add_ag (st, grp) =
      (lambda (st), (grp :: fst (upsilon (st)),
-            (fst (snd (upsilon (st))),
-             (f_p (st),
-              (f_g (st),
-               (f_s (st),
-        (f_d_p (st),
-         (f_d_g (st),
-          f_d_o (st))))))))) ;
+                    (fst (snd (upsilon (st))),
+                     (f_p (st),
+                      (f_g (st),
+                       (f_s (st),
+                        (f_d_p (st),
+                         (f_d_g (st),
+                          f_d_o (st))))))))) ;
 
   let rm_ag (st, grp) =
      let rec aux (li, g) =
@@ -458,23 +458,23 @@ species S_models_unix (S_grp is S_groups,
             then t
             else h :: aux (t, g)
      in (lambda (st), (aux (fst (upsilon (st)), grp),
-               (fst (snd (upsilon (st))),
-        (f_p (st),
-         (f_g (st),
-          (f_s (st),
-           (f_d_p (st),
-            (f_d_g (st),
-             f_d_o (st))))))))) ;
+                       (fst (snd (upsilon (st))),
+                        (f_p (st),
+                         (f_g (st),
+                          (f_s (st),
+                           (f_d_p (st),
+                            (f_d_g (st),
+                             f_d_o (st))))))))) ;
 
   let add_su (st, s) =
      (lambda (st), (fst (upsilon (st)),
-            (s :: fst (snd (upsilon (st))),
-             (f_p (st),
-              (f_g (st),
-               (f_s (st),
-        (f_d_p (st),
-         (f_d_g (st),
-          f_d_o (st))))))))) ;
+                    (s :: fst (snd (upsilon (st))),
+                     (f_p (st),
+                      (f_g (st),
+                       (f_s (st),
+                        (f_d_p (st),
+                         (f_d_g (st),
+                          f_d_o (st))))))))) ;
 
   let rm_su (st, s) =
      let rec aux (li, s) =
@@ -485,13 +485,13 @@ species S_models_unix (S_grp is S_groups,
             then t
             else h :: aux (t, s)
      in (lambda (st), (fst (upsilon (st)),
-               (aux (fst (snd (upsilon (st))), s),
-        (f_p (st),
-         (f_g (st),
-          (f_s (st),
-           (f_d_p (st),
-            (f_d_g (st),
-             f_d_o (st))))))))) ;
+                       (aux (fst (snd (upsilon (st))), s),
+                        (f_p (st),
+                         (f_g (st),
+                          (f_s (st),
+                           (f_d_p (st),
+                            (f_d_g (st),
+                             f_d_o (st))))))))) ;
 
   let chown (st, o, s) =
      let aux (st, ob) =
@@ -506,7 +506,7 @@ species S_models_unix (S_grp is S_groups,
              (f_s (st),
               (f_d_p (st),
                (f_d_g (st),
-        f_d_o (st))))))))) ;
+                f_d_o (st))))))))) ;
 
   let chgrp(st, o, g) =
      let aux (st, ob) =
@@ -514,14 +514,14 @@ species S_models_unix (S_grp is S_groups,
         then g
         else f_g (st, ob)
      in        (lambda (st),
-         (fst (upsilon (st)),
-          (fst (snd (upsilon (st))),
-           (f_p(st),
-            (aux (st),
-             (f_s (st),
-              (f_d_p (st),
-               (f_d_g (st),
-        f_d_o (st))))))))) ;
+                (fst (upsilon (st)),
+                 (fst (snd (upsilon (st))),
+                  (f_p(st),
+                   (aux (st),
+                    (f_s (st),
+                     (f_d_p (st),
+                      (f_d_g (st),
+                       f_d_o (st))))))))) ;
 
   let add_g_s (st, s, g) =
      let aux (st, sub) =
@@ -536,7 +536,7 @@ species S_models_unix (S_grp is S_groups,
              (aux (st),
               (f_d_p (st),
                (f_d_g (st),
-        f_d_o(st))))))))) ;
+                f_d_o(st))))))))) ;
 
   let rm_g_s (st, s, g) =
      let aux (st, sub) =
@@ -551,7 +551,7 @@ species S_models_unix (S_grp is S_groups,
              (aux (st),
               (f_d_p (st),
                (f_d_g (st),
-        f_d_o (st))))))))) ;
+                f_d_o (st))))))))) ;
 
   let add_d_p (st, o, m) =
      let aux (st, ob) =
@@ -566,7 +566,7 @@ species S_models_unix (S_grp is S_groups,
              (f_s (st),
               (aux (st),
                (f_d_g (st),
-        f_d_o (st))))))))) ;
+                f_d_o (st))))))))) ;
 
   let rm_d_p (st, o, m) =
      let aux (st, ob) =
@@ -581,7 +581,7 @@ species S_models_unix (S_grp is S_groups,
              (f_s (st),
               (aux (st),
                (f_d_g (st),
-        f_d_o (st))))))))) ;
+                f_d_o (st))))))))) ;
 
   let add_d_g (st, o, m) =
      let aux (st, ob) =
@@ -596,7 +596,7 @@ species S_models_unix (S_grp is S_groups,
              (f_s (st),
               (f_d_p (st),
                (aux (st),
-        f_d_o(st))))))))) ;
+                f_d_o(st))))))))) ;
 
   let rm_d_g (st, o, m) =
      let aux (st, ob) =
@@ -611,7 +611,7 @@ species S_models_unix (S_grp is S_groups,
              (f_s (st),
               (f_d_p (st),
                (aux (st),
-        f_d_o (st))))))))) ;
+                f_d_o (st))))))))) ;
 
   let add_d_o (st, o, m) =
      let aux (st, ob) =
@@ -626,7 +626,7 @@ species S_models_unix (S_grp is S_groups,
              (f_s (st),
               (f_d_p (st),
                (f_d_g (st),
-        aux (st))))))))) ;
+                aux (st))))))))) ;
 
   let rm_d_o (st, o, m) =
      let aux (st, ob) =
@@ -641,7 +641,7 @@ species S_models_unix (S_grp is S_groups,
              (f_s (st),
               (f_d_p (st),
                (f_d_g (st),
-        aux (st))))))))) ;
+                aux (st))))))))) ;
 
   let equal (st1, st2) = S_set_acc!equal (lambda (st1), lambda (st2)) ;
 
@@ -742,15 +742,15 @@ collection C_rights implements S_rights ;;
 
 collection C_requests_unix
   implements S_requests_unix (C_subjects, C_objects, C_access_mode,
-              C_get_release, C_groups, C_rights) ;;
+                              C_get_release, C_groups, C_rights) ;;
 
 collection C_models_unix
   implements S_models_unix (C_groups, C_rho_unix,
-            C_subjects, C_objects, C_access_mode,
-            C_access, C_set_of_access,
-            C_set_of_mode, C_set_of_groups,
-            C_rights, C_get_release,
-            C_requests_unix, C_decisions) ;;
+                            C_subjects, C_objects, C_access_mode,
+                            C_access, C_set_of_access,
+                            C_set_of_mode, C_set_of_groups,
+                            C_rights, C_get_release,
+                            C_requests_unix, C_decisions) ;;
 
 let pierre = C_subjects!create (1, "pierre") ;;
 
@@ -789,31 +789,31 @@ let fs_ex (s in C_subjects) in C_set_of_groups =
             C_subjects!equal (s, bob))
    then C_set_of_groups!singleton (C_groups!rsa)
    else if or_b (C_subjects!equal (s, pierre),
-         C_subjects!equal (s, marie))
+                 C_subjects!equal (s, marie))
    then C_set_of_groups!singleton (C_groups!curry)
    else C_set_of_groups!singleton (C_groups!element) ;;
 
 let fg_ex (o in C_objects) in C_groups =
    if or_b (or_b (C_objects!equal (o, rapport_pdf),
-          C_objects!equal (o, media_java)),
+                  C_objects!equal (o, media_java)),
             C_objects!equal (o, projet_tex))
    then C_groups!curry
    else if or_b (C_objects!equal (o, tp1_ml),
-         C_objects!equal (o, hachage_c))
+                 C_objects!equal (o, hachage_c))
    then C_groups!rsa
    else C_groups!element ;;
 
 let fd_p_ex (o in C_objects) in C_set_of_mode =
    if or_b (or_b (or_b (C_objects!equal (o, rapport_pdf),
-        C_objects!equal (o, media_java)),
-          C_objects!equal (o, tp1_ml)),
+                        C_objects!equal (o, media_java)),
+                  C_objects!equal (o, tp1_ml)),
             C_objects!equal (o, hachage_c))
    then C_set_of_mode!ajoute_element
-                      (C_access_mode!read,
-               C_set_of_mode!ajoute_element
-                             (C_access_mode!write,
-              C_set_of_mode!singleton
-                            (C_access_mode!execute)))
+     (C_access_mode!read,
+      C_set_of_mode!ajoute_element
+      (C_access_mode!write,
+       C_set_of_mode!singleton
+       (C_access_mode!execute)))
    else if C_objects!equal (o, projet_tex)
    then C_set_of_mode!vide
    else C_set_of_mode!singleton (C_access_mode!element) ;;
@@ -822,26 +822,26 @@ let fd_g_ex (o in C_objects) in C_set_of_mode =
    if C_objects!equal (o, rapport_pdf)
    then C_set_of_mode!singleton (C_access_mode!read)
    else if or_b (C_objects!equal (o, media_java),
-         C_objects!equal (o, tp1_ml))
+                 C_objects!equal (o, tp1_ml))
    then C_set_of_mode!union
-                      (C_set_of_mode!singleton (C_access_mode!read),
-               C_set_of_mode!singleton (C_access_mode!execute))
+     (C_set_of_mode!singleton (C_access_mode!read),
+      C_set_of_mode!singleton (C_access_mode!execute))
    else if or_b (C_objects!equal (o, hachage_c),
-         C_objects!equal (o, projet_tex))
+                 C_objects!equal (o, projet_tex))
    then C_set_of_mode!union
-                      (C_set_of_mode!singleton (C_access_mode!read),
-                       C_set_of_mode!singleton (C_access_mode!write))
+     (C_set_of_mode!singleton (C_access_mode!read),
+      C_set_of_mode!singleton (C_access_mode!write))
    else C_set_of_mode!singleton (C_access_mode!element) ;;
 
 let fd_o_ex (o in C_objects) in C_set_of_mode =
    if or_b (or_b (C_objects!equal (o, rapport_pdf),
-          C_objects!equal (o, media_java)),
+                  C_objects!equal (o, media_java)),
             C_objects!equal (o, tp1_ml))
    then C_set_of_mode!singleton (C_access_mode!read)
    else if C_objects!equal (o, hachage_c)
    then C_set_of_mode!union
-                      (C_set_of_mode!singleton (C_access_mode!read),
-               C_set_of_mode!singleton (C_access_mode!execute))
+     (C_set_of_mode!singleton (C_access_mode!read),
+      C_set_of_mode!singleton (C_access_mode!execute))
    else if C_objects!equal (o, projet_tex)
    then C_set_of_mode!vide
    else C_set_of_mode!singleton (C_access_mode!element) ;;
@@ -849,14 +849,14 @@ let fd_o_ex (o in C_objects) in C_set_of_mode =
 print_string ("Exemple d'execution :\n\n") ;;
 
 let st0 = C_models_unix!create (C_set_of_access!vide,
-        ag_ex,
-        su_ex,
-        fp_ex,
-        fg_ex,
-        fs_ex,
-        fd_p_ex,
-        fd_g_ex,
-        fd_o_ex) ;;
+                                ag_ex,
+                                su_ex,
+                                fp_ex,
+                                fg_ex,
+                                fs_ex,
+                                fd_p_ex,
+                                fd_g_ex,
+                                fd_o_ex) ;;
 
 let list_obj = [ rapport_pdf; tp1_ml; media_java; hachage_c; projet_tex ] ;;
 
@@ -867,15 +867,15 @@ let print_ls_all (s in string, st in C_models_unix) =
       | h :: t -> C_models_unix!print_ls (st, h) ^ "\n" ^ aux (t)
    in print_string ("ls -l " ^ s ^ "\n" ^ "\n" ^ aux (list_obj)) ;;
 
-print_ls_all ("0", st0) ;;
+   print_ls_all ("0", st0) ;;
 
 let req0 = C_requests_unix!create (C_get_release!get,
-           pierre,
-           rapport_pdf,
-           C_access_mode!write,
-           C_groups!element,
-           C_rights!element,
-           C_subjects!element) ;;
+                                   pierre,
+                                   rapport_pdf,
+                                   C_access_mode!write,
+                                   C_groups!element,
+                                   C_rights!element,
+                                   C_subjects!element) ;;
 
 print_string ("Requete0 : " ^ C_requests_unix!print (req0) ^ "\n") ;;
 
@@ -886,8 +886,8 @@ let dec0 = fst (rep0) ;;
 let st1 = snd (rep0) ;;
 
 print_string ("Reponse0 : Decision0 : " ^
-               C_decisions!print (dec0) ^
-               "\n") ;;
+              C_decisions!print (dec0) ^
+              "\n") ;;
 
 print_string ("           Acces1 : " ^
               C_models_unix!print (st1) ^
@@ -900,12 +900,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req1 = C_requests_unix!create (C_get_release!get,
-           bob,
-           projet_tex,
-           C_access_mode!read,
-           C_groups!element,
-           C_rights!element,
-           C_subjects!element) ;;
+                                   bob,
+                                   projet_tex,
+                                   C_access_mode!read,
+                                   C_groups!element,
+                                   C_rights!element,
+                                   C_subjects!element) ;;
 
 print_string ("Requete1 : " ^ C_requests_unix!print (req1) ^ "\n") ;;
 
@@ -917,7 +917,7 @@ let st2 = snd (rep1) ;;
 
 print_string ("Reponse1 : Decision1 : " ^
               C_decisions!print (dec1) ^
-               "\n") ;;
+              "\n") ;;
 
 print_string ("           Acces2 : " ^
               C_models_unix!print (st2) ^
@@ -927,12 +927,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req2 = C_requests_unix!create (C_get_release!get,
-           bob,
-           tp1_ml,
-           C_access_mode!execute,
-           C_groups!element,
-           C_rights!element,
-           C_subjects!element) ;;
+                                   bob,
+                                   tp1_ml,
+                                   C_access_mode!execute,
+                                   C_groups!element,
+                                   C_rights!element,
+                                   C_subjects!element) ;;
 
 print_string ("Requete2 : " ^ C_requests_unix!print (req2) ^ "\n") ;;
 
@@ -954,12 +954,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req3 = C_requests_unix!create (C_get_release!get,
-           bob,
-           tp1_ml,
-           C_access_mode!write,
-           C_groups!element,
-           C_rights!element,
-           C_subjects!element) ;;
+                                   bob,
+                                   tp1_ml,
+                                   C_access_mode!write,
+                                   C_groups!element,
+                                   C_rights!element,
+                                   C_subjects!element) ;;
 
 print_string ("Requete3 : " ^ C_requests_unix!print (req3) ^ "\n") ;;
 
@@ -981,12 +981,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req4 = C_requests_unix!create (C_get_release!get,
-           alice,
-           media_java,
-           C_access_mode!read,
-           C_groups!element,
-           C_rights!element,
-           C_subjects!element) ;;
+                                   alice,
+                                   media_java,
+                                   C_access_mode!read,
+                                   C_groups!element,
+                                   C_rights!element,
+                                   C_subjects!element) ;;
 
 print_string ("Requete4 : " ^ C_requests_unix!print (req4) ^ "\n") ;;
 
@@ -1009,12 +1009,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req5 = C_requests_unix!create (C_get_release!get,
-           bob,
-           media_java,
-           C_access_mode!read,
-           C_groups!element,
-           C_rights!element,
-           C_subjects!element) ;;
+                                   bob,
+                                   media_java,
+                                   C_access_mode!read,
+                                   C_groups!element,
+                                   C_rights!element,
+                                   C_subjects!element) ;;
 
 print_string ("Requete5 : " ^ C_requests_unix!print (req5) ^ "\n") ;;
 
@@ -1036,12 +1036,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req6 = C_requests_unix!create (C_get_release!get,
-           steeve,
-           projet_tex,
-           C_access_mode!write,
-           C_groups!element,
-           C_rights!element,
-           C_subjects!element) ;;
+                                   steeve,
+                                   projet_tex,
+                                   C_access_mode!write,
+                                   C_groups!element,
+                                   C_rights!element,
+                                   C_subjects!element) ;;
 
 print_string ("Requete6 : " ^ C_requests_unix!print (req6) ^ "\n") ;;
 
@@ -1063,12 +1063,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req7 = C_requests_unix!create (C_get_release!get,
-           alice,
-           projet_tex,
-           C_access_mode!write,
-           C_groups!element,
-           C_rights!element,
-           C_subjects!element) ;;
+                                   alice,
+                                   projet_tex,
+                                   C_access_mode!write,
+                                   C_groups!element,
+                                   C_rights!element,
+                                   C_subjects!element) ;;
 
 print_string ("Requete7 : " ^ C_requests_unix!print (req7) ^ "\n") ;;
 
@@ -1090,12 +1090,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req8 = C_requests_unix!create (C_get_release!rel,
-           alice,
-           media_java,
-           C_access_mode!read,
-           C_groups!element,
-           C_rights!element,
-           C_subjects!element) ;;
+                                   alice,
+                                   media_java,
+                                   C_access_mode!read,
+                                   C_groups!element,
+                                   C_rights!element,
+                                   C_subjects!element) ;;
 
 print_string ("Requete8 : " ^ C_requests_unix!print (req8) ^ "\n") ;;
 
@@ -1117,12 +1117,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req9 = C_requests_unix!create (C_get_release!rel,
-           marie,
-           media_java,
-           C_access_mode!read,
-           C_groups!element,
-           C_rights!element,
-           C_subjects!element) ;;
+                                   marie,
+                                   media_java,
+                                   C_access_mode!read,
+                                   C_groups!element,
+                                   C_rights!element,
+                                   C_subjects!element) ;;
 
 print_string ("Requete9 : " ^ C_requests_unix!print (req9) ^ "\n") ;;
 
@@ -1149,12 +1149,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req10 = C_requests_unix!create (C_get_release!active,
-            steeve,
-            C_objects!element,
-            C_access_mode!element,
-            C_groups!bidule,
-            C_rights!element,
-            C_subjects!element) ;;
+                                    steeve,
+                                    C_objects!element,
+                                    C_access_mode!element,
+                                    C_groups!bidule,
+                                    C_rights!element,
+                                    C_subjects!element) ;;
 
 print_string ("Requete10 : " ^ C_requests_unix!print_adm (req10) ^ "\n") ;;
 
@@ -1178,12 +1178,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req11 = C_requests_unix!create (C_get_release!active,
-            marie,
-            C_objects!element,
-            C_access_mode!element,
-            C_groups!truc,
-            C_rights!element,
-            C_subjects!element) ;;
+                                    marie,
+                                    C_objects!element,
+                                    C_access_mode!element,
+                                    C_groups!truc,
+                                    C_rights!element,
+                                    C_subjects!element) ;;
 
 print_string ("Requete11 : " ^ C_requests_unix!print_adm (req11) ^ "\n") ;;
 
@@ -1207,12 +1207,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req12 = C_requests_unix!create (C_get_release!inactive,
-            steeve,
-            C_objects!element,
-            C_access_mode!element,
-            C_groups!bidule,
-            C_rights!element,
-            C_subjects!element) ;;
+                                    steeve,
+                                    C_objects!element,
+                                    C_access_mode!element,
+                                    C_groups!bidule,
+                                    C_rights!element,
+                                    C_subjects!element) ;;
 
 print_string ("Requete12 : " ^ C_requests_unix!print_adm (req12) ^ "\n") ;;
 
@@ -1237,12 +1237,12 @@ print_string ("\n--------------------------------------------------------\n") ;;
 
 
 let req13 = C_requests_unix!create (C_get_release!inactive,
-            steeve,
-            C_objects!element,
-            C_access_mode!element,
-            C_groups!truc,
-            C_rights!element,
-            C_subjects!element) ;;
+                                    steeve,
+                                    C_objects!element,
+                                    C_access_mode!element,
+                                    C_groups!truc,
+                                    C_rights!element,
+                                    C_subjects!element) ;;
 
 print_string ("Requete13 : " ^ C_requests_unix!print_adm (req13) ^ "\n") ;;
 
@@ -1266,12 +1266,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req14 = C_requests_unix!create (C_get_release!inactive,
-            marie ,
-            C_objects!element,
-            C_access_mode!element,
-            C_groups!rsa,
-            C_rights!element,
-            C_subjects!element) ;;
+                                    marie ,
+                                    C_objects!element,
+                                    C_access_mode!element,
+                                    C_groups!rsa,
+                                    C_rights!element,
+                                    C_subjects!element) ;;
 
 print_string ("Requete14 : " ^ C_requests_unix!print_adm (req14) ^ "\n") ;;
 
@@ -1295,12 +1295,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req15 = C_requests_unix!create (C_get_release!inactive,
-            steeve,
-            C_objects!element,
-            C_access_mode!element,
-            C_groups!rsa,
-            C_rights!element,
-            C_subjects!element) ;;
+                                    steeve,
+                                    C_objects!element,
+                                    C_access_mode!element,
+                                    C_groups!rsa,
+                                    C_rights!element,
+                                    C_subjects!element) ;;
 
 print_string ("Requete15 : " ^ C_requests_unix!print_adm (req15) ^ "\n") ;;
 
@@ -1326,12 +1326,12 @@ print_string
 print_ls_all ("16", st16) ;;
 
 let req16 = C_requests_unix!create (C_get_release!p_right,
-            bob,
-            projet_tex,
-            C_access_mode!read,
-            C_groups!element,
-            C_rights!d_p,
-            C_subjects!element) ;;
+                                    bob,
+                                    projet_tex,
+                                    C_access_mode!read,
+                                    C_groups!element,
+                                    C_rights!d_p,
+                                    C_subjects!element) ;;
 
 print_string ("Requete16 : " ^ C_requests_unix!print_adm (req16) ^ "\n") ;;
 
@@ -1353,12 +1353,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req17 = C_requests_unix!create (C_get_release!p_right,
-            marie,
-            projet_tex,
-            C_access_mode!read,
-            C_groups!element,
-            C_rights!d_p,
-            C_subjects!element) ;;
+                                    marie,
+                                    projet_tex,
+                                    C_access_mode!read,
+                                    C_groups!element,
+                                    C_rights!d_p,
+                                    C_subjects!element) ;;
 
 print_string ("Requete17 : " ^ C_requests_unix!print_adm (req17) ^ "\n") ;;
 
@@ -1380,12 +1380,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req18 = C_requests_unix!create (C_get_release!m_right,
-            alice,
-            tp1_ml,
-            C_access_mode!execute,
-            C_groups!element,
-            C_rights!d_p,
-            C_subjects!element) ;;
+                                    alice,
+                                    tp1_ml,
+                                    C_access_mode!execute,
+                                    C_groups!element,
+                                    C_rights!d_p,
+                                    C_subjects!element) ;;
 
 print_string ("Requete18 : " ^ C_requests_unix!print_adm (req18) ^ "\n") ;;
 
@@ -1409,12 +1409,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req19 = C_requests_unix!create (C_get_release!m_right,
-            pierre,
-            tp1_ml,
-            C_access_mode!read,
-            C_groups!element,
-            C_rights!d_p,
-                     C_subjects!element) ;;
+                                    pierre,
+                                    tp1_ml,
+                                    C_access_mode!read,
+                                    C_groups!element,
+                                    C_rights!d_p,
+                                    C_subjects!element) ;;
 
 print_string ("Requete19 : " ^ C_requests_unix!print_adm (req19) ^ "\n") ;;
 
@@ -1435,12 +1435,12 @@ print_string ("           Acces20 : " ^
 print_string ("\n--------------------------------------------------------\n") ;;
 
 let req20 = C_requests_unix!create (C_get_release!m_right,
-            pierre,
-            rapport_pdf,
-            C_access_mode!write,
-            C_groups!element,
-            C_rights!d_p,
-                     C_subjects!element) ;;
+                                    pierre,
+                                    rapport_pdf,
+                                    C_access_mode!write,
+                                    C_groups!element,
+                                    C_rights!d_p,
+                                    C_subjects!element) ;;
 
 print_string ("Requete20 : " ^ C_requests_unix!print_adm (req20) ^ "\n") ;;
 
@@ -1462,12 +1462,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req21 = C_requests_unix!create (C_get_release!p_right,
-            pierre,
-            rapport_pdf,
-            C_access_mode!execute,
-            C_groups!element,
-            C_rights!d_g,
-                     C_subjects!element) ;;
+                                    pierre,
+                                    rapport_pdf,
+                                    C_access_mode!execute,
+                                    C_groups!element,
+                                    C_rights!d_g,
+                                    C_subjects!element) ;;
 
 print_string ("Requete21 : " ^ C_requests_unix!print_adm (req21) ^ "\n") ;;
 
@@ -1493,12 +1493,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req22 = C_requests_unix!create (C_get_release!p_right,
-            marie,
-            projet_tex,
-            C_access_mode!read,
-            C_groups!element,
-            C_rights!d_g,
-                     C_subjects!element) ;;
+                                    marie,
+                                    projet_tex,
+                                    C_access_mode!read,
+                                    C_groups!element,
+                                    C_rights!d_g,
+                                    C_subjects!element) ;;
 
 print_string ("Requete22 : " ^ C_requests_unix!print_adm (req22) ^ "\n") ;;
 
@@ -1520,12 +1520,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req23 = C_requests_unix!create (C_get_release!m_right,
-            bob,
-            hachage_c,
-            C_access_mode!read,
-            C_groups!element,
-            C_rights!d_g,
-                     C_subjects!element) ;;
+                                    bob,
+                                    hachage_c,
+                                    C_access_mode!read,
+                                    C_groups!element,
+                                    C_rights!d_g,
+                                    C_subjects!element) ;;
 
 print_string ("Requete23 : " ^ C_requests_unix!print_adm (req23) ^ "\n") ;;
 
@@ -1551,12 +1551,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req24 = C_requests_unix!create (C_get_release!m_right,
-            alice,
-            hachage_c,
-            C_access_mode!write,
-            C_groups!element,
-            C_rights!d_g,
-                     C_subjects!element) ;;
+                                    alice,
+                                    hachage_c,
+                                    C_access_mode!write,
+                                    C_groups!element,
+                                    C_rights!d_g,
+                                    C_subjects!element) ;;
 
 print_string ("Requete24 : " ^ C_requests_unix!print_adm (req24) ^ "\n") ;;
 
@@ -1578,12 +1578,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req25 = C_requests_unix!create (C_get_release!m_right,
-            alice,
-            tp1_ml,
-            C_access_mode!execute,
-            C_groups!element,
-            C_rights!d_g,
-                     C_subjects!element) ;;
+                                    alice,
+                                    tp1_ml,
+                                    C_access_mode!execute,
+                                    C_groups!element,
+                                    C_rights!d_g,
+                                    C_subjects!element) ;;
 
 print_string ("Requete25 : " ^ C_requests_unix!print_adm (req25) ^ "\n") ;;
 
@@ -1605,12 +1605,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req26 = C_requests_unix!create (C_get_release!p_right,
-            pierre,
-            rapport_pdf,
-            C_access_mode!read,
-            C_groups!element,
-            C_rights!d_o,
-                     C_subjects!element) ;;
+                                    pierre,
+                                    rapport_pdf,
+                                    C_access_mode!read,
+                                    C_groups!element,
+                                    C_rights!d_o,
+                                    C_subjects!element) ;;
 
 print_string ("Requete26 : " ^ C_requests_unix!print_adm (req26) ^ "\n") ;;
 
@@ -1636,12 +1636,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req27 = C_requests_unix!create (C_get_release!p_right,
-            marie,
-            projet_tex,
-            C_access_mode!read,
-            C_groups!element,
-            C_rights!d_o,
-                     C_subjects!element) ;;
+                                    marie,
+                                    projet_tex,
+                                    C_access_mode!read,
+                                    C_groups!element,
+                                    C_rights!d_o,
+                                    C_subjects!element) ;;
 
 print_string ("Requete27 : " ^ C_requests_unix!print_adm (req27) ^ "\n") ;;
 
@@ -1663,12 +1663,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req28 = C_requests_unix!create (C_get_release!m_right,
-            bob,
-            hachage_c,
-            C_access_mode!read,
-            C_groups!element,
-            C_rights!d_o,
-                     C_subjects!element) ;;
+                                    bob,
+                                    hachage_c,
+                                    C_access_mode!read,
+                                    C_groups!element,
+                                    C_rights!d_o,
+                                    C_subjects!element) ;;
 
 print_string ("Requete28 : " ^ C_requests_unix!print_adm (req28) ^ "\n") ;;
 
@@ -1694,12 +1694,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req29 = C_requests_unix!create (C_get_release!m_right,
-            alice,
-            hachage_c,
-            C_access_mode!write,
-            C_groups!element,
-            C_rights!d_o,
-                     C_subjects!element) ;;
+                                    alice,
+                                    hachage_c,
+                                    C_access_mode!write,
+                                    C_groups!element,
+                                    C_rights!d_o,
+                                    C_subjects!element) ;;
 
 print_string ("Requete29 : " ^ C_requests_unix!print_adm (req29) ^ "\n") ;;
 
@@ -1721,12 +1721,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req30 = C_requests_unix!create (C_get_release!m_right,
-            marie,
-            media_java,
-            C_access_mode!read,
-            C_groups!element,
-            C_rights!d_o,
-                     C_subjects!element) ;;
+                                    marie,
+                                    media_java,
+                                    C_access_mode!read,
+                                    C_groups!element,
+                                    C_rights!d_o,
+                                    C_subjects!element) ;;
 
 print_string ("Requete30 : " ^ C_requests_unix!print_adm (req30) ^ "\n") ;;
 
@@ -1748,12 +1748,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req31 = C_requests_unix!create (C_get_release!chown,
-            steeve,
-            hachage_c,
-            C_access_mode!element,
-            C_groups!element,
-            C_rights!element,
-                     pierre) ;;
+                                    steeve,
+                                    hachage_c,
+                                    C_access_mode!element,
+                                    C_groups!element,
+                                    C_rights!element,
+                                    pierre) ;;
 
 print_string ("Requete31 : " ^ C_requests_unix!print_adm (req31) ^ "\n") ;;
 
@@ -1779,12 +1779,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req32 = C_requests_unix!create (C_get_release!chown,
-            bob,
-            hachage_c,
-            C_access_mode!element,
-            C_groups!element,
-            C_rights!element,
-                     pierre) ;;
+                                    bob,
+                                    hachage_c,
+                                    C_access_mode!element,
+                                    C_groups!element,
+                                    C_rights!element,
+                                    pierre) ;;
 
 print_string ("Requete32 : " ^ C_requests_unix!print_adm (req32) ^ "\n") ;;
 
@@ -1806,12 +1806,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req33 = C_requests_unix!create (C_get_release!chown,
-            steeve,
-            rapport_pdf,
-            C_access_mode!element,
-            C_groups!element,
-            C_rights!element,
-                     alice) ;;
+                                    steeve,
+                                    rapport_pdf,
+                                    C_access_mode!element,
+                                    C_groups!element,
+                                    C_rights!element,
+                                    alice) ;;
 
 print_string ("Requete33 : " ^ C_requests_unix!print_adm (req33) ^ "\n") ;;
 
@@ -1837,12 +1837,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req34 = C_requests_unix!create (C_get_release!chown,
-            steeve,
-            projet_tex,
-            C_access_mode!element,
-            C_groups!element,
-            C_rights!element,
-                     steeve) ;;
+                                    steeve,
+                                    projet_tex,
+                                    C_access_mode!element,
+                                    C_groups!element,
+                                    C_rights!element,
+                                    steeve) ;;
 
 print_string ("Requete34 : " ^ C_requests_unix!print_adm (req34) ^ "\n") ;;
 
@@ -1868,12 +1868,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req35 = C_requests_unix!create (C_get_release!chgrp,
-            steeve,
-            hachage_c,
-            C_access_mode!element,
-            C_groups!curry,
-            C_rights!element,
-                     C_subjects!element) ;;
+                                    steeve,
+                                    hachage_c,
+                                    C_access_mode!element,
+                                    C_groups!curry,
+                                    C_rights!element,
+                                    C_subjects!element) ;;
 
 print_string ("Requete35 : " ^ C_requests_unix!print_adm (req35) ^ "\n") ;;
 
@@ -1899,12 +1899,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req36 = C_requests_unix!create (C_get_release!chgrp,
-            alice,
-            tp1_ml,
-            C_access_mode!element,
-            C_groups!curry,
-            C_rights!element,
-                     C_subjects!element) ;;
+                                    alice,
+                                    tp1_ml,
+                                    C_access_mode!element,
+                                    C_groups!curry,
+                                    C_rights!element,
+                                    C_subjects!element) ;;
 
 print_string ("Requete36 : " ^ C_requests_unix!print_adm (req36) ^ "\n") ;;
 
@@ -1926,12 +1926,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req37 = C_requests_unix!create (C_get_release!get,
-            marie,
-            projet_tex,
-            C_access_mode!write,
-            C_groups!element,
-            C_rights!element,
-                     C_subjects!element) ;;
+                                    marie,
+                                    projet_tex,
+                                    C_access_mode!write,
+                                    C_groups!element,
+                                    C_rights!element,
+                                    C_subjects!element) ;;
 
 print_string ("Requete37 : " ^ C_requests_unix!print (req37) ^ "\n") ;;
 
@@ -1954,12 +1954,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req38 = C_requests_unix!create (C_get_release!chgrp,
-            steeve,
-            projet_tex,
-            C_access_mode!element,
-            C_groups!rsa,
-            C_rights!element,
-                     C_subjects!element) ;;
+                                    steeve,
+                                    projet_tex,
+                                    C_access_mode!element,
+                                    C_groups!rsa,
+                                    C_rights!element,
+                                    C_subjects!element) ;;
 
 print_string ("Requete38 : " ^ C_requests_unix!print_adm (req38) ^ "\n") ;;
 
@@ -1981,12 +1981,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req39 = C_requests_unix!create (C_get_release!p_group,
-            steeve,
-            C_objects!element,
-            C_access_mode!element,
-            C_groups!rsa,
-            C_rights!element,
-                     marie) ;;
+                                    steeve,
+                                    C_objects!element,
+                                    C_access_mode!element,
+                                    C_groups!rsa,
+                                    C_rights!element,
+                                    marie) ;;
 
 print_string ("Requete39 : " ^ C_requests_unix!print_adm (req39) ^ "\n") ;;
 
@@ -2012,12 +2012,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req40 = C_requests_unix!create (C_get_release!get,
-            bob,
-            hachage_c,
-            C_access_mode!execute,
-            C_groups!element,
-            C_rights!element,
-                     C_subjects!element) ;;
+                                    bob,
+                                    hachage_c,
+                                    C_access_mode!execute,
+                                    C_groups!element,
+                                    C_rights!element,
+                                    C_subjects!element) ;;
 
 print_string ("Requete40 : " ^ C_requests_unix!print (req40) ^ "\n") ;;
 
@@ -2039,12 +2039,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req41 = C_requests_unix!create (C_get_release!p_group,
-            steeve,
-            C_objects!element,
-            C_access_mode!element,
-            C_groups!curry,
-            C_rights!element,
-                     bob) ;;
+                                    steeve,
+                                    C_objects!element,
+                                    C_access_mode!element,
+                                    C_groups!curry,
+                                    C_rights!element,
+                                    bob) ;;
 
 print_string ("Requete41 : " ^ C_requests_unix!print_adm (req41) ^ "\n") ;;
 
@@ -2066,12 +2066,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req42 = C_requests_unix!create (C_get_release!m_group,
-            steeve,
-            C_objects!element,
-            C_access_mode!element,
-            C_groups!rsa,
-            C_rights!element,
-                     marie) ;;
+                                    steeve,
+                                    C_objects!element,
+                                    C_access_mode!element,
+                                    C_groups!rsa,
+                                    C_rights!element,
+                                    marie) ;;
 
 print_string ("Requete42 : " ^ C_requests_unix!print_adm (req42) ^ "\n") ;;
 
@@ -2093,12 +2093,12 @@ print_string
    ("\n--------------------------------------------------------\n") ;;
 
 let req43 = C_requests_unix!create (C_get_release!m_group,
-            steeve,
-            C_objects!element,
-            C_access_mode!element,
-            C_groups!curry,
-            C_rights!element,
-                     marie) ;;
+                                    steeve,
+                                    C_objects!element,
+                                    C_access_mode!element,
+                                    C_groups!curry,
+                                    C_rights!element,
+                                    marie) ;;
 
 print_string ("Requete43 : " ^ C_requests_unix!print_adm (req43) ^ "\n") ;;
 
