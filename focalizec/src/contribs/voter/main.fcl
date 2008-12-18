@@ -1,0 +1,348 @@
+
+use "pair";;
+use "etat_vote";;
+use "num_capteur";;
+use "value";;
+use "vote";;
+
+open "pair";;
+open "etat_vote";;
+open "num_capteur";;
+open "value";;
+open "vote";;
+
+
+collection Coll_pair implements Imp_pair(Coll_capteur, Coll_etat_vote) ;;
+
+species Sp_int_imp_vote_tol inherits 
+  Imp_vote(Coll_etat_vote, Coll_capteur, Coll_int_imp_value_tol, Coll_pair) =
+  proof of equal_value_is_symmetric = 
+    by property Coll_int_imp_value_tol!equal_value_symmetric;
+  proof of equal_value_is_reflexive = 
+    by property Coll_int_imp_value_tol!equal_value_reflexive;
+end ;;
+
+collection Coll_int_imp_vote_tol implements Sp_int_imp_vote_tol ;;
+
+(* Pour les entiers avec tolérance *)
+let p_int_tol(x) = Coll_int_imp_value_tol!parse(x);;
+
+let voter_value_int_tol(v1, v2, v3) = 
+  let s = Coll_int_imp_vote_tol!value( 
+          Coll_int_imp_vote_tol!voter(#p_int_tol(v1), 
+                                     #p_int_tol(v2), 
+                                     #p_int_tol(v3))) in
+  Coll_int_imp_value_tol!print(s);;
+
+let voter_etat_int_tol(v1, v2, v3) = 
+  let s = Coll_int_imp_vote_tol!diag( 
+          Coll_int_imp_vote_tol!voter(#p_int_tol(v1), 
+                                     #p_int_tol(v2), 
+                                     #p_int_tol(v3))) in
+  Coll_etat_vote!print(Coll_int_imp_vote_tol!state(s));;
+
+let voter_val_int_tol(v1, v2, v3) = 
+  let s = Coll_int_imp_vote_tol!diag( 
+         Coll_int_imp_vote_tol!voter(#p_int_tol(v1), 
+                                     #p_int_tol(v2), 
+                                     #p_int_tol(v3))) in
+  Coll_capteur!print(Coll_int_imp_vote_tol!sensor(s));;
+
+let va10 = "1";;
+let va20 = "3";;
+let va30 = "5";;
+
+  basics#print_string( "Voteur entier avec tolerance de 2\n");;
+
+  basics#print_string( "v1 : ");;
+  basics#print_string(Coll_int_imp_value_tol!print(#p_int_tol(#va10)));;
+  basics#print_string(", v2 : ");;
+  basics#print_string(Coll_int_imp_value_tol!print(#p_int_tol(#va20)));;
+  basics#print_string(", v3 : ");;
+  basics#print_string(Coll_int_imp_value_tol!print(#p_int_tol(#va30)));;
+  basics#print_string(" --> val : ");;
+  basics#print_string(#voter_value_int_tol(#va10, #va20, #va30));;
+  basics#print_string(" , diag : (");;
+  basics#print_string(#voter_val_int_tol(#va10, #va20, #va30));;
+  basics#print_string(", ");;
+  basics#print_string(#voter_etat_int_tol(#va10, #va20, #va30));;
+  basics#print_string(")\n");;
+
+let va11 = "1";;
+let va21 = "1";;
+let va31 = "5";;
+
+  basics#print_string( "v1 : ");;
+  basics#print_string(Coll_int_imp_value_tol!print(#p_int_tol(#va11)));;
+  basics#print_string(", v2 : ");;
+  basics#print_string(Coll_int_imp_value_tol!print(#p_int_tol(#va21)));;
+  basics#print_string(", v3 : ");;
+  basics#print_string(Coll_int_imp_value_tol!print(#p_int_tol(#va31)));;
+  basics#print_string(" --> val : ");;
+  basics#print_string(#voter_value_int_tol(#va11, #va21, #va31));;
+  basics#print_string(" , diag : (");;
+  basics#print_string(#voter_val_int_tol(#va11, #va21, #va31));;
+  basics#print_string(", ");;
+  basics#print_string(#voter_etat_int_tol(#va11, #va21, #va31));;
+  basics#print_string(")\n");;
+
+let va12 = "4";;
+let va22 = "5";;
+let va32 = "5";;
+
+  basics#print_string( "v1 : ");;
+  basics#print_string(Coll_int_imp_value_tol!print(#p_int_tol(#va12)));;
+  basics#print_string(", v2 : ");;
+  basics#print_string(Coll_int_imp_value_tol!print(#p_int_tol(#va22)));;
+  basics#print_string(", v3 : ");;
+  basics#print_string(Coll_int_imp_value_tol!print(#p_int_tol(#va32)));;
+  basics#print_string(" --> val : ");;
+  basics#print_string(#voter_value_int_tol(#va12, #va22, #va32));;
+  basics#print_string(" , diag : (");;
+  basics#print_string(#voter_val_int_tol(#va12, #va22, #va32));;
+  basics#print_string(", ");;
+  basics#print_string(#voter_etat_int_tol(#va12, #va22, #va32));;
+  basics#print_string(")\n");;
+
+let va14 = "1";;
+let va24 = "4";;
+let va34 = "7";;
+
+  basics#print_string( "v1 : ");;
+  basics#print_string(Coll_int_imp_value_tol!print(#p_int_tol(#va14)));;
+  basics#print_string(", v2 : ");;
+  basics#print_string(Coll_int_imp_value_tol!print(#p_int_tol(#va24)));;
+  basics#print_string(", v3 : ");;
+  basics#print_string(Coll_int_imp_value_tol!print(#p_int_tol(#va34)));;
+  basics#print_string(" --> val : ");;
+  basics#print_string(#voter_value_int_tol(#va14, #va24, #va34));;
+  basics#print_string(" , diag : (");;
+  basics#print_string(#voter_val_int_tol(#va14, #va24, #va34));;
+  basics#print_string(", ");;
+  basics#print_string(#voter_etat_int_tol(#va14, #va24, #va34));;
+  basics#print_string(")\n");;
+
+
+
+
+species Sp_int_imp_vote inherits 
+  Imp_vote(Coll_etat_vote, Coll_capteur, Coll_int_imp_value, Coll_pair) =
+  proof of equal_value_is_symmetric = 
+    by property Coll_int_imp_value!equal_value_symmetric;
+  proof of equal_value_is_reflexive = 
+    by property Coll_int_imp_value!equal_value_reflexive;
+end ;;
+
+collection Coll_int_imp_vote implements Sp_int_imp_vote ;;
+
+(* Pour les entiers sans tolérance *)
+let p_int(x) = Coll_int_imp_value!parse(x);;
+
+let voter_value_int(v1, v2, v3) = 
+  let s = Coll_int_imp_vote!value( 
+    Coll_int_imp_vote!voter(#p_int(v1), #p_int(v2), #p_int(v3))) in
+  Coll_int_imp_value!print(s);;
+
+let voter_etat_int(v1, v2, v3) = 
+  let s = Coll_int_imp_vote!diag(
+    Coll_int_imp_vote!voter(#p_int(v1), #p_int(v2), #p_int(v3))) in
+  Coll_etat_vote!print(Coll_int_imp_vote!state(s));;
+
+let voter_val_int(v1, v2, v3) = 
+  let s = Coll_int_imp_vote!diag(
+    Coll_int_imp_vote!voter(#p_int(v1), #p_int(v2), #p_int(v3))) in
+  Coll_capteur!print(Coll_int_imp_vote!sensor(s));;
+
+let vb10 = "1";;
+let vb20 = "3";;
+let vb30 = "5";;
+
+  basics#print_string( "Voteur entier sans tolerance\n");;
+
+
+  basics#print_string("v1 : ");;
+  basics#print_string(Coll_int_imp_value!print(#p_int(#vb10)));;
+  basics#print_string(", v2 : ");;
+  basics#print_string(Coll_int_imp_value!print(#p_int(#vb20)));;
+  basics#print_string(", v3 : ");;
+  basics#print_string(Coll_int_imp_value!print(#p_int(#vb30)));;
+  basics#print_string(" --> val : ");;
+  basics#print_string(#voter_value_int(#vb10, #vb20, #vb30));;
+  basics#print_string(" , diag : (");;
+  basics#print_string(#voter_val_int(#vb10, #vb20, #vb30));;
+  basics#print_string(", ");;
+  basics#print_string(#voter_etat_int(#vb10, #vb20, #vb30));;
+  basics#print_string(")\n");;
+
+let vb11 = "5";;
+let vb21 = "5";;
+let vb31 = "5";;
+
+  basics#print_string( "v1 : ");;
+  basics#print_string(Coll_int_imp_value!print(#p_int(#vb11)));;
+  basics#print_string(", v2 : ");;
+  basics#print_string(Coll_int_imp_value!print(#p_int(#vb21)));;
+  basics#print_string(", v3 : ");;
+  basics#print_string(Coll_int_imp_value!print(#p_int(#vb31)));;
+  basics#print_string(" --> val : ");;
+  basics#print_string(#voter_value_int(#vb11, #vb21, #vb31));;
+  basics#print_string(" , diag : (");;
+  basics#print_string(#voter_val_int(#vb11, #vb21, #vb31));;
+  basics#print_string(", ");;
+  basics#print_string(#voter_etat_int(#vb11, #vb21, #vb31));;
+  basics#print_string(")\n");;
+
+let vb12 = "4";;
+let vb22 = "5";;
+let vb32 = "5";;
+
+  basics#print_string( "v1 : ");;
+  basics#print_string(Coll_int_imp_value!print(#p_int(#vb12)));;
+  basics#print_string(", v2 : ");;
+  basics#print_string(Coll_int_imp_value!print(#p_int(#vb22)));;
+  basics#print_string(", v3 : ");;
+  basics#print_string(Coll_int_imp_value!print(#p_int(#vb32)));;
+  basics#print_string(" --> val : ");;
+  basics#print_string(#voter_value_int(#vb12, #vb22, #vb32));;
+  basics#print_string(" , diag : (");;
+  basics#print_string(#voter_val_int(#vb12, #vb22, #vb32));;
+  basics#print_string(", ");;
+  basics#print_string(#voter_etat_int(#vb12, #vb22, #vb32));;
+  basics#print_string(")\n");;
+
+let vb14 = "1";;
+let vb24 = "4";;
+let vb34 = "7";;
+
+  basics#print_string( "v1 : ");;
+  basics#print_string(Coll_int_imp_value!print(#p_int(#vb14)));;
+  basics#print_string(", v2 : ");;
+  basics#print_string(Coll_int_imp_value!print(#p_int(#vb24)));;
+  basics#print_string(", v3 : ");;
+  basics#print_string(Coll_int_imp_value!print(#p_int(#vb34)));;
+  basics#print_string(" --> val : ");;
+  basics#print_string(#voter_value_int(#vb14, #vb24, #vb34));;
+  basics#print_string(" , diag : (");;
+  basics#print_string(#voter_val_int(#vb14, #vb24, #vb34));;
+  basics#print_string(", ");;
+  basics#print_string(#voter_etat_int(#vb14, #vb24, #vb34));;
+  basics#print_string(")\n");;
+
+
+
+species Sp_bool_imp_vote inherits 
+  Imp_vote(Coll_etat_vote, Coll_capteur, Coll_bool_imp_value, Coll_pair) =
+  proof of equal_value_is_symmetric = 
+    by property Coll_bool_imp_value!equal_value_symmetric;
+  proof of equal_value_is_reflexive = 
+    by property Coll_bool_imp_value!equal_value_reflexive;
+end ;;
+
+collection Coll_bool_imp_vote implements Sp_bool_imp_vote ;;
+
+(* Pour les booléens *)
+let p_bool(x) = Coll_bool_imp_value!parse(x);;
+
+let voter_value_bool(v1, v2, v3) = 
+  let s = Coll_bool_imp_vote!value(
+    Coll_bool_imp_vote!voter(#p_bool(v1), #p_bool(v2), #p_bool(v3))) in
+  Coll_bool_imp_value!print(s);;
+
+let voter_etat_bool(v1, v2, v3) = 
+  let s = Coll_bool_imp_vote!diag(
+    Coll_bool_imp_vote!voter(#p_bool(v1), #p_bool(v2), #p_bool(v3))) in
+  Coll_etat_vote!print(Coll_bool_imp_vote!state(s));;
+
+let voter_val_bool(v1, v2, v3) = 
+  let s = Coll_bool_imp_vote!diag(
+    Coll_bool_imp_vote!voter(#p_bool(v1), #p_bool(v2), #p_bool(v3))) in
+  Coll_capteur!print(Coll_bool_imp_vote!sensor(s));;
+
+let va13 = "False";;
+let va23 = "Falsee";;
+let va33 = "True";;
+
+  basics#print_string( "Voteur booleen sans tolerance\n");;
+
+  basics#print_string( "v1 : ");;
+  basics#print_string(Coll_bool_imp_value!print(#p_bool(#va13)));;
+  basics#print_string(", v2 : ");;
+  basics#print_string(Coll_bool_imp_value!print(#p_bool(#va23)));;
+  basics#print_string(", v3 : ");;
+  basics#print_string(Coll_bool_imp_value!print(#p_bool(#va33)));;
+  basics#print_string(" --> val : ");;
+  basics#print_string(#voter_value_bool(#va13, #va23, #va33));;
+  basics#print_string(" , diag : (");;
+  basics#print_string(#voter_val_bool(#va13, #va23, #va33));;
+  basics#print_string(", ");;
+  basics#print_string(#voter_etat_bool(#va13, #va23, #va33));;
+  basics#print_string(")\n");;
+
+
+let va15 = "False";;
+let va25 = "False";;
+let va35 = "False";;
+
+  basics#print_string( "v1 : ");;
+  basics#print_string(Coll_bool_imp_value!print(#p_bool(#va15)));;
+  basics#print_string(", v2 : ");;
+  basics#print_string(Coll_bool_imp_value!print(#p_bool(#va25)));;
+  basics#print_string(", v3 : ");;
+  basics#print_string(Coll_bool_imp_value!print(#p_bool(#va35)));;
+  basics#print_string(" --> val : ");;
+  basics#print_string(#voter_value_bool(#va15, #va25, #va35));;
+  basics#print_string(" , diag : (");;
+  basics#print_string(#voter_val_bool(#va15, #va25, #va35));;
+  basics#print_string(", ");;
+  basics#print_string(#voter_etat_bool(#va15, #va25, #va35));;
+  basics#print_string(")\n");;
+
+let p_bool2(x) = Coll_bool_imp_value!parse(x);;
+
+let voter_etat_bool2(v1, v2, v3) = 
+  let s = Coll_bool_imp_vote!diag(
+    Coll_bool_imp_vote!voter(#p_bool2(v1), #p_bool2(v2), #p_bool2(v3))) in
+  Coll_etat_vote!print(Coll_bool_imp_vote!state(s));;
+
+let voter_val_bool2(v1, v2, v3) = 
+  let s = Coll_bool_imp_vote!diag(
+    Coll_bool_imp_vote!voter(#p_bool2(v1), #p_bool2(v2), #p_bool2(v3))) in
+  Coll_capteur!print(Coll_bool_imp_vote!sensor(s));;
+
+let va16 = "False";;
+let va26 = "Falsee";;
+let va36 = "True";;
+
+  basics#print_string( "v1 : ");;
+  basics#print_string(Coll_bool_imp_value!print(#p_bool2(#va16)));;
+  basics#print_string(", v2 : ");;
+  basics#print_string(Coll_bool_imp_value!print(#p_bool2(#va26)));;
+  basics#print_string(", v3 : ");;
+  basics#print_string(Coll_bool_imp_value!print(#p_bool2(#va36)));;
+  basics#print_string(" --> val : ");;
+  basics#print_string(#voter_value_bool(#va16, #va26, #va36));;
+  basics#print_string(" , diag : (");;
+  basics#print_string(#voter_val_bool(#va16, #va26, #va36));;
+  basics#print_string(", ");;
+  basics#print_string(#voter_etat_bool(#va16, #va26, #va36));;
+  basics#print_string(")\n");;
+
+
+let va17 = "False";;
+let va27 = "False";;
+let va37 = "False";;
+
+  basics#print_string( "v1 : ");;
+  basics#print_string(Coll_bool_imp_value!print(#p_bool2(#va17)));;
+  basics#print_string(", v2 : ");;
+  basics#print_string(Coll_bool_imp_value!print(#p_bool2(#va27)));;
+  basics#print_string(", v3 : ");;
+  basics#print_string(Coll_bool_imp_value!print(#p_bool2(#va37)));;
+  basics#print_string(" --> val : ");;
+  basics#print_string(#voter_value_bool(#va17, #va27, #va37));;
+  basics#print_string(" , diag : (");;
+  basics#print_string(#voter_val_bool(#va17, #va27, #va37));;
+  basics#print_string(", ");;
+  basics#print_string(#voter_etat_bool(#va17, #va27, #va37));;
+  basics#print_string(")\n");;
+

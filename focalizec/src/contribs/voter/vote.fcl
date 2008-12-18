@@ -1,0 +1,255 @@
+
+(* 
+ *@version $Revision: 1.1 $ $Date: 2008-12-18 15:08:30 $
+ *)
+
+use "basics";;
+use "sets_orders";; 
+use "value";;
+use "etat_vote";;
+use "num_capteur";;
+use "pair";;
+
+open "basics";;
+open "sets_orders";;
+open "value";;
+open "etat_vote";;
+open "num_capteur";;
+open "pair";;
+
+
+(* Generic voter *)
+species Gen_voter( V is Value, S is Setoid) =
+
+signature voter : V -> V -> V -> (V * S);
+
+(* Shortcut to extract the value *)
+let value(p in V * S) in V = basics#fst(p);
+
+(* Shortcut to extract the diagnostics *)
+let diag(p in V * S) in S = basics#snd(p);
+
+property voter_returns_a_value:
+all v1 v2 v3 in V,
+   V!equal(value(voter(v1, v2, v3)), v1)
+\/ V!equal(value(voter(v1, v2, v3)), v2)
+\/ V!equal(value(voter(v1, v2, v3)), v3)
+;
+
+end;;
+
+
+(** the 2oo3 voter *)
+species Voteur(E is Sp_etat_vote, C is Sp_capteur, V is Value, 
+	       P is Sp_pair(C, E)) 
+  inherits Gen_voter(V, P) =
+
+(* Shortcut to extract sensor from diagnosis *)
+let sensor(diag in P) in C =
+  P!prj_a(diag)
+;
+
+(* Shortcut to extract state from diagnosis *)
+let state(diag in P) in E =
+  P!prj_b(diag)
+;
+
+(* Functional definition of the majority vote                *)
+(* Vote with 3 equivalent value returns a perfect_match and  *)
+(* the value of the first sensor.                            *)
+property vote_perfect :
+  all v1 v2 v3 in V,
+   (V!equal_value(v1, v2) /\
+    V!equal_value(v2, v3) /\
+    V!equal_value(v1, v3))
+  ->
+  (V!equal(value(voter( v1, v2, v3)), v1) /\
+   P!equal(diag(voter( v1, v2, v3)), P!constr(C!capt_1, E!perfect_match)))
+;
+
+(* Vote with one value different from the 2 other which are equivalent      *)
+(* returns a range_match with the faulty sensor and one of the 2 consistent *)
+(* value.                                                                   *)
+property vote_range_c1 : 
+  all v1 v2 v3 in V,
+   (V!equal_value(v2, v3) /\
+    ~ V!equal_value(v1, v2) /\
+    ~ V!equal_value(v1, v3))
+  ->
+  (V!equal(value(voter( v1, v2, v3)), v2) /\
+   P!equal(diag(voter( v1, v2, v3)), P!constr(C!capt_1, E!range_match)))
+;
+
+property vote_range_c2 : 
+  all v1 v2 v3 in V,
+   (~ V!equal_value(v1, v2) /\
+    ~ V!equal_value(v2, v3) /\
+    V!equal_value(v1, v3)) 
+  ->
+  (V!equal(value(voter( v1, v2, v3)), v1) /\
+   P!equal(diag(voter( v1, v2, v3)), P!constr(C!capt_2, E!range_match)))
+;
+
+property vote_range_c3 : 
+  all v1 v2 v3 in V,
+   (V!equal_value(v1, v2) /\
+    ~ V!equal_value(v1, v3) /\
+    ~ V!equal_value(v2, v3))
+  ->
+  (V!equal(value(voter( v1, v2, v3)), v1) /\
+   P!equal(diag(voter( v1, v2, v3)), P!constr(C!capt_3, E!range_match)))
+;
+
+(* Vote with 2 value different from the 2 other but one is consistent  *)
+(* returns a partial_match with the healthy sensor and its the value   *)
+property vote_partial_c1 : 
+  all v1 v2 v3 in V,
+  (V!equal_value(v1, v2) /\
+   ~ V!equal_value(v2, v3) /\
+   V!equal_value(v1, v3)) ->
+  (V!equal(value(voter( v1, v2, v3)), v1) /\
+   P!equal(diag(voter( v1, v2, v3)), P!constr(C!capt_1, E!partial_match)))
+;
+
+property vote_partial_c2 : 
+  all v1 v2 v3 in V,
+  (V!equal_value(v1, v2) /\
+   V!equal_value(v2, v3) /\
+   ~ V!equal_value(v1, v3)) ->
+  (V!equal(value(voter( v1, v2, v3)), v2) /\
+   P!equal(diag(voter( v1, v2, v3)), P!constr(C!capt_2, E!partial_match)))
+;
+
+property vote_partial_c3 : 
+  all v1 v2 v3 in V,
+  (~ V!equal_value(v1, v2) /\
+   V!equal_value(v2, v3) /\
+   V!equal_value(v1, v3)) ->
+  (V!equal(value(voter( v1, v2, v3)), v3) /\
+   P!equal(diag(voter( v1, v2, v3)), P!constr(C!capt_3, E!partial_match)))
+;
+
+(* Vote with 3 inconstent value returns a no_match. value ans sensor have *)
+(* no sense here                                                          *)
+property vote_no_match : 
+  all v1 v2 v3 in V,
+  (~ V!equal_value(v1, v2) /\
+   ~ V!equal_value(v1, v3) /\
+   ~ V!equal_value(v2, v3)) 
+  ->
+  (V!equal(value(voter( v1, v2, v3)), v1) /\
+   P!equal(diag(voter( v1, v2, v3)), P!constr(C!capt_1, E!no_match)))
+;
+
+(* Contraintes exportées vers les espéces passées en paramètre *)
+property equal_value_is_symmetric :
+  all v1 v2 in V,
+  V!equal_value(v1, v2) -> V!equal_value(v2, v1);
+
+property equal_value_is_reflexive:
+   all v1 in V, V!equal_value(v1, v1);
+
+(* Propriétés du voteur *)
+(* Le voteur ne doit retourner qu'un des quatre Ã©tats *)
+theorem t1 :
+all v1 v2 v3 in V,
+      (  E!equal(state(diag(voter( v1, v2, v3))), E!no_match)
+      \/ E!equal(state(diag(voter( v1, v2, v3))), E!range_match)
+      \/ E!equal(state(diag(voter( v1, v2, v3))), E!partial_match)
+      \/ E!equal(state(diag(voter( v1, v2, v3))), E!perfect_match) )
+proof = by  property E!all_value;
+
+(* le voteur ne doit retourner qu'un des trois numÃ©ros de capteur *)
+theorem t2 : all v1 v2 v3 in V,
+       ( C!equal(sensor(diag(voter( v1, v2, v3))), C!capt_1)
+      \/ C!equal(sensor(diag(voter( v1, v2, v3))), C!capt_2) 
+      \/ C!equal(sensor(diag(voter( v1, v2, v3))), C!capt_3) )
+proof = by property C!all_value;
+
+end ;;
+
+
+
+species Imp_vote(E is Sp_etat_vote, C is Sp_capteur, V is Value,
+		 P is Sp_pair(C, E)) 
+  inherits Voteur(E, C, V, P) =
+
+(* il faut bien mettre quelque chose !!!*)
+representation = int;
+
+let voter( v1 in V, v2 in V, v3 in V) in V * P =
+  let c1 = V!equal_value( v1, v2) in
+  let c2 = V!equal_value( v1, v3) in
+  let c3 = V!equal_value( v2, v3) in
+  if c1 then
+    if c2 then
+      if c3 then
+        (v1, P!constr(C!capt_1, E!perfect_match))
+      else
+        (v1, P!constr(C!capt_1, E!partial_match))
+    else
+      if c3 then
+        (v2, P!constr(C!capt_2, E!partial_match))
+      else
+        (v1, P!constr(C!capt_3, E!range_match))
+  else
+    if c2 then
+      if c3 then 
+        (v3, P!constr(C!capt_3, E!partial_match))
+      else
+        (v1, P!constr(C!capt_2, E!range_match))
+   else
+     if c3 then
+       (v2, P!constr(C!capt_1, E!range_match))
+     else
+       (v1, P!constr(C!capt_1, E!no_match))
+;
+
+
+proof of vote_perfect  = 
+  by property V!equal_reflexive, P!equal_reflexive 
+     definition of voter, diag, value
+;
+
+
+proof of vote_range_c1 =
+  by property V!equal_reflexive, P!equal_reflexive 
+     definition of voter, diag, value
+;
+
+proof of vote_range_c2 =
+  by property V!equal_reflexive, P!equal_reflexive 
+     definition of voter, diag, value
+;
+
+proof of vote_range_c3 =
+  by property V!equal_reflexive, P!equal_reflexive 
+     definition of voter, diag, value
+;
+
+proof of vote_partial_c1 = 
+  by property V!equal_reflexive, P!equal_reflexive 
+     definition of voter, diag, value
+;
+
+proof of vote_partial_c2 = 
+  by property V!equal_reflexive, P!equal_reflexive 
+     definition of voter, diag, value
+;
+
+proof of vote_partial_c3 =
+  by property V!equal_reflexive, P!equal_reflexive 
+     definition of voter, diag, value
+;
+
+proof of vote_no_match = 
+  by property V!equal_reflexive, P!equal_reflexive 
+     definition of voter, diag, value
+;
+
+proof of voter_returns_a_value =
+  by property V!equal_reflexive 
+     definition of voter, value
+;
+
+end ;;
