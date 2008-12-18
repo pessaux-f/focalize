@@ -1,0 +1,166 @@
+use "basics";;
+
+open "basics";;
+
+
+(* Module implémentant les Axiomes de Peano *)
+species Peano =
+
+signature equal : Self -> Self -> bool;
+
+(* Equality is reflexive *)
+property equal_reflexive:
+all x in Self,
+ equal(x, x)
+;
+
+(* Equality is symmetric *)
+property equal_symmetric:
+all x y in Self,
+  equal(x, y) -> equal(y, x)
+;
+
+(* Equality is transitive *)
+property equal_transitive:
+all x y z in Self,
+  (equal(x, y) /\ equal(y, z)) -> equal(x, z)
+;
+
+(* Shortcut for ~ equal *)
+signature diff : Self -> Self -> bool;
+
+property diff_spec:
+all x y in Self,
+  diff(x, y) <-> ~ equal( x, y)
+;
+property diff_is_irreflexive:
+all x in Self,
+  ~ diff(x, x)
+;
+
+property diff_is_symmetric:
+all x y in Self,
+(~ diff(x, y)) -> (~ diff(y, x))
+;
+
+(* Natural numbers are closed under equality *)
+(* For all a and b, if a is a natural number and a = b, then b is also
+   a natural number.*)
+
+(* 0 is a natural number. *)
+signature zero : Self;
+
+(* For every natural number n, s(n) is a natural number *)
+signature s : Self -> Self;
+
+(* For every natural number n, S(n) != 0. *)
+property zero_is_not_successor:
+all x in Self,
+  ~ equal(zero, s(x))
+;
+
+(* Succ is an injection *)
+property succ_is_an_injection:
+all x y in Self,
+  equal(s(x), s(y)) -> equal(x, y) 
+;
+
+(* Induction axiom *)
+(* if p is a unary predicate such that:
+    . p((0) is true, and
+    . for every natural number n, 
+        if p(n) is true, then p(s(n)) is true,
+          then p(n) is true for every natural number n. *)
+
+
+end;;
+
+
+species Imp_peano inherits Peano =
+
+representation = int;
+
+let equal(x in Self, y in Self) in bool = (x = y);
+
+let zero in Self = 0;
+
+(* Version avec gestion de l'overflow *)
+(*
+let s(x in Self) in Self = 
+  if x <0x 1000 then 
+    basics#succ(x)
+  else
+    foc_error("Peano overflow")
+;
+*)
+
+let s(x in Self) in Self = basics#succ(x);
+
+(* Proof of Peano properties *)
+proof of equal_reflexive =
+by definition of equal
+property beq_refl
+;
+
+proof of equal_symmetric =
+by definition of equal
+property beq_symm
+;
+
+proof of equal_transitive =
+by definition of equal
+property beq_trans
+;
+
+let diff(x in Self, y in Self) in bool = if (x = y) then false else true;
+
+proof of diff_spec =
+by definition of diff, equal
+;
+
+proof of diff_is_irreflexive =
+by definition of diff
+property equal_reflexive
+;
+
+proof of diff_is_symmetric =
+by definition of diff
+property equal_symmetric
+;
+
+proof of zero_is_not_successor =
+assumed {* By contruction. false on Z. A version on N to defined *}
+;
+
+proof of succ_is_an_injection =
+assumed {* to do *}
+;
+
+end;;
+
+collection Coll_peano implements Imp_peano;;
+
+
+(* Arithmetic on peano axioms with common operations plus, diff, inf, ... *)
+species Peano_Arith inherits Peano =
+
+signature plus : Self -> Self -> Self;
+
+property plus_spec_0:
+all x in Self,
+  equal( plus(x, zero), x)
+;
+
+property plus_equal_s:
+all x y in Self,
+  equal(plus(x, s(y)), s(plus( x, y)))
+; 
+
+theorem plus_commutative:
+all x y in Self,
+  equal(plus(x, y), plus(y, x))
+proof =
+assumed {* nécessite l'induction pour faire une preuve sur y *}
+;
+
+end;;
