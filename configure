@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.11 2008-12-17 13:57:43 weis Exp $
+#  $Id: configure,v 1.12 2008-12-18 11:25:46 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -87,15 +87,14 @@ while : ; do
     -bindir | --bindir) BIN_DIR="$2"; shift 2;;
     -libdir | --libdir) LIB_DIR="$2"; shift 2;;
     -convert | --convert) CONVERT="$2"; shift 2;;
-    -debug | --debug | --enable_debug) DEBUG=true; shift;;
     -gs | --gs) GS="$2"; shift 2;;
+    -sum | --sum) SUM="$2"; shift 2;;
     -use_xmlrpc | --use_xmlrpc) USE_XMLRPC=true; shift;;
     -xmlrpc | --xmlrpc) XMLRPC="$2"; shift 2;;
     -xmlrpc_flags | --xmlrpc_flags) XMLRPC_FLAGS="$2"; shift 2;;
     -xmlrpc_link | --xmlrpc_link) XMLRPC_LINK="$2"; shift 2;;
-    -gs | --gs) GS="$2"; shift 2;;
+    -debug | --debug | --enable_debug) DEBUG=true; shift;;
     -nodebug | --nodebug | --disable_debug) DEBUG=false; shift;;
-    -sum | --sum) SUM="$2"; shift 2;;
     -help | --help)
        echo "usage: ./configure [options]"
        echo
@@ -172,7 +171,7 @@ set_XMLRPC_FLAGS () {
   if test -n XMLRPC_FLAGS; then
     if check "ocamlfind"; then
       XMLRPC_FLAGS="`ocamlfind query -r -i-format xmlrpc | tr '\012' ' '`"
-    fi 
+    fi
   fi
 }
 
@@ -214,12 +213,17 @@ set_dirs () {
   SHARE_DOC_DIR="${SHARE_PROJECT_DIR}/doc"
 }
 
+set_COQ_MAKE () {
+ COQ_MAKE=make;
+ if check "gmake"; then COQ_MAKE=gmake; fi
+}
+
 set_variables () {
   set_DEBUG;
   set_XMLRPC;
   set_dirs;
+  set_COQ_MAKE;
 }
-
 
 check_installation_dirs () {
   # The list of directories that must be installable during configuration.
@@ -279,6 +283,8 @@ make_config_var () {
       -e "s,@XMLRPC@,$XMLRPC," \
       -e "s,@XMLRPC_FLAGS@,$XMLRPC_FLAGS," \
       -e "s,@XMLRPC_LINK@,$XMLRPC_LINK," \
+  \
+      -e "s,@COQ_MAKE@,$COQ_MAKE," \
       <.config_var.in >.config_var
 }
 

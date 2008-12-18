@@ -1,5 +1,5 @@
 #  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.6 2008-12-14 11:45:55 weis Exp $
+#  $Id: .config_var.in,v 1.7 2008-12-18 11:25:46 weis Exp $
 
 # The project id.
 PROJECT_NAME=@PROJECT_NAME@
@@ -31,6 +31,9 @@ SHARE_DOC_DIR=@SHARE_DOC_DIR@
 # Compilation flags.
 BYT_DEBUG_FLAGS=@BYT_DEBUG_FLAGS@
 BIN_DEBUG_FLAGS=@BIN_DEBUG_FLAGS@
+
+# Exernal tools
+COQ_MAKE=@COQ_MAKE@
 
 # Completely external tools (not installed with the project).
 
