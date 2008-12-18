@@ -1,0 +1,243 @@
+
+(* 
+ *@version $Revision: 1.1 $ $Date: 2008-12-18 15:07:39 $
+ *)
+
+use "basics";;
+use "sets_orders";;
+use "gen_def";;
+use "request";;
+
+open "basics";;
+open "sets_orders";;
+open "gen_def";;
+open "request";;
+
+species State_aut3 inherits Gen_state =
+(* Definition of the automata's states using a sum type *)
+
+signature rec_reverse : Self;
+signature rec_rev_moving : Self;
+signature rec_rev_normal : Self;
+signature rec_rev_nor_moving : Self;
+
+property diff_empty_rec_reverse:
+~ equal( empty, rec_reverse)
+;
+
+property diff_empty_rec_rev_moving:
+~ equal( empty, rec_rev_moving)
+;
+
+property diff_empty_rec_rev_normal:
+~ equal( empty, rec_rev_normal)
+;
+
+property diff_empty_rec_rev_nor_moving:
+~ equal( empty, rec_rev_nor_moving)
+;
+
+property diff_rec_reverse_rec_rev_moving:
+~ equal( rec_reverse, rec_rev_moving)
+;
+
+property diff_rec_reverse_rec_rev_normal:
+~ equal( rec_reverse, rec_rev_normal)
+;
+
+property diff_rec_reverse_rec_rev_nor_moving:
+~ equal( rec_reverse, rec_rev_nor_moving)
+;
+
+property diff_rec_rev_moving_rec_rev_normal:
+~ equal( rec_rev_moving, rec_rev_normal)
+;
+
+property diff_rec_rev_moving_rec_rev_nor_moving:
+~ equal( rec_rev_moving, rec_rev_nor_moving)
+;
+
+property diff_rec_rev_normal_rec_rev_nor_moving:
+~ equal( rec_rev_normal, rec_rev_nor_moving)
+;
+
+end;;
+
+species Imp_state_aut3 inherits State_aut3 =
+(* Definition of the automata's states using a sum type *)
+representation = int;
+
+let empty = 0;
+
+let rec_reverse = 31;
+let rec_rev_moving = 32;
+let rec_rev_normal = 33;
+let rec_rev_nor_moving = 34;
+
+let equal(x in Self, y in Self) in bool = 
+   basics#int_eq(x, y);
+let element = 1;
+
+proof of equal_transitive = assumed {* type polymorphe *};
+(* by property basics#beq_trans definition of equal; *)
+proof of equal_symmetric = assumed {* type polymorphe *};
+(* by property basics#beq_symm definition of equal; *)
+proof of equal_reflexive = assumed {* type polymorphe *};
+(* by property basics#beq_refl definition of equal; *)
+   
+let get(s in Self) in int = s
+;
+
+let parse(x) = basics#int_of_string(x);
+
+let print(s) =    
+   if !equal(s, !empty) then
+     "empty"
+   else if !equal(s, !rec_reverse) then
+     "rec_reverse"
+   else if !equal(s, !rec_rev_moving) then
+     "rec_rev_moving"
+   else if !equal(s, !rec_rev_normal) then
+     "rec_rev_normal"
+   else if !equal(s, !rec_rev_nor_moving) then
+     "rec_rev_nor_moving"
+   else
+     focalize_error("State_aut3 : Unknown state")
+;
+
+proof of diff_empty_rec_reverse = assumed {* see below *};
+proof of diff_empty_rec_rev_moving = assumed {* see below *};
+proof of diff_empty_rec_rev_normal = assumed {* see below *};
+proof of diff_empty_rec_rev_nor_moving = assumed {* see below *};
+proof of diff_rec_reverse_rec_rev_moving = assumed {* see below *};
+proof of diff_rec_reverse_rec_rev_normal = assumed {* see below *};
+proof of diff_rec_reverse_rec_rev_nor_moving = assumed {* see below *};
+proof of diff_rec_rev_moving_rec_rev_normal = assumed {* see below *};
+proof of diff_rec_rev_moving_rec_rev_nor_moving = assumed {* see below *};
+proof of diff_rec_rev_normal_rec_rev_nor_moving = assumed {* see below *};
+
+end;;
+
+collection Coll_state_aut3 implements Imp_state_aut3 ;;
+
+(********************************************************************)
+(*             Automate de recovery d'aiguille reverse              *)
+(********************************************************************)
+species Switch_recovery_reverse_automata(St is State_aut3, 
+					 Req is Requests, 
+					 Po is Ports) 
+inherits Automata(St, Req, Po) =
+representation = St;
+
+end;;
+
+species Imp_switch_recovery_reverse_automata(St is State_aut3, 
+					     Req is Requests, 
+					     Po is Ports) 
+inherits Switch_recovery_reverse_automata(St, Req, Po) =
+
+let init_state = St!empty;
+
+let entry(p in Po) =
+  if Po!equal(p, Po!port_in1)then
+    St!rec_reverse
+  else
+    focalize_error("unknown port")
+;
+
+let tau( s in Self, r in  Req) in (Self * Po) =
+if !equal(s, St!rec_reverse) then
+  if Req!equal(r, Req!moving) then
+    !constr_tau(St!rec_rev_moving, Po!empty)
+  else if Req!equal(r, Req!normal_switched) then
+    !constr_tau(St!empty, Po!port_out2)
+  else
+    (St!rec_reverse, Po!empty)
+else if !equal(s, St!rec_rev_moving) then
+  if Req!equal(r, Req!normal_switched) then
+    !constr_tau(St!rec_rev_normal, Po!empty)
+  else if Req!equal(r, Req!moving_time_out) then
+    !constr_tau(St!empty, Po!port_out2)
+  else
+    !constr_tau(St!rec_rev_moving, Po!empty)
+else if !equal(s, St!rec_rev_normal) then
+  if Req!equal(r, Req!moving) then
+    !constr_tau(St!rec_rev_nor_moving, Po!empty)
+  else if Req!equal(r, Req!reverse_switched) then
+    !constr_tau(St!empty, Po!port_out2)
+  else
+    !constr_tau(St!rec_rev_normal, Po!empty)
+else if !equal(s, St!rec_rev_nor_moving) then
+  if Req!equal(r, Req!reverse_switched) then
+    !constr_tau(St!empty, Po!port_out1)
+  else if Req!equal(r, Req!moving_time_out) then
+    !constr_tau(St!empty, Po!port_out2)
+  else if Req!equal(r, Req!normal_switched) then
+    !constr_tau(St!empty, Po!port_out2)
+  else
+    !constr_tau(St!rec_rev_nor_moving, Po!empty)
+else
+  !constr_tau(St!empty, Po!empty)
+;
+
+let get_state( x in Self) = x;
+
+let equal(x in Self, y in Self) in bool = 
+   St!equal(x, y)
+;
+
+proof of equal_reflexive =
+  by property St!equal_reflexive
+  definition of equal
+;
+proof of equal_symmetric =
+  by property St!equal_symmetric
+  definition of equal
+;
+proof of equal_transitive =
+  by property St!equal_transitive
+  definition of equal
+;
+
+theorem port_out1_is_when_reverse_switch:
+(*
+all s s1 in Self, all r in Req, all po in Po,
+tau(s, r) = (s1, po) ->
+Po!equal(po, Po!port_out1) ->
+  Req!equal(r, Req!reverse_switched)
+*) 
+all s in Self, all r in Req,
+Po!equal(tau_p2(tau(s, r)), Po!port_out1) ->
+  Req!equal(r, Req!reverse_switched)
+proof =
+<1>1
+  assume s in Self,
+  assume r in Req, 
+  assume H1:Po!equal(tau_p2(tau(s, r)), Po!port_out1),
+  prove Req!equal(r, Req!reverse_switched)
+   <2>1 prove  ~ Po!equal(Po!port_out2, Po!port_out1)
+   by property Po!diff_port_out1_port_out2, Po!equal_symmetric
+   <2>0 
+   qed
+    by definition of tau, constr_tau, tau_p2
+    hypothesis H1
+    step <2>1
+    property 
+      Req!diff_normal_switched_reverse_switched,
+      Req!diff_normal_switched_moving,
+      Req!diff_normal_switched_moving_time_out,
+      Req!diff_reverse_switched_moving,
+      Req!diff_reverse_switched_moving_time_out,
+      Req!diff_moving_moving_time_out,
+      Req!diff_inconsistent_moving_time_out,
+      Po!diff_empty_port_out1
+<1>0 qed.
+;
+
+end;;
+
+collection Coll_switch_recovery_reverse_automata implements 
+  Imp_switch_recovery_reverse_automata(Coll_state_aut3, 
+				       Coll_requests, 
+				       Coll_ports);;
+

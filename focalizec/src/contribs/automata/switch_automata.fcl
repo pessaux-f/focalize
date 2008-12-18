@@ -1,0 +1,371 @@
+(* 
+ *@version $Revision: 1.1 $ $Date: 2008-12-18 15:07:39 $
+ *)
+
+use "basics";;
+use "sets_orders";;
+use "gen_def";;
+use "request";;
+use "switch_recovery_automata";;
+use "switch_recovery_normal_automata";;
+use "switch_recovery_reverse_automata";;
+
+open"basics";;
+open"sets_orders";;
+open"gen_def";;
+open"request";;
+open"switch_recovery_automata";;
+open "switch_recovery_reverse_automata";;
+open "switch_recovery_normal_automata";;
+
+
+species State_aut1 inherits Gen_state =
+(* Definition of the automata's states using a sum type *)
+signature moving : Self;
+signature normal : Self;
+signature reverse : Self;
+signature uncontroled : Self;
+(* Property all states are different *)
+
+theorem diff_moving_normal:
+! equal(moving, normal)
+proof = assumed {* To do *}
+;
+
+theorem diff_moving_reverse:
+! equal(moving, reverse)
+proof = assumed {* To do *}
+;
+
+theorem diff_moving_uncontroled:
+! equal(moving, uncontroled)
+proof = assumed {* To do *}
+;
+
+theorem diff_normal_reverse:
+! equal(normal, reverse)
+proof = assumed {* To do *}
+;
+
+theorem diff_normal_uncontroled:
+! equal(normal, uncontroled)
+proof = assumed {* To do *}
+;
+
+theorem diff_reverse_uncontroled:
+! equal(reverse, uncontroled)
+proof = assumed {* To do *}
+;
+
+end;;
+
+species Imp_state_aut1 inherits State_aut1 =
+(* Definition of the automata's states using a sum type *)
+representation = int;
+
+let empty = 0;
+
+let moving = 10;
+let normal = 11;
+let reverse = 12;
+let uncontroled = 13;
+
+let equal(x in Self, y in Self) in bool = 
+   basics#int_eq(x, y);
+
+let element = 1;
+
+proof of equal_transitive = assumed {* type polymorphe *};
+(* by property basics#beq_trans definition of equal; *)
+proof of equal_symmetric = assumed {* type polymorphe *};
+(* by property basics#beq_symm definition of equal; *)
+proof of equal_reflexive = assumed {* type polymorphe *};
+(* by property basics#beq_refl definition of equal; *)
+   
+let get(s in Self) in int = s
+;
+
+let parse(x) = basics#int_of_string(x);
+let print(s) =    
+   if !equal(s, !empty) then
+     "empty"
+   else if !equal(s, !moving) then
+     "moving"
+   else if  !equal(s, !normal) then
+     "normal"
+   else if  !equal(s, !reverse) then
+     "reverse"
+   else if  !equal(s, !uncontroled) then
+     "uncontroled"
+   else
+     focalize_error("State_aut1 : Unknown state")
+;
+
+end;;
+
+collection Coll_state_aut1 implements Imp_state_aut1;;
+
+(********************************************************************)
+(*                     Automate d'aiguille                          *)
+(********************************************************************)
+species Switch_automata(
+			St1 is State_aut1, 
+			Req is Requests,
+			Po is Ports,
+		        St2 is State_aut2,
+			St3 is State_aut3,
+			Aut3 is Switch_recovery_reverse_automata(St3,
+								 Req,
+								 Po),
+			St4 is State_aut4,
+			Aut4 is Switch_recovery_normal_automata(St4,
+								Req,
+								Po),
+			
+		        Aut2 is Switch_recovery_automata(St2,
+							 Req, Po,
+							 St3, Aut3,
+							 St4, Aut4))
+inherits Automata(St1, Req, Po) =
+representation = St1 * Aut2;
+end;;
+
+
+species Imp_switch_automata(St1 is State_aut1, 
+			    Req is Requests,
+			    Po is Ports,
+		            St2 is State_aut2,
+			    St3 is State_aut3,
+			    Aut3 is Switch_recovery_reverse_automata(St3,
+								     Req,
+								     Po),
+			    St4 is State_aut4,
+			    Aut4 is Switch_recovery_normal_automata(St4,
+								    Req,
+								    Po),
+			    
+		            Aut2 is Switch_recovery_automata(St2,
+							     Req, Po,
+							     St3, Aut3,
+							     St4, Aut4))
+inherits Switch_automata(St1, Req, Po, St2, St3, Aut3, St4, Aut4, Aut2) =
+
+let st_aut1( i in Self) in St1 = basics#fst(i);
+let st_aut2( i in Self) in Aut2 = basics#snd(i);
+let constr_self( s1 in St1, a2 in Aut2) in Self = basics#pair(s1, a2);
+
+theorem st_is_fst_self:
+  all st in St1, all a2 in Aut2,
+    st_aut1( constr_self(st, a2)) = st
+proof = assumed {* To do *}
+;
+theorem aut2_is_snd_self:
+  all st in St1, all a2 in Aut2,
+    st_aut2( constr_self( st, a2)) = a2
+proof = assumed {* To do *}
+;
+
+theorem st_is_fst_fst_tau:
+  all st in St1, all a2 in Aut2, all p in Po,
+    st_aut1(!tau_p1(constr_tau(constr_self(st, a2), p))) = st
+  proof =
+  <1>1 assume st in St1, 
+       assume a2 in Aut2, 
+       assume p in Po,
+    prove
+    st_aut1(!tau_p1(constr_tau(constr_self(st, a2), p))) = st
+
+    <2>1 prove 
+         st_aut1(!tau_p1(constr_tau(!constr_self(st, a2), p))) =
+                   st_aut1(constr_self(st, a2))    
+      <3>1 prove tau_p1( constr_tau(!constr_self(st, a2), p)) =
+                                 constr_self(st, a2)
+         by property !self_is_fst_tau
+      <3>0 qed by step <3>1
+    <2>0 qed by step <2>1 property !st_is_fst_self, St1!equal_transitive
+  <1>0 qed.  
+;
+
+
+let init_state = !constr_self(St1!moving, Aut2!init_state);
+
+let entry(p in Po) =
+   !init_state;
+
+let tau( s1 in Self, r in  Req) in (Self * Po) =
+if St1!equal(!st_aut1(s1), St1!moving) then
+  if Req!equal(r, Req!normal_switched) then
+    !constr_tau(!constr_self(St1!normal, Aut2!init_state), Po!empty)
+  else if  Req!equal(r, Req!reverse_switched) then
+    !constr_tau(!constr_self(St1!reverse, Aut2!init_state), Po!empty)
+  else if Req!equal(r, Req!moving_time_out) then
+    !constr_tau(!constr_self(St1!uncontroled, Aut2!entry(Po!port_in2)), 
+		Po!empty)
+  else
+    !constr_tau(s1, Po!empty)
+else if St1!equal(!st_aut1(s1), St1!normal) then
+  if Req!equal(r, Req!moving) then
+    !constr_tau(!constr_self(St1!moving, Aut2!init_state), Po!empty)
+  else if Req!equal(r, Req!reverse_switched) then
+    !constr_tau(!constr_self(St1!uncontroled, Aut2!entry(Po!port_in1)), 
+		Po!empty)
+  else if Req!equal(r, Req!moving_time_out) then
+    !constr_tau(!constr_self(St1!uncontroled, Aut2!entry(Po!port_in2)), 
+		Po!empty)
+  else
+    !constr_tau(s1, Po!empty)
+else if St1!equal(!st_aut1(s1), St1!reverse) then
+  if Req!equal(r, Req!moving) then
+    !constr_tau(!constr_self(St1!moving, Aut2!init_state), Po!empty)
+  else if Req!equal(r, Req!normal_switched) then
+    !constr_tau(!constr_self(St1!uncontroled, Aut2!entry(Po!port_in3)), 
+		Po!empty)
+  else if Req!equal(r, Req!moving_time_out) then
+    !constr_tau(!constr_self(St1!uncontroled, Aut2!entry(Po!port_in2)), 
+		Po!empty)
+  else
+    !constr_tau(s1, Po!empty)
+else if St1!equal(!st_aut1(s1), St1!uncontroled) then
+  let a = Aut2!tau(!st_aut2(s1), r) in
+  if Po!equal(Aut2!tau_p2(a), Po!port_out1) then
+    !constr_tau(!constr_self(St1!reverse, Aut2!init_state), Po!empty)
+  else if Po!equal(Aut2!tau_p2(a), Po!port_out2) then
+    !constr_tau(!constr_self(St1!normal, Aut2!init_state), Po!empty)
+  else
+    !constr_tau(!constr_self(St1!uncontroled, Aut2!tau_p1(a)), Po!empty)      
+else
+  (* impossible case *)
+  !constr_tau(s1, Po!empty)
+;
+
+
+theorem normal_moving:
+St1!equal(
+  !st_aut1(!tau_p1(!tau(!constr_self(St1!normal, Aut2!init_state),
+				     Req!moving))), 
+	   St1!moving)
+proof =
+  <1>1
+  prove
+   st_aut1(!tau_p1(!tau(!constr_self(St1!normal, Aut2!init_state),
+                                   Req!moving))) =
+             St1!moving
+
+    <2>1 prove tau_p1(!tau(!constr_self(St1!normal, Aut2!init_state),
+				   Req!moving)) =
+                      !tau_p1(!constr_tau(!constr_self(St1!moving, 
+                                          Aut2!init_state), Po!empty))
+     by definition of tau
+     property st_is_fst_self, St1!diff_moving_normal, St1!equal_symmetric, St1!equal_reflexive, Req!equal_reflexive
+
+    <2>2 assume a in Aut2, assume p in Po,
+     prove st_aut1(tau_p1(constr_tau(constr_self(St1!moving, a), p))) =
+                      St1!moving
+     by property st_is_fst_fst_tau
+
+    <2>0 qed by step <2>1, <2>2
+
+  <1>0 qed.
+;
+
+
+
+theorem normal_reverse:
+St1!equal(
+  !st_aut1(!tau_p1(!tau(
+			!tau_p1(!tau(!constr_self(St1!normal, Aut2!init_state),
+				     Req!moving)), 
+			Req!reverse_switched))), 
+	   St1!reverse)
+proof =
+  assumed {* To do *}
+;
+
+let get_state( x in Self) = !st_aut1(x);
+
+let equal(x in Self, y in Self) in bool = 
+   St1!equal(!st_aut1(x), !st_aut1(y))
+;
+
+proof of equal_reflexive =
+  by property St1!equal_reflexive
+     definition of equal
+;
+proof of equal_symmetric =
+  by property St1!equal_symmetric
+     definition of equal
+;
+proof of equal_transitive =
+  by property St1!equal_transitive
+     definition of equal
+;
+
+
+(* l'égalité ne concerne que la projection 1 *)
+theorem equal_only_on_p1:
+  all s1 in St1, all a2 a3 in Aut2,
+  !equal(!constr_self(s1, a2), !constr_self(s1, a3))
+proof =
+  <1>1 
+    assume s1 in St1,
+    assume a2 in Aut2,
+    assume a3 in Aut2,
+  prove !equal(!constr_self(s1, a2), !constr_self(s1, a3))
+    <2>1 prove St1!equal(!st_aut1(!constr_self(s1, a2)), s1)
+    by property !st_is_fst_self
+    <2>2 prove St1!equal(s1, !st_aut1(!constr_self(s1, a3)))
+    by property St1!equal_symmetric, !st_is_fst_self
+    <2>0 qed by step <2>1, <2>2 
+                property St1!equal_transitive 
+                definition of equal
+  <1>0 qed.
+;
+
+end;;
+
+ 
+species Imp2_switch_automata inherits 
+  Imp_switch_automata(Coll_state_aut1, 
+                      Coll_requests,
+		      Coll_ports,
+		      Coll_state_aut2,
+		      Coll_state_aut3, Coll_switch_recovery_reverse_automata,
+		      Coll_state_aut4, Coll_switch_recovery_normal_automata,
+		      Coll_switch_recovery_automata) =
+
+
+theorem t1:
+all s1 in Coll_state_aut1,
+all a2 in Coll_switch_recovery_automata,
+all po in Coll_ports,
+Coll_state_aut1!equal(st_aut1(tau_p1(constr_tau(constr_self(s1, a2), po))), s1)
+proof =
+assumed {* To do *}; 
+
+
+theorem safe_normal:
+all a2 in Coll_state_aut2,
+all s1 in Self ,
+all r in Coll_requests,
+Coll_state_aut1!equal( st_aut1(tau_p1(tau( s1, r))), 
+                       Coll_state_aut1!normal) ->
+Coll_requests!equal(r, Coll_requests!normal_switched)
+proof = 
+<1>1 
+ assume a2 in Coll_state_aut2,
+ assume s1 in Self,
+ assume r in Coll_requests,  
+ assume H1: Coll_state_aut1!equal( st_aut1(tau_p1(tau( s1, r))), 
+                                   Coll_state_aut1!normal),
+ prove Coll_requests!equal(r, Coll_requests!normal_switched)
+ <2>1 qed assumed {* To do *}
+
+<1>f qed. 
+;
+
+end;;
+
+collection Coll_switch_automata implements 
+  Imp2_switch_automata;;
+
+

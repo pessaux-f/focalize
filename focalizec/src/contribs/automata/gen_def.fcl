@@ -1,0 +1,98 @@
+
+(* 
+ *@version $Revision: 1.1 $ $Date: 2008-12-18 15:07:39 $
+ *)
+
+use "basics";;
+use "sets_orders";;
+
+open "basics";;
+open "sets_orders";;
+
+(* Definition of the states *)
+species Gen_state inherits Setoid =
+
+signature get : Self -> int;
+
+signature empty : Self;
+
+end;;
+
+(* Definition of the requests *)
+species Gen_request inherits Setoid =
+signature set : int -> Self;
+end;;
+
+(* Definition of the ports *)
+species Gen_port inherits Setoid =
+end;;
+
+(* 
+Species : Automata
+Parameter:
+  - St : generic state
+  - Rq : generic request
+  - Po : generic port
+Description:
+This species is the root species for automata. An automata is
+characterised by an internal state and ports to communicate between
+automatas. Automatas can be nested. An internal state can be a generic
+state for a simple automata, or internal states of nested automatas
+for a compound automata.
+
+this species defines the basics functions of an automata:
+  - init_state : internal state of an automata after initialisation
+  - tau : transition function of the automata. From an internal state
+    and a request, tau returns the new internal state and the exit
+    port in case the transition goes outside the automata
+  - entry : function giving the relation between an entry port and a
+    state. This function should be use to reach internal state of an
+    automata from outside.
+  - get_state : function extracting the generic state from the internal state
+  - equal : equivalence relation between internal states.
+
+  - tau_p1, tau_p2 and constr_pau are utils facilitating the writing
+    of automata's transition.
+*)
+species Automata(St is Gen_state, Req is Gen_request, Po is Gen_port) =
+
+signature init_state : Self;
+signature tau : Self -> Req -> Self * Po;
+signature entry : Po -> Self;
+
+signature get_state : Self -> St;
+
+signature equal : Self -> Self -> bool;
+
+let tau_p1( i in (Self * Po)) in Self = basics#fst(i);
+let tau_p2( i in (Self * Po)) in Po = basics#snd(i);
+let constr_tau( p1 in Self, p2 in Po) in (Self * Po) = basics#pair(p1, p2);
+
+theorem self_is_fst_tau:
+  all s in Self, all p in Po,
+    tau_p1( constr_tau(s, p)) = s
+proof = assumed {* To do *}
+;
+
+theorem po_is_snd_tau:
+  all s in Self, all p in Po,
+    tau_p2( !constr_tau(s, p)) = p
+proof = assumed {* To do *}
+;
+
+(* equal is a equivalence relation between internal state *)
+property equal_reflexive:
+  all x in Self,
+    !equal(x, x)
+;
+property equal_symmetric:
+  all x y in Self,
+    !equal(x, y) -> !equal(y, x)
+;
+property equal_transitive:
+  all x y z in Self,
+    !equal(x, y) -> !equal(y, z) -> !equal(x, z)
+;
+
+end;;
+
