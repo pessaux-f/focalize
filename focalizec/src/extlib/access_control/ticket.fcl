@@ -446,50 +446,100 @@ species S_models_ticket (S_c is S_tickets,
                      (fst (snd (snd (upsilon (st)))),
               snd (snd (snd (upsilon (st)))))))) ;
 
+(*   let rm_uc (st in Self, c in S_c) in Self = *)
+(*      let rec aux (f in list (S_c), l in list (S_c)) = *)
+(*         match l with *)
+(*         | [ ] -> *)
+(*             (lambda (st), (f, *)
+(*            (fst (snd (upsilon (st))), *)
+(*             (fst (snd (snd (upsilon (st)))), *)
+(*              snd (snd (snd (upsilon (st)))))))) *)
+(*         | h :: t -> *)
+(*             if S_c!equal (c, h) *)
+(*             then aux (f, t) *)
+(*             else aux (h :: f, t) *)
+(*      in aux ([ ], fst (snd (st))) ; *)
+
+  let rec rm_uc_aux (f in list (S_c), l in list (S_c), st in Self, c in S_c) =
+     match l with
+     | [ ] ->
+         (lambda (st), (f,
+			(fst (snd (upsilon (st))),
+			 (fst (snd (snd (upsilon (st)))),
+			  snd (snd (snd (upsilon (st))))))))
+     | h :: t ->
+         if S_c!equal (c, h)
+         then rm_uc_aux (f, t, st, c)
+         else rm_uc_aux (h :: f, t, st, c) ;
+
   let rm_uc (st in Self, c in S_c) in Self =
-     let rec aux (f in list (S_c), l in list (S_c)) =
-        match l with
-        | [ ] ->
-            (lambda (st), (f,
-           (fst (snd (upsilon (st))),
-            (fst (snd (snd (upsilon (st)))),
-             snd (snd (snd (upsilon (st))))))))
-        | h :: t ->
-            if S_c!equal (c, h)
-            then aux (f, t)
-            else aux (h :: f, t)
-     in aux ([ ], fst (snd (st))) ;
+     rm_uc_aux ([ ], fst (snd (st)), st, c) ;
+
+(*   let rm_w (st in Self, s in S_sub, c in S_c) in Self = *)
+(*      let rec aux (f in list (S_sub * S_c), l in list (S_sub * S_c)) = *)
+(*         match l with *)
+(*         | [ ] -> *)
+(*             (lambda (st), (fst (upsilon (st)), *)
+(*            (fst (snd (upsilon(st))), *)
+(*             (f, *)
+(*              snd (snd (snd (upsilon (st)))))))) *)
+(*         | h :: t -> *)
+(*             if and_b (S_sub!equal (s, fst (h)), S_c!equal (c, snd (h))) *)
+(*             then aux (f, t) *)
+(*             else aux (h :: f, t) *)
+(*      in aux ([ ], fst (snd (snd (snd (st))))) ; *)
+
+  let rec rm_w_aux (f in list (S_sub * S_c), l in list (S_sub * S_c),
+		    st in Self, s in S_sub, c in S_c) =
+     match l with
+     | [ ] ->
+         (lambda (st), (fst (upsilon (st)),
+			(fst (snd (upsilon(st))),
+			 (f,
+			  snd (snd (snd (upsilon (st))))))))
+     | h :: t ->
+         if and_b (S_sub!equal (s, fst (h)), S_c!equal (c, snd (h)))
+         then rm_w_aux (f, t, st, s, c)
+         else rm_w_aux (h :: f, t, st, s, c) ;
 
   let rm_w (st in Self, s in S_sub, c in S_c) in Self =
-     let rec aux (f in list (S_sub * S_c), l in list (S_sub * S_c)) =
-        match l with
-        | [ ] ->
-            (lambda (st), (fst (upsilon (st)),
-           (fst (snd (upsilon(st))),
-            (f,
-             snd (snd (snd (upsilon (st))))))))
-        | h :: t ->
-            if and_b (S_sub!equal (s, fst (h)), S_c!equal (c, snd (h)))
-            then aux (f, t)
-            else aux (h :: f, t)
-     in aux ([ ], fst (snd (snd (snd (st))))) ;
+     rm_w_aux ([ ], fst (snd (snd (snd (st)))), st, s, c) ;
+
+(*   let rm_t (st in Self, o in S_obj, m in S_acc_mod, c in S_c) in Self = *)
+(*      let rec aux (f in list ((S_obj * S_acc_mod) * S_c), *)
+(*           l in list ((S_obj * S_acc_mod) * S_c)) = *)
+(*         match l with *)
+(*         | [ ] -> *)
+(*             (lambda (st), (fst (upsilon (st)), *)
+(*            (f, *)
+(*             (fst (snd (snd (upsilon (st)))), *)
+(*              snd (snd (snd (upsilon (st)))))))) *)
+(*         | h :: t -> *)
+(*             if and_b (S_obj!equal (o, fst (fst (h))), *)
+(*               and_b (S_acc_mod!equal (m, snd (fst (h))), *)
+(*              S_c!equal (c, snd (h)))) *)
+(*             then aux (f, t) *)
+(*             else aux (h :: f, t) *)
+(*      in aux ([ ], fst (snd (snd (st)))) ; *)
+
+  let rec rm_t_aux (f in list ((S_obj * S_acc_mod) * S_c),
+		    l in list ((S_obj * S_acc_mod) * S_c),
+		    st in Self, o in S_obj, m in S_acc_mod, c in S_c) =
+     match l with
+     | [ ] ->
+         (lambda (st), (fst (upsilon (st)),
+			(f,
+			 (fst (snd (snd (upsilon (st)))),
+			  snd (snd (snd (upsilon (st))))))))
+     | h :: t ->
+         if and_b (S_obj!equal (o, fst (fst (h))),
+		   and_b (S_acc_mod!equal (m, snd (fst (h))),
+			  S_c!equal (c, snd (h))))
+         then rm_t_aux (f, t, st, o, m, c)
+         else rm_t_aux (h :: f, t, st, o, m, c) ;
 
   let rm_t (st in Self, o in S_obj, m in S_acc_mod, c in S_c) in Self =
-     let rec aux (f in list ((S_obj * S_acc_mod) * S_c),
-          l in list ((S_obj * S_acc_mod) * S_c)) =
-        match l with
-        | [ ] ->
-            (lambda (st), (fst (upsilon (st)),
-           (f,
-            (fst (snd (snd (upsilon (st)))),
-             snd (snd (snd (upsilon (st))))))))
-        | h :: t ->
-            if and_b (S_obj!equal (o, fst (fst (h))),
-              and_b (S_acc_mod!equal (m, snd (fst (h))),
-             S_c!equal (c, snd (h))))
-            then aux (f, t)
-            else aux (h :: f, t)
-     in aux ([ ], fst (snd (snd (st)))) ;
+     rm_t_aux ([ ], fst (snd (snd (st))), st, o, m, c) ;
 
   let equal (st1, st2) =
      S_set_acc!equal (lambda(st1), lambda (st2)) ;
