@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.118 2008-12-17 18:26:26 weis Exp $ *)
+(* $Id: parser.mly,v 1.119 2008-12-18 07:45:45 weis Exp $ *)
 
 open Parsetree;;
 
@@ -226,7 +226,6 @@ let mk_proof_label (s1, s2) =
 %token MEASURE
 %token NOT
 %token NOTATION
-%token OBVIOUS
 %token OF
 %token ON
 %token OPEN
@@ -753,7 +752,7 @@ proof:
     /* Trailing is the reason why the proof was not given. */
   | opt_doc enforced_dependency_list ASSUMED EXTERNAL_CODE
     { mk_doc $1 (Pf_assumed ($2, $4)) }
-  | opt_doc OBVIOUS
+  | opt_doc QED
     { mk_doc $1 (Pf_auto []) }
   | opt_doc BY fact_list
     { mk_doc $1 (Pf_auto $3) }

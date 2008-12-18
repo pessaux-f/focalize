@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.70 2008-12-17 18:26:26 weis Exp $ *)
+(* $Id: lexer.mll,v 1.71 2008-12-18 07:45:45 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -126,7 +126,6 @@ List.iter
   "measure", MEASURE;
   "not", NOT;
   "notation", NOTATION;
-  "obvious", OBVIOUS;
   "of", OF;
   "open", OPEN;
   "on", ON;
