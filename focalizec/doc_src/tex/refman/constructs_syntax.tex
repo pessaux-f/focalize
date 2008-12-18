@@ -1,6 +1,6 @@
-% $Id: constructs_syntax.tex,v 1.31 2008-12-16 17:32:00 hardin Exp $
+% $Id: constructs_syntax.tex,v 1.32 2008-12-18 15:04:32 hardin Exp $
 
-
+ 
 \section{Language constructs and syntax}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -362,6 +362,28 @@ type pair ('a, 'b) = {
 type int_bool_pair = pair (int, bool) ;;
 \end{lstlisting}
 }
+
+\subsection{Type-checking}
+The type-checking process is roughly similar to ML
+type-checking. Polymorphic types are allowed at top-level. However,
+methods are not allowed to be polymorphic. This means that their types
+cannot contain variables. But they may contain collection parameters
+as stated in section \ref{collection-parameter}.
+
+A type $t_1$ is an  {\bf instanciation} of a type $t_2$ if $t_1$ is obtained
+by replacing some type variables of $t_2$ by a more defined type
+expression. If $t_2$ is introduced by a top-level definition, then its
+variables can be replaced by any (legal) type expression. Note that if $t_2$
+contains a formal collection parameter (thus an identifier which
+``smells'' like a variable  but which indeed is not a
+variable), then in  $t_1$ this formal parameter can be replaced by an
+effective one. 
+
+
+
+Two types  $t_1$ and  $t_2$  are said {\bf
+  compatible}\index{type!compatible} if they have a common 
+instanciation. 
 
 
 
