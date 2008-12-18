@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.13 2008-12-18 11:25:46 weis Exp $
+# $Id: Makefile,v 1.14 2008-12-18 13:23:24 weis Exp $
 
 ROOT_DIR = .
 
@@ -24,7 +24,7 @@ include $(ROOT_DIR)/Makefile.config
 # EXTERNAL_TOOLS_DIRS
 # INTERNAL_TOOLS_DIRS
 
-SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(INTERNAL_TOOLS_DIRS)
+ALL_SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(INTERNAL_TOOLS_DIRS)
 
 include $(ROOT_DIR)/Makefile.common
 
@@ -123,18 +123,14 @@ $(INTERNAL_TOOLS_EXES):
 	done
 
 install uninstall doc depend::
-	for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) $@) || exit; \
-	  echo "<-- $$i [$$?]"; \
-	done
-
-install depend::
 	for i in $(INTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i && $(MAKE) $@) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
+
+install::
+	.configure_coq_validation
 
 unconfigure:
 	$(RM) ./.config_var ./.depend

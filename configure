@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.14 2008-12-18 11:38:14 weis Exp $
+# $Id: configure,v 1.15 2008-12-18 13:21:58 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -86,6 +86,7 @@ while : ; do
     -share_prefix | --share_prefix) SHARE_PREFIX="$2"; shift 2;;
     -bindir | --bindir) BIN_DIR="$2"; shift 2;;
     -libdir | --libdir) LIB_DIR="$2"; shift 2;;
+    -coqrc | --coqrc) COQRC="$2"; shift 2;;
     -convert | --convert) CONVERT="$2"; shift 2;;
     -gs | --gs) GS="$2"; shift 2;;
     -sum | --sum) SUM="$2"; shift 2;;
@@ -299,6 +300,7 @@ make_config_var () {
       -e "s,@XMLRPC_LINK@,$XMLRPC_LINK," \
   \
       -e "s,@COQ_MAKE@,$COQ_MAKE," \
+      -e "s,@COQRC@,$COQRC," \
       <.config_var.in >.config_var
 }
 
