@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.43 2008-12-12 08:01:04 weis Exp $
+# $Id: Makefile,v 1.44 2008-12-18 15:29:17 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -75,13 +75,13 @@ include $(ROOT_DIR)/Makefile.common
 byt:: focalizec.byt
 
 focalizec.byt: $(BYT_OBJS)
-	$(CAML_BYT) $(BYT_OBJS) -o $@
+	$(CAML_BYT) str.cma $(BYT_OBJS) -o $@
 	$(LN) focalizec.byt focalizec
 
 bin:: focalizec.bin
 
 focalizec.bin: $(BIN_OBJS)
-	$(CAML_BIN) $(BIN_OBJS) -o $@
+	$(CAML_BIN) str.cmxa $(BIN_OBJS) -o $@
 	$(LN) focalizec.bin focalizec
 
 fodump: fodump.cmo

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.70 2008-12-17 13:57:04 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.71 2008-12-18 15:29:17 pessaux Exp $ *)
 
 let print_focalize_exception ppf = function
   (* ********************* *)
@@ -68,13 +68,14 @@ let print_focalize_exception ppf = function
   (* Scoping stage. *)
   | Scoping.Multiply_used_module modname ->
       Format.fprintf ppf
-        "@[%tModule%t@ '%s'@ %twas@ \"use\"@ several@ times%t.@]@."
+        "@[%tCompilation@ unit%t@ '%s'@ %twas@ \"use\"@ several@ times%t.@]@."
         Handy.pp_set_bold Handy.pp_reset_effects
         modname
         Handy.pp_set_bold Handy.pp_reset_effects
   | Scoping.Module_not_specified_as_used modname ->
       Format.fprintf ppf
-        "@[%tModule%t@ '%s'@ %twas@ not@ declared@ as@ \"use\"%t.@]@."
+        "@[%tCompilation@ unit%t@ '%s'@ %twas@ not@ declared@ as@ \
+         \"use\"%t.@]@."
         Handy.pp_set_bold Handy.pp_reset_effects
         modname
         Handy.pp_set_bold Handy.pp_reset_effects
@@ -128,7 +129,7 @@ let print_focalize_exception ppf = function
         Handy.pp_reset_effects
   | Env.Unbound_label (lvname, at) ->
       Format.fprintf ppf
-        "%a:@\n@[%tUnbound@ record@ field@ label%t@ '%t%a%t'.@]@."
+        "%a:@\n@[%tUnbound@ record@ method@ label%t@ '%t%a%t'.@]@."
         Location.pp_location at Handy.pp_set_bold Handy.pp_reset_effects
         Handy.pp_set_underlined Sourcify.pp_vname lvname
         Handy.pp_reset_effects
@@ -146,7 +147,8 @@ let print_focalize_exception ppf = function
         Handy.pp_reset_effects
   | Env.Unbound_module (fname, at) ->
       Format.fprintf ppf
-        "%a:@\n@[%tUnbound@ module%t@ '%t%s%t'.@]@." Location.pp_location at
+        "%a:@\n@[%tUnbound@ compilation@ unit%t@ '%t%s%t'.@]@."
+        Location.pp_location at
         Handy.pp_set_bold Handy.pp_reset_effects
         Handy.pp_set_underlined fname
         Handy.pp_reset_effects
@@ -204,9 +206,8 @@ let print_focalize_exception ppf = function
         "%a:@\n@[No expected argument(s).@]@." Location.pp_location at
   | Infer.Scheme_contains_type_vars (field_name, sch, at) ->
       Format.fprintf ppf
-        "%a:@\n@[%tIn@ field%t@ '%t%a%t'%t,@ type scheme%t@ @[%a@]@ \
-         %tcontains@ variables@ than@ cannot@ be@ generalized@ or@ is@ \
-         polymorphic%t.@]@."
+        "%a:@\n@[%tIn@ method%t@ '%t%a%t'%t,@ type scheme%t@ @[%a@]@ \
+         %tcontains@ free@ variables%t.@]@."
         Location.pp_location at
         Handy.pp_set_bold Handy.pp_reset_effects
         Handy.pp_set_underlined Sourcify.pp_vname field_name
@@ -304,14 +305,14 @@ let print_focalize_exception ppf = function
         Handy.pp_set_bold Handy.pp_reset_effects
   | Scoping.Is_parameter_only_coll_ident at ->
       Format.fprintf ppf
-        "%a:@\n@[%tA@ \"is\"@ parameter@ can@ only@ be@ a@ collection@ \
-         identifier%t.@]@."
+        "%a:@\n@[%tA@ \"is\"@ parameter@ can@ only@ be@ an@ identifier@ \
+         of@ a@ collection%t.@]@."
         Location.pp_location at
         Handy.pp_set_bold Handy.pp_reset_effects
   | Infer.Not_subspecies_conflicting_field (c1, c2, field, ty1, ty2, at) ->
       Format.fprintf ppf
         "%a:@\n@[%tCollection%t@ '%t%a%t'@ %tis@ not@ a@ subspecies@ \
-         of%t@ '%t%a%t'.@ In@ field@ '%a',@ types@ @[%a@]@ and@ @[%a@]@ \
+         of%t@ '%t%a%t'.@ In@ method@ '%a',@ types@ @[%a@]@ and@ @[%a@]@ \
          are@ not@ compatible.@]@."
         Location.pp_location at
         Handy.pp_set_bold Handy.pp_reset_effects
@@ -325,7 +326,7 @@ let print_focalize_exception ppf = function
   | Infer.Not_subspecies_circular_field (c1, c2, field, ty1, ty2, at) ->
       Format.fprintf ppf
         "%a:@\n@[%tCollection%t@ '%t%a%t'@ %tis@ not@ a@ subspecies@ of%t@ \
-        '%t%a%t'.@ %tIn@ field%t@ '%t%a%t',@ %ttype%t@ @[%t%a@%t]@ %toccurs@ \
+        '%t%a%t'.@ %tIn@ method%t@ '%t%a%t',@ %ttype%t@ @[%t%a@%t]@ %toccurs@ \
         in%t@ @[%t%a%t@]@ %tand@ would@ lead@ to@ a@ cycle%t.@]@."
         Location.pp_location at
         Handy.pp_set_bold Handy.pp_reset_effects
@@ -348,7 +349,7 @@ let print_focalize_exception ppf = function
       (c1, c2, field, ty_name, ar1, ar2, at) ->
         Format.fprintf ppf
           "%a:@\n@[Collection@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ \
-           In@ field@ '%a',@ the@ type@ constructor@ '%a'@ is@ used@ \
+           In@ method@ '%a',@ the@ type@ constructor@ '%a'@ is@ used@ \
            with@ the@ different@ arities@ %d@ and@ %d.@]@."
           Location.pp_location at
           Types.pp_type_collection c1 Types.pp_type_collection c2
@@ -362,7 +363,7 @@ let print_focalize_exception ppf = function
         Sourcify.pp_vname field Types.pp_type_collection c1
   | Infer.Parameterized_species_arity_mismatch msg ->
       Format.fprintf ppf
-        "@[Parameterized@ specie@ is@ applied@ to@ %s@ arguments.@]@."  msg
+        "@[Parameterised@ species@ is@ applied@ to@ %s@ arguments.@]@."  msg
   | Infer.Collection_not_fully_defined_missing_term_proof
         (coll_name, field_name) ->
       Format.eprintf
@@ -433,7 +434,7 @@ let print_focalize_exception ppf = function
       Format.fprintf ppf
         "@[%tSpecies%t@ %t'%a'%t@ %tis@ not@ well-formed.@ \
         Field%t@ %t'%a'%t@ %tinvolves@ a@ non-declared@ recursion@ \
-        for@ the@ following@ dependent@ fields:%t@ "
+        for@ the@ following@ dependent@ methods:%t@ "
         Handy.pp_set_bold Handy.pp_reset_effects
         Handy.pp_set_underlined Sourcify.pp_qualified_vname species_name
         Handy.pp_reset_effects
@@ -469,7 +470,7 @@ let print_focalize_exception ppf = function
       (lang, cstr_ident) ->
       Format.fprintf ppf
         "%a:@\n@[%tNo@ %s@ mapping@ given@ for@ the@ external@ sum@ \
-         type@ constructor%t@ '%t%a%t'.@]@."
+         type@ value@ constructor%t@ '%t%a%t'.@]@."
         Location.pp_location cstr_ident.Parsetree.ast_loc
         Handy.pp_set_bold lang Handy.pp_reset_effects
         Handy.pp_set_underlined Sourcify.pp_constructor_ident cstr_ident
@@ -477,7 +478,7 @@ let print_focalize_exception ppf = function
   | Externals_generation_errs.No_external_field_def (lang, label_ident) ->
       Format.fprintf ppf
         "%a:@\n@[%tNo@ %s@ mapping@ given@ for@ the@ external@ \
-         record@ field%t@ '%t%a%t'.@]@."
+         record@ method%t@ '%t%a%t'.@]@."
         Location.pp_location label_ident.Parsetree.ast_loc
         Handy.pp_set_bold lang Handy.pp_reset_effects
         Handy.pp_set_underlined Sourcify.pp_label_ident label_ident
@@ -496,7 +497,7 @@ let print_focalize_exception ppf = function
   (* Coq code generation errors. *)
   | Type_coq_generation.Mutable_record_fields_not_in_coq (at, field) ->
        Format.fprintf ppf
-        "%a:@\n@[%tType@ definition@ contains@ a@ mutable@ field%t@ \
+        "%a:@\n@[%tType@ definition@ contains@ a@ mutable@ method%t@ \
         '%t%a%t'@ %tthat@ can't@ be@ compiled@ to@ Coq.%t@]@."
         Location.pp_location at
         Handy.pp_set_bold Handy.pp_reset_effects
