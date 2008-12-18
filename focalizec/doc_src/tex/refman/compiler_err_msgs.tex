@@ -1,14 +1,14 @@
-% $Id: compiler_err_msgs.tex,v 1.21 2008-12-17 21:25:39 hardin Exp $
+% $Id: compiler_err_msgs.tex,v 1.22 2008-12-18 14:06:54 hardin Exp $
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Unable to find file 'name' in the search path.}
+\section*{Unable to find file '$name$' in the search path.}
 
 {\em Description}: The source file made reference to a \focal\
 compilation unit 
 $name$ (by the {\tt open} or {\tt use} directives, or by explicit
-qualification with the ``\#'' notation but the related
+qualification with the ``\#'' notation) but the related
 \focal\ file was not found in the current libraries search
 path.
 
@@ -169,7 +169,7 @@ logical expression.
 {\em Description}: A {\tt proof of} clause was found in a species for
 the property $ident$ but this property was not found in the species.
 
-{\em Hints}: Source program to fix.
+{\em Hints}: None.
 
 
 
@@ -279,7 +279,7 @@ hosted in another source file).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Type name '$name$' already bound in the current scope}
+\section*{Type name '$name$' already bound in the current scope.}
 {\em Description}: In a source file it is not allowed to redefine a
 type definition. This means that each type name definition must be
 unique inside a file. However, it is possible to have several type
@@ -351,16 +351,16 @@ arguments although this constructor needs none.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{In field '$name$', type scheme $sch$ contains variables than
-  cannot be generalized or is polymorphic.}
+\section*{In method '$name$', type scheme $sch$ contains free variables.}
 
 {\em Description}: As presented in \ref{no-polymorphism-for-methods},
 species methods cannot be polymorphic. The method $name$ has a
-polymorphic type scheme shown by $sch$.
+ type scheme shown by $sch$  which is polymorphic. 
 
-{\em Hints}: Source program to fix. You may explicitly add type
+{\em Hints}:  You may explicitly add type
 annotations (constraints) on the arguments or/and return type of your
-method definition.
+method definition. If you need some kind of such polymorphism, use the
+collection parameter mechanism. 
 
 
 
@@ -404,7 +404,7 @@ functions, change the names to make them different.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Delayed proof of '$name$' was found several times in the
+\section*{Delayed proof  of '$name$' was found several times in the
   species. Other occurence is at: $loc$.}
 
 {\em Description}: A delayed proof of the property $name$ was found
@@ -467,30 +467,32 @@ types found for the representation definition.
 {\em Description}: This error appears when {\tt Self} appears as a
 species identifier used in a species expression that is a parameter of
 the current defined species.
-{\color{red} Unsure, not appearing raised anymore. Check if this is
-  for further analysis or if it is a remaining spurious stuff.}
+
+% {\color{red} Unsure, not appearing raised anymore. Check if this is
+%   for further analysis or if it is a remaining spurious stuff.}
+
 
 {\em Hints}: None.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{A "in" parameter can only be an identifier of a collection}
+\section*{A  "is"  parameter can only be  instantiated by an identifier of a collection}
 
 {\em Description}: In a species expression, a parametrised species by
-an entity parameter ({\tt in}-parameter) is provided an effective
+an entity parameter ({\tt is}-parameter) is provided an effective
 argument that is not a collection identifier.
 
-{\em Hints}: Source program to fix. Although an entity parameter
-denotes a {\bf value} (and not a {\bf collection} like for
-{\tt is}-parameters), this value must have the {\bf type} of a
-collection interface. Hence in a species expression, a
-{\tt in}-parameter) must be instantiated by a {\tt collection}
-identifier.
+% {\em Hints}: Source program to fix. Although a collection parameter
+% denotes a {\bf value} (and not a {\bf collection} like for
+% {\tt is}-parameters), this value must have the {\bf type} of a
+% collection interface. Hence in a species expression, a
+% {\tt in}-parameter) must be instantiated by a {\tt collection}
+% identifier.
+{\em Hints}: None.
 
-{\color{red} revoir avec FP}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Collection '$s_1$' is not compatible with '$s_2$'. In field
+\section*{Collection '$s_1$' is not compatible with '$s_2$'. In method
   '$name$', types $t_1$ and $t_2$ are not compatible.}
 
 {\em Description}: During collection parameter instantiation, the
@@ -502,10 +504,10 @@ found.
 
 {\em Hints}: None.
 
-{\color{red} revoir avec FP}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Collection '$s_1$' is not compatible with '$s_2$'. In field
+\section*{Collection '$s_1$' is not compatible with '$s_2$'. In method
   '$fname$', type $t_1$ occurs in $t_2$ and would lead to a cycle.}
 
 {\em Description}: During collection parameter instantiation, the
@@ -517,9 +519,9 @@ type $t_2$.
 {\em Hints}: None.
 
 
-{\color{red} revoir avec FP}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Collection  '$s_1$' is not compatible with '$s_2$'. In field
+\section*{Collection  '$s_1$' is not compatible with '$s_2$'. In method
   '$fname$', the type constructor '$tname$' is used with the different
   arities $n_1$ and $n_2$.}
 
@@ -531,10 +533,10 @@ $n_2$.
 
 {\em Hints}: None.
 
-{\color{red} revoir avec FP}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Collection  '$s_1$' is not compatible with  '$s_2$'. Field '$name$'
+\section*{Collection  '$s_1$' is not compatible with  '$s_2$'.  Method '$name$'
   is not present in '$s_1$'.}
 
 {\em Description}:  During collection parameter instantiation, the
@@ -548,7 +550,7 @@ least $s_2$'s methods and especially not the method $name$.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Parameterized specie is applied to $n$ arguments.}
+\section*{Parameterised species is applied to $n$ arguments.}
 
 {\em Description}: A parameterized species is applied to a wrong
 number $n$ of effective arguments.
@@ -558,7 +560,7 @@ number $n$ of effective arguments.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Species '$sname$' cannot be turned into a collection. Field
+\section*{Species '$sname$' cannot be turned into a collection. Method
   '$fname$' is not defined.}
 
 {\em Description}: A collection is built  out of a  completely defined species
@@ -573,7 +575,7 @@ writing it code or by inheritance, according to your program model.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Species '$sname$' cannot be turned into a collection. Field
+\section*{Species '$sname$' cannot be turned into a collection. Method
   '$fname$' does not have a termination proof.}
 
 {\em Description}: A collection is built  out of a completely defined species
@@ -609,8 +611,8 @@ matching the function definition's ones.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Species 'sname' is not well-formed. Field '$name$' involves
-  a non-declared recursion for the following dependent fields: \ldots}
+\section*{Species 'sname' is not well-formed. Method  '$name$' involves
+  a non-declared recursion for the following dependent methods: \ldots}
 
 {\em Description}: The species $sname$ doesn't respect the
 well-formation rule presented in \ref{well-formation}. The chain of
@@ -650,7 +652,7 @@ definition.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{No $lang$ mapping given for the external sum type
+\section*{No $lang$ mapping given for the external sum type value
   constructor '$name$'.}
 
 {\em Description}: The external sum type definition allowing to link
