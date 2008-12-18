@@ -1,3 +1,5 @@
+#!/bin/sh
+
 #**********************************************************************#
 #                                                                      #
 #                        FoCaLize compiler                             #
@@ -13,37 +15,35 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: INSTALL,v 1.2 2008-12-18 13:24:53 weis Exp $
+# $Id: .configure_coq_validation,v 1.1 2008-12-18 13:25:45 weis Exp $
 
-Licence: New BSD Licence (see the file LICENSE for details)
+# Edit the user's .coqrc file to give coq access to zenon specific libraries.
 
-Prerequisites (optional):
-  - ImageMagick (optional)
-  - Ghostscript (optional)
+. ./.config_var
 
-Compile and install with:
-  configure
-  make
-  make install
+add_path_to_zenon_lib () {
+  echo "Adding coqc proof checks for your Zenon generated proofs to $COQRC."
+  echo >> $COQRC <EOF
+Add LoadPath $PATH_TO_ZENON_LIB
+EOF
+}
 
-The software will compile and install in turn:
- - Ocaml
- - Camlp5
- - Coq
- - zenon
- - zvtov
- - focalizec
+echo "Do you want to check the proofs using coqc <yes/no> [yes] ?";
+read use_coqc
 
-For checking the proofs with coqc, add this to your $HOME/.coqrc file:
-  Add LoadPath $PATH_TO_ZENON_LIB
-  Default for PATH_TO_ZENON_LIB is $SHARE_INSTALL_DIR/lib/zenon,
-  normally "/usr/local/focalize.0.1/lib/zenon".
-If you specified an alternate libdir when configuring focalize, you will
-need to adjust this command accordingly.
-
-Web site: http://focalize.inria.fr/
-Discussion: focalize-users@inria.fr
-Bug reports for installation: Pierre.Weis@inria.fr
-Bug reports for the compiler: http://focalize.inria.fr/
- (Find and click on the ``Bug Tracking'' link)
-Contact developers: focalize-devel@inria.fr
+case $use_coqc in
+  n* | N*)
+   echo "Proofs will not be checked using coqc. Check them by yourself!"
+   ;;
+  y* | Y* | o* | O*)
+   add_path_to_zenon_lib
+   ;;
+ *)
+  if test -z $use_coqc; then
+    add_path_to_zenon_lib
+  else
+    echo "Cannot understand your answer $use_coqc."
+    echo "If you want to check the proofs using coqc run again $0."
+  fi
+  ;;
+esac
