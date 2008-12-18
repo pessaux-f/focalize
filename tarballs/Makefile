@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.7 2008-12-18 07:26:26 weis Exp $
+# $Id: Makefile,v 1.8 2008-12-18 09:16:23 weis Exp $
 
 ROOT_DIR = ..
 
@@ -41,6 +41,18 @@ $(COQ_DIR):
 	  ($(CD) $(ROOT_DIR); $(TARX) $(TAR_BALLS_DIR_NAME)/$$i) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
+
+patches: patch_camlp5 patch_coq
+
+patch_camlp5: $(CAMLP5_PATCH_TAR_BALL)
+
+patch_coq: $(COQ_PATCH_TAR_BALL)
+
+$(CAMLP5_PATCH_TAR_BALL): $(CAMLP5_DIR_NAME)
+	tar cvzf $(CAMLP5_PATCH_TAR_BALL) $(CAMLP5_DIR_NAME)
+
+$(COQ_PATCH_TAR_BALL): $(COQ_DIR_NAME)
+	tar cvzf $(COQ_PATCH_TAR_BALL) $(COQ_DIR_NAME)
 
 include $(ROOT_DIR)/Makefile.common
 
