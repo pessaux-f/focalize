@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.17 2008-12-18 16:49:36 weis Exp $
+# $Id: Makefile,v 1.18 2008-12-18 17:27:07 weis Exp $
 
 ROOT_DIR = .
 
@@ -100,31 +100,6 @@ $(ABSOLUTE_COQ_DIR)/config/Makefile: $(ABSOLUTE_CAMLP5_DIR)/config/Makefile
 	 $(COQ_MAKE) install; \
 	)
 
-# Useless incremental target
-build_external_tools: $(EXTERNAL_TOOLS_EXES)
-
-$(EXTERNAL_TOOLS_EXES):
-	(cd $(ABSOLUTE_CAML_DIR); \
-	 $(MAKE) $(CAML_MAKE_ALL_TARGET); \
-	)
-	(cd $(ABSOLUTE_CAMLP5_DIR); \
-	 $(MAKE) $(CAMLP5_MAKE_ALL_TARGET); \
-	)
-	(cd $(ABSOLUTE_COQ_DIR); \
-	 $(COQ_MAKE) $(COQ_MAKE_ALL_TARGET); \
-	)
-# Useless incremental target
-install_external_tools: $(EXTERNAL_TOOLS_EXES)
-	(cd $(ABSOLUTE_CAML_DIR); \
-	 $(MAKE) install; \
-	)
-	(cd $(ABSOLUTE_CAMLP5_DIR); \
-	 $(MAKE) install; \
-	)
-	(cd $(ABSOLUTE_COQ_DIR); \
-	 $(COQ_MAKE) install; \
-	)
-
 #
 # Internal tools
 #
@@ -133,24 +108,27 @@ build_internal_tools: $(FOCALIZEC_EXES)
 $(ZENON_EXES): $(ABSOLUTE_COQ_DIR)/config/Makefile
 	for i in $(ZENON_DIR); do \
 	  echo "--> $$i ..."; \
-	  PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
-	  ($(CD) $$i; $(MAKE) all) || exit; \
+	  ($(CD) $$i; \
+	   PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
+	   $(MAKE) all) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 
 $(ZVTOV_EXES): $(ZENON_EXES)
 	for i in $(ZVTOV_DIR); do \
 	  echo "--> $$i ..."; \
-	  PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
-	  ($(CD) $$i; $(MAKE) all) || exit; \
+	  ($(CD) $$i; \
+	   PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
+	   $(MAKE) all) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 
 $(FOCALIZEC_EXES): $(ZENON_EXES) $(ZVTOV_EXES)
 	for i in $(FOCALIZEC_DIR); do \
 	  echo "--> $$i ..."; \
-	  PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
-	  ($(CD) $$i; $(MAKE) all) || exit; \
+	  ($(CD) $$i; \
+	   PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
+	   $(MAKE) all) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 
