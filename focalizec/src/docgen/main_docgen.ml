@@ -12,7 +12,35 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.5 2008-12-17 13:57:04 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.6 2008-12-19 15:52:10 pessaux Exp $ *)
+
+let xmlify_string s =
+  let s_len = String.length s in
+  let result = ref "" in
+  let i = ref 0 in
+  while !i < s_len do
+    (match s.[!i] with
+     | '<' -> result := !result ^ "&lt;"
+     | '>' -> result := !result ^ "&gt;"
+     | '&' -> result := !result ^ "&amp;"
+     | _ -> result := !result ^ (String.make 1 s.[!i])) ;
+    incr i
+  done ;
+  !result
+;;
+
+
+
+let get_in_file_and_name_from_ident ~current_unit ident =
+  match ident.Parsetree.ast_desc with
+   | Parsetree.I_local vname
+   | Parsetree.I_global (Parsetree.Vname vname) ->
+       ("", vname)
+   | Parsetree.I_global (Parsetree.Qualified (mod_name, vname)) ->
+       if mod_name = current_unit then ("", vname)
+       else (mod_name, vname)
+;;
+
 
 
 let gendoc_species_field out_fmt = function
@@ -36,71 +64,251 @@ let gendoc_species_field out_fmt = function
 
 
 
-let gendoc_species_description out_fmt species_description =
-  Format.fprintf out_fmt "<P>I closed ? : %b@\n"
-    species_description.Env.TypeInformation.spe_is_closed ;
-  Format.fprintf out_fmt "<UL>" ;
+let gendoc_foc_informations out_fmt name_opt math_opt latex_opt comments =
+  Format.fprintf out_fmt "@[<h 2><foc:informations>@\n" ;
+  (match name_opt with
+   | None -> ()
+   | Some _ -> failwith "To do Focdoc 1") ;
+  (match math_opt with
+   | None -> ()
+   | Some _ -> failwith "To do Focdoc 2") ;
+  (match latex_opt with
+   | None -> ()
+   | Some _ -> failwith "To do Focdoc 3") ;
   List.iter
-    (gendoc_species_field out_fmt)
-    species_description.Env.TypeInformation.spe_sig_methods ;
-  Format.fprintf out_fmt "</UL>" ;
+    (fun { Parsetree.de_desc = s } ->
+      let s = xmlify_string s in
+      Format.fprintf out_fmt "<foc:comments>%s</foc:comments>@\n" s)
+    comments ;
+  Format.fprintf out_fmt "@]</foc:informations>@\n" ;
+;;
+
+
+let gendoc_inherits out_fmt ~current_unit species_def =
+  let species_def_descr = species_def.Parsetree.ast_desc in
+  if species_def_descr.Parsetree.sd_inherits.Parsetree.ast_desc <> [] then
+    (begin
+    Format.fprintf out_fmt "@[<h 2><foc:inherits>@\n" ;
+    List.iter
+      (fun species_expr ->
+        let species_expr_desc = species_expr.Parsetree.ast_desc in
+        let (infile, ident_vname) =
+          get_in_file_and_name_from_ident
+            ~current_unit species_expr_desc.Parsetree.se_name in
+        match species_expr_desc.Parsetree.se_params with
+         | [] ->
+             (begin
+             Format.fprintf out_fmt "<foc:atom order=\"high\"" ;
+             if infile <> "" then
+               Format.fprintf out_fmt " infile=\"%s\"" infile ;
+             Format.fprintf out_fmt ">%a</foc:atom>@\n"
+               Sourcify.pp_vname ident_vname
+             end)
+         | params ->
+             (begin
+             Format.fprintf out_fmt "@[<h 2><foc:app>@\n" ;
+             Format.fprintf out_fmt "<foc:foc-name " ;
+             if infile <> "" then
+               Format.fprintf out_fmt " infile=\"%s\"" infile ;
+             Format.fprintf out_fmt "\">%a</foc:foc-name>@\n"
+               Sourcify.pp_vname ident_vname ;
+             List.iter
+               (fun _ -> ())
+               params ;
+             Format.fprintf out_fmt "@]</foc:app>@\n"
+             end))
+    species_def_descr.Parsetree.sd_inherits.Parsetree.ast_desc ;
+    Format.fprintf out_fmt "@]</foc:inherits>@\n" ;
+    end)
+;;
+
+
+let gendoc_species out_fmt ~current_unit species_def _species_descr =
+  Format.fprintf out_fmt "@[<h 2><foc:species>@\n" ;
+  Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+    Sourcify.pp_vname species_def.Parsetree.ast_desc.Parsetree.sd_name ;
+  (* Information: foc:informations. *)
+  gendoc_foc_informations out_fmt None None None species_def.Parsetree.ast_doc ;
+  (* Parameters: foc:parameter*. *)
+  (* Inherits: foc:inherits*. *)
+  gendoc_inherits out_fmt ~current_unit species_def ;
+  (* Methods: (%foc:component;)*. *)
+  Format.fprintf out_fmt "@]@\n" ;
 ;;
 
 
 
-let gendoc_please_compile_me out_fmt = function
-  | Infer.PCM_use (_, module_name) ->
-      Format.fprintf out_fmt "<H1>Used module: %s</HY1>@\n" module_name ;
-  | Infer.PCM_open (_, module_name) ->
-      Format.fprintf out_fmt "<H1>Opened module: %s</HY1>@\n" module_name ;
-  | Infer.PCM_coq_require module_name ->
-      Format.fprintf out_fmt
-        "<H1>Module required for Coq external definitions: %s</HY1>@\n"
-        module_name ;
+let gen_doc_pcm out_fmt ~current_unit = function
+  | Infer.PCM_use (_, comp_unit) ->
+      Format.fprintf out_fmt "<foc:load>%s</foc:load>@\n" comp_unit
+  | Infer.PCM_open (_, comp_unit) ->
+      Format.fprintf out_fmt "<foc:open>%s</foc:open>@\n" comp_unit
+  | Infer.PCM_coq_require _ -> ()
+  | Infer.PCM_type (_, _) ->
+      (* foc:concrete-type *) ()
+  | Infer.PCM_let_def (_, _) ->
+      (* foc:global-fun foc:letprop *) ()
+  | Infer.PCM_theorem (_, _) ->
+      (* foc:theorem *) ()
+  | Infer.PCM_expr _ -> ()
   | Infer.PCM_species (species_def, species_description, _) ->
-      Format.fprintf out_fmt "<H1>Species <B>%a<B></H1@\n"
-        Sourcify.pp_vname species_def.Parsetree.ast_desc.Parsetree.sd_name ;
-        gendoc_species_description out_fmt species_description
-  | Infer.PCM_collection 
-      (_collection_def, _species_description, _deps_graph_nodes) -> ()
-  | Infer.PCM_type (_vname, _type_description) -> ()
-  | Infer.PCM_let_def (_let_def, _type_schemes) -> ()
-  | Infer.PCM_theorem (_theorem_def, _) -> ()
-  | Infer.PCM_expr _expr -> ()
+      gendoc_species out_fmt ~current_unit species_def species_description
+  | Infer.PCM_collection (_col_def, _col_description, _) ->
+      (* foc:collection *) ()
 ;;
 
 
-let foo x =
-  List.iter
-    (fun { Parsetree.de_desc = s } -> Format.eprintf "%s@." s)
-    x
+
+
+
+(* *********************************************************************** *)
+(* look_for:string -> in_str:string -> (int * int) option                  *)
+(** {Descr}: Search from left to right, the indices where the string
+    [look_for] was found in the string [in_str]. If the searched string is
+    the empty string, then we consider that the search always fails.
+    This method is pure brute force.
+    If the string is found, then we return the start and stop positions in
+    the string [in_str] where [look_for] was found.                        *)
+(* *********************************************************************** *)
+let str_search ~look_for ~in_str =
+  if look_for = "" then None
+  else
+    (begin
+    let m = String.length look_for in
+    let n = String.length in_str in
+    let found_index = ref None in
+    let j = ref 0 in
+    while !j <= n - m && !found_index = None do
+      let i = ref 0 in
+      while !i < m && look_for.[!i] = in_str.[!i + !j] do incr i done ;
+      if !i >= m then found_index := Some (!j, (!j + m)) ;
+      incr j
+    done ;
+    !found_index
+    end)
 ;;
 
 
-let gendoc_please_compile_me input_file_name ast_root _pcms =
-  let out_filename = (Filename.chop_extension input_file_name) ^ ".xml" in
+
+(** {b Descr}: If the string [look_for] was found in the string [in_str],
+    returns the characters of [in_str] remaining after the position where
+    [look_for] was found. *)
+let get_text_after_matched_string ~look_for ~in_str =
+  match str_search ~look_for ~in_str with
+   | None -> None
+   | Some (_, match_end) ->
+       let rem_len = (String.length in_str) - match_end in
+       let sub_str = String.sub in_str match_end rem_len in
+       Some sub_str
+;;
+
+
+let find_title_author_and_description ast_root =
+  let rec search searched_tag_string = function
+    | [] -> None
+    | { Parsetree.de_desc = s } :: q ->
+        let found =
+          get_text_after_matched_string
+            ~look_for: searched_tag_string ~in_str: s in
+        match found with
+         | None ->
+             (* If not found in the current doc element, go on searching in
+                the next ones. *)
+             search searched_tag_string q
+         | Some txt ->
+             (* Only keep text until the end of line if we find some otherwise,
+                keep the whole text. *)
+             let txt_len = String.length txt in
+             let cut_at =
+               try String.index txt '\n' with Not_found -> txt_len in
+             let txt' =
+               if cut_at = txt_len then txt
+               else String.sub txt 0 cut_at in
+             Some txt' in
+  (* ************************************** *)
+  (* Do the job on the top node of the AST. *)
+  let title_opt = search "@title " ast_root.Parsetree.ast_doc in
+  let author_opt = search "@author " ast_root.Parsetree.ast_doc in
+  let description_opt = search "@description " ast_root.Parsetree.ast_doc in
+  if title_opt <> None && author_opt <> None && description_opt <> None then
+    (title_opt, author_opt, description_opt)
+  else
+    (begin
+    (* We didn't find the 3 searched tags in the top node of the AST. So,
+       search for them (or at least the missing one if only one was found) in
+       the first definition of the source file. *)
+    match ast_root.Parsetree.ast_desc with
+     | Parsetree.File [] ->
+         (* So, the source file is empty (with no definition). Return what we
+            got even if there is some tag(s) missing. *)
+         (title_opt, author_opt, description_opt)
+     | Parsetree.File (first :: _) ->
+         (begin
+         let title_opt' =
+           match title_opt with
+            | Some _ -> title_opt
+            | None -> search "@title " first.Parsetree.ast_doc in
+         let author_opt' =
+           match author_opt with
+            | Some _ -> author_opt |
+              None -> search "@author " first.Parsetree.ast_doc in
+         let description_opt' =
+           match description_opt with
+            | Some _ -> description_opt
+            | None -> search "@description " first.Parsetree.ast_doc in
+         (title_opt', author_opt', description_opt')
+         end)
+    end)
+;;
+
+
+
+
+
+
+let gendoc_please_compile_me input_file_name ast_root pcms =
+  let input_name_no_extension = Filename.chop_extension input_file_name in
+  let current_unit = Filename.basename input_name_no_extension in
+  let out_filename = input_name_no_extension ^ ".xml" in
   let out_channel = open_out_bin out_filename in
   let out_fmt = Format.formatter_of_out_channel out_channel in
   Format.fprintf out_fmt "<?xml version=\"1.0\"?>@\n" ;
-  let tmp = ast_root.Parsetree.ast_doc in
-  foo tmp ;
+  let (title_opt, author_opt, description_opt) =
+    find_title_author_and_description ast_root in
   Format.fprintf out_fmt
-    "@[<0>\
-       <html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:mml=\"\
-       http://www.w3.org/1998/Math/MathML\" xmlns:foc=\"\
-       http://focal.inria.fr/site/index\">@\n\
-       @[<0>\
-	 <head>@\n\
-	 <title>BLABLABLA</title>@\n\
-	 <link rel=\"stylesheet\" href=\"focdoc.css\" type=\"text/css\"/>@\n\
-	 </head>\
-       @]@\n\
-       @[<0>\
-	 <body>@\n\
-	 ...@\n\
-	 </body>\
-       @]@\n\
-       </html>\
-     @]@\n" ;
+    "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" ?>@\n\
+    <!-- document automatically generated from a FoC program. Note that \
+    focdoc has also both a DTD 'focdoc.dtd' and a RELAX NG schema \
+    'focdoc.rnc'.  To validate a focdoc file with focdoc.dtd, please \
+    product the focdoc file with the '-focdoc' option of focc. But whereas \
+    an XML document can associate itself with a DTD using a DOCTYPE \
+    declaration, RELAX NG does not define a way for an XML document to \
+    associate itself with a RELAX NG pattern.-->@\n@\n" ;
+  Format.fprintf out_fmt
+    "@[<v 2>\
+     <foc:focdoc xsi:schemaLocation=\"focal focdoc.xsd mathml2 \
+     http://www.w3.org/Math/XMLSchema/mathml2/mathml2.xsd\" \
+     xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" \
+     xmlns:mml=\"mathml2\" xmlns:foc=\"http://focal.inria.fr/site/index\">@\n" ;
+  Format.fprintf out_fmt "<foc:foc-name>%s</foc:foc-name>@\n" current_unit ;
+  Format.fprintf out_fmt "@[<v 2><foc:general-informations>@\n" ;
+  (match title_opt with
+    | Some title ->
+        let title = xmlify_string title in
+        Format.fprintf out_fmt "<foc:title>%s</foc:title>@\n" title
+    | None -> ()) ;
+  (match author_opt with
+    | Some author ->
+        let author = xmlify_string author in
+        Format.fprintf out_fmt "<foc:author>%s</foc:author>@\n" author
+    | None -> ()) ;
+  (match description_opt with
+    | Some description ->
+        let description = xmlify_string description in
+        Format.fprintf out_fmt "<foc:comments>%s</foc:comments>@\n" description
+    | None -> ()) ;
+  Format.fprintf out_fmt "@]</foc:general-informations>@\n" ;
+  List.iter (gen_doc_pcm out_fmt ~current_unit) pcms ;
+  Format.fprintf out_fmt "@]</foc:focdoc>@\n" ;
   close_out out_channel
 ;;
