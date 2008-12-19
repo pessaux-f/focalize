@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.19 2008-12-19 11:05:22 weis Exp $
+# $Id: configure,v 1.20 2008-12-19 11:09:57 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -322,8 +322,8 @@ set_software_specific_options () {
 set_caml_specific_options () {
   if test -z "${CAML_BYT}"; then CAML_BYT="${DEFAULT_CAML_BYT}"; fi
   if test -z "${CAML_BIN}"; then CAML_BIN="${DEFAULT_CAML_BIN}"; fi
-  if test -z "${CAML_LEX}"; then CAML_BIN="${DEFAULT_CAML_LEX}"; fi
-  if test -z "${CAML_YAc}"; then CAML_BIN="${DEFAULT_CAML_YAC}"; fi
+  if test -z "${CAML_LEX}"; then CAML_LEX="${DEFAULT_CAML_LEX}"; fi
+  if test -z "${CAML_YAC}"; then CAML_YAC="${DEFAULT_CAML_YAC}"; fi
 }
 
 set_coq_specific_options () {
@@ -413,6 +413,8 @@ build_config_var () {
   \
       -e "s,@CAML_BYT@,$CAML_BYT," \
       -e "s,@CAML_BIN@,$CAML_BIN," \
+      -e "s,@CAML_LEX@,$CAML_LEX," \
+      -e "s,@CAML_YAC@,$CAML_YAC," \
       -e "s,@BYT_DEBUG_FLAGS@,$BYT_DEBUG_FLAGS," \
       -e "s,@BIN_DEBUG_FLAGS@,$BIN_DEBUG_FLAGS," \
   \
