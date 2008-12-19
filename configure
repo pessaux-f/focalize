@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.17 2008-12-19 09:51:33 weis Exp $
+# $Id: configure,v 1.18 2008-12-19 10:49:52 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -108,35 +108,38 @@ while : ; do
 
   case "$1" in
     # Software specific options
-    [-]-share_prefix | [-]-share_project_prefix) SHARE_PROJECT_PREFIX="$2"; shift 2;;
-    [-]-prefix) PREFIX="$2"; shift 2;;
-    [-]-bindir) BIN_DIR="$2"; shift 2;;
-    [-]-libdir) LIB_DIR="$2"; shift 2;;
-    [-]-docdir) DOC_DIR="$2"; shift 2;;
-    [-]-mandir) MAN_DIR="$2"; shift 2;;
+    -share_prefix | --share_prefix | -share_project_prefix | --share_project_prefix)
+      SHARE_PROJECT_PREFIX="$2"; shift 2;;
+    -prefix | --prefix) PREFIX="$2"; shift 2;;
+    -bindir | --bindir) BIN_DIR="$2"; shift 2;;
+    -libdir | --libdir) LIB_DIR="$2"; shift 2;;
+    -docdir | --docdir) DOC_DIR="$2"; shift 2;;
+    -mandir | --mandir) MAN_DIR="$2"; shift 2;;
     # Caml options
-    [-]-caml_byt) CAML_BYT="$2"; shift 2;;
-    [-]-caml_bin) CAML_BIN="$2"; shift 2;;
+    -caml_byt | --caml_byt) CAML_BYT="$2"; shift 2;;
+    -caml_bin | --caml_bin) CAML_BIN="$2"; shift 2;;
     # Coq options
-    [-]-coqc) COQC="$2"; shift 2;;
-    [-]-coqrc) COQRC="$2"; shift 2;;
-    [-]-coq_make) COQ_MAKE="$2"; shift 2;;
+    -coqc | --coqc) COQC="$2"; shift 2;;
+    -coqrc | --coqrc) COQRC="$2"; shift 2;;
+    -coq_make | --coq_make) COQ_MAKE="$2"; shift 2;;
     # Zenon options
-    [-]-zenon ) ZENON="$2"; shift 2;;
-    [-]-use_coqc) USE_COQC="$2"; shift 2;;
-    [-]-convert) CONVERT="$2"; shift 2;;
-    [-]-gs) GS="$2"; shift 2;;
-    [-]-sum) SUM="$2"; shift 2;;
+    -zenon | --zenon) ZENON="$2"; shift 2;;
+    -use_coqc | --use_coqc) USE_COQC="$2"; shift 2;;
+    -convert | --convert) CONVERT="$2"; shift 2;;
+    -gs | --gs) GS="$2"; shift 2;;
+    -sum | --sum) SUM="$2"; shift 2;;
     # Zvtov options
-    [-]-zvtov ) ZVTOV="$2"; shift 2;;
-    [-]-use_xmlrpc) USE_XMLRPC=true; shift;;
-    [-]-xmlrpc) XMLRPC="$2"; shift 2;;
-    [-]-xmlrpc_flags) XMLRPC_FLAGS="$2"; shift 2;;
-    [-]-xmlrpc_link) XMLRPC_LINK="$2"; shift 2;;
+    -zvtov | --zvtov) ZVTOV="$2"; shift 2;;
+    -use_xmlrpc | --use_xmlrpc) USE_XMLRPC=true; shift;;
+    -xmlrpc | --xmlrpc) XMLRPC="$2"; shift 2;;
+    -xmlrpc_flags | --xmlrpc_flags) XMLRPC_FLAGS="$2"; shift 2;;
+    -xmlrpc_link | --xmlrpc_link) XMLRPC_LINK="$2"; shift 2;;
     # Generic options
-    [-]-debug | [-]-enable_debug) DEBUG=true; shift;;
-    [-]-nodebug | [-]-disable_debug) DEBUG=false; shift;;
-    [-]-help)
+    -debug | --debug | -enable_debug | --enable_debug)
+     DEBUG=true; shift;;
+    -nodebug | --nodebug | -disable_debug | --disable_debug)
+     DEBUG=false; shift;;
+    -help | --help)
        echo "usage: ./configure [options] [<directory>]"
        echo
        echo "if optional argument <directory> is provided, it is used as the"
