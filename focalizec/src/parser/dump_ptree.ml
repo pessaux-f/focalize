@@ -13,7 +13,17 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.34 2008-12-10 08:59:17 weis Exp $ *)
+(* $Id: dump_ptree.ml,v 1.35 2008-12-19 15:52:46 pessaux Exp $ *)
+
+
+
+let pp_documentation ppf doc =
+  List.iter
+    (fun { Parsetree.de_desc = d } -> Format.fprintf ppf "DOC: %s@\n" d)
+    doc
+;;
+
+
 
 (* *********************************************************************** *)
 (* pp_position : Format.formatter -> Lexing.position -> unit               *)
@@ -104,8 +114,9 @@ let pp_node_labels ppf =
     {b Rem} : Not exported ouside this module.                            *)
 (* ********************************************************************** *)
 let pp_ast desc_printer_fct ppf ast =
-  Format.fprintf ppf "%a@\n%a"
+  Format.fprintf ppf "%a@\n%a@\n%a"
     pp_location ast.Parsetree.ast_loc
+    pp_documentation ast.Parsetree.ast_doc
     desc_printer_fct ast.Parsetree.ast_desc
 ;;
 
