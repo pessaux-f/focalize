@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.18 2008-12-18 17:27:07 weis Exp $
+# $Id: Makefile,v 1.19 2008-12-19 10:11:41 weis Exp $
 
 ROOT_DIR = .
 
@@ -26,7 +26,7 @@ include $(ROOT_DIR)/Makefile.config
 
 ALL_SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(INTERNAL_TOOLS_DIRS)
 
-include $(ROOT_DIR)/Makefile.common
+#include $(ROOT_DIR)/Makefile.common
 
 .PHONY: configure_external build_external_tools_sources configure_external_tools
 .PHONY: build_external_tools build_internal_tools
@@ -43,7 +43,10 @@ configure_external: ./.config_var \
 ./.config_var:
 	./configure
 
-install_external_tools_sources: $(ABSOLUTE_COQ_DIR)
+install_external_tools_sources: .external_tools_sources_done
+
+.external_tools_sources_done: $(ABSOLUTE_COQ_DIR)
+	touch .external_tools_sources_done
 
 $(ABSOLUTE_CAML_DIR):
 	for i in $(TAR_BALLS_DIR); do \
@@ -66,7 +69,10 @@ $(ABSOLUTE_COQ_DIR): $(ABSOLUTE_CAMLP5_DIR)
 	  echo "<-- $$i [$$?]"; \
 	done
 
-configure_external_tools: $(ABSOLUTE_COQ_DIR)/config/Makefile
+configure_external_tools: .configure_external_tools_done
+
+.configure_external_tools_done: .configure_external_coq_tool_done
+	touch .configure_external_tools_done
 
 # We need to configure, build then install in a row, since
 # the caml compiler should be installed to configure camlp5,
@@ -77,35 +83,41 @@ configure_external_tools: $(ABSOLUTE_COQ_DIR)/config/Makefile
 # and install the FoCaLize internal tools zenon and zvtov;
 # all the external and internal tools should be compiled and installed to
 # compile the focalizec compiler and its libraries.
-$(ABSOLUTE_CAML_DIR)/config/Makefile: $(ABSOLUTE_CAML_DIR)
+.configure_external_caml_tool_done: $(ABSOLUTE_CAML_DIR)
 	($(CD) $(ABSOLUTE_CAML_DIR); \
 	 ./configure $(CAML_CONFIGURE_OPTIONS); \
 	 $(MAKE) $(CAML_MAKE_ALL_TARGET); \
 	 $(MAKE) install; \
 	)
+	touch .configure_external_caml_tool_done
 
-$(ABSOLUTE_CAMLP5_DIR)/config/Makefile: $(ABSOLUTE_CAML_DIR)/config/Makefile
+ .configure_external_camlp5_tool_done: .configure_external_caml_tool_done
 	($(CD) $(ABSOLUTE_CAMLP5_DIR); \
 	 PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
 	 ./configure $(CAMLP5_CONFIGURE_OPTIONS); \
 	 $(MAKE) $(CAMLP5_MAKE_ALL_TARGET); \
 	 $(MAKE) install; \
 	)
+	touch .configure_external_camlp5_tool_done
 
-$(ABSOLUTE_COQ_DIR)/config/Makefile: $(ABSOLUTE_CAMLP5_DIR)/config/Makefile
+.configure_external_coq_tool_done: .configure_external_camlp5_tool_done
 	($(CD) $(ABSOLUTE_COQ_DIR); \
 	 PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
 	 ./configure $(COQ_CONFIGURE_OPTIONS); \
 	 $(COQ_MAKE) $(COQ_MAKE_ALL_TARGET); \
 	 $(COQ_MAKE) install; \
 	)
+	touch .configure_external_coq_tool_done
 
 #
 # Internal tools
 #
-build_internal_tools: $(FOCALIZEC_EXES)
+build_internal_tools: .build_internal_tools_done
 
-$(ZENON_EXES): $(ABSOLUTE_COQ_DIR)/config/Makefile
+.build_internal_tools_done : .configure_external_tools_done .build_focalizec_done
+	touch .build_internal_tools_done
+
+.build_zenon_done $(ZENON_EXES): $(ABSOLUTE_COQ_DIR)/config/Makefile
 	for i in $(ZENON_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
@@ -113,8 +125,9 @@ $(ZENON_EXES): $(ABSOLUTE_COQ_DIR)/config/Makefile
 	   $(MAKE) all) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
+	touch .build_zenon_done
 
-$(ZVTOV_EXES): $(ZENON_EXES)
+.build_zvtov_done $(ZVTOV_EXES): .build_zenon_done
 	for i in $(ZVTOV_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
@@ -122,8 +135,9 @@ $(ZVTOV_EXES): $(ZENON_EXES)
 	   $(MAKE) all) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
+	touch .build_zvtov_done
 
-$(FOCALIZEC_EXES): $(ZENON_EXES) $(ZVTOV_EXES)
+.build_focalizec_done $(FOCALIZEC_EXES): .build_zvtov_done
 	for i in $(FOCALIZEC_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
@@ -131,6 +145,9 @@ $(FOCALIZEC_EXES): $(ZENON_EXES) $(ZVTOV_EXES)
 	   $(MAKE) all) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
+	touch .build_focalizec_done
+
+install:: .build_internal_tools_done
 
 install uninstall doc depend::
 	for i in $(INTERNAL_TOOLS_DIRS); do \
