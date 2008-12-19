@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.20 2008-12-19 10:25:11 weis Exp $
+# $Id: Makefile,v 1.21 2008-12-19 11:46:10 weis Exp $
 
 ROOT_DIR = .
 
@@ -114,7 +114,7 @@ configure_external_tools: .done_configure_external_tools
 #
 build_internal_tools: .done_build_internal_tools
 
-.build_internal_tools : .done_configure_external_tools .done_build_focalizec
+.done_build_internal_tools : .done_configure_external_tools .done_build_focalizec
 	touch .done_build_internal_tools
 
 .done_build_zenon $(ZENON_EXES): $(ABSOLUTE_COQ_DIR)/config/Makefile
