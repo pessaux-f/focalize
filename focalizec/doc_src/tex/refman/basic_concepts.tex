@@ -1,4 +1,4 @@
-% $Id: basic_concepts.tex,v 1.12 2008-12-17 21:25:39 hardin Exp $
+% $Id: basic_concepts.tex,v 1.13 2008-12-19 10:13:53 pessaux Exp $
 
 As stated in section \ref{glimpse}, the \focal\ language is designed
 to build an application step by step, going from very abstract
@@ -37,15 +37,18 @@ appears outside species and collections. Such definitions can only be:
   \item expressions to be directly evaluated (but there is no way to
     bind their value to an identifier).
 \end{itemize}
-Any toplevel-definition is terminated by a double semi-character (``;;'').\index{;;}
+Any toplevel-definition is terminated by a double semi-character
+(``;;'').\index{;;}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Species}
 \label{species-intro}
-{\bf Species} \index{species} are the nodes of the
-\focal\ hierarchy. A species is a sequence of
-{\bf methods} \index{method} or {\bf fields}\index{field}, each one being terminated
-by a semi character (``;'')\index{;;}. Hence, a basic species looks like:
+{\bf Species} \index{species} are the nodes of the \focal\
+hierarchy. A species is a sequence of {\bf methods} \index{method} or
+{\bf fields}\index{field}, each one being terminated by a semi
+character (``;'')\index{;;}. Hence, a basic species looks like:
 {\scriptsize
 \begin{lstlisting}
   species Name =
@@ -55,8 +58,9 @@ by a semi character (``;'')\index{;;}. Hence, a basic species looks like:
 \end{lstlisting}
 }
 
-Species names are always {\bf capitalized}. As any toplevel-definition, a species ends
-with a double semi-character (``;;'').\index{;;} There are several kinds of methods:
+Species names are always {\bf capitalised}. As any
+toplevel-definition, a species ends with a double semi-character
+(``;;'').\index{;;} There are several kinds of methods:
 \smallskip
 \begin{itemize}
   \medskip
@@ -95,7 +99,8 @@ instantiation. In other words, this type variable is not universally
 quantified, as are the type variables of polymorphic types. 
 
 \item {\bf Signatures}\index{signature}. They introduce names of
-  constants and functions, uniquely providing their type as a type expression. A signature
+  constants and functions, uniquely providing their type as a type
+  expression. A signature
   begins with the keyword {\tt signature} followed by the introduced
   name followed by {\tt :} followed by a type expression. For
   instance: 
@@ -107,10 +112,11 @@ quantified, as are the type variables of polymorphic types.
       \end{lstlisting}
     } 
 
-  As we saw above, {\tt Self} represents the representation (thus a type) of
-  the current species. Hence an operation pushing an integer onto a stack takes
-  as parameter the integer to push, the stack on which to push and give back a
-  new stack, that is, an entity of type {\tt Self}.
+  As we saw above, {\tt Self} represents the representation (thus a
+  type) of the current species. Hence an operation pushing an integer
+  onto a stack takes as parameter the integer to push, the stack on
+  which to push and give back a new stack, that is, an entity of type
+  {\tt Self}.
 
   \medskip
 
@@ -229,13 +235,22 @@ words this means that there is no more methods only {\em
 \smallskip
 Obviously, it is possible to build a species without signatures and
 properties, only providing functions and theorems directly. In this
-case, if the representation is also defined, then the obtained species is
-trivially complete.
+case, if the representation is also defined, then the obtained species
+is trivially complete.
 
 The important point for a species to be complete is that it can be
 turned into effective executable \ocaml\ code and effective checkable
-\coq\ code, since all the components are
-known.
+\coq\ code, since all the components are known.
+
+\medskip
+{\bf Important}: Although we said that only a complete species can
+lead to effective executable code, of course species even not complete
+are compiled ! This means that you do not need to have a complete
+species to compile your source code ! It is very common to have
+species not complete in source files since programs are written in a
+modular fashion, in several files. Moreover, a library may provide
+species with methods not defined, leaving the user the freedom to
+chose an effective implementation for some algorithms.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Interfaces}
@@ -282,7 +297,7 @@ has exactly the same sequence of methods than the complete species
 underlying it, apart the representation which is hidden. 
 Note that creating a collection from it  is the
 only way to turn methods of a complete species into executable
-code. This point is emphasized by the syntax:
+code. This point is emphasised by the syntax:
 
 {\tt collection} {\em name-collection} {\tt implements} {\em name-species}
 
@@ -321,8 +336,8 @@ Full.print (dv) ;;
 In the above example, we define a complete species {\tt Full}. Then
 we  create the collection
 {\tt MyFull\_Instance}. And we use methods of this collection to
-create entities of this collection. We print the result of the evaluation of
-the top-level definitions of {\tt v} and {\tt dv}. 
+create entities of this collection. We print the result of the
+evaluation of the top-level definitions of {\tt v} and {\tt dv}. 
 
 \smallskip
 

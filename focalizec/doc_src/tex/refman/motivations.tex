@@ -1,4 +1,4 @@
-% $Id: motivations.tex,v 1.4 2008-12-15 15:19:45 hardin Exp $
+% $Id: motivations.tex,v 1.5 2008-12-19 10:13:53 pessaux Exp $
 
 
 
@@ -8,7 +8,8 @@ Implementations) team of the LIP6 (Lab. Informatique de Paris 6)
 at Universit\'e Pierre et Marie Curie (UMPC), Paris}
  with the 
 objective of helping all stages of  development of critical software
-within safety and security domains. The  methods used in these domains are evolving,
+within safety and security domains. The  methods used in these domains
+are evolving,
 ad-hoc and empirical approaches  being replaced by more formal
 methods. For example, for high levels of safety, formal models of the
 requirement/specification phase are more and more considered as they
@@ -17,8 +18,9 @@ properties.  In the same way, high level assurance in system security asks for
 the use of true formal methods along the process of software
 development and is often required for the specification level.
 Thus  the project was to elaborate an Integrated
-Development Environment (IDE) able to provide high-level and justified confidence to
-users, but remaining easy to use by well-trained engineers.
+Development Environment (IDE) able to provide high-level and justified
+confidence to users, but remaining easy to use by well-trained
+engineers.
 
 To ease developing high integrity systems with numerous software
 components, an Integrated Development Environment (IDE) should provide
@@ -45,20 +47,17 @@ specification, handling of dysfunctional behaviors and vulnerabilities
 from the true beginning of development and fault avoidance, fault
 detection by validation testing, vulnerability and safety analysis.
 
-Currently, \focal\  can be seen as an IDE still in development, which attempts
-to give a positive solution to the three requirements identified above,
-the other items being currently under consideration.
- It provides
-means for the developers to formally express their specifications and
-to go step by step (in an incremental approach) to design and
-implementation while proving that
-such an implementation meets its specification or design
-requirements. Its language offers  high level
-mechanisms such as inheritance, late binding, redefinition,
+Currently, \focal\  can be seen as an IDE still in development, which
+attempts to give a positive solution to the three requirements
+identified above, the other items being currently under consideration.
+It provides means for the developers to formally express their
+specifications and to go step by step (in an incremental approach) to
+design and implementation while proving that such an implementation
+meets its specification or design requirements. Its language offers
+high level mechanisms such as inheritance, late binding, redefinition,
 parametrization, etc.  Confidence in proofs submitted by developers or
-automatically done 
-relies on formal proof verification.  It also provides some automation of documentation
-production and management. 
+automatically done relies on formal proof verification.  It also
+provides some automation of documentation production and management. 
 
 A formal specification can be built by declaring names of functions
 and values and introducing
@@ -83,23 +82,23 @@ only one specific domain was considered, the one of Computer
 Algebra. Algorithms used in this domain can be rather intricated and
 difficult to test and this is not rare that computer algebra systems
 issue a bad result, due to semantical flaws, compiler anomalies,
-etc. Thus the idea was to design a langage allowing to specify the
+etc. Thus the idea was to design a language allowing to specify the
 mathematics underlying these algorithms and to go step by step to
 different kinds of implementations according to the specifities of the
 problem under consideration\footnote{For example Computer Algebra
-Librairies use several different representations of polynomials
+Libraries use several different representations of polynomials
 according to the treatment to be done}. The first step was to design
 the semantics of such a language, trying to fit to several
 requirements: easing the expression of mathematical statements, clear
 distinction between the mathematical structure (semi-ring, polynomial,
 ..)  and its different implementations, easing the development
-(modularity, inheritance, parameterisation, abstraction, ..), runtime
+(modularity, inheritance, parametrisation, abstraction, ..), runtime
 efficiency and confidence in the whole development (mechanised proofs,
 ..).  After an initial phase of conceptual design, the \focal\
 semantics was submitted to a double test. On one hand, this semantics
 was specified in \coq\ and in a categorical model of type theories by
 S. Boulm\'e (see his thesis\cite{BoulmePhD00}), a point which
-enlighted the borders of this apporach, regarding the logical
+enlightened the borders of this approach, regarding the logical
 background. On the other hand, before designing the syntax, it was
 needed to study the development style in such a
 language. R. Rioboo~\cite{ThRRCalculemus,HardinRiobooTSI04} used the
@@ -109,38 +108,40 @@ language. R. Rioboo~\cite{ThRRCalculemus,HardinRiobooTSI04} used the
 Then the time came to design the syntax of
 the language and the compiler. To overcome inconsistencies risks, an
 original dependency analysis was incorporated into the compiler
-(V. Prevosto thesis\cite{PrevostoPhD03,TPHOL2002,PrevostoJAR02}) and the correction
-of the compiler (mostly written by V. Prevosto) against \focal's
-semantics is proved (by hand) \cite{TLCA2005}, a point which brings a
-satisfactory confidence in the language's correctness. Then
-Rioboo~\cite{ } began the development of a huge  computer algebra
+(V. Prevosto thesis\cite{PrevostoPhD03,TPHOL2002,PrevostoJAR02}) and
+the correction of the compiler (mostly written by V. Prevosto) against
+\focal's semantics is proved (by hand) \cite{TLCA2005}, a point which
+brings a satisfactory confidence in the language's correctness. Then
+Rioboo~\cite{ } began the development of a huge computer algebra
 library, which  offers  full specification
 and implementation of usual algebraic structures up to multivariate
-polynomial rings with complex algorithms,   first as  a way to extensively test
-the language and ( quite satisfactory)
+polynomial rings with complex algorithms, first as a way to
+extensively test the language and ( quite satisfactory)
 efficiency  of the produced code and then to provide a standard library
-of mathematical backgrounds.  And D. Doligez\cite{ZenonBDD}  started the
+of mathematical backgrounds. And D. Doligez\cite{ZenonBDD} started the
 development of \zenon, an automatic prover based on tableaux method,
 which takes a \focal\ statement and tries to build a proof of it and,
 when succeeds,  issues a \coq\ term. More  recently, M. Carlier and
-C. Dubois\cite{CarlierDuboisLNCS2008} enterprised the development of a test tool for \focal. 
+C. Dubois\cite{CarlierDuboisLNCS2008} began the development of a
+test tool for \focal.
 
 \focal\ has already been used to develop huge examples such as  the
 standard library and the computer algebra library. The library
 dedicated to the algebra of access control models, developed by
 M. Jaume and C. Morisset\cite{jias06,fcsarspa06,MorissetPhd}, 
  is   another huge example, which borrows implementations of orderings,
-lattices and boolean algebras to the computer algebra library.   \focal{} was also very
-successfully used to formalize airport security regulations, a work by 
-D. Delahaye, J.-F. Etienne, C.  Dubois, V. Donzeau-Gouge
-~\cite{EDEMOI-All,EDEMOI-Model,EDEMOI-Proof}. This last work led to
-the development of a translator\cite{Focal-UML}  from \focal\ to UML
-for documentation purposes. 
+lattices and boolean algebras to the computer algebra library.
+\focal{} was also very successfully used to formalize airport security
+regulations, a work by D. Delahaye, J.-F. Etienne, C.  Dubois,
+V. Donzeau-Gouge ~\cite{EDEMOI-All,EDEMOI-Model,EDEMOI-Proof}. This
+last work led to the development of a translator\cite{Focal-UML}
+from \focal\ to UML for documentation purposes. 
 
 We would like to mention  several works about safety and/or security
 concerns within \focal\  and specially the definition of a safety life
-cycle by P. Ayrault, T. Hardin and F. Pessaux \cite{TTSS08} and the study of some traps
-within formal methods by E. Jaegerand T. Hardin\cite{traps}. 
+cycle by P. Ayrault, T. Hardin and F. Pessaux \cite{TTSS08} and the
+study of some traps within formal methods by E. Jaeger and
+T. Hardin\cite{traps}. 
 
 
 

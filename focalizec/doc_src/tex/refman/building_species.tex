@@ -1,4 +1,4 @@
-% $Id: building_species.tex,v 1.9 2008-12-16 17:32:00 hardin Exp $
+% $Id: building_species.tex,v 1.10 2008-12-19 10:13:53 pessaux Exp $
 
 
 
@@ -48,7 +48,7 @@ end ;;
 }
 
 Instead of abstracting the type parameter and leaving it free in the
-context of the species, in \focal\ we {\em parameterise} the species
+context of the species, in \focal\ we {\em parametrise} the species
 by a {\bf collection parameter} called  {\tt Elem} in the example:
 {\scriptsize
 \begin{lstlisting}
@@ -61,14 +61,14 @@ end ;;
 
 Collection parameters are introduced by their name followed by the
 {\tt is} keyword, followed by an {\bf interface name} (remember that
-an interface has the same name as its uderlying species). In the
+an interface has the same name as its underlying species). In the
 example, {\tt Basic\_object} is a pre-defined species  from the
 standard library, containing only few methods and this name is used
 here to denote the interface of this species.   A
 collection parameter can be instantiated by any collection which
 interface is {\em
   compatible}\index{interface!compatibility} with the one required by
-the parameterized species (c.f \ref{interface}). In the example, any
+the parametrised species (c.f \ref{interface}). In the example, any
 effective parameter instantiating {\tt Elem} is a collection which
 interface contains at least the methods  listed in the interface of
 {\tt Basic\_object}. 
@@ -84,9 +84,10 @@ stands for the type of a function:
 \begin{itemize}
 \item taking a first argument whose type is the representation  of a
   collection having a compatible interface with the interface {\tt
-    Basic\_object}. (This especially means that such an argument is created using methods of the compatible collection),
-  \item taking a second argument whose type is the representation of the current
-    species,
+    Basic\_object}. (This especially means that such an argument is
+  created using methods of the compatible collection),
+  \item taking a second argument whose type is the representation of
+    the current species,
   \item and returning a value whose type is the representation  of the
     current species.
 \end{itemize}
@@ -98,12 +99,12 @@ The answer to this question is especially important to
 understand the programming model in \focal. It is a {\bf collection
   parameter} because ultimately, at the terminal nodes of the
 development, this parameter will have to be instantiated by an entity
-where everything is defined, so at least a complete species.   Imagine how to
-build an executable code if a parameter can be instantiated by a
-species with some methods only declared\ldots This is the first
+where everything is defined, so at least a complete species. Imagine
+how to build an executable code if a parameter can be instantiated by
+a species with some methods only declared\ldots This is the first
 reason. 
  
-Remember that properties mentionned in the collection interface have
+Remember that properties mentioned in the collection interface have
 been proved in the underlying complete species. Indeed in the hosting
 species, these theorems can be used as lemmas to do current proofs. If
 the collection representation was not abstracted, then some methods of
@@ -115,16 +116,16 @@ hosting, exactly as is the representation of a collection (c.f
 \ref{collection}).
 
 To summarize, declaring a collection parameter for a parametrised
-species means providing two things: the (capitalized) name of the parameter and the
-interface (denoted by a species name) that the instantiation of this
-parameter must satisfy.
+species means providing two things: the (capitalized) name of the
+parameter and the interface (denoted by a species name) that the
+instantiation of this parameter must satisfy.
 
 
 
 \smallskip It is important at this point to note that \focal\ deals with
 dependent types \index{type!dependent}, and therefore that {\em
   the order of the parameters is important}. To define the type of a
-parameter, one can use the preeceding parameters. For instance, 
+parameter, one can use the preceding parameters. For instance, 
 assuming that a parametrised species {\tt List} 
 declares the basic operations over lists, one can specify a new
 species working on couples of respectively values and lists of values
@@ -163,7 +164,7 @@ i.e. signatures, functions, properties and theorems, denoted by the
 parameter's name followed by  the ``!''\index{bang character}
 character followed by the method name. 
 
-To create a species describing a notion of generic couple, it sufices
+To create a species describing a notion of generic couple, it suffices
 to use two collection parameters, one for each component of the
 couple. To define a printing (i.e. returning a string, not making side
 effect in our example) method, it suffices to require each collection
@@ -231,7 +232,7 @@ a parameter can be instantiated by an {\bf entity of a certain
   collection}.  
 
 For example, to obtain a species offering addition modulo an
-integer value, we need to parameterise it by an entity of a collection
+integer value, we need to parametrise it by an entity of a collection
 implementing the integers and to give a way to build an entity
 representing the value of the modulo. Such a parameter is called an
 {\bf entity parameter} and is introduced by the keyword {\tt in}.
@@ -427,13 +428,13 @@ collection. But, the value constructors of the type {\tt list} are
 available, for instance, for pattern-matching.  
 
 As a consequence, if two methods in inherited species have the same
-name and if at least one of them is itself a parameterised one, then
+name and if at least one of them is itself a parametrised one, then
 the signatures of these methods are no longer required to be identical
 but their type must have a common instance after instanciation of the
 collection parameters.
 
 \index{inheritance!parametrised by {\tt Self}}
-\noindent{\bf Species inheriting species parameterised by {\tt Self}} 
+\noindent{\bf Species inheriting species parametrised by {\tt Self}} 
 A species can also inherit from a species parametrised by itself
 (i.e. by {\tt Self}). Although this is rather tricky programming, the
 standard library of \focal\ shows such an example in the file {\em
@@ -446,7 +447,7 @@ compatible with the interface required by the collection parameter of
 the inherited species. The \focal\ compiler collects the parts of the
 interface of {\tt Self} obtained either by inheritance or directly in
 the species body. Then it checks that the obtained interface is indeed
-compatible with the required interfaces of the parameterized inherited
+compatible with the required interfaces of the parametrised inherited
 species. if so, the compiler is able to build the new species. Thus
 the compiler tries to build a kind of fix-point but  this process is
 always terminating, issuing either the new species or rejecting it in
@@ -540,7 +541,7 @@ This mechanism enables two programming features:
     initial implementation for the inherited species. For example, the
     inheriting species can provide some new information
     (representation, functions, ..) which allow a more efficient
-    implementatio of a given function.
+    implementation of a given function.
 \end{itemize}
 
 
@@ -577,10 +578,11 @@ end ;;
 \end{lstlisting}
 }
 
-In this cases, knowing the type (or the logical statement) of the used methods is sufficient to
-ensure that the using method is well-formed. The type of a
-method being provided by its {\bf declaration}, we will call these induced
-dependencies {\bf decl-dependencies}.
+In this cases, knowing the type (or the logical statement) of the used
+methods is sufficient to ensure that the using method is
+well-formed. The type of a method being provided by its
+{\bf declaration}, we will call these induced dependencies
+{\bf decl-dependencies}.
 
 Such dependencies also arise on the representation as soon as the type
 of a method makes reference to the type {\tt Self}. Hence we can have
@@ -591,8 +593,8 @@ used in {\tt p1} and {\tt t1} as the argument of {\tt test} which expects
 an argument of type {\tt Self}), {\tt p1} and {\tt t1} have a
 decl-dependency on the representation. Moreover, {\tt f2} has one on
 {\tt f1}. The property {\tt p1} has decl-dependencies on {\tt test},
-{\tt f1} and {\tt f2} and {\tt Self}. And finally {\tt t1} decl-depends on {\tt p1},
-{\tt test}, {\tt f1} and {\tt Self}.
+{\tt f1} and {\tt f2} and {\tt Self}. And finally {\tt t1}
+decl-depends on {\tt p1}, {\tt test}, {\tt f1} and {\tt Self}.
 
 
 
