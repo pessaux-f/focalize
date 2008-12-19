@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.16 2008-12-19 09:37:21 weis Exp $
+# $Id: configure,v 1.17 2008-12-19 09:51:33 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -444,12 +444,14 @@ configure_auto () {
 }
 
 summarize_configuration () {
-  echo "***********************************"
-  echo "Configuration summary for focalize:"
+  echo
+  echo "*******************************************************"
+  echo "Summary of configuration settings summary for focalize:"
   echo
   cat .config_var
   echo
-  echo "***********************************"
+  echo "End of Summary of configuration settings for focalize."
+  echo "******************************************************"
 }
 
 #
