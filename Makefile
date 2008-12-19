@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.19 2008-12-19 10:11:41 weis Exp $
+# $Id: Makefile,v 1.20 2008-12-19 10:25:11 weis Exp $
 
 ROOT_DIR = .
 
@@ -36,16 +36,16 @@ all:: configure_external build_internal_tools
 #
 # External tools
 #
-configure_external: ./.config_var \
+configure_external: .config_var \
  install_external_tools_sources \
  configure_external_tools
 
-./.config_var:
+.config_var:
 	./configure
 
-install_external_tools_sources: .external_tools_sources_done
+install_external_tools_sources: .done_external_tools_sources
 
-.external_tools_sources_done: $(ABSOLUTE_COQ_DIR)
+.done_external_tools_sources: $(ABSOLUTE_COQ_DIR)
 	touch .external_tools_sources_done
 
 $(ABSOLUTE_CAML_DIR):
@@ -69,10 +69,10 @@ $(ABSOLUTE_COQ_DIR): $(ABSOLUTE_CAMLP5_DIR)
 	  echo "<-- $$i [$$?]"; \
 	done
 
-configure_external_tools: .configure_external_tools_done
+configure_external_tools: .done_configure_external_tools
 
-.configure_external_tools_done: .configure_external_coq_tool_done
-	touch .configure_external_tools_done
+.done_configure_external_tools: .done_configure_external_coq_tool
+	touch .done_configure_external_tools
 
 # We need to configure, build then install in a row, since
 # the caml compiler should be installed to configure camlp5,
@@ -83,41 +83,41 @@ configure_external_tools: .configure_external_tools_done
 # and install the FoCaLize internal tools zenon and zvtov;
 # all the external and internal tools should be compiled and installed to
 # compile the focalizec compiler and its libraries.
-.configure_external_caml_tool_done: $(ABSOLUTE_CAML_DIR)
+.done_configure_external_caml_tool: $(ABSOLUTE_CAML_DIR)
 	($(CD) $(ABSOLUTE_CAML_DIR); \
 	 ./configure $(CAML_CONFIGURE_OPTIONS); \
 	 $(MAKE) $(CAML_MAKE_ALL_TARGET); \
 	 $(MAKE) install; \
 	)
-	touch .configure_external_caml_tool_done
+	touch .done_configure_external_caml_tool
 
- .configure_external_camlp5_tool_done: .configure_external_caml_tool_done
+ .done_configure_external_camlp5_tool: .done_configure_external_caml_tool
 	($(CD) $(ABSOLUTE_CAMLP5_DIR); \
 	 PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
 	 ./configure $(CAMLP5_CONFIGURE_OPTIONS); \
 	 $(MAKE) $(CAMLP5_MAKE_ALL_TARGET); \
 	 $(MAKE) install; \
 	)
-	touch .configure_external_camlp5_tool_done
+	touch .done_configure_external_camlp5_tool
 
-.configure_external_coq_tool_done: .configure_external_camlp5_tool_done
+.done_configure_external_coq_tool: .done_configure_external_camlp5_tool
 	($(CD) $(ABSOLUTE_COQ_DIR); \
 	 PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
 	 ./configure $(COQ_CONFIGURE_OPTIONS); \
 	 $(COQ_MAKE) $(COQ_MAKE_ALL_TARGET); \
 	 $(COQ_MAKE) install; \
 	)
-	touch .configure_external_coq_tool_done
+	touch .done_configure_external_coq_tool
 
 #
 # Internal tools
 #
-build_internal_tools: .build_internal_tools_done
+build_internal_tools: .done_build_internal_tools
 
-.build_internal_tools_done : .configure_external_tools_done .build_focalizec_done
-	touch .build_internal_tools_done
+.build_internal_tools : .done_configure_external_tools .done_build_focalizec
+	touch .done_build_internal_tools
 
-.build_zenon_done $(ZENON_EXES): $(ABSOLUTE_COQ_DIR)/config/Makefile
+.done_build_zenon $(ZENON_EXES): $(ABSOLUTE_COQ_DIR)/config/Makefile
 	for i in $(ZENON_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
@@ -125,9 +125,9 @@ build_internal_tools: .build_internal_tools_done
 	   $(MAKE) all) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
-	touch .build_zenon_done
+	touch .done_build_zenon
 
-.build_zvtov_done $(ZVTOV_EXES): .build_zenon_done
+.done_build_zvtov $(ZVTOV_EXES): .done_build_zenon
 	for i in $(ZVTOV_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
@@ -135,9 +135,9 @@ build_internal_tools: .build_internal_tools_done
 	   $(MAKE) all) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
-	touch .build_zvtov_done
+	touch .done_build_zvtov
 
-.build_focalizec_done $(FOCALIZEC_EXES): .build_zvtov_done
+.done_build_focalizec $(FOCALIZEC_EXES): .done_build_zvtov
 	for i in $(FOCALIZEC_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
@@ -145,9 +145,9 @@ build_internal_tools: .build_internal_tools_done
 	   $(MAKE) all) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
-	touch .build_focalizec_done
+	touch .done_build_focalizec
 
-install:: .build_internal_tools_done
+install:: .done_build_internal_tools
 
 install uninstall doc depend::
 	for i in $(INTERNAL_TOOLS_DIRS); do \
@@ -156,11 +156,8 @@ install uninstall doc depend::
 	  echo "<-- $$i [$$?]"; \
 	done
 
-install::
-	.configure_coq_validation
-
 unconfigure:
-	$(RM) ./.config_var ./.depend
+	$(RM) .config_var .depend .done_*
 
 clean::
 	$(TOUCH) zenon/.config_var
