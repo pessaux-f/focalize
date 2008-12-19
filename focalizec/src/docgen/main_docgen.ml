@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.6 2008-12-19 15:52:10 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.7 2008-12-19 16:35:48 pessaux Exp $ *)
 
 let xmlify_string s =
   let s_len = String.length s in
@@ -43,26 +43,6 @@ let get_in_file_and_name_from_ident ~current_unit ident =
 
 
 
-let gendoc_species_field out_fmt = function
-  | Env.TypeInformation.SF_sig (_, n, sch) ->
-      Format.fprintf out_fmt "<LI>Signature: %a : %a</LI>@\n"
-        Sourcify.pp_vname n Types.pp_type_scheme sch
-  | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, _) ->
-      Format.fprintf out_fmt "<LI>Let: %a</LI>@\n" Sourcify.pp_vname n
-  | Env.TypeInformation.SF_let_rec let_field_infos ->
-      Format.fprintf out_fmt "<LI><UL>Let rec@\n" ;
-      List.iter
-        (fun (_, n, _, _, _, _, _, _) ->
-          Format.fprintf out_fmt "<LI>Let: %a</LI>@\n" Sourcify.pp_vname n)
-        let_field_infos ;
-      Format.fprintf out_fmt "</UL></LI>@\n"
-  | Env.TypeInformation.SF_theorem (_, n, _, _, _, _) ->
-      Format.fprintf out_fmt "<LI>Theorem: %a</LI>@\n" Sourcify.pp_vname n
-  | Env.TypeInformation.SF_property (_, n, _, _, _) ->
-      Format.fprintf out_fmt "<LI>Property: %a</LI>@\n" Sourcify.pp_vname n
-;;
-
-
 
 let gendoc_foc_informations out_fmt name_opt math_opt latex_opt comments =
   Format.fprintf out_fmt "@[<h 2><foc:informations>@\n" ;
@@ -88,6 +68,27 @@ let gendoc_inherits out_fmt ~current_unit species_def =
   let species_def_descr = species_def.Parsetree.ast_desc in
   if species_def_descr.Parsetree.sd_inherits.Parsetree.ast_desc <> [] then
     (begin
+    (* ***************************************************************** *)
+    (* Just a local recursive function to go inside the paren expression
+       when generating the XML for species parameters expressions.       *)
+    (* ***************************************************************** *)
+    let rec rec_gen_species_param_expr e =
+      match e.Parsetree.ast_desc with
+       | Parsetree.E_self ->
+           Format.fprintf out_fmt "<foc:param>Self</foc:param>@\n"
+       | Parsetree.E_constr (cstr_expr, []) ->
+           let Parsetree.CI qvname = cstr_expr.Parsetree.ast_desc in
+           (* [Fixme] DTD doesn't take care of parameters not hosted in
+              the current compilation unit. There is no "infile" attribute. *)
+           let vname =
+             match qvname with
+                Parsetree.Vname vn | Parsetree.Qualified (_, vn) -> vn in
+           Format.fprintf out_fmt "<foc:param>%a</foc:param>@\n"
+             Sourcify.pp_vname vname
+       | Parsetree.E_paren e' -> rec_gen_species_param_expr e'
+       | _ -> assert false in
+    (* ************************************ *)
+    (* Now generate the "inherits" clauses. *)
     Format.fprintf out_fmt "@[<h 2><foc:inherits>@\n" ;
     List.iter
       (fun species_expr ->
@@ -113,7 +114,9 @@ let gendoc_inherits out_fmt ~current_unit species_def =
              Format.fprintf out_fmt "\">%a</foc:foc-name>@\n"
                Sourcify.pp_vname ident_vname ;
              List.iter
-               (fun _ -> ())
+               (fun species_param ->
+                 let Parsetree.SP expr = species_param.Parsetree.ast_desc in
+                 rec_gen_species_param_expr expr)
                params ;
              Format.fprintf out_fmt "@]</foc:app>@\n"
              end))
@@ -133,7 +136,7 @@ let gendoc_species out_fmt ~current_unit species_def _species_descr =
   (* Inherits: foc:inherits*. *)
   gendoc_inherits out_fmt ~current_unit species_def ;
   (* Methods: (%foc:component;)*. *)
-  Format.fprintf out_fmt "@]@\n" ;
+  Format.fprintf out_fmt "@]</foc:species>@\n@\n" ;
 ;;
 
 
@@ -307,7 +310,7 @@ let gendoc_please_compile_me input_file_name ast_root pcms =
         let description = xmlify_string description in
         Format.fprintf out_fmt "<foc:comments>%s</foc:comments>@\n" description
     | None -> ()) ;
-  Format.fprintf out_fmt "@]</foc:general-informations>@\n" ;
+  Format.fprintf out_fmt "@]</foc:general-informations>@\n@\n" ;
   List.iter (gen_doc_pcm out_fmt ~current_unit) pcms ;
   Format.fprintf out_fmt "@]</foc:focdoc>@\n" ;
   close_out out_channel

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.73 2008-12-10 08:59:17 weis Exp $ *)
+(* $Id: scoping.ml,v 1.74 2008-12-19 16:35:48 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1903,7 +1903,7 @@ let scope_species_param ctx env param param_kind =
                  sum type constructors) that should be considered as a species
                  name. *)
               Parsetree.SP
-        (scope_expr_collection_cstr_for_is_param ctx env expr)
+                (scope_expr_collection_cstr_for_is_param ctx env expr)
           | Env.ScopeInformation.SPK_in ->
               Parsetree.SP (scope_expr ctx env expr)
          end)) in
