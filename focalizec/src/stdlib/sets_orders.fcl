@@ -14,9 +14,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets_orders.fcl,v 1.19 2008-11-30 22:26:05 weis Exp $ *)
+(* $Id: sets_orders.fcl,v 1.20 2008-12-19 15:51:44 pessaux Exp $ *)
 
-(** Basic sets operations, orderings and lattices. *)
+(**
+ @title FoC Project. Basic algebra.
+ @author The FoC project
+ @description Basic sets operations, orderings and lattices.
+*)
 
 use "basics";;
 open "basics";;
