@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.18 2008-12-19 10:49:52 weis Exp $
+# $Id: configure,v 1.19 2008-12-19 11:05:22 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -56,6 +56,8 @@ DEFAULT_SHARE_PROJECT_BIN_DIR="${DEFAULT_SHARE_PROJECT_DIR}/bin"
 # Defaults for Caml.
 DEFAULT_CAML_BYT="${DEFAULT_SHARE_PROJECT_BIN_DIR}/ocamlc"
 DEFAULT_CAML_BIN="${DEFAULT_SHARE_PROJECT_BIN_DIR}/ocamlopt"
+DEFAULT_CAML_YAC="${DEFAULT_SHARE_PROJECT_BIN_DIR}/ocamlyacc"
+DEFAULT_CAML_LEX="${DEFAULT_SHARE_PROJECT_BIN_DIR}/ocamllex"
 
 # Defaults for Coq.
 DEFAULT_COQC="${DEFAULT_SHARE_PROJECT_BIN_DIR}/coqc"
@@ -318,18 +320,20 @@ set_software_specific_options () {
 }
 
 set_caml_specific_options () {
-  if test -z "$CAML_BYT"; then CAML_BYT="${DEFAULT_CAML_BYT}"; fi
-  if test -z "$CAML_BIN"; then CAML_BIN="${DEFAULT_CAML_BIN}"; fi
+  if test -z "${CAML_BYT}"; then CAML_BYT="${DEFAULT_CAML_BYT}"; fi
+  if test -z "${CAML_BIN}"; then CAML_BIN="${DEFAULT_CAML_BIN}"; fi
+  if test -z "${CAML_LEX}"; then CAML_BIN="${DEFAULT_CAML_LEX}"; fi
+  if test -z "${CAML_YAc}"; then CAML_BIN="${DEFAULT_CAML_YAC}"; fi
 }
 
 set_coq_specific_options () {
-  if test -z "$COQC"; then COQC="${DEFAULT_COQC}"; fi
-  if test -z "$COQRC"; then COQRC="${DEFAULT_COQRC}"; fi
+  if test -z "${COQC}"; then COQC="${DEFAULT_COQC}"; fi
+  if test -z "${COQRC}"; then COQRC="${DEFAULT_COQRC}"; fi
   set_COQ_MAKE;
 }
 
 set_zenon_specific_options () {
-  if test -z "$ZENON"; then ZENON="${DEFAULT_ZENON}"; fi
+  if test -z "${ZENON}"; then ZENON="${DEFAULT_ZENON}"; fi
   if test -z "${USE_COQC}"; then USE_COQC="${DEFAULT_USE_COQC}"; fi
   if test -z "${CONVERT}"; then CONVERT="${DEFAULT_CONVERT}"; fi
   if test -z "${GS}"; then GS="${DEFAULT_GS}"; fi
@@ -337,7 +341,7 @@ set_zenon_specific_options () {
 }
 
 set_zvtov_specific_options () {
-  if test -z "$ZVTOV"; then ZVTOV="${DEFAULT_ZVTOV}"; fi
+  if test -z "${ZVTOV}"; then ZVTOV="${DEFAULT_ZVTOV}"; fi
   set_USE_XMLRPC;
 }
 

@@ -1,5 +1,5 @@
 #  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.9 2008-12-19 09:37:21 weis Exp $
+#  $Id: .config_var.in,v 1.10 2008-12-19 11:05:38 weis Exp $
 
 # The project id card.
 PROJECT_NAME=@PROJECT_NAME@
@@ -33,6 +33,8 @@ SHARE_PROJECT_DOC_DIR=@SHARE_PROJECT_DOC_DIR@
 # Caml compilers.
 CAML_BYT=@CAML_BYT@
 CAML_BIN=@CAML_BIN@
+CAML_YAC=@CAML_YAC@
+CAML_LEX=@CAML_LEX@
 # Compilation flags for Caml.
 BYT_DEBUG_FLAGS=@BYT_DEBUG_FLAGS@
 BIN_DEBUG_FLAGS=@BIN_DEBUG_FLAGS@
