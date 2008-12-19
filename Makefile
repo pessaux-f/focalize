@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.21 2008-12-19 11:46:10 weis Exp $
+# $Id: Makefile,v 1.22 2008-12-19 11:52:17 weis Exp $
 
 ROOT_DIR = .
 
@@ -160,6 +160,7 @@ unconfigure:
 	$(RM) .config_var .depend .done_*
 
 clean::
+	$(RM) .done_*
 	$(TOUCH) zenon/.config_var
 	for i in $(TAR_BALLS_DIR) $(INTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
