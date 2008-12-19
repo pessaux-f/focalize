@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.71 2008-12-18 15:29:17 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.72 2008-12-19 10:14:25 pessaux Exp $ *)
 
 let print_focalize_exception ppf = function
   (* ********************* *)
@@ -263,7 +263,7 @@ let print_focalize_exception ppf = function
   | Infer.Proof_of_multiply_defined (at1, name, at2) ->
       Format.fprintf ppf
         "%a:@\n@[%tDelayed@ proof@ of%t@ '%t%a%t'@ %twas@ found@ several@ \
-        times@ in@ the@ species.@ Other@ occurence@ is@ at%t:@ %t%a%t.@]@."
+        times@ in@ the@ species.@ Other@ occurrence@ is@ at%t:@ %t%a%t.@]@."
         Location.pp_location at1
         Handy.pp_set_bold Handy.pp_reset_effects
         Handy.pp_set_underlined Sourcify.pp_vname name
