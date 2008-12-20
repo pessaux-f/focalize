@@ -1,5 +1,5 @@
 (* 
- *@version $Revision: 1.1 $ $Date: 2008-12-18 15:07:39 $
+ *@version $Revision: 1.2 $ $Date: 2008-12-20 16:08:14 $
  *)
 
 use "basics";;
@@ -309,13 +309,18 @@ proof =
   <1>1 
     assume s1 in St1,
     assume a2 in Aut2,
-    assume a3 in Aut2,
+    assume a3 in Aut2, 
   prove !equal(!constr_self(s1, a2), !constr_self(s1, a3))
     <2>1 prove St1!equal(!st_aut1(!constr_self(s1, a2)), s1)
-    by property !st_is_fst_self
-    <2>2 prove St1!equal(s1, !st_aut1(!constr_self(s1, a3)))
-    by property St1!equal_symmetric, !st_is_fst_self
-    <2>0 qed by step <2>1, <2>2 
+    by property !st_is_fst_self, St1!equal_reflexive 
+       definition of constr_self, st_aut1 
+    <2>2 prove St1!equal(!st_aut1(!constr_self(s1, a3)), s1)
+    by property !st_is_fst_self, St1!equal_reflexive 
+       definition of constr_self, st_aut1 
+    <2>3 prove St1!equal(s1, !st_aut1(!constr_self(s1, a3)))
+    by property St1!equal_symmetric
+       step <2>2
+    <2>0 qed by step <2>1, <2>3 
                 property St1!equal_transitive 
                 definition of equal
   <1>0 qed.
@@ -360,7 +365,7 @@ proof =
  prove Coll_requests!equal(r, Coll_requests!normal_switched)
  <2>1 qed assumed {* To do *}
 
-<1>f qed. 
+<1>f qed.
 ;
 
 end;;
