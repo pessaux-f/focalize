@@ -12,14 +12,17 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.7 2008-12-12 08:01:04 weis Exp $
+# $Id: Makefile,v 1.8 2008-12-20 17:19:14 ayrault Exp $
 
 ROOT_DIR = ../..
 
 include $(ROOT_DIR)/Makefile.config
 
 # Fill here to add a new directory for a new contribution
-SUB_DIRS =
+SUB_DIRS = \
+	utils \
+	voter \
+	automata
 
 include $(ROOT_DIR)/Makefile.common
 
@@ -50,4 +53,3 @@ depend::
 	for i in $(SUB_DIRS); do \
 	  ($(CD) $$i ; $(MAKE) depend) \
 	done
-
