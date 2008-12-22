@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.23 2008-12-22 13:15:26 weis Exp $
+# $Id: Makefile,v 1.24 2008-12-22 17:41:01 weis Exp $
 
 ROOT_DIR = .
 
@@ -121,8 +121,8 @@ build_internal_tools: .done_build_internal_tools
 	for i in $(ZENON_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
-	   PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
-	   $(MAKE) all) || exit; \
+	   ./configure $(ZENON_CONFIGURE_OPTIONS); \
+	   $(MAKE) $(ZENON_MAKE_ALL_tARGET) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 	touch .done_build_zenon
@@ -131,8 +131,8 @@ build_internal_tools: .done_build_internal_tools
 	for i in $(ZVTOV_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
-	   PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
-	   $(MAKE) all) || exit; \
+	   ./configure $(ZVTOV_CONFIGURE_OPTIONS); \
+	   $(MAKE) $(ZVTOV_MAKE_ALL_TARGET)) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 	touch .done_build_zvtov
@@ -141,8 +141,8 @@ build_internal_tools: .done_build_internal_tools
 	for i in $(FOCALIZEC_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
-	   PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
-	   $(MAKE) all) || exit; \
+	   ./configure $(FOCALIZEC_CONFIGURE_OPTIONS); \
+	   $(MAKE) $(FOCALIZEC_MAKE_ALL_TARGET) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 	touch .done_build_focalizec
