@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.22 2008-12-19 11:52:17 weis Exp $
+# $Id: Makefile,v 1.23 2008-12-22 13:15:26 weis Exp $
 
 ROOT_DIR = .
 
@@ -46,7 +46,7 @@ configure_external: .config_var \
 install_external_tools_sources: .done_external_tools_sources
 
 .done_external_tools_sources: $(ABSOLUTE_COQ_DIR)
-	touch .external_tools_sources_done
+	touch .done_external_tools_sources
 
 $(ABSOLUTE_CAML_DIR):
 	for i in $(TAR_BALLS_DIR); do \
