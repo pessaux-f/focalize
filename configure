@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.23 2008-12-22 17:40:08 weis Exp $
+# $Id: configure,v 1.24 2008-12-22 18:38:20 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -54,6 +54,7 @@ DEFAULT_SHARE_PROJECT_BIN_DIR="${DEFAULT_SHARE_PROJECT_DIR}/bin"
 #DEFAULT_SHARE_PROJECT_DOC_DIR="${DEFAULT_SHARE_PROJECT_DIR}/doc"
 
 # Defaults for Caml.
+DEFAULT_CAML_DIR="${DEFAULT_LIB_DIR}/ocaml"
 DEFAULT_CAML_BYT="${DEFAULT_SHARE_PROJECT_BIN_DIR}/ocamlc"
 DEFAULT_CAML_BIN="${DEFAULT_SHARE_PROJECT_BIN_DIR}/ocamlopt"
 DEFAULT_CAML_YAC="${DEFAULT_SHARE_PROJECT_BIN_DIR}/ocamlyacc"
@@ -61,8 +62,11 @@ DEFAULT_CAML_LEX="${DEFAULT_SHARE_PROJECT_BIN_DIR}/ocamllex"
 DEFAULT_BYT_DEBUG_FLAGS="-g -dtypes"
 DEFAULT_BIN_DEBUG_FLAGS="-dtypes"
 
+# Default for Camlp5
+DEFAULT_CAMLP5_DIR="${DEFAULT_CAML_DIR}/camlp5"
 
 # Defaults for Coq.
+DEFAULT_COQ_DIR=
 DEFAULT_COQC="${DEFAULT_SHARE_PROJECT_BIN_DIR}/coqc"
 DEFAULT_COQRC="$HOME/.coqrc"
 DEFAULT_COQ_MAKE="gmake"

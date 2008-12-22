@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.9 2008-12-18 16:49:36 weis Exp $
+# $Id: Makefile,v 1.10 2008-12-22 18:38:20 weis Exp $
 
 ROOT_DIR = ..
 
@@ -21,21 +21,21 @@ include $(ROOT_DIR)/Makefile.config
 
 all:: $(EXTERNAL_TOOLS_DIRS)
 
-$(ABSOLUTE_CAML_DIR):
+$(ABSOLUTE_CAML_SRC_DIR):
 	for i in $(CAML_TAR_BALLS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $(ROOT_DIR); $(TARX) $(TAR_BALLS_DIR_NAME)/$$i) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 
-$(ABSOLUTE_CAMLP5_DIR):
+$(ABSOLUTE_CAMLP5_SRC_DIR):
 	for i in $(CAMLP5_TAR_BALLS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $(ROOT_DIR); $(TARX) $(TAR_BALLS_DIR_NAME)/$$i); \
 	  echo "<-- $$i [$$?]"; \
 	done
 
-$(ABSOLUTE_COQ_DIR):
+$(ABSOLUTE_COQ_SRC_DIR):
 	for i in $(COQ_TAR_BALLS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $(ROOT_DIR); $(TARX) $(TAR_BALLS_DIR_NAME)/$$i) || exit; \
@@ -48,11 +48,11 @@ patch_camlp5: $(CAMLP5_PATCH_TAR_BALL)
 
 patch_coq: $(COQ_PATCH_TAR_BALL)
 
-$(CAMLP5_PATCH_TAR_BALL): $(CAMLP5_DIR_NAME)
-	tar cvzf $(CAMLP5_PATCH_TAR_BALL) $(CAMLP5_DIR_NAME)
+$(CAMLP5_PATCH_TAR_BALL): $(CAMLP5_SRC_DIR_NAME)
+	tar cvzf $(CAMLP5_PATCH_TAR_BALL) $(CAMLP5_SRC_DIR_NAME)
 
-$(COQ_PATCH_TAR_BALL): $(COQ_DIR_NAME)
-	tar cvzf $(COQ_PATCH_TAR_BALL) $(COQ_DIR_NAME)
+$(COQ_PATCH_TAR_BALL): $(COQ_SRC_DIR_NAME)
+	tar cvzf $(COQ_PATCH_TAR_BALL) $(COQ_SRC_DIR_NAME)
 
 include $(ROOT_DIR)/Makefile.common
 

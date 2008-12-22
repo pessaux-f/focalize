@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.25 2008-12-22 17:43:17 weis Exp $
+# $Id: Makefile,v 1.26 2008-12-22 18:38:20 weis Exp $
 
 ROOT_DIR = .
 
@@ -45,27 +45,27 @@ configure_external: .config_var \
 
 install_external_tools_sources: .done_external_tools_sources
 
-.done_external_tools_sources: $(ABSOLUTE_COQ_DIR)
+.done_external_tools_sources: $(ABSOLUTE_COQ_SRC_DIR)
 	touch .done_external_tools_sources
 
-$(ABSOLUTE_CAML_DIR):
+$(ABSOLUTE_CAML_SRC_DIR):
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAML_DIR)) || exit; \
+	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAML_SRC_DIR)) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 
-$(ABSOLUTE_CAMLP5_DIR): $(ABSOLUTE_CAML_DIR)
+$(ABSOLUTE_CAMLP5_SRC_DIR): $(ABSOLUTE_CAML_SRC_DIR)
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAMLP5_DIR)) || exit; \
+	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAMLP5_SRC_DIR)) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 
-$(ABSOLUTE_COQ_DIR): $(ABSOLUTE_CAMLP5_DIR)
+$(ABSOLUTE_COQ_SRC_DIR): $(ABSOLUTE_CAMLP5_SRC_DIR)
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_COQ_DIR)) || exit; \
+	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_COQ_SRC_DIR)) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 
@@ -83,8 +83,8 @@ configure_external_tools: .done_configure_external_tools
 # and install the FoCaLize internal tools zenon and zvtov;
 # all the external and internal tools should be compiled and installed to
 # compile the focalizec compiler and its libraries.
-.done_configure_external_caml_tool: $(ABSOLUTE_CAML_DIR)
-	($(CD) $(ABSOLUTE_CAML_DIR); \
+.done_configure_external_caml_tool: $(ABSOLUTE_CAML_SRC_DIR)
+	($(CD) $(ABSOLUTE_CAML_SRC_DIR); \
 	 ./configure $(CAML_CONFIGURE_OPTIONS); \
 	 $(MAKE) $(CAML_MAKE_ALL_TARGET); \
 	 $(MAKE) install; \
@@ -92,7 +92,7 @@ configure_external_tools: .done_configure_external_tools
 	touch .done_configure_external_caml_tool
 
  .done_configure_external_camlp5_tool: .done_configure_external_caml_tool
-	($(CD) $(ABSOLUTE_CAMLP5_DIR); \
+	($(CD) $(ABSOLUTE_CAMLP5_SRC_DIR); \
 	 PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
 	 ./configure $(CAMLP5_CONFIGURE_OPTIONS); \
 	 $(MAKE) $(CAMLP5_MAKE_ALL_TARGET); \
@@ -101,7 +101,7 @@ configure_external_tools: .done_configure_external_tools
 	touch .done_configure_external_camlp5_tool
 
 .done_configure_external_coq_tool: .done_configure_external_camlp5_tool
-	($(CD) $(ABSOLUTE_COQ_DIR); \
+	($(CD) $(ABSOLUTE_COQ_SRC_DIR); \
 	 PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
 	 ./configure $(COQ_CONFIGURE_OPTIONS); \
 	 $(COQ_MAKE) $(COQ_MAKE_ALL_TARGET); \
@@ -117,8 +117,8 @@ build_internal_tools: .done_build_internal_tools
 .done_build_internal_tools : .done_configure_external_tools .done_build_focalizec
 	touch .done_build_internal_tools
 
-.done_build_zenon $(ZENON_EXES): $(ABSOLUTE_COQ_DIR)/config/Makefile
-	for i in $(ZENON_DIR); do \
+.done_build_zenon $(ZENON_EXES): $(ABSOLUTE_COQ_SRC_DIR)/config/Makefile
+	for i in $(ABSOLUTE_ZENON_SRC_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
 	   ./configure $(ZENON_CONFIGURE_OPTIONS); \
@@ -128,7 +128,7 @@ build_internal_tools: .done_build_internal_tools
 	touch .done_build_zenon
 
 .done_build_zvtov $(ZVTOV_EXES): .done_build_zenon
-	for i in $(ZVTOV_DIR); do \
+	for i in $(ABSOLUTE_ZVTOV_SRC_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
 	   ./configure $(ZVTOV_CONFIGURE_OPTIONS); \
@@ -138,7 +138,7 @@ build_internal_tools: .done_build_internal_tools
 	touch .done_build_zvtov
 
 .done_build_focalizec $(FOCALIZEC_EXES): .done_build_zvtov
-	for i in $(FOCALIZEC_DIR); do \
+	for i in $(ABSOLUTE_FOCALIZEC_SRC_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
 	   ./configure $(FOCALIZEC_CONFIGURE_OPTIONS); \
