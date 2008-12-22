@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.24 2008-12-22 17:41:01 weis Exp $
+# $Id: Makefile,v 1.25 2008-12-22 17:43:17 weis Exp $
 
 ROOT_DIR = .
 
@@ -122,7 +122,7 @@ build_internal_tools: .done_build_internal_tools
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
 	   ./configure $(ZENON_CONFIGURE_OPTIONS); \
-	   $(MAKE) $(ZENON_MAKE_ALL_tARGET) || exit; \
+	   $(MAKE) $(ZENON_MAKE_ALL_tARGET)) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 	touch .done_build_zenon
@@ -142,7 +142,7 @@ build_internal_tools: .done_build_internal_tools
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
 	   ./configure $(FOCALIZEC_CONFIGURE_OPTIONS); \
-	   $(MAKE) $(FOCALIZEC_MAKE_ALL_TARGET) || exit; \
+	   $(MAKE) $(FOCALIZEC_MAKE_ALL_TARGET)) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done
 	touch .done_build_focalizec
