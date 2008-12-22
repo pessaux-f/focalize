@@ -1,7 +1,9 @@
 #  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.10 2008-12-19 11:05:38 weis Exp $
+#  $Id: .config_var.in,v 1.11 2008-12-22 14:27:35 weis Exp $
 
-# The project id card.
+#
+# The project identity card.
+#
 PROJECT_NAME=@PROJECT_NAME@
 MAIN_VERSION_NUMBER=@MAIN_VERSION_NUMBER@
 SUB_VERSION_NUMBER=@SUB_VERSION_NUMBER@
@@ -9,6 +11,9 @@ PATCH_VERSION_NUMBER=@PATCH_VERSION_NUMBER@
 FULL_VERSION_NUMBER=@FULL_VERSION_NUMBER@
 FULL_PROJECT_NAME=@FULL_PROJECT_NAME@
 
+#
+# The project directories.
+#
 # The project sources directory.
 ABSOLUTE_ROOT_DIR=@ABSOLUTE_ROOT_DIR@
 
@@ -28,8 +33,9 @@ SHARE_PROJECT_LIB_DIR=@SHARE_PROJECT_LIB_DIR@
 SHARE_PROJECT_MAN_DIR=@SHARE_PROJECT_MAN_DIR@
 SHARE_PROJECT_DOC_DIR=@SHARE_PROJECT_DOC_DIR@
 
+#
 # External tools installed by the configuration phase.
-
+#
 # Caml compilers.
 CAML_BYT=@CAML_BYT@
 CAML_BIN=@CAML_BIN@
@@ -44,8 +50,9 @@ COQC=@COQC@
 COQRC=@COQRC@
 COQ_MAKE=@COQ_MAKE@
 
+#
 # Internal tools flags.
-
+#
 # Zenon.
 ZENON=@ZENON@
 USE_COQC=@USE_COQC@
@@ -60,8 +67,9 @@ XMLRPC=@XMLRPC@
 XMLRPC_FLAGS=@XMLRPC_FLAGS@
 XMLRPC_LINK=@XMLRPC_LINK@
 
+#
 # Completely external tools (not installed with the project).
-
+#
 # External tools for zenon
 CONVERT=@CONVERT@
 GS=@GS@
