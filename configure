@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.21 2008-12-22 09:04:24 weis Exp $
+# $Id: configure,v 1.22 2008-12-22 14:26:46 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -58,6 +58,9 @@ DEFAULT_CAML_BYT="${DEFAULT_SHARE_PROJECT_BIN_DIR}/ocamlc"
 DEFAULT_CAML_BIN="${DEFAULT_SHARE_PROJECT_BIN_DIR}/ocamlopt"
 DEFAULT_CAML_YAC="${DEFAULT_SHARE_PROJECT_BIN_DIR}/ocamlyacc"
 DEFAULT_CAML_LEX="${DEFAULT_SHARE_PROJECT_BIN_DIR}/ocamllex"
+DEFAULT_BYT_DEBUG_FLAGS="-g -dtypes"
+DEFAULT_BIN_DEBUG_FLAGS="-dtypes"
+
 
 # Defaults for Coq.
 DEFAULT_COQC="${DEFAULT_SHARE_PROJECT_BIN_DIR}/coqc"
@@ -77,6 +80,8 @@ DEFAULT_USE_XMLRPC=false
 DEFAULT_XMLRPC=xmlrpc
 DEFAULT_XMLRPC_FLAGS=""
 DEFAULT_XMLRPC_LINK=""
+
+DEFAULT_MAKE_EXTERNAL=true
 
 #
 # Generic aborting procedures.
@@ -144,6 +149,8 @@ while : ; do
     -xmlrpc | --xmlrpc) XMLRPC="$2"; shift 2;;
     -xmlrpc_flags | --xmlrpc_flags) XMLRPC_FLAGS="$2"; shift 2;;
     -xmlrpc_link | --xmlrpc_link) XMLRPC_LINK="$2"; shift 2;;
+    # Configure script specific options
+    -no_make_external | --no_make_external) MAKE_EXTERNAL=false; shift;;
     # Generic options
     -debug | --debug | -enable_debug | --enable_debug)
      DEBUG=true; shift;;
@@ -233,6 +240,11 @@ while : ; do
        echo "    set absolute path for the command coqc."
        echo "  [-]-coqrc <file>"
        echo "    set absolute path for coqrc, the startup file for coqc."
+       echo
+       echo "options specific to this configuration script shell:"
+       echo
+       echo "  [-]-no_make_external"
+       echo "    <non documented option>."
        exit 0
        ;;
     -*)
@@ -291,10 +303,10 @@ set_USE_XMLRPC () {
 }
 
 set_DEBUG () {
-  if test -z $DEBUG; then DEBUG=${DEFAULT_DEBUG}; fi
-  if test $DEBUG; then
-    BYT_DEBUG_FLAGS="-g -dtypes";
-    BIN_DEBUG_FLAGS="-dtypes";
+  if test -z ${DEBUG}; then DEBUG=${DEFAULT_DEBUG}; fi
+  if test ${DEBUG}; then
+    BYT_DEBUG_FLAGS="${DEFAULT_BYT_DEBUG_FLAGS}";
+    BIN_DEBUG_FLAGS="${DEFAULT_BIN_DEBUG_FLAGS}";
   fi
 }
 
@@ -355,6 +367,10 @@ set_zvtov_specific_options () {
 
 set_generic_options () {
   set_DEBUG;
+}
+
+set_configure_specific_options () {
+  if test -z "${MAKE_EXTERNAL}"; then MAKE_EXTERNAL="${DEFAULT_MAKE_EXTERNAL}"; fi
 }
 
 set_variables () {
@@ -483,7 +499,7 @@ main () {
   configure_auto;
   summarize_configuration;
   # Call the Makefile to go on configuring external tools.
-  make configure_external;
+  if ${MAKE_EXTERNAL}; then make configure_external; fi;
 }
 
 main; exit 0
