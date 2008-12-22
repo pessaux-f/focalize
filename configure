@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.25 2008-12-22 18:53:06 weis Exp $
+# $Id: configure,v 1.26 2008-12-22 18:55:39 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -48,8 +48,8 @@ DEFAULT_DOC_DIR="${DEFAULT_PREFIX}/doc"
 DEFAULT_SHARE_PROJECT_PREFIX="${DEFAULT_PREFIX}/share"
 DEFAULT_SHARE_PROJECT_DIR="${DEFAULT_SHARE_PROJECT_PREFIX}/${FULL_PROJECT_NAME}"
 DEFAULT_SHARE_PROJECT_BIN_DIR="${DEFAULT_SHARE_PROJECT_DIR}/bin"
+DEFAULT_SHARE_PROJECT_LIB_DIR="${DEFAULT_SHARE_PROJECT_DIR}/lib"
 
-#DEFAULT_SHARE_PROJECT_LIB_DIR="${DEFAULT_SHARE_PROJECT_DIR}/lib"
 #DEFAULT_SHARE_PROJECT_MAN_DIR="${DEFAULT_SHARE_PROJECT_DIR}/man"
 #DEFAULT_SHARE_PROJECT_DOC_DIR="${DEFAULT_SHARE_PROJECT_DIR}/doc"
 
