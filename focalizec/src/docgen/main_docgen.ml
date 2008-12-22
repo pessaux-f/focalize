@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.7 2008-12-19 16:35:48 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.8 2008-12-22 15:04:50 pessaux Exp $ *)
 
 let xmlify_string s =
   let s_len = String.length s in
@@ -64,78 +64,171 @@ let gendoc_foc_informations out_fmt name_opt math_opt latex_opt comments =
 ;;
 
 
+
+let gendoc_species_expr out_fmt ~current_unit species_expr =
+  (* ***************************************************************** *)
+  (* Just a local recursive function to go inside the paren expression
+     when generating the XML for species parameters expressions.       *)
+  (* ***************************************************************** *)
+  let rec rec_gen_species_param_expr e =
+    match e.Parsetree.ast_desc with
+     | Parsetree.E_self ->
+         Format.fprintf out_fmt "<foc:param>Self</foc:param>@\n"
+     | Parsetree.E_constr (cstr_expr, []) ->
+         let Parsetree.CI qvname = cstr_expr.Parsetree.ast_desc in
+         (* [Fixme] DTD doesn't take care of parameters not hosted in
+            the current compilation unit. There is no "infile" attribute. *)
+         let vname =
+           match qvname with
+              Parsetree.Vname vn | Parsetree.Qualified (_, vn) -> vn in
+         Format.fprintf out_fmt "<foc:param>%a</foc:param>@\n"
+           Sourcify.pp_vname vname
+     | Parsetree.E_paren e' -> rec_gen_species_param_expr e'
+     | _ -> assert false in
+  (* **************** *)
+  (* Now, do the job. *)
+  let species_expr_desc = species_expr.Parsetree.ast_desc in
+  let (infile, ident_vname) =
+    get_in_file_and_name_from_ident
+      ~current_unit species_expr_desc.Parsetree.se_name in
+  match species_expr_desc.Parsetree.se_params with
+   | [] ->
+       (begin
+       (* [Unsure] "order ?????" *)
+       Format.fprintf out_fmt "<foc:atom order=\"high\"" ;
+       if infile <> "" then
+         Format.fprintf out_fmt " infile=\"%s\"" infile ;
+       Format.fprintf out_fmt ">%a</foc:atom>@\n"
+         Sourcify.pp_vname ident_vname
+       end)
+   | params ->
+       (begin
+       Format.fprintf out_fmt "@[<h 2><foc:app>@\n" ;
+       Format.fprintf out_fmt "<foc:foc-name " ;
+       if infile <> "" then
+         Format.fprintf out_fmt " infile=\"%s\"" infile ;
+       Format.fprintf out_fmt "\">%a</foc:foc-name>@\n"
+         Sourcify.pp_vname ident_vname ;
+       List.iter
+         (fun species_param ->
+           let Parsetree.SP expr = species_param.Parsetree.ast_desc in
+           rec_gen_species_param_expr expr)
+         params ;
+       Format.fprintf out_fmt "@]</foc:app>@\n"
+       end)
+;;
+
+
+
 let gendoc_inherits out_fmt ~current_unit species_def =
   let species_def_descr = species_def.Parsetree.ast_desc in
   if species_def_descr.Parsetree.sd_inherits.Parsetree.ast_desc <> [] then
     (begin
-    (* ***************************************************************** *)
-    (* Just a local recursive function to go inside the paren expression
-       when generating the XML for species parameters expressions.       *)
-    (* ***************************************************************** *)
-    let rec rec_gen_species_param_expr e =
-      match e.Parsetree.ast_desc with
-       | Parsetree.E_self ->
-           Format.fprintf out_fmt "<foc:param>Self</foc:param>@\n"
-       | Parsetree.E_constr (cstr_expr, []) ->
-           let Parsetree.CI qvname = cstr_expr.Parsetree.ast_desc in
-           (* [Fixme] DTD doesn't take care of parameters not hosted in
-              the current compilation unit. There is no "infile" attribute. *)
-           let vname =
-             match qvname with
-                Parsetree.Vname vn | Parsetree.Qualified (_, vn) -> vn in
-           Format.fprintf out_fmt "<foc:param>%a</foc:param>@\n"
-             Sourcify.pp_vname vname
-       | Parsetree.E_paren e' -> rec_gen_species_param_expr e'
-       | _ -> assert false in
     (* ************************************ *)
     (* Now generate the "inherits" clauses. *)
     Format.fprintf out_fmt "@[<h 2><foc:inherits>@\n" ;
-    List.iter
-      (fun species_expr ->
-        let species_expr_desc = species_expr.Parsetree.ast_desc in
-        let (infile, ident_vname) =
-          get_in_file_and_name_from_ident
-            ~current_unit species_expr_desc.Parsetree.se_name in
-        match species_expr_desc.Parsetree.se_params with
-         | [] ->
-             (begin
-             Format.fprintf out_fmt "<foc:atom order=\"high\"" ;
-             if infile <> "" then
-               Format.fprintf out_fmt " infile=\"%s\"" infile ;
-             Format.fprintf out_fmt ">%a</foc:atom>@\n"
-               Sourcify.pp_vname ident_vname
-             end)
-         | params ->
-             (begin
-             Format.fprintf out_fmt "@[<h 2><foc:app>@\n" ;
-             Format.fprintf out_fmt "<foc:foc-name " ;
-             if infile <> "" then
-               Format.fprintf out_fmt " infile=\"%s\"" infile ;
-             Format.fprintf out_fmt "\">%a</foc:foc-name>@\n"
-               Sourcify.pp_vname ident_vname ;
-             List.iter
-               (fun species_param ->
-                 let Parsetree.SP expr = species_param.Parsetree.ast_desc in
-                 rec_gen_species_param_expr expr)
-               params ;
-             Format.fprintf out_fmt "@]</foc:app>@\n"
-             end))
-    species_def_descr.Parsetree.sd_inherits.Parsetree.ast_desc ;
+    List.iter (gendoc_species_expr out_fmt ~current_unit)      
+      species_def_descr.Parsetree.sd_inherits.Parsetree.ast_desc ;
     Format.fprintf out_fmt "@]</foc:inherits>@\n" ;
     end)
 ;;
 
 
-let gendoc_species out_fmt ~current_unit species_def _species_descr =
+
+let gendoc_parameters out_fmt ~current_unit params =
+  List.iter
+    (fun (p_vname, p_kind) ->
+      Format.fprintf out_fmt "@[<h 2><foc:parameter kind=\"" ;
+      (match p_kind.Parsetree.ast_desc with
+       | Parsetree.SPT_in in_ident ->
+           let (infile, ident_vname) =
+             get_in_file_and_name_from_ident ~current_unit in_ident in
+           Format.fprintf out_fmt "entity\">@\n" ;
+           Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+             Sourcify.pp_vname p_vname ;
+           Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
+           (* [Unsure] "order ?????" *)
+           Format.fprintf out_fmt 
+             "<foc:atom order=\"high\" infile=\"%s\">%a</foc:atom>@\n"
+             infile Sourcify.pp_vname ident_vname ;
+           Format.fprintf out_fmt "@]</foc:type>@\n"
+       | Parsetree.SPT_is species_expr ->
+           Format.fprintf out_fmt "collection\">@\n" ;
+           Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+             Sourcify.pp_vname p_vname ;
+           Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
+           gendoc_species_expr out_fmt ~current_unit species_expr ;
+           Format.fprintf out_fmt "@]</foc:type>@\n") ;
+      (* The comments and other informative stuff. *)
+      gendoc_foc_informations out_fmt None None None  p_kind.Parsetree.ast_doc ;
+      Format.fprintf out_fmt "@]</foc:parameter>@\n")
+    params
+;;
+
+
+
+let gendoc_type out_fmt ty =
+  Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
+  Types.pp_type_simple_to_xml out_fmt ty ;
+  Format.fprintf out_fmt "@]</foc:type>@\n"
+;;
+
+
+
+let gendoc_method out_fmt = function
+  | Env.TypeInformation.SF_sig (_from, n, sch) ->
+      (begin
+      (* foc:signature, foc:carrier. *)
+      if n = (Parsetree.Vlident "representation") then
+        (begin
+        Format.fprintf out_fmt "@[<h 2><foc:carrier>@\n" ;
+        (* foc:dependence, foc:informations, foc:ho?, foc:type. *) (* TODO. *)
+        gendoc_type out_fmt (Types.specialize sch) ;
+        Format.fprintf out_fmt "@]</foc:carrier>@\n"
+        end)
+      else
+        (begin
+        Format.fprintf out_fmt "@[<h 2><foc:signature>@\n" ;
+        let n_as_xml = xmlify_string (Parsetree_utils.name_of_vname n) in
+        Format.fprintf out_fmt "<foc:foc-name>%s</foc:foc-name>@\n" n_as_xml ;
+        (* foc:foc-name, foc:dependence, foc:informations, foc:ho?,
+           foc:type. *) (* TODO. *)
+        gendoc_type out_fmt (Types.specialize sch) ;
+        Format.fprintf out_fmt "@]</foc:signature>@\n"
+        end)
+      end)
+  | Env.TypeInformation.SF_let
+         (_from, _n, _parms, _sch, _body, _otp, _rep_deps, _lflag) ->
+      (* foc:definition, foc:letprop. *)  (* TODO. *) 
+      ()
+  | Env.TypeInformation.SF_let_rec _l ->
+      (* foc:definition, foc:letprop. *) (* TODO. *)
+      ()
+  | Env.TypeInformation.SF_theorem (_from, _n, _sch, _body, _proof, _rep_deps) ->
+      (* foc:theorem. *) (* TODO. *)
+      ()
+  | Env.TypeInformation.SF_property (_from, _n, _sch, _body, _rep_deps) ->
+      (* foc:property. *) (* TODO. *)
+      ()
+;;
+
+
+
+let gendoc_species out_fmt ~current_unit species_def species_descr =
   Format.fprintf out_fmt "@[<h 2><foc:species>@\n" ;
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
     Sourcify.pp_vname species_def.Parsetree.ast_desc.Parsetree.sd_name ;
   (* Information: foc:informations. *)
   gendoc_foc_informations out_fmt None None None species_def.Parsetree.ast_doc ;
   (* Parameters: foc:parameter*. *)
+  gendoc_parameters
+    out_fmt ~current_unit species_def.Parsetree.ast_desc.Parsetree.sd_params ;
   (* Inherits: foc:inherits*. *)
   gendoc_inherits out_fmt ~current_unit species_def ;
   (* Methods: (%foc:component;)*. *)
+  List.iter
+    (gendoc_method out_fmt)
+    species_descr.Env.TypeInformation.spe_sig_methods ;
   Format.fprintf out_fmt "@]</foc:species>@\n@\n" ;
 ;;
 
@@ -146,18 +239,20 @@ let gen_doc_pcm out_fmt ~current_unit = function
       Format.fprintf out_fmt "<foc:load>%s</foc:load>@\n" comp_unit
   | Infer.PCM_open (_, comp_unit) ->
       Format.fprintf out_fmt "<foc:open>%s</foc:open>@\n" comp_unit
-  | Infer.PCM_coq_require _ -> ()
+  | Infer.PCM_coq_require _ ->
+      (* [Fixme] DTD doesn't take care of the coq_require directive. *)
+      () (* TODO. *)
   | Infer.PCM_type (_, _) ->
-      (* foc:concrete-type *) ()
+      (* foc:concrete-type *) () (* TODO. *)
   | Infer.PCM_let_def (_, _) ->
-      (* foc:global-fun foc:letprop *) ()
+      (* foc:global-fun foc:letprop *) () (* TODO. *)
   | Infer.PCM_theorem (_, _) ->
-      (* foc:theorem *) ()
-  | Infer.PCM_expr _ -> ()
-  | Infer.PCM_species (species_def, species_description, _) ->
-      gendoc_species out_fmt ~current_unit species_def species_description
+      (* foc:theorem *) () (* TODO. *)
+  | Infer.PCM_expr _ -> () (* TODO. *)
+  | Infer.PCM_species (species_def, species_descr, _) ->
+      gendoc_species out_fmt ~current_unit species_def species_descr
   | Infer.PCM_collection (_col_def, _col_description, _) ->
-      (* foc:collection *) ()
+      (* foc:collection *) () (* TODO. *)
 ;;
 
 
@@ -222,11 +317,9 @@ let find_title_author_and_description ast_root =
              (* Only keep text until the end of line if we find some otherwise,
                 keep the whole text. *)
              let txt_len = String.length txt in
-             let cut_at =
-               try String.index txt '\n' with Not_found -> txt_len in
+             let cut_at = try String.index txt '\n' with Not_found -> txt_len in
              let txt' =
-               if cut_at = txt_len then txt
-               else String.sub txt 0 cut_at in
+               if cut_at = txt_len then txt else String.sub txt 0 cut_at in
              Some txt' in
   (* ************************************** *)
   (* Do the job on the top node of the AST. *)
@@ -275,7 +368,6 @@ let gendoc_please_compile_me input_file_name ast_root pcms =
   let out_filename = input_name_no_extension ^ ".xml" in
   let out_channel = open_out_bin out_filename in
   let out_fmt = Format.formatter_of_out_channel out_channel in
-  Format.fprintf out_fmt "<?xml version=\"1.0\"?>@\n" ;
   let (title_opt, author_opt, description_opt) =
     find_title_author_and_description ast_root in
   Format.fprintf out_fmt

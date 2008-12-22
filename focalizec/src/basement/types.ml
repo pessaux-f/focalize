@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.70 2008-11-29 23:23:18 weis Exp $ *)
+(* $Id: types.ml,v 1.71 2008-12-22 15:04:49 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1551,6 +1551,113 @@ let rec get_species_types_in_type ty =
      | ST_self_rep -> SpeciesCarrierTypeSet.empty
      | ST_species_rep st -> SpeciesCarrierTypeSet.singleton st
 ;;
+
+
+
+
+
+let pp_type_simple_to_xml =
+  (* ********************************************************************* *)
+  (* ((type_simple * string) list) ref                                     *)
+  (** {b Descr} : The mapping giving for each variable already seen the
+                name used to denote it while printing it.
+
+      {b Rem} : Not exported. This mapping is purely local to the
+              pretty-print function of type into the FoCaLize syntax. It is
+              especially not shared with the type printing routine used to
+              generate the OCaml or Coq code.                              *)
+  (* ********************************************************************* *)
+  let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
+
+  (* ******************************************************************* *)
+  (* int ref                                                             *)
+  (** {b Descr} : The counter counting the number of different variables
+      already seen hence printed. It serves to generate a fresh name to
+      new variables to print.
+
+      {b Rem} : Not exported. This counter is purely local to the
+      pretty-print function of type into the FoCaLize syntax. It is
+      especially not shared with the type printing routine used to
+      generate the OCaml or Coq code.                                    *)
+  (* ******************************************************************* *)
+  let type_variables_counter = ref 0 in
+
+  (* ************************************************************* *)
+  (* unit -> unit                                                  *)
+  (** {b Descr} : Resets the variables names mapping an counter.
+      This allows to stop name-sharing between type prints.
+
+     {b Rem} : Not exported. This counter is purely local to the
+      pretty-print function of type into the FoCaLize syntax. It is
+      especially not shared with the type printing routine used to
+      generate the OCaml or Coq code.                              *)
+  (* ************************************************************* *)
+  let reset_type_variables_mapping () =
+    type_variable_names_mapping := [] ;
+    type_variables_counter := 0 in
+
+  let get_or_make_type_variable_name ty_var ~generalized_p =
+    (* No need to repr, [rec_pp] already did it. *)
+    try List.assq ty_var !type_variable_names_mapping with
+    | Not_found ->
+        let name = Handy.int_to_base_26 !type_variables_counter in
+        incr type_variables_counter ;
+        let name' = if not generalized_p then "_" ^ name else name in
+        type_variable_names_mapping :=
+          (ty_var, name') :: !type_variable_names_mapping ;
+        name' in
+
+  let rec rec_pp ppf ty =
+    (* First of all get the "repr" guy ! *)
+    let ty = repr ty in
+    match ty with
+    | ST_var ty_var ->
+        let ty_variable_name =
+          get_or_make_type_variable_name
+            ty_var ~generalized_p: (ty_var.tv_level = generic_level) in
+        Format.fprintf ppf "<foc:tvar>%s</foc:tvar>@\n" ty_variable_name
+    | ST_arrow (ty1, ty2) ->
+        Format.fprintf ppf "@[<h 2><foc:fct>@\n%a%a@]</foc:fct>@\n"
+          rec_pp  ty1 rec_pp ty2 ;
+    | ST_tuple tys ->
+        Format.fprintf ppf "@[<h 2><foc:prod>@\n" ;
+        List.iter (rec_pp ppf) tys ;
+        Format.fprintf ppf "@]</foc:prod>@\n"
+    | ST_construct ((mod_name, cstr_name), arg_tys) ->
+        (begin
+        match arg_tys with
+         | [] ->
+             (* [Unsure] "order ?????" *)
+             Format.fprintf ppf
+               "<foc:atom> order=\"first\" infile=\"%s\">%s</foc:atom>@\n"
+               mod_name cstr_name
+         | _ ->
+             (* [Unsure] "order ?????" *)
+             Format.fprintf ppf "@[<h 2><foc:prm order=\"first\">" ;
+             List.iter (rec_pp ppf) arg_tys ;
+             Format.fprintf ppf
+               "<foc:foc-name infile=\"%s\">%s</foc:foc-name>@\n"
+               mod_name cstr_name ;
+             Format.fprintf ppf "@]</foc:prm>@\n"
+        end)
+    | ST_self_rep ->
+        (* [Unsure] "order ?????" *)
+        Format.fprintf ppf "<foc:self order=\"first\"/>@\n"
+    | ST_species_rep (mod_name, collection_name) ->
+        Format.fprintf ppf
+          "<foc:atom> order=\"first\" infile=\"%s\">%s</foc:atom>@\n"
+          mod_name collection_name in
+  (* ********************** *)
+  (* The function itself... *)
+  (fun ppf ty ->
+    reset_type_variables_mapping () ;
+    rec_pp ppf ty)
+;;
+
+
+
+
+
 
 
 
