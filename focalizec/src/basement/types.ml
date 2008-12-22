@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.71 2008-12-22 15:04:49 pessaux Exp $ *)
+(* $Id: types.ml,v 1.72 2008-12-22 17:27:18 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -405,22 +405,6 @@ let (pp_type_simple, pp_type_scheme) =
   (fun ppf the_scheme ->
     reset_type_variables_mapping () ;
     Format.fprintf ppf "%a" (rec_pp 0) the_scheme.ts_body)
-;;
-
-
-
-(** {b Rem} : Non exported oustide this module. *)
-let occur_check ~loc var ty =
-  let rec test t =
-    let t = repr t in
-    match t with
-     | ST_var var' ->
-         if var == var' then raise (Circularity (t, ty, loc))
-     | ST_arrow (ty1, ty2) -> test ty1 ; test ty2
-     | ST_tuple tys -> List.iter test tys
-     | ST_construct (_, args) -> List.iter test args
-     | ST_self_rep | ST_species_rep _ -> () in
-  test ty
 ;;
 
 
@@ -820,7 +804,7 @@ let refers_to_prop_p ty =
 
 let (reset_deps_on_rep,
      get_def_dep_on_rep, set_def_dep_on_rep,
-     get_decl_dep_on_rep,
+     get_decl_dep_on_rep, set_decl_dep_on_rep,
      check_for_decl_dep_on_self) =
   let found_decl = ref false in
   let found_def = ref false in
@@ -853,6 +837,14 @@ let (reset_deps_on_rep,
    (fun () -> found_def := true),
    (* get_decl_dep_on_rep : unit -> bool *)
    (fun () -> !found_decl),
+   (* ********************************************************************* *)
+   (* set_decl_dep_on_rep : unit -> unit                                    *)
+   (** {b Descr} : Turns on the flag telling that a decl-dependency on the
+       carrier was found.
+
+       [Rem] : Not exported outside this module.                            *)
+   (* ********************************************************************* *)
+   (fun () -> found_decl := true),
    (* ********************************************************************** *)
    (* check_for_decl_dep_on_self : type_simple -> unit                       *)
    (** {b Descr} : Turns on the flag telling that a decl-dependency on the
@@ -868,6 +860,35 @@ let (reset_deps_on_rep,
 ;;
 
 
+
+(* ************************************************************************* *)
+(** {b Descr} : Test if [var] occurs inside the structure of [ty] to prevent
+    creating cyclic types. This is used when unifying a variable with
+    something else.
+    By the way, since it performs a walk on the whole type's structure, we
+    take benefit of this to check if the unified type {ty] involved "Self",
+    hence has a dependency on the carrier.
+    
+    {b Rem} : Non exported oustide this module.                              *)
+(* ************************************************************************* *)
+let occur_check ~loc var ty =
+  let rec test t =
+    let t = repr t in
+    match t with
+     | ST_var var' ->
+         if var == var' then raise (Circularity (t, ty, loc))
+     | ST_arrow (ty1, ty2) -> test ty1 ; test ty2
+     | ST_tuple tys -> List.iter test tys
+     | ST_construct (_, args) -> List.iter test args
+     | ST_species_rep _ -> ()
+     | ST_self_rep ->
+         (* There is a dependency on the carrier. Note it ! *)
+         set_decl_dep_on_rep () in
+  test ty
+;;
+
+
+
 let unify ~loc ~self_manifest type1 type2 =
   let rec rec_unify ty1 ty2 =
     let ty1 = repr ty1 in
@@ -875,11 +896,18 @@ let unify ~loc ~self_manifest type1 type2 =
     if ty1 == ty2 then ty1 else
     match (ty1, ty2) with
      | (ST_var var, _) ->
+         (* BE CAREFUL: [occur_check] performs the setting of decl-dependencies
+	    on the carrier ! In effect, if [ty2] involved Self then we have a
+            dependency on the carrier and that must be taken into account !
+            The interest to make [occur_check] doing this work is that it
+            walk all along the type so it's a good idea to take benefit of this
+            walk to avoid one more walk. *)
          occur_check ~loc var ty2 ;
          lowerize_levels var.tv_level ty2 ;
          var.tv_value <- TVV_known ty2 ;
          ty2
      | (_, ST_var var) ->
+         (* BE CAREFUL: Same remark than above for [occur_check]. *)
          occur_check ~loc var ty1 ;
          lowerize_levels var.tv_level ty1 ;
          var.tv_value <- TVV_known ty1 ;
@@ -916,6 +944,7 @@ let unify ~loc ~self_manifest type1 type2 =
      | (ST_self_rep, ST_self_rep) ->
          (begin
          (* Trivial, but anyway, proceed as everywhere else. *)
+         set_decl_dep_on_rep () ;
          ST_self_rep
          end)
      | (ST_self_rep, _) ->
