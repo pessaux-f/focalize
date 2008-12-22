@@ -1,0 +1,12 @@
+*.cm*
+*.annot
+*.zv
+*.pfc
+*.v
+*.vo
+*.ml
+*.fo
+*.mangled
+*.coz
+.depend
+odoc
