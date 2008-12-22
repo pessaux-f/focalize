@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.25 2008-12-12 07:57:06 weis Exp $
+# $Id: Makefile,v 1.26 2008-12-22 19:30:43 weis Exp $
 
 ROOT_DIR = .
 
@@ -27,7 +27,7 @@ LIB_DIRS = src/stdlib src/extlib src/contribs
 
 SUB_DIRS = $(COMPILER_DIRS) $(LIB_DIRS)
 
-COMPILER_INSTALL_DIRS = src/toplevel src/stdlib $(LIB_DIRS)
+COMPILER_INSTALL_DIRS = src/toplevel $(LIB_DIRS)
 
 include $(ROOT_DIR)/Makefile.common
 
