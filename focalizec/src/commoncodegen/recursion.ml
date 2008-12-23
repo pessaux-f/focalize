@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.ml,v 1.15 2008-12-15 17:09:45 pessaux Exp $ *)
+(* $Id: recursion.ml,v 1.16 2008-12-23 13:43:21 pessaux Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function
@@ -44,8 +44,6 @@ type binding =
       Parsetree.expr * bool
 ;;
 
-type typed_vname = Parsetree.vname * Types.type_simple
-;;
 
 
 (**
@@ -79,6 +77,23 @@ let is_recursive_call function_name argument_list expr_list fexpr =
         | _ -> false
        end
    | _ -> false
+;;
+
+
+
+
+type typed_vname = (Parsetree.vname * Types.type_simple) ;;
+
+
+
+(* ***************************************************** *)
+(** {b Descr}: Just to give a name to the result type of
+    [list_recursive_calls] to manipulate easier.
+
+    {b Rem}: Exported outside this module.               *)
+(* ***************************************************** *)
+type recursive_calls_description =
+  ((typed_vname * Parsetree.expr) list * binding list) list
 ;;
 
 

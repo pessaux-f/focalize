@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.mli,v 1.7 2008-12-10 16:08:08 pessaux Exp $ *)
+(* $Id: rec_let_gen.mli,v 1.8 2008-12-23 13:43:21 pessaux Exp $ *)
 
 val generate_termination_lemmas :
   Context.species_compil_context -> Types.coq_print_context ->
@@ -21,11 +21,9 @@ val generate_termination_lemmas :
          (Parsetree.vname list) *
           ((Env.TypeInformation.species_param *
              Env.ordered_methods_from_params) list) *
-         Parsetree.vname list) option ->
-        (((Parsetree.vname * Types.type_simple) * Parsetree.expr) list *
-           Recursion.binding list)
-          list ->
-            unit
+         Parsetree.vname list)
+        option ->
+          Recursion.recursive_calls_description -> unit
 
 val transform_recursive_calls_args_into_tuple :
   Context.species_compil_context -> local_idents: Parsetree.vname list ->

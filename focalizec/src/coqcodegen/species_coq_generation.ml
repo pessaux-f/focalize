@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.150 2008-12-17 15:35:08 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.151 2008-12-23 13:43:21 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2290,6 +2290,9 @@ let generate_termination_proof ctx print_ctx env name
     sorted_deps_from_params generated_fields (* Only needed for "prelude". *)
     recursive_calls opt_term_pr =
   let out_fmter = ctx.Context.scc_out_fmter in
+
+(* ...generate_theorem_section_if_by_zenon *)
+
   Format.fprintf out_fmter "@[<2>Theorem %a_termination"
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* Generate the lambda-lifts for our dependencies. *)
