@@ -1,5 +1,5 @@
 #  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.14 2008-12-23 10:47:22 weis Exp $
+#  $Id: .config_var.in,v 1.15 2008-12-23 11:21:38 weis Exp $
 
 #
 # The project identity card.
@@ -39,7 +39,8 @@ SHARE_PROJECT_DOC_DIR=@SHARE_PROJECT_DOC_DIR@
 # External tools installed by the configuration phase.
 #
 # Caml compilers.
-CAML_DIR=@CAML_DIR@
+CAML_BIN_DIR=@CAML_BIN_DIR@
+CAML_LIB_DIR=@CAML_LIB_DIR@
 CAML_BYT=@CAML_BYT@
 CAML_BIN=@CAML_BIN@
 CAML_YAC=@CAML_YAC@
@@ -53,6 +54,7 @@ CAMLP5_DIR=@CAMLP5_DIR@
 
 # Coq settings.
 COQ_DIR=@COQ_DIR@
+COQ_CAML_DIR=@COQ_CAML_DIR@
 COQC=@COQC@
 COQRC=@COQRC@
 COQ_MAKE=@COQ_MAKE@
