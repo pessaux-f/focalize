@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.29 2008-12-23 11:52:50 weis Exp $
+# $Id: configure,v 1.30 2008-12-23 14:56:03 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -143,15 +143,31 @@ set_intrinsic () {
 
   # Intrinsic settings for Zenon.
   if test -z "${USE_COQC}"; then USE_COQC="${DEFAULT_USE_COQC}"; fi
-  if test -z "${CONVERT}"; then CONVERT="${DEFAULT_CONVERT}"; fi
-  if test -z "${GS}"; then GS="${DEFAULT_GS}"; fi
-  if test -z "${SUM}"; then SUM="${DEFAULT_SUM}"; fi
+  if test -z "${SUM}"; then SUM="${DEFAULT_SUM}"; else
+    if check $SUM; then :; else
+      echo "Configure: unavailable command $SUM."; exit 2;
+    fi
+  fi
+  if test -z $CONVERT; then CONVERT="$DEFAULT_CONVERT"; else
+    if check $CONVERT; then :; else
+      echo "Configure: unavailable command $CONVERT."; exit 2;
+    fi
+  fi
+  if test -z $GS; then GS="$DEFAULT_GS"; else
+    if check $GS; then :; else
+      echo "Configure: unavailable command $GS."; exit 2;
+    fi
+  fi
 
   # Intrinsic settings for Zvtov.
   if test -z "$USE_XMLRPC"; then USE_XMLRPC=${DEFAULT_USE_XMLRPC}; fi
   if test $USE_XMLRPC; then
     # set_XMLRPC;
-    if test -z "$XMLRPC"; then XMLRPC="$DEFAULT_XMLRPC"; fi
+    if test -z "$XMLRPC"; then XMLRPC="$DEFAULT_XMLRPC"; else
+      if check $XMLRPC; then :; else
+        echo "Configure: unavailable command $XMLRPC."; exit 2;
+      fi
+    fi
     # set_XMLRPC_FLAGS;
     if test -z "$XMLRPC_FLAGS"; then
       if check "ocamlfind"; then
@@ -378,8 +394,8 @@ while : ; do
     # Configure script specific options
     -no_make_external | --no_make_external) MAKE_EXTERNAL=false; shift;;
     # Generic options
-    -debug | --debug | -enable_debug | --enable_debug)
-     DEBUG=true; shift;;
+    -debug | --debug) DEBUG=$2; shift 2;;
+    -enable_debug | --enable_debug) DEBUG=true; shift;;
     -nodebug | --nodebug | -disable_debug | --disable_debug)
      DEBUG=false; shift;;
     -help | --help)
