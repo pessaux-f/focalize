@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.26 2008-12-22 18:38:20 weis Exp $
+# $Id: Makefile,v 1.27 2008-12-23 11:29:35 weis Exp $
 
 ROOT_DIR = .
 
@@ -102,7 +102,6 @@ configure_external_tools: .done_configure_external_tools
 
 .done_configure_external_coq_tool: .done_configure_external_camlp5_tool
 	($(CD) $(ABSOLUTE_COQ_SRC_DIR); \
-	 PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
 	 ./configure $(COQ_CONFIGURE_OPTIONS); \
 	 $(COQ_MAKE) $(COQ_MAKE_ALL_TARGET); \
 	 $(COQ_MAKE) install; \
