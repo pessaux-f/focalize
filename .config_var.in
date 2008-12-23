@@ -1,5 +1,5 @@
 #  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.13 2008-12-22 18:53:06 weis Exp $
+#  $Id: .config_var.in,v 1.14 2008-12-23 10:47:22 weis Exp $
 
 #
 # The project identity card.
@@ -64,15 +64,11 @@ COQ_MAKE=@COQ_MAKE@
 ZENON_DIR=@ZENON_DIR@
 ZENON=@ZENON@
 USE_COQC=@USE_COQC@
-SUM=@SUM@
-CONVERT=@CONVERT@
-GS=@GS@
 
 # Zvtov.
 ZVTOV_DIR=@ZVTOV_DIR@
 ZVTOV=@ZVTOV@
 USE_XMLRPC=@USE_XMLRPC@
-XMLRPC=@XMLRPC@
 XMLRPC_FLAGS=@XMLRPC_FLAGS@
 XMLRPC_LINK=@XMLRPC_LINK@
 
@@ -80,12 +76,9 @@ XMLRPC_LINK=@XMLRPC_LINK@
 # Completely external tools (not installed with the project).
 #
 # External tools for zenon
+SUM=@SUM@
 CONVERT=@CONVERT@
 GS=@GS@
-SUM=@SUM@
 
 # External tools for zvtov
-USE_XMLRPC=@USE_XMLRPC@
 XMLRPC=@XMLRPC@
-XMLRPC_FLAGS=@XMLRPC_FLAGS@
-XMLRPC_LINK=@XMLRPC_LINK@
