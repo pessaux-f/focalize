@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.26 2008-12-22 19:30:43 weis Exp $
+# $Id: Makefile,v 1.27 2008-12-23 13:36:16 doligez Exp $
 
 ROOT_DIR = .
 
@@ -36,27 +36,27 @@ all:: lib
 byt bin::
 	@for i in $(COMPILER_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $@) || exit; \
+	  ($(CD) $$i && $(MAKE) $@) || exit; \
 	  echo "<-- $$i"; \
         done
 
 lib:
 	@for i in $(LIB_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $@) || exit; \
+	  ($(CD) $$i && $(MAKE) $@) || exit; \
 	  echo "<-- $$i [$$?]"; \
         done
 
 clean doc depend::
 	@for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $@) || exit; \
+	  ($(CD) $$i && $(MAKE) $@) || exit; \
 	  echo "<-- $$i [$$?]"; \
         done
 
 install::
 	@for i in $(COMPILER_INSTALL_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $@) || exit; \
+	  ($(CD) $$i && $(MAKE) $@) || exit; \
 	  echo "<-- $$i [$$?]"; \
         done

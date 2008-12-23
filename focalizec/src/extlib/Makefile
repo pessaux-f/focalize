@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.13 2008-12-12 08:01:04 weis Exp $
+# $Id: Makefile,v 1.14 2008-12-23 13:36:16 doligez Exp $
 
 ROOT_DIR = ../..
 
@@ -27,25 +27,25 @@ lib: all
 byt bin::
 	for i in $(SUB_DIRS); do \
 	  echo "$$i ..."; \
-	  ($(CD) $$i; $(MAKE) all) \
+	  ($(CD) $$i && $(MAKE) all) \
         done
 
 clean::
 	for i in $(SUB_DIRS); do \
-	  ($(CD) $$i; $(MAKE) clean) \
+	  ($(CD) $$i && $(MAKE) clean) \
         done
 
 doc::
 	for i in $(SUB_DIRS); do \
-	  ($(CD) $$i; $(MAKE) doc) \
+	  ($(CD) $$i && $(MAKE) doc) \
 	done
 
 install::
 	for i in $(SUB_DIRS); do \
-	  ($(CD) $$i; $(MAKE) install) \
+	  ($(CD) $$i && $(MAKE) install) \
 	done
 
 depend::
 	for i in $(SUB_DIRS); do \
-	  ($(CD) $$i ; $(MAKE) depend) \
+	  ($(CD) $$i && $(MAKE) depend) \
 	done
