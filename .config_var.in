@@ -1,5 +1,5 @@
 #  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.15 2008-12-23 11:21:38 weis Exp $
+#  $Id: .config_var.in,v 1.16 2008-12-23 11:52:50 weis Exp $
 
 #
 # The project identity card.
@@ -53,7 +53,7 @@ BIN_DEBUG_FLAGS=@BIN_DEBUG_FLAGS@
 CAMLP5_DIR=@CAMLP5_DIR@
 
 # Coq settings.
-COQ_DIR=@COQ_DIR@
+COQ_LIB_DIR=@COQ_LIB_DIR@
 COQ_CAML_DIR=@COQ_CAML_DIR@
 COQC=@COQC@
 COQRC=@COQRC@
@@ -63,12 +63,12 @@ COQ_MAKE=@COQ_MAKE@
 # Internal tools flags.
 #
 # Zenon.
-ZENON_DIR=@ZENON_DIR@
+ZENON_LIB_DIR=@ZENON_LIB_DIR@
 ZENON=@ZENON@
 USE_COQC=@USE_COQC@
 
 # Zvtov.
-ZVTOV_DIR=@ZVTOV_DIR@
+ZVTOV_LIB_DIR=@ZVTOV_LIB_DIR@
 ZVTOV=@ZVTOV@
 USE_XMLRPC=@USE_XMLRPC@
 XMLRPC_FLAGS=@XMLRPC_FLAGS@
