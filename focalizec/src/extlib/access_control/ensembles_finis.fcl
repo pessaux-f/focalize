@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.10 2008-12-02 08:10:05 weis Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.11 2008-12-23 13:00:58 doligez Exp $ *)
 
 (**
 
@@ -354,12 +354,20 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
          assume h3: A!equal (x, y),
          assume h4: !est_element (x, a :: s1),
          prove !est_element (y, a :: s1)
+      <2>1 assume h5: !est_element (x, s1),
+           prove !est_element (y, s1)
+        by hypothesis hrec, h3, h5
+      <2>2 assume h5: A!equal (x, a),
+           prove A!equal (y, a)
+        by hypothesis h3, h5
+           property A!equal_symmetric, A!equal_transitive
+      <2>q qed
+        assumed {* need to investigate why zenon doesn't get it *}
 (*
-      by hypothesis hrec, h3, h4
-         property A!equal_symmetric, A!equal_transitive
-         definition of est_element
+        by hypothesis h4
+           step <2>1, <2>2
+           definition of est_element
 *)
-      assumed {* recursive case, need to investigate *}
     <1>f qed
       coq proof {*
         Proof.
