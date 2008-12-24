@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.29 2008-12-24 09:04:32 weis Exp $
+# $Id: Makefile,v 1.30 2008-12-24 11:34:26 weis Exp $
 
 ROOT_DIR = .
 
@@ -28,26 +28,33 @@ ALL_SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(INTERNAL_TOOLS_DIRS)
 
 #include $(ROOT_DIR)/Makefile.common
 
-.PHONY: configure_external build_external_tools_sources configure_external_tools
-.PHONY: build_external_tools build_internal_tools
-.PHONY: clean_external_tools clean_internal_tools
+.PHONY: build_internal_tools clean_internal_tools
+.PHONY: build_external_tools clean_external_tools
 
-all:: configure_external build_internal_tools
+all:: build_external_tools build_internal_tools
+
+# The ./configure make file target for external tools.
+.PHONY: configure_external_tools
+configure_external_tools: .done_install_external_tools_sources .done_build_external_tools
 
 #
-# External tools
+# External tools building, configuring and installing.
 #
-configure_external: .config_var \
- install_external_tools_sources \
- configure_external_tools
+build_external_tools: .config_var \
+ .done_install_external_tools_sources \
+ .done_build_external_tools
 
 .config_var:
 	./configure
 
-install_external_tools_sources: .done_external_tools_sources
+#
+# Installing external tools sources.
+#
+.PHONY: install_external_tools_sources
+install_external_tools_sources: .done_install_external_tools_sources
 
-.done_external_tools_sources: $(ABSOLUTE_COQ_SRC_DIR)
-	touch .done_external_tools_sources
+.done_install_external_tools_sources: $(ABSOLUTE_COQ_SRC_DIR)
+	$(TOUCH) .done_install_external_tools_sources
 
 $(ABSOLUTE_CAML_SRC_DIR):
 	for i in $(TAR_BALLS_DIR); do \
@@ -55,7 +62,7 @@ $(ABSOLUTE_CAML_SRC_DIR):
 	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAML_SRC_DIR)) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done; \
-	$(TOUCH) .done_create_external_$(CAML_NAME)_tool_sources
+	$(TOUCH) .done_install_external_$(CAML_NAME)_tool_sources
 
 $(ABSOLUTE_CAMLP5_SRC_DIR): $(ABSOLUTE_CAML_SRC_DIR)
 	for i in $(TAR_BALLS_DIR); do \
@@ -63,7 +70,7 @@ $(ABSOLUTE_CAMLP5_SRC_DIR): $(ABSOLUTE_CAML_SRC_DIR)
 	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAMLP5_SRC_DIR)) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done; \
-	$(TOUCH) .done_create_external_$(CAMLP5_NAME)_tool_sources
+	$(TOUCH) .done_install_external_$(CAMLP5_NAME)_tool_sources
 
 $(ABSOLUTE_COQ_SRC_DIR): $(ABSOLUTE_CAMLP5_SRC_DIR)
 	for i in $(TAR_BALLS_DIR); do \
@@ -71,56 +78,57 @@ $(ABSOLUTE_COQ_SRC_DIR): $(ABSOLUTE_CAMLP5_SRC_DIR)
 	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_COQ_SRC_DIR)) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done; \
-	$(TOUCH) .done_create_external_$(COQ_NAME)_tool_sources
+	$(TOUCH) .done_install_external_$(COQ_NAME)_tool_sources
 
-configure_external_tools: .done_configure_external_tools
-
-.done_configure_external_tools: .done_configure_external_coq_tool
-	touch .done_configure_external_tools
-
+#
+# Building external tools.
+#
 # We need to configure, build then install in a row, since
-# the caml compiler should be installed to configure camlp5,
-# the caml compiler should be up and running to compile camlp5;
-# the caml compiler AND camlp5 should be installed to configure coq,
-# the caml compiler AND camlp5 should be up and running to compile coq.
-# All external tools should be installed and up and running to compile
-# and install the FoCaLize internal tools zenon and zvtov;
-# all the external and internal tools should be compiled and installed to
-# compile the focalizec compiler and its libraries.
-.done_configure_external_caml_tool: $(ABSOLUTE_CAML_SRC_DIR)
+# - the caml compiler should be installed to configure camlp5,
+# - the caml compiler should be up and running to compile camlp5;
+# - the caml compiler AND camlp5 should be installed to configure coq,
+# - the caml compiler AND camlp5 should be up and running to compile coq.
+# - all external tools should be installed and up and running to compile
+#   and install the FoCaLize internal tools zenon and zvtov;
+# - all the external and internal tools should be compiled and installed to
+#   compile the focalizec compiler and its libraries.
+.done_build_external_tools: .done_build_external_coq_tool
+	$(TOUCH) .done_build_external_tools
+
+.done_build_external_caml_tool: $(ABSOLUTE_CAML_SRC_DIR)
 	($(CD) $(ABSOLUTE_CAML_SRC_DIR); \
 	 ./configure $(CAML_CONFIGURE_OPTIONS); \
 	 $(MAKE) $(CAML_MAKE_ALL_TARGET); \
 	 $(MAKE) install; \
 	); \
-	touch .done_configure_external_caml_tool
+	$(TOUCH) .done_build_external_caml_tool
 
- .done_configure_external_camlp5_tool: .done_configure_external_caml_tool
+ .done_build_external_camlp5_tool: .done_build_external_caml_tool
 	($(CD) $(ABSOLUTE_CAMLP5_SRC_DIR); \
 	 PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
 	 ./configure $(CAMLP5_CONFIGURE_OPTIONS); \
 	 $(MAKE) $(CAMLP5_MAKE_ALL_TARGET); \
 	 $(MAKE) install; \
 	); \
-	touch .done_configure_external_camlp5_tool
+	$(TOUCH) .done_build_external_camlp5_tool
 
-.done_configure_external_coq_tool: .done_configure_external_camlp5_tool
+.done_build_external_coq_tool: .done_build_external_camlp5_tool
 	($(CD) $(ABSOLUTE_COQ_SRC_DIR); \
 	 ./configure $(COQ_CONFIGURE_OPTIONS); \
 	 $(COQ_MAKE) $(COQ_MAKE_ALL_TARGET); \
 	 $(COQ_MAKE) install; \
 	); \
-	touch .done_configure_external_coq_tool
+	$(TOUCH) .done_build_external_coq_tool
 
 #
 # Internal tools
 #
 build_internal_tools: .done_build_internal_tools
 
-.done_build_internal_tools : .done_configure_external_tools .done_build_focalizec
-	touch .done_build_internal_tools
+.done_build_internal_tools: .done_build_external_tools .done_build_focalizec
+	$(TOUCH) .done_build_internal_tools
 
-.done_build_zenon $(ZENON_EXES): $(ABSOLUTE_COQ_SRC_DIR)/config/Makefile
+.done_build_zenon $(ZENON_EXES): .done_build_external_tools
 	for i in $(ABSOLUTE_ZENON_SRC_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
@@ -128,7 +136,7 @@ build_internal_tools: .done_build_internal_tools
 	   $(MAKE) $(ZENON_MAKE_ALL_tARGET)) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done; \
-	touch .done_build_zenon
+	$(TOUCH) .done_build_zenon
 
 .done_build_zvtov $(ZVTOV_EXES): .done_build_zenon
 	for i in $(ABSOLUTE_ZVTOV_SRC_DIR); do \
@@ -138,7 +146,7 @@ build_internal_tools: .done_build_internal_tools
 	   $(MAKE) $(ZVTOV_MAKE_ALL_TARGET)) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done; \
-	touch .done_build_zvtov
+	$(TOUCH) .done_build_zvtov
 
 .done_build_focalizec $(FOCALIZEC_EXES): .done_build_zvtov
 	for i in $(ABSOLUTE_FOCALIZEC_SRC_DIR); do \
@@ -148,7 +156,7 @@ build_internal_tools: .done_build_internal_tools
 	   $(MAKE) $(FOCALIZEC_MAKE_ALL_TARGET)) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done; \
-	touch .done_build_focalizec
+	$(TOUCH) .done_build_focalizec
 
 install:: .done_build_internal_tools
 
@@ -180,7 +188,7 @@ clean_externals:
 	  echo "<-- $$i [$$?]"; \
 	done; \
 	for i in $(EXTERNAL_TOOLS); do \
-	  $(RM) .done_configure_external_$$i_tool; \
+	  $(RM) .done_build_external_$$i_tool; \
 	done
 
 clean:: clean_internals
