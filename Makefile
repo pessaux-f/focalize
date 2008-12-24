@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.28 2008-12-24 08:13:04 weis Exp $
+# $Id: Makefile,v 1.29 2008-12-24 09:04:32 weis Exp $
 
 ROOT_DIR = .
 
@@ -30,6 +30,7 @@ ALL_SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(INTERNAL_TOOLS_DIRS)
 
 .PHONY: configure_external build_external_tools_sources configure_external_tools
 .PHONY: build_external_tools build_internal_tools
+.PHONY: clean_external_tools clean_internal_tools
 
 all:: configure_external build_internal_tools
 
@@ -53,21 +54,24 @@ $(ABSOLUTE_CAML_SRC_DIR):
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAML_SRC_DIR)) || exit; \
 	  echo "<-- $$i [$$?]"; \
-	done
+	done; \
+	$(TOUCH) .done_create_external_$(CAML_NAME)_tool_sources
 
 $(ABSOLUTE_CAMLP5_SRC_DIR): $(ABSOLUTE_CAML_SRC_DIR)
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAMLP5_SRC_DIR)) || exit; \
 	  echo "<-- $$i [$$?]"; \
-	done
+	done; \
+	$(TOUCH) .done_create_external_$(CAMLP5_NAME)_tool_sources
 
 $(ABSOLUTE_COQ_SRC_DIR): $(ABSOLUTE_CAMLP5_SRC_DIR)
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_COQ_SRC_DIR)) || exit; \
 	  echo "<-- $$i [$$?]"; \
-	done
+	done; \
+	$(TOUCH) .done_create_external_$(COQ_NAME)_tool_sources
 
 configure_external_tools: .done_configure_external_tools
 
@@ -158,10 +162,30 @@ install uninstall doc depend::
 unconfigure:
 	$(RM) .config_var .depend .done_*
 
-clean::
+clean_internals:
+	for i in $(INTERNAL_TOOLS_DIRS); do \
+	  echo "--> $$i ..."; \
+	  ($(CD) $$i && $(MAKE) clean) || exit; \
+	  echo "<-- $$i [$$?]"; \
+	done; \
+	for i in $(INTERNAL_TOOLS); do \
+	  $(RM) .done_build_$$i; \
+	  $(TOUCH) $$i/.config_var; \
+	done
+
+clean_externals:
+	for i in $(EXTERNAL_TOOLS_DIRS); do \
+	  echo "--> $$i ..."; \
+	  ($(CD) $$i && $(MAKE) clean) || exit; \
+	  echo "<-- $$i [$$?]"; \
+	done; \
+	for i in $(EXTERNAL_TOOLS); do \
+	  $(RM) .done_configure_external_$$i_tool; \
+	done
+
+clean:: clean_internals
 	$(RM) .done_*
-	$(TOUCH) zenon/.config_var
-	for i in $(TAR_BALLS_DIR) $(INTERNAL_TOOLS_DIRS); do \
+	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i && $(MAKE) $@) || exit; \
 	  echo "<-- $$i [$$?]"; \
