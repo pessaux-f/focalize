@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.34 2008-12-24 14:04:49 weis Exp $
+# $Id: Makefile,v 1.35 2008-12-24 14:11:46 weis Exp $
 
 ROOT_DIR = .
 
@@ -117,6 +117,13 @@ install_external_tools_sources: .done_install_external_tools_sources
 #   and install the FoCaLize internal tools zenon and zvtov;
 # - all the external and internal tools should be compiled and installed to
 #   compile the focalizec compiler and its libraries.
+# Hence:
+# - external tools are built and installed at project configuration time,
+# - internal tools are built and installed at project compilation time,
+# - then the focalizec compiler and its libraries are compiled.
+# A new make install invocation will install focalizec and the libraries in the proper
+# directories, $PREFIX/bin, $PREFIX/lib, etc.
+# The prefix directory $PREFIX is defined at the project configuration time.
 .done_build_external_tools: .done_build_external_coq_tool
 	$(TOUCH) .done_build_external_tools
 
