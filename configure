@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.36 2008-12-24 15:50:04 weis Exp $
+# $Id: configure,v 1.37 2008-12-24 16:03:13 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -624,7 +624,6 @@ build_config_var () {
       -e "s,@XMLRPC@,$XMLRPC," \
       -e "s,@XMLRPC_FLAGS@,$XMLRPC_FLAGS," \
       -e "s,@XMLRPC_LINK@,$XMLRPC_LINK," \
-  \
       <.config_var.in >.config_var
 }
 
