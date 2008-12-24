@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.30 2008-12-23 14:56:03 weis Exp $
+# $Id: configure,v 1.31 2008-12-24 08:30:04 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -145,17 +145,20 @@ set_intrinsic () {
   if test -z "${USE_COQC}"; then USE_COQC="${DEFAULT_USE_COQC}"; fi
   if test -z "${SUM}"; then SUM="${DEFAULT_SUM}"; else
     if check $SUM; then :; else
-      echo "Configure: unavailable command $SUM."; exit 2;
+      abort_configuration "unavailable command $SUM.";
+      abort_remedy "Choose an executable check sum command."
     fi
   fi
   if test -z $CONVERT; then CONVERT="$DEFAULT_CONVERT"; else
     if check $CONVERT; then :; else
-      echo "Configure: unavailable command $CONVERT."; exit 2;
+      abort_configuration "unavailable command $CONVERT.";
+      abort_remedy "Choose an executable convert command."
     fi
   fi
   if test -z $GS; then GS="$DEFAULT_GS"; else
     if check $GS; then :; else
-      echo "Configure: unavailable command $GS."; exit 2;
+      abort_configuration "unavailable command $GS.";
+      abort_remedy "Choose an executable gs command."
     fi
   fi
 
@@ -165,7 +168,8 @@ set_intrinsic () {
     # set_XMLRPC;
     if test -z "$XMLRPC"; then XMLRPC="$DEFAULT_XMLRPC"; else
       if check $XMLRPC; then :; else
-        echo "Configure: unavailable command $XMLRPC."; exit 2;
+        abort_configuration "unavailable command $XMLRPC.";
+        abort_remedy "Choose an executable xmlrpc command."
       fi
     fi
     # set_XMLRPC_FLAGS;
@@ -328,18 +332,23 @@ set_variables () {
 #
 # Generic aborting procedures.
 #
+
+BOLD_TAG="\033[1m"
+UNDERLINE_TAG="\033[4m"
+NORMAL_TAG="\033[0m"
+
 abort_configuration () {
-  echo;
-  echo "configure: ABORTING CONFIGURATION!";
-  echo;
-  echo "$1";
+  echo >&2
+  echo "./configure: " $BOLD_TAG"ABORTING CONFIGURATION!"$NORMAL_TAG  >&2
+  echo >&2
+  echo "$1" >&2
 }
 
 abort_remedy () {
-  echo;
-  echo "$1";
-  echo "(See configure -help for details).";
-  exit 1;
+  echo >&2
+  echo "$1" >&2
+  echo "(See configure -help for details)." >&2
+  exit 1 >&2
 }
 
 abort_configuration_not_writable_share_prefix_directory () {
@@ -514,23 +523,23 @@ check_installation_dirs () {
   # The list of directories that must be installable during configuration.
   CONFIGURATION_INSTALLABLE_DIRS="${SHARE_PROJECT_PREFIX}"
   for i in ${CONFIGURATION_INSTALLABLE_DIRS}; do
-    echo "Checking if we can install in $i...";
-    if test -d $i; then echo "  the directory exists: good.";
+    echo "Checking if we can install in $i..." >&2
+    if test -d $i; then echo "  the directory exists: good." >&2
       else
-        echo "  the directory does not exist: unrecoverable failure.";
+        echo "  the directory does not exist: unrecoverable failure." >&2
         abort_configuration \
           "You cannot install in $i, because it is not a directory.";
         abort_remedy \
           "Please, create a directory where you can install files and directories.";
     fi
-    if test -w $i; then echo "  the directory is writable: good.";
+    if test -w $i; then echo "  the directory is writable: good." >&2
       else
-        echo "  the directory is not writable: unrecoverable failure.";
+        echo "  the directory is not writable: unrecoverable failure." >&2
         abort_configuration_not_writable_share_prefix_directory "$i";
     fi
-    if (touch $i/$$; rm -f $i/$$); then echo "  you can install in the directory: good.";
+    if (touch $i/$$; rm -f $i/$$); then echo "  you can install in the directory: good." >&2
       else
-        echo "  you cannot install in the directory: unrecoverable failure.";
+        echo "  you cannot install in the directory: unrecoverable failure." >&2
         abort_configuration_not_writable_share_prefix_directory "$i";
     fi
   done
