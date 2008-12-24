@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.27 2008-12-23 11:29:35 weis Exp $
+# $Id: Makefile,v 1.28 2008-12-24 08:13:04 weis Exp $
 
 ROOT_DIR = .
 
@@ -88,7 +88,7 @@ configure_external_tools: .done_configure_external_tools
 	 ./configure $(CAML_CONFIGURE_OPTIONS); \
 	 $(MAKE) $(CAML_MAKE_ALL_TARGET); \
 	 $(MAKE) install; \
-	)
+	); \
 	touch .done_configure_external_caml_tool
 
  .done_configure_external_camlp5_tool: .done_configure_external_caml_tool
@@ -97,7 +97,7 @@ configure_external_tools: .done_configure_external_tools
 	 ./configure $(CAMLP5_CONFIGURE_OPTIONS); \
 	 $(MAKE) $(CAMLP5_MAKE_ALL_TARGET); \
 	 $(MAKE) install; \
-	)
+	); \
 	touch .done_configure_external_camlp5_tool
 
 .done_configure_external_coq_tool: .done_configure_external_camlp5_tool
@@ -105,7 +105,7 @@ configure_external_tools: .done_configure_external_tools
 	 ./configure $(COQ_CONFIGURE_OPTIONS); \
 	 $(COQ_MAKE) $(COQ_MAKE_ALL_TARGET); \
 	 $(COQ_MAKE) install; \
-	)
+	); \
 	touch .done_configure_external_coq_tool
 
 #
@@ -123,7 +123,7 @@ build_internal_tools: .done_build_internal_tools
 	   ./configure $(ZENON_CONFIGURE_OPTIONS); \
 	   $(MAKE) $(ZENON_MAKE_ALL_tARGET)) || exit; \
 	  echo "<-- $$i [$$?]"; \
-	done
+	done; \
 	touch .done_build_zenon
 
 .done_build_zvtov $(ZVTOV_EXES): .done_build_zenon
@@ -133,7 +133,7 @@ build_internal_tools: .done_build_internal_tools
 	   ./configure $(ZVTOV_CONFIGURE_OPTIONS); \
 	   $(MAKE) $(ZVTOV_MAKE_ALL_TARGET)) || exit; \
 	  echo "<-- $$i [$$?]"; \
-	done
+	done; \
 	touch .done_build_zvtov
 
 .done_build_focalizec $(FOCALIZEC_EXES): .done_build_zvtov
@@ -143,7 +143,7 @@ build_internal_tools: .done_build_internal_tools
 	   ./configure $(FOCALIZEC_CONFIGURE_OPTIONS); \
 	   $(MAKE) $(FOCALIZEC_MAKE_ALL_TARGET)) || exit; \
 	  echo "<-- $$i [$$?]"; \
-	done
+	done; \
 	touch .done_build_focalizec
 
 install:: .done_build_internal_tools
