@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.34 2008-12-24 11:50:01 weis Exp $
+# $Id: configure,v 1.35 2008-12-24 13:10:04 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -651,9 +651,9 @@ main () {
   configure_internal_tools;
   summarize_configuration;
   # Call the Makefile to go on configuring external tools.
-  if ${MAGIC_MAKE_EXTERNAL}; then make magic_configure_external_tools
-  fi;
-  if ${MAKE_EXTERNAL}; then make configure_external_tools; fi;
+  if ${MAGIC_MAKE_EXTERNAL}; then make magic_configure_external_tools; else
+    if ${MAKE_EXTERNAL}; then make configure_external_tools; fi;
+  fi
 }
 
 main; exit 0
