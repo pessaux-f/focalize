@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.19 2008-12-24 15:51:19 weis Exp $
+#  $Id: configure,v 1.20 2008-12-24 15:59:19 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=zvtov
@@ -505,7 +505,6 @@ build_config_var () {
   \
       -e "s,@COQC@,$COQC," \
       -e "s,@COQRC@,$COQRC," \
-
   \
       -e "s,@USE_COQC@,$USE_COQC," \
       -e "s,@SUM@,$SUM," \
@@ -517,7 +516,6 @@ build_config_var () {
       -e "s,@XMLRPC_FLAGS@,$XMLRPC_FLAGS," \
       -e "s,@XMLRPC_LINK@,$XMLRPC_LINK," \
       <.config_var.in >.config_var
-
 }
 
 summarize_configuration () {
