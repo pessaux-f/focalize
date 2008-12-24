@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.31 2008-12-24 08:30:04 weis Exp $
+# $Id: configure,v 1.32 2008-12-24 09:05:13 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -523,7 +523,7 @@ check_installation_dirs () {
   # The list of directories that must be installable during configuration.
   CONFIGURATION_INSTALLABLE_DIRS="${SHARE_PROJECT_PREFIX}"
   for i in ${CONFIGURATION_INSTALLABLE_DIRS}; do
-    echo "Checking if we can install in $i..." >&2
+    echo "Checking if we can install external tools in $i..." >&2
     if test -d $i; then echo "  the directory exists: good." >&2
       else
         echo "  the directory does not exist: unrecoverable failure." >&2
