@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.31 2008-12-24 11:50:01 weis Exp $
+# $Id: Makefile,v 1.32 2008-12-24 13:11:35 weis Exp $
 
 ROOT_DIR = .
 
@@ -57,14 +57,20 @@ build_external_tools: .config_var \
 .PHONY: install_external_tools_sources
 install_external_tools_sources: .done_install_external_tools_sources
 
-.done_install_external_tools_sources: $(ABSOLUTE_COQ_SRC_DIR)
+.done_install_external_tools_sources: .done_install_external_$(COQ_NAME)_tool_sources
 	$(TOUCH) .done_install_external_tools_sources
 
  .magic_done_install_external_tools_sources:
+	$(TOUCH) .magic_done_install_external_$(CAML_NAME)_tool_sources
+	$(TOUCH) .done_install_external_$(CAML_NAME)_tool_sources
+	$(TOUCH) .magic_done_install_external_$(CAMLP5_NAME)_tool_sources
+	$(TOUCH) .done_install_external_$(CAMLP5_NAME)_tool_sources
+	$(TOUCH) .magic_done_install_external_$(COQ_NAME)_tool_sources
+	$(TOUCH) .done_install_external_$(COQ_NAME)_tool_sources
 	$(TOUCH) .magic_done_install_external_tools_sources
 	$(TOUCH) .done_install_external_tools_sources
 
-$(ABSOLUTE_CAML_SRC_DIR):
+.done_install_external_$(CAML_NAME)_tool_sources:
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAML_SRC_DIR)) || exit; \
@@ -72,7 +78,8 @@ $(ABSOLUTE_CAML_SRC_DIR):
 	done; \
 	$(TOUCH) .done_install_external_$(CAML_NAME)_tool_sources
 
-$(ABSOLUTE_CAMLP5_SRC_DIR): $(ABSOLUTE_CAML_SRC_DIR)
+.done_install_external_$(CAMLP5_NAME)_tool_sources: \
+  .done_install_external_$(CAML_NAME)_tool_sources
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAMLP5_SRC_DIR)) || exit; \
@@ -80,7 +87,8 @@ $(ABSOLUTE_CAMLP5_SRC_DIR): $(ABSOLUTE_CAML_SRC_DIR)
 	done; \
 	$(TOUCH) .done_install_external_$(CAMLP5_NAME)_tool_sources
 
-$(ABSOLUTE_COQ_SRC_DIR): $(ABSOLUTE_CAMLP5_SRC_DIR)
+.done_install_external_$(COQ_NAME)_tool_sources: \
+  .done_install_external_$(CAMLP5_NAME)_tool_sources
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_COQ_SRC_DIR)) || exit; \
@@ -115,7 +123,7 @@ $(ABSOLUTE_COQ_SRC_DIR): $(ABSOLUTE_CAMLP5_SRC_DIR)
 	); \
 	$(TOUCH) .done_build_external_caml_tool
 
- .done_build_external_camlp5_tool: .done_build_external_caml_tool
+.done_build_external_camlp5_tool: .done_build_external_caml_tool
 	($(CD) $(ABSOLUTE_CAMLP5_SRC_DIR); \
 	 PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
 	 ./configure $(CAMLP5_CONFIGURE_OPTIONS); \
@@ -136,7 +144,7 @@ $(ABSOLUTE_COQ_SRC_DIR): $(ABSOLUTE_CAMLP5_SRC_DIR)
 	$(TOUCH) .magic_done_build_external_coq_tool
 	$(TOUCH) .done_build_external_coq_tool
 
- .magic_done_build_external_camlp5_tool: .magic_done_build_external_caml_tool
+.magic_done_build_external_camlp5_tool: .magic_done_build_external_caml_tool
 	$(TOUCH) .magic_done_build_external_camlp5_tool
 	$(TOUCH) .done_build_external_camlp5_tool
 
