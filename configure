@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.32 2008-12-24 09:05:13 weis Exp $
+# $Id: configure,v 1.33 2008-12-24 11:27:11 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -80,6 +80,7 @@ set_intrinsic_defaults () {
 
   # Intrinsic defaults for the software.
   DEFAULT_MAKE_EXTERNAL=true
+  DEFAULT_MAGIC_MAKE_EXTERNAL=false
 
   DEFAULT_DEBUG=true
 
@@ -114,10 +115,12 @@ set_intrinsic () {
   # Intrinsic settings for the software.
   if test -z "${MAKE_EXTERNAL}"; then
   MAKE_EXTERNAL="${DEFAULT_MAKE_EXTERNAL}"; fi
+  if test -z "${MAGIC_MAKE_EXTERNAL}"; then
+  MAGIC_MAKE_EXTERNAL="${DEFAULT_MAGIC_MAKE_EXTERNAL}"; fi
 
   if test -z ${DEBUG}; then
   DEBUG=${DEFAULT_DEBUG}; fi
- 
+
   # Intrinsic settings for the package installation.
   DEFAULT_PREFIX="/usr/local"
 
@@ -135,7 +138,7 @@ set_intrinsic () {
   if test -z "${COQ_MAKE}"; then
     # To compile Coq, prefer gmake, if GNU make is available with that name.
     if check "${DEFAULT_COQ_MAKE}"; then COQ_MAKE="${DEFAULT_COQ_MAKE}";
-    # Otherwise, use make (which is GNU make anyway on 
+    # Otherwise, use make (which is GNU make anyway on
     # boxes with GNU make as default!).
     else COQ_MAKE="make";
     fi
@@ -402,6 +405,7 @@ while : ; do
     -xmlrpc_link | --xmlrpc_link) XMLRPC_LINK="$2"; shift 2;;
     # Configure script specific options
     -no_make_external | --no_make_external) MAKE_EXTERNAL=false; shift;;
+    -magic_make_external | --magic_make_external) MAGIC_MAKE_EXTERNAL=true; shift;;
     # Generic options
     -debug | --debug) DEBUG=$2; shift 2;;
     -enable_debug | --enable_debug) DEBUG=true; shift;;
@@ -496,6 +500,8 @@ while : ; do
        echo
        echo "  [-]-no_make_external"
        echo "    <non documented option>."
+       echo "  [-]-magic__make_external"
+       echo "    <unknown option>."
        exit 0
        ;;
     -*)
@@ -645,7 +651,11 @@ main () {
   configure_internal_tools;
   summarize_configuration;
   # Call the Makefile to go on configuring external tools.
-  if ${MAKE_EXTERNAL}; then make configure_external; fi;
+  if ${MAGIC_MAKE_EXTERNAL}; then
+    touch .done_install_external_tools_sources;
+    touch .done_build_external_tools;
+  fi;
+  if ${MAKE_EXTERNAL}; then make configure_external_tools; fi;
 }
 
 main; exit 0
