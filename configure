@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.33 2008-12-24 11:27:11 weis Exp $
+# $Id: configure,v 1.34 2008-12-24 11:50:01 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -500,7 +500,7 @@ while : ; do
        echo
        echo "  [-]-no_make_external"
        echo "    <non documented option>."
-       echo "  [-]-magic__make_external"
+       echo "  [-]-magic_make_external"
        echo "    <unknown option>."
        exit 0
        ;;
@@ -651,9 +651,7 @@ main () {
   configure_internal_tools;
   summarize_configuration;
   # Call the Makefile to go on configuring external tools.
-  if ${MAGIC_MAKE_EXTERNAL}; then
-    touch .done_install_external_tools_sources;
-    touch .done_build_external_tools;
+  if ${MAGIC_MAKE_EXTERNAL}; then make magic_configure_external_tools
   fi;
   if ${MAKE_EXTERNAL}; then make configure_external_tools; fi;
 }

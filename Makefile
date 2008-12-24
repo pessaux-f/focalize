@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.30 2008-12-24 11:34:26 weis Exp $
+# $Id: Makefile,v 1.31 2008-12-24 11:50:01 weis Exp $
 
 ROOT_DIR = .
 
@@ -37,6 +37,10 @@ all:: build_external_tools build_internal_tools
 .PHONY: configure_external_tools
 configure_external_tools: .done_install_external_tools_sources .done_build_external_tools
 
+.PHONY: magic_configure_external_tools
+magic_configure_external_tools: \
+ .magic_done_install_external_tools_sources .magic_done_build_external_tools
+
 #
 # External tools building, configuring and installing.
 #
@@ -54,6 +58,10 @@ build_external_tools: .config_var \
 install_external_tools_sources: .done_install_external_tools_sources
 
 .done_install_external_tools_sources: $(ABSOLUTE_COQ_SRC_DIR)
+	$(TOUCH) .done_install_external_tools_sources
+
+ .magic_done_install_external_tools_sources:
+	$(TOUCH) .magic_done_install_external_tools_sources
 	$(TOUCH) .done_install_external_tools_sources
 
 $(ABSOLUTE_CAML_SRC_DIR):
@@ -95,6 +103,10 @@ $(ABSOLUTE_COQ_SRC_DIR): $(ABSOLUTE_CAMLP5_SRC_DIR)
 .done_build_external_tools: .done_build_external_coq_tool
 	$(TOUCH) .done_build_external_tools
 
+.magic_done_build_external_tools: .magic_done_build_external_coq_tool
+	$(TOUCH) .magic_done_build_external_tools
+	$(TOUCH) .done_build_external_tools
+
 .done_build_external_caml_tool: $(ABSOLUTE_CAML_SRC_DIR)
 	($(CD) $(ABSOLUTE_CAML_SRC_DIR); \
 	 ./configure $(CAML_CONFIGURE_OPTIONS); \
@@ -119,6 +131,18 @@ $(ABSOLUTE_COQ_SRC_DIR): $(ABSOLUTE_CAMLP5_SRC_DIR)
 	 $(COQ_MAKE) install; \
 	); \
 	$(TOUCH) .done_build_external_coq_tool
+
+.magic_done_build_external_coq_tool: .magic_done_build_external_camlp5_tool
+	$(TOUCH) .magic_done_build_external_coq_tool
+	$(TOUCH) .done_build_external_coq_tool
+
+ .magic_done_build_external_camlp5_tool: .magic_done_build_external_caml_tool
+	$(TOUCH) .magic_done_build_external_camlp5_tool
+	$(TOUCH) .done_build_external_camlp5_tool
+
+.magic_done_build_external_caml_tool:
+	$(TOUCH) .magic_done_build_external_caml_tool
+	$(TOUCH) .done_build_external_caml_tool
 
 #
 # Internal tools
