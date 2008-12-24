@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.33 2008-12-24 13:32:12 weis Exp $
+# $Id: Makefile,v 1.34 2008-12-24 14:04:49 weis Exp $
 
 ROOT_DIR = .
 
@@ -174,7 +174,8 @@ build_internal_tools: .done_build_internal_tools
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
 	   ./configure $(ZENON_CONFIGURE_OPTIONS); \
-	   $(MAKE) $(ZENON_MAKE_ALL_tARGET)) || exit; \
+	   $(MAKE) $(ZENON_MAKE_ALL_tARGET); \
+	   $(MAKE) install) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done; \
 	$(TOUCH) .done_build_zenon
@@ -184,7 +185,8 @@ build_internal_tools: .done_build_internal_tools
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
 	   ./configure $(ZVTOV_CONFIGURE_OPTIONS); \
-	   $(MAKE) $(ZVTOV_MAKE_ALL_TARGET)) || exit; \
+	   $(MAKE) $(ZVTOV_MAKE_ALL_TARGET); \
+           $(MAKE) install) || exit; \
 	  echo "<-- $$i [$$?]"; \
 	done; \
 	$(TOUCH) .done_build_zvtov
@@ -200,8 +202,15 @@ build_internal_tools: .done_build_internal_tools
 	$(TOUCH) .done_build_focalizec
 
 install:: .done_build_internal_tools
+	for i in $(ABSOLUTE_FOCALIZEC_SRC_DIR); do \
+	  echo "--> $$i ..."; \
+	  ($(CD) $$i; \
+	   $(MAKE) install) || exit; \
+	  echo "<-- $$i [$$?]"; \
+	done; \
+	$(TOUCH) .done_install_focalizec
 
-install uninstall doc depend::
+uninstall doc depend::
 	for i in $(INTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i && $(MAKE) $@) || exit; \
