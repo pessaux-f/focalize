@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.35 2008-12-19 15:52:46 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.36 2008-12-27 15:56:58 weis Exp $ *)
 
 
 
@@ -613,7 +613,7 @@ and pp_termination_proof_profiles ppf =
 
 and pp_termination_proof_profile_desc ppf tppd =
   Format.fprintf ppf "@[<2>{@ %a;@ %a@ }@]"
-    pp_vname tppd.Parsetree.tpp_name pp_param_list tppd.Parsetree.tpp_args
+    pp_vname tppd.Parsetree.tpp_name pp_param_list tppd.Parsetree.tpp_params
 and pp_termination_proof_profile ppf =
   pp_ast pp_termination_proof_profile_desc ppf
 

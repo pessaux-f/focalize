@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.62 2008-12-18 07:45:45 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.63 2008-12-27 15:56:58 weis Exp $ *)
 
 open Parsetree;;
 
@@ -632,7 +632,7 @@ and pp_termination_proof_profiles ppf =
 
 and pp_termination_proof_profile_desc ppf tppd =
   Format.fprintf ppf "@[<2>{@ %a;@ %a@ }@]"
-    pp_vname tppd.Parsetree.tpp_name pp_param_list tppd.Parsetree.tpp_args
+    pp_vname tppd.Parsetree.tpp_name pp_param_list tppd.Parsetree.tpp_params
 and pp_termination_proof_profile ppf = pp_ast pp_termination_proof_profile_desc ppf
 
 

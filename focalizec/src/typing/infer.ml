@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.164 2008-12-17 13:57:04 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.165 2008-12-27 15:56:58 weis Exp $ *)
 
 
 
@@ -1867,7 +1867,7 @@ and typecheck_termination_proof_profile ctx env previous_fields profile =
           raise
             (Invalid_parameter_in_delayed_proof_termination
                (profile.Parsetree.ast_loc, prof_param)))
-      profile_desc.Parsetree.tpp_args
+      profile_desc.Parsetree.tpp_params
   with Not_found ->
     (* The function whose the termination proof belongs to was not found in
        the current species fields. *)

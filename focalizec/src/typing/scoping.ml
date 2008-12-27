@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.74 2008-12-19 16:35:48 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.75 2008-12-27 15:56:58 weis Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1714,9 +1714,9 @@ let scope_termination_proof_profile ctx env profile =
                 | None -> None
                 | Some t -> Some (scope_type_expr ctx env t) in
              (arg_name, scoped_ty))
-           profile_desc.Parsetree.tpp_args in
+           profile_desc.Parsetree.tpp_params in
        let scoped_desc = { profile_desc with
-         Parsetree.tpp_args = scoped_args } in
+         Parsetree.tpp_params = scoped_args } in
        { profile with Parsetree.ast_desc = scoped_desc }
        end)
    | Env.ScopeInformation.SBI_file _
@@ -1743,7 +1743,7 @@ let scope_termination_proof_def ctx env termination_proof_def =
         Env.ScopeInformation.SBI_local env in
     let add_arguments env profile =
       List.fold_left add_argument env
-        profile.Parsetree.ast_desc.Parsetree.tpp_args in
+        profile.Parsetree.ast_desc.Parsetree.tpp_params in
     List.fold_left add_arguments env
       scoped_term_proof_profiles
   in

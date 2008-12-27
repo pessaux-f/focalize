@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.121 2008-12-26 17:31:53 weis Exp $ *)
+(* $Id: parser.mly,v 1.122 2008-12-27 15:56:58 weis Exp $ *)
 
 open Parsetree;;
 
@@ -544,7 +544,7 @@ termination_proof_profiles:
 
 termination_proof_profile:
   | bound_vname LPAREN param_list RPAREN
-    { mk {tpp_name = $1; tpp_args = $3; } }
+    { mk {tpp_name = $1; tpp_params = $3; } }
 ;
 
 define_termination_proof:
