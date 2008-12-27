@@ -1,8 +1,8 @@
 (*  Copyright 2005 MPI  *)
-(*  $Id: xmlrpc.ml,v 1.3 2008-11-25 15:59:15 doligez Exp $  *)
+(*  $Id: xmlrpc.ml,v 1.4 2008-12-27 19:05:03 weis Exp $  *)
 
 (* call external provers through the MathServe server. works only if
-   the focal file has been compiled with the -tptp option.
+   the focalize file has been compiled with the -tptp option.
 *)
 open Pxp_document
 open Pxp_core_types
