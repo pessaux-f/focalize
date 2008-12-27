@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.22 2008-12-27 18:35:19 weis Exp $
+#  $Id: configure,v 1.23 2008-12-27 19:05:40 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=zvtov
@@ -94,6 +94,7 @@ set_intrinsic_defaults () {
   # Intrinsic defaults for Zvtov.
   DEFAULT_USE_XMLRPC=false
   DEFAULT_XMLRPC=xmlrpc
+  DEFAULT_XMLRPC_MODULE=""
   DEFAULT_XMLRPC_FLAGS=""
   DEFAULT_XMLRPC_LINK=""
 
@@ -181,6 +182,8 @@ set_intrinsic () {
           XMLRPC_LINK="${DEFAULT_XMLRPC_LINK}"
       fi
     fi
+    # set_XMLRPC_MODULE;
+    if test -z $XMLRPC_MODULE; then XMLRPC_MODULE="xmlrpc"; fi
   fi;
 
 }

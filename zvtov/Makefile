@@ -13,15 +13,15 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: Makefile,v 1.22 2008-12-17 17:19:23 doligez Exp $
+#  $Id: Makefile,v 1.23 2008-12-27 19:05:40 weis Exp $
 
 include .config_var
 
-# programs
-CAMLBYT = ocamlc
-CAMLBIN = ocamlopt
-CAMLLEX = ocamllex
-CAMLYACC = ocamlyacc
+# programs defined in .config_var
+#CAMLBYT = ocamlc
+#CAMLBIN = ocamlopt
+#CAMLLEX = ocamllex
+#CAMLYACC = ocamlyacc
 
 # flags
 DEBUGFLAG	= -g -dtypes
@@ -31,12 +31,12 @@ CAMLBINFLAGS	= $(COMPFLAGS) $(DEBUGFLAG) $(XMLRPCFLAGS)
 
 MODULES = version misc options cache \
           expr parser_coq lexer_coq invoke invoke_cime \
-          $(XMLRPC) token lexer parser main
+          $(XMLRPC_MODULE) token lexer parser main
 
 LEXERS = lexer_coq lexer
 PARSERS = parser_coq
 
-PLAIN_MODULES = version misc cache invoke expr invoke_cime $(XMLRPC) \
+PLAIN_MODULES = version misc cache invoke expr invoke_cime $(XMLRPC_MODULE) \
                 token parser options main
 
 IMPL = $(MODULES:%=%.ml)

@@ -1,5 +1,5 @@
 #  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.3 2008-12-27 18:26:46 weis Exp $
+#  $Id: .config_var.in,v 1.4 2008-12-27 19:05:40 weis Exp $
 
 DEBUG=@DEBUG@
 
@@ -54,3 +54,6 @@ CAMLC=@CAML_BYT@
 CAMLOPT=@CAML_BIN@
 CAMLLEX=@CAML_LEX@
 CAMLYACC=@CAML_YAC@
+
+XMLRPCFLAGS=@XMLRPC_FLAGS@
+XMLRPCLINK=@XMLRPC_LINK@
