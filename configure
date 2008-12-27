@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.37 2008-12-24 16:03:13 weis Exp $
+# $Id: configure,v 1.38 2008-12-27 18:35:19 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -413,7 +413,7 @@ while : ; do
     -gs | --gs) GS="$2"; shift 2;;
     # Zvtov options
     -zvtov | --zvtov) ZVTOV="$2"; shift 2;;
-    -use_xmlrpc | --use_xmlrpc) USE_XMLRPC=true; shift;;
+    -use_xmlrpc | --use_xmlrpc) USE_XMLRPC=$2; shift 2;;
     -xmlrpc | --xmlrpc) XMLRPC="$2"; shift 2;;
     -xmlrpc_flags | --xmlrpc_flags) XMLRPC_FLAGS="$2"; shift 2;;
     -xmlrpc_link | --xmlrpc_link) XMLRPC_LINK="$2"; shift 2;;
@@ -483,8 +483,8 @@ while : ; do
        echo
        echo "  [-]-zvtov <executable-file>"
        echo "    set absolute path for the command zvtov."
-       echo "  [-]-use_xmlrpc";
-       echo "    configure zvtov to use xmlrpc."
+       echo "  [-]-use_xmlrpc <boolean>";
+       echo "    set if xmlrpc must be used by zvtov."
        echo "  [-]-xmlrpc <executable-file>";
        echo "    set absolute path for the command xmlrpc."
        echo "  [-]-xmlrpc_flags <string>";
