@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.20 2008-12-24 15:59:19 weis Exp $
+#  $Id: configure,v 1.21 2008-12-27 18:26:46 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=zvtov
@@ -400,6 +400,7 @@ while : ; do
     -convert | --convert) CONVERT="$2"; shift 2;;
     -gs | --gs) GS="$2"; shift 2;;
     # Zvtov optioins
+    -zenon | --zenon) ZENON="$2"; shift 2;;
     -use_xmlrpc | --use_xmlrpc) USE_XMLRPC=true; shift;;
     -xmlrpc | --xmlrpc) XMLRPC="$2"; shift 2;;
     -xmlrpc_flags | --xmlrpc_flags) XMLRPC_FLAGS="$2"; shift 2;;
@@ -447,6 +448,8 @@ while : ; do
        echo
        echo "options specific to Zenon are:"
        echo
+       echo "  [-]-zenon <executable-file>"
+       echo "    set absolute path for the command zenon."
        echo "  [-]-use_coqc <boolean>"
        echo "    set if coqc must be used to verify the proofs given by zenon."
        echo "  [-]-convert <executable-file>"
@@ -510,6 +513,8 @@ build_config_var () {
       -e "s,@SUM@,$SUM," \
       -e "s,@CONVERT@,$CONVERT," \
       -e "s,@GS@,$GS," \
+  \
+      -e "s,@ZENON@,$ZENON," \
   \
       -e "s,@USE_XMLRPC@,$USE_XMLRPC," \
       -e "s,@XMLRPC@,$XMLRPC," \

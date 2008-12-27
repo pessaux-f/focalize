@@ -1,5 +1,5 @@
 #  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.16 2008-12-23 11:52:50 weis Exp $
+#  $Id: .config_var.in,v 1.17 2008-12-27 18:26:46 weis Exp $
 
 #
 # The project identity card.
@@ -71,6 +71,7 @@ USE_COQC=@USE_COQC@
 ZVTOV_LIB_DIR=@ZVTOV_LIB_DIR@
 ZVTOV=@ZVTOV@
 USE_XMLRPC=@USE_XMLRPC@
+XMLRPC=@XMLRPC@
 XMLRPC_FLAGS=@XMLRPC_FLAGS@
 XMLRPC_LINK=@XMLRPC_LINK@
 
