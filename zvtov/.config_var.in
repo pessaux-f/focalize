@@ -1,5 +1,5 @@
 #  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.6 2008-12-27 19:36:25 weis Exp $
+#  $Id: .config_var.in,v 1.7 2008-12-27 22:01:32 weis Exp $
 
 DEBUG=@DEBUG@
 
@@ -7,6 +7,7 @@ DEBUG=@DEBUG@
 PREFIX=@PREFIX@
 BIN_DIR=@BIN_DIR@
 LIB_DIR=@LIB_DIR@
+DOC_DIR=@DOC_DIR@
 MAN_DIR=@MAN_DIR@
 
 # Caml settings

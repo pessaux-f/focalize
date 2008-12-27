@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.27 2008-12-27 21:58:49 weis Exp $
+#  $Id: configure,v 1.28 2008-12-27 22:01:32 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=zvtov
@@ -503,6 +503,8 @@ build_config_var () {
       -e "s,@PREFIX@,$PREFIX," \
       -e "s,@BIN_DIR@,$BIN_DIR," \
       -e "s,@LIB_DIR@,$LIB_DIR," \
+      -e "s,@DOC_DIR@,$DOC_DIR," \
+      -e "s,@MAN_DIR@,$MAN_DIR," \
   \
       -e "s,@CAML_LIB_DIR@,$CAML_LIB_DIR," \
       -e "s,@CAML_BIN_DIR@,$CAML_BIN_DIR," \
