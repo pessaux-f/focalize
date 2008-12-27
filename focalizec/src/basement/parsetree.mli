@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.45 2008-12-10 08:59:17 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.46 2008-12-27 15:56:30 weis Exp $ *)
 
 (** {2 The Focalize abstract syntax tree} *)
 
@@ -21,7 +21,18 @@
    Disambiguation has not yet been done.
    This is the input type of the disambiguation pass.
    The disambiguation pass has to resolve global/local/method
-   classification for idents. *)
+   classification for idents.
+
+   We use a short list of abbreviations in the naming of this file:
+   - "ast" means Abstract Syntax Tree,
+   - "loc" means location (a way to find the file and the place in the file
+   where a given syntax tree has been read),
+   - "desc" means description (generally speaking a type or a field of a
+   record type),
+   - "def" means definition as in "type_def" for ``type definition'',
+   - "expr" means expression as in "type_expr" for ``type expression'',
+   - "param" means parameter.
+ *)
 
 (** {3 The generic polymorphic type of AST nodes} *)
 
@@ -57,7 +68,16 @@ type ast_node_type_information =
    | ANTI_scheme of Types.type_scheme
 ;;
 
-(** {6 The polymorphic AST} *)
+(** {6 The polymorphic AST data structure} *)
+
+(** A polymorphic AST node contains the mandatory information for all AST
+    nodes: the location of the node, the documentation for the node, the type
+    of the node, and a description for the node which is left unspecified as a
+    polymorphic type variable at this level of description.
+    The polymorphic type variable gives us provision for any kind of
+    description type for the nodes: either sum type, record type, or
+    abbreviation type; we also accept any visibility for the node desciption
+    type, being it either public, private, or abstract. *)
 
 type 'a ast = {
    (** The location in the source of the AST node. *)
@@ -115,7 +135,7 @@ type label_name = vname
 ;;
 
 type node_label = int * string
-(** A node label in a proof as a intger level and a string label. *)
+(** A node label in a proof as a integer level and a string label. *)
 ;;
 
 (** {6 Identifiers specific to expressions and patterns} *)
@@ -170,7 +190,7 @@ and rep_type_def_desc =
   | RTE_paren of rep_type_def
 ;;
 
-(** {6 Types for all other entites: values, constructors, ...} *)
+(** {6 Types for all other entities: values, constructors, ...} *)
 
 type type_expr = type_expr_desc ast
 and type_expr_desc =
@@ -475,7 +495,7 @@ and termination_proof_def_desc = {
 and termination_proof_profile = termination_proof_profile_desc ast
 and termination_proof_profile_desc = {
   tpp_name : vname;       (** The function's name. *)
-  tpp_args : param_list;  (** The function's parameters. *)
+  tpp_params : param_list;  (** The function's parameters. *)
 }
 ;;
 
