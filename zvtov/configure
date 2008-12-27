@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.23 2008-12-27 19:05:40 weis Exp $
+#  $Id: configure,v 1.24 2008-12-27 19:15:05 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=zvtov
@@ -523,6 +523,7 @@ build_config_var () {
       -e "s,@XMLRPC@,$XMLRPC," \
       -e "s,@XMLRPC_FLAGS@,$XMLRPC_FLAGS," \
       -e "s,@XMLRPC_LINK@,$XMLRPC_LINK," \
+      -e "s,@XMLRPC_MODULE@,$XMLRPC_MODULE," \
       <.config_var.in >.config_var
 }
 

@@ -1,5 +1,5 @@
 #  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.4 2008-12-27 19:05:40 weis Exp $
+#  $Id: .config_var.in,v 1.5 2008-12-27 19:15:05 weis Exp $
 
 DEBUG=@DEBUG@
 
@@ -37,6 +37,7 @@ ZVTOV=@ZVTOV@
 USE_XMLRPC=@USE_XMLRPC@
 XMLRPC_FLAGS=@XMLRPC_FLAGS@
 XMLRPC_LINK=@XMLRPC_LINK@
+XMLRPC_MODULE=@XMLRPC_MODULE@
 
 #
 # Completely external tools (not installed with the project).
