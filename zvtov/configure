@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: configure,v 1.26 2008-12-27 21:27:53 weis Exp $
+#  $Id: configure,v 1.27 2008-12-27 21:58:49 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=zvtov
@@ -405,7 +405,7 @@ while : ; do
     -sum | --sum) SUM="$2"; shift 2;;
     -convert | --convert) CONVERT="$2"; shift 2;;
     -gs | --gs) GS="$2"; shift 2;;
-    # Zvtov optioins
+    # Zvtov options
     -zenon | --zenon) ZENON="$2"; shift 2;;
     -use_xmlrpc | --use_xmlrpc) USE_XMLRPC="$2"; shift 2;;
     -xmlrpc | --xmlrpc) XMLRPC="$2"; shift 2;;
@@ -505,6 +505,7 @@ build_config_var () {
       -e "s,@LIB_DIR@,$LIB_DIR," \
   \
       -e "s,@CAML_LIB_DIR@,$CAML_LIB_DIR," \
+      -e "s,@CAML_BIN_DIR@,$CAML_BIN_DIR," \
       -e "s,@CAML_BYT@,$CAML_BYT," \
       -e "s,@CAML_BIN@,$CAML_BIN," \
       -e "s,@CAML_LEX@,$CAML_LEX," \
@@ -512,16 +513,20 @@ build_config_var () {
       -e "s,@BYT_DEBUG_FLAGS@,$BYT_DEBUG_FLAGS," \
       -e "s,@BIN_DEBUG_FLAGS@,$BIN_DEBUG_FLAGS," \
   \
+      -e "s,@COQ_LIB_DIR@,$COQ_LIB_DIR," \
+      -e "s,@COQ_CAML_DIR@,$COQ_CAML_DIR," \
       -e "s,@COQC@,$COQC," \
       -e "s,@COQRC@,$COQRC," \
   \
+      -e "s,@ZENON_LIB_DIR@,$ZENON_LIB_DIR," \
+      -e "s,@ZENON@,$ZENON," \
       -e "s,@USE_COQC@,$USE_COQC," \
       -e "s,@SUM@,$SUM," \
       -e "s,@CONVERT@,$CONVERT," \
       -e "s,@GS@,$GS," \
   \
-      -e "s,@ZENON@,$ZENON," \
-  \
+      -e "s,@ZVTOV_LIB_DIR@,$ZVTOV_LIB_DIR," \
+      -e "s,@ZVTOV@,$ZVTOV," \
       -e "s,@USE_XMLRPC@,$USE_XMLRPC," \
       -e "s,@XMLRPC@,$XMLRPC," \
       -e "s,@XMLRPC_FLAGS@,$XMLRPC_FLAGS," \
