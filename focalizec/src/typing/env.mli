@@ -49,6 +49,10 @@ module TypeInformation :
       dor_def : bool ;
       dor_decl : bool }
 
+    type let_definition_flags = {
+      ldf_recursive : Parsetree.rec_flag ;
+      ldf_logical : Parsetree.logical_flag }
+
     type sig_field_info =
       (from_history * Parsetree.vname * Types.type_scheme)
 
@@ -56,7 +60,7 @@ module TypeInformation :
       (from_history * Parsetree.vname * (Parsetree.vname list) *
        Types.type_scheme * Parsetree.binding_body *
        (Parsetree.termination_proof option) * dependency_on_rep *
-       Parsetree.logical_flag)
+       let_definition_flags)
 
     type theorem_field_info =
       (from_history * Parsetree.vname *

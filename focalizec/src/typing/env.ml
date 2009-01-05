@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.117 2008-12-03 10:38:55 pessaux Exp $ *)
+(* $Id: env.ml,v 1.118 2009-01-05 13:39:33 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -360,6 +360,15 @@ module TypeInformation = struct
     dor_def : bool  ;  (** Flag for a def-dependency. *)
     dor_decl : bool }  (** Flag for a decl-dependency. *)
 
+
+  type let_definition_flags = {
+    ldf_recursive : Parsetree.rec_flag ; (** Tells if the  let-bound identifier
+                                             is recursive or not. *)
+    ldf_logical : Parsetree.logical_flag (** Tells if the let-bound identifier
+                                             is a logical or a computational
+                                             definition. *)
+    }
+
   type sig_field_info =
     ((** Where the sig comes from (and inheritance history). *)
      from_history *
@@ -380,8 +389,9 @@ module TypeInformation = struct
      (Parsetree.termination_proof option) *
      (** Tells if the method has dependencies on the carrier ("rep"). *)
      dependency_on_rep *
-     Parsetree.logical_flag)   (** Tells if the let-bound idnetifier is a
-                                   logical or a computational definition. *)
+     let_definition_flags)   (** reminds the let-bound identifier flags
+                                 (logical or a computational, recursive or
+                                 not). *)
 
 
 

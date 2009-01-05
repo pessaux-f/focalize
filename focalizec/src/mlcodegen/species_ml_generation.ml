@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.88 2008-12-03 09:07:26 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.89 2009-01-05 13:39:32 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1602,9 +1602,10 @@ let collection_compile env ~current_unit out_fmter collection_def
         | Env.TypeInformation.SF_sig (_, _, _)
         | Env.TypeInformation.SF_theorem (_, _, _, _, _, _)
         | Env.TypeInformation.SF_property (_, _, _, _, _) -> ()
-        | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, log_flag) ->
+        | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, flags) ->
             (* Generate only if not a logical let ! *)
-            if log_flag = Parsetree.LF_no_logical then
+            if flags.Env.TypeInformation.ldf_logical =
+               Parsetree.LF_no_logical then
               (begin
               Format.fprintf out_fmter "%a =@ t."
                 Parsetree_utils.pp_vname_with_operators_expanded n ;
@@ -1615,9 +1616,10 @@ let collection_compile env ~current_unit out_fmter collection_def
               end)
         | Env.TypeInformation.SF_let_rec l ->
             List.iter
-              (fun (_, n, _, _, _, _, _, log_flag) ->
+              (fun (_, n, _, _, _, _, _, flags) ->
                 (* Generate only if not a logical let ! *)
-                if log_flag = Parsetree.LF_no_logical then
+                if flags.Env.TypeInformation.ldf_logical =
+                   Parsetree.LF_no_logical then
                   (begin
                   Format.fprintf out_fmter "%a =@ t."
                     Parsetree_utils.pp_vname_with_operators_expanded n ;

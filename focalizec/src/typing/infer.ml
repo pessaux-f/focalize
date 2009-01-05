@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.165 2008-12-27 15:56:58 weis Exp $ *)
+(* $Id: infer.ml,v 1.166 2009-01-05 13:39:33 pessaux Exp $ *)
 
 
 
@@ -2001,65 +2001,72 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                    (fun accu_env (id, ty_scheme, _) ->
                       Env.TypingEnv.add_value id ty_scheme accu_env)
                    env bindings in
+               (* Build the record now to put it later in the environment. *)
+               let let_def_flags = {
+                 Env.TypeInformation.ldf_recursive =
+                   let_def.Parsetree.ast_desc.Parsetree.ld_rec ;
+                 Env.TypeInformation.ldf_logical =
+                   let_def.Parsetree.ast_desc.Parsetree.ld_logical } in
                (* We now collect the type information of these methods in
                   order to make them suitable for a "type of method". *)
                match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-               | Parsetree.RF_rec ->
-                 (begin
-                  let field_infos =
-                    List.map2
-                      (fun (id, ty_scheme, has_def_dep_on_rep) binding ->
-                        let expr =
-                          binding.Parsetree.ast_desc.Parsetree.b_body in
-                        let params_names =
-                          List.map
-                            fst binding.Parsetree.ast_desc.Parsetree.b_params in
-                        (* Note that [expr] below is already typed here. *)
-                        ((Env.intitial_inheritance_history current_species),
-                         id, params_names, ty_scheme, expr,
-                         (* [Unsure] We assign each mutually recursive function
-                            the same proof. This is not correct but anyway, we
-                            only handle unique recursive functions. *)
-                         let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof,
-                         has_def_dep_on_rep,
-                         let_def.Parsetree.ast_desc.Parsetree.ld_logical))
-                      bindings
-                      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
-                  (* Recursive, so just 1 field with several names. *)
-                  ((append_and_ensure_method_uniquely_defined
-                      current_species accu_fields
-                      [(Env.TypeInformation.SF_let_rec field_infos)]),
-                   ctx, env', accu_proofs, accu_term_proofs)
-                 end)
-               | Parsetree.RF_no_rec ->
-                 (begin
-                 (* Not recursive, then the list should be only 1 long.
-                    Anyway, if that not the case, this does not annoy.
-                    So we return a list of n fields with 1 name in each. *)
-                 let field_infos =
-                   List.map2
-                     (fun (id, ty_scheme, has_def_dep_on_rep) binding ->
-                      let expr =
-                        binding.Parsetree.ast_desc.Parsetree.b_body in
-                      let params_names =
-                        List.map fst
-                          binding.Parsetree.ast_desc.Parsetree.b_params in
-                      (* Note that [expr] below is already typed here. *)
-                      Env.TypeInformation.SF_let
-                        ((Env.intitial_inheritance_history current_species),
-                         id, params_names, ty_scheme, expr,
-                         (* Same remark than above, but with the additionnal
-                            stuff that non-recursive functions should anyway
-                            not have proofs since it is useless. *)
-                         let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof,
-                         has_def_dep_on_rep,
-                         let_def.Parsetree.ast_desc.Parsetree.ld_logical))
-                     bindings
-                     let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
-                 ((append_and_ensure_method_uniquely_defined
-                     current_species accu_fields field_infos),
-                   ctx, env', accu_proofs, accu_term_proofs)
-                 end)
+                | Parsetree.RF_rec ->
+                    (begin
+                    let field_infos =
+                      List.map2
+                        (fun (id, ty_scheme, has_def_dep_on_rep) binding ->
+                          let expr =
+                            binding.Parsetree.ast_desc.Parsetree.b_body in
+                          let params_names =
+                            List.map
+                              fst binding.Parsetree.ast_desc.Parsetree.b_params in
+                          (* Note that [expr] below is already typed here. *)
+                          ((Env.intitial_inheritance_history current_species),
+                           id, params_names, ty_scheme, expr,
+                           (* [Unsure] We assign each mutually recursive
+                              function the same proof. This is not correct but
+                              anyway, we only handle unique recursive
+                              function"s". *)
+                           let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof,
+                           has_def_dep_on_rep,
+                           let_def_flags))
+                        bindings
+                        let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
+                    (* Recursive, so just 1 field with several names. *)
+                    ((append_and_ensure_method_uniquely_defined
+                        current_species accu_fields
+                        [(Env.TypeInformation.SF_let_rec field_infos)]),
+                     ctx, env', accu_proofs, accu_term_proofs)
+                    end)
+                | Parsetree.RF_no_rec ->
+                    (begin
+                    (* Not recursive, then the list should be only 1 long.
+                       Anyway, if that not the case, this does not annoy.
+                       So we return a list of n fields with 1 name in each. *)
+                    let field_infos =
+                      List.map2
+                        (fun (id, ty_scheme, has_def_dep_on_rep) binding ->
+                          let expr =
+                            binding.Parsetree.ast_desc.Parsetree.b_body in
+                          let params_names =
+                            List.map fst
+                              binding.Parsetree.ast_desc.Parsetree.b_params in
+                          (* Note that [expr] below is already typed here. *)
+                          Env.TypeInformation.SF_let
+                            ((Env.intitial_inheritance_history current_species),
+                             id, params_names, ty_scheme, expr,
+                             (* Same remark than above, but with the additionnal
+                                stuff that non-recursive functions should anyway
+                                not have proofs since it is useless. *)
+                             let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof,
+                             has_def_dep_on_rep,
+                             let_def_flags))
+                        bindings
+                        let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
+                    ((append_and_ensure_method_uniquely_defined
+                        current_species accu_fields field_infos),
+                     ctx, env', accu_proofs, accu_term_proofs)
+                    end)
                end)
            | Parsetree.SF_property property_def ->
                (begin
@@ -3492,7 +3499,8 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
           let (f2, n2, args2, sc2, body2, otp2, dep2, log_flag2) = m2 in
           (* We don't allow to redefine methods mixing logical and computation
              flag. *)
-          if log_flag1 != log_flag2 then
+          if log_flag1.Env.TypeInformation.ldf_logical !=
+             log_flag2.Env.TypeInformation.ldf_logical then
             raise (No_mix_between_logical_defs (loc, n1)) ;
           Types.begin_definition () ;
           let ty1 = Types.specialize sc1 in
@@ -3541,7 +3549,8 @@ let fusion_fields_let_let_rec ~loc ctx meth1 rec_meths2 =
     let (f2, n2, args2, sc2, body2, otp2, dep2, log_flag2) = m2 in
     (* We don't allow to redefine methods mixing logical and computation
        flag. *)
-    if log_flag1 != log_flag2 then
+    if log_flag1.Env.TypeInformation.ldf_logical !=
+       log_flag2.Env.TypeInformation.ldf_logical then
       raise (No_mix_between_logical_defs (loc, n1)) ;
     Types.begin_definition () ;
     let ty1 = Types.specialize sc1 in
@@ -3587,7 +3596,8 @@ let fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2 =
     let (f1, n1, _, sc1, _, _, _, log_flag1) = m1 in
     (* We don't allow to redefine methods mixing logical and computation
        flag. *)
-    if log_flag1 != log_flag2 then
+    if log_flag1.Env.TypeInformation.ldf_logical !=
+       log_flag2.Env.TypeInformation.ldf_logical then
       raise (No_mix_between_logical_defs (loc, n1)) ;
     Types.begin_definition () ;
     let ty1 = Types.specialize sc1 in
@@ -3711,7 +3721,8 @@ let fields_fusion ~loc ctx phi1 phi2 =
           (from2, n2, pars2, sc2, body, otp2, dep, log_flag2)) when n1 = n2 ->
         (* let / let. *)
         (* Late binding : keep the second body ! *)
-        if log_flag1 != log_flag2 then
+        if log_flag1.Env.TypeInformation.ldf_logical !=
+           log_flag2.Env.TypeInformation.ldf_logical then
           raise (No_mix_between_logical_defs (loc, n1)) ;
         Types.reset_deps_on_rep () ;
         Types.begin_definition () ;

@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.8 2008-12-22 15:04:50 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.9 2009-01-05 13:39:32 pessaux Exp $ *)
 
 let xmlify_string s =
   let s_len = String.length s in
@@ -94,7 +94,7 @@ let gendoc_species_expr out_fmt ~current_unit species_expr =
   match species_expr_desc.Parsetree.se_params with
    | [] ->
        (begin
-       (* [Unsure] "order ?????" *)
+       (* [TODO] "order ?????" *)
        Format.fprintf out_fmt "<foc:atom order=\"high\"" ;
        if infile <> "" then
          Format.fprintf out_fmt " infile=\"%s\"" infile ;
@@ -147,7 +147,7 @@ let gendoc_parameters out_fmt ~current_unit params =
            Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
              Sourcify.pp_vname p_vname ;
            Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
-           (* [Unsure] "order ?????" *)
+           (* [TODO] "order ?????" *)
            Format.fprintf out_fmt 
              "<foc:atom order=\"high\" infile=\"%s\">%a</foc:atom>@\n"
              infile Sourcify.pp_vname ident_vname ;
@@ -175,6 +175,26 @@ let gendoc_type out_fmt ty =
 
 
 
+let gen_doc_logical_let out_fmt _ =
+  Format.fprintf out_fmt "@[<h 2><foc:letprop>@\n" ;
+  (* TODO. *)
+  Format.fprintf out_fmt "@]</foc:letprop>@\n"
+;;
+
+
+
+let gen_doc_computational_let out_fmt rec_flag _ =
+  let attr_rec_string =
+    (match rec_flag with
+     | Parsetree.RF_rec -> " recursive=\"yes\""
+     | Parsetree.RF_no_rec -> "") in
+  Format.fprintf out_fmt "@[<h 2><foc:definition%s>@\n" attr_rec_string ;
+  (* foc:foc-name,foc:dependence,foc:informations,foc:ho?,foc:type. *) (*TODO *)
+  Format.fprintf out_fmt "@]</foc:definition>@\n"
+;;
+
+
+
 let gendoc_method out_fmt = function
   | Env.TypeInformation.SF_sig (_from, n, sch) ->
       (begin
@@ -198,9 +218,16 @@ let gendoc_method out_fmt = function
         end)
       end)
   | Env.TypeInformation.SF_let
-         (_from, _n, _parms, _sch, _body, _otp, _rep_deps, _lflag) ->
+         (_from, _n, _parms, _sch, body, _otp, _rep_deps, lflags) ->
+      (begin
       (* foc:definition, foc:letprop. *)  (* TODO. *) 
-      ()
+      match lflags.Env.TypeInformation.ldf_logical with
+       | Parsetree.LF_logical ->
+           gen_doc_logical_let out_fmt body
+       | Parsetree.LF_no_logical ->
+           gen_doc_computational_let
+             out_fmt lflags.Env.TypeInformation.ldf_recursive body
+      end)
   | Env.TypeInformation.SF_let_rec _l ->
       (* foc:definition, foc:letprop. *) (* TODO. *)
       ()
