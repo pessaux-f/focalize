@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.24 2008-12-19 10:13:53 pessaux Exp $
+% $Id: compiler_err_msgs.tex,v 1.25 2009-01-05 14:30:50 pessaux Exp $
 
 
 
@@ -451,7 +451,7 @@ in the species where the error was reported.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Representation is multiply defined by multiple
   inheritance and was formerly found of type $t_1$ and newly found of
-  type $t_2$}.
+  type $t_2$.}
 
 {\em Description}: In the species, several parents brought by
 inheritance several incompatible definitions of the representation. The error message reports $t_1$ and $t_2$, two incompatible
@@ -607,6 +607,63 @@ $name$ doesn't exist among the original function's parameters.
 
 {\em Hints}: Change the parameter name in the proof to make it
 matching the function definition's ones.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Method '$mname$' was found with incompatible types during
+  inheritance. In species '$s_1$': $\tau_1$, in species '$s_2$':
+  $\tau_2$.}
+
+{\em Description}: During inheritance, a method $nmane$ was found with
+2 incompatible types. Remind that all along the inheritance tree,
+methods must not change their type. The two found types and the
+species hosting the definitions having these types are provided by
+'$s_1$'and $\tau_1$ (resp. '$s_2$'and $\tau_2$).
+
+{\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Logical method '$mname$' appearing in species '$s_1$' should
+  have the same statement than in species '$s_2$' at
+  $source-location$.}
+
+{\em Description}: During inheritance, a theorem or a property $nmane$
+was redefined but with a different statement. As described at the
+beginning of \ref{inheritance}, the inheritance mechanism also allows
+to redefine methods already existing as long as they keep the same
+type expression.  For theorems to have the same type is simply to have
+the same statement. A same property can be written in several
+semantically equivalent ways. For instance, transitivity of an
+operation $\odot$ can be written by:
+$\forall x, y, z \in S, x \odot y \Rightarrow y \odot z \Rightarrow
+x \odot z$
+or
+$\forall x, y, z \in S, (x \odot y \wedge y \odot z) \Rightarrow
+x \odot z$.
+\focal\ does not try to establish the equality of these two
+expressions. It only compares syntactically the statements modulo
+variables renaming (i.e. $\alpha$-conversion) and non-significant
+parentheses.
+
+{\em Hints}: The simplest way is to rewrite the logical statement of
+the inheriting species as it was written in the inherited species.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Definition '$name$' is considered as both  logical and
+  non-logical.}
+
+{\em Description}: In the inheritance tree of the current species, a
+method $name$ was previously found a ``logical'' and is now found no
+more ``logical''.
+
+{\em Hints}: Ensure that you did not define 2 methods with the same
+name but for different purposes (one to help in stating logical
+expressions and the other for your computational behaviour).
 
 
 

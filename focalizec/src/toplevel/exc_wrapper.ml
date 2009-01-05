@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.73 2009-01-05 13:39:33 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.74 2009-01-05 14:30:50 pessaux Exp $ *)
 
 let print_focalize_exception ppf = function
   (* ********************* *)
@@ -416,7 +416,7 @@ let print_focalize_exception ppf = function
       Format.fprintf ppf
         "%a:@\n@[%tLogical@ method%t@ %t'%a'%t@ %tappearing@ in@ species%t@ \
         %t'%a'%t@ %tshould@ have@ the@ same@ statement@ than@ in@ species%t@ \
-        %t'%a'%t@ %tat%t@ %a@]@."
+        %t'%a'%t@ %tat%t@ %a.@]@."
         Location.pp_location loc1
         Handy.pp_set_bold Handy.pp_reset_effects
         Handy.pp_set_underlined Sourcify.pp_vname name
@@ -429,6 +429,15 @@ let print_focalize_exception ppf = function
         Handy.pp_reset_effects
         Handy.pp_set_bold Handy.pp_reset_effects
         Location.pp_location loc2
+  | Infer.No_mix_between_logical_defs (at, name) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tDefinition%t@ '%t%a%t'@ %tis@ considered@ as@ both@ \
+        logical@ and@ non-logical%t.@]@."
+        Location.pp_location at
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined Sourcify.pp_vname name
+        Handy.pp_reset_effects
+        Handy.pp_set_bold Handy.pp_reset_effects
   (* ********************** *)
   (* Dependencies analysis. *)
   | Dep_analysis.Ill_formed_species (species_name, field_node, found_path) ->

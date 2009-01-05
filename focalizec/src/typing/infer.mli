@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: infer.mli,v 1.35 2008-12-17 13:57:04 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.36 2009-01-05 14:30:50 pessaux Exp $ *)
 
 
 exception Wrong_type_by_inheritance of
@@ -55,6 +55,7 @@ exception Scheme_contains_type_vars of
   (Parsetree.vname * Types.type_scheme * Location.t)
 exception Invalid_parameter_in_delayed_proof_termination of
   (Location.t * Parsetree.vname)
+exception No_mix_between_logical_defs of (Location.t * Parsetree.vname)
 
 type please_compile_me =
   | PCM_use of (Location.t * Parsetree.module_name)
