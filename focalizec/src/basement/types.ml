@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.72 2008-12-22 17:27:18 pessaux Exp $ *)
+(* $Id: types.ml,v 1.73 2009-01-06 14:09:50 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -1658,7 +1658,7 @@ let pp_type_simple_to_xml =
          | [] ->
              (* [Unsure] "order ?????" *)
              Format.fprintf ppf
-               "<foc:atom> order=\"first\" infile=\"%s\">%s</foc:atom>@\n"
+               "<foc:atom order=\"first\" infile=\"%s\">%s</foc:atom>@\n"
                mod_name cstr_name
          | _ ->
              (* [Unsure] "order ?????" *)
@@ -1674,7 +1674,7 @@ let pp_type_simple_to_xml =
         Format.fprintf ppf "<foc:self order=\"first\"/>@\n"
     | ST_species_rep (mod_name, collection_name) ->
         Format.fprintf ppf
-          "<foc:atom> order=\"first\" infile=\"%s\">%s</foc:atom>@\n"
+          "<foc:atom order=\"first\" infile=\"%s\">%s</foc:atom>@\n"
           mod_name collection_name in
   (* ********************** *)
   (* The function itself... *)
