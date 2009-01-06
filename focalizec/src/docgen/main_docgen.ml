@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.10 2009-01-06 13:57:17 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.11 2009-01-06 14:52:48 pessaux Exp $ *)
 
 
 
@@ -136,10 +136,12 @@ let gendoc_inherits out_fmt ~current_unit species_def =
     (begin
     (* ************************************ *)
     (* Now generate the "inherits" clauses. *)
-    Format.fprintf out_fmt "@[<h 2><foc:inherits>@\n" ;
-    List.iter (gendoc_species_expr out_fmt ~current_unit)      
-      species_def_descr.Parsetree.sd_inherits.Parsetree.ast_desc ;
-    Format.fprintf out_fmt "@]</foc:inherits>@\n" ;
+    List.iter
+      (fun spe_expr ->
+	Format.fprintf out_fmt "@[<h 2><foc:inherits>@\n" ;
+	gendoc_species_expr out_fmt ~current_unit spe_expr ;
+	Format.fprintf out_fmt "@]</foc:inherits>@\n")
+      species_def_descr.Parsetree.sd_inherits.Parsetree.ast_desc
     end)
 ;;
 
