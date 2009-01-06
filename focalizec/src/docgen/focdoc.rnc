@@ -1,0 +1,193 @@
+default namespace = ""
+namespace foc = "http://focal.inria.fr/site/index"
+namespace xsi = "http://www.w3.org/2001/XMLSchema-instance"
+
+start =
+  element foc:focdoc {
+    attribute xsi:schemaLocation { text },
+    foc-name,
+    element foc:general-informations {
+      element foc:title { text }?,
+      element foc:author { text }?,
+      comments?
+    },
+    (letprop
+     | element foc:collection {
+         foc-name,
+         informations,
+         element foc:implements { app | atom },
+         carrier,
+         (definition | letprop | theorem)+
+       }
+     | element foc:concrete-type {
+         foc-name,
+         param*,
+         element foc:constr { foc-name, type }*
+       }
+     | element foc:global-fun {
+         attribute recursive { xsd:NCName }?,
+         foc-name,
+         fun-dep?,
+         type
+       }
+     | element foc:species {
+         foc-name,
+         informations,
+         element foc:parameter {
+           attribute kind { xsd:NCName },
+           foc-name,
+           type,
+           informations
+         }*,
+         element foc:inherits { app | atom }*,
+         (carrier
+          | definition
+          | letprop
+          | theorem
+          | element foc:property {
+              foc-name, history, informations, proposition
+            }
+          | element foc:signature {
+              foc-name, history, informations, type
+            })+
+       })+,
+    element foc:load { xsd:NCName }*,
+    element foc:open { xsd:NCName }*
+  }
+foc-name =
+  element foc:foc-name {
+    attribute infile { xsd:NCName }?,
+    xsd:NCName
+  }
+comments = element foc:comments { text }
+informations = element foc:informations { math?, comments? }
+type =
+  element foc:type {
+    app
+    | atom
+    | fct
+    | prm
+    | prod
+    | self
+    | element foc:abst { empty }
+  }
+atom =
+  element foc:atom {
+    attribute infile { xsd:NCName }?,
+    attribute order { xsd:NCName },
+    xsd:NCName
+  }
+app = element foc:app { foc-name, param+ }
+history =
+  element foc:history {
+    element foc:first {
+      attribute infile { xsd:NCName }?,
+      xsd:NCName
+    },
+    element foc:last {
+      attribute infile { xsd:NCName }?,
+      xsd:NCName
+    },
+    element foc:comes-from {
+      attribute infile { xsd:NCName }?,
+      xsd:NCName
+    }
+  }
+theorem =
+  element foc:theorem {
+    foc-name,
+    history,
+    informations,
+    proposition,
+    element foc:proof { empty }
+  }
+letprop =
+  element foc:letprop {
+    foc-name,
+    (history, informations)?,
+    element foc:param-prop { foc-name, type }+,
+    (proposition
+     | element foc:warning { text })
+  }
+definition =
+  element foc:definition {
+    attribute recursive { xsd:NCName }?,
+    foc-name,
+    fun-dep?,
+    history,
+    informations,
+    element foc:ho { empty }?,
+    type
+  }
+proposition = element foc:proposition { all | application | ex }
+carrier = element foc:carrier { history, informations, type }
+param =
+  element foc:param {
+    attribute infile { xsd:NCName }?,
+    text
+  }
+fun-dep = element foc:fun-dep { foc-name+ }
+# en dessous de foc:math on peut mettre tout sous arbre well formed
+anyElement =
+  element * {
+    (attribute * { text }
+     | text
+     | anyElement)*
+  }
+math =
+  element foc:math {
+    attribute xmlns { xsd:NCName }?,
+     (text | anyElement ?)
+  }
+
+self =
+  element foc:self {
+    attribute order { xsd:NCName }
+  }
+prm =
+  element foc:prm {
+    attribute order { xsd:NCName },
+    self?,
+    prm?,
+    prod?,
+    (atom* | tvar*),
+    foc-name
+  }
+prod = element foc:prod { (prm | self)?, (tvar | atom+) }
+fct =
+  element foc:fct {
+    (atom | fct | prm | prod | self | tvar)*,
+    (element foc:meth { self, foc-name }
+     | element foc:prop { empty })?
+  }
+application =
+  element foc:application {
+    (application
+     | identifier
+     | element foc:symbol { math, identifier })*
+  }
+ex = element foc:ex { var, type, (all | application) }
+all =
+  element foc:all {
+    (all | implies | type | var)*,
+    (and
+     | application
+     | ex
+     | not
+     | or
+     | element foc:equiv { application, (not | or) })?
+  }
+tvar = element foc:tvar { xsd:NCName }
+identifier =
+  element foc:identifier {
+    foc-name,
+    element foc:of-species { foc-name }?
+  }
+var = element foc:var { foc-name }
+implies =
+  element foc:implies {
+    (all | and | application | implies | not | or)*
+  }
+and = element foc:and { not*, implies*, (and | application)* }
+not = element foc:not { application }
+or = element foc:or { (application | implies | or)* }

@@ -12,8 +12,18 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.9 2009-01-05 13:39:32 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.10 2009-01-06 13:57:17 pessaux Exp $ *)
 
+
+
+(* *********************************************************************** *)
+(** {b Descr}: Translates a string into a XML compliant string by escaping
+     characters according to XML lexical conventions.
+     The input string is NOT modified in place. We alwaus return a fresh
+     string.
+
+    {b Rem} : Not exported outside this module.                            *)
+(* *********************************************************************** *)
 let xmlify_string s =
   let s_len = String.length s in
   let result = ref "" in
@@ -167,10 +177,44 @@ let gendoc_parameters out_fmt ~current_unit params =
 
 
 
+(* *********************************************** *)
+(** {b Descr}: Emits XML code for a [simple_type].
+
+    {b Rem}: Not exported outside this module.     *)
+(* *********************************************** *)
 let gendoc_type out_fmt ty =
   Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
   Types.pp_type_simple_to_xml out_fmt ty ;
   Format.fprintf out_fmt "@]</foc:type>@\n"
+;;
+
+
+
+
+(* **************************************************** *)
+(** {b Descr}: Emits XML code for a [Env.from_history].
+
+    {b Rem}: Not exported outside this module.          *)
+(* **************************************************** *)
+let gendoc_history out_fmt from_hist =
+  (* foc:initial-apparition. The species where the field was declared or
+     defined for the first time along the inheritance tree without being
+     re-defined. *)
+  Format.fprintf out_fmt "@[<h 2><foc:history>@\n" ;
+  let (mod_name, spe_name) = from_hist.Env.fh_initial_apparition in
+  Format.fprintf out_fmt
+    "<foc:initial-apparition infile=\"%s\">%a</foc:initial-apparition>@\n"
+    mod_name Sourcify.pp_vname spe_name ;
+  (* foc:comes-from. The latest species from where we get the field by
+     inheritance along the inheritance tree. I.e. the closest parent providing
+     us the field. *)
+  let (come_from_mod_name, come_from_spe_name)  =
+    (match from_hist.Env.fh_inherited_along with
+     | [] -> from_hist.Env.fh_initial_apparition
+     | (host, _) :: _ -> host) in
+  Format.fprintf out_fmt "<foc:comes-from infile=\"%s\">%a</foc:comes-from>@\n"
+    come_from_mod_name Sourcify.pp_vname come_from_spe_name ;
+  Format.fprintf out_fmt "@]</foc:history>@\n"
 ;;
 
 
@@ -183,26 +227,36 @@ let gen_doc_logical_let out_fmt _ =
 
 
 
-let gen_doc_computational_let out_fmt rec_flag _ =
+let gen_doc_computational_let out_fmt from name sch rec_flag _body =
   let attr_rec_string =
     (match rec_flag with
      | Parsetree.RF_rec -> " recursive=\"yes\""
      | Parsetree.RF_no_rec -> "") in
   Format.fprintf out_fmt "@[<h 2><foc:definition%s>@\n" attr_rec_string ;
-  (* foc:foc-name,foc:dependence,foc:informations,foc:ho?,foc:type. *) (*TODO *)
+  (* foc:foc-name. *)
+  Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+    Sourcify.pp_vname name ;
+  (* foc:history. *)
+  gendoc_history out_fmt from ;
+  (* foc:informations,foc:ho?. *) (* TODO *)
+  (* foc:type. *)
+  gendoc_type out_fmt (Types.specialize sch) ;
   Format.fprintf out_fmt "@]</foc:definition>@\n"
 ;;
 
 
 
 let gendoc_method out_fmt = function
-  | Env.TypeInformation.SF_sig (_from, n, sch) ->
+  | Env.TypeInformation.SF_sig (from, n, sch) ->
       (begin
       (* foc:signature, foc:carrier. *)
       if n = (Parsetree.Vlident "representation") then
         (begin
         Format.fprintf out_fmt "@[<h 2><foc:carrier>@\n" ;
-        (* foc:dependence, foc:informations, foc:ho?, foc:type. *) (* TODO. *)
+        (* foc:history. *)
+        gendoc_history out_fmt from ;
+        (* foc:informations, foc:ho?. *) (* TODO. *)
+        (* foc:type. *)
         gendoc_type out_fmt (Types.specialize sch) ;
         Format.fprintf out_fmt "@]</foc:carrier>@\n"
         end)
@@ -210,15 +264,18 @@ let gendoc_method out_fmt = function
         (begin
         Format.fprintf out_fmt "@[<h 2><foc:signature>@\n" ;
         let n_as_xml = xmlify_string (Parsetree_utils.name_of_vname n) in
+        (* foc:foc-name. *)
         Format.fprintf out_fmt "<foc:foc-name>%s</foc:foc-name>@\n" n_as_xml ;
-        (* foc:foc-name, foc:dependence, foc:informations, foc:ho?,
-           foc:type. *) (* TODO. *)
+        (* foc:history. *)
+        gendoc_history out_fmt from ;
+        (* foc:informations, foc:ho?. *) (* TODO. *)
+        (* foc:type. *)
         gendoc_type out_fmt (Types.specialize sch) ;
         Format.fprintf out_fmt "@]</foc:signature>@\n"
         end)
       end)
   | Env.TypeInformation.SF_let
-         (_from, _n, _parms, _sch, body, _otp, _rep_deps, lflags) ->
+         (from, n, _parms, sch, body, _otp, _rep_deps, lflags) ->
       (begin
       (* foc:definition, foc:letprop. *)  (* TODO. *) 
       match lflags.Env.TypeInformation.ldf_logical with
@@ -226,7 +283,7 @@ let gendoc_method out_fmt = function
            gen_doc_logical_let out_fmt body
        | Parsetree.LF_no_logical ->
            gen_doc_computational_let
-             out_fmt lflags.Env.TypeInformation.ldf_recursive body
+             out_fmt from n sch lflags.Env.TypeInformation.ldf_recursive body
       end)
   | Env.TypeInformation.SF_let_rec _l ->
       (* foc:definition, foc:letprop. *) (* TODO. *)
@@ -399,13 +456,13 @@ let gendoc_please_compile_me input_file_name ast_root pcms =
     find_title_author_and_description ast_root in
   Format.fprintf out_fmt
     "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" ?>@\n\
-    <!-- document automatically generated from a FoC program. Note that \
+    <!-- document automatically generated from a FoCaL program. Note that \
     focdoc has also both a DTD 'focdoc.dtd' and a RELAX NG schema \
     'focdoc.rnc'.  To validate a focdoc file with focdoc.dtd, please \
-    product the focdoc file with the '-focdoc' option of focc. But whereas \
-    an XML document can associate itself with a DTD using a DOCTYPE \
-    declaration, RELAX NG does not define a way for an XML document to \
-    associate itself with a RELAX NG pattern.-->@\n@\n" ;
+    product the focdoc file with the '-focalize-doc' option of focalizecc. \
+    But whereas an XML document can associate itself with a DTD using a \
+    DOCTYPE declaration, RELAX NG does not define a way for an XML document \
+    to associate itself with a RELAX NG pattern.-->@\n@\n" ;
   Format.fprintf out_fmt
     "@[<v 2>\
      <foc:focdoc xsi:schemaLocation=\"focal focdoc.xsd mathml2 \

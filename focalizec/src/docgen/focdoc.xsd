@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://focal.inria.fr/site/index" xmlns:foc="http://focal.inria.fr/site/index" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <xs:import namespace="http://www.w3.org/2001/XMLSchema-instance" schemaLocation="xsi.xsd"/>
+  <xs:element name="focdoc">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:general-informations"/>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="foc:letprop"/>
+          <xs:element ref="foc:collection"/>
+          <xs:element ref="foc:concrete-type"/>
+          <xs:element ref="foc:global-fun"/>
+          <xs:element ref="foc:species"/>
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:load"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:open"/>
+      </xs:sequence>
+      <xs:attribute ref="xsi:schemaLocation" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="general-informations">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="foc:title"/>
+        <xs:element minOccurs="0" ref="foc:author"/>
+        <xs:element minOccurs="0" ref="foc:comments"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="title" type="xs:string"/>
+  <xs:element name="author" type="xs:string"/>
+  <xs:element name="collection">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:informations"/>
+        <xs:element ref="foc:implements"/>
+        <xs:element ref="foc:carrier"/>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="foc:definition"/>
+          <xs:element ref="foc:letprop"/>
+          <xs:element ref="foc:theorem"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="implements">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="foc:app"/>
+        <xs:element ref="foc:atom"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="concrete-type">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:param"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:constr"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="constr">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:type"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="global-fun">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:element minOccurs="0" ref="foc:fun-dep"/>
+        <xs:element ref="foc:type"/>
+      </xs:sequence>
+      <xs:attribute name="recursive" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="species">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:informations"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:parameter"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:inherits"/>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="foc:carrier"/>
+          <xs:element ref="foc:definition"/>
+          <xs:element ref="foc:letprop"/>
+          <xs:element ref="foc:theorem"/>
+          <xs:element ref="foc:property"/>
+          <xs:element ref="foc:signature"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="parameter">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:type"/>
+        <xs:element ref="foc:informations"/>
+      </xs:sequence>
+      <xs:attribute name="kind" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="inherits">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="foc:app"/>
+        <xs:element ref="foc:atom"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="property">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:history"/>
+        <xs:element ref="foc:informations"/>
+        <xs:element ref="foc:proposition"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="signature">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:history"/>
+        <xs:element ref="foc:informations"/>
+        <xs:element ref="foc:type"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="load" type="xs:NCName"/>
+  <xs:element name="open" type="xs:NCName"/>
+  <xs:element name="foc-name">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:NCName">
+          <xs:attribute name="infile" type="xs:NCName"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="comments" type="xs:string"/>
+  <xs:element name="informations">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="foc:math"/>
+        <xs:element minOccurs="0" ref="foc:comments"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="type">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="foc:app"/>
+        <xs:element ref="foc:atom"/>
+        <xs:element ref="foc:fct"/>
+        <xs:element ref="foc:prm"/>
+        <xs:element ref="foc:prod"/>
+        <xs:element ref="foc:self"/>
+        <xs:element ref="foc:abst"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="abst">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="atom">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:NCName">
+          <xs:attribute name="infile" type="xs:NCName"/>
+          <xs:attribute name="order" use="required" type="xs:NCName"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="app">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:element maxOccurs="unbounded" ref="foc:param"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="history">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:initial-apparition"/>
+        <xs:element ref="foc:comes-from"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="initial-apparition">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:NCName">
+          <xs:attribute name="infile" type="xs:NCName"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="comes-from">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:NCName">
+          <xs:attribute name="infile" type="xs:NCName"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="theorem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:history"/>
+        <xs:element ref="foc:informations"/>
+        <xs:element ref="foc:proposition"/>
+        <xs:element ref="foc:proof"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="proof">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="letprop">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="foc:history"/>
+          <xs:element ref="foc:informations"/>
+        </xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="foc:param-prop"/>
+        <xs:choice>
+          <xs:element ref="foc:proposition"/>
+          <xs:element ref="foc:warning"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="param-prop">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:type"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="warning" type="xs:string"/>
+  <xs:element name="definition">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:element minOccurs="0" ref="foc:fun-dep"/>
+        <xs:element ref="foc:history"/>
+        <xs:element ref="foc:informations"/>
+        <xs:element minOccurs="0" ref="foc:ho"/>
+        <xs:element ref="foc:type"/>
+      </xs:sequence>
+      <xs:attribute name="recursive" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ho">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="proposition">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="foc:all"/>
+        <xs:element ref="foc:application"/>
+        <xs:element ref="foc:ex"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="carrier">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:history"/>
+        <xs:element ref="foc:informations"/>
+        <xs:element ref="foc:type"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="param">
+    <xs:complexType mixed="true">
+      <xs:attribute name="infile" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="fun-dep">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="foc:foc-name"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <!-- en dessous de foc:math on peut mettre tout sous arbre well formed -->
+  <xs:group name="anyElement">
+    <xs:sequence>
+      <xs:any processContents="skip"/>
+    </xs:sequence>
+  </xs:group>
+  <xs:element name="math">
+    <xs:complexType mixed="true">
+      <xs:group minOccurs="0" ref="foc:anyElement"/>
+      <xs:attribute name="xmlns" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="self">
+    <xs:complexType>
+      <xs:attribute name="order" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="prm">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="foc:self"/>
+        <xs:element minOccurs="0" ref="foc:prm"/>
+        <xs:element minOccurs="0" ref="foc:prod"/>
+        <xs:choice>
+          <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:atom"/>
+          <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:tvar"/>
+        </xs:choice>
+        <xs:element ref="foc:foc-name"/>
+      </xs:sequence>
+      <xs:attribute name="order" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="prod">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice minOccurs="0">
+          <xs:element ref="foc:prm"/>
+          <xs:element ref="foc:self"/>
+        </xs:choice>
+        <xs:choice>
+          <xs:element ref="foc:tvar"/>
+          <xs:element maxOccurs="unbounded" ref="foc:atom"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="fct">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="foc:atom"/>
+          <xs:element ref="foc:fct"/>
+          <xs:element ref="foc:prm"/>
+          <xs:element ref="foc:prod"/>
+          <xs:element ref="foc:self"/>
+          <xs:element ref="foc:tvar"/>
+        </xs:choice>
+        <xs:choice minOccurs="0">
+          <xs:element ref="foc:meth"/>
+          <xs:element ref="foc:prop"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="meth">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:self"/>
+        <xs:element ref="foc:foc-name"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="prop">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="application">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="foc:application"/>
+        <xs:element ref="foc:identifier"/>
+        <xs:element ref="foc:symbol"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="symbol">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:math"/>
+        <xs:element ref="foc:identifier"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ex">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:var"/>
+        <xs:element ref="foc:type"/>
+        <xs:choice>
+          <xs:element ref="foc:all"/>
+          <xs:element ref="foc:application"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="all">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="foc:all"/>
+          <xs:element ref="foc:implies"/>
+          <xs:element ref="foc:type"/>
+          <xs:element ref="foc:var"/>
+        </xs:choice>
+        <xs:choice minOccurs="0">
+          <xs:element ref="foc:and"/>
+          <xs:element ref="foc:application"/>
+          <xs:element ref="foc:ex"/>
+          <xs:element ref="foc:not"/>
+          <xs:element ref="foc:or"/>
+          <xs:element ref="foc:equiv"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="equiv">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:application"/>
+        <xs:choice>
+          <xs:element ref="foc:not"/>
+          <xs:element ref="foc:or"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="tvar" type="xs:NCName"/>
+  <xs:element name="identifier">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:element minOccurs="0" ref="foc:of-species"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="of-species">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="var">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="implies">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="foc:all"/>
+        <xs:element ref="foc:and"/>
+        <xs:element ref="foc:application"/>
+        <xs:element ref="foc:implies"/>
+        <xs:element ref="foc:not"/>
+        <xs:element ref="foc:or"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="and">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:not"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:implies"/>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="foc:and"/>
+          <xs:element ref="foc:application"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="not">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:application"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="or">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="foc:application"/>
+        <xs:element ref="foc:implies"/>
+        <xs:element ref="foc:or"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

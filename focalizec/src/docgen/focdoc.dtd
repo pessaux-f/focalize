@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!-- FoCDoc DTD -->
+<!-- $Id: focdoc.dtd,v 1.1 2009-01-06 13:57:17 pessaux Exp $ -->
+<!-- to describe the mathml equivalent of a particular function --> 
+
+<!-- mathml.dtd ne sera plus utilise dans le dtd. Les annotations mathml dans
+     les fichiers focdoc seront traitees comme des chaines de caracteres 
+
+<!ENTITY % mathml SYSTEM "http://www.w3.org/1998/Math/MathML">
+<!ENTITY % MATHML.prefixed "INCLUDE">
+<!ENTITY % MATHML.prefix "mml"> -->
+
+<!-- ajout frederic : l'ajout de l'element foc-name pour focdoc, afin de préciser 
+                      à partir de quel fichier .foc le fichier .focdoc a été généré -->
+
+<!ENTITY % foc:element "foc:global-fun|foc:concrete-type|foc:letprop|foc:theorem|foc:species|foc:collection">
+<!ELEMENT foc:focdoc (foc:foc-name,foc:general-informations,(%foc:element;)*,foc:load*,foc:open*)>
+
+<!-- ajout frederic : prefixer tout les elements de focdoc par le namespace 
+                      "foc" afin d'eviter des conflits avec d'autre dtd -->                    
+       
+<!-- ajout frederic: l'attribut xmlns:foc est rajoute afin de valider
+                      correctement les fichiers focdoc envers le dtd -->
+
+<!ATTLIST foc:focdoc xmlns:foc CDATA #REQUIRED> 
+
+<!-- 3 kinds of informations:
+  - real name of the function
+  - comments in natural language
+  - mathml representation
+-->
+
+<!ELEMENT foc:informations (foc:name?,foc:math?,foc:latex?,foc:comments*)>
+
+<!-- modif frederic : title et author ne sont pas des champs obligatoires -->
+<!--        Element modifié : <!ELEMENT general-informations (title,author,lang?,comments?)> -->
+
+<!ELEMENT foc:general-informations (foc:title?,foc:author?,foc:lang?,foc:comments?)>
+<!ELEMENT foc:title (#PCDATA)>
+<!ELEMENT foc:author (#PCDATA)>
+<!ELEMENT foc:lang (#PCDATA)>
+<!ELEMENT foc:comments (#PCDATA)>
+<!ELEMENT foc:foc-name (#PCDATA)>
+<!ELEMENT foc:name (#PCDATA)>
+<!-- modif frederic: ajout de l'élément letprop à foc:component -->
+<!ENTITY % foc:component "foc:signature|foc:definition|foc:letprop|foc:theorem|foc:property|foc:carrier">
+<!ELEMENT foc:species (foc:foc-name,foc:informations,foc:parameter*,foc:inherits*,(%foc:component;)*)>
+<!ELEMENT foc:collection (foc:foc-name,foc:informations,foc:parameter*,foc:implements,(%foc:component;)*)>
+<!-- ajout virgile: pour savoir dans quel fichier une espèce est déclarée-->
+<!ATTLIST foc:foc-name infile CDATA #IMPLIED>
+<!-- /ajout -->
+<!ELEMENT foc:parameter (foc:foc-name,foc:type,foc:informations)>
+<!ATTLIST foc:parameter kind CDATA #REQUIRED >
+
+<!-- ajout frederic: Les élements inherits et implements ont été modifiés pour prendre en 
+                     compte les espèces paramétrées. Le contenu de inherits (de même que 
+                     pour implements) n'est plus foc-name mais de type atom ou app. 
+                       + atom pour préciser que l'espèce est atomique 
+                       + app pour les espèces paramétrées et leur paramètres effectifs -->
+                     
+<!-- Elements modifiés : <!ELEMENT inherits (foc-name)> 
+                         <!ELEMENT implements (foc-name)> -->
+
+<!ELEMENT foc:inherits (foc:atom|foc:app)>
+<!ELEMENT foc:implements (foc:atom|foc:app)>
+<!ELEMENT foc:signature (foc:foc-name,foc:history,foc:informations,foc:ho?,foc:type)>
+<!ELEMENT foc:ho EMPTY>
+<!ELEMENT foc:definition (foc:foc-name,foc:history,foc:informations,foc:ho?,foc:type)>
+<!ATTLIST foc:definition recursive CDATA #IMPLIED>
+
+<!-- ajout frederic : pour prendre en compte des fonctions globales -->
+<!ELEMENT foc:global-fun (foc:foc-name,foc:type)>
+<!ATTLIST foc:global-fun recursive CDATA #IMPLIED>
+
+<!-- ajout frederic : pour prendre en compte des types concrets -->
+<!--                  A noter qu'on utilise l'element param. Toutefois pour les 
+                      type concrets, l'attribut infile de param ne sera jamais 
+                      utilisé.
+                      
+                      Ici, les types Ocaml ou Coq liés aux types (ou aux 
+                      constructeurs) ne sont pas considérés. Cependant si un
+                      constructeur est liés à un type ocaml ou coq, alors
+                      l'attribut defined est utilisé   
+
+                      Pour les types définis comme alias des types existants, 
+                      l'element alias est utilisé  -->
+
+<!ELEMENT foc:concrete-type (foc:foc-name,foc:param*,(foc:alias|foc:constr*))>
+<!ELEMENT foc:alias (foc:type)>
+
+<!ELEMENT foc:constr (foc:foc-name,foc:type)>
+<!ATTLIST foc:constr defined CDATA #IMPLIED>
+
+<!-- ajout frederic: pour considérer les letprop -->
+<!-- modif frederic : les elements foc:history et foc:informations deviennent optionnels car 
+     pour les letprops définis au niveau du top level, ces informations ne seront pas générées -->
+
+<!ELEMENT foc:letprop (foc:foc-name,foc:history?,foc:informations?,foc:param-prop*,foc:proposition)>
+<!ELEMENT foc:param-prop (foc:foc-name,foc:type)>
+
+<!-- modif frederic : les elements foc:history et foc:informations deviennent optionnels car 
+     pour les theorems définis au niveau du top level, ces informations ne seront pas générées -->
+
+<!ELEMENT foc:theorem (foc:foc-name,foc:history?,foc:informations?,foc:proposition,foc:proof)>
+<!ELEMENT foc:proof ANY>
+<!ELEMENT foc:property (foc:foc-name,foc:history,foc:informations,foc:proposition)>
+<!-- expression -->
+<!ENTITY % foc:expression "foc:identifier|foc:application|foc:symbol|foc:int|foc:string">
+<!-- symbol is basically an identifier with special processing instructions
+     for mathml and/or latex -->
+<!ELEMENT foc:int EMPTY>
+<!ATTLIST foc:int val CDATA #REQUIRED>
+<!ELEMENT foc:string EMPTY>
+<!ATTLIST foc:string val CDATA #REQUIRED>
+
+<!-- modif frederic : remplacer le prefix math par foc -->
+<!-- element modifié : <!ELEMENT symbol (math:math?,latex?,identifier)> -->
+
+<!ELEMENT foc:symbol (foc:math?,foc:latex?,foc:identifier)>
+
+<!-- ajout frederic : element foc:math -->
+<!ELEMENT foc:math (#PCDATA)>
+
+<!ELEMENT foc:latex (#PCDATA)>
+<!ATTLIST foc:latex infix (true|false) "false">
+<!ELEMENT foc:identifier (foc:foc-name,foc:of-species?)>
+<!ELEMENT foc:of-species (foc:foc-name)>
+<!ELEMENT foc:application ((%foc:expression;)*)>
+<!-- /expression -->
+<!-- proposition -->
+
+<!-- Dans le code focdoc.mlp4 l'élement f:equiv est utilisé mais n'est pas défini dans le dtd.
+     Action : ajout de l'élement foc:equiv dans la liste des propositions   -->
+
+<!-- element modifié <!ENTITY % proposition "all|ex|and|or|implies|not|(%expression;)"> -->
+
+<!ENTITY % foc:proposition "foc:all|foc:ex|foc:and|foc:or|foc:implies|foc:equiv|foc:not|(%foc:expression;)">
+
+<!ELEMENT foc:var (foc:foc-name)>
+
+<!-- element modifié <!ELEMENT all (var,type,(%proposition;))> -->
+<!ELEMENT foc:all (foc:var,foc:type,(%foc:proposition;))>
+
+<!-- element modifié <!ELEMENT ex (var,type,(%proposition;))> -->
+<!ELEMENT foc:ex (foc:var,foc:type,(%foc:proposition;))>
+
+<!ELEMENT foc:and ((%foc:proposition;),(%foc:proposition;))>
+
+<!ELEMENT foc:or ((%foc:proposition;),(%foc:proposition;))>
+
+<!ELEMENT foc:implies ((%foc:proposition;),(%foc:proposition;))>
+
+<!-- elements rajoutés -->
+<!ELEMENT foc:equiv ((%foc:proposition;),(%foc:proposition;))>
+
+<!ELEMENT foc:not (%foc:proposition;)>
+
+<!-- /proposition -->
+<!ELEMENT foc:proposition (%foc:proposition;)>
+<!ELEMENT foc:carrier (foc:history,foc:informations,foc:ho?,foc:type)>
+<!ELEMENT foc:history (foc:initial-apparition,foc:comes-from)>
+<!ELEMENT foc:initial-apparition (#PCDATA)>
+<!ATTLIST foc:initial-apparition infile CDATA #IMPLIED>
+<!ELEMENT foc:comes-from (#PCDATA)>
+<!ATTLIST foc:comes-from infile CDATA #IMPLIED>
+<!-- type -->
+<!ENTITY % foc:typ "foc:atom|foc:tvar|foc:fct|foc:prod|foc:prop|foc:self|
+                foc:abst|foc:ml|foc:ml-c|foc:prm|foc:app|foc:meth">
+<!ELEMENT foc:type (%foc:typ;)>
+<!ELEMENT foc:atom (#PCDATA)>
+<!ATTLIST foc:atom order CDATA #REQUIRED >
+<!ATTLIST foc:atom infile CDATA #IMPLIED>
+<!ELEMENT foc:tvar (#PCDATA)>
+<!ELEMENT foc:fct ((%foc:typ;),(%foc:typ;))>
+<!ELEMENT foc:prod ((%foc:typ;),(%foc:typ;))>
+<!ELEMENT foc:prop EMPTY>
+<!ELEMENT foc:self EMPTY>
+<!ATTLIST foc:self order CDATA #REQUIRED >
+<!ELEMENT foc:abst EMPTY>
+<!ELEMENT foc:ml (#PCDATA)>
+<!ELEMENT foc:ml-c (#PCDATA)>
+<!ELEMENT foc:prm ((%foc:typ;)*,foc:foc-name)>
+<!ATTLIST foc:prm order CDATA #REQUIRED >
+<!ELEMENT foc:app (foc:foc-name,foc:param*)>
+
+<!-- ajout frederic : ajout de l'attribut infile pour param. Cet attribut sera 
+                      essentiellement utilisé pour indiquer dans quel fichier se trouve 
+                      une fonction globale ou une collection passée en paramètre.  -->
+
+<!ELEMENT foc:param (#PCDATA)>
+<!ATTLIST foc:param infile CDATA #IMPLIED>
+
+<!ELEMENT foc:meth ((%foc:typ;),foc:foc-name)>
+<!-- /type -->
+<!ELEMENT foc:load (#PCDATA)>
+<!ELEMENT foc:open (#PCDATA)>
+
+

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.118 2009-01-05 13:39:33 pessaux Exp $ *)
+(* $Id: env.ml,v 1.119 2009-01-06 13:57:17 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -201,7 +201,7 @@ let env_from_only_absolute_bindings generic_env =
 (* ***************************************************************** *)
 type from_history = {
   (** The species where the method was defined or declared for the first time.
-      whithout redefinition. All inheritance information prior to a possible
+      without redefinition. All inheritance information prior to a possible
       redefinition in this species is discarded. *)
   fh_initial_apparition : Parsetree.qualified_species ;
   (** The list of species inherited along which the method was not redefined.

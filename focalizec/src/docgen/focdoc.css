@@ -1,0 +1,153 @@
+
+body {
+     background-color: white;
+     color:black;
+
+}
+
+A:link, A:visited, A:active {
+	text-decoration: none;
+	color: teal;
+}
+
+A:hover {
+	  text-decoration: underline;
+	  color: teal;
+}
+
+h1 {
+   background-color: blue;
+   color: yellow;
+   text-align: center;
+      padding-top: 0.1em;
+      padding-right: 2em;
+      padding-bottom: 0.1em;
+      padding-left: 2em;
+}
+
+h2 {
+   background-color: blue;
+   color: yellow;
+      padding-top: 0.1em;
+      padding-right: 2em;
+      padding-bottom: 0.1em;
+      padding-left: 2em;
+}
+
+.author {
+	font-style: italic;
+	text-align: center;
+}
+
+.name {
+      font-weight: bolder;
+      color: blue;
+}
+
+.categ {
+       text-decoration: underline;
+       font-size: small;
+       color: green;
+       font-weight: bold;
+}
+
+.foc {
+     padding-left: 2em;
+     padding-right: 2em;
+     line-height: 2em;
+     display: block;
+     border: solid;
+     border-width: thin;
+/*
+     font-family: "Times New Roman", serif;
+     font-variant: small-caps;
+     color: lime;
+     background-color: white;
+*/
+}
+
+.comments {
+	  border: solid;
+	  border-width: thin;
+	  border-color: yellow;
+      padding-top: 0.1em;
+      padding-right: 2em;
+      padding-bottom: 0.1em;
+      padding-left: 2em;
+/*	   text-indent: 3em;*/
+}
+
+.key1 {
+      color: purple;
+      font-weight: bold;
+}
+
+.key2 {
+      color: fuchsia;
+}
+
+.key3 {
+      color: purple;
+}
+
+/* type */
+
+.type {
+      display: inline;
+      border: solid;
+      border-width: thin;
+      border-color: purple;
+      line-height: 1.2em;
+      padding-left: 0.2em;
+      padding-right: 0.2em;
+}
+
+.caml {
+}
+/* /type */
+
+/* head of the file */
+
+.head {
+      display: block;
+      background-color: silver;
+      padding-top: 0.5em;
+      padding-right: 3em;
+      padding-bottom: 0.5em;
+      padding-left: 3em;
+}
+
+.loads {
+}
+
+.opens {
+}
+
+A:link.load, A:visited.load, A:active.load, A:link.open, A:visited.open, A:active.open {
+	     text-decoration: underline;
+	     color: blue;
+}
+
+A:hover.load, A:hover.open {
+	      text-decoration: none;
+	      color: blue;
+}
+
+.index {
+}
+
+.refhead {
+	 font-size: x-small;
+	 text-align: right;
+}
+
+/* /head */
+
+/* eviter d'afficher les noms de variable math-ml comme des symbols */
+mi {
+        font-family: serif;
+}
+
+mo {
+        font-family: serif;
+}
