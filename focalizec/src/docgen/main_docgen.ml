@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.15 2009-01-07 16:18:01 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.16 2009-01-07 16:24:28 pessaux Exp $ *)
 
 
 
@@ -467,7 +467,20 @@ let gen_doc_pcm out_fmt ~current_unit = function
 
 
 
-(** "@title ", "@author ", "@description ". *)
+(* ************************************************************************** *)
+(* Parsetree.file_desc Parsetree.ast ->                                       *)
+(*   (string option * string option * string option)                          *)
+(** {b Descr}: Searches the string related to the 3 documentation tags
+    "@title ", "@author ", "@description ". These 3 tags are used to generate
+    the header of the XML file.
+    Since these 3 tags may appear in a documentation that is not attached to
+    the toplevel node of the AST (for instance if the source file starts with
+    a comment looking like a documentation because it is a sequence of stars,
+    exactly like we did in the comment of this function), we also search in
+    the documentation attached to the first definition of th'e source file.
+
+    {b Rem}: Not exported outside this module.                                *)
+(* ************************************************************************** *)
 let find_title_author_and_description ast_root =
   let found_title = ref None in
   let found_author = ref None in
