@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.73 2008-12-17 13:05:45 habib Exp $
+# $Id: Makefile,v 1.74 2009-01-07 16:48:18 rr Exp $
 
 ROOT_DIR = ../..
 
@@ -35,6 +35,7 @@ FOCALIZE_SRC = basics.fcl \
 	products.fcl \
 	lattices.fcl\
 	orders.fcl \
+	strict_orders.fcl \
 	orders_and_lattices.fcl \
 	sets_orders.fcl \
 	wellfounded.fcl \
