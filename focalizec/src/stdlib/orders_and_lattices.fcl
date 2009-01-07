@@ -32,15 +32,18 @@ species Partially_ordered_set_as_meet_semi_lattice
   (** we define lattice ordering from normal ordering *)
   let order_inf(x, y) = !leq(x, y);
 
+  theorem order_inf_spec: all x y in Self,
+    !order_inf(x, y) <-> !leq(x, y)
+    proof = by definition of order_inf;
+
   proof of order_inf_is_reflexive =
-    by property leq_reflexive, leq_extends_equal definition of order_inf;
+    by property leq_reflexive, leq_extends_equal, order_inf_spec;
 
   proof of order_inf_is_antisymmetric =
-    by property leq_antisymmetric definition of order_inf;
+    by property leq_antisymmetric, order_inf_spec;
 
   proof of order_inf_is_transitive =
-    by property leq_transitive
-       definition of order_inf;
+    by property leq_transitive, order_inf_spec;
 
   property inf_is_smaller : all x y in Self,
     !leq(!inf(x, y), x) /\ !leq(!inf(x, y), y) ;
@@ -49,9 +52,7 @@ species Partially_ordered_set_as_meet_semi_lattice
     !leq(i, x) -> !leq(i, y) -> !leq(i, !inf(x, y));
 
   proof of order_inf_is_infimum =
-    by property leq_defines_infimum
-       definition of order_inf
-  ;
+    by property leq_defines_infimum, order_inf_spec;
 
   proof of inf_idempotent =
     <1>1 assume x in Self,
@@ -115,15 +116,18 @@ species Partially_ordered_set_as_join_semi_lattice
   (** we define lattice ordering from normal ordering *)
   let order_sup(x, y) = !geq(x, y);
 
+  theorem order_sup_spec: all x y in Self,
+    !order_sup(x, y) <-> !geq(x, y)
+    proof = by definition of order_sup;
+
   proof of order_sup_is_reflexive =
-    by property geq_reflexive, geq_extends_equal
-       definition of order_sup;
+    by property geq_reflexive, geq_extends_equal, order_sup_spec;
 
   proof of order_sup_is_antisymmetric =
-    by property geq_antisymmetric definition of order_sup;
+    by property geq_antisymmetric, order_sup_spec;
 
   proof of order_sup_is_transitive =
-    by property geq_transitive definition of order_sup;
+    by property geq_transitive, order_sup_spec;
 
   (**  a supremum should be bigger than its arguments *)
   property sup_is_bigger : all x y in Self,
@@ -135,7 +139,7 @@ species Partially_ordered_set_as_join_semi_lattice
 
   (**  We relate to lattice notions *)
   proof of order_sup_is_supremum =
-    by property geq_defines_supremum definition of order_sup;
+    by property geq_defines_supremum, order_sup_spec;
 
   proof of sup_idempotent =
     <1>1 assume x in Self,
@@ -199,12 +203,10 @@ species Partially_ordered_set_as_lattice
            Partially_ordered_set_as_join_semi_lattice =
 
   proof of order_inf_refines_order_sup =
-    by definition of order_inf, order_sup, geq
-  ;
+    by property order_inf_spec, order_sup_spec, geq_is_leq;
 
   proof of order_sup_refines_order_inf =
-    by definition of order_inf, order_sup, geq
-  ;
+    by property order_inf_spec, order_sup_spec, geq_is_leq;
 
   proof of sup_absorbes_inf =
     <1>1 assume x in Self,
@@ -214,8 +216,7 @@ species Partially_ordered_set_as_lattice
               by property inf_is_smaller
          <2>2 prove !leq(x, !inf(x, !sup(x, y)))
               <3>1 prove !leq(x, !sup(x, y))
-                   by property sup_is_bigger
-                      definition of geq
+                   by property sup_is_bigger, geq_is_leq
               <3>f qed
                    by step <3>1
                       property leq_reflexive, leq_defines_infimum,
@@ -238,8 +239,7 @@ species Partially_ordered_set_as_lattice
               by property sup_is_bigger
          <2>2 prove !geq(x, !sup(x, !inf(x, y)))
               <3>1 prove !geq(x, !inf(x, y))
-                   by property inf_is_smaller
-                      definition of geq
+                   by property inf_is_smaller, geq_is_leq
               <3>f qed
                  by step <3>1
                     property geq_reflexive, geq_defines_supremum,
