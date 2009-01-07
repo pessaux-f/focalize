@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 <!-- FoCDoc DTD -->
-<!-- $Id: focdoc.dtd,v 1.2 2009-01-07 08:01:58 pessaux Exp $ -->
+<!-- $Id: focdoc.dtd,v 1.3 2009-01-07 11:29:26 pessaux Exp $ -->
 <!-- to describe the mathml equivalent of a particular function --> 
 
 <!-- mathml.dtd ne sera plus utilise dans le dtd. Les annotations mathml dans
@@ -33,7 +33,8 @@ correctement les fichiers focdoc envers le dtd -->
 <!ELEMENT foc:informations (foc:name?,foc:math?,foc:latex?,foc:comments*)>
 
 <!-- modif frederic : title et author ne sont pas des champs obligatoires -->
-<!-- Element modifié : <!ELEMENT general-informations (title,author,lang?,comments?)> -->
+<!-- Element modifié :
+     <!ELEMENT general-informations (title,author,lang?,comments?)> -->
 
 <!ELEMENT foc:general-informations (foc:title?,foc:author?,foc:lang?,foc:comments?)>
 <!ELEMENT foc:title (#PCDATA)>
@@ -73,17 +74,15 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 <!ATTLIST foc:global-fun recursive CDATA #IMPLIED>
 
 <!-- ajout frederic : pour prendre en compte des types concrets -->
-<!--                  A noter qu'on utilise l'element param. Toutefois pour les 
-                      type concrets, l'attribut infile de param ne sera jamais 
-                      utilisé.
+<!--    A noter qu'on utilise l'element param. Toutefois pour les types
+        concrets, l'attribut infile de param ne sera jamais utilisé.
                       
-                      Ici, les types Ocaml ou Coq liés aux types (ou aux 
-                      constructeurs) ne sont pas considérés. Cependant si un
-                      constructeur est liés à un type ocaml ou coq, alors
-                      l'attribut defined est utilisé   
+        Ici, les types Ocaml ou Coq liés aux types (ou aux  constructeurs) ne
+        sont pas considérés. Cependant si un constructeur est lié à un type
+        OCaml ou Coq, alors l'attribut defined est utilisé   
 
-                      Pour les types définis comme alias des types existants, 
-                      l'element alias est utilisé  -->
+        Pour les types définis comme alias des types existants, l'élément
+        alias est utilisé.  -->
 
 <!ELEMENT foc:concrete-type (foc:foc-name,foc:param*,(foc:alias|foc:constr*))>
 <!ELEMENT foc:alias (foc:type)>
@@ -92,14 +91,16 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 <!ATTLIST foc:constr defined CDATA #IMPLIED>
 
 <!-- ajout frederic: pour considérer les letprop -->
-<!-- modif frederic : les elements foc:history et foc:informations deviennent optionnels car 
-     pour les letprops définis au niveau du top level, ces informations ne seront pas générées -->
+<!-- modif frederic : les elements foc:history et foc:informations deviennent
+     optionnels car pour les letprops définis au niveau du top level, ces
+     informations ne seront pas générées -->
 
 <!ELEMENT foc:letprop (foc:foc-name,foc:history?,foc:informations?,foc:param-prop*,foc:proposition)>
 <!ELEMENT foc:param-prop (foc:foc-name,foc:type)>
 
-<!-- modif frederic : les elements foc:history et foc:informations deviennent optionnels car 
-     pour les theorems définis au niveau du top level, ces informations ne seront pas générées -->
+<!-- modif frederic : les elements foc:history et foc:informations deviennent
+     optionnels car pour les theorems définis au niveau du top level, ces
+     informations ne seront pas générées -->
 
 <!ELEMENT foc:theorem (foc:foc-name,foc:history?,foc:informations?,foc:proposition,foc:proof)>
 <!ELEMENT foc:proof ANY>
@@ -129,12 +130,14 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 <!-- /expression -->
 <!-- proposition -->
 
-<!-- Dans le code focdoc.mlp4 l'élement f:equiv est utilisé mais n'est pas défini dans le dtd.
-     Action : ajout de l'élement foc:equiv dans la liste des propositions   -->
+<!-- Dans le code focdoc.mlp4 l'élement f:equiv est utilisé mais n'est pas
+     défini dans le dtd.
+     Action : ajout de l'élement foc:equiv dans la liste des propositions. -->
 
-<!-- element modifié <!ENTITY % proposition "all|ex|and|or|implies|not|(%expression;)"> -->
+<!-- element modifié
+     <!ENTITY % proposition "all|ex|and|or|implies|not|(%expression;)"> -->
 
-<!ENTITY % foc:proposition "foc:all|foc:ex|foc:and|foc:or|foc:implies|foc:equiv|foc:not|(%foc:expression;)">
+<!ENTITY % foc:proposition "foc:all|foc:ex|foc:and|foc:or|foc:implies|foc:equiv|foc:not|(%foc:expression;)|foc:paren-ed-proposition">
 
 <!ELEMENT foc:var (foc:foc-name)>
 
@@ -154,6 +157,9 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 <!ELEMENT foc:equiv ((%foc:proposition;),(%foc:proposition;))>
 
 <!ELEMENT foc:not (%foc:proposition;)>
+
+<!ELEMENT foc:paren-ed-proposition (%foc:proposition;)>
+
 
 <!-- /proposition -->
 <!ELEMENT foc:proposition (%foc:proposition;)>
@@ -184,8 +190,8 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 <!ELEMENT foc:app (foc:foc-name,foc:param*)>
 
 <!-- ajout frederic : ajout de l'attribut infile pour param. Cet attribut sera 
-                      essentiellement utilisé pour indiquer dans quel fichier se trouve 
-                      une fonction globale ou une collection passée en paramètre.  -->
+     essentiellement utilisé pour indiquer dans quel fichier se trouve une
+     fonction globale ou une collection passée en paramètre.  -->
 
 <!ELEMENT foc:param (#PCDATA)>
 <!ATTLIST foc:param infile CDATA #IMPLIED>

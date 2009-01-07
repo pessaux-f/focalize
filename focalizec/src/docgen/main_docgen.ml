@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.12 2009-01-07 08:01:58 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.13 2009-01-07 11:29:26 pessaux Exp $ *)
 
 
 
@@ -248,15 +248,120 @@ let gen_doc_computational_let out_fmt from name sch rec_flag _body =
 
 
 
-let gen_doc_theorem out_fmt from name =
+(* ************************************************************************* *)
+(** {b Descr}: Emits the XML for a "forall" / "exists" logical expression.
+    Since the DTD's structure only allows to have one variable at once for a
+    "foc:all" / "foc:ex", we nest each bound variable from the list
+    [vnames].
+    Since the process is the same for "forall" and "exists", the function
+    takes the binder's name to use (as a string). The legal binders are
+    currently "ex" and "all". This name will be prefixed by "foc:" to create
+    the complete markup.
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+let rec gen_doc_forall_exists out_fmt binder_name vnames ty_expr lexpr =
+  let ty =
+    (match ty_expr.Parsetree.ast_type with
+     | Parsetree.ANTI_type t -> t
+     | Parsetree.ANTI_none | Parsetree.ANTI_non_relevant -> assert false
+     | Parsetree.ANTI_scheme sch -> Types.specialize sch) in
+  let rec rec_gen = function
+    | [] -> gen_doc_proposition out_fmt lexpr
+    | h :: q ->
+        (* Binder is "all" or "ex". *)
+        Format.fprintf out_fmt "@[<h 2><foc:%s>@\n" binder_name ;
+        (* foc:var foc:foc-name. *)
+        Format.fprintf out_fmt
+          "<foc:var><foc:foc-name>%a</foc:foc-name></foc:var>@\n"
+          Sourcify.pp_vname h ;
+        (* foc:type. *)
+        gendoc_type out_fmt ty ;
+        (* %foc:proposition. *)
+        rec_gen q ;
+        Format.fprintf out_fmt "@]</foc:%s>@\n" binder_name in
+  rec_gen vnames
+
+
+
+and gen_doc_proposition out_fmt initial_prop =
+  let rec rec_gen proposition =
+    match proposition.Parsetree.ast_desc with
+     | Parsetree.Pr_forall (vnames, ty_expr, lexpr) ->
+         (* Nested foc:all. *)
+         gen_doc_forall_exists out_fmt "all" vnames ty_expr lexpr
+     | Parsetree.Pr_exists (vnames, ty_expr, lexpr) ->
+         (* foc:ex. *)
+         gen_doc_forall_exists out_fmt "ex" vnames ty_expr lexpr
+     | Parsetree.Pr_imply (lexpr1 , lexpr2) ->
+         (* foc:implies. *)
+         Format.fprintf out_fmt "@[<h 2><foc:implies>@\n" ;
+         rec_gen lexpr1 ;
+         rec_gen lexpr2 ;
+         Format.fprintf out_fmt "@]</foc:implies>@\n"
+     | Parsetree.Pr_or (lexpr1 , lexpr2) ->
+         (* foc:or. *)
+         Format.fprintf out_fmt "@[<h 2><foc:or>@\n" ;
+         rec_gen lexpr1 ;
+         rec_gen lexpr2 ;
+         Format.fprintf out_fmt "@]</foc:or>@\n"
+     | Parsetree.Pr_and (lexpr1 , lexpr2) ->
+         (* foc:and. *)
+         Format.fprintf out_fmt "@[<h 2><foc:and>@\n" ;
+         rec_gen lexpr1 ;
+         rec_gen lexpr2 ;
+         Format.fprintf out_fmt "@]</foc:and>@\n"
+     | Parsetree.Pr_equiv (lexpr1 , lexpr2) ->
+         (* foc:equiv. *)
+         Format.fprintf out_fmt "@[<h 2><foc:equiv>@\n" ;
+         rec_gen lexpr1 ;
+         rec_gen lexpr2 ;
+         Format.fprintf out_fmt "@]</foc:equiv>@\n"
+     | Parsetree.Pr_not lexpr ->
+         (* foc:not. *)
+         Format.fprintf out_fmt "@[<h 2><foc:not>@\n" ;
+         rec_gen lexpr ;
+         Format.fprintf out_fmt "@]</foc:not>@\n"
+     | Parsetree.Pr_expr _expr ->
+         (* foc:expression. *) (* TODO *)
+         ()
+     | Parsetree.Pr_paren lexpr ->
+         (* foc:paren-ed-proposition. *)
+         Format.fprintf out_fmt "@[<h 2><foc:paren-ed-proposition>@\n" ;
+         rec_gen lexpr ;
+         Format.fprintf out_fmt "@]</foc:paren-ed-proposition>@\n" in
+  rec_gen initial_prop
+;;
+
+
+
+let gen_doc_theorem out_fmt from name lexpr =
   Format.fprintf out_fmt "@[<h 2><foc:theorem>@\n" ;
   (* foc:foc-name. *)
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
     Sourcify.pp_vname name ;
   (* foc:history. *)
   gendoc_history out_fmt from ;
-  (* foc:informations, foc:proposition. *)  (* TODO *)
+  (* foc:informations. *)             (* TODO *)
+  (* foc:proposition. *)
+  gen_doc_proposition out_fmt lexpr ;
+  (* foc:proof. *)              (* TODO *)
   Format.fprintf out_fmt "@]</foc:theorem>@\n"
+;;
+
+
+
+let gen_doc_property out_fmt from name lexpr =
+  Format.fprintf out_fmt "@[<h 2><foc:property>@\n" ;
+  (* foc:foc-name. *)
+  Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+    Sourcify.pp_vname name ;
+  (* foc:history. *)
+  gendoc_history out_fmt from ;
+  (* foc:informations. *)         (* TODO *)
+  (* foc:proposition. *)
+  gen_doc_proposition out_fmt lexpr ;
+  Format.fprintf out_fmt "@]</foc:property>@\n"
 ;;
 
 
@@ -303,12 +408,12 @@ let gendoc_method out_fmt = function
   | Env.TypeInformation.SF_let_rec _l ->
       (* foc:definition, foc:letprop. *)
       ()
-  | Env.TypeInformation.SF_theorem (from, n, _sch, _body, _proof, _rep_deps) ->
+  | Env.TypeInformation.SF_theorem (from, n, _, body, _proof, _rep_deps) ->
       (* foc:theorem. *)
-      gen_doc_theorem out_fmt from n
-  | Env.TypeInformation.SF_property (_from, _n, _sch, _body, _rep_deps) ->
-      (* foc:property. *) (* TODO. *)
-      ()
+      gen_doc_theorem out_fmt from n body
+  | Env.TypeInformation.SF_property (from, n, _, body, _rep_deps) ->
+      (* foc:property. *)
+      gen_doc_theorem out_fmt from n body
 ;;
 
 
