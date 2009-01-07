@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.13 2009-01-07 11:29:26 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.14 2009-01-07 15:27:05 pessaux Exp $ *)
 
 
 
@@ -249,6 +249,8 @@ let gen_doc_computational_let out_fmt from name sch rec_flag _body =
 
 
 (* ************************************************************************* *)
+(* Format.formatter -> string -> Parsetree.vname list ->                     *)
+(*   Parsetree.type_expr -> Parsetree.logical_expr -> unit                   *)
 (** {b Descr}: Emits the XML for a "forall" / "exists" logical expression.
     Since the DTD's structure only allows to have one variable at once for a
     "foc:all" / "foc:ex", we nest each bound variable from the list
@@ -326,10 +328,10 @@ and gen_doc_proposition out_fmt initial_prop =
          (* foc:expression. *) (* TODO *)
          ()
      | Parsetree.Pr_paren lexpr ->
-         (* foc:paren-ed-proposition. *)
-         Format.fprintf out_fmt "@[<h 2><foc:paren-ed-proposition>@\n" ;
+         (* foc:paren-logical-expr. *)
+         Format.fprintf out_fmt "@[<h 2><foc:paren-logical-expr>@\n" ;
          rec_gen lexpr ;
-         Format.fprintf out_fmt "@]</foc:paren-ed-proposition>@\n" in
+         Format.fprintf out_fmt "@]</foc:paren-logical-expr>@\n" in
   rec_gen initial_prop
 ;;
 
@@ -344,7 +346,9 @@ let gen_doc_theorem out_fmt from name lexpr =
   gendoc_history out_fmt from ;
   (* foc:informations. *)             (* TODO *)
   (* foc:proposition. *)
+  Format.fprintf out_fmt "@[<h 2><foc:proposition>@\n" ;
   gen_doc_proposition out_fmt lexpr ;
+  Format.fprintf out_fmt "@]</foc:proposition>@\n" ;
   (* foc:proof. *)              (* TODO *)
   Format.fprintf out_fmt "@]</foc:theorem>@\n"
 ;;
@@ -360,7 +364,9 @@ let gen_doc_property out_fmt from name lexpr =
   gendoc_history out_fmt from ;
   (* foc:informations. *)         (* TODO *)
   (* foc:proposition. *)
+  Format.fprintf out_fmt "@[<h 2><foc:proposition>@\n" ;
   gen_doc_proposition out_fmt lexpr ;
+  Format.fprintf out_fmt "@]</foc:proposition>@\n" ;
   Format.fprintf out_fmt "@]</foc:property>@\n"
 ;;
 
