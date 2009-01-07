@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.14 2009-01-07 15:27:05 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.15 2009-01-07 16:18:01 pessaux Exp $ *)
 
 
 
@@ -467,110 +467,48 @@ let gen_doc_pcm out_fmt ~current_unit = function
 
 
 
-
-
-(* *********************************************************************** *)
-(* look_for:string -> in_str: string -> (int * int) option                 *)
-(** {Descr}: Search from left to right, the indices where the string
-    [look_for] was found in the string [in_str]. If the searched string is
-    the empty string, then we consider that the search always fails.
-    This method is pure brute force.
-    If the string is found, then we return the start and stop positions in
-    the string [in_str] where [look_for] was found.
-
-    {b Rem}: Not exported outside this module.                             *)
-(* *********************************************************************** *)
-let str_search ~look_for ~in_str =
-  if look_for = "" then None
-  else
-    (begin
-    let m = String.length look_for in
-    let n = String.length in_str in
-    let found_index = ref None in
-    let j = ref 0 in
-    while !j <= n - m && !found_index = None do
-      let i = ref 0 in
-      while !i < m && look_for.[!i] = in_str.[!i + !j] do incr i done ;
-      if !i >= m then found_index := Some (!j, (!j + m)) ;
-      incr j
-    done ;
-    !found_index
-    end)
-;;
-
-
-
-(** {b Descr}: If the string [look_for] was found in the string [in_str],
-    returns the characters of [in_str] remaining after the position where
-    [look_for] was found. *)
-let get_text_after_matched_string ~look_for ~in_str =
-  match str_search ~look_for ~in_str with
-   | None -> None
-   | Some (_, match_end) ->
-       let rem_len = (String.length in_str) - match_end in
-       let sub_str = String.sub in_str match_end rem_len in
-       Some sub_str
-;;
-
-
+(** "@title ", "@author ", "@description ". *)
 let find_title_author_and_description ast_root =
-  let rec search searched_tag_string = function
-    | [] -> None
-    | { Parsetree.de_desc = s } :: q ->
-        let found =
-          get_text_after_matched_string
-            ~look_for: searched_tag_string ~in_str: s in
-        match found with
-         | None ->
-             (* If not found in the current doc element, go on searching in
-                the next ones. *)
-             search searched_tag_string q
-         | Some txt ->
-             (* Only keep text until the end of line if we find some otherwise,
-                keep the whole text. *)
-             let txt_len = String.length txt in
-             let cut_at = try String.index txt '\n' with Not_found -> txt_len in
-             let txt' =
-               if cut_at = txt_len then txt else String.sub txt 0 cut_at in
-             Some txt' in
-  (* ************************************** *)
-  (* Do the job on the top node of the AST. *)
-  let title_opt = search "@title " ast_root.Parsetree.ast_doc in
-  let author_opt = search "@author " ast_root.Parsetree.ast_doc in
-  let description_opt = search "@description " ast_root.Parsetree.ast_doc in
-  if title_opt <> None && author_opt <> None && description_opt <> None then
-    (title_opt, author_opt, description_opt)
-  else
-    (begin
-    (* We didn't find the 3 searched tags in the top node of the AST. So,
-       search for them (or at least the missing one if only one was found) in
-       the first definition of the source file. *)
-    match ast_root.Parsetree.ast_desc with
-     | Parsetree.File [] ->
-         (* So, the source file is empty (with no definition). Return what we
-            got even if there is some tag(s) missing. *)
-         (title_opt, author_opt, description_opt)
-     | Parsetree.File (first :: _) ->
-         (begin
-         let title_opt' =
-           match title_opt with
-            | Some _ -> title_opt
-            | None -> search "@title " first.Parsetree.ast_doc in
-         let author_opt' =
-           match author_opt with
-            | Some _ -> author_opt |
-              None -> search "@author " first.Parsetree.ast_doc in
-         let description_opt' =
-           match description_opt with
-            | Some _ -> description_opt
-            | None -> search "@description " first.Parsetree.ast_doc in
-         (title_opt', author_opt', description_opt')
-         end)
-    end)
+  let found_title = ref None in
+  let found_author = ref None in
+  let found_description = ref None in
+  (* A local function to search the tags in an AST node. It will be used on
+     the toplevel AST node and on the first AST definition's node in case the
+     documentation was not attached to the toplevel AST node. In case there
+     is several times the same tag, it always keep the first one found. *)
+  let hunt ast_node =
+    List.iter
+      (fun { Parsetree.de_desc = s } ->
+        let lexbuf = Lexing.from_string s in
+	let continue = ref true in
+	(* We lex ther string until we reach its end, i.e. until we get a
+	   non-tagged string being empty (i.e. ""). *)
+	while !continue do
+          match Doc_lexer.start lexbuf with
+           | Doc_lexer.DT_Author s ->
+               if !found_author = None then found_author := Some s
+           | Doc_lexer.DT_Title s ->
+               if !found_title = None then found_title := Some s
+           | Doc_lexer.DT_Description s ->
+               if !found_description = None then found_description := Some s
+	   | Doc_lexer.DT_None "" -> continue := false
+           | _ -> ()   (* Ignore other tags. *)
+	done)
+      ast_node.Parsetree.ast_doc in
+  (* Do the job on the top node of the AST. We lex the documentation and
+     look at the informations we found inside. *)
+  hunt ast_root ;
+  (* Then do the same thing on the AST node of the first definition of the
+     source file. *)
+  (match ast_root.Parsetree.ast_desc with
+   | Parsetree.File [] ->
+       (* So, the source file is empty (with no definition). Do nothing and be
+          happy with what we may have found before on the toplevel AST node. *)
+       ()
+   | Parsetree.File (first :: _) -> hunt first) ;
+  (* Now, just return what we found. *)
+  (!found_title, !found_author, !found_description)
 ;;
-
-
-
 
 
 
