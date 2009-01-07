@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.11 2009-01-06 14:52:48 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.12 2009-01-07 08:01:58 pessaux Exp $ *)
 
 
 
@@ -104,7 +104,7 @@ let gendoc_species_expr out_fmt ~current_unit species_expr =
   match species_expr_desc.Parsetree.se_params with
    | [] ->
        (begin
-       (* [TODO] "order ?????" *)
+       (* order = "high" because the atom represents a species. *)
        Format.fprintf out_fmt "<foc:atom order=\"high\"" ;
        if infile <> "" then
          Format.fprintf out_fmt " infile=\"%s\"" infile ;
@@ -138,9 +138,9 @@ let gendoc_inherits out_fmt ~current_unit species_def =
     (* Now generate the "inherits" clauses. *)
     List.iter
       (fun spe_expr ->
-	Format.fprintf out_fmt "@[<h 2><foc:inherits>@\n" ;
-	gendoc_species_expr out_fmt ~current_unit spe_expr ;
-	Format.fprintf out_fmt "@]</foc:inherits>@\n")
+        Format.fprintf out_fmt "@[<h 2><foc:inherits>@\n" ;
+        gendoc_species_expr out_fmt ~current_unit spe_expr ;
+        Format.fprintf out_fmt "@]</foc:inherits>@\n")
       species_def_descr.Parsetree.sd_inherits.Parsetree.ast_desc
     end)
 ;;
@@ -159,7 +159,7 @@ let gendoc_parameters out_fmt ~current_unit params =
            Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
              Sourcify.pp_vname p_vname ;
            Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
-           (* [TODO] "order ?????" *)
+           (* order = "high" because the atom represents a species. *)
            Format.fprintf out_fmt 
              "<foc:atom order=\"high\" infile=\"%s\">%a</foc:atom>@\n"
              infile Sourcify.pp_vname ident_vname ;
@@ -248,6 +248,19 @@ let gen_doc_computational_let out_fmt from name sch rec_flag _body =
 
 
 
+let gen_doc_theorem out_fmt from name =
+  Format.fprintf out_fmt "@[<h 2><foc:theorem>@\n" ;
+  (* foc:foc-name. *)
+  Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+    Sourcify.pp_vname name ;
+  (* foc:history. *)
+  gendoc_history out_fmt from ;
+  (* foc:informations, foc:proposition. *)  (* TODO *)
+  Format.fprintf out_fmt "@]</foc:theorem>@\n"
+;;
+
+
+
 let gendoc_method out_fmt = function
   | Env.TypeInformation.SF_sig (from, n, sch) ->
       (begin
@@ -279,7 +292,7 @@ let gendoc_method out_fmt = function
   | Env.TypeInformation.SF_let
          (from, n, _parms, sch, body, _otp, _rep_deps, lflags) ->
       (begin
-      (* foc:definition, foc:letprop. *)  (* TODO. *) 
+      (* foc:definition, foc:letprop. *)
       match lflags.Env.TypeInformation.ldf_logical with
        | Parsetree.LF_logical ->
            gen_doc_logical_let out_fmt body
@@ -288,11 +301,11 @@ let gendoc_method out_fmt = function
              out_fmt from n sch lflags.Env.TypeInformation.ldf_recursive body
       end)
   | Env.TypeInformation.SF_let_rec _l ->
-      (* foc:definition, foc:letprop. *) (* TODO. *)
+      (* foc:definition, foc:letprop. *)
       ()
-  | Env.TypeInformation.SF_theorem (_from, _n, _sch, _body, _proof, _rep_deps) ->
-      (* foc:theorem. *) (* TODO. *)
-      ()
+  | Env.TypeInformation.SF_theorem (from, n, _sch, _body, _proof, _rep_deps) ->
+      (* foc:theorem. *)
+      gen_doc_theorem out_fmt from n
   | Env.TypeInformation.SF_property (_from, _n, _sch, _body, _rep_deps) ->
       (* foc:property. *) (* TODO. *)
       ()
@@ -346,13 +359,15 @@ let gen_doc_pcm out_fmt ~current_unit = function
 
 
 (* *********************************************************************** *)
-(* look_for:string -> in_str:string -> (int * int) option                  *)
+(* look_for:string -> in_str: string -> (int * int) option                 *)
 (** {Descr}: Search from left to right, the indices where the string
     [look_for] was found in the string [in_str]. If the searched string is
     the empty string, then we consider that the search always fails.
     This method is pure brute force.
     If the string is found, then we return the start and stop positions in
-    the string [in_str] where [look_for] was found.                        *)
+    the string [in_str] where [look_for] was found.
+
+    {b Rem}: Not exported outside this module.                             *)
 (* *********************************************************************** *)
 let str_search ~look_for ~in_str =
   if look_for = "" then None

@@ -711,105 +711,120 @@
 
 
 
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
   <xsl:template match="foc:parameter">
     <xsl:call-template name="print-name-component"/>
     <xsl:choose>
       <xsl:when test="normalize-space(@kind)='collection'">
-          <xsl:text> : </xsl:text>
-          <xsl:apply-templates select="foc:type/foc:atom" mode="high"/>
+	<xsl:text> : </xsl:text>
+	<xsl:apply-templates select="foc:type/foc:atom" mode="high"/>
       </xsl:when>
       <xsl:otherwise>
-          <mml:math>
-                <mml:apply>
-                   <mml:in/>
-                   <mml:ci></mml:ci>
-                   <mml:ci></mml:ci>
-                </mml:apply>
-          </mml:math>
-          <xsl:apply-templates select="foc:type"/>
+	<mml:math>
+	  <mml:apply>
+	    <mml:in/>
+	    <mml:ci></mml:ci>
+	    <mml:ci></mml:ci>
+	  </mml:apply>
+	</mml:math>
+	<xsl:apply-templates select="foc:type"/>
       </xsl:otherwise>
     </xsl:choose>
     <xsl:text> </xsl:text>
     <code class="key2">
       <xsl:choose>
-       <xsl:when test="@kind!='entity' and @kind!='collection' ">
+	<xsl:when test="@kind!='entity' and @kind!='collection' ">
 	  <xsl:message>
-            <xsl:text>wrong value for attribute kind of parameter tag</xsl:text>
-          </xsl:message>
-       </xsl:when>
-
+	    <xsl:text>wrong value for attribute kind of parameter tag</xsl:text>
+	  </xsl:message>
+	</xsl:when>
       </xsl:choose>
     </code>
-    
   </xsl:template>
 
-  <!-- templates or types -->
 
- <xsl:template match="foc:type">
-  <xsl:choose>
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- templates or types -->
+  <xsl:template match="foc:type">
+    <xsl:choose>
       <xsl:when test="normalize-space($mmldisplay)='yes'">		
-		      <xsl:apply-imports/> 
+	<xsl:apply-imports/> 
       </xsl:when>
       <xsl:otherwise>
-        <xsl:text>MathML Display not selected</xsl:text>
+	<xsl:text>MathML Display not selected</xsl:text>
       </xsl:otherwise>
     </xsl:choose> 
-	    
   </xsl:template>
 
 
 
-<xsl:template match="foc:atom" mode="high">
-<!-- ne traite pas le cas des parametres qui sont des especes paramaetrees -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <xsl:template match="foc:atom" mode="high">
+    <!-- ne traite pas le cas des parametres qui sont des especes
+	 paramaetrees -->
     <!--<xsl:choose>
-      <xsl:when test="@order='first'">
-          <xsl:value-of select="normalize-space(.)"/>
-      </xsl:when>
-      <xsl:when test="@order='high'">-->
-
-<ins>
-<a>
-       <xsl:attribute name="href">
-                <xsl:value-of select="$docpath"/>
-		<xsl:choose>
-                  <xsl:when test="@infile">
-                        <xsl:value-of select="normalize-space(@infile)"/>
-			<xsl:value-of select="$ext"/>
-			<xsl:text>#species-</xsl:text>
-			<xsl:value-of select="normalize-space(.)"/>
-		 </xsl:when>
-                  <xsl:otherwise>
-         	   <xsl:text>#species-</xsl:text>
-            	   <xsl:value-of select="normalize-space(.)"/>
-		 </xsl:otherwise>
-                </xsl:choose>
-          </xsl:attribute>
-          <xsl:value-of select="normalize-space(.)"/>
-        </a>
-</ins>  
-      
+	<xsl:when test="@order='first'">
+	<xsl:value-of select="normalize-space(.)"/>
+	</xsl:when>
+	<xsl:when test="@order='high'">-->
+    <ins>
+      <a>
+	<xsl:attribute name="href">
+	  <xsl:value-of select="$docpath"/>
+	  <xsl:choose>
+	    <xsl:when test="@infile">
+	      <xsl:value-of select="normalize-space(@infile)"/>
+	      <xsl:value-of select="$ext"/>
+	      <xsl:text>#species-</xsl:text>
+	      <xsl:value-of select="normalize-space(.)"/>
+	    </xsl:when>
+	    <xsl:otherwise>
+	      <xsl:text>#species-</xsl:text>
+	      <xsl:value-of select="normalize-space(.)"/>
+	    </xsl:otherwise>
+	  </xsl:choose>
+	</xsl:attribute>
+	<xsl:value-of select="normalize-space(.)"/>
+      </a>
+    </ins>  
   </xsl:template>
 
 
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
   <xsl:template match="foc:tvar">
     <xsl:value-of select="normalize-space(.)"/>
   </xsl:template>
 
+
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
   <xsl:template match="foc:fct">
     <xsl:variable name="parenthesis">
       <xsl:if test="*[position()=1 and (foc:atom|foc:tvar|foc:self|foc:abst|foc:prop)]">
-        <xsl:text>n</xsl:text>
+	<xsl:text>n</xsl:text>
       </xsl:if>
     </xsl:variable>
     <xsl:if test="$parenthesis='y'">
       <code class="key2">
-        <xsl:text>(</xsl:text>
+	<xsl:text>(</xsl:text>
       </code>
     </xsl:if>
     <xsl:apply-templates select="*[position()=1]"/>
     <xsl:if test="$parenthesis='y'">
       <code class="key2">
-        <xsl:text>)</xsl:text>
+	<xsl:text>)</xsl:text>
       </code>
     </xsl:if>
     <code class="key2">
@@ -817,22 +832,27 @@
     </code>
     <xsl:apply-templates select="*[position()=2]"/>  
   </xsl:template>
-  
+
+
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
   <xsl:template match="foc:prod">
     <xsl:variable name="parenthesis">
       <xsl:if test="*[position()=1 and (foc:atom|foc:tvar|foc:self|foc:abst|foc:prop)]">
-        <xsl:text>n</xsl:text>
+	<xsl:text>n</xsl:text>
       </xsl:if>
     </xsl:variable>
     <xsl:if test="$parenthesis='y'">
       <code class="key2">
-        <xsl:text>(</xsl:text>
+	<xsl:text>(</xsl:text>
       </code>
     </xsl:if>
     <xsl:apply-templates select="*[position()=1]"/>
     <xsl:if test="$parenthesis='y'">
       <code class="key2">
-        <xsl:text>)</xsl:text>
+	<xsl:text>)</xsl:text>
       </code>
     </xsl:if>
     <code class="key2">
@@ -841,118 +861,180 @@
     <xsl:apply-templates select="*[position()=2]"/>  
   </xsl:template>
 
+
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
   <xsl:template match="foc:prop">
     <code class="key3">
       <xsl:text>Prop</xsl:text>
     </code>
   </xsl:template>
 
-  <xsl:template match="foc:self">
-  <xsl:choose>
- <xsl:when test="ancestor::foc:proposition">
- <xsl:text></xsl:text>
- </xsl:when>
- <xsl:otherwise>
-    <code class="key3">
-     <xsl:text>self</xsl:text>
-    </code> 
- </xsl:otherwise>
- </xsl:choose>
- </xsl:template>
 
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <xsl:template match="foc:self">
+    <xsl:choose>
+      <xsl:when test="ancestor::foc:proposition">
+	<xsl:text></xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+	<code class="key3">
+	  <xsl:text>self</xsl:text>
+	</code> 
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
   <xsl:template match="foc:abst">
     <code class="key3">
       <xsl:text>abst</xsl:text>
     </code>
   </xsl:template>
 
+
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
   <xsl:template match="foc:ml">
     <code class="caml">
       <xsl:value-of select="normalize-space(.)"/>
     </code>
   </xsl:template>
 
+
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
   <xsl:template match="foc:ml-c">
     <code class="caml">
       <xsl:value-of select="normalize-space(.)"/>
     </code>
   </xsl:template>
 
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
   <xsl:template match="foc:prm">
     <xsl:text>prn[</xsl:text>
     <xsl:apply-templates select="*"/>
     <xsl:text>]prn</xsl:text>
   </xsl:template>
-<!--
-   <xsl:template match="foc:meth">
-    <xsl:apply-templates select="*[.!=foc:foc-name]"/>
-    <code class="key2">
+  <!--
+      <xsl:template match="foc:meth">
+      <xsl:apply-templates select="*[.!=foc:foc-name]"/>
+      <code class="key2">
       <xsl:text>.</xsl:text>
-    </code>
-    <xsl:apply-templates select="foc:foc-name"/>
-  </xsl:template>
--->
+      </code>
+      <xsl:apply-templates select="foc:foc-name"/>
+      </xsl:template>
+  -->
 
-<xsl:template match="foc:inherits|foc:implements">
-  <ins>
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <xsl:template match="foc:inherits|foc:implements">
+    <ins>
       <a>
-        <xsl:attribute name="href">
-           <xsl:value-of select="$docpath"/>
-             <xsl:choose>    
-                 <xsl:when test="foc:app/foc:foc-name[@infile]">
-		 <xsl:value-of select="normalize-space(foc:app/foc:foc-name/@infile)"/>
-	         <xsl:value-of select="$ext"/>
-                </xsl:when>
-		<xsl:when test="foc:atom[@infile]">
-		 <xsl:value-of select="normalize-space(foc:atom/@infile)"/>
-	         <xsl:value-of select="$ext"/>
-                </xsl:when>                
-              </xsl:choose> 	  	
-                <xsl:text>#species-</xsl:text>
-                <xsl:apply-templates select="foc:atom|foc:app" mode="make-href"/>
-       </xsl:attribute>
-       <xsl:apply-templates select="foc:atom|foc:app" mode="display-of-link"/>
-     </a>
- </ins>
+	<xsl:attribute name="href">
+	  <xsl:value-of select="$docpath"/>
+	  <xsl:choose>    
+	    <xsl:when test="foc:app/foc:foc-name[@infile]">
+	      <xsl:value-of select="normalize-space(foc:app/foc:foc-name/@infile)"/>
+	      <xsl:value-of select="$ext"/>
+	    </xsl:when>
+	    <xsl:when test="foc:atom[@infile]">
+	      <xsl:value-of select="normalize-space(foc:atom/@infile)"/>
+	      <xsl:value-of select="$ext"/>
+	    </xsl:when>                
+	  </xsl:choose> 	  	
+	  <xsl:text>#species-</xsl:text>
+	  <xsl:apply-templates select="foc:atom|foc:app" mode="make-href"/>
+	</xsl:attribute>
+	<xsl:apply-templates select="foc:atom|foc:app" mode="display-of-link"/>
+      </a>
+    </ins>
+    <xsl:if test="following-sibling::*[position()=1 and name(.)='foc:inherits']">
+      <code class="key2">
+	<xsl:text>,</xsl:text>
+      </code>
+    </xsl:if>
+    <xsl:if test="following-sibling::*[position()=1 and name(.)='foc:implements']">
+      <code class="key2">
+	<xsl:text>,</xsl:text>
+      </code>
+    </xsl:if>         
+  </xsl:template>
 
- <xsl:if test="following-sibling::*[position()=1 and name(.)='foc:inherits']">
-   <code class="key2">
-     <xsl:text>,</xsl:text>
-   </code>
- </xsl:if>
- <xsl:if test="following-sibling::*[position()=1 and name(.)='foc:implements']">
-   <code class="key2">
-     <xsl:text>,</xsl:text>
-   </code>
- </xsl:if>         
-</xsl:template>
 
-<xsl:template match="foc:app" mode="display-of-link">
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <xsl:template match="foc:app" mode="display-of-link">
     <xsl:value-of select="normalize-space(foc:foc-name)"/>
     <xsl:text>(</xsl:text>
     <xsl:apply-templates select="*[position()>1]" mode="display-of-link"/>
     <xsl:text>)</xsl:text>
-</xsl:template>
+  </xsl:template>
 
-<xsl:template match="foc:param" mode="display-of-link">
-       <xsl:value-of select="normalize-space(.)"/>
-       <xsl:if test="following-sibling::foc:param">
-           <xsl:text>,</xsl:text>
-       </xsl:if>
-</xsl:template>
 
-<xsl:template match="foc:atom" mode="display-of-link">
-<xsl:value-of select="normalize-space()"/>
-</xsl:template>
 
-<xsl:template match="foc:app"  mode="make-href">
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <xsl:template match="foc:param" mode="display-of-link">
+    <xsl:value-of select="normalize-space(.)"/>
+    <xsl:if test="following-sibling::foc:param">
+      <xsl:text>,</xsl:text>
+    </xsl:if>
+  </xsl:template>
+
+
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <xsl:template match="foc:atom" mode="display-of-link">
+    <xsl:value-of select="normalize-space()"/>
+  </xsl:template>
+
+
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <xsl:template match="foc:app"  mode="make-href">
     <xsl:value-of select="normalize-space(foc:foc-name)"/>
-</xsl:template>
+  </xsl:template>
 
-<xsl:template match="foc:atom" mode="make-href">
-<xsl:value-of select="normalize-space()"/>
-</xsl:template>
 
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <xsl:template match="foc:atom" mode="make-href">
+    <xsl:value-of select="normalize-space()"/>
+  </xsl:template>
+
+
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
   <xsl:template match="foc:foc-name">
     <xsl:value-of select="normalize-space(.)"/>
   </xsl:template>

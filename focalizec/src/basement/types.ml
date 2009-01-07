@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.73 2009-01-06 14:09:50 pessaux Exp $ *)
+(* $Id: types.ml,v 1.74 2009-01-07 08:01:58 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -897,7 +897,7 @@ let unify ~loc ~self_manifest type1 type2 =
     match (ty1, ty2) with
      | (ST_var var, _) ->
          (* BE CAREFUL: [occur_check] performs the setting of decl-dependencies
-	    on the carrier ! In effect, if [ty2] involved Self then we have a
+            on the carrier ! In effect, if [ty2] involved Self then we have a
             dependency on the carrier and that must be taken into account !
             The interest to make [occur_check] doing this work is that it
             walk all along the type so it's a good idea to take benefit of this
@@ -1656,12 +1656,14 @@ let pp_type_simple_to_xml =
         (begin
         match arg_tys with
          | [] ->
-             (* [Unsure] "order ?????" *)
+             (* order = "first" because the atom does not represent a
+                species. *)
              Format.fprintf ppf
                "<foc:atom order=\"first\" infile=\"%s\">%s</foc:atom>@\n"
                mod_name cstr_name
          | _ ->
-             (* [Unsure] "order ?????" *)
+             (* order = "first" because the atom does not represent a
+                species. *)
              Format.fprintf ppf "@[<h 2><foc:prm order=\"first\">" ;
              List.iter (rec_pp ppf) arg_tys ;
              Format.fprintf ppf
@@ -1670,9 +1672,11 @@ let pp_type_simple_to_xml =
              Format.fprintf ppf "@]</foc:prm>@\n"
         end)
     | ST_self_rep ->
-        (* [Unsure] "order ?????" *)
+        (* order = "first" because the atom does not represent a species. *)
         Format.fprintf ppf "<foc:self order=\"first\"/>@\n"
     | ST_species_rep (mod_name, collection_name) ->
+        (* order = "first" because the atom does not represent a species.
+           Here it represents a **carrier** of species. *)
         Format.fprintf ppf
           "<foc:atom order=\"first\" infile=\"%s\">%s</foc:atom>@\n"
           mod_name collection_name in

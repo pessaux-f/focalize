@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 <!-- FoCDoc DTD -->
-<!-- $Id: focdoc.dtd,v 1.1 2009-01-06 13:57:17 pessaux Exp $ -->
+<!-- $Id: focdoc.dtd,v 1.2 2009-01-07 08:01:58 pessaux Exp $ -->
 <!-- to describe the mathml equivalent of a particular function --> 
 
 <!-- mathml.dtd ne sera plus utilise dans le dtd. Les annotations mathml dans
@@ -10,17 +10,17 @@
 <!ENTITY % MATHML.prefixed "INCLUDE">
 <!ENTITY % MATHML.prefix "mml"> -->
 
-<!-- ajout frederic : l'ajout de l'element foc-name pour focdoc, afin de préciser 
-                      à partir de quel fichier .foc le fichier .focdoc a été généré -->
+<!-- ajout frederic : l'ajout de l'element foc-name pour focdoc, afin de
+préciser  à partir de quel fichier .foc le fichier .focdoc a été généré -->
 
 <!ENTITY % foc:element "foc:global-fun|foc:concrete-type|foc:letprop|foc:theorem|foc:species|foc:collection">
 <!ELEMENT foc:focdoc (foc:foc-name,foc:general-informations,(%foc:element;)*,foc:load*,foc:open*)>
 
 <!-- ajout frederic : prefixer tout les elements de focdoc par le namespace 
-                      "foc" afin d'eviter des conflits avec d'autre dtd -->                    
+"foc" afin d'eviter des conflits avec d'autre dtd -->                    
        
 <!-- ajout frederic: l'attribut xmlns:foc est rajoute afin de valider
-                      correctement les fichiers focdoc envers le dtd -->
+correctement les fichiers focdoc envers le dtd -->
 
 <!ATTLIST foc:focdoc xmlns:foc CDATA #REQUIRED> 
 
@@ -33,7 +33,7 @@
 <!ELEMENT foc:informations (foc:name?,foc:math?,foc:latex?,foc:comments*)>
 
 <!-- modif frederic : title et author ne sont pas des champs obligatoires -->
-<!--        Element modifié : <!ELEMENT general-informations (title,author,lang?,comments?)> -->
+<!-- Element modifié : <!ELEMENT general-informations (title,author,lang?,comments?)> -->
 
 <!ELEMENT foc:general-informations (foc:title?,foc:author?,foc:lang?,foc:comments?)>
 <!ELEMENT foc:title (#PCDATA)>
@@ -52,11 +52,11 @@
 <!ELEMENT foc:parameter (foc:foc-name,foc:type,foc:informations)>
 <!ATTLIST foc:parameter kind CDATA #REQUIRED >
 
-<!-- ajout frederic: Les élements inherits et implements ont été modifiés pour prendre en 
-                     compte les espèces paramétrées. Le contenu de inherits (de même que 
-                     pour implements) n'est plus foc-name mais de type atom ou app. 
-                       + atom pour préciser que l'espèce est atomique 
-                       + app pour les espèces paramétrées et leur paramètres effectifs -->
+<!-- ajout frederic: Les élements inherits et implements ont été modifiés pour
+prendre en compte les espèces paramétrées. Le contenu de inherits (de même que
+pour implements) n'est plus foc-name mais de type atom ou app. 
+ + atom pour préciser que l'espèce est atomique 
+ + app pour les espèces paramétrées et leur paramètres effectifs -->
                      
 <!-- Elements modifiés : <!ELEMENT inherits (foc-name)> 
                          <!ELEMENT implements (foc-name)> -->
