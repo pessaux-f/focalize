@@ -1,0 +1,26 @@
+use "basics" ;;
+open "basics" ;;
+use "wellfounded" ;;
+
+theorem zero_inf_one : int_lt (0, 1)
+proof = assumed {* Well known theorem ;) *}
+;;
+
+species Test_measure =
+  let true_gt_false (x in basics#bool) in basics#int =
+    match x with
+     | true -> 1
+     | false -> 0 ;
+
+  let rec f (y in basics#int, z in basics#bool) =
+       if z then f (y, false) else y
+  termination proof =
+    measure true_gt_false on z
+    <1>1 assume z in bool,
+         assume H: z = true,
+	 prove basics#int_lt (true_gt_false (false), true_gt_false (z))
+         by definition of zero_inf_one, true_gt_false
+            hypothesis H
+    <1>2 qed.
+  ;
+end ;;
