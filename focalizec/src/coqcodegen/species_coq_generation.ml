@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.152 2008-12-23 15:52:05 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.153 2009-01-08 15:40:57 doligez Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1571,7 +1571,7 @@ let rec zenonify_proof_node ~in_nested_proof ctx print_ctx env min_coq_env
           the default one if there is no new aim provided. *)
        let lemma_name = Parsetree.Vlident ("__" ^ section_name ^ "_LEMMA") in
        zenonify_proof
-         ~in_nested_proof: true ctx print_ctx env min_coq_env
+         ~in_nested_proof: true ~qed:false ctx print_ctx env min_coq_env
          dependencies_from_params available_hyps' available_steps section_name
          (ZSGM_from_logical_expr new_aim) lemma_name parent_proof_opt proof ;
        Format.fprintf out_fmter "End __%s.@]@\n" section_name ;
@@ -1589,7 +1589,7 @@ let rec zenonify_proof_node ~in_nested_proof ctx print_ctx env min_coq_env
           psa_assumed_lemmas = assumed_lemmas }]
        end)
    | Parsetree.PN_qed ((_label_num, _label_name), proof) ->
-       zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
+       zenonify_proof ~in_nested_proof ~qed:true ctx print_ctx env min_coq_env
          dependencies_from_params available_hyps available_steps
          section_name_seed aim_gen_method default_aim_name parent_proof_opt
          proof ;
@@ -1598,7 +1598,7 @@ let rec zenonify_proof_node ~in_nested_proof ctx print_ctx env min_coq_env
 
 
 (* Returns the **new** available steps found. *)
-and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
+and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
     dependencies_from_params available_hyps available_steps section_name_seed
     aim_gen_method aim_name parent_proof_opt proof =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -1733,7 +1733,7 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
           closest [Pf_node] hosting us is in our parent proof. *)
        let real_facts =
          (match facts with
-          | [] ->
+          | [] when qed ->
               let parent_proof_nodes =
                 (match parent_proof_opt with
                  | None -> None
@@ -1743,7 +1743,7 @@ and zenonify_proof ~in_nested_proof ctx print_ctx env min_coq_env
                       | _ -> assert false) in
               (* Make a pseudo list with all the encountered steps (node
                  labels). *)
-              [{ Parsetree.ast_loc = Location.none ;
+              [{ Parsetree.ast_loc = proof.Parsetree.ast_loc ;
                  Parsetree.ast_desc =
                    Parsetree.F_node (
                      match parent_proof_nodes with
@@ -1943,8 +1943,8 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
           auto-proof is ended because this will be done directly by
           [generate_defined_theorem]. *)
        ignore
-         (zenonify_proof ~in_nested_proof: false ctx print_ctx env min_coq_env
-            dependencies_from_params
+         (zenonify_proof ~in_nested_proof: false ~qed:true ctx print_ctx env
+            min_coq_env dependencies_from_params
             [(* No available hypothesis at the beginning. *)]
             [(* No available steps at the beginning. *)] section_name_seed
             logical_expr_or_term_stuff name
