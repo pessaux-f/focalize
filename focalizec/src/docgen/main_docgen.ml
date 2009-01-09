@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.18 2009-01-09 15:58:07 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.19 2009-01-09 18:06:44 pessaux Exp $ *)
 
 
 
@@ -274,14 +274,17 @@ let gendoc_species_expr out_fmt ~current_unit species_expr =
      | Parsetree.E_self ->
          Format.fprintf out_fmt "<foc:param>Self</foc:param>@\n"
      | Parsetree.E_constr (cstr_expr, []) ->
+         (begin
          let Parsetree.CI qvname = cstr_expr.Parsetree.ast_desc in
-         (* [TODO] DTD doesn't take care of parameters not hosted in
-            the current compilation unit. There is no "infile" attribute. *)
-         let vname =
-           match qvname with
-              Parsetree.Vname vn | Parsetree.Qualified (_, vn) -> vn in
-         Format.fprintf out_fmt "<foc:param>%a</foc:param>@\n"
-           Sourcify.pp_vname vname
+         match qvname with
+          | Parsetree.Vname vn ->
+              Format.fprintf out_fmt "<foc:param>%a</foc:param>@\n"
+                Sourcify.pp_vname vn
+          | Parsetree.Qualified (mod_name, vn) ->
+              Format.fprintf out_fmt
+                "<foc:param infile=\"%s\">%a</foc:param>@\n"
+                mod_name Sourcify.pp_vname vn
+         end)
      | Parsetree.E_paren e' -> rec_gen_species_param_expr e'
      | _ -> assert false in
   (* **************** *)
@@ -389,22 +392,32 @@ let gendoc_type out_fmt ty =
 
 
 
+(** Used for [qualified_vname]s that are not in a <identifier></identifier>
+    markup. Especially, those appearing in an [expr_ident] being a
+    [EI_method] must **not** be printed with this function since their hosting
+    information leads tp a "<foc:of-species></foc:of-species>" markup instead
+    of a "infile" attribute.
+*)
+let gendoc_qualified_vname_not_EI_method out_fmt qvname =
+  match qvname with
+   | Parsetree.Vname vname ->
+       Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+         Sourcify.pp_vname vname
+   | Parsetree.Qualified (mod_name, vname) ->
+       Format.fprintf out_fmt
+         "<foc:foc-name infile=\"%s\">%a</foc:foc-name>@\n"
+         mod_name Sourcify.pp_vname vname
+;;
+
+
+
 let gendoc_expr_ident out_fmt id =
   match id.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
        Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
          Sourcify.pp_vname vname
    | Parsetree.EI_global qvname ->
-       (begin
-       match qvname with
-        | Parsetree.Vname vname ->
-            Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
-              Sourcify.pp_vname vname
-        | Parsetree.Qualified (mod_name, vname) ->
-            Format.fprintf out_fmt
-              "<foc:foc-name infile=\"%s\">%a</foc:foc-name>@\n"
-              mod_name Sourcify.pp_vname vname
-       end)
+       gendoc_qualified_vname_not_EI_method out_fmt qvname
    | Parsetree.EI_method (qcoll_name_opt, vname) ->
        (begin
        Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
@@ -628,12 +641,46 @@ and gendoc_expression out_fmt initial_expression =
 (*
      | Parsetree.E_constr (cstr_expr, exprs) ->
      | Parsetree.E_match (expr, pat_exprs) ->
+*)
      | Parsetree.E_if (expr1, expr2, expr3) ->
+         Format.fprintf out_fmt "@[<h 2><foc:if-expr>@\n" ;
+         rec_gen expr1 ;
+         rec_gen expr2 ;
+         rec_gen expr3 ;
+         Format.fprintf out_fmt "@]</foc:if-expr>@\n"
+(*
      | Parsetree.E_let (let_def, expr) ->
+*)
      | Parsetree.E_record label_exprs ->
-     | Parsetree.E_record_access (expr, label_name) ->
+         Format.fprintf out_fmt "@[<h 2><foc:record-expr>@\n" ;
+         List.iter
+           (fun (label_ident, expr) ->
+             let (Parsetree.LI label) = label_ident.Parsetree.ast_desc in
+             gendoc_qualified_vname_not_EI_method out_fmt label ;
+             rec_gen expr)
+           label_exprs ;
+         Format.fprintf out_fmt "@]</foc:record-expr>@\n"
+     | Parsetree.E_record_access (expr, label_ident) ->
+         Format.fprintf out_fmt "@[<h 2><foc:record-access-expr>@\n" ;
+         rec_gen expr ;
+         let (Parsetree.LI label) = label_ident.Parsetree.ast_desc in
+         gendoc_qualified_vname_not_EI_method out_fmt label ;
+         Format.fprintf out_fmt "@]</foc:record-access-expr>@\n"
      | Parsetree.E_record_with (expr, label_exprs) ->
+         Format.fprintf out_fmt "@[<h 2><foc:record-with-expr>@\n" ;
+         rec_gen expr ;
+         List.iter
+           (fun (label_ident, expr) ->
+             let (Parsetree.LI label) = label_ident.Parsetree.ast_desc in
+             gendoc_qualified_vname_not_EI_method out_fmt label ;
+             rec_gen expr)
+           label_exprs ;
+         Format.fprintf out_fmt "@]</foc:record-with-expr>@\n"
      | Parsetree.E_tuple exprs ->
+         Format.fprintf out_fmt "@[<h 2><foc:tuple-expr>@\n" ;
+         List.iter rec_gen exprs ;
+         Format.fprintf out_fmt "@]</foc:tuple-expr>@\n"
+(*
      | Parsetree.E_external external_expr ->
 *)
      | Parsetree.E_paren expr ->
@@ -662,7 +709,10 @@ let gen_doc_theorem out_fmt from name lexpr doc =
   Format.fprintf out_fmt "@[<h 2><foc:proposition>@\n" ;
   gen_doc_proposition out_fmt lexpr ;
   Format.fprintf out_fmt "@]</foc:proposition>@\n" ;
-  (* foc:proof. *)              (* TODO *)
+  (* foc:proof. *)
+  Format.fprintf out_fmt "@[<h 2><foc:proof>@\n" ;
+  (* TODO. *)
+  Format.fprintf out_fmt "@]</foc:proof>@\n" ;
   Format.fprintf out_fmt "@]</foc:theorem>@\n"
 ;;
 
@@ -688,6 +738,7 @@ let gen_doc_property out_fmt from name lexpr doc =
 
 
 
+(* ************************************************************************ *)
 (** {b Descr}: Emits the XML code for the methods.
     We also take in parameter the list of fields of the species definition.
     We need it only to recover the documentation attached to each method.
@@ -695,7 +746,8 @@ let gen_doc_property out_fmt from name lexpr doc =
     under the form of [Env.TypeInformation.species_field]s, and in such
     structure we do not have the documentation of the fields.
 
-    {b Rem}: Not exported outside this module.                             *)
+    {b Rem}: Not exported outside this module.                              *)
+(* ************************************************************************ *)
 let gendoc_method out_fmt species_def_fields = function
   | Env.TypeInformation.SF_sig (from, n, sch) ->
       (begin
@@ -792,9 +844,9 @@ let gen_doc_pcm out_fmt ~current_unit = function
       Format.fprintf out_fmt "<foc:load>%s</foc:load>@\n" comp_unit
   | Infer.PCM_open (_, comp_unit) ->
       Format.fprintf out_fmt "<foc:open>%s</foc:open>@\n" comp_unit
-  | Infer.PCM_coq_require _ ->
-      (* [Fixme] DTD doesn't take care of the coq_require directive. *)
-      () (* TODO. *)
+  | Infer.PCM_coq_require comp_unit ->
+      Format.fprintf out_fmt
+        "<foc:coq-require>%s</foc:coq-require>@\n" comp_unit
   | Infer.PCM_type (_, _) ->
       (* foc:concrete-type *) () (* TODO. *)
   | Infer.PCM_let_def (_, _) ->

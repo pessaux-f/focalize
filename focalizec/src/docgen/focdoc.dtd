@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 <!-- FoCDoc DTD -->
-<!-- $Id: focdoc.dtd,v 1.5 2009-01-09 15:58:07 pessaux Exp $ -->
+<!-- $Id: focdoc.dtd,v 1.6 2009-01-09 18:06:44 pessaux Exp $ -->
 <!-- to describe the mathml equivalent of a particular function --> 
 
 <!-- mathml.dtd ne sera plus utilise dans le dtd. Les annotations mathml dans
@@ -14,7 +14,7 @@
 préciser  à partir de quel fichier .foc le fichier .focdoc a été généré -->
 
 <!ENTITY % foc:element "foc:global-fun|foc:concrete-type|foc:letprop|foc:theorem|foc:species|foc:collection">
-<!ELEMENT foc:focdoc (foc:foc-name,foc:general-informations,(%foc:element;)*,foc:load*,foc:open*)>
+<!ELEMENT foc:focdoc (foc:foc-name,foc:general-informations,(%foc:element;)*,foc:load*,foc:open*, foc:coq-require*)>
 
 <!-- ajout frederic : prefixer tout les elements de focdoc par le namespace 
 "foc" afin d'eviter des conflits avec d'autre dtd -->                    
@@ -111,17 +111,23 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 
 
 <!-- Expressions -->
-<!ENTITY % foc:expression "foc:identifier|foc:application|foc:symbol|foc:int|foc:string|foc:float|foc:bool|foc:char|foc:paren-expr|foc:fun">
+<!ENTITY % foc:expression "foc:identifier|foc:application|foc:symbol|foc:int|foc:string|foc:float|foc:bool|foc:char|foc:paren-expr|foc:fun-expr|foc:if-expr|foc:tuple-expr|foc:record-expr|foc:record-with-expr|foc:record-access-expr">
 
 <!-- Not yet used in XSLs. -->
 <!ELEMENT foc:paren-expr (%foc:expr;)>
-<!ELEMENT foc:fun (foc:name+, (%foc:expression;)*)>
+<!ELEMENT foc:fun-expr ((foc:name)+, (%foc:expression;)*)>
+<!ELEMENT foc:if-expr ((%foc:expression;), (%foc:expression;), (%foc:expression;)>
+<!ELEMENT foc:tuple-expr ((%foc:expression;))>
+<!ELEMENT foc:record-expr ((foc:record-label-and-expr)+)>
+<!ELEMENT foc:record-with-expr ((%foc:expr;), (foc:record-label-and-expr)+)>
+<!ELEMENT foc:record-access-expr ((%foc:expr;),foc:foc-name)>
 <!ELEMENT foc:bool EMPTY>
 <!ATTLIST foc:bool val CDATA #REQUIRED>
 <!ELEMENT foc:float EMPTY>
 <!ATTLIST foc:float val CDATA #REQUIRED>
 <!ELEMENT foc:char EMPTY>
 <!ATTLIST foc:char val CDATA #REQUIRED>
+<!ELEMENT foc:record-label-and-expr (foc:foc-name, (%foc:expression;))>
 <!-- /Not yet used in XSLs. -->
 
 <!ELEMENT foc:int EMPTY>
@@ -210,3 +216,4 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 
 <!ELEMENT foc:load (#PCDATA)>
 <!ELEMENT foc:open (#PCDATA)>
+<!ELEMENT foc:coq-require(#PCDATA)>
