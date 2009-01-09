@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 <!-- FoCDoc DTD -->
-<!-- $Id: focdoc.dtd,v 1.4 2009-01-07 15:27:05 pessaux Exp $ -->
+<!-- $Id: focdoc.dtd,v 1.5 2009-01-09 15:58:07 pessaux Exp $ -->
 <!-- to describe the mathml equivalent of a particular function --> 
 
 <!-- mathml.dtd ne sera plus utilise dans le dtd. Les annotations mathml dans
@@ -42,13 +42,15 @@ correctement les fichiers focdoc envers le dtd -->
 <!ELEMENT foc:lang (#PCDATA)>
 <!ELEMENT foc:comments (#PCDATA)>
 <!ELEMENT foc:foc-name (#PCDATA)>
+<!-- ajout virgile: pour savoir dans quel fichier une espèce est déclarée-->
+<!ATTLIST foc:foc-name infile CDATA #IMPLIED>
+
 <!ELEMENT foc:name (#PCDATA)>
 <!-- modif frederic: ajout de l'élément letprop à foc:component -->
 <!ENTITY % foc:component "foc:signature|foc:definition|foc:letprop|foc:theorem|foc:property|foc:carrier">
 <!ELEMENT foc:species (foc:foc-name,foc:informations,foc:parameter*,foc:inherits*,(%foc:component;)*)>
 <!ELEMENT foc:collection (foc:foc-name,foc:informations,foc:parameter*,foc:implements,(%foc:component;)*)>
-<!-- ajout virgile: pour savoir dans quel fichier une espèce est déclarée-->
-<!ATTLIST foc:foc-name infile CDATA #IMPLIED>
+
 <!-- /ajout -->
 <!ELEMENT foc:parameter (foc:foc-name,foc:type,foc:informations)>
 <!ATTLIST foc:parameter kind CDATA #REQUIRED >
@@ -105,18 +107,32 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 <!ELEMENT foc:theorem (foc:foc-name,foc:history?,foc:informations?,foc:proposition,foc:proof)>
 <!ELEMENT foc:proof ANY>
 <!ELEMENT foc:property (foc:foc-name,foc:history,foc:informations,foc:proposition)>
-<!-- expression -->
-<!ENTITY % foc:expression "foc:identifier|foc:application|foc:symbol|foc:int|foc:string">
-<!-- symbol is basically an identifier with special processing instructions
-     for mathml and/or latex -->
+
+
+
+<!-- Expressions -->
+<!ENTITY % foc:expression "foc:identifier|foc:application|foc:symbol|foc:int|foc:string|foc:float|foc:bool|foc:char|foc:paren-expr|foc:fun">
+
+<!-- Not yet used in XSLs. -->
+<!ELEMENT foc:paren-expr (%foc:expr;)>
+<!ELEMENT foc:fun (foc:name+, (%foc:expression;)*)>
+<!ELEMENT foc:bool EMPTY>
+<!ATTLIST foc:bool val CDATA #REQUIRED>
+<!ELEMENT foc:float EMPTY>
+<!ATTLIST foc:float val CDATA #REQUIRED>
+<!ELEMENT foc:char EMPTY>
+<!ATTLIST foc:char val CDATA #REQUIRED>
+<!-- /Not yet used in XSLs. -->
+
 <!ELEMENT foc:int EMPTY>
 <!ATTLIST foc:int val CDATA #REQUIRED>
 <!ELEMENT foc:string EMPTY>
 <!ATTLIST foc:string val CDATA #REQUIRED>
 
 <!-- modif frederic : remplacer le prefix math par foc -->
-<!-- element modifié : <!ELEMENT symbol (math:math?,latex?,identifier)> -->
 
+<!-- symbol is basically an identifier with special processing instructions
+     for mathml and/or latex -->
 <!ELEMENT foc:symbol (foc:math?,foc:latex?,foc:identifier)>
 
 <!-- ajout frederic : element foc:math -->
@@ -127,41 +143,30 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 <!ELEMENT foc:identifier (foc:foc-name,foc:of-species?)>
 <!ELEMENT foc:of-species (foc:foc-name)>
 <!ELEMENT foc:application ((%foc:expression;)*)>
-<!-- /expression -->
-<!-- proposition -->
+<!-- /Expressions -->
 
+
+
+
+<!-- Propositions (logical expressions) -->
 <!-- Dans le code focdoc.mlp4 l'élement f:equiv est utilisé mais n'est pas
      défini dans le dtd.
      Action : ajout de l'élement foc:equiv dans la liste des propositions. -->
-
-<!-- element modifié
-     <!ENTITY % proposition "all|ex|and|or|implies|not|(%expression;)"> -->
-
 <!ENTITY % foc:proposition "foc:all|foc:ex|foc:and|foc:or|foc:implies|foc:equiv|foc:not|(%foc:expression;)|foc:paren-logical-expr">
-
 <!ELEMENT foc:var (foc:foc-name)>
-
-<!-- element modifié <!ELEMENT all (var,type,(%proposition;))> -->
 <!ELEMENT foc:all (foc:var,foc:type,(%foc:proposition;))>
-
-<!-- element modifié <!ELEMENT ex (var,type,(%proposition;))> -->
 <!ELEMENT foc:ex (foc:var,foc:type,(%foc:proposition;))>
-
 <!ELEMENT foc:and ((%foc:proposition;),(%foc:proposition;))>
-
 <!ELEMENT foc:or ((%foc:proposition;),(%foc:proposition;))>
-
 <!ELEMENT foc:implies ((%foc:proposition;),(%foc:proposition;))>
-
-<!-- elements rajoutés -->
 <!ELEMENT foc:equiv ((%foc:proposition;),(%foc:proposition;))>
-
 <!ELEMENT foc:not (%foc:proposition;)>
-
+<!-- Not yet used in XSLs. -->
 <!ELEMENT foc:paren-logical-expr (%foc:proposition;)>
+<!-- /Propositions (logical expressions) -->
 
 
-<!-- /proposition -->
+
 <!ELEMENT foc:proposition (%foc:proposition;)>
 <!ELEMENT foc:carrier (foc:history,foc:informations,foc:ho?,foc:type)>
 <!ELEMENT foc:history (foc:initial-apparition,foc:comes-from)>
@@ -169,7 +174,10 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 <!ATTLIST foc:initial-apparition infile CDATA #IMPLIED>
 <!ELEMENT foc:comes-from (#PCDATA)>
 <!ATTLIST foc:comes-from infile CDATA #IMPLIED>
-<!-- type -->
+
+
+
+<!-- Type expressions -->
 <!ENTITY % foc:typ "foc:atom|foc:tvar|foc:fct|foc:prod|foc:prop|foc:self|
                 foc:abst|foc:ml|foc:ml-c|foc:prm|foc:app|foc:meth">
 <!ELEMENT foc:type (%foc:typ;)>
@@ -192,13 +200,13 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 <!-- ajout frederic : ajout de l'attribut infile pour param. Cet attribut sera 
      essentiellement utilisé pour indiquer dans quel fichier se trouve une
      fonction globale ou une collection passée en paramètre.  -->
-
 <!ELEMENT foc:param (#PCDATA)>
 <!ATTLIST foc:param infile CDATA #IMPLIED>
 
 <!ELEMENT foc:meth ((%foc:typ;),foc:foc-name)>
-<!-- /type -->
+<!-- /Type expressions -->
+
+
+
 <!ELEMENT foc:load (#PCDATA)>
 <!ELEMENT foc:open (#PCDATA)>
-
-

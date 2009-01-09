@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.17 2009-01-09 11:13:22 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.18 2009-01-09 15:58:07 pessaux Exp $ *)
 
 
 
@@ -275,7 +275,7 @@ let gendoc_species_expr out_fmt ~current_unit species_expr =
          Format.fprintf out_fmt "<foc:param>Self</foc:param>@\n"
      | Parsetree.E_constr (cstr_expr, []) ->
          let Parsetree.CI qvname = cstr_expr.Parsetree.ast_desc in
-         (* [Fixme] DTD doesn't take care of parameters not hosted in
+         (* [TODO] DTD doesn't take care of parameters not hosted in
             the current compilation unit. There is no "infile" attribute. *)
          let vname =
            match qvname with
@@ -336,6 +336,12 @@ let gendoc_inherits out_fmt ~current_unit species_def =
 
 
 
+(* ********************************************************************** *)
+(** {b Descr}: Emits the XML code for species parameters declaration in a
+    species definition.
+
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
 let gendoc_parameters out_fmt ~current_unit params =
   List.iter
     (fun (p_vname, p_kind) ->
@@ -383,6 +389,46 @@ let gendoc_type out_fmt ty =
 
 
 
+let gendoc_expr_ident out_fmt id =
+  match id.Parsetree.ast_desc with
+   | Parsetree.EI_local vname ->
+       Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+         Sourcify.pp_vname vname
+   | Parsetree.EI_global qvname ->
+       (begin
+       match qvname with
+        | Parsetree.Vname vname ->
+            Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+              Sourcify.pp_vname vname
+        | Parsetree.Qualified (mod_name, vname) ->
+            Format.fprintf out_fmt
+              "<foc:foc-name infile=\"%s\">%a</foc:foc-name>@\n"
+              mod_name Sourcify.pp_vname vname
+       end)
+   | Parsetree.EI_method (qcoll_name_opt, vname) ->
+       (begin
+       Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+         Sourcify.pp_vname vname ;
+       match qcoll_name_opt with
+        | None -> ()
+        | Some qvname ->
+            (begin
+            match qvname with
+             | Parsetree.Vname coll_vname ->
+                 Format.fprintf out_fmt
+                   "<foc:of-species><foc:foc-name>%a</foc:foc-name>\
+                   </foc:of-species>@\n"
+                   Sourcify.pp_vname coll_vname
+             | Parsetree.Qualified (mod_name, coll_vname) ->
+                 Format.fprintf out_fmt
+                   "<foc:of-species><foc:foc-name infile=\"%s\">%a\
+                   </foc:foc-name></foc:of-species>@\n"
+                   mod_name Sourcify.pp_vname coll_vname
+            end)
+       end)
+;;
+
+
 
 (* **************************************************** *)
 (** {b Descr}: Emits XML code for a [Env.from_history].
@@ -416,6 +462,30 @@ let gen_doc_logical_let out_fmt _ _ =
   Format.fprintf out_fmt "@[<h 2><foc:letprop>@\n" ;
   (* TODO. *)
   Format.fprintf out_fmt "@]</foc:letprop>@\n"
+;;
+
+
+
+(* ********************************************** *)
+(* Format.formatter -> Parsetree.constant -> unit *)
+(** {b Descr}: Emits the XML code for constants.
+
+    {b Rem}: Not exported outside this modole.    *)
+(* ********************************************** *)
+let gendoc_constant out_fmt cst =
+  match cst.Parsetree.ast_desc with
+   | Parsetree.C_int s ->
+       Format.fprintf out_fmt "<foc:int>\"%s\"</foc:int>@\n" s
+   | Parsetree.C_float s ->
+       Format.fprintf out_fmt "<foc:float>\"%s\"</foc:float>@\n" s
+   | Parsetree.C_bool s ->
+       Format.fprintf out_fmt "<foc:bool>\"%s\"</foc:bool>@\n" s
+   | Parsetree.C_string s ->
+       Format.fprintf out_fmt "<foc:string>\"%s\"</foc:string>@\n"
+         (xmlify_string s)
+   | Parsetree.C_char c ->
+       Format.fprintf out_fmt "<foc:char>\"%s\"</foc:char>@\n"
+         (xmlify_string (Char.escaped c))
 ;;
 
 
@@ -519,15 +589,60 @@ and gen_doc_proposition out_fmt initial_prop =
          Format.fprintf out_fmt "@[<h 2><foc:not>@\n" ;
          rec_gen lexpr ;
          Format.fprintf out_fmt "@]</foc:not>@\n"
-     | Parsetree.Pr_expr _expr ->
-         (* foc:expression. *) (* TODO *)
-         ()
+     | Parsetree.Pr_expr expr -> gendoc_expression out_fmt expr
      | Parsetree.Pr_paren lexpr ->
          (* foc:paren-logical-expr. *)
          Format.fprintf out_fmt "@[<h 2><foc:paren-logical-expr>@\n" ;
          rec_gen lexpr ;
          Format.fprintf out_fmt "@]</foc:paren-logical-expr>@\n" in
   rec_gen initial_prop
+
+
+
+and gendoc_expression out_fmt initial_expression =
+  let rec rec_gen expression =
+    match expression.Parsetree.ast_desc with
+     | Parsetree.E_self ->
+         Format.fprintf out_fmt "@[<h 2><foc:identifier>@\n" ;
+         Format.fprintf out_fmt "<foc:foc-name>Self</foc:foc-name>" ;
+         Format.fprintf out_fmt "@]</foc:identifier>@\n"
+     | Parsetree.E_const cst -> gendoc_constant out_fmt cst
+     | Parsetree.E_fun (vnames, expr) ->
+         Format.fprintf out_fmt "@[<h 2>foc:fun>\n" ;
+         List.iter
+           (fun vname ->
+             Format.fprintf out_fmt "<foc:name>%a</foc:name>@\n"
+               Sourcify.pp_vname vname)
+           vnames ;
+         rec_gen expr ;
+         Format.fprintf out_fmt "@]</foc:fun>@\n"
+     | Parsetree.E_var id ->
+         Format.fprintf out_fmt "@[<h 2><foc:identifier>@\n" ;
+         gendoc_expr_ident out_fmt id ;
+         Format.fprintf out_fmt "@]</foc:identifier>@\n"
+     | Parsetree.E_app (expr, exprs) ->
+         Format.fprintf out_fmt "@[<h 2><foc:application>@\n" ;
+         rec_gen expr ;
+         List.iter rec_gen exprs ;
+         Format.fprintf out_fmt "@]</foc:application>@\n"
+(*
+     | Parsetree.E_constr (cstr_expr, exprs) ->
+     | Parsetree.E_match (expr, pat_exprs) ->
+     | Parsetree.E_if (expr1, expr2, expr3) ->
+     | Parsetree.E_let (let_def, expr) ->
+     | Parsetree.E_record label_exprs ->
+     | Parsetree.E_record_access (expr, label_name) ->
+     | Parsetree.E_record_with (expr, label_exprs) ->
+     | Parsetree.E_tuple exprs ->
+     | Parsetree.E_external external_expr ->
+*)
+     | Parsetree.E_paren expr ->
+         Format.fprintf out_fmt "@[<h 2><foc:paren-expr>@\n" ;
+         rec_gen expr ;
+         Format.fprintf out_fmt "@]</foc:paren-expr>@\n"
+     | _ -> (* TODO. *) ()
+ in
+  rec_gen initial_expression
 ;;
 
 
@@ -640,11 +755,16 @@ let gendoc_method out_fmt species_def_fields = function
    | Env.TypeInformation.SF_property (from, n, _, body, _rep_deps) ->
        (* foc:property. *)
        let doc = find_documentation_of_method n species_def_fields in
-       gen_doc_theorem out_fmt from n body doc
+       gen_doc_property out_fmt from n body doc
 ;;
 
 
 
+(* ****************************************************************** *)
+(* {b Descr}: Emits the XML code for a species, including its fields.
+
+   {b Rem}: Not exported outside this module.                         *)
+(* ****************************************************************** *)
 let gendoc_species out_fmt ~current_unit species_def species_descr =
   Format.fprintf out_fmt "@[<h 2><foc:species>@\n" ;
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
