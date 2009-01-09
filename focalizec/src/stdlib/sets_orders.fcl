@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets_orders.fcl,v 1.20 2008-12-19 15:51:44 pessaux Exp $ *)
+(* $Id: sets_orders.fcl,v 1.21 2009-01-09 11:13:22 pessaux Exp $ *)
 
 (**
  @title FoC Project. Basic algebra.
@@ -194,7 +194,7 @@ end ;;
 
 (** pre orderings are sometimes called quasi orderings *)
 species Pre_order inherits Setoid =
-  (** leq(x,y) is x &le; y
+  (** leq(x,y) is x <= y
       @mathml <leq/> *)
   signature leq : Self -> Self -> bool;
 
@@ -269,7 +269,7 @@ species Partial_order inherits Pre_order =
 end
 ;;
 
-(** in a meet semi lattice we have an operation inducing an ordering (&lt;=)*)
+(** in a meet semi lattice we have an operation inducing an ordering (<=)*)
 species Meet_semi_lattice inherits Setoid =
   (** the infimum of two elements *)
   (* [rr]: need a mathml symbol for that,
@@ -396,7 +396,7 @@ end
 ;;
 
 
-(** in a join semi lattice we have an operation inducing an ordering (&gt;=) *)
+(** in a join semi lattice we have an operation inducing an ordering (>=) *)
 species Join_semi_lattice inherits Setoid =
 
   (** the supremum of two elements *)

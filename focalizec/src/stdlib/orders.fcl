@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: orders.fcl,v 1.5 2008-12-02 13:58:28 rr Exp $ *)
+(* $Id: orders.fcl,v 1.6 2009-01-09 11:13:22 pessaux Exp $ *)
 
 use "basics";;
 use "sets";;
@@ -22,7 +22,7 @@ open "sets";;
 
 (** pre orderings are sometimes called quasi orderings *)
 species Pre_order inherits Setoid =
-  (** leq(x,y) is x &le; y
+  (** leq(x,y) is x <= y
       @mathml <leq/> *)
   signature leq : Self -> Self -> bool;
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.153 2009-01-08 15:40:57 doligez Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.154 2009-01-09 11:13:22 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1748,8 +1748,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
                    Parsetree.F_node (
                      match parent_proof_nodes with
                      | None -> []
-                     | Some x -> find_only_PN_subs_in_proof_nodes x
-                   ) ;
+                     | Some x -> find_only_PN_subs_in_proof_nodes x) ;
                  Parsetree.ast_doc = [] ;
                  Parsetree.ast_type = Parsetree.ANTI_non_relevant }]
           | _ -> facts) in

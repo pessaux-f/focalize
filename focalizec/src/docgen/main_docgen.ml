@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.16 2009-01-07 16:24:28 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.17 2009-01-09 11:13:22 pessaux Exp $ *)
 
 
 
@@ -53,23 +53,212 @@ let get_in_file_and_name_from_ident ~current_unit ident =
 
 
 
+(* ************************************************************************ *)
+(** {b Descr}: Find amongst the fields of the species definition (i.e. the
+    structure representing the species in the AST) the one wearing the name
+    [meth_name] and get its documentation.
+    This is used to generate the documentation of a method since in the
+    [please_compile_me]s (on which we iterate the documentation generation
+    process) we do not have the comments. So we need to recover them for
+    each [please_compile_me] via the original AST structure of the species
+    fields.
 
+    {b Rem}: Not exported outside this module.                              *)
+(* ************************************************************************ *)
+let find_documentation_of_method meth_name species_def_fields =
+  (* Local function to perform search among the [binding]s of a [SF_let]. *)
+  let rec find_in_bindings = function
+    | [] -> None
+    | h :: q ->
+        if h.Parsetree.ast_desc.Parsetree.b_name = meth_name then
+          Some h.Parsetree.ast_doc
+        else find_in_bindings q in
+  (* Local function to perform search among the whole list of fields. *)
+  let rec rec_find = function
+    | [] ->
+        (* If the method is not agmonst the species definition fields that's
+           because the method is inherited. So that's normal not to find it.
+           We then return an empty documentation, i.e/ an empty list. *)
+        []
+    | h :: q ->
+        (begin
+        match h.Parsetree.ast_desc with
+         | Parsetree.SF_rep rep_type_def ->
+             if meth_name = (Parsetree.Vlident "rep") then
+               rep_type_def.Parsetree.ast_doc
+             else rec_find q
+         | Parsetree.SF_sig sig_def ->
+             if sig_def.Parsetree.ast_desc.Parsetree.sig_name = meth_name then
+               sig_def.Parsetree.ast_doc
+             else rec_find q
+         | Parsetree.SF_let let_def ->
+             (begin
+             match
+                find_in_bindings
+                  let_def.Parsetree.ast_desc.Parsetree.ld_bindings with
+              | Some doc -> doc
+              | None -> rec_find q
+             end)
+         | Parsetree.SF_property property_def ->
+             if property_def.Parsetree.ast_desc.Parsetree.prd_name = meth_name
+             then
+               property_def.Parsetree.ast_doc
+             else rec_find q
+         | Parsetree.SF_theorem theorem_def ->
+             if theorem_def.Parsetree.ast_desc.Parsetree.th_name = meth_name
+             then
+               theorem_def.Parsetree.ast_doc
+             else rec_find q
+         | Parsetree.SF_proof proof_def ->
+             if proof_def.Parsetree.ast_desc.Parsetree.pd_name = meth_name then
+               proof_def.Parsetree.ast_doc
+             else rec_find q
+         | Parsetree.SF_termination_proof term_proof_def ->
+             let found_among_profiles =
+               Handy.list_mem_custom_eq
+                 (fun profile n ->
+                   profile.Parsetree.ast_desc.Parsetree.tpp_name = n)
+                 meth_name
+                 term_proof_def.Parsetree.ast_desc.Parsetree.tpd_profiles in
+             if found_among_profiles then h.Parsetree.ast_doc
+             else rec_find q
+        end) in
+  (* ********************** *)
+  (* Now, let's do the job. *)
+  rec_find species_def_fields
+;;
+
+
+
+(* ************************************************************************** *)
+(* Parsetree.doc_elem list ->                                                 *)
+(*   ((string option * string option * string option *                        *)
+(*    (string option * string option * string option))                        *)
+(** {b Descr}: Searches the string related to all documentation tags known in
+    FoCaL.
+    If several occurences of a same tag are found, their related texts are
+    concatened together in their apparition order and separated by a newline.
+    {b Rem}: Not exported outside this module.                                *)
+(* ************************************************************************** *)
+let extract_tagged_info_from_documentation doc_elems =
+  let found_title = ref None in
+  let found_author = ref None in
+  let found_description = ref None in
+  let found_mathml = ref None in
+  let found_latex = ref None in
+  let found_untagged = ref None in
+  (* A local function to search the tags in an AST node. *)
+  List.iter
+    (fun { Parsetree.de_desc = s } ->
+      let lexbuf = Lexing.from_string s in
+      let continue = ref true in
+      (* We lex ther string until we reach its end, i.e. until we get a
+         non-tagged string being empty (i.e. ""). *)
+      while !continue do
+        match Doc_lexer.start lexbuf with
+         | Doc_lexer.DT_Author s ->
+             (match !found_author with
+              | None -> found_author := Some s
+              | Some old -> found_author := Some (old ^ "\n" ^ s))
+         | Doc_lexer.DT_Title s ->
+             (match !found_title with
+              | None -> found_title := Some s
+              | Some old -> found_title := Some (old ^ "\n" ^ s))
+         | Doc_lexer.DT_Description s ->
+             (match !found_description with
+              | None -> found_description := Some s
+              | Some old -> found_description := Some (old ^ "\n" ^ s))
+         | Doc_lexer.DT_MathMl s ->
+             (match !found_mathml with
+              | None -> found_mathml := Some s
+              | Some old -> found_mathml := Some (old ^ "\n" ^ s))
+         | Doc_lexer.DT_LaTeX s ->
+             (match !found_latex with
+              | None -> found_latex := Some s
+              | Some old -> found_latex := Some (old ^ "\n" ^ s))
+         | Doc_lexer.DT_None "" -> continue := false
+         | Doc_lexer.DT_None s ->
+             (match !found_untagged with
+              | None -> found_untagged := Some s
+              | Some old -> found_untagged := Some (old ^ "\n" ^ s))
+      done)
+    doc_elems ;
+  (!found_title, !found_author, !found_description, !found_mathml,
+   !found_latex, !found_untagged)
+;;
+
+
+
+(* ************************************************************************** *)
+(* Parsetree.file_desc Parsetree.ast ->                                       *)
+(*   (string option * string option * string option)                          *)
+(** {b Descr}: Searches the string related to the 3 documentation tags
+    "@title ", "@author ", "@description ". These 3 tags are used to generate
+    the header of the XML file.
+    Since these 3 tags may appear in a documentation that is not attached to
+    the toplevel node of the AST (for instance if the source file starts with
+    a comment looking like a documentation because it is a sequence of stars,
+    exactly like we did in the comment of this function), we also search in
+    the documentation attached to the first definition of the source file.
+
+    {b Rem}: Not exported outside this module.                                *)
+(* ************************************************************************** *)
+let find_title_author_and_description ast_root =
+  (* Do the job on the top node of the AST. We lex the documentation and
+     look at the informations we found inside. *)
+  let (found_title, found_author, found_description, _, _, _) =
+    extract_tagged_info_from_documentation ast_root.Parsetree.ast_doc in
+  (* Then do the same thing on the AST node of the first definition of the
+     source file. *)
+  match ast_root.Parsetree.ast_desc with
+   | Parsetree.File [] ->
+       (* So, the source file is empty (with no definition). Nothing new and
+          be happy with what we may have found before on the toplevel AST
+          node. *)
+       (found_title, found_author, found_description)
+   | Parsetree.File (first :: _) ->
+       let (found_title', found_author', found_description', _, _, _) =
+         extract_tagged_info_from_documentation first.Parsetree.ast_doc in
+       (* Now, just return what we found, always prefering the items found
+          in the first AST node. *)
+       let final_title =
+         (match found_title with
+          | None -> found_title' | Some _ -> found_title) in
+       let final_author =
+         (match found_author with
+          | None -> found_author' | Some _ -> found_author) in
+       let final_description =
+         (match found_description with
+          | None -> found_description' | Some _ -> found_description) in
+       (final_title, final_author, final_description)
+;;
+
+
+
+(* ********************************************************************** *)
+(* Format.formatter -> string option -> string option -> string option -> *)
+(*   Parsetree.doc_elem list -> unit                                      *)
+(* {b Descr}: Generates the "<foc:information>" section from the optional
+    values for each element of "<foc:information>" in the DTD.
+
+   {b Rem}: Not exported outside this module.                             *)
+(* ********************************************************************** *)
 let gendoc_foc_informations out_fmt name_opt math_opt latex_opt comments =
   Format.fprintf out_fmt "@[<h 2><foc:informations>@\n" ;
   (match name_opt with
    | None -> ()
-   | Some _ -> failwith "To do Focdoc 1") ;
+   | Some s -> Format.fprintf out_fmt "<foc:name>%s</foc:name>@\n" s) ;
   (match math_opt with
    | None -> ()
-   | Some _ -> failwith "To do Focdoc 2") ;
+   | Some s -> Format.fprintf out_fmt "<foc:math>%s</foc:math>@\n" s) ;
   (match latex_opt with
    | None -> ()
-   | Some _ -> failwith "To do Focdoc 3") ;
-  List.iter
-    (fun { Parsetree.de_desc = s } ->
-      let s = xmlify_string s in
-      Format.fprintf out_fmt "<foc:comments>%s</foc:comments>@\n" s)
-    comments ;
+   | Some s -> Format.fprintf out_fmt "<foc:latex>%s</foc:latex>@\n" s) ;
+  (match comments with
+   | None -> ()
+   | Some s ->
+       let s = xmlify_string s in
+       Format.fprintf out_fmt "<foc:comments>%s</foc:comments>@\n" s) ;
   Format.fprintf out_fmt "@]</foc:informations>@\n" ;
 ;;
 
@@ -171,8 +360,10 @@ let gendoc_parameters out_fmt ~current_unit params =
            Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
            gendoc_species_expr out_fmt ~current_unit species_expr ;
            Format.fprintf out_fmt "@]</foc:type>@\n") ;
-      (* The comments and other informative stuff. *)
-      gendoc_foc_informations out_fmt None None None  p_kind.Parsetree.ast_doc ;
+      (* <foc:informations>. The comments and other informative stuff. *)
+      let (_, _, i_descrip, i_mathml, i_latex, i_other) =
+        extract_tagged_info_from_documentation p_kind.Parsetree.ast_doc in
+      gendoc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
       Format.fprintf out_fmt "@]</foc:parameter>@\n")
     params
 ;;
@@ -221,7 +412,7 @@ let gendoc_history out_fmt from_hist =
 
 
 
-let gen_doc_logical_let out_fmt _ =
+let gen_doc_logical_let out_fmt _ _ =
   Format.fprintf out_fmt "@[<h 2><foc:letprop>@\n" ;
   (* TODO. *)
   Format.fprintf out_fmt "@]</foc:letprop>@\n"
@@ -229,7 +420,7 @@ let gen_doc_logical_let out_fmt _ =
 
 
 
-let gen_doc_computational_let out_fmt from name sch rec_flag _body =
+let gen_doc_computational_let out_fmt from name sch rec_flag _body doc =
   let attr_rec_string =
     (match rec_flag with
      | Parsetree.RF_rec -> " recursive=\"yes\""
@@ -240,7 +431,11 @@ let gen_doc_computational_let out_fmt from name sch rec_flag _body =
     Sourcify.pp_vname name ;
   (* foc:history. *)
   gendoc_history out_fmt from ;
-  (* foc:informations,foc:ho?. *) (* TODO *)
+  (* foc:informations. *)
+  let (_, _, i_descrip, i_mathml, i_latex, i_other) =
+    extract_tagged_info_from_documentation doc in
+  gendoc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
+  (* foc:ho?. *) (* TODO *)
   (* foc:type. *)
   gendoc_type out_fmt (Types.specialize sch) ;
   Format.fprintf out_fmt "@]</foc:definition>@\n"
@@ -337,14 +532,17 @@ and gen_doc_proposition out_fmt initial_prop =
 
 
 
-let gen_doc_theorem out_fmt from name lexpr =
+let gen_doc_theorem out_fmt from name lexpr doc =
   Format.fprintf out_fmt "@[<h 2><foc:theorem>@\n" ;
   (* foc:foc-name. *)
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
     Sourcify.pp_vname name ;
   (* foc:history. *)
   gendoc_history out_fmt from ;
-  (* foc:informations. *)             (* TODO *)
+  (* foc:informations. *)
+  let (_, _, i_descrip, i_mathml, i_latex, i_other) =
+    extract_tagged_info_from_documentation doc in
+  gendoc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
   (* foc:proposition. *)
   Format.fprintf out_fmt "@[<h 2><foc:proposition>@\n" ;
   gen_doc_proposition out_fmt lexpr ;
@@ -355,14 +553,17 @@ let gen_doc_theorem out_fmt from name lexpr =
 
 
 
-let gen_doc_property out_fmt from name lexpr =
+let gen_doc_property out_fmt from name lexpr doc =
   Format.fprintf out_fmt "@[<h 2><foc:property>@\n" ;
   (* foc:foc-name. *)
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
     Sourcify.pp_vname name ;
   (* foc:history. *)
   gendoc_history out_fmt from ;
-  (* foc:informations. *)         (* TODO *)
+  (* foc:informations. *)
+  let (_, _, i_descrip, i_mathml, i_latex, i_other) =
+    extract_tagged_info_from_documentation doc in
+  gendoc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
   (* foc:proposition. *)
   Format.fprintf out_fmt "@[<h 2><foc:proposition>@\n" ;
   gen_doc_proposition out_fmt lexpr ;
@@ -372,16 +573,30 @@ let gen_doc_property out_fmt from name lexpr =
 
 
 
-let gendoc_method out_fmt = function
+(** {b Descr}: Emits the XML code for the methods.
+    We also take in parameter the list of fields of the species definition.
+    We need it only to recover the documentation attached to each method.
+    In effect, in the [please_compile_me], we record the list of fields
+    under the form of [Env.TypeInformation.species_field]s, and in such
+    structure we do not have the documentation of the fields.
+
+    {b Rem}: Not exported outside this module.                             *)
+let gendoc_method out_fmt species_def_fields = function
   | Env.TypeInformation.SF_sig (from, n, sch) ->
       (begin
+      (* Factorise the code: directly get the documentation for the 2 cases ! *)
+      let doc = find_documentation_of_method n species_def_fields in
+      let (_, _, i_descrip, i_mathml, i_latex, i_other) =
+        extract_tagged_info_from_documentation doc in
       (* foc:signature, foc:carrier. *)
       if n = (Parsetree.Vlident "representation") then
         (begin
         Format.fprintf out_fmt "@[<h 2><foc:carrier>@\n" ;
         (* foc:history. *)
         gendoc_history out_fmt from ;
-        (* foc:informations, foc:ho?. *) (* TODO. *)
+        (* foc:informations. *)
+        gendoc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
+        (* foc:ho?. *) (* TODO. *)
         (* foc:type. *)
         gendoc_type out_fmt (Types.specialize sch) ;
         Format.fprintf out_fmt "@]</foc:carrier>@\n"
@@ -394,32 +609,38 @@ let gendoc_method out_fmt = function
         Format.fprintf out_fmt "<foc:foc-name>%s</foc:foc-name>@\n" n_as_xml ;
         (* foc:history. *)
         gendoc_history out_fmt from ;
-        (* foc:informations, foc:ho?. *) (* TODO. *)
+        (* foc:informations. *)
+        gendoc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
+        (* foc:ho?. *) (* TODO. *)
         (* foc:type. *)
         gendoc_type out_fmt (Types.specialize sch) ;
         Format.fprintf out_fmt "@]</foc:signature>@\n"
         end)
       end)
-  | Env.TypeInformation.SF_let
-         (from, n, _parms, sch, body, _otp, _rep_deps, lflags) ->
-      (begin
-      (* foc:definition, foc:letprop. *)
-      match lflags.Env.TypeInformation.ldf_logical with
-       | Parsetree.LF_logical ->
-           gen_doc_logical_let out_fmt body
-       | Parsetree.LF_no_logical ->
-           gen_doc_computational_let
-             out_fmt from n sch lflags.Env.TypeInformation.ldf_recursive body
-      end)
-  | Env.TypeInformation.SF_let_rec _l ->
-      (* foc:definition, foc:letprop. *)
-      ()
-  | Env.TypeInformation.SF_theorem (from, n, _, body, _proof, _rep_deps) ->
-      (* foc:theorem. *)
-      gen_doc_theorem out_fmt from n body
-  | Env.TypeInformation.SF_property (from, n, _, body, _rep_deps) ->
-      (* foc:property. *)
-      gen_doc_theorem out_fmt from n body
+   | Env.TypeInformation.SF_let
+       (from, n, _parms, sch, body, _otp, _rep_deps, lflags) ->
+         (begin
+         (* foc:definition, foc:letprop. *)
+         let doc = find_documentation_of_method n species_def_fields in
+         match lflags.Env.TypeInformation.ldf_logical with
+          | Parsetree.LF_logical ->
+              gen_doc_logical_let out_fmt body doc
+          | Parsetree.LF_no_logical ->
+              gen_doc_computational_let
+                out_fmt from n sch lflags.Env.TypeInformation.ldf_recursive body
+                doc
+         end)
+   | Env.TypeInformation.SF_let_rec _l ->
+       (* foc:definition, foc:letprop. *)  (* TODO *)
+       ()
+   | Env.TypeInformation.SF_theorem (from, n, _, body, _proof, _rep_deps) ->
+       (* foc:theorem. *)
+       let doc = find_documentation_of_method n species_def_fields in
+       gen_doc_theorem out_fmt from n body doc
+   | Env.TypeInformation.SF_property (from, n, _, body, _rep_deps) ->
+       (* foc:property. *)
+       let doc = find_documentation_of_method n species_def_fields in
+       gen_doc_theorem out_fmt from n body doc
 ;;
 
 
@@ -429,7 +650,9 @@ let gendoc_species out_fmt ~current_unit species_def species_descr =
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
     Sourcify.pp_vname species_def.Parsetree.ast_desc.Parsetree.sd_name ;
   (* Information: foc:informations. *)
-  gendoc_foc_informations out_fmt None None None species_def.Parsetree.ast_doc ;
+  let (_, _, i_descrip, i_mathml, i_latex, i_other) =
+    extract_tagged_info_from_documentation species_def.Parsetree.ast_doc in
+  gendoc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
   (* Parameters: foc:parameter*. *)
   gendoc_parameters
     out_fmt ~current_unit species_def.Parsetree.ast_desc.Parsetree.sd_params ;
@@ -437,7 +660,7 @@ let gendoc_species out_fmt ~current_unit species_def species_descr =
   gendoc_inherits out_fmt ~current_unit species_def ;
   (* Methods: (%foc:component;)*. *)
   List.iter
-    (gendoc_method out_fmt)
+    (gendoc_method out_fmt species_def.Parsetree.ast_desc.Parsetree.sd_fields)
     species_descr.Env.TypeInformation.spe_sig_methods ;
   Format.fprintf out_fmt "@]</foc:species>@\n@\n" ;
 ;;
@@ -463,64 +686,6 @@ let gen_doc_pcm out_fmt ~current_unit = function
       gendoc_species out_fmt ~current_unit species_def species_descr
   | Infer.PCM_collection (_col_def, _col_description, _) ->
       (* foc:collection *) () (* TODO. *)
-;;
-
-
-
-(* ************************************************************************** *)
-(* Parsetree.file_desc Parsetree.ast ->                                       *)
-(*   (string option * string option * string option)                          *)
-(** {b Descr}: Searches the string related to the 3 documentation tags
-    "@title ", "@author ", "@description ". These 3 tags are used to generate
-    the header of the XML file.
-    Since these 3 tags may appear in a documentation that is not attached to
-    the toplevel node of the AST (for instance if the source file starts with
-    a comment looking like a documentation because it is a sequence of stars,
-    exactly like we did in the comment of this function), we also search in
-    the documentation attached to the first definition of th'e source file.
-
-    {b Rem}: Not exported outside this module.                                *)
-(* ************************************************************************** *)
-let find_title_author_and_description ast_root =
-  let found_title = ref None in
-  let found_author = ref None in
-  let found_description = ref None in
-  (* A local function to search the tags in an AST node. It will be used on
-     the toplevel AST node and on the first AST definition's node in case the
-     documentation was not attached to the toplevel AST node. In case there
-     is several times the same tag, it always keep the first one found. *)
-  let hunt ast_node =
-    List.iter
-      (fun { Parsetree.de_desc = s } ->
-        let lexbuf = Lexing.from_string s in
-	let continue = ref true in
-	(* We lex ther string until we reach its end, i.e. until we get a
-	   non-tagged string being empty (i.e. ""). *)
-	while !continue do
-          match Doc_lexer.start lexbuf with
-           | Doc_lexer.DT_Author s ->
-               if !found_author = None then found_author := Some s
-           | Doc_lexer.DT_Title s ->
-               if !found_title = None then found_title := Some s
-           | Doc_lexer.DT_Description s ->
-               if !found_description = None then found_description := Some s
-	   | Doc_lexer.DT_None "" -> continue := false
-           | _ -> ()   (* Ignore other tags. *)
-	done)
-      ast_node.Parsetree.ast_doc in
-  (* Do the job on the top node of the AST. We lex the documentation and
-     look at the informations we found inside. *)
-  hunt ast_root ;
-  (* Then do the same thing on the AST node of the first definition of the
-     source file. *)
-  (match ast_root.Parsetree.ast_desc with
-   | Parsetree.File [] ->
-       (* So, the source file is empty (with no definition). Do nothing and be
-          happy with what we may have found before on the toplevel AST node. *)
-       ()
-   | Parsetree.File (first :: _) -> hunt first) ;
-  (* Now, just return what we found. *)
-  (!found_title, !found_author, !found_description)
 ;;
 
 
