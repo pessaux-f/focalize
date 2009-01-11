@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.40 2009-01-11 15:55:34 weis Exp $
+# $Id: configure,v 1.41 2009-01-11 16:23:07 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -56,10 +56,17 @@ set_default_gs () {
   done
 }
 
+set_default_xmlrpc () {
+  for i in xmlrpc; do
+    if check $i; then DEFAULT_XMLRPC=$i; break; fi
+  done
+}
+
 set_command_defaults () {
   set_default_sum;
   set_default_convert;
   set_default_gs;
+  set_default_xmlrpc;
 }
 
 #
@@ -114,7 +121,7 @@ set_intrinsic_defaults () {
 
   # Intrinsic defaults for Zvtov.
   DEFAULT_USE_XMLRPC=false
-  DEFAULT_XMLRPC="xmlrpc"
+  DEFAULT_XMLRPC=:
   DEFAULT_XMLRPC_MODULE="xmlrpc"
   DEFAULT_XMLRPC_FLAGS=""
   DEFAULT_XMLRPC_LINK=""
@@ -187,14 +194,18 @@ set_intrinsic () {
 
   # Intrinsic settings for Zvtov.
   if test -z "$USE_XMLRPC"; then USE_XMLRPC=${DEFAULT_USE_XMLRPC}; fi
-  if test -z "$XMLRPC_MODULE"; then XMLRPC_MODULE=${DEFAULT_XMLRPC_MODULE}; fi
+  if test -z $XMLRPC; then XMLRPC="$DEFAULT_XMLRPC"; else
+    if check $XMLRPC; then :; else
+      abort_configuration "unavailable command $XMLRPC.";
+      abort_remedy "Choose an executable xmlrpc command."
+    fi
+  fi
+
   if $USE_XMLRPC; then
-    # set_XMLRPC;
-    if test -z "$XMLRPC"; then XMLRPC="$DEFAULT_XMLRPC"; else
-      if check $XMLRPC; then :; else
-        abort_configuration "unavailable command $XMLRPC.";
-        abort_remedy "Choose an executable xmlrpc command."
-      fi
+    # Check_XMLRPC;
+    if check $XMLRPC; then :; else
+      abort_configuration "unavailable command $XMLRPC.";
+      abort_remedy "Choose an executable xmlrpc command."
     fi
     # set_XMLRPC_FLAGS;
     if test -z "$XMLRPC_FLAGS"; then
@@ -216,11 +227,9 @@ set_intrinsic () {
     if $USE_XMLRPC; then
       if test -z $XMLRPC_MODULE; then
         XMLRPC_MODULE="${DEFAULT_XMLRPC_MODULE}"
-      else
-        XMLRPC_MODULE=""
       fi
     fi
-  fi;
+  fi
 
 }
 
