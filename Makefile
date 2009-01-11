@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.35 2008-12-24 14:11:46 weis Exp $
+# $Id: Makefile,v 1.36 2009-01-11 14:44:28 weis Exp $
 
 ROOT_DIR = .
 
@@ -26,7 +26,7 @@ include $(ROOT_DIR)/Makefile.config
 
 ALL_SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(INTERNAL_TOOLS_DIRS)
 
-#include $(ROOT_DIR)/Makefile.common
+include $(ROOT_DIR)/Makefile.common
 
 .PHONY: build_internal_tools clean_internal_tools
 .PHONY: build_external_tools clean_external_tools

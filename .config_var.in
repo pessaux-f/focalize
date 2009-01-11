@@ -1,5 +1,5 @@
-#  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.18 2008-12-27 19:15:05 weis Exp $
+#  Copyright 2008 INRIA
+#  $Id: .config_var.in,v 1.19 2009-01-11 14:44:28 weis Exp $
 
 #
 # The project identity card.
@@ -27,7 +27,7 @@ DOC_DIR=@DOC_DIR@
 MAN_DIR=@MAN_DIR@
 
 # The directories where the project installs its own specific versions
-# of mandatory external tools binaries and libraries.
+# of mandatory external tools binaries and libraries (if any).
 SHARE_PROJECT_PREFIX=@SHARE_PROJECT_PREFIX@
 SHARE_PROJECT_DIR=@SHARE_PROJECT_DIR@
 SHARE_PROJECT_BIN_DIR=@SHARE_PROJECT_BIN_DIR@
@@ -36,27 +36,29 @@ SHARE_PROJECT_MAN_DIR=@SHARE_PROJECT_MAN_DIR@
 SHARE_PROJECT_DOC_DIR=@SHARE_PROJECT_DOC_DIR@
 
 #
-# External tools installed by the configuration phase.
+# External tools settings.
 #
-# Caml compilers.
+# Caml tools settings.
 CAML_BIN_DIR=@CAML_BIN_DIR@
 CAML_LIB_DIR=@CAML_LIB_DIR@
 CAML_BYT=@CAML_BYT@
 CAML_BIN=@CAML_BIN@
-CAML_YAC=@CAML_YAC@
 CAML_LEX=@CAML_LEX@
+CAML_YAC=@CAML_YAC@
+CAML_DEP=@CAML_DEP@
 # Compilation flags for Caml.
 BYT_DEBUG_FLAGS=@BYT_DEBUG_FLAGS@
 BIN_DEBUG_FLAGS=@BIN_DEBUG_FLAGS@
 
 # Camlp5 settings.
-CAMLP5_DIR=@CAMLP5_DIR@
+CAMLP5_LIB_DIR=@CAMLP5_LIB_DIR@
 
 # Coq settings.
 COQ_LIB_DIR=@COQ_LIB_DIR@
 COQ_CAML_DIR=@COQ_CAML_DIR@
-COQC=@COQC@
 COQRC=@COQRC@
+COQC=@COQC@
+COQ_DEP=@COQ_DEP@
 COQ_MAKE=@COQ_MAKE@
 
 #
@@ -71,7 +73,6 @@ USE_COQC=@USE_COQC@
 ZVTOV_LIB_DIR=@ZVTOV_LIB_DIR@
 ZVTOV=@ZVTOV@
 USE_XMLRPC=@USE_XMLRPC@
-XMLRPC=@XMLRPC@
 XMLRPC_FLAGS=@XMLRPC_FLAGS@
 XMLRPC_LINK=@XMLRPC_LINK@
 XMLRPC_MODULE=@XMLRPC_MODULE@
@@ -86,3 +87,5 @@ GS=@GS@
 
 # External tools for zvtov
 XMLRPC=@XMLRPC@
+
+# Aliases for this tool.
