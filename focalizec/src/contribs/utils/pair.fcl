@@ -174,7 +174,7 @@ proof of def_equal1 =
    
   <2>0 qed by step <2>3, <2>4 property def_equal
 
-<1>0 qed.
+<1>0 conclude
 ;
 
 proof of  equal_reflexive =
@@ -188,7 +188,7 @@ proof of  equal_reflexive =
 
    <2>0 qed by step <2>1 property unicite_1, equal_transitive
 
-<1>0 qed.
+<1>0 conclude
 ;
 
 proof of  equal_reflexive2 =
@@ -217,7 +217,7 @@ proof of  equal_symmetric =
 
   <2>0 qed  by step <2>4 property unicite_1, equal_transitive
 
-<1>0 qed.
+<1>0 conclude
 ;
 
 proof of  equal_symmetric2 =
@@ -242,7 +242,7 @@ proof of  equal_symmetric2 =
   by property def_equal1
 
   <2>0 qed by hypothesis H1 step <2>1, <2>2, <2>3
-<1>0 qed.
+<1>0 conclude
 ;
 
 proof of  equal_transitive =
@@ -260,7 +260,7 @@ proof of  equal_transitive =
   <2>3 prove (S1!equal(!prj_a(p1), !prj_a(p3)) /\ S2!equal(!prj_b(p1), !prj_b(p3)))
     by step <2>1, <2>2 property S1!equal_transitive, S2!equal_transitive
   <2>0 qed by step <2>3 property def_equal
-<1>0 qed.
+<1>0 conclude
 ;
 
 proof of  equal_transitive2 =
@@ -284,7 +284,7 @@ proof of  equal_transitive2 =
     by hypothesis H2 property def_equal1
     <2>0 qed by step <2>1, <2>2, <2>3 
            property S1!equal_transitive, S2!equal_transitive
-<1>0 qed.
+<1>0 conclude
 ;
 
 end ;;
