@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.10 2009-01-11 01:42:30 weis Exp $
+# $Id: Makefile,v 1.11 2009-01-11 02:27:29 weis Exp $
 
 ROOT_DIR = ../..
 
@@ -31,26 +31,35 @@ lib: all
 
 byt bin::
 	for i in $(SUB_DIRS); do \
-	  echo "$$i ..."; \
-	  ($(CD) $$i && $(MAKE) all) \
+	  echo "--> $$i ..."; \
+	  ($(CD) $$i && $(MAKE) all) || exit; \
+	  echo "<-- $$i"; \
         done
 
 clean::
 	for i in $(SUB_DIRS); do \
-	  ($(CD) $$i && $(MAKE) clean) \
+	  echo "--> $$i ..."; \
+	  ($(CD) $$i && $(MAKE) clean) || exit; \
+	  echo "<-- $$i"; \
         done
 
 doc::
 	for i in $(SUB_DIRS); do \
-	  ($(CD) $$i && $(MAKE) doc) \
+	  echo "--> $$i ..."; \
+	  ($(CD) $$i && $(MAKE) doc) || exit; \
+	  echo "<-- $$i"; \
 	done
 
 install::
 	for i in $(SUB_DIRS); do \
-	  ($(CD) $$i && $(MAKE) install) \
+	  echo "--> $$i ..."; \
+	  ($(CD) $$i && $(MAKE) install) || exit; \
+	  echo "<-- $$i"; \
 	done
 
 depend::
 	for i in $(SUB_DIRS); do \
-	  ($(CD) $$i && $(MAKE) depend) \
+	  echo "--> $$i ..."; \
+	  ($(CD) $$i && $(MAKE) depend) || exit; \
+	  echo "<-- $$i"; \
 	done
