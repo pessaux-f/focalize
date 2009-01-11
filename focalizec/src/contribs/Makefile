@@ -5,6 +5,7 @@
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
 #            Damien Doligez                                            #
+#                                                                      #
 #                               LIP6  --  INRIA Rocquencourt           #
 #                                                                      #
 #  Copyright 2008 LIP6 and INRIA                                       #
@@ -12,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.9 2008-12-23 13:36:16 doligez Exp $
+# $Id: Makefile,v 1.10 2009-01-11 01:42:30 weis Exp $
 
 ROOT_DIR = ../..
 
@@ -21,8 +22,8 @@ include $(ROOT_DIR)/Makefile.config
 # Fill here to add a new directory for a new contribution
 SUB_DIRS = \
 	utils \
-	voter \
-	automata
+#	voter \
+#	automata
 
 include $(ROOT_DIR)/Makefile.common
 
