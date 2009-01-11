@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.11 2008-12-23 13:00:58 doligez Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.12 2009-01-11 01:30:39 weis Exp $ *)
 
 (**
 
@@ -219,7 +219,7 @@ species Ensembles_finis (A is Setoid) inherits Partial_order =
                     int_lt_irrefl, !incl_card, int_le_antisymm
            definition of equal, basics#( <0x )
            step <2>1
-    <1>f qed.
+    <1>f conclude
    ;
 
   (** Le cardinal de l'union est au plus la somme des cardinaux. *)
@@ -374,7 +374,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
         induction s.
         apply __Q_1_LEMMA.
         apply __Q_2_LEMMA; auto.
-        Qed.
+        Conclude
       *}
   ;
 (*

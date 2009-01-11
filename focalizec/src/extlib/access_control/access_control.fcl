@@ -1391,7 +1391,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
         <2>f qed
              by step <2>2, <2>3
                 property Rr!get_or_rel
-      <1>f qed.
+      <1>f conclude
   ;
 
   theorem tau_rbac_acc_r_correct :
@@ -1614,7 +1614,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
         <2>f qed
              by step <2>2, <2>3
                 property Rr!get_or_rel
-      <1>f qed.
+      <1>f conclude
   ;
 
   theorem tau_rbac_acc_r_correct_bis :
@@ -1761,7 +1761,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
         <2>f qed
              by step <2>2, <2>3
                 property Rr!get_or_rel
-      <1>f qed.
+      <1>f conclude
   ;
 
   theorem tau_rbac_adm_secure :
@@ -2388,7 +2388,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                   property secure_state
         <2>f qed
              by step <2>1, <2>2, <2>3, <2>4, <2>5
-      <1>f qed.
+      <1>f conclude
   ;
 
   theorem tau_rbac_secure :
@@ -2677,7 +2677,7 @@ species Model_hru (Rh is Rho,
          <2>f qed
               by step <2>2, <2>3
                  property R!get_or_rel
-       <1>f qed.
+       <1>f conclude
   ;
 
   theorem tau_hru_correct :
@@ -2897,7 +2897,7 @@ species Model_hru (Rh is Rho,
          <2>f qed
               by step <2>2, <2>3
                  property R!get_or_rel
-       <1>f qed.
+       <1>f conclude
   ;
 
   theorem tau_hru_correct_bis :
@@ -3039,7 +3039,7 @@ species Model_hru (Rh is Rho,
         <2>f qed
              by step <2>2, <2>3
                 property R!get_or_rel
-      <1>f qed.
+      <1>f conclude
   ;
 
 end ;;
