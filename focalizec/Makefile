@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.28 2009-01-06 18:22:36 pessaux Exp $
+# $Id: Makefile,v 1.29 2009-01-11 02:19:09 weis Exp $
 
 ROOT_DIR = .
 
@@ -23,8 +23,7 @@ COMPILER_DIRS = src/basement src/parser src/typing\
   src/docgen src/commoncodegen src/mlcodegen src/coqcodegen\
   src/toplevel
 
-LIB_DIRS = src/stdlib src/extlib
-# src/contribs
+LIB_DIRS = src/stdlib src/extlib src/contribs
 
 SUB_DIRS = $(COMPILER_DIRS) $(LIB_DIRS)
 
