@@ -24,6 +24,7 @@ random_foc.ml
 rings_fields.ml
 sets.ml
 sets_orders.ml
+strict_orders.ml
 small_integers.ml
 weak_structures.ml
 wellfounded.ml
