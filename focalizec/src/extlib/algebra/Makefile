@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.26 2008-12-17 13:06:12 habib Exp $
+# $Id: Makefile,v 1.27 2009-01-11 02:22:12 weis Exp $
 
 # Makefile for algebra structures implementations
 
@@ -138,7 +138,6 @@ install::
 	@if [ "$(EXTERNAL_VOS)" != "" ] ; then \
 	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/ ; \
 	fi
-
 
 clean::
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
