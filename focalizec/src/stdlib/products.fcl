@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: products.fcl,v 1.7 2008-12-02 14:45:18 rr Exp $ *)
+(* $Id: products.fcl,v 1.8 2009-01-11 01:22:18 weis Exp $ *)
 
 (**
 
@@ -69,7 +69,7 @@ species Product_set(A is Setoid, B is Setoid)
     <1>1 assume x in A,
          prove A!equal(!first(!pair(x, B!element)), x)
          by property !pair_preserves_first
-    <1>f qed. ;
+    <1>f conclude ;
 
   (** this is a way to express surjectivity of the second projection *)
   property pair_preserves_second: all x in A, all y in B,
@@ -81,7 +81,7 @@ species Product_set(A is Setoid, B is Setoid)
     <1>1 assume x in B,
          prove B!equal(!second(!pair(A!element, x)), x)
          by property !pair_preserves_second
-    <1>f qed. ;
+    <1>f conclude ;
 
   (** a product is not empty *)
   let element = !pair(A!element, B!element) ;
@@ -149,7 +149,7 @@ species Product_set(A is Setoid, B is Setoid)
                B!equal_transitive, B!equal_symmetric
            <2>f qed by step <2>1, <2>2
                        definition of equal
-      <1>f qed. ;
+      <1>f conclude ;
 
   (** consistency between builder and equality, second arg *)
   theorem pair_right_substitution_rule: all x in A, all y_1 y_2 in B,
@@ -178,7 +178,7 @@ species Product_set(A is Setoid, B is Setoid)
              property B!equal_transitive, B!equal_symmetric
            <2>f qed by step <2>1, <2>2
                        definition of equal
-      <1>f qed. ;
+      <1>f conclude ;
 
   (** Programmers should use this global consistency property when possible *)
   theorem pair_substitution_rule: all x_1 x_2 in A, all y_1 y_2 in B,
@@ -246,7 +246,7 @@ species Categorical_property_of_Product_set
                                  property B!equal_transitive, B!equal_symmetric
                 <3>f qed by step <3>1 definition of morph
            <2>f qed by step <2>1, <2>2 property P!equal_spec
-      <1>f qed.
+      <1>f conclude
   ;
 
     theorem morph_first_factorize: all x in E,
@@ -329,7 +329,7 @@ end;;
 (*                    by <3>1, <3>2, *)
 (*                       b!equal_transitive, b!equal_symmetric, b!equal_reflexive *)
 (*          <2>f qed by <2>1, <2>2 def !equal, !equal_a, !equal_b *)
-(*     <1>f qed.; *)
+(*     <1>f conclude; *)
 
 (* end *)
 

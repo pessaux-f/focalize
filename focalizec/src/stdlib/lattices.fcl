@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lattices.fcl,v 1.3 2008-11-30 22:26:05 weis Exp $ *)
+(* $Id: lattices.fcl,v 1.4 2009-01-11 01:22:18 weis Exp $ *)
 
 use "sets";;
 open "sets";;
@@ -115,7 +115,7 @@ species Meet_semi_lattice inherits Setoid =
          <2>4 qed
               by step <2>3
                  definition of order_inf
-       <1>2 qed.
+       <1>2 conclude
      ;
   (** any element smaller than x and y is smaller than their infimum *)
   theorem order_inf_is_infimum : all x y i in Self,
@@ -137,7 +137,7 @@ species Meet_semi_lattice inherits Setoid =
           by step <2>1
              property inf_is_associative, equal_transitive
              definition of order_inf
-      <1>2 qed.
+      <1>2 conclude
     ;
 
 end
@@ -230,7 +230,7 @@ species Join_semi_lattice inherits Setoid =
                property equal_symmetric, equal_transitive,
                         sup_left_substitution_rule
                definition of order_sup
-       <1>2 qed.
+       <1>2 conclude
      ;
 
   (** any element bigger than two elements is bigger than their supremum *)
@@ -254,7 +254,7 @@ species Join_semi_lattice inherits Setoid =
           by step <2>1
              property sup_is_associative, equal_transitive
              definition of order_sup
-      <1>2 qed.
+      <1>2 conclude
     ;
 
 end
@@ -297,7 +297,7 @@ species Lattice inherits Meet_semi_lattice, Join_semi_lattice =
             <2>z qed by step <2>1
                         property equal_symmetric
                         definition of order_inf
-       <1>2 qed.
+       <1>2 conclude
      ;
 
   (** in a lattice there is only one ordering *)
@@ -318,7 +318,7 @@ species Lattice inherits Meet_semi_lattice, Join_semi_lattice =
                step <2>1
                property equal_transitive, equal_symmetric, inf_absorbes_sup
                definition of order_sup
-       <1>2 qed.
+       <1>2 conclude
      ;
 
 (*
@@ -388,7 +388,7 @@ species Distributive_lattice
            <2>9 qed by step <2>1, <2>2, <2>7
                        property equal_transitive, equal_symmetric
 
-      <1>2 qed.
+      <1>2 conclude
     ;
 
   property inf_left_distributes : all x y z in Self,
@@ -424,7 +424,7 @@ species Distributive_lattice
                 by step <2>5, <2>6 property equal_transitive
            <2>9 qed by step <2>1, <2>2, <2>7
                     property !equal_transitive, !equal_symmetric
-      <1>2 qed.
+      <1>2 conclude
 ;
 
   (** a distributive lattice is always modular *)
@@ -559,7 +559,7 @@ species Bounded_lattice
          <2>f qed
             by step <2>3
                property sup_commutes, equal_symmetric, equal_transitive
-    <1>2 qed.
+    <1>2 conclude
    ;
 
   (** absorption laws enable to prove that being absorbant for one law
@@ -584,7 +584,7 @@ species Bounded_lattice
          <2>f qed
             by step <2>3
                property inf_commutes, equal_symmetric, equal_transitive
-    <1>2 qed.
+    <1>2 conclude
     ;
 end
 ;;

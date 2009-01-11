@@ -67,7 +67,7 @@ species Partially_ordered_set_as_meet_semi_lattice
               by step <2>2, <2>1 property leq_defines_infimum
          <2>4 prove !leq(!inf(x, y), x) by property inf_is_smaller
          <2>f qed by step <2>4, <2>3 property leq_antisymmetric
-    <1>f qed.
+    <1>f conclude
   ;
 
   (** details left as an exercice for the reader *)
@@ -156,7 +156,7 @@ species Partially_ordered_set_as_join_semi_lattice
                 by property sup_is_bigger
          <2>f qed
             by step <2>4, <2>3 property geq_antisymmetric
-    <1>f qed.
+    <1>f conclude
   ;
 
   (** details left as exercice for the reader *)
@@ -344,7 +344,7 @@ species Ordered_set_as_meet_semi_lattice
         <2>f qed
            by step <2>1, <2>2
               property total_order
-   <1>2 qed.
+   <1>2 conclude
   ;
 
 end
@@ -467,7 +467,7 @@ species Ordered_set_as_lattice
          <2>f qed
             by step <2>1, <2>2
                property total_order
-    <1>f qed.
+    <1>f conclude
 
    ;
 
@@ -503,7 +503,7 @@ species Ordered_set_as_lattice
               <3>f qed by step <3>2,  <3>3
                        property equal_symmetric, equal_transitive
          <2>f qed by step <2>1, <2>2 property total_order
-    <1>f qed.
+    <1>f conclude
     ;
 
 end

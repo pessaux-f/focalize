@@ -131,7 +131,7 @@ species Sum_set(A is Setoid, BB is Setoid)
            <2>1 prove ~(!second_case(x_1) /\ !second_case(x_2))
                 by property !case_exclusive hypothesis H_1
            <2>f qed by step <2>1 hypothesis H_2 property !equal_spec
-      <1>f qed.
+      <1>f conclude
     ;
 
 
@@ -159,7 +159,7 @@ species Sum_set(A is Setoid, BB is Setoid)
                        property A!equal_reflexive, 
                                 A!equal_symmetric, 
                                 A!equal_transitive
-      <1>f qed.
+      <1>f conclude
     ;
 
   (** specifications are compatible with equality *)
@@ -177,7 +177,7 @@ species Sum_set(A is Setoid, BB is Setoid)
                   step <2>1
                   hypothesis H_2
                   property !equal_spec
-      <1>f qed.
+      <1>f conclude
     ;
 
 
@@ -207,7 +207,7 @@ species Sum_set(A is Setoid, BB is Setoid)
                        property BB!equal_reflexive, 
                                 BB!equal_symmetric, 
                                 BB!equal_transitive
-      <1>f qed.
+      <1>f conclude
     ;
 
   (** specifications are compatible with bollean logic *)
@@ -223,7 +223,7 @@ species Sum_set(A is Setoid, BB is Setoid)
            <2>2 prove (!first_case(x) /\ !first_case(y) )
                 by step <2>1 hypothesis H property !equal_spec
            <2>f qed by step <2>2
-      <1>f qed. ;
+      <1>f conclude ;
     
 (*   (\** specifications are compatible with bollean logic *\) *)
 (*   theorem first_case_full_subtitution_rule: all x y in self, *)
@@ -244,7 +244,7 @@ species Sum_set(A is Setoid, BB is Setoid)
            <2>2 prove (!second_case(x) /\ !second_case(y) )
                 by step <2>1 hypothesis H property !equal_spec
            <2>f qed by step <2>2
-      <1>f qed.;
+      <1>f conclude;
     
 (*   (\** specifications are compatible with boolean logic *\) *)
 (*   theorem second_case_full_subtitution_rule: all x y in self, *)
@@ -269,7 +269,7 @@ species Sum_set(A is Setoid, BB is Setoid)
                  by property !first_has_case
             <2>f qed
                  by step <2>1, <2>2 hypothesis H property !equal_spec
-       <1>2 qed.; 
+       <1>2 conclude; 
 
    (**
       Non effective statement to very logical completeness.
@@ -288,7 +288,7 @@ species Sum_set(A is Setoid, BB is Setoid)
                by property !second_has_case
           <2>f qed
                by step <2>1, <2>2 hypothesis H property !equal_spec
-     <1>2 qed.; 
+     <1>2 conclude; 
 
 end;;
 
@@ -328,7 +328,7 @@ species Categorical_sum_property
               <3>f qed by step <3>1 property M_a!morph_substitution_rule
          <2>f qed by step <2>1, <2>2 hypothesis H_x 
                      definition of morph
-     <1>f qed.;
+     <1>f conclude;
 
   theorem morph_second_substitution_rule: all x y in S,
     S!equal(x, y) -> S!second_case(x) -> E!equal(!morph(x), !morph(y))
@@ -351,7 +351,7 @@ species Categorical_sum_property
               by step <2>1, <2>2 hypothesis H_x
                      property S!case_exclusive, S!case_complete
                      definition of morph
-     <1>f qed.;
+     <1>f conclude;
 
 
 
