@@ -13,21 +13,18 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: Makefile,v 1.23 2008-12-27 19:05:40 weis Exp $
+#  $Id: Makefile,v 1.24 2009-01-11 17:14:03 weis Exp $
 
+# Reading configuration settings.
 include .config_var
 
-# programs defined in .config_var
-#CAMLBYT = ocamlc
-#CAMLBIN = ocamlopt
-#CAMLLEX = ocamllex
-#CAMLYACC = ocamlyacc
+CAMLFLAGS = -warn-error A
 
-# flags
-DEBUGFLAG	= -g -dtypes
-COMPFLAGS	= -warn-error A
-CAMLBYTFLAGS	= $(COMPFLAGS) $(DEBUGFLAG) $(XMLRPCFLAGS)
-CAMLBINFLAGS	= $(COMPFLAGS) $(DEBUGFLAG) $(XMLRPCFLAGS)
+# Variables CAMLBYT, CAMLBIN, CAMLLEX, CAMLYACC CAMLDEP are defined at configuration time
+# their value is recorded in .config_var
+CAMLBINFLAGS = $(CAMLFLAGS) $(BIN_DEBUG_FLAGS) $(XMLRPC_FLAGS)
+
+CAMLBYTFLAGS = $(CAMLFLAGS) $(BYT_DEBUG_FLAGS) $(XMLRPC_FLAGS)
 
 MODULES = version misc options cache \
           expr parser_coq lexer_coq invoke invoke_cime \
@@ -48,13 +45,15 @@ BINOBJS = $(MODULES:%=%.cmx)
 
 all: byt bin zvtov
 
-byt: $(BYTOBJS)
-	$(CAMLBYT) $(CAMLBYTFLAGS) str.cma $(XMLRPCLINK) -o zvtov.byt $(BYTOBJS)
-	cp -p zvtov.byt zvtov
+byt: zvtov.byt
 
-bin: $(BINOBJS)
-	$(CAMLBIN) $(CAMLBINFLAGS) str.cmxa $(XMLRPCLINK) -o zvtov.bin $(BINOBJS)
-	cp -p zvtov.bin zvtov
+bin: zvtov.bin
+
+zvtov.bin: $(BINOBJS)
+	$(CAMLBIN) $(CAMLBINFLAGS) str.cmxa $(XMLRPC_LINK) -o zvtov.bin $(BINOBJS)
+
+zvtov.byt: $(BYTOBJS)
+	$(CAMLBYT) $(CAMLBYTFLAGS) str.cma $(XMLRPC_LINK) -o zvtov.byt $(BYTOBJS)
 
 zvtov: zvtov.byt
 	if test -x zvtov.bin; then \
@@ -75,7 +74,7 @@ uninstall:
 	rm -f "$(BIN_DIR)"/zvtov
 	rm -f "$(MAN_DIR)"/man1/zvtov.1
 
-.SUFFIXES: .ml .mli .cmo .cmi .cmx
+.SUFFIXES: .ml .mli .cmo .cmi .cmx .v .vo
 
 .ml.cmo:
 	$(CAMLBYT) $(CAMLBYTFLAGS) -c $*.ml
@@ -98,20 +97,23 @@ parser_coq.ml: parser_coq.mly
 parser_coq.mli: parser_coq.ml
 	:
 
-
 .PHONY: clean
 clean:
-	rm -f *.cm* *.o *.annot
+	rm -f .#*
+	rm -f *.cm* *.o *.annot *.output
 	rm -f lexer_coq.ml parser_coq.ml
 	rm -f parser_coq.mli
 	rm -f zvtov *.bin *.byt
 
-.PHONY: realclean
-realclean: clean
-	rm -f .config_var
+.PHONY: unconfigure
+unconfigure:
+	rm -f ./.config_var
+
+.PHONY: distclean
+distclean: clean unconfigure
 
 .PHONY: depend
 depend: $(IMPL) $(INTF)
-	ocamldep $(IMPL) $(INTF) >.depend
+	$(CAMLDEP) $(IMPL) $(INTF) >.depend
 
 include .depend
