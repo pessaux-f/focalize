@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify_token.ml,v 1.8 2008-12-18 07:45:45 weis Exp $ *)
+(* $Id: sourcify_token.ml,v 1.9 2009-01-11 00:55:56 weis Exp $ *)
 
 open Parser;;
 
@@ -99,6 +99,7 @@ let token ppf = function
   | BY -> Format.fprintf ppf "%s" "BY"
   | CAML -> Format.fprintf ppf "%s" "CAML"
   | COLLECTION -> Format.fprintf ppf "%s" "COLLECTION"
+  | CONCLUDE -> Format.fprintf ppf "%s" "CONCLUDE"
   | COQ -> Format.fprintf ppf "%s" "COQ"
   | COQ_REQUIRE -> Format.fprintf ppf "%s" "COQ_REQUIRE"
   | DEFINITION -> Format.fprintf ppf "%s" "DEFINITION"

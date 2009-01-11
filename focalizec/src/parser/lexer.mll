@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.71 2008-12-18 07:45:45 weis Exp $ *)
+(* $Id: lexer.mll,v 1.72 2009-01-11 00:55:56 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -102,6 +102,7 @@ List.iter
   "by", BY;
   "caml", CAML;
   "collection", COLLECTION;
+  "conclude", CONCLUDE;
   "coq", COQ;
   "coq_require", COQ_REQUIRE;
   "definition", DEFINITION;

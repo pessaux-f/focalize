@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.124 2009-01-09 13:09:27 doligez Exp $ *)
+(* $Id: parser.mly,v 1.125 2009-01-11 00:55:56 weis Exp $ *)
 
 open Parsetree;;
 
@@ -203,6 +203,7 @@ let mk_proof_label (s1, s2) =
 %token BY
 %token CAML
 %token COLLECTION
+%token CONCLUDE
 %token COQ
 %token COQ_REQUIRE
 %token DEFINITION
@@ -335,13 +336,13 @@ let mk_proof_label (s1, s2) =
 %%
 
 file:
-  | phrase_list { mk (File $1) }
-  | opt_doc BEGIN phrase_list { mk_doc $1 (File $3) }
+  | phrases { mk (File $1) }
+  | opt_doc BEGIN phrases { mk_doc $1 (File $3) }
 ;
 
-phrase_list:
+phrases:
   | EOF { [] }
-  | phrase phrase_list { $1 :: $2 }
+  | phrase phrases { $1 :: $2 }
 ;
 
 phrase:
@@ -419,7 +420,7 @@ define_type_body_contents:
 
 define_type_body_external:
   | INTERNAL define_type_body_regular_opt
-    opt_doc EXTERNAL external_expr_desc following_external_binding_list
+    opt_doc EXTERNAL external_expr_desc following_external_bindings
      { mk { etdb_internal = $2;
             etdb_external = mk_doc $3 $5;
             etdb_bindings = mk $6; }
@@ -430,9 +431,9 @@ external_binding:
   | external_value_vname EQUAL external_expr { mk ($1, $3) }
 ;
 
-following_external_binding_list:
+following_external_bindings:
   | { [] }
-  | AND external_binding following_external_binding_list { $2 :: $3 }
+  | AND external_binding following_external_bindings { $2 :: $3 }
 ;
 
 define_type_body_regular_opt:
@@ -501,7 +502,7 @@ define_species_inherits:
   | { mk [] }
 
 species_expr_list:
-  | species_expr {[ $1 ]}
+  | species_expr { [ $1 ] }
   | species_expr COMMA species_expr_list { $1 :: $3 }
 ;
 
@@ -749,15 +750,19 @@ in_type_expr:
 /**** PROOFS ****/
 
 proof:
-  | opt_doc QED
+  | opt_doc CONCLUDE
     { mk_doc $1 (Pf_auto []) }
-  | opt_doc BY facts
-    { mk_doc $1 (Pf_auto $3) }
+  | proof_development
+    { $1 }
+
+proof_development:
     /* Trailing is the reason why the proof was not given. */
-  | opt_doc enforced_dependency_list ASSUMED EXTERNAL_CODE
+  | opt_doc enforced_dependencies ASSUMED EXTERNAL_CODE
     { mk_doc $1 (Pf_assumed ($2, $4)) }
-  | opt_doc COQ PROOF enforced_dependency_list EXTERNAL_CODE
+  | opt_doc COQ PROOF enforced_dependencies EXTERNAL_CODE
     { mk_doc $1 (Pf_coq ($4, $5)) }
+  | opt_doc BY fact_list
+    { mk_doc $1 (Pf_auto $3) }
   | proof_node_list
     { mk (Pf_node $1) }
 ;
@@ -773,10 +778,10 @@ proof_node:
 ;
 
 proof_node_qed:
-  | opt_doc PROOF_LABEL QED proof
+  | opt_doc PROOF_LABEL QED proof_development
     { mk_doc $1 (PN_qed (mk_proof_label $2, $4)) }
-  | opt_doc PROOF_LABEL QED opt_doc DOT
-    { mk_doc $1 (PN_qed (mk_proof_label $2, mk_doc $4 (Pf_auto []))) }
+  | opt_doc PROOF_LABEL opt_doc CONCLUDE
+    { mk_doc $1 (PN_qed (mk_proof_label $2, mk_doc $3 (Pf_auto []))) }
 ;
 
 fact_list:
@@ -798,9 +803,9 @@ fact:
   | STEP proof_label_comma_list { mk (F_node (List.map mk_proof_label $2)) }
 ;
 
-enforced_dependency_list:
+enforced_dependencies:
   | { [ ] }
-  | enforced_dependency enforced_dependency_list { $1 :: $2 }
+  | enforced_dependency enforced_dependencies { $1 :: $2 }
 ;
 
 enforced_dependency:
@@ -814,8 +819,8 @@ proof_hypothesis:
 ;
 
 proof_hypothesis_list:
-  | proof_hypothesis COMMA proof_hypothesis_list { $1 :: $3 }
   | proof_hypothesis { [ $1 ] }
+  | proof_hypothesis COMMA proof_hypothesis_list { $1 :: $3 }
 ;
 
 opt_logical_expr:
@@ -838,7 +843,7 @@ hypothesis:
 ;
 
 hypothesis_list:
-  | hypothesis COMMA                 { [$1] }
+  | hypothesis COMMA { [$1] }
   | hypothesis COMMA hypothesis_list { $1 :: $3 }
 ;
 
@@ -1071,17 +1076,13 @@ expr_semi_list:
 ;
 
 expr_comma_list:
-  | expr
-    { [ $1 ] }
-  | expr COMMA expr_comma_list
-    { $1 :: $3 }
+  | expr { [ $1 ] }
+  | expr COMMA expr_comma_list { $1 :: $3 }
 ;
 
 record_field_list:
-  | label_ident EQUAL expr opt_semi
-    { [ ($1, $3) ] }
-  | label_ident EQUAL expr SEMI record_field_list
-    { ($1, $3) :: $5 }
+  | label_ident EQUAL expr opt_semi { [ ($1, $3) ] }
+  | label_ident EQUAL expr SEMI record_field_list { ($1, $3) :: $5 }
 ;
 
 /* In a proof, "by definition" is always refering to something local      */
@@ -1113,25 +1114,23 @@ species_ident:
 ;
 
 definition_ident_comma_list:
-  | definition_ident COMMA definition_ident_comma_list { $1 :: $3 }
   | definition_ident { [ $1 ] }
+  | definition_ident COMMA definition_ident_comma_list { $1 :: $3 }
 ;
 
 property_ident_comma_list:
-  | property_ident COMMA property_ident_comma_list { $1 :: $3 }
   | property_ident { [ $1 ] }
+  | property_ident COMMA property_ident_comma_list { $1 :: $3 }
 ;
 
 proof_label_comma_list:
-  | PROOF_LABEL COMMA proof_label_comma_list { $1 :: $3 }
   | PROOF_LABEL { [ $1 ] }
+  | PROOF_LABEL COMMA proof_label_comma_list { $1 :: $3 }
 ;
 
 clause_list:
-  | BAR clause
-    { [ $2 ] }
-  | BAR clause clause_list
-    { $2 :: $3 }
+  | BAR clause { [ $2 ] }
+  | BAR clause clause_list { $2 :: $3 }
 ;
 
 clause:
@@ -1215,10 +1214,8 @@ bound_vname:
 ;
 
 bound_vname_list:
-  | bound_vname bound_vname_list
-    { $1 :: $2 }
-  | bound_vname
-    { [ $1 ] }
+  | bound_vname { [ $1 ] }
+  | bound_vname bound_vname_list { $1 :: $2 }
 ;
 
 external_value_vname:
