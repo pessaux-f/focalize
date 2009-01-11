@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.39 2009-01-11 14:44:28 weis Exp $
+# $Id: configure,v 1.40 2009-01-11 15:55:34 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -115,7 +115,7 @@ set_intrinsic_defaults () {
   # Intrinsic defaults for Zvtov.
   DEFAULT_USE_XMLRPC=false
   DEFAULT_XMLRPC="xmlrpc"
-  DEFAULT_XMLRPC_MODULE=""
+  DEFAULT_XMLRPC_MODULE="xmlrpc"
   DEFAULT_XMLRPC_FLAGS=""
   DEFAULT_XMLRPC_LINK=""
 
@@ -214,7 +214,11 @@ set_intrinsic () {
     fi
     # set_XMLRPC_MODULE;
     if $USE_XMLRPC; then
-      if test -z $XMLRPC_MODULE; then XMLRPC_MODULE="${DEFAULT_XMLRPC_MODULE}"; fi
+      if test -z $XMLRPC_MODULE; then
+        XMLRPC_MODULE="${DEFAULT_XMLRPC_MODULE}"
+      else
+        XMLRPC_MODULE=""
+      fi
     fi
   fi;
 
