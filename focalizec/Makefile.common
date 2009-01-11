@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.18 2008-12-12 10:54:47 weis Exp $
+# $Id: Makefile.common,v 1.19 2009-01-11 20:55:43 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -63,7 +63,11 @@ tests::
 .mll.ml:
 	$(CAML_LEX) $<
 
-.fcl.fo .fcl.ml .fcl.zv:
+.fcl.fo:
+	$(FOCALIZEC) $<
+.fcl.ml:
+	$(FOCALIZEC) $<
+.fcl.zv:
 	$(FOCALIZEC) $<
 
 .zv.v:
