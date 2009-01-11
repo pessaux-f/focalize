@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.36 2009-01-11 14:44:28 weis Exp $
+# $Id: Makefile,v 1.37 2009-01-11 22:36:06 weis Exp $
 
 ROOT_DIR = .
 
@@ -68,7 +68,7 @@ install_external_tools_sources: .done_install_external_tools_sources
 .done_install_external_$(CAML_NAME)_tool_sources:
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAML_SRC_DIR)) || exit; \
+	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAML_SRC_DIR)); \
 	  echo "<-- $$i [$$?]"; \
 	done; \
 	$(TOUCH) .done_install_external_$(CAML_NAME)_tool_sources
@@ -81,7 +81,7 @@ install_external_tools_sources: .done_install_external_tools_sources
   .done_install_external_$(CAML_NAME)_tool_sources
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAMLP5_SRC_DIR)) || exit; \
+	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAMLP5_SRC_DIR)); \
 	  echo "<-- $$i [$$?]"; \
 	done; \
 	$(TOUCH) .done_install_external_$(CAMLP5_NAME)_tool_sources
@@ -95,7 +95,7 @@ install_external_tools_sources: .done_install_external_tools_sources
   .done_install_external_$(CAMLP5_NAME)_tool_sources
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_COQ_SRC_DIR)) || exit; \
+	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_COQ_SRC_DIR)); \
 	  echo "<-- $$i [$$?]"; \
 	done; \
 	$(TOUCH) .done_install_external_$(COQ_NAME)_tool_sources
@@ -182,7 +182,7 @@ build_internal_tools: .done_build_internal_tools
 	  ($(CD) $$i; \
 	   ./configure $(ZENON_CONFIGURE_OPTIONS); \
 	   $(MAKE) $(ZENON_MAKE_ALL_tARGET); \
-	   $(MAKE) install) || exit; \
+	   $(MAKE) install); \
 	  echo "<-- $$i [$$?]"; \
 	done; \
 	$(TOUCH) .done_build_zenon
@@ -193,7 +193,7 @@ build_internal_tools: .done_build_internal_tools
 	  ($(CD) $$i; \
 	   ./configure $(ZVTOV_CONFIGURE_OPTIONS); \
 	   $(MAKE) $(ZVTOV_MAKE_ALL_TARGET); \
-           $(MAKE) install) || exit; \
+           $(MAKE) install); \
 	  echo "<-- $$i [$$?]"; \
 	done; \
 	$(TOUCH) .done_build_zvtov
@@ -203,7 +203,7 @@ build_internal_tools: .done_build_internal_tools
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
 	   ./configure $(FOCALIZEC_CONFIGURE_OPTIONS); \
-	   $(MAKE) $(FOCALIZEC_MAKE_ALL_TARGET)) || exit; \
+	   $(MAKE) $(FOCALIZEC_MAKE_ALL_TARGET)); \
 	  echo "<-- $$i [$$?]"; \
 	done; \
 	$(TOUCH) .done_build_focalizec
@@ -212,7 +212,7 @@ install:: .done_build_internal_tools
 	for i in $(ABSOLUTE_FOCALIZEC_SRC_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
-	   $(MAKE) install) || exit; \
+	   $(MAKE) install); \
 	  echo "<-- $$i [$$?]"; \
 	done; \
 	$(TOUCH) .done_install_focalizec
@@ -220,7 +220,7 @@ install:: .done_build_internal_tools
 uninstall doc depend::
 	for i in $(INTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) $@) || exit; \
+	  ($(CD) $$i && $(MAKE) $@); \
 	  echo "<-- $$i [$$?]"; \
 	done
 
@@ -230,7 +230,7 @@ unconfigure:
 clean_internals:
 	for i in $(INTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) clean) || exit; \
+	  ($(CD) $$i && $(MAKE) clean); \
 	  echo "<-- $$i [$$?]"; \
 	done; \
 	for i in $(INTERNAL_TOOLS); do \
@@ -241,7 +241,7 @@ clean_internals:
 clean_externals:
 	for i in $(EXTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) clean) || exit; \
+	  ($(CD) $$i && $(MAKE) clean); \
 	  echo "<-- $$i [$$?]"; \
 	done; \
 	for i in $(EXTERNAL_TOOLS); do \
@@ -252,6 +252,6 @@ clean:: clean_internals
 	$(RM) .done_*
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) $@) || exit; \
+	  ($(CD) $$i && $(MAKE) $@); \
 	  echo "<-- $$i [$$?]"; \
 	done

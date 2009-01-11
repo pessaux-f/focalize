@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.43 2009-01-11 20:56:53 weis Exp $
+# $Id: configure,v 1.44 2009-01-11 22:36:06 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -414,6 +414,7 @@ set_share () {
       abort_remedy "Choose static_external mode or remove caml_bin_dir option."
     fi
   fi
+
   # Settings for Camlp5
   if test -z "${CAMLP5_LIB_DIR}"; then
   CAMLP5_LIB_DIR="${CAML_LIB_DIR}/camlp5"; fi
@@ -521,6 +522,7 @@ while : ; do
     -caml_dep | --caml_dep) CAML_DEP="$2"; shift 2;;
     -caml_doc | --caml_doc) CAML_DOC="$2"; shift 2;;
     # Coq options
+    -coq_lib_dir | --coq_lib_dir) COQ_LIB_DIR="$2"; shift 2;;
     -coqc | --coqc) COQC="$2"; shift 2;;
     -coq_dep | --coq_dep) COQ_DEP="$2"; shift 2;;
     -coqrc | --coqrc) COQRC="$2"; shift 2;;
@@ -640,6 +642,8 @@ while : ; do
        echo
        echo "options specific to Coq are:"
        echo
+       echo "  [-]-coq_lib_dir <directory>"
+       echo "    set absolute path for the Coq library."
        echo "  [-]-coqc <executable-file>"
        echo "    set absolute path for the Coq compiler."
        echo "  [-]-coq_dep <executable-file>"
