@@ -1,5 +1,5 @@
 #  Copyright 2008 INRIA
-#  $Id: .config_var.in,v 1.19 2009-01-11 14:44:28 weis Exp $
+#  $Id: .config_var.in,v 1.20 2009-01-11 20:58:11 weis Exp $
 
 #
 # The project identity card.
@@ -28,7 +28,8 @@ MAN_DIR=@MAN_DIR@
 
 # The directories where the project installs its own specific versions
 # of mandatory external tools binaries and libraries (if any).
-SHARE_PROJECT_PREFIX=@SHARE_PROJECT_PREFIX@
+STATIC_EXTERNAL=@STATIC_EXTERNAL@
+SHARE_PREFIX=@SHARE_PREFIX@
 SHARE_PROJECT_DIR=@SHARE_PROJECT_DIR@
 SHARE_PROJECT_BIN_DIR=@SHARE_PROJECT_BIN_DIR@
 SHARE_PROJECT_LIB_DIR=@SHARE_PROJECT_LIB_DIR@
@@ -46,6 +47,7 @@ CAML_BIN=@CAML_BIN@
 CAML_LEX=@CAML_LEX@
 CAML_YAC=@CAML_YAC@
 CAML_DEP=@CAML_DEP@
+CAML_DOC=@CAML_DOC@
 # Compilation flags for Caml.
 BYT_DEBUG_FLAGS=@BYT_DEBUG_FLAGS@
 BIN_DEBUG_FLAGS=@BIN_DEBUG_FLAGS@
