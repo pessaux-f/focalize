@@ -1,3 +1,22 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: parse_poly.fcl,v 1.2 2009-01-11 01:24:06 weis Exp $ *)
+
 (**
    @author Violaine Ruffie
    semi abstract model to parse polynomials

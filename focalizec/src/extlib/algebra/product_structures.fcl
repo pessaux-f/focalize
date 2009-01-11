@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*                                                                     *)
@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: product_structures.fcl,v 1.5 2008-12-03 10:58:03 weis Exp $ *)
+(* $Id: product_structures.fcl,v 1.6 2009-01-11 01:24:06 weis Exp $ *)
 
 (** Cartesian product of two structures, common orderings. *)
 
@@ -59,7 +59,7 @@ species Product_additive_monoid (M1 is Additive_monoid, M2 is Additive_monoid)
               by property M1!plus_commutes, M2!plus_commutes,
                 !pair_substitution_rule
           <2>f qed by step <2>1 definition of plus
-    <1>f qed.
+    <1>f conclude
     ;
 
   proof of zero_is_neutral = assumed {* Because todo *} ;
@@ -89,7 +89,7 @@ species Product_additive_monoid (M1 is Additive_monoid, M2 is Additive_monoid)
          <2>2 prove  M2!equal (!second (b), !second (c))
               by hypothesis H definition of equal
          <2>f qed by step <2>1, <2>2, <1>0 definition of plus
-    <1>f qed.
+    <1>f conclude
     ;
 
 end;;

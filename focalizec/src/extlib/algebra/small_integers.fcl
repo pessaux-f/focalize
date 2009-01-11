@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
@@ -10,12 +10,12 @@
 (*                                                                     *)
 (*                               LIP6   -  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007,2008 LIP6 and INRIA                                 *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: small_integers.fcl,v 1.4 2008-12-09 13:03:35 rr Exp $ *)
+(* $Id: small_integers.fcl,v 1.5 2009-01-11 01:24:06 weis Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)

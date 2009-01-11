@@ -1,11 +1,13 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6   -  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -13,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: multiplicative_law.fcl,v 1.4 2008-12-09 13:09:26 rr Exp $ *)
+(* $Id: multiplicative_law.fcl,v 1.5 2009-01-11 01:24:06 weis Exp $ *)
 
 (** Common properties of multiplicative laws. *)
 
@@ -116,7 +118,7 @@ species Commutative_monoid inherits Monoid =
          <2>3 prove !equal (!mult (y_1, x), !mult(y_2, x))
               by hypothesis H property mult_left_substitution_rule
          <2>f qed by step <2>1, <2>2, <2>3 property equal_transitive
-    <1>f qed.
+    <1>f conclude
     ;
 end ;;
 
@@ -193,7 +195,7 @@ species Commutative_monoid_with_divisibility inherits Commutative_monoid =
                 by property one_is_neutral
                 <3>f qed by step <3>1 property divides_extends_equal
            <2>f qed by step <2>1, <2>3 property divides_transitive
-     <1>f qed.
+     <1>f conclude
      ;
 end ;;
 
@@ -299,7 +301,7 @@ species Division_monoid
                  hypothesis H_x
                  property equal_transitive, equal_symmetric
          <2>f qed by step <2>3 hypothesis H_y property mult_is_regular
-    <1>f qed.
+    <1>f conclude
     ;
 
   theorem div_right_substitution_rule: all x y_1 y_2 in Self,
@@ -334,7 +336,7 @@ species Division_monoid
                 by step <2>1, <2>2
                    property equal_symmetric, equal_transitive
             <2>f qed  by step <2>3 hypothesis H_0 property mult_is_regular
-      <1>f qed.
+      <1>f conclude
       ;
 
   theorem div_really_divides: all x y in Self,
@@ -372,7 +374,7 @@ species Division_monoid
                        !same_is_not_different
                <3>f qed by step <3>1 definition of divides
           <2>f qed by step <2>1, <2>2 property !same_is_not_different
-    <1>f qed. ;
+    <1>f conclude ;
 
 
   proof of divides_reverses_mult =

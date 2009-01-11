@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: integers.fcl,v 1.6 2008-12-03 10:52:07 weis Exp $ *)
+(* $Id: integers.fcl,v 1.7 2009-01-11 01:24:06 weis Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called 
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -151,7 +151,7 @@ species Ordered_Enumeration_system inherits Enumeration_system =
                          definition of leq
            <2>f qed by step <2>1, <2>2
                            property lt_is_total
-      <1>2 qed.
+      <1>2 conclude
     ;
   theorem leq_is_transitive: all x y z in Self,
     !leq (x, y) -> !leq (y, z) -> !leq (x, z)

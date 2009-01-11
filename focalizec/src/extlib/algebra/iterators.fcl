@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: iterators.fcl,v 1.7 2008-11-30 23:12:09 weis Exp $ *)
+(* $Id: iterators.fcl,v 1.8 2009-01-11 01:24:06 weis Exp $ *)
 
 (** Basic techniques to iterate a process including very simple numbers. *)
 

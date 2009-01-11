@@ -1,11 +1,13 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6   -  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -13,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: weak_structures.fcl,v 1.5 2008-12-17 12:13:56 pessaux Exp $ *)
+(* $Id: weak_structures.fcl,v 1.6 2009-01-11 01:24:06 weis Exp $ *)
 
 (** We define here some weak notions such as rings with no subtraction. *)
 
@@ -126,7 +128,7 @@ species Commutative_semi_ring
                     by property mult_commutes
                <3>2 qed by step <3>1, <3>2 property plus_substitution_rule
           <2>f qed by step <2>1, <2>2, <2>3 property equal_transitive
-     <1>f qed.
+     <1>f conclude
    ;
 
    proof of zero_right_absorbes =
