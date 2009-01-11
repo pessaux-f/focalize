@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.41 2009-01-11 16:23:07 weis Exp $
+# $Id: configure,v 1.42 2009-01-11 17:28:23 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -225,9 +225,7 @@ set_intrinsic () {
     fi
     # set_XMLRPC_MODULE;
     if $USE_XMLRPC; then
-      if test -z $XMLRPC_MODULE; then
-        XMLRPC_MODULE="${DEFAULT_XMLRPC_MODULE}"
-      fi
+      if test -z $XMLRPC_MODULE; then XMLRPC_MODULE="${DEFAULT_XMLRPC_MODULE}"; fi
     fi
   fi
 
@@ -355,7 +353,7 @@ set_share () {
   # The normal setting is:
   # SHARE_PROJECT_DIR="${SHARE_PROJECT_PREFIX}/${FULL_PROJECT_NAME}"
   # For traditional project (e.g. zenon) there is no ${FULL_PROJECT_NAME}
-  # sub directory, and SHARE_PROJECT_DIR is just SHARE_PROJECT_PREFIX.
+  # sub directory, and SHARE_PROJECT_DIR is just ${SHARE_PROJECT_PREFIX}.
   # SHARE_PROJECT_DIR="${SHARE_PROJECT_PREFIX}/${FULL_PROJECT_NAME}"
   if ${USE_PROJECT_SUB_DIRECTORY}; then
     SHARE_PROJECT_DIR="${SHARE_PROJECT_PREFIX}/${FULL_PROJECT_NAME}"
@@ -520,7 +518,7 @@ while : ; do
     -gs | --gs) GS="$2"; shift 2;;
     # Zvtov options
     -zvtov | --zvtov) ZVTOV="$2"; shift 2;;
-    -use_xmlrpc | --use_xmlrpc) USE_XMLRPC=$2; shift 2;;
+    -use_xmlrpc | --use_xmlrpc) USE_XMLRPC="$2"; shift 2;;
     -xmlrpc | --xmlrpc) XMLRPC="$2"; shift 2;;
     -xmlrpc_flags | --xmlrpc_flags) XMLRPC_FLAGS="$2"; shift 2;;
     -xmlrpc_link | --xmlrpc_link) XMLRPC_LINK="$2"; shift 2;;
