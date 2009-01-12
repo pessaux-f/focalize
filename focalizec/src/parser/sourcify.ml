@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.65 2009-01-11 00:55:56 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.66 2009-01-12 15:33:51 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -24,11 +24,8 @@ open Parsetree;;
     {b Rem} : Exported ouside this module.                     *)
 (* *********************************************************** *)
 let pp_vname ppf = function
-  | Parsetree.Vlident s -> Format.fprintf ppf "%s" s
-  | Parsetree.Vuident s -> Format.fprintf ppf "%s" s
-  | Parsetree.Vpident s -> Format.fprintf ppf "%s" s
-  | Parsetree.Viident s -> Format.fprintf ppf "%s" s
-  | Parsetree.Vqident s -> Format.fprintf ppf "%s" s
+  | Parsetree.Vlident s | Parsetree.Vuident s | Parsetree.Vpident s
+  | Parsetree.Viident s | Parsetree.Vqident s -> Format.fprintf ppf "%s" s
 ;;
 (* ******************************************************************** *)
 (* string -> Format.formatter -> Parsetree.vname list -> unit           *)

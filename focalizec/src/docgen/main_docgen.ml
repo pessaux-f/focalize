@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.20 2009-01-12 13:37:26 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.21 2009-01-12 15:33:51 pessaux Exp $ *)
 
 
 
@@ -36,6 +36,14 @@ let xmlify_string s =
     incr i
   done ;
   !result
+;;
+
+
+
+let pp_xml_vname ppf = function
+  | Parsetree.Vlident s | Parsetree.Vuident s | Parsetree.Vpident s
+  | Parsetree.Viident s | Parsetree.Vqident s ->
+      Format.fprintf ppf "%s" (xmlify_string s)
 ;;
 
 
@@ -278,14 +286,14 @@ let gen_doc_species_expr out_fmt ~current_unit species_expr =
          match qvname with
           | Parsetree.Vname vn ->
               Format.fprintf out_fmt "<foc:param>%a</foc:param>@\n"
-                Sourcify.pp_vname vn
+                pp_xml_vname vn
           | Parsetree.Qualified (mod_name, vn) ->
               Format.fprintf out_fmt
                 "<foc:param infile=\"%s\">%a</foc:param>@\n"
-                mod_name Sourcify.pp_vname vn
+                mod_name pp_xml_vname vn
          end)
      | Parsetree.E_paren e' -> rec_gen_species_param_expr e'
-     | _ -> assert false in
+     | _ -> assert false in (* ????????product_structures.fcl??????????? *)
   (* **************** *)
   (* Now, do the job. *)
   let species_expr_desc = species_expr.Parsetree.ast_desc in
@@ -300,7 +308,7 @@ let gen_doc_species_expr out_fmt ~current_unit species_expr =
        if infile <> "" then
          Format.fprintf out_fmt " infile=\"%s\"" infile ;
        Format.fprintf out_fmt ">%a</foc:atom>@\n"
-         Sourcify.pp_vname ident_vname
+         pp_xml_vname ident_vname
        end)
    | params ->
        (begin
@@ -309,7 +317,7 @@ let gen_doc_species_expr out_fmt ~current_unit species_expr =
        if infile <> "" then
          Format.fprintf out_fmt " infile=\"%s\"" infile ;
        Format.fprintf out_fmt "\">%a</foc:foc-name>@\n"
-         Sourcify.pp_vname ident_vname ;
+         pp_xml_vname ident_vname ;
        List.iter
          (fun species_param ->
            let Parsetree.SP expr = species_param.Parsetree.ast_desc in
@@ -354,17 +362,17 @@ let gen_doc_parameters out_fmt ~current_unit params =
              get_in_file_and_name_from_ident ~current_unit in_ident in
            Format.fprintf out_fmt "entity\">@\n" ;
            Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
-             Sourcify.pp_vname p_vname ;
+             pp_xml_vname p_vname ;
            Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
            (* order = "high" because the atom represents a species. *)
            Format.fprintf out_fmt
              "<foc:atom order=\"high\" infile=\"%s\">%a</foc:atom>@\n"
-             infile Sourcify.pp_vname ident_vname ;
+             infile pp_xml_vname ident_vname ;
            Format.fprintf out_fmt "@]</foc:type>@\n"
        | Parsetree.SPT_is species_expr ->
            Format.fprintf out_fmt "collection\">@\n" ;
            Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
-             Sourcify.pp_vname p_vname ;
+             pp_xml_vname p_vname ;
            Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
            gen_doc_species_expr out_fmt ~current_unit species_expr ;
            Format.fprintf out_fmt "@]</foc:type>@\n") ;
@@ -401,11 +409,11 @@ let gen_doc_qualified_vname_not_EI_method out_fmt qvname =
   match qvname with
    | Parsetree.Vname vname ->
        Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
-         Sourcify.pp_vname vname
+         pp_xml_vname vname
    | Parsetree.Qualified (mod_name, vname) ->
        Format.fprintf out_fmt
          "<foc:foc-name infile=\"%s\">%a</foc:foc-name>@\n"
-         mod_name Sourcify.pp_vname vname
+         mod_name pp_xml_vname vname
 ;;
 
 
@@ -414,13 +422,13 @@ let gen_doc_expr_ident out_fmt id =
   match id.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
        Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
-         Sourcify.pp_vname vname
+         pp_xml_vname vname
    | Parsetree.EI_global qvname ->
        gen_doc_qualified_vname_not_EI_method out_fmt qvname
    | Parsetree.EI_method (qcoll_name_opt, vname) ->
        (begin
        Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
-         Sourcify.pp_vname vname ;
+         pp_xml_vname vname ;
        match qcoll_name_opt with
         | None -> ()
         | Some qvname ->
@@ -430,12 +438,12 @@ let gen_doc_expr_ident out_fmt id =
                  Format.fprintf out_fmt
                    "<foc:of-species><foc:foc-name>%a</foc:foc-name>\
                    </foc:of-species>@\n"
-                   Sourcify.pp_vname coll_vname
+                   pp_xml_vname coll_vname
              | Parsetree.Qualified (mod_name, coll_vname) ->
                  Format.fprintf out_fmt
                    "<foc:of-species><foc:foc-name infile=\"%s\">%a\
                    </foc:foc-name></foc:of-species>@\n"
-                   mod_name Sourcify.pp_vname coll_vname
+                   mod_name pp_xml_vname coll_vname
             end)
        end)
 ;;
@@ -455,7 +463,7 @@ let gen_doc_history out_fmt from_hist =
   let (mod_name, spe_name) = from_hist.Env.fh_initial_apparition in
   Format.fprintf out_fmt
     "<foc:initial-apparition infile=\"%s\">%a</foc:initial-apparition>@\n"
-    mod_name Sourcify.pp_vname spe_name ;
+    mod_name pp_xml_vname spe_name ;
   (* foc:comes-from. The latest species from where we get the field by
      inheritance along the inheritance tree. I.e. the closest parent providing
      us the field. *)
@@ -464,16 +472,8 @@ let gen_doc_history out_fmt from_hist =
      | [] -> from_hist.Env.fh_initial_apparition
      | (host, _) :: _ -> host) in
   Format.fprintf out_fmt "<foc:comes-from infile=\"%s\">%a</foc:comes-from>@\n"
-    come_from_mod_name Sourcify.pp_vname come_from_spe_name ;
+    come_from_mod_name pp_xml_vname come_from_spe_name ;
   Format.fprintf out_fmt "@]</foc:history>@\n"
-;;
-
-
-
-let gen_doc_logical_let out_fmt _ _ =
-  Format.fprintf out_fmt "@[<h 2><foc:letprop>@\n" ;
-  (* TODO. *)
-  Format.fprintf out_fmt "@]</foc:letprop>@\n"
 ;;
 
 
@@ -498,29 +498,6 @@ let gen_doc_constant out_fmt cst =
    | Parsetree.C_char c ->
        Format.fprintf out_fmt "<foc:char>\"%s\"</foc:char>@\n"
          (xmlify_string (Char.escaped c))
-;;
-
-
-
-let gen_doc_computational_let out_fmt from name sch rec_flag _body doc =
-  let attr_rec_string =
-    (match rec_flag with
-     | Parsetree.RF_rec -> " recursive=\"yes\""
-     | Parsetree.RF_no_rec -> "") in
-  Format.fprintf out_fmt "@[<h 2><foc:definition%s>@\n" attr_rec_string ;
-  (* foc:foc-name. *)
-  Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
-    Sourcify.pp_vname name ;
-  (* foc:history. *)
-  gen_doc_history out_fmt from ;
-  (* foc:informations. *)
-  let (_, _, i_descrip, i_mathml, i_latex, i_other) =
-    extract_tagged_info_from_documentation doc in
-  gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
-  (* foc:ho?. *) (* TODO *)
-  (* foc:type. *)
-  gen_doc_type ~reuse_mapping: false out_fmt (Types.specialize sch) ;
-  Format.fprintf out_fmt "@]</foc:definition>@\n"
 ;;
 
 
@@ -553,7 +530,7 @@ let rec gen_doc_forall_exists out_fmt binder_name vnames ty_expr lexpr =
         (* foc:var foc:foc-name. *)
         Format.fprintf out_fmt
           "<foc:var><foc:foc-name>%a</foc:foc-name></foc:var>@\n"
-          Sourcify.pp_vname h ;
+          pp_xml_vname h ;
         (* foc:type. *)
         gen_doc_type ~reuse_mapping: true out_fmt ty ;
         (* %foc:proposition. *)
@@ -624,7 +601,7 @@ and gen_doc_expression out_fmt initial_expression =
          List.iter
            (fun vname ->
              Format.fprintf out_fmt "<foc:name>%a</foc:name>@\n"
-               Sourcify.pp_vname vname)
+               pp_xml_vname vname)
            vnames ;
          rec_gen expr ;
          Format.fprintf out_fmt "@]</foc:fun>@\n"
@@ -693,11 +670,87 @@ and gen_doc_expression out_fmt initial_expression =
 
 
 
+let gen_doc_logical_let out_fmt from_opt name pnames sch body_as_prop doc =
+  (* foc:letprop. *)
+  Format.fprintf out_fmt "@[<h 2><foc:letprop>@\n" ;
+  (* foc:foc-name. *)
+  Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+    pp_xml_vname name ;
+  (* foc:history?. *)
+  (match from_opt with
+   | Some from -> gen_doc_history out_fmt from
+   | None ->()) ;
+  (* foc:informations?. *)
+  let (_, _, i_descrip, i_mathml, i_latex, i_other) =
+    extract_tagged_info_from_documentation doc in
+  gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
+  (* foc:param-prop*. *)
+  let (params_with_type, _, _) =
+    MiscHelpers.bind_parameters_to_types_from_type_scheme
+      ~self_manifest: None (Some sch) pnames in
+  List.iter
+    (fun (p_name, p_ty_opt) ->
+      (* foc:param-prop. *)
+      Format.fprintf out_fmt "@[<h 2><foc:param-prop>@\n" ;
+      let ty = (match p_ty_opt with None -> assert false | Some t -> t) in
+      (* foc:foc-name. *)
+      Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+        pp_xml_vname p_name ;
+      (* foc:type. *)
+      gen_doc_type ~reuse_mapping: true out_fmt ty ;
+      Format.fprintf out_fmt "@]</foc:param-prop>@\n")
+    params_with_type ;
+  (* foc:proposition. *)
+  gen_doc_proposition out_fmt body_as_prop ;
+  Format.fprintf out_fmt "@]</foc:letprop>@\n"
+;;
+
+
+
+let gen_doc_computational_let out_fmt from name sch rec_flag doc =
+  let attr_rec_string =
+    (match rec_flag with
+     | Parsetree.RF_rec -> " recursive=\"yes\""
+     | Parsetree.RF_no_rec -> "") in
+  Format.fprintf out_fmt "@[<h 2><foc:definition%s>@\n" attr_rec_string ;
+  (* foc:foc-name. *)
+  Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+    pp_xml_vname name ;
+  (* foc:history. *)
+  gen_doc_history out_fmt from ;
+  (* foc:informations. *)
+  let (_, _, i_descrip, i_mathml, i_latex, i_other) =
+    extract_tagged_info_from_documentation doc in
+  gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
+  (* foc:ho?. *) (* TODO *)
+  (* foc:type. *)
+  gen_doc_type ~reuse_mapping: false out_fmt (Types.specialize sch) ;
+  Format.fprintf out_fmt "@]</foc:definition>@\n"
+;;
+
+
+
+let gen_doc_computational_toplevel_let out_fmt name sch rec_flag =
+  let attr_rec_string =
+    (match rec_flag with
+     | Parsetree.RF_rec -> " recursive=\"yes\""
+     | Parsetree.RF_no_rec -> "") in
+  Format.fprintf out_fmt "@[<h 2><foc:global-fun%s>@\n" attr_rec_string ;
+  (* foc:foc-name. *)
+  Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+    pp_xml_vname name ;
+  (* foc:type. *)
+  gen_doc_type ~reuse_mapping: false out_fmt (Types.specialize sch) ;
+  Format.fprintf out_fmt "@]</foc:global-fun>@\n"
+;;
+
+
+
 let gen_doc_theorem out_fmt from name lexpr doc =
   Format.fprintf out_fmt "@[<h 2><foc:theorem>@\n" ;
   (* foc:foc-name. *)
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
-    Sourcify.pp_vname name ;
+    pp_xml_vname name ;
   (* foc:history. *)
   gen_doc_history out_fmt from ;
   (* foc:informations. *)
@@ -717,11 +770,16 @@ let gen_doc_theorem out_fmt from name lexpr doc =
 
 
 
+(* *************************************************************** *)
+(** {b Descr}: Emits the XML code for a method of kind "property".
+
+    {b Rem}: Not exported outside this module.                     *)
+(* *************************************************************** *)
 let gen_doc_property out_fmt from name lexpr doc =
   Format.fprintf out_fmt "@[<h 2><foc:property>@\n" ;
   (* foc:foc-name. *)
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
-    Sourcify.pp_vname name ;
+    pp_xml_vname name ;
   (* foc:history. *)
   gen_doc_history out_fmt from ;
   (* foc:informations. *)
@@ -738,7 +796,7 @@ let gen_doc_property out_fmt from name lexpr doc =
 
 
 (* ************************************************************************ *)
-(** {b Descr}: Emits the XML code for the methods.
+(** {b Descr}: Emits the XML code for a method of a species.
     We also take in parameter the list of fields of the species definition.
     We need it only to recover the documentation attached to each method.
     In effect, in the [please_compile_me], we record the list of fields
@@ -783,27 +841,32 @@ let gen_doc_method out_fmt species_def_fields = function
         Format.fprintf out_fmt "@]</foc:signature>@\n"
         end)
       end)
-   | Env.TypeInformation.SF_let
-       (from, n, _parms, sch, body, _otp, _rep_deps, lflags) ->
+   | Env.TypeInformation.SF_let (from, n, pnames, sch, body, _, _, lflags) ->
          (begin
          (* foc:definition, foc:letprop. *)
          let doc = find_documentation_of_method n species_def_fields in
          match lflags.Env.TypeInformation.ldf_logical with
           | Parsetree.LF_logical ->
-              gen_doc_logical_let out_fmt body doc
+              let body_as_prop =
+                (match body with
+                 | Parsetree.BB_logical e -> e
+                 | Parsetree.BB_computational _ ->
+(* ?????????? well_founded.fcl external logical def. ?????????? *)
+		     assert false) in
+              gen_doc_logical_let
+                out_fmt (Some from) n pnames sch body_as_prop doc
           | Parsetree.LF_no_logical ->
               gen_doc_computational_let
-                out_fmt from n sch lflags.Env.TypeInformation.ldf_recursive body
-                doc
+                out_fmt from n sch lflags.Env.TypeInformation.ldf_recursive doc
          end)
    | Env.TypeInformation.SF_let_rec _l ->
        (* foc:definition, foc:letprop. *)  (* TODO *)
        ()
-   | Env.TypeInformation.SF_theorem (from, n, _, body, _proof, _rep_deps) ->
+   | Env.TypeInformation.SF_theorem (from, n, _, body, _proof, _) ->
        (* foc:theorem. *)
        let doc = find_documentation_of_method n species_def_fields in
        gen_doc_theorem out_fmt from n body doc
-   | Env.TypeInformation.SF_property (from, n, _, body, _rep_deps) ->
+   | Env.TypeInformation.SF_property (from, n, _, body, _) ->
        (* foc:property. *)
        let doc = find_documentation_of_method n species_def_fields in
        gen_doc_property out_fmt from n body doc
@@ -819,7 +882,7 @@ let gen_doc_method out_fmt species_def_fields = function
 let gen_doc_species out_fmt ~current_unit species_def species_descr =
   Format.fprintf out_fmt "@[<h 2><foc:species>@\n" ;
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
-    Sourcify.pp_vname species_def.Parsetree.ast_desc.Parsetree.sd_name ;
+    pp_xml_vname species_def.Parsetree.ast_desc.Parsetree.sd_name ;
   (* Information: foc:informations. *)
   let (_, _, i_descrip, i_mathml, i_latex, i_other) =
     extract_tagged_info_from_documentation species_def.Parsetree.ast_doc in
@@ -850,7 +913,7 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
   Format.fprintf out_fmt "@[<h 2><foc:concrete-type>@\n" ;
   (* foc:foc-name. *)
   Format.fprintf out_fmt "<foc:foc-name infile=\"%s\">%a</foc:foc-name>@\n"
-    current_unit Sourcify.pp_vname ty_vname ;
+    current_unit pp_xml_vname ty_vname ;
   (* foc:param*. *)
   List.iter
     (fun ty ->
@@ -876,7 +939,7 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
            (* foc:foc-name. *)
            Format.fprintf out_fmt
              "<foc:foc-name infile=\"%s\">%a</foc:foc-name>@\n"
-             current_unit Sourcify.pp_vname cstr_name ;
+             current_unit pp_xml_vname cstr_name ;
            (* foc:type. *)
            let ty = Types.specialize_with_args sch ty_param_vars in
            gen_doc_type ~reuse_mapping: true out_fmt ty ;
@@ -890,7 +953,7 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
            Format.fprintf out_fmt"@[<h 2><foc:record-label-and-type)@\n" ;
            (* foc:name. *)
            Format.fprintf out_fmt "<foc:name>%a</foc:name>@\n"
-             Sourcify.pp_vname field_name ;
+             pp_xml_vname field_name ;
            let ty = Types.specialize_with_args sch ty_param_vars in
            (* foc:type. *)
            gen_doc_type ~reuse_mapping: true out_fmt ty ;
@@ -912,8 +975,35 @@ let gen_doc_pcm out_fmt ~current_unit = function
         "<foc:coq-require>%s</foc:coq-require>@\n" comp_unit
   | Infer.PCM_type (ty_vname, ty_descrip) ->
       gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip
-  | Infer.PCM_let_def (_, _) ->
-      (* foc:global-fun foc:letprop *) () (* TODO. *)
+  | Infer.PCM_let_def (let_def, schemes) ->
+      (begin
+      (* foc:global-fun foc:letprop *)
+      match let_def.Parsetree.ast_desc.Parsetree.ld_logical with
+       | Parsetree.LF_logical ->
+           List.iter2
+             (fun binding scheme ->
+               let body_as_prop =
+                 (match binding.Parsetree.ast_desc.Parsetree.b_body with
+                  | Parsetree.BB_logical e -> e
+                  | Parsetree.BB_computational _ -> assert false) in
+               (* Extract the parameters names. *)
+               let pnames =
+                 List.map fst binding.Parsetree.ast_desc.Parsetree.b_params in
+               (* Since this is a toplevel definition and not a method, we don't
+                  have any history information. So, pass [None]. *)
+               gen_doc_logical_let
+                 out_fmt None binding.Parsetree.ast_desc.Parsetree.b_name
+                 pnames scheme body_as_prop binding.Parsetree.ast_doc)
+             let_def.Parsetree.ast_desc.Parsetree.ld_bindings schemes
+       | Parsetree.LF_no_logical ->
+           List.iter2
+             (fun binding sch ->
+               gen_doc_computational_toplevel_let
+                 out_fmt
+                 binding.Parsetree.ast_desc.Parsetree.b_name
+                 sch let_def.Parsetree.ast_desc.Parsetree.ld_rec)
+             let_def.Parsetree.ast_desc.Parsetree.ld_bindings schemes
+      end)
   | Infer.PCM_theorem (_, _) ->
       (* foc:theorem *) () (* TODO. *)
   | Infer.PCM_expr _ -> () (* TODO. *)
@@ -925,6 +1015,14 @@ let gen_doc_pcm out_fmt ~current_unit = function
 
 
 
+(* ************************************************************** *)
+(* string -> Parsetree.file_desc Parsetree.ast ->                 *)
+(*   Infer.please_compile_me list -> unit                         *)
+(** {b Descr} : Entry point for the documentation generation on a
+    complete FoCaL source code.
+
+    {b Rem}: Exported outside this module.                        *)
+(* ************************************************************** *)
 let gen_doc_please_compile_me input_file_name ast_root pcms =
   let input_name_no_extension = Filename.chop_extension input_file_name in
   let current_unit = Filename.basename input_name_no_extension in
@@ -941,7 +1039,7 @@ let gen_doc_please_compile_me input_file_name ast_root pcms =
     product the focdoc file with the '-focalize-doc' option of focalizecc. \
     But whereas an XML document can associate itself with a DTD using a \
     DOCTYPE declaration, RELAX NG does not define a way for an XML document \
-    to associate itself with a RELAX NG pattern.-->@\n@\n" ;
+    to associate itself with a RELAX NG pattern. -->@\n@\n" ;
   Format.fprintf out_fmt
     "@[<v 2>\
      <foc:focdoc xsi:schemaLocation=\"focal focdoc.xsd mathml2 \
