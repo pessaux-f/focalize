@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.74 2009-01-07 08:01:58 pessaux Exp $ *)
+(* $Id: types.ml,v 1.75 2009-01-12 13:37:26 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -868,7 +868,7 @@ let (reset_deps_on_rep,
     By the way, since it performs a walk on the whole type's structure, we
     take benefit of this to check if the unified type {ty] involved "Self",
     hence has a dependency on the carrier.
-    
+
     {b Rem} : Non exported oustide this module.                              *)
 (* ************************************************************************* *)
 let occur_check ~loc var ty =
@@ -1585,7 +1585,7 @@ let rec get_species_types_in_type ty =
 
 
 
-let pp_type_simple_to_xml =
+let pp_type_simple_to_xml ~reuse_mapping =
   (* ********************************************************************* *)
   (* ((type_simple * string) list) ref                                     *)
   (** {b Descr} : The mapping giving for each variable already seen the
@@ -1625,16 +1625,15 @@ let pp_type_simple_to_xml =
     type_variable_names_mapping := [] ;
     type_variables_counter := 0 in
 
-  let get_or_make_type_variable_name ty_var ~generalized_p =
+  let get_or_make_type_variable_name ty_var =
     (* No need to repr, [rec_pp] already did it. *)
     try List.assq ty_var !type_variable_names_mapping with
     | Not_found ->
         let name = Handy.int_to_base_26 !type_variables_counter in
         incr type_variables_counter ;
-        let name' = if not generalized_p then "_" ^ name else name in
         type_variable_names_mapping :=
-          (ty_var, name') :: !type_variable_names_mapping ;
-        name' in
+          (ty_var, name) :: !type_variable_names_mapping ;
+        name in
 
   let rec rec_pp ppf ty =
     (* First of all get the "repr" guy ! *)
@@ -1642,8 +1641,7 @@ let pp_type_simple_to_xml =
     match ty with
     | ST_var ty_var ->
         let ty_variable_name =
-          get_or_make_type_variable_name
-            ty_var ~generalized_p: (ty_var.tv_level = generic_level) in
+          get_or_make_type_variable_name ty_var in
         Format.fprintf ppf "<foc:tvar>%s</foc:tvar>@\n" ty_variable_name
     | ST_arrow (ty1, ty2) ->
         Format.fprintf ppf "@[<h 2><foc:fct>@\n%a%a@]</foc:fct>@\n"
@@ -1683,7 +1681,7 @@ let pp_type_simple_to_xml =
   (* ********************** *)
   (* The function itself... *)
   (fun ppf ty ->
-    reset_type_variables_mapping () ;
+    if not reuse_mapping then reset_type_variables_mapping () ;
     rec_pp ppf ty)
 ;;
 
@@ -1716,7 +1714,7 @@ let rec type_simple_to_local_type ty =
             (* [julius:] type has been deduced *)
             type_simple_to_local_type ts
        end
-   
+
    | ST_arrow (l, r) ->
        (* [julius:] no changes. *)
        Lt_fun (type_simple_to_local_type l, type_simple_to_local_type r)

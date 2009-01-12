@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.119 2009-01-06 13:57:17 pessaux Exp $ *)
+(* $Id: env.ml,v 1.120 2009-01-12 13:37:26 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -587,7 +587,7 @@ module TypeInformation = struct
 
   type type_description = {
     type_loc : Location.t ;     (** The type definition's location. *)
-    type_kind : type_kind ;             (** Kind of the type definition. *)
+    type_kind : type_kind ;     (** Kind of the type definition. *)
     (** The type scheme representing to what this type is equal to. For
         instance in type 'a t = 'a list, t is TK_abstract with [type_identity]
         representing 'a list.
@@ -595,7 +595,7 @@ module TypeInformation = struct
         with [type_identity] representing the type ST_construct ("t", []). *)
     type_identity : Types.type_scheme ;
     (** Parameters of the type. Be careful, they are generalized at the same
-        that the above scheme [type_identity] is created. Hence, physical
+        time that the above scheme [type_identity] is created. Hence, physical
         sharing exists and is crucial ! *)
     type_params : Types.type_simple list ;
     type_arity : int          (** Number of parameters of the type. *)

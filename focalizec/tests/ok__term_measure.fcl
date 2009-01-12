@@ -22,6 +22,6 @@ species Test_measure =
          by definition of true_gt_false
             theorem zero_inf_one
             hypothesis H
-    <1>2 qed.
+    <1>2 conclude
   ;
 end ;;

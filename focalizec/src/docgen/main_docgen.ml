@@ -1,7 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
 (*                        FoCaL compiler                               *)
-(*            Yvan Noyer                                               *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*            François Pessaux                                         *)
@@ -12,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.19 2009-01-09 18:06:44 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.20 2009-01-12 13:37:26 pessaux Exp $ *)
 
 
 
@@ -243,7 +242,7 @@ let find_title_author_and_description ast_root =
 
    {b Rem}: Not exported outside this module.                             *)
 (* ********************************************************************** *)
-let gendoc_foc_informations out_fmt name_opt math_opt latex_opt comments =
+let gen_doc_foc_informations out_fmt name_opt math_opt latex_opt comments =
   Format.fprintf out_fmt "@[<h 2><foc:informations>@\n" ;
   (match name_opt with
    | None -> ()
@@ -264,7 +263,7 @@ let gendoc_foc_informations out_fmt name_opt math_opt latex_opt comments =
 
 
 
-let gendoc_species_expr out_fmt ~current_unit species_expr =
+let gen_doc_species_expr out_fmt ~current_unit species_expr =
   (* ***************************************************************** *)
   (* Just a local recursive function to go inside the paren expression
      when generating the XML for species parameters expressions.       *)
@@ -322,7 +321,7 @@ let gendoc_species_expr out_fmt ~current_unit species_expr =
 
 
 
-let gendoc_inherits out_fmt ~current_unit species_def =
+let gen_doc_inherits out_fmt ~current_unit species_def =
   let species_def_descr = species_def.Parsetree.ast_desc in
   if species_def_descr.Parsetree.sd_inherits.Parsetree.ast_desc <> [] then
     (begin
@@ -331,7 +330,7 @@ let gendoc_inherits out_fmt ~current_unit species_def =
     List.iter
       (fun spe_expr ->
         Format.fprintf out_fmt "@[<h 2><foc:inherits>@\n" ;
-        gendoc_species_expr out_fmt ~current_unit spe_expr ;
+        gen_doc_species_expr out_fmt ~current_unit spe_expr ;
         Format.fprintf out_fmt "@]</foc:inherits>@\n")
       species_def_descr.Parsetree.sd_inherits.Parsetree.ast_desc
     end)
@@ -345,7 +344,7 @@ let gendoc_inherits out_fmt ~current_unit species_def =
 
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
-let gendoc_parameters out_fmt ~current_unit params =
+let gen_doc_parameters out_fmt ~current_unit params =
   List.iter
     (fun (p_vname, p_kind) ->
       Format.fprintf out_fmt "@[<h 2><foc:parameter kind=\"" ;
@@ -358,7 +357,7 @@ let gendoc_parameters out_fmt ~current_unit params =
              Sourcify.pp_vname p_vname ;
            Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
            (* order = "high" because the atom represents a species. *)
-           Format.fprintf out_fmt 
+           Format.fprintf out_fmt
              "<foc:atom order=\"high\" infile=\"%s\">%a</foc:atom>@\n"
              infile Sourcify.pp_vname ident_vname ;
            Format.fprintf out_fmt "@]</foc:type>@\n"
@@ -367,12 +366,12 @@ let gendoc_parameters out_fmt ~current_unit params =
            Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
              Sourcify.pp_vname p_vname ;
            Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
-           gendoc_species_expr out_fmt ~current_unit species_expr ;
+           gen_doc_species_expr out_fmt ~current_unit species_expr ;
            Format.fprintf out_fmt "@]</foc:type>@\n") ;
       (* <foc:informations>. The comments and other informative stuff. *)
       let (_, _, i_descrip, i_mathml, i_latex, i_other) =
         extract_tagged_info_from_documentation p_kind.Parsetree.ast_doc in
-      gendoc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
+      gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
       Format.fprintf out_fmt "@]</foc:parameter>@\n")
     params
 ;;
@@ -384,9 +383,9 @@ let gendoc_parameters out_fmt ~current_unit params =
 
     {b Rem}: Not exported outside this module.     *)
 (* *********************************************** *)
-let gendoc_type out_fmt ty =
+let gen_doc_type ~reuse_mapping out_fmt ty =
   Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
-  Types.pp_type_simple_to_xml out_fmt ty ;
+  Types.pp_type_simple_to_xml ~reuse_mapping out_fmt ty ;
   Format.fprintf out_fmt "@]</foc:type>@\n"
 ;;
 
@@ -398,7 +397,7 @@ let gendoc_type out_fmt ty =
     information leads tp a "<foc:of-species></foc:of-species>" markup instead
     of a "infile" attribute.
 *)
-let gendoc_qualified_vname_not_EI_method out_fmt qvname =
+let gen_doc_qualified_vname_not_EI_method out_fmt qvname =
   match qvname with
    | Parsetree.Vname vname ->
        Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
@@ -411,13 +410,13 @@ let gendoc_qualified_vname_not_EI_method out_fmt qvname =
 
 
 
-let gendoc_expr_ident out_fmt id =
+let gen_doc_expr_ident out_fmt id =
   match id.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
        Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
          Sourcify.pp_vname vname
    | Parsetree.EI_global qvname ->
-       gendoc_qualified_vname_not_EI_method out_fmt qvname
+       gen_doc_qualified_vname_not_EI_method out_fmt qvname
    | Parsetree.EI_method (qcoll_name_opt, vname) ->
        (begin
        Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
@@ -448,7 +447,7 @@ let gendoc_expr_ident out_fmt id =
 
     {b Rem}: Not exported outside this module.          *)
 (* **************************************************** *)
-let gendoc_history out_fmt from_hist =
+let gen_doc_history out_fmt from_hist =
   (* foc:initial-apparition. The species where the field was declared or
      defined for the first time along the inheritance tree without being
      re-defined. *)
@@ -485,7 +484,7 @@ let gen_doc_logical_let out_fmt _ _ =
 
     {b Rem}: Not exported outside this modole.    *)
 (* ********************************************** *)
-let gendoc_constant out_fmt cst =
+let gen_doc_constant out_fmt cst =
   match cst.Parsetree.ast_desc with
    | Parsetree.C_int s ->
        Format.fprintf out_fmt "<foc:int>\"%s\"</foc:int>@\n" s
@@ -513,14 +512,14 @@ let gen_doc_computational_let out_fmt from name sch rec_flag _body doc =
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
     Sourcify.pp_vname name ;
   (* foc:history. *)
-  gendoc_history out_fmt from ;
+  gen_doc_history out_fmt from ;
   (* foc:informations. *)
   let (_, _, i_descrip, i_mathml, i_latex, i_other) =
     extract_tagged_info_from_documentation doc in
-  gendoc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
+  gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
   (* foc:ho?. *) (* TODO *)
   (* foc:type. *)
-  gendoc_type out_fmt (Types.specialize sch) ;
+  gen_doc_type ~reuse_mapping: false out_fmt (Types.specialize sch) ;
   Format.fprintf out_fmt "@]</foc:definition>@\n"
 ;;
 
@@ -556,7 +555,7 @@ let rec gen_doc_forall_exists out_fmt binder_name vnames ty_expr lexpr =
           "<foc:var><foc:foc-name>%a</foc:foc-name></foc:var>@\n"
           Sourcify.pp_vname h ;
         (* foc:type. *)
-        gendoc_type out_fmt ty ;
+        gen_doc_type ~reuse_mapping: true out_fmt ty ;
         (* %foc:proposition. *)
         rec_gen q ;
         Format.fprintf out_fmt "@]</foc:%s>@\n" binder_name in
@@ -602,7 +601,7 @@ and gen_doc_proposition out_fmt initial_prop =
          Format.fprintf out_fmt "@[<h 2><foc:not>@\n" ;
          rec_gen lexpr ;
          Format.fprintf out_fmt "@]</foc:not>@\n"
-     | Parsetree.Pr_expr expr -> gendoc_expression out_fmt expr
+     | Parsetree.Pr_expr expr -> gen_doc_expression out_fmt expr
      | Parsetree.Pr_paren lexpr ->
          (* foc:paren-logical-expr. *)
          Format.fprintf out_fmt "@[<h 2><foc:paren-logical-expr>@\n" ;
@@ -612,14 +611,14 @@ and gen_doc_proposition out_fmt initial_prop =
 
 
 
-and gendoc_expression out_fmt initial_expression =
+and gen_doc_expression out_fmt initial_expression =
   let rec rec_gen expression =
     match expression.Parsetree.ast_desc with
      | Parsetree.E_self ->
          Format.fprintf out_fmt "@[<h 2><foc:identifier>@\n" ;
          Format.fprintf out_fmt "<foc:foc-name>Self</foc:foc-name>" ;
          Format.fprintf out_fmt "@]</foc:identifier>@\n"
-     | Parsetree.E_const cst -> gendoc_constant out_fmt cst
+     | Parsetree.E_const cst -> gen_doc_constant out_fmt cst
      | Parsetree.E_fun (vnames, expr) ->
          Format.fprintf out_fmt "@[<h 2>foc:fun>\n" ;
          List.iter
@@ -631,7 +630,7 @@ and gendoc_expression out_fmt initial_expression =
          Format.fprintf out_fmt "@]</foc:fun>@\n"
      | Parsetree.E_var id ->
          Format.fprintf out_fmt "@[<h 2><foc:identifier>@\n" ;
-         gendoc_expr_ident out_fmt id ;
+         gen_doc_expr_ident out_fmt id ;
          Format.fprintf out_fmt "@]</foc:identifier>@\n"
      | Parsetree.E_app (expr, exprs) ->
          Format.fprintf out_fmt "@[<h 2><foc:application>@\n" ;
@@ -656,7 +655,7 @@ and gendoc_expression out_fmt initial_expression =
          List.iter
            (fun (label_ident, expr) ->
              let (Parsetree.LI label) = label_ident.Parsetree.ast_desc in
-             gendoc_qualified_vname_not_EI_method out_fmt label ;
+             gen_doc_qualified_vname_not_EI_method out_fmt label ;
              rec_gen expr)
            label_exprs ;
          Format.fprintf out_fmt "@]</foc:record-expr>@\n"
@@ -664,7 +663,7 @@ and gendoc_expression out_fmt initial_expression =
          Format.fprintf out_fmt "@[<h 2><foc:record-access-expr>@\n" ;
          rec_gen expr ;
          let (Parsetree.LI label) = label_ident.Parsetree.ast_desc in
-         gendoc_qualified_vname_not_EI_method out_fmt label ;
+         gen_doc_qualified_vname_not_EI_method out_fmt label ;
          Format.fprintf out_fmt "@]</foc:record-access-expr>@\n"
      | Parsetree.E_record_with (expr, label_exprs) ->
          Format.fprintf out_fmt "@[<h 2><foc:record-with-expr>@\n" ;
@@ -672,7 +671,7 @@ and gendoc_expression out_fmt initial_expression =
          List.iter
            (fun (label_ident, expr) ->
              let (Parsetree.LI label) = label_ident.Parsetree.ast_desc in
-             gendoc_qualified_vname_not_EI_method out_fmt label ;
+             gen_doc_qualified_vname_not_EI_method out_fmt label ;
              rec_gen expr)
            label_exprs ;
          Format.fprintf out_fmt "@]</foc:record-with-expr>@\n"
@@ -700,11 +699,11 @@ let gen_doc_theorem out_fmt from name lexpr doc =
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
     Sourcify.pp_vname name ;
   (* foc:history. *)
-  gendoc_history out_fmt from ;
+  gen_doc_history out_fmt from ;
   (* foc:informations. *)
   let (_, _, i_descrip, i_mathml, i_latex, i_other) =
     extract_tagged_info_from_documentation doc in
-  gendoc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
+  gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
   (* foc:proposition. *)
   Format.fprintf out_fmt "@[<h 2><foc:proposition>@\n" ;
   gen_doc_proposition out_fmt lexpr ;
@@ -724,11 +723,11 @@ let gen_doc_property out_fmt from name lexpr doc =
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
     Sourcify.pp_vname name ;
   (* foc:history. *)
-  gendoc_history out_fmt from ;
+  gen_doc_history out_fmt from ;
   (* foc:informations. *)
   let (_, _, i_descrip, i_mathml, i_latex, i_other) =
     extract_tagged_info_from_documentation doc in
-  gendoc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
+  gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
   (* foc:proposition. *)
   Format.fprintf out_fmt "@[<h 2><foc:proposition>@\n" ;
   gen_doc_proposition out_fmt lexpr ;
@@ -748,7 +747,7 @@ let gen_doc_property out_fmt from name lexpr doc =
 
     {b Rem}: Not exported outside this module.                              *)
 (* ************************************************************************ *)
-let gendoc_method out_fmt species_def_fields = function
+let gen_doc_method out_fmt species_def_fields = function
   | Env.TypeInformation.SF_sig (from, n, sch) ->
       (begin
       (* Factorise the code: directly get the documentation for the 2 cases ! *)
@@ -760,12 +759,12 @@ let gendoc_method out_fmt species_def_fields = function
         (begin
         Format.fprintf out_fmt "@[<h 2><foc:carrier>@\n" ;
         (* foc:history. *)
-        gendoc_history out_fmt from ;
+        gen_doc_history out_fmt from ;
         (* foc:informations. *)
-        gendoc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
+        gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
         (* foc:ho?. *) (* TODO. *)
         (* foc:type. *)
-        gendoc_type out_fmt (Types.specialize sch) ;
+        gen_doc_type ~reuse_mapping: false out_fmt (Types.specialize sch) ;
         Format.fprintf out_fmt "@]</foc:carrier>@\n"
         end)
       else
@@ -775,12 +774,12 @@ let gendoc_method out_fmt species_def_fields = function
         (* foc:foc-name. *)
         Format.fprintf out_fmt "<foc:foc-name>%s</foc:foc-name>@\n" n_as_xml ;
         (* foc:history. *)
-        gendoc_history out_fmt from ;
+        gen_doc_history out_fmt from ;
         (* foc:informations. *)
-        gendoc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
+        gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
         (* foc:ho?. *) (* TODO. *)
         (* foc:type. *)
-        gendoc_type out_fmt (Types.specialize sch) ;
+        gen_doc_type ~reuse_mapping: false out_fmt (Types.specialize sch) ;
         Format.fprintf out_fmt "@]</foc:signature>@\n"
         end)
       end)
@@ -817,24 +816,88 @@ let gendoc_method out_fmt species_def_fields = function
 
    {b Rem}: Not exported outside this module.                         *)
 (* ****************************************************************** *)
-let gendoc_species out_fmt ~current_unit species_def species_descr =
+let gen_doc_species out_fmt ~current_unit species_def species_descr =
   Format.fprintf out_fmt "@[<h 2><foc:species>@\n" ;
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
     Sourcify.pp_vname species_def.Parsetree.ast_desc.Parsetree.sd_name ;
   (* Information: foc:informations. *)
   let (_, _, i_descrip, i_mathml, i_latex, i_other) =
     extract_tagged_info_from_documentation species_def.Parsetree.ast_doc in
-  gendoc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
+  gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
   (* Parameters: foc:parameter*. *)
-  gendoc_parameters
+  gen_doc_parameters
     out_fmt ~current_unit species_def.Parsetree.ast_desc.Parsetree.sd_params ;
   (* Inherits: foc:inherits*. *)
-  gendoc_inherits out_fmt ~current_unit species_def ;
+  gen_doc_inherits out_fmt ~current_unit species_def ;
   (* Methods: (%foc:component;)*. *)
   List.iter
-    (gendoc_method out_fmt species_def.Parsetree.ast_desc.Parsetree.sd_fields)
+    (gen_doc_method out_fmt species_def.Parsetree.ast_desc.Parsetree.sd_fields)
     species_descr.Env.TypeInformation.spe_sig_methods ;
   Format.fprintf out_fmt "@]</foc:species>@\n@\n" ;
+;;
+
+
+
+let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
+  (* During specialization, we remind the instanciated variables of the type
+     identity scheme to force later their usage for the specialization of
+     each sum constructor or record fields. Hence, the sharing of these
+     varibles between all these types will be preserved. *)
+  let (ty_identity, ty_param_vars) =
+    Types.specialize_n_show_instanciated_generalized_vars
+      ty_descrip.Env.TypeInformation.type_identity in
+  (* foc:concrete-type. *)
+  Format.fprintf out_fmt "@[<h 2><foc:concrete-type>@\n" ;
+  (* foc:foc-name. *)
+  Format.fprintf out_fmt "<foc:foc-name infile=\"%s\">%a</foc:foc-name>@\n"
+    current_unit Sourcify.pp_vname ty_vname ;
+  (* foc:param*. *)
+  List.iter
+    (fun ty ->
+      Format.fprintf out_fmt "<foc:param infile=\"%s\">" current_unit ;
+      gen_doc_type out_fmt ~reuse_mapping: true ty ;
+      Format.fprintf out_fmt "</foc:param>@\n")
+    ty_param_vars ;
+  (* (foc:alias|foc:constr* ). *)
+  (match ty_descrip.Env.TypeInformation.type_kind with
+   | Env.TypeInformation.TK_abstract ->
+       (* TODO. We don't make any difference between an abstract type and
+          an abbrev. Both are generated in XML as aliases. A bit weak... *)
+       Format.fprintf out_fmt "<foc:alias>" ;
+       gen_doc_type ~reuse_mapping: true out_fmt ty_identity ;
+       Format.fprintf out_fmt "</foc:alias>@\n"
+   | Env.TypeInformation.TK_external _ ->
+       Format.fprintf out_fmt "<foc:external-type></foc:external-type>@\n"
+   | Env.TypeInformation.TK_variant constructors ->
+       List.iter
+         (fun (cstr_name, _, sch) ->
+           (* foc:constr. *)
+           Format.fprintf out_fmt"@[<h 2><foc:constr>@\n" ;
+           (* foc:foc-name. *)
+           Format.fprintf out_fmt
+             "<foc:foc-name infile=\"%s\">%a</foc:foc-name>@\n"
+             current_unit Sourcify.pp_vname cstr_name ;
+           (* foc:type. *)
+           let ty = Types.specialize_with_args sch ty_param_vars in
+           gen_doc_type ~reuse_mapping: true out_fmt ty ;
+           Format.fprintf out_fmt "@]</foc:constr>@\n")
+         constructors
+   | Env.TypeInformation.TK_record fields ->
+       (* foc:record-type. *)
+       Format.fprintf out_fmt"@[<h 2><foc:record-type)@\n" ;
+       List.iter
+         (fun (field_name, _, sch) ->
+           Format.fprintf out_fmt"@[<h 2><foc:record-label-and-type)@\n" ;
+           (* foc:name. *)
+           Format.fprintf out_fmt "<foc:name>%a</foc:name>@\n"
+             Sourcify.pp_vname field_name ;
+           let ty = Types.specialize_with_args sch ty_param_vars in
+           (* foc:type. *)
+           gen_doc_type ~reuse_mapping: true out_fmt ty ;
+           Format.fprintf out_fmt "@]</foc:record-label-and-type>@\n")
+         fields ;
+       Format.fprintf out_fmt "@]</foc:record-type>@\n") ;
+  Format.fprintf out_fmt "@]</foc:concrete-type>@\n"
 ;;
 
 
@@ -847,22 +910,22 @@ let gen_doc_pcm out_fmt ~current_unit = function
   | Infer.PCM_coq_require comp_unit ->
       Format.fprintf out_fmt
         "<foc:coq-require>%s</foc:coq-require>@\n" comp_unit
-  | Infer.PCM_type (_, _) ->
-      (* foc:concrete-type *) () (* TODO. *)
+  | Infer.PCM_type (ty_vname, ty_descrip) ->
+      gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip
   | Infer.PCM_let_def (_, _) ->
       (* foc:global-fun foc:letprop *) () (* TODO. *)
   | Infer.PCM_theorem (_, _) ->
       (* foc:theorem *) () (* TODO. *)
   | Infer.PCM_expr _ -> () (* TODO. *)
   | Infer.PCM_species (species_def, species_descr, _) ->
-      gendoc_species out_fmt ~current_unit species_def species_descr
+      gen_doc_species out_fmt ~current_unit species_def species_descr
   | Infer.PCM_collection (_col_def, _col_description, _) ->
       (* foc:collection *) () (* TODO. *)
 ;;
 
 
 
-let gendoc_please_compile_me input_file_name ast_root pcms =
+let gen_doc_please_compile_me input_file_name ast_root pcms =
   let input_name_no_extension = Filename.chop_extension input_file_name in
   let current_unit = Filename.basename input_name_no_extension in
   let out_filename = input_name_no_extension ^ ".xml" in

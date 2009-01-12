@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: polys_abstract.fcl,v 1.3 2009-01-11 01:24:06 weis Exp $ *)
+(* $Id: polys_abstract.fcl,v 1.4 2009-01-12 13:37:26 pessaux Exp $ *)
 
 (**                                                                      
  @title Abstract polynomials
@@ -119,12 +119,12 @@ species Formal_indexed_sum (M is Set_with_zero,
 
    theorem leading_coefficient_is_tail_with_degree: all p in Self,
      !equal (!reductum (p), !tail (p, !degree (p)))
-     proof: assumed {* *};
+     proof = assumed {* *};
 
    theorem tail_has_smaller_degree: all p q in Self, all d in I,
      !equal (p, !tail (q, d)) -> 
        ~  (!is_zero (q)) ->  I!lt (!degree (q), d)
-    proof: assumed {* *};
+    proof = assumed {* *};
 
 (*    (\** returns the number of monomials *\) *)
 (*    let rec number_of_monomials (p) = *)
@@ -155,7 +155,7 @@ species Formal_polynomials_commutative_ring
 
     theorem monomial_spec: all v in R, all d in D,
       !equal (!monomial (v, d), !module_mult (v, !generator (d)))
-      proof: by property !equal_reflexive definition of monomial ;
+      proof = by property !equal_reflexive definition of monomial ;
 
     let fmecg (p in Self, c in R, delta in D, q in Self) in Self =
       if R!is_zero (c)
@@ -164,7 +164,7 @@ species Formal_polynomials_commutative_ring
     theorem fmecg_combines : all p q in Self, all c in R, all delta in D,
       !equal (!fmecg (p, c, delta, q),
              !plus (p, !mult (!monomial (c, delta), q)))
-      proof: assumed {* [rr]: todo *};
+      proof = assumed {* [rr]: todo *};
 end;;
 
 
@@ -233,11 +233,11 @@ end;;
 
 (*   local theorem pow_0: all c in r, *)
 (*     r!equal (r!one, !pow (c, nat!zero)) *)
-(*     proof:assumed; *)
+(*     proof =assumed; *)
 
 (*   local theorem pow_ind: all c in r, all n in nat, *)
 (*     r!equal (!pow (c, nat!successor (n)), r!mult (c, !pow (c, n))) *)
-(*     proof: assumed; *)
+(*     proof = assumed; *)
 
 (*   (\**  *)
 (*     pseudo division is only defined for non null divisor *)

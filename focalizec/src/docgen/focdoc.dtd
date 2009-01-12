@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 <!-- FoCDoc DTD -->
-<!-- $Id: focdoc.dtd,v 1.6 2009-01-09 18:06:44 pessaux Exp $ -->
+<!-- $Id: focdoc.dtd,v 1.7 2009-01-12 13:37:26 pessaux Exp $ -->
 <!-- to describe the mathml equivalent of a particular function --> 
 
 <!-- mathml.dtd ne sera plus utilise dans le dtd. Les annotations mathml dans
@@ -86,11 +86,18 @@ pour implements) n'est plus foc-name mais de type atom ou app.
         Pour les types définis comme alias des types existants, l'élément
         alias est utilisé.  -->
 
-<!ELEMENT foc:concrete-type (foc:foc-name,foc:param*,(foc:alias|foc:constr*))>
+<!ELEMENT foc:concrete-type (foc:foc-name,foc:param*,(foc:alias|foc:constr*|foc:record-type|foc:external-type))>
 <!ELEMENT foc:alias (foc:type)>
 
 <!ELEMENT foc:constr (foc:foc-name,foc:type)>
 <!ATTLIST foc:constr defined CDATA #IMPLIED>
+
+<!-- Not yet used in XSLs. -->
+<!ELEMENT foc:record-type ((foc:record-label-and-type)+)>
+<!ELEMENT foc:record-label-and-type (foc:name, (%foc:type;))>
+<!ELEMENT foc:external-type>
+<!-- /Not yet used in XSLs. -->
+
 
 <!-- ajout frederic: pour considérer les letprop -->
 <!-- modif frederic : les elements foc:history et foc:informations deviennent

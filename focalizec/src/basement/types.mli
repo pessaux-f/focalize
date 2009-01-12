@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.44 2008-12-22 15:04:50 pessaux Exp $ *)
+(* $Id: types.mli,v 1.45 2009-01-12 13:37:26 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string;;
@@ -190,7 +190,8 @@ module SpeciesCarrierTypeSet :
 ;;
 
 val get_species_types_in_type : type_simple -> SpeciesCarrierTypeSet.t;;
-val pp_type_simple_to_xml : Format.formatter -> type_simple -> unit
+val pp_type_simple_to_xml :
+  reuse_mapping: bool -> Format.formatter -> type_simple -> unit
 
 
 (** *)
