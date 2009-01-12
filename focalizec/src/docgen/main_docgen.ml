@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.21 2009-01-12 15:33:51 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.22 2009-01-12 17:14:39 pessaux Exp $ *)
 
 
 
@@ -847,14 +847,21 @@ let gen_doc_method out_fmt species_def_fields = function
          let doc = find_documentation_of_method n species_def_fields in
          match lflags.Env.TypeInformation.ldf_logical with
           | Parsetree.LF_logical ->
-              let body_as_prop =
-                (match body with
-                 | Parsetree.BB_logical e -> e
-                 | Parsetree.BB_computational _ ->
-(* ?????????? well_founded.fcl external logical def. ?????????? *)
-		     assert false) in
-              gen_doc_logical_let
-                out_fmt (Some from) n pnames sch body_as_prop doc
+              (begin
+              match body with
+               | Parsetree.BB_logical lexpr ->
+                   gen_doc_logical_let
+                     out_fmt (Some from) n pnames sch lexpr doc
+               | Parsetree.BB_computational
+                   { Parsetree.ast_desc = Parsetree.E_external _ } ->
+                     (* The only admitted case is a "logical let" defined as an
+                        "external". In this case, since external stuff is an
+                        expression, we find an expression as body for a 
+                        "logical let". Otherwise, in any other case that's an
+                        error. *)
+                     ()  (* TODO. Not handled by the DTD and XSLs. *)
+               | Parsetree.BB_computational _ -> assert false
+              end)
           | Parsetree.LF_no_logical ->
               gen_doc_computational_let
                 out_fmt from n sch lflags.Env.TypeInformation.ldf_recursive doc
@@ -982,18 +989,26 @@ let gen_doc_pcm out_fmt ~current_unit = function
        | Parsetree.LF_logical ->
            List.iter2
              (fun binding scheme ->
-               let body_as_prop =
-                 (match binding.Parsetree.ast_desc.Parsetree.b_body with
-                  | Parsetree.BB_logical e -> e
-                  | Parsetree.BB_computational _ -> assert false) in
-               (* Extract the parameters names. *)
-               let pnames =
-                 List.map fst binding.Parsetree.ast_desc.Parsetree.b_params in
-               (* Since this is a toplevel definition and not a method, we don't
-                  have any history information. So, pass [None]. *)
-               gen_doc_logical_let
-                 out_fmt None binding.Parsetree.ast_desc.Parsetree.b_name
-                 pnames scheme body_as_prop binding.Parsetree.ast_doc)
+               match binding.Parsetree.ast_desc.Parsetree.b_body with
+                | Parsetree.BB_logical lexpr ->
+                    (* Extract the parameters names. *)
+                    let pnames =
+                      List.map
+                        fst binding.Parsetree.ast_desc.Parsetree.b_params in
+                    (* Since this is a toplevel definition and not a method, we
+                       don't have any history information. So, pass [None]. *)
+                    gen_doc_logical_let
+                      out_fmt None binding.Parsetree.ast_desc.Parsetree.b_name
+                      pnames scheme lexpr binding.Parsetree.ast_doc
+                | Parsetree.BB_computational
+                    { Parsetree.ast_desc = Parsetree.E_external _ } ->
+                      (* The only admitted case is a "logical let" defined as an
+                         "external". In this case, since external stuff is an
+                         expression, we find an expression as body for a 
+                         "logical let". Otherwise, in any other case that's an
+                         error. *)
+                      ()  (* TODO. Not handled by the DTD and XSLs. *)
+                | Parsetree.BB_computational _ -> assert false)
              let_def.Parsetree.ast_desc.Parsetree.ld_bindings schemes
        | Parsetree.LF_no_logical ->
            List.iter2
