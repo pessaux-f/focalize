@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.44 2009-01-11 22:36:06 weis Exp $
+# $Id: configure,v 1.45 2009-01-12 10:29:44 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -38,40 +38,63 @@ check () {
 #
 # Finding acceptable defaults for various unusual commands
 #
-set_default_sum () {
+set_sum_default () {
   for i in sum md5 md5sum md5deep sha1deep sha256deep; do
     if check $i; then DEFAULT_SUM=$i; break; fi
   done
 }
 
-set_default_convert () {
+set_convert_default () {
   for i in convert; do
     if check $i; then DEFAULT_CONVERT=$i; break; fi
   done
 }
 
-set_default_gs () {
+set_gs_default () {
   for i in gs; do
     if check $i; then DEFAULT_GS=$i; break; fi
   done
 }
 
-set_default_xmlrpc () {
+set_xmlrpc_default () {
   for i in xmlrpc; do
     if check $i; then DEFAULT_XMLRPC=$i; break; fi
   done
 }
 
 set_command_defaults () {
-  set_default_sum;
-  set_default_convert;
-  set_default_gs;
-  set_default_xmlrpc;
+  set_sum_default;
+  set_convert_default;
+  set_gs_default;
+  set_xmlrpc_default;
 }
 
 #
 # Defining all default variables
 #
+
+# The two root variables of the configuration are
+# $(PREFIX) and $(SHARE_PREFIX).
+#
+# $(PREFIX) defines the root directory for the project installation after its
+# proper configuration and compilation.
+# This directory will contain
+# - $(PREFIX)/bin for installation of the project binaries,
+# - $(PREFIX)/lib for installation of the project library files,
+# - $(PREFIX)/man for installation of the project manual pages,
+# - $(PREFIX)/doc for installation of the project documentation.
+#
+# $(SHARE_PREFIX) defines the root directory for the installation of private
+# versions of external tools, if necessary.
+# This directory will contain
+# - $(SHARE_PREFIX)/bin for installation of the project external tools binaries,
+# - $(SHARE_PREFIX)/lib for installation of the project external tools library files,
+# - $(SHARE_PREFIX)/man for installation of the project external tools manual pages,
+# - $(SHARE_PREFIX)/doc for installation of the project external tools documentation.
+
+# Default variable assigment
+
+# Variable assigment
 
 # Variables are divided into 3 groups:
 # - intrinsic defaults, which are string constants,
@@ -80,6 +103,7 @@ set_command_defaults () {
 #
 # For those groups we define a procedure that sets the defaults,
 # and a procedure that sets the variables after options have been processed.
+#
 # Then procedure set_defaults is called before parsing options, and
 # set_variables is called after parsing options.
 
@@ -133,33 +157,31 @@ set_intrinsic () {
 
   # Intrinsic settings for the project.
 
-  if test -z ${DEBUG}; then
-  DEBUG=${DEFAULT_DEBUG}; fi
+  if test -z ${DEBUG}; then DEBUG=${DEFAULT_DEBUG}; fi
 
   # Intrinsic settings for the project installation.
-  DEFAULT_PREFIX="/usr/local"
+  if test -z ${PREFIX}; then PREFIX=${DEFAULT_PREFIX}; fi
   if test -z "${USE_SHARE_SUB_DIRECTORY}"; then
-  USE_SHARE_SUB_DIRECTORY="${DEFAULT_USE_SHARE_SUB_DIRECTORY}"; fi
+    USE_SHARE_SUB_DIRECTORY="${DEFAULT_USE_SHARE_SUB_DIRECTORY}"; fi
   if test -z "${USE_PROJECT_SUB_DIRECTORY}"; then
-  USE_PROJECT_SUB_DIRECTORY="${DEFAULT_USE_PROJECT_SUB_DIRECTORY}"; fi
+    USE_PROJECT_SUB_DIRECTORY="${DEFAULT_USE_PROJECT_SUB_DIRECTORY}"; fi
 
   # External tools
   if test -z "${STATIC_EXTERNAL}"; then
-  STATIC_EXTERNAL="${DEFAULT_STATIC_EXTERNAL}"; fi
+    STATIC_EXTERNAL="${DEFAULT_STATIC_EXTERNAL}"; fi
   if test -z "${MAKE_EXTERNAL}"; then
-  MAKE_EXTERNAL="${DEFAULT_MAKE_EXTERNAL}"; fi
+    MAKE_EXTERNAL="${DEFAULT_MAKE_EXTERNAL}"; fi
   if test -z "${MAGIC_MAKE_EXTERNAL}"; then
-  MAGIC_MAKE_EXTERNAL="${DEFAULT_MAGIC_MAKE_EXTERNAL}"; fi
+    MAGIC_MAKE_EXTERNAL="${DEFAULT_MAGIC_MAKE_EXTERNAL}"; fi
 
-  # Intrinsic settings for Caml
-  if test ${DEBUG}; then
-    BYT_DEBUG_FLAGS="${DEFAULT_BYT_DEBUG_FLAGS}";
-    BIN_DEBUG_FLAGS="${DEFAULT_BIN_DEBUG_FLAGS}";
-  fi
+  # Intrinsic settings for Caml.
+  if test -z "${BYT_DEBUG_FLAGS}"; then
+    BYT_DEBUG_FLAGS="${DEFAULT_BYT_DEBUG_FLAGS}"; fi
+  if test -z "${BYT_DEBUG_FLAGS}"; then
+    BIN_DEBUG_FLAGS="${DEFAULT_BIN_DEBUG_FLAGS}"; fi
 
   # Intrinsic settings for Coq.
-  if test -z "${COQRC}"; then
-  COQRC="${DEFAULT_COQRC}"; fi
+  if test -z "${COQRC}"; then COQRC="${DEFAULT_COQRC}"; fi
 
   # Setting coq make command.
   if test -z "${COQ_MAKE}"; then
@@ -174,38 +196,42 @@ set_intrinsic () {
   # Intrinsic settings for Zenon.
   if test -z "${USE_COQC}"; then USE_COQC="${DEFAULT_USE_COQC}"; fi
   if test -z "${SUM}"; then SUM="${DEFAULT_SUM}"; else
-    if check $SUM; then :; else
-      abort_configuration "unavailable command $SUM.";
+    if check "${SUM}"; then :; else
+      abort_configuration "unavailable command ${SUM}.";
       abort_remedy "Choose an executable check sum command."
     fi
   fi
-  if test -z $CONVERT; then CONVERT="$DEFAULT_CONVERT"; else
-    if check $CONVERT; then :; else
-      abort_configuration "unavailable command $CONVERT.";
+  if test -z ${CONVERT}; then CONVERT="${DEFAULT_CONVERT}"; else
+    if check ${CONVERT}; then :; else
+      abort_configuration "unavailable command ${CONVERT}.";
       abort_remedy "Choose an executable convert command."
     fi
   fi
-  if test -z $GS; then GS="$DEFAULT_GS"; else
-    if check $GS; then :; else
-      abort_configuration "unavailable command $GS.";
+  if test -z "${GS}"; then GS="${DEFAULT_GS}"; else
+    if check ${GS}; then :; else
+      abort_configuration "unavailable command ${GS}.";
       abort_remedy "Choose an executable gs command."
     fi
   fi
 
   # Intrinsic settings for Zvtov.
   if test -z "$USE_XMLRPC"; then USE_XMLRPC=${DEFAULT_USE_XMLRPC}; fi
-  if test -z $XMLRPC; then XMLRPC="$DEFAULT_XMLRPC"; else
-    if check $XMLRPC; then :; else
-      abort_configuration "unavailable command $XMLRPC.";
+  if test -z ${XMLRPC}; then XMLRPC="${DEFAULT_XMLRPC}"; else
+    if check ${XMLRPC}; then :; else
+      abort_configuration "unavailable command ${XMLRPC}.";
       abort_remedy "Choose an executable xmlrpc command."
     fi
   fi
 
-  if $USE_XMLRPC; then
+  if ${USE_XMLRPC}; then
     # Check_XMLRPC;
-    if check $XMLRPC; then :; else
-      abort_configuration "unavailable command $XMLRPC.";
+    if check ${XMLRPC}; then :; else
+      abort_configuration "unavailable command ${XMLRPC}.";
       abort_remedy "Choose an executable xmlrpc command."
+    fi
+    # set_XMLRPC_MODULE;
+    if ${USE_XMLRPC}; then
+      if test -z ${XMLRPC_MODULE}; then XMLRPC_MODULE="${DEFAULT_XMLRPC_MODULE}"; fi
     fi
     # set_XMLRPC_FLAGS;
     if test -z "$XMLRPC_FLAGS"; then
@@ -223,10 +249,6 @@ set_intrinsic () {
         XMLRPC_LINK="${DEFAULT_XMLRPC_LINK}"
       fi
     fi
-    # set_XMLRPC_MODULE;
-    if $USE_XMLRPC; then
-      if test -z $XMLRPC_MODULE; then XMLRPC_MODULE="${DEFAULT_XMLRPC_MODULE}"; fi
-    fi
   fi
 
 }
@@ -238,16 +260,6 @@ set_prefix_defaults () {
   DEFAULT_LIB_DIR="${DEFAULT_PREFIX}/lib"
   DEFAULT_MAN_DIR="${DEFAULT_PREFIX}/man"
   DEFAULT_DOC_DIR="${DEFAULT_PREFIX}/doc"
-
-  # General defaults for the installation of the external tools of the project.
-  # Normal setting is:
-  # DEFAULT_SHARE_PREFIX="${DEFAULT_PREFIX}/share"
-  # For Zenon the DEFAULT_SHARE_PREFIX should be the DEFAULT_PREFIX.
-  if $USE_SHARE_SUB_DIRECTORY; then
-    DEFAULT_SHARE_PREFIX="${DEFAULT_PREFIX}/share"
-  else
-    DEFAULT_SHARE_PREFIX="${DEFAULT_PREFIX}"
-  fi
 
 }
 
@@ -264,13 +276,23 @@ set_prefix () {
 }
 
 # Setting (or defining) variables that depend upon ${DEFAULT_SHARE_PREFIX}.
-set_share_defaults () {
+set_share_prefix_defaults () {
+
+  # General defaults for the installation of the external tools of the project.
+  # Normal setting is:
+  # DEFAULT_SHARE_PREFIX="${DEFAULT_PREFIX}/share"
+  # For Zenon the DEFAULT_SHARE_PREFIX should be the DEFAULT_PREFIX.
+  if ${DEFAULT_USE_SHARE_SUB_DIRECTORY}; then
+    DEFAULT_SHARE_PREFIX="${DEFAULT_PREFIX}/share"
+  else
+    DEFAULT_SHARE_PREFIX="${DEFAULT_PREFIX}"
+  fi
 
   # The normal default binding is
   # DEFAULT_SHARE_PROJECT_DIR="${DEFAULT_SHARE_PREFIX}/${FULL_PROJECT_NAME}"
   # For traditional projects (e.g. zenon), there is no FULL_PROJECT_NAME sub directory,
   # we directly use the DEFAULT_SHARE_PREFIX.
-  if ${USE_PROJECT_SUB_DIRECTORY}; then
+  if ${DEFAULT_USE_PROJECT_SUB_DIRECTORY}; then
     DEFAULT_SHARE_PROJECT_DIR="${DEFAULT_SHARE_PREFIX}/${FULL_PROJECT_NAME}"
   else
     DEFAULT_SHARE_PROJECT_DIR="${DEFAULT_SHARE_PREFIX}"
@@ -290,7 +312,7 @@ set_share_defaults () {
   # For traditional projects (e.g. zenon), there is no reasonable
   # value for ${DEFAULT_CAML_BIN_DIR} defined: we thus directly use
   # "com" as default.
-  if ${STATIC_EXTERNAL}; then
+  if ${DEFAULT_STATIC_EXTERNAL}; then
     DEFAULT_CAML_BYT="${DEFAULT_CAML_BIN_DIR}/ocamlc"
     DEFAULT_CAML_BIN="${DEFAULT_CAML_BIN_DIR}/ocamlopt"
     DEFAULT_CAML_YAC="${DEFAULT_CAML_BIN_DIR}/ocamlyacc"
@@ -318,7 +340,7 @@ set_share_defaults () {
   # For traditional projects (e.g. zenon), there is no reasonable value for
   # ${DEFAULT_SHARE_PROJECT_BIN_DIR} defined: we thus directly use
   # "coqc" as default.
-  if ${STATIC_EXTERNAL}; then
+  if ${DEFAULT_STATIC_EXTERNAL}; then
     DEFAULT_COQC="${DEFAULT_SHARE_PROJECT_BIN_DIR}/coqc"
     DEFAULT_COQ_DEP="${DEFAULT_SHARE_PROJECT_BIN_DIR}/coqdep"
   else
@@ -329,7 +351,7 @@ set_share_defaults () {
   # Defaults for Zenon.
   DEFAULT_ZENON_LIB_DIR="${DEFAULT_SHARE_PROJECT_LIB_DIR}/zenon"
 
-  if ${STATIC_EXTERNAL}; then
+  if ${DEFAULT_STATIC_EXTERNAL}; then
     DEFAULT_ZENON="${DEFAULT_SHARE_PROJECT_BIN_DIR}/zenon"
   else
     DEFAULT_ZENON="zenon"
@@ -338,7 +360,7 @@ set_share_defaults () {
   # Defaults for Zvtov.
   DEFAULT_ZVTOV_LIB_DIR="${DEFAULT_SHARE_PROJECT_LIB_DIR}/zvtov"
 
-  if ${STATIC_EXTERNAL}; then
+  if ${DEFAULT_STATIC_EXTERNAL}; then
     DEFAULT_ZVTOV="${DEFAULT_SHARE_PROJECT_BIN_DIR}/zvtov"
   else
     DEFAULT_ZVTOV="zvtov"
@@ -347,7 +369,7 @@ set_share_defaults () {
 }
 
 # Setting variables that depend upon ${SHARE_PREFIX}.
-set_share () {
+set_share_prefix () {
 
   if test -z "${SHARE_PREFIX}"; then
     SHARE_PREFIX="${DEFAULT_SHARE_PREFIX}"
@@ -371,7 +393,7 @@ set_share () {
 
   # Settings for Caml.
   if test -z "${CAML_LIB_DIR}"; then
-  CAML_LIB_DIR="${SHARE_PROJECT_LIB_DIR}/ocaml"; fi
+    CAML_LIB_DIR="${SHARE_PROJECT_LIB_DIR}/ocaml"; fi
   if test -z "${CAML_BIN_DIR}"; then
     # If CAML_BIN_DIR HAS NOT been set, then the associated commands,
     # get bound to their defaults, unless those commands have already
@@ -451,14 +473,14 @@ set_defaults () {
   set_intrinsic_defaults;
   set_command_defaults;
   set_prefix_defaults;
-  set_share_defaults;
+  set_share_prefix_defaults;
 }
 
 # Setting all variables after option parsing has been completed.
 set_variables () {
   set_intrinsic;
   set_prefix;
-  set_share;
+  set_share_prefix;
 }
 
 #
