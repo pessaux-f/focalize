@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.45 2009-01-07 16:18:01 pessaux Exp $
+# $Id: Makefile,v 1.46 2009-01-13 14:34:09 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -49,6 +49,7 @@ BYT_OBJS = \
 	../typing/infer.cmo \
 	\
 	../docgen/doc_lexer.cmo \
+	../docgen/utils_docgen.cmo \
 	../docgen/main_docgen.cmo \
 	\
 	../commoncodegen/visUniverse.cmo \
