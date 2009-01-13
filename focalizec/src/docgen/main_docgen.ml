@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.23 2009-01-13 11:37:59 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.24 2009-01-13 12:33:12 pessaux Exp $ *)
 
 
 
@@ -316,10 +316,10 @@ let gen_doc_species_expr out_fmt ~current_unit species_expr =
    | params ->
        (begin
        Format.fprintf out_fmt "@[<h 2><foc:app>@\n" ;
-       Format.fprintf out_fmt "<foc:foc-name " ;
+       Format.fprintf out_fmt "<foc:foc-name" ;
        if infile <> "" then
          Format.fprintf out_fmt " infile=\"%s\"" infile ;
-       Format.fprintf out_fmt "\">%a</foc:foc-name>@\n"
+       Format.fprintf out_fmt ">%a</foc:foc-name>@\n"
          pp_xml_vname ident_vname ;
        List.iter
          (fun species_param ->

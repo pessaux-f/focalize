@@ -72,6 +72,7 @@
 	</caption>
 	<xsl:call-template name="loads"/>
 	<xsl:call-template name="opens"/>
+	<xsl:call-template name="coq-requires"/>
 	<xsl:call-template name="index"/>
       </table>
       <!--meriterait d'etre parametre-->
@@ -173,12 +174,12 @@
 	    <a class="load">
 	      <xsl:attribute name="href">
 		<xsl:value-of select="$docpath"/>
-		<xsl:value-of select="normalize-space(.)"/>
+		<xsl:value-of select="normalize-space (.)"/>
 		<xsl:value-of select="$ext"/>
 	      </xsl:attribute>
-	      <xsl:value-of select="normalize-space(.)"/>
+	      <xsl:value-of select="normalize-space (.)"/>
 	    </a>
-	    <xsl:if test="not(position()=last())">
+	    <xsl:if test="not (position() = last())">
 	      <xsl:text> - </xsl:text>
 	    </xsl:if>
 	  </xsl:for-each>
@@ -204,13 +205,44 @@
 	      <a class="open">
 		<xsl:attribute name="href">
 		  <xsl:value-of select="$docpath"/>
-		  <xsl:value-of select="normalize-space(.)"/>
+		  <xsl:value-of select="normalize-space (.)"/>
 		  <xsl:value-of select="$ext"/>
+		</xsl:attribute>
+		<xsl:value-of select="normalize-space (.)"/>
+	      </a>
+	    </ins>
+	    <xsl:if test="not (position () = last ())">
+	      <xsl:text> - </xsl:text>
+	    </xsl:if>
+	  </xsl:for-each>
+	</td>
+      </tr>
+    </xsl:if>
+  </xsl:template>
+
+
+
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <!-- ********************************************************************* -->
+  <xsl:template name="coq-requires">
+    <xsl:if test="foc:coq-require">
+      <tr>
+	<td class="coq-requires">
+	  <xsl:text>Coq requires </xsl:text>
+	</td>
+	<td class="coq-requires">
+	  <xsl:for-each select="foc:coq-require">
+	    <ins>		
+	      <a class="coq-require">
+		<xsl:attribute name="href">
+		  <xsl:value-of select="$docpath"/>
+		  <xsl:value-of select="normalize-space(.)"/>.v
 		</xsl:attribute>
 		<xsl:value-of select="normalize-space(.)"/>
 	      </a>
 	    </ins>
-	    <xsl:if test="not(position()=last())">
+	    <xsl:if test="not (position () = last ())">
 	      <xsl:text> - </xsl:text>
 	    </xsl:if>
 	  </xsl:for-each>

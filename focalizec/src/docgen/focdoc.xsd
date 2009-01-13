@@ -15,6 +15,7 @@
         </xs:choice>
         <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:load"/>
         <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:open"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:coq-require"/>
       </xs:sequence>
       <xs:attribute ref="xsi:schemaLocation" use="required"/>
     </xs:complexType>
@@ -138,6 +139,7 @@
   </xs:element>
   <xs:element name="load" type="xs:NCName"/>
   <xs:element name="open" type="xs:NCName"/>
+  <xs:element name="coq-require" type="xs:NCName"/>
   <xs:element name="foc-name">
     <xs:complexType>
       <xs:simpleContent>

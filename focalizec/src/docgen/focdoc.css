@@ -123,6 +123,9 @@ h2 {
 .opens {
 }
 
+.coq-requires {
+}
+
 A:link.load, A:visited.load, A:active.load, A:link.open, A:visited.open, A:active.open {
 	     text-decoration: underline;
 	     color: blue;
