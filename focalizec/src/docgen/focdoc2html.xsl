@@ -99,7 +99,8 @@
   <!-- ********************************************************************* -->
   <!-- ********************************************************************* -->
   <xsl:template name="top-level">  
-    <xsl:for-each select="foc:theorem|foc:letprop|foc:global-fun|foc:concrete-type">
+    <xsl:for-each select="foc:theorem|foc:letprop|foc:global-fun
+			  |foc:concrete-type">
       <xsl:sort select="foc:foc-name"/>
       <xsl:apply-templates select="."/>
     </xsl:for-each>
@@ -131,9 +132,9 @@
   <!-- ********************************************************************* -->
   <xsl:template match="foc:general-informations">
     <xsl:choose>
-      <xsl:when test="normalize-space(foc:title)!=''">
+      <xsl:when test="normalize-space (foc:title) != ''">
 	<h1>
-	  <xsl:value-of select="normalize-space(foc:title)"/>
+	  <xsl:value-of select="normalize-space (foc:title)"/>
 	</h1>
       </xsl:when>
       <xsl:otherwise>
@@ -141,9 +142,9 @@
       </xsl:otherwise>
     </xsl:choose>
     <xsl:choose>
-      <xsl:when test="normalize-space(foc:author)!=''">
+      <xsl:when test="normalize-space (foc:author) != ''">
 	<p class="author">
-	  <xsl:value-of select="normalize-space(foc:author)"/>
+	  <xsl:value-of select="normalize-space (foc:author)"/>
 	</p>
       </xsl:when>
       <xsl:otherwise>
@@ -151,7 +152,7 @@
     </xsl:choose>
     <xsl:if test="foc:comments">
       <p class="comments">
-	<xsl:value-of select="normalize-space(foc:comments)"/>
+	<xsl:value-of select="normalize-space (foc:comments)"/>
       </p>
     </xsl:if>
   </xsl:template>
@@ -240,7 +241,7 @@
 		<xsl:apply-templates select="foc:foc-name"/>
 	      </a>
 	    </ins>
-	    <xsl:if test="not(position()=last())">
+	    <xsl:if test="not (position() = last())">
 	      <xsl:text> - </xsl:text>
 	    </xsl:if>
 	  </xsl:for-each>
@@ -282,11 +283,11 @@
   <xsl:template name="print-usual-name">
     <xsl:choose>
       <xsl:when test="foc:informations/foc:name">
-	<xsl:value-of select="normalize-space(foc:informations/foc:name)"/>
+	<xsl:value-of select="normalize-space (foc:informations/foc:name)"/>
       </xsl:when>
       <xsl:otherwise>
 	<code>
-	  <xsl:value-of select="normalize-space(foc:foc-name)"/>
+	  <xsl:value-of select="normalize-space (foc:foc-name)"/>
 	</code>
       </xsl:otherwise>
     </xsl:choose>
@@ -328,24 +329,25 @@
     <ins>
       <a>
 	<xsl:attribute name="id">
-	  <xsl:if test="name(.)='foc:definition' or name(.)='foc:signature'">
+	  <xsl:if test="name(.) = 'foc:definition'
+			or name(.) = 'foc:signature'">
 	    <xsl:text>definition_signature-</xsl:text>
 	  </xsl:if>
-	  <xsl:if test="name(.)='foc:property'">
+	  <xsl:if test="name(.) = 'foc:property'">
 	    <xsl:text>property_theorem-</xsl:text>
 	  </xsl:if>
-	  <xsl:if test="name(.)='foc:theorem'">
+	  <xsl:if test="name(.) = 'foc:theorem'">
 	    <xsl:text>property_theorem-</xsl:text>
 	  </xsl:if>
-	  <xsl:if test="name(.)='foc:letprop'">
+	  <xsl:if test="name(.) = 'foc:letprop'">
 	    <xsl:text>letprop-</xsl:text>
 	  </xsl:if>
-	  <xsl:if test="name(.)='foc:parameter'">
+	  <xsl:if test="name(.) = 'foc:parameter'">
 	    <xsl:text>parameter-</xsl:text>
 	  </xsl:if>
-	  <xsl:value-of select="normalize-space(../foc:foc-name)"/>
+	  <xsl:value-of select="normalize-space (../foc:foc-name)"/>
 	  <xsl:text>-</xsl:text>
-	  <xsl:value-of select="normalize-space(foc:foc-name)"/>
+	  <xsl:value-of select="normalize-space (foc:foc-name)"/>
 	</xsl:attribute>
 	<xsl:text> </xsl:text>
       </a>
@@ -358,7 +360,7 @@
   <!-- ********************************************************************* -->
   <!-- ********************************************************************* -->
   <xsl:template match="foc:species|foc:collection">
-    <xsl:param name="categorie" select="substring-after(name(),'foc:')"/>
+    <xsl:param name="categorie" select="substring-after (name(),'foc:')"/>
     <tr>
       <xsl:comment>
 	<xsl:value-of select="$categorie"/>
@@ -380,7 +382,8 @@
     <tr class="comments">
       <td colspan="2"> 
 	<xsl:if test="foc:informations/foc:comments">
-	  <xsl:value-of select="normalize-space(foc:informations/foc:comments)"/>
+	  <xsl:value-of
+	      select="normalize-space(foc:informations/foc:comments)"/>
 	</xsl:if>
       </td>
     </tr>       
@@ -399,7 +402,7 @@
 	    </code>
 	    <xsl:for-each select="foc:parameter">
 	      <xsl:apply-templates select="."/>
-	      <xsl:if test="not(position()=last())">
+	      <xsl:if test="not (position() = last())">
 		<code class="key2">
 		  <xsl:text>,</xsl:text>
 		</code>
@@ -431,8 +434,10 @@
     <xsl:if test="foc:carrier">
       <xsl:apply-templates select="foc:carrier"/>
     </xsl:if>
-    <xsl:if test="foc:signature|foc:definition|foc:theorem|foc:property|foc:letprop">
-      <xsl:for-each select="foc:signature|foc:definition|foc:theorem|foc:property|foc:letprop">
+    <xsl:if test="foc:signature|foc:definition|foc:theorem|foc:property
+		  |foc:letprop">
+      <xsl:for-each select="foc:signature|foc:definition|foc:theorem
+			    |foc:property|foc:letprop">
 	<xsl:sort select="foc:foc-name"/>
 	<xsl:apply-templates select="."/>
       </xsl:for-each>
@@ -455,10 +460,13 @@
   <!-- ********************************************************************* -->
   <!-- ********************************************************************* -->
   <!-- ********************************************************************* -->
-  <xsl:template match="foc:definition|foc:signature|foc:theorem|foc:property|foc:carrier|foc:letprop|foc:global-fun|foc:concrete-type">
+  <xsl:template match="foc:definition|foc:signature|foc:theorem|foc:property
+		       |foc:carrier|foc:letprop|foc:global-fun
+		       |foc:concrete-type">
     
     <xsl:param name="nameSpecies" select="normalize-space(../foc:foc-name)"/>
-    <xsl:param name="initial-apparition" select="normalize-space(foc:history/foc:initial-apparition)"/>
+    <xsl:param name="initial-apparition"
+	       select="normalize-space(foc:history/foc:initial-apparition)"/>
 
     <!-- Debug du test ci-dessous...
 	 <xsl:text>nameSpecies: </xsl:text>
@@ -471,14 +479,14 @@
 
     <!-- ne pas tout deplier si verbose = 0, tout afficher si =1-->
     <xsl:if test="(($verbose = 0) and ($initial-apparition=$nameSpecies)) or
-		  $verbose >= 1 or name(..)='foc:collection'
-		  or name(..)='foc:focdoc'">
+		  $verbose >= 1 or name(..) = 'foc:collection'
+		  or name(..) = 'foc:focdoc'">
       <tr>
 	<!--<td class="categ" width="10%">-->
 	<td colspan="2">
 	  <div class="categ" >
 	    <xsl:value-of select="substring-after(name(),'foc:')"/>
-	    <xsl:if test="normalize-space(@recursive)='yes'"> 
+	    <xsl:if test="normalize-space(@recursive) = 'yes'"> 
 	      <xsl:text> recursive </xsl:text>
 	    </xsl:if>
 	    <xsl:text> : </xsl:text>
@@ -496,7 +504,7 @@
 		<xsl:call-template name="concrete-type"/>
 	      </xsl:when>
 	      <xsl:otherwise>
-		<xsl:if test="name()='foc:letprop'">
+		<xsl:if test="name() = 'foc:letprop'">
 		  <xsl:call-template name="letprop-parameters"/>
 		</xsl:if>
 		<xsl:apply-templates select="foc:type|foc:proposition"/>
@@ -517,10 +525,10 @@
   <xsl:template name="letprop-parameters">
     <xsl:text>letprop parameters : </xsl:text>
     <xsl:for-each select="foc:param-prop">
-      <xsl:value-of select="normalize-space(foc:foc-name)"/>
+      <xsl:value-of select="normalize-space (foc:foc-name)"/>
       <xsl:text> of type </xsl:text>
       <xsl:apply-templates select="foc:type"/>
-      <xsl:if test="not(position()=last())">            
+      <xsl:if test="not (position() = last())">            
 	<xsl:text> , </xsl:text>        
       </xsl:if>
     </xsl:for-each>
@@ -535,9 +543,9 @@
   <xsl:template name="concrete-type">
     <xsl:text>parameters of type: </xsl:text>
     <xsl:for-each select="foc:param">
-      <xsl:value-of select="normalize-space(.)"/>
+      <xsl:value-of select="normalize-space (.)"/>
       <xsl:text> : Type </xsl:text>
-      <xsl:if test="not(position()=last())">            
+      <xsl:if test="not (position() = last())">            
 	<xsl:text> , </xsl:text>        
       </xsl:if>
     </xsl:for-each>
@@ -547,7 +555,7 @@
       <br/>
       <xsl:for-each select="foc:constr">
 	<xsl:apply-templates select="foc:type"/>    
-	<xsl:if test="not(position()=last())">            
+	<xsl:if test="not (position() = last())">            
 	  <br/>       
 	</xsl:if>
       </xsl:for-each>
@@ -591,7 +599,9 @@
   <!-- ********************************************************************* -->
   <xsl:template name="do-history-comments">
     <!-- A priori le noeud courant est  un fils de species ou collection-->
-    <xsl:if test="not(normalize-space(../foc:foc-name)=normalize-space(foc:history/foc:initial-apparition)) or foc:informations/foc:comments or foc:fun-dep">
+    <xsl:if test="not(normalize-space(../foc:foc-name)=
+		  normalize-space(foc:history/foc:initial-apparition))
+		  or foc:informations/foc:comments or foc:fun-dep">
       <!--<td colspan="2"/>-->
       <xsl:if test="foc:informations/foc:comments">
 	<tr>
@@ -601,17 +611,26 @@
 	</tr>
       </xsl:if>   
             
-      <xsl:if test="not(normalize-space(../foc:foc-name)=normalize-space(foc:history/foc:initial-apparition)) or foc:fun-dep">
+      <xsl:if test="not (normalize-space (../foc:foc-name) =
+		    normalize-space (foc:history/foc:initial-apparition))
+		    or foc:fun-dep">
 	<tr>
 	  <xsl:choose>
-	    <!--attention : pour le moment les global-fun n'ont pas de fils fun-dep mais ca peut changer-->
-	    <xsl:when test="not(normalize-space(../foc:foc-name)=normalize-space(foc:history/foc:initial-apparition)) and not(foc:fun-dep) and not(name(.)='foc:global-fun' or name(.)='foc:concrete-type')">
+	    <!--attention : pour le moment les global-fun n'ont pas de fils
+		fun-dep mais ca peut changer-->
+	    <xsl:when test="not (normalize-space(../foc:foc-name) =
+			    normalize-space(foc:history/foc:initial-apparition))
+			    and not (foc:fun-dep) 
+			    and not (name(.) = 'foc:global-fun'
+			    or name(.) = 'foc:concrete-type')">
 	      <td>              
 		<xsl:apply-templates select="foc:history"/>
 	      </td>
 	      <td/>
 	    </xsl:when>
-	    <xsl:when test="not(normalize-space(../foc:foc-name)=normalize-space(foc:history/foc:initial-apparition)) and foc:fun-dep">
+	    <xsl:when test="not (normalize-space(../foc:foc-name) =
+			    normalize-space(foc:history/foc:initial-apparition))
+			    and foc:fun-dep">
 	      <td>
 		<xsl:apply-templates select="foc:history"/>
 	      </td>    
@@ -651,7 +670,7 @@
     <xsl:text>Mutually recursives functions:  </xsl:text>
     <xsl:for-each select="./foc:foc-name">
       <xsl:apply-templates select="."/>
-      <xsl:if test="position()!=last()">
+      <xsl:if test="position() != last()">
 	<xsl:text> , </xsl:text> 
       </xsl:if>
     </xsl:for-each>
@@ -670,7 +689,7 @@
 	<xsl:attribute name="href">
 	  <xsl:value-of select="$docpath"/>
 	  <xsl:if test="@infile">
-	    <xsl:value-of select="normalize-space(@infile)"/>
+	    <xsl:value-of select="normalize-space (@infile)"/>
 	    <xsl:value-of select="$ext"/>
 	  </xsl:if>
 	  <xsl:text>#species-</xsl:text>
@@ -686,7 +705,7 @@
 	<xsl:attribute name="href">
 	  <xsl:value-of select="$docpath"/>	  
 	  <xsl:if test="@infile">
-	    <xsl:value-of select="normalize-space(@infile)"/>
+	    <xsl:value-of select="normalize-space (@infile)"/>
 	    <xsl:value-of select="$ext"/>
 	  </xsl:if>
 	  <xsl:text>#</xsl:text>
@@ -696,11 +715,11 @@
 	  <xsl:if test="ancestor::foc:property|ancestor::foc:theorem">
 	    <xsl:text>property_theorem-</xsl:text>
 	  </xsl:if>
-	  <xsl:value-of select="normalize-space(.)"/>
+	  <xsl:value-of select="normalize-space (.)"/>
 	  <xsl:text>-</xsl:text>
-	  <xsl:value-of select="normalize-space(../../foc:foc-name)"/>      
+	  <xsl:value-of select="normalize-space (../../foc:foc-name)"/>      
 	</xsl:attribute>
-	<xsl:value-of select="normalize-space(../../foc:foc-name)"/>
+	<xsl:value-of select="normalize-space (../../foc:foc-name)"/>
       </a>
     </ins>
     <xsl:text>)</xsl:text>
@@ -717,7 +736,7 @@
   <xsl:template match="foc:parameter">
     <xsl:call-template name="print-name-component"/>
     <xsl:choose>
-      <xsl:when test="normalize-space(@kind)='collection'">
+      <xsl:when test="normalize-space(@kind) = 'collection'">
 	<xsl:text> : </xsl:text>
 	<xsl:apply-templates select="foc:type/foc:atom" mode="high"/>
       </xsl:when>
@@ -735,7 +754,7 @@
     <xsl:text> </xsl:text>
     <code class="key2">
       <xsl:choose>
-	<xsl:when test="@kind!='entity' and @kind!='collection' ">
+	<xsl:when test="@kind != 'entity' and @kind != 'collection' ">
 	  <xsl:message>
 	    <xsl:text>wrong value for attribute kind of parameter tag</xsl:text>
 	  </xsl:message>
@@ -780,18 +799,18 @@
 	  <xsl:value-of select="$docpath"/>
 	  <xsl:choose>
 	    <xsl:when test="@infile">
-	      <xsl:value-of select="normalize-space(@infile)"/>
+	      <xsl:value-of select="normalize-space (@infile)"/>
 	      <xsl:value-of select="$ext"/>
 	      <xsl:text>#species-</xsl:text>
-	      <xsl:value-of select="normalize-space(.)"/>
+	      <xsl:value-of select="normalize-space (.)"/>
 	    </xsl:when>
 	    <xsl:otherwise>
 	      <xsl:text>#species-</xsl:text>
-	      <xsl:value-of select="normalize-space(.)"/>
+	      <xsl:value-of select="normalize-space (.)"/>
 	    </xsl:otherwise>
 	  </xsl:choose>
 	</xsl:attribute>
-	<xsl:value-of select="normalize-space(.)"/>
+	<xsl:value-of select="normalize-space (.)"/>
       </a>
     </ins>  
   </xsl:template>
@@ -802,7 +821,7 @@
   <!-- ********************************************************************* -->
   <!-- ********************************************************************* -->
   <xsl:template match="foc:tvar">
-    <xsl:value-of select="normalize-space(.)"/>
+    <xsl:value-of select="normalize-space (.)"/>
   </xsl:template>
 
 
@@ -812,7 +831,8 @@
   <!-- ********************************************************************* -->
   <xsl:template match="foc:fct">
     <xsl:variable name="parenthesis">
-      <xsl:if test="*[position()=1 and (foc:atom|foc:tvar|foc:self|foc:abst|foc:prop)]">
+      <xsl:if test="*[position() = 1 and
+		    (foc:atom|foc:tvar|foc:self|foc:abst|foc:prop)]">
 	<xsl:text>n</xsl:text>
       </xsl:if>
     </xsl:variable>
@@ -821,7 +841,7 @@
 	<xsl:text>(</xsl:text>
       </code>
     </xsl:if>
-    <xsl:apply-templates select="*[position()=1]"/>
+    <xsl:apply-templates select="*[position() = 1]"/>
     <xsl:if test="$parenthesis='y'">
       <code class="key2">
 	<xsl:text>)</xsl:text>
@@ -830,7 +850,7 @@
     <code class="key2">
       <xsl:text> -> </xsl:text>
     </code>
-    <xsl:apply-templates select="*[position()=2]"/>  
+    <xsl:apply-templates select="*[position() = 2]"/>  
   </xsl:template>
 
 
@@ -840,17 +860,18 @@
   <!-- ********************************************************************* -->
   <xsl:template match="foc:prod">
     <xsl:variable name="parenthesis">
-      <xsl:if test="*[position()=1 and (foc:atom|foc:tvar|foc:self|foc:abst|foc:prop)]">
+      <xsl:if test="*[position() = 1
+		    and (foc:atom|foc:tvar|foc:self|foc:abst|foc:prop)]">
 	<xsl:text>n</xsl:text>
       </xsl:if>
     </xsl:variable>
-    <xsl:if test="$parenthesis='y'">
+    <xsl:if test="$parenthesis = 'y'">
       <code class="key2">
 	<xsl:text>(</xsl:text>
       </code>
     </xsl:if>
     <xsl:apply-templates select="*[position()=1]"/>
-    <xsl:if test="$parenthesis='y'">
+    <xsl:if test="$parenthesis = 'y'">
       <code class="key2">
 	<xsl:text>)</xsl:text>
       </code>
@@ -858,7 +879,7 @@
     <code class="key2">
       <xsl:text> * </xsl:text>
     </code>
-    <xsl:apply-templates select="*[position()=2]"/>  
+    <xsl:apply-templates select="*[position() = 2]"/>  
   </xsl:template>
 
 
@@ -884,7 +905,7 @@
       </xsl:when>
       <xsl:otherwise>
 	<code class="key3">
-	  <xsl:text>self</xsl:text>
+	  <xsl:text>Self</xsl:text>
 	</code> 
       </xsl:otherwise>
     </xsl:choose>
@@ -908,7 +929,7 @@
   <!-- ********************************************************************* -->
   <xsl:template match="foc:ml">
     <code class="caml">
-      <xsl:value-of select="normalize-space(.)"/>
+      <xsl:value-of select="normalize-space (.)"/>
     </code>
   </xsl:template>
 
@@ -953,11 +974,12 @@
 	  <xsl:value-of select="$docpath"/>
 	  <xsl:choose>    
 	    <xsl:when test="foc:app/foc:foc-name[@infile]">
-	      <xsl:value-of select="normalize-space(foc:app/foc:foc-name/@infile)"/>
+	      <xsl:value-of
+		  select="normalize-space (foc:app/foc:foc-name/@infile)"/>
 	      <xsl:value-of select="$ext"/>
 	    </xsl:when>
 	    <xsl:when test="foc:atom[@infile]">
-	      <xsl:value-of select="normalize-space(foc:atom/@infile)"/>
+	      <xsl:value-of select="normalize-space (foc:atom/@infile)"/>
 	      <xsl:value-of select="$ext"/>
 	    </xsl:when>                
 	  </xsl:choose> 	  	
@@ -967,12 +989,14 @@
 	<xsl:apply-templates select="foc:atom|foc:app" mode="display-of-link"/>
       </a>
     </ins>
-    <xsl:if test="following-sibling::*[position()=1 and name(.)='foc:inherits']">
+    <xsl:if test="following-sibling::*[position() = 1
+		  and name(.) = 'foc:inherits']">
       <code class="key2">
 	<xsl:text>,</xsl:text>
       </code>
     </xsl:if>
-    <xsl:if test="following-sibling::*[position()=1 and name(.)='foc:implements']">
+    <xsl:if test="following-sibling::*[position() = 1
+		                       and name(.) = 'foc:implements']">
       <code class="key2">
 	<xsl:text>,</xsl:text>
       </code>
@@ -987,7 +1011,7 @@
   <xsl:template match="foc:app" mode="display-of-link">
     <xsl:value-of select="normalize-space(foc:foc-name)"/>
     <xsl:text>(</xsl:text>
-    <xsl:apply-templates select="*[position()>1]" mode="display-of-link"/>
+    <xsl:apply-templates select="*[position() > 1]" mode="display-of-link"/>
     <xsl:text>)</xsl:text>
   </xsl:template>
 
@@ -997,7 +1021,7 @@
   <!-- ********************************************************************* -->
   <!-- ********************************************************************* -->
   <xsl:template match="foc:param" mode="display-of-link">
-    <xsl:value-of select="normalize-space(.)"/>
+    <xsl:value-of select="normalize-space (.)"/>
     <xsl:if test="following-sibling::foc:param">
       <xsl:text>,</xsl:text>
     </xsl:if>
@@ -1009,7 +1033,7 @@
   <!-- ********************************************************************* -->
   <!-- ********************************************************************* -->
   <xsl:template match="foc:atom" mode="display-of-link">
-    <xsl:value-of select="normalize-space()"/>
+    <xsl:value-of select="normalize-space ()"/>
   </xsl:template>
 
 
@@ -1018,7 +1042,7 @@
   <!-- ********************************************************************* -->
   <!-- ********************************************************************* -->
   <xsl:template match="foc:app"  mode="make-href">
-    <xsl:value-of select="normalize-space(foc:foc-name)"/>
+    <xsl:value-of select="normalize-space (foc:foc-name)"/>
   </xsl:template>
 
 
@@ -1027,7 +1051,7 @@
   <!-- ********************************************************************* -->
   <!-- ********************************************************************* -->
   <xsl:template match="foc:atom" mode="make-href">
-    <xsl:value-of select="normalize-space()"/>
+    <xsl:value-of select="normalize-space ()"/>
   </xsl:template>
 
 
@@ -1036,7 +1060,7 @@
   <!-- ********************************************************************* -->
   <!-- ********************************************************************* -->
   <xsl:template match="foc:foc-name">
-    <xsl:value-of select="normalize-space(.)"/>
+    <xsl:value-of select="normalize-space (.)"/>
   </xsl:template>
 
 </xsl:stylesheet>

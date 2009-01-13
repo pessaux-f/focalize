@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.22 2009-01-12 17:14:39 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.23 2009-01-13 11:37:59 pessaux Exp $ *)
 
 
 
@@ -84,7 +84,10 @@ let find_documentation_of_method meth_name species_def_fields =
   let rec rec_find = function
     | [] ->
         (* If the method is not agmonst the species definition fields that's
-           because the method is inherited. So that's normal not to find it.
+           because the method is inherited (either we the method is inherited
+           in a regular way by the "inherits" clause or we are called on a
+           collection, hence the inheritance is shadow under the "implements"
+           clause. So that's normal not to find it.
            We then return an empty documentation, i.e/ an empty list. *)
         []
     | h :: q ->
@@ -887,6 +890,7 @@ let gen_doc_method out_fmt species_def_fields = function
    {b Rem}: Not exported outside this module.                         *)
 (* ****************************************************************** *)
 let gen_doc_species out_fmt ~current_unit species_def species_descr =
+  (* foc:species. *)
   Format.fprintf out_fmt "@[<h 2><foc:species>@\n" ;
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
     pp_xml_vname species_def.Parsetree.ast_desc.Parsetree.sd_name ;
@@ -905,6 +909,41 @@ let gen_doc_species out_fmt ~current_unit species_def species_descr =
     species_descr.Env.TypeInformation.spe_sig_methods ;
   Format.fprintf out_fmt "@]</foc:species>@\n@\n" ;
 ;;
+
+
+
+(* ************************************************************** *)
+(* Format.formatter -> current_unit: Parsetree.module_name ->     *)
+(*   Parsetree.collection_def_desc Parsetree.ast ->               *)
+(*     Env.TypeInformation.species_description -> unit            *)
+(** {b Descr} : Emits the XML code for a collection definition.
+
+    {b Rem}: Not exported outside this module.                    *)
+(* ************************************************************** *)
+let gen_doc_collection out_fmt ~current_unit coll_def coll_descr =
+  (* foc:collection. *)
+  Format.fprintf out_fmt "@[<h 2><foc:collection>@\n" ;
+  Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+    pp_xml_vname coll_def.Parsetree.ast_desc.Parsetree.cd_name ;
+  (* Information: foc:informations. *)
+  let (_, _, i_descrip, i_mathml, i_latex, i_other) =
+    extract_tagged_info_from_documentation coll_def.Parsetree.ast_doc in
+  gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
+  (* foc:implements. *)
+  gen_doc_species_expr
+    out_fmt ~current_unit coll_def.Parsetree.ast_desc.Parsetree.cd_body ;
+  (* (%foc:component;)*. *)
+  List.iter
+    (gen_doc_method out_fmt
+       (* No documentation will be found since in a collection there is no
+          definition. All are inherited via the "implements" clause. So we
+          pass the empty list of methods descriptions and in effect no doc
+          will be found. *)
+       [])
+    coll_descr.Env.TypeInformation.spe_sig_methods ;
+  Format.fprintf out_fmt "@]</foc:collection>@\n@\n" ;
+;;
+
 
 
 
@@ -1024,8 +1063,8 @@ let gen_doc_pcm out_fmt ~current_unit = function
   | Infer.PCM_expr _ -> () (* TODO. *)
   | Infer.PCM_species (species_def, species_descr, _) ->
       gen_doc_species out_fmt ~current_unit species_def species_descr
-  | Infer.PCM_collection (_col_def, _col_description, _) ->
-      (* foc:collection *) () (* TODO. *)
+  | Infer.PCM_collection (coll_def, col_descr, _) ->
+      gen_doc_collection out_fmt ~current_unit coll_def col_descr
 ;;
 
 
@@ -1041,7 +1080,7 @@ let gen_doc_pcm out_fmt ~current_unit = function
 let gen_doc_please_compile_me input_file_name ast_root pcms =
   let input_name_no_extension = Filename.chop_extension input_file_name in
   let current_unit = Filename.basename input_name_no_extension in
-  let out_filename = input_name_no_extension ^ ".xml" in
+  let out_filename = input_name_no_extension ^ ".fcd" in
   let out_channel = open_out_bin out_filename in
   let out_fmt = Format.formatter_of_out_channel out_channel in
   let (title_opt, author_opt, description_opt) =

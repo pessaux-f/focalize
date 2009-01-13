@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 <!-- FoCDoc DTD -->
-<!-- $Id: focdoc.dtd,v 1.7 2009-01-12 13:37:26 pessaux Exp $ -->
+<!-- $Id: focdoc.dtd,v 1.8 2009-01-13 11:37:59 pessaux Exp $ -->
 <!-- to describe the mathml equivalent of a particular function --> 
 
 <!-- mathml.dtd ne sera plus utilise dans le dtd. Les annotations mathml dans
@@ -49,7 +49,7 @@ correctement les fichiers focdoc envers le dtd -->
 <!-- modif frederic: ajout de l'élément letprop à foc:component -->
 <!ENTITY % foc:component "foc:signature|foc:definition|foc:letprop|foc:theorem|foc:property|foc:carrier">
 <!ELEMENT foc:species (foc:foc-name,foc:informations,foc:parameter*,foc:inherits*,(%foc:component;)*)>
-<!ELEMENT foc:collection (foc:foc-name,foc:informations,foc:parameter*,foc:implements,(%foc:component;)*)>
+<!ELEMENT foc:collection (foc:foc-name,foc:informations,foc:implements,(%foc:component;)*)>
 
 <!-- /ajout -->
 <!ELEMENT foc:parameter (foc:foc-name,foc:type,foc:informations)>
