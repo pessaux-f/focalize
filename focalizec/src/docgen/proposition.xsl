@@ -9,30 +9,40 @@
  
  <!-- juste pour tests <xsl:param name="docpath" select="''"/>-->
 
+
+
 <xsl:template match="int">
-<mml:mn><xsl:value-of select="@val"/></mml:mn>
+  <mml:mn><xsl:value-of select="@val"/></mml:mn>
 </xsl:template>
+
+
 
 <xsl:template match="string">
-<mml:ms><xsl:value-of select="@val"/></mml:ms>
+  <mml:ms><xsl:value-of select="@val"/></mml:ms>
 </xsl:template>
+
+
 
 <!--  utile pour les tests :-->
- <xsl:template match="/">
+<xsl:template match="/">
   <root>
- <xsl:apply-templates select="//foc:proposition"/>
- </root>
- </xsl:template>
-
-<xsl:template match="foc:focdoc">
-<xsl:text>
-
-</xsl:text>
-
+    <xsl:apply-templates select="//foc:proposition"/>
+  </root>
 </xsl:template>
 
+
+
+<xsl:template match="foc:focdoc">
+  <xsl:text>
+
+  </xsl:text>
+</xsl:template>
+
+
+
+
 <xsl:template match="foc:proposition">
-<mml:math>
+  <mml:math>
 <!--<mml:mstyle color="teal">-->
     <xsl:apply-templates/>
 </mml:math>
@@ -41,42 +51,50 @@
 
 
  
-  <xsl:template match="foc:all">
+<xsl:template match="foc:all">
   <xsl:element name="mml:apply">
-  <mml:forall/>
+    <mml:forall/>
     <xsl:apply-templates/>
   </xsl:element>
- </xsl:template>
+</xsl:template>
 
- <xsl:template match="foc:ex">
- <xsl:element name="mml:apply">
- <mml:exists/>
-     <xsl:apply-templates/>
- </xsl:element>
- </xsl:template>
 
- <xsl:template match="foc:var">
+
+<xsl:template match="foc:ex">
+  <xsl:element name="mml:apply">
+    <mml:exists/>
+    <xsl:apply-templates/>
+  </xsl:element>
+</xsl:template>
+
+
+
+<xsl:template match="foc:var">
   <xsl:param name="nom">
- <xsl:value-of select="normalize-space(foc:foc-name)"/>
- </xsl:param>
-<xsl:choose>
- <xsl:when test="name(..)='foc:all' or name(..)='foc:ex'">
-   <mml:bvar>
-<!--<mml:ci>
-  <xsl:value-of select="normalize-space(foc:foc-name)"/>
- </mml:ci>-->
-  <xsl:apply-templates select="following-sibling::foc:type[position()=1]" mode="brother_of_var">
- <xsl:with-param name="nom" select="$nom"/>
- </xsl:apply-templates>
- </mml:bvar>
-   </xsl:when>
- <xsl:otherwise>
-  <mml:ci>
-  <xsl:value-of select="normalize-space(foc:foc-name)"/>
-  </mml:ci>  
- </xsl:otherwise>
- </xsl:choose>
- </xsl:template>
+    <xsl:value-of select="normalize-space(foc:foc-name)"/>
+  </xsl:param>
+  <xsl:choose>
+    <xsl:when test="name(..) = 'foc:all' or name(..) = 'foc:ex'">
+      <mml:bvar>
+	<!--<mml:ci>
+	  <xsl:value-of select="normalize-space(foc:foc-name)"/>
+	</mml:ci>-->
+	<xsl:apply-templates
+	    select="following-sibling::foc:type[position () =1]"
+	    mode="brother_of_var">
+	  <xsl:with-param name="nom" select="$nom"/>
+	</xsl:apply-templates>
+      </mml:bvar>
+    </xsl:when>
+    <xsl:otherwise>
+      <mml:ci>
+	<xsl:value-of select="normalize-space(foc:foc-name)"/>
+      </mml:ci>  
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+
+
 
 <!-- 
      tries to find a mathml symbol for the meth-name method of spec

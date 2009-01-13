@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.166 2009-01-05 13:39:33 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.167 2009-01-13 14:17:29 pessaux Exp $ *)
 
 
 
@@ -4187,7 +4187,7 @@ type please_compile_me =
   | PCM_theorem of
       (Parsetree.theorem_def *
        (** The mapping of type variables found in the "forall" and "exists" in
-           the theorem's logical expression.onto their name. *)
+           the theorem's logical expressions onto their name. *)
        ((Parsetree.vname * Types.type_simple) list))
   | PCM_expr of Parsetree.expr
 ;;

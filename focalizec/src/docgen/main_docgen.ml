@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.24 2009-01-13 12:33:12 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.25 2009-01-13 14:17:29 pessaux Exp $ *)
 
 
 
@@ -749,13 +749,13 @@ let gen_doc_computational_toplevel_let out_fmt name sch rec_flag =
 
 
 
-let gen_doc_theorem out_fmt from name lexpr doc =
+let gen_doc_theorem out_fmt opt_from name lexpr doc =
   Format.fprintf out_fmt "@[<h 2><foc:theorem>@\n" ;
   (* foc:foc-name. *)
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
     pp_xml_vname name ;
-  (* foc:history. *)
-  gen_doc_history out_fmt from ;
+  (* foc:history?. *)
+  (match opt_from with Some from -> gen_doc_history out_fmt from |None -> ());
   (* foc:informations. *)
   let (_, _, i_descrip, i_mathml, i_latex, i_other) =
     extract_tagged_info_from_documentation doc in
@@ -872,10 +872,10 @@ let gen_doc_method out_fmt species_def_fields = function
    | Env.TypeInformation.SF_let_rec _l ->
        (* foc:definition, foc:letprop. *)  (* TODO *)
        ()
-   | Env.TypeInformation.SF_theorem (from, n, _, body, _proof, _) ->
+   | Env.TypeInformation.SF_theorem (from, n, _, body, _, _) ->
        (* foc:theorem. *)
        let doc = find_documentation_of_method n species_def_fields in
-       gen_doc_theorem out_fmt from n body doc
+       gen_doc_theorem out_fmt (Some from) n body doc
    | Env.TypeInformation.SF_property (from, n, _, body, _) ->
        (* foc:property. *)
        let doc = find_documentation_of_method n species_def_fields in
@@ -1058,8 +1058,12 @@ let gen_doc_pcm out_fmt ~current_unit = function
                  sch let_def.Parsetree.ast_desc.Parsetree.ld_rec)
              let_def.Parsetree.ast_desc.Parsetree.ld_bindings schemes
       end)
-  | Infer.PCM_theorem (_, _) ->
-      (* foc:theorem *) () (* TODO. *)
+  | Infer.PCM_theorem (theo_def, _) ->
+      (* foc:theorem. *)
+      let th_desc = theo_def.Parsetree.ast_desc in
+      gen_doc_theorem
+        out_fmt None th_desc.Parsetree.th_name th_desc.Parsetree.th_stmt
+        theo_def.Parsetree.ast_doc
   | Infer.PCM_expr _ -> () (* TODO. *)
   | Infer.PCM_species (species_def, species_descr, _) ->
       gen_doc_species out_fmt ~current_unit species_def species_descr

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 <!-- FoCDoc DTD -->
-<!-- $Id: focdoc.dtd,v 1.8 2009-01-13 11:37:59 pessaux Exp $ -->
+<!-- $Id: focdoc.dtd,v 1.9 2009-01-13 14:17:29 pessaux Exp $ -->
 <!-- to describe the mathml equivalent of a particular function --> 
 
 <!-- mathml.dtd ne sera plus utilise dans le dtd. Les annotations mathml dans
@@ -13,8 +13,11 @@
 <!-- ajout frederic : l'ajout de l'element foc-name pour focdoc, afin de
 préciser  à partir de quel fichier .foc le fichier .focdoc a été généré -->
 
-<!ENTITY % foc:element "foc:global-fun|foc:concrete-type|foc:letprop|foc:theorem|foc:species|foc:collection">
-<!ELEMENT foc:focdoc (foc:foc-name,foc:general-informations,(%foc:element;)*,foc:load*,foc:open*, foc:coq-require*)>
+<!ENTITY % foc:element "foc:global-fun|foc:concrete-type|foc:letprop
+                        |foc:theorem|foc:species|foc:collection">
+<!ELEMENT foc:focdoc
+  (foc:foc-name,foc:general-informations,(%foc:element;)*,foc:load*,foc:open*,
+   foc:coq-require*)>
 
 <!-- ajout frederic : prefixer tout les elements de focdoc par le namespace 
 "foc" afin d'eviter des conflits avec d'autre dtd -->                    
@@ -36,7 +39,8 @@ correctement les fichiers focdoc envers le dtd -->
 <!-- Element modifié :
      <!ELEMENT general-informations (title,author,lang?,comments?)> -->
 
-<!ELEMENT foc:general-informations (foc:title?,foc:author?,foc:lang?,foc:comments?)>
+<!ELEMENT foc:general-informations
+   (foc:title?,foc:author?,foc:lang?,foc:comments?)>
 <!ELEMENT foc:title (#PCDATA)>
 <!ELEMENT foc:author (#PCDATA)>
 <!ELEMENT foc:lang (#PCDATA)>
@@ -47,9 +51,13 @@ correctement les fichiers focdoc envers le dtd -->
 
 <!ELEMENT foc:name (#PCDATA)>
 <!-- modif frederic: ajout de l'élément letprop à foc:component -->
-<!ENTITY % foc:component "foc:signature|foc:definition|foc:letprop|foc:theorem|foc:property|foc:carrier">
-<!ELEMENT foc:species (foc:foc-name,foc:informations,foc:parameter*,foc:inherits*,(%foc:component;)*)>
-<!ELEMENT foc:collection (foc:foc-name,foc:informations,foc:implements,(%foc:component;)*)>
+<!ENTITY % foc:component "foc:signature|foc:definition|foc:letprop|foc:theorem
+                          |foc:property|foc:carrier">
+<!ELEMENT foc:species
+  (foc:foc-name,foc:informations,foc:parameter*,foc:inherits*,
+   (%foc:component;)*)>
+<!ELEMENT foc:collection
+  (foc:foc-name,foc:informations,foc:implements,(%foc:component;)*)>
 
 <!-- /ajout -->
 <!ELEMENT foc:parameter (foc:foc-name,foc:type,foc:informations)>
@@ -66,9 +74,11 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 
 <!ELEMENT foc:inherits (foc:atom|foc:app)>
 <!ELEMENT foc:implements (foc:atom|foc:app)>
-<!ELEMENT foc:signature (foc:foc-name,foc:history,foc:informations,foc:ho?,foc:type)>
+<!ELEMENT foc:signature
+  (foc:foc-name,foc:history,foc:informations,foc:ho?,foc:type)>
 <!ELEMENT foc:ho EMPTY>
-<!ELEMENT foc:definition (foc:foc-name,foc:history,foc:informations,foc:ho?,foc:type)>
+<!ELEMENT foc:definition
+  (foc:foc-name,foc:history,foc:informations,foc:ho?,foc:type)>
 <!ATTLIST foc:definition recursive CDATA #IMPLIED>
 
 <!-- ajout frederic : pour prendre en compte des fonctions globales -->
@@ -86,7 +96,9 @@ pour implements) n'est plus foc-name mais de type atom ou app.
         Pour les types définis comme alias des types existants, l'élément
         alias est utilisé.  -->
 
-<!ELEMENT foc:concrete-type (foc:foc-name,foc:param*,(foc:alias|foc:constr*|foc:record-type|foc:external-type))>
+<!ELEMENT foc:concrete-type
+  (foc:foc-name,foc:param*,(foc:alias|foc:constr*|foc:record-type
+   |foc:external-type))>
 <!ELEMENT foc:alias (foc:type)>
 
 <!ELEMENT foc:constr (foc:foc-name,foc:type)>
@@ -104,26 +116,34 @@ pour implements) n'est plus foc-name mais de type atom ou app.
      optionnels car pour les letprops définis au niveau du top level, ces
      informations ne seront pas générées -->
 
-<!ELEMENT foc:letprop (foc:foc-name,foc:history?,foc:informations?,foc:param-prop*,foc:proposition)>
+<!ELEMENT foc:letprop
+  (foc:foc-name,foc:history?,foc:informations?,foc:param-prop*,foc:proposition)>
 <!ELEMENT foc:param-prop (foc:foc-name,foc:type)>
 
 <!-- modif frederic : les elements foc:history et foc:informations deviennent
      optionnels car pour les theorems définis au niveau du top level, ces
      informations ne seront pas générées -->
 
-<!ELEMENT foc:theorem (foc:foc-name,foc:history?,foc:informations?,foc:proposition,foc:proof)>
+<!ELEMENT foc:theorem
+  (foc:foc-name,foc:history?,foc:informations?,foc:proposition,foc:proof)>
 <!ELEMENT foc:proof ANY>
-<!ELEMENT foc:property (foc:foc-name,foc:history,foc:informations,foc:proposition)>
+<!ELEMENT foc:property
+  (foc:foc-name,foc:history,foc:informations,foc:proposition)>
 
 
 
 <!-- Expressions -->
-<!ENTITY % foc:expression "foc:identifier|foc:application|foc:symbol|foc:int|foc:string|foc:float|foc:bool|foc:char|foc:paren-expr|foc:fun-expr|foc:if-expr|foc:tuple-expr|foc:record-expr|foc:record-with-expr|foc:record-access-expr">
+<!ENTITY % foc:expression "foc:identifier|foc:application|foc:symbol|foc:int
+                           |foc:string|foc:float|foc:bool|foc:char
+                           |foc:paren-expr|foc:fun-expr|foc:if-expr
+                           |foc:tuple-expr|foc:record-expr|foc:record-with-expr
+                           |foc:record-access-expr">
 
 <!-- Not yet used in XSLs. -->
 <!ELEMENT foc:paren-expr (%foc:expr;)>
 <!ELEMENT foc:fun-expr ((foc:name)+, (%foc:expression;)*)>
-<!ELEMENT foc:if-expr ((%foc:expression;), (%foc:expression;), (%foc:expression;)>
+<!ELEMENT foc:if-expr
+  ((%foc:expression;), (%foc:expression;), (%foc:expression;)>
 <!ELEMENT foc:tuple-expr ((%foc:expression;))>
 <!ELEMENT foc:record-expr ((foc:record-label-and-expr)+)>
 <!ELEMENT foc:record-with-expr ((%foc:expr;), (foc:record-label-and-expr)+)>
@@ -165,7 +185,9 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 <!-- Dans le code focdoc.mlp4 l'élement f:equiv est utilisé mais n'est pas
      défini dans le dtd.
      Action : ajout de l'élement foc:equiv dans la liste des propositions. -->
-<!ENTITY % foc:proposition "foc:all|foc:ex|foc:and|foc:or|foc:implies|foc:equiv|foc:not|(%foc:expression;)|foc:paren-logical-expr">
+<!ENTITY % foc:proposition "foc:all|foc:ex|foc:and|foc:or|foc:implies
+                            |foc:equiv|foc:not|(%foc:expression;)
+                            |foc:paren-logical-expr">
 <!ELEMENT foc:var (foc:foc-name)>
 <!ELEMENT foc:all (foc:var,foc:type,(%foc:proposition;))>
 <!ELEMENT foc:ex (foc:var,foc:type,(%foc:proposition;))>
@@ -191,8 +213,8 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 
 
 <!-- Type expressions -->
-<!ENTITY % foc:typ "foc:atom|foc:tvar|foc:fct|foc:prod|foc:prop|foc:self|
-                foc:abst|foc:ml|foc:ml-c|foc:prm|foc:app|foc:meth">
+<!ENTITY % foc:typ "foc:atom|foc:tvar|foc:fct|foc:prod|foc:prop|foc:self
+                |foc:abst|foc:ml|foc:ml-c|foc:prm|foc:app|foc:meth">
 <!ELEMENT foc:type (%foc:typ;)>
 <!ELEMENT foc:atom (#PCDATA)>
 <!ATTLIST foc:atom order CDATA #REQUIRED >
