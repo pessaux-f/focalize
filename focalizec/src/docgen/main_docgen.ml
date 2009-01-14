@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.28 2009-01-14 12:39:24 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.29 2009-01-14 13:03:49 pessaux Exp $ *)
 
 
 
@@ -65,8 +65,18 @@ let gen_doc_species_expr out_fmt ~current_unit species_expr =
                 "<foc:param infile=\"%s\">%a</foc:param>@\n"
                 mod_name Utils_docgen.pp_xml_vname vn
          end)
+     | Parsetree.E_var ident ->
+         (begin
+         (* To handle the case of "IN" parameters names. They must be a simple
+            identifier, i.e. parsed as a EI_local. *)
+         match ident.Parsetree.ast_desc with
+          | Parsetree.EI_local vname ->
+               Format.fprintf out_fmt "<foc:param>%a</foc:param>@\n"
+                Utils_docgen.pp_xml_vname vname
+          | _ -> assert false
+         end)
      | Parsetree.E_paren e' -> rec_gen_species_param_expr e'
-     | _ -> assert false in (* ????????quotients.fcl??????????? *)
+     | _ -> assert false in
   (* **************** *)
   (* Now, do the job. *)
   let species_expr_desc = species_expr.Parsetree.ast_desc in
