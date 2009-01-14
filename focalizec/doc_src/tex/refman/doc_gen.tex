@@ -1,4 +1,4 @@
-% $Id: doc_gen.tex,v 1.1 2009-01-14 15:00:12 pessaux Exp $
+% $Id: doc_gen.tex,v 1.2 2009-01-14 16:04:54 pessaux Exp $
 
 
 When invoked with the {\tt $-$focalize-doc} option, the command
@@ -19,7 +19,88 @@ contain special markups used by the documentation generator of \focal.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Special markups}
+\focal's documentation system currently supports 5 kinds of
+markup. They impact the content of the final generated document,
+either in its content or in the way information is displayed depending
+on the output format. These markups start with the ``@'' character and
+the content of the markup follows and finishes at the end of the
+line. It is then possible in a documentation comment to mix regular
+text that won't be interpreted and markups.
 
+\subsubsection{@title}
+This markup must appear (i.e. is only taken into account) in the first
+documentation comment on the source file. The following text is
+considered to be the title of the source file and will appear in the
+header of the final document.
+
+See example provided for the {\tt @description} markup below.
+
+
+
+\subsubsection{@author}
+This markup must appear (i.e. is only taken into account) in the first
+documentation comment on the source file. The following text is
+considered to be the author of the source file and will appear in the
+header of the final document.
+
+See example provided for the {\tt @description} markup below.
+
+
+
+\subsubsection{@description}
+This markup must appear (i.e. is only taken into account) in the first
+documentation comment on the source file. The following text is
+considered to be the description of the content of the source file
+(what services it implements) and will appear in the header of the
+final document.
+
+For example:
+{\scriptsize
+\begin{lstlisting}
+(***********************************************************************)
+(*                        FoCaL compiler                               *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(***********************************************************************)
+
+(**
+ @title FoC Project. Basic algebra.
+ @author The FoC project
+ @description Basic sets operations, orderings and lattices.
+*)
+...
+\end{lstlisting}
+}
+will .........
+
+\subsubsection{@mathml}
+This markup must appear in the document comment preceding a method
+definition. It indicates the sequence of MathML code to use to replace
+the name of the method everywhere in the current document. This markup
+only affects the HTML display since it allows to show more usual
+symbols rather than identifiers in a browser. This is expecially
+useful for mathematical formulaes where one prefer to see the sign $=$
+rather than an identifier ``{\tt equal}''.
+
+For example:
+{\scriptsize
+\begin{lstlisting}
+(** In a setoid, we can test the equality (note for logicians: this is
+   a congruence). *)
+species Setoid inherits Basic_object =
+  (** @mathml <eq/> *)
+  signature equal : Self -> Self -> bool ;
+  property equal_transitive : all x y z in Self,
+    equal (x, y) -> equal (y, z) -> equal (x, z) ;
+  ...
+\end{lstlisting}
+}
+will replace any occurrence of the method {\tt equal} by the
+``\verb+<eq/>+'' MathML sequence that displays a $=$ sign when
+displayed by an HTML browser.
+
+\medskip
+\includegraphics{mathml_snapshot.ps}
 
 
 
