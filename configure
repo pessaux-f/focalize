@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.47 2009-01-14 11:36:28 weis Exp $
+# $Id: configure,v 1.48 2009-01-14 12:07:47 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -231,7 +231,7 @@ set_intrinsic () {
     fi
     # set_XMLRPC_MODULE;
     if ${USE_XMLRPC}; then
-      if test -z ${XMLRPC_MODULE}; then XMLRPC_MODULE="${DEFAULT_XMLRPC_MODULE}"; fi
+      if test -z "${XMLRPC_MODULE}"; then XMLRPC_MODULE="${DEFAULT_XMLRPC_MODULE}"; fi
     fi
     # set_XMLRPC_FLAGS;
     if test -z "$XMLRPC_FLAGS"; then
@@ -691,6 +691,7 @@ while : ; do
        echo "    <unknown option>."
        exit 0
        ;;
+
     -*)
        echo "./configure: bad option '$1'" >&2
        echo "For help, use ./configure -help" >&2
