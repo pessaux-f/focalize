@@ -13,15 +13,15 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: Makefile,v 1.24 2009-01-11 17:14:03 weis Exp $
+#  $Id: Makefile,v 1.25 2009-01-14 11:45:14 weis Exp $
 
 # Reading configuration settings.
 include .config_var
 
 CAMLFLAGS = -warn-error A
 
-# Variables CAMLBYT, CAMLBIN, CAMLLEX, CAMLYACC CAMLDEP are defined at configuration time
-# their value is recorded in .config_var
+# Variables CAMLBYT, CAMLBIN, CAMLLEX, CAMLYACC, CAMLDEP and CAMLDOC are defined
+# at configuration time their value is recorded in .config_var.
 CAMLBINFLAGS = $(CAMLFLAGS) $(BIN_DEBUG_FLAGS) $(XMLRPC_FLAGS)
 
 CAMLBYTFLAGS = $(CAMLFLAGS) $(BYT_DEBUG_FLAGS) $(XMLRPC_FLAGS)
