@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.37 2009-01-11 22:36:06 weis Exp $
+# $Id: Makefile,v 1.38 2009-01-14 17:27:39 weis Exp $
 
 ROOT_DIR = .
 
@@ -224,10 +224,11 @@ uninstall doc depend::
 	  echo "<-- $$i [$$?]"; \
 	done
 
-unconfigure:
+.PHONY: unconfigure
+unconfigure::
 	$(RM) .config_var .depend .done_*
 
-clean_internals:
+clean_internal_tools:
 	for i in $(INTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i && $(MAKE) clean); \
@@ -238,7 +239,18 @@ clean_internals:
 	  $(TOUCH) $$i/.config_var; \
 	done
 
-clean_externals:
+distclean_internal_tools:
+	for i in $(INTERNAL_TOOLS_DIRS); do \
+	  echo "--> $$i ..."; \
+	  ($(CD) $$i && $(MAKE) distclean); \
+	  echo "<-- $$i [$$?]"; \
+	done; \
+	for i in $(INTERNAL_TOOLS); do \
+	  $(RM) .done_build_$$i; \
+	  $(TOUCH) $$i/.config_var; \
+	done
+
+clean_external_tools:
 	for i in $(EXTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i && $(MAKE) clean); \
@@ -248,10 +260,13 @@ clean_externals:
 	  $(RM) .done_build_external_$$i_tool; \
 	done
 
-clean:: clean_internals
+distclean_external_tools:
 	$(RM) .done_*
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i && $(MAKE) $@); \
 	  echo "<-- $$i [$$?]"; \
 	done
+
+.PHONY: distclean
+distclean:: distclean_external_tools distclean_internal_tools unconfigure
