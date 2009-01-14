@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.46 2009-01-14 10:36:53 weis Exp $
+# $Id: configure,v 1.47 2009-01-14 11:36:28 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -117,7 +117,7 @@ set_intrinsic_defaults () {
 
   # Intrinsic defaults for the project installation.
   DEFAULT_PREFIX="/usr/local"
-  # Do we add a 'share' sub directory to ${SHARE_PREFIX} for the project ?
+  # Do we add the 'share' sub directory to ${SHARE_PREFIX} for the project ?
   DEFAULT_USE_SHARE_SUB_DIRECTORY=false
   # Do we use a 'full project name' private sub directory ${SHARE_PREFIX} for the project ?
   DEFAULT_USE_PROJECT_SUB_DIRECTORY=true
@@ -201,8 +201,8 @@ set_intrinsic () {
       abort_remedy "Choose an executable check sum command."
     fi
   fi
-  if test -z ${CONVERT}; then CONVERT="${DEFAULT_CONVERT}"; else
-    if check ${CONVERT}; then :; else
+  if test -z "${CONVERT}"; then CONVERT="${DEFAULT_CONVERT}"; else
+    if check "${CONVERT}"; then :; else
       abort_configuration "unavailable command ${CONVERT}.";
       abort_remedy "Choose an executable convert command."
     fi
@@ -216,8 +216,8 @@ set_intrinsic () {
 
   # Intrinsic settings for Zvtov.
   if test -z "$USE_XMLRPC"; then USE_XMLRPC=${DEFAULT_USE_XMLRPC}; fi
-  if test -z ${XMLRPC}; then XMLRPC="${DEFAULT_XMLRPC}"; else
-    if check ${XMLRPC}; then :; else
+  if test -z "${XMLRPC}"; then XMLRPC="${DEFAULT_XMLRPC}"; else
+    if check "${XMLRPC}"; then :; else
       abort_configuration "unavailable command ${XMLRPC}.";
       abort_remedy "Choose an executable xmlrpc command."
     fi
@@ -225,7 +225,7 @@ set_intrinsic () {
 
   if ${USE_XMLRPC}; then
     # Check_XMLRPC;
-    if check ${XMLRPC}; then :; else
+    if check "${XMLRPC}"; then :; else
       abort_configuration "unavailable command ${XMLRPC}.";
       abort_remedy "Choose an executable xmlrpc command."
     fi
@@ -518,7 +518,7 @@ abort_configuration_not_writable_share_prefix_directory () {
 #
 
 # Setting default values (for help in particular).
-# This must be done before parsing the command line arguments.
+# Hence, this must be done before parsing the command line arguments.
 set_defaults
 
 #
@@ -538,6 +538,7 @@ while : ; do
     -mandir | --mandir) MAN_DIR="$2"; shift 2;;
     # Caml options
     -caml_lib_dir | --caml_lib_dir) CAML_LIB_DIR="$2"; shift 2;;
+    -caml_bin_dir | --caml_bin_dir) CAML_BIN_DIR="$2"; shift 2;;
     -caml_byt_compiler | --caml_byt_compiler) CAML_BYT_COMPILER="$2"; shift 2;;
     -caml_bin_compiler | --caml_bin_compiler) CAML_BIN_COMPILER="$2"; shift 2;;
     -caml_lex_compiler | --caml_lex_compiler) CAML_LEX_COMPILER="$2"; shift 2;;
