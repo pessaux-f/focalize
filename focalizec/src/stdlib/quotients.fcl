@@ -1,0 +1,267 @@
+(** 
+   @title Quotient Structures
+   @author Renaud Rioboo
+
+*)
+
+
+use "basics";;
+use "sets";;
+open "basics";;
+open "sets";;
+
+(**
+  This is a first attempt to specify representations.
+  We define two functions and two properties relating
+  concrete values of representation and abstract values of Self
+*)
+species Represented_by (S is Basic_object) inherits Setoid =
+
+  representation = S ;
+
+  (** An element of Self is encoded by an element of S. *)
+  let to_rep (x in Self) in S = x ;
+
+  (** One should be able to describe which values of s correspond to some
+     abstract Self. *)
+  signature represents_some_self : S -> prop;
+
+  (** A way to abstract concrete values, not intended to be used by the
+     programmer *)
+  signature from_rep : S -> Self;
+
+  (** This property enables to state theorems about abstract Self. *)
+  logical let correct_representation (x) =
+    !represents_some_self (!to_rep (x))
+  ;
+
+  theorem correct_rep_spec : all x in Self,
+     !correct_representation (x) <-> !represents_some_self (!to_rep (x))
+     proof = by definition of correct_representation
+  ;
+
+  (** Combining to_rep and from_rep gives identity. *)
+  property to_rep_reverses : all x in Self, !equal (!from_rep (!to_rep (x)), x) ;
+
+  (** Since we provide an injection to s from_rep is a surjection. *)
+  theorem from_rep_is_surjective : all x in Self, ex y in S,
+    !equal (!from_rep (y), x)
+  proof =
+   <1>1 assume x in Self,
+        prove !equal (!from_rep (x), x)
+        by property to_rep_reverses
+        definition of to_rep
+   <1>f qed.
+  ;
+
+  (** Every element of Self should verify an invariant. *)
+  property correct_invariant : all x in Self, !correct_representation (x) ;
+
+  (** By default we print the concrete data. *)
+  let print (x) = S!print (!to_rep (x)) ;
+  (** By default we parse concrete data and abstract it. *)
+  let parse (p) = !from_rep (S!parse (p)) ;
+end
+;;
+
+
+
+
+(** Equivalence relations over a set *)
+species Equivalence_relation(S is Setoid) 
+  inherits Basic_object =
+  (**
+     @mathml <equivalent/>
+     will be denoted as infix congruence
+   *)
+    signature equiv: S -> S -> prop;
+    property equiv_symmetric: all x y in S, 
+      !equiv(x, y) -> !equiv(y, x);
+    property equiv_transitive: all x y z in S, 
+      !equiv(x, y) -> !equiv(y, z) -> !equiv(x, z);
+    (** compatibility with equality *)
+    property equal_refines_equiv: all x y in S, 
+       S!equal(x, y) -> !equiv(x, y);
+    theorem equiv_reflexive: all x in S, !equiv(x, x)
+      proof = by property !equal_refines_equiv, S!equal_reflexive;
+end
+;;
+
+(** General properties about any function *)
+species Setoid_morphism(S is Setoid, T is Setoid) 
+   inherits Equivalence_relation(S) =
+
+  (** an abstract reduction function *)
+  signature morph: S -> T;
+
+  (** it should be compatible with equality *)
+  property morph_substitution_rule: all x y in S, 
+    S!equal(x, y) -> T!equal(!morph(x), !morph(y));
+
+  (* [rr]: a hack to force the compiler to include t!equal in the env *)
+  let equal_t(x, y) = T!equal(x, y);
+
+  (** we define an equivalence relation *)
+  logical let equiv(e1, e2) = !equal_t(!morph(e1), !morph(e2));
+
+  proof of equiv_symmetric =
+    by property T!equal_symmetric 
+       definition of equiv, equal_t
+  ;
+  proof of equiv_transitive =
+    by property T!equal_transitive 
+       definition of equiv, equal_t
+  ;
+  proof of equal_refines_equiv =
+    by property !morph_substitution_rule 
+       definition of equiv, equal_t
+  ;
+end
+;;
+
+(**
+   Whenever we assimilated elements of a set with the target of a function
+   taking elements as arguments we have some free theorems
+*)
+
+species Represented_by_setoid(S is Setoid)
+   inherits Represented_by(S) =
+
+  (* [rr]: hack to force the compiler to include s!equal in the environment *)
+  let equal_s(x, y) = S!equal(x, y);
+
+  (** equality in self is equality in s *)
+  let equal(x in Self, y in Self) = !equal_s(x, y);
+
+  proof of equal_reflexive = 
+    by property S!equal_reflexive 
+       definition of equal, equal_s
+  ;
+
+  proof of equal_symmetric =
+   by property S!equal_symmetric 
+      definition of equal, equal_s
+  ;
+
+  proof of equal_transitive =
+   by property S!equal_transitive 
+      definition of equal, equal_s
+  ;
+
+  logical let represents_some_self(x) = !equal_s(!from_rep(x), x);
+(*   letprop represents_some_self(x) = s!equal(!from_rep(x), x); *)
+
+  theorem to_rep_is_injective: all e_1 e_2 in Self,
+    S!equal(!to_rep(e_1), !to_rep(e_2)) -> !equal(e_1, e_2)
+  proof =
+    by definition of equal, equal_s, to_rep;
+
+  proof of to_rep_reverses =
+    <1>1 assume x in Self,
+         prove S!equal(!from_rep(!to_rep(x)), x)
+         <2>1 prove S!equal(!from_rep(x), x)
+              <3>1 prove !correct_representation(x) 
+                   by property !correct_invariant
+              <3>2 prove !represents_some_self(!to_rep(x))
+                   by step <3>1 property !correct_rep_spec
+              <3>f qed by step <3>2 
+                          definition of represents_some_self, equal_s, to_rep
+         <2>f qed by step <2>1 definition of to_rep
+     <1>f qed by step <1>1 definition of equal, equal_s
+  ;
+
+end
+;;
+
+
+species Projections(S is Setoid) 
+  inherits Setoid_morphism(S, S) = 
+  signature reduce: S -> S;
+  property reduce_substitution_rule: all x y in S,
+     S!equal(x, y) -> S!equal(!reduce(x), !reduce(y));
+
+  (** a projection is idempotent with respect to functional composition *)
+  property reduce_is_projection :  all x in S, 
+    S!equal(!reduce(x), !reduce(!reduce(x)));
+
+  let morph(x) = !reduce(x);
+  proof of morph_substitution_rule = 
+    by property !reduce_substitution_rule 
+       definition of morph;
+
+end
+;;
+
+(** 
+   Quotient sets, a projection function induces an equivalence relation over 
+   the set. The image of the projection is the set of lateral classes of the
+   equivalence relation.
+
+*)
+
+species Quotient_set(S is Setoid, 
+                     Proj is Projections(S)
+		    )
+  inherits Represented_by_setoid(S), Setoid =
+
+  (** We produce elements by projecting them  *)
+  let from_rep(x) = Proj!reduce(x);
+
+  let element in Self = Proj!reduce(S!element);
+
+  (** we state that we create reduced elements *) 
+  theorem sample_is_reduced: !correct_representation(!element)
+    proof =
+    <1>1 prove !represents_some_self(!element)
+         <2>1 prove S!equal(Proj!reduce(!element), !element)
+              by property Proj!reduce_is_projection, S!equal_symmetric
+              definition of element
+         <2>f qed by step <2>1
+                  definition of represents_some_self, equal_s, from_rep
+    <1>2 qed by step <1>1 
+                definition of to_rep, correct_representation
+    ;
+end
+;;
+
+species Singleton inherits Setoid =
+  representation = unit;
+  (* [rr]: better parse *)
+  let element = basics#();
+  let equal(_x, _y) = true;
+
+  proof of equal_reflexive = by definition of equal ;
+  proof of equal_symmetric = by definition of equal ;
+  proof of equal_transitive = by definition of equal ;
+end
+;;
+
+collection Un_singleton implements Singleton;;
+
+
+species Projection_over_sample(S is Setoid)
+  inherits Projections(S) =
+    representation = unit;
+    let reduce(_x) = S!element ;
+    proof of reduce_substitution_rule = 
+      by property S!equal_reflexive definition of reduce;
+    proof of reduce_is_projection = 
+      by property S!equal_reflexive definition of reduce;
+end
+;;
+
+collection Trivial_projection
+  implements Projection_over_sample(Un_singleton);;
+
+species Trivial_quotient_final
+  inherits Quotient_set(Un_singleton,
+			  Trivial_projection)=
+  (** the only signature returning a value of self preserves the invariant  *)
+  proof of correct_invariant =
+    property sample_is_reduced
+    assumed {* *};
+end
+;;
+
+collection Trivial_quotient implements Trivial_quotient_final;;
+

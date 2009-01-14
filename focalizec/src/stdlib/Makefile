@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.74 2009-01-07 16:48:18 rr Exp $
+# $Id: Makefile,v 1.75 2009-01-14 17:28:54 rr Exp $
 
 ROOT_DIR = ../..
 
@@ -39,7 +39,8 @@ FOCALIZE_SRC = basics.fcl \
 	orders_and_lattices.fcl \
 	sets_orders.fcl \
 	wellfounded.fcl \
-	sums.fcl
+	sums.fcl \
+	quotients.fcl
 
 FOCALIZE_SRC_UNSAFE =
 
