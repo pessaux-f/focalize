@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.8 2009-01-13 14:34:09 pessaux Exp $
+# $Id: Makefile,v 1.9 2009-01-14 10:44:19 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -20,6 +20,6 @@ include $(ROOT_DIR)/Makefile.config
 
 CAML_INCLUDES = -I ../basement -I ../parser -I ../typing
 
-BYT_OBJS = doc_lexer.cmo utils_docgen.cmo main_docgen.cmo
+BYT_OBJS = doc_lexer.cmo utils_docgen.cmo env_docgen.cmo main_docgen.cmo
 
 include $(ROOT_DIR)/Makefile.common
