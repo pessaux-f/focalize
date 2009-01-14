@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.27 2009-01-14 10:44:19 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.28 2009-01-14 12:39:24 pessaux Exp $ *)
 
 
 
@@ -66,7 +66,7 @@ let gen_doc_species_expr out_fmt ~current_unit species_expr =
                 mod_name Utils_docgen.pp_xml_vname vn
          end)
      | Parsetree.E_paren e' -> rec_gen_species_param_expr e'
-     | _ -> assert false in (* ????????product_structures.fcl??????????? *)
+     | _ -> assert false in (* ????????quotients.fcl??????????? *)
   (* **************** *)
   (* Now, do the job. *)
   let species_expr_desc = species_expr.Parsetree.ast_desc in

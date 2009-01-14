@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: utils_docgen.ml,v 1.1 2009-01-13 14:34:09 pessaux Exp $ *)
+(* $Id: utils_docgen.ml,v 1.2 2009-01-14 12:39:24 pessaux Exp $ *)
 
 
 
@@ -73,12 +73,12 @@ let get_in_file_and_name_from_ident ~current_unit ident =
     {b Rem}: Exported outside this module.                                  *)
 (* ************************************************************************ *)
 let find_documentation_of_method meth_name species_def_fields =
-  (* Local function to perform search among the [binding]s of a [SF_let]. *)
+  (* Local function to perform search among the [binding]s of a [SF_let] in
+     order to find if a binding has the searched name. *)
   let rec find_in_bindings = function
-    | [] -> None
+    | [] -> false
     | h :: q ->
-        if h.Parsetree.ast_desc.Parsetree.b_name = meth_name then
-          Some h.Parsetree.ast_doc
+        if h.Parsetree.ast_desc.Parsetree.b_name = meth_name then true
         else find_in_bindings q in
   (* Local function to perform search among the whole list of fields. *)
   let rec rec_find = function
@@ -103,11 +103,16 @@ let find_documentation_of_method meth_name species_def_fields =
              else rec_find q
          | Parsetree.SF_let let_def ->
              (begin
-             match
-                find_in_bindings
-                  let_def.Parsetree.ast_desc.Parsetree.ld_bindings with
-              | Some doc -> doc
-              | None -> rec_find q
+             (* It appears that the parsed comment of a "let" definition is
+                hoocked on the [let_def] node. *)
+             (* TODO: This means that the principle of focdoc is wrong in case
+                of multiple functions binding since we will have only 1 comment
+                for all the defined functions. There is something to think
+                again... *)
+             if find_in_bindings
+                 let_def.Parsetree.ast_desc.Parsetree.ld_bindings then
+               let_def.Parsetree.ast_doc
+             else rec_find q
              end)
          | Parsetree.SF_property property_def ->
              if property_def.Parsetree.ast_desc.Parsetree.prd_name = meth_name
