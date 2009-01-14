@@ -51,7 +51,7 @@ species Represented_by (S is Basic_object) inherits Setoid =
         prove !equal (!from_rep (x), x)
         by property to_rep_reverses
         definition of to_rep
-   <1>f qed.
+   <1>f conclude
   ;
 
   (** Every element of Self should verify an invariant. *)
