@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.39 2009-01-15 09:30:55 weis Exp $
+# $Id: Makefile,v 1.40 2009-01-15 09:52:56 weis Exp $
 
 ROOT_DIR = .
 
@@ -264,4 +264,4 @@ distclean_external_tools:
 	  echo "<-- $$i [$$?]"; \
 	done
 
-distclean:: distclean_external_tools distclean_internal_tools
+distclean:: distclean_external_tools distclean_internal_tools unconfigure

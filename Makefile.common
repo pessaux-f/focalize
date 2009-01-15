@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.5 2009-01-15 09:31:59 weis Exp $
+# $Id: Makefile.common,v 1.6 2009-01-15 09:51:34 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -43,7 +43,7 @@ clean::
 unconfigure::
 	$(RM) .config_var .depend .done_*
 
-distclean:: clean unconfigure
+distclean:: clean
 
 depend::
 	$(CAML_DEP) *.mli *.ml > ./.depend
@@ -70,7 +70,11 @@ tests::
 .mll.ml:
 	$(CAML_LEX) $<
 
-.fcl.fo .fcl.ml .fcl.zv:
+.fcl.fo:
+	$(FOCALIZEC) $<
+.fcl.ml:
+	$(FOCALIZEC) $<
+.fcl.zv:
 	$(FOCALIZEC) $<
 
 .zv.v:
