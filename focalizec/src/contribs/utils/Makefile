@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.2 2009-01-15 09:05:34 weis Exp $
+# $Id: Makefile,v 1.3 2009-01-15 10:05:30 weis Exp $
 
 # Makefile for algebra structures implementations
 
@@ -125,15 +125,10 @@ install::
 
 
 clean::
-	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
-	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS)
-	$(RM) $(FOCALIZE_MLS_UNSAFE) $(FOCALIZE_ZVS_UNSAFE) $(FOCALIZE_VS_UNSAFE)
-	$(RM) $(FOCALIZE_BYT_OBJS_UNSAFE) $(FOCALIZE_BIN_OBJS_UNSAFE) $(FOCALIZE_VOS_UNSAFE)
-	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)
+	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) \
+	      $(FOCALIZE_MLS_UNSAFE) $(FOCALIZE_ZVS_UNSAFE) $(FOCALIZE_VS_UNSAFE)
 	$(RM) big_integers.ml parse_poly.ml polys_abstract.ml
-	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm*
-	$(RM) big_integers.o parse_poly.o polys_abstract.o
-	$(RM) *.annot *.glob
+	$(RM) *.glob
 
 
 # Were not compiled to Coq in the previous FoCaL compiler...
