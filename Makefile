@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.38 2009-01-14 17:27:39 weis Exp $
+# $Id: Makefile,v 1.39 2009-01-15 09:30:55 weis Exp $
 
 ROOT_DIR = .
 
@@ -224,10 +224,6 @@ uninstall doc depend::
 	  echo "<-- $$i [$$?]"; \
 	done
 
-.PHONY: unconfigure
-unconfigure::
-	$(RM) .config_var .depend .done_*
-
 clean_internal_tools:
 	for i in $(INTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
@@ -264,9 +260,8 @@ distclean_external_tools:
 	$(RM) .done_*
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) $@); \
+	  ($(CD) $$i && $(MAKE) distclean); \
 	  echo "<-- $$i [$$?]"; \
 	done
 
-.PHONY: distclean
-distclean:: distclean_external_tools distclean_internal_tools unconfigure
+distclean:: distclean_external_tools distclean_internal_tools
