@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.20 2009-01-15 09:52:28 weis Exp $
+# $Id: Makefile.common,v 1.21 2009-01-15 15:01:33 doligez Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -34,7 +34,7 @@ doc:: $(BYT_OBJS)
 clean::
 	$(RM) *.cm* *.o *.a *.annot *.out *.vo *.fo *~ .*~ log *.mangled *.pfc
 	if test -d tests; then \
-	  ($(CD) tests; $(MAKE) clean); \
+	  $(MAKE) -C tests clean; \
 	fi
 	if test -d odoc; then \
 	  $(RM) odoc/*; \
@@ -50,7 +50,7 @@ depend::
 
 # Only on demand.
 tests::
-	if test -d tests; then ($(CD) tests; $(MAKE) all); fi
+	if test -d tests; then $(MAKE) -C tests all; fi
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .fo .zv .v .vo
 .SUFFIXES: .tex .dvi .ps .pdf .idx

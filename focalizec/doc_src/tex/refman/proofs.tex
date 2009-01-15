@@ -1,4 +1,4 @@
-% $Id: proofs.tex,v 1.5 2008-12-11 10:48:24 hardin Exp $
+% $Id: proofs.tex,v 1.6 2009-01-15 15:01:33 doligez Exp $
 
 
 
@@ -13,4 +13,27 @@ direct \coq\ script will be addressed in \ref{coq-proofs}. And the
 last kind of proof, by {\tt assumed} doesn't need anymore description
 since it consists in bypassing the formal proof mechanism.
 
-Conceptually, a proof is a tree......
+The syntax of proofs is as follows.
+\begin{syntax}
+\syntaxclass{Proofs:}
+proof & ::=  & proof\_step* qed\_step \\
+      & \mid & \terminal{by} fact* \\
+      & \mid & \terminal{qed}
+\end{syntax}
+
+\begin{syntax}
+\syntaxclass{Proof steps:}
+proof\_step & ::=  & proof\_bullet statement proof
+\end{syntax}
+
+\begin{syntax}
+\syntaxclass{Statements:}
+statement & ::=  & [\terminal{assume} logical\_expr \terminal{,}]*
+                   [\terminal{prove} logical\_expr]
+\end{syntax}
+
+\begin{syntax}
+\syntaxclass{QED steps:}
+qed\_step & ::=  & proof\_bullet \terminal{qed} proof \\
+          & \mid & proof\_bullet \terminal{qed} \terminal{.}
+\end{syntax}

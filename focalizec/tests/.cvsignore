@@ -3,5 +3,7 @@
 *.ml
 *.fo
 *.mangled
+*.v
+*.vo
 .depend
 odoc
