@@ -13,10 +13,13 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: Makefile,v 1.25 2009-01-14 11:45:14 weis Exp $
+#  $Id: Makefile,v 1.26 2009-01-15 09:33:20 weis Exp $
 
 # Reading configuration settings.
 include .config_var
+
+# Staging directory for package managers
+DESTDIR = ""
 
 CAMLFLAGS = -warn-error A
 
@@ -64,15 +67,15 @@ zvtov: zvtov.byt
 
 .PHONY: install
 install:
-	mkdir -p "$(BIN_DIR)"
-	cp -p zvtov "$(BIN_DIR)"/
-	mkdir -p "$(MAN_DIR)"/man1
-	cp zvtov.1 "$(MAN_DIR)"/man1/
+	mkdir -p "$(DESTDIR)$(BIN_DIR)"
+	cp -p zvtov "$(DESTDIR)$(BIN_DIR)"/
+	mkdir -p "$(DESTDIR)$(MAN_DIR)"/man1
+	cp zvtov.1 "$(DESTDIR)$(MAN_DIR)"/man1/
 
 .PHONY: uninstall
 uninstall:
-	rm -f "$(BIN_DIR)"/zvtov
-	rm -f "$(MAN_DIR)"/man1/zvtov.1
+	rm -f "$(DESTDIR)$(BIN_DIR)"/zvtov
+	rm -f "$(DESTDIR)$(MAN_DIR)"/man1/zvtov.1
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx .v .vo
 
