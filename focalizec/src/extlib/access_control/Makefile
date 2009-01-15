@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.18 2008-12-17 16:00:42 habib Exp $
+# $Id: Makefile,v 1.19 2009-01-15 09:05:34 weis Exp $
 
 # Makefile for access control models
 
@@ -22,8 +22,6 @@ ROOT_DIR = ../../..
 include $(ROOT_DIR)/Makefile.config
 
 LIB_INSTALL_DIR = $(LIB_DIR)/access_control
-
-ZENON_DIR = $(ROOT_DIR)/../zenon/
 
 STDLIB_DIR = $(ROOT_DIR)/src/stdlib
 
@@ -35,7 +33,8 @@ FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(STDLIB_DIR)
 
 CAML_COMP_FLAGS = -w A -warn-error Ae -dtypes -I $(STDLIB_DIR)
 
-COQ_INCLUDES = -I $(ZENON_DIR) -I $(STDLIB_DIR)
+#From Makefile.config ZENON_LIB_DIR
+COQ_INCLUDES = -I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
 
 include $(ROOT_DIR)/Makefile.common
 

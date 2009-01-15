@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.1 2008-12-20 16:58:28 ayrault Exp $
+# $Id: Makefile,v 1.2 2009-01-15 09:05:34 weis Exp $
 
 # Makefile for algebra structures implementations
 
@@ -22,8 +22,6 @@ ROOT_DIR = ../../..
 include $(ROOT_DIR)/Makefile.config
 
 LIB_INSTALL_DIR = $(LIB_DIR)/utils
-
-ZENON_DIR = $(ROOT_DIR)/../zenon/
 
 STDLIB_DIR = $(ROOT_DIR)/src/stdlib
 
@@ -36,12 +34,15 @@ FOCALIZE_COMPILER = $(ROOT_DIR)/src/toplevel/focalizec
 FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) \
 -I $(UTILSLIB_DIR)
 
-#From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
+# From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
 CAML_COMP_FLAGS = -w A -warn-error Ae -dtypes -I $(STDLIB_DIR) \
 -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)
 
-COQ_INCLUDES = -I $(ZENON_DIR) -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) \
+# From Makefile.config ZENON_LIB_DIR
+# Was ZENON_LIB_DIR = $(ROOT_DIR)/../zenon/
+
+COQ_INCLUDES = -I $(ZENON_LIB_DIR) -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) \
 	-I $(UTILSLIB_DIR)
 
 FOCALIZE_SRC = \
