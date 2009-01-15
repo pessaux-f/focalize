@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.12 2009-01-11 01:30:39 weis Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.13 2009-01-15 13:08:10 doligez Exp $ *)
 
 (**
 
@@ -362,56 +362,18 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
         by hypothesis h3, h5
            property A!equal_symmetric, A!equal_transitive
       <2>q qed
-        assumed {* need to investigate why zenon doesn't get it *}
-(*
         by hypothesis h4
            step <2>1, <2>2
            definition of est_element
-*)
     <1>f qed
       coq proof {*
         Proof.
         induction s.
         apply __Q_1_LEMMA.
         apply __Q_2_LEMMA; auto.
-        Conclude
+        Qed.
       *}
   ;
-(*
-    by definition of est_element property A!equal_transitive, A!equal_symmetric
-  ;
-    coq proof {*
-      Unfold abst_est_element;Induction s;Simpl;Intros.
-      Elim H0.
-      Cut (setoid_equal self_a y a)=true \/ (setoid_equal self_a y a)=false.
-      2:Elim (setoid_equal self_a y a).
-      2:Left;Trivial.
-      2:Right;Trivial.
-      Intros;Elim H2;Intros.
-      Rewrite H3;Simpl;Trivial.
-      Rewrite H3;Simpl;Apply (H x y H0).
-      Cut (setoid_equal self_a x a)=false -> (liste__est_element x l)=true.
-      2:Intros;Rewrite H4 in H1;Generalize H1;Simpl;Intros;Apply Is_true_eq_true;
-      Assumption.
-      Intros;Apply Is_true_eq_left;Apply H4.
-      Cut (setoid_equal self_a x a)=true \/ (setoid_equal self_a x a)=false.
-      2:Elim (setoid_equal self_a x a).
-      2:Left;Trivial.
-      2:Right;Trivial.
-      Intros;Elim H5;Intros.
-      2:Assumption.
-      Absurd (setoid_equal self_a y a)=false.
-      2:Assumption.
-      Generalize
-      ((setoid_equal_transitive self_a) y x a
-                       ((setoid_equal_symmetric self_a) x y
-                                        H0)
-                       (Is_true_eq_left (setoid_equal self_a x a) H6)).
-      Elim (setoid_equal self_a y a);Simpl;Intros.
-      Discriminate.
-      Elim H7.
-    *};
-*)
 
   let rec sous_ensemble (e1 in Self, e2 in Self) in bool =
     match e1 with
