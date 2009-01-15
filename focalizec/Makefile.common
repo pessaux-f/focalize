@@ -13,11 +13,13 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.19 2009-01-11 20:55:43 weis Exp $
+# $Id: Makefile.common,v 1.20 2009-01-15 09:52:28 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
-.PHONY: all byt bin clean doc install uninstall depend tests lib
+.PHONY: all byt bin
+.PHONY: clean unconfigure distclean install uninstall
+.PHONY: doc depend tests lib
 
 all:: byt bin
 
@@ -37,6 +39,11 @@ clean::
 	if test -d odoc; then \
 	  $(RM) odoc/*; \
 	fi
+
+unconfigure::
+	$(RM) .config_var .depend .done_*
+
+distclean:: clean
 
 depend::
 	$(CAML_DEP) *.mli *.ml > ./.depend
