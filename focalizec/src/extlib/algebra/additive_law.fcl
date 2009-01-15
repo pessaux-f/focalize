@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: additive_law.fcl,v 1.6 2009-01-11 01:24:06 weis Exp $ *)
+(* $Id: additive_law.fcl,v 1.7 2009-01-15 22:32:08 rr Exp $ *)
 
 (** The FoCaLize library does not intend to model binary laws which are not
    associative, thus some mathematical notions such as magmas (groupoids) are
@@ -53,29 +53,6 @@ species Zero_check_set inherits Setoid_with_zero =
 
   property is_zero_substitution_rule: all x y in Self,
     !is_zero (x) -> (!equal (x, y) \/ !equal (y, x)) -> !is_zero (y) ;
-
-   (**
-      We could deduce that zero verifies the check, using equlity properties
-      but we chose to have this primitive, because we want to define equality
-      using zero check
-    *)
-   property zero_checks_to_zero: !is_zero(!zero);
-   (*
-   theorem zero_checks_to_zero: !is_zero(!zero)
-     proof =
-       <1>1 prove !equal(!zero,!zero)
-            by !equal_reflexive
-       <1>2 qed by <1>1, !equals_zero_is_zero_check
-     ;
-   *)
-
-  (**
-     when an element is equal to zero it satisfies the check
-   *)
-   (*
-   property equals_zero_is_zero_check: all x in Self,
-     !equal(!zero,x) -> !is_zero(x);
-   *)
 
    theorem equals_zero_is_zero_check : all x in Self,
     ( !equal (!zero, x) \/ !equal (x, !zero))-> !is_zero (x)

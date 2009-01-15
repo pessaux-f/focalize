@@ -1,13 +1,12 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                FoCaLize compiler                                    *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
-(*                                                                     *)
 (*                               LIP6   -  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -15,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: weak_structures.fcl,v 1.6 2009-01-11 01:24:06 weis Exp $ *)
+(* $Id: weak_structures.fcl,v 1.7 2009-01-15 22:32:08 rr Exp $ *)
 
 (** We define here some weak notions such as rings with no subtraction. *)
 
@@ -104,7 +103,9 @@ end ;;
 
 (** a commutative semi_ring is a semi_module on itself *)
 species Commutative_semi_ring
-  inherits Commutative_monoid, Semi_ring, Left_semi_module (Self) =
+  inherits Commutative_monoid_with_absorbant, 
+           Semi_ring, 
+           Left_semi_module(Self) =
    proof of one_is_right_neutral = 
      by property one_is_left_neutral, mult_commutes, equal_transitive ;
 
@@ -162,18 +163,12 @@ species Commutative_semi_algebra(R is Commutative_semi_ring)
 end ;;
 
 
-(** in an integral_semi_ring one can divide. if xy=0 then x=0 or y=0.
- *)
-species Integral_semi_ring inherits Regular_monoid, Commutative_semi_ring =
-  let is_zero (x) = !equal (x, !zero) ;
-end ;;
-
 
 (** torsion_free_semi_module has the following property: 
   a*m = 0 implies a = 0 \/ m = 0, so that we can define an  
   external division
  *)
-species Torsion_free_semi_module (R is Integral_semi_ring)
+species Torsion_free_semi_module (R is Semi_ring)
   inherits Left_semi_module (R) =
    signature exquo : Self -> R-> partiel (Self) ;
 
@@ -197,6 +192,29 @@ species Torsion_free_semi_module (R is Integral_semi_ring)
   property mult_is_integral: all x in Self, all a in R,
     !equal (!mult (a, x), Self!zero) ->
       (R!equal (a, R!zero) \/ !equal (x, Self!zero)) ;
+
+end ;;
+
+(** 
+   in an Integral_semi_ring one can divide. if xy=0 then x=0 or y=0.
+ *)
+species Integral_semi_ring 
+  inherits Regular_monoid, 
+           Commutative_semi_ring,
+           Torsion_free_semi_module(Self) =
+  let is_zero (x) = !equal (x, !zero);
+
+  proof of is_zero_spec = by property !equal_symmetric definition of is_zero;
+
+  theorem divides_is_additive: all x y z in Self,
+    !divides(x, y) -> !divides(x, z) -> !divides(x, !plus(y, z))
+   (* [rr]: should be a property *)
+    proof = assumed {* *};
+
+  theorem one_is_not_zero: ~(!is_zero(!one))
+  (* [rr]: should be a property *)
+  proof = assumed {* *};
+
 
 end ;;
 
@@ -333,6 +351,83 @@ species Euclidean_semi_ring inherits Factorial_semi_ring =
    \/
    (!equal (z, !remainder (x, y)) -> 
      (!is_zero (z) \/ !euclidean_ordering (z, y))) ;
+
+   (** Unicity of Euclidean relation *)
+   theorem euclidean_characterisation: all a b q r in Self,
+     !equal(a, !plus(!mult(b, q), r)) ->
+        (~(!is_zero(b))) -> 
+          (!is_zero(r) \/ !euclidean_ordering(r, b)) ->
+             (!equal(q, !quotient(a, b)) /\ !equal(r, !remainder(a, b)))
+     (* [rr]: this should be a property *)
+     proof = assumed {* *};
+
+   theorem zero_remainder_divides: all x y in Self,
+     ~(!is_zero(y)) -> !is_zero(!remainder(x, y)) -> !divides(y, x)
+     proof =
+       <1>1 assume x in Self, assume y in Self,
+            assume H_0: ~(!is_zero(y)),
+            assume H_r: !is_zero(!remainder(x, y)),
+            prove !divides(y, x)
+            <2>1 prove !equal(x, !mult(!quotient(x, y), y))
+                 <3>1 prove !equal(x,
+				   !plus(!mult(!quotient(x, y), y),
+					 !zero))
+                      <4>1 prove !equal(x,
+					!plus(!mult(!quotient(x, y), y),
+					      !remainder(x, y)))
+                           by hypothesis H_0 property !euclidean_relation
+                      <4>2 prove !equal(!remainder(x, y), !zero)
+                           by hypothesis H_r
+                              property !is_zero_spec, !equal_symmetric
+                      <4>f qed by step <4>1, <4>2
+                                  property !plus_right_substitution_rule,
+                                           !equal_transitive
+                 <3>f qed by step <3>1
+                             property !zero_is_neutral, !equal_transitive
+            <2>2 prove !divides(y, !mult(!quotient(x, y), y))
+                 by property !divides_reverses_mult
+            <2>f qed by step <2>1, <2>2
+                        property !equal_symmetric,
+                                 !divides_transitive, !divides_extends_equal
+       <1>f conclude
+     ;
+
+   (** Units are extremal *)
+   theorem one_is_euclidean_minimal: all x in Self,
+     ~(!is_zero(x)) -> !euclidean_ordering(!one, x)
+     proof = assumed {* *};
+
+   theorem remainder_left_substitution_rule: all x y z in Self,
+     !equal(x, y) -> ~(!is_zero(z)) ->
+       !equal(!remainder(x, z), !remainder(y, z))
+     proof = assumed {* Needs check *}
+  ;
+
+   theorem zero_remainder_is_zero: all x in Self,
+     !is_zero(x) \/ !is_zero(!remainder(!zero, x))
+     proof =
+     <1>1 assume x in Self,
+          assume H: ~(!is_zero(x)),
+          prove !is_zero(!remainder(!zero, x))
+          <2>1 prove !equal(!zero, !plus(!mult(x, !zero), !zero))
+               <3>1 prove !equal(!mult(x, !zero), !zero)
+                    by property !zero_right_absorbes
+               (* [rr]: zenon has problems with substitution rules! *)
+               <3>2 prove !equal(!plus(!mult(x, !zero), !zero),
+				 !plus(!zero, !zero))
+                    by step <3>1 property !plus_left_substitution_rule
+               <3>f qed by step <3>2
+                           property !zero_is_neutral,
+                                    !equal_symmetric, !equal_transitive
+          <2>2 prove !equal(!zero, !remainder(!zero, x))
+               by step <2>1 hypothesis H
+                  property !zero_checks_to_zero, !euclidean_characterisation
+          <2>f qed by step <2>2 property !is_zero_spec
+     <1>f conclude
+     ;
+ 
+
+
  let exquo (x, y) =
     if Self!is_zero (y) then basics#Failed
     else
