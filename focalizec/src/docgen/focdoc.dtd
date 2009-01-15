@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 <!-- FoCDoc DTD -->
-<!-- $Id: focdoc.dtd,v 1.9 2009-01-13 14:17:29 pessaux Exp $ -->
+<!-- $Id: focdoc.dtd,v 1.10 2009-01-15 11:26:21 pessaux Exp $ -->
 <!-- to describe the mathml equivalent of a particular function --> 
 
 <!-- mathml.dtd ne sera plus utilise dans le dtd. Les annotations mathml dans
@@ -75,10 +75,9 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 <!ELEMENT foc:inherits (foc:atom|foc:app)>
 <!ELEMENT foc:implements (foc:atom|foc:app)>
 <!ELEMENT foc:signature
-  (foc:foc-name,foc:history,foc:informations,foc:ho?,foc:type)>
-<!ELEMENT foc:ho EMPTY>
+  (foc:foc-name,foc:history,foc:informations,foc:type)>
 <!ELEMENT foc:definition
-  (foc:foc-name,foc:history,foc:informations,foc:ho?,foc:type)>
+  (foc:foc-name,foc:history,foc:informations,foc:type)>
 <!ATTLIST foc:definition recursive CDATA #IMPLIED>
 
 <!-- ajout frederic : pour prendre en compte des fonctions globales -->
@@ -203,7 +202,7 @@ pour implements) n'est plus foc-name mais de type atom ou app.
 
 
 <!ELEMENT foc:proposition (%foc:proposition;)>
-<!ELEMENT foc:carrier (foc:history,foc:informations,foc:ho?,foc:type)>
+<!ELEMENT foc:carrier (foc:history,foc:informations,foc:type)>
 <!ELEMENT foc:history (foc:initial-apparition,foc:comes-from)>
 <!ELEMENT foc:initial-apparition (#PCDATA)>
 <!ATTLIST foc:initial-apparition infile CDATA #IMPLIED>

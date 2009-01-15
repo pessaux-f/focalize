@@ -264,7 +264,6 @@
         <xs:element minOccurs="0" ref="foc:fun-dep"/>
         <xs:element ref="foc:history"/>
         <xs:element ref="foc:informations"/>
-        <xs:element minOccurs="0" ref="foc:ho"/>
         <xs:element ref="foc:type"/>
       </xs:sequence>
       <xs:attribute name="recursive" type="xs:NCName"/>

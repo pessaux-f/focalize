@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.29 2009-01-14 13:03:49 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.30 2009-01-15 11:26:21 pessaux Exp $ *)
 
 
 
@@ -563,7 +563,6 @@ let gen_doc_computational_let out_fmt env from name sch rec_flag doc =
     Utils_docgen.extract_tagged_info_from_documentation doc in
   gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
   let env' = Env_docgen.add_method name i_mathml i_latex env in
-  (* foc:ho?. *) (* TODO *)
   (* foc:type. *)
   gen_doc_type ~reuse_mapping: false out_fmt (Types.specialize sch) ;
   Format.fprintf out_fmt "@]</foc:definition>@\n" ;
@@ -668,7 +667,6 @@ let gen_doc_method out_fmt env species_def_fields = function
         gen_doc_history out_fmt from ;
         (* foc:informations. *)
         gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
-        (* foc:ho?. *) (* TODO. *)
         (* foc:type. *)
         gen_doc_type ~reuse_mapping: false out_fmt (Types.specialize sch) ;
         Format.fprintf out_fmt "@]</foc:carrier>@\n"
@@ -684,7 +682,6 @@ let gen_doc_method out_fmt env species_def_fields = function
         gen_doc_history out_fmt from ;
         (* foc:informations. *)
         gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
-        (* foc:ho?. *) (* TODO. *)
         (* foc:type. *)
         gen_doc_type ~reuse_mapping: false out_fmt (Types.specialize sch) ;
         Format.fprintf out_fmt "@]</foc:signature>@\n"
@@ -943,7 +940,10 @@ let gen_doc_pcm out_fmt env ~current_unit = function
       gen_doc_theorem
         out_fmt env None th_desc.Parsetree.th_name th_desc.Parsetree.th_stmt
         theo_def.Parsetree.ast_doc
-  | Infer.PCM_expr _ -> env (* TODO. *)
+  | Infer.PCM_expr _ ->
+      (* Since toplevel expressions are not usable for any developpement, we
+	 do not document them. *)
+      env
   | Infer.PCM_species (species_def, species_descr, _) ->
       gen_doc_species out_fmt env ~current_unit species_def species_descr
   | Infer.PCM_collection (coll_def, col_descr, _) ->

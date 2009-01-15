@@ -116,7 +116,6 @@ definition =
     fun-dep?,
     history,
     informations,
-    element foc:ho { empty }?,
     type
   }
 proposition = element foc:proposition { all | application | ex }
