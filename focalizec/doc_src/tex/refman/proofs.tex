@@ -1,4 +1,4 @@
-% $Id: proofs.tex,v 1.6 2009-01-15 15:01:33 doligez Exp $
+% $Id: proofs.tex,v 1.7 2009-01-15 17:06:54 doligez Exp $
 
 
 
@@ -17,23 +17,23 @@ The syntax of proofs is as follows.
 \begin{syntax}
 \syntaxclass{Proofs:}
 proof & ::=  & proof\_step* qed\_step \\
-      & \mid & \terminal{by} fact* \\
-      & \mid & \terminal{qed}
+      & \mid & \terminal{by}\ fact* \\
+      & \mid & \terminal{conclude}
 \end{syntax}
 
 \begin{syntax}
 \syntaxclass{Proof steps:}
-proof\_step & ::=  & proof\_bullet statement proof
+proof\_step & ::=  & proof\_bullet\ statement\ proof
 \end{syntax}
 
 \begin{syntax}
 \syntaxclass{Statements:}
-statement & ::=  & [\terminal{assume} logical\_expr \terminal{,}]*
-                   [\terminal{prove} logical\_expr]
+statement & ::=  & [\terminal{assume}\ logical\_expr\ \terminal{,}]*
+                   [\terminal{prove}\ logical\_expr]
 \end{syntax}
 
 \begin{syntax}
 \syntaxclass{QED steps:}
-qed\_step & ::=  & proof\_bullet \terminal{qed} proof \\
-          & \mid & proof\_bullet \terminal{qed} \terminal{.}
+qed\_step & ::=  & proof\_bullet\ \terminal{qed}\ proof \\
+          & \mid & proof\_bullet\ \terminal{conclude}
 \end{syntax}

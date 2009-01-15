@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.5 2009-01-15 11:12:50 pessaux Exp $
+% $Id: lexical_conventions.tex,v 1.6 2009-01-15 17:06:54 doligez Exp $
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -104,14 +104,14 @@ end ;;
 \vspace{0.2cm}
 \begin{syntax}
 \syntaxclass{Basic identifiers:}
-digit & ::= & \terminal{0 }\ldots \terminal{9} & \\
+digit & ::= & \terminal{0} \ldots \terminal{9} & \\
 lower & ::= & \terminal{a} \ldots \terminal{z} & \\
 upper & ::= & \terminal{A} \ldots \terminal{Z} & \\
 letter & ::= & lower \mid upper & \\
-lident & ::= & (lower | \terminal{\_})
-            \{ letter \mid digit \mid \terminal{\_} \} & \\
-uident & ::= & upper \{ letter \mid digit \mid \terminal{\_} \} & \\
-ident & ::= & lident | uident
+lident & ::= & \{\ lower \mid \terminal{\_} \}
+            \{ letter \mid digit \mid \terminal{\_} \}* & \\
+uident & ::= & upper\ \{\ letter \mid digit \mid \terminal{\_} \}* & \\
+ident & ::= & lident \mid uident
 \end{syntax}
 \vspace{0.2cm}
 
@@ -166,12 +166,12 @@ spaces inside or extend the notion of operator identifiers.
         \terminal{ ,\ +\ -\ *\ /\ \%\ \&\ \mid\ :\ ;\ <\ =\ >\ @ \wedge
                   \ \setminus} & \\
     prefix\_op & ::= & prefix\_char
-        \{ letter \mid prefix\_char \mid infix\_char
+        \ \{ letter \mid prefix\_char \mid infix\_char
         \mid digit \mid \terminal{\_} \}* & \\
     infix\_op & ::= & infix\_char
-        \{ letter \mid prefix\_char \mid infix\_char
+        \ \{ letter \mid prefix\_char \mid infix\_char
         \mid digit \mid \terminal{\_} \}* & \\
-    op & ::= & infix\_op | prefix\_op
+    op & ::= & infix\_op \mid prefix\_op
     \end{syntax}
 
     Hence, in the above examples, {\tt +}, {\tt ++} and
@@ -300,47 +300,59 @@ table below:
 
 \medskip
 \noindent
-\begin{tabular}{|c|c|l|}
+\begin{tabular}{|c|c|p{7cm}|}
   \hline
   Sequence & Character & Comment \\
   \hline
-  $\setminus$n & '$\setminus$010' & Line feed. \\
+  $\setminus$b & $\setminus$008 & Backspace. \\
   \hline
-  $\setminus$r & '$\setminus$013' & Carriage return. \\
+  $\setminus$t & $\setminus$009 & Tabulation. \\
   \hline
-  $\setminus$b & '$\setminus$008' & Backspace. \\
+  $\setminus$n & $\setminus$010 & Line feed. \\
   \hline
-  $\setminus$t & '$\setminus$009' & Tabulation. \\
+  $\setminus$r & $\setminus$013 & Carriage return. \\
   \hline
-  $\setminus$" & '"'              & Double quote. \\
+  $\setminus$\textvisiblespace & \textvisiblespace      & Space character. \\
   \hline
-  $\setminus$* & '*'              & Since comments cannot appear
-                                    inside string, \\
-               &                  & to insert the
-                                    sequence ``(*'' or ``*)'', use this \\
-               &                  & escape sequence combined with the
-                                    two following \\
-               &                  & ones. \\
+  $\setminus$" & "              & Double quote. \\
   \hline
-  $\setminus$( & '('              & See comment above for $\setminus$*. \\
+  $\setminus$' & '              & Single quote. \\
   \hline
-  $\setminus$) & ')'              & See comment above for $\setminus$*. \\
+  $\setminus$* & *              & Since comments cannot appear inside
+                                  strings, to insert one of the
+                                  sequence ``(*'', ``*)'', ``\{*'', or
+                                  ``*\}'', use this escape sequence
+                                  combined with the four following
+                                  ones. \\
   \hline
-  $\setminus\setminus$ & '\'      & Backslash character. \\
+  $\setminus$( & (              & See comment above for $\setminus$*. \\
   \hline
-  $\setminus$- & '-' & Minus (dash) character. Like for multi-line
-                                    comments, \\
-               &                  & uni-line comments can't
-                                    appear in strings. Hence, to \\
-               &                  & insert the sequence ``--'', use
-                                    twice this escape sequence. \\
+  $\setminus$) & )              & See comment above for $\setminus$*. \\
+  \hline
+  $\setminus$\{ & \{              & See comment above for $\setminus$*. \\
+  \hline
+  $\setminus$\} & \}              & See comment above for $\setminus$*. \\
+  \hline
+  $\setminus\setminus$ & $\setminus$      & Backslash character. \\
+  \hline
+  $\setminus$` & `      & Backquote character. \\
+  \hline
+  $\setminus$\-- & \-- & Minus (dash) character. Like for multi-line
+                           comments, uni-line comments can't appear in
+                           strings. Hence, to insert the sequence
+                           ``\--\--'', use this escape sequence twice. \\
   \hline
   $\setminus$[0-9][0-9][0-9] & & The character whose ASCII code in
-                                {\bf decimal} is given \\
-               &                  & by the 3 digits following the
-                                  $\setminus$. This sequence is valid \\
-               &                  & for any valid character
-      ASCII code.\\
+                                {\bf decimal} is given by the 3 digits
+                                following the $\setminus$. This
+                                sequence is valid for all
+                                ASCII codes. \\
+  \hline
+  $\setminus$x[0-9a-fA-F][0-9a-fA-F] & & The character whose ASCII code in
+                                {\bf hexadecimal} is given by the 2
+                                digits following the $\setminus$. This
+                                sequence is valid for all
+                                ASCII codes.\\
   \hline
 \end{tabular}
 
@@ -351,48 +363,12 @@ table below:
 \subsection{Character literals}
 \label{character literals}
 \label{hexadecimal}
-Characters literals are composed of one character enclosed between 2 ``{\tt '}''
-(quote) characters. Example: {\tt 'a'}, {\tt '?'}.
+Characters literals are composed of one character enclosed between two
+``{\tt '}'' (quote) characters. Example: {\tt 'a'}, {\tt '?'}.
 Escape sequences (meta code to insert characters that can't appears
 simply in a character literal) must also be enclosed by
-quotes. Available escape sequences are summarised in the table below:
-
-\medskip
-\noindent
-\begin{tabular}{|c|c|l|}
-  \hline
-  Sequence & Character & Comment \\
-  \hline
-  $\setminus\setminus$ & '$\setminus$' & Backslash. \\
-  \hline
-  $\setminus$'         & '{\tt '}'  & Quote. \\
-  \hline
-  $\setminus$"         & '"'        & Double quote. \\
-  \hline
-  $\setminus$n         &            & Carriage return. \\
-  \hline
-  $\setminus$t         &            & Tabulation. \\
-  \hline
-  $\setminus$b         &            & Backspace. \\
-  \hline
-  $\setminus$r         &            & Carriage return. \\
-  \hline
-  $\setminus$[0-9][0-9][0-9] & & The character whose ASCII code in
-                                {\bf decimal} is given \\
-               &                  & by the 3 digits following the
-                                  $\setminus$. This sequence is valid \\
-               &                  & for any valid character
-      ASCII code.\\
-  \hline
-  $\setminus$x[0-9a-fA-F][0-9a-fA-F] & & The character whose ASCII code in
-                                {\bf hexadecimal} is given \\
-               &                  & by the 2 digits following the
-                                  $\setminus$. This sequence is valid \\
-               &                  & for any valid character
-      ASCII code.\\
-  \hline
-\end{tabular}
-
+quotes. Available escape sequences are summarised in the table above
+(see section~\ref{string literal}).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -434,8 +410,8 @@ prefixed by ``0x'' or ``0X''. Example {\tt 0x-F2.E4}, {\tt 0X4.3A},
 \begin{syntax}
 \syntaxclass{Proof step bullets:}
 proof\_step\_bullet & ::= &
-   \terminal{<} \{ \terminal{0} \ldots \terminal{9} \}+\ \terminal{>}
-   \ letter+
+   \terminal{<} \{ \terminal{0} \ldots \terminal{9} \}+ \terminal{>}
+   \ \{letter \mid digit \}+
 \end{syntax}
 
 A proof step bullet is a non-negative non-signed integer literal
@@ -451,7 +427,7 @@ depth of the bullet and the second part stands for its name. Example:
       prove ...
    <2>1 prove ... by ...
    <2>9 qed by step <2>1 property ...
- <1>2 qed.
+ <1>2 conclude
 \end{lstlisting}
 }
 
