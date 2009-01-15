@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.4 2009-01-14 15:00:12 pessaux Exp $
+% $Id: lexical_conventions.tex,v 1.5 2009-01-15 11:12:50 pessaux Exp $
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -59,25 +59,27 @@ end ;;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Documentations}
+\subsection{Annotations}
+\index{annotation}
 \index{documentation}
-\label{documentation}
-Documentations are introduced by the three characters {\tt (**},
+\label{annotation}
+{\bf Annotations} are introduced by the three characters {\tt (**},
 with no intervening blanks, and terminated by the two characters
 {\tt *)}, with no intervening blanks.
-Documentations cannot occur inside string or character literals and
+Annotations cannot occur inside string or character literals and
 cannot be nested. They must precede the construct  they document. This
 especially means that a
-{\bf source file cannot end by a documentation} otherwise a syntax
+{\bf source file cannot end by an annotation} otherwise a syntax
 error will be issued.
 
-Unlike comments, documentations are kept during the compilation process
+Unlike comments, annotations are kept during the compilation process
 and recorded in the compilation information (``.fo'' files). They can
 be processed by the external documentation tool \focdoc\ provided with
-the \focal\ development environment. Several documentations can be put
-in sequence for the same construct. This allow to embed inside them
-tags that can be used by third-party tools to discriminate on
-meaningful documentation for them. For more information, consult
+the \focal\ development environment. Several annotations can be put
+in sequence for the same construct. We call such a sequence an
+{\bf annotations block}\index{annotation!block}. This allows to embed
+inside them tags that can be used by third-party tools to discriminate
+on meaningful annotations for them. For more information, consult
 \ref{documentation-generation}.
 Example:
 {\scriptsize

@@ -1,7 +1,4 @@
-% $Id: doc_gen.tex,v 1.3 2009-01-14 17:38:00 pessaux Exp $
-{\color{red} TODO: make clear the vocabulary
-  comment/documentation/documentation comment}.
-
+% $Id: doc_gen.tex,v 1.4 2009-01-15 11:12:50 pessaux Exp $
 When invoked with the {\tt $-$focalize-doc} option, the command
 {\tt focalizec} generates an extra file (with the ``.fcd'' suffix)
 containing ``documentation'' information extracted from the compiled
@@ -10,50 +7,50 @@ source file.
 This information describes the different elements found in the source
 file (species, collections, methods, toplevel definitions, type
 definitions) with various annotations like type,
-definition/inheritance locations. It also contains the comments
-previously called ``documentations'' (c.f \ref{documentation}) and that
-were kept during the compilation process. Moreover, these comments can
-contain special markups used by the documentation generator of \focal.
+definition/inheritance locations. It also contains the special comments
+previously called {\bf annotations} (c.f \ref{annotation}) and that
+were kept during the compilation process. Moreover, these annotations
+can contain special tags used by the documentation generator of
+\focal.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Special markups}
+\subsection{Special tags}
 \focal's documentation system currently supports 5 kinds of
-markup. They impact the content of the final generated document,
+tag. They impact the content of the final generated document,
 either in its content or in the way information is displayed depending
-on the output format. These markups start with the ``@'' character and
-the content of the markup follows and finishes at the end of the
-line. It is then possible in a documentation comment to mix regular
-text that won't be interpreted and markups.
+on the output format. These tags start with the ``@'' character and
+the content of the tag follows until the enf of the line. It is then
+possible in an annodation to mix regular text that will not be
+interpreted and tags.
 
 \subsubsection{@title}
-This markup must appear (i.e. is only taken into account) in the first
-documentation comment on the source file. The following text is
-considered to be the title of the source file and will appear in the
-header of the final document.
+This tag must appear (i.e. is only taken into account) in the first
+annotations block of the source file. The following text is considered
+to be the title of the source file and will appear in the header of
+the final document.
 
-See example provided for the {\tt @description} markup below.
+See example provided for the {\tt @description} tag below.
 
 
 
 \subsubsection{@author}
-This markup must appear (i.e. is only taken into account) in the first
-documentation comment on the source file. The following text is
-considered to be the author of the source file and will appear in the
-header of the final document.
+This tag must appear (i.e. is only taken into account) in the first
+annotations block of the source file. The following text is considered
+to be the author of the source file and will appear in the header of
+the final document.
 
-See example provided for the {\tt @description} markup below.
+See example provided for the {\tt @description} tag below.
 
 
 
 \subsubsection{@description}
-This markup must appear (i.e. is only taken into account) in the first
-documentation comment on the source file. The following text is
-considered to be the description of the content of the source file
-(what services it implements) and will appear in the header of the
-final document.
+This tag must appear (i.e. is only taken into account) in the first
+annotations block of the source file. The following text is considered
+to be the description of the content of the source file (what services
+it implements) and will appear in the header of the final document.
 
 For example:
 {\scriptsize
@@ -72,31 +69,29 @@ For example:
 ...
 \end{lstlisting}
 }
-will lead to a document header like (in HTML format):
+will lead to a document header like (displayed in HTML format):
 
 \medskip
 \includegraphics{header_html_snapshot.ps}
 
 You may notice in the above source code example that the header
-information is located in a documentation comment that does not look
-to the {\bf first} one. In effect, the top-most banner starting by
+information is located in an annotation that is not the {\bf first}
+one. In effect, the top-most banner starting by
 {\scriptsize
 \begin{lstlisting}
 (***********************************************************************)
 \end{lstlisting}
 }
-is in fact also a documentation comment since it starts by the
-sequence ``(**''. In fact, a ``documentation'' is a sequence of
-documentation comments. Hence several consecutive documentation
-comments form a ``documentation''. For this reason, our header
-information, even if located in the third documentation comment is
-located in the first documentation.
+is in fact also an annotation since it starts by the sequence
+``(**''. However all these annotation belong to the same annotations
+block as requiered.
+
 
 
 \subsubsection{@mathml}
-This markup must appear in the document comment preceding a method
+This tag must appear in the document comment preceding a method
 definition. It indicates the sequence of MathML code to use to replace
-the name of the method everywhere in the current document. This markup
+the name of the method everywhere in the current document. This tag
 only affects the HTML display since it allows to show more usual
 symbols rather than identifiers in a browser. This is expecially
 useful for mathematical formulaes where one prefer to see the sign $=$
@@ -130,7 +125,7 @@ displayed by an HTML browser.
 The generated documentation file is a plain ASCII text containing some
 XML compliant with \focal's DTD
 ({\tt focalize/focalizec/src/docgen/focdoc.dtd}). Like for any XML
-files processing is performed thank to the command \xsltproc\ with 
+files processing is performed thank to the command \xsltproc\ with
 XSL stylesheets (``.xsl'' files).
 
 You may write custom XSL stylesheets to process this XML but the
@@ -167,6 +162,8 @@ browser is performed in two passes.
   xsltproc ''directory to the stylesheet''/mmlctop2_0.xsl mysrc.fcd > mysrc.xml
   \end{verbatim}
   }
+  \smallskip
+  {\bf Attention:}
   You may note that the final result file name must be ended by the
   suffix ``.xml'' otherwise your browser won't be able to interpret it
   correctly and won't display symbols ($\Rightarrow, \in, \exists,
