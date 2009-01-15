@@ -98,23 +98,20 @@ species Setoid_morphism(S is Setoid, T is Setoid)
   property morph_substitution_rule: all x y in S, 
     S!equal(x, y) -> T!equal(!morph(x), !morph(y));
 
-  (* [rr]: a hack to force the compiler to include t!equal in the env *)
-  let equal_t(x, y) = T!equal(x, y);
-
   (** we define an equivalence relation *)
-  logical let equiv(e1, e2) = !equal_t(!morph(e1), !morph(e2));
+  logical let equiv(e1, e2) = T!equal(!morph(e1), !morph(e2));
 
   proof of equiv_symmetric =
     by property T!equal_symmetric 
-       definition of equiv, equal_t
+       definition of equiv
   ;
   proof of equiv_transitive =
     by property T!equal_transitive 
-       definition of equiv, equal_t
+       definition of equiv
   ;
   proof of equal_refines_equiv =
     by property !morph_substitution_rule 
-       definition of equiv, equal_t
+       definition of equiv
   ;
 end
 ;;
@@ -127,34 +124,31 @@ end
 species Represented_by_setoid(S is Setoid)
    inherits Represented_by(S) =
 
-  (* [rr]: hack to force the compiler to include s!equal in the environment *)
-  let equal_s(x, y) = S!equal(x, y);
-
   (** equality in self is equality in s *)
-  let equal(x in Self, y in Self) = !equal_s(x, y);
+  let equal(x in Self, y in Self) = S!equal(x, y);
 
   proof of equal_reflexive = 
     by property S!equal_reflexive 
-       definition of equal, equal_s
+       definition of equal
   ;
 
   proof of equal_symmetric =
    by property S!equal_symmetric 
-      definition of equal, equal_s
+      definition of equal
   ;
 
   proof of equal_transitive =
    by property S!equal_transitive 
-      definition of equal, equal_s
+      definition of equal
   ;
 
-  logical let represents_some_self(x) = !equal_s(!from_rep(x), x);
+  logical let represents_some_self(x) = S!equal(!from_rep(x), x);
 (*   letprop represents_some_self(x) = s!equal(!from_rep(x), x); *)
 
   theorem to_rep_is_injective: all e_1 e_2 in Self,
     S!equal(!to_rep(e_1), !to_rep(e_2)) -> !equal(e_1, e_2)
   proof =
-    by definition of equal, equal_s, to_rep;
+    by definition of equal, to_rep;
 
   proof of to_rep_reverses =
     <1>1 assume x in Self,
@@ -165,9 +159,9 @@ species Represented_by_setoid(S is Setoid)
               <3>2 prove !represents_some_self(!to_rep(x))
                    by step <3>1 property !correct_rep_spec
               <3>f qed by step <3>2 
-                          definition of represents_some_self, equal_s, to_rep
+                          definition of represents_some_self, to_rep
          <2>f qed by step <2>1 definition of to_rep
-     <1>f qed by step <1>1 definition of equal, equal_s
+     <1>f qed by step <1>1 definition of equal
   ;
 
 end
@@ -217,7 +211,7 @@ species Quotient_set(S is Setoid,
               by property Proj!reduce_is_projection, S!equal_symmetric
               definition of element
          <2>f qed by step <2>1
-                  definition of represents_some_self, equal_s, from_rep
+                  definition of represents_some_self, from_rep
     <1>2 qed by step <1>1 
                 definition of to_rep, correct_representation
     ;
