@@ -7,17 +7,13 @@
 		xmlns="http://www.w3.org/1999/xhtml">
 
   <xsl:import href="proposition.xsl"/>
-
-  <xsl:output method="xml"
-	      indent="yes"/>
-
+  <xsl:output method="xml" indent="yes"/>
   <xsl:param name="ext" select="'.xml'"/>
-
   <xsl:param name="verbose" select="0"/>
-
   <xsl:param name="docpath" select="''"/>
-
   <xsl:param name="mmldisplay" select="'yes'"/>
+
+
 
   <xsl:template match="/">
     <xsl:message>  Use the "docpath" variable to specify a path </xsl:message>
