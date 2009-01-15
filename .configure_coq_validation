@@ -15,11 +15,11 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: .configure_coq_validation,v 1.1 2008-12-18 13:25:45 weis Exp $
+# $Id: .configure_coq_validation,v 1.2 2009-01-15 14:07:46 weis Exp $
 
 # Edit the user's .coqrc file to give coq access to zenon specific libraries.
 
-. ./.config_var
+. ./.config_var_for_shell
 
 add_path_to_zenon_lib () {
   echo "Adding coqc proof checks for your Zenon generated proofs to $COQRC."
