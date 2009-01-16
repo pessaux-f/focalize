@@ -1,2 +1,3 @@
 .depend
 .config_var
+.config_var_for_shell

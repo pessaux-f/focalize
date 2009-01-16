@@ -6,6 +6,7 @@
 *.output
 gmon.out
 .config_var
+.config_var_for_shell
 zvtov
 lexer.ml
 lexer_coq.ml
