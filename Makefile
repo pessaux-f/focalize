@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.40 2009-01-15 09:52:56 weis Exp $
+# $Id: Makefile,v 1.41 2009-01-16 12:10:37 weis Exp $
 
 ROOT_DIR = .
 
@@ -68,8 +68,10 @@ install_external_tools_sources: .done_install_external_tools_sources
 .done_install_external_$(CAML_NAME)_tool_sources:
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAML_SRC_DIR)); \
-	  echo "<-- $$i [$$?]"; \
+	  $(MAKE) -C $$i $(ABSOLUTE_CAML_SRC_DIR); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done; \
 	$(TOUCH) .done_install_external_$(CAML_NAME)_tool_sources
 
@@ -81,8 +83,10 @@ install_external_tools_sources: .done_install_external_tools_sources
   .done_install_external_$(CAML_NAME)_tool_sources
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_CAMLP5_SRC_DIR)); \
-	  echo "<-- $$i [$$?]"; \
+	  $(MAKE) -C $$i $(ABSOLUTE_CAMLP5_SRC_DIR); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done; \
 	$(TOUCH) .done_install_external_$(CAMLP5_NAME)_tool_sources
 
@@ -95,8 +99,10 @@ install_external_tools_sources: .done_install_external_tools_sources
   .done_install_external_$(CAMLP5_NAME)_tool_sources
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; $(MAKE) $(ABSOLUTE_COQ_SRC_DIR)); \
-	  echo "<-- $$i [$$?]"; \
+	  $(MAKE) -C $$i $(ABSOLUTE_COQ_SRC_DIR); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done; \
 	$(TOUCH) .done_install_external_$(COQ_NAME)_tool_sources
 
@@ -133,10 +139,13 @@ install_external_tools_sources: .done_install_external_tools_sources
 
 .done_build_external_caml_tool: .done_install_external_$(CAML_NAME)_tool_sources
 	($(CD) $(ABSOLUTE_CAML_SRC_DIR); \
-	 ./configure $(CAML_CONFIGURE_OPTIONS); \
-	 $(MAKE) $(CAML_MAKE_ALL_TARGET); \
-	 $(MAKE) install; \
+	 ./configure $(CAML_CONFIGURE_OPTIONS) && \
+	 $(MAKE) $(CAML_MAKE_ALL_TARGET) && \
+	 $(MAKE) install && \
 	); \
+	err=$$?; \
+	echo "<-- $$i [$$err]"; \
+	case $$err in 0);; *) exit $$err;; esac; \
 	$(TOUCH) .done_build_external_caml_tool
 
 .done_magic_build_external_caml_tool: .done_magic_install_external_$(CAML_NAME)_tool_sources
@@ -146,10 +155,13 @@ install_external_tools_sources: .done_install_external_tools_sources
 .done_build_external_camlp5_tool: .done_build_external_caml_tool
 	($(CD) $(ABSOLUTE_CAMLP5_SRC_DIR); \
 	 PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH; \
-	 ./configure $(CAMLP5_CONFIGURE_OPTIONS); \
-	 $(MAKE) $(CAMLP5_MAKE_ALL_TARGET); \
+	 ./configure $(CAMLP5_CONFIGURE_OPTIONS) && \
+	 $(MAKE) $(CAMLP5_MAKE_ALL_TARGET) && \
 	 $(MAKE) install; \
 	); \
+	err=$$?; \
+	echo "<-- $$i [$$err]"; \
+	case $$err in 0);; *) exit $$err;; esac; \
 	$(TOUCH) .done_build_external_camlp5_tool
 
 .done_magic_build_external_camlp5_tool: .done_magic_build_external_caml_tool
@@ -158,10 +170,13 @@ install_external_tools_sources: .done_install_external_tools_sources
 
 .done_build_external_coq_tool: .done_build_external_camlp5_tool
 	($(CD) $(ABSOLUTE_COQ_SRC_DIR); \
-	 ./configure $(COQ_CONFIGURE_OPTIONS); \
-	 $(COQ_MAKE) $(COQ_MAKE_ALL_TARGET); \
+	 ./configure $(COQ_CONFIGURE_OPTIONS) && \
+	 $(COQ_MAKE) $(COQ_MAKE_ALL_TARGET) && \
 	 $(COQ_MAKE) install; \
 	); \
+	err=$$?; \
+	echo "<-- $$i [$$err]"; \
+	case $$err in 0);; *) exit $$err;; esac; \
 	$(TOUCH) .done_build_external_coq_tool
 
 .done_magic_build_external_coq_tool: .done_magic_build_external_camlp5_tool
@@ -171,19 +186,21 @@ install_external_tools_sources: .done_install_external_tools_sources
 #
 # Internal tools
 #
-build_internal_tools: .done_build_internal_tools
+build_internal_tools: .done_build_external_tools .done_build_internal_tools
 
-.done_build_internal_tools: .done_build_external_tools .done_build_focalizec
+.done_build_internal_tools: .done_build_focalizec
 	$(TOUCH) .done_build_internal_tools
 
 .done_build_zenon $(ZENON_EXES): .done_build_external_tools
 	for i in $(ABSOLUTE_ZENON_SRC_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
-	   ./configure $(ZENON_CONFIGURE_OPTIONS); \
-	   $(MAKE) $(ZENON_MAKE_ALL_tARGET); \
+	   ./configure $(ZENON_CONFIGURE_OPTIONS) && \
+	   $(MAKE) $(ZENON_MAKE_ALL_tARGET) && \
 	   $(MAKE) install); \
-	  echo "<-- $$i [$$?]"; \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done; \
 	$(TOUCH) .done_build_zenon
 
@@ -191,10 +208,12 @@ build_internal_tools: .done_build_internal_tools
 	for i in $(ABSOLUTE_ZVTOV_SRC_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
-	   ./configure $(ZVTOV_CONFIGURE_OPTIONS); \
-	   $(MAKE) $(ZVTOV_MAKE_ALL_TARGET); \
+	   ./configure $(ZVTOV_CONFIGURE_OPTIONS) && \
+	   $(MAKE) $(ZVTOV_MAKE_ALL_TARGET) && \
            $(MAKE) install); \
-	  echo "<-- $$i [$$?]"; \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done; \
 	$(TOUCH) .done_build_zvtov
 
@@ -202,33 +221,68 @@ build_internal_tools: .done_build_internal_tools
 	for i in $(ABSOLUTE_FOCALIZEC_SRC_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i; \
-	   ./configure $(FOCALIZEC_CONFIGURE_OPTIONS); \
+	   ./configure $(FOCALIZEC_CONFIGURE_OPTIONS) && \
 	   $(MAKE) $(FOCALIZEC_MAKE_ALL_TARGET)); \
-	  echo "<-- $$i [$$?]"; \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done; \
 	$(TOUCH) .done_build_focalizec
+
+# To get a correct make all for internal tools we need to have a
+# make_and_install target in each internal tool Makefile.
+# This target should make all and then install the executable,
+# if and only if, either:
+# - there is no installed executable yet, or
+# - ./executable is newer than the already installed one.
+# This may be obtained via a .done_installation hidden file, with explicit
+# dependancy ? Or may be a .to_do_installation and .done_installation ?
+# or with a shell script that tests the above condition ?
+# Another prerequisite is that the ``all'' target indeed does nothing if nothing
+# has to be done (not even rebuild the same executable or copy it to a selected
+# place).
+#
+#all:: make_all_internal_tools
+
+#.PHONY make_all_internal_tools
+# make_all_internal_tools:
+#	for i in $(INTERNAL_TOOLS_DIRS); do \
+#	  echo "--> $$i ..."; \
+#	  $(MAKE) -C $$i $(INTERNAL_TOOLS_MAKE_ALL_TARGET); \
+#	  err=$$?; \
+#	  echo "<-- $$i [$$err]"; \
+#	  case $$err in 0);; *) exit $$err;; esac; \
+#	done; \
+#	$(TOUCH) .done_install_focalizec
+
+clean:: clean_internal_tools
 
 install:: .done_build_internal_tools
 	for i in $(ABSOLUTE_FOCALIZEC_SRC_DIR); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i; \
-	   $(MAKE) install); \
-	  echo "<-- $$i [$$?]"; \
+	  $(MAKE) -C $$i $@; \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done; \
 	$(TOUCH) .done_install_focalizec
 
 uninstall doc depend::
 	for i in $(INTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) $@); \
-	  echo "<-- $$i [$$?]"; \
+	  $(MAKE) -C $$i $@; \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
 clean_internal_tools:
 	for i in $(INTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) clean); \
-	  echo "<-- $$i [$$?]"; \
+	  $(MAKE) -C $$i clean; \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done; \
 	for i in $(INTERNAL_TOOLS); do \
 	  $(RM) .done_build_$$i; \
@@ -238,8 +292,10 @@ clean_internal_tools:
 distclean_internal_tools:
 	for i in $(INTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) distclean); \
-	  echo "<-- $$i [$$?]"; \
+	  $(MAKE) -C $$i distclean; \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done; \
 	for i in $(INTERNAL_TOOLS); do \
 	  $(RM) .done_build_$$i; \
@@ -249,8 +305,10 @@ distclean_internal_tools:
 clean_external_tools:
 	for i in $(EXTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) clean); \
-	  echo "<-- $$i [$$?]"; \
+	  $(MAKE) -C $$i clean; \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done; \
 	for i in $(EXTERNAL_TOOLS); do \
 	  $(RM) .done_build_external_$$i_tool; \
@@ -260,8 +318,10 @@ distclean_external_tools:
 	$(RM) .done_*
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) distclean); \
-	  echo "<-- $$i [$$?]"; \
+	  $(MAKE) -C $$i distclean; \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
 distclean:: distclean_external_tools distclean_internal_tools unconfigure
