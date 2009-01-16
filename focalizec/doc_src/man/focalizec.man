@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.\" \$Id: focalizec.man,v 1.6 2008-12-16 11:31:14 pessaux Exp $
+.\" \$Id: focalizec.man,v 1.7 2009-01-16 16:33:39 weis Exp $
 .\"
 .\"
 .\" First parameter, NAME, should be all caps
@@ -33,35 +33,30 @@ $(capitalize $package) version $package_version
 .SH DESCRIPTION
 The 
 .B $package
-compiler is a compiler for the $(focal) language. It takes a input one
-source file that gets compiled to
+compiler is a compiler for the $(focal) language. It takes a
+source file as input and compiles it to
 .B OCaml
-and or pre-\fBCoq\fP
-source codes depending of the selected options. By default both these
-target languages are generated. During the compilation process an
-object file (ended by the suffix
-\fI.fo\fP) is also generated for separate compilation purposes.
+and/or pre-\fBCoq\fP
+source files, according to selected options. The default is to generate both
+target languages. During the compilation process, the compiler also generates
+a specific object file (with suffix \fI.fo\fP) for the sake of separate compilation.
 
 The generated
 .B OCaml
 code can directly be passed to the
 .B Objective Caml
 compiler to finally get an executable linking all the generated files
-of your
-$(focal)
-development.
+of your $(focal) development.
 
-The generated pre-\fBCoq\fP
-sources are files ended by a
-.I .zv
-suffix and need to be sent to the
+The generated pre-\fBCoq\fP source files get suffix \fI.zv\fP. They must be
+processed by the
 .B Zenon
-automated theorem prover by invoking the command
-.B zvtov
-in order to get a pure
+automated theorem prover to get a pure
 .B Coq
-source file ended with the suffix
-\fI.v\fP.
+source file (with suffix \fI.v\fP).
+The $(focal) specific command
+.B zvtov
+is specially devoted to this task.
 
 Hence the generation process is the following:
     file.fcl --
@@ -69,7 +64,7 @@ Hence the generation process is the following:
 --> file.ml and/or file.zv
     file.ml --
 .B ocaml/ocamlopt ...
---> executable
+--> executable program
     file.zv --
 .B zvtov
 --> file.v
@@ -95,12 +90,11 @@ species name + the suffix
 \fI.dot\fP.
 .TP
 .B --experimental
-Reserved for development purpose. Never use. Invoking the compiler
-with this option may trigger unpredictable results.
+Reserved for development purpose. Never use it, since invoking the compiler
+with this option may lead to unpredictable results.
 .TP
 .B -focalize-doc
-Generate documentation.
-.B Not currently complete. Reserved for future usage.
+Generate documentation. Still experimental.
 .TP
 .B -i
 Prints the interfaces of the species present in the compiled source
@@ -121,16 +115,16 @@ options in their apparition order on the command line.
 Make termination proofs mandatory for recursive functions. If a
 recursive function doesn't have its termination proof, then the field
 will be considered as not fully defined and no collection will be
-possible based on the species hosting the function. By default this
-option is not enabled and if a recursive function does not have any
+possible based on the species hosting the function. Default is to
+disable this option: if a recursive function does not have any
 termination proof, a warning is printed during compilation when trying
 to make a collection from this species.
 .TP
 .B --methods-history-to-text \<dirname\>
 Dumps the methods' inheritance history of the species present in the
-compiled. The result is sent as plain text files into the \<dirname\>
-directory. For each method of each species a file is generated wearing
-the name made of
+compiled $(focal) files. The result is sent as plain text files into the
+\<dirname\> directory. For each method of each species a file is generated
+wearing the name made of
 .I history_
 + the source file base name (i.e. without path and suffix) +
 .I _
@@ -138,61 +132,59 @@ the name made of
 \fI.txt\fP.
 .TP
 .B --no-ansi-escape
-Disables ANSI escape sequences in the error messages. By default, when
-an error is reported, bold, italic, underline fonts are used to make
-easier reading the message. Using this option removes all these text
-attributes and may be used if your terminal doesn't support ANSI
-escape sequences or, for example, if compiling under
+Disables ANSI escape sequences in error messages. Default is to
+use bold, italic, underline fonts when reporting errors, to make
+the messages easier to read. This option removes all the text
+attributes and should be used if your terminal doesn't support ANSI
+escape sequences or when compiling under
 \fBemacs\fP.
 .TP
 .B --no-coq-code
 Disables the
 .B Coq
-code generation. By default Coq code is always generated.
+code generation. Default is to generate Coq code.
 .TP
 .B --no-ocaml-code
 Disables the
 .B OCaml
-code generation. By default OCaml code is always generated.
+code generation. Default is to generate OCaml code.
 .TP
 .B -no-stdlib-path
 Does not include the standard library installation directory in the
-libraries search path. This option is rarely useful and mostly
-dedicated to the $(focal) compiler build process.
+library search path. Rarely useful and mostly dedicated to the $(focal)
+compiler build process.
 .TP
 .B --pretty \<file\>
-Undocumented: mostly for debug purpose. Pretty-prints the parse tree
+Undocumented: mostly for debugging purpose. Pretty-prints the parse tree
 of the $(focal) file as a $(focal) source into the argument file.
 .TP
 .B --raw-ast-dump
-Undocumented: mostly for debug purpose. Prints on stderr the raw AST
+Undocumented: mostly for debugging purpose. Prints on stderr the raw AST
 structure after parsing stage.
 .TP
 .B --scoped_pretty \<file\>
-Undocumented: mostly for debug purpose. Pretty-prints the parse tree
-of the $(focal) file once scoped as a $(focal) source into the
+Undocumented: mostly for debugging purpose. Pretty-prints the parse tree
+of the $(focal) file, once scoped, as a $(focal) source into the
 file \<file\>.
 .TP
 .B --verbose.
-Sets the compiler in verbose mode. It will then generate the trace of
-the steps and operations is does during, the compilation. This feature
-is mostly used for debugging purpose but can also explain the
-elaboration of the model during compilation for people interested in
-$(focal)'s compilation process. 
+Sets the compiler in verbose mode. The compiler generate the trace of
+steps and operations it performs. Mostly used for debugging purpose; for people
+interested in understanding the $(focal)'s compilation process, can also
+explain the elaboration of the model during the compilation.
 .TP
 .B \-v
 Print the
 .B $package
-version number then exits.
+version number.
 .TP
 .B \-version
 Print the
 .B $package
-full version, sub-version and release date, then exits.
+full version (version, sub-version and release date).
 .TP
 .B --where
-Prints the binaries and libraries installation directories then
-exits.
+Prints the binaries and libraries installation directories.
 .TP
 .B \-help
 Display this list of options.
@@ -201,7 +193,7 @@ Display this list of options.
 Display this list of options.
 
 .SH COPYRIGHT
-This program is free software, distributed under the artistic licence found in
+This program is free software, distributed under the licence found in
 the LICENSE file in the root directory of the distribution.
 .SH SEE ALSO
 .BR
