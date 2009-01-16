@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.29 2009-01-15 22:32:08 rr Exp $
+# $Id: Makefile,v 1.30 2009-01-16 10:38:54 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -46,8 +46,8 @@ FOCALIZE_SRC = \
 	randoms.fcl \
 	integers.fcl \
 	arrays.fcl \
-	product_structures.fcl \
-	quotient_structures.fcl
+	product_structures.fcl
+#	quotient_structures.fcl
 
 FOCALIZE_SRC_UNSAFE = \
 	iterators.fcl \
