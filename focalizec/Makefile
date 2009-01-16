@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.30 2009-01-15 15:01:33 doligez Exp $
+# $Id: Makefile,v 1.31 2009-01-16 13:26:24 weis Exp $
 
 ROOT_DIR = .
 
@@ -36,7 +36,7 @@ all:: lib
 byt bin::
 	@for i in $(COMPILER_DIRS); do \
 	  echo "--> $$i ..."; \
-	  $(MAKE) -C $$i $@; \
+	  ($(CD) $$i && $(MAKE) $@); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]"; \
 	  case $$err in 0);; *) exit $$err;; esac; \
@@ -45,7 +45,7 @@ byt bin::
 lib:
 	@for i in $(LIB_DIRS); do \
 	  echo "--> $$i ..."; \
-	  $(MAKE) -C $$i $@; \
+	  ($(CD) $$i && $(MAKE) $@); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]"; \
 	  case $$err in 0);; *) exit $$err;; esac; \
@@ -54,7 +54,7 @@ lib:
 clean doc depend::
 	@for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..."; \
-	  $(MAKE) -C $$i $@; \
+	  ($(CD) $$i && $(MAKE) $@); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]"; \
 	  case $$err in 0);; *) exit $$err;; esac; \
@@ -63,7 +63,7 @@ clean doc depend::
 install::
 	@for i in $(COMPILER_INSTALL_DIRS); do \
 	  echo "--> $$i ..."; \
-	  $(MAKE) -C $$i $@; \
+	  ($(CD) $$i && $(MAKE) $@); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]"; \
 	  case $$err in 0);; *) exit $$err;; esac; \

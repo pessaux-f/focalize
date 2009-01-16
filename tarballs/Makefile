@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.10 2008-12-22 18:38:20 weis Exp $
+# $Id: Makefile,v 1.11 2009-01-16 13:26:24 weis Exp $
 
 ROOT_DIR = ..
 
@@ -24,22 +24,27 @@ all:: $(EXTERNAL_TOOLS_DIRS)
 $(ABSOLUTE_CAML_SRC_DIR):
 	for i in $(CAML_TAR_BALLS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $(ROOT_DIR); $(TARX) $(TAR_BALLS_DIR_NAME)/$$i) || exit; \
-	  echo "<-- $$i [$$?]"; \
+	  ($(CD) $(ROOT_DIR) && $(TARX) $(TAR_BALLS_DIR_NAME)/$$i)
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
 $(ABSOLUTE_CAMLP5_SRC_DIR):
 	for i in $(CAMLP5_TAR_BALLS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $(ROOT_DIR); $(TARX) $(TAR_BALLS_DIR_NAME)/$$i); \
-	  echo "<-- $$i [$$?]"; \
+	  ($(CD) $(ROOT_DIR) && $(TARX) $(TAR_BALLS_DIR_NAME)/$$i)
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
 $(ABSOLUTE_COQ_SRC_DIR):
 	for i in $(COQ_TAR_BALLS); do \
-	  echo "--> $$i ..."; \
-	  ($(CD) $(ROOT_DIR); $(TARX) $(TAR_BALLS_DIR_NAME)/$$i) || exit; \
-	  echo "<-- $$i [$$?]"; \
+	  ($(CD) $(ROOT_DIR) && $(TARX) $(TAR_BALLS_DIR_NAME)/$$i)
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
 patches: patch_camlp5 patch_coq

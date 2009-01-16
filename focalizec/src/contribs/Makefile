@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.11 2009-01-11 02:27:29 weis Exp $
+# $Id: Makefile,v 1.12 2009-01-16 13:26:24 weis Exp $
 
 ROOT_DIR = ../..
 
@@ -32,34 +32,44 @@ lib: all
 byt bin::
 	for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) all) || exit; \
-	  echo "<-- $$i"; \
+	  ($(CD) $$i && $(MAKE) all); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
         done
 
 clean::
 	for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) clean) || exit; \
-	  echo "<-- $$i"; \
+	  ($(CD) $$i && $(MAKE) clean); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
         done
 
 doc::
 	for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) doc) || exit; \
-	  echo "<-- $$i"; \
+	  ($(CD) $$i && $(MAKE) doc); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
 install::
 	for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) install) || exit; \
-	  echo "<-- $$i"; \
+	  ($(CD) $$i && $(MAKE) install); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
 depend::
 	for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) depend) || exit; \
-	  echo "<-- $$i"; \
+	  ($(CD) $$i && $(MAKE) depend); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
 	done
