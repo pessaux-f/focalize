@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.154 2009-01-09 11:13:22 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.155 2009-01-16 10:15:52 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2271,12 +2271,12 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
                If the order uses only the 2nd and 3rd arguments of a 4
                arguments-function, then the 2 match will only retain the 2nd
                and 3rd components of the tuple of function'as arguments. *)
-            Format.fprintf out_fmter "@[<2>match@ __x@ with@\n" ;
+            Format.fprintf out_fmter "@[<2>match@ __x@ with@\n| " ;
             let printed1 =
               print_pattern_for_order
                 out_fmter ~var_suffix: "1" pattern_description in
             Format.fprintf out_fmter " =>@\n" ;
-            Format.fprintf out_fmter "@[<2>match@ __x@ with@\n" ;
+            Format.fprintf out_fmter "@[<2>match@ __x@ with@\n| " ;
             let printed2 =
               print_pattern_for_order
                 out_fmter ~var_suffix: "2" pattern_description in
