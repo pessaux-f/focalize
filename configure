@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.52 2009-01-15 14:07:46 weis Exp $
+# $Id: configure,v 1.53 2009-01-16 12:39:10 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -883,6 +883,10 @@ main () {
   build_configuration_variables;
   touch_depends;
   configure_internal_tools;
+  # Now that .config_var_for_shell is built, we can call ./.configure, the
+  # script that does the rest of the work that never necessitates user's
+  # interaction.
+  if test -x ./.configure; then ./.configure; fi;
   summarize_configuration;
   # Call the Makefile to go on configuring external tools.
   if ${MAGIC_MAKE_EXTERNAL}; then make magic_configure_external_tools; else
