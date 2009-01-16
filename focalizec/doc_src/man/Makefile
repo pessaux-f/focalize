@@ -9,7 +9,7 @@
 #                                                                     #
 #*********************************************************************#
 
-# $Id: Makefile,v 1.1 2008-12-12 10:44:03 weis Exp $
+# $Id: Makefile,v 1.2 2009-01-16 16:34:29 weis Exp $
 
 # Makefile for man page generation.
 
@@ -45,7 +45,7 @@ visu: $(MANOBJS)
 
 clean::
 	$(RM) $(MANOBJS) *~
-	cd Includes; $(RM) *~
+#	cd Includes; $(RM) *~
 
 .SUFFIXES:
 .SUFFIXES: .man .1
